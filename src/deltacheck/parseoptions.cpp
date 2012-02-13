@@ -28,6 +28,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "parseoptions.h"
 #include "version.h"
+#include "summarization.h"
+#include "collation.h"
 
 /*******************************************************************\
 
@@ -204,6 +206,8 @@ int deltacheck_parseoptionst::summarization(const optionst &options)
 
     if(process_goto_program(options, context, goto_functions))
       return 12;
+      
+    ::summarization(context, goto_functions, options);
   }
 
   catch(const char *e)
@@ -250,6 +254,15 @@ int deltacheck_parseoptionst::collation(const optionst &options)
   {
     status("PHASE 2: Reading the list of files to collate");
 
+    std::ifstream in(cmdline.args[0].c_str());
+
+    if(!in)
+    {
+      error("failed to open file");
+      return 12;
+    }
+    
+    ::collation(in, options);
   }
 
   catch(const char *e)

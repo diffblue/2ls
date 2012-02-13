@@ -1,7 +1,7 @@
 include ../config.inc
 CBMC ?= ../..
 
-SRC = main.cpp parseoptions.cpp \
+SRC = main.cpp parseoptions.cpp summarization.cpp collation.cpp \
       $(CBMC)/src/cbmc/xml_interface.cpp
 
 OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
