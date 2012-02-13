@@ -7,13 +7,8 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 #include <cstdlib>
-/*
 #include <fstream>
 #include <memory>
-
-#include <expr_util.h>
-*/
-
 #include <iostream>
 
 #include <config.h>
@@ -22,19 +17,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/goto_inline.h>
 #include <goto-programs/read_goto_binary.h>
 #include <goto-programs/link_to_library.h>
-/*
-#include <goto-programs/goto_convert_functions.h>
-#include <goto-programs/goto_check.h>
-#include <goto-programs/remove_function_pointers.h>
-#include <goto-programs/loop_numbers.h>
-
-#include <goto-symex/xml_goto_trace.h>
-
-#include <pointer-analysis/value_set_analysis.h>
-#include <pointer-analysis/goto_program_dereference.h>
-#include <pointer-analysis/add_failed_symbols.h>
-#include <pointer-analysis/show_value_sets.h>
-*/
 
 #include <langapi/mode.h>
 
@@ -169,65 +151,51 @@ int deltacheck_parseoptionst::doit()
   get_command_line_options(options);
   set_verbosity(*this);
 
-  // get program
-
-  contextt context;
-  goto_functionst goto_functions;
-
-  if(get_goto_program(options, context, goto_functions))
-    return 6;
-
-  // do actual analysis
-
-  //const namespacet ns(context);
-  //path_searcht path_search(options, ns, ui_message_handler);
-  //set_verbosity(path_search);
-  //path_search.set_ui(get_ui());
+  // We have two phases:
+  // 1) summarization: given _one_ goto-binary, produce summary
+  // 2) collation: put all summaries together
+  //
+  // The phases are distinguished by the type of input file.
   
-  return 0;
+  if(cmdline.args.size()!=1)
+  {
+    usage_error();
+    return 10;
+  }
+
+  if(is_goto_binary(cmdline.args[0]))
+    return summarization(options);
+  else
+    return collation(options);
 }
 
 /*******************************************************************\
 
-Function: deltacheck_parseoptionst::get_goto_program
+Function: deltacheck_parseoptionst::summarization
 
   Inputs:
 
  Outputs:
 
- Purpose:
+ Purpose: summarize one goto binary
 
 \*******************************************************************/
-  
-bool deltacheck_parseoptionst::get_goto_program(
-  const optionst &options,
-  contextt &context,
-  goto_functionst &goto_functions)
-{
-  if(cmdline.args.size()==0)
-  {
-    error("Please provide a program to verify");
-    return true;
-  }
 
+int deltacheck_parseoptionst::summarization(const optionst &options)
+{
+  // get the goto program
+  contextt context;
+  goto_functionst goto_functions;
+  
   try
   {
-    if(cmdline.args.size()==1 &&
-       is_goto_binary(cmdline.args[0]))
-    {
-      status("Reading GOTO program from file");
+    status("PHASE 1: Summarizing goto binary");
 
-      if(read_goto_binary(cmdline.args[0],
-           context, goto_functions, get_message_handler()))
-        return true;
+    if(read_goto_binary(cmdline.args[0],
+         context, goto_functions, get_message_handler()))
+      return 11;
         
-      config.ansi_c.set_from_context(context);
-    }
-    else
-    {
-      error("I only take goto programs as intput!");
-      return true;
-    }
+    config.ansi_c.set_from_context(context);
 
     // finally add the library
     status("Adding CPROVER library");      
@@ -235,33 +203,79 @@ bool deltacheck_parseoptionst::get_goto_program(
       context, goto_functions, options, ui_message_handler);
 
     if(process_goto_program(options, context, goto_functions))
-      return true;
+      return 12;
   }
 
   catch(const char *e)
   {
     error(e);
-    return true;
+    return 13;
   }
 
   catch(const std::string e)
   {
     error(e);
-    return true;
+    return 13;
   }
   
   catch(int)
   {
-    return true;
+    return 13;
   }
   
   catch(std::bad_alloc)
   {
     error("Out of memory");
-    return true;
+    return 14;
   }
   
-  return false;
+  return 0;
+}
+
+/*******************************************************************\
+
+Function: deltacheck_parseoptionst::collation
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: collect and analyze the summaries
+
+\*******************************************************************/
+
+int deltacheck_parseoptionst::collation(const optionst &options)
+{
+  try
+  {
+    status("PHASE 2: Reading the list of files to collate");
+
+  }
+
+  catch(const char *e)
+  {
+    error(e);
+    return 13;
+  }
+
+  catch(const std::string e)
+  {
+    error(e);
+    return 13;
+  }
+  
+  catch(int)
+  {
+    return 13;
+  }
+  
+  catch(std::bad_alloc)
+  {
+    error("Out of memory");
+    return 14;
+  }
+  
+  return 0;
 }
 
 /*******************************************************************\
@@ -353,7 +367,8 @@ void deltacheck_parseoptionst::help()
     "Usage:                       Purpose:\n"
     "\n"
     " deltacheck [-?] [-h] [--help]   show help\n"
-    " deltacheck file.c ...           source file names\n"
+    " deltacheck goto-binary       summarize goto-binary (phase I)\n"
+    " deltacheck file-list         collate information from given summaries (phase II)\n"
     "\n"
     "Other options:\n"
     " --version                    show version and exit\n"

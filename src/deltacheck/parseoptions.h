@@ -40,10 +40,11 @@ protected:
 
   virtual void get_command_line_options(optionst &options);
 
-  virtual bool get_goto_program(
-    const optionst &options,
-    contextt &context,
-    goto_functionst &goto_functions);
+  virtual int summarization(
+    const optionst &options);
+
+  virtual int collation(
+    const optionst &options);
 
   virtual bool process_goto_program(
     const optionst &options,
