@@ -14,6 +14,10 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <goto-programs/goto_functions.h>
 
-void summarization(const contextt &, const goto_functionst &, const optionst &);
+void summarization(
+  const std::string &file_name,
+  const contextt &,
+  const goto_functionst &,
+  const optionst &);
 
 #endif

@@ -2,6 +2,7 @@ include ../config.inc
 CBMC ?= ../..
 
 SRC = main.cpp parseoptions.cpp summarization.cpp collation.cpp \
+      summarize_function_pointers.cpp \
       $(CBMC)/src/cbmc/xml_interface.cpp
 
 OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \

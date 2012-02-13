@@ -207,7 +207,7 @@ int deltacheck_parseoptionst::summarization(const optionst &options)
     if(process_goto_program(options, context, goto_functions))
       return 12;
       
-    ::summarization(context, goto_functions, options);
+    ::summarization(cmdline.args[0], context, goto_functions, options);
   }
 
   catch(const char *e)

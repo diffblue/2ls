@@ -22,4 +22,5 @@ Function: collation
 
 void collation(const std::istream &in, const optionst &options)
 {
+  throw "yet to be implemented";
 }
