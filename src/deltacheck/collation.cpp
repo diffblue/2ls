@@ -7,6 +7,7 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 #include "collation.h"
+#include "cgraph_builder.h"
 
 /*******************************************************************\
 
@@ -20,7 +21,9 @@ Function: collation
 
 \*******************************************************************/
 
-void collation(const std::istream &in, const optionst &options)
+void collation(std::istream &in, const optionst &options)
 {
-  throw "yet to be implemented";
+  cgraph_buildert cg_builder;
+  
+  cg_builder.deserialize_list(in);
 }

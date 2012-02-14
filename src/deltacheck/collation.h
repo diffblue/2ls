@@ -13,6 +13,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <options.h>
 
-void collation(const std::istream &in, const optionst &);
+void collation(std::istream &in, const optionst &);
 
 #endif

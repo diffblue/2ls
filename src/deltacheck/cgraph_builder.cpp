@@ -9,6 +9,7 @@ Author: Ondrej Sery, ondrej.sery@d3s.mff.cuni.cz
 
 #include "cgraph_builder.h"
 
+#include <string>
 #include <iostream>
 #include <std_expr.h>
 
@@ -192,5 +193,59 @@ cgraph_buildert::compute_variable_name(const exprt& expr)
   return "UNIMPLEMENTED";
 }
 
+void
+cgraph_buildert::serialize(const std::string& file_name)
+{
+  std::ofstream out(file_name.c_str());
+  if (!out)
+    throw "Failed to write the partial call graph file: " + file_name;
+  
+  partial_analysis.serialize(out);
+  
+  if (!out)
+  {
+    out.close();
+    throw "Failed to write the partial call graph file: " + file_name;
+  }
+  out.close();
+}
 
+void
+cgraph_buildert::deserialize(const std::string& file_name)
+{
+  std::ifstream in(file_name.c_str());
+  if (!in)
+    throw "Failed to read the partial call graph file: " + file_name;
+  
+  partial_analysis.deserialize(in);
+  
+  if (!in)
+  {
+    in.close();
+    throw "Failed to read the partial call graph file: " + file_name;
+  }
+  in.close();
+}
 
+void
+cgraph_buildert::deserialize_list(std::istream& in)
+{
+  std::string line_str;
+  
+  while (getline(in, line_str))
+  {
+    if (!line_str.empty())
+      deserialize(line_str + ".dc");
+  }
+  
+  if (in.bad())
+  {
+    throw "Failed to read the list of call graph files.";
+  }
+  
+  std::cout << "===== AFTER LOAD =====" << std::endl;
+  partial_analysis.print(std::cout);
+  partial_analysis.find_fixpoint();
+  std::cout << "===== AFTER FIXPOINT =====" << std::endl;
+  partial_analysis.print(std::cout);
+}

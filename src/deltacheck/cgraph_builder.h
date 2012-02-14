@@ -10,6 +10,7 @@ Author: Ondrej Sery, ondrej.sery@d3s.mff.cuni.cz
 #ifndef CPROVER_DELTACHECK_CGRAPH_BUILDER_H
 #define	CPROVER_DELTACHECK_CGRAPH_BUILDER_H
 
+#include <fstream>
 #include <goto-programs/goto_functions.h>
 #include <goto-programs/goto_program.h>
 #include <irep.h>
@@ -31,6 +32,12 @@ public:
           irep_idt current_function,
           const code_function_callt& function_call);
   void analyze_assignment(const code_assignt& assignment);
+  
+  void serialize(const std::string& file_name);
+
+  void deserialize(const std::string& file_name);
+  
+  void deserialize_list(std::istream& in);
   
 private:
 
