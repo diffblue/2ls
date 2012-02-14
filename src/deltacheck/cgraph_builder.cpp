@@ -31,9 +31,14 @@ cgraph_buildert::analyze_module(const goto_functionst& functions)
     }
   }
   
+  std::cout << "===== AFTER COLLECTION =====" << std::endl;
+  partial_analysis.print(std::cout);
   partial_analysis.find_fixpoint();
-  // TODO
-  // partial_analysis.remove_invisible();
+  std::cout << "===== AFTER FIXPOINT =====" << std::endl;
+  partial_analysis.print(std::cout);
+  partial_analysis.remove_invisible();
+  std::cout << "===== AFTER FILTERING =====" << std::endl;
+  partial_analysis.print(std::cout);
 }
 
 void
@@ -110,9 +115,22 @@ cgraph_buildert::analyze_assignment(const code_assignt& assignment)
   // the corresponding "type [x field]"
   std::cout << " - rhs: " << assignment.rhs().to_string() << std::endl;
   
-  irep_idt rhs_var = compute_variable_name(assignment.rhs());
   irep_idt lhs_var = compute_variable_name(assignment.lhs());
+  const exprt& rhs = assignment.rhs();
   
+  // A constant function pointer?
+  if (rhs.id() == ID_address_of && 
+          rhs.type().id() == ID_pointer && 
+          rhs.type().subtype().id() == ID_code) {
+    assert (rhs.operands().size() == 1);
+    assert (rhs.op0().id() == ID_symbol);
+    
+    partial_analysis.add_value(lhs_var,
+            to_symbol_expr(rhs.op0()).get_identifier());
+    return;
+  }
+  
+  irep_idt rhs_var = compute_variable_name(rhs);
   partial_analysis.add_rule(lhs_var, rhs_var);
   
   // TODO: The following is not addressed at all:
@@ -125,6 +143,37 @@ cgraph_buildert::compute_variable_name(const exprt& expr) const
 {
   // TODO: Implement translation of expressions to variables for fixpoint
   // analysis
+  if (expr.id() == ID_symbol) 
+  {
+    const symbol_exprt& symbol = to_symbol_expr(expr);
+    return symbol.get_identifier();
+  } 
+  else if (expr.id() == ID_address_of)
+  {
+    assert(expr.operands().size() == 1);
+    const address_of_exprt& address_of = to_address_of_expr(expr);
+    
+    // Is it a function pointer?
+    if (expr.type().id() == ID_pointer && 
+            expr.type().subtype().id() == ID_code)
+    {
+      const exprt &op = address_of.op0();
+      
+      // A constant function pointer (i.e., an address of a function)?
+      if (op.id() == ID_symbol)
+        return to_symbol_expr(op).get_identifier();
+    }
+  }
+  else if (expr.id() == ID_dereference)
+  {
+    assert(expr.operands().size() == 1);
+    const dereference_exprt& dereference = to_dereference_expr(expr);
+    const exprt &op = dereference.op0();
+    
+    // Dereferencing a symbol?
+    if (op.id() == ID_symbol)
+      return to_symbol_expr(op).get_identifier();
+  }
   return "UNIMPLEMENTED";
 }
 

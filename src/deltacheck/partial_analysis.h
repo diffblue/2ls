@@ -10,6 +10,7 @@ Author: Ondrej Sery, ondrej.sery@d3s.mff.cuni.cz
 #ifndef CPROVER_DELTACHECK_PARTIAL_ANALYSIS_H
 #define	CPROVER_DELTACHECK_PARTIAL_ANALYSIS_H
 
+#include <iostream>
 #include <hash_cont.h>
 
 template <typename variablet, typename valuet, 
@@ -86,9 +87,48 @@ public:
     }
   }
   
-  void remove_invisible(); // TODO
+  void remove_invisible() 
+  {
+    remove_invisible_from_values();
+    remove_invisible_from_rules(rules);
+    remove_invisible_from_rules(inverse_rules);
+  }
   
   const value_mapt& get_value_map() const { return value_map; }
+  
+  void print(std::ostream& out) const
+  {
+    // Values
+    for (typename value_mapt::const_iterator it = value_map.begin();
+            it != value_map.end();
+            ++it)
+    {
+      out << "Values for \"" << it->first << "\" <--" << std::endl;
+      
+      const valuest& values = it->second;
+      for (typename valuest::const_iterator it2 = values.begin();
+            it2 != values.end();
+            ++it2)
+      {
+        out << "    \"" << *it2 << "\"" << std::endl;
+      }
+    }
+    // Rules
+    for (typename rulest::const_iterator it = rules.begin();
+            it != rules.end();
+            ++it)
+    {
+      out << "Rules for \"" << it->first << "\" <--" << std::endl;
+      
+      const variablest& variables = it->second;
+      for (typename variablest::const_iterator it2 = variables.begin();
+            it2 != variables.end();
+            ++it2)
+      {
+        out << "    \"" << *it2 << "\"" << std::endl;
+      }
+    }
+  }
   
 private:
   
@@ -106,6 +146,50 @@ private:
     return count != it->second.size();
   }
   
+  void remove_invisible_from_values()
+  {
+    for (typename value_mapt::const_iterator it = value_map.begin();
+            it != value_map.end();)
+    {
+      if (visible_variables.find(it->first) == visible_variables.end()) 
+        it = value_map.erase(it);
+      else 
+        ++it;
+    }
+  }
+  
+  void remove_invisible_from_rules(rulest& rules)
+  {
+    for (typename rulest::iterator it = rules.begin();
+            it != rules.end();)
+    {
+      if (visible_variables.find(it->first) == visible_variables.end()) 
+      {
+        // Invisible key -> remove the whole entry
+        it = rules.erase(it);
+      }
+      else 
+      {
+        // Visible key -> remove invisible values
+        variablest& variables = it->second;
+        for (typename variablest::const_iterator it2 = variables.begin();
+                it2 != variables.end();) 
+        {
+          if (visible_variables.find(*it2) == visible_variables.end())
+            it2 = variables.erase(it2);
+          else
+            ++it2;
+        }
+        
+        // All values removed -> remove the whole entry anyway
+        if (variables.size() == 0)
+          it = rules.erase(it);
+        else
+          ++it;
+      }
+    }
+  }
+  
   bool update_variable(const variablet& variable) 
   {
     bool changed = false;
@@ -121,11 +205,31 @@ private:
             ++it2)
     {
       if (*it2 != variable) {
-        changed |= add_rule(variable, *it2);
+        if (visible_variables.find(*it2) == visible_variables.end()) {
+          changed |= merge_rules(variable, *it2);
+        }
         changed |= merge_values(variable, *it2);
       }
     }
     
+    return changed;
+  }
+  
+  bool merge_rules(const variablet& dest, const variablet& src)
+  {
+    typename rulest::const_iterator it = rules.find(src);
+    
+    if (it == rules.end())
+      return false;
+    
+    bool changed = false;
+    
+    for (typename variablest::const_iterator it2 = it->second.begin();
+            it2 != it->second.end();
+            ++it2)
+    {
+      changed |= add_rule(dest, *it2);
+    }
     return changed;
   }
   
