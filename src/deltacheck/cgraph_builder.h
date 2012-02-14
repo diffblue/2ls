@@ -34,7 +34,7 @@ public:
   
 private:
 
-  irep_idt compute_variable_name(const exprt& expr) const;
+  irep_idt compute_variable_name(const exprt& expr);
   partial_analysist<irep_idt, irep_idt, irep_id_hash, irep_id_hash> 
           partial_analysis;
 };

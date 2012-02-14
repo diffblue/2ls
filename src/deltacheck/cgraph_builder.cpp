@@ -139,7 +139,7 @@ cgraph_buildert::analyze_assignment(const code_assignt& assignment)
 }
 
 irep_idt
-cgraph_buildert::compute_variable_name(const exprt& expr) const
+cgraph_buildert::compute_variable_name(const exprt& expr)
 {
   // TODO: Implement translation of expressions to variables for fixpoint
   // analysis
@@ -171,8 +171,23 @@ cgraph_buildert::compute_variable_name(const exprt& expr) const
     const exprt &op = dereference.op0();
     
     // Dereferencing a symbol?
-    if (op.id() == ID_symbol)
-      return to_symbol_expr(op).get_identifier();
+    //if (op.id() == ID_symbol)
+    //  return to_symbol_expr(op).get_identifier();
+    return compute_variable_name(op);
+  }
+  else if (expr.id() == ID_member)
+  {
+    const member_exprt& member = to_member_expr(expr);
+    const typet& struct_type = member.struct_op().type();
+    assert(struct_type.id() == ID_symbol);
+    
+    irep_idt res_var(
+            to_symbol_type(struct_type).get_identifier().as_string() + "." +
+            member.get_component_name().c_str());
+    
+    partial_analysis.set_visible(res_var);
+    
+    return res_var;
   }
   return "UNIMPLEMENTED";
 }
