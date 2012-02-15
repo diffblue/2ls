@@ -30,9 +30,9 @@ public:
   cgraph_buildert();
   ~cgraph_buildert();
   
-  void analyze_module(const goto_functionst& functions);
-  void analyze_function(
-          irep_idt current_function,
+  void analyze_module(const contextt& context,
+          const goto_functionst& functions);
+  void analyze_function(irep_idt current_function,
           const goto_functionst::goto_functiont& function);
   
   void add_analysis(modular_code_analysist* analysis)

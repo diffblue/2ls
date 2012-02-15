@@ -10,7 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "summarization.h"
 #include "cgraph_builder.h"
 #include "modular_fptr_analysis.h"
-//#include "summarize_function_pointers.h"
+#include "modular_globals_analysis.h"
 
 /*******************************************************************\
 
@@ -30,16 +30,13 @@ void summarization(
   const goto_functionst &goto_functions,
   const optionst &options)
 {
-  /*
-  function_pointerst function_pointers;
-  
-  summarize_function_pointers(context, goto_functions, function_pointers);
-   */
-  
   cgraph_buildert cg_builder;
+  modular_fptr_analysist fptr_analysis;
+  modular_globals_analysist globals_analysis;
   
-  cg_builder.add_analysis(new modular_fptr_analysist());
+  cg_builder.add_analysis(&fptr_analysis);
+  cg_builder.add_analysis(&globals_analysis);
   
-  cg_builder.analyze_module(goto_functions);
+  cg_builder.analyze_module(context, goto_functions);
   cg_builder.serialize(file_name);
 }

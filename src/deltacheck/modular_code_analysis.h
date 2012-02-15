@@ -1,7 +1,7 @@
 /*******************************************************************\
 
 Module: The ancestor of modular (i.e., per C file) fixpoint analysis 
-of goto-programs. Based on partial_analysist, this class adds visitor-like
+of goto-programs. Based on modular_analysist, this class adds visitor-like
 processing of goto-programs.
 
 The class supports serialization and deserialization to/from a text file.
@@ -31,8 +31,20 @@ public:
   
   // Instruction visitor functions
   void visit(const goto_programt::instructiont& instr);
-  virtual void enter_function(const irep_idt& function_id) {}
-  virtual void exit_function() {};
+  virtual void enter_function(
+          const irep_idt& function_id) 
+  {
+    current_function = function_id;
+  }
+  virtual void exit_function() 
+  {
+    current_function.clear();
+  }
+  
+  void set_context(const contextt& _context)
+  {
+    context = &_context;
+  }
   
   virtual void accept_assume(const code_assumet& instruction) {};
   virtual void accept_assign(const code_assignt& instruction) {};
@@ -47,6 +59,10 @@ public:
   virtual void print(std::ostream& out) const;
   virtual void serialize(std::ostream& out) const;
   virtual void deserialize(std::istream& in);
+  
+protected:
+  irep_idt current_function;
+  const contextt* context;
 };
 
 #endif

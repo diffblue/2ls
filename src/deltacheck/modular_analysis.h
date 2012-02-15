@@ -33,16 +33,12 @@ public:
   bool add_rule(const variablet& subsumes, 
           const variablet& subsumed)
   {
-    all_variables.insert(subsumes);
-    all_variables.insert(subsumed);
     insert_variable(inverse_rules, subsumed, subsumes);
     return insert_variable(rules, subsumes, subsumed);
   }
   
   bool add_value(const variablet& variable, const valuet& value)
   {
-    all_variables.insert(variable);
-    
     typename value_mapt::iterator it = value_map.find(variable);
     
     if (it == value_map.end())
@@ -57,8 +53,6 @@ public:
   
   bool add_values(const variablet& variable, const valuest& values)
   {
-    all_variables.insert(variable);
-    
     typename value_mapt::iterator it = value_map.find(variable);
     
     if (it == value_map.end())
@@ -74,13 +68,22 @@ public:
   void set_visible(const variablet& variable)
   {
     visible_variables.insert(variable);
-    all_variables.insert(variable);
   }
   
   void compute_fixpoint()
   {
-    variablest queue(all_variables);
+    variablest queue;
     
+    // Only variables occurring as rhs of a rule need to be considered
+    for (typename rulest::const_iterator 
+            it = rules.begin();
+            it != rules.end();
+            ++it)
+    {
+      queue.insert(it->first);
+    }
+    
+    // Iterate until saturation
     while (!queue.empty())
     {
       variablet current = *queue.begin();
@@ -236,7 +239,6 @@ protected:
   rulest rules;
   rulest inverse_rules;
   variablest visible_variables;
-  variablest all_variables;
 };
 
 #endif

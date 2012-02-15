@@ -7,10 +7,11 @@ Author: Ondrej Sery, ondrej.sery@d3s.mff.cuni.cz
 
 \*******************************************************************/
 
-#include "cgraph_builder.h"
-
+#include <context.h>
 #include <string>
 #include <iostream>
+
+#include "cgraph_builder.h"
 
 cgraph_buildert::cgraph_buildert()
 {
@@ -18,16 +19,17 @@ cgraph_buildert::cgraph_buildert()
 
 cgraph_buildert::~cgraph_buildert()
 {
-  forall_analyses(it, analyses)
-  {
-    delete *it;
-  }
-  analyses.clear();
 }
 
 void
-cgraph_buildert::analyze_module(const goto_functionst& functions) 
+cgraph_buildert::analyze_module(const contextt& context, 
+        const goto_functionst& functions) 
 {
+  Forall_analyses(it, analyses)
+  {
+    (*it)->set_context(context);
+  }
+  
   forall_goto_functions(it, functions) 
   {
     const goto_functionst::goto_functiont& function = it->second;

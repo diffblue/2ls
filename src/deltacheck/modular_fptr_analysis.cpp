@@ -90,10 +90,10 @@ modular_fptr_analysist::try_compute_value(const exprt& expr, valuet& value)
     
     if (expr.type().id() == ID_pointer && 
             expr.type().subtype().id() == ID_code &&
-            address_of.op0().id() == ID_symbol)
+            address_of.object().id() == ID_symbol)
     {
       // A constant function pointer (i.e., an address of a function)
-      value = to_symbol_expr(address_of.op0()).get_identifier();
+      value = to_symbol_expr(address_of.object()).get_identifier();
       return true;
     }
   }
@@ -120,19 +120,19 @@ modular_fptr_analysist::try_compute_variable(const exprt& expr,
     
     if (expr.type().id() == ID_pointer && 
             expr.type().subtype().id() == ID_code &&
-            address_of.op0().id() == ID_symbol)
+            address_of.object().id() == ID_symbol)
     {
       // A constant function pointer (i.e., an address of a function)
       // This is a constant value not a variable --> fail the attempt
       return false;
     }
-    return try_compute_variable(address_of.op0(), variable);
+    return try_compute_variable(address_of.object(), variable);
   }
   else if (expr.id() == ID_dereference)
   {
     assert(expr.operands().size() == 1);
     const dereference_exprt& dereference = to_dereference_expr(expr);
-    const exprt &op = dereference.op0();
+    const exprt &op = dereference.pointer();
     
     // Dereferencing a symbol?
     //if (op.id() == ID_symbol)
@@ -153,5 +153,5 @@ modular_fptr_analysist::try_compute_variable(const exprt& expr,
     return true;
   }
   variable = "UNIMPLEMENTED";
-  return false;
+  return true;
 }

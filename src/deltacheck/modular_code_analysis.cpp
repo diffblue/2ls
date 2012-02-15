@@ -1,6 +1,6 @@
 /*******************************************************************\
 
-Module: Ancester of modular (i.e., per C file) fixpoint analysis 
+Module: Ancestor of modular (i.e., per C file) fixpoint analysis 
 of goto-programs.
 
 Author: Ondrej Sery, ondrej.sery@d3s.mff.cuni.cz
@@ -9,7 +9,7 @@ Author: Ondrej Sery, ondrej.sery@d3s.mff.cuni.cz
 
 #include "modular_code_analysis.h"
 
-modular_code_analysist::modular_code_analysist()
+modular_code_analysist::modular_code_analysist() : context(NULL)
 {
 }
 
@@ -37,11 +37,12 @@ modular_code_analysist::visit(const goto_programt::instructiont& instr)
       accept_return(to_code_return(instr.code));
       break;
     case SKIP: // fall through
-    case END_FUNCTION:
     case DECL: // fall through
+    case GOTO: // fall through
+    case END_FUNCTION: // fall through
       break;
     default:
-      throw "Unexpected instruction type in modular_analysist::visit()";
+      throw "Unexpected instruction type in modular_code_analysist::visit()";
       break;
   }
 }
