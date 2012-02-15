@@ -9,6 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <fstream>
 #include "summarization.h"
 #include "cgraph_builder.h"
+#include "modular_fptr_analysis.h"
 //#include "summarize_function_pointers.h"
 
 /*******************************************************************\
@@ -37,6 +38,8 @@ void summarization(
   
   cgraph_buildert cg_builder;
   
+  cg_builder.add_analysis(new modular_fptr_analysist());
+  
   cg_builder.analyze_module(goto_functions);
-  cg_builder.serialize(file_name + ".dc");
+  cg_builder.serialize(file_name);
 }

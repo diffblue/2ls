@@ -3,6 +3,10 @@
 Module: Partial fixed-point analysis to be used for function-pointer alias 
 analysis per C file.
 
+The analysis accepts rules (subsumption among variables), values (constants),
+and distinguishes visible and invisible variables. After fixpoint computation
+the invisible variables can be removed.
+
 Author: Ondrej Sery, ondrej.sery@d3s.mff.cuni.cz
 
 \*******************************************************************/
@@ -13,16 +17,18 @@ Author: Ondrej Sery, ondrej.sery@d3s.mff.cuni.cz
 #include <iostream>
 #include <hash_cont.h>
 
-template <typename variablet, typename valuet, 
-        typename variable_hasht, typename value_hasht>
-class partial_analysist {
+template <typename variableT, typename valueT,
+        typename variable_hashT, typename value_hashT>
+class modular_analysist {
 public:
-  typedef typename hash_set_cont<valuet, value_hasht> valuest;
-  typedef typename hash_set_cont<variablet, variable_hasht> variablest;
-  typedef typename hash_map_cont<variablet, valuest, variable_hasht> value_mapt;
-  typedef typename hash_map_cont<variablet, variablest, variable_hasht> rulest;
+  typedef variableT variablet;
+  typedef valueT valuet;
+  typedef typename hash_set_cont<valuet, value_hashT> valuest;
+  typedef typename hash_set_cont<variablet, variable_hashT> variablest;
+  typedef typename hash_map_cont<variablet, valuest, variable_hashT> value_mapt;
+  typedef typename hash_map_cont<variablet, variablest, variable_hashT> rulest;
   
-  partial_analysist() {}
+  modular_analysist() {}
   
   bool add_rule(const variablet& subsumes, 
           const variablet& subsumed)
@@ -71,7 +77,7 @@ public:
     all_variables.insert(variable);
   }
   
-  void find_fixpoint()
+  void compute_fixpoint()
   {
     variablest queue(all_variables);
     
@@ -95,150 +101,6 @@ public:
   }
   
   const value_mapt& get_value_map() const { return value_map; }
-  
-  void print(std::ostream& out) const
-  {
-    // Values
-    for (typename value_mapt::const_iterator it = value_map.begin();
-            it != value_map.end();
-            ++it)
-    {
-      out << "Values for \"" << it->first << "\" <--" << std::endl;
-      
-      const valuest& values = it->second;
-      for (typename valuest::const_iterator it2 = values.begin();
-            it2 != values.end();
-            ++it2)
-      {
-        out << "    \"" << *it2 << "\"" << std::endl;
-      }
-    }
-    // Rules
-    for (typename rulest::const_iterator it = rules.begin();
-            it != rules.end();
-            ++it)
-    {
-      out << "Rules for \"" << it->first << "\" <--" << std::endl;
-      
-      const variablest& variables = it->second;
-      for (typename variablest::const_iterator it2 = variables.begin();
-            it2 != variables.end();
-            ++it2)
-      {
-        out << "    \"" << *it2 << "\"" << std::endl;
-      }
-    }
-  }
-  
-  void serialize(std::ostream& out)
-  {
-    // Values
-    out << value_map.size() << std::endl;
-    for (typename value_mapt::const_iterator it = value_map.begin();
-            it != value_map.end();
-            ++it)
-    {
-      const valuest& values = it->second;
-      
-      out << it->first << std::endl;
-      out << values.size() << std::endl;
-      
-      for (typename valuest::const_iterator it2 = values.begin();
-            it2 != values.end();
-            ++it2)
-      {
-        out << *it2 << std::endl;
-      }
-    }
-    // Rules
-    out << rules.size() << std::endl;
-    for (typename rulest::const_iterator it = rules.begin();
-            it != rules.end();
-            ++it)
-    {
-      const variablest& variables = it->second;
-      out << it->first << std::endl;
-      out << it->second.size() << std::endl;
-      
-      for (typename variablest::const_iterator it2 = variables.begin();
-            it2 != variables.end();
-            ++it2)
-      {
-        out << *it2 << std::endl;
-      }
-    }
-    // Visible variables
-    out << visible_variables.size() << std::endl;
-    for (typename variablest::const_iterator it = visible_variables.begin();
-            it != visible_variables.end();
-            ++it)
-    {
-      out << *it << std::endl;
-    }
-  }
-  
-  void deserialize(std::istream& in)
-  {
-    // Values
-    int values_map_size;
-    in >> values_map_size;
-    if (!in.good()) return;
-    
-    for (int i = 0; i < values_map_size; ++i)
-    {
-      int values_size;
-      std::string var_str;
-      in >> var_str;
-      in >> values_size;
-      variablet var(var_str);
-      if (!in.good()) return;
-      
-      for (int j = 0; j < values_size; ++j)
-      {
-        std::string val_str;
-        in >> val_str;
-        valuet val(val_str);
-        
-        add_value(var, val);
-      }
-    }
-    // Rules
-    int rules_size;
-    in >> rules_size;
-    if (!in.good()) return;
-    
-    for (int i = 0; i < rules_size; ++i)
-    {
-      int vars_size;
-      std::string var_str;
-      in >> var_str;
-      in >> vars_size;
-      variablet var(var_str);
-      if (!in.good()) return;
-      
-      for (int j = 0; j < vars_size; ++j)
-      {
-        std::string var2_str;
-        in >> var2_str;
-        variablet var2(var2_str);
-        
-        add_rule(var, var2);
-      }
-    }
-    // Visible variables
-    int visible_size;
-    in >> visible_size;
-    if (!in.good()) return;
-    
-    for (int i = 0; i < visible_size; ++i)
-    {
-      std::string var_str;
-      in >> var_str;
-      variablet var(var_str);
-      
-      set_visible(var);
-    }
-  }
   
 private:
   
@@ -368,7 +230,8 @@ private:
         queue.insert(*it2);
     }
   }
-  
+
+protected:
   value_mapt value_map;
   rulest rules;
   rulest inverse_rules;
