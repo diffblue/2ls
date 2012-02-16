@@ -2,6 +2,17 @@
 
 Module: Modular (i.e., per C file) analysis of function pointers.
 
+The aliasing data is assigned to the following entities with decreasing 
+priority:
+- symbol (variable, variable.field, function)
+- fields of structures (i.e., shared among structures of the same type)
+- types (i.e., specific type of function pointer)
+- wildcard (matches anything unknown)
+
+FIXME: The following is not addressed at all:
+- function parameters, return value
+- non-scalar assignment: structures, arrays
+
 Author: Ondrej Sery, ondrej.sery@d3s.mff.cuni.cz
 
 \*******************************************************************/
@@ -24,13 +35,25 @@ public:
   {
     return "Function pointer analysis";
   }
-  
+
+protected:
   virtual void accept_assign(const code_assignt& instruction);
   virtual void accept_function_call(const code_function_callt& instruction);
+  virtual void accept_return(const code_returnt& instruction);
   
-  // Analysis relevant functions
-  virtual bool try_compute_value(const exprt& expr, valuet& value);
-  virtual bool try_compute_variable(const exprt& expr, variablet& variable);
+private:
+  irep_idt any_variable;
+  
+  void process_assignment(const variablet& lhs_var, const exprt& rhs);
+  
+  bool try_compute_symbol_variable(const exprt& expr, variablet& variable);
+  bool try_compute_field_access_variable(const exprt& expr, variablet& variable);
+  bool try_compute_type_variable(const exprt& expr, variablet& variable);
+  
+  bool try_compute_constant_value(const exprt& expr, valuet& value);
+  bool try_compute_variable(const exprt& expr, variablet& variable);
+  
+  bool is_symbol_visible(const symbolt& symbol);
 };
 
 #endif

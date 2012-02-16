@@ -45,22 +45,18 @@ public:
   {
     context = &_context;
   }
-  
-  virtual void accept_assume(const code_assumet& instruction) {};
-  virtual void accept_assign(const code_assignt& instruction) {};
-  virtual void accept_assert(const code_assertt& instruction) {};
-  virtual void accept_function_call(const code_function_callt& instruction) {};
-  virtual void accept_return(const code_returnt& instruction) {};
-  
-  // Analysis relevant functions
-  virtual bool try_compute_value(const exprt& expr, valuet& value) = 0;
-  virtual bool try_compute_variable(const exprt& expr, variablet& variable) = 0;
-  
+
   virtual void print(std::ostream& out) const;
   virtual void serialize(std::ostream& out) const;
   virtual void deserialize(std::istream& in);
   
 protected:
+  virtual void accept_assume(const code_assumet& instruction) {};
+  virtual void accept_assign(const code_assignt& instruction) {};
+  virtual void accept_assert(const code_assertt& instruction) {};
+  virtual void accept_function_call(const code_function_callt& instruction) {};
+  virtual void accept_return(const code_returnt& instruction) {};
+
   irep_idt current_function;
   const contextt* context;
 };

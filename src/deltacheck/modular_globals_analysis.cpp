@@ -10,6 +10,7 @@ Author: Ondrej Sery, ondrej.sery@d3s.mff.cuni.cz
 #include <std_expr.h>
 #include <context.h>
 #include <symbol.h>
+#include <ansi-c/type2name.h>
 
 #include "modular_globals_analysis.h"
 
@@ -29,7 +30,7 @@ modular_globals_analysist::get_aliased_globals(const irep_idt& id,
   globals.clear();
   
   const typet& type = context->lookup(id).type;
-  irep_idt type_id = type_to_string(type);
+  irep_idt type_id = type2name(type);
   
   typename value_mapt::const_iterator it =
           value_map.find(type_id);
@@ -97,34 +98,12 @@ modular_globals_analysist::try_compute_variable(
     
     if (symbol.static_lifetime && symbol.lvalue)
     {
-      variable = type_to_string(symbol.type);
+      variable = type2name(symbol.type);
+      set_visible(variable);
       return true;
     }
   }
   return false;
-}
-
-irep_idt
-modular_globals_analysist::type_to_string(const typet& type)
-{
-  if (type.id() == ID_symbol) 
-  {
-    // Symbol type
-    return to_symbol_type(type).get_identifier();
-  }
-  else if (type.id() == ID_signedbv ||
-          type.id() == ID_unsignedbv ||
-          type.id() == ID_fixedbv ||
-          type.id() == ID_floatbv)
-  {
-    // FIXME: Better encoding
-    return type.id().as_string() + "_" + 
-            i2string(to_bitvector_type(type).get_width());
-  }
-  else 
-  {
-    return type.id();
-  }
 }
 
 void

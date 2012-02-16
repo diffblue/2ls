@@ -77,8 +77,9 @@ cgraph_buildert::print_analyses(std::ostream& out) const
 {
   forall_analyses(it, analyses)
   {
-    out << "Analysis: " << (*it)->get_analysis_id() << std::endl;
+    out << " *** Analysis: " << (*it)->get_analysis_id() << std::endl;
     (*it)->print(out);
+    out << std::endl;
   }
 }
 
