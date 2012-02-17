@@ -56,6 +56,9 @@ modular_fptr_analysist::accept_function_call(
     {
       add_rule(function_var, var);
     }
+    
+    // FIXME: Handle also parameters here -> hard to do due to yet unknown
+    // aliasing.
   } 
   else
   {
@@ -110,7 +113,11 @@ bool
 modular_fptr_analysist::try_compute_constant_value(const exprt& expr, 
         valuet& value)
 {
-  if (expr.id() == ID_address_of)
+  if (expr.id() == ID_typecast)
+  {
+    return try_compute_constant_value(expr.op0(), value);
+  }
+  else if (expr.id() == ID_address_of)
   {
     const address_of_exprt& address_of = to_address_of_expr(expr);
     
@@ -206,6 +213,7 @@ modular_fptr_analysist::try_compute_type_variable(const exprt& expr,
   if (type.id() == ID_pointer && type.subtype().id() == ID_code)
   {
     variable = type2name(to_pointer_type(type));
+    set_visible(variable);
     return true;
   }
   return false;
@@ -247,4 +255,20 @@ bool
 modular_fptr_analysist::is_symbol_visible(const symbolt& symbol)
 {
   return symbol.static_lifetime && !symbol.file_local;
+}
+
+bool
+modular_fptr_analysist::get_callees(const irep_idt& id, valuest& functions)
+{
+  functions.clear();
+  
+  typename value_mapt::const_iterator it =
+          value_map.find(id);
+  
+  if (it == value_map.end())
+    return false;
+  
+  functions.insert(it->second.begin(), it->second.end());
+  
+  return functions.size() != 0;
 }

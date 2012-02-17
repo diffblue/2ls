@@ -36,6 +36,9 @@ public:
     return "Function pointer analysis";
   }
 
+  // Queries for the call graph
+  bool get_callees(const irep_idt& function, valuest& functions);
+  
 protected:
   virtual void accept_assign(const code_assignt& instruction);
   virtual void accept_function_call(const code_function_callt& instruction);

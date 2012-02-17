@@ -29,7 +29,7 @@ public:
   }
   
   // Queries for the aliases of globals, context has to be set when calling
-  bool get_aliased_globals(const irep_idt&, valuest& globals);
+  bool get_aliased_globals(const irep_idt& id, valuest& globals);
 
 protected:
   virtual void accept_assign(const code_assignt& instruction);
