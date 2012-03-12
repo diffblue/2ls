@@ -262,7 +262,7 @@ modular_fptr_analysist::get_callees(const irep_idt& id, valuest& functions)
 {
   functions.clear();
   
-  typename value_mapt::const_iterator it =
+  value_mapt::const_iterator it =
           value_map.find(id);
   
   if (it == value_map.end())

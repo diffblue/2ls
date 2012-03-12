@@ -51,14 +51,14 @@ void
 modular_code_analysist::print(std::ostream& out) const 
 {
   // Values
-  for (typename value_mapt::const_iterator it = value_map.begin();
+  for (value_mapt::const_iterator it = value_map.begin();
           it != value_map.end();
           ++it)
   {
     out << "Values for \"" << it->first << "\" <--" << std::endl;
 
     const valuest& values = it->second;
-    for (typename valuest::const_iterator it2 = values.begin();
+    for (valuest::const_iterator it2 = values.begin();
             it2 != values.end();
             ++it2)
     {
@@ -66,14 +66,14 @@ modular_code_analysist::print(std::ostream& out) const
     }
   }
   // Rules
-  for (typename rulest::const_iterator it = rules.begin();
+  for (rulest::const_iterator it = rules.begin();
           it != rules.end();
           ++it)
   {
     out << "Rules for \"" << it->first << "\" <--" << std::endl;
 
     const variablest& variables = it->second;
-    for (typename variablest::const_iterator it2 = variables.begin();
+    for (variablest::const_iterator it2 = variables.begin();
             it2 != variables.end();
             ++it2)
     {
@@ -87,7 +87,7 @@ modular_code_analysist::serialize(std::ostream& out) const
 {
   // Values
   out << value_map.size() << std::endl;
-  for (typename value_mapt::const_iterator it = value_map.begin();
+  for (value_mapt::const_iterator it = value_map.begin();
           it != value_map.end();
           ++it) 
   {
@@ -96,7 +96,7 @@ modular_code_analysist::serialize(std::ostream& out) const
     out << it->first << std::endl;
     out << values.size() << std::endl;
 
-    for (typename valuest::const_iterator it2 = values.begin();
+    for (valuest::const_iterator it2 = values.begin();
             it2 != values.end();
             ++it2) 
     {
@@ -105,7 +105,7 @@ modular_code_analysist::serialize(std::ostream& out) const
   }
   // Rules
   out << rules.size() << std::endl;
-  for (typename rulest::const_iterator it = rules.begin();
+  for (rulest::const_iterator it = rules.begin();
           it != rules.end();
           ++it) 
   {
@@ -113,7 +113,7 @@ modular_code_analysist::serialize(std::ostream& out) const
     out << it->first << std::endl;
     out << it->second.size() << std::endl;
 
-    for (typename variablest::const_iterator it2 = variables.begin();
+    for (variablest::const_iterator it2 = variables.begin();
             it2 != variables.end();
             ++it2) 
     {
@@ -122,7 +122,7 @@ modular_code_analysist::serialize(std::ostream& out) const
   }
   // Visible variables
   out << visible_variables.size() << std::endl;
-  for (typename variablest::const_iterator it = visible_variables.begin();
+  for (variablest::const_iterator it = visible_variables.begin();
           it != visible_variables.end();
           ++it) 
   {

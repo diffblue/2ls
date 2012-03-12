@@ -32,7 +32,7 @@ modular_globals_analysist::get_aliased_globals(const irep_idt& id,
   const typet& type = context->lookup(id).type;
   irep_idt type_id = type2name(type);
   
-  typename value_mapt::const_iterator it =
+  value_mapt::const_iterator it =
           value_map.find(type_id);
   
   if (it == value_map.end())
