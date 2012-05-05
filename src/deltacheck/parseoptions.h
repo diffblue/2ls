@@ -33,24 +33,27 @@ public:
   virtual int doit();
   virtual void help();
 
-  deltacheck_parseoptionst(int argc, const char **argv);
+  deltacheck_parseoptionst(
+    int argc, const char **argv);
 
 protected:
   virtual void register_languages();
 
   virtual void get_command_line_options(optionst &options);
 
-  virtual int summarization(
-    const optionst &options);
-
-  virtual int collation(
-    const optionst &options);
-
   virtual bool process_goto_program(
     const optionst &options,
     contextt &context,
     goto_functionst &goto_functions);
     
+  // PHASE 1
+  virtual int summarization(
+    const optionst &options);
+
+  // PHASE 2
+  virtual int collation(
+    const optionst &options);
+
   void set_verbosity(messaget &message);
   
   ui_message_handlert ui_message_handler;

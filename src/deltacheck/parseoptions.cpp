@@ -43,7 +43,8 @@ Function: deltacheck_parseoptionst::deltacheck_parseoptionst
 
 \*******************************************************************/
 
-deltacheck_parseoptionst::deltacheck_parseoptionst(int argc, const char **argv):
+deltacheck_parseoptionst::deltacheck_parseoptionst(
+  int argc, const char **argv):
   parseoptions_baset(DELTACHECK_OPTIONS, argc, argv),
   xml_interfacet(cmdline),
   ui_message_handler(
