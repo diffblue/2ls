@@ -14,10 +14,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <config.h>
 #include <context.h>
 
-#include <goto-programs/goto_inline.h>
-#include <goto-programs/read_goto_binary.h>
-#include <goto-programs/link_to_library.h>
-
 #include <langapi/mode.h>
 
 #include <ansi-c/ansi_c_language.h>
@@ -160,13 +156,13 @@ int deltacheck_parseoptionst::doit()
   //
   // The phases are distinguished by the type of input file.
   
-  if(cmdline.args.size()!=1)
+  if(cmdline.args.size()==0)
   {
     usage_error();
     return 10;
   }
-
-  if(is_goto_binary(cmdline.args[0]))
+  
+  if(cmdline.isset("summarize"))
     return summarization(options);
   else
     return collation(options);
@@ -186,29 +182,17 @@ Function: deltacheck_parseoptionst::summarization
 
 int deltacheck_parseoptionst::summarization(const optionst &options)
 {
-  // get the goto program
-  contextt context;
-  goto_functionst goto_functions;
-  
   try
   {
-    status("PHASE 1: Summarizing goto binary");
-
-    if(read_goto_binary(cmdline.args[0],
-         context, goto_functions, get_message_handler()))
-      return 11;
-        
-    config.ansi_c.set_from_context(context);
-
-    // finally add the library
-    status("Adding CPROVER library");      
-    link_to_library(
-      context, goto_functions, options, ui_message_handler);
-
-    if(process_goto_program(options, context, goto_functions))
-      return 12;
+    for(cmdlinet::argst::const_iterator
+        args_it=cmdline.args.begin();
+        args_it!=cmdline.args.end();
+        args_it++)
+    {
+      status("PHASE 1: Summarizing "+*args_it);
       
-    ::summarization(cmdline.args[0], context, goto_functions, options);
+      ::summarization(cmdline.args[0], options, get_message_handler());
+    }
   }
 
   catch(const char *e)
@@ -290,71 +274,6 @@ int deltacheck_parseoptionst::collation(const optionst &options)
   }
   
   return 0;
-}
-
-/*******************************************************************\
-
-Function: deltacheck_parseoptionst::process_goto_program
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-  
-bool deltacheck_parseoptionst::process_goto_program(
-  const optionst &options,
-  contextt &context,
-  goto_functionst &goto_functions)
-{
-  try
-  {
-    namespacet ns(context);
-
-    status("Partial Inlining");
-    // do partial inlining
-    goto_partial_inline(goto_functions, ns, ui_message_handler);
-    
-    // recalculate numbers, etc.
-    goto_functions.update();
-
-    // add loop ids
-    goto_functions.compute_loop_numbers();
-
-    // show it?
-    if(cmdline.isset("show-goto-functions"))
-    {
-      goto_functions.output(ns, std::cout);
-      return true;
-    }
-  }
-
-  catch(const char *e)
-  {
-    error(e);
-    return true;
-  }
-
-  catch(const std::string e)
-  {
-    error(e);
-    return true;
-  }
-  
-  catch(int)
-  {
-    return true;
-  }
-  
-  catch(std::bad_alloc)
-  {
-    error("Out of memory");
-    return true;
-  }
-  
-  return false;
 }
 
 /*******************************************************************\

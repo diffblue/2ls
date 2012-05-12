@@ -11,13 +11,11 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <options.h>
 #include <context.h>
-
-#include <goto-programs/goto_functions.h>
+#include <message.h>
 
 void summarization(
   const std::string &file_name,
-  const contextt &,
-  const goto_functionst &,
-  const optionst &);
+  const optionst &,
+  message_handlert &);
 
 #endif

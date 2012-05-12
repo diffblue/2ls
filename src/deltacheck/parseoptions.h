@@ -22,7 +22,7 @@ Author: Daniel Kroening, kroening@kroening.com
   "(debug-level):" \
   "(xml-ui)(xml-interface)" \
   "(show-goto-functions)" \
-  "(verbosity):(version)"
+  "(verbosity):(version)(summarize)"
 
 class deltacheck_parseoptionst:
   public parseoptions_baset,
@@ -41,11 +41,6 @@ protected:
 
   virtual void get_command_line_options(optionst &options);
 
-  virtual bool process_goto_program(
-    const optionst &options,
-    contextt &context,
-    goto_functionst &goto_functions);
-    
   // PHASE 1
   virtual int summarization(
     const optionst &options);
