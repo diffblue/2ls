@@ -9,15 +9,117 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <fstream>
 
 #include <config.h>
+#include <xml.h>
 
 #include <goto-programs/goto_inline.h>
 #include <goto-programs/read_goto_binary.h>
 #include <goto-programs/link_to_library.h>
 
+#include "xml_conversion.h"
 #include "summarization.h"
-#include "cgraph_builder.h"
-#include "modular_fptr_analysis.h"
-#include "modular_globals_analysis.h"
+//#include "cgraph_builder.h"
+//#include "modular_fptr_analysis.h"
+//#include "modular_globals_analysis.h"
+
+/*******************************************************************\
+
+Function: summarize_function
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void summarize_function(
+  const namespacet &ns, 
+  const goto_functionst &goto_functions,
+  const symbolt &symbol,
+  const goto_functionst::goto_functiont &goto_function,
+  std::ostream &out)
+{
+  out << "<function id=\"";
+  xmlt::escape_attribute(id2string(symbol.name), out);
+  out << "\">" << std::endl;
+  
+  if(symbol.location.is_not_nil() && symbol.location.get_file()!="")
+    out << xml(symbol.location);
+}
+
+/*******************************************************************\
+
+Function: dump_exported_functions
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void dump_exported_functions(
+  const namespacet &ns, 
+  const goto_functionst &goto_functions,
+  std::ostream &out)
+{
+  out << "<functions>" << std::endl;
+
+  // do this for each function
+  forall_goto_functions(f_it, goto_functions)
+  {
+    if(!f_it->second.body_available)
+      continue;
+
+    const symbolt &symbol=ns.lookup(f_it->first);
+    
+    if(symbol.file_local)
+      continue;
+  
+    summarize_function(ns, goto_functions, symbol, f_it->second, out);
+        
+    out << "</function>" << std::endl;
+  }
+  
+  out << "</functions>" << std::endl;
+}
+
+/*******************************************************************\
+
+Function: dump_state_variables
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void dump_state_variables(
+  const contextt &context,
+  std::ostream &out)
+{
+  out << "<state_variables>" << std::endl;
+
+  forall_symbols(s_it, context.symbols)
+  {
+    const symbolt &symbol=s_it->second;
+  
+    out << "<state_variable id=\"";
+    xmlt::escape_attribute(id2string(symbol.name), out);
+    out << "\">" << std::endl;
+  
+    if(symbol.location.is_not_nil() && symbol.location.get_file()!="")
+      out << xml(symbol.location);
+
+    out << "</state_variable>" << std::endl;
+  }
+  
+  out << "</state_variables>" << std::endl;
+}
 
 /*******************************************************************\
 
@@ -34,8 +136,18 @@ Function: summarization
 void summarization(
   const contextt &context,
   const goto_functionst &goto_functions,
-  const optionst &options)
+  const optionst &options,
+  std::ostream &out)
 {
+  // first collect non-static function symbols that
+  // have a body
+  
+  namespacet ns(context);
+  
+  dump_exported_functions(ns, goto_functions, out);
+  
+  dump_state_variables(context, out);
+  
   #if 0
   cgraph_buildert cg_builder;
   modular_fptr_analysist fptr_analysis;
@@ -47,11 +159,6 @@ void summarization(
   cg_builder.analyze_module(context, goto_functions);
   cg_builder.serialize(file_name);
   #endif
-
-  // do this for each function
-  forall_goto_functions(f_it, goto_functions)
-  {
-  }  
 }
 
 /*******************************************************************\
@@ -104,6 +211,10 @@ void summarization(
   if(!summary_file)
     throw std::string("failed to write summary file");
 
-  ::summarization(context, goto_functions, options);
+  summary_file << "<summaries>" << std::endl;
+
+  ::summarization(context, goto_functions, options, summary_file);
+
+  summary_file << "</summaries>" << std::endl;
 }
 

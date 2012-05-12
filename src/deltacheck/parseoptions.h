@@ -20,8 +20,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #define DELTACHECK_OPTIONS \
   "(function):" \
   "(debug-level):" \
-  "(xml-ui)(xml-interface)" \
-  "(show-goto-functions)" \
+  "(xml-ui)(xml-interface)(claim):" \
+  "(show-goto-functions)(show-claims)" \
   "(verbosity):(version)(summarize)"
 
 class deltacheck_parseoptionst:
