@@ -17,6 +17,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "xml_conversion.h"
 #include "summarization.h"
+#include "transformer.h"
+
 //#include "cgraph_builder.h"
 //#include "modular_fptr_analysis.h"
 //#include "modular_globals_analysis.h"
@@ -46,6 +48,11 @@ void summarize_function(
   
   if(symbol.location.is_not_nil() && symbol.location.get_file()!="")
     out << xml(symbol.location);
+
+  transformer(ns, goto_functions, symbol, goto_function, out);
+
+  out << "</function>" << std::endl;
+  out << std::endl;
 }
 
 /*******************************************************************\

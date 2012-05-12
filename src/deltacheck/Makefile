@@ -7,6 +7,7 @@ SRC = main.cpp parseoptions.cpp summarization.cpp collation.cpp \
       modular_fptr_analysis.cpp \
       modular_globals_analysis.cpp \
       xml_conversion.cpp \
+      transformer.cpp \
       $(CBMC)/src/cbmc/xml_interface.cpp
 
 OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
