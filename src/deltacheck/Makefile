@@ -20,7 +20,8 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       $(CBMC)/src/solvers/solvers$(LIBEXT) \
       $(CBMC)/src/util/util$(LIBEXT)
 
-INCLUDES= -I $(CBMC)/src -I $(CBMC)/src/util
+INCLUDES= -I $(CBMC)/src -I $(CBMC)/src/util \
+  -I $(CUDD)/cudd -I $(CUDD)/obj -I $(CUDD)/mtr -I $(CUDD)/epd
 
 LIBS =
 

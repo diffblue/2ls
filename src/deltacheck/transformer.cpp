@@ -6,6 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <cuddObj.hh>
+
 #include <numbering.h>
 
 #include "transformer.h"
