@@ -23,7 +23,8 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
 INCLUDES= -I $(CBMC)/src -I $(CBMC)/src/util \
   -I $(CUDD)/cudd -I $(CUDD)/obj -I $(CUDD)/mtr -I $(CUDD)/epd
 
-LIBS = -L $(CUDD)/cudd -lcudd
+LIBS = $(CUDD)/cudd/libcudd.a $(CUDD)/obj/libobj.a $(CUDD)/mtr/libmtr.a \
+       $(CUDD)/st/libst.a $(CUDD)/epd/libepd.a $(CUDD)/util/libutil.a
 
 CLEANFILES = deltacheck$(EXEEXT)
 
