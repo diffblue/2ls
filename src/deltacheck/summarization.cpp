@@ -49,7 +49,7 @@ void summarize_function(
   if(symbol.location.is_not_nil() && symbol.location.get_file()!="")
     out << xml(symbol.location);
 
-  transformer(ns, goto_functions, symbol, goto_function, out);
+  transformer(ns, goto_functions, symbol.name, out);
 
   out << "</function>" << std::endl;
   out << std::endl;

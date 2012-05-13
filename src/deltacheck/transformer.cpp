@@ -30,20 +30,25 @@ public:
     const namespacet &_ns,
     const goto_functionst &_goto_functions):
     ns(_ns),
-    goto_functions(_goto_functions)
+    goto_functions(_goto_functions),
+    mgr(0, 0)
   {
   }
+  
+  void operator() (const irep_idt &irep_id);
   
   void output(std::ostream &out) const;
   
 protected:
   const namespacet &ns;
   const goto_functionst &goto_functions;
+  
+  Cudd mgr;
 };
 
 /*******************************************************************\
 
-Function: transformer
+Function: transformert::operator()
 
   Inputs:
 
@@ -53,14 +58,9 @@ Function: transformer
 
 \*******************************************************************/
 
-#if 0
-void transformer(
-  const namespacet &ns, 
-  const goto_functionst &goto_functions,
-  const symbolt &symbol,
-  const goto_functionst::goto_functiont &goto_function,
-  std::ostream &out)
+void transformert::operator()(const irep_idt &function_identifier)
 {
+  #if 0
   find_symbols_sett symbols;
   collect_symbols(goto_function, symbols);
 
@@ -72,8 +72,24 @@ void transformer(
 
   forall_goto_instructions(i_it, goto_function.goto_program)
     state_map[i_it];
+  #endif
 }
-#endif
+
+/*******************************************************************\
+
+Function: transformert::output
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void transformert::output(std::ostream &out) const
+{
+}
 
 /*******************************************************************\
 
@@ -90,11 +106,12 @@ Function: transformer
 void transformer(
   const namespacet &ns, 
   const goto_functionst &goto_functions,
-  const symbolt &symbol,
-  const goto_functionst::goto_functiont &goto_function,
+  const irep_idt &function_identifier,
   std::ostream &out)
 {
-//  transformert transformer(ns, goto_functions, out);
+  transformert transformer(ns, goto_functions);
   
-//  transformer(symbol, goto_function);
+  transformer(function_identifier);
+  
+  transformer.output(out);
 }

@@ -23,7 +23,7 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
 INCLUDES= -I $(CBMC)/src -I $(CBMC)/src/util \
   -I $(CUDD)/cudd -I $(CUDD)/obj -I $(CUDD)/mtr -I $(CUDD)/epd
 
-LIBS =
+LIBS = -L $(CUDD)/cudd -lcudd
 
 CLEANFILES = deltacheck$(EXEEXT)
 

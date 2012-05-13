@@ -15,6 +15,5 @@ Author: Daniel Kroening, kroening@kroening.com
 void transformer(
   const namespacet &ns, 
   const goto_functionst &goto_functions,
-  const symbolt &symbol,
-  const goto_functionst::goto_functiont &goto_function,
+  const irep_idt &function_identifier,
   std::ostream &out);
