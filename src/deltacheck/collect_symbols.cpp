@@ -14,8 +14,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/goto_functions.h>
 
 void collect_symbols(
-  const goto_functiont &,
-  find_symbols_sett &)
+  const goto_functionst::goto_functiont &goto_function,
+  find_symbols_sett &dest)
 {
 
 }
