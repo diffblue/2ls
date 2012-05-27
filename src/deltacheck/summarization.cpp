@@ -10,6 +10,10 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <config.h>
 #include <xml.h>
+#include <message.h>
+#include <prefix.h>
+#include <cprover_prefix.h>
+#include <std_expr.h>
 
 #include <goto-programs/goto_inline.h>
 #include <goto-programs/read_goto_binary.h>
@@ -17,11 +21,88 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "xml_conversion.h"
 #include "summarization.h"
+#include "dependencies.h"
 #include "transformer.h"
 
 //#include "cgraph_builder.h"
 //#include "modular_fptr_analysis.h"
 //#include "modular_globals_analysis.h"
+
+/*******************************************************************\
+
+Function: summarize_function_calls
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void summarize_function_calls_rec(
+  const namespacet &ns,
+  const goto_functionst &goto_functions,
+  const exprt &function,
+  std::set<irep_idt> &called_functions)
+{
+  if(function.id()==ID_symbol)
+  {
+    irep_idt id=to_symbol_expr(function).get_identifier();
+    const symbolt &symbol=ns.lookup(id);
+    if(!symbol.file_local)
+      called_functions.insert(id);
+  }
+  else if(function.id()==ID_dereference)
+  {
+  }
+  else if(function.id()==ID_if)
+  {
+  }
+}
+  
+/*******************************************************************\
+
+Function: summarize_function_calls
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void summarize_function_calls(
+  const namespacet &ns, 
+  const goto_functionst &goto_functions,
+  const goto_functionst::goto_functiont &goto_function,
+  std::ostream &out)
+{
+  std::set<irep_idt> called_functions;
+  
+  forall_goto_program_instructions(it, goto_function.body)
+  {
+    if(it->is_function_call())
+    {
+      const exprt &function=to_code_function_call(it->code).function();
+      
+      summarize_function_calls_rec(
+        ns, goto_functions, function, called_functions);
+    }
+  }
+  
+  for(std::set<irep_idt>::const_iterator
+      it=called_functions.begin();
+      it!=called_functions.end();
+      it++)
+  {
+    out << "  ";
+    out << "<called id=\"";
+    xmlt::escape_attribute(id2string(*it), out);
+    out << "\"/>" << std::endl;
+  }
+}
 
 /*******************************************************************\
 
@@ -46,10 +127,13 @@ void summarize_function(
   xmlt::escape_attribute(id2string(symbol.name), out);
   out << "\">" << std::endl;
   
-  if(symbol.location.is_not_nil() && symbol.location.get_file()!="")
-    out << xml(symbol.location);
+  if(symbol.location.is_not_nil() &&
+     symbol.location.get_file()!="")
+    out << "  " << xml(symbol.location);
 
-  transformer(ns, goto_functions, symbol.name, out);
+  summarize_function_calls(ns, goto_functions, goto_function, out);
+  
+  transformer(ns, goto_functions, goto_function, out);
 
   out << "</function>" << std::endl;
   out << std::endl;
@@ -80,17 +164,19 @@ void dump_exported_functions(
     if(!f_it->second.body_available)
       continue;
 
+    if(has_prefix(id2string(f_it->first), CPROVER_PREFIX))
+      continue;
+  
     const symbolt &symbol=ns.lookup(f_it->first);
     
     if(symbol.file_local)
       continue;
   
     summarize_function(ns, goto_functions, symbol, f_it->second, out);
-        
-    out << "</function>" << std::endl;
   }
   
   out << "</functions>" << std::endl;
+  out << std::endl;
 }
 
 /*******************************************************************\
@@ -114,6 +200,16 @@ void dump_state_variables(
   forall_symbols(s_it, context.symbols)
   {
     const symbolt &symbol=s_it->second;
+    
+    if(has_prefix(id2string(symbol.name), CPROVER_PREFIX))
+      continue;
+      
+    if(symbol.type.id()==ID_code ||
+       symbol.is_type)
+      continue;
+      
+    if(symbol.file_local)
+      continue;
   
     out << "<state_variable id=\"";
     xmlt::escape_attribute(id2string(symbol.name), out);
@@ -126,6 +222,7 @@ void dump_state_variables(
   }
   
   out << "</state_variables>" << std::endl;
+  out << std::endl;
 }
 
 /*******************************************************************\
@@ -141,6 +238,7 @@ Function: summarization
 \*******************************************************************/
 
 void summarization(
+  const function_file_mapt &function_file_map,
   const contextt &context,
   const goto_functionst &goto_functions,
   const optionst &options,
@@ -181,10 +279,16 @@ Function: summarization
 \*******************************************************************/
 
 void summarization(
+  const function_file_mapt &function_file_map,
   const std::string &file_name,
   const optionst &options,
   message_handlert &message_handler)
 {
+  // first check dependencies
+  if(!options.get_bool_option("force") &&
+     dependencies(function_file_map, file_name, message_handler)==FRESH)
+    return;
+
   // get the goto program
   contextt context;
   goto_functionst goto_functions;
@@ -220,8 +324,16 @@ void summarization(
 
   summary_file << "<summaries>" << std::endl;
 
-  ::summarization(context, goto_functions, options, summary_file);
-
+  ::summarization(
+    function_file_map,
+    context,
+    goto_functions,
+    options,
+    summary_file);
+  
   summary_file << "</summaries>" << std::endl;
+
+  messaget message(message_handler); 
+  message.status("Summary written as "+summary_file_name);
 }
 

@@ -1,24 +1,23 @@
 /*******************************************************************\
 
-Module: Summarization
+Module: Dependency Checking
 
 Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef CPROVER_DELTACHECK_SUMMARIZATION_H
-#define CPROVER_DELTACHECK_SUMMARIZATION_H
+#ifndef CPROVER_DELTACHECK_DEPENDENCIES_H
+#define CPROVER_DELTACHECK_DEPENDENCIES_H
 
 #include <options.h>
-#include <context.h>
-#include <message.h>
 
 #include "function_file_map.h"
 
-void summarization(
+typedef enum { STALE, FRESH } dependency_statet;
+
+dependency_statet dependencies(
   const function_file_mapt &function_file_map,
   const std::string &file_name,
-  const optionst &,
-  message_handlert &);
+  class message_handlert &message_handler);
 
 #endif

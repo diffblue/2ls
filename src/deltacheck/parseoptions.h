@@ -20,6 +20,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #define DELTACHECK_OPTIONS \
   "(function):" \
   "(debug-level):" \
+  "(call-graph-dot):" \
   "(xml-ui)(xml-interface)(claim):" \
   "(show-goto-functions)(show-claims)" \
   "(verbosity):(version)(summarize)"
@@ -46,7 +47,7 @@ protected:
     const optionst &options);
 
   // PHASE 2
-  virtual int collation(
+  virtual int reporting(
     const optionst &options);
 
   void set_verbosity(messaget &message);

@@ -6,13 +6,18 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef CPROVER_DELTACHECK_COLLATION_H
-#define CPROVER_DELTACHECK_COLLATION_H
+#ifndef CPROVER_DELTACHECK_REPORTING_H
+#define CPROVER_DELTACHECK_REPORTING_H
 
-#include <iostream>
+#include <vector>
+#include <string>
 
 #include <options.h>
+#include <message.h>
 
-void collation(std::istream &in, const optionst &);
+void reporting(
+  const std::vector<std::string> &files,
+  const optionst &,
+  message_handlert &);
 
 #endif

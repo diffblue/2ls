@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <memory>
 #include <iostream>
 
+#include <i2string.h>
 #include <config.h>
 #include <context.h>
 
@@ -25,7 +26,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "parseoptions.h"
 #include "version.h"
 #include "summarization.h"
-#include "collation.h"
+#include "reporting.h"
 
 /*******************************************************************\
 
@@ -149,23 +150,25 @@ int deltacheck_parseoptionst::doit()
   optionst options;
   get_command_line_options(options);
   set_verbosity(*this);
+  set_message_handler(ui_message_handler);
 
-  // We have two phases:
-  // 1) summarization: given _one_ goto-binary, produce summary
-  // 2) collation: put all summaries together
-  //
-  // The phases are distinguished by the type of input file.
-  
   if(cmdline.args.size()==0)
   {
     usage_error();
     return 10;
   }
   
+  if(cmdline.isset("call-graph-dot"))
+    options.set_option("call-graph-dot", cmdline.getval("call-graph-dot"));
+  
+  // We have two phases:
+  // 1) summarization: given _one_ goto-binary, produce summary
+  // 2) reporting: sift information from summaries
+  
   if(cmdline.isset("summarize"))
     return summarization(options);
   else
-    return collation(options);
+    return reporting(options);
 }
 
 /*******************************************************************\
@@ -184,6 +187,14 @@ int deltacheck_parseoptionst::summarization(const optionst &options)
 {
   try
   {
+    status("Building function->file map");
+    function_file_mapt function_file_map;
+
+    build_function_file_map(
+      cmdline.args,
+      get_message_handler(),
+      function_file_map);
+  
     for(cmdlinet::argst::const_iterator
         args_it=cmdline.args.begin();
         args_it!=cmdline.args.end();
@@ -191,7 +202,11 @@ int deltacheck_parseoptionst::summarization(const optionst &options)
     {
       status("PHASE 1: Summarizing "+*args_it);
       
-      ::summarization(cmdline.args[0], options, get_message_handler());
+      ::summarization(
+        function_file_map,
+        *args_it,
+        options,
+        get_message_handler());
     }
   }
 
@@ -223,7 +238,7 @@ int deltacheck_parseoptionst::summarization(const optionst &options)
 
 /*******************************************************************\
 
-Function: deltacheck_parseoptionst::collation
+Function: deltacheck_parseoptionst::reporting
 
   Inputs:
 
@@ -233,21 +248,14 @@ Function: deltacheck_parseoptionst::collation
 
 \*******************************************************************/
 
-int deltacheck_parseoptionst::collation(const optionst &options)
+int deltacheck_parseoptionst::reporting(const optionst &options)
 {
   try
   {
-    status("PHASE 2: Reading the list of files to collate");
+    status("PHASE 2: reporting ("+
+           i2string(cmdline.args.size())+" files)");
 
-    std::ifstream in(cmdline.args[0].c_str());
-
-    if(!in)
-    {
-      error("failed to open file");
-      return 12;
-    }
-    
-    ::collation(in, options);
+    ::reporting(cmdline.args, options, get_message_handler());
   }
 
   catch(const char *e)
@@ -300,12 +308,12 @@ void deltacheck_parseoptionst::help()
     "Usage:                       Purpose:\n"
     "\n"
     " deltacheck [-?] [-h] [--help]   show help\n"
-    " deltacheck file-list         collate information from given summaries (phase II)\n"
+    " deltacheck files ...         report results (phase II)\n"
     "\n"
     "Phase I (summarization) options:\n"
-    " --summarize files            summarize given goto-binaries\n"
+    " --summarize files ...        summarize given goto-binaries\n"
     "\n"
-    "Phase II (collation) options:\n"
+    "Phase II (reporting) options:\n"
     " --show-claims                show properties\n"
     " --claim id                   only check given claim\n"
     "\n"    

@@ -35,7 +35,7 @@ public:
   {
   }
   
-  void operator() (const irep_idt &irep_id);
+  void operator() (const goto_functionst::goto_functiont &);
   
   void output(std::ostream &out) const;
   
@@ -58,7 +58,7 @@ Function: transformert::operator()
 
 \*******************************************************************/
 
-void transformert::operator()(const irep_idt &function_identifier)
+void transformert::operator()(const goto_functionst::goto_functiont &goto_function)
 {
   #if 0
   find_symbols_sett symbols;
@@ -106,12 +106,12 @@ Function: transformer
 void transformer(
   const namespacet &ns, 
   const goto_functionst &goto_functions,
-  const irep_idt &function_identifier,
+  const goto_functionst::goto_functiont &goto_function,
   std::ostream &out)
 {
   transformert transformer(ns, goto_functions);
   
-  transformer(function_identifier);
+  transformer(goto_function);
   
   transformer.output(out);
 }
