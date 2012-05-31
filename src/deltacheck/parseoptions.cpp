@@ -152,7 +152,7 @@ int deltacheck_parseoptionst::doit()
   set_verbosity(*this);
   set_message_handler(ui_message_handler);
 
-  if(cmdline.args.size()==0)
+  if(cmdline.args.size()!=1)
   {
     usage_error();
     return 10;
@@ -165,10 +165,39 @@ int deltacheck_parseoptionst::doit()
   // 1) summarization: given _one_ goto-binary, produce summary
   // 2) reporting: sift information from summaries
   
-  if(cmdline.isset("summarize"))
-    return summarization(options);
-  else
-    return reporting(options);
+  // we first read the list of files
+  {
+    std::list<std::string> files;
+
+    std::ifstream in(cmdline.args[0].c_str());
+    
+    if(!in)
+    {
+      error("failed to open list-of-files "+cmdline.args[0]);
+      return 10;
+    }
+    
+    std::string line;
+    while(getline(in, line))
+    {
+      if(line!="" && line[0]!='#')
+      {
+        std::string file=line;
+        if(!std::ifstream(file.c_str()))
+        {
+          error("failed to open goto-binary "+file);
+          return 10;
+        }
+        
+        files.push_back(line);
+      }
+    }
+  
+    if(cmdline.isset("summarize"))
+      return summarization(options, files);
+    else
+      return reporting(options, files);
+  }
 }
 
 /*******************************************************************\
@@ -183,7 +212,9 @@ Function: deltacheck_parseoptionst::summarization
 
 \*******************************************************************/
 
-int deltacheck_parseoptionst::summarization(const optionst &options)
+int deltacheck_parseoptionst::summarization(
+  const optionst &options,
+  const std::list<std::string> &files)
 {
   try
   {
@@ -191,20 +222,20 @@ int deltacheck_parseoptionst::summarization(const optionst &options)
     function_file_mapt function_file_map;
 
     build_function_file_map(
-      cmdline.args,
+      files,
       get_message_handler(),
       function_file_map);
-  
-    for(cmdlinet::argst::const_iterator
-        args_it=cmdline.args.begin();
-        args_it!=cmdline.args.end();
-        args_it++)
+
+    for(std::list<std::string>::const_iterator
+        files_it=files.begin();
+        files_it!=files.end();
+        files_it++)
     {
-      status("PHASE 1: Summarizing "+*args_it);
+      status("PHASE 1: Summarizing "+*files_it);
       
       ::summarization(
         function_file_map,
-        *args_it,
+        *files_it,
         options,
         get_message_handler());
     }
@@ -248,14 +279,16 @@ Function: deltacheck_parseoptionst::reporting
 
 \*******************************************************************/
 
-int deltacheck_parseoptionst::reporting(const optionst &options)
+int deltacheck_parseoptionst::reporting(
+  const optionst &options,
+  const std::list<std::string> &files)
 {
   try
   {
     status("PHASE 2: reporting ("+
            i2string(cmdline.args.size())+" files)");
 
-    ::reporting(cmdline.args, options, get_message_handler());
+    ::reporting(files, options, get_message_handler());
   }
 
   catch(const char *e)
@@ -308,14 +341,14 @@ void deltacheck_parseoptionst::help()
     "Usage:                       Purpose:\n"
     "\n"
     " deltacheck [-?] [-h] [--help]   show help\n"
-    " deltacheck files ...         report results (phase II)\n"
+    " deltacheck files.txt         report results (phase II)\n"
     "\n"
     "Phase I (summarization) options:\n"
-    " --summarize files ...        summarize given goto-binaries\n"
+    " --summarize files.txt        summarize given goto-binaries\n"
     "\n"
     "Phase II (reporting) options:\n"
     " --show-claims                show properties\n"
-    " --claim id                   only check given claim\n"
+    " --claim id                   only report on given claim\n"
     "\n"    
     "Other options:\n"
     " --version                    show version and exit\n"

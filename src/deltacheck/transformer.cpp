@@ -162,6 +162,64 @@ void transformert::get_successors(unsigned PC)
   {
     merge(PC+1, new_guard);
   }
+  else if(instruction.is_assume())
+  {
+    merge(PC+1, new_guard);
+  }
+  else if(instruction.is_assert())
+  {
+    merge(PC+1, new_guard);
+  }
+  else if(instruction.is_other())
+  {
+    merge(PC+1, new_guard);
+  }
+  else if(instruction.is_start_thread())
+  {
+    merge(PC+1, new_guard);
+  }
+  else if(instruction.is_end_thread())
+  {
+    // no successor
+  }
+  else if(instruction.is_end_function())
+  {
+    // no successor
+  }
+  else if(instruction.is_atomic_begin())
+  {
+    merge(PC+1, new_guard);
+  }
+  else if(instruction.is_atomic_end())
+  {
+    merge(PC+1, new_guard);
+  }
+  else if(instruction.is_return())
+  {
+    // go to end-of-function
+    merge(locations.size()-1, new_guard);
+  }
+  else if(instruction.is_decl())
+  {
+    merge(PC+1, new_guard);
+  }
+  else if(instruction.is_dead())
+  {
+    merge(PC+1, new_guard);
+  }
+  else if(instruction.is_throw())
+  {
+    // complex successor
+  }
+  else if(instruction.is_catch())
+  {
+    merge(PC+1, new_guard);
+  }
+  else if(instruction.is_skip() ||
+          instruction.is_location())
+  {
+    merge(PC+1, new_guard);
+  }
   else
   {
     // treat like skip
@@ -213,9 +271,9 @@ void transformert::discover_predicates(const goto_functionst::goto_functiont &go
   find_symbols_sett symbols;
   collect_symbols(goto_function, symbols);
   
-  predicates.resize(2);
-  predicates[0].var=mgr.bddVar();
-  predicates[1].var=mgr.bddVar();
+//  predicates.resize(2);
+//  predicates[0].var=mgr.bddVar();
+//  predicates[1].var=mgr.bddVar();
 }
 
 /*******************************************************************\

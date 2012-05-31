@@ -16,7 +16,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <message.h>
 
 void reporting(
-  const std::vector<std::string> &files,
+  const std::list<std::string> &files,
   const optionst &,
   message_handlert &);
 

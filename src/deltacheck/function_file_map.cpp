@@ -23,11 +23,11 @@ Function: build_function_file_map
 \*******************************************************************/
 
 void build_function_file_map(
-  const std::vector<std::string> &files,
+  const std::list<std::string> &files,
   message_handlert &message_handler,
   function_file_mapt &function_file_map)
 {
-  for(std::vector<std::string>::const_iterator
+  for(std::list<std::string>::const_iterator
       file_it=files.begin();
       file_it!=files.end();
       file_it++)

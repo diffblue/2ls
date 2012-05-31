@@ -44,11 +44,13 @@ protected:
 
   // PHASE 1
   virtual int summarization(
-    const optionst &options);
+    const optionst &options,
+    const std::list<std::string> &files);
 
   // PHASE 2
   virtual int reporting(
-    const optionst &options);
+    const optionst &options,
+    const std::list<std::string> &files);
 
   void set_verbosity(messaget &message);
   

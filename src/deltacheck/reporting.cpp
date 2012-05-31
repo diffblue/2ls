@@ -69,7 +69,7 @@ Function: reporting
 \*******************************************************************/
 
 void reporting(
-  const std::vector<std::string> &files,
+  const std::list<std::string> &files,
   const optionst &options,
   message_handlert &message_handler)
 {
@@ -78,7 +78,7 @@ void reporting(
   call_grapht call_graph;
   std::set<irep_idt> functions;
   
-  for(std::vector<std::string>::const_iterator
+  for(std::list<std::string>::const_iterator
       it=files.begin();
       it!=files.end();
       it++)
