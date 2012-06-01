@@ -18,11 +18,12 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/goto_inline.h>
 #include <goto-programs/read_goto_binary.h>
 #include <goto-programs/link_to_library.h>
+#include <goto-programs/goto_check.h>
 
 #include "xml_conversion.h"
 #include "summarization.h"
 #include "dependencies.h"
-#include "transformer.h"
+#include "function_transformer.h"
 
 //#include "cgraph_builder.h"
 //#include "modular_fptr_analysis.h"
@@ -121,6 +122,7 @@ void summarize_function(
   const goto_functionst &goto_functions,
   const symbolt &symbol,
   const goto_functionst::goto_functiont &goto_function,
+  message_handlert &message_handler,
   std::ostream &out)
 {
   out << "<function id=\"";
@@ -133,7 +135,7 @@ void summarize_function(
 
   summarize_function_calls(ns, goto_functions, goto_function, out);
   
-  transformer(ns, goto_functions, goto_function, out);
+  function_transformer(ns, goto_functions, goto_function, message_handler, out);
 
   out << "</function>" << std::endl;
   out << std::endl;
@@ -154,6 +156,7 @@ Function: dump_exported_functions
 void dump_exported_functions(
   const namespacet &ns, 
   const goto_functionst &goto_functions,
+  message_handlert &message_handler,
   std::ostream &out)
 {
   out << "<functions>" << std::endl;
@@ -171,8 +174,12 @@ void dump_exported_functions(
     
     if(symbol.file_local)
       continue;
+
+    messaget message(message_handler);
+    message.status("Summarizing "+id2string(f_it->first));
   
-    summarize_function(ns, goto_functions, symbol, f_it->second, out);
+    summarize_function(
+      ns, goto_functions, symbol, f_it->second, message_handler, out);
   }
   
   out << "</functions>" << std::endl;
@@ -242,6 +249,7 @@ void summarization(
   const contextt &context,
   const goto_functionst &goto_functions,
   const optionst &options,
+  message_handlert &message_handler,
   std::ostream &out)
 {
   // first collect non-static function symbols that
@@ -249,7 +257,7 @@ void summarization(
   
   namespacet ns(context);
   
-  dump_exported_functions(ns, goto_functions, out);
+  dump_exported_functions(ns, goto_functions, message_handler, out);
   
   dump_state_variables(context, out);
   
@@ -292,6 +300,9 @@ void summarization(
   // get the goto program
   contextt context;
   goto_functionst goto_functions;
+  
+  messaget message(message_handler); 
+  message.status("Reading goto-program");
 
   if(read_goto_binary(
        file_name,
@@ -299,6 +310,8 @@ void summarization(
     throw std::string("failed to read goto binary ")+file_name;
     
   config.ansi_c.set_from_context(context);
+
+  message.status("Preparing goto-program");
 
   // finally add the library
   link_to_library(
@@ -309,12 +322,17 @@ void summarization(
   // do partial inlining
   goto_partial_inline(goto_functions, ns, message_handler);
   
+  // add checks
+  goto_check(ns, options, goto_functions);
+  
   // recalculate numbers, etc.
   goto_functions.update();
-
+  
   // add loop ids
   goto_functions.compute_loop_numbers();
   
+  //goto_functions.output(ns, std::cout);
+
   std::string summary_file_name=file_name+".summary";
   std::ofstream summary_file(summary_file_name.c_str(),
     std::ios::binary|std::ios::trunc|std::ios::out);
@@ -329,11 +347,11 @@ void summarization(
     context,
     goto_functions,
     options,
+    message_handler,
     summary_file);
   
   summary_file << "</summaries>" << std::endl;
 
-  messaget message(message_handler); 
   message.status("Summary written as "+summary_file_name);
 }
 

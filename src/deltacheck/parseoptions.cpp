@@ -100,6 +100,56 @@ void deltacheck_parseoptionst::get_command_line_options(optionst &options)
 
   if(cmdline.isset("debug-level"))
     options.set_option("debug-level", cmdline.getval("debug-level"));
+
+  #if 0
+  // check array bounds
+  if(cmdline.isset("bounds-check"))
+    options.set_option("bounds-check", true);
+  else
+    options.set_option("bounds-check", false);
+
+  // check division by zero
+  if(cmdline.isset("div-by-zero-check"))
+    options.set_option("div-by-zero-check", true);
+  else
+    options.set_option("div-by-zero-check", false);
+
+  // check overflow/underflow
+  if(cmdline.isset("signed-overflow-check"))
+    options.set_option("signed-overflow-check", true);
+  else
+    options.set_option("signed-overflow-check", false);
+
+  // check overflow/underflow
+  if(cmdline.isset("unsigned-overflow-check"))
+    options.set_option("unsigned-overflow-check", true);
+  else
+    options.set_option("unsigned-overflow-check", false);
+
+  // check for NaN (not a number)
+  if(cmdline.isset("nan-check"))
+    options.set_option("nan-check", true);
+  else
+    options.set_option("nan-check", false);
+
+  // check pointers
+  if(cmdline.isset("pointer-check"))
+    options.set_option("pointer-check", true);
+  else
+    options.set_option("pointer-check", false);
+  #else
+  options.set_option("bounds-check", true);
+  options.set_option("div-by-zero-check", true);
+  options.set_option("signed-overflow-check", true);
+  options.set_option("unsigned-overflow-check", false);
+  options.set_option("pointer-check", true);
+  #endif
+
+  // check assertions
+  options.set_option("assertions", true);
+
+  // use assumptions
+  options.set_option("assumptions", true);
 }
 
 /*******************************************************************\
@@ -231,6 +281,7 @@ int deltacheck_parseoptionst::summarization(
         files_it!=files.end();
         files_it++)
     {
+      status("");
       status("PHASE 1: Summarizing "+*files_it);
       
       ::summarization(
