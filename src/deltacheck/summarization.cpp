@@ -15,11 +15,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <cprover_prefix.h>
 #include <std_expr.h>
 
-#include <goto-programs/goto_inline.h>
-#include <goto-programs/read_goto_binary.h>
-#include <goto-programs/link_to_library.h>
-#include <goto-programs/goto_check.h>
-
+#include "get_goto_program.h"
 #include "xml_conversion.h"
 #include "summarization.h"
 #include "dependencies.h"
@@ -301,35 +297,7 @@ void summarization(
   contextt context;
   goto_functionst goto_functions;
   
-  messaget message(message_handler); 
-  message.status("Reading goto-program");
-
-  if(read_goto_binary(
-       file_name,
-       context, goto_functions, message_handler))
-    throw std::string("failed to read goto binary ")+file_name;
-    
-  config.ansi_c.set_from_context(context);
-
-  message.status("Preparing goto-program");
-
-  // finally add the library
-  link_to_library(
-    context, goto_functions, options, message_handler);
-
-  namespacet ns(context);
-
-  // do partial inlining
-  goto_partial_inline(goto_functions, ns, message_handler);
-  
-  // add checks
-  goto_check(ns, options, goto_functions);
-  
-  // recalculate numbers, etc.
-  goto_functions.update();
-  
-  // add loop ids
-  goto_functions.compute_loop_numbers();
+  get_goto_program(file_name, options, context, goto_functions, message_handler);
   
   //goto_functions.output(ns, std::cout);
 
@@ -352,6 +320,7 @@ void summarization(
   
   summary_file << "</summaries>" << std::endl;
 
+  messaget message(message_handler);
   message.status("Summary written as "+summary_file_name);
 }
 

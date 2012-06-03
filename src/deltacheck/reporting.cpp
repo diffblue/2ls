@@ -9,10 +9,13 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <fstream>
 #include <set>
 
+#include <goto-programs/show_claims.h>
+
 #include <xmllang/xml_parser.h>
 
 #include "reporting.h"
 #include "call_graph.h"
+#include "get_goto_program.h"
 
 #if 0
 #include "cgraph_builder.h"
@@ -58,6 +61,78 @@ void collate(
 
 /*******************************************************************\
 
+Function: call_graph_dot
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void call_graph_dot(
+  const std::list<std::string> &files,
+  const std::string &dest_file,
+  message_handlert &message_handler)
+{
+  messaget message(message_handler);
+  call_grapht call_graph;
+  
+  for(std::list<std::string>::const_iterator
+      it=files.begin();
+      it!=files.end();
+      it++)
+  {
+    xmlt xml;
+    if(parse_xml(*it+".summary", message_handler, xml))
+      message.warning("failed to read summary of "+*it);
+      
+    call_graph.add_summary(xml);    
+  }
+  
+  {
+    message.status("Writing call graph");
+    std::ofstream out(dest_file.c_str());
+    if(!out)
+      throw "failed to write call graph DOT";
+    call_graph.output_dot(out);
+    return;
+  }
+}
+
+/*******************************************************************\
+
+Function: reporting
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void reporting(
+  const std::string &file_name,
+  const optionst &options,
+  message_handlert &message_handler)
+{
+  messaget message(message_handler);
+
+  // get the goto program
+  contextt context;
+  goto_functionst goto_functions;
+      
+  get_goto_program(file_name, options, context, goto_functions, message_handler);
+
+  namespacet ns(context);
+
+  show_claims(ns, ui_message_handlert::PLAIN, goto_functions);
+}
+    
+/*******************************************************************\
+
 Function: reporting
 
   Inputs:
@@ -73,45 +148,18 @@ void reporting(
   const optionst &options,
   message_handlert &message_handler)
 {
-  messaget message(message_handler);
+  if(options.get_option("call-graph-dot")!="")
+    call_graph_dot(files, options.get_option("call-graph-dot"),
+                   message_handler);
+    
+  // report status of claims on a per-file basis
 
-  call_grapht call_graph;
-  std::set<irep_idt> functions;
-  
   for(std::list<std::string>::const_iterator
       it=files.begin();
       it!=files.end();
       it++)
-  {
-    xmlt xml;
-    if(parse_xml(*it+".summary", message_handler, xml))
-      message.warning("failed to read summary of "+*it);
-      
-    call_graph.add_summary(xml);    
-    get_functions(xml, functions);
-  }
-  
-  if(options.get_option("call-graph-dot")!="")
-  {
-    message.status("Writing call graph");
-    std::ofstream out(options.get_option("call-graph-dot").c_str());
-    if(!out)
-      throw "failed to write call graph DOT";
-    call_graph.output_dot(out);
-    return;
-  }
-
-  // now collate starting with the leaves of the call graph
-  for(std::set<irep_idt>::const_iterator
-      it=functions.begin();
-      it!=functions.end();
-      it++)
-  {
-    irep_idt id=*it;
+    reporting(*it, options, message_handler);
     
-    // do 
-  }
-  
   #if 0
   cgraph_buildert cg_builder;
   modular_fptr_analysist fptr_analysis;
