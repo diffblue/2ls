@@ -5,7 +5,7 @@ SRC = main.cpp parseoptions.cpp summarization.cpp reporting.cpp \
       call_graph.cpp function_file_map.cpp dependencies.cpp \
       collect_symbols.cpp function_transformer.cpp \
       statement_transformer.cpp discover_predicates.cpp \
-      canonicalize.cpp \
+      canonicalize.cpp predicates.cpp \
       cgraph_builder.cpp \
       modular_code_analysis.cpp \
       modular_fptr_analysis.cpp \

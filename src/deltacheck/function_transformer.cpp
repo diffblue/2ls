@@ -37,13 +37,19 @@ public:
   typedef std::map<goto_programt::const_targett, unsigned> location_mapt;
   location_mapt location_map;
   
-  predicatest predicates;
+  unsigned target_PC(goto_programt::const_targett t)
+  {
+    location_mapt::const_iterator it=location_map.find(t);
+    assert(it!=location_map.end());
+    return it->second;
+  }
   
   function_transformert(
     const namespacet &_ns,
     const goto_functionst &_goto_functions,
     Cudd &_mgr,
     message_handlert &_message_handler):
+    predicates(_ns),
     ns(_ns),
     goto_functions(_goto_functions),
     mgr(_mgr),
@@ -54,6 +60,8 @@ public:
   void operator() (const goto_functionst::goto_functiont &);
   
   void output(std::ostream &out) const;
+  
+  predicatest predicates;
   
 protected:
   const namespacet &ns;
@@ -112,16 +120,7 @@ void function_transformert::operator()(
 {
   setup_state_map(goto_function);
   discover_predicates(goto_function);
-  
-  std::string m="Predicates: ";
-  for(predicatest::const_iterator p_it=predicates.begin();
-      p_it!=predicates.end();
-      p_it++)
-  {
-    if(p_it!=predicates.begin()) m+=", ";
-    m+=from_expr(ns, "", p_it->expr);
-  }
-  message.debug(m);
+  message.debug("Predicates: "+predicates.make_list());
 
   if(locations.empty()) return;
 
@@ -185,7 +184,8 @@ void function_transformert::get_successors(unsigned PC)
       {
         BDD new_guard=
           statement_transformer.guard(from.guard, instruction.guard);
-        //merge(PC+1, new_guard);
+          
+        merge(target_PC(*it), new_guard);
       }
     }
   }
@@ -226,9 +226,7 @@ void function_transformert::get_successors(unsigned PC)
         it!=instruction.targets.end();
         it++)
     {
-      BDD new_guard=
-        statement_transformer.guard(new_guard, instruction.guard);
-      //merge(PC+1, new_guard);
+      merge(target_PC(*it), from.guard);
     }
   }
   else if(instruction.is_end_thread())
@@ -312,7 +310,11 @@ void function_transformert::merge(
   to.guard|=new_guard; // merge
   
   if(to.guard!=old_guard)
+  {
+    std::cout << "New state at PC " << PC << std::endl;
+    to.guard.print(predicates.size()*2);
     queue.push(PC); // fixpoint not yet reached
+  }
 }
 
 /*******************************************************************\
@@ -335,15 +337,7 @@ void function_transformert::add(
       it!=new_predicates.end();
       it++)
   {
-    unsigned index=predicates.size();
-  
-    predicates.push_back(predicatet());
-    predicates.back().expr=*it;
-    
-    // this will cause the ordering of the variable and
-    // it's next-state version to be interleaved
-    predicates.back().var=mgr.bddVar(index*2);
-    predicates.back().next_var=mgr.bddVar(index*2+1);
+    predicates.add(mgr, *it);
   }
 }
 
@@ -388,34 +382,35 @@ Function: function_transformert::xml
 void function_transformert::xml(BDD bdd, std::ostream &out) const
 {
   // dump DNF
-  CUDD_VALUE_TYPE value;
-  int *cube;
-  DdGen *gen=bdd.FirstCube(&cube, &value);
-  assert(gen!=NULL);
   assert((unsigned)mgr.ReadSize()>=predicates.size()*2);
   
   out << "  <or>" << std::endl;
-  do
+
+  CUDD_VALUE_TYPE value;
+  int *cube;
+  DdGen *gen;
+
+  Cudd_ForeachCube(mgr.getManager(), bdd.getNode(), gen, cube, value)
   {
+    assert(gen!=NULL);
+    assert(cube!=NULL);
+
     out << "    <and>" << std::endl;
-    for(int i=0; i<mgr.ReadSize(); i++)
+    for(unsigned p=0; p<predicates.size(); p++)
     {
-      unsigned p=i/2;
+      unsigned i=p*2;
       
-      if(cube[i]!=2)
-        assert((i%2)==0);
-    
       switch(cube[i])
       {
       case 0: // complemented
         out << "    <pred neg=\"1\" id=\"" << std::endl;
-        xmlt::escape_attribute(id2string(predicates[i].id), out);
+        xmlt::escape_attribute(id2string(predicates[p].id), out);
         out << "\"/>" << std::endl;
         break;
 
       case 1: // uncomplemented
         out << "    <pred neg=\"0\" id=\"" << std::endl;
-        xmlt::escape_attribute(id2string(predicates[i].id), out);
+        xmlt::escape_attribute(id2string(predicates[p].id), out);
         out << "\"/>" << std::endl;
         break;
 
@@ -428,7 +423,6 @@ void function_transformert::xml(BDD bdd, std::ostream &out) const
     }
     out << "    </and>" << std::endl;
   }
-  while(Cudd_NextCube(gen, &cube, &value)!=0);
   
   out << "  </or>" << std::endl;
 }
