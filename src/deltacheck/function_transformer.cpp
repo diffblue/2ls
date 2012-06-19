@@ -403,15 +403,14 @@ void function_transformert::xml(BDD bdd, std::ostream &out) const
       switch(cube[i])
       {
       case 0: // complemented
-        out << "    <pred neg=\"1\" id=\"" << std::endl;
-        xmlt::escape_attribute(id2string(predicates[p].id), out);
-        out << "\"/>" << std::endl;
-        break;
-
       case 1: // uncomplemented
-        out << "    <pred neg=\"0\" id=\"" << std::endl;
+        out << "    ";
+        if(cube[i]==0) out << "<not>";
+        out << "<pred id=\"";
         xmlt::escape_attribute(id2string(predicates[p].id), out);
         out << "\"/>" << std::endl;
+        if(cube[i]==0) out << "</not>";
+        out << std::endl;
         break;
 
       case 2: // don't care

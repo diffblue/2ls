@@ -1,6 +1,6 @@
 /*******************************************************************\
 
-Module: Summarization
+Module: Map from function names to the file
 
 Author: Daniel Kroening, kroening@kroening.com
 
