@@ -14,6 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <prefix.h>
 #include <cprover_prefix.h>
 #include <std_expr.h>
+#include <xml_expr.h>
 
 #include "get_goto_program.h"
 #include "xml_conversion.h"

@@ -20,6 +20,7 @@ Function: xml
 
 \*******************************************************************/
 
+#if 0
 xmlt xml(const locationt &location)
 {
   xmlt xml_location;
@@ -33,3 +34,4 @@ xmlt xml(const locationt &location)
 
   return xml_location;
 }
+#endif
