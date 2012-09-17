@@ -14,6 +14,7 @@ SRC = main.cpp parseoptions.cpp summarization.cpp reporting.cpp \
       $(CBMC)/src/cbmc/xml_interface.cpp
 
 OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
+      $(CBMC)/src/linking/linking$(LIBEXT) \
       $(CBMC)/src/big-int/bigint$(OBJEXT) \
       $(CBMC)/src/goto-programs/goto-programs$(LIBEXT) \
       $(CBMC)/src/goto-symex/goto-symex$(LIBEXT) \
