@@ -16,7 +16,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <context.h>
 
 #include <langapi/mode.h>
-
+#include <cbmc/version.h>
 #include <ansi-c/ansi_c_language.h>
 
 #ifdef HAVE_CPP
@@ -384,7 +384,8 @@ void deltacheck_parseoptionst::help()
 {
   std::cout <<
     "\n"
-    "* *         DELTACHECK " DELTACHECK_VERSION " - Copyright (C) 2011-2012           * *\n"
+    "* *         DELTACHECK " DELTACHECK_VERSION " - Copyright (C) 2011-2012        * *\n"
+    "* *                    based on CBMC " CBMC_VERSION "                    * *\n"
     "* *                     Daniel Kroening                     * *\n"
     "* *      Oxford University, Computer Science Department     * *\n"
     "* *                 kroening@kroening.com                   * *\n"
