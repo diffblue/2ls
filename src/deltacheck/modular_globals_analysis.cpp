@@ -78,7 +78,8 @@ modular_globals_analysist::try_compute_value(const exprt& expr, valuet& value)
     irep_idt id = to_symbol_expr(expr).get_identifier();
     const symbolt& symbol = context->lookup(id);
     
-    if (symbol.static_lifetime && symbol.lvalue) {
+    if(symbol.is_static_lifetime && symbol.is_lvalue)
+    {
       value = id;
       return true;
     }
@@ -96,7 +97,7 @@ modular_globals_analysist::try_compute_variable(
     irep_idt id = to_symbol_expr(expr).get_identifier();
     const symbolt& symbol = context->lookup(id);
     
-    if (symbol.static_lifetime && symbol.lvalue)
+    if(symbol.is_static_lifetime && symbol.is_lvalue)
     {
       variable = type2name(symbol.type);
       set_visible(variable);

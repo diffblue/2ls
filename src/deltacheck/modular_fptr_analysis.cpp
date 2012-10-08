@@ -139,13 +139,13 @@ modular_fptr_analysist::try_compute_symbol_variable(const exprt& expr,
 {
   assert(context);
   
-  if (expr.id() == ID_symbol) 
+  if(expr.id() == ID_symbol) 
   {
     // Directly a symbol
     irep_idt id = to_symbol_expr(expr).get_identifier();
     const symbolt& symbol = context->lookup(id);
     
-    if (symbol.lvalue) 
+    if(symbol.is_lvalue) 
     {
       variable = id;
       
@@ -160,12 +160,12 @@ modular_fptr_analysist::try_compute_symbol_variable(const exprt& expr,
     // A field of a structure
     const member_exprt& member = to_member_expr(expr);
     
-    if (member.struct_op().id() == ID_symbol) 
+    if(member.struct_op().id() == ID_symbol) 
     {
       irep_idt id = to_symbol_expr(member.struct_op()).get_identifier();
       const symbolt& symbol = context->lookup(id);
     
-      if (symbol.lvalue) 
+      if(symbol.is_lvalue) 
       {
         variable = id.as_string() + "." + member.get_component_name().as_string();
         
@@ -254,7 +254,7 @@ modular_fptr_analysist::try_compute_variable(const exprt& expr,
 bool
 modular_fptr_analysist::is_symbol_visible(const symbolt& symbol)
 {
-  return symbol.static_lifetime && !symbol.file_local;
+  return symbol.is_static_lifetime && !symbol.is_file_local;
 }
 
 bool

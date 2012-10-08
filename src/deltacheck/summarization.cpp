@@ -48,7 +48,7 @@ void summarize_function_calls_rec(
   {
     irep_idt id=to_symbol_expr(function).get_identifier();
     const symbolt &symbol=ns.lookup(id);
-    if(!symbol.file_local)
+    if(!symbol.is_file_local)
       called_functions.insert(id);
   }
   else if(function.id()==ID_dereference)
@@ -169,7 +169,7 @@ void dump_exported_functions(
   
     const symbolt &symbol=ns.lookup(f_it->first);
     
-    if(symbol.file_local)
+    if(symbol.is_file_local)
       continue;
 
     messaget message(message_handler);
@@ -212,7 +212,7 @@ void dump_state_variables(
        symbol.is_type)
       continue;
       
-    if(symbol.file_local)
+    if(symbol.is_file_local)
       continue;
   
     out << "<state_variable id=\"";
