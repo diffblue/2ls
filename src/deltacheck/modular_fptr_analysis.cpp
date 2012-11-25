@@ -84,7 +84,7 @@ modular_fptr_analysist::accept_return(const code_returnt& instruction)
 {
   std::cout << " - return value: " << instruction.return_value().to_string() <<
           std::endl;
-  variablet lhs_var = current_function.as_string() + ".return_value";
+  variablet lhs_var = id2string(current_function) + ".return_value";
   
   process_assignment(lhs_var, instruction.return_value());
 }
@@ -167,7 +167,7 @@ modular_fptr_analysist::try_compute_symbol_variable(const exprt& expr,
     
       if(symbol.is_lvalue) 
       {
-        variable = id.as_string() + "." + member.get_component_name().as_string();
+        variable = id2string(id) + "." + id2string(member.get_component_name());
         
         if (is_symbol_visible(symbol))
           set_visible(variable);
@@ -194,8 +194,8 @@ modular_fptr_analysist::try_compute_field_access_variable(const exprt& expr,
     assert(struct_type.id() == ID_symbol);
     
     variable = irep_idt(
-            to_symbol_type(struct_type).get_identifier().as_string() + "." +
-            member.get_component_name().as_string());
+            id2string(to_symbol_type(struct_type).get_identifier()) + "." +
+            id2string(member.get_component_name()));
     
     set_visible(variable);
     return true;
