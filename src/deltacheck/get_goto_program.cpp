@@ -48,7 +48,7 @@ void get_goto_program(
 
   // finally add the library
   link_to_library(
-    context, goto_functions, options, message_handler);
+    context, goto_functions, message_handler);
 
   namespacet ns(context);
 
