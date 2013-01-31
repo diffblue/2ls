@@ -19,6 +19,7 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       $(CBMC)/src/big-int/bigint$(OBJEXT) \
       $(CBMC)/src/goto-programs/goto-programs$(LIBEXT) \
       $(CBMC)/src/goto-symex/goto-symex$(LIBEXT) \
+      $(CBMC)/src/analyses/analyses$(LIBEXT) \
       $(CBMC)/src/pointer-analysis/pointer-analysis$(LIBEXT) \
       $(CBMC)/src/langapi/langapi$(LIBEXT) \
       $(CBMC)/src/xmllang/xmllang$(LIBEXT) \
