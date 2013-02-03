@@ -26,6 +26,9 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       $(CBMC)/src/solvers/solvers$(LIBEXT) \
       $(CBMC)/src/util/util$(LIBEXT)
 
+include $(CBMC)/src/config.inc
+include $(CBMC)/src/common
+
 INCLUDES= -I $(CBMC)/src -I $(CBMC)/src/util \
   -I $(CUDD)/cudd -I $(CUDD)/obj -I $(CUDD)/mtr -I $(CUDD)/epd
 
