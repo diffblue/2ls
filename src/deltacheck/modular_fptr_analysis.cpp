@@ -7,7 +7,7 @@ Author: Ondrej Sery, ondrej.sery@d3s.mff.cuni.cz
 \*******************************************************************/
 
 #include <std_expr.h>
-#include <context.h>
+#include <symbol_table.h>
 #include <ansi-c/type2name.h>
 
 #include "modular_fptr_analysis.h"
@@ -137,13 +137,13 @@ bool
 modular_fptr_analysist::try_compute_symbol_variable(const exprt& expr, 
         variablet& variable)
 {
-  assert(context);
+  assert(symbol_table);
   
   if(expr.id() == ID_symbol) 
   {
     // Directly a symbol
     irep_idt id = to_symbol_expr(expr).get_identifier();
-    const symbolt& symbol = context->lookup(id);
+    const symbolt& symbol = symbol_table->lookup(id);
     
     if(symbol.is_lvalue) 
     {
@@ -163,7 +163,7 @@ modular_fptr_analysist::try_compute_symbol_variable(const exprt& expr,
     if(member.struct_op().id() == ID_symbol) 
     {
       irep_idt id = to_symbol_expr(member.struct_op()).get_identifier();
-      const symbolt& symbol = context->lookup(id);
+      const symbolt& symbol = symbol_table->lookup(id);
     
       if(symbol.is_lvalue) 
       {
@@ -223,7 +223,7 @@ bool
 modular_fptr_analysist::try_compute_variable(const exprt& expr, 
         variablet& variable)
 {
-  assert(context);
+  assert(symbol_table);
   
   // Ignore any non-pointer expression
   if (expr.type().id() != ID_pointer)

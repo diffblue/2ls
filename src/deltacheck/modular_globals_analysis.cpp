@@ -8,7 +8,7 @@ Author: Ondrej Sery, ondrej.sery@d3s.mff.cuni.cz
 
 #include <i2string.h>
 #include <std_expr.h>
-#include <context.h>
+#include <symbol_table.h>
 #include <symbol.h>
 #include <ansi-c/type2name.h>
 
@@ -26,10 +26,10 @@ bool
 modular_globals_analysist::get_aliased_globals(const irep_idt& id, 
         valuest& globals)
 {
-  assert(context);
+  assert(symbol_table);
   globals.clear();
   
-  const typet& type = context->lookup(id).type;
+  const typet& type = symbol_table->lookup(id).type;
   irep_idt type_id = type2name(type);
   
   value_mapt::const_iterator it =
@@ -72,11 +72,11 @@ modular_globals_analysist::accept_return(const code_returnt& instruction)
 bool
 modular_globals_analysist::try_compute_value(const exprt& expr, valuet& value)
 {
-  assert(context);
+  assert(symbol_table);
   if (expr.id() == ID_symbol) 
   {
     irep_idt id = to_symbol_expr(expr).get_identifier();
-    const symbolt& symbol = context->lookup(id);
+    const symbolt& symbol = symbol_table->lookup(id);
     
     if(symbol.is_static_lifetime && symbol.is_lvalue)
     {
@@ -91,11 +91,11 @@ bool
 modular_globals_analysist::try_compute_variable(
         const exprt& expr, variablet& variable)
 {
-  assert(context);
+  assert(symbol_table);
   if (expr.id() == ID_symbol) 
   {
     irep_idt id = to_symbol_expr(expr).get_identifier();
-    const symbolt& symbol = context->lookup(id);
+    const symbolt& symbol = symbol_table->lookup(id);
     
     if(symbol.is_static_lifetime && symbol.is_lvalue)
     {

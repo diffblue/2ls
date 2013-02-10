@@ -30,7 +30,7 @@ Function: get_goto_program
 void get_goto_program(
   const std::string &file_name,
   const optionst &options,
-  contextt &context,
+  symbol_tablet &symbol_table,
   goto_functionst &goto_functions,
   message_handlert &message_handler)
 {
@@ -39,18 +39,18 @@ void get_goto_program(
 
   if(read_goto_binary(
        file_name,
-       context, goto_functions, message_handler))
+       symbol_table, goto_functions, message_handler))
     throw std::string("failed to read goto binary ")+file_name;
     
-  config.ansi_c.set_from_context(context);
+  config.ansi_c.set_from_symbol_table(symbol_table);
 
   message.status("Preparing goto-program");
 
   // finally add the library
   link_to_library(
-    context, goto_functions, message_handler);
+    symbol_table, goto_functions, message_handler);
 
-  namespacet ns(context);
+  namespacet ns(symbol_table);
 
   // do partial inlining
   goto_partial_inline(goto_functions, ns, message_handler);

@@ -9,7 +9,7 @@ Author: Ondrej Sery, ondrej.sery@d3s.mff.cuni.cz
 
 #include "modular_code_analysis.h"
 
-modular_code_analysist::modular_code_analysist() : context(NULL)
+modular_code_analysist::modular_code_analysist() : symbol_table(NULL)
 {
 }
 

@@ -6,7 +6,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <context.h>
+#include <symbol_table.h>
 #include <message.h>
 #include <options.h>
 
@@ -15,6 +15,6 @@ Author: Daniel Kroening, kroening@kroening.com
 void get_goto_program(
   const std::string &file_name,
   const optionst &options,
-  contextt &context,
+  symbol_tablet &symbol_table,
   goto_functionst &goto_functions,
   message_handlert &message_handler);

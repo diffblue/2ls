@@ -28,7 +28,7 @@ public:
     return "Globals analysis";
   }
   
-  // Queries for the aliases of globals, context has to be set when calling
+  // Queries for the aliases of globals, symbol_table has to be set when calling
   bool get_aliased_globals(const irep_idt& id, valuest& globals);
 
 protected:

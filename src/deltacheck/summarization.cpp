@@ -196,12 +196,12 @@ Function: dump_state_variables
 \*******************************************************************/
 
 void dump_state_variables(
-  const contextt &context,
+  const symbol_tablet &symbol_table,
   std::ostream &out)
 {
   out << "<state_variables>" << std::endl;
 
-  forall_symbols(s_it, context.symbols)
+  forall_symbols(s_it, symbol_table.symbols)
   {
     const symbolt &symbol=s_it->second;
     
@@ -243,7 +243,7 @@ Function: summarization
 
 void summarization(
   const function_file_mapt &function_file_map,
-  const contextt &context,
+  const symbol_tablet &symbol_table,
   const goto_functionst &goto_functions,
   const optionst &options,
   message_handlert &message_handler,
@@ -252,11 +252,11 @@ void summarization(
   // first collect non-static function symbols that
   // have a body
   
-  namespacet ns(context);
+  namespacet ns(symbol_table);
   
   dump_exported_functions(ns, goto_functions, message_handler, out);
   
-  dump_state_variables(context, out);
+  dump_state_variables(symbol_table, out);
   
   #if 0
   cgraph_buildert cg_builder;
@@ -266,7 +266,7 @@ void summarization(
   cg_builder.add_analysis(&fptr_analysis);
   cg_builder.add_analysis(&globals_analysis);
   
-  cg_builder.analyze_module(context, goto_functions);
+  cg_builder.analyze_module(symbol_table, goto_functions);
   cg_builder.serialize(file_name);
   #endif
 }
@@ -295,10 +295,10 @@ void summarization(
     return;
 
   // get the goto program
-  contextt context;
+  symbol_tablet symbol_table;
   goto_functionst goto_functions;
   
-  get_goto_program(file_name, options, context, goto_functions, message_handler);
+  get_goto_program(file_name, options, symbol_table, goto_functions, message_handler);
   
   //goto_functions.output(ns, std::cout);
 
@@ -313,7 +313,7 @@ void summarization(
 
   ::summarization(
     function_file_map,
-    context,
+    symbol_table,
     goto_functions,
     options,
     message_handler,

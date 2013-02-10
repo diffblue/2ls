@@ -7,7 +7,7 @@ Author: Ondrej Sery, ondrej.sery@d3s.mff.cuni.cz
 
 \*******************************************************************/
 
-#include <context.h>
+#include <symbol_table.h>
 #include <string>
 #include <iostream>
 
@@ -22,12 +22,12 @@ cgraph_buildert::~cgraph_buildert()
 }
 
 void
-cgraph_buildert::analyze_module(const contextt& context, 
+cgraph_buildert::analyze_module(const symbol_tablet& symbol_table, 
         const goto_functionst& functions) 
 {
   Forall_analyses(it, analyses)
   {
-    (*it)->set_context(context);
+    (*it)->set_symbol_table(symbol_table);
   }
   
   forall_goto_functions(it, functions) 

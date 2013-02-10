@@ -10,7 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #define CPROVER_DELTACHECK_SUMMARIZATION_H
 
 #include <options.h>
-#include <context.h>
+#include <symbol_table.h>
 #include <message.h>
 
 #include "function_file_map.h"

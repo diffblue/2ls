@@ -121,12 +121,12 @@ void reporting(
   messaget message(message_handler);
 
   // get the goto program
-  contextt context;
+  symbol_tablet symbol_table;
   goto_functionst goto_functions;
       
-  get_goto_program(file_name, options, context, goto_functions, message_handler);
+  get_goto_program(file_name, options, symbol_table, goto_functions, message_handler);
 
-  namespacet ns(context);
+  namespacet ns(symbol_table);
 
   show_claims(ns, ui_message_handlert::PLAIN, goto_functions);
 }

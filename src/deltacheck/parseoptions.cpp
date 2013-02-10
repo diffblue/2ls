@@ -13,7 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <i2string.h>
 #include <config.h>
-#include <context.h>
+#include <symbol_table.h>
 
 #include <langapi/mode.h>
 #include <cbmc/version.h>

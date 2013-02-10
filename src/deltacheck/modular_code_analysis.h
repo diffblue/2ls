@@ -41,9 +41,9 @@ public:
     current_function.clear();
   }
   
-  void set_context(const contextt& _context)
+  void set_symbol_table(const symbol_tablet& _symbol_table)
   {
-    context = &_context;
+    symbol_table = &_symbol_table;
   }
 
   virtual void print(std::ostream& out) const;
@@ -58,7 +58,7 @@ protected:
   virtual void accept_return(const code_returnt& instruction) {};
 
   irep_idt current_function;
-  const contextt* context;
+  const symbol_tablet* symbol_table;
 };
 
 #endif
