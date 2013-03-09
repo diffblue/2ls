@@ -11,7 +11,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/read_goto_binary.h>
 #include <goto-programs/goto_inline.h>
 #include <goto-programs/link_to_library.h>
-#include <goto-programs/goto_check.h>
+
+#include <analyses/goto_check.h>
 
 #include "get_goto_program.h"
 
