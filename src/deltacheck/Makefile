@@ -29,7 +29,7 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
 include $(CBMC)/src/config.inc
 include $(CBMC)/src/common
 
-INCLUDES= -I $(CBMC)/src -I $(CBMC)/src/util \
+INCLUDES= -I $(CBMC)/src \
   -I $(CUDD)/cudd -I $(CUDD)/obj -I $(CUDD)/mtr -I $(CUDD)/epd
 
 LIBS = $(CUDD)/obj/libobj.a $(CUDD)/cudd/libcudd.a $(CUDD)/mtr/libmtr.a \

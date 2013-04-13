@@ -6,9 +6,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <symbol_table.h>
-#include <message.h>
-#include <options.h>
+#include <util/symbol_table.h>
+#include <util/message.h>
+#include <util/options.h>
 
 #include <goto-programs/goto_functions.h>
 

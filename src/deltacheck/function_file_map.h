@@ -11,7 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <map>
 
-#include <irep.h>
+#include <util/irep.h>
 
 typedef std::map<irep_idt, irep_idt> function_file_mapt;
 

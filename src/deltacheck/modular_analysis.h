@@ -15,10 +15,11 @@ Author: Ondrej Sery, ondrej.sery@d3s.mff.cuni.cz
 #define	CPROVER_DELTACHECK_PARTIAL_ANALYSIS_H
 
 #include <iostream>
-#include <hash_cont.h>
+
+#include <util/hash_cont.h>
 
 template <typename variableT, typename valueT,
-        typename variable_hashT, typename value_hashT>
+          typename variable_hashT, typename value_hashT>
 class modular_analysist {
 public:
   typedef variableT variablet;

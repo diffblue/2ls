@@ -9,7 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_DELTACHECK_COLLECT_SYMBOLS_H
 #define CPROVER_DELTACHECK_COLLECT_SYMBOLS_H
 
-#include <find_symbols.h>
+#include <util/find_symbols.h>
 
 #include <goto-programs/goto_functions.h>
 

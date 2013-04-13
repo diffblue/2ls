@@ -16,8 +16,10 @@ Author: Ondrej Sery, ondrej.sery@d3s.mff.cuni.cz
 #ifndef CPROVER_DELTACHECK_MODULAR_CODE_ANALYSIS_H
 #define	CPROVER_DELTACHECK_MODULAR_CODE_ANALYSIS_H
 
+#include <util/irep.h>
+
 #include <goto-programs/goto_program.h>
-#include <irep.h>
+
 #include "modular_analysis.h"
 
 class modular_code_analysist : public modular_analysist<irep_idt, irep_idt,

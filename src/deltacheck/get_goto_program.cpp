@@ -6,7 +6,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <config.h>
+#include <util/config.h>
 
 #include <goto-programs/read_goto_binary.h>
 #include <goto-programs/goto_inline.h>

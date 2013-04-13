@@ -11,9 +11,11 @@ Author: Ondrej Sery, ondrej.sery@d3s.mff.cuni.cz
 #define	CPROVER_DELTACHECK_CGRAPH_BUILDER_H
 
 #include <fstream>
+
+#include <util/irep.h>
+
 #include <goto-programs/goto_functions.h>
 #include <goto-programs/goto_program.h>
-#include <irep.h>
 
 #include "modular_code_analysis.h"
 

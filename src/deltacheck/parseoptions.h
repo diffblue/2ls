@@ -9,9 +9,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_DELTACHECK_PARSEOPTIONS_H
 #define CPROVER_DELTACHECK_PARSEOPTIONS_H
 
-#include <ui_message.h>
-#include <parseoptions.h>
-#include <options.h>
+#include <util/ui_message.h>
+#include <util/parseoptions.h>
+#include <util/options.h>
 
 #include <goto-programs/goto_functions.h>
 //#include <langapi/language_ui.h>

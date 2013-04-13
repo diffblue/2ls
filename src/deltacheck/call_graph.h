@@ -12,8 +12,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <iostream>
 #include <map>
 
-#include <irep.h>
-#include <xml.h>
+#include <util/irep.h>
+#include <util/xml.h>
 
 class call_grapht:std::multimap<irep_idt, irep_idt>
 {

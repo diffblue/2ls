@@ -10,9 +10,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <list>
 
-#include <namespace.h>
-#include <expr.h>
-#include <std_code.h>
+#include <util/namespace.h>
+#include <util/expr.h>
+#include <util/std_code.h>
 
 #include "predicates.h"
 

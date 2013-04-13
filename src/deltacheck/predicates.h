@@ -9,8 +9,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_DELTACHECK_PREDICATES_H
 #define CPROVER_DELTACHECK_PREDICATES_H
 
-#include <expr.h>
-#include <namespace.h>
+#include <util/expr.h>
+#include <util/namespace.h>
 
 #include <cuddObj.hh>
 

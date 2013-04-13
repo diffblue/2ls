@@ -6,11 +6,12 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <iostream>
 #include <stack>
 
 #include <cuddObj.hh>
 
-#include <xml.h>
+#include <util/xml.h>
 
 #include "function_transformer.h"
 #include "statement_transformer.h"

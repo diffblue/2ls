@@ -6,10 +6,11 @@ Author: Ondrej Sery, ondrej.sery@d3s.mff.cuni.cz
 
 \*******************************************************************/
 
-#include <i2string.h>
-#include <std_expr.h>
-#include <symbol_table.h>
-#include <symbol.h>
+#include <util/i2string.h>
+#include <util/std_expr.h>
+#include <util/symbol_table.h>
+#include <util/symbol.h>
+
 #include <ansi-c/type2name.h>
 
 #include "modular_globals_analysis.h"

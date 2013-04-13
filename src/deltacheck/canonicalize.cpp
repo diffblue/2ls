@@ -6,9 +6,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <simplify_expr.h>
-#include <expr.h>
-#include <namespace.h>
+#include <util/simplify_expr.h>
+#include <util/expr.h>
+#include <util/namespace.h>
 
 #include "canonicalize.h"
 

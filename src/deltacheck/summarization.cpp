@@ -8,13 +8,13 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <fstream>
 
-#include <config.h>
-#include <xml.h>
-#include <message.h>
-#include <prefix.h>
-#include <cprover_prefix.h>
-#include <std_expr.h>
-#include <xml_expr.h>
+#include <util/config.h>
+#include <util/xml.h>
+#include <util/message.h>
+#include <util/prefix.h>
+#include <util/cprover_prefix.h>
+#include <util/std_expr.h>
+#include <util/xml_expr.h>
 
 #include "get_goto_program.h"
 #include "xml_conversion.h"

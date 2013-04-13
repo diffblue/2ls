@@ -7,9 +7,10 @@ Author: Ondrej Sery, ondrej.sery@d3s.mff.cuni.cz
 
 \*******************************************************************/
 
-#include <symbol_table.h>
 #include <string>
 #include <iostream>
+
+#include <util/symbol_table.h>
 
 #include "cgraph_builder.h"
 

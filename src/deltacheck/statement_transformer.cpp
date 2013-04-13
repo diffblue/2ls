@@ -6,7 +6,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <simplify_expr.h>
+#include <util/simplify_expr.h>
 
 #include <langapi/language_util.h>
 

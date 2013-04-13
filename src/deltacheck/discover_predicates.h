@@ -8,8 +8,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <list>
 
-#include <namespace.h>
-#include <expr.h>
+#include <util/namespace.h>
+#include <util/expr.h>
 
 std::list<exprt> discover_predicates(
   const exprt &src,

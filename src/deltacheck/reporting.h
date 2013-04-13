@@ -12,8 +12,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <vector>
 #include <string>
 
-#include <options.h>
-#include <message.h>
+#include <util/options.h>
+#include <util/message.h>
 
 void reporting(
   const std::list<std::string> &files,

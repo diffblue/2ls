@@ -11,9 +11,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <memory>
 #include <iostream>
 
-#include <i2string.h>
-#include <config.h>
-#include <symbol_table.h>
+#include <util/i2string.h>
+#include <util/config.h>
+#include <util/symbol_table.h>
 
 #include <langapi/mode.h>
 #include <cbmc/version.h>

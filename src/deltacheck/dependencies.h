@@ -9,7 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_DELTACHECK_DEPENDENCIES_H
 #define CPROVER_DELTACHECK_DEPENDENCIES_H
 
-#include <options.h>
+#include <util/options.h>
 
 #include "function_file_map.h"
 

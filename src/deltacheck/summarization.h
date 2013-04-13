@@ -9,9 +9,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_DELTACHECK_SUMMARIZATION_H
 #define CPROVER_DELTACHECK_SUMMARIZATION_H
 
-#include <options.h>
-#include <symbol_table.h>
-#include <message.h>
+#include <util/options.h>
+#include <util/symbol_table.h>
+#include <util/message.h>
 
 #include "function_file_map.h"
 

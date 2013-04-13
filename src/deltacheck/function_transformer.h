@@ -6,10 +6,10 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <iostream>
+#include <ostream>
 
-#include <namespace.h>
-#include <message.h>
+#include <util/namespace.h>
+#include <util/message.h>
 
 #include <goto-programs/goto_functions.h>
 
