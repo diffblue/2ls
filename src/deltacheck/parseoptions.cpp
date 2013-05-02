@@ -208,7 +208,19 @@ int deltacheck_parseoptionst::doit()
       return 10;
     }
     
-    index(cmdline.args);
+    std::ofstream out(cmdline.getval("index"));
+    if(!out)
+    {
+      error(std::string("failed to open output file \"")+
+            cmdline.getval("index")+"\"");
+      return 11;
+    }
+    
+    std::string description;
+    if(cmdline.isset("description"))
+      description=cmdline.getval("description");
+    
+    build_index(cmdline.args, description, out, get_message_handler());
     return 0;
   }
 
@@ -220,7 +232,11 @@ int deltacheck_parseoptionst::doit()
 
   try
   {
-    delta_check(cmdline.args[0], cmdline.args[1], get_message_handler());
+    std::string function;
+    if(cmdline.isset("function"))
+      function=cmdline.getval("function");
+  
+    delta_check(cmdline.args[0], cmdline.args[1], function, get_message_handler());
   }
 
   catch(const char *e)

@@ -20,7 +20,7 @@ Author: Daniel Kroening, kroening@kroening.com
   "(function):" \
   "(debug-level):" \
   "(xml-ui)(xml-interface)" \
-  "(verbosity):(version)(index)"
+  "(verbosity):(version)(index):(description):"
 
 class deltacheck_parseoptionst:
   public parseoptions_baset,

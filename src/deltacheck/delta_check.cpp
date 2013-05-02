@@ -6,7 +6,238 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <fstream>
+
+#include <util/message.h>
+#include <goto-programs/read_goto_binary.h>
+#include <goto-programs/goto_model.h>
+
 #include "index.h"
+#include "function_delta.h"
+#include "version.h"
+#include "delta_check.h"
+
+class get_functiont:public messaget
+{
+public:
+  explicit get_functiont(
+    const indext &_index):index(_index)
+  {
+  }
+
+  const goto_functionst::goto_functiont * operator()(const irep_idt &id)
+  {
+    // do we have it in our current file?
+    if(current_file_name!="")
+    {
+      const goto_functionst::function_mapt::const_iterator
+        f_it=goto_model.goto_functions.function_map.find(id);
+      
+      if(f_it!=goto_model.goto_functions.function_map.end())
+        return &f_it->second; // found
+    }
+    
+    // find in index
+    indext::function_to_filet::const_iterator it=
+      index.function_to_file.find(id);
+     
+    if(it==index.function_to_file.end())
+      return NULL; // not there
+    
+    // pick first file
+    assert(!it->second.empty());
+
+    current_file_name=*(it->second.begin());
+    
+    status("Reading \""+id2string(current_file_name)+"\"");
+    
+    // read the file
+    goto_model.clear();
+    read_goto_binary(
+      id2string(current_file_name),
+      goto_model,
+      get_message_handler());
+
+    const goto_functionst::function_mapt::const_iterator
+      f_it=goto_model.goto_functions.function_map.find(id);
+    
+    assert(f_it!=goto_model.goto_functions.function_map.end());
+    return &f_it->second;
+  }
+
+protected:
+  const indext &index;
+  irep_idt current_file_name;
+  goto_modelt goto_model;
+};
+
+/*******************************************************************\
+
+Function: delta_check_function
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void delta_check_function(
+  const indext &index1,
+  const indext &index2,
+  const std::string &function,
+  std::ostream &report,
+  message_handlert &message_handler)
+{
+  const irep_idt id="c::"+function;
+
+  get_functiont get_function1(index1);
+  get_function1.set_message_handler(message_handler);
+  
+  get_functiont get_function2(index2);
+  get_function2.set_message_handler(message_handler);
+
+  messaget message(message_handler);
+  
+  const goto_functionst::goto_functiont *index1_fkt=
+    get_function1(id);
+  
+  if(index1_fkt==NULL)
+  {
+    message.error("function \""+function+"\" not found in index1");
+    return;
+  }
+
+  const goto_functionst::goto_functiont *index2_fkt=
+    get_function2(id);
+    
+  if(index2_fkt==NULL)
+  {
+    message.error("function \""+function+"\" not found in index2");
+    return;
+  }
+
+  function_delta(*index1_fkt, *index2_fkt, report, message_handler);
+}
+
+/*******************************************************************\
+
+Function: delta_check_all
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void delta_check_all(
+  const indext &index1,
+  const indext &index2,
+  std::ostream &report,
+  message_handlert &message_handler)
+{
+  // we do this by file in index2
+  
+  messaget message(message_handler);
+
+  get_functiont get_function1(index1);
+  get_function1.set_message_handler(message_handler);
+  
+  for(indext::filest::const_iterator
+      file_it=index2.files.begin();
+      file_it!=index2.files.end();
+      file_it++)
+  {
+    message.status("Processing \""+id2string(*file_it)+"\"");
+    
+    // read the file
+    goto_modelt model2;
+    read_goto_binary(id2string(*file_it), model2, message_handler);
+    
+    const std::set<irep_idt> &functions=
+      index2.file_to_function.find(*file_it)->second;
+
+    // now do all functions from model2
+    for(std::set<irep_idt>::const_iterator
+        fkt_it=functions.begin();
+        fkt_it!=functions.end();
+        fkt_it++)
+    {
+      const irep_idt &id=*fkt_it;
+      const goto_functionst::goto_functiont *index2_fkt=
+        &model2.goto_functions.function_map.find(id)->second;
+    
+      // get corresponding index1 function, if available
+      
+      const goto_functionst::goto_functiont *index1_fkt=
+        get_function1(id);
+      
+      if(index1_fkt!=NULL)
+      {
+        message.status("Delta Checking \""+id2string(id)+"\"");
+        
+        report << "<h2>Function " << id << " in " << *file_it
+               << "</h2>" << std::endl;
+        
+        function_delta(*index1_fkt, *index2_fkt, report, message_handler);
+      }
+    }
+  }
+}
+
+/*******************************************************************\
+
+Function: delta_check
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void delta_check(
+  const std::string &index1_file_name,
+  const std::string &index2_file_name,
+  const std::string &function,
+  message_handlert &message_handler)
+{
+  indext index1, index2;
+  
+  messaget message(message_handler);
+  message.status("Reading first index");
+  index1.read(index1_file_name, message_handler);
+  message.status("Reading second index");
+  index2.read(index2_file_name, message_handler);
+
+  std::string report_file_name="deltacheck.html";
+  std::ofstream out(report_file_name.c_str());
+  if(!out)
+  {
+    message.error("failed to write to \""+report_file_name+"\"");
+    return;
+  }
+  
+  out << "<html>\n"
+         "<head>\n"
+         "</head>\n"
+         "\n"
+         "<body>\n";
+
+  out << "<h1>DeltaCheck Report</h1>\n\n";
+  out << "<p>DeltaCheck version: " << DELTACHECK_VERSION << "</p>\n";
+  out << "<p>Old version: " << index1_file_name << " " << index1.description << "</p>\n";
+  out << "<p>New version: " << index2_file_name << " " << index2.description << "</p>\n";
+
+  if(function=="")
+    delta_check_all(index1, index2, out, message_handler);
+  else
+    delta_check_function(index1, index2, function, out, message_handler);
+}
 
 #if 0
 #include <fstream>

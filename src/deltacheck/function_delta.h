@@ -6,17 +6,18 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef CPROVER_DELTA_CHECK_H
-#define CPROVER_DELTA_CHECK_H
+#ifndef CPROVER_FUNCTION_DELTA_H
+#define CPROVER_FUNCTION_DELTA_H
 
-#include <string>
+#include <ostream>
 
 #include <util/message.h>
+#include <goto-programs/goto_functions.h>
 
-void delta_check(
-  const std::string &index1,
-  const std::string &index2,
-  const std::string &function,
+void function_delta(
+  const goto_functionst::goto_functiont &f1,
+  const goto_functionst::goto_functiont &f2,
+  std::ostream &,
   message_handlert &);
 
 #endif

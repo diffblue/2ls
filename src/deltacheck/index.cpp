@@ -6,11 +6,17 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <util/xml.h>
+#include <xmllang/xml_parser.h>
+
+#include <goto-programs/read_goto_binary.h>
+#include <goto-programs/goto_model.h>
+
 #include "index.h"
 
 /*******************************************************************\
 
-Function: index
+Function: build_index
 
   Inputs:
 
@@ -20,8 +26,103 @@ Function: index
 
 \*******************************************************************/
 
-void index(const std::vector<std::string> &files)
+void build_index(
+  const std::vector<std::string> &files,
+  const std::string &description,
+  std::ostream &out,
+  message_handlert &message_handler)
 {
+  out << "<?xml verion=\"1.0\" encoding=\"UTF-8\"?>" << std::endl;
+
+  out << "<DeltaCheckIndex>" << std::endl;
+  
+  out << "<description>";
+  xmlt::escape(description, out);
+  out << "</description>" << std::endl;
+  out << std::endl;
+  
+  for(std::vector<std::string>::const_iterator
+      it=files.begin();
+      it!=files.end();
+      it++)
+  {
+    out << "<file name=\"";
+    xmlt::escape_attribute(*it, out);
+    out << ">" << std::endl;
+
+    goto_modelt goto_model;
+    
+    if(read_goto_binary(*it, goto_model, message_handler))
+    {
+      messaget message(message_handler);
+      message.error("failed to read \""+*it+"\"");
+    }
+
+    for(goto_functionst::function_mapt::const_iterator
+        f_it=goto_model.goto_functions.function_map.begin();
+        f_it!=goto_model.goto_functions.function_map.end();
+        f_it++)
+    {
+      if(f_it->second.body_available)
+      {
+        out << "  <function id=\"";
+        xmlt::escape_attribute(id2string(f_it->first), out);
+        out << "/>" << std::endl;
+      }
+    }    
+    
+    out << "</file>" << std::endl;
+  }
+  
+  out << "</DeltaCheckIndex>" << std::endl;  
+}
+
+/*******************************************************************\
+
+Function: indext::read
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void indext::read(
+  const std::string &in_file_name,
+  message_handlert &message_handler)
+{
+  xmlt xml;
+  parse_xml(in_file_name, message_handler, xml);
+    
+  xmlt::elementst::const_iterator DeltaCheckIndex=xml.find("DeltaCheckIndex");
+
+  if(DeltaCheckIndex!=xml.elements.end())
+  {
+    description=DeltaCheckIndex->get_element("description");
+  
+    for(xmlt::elementst::const_iterator
+        file_it=DeltaCheckIndex->elements.begin();
+        file_it!=DeltaCheckIndex->elements.end();
+        file_it++)
+    {
+      irep_idt file_name=file_it->get_attribute("name");
+      
+      files.insert(file_name);
+
+      for(xmlt::elementst::const_iterator
+          fkt_it=file_it->elements.begin();
+          fkt_it!=file_it->elements.end();
+          fkt_it++)
+      {
+        irep_idt id=fkt_it->get_attribute("id");
+        functions.insert(id);
+        function_to_file[id].insert(file_name);
+        file_to_function[file_name].insert(id);
+      }
+    }
+  }
 }
 
 #if 0
