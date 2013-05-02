@@ -14,16 +14,13 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/options.h>
 
 #include <goto-programs/goto_functions.h>
-//#include <langapi/language_ui.h>
 #include <cbmc/xml_interface.h>
 
 #define DELTACHECK_OPTIONS \
   "(function):" \
   "(debug-level):" \
-  "(call-graph-dot):" \
-  "(xml-ui)(xml-interface)(claim):" \
-  "(show-goto-functions)(show-claims)" \
-  "(verbosity):(version)(summarize)(html)"
+  "(xml-ui)(xml-interface)" \
+  "(verbosity):(version)(index)"
 
 class deltacheck_parseoptionst:
   public parseoptions_baset,
@@ -41,16 +38,6 @@ protected:
   virtual void register_languages();
 
   virtual void get_command_line_options(optionst &options);
-
-  // PHASE 1
-  virtual int summarization(
-    const optionst &options,
-    const std::list<std::string> &files);
-
-  // PHASE 2
-  virtual int reporting(
-    const optionst &options,
-    const std::list<std::string> &files);
 
   void set_verbosity(messaget &message);
   

@@ -18,15 +18,12 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <langapi/mode.h>
 #include <cbmc/version.h>
 #include <ansi-c/ansi_c_language.h>
-
-#ifdef HAVE_CPP
 #include <cpp/cpp_language.h>
-#endif
 
 #include "parseoptions.h"
 #include "version.h"
-#include "summarization.h"
-#include "reporting.h"
+#include "index.h"
+#include "delta_check.h"
 
 /*******************************************************************\
 
@@ -167,10 +164,7 @@ Function: deltacheck_parseoptionst::register_langauges
 void deltacheck_parseoptionst::register_languages()
 {
   register_language(new_ansi_c_language);
-  
-  #ifdef HAVE_CPP
   register_language(new_cpp_language);
-  #endif
 }
 
 /*******************************************************************\
@@ -202,147 +196,31 @@ int deltacheck_parseoptionst::doit()
   set_verbosity(*this);
   set_message_handler(ui_message_handler);
 
-  if(cmdline.args.size()!=1)
+  // We have two phases:
+  // 1) indexing: given some goto-binaries, produce index
+  // 2) delta checking: given two indices, do delta checking
+
+  if(cmdline.isset("index"))
+  {
+    if(cmdline.args.size()==0)
+    {
+      usage_error();
+      return 10;
+    }
+    
+    index(cmdline.args);
+    return 0;
+  }
+
+  if(cmdline.args.size()!=2)
   {
     usage_error();
     return 10;
   }
-  
-  if(cmdline.isset("call-graph-dot"))
-    options.set_option("call-graph-dot", cmdline.getval("call-graph-dot"));
-  
-  // We have two phases:
-  // 1) summarization: given _one_ goto-binary, produce summary
-  // 2) reporting: sift information from summaries
-  
-  // we first read the list of files
-  {
-    std::list<std::string> files;
 
-    std::ifstream in(cmdline.args[0].c_str());
-    
-    if(!in)
-    {
-      error("failed to open list-of-files "+cmdline.args[0]);
-      return 10;
-    }
-    
-    std::string line;
-    while(getline(in, line))
-    {
-      if(line!="" && line[0]!='#')
-      {
-        std::string file=line;
-        if(!std::ifstream(file.c_str()))
-        {
-          error("failed to open goto-binary "+file);
-          return 10;
-        }
-        
-        files.push_back(line);
-      }
-    }
-  
-    if(cmdline.isset("summarize"))
-      return summarization(options, files);
-    else
-      return reporting(options, files);
-  }
-}
-
-/*******************************************************************\
-
-Function: deltacheck_parseoptionst::summarization
-
-  Inputs:
-
- Outputs:
-
- Purpose: summarize one goto binary
-
-\*******************************************************************/
-
-int deltacheck_parseoptionst::summarization(
-  const optionst &options,
-  const std::list<std::string> &files)
-{
   try
   {
-    status("Building function->file map");
-    function_file_mapt function_file_map;
-
-    build_function_file_map(
-      files,
-      get_message_handler(),
-      function_file_map);
-
-    for(std::list<std::string>::const_iterator
-        files_it=files.begin();
-        files_it!=files.end();
-        files_it++)
-    {
-      status("");
-      status("PHASE 1: Summarizing "+*files_it);
-      
-      ::summarization(
-        function_file_map,
-        *files_it,
-        options,
-        get_message_handler());
-    }
-  }
-
-  catch(const char *e)
-  {
-    error(e);
-    return 13;
-  }
-
-  catch(const std::string e)
-  {
-    error(e);
-    return 13;
-  }
-  
-  catch(int)
-  {
-    return 13;
-  }
-  
-  catch(std::bad_alloc)
-  {
-    error("Out of memory");
-    return 14;
-  }
-  
-  return 0;
-}
-
-/*******************************************************************\
-
-Function: deltacheck_parseoptionst::reporting
-
-  Inputs:
-
- Outputs:
-
- Purpose: collect and analyze the summaries
-
-\*******************************************************************/
-
-int deltacheck_parseoptionst::reporting(
-  const optionst &options,
-  const std::list<std::string> &files)
-{
-  try
-  {
-    status("PHASE 2: reporting ("+
-           i2string(cmdline.args.size())+" files)");
-
-    if(cmdline.isset("html"))
-      ::reporting_html(files, options, get_message_handler());
-    else
-      ::reporting_cmdline(files, options, get_message_handler());
+    delta_check(cmdline.args[0], cmdline.args[1], get_message_handler());
   }
 
   catch(const char *e)
@@ -387,7 +265,7 @@ void deltacheck_parseoptionst::help()
 {
   std::cout <<
     "\n"
-    "* *         DELTACHECK " DELTACHECK_VERSION " - Copyright (C) 2011-2012        * *\n"
+    "* *         DELTACHECK " DELTACHECK_VERSION " - Copyright (C) 2011-2013        * *\n"
     "* *                    based on CBMC " CBMC_VERSION "                    * *\n"
     "* *                     Daniel Kroening                     * *\n"
     "* *      Oxford University, Computer Science Department     * *\n"
@@ -395,15 +273,14 @@ void deltacheck_parseoptionst::help()
     "\n"
     "Usage:                       Purpose:\n"
     "\n"
-    " deltacheck [-?] [-h] [--help]   show help\n"
-    " deltacheck files.txt         report results (phase II)\n"
+    " deltacheck [-?] [-h] [--help] show help\n"
+    " deltacheck --index files     build index for given file(s)\n"
+    " deltacheck index1 index2     delta check two versions\n"
     "\n"
-    "Phase I (summarization) options:\n"
-    " --summarize files.txt        summarize given goto-binaries\n"
+    "Indexing options:\n"
     "\n"
-    "Phase II (reporting) options:\n"
-    " --show-claims                show properties\n"
-    " --claim id                   only report on given claim\n"
+    "Delta checking options:\n"
+    " --function id                limit analysis to given function\n"
     "\n"    
     "Other options:\n"
     " --version                    show version and exit\n"

@@ -1,16 +1,7 @@
 include ../config.inc
 CBMC ?= ../..
 
-SRC = main.cpp parseoptions.cpp summarization.cpp reporting.cpp \
-      call_graph.cpp function_file_map.cpp dependencies.cpp \
-      collect_symbols.cpp function_transformer.cpp \
-      statement_transformer.cpp discover_predicates.cpp \
-      canonicalize.cpp get_goto_program.cpp predicates.cpp \
-      cgraph_builder.cpp \
-      modular_code_analysis.cpp \
-      modular_fptr_analysis.cpp \
-      modular_globals_analysis.cpp \
-      xml_conversion.cpp \
+SRC = main.cpp parseoptions.cpp index.cpp delta_check.cpp \
       $(CBMC)/src/cbmc/xml_interface.cpp
 
 OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
