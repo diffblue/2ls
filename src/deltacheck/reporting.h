@@ -15,7 +15,12 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/options.h>
 #include <util/message.h>
 
-void reporting(
+void reporting_html(
+  const std::list<std::string> &files,
+  const optionst &,
+  message_handlert &);
+
+void reporting_cmdline(
   const std::list<std::string> &files,
   const optionst &,
   message_handlert &);

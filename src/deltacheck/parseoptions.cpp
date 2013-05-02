@@ -339,7 +339,10 @@ int deltacheck_parseoptionst::reporting(
     status("PHASE 2: reporting ("+
            i2string(cmdline.args.size())+" files)");
 
-    ::reporting(files, options, get_message_handler());
+    if(cmdline.isset("html"))
+      ::reporting_html(files, options, get_message_handler());
+    else
+      ::reporting_cmdline(files, options, get_message_handler());
   }
 
   catch(const char *e)

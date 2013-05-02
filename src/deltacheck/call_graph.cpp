@@ -10,7 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
-Function: call_grapht::add_summary
+Function: summary_to_call_graph
 
   Inputs:
 
@@ -20,7 +20,7 @@ Function: call_grapht::add_summary
 
 \*******************************************************************/
 
-void call_grapht::add_summary(const xmlt &xml)
+void summary_to_call_graph(const xmlt &xml, call_grapht &dest)
 {
   xmlt::elementst::const_iterator functions=xml.find("functions");
   
@@ -31,8 +31,7 @@ void call_grapht::add_summary(const xmlt &xml)
         f_it!=functions->elements.end();
         f_it++)
     {
-      std::pair<irep_idt, irep_idt> entry;
-      entry.first=f_it->get_attribute("id");
+      irep_idt caller=f_it->get_attribute("id");
 
       for(xmlt::elementst::const_iterator
           c_it=f_it->elements.begin();
@@ -41,40 +40,10 @@ void call_grapht::add_summary(const xmlt &xml)
       {
         if(c_it->name=="called")
         {
-          entry.second=c_it->get_attribute("id");
-          insert(entry);
+          irep_idt callee=c_it->get_attribute("id");
+          dest.add(caller, callee);
         }
       }
     }
   }
 }
-
-/*******************************************************************\
-
-Function: call_grapht::output_dot
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void call_grapht::output_dot(std::ostream &out) const
-{
-  out << "digraph call_graph {" << std::endl;
-
-  for(const_iterator it=begin();
-      it!=end();
-      it++)
-  {
-    out << "  \"" << it->first << "\" -> "
-        << "\"" << it->second << "\" "
-        << " [arrowhead=\"vee\"];"
-        << std::endl;
-  }
-  
-  out << "}" << std::endl;
-}
-

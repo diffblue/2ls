@@ -23,7 +23,7 @@ Author: Daniel Kroening, kroening@kroening.com
   "(call-graph-dot):" \
   "(xml-ui)(xml-interface)(claim):" \
   "(show-goto-functions)(show-claims)" \
-  "(verbosity):(version)(summarize)"
+  "(verbosity):(version)(summarize)(html)"
 
 class deltacheck_parseoptionst:
   public parseoptions_baset,
