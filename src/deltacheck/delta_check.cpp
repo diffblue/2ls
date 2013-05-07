@@ -118,7 +118,7 @@ void delta_check_function(
     return;
   }
 
-  function_delta(*index1_fkt, *index2_fkt, report, message_handler);
+  function_delta(id, *index1_fkt, *index2_fkt, report, message_handler);
 }
 
 /*******************************************************************\
@@ -182,7 +182,7 @@ void delta_check_all(
         report << "<h2>Function " << id << " in " << *file_it
                << "</h2>" << std::endl;
         
-        function_delta(*index1_fkt, *index2_fkt, report, message_handler);
+        function_delta(id, *index1_fkt, *index2_fkt, report, message_handler);
       }
     }
   }
