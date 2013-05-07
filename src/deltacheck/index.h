@@ -41,7 +41,7 @@ public:
   
   void read(const std::string &file, message_handlert &);
   
-  std::string description;
+  std::string description, file_name;
 };
 
 #endif

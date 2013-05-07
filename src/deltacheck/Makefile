@@ -2,7 +2,7 @@ include ../config.inc
 CBMC ?= ../..
 
 SRC = main.cpp parseoptions.cpp index.cpp delta_check.cpp \
-      function_delta.cpp \
+      function_delta.cpp html_report.cpp logo.cpp \
       $(CBMC)/src/cbmc/xml_interface.cpp
 
 OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \

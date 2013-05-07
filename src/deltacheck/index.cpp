@@ -13,6 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/goto_model.h>
 
 #include "index.h"
+#include "version.h"
 
 /*******************************************************************\
 
@@ -34,7 +35,8 @@ void build_index(
 {
   out << "<?xml verion=\"1.0\" encoding=\"UTF-8\"?>" << std::endl;
 
-  out << "<DeltaCheckIndex>" << std::endl;
+  out << "<DeltaCheckIndex version=\""
+      << DELTACHECK_VERSION << "\">" << std::endl;
   
   out << "<description>";
   xmlt::escape(description, out);
@@ -93,6 +95,8 @@ void indext::read(
   const std::string &in_file_name,
   message_handlert &message_handler)
 {
+  file_name=in_file_name;
+
   xmlt xml;
   parse_xml(in_file_name, message_handler, xml);
     

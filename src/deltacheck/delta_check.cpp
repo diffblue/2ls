@@ -14,8 +14,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "index.h"
 #include "function_delta.h"
-#include "version.h"
 #include "delta_check.h"
+#include "html_report.h"
 
 class get_functiont:public messaget
 {
@@ -221,22 +221,15 @@ void delta_check(
     message.error("failed to write to \""+report_file_name+"\"");
     return;
   }
-  
-  out << "<html>\n"
-         "<head>\n"
-         "</head>\n"
-         "\n"
-         "<body>\n";
 
-  out << "<h1>DeltaCheck Report</h1>\n\n";
-  out << "<p>DeltaCheck version: " << DELTACHECK_VERSION << "</p>\n";
-  out << "<p>Old version: " << index1_file_name << " " << index1.description << "</p>\n";
-  out << "<p>New version: " << index2_file_name << " " << index2.description << "</p>\n";
+  html_report_header(out, index1, index2);  
 
   if(function=="")
     delta_check_all(index1, index2, out, message_handler);
   else
     delta_check_function(index1, index2, function, out, message_handler);
+
+  html_report_footer(out, index1, index2);  
 }
 
 #if 0
