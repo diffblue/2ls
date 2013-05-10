@@ -38,5 +38,7 @@ void function_delta(
   }
 
   out << "<h2>Function " << id << "</h2>\n";
+
+  
 }
 

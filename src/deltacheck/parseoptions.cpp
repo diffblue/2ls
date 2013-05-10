@@ -24,6 +24,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "version.h"
 #include "index.h"
 #include "delta_check.h"
+#include "simple_check.h"
 
 /*******************************************************************\
 
@@ -224,19 +225,29 @@ int deltacheck_parseoptionst::doit()
     return 0;
   }
 
-  if(cmdline.args.size()!=2)
-  {
-    usage_error();
-    return 10;
-  }
-
   try
   {
-    std::string function;
-    if(cmdline.isset("function"))
-      function=cmdline.getval("function");
-  
-    delta_check(cmdline.args[0], cmdline.args[1], function, get_message_handler());
+    if(cmdline.args.size()==2)
+    {
+      std::string function;
+      if(cmdline.isset("function"))
+        function=cmdline.getval("function");
+    
+      delta_check(cmdline.args[0], cmdline.args[1], function, get_message_handler());
+    }
+    else if(cmdline.args.size()==1)
+    {
+      std::string function;
+      if(cmdline.isset("function"))
+        function=cmdline.getval("function");
+    
+      simple_check(cmdline.args[0], function, get_message_handler());
+    }
+    else
+    {
+      usage_error();
+      return 10;
+    }
   }
 
   catch(const char *e)
