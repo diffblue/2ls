@@ -32,7 +32,6 @@ public:
     return "DeltaCheck equalit solver";
   }
   
-protected:
   void set_equal(const exprt &, const exprt &);
 };
 

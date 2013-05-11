@@ -6,8 +6,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <analyses/goto_check.h>
-
 #include "solver.h"
 #include "function_delta.h"
 
@@ -59,11 +57,6 @@ void function_deltat::encode(
     
     if(instruction.is_goto())
     {
-      // 'true' branch
-      exprt guard_true=rename_rhs(instruction.guard, i_it, v);
-      
-      // 'false' branch
-      exprt guard_false=rename_rhs(gen_not(instruction.guard), i_it, v);
     }
     else if(instruction.is_assert())
     {
