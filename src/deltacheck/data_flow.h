@@ -50,7 +50,7 @@ protected:
     goto_programt::const_targetst succ, pred;
   };
   
-  bool propagate(const loct &loc);
+  bool join(const loct &loc);
   
   typedef std::map<goto_programt::const_targett, loct> loc_mapt;
   loc_mapt loc_map;
