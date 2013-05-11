@@ -33,15 +33,14 @@ protected:
   exprt rename(kindt kind, const exprt &src, goto_programt::const_targett t);
   typet rename(kindt kind, const typet &src, goto_programt::const_targett t);
   
+  class symbol_exprt guard(goto_programt::const_targett t);
+  
   void transformer(goto_programt::const_targett t);
   void skip_transformer(goto_programt::const_targett t);
 
   void collect_objects(const goto_programt &);
   void collect_objects(const exprt &);
 
-  typedef std::set<exprt> objectst;
-  objectst objects;  
-  
   typedef std::vector<goto_programt::const_targett> work_queuet;
   work_queuet work_queue;
   
@@ -50,8 +49,11 @@ protected:
     goto_programt::const_targetst succ, pred;
   };
   
-  bool join(const loct &loc);
+  bool join(goto_programt::const_targett t);
   
   typedef std::map<goto_programt::const_targett, loct> loc_mapt;
   loc_mapt loc_map;
+
+  typedef std::set<exprt> objectst;
+  objectst objects; 
 };

@@ -34,7 +34,7 @@ exprt data_flowt::rename(
   {
     irep_idt identifier=to_symbol_expr(tmp).get_identifier();
     irep_idt new_identifier=
-      id2string(identifier)+"#"+i2string(version)+
+      id2string(identifier)+"#"+i2string(t->location_number)+"v"+i2string(version)+
       (kind==OUT?"O":kind==OUT_TAKEN?"Ot":"I");
     to_symbol_expr(tmp).set_identifier(new_identifier);
   }
@@ -49,23 +49,43 @@ exprt data_flowt::rename(
 
 /*******************************************************************\
 
-Function: data_flowt::transformer
+Function: data_flowt::guard
 
   Inputs:
 
  Outputs:
 
- Purpose: adds the transformer for location t
+ Purpose:
+
+\*******************************************************************/
+
+symbol_exprt data_flowt::guard(goto_programt::const_targett t)
+{
+  irep_idt id=
+    "data_flow::\\guard"+i2string(t->location_number)+"v"+i2string(version);
+  return symbol_exprt(id, bool_typet());
+}
+
+/*******************************************************************\
+
+Function: data_flowt::skip_transformer
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: adds the skip transformer for location t
 
 \*******************************************************************/
 
 void data_flowt::skip_transformer(goto_programt::const_targett t)
 {
+  // this says that v_OUT = v_IN
   for(objectst::const_iterator
       o_it=objects.begin();
       o_it!=objects.end();
       o_it++)
-      solver.set_equal(rename(OUT, *o_it, t), rename(IN, *o_it, t));
+    solver.set_equal(rename(OUT, *o_it, t), rename(IN, *o_it, t));
 }
 
 /*******************************************************************\
@@ -195,12 +215,53 @@ Function: data_flowt::join
 
 \*******************************************************************/
 
-bool data_flowt::join(const loct &loc)
+bool data_flowt::join(goto_programt::const_targett t)
 {
   // find facts that are true at all predecessors of t
   // and make them true at t
 
-  return false;
+  // build 'in' vector
+  solvert::var_sett in;
+  in.reserve(objects.size());
+  
+  for(objectst::const_iterator
+      o_it=objects.begin();
+      o_it!=objects.end();
+      o_it++)
+  {
+    in.push_back(rename(IN, *o_it, t));
+  }
+  
+  // build list of matching 'out' vectors
+  std::list<solvert::var_sett> src;
+
+  const loct &loc=loc_map[t];
+  for(goto_programt::const_targetst::const_iterator
+      s_it=loc.succ.begin(); s_it!=loc.succ.end(); s_it++)
+  {
+    goto_programt::const_targett succ=*s_it;
+    goto_programt::const_targett succ_next=*s_it;
+    succ_next++;
+    
+    src.push_back(solvert::var_sett());
+    solvert::var_sett &out=src.back();
+    out.reserve(objects.size());
+
+    // connect branches to correct output
+    kindt kind=
+      (succ->is_goto() && succ_next!=t)?OUT_TAKEN:OUT;
+
+    for(objectst::const_iterator
+        o_it=objects.begin();
+        o_it!=objects.end();
+        o_it++)
+    {
+      out.push_back(rename(kind, *o_it, succ));
+    }
+    
+  }
+
+  return solver.join(src, in);
 }
 
 /*******************************************************************\
@@ -224,7 +285,11 @@ void data_flowt::operator()(const goto_programt &goto_program)
   forall_goto_program_instructions(it, goto_program)
   {
     loct &loc=loc_map[it];
+    
+    // build successors
     goto_program.get_successors(it, loc.succ);
+
+    // build predecessors
     for(goto_programt::const_targetst::const_iterator
         s_it=loc.succ.begin(); s_it!=loc.succ.end(); s_it++)
       loc_map[*s_it].pred.push_back(it);
@@ -243,10 +308,9 @@ void data_flowt::operator()(const goto_programt &goto_program)
     goto_programt::const_targett t=work_queue.back();
     work_queue.pop_back();
 
-    const loct &loc=loc_map[t];
-
-    if(join(loc))
+    if(join(t))
     {
+      const loct &loc=loc_map[t];
       for(goto_programt::const_targetst::const_iterator
           s_it=loc.succ.begin(); s_it!=loc.succ.end(); s_it++)
         work_queue.push_back(*s_it);

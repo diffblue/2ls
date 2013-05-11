@@ -86,3 +86,21 @@ void solvert::print_assignment(std::ostream &out) const
 {
 }
   
+/*******************************************************************\
+
+Function: solvert::join
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool solvert::join(const src_listt &src,
+                   const var_sett &dest)
+{
+  return false;
+}
+  
