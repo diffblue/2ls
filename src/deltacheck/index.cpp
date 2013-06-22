@@ -57,7 +57,7 @@ void build_index(
     if(read_goto_binary(*it, goto_model, message_handler))
     {
       messaget message(message_handler);
-      message.error("failed to read \""+*it+"\"");
+      message.error() << "failed to read `" << *it << "'" << messaget::eom;
     }
 
     for(goto_functionst::function_mapt::const_iterator
@@ -297,7 +297,7 @@ void dump_exported_functions(
       continue;
 
     messaget message(message_handler);
-    message.status("Summarizing "+id2string(f_it->first));
+    message.status() << "Summarizing " << f_it->first << messaget::eom;
   
     summarize_function(
       ns, goto_functions, symbol, f_it->second, message_handler, out);
@@ -446,7 +446,7 @@ void summarization(
   summary_file << "</summaries>" << std::endl;
 
   messaget message(message_handler);
-  message.status("Summary written as "+summary_file_name);
+  message.status() << "Summary written as " << summary_file_name << messaget::eom;
 }
 
 #endif
