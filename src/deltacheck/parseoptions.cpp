@@ -209,11 +209,13 @@ int deltacheck_parseoptionst::doit()
       return 10;
     }
     
+    status() << "Building index `" << cmdline.getval("index") << "'" << eom;
+    
     std::ofstream out(cmdline.getval("index"));
     if(!out)
     {
-      error(std::string("failed to open output file \"")+
-            cmdline.getval("index")+"\"");
+      error() << "failed to open output file `"
+              << cmdline.getval("index") << "' " << eom;
       return 11;
     }
     
@@ -256,7 +258,7 @@ int deltacheck_parseoptionst::doit()
     return 13;
   }
 
-  catch(const std::string e)
+  catch(const std::string &e)
   {
     error(e);
     return 13;
@@ -269,7 +271,7 @@ int deltacheck_parseoptionst::doit()
   
   catch(std::bad_alloc)
   {
-    error("Out of memory");
+    error() << "Out of memory" << eom;
     return 14;
   }
   
@@ -301,7 +303,8 @@ void deltacheck_parseoptionst::help()
     "Usage:                       Purpose:\n"
     "\n"
     " deltacheck [-?] [-h] [--help] show help\n"
-    " deltacheck --index files     build index for given file(s)\n"
+    " deltacheck --index           \n"
+    "   index-file.xml file(s)     build index for given file(s)\n"
     " deltacheck index1 index2     delta check two versions\n"
     "\n"
     "Indexing options:\n"
