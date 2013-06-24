@@ -62,15 +62,16 @@ Function: deltacheck_parseoptionst::set_verbosity
 
 void deltacheck_parseoptionst::set_verbosity(messaget &message)
 {
-  int v=8;
+  // our default verbosity
+  int v=messaget::M_STATISTICS;
   
   if(cmdline.isset("verbosity"))
   {
     v=atoi(cmdline.getval("verbosity"));
     if(v<0)
       v=0;
-    else if(v>9)
-      v=9;
+    else if(v>10)
+      v=10;
   }
   
   message.set_verbosity(v);
@@ -197,38 +198,38 @@ int deltacheck_parseoptionst::doit()
   set_verbosity(*this);
   set_message_handler(ui_message_handler);
 
-  // We have two phases:
-  // 1) indexing: given some goto-binaries, produce index
-  // 2) delta checking: given two indices, do delta checking
-
-  if(cmdline.isset("index"))
-  {
-    if(cmdline.args.size()==0)
-    {
-      usage_error();
-      return 10;
-    }
-    
-    status() << "Building index `" << cmdline.getval("index") << "'" << eom;
-    
-    std::ofstream out(cmdline.getval("index"));
-    if(!out)
-    {
-      error() << "failed to open output file `"
-              << cmdline.getval("index") << "' " << eom;
-      return 11;
-    }
-    
-    std::string description;
-    if(cmdline.isset("description"))
-      description=cmdline.getval("description");
-    
-    build_index(cmdline.args, description, out, get_message_handler());
-    return 0;
-  }
-
   try
   {
+    // We have two phases:
+    // 1) indexing: given some goto-binaries, produce index
+    // 2) delta checking: given two indices, do delta checking
+
+    if(cmdline.isset("index"))
+    {
+      if(cmdline.args.size()==0)
+      {
+        usage_error();
+        return 10;
+      }
+      
+      status() << "Building index `" << cmdline.getval("index") << "'" << eom;
+      
+      std::ofstream out(cmdline.getval("index"));
+      if(!out)
+      {
+        error() << "failed to open output file `"
+                << cmdline.getval("index") << "' " << eom;
+        return 11;
+      }
+      
+      std::string description;
+      if(cmdline.isset("description"))
+        description=cmdline.getval("description");
+      
+      build_index(cmdline.args, description, out, get_message_handler());
+      return 0;
+    }
+
     if(cmdline.args.size()==2)
     {
       std::string function;
