@@ -99,32 +99,32 @@ void indext::read(
 
   xmlt xml;
   parse_xml(in_file_name, message_handler, xml);
-    
-  xmlt::elementst::const_iterator DeltaCheckIndex=xml.find("DeltaCheckIndex");
-
-  if(DeltaCheckIndex!=xml.elements.end())
-  {
-    description=DeltaCheckIndex->get_element("description");
   
+  if(xml.name!="DeltaCheckIndex")
+    return;
+
+  description=xml.get_element("description");
+
+  for(xmlt::elementst::const_iterator
+      file_it=xml.elements.begin();
+      file_it!=xml.elements.end();
+      file_it++)
+  {
+    if(file_it->name!="file") continue;
+  
+    irep_idt file_name=file_it->get_attribute("name");
+    
+    // create map entry
+    file_to_function[file_name];
+
     for(xmlt::elementst::const_iterator
-        file_it=DeltaCheckIndex->elements.begin();
-        file_it!=DeltaCheckIndex->elements.end();
-        file_it++)
+        fkt_it=file_it->elements.begin();
+        fkt_it!=file_it->elements.end();
+        fkt_it++)
     {
-      irep_idt file_name=file_it->get_attribute("name");
-
-      // create map entry
-      file_to_function[file_name];      
-
-      for(xmlt::elementst::const_iterator
-          fkt_it=file_it->elements.begin();
-          fkt_it!=file_it->elements.end();
-          fkt_it++)
-      {
-        irep_idt id=fkt_it->get_attribute("id");
-        function_to_file[id].insert(file_name);
-        file_to_function[file_name].insert(id);
-      }
+      irep_idt function_id=fkt_it->get_attribute("id");
+      function_to_file[function_id].insert(file_name);
+      file_to_function[file_name].insert(function_id);
     }
   }
 }
