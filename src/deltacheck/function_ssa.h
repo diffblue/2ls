@@ -20,6 +20,14 @@ public:
 
   inline function_SSAt(
     const goto_functiont &goto_function,
+    const namespacet &_ns,
+    const std::string &_suffix):ns(_ns), suffix(_suffix)
+  {
+    build(goto_function);
+  }
+  
+  inline function_SSAt(
+    const goto_functiont &goto_function,
     const namespacet &_ns):ns(_ns)
   {
     build(goto_function);
@@ -27,14 +35,11 @@ public:
   
   void output(std::ostream &);
   
-  // the guards are conjunctions
-  typedef exprt::operandst guardt;
-  
   class nodet
   {
   public:
     equal_exprt equality;
-    guardt guard;
+    exprt guard;
     goto_programt::const_targett loc;
   };
   
@@ -42,16 +47,20 @@ public:
   nodest nodes;
 
 protected:
+  const namespacet &ns;
+  std::string suffix; // an extra suffix  
+
   void build(const goto_functiont &goto_function);
   void output(const nodet &, std::ostream &);
 
-  const namespacet &ns;
   
   typedef std::map<irep_idt, unsigned> ssa_mapt;
+  ssa_mapt ssa_map;
   
-  exprt rename(const exprt &, ssa_mapt &);
-  exprt assign(const exprt &, ssa_mapt &);
+  exprt rename(const exprt &);
+  exprt assign(const exprt &);
 
+  symbol_exprt guard_symbol();
 };
 
 #endif

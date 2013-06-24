@@ -27,8 +27,7 @@ Function: function_SSAt::build
 
 void function_SSAt::build(const goto_functiont &goto_function)
 {
-  guardt guard;
-  ssa_mapt ssa_map;
+  exprt guard=guard_symbol();
 
   forall_goto_program_instructions(i_it, goto_function.body)
   {
@@ -38,22 +37,40 @@ void function_SSAt::build(const goto_functiont &goto_function)
     
       nodes.push_back(nodet());
       nodet &n=nodes.back();
-    
-      n.guard=guard;
+      n.guard=rename(guard);
 
       // order matters here, RHS is done before LHS
-      n.equality.rhs()=rename(code_assign.rhs(), ssa_map);
-      n.equality.lhs()=assign(code_assign.lhs(), ssa_map);
+      n.equality.rhs()=rename(code_assign.rhs());
+      n.equality.lhs()=assign(code_assign.lhs());
     }
     else if(i_it->is_goto())
     {
-      // possibly adds guard
-      exprt g=rename(i_it->guard, ssa_map);
-      
-      guard.push_back(gen_not(g));
+      // changes the guard
+      nodes.push_back(nodet());
+      nodet &n=nodes.back();
+      n.guard=rename(guard);
+    
+      // order matters here, RHS is done before LHS
+      n.equality.rhs()=rename(and_exprt(guard, i_it->guard));
+      n.equality.lhs()=assign(guard);
     }
     else if(i_it->is_function_call())
     {
+      const code_function_callt &code_function_call=
+        to_code_function_call(i_it->code);
+
+      if(code_function_call.lhs().is_not_nil())
+      {
+        #if 0
+        nodes.push_back(nodet());
+        nodet &n=nodes.back();
+        n.guard=rename(guard);
+
+        // order matters here, RHS is done before LHS
+        n.equality.rhs()=rename(code_assign.rhs());
+        n.equality.lhs()=assign(code_function_call.lhs());
+        #endif
+      }
     }
     else if(i_it->is_return())
     {
@@ -69,6 +86,23 @@ void function_SSAt::build(const goto_functiont &goto_function)
 
 /*******************************************************************\
 
+Function: function_SSAt::guard_symbol
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+symbol_exprt function_SSAt::guard_symbol()
+{
+  return symbol_exprt("ssa::$guard", bool_typet());
+}
+
+/*******************************************************************\
+
 Function: function_SSAt::rename
 
   Inputs:
@@ -79,14 +113,14 @@ Function: function_SSAt::rename
 
 \*******************************************************************/
 
-exprt function_SSAt::rename(const exprt &expr, ssa_mapt &ssa_map)
+exprt function_SSAt::rename(const exprt &expr)
 {
   if(expr.id()==ID_symbol)
   {
     symbol_exprt symbol_expr=to_symbol_expr(expr); // copy
     const irep_idt &old_id=symbol_expr.get_identifier();
     unsigned cnt=ssa_map[old_id];
-    irep_idt new_id=id2string(old_id)+"#"+i2string(cnt);
+    irep_idt new_id=id2string(old_id)+"#"+i2string(cnt)+suffix;
     symbol_expr.set_identifier(new_id);
     return symbol_expr;
   }
@@ -98,7 +132,7 @@ exprt function_SSAt::rename(const exprt &expr, ssa_mapt &ssa_map)
   {
     exprt tmp=expr; // copy
     Forall_operands(it, tmp)
-      *it=rename(*it, ssa_map);
+      *it=rename(*it);
     return tmp;
   }
 }
@@ -115,39 +149,39 @@ Function: function_SSAt::assign
 
 \*******************************************************************/
 
-exprt function_SSAt::assign(const exprt &expr, ssa_mapt &ssa_map)
+exprt function_SSAt::assign(const exprt &expr)
 {
   if(expr.id()==ID_symbol)
   {
     const irep_idt &old_id=to_symbol_expr(expr).get_identifier();
     ++ssa_map[old_id];
-    return rename(expr, ssa_map);
+    return rename(expr);
   }
   else if(expr.id()==ID_index)
   {
     index_exprt index_expr=to_index_expr(expr); // copy
-    index_expr.index()=rename(index_expr.index(), ssa_map);
-    index_expr.array()=assign(index_expr.array(), ssa_map);
+    index_expr.index()=rename(index_expr.index());
+    index_expr.array()=assign(index_expr.array());
     return index_expr;
   }
   else if(expr.id()==ID_member)
   {
     member_exprt member_expr=to_member_expr(expr); // copy
-    member_expr.struct_op()=assign(member_expr.struct_op(), ssa_map);
+    member_expr.struct_op()=assign(member_expr.struct_op());
     return member_expr;
   }
   else if(expr.id()==ID_dereference)
   {
     dereference_exprt dereference_expr=to_dereference_expr(expr); // copy
     
-    dereference_expr.pointer()=rename(dereference_expr.pointer(), ssa_map);
+    dereference_expr.pointer()=rename(dereference_expr.pointer());
 
     return dereference_expr;
   }
   else if(expr.id()==ID_typecast)
   {
     typecast_exprt typecast_expr=to_typecast_expr(expr); //copy
-    typecast_expr.op()=assign(typecast_expr.op(), ssa_map);
+    typecast_expr.op()=assign(typecast_expr.op());
     return typecast_expr;
   }
   else
@@ -168,21 +202,16 @@ Function: function_SSAt::output
 
 void function_SSAt::output(std::ostream &out)
 {
-  guardt guard;
+  exprt guard;
 
   for(nodest::const_iterator
       n_it=nodes.begin(); n_it!=nodes.end(); n_it++)
   {
     if(guard!=n_it->guard)
     {
-      out << std::endl;
-    
-      // tab in according to guard length
       guard=n_it->guard;
-      for(unsigned i=0; i<guard.size(); i++)
-        out << "  ";
-
-      out << "[" << from_expr(ns, "", and_exprt(guard)) << "]" << std::endl;
+      out << std::endl;
+      out << "[" << from_expr(ns, "", guard) << "]" << std::endl;
     }
 
     output(*n_it, out);
@@ -203,10 +232,6 @@ Function: function_SSAt::output
 
 void function_SSAt::output(const nodet &node, std::ostream &out)
 {
-  // tab in according to guard length
-  for(unsigned i=0; i<node.guard.size(); i++)
-    out << "  ";
-    
   out << from_expr(ns, "", node.equality);
   
   out << std::endl;
