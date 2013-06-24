@@ -25,6 +25,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "index.h"
 #include "delta_check.h"
 #include "simple_check.h"
+#include "show_ssa.h"
 
 /*******************************************************************\
 
@@ -229,6 +230,23 @@ int deltacheck_parseoptionst::doit()
       build_index(cmdline.args, description, out, get_message_handler());
       return 0;
     }
+    
+    if(cmdline.isset("show-ssa"))
+    {
+      if(cmdline.args.size()!=1)
+      {
+        usage_error();
+        return 10;
+      }
+
+      indext index;
+  
+      status() << "Reading index" << eom;
+      index.read(cmdline.args[0], get_message_handler());
+
+      show_ssa(index, std::cout, get_message_handler());
+      return 0;
+    }
 
     if(cmdline.args.size()==2)
     {
@@ -325,6 +343,7 @@ void deltacheck_parseoptionst::help()
     "\n"
     "Delta checking options:\n"
     " --function id                limit analysis to given function\n"
+    " --show-ssa                   show SSA\n"
     "\n"    
     "Other options:\n"
     " --version                    show version and exit\n"

@@ -93,19 +93,19 @@ void delta_check_all(
   get_functiont get_function1(index1);
   get_function1.set_message_handler(message_handler);
   
-  for(indext::filest::const_iterator
-      file_it=index2.files.begin();
-      file_it!=index2.files.end();
+  for(indext::file_to_functiont::const_iterator
+      file_it=index2.file_to_function.begin();
+      file_it!=index2.file_to_function.end();
       file_it++)
   {
-    message.status("Processing \""+id2string(*file_it)+"\"");
+    message.status() << "Processing \"" << file_it->first << "\""
+                     << messaget::eom;
     
     // read the file
     goto_modelt model2;
-    read_goto_binary(id2string(*file_it), model2, message_handler);
+    read_goto_binary(id2string(file_it->first), model2, message_handler);
     
-    const std::set<irep_idt> &functions=
-      index2.file_to_function.find(*file_it)->second;
+    const std::set<irep_idt> &functions=file_it->second;
 
     // now do all functions from model2
     for(std::set<irep_idt>::const_iterator
@@ -126,7 +126,7 @@ void delta_check_all(
       {
         message.status("Delta Checking \""+id2string(id)+"\"");
         
-        report << "<h2>Function " << id << " in " << *file_it
+        report << "<h2>Function " << id << " in " << file_it->first
                << "</h2>" << std::endl;
         
         function_delta(id, *index1_fkt, *index2_fkt, report, message_handler);

@@ -50,7 +50,7 @@ void build_index(
   {
     out << "<file name=\"";
     xmlt::escape_attribute(*it, out);
-    out << ">" << std::endl;
+    out << "\">" << std::endl;
 
     goto_modelt goto_model;
     
@@ -69,7 +69,7 @@ void build_index(
       {
         out << "  <function id=\"";
         xmlt::escape_attribute(id2string(f_it->first), out);
-        out << "/>" << std::endl;
+        out << "\"/>" << std::endl;
       }
     }    
     
@@ -112,8 +112,9 @@ void indext::read(
         file_it++)
     {
       irep_idt file_name=file_it->get_attribute("name");
-      
-      files.insert(file_name);
+
+      // create map entry
+      file_to_function[file_name];      
 
       for(xmlt::elementst::const_iterator
           fkt_it=file_it->elements.begin();
@@ -121,7 +122,6 @@ void indext::read(
           fkt_it++)
       {
         irep_idt id=fkt_it->get_attribute("id");
-        functions.insert(id);
         function_to_file[id].insert(file_name);
         file_to_function[file_name].insert(id);
       }

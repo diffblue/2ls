@@ -70,7 +70,8 @@ void simple_check_function(
   
   if(index_fkt==NULL)
   {
-    message.error("function \""+function+"\" not found in index");
+    message.error() << "function \"" << function
+                    << "\" not found in index" << messaget::eom;
     return;
   }
 
@@ -98,19 +99,19 @@ void simple_check_all(
   
   messaget message(message_handler);
 
-  for(indext::filest::const_iterator
-      file_it=index.files.begin();
-      file_it!=index.files.end();
+  for(indext::file_to_functiont::const_iterator
+      file_it=index.file_to_function.begin();
+      file_it!=index.file_to_function.end();
       file_it++)
   {
-    message.status("Processing \""+id2string(*file_it)+"\"");
+    message.status() << "Processing \"" << file_it->first << "\""
+                     << messaget::eom;
     
     // read the file
     goto_modelt model;
-    read_goto_binary(id2string(*file_it), model, message_handler);
+    read_goto_binary(id2string(file_it->first), model, message_handler);
     
-    const std::set<irep_idt> &functions=
-      index.file_to_function.find(*file_it)->second;
+    const std::set<irep_idt> &functions=file_it->second;
 
     // now do all functions from model
     for(std::set<irep_idt>::const_iterator
@@ -124,7 +125,7 @@ void simple_check_all(
     
       message.status("Checking \""+id2string(id)+"\"");
       
-      report << "<h2>Function " << id << " in " << *file_it
+      report << "<h2>Function " << id << " in " << file_it->first
              << "</h2>" << std::endl;
       
       simple_check_function(id, *index_fkt, report, message_handler);
