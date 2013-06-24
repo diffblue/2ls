@@ -25,16 +25,17 @@ void build_index(
 class indext
 {
 public:
-  // file names to function names
-  typedef std::map<irep_idt, std::set<irep_idt> > file_to_functiont;
-  file_to_functiont file_to_function;
-
   // function names to file
   typedef std::map<irep_idt, std::set<irep_idt> > function_to_filet;
   function_to_filet function_to_file;
   
-  typedef std::set<irep_idt> filest;
-  filest files;
+  struct filet
+  {
+    std::set<irep_idt> functions;
+  };
+
+  // file names to filet  
+  typedef std::map<irep_idt, filet> filest;
   
   typedef std::set<irep_idt> functionst;
   functionst functions;
