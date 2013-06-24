@@ -1,7 +1,8 @@
 include ../config.inc
 CBMC ?= ../..
 
-SRC = main.cpp parseoptions.cpp index.cpp delta_check.cpp get_function.cpp \
+SRC = main.cpp deltacheck_parseoptions.cpp index.cpp delta_check.cpp \
+      get_function.cpp \
       function_delta.cpp html_report.cpp logo.cpp simple_check.cpp \
       solver.cpp data_flow.cpp \
       $(CBMC)/src/cbmc/xml_interface.cpp
