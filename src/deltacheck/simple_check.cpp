@@ -145,21 +145,18 @@ Function: simple_check
 \*******************************************************************/
 
 void simple_check(
-  const std::string &index_file_name,
+  const indext &index,
   const std::string &function,
   message_handlert &message_handler)
 {
-  indext index;
-  
-  messaget message(message_handler);
-  message.status("Reading index");
-  index.read(index_file_name, message_handler);
-
   std::string report_file_name="deltacheck.html";
   std::ofstream out(report_file_name.c_str());
+
   if(!out)
   {
-    message.error("failed to write to \""+report_file_name+"\"");
+    messaget message(message_handler);
+    message.error() << "failed to write to \""
+                    << report_file_name << "\"" << messaget::eom;
     return;
   }
 

@@ -11,11 +11,12 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <string>
 
-#include <util/message.h>
+class message_handlert;
+class indext;
 
 void delta_check(
-  const std::string &index1,
-  const std::string &index2,
+  const indext &index1,
+  const indext &index2,
   const std::string &function,
   message_handlert &);
 

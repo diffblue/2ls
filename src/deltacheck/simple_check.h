@@ -11,10 +11,11 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <string>
 
-#include <util/message.h>
+class message_handlert;
+class indext;
 
 void simple_check(
-  const std::string &index1,
+  const indext &index,
   const std::string &function,
   message_handlert &);
 

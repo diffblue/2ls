@@ -235,8 +235,16 @@ int deltacheck_parseoptionst::doit()
       std::string function;
       if(cmdline.isset("function"))
         function=cmdline.getval("function");
-    
-      delta_check(cmdline.args[0], cmdline.args[1], function, get_message_handler());
+
+      indext index1, index2;
+  
+      status() << "Reading first index" << eom;
+      index1.read(cmdline.args[0], get_message_handler());
+
+      status() << "Reading second index" << eom;
+      index2.read(cmdline.args[1], get_message_handler());
+
+      delta_check(index1, index2, function, get_message_handler());
     }
     else if(cmdline.args.size()==1)
     {
@@ -244,7 +252,12 @@ int deltacheck_parseoptionst::doit()
       if(cmdline.isset("function"))
         function=cmdline.getval("function");
     
-      simple_check(cmdline.args[0], function, get_message_handler());
+      indext index;
+  
+      status() << "Reading index" << eom;
+      index.read(cmdline.args[0], get_message_handler());
+
+      simple_check(index, function, get_message_handler());
     }
     else
     {

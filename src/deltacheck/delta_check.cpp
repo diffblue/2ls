@@ -148,24 +148,18 @@ Function: delta_check
 \*******************************************************************/
 
 void delta_check(
-  const std::string &index1_file_name,
-  const std::string &index2_file_name,
+  const indext &index1,
+  const indext &index2,
   const std::string &function,
   message_handlert &message_handler)
 {
-  indext index1, index2;
-  
-  messaget message(message_handler);
-  message.status("Reading first index");
-  index1.read(index1_file_name, message_handler);
-  message.status("Reading second index");
-  index2.read(index2_file_name, message_handler);
-
   std::string report_file_name="deltacheck.html";
   std::ofstream out(report_file_name.c_str());
   if(!out)
   {
-    message.error("failed to write to \""+report_file_name+"\"");
+    messaget message(message_handler);
+    message.error() << "failed to write to \""
+                    << report_file_name << "\"" << messaget::eom;
     return;
   }
 
