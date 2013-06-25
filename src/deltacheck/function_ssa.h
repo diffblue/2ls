@@ -17,53 +17,71 @@ class function_SSAt
 {
 public:
   typedef goto_functionst::goto_functiont goto_functiont;
+  typedef goto_programt::const_targett locationt;
 
   inline function_SSAt(
-    const goto_functiont &goto_function,
+    const goto_functiont &_goto_function,
     const namespacet &_ns,
-    const std::string &_suffix):ns(_ns), suffix(_suffix)
+    const std::string &_suffix):
+    ns(_ns), goto_function(_goto_function), suffix(_suffix)
   {
-    build_SSA(goto_function);
+    build_SSA();
   }
   
   inline function_SSAt(
-    const goto_functiont &goto_function,
-    const namespacet &_ns):ns(_ns)
+    const goto_functiont &_goto_function,
+    const namespacet &_ns):
+    ns(_ns), goto_function(_goto_function)
   {
-    build_SSA(goto_function);
+    build_SSA();
   }
   
-  void output(std::ostream &);
+  void output(std::ostream &) const;
 
-  // the SSA node  
+  // the SSA node for a location
   class nodet
   {
   public:
-    equal_exprt equality;
+    typedef std::vector<equal_exprt> equalitiest;
+    equalitiest equalities;
     exprt guard;
-    goto_programt::const_targett loc;
+    
+    typedef std::set<locationt> incomingt;
+    incomingt incoming;
   };
   
-  typedef std::list<nodet> nodest;
+  typedef std::map<locationt, nodet> nodest;
   nodest nodes;
 
 protected:
   const namespacet &ns;
+  const goto_functiont &goto_function;
   std::string suffix; // an extra suffix  
 
-  void output(const nodet &, std::ostream &);
+  void output(const nodet &, std::ostream &) const;
   
+  // collect all the objects involved
+  void collect_objects();
+  void collect_objects(const exprt &);
+
+  typedef std::set<symbol_exprt> objectst;
+  objectst objects; 
+
   // build the SSA formulas
-  void build_SSA(const goto_functiont &goto_function);
+  void build_SSA();
 
-  // maps identifier to SSA index
-  typedef std::map<irep_idt, unsigned> ssa_mapt;
-  ssa_mapt ssa_map;
+  enum kindt { IN, OUT };
+  symbol_exprt name(const symbol_exprt &, kindt kind, locationt loc);
+  exprt rename(const exprt &, kindt kind, locationt loc);
+  symbol_exprt guard();
+
+  // incoming and outgoing data-flow
+  void build_incoming();
+  void build_outgoing();
   
-  exprt rename(const exprt &);
-  exprt assign(const exprt &);
-
-  symbol_exprt guard_symbol();
+  // final phase, optimization
+  void optimize();
+  static void get_exprs(const exprt &, std::set<exprt> &);
 };
 
 #endif
