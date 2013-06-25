@@ -76,6 +76,8 @@ void show_ssa(
           << std::endl;
           
       show_ssa(*index_fkt, ns, out);
+      
+      out << std::endl;
     }
   }
   
