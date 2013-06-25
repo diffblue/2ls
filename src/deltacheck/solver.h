@@ -6,10 +6,11 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef CPROVER_SOLVER_H
-#define CPROVER_SOLVER_H
+#ifndef CPROVER_DELTACHECK_SOLVER_H
+#define CPROVER_DELTACHECK_SOLVER_H
 
 #include <util/decision_procedure.h>
+#include <util/union_find.h>
 
 class solvert:public decision_proceduret
 {
@@ -29,7 +30,7 @@ public:
 
   virtual std::string decision_procedure_text() const
   {
-    return "DeltaCheck equalit solver";
+    return "DeltaCheck equality+UF solver";
   }
   
   void set_equal(const exprt &, const exprt &);
@@ -43,6 +44,14 @@ public:
   // Returns true iff anything new was implied.
   bool join(const src_listt &src,
             const var_sett &dest);
+
+protected:
+
+  // a numbering for expressions
+  numbering<exprt> expr_numbering;
+
+  // equality logic
+  unsigned_union_find equalities;
 };
 
 #endif

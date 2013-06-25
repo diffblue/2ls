@@ -51,6 +51,11 @@ Function: solvert::set_equal
 
 void solvert::set_equal(const exprt &lhs, const exprt &rhs)
 {
+  // add to union find
+  unsigned lhs_nr=expr_numbering(lhs),
+           rhs_nr=expr_numbering(rhs);
+
+  equalities.make_union(lhs_nr, rhs_nr);
 }
   
 /*******************************************************************\
