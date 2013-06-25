@@ -12,22 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <langapi/language_util.h>
 
 #include "function_ssa.h"
-
-/*******************************************************************\
-
-Function: function_SSAt::build_source_map
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void function_SSAt::build_source_map(const goto_functiont &goto_function)
-{
-}
+#include "def_domain.h"
 
 /*******************************************************************\
 
@@ -43,10 +28,21 @@ Function: function_SSAt::build_SSA
 
 void function_SSAt::build_SSA(const goto_functiont &goto_function)
 {
+  // run a preliminary analysis to find out where variables are defined
+  static_analysist<def_domaint> def_analysis(ns);
+  def_analysis(goto_function.body);
+
+  // now build SSA
   exprt guard=guard_symbol();
 
   forall_goto_program_instructions(i_it, goto_function.body)
   {
+    // First step:
+    // do we need to add any phi nodes here?
+//    const def_domaint::def_mapt &def_map=def_analysis[i_it].def_map;
+
+        
+  
     if(i_it->is_assign())
     {
       const code_assignt &code_assign=to_code_assign(i_it->code);
