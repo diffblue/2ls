@@ -43,11 +43,15 @@ void build_index(
   out << "</description>" << std::endl;
   out << std::endl;
   
+  messaget message(message_handler);
+
   for(std::vector<std::string>::const_iterator
       it=files.begin();
       it!=files.end();
       it++)
   {
+    message.status() << "Reading `" << *it << "'" << messaget::eom;
+  
     out << "<file name=\"";
     xmlt::escape_attribute(*it, out);
     out << "\">" << std::endl;
@@ -56,8 +60,8 @@ void build_index(
     
     if(read_goto_binary(*it, goto_model, message_handler))
     {
-      messaget message(message_handler);
       message.error() << "failed to read `" << *it << "'" << messaget::eom;
+      continue;
     }
 
     for(goto_functionst::function_mapt::const_iterator
