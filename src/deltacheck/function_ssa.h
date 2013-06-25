@@ -34,7 +34,8 @@ public:
   }
   
   void output(std::ostream &);
-  
+
+  // the SSA node  
   class nodet
   {
   public:
@@ -50,10 +51,37 @@ protected:
   const namespacet &ns;
   std::string suffix; // an extra suffix  
 
-  void build(const goto_functiont &goto_function);
   void output(const nodet &, std::ostream &);
-
   
+  void build(const goto_functiont &goto_function)
+  {
+    build_source_map(goto_function); // step 1    
+    build_SSA(goto_function); // step 2
+  }
+
+  // Step 1:
+  // preliminary data-flow analysis to find sources
+  typedef std::map<irep_idt, std::set<unsigned> > id_source_mapt;
+  typedef std::map<goto_programt::const_targett, id_source_mapt> loc_source_mapt;
+  loc_source_mapt loc_source_map;
+  
+  void build_source_map(const goto_functiont &goto_function);
+  std::set<irep_idt> symbols_written(goto_programt::targett loc);
+  
+  struct queue_entryt
+  {
+    goto_programt::const_targett loc;
+    id_source_mapt id_source_map;
+    explicit queue_entryt(goto_programt::const_targett _loc):loc(_loc)
+    {
+    }
+  };
+
+  // Step 2:  
+  // build the SSA formulas
+  void build_SSA(const goto_functiont &goto_function);
+
+  // maps identifier to SSA index
   typedef std::map<irep_idt, unsigned> ssa_mapt;
   ssa_mapt ssa_map;
   

@@ -10,11 +10,11 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/goto_model.h>
 
 #include "index.h"
-#include "function_ssa.h"
+#include "def_domain.h"
 
 /*******************************************************************\
 
-Function: show_ssa
+Function: show_defs
 
   Inputs:
 
@@ -24,18 +24,19 @@ Function: show_ssa
 
 \*******************************************************************/
 
-void show_ssa(
+void show_defs(
   const goto_functionst::goto_functiont &goto_function,
   const namespacet &ns,
   std::ostream &out)
 {
-  function_SSAt function_SSA(goto_function, ns);
-  function_SSA.output(out);
+  static_analysist<def_domaint> def_analysis(ns);
+  def_analysis(goto_function.body);
+  def_analysis.output(goto_function.body, out);
 }
 
 /*******************************************************************\
 
-Function: show_ssa
+Function: show_defs
 
   Inputs:
 
@@ -45,7 +46,7 @@ Function: show_ssa
 
 \*******************************************************************/
 
-void show_ssa(
+void show_defs(
   const indext &index,
   std::ostream &out,
   message_handlert &message_handler)
@@ -75,7 +76,7 @@ void show_ssa(
       out << ">>>> Function " << id << " in " << file_it->first
           << std::endl;
           
-      show_ssa(*index_fkt, ns, out);
+      show_defs(*index_fkt, ns, out);
       
       out << std::endl;
     }

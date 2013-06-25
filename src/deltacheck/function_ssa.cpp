@@ -15,7 +15,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
-Function: function_SSAt::build
+Function: function_SSAt::build_source_map
 
   Inputs:
 
@@ -25,7 +25,23 @@ Function: function_SSAt::build
 
 \*******************************************************************/
 
-void function_SSAt::build(const goto_functiont &goto_function)
+void function_SSAt::build_source_map(const goto_functiont &goto_function)
+{
+}
+
+/*******************************************************************\
+
+Function: function_SSAt::build_SSA
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void function_SSAt::build_SSA(const goto_functiont &goto_function)
 {
   exprt guard=guard_symbol();
 

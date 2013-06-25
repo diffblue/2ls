@@ -68,7 +68,7 @@ symbol_exprt data_flowt::guard(goto_programt::const_targett t)
 
 /*******************************************************************\
 
-Function: data_flowt::skip_transformer
+Function: data_flowt::out_is_in
 
   Inputs:
 
@@ -78,7 +78,7 @@ Function: data_flowt::skip_transformer
 
 \*******************************************************************/
 
-void data_flowt::skip_transformer(goto_programt::const_targett t)
+void data_flowt::out_is_in(goto_programt::const_targett t)
 {
   // this says that v_OUT = v_IN
   for(objectst::const_iterator
@@ -123,19 +123,12 @@ void data_flowt::transformer(goto_programt::const_targett t)
       if(assigned.find(*o_it)!=assigned.end())
         solver.set_equal(rename(OUT, *o_it, t), rename(IN, *o_it, t));
   }
-  else if(t->is_goto())
-  {
-    solver.set_to_true(rename(OUT, not_exprt(t->guard), t));
-    solver.set_to_true(rename(OUT_TAKEN, t->guard, t));
-    
-    skip_transformer(t);
-  }
   else if(t->is_assert())
   {
-    if(assert_to_assume)
-      solver.set_to_true(rename(OUT, t->guard, t));
+    //if(assert_to_assume)
+    //  solver.set_to_true(rename(OUT, t->guard, t));
 
-    skip_transformer(t);
+    out_is_in(t);
   }
   else if(t->is_function_call())
   {
@@ -158,7 +151,11 @@ void data_flowt::transformer(goto_programt::const_targett t)
         solver.set_equal(rename(OUT, *o_it, t), rename(IN, *o_it, t));
   }
   else
-    skip_transformer(t);
+    out_is_in(t);
+
+  // Do guard. This is the OR of the incoming edges.
+//  for(
+  
 }
 
 /*******************************************************************\

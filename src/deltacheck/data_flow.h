@@ -36,7 +36,7 @@ protected:
   class symbol_exprt guard(goto_programt::const_targett t);
   
   void transformer(goto_programt::const_targett t);
-  void skip_transformer(goto_programt::const_targett t);
+  void out_is_in(goto_programt::const_targett t);
 
   void collect_objects(const goto_programt &);
   void collect_objects(const exprt &);
