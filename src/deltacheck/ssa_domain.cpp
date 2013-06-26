@@ -6,13 +6,17 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#ifdef DEBUG
+#include <iostream>
+#endif
+
 #include <util/std_expr.h>
 
-#include "def_domain.h"
+#include "ssa_domain.h"
 
 /*******************************************************************\
 
-Function: def_domaint::output
+Function: ssa_domaint::output
 
   Inputs:
 
@@ -22,7 +26,7 @@ Function: def_domaint::output
 
 \*******************************************************************/
 
-void def_domaint::output(
+void ssa_domaint::output(
   const namespacet &ns,
   std::ostream &out) const
 {
@@ -31,21 +35,14 @@ void def_domaint::output(
       d_it!=def_map.end();
       d_it++)
   {
-    out << d_it->first << ":";
-    for(std::set<locationt>::const_iterator
-        s_it=d_it->second.begin(); s_it!=d_it->second.end(); s_it++)
-    {
-      if(s_it!=d_it->second.begin()) out << ",";
-      out << " " << (*s_it)->location_number;
-    }
-    
+    out << d_it->first << ": " << d_it->second->location_number;
     out << std::endl;
   }
 }
 
 /*******************************************************************\
 
-Function: def_domaint::transform
+Function: ssa_domaint::transform
 
   Inputs:
 
@@ -55,7 +52,7 @@ Function: def_domaint::transform
 
 \*******************************************************************/
 
-void def_domaint::transform(
+void ssa_domaint::transform(
   const namespacet &ns,
   locationt from,
   locationt to)
@@ -65,11 +62,22 @@ void def_domaint::transform(
     const code_assignt &code_assign=to_code_assign(from->code);
     assign(code_assign.lhs(), from);
   }
+  else if(from->is_decl())
+  {
+    const code_declt &code_decl=to_code_decl(from->code);
+    assign(code_decl.symbol(), from);
+  }
+  else if(from->is_dead())
+  {
+    const code_deadt &code_dead=to_code_dead(from->code);
+    const irep_idt &id=code_dead.get_identifier();
+    def_map.erase(id);
+  }
 }
 
 /*******************************************************************\
 
-Function: def_domaint::assign
+Function: ssa_domaint::assign
 
   Inputs:
 
@@ -79,14 +87,12 @@ Function: def_domaint::assign
 
 \*******************************************************************/
 
-void def_domaint::assign(const exprt &lhs, locationt from)
+void ssa_domaint::assign(const exprt &lhs, locationt from)
 {
   if(lhs.id()==ID_symbol)
   {
     const irep_idt &id=to_symbol_expr(lhs).get_identifier();
-    std::set<locationt> &def_set=def_map[id];
-    def_set.clear();
-    def_set.insert(from);
+    def_map[id]=from;
   }
   else if(lhs.id()==ID_member || lhs.id()==ID_index || lhs.id()==ID_typecast)
   {
@@ -99,7 +105,7 @@ void def_domaint::assign(const exprt &lhs, locationt from)
 
 /*******************************************************************\
 
-Function: def_domaint::merge
+Function: ssa_domaint::merge
 
   Inputs:
 
@@ -109,24 +115,46 @@ Function: def_domaint::merge
 
 \*******************************************************************/
 
-bool def_domaint::merge(const def_domaint &b)
+bool ssa_domaint::merge(const ssa_domaint &b, locationt l)
 {
   bool result=false;
 
   // should traverse both maps simultaneously
   for(def_mapt::const_iterator
-      d_it=b.def_map.begin();
-      d_it!=b.def_map.end();
-      d_it++)
+      d_it_b=b.def_map.begin();
+      d_it_b!=b.def_map.end();
+      d_it_b++)
   {
-    const std::set<locationt> &src=d_it->second;
-    std::set<locationt> &dest=def_map[d_it->first];
-    unsigned dest_size_before=dest.size();
-
-    // we hope the STL optimizes the below to be linear in src.size()
-    dest.insert(src.begin(), src.end());
-    
-    if(dest.size()!=dest_size_before) result=true;
+    irep_idt id=d_it_b->first;
+  
+    def_mapt::iterator d_it_a=def_map.find(id);
+    if(d_it_a==def_map.end())
+    {
+      def_map[id]=d_it_b->second;
+      result=true;
+      #ifdef DEBUG
+      std::cout << "SETTING " << id << ": " << d_it_b->second->location_number << std::endl;
+      #endif
+    }
+    else
+    {
+      if(d_it_a->second!=d_it_b->second)
+      {
+        // aarg! data coming from two different places!
+        d_it_a->second=l; // new phi node
+        result=true;
+        #ifdef DEBUG
+        std::cout << "MERGING " << id << ": " << l->location_number << std::endl;
+        #endif
+     }
+      else
+      {
+        #ifdef DEBUG
+        std::cout << "AGREE " << id << ": " << d_it_b->second->location_number << std::endl;
+        #endif
+      }
+      
+    }
   }
   
   return result;

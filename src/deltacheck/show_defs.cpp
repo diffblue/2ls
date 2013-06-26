@@ -10,7 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/goto_model.h>
 
 #include "index.h"
-#include "def_domain.h"
+#include "ssa_domain.h"
 
 /*******************************************************************\
 
@@ -29,9 +29,9 @@ void show_defs(
   const namespacet &ns,
   std::ostream &out)
 {
-  static_analysist<def_domaint> def_analysis(ns);
-  def_analysis(goto_function.body);
-  def_analysis.output(goto_function.body, out);
+  static_analysist<ssa_domaint> ssa_analysis(ns);
+  ssa_analysis(goto_function.body);
+  ssa_analysis.output(goto_function.body, out);
 }
 
 /*******************************************************************\

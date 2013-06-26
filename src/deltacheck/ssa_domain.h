@@ -12,13 +12,13 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <analyses/static_analysis.h>
 #include <analyses/interval_analysis.h>
 
-class def_domaint:public domain_baset
+class ssa_domaint:public domain_baset
 {
 public:
-  // identifier to definition (source) location
-  typedef std::map<irep_idt, std::set<locationt> > def_mapt;
+  // identifier to its definition (source) location
+  typedef std::map<irep_idt, locationt> def_mapt;
   def_mapt def_map;
-
+  
   virtual void transform(
     const namespacet &ns,
     locationt from,
@@ -28,7 +28,9 @@ public:
     const namespacet &ns,
     std::ostream &out) const;
 
-  bool merge(const def_domaint &b);
+  bool merge(
+    const ssa_domaint &b,
+    locationt l);
 
 protected:
   void assign(const exprt &lhs, locationt from);
