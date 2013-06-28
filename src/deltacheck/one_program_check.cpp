@@ -13,10 +13,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/goto_model.h>
 
 #include "index.h"
-#include "function_delta.h"
 #include "html_report.h"
 #include "get_function.h"
 #include "one_program_check.h"
+#include "ssa_data_flow.h"
 
 /*******************************************************************\
 
@@ -33,11 +33,17 @@ Function: one_program_check_function
 void one_program_check_function(
   const irep_idt &id,
   const goto_functionst::goto_functiont &f,
+  const namespacet &ns,
   std::ostream &report,
-  message_handlert &message_handler)          
+  message_handlert &message_handler)
 {
-  const goto_functionst::goto_functiont f_empty;
-  function_delta(id, f_empty, f, report, message_handler);
+  // build SSA
+  function_SSAt function_SSA(f, ns);
+  
+  // now do fixed-point
+  ssa_data_flowt ssa_data_flow(function_SSA);
+  
+  // now give to SAT
 }
 
 /*******************************************************************\
@@ -63,6 +69,8 @@ void one_program_check_function(
   get_functiont get_function(index);
   get_function.set_message_handler(message_handler);
   
+  const namespacet &ns=get_function.ns;
+  
   messaget message(message_handler);
   
   const goto_functionst::goto_functiont *index_fkt=
@@ -75,7 +83,7 @@ void one_program_check_function(
     return;
   }
 
-  one_program_check_function(id, *index_fkt, report, message_handler);
+  one_program_check_function(id, *index_fkt, ns, report, message_handler);
 }
 
 /*******************************************************************\
@@ -110,7 +118,8 @@ void one_program_check_all(
     // read the file
     goto_modelt model;
     read_goto_binary(id2string(file_it->first), model, message_handler);
-    
+   
+    const namespacet ns(model.symbol_table); 
     const std::set<irep_idt> &functions=file_it->second;
 
     // now do all functions from model
@@ -128,7 +137,7 @@ void one_program_check_all(
       report << "<h2>Function " << id << " in " << file_it->first
              << "</h2>" << std::endl;
       
-      one_program_check_function(id, *index_fkt, report, message_handler);
+      one_program_check_function(id, *index_fkt, ns, report, message_handler);
     }
   }
 }

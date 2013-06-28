@@ -14,7 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 class message_handlert;
 class indext;
 
-void simple_check(
+void one_program_check(
   const indext &index,
   const std::string &function,
   message_handlert &);

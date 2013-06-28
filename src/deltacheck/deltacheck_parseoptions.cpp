@@ -293,7 +293,7 @@ int deltacheck_parseoptionst::doit()
       status() << "Reading index" << eom;
       index.read(cmdline.args[0], get_message_handler());
 
-      simple_check(index, function, get_message_handler());
+      one_program_check(index, function, get_message_handler());
     }
     else
     {

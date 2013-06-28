@@ -10,7 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
-Function:
+Function: ssa_data_flowt::fixed_point
 
   Inputs:
 
@@ -19,3 +19,9 @@ Function:
  Purpose:
 
 \*******************************************************************/
+
+void ssa_data_flowt::fixed_point()
+{
+
+}
+
