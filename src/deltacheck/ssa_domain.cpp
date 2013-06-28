@@ -73,6 +73,15 @@ void ssa_domaint::transform(
     const irep_idt &id=code_dead.get_identifier();
     def_map.erase(id);
   }
+  else if(from->is_goto())
+  {
+    if(!from->guard.is_true())
+      def_map[guard_identifier()]=from;
+  }
+  else if(from->is_assume())
+  {
+    def_map[guard_identifier()]=from;
+  }
 }
 
 /*******************************************************************\
@@ -93,7 +102,6 @@ void ssa_domaint::assign(const exprt &lhs, locationt from)
   {
     const irep_idt &id=to_symbol_expr(lhs).get_identifier();
     def_map[id]=from;
-    assigned.insert(id);
   }
   else if(lhs.id()==ID_member || lhs.id()==ID_index || lhs.id()==ID_typecast)
   {
@@ -141,10 +149,13 @@ bool ssa_domaint::merge(const ssa_domaint &b, locationt l)
     {
       if(d_it_a->second!=d_it_b->second)
       {
-        // aarg! data coming from two different places!
-        d_it_a->second=l; // new phi node
+        // Arg! Data coming from two different places!
+        // Produce new phi node.
+        std::set<locationt> &phi_node=phi_nodes[id];
+        phi_node.insert(d_it_a->second);
+        phi_node.insert(d_it_b->second);
+        d_it_a->second=l;
         result=true;
-        phi_nodes.insert(id);
         #ifdef DEBUG
         std::cout << "MERGING " << id << ": " << l->location_number << std::endl;
         #endif

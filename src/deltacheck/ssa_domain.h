@@ -19,7 +19,8 @@ public:
   typedef std::map<irep_idt, locationt> def_mapt;
   def_mapt def_map;
   
-  std::set<irep_idt> assigned, phi_nodes;
+  typedef std::map<irep_idt, std::set<locationt> > phi_nodest;
+  phi_nodest phi_nodes;
   
   virtual void transform(
     const namespacet &ns,
@@ -33,6 +34,11 @@ public:
   bool merge(
     const ssa_domaint &b,
     locationt l);
+    
+  static irep_idt guard_identifier()
+  {
+    return ID_guard;
+  }
 
 protected:
   void assign(const exprt &lhs, locationt from);
