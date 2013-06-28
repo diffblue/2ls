@@ -24,7 +24,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "version.h"
 #include "index.h"
 #include "delta_check.h"
-#include "simple_check.h"
+#include "one_program_check.h"
 #include "show_ssa.h"
 #include "show_defs.h"
 

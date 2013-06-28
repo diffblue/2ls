@@ -16,11 +16,11 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "function_delta.h"
 #include "html_report.h"
 #include "get_function.h"
-#include "simple_check.h"
+#include "one_program_check.h"
 
 /*******************************************************************\
 
-Function: simple_check_function
+Function: one_program_check_function
 
   Inputs:
 
@@ -30,7 +30,7 @@ Function: simple_check_function
 
 \*******************************************************************/
 
-void simple_check_function(
+void one_program_check_function(
   const irep_idt &id,
   const goto_functionst::goto_functiont &f,
   std::ostream &report,
@@ -42,7 +42,7 @@ void simple_check_function(
 
 /*******************************************************************\
 
-Function: simple_check_function
+Function: one_program_check_function
 
   Inputs:
 
@@ -52,7 +52,7 @@ Function: simple_check_function
 
 \*******************************************************************/
 
-void simple_check_function(
+void one_program_check_function(
   const indext &index,
   const std::string &function,
   std::ostream &report,
@@ -75,12 +75,12 @@ void simple_check_function(
     return;
   }
 
-  simple_check_function(id, *index_fkt, report, message_handler);
+  one_program_check_function(id, *index_fkt, report, message_handler);
 }
 
 /*******************************************************************\
 
-Function: simple_check_all
+Function: one_program_check_all
 
   Inputs:
 
@@ -90,7 +90,7 @@ Function: simple_check_all
 
 \*******************************************************************/
 
-void simple_check_all(
+void one_program_check_all(
   const indext &index,
   std::ostream &report,
   message_handlert &message_handler)
@@ -128,14 +128,14 @@ void simple_check_all(
       report << "<h2>Function " << id << " in " << file_it->first
              << "</h2>" << std::endl;
       
-      simple_check_function(id, *index_fkt, report, message_handler);
+      one_program_check_function(id, *index_fkt, report, message_handler);
     }
   }
 }
 
 /*******************************************************************\
 
-Function: simple_check
+Function: one_program_check
 
   Inputs:
 
@@ -145,7 +145,7 @@ Function: simple_check
 
 \*******************************************************************/
 
-void simple_check(
+void one_program_check(
   const indext &index,
   const std::string &function,
   message_handlert &message_handler)
@@ -164,9 +164,9 @@ void simple_check(
   html_report_header(out, index);
 
   if(function=="")
-    simple_check_all(index, out, message_handler);
+    one_program_check_all(index, out, message_handler);
   else
-    simple_check_function(index, function, out, message_handler);
+    one_program_check_function(index, function, out, message_handler);
 
   html_report_footer(out, index);
 }
