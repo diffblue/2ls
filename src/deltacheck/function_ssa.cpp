@@ -85,15 +85,24 @@ void function_SSAt::build_phi_nodes(locationt loc)
           incoming_it!=incoming.end();
           incoming_it++)
       {
-        exprt incoming_value=name(*o_it, OUT, *incoming_it);
+        locationt in_loc=*incoming_it;
+        bool is_backwards_goto=in_loc->is_backwards_goto();
+      
+        exprt incoming_value=
+          name(*o_it, OUT, is_backwards_goto, in_loc);
+
+        exprt incoming_guard=
+          name(guard_symbol(), OUT, is_backwards_goto, in_loc);
 
         if(rhs.is_nil()) // first
           rhs=incoming_value;
         else
-          rhs=if_exprt(name(guard_symbol(), OUT, *incoming_it), incoming_value, rhs);
+          rhs=if_exprt(
+            incoming_guard,
+            incoming_value, rhs);
       }
 
-      symbol_exprt lhs=name(*o_it, PHI, loc);
+      symbol_exprt lhs=name(*o_it, PHI, false, loc);
 
       equal_exprt equality(lhs, rhs);
       node.equalities.push_back(equality);
@@ -113,7 +122,7 @@ Function: function_SSAt::assigns
 
 \*******************************************************************/
 
-bool function_SSAt::assigns(const symbol_exprt &object, locationt loc)
+bool function_SSAt::assigns(const symbol_exprt &object, locationt loc) const
 {
   if(loc->is_assign())
   {
@@ -166,7 +175,7 @@ void function_SSAt::build_transfer(locationt loc)
         const code_assignt &code_assign=to_code_assign(loc->code);
         
         equal_exprt equality;
-        equality.lhs()=name(*o_it, OUT, loc);
+        equality.lhs()=name(*o_it, OUT, false, loc);
         equality.rhs()=read(code_assign.rhs(), loc);
     
         node.equalities.push_back(equality);
@@ -205,7 +214,7 @@ void function_SSAt::build_guard(locationt loc)
     locationt next=i_it;
     next++;
     
-    symbol_exprt gs=name(guard_symbol(), OUT, i_it);
+    symbol_exprt gs=name(guard_symbol(), OUT, false, i_it);
     
     if(i_it->is_goto())
     {
@@ -242,7 +251,7 @@ void function_SSAt::build_guard(locationt loc)
   else
     rhs=or_exprt(sources);
 
-  equal_exprt equality(name(guard_symbol(), OUT, loc), rhs);
+  equal_exprt equality(name(guard_symbol(), OUT, false, loc), rhs);
   nodes[loc].equalities.push_back(equality);
 }
 
@@ -275,7 +284,7 @@ Function: function_SSAt::read
 
 \*******************************************************************/
 
-exprt function_SSAt::read(const exprt &expr, locationt loc)
+exprt function_SSAt::read(const exprt &expr, locationt loc) const
 {
   if(expr.id()==ID_symbol)
   {
@@ -295,9 +304,9 @@ exprt function_SSAt::read(const exprt &expr, locationt loc)
     {
       // reading from PHI node or OUT?
       if(assigns(symbol_expr, d_it->second) && d_it->second!=loc)
-        return name(to_symbol_expr(expr), OUT, d_it->second);
+        return name(to_symbol_expr(expr), OUT, false, d_it->second);
       else
-        return name(to_symbol_expr(expr), PHI, d_it->second);
+        return name(to_symbol_expr(expr), PHI, false, d_it->second);
     }
   }
   else if(expr.id()==ID_address_of)
@@ -328,14 +337,17 @@ Function: function_SSAt::name
 symbol_exprt function_SSAt::name(
   const symbol_exprt &symbol,
   kindt kind,
-  locationt loc)
+  bool prime,
+  locationt loc) const
 {
   symbol_exprt new_symbol_expr=symbol; // copy
   const irep_idt &old_id=symbol.get_identifier();
   unsigned cnt=loc->location_number;
   irep_idt new_id=id2string(old_id)+"#"+
                   (kind==PHI?"phi":"")+
-                  i2string(cnt)+suffix;
+                  i2string(cnt)+
+                  (prime?"'":"")+
+                  suffix;
   new_symbol_expr.set_identifier(new_id);
   return new_symbol_expr;
 }
