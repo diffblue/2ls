@@ -449,109 +449,6 @@ void function_SSAt::collect_objects()
 
 /*******************************************************************\
 
-Function: function_SSAt::get_exprs
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void function_SSAt::get_exprs(const exprt &src, std::set<exprt> &dest)
-{
-  if(dest.insert(src).second)
-  {
-    forall_operands(it, src)
-      get_exprs(*it, dest);
-  }
-}
-
-/*******************************************************************\
-
-Function: function_SSAt::optimize
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void function_SSAt::optimize()
-{
-  union_find<exprt> equal;
-  std::set<exprt> exprs;
-  
-  for(nodest::iterator n_it=nodes.begin();
-      n_it!=nodes.end();
-      n_it++)
-  {
-    nodet &node=n_it->second;
-    for(nodet::equalitiest::const_iterator
-        e_it=node.equalities.begin();
-        e_it!=node.equalities.end();
-        e_it++)
-    {
-      equal.make_union(e_it->lhs(), e_it->rhs());
-      get_exprs(e_it->lhs(), exprs);
-      get_exprs(e_it->rhs(), exprs);
-    }
-  }
-  
-  // get a number for all expressions
-  for(std::set<exprt>::const_iterator
-      e_it=exprs.begin(); e_it!=exprs.end(); e_it++)
-    equal.number(*e_it);
-  
-  // iterate until saturation
-  while(true)
-  {
-    bool progress=false;
-    
-    for(std::set<exprt>::const_iterator
-        e_it=exprs.begin(); e_it!=exprs.end(); e_it++)
-    {
-      if(e_it->id()==ID_if)
-      {
-        const if_exprt &if_expr=to_if_expr(*e_it);
-        const exprt &t=if_expr.true_case();
-        const exprt &f=if_expr.false_case();
-
-        if(equal.same_set(t, f) && !equal.same_set(*e_it, t))
-        {
-          equal.make_union(*e_it, t);
-          progress=true;
-        }
-      }
-    }
-    
-    if(!progress) break;
-  }
-  
-  // now we know what's equal; use to eliminate constraints
-  for(nodest::iterator n_it=nodes.begin();
-      n_it!=nodes.end();
-      n_it++)
-  {
-    nodet &node=n_it->second;
-    for(nodet::equalitiest::const_iterator
-        e_it=node.equalities.begin();
-        e_it!=node.equalities.end();
-        e_it++)
-    {
-      if(e_it->rhs().id()==ID_if)
-      {
-        
-      }
-    }
-  }
-}
-
-/*******************************************************************\
-
 Function: function_SSAt::output
 
   Inputs:
@@ -564,19 +461,8 @@ Function: function_SSAt::output
 
 void function_SSAt::output(std::ostream &out) const
 {
-  //exprt guard;
-
   forall_goto_program_instructions(i_it, goto_function.body)
   {
-    #if 0
-    if(guard!=n_it->guard)
-    {
-      guard=n_it->guard;
-      out << std::endl;
-      out << "[" << from_expr(ns, "", guard) << "]" << std::endl;
-    }
-    #endif
-    
     const nodest::const_iterator n_it=nodes.find(i_it);
     if(n_it==nodes.end()) continue;
 

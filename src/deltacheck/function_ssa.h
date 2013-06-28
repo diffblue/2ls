@@ -73,15 +73,10 @@ protected:
   // build the SSA formulas
   void build_SSA();
 
-
   // incoming and outgoing data-flow
   void build_phi_nodes(locationt loc);
   void build_transfer(locationt loc);
   void build_guard(locationt loc);
-  
-  // final phase, optimization
-  void optimize();
-  static void get_exprs(const exprt &, std::set<exprt> &);
 };
 
 #endif
