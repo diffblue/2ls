@@ -13,7 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/goto_model.h>
 
 #include "index.h"
-#include "function_delta.h"
+#include "ssa_data_flow.h"
 #include "html_report.h"
 #include "get_function.h"
 #include "delta_check.h"
@@ -65,7 +65,9 @@ void delta_check_function(
     return;
   }
 
+  #if 0
   function_delta(id, *index1_fkt, *index2_fkt, report, message_handler);
+  #endif
 }
 
 /*******************************************************************\
@@ -128,8 +130,10 @@ void delta_check_all(
         
         report << "<h2>Function " << id << " in " << file_it->first
                << "</h2>" << std::endl;
-        
+
+        #if 0        
         function_delta(id, *index1_fkt, *index2_fkt, report, message_handler);
+        #endif
       }
     }
   }
