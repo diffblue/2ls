@@ -19,6 +19,8 @@ public:
   typedef std::map<irep_idt, locationt> def_mapt;
   def_mapt def_map;
   
+  std::set<irep_idt> assigned, phi_nodes;
+  
   virtual void transform(
     const namespacet &ns,
     locationt from,

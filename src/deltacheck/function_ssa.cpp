@@ -31,14 +31,105 @@ void function_SSAt::build_SSA()
   // collect objects
   collect_objects();
   
-  // build incoming constraints
-  build_incoming();
+  // perform SSA data-flow analysis
+  static_analysist<ssa_domaint> ssa_analysis(ns);
+  ssa_analysis(goto_function.body);
 
-  // build outgoing constraints
-  build_outgoing();
+  // now build phi-nodes
+  forall_goto_program_instructions(i_it, goto_function.body)
+    build_phi_nodes(i_it);
   
-  // finally, optimize
-  optimize();
+  // now build transfer functions
+  forall_goto_program_instructions(i_it, goto_function.body)
+    build_transfer(i_it);
+}
+
+/*******************************************************************\
+
+Function: function_SSAt::build_phi_nodes
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void function_SSAt::build_phi_nodes(locationt loc)
+{
+  const std::set<irep_idt> &phi_nodes=ssa_analysis[i_it].phi_nodes;
+  nodet &node=nodes[loc];
+
+  for(objectst::const_iterator
+      o_it=objects.begin(); o_it!=objects.end(); o_it++)
+  {
+    // phi-node here?
+    if(phi_nodes.find(o_it->get_identifier())!=phi_nodes.end())
+    {
+      // yes
+      equal_exprt equality;
+      equality.lhs()=name(*o_it, PHI, loc)
+      
+      node.equalities.push_back(
+    }
+  }
+}
+
+/*******************************************************************\
+
+Function: function_SSAt::build_SSA
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void function_SSAt::build_SSA()
+{
+  // collect objects
+  collect_objects();
+  
+  // perform SSA data-flow analysis
+  static_analysist<ssa_domaint> ssa_analysis(ns);
+  ssa_analysis(goto_function.body);
+
+  // now build phi-nodes
+  forall_goto_program_instructions(i_it, goto_function.body)
+    phi_nodes(i_it);
+  
+  // now build transfer functions
+  forall_goto_program_instructions(i_it, goto_function.body)
+    transfer(i_it);
+  
+  {
+    def_mapt &def_map=ssa_analysis[i_it].def_map;
+    nodet &node=nodes[i_it];
+  
+    for(objectst::const_iterator
+        o_it=objects.begin(); o_it!=objects.end(); o_it++)
+    {
+      irep_idt &identifier=o_it->get_identifier();
+      
+      // phi-node?
+      ssa_domaint::def_mapt::const_iterator d_it=
+        def_map.find(identifier);
+        
+      if(d_it!=def_map.end() && d_it->second==i_it)
+      {
+        // yes
+        
+      }
+      
+      // written here?
+      if(i_it->is_assign())
+      {
+      }
+    }
+  }
 }
 
 /*******************************************************************\

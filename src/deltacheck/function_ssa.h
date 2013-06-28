@@ -13,6 +13,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <goto-programs/goto_functions.h>
 
+#include "ssa_domain.h"
+
 class function_SSAt
 {
 public:
@@ -22,16 +24,10 @@ public:
   inline function_SSAt(
     const goto_functiont &_goto_function,
     const namespacet &_ns,
-    const std::string &_suffix):
-    ns(_ns), goto_function(_goto_function), suffix(_suffix)
-  {
-    build_SSA();
-  }
-  
-  inline function_SSAt(
-    const goto_functiont &_goto_function,
-    const namespacet &_ns):
-    ns(_ns), goto_function(_goto_function)
+    const std::string &_suffix=""):
+    ns(_ns), goto_function(_goto_function), 
+    ssa_analysis(_ns),
+    suffix(_suffix)
   {
     build_SSA();
   }
@@ -56,6 +52,7 @@ public:
 protected:
   const namespacet &ns;
   const goto_functiont &goto_function;
+  static_analysist<ssa_domaint> ssa_analysis;
   std::string suffix; // an extra suffix  
 
   void output(const nodet &, std::ostream &) const;
@@ -76,8 +73,8 @@ protected:
   symbol_exprt guard();
 
   // incoming and outgoing data-flow
-  void build_incoming();
-  void build_outgoing();
+  void build_phi_nodes();
+  void build_transfer();
   
   // final phase, optimization
   void optimize();
