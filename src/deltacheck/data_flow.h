@@ -13,7 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 class data_flowt
 {
 public:
-  data_flowt(solvert &_solver):
+  explicit data_flowt(solvert &_solver):
     version(0),
     assert_to_assume(false),
     solver(_solver)
