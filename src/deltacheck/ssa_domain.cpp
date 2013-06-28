@@ -73,15 +73,6 @@ void ssa_domaint::transform(
     const irep_idt &id=code_dead.get_identifier();
     def_map.erase(id);
   }
-  else if(from->is_goto())
-  {
-    if(!from->guard.is_true())
-      def_map[guard_identifier()]=from;
-  }
-  else if(from->is_assume())
-  {
-    def_map[guard_identifier()]=from;
-  }
 }
 
 /*******************************************************************\

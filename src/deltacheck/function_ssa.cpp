@@ -43,6 +43,10 @@ void function_SSAt::build_SSA()
   // now build transfer functions
   forall_goto_program_instructions(i_it, goto_function.body)
     build_transfer(i_it);
+
+  // now build guards
+  forall_goto_program_instructions(i_it, goto_function.body)
+    build_guard(i_it);
 }
 
 /*******************************************************************\
@@ -86,9 +90,7 @@ void function_SSAt::build_phi_nodes(locationt loc)
         if(rhs.is_nil()) // first
           rhs=incoming_value;
         else
-        {
-          rhs=if_exprt(name(guard(), OUT, *incoming_it), incoming_value, rhs);
-        }
+          rhs=if_exprt(name(guard_symbol(), OUT, *incoming_it), incoming_value, rhs);
       }
 
       symbol_exprt lhs=name(*o_it, PHI, loc);
@@ -180,35 +182,11 @@ void function_SSAt::build_transfer(locationt loc)
       }
     }
   }
-  
-  // guard?
-  if(loc->is_goto())
-  {
-    if(!loc->guard.is_true())
-    {
-      exprt renamed_guard=read(loc->guard, loc);
-      exprt old_guard=read(guard(), loc);
-    
-      equal_exprt equality_taken, equality_not_taken;
-
-      equality_taken.lhs()=name(guard(), OUT_TAKEN, loc);
-      equality_taken.rhs()=and_exprt(old_guard, renamed_guard);
-
-      equality_not_taken.lhs()=name(guard(), OUT, loc);
-      equality_not_taken.rhs()=and_exprt(old_guard, not_exprt(renamed_guard));
-    
-      node.equalities.push_back(equality_taken);
-      node.equalities.push_back(equality_not_taken);
-    }
-  }
-  else if(loc->is_assume())
-  {
-  }
 }
-
+  
 /*******************************************************************\
 
-Function: function_SSAt::guard
+Function: function_SSAt::build_guard
 
   Inputs:
 
@@ -218,9 +196,71 @@ Function: function_SSAt::guard
 
 \*******************************************************************/
 
-symbol_exprt function_SSAt::guard()
+void function_SSAt::build_guard(locationt loc)
 {
-  return symbol_exprt(ssa_domaint::guard_identifier(), bool_typet());
+  exprt::operandst sources;
+
+  forall_goto_program_instructions(i_it, goto_function.body)
+  {
+    locationt next=i_it;
+    next++;
+    
+    symbol_exprt gs=name(guard_symbol(), OUT, i_it);
+    
+    if(i_it->is_goto())
+    {
+      // target, perhaps?
+      if(i_it->get_target()==loc)
+        sources.push_back(
+          and_exprt(gs, read(i_it->guard, i_it)));
+      else if(next==loc && !i_it->guard.is_true())
+        sources.push_back(
+          and_exprt(gs, not_exprt(read(i_it->guard, i_it))));
+    }
+    else if(i_it->is_assume())
+    {
+      if(next==loc)
+        sources.push_back(
+          and_exprt(gs, read(i_it->guard, i_it)));
+    }
+    else if(i_it->is_return() || i_it->is_throw())
+    {
+    }
+    else
+    {
+      if(next==loc)
+        sources.push_back(gs);
+    }
+  }
+  
+  exprt rhs;
+  
+  if(sources.empty())
+    return;
+  else if(sources.size()==1)
+    rhs=sources.front();
+  else
+    rhs=or_exprt(sources);
+
+  equal_exprt equality(name(guard_symbol(), OUT, loc), rhs);
+  nodes[loc].equalities.push_back(equality);
+}
+
+/*******************************************************************\
+
+Function: function_SSAt::guard_symbol
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+symbol_exprt function_SSAt::guard_symbol()
+{
+  return symbol_exprt("ssa::$guard", bool_typet());
 }
 
 /*******************************************************************\
@@ -294,7 +334,7 @@ symbol_exprt function_SSAt::name(
   const irep_idt &old_id=symbol.get_identifier();
   unsigned cnt=loc->location_number;
   irep_idt new_id=id2string(old_id)+"#"+
-                  (kind==PHI?"phi":(kind==OUT_TAKEN?"taken":""))+
+                  (kind==PHI?"phi":"")+
                   i2string(cnt)+suffix;
   new_symbol_expr.set_identifier(new_id);
   return new_symbol_expr;

@@ -35,11 +35,6 @@ public:
     const ssa_domaint &b,
     locationt l);
     
-  static irep_idt guard_identifier()
-  {
-    return ID_guard;
-  }
-
 protected:
   void assign(const exprt &lhs, locationt from);
 };

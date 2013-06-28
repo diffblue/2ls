@@ -67,15 +67,16 @@ protected:
   // build the SSA formulas
   void build_SSA();
 
-  enum kindt { PHI, OUT, OUT_TAKEN };
+  enum kindt { PHI, OUT };
   symbol_exprt name(const symbol_exprt &, kindt kind, locationt loc);
   exprt read(const exprt &, locationt loc);
-  symbol_exprt guard();
+  symbol_exprt guard_symbol();
   bool assigns(const symbol_exprt &, locationt loc);
 
   // incoming and outgoing data-flow
   void build_phi_nodes(locationt loc);
   void build_transfer(locationt loc);
+  void build_guard(locationt loc);
   
   // final phase, optimization
   void optimize();
