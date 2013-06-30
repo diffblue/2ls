@@ -44,16 +44,21 @@ public:
     
     typedef std::set<locationt> incomingt;
     incomingt incoming;
+    
+    void output(std::ostream &, const namespacet &) const;
   };
-  
+
+  // all the SSA nodes  
   typedef std::map<locationt, nodet> nodest;
   nodest nodes;
 
+  // auxiliary functions
   enum kindt { PHI, OUT, LOOP };
   symbol_exprt name(const symbol_exprt &, kindt kind, locationt loc) const;
   exprt read(const exprt &, locationt loc) const;
   static symbol_exprt guard_symbol();
   bool assigns(const symbol_exprt &, locationt loc) const;
+
   const namespacet &ns;
 
 protected:
@@ -61,8 +66,6 @@ protected:
   static_analysist<ssa_domaint> ssa_analysis;
   std::string suffix; // an extra suffix  
 
-  void output(const nodet &, std::ostream &) const;
-  
   // collect all the objects involved
   void collect_objects();
   void collect_objects(const exprt &);
