@@ -8,12 +8,35 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #define DEBUG
 
+#include <util/decision_procedure.h>
+
 #include "ssa_data_flow.h"
 #include "solver.h"
 
 #ifdef DEBUG
 #include <iostream>
 #endif
+
+/*******************************************************************\
+
+Function: ssa_data_flowt::get_backwards_edges
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void ssa_data_flowt::get_backwards_edges()
+{
+  forall_goto_program_instructions(i_it, function_SSA.goto_function.body)
+  {
+    if(i_it->is_backwards_goto())
+      backwards_edges.push_back(i_it);
+  }
+}
 
 /*******************************************************************\
 
@@ -29,8 +52,12 @@ Function: ssa_data_flowt::fixed_point
 
 void ssa_data_flowt::fixed_point()
 {
+  get_backwards_edges();
+
   initialize_invariant();
   iteration_number=0;
+  
+  bool change;
 
   do
   {
@@ -41,8 +68,7 @@ void ssa_data_flowt::fixed_point()
     print_invariant(std::cout);
     #endif
   
-    change=false;
-    iteration();
+    change=iteration();
   }
   while(change);
 }
@@ -59,11 +85,20 @@ Function: ssa_data_flowt::iteration
 
 \*******************************************************************/
 
-void ssa_data_flowt::iteration()
+bool ssa_data_flowt::iteration()
 {
   solvert solver(function_SSA.ns);
 
+  // feed SSA into solver
+  solver << function_SSA;
   
+  // solve
+  solver.dec_solve();
+
+  // now weaken invariant
+  
+  
+  return false;
 }
 
 /*******************************************************************\
@@ -97,4 +132,3 @@ Function: ssa_data_flowt::print_invariant
 void ssa_data_flowt::print_invariant(std::ostream &out) const
 {
 }
-

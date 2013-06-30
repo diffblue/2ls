@@ -15,6 +15,8 @@ Author: Daniel Kroening, kroening@kroening.com
 class solvert:public decision_proceduret
 {
 public:
+  // standard solver interface
+  
   explicit solvert(const namespacet &_ns):decision_proceduret(_ns)
   {
   }
@@ -33,19 +35,24 @@ public:
     return "DeltaCheck equality+UF solver";
   }
   
-  void set_equal(const exprt &, const exprt &);
-
   // special feature for data-flow analyses
   typedef std::vector<exprt> var_sett;
-  typedef std::list<var_sett> src_listt;
 
-  // Find facts true over all source sets,
-  // and adds these as constraints for the destination.
-  // Returns true iff anything new was implied.
-  bool join(const src_listt &src,
-            const var_sett &dest);
+  struct predicatet
+  {
+    bool merge(const predicatet &);
+  };
+  
+  void get_predicate(
+    const var_sett &vars,
+    predicatet &dest);
+    
+  void assume_predicate(
+    const var_sett &vars,
+    predicatet &dest);  
 
 protected:
+  void set_equal(const exprt &, const exprt &);
 
   // a numbering for expressions
   numbering<exprt> expr_numbering;

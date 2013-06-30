@@ -60,9 +60,9 @@ public:
   bool assigns(const symbol_exprt &, locationt loc) const;
 
   const namespacet &ns;
+  const goto_functiont &goto_function;
 
 protected:
-  const goto_functiont &goto_function;
   static_analysist<ssa_domaint> ssa_analysis;
   std::string suffix; // an extra suffix  
 

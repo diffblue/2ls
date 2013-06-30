@@ -103,9 +103,3 @@ Function: solvert::join
 
 \*******************************************************************/
 
-bool solvert::join(const src_listt &src,
-                   const var_sett &dest)
-{
-  return false;
-}
-  

@@ -23,11 +23,14 @@ public:
 
 protected:
   const function_SSAt &function_SSA;
+  typedef function_SSAt::locationt locationt;
   
   void fixed_point();
-  void iteration();
-  bool change;
-  
+  bool iteration();
   void initialize_invariant();
+  
+  typedef std::vector<locationt> backwards_edgest;
+  backwards_edgest backwards_edges;
+  void get_backwards_edges();
 };
 
