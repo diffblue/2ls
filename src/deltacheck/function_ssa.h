@@ -49,14 +49,14 @@ public:
   typedef std::map<locationt, nodet> nodest;
   nodest nodes;
 
-  enum kindt { PHI, OUT };
-  symbol_exprt name(const symbol_exprt &, kindt kind, bool prime, locationt loc) const;
+  enum kindt { PHI, OUT, LOOP };
+  symbol_exprt name(const symbol_exprt &, kindt kind, locationt loc) const;
   exprt read(const exprt &, locationt loc) const;
   static symbol_exprt guard_symbol();
   bool assigns(const symbol_exprt &, locationt loc) const;
+  const namespacet &ns;
 
 protected:
-  const namespacet &ns;
   const goto_functiont &goto_function;
   static_analysist<ssa_domaint> ssa_analysis;
   std::string suffix; // an extra suffix  

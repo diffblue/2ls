@@ -76,34 +76,39 @@ void function_SSAt::build_phi_nodes(locationt loc)
     if(p_it!=phi_nodes.end())
     {
       // yes
-      const std::set<locationt> &incoming=p_it->second;
-      
-      exprt rhs=nil_exprt();
+      const std::set<ssa_domaint::def_entryt> &incoming=p_it->second;
 
-      for(std::set<locationt>::const_iterator
+      exprt rhs=nil_exprt();
+      bool has_backward=false;
+
+      for(std::set<ssa_domaint::def_entryt>::const_iterator
           incoming_it=incoming.begin();
           incoming_it!=incoming.end();
           incoming_it++)
       {
-        locationt in_loc=*incoming_it;
-        bool is_backwards_goto=in_loc->is_backwards_goto();
-      
-        exprt incoming_value=
-          name(*o_it, OUT, is_backwards_goto, in_loc);
+        exprt incoming_value, incoming_guard;
 
-        exprt incoming_guard=
-          name(guard_symbol(), OUT, is_backwards_goto, in_loc);
+        // we distinguish forwards- from brackwards-edges
+        if(incoming_it->source->location_number > loc->location_number)
+        {
+          incoming_value=name(*o_it, LOOP, loc);
+          incoming_guard=name(guard_symbol(), LOOP, loc);
+          has_backward=true;
+        }
+        else
+        {
+          incoming_value=name(*o_it, OUT, incoming_it->def);
+          incoming_guard=name(guard_symbol(), OUT, incoming_it->source);
+        }
 
         if(rhs.is_nil()) // first
           rhs=incoming_value;
         else
-          rhs=if_exprt(
-            incoming_guard,
-            incoming_value, rhs);
+          rhs=if_exprt(incoming_guard, incoming_value, rhs);
       }
 
-      symbol_exprt lhs=name(*o_it, PHI, false, loc);
-
+      symbol_exprt lhs=name(*o_it, PHI, loc);
+      
       equal_exprt equality(lhs, rhs);
       node.equalities.push_back(equality);
     }
@@ -175,7 +180,7 @@ void function_SSAt::build_transfer(locationt loc)
         const code_assignt &code_assign=to_code_assign(loc->code);
         
         equal_exprt equality;
-        equality.lhs()=name(*o_it, OUT, false, loc);
+        equality.lhs()=name(*o_it, OUT, loc);
         equality.rhs()=read(code_assign.rhs(), loc);
     
         node.equalities.push_back(equality);
@@ -214,14 +219,21 @@ void function_SSAt::build_guard(locationt loc)
     locationt next=i_it;
     next++;
     
-    symbol_exprt gs=name(guard_symbol(), OUT, false, i_it);
+    symbol_exprt gs=name(guard_symbol(), OUT, i_it);
     
     if(i_it->is_goto())
     {
       // target, perhaps?
       if(i_it->get_target()==loc)
-        sources.push_back(
-          and_exprt(gs, read(i_it->guard, i_it)));
+      {
+        // Yes. Might be backwards.
+        if(i_it->is_backwards_goto())
+          sources.push_back(
+            name(guard_symbol(), LOOP, loc));
+        else
+          sources.push_back(
+            and_exprt(gs, read(i_it->guard, i_it)));
+      }
       else if(next==loc && !i_it->guard.is_true())
         sources.push_back(
           and_exprt(gs, not_exprt(read(i_it->guard, i_it))));
@@ -251,7 +263,7 @@ void function_SSAt::build_guard(locationt loc)
   else
     rhs=or_exprt(sources);
 
-  equal_exprt equality(name(guard_symbol(), OUT, false, loc), rhs);
+  equal_exprt equality(name(guard_symbol(), OUT, loc), rhs);
   nodes[loc].equalities.push_back(equality);
 }
 
@@ -302,11 +314,13 @@ exprt function_SSAt::read(const exprt &expr, locationt loc) const
     }
     else
     {
+      locationt def=d_it->second.def;
+      
       // reading from PHI node or OUT?
-      if(assigns(symbol_expr, d_it->second) && d_it->second!=loc)
-        return name(to_symbol_expr(expr), OUT, false, d_it->second);
+      if(assigns(symbol_expr, def) && def!=loc)
+        return name(to_symbol_expr(expr), OUT, def);
       else
-        return name(to_symbol_expr(expr), PHI, false, d_it->second);
+        return name(to_symbol_expr(expr), PHI, def);
     }
   }
   else if(expr.id()==ID_address_of)
@@ -337,16 +351,14 @@ Function: function_SSAt::name
 symbol_exprt function_SSAt::name(
   const symbol_exprt &symbol,
   kindt kind,
-  bool prime,
   locationt loc) const
 {
   symbol_exprt new_symbol_expr=symbol; // copy
   const irep_idt &old_id=symbol.get_identifier();
   unsigned cnt=loc->location_number;
   irep_idt new_id=id2string(old_id)+"#"+
-                  (kind==PHI?"phi":"")+
+                  (kind==PHI?"phi":(kind==LOOP?"loop":""))+
                   i2string(cnt)+
-                  (prime?"'":"")+
                   suffix;
   new_symbol_expr.set_identifier(new_id);
   return new_symbol_expr;

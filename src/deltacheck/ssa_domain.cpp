@@ -6,6 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+//#define DEBUG
+
 #ifdef DEBUG
 #include <iostream>
 #endif
@@ -35,8 +37,23 @@ void ssa_domaint::output(
       d_it!=def_map.end();
       d_it++)
   {
-    out << d_it->first << ": " << d_it->second->location_number;
-    out << std::endl;
+    out << "DEF " << d_it->first << ": "
+        << d_it->second << std::endl;
+  }
+
+  for(phi_nodest::const_iterator
+      p_it=phi_nodes.begin();
+      p_it!=phi_nodes.end();
+      p_it++)
+  {
+    for(std::set<def_entryt>::const_iterator
+        n_it=p_it->second.begin();
+        n_it!=p_it->second.end();
+        n_it++)
+    {
+      out << "PHI " << p_it->first << ": "
+          << (*n_it) << std::endl;
+    }
   }
 }
 
@@ -73,6 +90,11 @@ void ssa_domaint::transform(
     const irep_idt &id=code_dead.get_identifier();
     def_map.erase(id);
   }
+  
+  // update source in all defs
+  for(def_mapt::iterator
+      d_it=def_map.begin(); d_it!=def_map.end(); d_it++)
+    d_it->second.source=from;
 }
 
 /*******************************************************************\
@@ -92,7 +114,9 @@ void ssa_domaint::assign(const exprt &lhs, locationt from)
   if(lhs.id()==ID_symbol)
   {
     const irep_idt &id=to_symbol_expr(lhs).get_identifier();
-    def_map[id]=from;
+    def_entryt &def_entry=def_map[id];
+    def_entry.def=from;
+    def_entry.source=from;
   }
   else if(lhs.id()==ID_member || lhs.id()==ID_index || lhs.id()==ID_typecast)
   {
@@ -115,7 +139,9 @@ Function: ssa_domaint::merge
 
 \*******************************************************************/
 
-bool ssa_domaint::merge(const ssa_domaint &b, locationt l)
+bool ssa_domaint::merge(
+  const ssa_domaint &b,
+  locationt to)
 {
   bool result=false;
 
@@ -130,31 +156,37 @@ bool ssa_domaint::merge(const ssa_domaint &b, locationt l)
     def_mapt::iterator d_it_a=def_map.find(id);
     if(d_it_a==def_map.end())
     {
+      // no entry in 'this' yet, create entry
       def_map[id]=d_it_b->second;
       result=true;
+
       #ifdef DEBUG
-      std::cout << "SETTING " << id << ": " << d_it_b->second->location_number << std::endl;
+      std::cout << "SETTING " << id << ": " << def_map[id] << std::endl;
       #endif
     }
     else
     {
-      if(d_it_a->second!=d_it_b->second)
+      // we have two entries, compare
+      
+      if(d_it_a->second.def!=d_it_b->second.def)
       {
         // Arg! Data coming from two different places!
         // Produce new phi node.
-        std::set<locationt> &phi_node=phi_nodes[id];
+        std::set<def_entryt> &phi_node=phi_nodes[id];
+        
         phi_node.insert(d_it_a->second);
         phi_node.insert(d_it_b->second);
-        d_it_a->second=l;
+
         result=true;
+
         #ifdef DEBUG
-        std::cout << "MERGING " << id << ": " << l->location_number << std::endl;
+        std::cout << "MERGING " << id << ": " << d_it_b->second << std::endl;
         #endif
      }
       else
       {
         #ifdef DEBUG
-        std::cout << "AGREE " << id << ": " << d_it_b->second->location_number << std::endl;
+        std::cout << "AGREE " << id << ": " << d_it_b->second << std::endl;
         #endif
       }
       

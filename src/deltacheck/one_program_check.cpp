@@ -37,6 +37,10 @@ void one_program_check_function(
   std::ostream &report,
   message_handlert &message_handler)
 {
+  messaget message(message_handler);
+
+  message.status() << "Data-flow fixed-point" << messaget::eom;
+
   // build SSA
   function_SSAt function_SSA(f, ns);
   

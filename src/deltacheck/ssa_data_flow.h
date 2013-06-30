@@ -17,10 +17,17 @@ public:
     fixed_point();
   }
 
+  void print_invariant(std::ostream &) const;
+  
+  unsigned iteration_number;
+
 protected:
   const function_SSAt &function_SSA;
   
   void fixed_point();
-
+  void iteration();
+  bool change;
+  
+  void initialize_invariant();
 };
 

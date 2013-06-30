@@ -16,10 +16,31 @@ class ssa_domaint:public domain_baset
 {
 public:
   // identifier to its definition (source) location
-  typedef std::map<irep_idt, locationt> def_mapt;
-  def_mapt def_map;
+  struct def_entryt
+  {
+    locationt def;
+    locationt source;
+  };
+
+  friend inline std::ostream & operator << (
+    std::ostream &out, const def_entryt &d)
+  {
+    return out << d.def->location_number << " from "
+               << d.source->location_number;
+  }
   
-  typedef std::map<irep_idt, std::set<locationt> > phi_nodest;
+  friend inline bool operator < (
+    const def_entryt &a, const def_entryt &b)
+  {
+    return a.source < b.source;
+  }
+  
+  typedef std::map<irep_idt, def_entryt> def_mapt;
+  def_mapt def_map;
+
+  // the phi nodes map identifiers to the definitions
+  // of the incoming branches
+  typedef std::map<irep_idt, std::set<def_entryt> > phi_nodest;
   phi_nodest phi_nodes;
   
   virtual void transform(
@@ -33,7 +54,7 @@ public:
 
   bool merge(
     const ssa_domaint &b,
-    locationt l);
+    locationt to);
     
 protected:
   void assign(const exprt &lhs, locationt from);
