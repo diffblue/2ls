@@ -82,4 +82,7 @@ protected:
   void build_guard(locationt loc);
 };
 
+class decision_proceduret & operator <<
+  (decision_proceduret &dest, const function_SSAt &src);
+
 #endif

@@ -8,7 +8,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/i2string.h>
 #include <util/expr_util.h>
-#include <util/union_find.h>
+#include <util/decision_procedure.h>
 
 #include <langapi/language_util.h>
 
@@ -507,3 +507,34 @@ void function_SSAt::nodet::output(
     out << from_expr(ns, "", *e_it) << std::endl;
 }
 
+/*******************************************************************\
+
+Function: function_SSAt::operator <<
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+decision_proceduret & operator << (
+  decision_proceduret &dest,
+  const function_SSAt &src)
+{
+  for(function_SSAt::nodest::const_iterator
+      n_it=src.nodes.begin();
+      n_it!=src.nodes.end();
+      n_it++)
+  {
+    for(function_SSAt::nodet::equalitiest::const_iterator
+        e_it=n_it->second.equalities.begin();
+        e_it!=n_it->second.equalities.end();
+        e_it++)
+      dest << *e_it;
+  }
+  
+  return dest;
+}
+  
