@@ -34,7 +34,7 @@ void ssa_data_flowt::get_backwards_edges()
   forall_goto_program_instructions(i_it, function_SSA.goto_function.body)
   {
     if(i_it->is_backwards_goto())
-      backwards_edges.push_back(i_it);
+      backwards_edges.push_back(backwards_edge(i_it));
   }
 }
 
@@ -91,12 +91,23 @@ bool ssa_data_flowt::iteration()
 
   // feed SSA into solver
   solver << function_SSA;
+
+  // feed in current predicates
+  for(backwards_edgest::const_iterator
+      b_it=backwards_edges.begin();
+      b_it!=backwards_edges.end();
+      b_it++)
+    solver.assume(b_it->in_vars, b_it->predicate);
   
   // solve
   solver.dec_solve();
 
-  // now weaken invariant
-  
+  // now weaken predicates
+  for(backwards_edgest::iterator
+      b_it=backwards_edges.begin();
+      b_it!=backwards_edges.end();
+      b_it++)
+    solver.weaken(b_it->out_vars, b_it->predicate);
   
   return false;
 }

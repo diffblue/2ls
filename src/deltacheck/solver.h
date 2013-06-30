@@ -43,13 +43,13 @@ public:
     bool merge(const predicatet &);
   };
   
-  void get_predicate(
+  void weaken(
     const var_sett &vars,
     predicatet &dest);
     
-  void assume_predicate(
+  void assume(
     const var_sett &vars,
-    predicatet &dest);  
+    const predicatet &dest);  
 
 protected:
   void set_equal(const exprt &, const exprt &);
