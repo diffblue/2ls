@@ -93,7 +93,7 @@ void solvert::print_assignment(std::ostream &out) const
   
 /*******************************************************************\
 
-Function: solvert::join
+Function: solvert::weaken
 
   Inputs:
 
@@ -102,4 +102,28 @@ Function: solvert::join
  Purpose:
 
 \*******************************************************************/
+
+void solvert::weaken(
+  const var_sett &vars,
+  predicatet &dest)
+{
+}
+  
+/*******************************************************************\
+
+Function: solvert::assume
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void solvert::assume(
+  const var_sett &vars,
+  const predicatet &dest)
+{
+}
 

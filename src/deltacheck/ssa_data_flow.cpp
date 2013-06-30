@@ -19,6 +19,31 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
+Function: ssa_data_flowt::get_backwards_edge
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+ssa_data_flowt::backwards_edget ssa_data_flowt::backwards_edge(locationt loc)
+{
+  assert(loc->is_backwards_goto());
+
+  backwards_edget result;
+
+  result.loc=loc;
+  //result.in_vars=
+  //result.out_vars=
+  
+  return result;  
+}
+
+/*******************************************************************\
+
 Function: ssa_data_flowt::get_backwards_edges
 
   Inputs:
