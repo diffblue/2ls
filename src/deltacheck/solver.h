@@ -25,10 +25,7 @@ public:
   virtual void print_assignment(std::ostream &out) const;
   virtual void set_to(const exprt &expr, bool value);
   
-  virtual resultt dec_solve()
-  {
-    return D_ERROR;
-  }
+  virtual resultt dec_solve();
 
   virtual std::string decision_procedure_text() const
   {

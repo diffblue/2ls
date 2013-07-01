@@ -6,10 +6,32 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <map>
+#include <set>
+
+#include <langapi/language_util.h>
+
 #include <util/expr.h>
 #include <util/std_expr.h>
 
 #include "solver.h"
+
+/*******************************************************************\
+
+Function: solvert::dec_solve
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+decision_proceduret::resultt solvert::dec_solve()
+{
+  return D_ERROR;
+}
 
 /*******************************************************************\
 
@@ -89,6 +111,30 @@ Function: solvert::print_assignment
 
 void solvert::print_assignment(std::ostream &out) const
 {
+  std::map<unsigned, std::set<unsigned> > equality_map;
+  
+  for(unsigned i=0; i<expr_numbering.size(); i++)
+    equality_map[equalities.find(i)].insert(i);
+  
+  for(std::map<unsigned, std::set<unsigned> >::const_iterator
+      e_it=equality_map.begin();
+      e_it!=equality_map.end();
+      e_it++)
+  {
+    const std::set<unsigned> &eq_set=e_it->second;
+  
+    if(eq_set.size()>=2)
+    {
+      for(std::set<unsigned>::const_iterator
+          eq_it=eq_set.begin(); eq_it!=eq_set.end(); eq_it++)
+      {
+        out << "Equal: "
+            << from_expr(ns, "", expr_numbering[*eq_it]) << std::endl;
+      }
+
+      out << std::endl;
+    }
+  }
 }
   
 /*******************************************************************\
