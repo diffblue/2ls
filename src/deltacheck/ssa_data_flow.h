@@ -8,6 +8,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "function_ssa.h"
 #include "solver.h"
+#include "predicate.h"
 
 class ssa_data_flowt
 {
@@ -33,7 +34,7 @@ protected:
   struct backwards_edget
   {
     locationt from, to;
-    solvert::predicatet pre_predicate, post_predicate;
+    predicatet pre_predicate, post_predicate;
   };
   
   backwards_edget backwards_edge(locationt loc);

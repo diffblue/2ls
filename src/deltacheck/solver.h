@@ -32,36 +32,6 @@ public:
     return "DeltaCheck equality+UF solver";
   }
   
-  // special feature for data-flow analyses
-  typedef std::vector<symbol_exprt> var_listt;
-
-  struct predicatet
-  {
-    symbol_exprt guard;
-    var_listt vars;
-
-    void output(std::ostream &) const;
-    void make_false();
-    
-    // returns 'true' iff predicate is weakened
-    bool disjunction(const predicatet &);
-    
-    // rename supporting set of variables
-    void rename(
-      const symbol_exprt &new_guard,
-      const var_listt &new_vars);
-  };
-  
-  friend inline std::ostream & operator << (
-    std::ostream &out, const predicatet &predicate)
-  {
-    predicate.output(out);
-    return out;
-  }
-
-  void set_to_true(const predicatet &);
-  void get(predicatet &);
-
 protected:
   void set_equal(const exprt &, const exprt &);
 

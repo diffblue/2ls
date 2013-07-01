@@ -140,7 +140,7 @@ bool ssa_data_flowt::iteration()
       b_it=backwards_edges.begin();
       b_it!=backwards_edges.end();
       b_it++)
-    solver.set_to_true(b_it->pre_predicate);
+    b_it->pre_predicate.set_to_true(solver);
   
   // solve
   solver.dec_solve();
@@ -152,7 +152,7 @@ bool ssa_data_flowt::iteration()
       b_it=backwards_edges.begin();
       b_it!=backwards_edges.end();
       b_it++)
-    solver.get(b_it->post_predicate);
+    b_it->post_predicate.get(solver);
 
   // now 'OR' with previous pre-state predicates
 
@@ -164,7 +164,7 @@ bool ssa_data_flowt::iteration()
       b_it++)
   {
     // copy
-    solvert::predicatet tmp=b_it->post_predicate;
+    predicatet tmp=b_it->post_predicate;
     
     // rename
     tmp.rename(b_it->pre_predicate.guard, b_it->pre_predicate.vars);
@@ -202,7 +202,7 @@ void ssa_data_flowt::print_invariant(std::ostream &out) const
         << " to " << be.to->location_number << std::endl;
 
     out << "Pre: ";
-    for(solvert::var_listt::const_iterator
+    for(predicatet::var_listt::const_iterator
         v_it=be.pre_predicate.vars.begin(); v_it!=be.pre_predicate.vars.end(); v_it++)
       out << " " << v_it->get_identifier();
     out << std::endl;
@@ -210,7 +210,7 @@ void ssa_data_flowt::print_invariant(std::ostream &out) const
         << std::endl;
 
     out << "Post:";
-    for(solvert::var_listt::const_iterator
+    for(predicatet::var_listt::const_iterator
         v_it=be.post_predicate.vars.begin(); v_it!=be.post_predicate.vars.end(); v_it++)
       out << " " << v_it->get_identifier();
     out << std::endl;
