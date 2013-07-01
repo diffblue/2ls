@@ -12,7 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 class ssa_data_flowt
 {
 public:
-  ssa_data_flowt(const function_SSAt &_function_SSA):
+  explicit ssa_data_flowt(const function_SSAt &_function_SSA):
     function_SSA(_function_SSA)
   {
     fixed_point();

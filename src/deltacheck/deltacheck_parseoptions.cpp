@@ -25,8 +25,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "index.h"
 #include "delta_check.h"
 #include "one_program_check.h"
-#include "show_ssa.h"
-#include "show_defs.h"
+#include "show.h"
 
 /*******************************************************************\
 
@@ -263,6 +262,23 @@ int deltacheck_parseoptionst::doit()
       index.read(cmdline.args[0], get_message_handler());
 
       show_defs(index, std::cout, get_message_handler());
+      return 0;
+    }
+
+    if(cmdline.isset("show-fixed-points"))
+    {
+      if(cmdline.args.size()!=1)
+      {
+        usage_error();
+        return 10;
+      }
+
+      indext index;
+  
+      status() << "Reading index" << eom;
+      index.read(cmdline.args[0], get_message_handler());
+
+      show_fixed_points(index, std::cout, get_message_handler());
       return 0;
     }
 
