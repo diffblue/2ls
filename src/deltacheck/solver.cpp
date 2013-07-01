@@ -139,7 +139,7 @@ void solvert::print_assignment(std::ostream &out) const
   
 /*******************************************************************\
 
-Function: solvert::weaken
+Function: solvert::get
 
   Inputs:
 
@@ -149,15 +149,13 @@ Function: solvert::weaken
 
 \*******************************************************************/
 
-void solvert::weaken(
-  const var_listt &vars,
-  predicatet &dest)
+void solvert::get(predicatet &dest)
 {
 }
   
 /*******************************************************************\
 
-Function: solvert::assume
+Function: solvert::set_to_true
 
   Inputs:
 
@@ -167,9 +165,7 @@ Function: solvert::assume
 
 \*******************************************************************/
 
-void solvert::assume(
-  const var_listt &vars,
-  const predicatet &dest)
+void solvert::set_to_true(const predicatet &dest)
 {
 }
 
@@ -186,6 +182,57 @@ Function: solvert::predicatet::output
 \*******************************************************************/
 
 void solvert::predicatet::output(std::ostream &out) const
+{
+}
+
+/*******************************************************************\
+
+Function: solvert::predicatet::make_false
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void solvert::predicatet::make_false()
+{
+}
+
+/*******************************************************************\
+
+Function: solvert::predicatet::disjunction
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool solvert::predicatet::disjunction(const predicatet &other)
+{
+  return false;
+}
+
+/*******************************************************************\
+
+Function: solvert::predicatet::rename
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void solvert::predicatet::rename(
+  const symbol_exprt &new_guard,
+  const var_listt &new_var_list)
 {
 }
 

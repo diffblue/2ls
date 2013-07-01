@@ -37,8 +37,19 @@ public:
 
   struct predicatet
   {
-    bool merge(const predicatet &);
+    symbol_exprt guard;
+    var_listt vars;
+
     void output(std::ostream &) const;
+    void make_false();
+    
+    // returns 'true' iff predicate is weakened
+    bool disjunction(const predicatet &);
+    
+    // rename supporting set of variables
+    void rename(
+      const symbol_exprt &new_guard,
+      const var_listt &new_vars);
   };
   
   friend inline std::ostream & operator << (
@@ -47,14 +58,9 @@ public:
     predicate.output(out);
     return out;
   }
-  
-  void weaken(
-    const var_listt &vars,
-    predicatet &dest);
-    
-  void assume(
-    const var_listt &vars,
-    const predicatet &dest);  
+
+  void set_to_true(const predicatet &);
+  void get(predicatet &);
 
 protected:
   void set_equal(const exprt &, const exprt &);

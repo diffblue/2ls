@@ -46,9 +46,17 @@ ssa_data_flowt::backwards_edget ssa_data_flowt::backwards_edge(locationt from)
     symbol_exprt in=function_SSA.read_in(*o_it, result.to);
     symbol_exprt out=function_SSA.read(*o_it, result.from);
   
-    result.in_vars.push_back(in);
-    result.out_vars.push_back(out);
+    result.pre_predicate.vars.push_back(in);
+    result.post_predicate.vars.push_back(out);
   }
+
+  symbol_exprt guard=function_SSA.guard_symbol();
+  result.pre_predicate.guard=function_SSA.name(guard, function_SSAt::LOOP, result.to);
+  result.post_predicate.guard=function_SSA.name(guard, function_SSAt::OUT, result.from);
+
+  // Initially, we start with the strongest invariant: false
+  // This gets weakened incrementally.
+  result.pre_predicate.make_false();
 
   return result;  
 }
@@ -90,7 +98,6 @@ void ssa_data_flowt::fixed_point()
 {
   get_backwards_edges();
 
-  initialize_invariant();
   iteration_number=0;
   
   bool change;
@@ -103,7 +110,7 @@ void ssa_data_flowt::fixed_point()
     std::cout << "Iteration #" << iteration_number << std::endl;
     print_invariant(std::cout);
     #endif
-  
+   
     change=iteration();
   }
   while(change);
@@ -128,40 +135,46 @@ bool ssa_data_flowt::iteration()
   // feed SSA into solver
   solver << function_SSA;
 
-  // feed in current predicates
+  // feed in current pre-state predicates
   for(backwards_edgest::const_iterator
       b_it=backwards_edges.begin();
       b_it!=backwards_edges.end();
       b_it++)
-    solver.assume(b_it->in_vars, b_it->predicate);
+    solver.set_to_true(b_it->pre_predicate);
   
   // solve
   solver.dec_solve();
+  
+  // solver.print_assignment(std::cout);
 
-  // now weaken predicates
+  // now get new value of post-state predicates
   for(backwards_edgest::iterator
       b_it=backwards_edges.begin();
       b_it!=backwards_edges.end();
       b_it++)
-    solver.weaken(b_it->out_vars, b_it->predicate);
+    solver.get(b_it->post_predicate);
+
+  // now 'OR' with previous pre-state predicates
+
+  bool change=false;
+
+  for(backwards_edgest::iterator
+      b_it=backwards_edges.begin();
+      b_it!=backwards_edges.end();
+      b_it++)
+  {
+    // copy
+    solvert::predicatet tmp=b_it->post_predicate;
+    
+    // rename
+    tmp.rename(b_it->pre_predicate.guard, b_it->pre_predicate.vars);
+
+    // make disjunction
+    if(b_it->pre_predicate.disjunction(tmp))
+      change=true;
+  }
   
-  return false;
-}
-
-/*******************************************************************\
-
-Function: ssa_data_flowt::initialize_invariant
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void ssa_data_flowt::initialize_invariant()
-{
+  return change;
 }
 
 /*******************************************************************\
@@ -188,19 +201,23 @@ void ssa_data_flowt::print_invariant(std::ostream &out) const
     out << "*** From " << be.from->location_number
         << " to " << be.to->location_number << std::endl;
 
-    out << "In: ";
+    out << "Pre: ";
     for(solvert::var_listt::const_iterator
-        v_it=be.in_vars.begin(); v_it!=be.in_vars.end(); v_it++)
+        v_it=be.pre_predicate.vars.begin(); v_it!=be.pre_predicate.vars.end(); v_it++)
       out << " " << v_it->get_identifier();
     out << std::endl;
+    out << "GSym: " << be.pre_predicate.guard.get_identifier()
+        << std::endl;
 
-    out << "Out:";
+    out << "Post:";
     for(solvert::var_listt::const_iterator
-        v_it=be.out_vars.begin(); v_it!=be.out_vars.end(); v_it++)
+        v_it=be.post_predicate.vars.begin(); v_it!=be.post_predicate.vars.end(); v_it++)
       out << " " << v_it->get_identifier();
     out << std::endl;
+    out << "GSym: " << be.post_predicate.guard.get_identifier()
+        << std::endl;
     
-    out << be.predicate;
+    out << be.pre_predicate;
 
     out << std::endl;
   }

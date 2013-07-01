@@ -33,8 +33,7 @@ protected:
   struct backwards_edget
   {
     locationt from, to;
-    solvert::var_listt in_vars, out_vars;
-    solvert::predicatet predicate;
+    solvert::predicatet pre_predicate, post_predicate;
   };
   
   backwards_edget backwards_edge(locationt loc);
