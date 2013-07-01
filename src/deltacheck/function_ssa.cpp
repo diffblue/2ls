@@ -359,7 +359,26 @@ symbol_exprt function_SSAt::name(
   
   if(kind==IN)
   {
+    const ssa_domaint::phi_nodest &phi_nodes=ssa_analysis[loc].phi_nodes;
+
+    ssa_domaint::phi_nodest::const_iterator p_it=
+      phi_nodes.find(symbol.get_identifier());
+      
     kind=OUT;
+          
+    if(p_it!=phi_nodes.end())
+    {
+      const std::set<ssa_domaint::def_entryt> &incoming=p_it->second;
+
+      for(std::set<ssa_domaint::def_entryt>::const_iterator
+          incoming_it=incoming.begin();
+          incoming_it!=incoming.end();
+          incoming_it++)
+      {
+        if(incoming_it->source->location_number > loc->location_number)
+          kind=LOOP;
+      }
+    }
   }
 
   symbol_exprt new_symbol_expr=symbol; // copy
