@@ -29,16 +29,27 @@ Function: ssa_data_flowt::get_backwards_edge
 
 \*******************************************************************/
 
-ssa_data_flowt::backwards_edget ssa_data_flowt::backwards_edge(locationt loc)
+ssa_data_flowt::backwards_edget ssa_data_flowt::backwards_edge(locationt from)
 {
-  assert(loc->is_backwards_goto());
+  assert(from->is_backwards_goto());
 
   backwards_edget result;
 
-  result.loc=loc;
-  //result.in_vars=
-  //result.out_vars=
+  result.from=from;
+  result.to=from->get_target();
+
+  for(function_SSAt::objectst::const_iterator
+      o_it=function_SSA.objects.begin();
+      o_it!=function_SSA.objects.end();
+      o_it++)
+  {
+    exprt in=function_SSA.name(*o_it, function_SSAt::IN, result.to);
+    exprt out=function_SSA.name(*o_it, function_SSAt::OUT, result.from);
   
+    result.in_vars.push_back(in);
+    result.out_vars.push_back(out);
+  }
+
   return result;  
 }
 
@@ -167,4 +178,30 @@ Function: ssa_data_flowt::print_invariant
 
 void ssa_data_flowt::print_invariant(std::ostream &out) const
 {
+  for(backwards_edgest::const_iterator
+      b_it=backwards_edges.begin();
+      b_it!=backwards_edges.end();
+      b_it++)
+  {
+    const backwards_edget &be=*b_it;
+  
+    out << "*** From " << be.from->location_number
+        << " to " << be.to->location_number << std::endl;
+
+    out << "In: ";
+    for(solvert::var_sett::const_iterator
+        v_it=be.in_vars.begin(); v_it!=be.in_vars.end(); v_it++)
+      out << " " << *v_it;
+    out << std::endl;
+
+    out << "Out:";
+    for(solvert::var_sett::const_iterator
+        v_it=be.out_vars.begin(); v_it!=be.out_vars.end(); v_it++)
+      out << " " << *v_it;
+    out << std::endl;
+    
+    out << be.predicate;
+
+    out << std::endl;
+  }
 }

@@ -127,3 +127,19 @@ void solvert::assume(
 {
 }
 
+/*******************************************************************\
+
+Function: solvert::predicatet::output
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void solvert::predicatet::output(std::ostream &out) const
+{
+}
+

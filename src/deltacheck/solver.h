@@ -41,7 +41,15 @@ public:
   struct predicatet
   {
     bool merge(const predicatet &);
+    void output(std::ostream &) const;
   };
+  
+  friend inline std::ostream & operator << (
+    std::ostream &out, const predicatet &predicate)
+  {
+    predicate.output(out);
+    return out;
+  }
   
   void weaken(
     const var_sett &vars,

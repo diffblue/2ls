@@ -353,6 +353,15 @@ symbol_exprt function_SSAt::name(
   kindt kind,
   locationt loc) const
 {
+  // kind IN means:
+  // * LOOP if there is a LOOP node at loc for symbol
+  // * OUT  otherwise
+  
+  if(kind==IN)
+  {
+    kind=OUT;
+  }
+
   symbol_exprt new_symbol_expr=symbol; // copy
   const irep_idt &old_id=symbol.get_identifier();
   unsigned cnt=loc->location_number;

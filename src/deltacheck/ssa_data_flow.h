@@ -32,7 +32,7 @@ protected:
 
   struct backwards_edget
   {
-    locationt loc;
+    locationt from, to;
     solvert::var_sett in_vars, out_vars;
     solvert::predicatet predicate;
   };

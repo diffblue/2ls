@@ -53,7 +53,7 @@ public:
   nodest nodes;
 
   // auxiliary functions
-  enum kindt { PHI, OUT, LOOP };
+  enum kindt { PHI, OUT, LOOP, IN };
   symbol_exprt name(const symbol_exprt &, kindt kind, locationt loc) const;
   exprt read(const exprt &, locationt loc) const;
   static symbol_exprt guard_symbol();
@@ -62,6 +62,9 @@ public:
   const namespacet &ns;
   const goto_functiont &goto_function;
 
+  typedef std::set<symbol_exprt> objectst;
+  objectst objects;
+  
 protected:
   static_analysist<ssa_domaint> ssa_analysis;
   std::string suffix; // an extra suffix  
@@ -69,9 +72,6 @@ protected:
   // collect all the objects involved
   void collect_objects();
   void collect_objects(const exprt &);
-
-  typedef std::set<symbol_exprt> objectst;
-  objectst objects; 
 
   // build the SSA formulas
   void build_SSA();
