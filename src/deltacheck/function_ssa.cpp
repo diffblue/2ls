@@ -447,7 +447,7 @@ exprt function_SSAt::assign(const exprt &expr)
 
 /*******************************************************************\
 
-Function: function_SSAt::collect_objects
+Function: function_SSAt::collect_objects_rec
 
   Inputs:
 
@@ -457,10 +457,10 @@ Function: function_SSAt::collect_objects
 
 \*******************************************************************/
 
-void function_SSAt::collect_objects(const exprt &src)
+void function_SSAt::collect_objects_rec(const exprt &src)
 {
   forall_operands(it, src)
-    collect_objects(*it);
+    collect_objects_rec(*it);
   
   if(src.id()==ID_symbol)
     objects.insert(to_symbol_expr(src));
@@ -482,8 +482,8 @@ void function_SSAt::collect_objects()
 {
   forall_goto_program_instructions(it, goto_function.body)
   {
-    collect_objects(it->guard);
-    collect_objects(it->code);
+    collect_objects_rec(it->guard);
+    collect_objects_rec(it->code);
   }
 }
 

@@ -71,7 +71,7 @@ protected:
 
   // collect all the objects involved
   void collect_objects();
-  void collect_objects(const exprt &);
+  void collect_objects_rec(const exprt &);
 
   // build the SSA formulas
   void build_SSA();

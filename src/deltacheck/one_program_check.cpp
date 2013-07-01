@@ -39,11 +39,13 @@ void one_program_check_function(
 {
   messaget message(message_handler);
 
-  message.status() << "Data-flow fixed-point" << messaget::eom;
+  message.status() << "Building SSA" << messaget::eom;
 
   // build SSA
   function_SSAt function_SSA(f, ns);
   
+  message.status() << "Data-flow fixed-point" << messaget::eom;
+
   // now do fixed-point
   ssa_data_flowt ssa_data_flow(function_SSA);
   
@@ -133,10 +135,22 @@ void one_program_check_all(
         fkt_it++)
     {
       const irep_idt &id=*fkt_it;
+      
+      const goto_functionst::function_mapt::const_iterator
+        fmap_it=model.goto_functions.function_map.find(id);
+        
+      if(fmap_it==model.goto_functions.function_map.end())
+      {
+        message.error() << "failed to find function `" << id2string(id)
+                        << "'" << messaget::eom;
+        continue;
+      }
+      
       const goto_functionst::goto_functiont *index_fkt=
-        &model.goto_functions.function_map.find(id)->second;
+        &fmap_it->second;
     
-      message.status("Checking \""+id2string(id)+"\"");
+      message.status() << "Checking \"" << id2string(id) << "\""
+                       << messaget::eom;
       
       report << "<h2>Function " << id << " in " << file_it->first
              << "</h2>" << std::endl;
