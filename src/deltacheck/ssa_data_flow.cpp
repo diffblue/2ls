@@ -43,8 +43,8 @@ ssa_data_flowt::backwards_edget ssa_data_flowt::backwards_edge(locationt from)
       o_it!=function_SSA.objects.end();
       o_it++)
   {
-    exprt in=function_SSA.name(*o_it, function_SSAt::IN, result.to);
-    exprt out=function_SSA.name(*o_it, function_SSAt::OUT, result.from);
+    symbol_exprt in=function_SSA.read_in(*o_it, result.to);
+    symbol_exprt out=function_SSA.read(*o_it, result.from);
   
     result.in_vars.push_back(in);
     result.out_vars.push_back(out);
@@ -189,15 +189,15 @@ void ssa_data_flowt::print_invariant(std::ostream &out) const
         << " to " << be.to->location_number << std::endl;
 
     out << "In: ";
-    for(solvert::var_sett::const_iterator
+    for(solvert::var_listt::const_iterator
         v_it=be.in_vars.begin(); v_it!=be.in_vars.end(); v_it++)
-      out << " " << *v_it;
+      out << " " << v_it->get_identifier();
     out << std::endl;
 
     out << "Out:";
-    for(solvert::var_sett::const_iterator
+    for(solvert::var_listt::const_iterator
         v_it=be.out_vars.begin(); v_it!=be.out_vars.end(); v_it++)
-      out << " " << *v_it;
+      out << " " << v_it->get_identifier();
     out << std::endl;
     
     out << be.predicate;

@@ -104,7 +104,7 @@ Function: solvert::weaken
 \*******************************************************************/
 
 void solvert::weaken(
-  const var_sett &vars,
+  const var_listt &vars,
   predicatet &dest)
 {
 }
@@ -122,7 +122,7 @@ Function: solvert::assume
 \*******************************************************************/
 
 void solvert::assume(
-  const var_sett &vars,
+  const var_listt &vars,
   const predicatet &dest)
 {
 }

@@ -296,33 +296,106 @@ Function: function_SSAt::read
 
 \*******************************************************************/
 
+symbol_exprt function_SSAt::read(const symbol_exprt &expr, locationt loc) const
+{
+  const irep_idt &identifier=expr.get_identifier();
+  const ssa_domaint &ssa_domain=ssa_analysis[loc];
+
+  ssa_domaint::def_mapt::const_iterator d_it=
+    ssa_domain.def_map.find(identifier);
+
+  if(d_it==ssa_domain.def_map.end())
+  {
+    // not written so far
+    return expr;
+  }
+  else
+  {
+    locationt def=d_it->second.def;
+    
+    // reading from PHI node or OUT?
+    if(assigns(expr, def) && def!=loc)
+      return name(to_symbol_expr(expr), OUT, def);
+    else
+      return name(to_symbol_expr(expr), PHI, def);
+  }
+}
+
+/*******************************************************************\
+
+Function: function_SSAt::read_in
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+symbol_exprt function_SSAt::read_in(const symbol_exprt &expr, locationt loc) const
+{
+  // This reads:
+  // * LOOP if there is a LOOP node at loc for symbol
+  // * OUT  otherwise
+
+  const irep_idt &identifier=expr.get_identifier();
+  const ssa_domaint &ssa_domain=ssa_analysis[loc];
+
+  ssa_domaint::def_mapt::const_iterator d_it=
+    ssa_domain.def_map.find(identifier);
+
+  if(d_it==ssa_domain.def_map.end())
+  {
+    // not written so far
+    return expr;
+  }
+  else
+  {
+    const ssa_domaint::phi_nodest &phi_nodes=ssa_analysis[loc].phi_nodes;
+
+    ssa_domaint::phi_nodest::const_iterator p_it=
+      phi_nodes.find(identifier);
+      
+    bool has_phi=false;
+          
+    if(p_it!=phi_nodes.end())
+    {
+      const std::set<ssa_domaint::def_entryt> &incoming=p_it->second;
+
+      for(std::set<ssa_domaint::def_entryt>::const_iterator
+          incoming_it=incoming.begin();
+          incoming_it!=incoming.end();
+          incoming_it++)
+      {
+        if(incoming_it->source->location_number > loc->location_number)
+          has_phi=true;
+      }
+    }
+    
+    if(has_phi)
+      return name(expr, LOOP, loc);
+    else
+      return read(expr, loc);
+  }
+}
+
+/*******************************************************************\
+
+Function: function_SSAt::read
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
 exprt function_SSAt::read(const exprt &expr, locationt loc) const
 {
   if(expr.id()==ID_symbol)
-  {
-    const symbol_exprt &symbol_expr=to_symbol_expr(expr);
-    const irep_idt &identifier=symbol_expr.get_identifier();
-    const ssa_domaint &ssa_domain=ssa_analysis[loc];
-
-    ssa_domaint::def_mapt::const_iterator d_it=
-      ssa_domain.def_map.find(identifier);
-  
-    if(d_it==ssa_domain.def_map.end())
-    {
-      // not written so far
-      return expr;
-    }
-    else
-    {
-      locationt def=d_it->second.def;
-      
-      // reading from PHI node or OUT?
-      if(assigns(symbol_expr, def) && def!=loc)
-        return name(to_symbol_expr(expr), OUT, def);
-      else
-        return name(to_symbol_expr(expr), PHI, def);
-    }
-  }
+    return read(to_symbol_expr(expr), loc);
   else if(expr.id()==ID_address_of)
   {
     return expr;
@@ -353,34 +426,6 @@ symbol_exprt function_SSAt::name(
   kindt kind,
   locationt loc) const
 {
-  // kind IN means:
-  // * LOOP if there is a LOOP node at loc for symbol
-  // * OUT  otherwise
-  
-  if(kind==IN)
-  {
-    const ssa_domaint::phi_nodest &phi_nodes=ssa_analysis[loc].phi_nodes;
-
-    ssa_domaint::phi_nodest::const_iterator p_it=
-      phi_nodes.find(symbol.get_identifier());
-      
-    kind=OUT;
-          
-    if(p_it!=phi_nodes.end())
-    {
-      const std::set<ssa_domaint::def_entryt> &incoming=p_it->second;
-
-      for(std::set<ssa_domaint::def_entryt>::const_iterator
-          incoming_it=incoming.begin();
-          incoming_it!=incoming.end();
-          incoming_it++)
-      {
-        if(incoming_it->source->location_number > loc->location_number)
-          kind=LOOP;
-      }
-    }
-  }
-
   symbol_exprt new_symbol_expr=symbol; // copy
   const irep_idt &old_id=symbol.get_identifier();
   unsigned cnt=loc->location_number;

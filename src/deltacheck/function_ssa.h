@@ -53,9 +53,11 @@ public:
   nodest nodes;
 
   // auxiliary functions
-  enum kindt { PHI, OUT, LOOP, IN };
+  enum kindt { PHI, OUT, LOOP };
   symbol_exprt name(const symbol_exprt &, kindt kind, locationt loc) const;
   exprt read(const exprt &, locationt loc) const;
+  symbol_exprt read(const symbol_exprt &, locationt loc) const;
+  symbol_exprt read_in(const symbol_exprt &, locationt loc) const;
   static symbol_exprt guard_symbol();
   bool assigns(const symbol_exprt &, locationt loc) const;
 

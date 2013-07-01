@@ -36,7 +36,7 @@ public:
   }
   
   // special feature for data-flow analyses
-  typedef std::vector<exprt> var_sett;
+  typedef std::vector<symbol_exprt> var_listt;
 
   struct predicatet
   {
@@ -52,11 +52,11 @@ public:
   }
   
   void weaken(
-    const var_sett &vars,
+    const var_listt &vars,
     predicatet &dest);
     
   void assume(
-    const var_sett &vars,
+    const var_listt &vars,
     const predicatet &dest);  
 
 protected:
