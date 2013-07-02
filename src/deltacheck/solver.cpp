@@ -28,8 +28,97 @@ Function: solvert::dec_solve
 
 \*******************************************************************/
 
+solvert::solvert(const namespacet &_ns):decision_proceduret(_ns)
+{
+  false_nr=add(false_exprt());
+  true_nr=add(true_exprt());
+}
+
+/*******************************************************************\
+
+Function: solvert::add
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void solvert::add(unsigned nr)
+{
+  const exprt &expr=expr_numbering[nr];
+    
+  if(expr.id()==ID_if)
+  {
+    const if_exprt &if_expr=to_if_expr(expr);
+
+    // the three calls below are possibly recursive,
+    // and thus, "if_list" isn't stable
+    solver_ift solver_if;
+    solver_if.cond=add(if_expr.cond());
+    solver_if.true_case=add(if_expr.true_case());
+    solver_if.false_case=add(if_expr.false_case());
+    solver_if.e_nr=nr;
+
+    if_list.push_back(solver_if);
+  }
+}
+
+/*******************************************************************\
+
+Function: solvert::dec_solve
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
 decision_proceduret::resultt solvert::dec_solve()
 {
+  bool progress;
+  
+  do
+  {  
+    progress=false;
+
+    for(if_listt::const_iterator
+        if_it=if_list.begin();
+        if_it!=if_list.end();
+        if_it++)
+    {
+      if(is_equal(if_it->cond, false_nr)) // false ? x : y == y
+      {
+        if(!is_equal(if_it->false_case, if_it->e_nr))
+        {
+          set_equal(if_it->false_case, if_it->e_nr);
+          progress=true;
+        }
+      }
+      else if(is_equal(if_it->cond, true_nr)) // true ? x : y == x
+      {
+        if(!is_equal(if_it->true_case, if_it->e_nr))
+        {
+          set_equal(if_it->true_case, if_it->e_nr);
+          progress=true;
+        }
+      }
+
+      // c ? x : x == x
+      if(is_equal(if_it->false_case, if_it->true_case) &&
+         !is_equal(if_it->false_case, if_it->e_nr))
+      {
+        set_equal(if_it->false_case, if_it->e_nr);
+        progress=true;
+      }
+    }
+  }
+  while(progress);
+
   return D_ERROR;
 }
 
@@ -57,27 +146,10 @@ void solvert::set_to(const exprt &expr, bool value)
     if(!value)
       set_equal(to_notequal_expr(expr).lhs(), to_notequal_expr(expr).rhs());
   }
-}
-  
-/*******************************************************************\
-
-Function: solvert::set_equal
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void solvert::set_equal(const exprt &lhs, const exprt &rhs)
-{
-  // add to union find
-  unsigned lhs_nr=expr_numbering(lhs),
-           rhs_nr=expr_numbering(rhs);
-
-  equalities.make_union(lhs_nr, rhs_nr);
+  else
+  {
+    set_equal(add(expr), value?true_nr:false_nr);
+  }
 }
   
 /*******************************************************************\

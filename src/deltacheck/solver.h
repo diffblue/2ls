@@ -17,9 +17,7 @@ class solvert:public decision_proceduret
 public:
   // standard solver interface
   
-  explicit solvert(const namespacet &_ns):decision_proceduret(_ns)
-  {
-  }
+  explicit solvert(const namespacet &_ns);
 
   virtual exprt get(const exprt &expr) const;
   virtual void print_assignment(std::ostream &out) const;
@@ -33,13 +31,54 @@ public:
   }
   
 protected:
-  void set_equal(const exprt &, const exprt &);
+  inline void set_equal(const exprt &a, const exprt &b)
+  {
+    set_equal(add(a), add(b));
+  }
 
+  inline void set_equal(unsigned a, unsigned b)
+  {
+    equalities.make_union(a, b);
+  }
+  
   // a numbering for expressions
   numbering<exprt> expr_numbering;
 
   // equality logic
   unsigned_union_find equalities;
+  
+  struct solver_ift
+  {
+    unsigned cond, true_case, false_case, e_nr;
+  };
+  
+  typedef std::vector<solver_ift> if_listt;
+  if_listt if_list;
+  
+  struct solver_uft
+  {
+    unsigned e_nr;
+  };
+
+  typedef std::vector<solver_uft> uf_listt;
+  uf_listt uf_list;
+  
+  void add(unsigned nr);
+
+  unsigned add(const exprt &expr)
+  {
+    unsigned old_size=expr_numbering.size();
+    unsigned nr=expr_numbering(expr);
+    if(expr_numbering.size()!=old_size) add(nr);
+    return nr;
+  }
+  
+  unsigned false_nr, true_nr;
+  
+  inline bool is_equal(unsigned a, unsigned b)
+  {
+    return equalities.find(a)==equalities.find(b);
+  }
 };
 
 #endif
