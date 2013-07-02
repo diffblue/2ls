@@ -59,9 +59,25 @@ protected:
   {
     unsigned e_nr;
   };
-
+  
   typedef std::vector<solver_uft> uf_listt;
   uf_listt uf_list;
+  
+  struct solver_ort
+  {
+    unsigned op0, op1, e_nr;
+  };
+
+  typedef std::vector<solver_ort> or_listt;
+  or_listt or_list;
+  
+  struct solver_andt
+  {
+    unsigned op0, op1, e_nr;
+  };
+
+  typedef std::vector<solver_andt> and_listt;
+  and_listt and_list;
   
   void add(unsigned nr);
 

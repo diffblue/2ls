@@ -64,6 +64,30 @@ void solvert::add(unsigned nr)
 
     if_list.push_back(solver_if);
   }
+  else if(expr.id()==ID_or)
+  {
+    if(expr.operands().size()==2)
+    {
+      solver_ort solver_or;
+      solver_or.op0=add(expr.op0());
+      solver_or.op1=add(expr.op1());
+      solver_or.e_nr=nr;
+      
+      or_list.push_back(solver_or);
+    }
+  }
+  else if(expr.id()==ID_and)
+  {
+    if(expr.operands().size()==2)
+    {
+      solver_andt solver_and;
+      solver_and.op0=add(expr.op0());
+      solver_and.op1=add(expr.op1());
+      solver_and.e_nr=nr;
+      
+      and_list.push_back(solver_and);
+    }
+  }
 }
 
 /*******************************************************************\
@@ -114,6 +138,52 @@ decision_proceduret::resultt solvert::dec_solve()
       {
         set_equal(if_it->false_case, if_it->e_nr);
         progress=true;
+      }
+    }
+
+    for(or_listt::const_iterator
+        or_it=or_list.begin();
+        or_it!=or_list.end();
+        or_it++)
+    {
+      if(is_equal(or_it->op1, false_nr)) // x || false == x
+      {
+        if(!is_equal(or_it->op0, or_it->e_nr))
+        {
+          set_equal(or_it->op0, or_it->e_nr);
+          progress=true;
+        }
+      }
+      else if(is_equal(or_it->op0, false_nr)) // false || x == x
+      {
+        if(!is_equal(or_it->op1, or_it->e_nr))
+        {
+          set_equal(or_it->op1, or_it->e_nr);
+          progress=true;
+        }
+      }
+    }
+
+    for(and_listt::const_iterator
+        and_it=and_list.begin();
+        and_it!=and_list.end();
+        and_it++)
+    {
+      if(is_equal(and_it->op1, true_nr)) // x || true == x
+      {
+        if(!is_equal(and_it->op0, and_it->e_nr))
+        {
+          set_equal(and_it->op0, and_it->e_nr);
+          progress=true;
+        }
+      }
+      else if(is_equal(and_it->op0, true_nr)) // true || x == x
+      {
+        if(!is_equal(and_it->op1, and_it->e_nr))
+        {
+          set_equal(and_it->op1, and_it->e_nr);
+          progress=true;
+        }
       }
     }
   }
