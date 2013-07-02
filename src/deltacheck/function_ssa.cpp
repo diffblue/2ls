@@ -79,7 +79,6 @@ void function_SSAt::build_phi_nodes(locationt loc)
       const std::set<ssa_domaint::def_entryt> &incoming=p_it->second;
 
       exprt rhs=nil_exprt();
-      bool has_backward=false;
 
       for(std::set<ssa_domaint::def_entryt>::const_iterator
           incoming_it=incoming.begin();
@@ -93,7 +92,6 @@ void function_SSAt::build_phi_nodes(locationt loc)
         {
           incoming_value=name(*o_it, LOOP, loc);
           incoming_guard=name(guard_symbol(), LOOP, loc);
-          has_backward=true;
         }
         else
         {
