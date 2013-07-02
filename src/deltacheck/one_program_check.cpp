@@ -186,7 +186,7 @@ void one_program_check_all(
                        << messaget::eom;
       
       report << "<h2>Function " << id << " in " << file_it->first
-             << "</h2>" << std::endl;
+             << "</h2>\n";
       
       one_program_check_function(id, *index_fkt, ns, report, message_handler);
     }

@@ -549,9 +549,9 @@ void function_SSAt::output(std::ostream &out) const
     const nodest::const_iterator n_it=nodes.find(i_it);
     if(n_it==nodes.end()) continue;
 
-    out << "*** " << i_it->location << std::endl;
+    out << "*** " << i_it->location << "\n";
     n_it->second.output(out, ns);
-    out << std::endl;
+    out << "\n";
   }
 }
 
@@ -575,7 +575,7 @@ void function_SSAt::nodet::output(
       e_it=equalities.begin();
       e_it!=equalities.end();
       e_it++)
-    out << from_expr(ns, "", *e_it) << std::endl;
+    out << from_expr(ns, "", *e_it) << "\n";
 }
 
 /*******************************************************************\

@@ -108,7 +108,7 @@ void ssa_data_flowt::fixed_point()
     iteration_number++;
     
     #ifdef DEBUG
-    std::cout << "Iteration #" << iteration_number << std::endl;
+    std::cout << "Iteration #" << iteration_number << "\n";
     print_invariant(std::cout);
     #endif
    
@@ -271,26 +271,26 @@ void ssa_data_flowt::print_invariant(std::ostream &out) const
     const backwards_edget &be=*b_it;
   
     out << "*** From " << be.from->location_number
-        << " to " << be.to->location_number << std::endl;
+        << " to " << be.to->location_number << "\n";
 
     out << "Pre: ";
     for(predicatet::var_listt::const_iterator
         v_it=be.pre_predicate.vars.begin(); v_it!=be.pre_predicate.vars.end(); v_it++)
       out << " " << v_it->get_identifier();
-    out << std::endl;
+    out << "\n";
     out << "GSym: " << be.pre_predicate.guard.get_identifier()
-        << std::endl;
+        << "\n";
 
     out << "Post:";
     for(predicatet::var_listt::const_iterator
         v_it=be.post_predicate.vars.begin(); v_it!=be.post_predicate.vars.end(); v_it++)
       out << " " << v_it->get_identifier();
-    out << std::endl;
+    out << "\n";
     out << "GSym: " << be.post_predicate.guard.get_identifier()
-        << std::endl;
+        << "\n";
     
     out << be.pre_predicate;
 
-    out << std::endl;
+    out << "\n";
   }
 }

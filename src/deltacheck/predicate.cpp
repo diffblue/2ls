@@ -88,7 +88,7 @@ void predicatet::output(std::ostream &out) const
 {
   if(is_false)
   {
-    out << "FALSE" << std::endl;
+    out << "FALSE" << "\n";
     return;
   }
   else
@@ -105,8 +105,8 @@ void predicatet::output(std::ostream &out) const
       {
         for(unsigned v=0; v<vars.size(); v++)
           if(e_it->first==uuf.find(v))
-            out << "Equal: " << from_expr(vars[v]) << std::endl;
-        out << std::endl;
+            out << "Equal: " << from_expr(vars[v]) << "\n";
+        out << "\n";
       }
     }
   }

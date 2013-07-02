@@ -37,8 +37,7 @@ void ssa_domaint::output(
       d_it!=def_map.end();
       d_it++)
   {
-    out << "DEF " << d_it->first << ": "
-        << d_it->second << std::endl;
+    out << "DEF " << d_it->first << ": " << d_it->second << "\n";
   }
 
   for(phi_nodest::const_iterator
@@ -52,7 +51,7 @@ void ssa_domaint::output(
         n_it++)
     {
       out << "PHI " << p_it->first << ": "
-          << (*n_it) << std::endl;
+          << (*n_it) << "\n";
     }
   }
 }
@@ -161,7 +160,7 @@ bool ssa_domaint::merge(
       result=true;
 
       #ifdef DEBUG
-      std::cout << "SETTING " << id << ": " << def_map[id] << std::endl;
+      std::cout << "SETTING " << id << ": " << def_map[id] << "\n";
       #endif
     }
     else
@@ -177,7 +176,7 @@ bool ssa_domaint::merge(
           result=true;
 
           #ifdef DEBUG
-          std::cout << "OVERWRITING " << id << ": " << def_map[id] << std::endl;
+          std::cout << "OVERWRITING " << id << ": " << def_map[id] << "\n";
           #endif
         }
         else
@@ -196,14 +195,14 @@ bool ssa_domaint::merge(
           result=true;
 
           #ifdef DEBUG
-          std::cout << "MERGING " << id << ": " << d_it_b->second << std::endl;
+          std::cout << "MERGING " << id << ": " << d_it_b->second << "\n";
           #endif
         }
      }
       else
       {
         #ifdef DEBUG
-        std::cout << "AGREE " << id << ": " << d_it_b->second << std::endl;
+        std::cout << "AGREE " << id << ": " << d_it_b->second << "\n";
         #endif
       }
       

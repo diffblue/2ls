@@ -109,7 +109,7 @@ void solvert::add(unsigned nr)
       #ifdef DEBUG
       std::cout << "UF " << nr << " added: " << expr.id();
       forall_operands(it, expr) std::cout << " " << add(*it);
-      std::cout << std::endl;
+      std::cout << "\n";
       #endif
     }
   }
@@ -218,7 +218,7 @@ decision_proceduret::resultt solvert::dec_solve()
               #ifdef DEBUG
               std::cout << "UF check " 
                         << uf_it1->e_nr << " vs " << uf_it2->e_nr
-                        << ": op " << i << " not equal" << std::endl;
+                        << ": op " << i << " not equal\n";
               #endif
               all_equal=false;
               break;
@@ -229,7 +229,7 @@ decision_proceduret::resultt solvert::dec_solve()
           {
             #ifdef DEBUG
             std::cout << "UF check: " 
-                      << uf_it1->e_nr << " = " << uf_it2->e_nr << std::endl;
+                      << uf_it1->e_nr << " = " << uf_it2->e_nr << "\n";
             #endif
             set_equal(uf_it1->e_nr, uf_it2->e_nr);
             progress=true;
@@ -336,10 +336,10 @@ void solvert::print_assignment(std::ostream &out) const
           eq_it=eq_set.begin(); eq_it!=eq_set.end(); eq_it++)
       {
         out << "Equal: "
-            << from_expr(ns, "", expr_numbering[*eq_it]) << std::endl;
+            << from_expr(ns, "", expr_numbering[*eq_it]) << "\n";
       }
 
-      out << std::endl;
+      out << "\n";
     }
   }
 }
