@@ -170,18 +170,35 @@ bool ssa_domaint::merge(
       
       if(d_it_a->second.def!=d_it_b->second.def)
       {
-        // Arg! Data coming from two different places!
-        // Produce new phi node.
-        std::set<def_entryt> &phi_node=phi_nodes[id];
-        
-        phi_node.insert(d_it_a->second);
-        phi_node.insert(d_it_b->second);
+        // same source?
+        if(d_it_a->second.source==d_it_b->second.source)
+        {
+          d_it_a->second.def=d_it_b->second.def;
+          result=true;
 
-        result=true;
+          #ifdef DEBUG
+          std::cout << "OVERWRITING " << id << ": " << def_map[id] << std::endl;
+          #endif
+        }
+        else
+        {
+          // Arg! Data coming from two different places!
+          // Produce new phi node.
+          std::set<def_entryt> &phi_node=phi_nodes[id];
+          
+          phi_node.insert(d_it_a->second);
+          phi_node.insert(d_it_b->second);
+          
+          // this node is now the new source        
+          d_it_a->second.def=to;
+          d_it_a->second.source=to;
 
-        #ifdef DEBUG
-        std::cout << "MERGING " << id << ": " << d_it_b->second << std::endl;
-        #endif
+          result=true;
+
+          #ifdef DEBUG
+          std::cout << "MERGING " << id << ": " << d_it_b->second << std::endl;
+          #endif
+        }
      }
       else
       {
