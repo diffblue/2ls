@@ -22,7 +22,7 @@ public:
   {
   }
 
-  const goto_functionst::goto_functiont * operator()(
+  goto_functionst::goto_functiont * operator()(
     const irep_idt &id);
     
 protected:

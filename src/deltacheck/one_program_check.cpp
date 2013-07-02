@@ -11,12 +11,14 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/message.h>
 #include <goto-programs/read_goto_binary.h>
 #include <goto-programs/goto_model.h>
+#include <analyses/goto_check.h>
 
 #include "index.h"
 #include "html_report.h"
 #include "get_function.h"
 #include "one_program_check.h"
 #include "ssa_data_flow.h"
+#include "report_assertions.h"
 
 /*******************************************************************\
 
@@ -32,24 +34,41 @@ Function: one_program_check_function
 
 void one_program_check_function(
   const irep_idt &id,
-  const goto_functionst::goto_functiont &f,
+  goto_functionst::goto_functiont &f,
   const namespacet &ns,
   std::ostream &report,
   message_handlert &message_handler)
 {
   messaget message(message_handler);
+  
+  optionst options;
+  options.set_option("bounds-check", true);
+  options.set_option("pointer-check", true);
+  options.set_option("div-by-zero-check", true);
+  options.set_option("signed-overflow-check", true);
+  //options.set_option("unsigned-overflow-check", true);
+  options.set_option("undefined-shift-check", true);
+  //options.set_option("float-overflow-check", true);
+  options.set_option("simplify", true);
+  //options.set_option("nan-check", true);
+  options.set_option("assertions", true);
+  options.set_option("assumptions", true);
 
-  message.status() << "Building SSA" << messaget::eom;
+  // add properties
+  message.status() << "Generating properties" << messaget::eom;
+  goto_check(ns, options, f);
 
   // build SSA
+  message.status() << "Building SSA" << messaget::eom;
   function_SSAt function_SSA(f, ns);
   
-  message.status() << "Data-flow fixed-point" << messaget::eom;
-
   // now do fixed-point
+  message.status() << "Data-flow fixed-point" << messaget::eom;
   ssa_data_flowt ssa_data_flow(function_SSA);
   
-  // now give to SAT
+  // now report on assertions
+  message.status() << "Reporting" << messaget::eom;
+  report_assertions(ssa_data_flow, report);
 }
 
 /*******************************************************************\
@@ -79,7 +98,7 @@ void one_program_check_function(
   
   messaget message(message_handler);
   
-  const goto_functionst::goto_functiont *index_fkt=
+  goto_functionst::goto_functiont *index_fkt=
     get_function(id);
   
   if(index_fkt==NULL)
@@ -136,7 +155,7 @@ void one_program_check_all(
     {
       const irep_idt &id=*fkt_it;
       
-      const goto_functionst::function_mapt::const_iterator
+      const goto_functionst::function_mapt::iterator
         fmap_it=model.goto_functions.function_map.find(id);
         
       if(fmap_it==model.goto_functions.function_map.end())
@@ -146,7 +165,7 @@ void one_program_check_all(
         continue;
       }
       
-      const goto_functionst::goto_functiont *index_fkt=
+      goto_functionst::goto_functiont *index_fkt=
         &fmap_it->second;
     
       message.status() << "Checking \"" << id2string(id) << "\""
@@ -177,16 +196,20 @@ void one_program_check(
   const std::string &function,
   message_handlert &message_handler)
 {
+  messaget message(message_handler);
+
   std::string report_file_name="deltacheck.html";
   std::ofstream out(report_file_name.c_str());
 
   if(!out)
   {
-    messaget message(message_handler);
     message.error() << "failed to write to \""
                     << report_file_name << "\"" << messaget::eom;
     return;
   }
+  
+  message.status() << "Writing report into \""
+                   << report_file_name << "\"" << messaget::eom;
 
   html_report_header(out, index);
 

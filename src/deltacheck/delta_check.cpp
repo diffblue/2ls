@@ -157,15 +157,20 @@ void delta_check(
   const std::string &function,
   message_handlert &message_handler)
 {
+  messaget message(message_handler);
+
   std::string report_file_name="deltacheck.html";
   std::ofstream out(report_file_name.c_str());
+
   if(!out)
   {
-    messaget message(message_handler);
     message.error() << "failed to write to \""
                     << report_file_name << "\"" << messaget::eom;
     return;
   }
+
+  message.status() << "Writing report into \""
+                   << report_file_name << "\"" << messaget::eom;
 
   html_report_header(out, index1, index2);  
 

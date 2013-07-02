@@ -30,56 +30,18 @@ public:
     return "DeltaCheck equality+UF solver";
   }
   
-protected:
   inline void set_equal(const exprt &a, const exprt &b)
   {
     set_equal(add(a), add(b));
   }
 
-  inline void set_equal(unsigned a, unsigned b)
+  inline bool is_equal(const exprt &a, const exprt &b) const
   {
-    equalities.make_union(a, b);
+    unsigned a_nr, b_nr;
+    if(expr_numbering.get_number(a, a_nr)) return false;
+    if(expr_numbering.get_number(b, b_nr)) return false;
+    return is_equal(a_nr, b_nr);
   }
-  
-  // a numbering for expressions
-  numbering<exprt> expr_numbering;
-
-  // equality logic
-  unsigned_union_find equalities;
-  
-  struct solver_ift
-  {
-    unsigned cond, true_case, false_case, e_nr;
-  };
-  
-  typedef std::vector<solver_ift> if_listt;
-  if_listt if_list;
-  
-  struct solver_uft
-  {
-    unsigned e_nr;
-  };
-  
-  typedef std::vector<solver_uft> uf_listt;
-  uf_listt uf_list;
-  
-  struct solver_ort
-  {
-    unsigned op0, op1, e_nr;
-  };
-
-  typedef std::vector<solver_ort> or_listt;
-  or_listt or_list;
-  
-  struct solver_andt
-  {
-    unsigned op0, op1, e_nr;
-  };
-
-  typedef std::vector<solver_andt> and_listt;
-  and_listt and_list;
-  
-  void add(unsigned nr);
 
   unsigned add(const exprt &expr)
   {
@@ -89,9 +51,44 @@ protected:
     return nr;
   }
   
+protected:
+  inline void set_equal(unsigned a, unsigned b)
+  {
+    equalities.make_union(a, b);
+  }
+  
+  inline bool implies_equal(unsigned a, unsigned b)
+  {
+    if(is_equal(a, b)) return false; // no progres
+    equalities.make_union(a, b);
+    return true; // progress!
+  }
+  
+  // a numbering for expressions
+  numbering<exprt> expr_numbering;
+
+  // equality logic
+  unsigned_union_find equalities;
+  
+  struct solver_exprt
+  {
+    unsigned e_nr;
+    std::vector<unsigned> op;
+  };
+  
+  typedef std::vector<solver_exprt> solver_expr_listt;
+  solver_expr_listt if_list, or_list, and_list;
+  
+  typedef std::map<irep_idt, solver_expr_listt> uf_mapt;
+  uf_mapt uf_map;
+  
+  solver_exprt convert(unsigned nr);
+  
+  void add(unsigned nr);
+
   unsigned false_nr, true_nr;
   
-  inline bool is_equal(unsigned a, unsigned b)
+  inline bool is_equal(unsigned a, unsigned b) const
   {
     return equalities.find(a)==equalities.find(b);
   }

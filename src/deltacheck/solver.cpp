@@ -6,6 +6,12 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+//#define DEBUG
+
+#ifdef DEBUG
+#include <iostream>
+#endif
+
 #include <map>
 #include <set>
 
@@ -36,6 +42,34 @@ solvert::solvert(const namespacet &_ns):decision_proceduret(_ns)
 
 /*******************************************************************\
 
+Function: solvert::convert
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+solvert::solver_exprt solvert::convert(unsigned nr)
+{
+  const exprt &expr=expr_numbering[nr];
+  const exprt::operandst &expr_op=expr.operands();
+  
+  solver_exprt dest;
+
+  dest.e_nr=nr;
+  dest.op.resize(expr_op.size());
+
+  for(unsigned i=0; i<dest.op.size(); i++)
+    dest.op[i]=add(expr_op[i]);
+
+  return dest;
+}
+
+/*******************************************************************\
+
 Function: solvert::add
 
   Inputs:
@@ -52,40 +86,31 @@ void solvert::add(unsigned nr)
     
   if(expr.id()==ID_if)
   {
-    const if_exprt &if_expr=to_if_expr(expr);
-
-    // the three calls below are possibly recursive,
-    // and thus, "if_list" isn't stable
-    solver_ift solver_if;
-    solver_if.cond=add(if_expr.cond());
-    solver_if.true_case=add(if_expr.true_case());
-    solver_if.false_case=add(if_expr.false_case());
-    solver_if.e_nr=nr;
-
-    if_list.push_back(solver_if);
+    solver_exprt solver_expr=convert(nr);
+  
+    if_list.push_back(solver_expr);
+    
+    // we also add if-s as UFs (uff!)
+    uf_map[ID_if].push_back(solver_expr);
   }
   else if(expr.id()==ID_or)
-  {
-    if(expr.operands().size()==2)
-    {
-      solver_ort solver_or;
-      solver_or.op0=add(expr.op0());
-      solver_or.op1=add(expr.op1());
-      solver_or.e_nr=nr;
-      
-      or_list.push_back(solver_or);
-    }
-  }
+    or_list.push_back(convert(nr));
   else if(expr.id()==ID_and)
+    and_list.push_back(convert(nr));
+  else if(expr.id()==ID_not)
   {
-    if(expr.operands().size()==2)
+  }
+  else
+  {
+    if(expr.has_operands()) // make it uninterpreted
     {
-      solver_andt solver_and;
-      solver_and.op0=add(expr.op0());
-      solver_and.op1=add(expr.op1());
-      solver_and.e_nr=nr;
+      uf_map[expr.id()].push_back(convert(nr));
       
-      and_list.push_back(solver_and);
+      #ifdef DEBUG
+      std::cout << "UF " << nr << " added: " << expr.id();
+      forall_operands(it, expr) std::cout << " " << add(*it);
+      std::cout << std::endl;
+      #endif
     }
   }
 }
@@ -110,79 +135,105 @@ decision_proceduret::resultt solvert::dec_solve()
   {  
     progress=false;
 
-    for(if_listt::const_iterator
+    for(solver_expr_listt::const_iterator
         if_it=if_list.begin();
         if_it!=if_list.end();
         if_it++)
     {
-      if(is_equal(if_it->cond, false_nr)) // false ? x : y == y
+      if(is_equal(if_it->op[0], false_nr)) // false ? x : y == y
       {
-        if(!is_equal(if_it->false_case, if_it->e_nr))
-        {
-          set_equal(if_it->false_case, if_it->e_nr);
-          progress=true;
-        }
+        progress=implies_equal(if_it->op[2], if_it->e_nr);
       }
-      else if(is_equal(if_it->cond, true_nr)) // true ? x : y == x
+      else if(is_equal(if_it->op[0], true_nr)) // true ? x : y == x
       {
-        if(!is_equal(if_it->true_case, if_it->e_nr))
-        {
-          set_equal(if_it->true_case, if_it->e_nr);
-          progress=true;
-        }
+        progress=implies_equal(if_it->op[1], if_it->e_nr);
       }
 
-      // c ? x : x == x
-      if(is_equal(if_it->false_case, if_it->true_case) &&
-         !is_equal(if_it->false_case, if_it->e_nr))
+      if(is_equal(if_it->op[2], if_it->op[1])) // c ? x : x == x
       {
-        set_equal(if_it->false_case, if_it->e_nr);
-        progress=true;
+        progress=implies_equal(if_it->op[2], if_it->e_nr);
       }
     }
-
-    for(or_listt::const_iterator
+    
+    for(solver_expr_listt::const_iterator
         or_it=or_list.begin();
         or_it!=or_list.end();
         or_it++)
     {
-      if(is_equal(or_it->op1, false_nr)) // x || false == x
+      if(is_equal(or_it->op[1], false_nr)) // x || false == x
       {
-        if(!is_equal(or_it->op0, or_it->e_nr))
-        {
-          set_equal(or_it->op0, or_it->e_nr);
-          progress=true;
-        }
+        progress=implies_equal(or_it->op[0], or_it->e_nr);
       }
-      else if(is_equal(or_it->op0, false_nr)) // false || x == x
+      else if(is_equal(or_it->op[0], false_nr)) // false || x == x
       {
-        if(!is_equal(or_it->op1, or_it->e_nr))
-        {
-          set_equal(or_it->op1, or_it->e_nr);
-          progress=true;
-        }
+        progress=implies_equal(or_it->op[1], or_it->e_nr);
       }
     }
 
-    for(and_listt::const_iterator
+    for(solver_expr_listt::const_iterator
         and_it=and_list.begin();
         and_it!=and_list.end();
         and_it++)
     {
-      if(is_equal(and_it->op1, true_nr)) // x || true == x
+      if(is_equal(and_it->op[1], true_nr)) // x || true == x
       {
-        if(!is_equal(and_it->op0, and_it->e_nr))
-        {
-          set_equal(and_it->op0, and_it->e_nr);
-          progress=true;
-        }
+        progress=implies_equal(and_it->op[0], and_it->e_nr);
       }
-      else if(is_equal(and_it->op0, true_nr)) // true || x == x
+      else if(is_equal(and_it->op[0], true_nr)) // true || x == x
       {
-        if(!is_equal(and_it->op1, and_it->e_nr))
+        progress=implies_equal(and_it->op[1], and_it->e_nr);
+      }
+    }
+
+    for(uf_mapt::const_iterator
+        uf_map_it=uf_map.begin();
+        uf_map_it!=uf_map.end();
+        uf_map_it++)
+    {
+      const solver_expr_listt &uf_list=uf_map_it->second;
+    
+      // boo, quadratic!
+      for(solver_expr_listt::const_iterator
+          uf_it1=uf_list.begin();
+          uf_it1!=uf_list.end();
+          uf_it1++)
+      {
+        solver_expr_listt::const_iterator next=uf_it1;
+        next++;
+      
+        for(solver_expr_listt::const_iterator
+            uf_it2=next;
+            uf_it2!=uf_list.end();
+            uf_it2++)
         {
-          set_equal(and_it->op1, and_it->e_nr);
-          progress=true;
+          if(uf_it1->op.size()!=uf_it2->op.size()) continue;
+          if(is_equal(uf_it1->e_nr, uf_it2->e_nr)) continue;
+          
+          bool all_equal=true;
+          
+          for(unsigned i=0; i<uf_it1->op.size(); i++)
+          {
+            if(!is_equal(uf_it1->op[i], uf_it2->op[i]))
+            {
+              #ifdef DEBUG
+              std::cout << "UF check " 
+                        << uf_it1->e_nr << " vs " << uf_it2->e_nr
+                        << ": op " << i << " not equal" << std::endl;
+              #endif
+              all_equal=false;
+              break;
+            }
+          }
+          
+          if(all_equal)
+          {
+            #ifdef DEBUG
+            std::cout << "UF check: " 
+                      << uf_it1->e_nr << " = " << uf_it2->e_nr << std::endl;
+            #endif
+            set_equal(uf_it1->e_nr, uf_it2->e_nr);
+            progress=true;
+          }
         }
       }
     }
@@ -236,6 +287,20 @@ Function: solvert::get
 
 exprt solvert::get(const exprt &expr) const
 {
+  if(expr.is_constant()) return expr;
+
+  unsigned nr;
+
+  if(!expr_numbering.get_number(expr, nr))
+  {
+    // equal to some constant?
+    nr=equalities.find(nr);
+    
+    for(unsigned i=0; i<equalities.size(); i++)
+      if(expr_numbering[i].is_constant())
+        return expr_numbering[i];
+  }
+
   return nil_exprt();
 }
   

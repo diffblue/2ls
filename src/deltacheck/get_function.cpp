@@ -22,12 +22,12 @@ Function: get_functiont::operator()
 
 \*******************************************************************/
 
-const goto_functionst::goto_functiont * get_functiont::operator()(const irep_idt &id)
+goto_functionst::goto_functiont * get_functiont::operator()(const irep_idt &id)
 {
   // do we have it in our current file?
   if(current_file_name!="")
   {
-    const goto_functionst::function_mapt::const_iterator
+    const goto_functionst::function_mapt::iterator
       f_it=goto_model.goto_functions.function_map.find(id);
     
     if(f_it!=goto_model.goto_functions.function_map.end())
@@ -55,7 +55,7 @@ const goto_functionst::goto_functiont * get_functiont::operator()(const irep_idt
     goto_model,
     get_message_handler());
 
-  const goto_functionst::function_mapt::const_iterator
+  const goto_functionst::function_mapt::iterator
     f_it=goto_model.goto_functions.function_map.find(id);
   
   assert(f_it!=goto_model.goto_functions.function_map.end());

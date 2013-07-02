@@ -9,6 +9,39 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "html_report.h"
 #include "logo.h"
 #include "version.h"
+#include "html_escape.h"
+
+/*******************************************************************\
+
+Function: html_report_header
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void html_report_header(std::ostream &out)
+{
+  out << "<html>\n"
+         "<head>\n";
+  
+  out << "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\n"
+         "\n";
+         
+  out << "<style media=\"screen\" type=\"text/css\">\n"
+         ".image-right { float: right; margin-left: 10px; }\n"
+         "table.assertions { border-collapse:collapse; }\n"
+         "table.assertions td, th { border:1px solid black; padding: 4px 4px 4px 8px; }\n"
+         "</style>\n"
+         "\n";
+
+  out << "</head>\n"
+         "\n"
+         "<body>\n";
+}
 
 /*******************************************************************\
 
@@ -26,20 +59,20 @@ void html_report_header(
   std::ostream &out,
   const indext &index1, const indext &index2)
 {
-  out << "<html>\n"
-         "<head>\n"
-         "</head>\n"
-         "\n"
-         "<body>\n";
+  html_report_header(out);
 
-  out << "<h1>DeltaCheck Report</h1>\n\n";
   out << "<img src=\"" << deltacheck_logo
       << "\" class=\"image-right\" alt=\"DeltaCheck Logo\">\n\n";
+
+  out << "<h1>DeltaCheck Report</h1>\n\n";
+
   out << "<p>DeltaCheck version: " << DELTACHECK_VERSION << "</p>\n";
   
   out << "<h2>Software under analysis</h2>\n";
-  out << "<p>Old version: " << index1.file_name << " " << index1.description << "</p>\n";
-  out << "<p>New version: " << index2.file_name << " " << index2.description << "</p>\n";
+  out << "<p>Old version: " << html_escape(index1.file_name)
+      << " " << html_escape(index1.description) << "</p>\n";
+  out << "<p>New version: " << html_escape(index2.file_name)
+      << " " << html_escape(index2.description) << "</p>\n";
 }
 
 /*******************************************************************\
@@ -58,19 +91,18 @@ void html_report_header(
   std::ostream &out,
   const indext &index)
 {
-  out << "<html>\n"
-         "<head>\n"
-         "</head>\n"
-         "\n"
-         "<body>\n";
+  html_report_header(out);
 
-  out << "<h1>DeltaCheck Report</h1>\n\n";
   out << "<img src=\"" << deltacheck_logo
       << "\" class=\"image-right\" alt=\"DeltaCheck Logo\">\n\n";
+
+  out << "<h1>DeltaCheck Report</h1>\n\n";
+
   out << "<p>DeltaCheck version: " << DELTACHECK_VERSION << "</p>\n";
   
   out << "<h2>Software under analysis</h2>\n";
-  out << "<p>Single version: " << index.file_name << " " << index.description << "</p>\n";
+  out << "<p>Single version: " << html_escape(index.file_name)
+      << " " << html_escape(index.description) << "</p>\n";
 }
 
 /*******************************************************************\

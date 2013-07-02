@@ -33,15 +33,15 @@ void build_index(
   std::ostream &out,
   message_handlert &message_handler)
 {
-  out << "<?xml verion=\"1.0\" encoding=\"UTF-8\"?>" << std::endl;
+  out << "<?xml verion=\"1.0\" encoding=\"UTF-8\"?>\n";
 
   out << "<DeltaCheckIndex version=\""
-      << DELTACHECK_VERSION << "\">" << std::endl;
+      << DELTACHECK_VERSION << "\">\n";
   
   out << "<description>";
   xmlt::escape(description, out);
-  out << "</description>" << std::endl;
-  out << std::endl;
+  out << "</description>\n";
+  out << "\n";
   
   messaget message(message_handler);
 
@@ -54,7 +54,7 @@ void build_index(
   
     out << "<file name=\"";
     xmlt::escape_attribute(*it, out);
-    out << "\">" << std::endl;
+    out << "\">\n";
 
     goto_modelt goto_model;
     
@@ -73,14 +73,14 @@ void build_index(
       {
         out << "  <function id=\"";
         xmlt::escape_attribute(id2string(f_it->first), out);
-        out << "\"/>" << std::endl;
+        out << "\"/>\n";
       }
     }    
     
-    out << "</file>" << std::endl;
+    out << "</file>\n";
   }
   
-  out << "</DeltaCheckIndex>" << std::endl;  
+  out << "</DeltaCheckIndex>\n";  
 }
 
 /*******************************************************************\
@@ -226,7 +226,7 @@ void summarize_function_calls(
     out << "  ";
     out << "<called id=\"";
     xmlt::escape_attribute(id2string(*it), out);
-    out << "\"/>" << std::endl;
+    out << "\"/>\n";
   }
 }
 
@@ -252,7 +252,7 @@ void summarize_function(
 {
   out << "<function id=\"";
   xmlt::escape_attribute(id2string(symbol.name), out);
-  out << "\">" << std::endl;
+  out << "\">\n";
   
   if(symbol.location.is_not_nil() &&
      symbol.location.get_file()!="")
@@ -262,8 +262,8 @@ void summarize_function(
   
   function_transformer(ns, goto_functions, goto_function, message_handler, out);
 
-  out << "</function>" << std::endl;
-  out << std::endl;
+  out << "</function>\n";
+  out << "\n";
 }
 
 /*******************************************************************\
@@ -284,7 +284,7 @@ void dump_exported_functions(
   message_handlert &message_handler,
   std::ostream &out)
 {
-  out << "<functions>" << std::endl;
+  out << "<functions>\n";
 
   // do this for each function
   forall_goto_functions(f_it, goto_functions)
@@ -307,8 +307,8 @@ void dump_exported_functions(
       ns, goto_functions, symbol, f_it->second, message_handler, out);
   }
   
-  out << "</functions>" << std::endl;
-  out << std::endl;
+  out << "</functions>\n";
+  out << "\n";
 }
 
 /*******************************************************************\
@@ -327,7 +327,7 @@ void dump_state_variables(
   const symbol_tablet &symbol_table,
   std::ostream &out)
 {
-  out << "<state_variables>" << std::endl;
+  out << "<state_variables>\n";
 
   forall_symbols(s_it, symbol_table.symbols)
   {
@@ -345,16 +345,16 @@ void dump_state_variables(
   
     out << "<state_variable id=\"";
     xmlt::escape_attribute(id2string(symbol.name), out);
-    out << "\">" << std::endl;
+    out << "\">\n";
   
     if(symbol.location.is_not_nil() && symbol.location.get_file()!="")
       out << xml(symbol.location);
 
-    out << "</state_variable>" << std::endl;
+    out << "</state_variable>\n";
   }
   
-  out << "</state_variables>" << std::endl;
-  out << std::endl;
+  out << "</state_variables>\n";
+  out << "\n";
 }
 
 /*******************************************************************\
@@ -437,7 +437,7 @@ void summarization(
   if(!summary_file)
     throw std::string("failed to write summary file");
 
-  summary_file << "<summaries>" << std::endl;
+  summary_file << "<summaries>\n";
 
   ::summarization(
     function_file_map,
@@ -447,7 +447,7 @@ void summarization(
     message_handler,
     summary_file);
   
-  summary_file << "</summaries>" << std::endl;
+  summary_file << "</summaries>\n";
 
   messaget message(message_handler);
   message.status() << "Summary written as " << summary_file_name << messaget::eom;

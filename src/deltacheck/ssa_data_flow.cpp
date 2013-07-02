@@ -6,7 +6,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#define DEBUG
+//#define DEBUG
 
 #include <util/decision_procedure.h>
 
@@ -97,6 +97,7 @@ Function: ssa_data_flowt::fixed_point
 void ssa_data_flowt::fixed_point()
 {
   get_backwards_edges();
+  setup_assertions();
 
   iteration_number=0;
   
@@ -142,10 +143,17 @@ bool ssa_data_flowt::iteration()
       b_it++)
     b_it->pre_predicate.set_to_true(solver);
   
+  // feed in assertions
+  for(assertionst::const_iterator
+      a_it=assertions.begin(); a_it!=assertions.end(); a_it++)
+    solver.add(a_it->guard);
+
   // solve
   solver.dec_solve();
-  
-  // solver.print_assignment(std::cout);
+ 
+  #if 0
+  solver.print_assignment(std::cout);
+  #endif
 
   // now get new value of post-state predicates
   for(backwards_edgest::iterator
@@ -168,13 +176,77 @@ bool ssa_data_flowt::iteration()
     
     // rename
     tmp.rename(b_it->pre_predicate.guard, b_it->pre_predicate.vars);
-
+    
+    #if 0
+    tmp.output(std::cout);
+    #endif
+    
     // make disjunction
     if(b_it->pre_predicate.disjunction(tmp))
       change=true;
   }
   
+  if(!change)
+    check_assertions(solver);
+  
   return change;
+}
+
+/*******************************************************************\
+
+Function: ssa_data_flowt::check_assertions
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void ssa_data_flowt::check_assertions(solvert &solver)
+{
+  for(assertionst::iterator
+      a_it=assertions.begin(); a_it!=assertions.end(); a_it++)
+  {
+    exprt g=solver.get(a_it->guard);
+
+    tvt status;
+    
+    if(g.is_true())
+      status=tvt(true);
+    else if(g.is_false())
+      status=tvt(false);
+    else
+      status=tvt::unknown();
+
+    a_it->status=status;
+  }
+}
+
+/*******************************************************************\
+
+Function: ssa_data_flowt::setup_assertions
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void ssa_data_flowt::setup_assertions()
+{
+  forall_goto_program_instructions(i_it, function_SSA.goto_function.body)
+  {
+    if(i_it->is_assert())
+    {
+      assertions.push_back(assertiont());
+      assertions.back().loc=i_it;
+      assertions.back().guard=function_SSA.read(i_it->guard, i_it);
+    }
+  }
 }
 
 /*******************************************************************\

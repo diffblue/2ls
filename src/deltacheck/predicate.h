@@ -10,6 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #define CPROVER_DELTACHECK_PREDICATE_H
 
 #include <util/std_expr.h>
+#include <util/union_find.h>
 
 #include "solver.h"
 
@@ -44,7 +45,12 @@ public:
   void set_to_true(solvert &) const;
 
 protected:
+  // for now, we can track:
+  // * bottom (is_false)
+  // * equalities between variables
+
   bool is_false;
+  unsigned_union_find uuf;
 };
 
 static inline std::ostream & operator << (
