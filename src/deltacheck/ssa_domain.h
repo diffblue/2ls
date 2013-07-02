@@ -32,7 +32,10 @@ public:
   friend inline bool operator < (
     const def_entryt &a, const def_entryt &b)
   {
-    return a.source < b.source;
+    if(a.def==b.def)
+      return a.source < b.source;
+    else
+      return a.def < b.def;
   }
   
   typedef std::map<irep_idt, def_entryt> def_mapt;
