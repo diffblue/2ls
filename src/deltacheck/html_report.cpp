@@ -35,6 +35,7 @@ void html_report_header(std::ostream &out)
          ".image-right { float: right; margin-left: 10px; }\n"
          "table.assertions { border-collapse:collapse; }\n"
          "table.assertions td, th { border:1px solid black; padding: 4px 4px 4px 8px; }\n"
+         "p.statistics { font: 11px \"Trebuchet MS\", Verdana, Arial, Helvetica, sans-serif; }\n"
          "</style>\n"
          "\n";
 

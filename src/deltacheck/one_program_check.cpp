@@ -9,6 +9,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <fstream>
 
 #include <util/message.h>
+#include <util/time_stopping.h>
+
 #include <goto-programs/read_goto_binary.h>
 #include <goto-programs/goto_model.h>
 #include <analyses/goto_check.h>
@@ -55,20 +57,32 @@ void one_program_check_function(
   options.set_option("assumptions", true);
 
   // add properties
+  fine_timet start_prop=current_time();
   message.status() << "Generating properties" << messaget::eom;
   goto_check(ns, options, f);
 
   // build SSA
+  fine_timet start_ssa=current_time();
   message.status() << "Building SSA" << messaget::eom;
   function_SSAt function_SSA(f, ns);
   
   // now do fixed-point
+  fine_timet start_fp=current_time();
   message.status() << "Data-flow fixed-point" << messaget::eom;
   ssa_data_flowt ssa_data_flow(function_SSA);
   
   // now report on assertions
+  fine_timet start_reporting=current_time();
   message.status() << "Reporting" << messaget::eom;
   report_assertions(ssa_data_flow, report);
+  fine_timet end_reporting=current_time();
+  
+  // dump statistics
+  report << "<p class=\"statistics\">Properties: " << start_ssa-start_prop
+         << "s SSA: " << start_fp-start_ssa
+         << "s Fixed-point: " << start_reporting-start_fp
+         << "s Reporting: " << start_reporting-end_reporting
+         << "s</p>\n";
 }
 
 /*******************************************************************\
