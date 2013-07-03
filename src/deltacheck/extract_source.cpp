@@ -6,7 +6,30 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <fstream>
+
+#include <util/string2int.h>
+
 #include "extract_source.h"
+#include "html_escape.h"
+
+/*******************************************************************\
+
+Function: fast_forward
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void fast_forward(unsigned lines, std::istream &in)
+{
+  for(unsigned int i=0; i<lines; ++i)
+    in.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+}
 
 /*******************************************************************\
 
@@ -21,8 +44,51 @@ Function: extract_source
 \*******************************************************************/
 
 void extract_source(
-  const locationt &begin, const locationt &end,
-  std::ostream &)
+  const locationt &location,
+  const goto_programt &goto_program,
+  std::ostream &out)
 {
+  const irep_idt &file=location.get_file();
+
+  if(file=="") return;
+  if(goto_program.instructions.empty()) return;
+
+  std::ifstream in(file.c_str());
   
+  if(!in)
+  {
+    out << "<p>failed to open \""
+        << html_escape(file) << "\"</p>\n";
+    return;
+  }
+  
+  unsigned line_no=safe_string2unsigned(id2string(location.get_line()));
+
+  if(line_no!=0)
+    fast_forward(line_no-1, in);
+
+  // get last line of function
+  
+  const locationt &last=goto_program.instructions.back().location;
+  
+  if(last.get_file()!=file)
+  {
+    // Hm, function ends in a different file than it starts.
+    // Possible, but unusual.
+    return;
+  }
+
+  unsigned end_line=safe_string2unsigned(id2string(last.get_line()));
+  
+  out << "<div class=\"source\">\n";
+
+  for(; line_no<=end_line; line_no++)
+  {
+    std::string line;
+    if(!std::getline(in, line)) break;
+    
+    out << line_no << " " << line << "<br>\n";
+  }   
+  
+  out << "</div>\n";
 }

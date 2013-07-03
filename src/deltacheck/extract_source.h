@@ -11,10 +11,11 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <ostream>
 
-#include <util/location.h>
+#include <goto-programs/goto_functions.h>
 
 void extract_source(
-  const locationt &begin, const locationt &end,
+  const locationt &location,
+  const goto_programt &goto_program,
   std::ostream &);
 
 #endif

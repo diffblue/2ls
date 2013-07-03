@@ -23,6 +23,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "report_assertions.h"
 #include "html_escape.h"
 #include "statistics.h"
+#include "extract_source.h"
 
 class one_program_checkt:public messaget
 {
@@ -48,7 +49,7 @@ public:
 protected:
 
   void check_function(
-    const irep_idt &id,
+    const symbolt &symbol,
     goto_functionst::goto_functiont &f,
     const namespacet &ns);
 };
@@ -66,7 +67,7 @@ Function: one_program_checkt::check_function
 \*******************************************************************/
 
 void one_program_checkt::check_function(
-  const irep_idt &id,
+  const symbolt &symbol,
   goto_functionst::goto_functiont &f,
   const namespacet &ns)
 {
@@ -106,6 +107,7 @@ void one_program_checkt::check_function(
   status() << "Reporting" << eom;
   statistics.start("Reporting");
   report_assertions(ssa_data_flow, report);
+  extract_source(symbol.location, f.body, report);
   statistics.stop("Reporting");
   
   // dump statistics
@@ -131,8 +133,6 @@ void one_program_checkt::check_function(const std::string &function)
   get_functiont get_function(index);
   get_function.set_message_handler(get_message_handler());
   
-  const namespacet &ns=get_function.ns;
-  
   goto_functionst::goto_functiont *index_fkt=
     get_function(id);
   
@@ -143,7 +143,11 @@ void one_program_checkt::check_function(const std::string &function)
     return;
   }
 
-  check_function(id, *index_fkt, ns);
+  const namespacet &ns=get_function.ns;
+  
+  const symbolt &symbol=ns.lookup(id);
+  
+  check_function(symbol, *index_fkt, ns);
 }
 
 /*******************************************************************\
@@ -205,7 +209,7 @@ void one_program_checkt::check_all()
              << " in " << html_escape(file_it->first)
              << "</h2>\n";
 
-      check_function(id, *index_fkt, ns);
+      check_function(symbol, *index_fkt, ns);
     }
   }
   
