@@ -22,10 +22,40 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "ssa_data_flow.h"
 #include "report_assertions.h"
 #include "html_escape.h"
+#include "statistics.h"
+
+class one_program_checkt:public messaget
+{
+public:
+  one_program_checkt(
+    const indext &_index,
+    std::ostream &_report,
+    message_handlert &message_handler):
+    messaget(message_handler),
+    index(_index),
+    report(_report)
+  {
+  }
+  
+  const indext &index;
+  std::ostream &report;
+  statisticst statistics;
+  optionst options;
+  
+  void check_function(const std::string &);
+  void check_all();
+
+protected:
+
+  void check_function(
+    const irep_idt &id,
+    goto_functionst::goto_functiont &f,
+    const namespacet &ns);
+};
 
 /*******************************************************************\
 
-Function: one_program_check_function
+Function: one_program_checkt::check_function
 
   Inputs:
 
@@ -35,16 +65,11 @@ Function: one_program_check_function
 
 \*******************************************************************/
 
-void one_program_check_function(
+void one_program_checkt::check_function(
   const irep_idt &id,
   goto_functionst::goto_functiont &f,
-  const namespacet &ns,
-  std::ostream &report,
-  message_handlert &message_handler)
+  const namespacet &ns)
 {
-  messaget message(message_handler);
-  
-  optionst options;
   options.set_option("bounds-check", true);
   options.set_option("pointer-check", true);
   options.set_option("div-by-zero-check", true);
@@ -59,36 +84,32 @@ void one_program_check_function(
 
   // add properties
   fine_timet start_prop=current_time();
-  message.status() << "Generating properties" << messaget::eom;
+  status() << "Generating properties" << eom;
   goto_check(ns, options, f);
 
   // build SSA
   fine_timet start_ssa=current_time();
-  message.status() << "Building SSA" << messaget::eom;
+  status() << "Building SSA" << eom;
   function_SSAt function_SSA(f, ns);
   
   // now do fixed-point
   fine_timet start_fp=current_time();
-  message.status() << "Data-flow fixed-point" << messaget::eom;
+  status() << "Data-flow fixed-point" << eom;
   ssa_data_flowt ssa_data_flow(function_SSA);
   
   // now report on assertions
   fine_timet start_reporting=current_time();
-  message.status() << "Reporting" << messaget::eom;
+  status() << "Reporting" << eom;
   report_assertions(ssa_data_flow, report);
   fine_timet end_reporting=current_time();
   
   // dump statistics
-  report << "<p class=\"statistics\">Properties: " << start_ssa-start_prop
-         << "s SSA: " << start_fp-start_ssa
-         << "s Fixed-point: " << start_reporting-start_fp
-         << "s Reporting: " << start_reporting-end_reporting
-         << "s</p>\n";
+  statistics.html_report_function(report);
 }
 
 /*******************************************************************\
 
-Function: one_program_check_function
+Function: one_program_checkt::check_function
 
   Inputs:
 
@@ -98,37 +119,31 @@ Function: one_program_check_function
 
 \*******************************************************************/
 
-void one_program_check_function(
-  const indext &index,
-  const std::string &function,
-  std::ostream &report,
-  message_handlert &message_handler)
+void one_program_checkt::check_function(const std::string &function)
 {
   const irep_idt id="c::"+function;
 
   get_functiont get_function(index);
-  get_function.set_message_handler(message_handler);
+  get_function.set_message_handler(get_message_handler());
   
   const namespacet &ns=get_function.ns;
-  
-  messaget message(message_handler);
   
   goto_functionst::goto_functiont *index_fkt=
     get_function(id);
   
   if(index_fkt==NULL)
   {
-    message.error() << "function \"" << function
-                    << "\" not found in index" << messaget::eom;
+    error() << "function \"" << function
+            << "\" not found in index" << eom;
     return;
   }
 
-  one_program_check_function(id, *index_fkt, ns, report, message_handler);
+  check_function(id, *index_fkt, ns);
 }
 
 /*******************************************************************\
 
-Function: one_program_check_all
+Function: one_program_checkt::check_all
 
   Inputs:
 
@@ -138,26 +153,20 @@ Function: one_program_check_all
 
 \*******************************************************************/
 
-void one_program_check_all(
-  const indext &index,
-  std::ostream &report,
-  message_handlert &message_handler)
+void one_program_checkt::check_all()
 {
   // we do this by file in the index
   
-  messaget message(message_handler);
-
   for(indext::file_to_functiont::const_iterator
       file_it=index.file_to_function.begin();
       file_it!=index.file_to_function.end();
       file_it++)
   {
-    message.status() << "Processing \"" << file_it->first << "\""
-                     << messaget::eom;
+    status() << "Processing \"" << file_it->first << "\"" << eom;
     
     // read the file
     goto_modelt model;
-    read_goto_binary(id2string(file_it->first), model, message_handler);
+    read_goto_binary(id2string(file_it->first), model, get_message_handler());
    
     const namespacet ns(model.symbol_table); 
     const std::set<irep_idt> &functions=file_it->second;
@@ -175,16 +184,15 @@ void one_program_check_all(
         
       if(fmap_it==model.goto_functions.function_map.end())
       {
-        message.error() << "failed to find function `" << id2string(id)
-                        << "'" << messaget::eom;
+        error() << "failed to find function `" << id2string(id)
+                << "'" << eom;
         continue;
       }
       
       goto_functionst::goto_functiont *index_fkt=
         &fmap_it->second;
     
-      message.status() << "Checking \"" << id2string(id) << "\""
-                       << messaget::eom;
+      status() << "Checking \"" << id2string(id) << "\"" << eom;
       
       const symbolt &symbol=ns.lookup(id);
 
@@ -192,7 +200,7 @@ void one_program_check_all(
              << " in " << html_escape(file_it->first)
              << "</h2>\n";
 
-      one_program_check_function(id, *index_fkt, ns, report, message_handler);
+      check_function(id, *index_fkt, ns);
     }
   }
 }
@@ -214,10 +222,10 @@ void one_program_check(
   const std::string &function,
   message_handlert &message_handler)
 {
-  messaget message(message_handler);
-
   std::string report_file_name="deltacheck.html";
   std::ofstream out(report_file_name.c_str());
+  
+  messaget message(message_handler);
 
   if(!out)
   {
@@ -231,11 +239,12 @@ void one_program_check(
 
   html_report_header(out, index);
 
+  one_program_checkt opc(index, out, message_handler);
+  
   if(function=="")
-    one_program_check_all(index, out, message_handler);
+    opc.check_all();
   else
-    one_program_check_function(index, function, out, message_handler);
+    opc.check_function(function);
 
   html_report_footer(out, index);
-}
-
+}  
