@@ -81,27 +81,32 @@ void one_program_checkt::check_function(
   //options.set_option("nan-check", true);
   options.set_option("assertions", true);
   options.set_option("assumptions", true);
+  
+  statistics.next_function();
 
   // add properties
-  fine_timet start_prop=current_time();
   status() << "Generating properties" << eom;
+  statistics.start("Properties");
   goto_check(ns, options, f);
+  statistics.stop("Properties");
 
   // build SSA
-  fine_timet start_ssa=current_time();
   status() << "Building SSA" << eom;
+  statistics.start("SSA");
   function_SSAt function_SSA(f, ns);
+  statistics.stop("SSA");
   
   // now do fixed-point
-  fine_timet start_fp=current_time();
   status() << "Data-flow fixed-point" << eom;
+  statistics.start("Fixed-point");
   ssa_data_flowt ssa_data_flow(function_SSA);
+  statistics.stop("Fixed-point");
   
   // now report on assertions
-  fine_timet start_reporting=current_time();
   status() << "Reporting" << eom;
+  statistics.start("Reporting");
   report_assertions(ssa_data_flow, report);
-  fine_timet end_reporting=current_time();
+  statistics.stop("Reporting");
   
   // dump statistics
   statistics.html_report_function(report);
@@ -203,6 +208,11 @@ void one_program_checkt::check_all()
       check_function(id, *index_fkt, ns);
     }
   }
+  
+  // Report grand totals
+  
+  report << "<h2>Summary Statistics</h2>\n";
+  statistics.html_report_total(report);
 }
 
 /*******************************************************************\

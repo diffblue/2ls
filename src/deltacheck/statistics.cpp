@@ -86,15 +86,22 @@ Function: statisticst::html_report_total
 void statisticst::html_report_total(std::ostream &out) const
 {
   out << "<p class=\"total_statistics\">\n";
+  
+  out << "<table>\n";
+  
+  out << "<tr><td>Functions:</td><td>" << functions_processed
+      << "</td></tr>\n";
 
   for(time_mapt::const_iterator
       it=time_map.begin(); it!=time_map.end(); it++)
   {
-    if(it!=time_map.begin()) out << " ";
-    out << html_escape(it->first) << ":&nbsp;"
+    out << "<tr><td>";
+    out << html_escape(it->first) << ":</td><td>"
         << it->second.function
-        << "s";
+        << "s</td></tr>\n";
   }
+  
+  out << "</table>\n";
   
   out << "</p>\n";
 }
