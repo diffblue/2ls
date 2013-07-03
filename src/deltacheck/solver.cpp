@@ -54,7 +54,9 @@ Function: solvert::convert
 
 solvert::solver_exprt solvert::convert(unsigned nr)
 {
-  const exprt &expr=expr_numbering[nr];
+  // expr_numbering is a vector, and thus not stable.
+  // We add expressions recursively below.
+  const exprt expr=expr_numbering[nr];
   const exprt::operandst &expr_op=expr.operands();
   
   solver_exprt dest;
@@ -82,7 +84,9 @@ Function: solvert::add
 
 void solvert::add(unsigned nr)
 {
-  const exprt &expr=expr_numbering[nr];
+  // expr_numbering is a vector, and thus not stable.
+  // convert() will add expressions.
+  const exprt expr=expr_numbering[nr];
     
   if(expr.id()==ID_if)
   {
