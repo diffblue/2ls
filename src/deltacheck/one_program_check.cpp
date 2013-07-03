@@ -21,6 +21,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "one_program_check.h"
 #include "ssa_data_flow.h"
 #include "report_assertions.h"
+#include "html_escape.h"
 
 /*******************************************************************\
 
@@ -185,9 +186,12 @@ void one_program_check_all(
       message.status() << "Checking \"" << id2string(id) << "\""
                        << messaget::eom;
       
-      report << "<h2>Function " << id << " in " << file_it->first
+      const symbolt &symbol=ns.lookup(id);
+
+      report << "<h2>Function " << html_escape(symbol.display_name())
+             << " in " << html_escape(file_it->first)
              << "</h2>\n";
-      
+
       one_program_check_function(id, *index_fkt, ns, report, message_handler);
     }
   }
