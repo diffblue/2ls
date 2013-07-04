@@ -16,7 +16,6 @@ class indext;
 
 void one_program_check(
   const indext &index,
-  const std::string &function,
   message_handlert &);
 
 #endif

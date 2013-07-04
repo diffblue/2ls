@@ -20,58 +20,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
-Function: delta_check_function
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void delta_check_function(
-  const indext &index1,
-  const indext &index2,
-  const std::string &function,
-  std::ostream &report,
-  message_handlert &message_handler)
-{
-  const irep_idt id="c::"+function;
-
-  get_functiont get_function1(index1);
-  get_function1.set_message_handler(message_handler);
-  
-  get_functiont get_function2(index2);
-  get_function2.set_message_handler(message_handler);
-
-  messaget message(message_handler);
-  
-  const goto_functionst::goto_functiont *index1_fkt=
-    get_function1(id);
-  
-  if(index1_fkt==NULL)
-  {
-    message.error("function \""+function+"\" not found in index1");
-    return;
-  }
-
-  const goto_functionst::goto_functiont *index2_fkt=
-    get_function2(id);
-    
-  if(index2_fkt==NULL)
-  {
-    message.error("function \""+function+"\" not found in index2");
-    return;
-  }
-
-  #if 0
-  function_delta(id, *index1_fkt, *index2_fkt, report, message_handler);
-  #endif
-}
-
-/*******************************************************************\
-
 Function: delta_check_all
 
   Inputs:
@@ -154,7 +102,6 @@ Function: delta_check
 void delta_check(
   const indext &index1,
   const indext &index2,
-  const std::string &function,
   message_handlert &message_handler)
 {
   messaget message(message_handler);
@@ -174,10 +121,7 @@ void delta_check(
 
   html_report_header(out, index1, index2);  
 
-  if(function=="")
-    delta_check_all(index1, index2, out, message_handler);
-  else
-    delta_check_function(index1, index2, function, out, message_handler);
+  delta_check_all(index1, index2, out, message_handler);
 
   html_report_footer(out, index1, index2);  
 }

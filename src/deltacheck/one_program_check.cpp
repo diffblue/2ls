@@ -116,42 +116,6 @@ void one_program_checkt::check_function(
 
 /*******************************************************************\
 
-Function: one_program_checkt::check_function
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void one_program_checkt::check_function(const std::string &function)
-{
-  const irep_idt id="c::"+function;
-
-  get_functiont get_function(index);
-  get_function.set_message_handler(get_message_handler());
-  
-  goto_functionst::goto_functiont *index_fkt=
-    get_function(id);
-  
-  if(index_fkt==NULL)
-  {
-    error() << "function \"" << function
-            << "\" not found in index" << eom;
-    return;
-  }
-
-  const namespacet &ns=get_function.ns;
-  
-  const symbolt &symbol=ns.lookup(id);
-  
-  check_function(symbol, *index_fkt, ns);
-}
-
-/*******************************************************************\
-
 Function: one_program_checkt::check_all
 
   Inputs:
@@ -233,7 +197,6 @@ Function: one_program_check
 
 void one_program_check(
   const indext &index,
-  const std::string &function,
   message_handlert &message_handler)
 {
   std::string report_file_name="deltacheck.html";
@@ -255,10 +218,7 @@ void one_program_check(
 
   one_program_checkt opc(index, out, message_handler);
   
-  if(function=="")
-    opc.check_all();
-  else
-    opc.check_function(function);
+  opc.check_all();
 
   html_report_footer(out, index);
 }  

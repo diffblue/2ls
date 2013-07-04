@@ -16,13 +16,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/message.h>
 
-void build_index(
-  const std::vector<std::string> &files,
-  const std::string &description,
-  std::ostream &out,
-  message_handlert &);
-
-class indext
+class indext:public messaget
 {
 public:
   // function names to file
@@ -33,7 +27,14 @@ public:
   typedef std::map<irep_idt, std::set<irep_idt> > file_to_functiont;
   file_to_functiont file_to_function;
   
-  void read(const std::string &file, message_handlert &);
+  void read(const std::string &file);
+
+  void write(std::ostream &) const;
+
+  void build(const std::vector<std::string> &files,
+             const std::string &description);
+
+  void index_goto_binary(const irep_idt &file);
   
   std::string description, file_name;
 };

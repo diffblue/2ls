@@ -227,7 +227,10 @@ int deltacheck_parseoptionst::doit()
       if(cmdline.isset("description"))
         description=cmdline.getval("description");
       
-      build_index(cmdline.args, description, out, get_message_handler());
+      indext index;
+      index.set_message_handler(get_message_handler());
+      index.build(cmdline.args, description);
+      index.write(out);
       return 0;
     }
     
@@ -240,9 +243,10 @@ int deltacheck_parseoptionst::doit()
       }
 
       indext index;
+      index.set_message_handler(get_message_handler());
   
       status() << "Reading index" << eom;
-      index.read(cmdline.args[0], get_message_handler());
+      index.read(cmdline.args[0]);
 
       show_ssa(index, std::cout, get_message_handler());
       return 0;
@@ -257,9 +261,8 @@ int deltacheck_parseoptionst::doit()
       }
 
       indext index;
-  
-      status() << "Reading index" << eom;
-      index.read(cmdline.args[0], get_message_handler());
+      index.set_message_handler(get_message_handler());
+      index.read(cmdline.args[0]);
 
       show_defs(index, std::cout, get_message_handler());
       return 0;
@@ -274,9 +277,8 @@ int deltacheck_parseoptionst::doit()
       }
 
       indext index;
-  
-      status() << "Reading index" << eom;
-      index.read(cmdline.args[0], get_message_handler());
+      index.set_message_handler(get_message_handler());
+      index.read(cmdline.args[0]);
 
       show_fixed_points(index, std::cout, get_message_handler());
       return 0;
@@ -284,32 +286,23 @@ int deltacheck_parseoptionst::doit()
 
     if(cmdline.args.size()==2)
     {
-      std::string function;
-      if(cmdline.isset("function"))
-        function=cmdline.getval("function");
-
       indext index1, index2;
+      index1.set_message_handler(get_message_handler());
+      index2.set_message_handler(get_message_handler());
   
-      status() << "Reading first index" << eom;
-      index1.read(cmdline.args[0], get_message_handler());
+      index1.read(cmdline.args[0]);
+      index2.read(cmdline.args[1]);
 
-      status() << "Reading second index" << eom;
-      index2.read(cmdline.args[1], get_message_handler());
-
-      delta_check(index1, index2, function, get_message_handler());
+      delta_check(index1, index2, get_message_handler());
     }
     else if(cmdline.args.size()==1)
     {
-      std::string function;
-      if(cmdline.isset("function"))
-        function=cmdline.getval("function");
-    
       indext index;
+      index.set_message_handler(get_message_handler());
   
-      status() << "Reading index" << eom;
-      index.read(cmdline.args[0], get_message_handler());
+      index.read(cmdline.args[0]);
 
-      one_program_check(index, function, get_message_handler());
+      one_program_check(index, get_message_handler());
     }
     else
     {
