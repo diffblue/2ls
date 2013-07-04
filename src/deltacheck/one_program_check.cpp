@@ -30,28 +30,25 @@ class one_program_checkt:public messaget
 public:
   one_program_checkt(
     const indext &_index,
-    std::ostream &_report,
     message_handlert &message_handler):
     messaget(message_handler),
-    index(_index),
-    report(_report)
+    index(_index)
   {
   }
   
   const indext &index;
-  std::ostream &report;
   statisticst statistics;
   optionst options;
   
-  void check_function(const std::string &);
-  void check_all();
+  void check_all(std::ostream &global_report);
 
 protected:
 
   void check_function(
     const symbolt &symbol,
     goto_functionst::goto_functiont &f,
-    const namespacet &ns);
+    const namespacet &ns,
+    std::ostream &file_report);
 };
 
 /*******************************************************************\
@@ -69,7 +66,8 @@ Function: one_program_checkt::check_function
 void one_program_checkt::check_function(
   const symbolt &symbol,
   goto_functionst::goto_functiont &f,
-  const namespacet &ns)
+  const namespacet &ns,
+  std::ostream &file_report)
 {
   options.set_option("bounds-check", true);
   options.set_option("pointer-check", true);
@@ -106,12 +104,12 @@ void one_program_checkt::check_function(
   // now report on assertions
   status() << "Reporting" << eom;
   statistics.start("Reporting");
-  report_assertions(ssa_data_flow, report);
-  extract_source(symbol.location, f.body, report);
+  report_assertions(ssa_data_flow, file_report);
+  extract_source(symbol.location, f.body, file_report);
   statistics.stop("Reporting");
   
   // dump statistics
-  statistics.html_report_function(report);
+  statistics.html_report_function(file_report);
 }
 
 /*******************************************************************\
@@ -126,7 +124,7 @@ Function: one_program_checkt::check_all
 
 \*******************************************************************/
 
-void one_program_checkt::check_all()
+void one_program_checkt::check_all(std::ostream &global_report)
 {
   // we do this by file in the index
   
@@ -137,7 +135,17 @@ void one_program_checkt::check_all()
   {
     status() << "Processing \"" << file_it->first << "\"" << eom;
     
-    // read the file
+    std::string file_report_name=id2string(file_it->first)+".deltacheck.html";
+    std::ofstream file_report(file_report_name.c_str());
+    
+    if(!file_report)
+    {
+      error() << "failed to open report file `" << file_report
+              << "'" << eom;
+      return;
+    }
+    
+    // read the goto-binary file
     goto_modelt model;
     read_goto_binary(id2string(file_it->first), model, get_message_handler());
    
@@ -169,18 +177,18 @@ void one_program_checkt::check_all()
       
       const symbolt &symbol=ns.lookup(id);
 
-      report << "<h2>Function " << html_escape(symbol.display_name())
-             << " in " << html_escape(file_it->first)
-             << "</h2>\n";
+      file_report << "<h2>Function " << html_escape(symbol.display_name())
+                  << " in " << html_escape(file_it->first)
+                  << "</h2>\n";
 
-      check_function(symbol, *index_fkt, ns);
+      check_function(symbol, *index_fkt, ns, file_report);
     }
   }
   
   // Report grand totals
   
-  report << "<h2>Summary Statistics</h2>\n";
-  statistics.html_report_total(report);
+  global_report << "<h2>Summary Statistics</h2>\n";
+  statistics.html_report_total(global_report);
 }
 
 /*******************************************************************\
@@ -216,9 +224,9 @@ void one_program_check(
 
   html_report_header(out, index);
 
-  one_program_checkt opc(index, out, message_handler);
+  one_program_checkt opc(index, message_handler);
   
-  opc.check_all();
+  opc.check_all(out);
 
   html_report_footer(out, index);
 }  
