@@ -6,8 +6,10 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <limits>
 #include <fstream>
 
+#include <util/i2string.h>
 #include <util/string2int.h>
 
 #include "extract_source.h"
@@ -80,15 +82,29 @@ void extract_source(
 
   unsigned end_line=safe_string2unsigned(id2string(last.get_line()));
   
-  out << "<div class=\"source\">\n";
-
+  out << "<table class=\"source\"><tr>\n";
+  
+  // line numbers go into a column
+  
+  out << "<td class=\"line_numbers\">\n";
+  
+  for(; line_no<=end_line; line_no++)
+    out << line_no << "<br>";
+    
+  out << "</td>\n";
+  
+  // now do source text in another column
+  
+  out << "<td class=\"code\"><pre>\n";
+  
   for(; line_no<=end_line; line_no++)
   {
     std::string line;
     if(!std::getline(in, line)) break;
-    
-    out << line_no << " " << line << "<br>\n";
-  }   
+    out << line << "\n";
+  }
   
-  out << "</div>\n";
+  out << "</pre></td>\n";
+  
+  out << "</table>\n";
 }
