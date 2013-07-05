@@ -131,7 +131,7 @@ void statisticst::html_report_function(std::ostream &out) const
         << "s";
   }
   
-  out << "</p>\n";
+  out << "\n</p>\n";
 }
 
 /*******************************************************************\

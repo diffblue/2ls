@@ -36,6 +36,7 @@ void html_report_header(std::ostream &out)
          "table.assertions { border-collapse:collapse; }\n"
          "table.assertions td, th { border:1px solid black; padding: 4px 4px 4px 8px; }\n"
          "p.function_statistics { font: 11px \"Trebuchet MS\", Verdana, Arial, Helvetica, sans-serif; }\n"
+         "table.source td.line_numbers { text-align:right; }\n"
          "</style>\n"
          "\n";
 

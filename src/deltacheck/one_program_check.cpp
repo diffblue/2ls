@@ -106,6 +106,7 @@ void one_program_checkt::check_function(
   statistics.start("Reporting");
   report_assertions(ssa_data_flow, file_report);
   extract_source(symbol.location, f.body, file_report);
+  file_report << "\n";
   statistics.stop("Reporting");
   
   // dump statistics
@@ -145,6 +146,8 @@ void one_program_checkt::check_all(std::ostream &global_report)
       return;
     }
     
+    html_report_header(file_report, index);
+    
     // read the goto-binary file
     goto_modelt model;
     read_goto_binary(id2string(file_it->first), model, get_message_handler());
@@ -183,6 +186,8 @@ void one_program_checkt::check_all(std::ostream &global_report)
 
       check_function(symbol, *index_fkt, ns, file_report);
     }
+
+    html_report_footer(file_report, index);
   }
   
   // Report grand totals
