@@ -23,8 +23,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "deltacheck_parseoptions.h"
 #include "version.h"
 #include "index.h"
-#include "delta_check.h"
-#include "one_program_check.h"
+#include "checker.h"
 #include "show.h"
 
 /*******************************************************************\

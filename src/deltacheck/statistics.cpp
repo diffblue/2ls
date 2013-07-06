@@ -26,7 +26,7 @@ Function: statisticst::clear
 void statisticst::clear()
 {
   time_map.clear();
-  functions_processed=0;
+  number_map.clear();
 }
 
 /*******************************************************************\
@@ -66,7 +66,7 @@ void statisticst::stop(const std::string &what)
   timet &t=time_map[what];
   assert(t.running);
   fine_timet this_period=current_time()-t.start;
-  t.function=this_period;
+  t.last=this_period;
   t.total+=this_period;
   t.running=false;
 }
@@ -89,15 +89,21 @@ void statisticst::html_report_total(std::ostream &out) const
   
   out << "<table>\n";
   
-  out << "<tr><td>Functions:</td><td>" << functions_processed
-      << "</td></tr>\n";
-
+  for(number_mapt::const_iterator
+      it=number_map.begin(); it!=number_map.end(); it++)
+  {
+    out << "<tr><td>";
+    out << html_escape(it->first) << ":</td><td>"
+        << it->second
+        << "s</td></tr>\n";
+  }
+  
   for(time_mapt::const_iterator
       it=time_map.begin(); it!=time_map.end(); it++)
   {
     out << "<tr><td>";
     out << html_escape(it->first) << ":</td><td>"
-        << it->second.function
+        << it->second.total
         << "s</td></tr>\n";
   }
   
@@ -108,7 +114,7 @@ void statisticst::html_report_total(std::ostream &out) const
 
 /*******************************************************************\
 
-Function: statisticst::html_report_function
+Function: statisticst::html_report_last
 
   Inputs:
 
@@ -118,7 +124,7 @@ Function: statisticst::html_report_function
 
 \*******************************************************************/
 
-void statisticst::html_report_function(std::ostream &out) const
+void statisticst::html_report_last(std::ostream &out) const
 {
   out << "<p class=\"function_statistics\">\n";
 
@@ -127,27 +133,10 @@ void statisticst::html_report_function(std::ostream &out) const
   {
     if(it!=time_map.begin()) out << " ";
     out << html_escape(it->first) << ":&nbsp;"
-        << it->second.function
+        << it->second.last
         << "s";
   }
   
   out << "\n</p>\n";
-}
-
-/*******************************************************************\
-
-Function: statisticst::next_function
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void statisticst::next_function()
-{
-  functions_processed++;
 }
 

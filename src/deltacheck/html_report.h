@@ -17,16 +17,10 @@ void html_report_header(
   std::ostream &out,
   const indext &index1, const indext &index2);
 
-void html_report_footer(
-  std::ostream &out,
-  const indext &index1, const indext &index2);
-
 void html_report_header(
   std::ostream &out,
   const indext &index1);
 
-void html_report_footer(
-  std::ostream &out,
-  const indext &index1);
+void html_report_footer(std::ostream &out);
 
 #endif

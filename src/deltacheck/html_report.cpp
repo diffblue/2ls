@@ -37,6 +37,7 @@ void html_report_header(std::ostream &out)
          "table.assertions td, th { border:1px solid black; padding: 4px 4px 4px 8px; }\n"
          "p.function_statistics { font: 11px \"Trebuchet MS\", Verdana, Arial, Helvetica, sans-serif; }\n"
          "table.source td.line_numbers { text-align:right; }\n"
+         "copyright { font: 9px \"Trebuchet MS\", Verdana, Arial, Helvetica, sans-serif; }\n"
          "</style>\n"
          "\n";
 
@@ -119,30 +120,11 @@ Function: html_report_footer
 
 \*******************************************************************/
 
-void html_report_footer(
-  std::ostream &out,
-  const indext &index1, const indext &index2)
+void html_report_footer(std::ostream &out)
 {
-  out << "</body>\n"
-         "</html>\n";
-}
-
-/*******************************************************************\
-
-Function: html_report_footer
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void html_report_footer(
-  std::ostream &out,
-  const indext &index)
-{
-  out << "</body>\n"
+  out << "<div class=\"copyright\">\n"
+         "DeltaCheck is Copyright 2011&ndash;2013 Daniel Kroening, University of Oxford.\n"
+         "</div>\n"
+         "</body>\n"
          "</html>\n";
 }

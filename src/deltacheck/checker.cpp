@@ -25,35 +25,51 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "statistics.h"
 #include "extract_source.h"
 
-class one_program_checkt:public messaget
+class deltacheck_checkert:public messaget
 {
 public:
-  one_program_checkt(
+  deltacheck_checkert(
     const indext &_index,
     message_handlert &message_handler):
     messaget(message_handler),
-    index(_index)
+    use_index_old(false),
+    index_old(dummy_index_old), index(_index)
   {
   }
   
-  const indext &index;
+  deltacheck_checkert(
+    const indext &_index_old,
+    const indext &_index,
+    message_handlert &message_handler):
+    messaget(message_handler),
+    use_index_old(true),
+    index_old(_index_old), index(_index)
+  {
+  }
+  
   statisticst statistics;
   optionst options;
   
-  void check_all(std::ostream &global_report);
+  void operator()();
 
 protected:
-
+  bool use_index_old;
+  indext dummy_index_old;
+  const indext &index_old;
+  const indext &index;
+  
   void check_function(
     const symbolt &symbol,
     goto_functionst::goto_functiont &f,
     const namespacet &ns,
     std::ostream &file_report);
+
+  void check_all(std::ostream &global_report);
 };
 
 /*******************************************************************\
 
-Function: one_program_checkt::check_function
+Function: deltacheck_checkert::check_function
 
   Inputs:
 
@@ -63,7 +79,7 @@ Function: one_program_checkt::check_function
 
 \*******************************************************************/
 
-void one_program_checkt::check_function(
+void deltacheck_checkert::check_function(
   const symbolt &symbol,
   goto_functionst::goto_functiont &f,
   const namespacet &ns,
@@ -81,7 +97,8 @@ void one_program_checkt::check_function(
   options.set_option("assertions", true);
   options.set_option("assumptions", true);
   
-  statistics.next_function();
+  statistics.number_map["Functions"]++;
+  statistics.number_map["LOCs"]+=f.body.instructions.size();
 
   // add properties
   status() << "Generating properties" << eom;
@@ -110,12 +127,12 @@ void one_program_checkt::check_function(
   statistics.stop("Reporting");
   
   // dump statistics
-  statistics.html_report_function(file_report);
+  statistics.html_report_last(file_report);
 }
 
 /*******************************************************************\
 
-Function: one_program_checkt::check_all
+Function: deltacheck_checkert::check_all
 
   Inputs:
 
@@ -125,7 +142,7 @@ Function: one_program_checkt::check_all
 
 \*******************************************************************/
 
-void one_program_checkt::check_all(std::ostream &global_report)
+void deltacheck_checkert::check_all(std::ostream &global_report)
 {
   // we do this by file in the index
   
@@ -187,7 +204,7 @@ void one_program_checkt::check_all(std::ostream &global_report)
       check_function(symbol, *index_fkt, ns, file_report);
     }
 
-    html_report_footer(file_report, index);
+    html_report_footer(file_report);
   }
   
   // Report grand totals
@@ -208,30 +225,68 @@ Function: one_program_check
 
 \*******************************************************************/
 
-void one_program_check(
-  const indext &index,
-  message_handlert &message_handler)
+void deltacheck_checkert::operator()()
 {
   std::string report_file_name="deltacheck.html";
   std::ofstream out(report_file_name.c_str());
   
-  messaget message(message_handler);
-
   if(!out)
   {
-    message.error() << "failed to write to \""
-                    << report_file_name << "\"" << messaget::eom;
+    error() << "failed to write to \""
+            << report_file_name << "\"" << eom;
     return;
   }
   
-  message.status() << "Writing report into \""
-                   << report_file_name << "\"" << messaget::eom;
+  status() << "Writing report into \""
+           << report_file_name << "\"" << eom;
 
-  html_report_header(out, index);
+  if(use_index_old)
+    html_report_header(out, index_old, index);
+  else
+    html_report_header(out, index);
 
-  one_program_checkt opc(index, message_handler);
-  
-  opc.check_all(out);
+  check_all(out);
 
-  html_report_footer(out, index);
+  html_report_footer(out);
 }  
+
+/*******************************************************************\
+
+Function: one_program_check
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void one_program_check(
+  const indext &index,
+  message_handlert &message_handler)
+{
+  deltacheck_checkert checker(index, message_handler);
+  checker();
+}  
+
+/*******************************************************************\
+
+Function: delta_check
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void delta_check(
+  const indext &index1,
+  const indext &index2,
+  message_handlert &message_handler)
+{
+  deltacheck_checkert checker(index1, index2, message_handler);
+  checker();
+}
