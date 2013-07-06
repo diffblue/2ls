@@ -252,8 +252,11 @@ void deltacheck_checkert::check_all(std::ostream &global_report)
               << "'" << eom;
       return;
     }
-    
-    html_report_header(file_report, index);
+
+    if(use_index_old)
+      html_report_header(file_report, index_old, index);
+    else    
+      html_report_header(file_report, index);
     
     // read the goto-binary file
     goto_modelt model;

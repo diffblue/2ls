@@ -37,7 +37,9 @@ void html_report_header(std::ostream &out)
          "table.assertions td, th { border:1px solid black; padding: 4px 4px 4px 8px; }\n"
          "p.function_statistics { font: 11px \"Trebuchet MS\", Verdana, Arial, Helvetica, sans-serif; }\n"
          "table.source td.line_numbers { text-align:right; }\n"
-         "copyright { font: 9px \"Trebuchet MS\", Verdana, Arial, Helvetica, sans-serif; }\n"
+         ".copyright { font: 9px \"Trebuchet MS\", Verdana, Arial, Helvetica, sans-serif; }\n"
+         "em { font-weight:bold; }\n"
+         "strong.different { background-color: #fce94f; font-weight: normal; }\n"
          "</style>\n"
          "\n";
 
@@ -72,10 +74,13 @@ void html_report_header(
   out << "<p>DeltaCheck version: " << DELTACHECK_VERSION << "</p>\n";
   
   out << "<h2>Software under analysis</h2>\n";
-  out << "<p>Old version: " << html_escape(index1.file_name)
-      << " " << html_escape(index1.description) << "</p>\n";
-  out << "<p>New version: " << html_escape(index2.file_name)
-      << " " << html_escape(index2.description) << "</p>\n";
+
+  out << "<p><table>\n"
+      << "<tr><td>Old version:</td><td>" << html_escape(index1.file_name)
+      << "</td><td>" << html_escape(index1.description) << "</td></tr>\n";
+  out << "<tr><td>New version:</td><td>" << html_escape(index2.file_name)
+      << "</td><td>" << html_escape(index2.description) << "</td></tr>\n"
+      << "</table></p>\n";
 }
 
 /*******************************************************************\
@@ -122,9 +127,12 @@ Function: html_report_footer
 
 void html_report_footer(std::ostream &out)
 {
-  out << "<div class=\"copyright\">\n"
+  out << "<hr>\n"
+         "\n"
+         "<div class=\"copyright\">\n"
          "DeltaCheck is Copyright 2011&ndash;2013 Daniel Kroening, University of Oxford.\n"
          "</div>\n"
+         "\n"
          "</body>\n"
          "</html>\n";
 }

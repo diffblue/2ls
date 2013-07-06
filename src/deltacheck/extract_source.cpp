@@ -11,11 +11,18 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <limits>
 #include <fstream>
 
+#if defined(__linux__) || defined(__FreeBSD_kernel__) || defined(__CYGWIN__) || defined(__MACH__)
+#include <unistd.h>
+#endif
+
 #include <util/i2string.h>
 #include <util/string2int.h>
+#include <util/tempfile.h>
 
 #include "extract_source.h"
 #include "html_escape.h"
+
+// may wish to try http://www.gnu.org/software/src-highlite/
 
 /*******************************************************************\
 
@@ -48,7 +55,20 @@ Function: is_keyword
 \*******************************************************************/
 
 const char *keywords[]=
-{ NULL };
+{ 
+  "auto", "_Bool", "break", "case", "char", "_Complex", "const", "continue",
+  "default", "do", "double", "else", "enum", "extern", "float", "for",
+  "goto", "if", "inline", "int", "long", "register", "restrict", "return",
+  "short", "signed", "sizeof", "static", "struct", "switch", "typedef",
+  "union", "unsigned", "void", "volatile", "while", "__float128",
+  "__int128", "__int8", "__int16", "__int32", "__int64", "__ptr32",
+  "__ptr64", "__complex__", "__complex", "__real__" , "__real", "__imag__" ,
+  "__imag", "offsetof", "__asm", "asm", "__asm__", "bool", "catch", "class",
+  "constexpr", "delete", "decltype", "explicit", "friend", "mutable",
+  "namespace", "new", "nullptr", "operator", "private", "protected",
+  "public", "static_assert", "template", "this", "thread_local", "throw",
+  "typeid", "typename", "using", "virtual", "wchar_t", "typeof", NULL
+};
 
 bool is_keyword(const std::string &token)
 {
@@ -76,7 +96,7 @@ Function: source_token
 const char *tokens[]=
 { "++", "+=", "--", "-=", "&&", "&=", "||", "|=", "/*",
   "*/", "//", "%=", "/=", "<<", ">>", "<<=", ">>=", "==",
-  "!=", "<=", ">=", "::", "->", "##", NULL };
+  "!=", "<=", ">=", "::", "->", "##", ".*", "->*", NULL };
   
 class tokenizert
 {
@@ -196,7 +216,7 @@ Function: get_source
 
 struct linet
 {
-  linet(unsigned _line_no, std::string &_line):
+  linet(unsigned _line_no, const std::string &_line):
     line_no(_line_no), line(_line) { }
   unsigned line_no;
   std::string line;
@@ -205,7 +225,7 @@ struct linet
 void get_source(
   const locationt &location,
   const goto_programt &goto_program,
-  std::vector<linet> &dest)
+  std::list<linet> &dest)
 {
   const irep_idt &file=location.get_file();
 
@@ -260,7 +280,7 @@ void extract_source(
   const goto_programt &goto_program,
   std::ostream &out)
 {
-  std::vector<linet> lines;
+  std::list<linet> lines;
   get_source(location, goto_program, lines);
   
   out << "<p>\n";
@@ -270,7 +290,7 @@ void extract_source(
   
   out << "<td class=\"line_numbers\"><pre>\n";
   
-  for(std::vector<linet>::const_iterator
+  for(std::list<linet>::const_iterator
       l_it=lines.begin(); l_it!=lines.end(); l_it++)
     out << l_it->line_no << "\n";
     
@@ -280,7 +300,7 @@ void extract_source(
   
   out << "<td class=\"code\"><pre>\n";
   
-  for(std::vector<linet>::const_iterator
+  for(std::list<linet>::const_iterator
       l_it=lines.begin(); l_it!=lines.end(); l_it++)
   {
     html_source(l_it->line, out);
@@ -291,6 +311,141 @@ void extract_source(
   
   out << "</table>\n";
   out << "</p>\n";
+}
+
+/*******************************************************************\
+
+Function: process_diff
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+#include <iostream>
+
+void process_diff(
+  std::list<linet> &lines1,
+  std::list<linet> &lines2,
+  const std::list<std::string> &diff)
+{
+  std::vector<std::list<linet>::iterator> l_it1, l_it2;
+  
+  for(std::list<linet>::iterator it=lines1.begin();
+      it!=lines1.end(); it++)
+    l_it1.push_back(it);
+
+  for(std::list<linet>::iterator it=lines2.begin();
+      it!=lines2.end(); it++)
+    l_it2.push_back(it);
+
+  for(std::list<std::string>::const_iterator
+      d_it=diff.begin();
+      d_it!=diff.end();
+      d_it++)
+  {
+    const std::string &line=*d_it;
+    
+    if(line.empty() || !isdigit(line[0])) continue;
+    std::cout << "ACTION: " << line << "\n";
+    
+    unsigned i;
+    std::string line_from_str, line_to_str;
+    for(i=0; i<line.size() && isdigit(line[i]); i++) line_from_str+=line[i];
+
+    if(i<line.size() && line[i]==',')
+      for(i++; i<line.size() && isdigit(line[i]); i++) line_to_str+=line[i];
+    else
+      line_to_str=line_from_str;
+
+    if(i>=line.size() || i==0) continue;
+
+    // we expect 'a' (add), 'd' (delete), 'c' (change)
+    char action=line[i];
+    
+    unsigned line_from=atoi(line_from_str.c_str());
+    unsigned line_to=atoi(line_to_str.c_str());
+    
+    std::cout << "Lfrom: " << line_from << " Lto: " << line_to << std::endl;
+    
+    if(line_from<1 || line_from>l_it1.size() || 
+       line_to<1   || line_to>l_it1.size()) continue;
+
+    switch(action)
+    {
+    case 'c':
+      break; // we ignore changes
+    
+    case 'a': // add
+      for(unsigned i=line_from; i<=line_to; i++)
+        lines1.insert(l_it1[line_from], linet(0, ""));
+      break;
+    
+    case 'd': // delete
+      for(unsigned i=line_from; i<=line_to; i++)
+        lines2.insert(l_it2[line_from], linet(0, ""));
+      break;
+    
+    default:; // unknown action
+    }
+  }
+}
+
+/*******************************************************************\
+
+Function: diff_it
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void diff_it(
+  std::list<linet> &lines1,
+  std::list<linet> &lines2)
+{
+  std::string tmp1_name=get_temporary_file("delta_diff1", "txt");
+  std::string tmp2_name=get_temporary_file("delta_diff2", "txt");
+  std::string tmp3_name=get_temporary_file("delta_diff3", "txt");
+
+  {  
+    std::ofstream out1(tmp1_name.c_str());
+    std::ofstream out2(tmp2_name.c_str());
+    
+    for(std::list<linet>::const_iterator l_it=lines1.begin();
+        l_it!=lines1.end(); l_it++)
+      out1 << l_it->line << "\n";
+
+    for(std::list<linet>::const_iterator l_it=lines2.begin();
+        l_it!=lines2.end(); l_it++)
+      out2 << l_it->line << "\n";
+  }
+  
+  std::string cmdline="diff \""+tmp1_name+"\""+
+                          " \""+tmp2_name+"\""+
+                         "> \""+tmp3_name+"\"";
+  
+  system(cmdline.c_str());
+
+  // open output
+  {
+    std::ifstream in(tmp3_name.c_str());
+    std::string line;
+    std::list<std::string> diff;
+    while(std::getline(in, line)) { diff.push_back(line); std::cout << "L: " << line << std::endl;}
+    process_diff(lines1, lines2, diff);
+  }
+  
+  // clean up
+  unlink(tmp1_name.c_str());
+  unlink(tmp2_name.c_str());
+  unlink(tmp3_name.c_str());
 }
 
 /*******************************************************************\
@@ -312,29 +467,48 @@ void extract_source(
   const goto_programt &goto_program,
   std::ostream &out)
 {
-  std::vector<linet> lines, lines_old;
+  // get sources
+  std::list<linet> lines, lines_old;
+
   get_source(location, goto_program, lines);
   get_source(location_old, goto_program_old, lines_old);
+
+  // run 'diff'
+  
+  diff_it(lines_old, lines);
   
   out << "<p>\n";
-  out << "<table class=\"source\"><tr>\n";
+  out << "<table class=\"source\">\n";  
+  out << "<tr><th colspan=2>old version</th>"
+         "<th colspan=2>new version</th></tr>\n";
+  
+  out << "<tr>\n";
   
   // old version
 
+ std::list<linet>::const_iterator l_old_it, l_it;
+ 
   out << "<td class=\"line_numbers\"><pre>\n";
   
-  for(std::vector<linet>::const_iterator
-      l_it=lines_old.begin(); l_it!=lines_old.end(); l_it++)
-    out << l_it->line_no << "\n";
+  for(std::list<linet>::const_iterator
+      l_old_it=lines_old.begin(); l_old_it!=lines_old.end(); l_old_it++)
+  {
+    if(l_old_it->line_no!=0) out << l_old_it->line_no;
+    out << "\n";
+  }
     
   out << "</pre></td>\n";
   
   out << "<td class=\"code\"><pre>\n";
   
-  for(std::vector<linet>::const_iterator
-      l_it=lines_old.begin(); l_it!=lines_old.end(); l_it++)
+  for(l_old_it=lines_old.begin(), l_it=lines.begin();
+      l_old_it!=lines_old.end() && l_it!=lines.end();
+      l_old_it++, l_it++)
   {
-    html_source(l_it->line, out);
+    bool different=(l_old_it->line!=l_it->line);
+    if(different) out << "<strong class=\"different\">";
+    html_source(l_old_it->line, out);
+    if(different) out << "</strong>";
     out << "\n";
   }
   
@@ -344,18 +518,25 @@ void extract_source(
   
   out << "<td class=\"line_numbers\"><pre>\n";
   
-  for(std::vector<linet>::const_iterator
+  for(std::list<linet>::const_iterator
       l_it=lines.begin(); l_it!=lines.end(); l_it++)
-    out << l_it->line_no << "\n";
+  {
+    if(l_it->line_no!=0) out << l_it->line_no;
+    out << "\n";
+  }
     
   out << "</pre></td>\n";
   
   out << "<td class=\"code\"><pre>\n";
   
-  for(std::vector<linet>::const_iterator
-      l_it=lines.begin(); l_it!=lines.end(); l_it++)
+  for(l_old_it=lines_old.begin(), l_it=lines.begin();
+      l_old_it!=lines_old.end() && l_it!=lines.end();
+      l_old_it++, l_it++)
   {
+    bool different=(l_old_it->line!=l_it->line);
+    if(different) out << "<strong class=\"different\">";
     html_source(l_it->line, out);
+    if(different) out << "</strong>";
     out << "\n";
   }
   
