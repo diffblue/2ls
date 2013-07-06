@@ -18,4 +18,11 @@ void extract_source(
   const goto_programt &goto_program,
   std::ostream &);
 
+void extract_source(
+  const locationt &location_old,
+  const goto_programt &goto_program_old,
+  const locationt &location,
+  const goto_programt &goto_program,
+  std::ostream &);
+
 #endif

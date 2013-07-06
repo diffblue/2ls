@@ -184,7 +184,7 @@ void html_source(
 
 /*******************************************************************\
 
-Function: extract_source
+Function: get_source
 
   Inputs:
 
@@ -194,10 +194,18 @@ Function: extract_source
 
 \*******************************************************************/
 
-void extract_source(
+struct linet
+{
+  linet(unsigned _line_no, std::string &_line):
+    line_no(_line_no), line(_line) { }
+  unsigned line_no;
+  std::string line;
+};
+
+void get_source(
   const locationt &location,
   const goto_programt &goto_program,
-  std::ostream &out)
+  std::vector<linet> &dest)
 {
   const irep_idt &file=location.get_file();
 
@@ -206,12 +214,7 @@ void extract_source(
 
   std::ifstream in(file.c_str());
   
-  if(!in)
-  {
-    out << "<p>failed to open \""
-        << html_escape(file) << "\"</p>\n";
-    return;
-  }
+  if(!in) return;
   
   unsigned first_line=safe_string2unsigned(id2string(location.get_line()));
 
@@ -230,6 +233,35 @@ void extract_source(
   }
 
   unsigned end_line=safe_string2unsigned(id2string(last.get_line()));
+
+  for(unsigned line_no=first_line; line_no<=end_line; line_no++)
+  {
+    std::string s;
+    if(!std::getline(in, s)) break;
+    dest.push_back(linet(line_no, s));
+  }
+  
+}
+
+/*******************************************************************\
+
+Function: extract_source
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void extract_source(
+  const locationt &location,
+  const goto_programt &goto_program,
+  std::ostream &out)
+{
+  std::vector<linet> lines;
+  get_source(location, goto_program, lines);
   
   out << "<p>\n";
   out << "<table class=\"source\"><tr>\n";
@@ -238,8 +270,9 @@ void extract_source(
   
   out << "<td class=\"line_numbers\"><pre>\n";
   
-  for(unsigned line_no=first_line; line_no<=end_line; line_no++)
-    out << line_no << "\n";
+  for(std::vector<linet>::const_iterator
+      l_it=lines.begin(); l_it!=lines.end(); l_it++)
+    out << l_it->line_no << "\n";
     
   out << "</pre></td>\n";
   
@@ -247,16 +280,88 @@ void extract_source(
   
   out << "<td class=\"code\"><pre>\n";
   
-  for(unsigned line_no=first_line; line_no<=end_line; line_no++)
+  for(std::vector<linet>::const_iterator
+      l_it=lines.begin(); l_it!=lines.end(); l_it++)
   {
-    std::string line;
-    if(!std::getline(in, line)) break;
-    html_source(line, out);
+    html_source(l_it->line, out);
+    out << "\n";
+  }
+  
+  out << "</pre></td></tr>\n";
+  
+  out << "</table>\n";
+  out << "</p>\n";
+}
+
+/*******************************************************************\
+
+Function: extract_source
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void extract_source(
+  const locationt &location_old,
+  const goto_programt &goto_program_old,
+  const locationt &location,
+  const goto_programt &goto_program,
+  std::ostream &out)
+{
+  std::vector<linet> lines, lines_old;
+  get_source(location, goto_program, lines);
+  get_source(location_old, goto_program_old, lines_old);
+  
+  out << "<p>\n";
+  out << "<table class=\"source\"><tr>\n";
+  
+  // old version
+
+  out << "<td class=\"line_numbers\"><pre>\n";
+  
+  for(std::vector<linet>::const_iterator
+      l_it=lines_old.begin(); l_it!=lines_old.end(); l_it++)
+    out << l_it->line_no << "\n";
+    
+  out << "</pre></td>\n";
+  
+  out << "<td class=\"code\"><pre>\n";
+  
+  for(std::vector<linet>::const_iterator
+      l_it=lines_old.begin(); l_it!=lines_old.end(); l_it++)
+  {
+    html_source(l_it->line, out);
     out << "\n";
   }
   
   out << "</pre></td>\n";
   
+  // new version
+  
+  out << "<td class=\"line_numbers\"><pre>\n";
+  
+  for(std::vector<linet>::const_iterator
+      l_it=lines.begin(); l_it!=lines.end(); l_it++)
+    out << l_it->line_no << "\n";
+    
+  out << "</pre></td>\n";
+  
+  out << "<td class=\"code\"><pre>\n";
+  
+  for(std::vector<linet>::const_iterator
+      l_it=lines.begin(); l_it!=lines.end(); l_it++)
+  {
+    html_source(l_it->line, out);
+    out << "\n";
+  }
+  
+  out << "</pre></td></tr>\n";
+  
   out << "</table>\n";
-  out << "</p>\n";
+  out << "</p>\n";  
 }
+

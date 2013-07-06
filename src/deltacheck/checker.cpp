@@ -64,9 +64,50 @@ protected:
     const namespacet &ns,
     std::ostream &file_report);
 
+  void check_function(
+
+    const symbolt &symbol_old,
+    goto_functionst::goto_functiont &f_old,
+    const namespacet &ns_old,
+
+    const symbolt &symbol,
+    goto_functionst::goto_functiont &f,
+    const namespacet &ns,
+
+    std::ostream &file_report);
+
   void check_all(std::ostream &global_report);
+  
+  void get_options();
 };
 
+/*******************************************************************\
+
+Function: deltacheck_checkert::get_options
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void deltacheck_checkert::get_options()
+{
+  options.set_option("bounds-check", true);
+  options.set_option("pointer-check", true);
+  options.set_option("div-by-zero-check", true);
+  options.set_option("signed-overflow-check", true);
+  //options.set_option("unsigned-overflow-check", true);
+  options.set_option("undefined-shift-check", true);
+  //options.set_option("float-overflow-check", true);
+  options.set_option("simplify", true);
+  //options.set_option("nan-check", true);
+  options.set_option("assertions", true);
+  options.set_option("assumptions", true);
+}
+  
 /*******************************************************************\
 
 Function: deltacheck_checkert::check_function
@@ -85,17 +126,7 @@ void deltacheck_checkert::check_function(
   const namespacet &ns,
   std::ostream &file_report)
 {
-  options.set_option("bounds-check", true);
-  options.set_option("pointer-check", true);
-  options.set_option("div-by-zero-check", true);
-  options.set_option("signed-overflow-check", true);
-  //options.set_option("unsigned-overflow-check", true);
-  options.set_option("undefined-shift-check", true);
-  //options.set_option("float-overflow-check", true);
-  options.set_option("simplify", true);
-  //options.set_option("nan-check", true);
-  options.set_option("assertions", true);
-  options.set_option("assumptions", true);
+  get_options();
   
   statistics.number_map["Functions"]++;
   statistics.number_map["LOCs"]+=f.body.instructions.size();
@@ -121,8 +152,64 @@ void deltacheck_checkert::check_function(
   // now report on assertions
   status() << "Reporting" << eom;
   statistics.start("Reporting");
-  report_assertions(ssa_data_flow, file_report);
+  report_assertions(ssa_data_flow, file_report);  
   extract_source(symbol.location, f.body, file_report);
+  file_report << "\n";
+  statistics.stop("Reporting");
+  
+  // dump statistics
+  statistics.html_report_last(file_report);
+}
+
+/*******************************************************************\
+
+Function: deltacheck_checkert::check_function
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void deltacheck_checkert::check_function(
+  const symbolt &symbol_old,
+  goto_functionst::goto_functiont &f_old,
+  const namespacet &ns_old,
+  const symbolt &symbol,
+  goto_functionst::goto_functiont &f,
+  const namespacet &ns,
+  std::ostream &file_report)
+{
+  get_options();
+  
+  statistics.number_map["Functions"]++;
+  statistics.number_map["LOCs"]+=f.body.instructions.size();
+
+  // add properties
+  status() << "Generating properties" << eom;
+  statistics.start("Properties");
+  goto_check(ns, options, f);
+  statistics.stop("Properties");
+
+  // build SSA
+  status() << "Building SSA" << eom;
+  statistics.start("SSA");
+  function_SSAt function_SSA(f, ns);
+  statistics.stop("SSA");
+  
+  // now do fixed-point
+  status() << "Data-flow fixed-point" << eom;
+  statistics.start("Fixed-point");
+  ssa_data_flowt ssa_data_flow(function_SSA);
+  statistics.stop("Fixed-point");
+  
+  // now report on assertions
+  status() << "Reporting" << eom;
+  statistics.start("Reporting");
+  report_assertions(ssa_data_flow, file_report);  
+  extract_source(symbol_old.location, f_old.body, symbol.location, f.body, file_report);
   file_report << "\n";
   statistics.stop("Reporting");
   
@@ -145,6 +232,9 @@ Function: deltacheck_checkert::check_all
 void deltacheck_checkert::check_all(std::ostream &global_report)
 {
   // we do this by file in the index
+
+  get_functiont get_old_function(index_old);
+  get_old_function.set_message_handler(get_message_handler());
   
   for(indext::file_to_functiont::const_iterator
       file_it=index.file_to_function.begin();
@@ -201,7 +291,21 @@ void deltacheck_checkert::check_all(std::ostream &global_report)
                   << " in " << html_escape(file_it->first)
                   << "</h2>\n";
 
-      check_function(symbol, *index_fkt, ns, file_report);
+      // get corresponding index_old function, if available
+    
+      goto_functionst::goto_functiont *index_old_fkt=
+        get_old_function(id);
+    
+      if(index_old_fkt!=NULL)
+      {
+        const namespacet &ns_old=get_old_function.ns;
+        const symbolt &symbol_old=ns_old.lookup(id);
+        check_function(symbol_old, *index_old_fkt, ns_old,
+                       symbol, *index_fkt, ns,
+                       file_report);
+      }
+      else
+        check_function(symbol, *index_fkt, ns, file_report);
     }
 
     html_report_footer(file_report);
