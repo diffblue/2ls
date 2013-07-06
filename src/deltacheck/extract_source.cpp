@@ -76,7 +76,7 @@ Function: source_token
 const char *tokens[]=
 { "++", "+=", "--", "-=", "&&", "&=", "||", "|=", "/*",
   "*/", "//", "%=", "/=", "<<", ">>", "<<=", ">>=", "==",
-  "!=", "<=", ">=", NULL };
+  "!=", "<=", ">=", "::", "->", "##", NULL };
   
 class tokenizert
 {
@@ -169,13 +169,13 @@ void html_source(
     if(isalnum(token[0]))
     {
       if(is_keyword(token))
-      {
-        out << token;
-      }
+        out << "<em>" << token << "</em>";
       else
-      {
-        out << token;
-      }
+        out << "<var>" << token << "</var>";
+    }
+    else if(token[0]=='"' || token[0]=='\'')
+    {
+      out << "<kbd>" << html_escape(token) << "</kbd>";
     }
     else
       out << html_escape(token);
