@@ -24,7 +24,7 @@ Function: html_report_header
 \*******************************************************************/
 
 const char header[]=
-#include "html_header.inc"
+#include "report_header.inc"
 ;
 
 void html_report_header(std::ostream &out)

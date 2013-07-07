@@ -195,6 +195,8 @@ public:
     different(false), out(_out), comment(false) { }
     
   bool different;
+  unsigned line_no;
+  std::string id_suffix;
     
   void operator()(const std::string &line);
 
@@ -231,12 +233,23 @@ void html_formattert::operator()(const std::string &line)
     }
     else
     {
-      if(isalnum(token[0]))
+      if(isdigit(token[0])) // numeral
+      {
+        out << token;
+      }
+      else if(isalpha(token[0]))
       {
         if(is_keyword(token))
           out << "<em>" << token << "</em>";
         else
-          out << "<var>" << token << "</var>";
+        {
+          out << "<var onMouseOver=\"var_tooltip('"
+              << token << id_suffix << "', " << line_no << ");\""
+                 " onMouseOut=\"tooltip.hide();\""
+                 ">"
+              << token
+              << "</var>";
+        }
       }
       else if(token=="/*")
       {
@@ -433,7 +446,10 @@ void extract_source(
   
   for(std::list<linet>::const_iterator
       l_it=lines.begin(); l_it!=lines.end(); l_it++)
+  {
+    html_formatter.line_no=l_it->line_no;
     html_formatter(l_it->line);
+  }
   
   out << "</pre></td></tr>\n";
   
@@ -701,6 +717,8 @@ void extract_source(
         l_old_it++, l_it++)
     {
       html_formatter.different=(l_old_it->line!=l_it->line);
+      html_formatter.line_no=l_it->line_no;
+      html_formatter.id_suffix="_old";
       html_formatter(l_old_it->line);
     }
   }
@@ -751,6 +769,7 @@ void extract_source(
         l_old_it++, l_it++)
     {
       html_formatter.different=(l_old_it->line!=l_it->line);
+      html_formatter.line_no=l_it->line_no;
       html_formatter(l_it->line);
     }
   }

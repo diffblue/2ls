@@ -59,9 +59,9 @@ endif
 
 # HTML Header
 
-html_report$(OBJEXT): html_header.inc
+html_report$(OBJEXT): report_header.inc
 
-html_header.inc: report_header.html
+report_header.inc: report_header.html
 	./to_c_string.perl < report_header.html > $@
 
 ###############################################################################
