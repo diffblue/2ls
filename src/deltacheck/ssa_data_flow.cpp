@@ -151,8 +151,10 @@ bool ssa_data_flowt::iteration()
   // solve
   solver.dec_solve();
  
-  #if 0
+  #ifdef DEBUG
+  std::cout << "=======================\n";
   solver.print_assignment(std::cout);
+  std::cout << "=======================\n";
   #endif
 
   // now get new value of post-state predicates
