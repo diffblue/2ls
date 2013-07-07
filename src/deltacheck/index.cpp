@@ -31,6 +31,7 @@ void indext::build(const std::vector<std::string> &files,
                    const std::string &_description)
 {
   description=_description;
+  path_prefix="";
 
   for(std::vector<std::string>::const_iterator
       f_it=files.begin();
@@ -140,6 +141,18 @@ Function: indext::read
 void indext::read(const std::string &in_file_name)
 {
   file_name=in_file_name;
+  
+  {
+    #ifdef _WIN32
+    char path_sep='\\';
+    #else
+    char path_sep='/';
+    #endif
+    
+    std::size_t path_sep_pos=in_file_name.rfind(path_sep);
+    if(path_sep_pos!=std::string::npos)
+      path_prefix=in_file_name.substr(0, path_sep_pos);
+  }
   
   // figure out if this is a goto-binary or an index
   if(is_goto_binary(file_name))

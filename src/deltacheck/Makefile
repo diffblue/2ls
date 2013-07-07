@@ -57,6 +57,13 @@ ifneq ($(wildcard $(CBMC)/src/php/Makefile),)
   CXXFLAGS += -DHAVE_PHP
 endif
 
+# HTML Header
+
+html_report$(OBJEXT): html_header.inc
+
+html_header.inc: report_header.html
+	./to_c_string.perl < report_header.html > $@
+
 ###############################################################################
 
 deltacheck$(EXEEXT): $(OBJ)

@@ -37,6 +37,8 @@ public:
   void index_goto_binary(const irep_idt &file);
   
   std::string description, file_name;
+  
+  std::string path_prefix;
 };
 
 #endif

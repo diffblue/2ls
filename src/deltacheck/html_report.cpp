@@ -23,43 +23,17 @@ Function: html_report_header
 
 \*******************************************************************/
 
+const char header[]=
+#include "html_header.inc"
+;
+
 void html_report_header(std::ostream &out)
 {
-  out << "<html>\n"
-         "<head>\n";
-  
-  out << "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\n"
-         "\n";
-  
-  // CSS       
-  out << "<style media=\"screen\" type=\"text/css\">\n";
-  
-  // logo
-  out << ".image-right { float: right; margin-left: 10px; }\n";
+  out << "<html>\n";
 
-  // Table of files
-  out << "table.file-table { border-collapse:collapse; }\n"
-         "table.file-table td, th { border:1px solid black; padding: 2px 2px 2px 4px; }\n";
-         
-  // Table of properties         
-  out << "table.properties { border-collapse:collapse; }\n"
-         "table.properties td, th { border:1px solid black; padding: 4px 4px 4px 8px; }\n";
-         
-  // Small stuff
-  out << "p.function_statistics { font: 11px \"Trebuchet MS\", Verdana, Arial, Helvetica, sans-serif; }\n"
-         ".copyright { font: 9px \"Trebuchet MS\", Verdana, Arial, Helvetica, sans-serif; }\n";
-        
-  // Source code formatting 
-  out << "table.source td.line_numbers { text-align:right; }\n"
-         "em { font-style: normal; font-weight:bold; }\n"
-         "cite { font-style: normal; color: #4e9a06; }\n"
-         "strong.different { font-style: normal; background-color: #fce94f; font-weight: normal; }\n";
+  out << header;
 
-  out << "</style>\n"
-         "\n";
-
-  out << "</head>\n"
-         "\n"
+  out << "\n"
          "<body>\n";
 }
 

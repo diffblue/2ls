@@ -341,11 +341,12 @@ Function: get_errors
 
 \*******************************************************************/
 
-void get_errors(
+std::string get_errors(
   const propertiest &properties,
-  const linet &line,
-  std::list<std::string> &errors)
+  const linet &line)
 {
+  std::string errors;
+
   for(propertiest::const_iterator
       p_it=properties.begin(); p_it!=properties.end(); p_it++)
   {
@@ -354,10 +355,20 @@ void get_errors(
     {
       if(p_it->status.is_false())
       {
-        errors.push_back(as_string(p_it->loc->location.get_property()));
+        if(!errors.empty()) errors+="<br>";
+
+        irep_idt property=p_it->loc->location.get_property();
+        irep_idt comment=p_it->loc->location.get_comment();
+
+        if(comment=="")
+          errors+=as_string(property);
+        else
+          errors+=as_string(comment);
       }
     }
   }
+  
+  return errors;
 }
 
 /*******************************************************************\
@@ -391,11 +402,13 @@ void extract_source(
   for(std::list<linet>::const_iterator
       l_it=lines.begin(); l_it!=lines.end(); l_it++)
   {
-    std::list<std::string> errors;
-    get_errors(properties, *l_it, errors);
+    std::string errors=get_errors(properties, *l_it);
     if(!errors.empty())
     {
-      out << "<font color=\"#CC0000\">&#x2717;</font>";
+      out << "<div title=\"header=[First row] body=[second row]\" "
+             "STYLE=\"BORDER: #558844 1px solid; WIDTH:200px; HEIGHT: 40px\">"
+          << "<font color=\"#CC0000\">&#x2717;</font>"
+          << "</div>";
     }
     out << "\n";
   }
@@ -702,11 +715,14 @@ void extract_source(
   for(std::list<linet>::const_iterator
       l_it=lines.begin(); l_it!=lines.end(); l_it++)
   {
-    std::list<std::string> errors;
-    get_errors(properties, *l_it, errors);
+    std::string errors=get_errors(properties, *l_it);
     if(!errors.empty())
     {
-      out << "<font color=\"#CC0000\">&#x2717;</font>";
+      out << "<span style=\"color:#CC0000\" onmouseover=\"tooltip.show('"
+          << html_escape(errors) << "');\""
+                 " onmouseout=\"tooltip.hide();\">"
+          << "&#x2717;"
+          << "</span>";
     }
     out << "\n";
   }
