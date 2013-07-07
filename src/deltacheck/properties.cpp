@@ -40,7 +40,10 @@ void html_report(
   {
     const locationt &location=p_it->loc->location;
   
-    out << "<tr>\n";
+    out << "<tr class=\"property\""
+           " onMouseOver=\"this.bgColor='#eeeeee';\""
+           " onMouseOut=\"this.bgColor='#ffffff';\""
+           ">\n";
     
     out << "  <td align=\"center\">";
     

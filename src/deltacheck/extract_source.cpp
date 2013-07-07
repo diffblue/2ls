@@ -336,7 +336,7 @@ Function: extract_source
 void extract_source(
   const locationt &location,
   const goto_programt &goto_program,
-  const propertiest  &properties,
+  const propertiest &properties,
   std::ostream &out)
 {
   std::list<linet> lines;
