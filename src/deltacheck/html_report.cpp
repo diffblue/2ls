@@ -33,13 +33,14 @@ void html_report_header(std::ostream &out)
          
   out << "<style media=\"screen\" type=\"text/css\">\n"
          ".image-right { float: right; margin-left: 10px; }\n"
-         "table.assertions { border-collapse:collapse; }\n"
-         "table.assertions td, th { border:1px solid black; padding: 4px 4px 4px 8px; }\n"
+         "table.properties { border-collapse:collapse; }\n"
+         "table.properties td, th { border:1px solid black; padding: 4px 4px 4px 8px; }\n"
          "p.function_statistics { font: 11px \"Trebuchet MS\", Verdana, Arial, Helvetica, sans-serif; }\n"
          "table.source td.line_numbers { text-align:right; }\n"
          ".copyright { font: 9px \"Trebuchet MS\", Verdana, Arial, Helvetica, sans-serif; }\n"
-         "em { font-weight:bold; }\n"
-         "strong.different { background-color: #fce94f; font-weight: normal; }\n"
+         "em { font-style: normal; font-weight:bold; }\n"
+         "cite { font-style: normal; color: #4e9a06; }\n"
+         "strong.different { font-style: normal; background-color: #fce94f; font-weight: normal; }\n"
          "</style>\n"
          "\n";
 

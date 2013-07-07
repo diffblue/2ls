@@ -106,10 +106,11 @@ public:
   }
   
   std::string get();
+  std::string peek();
   std::string buf;
 };
 
-std::string tokenizert::get()
+std::string tokenizert::peek()
 {
   if(buf.empty()) return buf;
 
@@ -159,14 +160,19 @@ std::string tokenizert::get()
     }
   }
   
-  std::string result=buf.substr(0, pos);
-  buf.erase(0, pos);
+  return buf.substr(0, pos);
+}
+
+std::string tokenizert::get()
+{
+  std::string result=peek();
+  buf.erase(0, result.size());
   return result;
 }
 
 /*******************************************************************\
 
-Function: html_source
+Function: html_formattert
 
   Inputs:
 
@@ -176,30 +182,82 @@ Function: html_source
 
 \*******************************************************************/
 
-void html_source(
-  const std::string &line,
-  std::ostream &out)
+class html_formattert
+{
+public:
+  explicit html_formattert(std::ostream &_out):
+    different(false), out(_out), comment(false) { }
+    
+  bool different;
+    
+  void operator()(const std::string &line);
+
+protected:
+  std::ostream &out;
+  bool comment;
+};
+
+void html_formattert::operator()(const std::string &line)
 {
   tokenizert tokenizer(line);
-
   std::string token;
+  
+  while(true)
+  {
+    token=tokenizer.peek();
+    if(token==" ") out << tokenizer.get(); else break;
+  }
+
+  // open tags  
+  if(different) out << "<strong class=\"different\">";
+  if(comment) out << "<cite>";
   
   while(!(token=tokenizer.get()).empty())
   {
-    if(isalnum(token[0]))
+    if(comment)
     {
-      if(is_keyword(token))
-        out << "<em>" << token << "</em>";
-      else
-        out << "<var>" << token << "</var>";
-    }
-    else if(token[0]=='"' || token[0]=='\'')
-    {
-      out << "<kbd>" << html_escape(token) << "</kbd>";
+      out << html_escape(token);
+      if(token=="*/")
+      {
+        out << "</cite>";
+        comment=false;
+      }
     }
     else
-      out << html_escape(token);
+    {
+      if(isalnum(token[0]))
+      {
+        if(is_keyword(token))
+          out << "<em>" << token << "</em>";
+        else
+          out << "<var>" << token << "</var>";
+      }
+      else if(token=="/*")
+      {
+        comment=true;
+        out << "<cite>" << token;
+      }
+      else if(token=="//")
+      {
+        out << "<cite>" << token;
+        while(!(token=tokenizer.get()).empty())
+          out << html_escape(token);
+        out << "</cite>";
+      }
+      else if(token[0]=='"' || token[0]=='\'')
+      {
+        out << "<kbd>" << html_escape(token) << "</kbd>";
+      }
+      else
+        out << html_escape(token);
+    }
   }
+
+  // close tags  
+  if(comment) out << "</cite>";
+  if(different) out << "</strong>";
+  
+  out << "\n";
 }
 
 /*******************************************************************\
@@ -278,6 +336,7 @@ Function: extract_source
 void extract_source(
   const locationt &location,
   const goto_programt &goto_program,
+  const propertiest  &properties,
   std::ostream &out)
 {
   std::list<linet> lines;
@@ -300,12 +359,11 @@ void extract_source(
   
   out << "<td class=\"code\"><pre>\n";
   
+  html_formattert html_formatter(out);
+  
   for(std::list<linet>::const_iterator
       l_it=lines.begin(); l_it!=lines.end(); l_it++)
-  {
-    html_source(l_it->line, out);
-    out << "\n";
-  }
+    html_formatter(l_it->line);
   
   out << "</pre></td></tr>\n";
   
@@ -324,8 +382,6 @@ Function: process_diff
  Purpose:
 
 \*******************************************************************/
-
-#include <iostream>
 
 void process_diff(
   std::list<linet> &lines1,
@@ -350,7 +406,7 @@ void process_diff(
     const std::string &line=*d_it;
     
     if(line.empty() || !isdigit(line[0])) continue;
-    std::cout << "ACTION: " << line << "\n";
+    //std::cout << "ACTION: " << line << "\n";
     
     unsigned i;
     std::string line_from_str, line_to_str;
@@ -369,7 +425,7 @@ void process_diff(
     unsigned line_from=atoi(line_from_str.c_str());
     unsigned line_to=atoi(line_to_str.c_str());
     
-    std::cout << "Lfrom: " << line_from << " Lto: " << line_to << std::endl;
+    // std::cout << "Lfrom: " << line_from << " Lto: " << line_to << std::endl;
     
     if(line_from<1 || line_from>l_it1.size() || 
        line_to<1   || line_to>l_it1.size()) continue;
@@ -438,7 +494,7 @@ void diff_it(
     std::ifstream in(tmp3_name.c_str());
     std::string line;
     std::list<std::string> diff;
-    while(std::getline(in, line)) { diff.push_back(line); std::cout << "L: " << line << std::endl;}
+    while(std::getline(in, line)) diff.push_back(line);
     process_diff(lines1, lines2, diff);
   }
   
@@ -465,6 +521,7 @@ void extract_source(
   const goto_programt &goto_program_old,
   const locationt &location,
   const goto_programt &goto_program,
+  const propertiest &properties,
   std::ostream &out)
 {
   // get sources
@@ -500,16 +557,17 @@ void extract_source(
   out << "</pre></td>\n";
   
   out << "<td class=\"code\"><pre>\n";
-  
-  for(l_old_it=lines_old.begin(), l_it=lines.begin();
-      l_old_it!=lines_old.end() && l_it!=lines.end();
-      l_old_it++, l_it++)
-  {
-    bool different=(l_old_it->line!=l_it->line);
-    if(different) out << "<strong class=\"different\">";
-    html_source(l_old_it->line, out);
-    if(different) out << "</strong>";
-    out << "\n";
+
+  {  
+    html_formattert html_formatter(out);
+    
+    for(l_old_it=lines_old.begin(), l_it=lines.begin();
+        l_old_it!=lines_old.end() && l_it!=lines.end();
+        l_old_it++, l_it++)
+    {
+      html_formatter.different=(l_old_it->line!=l_it->line);
+      html_formatter(l_old_it->line);
+    }
   }
   
   out << "</pre></td>\n";
@@ -529,15 +587,16 @@ void extract_source(
   
   out << "<td class=\"code\"><pre>\n";
   
-  for(l_old_it=lines_old.begin(), l_it=lines.begin();
-      l_old_it!=lines_old.end() && l_it!=lines.end();
-      l_old_it++, l_it++)
   {
-    bool different=(l_old_it->line!=l_it->line);
-    if(different) out << "<strong class=\"different\">";
-    html_source(l_it->line, out);
-    if(different) out << "</strong>";
-    out << "\n";
+    html_formattert html_formatter(out);
+  
+    for(l_old_it=lines_old.begin(), l_it=lines.begin();
+        l_old_it!=lines_old.end() && l_it!=lines.end();
+        l_old_it++, l_it++)
+    {
+      html_formatter.different=(l_old_it->line!=l_it->line);
+      html_formatter(l_it->line);
+    }
   }
   
   out << "</pre></td></tr>\n";

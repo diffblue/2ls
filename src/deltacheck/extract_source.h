@@ -13,9 +13,12 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <goto-programs/goto_functions.h>
 
+#include "properties.h"
+
 void extract_source(
   const locationt &location,
   const goto_programt &goto_program,
+  const propertiest &properties,
   std::ostream &);
 
 void extract_source(
@@ -23,6 +26,7 @@ void extract_source(
   const goto_programt &goto_program_old,
   const locationt &location,
   const goto_programt &goto_program,
+  const propertiest &properties,
   std::ostream &);
 
 #endif
