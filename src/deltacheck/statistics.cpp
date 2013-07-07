@@ -95,7 +95,7 @@ void statisticst::html_report_total(std::ostream &out) const
     out << "<tr><td>";
     out << html_escape(it->first) << ":</td><td>"
         << it->second
-        << "s</td></tr>\n";
+        << "</td></tr>\n";
   }
   
   for(time_mapt::const_iterator
