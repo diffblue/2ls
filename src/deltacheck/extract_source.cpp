@@ -6,10 +6,16 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+//#define DEBUG
+
 #include <cctype>
 #include <cstring>
 #include <limits>
 #include <fstream>
+
+#ifdef DEBUG
+#include <iostream>
+#endif
 
 #if defined(__linux__) || defined(__FreeBSD_kernel__) || defined(__CYGWIN__) || defined(__MACH__)
 #include <unistd.h>
@@ -274,8 +280,10 @@ Function: get_source
 
 struct linet
 {
-  linet(unsigned _line_no, const std::string &_line):
-    line_no(_line_no), line(_line) { }
+  explicit linet():line_no(0) { }
+  linet(const irep_idt &_file, unsigned _line_no, const std::string &_line):
+    file(_file), line_no(_line_no), line(_line) { }
+  irep_idt file;
   unsigned line_no;
   std::string line;
 };
@@ -316,9 +324,40 @@ void get_source(
   {
     std::string s;
     if(!std::getline(in, s)) break;
-    dest.push_back(linet(line_no, s));
+    dest.push_back(linet(file, line_no, s));
   }
   
+}
+
+/*******************************************************************\
+
+Function: get_errors
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void get_errors(
+  const propertiest &properties,
+  const linet &line,
+  std::list<std::string> &errors)
+{
+  for(propertiest::const_iterator
+      p_it=properties.begin(); p_it!=properties.end(); p_it++)
+  {
+    if(line.file==p_it->loc->location.get_file() &&
+       i2string(line.line_no)==as_string(p_it->loc->location.get_line()))
+    {
+      if(p_it->status.is_false())
+      {
+        errors.push_back(as_string(p_it->loc->location.get_property()));
+      }
+    }
+  }
 }
 
 /*******************************************************************\
@@ -345,6 +384,24 @@ void extract_source(
   out << "<p>\n";
   out << "<table class=\"source\"><tr>\n";
   
+  // error marking  
+
+  out << "<td class=\"line_numbers\"><pre>\n";
+  
+  for(std::list<linet>::const_iterator
+      l_it=lines.begin(); l_it!=lines.end(); l_it++)
+  {
+    std::list<std::string> errors;
+    get_errors(properties, *l_it, errors);
+    if(!errors.empty())
+    {
+      out << "<font color=\"#CC0000\">&#x2717;</font>";
+    }
+    out << "\n";
+  }
+    
+  out << "</pre></td>\n";
+
   // line numbers go into a column
   
   out << "<td class=\"line_numbers\"><pre>\n";
@@ -371,6 +428,84 @@ void extract_source(
   out << "</p>\n";
 }
 
+/*******************************************************************\
+
+Function: diff_action
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+class diff_actiont
+{
+public:
+  char action;
+  unsigned old_from, old_to, old_size;
+  unsigned new_from, new_to, new_size;
+  diff_actiont(const std::string &);
+
+  void output(std::ostream &out)
+  {
+    if(action!=0)
+      out << "Action: " << action
+          << " Old: " << old_from << "-" << old_to << " (" << old_size << ")"
+          << " New: " << new_from << "-" << new_to << " (" << new_size << ")"
+          << "\n";
+  }
+};
+
+diff_actiont::diff_actiont(const std::string &src)
+{
+  old_from=old_to=new_from=new_to=old_size=new_size=0;
+  action=0;
+
+  // e.g. 4,5c4
+  if(src.empty() || !isdigit(src[0])) return;
+  
+  std::string old_from_str, old_to_str, new_from_str, new_to_str;
+
+  unsigned i;
+
+  for(i=0; i<src.size() && isdigit(src[i]); i++) old_from_str+=src[i];
+
+  if(i<src.size() && src[i]==',')
+    for(i++; i<src.size() && isdigit(src[i]); i++) old_to_str+=src[i];
+  else
+    old_to_str=old_from_str;
+    
+  if(i<src.size() && isalpha(src[i]))
+    action=src[i];
+  else
+    return;
+
+  for(i++; i<src.size() && isdigit(src[i]); i++) new_from_str+=src[i];
+
+  if(i<src.size() && src[i]==',')
+    for(i++; i<src.size() && isdigit(src[i]); i++) new_to_str+=src[i];
+  else
+    new_to_str=new_from_str;
+
+  old_from=atoi(old_from_str.c_str());
+  old_to=atoi(old_to_str.c_str());
+  new_from=atoi(new_from_str.c_str());
+  new_to=atoi(new_to_str.c_str());
+  
+  old_size=old_to-old_from+1;
+  new_size=new_to-new_from+1;
+  
+  if(action=='a')
+    old_size=0;
+  else if(action=='d')
+    new_size=0;
+
+  // sanity check
+  if(old_from>old_to || new_from>new_to) action=0;
+}
+  
 /*******************************************************************\
 
 Function: process_diff
@@ -403,49 +538,36 @@ void process_diff(
       d_it!=diff.end();
       d_it++)
   {
-    const std::string &line=*d_it;
+    diff_actiont da(*d_it);
     
-    if(line.empty() || !isdigit(line[0])) continue;
-    //std::cout << "ACTION: " << line << "\n";
-    
-    unsigned i;
-    std::string line_from_str, line_to_str;
-    for(i=0; i<line.size() && isdigit(line[i]); i++) line_from_str+=line[i];
+    #ifdef DEBUG
+    da.output(std::cout);
+    #endif
 
-    if(i<line.size() && line[i]==',')
-      for(i++; i<line.size() && isdigit(line[i]); i++) line_to_str+=line[i];
-    else
-      line_to_str=line_from_str;
-
-    if(i>=line.size() || i==0) continue;
-
-    // we expect 'a' (add), 'd' (delete), 'c' (change)
-    char action=line[i];
-    
-    unsigned line_from=atoi(line_from_str.c_str());
-    unsigned line_to=atoi(line_to_str.c_str());
-    
-    // std::cout << "Lfrom: " << line_from << " Lto: " << line_to << std::endl;
-    
-    if(line_from<1 || line_from>l_it1.size() || 
-       line_to<1   || line_to>l_it1.size()) continue;
-
-    switch(action)
+    switch(da.action)
     {
-    case 'c':
-      break; // we ignore changes
-    
+    case 'c': // change
+      if(da.new_size>da.old_size)
+      {
+        for(unsigned i=da.old_size; i<da.new_size; i++)
+          lines1.insert(l_it1[da.old_from], linet());
+      }
+      else if(da.old_size>da.new_size)
+      {
+        for(unsigned i=da.new_size; i<da.old_size; i++)
+          lines2.insert(l_it2[da.old_from], linet());
+      }
+      break;
+      
     case 'a': // add
-      for(unsigned i=line_from; i<=line_to; i++)
-        lines1.insert(l_it1[line_from], linet(0, ""));
+      for(unsigned i=0; i<da.new_size; i++)
+        lines1.insert(l_it1[da.old_from], linet());
       break;
-    
+
     case 'd': // delete
-      for(unsigned i=line_from; i<=line_to; i++)
-        lines2.insert(l_it2[line_from], linet(0, ""));
+      for(unsigned i=0; i<da.old_size; i++)
+        lines2.insert(l_it2[da.old_from], linet());
       break;
-    
-    default:; // unknown action
     }
   }
 }
@@ -574,6 +696,23 @@ void extract_source(
   
   // new version
   
+  // error marking  
+  out << "<td class=\"line_numbers\"><pre>\n";
+  
+  for(std::list<linet>::const_iterator
+      l_it=lines.begin(); l_it!=lines.end(); l_it++)
+  {
+    std::list<std::string> errors;
+    get_errors(properties, *l_it, errors);
+    if(!errors.empty())
+    {
+      out << "<font color=\"#CC0000\">&#x2717;</font>";
+    }
+    out << "\n";
+  }
+    
+  out << "</pre></td>\n";
+
   out << "<td class=\"line_numbers\"><pre>\n";
   
   for(std::list<linet>::const_iterator
@@ -585,17 +724,6 @@ void extract_source(
     
   out << "</pre></td>\n";
 
-  // error marking  
-  out << "<td class=\"line_numbers\"><pre>\n";
-  
-  for(std::list<linet>::const_iterator
-      l_it=lines.begin(); l_it!=lines.end(); l_it++)
-  {
-    out << "<font color=\"#CC0000\">&#x2717;</font>";
-    out << "\n";
-  }
-    
-  out << "</pre></td>\n";
   
   out << "<td class=\"code\"><pre>\n";
   
