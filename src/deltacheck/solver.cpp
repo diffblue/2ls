@@ -292,6 +292,19 @@ Function: solvert::get
 exprt solvert::get(const exprt &expr) const
 {
   if(expr.is_constant()) return expr;
+  
+  // is it an equality?
+  if(expr.id()==ID_equal)
+  {
+    unsigned nr0, nr1;
+
+    if(!expr_numbering.get_number(to_equal_expr(expr).lhs(), nr0) &&
+       !expr_numbering.get_number(to_equal_expr(expr).rhs(), nr1))
+    {
+      if(is_equal(nr0, nr1))
+        return true_exprt();
+    }
+  }
 
   unsigned nr;
 
