@@ -537,7 +537,7 @@ void extract_source(
   out << "<p>\n";
   out << "<table class=\"source\">\n";  
   out << "<tr><th colspan=2>old version</th>"
-         "<th colspan=2>new version</th></tr>\n";
+         "<th colspan=3>new version</th></tr>\n";
   
   out << "<tr>\n";
   
@@ -580,6 +580,18 @@ void extract_source(
       l_it=lines.begin(); l_it!=lines.end(); l_it++)
   {
     if(l_it->line_no!=0) out << l_it->line_no;
+    out << "\n";
+  }
+    
+  out << "</pre></td>\n";
+
+  // error marking  
+  out << "<td class=\"line_numbers\"><pre>\n";
+  
+  for(std::list<linet>::const_iterator
+      l_it=lines.begin(); l_it!=lines.end(); l_it++)
+  {
+    out << "<font color=\"#CC0000\">&#x2717;</font>";
     out << "\n";
   }
     
