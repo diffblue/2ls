@@ -418,10 +418,11 @@ void extract_source(
     std::string errors=get_errors(properties, *l_it);
     if(!errors.empty())
     {
-      out << "<div title=\"header=[First row] body=[second row]\" "
-             "STYLE=\"BORDER: #558844 1px solid; WIDTH:200px; HEIGHT: 40px\">"
-          << "<font color=\"#CC0000\">&#x2717;</font>"
-          << "</div>";
+      out << "<span style=\"color:#CC0000\" onmouseover=\"tooltip.show('"
+          << html_escape(errors) << "');\""
+                 " onmouseout=\"tooltip.hide();\">"
+          << "&#x2717;"
+          << "</span>";
     }
     out << "\n";
   }
