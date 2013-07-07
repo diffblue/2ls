@@ -283,6 +283,24 @@ int deltacheck_parseoptionst::doit()
       return 0;
     }
 
+    if(cmdline.isset("show-properties"))
+    {
+      if(cmdline.args.size()!=1)
+      {
+        usage_error();
+        return 10;
+      }
+
+      indext index;
+      index.set_message_handler(get_message_handler());
+  
+      status() << "Reading index" << eom;
+      index.read(cmdline.args[0]);
+
+      show_properties(index, std::cout, get_message_handler());
+      return 0;
+    }
+
     if(cmdline.args.size()==2)
     {
       indext index1, index2;

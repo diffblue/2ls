@@ -183,7 +183,7 @@ void show_fixed_point(
 
 /*******************************************************************\
 
-Function: show_ssa
+Function: show_fixed_points
 
   Inputs:
 
@@ -224,6 +224,56 @@ void show_fixed_points(
           << std::endl;
           
       show_fixed_point(*index_fkt, ns, out);
+      
+      out << std::endl;
+    }
+  }
+  
+}
+
+/*******************************************************************\
+
+Function: show_properties
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void show_properties(
+  const indext &index,
+  std::ostream &out,
+  message_handlert &message_handler)
+{
+  for(indext::file_to_functiont::const_iterator
+      file_it=index.file_to_function.begin();
+      file_it!=index.file_to_function.end();
+      file_it++)
+  {
+    // read the file
+    goto_modelt model;
+    read_goto_binary(id2string(file_it->first), model, message_handler);
+    
+    const namespacet ns(model.symbol_table);
+    const std::set<irep_idt> &functions=file_it->second;
+
+    // now do all functions from model
+    for(std::set<irep_idt>::const_iterator
+        fkt_it=functions.begin();
+        fkt_it!=functions.end();
+        fkt_it++)
+    {
+      const irep_idt &id=*fkt_it;
+      const goto_functionst::goto_functiont *index_fkt=
+        &model.goto_functions.function_map.find(id)->second;
+    
+      out << ">>>> Function " << id << " in " << file_it->first
+          << std::endl;
+          
+      //show_fixed_point(*index_fkt, ns, out);
       
       out << std::endl;
     }

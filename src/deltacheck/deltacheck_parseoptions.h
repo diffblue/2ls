@@ -21,7 +21,8 @@ Author: Daniel Kroening, kroening@kroening.com
   "(debug-level):" \
   "(xml-ui)(xml-interface)" \
   "(verbosity):(version)(index):(description):" \
-  "(show-ssa)(show-defs)(show-fixed-points)"
+  "(show-ssa)(show-defs)(show-fixed-points)" \
+  "(show-properties)"
 
 class deltacheck_parseoptionst:
   public parseoptions_baset,

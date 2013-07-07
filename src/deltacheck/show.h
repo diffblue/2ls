@@ -30,4 +30,9 @@ void show_fixed_points(
   std::ostream &,
   message_handlert &);
 
+void show_properties(
+  const indext &index,
+  std::ostream &,
+  message_handlert &);
+
 #endif
