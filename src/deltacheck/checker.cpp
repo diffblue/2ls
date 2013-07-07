@@ -77,7 +77,7 @@ protected:
 
   void check_all(std::ostream &global_report);
   
-  unsigned errors_in_file;
+  unsigned errors_in_file, passed_in_file, unknown_in_file;
   
   void get_options();
   
@@ -257,7 +257,7 @@ void deltacheck_checkert::check_all(std::ostream &global_report)
   {
     status() << "Processing \"" << file_it->first << "\"" << eom;
     
-    errors_in_file=0;
+    errors_in_file=unknown_in_file=passed_in_file=0;
     
     std::string file_report_name=id2string(file_it->first)+".deltacheck.html";
     std::ofstream file_report(file_report_name.c_str());
@@ -344,6 +344,9 @@ void deltacheck_checkert::check_all(std::ostream &global_report)
   
   global_report << "<h2>Summary statistics</h2>\n";
   statistics.html_report_total(global_report);
+  
+  result() << "Properties passed: " << statistics.number_map["Passed"] << eom;
+  result() << "Properties failed: " << statistics.number_map["Errors"] << eom;
 }
 
 /*******************************************************************\
@@ -366,7 +369,20 @@ void deltacheck_checkert::collect_statistics(const propertiest &properties)
       p_it++)
   {
     if(p_it->status.is_false())
+    {
       errors_in_file++;
+      statistics.number_map["Errors"]++;
+    }
+    else if(p_it->status.is_true())
+    {
+      passed_in_file++;
+      statistics.number_map["Passed"]++;
+    }
+    else
+    {
+      unknown_in_file++;
+      statistics.number_map["Unknown"]++;
+    }
   }
 }
 
