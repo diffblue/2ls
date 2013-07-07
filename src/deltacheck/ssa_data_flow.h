@@ -14,6 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "function_ssa.h"
 #include "solver.h"
 #include "predicate.h"
+#include "properties.h"
 
 class ssa_data_flowt
 {
@@ -29,17 +30,8 @@ public:
   void print_invariant(std::ostream &) const;
   
   unsigned iteration_number;
-  
-  class assertiont
-  {
-  public:
-    locationt loc;
-    tvt status;
-    exprt guard;
-  };
-  
-  typedef std::list<assertiont> assertionst;
-  assertionst assertions;
+
+  propertiest properties;
   
 protected:
   const function_SSAt &function_SSA;

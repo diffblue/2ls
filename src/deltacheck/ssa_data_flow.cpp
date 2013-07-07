@@ -144,9 +144,9 @@ bool ssa_data_flowt::iteration()
     b_it->pre_predicate.set_to_true(solver);
   
   // feed in assertions
-  for(assertionst::const_iterator
-      a_it=assertions.begin(); a_it!=assertions.end(); a_it++)
-    solver.add(a_it->guard);
+  for(propertiest::const_iterator
+      p_it=properties.begin(); p_it!=properties.end(); p_it++)
+    solver.add(p_it->guard);
 
   // solve
   solver.dec_solve();
@@ -206,10 +206,10 @@ Function: ssa_data_flowt::check_assertions
 
 void ssa_data_flowt::check_assertions(solvert &solver)
 {
-  for(assertionst::iterator
-      a_it=assertions.begin(); a_it!=assertions.end(); a_it++)
+  for(propertiest::iterator
+      p_it=properties.begin(); p_it!=properties.end(); p_it++)
   {
-    exprt g=solver.get(a_it->guard);
+    exprt g=solver.get(p_it->guard);
 
     tvt status;
     
@@ -220,7 +220,7 @@ void ssa_data_flowt::check_assertions(solvert &solver)
     else
       status=tvt::unknown();
 
-    a_it->status=status;
+    p_it->status=status;
   }
 }
 
@@ -242,9 +242,9 @@ void ssa_data_flowt::setup_assertions()
   {
     if(i_it->is_assert())
     {
-      assertions.push_back(assertiont());
-      assertions.back().loc=i_it;
-      assertions.back().guard=function_SSA.read(i_it->guard, i_it);
+      properties.push_back(propertyt());
+      properties.back().loc=i_it;
+      properties.back().guard=function_SSA.read(i_it->guard, i_it);
     }
   }
 }

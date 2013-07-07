@@ -20,7 +20,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "html_report.h"
 #include "get_function.h"
 #include "ssa_data_flow.h"
-#include "report_assertions.h"
 #include "html_escape.h"
 #include "statistics.h"
 #include "extract_source.h"
@@ -152,7 +151,7 @@ void deltacheck_checkert::check_function(
   // now report on assertions
   status() << "Reporting" << eom;
   statistics.start("Reporting");
-  report_assertions(ssa_data_flow, file_report);  
+  html_report(ssa_data_flow.properties, file_report);  
   extract_source(symbol.location, f.body, file_report);
   file_report << "\n";
   statistics.stop("Reporting");
@@ -208,7 +207,7 @@ void deltacheck_checkert::check_function(
   // now report on assertions
   status() << "Reporting" << eom;
   statistics.start("Reporting");
-  report_assertions(ssa_data_flow, file_report);  
+  html_report(ssa_data_flow.properties, file_report);  
   extract_source(symbol_old.location, f_old.body, symbol.location, f.body, file_report);
   file_report << "\n";
   statistics.stop("Reporting");
