@@ -64,20 +64,24 @@ protected:
     std::ostream &file_report);
 
   void check_function(
-
+    // old
     const symbolt &symbol_old,
     goto_functionst::goto_functiont &f_old,
     const namespacet &ns_old,
-
+    // new
     const symbolt &symbol,
     goto_functionst::goto_functiont &f,
     const namespacet &ns,
-
+    // output
     std::ostream &file_report);
 
   void check_all(std::ostream &global_report);
   
+  unsigned errors_in_file;
+  
   void get_options();
+  
+  void collect_statistics(const propertiest &properties);
 };
 
 /*******************************************************************\
@@ -158,6 +162,9 @@ void deltacheck_checkert::check_function(
   
   // dump statistics
   statistics.html_report_last(file_report);
+  
+  // collect some more data
+  collect_statistics(ssa_data_flow.properties); 
 }
 
 /*******************************************************************\
@@ -216,6 +223,9 @@ void deltacheck_checkert::check_function(
   
   // dump statistics
   statistics.html_report_last(file_report);
+
+  // collect some more data
+  collect_statistics(ssa_data_flow.properties); 
 }
 
 /*******************************************************************\
@@ -237,12 +247,17 @@ void deltacheck_checkert::check_all(std::ostream &global_report)
   get_functiont get_old_function(index_old);
   get_old_function.set_message_handler(get_message_handler());
   
+  global_report << "<table class=\"file-table\">\n"
+                << "<tr><th>File</th><th># Errors</th></tr>\n";
+  
   for(indext::file_to_functiont::const_iterator
       file_it=index.file_to_function.begin();
       file_it!=index.file_to_function.end();
       file_it++)
   {
     status() << "Processing \"" << file_it->first << "\"" << eom;
+    
+    errors_in_file=0;
     
     std::string file_report_name=id2string(file_it->first)+".deltacheck.html";
     std::ofstream file_report(file_report_name.c_str());
@@ -304,6 +319,7 @@ void deltacheck_checkert::check_all(std::ostream &global_report)
       {
         const namespacet &ns_old=get_old_function.ns;
         const symbolt &symbol_old=ns_old.lookup(id);
+
         check_function(symbol_old, *index_old_fkt, ns_old,
                        symbol, *index_fkt, ns,
                        file_report);
@@ -313,17 +329,50 @@ void deltacheck_checkert::check_all(std::ostream &global_report)
     }
 
     html_report_footer(file_report);
+    
+    // add link to global report
+    global_report << "<tr><td><a href=\"" << file_report_name
+                  << "\">" << html_escape(file_it->first)
+                  << "</a></td>"
+                  << "<td align=\"right\">" << errors_in_file << "</td>"
+                  << "</tr>\n";
   }
+  
+  global_report << "</table>\n\n";
   
   // Report grand totals
   
-  global_report << "<h2>Summary Statistics</h2>\n";
+  global_report << "<h2>Summary statistics</h2>\n";
   statistics.html_report_total(global_report);
 }
 
 /*******************************************************************\
 
-Function: one_program_check
+Function: deltacheck_checkert::collect_statistics
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void deltacheck_checkert::collect_statistics(const propertiest &properties)
+{
+  for(propertiest::const_iterator
+      p_it=properties.begin();
+      p_it!=properties.end();
+      p_it++)
+  {
+    if(p_it->status.is_false())
+      errors_in_file++;
+  }
+}
+
+/*******************************************************************\
+
+Function: deltacheck_checkert::operator()
 
   Inputs:
 

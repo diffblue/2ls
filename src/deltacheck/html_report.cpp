@@ -36,8 +36,12 @@ void html_report_header(std::ostream &out)
   
   // logo
   out << ".image-right { float: right; margin-left: 10px; }\n";
+
+  // Table of files
+  out << "table.file-table { border-collapse:collapse; }\n"
+         "table.file-table td, th { border:1px solid black; padding: 2px 2px 2px 4px; }\n";
          
-  // Tabe of properties         
+  // Table of properties         
   out << "table.properties { border-collapse:collapse; }\n"
          "table.properties td, th { border:1px solid black; padding: 4px 4px 4px 8px; }\n";
          
