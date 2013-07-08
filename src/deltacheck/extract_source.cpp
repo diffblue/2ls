@@ -10,6 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <cctype>
 #include <cstring>
+#include <cstdlib>
 #include <limits>
 #include <fstream>
 
