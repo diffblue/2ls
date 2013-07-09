@@ -80,24 +80,39 @@ void function_SSAt::build_phi_nodes(locationt loc)
 
       exprt rhs=nil_exprt();
 
+      // We distinguish forwards- from backwards-edges,
+      // and do forwards-edges first, which gives them
+      // _lower_ priority in the ITE.
+
       for(std::set<ssa_domaint::def_entryt>::const_iterator
           incoming_it=incoming.begin();
           incoming_it!=incoming.end();
           incoming_it++)
       {
-        exprt incoming_value, incoming_guard;
+        if(incoming_it->source->location_number >= loc->location_number)
+          continue; // it's a backwards-edge
 
-        // we distinguish forwards- from brackwards-edges
-        if(incoming_it->source->location_number > loc->location_number)
-        {
-          incoming_value=name(*o_it, LOOP, loc);
-          incoming_guard=name(guard_symbol(), LOOP, loc);
-        }
+        exprt incoming_value=name(*o_it, OUT, incoming_it->def);
+        exprt incoming_guard=name(guard_symbol(), OUT, incoming_it->source);
+
+        if(rhs.is_nil()) // first
+          rhs=incoming_value;
         else
-        {
-          incoming_value=name(*o_it, OUT, incoming_it->def);
-          incoming_guard=name(guard_symbol(), OUT, incoming_it->source);
-        }
+          rhs=if_exprt(incoming_guard, incoming_value, rhs);
+      }
+      
+      // now do backwards
+
+      for(std::set<ssa_domaint::def_entryt>::const_iterator
+          incoming_it=incoming.begin();
+          incoming_it!=incoming.end();
+          incoming_it++)
+      {
+        if(incoming_it->source->location_number < loc->location_number)
+          continue; // it's a forwards-edge
+
+        exprt incoming_value=name(*o_it, LOOP, loc);
+        exprt incoming_guard=name(guard_symbol(), LOOP, loc);
 
         if(rhs.is_nil()) // first
           rhs=incoming_value;
