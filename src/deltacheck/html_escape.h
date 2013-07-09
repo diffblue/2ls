@@ -6,8 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef DELTACHECK_HTML_ESCAPE
-#define DELTACHECK_HTML_ESCAPE
+#ifndef DELTACHECK_HTML_ESCAPE_H
+#define DELTACHECK_HTML_ESCAPE_H
 
 #include <util/dstring.h>
 
