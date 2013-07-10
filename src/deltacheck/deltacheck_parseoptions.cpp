@@ -25,7 +25,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "index.h"
 #include "checker.h"
 #include "show.h"
-#include "svn.h"
+#include "versioning.h"
 
 /*******************************************************************\
 

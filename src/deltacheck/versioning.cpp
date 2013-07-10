@@ -6,23 +6,20 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include "svn.h"
+#include "versioning.h"
 
-class svnt:public messaget
+class versioningt:public messaget
 {
 public:
-  svnt(const std::string &_url,
-       const std::string &_revision,
-       message_handlert &_message_handler):
-    messaget(_message_handler),
-    url(_url), revision(_revision)
+  explicit versioningt(message_handlert &_message_handler):
+    messaget(_message_handler)
   {
-    doit();
   }
   
-protected:
-  const std::string &url, &revision;
+  void svn(const std::string &url,
+           const std::string &revision);
   
+protected:
   void get_revisions();
   
   class revisiont
@@ -35,13 +32,11 @@ protected:
   
   // maps revision_id -> revisiont
   typedef std::map<std::string, revisiont> revision_mapt;
-  
-  void doit();
 };
 
 /*******************************************************************\
 
-Function: svnt::get_revisions
+Function: versioningt::get_revisions
 
   Inputs:
 
@@ -51,13 +46,13 @@ Function: svnt::get_revisions
 
 \*******************************************************************/
 
-void svnt::get_revisions()
+void versioningt::get_revisions()
 {
 }
 
 /*******************************************************************\
 
-Function: svnt::doit
+Function: versioningt::svn
 
   Inputs:
 
@@ -67,7 +62,9 @@ Function: svnt::doit
 
 \*******************************************************************/
 
-void svnt::doit()
+void versioningt::svn(
+  const std::string &url,
+  const std::string &revision)
 {
   get_revisions();
 }
@@ -88,5 +85,6 @@ void svn(const std::string &url,
          const std::string &revision,
          message_handlert &message_handler)
 {
-  svnt(url, revision, message_handler);
+  versioningt versioning(message_handler);
+  versioning.svn(url, revision);
 }
