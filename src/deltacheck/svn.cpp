@@ -17,11 +17,60 @@ public:
     messaget(_message_handler),
     url(_url), revision(_revision)
   {
+    doit();
   }
   
 protected:
   const std::string &url, &revision;
+  
+  void get_revisions();
+  
+  class revisiont
+  {
+  public:
+    std::string date;
+    std::string msg;
+    std::string author;
+  };
+  
+  // maps revision_id -> revisiont
+  typedef std::map<std::string, revisiont> revision_mapt;
+  
+  void doit();
 };
+
+/*******************************************************************\
+
+Function: svnt::get_revisions
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void svnt::get_revisions()
+{
+}
+
+/*******************************************************************\
+
+Function: svnt::doit
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void svnt::doit()
+{
+  get_revisions();
+}
 
 /*******************************************************************\
 
