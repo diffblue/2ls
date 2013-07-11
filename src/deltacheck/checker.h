@@ -15,10 +15,12 @@ class indext;
 void delta_check(
   const indext &index1,
   const indext &index2,
+  const optionst &options,
   message_handlert &);
 
 void one_program_check(
   const indext &index,
+  const optionst &options,
   message_handlert &);
 
 #endif

@@ -319,7 +319,21 @@ int deltacheck_parseoptionst::doit()
       show_properties(index, std::cout, get_message_handler());
       return 0;
     }
+    
+    optionst options;
 
+    options.set_option("bounds-check", true);
+    options.set_option("pointer-check", true);
+    options.set_option("div-by-zero-check", true);
+    options.set_option("signed-overflow-check", true);
+    //options.set_option("unsigned-overflow-check", true);
+    options.set_option("undefined-shift-check", true);
+    //options.set_option("float-overflow-check", true);
+    options.set_option("simplify", true);
+    //options.set_option("nan-check", true);
+    options.set_option("assertions", true);
+    options.set_option("assumptions", true);
+    
     if(cmdline.args.size()==2)
     {
       indext index1, index2;
@@ -329,7 +343,7 @@ int deltacheck_parseoptionst::doit()
       index1.read(cmdline.args[0]);
       index2.read(cmdline.args[1]);
 
-      delta_check(index1, index2, get_message_handler());
+      delta_check(index1, index2, options, get_message_handler());
     }
     else if(cmdline.args.size()==1)
     {
@@ -338,7 +352,7 @@ int deltacheck_parseoptionst::doit()
   
       index.read(cmdline.args[0]);
 
-      one_program_check(index, get_message_handler());
+      one_program_check(index, options, get_message_handler());
     }
     else
     {

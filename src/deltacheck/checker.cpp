@@ -29,25 +29,26 @@ class deltacheck_checkert:public messaget
 public:
   deltacheck_checkert(
     const indext &_index,
+    const optionst &_options,
     message_handlert &message_handler):
     messaget(message_handler),
     use_index_old(false),
-    index_old(dummy_index_old), index(_index)
+    index_old(dummy_index_old), index(_index), options(_options)
   {
   }
   
   deltacheck_checkert(
     const indext &_index_old,
     const indext &_index,
+    const optionst &_options,
     message_handlert &message_handler):
     messaget(message_handler),
     use_index_old(true),
-    index_old(_index_old), index(_index)
+    index_old(_index_old), index(_index), options(_options)
   {
   }
   
   statisticst statistics;
-  optionst options;
   
   void operator()();
 
@@ -56,6 +57,7 @@ protected:
   indext dummy_index_old;
   const indext &index_old;
   const indext &index;
+  const optionst &options;
   
   void check_function(
     const symbolt &symbol,
@@ -79,38 +81,9 @@ protected:
   
   unsigned errors_in_file, passed_in_file, unknown_in_file;
   
-  void get_options();
-  
   void collect_statistics(const propertiest &properties);
 };
 
-/*******************************************************************\
-
-Function: deltacheck_checkert::get_options
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void deltacheck_checkert::get_options()
-{
-  options.set_option("bounds-check", true);
-  options.set_option("pointer-check", true);
-  options.set_option("div-by-zero-check", true);
-  options.set_option("signed-overflow-check", true);
-  //options.set_option("unsigned-overflow-check", true);
-  options.set_option("undefined-shift-check", true);
-  //options.set_option("float-overflow-check", true);
-  options.set_option("simplify", true);
-  //options.set_option("nan-check", true);
-  options.set_option("assertions", true);
-  options.set_option("assumptions", true);
-}
-  
 /*******************************************************************\
 
 Function: deltacheck_checkert::check_function
@@ -129,8 +102,6 @@ void deltacheck_checkert::check_function(
   const namespacet &ns,
   std::ostream &file_report)
 {
-  get_options();
-  
   statistics.number_map["Functions"]++;
   statistics.number_map["LOCs"]+=f.body.instructions.size();
 
@@ -190,8 +161,6 @@ void deltacheck_checkert::check_function(
   const namespacet &ns,
   std::ostream &file_report)
 {
-  get_options();
-  
   statistics.number_map["Functions"]++;
   statistics.number_map["LOCs"]+=f.body.instructions.size();
 
@@ -439,9 +408,10 @@ Function: one_program_check
 
 void one_program_check(
   const indext &index,
+  const optionst &options,
   message_handlert &message_handler)
 {
-  deltacheck_checkert checker(index, message_handler);
+  deltacheck_checkert checker(index, options, message_handler);
   checker();
 }  
 
@@ -460,8 +430,9 @@ Function: delta_check
 void delta_check(
   const indext &index1,
   const indext &index2,
+  const optionst &options,
   message_handlert &message_handler)
 {
-  deltacheck_checkert checker(index1, index2, message_handler);
+  deltacheck_checkert checker(index1, index2, options, message_handler);
   checker();
 }
