@@ -17,6 +17,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "properties.h"
 
 void extract_source(
+  const std::string &path_prefix,
   const locationt &location,
   const goto_programt &goto_program,
   const propertiest &properties,
@@ -24,8 +25,10 @@ void extract_source(
   message_handlert &);
 
 void extract_source(
+  const std::string &path_prefix_old,
   const locationt &location_old,
   const goto_programt &goto_program_old,
+  const std::string &path_prefix,
   const locationt &location,
   const goto_programt &goto_program,
   const propertiest &properties,

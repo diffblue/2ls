@@ -151,7 +151,7 @@ void indext::read(const std::string &in_file_name)
     
     std::size_t path_sep_pos=in_file_name.rfind(path_sep);
     if(path_sep_pos!=std::string::npos)
-      path_prefix=in_file_name.substr(0, path_sep_pos);
+      path_prefix=in_file_name.substr(0, path_sep_pos+1);
   }
   
   // figure out if this is a goto-binary or an index

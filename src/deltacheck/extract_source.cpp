@@ -303,6 +303,7 @@ struct linet
 };
 
 void get_source(
+  const std::string &path_prefix,
   const locationt &location,
   const goto_programt &goto_program,
   std::list<linet> &dest,
@@ -313,13 +314,24 @@ void get_source(
 
   if(file=="") return;
   if(goto_program.instructions.empty()) return;
+  
+  std::string full_path;
 
-  std::ifstream in(file.c_str());
+  #ifdef _WIN32
+  if((file.size()>=2 && file[1]==':') || file[0]=='\\')
+  #else
+  if(file[0]=='/')
+  #endif
+    full_path=id2string(file);
+  else
+    full_path=path_prefix+id2string(file);
+
+  std::ifstream in(full_path.c_str());
   
   if(!in)
   {
     message.error() << "failed to open source `"
-                    << file << "'" << messaget::eom;
+                    << full_path << "'" << messaget::eom;
     dest.push_back(linet(file, 1, "/* failed to open source file */"));
     return;
   }
@@ -406,6 +418,7 @@ Function: extract_source
 \*******************************************************************/
 
 void extract_source(
+  const std::string &path_prefix,
   const locationt &location,
   const goto_programt &goto_program,
   const propertiest &properties,
@@ -413,7 +426,7 @@ void extract_source(
   message_handlert &message_handler)
 {
   std::list<linet> lines;
-  get_source(location, goto_program, lines, message_handler);
+  get_source(path_prefix, location, goto_program, lines, message_handler);
   
   out << "<p>\n";
   out << "<table class=\"source\"><tr>\n";
@@ -679,8 +692,10 @@ Function: extract_source
 \*******************************************************************/
 
 void extract_source(
+  const std::string &path_prefix_old,
   const locationt &location_old,
   const goto_programt &goto_program_old,
+  const std::string &path_prefix,
   const locationt &location,
   const goto_programt &goto_program,
   const propertiest &properties,
@@ -690,8 +705,8 @@ void extract_source(
   // get sources
   std::list<linet> lines, lines_old;
 
-  get_source(location, goto_program, lines, message_handler);
-  get_source(location_old, goto_program_old, lines_old, message_handler);
+  get_source(path_prefix_old, location, goto_program, lines, message_handler);
+  get_source(path_prefix, location_old, goto_program_old, lines_old, message_handler);
 
   // run 'diff'
   
