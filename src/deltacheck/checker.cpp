@@ -156,7 +156,9 @@ void deltacheck_checkert::check_function(
   status() << "Reporting" << eom;
   statistics.start("Reporting");
   html_report(ssa_data_flow.properties, file_report);  
-  extract_source(symbol.location, f.body, ssa_data_flow.properties, file_report);
+  extract_source(
+    symbol.location, f.body, ssa_data_flow.properties, file_report,
+    get_message_handler());
   file_report << "\n";
   statistics.stop("Reporting");
   
@@ -217,7 +219,7 @@ void deltacheck_checkert::check_function(
   html_report(ssa_data_flow.properties, file_report);  
   extract_source(symbol_old.location, f_old.body,
                  symbol.location, f.body, ssa_data_flow.properties,
-                 file_report);
+                 file_report, get_message_handler());
   file_report << "\n";
   statistics.stop("Reporting");
   

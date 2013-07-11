@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <ostream>
 
+#include <util/message.h>
 #include <goto-programs/goto_functions.h>
 
 #include "properties.h"
@@ -19,7 +20,8 @@ void extract_source(
   const locationt &location,
   const goto_programt &goto_program,
   const propertiest &properties,
-  std::ostream &);
+  std::ostream &,
+  message_handlert &);
 
 void extract_source(
   const locationt &location_old,
@@ -27,6 +29,7 @@ void extract_source(
   const locationt &location,
   const goto_programt &goto_program,
   const propertiest &properties,
-  std::ostream &);
+  std::ostream &,
+  message_handlert &);
 
 #endif

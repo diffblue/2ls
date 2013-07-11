@@ -305,8 +305,10 @@ struct linet
 void get_source(
   const locationt &location,
   const goto_programt &goto_program,
-  std::list<linet> &dest)
+  std::list<linet> &dest,
+  message_handlert &message_handler)
 {
+  messaget message(message_handler);
   const irep_idt &file=location.get_file();
 
   if(file=="") return;
@@ -314,7 +316,13 @@ void get_source(
 
   std::ifstream in(file.c_str());
   
-  if(!in) return;
+  if(!in)
+  {
+    message.error() << "failed to open source `"
+                    << file << "'" << messaget::eom;
+    dest.push_back(linet(file, 1, "/* failed to open source file */"));
+    return;
+  }
   
   unsigned first_line=safe_string2unsigned(id2string(location.get_line()));
 
@@ -401,10 +409,11 @@ void extract_source(
   const locationt &location,
   const goto_programt &goto_program,
   const propertiest &properties,
-  std::ostream &out)
+  std::ostream &out,
+  message_handlert &message_handler)
 {
   std::list<linet> lines;
-  get_source(location, goto_program, lines);
+  get_source(location, goto_program, lines, message_handler);
   
   out << "<p>\n";
   out << "<table class=\"source\"><tr>\n";
@@ -675,13 +684,14 @@ void extract_source(
   const locationt &location,
   const goto_programt &goto_program,
   const propertiest &properties,
-  std::ostream &out)
+  std::ostream &out,
+  message_handlert &message_handler)
 {
   // get sources
   std::list<linet> lines, lines_old;
 
-  get_source(location, goto_program, lines);
-  get_source(location_old, goto_program_old, lines_old);
+  get_source(location, goto_program, lines, message_handler);
+  get_source(location_old, goto_program_old, lines_old, message_handler);
 
   // run 'diff'
   
