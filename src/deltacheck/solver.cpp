@@ -110,6 +110,12 @@ void solvert::new_expression(unsigned nr)
     add_operands(nr);
     not_list.push_back(nr);
   }
+  else if(expr.id()==ID_notequal)
+  {
+    // we record x!=y <=> !x==y
+    set_equal(not_exprt(equal_exprt(expr.op0(), expr.op1())),
+              expr);
+  }
   else
   {
     if(expr.has_operands()) // make it uninterpreted
@@ -156,16 +162,16 @@ decision_proceduret::resultt solvert::dec_solve()
 
       if(is_equal(se.op[0], false_nr)) // false ? x : y == y
       {
-        progress=implies_equal(se.op[2], e_nr);
+        implies_equal(se.op[2], e_nr, progress);
       }
       else if(is_equal(se.op[0], true_nr)) // true ? x : y == x
       {
-        progress=implies_equal(se.op[1], e_nr);
+        implies_equal(se.op[1], e_nr, progress);
       }
 
       if(is_equal(se.op[2], se.op[1])) // c ? x : x == x
       {
-        progress=implies_equal(se.op[2], e_nr);
+        implies_equal(se.op[2], e_nr, progress);
       }
     }
     
@@ -179,11 +185,11 @@ decision_proceduret::resultt solvert::dec_solve()
 
       if(is_equal(se.op[1], false_nr)) // x || false == x
       {
-        progress=implies_equal(se.op[0], e_nr);
+        implies_equal(se.op[0], e_nr, progress);
       }
       else if(is_equal(se.op[0], false_nr)) // false || x == x
       {
-        progress=implies_equal(se.op[1], e_nr);
+        implies_equal(se.op[1], e_nr, progress);
       }
     }
 
@@ -197,11 +203,11 @@ decision_proceduret::resultt solvert::dec_solve()
 
       if(is_equal(se.op[1], true_nr)) // x || true == x
       {
-        progress=implies_equal(se.op[0], e_nr);
+        implies_equal(se.op[0], e_nr, progress);
       }
       else if(is_equal(se.op[0], true_nr)) // true || x == x
       {
-        progress=implies_equal(se.op[1], e_nr);
+        implies_equal(se.op[1], e_nr, progress);
       }
     }
 
@@ -215,11 +221,20 @@ decision_proceduret::resultt solvert::dec_solve()
 
       if(is_equal(se.op[0], true_nr)) // !true == false
       {
-        progress=implies_equal(false_nr, e_nr);
+        implies_equal(false_nr, e_nr, progress);
       }
       else if(is_equal(se.op[0], false_nr)) // !false == true
       {
-        progress=implies_equal(true_nr, e_nr);
+        implies_equal(true_nr, e_nr, progress);
+      }
+
+      if(is_equal(e_nr, true_nr)) // !true == false
+      {
+        implies_equal(false_nr, se.op[0], progress);
+      }
+      else if(is_equal(e_nr, false_nr)) // !false == true
+      {
+        implies_equal(true_nr, se.op[0], progress);
       }
     }
 
@@ -350,16 +365,24 @@ exprt solvert::get(const exprt &expr) const
         return true_exprt();
     }
   }
+  else if(expr.id()==ID_not ||
+          expr.id()==ID_and ||
+          expr.id()==ID_or)
+  {
+    exprt tmp=expr;
+    Forall_operands(it, tmp)
+      *it=get(*it); // recursive call
+    return tmp;
+  }
 
   unsigned nr;
 
   if(!expr_numbering.get_number(expr, nr))
   {
     // equal to some constant?
-    nr=equalities.find(nr);
-    
     for(unsigned i=0; i<equalities.size(); i++)
-      if(expr_numbering[i].is_constant())
+      if(expr_numbering[i].is_constant() &&
+         is_equal(i, nr))
         return expr_numbering[i];
   }
 

@@ -60,13 +60,13 @@ protected:
     equalities.make_union(a, b);
   }
 
-  // make 'a' and 'b' equal, and return 'true'
-  // iff this wasn't the case before
-  inline bool implies_equal(unsigned a, unsigned b)
+  // make 'a' and 'b' equal, and track if
+  // this wasn't the case before
+  inline void implies_equal(unsigned a, unsigned b, bool &progress)
   {
-    if(is_equal(a, b)) return false; // no progres
+    if(is_equal(a, b)) return; // no progres
     equalities.make_union(a, b);
-    return true; // progress!
+    progress=true; // progress!
   }
   
   // a numbering for expressions
