@@ -14,6 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 class message_handlert;
 class indext;
+class optionst;
 
 void show_ssa(
   const indext &index,
@@ -32,6 +33,7 @@ void show_fixed_points(
 
 void show_properties(
   const indext &index,
+  const optionst &options,
   std::ostream &,
   message_handlert &);
 

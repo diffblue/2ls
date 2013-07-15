@@ -6,9 +6,14 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <util/options.h>
+
 #include <goto-programs/read_goto_binary.h>
 #include <goto-programs/goto_model.h>
 #include <goto-programs/show_claims.h>
+#include <goto-programs/set_claims.h>
+
+#include <analyses/goto_check.h>
 
 #include "index.h"
 #include "ssa_domain.h"
@@ -246,6 +251,7 @@ Function: show_properties
 
 void show_properties(
   const indext &index,
+  const optionst &options,
   std::ostream &out,
   message_handlert &message_handler)
 {
@@ -257,6 +263,10 @@ void show_properties(
     // read the file
     goto_modelt model;
     read_goto_binary(id2string(file_it->first), model, message_handler);
+    
+    // add the properties
+    goto_check(options, model);
+    label_claims(model.goto_functions);
     
     show_claims(model, ui_message_handlert::PLAIN);
   }

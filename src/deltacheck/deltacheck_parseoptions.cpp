@@ -302,6 +302,20 @@ int deltacheck_parseoptionst::doit()
       return 0;
     }
 
+    optionst options;
+
+    options.set_option("bounds-check", true);
+    options.set_option("pointer-check", true);
+    options.set_option("div-by-zero-check", true);
+    options.set_option("signed-overflow-check", true);
+    //options.set_option("unsigned-overflow-check", true);
+    options.set_option("undefined-shift-check", true);
+    //options.set_option("float-overflow-check", true);
+    options.set_option("simplify", true);
+    //options.set_option("nan-check", true);
+    options.set_option("assertions", true);
+    options.set_option("assumptions", true);
+    
     if(cmdline.isset("show-properties"))
     {
       if(cmdline.args.size()!=1)
@@ -316,23 +330,9 @@ int deltacheck_parseoptionst::doit()
       status() << "Reading index" << eom;
       index.read(cmdline.args[0]);
 
-      show_properties(index, std::cout, get_message_handler());
+      show_properties(index, options, std::cout, get_message_handler());
       return 0;
     }
-    
-    optionst options;
-
-    options.set_option("bounds-check", true);
-    options.set_option("pointer-check", true);
-    options.set_option("div-by-zero-check", true);
-    options.set_option("signed-overflow-check", true);
-    //options.set_option("unsigned-overflow-check", true);
-    options.set_option("undefined-shift-check", true);
-    //options.set_option("float-overflow-check", true);
-    options.set_option("simplify", true);
-    //options.set_option("nan-check", true);
-    options.set_option("assertions", true);
-    options.set_option("assumptions", true);
     
     if(cmdline.args.size()==2)
     {
