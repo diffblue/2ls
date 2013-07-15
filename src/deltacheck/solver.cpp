@@ -235,7 +235,8 @@ decision_proceduret::resultt solvert::dec_solve()
       {
         implies_equal(se.op[0], e_nr, progress);
       }
-      else if(is_equal(se.op[0], false_nr)) // false || x == x
+
+      if(is_equal(se.op[0], false_nr)) // false || x == x
       {
         implies_equal(se.op[1], e_nr, progress);
       }
@@ -249,13 +250,21 @@ decision_proceduret::resultt solvert::dec_solve()
       unsigned e_nr=*and_it;
       const solver_exprt &se=expr_map[e_nr];
 
-      if(is_equal(se.op[1], true_nr)) // x || true == x
+      if(is_equal(se.op[1], true_nr)) // x && true == x
       {
         implies_equal(se.op[0], e_nr, progress);
       }
-      else if(is_equal(se.op[0], true_nr)) // true || x == x
+      
+      if(is_equal(se.op[0], true_nr)) // true && x == x
       {
         implies_equal(se.op[1], e_nr, progress);
+      }
+
+      if(is_equal(e_nr, true_nr)) // a && b == true -> a==true && b==true
+      {
+        for(std::vector<unsigned>::const_iterator
+            o_it=se.op.begin(); o_it!=se.op.end(); o_it++)
+          implies_equal(*o_it, true_nr, progress);
       }
     }
 
