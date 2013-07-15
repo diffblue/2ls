@@ -9,6 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #define DEBUG
 
 #include <util/decision_procedure.h>
+#include <util/simplify_expr.h>
 
 #include "ssa_data_flow.h"
 #include "solver.h"
@@ -97,7 +98,7 @@ Function: ssa_data_flowt::fixed_point
 void ssa_data_flowt::fixed_point()
 {
   get_backwards_edges();
-  setup_assertions();
+  setup_properties();
 
   iteration_number=0;
   
@@ -115,6 +116,9 @@ void ssa_data_flowt::fixed_point()
     change=iteration();
   }
   while(change);
+
+  // we check the properties once we have the fixed point
+  check_properties();
 }
 
 /*******************************************************************\
@@ -143,14 +147,14 @@ bool ssa_data_flowt::iteration()
       b_it++)
     b_it->pre_predicate.set_to_true(solver);
   
-  // feed in assertions
+  // feed in assertions to aid fixed-point computation
   for(propertiest::const_iterator
       p_it=properties.begin(); p_it!=properties.end(); p_it++)
   {
     #ifdef DEBUG
-    std::cout << "ASSERTION: " << from_expr(p_it->guard) << std::endl;
+    std::cout << "ASSERTION: " << from_expr(p_it->condition) << std::endl;
     #endif
-    solver.add(p_it->guard);
+    solver.add(p_it->condition);
   }
 
   // solve
@@ -193,15 +197,12 @@ bool ssa_data_flowt::iteration()
       change=true;
   }
   
-  if(!change)
-    check_assertions(solver);
-  
   return change;
 }
 
 /*******************************************************************\
 
-Function: ssa_data_flowt::check_assertions
+Function: ssa_data_flowt::check_properties
 
   Inputs:
 
@@ -211,12 +212,48 @@ Function: ssa_data_flowt::check_assertions
 
 \*******************************************************************/
 
-void ssa_data_flowt::check_assertions(solvert &solver)
+void ssa_data_flowt::check_properties()
 {
   for(propertiest::iterator
       p_it=properties.begin(); p_it!=properties.end(); p_it++)
   {
-    exprt g=solver.get(p_it->guard);
+    solvert solver(function_SSA.ns);
+
+    // feed SSA into solver
+    solver << function_SSA;
+
+    // feed in current fixed-point
+    for(backwards_edgest::const_iterator
+        b_it=backwards_edges.begin();
+        b_it!=backwards_edges.end();
+        b_it++)
+      b_it->pre_predicate.set_to_true(solver);
+
+    #ifdef DEBUG
+    std::cout << "GUARD: " << from_expr(function_SSA.ns, "", p_it->guard) << "\n";
+    std::cout << "CHECKING: " << from_expr(function_SSA.ns, "", p_it->condition) << "\n";
+    #endif
+    
+    // feed in the assertion
+    solver.set_to_true(p_it->guard);
+    solver.add(p_it->condition);
+
+    // solve
+    solver.dec_solve();
+   
+    #ifdef DEBUG
+    std::cout << "=======================\n";
+    solver.print_assignment(std::cout);
+    std::cout << "=======================\n";
+    #endif
+
+    exprt g=solver.get(p_it->condition);
+    simplify(g, function_SSA.ns);
+
+    #ifdef DEBUG
+    std::cout << "RESULT: " << from_expr(function_SSA.ns, "", g) << "\n";
+    std::cout << "\n";
+    #endif
 
     tvt status;
     
@@ -228,12 +265,17 @@ void ssa_data_flowt::check_assertions(solvert &solver)
       status=tvt::unknown();
 
     p_it->status=status;
+    
+    #ifdef DEBUG
+    std::cout << "RESULT: " << status << "\n";
+    std::cout << "\n";
+    #endif
   }
 }
 
 /*******************************************************************\
 
-Function: ssa_data_flowt::setup_assertions
+Function: ssa_data_flowt::setup_properties
 
   Inputs:
 
@@ -243,7 +285,7 @@ Function: ssa_data_flowt::setup_assertions
 
 \*******************************************************************/
 
-void ssa_data_flowt::setup_assertions()
+void ssa_data_flowt::setup_properties()
 {
   forall_goto_program_instructions(i_it, function_SSA.goto_function.body)
   {
@@ -251,7 +293,8 @@ void ssa_data_flowt::setup_assertions()
     {
       properties.push_back(propertyt());
       properties.back().loc=i_it;
-      properties.back().guard=function_SSA.read(i_it->guard, i_it);
+      properties.back().condition=function_SSA.read(i_it->guard, i_it);
+      properties.back().guard=function_SSA.guard_symbol(i_it);
     }
   }
 }

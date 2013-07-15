@@ -18,7 +18,7 @@ class propertyt
 public:
   goto_programt::const_targett loc;
   tvt status;
-  exprt guard;
+  exprt guard, condition;
 };
   
 typedef std::list<propertyt> propertiest;

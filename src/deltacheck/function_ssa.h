@@ -59,6 +59,8 @@ public:
   symbol_exprt read(const symbol_exprt &, locationt loc) const;
   symbol_exprt read_in(const symbol_exprt &, locationt loc) const;
   static symbol_exprt guard_symbol();
+  symbol_exprt guard_symbol(locationt loc) const
+  { return name(guard_symbol(), OUT, loc); }
   bool assigns(const symbol_exprt &, locationt loc) const;
 
   const namespacet &ns;

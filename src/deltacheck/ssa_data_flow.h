@@ -52,8 +52,8 @@ protected:
   backwards_edgest backwards_edges;
   void get_backwards_edges();
 
-  void check_assertions(solvert &solver);
-  void setup_assertions();
+  void check_properties();
+  void setup_properties();
 };
 
 #endif
