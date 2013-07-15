@@ -146,7 +146,12 @@ bool ssa_data_flowt::iteration()
   // feed in assertions
   for(propertiest::const_iterator
       p_it=properties.begin(); p_it!=properties.end(); p_it++)
+  {
+    #ifdef DEBUG
+    std::cout << "ASSERTION: " << from_expr(p_it->guard) << std::endl;
+    #endif
     solver.add(p_it->guard);
+  }
 
   // solve
   solver.dec_solve();
