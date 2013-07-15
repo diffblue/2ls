@@ -609,18 +609,20 @@ decision_proceduret & operator << (
   decision_proceduret &dest,
   const function_SSAt &src)
 {
-  for(function_SSAt::nodest::const_iterator
-      n_it=src.nodes.begin();
-      n_it!=src.nodes.end();
-      n_it++)
+  forall_goto_program_instructions(i_it, src.goto_function.body)
   {
+    const function_SSAt::nodest::const_iterator n_it=
+      src.nodes.find(i_it);
+    if(n_it==src.nodes.end()) continue;
+
     for(function_SSAt::nodet::equalitiest::const_iterator
         e_it=n_it->second.equalities.begin();
         e_it!=n_it->second.equalities.end();
         e_it++)
+    {
       dest << *e_it;
+    }
   }
   
   return dest;
 }
-  
