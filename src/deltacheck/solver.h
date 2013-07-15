@@ -33,18 +33,21 @@ public:
   
   inline void set_equal(const exprt &a, const exprt &b)
   {
-    set_equal(add(a), add(b));
+    set_equal(simplify_and_add(a), simplify_and_add(b));
   }
 
-  inline bool is_equal(const exprt &a, const exprt &b) const
+  bool is_equal(const exprt &a, const exprt &b) const;
+  
+  inline void add_expression(const exprt &expr)
   {
-    unsigned a_nr, b_nr;
-    if(expr_numbering.get_number(a, a_nr)) return false;
-    if(expr_numbering.get_number(b, b_nr)) return false;
-    return is_equal(a_nr, b_nr);
+    simplify_and_add(expr);
   }
 
-  // add an expression, returns its handle
+protected:
+  void set_to_rec(const exprt &expr, bool value);
+  unsigned simplify_and_add(const exprt &expr);
+
+  // add a simplified expression, returns its handle
   unsigned add(const exprt &expr)
   {
     unsigned old_size=expr_numbering.size();
@@ -53,7 +56,6 @@ public:
     return nr;
   }
   
-protected:
   // make 'a' and 'b' equal
   inline void set_equal(unsigned a, unsigned b)
   {

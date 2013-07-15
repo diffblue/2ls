@@ -19,12 +19,13 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/expr.h>
 #include <util/std_expr.h>
+#include <util/simplify_expr.h>
 
 #include "solver.h"
 
 /*******************************************************************\
 
-Function: solvert::dec_solve
+Function: solvert::solvert
 
   Inputs:
 
@@ -38,6 +39,50 @@ solvert::solvert(const namespacet &_ns):decision_proceduret(_ns)
 {
   false_nr=add(false_exprt());
   true_nr=add(true_exprt());
+}
+
+/*******************************************************************\
+
+Function: solvert::simplify_and_add
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+unsigned solvert::simplify_and_add(const exprt &expr)
+{
+  exprt tmp=expr;
+  simplify(tmp, ns);
+  return add(tmp);
+}
+
+/*******************************************************************\
+
+Function: solvert::is_equal
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool solvert::is_equal(const exprt &a, const exprt &b) const
+{
+  exprt tmp_a=a, tmp_b=b;
+  
+  simplify(tmp_a, ns);
+  simplify(tmp_b, ns);
+  
+  unsigned a_nr, b_nr;
+  if(expr_numbering.get_number(tmp_a, a_nr)) return false;
+  if(expr_numbering.get_number(tmp_b, b_nr)) return false;
+  return is_equal(a_nr, b_nr);
 }
 
 /*******************************************************************\
@@ -112,9 +157,12 @@ void solvert::new_expression(unsigned nr)
   }
   else if(expr.id()==ID_notequal)
   {
+    #if 0
     // we record x!=y <=> !x==y
     set_equal(not_exprt(equal_exprt(expr.op0(), expr.op1())),
               expr);
+    #endif
+    assert(false);
   }
   else
   {
@@ -315,21 +363,55 @@ Function: solvert::set_to
 
 \*******************************************************************/
 
+#include <iostream>
+
 void solvert::set_to(const exprt &expr, bool value)
+{
+  exprt tmp=expr;
+  simplify(tmp, ns);
+  set_to_rec(tmp, value);
+  
+  std::cout << "SET TO " << value << ": " << from_expr(ns, "", expr) << std::endl;
+}
+  
+/*******************************************************************\
+
+Function: solvert::set_to_rec
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void solvert::set_to_rec(const exprt &expr, bool value)
 {
   if(expr.id()==ID_equal)
   {
+    const equal_exprt &equal_expr=to_equal_expr(expr);
+
     if(value)
-      set_equal(to_equal_expr(expr).lhs(), to_equal_expr(expr).rhs());
+      set_equal(add(equal_expr.lhs()), add(equal_expr.rhs()));
   }
   else if(expr.id()==ID_notequal)
   {
-    if(!value)
-      set_equal(to_notequal_expr(expr).lhs(), to_notequal_expr(expr).rhs());
+    assert(false);
   }
   else if(expr.id()==ID_not)
   {
-    set_to(to_not_expr(expr).op(), !value);
+    set_to_rec(to_not_expr(expr).op(), !value);
+  }
+  else if(expr.id()==ID_and)
+  {
+    if(value)
+    {
+      forall_operands(it, expr)
+        set_to_rec(*it, true);
+    }
+    else
+      set_equal(add(expr), false_nr);
   }
   else
   {
@@ -356,14 +438,9 @@ exprt solvert::get(const exprt &expr) const
   // is it an equality?
   if(expr.id()==ID_equal)
   {
-    unsigned nr0, nr1;
-
-    if(!expr_numbering.get_number(to_equal_expr(expr).lhs(), nr0) &&
-       !expr_numbering.get_number(to_equal_expr(expr).rhs(), nr1))
-    {
-      if(is_equal(nr0, nr1))
-        return true_exprt();
-    }
+    if(is_equal(to_equal_expr(expr).lhs(),
+                to_equal_expr(expr).rhs()))
+      return true_exprt();
   }
   else if(expr.id()==ID_not ||
           expr.id()==ID_and ||
@@ -374,10 +451,13 @@ exprt solvert::get(const exprt &expr) const
       *it=get(*it); // recursive call
     return tmp;
   }
+  
+  exprt tmp=expr;
+  simplify(tmp, ns);
 
   unsigned nr;
 
-  if(!expr_numbering.get_number(expr, nr))
+  if(!expr_numbering.get_number(tmp, nr))
   {
     // equal to some constant?
     for(unsigned i=0; i<equalities.size(); i++)
