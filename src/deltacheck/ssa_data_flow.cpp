@@ -154,7 +154,7 @@ bool ssa_data_flowt::iteration()
     #ifdef DEBUG
     std::cout << "ASSERTION: " << from_expr(p_it->condition) << std::endl;
     #endif
-    solver.add(p_it->condition);
+    solver.add_expression(p_it->condition);
   }
 
   // solve
@@ -236,7 +236,7 @@ void ssa_data_flowt::check_properties()
     
     // feed in the assertion
     solver.set_to_true(p_it->guard);
-    solver.add(p_it->condition);
+    solver.add_expression(p_it->condition);
 
     // solve
     solver.dec_solve();
