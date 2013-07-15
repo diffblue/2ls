@@ -87,7 +87,7 @@ protected:
 
   // lists of expressions with particular IDs  
   typedef std::vector<unsigned> solver_expr_listt;
-  solver_expr_listt if_list, or_list, and_list;
+  solver_expr_listt if_list, or_list, and_list, not_list;
 
   // uninterpreted functions (and predicates), mapping
   // expression id -> to the list of expressions of this kind  

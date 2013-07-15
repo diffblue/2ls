@@ -107,6 +107,8 @@ void solvert::new_expression(unsigned nr)
   }
   else if(expr.id()==ID_not)
   {
+    add_operands(nr);
+    not_list.push_back(nr);
   }
   else
   {
@@ -203,6 +205,24 @@ decision_proceduret::resultt solvert::dec_solve()
       }
     }
 
+    for(solver_expr_listt::const_iterator
+        not_it=not_list.begin();
+        not_it!=not_list.end();
+        not_it++)
+    {
+      unsigned e_nr=*not_it;
+      const solver_exprt &se=expr_map[e_nr];
+
+      if(is_equal(se.op[0], true_nr)) // !true == false
+      {
+        progress=implies_equal(false_nr, e_nr);
+      }
+      else if(is_equal(se.op[0], false_nr)) // !false == true
+      {
+        progress=implies_equal(true_nr, e_nr);
+      }
+    }
+
     for(uf_mapt::const_iterator
         uf_map_it=uf_map.begin();
         uf_map_it!=uf_map.end();
@@ -291,6 +311,10 @@ void solvert::set_to(const exprt &expr, bool value)
   {
     if(!value)
       set_equal(to_notequal_expr(expr).lhs(), to_notequal_expr(expr).rhs());
+  }
+  else if(expr.id()==ID_not)
+  {
+    set_to(to_not_expr(expr).op(), !value);
   }
   else
   {
