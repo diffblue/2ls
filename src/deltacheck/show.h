@@ -18,16 +18,19 @@ class optionst;
 
 void show_ssa(
   const indext &index,
+  const optionst &options,
   std::ostream &,
   message_handlert &);
 
 void show_defs(
   const indext &index,
+  const optionst &options,
   std::ostream &,
   message_handlert &);
 
 void show_fixed_points(
   const indext &index,
+  const optionst &options,
   std::ostream &,
   message_handlert &);
 

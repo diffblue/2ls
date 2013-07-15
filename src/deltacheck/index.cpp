@@ -112,7 +112,8 @@ void indext::index_goto_binary(const irep_idt &file)
     error() << "failed to read `" << file << "'" << eom;
     return;
   }
-
+  
+  // index the functions
   for(goto_functionst::function_mapt::const_iterator
       f_it=goto_model.goto_functions.function_map.begin();
       f_it!=goto_model.goto_functions.function_map.end();

@@ -56,6 +56,7 @@ Function: show_defs
 
 void show_defs(
   const indext &index,
+  const optionst &options,
   std::ostream &out,
   message_handlert &message_handler)
 {
@@ -68,6 +69,11 @@ void show_defs(
     goto_modelt model;
     read_goto_binary(id2string(file_it->first), model, message_handler);
     
+    // add the properties
+    goto_check(options, model);
+    model.goto_functions.update();
+    label_claims(model.goto_functions);
+
     const namespacet ns(model.symbol_table);
     const std::set<irep_idt> &functions=file_it->second;
 
@@ -127,6 +133,7 @@ Function: show_ssa
 
 void show_ssa(
   const indext &index,
+  const optionst &options,
   std::ostream &out,
   message_handlert &message_handler)
 {
@@ -139,6 +146,11 @@ void show_ssa(
     goto_modelt model;
     read_goto_binary(id2string(file_it->first), model, message_handler);
     
+    // add the properties
+    goto_check(options, model);
+    model.goto_functions.update();
+    label_claims(model.goto_functions);
+
     const namespacet ns(model.symbol_table);
     const std::set<irep_idt> &functions=file_it->second;
 
@@ -181,9 +193,7 @@ void show_fixed_point(
   std::ostream &out)
 {
   function_SSAt function_SSA(goto_function, ns);
-
   ssa_data_flowt ssa_data_flow(function_SSA);
-  
   ssa_data_flow.print_invariant(out);
 }
 
@@ -201,6 +211,7 @@ Function: show_fixed_points
 
 void show_fixed_points(
   const indext &index,
+  const optionst &options,
   std::ostream &out,
   message_handlert &message_handler)
 {
@@ -213,6 +224,11 @@ void show_fixed_points(
     goto_modelt model;
     read_goto_binary(id2string(file_it->first), model, message_handler);
     
+    // add the properties
+    goto_check(options, model);
+    model.goto_functions.update();
+    label_claims(model.goto_functions);
+
     const namespacet ns(model.symbol_table);
     const std::set<irep_idt> &functions=file_it->second;
 
@@ -266,6 +282,7 @@ void show_properties(
     
     // add the properties
     goto_check(options, model);
+    model.goto_functions.update();
     label_claims(model.goto_functions);
     
     show_claims(model, ui_message_handlert::PLAIN);
