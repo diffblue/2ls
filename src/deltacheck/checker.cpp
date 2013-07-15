@@ -109,6 +109,7 @@ void deltacheck_checkert::check_function(
   status() << "Generating properties" << eom;
   statistics.start("Properties");
   goto_check(ns, options, f);
+  f.body.update();
   statistics.stop("Properties");
 
   // build SSA
