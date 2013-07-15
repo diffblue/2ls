@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/decision_procedure.h>
 #include <util/union_find.h>
+#include <util/expanding_vector.h>
 
 class solvert:public decision_proceduret
 {
@@ -43,20 +44,24 @@ public:
     return is_equal(a_nr, b_nr);
   }
 
+  // add an expression, returns its handle
   unsigned add(const exprt &expr)
   {
     unsigned old_size=expr_numbering.size();
     unsigned nr=expr_numbering(expr);
-    if(expr_numbering.size()!=old_size) add(nr);
+    if(expr_numbering.size()!=old_size) new_expression(nr);
     return nr;
   }
   
 protected:
+  // make 'a' and 'b' equal
   inline void set_equal(unsigned a, unsigned b)
   {
     equalities.make_union(a, b);
   }
-  
+
+  // make 'a' and 'b' equal, and return 'true'
+  // iff this wasn't the case before
   inline bool implies_equal(unsigned a, unsigned b)
   {
     if(is_equal(a, b)) return false; // no progres
@@ -70,22 +75,35 @@ protected:
   // equality logic
   unsigned_union_find equalities;
   
+  // further data per expression
   struct solver_exprt
   {
-    unsigned e_nr;
+    // the numbers of the operands
     std::vector<unsigned> op;
   };
   
-  typedef std::vector<solver_exprt> solver_expr_listt;
+  typedef expanding_vector<solver_exprt> expr_mapt;
+  expr_mapt expr_map;
+
+  // lists of expressions with particular IDs  
+  typedef std::vector<unsigned> solver_expr_listt;
   solver_expr_listt if_list, or_list, and_list;
-  
+
+  // uninterpreted functions (and predicates), mapping
+  // expression id -> to the list of expressions of this kind  
   typedef std::map<irep_idt, solver_expr_listt> uf_mapt;
   uf_mapt uf_map;
-  
-  solver_exprt convert(unsigned nr);
-  
-  void add(unsigned nr);
 
+  // builds above solver_exprt for given expression  
+  solver_exprt build_solver_expr(unsigned nr);
+
+  // called to recurse over the operands of a new expression
+  void add_operands(unsigned nr);
+
+  // called after new expresion with given number has been added
+  void new_expression(unsigned nr);
+
+  // handy numbers of well-known constants
   unsigned false_nr, true_nr;
   
   inline bool is_equal(unsigned a, unsigned b) const

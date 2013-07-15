@@ -42,7 +42,7 @@ solvert::solvert(const namespacet &_ns):decision_proceduret(_ns)
 
 /*******************************************************************\
 
-Function: solvert::convert
+Function: solvert::add_operands
 
   Inputs:
 
@@ -52,27 +52,27 @@ Function: solvert::convert
 
 \*******************************************************************/
 
-solvert::solver_exprt solvert::convert(unsigned nr)
+void solvert::add_operands(unsigned nr)
 {
   // expr_numbering is a vector, and thus not stable.
-  // We add expressions recursively below.
+  // We will call add recursively below.
   const exprt expr=expr_numbering[nr];
+
   const exprt::operandst &expr_op=expr.operands();
-  
-  solver_exprt dest;
+  std::vector<unsigned> dest;
 
-  dest.e_nr=nr;
-  dest.op.resize(expr_op.size());
+  dest.resize(expr_op.size());
 
-  for(unsigned i=0; i<dest.op.size(); i++)
-    dest.op[i]=add(expr_op[i]);
+  for(unsigned i=0; i<dest.size(); i++)
+    dest[i]=add(expr_op[i]);
 
-  return dest;
+  // store    
+  expr_map[nr].op=dest;
 }
 
 /*******************************************************************\
 
-Function: solvert::add
+Function: solvert::new_expression
 
   Inputs:
 
@@ -82,25 +82,29 @@ Function: solvert::add
 
 \*******************************************************************/
 
-void solvert::add(unsigned nr)
+void solvert::new_expression(unsigned nr)
 {
   // expr_numbering is a vector, and thus not stable.
-  // convert() will add expressions.
   const exprt expr=expr_numbering[nr];
-    
+      
   if(expr.id()==ID_if)
   {
-    solver_exprt solver_expr=convert(nr);
-  
-    if_list.push_back(solver_expr);
+    add_operands(nr);
+    if_list.push_back(nr);
     
     // we also add if-s as UFs (uff!)
-    uf_map[ID_if].push_back(solver_expr);
+    uf_map[ID_if].push_back(nr);
   }
   else if(expr.id()==ID_or)
-    or_list.push_back(convert(nr));
+  {
+    add_operands(nr);
+    or_list.push_back(nr);
+  }
   else if(expr.id()==ID_and)
-    and_list.push_back(convert(nr));
+  {
+    add_operands(nr);
+    and_list.push_back(nr);
+  }
   else if(expr.id()==ID_not)
   {
   }
@@ -108,7 +112,8 @@ void solvert::add(unsigned nr)
   {
     if(expr.has_operands()) // make it uninterpreted
     {
-      uf_map[expr.id()].push_back(convert(nr));
+      add_operands(nr);
+      uf_map[expr.id()].push_back(nr);
       
       #ifdef DEBUG
       std::cout << "UF " << nr << " added: " << expr.id();
@@ -144,18 +149,21 @@ decision_proceduret::resultt solvert::dec_solve()
         if_it!=if_list.end();
         if_it++)
     {
-      if(is_equal(if_it->op[0], false_nr)) // false ? x : y == y
+      unsigned e_nr=*if_it;
+      const solver_exprt &se=expr_map[e_nr];
+
+      if(is_equal(se.op[0], false_nr)) // false ? x : y == y
       {
-        progress=implies_equal(if_it->op[2], if_it->e_nr);
+        progress=implies_equal(se.op[2], e_nr);
       }
-      else if(is_equal(if_it->op[0], true_nr)) // true ? x : y == x
+      else if(is_equal(se.op[0], true_nr)) // true ? x : y == x
       {
-        progress=implies_equal(if_it->op[1], if_it->e_nr);
+        progress=implies_equal(se.op[1], e_nr);
       }
 
-      if(is_equal(if_it->op[2], if_it->op[1])) // c ? x : x == x
+      if(is_equal(se.op[2], se.op[1])) // c ? x : x == x
       {
-        progress=implies_equal(if_it->op[2], if_it->e_nr);
+        progress=implies_equal(se.op[2], e_nr);
       }
     }
     
@@ -164,13 +172,16 @@ decision_proceduret::resultt solvert::dec_solve()
         or_it!=or_list.end();
         or_it++)
     {
-      if(is_equal(or_it->op[1], false_nr)) // x || false == x
+      unsigned e_nr=*or_it;
+      const solver_exprt &se=expr_map[e_nr];
+
+      if(is_equal(se.op[1], false_nr)) // x || false == x
       {
-        progress=implies_equal(or_it->op[0], or_it->e_nr);
+        progress=implies_equal(se.op[0], e_nr);
       }
-      else if(is_equal(or_it->op[0], false_nr)) // false || x == x
+      else if(is_equal(se.op[0], false_nr)) // false || x == x
       {
-        progress=implies_equal(or_it->op[1], or_it->e_nr);
+        progress=implies_equal(se.op[1], e_nr);
       }
     }
 
@@ -179,13 +190,16 @@ decision_proceduret::resultt solvert::dec_solve()
         and_it!=and_list.end();
         and_it++)
     {
-      if(is_equal(and_it->op[1], true_nr)) // x || true == x
+      unsigned e_nr=*and_it;
+      const solver_exprt &se=expr_map[e_nr];
+
+      if(is_equal(se.op[1], true_nr)) // x || true == x
       {
-        progress=implies_equal(and_it->op[0], and_it->e_nr);
+        progress=implies_equal(se.op[0], e_nr);
       }
-      else if(is_equal(and_it->op[0], true_nr)) // true || x == x
+      else if(is_equal(se.op[0], true_nr)) // true || x == x
       {
-        progress=implies_equal(and_it->op[1], and_it->e_nr);
+        progress=implies_equal(se.op[1], e_nr);
       }
     }
 
@@ -210,18 +224,25 @@ decision_proceduret::resultt solvert::dec_solve()
             uf_it2!=uf_list.end();
             uf_it2++)
         {
-          if(uf_it1->op.size()!=uf_it2->op.size()) continue;
-          if(is_equal(uf_it1->e_nr, uf_it2->e_nr)) continue;
+          unsigned e_nr1=*uf_it1, e_nr2=*uf_it2;
+          const solver_exprt &se1=expr_map[e_nr1], 
+                             &se2=expr_map[e_nr2];
+
+          // same number of arguments?        
+          if(se1.op.size()!=se2.op.size()) continue;
+          
+          // already equal?
+          if(is_equal(e_nr1, e_nr2)) continue;
           
           bool all_equal=true;
           
-          for(unsigned i=0; i<uf_it1->op.size(); i++)
+          for(unsigned i=0; i<se1.op.size(); i++)
           {
-            if(!is_equal(uf_it1->op[i], uf_it2->op[i]))
+            if(!is_equal(se1.op[i], se2.op[i]))
             {
               #ifdef DEBUG
               std::cout << "UF check " 
-                        << uf_it1->e_nr << " vs " << uf_it2->e_nr
+                        << e_nr1 << " vs " << e_nr2
                         << ": op " << i << " not equal\n";
               #endif
               all_equal=false;
@@ -235,7 +256,7 @@ decision_proceduret::resultt solvert::dec_solve()
             std::cout << "UF check: " 
                       << uf_it1->e_nr << " = " << uf_it2->e_nr << "\n";
             #endif
-            set_equal(uf_it1->e_nr, uf_it2->e_nr);
+            set_equal(e_nr1, e_nr2);
             progress=true;
           }
         }
