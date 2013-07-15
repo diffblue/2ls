@@ -363,15 +363,11 @@ Function: solvert::set_to
 
 \*******************************************************************/
 
-#include <iostream>
-
 void solvert::set_to(const exprt &expr, bool value)
 {
   exprt tmp=expr;
   simplify(tmp, ns);
   set_to_rec(tmp, value);
-  
-  std::cout << "SET TO " << value << ": " << from_expr(ns, "", expr) << std::endl;
 }
   
 /*******************************************************************\
