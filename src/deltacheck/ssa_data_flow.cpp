@@ -127,6 +127,12 @@ void ssa_data_flowt::fixed_point()
   }
   while(change);
 
+  #ifdef DEBUG
+  std::cout << "Fixedpoint after " << iteration_number
+            << " iteration(s)\n";
+  print_invariant(std::cout);
+  #endif
+
   // we check the properties once we have the fixed point
   check_properties();
 }
@@ -163,12 +169,7 @@ bool ssa_data_flowt::iteration()
   // feed in assertions to aid fixed-point computation
   for(propertiest::const_iterator
       p_it=properties.begin(); p_it!=properties.end(); p_it++)
-  {
-    #ifdef DEBUG
-    std::cout << "ASSERTION: " << from_expr(p_it->condition) << std::endl;
-    #endif
     solver.add_expression(p_it->condition);
-  }
 
   // solve
   solver.dec_solve();
@@ -340,7 +341,8 @@ void ssa_data_flowt::print_invariant(std::ostream &out) const
 
     out << "Pre: ";
     for(predicatet::var_listt::const_iterator
-        v_it=be.pre_predicate.vars.begin(); v_it!=be.pre_predicate.vars.end(); v_it++)
+        v_it=be.pre_predicate.vars.begin();
+        v_it!=be.pre_predicate.vars.end(); v_it++)
       out << " " << v_it->get_identifier();
     out << "\n";
     out << "GSym: " << be.pre_predicate.guard.get_identifier()
@@ -348,7 +350,8 @@ void ssa_data_flowt::print_invariant(std::ostream &out) const
 
     out << "Post:";
     for(predicatet::var_listt::const_iterator
-        v_it=be.post_predicate.vars.begin(); v_it!=be.post_predicate.vars.end(); v_it++)
+        v_it=be.post_predicate.vars.begin();
+        v_it!=be.post_predicate.vars.end(); v_it++)
       out << " " << v_it->get_identifier();
     out << "\n";
     out << "GSym: " << be.post_predicate.guard.get_identifier()
