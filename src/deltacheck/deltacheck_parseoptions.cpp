@@ -252,8 +252,6 @@ int deltacheck_parseoptionst::doit()
       return 0;
     }
     
-    optionst options;
-
     options.set_option("bounds-check", true);
     options.set_option("pointer-check", true);
     options.set_option("div-by-zero-check", true);
