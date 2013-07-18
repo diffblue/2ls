@@ -308,7 +308,9 @@ Function: function_SSAt::read
 
 \*******************************************************************/
 
-symbol_exprt function_SSAt::read(const symbol_exprt &expr, locationt loc) const
+symbol_exprt function_SSAt::read(
+  const symbol_exprt &expr,
+  locationt loc) const
 {
   const irep_idt &identifier=expr.get_identifier();
   const ssa_domaint &ssa_domain=ssa_analysis[loc];
