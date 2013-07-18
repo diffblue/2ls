@@ -522,7 +522,15 @@ void function_SSAt::collect_objects_rec(const exprt &src)
     collect_objects_rec(*it);
   
   if(src.id()==ID_symbol)
-    objects.insert(to_symbol_expr(src));
+  {
+    const typet &type=ns.follow(src.type());
+
+    if(type.id()==ID_code)
+    {
+    }
+    else
+      objects.insert(to_symbol_expr(src));
+  }
 }
 
 /*******************************************************************\
