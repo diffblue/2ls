@@ -45,13 +45,16 @@ void ssa_domaint::output(
       p_it!=phi_nodes.end();
       p_it++)
   {
-    for(std::set<def_entryt>::const_iterator
+    for(std::map<locationt, locationt>::const_iterator
         n_it=p_it->second.begin();
         n_it!=p_it->second.end();
         n_it++)
     {
+      // this maps source -> def
       out << "PHI " << p_it->first << ": "
-          << (*n_it) << "\n";
+          << (*n_it).second->location_number
+          << " from " 
+          << (*n_it).first->location_number << "\n";
     }
   }
 }
@@ -183,10 +186,13 @@ bool ssa_domaint::merge(
         {
           // Arg! Data coming from two different places!
           // Produce new phi node.
-          std::set<def_entryt> &phi_node=phi_nodes[id];
+          std::map<locationt, locationt> &phi_node=phi_nodes[id];
+
+          if(d_it_a->second.def!=to) // not myself?
+            phi_node[d_it_a->second.source]=d_it_a->second.def;
           
-          phi_node.insert(d_it_a->second);
-          phi_node.insert(d_it_b->second);
+          if(d_it_b->second.def!=to) // not myself?
+            phi_node[d_it_b->second.source]=d_it_b->second.def;
           
           // this node is now the new source        
           d_it_a->second.def=to;
@@ -198,7 +204,7 @@ bool ssa_domaint::merge(
           std::cout << "MERGING " << id << ": " << d_it_b->second << "\n";
           #endif
         }
-     }
+      }
       else
       {
         #ifdef DEBUG

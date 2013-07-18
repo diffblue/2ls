@@ -30,7 +30,9 @@ Function: ssa_data_flowt::get_backwards_edge
 
 \*******************************************************************/
 
-ssa_data_flowt::backwards_edget ssa_data_flowt::backwards_edge(locationt from)
+ssa_data_flowt::backwards_edget ssa_data_flowt::backwards_edge(
+  const function_SSAt &function_SSA,
+  locationt from)
 {
   assert(from->is_backwards_goto());
 
@@ -76,10 +78,18 @@ Function: ssa_data_flowt::get_backwards_edges
 
 void ssa_data_flowt::get_backwards_edges()
 {
-  forall_goto_program_instructions(i_it, function_SSA.goto_function.body)
+  // old program
+  forall_goto_program_instructions(i_it, function_SSA_old.goto_function.body)
   {
     if(i_it->is_backwards_goto())
-      backwards_edges.push_back(backwards_edge(i_it));
+      backwards_edges.push_back(backwards_edge(function_SSA_old, i_it));
+  }
+  
+  // new program
+  forall_goto_program_instructions(i_it, function_SSA_new.goto_function.body)
+  {
+    if(i_it->is_backwards_goto())
+      backwards_edges.push_back(backwards_edge(function_SSA_new, i_it));
   }
 }
 
@@ -135,10 +145,13 @@ Function: ssa_data_flowt::iteration
 
 bool ssa_data_flowt::iteration()
 {
-  solvert solver(function_SSA.ns);
+  solvert solver(ns);
 
-  // feed SSA into solver
-  solver << function_SSA;
+  // feed SSA(s) into solver
+  solver << function_SSA_new;
+
+  if(use_old)
+    solver << function_SSA_old;
 
   // feed in current pre-state predicates
   for(backwards_edgest::const_iterator
@@ -217,10 +230,12 @@ void ssa_data_flowt::check_properties()
   for(propertiest::iterator
       p_it=properties.begin(); p_it!=properties.end(); p_it++)
   {
-    solvert solver(function_SSA.ns);
+    solvert solver(ns);
 
     // feed SSA into solver
-    solver << function_SSA;
+    solver << function_SSA_new;
+    
+    if(use_old) solver << function_SSA_old;
 
     // feed in current fixed-point
     for(backwards_edgest::const_iterator
@@ -230,8 +245,8 @@ void ssa_data_flowt::check_properties()
       b_it->pre_predicate.set_to_true(solver);
 
     #ifdef DEBUG
-    std::cout << "GUARD: " << from_expr(function_SSA.ns, "", p_it->guard) << "\n";
-    std::cout << "CHECKING: " << from_expr(function_SSA.ns, "", p_it->condition) << "\n";
+    std::cout << "GUARD: " << from_expr(ns, "", p_it->guard) << "\n";
+    std::cout << "CHECKING: " << from_expr(ns, "", p_it->condition) << "\n";
     #endif
     
     // feed in the assertion
@@ -248,10 +263,10 @@ void ssa_data_flowt::check_properties()
     #endif
 
     exprt g=solver.get(p_it->condition);
-    simplify(g, function_SSA.ns);
+    simplify(g, ns);
 
     #ifdef DEBUG
-    std::cout << "RESULT: " << from_expr(function_SSA.ns, "", g) << "\n";
+    std::cout << "RESULT: " << from_expr(ns, "", g) << "\n";
     std::cout << "\n";
     #endif
 
@@ -287,14 +302,14 @@ Function: ssa_data_flowt::setup_properties
 
 void ssa_data_flowt::setup_properties()
 {
-  forall_goto_program_instructions(i_it, function_SSA.goto_function.body)
+  forall_goto_program_instructions(i_it, function_SSA_new.goto_function.body)
   {
     if(i_it->is_assert())
     {
       properties.push_back(propertyt());
       properties.back().loc=i_it;
-      properties.back().condition=function_SSA.read(i_it->guard, i_it);
-      properties.back().guard=function_SSA.guard_symbol(i_it);
+      properties.back().condition=function_SSA_new.read(i_it->guard, i_it);
+      properties.back().guard=function_SSA_new.guard_symbol(i_it);
     }
   }
 }

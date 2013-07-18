@@ -26,8 +26,6 @@ Function: function_SSAt::build_SSA
 
 \*******************************************************************/
 
-#include <iostream>
-
 void function_SSAt::build_SSA()
 {
   // collect objects
@@ -76,24 +74,25 @@ void function_SSAt::build_phi_nodes(locationt loc)
     if(p_it!=phi_nodes.end())
     {
       // yes
-      const std::set<ssa_domaint::def_entryt> &incoming=p_it->second;
+      // source -> def map
+      const std::map<locationt, locationt> &incoming=p_it->second;
 
       exprt rhs=nil_exprt();
 
       // We distinguish forwards- from backwards-edges,
       // and do forwards-edges first, which gives them
       // _lower_ priority in the ITE.
-
-      for(std::set<ssa_domaint::def_entryt>::const_iterator
+      
+      for(std::map<locationt, locationt>::const_iterator
           incoming_it=incoming.begin();
           incoming_it!=incoming.end();
           incoming_it++)
       {
-        if(incoming_it->source->location_number >= loc->location_number)
+        if(incoming_it->first->location_number >= loc->location_number)
           continue; // it's a backwards-edge
 
-        exprt incoming_value=name(*o_it, OUT, incoming_it->def);
-        exprt incoming_guard=name(guard_symbol(), OUT, incoming_it->source);
+        exprt incoming_value=name(*o_it, OUT, incoming_it->second);
+        exprt incoming_guard=name(guard_symbol(), OUT, incoming_it->first);
 
         if(rhs.is_nil()) // first
           rhs=incoming_value;
@@ -103,12 +102,12 @@ void function_SSAt::build_phi_nodes(locationt loc)
       
       // now do backwards
 
-      for(std::set<ssa_domaint::def_entryt>::const_iterator
+      for(std::map<locationt, locationt>::const_iterator
           incoming_it=incoming.begin();
           incoming_it!=incoming.end();
           incoming_it++)
       {
-        if(incoming_it->source->location_number < loc->location_number)
+        if(incoming_it->first->location_number < loc->location_number)
           continue; // it's a forwards-edge
 
         exprt incoming_value=name(*o_it, LOOP, loc);
@@ -374,14 +373,14 @@ symbol_exprt function_SSAt::read_in(const symbol_exprt &expr, locationt loc) con
           
     if(p_it!=phi_nodes.end())
     {
-      const std::set<ssa_domaint::def_entryt> &incoming=p_it->second;
+      const std::map<locationt, locationt> &incoming=p_it->second;
 
-      for(std::set<ssa_domaint::def_entryt>::const_iterator
+      for(std::map<locationt, locationt>::const_iterator
           incoming_it=incoming.begin();
           incoming_it!=incoming.end();
           incoming_it++)
       {
-        if(incoming_it->source->location_number > loc->location_number)
+        if(incoming_it->first->location_number > loc->location_number)
           has_phi=true;
       }
     }
@@ -564,7 +563,8 @@ void function_SSAt::output(std::ostream &out) const
     const nodest::const_iterator n_it=nodes.find(i_it);
     if(n_it==nodes.end()) continue;
 
-    out << "*** " << i_it->location << "\n";
+    out << "*** " << i_it->location_number
+        << " " << i_it->location << "\n";
     n_it->second.output(out, ns);
     out << "\n";
   }

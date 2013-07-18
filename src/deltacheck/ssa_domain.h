@@ -15,11 +15,10 @@ Author: Daniel Kroening, kroening@kroening.com
 class ssa_domaint:public domain_baset
 {
 public:
-  // identifier to its definition (source) location
+  // definition and source location for an identifier
   struct def_entryt
   {
-    locationt def;
-    locationt source;
+    locationt source, def;
   };
 
   friend inline std::ostream & operator << (
@@ -29,21 +28,12 @@ public:
                << d.source->location_number;
   }
   
-  friend inline bool operator < (
-    const def_entryt &a, const def_entryt &b)
-  {
-    if(a.def==b.def)
-      return a.source < b.source;
-    else
-      return a.def < b.def;
-  }
-  
   typedef std::map<irep_idt, def_entryt> def_mapt;
   def_mapt def_map;
 
-  // the phi nodes map identifiers to the definitions
-  // of the incoming branches
-  typedef std::map<irep_idt, std::set<def_entryt> > phi_nodest;
+  // the phi nodes map identifiers to incoming branches:
+  // map from source to definition
+  typedef std::map<irep_idt, std::map<locationt, locationt> > phi_nodest;
   phi_nodest phi_nodes;
   
   virtual void transform(

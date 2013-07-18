@@ -21,8 +21,25 @@ class ssa_data_flowt
 public:
   typedef function_SSAt::locationt locationt;
 
-  explicit ssa_data_flowt(const function_SSAt &_function_SSA):
-    function_SSA(_function_SSA)
+  explicit ssa_data_flowt(
+    const function_SSAt &_function_SSA_old,
+    const function_SSAt &_function_SSA_new,
+    const namespacet &_ns):
+    function_SSA_old(_function_SSA_old),
+    function_SSA_new(_function_SSA_new),
+    ns(_ns),
+    use_old(true)
+  {
+    fixed_point();
+  }
+
+  explicit ssa_data_flowt(
+    const function_SSAt &_function_SSA,
+    const namespacet &_ns):
+    function_SSA_old(_function_SSA),
+    function_SSA_new(_function_SSA),
+    ns(_ns),
+    use_old(false)
   {
     fixed_point();
   }
@@ -34,7 +51,10 @@ public:
   propertiest properties;
   
 protected:
-  const function_SSAt &function_SSA;
+  const function_SSAt &function_SSA_old;
+  const function_SSAt &function_SSA_new;
+  const namespacet &ns;
+  bool use_old;
   
   void fixed_point();
   bool iteration();
@@ -46,7 +66,8 @@ protected:
     predicatet pre_predicate, post_predicate;
   };
   
-  backwards_edget backwards_edge(locationt loc);
+  backwards_edget backwards_edge(
+    const function_SSAt &function_SSA, locationt loc);
   
   typedef std::vector<backwards_edget> backwards_edgest;
   backwards_edgest backwards_edges;

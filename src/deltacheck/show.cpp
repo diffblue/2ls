@@ -193,7 +193,7 @@ void show_fixed_point(
   std::ostream &out)
 {
   function_SSAt function_SSA(goto_function, ns);
-  ssa_data_flowt ssa_data_flow(function_SSA);
+  ssa_data_flowt ssa_data_flow(function_SSA, ns);
   ssa_data_flow.print_invariant(out);
 }
 

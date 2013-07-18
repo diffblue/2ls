@@ -65,7 +65,7 @@ protected:
     const namespacet &ns,
     std::ostream &file_report);
 
-  void check_function(
+  void check_function_delta(
     // old
     const symbolt &symbol_old,
     goto_functionst::goto_functiont &f_old,
@@ -121,7 +121,7 @@ void deltacheck_checkert::check_function(
   // now do fixed-point
   status() << "Data-flow fixed-point" << eom;
   statistics.start("Fixed-point");
-  ssa_data_flowt ssa_data_flow(function_SSA);
+  ssa_data_flowt ssa_data_flow(function_SSA, ns);
   statistics.stop("Fixed-point");
   
   // now report on assertions
@@ -144,7 +144,7 @@ void deltacheck_checkert::check_function(
 
 /*******************************************************************\
 
-Function: deltacheck_checkert::check_function
+Function: assert_to_assume
 
   Inputs:
 
@@ -154,7 +154,26 @@ Function: deltacheck_checkert::check_function
 
 \*******************************************************************/
 
-void deltacheck_checkert::check_function(
+void assert_to_assume(goto_programt &dest)
+{
+  Forall_goto_program_instructions(i_it, dest)
+    if(i_it->is_assert())
+      i_it->type=ASSUME;
+}
+
+/*******************************************************************\
+
+Function: deltacheck_checkert::check_function_delta
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void deltacheck_checkert::check_function_delta(
   const symbolt &symbol_old,
   goto_functionst::goto_functiont &f_old,
   const namespacet &ns_old,
@@ -166,22 +185,27 @@ void deltacheck_checkert::check_function(
   statistics.number_map["Functions"]++;
   statistics.number_map["LOCs"]+=f.body.instructions.size();
 
-  // add properties
+  // add properties to each
   status() << "Generating properties" << eom;
   statistics.start("Properties");
+  goto_check(ns, options, f_old);
+  f_old.body.update();
+  assert_to_assume(f_old.body);
   goto_check(ns, options, f);
+  f.body.update();
   statistics.stop("Properties");
 
-  // build SSA
+  // build SSA for each
   status() << "Building SSA" << eom;
   statistics.start("SSA");
+  function_SSAt function_SSA_old(f_old, ns, "@old");
   function_SSAt function_SSA(f, ns);
   statistics.stop("SSA");
   
-  // now do fixed-point
-  status() << "Data-flow fixed-point" << eom;
+  // now do _joint_ fixed-point
+  status() << "Joint data-flow fixed-point" << eom;
   statistics.start("Fixed-point");
-  ssa_data_flowt ssa_data_flow(function_SSA);
+  ssa_data_flowt ssa_data_flow(function_SSA_old, function_SSA, ns);
   statistics.stop("Fixed-point");
   
   // now report on assertions
@@ -293,9 +317,10 @@ void deltacheck_checkert::check_all(std::ostream &global_report)
         const namespacet &ns_old=get_old_function.ns;
         const symbolt &symbol_old=ns_old.lookup(id);
 
-        check_function(symbol_old, *index_old_fkt, ns_old,
-                       symbol, *index_fkt, ns,
-                       file_report);
+        check_function_delta(
+          symbol_old, *index_old_fkt, ns_old,
+          symbol,     *index_fkt,     ns,
+          file_report);
       }
       else
         check_function(symbol, *index_fkt, ns, file_report);
@@ -320,6 +345,7 @@ void deltacheck_checkert::check_all(std::ostream &global_report)
   
   result() << "Properties passed: " << statistics.number_map["Passed"] << eom;
   result() << "Properties failed: " << statistics.number_map["Errors"] << eom;
+  result() << "Properties warned: " << statistics.number_map["Unknown"] << eom;
 }
 
 /*******************************************************************\
