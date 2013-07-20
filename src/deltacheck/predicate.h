@@ -43,6 +43,19 @@ public:
   
   void get(const solvert &);
   void set_to_true(solvert &) const;
+  
+  bool is_bottom() const
+  {
+    return is_false;
+  }
+
+  bool is_top() const
+  {
+    if(is_false) return false;
+    for(unsigned i=0; i<uuf.size(); i++)
+      if(uuf.find(i)!=i) return false;
+    return true;
+  }
 
 protected:
   // for now, we can track:
