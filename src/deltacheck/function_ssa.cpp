@@ -49,30 +49,6 @@ void function_SSAt::build_SSA()
 
 /*******************************************************************\
 
-Function: function_SSAt::has_phi_node
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-bool function_SSAt::has_phi_node(
-  const irep_idt &identifier,
-  locationt loc)
-{
-  const ssa_domaint::phi_nodest &phi_nodes=ssa_analysis[loc].phi_nodes;
-
-  ssa_domaint::phi_nodest::const_iterator p_it=
-    phi_nodes.find(identifier);
-          
-   return p_it!=phi_nodes.end();
-}
-
-/*******************************************************************\
-
 Function: function_SSAt::build_phi_nodes
 
   Inputs:
@@ -114,8 +90,8 @@ void function_SSAt::build_phi_nodes(locationt loc)
         if(incoming_it->first->location_number < loc->location_number)
         {
           // it's a forward edge
-          bool from_phi=has_phi_node(o_it->get_identifier(), incoming_it->second);
-          exprt incoming_value=name(*o_it, from_phi?PHI:OUT, incoming_it->second);
+          bool from_out=assigns(*o_it, incoming_it->second);
+          exprt incoming_value=name(*o_it, from_out?OUT:PHI, incoming_it->second);
           exprt incoming_guard=guard_symbol(incoming_it->first);
 
           if(rhs.is_nil()) // first

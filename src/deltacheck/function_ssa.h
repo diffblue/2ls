@@ -84,9 +84,6 @@ protected:
   void build_phi_nodes(locationt loc);
   void build_transfer(locationt loc);
   void build_guard(locationt loc);
-  
-  bool has_phi_node(const irep_idt &identifier,
-                    locationt loc);
 };
 
 class decision_proceduret & operator <<
