@@ -49,6 +49,30 @@ void function_SSAt::build_SSA()
 
 /*******************************************************************\
 
+Function: function_SSAt::has_phi_node
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool function_SSAt::has_phi_node(
+  const irep_idt &identifier,
+  locationt loc)
+{
+  const ssa_domaint::phi_nodest &phi_nodes=ssa_analysis[loc].phi_nodes;
+
+  ssa_domaint::phi_nodest::const_iterator p_it=
+    phi_nodes.find(identifier);
+          
+   return p_it!=phi_nodes.end();
+}
+
+/*******************************************************************\
+
 Function: function_SSAt::build_phi_nodes
 
   Inputs:
@@ -87,37 +111,36 @@ void function_SSAt::build_phi_nodes(locationt loc)
           incoming_it=incoming.begin();
           incoming_it!=incoming.end();
           incoming_it++)
-      {
-        if(incoming_it->first->location_number >= loc->location_number)
-          continue; // it's a backwards-edge
+        if(incoming_it->first->location_number < loc->location_number)
+        {
+          // it's a forward edge
+          bool from_phi=has_phi_node(o_it->get_identifier(), incoming_it->second);
+          exprt incoming_value=name(*o_it, from_phi?PHI:OUT, incoming_it->second);
+          exprt incoming_guard=guard_symbol(incoming_it->first);
 
-        exprt incoming_value=name(*o_it, OUT, incoming_it->second);
-        exprt incoming_guard=name(guard_symbol(), OUT, incoming_it->first);
-
-        if(rhs.is_nil()) // first
-          rhs=incoming_value;
-        else
-          rhs=if_exprt(incoming_guard, incoming_value, rhs);
-      }
-      
+          if(rhs.is_nil()) // first
+            rhs=incoming_value;
+          else
+            rhs=if_exprt(incoming_guard, incoming_value, rhs);
+        }
+       
       // now do backwards
 
       for(std::map<locationt, locationt>::const_iterator
           incoming_it=incoming.begin();
           incoming_it!=incoming.end();
           incoming_it++)
-      {
-        if(incoming_it->first->location_number < loc->location_number)
-          continue; // it's a forwards-edge
+        if(incoming_it->first->location_number >= loc->location_number)
+        {
+          // it's a backwards edge
+          exprt incoming_value=name(*o_it, LOOP, loc);
+          exprt incoming_guard=name(guard_symbol(), LOOP, loc);
 
-        exprt incoming_value=name(*o_it, LOOP, loc);
-        exprt incoming_guard=name(guard_symbol(), LOOP, loc);
-
-        if(rhs.is_nil()) // first
-          rhs=incoming_value;
-        else
-          rhs=if_exprt(incoming_guard, incoming_value, rhs);
-      }
+          if(rhs.is_nil()) // first
+            rhs=incoming_value;
+          else
+            rhs=if_exprt(incoming_guard, incoming_value, rhs);
+        }
 
       symbol_exprt lhs=name(*o_it, PHI, loc);
       
