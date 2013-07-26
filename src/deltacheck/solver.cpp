@@ -157,12 +157,9 @@ void solvert::new_expression(unsigned nr)
   }
   else if(expr.id()==ID_notequal)
   {
-    #if 0
     // we record x!=y <=> !x==y
     set_equal(not_exprt(equal_exprt(expr.op0(), expr.op1())),
               expr);
-    #endif
-    assert(false);
   }
   else
   {
@@ -208,11 +205,11 @@ decision_proceduret::resultt solvert::dec_solve()
       unsigned e_nr=*if_it;
       const solver_exprt &se=expr_map[e_nr];
 
-      if(is_equal(se.op[0], false_nr)) // false ? x : y == y
+      if(is_false(se.op[0])) // false ? x : y == y
       {
         implies_equal(se.op[2], e_nr, progress);
       }
-      else if(is_equal(se.op[0], true_nr)) // true ? x : y == x
+      else if(is_true(se.op[0])) // true ? x : y == x
       {
         implies_equal(se.op[1], e_nr, progress);
       }
@@ -231,12 +228,12 @@ decision_proceduret::resultt solvert::dec_solve()
       unsigned e_nr=*or_it;
       const solver_exprt &se=expr_map[e_nr];
 
-      if(is_equal(se.op[1], false_nr)) // x || false == x
+      if(is_false(se.op[1])) // x || false == x
       {
         implies_equal(se.op[0], e_nr, progress);
       }
 
-      if(is_equal(se.op[0], false_nr)) // false || x == x
+      if(is_false(se.op[0])) // false || x == x
       {
         implies_equal(se.op[1], e_nr, progress);
       }
@@ -250,17 +247,17 @@ decision_proceduret::resultt solvert::dec_solve()
       unsigned e_nr=*and_it;
       const solver_exprt &se=expr_map[e_nr];
 
-      if(is_equal(se.op[1], true_nr)) // x && true == x
+      if(is_true(se.op[1])) // x && true == x
       {
         implies_equal(se.op[0], e_nr, progress);
       }
       
-      if(is_equal(se.op[0], true_nr)) // true && x == x
+      if(is_true(se.op[0])) // true && x == x
       {
         implies_equal(se.op[1], e_nr, progress);
       }
 
-      if(is_equal(e_nr, true_nr)) // a && b == true -> a==true && b==true
+      if(is_true(e_nr)) // a && b == true -> a==true && b==true
       {
         for(std::vector<unsigned>::const_iterator
             o_it=se.op.begin(); o_it!=se.op.end(); o_it++)
@@ -276,20 +273,20 @@ decision_proceduret::resultt solvert::dec_solve()
       unsigned e_nr=*not_it;
       const solver_exprt &se=expr_map[e_nr];
 
-      if(is_equal(se.op[0], true_nr)) // !true == false
+      if(is_true(se.op[0])) // !true == false
       {
         implies_equal(false_nr, e_nr, progress);
       }
-      else if(is_equal(se.op[0], false_nr)) // !false == true
+      else if(is_false(se.op[0])) // !false == true
       {
         implies_equal(true_nr, e_nr, progress);
       }
 
-      if(is_equal(e_nr, true_nr)) // !true == false
+      if(is_true(e_nr)) // !true == false
       {
         implies_equal(false_nr, se.op[0], progress);
       }
-      else if(is_equal(e_nr, false_nr)) // !false == true
+      else if(is_false(e_nr)) // !false == true
       {
         implies_equal(true_nr, se.op[0], progress);
       }
@@ -356,8 +353,25 @@ decision_proceduret::resultt solvert::dec_solve()
     }
   }
   while(progress);
+  
+  // check if we are consistent
 
-  return D_ERROR;
+  for(disequalitiest::const_iterator
+      d_it=disequalities.begin();
+      d_it!=disequalities.end();
+      d_it++)
+  {
+    const std::set<unsigned> &diseq_set=d_it->second;
+  
+    for(std::set<unsigned>::const_iterator
+        diseq_it=diseq_set.begin(); diseq_it!=diseq_set.end(); diseq_it++)
+    {
+      if(is_equal(d_it->first, *diseq_it))
+        return D_UNSATISFIABLE;
+    }
+  }
+
+  return D_SATISFIABLE;
 }
 
 /*******************************************************************\
@@ -396,13 +410,26 @@ void solvert::set_to_rec(const exprt &expr, bool value)
   if(expr.id()==ID_equal)
   {
     const equal_exprt &equal_expr=to_equal_expr(expr);
+    
+    unsigned a=add(equal_expr.lhs()), b=add(equal_expr.rhs());
 
     if(value)
-      set_equal(add(equal_expr.lhs()), add(equal_expr.rhs()));
+      set_equal(a, b);
+    else
+      set_disequal(a, b);
   }
   else if(expr.id()==ID_notequal)
   {
-    assert(false);
+    // flip-image of the case above
+    
+    const notequal_exprt &notequal_expr=to_notequal_expr(expr);
+    
+    unsigned a=add(notequal_expr.lhs()), b=add(notequal_expr.rhs());
+
+    if(value)
+      set_disequal(a, b);
+    else
+      set_equal(a, b);
   }
   else if(expr.id()==ID_not)
   {
@@ -418,8 +445,41 @@ void solvert::set_to_rec(const exprt &expr, bool value)
     else
       set_equal(add(expr), false_nr);
   }
+  else if(expr.id()==ID_le)
+  {
+    assert(expr.operands().size()==2);
+  
+    if(!value)
+      set_to_rec(binary_relation_exprt(expr.op0(), ID_gt, expr.op1()), true);
+    else if(expr.op0().is_constant()) // c <= something
+    {
+      
+    }
+  }
+  else if(expr.id()==ID_lt)
+  {
+    assert(expr.operands().size()==2);
+  
+    if(!value)
+      set_to_rec(binary_relation_exprt(expr.op0(), ID_ge, expr.op1()), true);
+  }
+  else if(expr.id()==ID_ge)
+  {
+    assert(expr.operands().size()==2);
+  
+    if(!value)
+      set_to_rec(binary_relation_exprt(expr.op0(), ID_lt, expr.op1()), true);
+  }
+  else if(expr.id()==ID_gt)
+  {
+    assert(expr.operands().size()==2);
+  
+    if(!value)
+      set_to_rec(binary_relation_exprt(expr.op0(), ID_le, expr.op1()), true);
+  }
   else
   {
+    // just treat as generic predicate
     set_equal(add(expr), value?true_nr:false_nr);
   }
 }
@@ -488,6 +548,8 @@ Function: solvert::print_assignment
 
 void solvert::print_assignment(std::ostream &out) const
 {
+  // equalities
+  
   std::map<unsigned, std::set<unsigned> > equality_map;
   
   for(unsigned i=0; i<expr_numbering.size(); i++)
@@ -512,5 +574,70 @@ void solvert::print_assignment(std::ostream &out) const
       out << "\n";
     }
   }
+  
+  // disequalities
+  
+  for(disequalitiest::const_iterator
+      d_it=disequalities.begin();
+      d_it!=disequalities.end();
+      d_it++)
+  {
+    const std::set<unsigned> &diseq_set=d_it->second;
+  
+    for(std::set<unsigned>::const_iterator
+        diseq_it=diseq_set.begin(); diseq_it!=diseq_set.end(); diseq_it++)
+    {
+      out << "Disequal: "
+          << from_expr(ns, "", expr_numbering[d_it->first])
+          << " != "
+          << from_expr(ns, "", expr_numbering[*diseq_it])
+          << "\n";
+    }
+  }
+  
+  // intervals
+
+  for(integer_intervalst::const_iterator
+      i_it=integer_intervals.begin();
+      i_it!=integer_intervals.end(); i_it++)
+  {
+    const integer_intervalt &interval=*i_it;
+    
+    if(interval.is_top()) continue;
+    
+    out << "Interval: ";
+
+    if(interval.lower_set)
+      out << interval.lower << " <= ";
+
+    out << from_expr(ns, "", expr_numbering[i_it-integer_intervals.begin()]);
+    
+    if(interval.upper_set)
+      out << " <= " << interval.upper;
+    
+    out << "\n";
+  }
+
+  for(ieee_float_intervalst::const_iterator
+      i_it=ieee_float_intervals.begin();
+      i_it!=ieee_float_intervals.end(); i_it++)
+  {
+    const ieee_float_intervalt &interval=*i_it;
+    
+    if(interval.is_top()) continue;
+    
+    out << "Interval: ";
+
+    if(interval.lower_set)
+      out << interval.lower << " <= ";
+
+    out << from_expr(ns, "", expr_numbering[i_it-ieee_float_intervals.begin()]);
+    
+    if(interval.upper_set)
+      out << " <= " << interval.upper;
+    
+    out << "\n";
+  }
+
 }
   

@@ -9,7 +9,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #define DEBUG
 
 #include <util/decision_procedure.h>
-#include <util/simplify_expr.h>
 
 #include "ssa_data_flow.h"
 #include "solver.h"
@@ -252,10 +251,10 @@ void ssa_data_flowt::check_properties()
     
     // feed in the assertion
     solver.set_to_true(p_it->guard);
-    solver.add_expression(p_it->condition);
+    solver.set_to_false(p_it->condition);
 
     // solve
-    solver.dec_solve();
+    decision_proceduret::resultt result=solver.dec_solve();
    
     #ifdef DEBUG
     std::cout << "=======================\n";
@@ -263,19 +262,11 @@ void ssa_data_flowt::check_properties()
     std::cout << "=======================\n";
     #endif
 
-    exprt g=solver.get(p_it->condition);
-    simplify(g, ns);
-
-    #ifdef DEBUG
-    std::cout << "RESULT: " << from_expr(ns, "", g) << "\n";
-    std::cout << "\n";
-    #endif
-
     tvt status;
     
-    if(g.is_true())
+    if(result==decision_proceduret::D_UNSATISFIABLE)
       status=tvt(true);
-    else if(g.is_false())
+    else if(result==decision_proceduret::D_SATISFIABLE)
       status=tvt(false);
     else
       status=tvt::unknown();

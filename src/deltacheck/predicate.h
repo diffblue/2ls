@@ -61,9 +61,14 @@ protected:
   // for now, we can track:
   // * bottom (is_false)
   // * equalities between variables
+  // * intervals
 
   bool is_false;
   unsigned_union_find uuf;
+  typedef expanding_vector<integer_intervalt> integer_intervalst;
+  typedef expanding_vector<ieee_float_intervalt> ieee_float_intervalst;
+  integer_intervalst integer_intervals;
+  ieee_float_intervalst ieee_float_intervals;
 };
 
 static inline std::ostream & operator << (

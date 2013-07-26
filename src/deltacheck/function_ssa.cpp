@@ -265,14 +265,10 @@ void function_SSAt::build_guard(locationt loc)
     }
   }
   
-  exprt rhs;
-  
   if(sources.empty())
     return;
-  else if(sources.size()==1)
-    rhs=sources.front();
-  else
-    rhs=or_exprt(sources);
+
+  exprt rhs=disjunction(sources);
 
   equal_exprt equality(name(guard_symbol(), OUT, loc), rhs);
   nodes[loc].equalities.push_back(equality);

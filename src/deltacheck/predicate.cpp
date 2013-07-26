@@ -93,6 +93,8 @@ void predicatet::output(std::ostream &out) const
   }
   else
   {
+    // print equalities in pretty way
+    
     std::map<unsigned, unsigned> eq_count;
     
     for(unsigned v=0; v<vars.size(); v++)
@@ -106,6 +108,24 @@ void predicatet::output(std::ostream &out) const
         for(unsigned v=0; v<vars.size(); v++)
           if(e_it->first==uuf.find(v))
             out << "Equal: " << from_expr(vars[v]) << "\n";
+        out << "\n";
+      }
+    }
+    
+    // print intervals
+    for(intervalst::const_iterator
+        i_it=intervals.begin(); i_it!=intervals.end(); i_it++)
+    {
+      if(i_it->lower_is_set || i_it->upper_is_set)
+      {
+        if(i_it->lower_is_set)
+          out << from_expr(i_it->lower) << " <= ";
+          
+        out << from_expr(vars[i_it-intervals.begin()]);
+          
+        if(i_it->upper_is_set)
+          out << " <= " << from_expr(i_it->lower);
+          
         out << "\n";
       }
     }

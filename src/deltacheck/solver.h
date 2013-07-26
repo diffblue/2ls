@@ -9,9 +9,13 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_DELTACHECK_SOLVER_H
 #define CPROVER_DELTACHECK_SOLVER_H
 
+#include <set>
+
 #include <util/decision_procedure.h>
 #include <util/union_find.h>
 #include <util/expanding_vector.h>
+
+#include <analyses/intervals.h>
 
 class solvert:public decision_proceduret
 {
@@ -77,6 +81,29 @@ protected:
   // equality logic
   unsigned_union_find equalities;
   
+  inline bool is_equal(unsigned a, unsigned b) const
+  {
+    return equalities.find(a)==equalities.find(b);
+  }
+  
+  // disequalities; the smaller index is the key
+  typedef std::map<unsigned, std::set<unsigned> > disequalitiest;
+  disequalitiest disequalities;
+  
+  inline bool is_disequal(unsigned a, unsigned b) const
+  {
+    if(a>b) std::swap(a, b);
+    disequalitiest::const_iterator it=disequalities.find(a);
+    if(it==disequalities.end()) return false;
+    return it->second.find(b)!=it->second.end();
+  }
+
+  void set_disequal(unsigned a, unsigned b)
+  {
+    if(a>b) std::swap(a, b);
+    disequalities[a].insert(b);
+  }
+
   // further data per expression
   struct solver_exprt
   {
@@ -108,10 +135,21 @@ protected:
   // handy numbers of well-known constants
   unsigned false_nr, true_nr;
   
-  inline bool is_equal(unsigned a, unsigned b) const
+  inline bool is_true(unsigned a) const
   {
-    return equalities.find(a)==equalities.find(b);
+    return is_equal(a, true_nr);
   }
+
+  inline bool is_false(unsigned a) const
+  {
+    return is_equal(a, false_nr);
+  }
+
+  // interval domain
+  typedef expanding_vector<integer_intervalt> integer_intervalst;
+  typedef expanding_vector<ieee_float_intervalt> ieee_float_intervalst;
+  ieee_float_intervalst ieee_float_intervals;
+  integer_intervalst integer_intervals;
 };
 
 #endif
