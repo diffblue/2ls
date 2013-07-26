@@ -144,25 +144,6 @@ void deltacheck_analyzert::check_function(
 
 /*******************************************************************\
 
-Function: assert_to_assume
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void assert_to_assume(goto_programt &dest)
-{
-  Forall_goto_program_instructions(i_it, dest)
-    if(i_it->is_assert())
-      i_it->type=ASSUME;
-}
-
-/*******************************************************************\
-
 Function: deltacheck_analyzert::check_function_delta
 
   Inputs:
@@ -177,35 +158,37 @@ void deltacheck_analyzert::check_function_delta(
   const symbolt &symbol_old,
   goto_functionst::goto_functiont &f_old,
   const namespacet &ns_old,
-  const symbolt &symbol,
-  goto_functionst::goto_functiont &f,
+  const symbolt &symbol_new,
+  goto_functionst::goto_functiont &f_new,
   const namespacet &ns,
   std::ostream &file_report)
 {
   statistics.number_map["Functions"]++;
-  statistics.number_map["LOCs"]+=f.body.instructions.size();
+  statistics.number_map["LOCs"]+=f_new.body.instructions.size();
 
   // add properties to each
   status() << "Generating properties" << eom;
   statistics.start("Properties");
   goto_check(ns, options, f_old);
   f_old.body.update();
-  assert_to_assume(f_old.body);
-  goto_check(ns, options, f);
-  f.body.update();
+  goto_check(ns, options, f_new);
+  f_new.body.update();
   statistics.stop("Properties");
 
   // build SSA for each
   status() << "Building SSA" << eom;
   statistics.start("SSA");
   function_SSAt function_SSA_old(f_old, ns, "@old");
-  function_SSAt function_SSA(f, ns);
+  function_SSAt function_SSA_new(f_new, ns);
   statistics.stop("SSA");
+
+  // add assertions in old as constraints
+  function_SSA_old.assertions_to_constraints();
   
   // now do _joint_ fixed-point
   status() << "Joint data-flow fixed-point" << eom;
   statistics.start("Fixed-point");
-  ssa_data_flowt ssa_data_flow(function_SSA_old, function_SSA, ns);
+  ssa_data_flowt ssa_data_flow(function_SSA_old, function_SSA_new, ns);
   statistics.stop("Fixed-point");
   
   // now report on assertions
@@ -213,7 +196,8 @@ void deltacheck_analyzert::check_function_delta(
   statistics.start("Reporting");
   html_report(ssa_data_flow.properties, file_report);  
   extract_source(index_old.path_prefix, symbol_old.location, f_old.body,
-                 index.path_prefix, symbol.location, f.body, ssa_data_flow.properties,
+                 index.path_prefix,     symbol_new.location, f_new.body,
+                 ssa_data_flow.properties,
                  file_report, get_message_handler());
   file_report << "\n";
   statistics.stop("Reporting");

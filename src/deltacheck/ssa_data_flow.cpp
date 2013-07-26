@@ -29,6 +29,80 @@ Function: ssa_data_flowt::get_backwards_edge
 
 \*******************************************************************/
 
+void ssa_data_flowt::tie_inputs_together(decision_proceduret &dest)
+{
+  // the following are inputs:
+  // 1) the parameters of the functions
+  // 2) any global objects mentioned
+  // 3) the guard at the entry point
+
+  if(function_SSA_old.goto_function.body.empty() ||
+     function_SSA_new.goto_function.body.empty())
+    return;
+    
+  goto_programt::const_targett l_old=
+    function_SSA_old.goto_function.body.instructions.begin();
+
+  goto_programt::const_targett l_new=
+    function_SSA_new.goto_function.body.instructions.begin();
+    
+  // 1) parameters
+  
+  const code_typet::parameterst &p_new=
+    function_SSA_new.goto_function.type.parameters();
+    
+  const code_typet::parameterst &p_old=
+    function_SSA_old.goto_function.type.parameters();
+
+  for(unsigned p=0; p<p_new.size(); p++)
+    if(p<p_old.size() &&
+       p_old[p].type()==p_new[p].type())
+    {
+      symbol_exprt s_old(p_old[p].get_identifier(), p_old[p].type());
+      symbol_exprt s_new(p_new[p].get_identifier(), p_new[p].type());
+      s_old=function_SSA_old.read(s_old, l_old);
+      s_new=function_SSA_new.read(s_new, l_new);
+
+      dest.set_to_true(equal_exprt(s_old, s_new));
+    }
+    
+  // 2) globals
+  
+  for(function_SSAt::objectst::const_iterator
+      it=function_SSA_new.objects.begin();
+      it!=function_SSA_new.objects.end();
+      it++)
+  {
+    const symbol_exprt &s=to_symbol_expr(*it);
+    const symbolt &symbol=ns.lookup(s);
+    if(!symbol.is_static_lifetime || !symbol.is_lvalue) continue;
+    if(function_SSA_old.objects.find(s)==
+       function_SSA_old.objects.end()) continue;
+    
+    symbol_exprt s_new=function_SSA_new.read(s, l_new);
+    symbol_exprt s_old=function_SSA_old.read(s, l_old);
+
+    dest.set_to_true(equal_exprt(s_old, s_new));
+  }
+
+  // 3) guard
+  dest.set_to_true(
+    equal_exprt(function_SSA_old.guard_symbol(l_old),
+                function_SSA_new.guard_symbol(l_new)));
+}
+
+/*******************************************************************\
+
+Function: ssa_data_flowt::get_backwards_edge
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
 ssa_data_flowt::backwards_edget ssa_data_flowt::backwards_edge(
   const function_SSAt &function_SSA,
   locationt from)
@@ -156,7 +230,10 @@ bool ssa_data_flowt::iteration()
   solver << function_SSA_new;
 
   if(use_old)
+  {
     solver << function_SSA_old;
+    tie_inputs_together(solver);
+  }
 
   // feed in current pre-state predicates
   for(backwards_edgest::const_iterator
@@ -235,7 +312,11 @@ void ssa_data_flowt::check_properties()
     // feed SSA into solver
     solver << function_SSA_new;
     
-    if(use_old) solver << function_SSA_old;
+    if(use_old)
+    {
+      solver << function_SSA_old;
+      tie_inputs_together(solver);
+    }
 
     // feed in current fixed-point
     for(backwards_edgest::const_iterator

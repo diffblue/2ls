@@ -56,6 +56,7 @@ protected:
   const namespacet &ns;
   bool use_old;
   
+  void tie_inputs_together(decision_proceduret &dest);
   void fixed_point();
   bool iteration();
   void initialize_invariant();

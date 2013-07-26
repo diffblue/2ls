@@ -40,20 +40,25 @@ public:
   public:
     typedef std::vector<equal_exprt> equalitiest;
     equalitiest equalities;
-    exprt guard;
+
+    typedef std::vector<exprt> constraintst;
+    constraintst constraints;
     
     typedef std::set<locationt> incomingt;
     incomingt incoming;
     
     void output(std::ostream &, const namespacet &) const;
   };
+  
+  // turns the assertions in the function into constraints
+  void assertions_to_constraints();
 
   // all the SSA nodes  
   typedef std::map<locationt, nodet> nodest;
   nodest nodes;
 
   // auxiliary functions
-  enum kindt { PHI, OUT, LOOP };
+  enum kindt { PHI, OUT, LOOP, INPUT };
   symbol_exprt name(const symbol_exprt &, kindt kind, locationt loc) const;
   exprt read(const exprt &, locationt loc) const;
   symbol_exprt read(const symbol_exprt &, locationt loc) const;
@@ -66,6 +71,7 @@ public:
   const namespacet &ns;
   const goto_functiont &goto_function;
 
+  // the objects accessed
   typedef std::set<symbol_exprt> objectst;
   objectst objects;
   

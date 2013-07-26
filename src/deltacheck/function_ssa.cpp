@@ -276,6 +276,30 @@ void function_SSAt::build_guard(locationt loc)
 
 /*******************************************************************\
 
+Function: function_SSAt::assertions_to_constraints
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: turns assertions into constraints
+
+\*******************************************************************/
+
+void function_SSAt::assertions_to_constraints()
+{
+  forall_goto_program_instructions(i_it, goto_function.body)
+  {
+    if(i_it->is_assert())
+    {
+      exprt c=read(i_it->guard, i_it);
+      nodes[i_it].constraints.push_back(c);
+    }
+  }  
+}
+
+/*******************************************************************\
+
 Function: function_SSAt::guard_symbol
 
   Inputs:
@@ -315,8 +339,8 @@ symbol_exprt function_SSAt::read(
 
   if(d_it==ssa_domain.def_map.end())
   {
-    // not written so far
-    return expr;
+    // not written so far, it's input
+    return name(expr, INPUT, goto_function.body.instructions.begin());
   }
   else
   {
@@ -324,9 +348,9 @@ symbol_exprt function_SSAt::read(
     
     // reading from PHI node or OUT?
     if(assigns(expr, def) && def!=loc)
-      return name(to_symbol_expr(expr), OUT, def);
+      return name(expr, OUT, def);
     else
-      return name(to_symbol_expr(expr), PHI, def);
+      return name(expr, PHI, def);
   }
 }
 
@@ -438,10 +462,16 @@ symbol_exprt function_SSAt::name(
   symbol_exprt new_symbol_expr=symbol; // copy
   const irep_idt &old_id=symbol.get_identifier();
   unsigned cnt=loc->location_number;
-  irep_idt new_id=id2string(old_id)+"#"+
-                  (kind==PHI?"phi":(kind==LOOP?"loop":""))+
-                  i2string(cnt)+
-                  suffix;
+  irep_idt new_id;
+  
+  if(kind==INPUT)
+    new_id=id2string(old_id)+suffix;
+  else
+    new_id=id2string(old_id)+"#"+
+           (kind==PHI?"phi":(kind==LOOP?"loop":""))+
+           i2string(cnt)+
+           suffix;
+
   new_symbol_expr.set_identifier(new_id);
   return new_symbol_expr;
 }
@@ -596,6 +626,13 @@ void function_SSAt::nodet::output(
       e_it!=equalities.end();
       e_it++)
     out << from_expr(ns, "", *e_it) << "\n";
+
+  for(constraintst::const_iterator
+      e_it=constraints.begin();
+      e_it!=constraints.end();
+      e_it++)
+    out << from_expr(ns, "", *e_it) << "\n";
+
 }
 
 /*******************************************************************\
@@ -626,6 +663,14 @@ decision_proceduret & operator << (
         e_it++)
     {
       dest << *e_it;
+    }
+
+    for(function_SSAt::nodet::constraintst::const_iterator
+        c_it=n_it->second.constraints.begin();
+        c_it!=n_it->second.constraints.end();
+        c_it++)
+    {
+      dest << *c_it;
     }
   }
   
