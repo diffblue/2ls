@@ -12,13 +12,13 @@ Author: Daniel Kroening, kroening@kroening.com
 class message_handlert;
 class indext;
 
-void delta_check(
+void deltacheck_analyzer(
   const indext &index1,
   const indext &index2,
   const optionst &options,
   message_handlert &);
 
-void one_program_check(
+void one_program_analyzer(
   const indext &index,
   const optionst &options,
   message_handlert &);

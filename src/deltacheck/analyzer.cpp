@@ -15,7 +15,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/goto_model.h>
 #include <analyses/goto_check.h>
 
-#include "checker.h"
 #include "index.h"
 #include "html_report.h"
 #include "get_function.h"
@@ -23,11 +22,12 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "html_escape.h"
 #include "statistics.h"
 #include "extract_source.h"
+#include "analyzer.h"
 
-class deltacheck_checkert:public messaget
+class deltacheck_analyzert:public messaget
 {
 public:
-  deltacheck_checkert(
+  deltacheck_analyzert(
     const indext &_index,
     const optionst &_options,
     message_handlert &message_handler):
@@ -37,7 +37,7 @@ public:
   {
   }
   
-  deltacheck_checkert(
+  deltacheck_analyzert(
     const indext &_index_old,
     const indext &_index,
     const optionst &_options,
@@ -86,7 +86,7 @@ protected:
 
 /*******************************************************************\
 
-Function: deltacheck_checkert::check_function
+Function: deltacheck_analyzert::check_function
 
   Inputs:
 
@@ -96,7 +96,7 @@ Function: deltacheck_checkert::check_function
 
 \*******************************************************************/
 
-void deltacheck_checkert::check_function(
+void deltacheck_analyzert::check_function(
   const symbolt &symbol,
   goto_functionst::goto_functiont &f,
   const namespacet &ns,
@@ -163,7 +163,7 @@ void assert_to_assume(goto_programt &dest)
 
 /*******************************************************************\
 
-Function: deltacheck_checkert::check_function_delta
+Function: deltacheck_analyzert::check_function_delta
 
   Inputs:
 
@@ -173,7 +173,7 @@ Function: deltacheck_checkert::check_function_delta
 
 \*******************************************************************/
 
-void deltacheck_checkert::check_function_delta(
+void deltacheck_analyzert::check_function_delta(
   const symbolt &symbol_old,
   goto_functionst::goto_functiont &f_old,
   const namespacet &ns_old,
@@ -227,7 +227,7 @@ void deltacheck_checkert::check_function_delta(
 
 /*******************************************************************\
 
-Function: deltacheck_checkert::check_all
+Function: deltacheck_analyzert::check_all
 
   Inputs:
 
@@ -237,7 +237,7 @@ Function: deltacheck_checkert::check_all
 
 \*******************************************************************/
 
-void deltacheck_checkert::check_all(std::ostream &global_report)
+void deltacheck_analyzert::check_all(std::ostream &global_report)
 {
   // we do this by file in the index
 
@@ -350,7 +350,7 @@ void deltacheck_checkert::check_all(std::ostream &global_report)
 
 /*******************************************************************\
 
-Function: deltacheck_checkert::collect_statistics
+Function: deltacheck_analyzert::collect_statistics
 
   Inputs:
 
@@ -360,7 +360,7 @@ Function: deltacheck_checkert::collect_statistics
 
 \*******************************************************************/
 
-void deltacheck_checkert::collect_statistics(const propertiest &properties)
+void deltacheck_analyzert::collect_statistics(const propertiest &properties)
 {
   for(propertiest::const_iterator
       p_it=properties.begin();
@@ -387,7 +387,7 @@ void deltacheck_checkert::collect_statistics(const propertiest &properties)
 
 /*******************************************************************\
 
-Function: deltacheck_checkert::operator()
+Function: deltacheck_analyzert::operator()
 
   Inputs:
 
@@ -397,7 +397,7 @@ Function: deltacheck_checkert::operator()
 
 \*******************************************************************/
 
-void deltacheck_checkert::operator()()
+void deltacheck_analyzert::operator()()
 {
   std::string report_file_name="deltacheck.html";
   std::ofstream out(report_file_name.c_str());
@@ -424,7 +424,7 @@ void deltacheck_checkert::operator()()
 
 /*******************************************************************\
 
-Function: one_program_check
+Function: one_program_analyzer
 
   Inputs:
 
@@ -434,18 +434,18 @@ Function: one_program_check
 
 \*******************************************************************/
 
-void one_program_check(
+void one_program_analyzer(
   const indext &index,
   const optionst &options,
   message_handlert &message_handler)
 {
-  deltacheck_checkert checker(index, options, message_handler);
+  deltacheck_analyzert checker(index, options, message_handler);
   checker();
 }  
 
 /*******************************************************************\
 
-Function: delta_check
+Function: deltacheck_analyzer
 
   Inputs:
 
@@ -455,12 +455,12 @@ Function: delta_check
 
 \*******************************************************************/
 
-void delta_check(
+void deltacheck_analyzer(
   const indext &index1,
   const indext &index2,
   const optionst &options,
   message_handlert &message_handler)
 {
-  deltacheck_checkert checker(index1, index2, options, message_handler);
+  deltacheck_analyzert checker(index1, index2, options, message_handler);
   checker();
 }

@@ -113,8 +113,9 @@ void predicatet::output(std::ostream &out) const
     }
     
     // print intervals
-    for(intervalst::const_iterator
-        i_it=intervals.begin(); i_it!=intervals.end(); i_it++)
+    #if 0
+    for(integer_intervalst::const_iterator
+        i_it=integer_intervals.begin(); i_it!=integer_intervals.end(); i_it++)
     {
       if(i_it->lower_is_set || i_it->upper_is_set)
       {
@@ -129,6 +130,7 @@ void predicatet::output(std::ostream &out) const
         out << "\n";
       }
     }
+    #endif
   }
 }
 

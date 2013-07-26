@@ -23,7 +23,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "deltacheck_parseoptions.h"
 #include "version.h"
 #include "index.h"
-#include "checker.h"
+#include "analyzer.h"
 #include "show.h"
 #include "versioning.h"
 
@@ -341,7 +341,7 @@ int deltacheck_parseoptionst::doit()
       index1.read(cmdline.args[0]);
       index2.read(cmdline.args[1]);
 
-      delta_check(index1, index2, options, get_message_handler());
+      deltacheck_analyzer(index1, index2, options, get_message_handler());
     }
     else if(cmdline.args.size()==1)
     {
@@ -350,7 +350,7 @@ int deltacheck_parseoptionst::doit()
   
       index.read(cmdline.args[0]);
 
-      one_program_check(index, options, get_message_handler());
+      one_program_analyzer(index, options, get_message_handler());
     }
     else
     {
