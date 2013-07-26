@@ -20,6 +20,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/expr.h>
 #include <util/std_expr.h>
 #include <util/simplify_expr.h>
+#include <util/arith_tools.h>
 
 #include "solver.h"
 
@@ -248,14 +249,23 @@ decision_proceduret::resultt solvert::dec_solve()
     {
       if(!is_true(i)) continue;
       if(expr_map[i].predicate_processed) continue;
+
+      // remember we have done it
+      expr_map[i].predicate_processed=true;
       
       const exprt &expr=expr_numbering[i];
       
+      #ifdef DEBUG
+      std::cout << "RUMMAGE true: " << from_expr(ns, "", expr) << std::endl;
+      #endif
+      
       if(expr.id()==ID_equal)
       {
-        unsigned a=add(to_equal_expr(expr).lhs()),
-                 b=add(to_equal_expr(expr).rhs());
-        implies_equal(a, b, progress);
+        const equal_exprt &equal_expr=to_equal_expr(expr);
+        const exprt &lhs=equal_expr.lhs();
+        const exprt &rhs=equal_expr.rhs();
+      
+        implies_equal(add(lhs), add(rhs), progress);
       }
       else if(expr.id()==ID_le)
       {
@@ -264,15 +274,81 @@ decision_proceduret::resultt solvert::dec_solve()
         if(expr.op0().is_constant()) // c <= something
           bound(to_constant_expr(expr.op0()), expr.op1(), WEAK, LOWER, progress);
         else if(expr.op1().is_constant()) // something <= c
-          bound(to_constant_expr(expr.op0()), expr.op1(), WEAK, UPPER, progress);
+          bound(to_constant_expr(expr.op1()), expr.op0(), WEAK, UPPER, progress);
       }
       else if(expr.id()==ID_lt)
       {
         if(expr.op0().is_constant()) // c < something
           bound(to_constant_expr(expr.op0()), expr.op1(), STRICT, LOWER, progress);
         else if(expr.op1().is_constant()) // something < c
-          bound(to_constant_expr(expr.op0()), expr.op1(), STRICT, UPPER, progress);
+          bound(to_constant_expr(expr.op1()), expr.op0(), STRICT, UPPER, progress);
       }
+    }
+
+    // rummage through things that are equal to 'false'
+    // and that we haven't processed yet
+
+    for(unsigned i=0; i<equalities.size(); i++)
+    {
+      if(!is_false(i)) continue;
+      if(expr_map[i].predicate_processed) continue;
+
+      // remember we have done it
+      expr_map[i].predicate_processed=true;
+      
+      const exprt &expr=expr_numbering[i];
+      
+      #ifdef DEBUG
+      std::cout << "RUMMAGE false: " << from_expr(ns, "", expr) << std::endl;
+      #endif
+      
+      if(expr.id()==ID_equal)
+      {
+        const equal_exprt &equal_expr=to_equal_expr(expr);
+        const exprt &lhs=equal_expr.lhs();
+        const exprt &rhs=equal_expr.rhs();
+      
+        set_disequal(add(lhs), add(rhs));
+        progress=true;
+      }
+      else if(expr.id()==ID_le)
+      {
+        assert(expr.operands().size()==2);
+        
+        if(expr.op0().is_constant()) // ! c <= something
+          bound(to_constant_expr(expr.op0()), expr.op1(), STRICT, UPPER, progress);
+        else if(expr.op1().is_constant()) // ! something <= c
+          bound(to_constant_expr(expr.op1()), expr.op0(), STRICT, LOWER, progress);
+      }
+      else if(expr.id()==ID_lt)
+      {
+        if(expr.op0().is_constant()) // ! c < something
+          bound(to_constant_expr(expr.op0()), expr.op1(), WEAK, UPPER, progress);
+        else if(expr.op1().is_constant()) // ! something < c
+          bound(to_constant_expr(expr.op1()), expr.op0(), WEAK, LOWER, progress);
+      }
+    }
+
+    // Add bounds around constants.
+    for(unsigned i=0; i<expr_numbering.size(); i++)
+    {
+      const exprt &e=expr_numbering[i];
+      if(e.is_constant())
+      {
+        bound(to_constant_expr(e), e, WEAK, LOWER, progress);
+        bound(to_constant_expr(e), e, WEAK, UPPER, progress);
+      }
+    }
+
+    // Rummage through things that are equal,
+    // and make the bounds meet. Should really use triggers for this.
+    for(unsigned i=0; i<expr_numbering.size(); i++)
+    {
+      unsigned root=equalities.find(i);
+      if(integer_intervals[root].meet(integer_intervals[i])) progress=true;
+      if(integer_intervals[i].meet(integer_intervals[root])) progress=true;
+      if(ieee_float_intervals[root].meet(ieee_float_intervals[i])) progress=true;
+      if(ieee_float_intervals[i].meet(ieee_float_intervals[root])) progress=true;
     }
 
     for(solver_expr_listt::const_iterator
@@ -421,7 +497,7 @@ decision_proceduret::resultt solvert::dec_solve()
           {
             #ifdef DEBUG
             std::cout << "UF check: " 
-                      << uf_it1->e_nr << " = " << uf_it2->e_nr << "\n";
+                      << e_nr1 << " = " << e_nr2 << "\n";
             #endif
             set_equal(e_nr1, e_nr2);
             progress=true;
@@ -447,6 +523,12 @@ decision_proceduret::resultt solvert::dec_solve()
       if(is_equal(d_it->first, *diseq_it))
         return D_UNSATISFIABLE;
     }
+  }
+  
+  for(unsigned i=0; i<expr_numbering.size(); i++)
+  {
+    if(integer_intervals[i].is_bottom()) return D_UNSATISFIABLE;
+    if(ieee_float_intervals[i].is_bottom()) return D_UNSATISFIABLE;
   }
 
   return D_SATISFIABLE;
@@ -523,38 +605,6 @@ void solvert::set_to_rec(const exprt &expr, bool value)
     else
       set_equal(add(expr), false_nr);
   }
-  else if(expr.id()==ID_le)
-  {
-    assert(expr.operands().size()==2);
-  
-    if(!value)
-      set_to_rec(binary_relation_exprt(expr.op0(), ID_gt, expr.op1()), true);
-    else if(expr.op0().is_constant()) // c <= something
-    {
-      
-    }
-  }
-  else if(expr.id()==ID_lt)
-  {
-    assert(expr.operands().size()==2);
-  
-    if(!value)
-      set_to_rec(binary_relation_exprt(expr.op0(), ID_ge, expr.op1()), true);
-  }
-  else if(expr.id()==ID_ge)
-  {
-    assert(expr.operands().size()==2);
-  
-    if(!value)
-      set_to_rec(binary_relation_exprt(expr.op0(), ID_lt, expr.op1()), true);
-  }
-  else if(expr.id()==ID_gt)
-  {
-    assert(expr.operands().size()==2);
-  
-    if(!value)
-      set_to_rec(binary_relation_exprt(expr.op0(), ID_le, expr.op1()), true);
-  }
   else
   {
     // just treat as generic predicate
@@ -574,12 +624,57 @@ Function: solvert::bound
 
 \*******************************************************************/
 
-void solvert::bound(const constant_exprt &bound,
-                    const exprt &what,
-                    weak_strictt weak_strict,
-                    lower_uppert lower_upper,
-                    bool &progress)
+void solvert::bound(
+  const constant_exprt &bound,
+  const exprt &what,
+  weak_strictt weak_strict,
+  lower_uppert lower_upper,
+  bool &progress)
 {
+  const typet &type=bound.type();
+  
+  if(type.id()==ID_signedbv || type.id()==ID_unsignedbv)
+  {
+    mp_integer int_val;
+    if(to_integer(bound, int_val)) return;
+    
+    if(weak_strict==STRICT)
+    {
+      if(lower_upper==LOWER)
+        ++int_val; // c < x ==> c+1 <= x
+      else
+        --int_val; // x < c ==> x <= c-1
+    }
+    
+    integer_intervalt new_interval;
+    
+    if(lower_upper==LOWER)
+      new_interval.set_lower(int_val);
+    else
+      new_interval.set_upper(int_val);
+
+    integer_intervalt &interval=integer_intervals[add(what)];
+    
+    if(interval.meet(new_interval))
+      progress=true;
+  }
+  else if(type.id()==ID_floatbv)
+  {
+    ieee_floatt float_val(bound);
+    if(weak_strict!=WEAK) return;
+
+    ieee_float_intervalt new_interval;
+    
+    if(lower_upper==LOWER)
+      new_interval.set_lower(float_val);
+    else
+      new_interval.set_upper(float_val);
+
+    ieee_float_intervalt &interval=ieee_float_intervals[add(what)];
+
+    if(interval.meet(new_interval))
+      progress=true;
+  }
 }
 
 /*******************************************************************\
