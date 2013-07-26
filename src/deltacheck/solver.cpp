@@ -509,6 +509,9 @@ decision_proceduret::resultt solvert::dec_solve()
   while(progress);
   
   // check if we are consistent
+  
+  if(is_equal(true_nr, false_nr))
+    return D_UNSATISFIABLE;
 
   for(disequalitiest::const_iterator
       d_it=disequalities.begin();
