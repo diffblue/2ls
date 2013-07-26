@@ -549,11 +549,8 @@ Function: solvert::set_to
 
 \*******************************************************************/
 
-#include <iostream>
-
 void solvert::set_to(const exprt &expr, bool value)
 {
-  std::cout << "SET_TO " << value << ": " << from_expr(ns, "", expr) << "\n";
   exprt tmp=expr;
   simplify(tmp, ns);
   set_to_rec(tmp, value);
