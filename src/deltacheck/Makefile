@@ -28,8 +28,9 @@ include $(CBMC)/src/common
 INCLUDES= -I $(CBMC)/src \
   -I $(CUDD)/cudd -I $(CUDD)/obj -I $(CUDD)/mtr -I $(CUDD)/epd
 
-LIBS = $(CUDD)/cudd/libcudd.a $(CUDD)/mtr/libmtr.a \
-       $(CUDD)/st/libst.a $(CUDD)/epd/libepd.a $(CUDD)/util/libutil.a
+LIBS =
+#LIBS = $(CUDD)/cudd/libcudd.a $(CUDD)/mtr/libmtr.a \
+#       $(CUDD)/st/libst.a $(CUDD)/epd/libepd.a $(CUDD)/util/libutil.a
 
 # $(CUDD)/obj/libobj.a 
 
