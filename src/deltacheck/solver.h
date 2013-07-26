@@ -37,29 +37,25 @@ public:
   
   inline void set_equal(const exprt &a, const exprt &b)
   {
-    set_equal(simplify_and_add(a), simplify_and_add(b));
+    set_equal(add(a), add(b));
   }
 
   bool is_equal(const exprt &a, const exprt &b) const;
   
   inline void add_expression(const exprt &expr)
   {
-    simplify_and_add(expr);
+    add(expr);
   }
 
 protected:
   void set_to_rec(const exprt &expr, bool value);
-  unsigned simplify_and_add(const exprt &expr);
-
-  // add a simplified expression, returns its handle
-  unsigned add(const exprt &expr)
-  {
-    unsigned old_size=expr_numbering.size();
-    unsigned nr=expr_numbering(expr);
-    if(expr_numbering.size()!=old_size) new_expression(nr);
-    return nr;
-  }
   
+  // simplify and add expression, return its handle
+  unsigned add(const exprt &expr);
+
+  // recursively add a simplified expression, returns its handle
+  unsigned add_rec(const exprt &expr);
+
   // make 'a' and 'b' equal
   inline void set_equal(unsigned a, unsigned b)
   {
@@ -74,6 +70,16 @@ protected:
     equalities.make_union(a, b);
     progress=true; // progress!
   }
+  
+  // add a bound, and track if this is a new bound
+  enum weak_strictt { WEAK, STRICT };
+  enum lower_uppert { LOWER, UPPER };
+  
+  void bound(const constant_exprt &bound,
+             const exprt &what,
+             weak_strictt weak_strict,
+             lower_uppert lower_upper,
+             bool &progress);
   
   // a numbering for expressions
   numbering<exprt> expr_numbering;
@@ -109,6 +115,12 @@ protected:
   {
     // the numbers of the operands
     std::vector<unsigned> op;
+    
+    bool predicate_processed;
+    
+    solver_exprt():predicate_processed(false)
+    {
+    }
   };
   
   typedef expanding_vector<solver_exprt> expr_mapt;

@@ -43,7 +43,7 @@ solvert::solvert(const namespacet &_ns):decision_proceduret(_ns)
 
 /*******************************************************************\
 
-Function: solvert::simplify_and_add
+Function: solvert::add
 
   Inputs:
 
@@ -53,11 +53,55 @@ Function: solvert::simplify_and_add
 
 \*******************************************************************/
 
-unsigned solvert::simplify_and_add(const exprt &expr)
+unsigned solvert::add(const exprt &expr)
 {
   exprt tmp=expr;
   simplify(tmp, ns);
-  return add(tmp);
+  return add_rec(tmp);
+}
+
+/*******************************************************************\
+
+Function: solvert::add_rec
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+unsigned solvert::add_rec(const exprt &expr)
+{
+  // we do a mild bit of canonicalization
+  
+  if(expr.id()==ID_ge)
+  {
+    // rewrite x>=y to y<=x
+    exprt tmp=expr;
+    tmp.id(ID_le);
+    assert(tmp.operands().size()==2);
+    std::swap(tmp.op0(), tmp.op1());
+    return add_rec(tmp);
+  }
+  else if(expr.id()==ID_gt)
+  {
+    // rewrite x>y to y<x
+    exprt tmp=expr;
+    tmp.id(ID_lt);
+    assert(tmp.operands().size()==2);
+    std::swap(tmp.op0(), tmp.op1());
+    return add_rec(tmp);
+  }
+
+  unsigned old_size=expr_numbering.size();
+  unsigned nr=expr_numbering(expr);
+  
+  // new? do recursion
+  if(expr_numbering.size()!=old_size) new_expression(nr);
+
+  return nr;
 }
 
 /*******************************************************************\
@@ -109,7 +153,7 @@ void solvert::add_operands(unsigned nr)
   dest.resize(expr_op.size());
 
   for(unsigned i=0; i<dest.size(); i++)
-    dest[i]=add(expr_op[i]);
+    dest[i]=add_rec(expr_op[i]);
 
   // store    
   expr_map[nr].op=dest;
@@ -196,6 +240,40 @@ decision_proceduret::resultt solvert::dec_solve()
   do
   {  
     progress=false;
+    
+    // rummage through things that are equal to 'true'
+    // and that we haven't processed yet
+
+    for(unsigned i=0; i<equalities.size(); i++)
+    {
+      if(!is_true(i)) continue;
+      if(expr_map[i].predicate_processed) continue;
+      
+      const exprt &expr=expr_numbering[i];
+      
+      if(expr.id()==ID_equal)
+      {
+        unsigned a=add(to_equal_expr(expr).lhs()),
+                 b=add(to_equal_expr(expr).rhs());
+        implies_equal(a, b, progress);
+      }
+      else if(expr.id()==ID_le)
+      {
+        assert(expr.operands().size()==2);
+        
+        if(expr.op0().is_constant()) // c <= something
+          bound(to_constant_expr(expr.op0()), expr.op1(), WEAK, LOWER, progress);
+        else if(expr.op1().is_constant()) // something <= c
+          bound(to_constant_expr(expr.op0()), expr.op1(), WEAK, UPPER, progress);
+      }
+      else if(expr.id()==ID_lt)
+      {
+        if(expr.op0().is_constant()) // c < something
+          bound(to_constant_expr(expr.op0()), expr.op1(), STRICT, LOWER, progress);
+        else if(expr.op1().is_constant()) // something < c
+          bound(to_constant_expr(expr.op0()), expr.op1(), STRICT, UPPER, progress);
+      }
+    }
 
     for(solver_expr_listt::const_iterator
         if_it=if_list.begin();
@@ -484,6 +562,26 @@ void solvert::set_to_rec(const exprt &expr, bool value)
   }
 }
   
+/*******************************************************************\
+
+Function: solvert::bound
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void solvert::bound(const constant_exprt &bound,
+                    const exprt &what,
+                    weak_strictt weak_strict,
+                    lower_uppert lower_upper,
+                    bool &progress)
+{
+}
+
 /*******************************************************************\
 
 Function: solvert::get
