@@ -419,6 +419,7 @@ void deltacheck_parseoptionst::help()
     "Delta checking options:\n"
     " --show-ssa                   show SSA\n"
     " --show-properties            show the properties\n"
+    " --show-fixed-points          show the fixed-points for the loops\n"
     "\n"    
     "Other options:\n"
     " --version                    show version and exit\n"
