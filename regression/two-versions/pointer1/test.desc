@@ -3,5 +3,5 @@ new.o
 old.o
 ^EXIT=0$
 ^SIGNAL=0$
-^Properties passed: 2$
+^Properties passed: 14$
 ^Properties failed: 0$
