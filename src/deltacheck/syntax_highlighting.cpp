@@ -9,6 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 // may wish to try http://www.gnu.org/software/src-highlite/
 
 #include <ostream>
+#include <cstring>
 
 #include "html_escape.h"
 #include "syntax_highlighting.h"
