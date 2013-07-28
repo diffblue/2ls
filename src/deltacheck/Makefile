@@ -3,10 +3,10 @@ CBMC ?= ../..
 
 SRC = deltacheck_main.cpp deltacheck_parseoptions.cpp index.cpp \
       get_function.cpp function_ssa.cpp predicate.cpp versioning.cpp \
-      ssa_domain.cpp ssa_data_flow.cpp html_escape.cpp \
+      ssa_domain.cpp ssa_data_flow.cpp html_escape.cpp source_diff.cpp \
       html_report.cpp logo.cpp analyzer.cpp syntax_highlighting.cpp \
-      solver.cpp show.cpp properties.cpp \
-      extract_source.cpp statistics.cpp \
+      solver.cpp show.cpp properties.cpp report_source_code.cpp \
+      get_source.cpp statistics.cpp \
       $(CBMC)/src/cbmc/xml_interface.cpp
 
 OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \

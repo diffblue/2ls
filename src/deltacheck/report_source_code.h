@@ -1,13 +1,13 @@
 /*******************************************************************\
 
-Module: Extract Source for HTML
+Module: Source Code Reporting
 
 Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef CPROVER_EXTRACT_SOURCE_H
-#define CPROVER_EXTRACT_SOURCE_H
+#ifndef CPROVER_REPORT_SOURCE_CODE_H
+#define CPROVER_REPORT_SOURCE_CODE_H
 
 #include <ostream>
 
@@ -16,7 +16,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "properties.h"
 
-void extract_source(
+void report_source_code(
   const std::string &path_prefix,
   const locationt &location,
   const goto_programt &goto_program,
@@ -24,7 +24,7 @@ void extract_source(
   std::ostream &,
   message_handlert &);
 
-void extract_source(
+void report_source_code(
   const std::string &path_prefix_old,
   const locationt &location_old,
   const goto_programt &goto_program_old,

@@ -21,7 +21,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "ssa_data_flow.h"
 #include "html_escape.h"
 #include "statistics.h"
-#include "extract_source.h"
+#include "report_source_code.h"
 #include "analyzer.h"
 
 class deltacheck_analyzert:public messaget
@@ -128,7 +128,7 @@ void deltacheck_analyzert::check_function(
   status() << "Reporting" << eom;
   statistics.start("Reporting");
   html_report(ssa_data_flow.properties, file_report);  
-  extract_source(
+  report_source_code(
     index.path_prefix, symbol.location, f.body,
     ssa_data_flow.properties, file_report,
     get_message_handler());
@@ -195,10 +195,11 @@ void deltacheck_analyzert::check_function_delta(
   status() << "Reporting" << eom;
   statistics.start("Reporting");
   html_report(ssa_data_flow.properties, file_report);  
-  extract_source(index_old.path_prefix, symbol_old.location, f_old.body,
-                 index.path_prefix,     symbol_new.location, f_new.body,
-                 ssa_data_flow.properties,
-                 file_report, get_message_handler());
+  report_source_code(
+    index_old.path_prefix, symbol_old.location, f_old.body,
+    index.path_prefix,     symbol_new.location, f_new.body,
+    ssa_data_flow.properties,
+    file_report, get_message_handler());
   file_report << "\n";
   statistics.stop("Reporting");
   
