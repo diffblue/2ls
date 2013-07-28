@@ -348,7 +348,10 @@ void ssa_data_flowt::check_properties()
     if(result==decision_proceduret::D_UNSATISFIABLE)
       status=tvt(true);
     else if(result==decision_proceduret::D_SATISFIABLE)
+    {
       status=tvt(false);
+      generate_countermodel(*p_it, solver);
+    }
     else
       status=tvt::unknown();
 
@@ -358,6 +361,65 @@ void ssa_data_flowt::check_properties()
     std::cout << "RESULT: " << status << "\n";
     std::cout << "\n";
     #endif
+  }
+}
+
+/*******************************************************************\
+
+Function: ssa_data_flowt::setup_properties
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void ssa_data_flowt::generate_countermodel(
+  propertyt &property,
+  const decision_proceduret &solver)
+{
+  // collect values of lhs of all SSA nodes
+  
+  for(function_SSAt::nodest::const_iterator
+      n_it=function_SSA_new.nodes.begin();
+      n_it!=function_SSA_new.nodes.end();
+      n_it++)
+  {
+    const function_SSAt::nodet &node=n_it->second;
+    for(function_SSAt::nodet::equalitiest::const_iterator
+        e_it=node.equalities.begin();
+        e_it!=node.equalities.end();
+        e_it++)
+    {
+      exprt lhs=e_it->lhs();
+      exprt value=solver.get(lhs);
+      if(value.is_not_nil())
+        property.value_map[lhs]=value;
+    }
+  }
+  
+  if(use_old)
+  {
+    for(function_SSAt::nodest::const_iterator
+        n_it=function_SSA_old.nodes.begin();
+        n_it!=function_SSA_old.nodes.end();
+        n_it++)
+    {
+      const function_SSAt::nodet &node=n_it->second;
+      for(function_SSAt::nodet::equalitiest::const_iterator
+          e_it=node.equalities.begin();
+          e_it!=node.equalities.end();
+          e_it++)
+      {
+        exprt lhs=e_it->lhs();
+        exprt value=solver.get(lhs);
+        if(value.is_not_nil())
+          property.value_map[lhs]=value;
+      }
+    }
+    
   }
 }
 

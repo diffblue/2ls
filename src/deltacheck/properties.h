@@ -19,6 +19,10 @@ public:
   goto_programt::const_targett loc;
   tvt status;
   exprt guard, condition;
+  
+  // in case of failed properties: countermodel
+  typedef std::map<exprt, exprt> value_mapt;
+  value_mapt value_map;
 };
   
 typedef std::list<propertyt> propertiest;

@@ -293,7 +293,9 @@ void function_SSAt::assertions_to_constraints()
     if(i_it->is_assert())
     {
       exprt c=read(i_it->guard, i_it);
-      nodes[i_it].constraints.push_back(c);
+      exprt g=guard_symbol(i_it);
+      implies_exprt implication(g, c);
+      nodes[i_it].constraints.push_back(implication);
     }
   }  
 }

@@ -391,6 +391,12 @@ decision_proceduret::resultt solvert::dec_solve()
       {
         implies_equal(se.op[1], e_nr, progress);
       }
+
+      if(is_false(e_nr)) // !(x || y) ===> !x, !y
+      {
+        for(unsigned i=0; i<se.op.size(); i++)
+          implies_equal(se.op[i], false_nr, progress);
+      }
     }
 
     for(solver_expr_listt::const_iterator

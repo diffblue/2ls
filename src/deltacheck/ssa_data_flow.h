@@ -55,12 +55,14 @@ protected:
   const function_SSAt &function_SSA_new;
   const namespacet &ns;
   bool use_old;
-  
+
+  // fixed-point computation  
   void tie_inputs_together(decision_proceduret &dest);
   void fixed_point();
   bool iteration();
   void initialize_invariant();
 
+  // CFG cycles
   struct backwards_edget
   {
     locationt from, to;
@@ -74,8 +76,12 @@ protected:
   backwards_edgest backwards_edges;
   void get_backwards_edges();
 
+  // properties
   void check_properties();
   void setup_properties();
+  void generate_countermodel(
+    propertyt &property,
+    const decision_proceduret &solver);
 };
 
 #endif
