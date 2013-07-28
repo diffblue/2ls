@@ -28,8 +28,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "extract_source.h"
 #include "html_escape.h"
-
-// may wish to try http://www.gnu.org/software/src-highlite/
+#include "syntax_highlighting.h"
 
 /*******************************************************************\
 
@@ -47,237 +46,6 @@ void fast_forward(unsigned lines, std::istream &in)
 {
   for(unsigned int i=0; i<lines; ++i)
     in.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-}
-
-/*******************************************************************\
-
-Function: is_keyword
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-const char *keywords[]=
-{ 
-  "auto", "_Bool", "break", "case", "char", "_Complex", "const", "continue",
-  "default", "do", "double", "else", "enum", "extern", "float", "for",
-  "goto", "if", "inline", "int", "long", "register", "restrict", "return",
-  "short", "signed", "sizeof", "static", "struct", "switch", "typedef",
-  "union", "unsigned", "void", "volatile", "while", "__float128",
-  "__int128", "__int8", "__int16", "__int32", "__int64", "__ptr32",
-  "__ptr64", "__complex__", "__complex", "__real__" , "__real", "__imag__" ,
-  "__imag", "offsetof", "__asm", "asm", "__asm__", "bool", "catch", "class",
-  "constexpr", "delete", "decltype", "explicit", "friend", "mutable",
-  "namespace", "new", "nullptr", "operator", "private", "protected",
-  "public", "static_assert", "template", "this", "thread_local", "throw",
-  "typeid", "typename", "using", "virtual", "wchar_t", "typeof", NULL
-};
-
-bool is_keyword(const std::string &token)
-{
-  for(unsigned i=0; keywords[i]!=NULL; i++)
-  {
-    if(strcmp(keywords[i], token.c_str())==0)
-      return true;
-  }
-  
-  return false;
-}
-  
-/*******************************************************************\
-
-Function: source_token
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-const char *tokens[]=
-{ "++", "+=", "--", "-=", "&&", "&=", "||", "|=", "/*",
-  "*/", "//", "%=", "/=", "<<", ">>", "<<=", ">>=", "==",
-  "!=", "<=", ">=", "::", "->", "##", ".*", "->*", NULL };
-  
-class tokenizert
-{
-public:
-  explicit tokenizert(const std::string &_buf):buf(_buf)
-  {
-  }
-  
-  std::string get();
-  std::string peek();
-  std::string buf;
-};
-
-std::string tokenizert::peek()
-{
-  if(buf.empty()) return buf;
-
-  char first=buf[0];
-  
-  unsigned pos=1;
-  
-  if(isalnum(first))
-  {
-    // identifier or keyword or number
-    for(pos=1; pos<buf.size() && isalnum(buf[pos]); pos++);
-  }
-  else if(first=='"' || first=='\'')
-  {
-    // string literal or character literal
-    while(pos<buf.size())
-    {
-      if(buf[pos]==first)
-        break; // end
-      else if(buf[pos]=='\\' && (pos+1)<buf.size()) // escape
-        pos+=2;
-      else
-        pos++;
-    }
-  }
-  else
-  {
-    for(pos=1; pos<buf.size(); pos++)
-    {
-      bool match=false;
-    
-      for(unsigned t=0; tokens[t]!=NULL; t++)
-      {
-        if(strncmp(tokens[t], buf.c_str(), pos)==0)
-        {
-          match=true;
-          break;
-        }
-      }
-
-      // no more matches
-      if(!match)
-      {
-        if(pos!=1) pos--;
-        break;
-      }
-    }
-  }
-  
-  return buf.substr(0, pos);
-}
-
-std::string tokenizert::get()
-{
-  std::string result=peek();
-  buf.erase(0, result.size());
-  return result;
-}
-
-/*******************************************************************\
-
-Function: html_formattert
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-class html_formattert
-{
-public:
-  explicit html_formattert(std::ostream &_out):
-    different(false), out(_out), comment(false) { }
-    
-  bool different;
-  unsigned line_no;
-  std::string id_suffix;
-    
-  void operator()(const std::string &line);
-
-protected:
-  std::ostream &out;
-  bool comment;
-};
-
-void html_formattert::operator()(const std::string &line)
-{
-  tokenizert tokenizer(line);
-  std::string token;
-  
-  while(true)
-  {
-    token=tokenizer.peek();
-    if(token==" ") out << tokenizer.get(); else break;
-  }
-
-  // open tags  
-  if(different) out << "<strong class=\"different\">";
-  if(comment) out << "<cite>";
-  
-  while(!(token=tokenizer.get()).empty())
-  {
-    if(comment)
-    {
-      out << html_escape(token);
-      if(token=="*/")
-      {
-        out << "</cite>";
-        comment=false;
-      }
-    }
-    else
-    {
-      if(isdigit(token[0])) // numeral
-      {
-        out << token;
-      }
-      else if(isalpha(token[0]))
-      {
-        if(is_keyword(token))
-          out << "<em>" << token << "</em>";
-        else
-        {
-          out << "<var onMouseOver=\"var_tooltip('"
-              << token << id_suffix << "', " << line_no << ");\""
-                 " onMouseOut=\"tooltip.hide();\""
-                 ">"
-              << token
-              << "</var>";
-        }
-      }
-      else if(token=="/*")
-      {
-        comment=true;
-        out << "<cite>" << token;
-      }
-      else if(token=="//")
-      {
-        out << "<cite>" << token;
-        while(!(token=tokenizer.get()).empty())
-          out << html_escape(token);
-        out << "</cite>";
-      }
-      else if(token[0]=='"' || token[0]=='\'')
-      {
-        out << "<kbd>" << html_escape(token) << "</kbd>";
-      }
-      else
-        out << html_escape(token);
-    }
-  }
-
-  // close tags  
-  if(comment) out << "</cite>";
-  if(different) out << "</strong>";
-  
-  out << "\n";
 }
 
 /*******************************************************************\
@@ -466,13 +234,13 @@ void extract_source(
   
   out << "<td class=\"code\"><pre>\n";
   
-  html_formattert html_formatter(out);
+  syntax_highlightingt syntax_highlighting(out);
   
   for(std::list<linet>::const_iterator
       l_it=lines.begin(); l_it!=lines.end(); l_it++)
   {
-    html_formatter.line_no=l_it->line_no;
-    html_formatter(l_it->line);
+    syntax_highlighting.line_no=l_it->line_no;
+    syntax_highlighting(l_it->line);
   }
   
   out << "</pre></td></tr>\n";
@@ -737,16 +505,16 @@ void extract_source(
   out << "<td class=\"code\"><pre>\n";
 
   {  
-    html_formattert html_formatter(out);
+    syntax_highlightingt syntax_highlighting(out);
     
     for(l_old_it=lines_old.begin(), l_it=lines.begin();
         l_old_it!=lines_old.end() && l_it!=lines.end();
         l_old_it++, l_it++)
     {
-      html_formatter.different=(l_old_it->line!=l_it->line);
-      html_formatter.line_no=l_it->line_no;
-      html_formatter.id_suffix="_old";
-      html_formatter(l_old_it->line);
+      syntax_highlighting.different=(l_old_it->line!=l_it->line);
+      syntax_highlighting.line_no=l_it->line_no;
+      syntax_highlighting.id_suffix="_old";
+      syntax_highlighting(l_old_it->line);
     }
   }
   
@@ -789,15 +557,15 @@ void extract_source(
   out << "<td class=\"code\"><pre>\n";
   
   {
-    html_formattert html_formatter(out);
+    syntax_highlightingt syntax_highlighting(out);
   
     for(l_old_it=lines_old.begin(), l_it=lines.begin();
         l_old_it!=lines_old.end() && l_it!=lines.end();
         l_old_it++, l_it++)
     {
-      html_formatter.different=(l_old_it->line!=l_it->line);
-      html_formatter.line_no=l_it->line_no;
-      html_formatter(l_it->line);
+      syntax_highlighting.different=(l_old_it->line!=l_it->line);
+      syntax_highlighting.line_no=l_it->line_no;
+      syntax_highlighting(l_it->line);
     }
   }
   
