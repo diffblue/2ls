@@ -10,6 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <fstream>
 #include <cctype>
+#include <cstdlib>
 
 #ifdef DEBUG
 #include <iostream>
