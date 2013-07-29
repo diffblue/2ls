@@ -241,7 +241,10 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
     
     errors_in_file=unknown_in_file=passed_in_file=0;
     
-    std::string file_report_name=id2string(file_it->first)+".deltacheck.html";
+    std::string file_suffix=
+      use_index_old?".deltacheck-diff.html":".deltacheck.html";
+    
+    std::string file_report_name=id2string(file_it->first)+file_suffix;
     std::ofstream file_report(file_report_name.c_str());
     
     if(!file_report)
@@ -384,7 +387,10 @@ Function: deltacheck_analyzert::operator()
 
 void deltacheck_analyzert::operator()()
 {
-  std::string report_file_name="deltacheck.html";
+  std::string file_suffix=
+    use_index_old?".deltacheck-diff.html":".deltacheck.html";
+
+  std::string report_file_name=file_suffix;
   std::ofstream out(report_file_name.c_str());
   
   if(!out)
