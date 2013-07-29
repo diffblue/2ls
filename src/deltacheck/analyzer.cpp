@@ -33,18 +33,18 @@ public:
     message_handlert &message_handler):
     messaget(message_handler),
     use_index_old(false),
-    index_old(dummy_index_old), index(_index), options(_options)
+    index_old(dummy_index_old), index_new(_index), options(_options)
   {
   }
   
   deltacheck_analyzert(
     const indext &_index_old,
-    const indext &_index,
+    const indext &_index_new,
     const optionst &_options,
     message_handlert &message_handler):
     messaget(message_handler),
     use_index_old(true),
-    index_old(_index_old), index(_index), options(_options)
+    index_old(_index_old), index_new(_index_new), options(_options)
   {
   }
   
@@ -56,7 +56,7 @@ protected:
   bool use_index_old;
   indext dummy_index_old;
   const indext &index_old;
-  const indext &index;
+  const indext &index_new;
   const optionst &options;
   
   void check_function(
@@ -129,7 +129,7 @@ void deltacheck_analyzert::check_function(
   statistics.start("Reporting");
   html_report(ssa_data_flow.properties, file_report);  
   report_source_code(
-    index.path_prefix, symbol.location, f.body,
+    index_new.path_prefix, symbol.location, f.body,
     ssa_data_flow.properties, file_report,
     get_message_handler());
   file_report << "\n";
@@ -192,12 +192,18 @@ void deltacheck_analyzert::check_function_delta(
   statistics.stop("Fixed-point");
   
   // now report on assertions
+  std::string description_old=
+    index_old.description==""?"old version":index_old.description;
+
+  std::string description_new=
+    index_new.description==""?"new version":index_new.description;
+  
   status() << "Reporting" << eom;
   statistics.start("Reporting");
   html_report(ssa_data_flow.properties, file_report);  
   report_source_code(
-    index_old.path_prefix, symbol_old.location, f_old.body,
-    index.path_prefix,     symbol_new.location, f_new.body,
+    index_old.path_prefix, symbol_old.location, f_old.body, description_old,
+    index_new.path_prefix, symbol_new.location, f_new.body, description_new,
     ssa_data_flow.properties,
     file_report, get_message_handler());
   file_report << "\n";
@@ -233,8 +239,8 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
                 << "<tr><th>File</th><th># Errors</th></tr>\n";
   
   for(indext::file_to_functiont::const_iterator
-      file_it=index.file_to_function.begin();
-      file_it!=index.file_to_function.end();
+      file_it=index_new.file_to_function.begin();
+      file_it!=index_new.file_to_function.end();
       file_it++)
   {
     status() << "Processing \"" << file_it->first << "\"" << eom;
@@ -255,9 +261,9 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
     }
 
     if(use_index_old)
-      html_report_header(file_report, index_old, index);
+      html_report_header(file_report, index_old, index_new);
     else    
-      html_report_header(file_report, index);
+      html_report_header(file_report, index_new);
     
     // read the goto-binary file
     goto_modelt model;
@@ -284,7 +290,7 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
         continue;
       }
       
-      goto_functionst::goto_functiont *index_fkt=
+      goto_functionst::goto_functiont *index_new_fkt=
         &fmap_it->second;
     
       status() << "Checking \"" << id2string(id) << "\"" << eom;
@@ -307,11 +313,11 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
 
         check_function_delta(
           symbol_old, *index_old_fkt, ns_old,
-          symbol,     *index_fkt,     ns,
+          symbol,     *index_new_fkt,     ns,
           file_report);
       }
       else
-        check_function(symbol, *index_fkt, ns, file_report);
+        check_function(symbol, *index_new_fkt, ns, file_report);
     }
 
     html_report_footer(file_report);
@@ -404,9 +410,9 @@ void deltacheck_analyzert::operator()()
            << report_file_name << "\"" << eom;
 
   if(use_index_old)
-    html_report_header(out, index_old, index);
+    html_report_header(out, index_old, index_new);
   else
-    html_report_header(out, index);
+    html_report_header(out, index_new);
 
   check_all(out);
 

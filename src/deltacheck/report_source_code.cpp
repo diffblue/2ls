@@ -150,9 +150,11 @@ void report_source_code(
   const std::string &path_prefix_old,
   const locationt &location_old,
   const goto_programt &goto_program_old,
+  const std::string &description_old,
   const std::string &path_prefix,
   const locationt &location,
   const goto_programt &goto_program,
+  const std::string &description,
   const propertiest &properties,
   std::ostream &out,
   message_handlert &message_handler)
@@ -169,8 +171,8 @@ void report_source_code(
   
   out << "<p>\n";
   out << "<table class=\"source\">\n";  
-  out << "<tr><th colspan=2>old version</th>"
-         "<th colspan=3>new version</th></tr>\n";
+  out << "<tr><th colspan=2>" << html_escape(description) << "</th>"
+         "<th colspan=3>" << html_escape(description) << "</th></tr>\n";
   
   out << "<tr>\n";
   
