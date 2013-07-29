@@ -15,11 +15,13 @@ Author: Daniel Kroening, kroening@kroening.com
 
 void html_report_header(
   std::ostream &out,
-  const indext &index1, const indext &index2);
+  const indext &index1, const indext &index2,
+  const std::string &title);
 
 void html_report_header(
   std::ostream &out,
-  const indext &index1);
+  const indext &index1,
+  const std::string &title);
 
 void html_report_footer(std::ostream &out);
 

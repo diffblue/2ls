@@ -262,11 +262,13 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
               << "'" << eom;
       return;
     }
+    
+    std::string title="DeltaCheck File Report";
 
     if(use_index_old)
-      html_report_header(file_report, index_old, index_new);
+      html_report_header(file_report, index_old, index_new, title);
     else    
-      html_report_header(file_report, index_new);
+      html_report_header(file_report, index_new, title);
     
     // read the goto-binary file
     goto_modelt model;
@@ -396,10 +398,9 @@ Function: deltacheck_analyzert::operator()
 
 void deltacheck_analyzert::operator()()
 {
-  std::string file_suffix=
-    use_index_old?".deltacheck-diff.html":".deltacheck.html";
+  std::string report_file_name=
+    use_index_old?"deltacheck-diff.html":"deltacheck.html";
 
-  std::string report_file_name=file_suffix;
   std::ofstream out(report_file_name.c_str());
   
   if(!out)
@@ -411,11 +412,13 @@ void deltacheck_analyzert::operator()()
   
   status() << "Writing report into \""
            << report_file_name << "\"" << eom;
+           
+  std::string title="DeltaCheck Summary Report";
 
   if(use_index_old)
-    html_report_header(out, index_old, index_new);
+    html_report_header(out, index_old, index_new, title);
   else
-    html_report_header(out, index_new);
+    html_report_header(out, index_new, title);
 
   check_all(out);
 

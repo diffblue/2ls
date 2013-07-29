@@ -27,11 +27,19 @@ const char header[]=
 #include "report_header.inc"
 ;
 
-void html_report_header(std::ostream &out)
+void html_report_header(
+  const std::string &title,
+  std::ostream &out)
 {
   out << "<html>\n";
 
+  out << "<head>\n";
+  
+  out << "<title>" << html_escape(title) << "</title>\n\n";
+
   out << header;
+
+  out << "<head>\n";
 
   out << "\n"
          "<body>\n";
@@ -51,14 +59,15 @@ Function: html_report_header
 
 void html_report_header(
   std::ostream &out,
-  const indext &index1, const indext &index2)
+  const indext &index1, const indext &index2,
+  const std::string &title)
 {
-  html_report_header(out);
+  html_report_header(title, out);
 
   out << "<img src=\"" << deltacheck_logo
       << "\" class=\"image-right\" alt=\"DeltaCheck Logo\">\n\n";
 
-  out << "<h1>DeltaCheck Report</h1>\n\n";
+  out << "<h1>" << html_escape(title) << "</h1>\n\n";
 
   out << "<p>DeltaCheck version: " << DELTACHECK_VERSION << "</p>\n";
   
@@ -86,14 +95,15 @@ Function: html_report_header
 
 void html_report_header(
   std::ostream &out,
-  const indext &index)
+  const indext &index,
+  const std::string &title)
 {
-  html_report_header(out);
+  html_report_header(title, out);
 
   out << "<img src=\"" << deltacheck_logo
       << "\" class=\"image-right\" alt=\"DeltaCheck Logo\">\n\n";
 
-  out << "<h1>DeltaCheck Report</h1>\n\n";
+  out << "<h1>" << html_escape(title) << "</h1>\n\n";
 
   out << "<p>DeltaCheck version: " << DELTACHECK_VERSION << "</p>\n";
   
