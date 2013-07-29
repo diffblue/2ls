@@ -11,7 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/threeval.h>
 
-#include "function_SSA.h"
+#include "function_ssa.h"
 
 class propertyt
 {
