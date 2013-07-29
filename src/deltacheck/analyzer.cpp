@@ -127,7 +127,8 @@ void deltacheck_analyzert::check_function(
   // now report on assertions
   status() << "Reporting" << eom;
   statistics.start("Reporting");
-  html_report(ssa_data_flow.properties, file_report);  
+  report_properties(ssa_data_flow.properties, file_report);  
+  report_countermodels(function_SSA, ssa_data_flow.properties, file_report);  
   report_source_code(
     index_new.path_prefix, symbol.location, f.body,
     ssa_data_flow.properties, file_report,
@@ -200,7 +201,9 @@ void deltacheck_analyzert::check_function_delta(
   
   status() << "Reporting" << eom;
   statistics.start("Reporting");
-  html_report(ssa_data_flow.properties, file_report);  
+  report_properties(ssa_data_flow.properties, file_report);  
+  report_countermodels(function_SSA_old, function_SSA_new,
+                       ssa_data_flow.properties, file_report);  
   report_source_code(
     index_old.path_prefix, symbol_old.location, f_old.body, description_old,
     index_new.path_prefix, symbol_new.location, f_new.body, description_new,

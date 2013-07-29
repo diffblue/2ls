@@ -146,8 +146,9 @@ var tooltip=function(){
 <script type="text/javascript">
 
 var property_selected = 0;
+var var_values = { }; // the counterexample
 
-var property=function(row, what) {
+var property_event=function(row, what, ce) {
   if(what=='over')
   {
     if(property_selected!=row) row.bgColor='#eeeeee';
@@ -161,11 +162,15 @@ var property=function(row, what) {
     if(property_selected!=0) property_selected.bgColor='#ffffff';
     row.bgColor='#fcaf3e';
     property_selected=row;
+    var_values=ce;
   }
 }
 
-var var_tooltip=function(id, line_no) {
-  tooltip.show(id+' in line '+line_no);
+var var_tooltip=function(id, where) {
+  var key=id+'@'+where;
+  var value=var_values[key];
+  if(value!==undefined)
+    tooltip.show(value);
 }
 
 </script>

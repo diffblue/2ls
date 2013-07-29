@@ -202,7 +202,7 @@ void report_source_code(
     {
       syntax_highlighting.different=(l_old_it->line!=l_it->line);
       syntax_highlighting.line_no=l_it->line_no;
-      syntax_highlighting.id_suffix="_old";
+      syntax_highlighting.id_suffix="@old";
       syntax_highlighting(l_old_it->line);
     }
   }

@@ -192,7 +192,7 @@ void function_SSAt::build_transfer(locationt loc)
         
         equal_exprt equality;
         equality.lhs()=name(*o_it, OUT, loc);
-        equality.rhs()=read(code_assign.rhs(), loc);
+        equality.rhs()=read_rhs(code_assign.rhs(), loc);
     
         node.equalities.push_back(equality);
       }
@@ -243,17 +243,17 @@ void function_SSAt::build_guard(locationt loc)
             name(guard_symbol(), LOOP, loc));
         else
           sources.push_back(
-            and_exprt(gs, read(i_it->guard, i_it)));
+            and_exprt(gs, read_rhs(i_it->guard, i_it)));
       }
       else if(next==loc && !i_it->guard.is_true())
         sources.push_back(
-          and_exprt(gs, not_exprt(read(i_it->guard, i_it))));
+          and_exprt(gs, not_exprt(read_rhs(i_it->guard, i_it))));
     }
     else if(i_it->is_assume())
     {
       if(next==loc)
         sources.push_back(
-          and_exprt(gs, read(i_it->guard, i_it)));
+          and_exprt(gs, read_rhs(i_it->guard, i_it)));
     }
     else if(i_it->is_return() || i_it->is_throw())
     {
@@ -292,7 +292,7 @@ void function_SSAt::assertions_to_constraints()
   {
     if(i_it->is_assert())
     {
-      exprt c=read(i_it->guard, i_it);
+      exprt c=read_rhs(i_it->guard, i_it);
       exprt g=guard_symbol(i_it);
       implies_exprt implication(g, c);
       nodes[i_it].constraints.push_back(implication);
@@ -319,7 +319,7 @@ symbol_exprt function_SSAt::guard_symbol()
 
 /*******************************************************************\
 
-Function: function_SSAt::read
+Function: function_SSAt::read_rhs
 
   Inputs:
 
@@ -329,7 +329,7 @@ Function: function_SSAt::read
 
 \*******************************************************************/
 
-symbol_exprt function_SSAt::read(
+symbol_exprt function_SSAt::read_rhs(
   const symbol_exprt &expr,
   locationt loc) const
 {
@@ -342,7 +342,7 @@ symbol_exprt function_SSAt::read(
   if(d_it==ssa_domain.def_map.end())
   {
     // not written so far, it's input
-    return name(expr, INPUT, goto_function.body.instructions.begin());
+    return name_input(expr);
   }
   else
   {
@@ -358,6 +358,46 @@ symbol_exprt function_SSAt::read(
 
 /*******************************************************************\
 
+Function: function_SSAt::read_lhs
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt function_SSAt::read_lhs(
+  const exprt &expr,
+  locationt loc) const
+{
+  if(expr.id()==ID_symbol)
+  {
+    const symbol_exprt &symbol_expr=to_symbol_expr(expr);
+    if(assigns(symbol_expr, loc))
+      return name(symbol_expr, OUT, loc);
+    else
+      return read_rhs(symbol_expr, loc);
+  }
+  else if(expr.id()==ID_member)
+  {
+    member_exprt tmp=to_member_expr(expr);
+    tmp.struct_op()=read_lhs(tmp.struct_op(), loc);
+    return tmp;
+  }
+  else if(expr.id()==ID_index)
+  {
+    index_exprt tmp=to_index_expr(expr);
+    tmp.array()=read_lhs(tmp.array(), loc);
+    return tmp;
+  }
+  else
+    return read_rhs(expr, loc);
+}
+
+/*******************************************************************\
+
 Function: function_SSAt::read_in
 
   Inputs:
@@ -368,10 +408,12 @@ Function: function_SSAt::read_in
 
 \*******************************************************************/
 
-symbol_exprt function_SSAt::read_in(const symbol_exprt &expr, locationt loc) const
+symbol_exprt function_SSAt::read_in(
+  const symbol_exprt &expr,
+  locationt loc) const
 {
   // This reads:
-  // * LOOP if there is a LOOP node at loc for symbol
+  // * LOOP if there is a LOOP node at 'loc' for symbol
   // * OUT  otherwise
 
   const irep_idt &identifier=expr.get_identifier();
@@ -411,13 +453,13 @@ symbol_exprt function_SSAt::read_in(const symbol_exprt &expr, locationt loc) con
     if(has_phi)
       return name(expr, LOOP, loc);
     else
-      return read(expr, loc);
+      return read_rhs(expr, loc);
   }
 }
 
 /*******************************************************************\
 
-Function: function_SSAt::read
+Function: function_SSAt::read_rhs
 
   Inputs:
 
@@ -427,10 +469,10 @@ Function: function_SSAt::read
 
 \*******************************************************************/
 
-exprt function_SSAt::read(const exprt &expr, locationt loc) const
+exprt function_SSAt::read_rhs(const exprt &expr, locationt loc) const
 {
   if(expr.id()==ID_symbol)
-    return read(to_symbol_expr(expr), loc);
+    return read_rhs(to_symbol_expr(expr), loc);
   else if(expr.id()==ID_address_of)
   {
     return expr;
@@ -439,7 +481,7 @@ exprt function_SSAt::read(const exprt &expr, locationt loc) const
   {
     exprt tmp=expr; // copy
     Forall_operands(it, tmp)
-      *it=read(*it, loc);
+      *it=read_rhs(*it, loc);
     return tmp;
   }
 }
@@ -464,17 +506,42 @@ symbol_exprt function_SSAt::name(
   symbol_exprt new_symbol_expr=symbol; // copy
   const irep_idt &old_id=symbol.get_identifier();
   unsigned cnt=loc->location_number;
-  irep_idt new_id;
-  
-  if(kind==INPUT)
-    new_id=id2string(old_id)+suffix;
-  else
-    new_id=id2string(old_id)+"#"+
-           (kind==PHI?"phi":(kind==LOOP?"loop":""))+
-           i2string(cnt)+
-           suffix;
+
+  irep_idt new_id=id2string(old_id)+"#"+
+                  (kind==PHI?"phi":(kind==LOOP?"loop":""))+
+                  i2string(cnt)+
+                  suffix;
 
   new_symbol_expr.set_identifier(new_id);
+  
+  if(symbol.location().is_not_nil())
+    new_symbol_expr.location()=symbol.location();
+  
+  return new_symbol_expr;
+}
+
+/*******************************************************************\
+
+Function: function_SSAt::name_input
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+symbol_exprt function_SSAt::name_input(const symbol_exprt &symbol) const
+{
+  symbol_exprt new_symbol_expr=symbol; // copy
+  const irep_idt &old_id=symbol.get_identifier();
+  irep_idt new_id=id2string(old_id)+suffix;
+  new_symbol_expr.set_identifier(new_id);
+
+  if(symbol.location().is_not_nil())
+    new_symbol_expr.location()=symbol.location();
+
   return new_symbol_expr;
 }
 

@@ -58,11 +58,13 @@ public:
   nodest nodes;
 
   // auxiliary functions
-  enum kindt { PHI, OUT, LOOP, INPUT };
+  enum kindt { PHI, OUT, LOOP };
   symbol_exprt name(const symbol_exprt &, kindt kind, locationt loc) const;
-  exprt read(const exprt &, locationt loc) const;
-  symbol_exprt read(const symbol_exprt &, locationt loc) const;
+  symbol_exprt name_input(const symbol_exprt &) const;
+  exprt read_rhs(const exprt &, locationt loc) const;
+  symbol_exprt read_rhs(const symbol_exprt &, locationt loc) const;
   symbol_exprt read_in(const symbol_exprt &, locationt loc) const;
+  exprt read_lhs(const exprt &, locationt loc) const;
   static symbol_exprt guard_symbol();
   symbol_exprt guard_symbol(locationt loc) const
   { return name(guard_symbol(), OUT, loc); }

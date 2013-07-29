@@ -11,7 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/threeval.h>
 
-#include <goto-programs/goto_program.h>
+#include "function_SSA.h"
 
 class propertyt
 {
@@ -27,6 +27,19 @@ public:
   
 typedef std::list<propertyt> propertiest;
 
-void html_report(const propertiest &, std::ostream &);
+void report_properties(
+  const propertiest &,
+  std::ostream &);
+
+void report_countermodels(
+  const function_SSAt &,
+  const propertiest &,
+  std::ostream &);
+
+void report_countermodels(
+  const function_SSAt &function_SSA_old,
+  const function_SSAt &function_SSA_new,
+  const propertiest &,
+  std::ostream &);
 
 #endif

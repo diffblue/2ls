@@ -8,6 +8,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 // may wish to try http://www.gnu.org/software/src-highlite/
 
+#include <map>
 #include <ostream>
 #include <cstring>
 
@@ -177,18 +178,21 @@ Function: syntax_highlightingt::operator()
 void syntax_highlightingt::operator()(const std::string &line)
 {
   tokenizert tokenizer(line);
-  std::string token;
   
   while(true)
   {
-    token=tokenizer.peek();
+    std::string token=tokenizer.peek();
     if(token==" ") out << tokenizer.get(); else break;
   }
 
   // open tags  
   if(different) out << "<strong class=\"different\">";
   if(comment) out << "<cite>";
+
+  std::string token;  
   
+  std::map<std::string, unsigned> var_count;
+
   while(!(token=tokenizer.get()).empty())
   {
     if(comment)
@@ -213,7 +217,8 @@ void syntax_highlightingt::operator()(const std::string &line)
         else
         {
           out << "<var onMouseOver=\"var_tooltip('"
-              << token << id_suffix << "', " << line_no << ");\""
+              << token << id_suffix << "', '" << line_no 
+              << "." << ++var_count[token] << "');\""
                  " onMouseOut=\"tooltip.hide();\""
                  ">"
               << token
@@ -237,7 +242,20 @@ void syntax_highlightingt::operator()(const std::string &line)
         out << "<kbd>" << html_escape(token) << "</kbd>";
       }
       else
+      {
+        // hack to distinguish lhs from rhs without parsing
+        #if 0
+        if(token=="+=" || token=="=" ||
+           token=="-=" || token=="<<=" ||
+           token==">>=" || token=="&=" ||
+           token=="^=" || token=="|=")
+          lhs=false;
+        else if(token==";")
+          lhs=true;
+        #endif
+
         out << html_escape(token);
+      }
     }
   }
 

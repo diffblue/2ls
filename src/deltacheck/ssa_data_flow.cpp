@@ -60,8 +60,8 @@ void ssa_data_flowt::tie_inputs_together(decision_proceduret &dest)
     {
       symbol_exprt s_old(p_old[p].get_identifier(), p_old[p].type());
       symbol_exprt s_new(p_new[p].get_identifier(), p_new[p].type());
-      s_old=function_SSA_old.read(s_old, l_old);
-      s_new=function_SSA_new.read(s_new, l_new);
+      s_old=function_SSA_old.read_rhs(s_old, l_old);
+      s_new=function_SSA_new.read_rhs(s_new, l_new);
 
       dest.set_to_true(equal_exprt(s_old, s_new));
     }
@@ -79,8 +79,8 @@ void ssa_data_flowt::tie_inputs_together(decision_proceduret &dest)
     if(function_SSA_old.objects.find(s)==
        function_SSA_old.objects.end()) continue;
     
-    symbol_exprt s_new=function_SSA_new.read(s, l_new);
-    symbol_exprt s_old=function_SSA_old.read(s, l_old);
+    symbol_exprt s_new=function_SSA_new.read_rhs(s, l_new);
+    symbol_exprt s_old=function_SSA_old.read_rhs(s, l_old);
 
     dest.set_to_true(equal_exprt(s_old, s_new));
   }
@@ -120,7 +120,7 @@ ssa_data_flowt::backwards_edget ssa_data_flowt::backwards_edge(
       o_it++)
   {
     symbol_exprt in=function_SSA.read_in(*o_it, result.to);
-    symbol_exprt out=function_SSA.read(*o_it, result.from);
+    symbol_exprt out=function_SSA.read_rhs(*o_it, result.from);
   
     result.pre_predicate.vars.push_back(in);
     result.post_predicate.vars.push_back(out);
@@ -443,7 +443,7 @@ void ssa_data_flowt::setup_properties()
     {
       properties.push_back(propertyt());
       properties.back().loc=i_it;
-      properties.back().condition=function_SSA_new.read(i_it->guard, i_it);
+      properties.back().condition=function_SSA_new.read_rhs(i_it->guard, i_it);
       properties.back().guard=function_SSA_new.guard_symbol(i_it);
     }
   }
