@@ -25,7 +25,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "index.h"
 #include "analyzer.h"
 #include "show.h"
-#include "versioning.h"
 
 /*******************************************************************\
 
@@ -205,24 +204,6 @@ int deltacheck_parseoptionst::doit()
     // 1) indexing: given some goto-binaries, produce index
     // 2) delta checking: given two indices, do delta checking
     
-    if(cmdline.isset("svn"))
-    {
-      if(cmdline.args.size()!=0)
-      {
-        usage_error();
-        return 10;
-      }
-      
-      std::string url, revision;
-      url=cmdline.getval("svn");
-      
-      if(cmdline.isset("revision"))
-        revision=cmdline.getval("revision");
-      
-      svn(url, revision, get_message_handler());
-      return 0;
-    }
-
     if(cmdline.isset("index"))
     {
       if(cmdline.args.size()==0)

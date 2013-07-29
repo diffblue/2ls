@@ -2,7 +2,7 @@ include ../config.inc
 CBMC ?= ../..
 
 SRC = deltacheck_main.cpp deltacheck_parseoptions.cpp index.cpp \
-      get_function.cpp function_ssa.cpp predicate.cpp versioning.cpp \
+      get_function.cpp function_ssa.cpp predicate.cpp \
       ssa_domain.cpp ssa_data_flow.cpp html_escape.cpp source_diff.cpp \
       html_report.cpp logo.cpp analyzer.cpp syntax_highlighting.cpp \
       solver.cpp show.cpp properties.cpp report_source_code.cpp \
