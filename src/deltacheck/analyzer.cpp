@@ -331,6 +331,8 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
       {
         const namespacet &ns_old=get_old_function.ns;
         const symbolt &symbol_old=ns_old.lookup(id);
+        std::string path_prefix_old=
+          get_directory(id2string(get_old_function.get_file_name()));
 
         check_function_delta(
           path_prefix_old, symbol_old, *index_old_fkt, ns_old,

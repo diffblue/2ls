@@ -24,6 +24,11 @@ public:
 
   goto_functionst::goto_functiont * operator()(
     const irep_idt &id);
+  
+  inline irep_idt get_file_name() const
+  {
+    return current_file_name;
+  }
     
 protected:
   const indext &index;
