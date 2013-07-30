@@ -74,6 +74,7 @@ void get_source(
     message.error() << "failed to open source `"
                     << full_path << "'" << messaget::eom;
     dest.push_back(linet(file, 1, "/* failed to open source file */"));
+    dest.push_back(linet(file, 2, "/* "+full_path+" */"));
     return;
   }
   
