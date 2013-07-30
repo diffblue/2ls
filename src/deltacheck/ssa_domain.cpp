@@ -120,9 +120,22 @@ void ssa_domaint::assign(const exprt &lhs, locationt from)
     def_entry.def=from;
     def_entry.source=from;
   }
-  else if(lhs.id()==ID_member || lhs.id()==ID_index || lhs.id()==ID_typecast)
+  else if(lhs.id()==ID_member)
   {
-    assign(lhs.op0(), from);
+    assign(to_member_expr(lhs).struct_op(), from);
+  }
+  else if(lhs.id()==ID_index)
+  {
+    assign(to_index_expr(lhs).array(), from);
+  }
+  else if(lhs.id()==ID_typecast)
+  {
+    assign(to_typecast_expr(lhs).op(), from);
+  }
+  else if(lhs.id()==ID_if)
+  {
+    assign(to_if_expr.true_case(), from);
+    assign(to_if_expr.false_case(), from);
   }
   else if(lhs.id()==ID_dereference)
   {
@@ -172,7 +185,7 @@ bool ssa_domaint::merge(
       
       if(d_it_a->second.def!=d_it_b->second.def)
       {
-        // same source?
+        // coming from the same source?
         if(d_it_a->second.source==d_it_b->second.source)
         {
           d_it_a->second.def=d_it_b->second.def;
