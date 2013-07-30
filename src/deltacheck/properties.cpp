@@ -180,7 +180,7 @@ void report_countermodel(
     {
       get_tracked_expr(i_it->guard, tracked_expr_rhs);
     }
-    else
+    else if(i_it->is_assign())
     {
       const code_assignt &code_assign=to_code_assign(i_it->code);
       get_tracked_expr_lhs(code_assign.lhs(), tracked_expr_lhs, tracked_expr_rhs);
