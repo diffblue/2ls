@@ -341,9 +341,15 @@ decision_proceduret::resultt solvert::dec_solve()
 
     // Rummage through things that are equal,
     // and make the bounds meet. Should really use triggers for this.
+
+    // References below aren't stable, thus enlarge now!
+    integer_intervals[expr_numbering.size()-1];
+    ieee_float_intervals[expr_numbering.size()-1];
+
     for(unsigned i=0; i<expr_numbering.size(); i++)
     {
       unsigned root=equalities.find(i);
+      if(root==i) continue;
       if(integer_intervals[root].meet(integer_intervals[i])) progress=true;
       if(integer_intervals[i].meet(integer_intervals[root])) progress=true;
       if(ieee_float_intervals[root].meet(ieee_float_intervals[i])) progress=true;
