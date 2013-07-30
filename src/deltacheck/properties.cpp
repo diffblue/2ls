@@ -88,6 +88,61 @@ void report_properties(
 
 /*******************************************************************\
 
+Function: get_tracked_expr
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void get_tracked_expr(
+  const exprt &src,
+  std::list<exprt> &dest)
+{
+  forall_operands(it, src)
+    get_tracked_expr(*it, dest);
+    
+  if(src.id()==ID_symbol)
+    dest.push_back(src);
+}
+
+/*******************************************************************\
+
+Function: get_tracked_expr_lhs
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void get_tracked_expr_lhs(
+  const exprt &src,
+  std::list<exprt> &dest_lhs,
+  std::list<exprt> &dest_rhs)
+{
+  if(src.id()==ID_symbol)
+    dest_lhs.push_back(src);
+  else if(src.id()==ID_member)
+  {
+    get_tracked_expr_lhs(to_member_expr(src).struct_op(), dest_lhs, dest_rhs);
+  }
+  else if(src.id()==ID_index)
+  {
+    get_tracked_expr_lhs(to_index_expr(src).array(), dest_lhs, dest_rhs);
+    get_tracked_expr(to_index_expr(src).index(), dest_rhs);
+  }
+  else
+    get_tracked_expr(src, dest_rhs);
+}
+
+/*******************************************************************\
+
 Function: report_countermodel
 
   Inputs:
@@ -119,21 +174,32 @@ void report_countermodel(
 
   forall_goto_program_instructions(i_it, function_SSA.goto_function.body)
   {
-    for(function_SSAt::objectst::const_iterator
-        o_it=function_SSA.objects.begin();
-        o_it!=function_SSA.objects.end();
-        o_it++)
-    {
-      exprt input_name=function_SSA.name_input(*o_it);
+    std::list<exprt> tracked_expr_rhs, tracked_expr_lhs;
     
-      // lhs
-      exprt renamed_lhs=function_SSA.read_lhs(*o_it, i_it);
+    if(i_it->is_assert() || i_it->is_assume() || i_it->is_goto())
+    {
+      get_tracked_expr(i_it->guard, tracked_expr_rhs);
+    }
+    else
+    {
+      const code_assignt &code_assign=to_code_assign(i_it->code);
+      get_tracked_expr_lhs(code_assign.lhs(), tracked_expr_lhs, tracked_expr_rhs);
+      get_tracked_expr(code_assign.rhs(), tracked_expr_rhs);
+    }
+    
+    // lhs
+    for(std::list<exprt>::const_iterator
+        e_it=tracked_expr_lhs.begin();
+        e_it!=tracked_expr_lhs.end();
+        e_it++)
+    {
+      exprt input_name=function_SSA.name_input(to_symbol_expr(*e_it));
+      exprt renamed_lhs=function_SSA.read_lhs(*e_it, i_it);
 
       const propertyt::value_mapt::const_iterator v_it_lhs=
         property.value_map.find(renamed_lhs);
 
-      if(function_SSA.assigns(*o_it, i_it) &&
-         v_it_lhs!=property.value_map.end())
+      if(v_it_lhs!=property.value_map.end())
       {
         std::string var=from_expr(function_SSA.ns, "", input_name);
         std::string var_loc=var+"@"+id2string(i_it->location.get_line());
@@ -143,10 +209,16 @@ void report_countermodel(
             << from_expr(function_SSA.ns, "", v_it_lhs->second)
             << "';\n";
       }
+    }
 
-      // rhs
-
-      exprt renamed_rhs=function_SSA.read_rhs(*o_it, i_it);
+    // rhs
+    for(std::list<exprt>::const_iterator
+        e_it=tracked_expr_rhs.begin();
+        e_it!=tracked_expr_rhs.end();
+        e_it++)
+    {
+      exprt input_name=function_SSA.name_input(to_symbol_expr(*e_it));
+      exprt renamed_rhs=function_SSA.read_rhs(*e_it, i_it);
 
       const propertyt::value_mapt::const_iterator v_it_rhs=
         property.value_map.find(renamed_rhs);
