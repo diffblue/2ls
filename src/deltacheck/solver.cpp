@@ -308,8 +308,7 @@ decision_proceduret::resultt solvert::dec_solve()
         const exprt &lhs=equal_expr.lhs();
         const exprt &rhs=equal_expr.rhs();
       
-        set_disequal(add(lhs), add(rhs));
-        progress=true;
+        implies_disequal(add(lhs), add(rhs), progress);
       }
       else if(expr.id()==ID_le)
       {
@@ -505,8 +504,7 @@ decision_proceduret::resultt solvert::dec_solve()
             std::cout << "UF check: " 
                       << e_nr1 << " = " << e_nr2 << "\n";
             #endif
-            set_equal(e_nr1, e_nr2);
-            progress=true;
+            implies_equal(e_nr1, e_nr2, progress);
           }
         }
       }

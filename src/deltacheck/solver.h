@@ -104,6 +104,13 @@ protected:
     return it->second.find(b)!=it->second.end();
   }
 
+  void implies_disequal(unsigned a, unsigned b, bool &progress)
+  {
+    if(a>b) std::swap(a, b);
+    if((disequalities[a].insert(b)).second)
+      progress=true;
+  }
+
   void set_disequal(unsigned a, unsigned b)
   {
     if(a>b) std::swap(a, b);
