@@ -366,7 +366,30 @@ void ssa_data_flowt::check_properties()
 
 /*******************************************************************\
 
-Function: ssa_data_flowt::setup_properties
+Function: ssa_data_flowt::countermodel_expr
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void ssa_data_flowt::countermodel_expr(
+  const exprt &src,
+  std::set<exprt> &dest)
+{
+  forall_operands(it, src)
+    countermodel_expr(*it, dest);
+  
+  if(src.id()==ID_symbol)
+    dest.insert(src);
+}
+
+/*******************************************************************\
+
+Function: ssa_data_flowt::generate_countermodel
 
   Inputs:
 
@@ -380,7 +403,9 @@ void ssa_data_flowt::generate_countermodel(
   propertyt &property,
   const decision_proceduret &solver)
 {
-  // collect values of lhs of all SSA nodes
+  // collect all expressions from SSA that seem interesting
+  
+  std::set<exprt> expressions;
   
   for(function_SSAt::nodest::const_iterator
       n_it=function_SSA_new.nodes.begin();
@@ -393,10 +418,16 @@ void ssa_data_flowt::generate_countermodel(
         e_it!=node.equalities.end();
         e_it++)
     {
-      exprt lhs=e_it->lhs();
-      exprt value=solver.get(lhs);
-      if(value.is_not_nil())
-        property.value_map[lhs]=value;
+      countermodel_expr(e_it->lhs(), expressions);
+      countermodel_expr(e_it->rhs(), expressions);
+    }
+
+    for(function_SSAt::nodet::constraintst::const_iterator
+        e_it=node.constraints.begin();
+        e_it!=node.constraints.end();
+        e_it++)
+    {
+      countermodel_expr(*e_it, expressions);
     }
   }
   
@@ -413,13 +444,33 @@ void ssa_data_flowt::generate_countermodel(
           e_it!=node.equalities.end();
           e_it++)
       {
-        exprt lhs=e_it->lhs();
-        exprt value=solver.get(lhs);
-        if(value.is_not_nil())
-          property.value_map[lhs]=value;
+        countermodel_expr(e_it->lhs(), expressions);
+        countermodel_expr(e_it->rhs(), expressions);
+      }
+
+      for(function_SSAt::nodet::constraintst::const_iterator
+          e_it=node.constraints.begin();
+          e_it!=node.constraints.end();
+          e_it++)
+      {
+        countermodel_expr(*e_it, expressions);
       }
     }
-    
+  }
+  
+  // now collect from property
+  countermodel_expr(property.guard, expressions);
+  countermodel_expr(property.condition, expressions);
+
+  // get values for those expressions
+  for(std::set<exprt>::const_iterator
+      e_it=expressions.begin();
+      e_it!=expressions.end();
+      e_it++)
+  {
+    exprt value=solver.get(*e_it);
+    if(value.is_not_nil())
+      property.value_map[*e_it]=value;
   }
 }
 

@@ -79,6 +79,11 @@ protected:
   // properties
   void check_properties();
   void setup_properties();
+
+  void countermodel_expr(
+    const exprt &src,
+    std::set<exprt> &dest);
+
   void generate_countermodel(
     propertyt &property,
     const decision_proceduret &solver);

@@ -18,6 +18,8 @@ class propertyt
 public:
   goto_programt::const_targett loc;
   tvt status;
+  
+  // given in SSA form
   exprt guard, condition;
   
   // in case of failed properties: countermodel
