@@ -23,6 +23,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "statistics.h"
 #include "report_source_code.h"
 #include "analyzer.h"
+#include "path_util.h"
 
 class deltacheck_analyzert:public messaget
 {
@@ -60,6 +61,7 @@ protected:
   const optionst &options;
   
   void check_function(
+    const std::string &path_prefix,
     const symbolt &symbol,
     goto_functionst::goto_functiont &f,
     const namespacet &ns,
@@ -67,10 +69,12 @@ protected:
 
   void check_function_delta(
     // old
+    const std::string &path_prefix_old,
     const symbolt &symbol_old,
     goto_functionst::goto_functiont &f_old,
     const namespacet &ns_old,
     // new
+    const std::string &path_prefix_new,
     const symbolt &symbol,
     goto_functionst::goto_functiont &f,
     const namespacet &ns,
@@ -97,6 +101,7 @@ Function: deltacheck_analyzert::check_function
 \*******************************************************************/
 
 void deltacheck_analyzert::check_function(
+  const std::string &path_prefix,
   const symbolt &symbol,
   goto_functionst::goto_functiont &f,
   const namespacet &ns,
@@ -130,7 +135,7 @@ void deltacheck_analyzert::check_function(
   report_properties(ssa_data_flow.properties, file_report);  
   report_countermodels(function_SSA, ssa_data_flow.properties, file_report);  
   report_source_code(
-    index_new.path_prefix, symbol.location, f.body,
+    path_prefix, symbol.location, f.body,
     ssa_data_flow.properties, file_report,
     get_message_handler());
   file_report << "\n";
@@ -156,9 +161,13 @@ Function: deltacheck_analyzert::check_function_delta
 \*******************************************************************/
 
 void deltacheck_analyzert::check_function_delta(
+  // old
+  const std::string &path_prefix_old,
   const symbolt &symbol_old,
   goto_functionst::goto_functiont &f_old,
   const namespacet &ns_old,
+  // new
+  const std::string &path_prefix_new,
   const symbolt &symbol_new,
   goto_functionst::goto_functiont &f_new,
   const namespacet &ns,
@@ -205,8 +214,8 @@ void deltacheck_analyzert::check_function_delta(
   report_countermodels(function_SSA_old, function_SSA_new,
                        ssa_data_flow.properties, file_report);  
   report_source_code(
-    index_old.path_prefix, symbol_old.location, f_old.body, description_old,
-    index_new.path_prefix, symbol_new.location, f_new.body, description_new,
+    path_prefix_old, symbol_old.location, f_old.body, description_old,
+    path_prefix_new, symbol_new.location, f_new.body, description_new,
     ssa_data_flow.properties,
     file_report, get_message_handler());
   file_report << "\n";
@@ -246,14 +255,19 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
       file_it!=index_new.file_to_function.end();
       file_it++)
   {
-    status() << "Processing \"" << file_it->first << "\"" << eom;
+    std::string full_path=
+      make_relative_path(index_new.path_prefix, id2string(file_it->first));
+      
+    std::string path_prefix=get_directory(full_path);
+  
+    status() << "Processing \"" << full_path << "\"" << eom;
     
     errors_in_file=unknown_in_file=passed_in_file=0;
     
     std::string file_suffix=
       use_index_old?".deltacheck-diff.html":".deltacheck.html";
     
-    std::string file_report_name=id2string(file_it->first)+file_suffix;
+    std::string file_report_name=full_path+file_suffix;
     std::ofstream file_report(file_report_name.c_str());
     
     if(!file_report)
@@ -272,7 +286,7 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
     
     // read the goto-binary file
     goto_modelt model;
-    read_goto_binary(id2string(file_it->first), model, get_message_handler());
+    read_goto_binary(full_path, model, get_message_handler());
    
     const namespacet ns(model.symbol_table); 
     const std::set<irep_idt> &functions=file_it->second;
@@ -307,6 +321,8 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
                   << "</h2>\n";
 
       // get corresponding index_old function, if available
+      
+      std::string path_prefix_old;
     
       goto_functionst::goto_functiont *index_old_fkt=
         get_old_function(id);
@@ -317,12 +333,13 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
         const symbolt &symbol_old=ns_old.lookup(id);
 
         check_function_delta(
-          symbol_old, *index_old_fkt, ns_old,
-          symbol,     *index_new_fkt,     ns,
+          path_prefix_old, symbol_old, *index_old_fkt, ns_old,
+          path_prefix,     symbol,     *index_new_fkt,     ns,
           file_report);
       }
       else
-        check_function(symbol, *index_new_fkt, ns, file_report);
+        check_function(path_prefix, symbol, *index_new_fkt, ns,
+                       file_report);
     }
 
     html_report_footer(file_report);

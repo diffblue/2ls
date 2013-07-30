@@ -6,7 +6,7 @@ SRC = deltacheck_main.cpp deltacheck_parseoptions.cpp index.cpp \
       ssa_domain.cpp ssa_data_flow.cpp html_escape.cpp source_diff.cpp \
       html_report.cpp logo.cpp analyzer.cpp syntax_highlighting.cpp \
       solver.cpp show.cpp properties.cpp report_source_code.cpp \
-      get_source.cpp statistics.cpp \
+      get_source.cpp statistics.cpp path_util.cpp \
       $(CBMC)/src/cbmc/xml_interface.cpp
 
 OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \

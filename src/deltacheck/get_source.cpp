@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/string2int.h>
 
+#include "path_util.h"
 #include "get_source.h"
 
 /*******************************************************************\
@@ -56,16 +57,8 @@ void get_source(
   if(file=="") return;
   if(goto_program.instructions.empty()) return;
   
-  std::string full_path;
-
-  #ifdef _WIN32
-  if((file.size()>=2 && file[1]==':') || file[0]=='\\')
-  #else
-  if(file[0]=='/')
-  #endif
-    full_path=id2string(file);
-  else
-    full_path=path_prefix+id2string(file);
+  std::string full_path=
+    make_relative_path(path_prefix, id2string(file));
 
   std::ifstream in(full_path.c_str());
   
