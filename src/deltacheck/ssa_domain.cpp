@@ -134,8 +134,8 @@ void ssa_domaint::assign(const exprt &lhs, locationt from)
   }
   else if(lhs.id()==ID_if)
   {
-    assign(to_if_expr.true_case(), from);
-    assign(to_if_expr.false_case(), from);
+    assign(to_if_expr(lhs).true_case(), from);
+    assign(to_if_expr(lhs).false_case(), from);
   }
   else if(lhs.id()==ID_dereference)
   {
@@ -167,64 +167,71 @@ bool ssa_domaint::merge(
       d_it_b++)
   {
     const irep_idt &id=d_it_b->first;
+
+    // check if we have a phi node for 'id'
   
+    phi_nodest::iterator p_it=phi_nodes.find(id);
+    if(p_it!=phi_nodes.end())
+    {
+      // yes, simply add to existing phi node
+      std::map<locationt, locationt> &phi_node=p_it->second;
+      phi_node[d_it_b->second.source]=d_it_b->second.def;      
+      // doesn't get propagated, don't set result to 'true'
+      continue;
+    }
+
+    // have we seen this variable yet?
     def_mapt::iterator d_it_a=def_map.find(id);
     if(d_it_a==def_map.end())
     {
-      // no entry in 'this' yet, create entry
+      // no entry in 'this' yet, simply create a new entry
       def_map[id]=d_it_b->second;
       result=true;
 
       #ifdef DEBUG
       std::cout << "SETTING " << id << ": " << def_map[id] << "\n";
       #endif
+      continue;
+    }
+
+    // we have two entries, compare
+    if(d_it_a->second.def==d_it_b->second.def)
+    {
+      #ifdef DEBUG
+      std::cout << "AGREE " << id << ": " << d_it_b->second << "\n";
+      #endif
+      continue;
+    }
+
+    // Different definitions. Are they coming from the same source?
+    if(d_it_a->second.source==d_it_b->second.source)
+    {
+      // Propagate the new definition for same source.
+      d_it_a->second.def=d_it_b->second.def;
+      result=true;
+
+      #ifdef DEBUG
+      std::cout << "OVERWRITING " << id << ": " << def_map[id] << "\n";
+      #endif
     }
     else
     {
-      // we have two entries, compare
+      // Arg! Data coming from two sources from two different definitions!
+      // We produce a new phi node.
+      std::map<locationt, locationt> &phi_node=phi_nodes[id];
+
+      phi_node[d_it_a->second.source]=d_it_a->second.def;
+      phi_node[d_it_b->second.source]=d_it_b->second.def;
       
-      if(d_it_a->second.def!=d_it_b->second.def)
-      {
-        // coming from the same source?
-        if(d_it_a->second.source==d_it_b->second.source)
-        {
-          d_it_a->second.def=d_it_b->second.def;
-          result=true;
+      // This node is now the new source.
+      d_it_a->second.def=to;
+      d_it_a->second.source=to;
 
-          #ifdef DEBUG
-          std::cout << "OVERWRITING " << id << ": " << def_map[id] << "\n";
-          #endif
-        }
-        else
-        {
-          // Arg! Data coming from two different places!
-          // Produce new phi node.
-          std::map<locationt, locationt> &phi_node=phi_nodes[id];
+      result=true;
 
-          if(d_it_a->second.def!=to) // not myself?
-            phi_node[d_it_a->second.source]=d_it_a->second.def;
-          
-          if(d_it_b->second.def!=to) // not myself?
-            phi_node[d_it_b->second.source]=d_it_b->second.def;
-          
-          // this node is now the new source        
-          d_it_a->second.def=to;
-          d_it_a->second.source=to;
-
-          result=true;
-
-          #ifdef DEBUG
-          std::cout << "MERGING " << id << ": " << d_it_b->second << "\n";
-          #endif
-        }
-      }
-      else
-      {
-        #ifdef DEBUG
-        std::cout << "AGREE " << id << ": " << d_it_b->second << "\n";
-        #endif
-      }
-      
+      #ifdef DEBUG
+      std::cout << "MERGING " << id << ": " << d_it_b->second << "\n";
+      #endif
     }
   }
   
