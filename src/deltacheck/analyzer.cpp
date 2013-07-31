@@ -439,6 +439,14 @@ void deltacheck_analyzert::operator()()
   else
     html_report_header(out, index_new, title);
 
+  if(use_index_old)
+  {
+    status() << "Path prefix old: " << index_old.path_prefix << eom;
+    status() << "Path prefix new: " << index_new.path_prefix << eom;
+  }
+  else
+    status() << "Path prefix: " << index_new.path_prefix << eom;
+
   check_all(out);
 
   html_report_footer(out);
