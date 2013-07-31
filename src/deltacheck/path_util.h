@@ -13,3 +13,6 @@ std::string make_relative_path(
   const std::string &src);
 
 std::string get_directory(const std::string &src);
+
+std::string get_file_name(const std::string &src);
+

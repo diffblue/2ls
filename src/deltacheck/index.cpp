@@ -13,6 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/goto_model.h>
 
 #include "index.h"
+#include "path_util.h"
 #include "version.h"
 
 /*******************************************************************\
@@ -142,23 +143,12 @@ Function: indext::read
 void indext::read(const std::string &in_file_name)
 {
   file_name=in_file_name;
-  
-  {
-    #ifdef _WIN32
-    char path_sep='\\';
-    #else
-    char path_sep='/';
-    #endif
-    
-    std::size_t path_sep_pos=in_file_name.rfind(path_sep);
-    if(path_sep_pos!=std::string::npos)
-      path_prefix=in_file_name.substr(0, path_sep_pos+1);
-  }
+  path_prefix=get_directory(in_file_name);
   
   // figure out if this is a goto-binary or an index
   if(is_goto_binary(file_name))
   {
-    index_goto_binary(file_name);
+    index_goto_binary(get_file_name(file_name));
   }
   else
   {
