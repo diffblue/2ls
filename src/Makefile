@@ -1,6 +1,6 @@
-SUBDIRS = deltacheck
+SUBDIRS = deltacheck deltarepo
 
-all: deltacheck
+all: deltacheck deltarepo
 
 .PHONY: $(SUBDIRS)
 .PHONY: clean
