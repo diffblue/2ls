@@ -1,10 +1,13 @@
 /*******************************************************************\
 
-Module: Show the jobs for a repository
+Module: Update a repository
 
 Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
+
+#include "update.h"
+#include "deltarepo_config.h"
 
 /*******************************************************************\
 
@@ -20,4 +23,6 @@ Function: update
 
 void update()
 {
+  deltarepo_configt config;
+  
 }

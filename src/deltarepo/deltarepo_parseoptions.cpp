@@ -119,18 +119,9 @@ int deltarepo_parseoptionst::doit()
     }
   }
 
-  catch(const char *e)
-  {
-    return 13;
-  }
-
   catch(const std::string &e)
   {
-    return 13;
-  }
-  
-  catch(int)
-  {
+    std::cerr << e << std::endl;
     return 13;
   }
   

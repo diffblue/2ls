@@ -9,9 +9,11 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_DELTAREPO_INIT_H
 #define CPROVER_DELTAREPO_INIT_H
 
-#include <string>
+#include "deltarepo_config.h"
 
-enum repo_kindt { NONE, GIT, SVN };
+void check(
+  repo_kindt repo_kind,
+  const std::string &url);
 
 void init(
   repo_kindt repo_kind,
