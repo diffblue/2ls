@@ -104,13 +104,16 @@ Function: indext::index_goto_binary
 
 void indext::index_goto_binary(const irep_idt &file)
 {
-  status() << "Reading `" << file << "'" << eom;
+  std::string full_path=
+    make_relative_path(path_prefix, id2string(file));
+
+  status() << "Reading `" << full_path << "'" << eom;
   
   goto_modelt goto_model;
   
-  if(read_goto_binary(id2string(file), goto_model, get_message_handler()))
+  if(read_goto_binary(full_path, goto_model, get_message_handler()))
   {
-    error() << "failed to read `" << file << "'" << eom;
+    error() << "failed to read `" << full_path << "'" << eom;
     return;
   }
   
