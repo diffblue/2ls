@@ -1,6 +1,6 @@
-SUBDIRS = deltacheck deltarepo
+SUBDIRS = deltacheck deltagit
 
-all: deltacheck deltarepo
+all: deltacheck deltagit
 
 .PHONY: $(SUBDIRS)
 .PHONY: clean
