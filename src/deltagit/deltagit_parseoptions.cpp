@@ -30,15 +30,15 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "../deltacheck/version.h"
 
-#include "init.h"
+//#include "init.h"
 #include "show_jobs.h"
 #include "update.h"
 
-#include "deltarepo_parseoptions.h"
+#include "deltagit_parseoptions.h"
 
 /*******************************************************************\
 
-Function: deltarepo_parseoptionst::deltarepo_parseoptionst
+Function: deltagit_parseoptionst::deltagit_parseoptionst
 
   Inputs:
 
@@ -48,7 +48,7 @@ Function: deltarepo_parseoptionst::deltarepo_parseoptionst
 
 \*******************************************************************/
 
-deltarepo_parseoptionst::deltarepo_parseoptionst(
+deltagit_parseoptionst::deltagit_parseoptionst(
   int argc, const char **argv):
   parseoptions_baset(DELTACHECK_OPTIONS, argc, argv)
 {
@@ -56,7 +56,7 @@ deltarepo_parseoptionst::deltarepo_parseoptionst(
   
 /*******************************************************************\
 
-Function: deltarepo_parseoptionst::doit
+Function: deltagit_parseoptionst::doit
 
   Inputs:
 
@@ -66,7 +66,7 @@ Function: deltarepo_parseoptionst::doit
 
 \*******************************************************************/
 
-int deltarepo_parseoptionst::doit()
+int deltagit_parseoptionst::doit()
 {
   if(cmdline.isset("version"))
   {
@@ -81,7 +81,8 @@ int deltarepo_parseoptionst::doit()
       usage_error();
       return 10;
     }
-    
+
+    #if 0    
     const std::string command=cmdline.args[0];
     
     if(command=="init-git")
@@ -117,6 +118,7 @@ int deltarepo_parseoptionst::doit()
       usage_error();
       return 10;
     }
+    #endif
   }
 
   catch(const std::string &e)
@@ -136,7 +138,7 @@ int deltarepo_parseoptionst::doit()
 
 /*******************************************************************\
 
-Function: deltarepo_parseoptionst::help
+Function: deltagit_parseoptionst::help
 
   Inputs:
 
@@ -146,26 +148,22 @@ Function: deltarepo_parseoptionst::help
 
 \*******************************************************************/
 
-void deltarepo_parseoptionst::help()
+void deltagit_parseoptionst::help()
 {
   std::cout <<
     "\n"
-    "* *         DELTAREPO " DELTACHECK_VERSION " - Copyright (C) 2011-2013        * *\n"
+    "* *           DELTAGIT " DELTACHECK_VERSION " - Copyright (C) 2012-2013        * *\n"
     "* *                     Daniel Kroening                     * *\n"
     "* *      Oxford University, Computer Science Department     * *\n"
     "* *                 kroening@kroening.com                   * *\n"
     "\n"
     "Usage:                       Purpose:\n"
     "\n"
-    " deltarepo [-?] [-h] [--help] show help\n"
-    " deltarepo init-svn url dest  set up svn clone in given directory dest\n"
-    " deltarepo init-git url dest  set up git clone in given directory dest\n"
-    " deltarepo update             update current directory\n"
-    " deltarepo jobs               list the jobs for the current directory\n"
+    " deltagit [-?] [-h] [--help]  show help\n"
+    " deltagit jobs                list the jobs for the current directory\n"
     "\n"    
     "Other options:\n"
     " --version                    show version and exit\n"
     " --xml-ui                     use XML-formatted output\n"
-    " --xml-interface              stdio-XML interface\n"
     "\n";
 }

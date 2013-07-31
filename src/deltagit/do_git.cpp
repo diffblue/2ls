@@ -14,7 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <xmllang/xml_parser.h>
 
 #include "shell_escape.h"
-#include "do_svn.h"
+#include "do_git.h"
 
 /*******************************************************************\
 

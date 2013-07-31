@@ -14,13 +14,13 @@ Author: Daniel Kroening, kroening@kroening.com
 #define DELTACHECK_OPTIONS \
   "(verbosity):(version)(description):"
 
-class deltarepo_parseoptionst:public parseoptions_baset
+class deltagit_parseoptionst:public parseoptions_baset
 {
 public:
   virtual int doit();
   virtual void help();
 
-  deltarepo_parseoptionst(
+  deltagit_parseoptionst(
     int argc, const char **argv);
 
 protected:

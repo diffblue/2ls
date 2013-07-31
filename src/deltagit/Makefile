@@ -1,9 +1,8 @@
 include ../config.inc
 CBMC ?= ../..
 
-SRC = deltarepo_main.cpp deltarepo_parseoptions.cpp show_jobs.cpp \
-      update.cpp init.cpp deltarepo_config.cpp shell_escape.cpp \
-      do_svn.cpp
+SRC = deltagit_main.cpp deltagit_parseoptions.cpp show_jobs.cpp \
+      shell_escape.cpp do_git.cpp
 
 OBJ+= $(CBMC)/src/util/util$(LIBEXT) \
       $(CBMC)/src/xmllang/xmllang$(LIBEXT) \
@@ -16,12 +15,12 @@ INCLUDES= -I $(CBMC)/src
 
 LIBS =
 
-CLEANFILES = deltarepo$(EXEEXT)
+CLEANFILES = deltagit$(EXEEXT)
 
-all: deltarepo$(EXEEXT)
+all: deltagit$(EXEEXT)
 
 ###############################################################################
 
-deltarepo$(EXEEXT): $(OBJ)
+deltagit$(EXEEXT): $(OBJ)
 	$(LINKBIN)
 

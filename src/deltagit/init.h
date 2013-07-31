@@ -9,8 +9,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_DELTAREPO_INIT_H
 #define CPROVER_DELTAREPO_INIT_H
 
-#include "deltarepo_config.h"
-
 void check(
   repo_kindt repo_kind,
   const std::string &url);
