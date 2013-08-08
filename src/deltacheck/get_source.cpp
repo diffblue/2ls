@@ -59,13 +59,20 @@ void get_source(
   
   std::string full_path=
     make_relative_path(path_prefix, id2string(file));
-
-  std::ifstream in(full_path.c_str());
+    
+  std::ifstream in;
+  in.open(full_path.c_str());
+  
+  if(!in)
+    in.open(file.c_str());
   
   if(!in)
   {
     message.error() << "failed to open source `"
-                    << full_path << "'" << messaget::eom;
+                    << file << "'" << messaget::eom;
+    if(full_path!=id2string(file))
+      message.error() << "also tried `" << full_path << "'"
+                      << messaget::eom;
     dest.push_back(linet(file, 1, "/* failed to open source file */"));
     dest.push_back(linet(file, 2, "/* "+full_path+" */"));
     return;
