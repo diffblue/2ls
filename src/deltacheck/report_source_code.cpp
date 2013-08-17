@@ -151,28 +151,31 @@ void report_source_code(
   const locationt &location_old,
   const goto_programt &goto_program_old,
   const std::string &description_old,
-  const std::string &path_prefix,
-  const locationt &location,
-  const goto_programt &goto_program,
-  const std::string &description,
+  const std::string &path_prefix_new,
+  const locationt &location_new,
+  const goto_programt &goto_program_new,
+  const std::string &description_new,
   const propertiest &properties,
   std::ostream &out,
   message_handlert &message_handler)
 {
   // get sources
-  std::list<linet> lines, lines_old;
+  std::list<linet> lines_new, lines_old;
 
-  get_source(path_prefix_old, location, goto_program, lines, message_handler);
-  get_source(path_prefix, location_old, goto_program_old, lines_old, message_handler);
+  get_source(path_prefix_old, location_old, goto_program_old, lines_old, message_handler);
+  get_source(path_prefix_new, location_new, goto_program_new, lines_new, message_handler);
 
   // run 'diff'
   
-  diff_it(lines_old, lines);
+  diff_it(lines_old, lines_new);
   
   out << "<p>\n";
   out << "<table class=\"source\">\n";  
-  out << "<tr><th colspan=2>" << html_escape(description) << "</th>"
-         "<th colspan=3>" << html_escape(description) << "</th></tr>\n";
+  out << "<tr>"
+         "<th colspan=2>" << html_escape(description_old) << "</th>"
+         "<th width=30></th>"
+         "<th colspan=2>" << html_escape(description_new) << "</th>"
+         "</tr>\n";
   
   out << "<tr>\n";
   
@@ -196,8 +199,8 @@ void report_source_code(
   {  
     syntax_highlightingt syntax_highlighting(out);
     
-    for(l_old_it=lines_old.begin(), l_it=lines.begin();
-        l_old_it!=lines_old.end() && l_it!=lines.end();
+    for(l_old_it=lines_old.begin(), l_it=lines_new.begin();
+        l_old_it!=lines_old.end() && l_it!=lines_new.end();
         l_old_it++, l_it++)
     {
       syntax_highlighting.different=(l_old_it->line!=l_it->line);
@@ -215,7 +218,7 @@ void report_source_code(
   out << "<td class=\"line_numbers\"><pre>\n";
   
   for(std::list<linet>::const_iterator
-      l_it=lines.begin(); l_it!=lines.end(); l_it++)
+      l_it=lines_new.begin(); l_it!=lines_new.end(); l_it++)
   {
     std::string errors=get_errors(properties, *l_it);
     if(!errors.empty())
@@ -234,7 +237,7 @@ void report_source_code(
   out << "<td class=\"line_numbers\"><pre>\n";
   
   for(std::list<linet>::const_iterator
-      l_it=lines.begin(); l_it!=lines.end(); l_it++)
+      l_it=lines_new.begin(); l_it!=lines_new.end(); l_it++)
   {
     if(l_it->line_no!=0) out << l_it->line_no;
     out << "\n";
@@ -248,8 +251,8 @@ void report_source_code(
   {
     syntax_highlightingt syntax_highlighting(out);
   
-    for(l_old_it=lines_old.begin(), l_it=lines.begin();
-        l_old_it!=lines_old.end() && l_it!=lines.end();
+    for(l_old_it=lines_old.begin(), l_it=lines_new.begin();
+        l_old_it!=lines_old.end() && l_it!=lines_new.end();
         l_old_it++, l_it++)
     {
       syntax_highlighting.different=(l_old_it->line!=l_it->line);
