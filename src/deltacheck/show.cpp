@@ -15,9 +15,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <analyses/goto_check.h>
 
+#include "../ssa/ssa_domain.h"
+#include "../ssa/function_ssa.h"
 #include "index.h"
-#include "ssa_domain.h"
-#include "function_ssa.h"
 #include "ssa_data_flow.h"
 
 /*******************************************************************\

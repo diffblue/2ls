@@ -1,4 +1,4 @@
-SUBDIRS = deltacheck deltagit
+SUBDIRS = deltacheck deltagit ssa
 
 all: deltacheck deltagit
 
@@ -9,6 +9,8 @@ $(SUBDIRS):
 	$(MAKE) -C $@
 
 # Dependencies
+
+deltacheck: ssa
 
 clean: $(patsubst %, %_clean, $(SUBDIRS))
 

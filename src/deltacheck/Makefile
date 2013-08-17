@@ -2,8 +2,8 @@ include ../config.inc
 CBMC ?= ../..
 
 SRC = deltacheck_main.cpp deltacheck_parseoptions.cpp index.cpp \
-      get_function.cpp function_ssa.cpp predicate.cpp \
-      ssa_domain.cpp ssa_data_flow.cpp html_escape.cpp source_diff.cpp \
+      get_function.cpp predicate.cpp \
+      ssa_data_flow.cpp html_escape.cpp source_diff.cpp \
       html_report.cpp logo.cpp analyzer.cpp syntax_highlighting.cpp \
       solver.cpp show.cpp properties.cpp report_source_code.cpp \
       get_source.cpp statistics.cpp path_util.cpp \
@@ -20,7 +20,9 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       $(CBMC)/src/langapi/langapi$(LIBEXT) \
       $(CBMC)/src/xmllang/xmllang$(LIBEXT) \
       $(CBMC)/src/solvers/solvers$(LIBEXT) \
-      $(CBMC)/src/util/util$(LIBEXT)
+      $(CBMC)/src/util/util$(LIBEXT) \
+      ../ssa/function_ssa$(OBJEXT) \
+      ../ssa/ssa_domain$(OBJEXT)
 
 include $(CBMC)/src/config.inc
 include $(CBMC)/src/common
