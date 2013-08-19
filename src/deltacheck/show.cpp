@@ -10,8 +10,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <goto-programs/read_goto_binary.h>
 #include <goto-programs/goto_model.h>
-#include <goto-programs/show_claims.h>
-#include <goto-programs/set_claims.h>
+#include <goto-programs/show_properties.h>
+#include <goto-programs/set_properties.h>
 
 #include <analyses/goto_check.h>
 
@@ -72,7 +72,7 @@ void show_defs(
     // add the properties
     goto_check(options, model);
     model.goto_functions.update();
-    label_claims(model.goto_functions);
+    label_properties(model.goto_functions);
 
     const namespacet ns(model.symbol_table);
     const std::set<irep_idt> &functions=file_it->second;
@@ -149,7 +149,7 @@ void show_ssa(
     // add the properties
     goto_check(options, model);
     model.goto_functions.update();
-    label_claims(model.goto_functions);
+    label_properties(model.goto_functions);
 
     const namespacet ns(model.symbol_table);
     const std::set<irep_idt> &functions=file_it->second;
@@ -227,7 +227,7 @@ void show_fixed_points(
     // add the properties
     goto_check(options, model);
     model.goto_functions.update();
-    label_claims(model.goto_functions);
+    label_properties(model.goto_functions);
 
     const namespacet ns(model.symbol_table);
     const std::set<irep_idt> &functions=file_it->second;
@@ -283,9 +283,9 @@ void show_properties(
     // add the properties
     goto_check(options, model);
     model.goto_functions.update();
-    label_claims(model.goto_functions);
+    label_properties(model.goto_functions);
     
-    show_claims(model, ui_message_handlert::PLAIN);
+    show_properties(model, ui_message_handlert::PLAIN);
   }
   
 }
