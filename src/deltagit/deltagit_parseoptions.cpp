@@ -8,32 +8,10 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <iostream>
 
-#if 0
-#include <cstdlib>
-#include <fstream>
-#include <memory>
-
-#include <util/i2string.h>
-#include <util/config.h>
-#include <util/symbol_table.h>
-
-#include <langapi/mode.h>
-#include <cbmc/version.h>
-#include <ansi-c/ansi_c_language.h>
-#include <cpp/cpp_language.h>
-
-#include "index.h"
-#include "analyzer.h"
-#include "show.h"
-#include "versioning.h"
-#endif
-
 #include "../deltacheck/version.h"
 
-//#include "init.h"
 #include "show_jobs.h"
-#include "update.h"
-
+#include "do_git.h"
 #include "deltagit_parseoptions.h"
 
 /*******************************************************************\
@@ -82,43 +60,27 @@ int deltagit_parseoptionst::doit()
       return 10;
     }
 
-    #if 0    
     const std::string command=cmdline.args[0];
     
-    if(command=="init-git")
+    if(command=="jobs")
     {
-      if(cmdline.args.size()!=3)
+      show_jobs(std::cout);
+    }
+    else if(command=="do")
+    {
+      if(cmdline.args.size()!=2)
       {
         usage_error();
         return 10;
       }
       
-      init(GIT, cmdline.args[1], cmdline.args[2]);
-    }
-    else if(command=="init-svn")
-    {
-      if(cmdline.args.size()!=3)
-      {
-        usage_error();
-        return 10;
-      }
-      
-      init(SVN, cmdline.args[1], cmdline.args[2]);
-    }
-    else if(command=="update")
-    {
-      update();
-    }
-    else if(command=="jobs")
-    {
-      show_jobs();
+      do_git(cmdline.args[1]);
     }
     else
     {
       usage_error();
       return 10;
     }
-    #endif
   }
 
   catch(const std::string &e)
@@ -161,6 +123,7 @@ void deltagit_parseoptionst::help()
     "\n"
     " deltagit [-?] [-h] [--help]  show help\n"
     " deltagit jobs                list the jobs for the current directory\n"
+    " deltagit do <job>            do given job\n"
     "\n"    
     "Other options:\n"
     " --version                    show version and exit\n"

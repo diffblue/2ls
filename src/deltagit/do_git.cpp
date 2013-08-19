@@ -18,7 +18,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
-Function: do_svn
+Function: do_git
 
   Inputs:
 
@@ -28,7 +28,7 @@ Function: do_svn
 
 \*******************************************************************/
 
-void do_svn(const std::string &command)
+void do_git(const std::string &command)
 {
   std::string full_command="xml "+command;
 
@@ -40,7 +40,7 @@ void do_svn(const std::string &command)
 
 /*******************************************************************\
 
-Function: do_svn
+Function: do_git
 
   Inputs:
 
@@ -50,7 +50,7 @@ Function: do_svn
 
 \*******************************************************************/
 
-void do_svn(const std::string &command, xmlt &dest)
+void do_git(const std::string &command, xmlt &dest)
 {
   temporary_filet temp_file("deltarepo_svn", "xml");
 
@@ -58,7 +58,7 @@ void do_svn(const std::string &command, xmlt &dest)
     "--xml "+command+
     " > "+shell_escape(temp_file());
 
-  do_svn(full_command);
+  do_git(full_command);
 
   console_message_handlert message_handler;
   xmlt xml;

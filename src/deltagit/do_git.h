@@ -6,14 +6,11 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef CPROVER_DELTAREPO_DO_SVN_H
-#define CPROVER_DELTAREPO_DO_SVN_H
+#ifndef CPROVER_DELTAGIT_DO_GIT_H
+#define CPROVER_DELTAGIT_DO_GIT_H
 
 #include <string>
 
-class xmlt;
-
-void do_svn(const std::string &, xmlt &);
-void do_svn(const std::string &);
+void do_git(const std::string &);
 
 #endif
