@@ -13,6 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/prefix.h>
 
 #include "show_jobs.h"
+#include "git_log.h"
 
 /*******************************************************************\
 
@@ -66,58 +67,39 @@ Function: show_jobs
 
 void show_jobs(std::ostream &out)
 {
-  temporary_filet tmpfile("deltagit", "log");
-
   // get the git log
-  std::string command;
-  command="git log --name-only > "+tmpfile();
-  system(command.c_str());
+  git_logt git_log;
 
   // rummage through it, looking for 'interesting' commits
-  
-  std::ifstream in(tmpfile().c_str());
-  if(!in) return;
-  
-  std::string line;
-  std::string commit, last_commit;
-  std::string svn_id;
-  
-  while(std::getline(in, line))
+  for(git_logt::entriest::const_iterator
+      l_it=git_log.entries.begin();
+      l_it!=git_log.entries.end();
+      l_it++)
   {
-    if(has_prefix(line, "commit "))
+    bool found=false;
+  
+    for(std::list<std::string>::const_iterator
+        f_it=l_it->files.begin();
+        f_it!=l_it->files.end();
+        f_it++)
     {
-      commit=line.substr(7, std::string::npos);
-    }
-    else if(has_prefix(line, "Author: "))
-    {
-    }
-    else if(has_prefix(line, "Date: "))
-    {
-    }
-    else if(has_prefix(line, "    git-svn-id: "))
-    {
-      std::size_t pos1=line.rfind('@');
-      std::size_t pos2=line.rfind(' ');
-      if(pos1!=std::string::npos && pos2!=std::string::npos)
-        svn_id=line.substr(pos1+1, pos2-pos1-1);
-    }
-    else if(!line.empty() && line[0]!=' ')
-    {
-      // shall be file name
-      std::string file=get_file(line);
+      std::string file=get_file(*f_it);
       std::string ext=get_extension(file);
+
       if(ext=="c" || ext=="C" ||
          ext=="cpp" || ext=="c++" ||
          ext=="h" || ext=="hpp")
       {
-        if(commit!=last_commit)
-        {
-          last_commit=commit;
-          out << commit;
-          if(svn_id!="") out << " r" << svn_id;
-          out << "\n";
-        }
+        found=true;
+        break;
       }    
+    }
+
+    if(found)
+    {
+      out << l_it->commit;
+      if(l_it->git_svn_id!="") out << " r" << l_it->git_svn_id;
+      out << "\n";
     }
   }
 }
