@@ -82,6 +82,10 @@ int deltagit_parseoptionst::doit()
         return 10;
       }
     }
+    else if(command=="report")
+    {
+      report();
+    }
     else
     {
       usage_error();

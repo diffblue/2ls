@@ -1,4 +1,4 @@
-SUBDIRS = deltacheck deltagit ssa
+SUBDIRS = deltacheck deltagit ssa html
 
 all: deltacheck deltagit
 
@@ -10,7 +10,8 @@ $(SUBDIRS):
 
 # Dependencies
 
-deltacheck: ssa
+deltacheck: ssa html
+deltagit: html
 
 clean: $(patsubst %, %_clean, $(SUBDIRS))
 
