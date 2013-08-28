@@ -8,8 +8,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <cassert>
 
+#include "../html/html_escape.h"
 #include "statistics.h"
-#include "html_escape.h"
 
 /*******************************************************************\
 

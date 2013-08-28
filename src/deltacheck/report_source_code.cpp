@@ -10,8 +10,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/i2string.h>
 
+#include "../html/html_escape.h"
 #include "report_source_code.h"
-#include "html_escape.h"
 #include "get_source.h"
 #include "source_diff.h"
 #include "syntax_highlighting.h"

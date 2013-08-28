@@ -6,8 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include "../html/html_escape.h"
 #include "properties.h"
-#include "html_escape.h"
 
 /*******************************************************************\
 

@@ -12,7 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <ostream>
 #include <cstring>
 
-#include "html_escape.h"
+#include "../html/html_escape.h"
 #include "syntax_highlighting.h"
 
 /*******************************************************************\

@@ -15,11 +15,11 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/goto_model.h>
 #include <analyses/goto_check.h>
 
+#include "../html/html_escape.h"
 #include "index.h"
 #include "html_report.h"
 #include "get_function.h"
 #include "ssa_data_flow.h"
-#include "html_escape.h"
 #include "statistics.h"
 #include "report_source_code.h"
 #include "analyzer.h"

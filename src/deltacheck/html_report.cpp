@@ -6,10 +6,10 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include "../html/html_escape.h"
+#include "../html/logo.h"
 #include "html_report.h"
-#include "logo.h"
 #include "version.h"
-#include "html_escape.h"
 
 /*******************************************************************\
 
