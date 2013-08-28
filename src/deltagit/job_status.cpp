@@ -105,6 +105,7 @@ void job_statust::write()
 
   xml.set_attribute("id", id);
   xml.set_attribute("status", as_string(status));
+  xml.set_attribute("commit", commit);
   
   if(failure)
     xml.set_attribute("failure", "1");
