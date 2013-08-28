@@ -26,7 +26,35 @@ Function: check_out
 
 void check_out(job_statust &job_status)
 {
+  std::string working_dir=job_status.id+".wd";
+
+  std::string command;
+
+  // do a shared clone -- this uses very little disc space
+  command="git clone --no-checkout --shared source-repo "+
+          working_dir;
+
+  int result1=system(command.c_str());
+  if(result1!=0)
+  {
+    job_status.failure=true;
+    job_status.write();
+    return;
+  }
   
+  // now do checkout; this will eat disc space
+  command="cd "+working_dir+"; git checkout --detach";
+  int result2=system(command.c_str());
+
+  if(result2!=0)
+  {
+    job_status.failure=true;
+    job_status.write();
+    return;
+  }
+
+  job_status.status=job_statust::BUILD;
+  job_status.write();  
 }
 
 /*******************************************************************\
@@ -43,7 +71,7 @@ Function: build
 
 void build(job_statust &job_status)
 {
-  
+  job_status.failure=true;
 }
 
 /*******************************************************************\
@@ -60,7 +88,7 @@ Function: analyse
 
 void analyse(job_statust &job_status)
 {
-  
+  job_status.failure=true;
 }
 
 /*******************************************************************\
@@ -92,5 +120,23 @@ void do_job(const std::string &id)
     }
   }
 
+}
+
+/*******************************************************************\
+
+Function: do_job
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void do_job()
+{
+  // get job list
+  
 }
 

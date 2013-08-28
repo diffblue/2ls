@@ -68,13 +68,19 @@ int deltagit_parseoptionst::doit()
     }
     else if(command=="do")
     {
-      if(cmdline.args.size()!=2)
+      if(cmdline.args.size()==2)
+      {
+        do_job(cmdline.args[1]);
+      }
+      else if(cmdline.args.size()==1)
+      {
+        do_job();
+      }
+      else
       {
         usage_error();
         return 10;
       }
-      
-      do_job(cmdline.args[1]);
     }
     else
     {

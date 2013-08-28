@@ -6,11 +6,14 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <fstream>
+
 #include <util/xml.h>
 #include <util/cout_message.h>
 
 #include <xmllang/xml_parser.h>
 
+#include "git_log.h"
 #include "job_status.h"
 
 /*******************************************************************\
@@ -54,6 +57,9 @@ void job_statust::read()
     status=DONE;
   else
     throw std::string("unexpected status");
+
+  if(src.get_attribute("failure")=="1")
+    failure=true;
 }
 
 /*******************************************************************\
@@ -94,9 +100,104 @@ Function: job_statust::write
 
 void job_statust::write()
 {
-  xmlt dest;
-  dest.name="deltagit_jobstatus";
+  xmlt xml;
+  xml.name="deltagit_jobstatus";
 
-  dest.set_attribute("id", id);
-  dest.set_attribute("status", as_string(status));
+  xml.set_attribute("id", id);
+  xml.set_attribute("status", as_string(status));
+  
+  if(failure)
+    xml.set_attribute("failure", "1");
+  
+  std::ofstream out((id+".xml").c_str());
+  out << xml;
+}
+
+/*******************************************************************\
+
+Function: get_extension
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::string get_extension(const std::string &s)
+{
+  std::size_t pos=s.rfind('.');
+  if(pos==std::string::npos) return "";
+  return s.substr(pos+1, std::string::npos);
+}
+
+/*******************************************************************\
+
+Function: get_file
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::string get_file(const std::string &s)
+{
+  std::size_t pos=s.rfind('/');
+  if(pos==std::string::npos) return s;
+  return s.substr(pos+1, std::string::npos);
+}
+
+/*******************************************************************\
+
+Function: get_jobs
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+#include <iostream>
+
+void get_jobs(std::list<job_statust> &jobs)
+{
+  // get the git log
+  git_logt git_log;
+  
+  std::cout << "LOG: " << git_log.entries.size() << std::endl;
+
+  // rummage through it, looking for 'interesting' commits
+  for(git_logt::entriest::const_iterator
+      l_it=git_log.entries.begin();
+      l_it!=git_log.entries.end();
+      l_it++)
+  {
+    bool found=false;
+  
+    for(std::list<std::string>::const_iterator
+        f_it=l_it->files.begin();
+        f_it!=l_it->files.end();
+        f_it++)
+    {
+      std::string file=get_file(*f_it);
+      std::string ext=get_extension(file);
+
+      if(ext=="c" || ext=="C" ||
+         ext=="cpp" || ext=="c++" ||
+         ext=="h" || ext=="hpp")
+      {
+        found=true;
+        break;
+      }    
+    }
+
+    if(found)
+      jobs.push_back(job_statust(l_it->commit));
+  }
 }

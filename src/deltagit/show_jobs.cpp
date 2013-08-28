@@ -6,53 +6,11 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <cstdlib>
-#include <fstream>
-
 #include <util/tempfile.h>
 #include <util/prefix.h>
 
 #include "show_jobs.h"
-#include "git_log.h"
 #include "job_status.h"
-
-/*******************************************************************\
-
-Function: get_extension
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-std::string get_extension(const std::string &s)
-{
-  std::size_t pos=s.rfind('.');
-  if(pos==std::string::npos) return "";
-  return s.substr(pos+1, std::string::npos);
-}
-
-/*******************************************************************\
-
-Function: get_file
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-std::string get_file(const std::string &s)
-{
-  std::size_t pos=s.rfind('/');
-  if(pos==std::string::npos) return s;
-  return s.substr(pos+1, std::string::npos);
-}
 
 /*******************************************************************\
 
@@ -68,45 +26,20 @@ Function: show_jobs
 
 void show_jobs(std::ostream &out)
 {
-  // get the git log
-  git_logt git_log;
-
-  // rummage through it, looking for 'interesting' commits
-  for(git_logt::entriest::const_iterator
-      l_it=git_log.entries.begin();
-      l_it!=git_log.entries.end();
-      l_it++)
-  {
-    bool found=false;
+  std::list<job_statust> jobs;
   
-    for(std::list<std::string>::const_iterator
-        f_it=l_it->files.begin();
-        f_it!=l_it->files.end();
-        f_it++)
-    {
-      std::string file=get_file(*f_it);
-      std::string ext=get_extension(file);
+  get_jobs(jobs);
+  
+  for(std::list<job_statust>::const_iterator
+      j_it=jobs.begin();
+      j_it!=jobs.end();
+      j_it++)
+  {
+    out << j_it->id;
 
-      if(ext=="c" || ext=="C" ||
-         ext=="cpp" || ext=="c++" ||
-         ext=="h" || ext=="hpp")
-      {
-        found=true;
-        break;
-      }    
-    }
-
-    if(found)
-    {
-      out << l_it->commit;
-
-      job_statust job_status(l_it->commit);
-      out << " " << as_string(job_status.status);
-      if(job_status.failure) out << " FAILED";
-      
-      if(l_it->git_svn_id!="") out << " r" << l_it->git_svn_id;
-
-      out << "\n";
-    }
+    out << " " << as_string(j_it->status);
+    if(j_it->failure) out << " FAILED";
+    
+    out << "\n";
   }
 }

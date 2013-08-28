@@ -12,5 +12,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <string>
 
 void do_job(const std::string &id);
+void do_job();
 
 #endif

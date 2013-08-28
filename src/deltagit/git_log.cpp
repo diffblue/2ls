@@ -32,7 +32,7 @@ void git_logt::read()
 
   // get the git log by running "git log"
   std::string command;
-  command="git log --name-only > "+tmpfile();
+  command="cd source-repo; git log --name-only > "+tmpfile();
   system(command.c_str());
 
   // read it from temporary file

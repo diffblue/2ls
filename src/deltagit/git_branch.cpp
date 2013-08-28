@@ -32,7 +32,7 @@ void git_brancht::read()
 
   // get the git branches by running "git branch -a"
   std::string command;
-  command="git branch --list -a -v --no-abbrev > "+tmpfile();
+  command="cd source-repo; git branch --list -a -v --no-abbrev > "+tmpfile();
   system(command.c_str());
 
   // read it from temporary file
