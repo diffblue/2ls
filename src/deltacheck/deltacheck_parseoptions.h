@@ -21,6 +21,8 @@ Author: Daniel Kroening, kroening@kroening.com
   "(debug-level):" \
   "(xml-ui)(xml-interface)" \
   "(verbosity):(version)(index):(description):" \
+  "(bounds-check)(pointer-check)(div-by-zero-check)" \
+  "(signed-overflow-check)(unsigned-overflow-check)(nan-check)" \
   "(show-ssa)(show-defs)(show-fixed-points)" \
   "(show-properties)(sat)"
 

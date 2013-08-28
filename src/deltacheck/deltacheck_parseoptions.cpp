@@ -100,7 +100,6 @@ void deltacheck_parseoptionst::get_command_line_options(optionst &options)
   if(cmdline.isset("debug-level"))
     options.set_option("debug-level", cmdline.getval("debug-level"));
 
-  #if 0
   // check array bounds
   if(cmdline.isset("bounds-check"))
     options.set_option("bounds-check", true);
@@ -136,13 +135,6 @@ void deltacheck_parseoptionst::get_command_line_options(optionst &options)
     options.set_option("pointer-check", true);
   else
     options.set_option("pointer-check", false);
-  #else
-  options.set_option("bounds-check", true);
-  options.set_option("div-by-zero-check", true);
-  options.set_option("signed-overflow-check", true);
-  options.set_option("unsigned-overflow-check", false);
-  options.set_option("pointer-check", true);
-  #endif
 
   // check assertions
   options.set_option("assertions", true);
