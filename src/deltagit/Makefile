@@ -2,7 +2,7 @@ include ../config.inc
 CBMC ?= ../..
 
 SRC = deltagit_main.cpp deltagit_parseoptions.cpp show_jobs.cpp \
-      shell_escape.cpp do_git.cpp git_log.cpp git_branch.cpp
+      shell_escape.cpp git_log.cpp git_branch.cpp
 
 OBJ+= $(CBMC)/src/util/util$(LIBEXT) \
       $(CBMC)/src/xmllang/xmllang$(LIBEXT) \
