@@ -1,12 +1,14 @@
 include ../config.inc
 CBMC ?= ../..
 
-SRC = deltagit_main.cpp deltagit_parseoptions.cpp show_jobs.cpp \
-      shell_escape.cpp git_log.cpp git_branch.cpp job_status.cpp do_job.cpp
+SRC = deltagit_main.cpp deltagit_parseoptions.cpp show_jobs.cpp report.cpp \
+      shell_escape.cpp git_log.cpp git_branch.cpp job_status.cpp do_job.cpp \
+      deltagit_config.cpp
 
 OBJ+= $(CBMC)/src/util/util$(LIBEXT) \
       $(CBMC)/src/xmllang/xmllang$(LIBEXT) \
-      $(CBMC)/src/big-int/big-int$(LIBEXT)
+      $(CBMC)/src/big-int/big-int$(LIBEXT) \
+      ../html/html_escape$(OBJEXT)
 
 include $(CBMC)/src/config.inc
 include $(CBMC)/src/common

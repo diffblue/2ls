@@ -13,6 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "show_jobs.h"
 #include "do_job.h"
 #include "deltagit_parseoptions.h"
+#include "report.h"
 
 /*******************************************************************\
 
