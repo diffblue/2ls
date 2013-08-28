@@ -44,7 +44,8 @@ void check_out(job_statust &job_status)
   }
   
   // now do checkout; this will eat disc space
-  command="cd "+working_dir+"; git checkout --detach";
+  command="cd "+working_dir+"; "+
+          "git checkout --detach "+job_status.commit;
   int result2=system(command.c_str());
 
   if(result2!=0)

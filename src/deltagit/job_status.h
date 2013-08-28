@@ -21,6 +21,7 @@ public:
   }
 
   std::string id;
+  std::string commit;
 
   enum statust { CHECK_OUT, BUILD, ANALYSE, DONE };
   bool failure;

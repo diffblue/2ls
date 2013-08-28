@@ -195,6 +195,18 @@ void get_jobs(std::list<job_statust> &jobs)
     }
 
     if(found)
-      jobs.push_back(job_statust(l_it->commit));
+    {
+      std::string id;
+
+      if(l_it->git_svn_id!="")
+        id="r"+l_it->git_svn_id;
+      else
+        id=l_it->commit;
+      
+      job_statust job_status(id);
+      job_status.commit=l_it->commit;
+      
+      jobs.push_back(job_status);
+    }
   }
 }
