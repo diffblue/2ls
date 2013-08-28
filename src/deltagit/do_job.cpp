@@ -104,11 +104,8 @@ Function: do_job
 
 \*******************************************************************/
 
-void do_job(const std::string &id)
+void do_job(job_statust &job_status)
 {
-  // get current job status
-  job_statust job_status(id);
-
   while(job_status.status!=job_statust::DONE &&
         !job_status.failure)
   {
@@ -135,9 +132,43 @@ Function: do_job
 
 \*******************************************************************/
 
+void do_job(const std::string &id)
+{
+  // get current job status
+  job_statust job_status(id);
+  do_job(job_status);
+}
+
+/*******************************************************************\
+
+Function: do_job
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
 void do_job()
 {
   // get job list
+  std::list<job_statust> jobs;
+  get_jobs(jobs);
   
+  // do jobs that need work
+  for(std::list<job_statust>::iterator
+      j_it=jobs.begin();
+      j_it!=jobs.end();
+      j_it++)
+  {
+    if(j_it->status!=job_statust::DONE &&
+       !j_it->failure)
+    {
+      std::cout << "Job " << j_it->id << std::endl;
+      do_job(*j_it);
+    }
+  }
 }
 

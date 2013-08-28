@@ -173,9 +173,10 @@ void get_jobs(std::list<job_statust> &jobs)
   std::cout << "LOG: " << git_log.entries.size() << std::endl;
 
   // rummage through it, looking for 'interesting' commits
-  for(git_logt::entriest::const_iterator
-      l_it=git_log.entries.begin();
-      l_it!=git_log.entries.end();
+  // we reverse, to start with older commits
+  for(git_logt::entriest::const_reverse_iterator
+      l_it=git_log.entries.rbegin();
+      l_it!=git_log.entries.rend();
       l_it++)
   {
     bool found=false;
