@@ -50,7 +50,7 @@ void git_brancht::read()
       const std::size_t branch_end=line.find(' ', 2);
       if(branch_end==std::string::npos) continue;
 
-      const std::size_t commit_pos=line.find_first_not_of(' ', commit_pos);
+      const std::size_t commit_pos=line.find_first_not_of(' ', branch_end);
       if(commit_pos==std::string::npos) continue;
 
       std::size_t commit_end=line.find(' ', commit_pos);
