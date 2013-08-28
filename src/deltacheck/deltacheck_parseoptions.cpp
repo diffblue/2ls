@@ -225,15 +225,7 @@ int deltacheck_parseoptionst::doit()
       return 0;
     }
     
-    options.set_option("bounds-check", true);
-    options.set_option("pointer-check", true);
-    options.set_option("div-by-zero-check", true);
-    options.set_option("signed-overflow-check", true);
-    //options.set_option("unsigned-overflow-check", true);
-    options.set_option("undefined-shift-check", true);
-    //options.set_option("float-overflow-check", true);
     options.set_option("simplify", true);
-    //options.set_option("nan-check", true);
     options.set_option("assertions", true);
     options.set_option("assumptions", true);
     
