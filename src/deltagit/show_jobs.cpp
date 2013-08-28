@@ -14,6 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "show_jobs.h"
 #include "git_log.h"
+#include "job_status.h"
 
 /*******************************************************************\
 
@@ -98,7 +99,12 @@ void show_jobs(std::ostream &out)
     if(found)
     {
       out << l_it->commit;
+
+      job_statust job_status(l_it->commit);
+      out << " " << as_string(job_status.status);
+      
       if(l_it->git_svn_id!="") out << " r" << l_it->git_svn_id;
+
       out << "\n";
     }
   }
