@@ -34,7 +34,8 @@ void job_statust::read()
   if(parse_xml("", message_handler, src))
   {
     // assume it's new
-    status=NEW;
+    status=CHECK_OUT;
+    failure=false;
     return;
   }
 
@@ -43,12 +44,12 @@ void job_statust::read()
 
   const std::string status_string=src.get_attribute("status");
   
-  if(status_string=="new")
-    status=NEW;
-  else if(status_string=="checked_out")
-    status=CHECKED_OUT;
-  else if(status_string=="built")
-    status=BUILT;
+  if(status_string=="check out")
+    status=CHECK_OUT;
+  else if(status_string=="build")
+    status=BUILD;
+  else if(status_string=="analyse")
+    status=ANALYSE;
   else if(status_string=="done")
     status=DONE;
   else
@@ -71,9 +72,9 @@ std::string as_string(job_statust::statust status)
 {
   switch(status)
   {
-  case job_statust::NEW: return "new";
-  case job_statust::CHECKED_OUT: return "checked_out";
-  case job_statust::BUILT: return "built";
+  case job_statust::CHECK_OUT: return "check out";
+  case job_statust::BUILD: return "build";
+  case job_statust::ANALYSE: return "analyse";
   case job_statust::DONE: return "done";
   default: return "";
   }

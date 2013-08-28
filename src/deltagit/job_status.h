@@ -21,7 +21,8 @@ public:
 
   std::string id;
 
-  enum statust { NEW, CHECKED_OUT, BUILT, DONE };
+  enum statust { CHECK_OUT, BUILD, ANALYSE, DONE };
+  bool failure;
   statust status;
   
   void read();

@@ -11,7 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "../deltacheck/version.h"
 
 #include "show_jobs.h"
-#include "do_git.h"
+#include "do_job.h"
 #include "deltagit_parseoptions.h"
 
 /*******************************************************************\
@@ -74,7 +74,7 @@ int deltagit_parseoptionst::doit()
         return 10;
       }
       
-      do_git(cmdline.args[1]);
+      do_job(cmdline.args[1]);
     }
     else
     {

@@ -102,6 +102,7 @@ void show_jobs(std::ostream &out)
 
       job_statust job_status(l_it->commit);
       out << " " << as_string(job_status.status);
+      if(job_status.failure) out << " FAILED";
       
       if(l_it->git_svn_id!="") out << " r" << l_it->git_svn_id;
 
