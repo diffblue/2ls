@@ -34,7 +34,7 @@ void job_statust::read()
   
   console_message_handlert message_handler;
       
-  if(parse_xml("", message_handler, src))
+  if(parse_xml(id+".status", message_handler, src))
   {
     // assume it's new
     status=CHECK_OUT;
@@ -109,7 +109,7 @@ void job_statust::write()
   if(failure)
     xml.set_attribute("failure", "1");
   
-  std::ofstream out((id+".xml").c_str());
+  std::ofstream out((id+".status").c_str());
   out << xml;
 }
 
@@ -163,15 +163,11 @@ Function: get_jobs
 
 \*******************************************************************/
 
-#include <iostream>
-
 void get_jobs(std::list<job_statust> &jobs)
 {
   // get the git log
   git_logt git_log;
   
-  std::cout << "LOG: " << git_log.entries.size() << std::endl;
-
   // rummage through it, looking for 'interesting' commits
   // we reverse, to start with older commits
   for(git_logt::entriest::const_reverse_iterator
