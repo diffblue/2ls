@@ -6,6 +6,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <cstdlib>
 #include <fstream>
 
 #include <util/xml.h>
@@ -37,8 +38,7 @@ void job_statust::read()
   if(parse_xml(id+".status", message_handler, src))
   {
     // assume it's new
-    status=CHECK_OUT;
-    failure=false;
+    clear();
     return;
   }
 
@@ -47,7 +47,9 @@ void job_statust::read()
 
   const std::string status_string=src.get_attribute("status");
   
-  if(status_string=="check out")
+  if(status_string=="init")
+    status=INIT;
+  else if(status_string=="check out")
     status=CHECK_OUT;
   else if(status_string=="build")
     status=BUILD;
@@ -60,6 +62,11 @@ void job_statust::read()
 
   if(src.get_attribute("failure")=="1")
     failure=true;
+
+  added=atol(src.get_attribute("added").c_str());
+  deleted=atol(src.get_attribute("deleted").c_str());
+  message=src.get_element("message");
+  author=src.get_attribute("author");
 }
 
 /*******************************************************************\
@@ -78,6 +85,7 @@ std::string as_string(job_statust::statust status)
 {
   switch(status)
   {
+  case job_statust::INIT: return "init";
   case job_statust::CHECK_OUT: return "check out";
   case job_statust::BUILD: return "build";
   case job_statust::ANALYSE: return "analyse";
@@ -106,6 +114,10 @@ void job_statust::write()
   xml.set_attribute("id", id);
   xml.set_attribute("status", as_string(status));
   xml.set_attribute("commit", commit);
+  xml.set_attribute("added", added);
+  xml.set_attribute("deleted", deleted);
+  xml.set_attribute("author", author);
+  xml.new_element("message").data=message;
   
   if(failure)
     xml.set_attribute("failure", "1");

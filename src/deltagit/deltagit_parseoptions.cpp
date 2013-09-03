@@ -13,7 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "show_jobs.h"
 #include "do_job.h"
 #include "deltagit_parseoptions.h"
-#include "report.h"
+#include "revisions_report.h"
 
 /*******************************************************************\
 
@@ -85,7 +85,7 @@ int deltagit_parseoptionst::doit()
     }
     else if(command=="report")
     {
-      report();
+      revisions_report();
     }
     else
     {
@@ -135,6 +135,8 @@ void deltagit_parseoptionst::help()
     " deltagit [-?] [-h] [--help]  show help\n"
     " deltagit jobs                list the jobs for the current directory\n"
     " deltagit do <job>            do given job\n"
+    " deltagit do                  do all jobs\n"
+    " deltagit report              generate top-level report\n"
     "\n"    
     "Other options:\n"
     " --version                    show version and exit\n"

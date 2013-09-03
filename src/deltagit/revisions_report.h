@@ -6,9 +6,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef CPROVER_DELTAGIT_REPORT_H
-#define CPROVER_DELTAGIT_REPORT_H
+#ifndef CPROVER_DELTAGIT_REVISIONS_REPORT_H
+#define CPROVER_DELTAGIT_REVISIONS_REPORT_H
 
-void report();
+void revisions_report();
 
 #endif

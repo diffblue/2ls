@@ -1,14 +1,15 @@
 include ../config.inc
 CBMC ?= ../..
 
-SRC = deltagit_main.cpp deltagit_parseoptions.cpp show_jobs.cpp report.cpp \
+SRC = deltagit_main.cpp deltagit_parseoptions.cpp show_jobs.cpp \
       shell_escape.cpp git_log.cpp git_branch.cpp job_status.cpp do_job.cpp \
-      deltagit_config.cpp
+      deltagit_config.cpp revisions_report.cpp
 
 OBJ+= $(CBMC)/src/util/util$(LIBEXT) \
       $(CBMC)/src/xmllang/xmllang$(LIBEXT) \
       $(CBMC)/src/big-int/big-int$(LIBEXT) \
-      ../html/html_escape$(OBJEXT)
+      ../html/html_escape$(OBJEXT) \
+      ../html/logo$(OBJEXT)
 
 include $(CBMC)/src/config.inc
 include $(CBMC)/src/common
@@ -20,6 +21,11 @@ LIBS =
 CLEANFILES = deltagit$(EXEEXT)
 
 all: deltagit$(EXEEXT)
+
+revisions_report$(OBJEXT): revisions_report_header.inc
+
+revisions_report_header.inc: revisions_report_header.html
+	../html/to_c_string.perl < revisions_report_header.html > $@
 
 ###############################################################################
 

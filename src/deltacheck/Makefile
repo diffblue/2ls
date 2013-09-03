@@ -67,7 +67,7 @@ endif
 html_report$(OBJEXT): report_header.inc
 
 report_header.inc: report_header.html
-	./to_c_string.perl < report_header.html > $@
+	../html/to_c_string.perl < report_header.html > $@
 
 ###############################################################################
 
