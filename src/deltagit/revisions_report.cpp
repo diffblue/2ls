@@ -6,6 +6,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <cmath>
 #include <fstream>
 
 #include "../html/html_escape.h"
