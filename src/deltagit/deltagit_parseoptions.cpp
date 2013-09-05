@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "show_jobs.h"
 #include "do_job.h"
+#include "init.h"
 #include "deltagit_parseoptions.h"
 #include "revisions_report.h"
 
@@ -66,6 +67,18 @@ int deltagit_parseoptionst::doit()
     if(command=="jobs")
     {
       show_jobs(std::cout);
+    }
+    else if(command=="init")
+    {
+      if(cmdline.args.size()==1)
+      {
+        init();
+      }
+      else
+      {
+        usage_error();
+        return 10;
+      }
     }
     else if(command=="do")
     {
