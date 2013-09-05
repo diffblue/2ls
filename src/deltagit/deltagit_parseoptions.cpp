@@ -150,6 +150,7 @@ void deltagit_parseoptionst::help()
     " deltagit jobs                list the jobs\n"
     " deltagit do <job>            do given job\n"
     " deltagit do                  do all jobs\n"
+    " deltagit reset               clear failure bit on all jobs\n"
     " deltagit report              generate top-level report\n"
     "\n"    
     "Other options:\n"
