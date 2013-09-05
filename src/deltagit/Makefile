@@ -3,7 +3,7 @@ CBMC ?= ../..
 
 SRC = deltagit_main.cpp deltagit_parseoptions.cpp show_jobs.cpp \
       shell_escape.cpp git_log.cpp git_branch.cpp job_status.cpp do_job.cpp \
-      deltagit_config.cpp revisions_report.cpp
+      deltagit_config.cpp revisions_report.cpp init.cpp
 
 OBJ+= $(CBMC)/src/util/util$(LIBEXT) \
       $(CBMC)/src/xmllang/xmllang$(LIBEXT) \

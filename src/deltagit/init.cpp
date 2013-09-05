@@ -1,26 +1,23 @@
 /*******************************************************************\
 
-Module: Check out a new repository
+Module: Initialize Jobs
 
 Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <cassert>
 #include <iostream>
 #include <fstream>
 
-#include <sys/stat.h>
+#include <util/prefix.h>
+#include <util/tempfile.h>
 
-#include <util/xml.h>
-
-#include "shell_escape.h"
-#include "do_svn.h"
+#include "job_status.h"
 #include "init.h"
 
 /*******************************************************************\
 
-Function: sanity_check
+Function: init
 
   Inputs:
 
@@ -30,39 +27,68 @@ Function: sanity_check
 
 \*******************************************************************/
 
-void sanity_check(
-  repo_kindt repo_kind,
-  const std::string &url)
+void init(job_statust &job_status)
 {
-  switch(repo_kind)
+  std::string command;
+  temporary_filet tempfile("deltagit", "txt");
+
+  // do a git show to learn more about the job
+  command="cd source-repo; git show "+job_status.commit+
+          " --numstat"+
+          " > "+tempfile();
+
+  int result1=system(command.c_str());
+  if(result1!=0)
   {
-  case NONE: assert(false); break;
-
-  case GIT:
-    break;
-
-  case SVN:
-    {
-      xmlt xml;
-      do_svn("info "+shell_escape(url), xml);
-
-      if(xml.name!="info")
-        throw std::string("unexpected XML from svn info");
-        
-      xmlt::elementst::const_iterator
-        entry_it=xml.find("entry");
-
-      if(entry_it==xml.elements.end())
-      {
-        std::cout << xml.data << "\n";
-        throw std::string("error from SVN");
-      }
-      
-      if(entry_it->get_attribute("kind")!="dir")
-        throw std::string("SVN URL is not a directory");
-    }
-    break;
+    job_status.failure=true;
+    // don't write, commit might be bogus
+    return;
   }
+
+  // parse the file
+  std::ifstream in(tempfile().c_str());
+  if(!in) return;
+  
+  std::string line;
+  
+  job_status.added=0;
+  job_status.deleted=0;
+  job_status.message="";
+  
+  while(std::getline(in, line))
+  {
+    if(has_prefix(line, "    git-svn-id: "))
+    {
+    }
+    else if(has_prefix(line, "    "))
+    {
+      // commit message
+      job_status.message+=line.substr(4, std::string::npos)+"\n";      
+    }
+    else if(has_prefix(line, "Author: "))
+    {
+      job_status.author=line.substr(8, std::string::npos);
+    }
+    else if(!line.empty() && isdigit(line[0]))
+    {
+      // <num-added>\t<num-deleted>\t<file-name>
+      const std::size_t end_added=line.find('\t', 0);
+      if(end_added==std::string::npos) continue;
+      const std::size_t end_deleted=line.find('\t', end_added+1);
+      if(end_deleted==std::string::npos) continue;
+      
+      job_status.added+=atol(line.substr(0, end_added).c_str());
+      job_status.deleted+=atol(line.substr(end_added+1, end_deleted-end_added-1).c_str());
+    }
+  }       
+  
+  // strip trailing \n from commit message
+  std::string &message=job_status.message;
+  while(!message.empty() && message[message.size()-1]=='\n')
+    message.resize(message.size()-1);
+  
+  job_status.status=job_statust::CHECK_OUT;
+  job_status.write();  
 }
 
 /*******************************************************************\
@@ -77,32 +103,24 @@ Function: init
 
 \*******************************************************************/
 
-void init(
-  repo_kindt repo_kind,
-  const std::string &url,
-  const std::string &dest)
+void init()
 {
-  sanity_check(repo_kind, url);
-
-  int mkdir_result=mkdir(dest.c_str(), 0777);
+  // get job list
+  std::list<job_statust> jobs;
+  get_jobs(jobs);
   
-  if(mkdir_result!=0)
-    throw std::string("error creating directory `")+dest+"'";
-  
-  xmlt config("deltarepo");
-
-  switch(repo_kind)
+  // do jobs that need to be initialized
+  for(std::list<job_statust>::iterator
+      j_it=jobs.begin();
+      j_it!=jobs.end();
+      j_it++)
   {
-  case NONE: assert(false); break;
-  case GIT: config.set_attribute("kind", "git"); break;
-  case SVN: config.set_attribute("kind", "svn"); break;
-  }
-  
-  config.set_attribute("url", url);
-  
-  {
-    std::string file_name=dest+"/"+deltarepo_configt::file_name();
-    std::ofstream out_file(file_name.c_str());
-    out_file << config;
+    if(j_it->status==job_statust::INIT &&
+       !j_it->failure)
+    {
+      std::cout << "Setting up job " << j_it->id << std::endl;
+      init(*j_it);
+    }
   }
 }
+
