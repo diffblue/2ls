@@ -15,6 +15,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "revisions_report.h"
 #include "job_status.h"
 #include "deltagit_config.h"
+#include "log_scale.h"
 
 const char revisions_report_header[]=
 #include "revisions_report_header.inc"
@@ -69,7 +70,9 @@ Function: height
 unsigned height(const job_statust &job_status)
 {
   unsigned lines=job_status.added+job_status.deleted;
-  return lines==0?1:(unsigned)(log(lines+1)/log(2));
+  if(lines==0) return 0;
+  if(lines==1) return 1;
+  return log10(lines)*10;
 }
 
 /*******************************************************************\
@@ -96,15 +99,7 @@ void revisions_report()
 
   get_jobs(jobs);
   
-  unsigned max_height=0;
-  
-  for(std::list<job_statust>::const_iterator
-      j_it=jobs.begin();
-      j_it!=jobs.end();
-      j_it++)
-  {
-    max_height=std::max(max_height, height(*j_it));
-  }
+  unsigned max_height=44; // the hight of log_scale.png
   
   std::ofstream out("index.html");
   
@@ -128,6 +123,11 @@ void revisions_report()
 
   out << "<div class=\"revisions\">\n";
   
+  out << "<table>\n"
+      << "<tr><td valign=top>\n"
+      << "<img src=\"" << log_scale << "\">\n"
+      << "</td>\n<td>\n";
+  
   for(std::list<job_statust>::const_iterator
       j_it=jobs.begin();
       j_it!=jobs.end();
@@ -141,7 +141,7 @@ void revisions_report()
     tooltip+=
       "</font>";
       
-    unsigned h=height(*j_it);
+    unsigned h=std::min(height(*j_it), max_height);
       
     out << "<div class=\"revision\""
            " id=\"rev-" << j_it->id << "\""
@@ -157,6 +157,8 @@ void revisions_report()
     out << "</div>";
     out << "\n";
   }
+  
+  out << "</td></tr></table>\n";
   
   out << "</div>\n";
   
