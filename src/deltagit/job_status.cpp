@@ -19,6 +19,25 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
+Function: job_statust::next_stage
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void job_statust::next_stage()
+{
+  assert(stage!=DONE);
+  stage=(staget)((int)stage+1);
+  status=WAITING;
+}
+
+/*******************************************************************\
+
 Function: job_statust::read
 
   Inputs:

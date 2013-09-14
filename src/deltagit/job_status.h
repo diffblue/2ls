@@ -44,6 +44,8 @@ public:
     added=deleted=0;
   }
   
+  void next_stage();
+  
 protected:
 };
 

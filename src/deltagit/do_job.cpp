@@ -6,6 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <unistd.h>
+
 #include <cstdlib>
 #include <cassert>
 #include <iostream>
@@ -32,6 +34,15 @@ Function: check_out
 void check_out(job_statust &job_status)
 {
   const std::string working_dir=job_status.id+".wd";
+  
+  // check if we already have it
+  if(access((working_dir+"/.git/HEAD").c_str(), R_OK)==0)
+  {
+    std::cout << "git repository already present\n";
+    job_status.next_stage();
+    job_status.write();  
+    return;
+  }
 
   job_status.status=job_statust::RUNNING;
   job_status.write();
@@ -66,8 +77,7 @@ void check_out(job_statust &job_status)
     return;
   }
 
-  job_status.status=job_statust::WAITING;
-  job_status.stage=job_statust::BUILD;
+  job_status.next_stage();
   job_status.write();  
 }
 
@@ -105,8 +115,7 @@ void build(job_statust &job_status)
     return;
   }
 
-  job_status.status=job_statust::WAITING;
-  job_status.stage=job_statust::ANALYSE;
+  job_status.next_stage();
   job_status.write();  
 }
 

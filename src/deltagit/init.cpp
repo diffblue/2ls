@@ -91,9 +91,8 @@ void init(job_statust &job_status)
   std::string &message=job_status.message;
   while(!message.empty() && message[message.size()-1]=='\n')
     message.resize(message.size()-1);
-  
-  job_status.stage=job_statust::CHECK_OUT;
-  job_status.status=job_statust::WAITING;
+
+  job_status.next_stage();
   job_status.write();  
 }
 
