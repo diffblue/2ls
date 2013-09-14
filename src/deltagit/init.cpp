@@ -110,6 +110,8 @@ void init()
   std::list<job_statust> jobs;
   get_jobs(jobs);
   
+  unsigned total=0;
+  
   // do jobs that need to be initialized
   for(std::list<job_statust>::iterator
       j_it=jobs.begin();
@@ -119,9 +121,13 @@ void init()
     if(j_it->status==job_statust::INIT &&
        !j_it->failure)
     {
-      std::cout << "Setting up job " << j_it->id << std::endl;
+      std::cout << "Setting up job " << j_it->id << "\n";
+      std::cout << std::flush;
       init(*j_it);
+      total++;
     }
   }
+  
+  std::cout << "Added " << total << " jobs\n";
 }
 
