@@ -137,7 +137,10 @@ void revisions_report()
       "<center>"+j_it->id+"</center>"+
       "<font size=2>";
     if(j_it->author!="") tooltip+="Author: "+html_escape(j_it->author)+"<br>";
+    if(j_it->date!="") tooltip+="Date: "+html_escape(j_it->date)+"<br>";
     tooltip+=htmlize_message(j_it->message);
+    if(j_it->status!=job_statust::DONE)
+      tooltip+="<br><i>"+html_escape(as_string(j_it->status))+"</i>";
     tooltip+=
       "</font>";
       

@@ -67,6 +67,7 @@ void job_statust::read()
   deleted=atol(src.get_attribute("deleted").c_str());
   message=src.get_element("message");
   author=src.get_attribute("author");
+  date=src.get_attribute("date");
 }
 
 /*******************************************************************\
@@ -117,6 +118,7 @@ void job_statust::write()
   xml.set_attribute("added", added);
   xml.set_attribute("deleted", deleted);
   xml.set_attribute("author", author);
+  xml.set_attribute("date", date);
   xml.new_element("message").data=message;
   
   if(failure)

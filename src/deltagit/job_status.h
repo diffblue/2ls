@@ -24,6 +24,7 @@ public:
   std::string commit;
   std::string message;
   std::string author;
+  std::string date;
   
   unsigned added, deleted;
 

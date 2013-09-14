@@ -70,6 +70,10 @@ void init(job_statust &job_status)
     {
       job_status.author=line.substr(8, std::string::npos);
     }
+    else if(has_prefix(line, "Date:   "))
+    {
+      job_status.date=line.substr(8, std::string::npos);
+    }
     else if(!line.empty() && isdigit(line[0]))
     {
       // <num-added>\t<num-deleted>\t<file-name>
