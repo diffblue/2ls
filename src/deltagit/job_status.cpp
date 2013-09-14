@@ -96,10 +96,11 @@ std::string as_string(job_statust::staget stage)
 {
   switch(stage)
   {
-  case job_statust::WAITING: return "waiting";
-  case job_statust::RUNNING: return "running";
-  case job_statust::FAILURE: return "failure";
-  case job_statust::COMPLETED: return "completed";
+  case job_statust::INIT: return "init";
+  case job_statust::CHECK_OUT: return "check out";
+  case job_statust::BUILD: return "build";
+  case job_statust::ANALYSE: return "analyse";
+  case job_statust::DONE: return "done";
   default: return "";
   }
 }
@@ -120,11 +121,10 @@ std::string as_string(job_statust::statust status)
 {
   switch(status)
   {
-  case job_statust::INIT: return "init";
-  case job_statust::CHECK_OUT: return "check out";
-  case job_statust::BUILD: return "build";
-  case job_statust::ANALYSE: return "analyse";
-  case job_statust::DONE: return "done";
+  case job_statust::WAITING: return "waiting";
+  case job_statust::RUNNING: return "running";
+  case job_statust::FAILURE: return "failure";
+  case job_statust::COMPLETED: return "completed";
   default: return "";
   }
 }
