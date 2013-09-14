@@ -45,29 +45,63 @@ void job_statust::read()
   if(src.name!="deltagit_jobstatus")
     throw std::string("unexpected XML for job status");
 
+  const std::string stage_string=src.get_attribute("stage");
+  
+  if(stage_string=="init")
+    stage=INIT;
+  else if(stage_string=="check out")
+    stage=CHECK_OUT;
+  else if(stage_string=="build")
+    stage=BUILD;
+  else if(stage_string=="analyse")
+    stage=ANALYSE;
+  else if(stage_string=="done")
+    stage=DONE;
+  else
+    throw std::string("unexpected stage");
+
   const std::string status_string=src.get_attribute("status");
   
-  if(status_string=="init")
-    status=INIT;
-  else if(status_string=="check out")
-    status=CHECK_OUT;
-  else if(status_string=="build")
-    status=BUILD;
-  else if(status_string=="analyse")
-    status=ANALYSE;
-  else if(status_string=="done")
-    status=DONE;
+  if(status_string=="waiting")
+    status=WAITING;
+  else if(status_string=="running")
+    status=RUNNING;
+  else if(status_string=="failure")
+    status=FAILURE;
+  else if(status_string=="completed")
+    status=COMPLETED;
   else
     throw std::string("unexpected status");
-
-  if(src.get_attribute("failure")=="1")
-    failure=true;
 
   added=atol(src.get_attribute("added").c_str());
   deleted=atol(src.get_attribute("deleted").c_str());
   message=src.get_element("message");
   author=src.get_attribute("author");
   date=src.get_attribute("date");
+}
+
+/*******************************************************************\
+
+Function: as_string
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::string as_string(job_statust::staget stage)
+{
+  switch(stage)
+  {
+  case job_statust::WAITING: return "waiting";
+  case job_statust::RUNNING: return "running";
+  case job_statust::FAILURE: return "failure";
+  case job_statust::COMPLETED: return "completed";
+  default: return "";
+  }
 }
 
 /*******************************************************************\
@@ -114,15 +148,13 @@ void job_statust::write()
 
   xml.set_attribute("id", id);
   xml.set_attribute("status", as_string(status));
+  xml.set_attribute("stage", as_string(stage));
   xml.set_attribute("commit", commit);
   xml.set_attribute("added", added);
   xml.set_attribute("deleted", deleted);
   xml.set_attribute("author", author);
   xml.set_attribute("date", date);
   xml.new_element("message").data=message;
-  
-  if(failure)
-    xml.set_attribute("failure", "1");
   
   std::ofstream out((id+".status").c_str());
   out << xml;

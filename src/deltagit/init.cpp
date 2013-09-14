@@ -41,7 +41,7 @@ void init(job_statust &job_status)
   int result1=system(command.c_str());
   if(result1!=0)
   {
-    job_status.failure=true;
+    job_status.status=job_statust::FAILURE;
     // don't write, commit might be bogus
     return;
   }
@@ -92,7 +92,8 @@ void init(job_statust &job_status)
   while(!message.empty() && message[message.size()-1]=='\n')
     message.resize(message.size()-1);
   
-  job_status.status=job_statust::CHECK_OUT;
+  job_status.stage=job_statust::CHECK_OUT;
+  job_status.status=job_statust::WAITING;
   job_status.write();  
 }
 
@@ -122,8 +123,8 @@ void init()
       j_it!=jobs.end();
       j_it++)
   {
-    if(j_it->status==job_statust::INIT &&
-       !j_it->failure)
+    if(j_it->stage==job_statust::INIT &&
+       j_it->status!=job_statust::FAILURE)
     {
       std::cout << "Setting up job " << j_it->id << "\n";
       std::cout << std::flush;

@@ -139,10 +139,10 @@ void revisions_report()
     if(j_it->author!="") tooltip+="Author: "+html_escape(j_it->author)+"<br>";
     if(j_it->date!="") tooltip+="Date: "+html_escape(j_it->date)+"<br>";
     tooltip+=htmlize_message(j_it->message);
-    if(j_it->status!=job_statust::DONE)
+    if(j_it->stage!=job_statust::DONE)
     {
-      tooltip+="<br><i>"+html_escape(as_string(j_it->status));
-      if(j_it->failure) tooltip+=" failure";
+      tooltip+="<br><i>"+html_escape(as_string(j_it->stage));
+      tooltip+=" "+html_escape(as_string(j_it->status));
       tooltip+="</i>";
     }
     tooltip+=
@@ -150,7 +150,7 @@ void revisions_report()
       
     unsigned h=std::min(height(*j_it), max_height);
 
-    if(j_it->status!=job_statust::INIT)
+    if(j_it->stage!=job_statust::INIT)
       out << "<a href=\"" << j_it->id << ".html/\">";
     
     out << "<div class=\"revision\""
@@ -166,7 +166,7 @@ void revisions_report()
     out << "</div>";
     out << "</div>";
     
-    if(j_it->status!=job_statust::INIT)
+    if(j_it->stage!=job_statust::INIT)
       out << "</a>\n";
 
     out << "\n";

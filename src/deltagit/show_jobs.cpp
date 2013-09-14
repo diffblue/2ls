@@ -37,8 +37,8 @@ void show_jobs(std::ostream &out)
   {
     out << j_it->id;
 
-    out << " " << as_string(j_it->status);
-    if(j_it->failure) out << " FAILED";
+    out << " " << as_string(j_it->stage)
+        << " " << as_string(j_it->status);
     
     out << "\n";
   }

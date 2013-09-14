@@ -33,6 +33,9 @@ void check_out(job_statust &job_status)
 {
   const std::string working_dir=job_status.id+".wd";
 
+  job_status.status=job_statust::RUNNING;
+  job_status.write();
+
   std::string command;
 
   // Do a shared clone -- this uses very little disc space.
@@ -44,7 +47,7 @@ void check_out(job_statust &job_status)
   int result1=system(command.c_str());
   if(result1!=0)
   {
-    job_status.failure=true;
+    job_status.status=job_statust::FAILURE;
     job_status.write();
     return;
   }
@@ -58,12 +61,13 @@ void check_out(job_statust &job_status)
 
   if(result2!=0)
   {
-    job_status.failure=true;
+    job_status.status=job_statust::FAILURE;
     job_status.write();
     return;
   }
 
-  job_status.status=job_statust::BUILD;
+  job_status.status=job_statust::WAITING;
+  job_status.stage=job_statust::BUILD;
   job_status.write();  
 }
 
@@ -83,6 +87,9 @@ void build(job_statust &job_status)
 {
   const std::string working_dir=job_status.id+".wd";
   
+  job_status.status=job_statust::RUNNING;
+  job_status.write();
+
   std::string command;
 
   // Now run build script in working directory.
@@ -93,12 +100,13 @@ void build(job_statust &job_status)
   
   if(result!=0)
   {
-    job_status.failure=true;
+    job_status.status=job_statust::FAILURE;
     job_status.write();
     return;
   }
 
-  job_status.status=job_statust::ANALYSE;
+  job_status.status=job_statust::WAITING;
+  job_status.stage=job_statust::ANALYSE;
   job_status.write();  
 }
 
@@ -139,7 +147,7 @@ void analyse(
     std::cout << "One-version analysis for " << job_status.id
               << "\n";
 
-  job_status.failure=true;
+  job_status.status=job_statust::FAILURE;
 }
 
 /*******************************************************************\
@@ -157,10 +165,10 @@ Function: do_job
 void do_job(job_statust &job_status,
             const std::list<job_statust> &jobs)
 {
-  while(job_status.status!=job_statust::DONE &&
-        !job_status.failure)
+  while(job_status.stage!=job_statust::DONE &&
+        job_status.status!=job_statust::FAILURE)
   {
-    switch(job_status.status)
+    switch(job_status.stage)
     {
     case job_statust::INIT: return; // done by deltagit init
     case job_statust::CHECK_OUT: check_out(job_status); break;
@@ -219,8 +227,8 @@ void do_job()
       j_it!=jobs.end();
       j_it++)
   {
-    if(j_it->status!=job_statust::DONE &&
-       !j_it->failure)
+    if(j_it->stage!=job_statust::DONE &&
+       j_it->status!=job_statust::FAILURE)
     {
       std::cout << "Job " << j_it->id << std::endl;
       do_job(*j_it, jobs);

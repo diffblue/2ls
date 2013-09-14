@@ -35,10 +35,10 @@ void reset()
       j_it!=jobs.end();
       j_it++)
   {
-    if(j_it->failure)
+    if(j_it->status==job_statust::FAILURE)
     {
       std::cout << "Resetting job " << j_it->id << std::endl;
-      j_it->failure=false;
+      j_it->status=job_statust::WAITING;
       j_it->write();
     }
   }

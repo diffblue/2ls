@@ -28,9 +28,10 @@ public:
   
   unsigned added, deleted;
 
-  enum statust { INIT, CHECK_OUT, BUILD, ANALYSE, DONE };
-  bool failure;
+  enum statust { WAITING, RUNNING, FAILURE, COMPLETED };
+  enum staget { INIT, CHECK_OUT, BUILD, ANALYSE, DONE };
   statust status;
+  staget stage;
   
   void read();
   void write();
@@ -38,8 +39,8 @@ public:
   void clear()
   {
     commit="";
-    status=INIT;
-    failure=false;
+    status=WAITING;
+    stage=INIT;
     added=deleted=0;
   }
   
@@ -47,6 +48,7 @@ protected:
 };
 
 std::string as_string(job_statust::statust);
+std::string as_string(job_statust::staget);
 
 typedef std::list<job_statust> jobst;
 
