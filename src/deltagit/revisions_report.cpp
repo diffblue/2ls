@@ -140,12 +140,19 @@ void revisions_report()
     if(j_it->date!="") tooltip+="Date: "+html_escape(j_it->date)+"<br>";
     tooltip+=htmlize_message(j_it->message);
     if(j_it->status!=job_statust::DONE)
-      tooltip+="<br><i>"+html_escape(as_string(j_it->status))+"</i>";
+    {
+      tooltip+="<br><i>"+html_escape(as_string(j_it->status));
+      if(j_it->failure) tooltip+=" failure";
+      tooltip+="</i>";
+    }
     tooltip+=
       "</font>";
       
     unsigned h=std::min(height(*j_it), max_height);
-      
+
+    if(j_it->status!=job_statust::INIT)
+      out << "<a href=\"" << j_it->id << ".html/\">";
+    
     out << "<div class=\"revision\""
            " id=\"rev-" << j_it->id << "\""
            " onMouseOver=\"tooltip.show('" << tooltip << "');\""
@@ -158,6 +165,10 @@ void revisions_report()
            ">";
     out << "</div>";
     out << "</div>";
+    
+    if(j_it->status!=job_statust::INIT)
+      out << "</a>\n";
+
     out << "\n";
   }
   
