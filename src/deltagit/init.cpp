@@ -123,7 +123,7 @@ void init(unsigned max_jobs)
       j_it!=jobs.rend();
       j_it++)
   {
-    if(max_jobs!=0 && total>max_jobs)
+    if(max_jobs!=0 && total>=max_jobs)
       break;
     
     if(j_it->stage==job_statust::INIT &&
