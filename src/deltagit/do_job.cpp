@@ -44,6 +44,8 @@ void check_out(job_statust &job_status)
     return;
   }
 
+  std::cout << "Checking out " << job_status.id << "\n";
+
   job_status.status=job_statust::RUNNING;
   job_status.write();
 
@@ -64,9 +66,9 @@ void check_out(job_statust &job_status)
   }
   
   // Now do checkout; this will eat disc space.
-  command="cd "+working_dir+"; "+
+  command="(cd "+working_dir+"; "+
           "git checkout --detach "+job_status.commit+
-          " 2>&1 >> "+job_status.id+".log";
+          ") 2>&1 >> "+job_status.id+".log";
 
   int result2=system(command.c_str());
 
@@ -95,6 +97,8 @@ Function: build
 
 void build(job_statust &job_status)
 {
+  std::cout << "Building " << job_status.id << "\n";
+
   const std::string working_dir=job_status.id+".wd";
   
   job_status.status=job_statust::RUNNING;
@@ -103,8 +107,8 @@ void build(job_statust &job_status)
   std::string command;
 
   // Now run build script in working directory.
-  command="cd "+working_dir+"; ../build"+
-          " 2>&1 >> "+job_status.id+".log";
+  command="(cd "+working_dir+"; ../build"+
+          ") 2>&1 >> "+job_status.id+".log";
 
   int result=system(command.c_str());
   
