@@ -1,15 +1,18 @@
-void f(char b, int x, int y) {
- while (b) {
-   x++;
-   y++;
+_Bool some_function();
+
+void f(int x, int y)
+{
+  while(some_function())
+  {
+    x++;
+    y++;
   }
-  assert(x == y);
+
+  assert(x==y);
 }
 
-
-void main() {
- char b;
- int x,y;
- f(b, x, y);
-
+void main()
+{
+  int x,y;
+  f(x, y);
 }
