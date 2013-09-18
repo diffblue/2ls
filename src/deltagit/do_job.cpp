@@ -189,8 +189,7 @@ Function: do_job
 void do_job(job_statust &job_status,
             const std::list<job_statust> &jobs)
 {
-  while(job_status.stage!=job_statust::DONE &&
-        job_status.status!=job_statust::FAILURE)
+  if(job_status.status!=job_statust::FAILURE)
   {
     switch(job_status.stage)
     {
@@ -258,6 +257,7 @@ void do_job()
     {
       std::cout << "Job " << j_it->id << std::endl;
       do_job(*j_it, jobs);
+      return;
     }
   }
 }
