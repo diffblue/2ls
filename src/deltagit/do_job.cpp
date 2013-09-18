@@ -38,7 +38,8 @@ void check_out(job_statust &job_status)
   // check if we already have it
   if(access((working_dir+"/.git/HEAD").c_str(), R_OK)==0)
   {
-    std::cout << "git repository already present\n";
+    std::cout << "git repository for " << job_status.id
+              << " already present\n";
     job_status.next_stage();
     job_status.write();  
     return;
@@ -244,7 +245,7 @@ void do_job()
   std::list<job_statust> jobs;
   get_jobs(jobs);
   
-  // Do a job that need work,
+  // Do a job that needs work,
   // starting from the end of the log.
   for(std::list<job_statust>::reverse_iterator
       j_it=jobs.rbegin();
