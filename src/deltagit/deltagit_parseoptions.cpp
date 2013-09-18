@@ -73,7 +73,11 @@ int deltagit_parseoptionst::doit()
     {
       if(cmdline.args.size()==1)
       {
-        init();
+        init(0);
+      }
+      else if(cmdline.args.size()==2)
+      {
+        init(atoi(cmdline.args[1].c_str()));
       }
       else
       {
@@ -162,10 +166,10 @@ void deltagit_parseoptionst::help()
     "Usage:                       Purpose:\n"
     "\n"
     " deltagit [-?] [-h] [--help]  show help\n"
-    " deltagit init                set up the jobs\n"
+    " deltagit init <max-jobs>     set up the jobs\n"
     " deltagit jobs                list the jobs\n"
     " deltagit do <job>            do given job\n"
-    " deltagit do                  do all jobs\n"
+    " deltagit do                  do a job that needs work\n"
     " deltagit reset               clear failure bit on all jobs\n"
     " deltagit report              generate top-level report\n"
     "\n"    

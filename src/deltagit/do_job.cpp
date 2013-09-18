@@ -149,9 +149,20 @@ void analyse(
   }
   
   if(previous!="")
+  {
     std::cout << "Differential analysis between "
               << previous << " and " << job_status.id
               << "\n";
+
+    // is it built already?
+    job_statust old_version(previous);
+
+    if(old_version.stage!=job_statust::ANALYSE)
+    {
+      std::cout << "Job " << previous << " is not built yet\n";
+      return;
+    }
+  }
   else
     std::cout << "One-version analysis for " << job_status.id
               << "\n";
@@ -230,10 +241,11 @@ void do_job()
   std::list<job_statust> jobs;
   get_jobs(jobs);
   
-  // do jobs that need work
-  for(std::list<job_statust>::iterator
-      j_it=jobs.begin();
-      j_it!=jobs.end();
+  // Do a job that need work,
+  // starting from the end of the log.
+  for(std::list<job_statust>::reverse_iterator
+      j_it=jobs.rbegin();
+      j_it!=jobs.rend();
       j_it++)
   {
     if(j_it->stage!=job_statust::DONE &&

@@ -108,7 +108,7 @@ Function: init
 
 \*******************************************************************/
 
-void init()
+void init(unsigned max_jobs)
 {
   // get job list
   std::list<job_statust> jobs;
@@ -116,12 +116,16 @@ void init()
   
   unsigned total=0;
   
-  // do jobs that need to be initialized
-  for(std::list<job_statust>::iterator
-      j_it=jobs.begin();
-      j_it!=jobs.end();
+  // Do jobs that need to be initialized,
+  // starting from the end.
+  for(std::list<job_statust>::reverse_iterator
+      j_it=jobs.rbegin();
+      j_it!=jobs.rend();
       j_it++)
   {
+    if(max_jobs!=0 && total>max_jobs)
+      break;
+    
     if(j_it->stage==job_statust::INIT &&
        j_it->status!=job_statust::FAILURE)
     {
