@@ -249,6 +249,7 @@ void do_job()
       j_it++)
   {
     if(j_it->stage!=job_statust::DONE &&
+       j_it->stage!=job_statust::INIT &&
        j_it->status!=job_statust::FAILURE)
     {
       std::cout << "Job " << j_it->id << std::endl;
