@@ -56,7 +56,7 @@ void check_out(job_statust &job_status)
   // Will overwrite log.
   command="git clone --no-checkout --shared source-repo "+
           working_dir+
-          " 2>&1 > "+job_status.id+".log";
+          " > "+job_status.id+".log 2>&1";
 
   int result1=system(command.c_str());
   if(result1!=0)
@@ -69,7 +69,7 @@ void check_out(job_statust &job_status)
   // Now do checkout; this will eat disc space.
   command="(cd "+working_dir+"; "+
           "git checkout --detach "+job_status.commit+
-          ") 2>&1 >> "+job_status.id+".log";
+          ") >> "+job_status.id+".log 2>&1";
 
   int result2=system(command.c_str());
 
@@ -109,7 +109,7 @@ void build(job_statust &job_status)
 
   // Now run build script in working directory.
   command="(cd "+working_dir+"; ../build"+
-          ") 2>&1 >> "+job_status.id+".log";
+          ") >> "+job_status.id+".log 2>&1";
 
   int result=system(command.c_str());
   
