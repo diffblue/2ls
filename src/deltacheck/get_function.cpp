@@ -8,6 +8,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <goto-programs/read_goto_binary.h>
 
+#include "path_util.h"
 #include "get_function.h"
 
 /*******************************************************************\
@@ -43,17 +44,24 @@ goto_functionst::goto_functiont * get_functiont::operator()(const irep_idt &id)
   
   // pick first file
   assert(!it->second.empty());
+  
+  irep_idt file_name=*(it->second.begin());
 
-  current_file_name=*(it->second.begin());
+  current_file_name=
+    make_relative_path(index.path_prefix, id2string(file_name));
   
   status("Reading \""+id2string(current_file_name)+"\"");
   
   // read the file
   goto_model.clear();
-  read_goto_binary(
+
+  bool error=read_goto_binary(
     id2string(current_file_name),
     goto_model,
     get_message_handler());
+  
+  if(error)
+    return NULL;
 
   const goto_functionst::function_mapt::iterator
     f_it=goto_model.goto_functions.function_map.find(id);
