@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <map>
 #include <ostream>
 #include <cstring>
+#include <cassert>
 
 #include "../html/html_escape.h"
 #include "syntax_highlighting.h"
@@ -77,6 +78,15 @@ public:
   std::string get();
   std::string peek();
   std::string buf;
+  bool eol() const { return buf.empty(); }
+
+  char get_char()
+  {
+    if(buf.empty()) return 0;
+    char result=buf[0];
+    buf.erase(0, 1);
+    return result;
+  }
 };
 
 /*******************************************************************\
@@ -193,12 +203,25 @@ void syntax_highlightingt::operator()(const std::string &line)
   
   std::map<std::string, unsigned> var_count;
 
-  while(!(token=tokenizer.get()).empty())
+  while(!tokenizer.eol())
   {
     if(comment)
     {
-      out << html_escape(token);
-      if(token=="*/")
+      std::string buf;
+      bool end_of_comment=false;
+      
+      while(!end_of_comment)
+      {
+        char ch=tokenizer.get_char();
+        if(ch==0) break;
+        buf+=ch;
+        if(buf.size()>=2 && buf[buf.size()-2]=='*' && buf[buf.size()-1]=='/')
+          end_of_comment=true;
+      }
+      
+      out << html_escape(buf);
+
+      if(end_of_comment)
       {
         out << "</cite>";
         comment=false;
@@ -206,6 +229,9 @@ void syntax_highlightingt::operator()(const std::string &line)
     }
     else
     {
+      token=tokenizer.get();
+      assert(!token.empty());
+
       if(isdigit(token[0])) // numeral
       {
         out << token;

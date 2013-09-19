@@ -38,20 +38,22 @@ Function: rename
 
 void rename(exprt &expr)
 {
-  Forall_operands(it, src)
-    rename(*it, dest);
+  Forall_operands(it, expr)
+    rename(*it);
   
-  find_symbols(kind, src.type(), dest);
+  rename(expr.type());
   
-  if(kind==F_BOTH || kind==F_EXPR)
-    if(src.id()==ID_symbol ||
-       src.id()==ID_next_symbol)
-      dest.insert(src.get(ID_identifier));
+  if(expr.id()==ID_symbol)
+  {
+  }
 
-  const irept &c_sizeof_type=src.find(ID_C_c_sizeof_type);
+  if(expr.find(ID_C_c_sizeof_type).is_not_nil())
+  {
+    irept &c_sizeof_type=expr.add(ID_C_c_sizeof_type);
 
-  if(c_sizeof_type.is_not_nil())
-    find_symbols(kind, static_cast<const typet &>(c_sizeof_type), dest);
+    if(c_sizeof_type.is_not_nil())
+      rename(static_cast<typet &>(c_sizeof_type));
+  }
 }
 
 /*******************************************************************\
