@@ -419,8 +419,11 @@ void deltacheck_analyzert::operator()()
 {
   std::string report_file_name=
     use_index_old?"deltacheck-diff.html":"deltacheck.html";
+    
+  std::string report_full_path=
+    make_relative_path(index_new.path_prefix, report_file_name);
 
-  std::ofstream out(report_file_name.c_str());
+  std::ofstream out(report_full_path.c_str());
   
   if(!out)
   {
@@ -450,6 +453,22 @@ void deltacheck_analyzert::operator()()
   check_all(out);
 
   html_report_footer(out);
+  
+  // Write some statistics into an XML file, for the benefit
+  // of other programs.
+  
+  std::string stat_xml_full_path=
+    make_relative_path(index_new.path_prefix, "deltacheck-stat.xml");
+
+  std::ofstream xml_out(stat_xml_full_path.c_str());
+  
+  xml_out << "<deltacheck_stat>\n";
+  xml_out << "<properties";
+  xml_out << " passed=\"" << statistics.number_map["Passed"] << "\"";
+  xml_out << " failed=\"" << statistics.number_map["Errors"] << "\"";
+  xml_out << " warned=\"" << statistics.number_map["Unknown"] << "\"";
+  xml_out << ">\n";
+  xml_out << "</deltacheck_stat>\n";
 }  
 
 /*******************************************************************\
