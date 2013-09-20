@@ -45,6 +45,9 @@ void rename(exprt &expr)
   
   if(expr.id()==ID_symbol)
   {
+    const irep_idt old_name=expr.get(ID_identifier);
+    const irep_idt new_name=id2string(old_name)+"$old";
+    expr.set(ID_identifier, new_name);
   }
 
   if(expr.find(ID_C_c_sizeof_type).is_not_nil())
@@ -105,7 +108,9 @@ void rename(typet &type)
   }
   else if(type.id()==ID_symbol)
   {
-    irep_idt old=type.get(ID_identifier);
+    const irep_idt old_name=type.get(ID_identifier);
+    const irep_idt new_name=id2string(old_name)+"$old";
+    type.set(ID_identifier, new_name);
   }
   else if(type.id()==ID_array)
   {
