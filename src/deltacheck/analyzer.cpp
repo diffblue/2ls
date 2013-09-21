@@ -192,7 +192,7 @@ void deltacheck_analyzert::check_function_delta(
   function_SSAt function_SSA_new(f_new, ns);
   statistics.stop("SSA");
 
-  // add assertions in old as constraints
+  // add assertions in old version as assumptions
   function_SSA_old.assertions_to_constraints();
   
   // now do _joint_ fixed-point
