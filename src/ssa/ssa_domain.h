@@ -6,8 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef CPROVER_SOURCE_DOMAIN_H
-#define CPROVER_SOURCE_DOMAIN_H
+#ifndef CPROVER_SSA_DOMAIN_H
+#define CPROVER_SSA_DOMAIN_H
 
 #include <analyses/static_analysis.h>
 #include <analyses/interval_analysis.h>
