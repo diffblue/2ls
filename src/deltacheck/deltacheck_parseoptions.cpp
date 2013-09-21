@@ -263,6 +263,22 @@ int deltacheck_parseoptionst::doit()
       return 0;
     }
 
+    if(cmdline.isset("show-guards"))
+    {
+      if(cmdline.args.size()!=1)
+      {
+        usage_error();
+        return 10;
+      }
+
+      indext index;
+      index.set_message_handler(get_message_handler());
+      index.read(cmdline.args[0]);
+
+      show_guards(index, options, std::cout, get_message_handler());
+      return 0;
+    }
+
     if(cmdline.isset("show-fixed-points"))
     {
       if(cmdline.args.size()!=1)

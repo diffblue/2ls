@@ -23,7 +23,7 @@ Author: Daniel Kroening, kroening@kroening.com
   "(verbosity):(version)(index):(description):" \
   "(bounds-check)(pointer-check)(div-by-zero-check)" \
   "(signed-overflow-check)(unsigned-overflow-check)(nan-check)" \
-  "(show-ssa)(show-defs)(show-fixed-points)" \
+  "(show-ssa)(show-defs)(show-guards)(show-fixed-points)" \
   "(show-properties)(sat)"
 
 class deltacheck_parseoptionst:
