@@ -257,22 +257,24 @@ void report_countermodels(
   std::ostream &out)
 {
   out << "<script type=\"text/javascript\">\n";
+  out << "// differential countermodels\n";
   
   unsigned count=0;
   
   for(propertiest::const_iterator
       p_it=properties.begin();
       p_it!=properties.end();
-      p_it++, count=0)
+      p_it++, count++)
   {
-    const propertyt &property=*p_it;
-    
-    if(property.status!=tvt(false)) continue;
-
     out << "var ce" << count << " = { };\n";
 
-    report_countermodel(*p_it, function_SSA_old, count, out);
-    report_countermodel(*p_it, function_SSA_new, count, out);
+    const propertyt &property=*p_it;
+    
+    if(property.status==tvt(false))
+    {
+      report_countermodel(*p_it, function_SSA_old, count, out);
+      report_countermodel(*p_it, function_SSA_new, count, out);
+    }
     
     out << "\n";
   }
@@ -298,21 +300,23 @@ void report_countermodels(
   std::ostream &out)
 {
   out << "<script type=\"text/javascript\">\n";
+  out << "// single-version countermodels\n";
   
   unsigned count=0;
   
   for(propertiest::const_iterator
       p_it=properties.begin();
       p_it!=properties.end();
-      p_it++, count=0)
+      p_it++, count++)
   {
-    const propertyt &property=*p_it;
-    
-    if(property.status!=tvt(false)) continue;
-
     out << "var ce" << count << " = { };\n";
 
-    report_countermodel(*p_it, function_SSA, count, out);
+    const propertyt &property=*p_it;
+    
+    if(property.status==tvt(false))
+    {
+      report_countermodel(*p_it, function_SSA, count, out);
+    }
     
     out << "\n";
   }
