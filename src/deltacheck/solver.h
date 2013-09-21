@@ -48,6 +48,10 @@ public:
   }
 
 protected:
+  // Used to determine whether an expression is suitable
+  // as value for a model.
+  bool is_a_constant(const exprt &expr) const;
+
   void set_to_rec(const exprt &expr, bool value);
   
   // simplify and add expression, return its handle

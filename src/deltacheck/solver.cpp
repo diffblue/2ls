@@ -692,6 +692,30 @@ void solvert::bound(
 
 /*******************************************************************\
 
+Function: solvert::is_a_constant
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool solvert::is_a_constant(const exprt &expr) const
+{
+  if(expr.is_constant()) return true;
+  
+  if(expr.id()==ID_address_of &&
+     expr.operands().size()==1 &&
+     expr.op0().id()==ID_symbol)
+    return true;
+
+  return false;
+}
+
+/*******************************************************************\
+
 Function: solvert::get
 
   Inputs:
@@ -704,7 +728,9 @@ Function: solvert::get
 
 exprt solvert::get(const exprt &expr) const
 {
-  if(expr.is_constant()) return expr;
+  // is it already a constant?
+  if(expr.is_constant())
+    return expr;
   
   // is it an equality?
   if(expr.id()==ID_equal)
@@ -715,7 +741,8 @@ exprt solvert::get(const exprt &expr) const
   }
   else if(expr.id()==ID_not ||
           expr.id()==ID_and ||
-          expr.id()==ID_or)
+          expr.id()==ID_or ||
+          expr.id()==ID_implies)
   {
     exprt tmp=expr;
     Forall_operands(it, tmp)
@@ -730,10 +757,11 @@ exprt solvert::get(const exprt &expr) const
 
   if(!expr_numbering.get_number(tmp, nr))
   {
-    // equal to some constant?
+    // Equal to some constant?
     for(unsigned i=0; i<equalities.size(); i++)
-      if(expr_numbering[i].is_constant() &&
-         is_equal(i, nr))
+      if(i!=nr &&
+         is_equal(i, nr) &&
+         is_a_constant(expr_numbering[i]))
         return expr_numbering[i];
   }
 
