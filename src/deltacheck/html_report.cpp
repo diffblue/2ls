@@ -129,7 +129,7 @@ void html_report_footer(std::ostream &out)
   out << "<hr>\n"
          "\n"
          "<div class=\"copyright\">\n"
-         "DeltaCheck is Copyright 2011&ndash;2013 Daniel Kroening, University of Oxford.\n"
+         "DeltaCheck is &copy; 2011&ndash;2013 Daniel Kroening, University of Oxford.\n"
          "</div>\n"
          "\n"
          "</body>\n"
