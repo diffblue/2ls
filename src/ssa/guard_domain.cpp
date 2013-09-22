@@ -84,7 +84,7 @@ Function: guard_domaint::merge
 
   Inputs:
 
- Outputs:
+ Outputs: return true if "this" has changed
 
  Purpose:
 
@@ -94,14 +94,20 @@ bool guard_domaint::merge(
   const guard_domaint &b,
   locationt to)
 {
-  bool result=false;
-
   // This is the 'OR' between the two conjunctions.
   // If this is something simple, we use it.
   // Otherwise, we introduce a brand-new guard.
-
-  guards.clear();
-  guards.push_back(guardt(to));
   
-  return result;
+  if(guards==b.guards)
+    return false;
+    
+  guardst new_guards;
+  new_guards.push_back(guardt(to));
+  
+  if(new_guards==guards)
+    return false;
+
+  guards.swap(new_guards);
+  
+  return true;
 }

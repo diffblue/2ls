@@ -116,7 +116,7 @@ void show_guards(
   const namespacet &ns,
   std::ostream &out)
 {
-  static_analysist<guard_domaint> ssa_analysis(ns);
+  ait<guard_domaint> ssa_analysis(ns);
   ssa_analysis(goto_function.body);
   ssa_analysis.output(goto_function.body, out);
 }
