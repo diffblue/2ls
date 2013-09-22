@@ -30,15 +30,29 @@ void guard_domaint::output(
   const namespacet &ns,
   std::ostream &out) const
 {
+  if(unreachable)
+  {
+    out << "UNREACHABLE\n";
+    return;
+  }
+
   for(guardst::const_iterator
       g_it=guards.begin();
       g_it!=guards.end();
       g_it++)
   {
     if(g_it!=guards.begin()) out << " ";
-    if(!g_it->truth) out << "!";
-    out << g_it->branch->location_number;
+    switch(g_it->kind)
+    {
+    case guardt::NONE: assert(false); break;
+    case guardt::BRANCH_TAKEN: out << "bt"; break;
+    case guardt::BRANCH_NOT_TAKEN: out << "bnt"; break;
+    case guardt::MERGED: break;
+    }
+
+    out << g_it->loc->location_number;
   }
+
   out << "\n";
 }
 
@@ -59,12 +73,15 @@ void guard_domaint::transform(
   locationt from,
   locationt to)
 {
+  if(unreachable) return;
+
   if(from->is_goto())
   {
     if(from->get_target()==to)
     {
       // taken
-      guards.push_back(guardt(from, true));
+      if(!from->guard.is_true())
+        guards.push_back(guardt(from, true));
     }
     else
     {
@@ -75,6 +92,12 @@ void guard_domaint::transform(
   else if(from->is_assume())
   {
     guards.push_back(guardt(from));
+  }
+  else if(from->is_function_call())
+  {
+    // Functions might not return, but we will assume that
+    // for now.
+    //guards.push_back(guardt(from));
   }
 }
 
@@ -92,17 +115,57 @@ Function: guard_domaint::merge
 
 bool guard_domaint::merge(
   const guard_domaint &b,
+  locationt from,
   locationt to)
 {
-  // This is the 'OR' between the two conjunctions.
-  // If this is something simple, we use it.
-  // Otherwise, we introduce a brand-new guard.
+  // Merging a blank state doesn't change anything.
+  if(b.unreachable) return false;
+
+  // update 'from'
+  incoming[from]=b.guards;
+
+  if(unreachable)
+  {
+    // copy guards of 'b'
+    unreachable=false;
+    guards=b.guards;
+    return true;
+  }
   
-  if(guards==b.guards)
-    return false;
-    
   guardst new_guards;
-  new_guards.push_back(guardt(to));
+  
+  // Just one incoming edge?
+  if(incoming.size()==1)
+  {
+    new_guards=incoming.begin()->second;
+  }
+  else if(incoming.size()==2)
+  {
+    // This is the 'OR' between the two conjunctions.
+    // If this is something simple, we use it.
+    const guardst &g1=incoming.begin()->second;
+    const guardst &g2=incoming.rbegin()->second;
+  
+    if(prefix_match(g1, g2) &&
+       g1.back().is_branch() && g2.back().is_branch() &&
+       g1.back().loc==g2.back().loc)
+    {
+      // We have PREFIX bt loc and PREFIX bnt loc.
+      // The 'OR' is PREFIX.
+      new_guards=g1;
+      new_guards.resize(new_guards.size()-1);
+    }
+    else
+    {
+      // introduce merge guard
+      new_guards.push_back(guardt(to));
+    }
+  }
+  else
+  {
+    // Otherwise, we introduce a brand-new merge guard.
+    new_guards.push_back(guardt(to));
+  }
   
   if(new_guards==guards)
     return false;
