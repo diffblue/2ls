@@ -198,12 +198,6 @@ int deltacheck_parseoptionst::doit()
     
     if(cmdline.isset("index"))
     {
-      if(cmdline.args.size()==0)
-      {
-        usage_error();
-        return 10;
-      }
-      
       status() << "Building index `" << cmdline.getval("index") << "'" << eom;
       
       std::ofstream out(cmdline.getval("index"));
@@ -220,7 +214,23 @@ int deltacheck_parseoptionst::doit()
       
       indext index;
       index.set_message_handler(get_message_handler());
-      index.build(cmdline.args, description);
+
+      if(cmdline.args.size()==0)
+      {
+        // read from stdin
+        std::vector<std::string> files;
+        std::string line;
+        while(std::getline(std::cin, line))
+        {
+          if(!line.empty())
+            files.push_back(line);
+        }
+
+        index.build(files, description);
+      }
+      else
+        index.build(cmdline.args, description);
+
       index.write(out);
       return 0;
     }
@@ -393,6 +403,8 @@ void deltacheck_parseoptionst::help()
     " deltacheck [-?] [-h] [--help] show help\n"
     " deltacheck --index           \n"
     "   index-file.xml file(s)     build index for given file(s)\n"
+    " deltacheck --index           \n"
+    "   index-file.xml < list      build index for files given as list\n"
     " deltacheck index1 index2     delta check two versions\n"
     "\n"
     "Indexing options:\n"
