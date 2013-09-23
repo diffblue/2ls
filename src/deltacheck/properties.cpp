@@ -155,6 +155,7 @@ Function: report_countermodel
 
 void report_countermodel(
   const propertyt &property,
+  const namespacet &ns,
   const function_SSAt &function_SSA,
   unsigned count,
   std::ostream &out)
@@ -164,9 +165,9 @@ void report_countermodel(
       v_it!=property.value_map.end();
       v_it++)
   {
-    out << "// " << from_expr(function_SSA.ns, "", v_it->first)
+    out << "// " << from_expr(ns, "", v_it->first)
                  << " -> "
-                 << from_expr(function_SSA.ns, "", v_it->second)
+                 << from_expr(ns, "", v_it->second)
                  << "\n";
   }
   
@@ -201,12 +202,12 @@ void report_countermodel(
 
       if(v_it_lhs!=property.value_map.end())
       {
-        std::string var=from_expr(function_SSA.ns, "", input_name);
+        std::string var=from_expr(ns, "", input_name);
         std::string var_loc=var+"@"+id2string(i_it->location.get_line());
         out << "ce" << count << "['" << var_loc
             << "." << ++var_count[var_loc]
             << "']='"
-            << from_expr(function_SSA.ns, "", v_it_lhs->second)
+            << from_expr(ns, "", v_it_lhs->second)
             << "';\n";
       }
     }
@@ -225,12 +226,12 @@ void report_countermodel(
         
       if(v_it_rhs!=property.value_map.end())
       {
-        std::string var=from_expr(function_SSA.ns, "", input_name);
+        std::string var=from_expr(ns, "", input_name);
         std::string var_loc=var+"@"+id2string(i_it->location.get_line());
         out << "ce" << count << "['" << var_loc
             << "." << ++var_count[var_loc]
             << "']='"
-            << from_expr(function_SSA.ns, "", v_it_rhs->second)
+            << from_expr(ns, "", v_it_rhs->second)
             << "';\n";
       }
 
@@ -272,8 +273,11 @@ void report_countermodels(
     
     if(property.status==tvt(false))
     {
-      report_countermodel(*p_it, function_SSA_old, count, out);
-      report_countermodel(*p_it, function_SSA_new, count, out);
+      namespacet joint_ns(
+        function_SSA_new.ns.get_symbol_table(),
+        function_SSA_old.ns.get_symbol_table());
+      report_countermodel(*p_it, joint_ns, function_SSA_old, count, out);
+      report_countermodel(*p_it, joint_ns, function_SSA_new, count, out);
     }
     
     out << "\n";
@@ -315,7 +319,7 @@ void report_countermodels(
     
     if(property.status==tvt(false))
     {
-      report_countermodel(*p_it, function_SSA, count, out);
+      report_countermodel(*p_it, function_SSA.ns, function_SSA, count, out);
     }
     
     out << "\n";
