@@ -12,9 +12,23 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/symbol_table.h>
 #include <goto-programs/goto_functions.h>
 
-void rename(symbol_tablet &);
-void rename(exprt &);
-void rename(typet &);
-void rename(goto_functionst &);
+class renamet
+{
+public:
+  renamet():suffix("$old")
+  {
+  }
+
+  void operator()(symbol_tablet &);
+  void operator()(symbolt &);
+  void operator()(exprt &);
+  void operator()(typet &);
+  void operator()(goto_functionst &);
+  void operator()(goto_functionst::goto_functiont &);
+  
+  std::string suffix;
+
+protected:
+};
 
 #endif

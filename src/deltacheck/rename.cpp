@@ -10,7 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
-Function: rename
+Function: renamet::operator()
 
   Inputs:
 
@@ -20,13 +20,20 @@ Function: rename
 
 \*******************************************************************/
 
-void rename(symbol_tablet &symbol_table)
+void renamet::operator()(symbol_tablet &symbol_table)
 {
+  for(symbol_tablet::symbolst::iterator
+      s_it=symbol_table.symbols.begin();
+      s_it!=symbol_table.symbols.end();
+      s_it++)
+  {
+    operator()(s_it->second);
+  }
 }
 
 /*******************************************************************\
 
-Function: rename
+Function: renamet::operator()
 
   Inputs:
 
@@ -36,17 +43,35 @@ Function: rename
 
 \*******************************************************************/
 
-void rename(exprt &expr)
+void renamet::operator()(symbolt &symbol)
+{
+  operator()(symbol.value);
+  operator()(symbol.type);
+}
+
+/*******************************************************************\
+
+Function: renamet::operator()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void renamet::operator()(exprt &expr)
 {
   Forall_operands(it, expr)
-    rename(*it);
+    operator()(*it);
   
-  rename(expr.type());
+  operator()(expr.type());
   
   if(expr.id()==ID_symbol)
   {
     const irep_idt old_name=expr.get(ID_identifier);
-    const irep_idt new_name=id2string(old_name)+"$old";
+    const irep_idt new_name=id2string(old_name)+suffix;
     expr.set(ID_identifier, new_name);
   }
 
@@ -55,13 +80,13 @@ void rename(exprt &expr)
     irept &c_sizeof_type=expr.add(ID_C_c_sizeof_type);
 
     if(c_sizeof_type.is_not_nil())
-      rename(static_cast<typet &>(c_sizeof_type));
+      operator()(static_cast<typet &>(c_sizeof_type));
   }
 }
 
 /*******************************************************************\
 
-Function: rename
+Function: renamet::operator()
 
   Inputs:
 
@@ -71,13 +96,13 @@ Function: rename
 
 \*******************************************************************/
 
-void rename(typet &type)
+void renamet::operator()(typet &type)
 {
   if(type.has_subtype())
-    rename(type.subtype());
+    operator()(type.subtype());
 
   Forall_subtypes(it, type)
-    rename(*it);
+    operator()(*it);
     
   if(type.id()==ID_struct ||
      type.id()==ID_union)
@@ -89,12 +114,12 @@ void rename(typet &type)
         it=components.begin();
         it!=components.end();
         it++)
-      rename(*it);
+      operator()(*it);
   } 
   else if(type.id()==ID_code)
   {
     code_typet &code_type=to_code_type(type);
-    rename(code_type.return_type());
+    operator()(code_type.return_type());
 
     code_typet::argumentst &arguments=code_type.arguments();
 
@@ -103,7 +128,7 @@ void rename(typet &type)
         it!=arguments.end();
         it++)
     {
-      rename(*it);
+      operator()(*it);
     }
   }
   else if(type.id()==ID_symbol)
@@ -115,13 +140,13 @@ void rename(typet &type)
   else if(type.id()==ID_array)
   {
     // do the size -- the subtype is already done
-    rename(to_array_type(type).size());
+    operator()(to_array_type(type).size());
   }
 }
 
 /*******************************************************************\
 
-Function: rename
+Function: renamet::operator()
 
   Inputs:
 
@@ -131,7 +156,34 @@ Function: rename
 
 \*******************************************************************/
 
-void rename(goto_functionst &)
+void renamet::operator()(goto_functionst &goto_functions)
 {
+  for(goto_functionst::function_mapt::iterator
+      f_it=goto_functions.function_map.begin();
+      f_it!=goto_functions.function_map.end();
+      f_it++)
+    operator()(f_it->second);
+}
 
+/*******************************************************************\
+
+Function: renamet::operator()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void renamet::operator()(goto_functionst::goto_functiont &goto_function)
+{
+  operator()(goto_function.type);
+  
+  Forall_goto_program_instructions(i_it, goto_function.body)
+  {
+    operator()(i_it->code);
+    operator()(i_it->guard);
+  }
 }
