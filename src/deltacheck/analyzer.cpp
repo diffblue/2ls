@@ -170,7 +170,7 @@ void deltacheck_analyzert::check_function_delta(
   const std::string &path_prefix_new,
   const symbolt &symbol_new,
   goto_functionst::goto_functiont &f_new,
-  const namespacet &ns,
+  const namespacet &ns_new,
   std::ostream &file_report)
 {
   statistics.number_map["Functions"]++;
@@ -179,26 +179,29 @@ void deltacheck_analyzert::check_function_delta(
   // add properties to each
   status() << "Generating properties" << eom;
   statistics.start("Properties");
-  goto_check(ns, options, f_old);
+  goto_check(ns_old, options, f_old);
   f_old.body.update();
-  goto_check(ns, options, f_new);
+  goto_check(ns_new, options, f_new);
   f_new.body.update();
   statistics.stop("Properties");
 
   // build SSA for each
   status() << "Building SSA" << eom;
   statistics.start("SSA");
-  function_SSAt function_SSA_old(f_old, ns, "@old");
-  function_SSAt function_SSA_new(f_new, ns);
+  function_SSAt function_SSA_old(f_old, ns_old, "@old");
+  function_SSAt function_SSA_new(f_new, ns_new);
   statistics.stop("SSA");
 
   // add assertions in old version as assumptions
   function_SSA_old.assertions_to_constraints();
   
   // now do _joint_ fixed-point
+  namespacet joint_ns(
+    ns_new.get_symbol_table(),
+    ns_old.get_symbol_table());
   status() << "Joint data-flow fixed-point" << eom;
   statistics.start("Fixed-point");
-  ssa_data_flowt ssa_data_flow(function_SSA_old, function_SSA_new, ns);
+  ssa_data_flowt ssa_data_flow(function_SSA_old, function_SSA_new, joint_ns);
   statistics.stop("Fixed-point");
   
   // now report on assertions
