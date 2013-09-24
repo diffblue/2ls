@@ -119,7 +119,11 @@ void process_diff(
   std::list<linet> &lines2,
   const std::list<std::string> &diff)
 {
+  // constant-time access to the list of lines members
   std::vector<std::list<linet>::iterator> l_it1, l_it2;
+  
+  l_it1.reserve(lines1.size());
+  l_it2.reserve(lines2.size());
   
   for(std::list<linet>::iterator it=lines1.begin();
       it!=lines1.end(); it++)
@@ -129,6 +133,7 @@ void process_diff(
       it!=lines2.end(); it++)
     l_it2.push_back(it);
 
+  // now process the diff
   for(std::list<std::string>::const_iterator
       d_it=diff.begin();
       d_it!=diff.end();
@@ -146,23 +151,35 @@ void process_diff(
       if(da.new_size>da.old_size)
       {
         for(unsigned i=da.old_size; i<da.new_size; i++)
+        {
+          assert(da.old_from<l_it1.size());
           lines1.insert(l_it1[da.old_from], linet());
+        }
       }
       else if(da.old_size>da.new_size)
       {
         for(unsigned i=da.new_size; i<da.old_size; i++)
+        {
+          assert(da.old_from<l_it2.size());
           lines2.insert(l_it2[da.old_from], linet());
+        }
       }
       break;
       
     case 'a': // add
       for(unsigned i=0; i<da.new_size; i++)
+      {
+        assert(da.old_from<l_it1.size());
         lines1.insert(l_it1[da.old_from], linet());
+      }
       break;
 
     case 'd': // delete
       for(unsigned i=0; i<da.old_size; i++)
+      {
+        assert(da.old_from<l_it2.size());
         lines2.insert(l_it2[da.old_from], linet());
+      }
       break;
     }
   }
