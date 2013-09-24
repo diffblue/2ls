@@ -115,23 +115,24 @@ Function: process_diff
 \*******************************************************************/
 
 void process_diff(
-  std::list<linet> &lines1,
-  std::list<linet> &lines2,
+  std::list<linet> &lines_old,
+  std::list<linet> &lines_new,
   const std::list<std::string> &diff)
 {
   // constant-time access to the list of lines members
-  std::vector<std::list<linet>::iterator> l_it1, l_it2;
+  std::vector<std::list<linet>::iterator>
+    l_it_old, l_it_new;
   
-  l_it1.reserve(lines1.size());
-  l_it2.reserve(lines2.size());
+  l_it_old.reserve(lines_old.size());
+  l_it_new.reserve(lines_new.size());
   
-  for(std::list<linet>::iterator it=lines1.begin();
-      it!=lines1.end(); it++)
-    l_it1.push_back(it);
+  for(std::list<linet>::iterator it=lines_old.begin();
+      it!=lines_old.end(); it++)
+    l_it_old.push_back(it);
 
-  for(std::list<linet>::iterator it=lines2.begin();
-      it!=lines2.end(); it++)
-    l_it2.push_back(it);
+  for(std::list<linet>::iterator it=lines_new.begin();
+      it!=lines_new.end(); it++)
+    l_it_new.push_back(it);
 
   // now process the diff
   for(std::list<std::string>::const_iterator
@@ -148,20 +149,20 @@ void process_diff(
     switch(da.action)
     {
     case 'c': // change
-      if(da.new_size>da.old_size)
+      if(da.new_size>da.old_size) // enlarge
       {
         for(unsigned i=da.old_size; i<da.new_size; i++)
         {
-          assert(da.old_from<l_it1.size());
-          lines1.insert(l_it1[da.old_from], linet());
+          assert(da.old_from<l_it_old.size());
+          lines_old.insert(l_it_old[da.old_from], linet());
         }
       }
-      else if(da.old_size>da.new_size)
+      else if(da.old_size>da.new_size) // shrink
       {
         for(unsigned i=da.new_size; i<da.old_size; i++)
         {
-          assert(da.old_from<l_it2.size());
-          lines2.insert(l_it2[da.old_from], linet());
+          assert(da.new_from<l_it_new.size());
+          lines_new.insert(l_it_new[da.new_from], linet());
         }
       }
       break;
@@ -169,16 +170,16 @@ void process_diff(
     case 'a': // add
       for(unsigned i=0; i<da.new_size; i++)
       {
-        assert(da.old_from<l_it1.size());
-        lines1.insert(l_it1[da.old_from], linet());
+        assert(da.old_from<l_it_old.size());
+        lines_old.insert(l_it_old[da.old_from], linet());
       }
       break;
 
     case 'd': // delete
       for(unsigned i=0; i<da.old_size; i++)
       {
-        assert(da.old_from<l_it2.size());
-        lines2.insert(l_it2[da.old_from], linet());
+        assert(da.new_from<l_it_new.size());
+        lines_new.insert(l_it_new[da.new_from], linet());
       }
       break;
     }
