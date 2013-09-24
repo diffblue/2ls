@@ -31,7 +31,7 @@ void html_report_header(
   const std::string &title,
   std::ostream &out)
 {
-  out << "<html>\n";
+  out << "<!DOCTYPE html>\n<html>\n";
 
   out << "<head>\n";
   
