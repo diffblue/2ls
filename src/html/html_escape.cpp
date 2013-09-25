@@ -32,8 +32,12 @@ std::string html_escape(const std::string &src)
     case '<': result+="&lt;"; break;
     case '>': result+="&gt;"; break;
     case '"': result+="&quot;"; break;
-    case '\'': result+="&apos;"; break;
     case '&': result+="&amp;"; break;
+    
+    // &apos; does not seem to be universally supported,
+    // and Unicode seems to suggest to prefer &#8217; over &#39;
+    case '\'': result+="&8217;"; break;
+
     default: result+=src[i];
     }
   
