@@ -9,8 +9,11 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <cstdlib>
 #include <fstream>
 
+#include <dirent.h>
+
 #include <util/xml.h>
 #include <util/cout_message.h>
+#include <util/suffix.h>
 
 #include <xmllang/xml_parser.h>
 
@@ -181,44 +184,6 @@ void job_statust::write()
 
 /*******************************************************************\
 
-Function: get_extension
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-std::string get_extension(const std::string &s)
-{
-  std::size_t pos=s.rfind('.');
-  if(pos==std::string::npos) return "";
-  return s.substr(pos+1, std::string::npos);
-}
-
-/*******************************************************************\
-
-Function: get_file
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-std::string get_file(const std::string &s)
-{
-  std::size_t pos=s.rfind('/');
-  if(pos==std::string::npos) return s;
-  return s.substr(pos+1, std::string::npos);
-}
-
-/*******************************************************************\
-
 Function: get_jobs
 
   Inputs:
@@ -231,48 +196,21 @@ Function: get_jobs
 
 void get_jobs(std::list<job_statust> &jobs)
 {
-  // get the git log
-  git_logt git_log;
+  DIR *dir=opendir(".");
+  if(dir==NULL) return;
   
-  // rummage through it, looking for 'interesting' commits
-  // we reverse, to start with older commits
-  for(git_logt::entriest::const_reverse_iterator
-      l_it=git_log.entries.rbegin();
-      l_it!=git_log.entries.rend();
-      l_it++)
+  std::string suffix=".status";
+
+  struct dirent *ent;
+  while((ent=readdir(dir))!=NULL)
   {
-    bool found=false;
-  
-    for(std::list<std::string>::const_iterator
-        f_it=l_it->files.begin();
-        f_it!=l_it->files.end();
-        f_it++)
+    std::string name=ent->d_name;
+    if(has_suffix(name, suffix))
     {
-      std::string file=get_file(*f_it);
-      std::string ext=get_extension(file);
-
-      if(ext=="c" || ext=="C" ||
-         ext=="cpp" || ext=="c++" ||
-         ext=="h" || ext=="hpp")
-      {
-        found=true;
-        break;
-      }    
-    }
-
-    if(found)
-    {
-      std::string id;
-
-      if(l_it->git_svn_id!="")
-        id="r"+l_it->git_svn_id;
-      else
-        id=l_it->commit;
-      
-      job_statust job_status(id);
-      job_status.commit=l_it->commit;
-      
-      jobs.push_back(job_status);
+      std::string id=name.substr(0, name.size()-suffix.size());
+      jobs.push_back(job_statust(id));
     }
   }
+
+  closedir(dir);
 }
