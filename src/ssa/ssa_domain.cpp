@@ -29,7 +29,6 @@ Function: ssa_domaint::output
 \*******************************************************************/
 
 void ssa_domaint::output(
-  const namespacet &ns,
   std::ostream &out) const
 {
   for(def_mapt::const_iterator
@@ -45,14 +44,14 @@ void ssa_domaint::output(
       p_it!=phi_nodes.end();
       p_it++)
   {
-    for(std::map<locationt, locationt>::const_iterator
+    for(std::map<locationt, deft>::const_iterator
         n_it=p_it->second.begin();
         n_it!=p_it->second.end();
         n_it++)
     {
       // this maps source -> def
       out << "PHI " << p_it->first << ": "
-          << (*n_it).second->location_number
+          << (*n_it).second
           << " from " 
           << (*n_it).first->location_number << "\n";
     }
@@ -72,7 +71,6 @@ Function: ssa_domaint::transform
 \*******************************************************************/
 
 void ssa_domaint::transform(
-  const namespacet &ns,
   locationt from,
   locationt to)
 {
@@ -117,7 +115,8 @@ void ssa_domaint::assign(const exprt &lhs, locationt from)
   {
     const irep_idt &id=to_symbol_expr(lhs).get_identifier();
     def_entryt &def_entry=def_map[id];
-    def_entry.def=from;
+    def_entry.def.loc=from;
+    def_entry.def.kind=deft::ASSIGNMENT;
     def_entry.source=from;
   }
   else if(lhs.id()==ID_member)
@@ -156,6 +155,7 @@ Function: ssa_domaint::merge
 
 bool ssa_domaint::merge(
   const ssa_domaint &b,
+  locationt from,
   locationt to)
 {
   bool result=false;
@@ -174,7 +174,7 @@ bool ssa_domaint::merge(
     if(p_it!=phi_nodes.end())
     {
       // yes, simply add to existing phi node
-      std::map<locationt, locationt> &phi_node=p_it->second;
+      std::map<locationt, deft> &phi_node=p_it->second;
       phi_node[d_it_b->second.source]=d_it_b->second.def;      
       // doesn't get propagated, don't set result to 'true'
       continue;
@@ -218,13 +218,14 @@ bool ssa_domaint::merge(
     {
       // Arg! Data coming from two sources from two different definitions!
       // We produce a new phi node.
-      std::map<locationt, locationt> &phi_node=phi_nodes[id];
+      std::map<locationt, deft> &phi_node=phi_nodes[id];
 
       phi_node[d_it_a->second.source]=d_it_a->second.def;
       phi_node[d_it_b->second.source]=d_it_b->second.def;
       
-      // This node is now the new source.
-      d_it_a->second.def=to;
+      // This phi node is now the new source.
+      d_it_a->second.def.loc=to;
+      d_it_a->second.def.kind=deft::PHI;
       d_it_a->second.source=to;
 
       result=true;

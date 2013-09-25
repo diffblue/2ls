@@ -6,6 +6,12 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#define DEBUG
+
+#ifdef DEBUG
+#include <iostream>
+#endif
+
 #include <util/i2string.h>
 #include <util/expr_util.h>
 #include <util/decision_procedure.h>
@@ -32,7 +38,7 @@ void function_SSAt::build_SSA()
   collect_objects();
   
   // perform SSA data-flow analysis
-  ssa_analysis(goto_function.body);
+  ssa_analysis(goto_function);
 
   // now build phi-nodes
   forall_goto_program_instructions(i_it, goto_function.body)
@@ -71,58 +77,56 @@ void function_SSAt::build_phi_nodes(locationt loc)
     ssa_domaint::phi_nodest::const_iterator p_it=
       phi_nodes.find(o_it->get_identifier());
           
-    if(p_it!=phi_nodes.end())
-    {
-      // yes
-      // source -> def map
-      const std::map<locationt, locationt> &incoming=p_it->second;
+    if(p_it==phi_nodes.end()) continue; // none
+    
+    // yes
+    // source -> def map
+    const std::map<locationt, ssa_domaint::deft> &incoming=p_it->second;
 
-      exprt rhs=nil_exprt();
+    exprt rhs=nil_exprt();
 
-      // We distinguish forwards- from backwards-edges,
-      // and do forwards-edges first, which gives them
-      // _lower_ priority in the ITE.
-      
-      for(std::map<locationt, locationt>::const_iterator
-          incoming_it=incoming.begin();
-          incoming_it!=incoming.end();
-          incoming_it++)
-        if(incoming_it->first->location_number < loc->location_number)
-        {
-          // it's a forward edge
-          bool from_out=assigns(*o_it, incoming_it->second);
-          exprt incoming_value=name(*o_it, from_out?OUT:PHI, incoming_it->second);
-          exprt incoming_guard=guard_symbol(incoming_it->first);
+    // We distinguish forwards- from backwards-edges,
+    // and do forwards-edges first, which gives them
+    // _lower_ priority in the ITE.
+    
+    for(std::map<locationt, ssa_domaint::deft>::const_iterator
+        incoming_it=incoming.begin();
+        incoming_it!=incoming.end();
+        incoming_it++)
+      if(incoming_it->first->location_number < loc->location_number)
+      {
+        // it's a forward edge
+        exprt incoming_value=name(*o_it, incoming_it->second);
+        exprt incoming_guard=guard_symbol(incoming_it->first);
 
-          if(rhs.is_nil()) // first
-            rhs=incoming_value;
-          else
-            rhs=if_exprt(incoming_guard, incoming_value, rhs);
-        }
-       
-      // now do backwards
+        if(rhs.is_nil()) // first
+          rhs=incoming_value;
+        else
+          rhs=if_exprt(incoming_guard, incoming_value, rhs);
+      }
+     
+    // now do backwards
 
-      for(std::map<locationt, locationt>::const_iterator
-          incoming_it=incoming.begin();
-          incoming_it!=incoming.end();
-          incoming_it++)
-        if(incoming_it->first->location_number >= loc->location_number)
-        {
-          // it's a backwards edge
-          exprt incoming_value=name(*o_it, LOOP, loc);
-          exprt incoming_guard=name(guard_symbol(), LOOP, loc);
+    for(std::map<locationt, ssa_domaint::deft>::const_iterator
+        incoming_it=incoming.begin();
+        incoming_it!=incoming.end();
+        incoming_it++)
+      if(incoming_it->first->location_number >= loc->location_number)
+      {
+        // it's a backwards edge
+        exprt incoming_value=name(*o_it, LOOP, loc);
+        exprt incoming_guard=name(guard_symbol(), LOOP, loc);
 
-          if(rhs.is_nil()) // first
-            rhs=incoming_value;
-          else
-            rhs=if_exprt(incoming_guard, incoming_value, rhs);
-        }
+        if(rhs.is_nil()) // first
+          rhs=incoming_value;
+        else
+          rhs=if_exprt(incoming_guard, incoming_value, rhs);
+      }
 
-      symbol_exprt lhs=name(*o_it, PHI, loc);
-      
-      equal_exprt equality(lhs, rhs);
-      node.equalities.push_back(equality);
-    }
+    symbol_exprt lhs=name(*o_it, PHI, loc);
+    
+    equal_exprt equality(lhs, rhs);
+    node.equalities.push_back(equality);
   }
 }
 
@@ -345,15 +349,7 @@ symbol_exprt function_SSAt::read_rhs(
     return name_input(expr);
   }
   else
-  {
-    locationt def=d_it->second.def;
-    
-    // reading from PHI node or OUT?
-    if(assigns(expr, def) && def!=loc)
-      return name(expr, OUT, def);
-    else
-      return name(expr, PHI, def);
-  }
+    return name(expr, d_it->second.def);
 }
 
 /*******************************************************************\
@@ -438,9 +434,9 @@ symbol_exprt function_SSAt::read_in(
           
     if(p_it!=phi_nodes.end())
     {
-      const std::map<locationt, locationt> &incoming=p_it->second;
+      const std::map<locationt, ssa_domaint::deft> &incoming=p_it->second;
 
-      for(std::map<locationt, locationt>::const_iterator
+      for(std::map<locationt, ssa_domaint::deft>::const_iterator
           incoming_it=incoming.begin();
           incoming_it!=incoming.end();
           incoming_it++)
@@ -518,6 +514,30 @@ symbol_exprt function_SSAt::name(
     new_symbol_expr.location()=symbol.location();
   
   return new_symbol_expr;
+}
+
+/*******************************************************************\
+
+Function: function_SSAt::name
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+symbol_exprt function_SSAt::name(
+  const symbol_exprt &symbol_expr,
+  const ssa_domaint::deft &def) const
+{
+  if(def.kind==ssa_domaint::deft::INPUT)
+    return name_input(symbol_expr);
+  else if(def.kind==ssa_domaint::deft::PHI)
+    return name(symbol_expr, PHI, def.loc);
+  else
+    return name(symbol_expr, OUT, def.loc);
 }
 
 /*******************************************************************\

@@ -38,9 +38,9 @@ void show_defs(
   const namespacet &ns,
   std::ostream &out)
 {
-  static_analysist<ssa_domaint> ssa_analysis(ns);
-  ssa_analysis(goto_function.body);
-  ssa_analysis.output(goto_function.body, out);
+  ssa_ait ssa_analysis;
+  ssa_analysis(goto_function);
+  ssa_analysis.output(ns, goto_function.body, out);
 }
 
 /*******************************************************************\
@@ -116,9 +116,9 @@ void show_guards(
   const namespacet &ns,
   std::ostream &out)
 {
-  ait<guard_domaint> ssa_analysis(ns);
-  ssa_analysis(goto_function.body);
-  ssa_analysis.output(goto_function.body, out);
+  guard_ait guard_ai;
+  guard_ai(goto_function);
+  guard_ai.output(ns, goto_function.body, out);
 }
 
 /*******************************************************************\

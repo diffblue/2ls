@@ -59,13 +59,6 @@ public:
     return !(a==b);
   }
   
-  virtual void make_entry_state()
-  {
-    // this is 'top'
-    unreachable=false;
-    guards.clear();
-  }
-
   // We may be under some set of guards.
   typedef std::vector<guardt> guardst;
   guardst guards;
@@ -86,18 +79,29 @@ public:
   }
 
   virtual void transform(
-    const namespacet &ns,
     locationt from,
     locationt to);
               
   virtual void output(
-    const namespacet &ns,
     std::ostream &out) const;
 
   bool merge(
     const guard_domaint &b,
     locationt from,
     locationt to);
+};
+
+class guard_ait:public ait<guard_domaint>
+{
+protected:
+  virtual void initialize(const goto_programt &goto_program)
+  {
+    ait<guard_domaint>::initialize(goto_program);
+
+    // make entry instruction reachable
+    if(!goto_program.instructions.empty())
+      operator[](goto_program.instructions.begin()).unreachable=false;
+  }
 };
 
 #endif

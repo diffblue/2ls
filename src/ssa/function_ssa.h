@@ -26,7 +26,6 @@ public:
     const namespacet &_ns,
     const std::string &_suffix=""):
     ns(_ns), goto_function(_goto_function), 
-    ssa_analysis(_ns),
     suffix(_suffix)
   {
     build_SSA();
@@ -60,6 +59,7 @@ public:
   // auxiliary functions
   enum kindt { PHI, OUT, LOOP };
   symbol_exprt name(const symbol_exprt &, kindt kind, locationt loc) const;
+  symbol_exprt name(const symbol_exprt &, const ssa_domaint::deft &) const;
   symbol_exprt name_input(const symbol_exprt &) const;
   exprt read_rhs(const exprt &, locationt loc) const;
   symbol_exprt read_rhs(const symbol_exprt &, locationt loc) const;
@@ -78,7 +78,7 @@ public:
   objectst objects;
   
 protected:
-  static_analysist<ssa_domaint> ssa_analysis;
+  ssa_ait ssa_analysis;
   std::string suffix; // an extra suffix  
 
   // collect all the objects involved
