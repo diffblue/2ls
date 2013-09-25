@@ -56,7 +56,7 @@ void check_out(job_statust &job_status)
   // Will overwrite log.
   command="git clone --no-checkout --shared source-repo "+
           working_dir+
-          " > "+job_status.id+".log 2>&1";
+          " > "+job_status.id+".checkout.log 2>&1";
 
   int result1=system(command.c_str());
   if(result1!=0)
@@ -69,7 +69,7 @@ void check_out(job_statust &job_status)
   // Now do checkout; this will eat disc space.
   command="(cd "+working_dir+"; "+
           "git checkout --detach "+job_status.commit+
-          ") >> "+job_status.id+".log 2>&1";
+          ") >> "+job_status.id+".checkout.log 2>&1";
 
   int result2=system(command.c_str());
 
@@ -109,7 +109,7 @@ void build(job_statust &job_status)
 
   // Now run build script in working directory.
   command="(cd "+working_dir+"; ../build"+
-          ") >> "+job_status.id+".log 2>&1";
+          ") >> "+job_status.id+".build.log 2>&1";
 
   int result=system(command.c_str());
   
@@ -167,12 +167,33 @@ void analyse(
       std::cout << "Job " << previous << " is not built yet\n";
       return;
     }
+    
+    job_status.status=job_statust::RUNNING;
+    job_status.write();
+    
+    std::string command=
+      "./analyse \""+previous+"\" \""+job_status.id+"\""
+      " >> "+job_status.id+".analysis.log 2>&1";
+
+    int result=system(command.c_str());
+    
+    if(result!=0)
+    {
+      job_status.status=job_statust::FAILURE;
+      job_status.write();
+      return;
+    }
+
+    job_status.next_stage();
+    job_status.write();    
   }
   else
+  {
     std::cout << "One-version analysis for " << job_status.id
               << "\n";
 
-  job_status.status=job_statust::FAILURE;
+    job_status.status=job_statust::FAILURE;
+  }
 }
 
 /*******************************************************************\
