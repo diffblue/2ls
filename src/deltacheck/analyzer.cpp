@@ -473,6 +473,7 @@ void deltacheck_analyzert::operator()()
   xml_out << " failed=\"" << statistics.number_map["Errors"] << "\"";
   xml_out << " warned=\"" << statistics.number_map["Unknown"] << "\"";
   xml_out << ">\n";
+  xml_out << "</properties>\n";
   xml_out << "</deltacheck_stat>\n";
 }  
 
