@@ -8,6 +8,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <cstdlib>
 #include <fstream>
+#include <set>
 
 #include <dirent.h>
 
@@ -196,6 +197,9 @@ Function: get_jobs
 
 void get_jobs(std::list<job_statust> &jobs)
 {
+  // sort into set
+  std::set<std::string> job_set;
+
   DIR *dir=opendir(".");
   if(dir==NULL) return;
   
@@ -208,9 +212,16 @@ void get_jobs(std::list<job_statust> &jobs)
     if(has_suffix(name, suffix))
     {
       std::string id=name.substr(0, name.size()-suffix.size());
-      jobs.push_back(job_statust(id));
+      job_set.insert(id);
     }
   }
 
   closedir(dir);
+  
+  // dump the set into list
+  for(std::set<std::string>::const_iterator
+      s_it=job_set.begin();
+      s_it!=job_set.end();
+      s_it++)
+    jobs.push_back(job_statust(*s_it));
 }
