@@ -10,6 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/message.h>
 #include <util/time_stopping.h>
+#include <util/memory_info.h>
 
 #include <goto-programs/read_goto_binary.h>
 #include <goto-programs/goto_model.h>
@@ -369,6 +370,9 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
   result() << "Properties passed: " << statistics.number_map["Passed"] << eom;
   result() << "Properties failed: " << statistics.number_map["Errors"] << eom;
   result() << "Properties warned: " << statistics.number_map["Unknown"] << eom;
+  
+  memory_info(messaget::statistics());
+  messaget::statistics() << eom;
 }
 
 /*******************************************************************\
