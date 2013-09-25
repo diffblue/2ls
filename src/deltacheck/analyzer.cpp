@@ -271,6 +271,8 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
       use_index_old?".deltacheck-diff.html":".deltacheck.html";
     
     std::string file_report_name=full_path+file_suffix;
+    std::string report_url=id2string(file_it->first)+file_suffix;
+    
     std::ofstream file_report(file_report_name.c_str());
     
     if(!file_report)
@@ -280,7 +282,7 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
       return;
     }
     
-    std::string title="DeltaCheck File Report";
+    std::string title="DeltaCheck File";
 
     if(use_index_old)
       html_report_header(file_report, index_old, index_new, title);
@@ -350,7 +352,7 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
     html_report_footer(file_report);
     
     // add link to global report
-    global_report << "<tr><td><a href=\"" << file_report_name
+    global_report << "<tr><td><a href=\"" << html_escape(report_url)
                   << "\">" << html_escape(file_it->first)
                   << "</a></td>"
                   << "<td align=\"right\">" << errors_in_file << "</td>"
@@ -438,7 +440,7 @@ void deltacheck_analyzert::operator()()
   status() << "Writing report into \""
            << report_file_name << "\"" << eom;
            
-  std::string title="DeltaCheck Summary Report";
+  std::string title="DeltaCheck Summary";
 
   if(use_index_old)
     html_report_header(out, index_old, index_new, title);
