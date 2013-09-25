@@ -228,7 +228,7 @@ void revisions_report()
     out << "</div>";
     
     if(link!="")
-      out << "</a>\n";
+      out << "</a>";
 
     out << "\n";
   }
