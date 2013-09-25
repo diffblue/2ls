@@ -10,5 +10,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #define CPROVER_DELTAGIT_RESET_H
 
 void reset();
+void reset(const std::string &job);
 
 #endif

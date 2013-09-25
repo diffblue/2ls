@@ -37,10 +37,34 @@ void reset()
   {
     if(j_it->status==job_statust::FAILURE)
     {
-      std::cout << "Resetting job " << j_it->id << std::endl;
+      std::cout << "Resetting job " << j_it->id << "\n";
       j_it->status=job_statust::WAITING;
       j_it->write();
     }
+  }
+}
+
+/*******************************************************************\
+
+Function: reset
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void reset(const std::string &job)
+{
+  job_statust job_status(job);
+
+  if(job_status.status==job_statust::FAILURE)
+  {
+    std::cout << "Resetting job " << job_status.id << "\n";
+    job_status.status=job_statust::WAITING;
+    job_status.write();
   }
 }
 
