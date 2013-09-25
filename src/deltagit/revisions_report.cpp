@@ -48,9 +48,13 @@ std::string htmlize_message(const std::string &src)
     case '<': result+="&lt;"; break;
     case '>': result+="&gt;"; break;
     case '"': result+="&quot;"; break;
-    case '\'': result+="&apos;"; break;
     case '&': result+="&amp;"; break;
     case '\n': result+="<br>"; break;
+
+    // &apos; does not seem to be universally supported,
+    // and Unicode seems to suggest to prefer &#8217; over &#39;
+    case '\'': result+="&8217;"; break;
+            
     default:
       if(src[i]>=' ') result+=src[i];
     }
