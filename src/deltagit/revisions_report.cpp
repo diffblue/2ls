@@ -7,7 +7,10 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 #include <cmath>
+#include <cstdlib>
 #include <fstream>
+
+#include <xmllang/xml_parser.h>
 
 #include "../html/html_escape.h"
 #include "../html/logo.h"
@@ -133,6 +136,26 @@ void revisions_report()
       j_it!=jobs.end();
       j_it++)
   {
+    // read deltacheck summary, if available
+    unsigned passed=0, failed=0;
+
+    {    
+      std::string summary_file_name=j_it->id+".wd/deltacheck-stat.xml";
+      xmlt deltacheck_summary;
+      null_message_handlert null_message_handler;
+      parse_xml(summary_file_name, null_message_handler, deltacheck_summary);
+      xmlt::elementst::const_iterator deltacheck_stat=deltacheck_summary.find("deltacheck_stat");
+      if(deltacheck_stat!=deltacheck_summary.elements.end())
+      {
+        xmlt::elementst::const_iterator properties=deltacheck_stat->find("properties");
+        if(properties!=deltacheck_stat->elements.end())
+        {
+          passed=atoi(properties->get_attribute("passed").c_str());
+          failed=atoi(properties->get_attribute("failed").c_str());
+        }
+      }
+    }
+  
     std::string tooltip=
       "<center>"+j_it->id+"</center>"+
       "<font size=2>";
@@ -150,23 +173,61 @@ void revisions_report()
       
     unsigned h=std::min(height(*j_it), max_height);
 
-    if(j_it->stage!=job_statust::INIT)
-      out << "<a href=\"" << j_it->id << ".html/\">";
+    std::string link;
+    std::string bar_color;
+    
+    if(j_it->stage==job_statust::ANALYSE)
+    {
+      link=id2string(j_it->id)+"wd/deltacheck-diff.html";
+      bar_color="#7070e0";
+    }
+    else if(j_it->stage==job_statust::DONE)
+    {
+      link=id2string(j_it->id)+"wd/deltacheck-diff.html";
+
+      unsigned r, g;
+      if(passed+failed==0)
+      {
+        r=0;
+        g=255;
+      }
+      else
+      {
+        r=(unsigned long long)255*failed/(passed+failed);
+        g=(unsigned long long)255*passed/(passed+failed);
+      }
+
+      char buffer[100];
+      snprintf(buffer, 100, "#%2x%2x30", r, g);
+      bar_color=buffer;
+    }
+    else
+    {
+      if(j_it->status==job_statust::FAILURE)
+        bar_color="#e0e0e0";
+      else
+        bar_color="#7070e0";
+    }
+    
+    if(link!="")
+      out << "<a href=\"" << html_escape(link) << "\">";
     
     out << "<div class=\"revision\""
            " id=\"rev-" << j_it->id << "\""
            " onMouseOver=\"tooltip.show('" << tooltip << "');\""
            " onMouseOut=\"tooltip.hide();\""
            ">";
+
     out << "<div "
            " style=\"height: " << h << "px;"
-           " background-color: #7070e0;"
+           " background-color: " << bar_color << ";"
            " margin-top: " << max_height-h << "px;\""
            ">";
+
     out << "</div>";
     out << "</div>";
     
-    if(j_it->stage!=job_statust::INIT)
+    if(link!="")
       out << "</a>\n";
 
     out << "\n";
