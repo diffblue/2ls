@@ -106,12 +106,9 @@ int deltagit_parseoptionst::doit()
     else if(command=="reset")
     {
       if(cmdline.args.size()==2)
-      {
-      }
+        reset(cmdline.args[1]);
       else if(cmdline.args.size()==1)
-      {
         reset();
-      }
       else
       {
         usage_error();
