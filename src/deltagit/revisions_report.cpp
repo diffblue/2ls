@@ -178,12 +178,12 @@ void revisions_report()
     
     if(j_it->stage==job_statust::ANALYSE)
     {
-      link=id2string(j_it->id)+"wd/deltacheck-diff.html";
+      link=id2string(j_it->id)+".wd/deltacheck-diff.html";
       bar_color="#7070e0";
     }
     else if(j_it->stage==job_statust::DONE)
     {
-      link=id2string(j_it->id)+"wd/deltacheck-diff.html";
+      link=id2string(j_it->id)+".wd/deltacheck-diff.html";
 
       unsigned r, g;
       if(passed+failed==0)
@@ -198,7 +198,7 @@ void revisions_report()
       }
 
       char buffer[100];
-      snprintf(buffer, 100, "#%2x%2x30", r, g);
+      snprintf(buffer, 100, "#%02x%02x30", r, g);
       bar_color=buffer;
     }
     else
