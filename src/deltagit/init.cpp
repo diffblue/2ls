@@ -15,6 +15,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "job_status.h"
 #include "init.h"
+#include "git_log.h"
 
 /*******************************************************************\
 
@@ -98,6 +99,44 @@ void init(job_statust &job_status)
 
 /*******************************************************************\
 
+Function: get_extension
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::string get_extension(const std::string &s)
+{
+  std::size_t pos=s.rfind('.');
+  if(pos==std::string::npos) return "";
+  return s.substr(pos+1, std::string::npos);
+}
+
+/*******************************************************************\
+
+Function: get_file
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::string get_file(const std::string &s)
+{
+  std::size_t pos=s.rfind('/');
+  if(pos==std::string::npos) return s;
+  return s.substr(pos+1, std::string::npos);
+}
+
+/*******************************************************************\
+
 Function: init
 
   Inputs:
@@ -110,9 +149,55 @@ Function: init
 
 void init(unsigned max_jobs)
 {
-  // get job list
+  // get jobs from git log
   std::list<job_statust> jobs;
-  get_jobs(jobs);
+
+  std::cout << "Getting git log\n";
+
+  // get the git log
+  git_logt git_log;
+  
+  // rummage through it, looking for 'interesting' commits
+  // we reverse, to start with older commits
+  for(git_logt::entriest::const_reverse_iterator
+      l_it=git_log.entries.rbegin();
+      l_it!=git_log.entries.rend();
+      l_it++)
+  {
+    bool found=false;
+  
+    for(std::list<std::string>::const_iterator
+        f_it=l_it->files.begin();
+        f_it!=l_it->files.end();
+        f_it++)
+    {
+      std::string file=get_file(*f_it);
+      std::string ext=get_extension(file);
+
+      if(ext=="c" || ext=="C" ||
+         ext=="cpp" || ext=="c++" ||
+         ext=="h" || ext=="hpp")
+      {
+        found=true;
+        break;
+      }    
+    }
+
+    if(found)
+    {
+      std::string id;
+
+      if(l_it->git_svn_id!="")
+        id="r"+l_it->git_svn_id;
+      else
+        id=l_it->commit;
+      
+      job_statust job_status(id);
+      job_status.commit=l_it->commit;
+      
+      jobs.push_back(job_status);
+    }
+  }
   
   unsigned total=0;
   
