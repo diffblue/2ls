@@ -223,9 +223,10 @@ void diff_it(
                           " \""+tmp2_name+"\""+
                          "> \""+tmp3_name+"\"";
   
-  system(cmdline.c_str());
+  int result=system(cmdline.c_str());
 
   // open output
+  if(result>=0)
   {
     std::ifstream in(tmp3_name.c_str());
     std::string line;
