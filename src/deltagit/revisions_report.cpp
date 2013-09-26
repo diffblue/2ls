@@ -148,15 +148,11 @@ void revisions_report()
       xmlt deltacheck_summary;
       null_message_handlert null_message_handler;
       parse_xml(summary_file_name, null_message_handler, deltacheck_summary);
-      xmlt::elementst::const_iterator deltacheck_stat=deltacheck_summary.find("deltacheck_stat");
-      if(deltacheck_stat!=deltacheck_summary.elements.end())
+      xmlt::elementst::const_iterator properties=deltacheck_summary.find("properties");
+      if(properties!=deltacheck_summary.elements.end())
       {
-        xmlt::elementst::const_iterator properties=deltacheck_stat->find("properties");
-        if(properties!=deltacheck_stat->elements.end())
-        {
-          passed=atoi(properties->get_attribute("passed").c_str());
-          failed=atoi(properties->get_attribute("failed").c_str());
-        }
+        passed=atoi(properties->get_attribute("passed").c_str());
+        failed=atoi(properties->get_attribute("failed").c_str());
       }
     }
   
