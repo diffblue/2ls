@@ -56,22 +56,54 @@ void get_source(
 
   if(file=="") return;
   if(goto_program.instructions.empty()) return;
+
+  // split up path_prefix into directories  
+  std::list<std::string> directories;
   
-  std::string full_path=
-    make_relative_path(path_prefix, id2string(file));
+  {
+    std::string tmp;
+    for(unsigned i=0; i<path_prefix.size(); i++)
+    {
+      if(path_prefix[i]=='/' && !tmp.empty())
+      {
+        directories.push_back(tmp);
+        tmp.clear();
+      }
+      
+      tmp+=path_prefix[i];
+    }
     
+    if(!tmp.empty() && tmp!="/") directories.push_back(tmp);
+  }
+  
+  // try prefixes of path_prefix
+  
+  std::string full_path;
+  
+  for(int i=directories.size(); i>=0; i--)
+  {
+    std::string prefix;
+    for(std::list<std::string>::const_iterator
+        p_it=directories.begin();
+        p_it!=directories.end();
+        p_it++)
+      prefix+=*p_it;
+  
+    full_path=
+      make_relative_path(prefix, id2string(file));
+    
+    if(access(full_path.c_str(), R_OK)==0) break; // found!
+  }
+
   std::ifstream in;
   in.open(full_path.c_str());
-  
-  if(!in)
-    in.open(file.c_str());
-  
+
   if(!in)
   {
     message.error() << "failed to open source `"
                     << file << "'" << messaget::eom;
-    if(full_path!=id2string(file))
-      message.error() << "also tried `" << full_path << "'"
+    if(!directories.empty())
+      message.error() << "also tried prefixes of `" << path_prefix << "'"
                       << messaget::eom;
     dest.push_back(linet(file, 1, "/* failed to open source file */"));
     dest.push_back(linet(file, 2, "/* "+full_path+" */"));
