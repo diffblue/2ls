@@ -195,10 +195,24 @@ Function: get_jobs
 
 \*******************************************************************/
 
+class job_ordering
+{
+public:
+  bool operator()(const std::string &s1, const std::string &s2)
+  {
+    if(s1.size()>=2 && s2.size()>=2 &&
+       s1[0]=='r' && s2[0]=='r')
+      return atol(s1.substr(1, std::string::npos).c_str())<
+             atol(s2.substr(1, std::string::npos).c_str());
+    else
+      return s1<s2;
+  }
+};
+
 void get_jobs(std::list<job_statust> &jobs)
 {
   // sort into set
-  std::set<std::string> job_set;
+  std::set<std::string, job_ordering> job_set;
 
   DIR *dir=opendir(".");
   if(dir==NULL) return;
