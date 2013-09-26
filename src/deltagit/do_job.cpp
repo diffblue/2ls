@@ -211,7 +211,22 @@ Function: do_job
 void do_job(job_statust &job_status,
             const std::list<job_statust> &jobs)
 {
-  if(job_status.status!=job_statust::FAILURE)
+  if(job_status.status==job_statust::FAILURE)
+  {
+    std::cout << "Job " << job_status.id << " has failed, "
+                 "consider resetting it.\n";
+  }
+  else if(job_status.status==job_statust::RUNNING)
+  {
+    std::cout << "Job " << job_status.id
+              << " is already running.\n";
+  }
+  else if(job_status.status==job_statust::COMPLETED)
+  {
+    std::cout << "Job " << job_status.id
+              << " is already completed.\n";
+  }
+  else
   {
     switch(job_status.stage)
     {
@@ -275,9 +290,9 @@ void do_job()
   {
     if(j_it->stage!=job_statust::DONE &&
        j_it->stage!=job_statust::INIT &&
-       j_it->status!=job_statust::FAILURE)
+       j_it->status==job_statust::WAITING)
     {
-      std::cout << "Job " << j_it->id << std::endl;
+      std::cout << "Doing job " << j_it->id << std::endl;
       do_job(*j_it, jobs);
       return;
     }
