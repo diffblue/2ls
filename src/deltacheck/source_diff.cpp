@@ -153,16 +153,16 @@ void process_diff(
       {
         for(unsigned i=da.old_size; i<da.new_size; i++)
         {
-          assert(da.old_from<l_it_old.size());
-          lines_old.insert(l_it_old[da.old_from], linet());
+          if(da.old_from<l_it_old.size())
+            lines_old.insert(l_it_old[da.old_from], linet());
         }
       }
       else if(da.old_size>da.new_size) // shrink
       {
         for(unsigned i=da.new_size; i<da.old_size; i++)
         {
-          assert(da.new_from<l_it_new.size());
-          lines_new.insert(l_it_new[da.new_from], linet());
+          if(da.new_from<l_it_new.size())
+            lines_new.insert(l_it_new[da.new_from], linet());
         }
       }
       break;
@@ -170,16 +170,16 @@ void process_diff(
     case 'a': // add
       for(unsigned i=0; i<da.new_size; i++)
       {
-        assert(da.old_from<l_it_old.size());
-        lines_old.insert(l_it_old[da.old_from], linet());
+        if(da.old_from<l_it_old.size())
+          lines_old.insert(l_it_old[da.old_from], linet());
       }
       break;
 
     case 'd': // delete
       for(unsigned i=0; i<da.old_size; i++)
       {
-        assert(da.new_from<l_it_new.size());
-        lines_new.insert(l_it_new[da.new_from], linet());
+        if(da.new_from<l_it_new.size())
+          lines_new.insert(l_it_new[da.new_from], linet());
       }
       break;
     }
