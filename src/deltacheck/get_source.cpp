@@ -9,6 +9,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <fstream>
 #include <limits>
 
+#include <unistd.h>
+
 #include <util/string2int.h>
 
 #include "path_util.h"
