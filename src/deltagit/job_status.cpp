@@ -37,7 +37,7 @@ void job_statust::next_stage()
 {
   assert(stage!=DONE);
   stage=(staget)((int)stage+1);
-  status=WAITING;
+  status=stage==DONE?COMPLETED:WAITING;
 }
 
 /*******************************************************************\
