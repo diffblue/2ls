@@ -178,12 +178,11 @@ void revisions_report()
     unsigned h=std::min(height(*j_it), max_height);
 
     std::string link;
-    std::string bar_color;
+    std::string bar_color="#7070e0";
     
     if(j_it->stage==job_statust::ANALYSE)
     {
       link=id2string(j_it->id)+".wd/deltacheck-diff.html";
-      bar_color="#7070e0";
     }
     else if(j_it->stage==job_statust::DONE)
     {
@@ -209,8 +208,6 @@ void revisions_report()
     {
       if(j_it->status==job_statust::FAILURE)
         bar_color="#e0e0e0";
-      else
-        bar_color="#7070e0";
     }
     
     if(link!="")
