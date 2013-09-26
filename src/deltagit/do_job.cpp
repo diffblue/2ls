@@ -162,7 +162,8 @@ void analyse(
     // is it built already?
     job_statust old_version(previous);
 
-    if(old_version.stage!=job_statust::ANALYSE)
+    if(old_version.stage!=job_statust::ANALYSE &&
+       old_version.stage!=job_statust::DONE)
     {
       std::cout << "Job " << previous << " is not built yet\n";
       return;
@@ -192,7 +193,24 @@ void analyse(
     std::cout << "One-version analysis for " << job_status.id
               << "\n";
 
-    job_status.status=job_statust::FAILURE;
+    job_status.status=job_statust::RUNNING;
+    job_status.write();
+    
+    std::string command=
+      "./analyse-one \""+job_status.id+"\""
+      " >> "+job_status.id+".analysis.log 2>&1";
+
+    int result=system(command.c_str());
+    
+    if(result!=0)
+    {
+      job_status.status=job_statust::FAILURE;
+      job_status.write();
+      return;
+    }
+
+    job_status.next_stage();
+    job_status.write();    
   }
 }
 
