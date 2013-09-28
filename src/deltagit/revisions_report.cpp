@@ -94,7 +94,9 @@ Function: revisions_report
 
 \*******************************************************************/
 
-void revisions_report()
+void revisions_report(
+  bool partial_html,
+  unsigned max_revs)
 {
   deltagit_configt deltagit_config;
   
@@ -109,24 +111,27 @@ void revisions_report()
   unsigned max_height=44; // the hight of log_scale.png
   
   std::ofstream out("index.html");
-  
-  out << "<html>\n"
-         "<head>\n";
-        
-  out << "<title>" << html_escape(title) << "</title>\n";
 
-  out << revisions_report_header;
+  if(!partial_html)
+  {  
+    out << "<html>\n"
+           "<head>\n";
+        
+    out << "<title>" << html_escape(title) << "</title>\n";
+
+    out << revisions_report_header;
   
-  out << "</head>\n\n";
+    out << "</head>\n\n";
   
-  out << "<body>\n\n";
+    out << "<body>\n\n";
   
-  out << "<img src=\"" << deltacheck_logo
-      << "\" class=\"logo\" alt=\"DeltaCheck Logo\">\n\n";
+    out << "<img src=\"" << deltacheck_logo
+        << "\" class=\"logo\" alt=\"DeltaCheck Logo\">\n\n";
       
-  out << "<div class=\"description\">"
-      << html_escape(deltagit_config.description)
-      << "</div>\n";
+    out << "<div class=\"description\">"
+        << html_escape(deltagit_config.description)
+        << "</div>\n";
+  }
 
   out << "<div class=\"revisions\">\n";
   
@@ -134,12 +139,18 @@ void revisions_report()
       << "<tr><td valign=top>\n"
       << "<img src=\"" << log_scale << "\">\n"
       << "</td>\n<td>\n";
+      
+  unsigned counter=0, number_of_jobs=jobs.size();
   
   for(std::list<job_statust>::const_iterator
       j_it=jobs.begin();
       j_it!=jobs.end();
-      j_it++)
+      j_it++, counter++)
   {
+    if(max_revs!=0 &&
+       counter+max_revs<number_of_jobs)
+      continue; // skip
+  
     // read deltacheck summary, if available
     unsigned passed=0, failed=0;
 
@@ -234,6 +245,9 @@ void revisions_report()
   
   out << "</div>\n";
   
-  out << "</body>\n";
-  out << "</html>\n";
+  if(!partial_html)
+  {
+    out << "</body>\n";
+    out << "</html>\n";
+  }
 }

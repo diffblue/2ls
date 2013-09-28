@@ -9,6 +9,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_DELTAGIT_REVISIONS_REPORT_H
 #define CPROVER_DELTAGIT_REVISIONS_REPORT_H
 
-void revisions_report();
+void revisions_report(
+  bool partial_html,
+  unsigned max_revs);
 
 #endif

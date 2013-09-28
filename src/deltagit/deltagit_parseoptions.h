@@ -12,7 +12,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/parseoptions.h>
 
 #define DELTACHECK_OPTIONS \
-  "(verbosity):(version)(description):"
+  "(verbosity):(version)(description):" \
+  "(max-revs):(partial-html)"
 
 class deltagit_parseoptionst:public parseoptions_baset
 {

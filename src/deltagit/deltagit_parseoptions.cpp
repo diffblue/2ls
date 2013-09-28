@@ -117,7 +117,11 @@ int deltagit_parseoptionst::doit()
     }
     else if(command=="report")
     {
-      revisions_report();
+      bool partial_html=cmdline.isset("partial-html");
+      unsigned max_revs=0;
+      if(cmdline.isset("max-revs"))
+        max_revs=atol(cmdline.getval("max-revs"));
+      revisions_report(partial_html, max_revs);
     }
     else
     {
@@ -171,6 +175,10 @@ void deltagit_parseoptionst::help()
     " deltagit do                  do a job that needs work\n"
     " deltagit reset               clear failure bit on all jobs\n"
     " deltagit report              generate top-level report\n"
+    "\n"
+    "Reporting options:\n"
+    " --partial-html               generate a partial HTML file\n"
+    " --max-revs <nr>              report on the last <nr> revisions\n"
     "\n"    
     "Other options:\n"
     " --version                    show version and exit\n"
