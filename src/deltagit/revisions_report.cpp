@@ -116,9 +116,11 @@ void revisions_report(
   std::ofstream out(outfile_name.c_str());
 
   if(!partial_html)
-  {  
+  { 
+    out << "<!DOCTYPE html>\n"; 
     out << "<html>\n"
-           "<head>\n";
+           "<head>\n"
+           "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\n";
         
     out << "<title>" << html_escape(title) << "</title>\n";
 
