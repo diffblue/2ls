@@ -50,7 +50,7 @@ deltacheck_parseoptionst::deltacheck_parseoptionst(
   
 /*******************************************************************\
 
-Function: deltacheck_parseoptionst::set_verbosity
+Function: deltacheck_parseoptionst::eval_verbosity
 
   Inputs:
 
@@ -60,7 +60,7 @@ Function: deltacheck_parseoptionst::set_verbosity
 
 \*******************************************************************/
 
-void deltacheck_parseoptionst::set_verbosity(messaget &message)
+void deltacheck_parseoptionst::eval_verbosity()
 {
   // our default verbosity
   int v=messaget::M_STATISTICS;
@@ -74,7 +74,7 @@ void deltacheck_parseoptionst::set_verbosity(messaget &message)
       v=10;
   }
   
-  message.set_verbosity(v);
+  set_verbosity(v);
 }
 
 /*******************************************************************\
@@ -187,8 +187,8 @@ int deltacheck_parseoptionst::doit()
 
   optionst options;
   get_command_line_options(options);
-  set_verbosity(*this);
   set_message_handler(ui_message_handler);
+  eval_verbosity();
 
   try
   {

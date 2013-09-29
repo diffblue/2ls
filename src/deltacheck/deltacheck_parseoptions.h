@@ -43,7 +43,7 @@ protected:
 
   virtual void get_command_line_options(optionst &options);
 
-  void set_verbosity(messaget &message);
+  void eval_verbosity();
   
   ui_message_handlert ui_message_handler;
 };
