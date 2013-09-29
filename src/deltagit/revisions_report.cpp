@@ -130,11 +130,11 @@ void revisions_report(
   
     out << "<img src=\"" << deltacheck_logo
         << "\" class=\"logo\" alt=\"DeltaCheck Logo\">\n\n";
-      
-    out << "<div class=\"description\">"
-        << html_escape(deltagit_config.description)
-        << "</div>\n";
   }
+
+  out << "<div class=\"description\">"
+      << html_escape(deltagit_config.description)
+      << "</div>\n";
 
   out << "<div class=\"revisions\">\n";
   
@@ -246,6 +246,7 @@ void revisions_report(
   
   out << "</td></tr></table>\n";
   
+  // revisions
   out << "</div>\n";
   
   if(!partial_html)
