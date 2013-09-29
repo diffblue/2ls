@@ -110,7 +110,10 @@ void revisions_report(
   
   unsigned max_height=44; // the hight of log_scale.png
   
-  std::ofstream out("index.html");
+  std::string outfile_name=
+    partial_html?"include.html":"index.html";
+  
+  std::ofstream out(outfile_name.c_str());
 
   if(!partial_html)
   {  

@@ -177,7 +177,7 @@ void deltagit_parseoptionst::help()
     " deltagit report              generate top-level report\n"
     "\n"
     "Reporting options:\n"
-    " --partial-html               generate a partial HTML file\n"
+    " --partial-html               generate a partial HTML file \"include.html\"\n"
     " --max-revs <nr>              report on the last <nr> revisions\n"
     "\n"    
     "Other options:\n"
