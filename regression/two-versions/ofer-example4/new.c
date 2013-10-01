@@ -1,12 +1,10 @@
-int g();
-
 void f(unsigned l, int x, int y)
 {
 	while (l) {
                 l--;
-                x++; 
+                x++;
 		y--;
 	}
 
-        assert(x == y );  // this should pass.
+        assert(x == y);  // this should pass.
 }
