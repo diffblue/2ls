@@ -87,13 +87,15 @@ void function_SSAt::build_phi_nodes(locationt loc)
 
     // We distinguish forwards- from backwards-edges,
     // and do forwards-edges first, which gives them
-    // _lower_ priority in the ITE.
+    // _lower_ priority in the ITE. Inputs are always
+    // forward edges.
     
     for(std::map<locationt, ssa_domaint::deft>::const_iterator
         incoming_it=incoming.begin();
         incoming_it!=incoming.end();
         incoming_it++)
-      if(incoming_it->first->location_number < loc->location_number)
+      if(incoming_it->second.is_input() ||
+         incoming_it->first->location_number < loc->location_number)
       {
         // it's a forward edge
         exprt incoming_value=name(*o_it, incoming_it->second);
@@ -111,7 +113,8 @@ void function_SSAt::build_phi_nodes(locationt loc)
         incoming_it=incoming.begin();
         incoming_it!=incoming.end();
         incoming_it++)
-      if(incoming_it->first->location_number >= loc->location_number)
+      if(!incoming_it->second.is_input() &&
+         incoming_it->first->location_number >= loc->location_number)
       {
         // it's a backwards edge
         exprt incoming_value=name(*o_it, LOOP, loc);
