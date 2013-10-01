@@ -230,52 +230,59 @@ Function: function_SSAt::build_guard
 
 void function_SSAt::build_guard(locationt loc)
 {
+  exprt rhs;
+  
   exprt::operandst sources;
-
-  forall_goto_program_instructions(i_it, goto_function.body)
+  
+  // the very first 'loc' trivially gets 'true' as guard
+  if(loc==goto_function.body.instructions.begin())
+    rhs=true_exprt();
+  else
   {
-    locationt next=i_it;
-    next++;
-    
-    symbol_exprt gs=name(guard_symbol(), OUT, i_it);
-    
-    if(i_it->is_goto())
+    // find the sources for 'loc'
+    forall_goto_program_instructions(i_it, goto_function.body)
     {
-      // target, perhaps?
-      if(i_it->get_target()==loc)
+      locationt next=i_it;
+      next++;
+      
+      symbol_exprt gs=name(guard_symbol(), OUT, i_it);
+      
+      if(i_it->is_goto())
       {
-        // Yes. Might be backwards.
-        if(i_it->is_backwards_goto())
+        // target, perhaps?
+        if(i_it->get_target()==loc)
+        {
+          // Yes. Might be backwards.
+          if(i_it->is_backwards_goto())
+            sources.push_back(
+              name(guard_symbol(), LOOP, loc));
+          else
+            sources.push_back(
+              and_exprt(gs, read_rhs(i_it->guard, i_it)));
+        }
+        else if(next==loc && !i_it->guard.is_true())
           sources.push_back(
-            name(guard_symbol(), LOOP, loc));
-        else
+            and_exprt(gs, not_exprt(read_rhs(i_it->guard, i_it))));
+      }
+      else if(i_it->is_assume())
+      {
+        if(next==loc)
           sources.push_back(
             and_exprt(gs, read_rhs(i_it->guard, i_it)));
       }
-      else if(next==loc && !i_it->guard.is_true())
-        sources.push_back(
-          and_exprt(gs, not_exprt(read_rhs(i_it->guard, i_it))));
+      else if(i_it->is_return() || i_it->is_throw())
+      {
+      }
+      else
+      {
+        if(next==loc)
+          sources.push_back(gs);
+      }
     }
-    else if(i_it->is_assume())
-    {
-      if(next==loc)
-        sources.push_back(
-          and_exprt(gs, read_rhs(i_it->guard, i_it)));
-    }
-    else if(i_it->is_return() || i_it->is_throw())
-    {
-    }
-    else
-    {
-      if(next==loc)
-        sources.push_back(gs);
-    }
-  }
   
-  if(sources.empty())
-    return;
-
-  exprt rhs=disjunction(sources);
+    // the below produces 'false' if there is no source
+    rhs=disjunction(sources);
+  }
 
   equal_exprt equality(name(guard_symbol(), OUT, loc), rhs);
   nodes[loc].equalities.push_back(equality);
