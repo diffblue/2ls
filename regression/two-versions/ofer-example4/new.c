@@ -1,6 +1,7 @@
 int g();
 
-void f(unsigned l, int x, int y) {
+void f(unsigned l, int x, int y)
+{
 	while (l) {
                 l--;
                 x++; 
