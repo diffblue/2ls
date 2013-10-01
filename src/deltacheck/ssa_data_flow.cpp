@@ -19,7 +19,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
-Function: ssa_data_flowt::get_backwards_edge
+Function: ssa_data_flowt::tie_inputs_together
 
   Inputs:
 
@@ -40,12 +40,6 @@ void ssa_data_flowt::tie_inputs_together(decision_proceduret &dest)
      function_SSA_new.goto_function.body.empty())
     return;
     
-  goto_programt::const_targett l_old=
-    function_SSA_old.goto_function.body.instructions.begin();
-
-  goto_programt::const_targett l_new=
-    function_SSA_new.goto_function.body.instructions.begin();
-    
   // 1) parameters
   
   const code_typet::parameterst &p_new=
@@ -60,8 +54,8 @@ void ssa_data_flowt::tie_inputs_together(decision_proceduret &dest)
     {
       symbol_exprt s_old(p_old[p].get_identifier(), p_old[p].type());
       symbol_exprt s_new(p_new[p].get_identifier(), p_new[p].type());
-      s_old=function_SSA_old.read_rhs(s_old, l_old);
-      s_new=function_SSA_new.read_rhs(s_new, l_new);
+      s_old=function_SSA_old.name_input(s_old);
+      s_new=function_SSA_new.name_input(s_new);
 
       dest.set_to_true(equal_exprt(s_old, s_new));
     }
@@ -79,16 +73,19 @@ void ssa_data_flowt::tie_inputs_together(decision_proceduret &dest)
     if(function_SSA_old.objects.find(s)==
        function_SSA_old.objects.end()) continue;
     
-    symbol_exprt s_new=function_SSA_new.read_rhs(s, l_new);
-    symbol_exprt s_old=function_SSA_old.read_rhs(s, l_old);
+    symbol_exprt s_new=function_SSA_new.name_input(s);
+    symbol_exprt s_old=function_SSA_old.name_input(s);
 
     dest.set_to_true(equal_exprt(s_old, s_new));
   }
 
   // 3) guard
+  
+  /*
   dest.set_to_true(
     equal_exprt(function_SSA_old.guard_symbol(l_old),
                 function_SSA_new.guard_symbol(l_new)));
+  */
 }
 
 /*******************************************************************\
