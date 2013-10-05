@@ -19,7 +19,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "../ssa/guard_domain.h"
 #include "../ssa/function_ssa.h"
 #include "index.h"
-#include "ssa_data_flow.h"
+#include "ssa_fixed_point.h"
 
 /*******************************************************************\
 
@@ -272,8 +272,8 @@ void show_fixed_point(
   std::ostream &out)
 {
   function_SSAt function_SSA(goto_function, ns);
-  ssa_data_flowt ssa_data_flow(function_SSA, ns);
-  ssa_data_flow.print_invariant(out);
+  ssa_fixed_pointt ssa_fixed_point(function_SSA, ns);
+  ssa_fixed_point.print_invariant(out);
 }
 
 /*******************************************************************\

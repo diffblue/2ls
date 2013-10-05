@@ -20,7 +20,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "index.h"
 #include "html_report.h"
 #include "get_function.h"
-#include "ssa_data_flow.h"
+#include "ssa_fixed_point.h"
 #include "statistics.h"
 #include "report_source_code.h"
 #include "analyzer.h"
@@ -127,17 +127,17 @@ void deltacheck_analyzert::check_function(
   // now do fixed-point
   status() << "Data-flow fixed-point" << eom;
   statistics.start("Fixed-point");
-  ssa_data_flowt ssa_data_flow(function_SSA, ns);
+  ssa_fixed_pointt ssa_fixed_point(function_SSA, ns);
   statistics.stop("Fixed-point");
   
   // now report on assertions
   status() << "Reporting" << eom;
   statistics.start("Reporting");
-  report_properties(ssa_data_flow.properties, file_report);  
-  report_countermodels(function_SSA, ssa_data_flow.properties, file_report);  
+  report_properties(ssa_fixed_point.properties, file_report);  
+  report_countermodels(function_SSA, ssa_fixed_point.properties, file_report);  
   report_source_code(
     path_prefix, symbol.location, f.body,
-    ssa_data_flow.properties, file_report,
+    ssa_fixed_point.properties, file_report,
     get_message_handler());
   file_report << "\n";
   statistics.stop("Reporting");
@@ -146,7 +146,7 @@ void deltacheck_analyzert::check_function(
   statistics.html_report_last(file_report);
   
   // collect some more data
-  collect_statistics(ssa_data_flow.properties); 
+  collect_statistics(ssa_fixed_point.properties); 
 }
 
 /*******************************************************************\
@@ -202,7 +202,7 @@ void deltacheck_analyzert::check_function_delta(
     ns_old.get_symbol_table());
   status() << "Joint data-flow fixed-point" << eom;
   statistics.start("Fixed-point");
-  ssa_data_flowt ssa_data_flow(function_SSA_old, function_SSA_new, joint_ns);
+  ssa_fixed_pointt ssa_fixed_point(function_SSA_old, function_SSA_new, joint_ns);
   statistics.stop("Fixed-point");
   
   // now report on assertions
@@ -214,13 +214,13 @@ void deltacheck_analyzert::check_function_delta(
   
   status() << "Reporting" << eom;
   statistics.start("Reporting");
-  report_properties(ssa_data_flow.properties, file_report);  
+  report_properties(ssa_fixed_point.properties, file_report);  
   report_countermodels(function_SSA_old, function_SSA_new,
-                       ssa_data_flow.properties, file_report);  
+                       ssa_fixed_point.properties, file_report);  
   report_source_code(
     path_prefix_old, symbol_old.location, f_old.body, description_old,
     path_prefix_new, symbol_new.location, f_new.body, description_new,
-    ssa_data_flow.properties,
+    ssa_fixed_point.properties,
     file_report, get_message_handler());
   file_report << "\n";
   statistics.stop("Reporting");
@@ -229,7 +229,7 @@ void deltacheck_analyzert::check_function_delta(
   statistics.html_report_last(file_report);
 
   // collect some more data
-  collect_statistics(ssa_data_flow.properties); 
+  collect_statistics(ssa_fixed_point.properties); 
 }
 
 /*******************************************************************\

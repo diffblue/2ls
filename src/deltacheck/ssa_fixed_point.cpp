@@ -10,7 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/decision_procedure.h>
 
-#include "ssa_data_flow.h"
+#include "ssa_fixed_point.h"
 #include "solver.h"
 
 #ifdef DEBUG
@@ -19,7 +19,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
-Function: ssa_data_flowt::tie_inputs_together
+Function: ssa_fixed_pointt::tie_inputs_together
 
   Inputs:
 
@@ -29,7 +29,7 @@ Function: ssa_data_flowt::tie_inputs_together
 
 \*******************************************************************/
 
-void ssa_data_flowt::tie_inputs_together(decision_proceduret &dest)
+void ssa_fixed_pointt::tie_inputs_together(decision_proceduret &dest)
 {
   // the following are inputs:
   // 1) the parameters of the functions
@@ -90,7 +90,7 @@ void ssa_data_flowt::tie_inputs_together(decision_proceduret &dest)
 
 /*******************************************************************\
 
-Function: ssa_data_flowt::get_backwards_edge
+Function: ssa_fixed_pointt::get_backwards_edge
 
   Inputs:
 
@@ -100,7 +100,7 @@ Function: ssa_data_flowt::get_backwards_edge
 
 \*******************************************************************/
 
-ssa_data_flowt::backwards_edget ssa_data_flowt::backwards_edge(
+ssa_fixed_pointt::backwards_edget ssa_fixed_pointt::backwards_edge(
   const function_SSAt &function_SSA,
   locationt from)
 {
@@ -136,7 +136,7 @@ ssa_data_flowt::backwards_edget ssa_data_flowt::backwards_edge(
 
 /*******************************************************************\
 
-Function: ssa_data_flowt::get_backwards_edges
+Function: ssa_fixed_pointt::get_backwards_edges
 
   Inputs:
 
@@ -146,7 +146,7 @@ Function: ssa_data_flowt::get_backwards_edges
 
 \*******************************************************************/
 
-void ssa_data_flowt::get_backwards_edges()
+void ssa_fixed_pointt::get_backwards_edges()
 {
   // old program
   forall_goto_program_instructions(i_it, function_SSA_old.goto_function.body)
@@ -165,7 +165,7 @@ void ssa_data_flowt::get_backwards_edges()
 
 /*******************************************************************\
 
-Function: ssa_data_flowt::fixed_point
+Function: ssa_fixed_pointt::fixed_point
 
   Inputs:
 
@@ -175,7 +175,7 @@ Function: ssa_data_flowt::fixed_point
 
 \*******************************************************************/
 
-void ssa_data_flowt::fixed_point()
+void ssa_fixed_pointt::fixed_point()
 {
   get_backwards_edges();
   setup_properties();
@@ -209,7 +209,7 @@ void ssa_data_flowt::fixed_point()
 
 /*******************************************************************\
 
-Function: ssa_data_flowt::iteration
+Function: ssa_fixed_pointt::iteration
 
   Inputs:
 
@@ -219,7 +219,7 @@ Function: ssa_data_flowt::iteration
 
 \*******************************************************************/
 
-bool ssa_data_flowt::iteration()
+bool ssa_fixed_pointt::iteration()
 {
   solvert solver(ns);
 
@@ -289,7 +289,7 @@ bool ssa_data_flowt::iteration()
 
 /*******************************************************************\
 
-Function: ssa_data_flowt::check_properties
+Function: ssa_fixed_pointt::check_properties
 
   Inputs:
 
@@ -299,7 +299,7 @@ Function: ssa_data_flowt::check_properties
 
 \*******************************************************************/
 
-void ssa_data_flowt::check_properties()
+void ssa_fixed_pointt::check_properties()
 {
   for(propertiest::iterator
       p_it=properties.begin(); p_it!=properties.end(); p_it++)
@@ -363,7 +363,7 @@ void ssa_data_flowt::check_properties()
 
 /*******************************************************************\
 
-Function: ssa_data_flowt::countermodel_expr
+Function: ssa_fixed_pointt::countermodel_expr
 
   Inputs:
 
@@ -373,7 +373,7 @@ Function: ssa_data_flowt::countermodel_expr
 
 \*******************************************************************/
 
-void ssa_data_flowt::countermodel_expr(
+void ssa_fixed_pointt::countermodel_expr(
   const exprt &src,
   std::set<exprt> &dest)
 {
@@ -386,7 +386,7 @@ void ssa_data_flowt::countermodel_expr(
 
 /*******************************************************************\
 
-Function: ssa_data_flowt::generate_countermodel
+Function: ssa_fixed_pointt::generate_countermodel
 
   Inputs:
 
@@ -396,7 +396,7 @@ Function: ssa_data_flowt::generate_countermodel
 
 \*******************************************************************/
 
-void ssa_data_flowt::generate_countermodel(
+void ssa_fixed_pointt::generate_countermodel(
   propertyt &property,
   const decision_proceduret &solver)
 {
@@ -473,7 +473,7 @@ void ssa_data_flowt::generate_countermodel(
 
 /*******************************************************************\
 
-Function: ssa_data_flowt::setup_properties
+Function: ssa_fixed_pointt::setup_properties
 
   Inputs:
 
@@ -483,7 +483,7 @@ Function: ssa_data_flowt::setup_properties
 
 \*******************************************************************/
 
-void ssa_data_flowt::setup_properties()
+void ssa_fixed_pointt::setup_properties()
 {
   forall_goto_program_instructions(i_it, function_SSA_new.goto_function.body)
   {
@@ -499,7 +499,7 @@ void ssa_data_flowt::setup_properties()
 
 /*******************************************************************\
 
-Function: ssa_data_flowt::print_invariant
+Function: ssa_fixed_pointt::print_invariant
 
   Inputs:
 
@@ -509,7 +509,7 @@ Function: ssa_data_flowt::print_invariant
 
 \*******************************************************************/
 
-void ssa_data_flowt::print_invariant(std::ostream &out) const
+void ssa_fixed_pointt::print_invariant(std::ostream &out) const
 {
   for(backwards_edgest::const_iterator
       b_it=backwards_edges.begin();

@@ -16,12 +16,12 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "predicate.h"
 #include "properties.h"
 
-class ssa_data_flowt
+class ssa_fixed_pointt
 {
 public:
   typedef function_SSAt::locationt locationt;
 
-  explicit ssa_data_flowt(
+  explicit ssa_fixed_pointt(
     const function_SSAt &_function_SSA_old,
     const function_SSAt &_function_SSA_new,
     const namespacet &_ns):
@@ -33,7 +33,7 @@ public:
     fixed_point();
   }
 
-  explicit ssa_data_flowt(
+  explicit ssa_fixed_pointt(
     const function_SSAt &_function_SSA,
     const namespacet &_ns):
     function_SSA_old(_function_SSA),
