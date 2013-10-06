@@ -1,6 +1,6 @@
 /*******************************************************************\
 
-Module: Forward Greatest Fixed-Point
+Module: Forward Least Fixed-Point
 
 Author: Daniel Kroening, kroening@kroening.com
 
@@ -17,7 +17,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
-Function: fixed_pointt::fixed_point
+Function: fixed_pointt::operator()
 
   Inputs:
 
@@ -27,9 +27,15 @@ Function: fixed_pointt::fixed_point
 
 \*******************************************************************/
 
-void fixed_pointt::fixed_point()
+void fixed_pointt::operator()()
 {
   iteration_number=0;
+  
+  // Set up the state predicate, starting with 'false'
+  // (the empty set).
+
+  state_predicate.state_vars=pre_state_vars;
+  state_predicate.make_false();
   
   bool change;
 
@@ -38,8 +44,9 @@ void fixed_pointt::fixed_point()
     iteration_number++;
     
     #ifdef DEBUG
-    std::cout << "Forward greatest fixed-point iteration #" << iteration_number << "\n";
-    print(std::cout);
+    std::cout << "\n"
+              << "******** Forward least fixed-point iteration #"
+              << iteration_number << "\n";
     #endif
    
     change=iteration();
@@ -49,7 +56,7 @@ void fixed_pointt::fixed_point()
   #ifdef DEBUG
   std::cout << "Fixed-point after " << iteration_number
             << " iteration(s)\n";
-  print(std::cout);
+  output(std::cout);
   #endif
 }
 
@@ -59,7 +66,7 @@ Function: fixed_pointt::iteration
 
   Inputs:
 
- Outputs:
+ Outputs: 'true' if there is a change in the state predicate
 
  Purpose:
 
@@ -69,15 +76,20 @@ bool fixed_pointt::iteration()
 {
   solvert solver(ns);
 
-  // feed transition relation into solver
+  // Feed transition relation into solver.
   for(constraintst::const_iterator
       it=transition_relation.begin();
       it!=transition_relation.end();
       it++)
     solver << *it;
 
-  // feed current state predicate into solver
+  // Feed current state predicate into solver.
   state_predicate.set_to_true(solver);
+  
+  #ifdef DEBUG
+  std::cout << "Entry state:\n";
+  output(std::cout);
+  #endif
 
   // solve
   solver.dec_solve();
@@ -90,23 +102,26 @@ bool fixed_pointt::iteration()
 
   // now get new post-state
   predicatet post_state;
+  post_state.state_vars=post_state_vars;
+  
   post_state.get(solver);
 
   // Now 'OR' with previous state predicate.
   // First rename post-state to pre-state.
-  //post_state.rename(b_it->pre_predicate.guard, b_it->pre_predicate.vars);
+  post_state.rename(pre_state_vars);
     
-  #if 0
+  #ifdef DEBUG
+  std::cout << "Post state:\n";
   post_state.output(std::cout);
   #endif
     
-  // make disjunction
+  // Form disjunction of previous state predicate and the new one.
   return state_predicate.disjunction(post_state);
 }
 
 /*******************************************************************\
 
-Function: fixed_pointt::print
+Function: fixed_pointt::output
 
   Inputs:
 
@@ -116,33 +131,7 @@ Function: fixed_pointt::print
 
 \*******************************************************************/
 
-void fixed_pointt::print(std::ostream &out) const
+void fixed_pointt::output(std::ostream &out) const
 {
-  /*
-    out << "*** From " << be.from->location_number
-        << " to " << be.to->location_number << "\n";
-
-    out << "Pre: ";
-    for(predicatet::var_listt::const_iterator
-        v_it=be.pre_predicate.vars.begin();
-        v_it!=be.pre_predicate.vars.end(); v_it++)
-      out << " " << v_it->get_identifier();
-    out << "\n";
-    out << "GSym: " << be.pre_predicate.guard.get_identifier()
-        << "\n";
-
-    out << "Post:";
-    for(predicatet::var_listt::const_iterator
-        v_it=be.post_predicate.vars.begin();
-        v_it!=be.post_predicate.vars.end(); v_it++)
-      out << " " << v_it->get_identifier();
-    out << "\n";
-    out << "GSym: " << be.post_predicate.guard.get_identifier()
-        << "\n";
-    
-    out << be.pre_predicate;
-
-    out << "\n";
-  }
-  */
+  state_predicate.output(out);
 }

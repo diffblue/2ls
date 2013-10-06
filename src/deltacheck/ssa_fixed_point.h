@@ -12,9 +12,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/threeval.h>
 
 #include "../ssa/function_ssa.h"
-#include "solver.h"
-#include "predicate.h"
 #include "properties.h"
+#include "fixed_point.h"
 
 class ssa_fixed_pointt
 {
@@ -28,9 +27,10 @@ public:
     function_SSA_old(_function_SSA_old),
     function_SSA_new(_function_SSA_new),
     ns(_ns),
-    use_old(true)
+    use_old(true),
+    fixed_point(_ns)
   {
-    fixed_point();
+    compute_fixed_point();
   }
 
   explicit ssa_fixed_pointt(
@@ -39,16 +39,16 @@ public:
     function_SSA_old(_function_SSA),
     function_SSA_new(_function_SSA),
     ns(_ns),
-    use_old(false)
+    use_old(false),
+    fixed_point(_ns)
   {
-    fixed_point();
+    compute_fixed_point();
   }
 
-  void print_invariant(std::ostream &) const;
-  
-  unsigned iteration_number;
-
-  propertiest properties;
+  inline void output(std::ostream &out) const
+  {
+    fixed_point.output(out);
+  }
   
 protected:
   const function_SSAt &function_SSA_old;
@@ -56,29 +56,25 @@ protected:
   const namespacet &ns;
   bool use_old;
 
+public:
+  propertiest properties;
+  fixed_pointt fixed_point;
+
+protected:
   // fixed-point computation  
-  void tie_inputs_together(decision_proceduret &dest);
-  void fixed_point();
+  void tie_inputs_together(std::list<exprt> &dest);
+  void compute_fixed_point();
   bool iteration();
   void initialize_invariant();
 
-  // CFG cycles
-  struct backwards_edget
-  {
-    locationt from, to;
-    predicatet pre_predicate, post_predicate;
-  };
-  
-  backwards_edget backwards_edge(
+  void do_backwards_edge(
     const function_SSAt &function_SSA, locationt loc);
   
-  typedef std::vector<backwards_edget> backwards_edgest;
-  backwards_edgest backwards_edges;
-  void get_backwards_edges();
+  void do_backwards_edges();
 
   // properties
-  void check_properties();
   void setup_properties();
+  void check_properties();
 
   void countermodel_expr(
     const exprt &src,

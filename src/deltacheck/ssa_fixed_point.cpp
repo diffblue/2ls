@@ -8,10 +8,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #define DEBUG
 
-#include <util/decision_procedure.h>
-
 #include "ssa_fixed_point.h"
-#include "solver.h"
 
 #ifdef DEBUG
 #include <iostream>
@@ -29,7 +26,7 @@ Function: ssa_fixed_pointt::tie_inputs_together
 
 \*******************************************************************/
 
-void ssa_fixed_pointt::tie_inputs_together(decision_proceduret &dest)
+void ssa_fixed_pointt::tie_inputs_together(std::list<exprt> &dest)
 {
   // the following are inputs:
   // 1) the parameters of the functions
@@ -57,7 +54,7 @@ void ssa_fixed_pointt::tie_inputs_together(decision_proceduret &dest)
       s_old=function_SSA_old.name_input(s_old);
       s_new=function_SSA_new.name_input(s_new);
 
-      dest.set_to_true(equal_exprt(s_old, s_new));
+      dest.push_back(equal_exprt(s_old, s_new));
     }
     
   // 2) globals
@@ -76,7 +73,7 @@ void ssa_fixed_pointt::tie_inputs_together(decision_proceduret &dest)
     symbol_exprt s_new=function_SSA_new.name_input(s);
     symbol_exprt s_old=function_SSA_old.name_input(s);
 
-    dest.set_to_true(equal_exprt(s_old, s_new));
+    dest.push_back(equal_exprt(s_old, s_new));
   }
 
   // 3) guard
@@ -90,7 +87,7 @@ void ssa_fixed_pointt::tie_inputs_together(decision_proceduret &dest)
 
 /*******************************************************************\
 
-Function: ssa_fixed_pointt::get_backwards_edge
+Function: ssa_fixed_pointt::do_backwards_edge
 
   Inputs:
 
@@ -100,43 +97,36 @@ Function: ssa_fixed_pointt::get_backwards_edge
 
 \*******************************************************************/
 
-ssa_fixed_pointt::backwards_edget ssa_fixed_pointt::backwards_edge(
+void ssa_fixed_pointt::do_backwards_edge(
   const function_SSAt &function_SSA,
   locationt from)
 {
   assert(from->is_backwards_goto());
+  
+  locationt to=from->get_target();
 
-  backwards_edget result;
-
-  result.from=from;
-  result.to=from->get_target();
-
+  // Record the objects modified by the loop to get
+  // 'primed' (post-state) and 'unprimed' (pre-state) variables.
   for(function_SSAt::objectst::const_iterator
       o_it=function_SSA.objects.begin();
       o_it!=function_SSA.objects.end();
       o_it++)
   {
-    symbol_exprt in=function_SSA.read_in(*o_it, result.to);
-    symbol_exprt out=function_SSA.read_rhs(*o_it, result.from);
+    symbol_exprt in=function_SSA.read_in(*o_it, to);
+    symbol_exprt out=function_SSA.read_rhs(*o_it, from);
   
-    result.pre_predicate.vars.push_back(in);
-    result.post_predicate.vars.push_back(out);
+    fixed_point.pre_state_vars.push_back(in);
+    fixed_point.post_state_vars.push_back(out);
   }
 
   symbol_exprt guard=function_SSA.guard_symbol();
-  result.pre_predicate.guard=function_SSA.name(guard, function_SSAt::LOOP, result.to);
-  result.post_predicate.guard=function_SSA.name(guard, function_SSAt::OUT, result.from);
-
-  // Initially, we start with the strongest invariant: false
-  // This gets weakened incrementally.
-  result.pre_predicate.make_false();
-
-  return result;  
+  fixed_point.pre_state_vars.push_back(function_SSA.name(guard, function_SSAt::LOOP, to));
+  fixed_point.post_state_vars.push_back(function_SSA.name(guard, function_SSAt::OUT, from));
 }
 
 /*******************************************************************\
 
-Function: ssa_fixed_pointt::get_backwards_edges
+Function: ssa_fixed_pointt::do_backwards_edges
 
   Inputs:
 
@@ -146,26 +136,29 @@ Function: ssa_fixed_pointt::get_backwards_edges
 
 \*******************************************************************/
 
-void ssa_fixed_pointt::get_backwards_edges()
+void ssa_fixed_pointt::do_backwards_edges()
 {
-  // old program
-  forall_goto_program_instructions(i_it, function_SSA_old.goto_function.body)
-  {
-    if(i_it->is_backwards_goto())
-      backwards_edges.push_back(backwards_edge(function_SSA_old, i_it));
+  // old program, if applicable
+  if(use_old)
+  {  
+    forall_goto_program_instructions(i_it, function_SSA_old.goto_function.body)
+    {
+      if(i_it->is_backwards_goto())
+        do_backwards_edge(function_SSA_old, i_it);
+    }
   }
-  
+
   // new program
   forall_goto_program_instructions(i_it, function_SSA_new.goto_function.body)
   {
     if(i_it->is_backwards_goto())
-      backwards_edges.push_back(backwards_edge(function_SSA_new, i_it));
+      do_backwards_edge(function_SSA_new, i_it);
   }
 }
 
 /*******************************************************************\
 
-Function: ssa_fixed_pointt::fixed_point
+Function: ssa_fixed_pointt::compute_fixed_point
 
   Inputs:
 
@@ -175,116 +168,30 @@ Function: ssa_fixed_pointt::fixed_point
 
 \*******************************************************************/
 
-void ssa_fixed_pointt::fixed_point()
+void ssa_fixed_pointt::compute_fixed_point()
 {
-  get_backwards_edges();
+  do_backwards_edges();
   setup_properties();
 
-  iteration_number=0;
+  // set up transition relation
   
-  bool change;
-
-  do
-  {
-    iteration_number++;
-    
-    #ifdef DEBUG
-    std::cout << "Iteration #" << iteration_number << "\n";
-    print_invariant(std::cout);
-    #endif
-   
-    change=iteration();
-  }
-  while(change);
-
-  #ifdef DEBUG
-  std::cout << "Fixedpoint after " << iteration_number
-            << " iteration(s)\n";
-  print_invariant(std::cout);
-  #endif
-
-  // we check the properties once we have the fixed point
-  check_properties();
-}
-
-/*******************************************************************\
-
-Function: ssa_fixed_pointt::iteration
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-bool ssa_fixed_pointt::iteration()
-{
-  solvert solver(ns);
-
-  // feed SSA(s) into solver
-  solver << function_SSA_new;
+  // new function
+  fixed_point.transition_relation << function_SSA_new;
 
   if(use_old)
   {
-    solver << function_SSA_old;
-    tie_inputs_together(solver);
+    // old function, if applicable
+    fixed_point.transition_relation << function_SSA_old;
+    
+    // tie inputs together, if applicable
+    tie_inputs_together(fixed_point.transition_relation);
   }
 
-  // feed in current pre-state predicates
-  for(backwards_edgest::const_iterator
-      b_it=backwards_edges.begin();
-      b_it!=backwards_edges.end();
-      b_it++)
-    b_it->pre_predicate.set_to_true(solver);
-  
-  // feed in assertions to aid fixed-point computation
-  for(propertiest::const_iterator
-      p_it=properties.begin(); p_it!=properties.end(); p_it++)
-    solver.add_expression(p_it->condition);
+  // compute the fixed-point
+  fixed_point();
 
-  // solve
-  solver.dec_solve();
- 
-  #ifdef DEBUG
-  std::cout << "=======================\n";
-  solver.print_assignment(std::cout);
-  std::cout << "=======================\n";
-  #endif
-
-  // now get new value of post-state predicates
-  for(backwards_edgest::iterator
-      b_it=backwards_edges.begin();
-      b_it!=backwards_edges.end();
-      b_it++)
-    b_it->post_predicate.get(solver);
-
-  // now 'OR' with previous pre-state predicates
-
-  bool change=false;
-
-  for(backwards_edgest::iterator
-      b_it=backwards_edges.begin();
-      b_it!=backwards_edges.end();
-      b_it++)
-  {
-    // copy
-    predicatet tmp=b_it->post_predicate;
-    
-    // rename
-    tmp.rename(b_it->pre_predicate.guard, b_it->pre_predicate.vars);
-    
-    #if 0
-    tmp.output(std::cout);
-    #endif
-    
-    // make disjunction
-    if(b_it->pre_predicate.disjunction(tmp))
-      change=true;
-  }
-  
-  return change;
+  // we check the properties once we have the fixed point
+  check_properties();
 }
 
 /*******************************************************************\
@@ -306,21 +213,11 @@ void ssa_fixed_pointt::check_properties()
   {
     solvert solver(ns);
 
-    // feed SSA into solver
-    solver << function_SSA_new;
+    // feed transition relation into solver
+    solver << fixed_point.transition_relation;
     
-    if(use_old)
-    {
-      solver << function_SSA_old;
-      tie_inputs_together(solver);
-    }
-
-    // feed in current fixed-point
-    for(backwards_edgest::const_iterator
-        b_it=backwards_edges.begin();
-        b_it!=backwards_edges.end();
-        b_it++)
-      b_it->pre_predicate.set_to_true(solver);
+    // feed in fixed-point
+    solver << fixed_point.state_predicate;
 
     #ifdef DEBUG
     std::cout << "GUARD: " << from_expr(ns, "", p_it->guard) << "\n";
@@ -331,7 +228,7 @@ void ssa_fixed_pointt::check_properties()
     solver.set_to_true(p_it->guard);
     solver.set_to_false(p_it->condition);
 
-    // solve
+    // now solve
     decision_proceduret::resultt result=solver.dec_solve();
    
     #ifdef DEBUG
@@ -494,53 +391,5 @@ void ssa_fixed_pointt::setup_properties()
       properties.back().condition=function_SSA_new.read_rhs(i_it->guard, i_it);
       properties.back().guard=function_SSA_new.guard_symbol(i_it);
     }
-  }
-}
-
-/*******************************************************************\
-
-Function: ssa_fixed_pointt::print_invariant
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void ssa_fixed_pointt::print_invariant(std::ostream &out) const
-{
-  for(backwards_edgest::const_iterator
-      b_it=backwards_edges.begin();
-      b_it!=backwards_edges.end();
-      b_it++)
-  {
-    const backwards_edget &be=*b_it;
-  
-    out << "*** From " << be.from->location_number
-        << " to " << be.to->location_number << "\n";
-
-    out << "Pre: ";
-    for(predicatet::var_listt::const_iterator
-        v_it=be.pre_predicate.vars.begin();
-        v_it!=be.pre_predicate.vars.end(); v_it++)
-      out << " " << v_it->get_identifier();
-    out << "\n";
-    out << "GSym: " << be.pre_predicate.guard.get_identifier()
-        << "\n";
-
-    out << "Post:";
-    for(predicatet::var_listt::const_iterator
-        v_it=be.post_predicate.vars.begin();
-        v_it!=be.post_predicate.vars.end(); v_it++)
-      out << " " << v_it->get_identifier();
-    out << "\n";
-    out << "GSym: " << be.post_predicate.guard.get_identifier()
-        << "\n";
-    
-    out << be.pre_predicate;
-
-    out << "\n";
   }
 }

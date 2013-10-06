@@ -746,8 +746,8 @@ Function: function_SSAt::operator <<
 
 \*******************************************************************/
 
-decision_proceduret & operator << (
-  decision_proceduret &dest,
+std::list<exprt> & operator << (
+  std::list<exprt> &dest,
   const function_SSAt &src)
 {
   forall_goto_program_instructions(i_it, src.goto_function.body)
@@ -761,7 +761,7 @@ decision_proceduret & operator << (
         e_it!=n_it->second.equalities.end();
         e_it++)
     {
-      dest << *e_it;
+      dest.push_back(*e_it);
     }
 
     for(function_SSAt::nodet::constraintst::const_iterator
@@ -769,7 +769,7 @@ decision_proceduret & operator << (
         c_it!=n_it->second.constraints.end();
         c_it++)
     {
-      dest << *c_it;
+      dest.push_back(*c_it);
     }
   }
   

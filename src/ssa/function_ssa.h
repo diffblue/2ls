@@ -94,7 +94,7 @@ protected:
   void build_guard(locationt loc);
 };
 
-class decision_proceduret & operator <<
-  (decision_proceduret &dest, const function_SSAt &src);
+std::list<exprt> & operator <<
+  (std::list<exprt> &dest, const function_SSAt &src);
 
 #endif

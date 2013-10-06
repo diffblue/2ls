@@ -22,17 +22,15 @@ public:
   typedef std::list<exprt> constraintst;
   constraintst transition_relation;
   
-  typedef std::vector<symbol_exprt> var_listt;  
-  var_listt pre_state_vars, post_state_vars;
-  var_listt pre_state_guards, post_state_guards;
+  predicatet::state_var_listt pre_state_vars, post_state_vars;
   
   predicatet state_predicate;
 
-  void print(std::ostream &) const;
+  void output(std::ostream &) const;
   
   unsigned iteration_number;
 
-  void fixed_point();
+  void operator()();
 
 protected:
   const namespacet &ns;
@@ -41,5 +39,15 @@ protected:
   void initialize();
   bool iteration();
 };
+
+static inline decision_proceduret & operator << (
+  decision_proceduret &dest,
+  const std::list<exprt> &src)
+{
+  for(std::list<exprt>::const_iterator
+      c_it=src.begin(); c_it!=src.end(); c_it++)
+    dest << *c_it;
+  return dest;
+}
 
 #endif

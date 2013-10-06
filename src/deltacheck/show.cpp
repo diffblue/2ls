@@ -273,7 +273,7 @@ void show_fixed_point(
 {
   function_SSAt function_SSA(goto_function, ns);
   ssa_fixed_pointt ssa_fixed_point(function_SSA, ns);
-  ssa_fixed_point.print_invariant(out);
+  ssa_fixed_point.output(out);
 }
 
 /*******************************************************************\
