@@ -230,79 +230,75 @@ Function: function_SSAt::build_guard
 
 void function_SSAt::build_guard(locationt loc)
 {
-  exprt forward_guard;
-  
-  // the very first 'loc' trivially gets 'true' as forward_guard
+  exprt::operandst sources;
+
+  // the very first 'loc' trivially gets 'true' as source
   if(loc==goto_function.body.instructions.begin())
-    forward_guard=true_exprt();
-  else
-  {
-    exprt::operandst sources;
+    sources.push_back(true_exprt());
   
-    // find the forward-sources for 'loc'
-    forall_goto_program_instructions(i_it, goto_function.body)
+  // find the forward-sources for 'loc'
+  forall_goto_program_instructions(i_it, goto_function.body)
+  {
+    locationt next=i_it;
+    next++;
+    
+    symbol_exprt gs=name(guard_symbol(), OUT, i_it);
+    
+    if(i_it->is_goto())
     {
-      locationt next=i_it;
-      next++;
-      
-      symbol_exprt gs=name(guard_symbol(), OUT, i_it);
-      
-      if(i_it->is_goto())
+      // target, perhaps?
+      if(i_it->get_target()==loc)
       {
-        // target, perhaps?
-        if(i_it->get_target()==loc)
+        // Yes. But might be backwards.
+        if(i_it->is_backwards_goto())
         {
-          // Yes. But might be backwards.
-          if(!i_it->is_backwards_goto())
-            sources.push_back(
-              and_exprt(gs, read_rhs(i_it->guard, i_it)));
+          symbol_exprt loop_select=
+            name(guard_symbol(), LOOP_SELECT, i_it);
+            
+          sources.push_back(loop_select);
+
+          #if 0
+          // Add a constraint that says that we only select
+          // a backwards edge if the incoming guard is 'true'.
+          symbol_exprt gs_lb=
+            name(guard_symbol(), LOOP_BACK, i_it);
+          
+          exprt new_guard=
+            and_exprt(gs_lb, read_rhs(i_it->guard, i_it));
+            
+          implies_exprt(loop_select, new_guard);
+          #endif
         }
-        else if(next==loc && !i_it->guard.is_true())
-          sources.push_back(
-            and_exprt(gs, not_exprt(read_rhs(i_it->guard, i_it))));
-      }
-      else if(i_it->is_assume())
-      {
-        if(next==loc)
+        else
           sources.push_back(
             and_exprt(gs, read_rhs(i_it->guard, i_it)));
       }
-      else if(i_it->is_return() || i_it->is_throw())
+      else if(next==loc && !i_it->guard.is_true())
       {
-      }
-      else
-      {
-        if(next==loc)
-          sources.push_back(gs);
+        // else-case
+        sources.push_back(
+          and_exprt(gs, not_exprt(read_rhs(i_it->guard, i_it))));
       }
     }
-  
-    // the below produces 'false' if there is no source
-    forward_guard=disjunction(sources);
-  }
-  
-  exprt rhs=forward_guard;
-  
-  // now look for any backwards edges
-  forall_goto_program_instructions(i_it, goto_function.body)
-  {
-    if(i_it->is_goto() &&
-       i_it->get_target()==loc &&
-       i_it->is_backwards_goto())
+    else if(i_it->is_assume())
     {
-      symbol_exprt gs=
-        name(guard_symbol(), OUT, i_it);
-      
-      exprt new_guard=
-        and_exprt(gs, read_rhs(i_it->guard, i_it));
-
-      symbol_exprt loop_select=
-        name(guard_symbol(), LOOP_SELECT, i_it);
-    
-      rhs=if_exprt(loop_select, gs, rhs);
+      if(next==loc)
+        sources.push_back(
+          and_exprt(gs, read_rhs(i_it->guard, i_it)));
+    }
+    else if(i_it->is_return() || i_it->is_throw())
+    {
+    }
+    else
+    {
+      if(next==loc)
+        sources.push_back(gs);
     }
   }
 
+  // the below produces 'false' if there is no source
+  exprt rhs=disjunction(sources);
+  
   equal_exprt equality(name(guard_symbol(), OUT, loc), rhs);
   nodes[loc].equalities.push_back(equality);
 }
@@ -538,7 +534,7 @@ symbol_exprt function_SSAt::name(
                    kind==LOOP_SELECT?"ls":
                    "")+
                   i2string(cnt)+
-                  suffix;
+                  (kind==LOOP_SELECT?std::string(""):suffix);
 
   new_symbol_expr.set_identifier(new_id);
   
