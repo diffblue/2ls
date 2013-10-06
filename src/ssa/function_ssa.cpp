@@ -117,13 +117,13 @@ void function_SSAt::build_phi_nodes(locationt loc)
          incoming_it->first->location_number >= loc->location_number)
       {
         // it's a backwards edge
-        exprt incoming_value=name(*o_it, LOOP, loc);
-        exprt incoming_guard=name(guard_symbol(), LOOP, loc);
+        exprt incoming_value=name(*o_it, LOOP_BACK, incoming_it->first);
+        exprt incoming_select=name(guard_symbol(), LOOP_SELECT, incoming_it->first);
 
         if(rhs.is_nil()) // first
           rhs=incoming_value;
         else
-          rhs=if_exprt(incoming_guard, incoming_value, rhs);
+          rhs=if_exprt(incoming_select, incoming_value, rhs);
       }
 
     symbol_exprt lhs=name(*o_it, PHI, loc);
@@ -230,16 +230,16 @@ Function: function_SSAt::build_guard
 
 void function_SSAt::build_guard(locationt loc)
 {
-  exprt rhs;
+  exprt forward_guard;
   
-  exprt::operandst sources;
-  
-  // the very first 'loc' trivially gets 'true' as guard
+  // the very first 'loc' trivially gets 'true' as forward_guard
   if(loc==goto_function.body.instructions.begin())
-    rhs=true_exprt();
+    forward_guard=true_exprt();
   else
   {
-    // find the sources for 'loc'
+    exprt::operandst sources;
+  
+    // find the forward-sources for 'loc'
     forall_goto_program_instructions(i_it, goto_function.body)
     {
       locationt next=i_it;
@@ -252,11 +252,8 @@ void function_SSAt::build_guard(locationt loc)
         // target, perhaps?
         if(i_it->get_target()==loc)
         {
-          // Yes. Might be backwards.
-          if(i_it->is_backwards_goto())
-            sources.push_back(
-              name(guard_symbol(), LOOP, loc));
-          else
+          // Yes. But might be backwards.
+          if(!i_it->is_backwards_goto())
             sources.push_back(
               and_exprt(gs, read_rhs(i_it->guard, i_it)));
         }
@@ -281,7 +278,29 @@ void function_SSAt::build_guard(locationt loc)
     }
   
     // the below produces 'false' if there is no source
-    rhs=disjunction(sources);
+    forward_guard=disjunction(sources);
+  }
+  
+  exprt rhs=forward_guard;
+  
+  // now look for any backwards edges
+  forall_goto_program_instructions(i_it, goto_function.body)
+  {
+    if(i_it->is_goto() &&
+       i_it->get_target()==loc &&
+       i_it->is_backwards_goto())
+    {
+      symbol_exprt gs=
+        name(guard_symbol(), OUT, i_it);
+      
+      exprt new_guard=
+        and_exprt(gs, read_rhs(i_it->guard, i_it));
+
+      symbol_exprt loop_select=
+        name(guard_symbol(), LOOP_SELECT, i_it);
+    
+      rhs=if_exprt(loop_select, gs, rhs);
+    }
   }
 
   equal_exprt equality(name(guard_symbol(), OUT, loc), rhs);
@@ -419,7 +438,7 @@ symbol_exprt function_SSAt::read_in(
   locationt loc) const
 {
   // This reads:
-  // * LOOP if there is a LOOP node at 'loc' for symbol
+  // * LOOP_BACK if there is a LOOP node at 'loc' for symbol
   // * OUT  otherwise
 
   const irep_idt &identifier=expr.get_identifier();
@@ -457,7 +476,7 @@ symbol_exprt function_SSAt::read_in(
     }
     
     if(has_phi)
-      return name(expr, LOOP, loc);
+      return name(expr, LOOP_BACK, loc);
     else
       return read_rhs(expr, loc);
   }
@@ -512,9 +531,12 @@ symbol_exprt function_SSAt::name(
   symbol_exprt new_symbol_expr=symbol; // copy
   const irep_idt &old_id=symbol.get_identifier();
   unsigned cnt=loc->location_number;
-
+  
   irep_idt new_id=id2string(old_id)+"#"+
-                  (kind==PHI?"phi":(kind==LOOP?"loop":""))+
+                  (kind==PHI?"phi":
+                   kind==LOOP_BACK?"lb":
+                   kind==LOOP_SELECT?"ls":
+                   "")+
                   i2string(cnt)+
                   suffix;
 

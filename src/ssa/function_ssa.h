@@ -57,7 +57,7 @@ public:
   nodest nodes;
 
   // auxiliary functions
-  enum kindt { PHI, OUT, LOOP };
+  enum kindt { PHI, OUT, LOOP_BACK, LOOP_SELECT };
   symbol_exprt name(const symbol_exprt &, kindt kind, locationt loc) const;
   symbol_exprt name(const symbol_exprt &, const ssa_domaint::deft &) const;
   symbol_exprt name_input(const symbol_exprt &) const;
