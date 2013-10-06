@@ -206,6 +206,11 @@ void solvert::new_expression(unsigned nr)
     set_equal(not_exprt(equal_exprt(expr.op0(), expr.op1())),
               expr);
   }
+  else if(expr.id()==ID_equal)
+  {
+    add_operands(nr);
+    equal_list.push_back(nr);
+  }
   else
   {
     if(expr.has_operands()) // make it uninterpreted
@@ -397,6 +402,16 @@ decision_proceduret::resultt solvert::dec_solve()
         implies_equal(se.op[1], e_nr, progress);
       }
 
+      if(is_true(se.op[1])) // x || true == true
+      {
+        implies_equal(true_nr, e_nr, progress);
+      }
+
+      if(is_true(se.op[0])) // true || x == true
+      {
+        implies_equal(true_nr, e_nr, progress);
+      }
+
       if(is_false(e_nr)) // !(x || y) ===> !x, !y
       {
         for(unsigned i=0; i<se.op.size(); i++)
@@ -420,6 +435,16 @@ decision_proceduret::resultt solvert::dec_solve()
       if(is_true(se.op[0])) // true && x == x
       {
         implies_equal(se.op[1], e_nr, progress);
+      }
+
+      if(is_false(se.op[1])) // x && false == false
+      {
+        implies_equal(false_nr, e_nr, progress);
+      }
+      
+      if(is_false(se.op[0])) // false && x == false
+      {
+        implies_equal(false_nr, e_nr, progress);
       }
 
       if(is_true(e_nr)) // a && b == true -> a==true && b==true
@@ -454,6 +479,46 @@ decision_proceduret::resultt solvert::dec_solve()
       else if(is_false(e_nr)) // !false == true
       {
         implies_equal(true_nr, se.op[0], progress);
+      }
+    }
+
+    for(solver_expr_listt::const_iterator
+        equal_it=equal_list.begin();
+        equal_it!=equal_list.end();
+        equal_it++)
+    {
+      unsigned e_nr=*equal_it;
+      const solver_exprt &se=expr_map[e_nr];
+      
+      unsigned op0=equalities.find(se.op[0]);
+      unsigned op1=equalities.find(se.op[1]);
+
+      // Is it equal?
+      if(is_equal(op0, op1))
+        implies_equal(true_nr, e_nr, progress);
+      
+      // Is there a disequality for this equality?
+      for(disequalitiest::const_iterator
+          d_it=disequalities.begin();
+          d_it!=disequalities.end();
+          d_it++)
+      {
+        const std::set<unsigned> &diseq_set=d_it->second;
+      
+        for(std::set<unsigned>::const_iterator
+            diseq_it=diseq_set.begin(); diseq_it!=diseq_set.end(); diseq_it++)
+        {
+          if(is_equal(d_it->first, op0) &&
+             is_equal(*diseq_it, op1))
+          {
+            implies_equal(false_nr, e_nr, progress);
+          }
+          else if(is_equal(d_it->first, op1) &&
+                  is_equal(*diseq_it, op0))
+          {
+            implies_equal(false_nr, e_nr, progress);
+          }
+        }
       }
     }
 

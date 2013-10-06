@@ -96,7 +96,8 @@ protected:
     return equalities.find(a)==equalities.find(b);
   }
   
-  // disequalities; the smaller index is the key
+  // Disequalities; the smaller index is the key.
+  // This should really use roots from the equalities.
   typedef std::map<unsigned, std::set<unsigned> > disequalitiest;
   disequalitiest disequalities;
   
@@ -139,7 +140,7 @@ protected:
 
   // lists of expressions with particular IDs  
   typedef std::vector<unsigned> solver_expr_listt;
-  solver_expr_listt if_list, or_list, and_list, not_list;
+  solver_expr_listt if_list, or_list, and_list, not_list, equal_list;
 
   // uninterpreted functions (and predicates), mapping
   // expression id -> to the list of expressions of this kind  
