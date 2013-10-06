@@ -103,7 +103,7 @@ void ssa_fixed_pointt::do_backwards_edge(
 {
   assert(from->is_backwards_goto());
   
-  locationt to=from->get_target();
+  //locationt to=from->get_target();
 
   // Record the objects modified by the loop to get
   // 'primed' (post-state) and 'unprimed' (pre-state) variables.
@@ -112,7 +112,7 @@ void ssa_fixed_pointt::do_backwards_edge(
       o_it!=function_SSA.objects.end();
       o_it++)
   {
-    symbol_exprt in=function_SSA.read_in(*o_it, to);
+    symbol_exprt in=function_SSA.name(*o_it, function_SSAt::LOOP_BACK, from);
     symbol_exprt out=function_SSA.read_rhs(*o_it, from);
   
     fixed_point.pre_state_vars.push_back(in);
@@ -120,7 +120,7 @@ void ssa_fixed_pointt::do_backwards_edge(
   }
 
   symbol_exprt guard=function_SSA.guard_symbol();
-  fixed_point.pre_state_vars.push_back(function_SSA.name(guard, function_SSAt::LOOP, to));
+  fixed_point.pre_state_vars.push_back(function_SSA.name(guard, function_SSAt::LOOP_BACK, from));
   fixed_point.post_state_vars.push_back(function_SSA.name(guard, function_SSAt::OUT, from));
 }
 
@@ -186,7 +186,7 @@ void ssa_fixed_pointt::compute_fixed_point()
     // tie inputs together, if applicable
     tie_inputs_together(fixed_point.transition_relation);
   }
-
+  
   // compute the fixed-point
   fixed_point();
 
