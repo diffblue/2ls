@@ -106,14 +106,14 @@ bool fixed_pointt::iteration()
   
   post_state.get(solver);
 
-  // Now 'OR' with previous state predicate.
-  // First rename post-state to pre-state.
-  post_state.rename(pre_state_vars);
-    
   #ifdef DEBUG
   std::cout << "Post state:\n";
   post_state.output(std::cout);
   #endif
+    
+  // Now 'OR' with previous state predicate.
+  // First rename post-state to pre-state.
+  post_state.rename(pre_state_vars);
     
   // Form disjunction of previous state predicate and the new one.
   return state_predicate.disjunction(post_state);
