@@ -1,1 +1,1 @@
-#define DELTACHECK_VERSION "0.4"
+#define DELTACHECK_VERSION "0.4.1"
