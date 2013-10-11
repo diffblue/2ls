@@ -54,8 +54,6 @@ public:
     
     std::set<f_idt> calls;
     std::set<f_idt> called_by;
-    
-    // statistics
   };
 
   // functions to 'affected' map
