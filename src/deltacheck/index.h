@@ -47,7 +47,7 @@ public:
 
   irep_idt get_file_for_function(
     const irep_idt &preferred_file,
-    const irep_idt &function_id);
+    const irep_idt &function_id) const;
 
 };
 

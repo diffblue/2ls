@@ -218,7 +218,7 @@ Function: indext::get_file_for_function
 
 irep_idt indext::get_file_for_function(
   const irep_idt &preferred_file,
-  const irep_idt &function_id)
+  const irep_idt &function_id) const
 {
   function_to_filet::const_iterator
     it=function_to_file.find(function_id);
