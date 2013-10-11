@@ -7,7 +7,7 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 #ifndef CPROVER_GET_FUNCTION_H
-#define CPROVER_GET_FUNCITON_H
+#define CPROVER_GET_FUNCTION_H
 
 #include <util/message.h>
 #include <goto-programs/goto_model.h>
@@ -23,7 +23,7 @@ public:
   }
 
   goto_functionst::goto_functiont * operator()(
-    const irep_idt &id);
+    const irep_idt &function_id);
   
   inline irep_idt get_file_name() const
   {
