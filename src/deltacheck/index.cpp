@@ -203,3 +203,35 @@ void indext::read(const std::string &in_file_name)
     }
   }
 }
+
+/*******************************************************************\
+
+Function: indext::get_file_for_function
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+irep_idt indext::get_file_for_function(
+  const irep_idt &preferred_file,
+  const irep_idt &function_id)
+{
+  function_to_filet::const_iterator
+    it=function_to_file.find(function_id);
+
+  // found at all?
+  if(it==function_to_file.end())
+    return preferred_file; // function not found
+
+  // function is in preferred file?
+  if(it->second.find(preferred_file)!=it->second.end())
+    return preferred_file; // ok as given
+  
+  assert(!it->second.empty());
+
+  return *it->second.begin(); // fix file
+}
