@@ -28,8 +28,7 @@ Function: change_impactt::diff
 
 void change_impactt::diff(
   const indext &old_index,
-  const indext &new_index,
-  const optionst &options)
+  const indext &new_index)
 {
   for(indext::file_to_functiont::const_iterator
       new_file_it=new_index.file_to_function.begin();
@@ -267,9 +266,7 @@ Function: change_impactt::change_impact
 
 \*******************************************************************/
 
-void change_impactt::change_impact(
-  const indext &new_index,
-  const optionst &options)
+void change_impactt::change_impact(const indext &new_index)
 {
   std::stack<f_idt> working;
   
@@ -302,7 +299,7 @@ void change_impactt::change_impact(
     const f_idt f_id=working.top();
     working.pop();
     
-    propagate_affected(new_index, get_function, options, f_id, working);
+    propagate_affected(new_index, get_function, f_id, working);
   }
 }
 
@@ -321,7 +318,6 @@ Function: change_impactt::propagate_affected
 void change_impactt::propagate_affected(
   const indext &new_index,
   get_functiont &get_function,
-  const optionst &options,
   const f_idt &f_id,
   std::stack<f_idt> &working_fkts)
 {

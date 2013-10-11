@@ -25,6 +25,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "report_source_code.h"
 #include "analyzer.h"
 #include "path_util.h"
+#include "change_impact.h"
 
 class deltacheck_analyzert:public messaget
 {
@@ -61,6 +62,8 @@ protected:
   const indext &index_new;
   const optionst &options;
   
+  change_impactt change_impact;
+  
   void check_function(
     const std::string &path_prefix,
     const symbolt &symbol,
@@ -84,7 +87,8 @@ protected:
 
   void check_all(std::ostream &global_report);
   
-  unsigned errors_in_file, passed_in_file, unknown_in_file;
+  unsigned errors_in_file, passed_in_file,
+           unknown_in_file, unaffected_in_file;
   
   void collect_statistics(const propertiest &properties);
 };
@@ -292,7 +296,7 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
     goto_modelt model;
     read_goto_binary(full_path, model, get_message_handler());
    
-    const namespacet ns(model.symbol_table); 
+    const namespacet ns_new(model.symbol_table); 
     const std::set<irep_idt> &functions=file_it->second;
 
     // now do all functions from model
@@ -316,9 +320,31 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
       goto_functionst::goto_functiont *index_new_fkt=
         &fmap_it->second;
     
+      // In case of differential checking, is this function at all affected?
+      if(use_index_old)
+        if(!change_impact.file_map[file_it->first][id].is_affected())
+        {
+          status() << "Function \"" << id2string(id) << "\" is not affected" << eom;
+
+          // add properties to each
+          statistics.start("Properties");
+          goto_check(ns_new, options, *index_new_fkt);
+          index_new_fkt->body.update();
+          statistics.stop("Properties");
+
+          unsigned count=0;
+          forall_goto_program_instructions(i_it, index_new_fkt->body)
+            if(i_it->is_assert())
+              count++;
+          
+          unaffected_in_file++;
+          statistics.number_map["Unaffected"]++;
+          continue;
+        }
+      
       status() << "Checking \"" << id2string(id) << "\"" << eom;
       
-      const symbolt &symbol=ns.lookup(id);
+      const symbolt &symbol=ns_new.lookup(id);
 
       file_report << "<h2>Function " << html_escape(symbol.display_name())
                   << " in " << html_escape(file_it->first)
@@ -340,11 +366,11 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
 
         check_function_delta(
           path_prefix_old, symbol_old, *index_old_fkt, ns_old,
-          path_prefix,     symbol,     *index_new_fkt,     ns,
+          path_prefix,     symbol,     *index_new_fkt, ns_new,
           file_report);
       }
       else
-        check_function(path_prefix, symbol, *index_new_fkt, ns,
+        check_function(path_prefix, symbol, *index_new_fkt, ns_new,
                        file_report);
     }
 
@@ -365,6 +391,7 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
   global_report << "<h2>Summary statistics</h2>\n";
   statistics.html_report_total(global_report);
   
+  result() << "Properties unaffected: " << statistics.number_map["Unaffected"] << eom;
   result() << "Properties passed: " << statistics.number_map["Passed"] << eom;
   result() << "Properties failed: " << statistics.number_map["Errors"] << eom;
   result() << "Properties warned: " << statistics.number_map["Unknown"] << eom;
@@ -456,6 +483,16 @@ void deltacheck_analyzert::operator()()
   }
   else
     status() << "Path prefix: " << index_new.path_prefix << eom;
+    
+  if(use_index_old)
+  {
+    statistics.start("Change-impact");
+    status() << "Computing syntactic difference" << eom;
+    change_impact.diff(index_old, index_new);
+    status() << "Change-impact analysis" << eom;
+    change_impact.change_impact(index_new);
+    statistics.stop("Change-impact");
+  }
 
   check_all(out);
 
@@ -471,6 +508,7 @@ void deltacheck_analyzert::operator()()
   
   xml_out << "<deltacheck_stat>\n";
   xml_out << "<properties";
+  xml_out << " unaffected=\"" << statistics.number_map["Unaffected"] << "\"";
   xml_out << " passed=\"" << statistics.number_map["Passed"] << "\"";
   xml_out << " failed=\"" << statistics.number_map["Errors"] << "\"";
   xml_out << " warned=\"" << statistics.number_map["Unknown"] << "\"";

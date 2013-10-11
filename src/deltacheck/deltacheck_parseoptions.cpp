@@ -342,7 +342,7 @@ int deltacheck_parseoptionst::doit()
       change_impactt change_impact;
       change_impact.set_message_handler(get_message_handler());
       
-      change_impact.diff(index1, index2, options);
+      change_impact.diff(index1, index2);
       change_impact.output_diff(std::cout);
 
       return 0;
@@ -367,10 +367,10 @@ int deltacheck_parseoptionst::doit()
       change_impact.set_message_handler(get_message_handler());
       
       status() << "Computing syntactic difference" << eom;
-      change_impact.diff(index1, index2, options);
+      change_impact.diff(index1, index2);
 
       status() << "Change-impact analysis" << eom;
-      change_impact.change_impact(index2, options);
+      change_impact.change_impact(index2);
 
       change_impact.output_change_impact(std::cout);
 

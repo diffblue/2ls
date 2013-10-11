@@ -11,14 +11,22 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <stack>
 
-#include <util/options.h>
-
 #include "get_function.h"
 #include "index.h"
 
 class change_impactt:public messaget
 {
 public:
+  void diff(
+    const indext &old_index,
+    const indext &new_index);
+
+  void change_impact(
+    const indext &new_index);
+
+  void output_diff(std::ostream &);  
+  void output_change_impact(std::ostream &);  
+  
   struct f_idt
   {
     irep_idt file, function_id;
@@ -63,18 +71,6 @@ public:
   typedef std::map<irep_idt, function_mapt> file_mapt;
   file_mapt file_map;
 
-  void diff(
-    const indext &old_index,
-    const indext &new_index,
-    const optionst &options);
-
-  void change_impact(
-    const indext &new_index,
-    const optionst &options);
-
-  void output_diff(std::ostream &);  
-  void output_change_impact(std::ostream &);  
-  
 protected:
   void diff_functions(
     const irep_idt &file,
@@ -85,7 +81,6 @@ protected:
   void propagate_affected(
     const indext &new_index,
     get_functiont &get_function,
-    const optionst &options,
     const f_idt &f_id,
     std::stack<f_idt> &working);
 
