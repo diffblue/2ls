@@ -3,7 +3,7 @@ CBMC ?= ../..
 
 SRC = deltacheck_main.cpp deltacheck_parseoptions.cpp index.cpp \
       get_function.cpp predicate.cpp rename.cpp fixed_point.cpp \
-      ssa_fixed_point.cpp source_diff.cpp \
+      ssa_fixed_point.cpp source_diff.cpp change_impact.cpp \
       html_report.cpp analyzer.cpp syntax_highlighting.cpp \
       solver.cpp show.cpp properties.cpp report_source_code.cpp \
       get_source.cpp statistics.cpp path_util.cpp \

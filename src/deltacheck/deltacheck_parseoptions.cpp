@@ -24,6 +24,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "version.h"
 #include "index.h"
 #include "analyzer.h"
+#include "change_impact.h"
 #include "show.h"
 
 /*******************************************************************\
@@ -322,6 +323,59 @@ int deltacheck_parseoptionst::doit()
       show_properties(index, options, std::cout, get_message_handler());
       return 0;
     }
+
+    if(cmdline.isset("show-diff"))
+    {
+      if(cmdline.args.size()!=2)
+      {
+        usage_error();
+        return 10;
+      }
+
+      indext index1, index2;
+      index1.set_message_handler(get_message_handler());
+      index2.set_message_handler(get_message_handler());
+  
+      index1.read(cmdline.args[0]);
+      index2.read(cmdline.args[1]);
+
+      change_impactt change_impact;
+      change_impact.set_message_handler(get_message_handler());
+      
+      change_impact.diff(index1, index2, options);
+      change_impact.output_diff(std::cout);
+
+      return 0;
+    }
+    
+    if(cmdline.isset("show-change-impact"))
+    {
+      if(cmdline.args.size()!=2)
+      {
+        usage_error();
+        return 10;
+      }
+
+      indext index1, index2;
+      index1.set_message_handler(get_message_handler());
+      index2.set_message_handler(get_message_handler());
+  
+      index1.read(cmdline.args[0]);
+      index2.read(cmdline.args[1]);
+
+      change_impactt change_impact;
+      change_impact.set_message_handler(get_message_handler());
+      
+      status() << "Computing syntactic difference" << eom;
+      change_impact.diff(index1, index2, options);
+
+      status() << "Change-impact analysis" << eom;
+      change_impact.change_impact(index2, options);
+
+      change_impact.output_change_impact(std::cout);
+
+      return 0;
+    }
     
     if(cmdline.args.size()==2)
     {
@@ -413,6 +467,7 @@ void deltacheck_parseoptionst::help()
     " --show-ssa                   show SSA\n"
     " --show-properties            show the properties\n"
     " --show-fixed-points          show the fixed-points for the loops\n"
+    " --show-change-impact         show syntactic change-impact\n"
     "\n"
     "Safety checks:\n"
     " --bounds-check               add array bounds checks\n"

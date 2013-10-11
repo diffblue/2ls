@@ -24,7 +24,8 @@ Author: Daniel Kroening, kroening@kroening.com
   "(bounds-check)(pointer-check)(div-by-zero-check)" \
   "(signed-overflow-check)(unsigned-overflow-check)(nan-check)" \
   "(show-ssa)(show-defs)(show-guards)(show-fixed-points)" \
-  "(show-properties)(sat)"
+  "(show-properties)(show-change-impact)(show-diff)" \
+  "(sat)"
 
 class deltacheck_parseoptionst:
   public parseoptions_baset,
