@@ -259,9 +259,7 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
       file_it!=index_new.file_to_function.end();
       file_it++)
   {
-    std::string full_path=
-      make_relative_path(index_new.path_prefix, id2string(file_it->first));
-      
+    std::string full_path=index_new.full_path(file_it->first);      
     std::string path_prefix=get_directory(full_path);
   
     status() << "Processing \"" << full_path << "\"" << eom;

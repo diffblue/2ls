@@ -92,6 +92,23 @@ void indext::write(std::ostream &out) const
 
 /*******************************************************************\
 
+Function: indext::full_path
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::string indext::full_path(const irep_idt &src) const
+{
+  return make_relative_path(path_prefix, id2string(src));
+}
+
+/*******************************************************************\
+
 Function: indext::index_goto_binary
 
   Inputs:
@@ -104,16 +121,15 @@ Function: indext::index_goto_binary
 
 void indext::index_goto_binary(const irep_idt &file)
 {
-  std::string full_path=
-    make_relative_path(path_prefix, id2string(file));
+  std::string file_full_path=full_path(file);
 
-  status() << "Reading `" << full_path << "'" << eom;
+  status() << "Reading `" << file_full_path << "'" << eom;
   
   goto_modelt goto_model;
   
-  if(read_goto_binary(full_path, goto_model, get_message_handler()))
+  if(read_goto_binary(file_full_path, goto_model, get_message_handler()))
   {
-    error() << "failed to read `" << full_path << "'" << eom;
+    error() << "failed to read `" << file_full_path << "'" << eom;
     return;
   }
   

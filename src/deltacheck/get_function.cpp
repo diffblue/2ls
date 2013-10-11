@@ -47,8 +47,7 @@ goto_functionst::goto_functiont * get_functiont::operator()(const irep_idt &id)
   
   irep_idt file_name=*(it->second.begin());
 
-  current_file_name=
-    make_relative_path(index.path_prefix, id2string(file_name));
+  current_file_name=index.full_path(file_name);
   
   status("Reading \""+id2string(current_file_name)+"\"");
   

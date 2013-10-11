@@ -36,9 +36,14 @@ public:
 
   void index_goto_binary(const irep_idt &file);
   
-  std::string description, file_name;
+  std::string description, file_name, path_prefix;  
   
-  std::string path_prefix;
+  std::string full_path(const irep_idt &) const;
+
+  inline std::string full_path(const file_to_functiont::const_iterator it) const
+  {
+    return full_path(it->first);
+  }
 };
 
 #endif
