@@ -25,7 +25,7 @@ Author: Daniel Kroening, kroening@kroening.com
   "(signed-overflow-check)(unsigned-overflow-check)(nan-check)" \
   "(show-ssa)(show-defs)(show-guards)(show-fixed-points)" \
   "(show-properties)(show-change-impact)(show-diff)" \
-  "(sat)"
+  "(no-inline)(sat)"
 
 class deltacheck_parseoptionst:
   public parseoptions_baset,

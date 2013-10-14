@@ -137,6 +137,12 @@ void deltacheck_parseoptionst::get_command_line_options(optionst &options)
   else
     options.set_option("pointer-check", false);
 
+  // do we do inlining?
+  if(cmdline.isset("no-inlining"))
+    options.set_option("partial-inlining", false);
+  else
+    options.set_option("partial-inlining", true);
+
   // check assertions
   options.set_option("assertions", true);
 
