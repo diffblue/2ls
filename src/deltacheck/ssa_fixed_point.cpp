@@ -214,16 +214,18 @@ void ssa_fixed_pointt::check_properties()
   for(propertiest::iterator
       p_it=properties.begin(); p_it!=properties.end(); p_it++)
   {
-    //solvert solver(ns);
+    solvert solver(ns);
+    #if 0
     satcheckt satcheck;
     bv_pointerst solver(ns, satcheck);
     //solver.set_message_handler(get_message_handler());
+    #endif
 
     // feed transition relation into solver
     solver << fixed_point.transition_relation;
     
     // feed in fixed-point
-    //solver << fixed_point.state_predicate;
+    solver << fixed_point.state_predicate;
 
     #ifdef DEBUG
     std::cout << "GUARD: " << from_expr(ns, "", p_it->guard) << "\n";
