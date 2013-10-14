@@ -197,8 +197,10 @@ void function_SSAt::build_transfer(locationt loc)
       {
         const code_assignt &code_assign=to_code_assign(loc->code);
         
+        const symbol_exprt ssa_symbol=name(*o_it, OUT, loc);
+        
         equal_exprt equality;
-        equality.lhs()=name(*o_it, OUT, loc);
+        equality.lhs()=ssa_symbol;
         equality.rhs()=read_rhs(code_assign.rhs(), loc);
     
         node.equalities.push_back(equality);
