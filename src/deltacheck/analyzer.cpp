@@ -395,7 +395,10 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
       }
       else
       {
-        if(loops(index_new_fkt->body) || symbol.name!=ID_main)
+        if(symbol.name==ID_main)
+        {
+        }
+        else if(loops(index_new_fkt->body) || symbol.name!="c::main")
           check_function(path_prefix, symbol, *index_new_fkt, ns_new,
                          file_report);
         else
