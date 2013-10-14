@@ -14,7 +14,15 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <goto-programs/read_goto_binary.h>
 #include <goto-programs/goto_model.h>
+#include <goto-programs/goto_inline.h>
+
+#include <goto-symex/goto_symex.h>
+#include <goto-symex/symex_target_equation.h>
+
 #include <analyses/goto_check.h>
+
+#include <solvers/sat/satcheck.h>
+#include <solvers/flattening/bv_pointers.h>
 
 #include "../html/html_escape.h"
 #include "index.h"
@@ -248,6 +256,13 @@ Function: deltacheck_analyzert::check_all
 
 \*******************************************************************/
 
+bool loops(const goto_programt &src)
+{
+  forall_goto_program_instructions(it, src)
+    if(it->is_backwards_goto()) return true;
+  return false;
+}
+
 void deltacheck_analyzert::check_all(std::ostream &global_report)
 {
   // we do this by file in the index
@@ -295,6 +310,15 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
     // read the goto-binary file
     goto_modelt model;
     read_goto_binary(full_path, model, get_message_handler());
+    
+    // do partial inlining to increase precision
+    if(options.get_bool_option("partial-inlining"))
+    {
+      #if 0
+      status() << "Partial inlining" << eom;
+      goto_partial_inline(model, get_message_handler(), 30);
+      #endif
+    }
    
     const namespacet ns_new(model.symbol_table); 
     const std::set<irep_idt> &functions=file_it->second;
@@ -370,8 +394,50 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
           file_report);
       }
       else
-        check_function(path_prefix, symbol, *index_new_fkt, ns_new,
-                       file_report);
+      {
+        if(loops(index_new_fkt->body))
+          check_function(path_prefix, symbol, *index_new_fkt, ns_new,
+                         file_report);
+        else if(symbol.name==ID_main)
+        {
+          goto_check(ns_new, options, *index_new_fkt);
+          index_new_fkt->body.update();
+
+          symbol_tablet d;
+          namespacet joint(d, model.symbol_table);
+          symex_target_equationt e(joint);
+          goto_symext symex(joint, d, e);
+        
+          symex(model.goto_functions, index_new_fkt->body);
+
+          satcheckt satcheck;
+          satcheck.set_message_handler(get_message_handler());
+          bv_pointerst solver(joint, satcheck);
+          solver.set_message_handler(get_message_handler());
+          e.convert(solver);
+          decision_proceduret::resultt r=solver.dec_solve();
+
+          for(symex_target_equationt::SSA_stepst::iterator
+              it=e.SSA_steps.begin();
+              it!=e.SSA_steps.end();
+              it++)
+          {
+            if(it->is_assert())
+            {
+              tvt result;
+              if(r==decision_proceduret::D_SATISFIABLE)
+                result=solver.prop.l_get(it->cond_literal);
+              else
+                result=tvt(true);
+
+              if(result.is_false())
+                statistics.number_map["Errors"]++;
+              else
+                statistics.number_map["Passed"]++;
+            }
+          }
+        }
+      }
     }
 
     html_report_footer(file_report);
