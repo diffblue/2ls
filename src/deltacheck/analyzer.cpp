@@ -395,6 +395,10 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
       }
       else
       {
+        #if 1
+        check_function(path_prefix, symbol, *index_new_fkt, ns_new,
+                       file_report);
+        #else
         if(symbol.name==ID_main)
         {
         }
@@ -440,6 +444,7 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
             }
           }
         }
+        #endif
       }
     }
 
