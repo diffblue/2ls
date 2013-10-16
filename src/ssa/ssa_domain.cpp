@@ -14,6 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/std_expr.h>
 
+#include "object_id.h"
 #include "ssa_domain.h"
 
 /*******************************************************************\
@@ -111,33 +112,37 @@ Function: ssa_domaint::assign
 
 void ssa_domaint::assign(const exprt &lhs, locationt from)
 {
-  if(lhs.id()==ID_symbol)
-  {
-    const irep_idt &id=to_symbol_expr(lhs).get_identifier();
-    def_entryt &def_entry=def_map[id];
-    def_entry.def.loc=from;
-    def_entry.def.kind=deft::ASSIGNMENT;
-    def_entry.source=from;
-  }
-  else if(lhs.id()==ID_member)
-  {
-    assign(to_member_expr(lhs).struct_op(), from);
-  }
-  else if(lhs.id()==ID_index)
-  {
-    assign(to_index_expr(lhs).array(), from);
-  }
-  else if(lhs.id()==ID_typecast)
+  if(lhs.id()==ID_typecast)
   {
     assign(to_typecast_expr(lhs).op(), from);
+    return;
   }
   else if(lhs.id()==ID_if)
   {
     assign(to_if_expr(lhs).true_case(), from);
     assign(to_if_expr(lhs).false_case(), from);
+    return;
   }
-  else if(lhs.id()==ID_dereference)
+
+  // Are we assigning an entire struct?
+  // If so, need to split into pieces.
+  
+  if(lhs.type().id()==ID_struct)
   {
+  }
+  else if(lhs.type().id()==ID_union)
+  {
+  }
+  
+  const irep_idt id=object_id(lhs);
+  
+  if(id!=irep_idt())
+  {
+    const irep_idt id=object_id(lhs);
+    def_entryt &def_entry=def_map[id];
+    def_entry.def.loc=from;
+    def_entry.def.kind=deft::ASSIGNMENT;
+    def_entry.source=from;
   }
 }
 

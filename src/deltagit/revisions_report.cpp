@@ -26,6 +26,45 @@ const char revisions_report_header[]=
 
 /*******************************************************************\
 
+Function: shorten_message
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::string shorten_message(const std::string &src)
+{
+  std::string result;
+  
+  result.reserve(src.size());
+  
+  unsigned line_count=1;
+  
+  for(unsigned i=0; i<src.size(); i++)
+  {
+    result+=src[i];
+
+    if(src[i]=='\n')
+    {
+      line_count++;
+    
+      if(line_count>20) // arbitrary magic number
+      {
+        result+="...\n";
+        break;
+      }
+    }
+  }
+  
+  return result;
+}
+
+/*******************************************************************\
+
 Function: htmlize_message
 
   Inputs:
@@ -177,7 +216,7 @@ void revisions_report(
       "<font size=2>";
     if(j_it->author!="") tooltip+="Author: "+html_escape(j_it->author)+"<br>";
     if(j_it->date!="") tooltip+="Date: "+html_escape(j_it->date)+"<br>";
-    tooltip+=htmlize_message(j_it->message);
+    tooltip+=htmlize_message(shorten_message(j_it->message));
     if(j_it->stage!=job_statust::DONE)
     {
       tooltip+="<br><i>"+html_escape(as_string(j_it->stage));

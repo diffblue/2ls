@@ -24,6 +24,7 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       ../html/logo$(OBJEXT) \
       ../html/html_escape$(OBJEXT) \
       ../ssa/function_ssa$(OBJEXT) \
+      ../ssa/object_id$(OBJEXT) \
       ../ssa/ssa_domain$(OBJEXT) \
       ../ssa/guard_domain$(OBJEXT)
 
