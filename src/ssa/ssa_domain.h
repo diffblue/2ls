@@ -85,6 +85,9 @@ protected:
 class ssa_ait:public ait<ssa_domaint>
 {
 protected:
+  // The below is needed to make the entry point get a source
+  // for the function parameters.
+
   virtual void initialize(const goto_functionst::goto_functiont &goto_function)
   {
     ait<ssa_domaint>::initialize(goto_function);
