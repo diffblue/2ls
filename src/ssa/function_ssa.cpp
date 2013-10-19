@@ -18,6 +18,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <langapi/language_util.h>
 
+#include "object_id.h"
 #include "function_ssa.h"
 
 /*******************************************************************\
@@ -75,7 +76,7 @@ void function_SSAt::build_phi_nodes(locationt loc)
   {
     // phi-node here?
     ssa_domaint::phi_nodest::const_iterator p_it=
-      phi_nodes.find(o_it->get_identifier());
+      phi_nodes.find(object_id(o_it->expr));
           
     if(p_it==phi_nodes.end()) continue; // none
     
@@ -145,12 +146,12 @@ Function: function_SSAt::assigns
 
 \*******************************************************************/
 
-bool function_SSAt::assigns(const symbol_exprt &object, locationt loc) const
+bool function_SSAt::assigns(const objectt &object, locationt loc) const
 {
   if(loc->is_assign())
   {
     const code_assignt &code_assign=to_code_assign(loc->code);
-    return code_assign.lhs()==object;
+    return code_assign.lhs()==object.expr;
   }
   else if(loc->is_function_call())
   {
@@ -160,12 +161,12 @@ bool function_SSAt::assigns(const symbol_exprt &object, locationt loc) const
     if(code_function_call.lhs().is_nil())
       return false;
       
-    return code_function_call.lhs()==object;
+    return code_function_call.lhs()==object.expr;
   }
   else if(loc->is_decl())
   {
     const code_declt &code_decl=to_code_decl(loc->code);
-    return code_decl.symbol()==object;
+    return code_decl.symbol()==object.expr;
   }
   else
     return false;
@@ -188,7 +189,9 @@ void function_SSAt::build_transfer(locationt loc)
   nodet &node=nodes[loc];
 
   for(objectst::const_iterator
-      o_it=objects.begin(); o_it!=objects.end(); o_it++)
+      o_it=objects.begin();
+      o_it!=objects.end();
+      o_it++)
   {
     // assigned here?
     if(assigns(*o_it, loc))
@@ -343,9 +346,9 @@ Function: function_SSAt::guard_symbol
 
 \*******************************************************************/
 
-symbol_exprt function_SSAt::guard_symbol()
+function_SSAt::objectt function_SSAt::guard_symbol()
 {
-  return symbol_exprt("ssa::$guard", bool_typet());
+  return objectt(symbol_exprt("ssa::$guard", bool_typet()));
 }
 
 /*******************************************************************\
@@ -361,10 +364,10 @@ Function: function_SSAt::read_rhs
 \*******************************************************************/
 
 symbol_exprt function_SSAt::read_rhs(
-  const symbol_exprt &expr,
+  const objectt &object,
   locationt loc) const
 {
-  const irep_idt &identifier=expr.get_identifier();
+  const irep_idt &identifier=object_id(object.expr);
   const ssa_domaint &ssa_domain=ssa_analysis[loc];
 
   ssa_domaint::def_mapt::const_iterator d_it=
@@ -373,10 +376,10 @@ symbol_exprt function_SSAt::read_rhs(
   if(d_it==ssa_domain.def_map.end())
   {
     // not written so far, it's input
-    return name_input(expr);
+    return name_input(object);
   }
   else
-    return name(expr, d_it->second.def);
+    return name(object, d_it->second.def);
 }
 
 /*******************************************************************\
@@ -391,6 +394,7 @@ Function: function_SSAt::read_lhs
 
 \*******************************************************************/
 
+#if 0
 exprt function_SSAt::read_lhs(
   const exprt &expr,
   locationt loc) const
@@ -418,6 +422,7 @@ exprt function_SSAt::read_lhs(
   else
     return read_rhs(expr, loc);
 }
+#endif
 
 /*******************************************************************\
 
@@ -432,14 +437,14 @@ Function: function_SSAt::read_in
 \*******************************************************************/
 
 symbol_exprt function_SSAt::read_in(
-  const symbol_exprt &expr,
+  const objectt &object,
   locationt loc) const
 {
   // This reads:
   // * LOOP_BACK if there is a LOOP node at 'loc' for symbol
   // * OUT  otherwise
 
-  const irep_idt &identifier=expr.get_identifier();
+  const irep_idt &identifier=object_id(object.expr);
   const ssa_domaint &ssa_domain=ssa_analysis[loc];
 
   ssa_domaint::def_mapt::const_iterator d_it=
@@ -448,7 +453,7 @@ symbol_exprt function_SSAt::read_in(
   if(d_it==ssa_domain.def_map.end())
   {
     // not written so far
-    return expr;
+    return object.expr;
   }
   else
   {
@@ -474,9 +479,9 @@ symbol_exprt function_SSAt::read_in(
     }
     
     if(has_phi)
-      return name(expr, LOOP_BACK, loc);
+      return name(object, LOOP_BACK, loc);
     else
-      return read_rhs(expr, loc);
+      return read_rhs(object, loc);
   }
 }
 
@@ -522,15 +527,15 @@ Function: function_SSAt::name
 \*******************************************************************/
 
 symbol_exprt function_SSAt::name(
-  const symbol_exprt &symbol,
+  const objectt &object,
   kindt kind,
   locationt loc) const
 {
-  symbol_exprt new_symbol_expr=symbol; // copy
-  const irep_idt &old_id=symbol.get_identifier();
+  symbol_exprt new_symbol_expr(object.expr.type());
+  const irep_idt &id=object.identifier();
   unsigned cnt=loc->location_number;
   
-  irep_idt new_id=id2string(old_id)+"#"+
+  irep_idt new_id=id2string(id)+"#"+
                   (kind==PHI?"phi":
                    kind==LOOP_BACK?"lb":
                    kind==LOOP_SELECT?"ls":
@@ -540,8 +545,8 @@ symbol_exprt function_SSAt::name(
 
   new_symbol_expr.set_identifier(new_id);
   
-  if(symbol.location().is_not_nil())
-    new_symbol_expr.location()=symbol.location();
+  if(object.expr.location().is_not_nil())
+    new_symbol_expr.location()=object.expr.location();
   
   return new_symbol_expr;
 }
@@ -559,15 +564,15 @@ Function: function_SSAt::name
 \*******************************************************************/
 
 symbol_exprt function_SSAt::name(
-  const symbol_exprt &symbol_expr,
+  const objectt &object,
   const ssa_domaint::deft &def) const
 {
   if(def.kind==ssa_domaint::deft::INPUT)
-    return name_input(symbol_expr);
+    return name_input(object);
   else if(def.kind==ssa_domaint::deft::PHI)
-    return name(symbol_expr, PHI, def.loc);
+    return name(object, PHI, def.loc);
   else
-    return name(symbol_expr, OUT, def.loc);
+    return name(object, OUT, def.loc);
 }
 
 /*******************************************************************\
@@ -582,15 +587,15 @@ Function: function_SSAt::name_input
 
 \*******************************************************************/
 
-symbol_exprt function_SSAt::name_input(const symbol_exprt &symbol) const
+symbol_exprt function_SSAt::name_input(const objectt &object) const
 {
-  symbol_exprt new_symbol_expr=symbol; // copy
-  const irep_idt &old_id=symbol.get_identifier();
+  symbol_exprt new_symbol_expr(object.expr.type()); // copy
+  const irep_idt old_id=object.identifier();
   irep_idt new_id=id2string(old_id)+suffix;
   new_symbol_expr.set_identifier(new_id);
 
-  if(symbol.location().is_not_nil())
-    new_symbol_expr.location()=symbol.location();
+  if(object.expr.location().is_not_nil())
+    new_symbol_expr.location()=object.expr.location();
 
   return new_symbol_expr;
 }
@@ -662,18 +667,19 @@ Function: function_SSAt::collect_objects_rec
 
 void function_SSAt::collect_objects_rec(const exprt &src)
 {
-  forall_operands(it, src)
-    collect_objects_rec(*it);
-  
-  if(src.id()==ID_symbol)
-  {
-    const typet &type=ns.follow(src.type());
+  const typet &type=ns.follow(src.type());
 
-    if(type.id()==ID_code)
-    {
-    }
-    else
-      objects.insert(to_symbol_expr(src));
+  if(type.id()==ID_code)
+    return;
+
+  irep_idt id=object_id(src);
+  
+  if(id!=irep_idt())
+    objects.insert(objectt(src));
+  else
+  {
+    forall_operands(it, src)
+      collect_objects_rec(*it);
   }
 }
 

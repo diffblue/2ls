@@ -14,6 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/goto_functions.h>
 
 #include "ssa_domain.h"
+#include "object_id.h"
 
 class function_SSAt
 {
@@ -56,25 +57,45 @@ public:
   typedef std::map<locationt, nodet> nodest;
   nodest nodes;
 
+  // obects of the SSA
+  class objectt
+  {
+  public:
+    exprt expr;
+    inline explicit objectt(const exprt &_expr):expr(_expr)
+    {
+    }
+    
+    inline irep_idt identifier() const
+    {
+      return object_id(expr);
+    }
+    
+    inline bool operator<(const objectt &other) const
+    {
+      return expr<other.expr;
+    }
+  };
+  
   // auxiliary functions
   enum kindt { PHI, OUT, LOOP_BACK, LOOP_SELECT };
-  symbol_exprt name(const symbol_exprt &, kindt kind, locationt loc) const;
-  symbol_exprt name(const symbol_exprt &, const ssa_domaint::deft &) const;
-  symbol_exprt name_input(const symbol_exprt &) const;
+  symbol_exprt name(const objectt &, kindt kind, locationt loc) const;
+  symbol_exprt name(const objectt &, const ssa_domaint::deft &) const;
+  symbol_exprt name_input(const objectt &) const;
   exprt read_rhs(const exprt &, locationt loc) const;
-  symbol_exprt read_rhs(const symbol_exprt &, locationt loc) const;
-  symbol_exprt read_in(const symbol_exprt &, locationt loc) const;
+  symbol_exprt read_rhs(const objectt &, locationt loc) const;
+  symbol_exprt read_in(const objectt &, locationt loc) const;
   exprt read_lhs(const exprt &, locationt loc) const;
-  static symbol_exprt guard_symbol();
+  static objectt guard_symbol();
   symbol_exprt guard_symbol(locationt loc) const
   { return name(guard_symbol(), OUT, loc); }
-  bool assigns(const symbol_exprt &, locationt loc) const;
+  bool assigns(const objectt &, locationt loc) const;
 
   const namespacet &ns;
   const goto_functiont &goto_function;
-
+  
   // the objects accessed
-  typedef std::set<symbol_exprt> objectst;
+  typedef std::set<objectt> objectst;
   objectst objects;
   
 protected:
