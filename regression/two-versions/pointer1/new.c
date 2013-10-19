@@ -9,7 +9,10 @@ struct S
   int payload;
 };
 
+int i;
+
 void my_g(struct S *p)
 {
+  i++;
   p->n->n->payload=1;
 }
