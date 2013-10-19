@@ -84,12 +84,15 @@ public:
   symbol_exprt name_input(const objectt &) const;
   exprt read_rhs(const exprt &, locationt loc) const;
   symbol_exprt read_rhs(const objectt &, locationt loc) const;
-  symbol_exprt read_in(const objectt &, locationt loc) const;
+  exprt read_node_in(const objectt &, locationt loc) const;
   exprt read_lhs(const exprt &, locationt loc) const;
   static objectt guard_symbol();
   symbol_exprt guard_symbol(locationt loc) const
   { return name(guard_symbol(), OUT, loc); }
   bool assigns(const objectt &, locationt loc) const;
+  
+  bool has_static_lifetime(const objectt &) const;
+  bool has_static_lifetime(const exprt &) const;
 
   const namespacet &ns;
   const goto_functiont &goto_function;

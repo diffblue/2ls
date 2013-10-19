@@ -282,7 +282,7 @@ void function_SSAt::build_guard(locationt loc)
       {
         // else-case
         sources.push_back(
-          and_exprt(gs, not_exprt(read_rhs(i_it->guard, i_it))));
+          and_exprt(gs, boolean_negate(read_rhs(i_it->guard, i_it))));
       }
     }
     else if(i_it->is_assume())
@@ -394,39 +394,28 @@ Function: function_SSAt::read_lhs
 
 \*******************************************************************/
 
-#if 0
 exprt function_SSAt::read_lhs(
   const exprt &expr,
   locationt loc) const
 {
-  if(expr.id()==ID_symbol)
+  objectt object(expr);
+
+  // is this an object we track?
+  if(objects.find(object)!=objects.end())
   {
-    const symbol_exprt &symbol_expr=to_symbol_expr(expr);
-    if(assigns(symbol_expr, loc))
-      return name(symbol_expr, OUT, loc);
+    // yes, it is
+    if(assigns(object, loc))
+      return name(object, OUT, loc);
     else
-      return read_rhs(symbol_expr, loc);
-  }
-  else if(expr.id()==ID_member)
-  {
-    member_exprt tmp=to_member_expr(expr);
-    tmp.struct_op()=read_lhs(tmp.struct_op(), loc);
-    return tmp;
-  }
-  else if(expr.id()==ID_index)
-  {
-    index_exprt tmp=to_index_expr(expr);
-    tmp.array()=read_lhs(tmp.array(), loc);
-    return tmp;
+      return read_rhs(object, loc);
   }
   else
     return read_rhs(expr, loc);
 }
-#endif
 
 /*******************************************************************\
 
-Function: function_SSAt::read_in
+Function: function_SSAt::read_node_in
 
   Inputs:
 
@@ -436,13 +425,13 @@ Function: function_SSAt::read_in
 
 \*******************************************************************/
 
-symbol_exprt function_SSAt::read_in(
+exprt function_SSAt::read_node_in(
   const objectt &object,
   locationt loc) const
 {
   // This reads:
   // * LOOP_BACK if there is a LOOP node at 'loc' for symbol
-  // * OUT  otherwise
+  // * OUT otherwise
 
   const irep_idt &identifier=object_id(object.expr);
   const ssa_domaint &ssa_domain=ssa_analysis[loc];
@@ -451,38 +440,33 @@ symbol_exprt function_SSAt::read_in(
     ssa_domain.def_map.find(identifier);
 
   if(d_it==ssa_domain.def_map.end())
-  {
-    // not written so far
-    return object.expr;
-  }
-  else
-  {
-    const ssa_domaint::phi_nodest &phi_nodes=ssa_analysis[loc].phi_nodes;
+    return name_input(object); // not written so far
 
-    ssa_domaint::phi_nodest::const_iterator p_it=
-      phi_nodes.find(identifier);
-      
-    bool has_phi=false;
-          
-    if(p_it!=phi_nodes.end())
-    {
-      const std::map<locationt, ssa_domaint::deft> &incoming=p_it->second;
+  const ssa_domaint::phi_nodest &phi_nodes=ssa_analysis[loc].phi_nodes;
 
-      for(std::map<locationt, ssa_domaint::deft>::const_iterator
-          incoming_it=incoming.begin();
-          incoming_it!=incoming.end();
-          incoming_it++)
-      {
-        if(incoming_it->first->location_number > loc->location_number)
-          has_phi=true;
-      }
-    }
+  ssa_domaint::phi_nodest::const_iterator p_it=
+    phi_nodes.find(identifier);
     
-    if(has_phi)
-      return name(object, LOOP_BACK, loc);
-    else
-      return read_rhs(object, loc);
+  bool has_phi=false;
+        
+  if(p_it!=phi_nodes.end())
+  {
+    const std::map<locationt, ssa_domaint::deft> &incoming=p_it->second;
+
+    for(std::map<locationt, ssa_domaint::deft>::const_iterator
+        incoming_it=incoming.begin();
+        incoming_it!=incoming.end();
+        incoming_it++)
+    {
+      if(incoming_it->first->location_number > loc->location_number)
+        has_phi=true;
+    }
   }
+  
+  if(has_phi)
+    return name(object, LOOP_BACK, loc);
+  else
+    return read_rhs(object, loc);
 }
 
 /*******************************************************************\
@@ -499,11 +483,17 @@ Function: function_SSAt::read_rhs
 
 exprt function_SSAt::read_rhs(const exprt &expr, locationt loc) const
 {
-  if(expr.id()==ID_symbol)
-    return read_rhs(to_symbol_expr(expr), loc);
+  objectt object(expr);
+
+  // is this an object we track?
+  if(objects.find(object)!=objects.end())
+    return read_rhs(object, loc);
+  else if(expr.id()==ID_symbol)
+    return name_input(object);
   else if(expr.id()==ID_address_of)
   {
-    return expr;
+    address_of_exprt address_of_expr=to_address_of_expr(expr);
+    return address_of_expr;
   }
   else
   {
@@ -758,6 +748,52 @@ void function_SSAt::nodet::output(
       e_it++)
     out << from_expr(ns, "", *e_it) << "\n";
 
+}
+
+/*******************************************************************\
+
+Function: function_SSAt::has_static_lifetime
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool function_SSAt::has_static_lifetime(const objectt &object) const
+{
+  return has_static_lifetime(object.expr);
+}
+
+/*******************************************************************\
+
+Function: function_SSAt::has_static_lifetime
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool function_SSAt::has_static_lifetime(const exprt &src) const
+{
+  if(src.id()==ID_dereference)
+    return true;
+  else if(src.id()==ID_index)
+    return has_static_lifetime(to_index_expr(src).array());
+  else if(src.id()==ID_member)
+    return has_static_lifetime(to_member_expr(src).struct_op());
+  else if(src.id()==ID_symbol)
+  {
+    const symbolt &s=ns.lookup(to_symbol_expr(src));
+    return s.is_static_lifetime;
+  }
+  else
+    return false;
 }
 
 /*******************************************************************\

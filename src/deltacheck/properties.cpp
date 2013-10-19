@@ -194,7 +194,6 @@ void report_countermodel(
         e_it!=tracked_expr_lhs.end();
         e_it++)
     {
-      exprt input_name=function_SSA.name_input(to_symbol_expr(*e_it));
       exprt renamed_lhs=function_SSA.read_lhs(*e_it, i_it);
 
       const propertyt::value_mapt::const_iterator v_it_lhs=
@@ -202,7 +201,7 @@ void report_countermodel(
 
       if(v_it_lhs!=property.value_map.end())
       {
-        std::string var=from_expr(ns, "", input_name);
+        std::string var=from_expr(ns, "", *e_it);
         std::string var_loc=var+"@"+id2string(i_it->location.get_line());
         out << "ce" << count << "['" << var_loc
             << "." << ++var_count[var_loc]
@@ -218,23 +217,21 @@ void report_countermodel(
         e_it!=tracked_expr_rhs.end();
         e_it++)
     {
-      exprt input_name=function_SSA.name_input(to_symbol_expr(*e_it));
       exprt renamed_rhs=function_SSA.read_rhs(*e_it, i_it);
 
       const propertyt::value_mapt::const_iterator v_it_rhs=
         property.value_map.find(renamed_rhs);
         
-      if(v_it_rhs!=property.value_map.end())
-      {
-        std::string var=from_expr(ns, "", input_name);
-        std::string var_loc=var+"@"+id2string(i_it->location.get_line());
-        out << "ce" << count << "['" << var_loc
-            << "." << ++var_count[var_loc]
-            << "']='"
-            << from_expr(ns, "", v_it_rhs->second)
-            << "';\n";
-      }
+      if(v_it_rhs==property.value_map.end())
+        continue;
 
+      std::string var=from_expr(ns, "", *e_it);
+      std::string var_loc=var+"@"+id2string(i_it->location.get_line());
+      out << "ce" << count << "['" << var_loc
+          << "." << ++var_count[var_loc]
+          << "']='"
+          << from_expr(ns, "", v_it_rhs->second)
+          << "';\n";
     }
   }
 }

@@ -40,7 +40,7 @@ void ssa_fixed_pointt::tie_inputs_together(std::list<exprt> &dest)
      function_SSA_new.goto_function.body.empty())
     return;
     
-  // 1) parameters
+  // 1) function parameters
   
   const code_typet::parameterst &p_new=
     function_SSA_new.goto_function.type.parameters();
@@ -54,8 +54,8 @@ void ssa_fixed_pointt::tie_inputs_together(std::list<exprt> &dest)
     {
       symbol_exprt s_old(p_old[p].get_identifier(), p_old[p].type());
       symbol_exprt s_new(p_new[p].get_identifier(), p_new[p].type());
-      s_old=function_SSA_old.name_input(s_old);
-      s_new=function_SSA_new.name_input(s_new);
+      s_old=function_SSA_old.name_input(function_SSAt::objectt(s_old));
+      s_new=function_SSA_new.name_input(function_SSAt::objectt(s_new));
 
       dest.push_back(equal_exprt(s_old, s_new));
     }
@@ -67,14 +67,15 @@ void ssa_fixed_pointt::tie_inputs_together(std::list<exprt> &dest)
       it!=function_SSA_new.objects.end();
       it++)
   {
-    const symbol_exprt &s=to_symbol_expr(*it);
-    const symbolt &symbol=ns.lookup(s);
-    if(!symbol.is_static_lifetime || !symbol.is_lvalue) continue;
-    if(function_SSA_old.objects.find(s)==
-       function_SSA_old.objects.end()) continue;
+    if(!function_SSA_new.has_static_lifetime(*it))
+      continue;
+      
+    if(function_SSA_old.objects.find(*it)==
+       function_SSA_old.objects.end())
+      continue;
     
-    symbol_exprt s_new=function_SSA_new.name_input(s);
-    symbol_exprt s_old=function_SSA_old.name_input(s);
+    symbol_exprt s_new=function_SSA_new.name_input(*it);
+    symbol_exprt s_old=function_SSA_old.name_input(*it);
 
     dest.push_back(equal_exprt(s_old, s_new));
   }
@@ -122,7 +123,7 @@ void ssa_fixed_pointt::do_backwards_edge(
     fixed_point.post_state_vars.push_back(out);
   }
 
-  symbol_exprt guard=function_SSA.guard_symbol();
+  function_SSAt::objectt guard=function_SSA.guard_symbol();
   fixed_point.pre_state_vars.push_back(function_SSA.name(guard, function_SSAt::LOOP_BACK, from));
   fixed_point.post_state_vars.push_back(function_SSA.name(guard, function_SSAt::OUT, from));
 }
