@@ -51,8 +51,9 @@ irep_idt object_id(const exprt &src)
   else if(src.id()==ID_dereference)
   {
     const dereference_exprt &dereference_expr=to_dereference_expr(src);
-    return "*("+id2string(object_id(dereference_expr.pointer()))+
-           ")";
+    irep_idt pointer_object=object_id(dereference_expr.pointer());
+    if(pointer_object==irep_idt()) return irep_idt();
+    return "*("+id2string(pointer_object)+")";
   }
   else
     return irep_idt();
