@@ -13,7 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #define DELTACHECK_OPTIONS \
   "(verbosity):(version)(description):" \
-  "(max-revs):(partial-html)"
+  "(max-revs):(partial-html):"
 
 class deltagit_parseoptionst:public parseoptions_baset
 {

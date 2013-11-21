@@ -119,9 +119,12 @@ int deltagit_parseoptionst::doit()
     {
       bool partial_html=cmdline.isset("partial-html");
       unsigned max_revs=0;
+      std::string rel_path;
       if(cmdline.isset("max-revs"))
         max_revs=atol(cmdline.getval("max-revs"));
-      revisions_report(partial_html, max_revs);
+      if(partial_html)
+        rel_path=cmdline.getval("partial-html");
+      revisions_report(partial_html, rel_path, max_revs);
     }
     else
     {

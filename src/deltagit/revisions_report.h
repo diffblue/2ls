@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 void revisions_report(
   bool partial_html,
+  const std::string &rel_path,
   unsigned max_revs);
 
 #endif

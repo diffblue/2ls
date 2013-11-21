@@ -135,6 +135,7 @@ Function: revisions_report
 
 void revisions_report(
   bool partial_html,
+  const std::string &rel_path,
   unsigned max_revs)
 {
   deltagit_configt deltagit_config;
@@ -230,6 +231,9 @@ void revisions_report(
 
     std::string link;
     std::string bar_color="#7070e0";
+    
+    if(rel_path!="")
+      link+=rel_path;
     
     if(j_it->stage==job_statust::ANALYSE)
     {
