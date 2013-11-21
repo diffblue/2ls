@@ -232,16 +232,13 @@ void revisions_report(
     std::string link;
     std::string bar_color="#7070e0";
     
-    if(rel_path!="")
-      link+=rel_path;
-    
     if(j_it->stage==job_statust::ANALYSE)
     {
-      link=id2string(j_it->id)+".wd/deltacheck-diff.html";
+      link=rel_path+id2string(j_it->id)+".wd/deltacheck-diff.html";
     }
     else if(j_it->stage==job_statust::DONE)
     {
-      link=id2string(j_it->id)+".wd/deltacheck-diff.html";
+      link=rel_path+id2string(j_it->id)+".wd/deltacheck-diff.html";
 
       unsigned r, g;
       if(passed+failed==0)
