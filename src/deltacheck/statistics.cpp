@@ -65,7 +65,7 @@ void statisticst::stop(const std::string &what)
 {
   timet &t=time_map[what];
   assert(t.running);
-  fine_timet this_period=current_time()-t.start;
+  time_periodt this_period=current_time()-t.start;
   t.last=this_period;
   t.total+=this_period;
   t.running=false;

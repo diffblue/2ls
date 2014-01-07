@@ -27,7 +27,8 @@ public:
   {
     timet():running(false), total(0) { }
     bool running;
-    fine_timet total, last, start;
+    time_periodt total, last;
+    absolute_timet start;
   };
   
   typedef std::map<std::string, unsigned> number_mapt;
