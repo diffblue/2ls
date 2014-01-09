@@ -158,6 +158,10 @@ void solvert::add_operands(unsigned nr)
 
   // store    
   expr_map[nr].op=dest;
+
+  // Remember that the operands are contained in the expresion.
+  for(unsigned i=0; i<dest.size(); i++)
+    expr_map[dest[i]].operand_of.push_back(nr);
 }
 
 /*******************************************************************\

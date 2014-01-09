@@ -44,7 +44,7 @@ std::string get_errors(
       {
         if(!errors.empty()) errors+="<br>";
 
-        irep_idt property=p_it->loc->location.get_property();
+        irep_idt property=p_it->loc->location.get_property_class();
         irep_idt comment=p_it->loc->location.get_comment();
 
         if(comment=="")

@@ -128,6 +128,9 @@ protected:
     // the numbers of the operands
     std::vector<unsigned> op;
     
+    // the numbers of the expressions that contain this one
+    std::vector<unsigned> operand_of;
+    
     bool predicate_processed;
     
     solver_exprt():predicate_processed(false)

@@ -73,7 +73,7 @@ void report_properties(
     out << "</td>\n";
     
     out << "  <td>";
-    out << html_escape(location.get_property());
+    out << html_escape(location.get_property_class());
     out << "</td>\n";
     
     out << "  <td>";

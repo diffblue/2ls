@@ -471,6 +471,7 @@ void deltacheck_parseoptionst::help()
     "\n"
     "Delta checking options:\n"
     " --show-ssa                   show SSA\n"
+    " --show-guards                show guards\n"
     " --show-properties            show the properties\n"
     " --show-fixed-points          show the fixed-points for the loops\n"
     " --show-change-impact         show syntactic change-impact\n"
