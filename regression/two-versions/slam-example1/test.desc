@@ -1,4 +1,4 @@
-CORE
+KNOWNBUG
 new.o
 old.o
 ^EXIT=0$
