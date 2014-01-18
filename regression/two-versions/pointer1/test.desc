@@ -1,4 +1,4 @@
-CORE
+KNOWNBUG
 new.o
 old.o --pointer-check --bounds-check
 ^EXIT=0$
