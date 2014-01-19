@@ -452,7 +452,7 @@ void deltacheck_parseoptionst::help()
 {
   std::cout <<
     "\n"
-    "* *         DELTACHECK " DELTACHECK_VERSION " - Copyright (C) 2011-2013        * *\n"
+    "* *         DELTACHECK " DELTACHECK_VERSION " - Copyright (C) 2011-2014        * *\n"
     "* *                    based on CBMC " CBMC_VERSION "                    * *\n"
     "* *                     Daniel Kroening                     * *\n"
     "* *      Oxford University, Computer Science Department     * *\n"
