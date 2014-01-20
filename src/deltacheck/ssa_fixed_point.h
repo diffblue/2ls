@@ -11,21 +11,21 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/threeval.h>
 
-#include "../ssa/function_ssa.h"
+#include "../ssa/local_ssa.h"
 #include "properties.h"
 #include "fixed_point.h"
 
 class ssa_fixed_pointt
 {
 public:
-  typedef function_SSAt::locationt locationt;
+  typedef local_SSAt::locationt locationt;
 
   explicit ssa_fixed_pointt(
-    const function_SSAt &_function_SSA_old,
-    const function_SSAt &_function_SSA_new,
+    const local_SSAt &_SSA_old,
+    const local_SSAt &_SSA_new,
     const namespacet &_ns):
-    function_SSA_old(_function_SSA_old),
-    function_SSA_new(_function_SSA_new),
+    SSA_old(_SSA_old),
+    SSA_new(_SSA_new),
     ns(_ns),
     use_old(true),
     fixed_point(_ns)
@@ -34,10 +34,10 @@ public:
   }
 
   explicit ssa_fixed_pointt(
-    const function_SSAt &_function_SSA,
+    const local_SSAt &_SSA,
     const namespacet &_ns):
-    function_SSA_old(_function_SSA),
-    function_SSA_new(_function_SSA),
+    SSA_old(_SSA),
+    SSA_new(_SSA),
     ns(_ns),
     use_old(false),
     fixed_point(_ns)
@@ -51,8 +51,8 @@ public:
   }
   
 protected:
-  const function_SSAt &function_SSA_old;
-  const function_SSAt &function_SSA_new;
+  const local_SSAt &SSA_old;
+  const local_SSAt &SSA_new;
   const namespacet &ns;
   bool use_old;
 
@@ -68,7 +68,7 @@ protected:
   void initialize_invariant();
 
   void do_backwards_edge(
-    const function_SSAt &function_SSA, locationt loc);
+    const local_SSAt &SSA, locationt loc);
   
   void do_backwards_edges();
 

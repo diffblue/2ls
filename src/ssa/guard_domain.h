@@ -80,10 +80,12 @@ public:
 
   virtual void transform(
     locationt from,
-    locationt to);
+    locationt to,
+    const namespacet &ns);
               
   virtual void output(
-    std::ostream &out) const;
+    std::ostream &out,
+    const namespacet &ns) const;
 
   bool merge(
     const guard_domaint &b,

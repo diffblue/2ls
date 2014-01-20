@@ -6,27 +6,29 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef CPROVER_FUNCTION_SSA_H
-#define CPROVER_FUNCTION_SSA_H
+#ifndef CPROVER_LOCAL_SSA_H
+#define CPROVER_LOCAL_SSA_H
 
 #include <util/std_expr.h>
 
 #include <goto-programs/goto_functions.h>
 
 #include "ssa_domain.h"
+#include "guard_map.h"
 #include "object_id.h"
 
-class function_SSAt
+class local_SSAt
 {
 public:
   typedef goto_functionst::goto_functiont goto_functiont;
   typedef goto_programt::const_targett locationt;
 
-  inline function_SSAt(
+  inline local_SSAt(
     const goto_functiont &_goto_function,
     const namespacet &_ns,
     const std::string &_suffix=""):
     ns(_ns), goto_function(_goto_function), 
+    guard_map(_goto_function.body),
     suffix(_suffix)
   {
     build_SSA();
@@ -48,6 +50,11 @@ public:
     incomingt incoming;
     
     void output(std::ostream &, const namespacet &) const;
+
+    bool empty() const
+    {
+      return equalities.empty() && constraints.empty();
+    }
   };
   
   // turns the assertions in the function into constraints
@@ -61,20 +68,29 @@ public:
   class objectt
   {
   public:
-    exprt expr;
     inline explicit objectt(const exprt &_expr):expr(_expr)
     {
+      identifier=object_id(expr);
     }
     
-    inline irep_idt identifier() const
+    inline const exprt &get_expr() const
     {
-      return object_id(expr);
+      return expr;
+    }
+    
+    inline irep_idt get_identifier() const
+    {
+      return identifier;
     }
     
     inline bool operator<(const objectt &other) const
     {
-      return expr<other.expr;
+      return identifier<other.identifier;
     }
+
+  protected:
+    exprt expr;
+    irep_idt identifier;
   };
   
   // auxiliary functions
@@ -88,8 +104,10 @@ public:
   exprt read_lhs(const exprt &, locationt loc) const;
   static objectt guard_symbol();
   symbol_exprt guard_symbol(locationt loc) const
-  { return name(guard_symbol(), OUT, loc); }
+  { return name(guard_symbol(), OUT, guard_map[loc].guard_source); }
   bool assigns(const objectt &, locationt loc) const;
+  bool assigns_rec(const objectt &, const exprt &) const;
+  void assign_rec(const exprt &lhs, const exprt &rhs, locationt loc);
   
   bool has_static_lifetime(const objectt &) const;
   bool has_static_lifetime(const exprt &) const;
@@ -102,6 +120,7 @@ public:
   objectst objects;
   
 protected:
+  guard_mapt guard_map;
   ssa_ait ssa_analysis;
   std::string suffix; // an extra suffix  
 
@@ -119,6 +138,6 @@ protected:
 };
 
 std::list<exprt> & operator <<
-  (std::list<exprt> &dest, const function_SSAt &src);
+  (std::list<exprt> &dest, const local_SSAt &src);
 
 #endif

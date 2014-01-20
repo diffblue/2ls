@@ -19,11 +19,11 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <langapi/language_util.h>
 
 #include "object_id.h"
-#include "function_ssa.h"
+#include "local_ssa.h"
 
 /*******************************************************************\
 
-Function: function_SSAt::build_SSA
+Function: local_SSAt::build_SSA
 
   Inputs:
 
@@ -33,13 +33,13 @@ Function: function_SSAt::build_SSA
 
 \*******************************************************************/
 
-void function_SSAt::build_SSA()
+void local_SSAt::build_SSA()
 {
   // collect objects
   collect_objects();
   
   // perform SSA data-flow analysis
-  ssa_analysis(goto_function);
+  ssa_analysis(goto_function, ns);
 
   // now build phi-nodes
   forall_goto_program_instructions(i_it, goto_function.body)
@@ -56,7 +56,7 @@ void function_SSAt::build_SSA()
 
 /*******************************************************************\
 
-Function: function_SSAt::build_phi_nodes
+Function: local_SSAt::build_phi_nodes
 
   Inputs:
 
@@ -66,7 +66,7 @@ Function: function_SSAt::build_phi_nodes
 
 \*******************************************************************/
 
-void function_SSAt::build_phi_nodes(locationt loc)
+void local_SSAt::build_phi_nodes(locationt loc)
 {
   const ssa_domaint::phi_nodest &phi_nodes=ssa_analysis[loc].phi_nodes;
   nodet &node=nodes[loc];
@@ -76,7 +76,7 @@ void function_SSAt::build_phi_nodes(locationt loc)
   {
     // phi-node here?
     ssa_domaint::phi_nodest::const_iterator p_it=
-      phi_nodes.find(object_id(o_it->expr));
+      phi_nodes.find(o_it->get_identifier());
           
     if(p_it==phi_nodes.end()) continue; // none
     
@@ -136,7 +136,7 @@ void function_SSAt::build_phi_nodes(locationt loc)
 
 /*******************************************************************\
 
-Function: function_SSAt::assigns
+Function: local_SSAt::assigns
 
   Inputs:
 
@@ -146,12 +146,12 @@ Function: function_SSAt::assigns
 
 \*******************************************************************/
 
-bool function_SSAt::assigns(const objectt &object, locationt loc) const
+bool local_SSAt::assigns(const objectt &object, locationt loc) const
 {
   if(loc->is_assign())
   {
     const code_assignt &code_assign=to_code_assign(loc->code);
-    return code_assign.lhs()==object.expr;
+    return assigns_rec(object, code_assign.lhs());
   }
   else if(loc->is_function_call())
   {
@@ -161,12 +161,12 @@ bool function_SSAt::assigns(const objectt &object, locationt loc) const
     if(code_function_call.lhs().is_nil())
       return false;
       
-    return code_function_call.lhs()==object.expr;
+    return assigns_rec(object, code_function_call.lhs());
   }
   else if(loc->is_decl())
   {
     const code_declt &code_decl=to_code_decl(loc->code);
-    return code_decl.symbol()==object.expr;
+    return assigns_rec(object, code_decl.symbol());
   }
   else
     return false;
@@ -174,7 +174,7 @@ bool function_SSAt::assigns(const objectt &object, locationt loc) const
 
 /*******************************************************************\
 
-Function: function_SSAt::build_transfer
+Function: local_SSAt::assigns_rec
 
   Inputs:
 
@@ -184,46 +184,69 @@ Function: function_SSAt::build_transfer
 
 \*******************************************************************/
 
-void function_SSAt::build_transfer(locationt loc)
+bool local_SSAt::assigns_rec(
+  const objectt &object,
+  const exprt &lhs) const
 {
-  nodet &node=nodes[loc];
+  const typet &type=ns.follow(lhs.type());
 
-  for(objectst::const_iterator
-      o_it=objects.begin();
-      o_it!=objects.end();
-      o_it++)
+  if(type.id()==ID_struct)
   {
-    // assigned here?
-    if(assigns(*o_it, loc))
-    {
-      if(loc->is_assign())
-      {
-        const code_assignt &code_assign=to_code_assign(loc->code);
-        
-        const symbol_exprt ssa_symbol=name(*o_it, OUT, loc);
-        
-        equal_exprt equality;
-        equality.lhs()=ssa_symbol;
-        equality.rhs()=read_rhs(code_assign.rhs(), loc);
-    
-        node.equalities.push_back(equality);
-      }
-      else if(loc->is_function_call())
-      {
-        const code_function_callt &code_function_call=
-          to_code_function_call(loc->code);
+    // need to split up
 
-        if(code_function_call.lhs().is_not_nil())
-        {
-        }
-      }
+    const struct_typet &struct_type=to_struct_type(type);
+    const struct_typet::componentst &components=struct_type.components();
+    
+    for(struct_typet::componentst::const_iterator
+        it=components.begin();
+        it!=components.end();
+        it++)
+    {
+      member_exprt new_lhs(lhs, it->get_name(), it->type());
+      if(assigns_rec(object, new_lhs)) // recursive call
+        return true;
+    }
+    
+    return false; // done
+  }
+  else
+    return lhs==object.get_expr();
+}
+
+/*******************************************************************\
+
+Function: local_SSAt::build_transfer
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void local_SSAt::build_transfer(locationt loc)
+{
+  if(loc->is_assign())
+  {
+    const code_assignt &code_assign=to_code_assign(loc->code);
+
+    assign_rec(code_assign.lhs(), code_assign.rhs(), loc);
+  }
+  else if(loc->is_function_call())
+  {
+    const code_function_callt &code_function_call=
+      to_code_function_call(loc->code);
+
+    if(code_function_call.lhs().is_not_nil())
+    {
     }
   }
 }
   
 /*******************************************************************\
 
-Function: function_SSAt::build_guard
+Function: local_SSAt::build_guard
 
   Inputs:
 
@@ -233,84 +256,58 @@ Function: function_SSAt::build_guard
 
 \*******************************************************************/
 
-void function_SSAt::build_guard(locationt loc)
+void local_SSAt::build_guard(locationt loc)
 {
+  const guard_mapt::entryt &entry=guard_map[loc];
+  
+  // anything to be built?
+  if(!entry.has_guard) return;
+  
   exprt::operandst sources;
 
   // the very first 'loc' trivially gets 'true' as source
   if(loc==goto_function.body.instructions.begin())
     sources.push_back(true_exprt());
-  
-  // find the forward-sources for 'loc'
-  forall_goto_program_instructions(i_it, goto_function.body)
-  {
-    locationt next=i_it;
-    next++;
-    
-    symbol_exprt gs=name(guard_symbol(), OUT, i_it);
-    
-    if(i_it->is_goto())
-    {
-      // target, perhaps?
-      if(i_it->get_target()==loc)
-      {
-        // Yes. But might be backwards.
-        if(i_it->is_backwards_goto())
-        {
-          symbol_exprt loop_select=
-            name(guard_symbol(), LOOP_SELECT, i_it);
-            
-          sources.push_back(loop_select);
 
-          #if 0
-          // Add a constraint that says that we only select
-          // a backwards edge if the incoming guard is 'true'.
-          symbol_exprt gs_lb=
-            name(guard_symbol(), LOOP_BACK, i_it);
-          
-          exprt new_guard=
-            and_exprt(gs_lb, read_rhs(i_it->guard, i_it));
-            
-          implies_exprt(loop_select, new_guard);
-          #endif
-        }
-        else
-          sources.push_back(
-            and_exprt(gs, read_rhs(i_it->guard, i_it)));
-      }
-      else if(next==loc && !i_it->guard.is_true())
-      {
-        // else-case
-        sources.push_back(
-          and_exprt(gs, boolean_negate(read_rhs(i_it->guard, i_it))));
-      }
-    }
-    else if(i_it->is_assume())
+  for(guard_mapt::incomingt::const_iterator
+      i_it=entry.incoming.begin();
+      i_it!=entry.incoming.end();
+      i_it++)
+  {
+    const guard_mapt::edget &edge=*i_it;
+    
+    if(edge.guard.is_false()) continue;
+    
+    exprt source;
+    
+    // might be backwards
+    if(edge.from->is_backwards_goto())
     {
-      if(next==loc)
-        sources.push_back(
-          and_exprt(gs, read_rhs(i_it->guard, i_it)));
-    }
-    else if(i_it->is_return() || i_it->is_throw())
-    {
+      symbol_exprt loop_select=
+        name(guard_symbol(), LOOP_SELECT, edge.guard_source);
+
+      source=loop_select;
+      // need constraing for edge.cond
     }
     else
     {
-      if(next==loc)
-        sources.push_back(gs);
+      symbol_exprt gs=name(guard_symbol(), OUT, edge.guard_source);
+      source=and_exprt(gs, read_rhs(edge.guard, edge.from));
     }
+    
+    sources.push_back(source);
   }
 
   // the below produces 'false' if there is no source
   exprt rhs=disjunction(sources);
   
-  equal_exprt equality(name(guard_symbol(), OUT, loc), rhs);
+  equal_exprt equality(guard_symbol(loc), rhs);
   nodes[loc].equalities.push_back(equality);
 }
 
 /*******************************************************************\
 
-Function: function_SSAt::assertions_to_constraints
+Function: local_SSAt::assertions_to_constraints
 
   Inputs:
 
@@ -320,7 +317,7 @@ Function: function_SSAt::assertions_to_constraints
 
 \*******************************************************************/
 
-void function_SSAt::assertions_to_constraints()
+void local_SSAt::assertions_to_constraints()
 {
   forall_goto_program_instructions(i_it, goto_function.body)
   {
@@ -336,7 +333,7 @@ void function_SSAt::assertions_to_constraints()
 
 /*******************************************************************\
 
-Function: function_SSAt::guard_symbol
+Function: local_SSAt::guard_symbol
 
   Inputs:
 
@@ -346,14 +343,14 @@ Function: function_SSAt::guard_symbol
 
 \*******************************************************************/
 
-function_SSAt::objectt function_SSAt::guard_symbol()
+local_SSAt::objectt local_SSAt::guard_symbol()
 {
   return objectt(symbol_exprt("ssa::$guard", bool_typet()));
 }
 
 /*******************************************************************\
 
-Function: function_SSAt::read_rhs
+Function: local_SSAt::read_rhs
 
   Inputs:
 
@@ -363,11 +360,11 @@ Function: function_SSAt::read_rhs
 
 \*******************************************************************/
 
-symbol_exprt function_SSAt::read_rhs(
+symbol_exprt local_SSAt::read_rhs(
   const objectt &object,
   locationt loc) const
 {
-  const irep_idt &identifier=object_id(object.expr);
+  const irep_idt &identifier=object_id(object.get_expr());
   const ssa_domaint &ssa_domain=ssa_analysis[loc];
 
   ssa_domaint::def_mapt::const_iterator d_it=
@@ -384,7 +381,7 @@ symbol_exprt function_SSAt::read_rhs(
 
 /*******************************************************************\
 
-Function: function_SSAt::read_lhs
+Function: local_SSAt::read_lhs
 
   Inputs:
 
@@ -394,7 +391,7 @@ Function: function_SSAt::read_lhs
 
 \*******************************************************************/
 
-exprt function_SSAt::read_lhs(
+exprt local_SSAt::read_lhs(
   const exprt &expr,
   locationt loc) const
 {
@@ -415,7 +412,7 @@ exprt function_SSAt::read_lhs(
 
 /*******************************************************************\
 
-Function: function_SSAt::read_node_in
+Function: local_SSAt::read_node_in
 
   Inputs:
 
@@ -425,7 +422,7 @@ Function: function_SSAt::read_node_in
 
 \*******************************************************************/
 
-exprt function_SSAt::read_node_in(
+exprt local_SSAt::read_node_in(
   const objectt &object,
   locationt loc) const
 {
@@ -433,7 +430,7 @@ exprt function_SSAt::read_node_in(
   // * LOOP_BACK if there is a LOOP node at 'loc' for symbol
   // * OUT otherwise
 
-  const irep_idt &identifier=object_id(object.expr);
+  const irep_idt &identifier=object_id(object.get_expr());
   const ssa_domaint &ssa_domain=ssa_analysis[loc];
 
   ssa_domaint::def_mapt::const_iterator d_it=
@@ -471,7 +468,7 @@ exprt function_SSAt::read_node_in(
 
 /*******************************************************************\
 
-Function: function_SSAt::read_rhs
+Function: local_SSAt::read_rhs
 
   Inputs:
 
@@ -481,7 +478,7 @@ Function: function_SSAt::read_rhs
 
 \*******************************************************************/
 
-exprt function_SSAt::read_rhs(const exprt &expr, locationt loc) const
+exprt local_SSAt::read_rhs(const exprt &expr, locationt loc) const
 {
   objectt object(expr);
 
@@ -506,7 +503,7 @@ exprt function_SSAt::read_rhs(const exprt &expr, locationt loc) const
 
 /*******************************************************************\
 
-Function: function_SSAt::name
+Function: local_SSAt::name
 
   Inputs:
 
@@ -516,13 +513,13 @@ Function: function_SSAt::name
 
 \*******************************************************************/
 
-symbol_exprt function_SSAt::name(
+symbol_exprt local_SSAt::name(
   const objectt &object,
   kindt kind,
   locationt loc) const
 {
-  symbol_exprt new_symbol_expr(object.expr.type());
-  const irep_idt &id=object.identifier();
+  symbol_exprt new_symbol_expr(object.get_expr().type());
+  const irep_idt &id=object.get_identifier();
   unsigned cnt=loc->location_number;
   
   irep_idt new_id=id2string(id)+"#"+
@@ -535,15 +532,15 @@ symbol_exprt function_SSAt::name(
 
   new_symbol_expr.set_identifier(new_id);
   
-  if(object.expr.location().is_not_nil())
-    new_symbol_expr.location()=object.expr.location();
+  if(object.get_expr().location().is_not_nil())
+    new_symbol_expr.location()=object.get_expr().location();
   
   return new_symbol_expr;
 }
 
 /*******************************************************************\
 
-Function: function_SSAt::name
+Function: local_SSAt::name
 
   Inputs:
 
@@ -553,7 +550,7 @@ Function: function_SSAt::name
 
 \*******************************************************************/
 
-symbol_exprt function_SSAt::name(
+symbol_exprt local_SSAt::name(
   const objectt &object,
   const ssa_domaint::deft &def) const
 {
@@ -567,7 +564,7 @@ symbol_exprt function_SSAt::name(
 
 /*******************************************************************\
 
-Function: function_SSAt::name_input
+Function: local_SSAt::name_input
 
   Inputs:
 
@@ -577,22 +574,22 @@ Function: function_SSAt::name_input
 
 \*******************************************************************/
 
-symbol_exprt function_SSAt::name_input(const objectt &object) const
+symbol_exprt local_SSAt::name_input(const objectt &object) const
 {
-  symbol_exprt new_symbol_expr(object.expr.type()); // copy
-  const irep_idt old_id=object.identifier();
+  symbol_exprt new_symbol_expr(object.get_expr().type()); // copy
+  const irep_idt old_id=object.get_identifier();
   irep_idt new_id=id2string(old_id)+suffix;
   new_symbol_expr.set_identifier(new_id);
 
-  if(object.expr.location().is_not_nil())
-    new_symbol_expr.location()=object.expr.location();
+  if(object.get_expr().location().is_not_nil())
+    new_symbol_expr.location()=object.get_expr().location();
 
   return new_symbol_expr;
 }
 
 /*******************************************************************\
 
-Function: 
+Function: local_SSAt::assign_rec
 
   Inputs:
 
@@ -602,50 +599,50 @@ Function:
 
 \*******************************************************************/
 
-#if 0
-exprt function_SSAt::assign(const exprt &expr)
+void local_SSAt::assign_rec(
+  const exprt &lhs,
+  const exprt &rhs,
+  locationt loc)
 {
-  if(expr.id()==ID_symbol)
-  {
-    const irep_idt &old_id=to_symbol_expr(expr).get_identifier();
-    ++ssa_map[old_id];
-    return rename(expr);
-  }
-  else if(expr.id()==ID_index)
-  {
-    index_exprt index_expr=to_index_expr(expr); // copy
-    index_expr.index()=rename(index_expr.index());
-    index_expr.array()=assign(index_expr.array());
-    return index_expr;
-  }
-  else if(expr.id()==ID_member)
-  {
-    member_exprt member_expr=to_member_expr(expr); // copy
-    member_expr.struct_op()=assign(member_expr.struct_op());
-    return member_expr;
-  }
-  else if(expr.id()==ID_dereference)
-  {
-    dereference_exprt dereference_expr=to_dereference_expr(expr); // copy
-    
-    dereference_expr.pointer()=rename(dereference_expr.pointer());
+  const typet &type=ns.follow(lhs.type());
 
-    return dereference_expr;
-  }
-  else if(expr.id()==ID_typecast)
+  if(type.id()==ID_struct)
   {
-    typecast_exprt typecast_expr=to_typecast_expr(expr); //copy
-    typecast_expr.op()=assign(typecast_expr.op());
-    return typecast_expr;
+    // need to split up
+
+    const struct_typet &struct_type=to_struct_type(type);
+    const struct_typet::componentst &components=struct_type.components();
+    
+    for(struct_typet::componentst::const_iterator
+        it=components.begin();
+        it!=components.end();
+        it++)
+    {
+      member_exprt new_lhs(lhs, it->get_name(), it->type());
+      member_exprt new_rhs(rhs, it->get_name(), it->type());
+      assign_rec(new_lhs, new_rhs, loc);
+    }
+    
+    return; // done
   }
-  else
-    return expr;
+
+  objectt lhs_object(lhs);
+
+  // is this an object we track?
+  if(objects.find(lhs_object)!=objects.end())
+  {
+    // yes!
+    const symbol_exprt ssa_symbol=name(lhs_object, OUT, loc);
+    exprt ssa_rhs=read_rhs(rhs, loc);
+    equal_exprt equality(ssa_symbol, ssa_rhs);
+
+    nodes[loc].equalities.push_back(equality);
+  }
 }
-#endif
 
 /*******************************************************************\
 
-Function: function_SSAt::collect_objects_rec
+Function: local_SSAt::collect_objects_rec
 
   Inputs:
 
@@ -655,12 +652,31 @@ Function: function_SSAt::collect_objects_rec
 
 \*******************************************************************/
 
-void function_SSAt::collect_objects_rec(const exprt &src)
+void local_SSAt::collect_objects_rec(const exprt &src)
 {
   const typet &type=ns.follow(src.type());
 
   if(type.id()==ID_code)
     return;
+
+  if(type.id()==ID_struct)
+  {
+    // need to split up
+
+    const struct_typet &struct_type=to_struct_type(type);
+    const struct_typet::componentst &components=struct_type.components();
+    
+    for(struct_typet::componentst::const_iterator
+        it=components.begin();
+        it!=components.end();
+        it++)
+    {
+      member_exprt new_src(src, it->get_name(), it->type());
+      collect_objects_rec(new_src); // recursive call
+    }
+    
+    return; // done
+  }
 
   irep_idt id=object_id(src);
   
@@ -675,7 +691,7 @@ void function_SSAt::collect_objects_rec(const exprt &src)
 
 /*******************************************************************\
 
-Function: function_SSAt::collect_objects
+Function: local_SSAt::collect_objects
 
   Inputs:
 
@@ -685,7 +701,7 @@ Function: function_SSAt::collect_objects
 
 \*******************************************************************/
 
-void function_SSAt::collect_objects()
+void local_SSAt::collect_objects()
 {
   forall_goto_program_instructions(it, goto_function.body)
   {
@@ -696,7 +712,7 @@ void function_SSAt::collect_objects()
 
 /*******************************************************************\
 
-Function: function_SSAt::output
+Function: local_SSAt::output
 
   Inputs:
 
@@ -706,12 +722,13 @@ Function: function_SSAt::output
 
 \*******************************************************************/
 
-void function_SSAt::output(std::ostream &out) const
+void local_SSAt::output(std::ostream &out) const
 {
   forall_goto_program_instructions(i_it, goto_function.body)
   {
     const nodest::const_iterator n_it=nodes.find(i_it);
     if(n_it==nodes.end()) continue;
+    if(n_it->second.empty()) continue;
 
     out << "*** " << i_it->location_number
         << " " << i_it->location << "\n";
@@ -722,7 +739,7 @@ void function_SSAt::output(std::ostream &out) const
 
 /*******************************************************************\
 
-Function: function_SSAt::output
+Function: local_SSAt::output
 
   Inputs:
 
@@ -732,7 +749,7 @@ Function: function_SSAt::output
 
 \*******************************************************************/
 
-void function_SSAt::nodet::output(
+void local_SSAt::nodet::output(
   std::ostream &out,
   const namespacet &ns) const
 {
@@ -752,7 +769,7 @@ void function_SSAt::nodet::output(
 
 /*******************************************************************\
 
-Function: function_SSAt::has_static_lifetime
+Function: local_SSAt::has_static_lifetime
 
   Inputs:
 
@@ -762,14 +779,14 @@ Function: function_SSAt::has_static_lifetime
 
 \*******************************************************************/
 
-bool function_SSAt::has_static_lifetime(const objectt &object) const
+bool local_SSAt::has_static_lifetime(const objectt &object) const
 {
-  return has_static_lifetime(object.expr);
+  return has_static_lifetime(object.get_expr());
 }
 
 /*******************************************************************\
 
-Function: function_SSAt::has_static_lifetime
+Function: local_SSAt::has_static_lifetime
 
   Inputs:
 
@@ -779,7 +796,7 @@ Function: function_SSAt::has_static_lifetime
 
 \*******************************************************************/
 
-bool function_SSAt::has_static_lifetime(const exprt &src) const
+bool local_SSAt::has_static_lifetime(const exprt &src) const
 {
   if(src.id()==ID_dereference)
     return true;
@@ -798,7 +815,7 @@ bool function_SSAt::has_static_lifetime(const exprt &src) const
 
 /*******************************************************************\
 
-Function: function_SSAt::operator <<
+Function: local_SSAt::operator <<
 
   Inputs:
 
@@ -810,15 +827,15 @@ Function: function_SSAt::operator <<
 
 std::list<exprt> & operator << (
   std::list<exprt> &dest,
-  const function_SSAt &src)
+  const local_SSAt &src)
 {
   forall_goto_program_instructions(i_it, src.goto_function.body)
   {
-    const function_SSAt::nodest::const_iterator n_it=
+    const local_SSAt::nodest::const_iterator n_it=
       src.nodes.find(i_it);
     if(n_it==src.nodes.end()) continue;
 
-    for(function_SSAt::nodet::equalitiest::const_iterator
+    for(local_SSAt::nodet::equalitiest::const_iterator
         e_it=n_it->second.equalities.begin();
         e_it!=n_it->second.equalities.end();
         e_it++)
@@ -826,7 +843,7 @@ std::list<exprt> & operator << (
       dest.push_back(*e_it);
     }
 
-    for(function_SSAt::nodet::constraintst::const_iterator
+    for(local_SSAt::nodet::constraintst::const_iterator
         c_it=n_it->second.constraints.begin();
         c_it!=n_it->second.constraints.end();
         c_it++)

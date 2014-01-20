@@ -25,7 +25,9 @@ Function: object_id
 irep_idt object_id(const exprt &src)
 {
   if(src.id()==ID_symbol)
+  {
     return to_symbol_expr(src).get_identifier();
+  }
   else if(src.id()==ID_member)
   {
     const member_exprt &member_expr=to_member_expr(src);
@@ -53,7 +55,7 @@ irep_idt object_id(const exprt &src)
     const dereference_exprt &dereference_expr=to_dereference_expr(src);
     irep_idt pointer_object=object_id(dereference_expr.pointer());
     if(pointer_object==irep_idt()) return irep_idt();
-    return "*("+id2string(pointer_object)+")";
+    return id2string(pointer_object)+"->*";
   }
   else
     return irep_idt();

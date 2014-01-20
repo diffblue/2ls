@@ -1,6 +1,8 @@
+unsigned int x, y;
+
 int main()
 {
-  unsigned int x, y, *p;
+  unsigned int *p;
   
   p=&x;
   

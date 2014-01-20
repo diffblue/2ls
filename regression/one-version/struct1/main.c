@@ -16,8 +16,8 @@ int main()
   my_s1.b=1;
   assert(my_s1.b==1);
   
-  my_s1.b++;
-  assert(my_s1.b==2);
+  my_s1.b=my_s1.c;
+  assert(my_s1.b==my_s1.c);
   
   my_s2.x=10;
   my_s1.a=my_s2;

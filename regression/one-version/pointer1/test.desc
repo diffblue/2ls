@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 main.o
 --pointer-check
 ^EXIT=0$

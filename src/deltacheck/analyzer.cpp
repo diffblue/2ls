@@ -133,20 +133,20 @@ void deltacheck_analyzert::check_function(
   // build SSA
   status() << "Building SSA" << eom;
   statistics.start("SSA");
-  function_SSAt function_SSA(f, ns);
+  local_SSAt SSA(f, ns);
   statistics.stop("SSA");
   
   // now do fixed-point
   status() << "Data-flow fixed-point" << eom;
   statistics.start("Fixed-point");
-  ssa_fixed_pointt ssa_fixed_point(function_SSA, ns);
+  ssa_fixed_pointt ssa_fixed_point(SSA, ns);
   statistics.stop("Fixed-point");
   
   // now report on assertions
   status() << "Reporting" << eom;
   statistics.start("Reporting");
   report_properties(ssa_fixed_point.properties, file_report);  
-  report_countermodels(function_SSA, ssa_fixed_point.properties, file_report);  
+  report_countermodels(SSA, ssa_fixed_point.properties, file_report);  
   report_source_code(
     path_prefix, symbol.location, f.body,
     ssa_fixed_point.properties, file_report,
@@ -201,12 +201,12 @@ void deltacheck_analyzert::check_function_delta(
   // build SSA for each
   status() << "Building SSA" << eom;
   statistics.start("SSA");
-  function_SSAt function_SSA_old(f_old, ns_old, "@old");
-  function_SSAt function_SSA_new(f_new, ns_new);
+  local_SSAt SSA_old(f_old, ns_old, "@old");
+  local_SSAt SSA_new(f_new, ns_new);
   statistics.stop("SSA");
 
   // add assertions in old version as assumptions
-  function_SSA_old.assertions_to_constraints();
+  SSA_old.assertions_to_constraints();
   
   // now do _joint_ fixed-point
   namespacet joint_ns(
@@ -214,7 +214,7 @@ void deltacheck_analyzert::check_function_delta(
     ns_old.get_symbol_table());
   status() << "Joint data-flow fixed-point" << eom;
   statistics.start("Fixed-point");
-  ssa_fixed_pointt ssa_fixed_point(function_SSA_old, function_SSA_new, joint_ns);
+  ssa_fixed_pointt ssa_fixed_point(SSA_old, SSA_new, joint_ns);
   statistics.stop("Fixed-point");
   
   // now report on assertions
@@ -227,7 +227,7 @@ void deltacheck_analyzert::check_function_delta(
   status() << "Reporting" << eom;
   statistics.start("Reporting");
   report_properties(ssa_fixed_point.properties, file_report);  
-  report_countermodels(function_SSA_old, function_SSA_new,
+  report_countermodels(SSA_old, SSA_new,
                        ssa_fixed_point.properties, file_report);  
   report_source_code(
     path_prefix_old, symbol_old.location, f_old.body, description_old,

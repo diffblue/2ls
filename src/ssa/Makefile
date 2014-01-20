@@ -1,7 +1,8 @@
 include ../config.inc
 CBMC ?= ../..
 
-SRC = function_ssa.cpp ssa_domain.cpp guard_domain.cpp object_id.cpp
+SRC = local_ssa.cpp ssa_domain.cpp guard_domain.cpp object_id.cpp \
+      guard_map.cpp
 
 include $(CBMC)/src/config.inc
 include $(CBMC)/src/common

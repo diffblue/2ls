@@ -156,7 +156,7 @@ Function: report_countermodel
 void report_countermodel(
   const propertyt &property,
   const namespacet &ns,
-  const function_SSAt &function_SSA,
+  const local_SSAt &SSA,
   unsigned count,
   std::ostream &out)
 {
@@ -173,7 +173,7 @@ void report_countermodel(
   
   std::map<std::string, unsigned> var_count;
 
-  forall_goto_program_instructions(i_it, function_SSA.goto_function.body)
+  forall_goto_program_instructions(i_it, SSA.goto_function.body)
   {
     std::list<exprt> tracked_expr_rhs, tracked_expr_lhs;
     
@@ -194,7 +194,7 @@ void report_countermodel(
         e_it!=tracked_expr_lhs.end();
         e_it++)
     {
-      exprt renamed_lhs=function_SSA.read_lhs(*e_it, i_it);
+      exprt renamed_lhs=SSA.read_lhs(*e_it, i_it);
 
       const propertyt::value_mapt::const_iterator v_it_lhs=
         property.value_map.find(renamed_lhs);
@@ -217,7 +217,7 @@ void report_countermodel(
         e_it!=tracked_expr_rhs.end();
         e_it++)
     {
-      exprt renamed_rhs=function_SSA.read_rhs(*e_it, i_it);
+      exprt renamed_rhs=SSA.read_rhs(*e_it, i_it);
 
       const propertyt::value_mapt::const_iterator v_it_rhs=
         property.value_map.find(renamed_rhs);
@@ -249,8 +249,8 @@ Function: report_countermodels
 \*******************************************************************/
 
 void report_countermodels(
-  const function_SSAt &function_SSA_old,
-  const function_SSAt &function_SSA_new,
+  const local_SSAt &SSA_old,
+  const local_SSAt &SSA_new,
   const propertiest &properties,
   std::ostream &out)
 {
@@ -271,10 +271,10 @@ void report_countermodels(
     if(property.status==tvt(false))
     {
       namespacet joint_ns(
-        function_SSA_new.ns.get_symbol_table(),
-        function_SSA_old.ns.get_symbol_table());
-      report_countermodel(*p_it, joint_ns, function_SSA_old, count, out);
-      report_countermodel(*p_it, joint_ns, function_SSA_new, count, out);
+        SSA_new.ns.get_symbol_table(),
+        SSA_old.ns.get_symbol_table());
+      report_countermodel(*p_it, joint_ns, SSA_old, count, out);
+      report_countermodel(*p_it, joint_ns, SSA_new, count, out);
     }
     
     out << "\n";
@@ -296,7 +296,7 @@ Function: report_countermodels
 \*******************************************************************/
 
 void report_countermodels(
-  const function_SSAt &function_SSA,
+  const local_SSAt &SSA,
   const propertiest &properties,
   std::ostream &out)
 {
@@ -316,7 +316,7 @@ void report_countermodels(
     
     if(property.status==tvt(false))
     {
-      report_countermodel(*p_it, function_SSA.ns, function_SSA, count, out);
+      report_countermodel(*p_it, SSA.ns, SSA, count, out);
     }
     
     out << "\n";

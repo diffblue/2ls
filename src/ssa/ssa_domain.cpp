@@ -30,7 +30,8 @@ Function: ssa_domaint::output
 \*******************************************************************/
 
 void ssa_domaint::output(
-  std::ostream &out) const
+  std::ostream &out,
+  const namespacet &ns) const
 {
   for(def_mapt::const_iterator
       d_it=def_map.begin();
@@ -73,17 +74,18 @@ Function: ssa_domaint::transform
 
 void ssa_domaint::transform(
   locationt from,
-  locationt to)
+  locationt to,
+  const namespacet &ns)
 {
   if(from->is_assign())
   {
     const code_assignt &code_assign=to_code_assign(from->code);
-    assign(code_assign.lhs(), from);
+    assign(code_assign.lhs(), from, ns);
   }
   else if(from->is_decl())
   {
     const code_declt &code_decl=to_code_decl(from->code);
-    assign(code_decl.symbol(), from);
+    assign(code_decl.symbol(), from, ns);
   }
   else if(from->is_dead())
   {
@@ -110,27 +112,44 @@ Function: ssa_domaint::assign
 
 \*******************************************************************/
 
-void ssa_domaint::assign(const exprt &lhs, locationt from)
+void ssa_domaint::assign(
+  const exprt &lhs, locationt from,
+  const namespacet &ns)
 {
   if(lhs.id()==ID_typecast)
   {
-    assign(to_typecast_expr(lhs).op(), from);
+    assign(to_typecast_expr(lhs).op(), from, ns);
     return;
   }
   else if(lhs.id()==ID_if)
   {
-    assign(to_if_expr(lhs).true_case(), from);
-    assign(to_if_expr(lhs).false_case(), from);
+    assign(to_if_expr(lhs).true_case(), from, ns);
+    assign(to_if_expr(lhs).false_case(), from, ns);
     return;
   }
 
-  // Are we assigning an entire struct?
-  // If so, need to split into pieces.
+  const typet &lhs_type=ns.follow(lhs.type());
   
-  if(lhs.type().id()==ID_struct)
+  if(lhs_type.id()==ID_struct)
   {
+    // Are we assigning an entire struct?
+    // If so, need to split into pieces, recursively.
+  
+    const struct_typet &struct_type=to_struct_type(lhs_type);
+    const struct_typet::componentst &components=struct_type.components();
+    
+    for(struct_typet::componentst::const_iterator
+        it=components.begin();
+        it!=components.end();
+        it++)
+    {
+      member_exprt new_lhs(lhs, it->get_name(), it->type());
+      assign(new_lhs, from, ns); // recursive call
+    }
+    
+    return; // done
   }
-  else if(lhs.type().id()==ID_union)
+  else if(lhs_type.id()==ID_union)
   {
   }
   

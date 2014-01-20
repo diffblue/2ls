@@ -16,8 +16,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <analyses/goto_check.h>
 
 #include "../ssa/ssa_domain.h"
-#include "../ssa/guard_domain.h"
-#include "../ssa/function_ssa.h"
+#include "../ssa/guard_map.h"
+#include "../ssa/local_ssa.h"
 #include "index.h"
 #include "ssa_fixed_point.h"
 
@@ -39,7 +39,7 @@ void show_defs(
   std::ostream &out)
 {
   ssa_ait ssa_analysis;
-  ssa_analysis(goto_function);
+  ssa_analysis(goto_function, ns);
   ssa_analysis.output(ns, goto_function.body, out);
 }
 
@@ -116,9 +116,8 @@ void show_guards(
   const namespacet &ns,
   std::ostream &out)
 {
-  guard_ait guard_ai;
-  guard_ai(goto_function);
-  guard_ai.output(ns, goto_function.body, out);
+  guard_mapt guard_map(goto_function.body);
+  guard_map.output(goto_function.body, out);
 }
 
 /*******************************************************************\
@@ -194,8 +193,8 @@ void show_ssa(
   const namespacet &ns,
   std::ostream &out)
 {
-  function_SSAt function_SSA(goto_function, ns);
-  function_SSA.output(out);
+  local_SSAt local_SSA(goto_function, ns);
+  local_SSA.output(out);
 }
 
 /*******************************************************************\
@@ -271,8 +270,8 @@ void show_fixed_point(
   const namespacet &ns,
   std::ostream &out)
 {
-  function_SSAt function_SSA(goto_function, ns);
-  ssa_fixed_pointt ssa_fixed_point(function_SSA, ns);
+  local_SSAt local_SSA(goto_function, ns);
+  ssa_fixed_pointt ssa_fixed_point(local_SSA, ns);
   ssa_fixed_point.output(out);
 }
 

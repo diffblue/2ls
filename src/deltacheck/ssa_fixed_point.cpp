@@ -36,17 +36,17 @@ void ssa_fixed_pointt::tie_inputs_together(std::list<exprt> &dest)
   // 2) any global objects mentioned
   // 3) the guard at the entry point
 
-  if(function_SSA_old.goto_function.body.empty() ||
-     function_SSA_new.goto_function.body.empty())
+  if(SSA_old.goto_function.body.empty() ||
+     SSA_new.goto_function.body.empty())
     return;
     
   // 1) function parameters
   
   const code_typet::parameterst &p_new=
-    function_SSA_new.goto_function.type.parameters();
+    SSA_new.goto_function.type.parameters();
     
   const code_typet::parameterst &p_old=
-    function_SSA_old.goto_function.type.parameters();
+    SSA_old.goto_function.type.parameters();
 
   for(unsigned p=0; p<p_new.size(); p++)
     if(p<p_old.size() &&
@@ -54,28 +54,28 @@ void ssa_fixed_pointt::tie_inputs_together(std::list<exprt> &dest)
     {
       symbol_exprt s_old(p_old[p].get_identifier(), p_old[p].type());
       symbol_exprt s_new(p_new[p].get_identifier(), p_new[p].type());
-      s_old=function_SSA_old.name_input(function_SSAt::objectt(s_old));
-      s_new=function_SSA_new.name_input(function_SSAt::objectt(s_new));
+      s_old=SSA_old.name_input(local_SSAt::objectt(s_old));
+      s_new=SSA_new.name_input(local_SSAt::objectt(s_new));
 
       dest.push_back(equal_exprt(s_old, s_new));
     }
     
   // 2) globals
   
-  for(function_SSAt::objectst::const_iterator
-      it=function_SSA_new.objects.begin();
-      it!=function_SSA_new.objects.end();
+  for(local_SSAt::objectst::const_iterator
+      it=SSA_new.objects.begin();
+      it!=SSA_new.objects.end();
       it++)
   {
-    if(!function_SSA_new.has_static_lifetime(*it))
+    if(!SSA_new.has_static_lifetime(*it))
       continue;
       
-    if(function_SSA_old.objects.find(*it)==
-       function_SSA_old.objects.end())
+    if(SSA_old.objects.find(*it)==
+       SSA_old.objects.end())
       continue;
     
-    symbol_exprt s_new=function_SSA_new.name_input(*it);
-    symbol_exprt s_old=function_SSA_old.name_input(*it);
+    symbol_exprt s_new=SSA_new.name_input(*it);
+    symbol_exprt s_old=SSA_old.name_input(*it);
 
     dest.push_back(equal_exprt(s_old, s_new));
   }
@@ -84,8 +84,8 @@ void ssa_fixed_pointt::tie_inputs_together(std::list<exprt> &dest)
   
   /*
   dest.set_to_true(
-    equal_exprt(function_SSA_old.guard_symbol(l_old),
-                function_SSA_new.guard_symbol(l_new)));
+    equal_exprt(SSA_old.guard_symbol(l_old),
+                SSA_new.guard_symbol(l_new)));
   */
 }
 
@@ -102,7 +102,7 @@ Function: ssa_fixed_pointt::do_backwards_edge
 \*******************************************************************/
 
 void ssa_fixed_pointt::do_backwards_edge(
-  const function_SSAt &function_SSA,
+  const local_SSAt &SSA,
   locationt from)
 {
   assert(from->is_backwards_goto());
@@ -111,21 +111,21 @@ void ssa_fixed_pointt::do_backwards_edge(
 
   // Record the objects modified by the loop to get
   // 'primed' (post-state) and 'unprimed' (pre-state) variables.
-  for(function_SSAt::objectst::const_iterator
-      o_it=function_SSA.objects.begin();
-      o_it!=function_SSA.objects.end();
+  for(local_SSAt::objectst::const_iterator
+      o_it=SSA.objects.begin();
+      o_it!=SSA.objects.end();
       o_it++)
   {
-    symbol_exprt in=function_SSA.name(*o_it, function_SSAt::LOOP_BACK, from);
-    symbol_exprt out=function_SSA.read_rhs(*o_it, from);
+    symbol_exprt in=SSA.name(*o_it, local_SSAt::LOOP_BACK, from);
+    symbol_exprt out=SSA.read_rhs(*o_it, from);
   
     fixed_point.pre_state_vars.push_back(in);
     fixed_point.post_state_vars.push_back(out);
   }
 
-  function_SSAt::objectt guard=function_SSA.guard_symbol();
-  fixed_point.pre_state_vars.push_back(function_SSA.name(guard, function_SSAt::LOOP_BACK, from));
-  fixed_point.post_state_vars.push_back(function_SSA.name(guard, function_SSAt::OUT, from));
+  local_SSAt::objectt guard=SSA.guard_symbol();
+  fixed_point.pre_state_vars.push_back(SSA.name(guard, local_SSAt::LOOP_BACK, from));
+  fixed_point.post_state_vars.push_back(SSA.name(guard, local_SSAt::OUT, from));
 }
 
 /*******************************************************************\
@@ -145,18 +145,18 @@ void ssa_fixed_pointt::do_backwards_edges()
   // old program, if applicable
   if(use_old)
   {  
-    forall_goto_program_instructions(i_it, function_SSA_old.goto_function.body)
+    forall_goto_program_instructions(i_it, SSA_old.goto_function.body)
     {
       if(i_it->is_backwards_goto())
-        do_backwards_edge(function_SSA_old, i_it);
+        do_backwards_edge(SSA_old, i_it);
     }
   }
 
   // new program
-  forall_goto_program_instructions(i_it, function_SSA_new.goto_function.body)
+  forall_goto_program_instructions(i_it, SSA_new.goto_function.body)
   {
     if(i_it->is_backwards_goto())
-      do_backwards_edge(function_SSA_new, i_it);
+      do_backwards_edge(SSA_new, i_it);
   }
 }
 
@@ -180,12 +180,12 @@ void ssa_fixed_pointt::compute_fixed_point()
   // set up transition relation
   
   // new function
-  fixed_point.transition_relation << function_SSA_new;
+  fixed_point.transition_relation << SSA_new;
 
   if(use_old)
   {
     // old function, if applicable
-    fixed_point.transition_relation << function_SSA_old;
+    fixed_point.transition_relation << SSA_old;
     
     // tie inputs together, if applicable
     tie_inputs_together(fixed_point.transition_relation);
@@ -310,13 +310,13 @@ void ssa_fixed_pointt::generate_countermodel(
   
   std::set<exprt> expressions;
   
-  for(function_SSAt::nodest::const_iterator
-      n_it=function_SSA_new.nodes.begin();
-      n_it!=function_SSA_new.nodes.end();
+  for(local_SSAt::nodest::const_iterator
+      n_it=SSA_new.nodes.begin();
+      n_it!=SSA_new.nodes.end();
       n_it++)
   {
-    const function_SSAt::nodet &node=n_it->second;
-    for(function_SSAt::nodet::equalitiest::const_iterator
+    const local_SSAt::nodet &node=n_it->second;
+    for(local_SSAt::nodet::equalitiest::const_iterator
         e_it=node.equalities.begin();
         e_it!=node.equalities.end();
         e_it++)
@@ -325,7 +325,7 @@ void ssa_fixed_pointt::generate_countermodel(
       countermodel_expr(e_it->rhs(), expressions);
     }
 
-    for(function_SSAt::nodet::constraintst::const_iterator
+    for(local_SSAt::nodet::constraintst::const_iterator
         e_it=node.constraints.begin();
         e_it!=node.constraints.end();
         e_it++)
@@ -336,13 +336,13 @@ void ssa_fixed_pointt::generate_countermodel(
   
   if(use_old)
   {
-    for(function_SSAt::nodest::const_iterator
-        n_it=function_SSA_old.nodes.begin();
-        n_it!=function_SSA_old.nodes.end();
+    for(local_SSAt::nodest::const_iterator
+        n_it=SSA_old.nodes.begin();
+        n_it!=SSA_old.nodes.end();
         n_it++)
     {
-      const function_SSAt::nodet &node=n_it->second;
-      for(function_SSAt::nodet::equalitiest::const_iterator
+      const local_SSAt::nodet &node=n_it->second;
+      for(local_SSAt::nodet::equalitiest::const_iterator
           e_it=node.equalities.begin();
           e_it!=node.equalities.end();
           e_it++)
@@ -351,7 +351,7 @@ void ssa_fixed_pointt::generate_countermodel(
         countermodel_expr(e_it->rhs(), expressions);
       }
 
-      for(function_SSAt::nodet::constraintst::const_iterator
+      for(local_SSAt::nodet::constraintst::const_iterator
           e_it=node.constraints.begin();
           e_it!=node.constraints.end();
           e_it++)
@@ -391,14 +391,14 @@ Function: ssa_fixed_pointt::setup_properties
 
 void ssa_fixed_pointt::setup_properties()
 {
-  forall_goto_program_instructions(i_it, function_SSA_new.goto_function.body)
+  forall_goto_program_instructions(i_it, SSA_new.goto_function.body)
   {
     if(i_it->is_assert())
     {
       properties.push_back(propertyt());
       properties.back().loc=i_it;
-      properties.back().condition=function_SSA_new.read_rhs(i_it->guard, i_it);
-      properties.back().guard=function_SSA_new.guard_symbol(i_it);
+      properties.back().condition=SSA_new.read_rhs(i_it->guard, i_it);
+      properties.back().guard=SSA_new.guard_symbol(i_it);
     }
   }
 }

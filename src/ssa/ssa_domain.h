@@ -60,7 +60,7 @@ public:
   
   typedef std::map<irep_idt, def_entryt> def_mapt;
   def_mapt def_map;
-
+  
   // the phi nodes map identifiers to incoming branches:
   // map from source to definition
   typedef std::map<irep_idt, std::map<locationt, deft> > phi_nodest;
@@ -68,10 +68,12 @@ public:
   
   virtual void transform(
     locationt from,
-    locationt to);
+    locationt to,
+    const namespacet &ns);
               
   virtual void output(
-    std::ostream &out) const;
+    std::ostream &out,
+    const namespacet &ns) const;
 
   bool merge(
     const ssa_domaint &b,
@@ -79,7 +81,9 @@ public:
     locationt to);
     
 protected:
-  void assign(const exprt &lhs, locationt from);
+  void assign(
+    const exprt &lhs, locationt from,
+    const namespacet &ns);
 };
 
 class ssa_ait:public ait<ssa_domaint>
