@@ -166,7 +166,6 @@ void ssa_domaint::assign(
   
   if(id!=irep_idt())
   {
-    const irep_idt id=object_id(lhs);
     def_entryt &def_entry=def_map[id];
     def_entry.def.loc=from;
     def_entry.def.kind=deft::ASSIGNMENT;
