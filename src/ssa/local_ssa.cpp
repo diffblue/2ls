@@ -146,7 +146,7 @@ Function: local_SSAt::assigns
 
 \*******************************************************************/
 
-bool local_SSAt::assigns(const objectt &object, locationt loc) const
+bool local_SSAt::assigns(const ssa_objectt &object, locationt loc) const
 {
   if(loc->is_assign())
   {
@@ -185,7 +185,7 @@ Function: local_SSAt::assigns_rec
 \*******************************************************************/
 
 bool local_SSAt::assigns_rec(
-  const objectt &object,
+  const ssa_objectt &object,
   const exprt &lhs) const
 {
   const typet &type=ns.follow(lhs.type());
@@ -343,9 +343,9 @@ Function: local_SSAt::guard_symbol
 
 \*******************************************************************/
 
-local_SSAt::objectt local_SSAt::guard_symbol()
+ssa_objectt local_SSAt::guard_symbol()
 {
-  return objectt(symbol_exprt("ssa::$guard", bool_typet()));
+  return ssa_objectt(symbol_exprt("ssa::$guard", bool_typet()));
 }
 
 /*******************************************************************\
@@ -361,7 +361,7 @@ Function: local_SSAt::read_rhs
 \*******************************************************************/
 
 symbol_exprt local_SSAt::read_rhs(
-  const objectt &object,
+  const ssa_objectt &object,
   locationt loc) const
 {
   const irep_idt &identifier=object_id(object.get_expr());
@@ -395,7 +395,7 @@ exprt local_SSAt::read_lhs(
   const exprt &expr,
   locationt loc) const
 {
-  objectt object(expr);
+  ssa_objectt object(expr);
 
   // is this an object we track?
   if(objects.find(object)!=objects.end())
@@ -423,7 +423,7 @@ Function: local_SSAt::read_node_in
 \*******************************************************************/
 
 exprt local_SSAt::read_node_in(
-  const objectt &object,
+  const ssa_objectt &object,
   locationt loc) const
 {
   // This reads:
@@ -480,7 +480,7 @@ Function: local_SSAt::read_rhs
 
 exprt local_SSAt::read_rhs(const exprt &expr, locationt loc) const
 {
-  objectt object(expr);
+  ssa_objectt object(expr);
 
   // is this an object we track?
   if(objects.find(object)!=objects.end())
@@ -514,7 +514,7 @@ Function: local_SSAt::name
 \*******************************************************************/
 
 symbol_exprt local_SSAt::name(
-  const objectt &object,
+  const ssa_objectt &object,
   kindt kind,
   locationt loc) const
 {
@@ -551,7 +551,7 @@ Function: local_SSAt::name
 \*******************************************************************/
 
 symbol_exprt local_SSAt::name(
-  const objectt &object,
+  const ssa_objectt &object,
   const ssa_domaint::deft &def) const
 {
   if(def.kind==ssa_domaint::deft::INPUT)
@@ -574,7 +574,7 @@ Function: local_SSAt::name_input
 
 \*******************************************************************/
 
-symbol_exprt local_SSAt::name_input(const objectt &object) const
+symbol_exprt local_SSAt::name_input(const ssa_objectt &object) const
 {
   symbol_exprt new_symbol_expr(object.get_expr().type()); // copy
   const irep_idt old_id=object.get_identifier();
@@ -626,7 +626,7 @@ void local_SSAt::assign_rec(
     return; // done
   }
 
-  objectt lhs_object(lhs);
+  ssa_objectt lhs_object(lhs);
 
   // is this an object we track?
   if(objects.find(lhs_object)!=objects.end())
@@ -681,7 +681,7 @@ void local_SSAt::collect_objects_rec(const exprt &src)
   irep_idt id=object_id(src);
   
   if(id!=irep_idt())
-    objects.insert(objectt(src));
+    objects.insert(ssa_objectt(src));
   else
   {
     forall_operands(it, src)
@@ -779,7 +779,7 @@ Function: local_SSAt::has_static_lifetime
 
 \*******************************************************************/
 
-bool local_SSAt::has_static_lifetime(const objectt &object) const
+bool local_SSAt::has_static_lifetime(const ssa_objectt &object) const
 {
   return has_static_lifetime(object.get_expr());
 }

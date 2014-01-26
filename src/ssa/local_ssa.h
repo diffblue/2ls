@@ -15,7 +15,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "ssa_domain.h"
 #include "guard_map.h"
-#include "object_id.h"
+#include "ssa_object.h"
 
 class local_SSAt
 {
@@ -64,59 +64,30 @@ public:
   typedef std::map<locationt, nodet> nodest;
   nodest nodes;
 
-  // obects of the SSA
-  class objectt
-  {
-  public:
-    inline explicit objectt(const exprt &_expr):expr(_expr)
-    {
-      identifier=object_id(expr);
-    }
-    
-    inline const exprt &get_expr() const
-    {
-      return expr;
-    }
-    
-    inline irep_idt get_identifier() const
-    {
-      return identifier;
-    }
-    
-    inline bool operator<(const objectt &other) const
-    {
-      return identifier<other.identifier;
-    }
-
-  protected:
-    exprt expr;
-    irep_idt identifier;
-  };
-  
   // auxiliary functions
   enum kindt { PHI, OUT, LOOP_BACK, LOOP_SELECT };
-  symbol_exprt name(const objectt &, kindt kind, locationt loc) const;
-  symbol_exprt name(const objectt &, const ssa_domaint::deft &) const;
-  symbol_exprt name_input(const objectt &) const;
+  symbol_exprt name(const ssa_objectt &, kindt kind, locationt loc) const;
+  symbol_exprt name(const ssa_objectt &, const ssa_domaint::deft &) const;
+  symbol_exprt name_input(const ssa_objectt &) const;
   exprt read_rhs(const exprt &, locationt loc) const;
-  symbol_exprt read_rhs(const objectt &, locationt loc) const;
-  exprt read_node_in(const objectt &, locationt loc) const;
+  symbol_exprt read_rhs(const ssa_objectt &, locationt loc) const;
+  exprt read_node_in(const ssa_objectt &, locationt loc) const;
   exprt read_lhs(const exprt &, locationt loc) const;
-  static objectt guard_symbol();
+  static ssa_objectt guard_symbol();
   symbol_exprt guard_symbol(locationt loc) const
   { return name(guard_symbol(), OUT, guard_map[loc].guard_source); }
-  bool assigns(const objectt &, locationt loc) const;
-  bool assigns_rec(const objectt &, const exprt &) const;
+  bool assigns(const ssa_objectt &, locationt loc) const;
+  bool assigns_rec(const ssa_objectt &, const exprt &) const;
   void assign_rec(const exprt &lhs, const exprt &rhs, locationt loc);
   
-  bool has_static_lifetime(const objectt &) const;
+  bool has_static_lifetime(const ssa_objectt &) const;
   bool has_static_lifetime(const exprt &) const;
 
   const namespacet &ns;
   const goto_functiont &goto_function;
   
   // the objects accessed
-  typedef std::set<objectt> objectst;
+  typedef std::set<ssa_objectt> objectst;
   objectst objects;
   
 protected:
