@@ -757,13 +757,13 @@ void local_SSAt::nodet::output(
       e_it=equalities.begin();
       e_it!=equalities.end();
       e_it++)
-    out << from_expr(ns, "", *e_it) << "\n";
+    out << "(E) " << from_expr(ns, "", *e_it) << "\n";
 
   for(constraintst::const_iterator
       e_it=constraints.begin();
       e_it!=constraints.end();
       e_it++)
-    out << from_expr(ns, "", *e_it) << "\n";
+    out << "(C) " << from_expr(ns, "", *e_it) << "\n";
 
 }
 
