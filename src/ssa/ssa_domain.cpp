@@ -31,6 +31,7 @@ Function: ssa_domaint::output
 
 void ssa_domaint::output(
   std::ostream &out,
+  const ai_baset &,
   const namespacet &ns) const
 {
   for(def_mapt::const_iterator
@@ -75,6 +76,7 @@ Function: ssa_domaint::transform
 void ssa_domaint::transform(
   locationt from,
   locationt to,
+  ai_baset &ai,
   const namespacet &ns)
 {
   if(from->is_assign())
@@ -151,6 +153,13 @@ void ssa_domaint::assign(
   }
   else if(lhs_type.id()==ID_union)
   {
+    // todo
+  }
+  
+  if(lhs.id()==ID_dereference)
+  {
+    // this might alias other stuff
+    
   }
   
   const irep_idt id=object_id(lhs);

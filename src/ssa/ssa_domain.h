@@ -69,10 +69,12 @@ public:
   virtual void transform(
     locationt from,
     locationt to,
+    ai_baset &ai,
     const namespacet &ns);
               
   virtual void output(
     std::ostream &out,
+    const ai_baset &ai,
     const namespacet &ns) const;
 
   bool merge(

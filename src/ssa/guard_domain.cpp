@@ -28,6 +28,7 @@ Function: guard_domaint::output
 
 void guard_domaint::output(
   std::ostream &out,
+  const ai_baset &,
   const namespacet &ns) const
 {
   if(unreachable)
@@ -71,6 +72,7 @@ Function: guard_domaint::transform
 void guard_domaint::transform(
   locationt from,
   locationt to,
+  ai_baset &,
   const namespacet &ns)
 {
   if(unreachable) return;
