@@ -9,6 +9,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_SSA_OBJECTS_H
 #define CPROVER_SSA_OBJECTS_H
 
+#include <goto-programs/goto_program.h>
+
 #include "object_id.h"
 
 class ssa_objectt
@@ -34,10 +36,21 @@ public:
   {
     return identifier<other.identifier;
   }
+  
+  // this is for use in if(...) tests
+  operator void *() const
+  {
+    return identifier.empty()?0:(void *)&identifier;
+  }
 
 protected:
   exprt expr;
   irep_idt identifier;
 };
+
+void collect_objects(
+  const goto_programt &,
+  const namespacet &,
+  std::set<ssa_objectt> &);
 
 #endif

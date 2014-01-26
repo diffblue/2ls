@@ -87,7 +87,15 @@ public:
 protected:
   void assign(
     const exprt &lhs, locationt from,
+    ai_baset &ai,
     const namespacet &ns);
+    
+  void assign(
+    const ssa_objectt &lhs, locationt from,
+    ai_baset &ai,
+    const namespacet &ns);
+    
+  static bool may_alias(const ssa_objectt &o1, const ssa_objectt &o2);
 };
 
 class ssa_ait:public ait<ssa_domaint>
@@ -102,6 +110,8 @@ public:
 
 protected:
   const objectst &objects;
+  
+  friend class ssa_domaint;
 
   // The overload below is needed to make the entry point get a source
   // for the function parameters.

@@ -82,12 +82,12 @@ void ssa_domaint::transform(
   if(from->is_assign())
   {
     const code_assignt &code_assign=to_code_assign(from->code);
-    assign(code_assign.lhs(), from, ns);
+    assign(code_assign.lhs(), from, ai, ns);
   }
   else if(from->is_decl())
   {
     const code_declt &code_decl=to_code_decl(from->code);
-    assign(code_decl.symbol(), from, ns);
+    assign(code_decl.symbol(), from, ai, ns);
   }
   else if(from->is_dead())
   {
@@ -116,17 +116,18 @@ Function: ssa_domaint::assign
 
 void ssa_domaint::assign(
   const exprt &lhs, locationt from,
+  ai_baset &ai,
   const namespacet &ns)
 {
   if(lhs.id()==ID_typecast)
   {
-    assign(to_typecast_expr(lhs).op(), from, ns);
+    assign(to_typecast_expr(lhs).op(), from, ai, ns);
     return;
   }
   else if(lhs.id()==ID_if)
   {
-    assign(to_if_expr(lhs).true_case(), from, ns);
-    assign(to_if_expr(lhs).false_case(), from, ns);
+    assign(to_if_expr(lhs).true_case(), from, ai, ns);
+    assign(to_if_expr(lhs).false_case(), from, ai, ns);
     return;
   }
 
@@ -146,7 +147,7 @@ void ssa_domaint::assign(
         it++)
     {
       member_exprt new_lhs(lhs, it->get_name(), it->type());
-      assign(new_lhs, from, ns); // recursive call
+      assign(new_lhs, from, ai, ns); // recursive call
     }
     
     return; // done
@@ -156,21 +157,70 @@ void ssa_domaint::assign(
     // todo
   }
   
-  if(lhs.id()==ID_dereference)
-  {
-    // this might alias other stuff
-    
-  }
+  const ssa_objectt ssa_object(lhs);
   
-  const irep_idt id=object_id(lhs);
-  
-  if(id!=irep_idt())
+  if(ssa_object)
   {
-    def_entryt &def_entry=def_map[id];
-    def_entry.def.loc=from;
-    def_entry.def.kind=deft::ASSIGNMENT;
-    def_entry.source=from;
+    assign(ssa_object, from, ai, ns);
+
+    if(lhs.id()==ID_dereference)
+    {
+      // this might alias other stuff
+      const std::set<ssa_objectt> &objects=
+        static_cast<const ssa_ait &>(ai).objects;
+        
+      for(std::set<ssa_objectt>::const_iterator
+          o_it=objects.begin();
+          o_it!=objects.end();
+          o_it++)
+      {
+        if(may_alias(*o_it, ssa_object))
+          assign(*o_it, from, ai, ns);
+      }
+    }    
   }
+}
+
+/*******************************************************************\
+
+Function: ssa_domaint::may_alias
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool ssa_domaint::may_alias(
+  const ssa_objectt &o1, const ssa_objectt &o2)
+{
+  return false;
+}
+
+/*******************************************************************\
+
+Function: ssa_domaint::assign
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void ssa_domaint::assign(
+  const ssa_objectt &lhs,
+  locationt from,
+  ai_baset &,
+  const namespacet &)
+{
+  def_entryt &def_entry=def_map[lhs.get_identifier()];
+  def_entry.def.loc=from;
+  def_entry.def.kind=deft::ASSIGNMENT;
+  def_entry.source=from;
 }
 
 /*******************************************************************\

@@ -26,7 +26,8 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       ../ssa/local_ssa$(OBJEXT) \
       ../ssa/object_id$(OBJEXT) \
       ../ssa/ssa_domain$(OBJEXT) \
-      ../ssa/guard_map$(OBJEXT)
+      ../ssa/guard_map$(OBJEXT) \
+      ../ssa/ssa_object$(OBJEXT)
 
 include $(CBMC)/src/config.inc
 include $(CBMC)/src/common

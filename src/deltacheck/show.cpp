@@ -38,7 +38,10 @@ void show_defs(
   const namespacet &ns,
   std::ostream &out)
 {
-  ssa_ait ssa_analysis;
+  std::set<ssa_objectt> objects;
+  collect_objects(goto_function.body, ns, objects);
+  
+  ssa_ait ssa_analysis(objects);
   ssa_analysis(goto_function, ns);
   ssa_analysis.output(ns, goto_function.body, out);
 }
