@@ -29,6 +29,7 @@ public:
     const std::string &_suffix=""):
     ns(_ns), goto_function(_goto_function), 
     guard_map(_goto_function.body),
+    ssa_analysis(objects),
     suffix(_suffix)
   {
     build_SSA();
