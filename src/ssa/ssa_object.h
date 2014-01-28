@@ -35,6 +35,16 @@ public:
     return identifier<other.identifier;
   }
   
+  inline bool operator==(const ssa_objectt &other) const
+  {
+    return identifier==other.identifier;
+  }
+  
+  inline bool operator!=(const ssa_objectt &other) const
+  {
+    return identifier!=other.identifier;
+  }
+  
   // this is for use in if(...) tests
   operator void *() const
   {
