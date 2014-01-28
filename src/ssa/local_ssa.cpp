@@ -499,9 +499,6 @@ exprt local_SSAt::read_rhs(const exprt &expr, locationt loc) const
       for(objectst::const_iterator
           o_it=objects.begin(); o_it!=objects.end(); o_it++)
       {
-        std::cout << "o_it: " << o_it->get_identifier() << "\n";
-        std::cout << "object: " << object.get_identifier() << "\n";
-      
         if(*o_it!=object &&
            ssa_domaint::may_alias(object, *o_it) &&
            o_it->get_expr().type()==expr.type())
