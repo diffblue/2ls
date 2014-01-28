@@ -84,6 +84,10 @@ public:
     locationt from,
     locationt to);
     
+  static bool may_alias(
+    const ssa_objectt &o1,
+    const ssa_objectt &o2);
+
 protected:
   void assign(
     const exprt &lhs, locationt from,
@@ -93,9 +97,7 @@ protected:
   void assign(
     const ssa_objectt &lhs, locationt from,
     ai_baset &ai,
-    const namespacet &ns);
-    
-  static bool may_alias(const ssa_objectt &o1, const ssa_objectt &o2);
+    const namespacet &ns);    
 };
 
 class ssa_ait:public ait<ssa_domaint>

@@ -14,7 +14,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/std_expr.h>
 
-#include "object_id.h"
 #include "ssa_domain.h"
 
 /*******************************************************************\
@@ -174,7 +173,8 @@ void ssa_domaint::assign(
           o_it!=objects.end();
           o_it++)
       {
-        if(may_alias(*o_it, ssa_object))
+        if(*o_it!=ssa_object &&
+           may_alias(*o_it, ssa_object))
           assign(*o_it, from, ai, ns);
       }
     }    
@@ -196,7 +196,25 @@ Function: ssa_domaint::may_alias
 bool ssa_domaint::may_alias(
   const ssa_objectt &o1, const ssa_objectt &o2)
 {
-  return false;
+  const exprt &e1=o1.get_expr();
+  const exprt &e2=o2.get_expr();
+
+  // The same?
+  if(e1==e2)
+    return true;
+
+  // Is one a pointer?
+  if(e1.id()==ID_dereference || e2.id()==ID_dereference)
+  {
+    // Type matches?
+    if(e1.type()==e2.type())
+      return true;
+    
+    // Give up, but should consider more options
+    return false;
+  }
+  else
+    return false; // both different objects
 }
 
 /*******************************************************************\

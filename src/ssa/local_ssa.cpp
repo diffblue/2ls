@@ -18,7 +18,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <langapi/language_util.h>
 
-#include "object_id.h"
 #include "local_ssa.h"
 
 /*******************************************************************\
@@ -36,7 +35,7 @@ Function: local_SSAt::build_SSA
 void local_SSAt::build_SSA()
 {
   // collect objects
-  collect_objects();
+  collect_objects(goto_function.body, ns, objects);
   
   // perform SSA data-flow analysis
   ssa_analysis(goto_function, ns);
@@ -364,7 +363,7 @@ symbol_exprt local_SSAt::read_rhs(
   const ssa_objectt &object,
   locationt loc) const
 {
-  const irep_idt &identifier=object_id(object.get_expr());
+  const irep_idt &identifier=object.get_identifier();
   const ssa_domaint &ssa_domain=ssa_analysis[loc];
 
   ssa_domaint::def_mapt::const_iterator d_it=
@@ -430,7 +429,7 @@ exprt local_SSAt::read_node_in(
   // * LOOP_BACK if there is a LOOP node at 'loc' for symbol
   // * OUT otherwise
 
-  const irep_idt &identifier=object_id(object.get_expr());
+  const irep_idt &identifier=object.get_identifier();
   const ssa_domaint &ssa_domain=ssa_analysis[loc];
 
   ssa_domaint::def_mapt::const_iterator d_it=
@@ -480,6 +479,49 @@ Function: local_SSAt::read_rhs
 
 exprt local_SSAt::read_rhs(const exprt &expr, locationt loc) const
 {
+  if(expr.id()==ID_address_of)
+  {
+    address_of_exprt address_of_expr=to_address_of_expr(expr);
+    return address_of_expr;
+  }
+  else if(expr.id()==ID_dereference)
+  {
+    // might alias with whatnot
+    assert(expr.operands().size()==1);
+    exprt pointer=expr.op0();
+    
+    ssa_objectt object(expr);
+
+    if(object)
+    {
+      exprt result=read_rhs(object, loc);
+
+      for(objectst::const_iterator
+          o_it=objects.begin(); o_it!=objects.end(); o_it++)
+      {
+        std::cout << "o_it: " << o_it->get_identifier() << "\n";
+        std::cout << "object: " << object.get_identifier() << "\n";
+      
+        if(*o_it!=object &&
+           ssa_domaint::may_alias(object, *o_it) &&
+           o_it->get_expr().type()==expr.type())
+        {
+          exprt o_address=
+            o_it->get_expr().id()==ID_dereference?o_it->get_expr().op0():
+            address_of_exprt(o_it->get_expr());
+          
+          if(o_address.type()!=pointer.type())
+            o_address.make_typecast(pointer.type());
+        
+          equal_exprt equality(o_address, pointer);
+          result=if_exprt(read_rhs(equality, loc), read_rhs(*o_it, loc), result);
+        }
+      }
+      
+      return result;
+    }
+  }
+
   ssa_objectt object(expr);
 
   // is this an object we track?
@@ -487,11 +529,6 @@ exprt local_SSAt::read_rhs(const exprt &expr, locationt loc) const
     return read_rhs(object, loc);
   else if(expr.id()==ID_symbol)
     return name_input(object);
-  else if(expr.id()==ID_address_of)
-  {
-    address_of_exprt address_of_expr=to_address_of_expr(expr);
-    return address_of_expr;
-  }
   else
   {
     exprt tmp=expr; // copy
@@ -637,76 +674,6 @@ void local_SSAt::assign_rec(
     equal_exprt equality(ssa_symbol, ssa_rhs);
 
     nodes[loc].equalities.push_back(equality);
-  }
-}
-
-/*******************************************************************\
-
-Function: local_SSAt::collect_objects_rec
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void local_SSAt::collect_objects_rec(const exprt &src)
-{
-  const typet &type=ns.follow(src.type());
-
-  if(type.id()==ID_code)
-    return;
-
-  if(type.id()==ID_struct)
-  {
-    // need to split up
-
-    const struct_typet &struct_type=to_struct_type(type);
-    const struct_typet::componentst &components=struct_type.components();
-    
-    for(struct_typet::componentst::const_iterator
-        it=components.begin();
-        it!=components.end();
-        it++)
-    {
-      member_exprt new_src(src, it->get_name(), it->type());
-      collect_objects_rec(new_src); // recursive call
-    }
-    
-    return; // done
-  }
-
-  irep_idt id=object_id(src);
-  
-  if(id!=irep_idt())
-    objects.insert(ssa_objectt(src));
-  else
-  {
-    forall_operands(it, src)
-      collect_objects_rec(*it);
-  }
-}
-
-/*******************************************************************\
-
-Function: local_SSAt::collect_objects
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void local_SSAt::collect_objects()
-{
-  forall_goto_program_instructions(it, goto_function.body)
-  {
-    collect_objects_rec(it->guard);
-    collect_objects_rec(it->code);
   }
 }
 

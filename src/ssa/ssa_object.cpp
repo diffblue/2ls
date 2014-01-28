@@ -49,10 +49,10 @@ void collect_objects_rec(
     return; // done
   }
 
-  irep_idt id=object_id(src);
+  ssa_objectt ssa_object(src);
   
-  if(id!=irep_idt())
-    dest.insert(ssa_objectt(src));
+  if(ssa_object)
+    dest.insert(ssa_object);
   else
   {
     forall_operands(it, src)
@@ -83,3 +83,55 @@ void collect_objects(
     collect_objects_rec(it->code, ns, dest);
   }
 }
+
+/*******************************************************************\
+
+Function: ssa_objectt::object_id_rec
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+irep_idt ssa_objectt::object_id_rec(const exprt &src)
+{
+  if(src.id()==ID_symbol)
+  {
+    return to_symbol_expr(src).get_identifier();
+  }
+  else if(src.id()==ID_member)
+  {
+    const member_exprt &member_expr=to_member_expr(src);
+    
+    if(member_expr.struct_op().id()==ID_dereference)
+    {
+      const dereference_exprt &dereference_expr=
+        to_dereference_expr(member_expr.struct_op());
+
+      return id2string(object_id_rec(dereference_expr.pointer()))+"->"+
+             id2string(member_expr.get_component_name());
+    }
+    else   
+      return id2string(object_id_rec(member_expr.struct_op()))+"."+
+             id2string(member_expr.get_component_name());
+  }
+  else if(src.id()==ID_index)
+  {
+    const index_exprt &index_expr=to_index_expr(src);
+    return id2string(object_id_rec(index_expr.array()))+
+           "["+"]";
+  }
+  else if(src.id()==ID_dereference)
+  {
+    const dereference_exprt &dereference_expr=to_dereference_expr(src);
+    irep_idt pointer_object=object_id_rec(dereference_expr.pointer());
+    if(pointer_object==irep_idt()) return irep_idt();
+    return id2string(pointer_object)+"->*";
+  }
+  else
+    return irep_idt();
+}
+

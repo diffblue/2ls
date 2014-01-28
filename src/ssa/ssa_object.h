@@ -11,14 +11,12 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <goto-programs/goto_program.h>
 
-#include "object_id.h"
-
 class ssa_objectt
 {
 public:
   inline explicit ssa_objectt(const exprt &_expr):
     expr(_expr),
-    identifier(object_id(expr))
+    identifier(object_id_rec(expr))
   {
   }
   
@@ -46,6 +44,8 @@ public:
 protected:
   exprt expr;
   irep_idt identifier;
+
+  static irep_idt object_id_rec(const exprt &src);
 };
 
 void collect_objects(
