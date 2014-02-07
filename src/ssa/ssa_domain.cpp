@@ -235,7 +235,10 @@ void ssa_domaint::assign(
   ai_baset &,
   const namespacet &)
 {
-  def_entryt &def_entry=def_map[lhs.get_identifier()];
+  irep_idt identifier=lhs.get_identifier();
+  assigned_objects.insert(identifier);
+
+  def_entryt &def_entry=def_map[identifier];
   def_entry.def.loc=from;
   def_entry.def.kind=deft::ASSIGNMENT;
   def_entry.source=from;

@@ -77,8 +77,6 @@ public:
   static ssa_objectt guard_symbol();
   symbol_exprt guard_symbol(locationt loc) const
   { return name(guard_symbol(), OUT, guard_map[loc].guard_source); }
-  bool assigns(const ssa_objectt &, locationt loc) const;
-  bool assigns_rec(const ssa_objectt &, const exprt &) const;
   void assign_rec(const exprt &lhs, const exprt &rhs, locationt loc);
   
   bool has_static_lifetime(const ssa_objectt &) const;

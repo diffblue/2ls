@@ -68,6 +68,15 @@ public:
   typedef std::map<irep_idt, std::map<locationt, deft> > phi_nodest;
   phi_nodest phi_nodes;
   
+  // stuff assigned at this location
+  std::set<irep_idt> assigned_objects;
+  
+  inline bool is_assigned(const ssa_objectt &object) const
+  {
+    return assigned_objects.find(object.get_identifier())!=
+           assigned_objects.end();
+  }
+  
   virtual void transform(
     locationt from,
     locationt to,

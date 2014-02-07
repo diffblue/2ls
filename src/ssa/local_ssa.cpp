@@ -135,85 +135,6 @@ void local_SSAt::build_phi_nodes(locationt loc)
 
 /*******************************************************************\
 
-Function: local_SSAt::assigns
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-bool local_SSAt::assigns(const ssa_objectt &object, locationt loc) const
-{
-  if(loc->is_assign())
-  {
-    const code_assignt &code_assign=to_code_assign(loc->code);
-    return assigns_rec(object, code_assign.lhs());
-  }
-  else if(loc->is_function_call())
-  {
-    const code_function_callt &code_function_call=
-      to_code_function_call(loc->code);
-
-    if(code_function_call.lhs().is_nil())
-      return false;
-      
-    return assigns_rec(object, code_function_call.lhs());
-  }
-  else if(loc->is_decl())
-  {
-    const code_declt &code_decl=to_code_decl(loc->code);
-    return assigns_rec(object, code_decl.symbol());
-  }
-  else
-    return false;
-}
-
-/*******************************************************************\
-
-Function: local_SSAt::assigns_rec
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-bool local_SSAt::assigns_rec(
-  const ssa_objectt &object,
-  const exprt &lhs) const
-{
-  const typet &type=ns.follow(lhs.type());
-
-  if(type.id()==ID_struct)
-  {
-    // need to split up
-
-    const struct_typet &struct_type=to_struct_type(type);
-    const struct_typet::componentst &components=struct_type.components();
-    
-    for(struct_typet::componentst::const_iterator
-        it=components.begin();
-        it!=components.end();
-        it++)
-    {
-      member_exprt new_lhs(lhs, it->get_name(), it->type());
-      if(assigns_rec(object, new_lhs)) // recursive call
-        return true;
-    }
-    
-    return false; // done
-  }
-  else
-    return lhs==object.get_expr();
-}
-
-/*******************************************************************\
-
 Function: local_SSAt::build_transfer
 
   Inputs:
@@ -400,7 +321,7 @@ exprt local_SSAt::read_lhs(
   if(objects.find(object)!=objects.end())
   {
     // yes, it is
-    if(assigns(object, loc))
+    if(ssa_analysis[loc].is_assigned(object))
       return name(object, OUT, loc);
     else
       return read_rhs(object, loc);
