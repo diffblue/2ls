@@ -619,8 +619,7 @@ void local_SSAt::assign_rec(
     equal_exprt equality(ssa_symbol, ssa_rhs);
     nodes[loc].equalities.push_back(equality);
     
-    #if 0
-    // aliasing
+    // aliasing on writing
     if(lhs.id()==ID_dereference)
     {
       // go over all assigned objects
@@ -632,22 +631,19 @@ void local_SSAt::assign_rec(
         if(*o_it!=lhs_object)
         {
           const symbol_exprt ssa_symbol=name(*o_it, OUT, loc);
-          exprt ssa_rhs=read_rhs(rhs, loc);
           
-          // the rhs might need to be conditional
-          if(o_it->get_expr().id()==ID_dereference &&
-             *o_it!=lhs_object)
-          {
-            exprt guard=same_object(lhs_object, *o_it);
-            ssa_rhs=if_exprt(guard, ssa_rhs, read_rhs(*o_it, loc));
-          }
+          exprt guard=same_object(lhs_object, *o_it);
+
+          exprt ssa_rhs=if_exprt(
+            read_rhs(guard, loc),
+            read_rhs(rhs, loc),
+            read_rhs(*o_it, loc));
           
           equal_exprt equality(ssa_symbol, ssa_rhs);
           nodes[loc].equalities.push_back(equality);
         }
       }
     }
-    #endif
   }
 }
 

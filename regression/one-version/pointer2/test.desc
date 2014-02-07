@@ -1,7 +1,7 @@
-KNOWNBUG
+CORE
 main.o
 --pointer-check
 ^EXIT=0$
 ^SIGNAL=0$
-^Properties passed: 3$
+^Properties passed: 4$
 ^Properties failed: 0$
