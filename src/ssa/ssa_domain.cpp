@@ -78,15 +78,23 @@ void ssa_domaint::transform(
   ai_baset &ai,
   const namespacet &ns)
 {
-  if(from->is_assign())
+  if(from->is_assign() || from->is_decl())
   {
-    const code_assignt &code_assign=to_code_assign(from->code);
-    assign(code_assign.lhs(), from, ai, ns);
-  }
-  else if(from->is_decl())
-  {
-    const code_declt &code_decl=to_code_decl(from->code);
-    assign(code_decl.symbol(), from, ai, ns);
+    const std::set<ssa_objectt> &assigns=
+      static_cast<ssa_ait &>(ai).assignments.get(from);
+
+    for(std::set<ssa_objectt>::const_iterator
+        o_it=assigns.begin();
+        o_it!=assigns.end();
+        o_it++)
+    {
+      irep_idt identifier=o_it->get_identifier();
+
+      def_entryt &def_entry=def_map[identifier];
+      def_entry.def.loc=from;
+      def_entry.def.kind=deft::ASSIGNMENT;
+      def_entry.source=from;
+    }
   }
   else if(from->is_dead())
   {
@@ -99,149 +107,6 @@ void ssa_domaint::transform(
   for(def_mapt::iterator
       d_it=def_map.begin(); d_it!=def_map.end(); d_it++)
     d_it->second.source=from;
-}
-
-/*******************************************************************\
-
-Function: ssa_domaint::assign
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void ssa_domaint::assign(
-  const exprt &lhs, locationt from,
-  ai_baset &ai,
-  const namespacet &ns)
-{
-  if(lhs.id()==ID_typecast)
-  {
-    assign(to_typecast_expr(lhs).op(), from, ai, ns);
-    return;
-  }
-  else if(lhs.id()==ID_if)
-  {
-    assign(to_if_expr(lhs).true_case(), from, ai, ns);
-    assign(to_if_expr(lhs).false_case(), from, ai, ns);
-    return;
-  }
-
-  const typet &lhs_type=ns.follow(lhs.type());
-  
-  if(lhs_type.id()==ID_struct)
-  {
-    // Are we assigning an entire struct?
-    // If so, need to split into pieces, recursively.
-  
-    const struct_typet &struct_type=to_struct_type(lhs_type);
-    const struct_typet::componentst &components=struct_type.components();
-    
-    for(struct_typet::componentst::const_iterator
-        it=components.begin();
-        it!=components.end();
-        it++)
-    {
-      member_exprt new_lhs(lhs, it->get_name(), it->type());
-      assign(new_lhs, from, ai, ns); // recursive call
-    }
-    
-    return; // done
-  }
-  else if(lhs_type.id()==ID_union)
-  {
-    // todo
-  }
-  
-  const ssa_objectt ssa_object(lhs);
-  
-  if(ssa_object)
-  {
-    assign(ssa_object, from, ai, ns);
-
-    if(lhs.id()==ID_dereference)
-    {
-      // this might alias other stuff
-      const std::set<ssa_objectt> &objects=
-        static_cast<const ssa_ait &>(ai).objects;
-        
-      for(std::set<ssa_objectt>::const_iterator
-          o_it=objects.begin();
-          o_it!=objects.end();
-          o_it++)
-      {
-        if(*o_it!=ssa_object &&
-           may_alias(*o_it, ssa_object))
-          assign(*o_it, from, ai, ns);
-      }
-    }    
-  }
-}
-
-/*******************************************************************\
-
-Function: ssa_domaint::may_alias
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-bool ssa_domaint::may_alias(
-  const ssa_objectt &o1, const ssa_objectt &o2)
-{
-  const exprt &e1=o1.get_expr();
-  const exprt &e2=o2.get_expr();
-
-  // The same?
-  if(e1==e2)
-    return true;
-
-  // Is one a pointer?
-  if(e1.id()==ID_dereference || e2.id()==ID_dereference)
-  {
-    // Type matches?
-    if(e1.type()==e2.type())
-      return true;
-    
-    // Give up, but should consider more options
-    return false;
-  }
-  else
-    return false; // both different objects
-}
-
-/*******************************************************************\
-
-Function: ssa_domaint::assign
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void ssa_domaint::assign(
-  const ssa_objectt &lhs,
-  locationt from,
-  ai_baset &,
-  const namespacet &)
-{
-  irep_idt identifier=lhs.get_identifier();
-  assigned_objects.insert(identifier);
-
-  def_entryt &def_entry=def_map[identifier];
-  def_entry.def.loc=from;
-  def_entry.def.kind=deft::ASSIGNMENT;
-  def_entry.source=from;
 }
 
 /*******************************************************************\
@@ -262,7 +127,7 @@ bool ssa_domaint::merge(
   locationt to)
 {
   bool result=false;
-
+  
   // should traverse both maps simultaneously
   for(def_mapt::const_iterator
       d_it_b=b.def_map.begin();

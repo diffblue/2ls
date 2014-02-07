@@ -11,7 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <analyses/ai.h>
 
-#include "ssa_object.h"
+#include "assignments.h"
 
 class ssa_domaint:public ai_domain_baset
 {
@@ -67,16 +67,7 @@ public:
   // map from source to definition
   typedef std::map<irep_idt, std::map<locationt, deft> > phi_nodest;
   phi_nodest phi_nodes;
-  
-  // stuff assigned at this location
-  std::set<irep_idt> assigned_objects;
-  
-  inline bool is_assigned(const ssa_objectt &object) const
-  {
-    return assigned_objects.find(object.get_identifier())!=
-           assigned_objects.end();
-  }
-  
+
   virtual void transform(
     locationt from,
     locationt to,
@@ -92,35 +83,18 @@ public:
     const ssa_domaint &b,
     locationt from,
     locationt to);
-    
-  static bool may_alias(
-    const ssa_objectt &o1,
-    const ssa_objectt &o2);
-
-protected:
-  void assign(
-    const exprt &lhs, locationt from,
-    ai_baset &ai,
-    const namespacet &ns);
-    
-  void assign(
-    const ssa_objectt &lhs, locationt from,
-    ai_baset &ai,
-    const namespacet &ns);    
 };
 
 class ssa_ait:public ait<ssa_domaint>
 {
 public:
-  typedef std::set<ssa_objectt> objectst;
-
-  explicit ssa_ait(const objectst &_objects):
-    objects(_objects)
+  explicit ssa_ait(const assignmentst &_assignments):
+    assignments(_assignments)
   {
   }
 
 protected:
-  const objectst &objects;
+  const assignmentst &assignments;
   
   friend class ssa_domaint;
 

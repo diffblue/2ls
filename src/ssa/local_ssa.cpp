@@ -34,9 +34,6 @@ Function: local_SSAt::build_SSA
 
 void local_SSAt::build_SSA()
 {
-  // collect objects
-  collect_objects(goto_function.body, ns, objects);
-  
   // perform SSA data-flow analysis
   ssa_analysis(goto_function, ns);
 
@@ -71,7 +68,8 @@ void local_SSAt::build_phi_nodes(locationt loc)
   nodet &node=nodes[loc];
 
   for(objectst::const_iterator
-      o_it=objects.begin(); o_it!=objects.end(); o_it++)
+      o_it=assignments.objects.begin();
+      o_it!=assignments.objects.end(); o_it++)
   {
     // phi-node here?
     ssa_domaint::phi_nodest::const_iterator p_it=
@@ -318,10 +316,11 @@ exprt local_SSAt::read_lhs(
   ssa_objectt object(expr);
 
   // is this an object we track?
-  if(objects.find(object)!=objects.end())
+  if(assignments.objects.find(object)!=
+     assignments.objects.end())
   {
     // yes, it is
-    if(ssa_analysis[loc].is_assigned(object))
+    if(assignments.assigns(loc, object))
       return name(object, OUT, loc);
     else
       return read_rhs(object, loc);
@@ -409,7 +408,6 @@ exprt local_SSAt::read_rhs(const exprt &expr, locationt loc) const
   {
     // might alias with whatnot
     assert(expr.operands().size()==1);
-    exprt pointer=expr.op0();
     
     ssa_objectt object(expr);
 
@@ -418,21 +416,15 @@ exprt local_SSAt::read_rhs(const exprt &expr, locationt loc) const
       exprt result=read_rhs(object, loc);
 
       for(objectst::const_iterator
-          o_it=objects.begin(); o_it!=objects.end(); o_it++)
+          o_it=assignments.objects.begin();
+          o_it!=assignments.objects.end(); o_it++)
       {
         if(*o_it!=object &&
-           ssa_domaint::may_alias(object, *o_it) &&
+           assignmentst::may_alias(object, *o_it) &&
            o_it->get_expr().type()==expr.type())
         {
-          exprt o_address=
-            o_it->get_expr().id()==ID_dereference?o_it->get_expr().op0():
-            address_of_exprt(o_it->get_expr());
-          
-          if(o_address.type()!=pointer.type())
-            o_address.make_typecast(pointer.type());
-        
-          equal_exprt equality(o_address, pointer);
-          result=if_exprt(read_rhs(equality, loc), read_rhs(*o_it, loc), result);
+          exprt guard=same_object(*o_it, object);
+          result=if_exprt(read_rhs(guard, loc), read_rhs(*o_it, loc), result);
         }
       }
       
@@ -443,7 +435,8 @@ exprt local_SSAt::read_rhs(const exprt &expr, locationt loc) const
   ssa_objectt object(expr);
 
   // is this an object we track?
-  if(objects.find(object)!=objects.end())
+  if(assignments.objects.find(object)!=
+     assignments.objects.end())
     return read_rhs(object, loc);
   else if(expr.id()==ID_symbol)
     return name_input(object);
@@ -454,6 +447,39 @@ exprt local_SSAt::read_rhs(const exprt &expr, locationt loc) const
       *it=read_rhs(*it, loc);
     return tmp;
   }
+}
+
+/*******************************************************************\
+
+Function: local_SSAt::same_object
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt local_SSAt::same_object(
+  const ssa_objectt &o1,
+  const ssa_objectt &o2) const
+{
+  exprt o1_expr=o1.get_expr();
+  exprt o2_expr=o2.get_expr();
+
+  exprt o1_address=
+    o1_expr.id()==ID_dereference?to_dereference_expr(o1_expr).pointer():
+    address_of_exprt(o1_expr);
+  
+  exprt o2_address=
+    o2_expr.id()==ID_dereference?to_dereference_expr(o2_expr).pointer():
+    address_of_exprt(o2_expr);
+  
+  if(o1_address.type()!=o2_address.type())
+    o1_address.make_typecast(o2_address.type());
+
+  return equal_exprt(o1_address, o2_address);
 }
 
 /*******************************************************************\
@@ -583,15 +609,45 @@ void local_SSAt::assign_rec(
 
   ssa_objectt lhs_object(lhs);
 
-  // is this an object we track?
-  if(objects.find(lhs_object)!=objects.end())
+  const std::set<ssa_objectt> &assigned=
+    assignments.get(loc);
+  
+  if(assigned.find(lhs_object)!=assigned.end())
   {
-    // yes!
     const symbol_exprt ssa_symbol=name(lhs_object, OUT, loc);
     exprt ssa_rhs=read_rhs(rhs, loc);
     equal_exprt equality(ssa_symbol, ssa_rhs);
-
     nodes[loc].equalities.push_back(equality);
+    
+    #if 0
+    // aliasing
+    if(lhs.id()==ID_dereference)
+    {
+      // go over all assigned objects
+      for(std::set<ssa_objectt>::const_iterator
+          o_it=assigned.begin();
+          o_it!=assigned.end();
+          o_it++)
+      {
+        if(*o_it!=lhs_object)
+        {
+          const symbol_exprt ssa_symbol=name(*o_it, OUT, loc);
+          exprt ssa_rhs=read_rhs(rhs, loc);
+          
+          // the rhs might need to be conditional
+          if(o_it->get_expr().id()==ID_dereference &&
+             *o_it!=lhs_object)
+          {
+            exprt guard=same_object(lhs_object, *o_it);
+            ssa_rhs=if_exprt(guard, ssa_rhs, read_rhs(*o_it, loc));
+          }
+          
+          equal_exprt equality(ssa_symbol, ssa_rhs);
+          nodes[loc].equalities.push_back(equality);
+        }
+      }
+    }
+    #endif
   }
 }
 

@@ -28,8 +28,9 @@ public:
     const namespacet &_ns,
     const std::string &_suffix=""):
     ns(_ns), goto_function(_goto_function), 
+    assignments(_goto_function.body, ns),
     guard_map(_goto_function.body),
-    ssa_analysis(objects),
+    ssa_analysis(assignments),
     suffix(_suffix)
   {
     build_SSA();
@@ -85,9 +86,8 @@ public:
   const namespacet &ns;
   const goto_functiont &goto_function;
   
-  // the objects accessed
-  typedef std::set<ssa_objectt> objectst;
-  objectst objects;
+  typedef assignmentst::objectst objectst;
+  assignmentst assignments;
   
 protected:
   guard_mapt guard_map;
@@ -101,6 +101,8 @@ protected:
   void build_phi_nodes(locationt loc);
   void build_transfer(locationt loc);
   void build_guard(locationt loc);
+  
+  exprt same_object(const ssa_objectt &, const ssa_objectt &) const;
 };
 
 std::list<exprt> & operator <<
