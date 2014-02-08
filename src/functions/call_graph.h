@@ -39,6 +39,11 @@ public:
   // file to functions map
   typedef std::map<irep_idt, function_mapt> file_mapt;
   file_mapt file_map;
+  
+  inline datat &operator[](const f_idt &f)
+  {
+    return file_map[f.file][f.function_id];
+  }
 
   void build(
     const indext &index,
