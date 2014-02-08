@@ -25,14 +25,14 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <solvers/flattening/bv_pointers.h>
 
 #include "../html/html_escape.h"
-#include "index.h"
+#include "../functions/index.h"
+#include "../functions/get_function.h"
+#include "../functions/path_util.h"
 #include "html_report.h"
-#include "get_function.h"
 #include "ssa_fixed_point.h"
 #include "statistics.h"
 #include "report_source_code.h"
 #include "analyzer.h"
-#include "path_util.h"
 #include "change_impact.h"
 
 class deltacheck_analyzert:public messaget

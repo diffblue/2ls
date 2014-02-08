@@ -11,7 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <ostream>
 
-#include "index.h"
+#include "../functions/index.h"
 
 void html_report_header(
   std::ostream &out,

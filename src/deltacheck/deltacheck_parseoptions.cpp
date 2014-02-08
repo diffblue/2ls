@@ -20,9 +20,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <ansi-c/ansi_c_language.h>
 #include <cpp/cpp_language.h>
 
+#include "../functions/index.h"
 #include "deltacheck_parseoptions.h"
 #include "version.h"
-#include "index.h"
 #include "analyzer.h"
 #include "change_impact.h"
 #include "show.h"

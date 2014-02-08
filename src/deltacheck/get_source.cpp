@@ -13,7 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/string2int.h>
 
-#include "path_util.h"
+#include "../functions/path_util.h"
 #include "get_source.h"
 
 /*******************************************************************\

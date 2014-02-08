@@ -14,7 +14,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "index.h"
 #include "path_util.h"
-#include "version.h"
+
+#define INDEX_VERSION "1.0"
 
 /*******************************************************************\
 
@@ -57,8 +58,8 @@ void indext::write(std::ostream &out) const
 {
   out << "<?xml verion=\"1.0\" encoding=\"UTF-8\"?>\n";
 
-  out << "<DeltaCheckIndex version=\""
-      << DELTACHECK_VERSION << "\">\n";
+  out << "<Index version=\""
+      << INDEX_VERSION << "\">\n";
   
   out << "<description>";
   xmlt::escape(description, out);

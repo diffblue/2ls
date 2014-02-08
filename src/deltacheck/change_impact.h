@@ -11,8 +11,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <stack>
 
-#include "get_function.h"
-#include "index.h"
+#include "../functions/get_function.h"
+#include "../functions/index.h"
 
 class change_impactt:public messaget
 {

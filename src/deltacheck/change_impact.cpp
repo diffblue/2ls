@@ -11,8 +11,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/read_goto_binary.h>
 #include <goto-programs/goto_model.h>
 
+#include "../functions/get_function.h"
 #include "change_impact.h"
-#include "get_function.h"
 
 /*******************************************************************\
 

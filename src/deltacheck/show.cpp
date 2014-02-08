@@ -18,7 +18,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "../ssa/ssa_domain.h"
 #include "../ssa/guard_map.h"
 #include "../ssa/local_ssa.h"
-#include "index.h"
+#include "../functions/index.h"
 #include "ssa_fixed_point.h"
 
 /*******************************************************************\

@@ -1,12 +1,11 @@
 include ../config.inc
 CBMC ?= ../..
 
-SRC = deltacheck_main.cpp deltacheck_parseoptions.cpp index.cpp \
-      get_function.cpp rename.cpp \
-      ssa_fixed_point.cpp source_diff.cpp change_impact.cpp \
+SRC = deltacheck_main.cpp deltacheck_parseoptions.cpp \
+      rename.cpp ssa_fixed_point.cpp source_diff.cpp change_impact.cpp \
       html_report.cpp analyzer.cpp syntax_highlighting.cpp \
       show.cpp properties.cpp report_source_code.cpp \
-      get_source.cpp statistics.cpp path_util.cpp \
+      get_source.cpp statistics.cpp \
       $(CBMC)/src/cbmc/xml_interface.cpp
 
 OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
@@ -31,7 +30,10 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       ../solver/predicate$(OBJEXT) \
       ../solver/solver$(OBJEXT) \
       ../solver/fixed_point$(OBJEXT) \
-      ../summaries/summary$(OBJEXT)
+      ../functions/summary$(OBJEXT) \
+      ../functions/get_function$(OBJEXT) \
+      ../functions/path_util$(OBJEXT) \
+      ../functions/index$(OBJEXT)
 
 include $(CBMC)/src/config.inc
 include $(CBMC)/src/common
