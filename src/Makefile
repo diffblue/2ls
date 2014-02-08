@@ -1,4 +1,4 @@
-SUBDIRS = deltacheck deltagit ssa html
+SUBDIRS = deltacheck deltagit ssa solver summaries html
 
 all: deltacheck deltagit
 

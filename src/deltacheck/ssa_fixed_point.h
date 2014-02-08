@@ -13,7 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "../ssa/local_ssa.h"
 #include "properties.h"
-#include "fixed_point.h"
+#include "../solver/fixed_point.h"
 
 class ssa_fixed_pointt
 {
