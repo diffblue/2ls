@@ -222,6 +222,8 @@ void revisions_report(
     {
       tooltip+="<br><i>"+html_escape(as_string(j_it->stage));
       tooltip+=" "+html_escape(as_string(j_it->status));
+      if(j_it->hostname!="")
+        tooltip+=" on "+html_escape(as_string(j_it->hostname));
       tooltip+="</i>";
     }
     tooltip+=
