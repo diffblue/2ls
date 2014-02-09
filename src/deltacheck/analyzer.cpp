@@ -470,6 +470,9 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
   result() << "Properties passed: " << statistics.number_map["Passed"] << eom;
   result() << "Properties failed: " << statistics.number_map["Errors"] << eom;
   result() << "Properties warned: " << statistics.number_map["Unknown"] << eom;
+
+  messaget::statistics() << "LOCs analyzed: " << statistics.number_map["LOCs"] << eom;
+  messaget::statistics() << "Functions analyzed: " << statistics.number_map["Functions"] << eom;
   
   memory_info(messaget::statistics());
   messaget::statistics() << eom;
@@ -607,6 +610,11 @@ void deltacheck_analyzert::operator()()
   xml_out << " warned=\"" << statistics.number_map["Unknown"] << "\"";
   xml_out << ">\n";
   xml_out << "</properties>\n";
+  xml_out << "<program";
+  xml_out << " LOCs=\"" << statistics.number_map["LOCs"] << "\"";
+  xml_out << " Functions=\"" << statistics.number_map["Functions"] << "\"";
+  xml_out << ">\n";
+  xml_out << "</program>\n";
   xml_out << "</deltacheck_stat>\n";
 }  
 
