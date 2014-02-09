@@ -98,7 +98,8 @@ protected:
   unsigned errors_in_file, passed_in_file,
            unknown_in_file, unaffected_in_file;
   
-  void collect_statistics(const propertiest &properties);
+  void collect_statistics(const propertiest &);
+  void collect_statistics(const goto_functionst::goto_functiont &);
 };
 
 /*******************************************************************\
@@ -121,7 +122,6 @@ void deltacheck_analyzert::check_function(
   std::ostream &file_report)
 {
   statistics.number_map["Functions"]++;
-  statistics.number_map["LOCs"]+=f.body.instructions.size();
 
   // add properties
   status() << "Generating properties" << eom;
@@ -159,6 +159,7 @@ void deltacheck_analyzert::check_function(
   
   // collect some more data
   collect_statistics(ssa_fixed_point.properties); 
+  collect_statistics(f);
 }
 
 /*******************************************************************\
@@ -187,7 +188,6 @@ void deltacheck_analyzert::check_function_delta(
   std::ostream &file_report)
 {
   statistics.number_map["Functions"]++;
-  statistics.number_map["LOCs"]+=f_new.body.instructions.size();
 
   // add properties to each
   status() << "Generating properties" << eom;
@@ -242,6 +242,7 @@ void deltacheck_analyzert::check_function_delta(
 
   // collect some more data
   collect_statistics(ssa_fixed_point.properties); 
+  collect_statistics(f_new); 
 }
 
 /*******************************************************************\
@@ -472,6 +473,24 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
   
   memory_info(messaget::statistics());
   messaget::statistics() << eom;
+}
+
+/*******************************************************************\
+
+Function: deltacheck_analyzert::collect_statistics
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void deltacheck_analyzert::collect_statistics(
+  const goto_functionst::goto_functiont &goto_function)
+{
+  statistics.number_map["LOCs"]+=goto_function.body.instructions.size();
 }
 
 /*******************************************************************\
