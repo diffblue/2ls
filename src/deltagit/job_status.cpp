@@ -124,6 +124,7 @@ void job_statust::read()
   message=src.get_element("message");
   author=src.get_attribute("author");
   date=src.get_attribute("date");
+  commit=src.get_attribute("commit");
 
   hostname=src.get_attribute("hostname");
 }
