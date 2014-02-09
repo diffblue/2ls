@@ -180,7 +180,7 @@ void analyse(
     
     std::string command=
       "./analyse \""+previous+"\" \""+job_status.id+"\""
-      " >> jobs/"+job_status.id+".analysis.log 2>&1";
+      " > jobs/"+job_status.id+".analysis.log 2>&1";
 
     int result=system(command.c_str());
     
@@ -205,7 +205,7 @@ void analyse(
     
     std::string command=
       "./analyse-one \""+job_status.id+"\""
-      " >> jobs/"+job_status.id+".analysis.log 2>&1";
+      " > jobs/"+job_status.id+".analysis.log 2>&1";
 
     int result=system(command.c_str());
     
