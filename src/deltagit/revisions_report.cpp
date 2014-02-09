@@ -222,7 +222,7 @@ void revisions_report(
     {
       tooltip+="<br><i>"+html_escape(as_string(j_it->stage));
       tooltip+=" "+html_escape(as_string(j_it->status));
-      if(j_it->hostname!="")
+      if(j_it->hostname!="" && j_it->status!=job_statust::WAITING)
         tooltip+=" on "+html_escape(as_string(j_it->hostname));
       tooltip+="</i>";
     }
