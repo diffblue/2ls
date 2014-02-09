@@ -20,7 +20,10 @@ public:
     read();
   }
 
+  // unique identifier
   std::string id;
+
+  // stuff about the commit
   std::string commit;
   std::string message;
   std::string author;
@@ -28,10 +31,13 @@ public:
   
   unsigned added, deleted;
 
+  // analysis status
   enum statust { WAITING, RUNNING, FAILURE, COMPLETED };
   enum staget { INIT, CHECK_OUT, BUILD, ANALYSE, DONE };
   statust status;
   staget stage;
+  
+  std::string hostname;
   
   void read();
   void write();
@@ -50,6 +56,8 @@ public:
   {
     return "jobs/"+id+".wd";
   }
+  
+  void set_hostname();
   
 protected:
 };

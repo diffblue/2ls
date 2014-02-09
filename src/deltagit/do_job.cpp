@@ -48,6 +48,7 @@ void check_out(job_statust &job_status)
   std::cout << "Checking out " << job_status.id << "\n";
 
   job_status.status=job_statust::RUNNING;
+  job_status.set_hostname();
   job_status.write();
 
   std::string command;
@@ -103,6 +104,7 @@ void build(job_statust &job_status)
   const std::string working_dir=job_status.get_wd();
   
   job_status.status=job_statust::RUNNING;
+  job_status.set_hostname();
   job_status.write();
 
   std::string command;
@@ -170,6 +172,7 @@ void analyse(
     }
     
     job_status.status=job_statust::RUNNING;
+    job_status.set_hostname();
     job_status.write();
     
     std::string command=
@@ -194,6 +197,7 @@ void analyse(
               << "\n";
 
     job_status.status=job_statust::RUNNING;
+    job_status.set_hostname();
     job_status.write();
     
     std::string command=

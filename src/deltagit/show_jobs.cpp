@@ -40,6 +40,9 @@ void show_jobs(std::ostream &out)
     out << " " << as_string(j_it->stage)
         << " " << as_string(j_it->status);
     
+    if(j_it->hostname!="")
+      out << " on " << j_it->hostname;
+    
     out << "\n";
   }
 }

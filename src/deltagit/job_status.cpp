@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <time.h>
 #include <dirent.h>
+#include <unistd.h>
 
 #include <util/xml.h>
 #include <util/cout_message.h>
@@ -21,6 +22,27 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "git_log.h"
 #include "job_status.h"
+
+/*******************************************************************\
+
+Function: job_statust::set_hostname
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void job_statust::set_hostname()
+{
+  char s[1000];
+  if(gethostname(s, 1000)==0)
+  {
+    hostname=std::string(s);
+  }        
+}
 
 /*******************************************************************\
 
@@ -102,6 +124,8 @@ void job_statust::read()
   message=src.get_element("message");
   author=src.get_attribute("author");
   date=src.get_attribute("date");
+
+  hostname=src.get_attribute("hostname");
 }
 
 /*******************************************************************\
@@ -178,6 +202,7 @@ void job_statust::write()
   xml.set_attribute("deleted", deleted);
   xml.set_attribute("author", author);
   xml.set_attribute("date", date);
+  xml.set_attribute("hostname", hostname);
   xml.new_element("message").data=message;
   
   std::ofstream out(("jobs/"+id+".status").c_str());
