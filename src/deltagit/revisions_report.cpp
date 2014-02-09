@@ -236,11 +236,11 @@ void revisions_report(
     
     if(j_it->stage==job_statust::ANALYSE)
     {
-      link=rel_path+id2string(j_it->id)+".wd/deltacheck-diff.html";
+      link=rel_path+"jobs/"+id2string(j_it->id)+".wd/deltacheck-diff.html";
     }
     else if(j_it->stage==job_statust::DONE)
     {
-      link=rel_path+id2string(j_it->id)+".wd/deltacheck-diff.html";
+      link=rel_path+"jobs/"+id2string(j_it->id)+".wd/deltacheck-diff.html";
 
       unsigned r, g;
       if(passed+failed==0)
