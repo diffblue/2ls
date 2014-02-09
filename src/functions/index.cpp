@@ -58,7 +58,7 @@ void indext::write(std::ostream &out) const
 {
   out << "<?xml verion=\"1.0\" encoding=\"UTF-8\"?>\n";
 
-  out << "<Index version=\""
+  out << "<DeltaCheckIndex version=\""
       << INDEX_VERSION << "\">\n";
   
   out << "<description>";
@@ -173,10 +173,17 @@ void indext::read(const std::string &in_file_name)
   else
   {
     xmlt xml;
-    parse_xml(in_file_name, get_message_handler(), xml);
+    if(parse_xml(in_file_name, get_message_handler(), xml))
+    {
+      error() << "failed to read index XML `" << in_file_name << "'" << eom;
+      return;
+    }
     
     if(xml.name!="DeltaCheckIndex")
+    {
+      error() << "index XML `" << in_file_name << "' is malformed" << eom;
       return;
+    }
 
     description=xml.get_element("description");
 
