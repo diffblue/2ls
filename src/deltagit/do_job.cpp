@@ -53,10 +53,10 @@ void check_out(job_statust &job_status)
   std::string command;
 
   // Do a shared clone -- this uses very little disc space.
-  // Will overwrite log.
+  // Will overwrite checkout log.
   command="git clone --no-checkout --shared source-repo "+
           working_dir+
-          " > "+job_status.id+".checkout.log 2>&1";
+          " > jobs/"+job_status.id+".checkout.log 2>&1";
 
   int result1=system(command.c_str());
   if(result1!=0)
@@ -69,7 +69,7 @@ void check_out(job_statust &job_status)
   // Now do checkout; this will eat disc space.
   command="(cd "+working_dir+"; "+
           "git checkout --detach "+job_status.commit+
-          ") >> "+job_status.id+".checkout.log 2>&1";
+          ") >> jobs/"+job_status.id+".checkout.log 2>&1";
 
   int result2=system(command.c_str());
 
@@ -109,7 +109,7 @@ void build(job_statust &job_status)
 
   // Now run build script in working directory.
   command="(cd "+working_dir+"; ../../build"+
-          ") >> "+job_status.id+".build.log 2>&1";
+          ") >> jobs/"+job_status.id+".build.log 2>&1";
 
   int result=system(command.c_str());
   
@@ -174,7 +174,7 @@ void analyse(
     
     std::string command=
       "./analyse \""+previous+"\" \""+job_status.id+"\""
-      " >> "+job_status.id+".analysis.log 2>&1";
+      " >> jobs/"+job_status.id+".analysis.log 2>&1";
 
     int result=system(command.c_str());
     
@@ -198,7 +198,7 @@ void analyse(
     
     std::string command=
       "./analyse-one \""+job_status.id+"\""
-      " >> "+job_status.id+".analysis.log 2>&1";
+      " >> jobs/"+job_status.id+".analysis.log 2>&1";
 
     int result=system(command.c_str());
     
