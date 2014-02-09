@@ -158,7 +158,6 @@ void deltacheck_analyzert::check_function(
   
   // collect some more data
   collect_statistics(ssa_fixed_point.properties); 
-  collect_statistics(f);
 }
 
 /*******************************************************************\
@@ -239,7 +238,6 @@ void deltacheck_analyzert::check_function_delta(
 
   // collect some more data
   collect_statistics(ssa_fixed_point.properties); 
-  collect_statistics(f_new); 
 }
 
 /*******************************************************************\
@@ -348,7 +346,7 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
 
       // update statistics
       LOCs_in_file+=index_new_fkt->body.instructions.size();
-      statistics.number_map["LOCs"]+=index_new_fkt->body.instructions.size();
+      collect_statistics(*index_new_fkt);
       statistics.number_map["Functions"]++;      
     
       // In case of differential checking, is this function at all affected?
