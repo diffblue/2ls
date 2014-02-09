@@ -362,8 +362,10 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
             if(i_it->is_assert())
               count++;
           
-          unaffected_in_file++;
-          statistics.number_map["Unaffected"]++;
+          unaffected_in_file+=count;
+          statistics.number_map["Unaffected"]+=count;
+          statistics.number_map["LOCs"]+=index_new_fkt->body.instructions.size();
+          statistics.number_map["Functions"]++;
           continue;
         }
       
