@@ -213,10 +213,17 @@ public:
     {
       // use date
       struct tm tm1, tm2;
-      strptime(j1.date.c_str(), "%a, %d %b %Y %T %z", &tm1);
-      strptime(j2.date.c_str(), "%a, %d %b %Y %T %z", &tm2);
+      // Tue Feb 4 12:29:13 2014 +0000
+      strptime(j1.date.c_str(), "%a %b %d %T %Y %z", &tm1);
+      strptime(j2.date.c_str(), "%a %b %d %T %Y %z", &tm2);
+      
+      time_t t1=mktime(&tm1);
+      time_t t2=mktime(&tm2);
 
-      return mktime(&tm1)<mktime(&tm2);
+      // secondary criterion      
+      if(t1==t2) return s1<s2;
+      
+      return t1<t2;
     }
   }
 };
