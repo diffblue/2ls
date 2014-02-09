@@ -10,6 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <fstream>
 #include <set>
 
+#include <time.h>
 #include <dirent.h>
 
 #include <util/xml.h>
@@ -198,21 +199,32 @@ Function: get_jobs
 class job_ordering
 {
 public:
-  bool operator()(const std::string &s1, const std::string &s2)
+  bool operator()(const job_statust &j1, const job_statust &j2)
   {
+    // SVN revisions rNNNN?
+    const std::string &s1=j1.id;
+    const std::string &s2=j2.id;
+    
     if(s1.size()>=2 && s2.size()>=2 &&
        s1[0]=='r' && s2[0]=='r')
       return atol(s1.substr(1, std::string::npos).c_str())<
              atol(s2.substr(1, std::string::npos).c_str());
     else
-      return s1<s2;
+    {
+      // use date
+      struct tm tm1, tm2;
+      strptime(j1.date.c_str(), "%a, %d %b %Y %T %z", &tm1);
+      strptime(j2.date.c_str(), "%a, %d %b %Y %T %z", &tm2);
+
+      return mktime(&tm1)<mktime(&tm2);
+    }
   }
 };
 
 void get_jobs(std::list<job_statust> &jobs)
 {
   // sort into set
-  std::set<std::string, job_ordering> job_set;
+  std::set<job_statust, job_ordering> job_set;
 
   DIR *dir=opendir("jobs");
   if(dir==NULL) return;
@@ -226,16 +238,17 @@ void get_jobs(std::list<job_statust> &jobs)
     if(has_suffix(name, suffix))
     {
       std::string id=name.substr(0, name.size()-suffix.size());
-      job_set.insert(id);
+      job_statust job_status(id);
+      job_set.insert(job_status);
     }
   }
 
   closedir(dir);
   
   // dump the set into list
-  for(std::set<std::string>::const_iterator
+  for(std::set<job_statust>::const_iterator
       s_it=job_set.begin();
       s_it!=job_set.end();
       s_it++)
-    jobs.push_back(job_statust(*s_it));
+    jobs.push_back(*s_it);
 }
