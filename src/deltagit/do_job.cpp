@@ -119,8 +119,11 @@ void build(job_statust &job_status)
   {
     job_status.status=job_statust::FAILURE;
     job_status.write();
+    std::cout << "Build has failed\n";
     return;
   }
+
+  std::cout << "Build successful\n";
 
   job_status.next_stage();
   job_status.write();  
