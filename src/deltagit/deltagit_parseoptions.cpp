@@ -16,6 +16,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "do_job.h"
 #include "init.h"
 #include "reset.h"
+#include "reanalyse.h"
 #include "deltagit_parseoptions.h"
 #include "revisions_report.h"
 
@@ -115,6 +116,18 @@ int deltagit_parseoptionst::doit()
         return 10;
       }
     }
+    else if(command=="reanalyse")
+    {
+      if(cmdline.args.size()==2)
+        reanalyse(cmdline.args[1]);
+      else if(cmdline.args.size()==1)
+        reanalyse();
+      else
+      {
+        usage_error();
+        return 10;
+      }
+    }
     else if(command=="report")
     {
       bool partial_html=cmdline.isset("partial-html");
@@ -177,6 +190,7 @@ void deltagit_parseoptionst::help()
     " deltagit do <job>            do given job\n"
     " deltagit do                  do a job that needs work\n"
     " deltagit reset               clear failure bit on all jobs\n"
+    " deltagit reanalyse           redo analysis\n"
     " deltagit report              generate top-level report\n"
     "\n"
     "Reporting options:\n"
