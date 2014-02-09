@@ -558,12 +558,12 @@ void deltacheck_analyzert::operator()()
   if(!out)
   {
     error() << "failed to write to \""
-            << report_file_name << "\"" << eom;
+            << report_full_path << "\"" << eom;
     return;
   }
   
   status() << "Writing report into \""
-           << report_file_name << "\"" << eom;
+           << report_full_path << "\"" << eom;
            
   std::string title="DeltaCheck Summary";
 
