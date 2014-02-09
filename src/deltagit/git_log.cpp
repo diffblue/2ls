@@ -9,6 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <cstdlib>
 #include <fstream>
 
+#include <util/i2string.h>
 #include <util/prefix.h>
 #include <util/tempfile.h>
 
@@ -26,13 +27,15 @@ Function: git_logt::read
 
 \*******************************************************************/
 
-void git_logt::read()
+void git_logt::read(unsigned max_commits)
 {
   temporary_filet tmpfile("deltagit", "log");
 
   // get the git log by running "git log"
   std::string command;
-  command="cd source-repo; git log --name-only > "+tmpfile();
+  command="cd source-repo; git log --name-only";
+  if(max_commits!=0) command+="--max-count="+i2string(max_commits);
+  command+=" > "+tmpfile();
   system(command.c_str());
 
   // read it from temporary file

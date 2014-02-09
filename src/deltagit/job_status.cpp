@@ -58,7 +58,7 @@ void job_statust::read()
   
   console_message_handlert message_handler;
       
-  if(parse_xml(id+".status", message_handler, src))
+  if(parse_xml("jobs/"+id+".status", message_handler, src))
   {
     // assume it's new
     clear();
@@ -179,7 +179,7 @@ void job_statust::write()
   xml.set_attribute("date", date);
   xml.new_element("message").data=message;
   
-  std::ofstream out((id+".status").c_str());
+  std::ofstream out(("jobs/"+id+".status").c_str());
   out << xml;
 }
 
@@ -214,7 +214,7 @@ void get_jobs(std::list<job_statust> &jobs)
   // sort into set
   std::set<std::string, job_ordering> job_set;
 
-  DIR *dir=opendir(".");
+  DIR *dir=opendir("jobs");
   if(dir==NULL) return;
   
   std::string suffix=".status";

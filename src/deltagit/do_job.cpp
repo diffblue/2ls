@@ -33,7 +33,7 @@ Function: check_out
 
 void check_out(job_statust &job_status)
 {
-  const std::string working_dir=job_status.id+".wd";
+  const std::string working_dir=job_status.get_wd();
   
   // check if we already have it
   if(access((working_dir+"/.git/HEAD").c_str(), R_OK)==0)
@@ -100,7 +100,7 @@ void build(job_statust &job_status)
 {
   std::cout << "Building " << job_status.id << "\n";
 
-  const std::string working_dir=job_status.id+".wd";
+  const std::string working_dir=job_status.get_wd();
   
   job_status.status=job_statust::RUNNING;
   job_status.write();
@@ -108,7 +108,7 @@ void build(job_statust &job_status)
   std::string command;
 
   // Now run build script in working directory.
-  command="(cd "+working_dir+"; ../build"+
+  command="(cd "+working_dir+"; ../../build"+
           ") >> "+job_status.id+".build.log 2>&1";
 
   int result=system(command.c_str());

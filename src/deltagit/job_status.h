@@ -46,6 +46,11 @@ public:
   
   void next_stage();
   
+  std::string get_wd()
+  {
+    return "jobs/"+id+".wd";
+  }
+  
 protected:
 };
 

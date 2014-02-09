@@ -27,14 +27,16 @@ public:
   
   typedef std::list<entryt> entriest;
   entriest entries;
-  
-  git_logt()
+
+  // Read at most max_commits many entries;
+  // 0 means no limit.
+  explicit git_logt(unsigned max_commits=0)
   {
-    read();
+    read(max_commits);
   }
 
 protected:
-  void read();
+  void read(unsigned max_commits);
 };
 
 #endif

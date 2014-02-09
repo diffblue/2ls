@@ -10,6 +10,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <fstream>
 #include <cstdlib>
 
+#include <sys/stat.h>
+
 #include <util/prefix.h>
 #include <util/tempfile.h>
 
@@ -147,7 +149,7 @@ Function: init
 
 \*******************************************************************/
 
-void init(unsigned max_jobs)
+void init(unsigned max_commits)
 {
   // get jobs from git log
   std::list<job_statust> jobs;
@@ -155,7 +157,7 @@ void init(unsigned max_jobs)
   std::cout << "Getting git log\n";
 
   // get the git log
-  git_logt git_log;
+  git_logt git_log(max_commits);
   
   // rummage through it, looking for 'interesting' commits
   // we reverse, to start with older commits
@@ -199,6 +201,13 @@ void init(unsigned max_jobs)
     }
   }
   
+  // Make sure we have a 'jobs' directory
+  #ifdef _WIN32
+  mkdir("jobs");
+  #else
+  mkdir("jobs", 0777);
+  #endif
+  
   unsigned total=0;
   
   // Do jobs that need to be initialized,
@@ -208,9 +217,6 @@ void init(unsigned max_jobs)
       j_it!=jobs.rend();
       j_it++)
   {
-    if(max_jobs!=0 && total>=max_jobs)
-      break;
-    
     if(j_it->stage==job_statust::INIT &&
        j_it->status!=job_statust::FAILURE)
     {
