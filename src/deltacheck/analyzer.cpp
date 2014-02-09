@@ -96,7 +96,8 @@ protected:
   void check_all(std::ostream &global_report);
   
   unsigned errors_in_file, passed_in_file,
-           unknown_in_file, unaffected_in_file;
+           unknown_in_file, unaffected_in_file,
+           LOCs_in_file;
   
   void collect_statistics(const propertiest &);
   void collect_statistics(const goto_functionst::goto_functiont &);
@@ -121,8 +122,6 @@ void deltacheck_analyzert::check_function(
   const namespacet &ns,
   std::ostream &file_report)
 {
-  statistics.number_map["Functions"]++;
-
   // add properties
   status() << "Generating properties" << eom;
   statistics.start("Properties");
@@ -187,8 +186,6 @@ void deltacheck_analyzert::check_function_delta(
   const namespacet &ns_new,
   std::ostream &file_report)
 {
-  statistics.number_map["Functions"]++;
-
   // add properties to each
   status() << "Generating properties" << eom;
   statistics.start("Properties");
@@ -272,7 +269,10 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
   get_old_function.set_message_handler(get_message_handler());
   
   global_report << "<table class=\"file-table\">\n"
-                << "<tr><th>File</th><th># Errors</th></tr>\n";
+                << "<tr><th>File</th>"
+                << "<th>LOCs</th>"
+                << "<th># Errors</th>"
+                << "</tr>\n";
   
   for(indext::file_to_functiont::const_iterator
       file_it=index_new.file_to_function.begin();
@@ -284,7 +284,8 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
   
     status() << "Processing \"" << full_path << "\"" << eom;
     
-    errors_in_file=unknown_in_file=passed_in_file=0;
+    errors_in_file=unknown_in_file=passed_in_file=unaffected_in_file=0;
+    LOCs_in_file=0;
     
     std::string file_suffix=
       use_index_old?".deltacheck-diff.html":".deltacheck.html";
@@ -344,6 +345,11 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
       
       goto_functionst::goto_functiont *index_new_fkt=
         &fmap_it->second;
+
+      // update statistics
+      LOCs_in_file+=index_new_fkt->body.instructions.size();
+      statistics.number_map["LOCs"]+=index_new_fkt->body.instructions.size();
+      statistics.number_map["Functions"]++;      
     
       // In case of differential checking, is this function at all affected?
       if(use_index_old)
@@ -364,8 +370,6 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
           
           unaffected_in_file+=count;
           statistics.number_map["Unaffected"]+=count;
-          statistics.number_map["LOCs"]+=index_new_fkt->body.instructions.size();
-          statistics.number_map["Functions"]++;
           continue;
         }
       
@@ -457,6 +461,7 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
     global_report << "<tr><td><a href=\"" << html_escape(report_url)
                   << "\">" << html_escape(file_it->first)
                   << "</a></td>"
+                  << "<td align=\"right\">" << LOCs_in_file << "</td>"
                   << "<td align=\"right\">" << errors_in_file << "</td>"
                   << "</tr>\n";
   }
