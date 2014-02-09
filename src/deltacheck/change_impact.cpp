@@ -181,9 +181,23 @@ void change_impactt::output_diff(std::ostream &out)
   for(file_mapt::const_iterator
       file_it=file_map.begin(); file_it!=file_map.end(); file_it++)
   {
-    out << "******* File " << file_it->first << "\n";
-    
     const function_mapt &function_map=file_it->second;
+    
+    bool change_found=false;
+    
+    for(function_mapt::const_iterator
+        fkt_it=function_map.begin();
+        fkt_it!=function_map.end();
+        fkt_it++)
+      if(fkt_it->second.has_change())
+      {
+        change_found=true;
+        break;
+      }
+    
+    if(!change_found) continue;
+
+    out << "******* File " << file_it->first << "\n";
     
     for(function_mapt::const_iterator
         fkt_it=function_map.begin();
@@ -226,9 +240,23 @@ void change_impactt::output_change_impact(std::ostream &out)
   for(file_mapt::const_iterator
       file_it=file_map.begin(); file_it!=file_map.end(); file_it++)
   {
-    out << "******* File " << file_it->first << "\n";
-    
     const function_mapt &function_map=file_it->second;
+    
+    bool is_affected=false;
+    
+    for(function_mapt::const_iterator
+        fkt_it=function_map.begin();
+        fkt_it!=function_map.end();
+        fkt_it++)
+      if(fkt_it->second.is_affected())
+      {
+        is_affected=true;
+        break;
+      }
+    
+    if(!is_affected) continue;
+
+    out << "******* File " << file_it->first << "\n";
     
     for(function_mapt::const_iterator
         fkt_it=function_map.begin();
