@@ -34,7 +34,7 @@ void git_logt::read(unsigned max_commits)
   // get the git log by running "git log"
   std::string command;
   command="cd source-repo; git log --name-only";
-  if(max_commits!=0) command+="--max-count="+i2string(max_commits);
+  if(max_commits!=0) command+=" --max-count="+i2string(max_commits);
   command+=" > "+tmpfile();
   system(command.c_str());
 
