@@ -52,7 +52,7 @@ public:
   
   void next_stage();
   
-  std::string get_wd()
+  std::string get_wd() const
   {
     return "jobs/"+id+".wd";
   }

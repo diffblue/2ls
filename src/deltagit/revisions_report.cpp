@@ -200,7 +200,7 @@ void revisions_report(
     unsigned passed=0, failed=0;
 
     {    
-      std::string summary_file_name=j_it->id+".wd/deltacheck-stat.xml";
+      std::string summary_file_name=j_it->get_wd()+"/deltacheck-stat.xml";
       xmlt deltacheck_summary;
       null_message_handlert null_message_handler;
       parse_xml(summary_file_name, null_message_handler, deltacheck_summary);
@@ -236,11 +236,11 @@ void revisions_report(
     
     if(j_it->stage==job_statust::ANALYSE)
     {
-      link=rel_path+"jobs/"+id2string(j_it->id)+".wd/deltacheck-diff.html";
+      link=rel_path+"/"+j_it->get_wd()+"/deltacheck-diff.html";
     }
     else if(j_it->stage==job_statust::DONE)
     {
-      link=rel_path+"jobs/"+id2string(j_it->id)+".wd/deltacheck-diff.html";
+      link=rel_path+"/"+j_it->get_wd()+"/deltacheck-diff.html";
 
       unsigned r, g;
       if(passed+failed==0)
