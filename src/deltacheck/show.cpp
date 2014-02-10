@@ -86,8 +86,14 @@ void show_defs(
         fkt_it++)
     {
       const irep_idt &id=*fkt_it;
+      
+      const goto_functionst::function_mapt::const_iterator m_it=
+        model.goto_functions.function_map.find(id);
+        
+      assert(m_it!=model.goto_functions.function_map.end());
+      
       const goto_functionst::goto_functiont *index_fkt=
-        &model.goto_functions.function_map.find(id)->second;
+        &m_it->second;
     
       out << ">>>> Function " << id << " in " << file_it->first
           << std::endl;
@@ -163,8 +169,14 @@ void show_guards(
         fkt_it++)
     {
       const irep_idt &id=*fkt_it;
+
+      const goto_functionst::function_mapt::const_iterator m_it=
+        model.goto_functions.function_map.find(id);
+        
+      assert(m_it!=model.goto_functions.function_map.end());
+      
       const goto_functionst::goto_functiont *index_fkt=
-        &model.goto_functions.function_map.find(id)->second;
+        &m_it->second;
     
       out << ">>>> Function " << id << " in " << file_it->first
           << std::endl;
@@ -241,8 +253,14 @@ void show_ssa(
         fkt_it++)
     {
       const irep_idt &id=*fkt_it;
+
+      const goto_functionst::function_mapt::const_iterator m_it=
+        model.goto_functions.function_map.find(id);
+        
+      assert(m_it!=model.goto_functions.function_map.end());
+      
       const goto_functionst::goto_functiont *index_fkt=
-        &model.goto_functions.function_map.find(id)->second;
+        &m_it->second;
     
       out << ">>>> Function " << id << " in " << file_it->first
           << std::endl;
@@ -319,8 +337,14 @@ void show_fixed_points(
         fkt_it++)
     {
       const irep_idt &id=*fkt_it;
+
+      const goto_functionst::function_mapt::const_iterator m_it=
+        model.goto_functions.function_map.find(id);
+        
+      assert(m_it!=model.goto_functions.function_map.end());
+      
       const goto_functionst::goto_functiont *index_fkt=
-        &model.goto_functions.function_map.find(id)->second;
+        &m_it->second;
     
       out << ">>>> Function " << id << " in " << file_it->first
           << std::endl;
