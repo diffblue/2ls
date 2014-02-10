@@ -467,22 +467,6 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
   }
   
   global_report << "</table>\n\n";
-  
-  // Report grand totals
-  
-  global_report << "<h2>Summary statistics</h2>\n";
-  statistics.html_report_total(global_report);
-  
-  result() << "Properties unaffected: " << statistics.number_map["Unaffected"] << eom;
-  result() << "Properties passed: " << statistics.number_map["Passed"] << eom;
-  result() << "Properties failed: " << statistics.number_map["Errors"] << eom;
-  result() << "Properties warned: " << statistics.number_map["Unknown"] << eom;
-
-  messaget::statistics() << "LOCs analyzed: " << statistics.number_map["LOCs"] << eom;
-  messaget::statistics() << "Functions analyzed: " << statistics.number_map["Functions"] << eom;
-  
-  memory_info(messaget::statistics());
-  messaget::statistics() << eom;
 }
 
 /*******************************************************************\
@@ -554,6 +538,8 @@ Function: deltacheck_analyzert::operator()
 
 void deltacheck_analyzert::operator()()
 {
+  statistics.start("Total-time");
+    
   std::string report_file_name=
     use_index_old?"deltacheck-diff.html":"deltacheck.html";
     
@@ -598,6 +584,24 @@ void deltacheck_analyzert::operator()()
   }
 
   check_all(out);
+
+  statistics.stop("Total-time");
+    
+  // Report grand totals
+  
+  out << "<h2>Summary statistics</h2>\n";
+  statistics.html_report_total(out);
+  
+  result() << "Properties unaffected: " << statistics.number_map["Unaffected"] << eom;
+  result() << "Properties passed: " << statistics.number_map["Passed"] << eom;
+  result() << "Properties failed: " << statistics.number_map["Errors"] << eom;
+  result() << "Properties warned: " << statistics.number_map["Unknown"] << eom;
+
+  messaget::statistics() << "LOCs analyzed: " << statistics.number_map["LOCs"] << eom;
+  messaget::statistics() << "Functions analyzed: " << statistics.number_map["Functions"] << eom;
+  
+  memory_info(messaget::statistics());
+  messaget::statistics() << eom;
 
   html_report_footer(out);
   
