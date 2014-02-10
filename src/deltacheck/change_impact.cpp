@@ -386,7 +386,7 @@ void change_impactt::propagate_affected(
   {
     goto_programt::const_targett l=working_locs.top();
     working_locs.pop();
-  
+    
     if(data.locs_affected.find(l->location_number)!=data.locs_affected.end())
       continue; // done already
 
@@ -411,7 +411,10 @@ void change_impactt::propagate_affected(
         it=successors.begin();
         it!=successors.end();
         it++)
+    {
+      assert(body.instructions.end()!=*it);
       working_locs.push(*it);
+    }
   }
 }
 
