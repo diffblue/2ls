@@ -23,6 +23,37 @@ Function: reanalyse
 
 \*******************************************************************/
 
+void reanalyse(job_statust &job_status)
+{
+  if(job_status.stage==job_statust::DONE)
+  {
+    std::cout << "Reanalysing job " << job_status.id << "\n";
+    job_status.status=job_statust::WAITING;
+    job_status.stage=job_statust::ANALYSE;
+    job_status.write();
+  }
+  else if(job_status.stage==job_statust::ANALYSE &&
+          job_status.status==job_statust::FAILURE)
+  {
+    std::cout << "Resetting job " << job_status.id << "\n";
+    job_status.status=job_statust::WAITING;
+    job_status.stage=job_statust::ANALYSE;
+    job_status.write();
+  }
+}
+
+/*******************************************************************\
+
+Function: reanalyse
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
 void reanalyse()
 {
   // get job list
@@ -35,13 +66,7 @@ void reanalyse()
       j_it!=jobs.end();
       j_it++)
   {
-    if(j_it->stage==job_statust::DONE)
-    {
-      std::cout << "Reanalysing job " << j_it->id << "\n";
-      j_it->status=job_statust::WAITING;
-      j_it->stage=job_statust::ANALYSE;
-      j_it->write();
-    }
+    reanalyse(*j_it);
   }
 }
 
@@ -60,13 +85,6 @@ Function: reanalyse
 void reanalyse(const std::string &job)
 {
   job_statust job_status(job);
-
-  if(job_status.stage==job_statust::DONE)
-  {
-    std::cout << "Reanalysing job " << job_status.id << "\n";
-    job_status.status=job_statust::WAITING;
-    job_status.stage=job_statust::ANALYSE;
-    job_status.write();
-  }
+  reanalyse(job_status);
 }
 
