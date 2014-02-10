@@ -69,7 +69,7 @@ void show_defs(
   {
     // read the file
     goto_modelt model;
-    read_goto_binary(id2string(file_it->first), model, message_handler);
+    read_goto_binary(index.full_path(file_it->first), model, message_handler);
     
     // add the properties
     goto_check(options, model);
@@ -152,7 +152,7 @@ void show_guards(
   {
     // read the file
     goto_modelt model;
-    read_goto_binary(id2string(file_it->first), model, message_handler);
+    read_goto_binary(index.full_path(file_it->first), model, message_handler);
     
     // add the properties
     goto_check(options, model);
@@ -236,7 +236,7 @@ void show_ssa(
   {
     // read the file
     goto_modelt model;
-    read_goto_binary(id2string(file_it->first), model, message_handler);
+    read_goto_binary(index.full_path(file_it->first), model, message_handler);
     
     // add the properties
     goto_check(options, model);
@@ -320,7 +320,7 @@ void show_fixed_points(
   {
     // read the file
     goto_modelt model;
-    read_goto_binary(id2string(file_it->first), model, message_handler);
+    read_goto_binary(index.full_path(file_it->first), model, message_handler);
     
     // add the properties
     goto_check(options, model);
@@ -382,7 +382,7 @@ void show_properties(
   {
     // read the file
     goto_modelt model;
-    read_goto_binary(id2string(file_it->first), model, message_handler);
+    read_goto_binary(index.full_path(file_it->first), model, message_handler);
     
     // add the properties
     goto_check(options, model);
