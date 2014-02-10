@@ -1,6 +1,6 @@
 /*******************************************************************\
 
-Module: Definition Analysis
+Module: A map of program locations to the assignments made there
 
 Author: Daniel Kroening, kroening@kroening.com
 

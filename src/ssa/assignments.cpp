@@ -1,6 +1,6 @@
 /*******************************************************************\
 
-Module: Definition Domain
+Module: A map of program locations to the assignments made there
 
 Author: Daniel Kroening, kroening@kroening.com
 
@@ -28,6 +28,10 @@ void assignmentst::build(
 
   forall_goto_program_instructions(it, goto_program)
   {
+    // make sure we have the location in the map
+    assignment_map[it];
+    
+    // now fill it
     if(it->is_assign())
     {
       const code_assignt &code_assign=to_code_assign(it->code);
