@@ -262,6 +262,8 @@ bool loops(const goto_programt &src)
 void deltacheck_analyzert::check_all(std::ostream &global_report)
 {
   // we do this by file in the index
+  
+  status() << "Starting analysis" << eom;
 
   get_functiont get_old_function(index_old);
   get_old_function.set_message_handler(get_message_handler());
@@ -355,7 +357,7 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
         {
           status() << "Function \"" << id2string(id) << "\" is not affected" << eom;
 
-          // add properties to each
+          // add properties to function
           statistics.start("Properties");
           goto_check(ns_new, options, *index_new_fkt);
           index_new_fkt->body.update();
@@ -368,7 +370,7 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
           
           unaffected_in_file+=count;
           statistics.number_map["Unaffected"]+=count;
-          continue;
+          continue; // next function
         }
       
       status() << "Checking \"" << id2string(id) << "\"" << eom;
