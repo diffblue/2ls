@@ -188,11 +188,13 @@ void analyse(
     {
       job_status.status=job_statust::FAILURE;
       job_status.write();
+      std::cout << "Analysis has failed\n";
       return;
     }
 
     job_status.next_stage();
     job_status.write();    
+    std::cout << "Analysis completed\n";
   }
   else
   {
@@ -213,11 +215,13 @@ void analyse(
     {
       job_status.status=job_statust::FAILURE;
       job_status.write();
+      std::cout << "Analysis has failed\n";
       return;
     }
 
     job_status.next_stage();
     job_status.write();    
+    std::cout << "Analysis completed\n";
   }
 }
 
