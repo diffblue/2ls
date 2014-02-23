@@ -11,7 +11,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <set>
 
 #ifdef _WIN32
-#include <winsock2.h>
 #else
 #include <time.h>
 #include <unistd.h>
@@ -42,11 +41,14 @@ Function: job_statust::set_hostname
 
 void job_statust::set_hostname()
 {
+  #ifdef _WIN32
+  #else
   char s[1000];
   if(gethostname(s, 1000)==0)
   {
     hostname=std::string(s);
-  }        
+  }    
+  #endif    
 }
 
 /*******************************************************************\
