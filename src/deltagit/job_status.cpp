@@ -10,6 +10,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <fstream>
 #include <set>
 
+// for strptime
+#define _XOPEN_SOURCE
+
 #include <time.h>
 #include <dirent.h>
 #include <unistd.h>
