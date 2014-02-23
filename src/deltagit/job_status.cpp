@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <set>
 
 #ifdef _WIN32
+#include <winsock2.h>
 #else
 #include <time.h>
 #include <unistd.h>
