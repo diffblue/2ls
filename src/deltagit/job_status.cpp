@@ -11,7 +11,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <set>
 
 // for strptime
+#ifndef _XOPEN_SOURCE
 #define _XOPEN_SOURCE
+#endif
 
 #include <time.h>
 #include <dirent.h>
