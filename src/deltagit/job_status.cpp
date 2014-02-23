@@ -10,14 +10,13 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <fstream>
 #include <set>
 
-// for strptime
-#ifndef _XOPEN_SOURCE
-#define _XOPEN_SOURCE
+#ifdef _WIN32
+#else
+#include <time.h>
+#include <unistd.h>
 #endif
 
-#include <time.h>
 #include <dirent.h>
-#include <unistd.h>
 
 #include <util/xml.h>
 #include <util/cout_message.h>
@@ -242,6 +241,9 @@ public:
              atol(s2.substr(1, std::string::npos).c_str());
     else
     {
+      #ifdef _WIN32
+      throw "todo: win32 doesn't have strptime";
+      #else
       // use date
       struct tm tm1, tm2;
       // Tue Feb 4 12:29:13 2014 +0000
@@ -255,6 +257,7 @@ public:
       if(t1==t2) return s1<s2;
       
       return t1<t2;
+      #endif
     }
   }
 };
