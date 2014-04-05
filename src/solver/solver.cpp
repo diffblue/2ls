@@ -908,7 +908,7 @@ void solvert::print_assignment(std::ostream &out) const
     
     if(interval.is_top()) continue;
     
-    out << "Interval: ";
+    out << "Integer interval: ";
 
     if(interval.lower_set)
       out << interval.lower << " <= ";
@@ -917,6 +917,8 @@ void solvert::print_assignment(std::ostream &out) const
     
     if(interval.upper_set)
       out << " <= " << interval.upper;
+
+    if(interval.is_bottom()) out << " (bottom)";
     
     out << "\n";
   }
@@ -929,7 +931,7 @@ void solvert::print_assignment(std::ostream &out) const
     
     if(interval.is_top()) continue;
     
-    out << "Interval: ";
+    out << "Floating-point interval: ";
 
     if(interval.lower_set)
       out << interval.lower << " <= ";
@@ -938,6 +940,8 @@ void solvert::print_assignment(std::ostream &out) const
     
     if(interval.upper_set)
       out << " <= " << interval.upper;
+    
+    if(interval.is_bottom()) out << " (bottom)";
     
     out << "\n";
   }
