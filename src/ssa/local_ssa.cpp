@@ -644,6 +644,23 @@ void local_SSAt::assign_rec(
         }
       }
     }
+    
+    #if 0
+    if(lhs.id()==ID_dereference) // might alias stuff
+    {
+      for(objectst::const_iterator
+          o_it=objects.begin();
+          o_it!=objects.end();
+          o_it++)
+      {
+        if(ssa_domain.may_alias(*o_it, lhs_object))
+        {
+          // we might write to that one as well
+          
+        }
+      }
+    }
+    #endif
   }
 }
 
