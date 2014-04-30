@@ -215,6 +215,10 @@ void solvert::new_expression(unsigned nr)
     add_operands(nr);
     equal_list.push_back(nr);
   }
+  else if(expr.id()==ID_address_of)
+  {
+    // NOT an uninterpreted function, but rather a constant.
+  }
   else
   {
     if(expr.has_operands()) // make it uninterpreted
