@@ -111,7 +111,7 @@ irep_idt ssa_objectt::object_id_rec(const exprt &src)
       const dereference_exprt &dereference_expr=
         to_dereference_expr(member_expr.struct_op());
 
-      return id2string(object_id_rec(dereference_expr.pointer()))+"->"+
+      return id2string(object_id_rec(dereference_expr.pointer()))+"'obj."+
              id2string(member_expr.get_component_name());
     }
     else   
@@ -129,7 +129,7 @@ irep_idt ssa_objectt::object_id_rec(const exprt &src)
     const dereference_exprt &dereference_expr=to_dereference_expr(src);
     irep_idt pointer_object=object_id_rec(dereference_expr.pointer());
     if(pointer_object==irep_idt()) return irep_idt();
-    return id2string(pointer_object)+"->*";
+    return id2string(pointer_object)+"'obj";
   }
   else
     return irep_idt();
