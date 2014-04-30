@@ -15,6 +15,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/read_goto_binary.h>
 #include <goto-programs/goto_model.h>
 #include <goto-programs/goto_inline.h>
+#include <goto-programs/set_properties.h>
 
 #include <goto-symex/goto_symex.h>
 #include <goto-symex/symex_target_equation.h>
@@ -127,6 +128,7 @@ void deltacheck_analyzert::check_function(
   statistics.start("Properties");
   goto_check(ns, options, f);
   f.body.update();
+  label_properties(f.body);
   statistics.stop("Properties");
 
   // build SSA
@@ -145,6 +147,7 @@ void deltacheck_analyzert::check_function(
   status() << "Reporting" << eom;
   statistics.start("Reporting");
   report_properties(ssa_fixed_point.properties, file_report);  
+  report_properties(ssa_fixed_point.properties, *this);  
   report_countermodels(SSA, ssa_fixed_point.properties, file_report);  
   report_source_code(
     path_prefix, symbol.location, f.body,
@@ -190,8 +193,10 @@ void deltacheck_analyzert::check_function_delta(
   statistics.start("Properties");
   goto_check(ns_old, options, f_old);
   f_old.body.update();
+  label_properties(f_old.body);
   goto_check(ns_new, options, f_new);
   f_new.body.update();
+  label_properties(f_new.body);
   statistics.stop("Properties");
 
   // build SSA for each
@@ -223,6 +228,7 @@ void deltacheck_analyzert::check_function_delta(
   status() << "Reporting" << eom;
   statistics.start("Reporting");
   report_properties(ssa_fixed_point.properties, file_report);  
+  report_properties(ssa_fixed_point.properties, *this);  
   report_countermodels(SSA_old, SSA_new,
                        ssa_fixed_point.properties, file_report);  
   report_source_code(

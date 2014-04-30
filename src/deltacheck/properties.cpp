@@ -88,6 +88,40 @@ void report_properties(
 
 /*******************************************************************\
 
+Function: report_properties
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void report_properties(
+  const propertiest &properties,
+  messaget &message)
+{
+  for(propertiest::const_iterator
+      p_it=properties.begin();
+      p_it!=properties.end();
+      p_it++)
+  {
+    message.status()
+      << "[" << p_it->loc->location.get_property_id() << "] "
+      << p_it->loc->location.get_comment() << ": ";
+    if(p_it->status.is_true())
+      message.status() << "OK";
+    else if(p_it->status.is_false())
+      message.status() << "FAILED";
+    else
+      message.status() << "UNKNOWN";
+    message.status() << messaget::eom;
+  }
+}
+
+/*******************************************************************\
+
 Function: get_tracked_expr
 
   Inputs:

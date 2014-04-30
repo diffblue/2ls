@@ -10,6 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #define DELTACHECK_PROPERTIES_H
 
 #include <util/threeval.h>
+#include <util/message.h>
 
 #include "../ssa/local_ssa.h"
 
@@ -32,6 +33,10 @@ typedef std::list<propertyt> propertiest;
 void report_properties(
   const propertiest &,
   std::ostream &);
+
+void report_properties(
+  const propertiest &,
+  messaget &);
 
 void report_countermodels(
   const local_SSAt &,
