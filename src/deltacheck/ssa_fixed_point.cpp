@@ -215,8 +215,9 @@ void ssa_fixed_pointt::check_properties()
   for(propertiest::iterator
       p_it=properties.begin(); p_it!=properties.end(); p_it++)
   {
-    solvert solver(ns);
     #if 0
+    solvert solver(ns);
+    #else
     satcheckt satcheck;
     bv_pointerst solver(ns, satcheck);
     //solver.set_message_handler(get_message_handler());
