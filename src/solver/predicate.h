@@ -39,7 +39,7 @@ public:
   void get(const solvert &);
   
   // push the predicate to a solver as constraint
-  void set_to_true(solvert &) const;
+  void set_to_true(decision_proceduret &) const;
 
   bool is_bottom() const
   {
@@ -75,8 +75,8 @@ static inline std::ostream & operator << (
   return out;
 }
 
-static inline solvert & operator << (
-  solvert &dest, const predicatet &predicate)
+static inline decision_proceduret & operator << (
+  decision_proceduret &dest, const predicatet &predicate)
 {
   predicate.set_to_true(dest);
   return dest;

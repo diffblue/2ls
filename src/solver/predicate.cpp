@@ -67,14 +67,14 @@ Function: predicatet::set_to_true
 
 \*******************************************************************/
 
-void predicatet::set_to_true(solvert &solver) const
+void predicatet::set_to_true(decision_proceduret &dest) const
 {
   // pass equalities to solver
     
   for(unsigned v=0; v<state_vars.size(); v++)
   {
     unsigned eq=uuf.find(v);
-    if(eq!=v) solver.set_equal(state_vars[v], state_vars[eq]);
+    if(eq!=v) dest.set_to_true(equal_exprt(state_vars[v], state_vars[eq]));
   }
 }
 
