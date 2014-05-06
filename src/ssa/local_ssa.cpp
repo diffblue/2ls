@@ -439,6 +439,29 @@ exprt local_SSAt::read_rhs(const exprt &expr, locationt loc) const
                        expr.type());
   }
 
+  // struct type? Need to split.
+  if(ns.follow(expr.type()).id()==ID_struct)
+  {
+    // build struct constructor
+    struct_exprt result(expr.type());
+    
+    const struct_typet &struct_type=to_struct_type(ns.follow(expr.type()));
+    const struct_typet::componentst &components=struct_type.components();
+    
+    result.operands().resize(components.size());
+    
+    for(struct_typet::componentst::const_iterator
+        it=components.begin();
+        it!=components.end();
+        it++)
+    {
+      result.operands()[it-components.begin()]=
+        read_rhs(member_exprt(expr, it->get_name(), it->type()), loc);
+    }
+    
+    return result;
+  }
+
   ssa_objectt object(expr);
 
   // is this an object we track?
