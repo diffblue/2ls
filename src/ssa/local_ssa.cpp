@@ -444,9 +444,13 @@ exprt local_SSAt::read_rhs(const exprt &expr, locationt loc) const
   // is this an object we track?
   if(assignments.objects.find(object)!=
      assignments.objects.end())
+  {
     return read_rhs(object, loc);
+  }
   else if(expr.id()==ID_symbol)
+  {
     return name_input(object);
+  }
   else
   {
     exprt tmp=expr; // copy
