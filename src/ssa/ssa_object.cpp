@@ -111,18 +111,22 @@ irep_idt ssa_objectt::object_id_rec(const exprt &src)
       const dereference_exprt &dereference_expr=
         to_dereference_expr(member_expr.struct_op());
 
-      return id2string(object_id_rec(dereference_expr.pointer()))+"'obj."+
-             id2string(member_expr.get_component_name());
+      return id2string(object_id_rec(dereference_expr.pointer()))+"'obj"+
+             "."+id2string(member_expr.get_component_name());
     }
     else   
-      return id2string(object_id_rec(member_expr.struct_op()))+"."+
-             id2string(member_expr.get_component_name());
+      return id2string(object_id_rec(member_expr.struct_op()))+
+             "."+id2string(member_expr.get_component_name());
   }
   else if(src.id()==ID_index)
   {
+    #if 0
     const index_exprt &index_expr=to_index_expr(src);
     return id2string(object_id_rec(index_expr.array()))+
            "["+"]";
+    #else
+    return irep_idt();
+    #endif
   }
   else if(src.id()==ID_dereference)
   {

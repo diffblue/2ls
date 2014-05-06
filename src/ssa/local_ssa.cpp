@@ -431,6 +431,13 @@ exprt local_SSAt::read_rhs(const exprt &expr, locationt loc) const
       return result;
     }
   }
+  else if(expr.id()==ID_index)
+  {
+    const index_exprt &index_expr=to_index_expr(expr);
+    return index_exprt(read_rhs(index_expr.array(), loc),
+                       read_rhs(index_expr.index(), loc),
+                       expr.type());
+  }
 
   ssa_objectt object(expr);
 
@@ -605,6 +612,14 @@ void local_SSAt::assign_rec(
     }
     
     return; // done
+  }
+  
+  if(lhs.id()==ID_index)
+  {
+    const index_exprt &index_expr=to_index_expr(lhs);
+    exprt new_rhs=with_exprt(index_expr.array(), index_expr.index(), rhs);
+    assign_rec(index_expr.array(), new_rhs, loc);
+    return;
   }
 
   ssa_objectt lhs_object(lhs);

@@ -75,6 +75,11 @@ void assignmentst::assign(
     assign(to_if_expr(lhs).false_case(), loc, ns);
     return;
   }
+  else if(lhs.id()==ID_index)
+  {
+    assign(to_index_expr(lhs).array(), loc, ns);
+    return;
+  }
 
   const typet &lhs_type=ns.follow(lhs.type());
   
@@ -101,7 +106,7 @@ void assignmentst::assign(
   {
     // todo
   }
-  
+
   const ssa_objectt ssa_object(lhs);
   
   if(ssa_object)
