@@ -34,6 +34,9 @@ Function: local_SSAt::build_SSA
 
 void local_SSAt::build_SSA()
 {
+  // entry and exit variables
+  get_entry_exit_vars();
+
   // perform SSA data-flow analysis
   ssa_analysis(goto_function, ns);
 
@@ -48,6 +51,49 @@ void local_SSAt::build_SSA()
   // now build guards
   forall_goto_program_instructions(i_it, goto_function.body)
     build_guard(i_it);
+}
+
+/*******************************************************************\
+
+Function: local_SSAt::get_entry_exit_vars
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void local_SSAt::get_entry_exit_vars()
+{
+  //TODO: functions with side effects
+
+  const code_typet::argumentst &argument_types=goto_function.type.arguments();
+  for(code_typet::argumentst::const_iterator
+      it=argument_types.begin(); it!=argument_types.end(); it++)
+  {
+    const code_typet::argumentt &argument=*it;
+    const irep_idt &identifier=argument.get_identifier();
+    const symbolt &symbol=ns.lookup(identifier);
+    entry_vars.push_back(symbol.symbol_expr());
+  }
+
+  //TODO: renaming of return values
+  forall_goto_program_instructions(it, goto_function.body)
+  {
+    if(it->is_return()) 
+    {
+      const code_returnt &code=to_code_return(it->code);
+      assert(code.operands().size()==1);
+      exprt rhs = code.op0(); 
+      symbol_exprt lhs = return_symbol(rhs.type(),it);
+      //TODO: 
+      //code_assignt assignment(lhs,rhs);
+      exit_vars.push_back(lhs);
+    }
+  }
+
 }
 
 /*******************************************************************\
@@ -279,6 +325,7 @@ ssa_objectt local_SSAt::guard_symbol()
 {
   return ssa_objectt(symbol_exprt("ssa::$guard", bool_typet()));
 }
+
 
 /*******************************************************************\
 
@@ -565,6 +612,24 @@ symbol_exprt local_SSAt::name(
     new_symbol_expr.location()=object.get_expr().location();
   
   return new_symbol_expr;
+}
+
+/*******************************************************************\
+
+Function: local_SSAt::return_symbol
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+symbol_exprt local_SSAt::return_symbol(typet type, locationt loc)
+{
+  unsigned cnt=loc->location_number;
+  return symbol_exprt("ssa::$return#"+i2string(cnt), type);
 }
 
 /*******************************************************************\

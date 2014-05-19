@@ -65,6 +65,10 @@ public:
   // all the SSA nodes  
   typedef std::map<locationt, nodet> nodest;
   nodest nodes;
+  
+  // function entry and exit variables
+  typedef std::vector<symbol_exprt> var_listt;
+  var_listt entry_vars, exit_vars;  
 
   // auxiliary functions
   enum kindt { PHI, OUT, LOOP_BACK, LOOP_SELECT };
@@ -79,6 +83,8 @@ public:
   symbol_exprt guard_symbol(locationt loc) const
   { return name(guard_symbol(), OUT, guard_map[loc].guard_source); }
   void assign_rec(const exprt &lhs, const exprt &rhs, locationt loc);
+  void get_entry_exit_vars();
+  symbol_exprt return_symbol(typet type, locationt loc);
   
   bool has_static_lifetime(const ssa_objectt &) const;
   bool has_static_lifetime(const exprt &) const;

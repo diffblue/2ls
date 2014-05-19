@@ -3,14 +3,15 @@
 
 #include "summary.h"
 #include "../ssa/local_ssa.h"
+//#include "../deltacheck/analyzer.h"
 
 class summary_storet;
 
 class summarizert
 {
  public:
-  summarizert(summary_storet &_summary_store,analyzert &_analyzer) : 
-    summary_store(_summary_store), analyzer(_analyzer)
+ summarizert(summary_storet &_summary_store/*,analyzert &_analyzer*/) : 
+  summary_store(_summary_store)//, analyzer(_analyzer)
   {}
 
   typedef predicatet preconditiont;
@@ -28,7 +29,7 @@ class summarizert
 
  protected:
   summary_storet &summary_store;
-  analyzert &analyzer;
+  //  analyzert &analyzer;
 
   void run();
 
