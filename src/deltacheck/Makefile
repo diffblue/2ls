@@ -30,6 +30,7 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       ../solver/predicate$(OBJEXT) \
       ../solver/solver$(OBJEXT) \
       ../solver/fixed_point$(OBJEXT) \
+      ../ai/ssa_cfg$(OBJEXT) \
       ../functions/summary$(OBJEXT) \
       ../functions/get_function$(OBJEXT) \
       ../functions/path_util$(OBJEXT) \

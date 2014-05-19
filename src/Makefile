@@ -10,7 +10,7 @@ $(SUBDIRS):
 
 # Dependencies
 
-deltacheck: ai ssa solver functions html
+deltacheck: ssa solver ai functions html
 deltagit: html
 
 clean: $(patsubst %, %_clean, $(SUBDIRS))

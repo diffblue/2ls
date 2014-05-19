@@ -24,7 +24,7 @@ class cfgt
   typedef std::set<Node> nodest;
   typedef std::vector<Edge> edgest;
 
-  virtual nodest get_nodes() = 0;
+  virtual nodest &get_nodes() = 0;
   virtual edgest &get_succ_edges(Node n) = 0;
   virtual Node get_pred_node(Edge &e) = 0;
   virtual Node get_succ_node(Edge &e) = 0;

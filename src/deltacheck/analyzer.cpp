@@ -25,6 +25,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <solvers/sat/satcheck.h>
 #include <solvers/flattening/bv_pointers.h>
 
+#include "../ai/ssa_cfg.h"
+
+
 #include "../html/html_escape.h"
 #include "../functions/index.h"
 #include "../functions/get_function.h"
@@ -137,15 +140,23 @@ void deltacheck_analyzert::check_function(
   local_SSAt SSA(f, ns);
   statistics.stop("SSA");
   
-  // now do fixed-point
+  
+  // build CFG for AI
+  status() << "Building SSA" << eom;
+  statistics.start("AI-CFG");
+  ssa_cfgt CFG(SSA);  
+  statistics.stop("AI-CFG");
+  
+  // now do fixed-point  
   status() << "Data-flow fixed-point" << eom;
   statistics.start("Fixed-point");
-  ssa_fixed_pointt ssa_fixed_point(SSA, ns);
+  //ssa_fixed_pointt ssa_fixed_point(SSA, ns);
   statistics.stop("Fixed-point");
   
   // now report on assertions
   status() << "Reporting" << eom;
   statistics.start("Reporting");
+  /*
   report_properties(ssa_fixed_point.properties, file_report);  
   report_properties(ssa_fixed_point.properties, *this);  
   report_countermodels(SSA, ssa_fixed_point.properties, file_report);  
@@ -154,13 +165,14 @@ void deltacheck_analyzert::check_function(
     ssa_fixed_point.properties, file_report,
     get_message_handler());
   file_report << "\n";
+  */
   statistics.stop("Reporting");
   
   // dump statistics
   statistics.html_report_last(file_report);
   
   // collect some more data
-  collect_statistics(ssa_fixed_point.properties); 
+  //collect_statistics(ssa_fixed_point.properties); 
 }
 
 /*******************************************************************\
