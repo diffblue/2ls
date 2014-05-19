@@ -1,6 +1,7 @@
 SUBDIRS = deltacheck deltagit ssa solver ai functions html
 
-all: deltacheck deltagit
+all: deltacheck 
+#deltagit
 
 .PHONY: $(SUBDIRS)
 .PHONY: clean
@@ -12,6 +13,7 @@ $(SUBDIRS):
 
 deltacheck: ssa solver ai functions html
 deltagit: html
+
 
 clean: $(patsubst %, %_clean, $(SUBDIRS))
 

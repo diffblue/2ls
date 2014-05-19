@@ -156,8 +156,22 @@ void local_SSAt::build_transfer(locationt loc)
     const code_function_callt &code_function_call=
       to_code_function_call(loc->code);
 
+    //TODO: functions with side effects
     if(code_function_call.lhs().is_not_nil())
     {
+      function_application_exprt ssa_rhs;
+      ssa_rhs.function() = code_function_call.function();
+      ssa_rhs.type() = code_function_call.lhs().type();
+      ssa_rhs.arguments() = code_function_call.arguments(); 
+      for(function_application_exprt::argumentst::iterator it = 
+           ssa_rhs.arguments().begin();it!=ssa_rhs.arguments().end(); it++) 
+      {
+        *it = read_rhs(*it,loc);
+      }
+
+      exprt ssa_lhs = read_rhs(code_function_call.lhs(), loc);          
+      equal_exprt equality(ssa_lhs, ssa_rhs);
+      nodes[loc].equalities.push_back(equality);
     }
   }
 }
@@ -205,7 +219,7 @@ void local_SSAt::build_guard(locationt loc)
         name(guard_symbol(), LOOP_SELECT, edge.guard_source);
 
       source=loop_select;
-      // need constraing for edge.cond
+      // need constraining for edge.cond
     }
     else
     {

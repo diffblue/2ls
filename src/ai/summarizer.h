@@ -1,16 +1,19 @@
-#ifndef CPROVER_SUMMARIZER_H
-#define CPROVER_SUMMARIZER_H
+#ifndef CPROVER_DELTACHECK_SUMMARIZER_H
+#define CPROVER_DELTACHECK_SUMMARIZER_H
 
-#include <util/std_expr.h>
+#include "summary.h"
+#include "../ssa/local_ssa.h"
+
+class summary_storet;
 
 class summarizert
 {
  public:
-  summarizert(summary_storet &_summary_store) : summary_store(_summary_store) {}
+  summarizert(summary_storet &_summary_store,analyzert &_analyzer) : 
+    summary_store(_summary_store), analyzer(_analyzer)
+  {}
 
   typedef predicatet preconditiont;
-  typedef predicatet iorelationt;
-  typedef std::pair<preconditiont, iorelationt> summaryt;
   typedef irep_idt function_namet;
   typedef local_SSAt function_bodyt;
   typedef std::map<function_namet, preconditiont> preconditionst;
@@ -25,6 +28,7 @@ class summarizert
 
  protected:
   summary_storet &summary_store;
+  analyzert &analyzer;
 
   void run();
 

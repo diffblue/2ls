@@ -1,6 +1,6 @@
 #include "summarizer.h"
 
-summarizert::summaryt summarizert::summarize(functiont function, preconditiont precondition)
+summaryt summarizert::summarize(functiont function, preconditiont precondition)
 {
   functions.clear();
   preconditions.clear();
@@ -10,7 +10,7 @@ summarizert::summaryt summarizert::summarize(functiont function, preconditiont p
   return summary_store.get(function.first);
 }
 
-summarizert::summaryt summarizert::summarize(functiont function)
+summaryt summarizert::summarize(functiont function)
 { 
   return summarize(function,true_exprt()); 
 } 
@@ -73,7 +73,13 @@ void summarizer::compute_summary_rec(function_namet function_name)
   }
 
   //analyze
-  io_relationt io_relation = ai.analyze(); //TODO
-  summary_store.put(function_name,summaryt(preconditions[function_name],io_relation));
+  //TODO
+  analyzer.analyze();
+  summaryt summary;
+  //summary.entry_vars = ; //TODO
+  //summary.exit_vars = ; //TODO
+  summary.precondition = preconditions[function_name];
+  summary.transformer = analyzer.get_result(); //TODO
+  summary_store.put(function_name,summary);
 }
 

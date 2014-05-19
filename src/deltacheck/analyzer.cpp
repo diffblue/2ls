@@ -25,7 +25,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <solvers/sat/satcheck.h>
 #include <solvers/flattening/bv_pointers.h>
 
-#include "../ai/ssa_cfg.h"
+//#include "../ai/ssa_cfg.h"
 
 
 #include "../html/html_escape.h"
@@ -142,10 +142,10 @@ void deltacheck_analyzert::check_function(
   
   
   // build CFG for AI
-  status() << "Building SSA" << eom;
-  statistics.start("AI-CFG");
-  ssa_cfgt CFG(SSA);  
-  statistics.stop("AI-CFG");
+  //  status() << "Building SSA" << eom;
+  //statistics.start("AI-CFG");
+  //ssa_cfgt CFG(SSA);  
+  //statistics.stop("AI-CFG");
   
   // now do fixed-point  
   status() << "Data-flow fixed-point" << eom;
