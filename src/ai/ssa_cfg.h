@@ -1,6 +1,8 @@
 #ifndef CPROVER_SSA_CFG_H
 #define CPROVER_SSA_CFG_H
 
+#include <goto-programs/goto_functions.h>
+
 #include "fixpoint.h"
 #include "../ssa/local_ssa.h"
 
@@ -24,6 +26,8 @@ class ssa_cfgt :
               ssa_cfg_concrete_transformert>
 {
 public:
+  typedef goto_functionst::goto_functiont goto_functiont;
+
   ssa_cfgt(const local_SSAt &local_ssa);
   
   virtual edgest &get_succ_edges(unsigned n) {
@@ -51,6 +55,9 @@ public:
   void dot_output(std::ostream &out);
   
 protected:
+  
+  const goto_functiont &goto_function;
+  
   nodest nodes;
   
   typedef hash_map_cont<unsigned, edgest> adjacencyt;
