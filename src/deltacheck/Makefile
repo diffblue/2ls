@@ -34,7 +34,8 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       ../functions/get_function$(OBJEXT) \
       ../functions/path_util$(OBJEXT) \
       ../functions/index$(OBJEXT) \
-      ../ai/ssa_cfg$(OBJEXT) 
+      ../ai/ssa_cfg$(OBJEXT) \
+     ../ai/summarizer$(OBJEXT)
 
 include $(CBMC)/src/config.inc
 include $(CBMC)/src/common

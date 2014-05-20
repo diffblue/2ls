@@ -21,6 +21,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "../functions/index.h"
 #include "ssa_fixed_point.h"
 
+#include "../ai/summarizer.h"
+#include "../ai/summary_store.h"
+
 /*******************************************************************\
 
 Function: show_defs
@@ -211,6 +214,22 @@ void show_ssa(
   local_SSA.output(out);
 }
 
+void test_summarizer(
+  const irep_idt &id,
+  const goto_functionst::goto_functiont &goto_function,
+  const namespacet &ns,
+  std::ostream &out)
+{
+  local_SSAt local_SSA(goto_function, ns);
+  local_SSA.assertions_to_constraints();
+  //  local_SSA.output(out);
+
+  summary_storet summary_store;
+  summarizert summarizer(summary_store);
+  summaryt summary = summarizer.summarize(
+    summarizert::functiont(id,local_SSA));
+}
+
 /*******************************************************************\
 
 Function: show_ssa
@@ -266,6 +285,10 @@ void show_ssa(
           << std::endl;
           
       show_ssa(*index_fkt, ns, out);
+
+#if 0
+      test_summarizer(id,*index_fkt, ns, out);
+#endif
       
       out << std::endl;
     }

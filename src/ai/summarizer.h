@@ -11,7 +11,7 @@ class summarizert
 {
  public:
  summarizert(summary_storet &_summary_store/*,analyzert &_analyzer*/) : 
-  summary_store(_summary_store)//, analyzer(_analyzer)
+  summary_store(_summary_store) //, analyzer(_analyzer)
   {}
 
   typedef predicatet preconditiont;
@@ -21,20 +21,19 @@ class summarizert
   typedef std::map<function_namet, function_bodyt> functionst;
   typedef functionst::value_type functiont;
 
-  summaryt summarize(functiont function, preconditiont precondition); 
-  summaryt summarize(functiont function);
+  summaryt summarize(const functiont &function, const preconditiont &precondition); 
+  summaryt summarize(const functiont &function);
 
-  void summarize(functionst functions, preconditionst preconditions); 
-  void summarize(functionst functions); 
+  void summarize(const functionst &functions, const preconditionst &preconditions); 
+  void summarize(const functionst &functions); 
 
  protected:
   summary_storet &summary_store;
   //  analyzert &analyzer;
-
-  void run();
-
   functionst functions;
   preconditionst preconditions;
+
+  void run();
 
  private:
   typedef std::map<function_namet, bool> flag_mapt;

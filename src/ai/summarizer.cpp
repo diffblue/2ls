@@ -1,22 +1,25 @@
+#include <iostream>
+
+
 #include "summarizer.h"
 #include "summary_store.h"
 
-summaryt summarizert::summarize(functiont function, preconditiont precondition)
+summaryt summarizert::summarize(const functiont &function, const preconditiont &precondition)
 {
   functions.clear();
   preconditions.clear();
-  //  functions[function.first] = function.second; //TODO
-  preconditions[function.first] = precondition;
+  //functions[function.first] = function.second; //TODO: copy
+  preconditions[function.first] = precondition; //TODO: seg fault?!
   run();
   return summary_store.get(function.first);
 }
 
-summaryt summarizert::summarize(functiont function)
+summaryt summarizert::summarize(const functiont &function)
 { 
   return summarize(function,predicatet(true_exprt())); 
 } 
 
-void summarizert::summarize(functionst _functions)
+void summarizert::summarize(const functionst &_functions)
 {
   preconditionst _preconditions;
   for(functionst::const_iterator it = _functions.begin(); it!=_functions.end(); it++)
@@ -26,7 +29,7 @@ void summarizert::summarize(functionst _functions)
   summarize(_functions,_preconditions);
 }
 
-void summarizert::summarize(functionst _functions, preconditionst _preconditions)
+void summarizert::summarize(const functionst &_functions,const preconditionst &_preconditions)
 {
   functions = _functions;
   preconditions = _preconditions;
@@ -35,18 +38,20 @@ void summarizert::summarize(functionst _functions, preconditionst _preconditions
 
 void summarizert::run()
 {
+  std::cout << "Summarizer runs..." << std::endl;
   //TODO: compute fixed point (if any descendents in the call graph are updated)
   //TODO: make context sensitive (currently, only globally given preconditions are used)
   //TODO: replace simple iterator by something following the call graph
   for(functionst::const_iterator it = functions.begin(); it!=functions.end(); it++)
   {
-     if(!summary_store.exists(it->first)) compute_summary_rec(it->first);
+    std::cout << "Summarizing function " << it->first << std::endl;
+    if(!summary_store.exists(it->first)) compute_summary_rec(it->first);
   }
 }
 
 void summarizert::compute_summary_rec(function_namet function_name)
 {
-  function_bodyt &body = functions.at(function_name); //TODO: must copy here
+  function_bodyt body = functions.at(function_name); //copy
 
   // replace calls with summaries
   for(local_SSAt::nodest::iterator n = body.nodes.begin(); n!=body.nodes.end(); n++)
