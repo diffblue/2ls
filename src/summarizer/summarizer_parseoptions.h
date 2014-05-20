@@ -32,6 +32,7 @@ class optionst;
   "(ppc-macos)(unsigned-char)" \
   "(string-abstraction)(no-arch)(arch):(floatbv)(fixedbv)" \
   "(round-to-nearest)(round-to-plus-inf)(round-to-minus-inf)(round-to-zero)" \
+  "(inline)" \
   "(show-locs)(show-vcc)(show-properties)(show-trace)" \
   "(property):" \
   "(no-simplify)(no-unwinding-assertions)(no-propagation)"

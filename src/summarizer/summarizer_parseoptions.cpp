@@ -21,6 +21,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/goto_convert_functions.h>
 #include <goto-programs/show_properties.h>
 #include <goto-programs/set_properties.h>
+#include <goto-programs/remove_function_pointers.h>
 #include <goto-programs/read_goto_binary.h>
 #include <goto-programs/loop_ids.h>
 #include <goto-programs/link_to_library.h>
@@ -34,6 +35,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <cbmc/version.h>
 
 #include "summarizer_parseoptions.h"
+#include "summarizer.h"
 
 /*******************************************************************\
 
@@ -204,6 +206,19 @@ int summarizer_parseoptionst::doit()
   if(get_goto_program(options, goto_functions))
     return 6;
     
+  // now do full inlining, if requested
+
+  if(cmdline.isset("inline"))
+  {
+    status() << "Function Pointer Removal" << eom;
+    remove_function_pointers(
+      symbol_table, goto_functions, cmdline.isset("pointer-check"));
+
+    status() << "Performing full inlining" << eom;
+    const namespacet ns(symbol_table);
+    goto_inline(goto_functions, ns, ui_message_handler);
+  }
+    
   label_properties(goto_functions);
 
   if(cmdline.isset("show-properties"))
@@ -216,43 +231,24 @@ int summarizer_parseoptionst::doit()
   if(set_properties(goto_functions))
     return 7;
     
-  // do actual Symex
-
-  #if 0
   try
   {
     const namespacet ns(symbol_table);
-    path_searcht path_search(ns);
+    summarizert summarizer(ns);
     
-    path_search.set_message_handler(get_message_handler());
-    path_search.set_verbosity(get_verbosity());
+    summarizer.set_message_handler(get_message_handler());
+    summarizer.set_verbosity(get_verbosity());
 
-    if(cmdline.isset("depth"))
-      path_search.depth_limit=unsafe_string2unsigned(cmdline.getval("depth"));
-
-    if(cmdline.isset("context-bound"))
-      path_search.context_bound=unsafe_string2unsigned(cmdline.getval("context-bound"));
-
-    if(cmdline.isset("unwind"))
-      path_search.unwind_limit=unsafe_string2unsigned(cmdline.getval("unwind"));
-
-    if(cmdline.isset("show-vcc"))
-    {
-      path_search.show_vcc=true;
-      path_search(goto_functions);
-      return 0;
-    }
-
-    // do actual summarizer
-    switch(path_search(goto_functions))
+    // do actual analysis
+    switch(summarizer(goto_functions))
     {
     case safety_checkert::SAFE:
-      report_properties(path_search.property_map);
+      //report_properties(path_search.property_map);
       report_success();
       return 0;
     
     case safety_checkert::UNSAFE:
-      report_properties(path_search.property_map);
+      //report_properties(path_search.property_map);
       report_failure();
       return 10;
     
@@ -272,7 +268,6 @@ int summarizer_parseoptionst::doit()
     error() << error_msg << messaget::eom;
     return 8;
   }
-  #endif
 
   #if 0                                         
   // let's log some more statistics
@@ -679,11 +674,11 @@ void summarizer_parseoptionst::help()
 {
   std::cout <<
     "\n"
-    "* *     Symex " CBMC_VERSION " - Copyright (C) 2013 ";
+    "* *  Summarizer " CBMC_VERSION " - Copyright (C) 2014 ";
     
   std::cout << "(" << (sizeof(void *)*8) << "-bit version)";
     
-  std::cout << "     * *\n";
+  std::cout << "   * *\n";
     
   std::cout <<
     "* *                    Daniel Kroening                      * *\n"
