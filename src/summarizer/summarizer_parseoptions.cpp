@@ -230,7 +230,7 @@ int summarizer_parseoptionst::doit()
 
   if(set_properties(goto_functions))
     return 7;
-    
+
   try
   {
     const namespacet ns(symbol_table);
@@ -239,6 +239,14 @@ int summarizer_parseoptionst::doit()
     summarizer.set_message_handler(get_message_handler());
     summarizer.set_verbosity(get_verbosity());
 
+    if(cmdline.isset("show-vcc"))
+    {
+      std::cout << "VERIFICATION CONDITIONS:\n\n";
+      summarizer.show_vcc=true;
+      summarizer(goto_functions);
+      return 0;
+    }
+    
     // do actual analysis
     switch(summarizer(goto_functions))
     {
@@ -778,8 +786,6 @@ void summarizer_parseoptionst::help()
     " --show-parse-tree            show parse tree\n"
     " --show-symbol-table          show symbol table\n"
     " --show-goto-functions        show goto program\n"
-    " --ppc-macos                  set MACOS/PPC architecture\n"
-    " --mm model                   set memory model (default: sc)\n"
     " --arch                       set architecture (default: "
                                    << configt::this_architecture() << ")\n"
     " --os                         set operating system (default: "
@@ -802,10 +808,10 @@ void summarizer_parseoptionst::help()
     " --signed-overflow-check      enable arithmetic over- and underflow checks\n"
     " --unsigned-overflow-check    enable arithmetic over- and underflow checks\n"
     " --nan-check                  check floating-point for NaN\n"
+    " --error-label label          check that label is unreachable\n"
     " --show-properties            show the properties\n"
     " --no-assertions              ignore user assertions\n"
     " --no-assumptions             ignore user assumptions\n"
-    " --error-label label          check that label is unreachable\n"
     "\n"
     "Other options:\n"
     " --version                    show version and exit\n"

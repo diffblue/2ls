@@ -13,13 +13,18 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <goto-programs/safety_checker.h>
 
+#include "../ssa/local_ssa.h"
+
 class summarizert:public safety_checkert
 {
 public:
   explicit inline summarizert(const namespacet &_ns):
-    safety_checkert(_ns)
+    safety_checkert(_ns),
+    show_vcc(false)
   {
   }
+  
+  bool show_vcc;
 
   virtual resultt operator()(
     const goto_functionst &goto_functions);
@@ -47,6 +52,8 @@ protected:
   
   void initialize_property_map(
     const goto_functionst &goto_functions);
+
+  void do_show_vcc(const local_SSAt &, const goto_programt::const_targett);
 };
 
 #endif

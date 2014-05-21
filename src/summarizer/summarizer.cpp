@@ -6,6 +6,10 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <iostream>
+
+#include <langapi/language_util.h>
+
 #include <solvers/sat/satcheck.h>
 #include <solvers/flattening/bv_pointers.h>
 
@@ -63,9 +67,21 @@ Function: summarizert::analyze
 
 \*******************************************************************/
 
+#include "../ssa/ssa_domain.h"
+
 void summarizert::analyze(
   const goto_functionst::function_mapt::const_iterator f_it)
 {
+  #if 0
+  assignmentst assignments(f_it->second.body, ns);
+  //assignments.output(ns, f_it->second.body, std::cout);
+  
+  ssa_ait ssa_ai(assignments);
+  ssa_ai(f_it->second.body, ns);
+  ssa_ai.output(ns, f_it->second.body, std::cout);
+  return;
+  #endif
+  
   // build SSA
   local_SSAt SSA(f_it->second, ns);
 
@@ -84,19 +100,25 @@ void summarizert::analyze(
     const locationt &location=i_it->location;  
     irep_idt property_name=location.get_property_id();
 
+    if(show_vcc)
+    {
+      do_show_vcc(SSA, i_it);
+      continue;
+    }
+  
     // solver
     satcheckt satcheck;
     bv_pointerst solver(ns, satcheck);
   
     satcheck.set_message_handler(get_message_handler());
     solver.set_message_handler(get_message_handler());
-  
+    
     // give SSA to solver
     solver << SSA;
 
-    // give property to solver
+    // give negation of property to solver
     solver << SSA.guard_symbol(i_it);          
-    solver << SSA.read_rhs(i_it->guard, i_it);
+    solver << SSA.read_rhs(not_exprt(i_it->guard), i_it);
     
     // solve
     switch(solver())
@@ -132,6 +154,44 @@ void summarizert::report_statistics()
 {
 }
   
+/*******************************************************************\
+
+Function: summarizert::do_show_vcc
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void summarizert::do_show_vcc(
+  const local_SSAt &SSA,
+  const goto_programt::const_targett i_it)
+{
+  std::cout << i_it->location << "\n";
+  std::cout << i_it->location.get_comment() << "\n";
+  
+  std::list<exprt> ssa_constraints;
+  ssa_constraints << SSA;
+
+  unsigned i=1;
+  for(std::list<exprt>::const_iterator c_it=ssa_constraints.begin();
+      c_it!=ssa_constraints.end();
+      c_it++, i++)
+    std::cout << "{-" << i << "} " << from_expr(ns, "", *c_it) << "\n";
+
+  std::cout << "|--------------------------\n";
+  
+  implies_exprt property(
+    SSA.guard_symbol(i_it), SSA.read_rhs(i_it->guard, i_it));
+
+  std::cout << "{1} " << from_expr(ns, "", property) << "\n";
+  
+  std::cout << "\n";
+}
+
 /*******************************************************************\
 
 Function: summarizert::initialize_property_map
