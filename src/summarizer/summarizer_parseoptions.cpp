@@ -243,12 +243,12 @@ int summarizer_parseoptionst::doit()
     switch(summarizer(goto_functions))
     {
     case safety_checkert::SAFE:
-      //report_properties(path_search.property_map);
+      report_properties(summarizer.property_map);
       report_success();
       return 0;
     
     case safety_checkert::UNSAFE:
-      //report_properties(path_search.property_map);
+      report_properties(summarizer.property_map);
       report_failure();
       return 10;
     
@@ -553,6 +553,81 @@ bool summarizer_parseoptionst::process_goto_program(
 
 /*******************************************************************\
 
+Function: summarizer_parseoptionst::report_properties
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void summarizer_parseoptionst::report_properties(
+  const summarizert::property_mapt &property_map)
+{
+  for(summarizert::property_mapt::const_iterator
+      it=property_map.begin();
+      it!=property_map.end();
+      it++)
+  {
+    if(get_ui()==ui_message_handlert::XML_UI)
+    {
+      xmlt xml_result("result");
+      xml_result.set_attribute("claim", id2string(it->first));
+
+      std::string status_string;
+
+      switch(it->second.status)
+      {
+      case summarizert::PASS: status_string="OK"; break;
+      case summarizert::FAIL: status_string="FAILURE"; break;
+      case summarizert::UNKNOWN: status_string="OK"; break;
+      }
+
+      xml_result.set_attribute("status", status_string);
+
+      std::cout << xml_result << "\n";
+    }
+    else
+    {
+      status() << "[" << it->first << "] "
+               << it->second.description << ": ";
+      switch(it->second.status)
+      {
+      case summarizert::PASS: status() << "OK"; break;
+      case summarizert::FAIL: status() << "FAILED"; break;
+      case summarizert::UNKNOWN: status() << "OK"; break;
+      }
+      status() << eom;
+    }
+
+    if(cmdline.isset("show-trace") &&
+       it->second.status==summarizert::FAIL)
+      show_counterexample(it->second.error_trace);
+  }
+
+  if(!cmdline.isset("property"))
+  {
+    status() << eom;
+
+    unsigned failed=0;
+
+    for(summarizert::property_mapt::const_iterator
+        it=property_map.begin();
+        it!=property_map.end();
+        it++)
+      if(it->second.status==summarizert::FAIL)
+        failed++;
+    
+    status() << "** " << failed
+             << " of " << property_map.size() << " failed"
+             << eom;  
+  }
+}
+
+/*******************************************************************\
+
 Function: summarizer_parseoptionst::report_success
 
   Inputs:
@@ -731,13 +806,6 @@ void summarizer_parseoptionst::help()
     " --no-assertions              ignore user assertions\n"
     " --no-assumptions             ignore user assumptions\n"
     " --error-label label          check that label is unreachable\n"
-    "\n"
-    "Symex options:\n"
-    " --function name              set main function name\n"
-    " --property nr                only check one specific property\n"
-    " --depth nr                   limit search depth\n"
-    " --context-bound nr           limit number of context switches\n"
-    " --unwind nr                  unwind nr times\n"
     "\n"
     "Other options:\n"
     " --version                    show version and exit\n"

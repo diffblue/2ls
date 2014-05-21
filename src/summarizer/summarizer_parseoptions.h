@@ -17,6 +17,8 @@ Author: Daniel Kroening, kroening@kroening.com
 class goto_functionst;
 class optionst;
 
+#include "summarizer.h"
+
 #define SUMMARIZER_OPTIONS \
   "(function):" \
   "D:I:" \
@@ -67,6 +69,7 @@ protected:
 
   void report_success();
   void report_failure();
+  void report_properties(const summarizert::property_mapt &);  
   void show_counterexample(const class goto_tracet &);
             
   void eval_verbosity();

@@ -28,7 +28,7 @@ public:
   absolute_timet start_time;
   time_periodt sat_time;
 
-  enum statust { NOT_REACHED, PASS, FAIL };
+  enum statust { UNKNOWN, PASS, FAIL };
 
   struct property_entryt
   {
@@ -42,6 +42,8 @@ public:
 
 protected:
   void report_statistics();
+
+  void analyze(const goto_functionst::function_mapt::const_iterator f_it);
   
   void initialize_property_map(
     const goto_functionst &goto_functions);
