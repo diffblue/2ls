@@ -184,3 +184,42 @@ void assignmentst::assign(
 {
   assignment_map[loc].insert(lhs);
 }
+
+/*******************************************************************\
+
+Function: assignmentst::output
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void assignmentst::output(
+  const namespacet &ns,
+  const goto_programt &goto_program,
+  std::ostream &out)
+{
+  forall_goto_program_instructions(i_it, goto_program)
+  {
+    out << "**** " << i_it->location_number << " "
+        << i_it->location << "\n";
+    
+    assignment_mapt::const_iterator m_it=assignment_map.find(i_it);
+    if(m_it==assignment_map.end()) throw "location not found";
+    
+    const objectst &objects=m_it->second;
+    
+    for(objectst::const_iterator
+        o_it=objects.begin();
+        o_it!=objects.end();
+        o_it++)
+    {
+      out << o_it->get_identifier() << "\n";
+    }
+        
+    out << "\n";
+  }
+}

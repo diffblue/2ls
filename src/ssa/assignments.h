@@ -44,7 +44,12 @@ public:
   }
   
   static bool may_alias(const ssa_objectt &, const ssa_objectt &);
-
+  
+  void output(
+    const namespacet &ns,
+    const goto_programt &_goto_program,
+    std::ostream &);
+  
 protected:
   void build(const goto_programt &, const namespacet &);
 
