@@ -850,3 +850,45 @@ std::list<exprt> & operator << (
   
   return dest;
 }
+
+/*******************************************************************\
+
+Function: local_SSAt::operator <<
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+decision_proceduret & operator << (
+  decision_proceduret &dest,
+  const local_SSAt &src)
+{
+  forall_goto_program_instructions(i_it, src.goto_function.body)
+  {
+    const local_SSAt::nodest::const_iterator n_it=
+      src.nodes.find(i_it);
+    if(n_it==src.nodes.end()) continue;
+
+    for(local_SSAt::nodet::equalitiest::const_iterator
+        e_it=n_it->second.equalities.begin();
+        e_it!=n_it->second.equalities.end();
+        e_it++)
+    {
+      dest << *e_it;
+    }
+
+    for(local_SSAt::nodet::constraintst::const_iterator
+        c_it=n_it->second.constraints.begin();
+        c_it!=n_it->second.constraints.end();
+        c_it++)
+    {
+      dest << *c_it;
+    }
+  }
+  
+  return dest;
+}

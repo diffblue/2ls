@@ -108,4 +108,7 @@ protected:
 std::list<exprt> & operator <<
   (std::list<exprt> &dest, const local_SSAt &src);
 
+class decision_proceduret & operator <<
+  (class decision_proceduret &dest, const local_SSAt &src);
+
 #endif
