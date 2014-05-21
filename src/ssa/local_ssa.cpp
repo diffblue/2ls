@@ -438,18 +438,33 @@ exprt local_SSAt::read_rhs(const exprt &expr, locationt loc) const
                        read_rhs(index_expr.index(), loc),
                        expr.type());
   }
+  
+  ssa_objectt object(expr);
+  
+  // is it an object identifier?
+  
+  if(!object)
+  {
+    exprt tmp=expr; // copy
+    Forall_operands(it, tmp)
+      *it=read_rhs(*it, loc);
+    return tmp;
+  }
+  
+  // Argument is a struct-typed ssa object?
+  // May need to split up into members.
+  const typet &type=ns.follow(expr.type());
 
-  // struct type? Need to split.
-  if(ns.follow(expr.type()).id()==ID_struct)
+  if(type.id()==ID_struct)
   {
     // build struct constructor
     struct_exprt result(expr.type());
-    
-    const struct_typet &struct_type=to_struct_type(ns.follow(expr.type()));
+  
+    const struct_typet &struct_type=to_struct_type(type);
     const struct_typet::componentst &components=struct_type.components();
-    
+  
     result.operands().resize(components.size());
-    
+  
     for(struct_typet::componentst::const_iterator
         it=components.begin();
         it!=components.end();
@@ -458,11 +473,9 @@ exprt local_SSAt::read_rhs(const exprt &expr, locationt loc) const
       result.operands()[it-components.begin()]=
         read_rhs(member_exprt(expr, it->get_name(), it->type()), loc);
     }
-    
+  
     return result;
   }
-
-  ssa_objectt object(expr);
 
   // is this an object we track?
   if(assignments.objects.find(object)!=
@@ -470,16 +483,9 @@ exprt local_SSAt::read_rhs(const exprt &expr, locationt loc) const
   {
     return read_rhs(object, loc);
   }
-  else if(expr.id()==ID_symbol)
-  {
-    return name_input(object);
-  }
   else
   {
-    exprt tmp=expr; // copy
-    Forall_operands(it, tmp)
-      *it=read_rhs(*it, loc);
-    return tmp;
+    return name_input(object);
   }
 }
 
