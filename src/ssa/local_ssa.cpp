@@ -21,6 +21,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <langapi/language_util.h>
 
 #include "local_ssa.h"
+#include "malloc_ssa.h"
 
 /*******************************************************************\
 
@@ -565,19 +566,11 @@ void local_SSAt::replace_side_effects_rec(
     }
     else if(statement==ID_malloc)
     {
-      // turn into symbol
-      #if 0
       counter++;
-      const irep_idt identifier=
-        "ssa::malloc"+
+      std::string tmp_suffix=
         i2string(loc->location_number)+
         "."+i2string(counter)+suffix;
-      typet type;
-      symbol_exprt symbol_expr(identifier, type);
-      address_of_exprt address_of_expr(symbol_expr);
-      typecast_exprt typecast_expr(address_of_expr, expr.type());
-      expr=typecast_exprt();
-      #endif
+      expr=malloc_ssa(side_effect_expr, tmp_suffix, ns);
     }
     else
       throw "unexpected side effect: "+id2string(statement);

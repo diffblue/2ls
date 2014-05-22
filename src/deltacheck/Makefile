@@ -23,6 +23,7 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       ../html/logo$(OBJEXT) \
       ../html/html_escape$(OBJEXT) \
       ../ssa/local_ssa$(OBJEXT) \
+      ../ssa/malloc_ssa$(OBJEXT) \
       ../ssa/ssa_domain$(OBJEXT) \
       ../ssa/assignments$(OBJEXT) \
       ../ssa/guard_map$(OBJEXT) \

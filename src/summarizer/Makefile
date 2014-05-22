@@ -16,6 +16,7 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       $(CBMC)/src/solvers/solvers$(LIBEXT) \
       $(CBMC)/src/util/util$(LIBEXT) \
       ../ssa/local_ssa$(OBJEXT) \
+      ../ssa/malloc_ssa$(OBJEXT) \
       ../ssa/ssa_domain$(OBJEXT) \
       ../ssa/assignments$(OBJEXT) \
       ../ssa/guard_map$(OBJEXT) \
