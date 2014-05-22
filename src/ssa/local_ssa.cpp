@@ -742,6 +742,18 @@ void local_SSAt::assign_rec(
     assign_rec(index_expr.array(), new_rhs, loc);
     return;
   }
+  else if(lhs.id()==ID_member)
+  {
+    // need to distinguish struct and union members
+    const member_exprt &member_expr=to_member_expr(lhs);
+    const exprt &compound=member_expr.struct_op();
+    const typet &compound_type=ns.follow(compound.type());
+    if(compound_type.id()==ID_union)
+    {
+      union_exprt new_rhs(member_expr.get_component_name(), rhs, compound.type());
+      assign_rec(member_expr.struct_op(), new_rhs, loc);
+    }
+  }
 
   ssa_objectt lhs_object(lhs, ns);
 

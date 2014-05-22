@@ -80,6 +80,14 @@ void assignmentst::assign(
     assign(to_index_expr(lhs).array(), loc, ns);
     return;
   }
+  else if(lhs.id()==ID_member)
+  {
+    // need to distinguish struct and union members
+    const member_exprt &member_expr=to_member_expr(lhs);
+    const typet &compound_type=ns.follow(member_expr.struct_op().type());
+    if(compound_type.id()==ID_union)
+      assign(member_expr.struct_op(), loc, ns);
+  }
 
   const typet &lhs_type=ns.follow(lhs.type());
   
@@ -101,10 +109,6 @@ void assignmentst::assign(
     }
     
     return; // done
-  }
-  else if(lhs_type.id()==ID_union)
-  {
-    // todo
   }
 
   const ssa_objectt ssa_object(lhs, ns);
