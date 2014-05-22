@@ -381,7 +381,7 @@ bool summarizer_parseoptionst::get_goto_program(
            goto_model, get_message_handler()))
         return true;
         
-      config.ansi_c.set_from_symbol_table(symbol_table);
+      config.ansi_c.set_from_symbol_table(goto_model.symbol_table);
 
       if(cmdline.isset("show-symbol-table"))
       {
@@ -391,7 +391,7 @@ bool summarizer_parseoptionst::get_goto_program(
       
       irep_idt entry_point=goto_model.goto_functions.entry_point();
       
-      if(symbol_table.symbols.find(entry_point)==symbol_table.symbols.end())
+      if(goto_model.symbol_table.symbols.find(entry_point)==symbol_table.symbols.end())
       {
         error() << "The goto binary has no entry point; please complete linking" << eom;
         return true;
