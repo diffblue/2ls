@@ -202,6 +202,17 @@ void assignmentst::output(
   const goto_programt &goto_program,
   std::ostream &out)
 {
+  #if 1
+  for(objectst::const_iterator
+      o_it=objects.begin();
+      o_it!=objects.end();
+      o_it++)
+  {
+    out << o_it->get_identifier() << "\n";
+  }
+        
+  #else
+
   forall_goto_program_instructions(i_it, goto_program)
   {
     out << "**** " << i_it->location_number << " "
@@ -222,4 +233,6 @@ void assignmentst::output(
         
     out << "\n";
   }
+  
+  #endif
 }
