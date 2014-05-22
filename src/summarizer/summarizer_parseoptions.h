@@ -14,7 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <langapi/language_ui.h>
 
-class goto_functionst;
+class goto_modelt;
 class optionst;
 
 #include "summarizer.h"
@@ -36,7 +36,7 @@ class optionst;
   "(round-to-nearest)(round-to-plus-inf)(round-to-minus-inf)(round-to-zero)" \
   "(inline)" \
   "(show-locs)(show-vcc)(show-properties)(show-trace)" \
-  "(show-goto-functions)" \
+  "(show-goto-functions)(show-guards)(show-defs)(show-ssa)" \
   "(property):" \
   "(no-simplify)(no-unwinding-assertions)(no-propagation)"
   // the last line is for CBMC-regression testing only
@@ -60,18 +60,24 @@ protected:
 
   bool get_goto_program(
     const optionst &options,
-    goto_functionst &goto_functions);
+    goto_modelt &goto_model);
 
   bool process_goto_program(
     const optionst &options,
-    goto_functionst &goto_functions);
+    goto_modelt &goto_model);
     
-  bool set_properties(goto_functionst &goto_functions);
+  bool set_properties(goto_modelt &);
 
   void report_success();
   void report_failure();
-  void report_properties(const summarizert::property_mapt &);  
-  void show_counterexample(const class goto_tracet &);
+
+  void report_properties(
+    const goto_modelt &,
+    const summarizert::property_mapt &);  
+
+  void show_counterexample(
+    const goto_modelt &,
+    const class goto_tracet &);
             
   void eval_verbosity();
 };

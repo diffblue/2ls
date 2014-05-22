@@ -36,6 +36,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "summarizer_parseoptions.h"
 #include "summarizer.h"
+#include "show.h"
 
 /*******************************************************************\
 
@@ -201,39 +202,55 @@ int summarizer_parseoptionst::doit()
 
   eval_verbosity();
 
-  goto_functionst goto_functions;
+  goto_modelt goto_model;
 
-  if(get_goto_program(options, goto_functions))
+  if(get_goto_program(options, goto_model))
     return 6;
     
   // now do full inlining, if requested
 
-  if(cmdline.isset("inline"))
+  //if(cmdline.isset("inline"))
   {
     status() << "Function Pointer Removal" << eom;
     remove_function_pointers(
-      symbol_table, goto_functions, cmdline.isset("pointer-check"));
+      goto_model, cmdline.isset("pointer-check"));
 
     status() << "Performing full inlining" << eom;
-    const namespacet ns(symbol_table);
-    goto_inline(goto_functions, ns, ui_message_handler);
+    goto_inline(goto_model, ui_message_handler);
   }
     
-  label_properties(goto_functions);
+  label_properties(goto_model);
 
   if(cmdline.isset("show-properties"))
   {
-    const namespacet ns(symbol_table);
-    show_properties(ns, get_ui(), goto_functions);
+    show_properties(goto_model, get_ui());
     return 0;
   }
 
-  if(set_properties(goto_functions))
+  if(set_properties(goto_model))
     return 7;
+
+  if(cmdline.isset("show-ssa"))
+  {
+    show_ssa(goto_model, std::cout, ui_message_handler);
+    return 7;
+  }
+
+  if(cmdline.isset("show-defs"))
+  {
+    show_defs(goto_model, std::cout, ui_message_handler);
+    return 7;
+  }
+
+  if(cmdline.isset("show-guards"))
+  {
+    show_guards(goto_model, std::cout, ui_message_handler);
+    return 7;
+  }
 
   try
   {
-    const namespacet ns(symbol_table);
+    namespacet ns(goto_model.symbol_table);
     summarizert summarizer(ns);
     
     summarizer.set_message_handler(get_message_handler());
@@ -243,20 +260,20 @@ int summarizer_parseoptionst::doit()
     {
       std::cout << "VERIFICATION CONDITIONS:\n\n";
       summarizer.show_vcc=true;
-      summarizer(goto_functions);
+      summarizer(goto_model.goto_functions);
       return 0;
     }
     
     // do actual analysis
-    switch(summarizer(goto_functions))
+    switch(summarizer(goto_model.goto_functions))
     {
     case safety_checkert::SAFE:
-      report_properties(summarizer.property_map);
+      report_properties(goto_model, summarizer.property_map);
       report_success();
       return 0;
     
     case safety_checkert::UNSAFE:
-      report_properties(summarizer.property_map);
+      report_properties(goto_model, summarizer.property_map);
       report_failure();
       return 10;
     
@@ -297,12 +314,12 @@ Function: summarizer_parseoptionst::set_properties
 
 \*******************************************************************/
 
-bool summarizer_parseoptionst::set_properties(goto_functionst &goto_functions)
+bool summarizer_parseoptionst::set_properties(goto_modelt &goto_model)
 {
   try
   {
     if(cmdline.isset("property"))
-      ::set_properties(goto_functions, cmdline.get_values("property"));
+      ::set_properties(goto_model, cmdline.get_values("property"));
   }
 
   catch(const char *e)
@@ -339,7 +356,7 @@ Function: summarizer_parseoptionst::get_goto_program
   
 bool summarizer_parseoptionst::get_goto_program(
   const optionst &options,
-  goto_functionst &goto_functions)
+  goto_modelt &goto_model)
 {
   if(cmdline.args.size()==0)
   {
@@ -355,7 +372,7 @@ bool summarizer_parseoptionst::get_goto_program(
       status() << "Reading GOTO program from file" << eom;
 
       if(read_goto_binary(cmdline.args[0],
-           symbol_table, goto_functions, get_message_handler()))
+           goto_model, get_message_handler()))
         return true;
         
       config.ansi_c.set_from_symbol_table(symbol_table);
@@ -366,7 +383,7 @@ bool summarizer_parseoptionst::get_goto_program(
         return true;
       }
       
-      irep_idt entry_point=goto_functions.entry_point();
+      irep_idt entry_point=goto_model.goto_functions.entry_point();
       
       if(symbol_table.symbols.find(entry_point)==symbol_table.symbols.end())
       {
@@ -431,24 +448,24 @@ bool summarizer_parseoptionst::get_goto_program(
         return true;
       }
 
-      irep_idt entry_point=goto_functions.entry_point();
+      irep_idt entry_point=goto_model.goto_functions.entry_point();
       
       if(symbol_table.symbols.find(entry_point)==symbol_table.symbols.end())
       {
         error() << "No entry point; please provide a main function" << eom;
         return true;
       }
-
+      
       status() << "Generating GOTO Program" << eom;
 
-      goto_convert(symbol_table, goto_functions, ui_message_handler);
+      goto_convert(symbol_table, goto_model, ui_message_handler);
     }
 
     // finally add the library
     status() << "Adding CPROVER library" << eom;
-    link_to_library(symbol_table, goto_functions, ui_message_handler);
+    link_to_library(goto_model, ui_message_handler);
 
-    if(process_goto_program(options, goto_functions))
+    if(process_goto_program(options, goto_model))
       return true;
   }
 
@@ -492,43 +509,42 @@ Function: summarizer_parseoptionst::process_goto_program
   
 bool summarizer_parseoptionst::process_goto_program(
   const optionst &options,
-  goto_functionst &goto_functions)
+  goto_modelt &goto_model)
 {
   try
   {
-    namespacet ns(symbol_table);
-
     // do partial inlining
     status() << "Partial Inlining" << eom;
-    goto_partial_inline(goto_functions, ns, ui_message_handler);
+    goto_partial_inline(goto_model, ui_message_handler);
     
     // add generic checks
     status() << "Generic Property Instrumentation" << eom;
-    goto_check(ns, options, goto_functions);
+    goto_check(options, goto_model);
     
     // recalculate numbers, etc.
-    goto_functions.update();
+    goto_model.goto_functions.update();
 
     // add loop ids
-    goto_functions.compute_loop_numbers();
+    goto_model.goto_functions.compute_loop_numbers();
     
     // if we aim to cover, replace
     // all assertions by false to prevent simplification
     
     if(cmdline.isset("cover-assertions"))
-      make_assertions_false(goto_functions);
+      make_assertions_false(goto_model);
 
     // show it?
     if(cmdline.isset("show-loops"))
     {
-      show_loop_ids(get_ui(), goto_functions);
+      show_loop_ids(get_ui(), goto_model);
       return true;
     }
 
     // show it?
     if(cmdline.isset("show-goto-functions"))
     {
-      goto_functions.output(ns, std::cout);
+      const namespacet ns(goto_model.symbol_table);
+      goto_model.goto_functions.output(ns, std::cout);
       return true;
     }
   }
@@ -572,6 +588,7 @@ Function: summarizer_parseoptionst::report_properties
 \*******************************************************************/
 
 void summarizer_parseoptionst::report_properties(
+  const goto_modelt &goto_model,
   const summarizert::property_mapt &property_map)
 {
   for(summarizert::property_mapt::const_iterator
@@ -612,7 +629,7 @@ void summarizer_parseoptionst::report_properties(
 
     if(cmdline.isset("show-trace") &&
        it->second.status==summarizert::FAIL)
-      show_counterexample(it->second.error_trace);
+      show_counterexample(goto_model, it->second.error_trace);
   }
 
   if(!cmdline.isset("property"))
@@ -682,9 +699,10 @@ Function: summarizer_parseoptionst::show_counterexample
 \*******************************************************************/
 
 void summarizer_parseoptionst::show_counterexample(
+  const goto_modelt &goto_model,
   const goto_tracet &error_trace)
 {
-  const namespacet ns(symbol_table);
+  const namespacet ns(goto_model.symbol_table);
 
   switch(get_ui())
   {
