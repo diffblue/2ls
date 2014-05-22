@@ -76,7 +76,7 @@ public:
   symbol_exprt read_rhs(const ssa_objectt &, locationt loc) const;
   exprt read_node_in(const ssa_objectt &, locationt loc) const;
   exprt read_lhs(const exprt &, locationt loc) const;
-  static ssa_objectt guard_symbol();
+  ssa_objectt guard_symbol() const;
   symbol_exprt guard_symbol(locationt loc) const
   { return name(guard_symbol(), OUT, guard_map[loc].guard_source); }
   void assign_rec(const exprt &lhs, const exprt &rhs, locationt loc);

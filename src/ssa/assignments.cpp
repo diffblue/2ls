@@ -107,7 +107,7 @@ void assignmentst::assign(
     // todo
   }
 
-  const ssa_objectt ssa_object(lhs);
+  const ssa_objectt ssa_object(lhs, ns);
   
   if(ssa_object)
   {

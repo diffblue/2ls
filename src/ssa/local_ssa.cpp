@@ -261,9 +261,9 @@ Function: local_SSAt::guard_symbol
 
 \*******************************************************************/
 
-ssa_objectt local_SSAt::guard_symbol()
+ssa_objectt local_SSAt::guard_symbol() const
 {
-  return ssa_objectt(symbol_exprt("ssa::$guard", bool_typet()));
+  return ssa_objectt(symbol_exprt("ssa::$guard", bool_typet()), ns);
 }
 
 /*******************************************************************\
@@ -313,7 +313,7 @@ exprt local_SSAt::read_lhs(
   const exprt &expr,
   locationt loc) const
 {
-  ssa_objectt object(expr);
+  ssa_objectt object(expr, ns);
 
   // is this an object we track?
   if(assignments.objects.find(object)!=
@@ -426,7 +426,7 @@ exprt local_SSAt::read_rhs(const exprt &expr, locationt loc) const
     // might alias with whatnot
     assert(expr.operands().size()==1);
     
-    ssa_objectt object(expr);
+    ssa_objectt object(expr, ns);
 
     if(object)
     {
@@ -456,7 +456,7 @@ exprt local_SSAt::read_rhs(const exprt &expr, locationt loc) const
                        expr.type());
   }
   
-  ssa_objectt object(expr);
+  ssa_objectt object(expr, ns);
   
   // is it an object identifier?
   
@@ -672,7 +672,7 @@ void local_SSAt::assign_rec(
     return;
   }
 
-  ssa_objectt lhs_object(lhs);
+  ssa_objectt lhs_object(lhs, ns);
 
   const std::set<ssa_objectt> &assigned=
     assignments.get(loc);
