@@ -22,6 +22,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "local_ssa.h"
 #include "malloc_ssa.h"
+#include "address_canonizer.h"
 
 /*******************************************************************\
 
@@ -470,8 +471,10 @@ exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
   }
   else if(expr.id()==ID_address_of)
   {
-    address_of_exprt address_of_expr=to_address_of_expr(expr);
-    return address_of_exprt(read_rhs_address_of_rec(address_of_expr.object(), loc));
+    address_of_exprt tmp=to_address_of_expr(expr);
+    tmp.object()=read_rhs_address_of_rec(tmp.object(), loc);
+    //return address_canonizer(tmp);
+    return tmp;
   }
   else if(expr.id()==ID_dereference)
   {
