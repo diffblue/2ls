@@ -71,9 +71,10 @@ public:
   symbol_exprt name(const ssa_objectt &, kindt kind, locationt loc) const;
   symbol_exprt name(const ssa_objectt &, const ssa_domaint::deft &) const;
   symbol_exprt name_input(const ssa_objectt &) const;
-  exprt read_rhs(const exprt &, locationt loc) const;
-  exprt read_rhs_rec(const exprt &, locationt loc) const;
   void replace_side_effects_rec(exprt &, locationt, unsigned &) const;
+  exprt read_rhs(const exprt &, locationt loc) const;
+  exprt read_rhs_address_of_rec(const exprt &expr, locationt loc) const;
+  exprt read_rhs_rec(const exprt &, locationt loc) const;
   symbol_exprt read_rhs(const ssa_objectt &, locationt loc) const;
   exprt read_node_in(const ssa_objectt &, locationt loc) const;
   exprt read_lhs(const exprt &, locationt loc) const;
