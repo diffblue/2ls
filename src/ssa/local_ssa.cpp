@@ -399,7 +399,24 @@ Function: local_SSAt::read_rhs
 
 exprt local_SSAt::read_rhs(const exprt &expr, locationt loc) const
 {
-  if(expr.id()==ID_address_of)
+  if(expr.id()==ID_sideeffect)
+  {
+    const side_effect_exprt &side_effect_expr=
+      to_side_effect_expr(expr);
+    const irep_idt statement=side_effect_expr.get_statement();
+
+    if(statement==ID_nondet)
+    {
+      // turn into nondet_symbol
+      exprt nondet_symbol(ID_nondet_symbol, expr.type());
+      const irep_idt identifier="ssa::nondet"+i2string(nondet_counter)+suffix;
+      nondet_symbol.set(ID_identifier, identifier);
+      return nondet_symbol;
+    }
+    else
+      throw "unexpected side effect: "+id2string(statement);
+  }
+  else if(expr.id()==ID_address_of)
   {
     address_of_exprt address_of_expr=to_address_of_expr(expr);
     return address_of_expr;

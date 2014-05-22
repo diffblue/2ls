@@ -31,7 +31,8 @@ public:
     assignments(_goto_function.body, ns),
     guard_map(_goto_function.body),
     ssa_analysis(assignments),
-    suffix(_suffix)
+    suffix(_suffix),
+    nondet_counter(0)
   {
     build_SSA();
   }
@@ -92,7 +93,8 @@ public:
 protected:
   guard_mapt guard_map;
   ssa_ait ssa_analysis;
-  std::string suffix; // an extra suffix  
+  std::string suffix; // an extra suffix
+  unsigned nondet_counter;
 
   // build the SSA formulas
   void build_SSA();
