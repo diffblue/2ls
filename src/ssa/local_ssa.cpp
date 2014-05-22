@@ -16,6 +16,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/expr_util.h>
 #include <util/decision_procedure.h>
 
+#include <goto-symex/adjust_float_expressions.h>
+
 #include <langapi/language_util.h>
 
 #include "local_ssa.h"
@@ -398,6 +400,26 @@ Function: local_SSAt::read_rhs
 \*******************************************************************/
 
 exprt local_SSAt::read_rhs(const exprt &expr, locationt loc) const
+{
+  exprt tmp=expr;
+  adjust_float_expressions(tmp, ns);
+  
+  return read_rhs_rec(tmp, loc);
+}
+
+/*******************************************************************\
+
+Function: local_SSAt::read_rhs_rec
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
 {
   if(expr.id()==ID_sideeffect)
   {
