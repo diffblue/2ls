@@ -14,9 +14,9 @@ Author: Daniel Kroening, kroening@kroening.com
 class ssa_objectt
 {
 public:
-  inline explicit ssa_objectt(const exprt &_expr):
+  inline explicit ssa_objectt(const exprt &_expr, const namespacet &_ns):
     expr(_expr),
-    identifier(object_id_rec(expr))
+    identifier(object_id_rec(expr, _ns))
   {
   }
   
@@ -55,7 +55,7 @@ protected:
   exprt expr;
   irep_idt identifier;
 
-  static irep_idt object_id_rec(const exprt &src);
+  static irep_idt object_id_rec(const exprt &src, const namespacet &);
 };
 
 void collect_objects(
