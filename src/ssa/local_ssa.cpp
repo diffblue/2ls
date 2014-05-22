@@ -403,6 +403,8 @@ exprt local_SSAt::read_rhs(const exprt &expr, locationt loc) const
 {
   exprt tmp=expr;
   adjust_float_expressions(tmp, ns);
+  unsigned counter=0;
+  replace_side_effects_rec(tmp, loc, counter);
   
   return read_rhs_rec(tmp, loc);
 }
@@ -423,21 +425,7 @@ exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
 {
   if(expr.id()==ID_sideeffect)
   {
-    const side_effect_exprt &side_effect_expr=
-      to_side_effect_expr(expr);
-    const irep_idt statement=side_effect_expr.get_statement();
-
-    if(statement==ID_nondet)
-    {
-      // turn into nondet_symbol
-      exprt nondet_symbol(ID_nondet_symbol, expr.type());
-      //nondet_counter++;
-      const irep_idt identifier="ssa::nondet"+i2string(nondet_counter)+suffix;
-      nondet_symbol.set(ID_identifier, identifier);
-      return nondet_symbol;
-    }
-    else
-      throw "unexpected side effect: "+id2string(statement);
+    throw "unexpected side effect in read_rhs_rec";
   }
   else if(expr.id()==ID_address_of)
   {
@@ -475,7 +463,7 @@ exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
       // produce a nondet_symbol for this
       exprt nondet_symbol(ID_nondet_symbol, expr.type());
       //nondet_counter++;
-      irep_idt identifier="ssa::deref"+i2string(nondet_counter)+suffix;
+      irep_idt identifier="ssa::deref"+i2string(0)+suffix;
       nondet_symbol.set(ID_identifier, identifier);
       return nondet_symbol;
     }
@@ -535,6 +523,64 @@ exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
   else
   {
     return name_input(object);
+  }
+}
+
+/*******************************************************************\
+
+Function: local_SSAt::replace_side_effects_rec
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void local_SSAt::replace_side_effects_rec(
+  exprt &expr, locationt loc, unsigned &counter) const
+{
+  Forall_operands(it, expr)
+    replace_side_effects_rec(*it, loc, counter);
+
+  if(expr.id()==ID_sideeffect)
+  {
+    const side_effect_exprt &side_effect_expr=
+      to_side_effect_expr(expr);
+    const irep_idt statement=side_effect_expr.get_statement();
+
+    if(statement==ID_nondet)
+    {
+      // turn into nondet_symbol
+      exprt nondet_symbol(ID_nondet_symbol, expr.type());
+      counter++;
+      const irep_idt identifier=
+        "ssa::nondet"+
+        i2string(loc->location_number)+
+        "."+i2string(counter)+suffix;
+      nondet_symbol.set(ID_identifier, identifier);
+      
+      expr.swap(nondet_symbol);
+    }
+    else if(statement==ID_malloc)
+    {
+      // turn into symbol
+      #if 0
+      counter++;
+      const irep_idt identifier=
+        "ssa::malloc"+
+        i2string(loc->location_number)+
+        "."+i2string(counter)+suffix;
+      typet type;
+      symbol_exprt symbol_expr(identifier, type);
+      address_of_exprt address_of_expr(symbol_expr);
+      typecast_exprt typecast_expr(address_of_expr, expr.type());
+      expr=typecast_exprt();
+      #endif
+    }
+    else
+      throw "unexpected side effect: "+id2string(statement);
   }
 }
 

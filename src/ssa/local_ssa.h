@@ -31,8 +31,7 @@ public:
     assignments(_goto_function.body, ns),
     guard_map(_goto_function.body),
     ssa_analysis(assignments),
-    suffix(_suffix),
-    nondet_counter(0)
+    suffix(_suffix)
   {
     build_SSA();
   }
@@ -74,6 +73,7 @@ public:
   symbol_exprt name_input(const ssa_objectt &) const;
   exprt read_rhs(const exprt &, locationt loc) const;
   exprt read_rhs_rec(const exprt &, locationt loc) const;
+  void replace_side_effects_rec(exprt &, locationt, unsigned &) const;
   symbol_exprt read_rhs(const ssa_objectt &, locationt loc) const;
   exprt read_node_in(const ssa_objectt &, locationt loc) const;
   exprt read_lhs(const exprt &, locationt loc) const;
@@ -95,7 +95,6 @@ protected:
   guard_mapt guard_map;
   ssa_ait ssa_analysis;
   std::string suffix; // an extra suffix
-  unsigned nondet_counter;
 
   // build the SSA formulas
   void build_SSA();
