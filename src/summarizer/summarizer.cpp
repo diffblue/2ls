@@ -82,6 +82,8 @@ void summarizert::analyze(
   return;
   #endif
   
+  status() << "Analyzing " << f_it->first << messaget::eom;
+  
   // build SSA
   local_SSAt SSA(f_it->second, ns);
 
