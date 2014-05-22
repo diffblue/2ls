@@ -28,7 +28,11 @@ void collect_objects_rec(
   const typet &type=ns.follow(src.type());
 
   if(type.id()==ID_code)
+  {
+    forall_operands(it, src)
+      collect_objects_rec(*it, ns, dest);
     return;
+  }
 
   if(type.id()==ID_struct)
   {
