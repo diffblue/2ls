@@ -409,6 +409,7 @@ exprt local_SSAt::read_rhs(const exprt &expr, locationt loc) const
     {
       // turn into nondet_symbol
       exprt nondet_symbol(ID_nondet_symbol, expr.type());
+      //nondet_counter++;
       const irep_idt identifier="ssa::nondet"+i2string(nondet_counter)+suffix;
       nondet_symbol.set(ID_identifier, identifier);
       return nondet_symbol;
@@ -446,6 +447,15 @@ exprt local_SSAt::read_rhs(const exprt &expr, locationt loc) const
       }
       
       return result;
+    }
+    else
+    {
+      // produce a nondet_symbol for this
+      exprt nondet_symbol(ID_nondet_symbol, expr.type());
+      //nondet_counter++;
+      irep_idt identifier="ssa::deref"+i2string(nondet_counter)+suffix;
+      nondet_symbol.set(ID_identifier, identifier);
+      return nondet_symbol;
     }
   }
   else if(expr.id()==ID_index)
