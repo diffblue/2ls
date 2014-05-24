@@ -19,6 +19,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/pointer_predicates.h>
 #include <util/pointer_offset_size.h>
 #include <util/arith_tools.h>
+#include <util/byte_operators.h>
 
 #include <ansi-c/c_types.h>
 
@@ -150,12 +151,20 @@ exprt alias_guard(
   }
 
   // in some cases, we can use plain equality
-  exprt lhs=e1.pointer();
-  exprt rhs=e2_address;
-  if(ns.follow(rhs.type())!=ns.follow(lhs.type()))
-    rhs=typecast_exprt(rhs, lhs.type());
+  mp_integer size1=pointer_offset_size(ns, e1.type());
+  mp_integer size2=pointer_offset_size(ns, e2.type());
   
-  return equal_exprt(lhs, rhs);
+  if(size1>=size2)
+  {
+    exprt lhs=e1.pointer();
+    exprt rhs=e2_address;
+    if(ns.follow(rhs.type())!=ns.follow(lhs.type()))
+      rhs=typecast_exprt(rhs, lhs.type());
+  
+    return equal_exprt(lhs, rhs);
+  }
+  
+  return same_object(e1.pointer(), e2_address);
 }
 
 /*******************************************************************\
@@ -201,9 +210,9 @@ exprt alias_value(
     }
   }
 
-  binary_exprt byte_extract(ID_byte_extract_little_endian, e1.type());
-  byte_extract.op0()=e2;
-  byte_extract.op1()=offset;
+  byte_extract_exprt byte_extract(byte_extract_id(), e1.type());
+  byte_extract.op()=e2;
+  byte_extract.offset()=offset;
   
   return byte_extract; 
 }
