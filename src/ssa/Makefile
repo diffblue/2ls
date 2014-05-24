@@ -1,7 +1,7 @@
 include ../config.inc
 CBMC ?= ../..
 
-SRC = local_ssa.cpp ssa_domain.cpp malloc_ssa.cpp \
+SRC = local_ssa.cpp ssa_domain.cpp translate_union_member.cpp malloc_ssa.cpp \
       guard_map.cpp ssa_object.cpp assignments.cpp \
       address_canonizer.cpp simplify_ssa.cpp
 

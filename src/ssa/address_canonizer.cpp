@@ -44,10 +44,11 @@ exprt address_canonizer(
     {
       // get offset
       exprt offset=member_offset_expr(to_member_expr(object), ns);
-      
+      return address;
     }
     else if(object.id()==ID_index)
     {
+      return address;
     }
     else
       return address;

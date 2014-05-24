@@ -28,6 +28,7 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       ../ssa/assignments$(OBJEXT) \
       ../ssa/guard_map$(OBJEXT) \
       ../ssa/ssa_object$(OBJEXT) \
+      ../ssa/address_canonizer$(OBJEXT) \
       ../solver/predicate$(OBJEXT) \
       ../solver/solver$(OBJEXT) \
       ../solver/fixed_point$(OBJEXT) \

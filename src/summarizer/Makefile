@@ -21,6 +21,7 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       ../ssa/assignments$(OBJEXT) \
       ../ssa/guard_map$(OBJEXT) \
       ../ssa/ssa_object$(OBJEXT) \
+      ../ssa/address_canonizer$(OBJEXT) \
       ../functions/summary$(OBJEXT) \
       ../functions/get_function$(OBJEXT) \
       ../functions/path_util$(OBJEXT) \

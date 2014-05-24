@@ -429,10 +429,10 @@ exprt local_SSAt::read_rhs_address_of_rec(
 {
   if(expr.id()==ID_dereference)
   {
-    //dereference_exprt tmp=to_dereference_expr(expr);
-    //tmp.pointer()=read_rhs_rec(tmp.pointer(), loc);
-    //return tmp;
-    return read_rhs_rec(expr, loc);
+    // We 'read' the pointer only, the dereferencing expression stays.
+    dereference_exprt tmp=to_dereference_expr(expr);
+    tmp.pointer()=read_rhs_rec(tmp.pointer(), loc);
+    return tmp;
   }
   else if(expr.id()==ID_member)
   {
@@ -445,6 +445,14 @@ exprt local_SSAt::read_rhs_address_of_rec(
     index_exprt tmp=to_index_expr(expr);
     tmp.array()=read_rhs_address_of_rec(tmp.array(), loc);
     tmp.index()=read_rhs_rec(tmp.index(), loc);
+    return tmp;
+  }
+  else if(expr.id()==ID_if)
+  {
+    if_exprt tmp=to_if_expr(expr);
+    tmp.cond()=read_rhs_rec(tmp.cond(), loc);
+    tmp.true_case()=read_rhs_address_of_rec(tmp.true_case(), loc);
+    tmp.false_case()=read_rhs_address_of_rec(tmp.false_case(), loc);
     return tmp;
   }
   else
@@ -473,8 +481,7 @@ exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
   {
     address_of_exprt tmp=to_address_of_expr(expr);
     tmp.object()=read_rhs_address_of_rec(tmp.object(), loc);
-    //return address_canonizer(tmp);
-    return tmp;
+    return address_canonizer(tmp, ns);
   }
   else if(expr.id()==ID_dereference)
   {
@@ -488,7 +495,11 @@ exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
     if(object)
       result=read_rhs(object, loc);
     else
-      result=nil_exprt();
+    {
+      // we use the identifier produced by
+      // local_SSAt::replace_side_effects_rec
+      result=symbol_exprt(expr.get(ID_C_identifier), expr.type());
+    }
 
     for(objectst::const_iterator
         o_it=assignments.objects.begin();
@@ -610,6 +621,17 @@ void local_SSAt::replace_side_effects_rec(
     }
     else
       throw "unexpected side effect: "+id2string(statement);
+  }
+  else if(expr.id()==ID_dereference)
+  {
+    // We generate a symbol identifier in case dereferencing turns
+    // out to need one.
+    counter++;
+    const irep_idt identifier=
+      "ssa::deref"+
+      i2string(loc->location_number)+
+      "."+i2string(counter)+suffix;
+    expr.set(ID_C_identifier, identifier);
   }
 }
 
