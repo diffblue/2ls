@@ -807,13 +807,14 @@ void local_SSAt::assign_rec(
           o_it!=assigned.end();
           o_it++)
       {
-        if(*o_it!=lhs_object)
+        if(*o_it!=lhs_object &&
+           may_alias(dereference_expr, o_it->get_expr(), ns))
         {
           const symbol_exprt ssa_symbol=name(*o_it, OUT, loc);
           
           exprt guard=alias_guard(dereference_expr, o_it->get_expr(), ns);
-          exprt value=alias_value(dereference_expr, o_it->get_expr(), ns);
-
+          exprt value=alias_value(dereference_expr, read_rhs(*o_it, loc), ns);
+          
           exprt ssa_rhs=if_exprt(
             read_rhs(guard, loc),
             read_rhs(rhs, loc),
@@ -824,23 +825,6 @@ void local_SSAt::assign_rec(
         }
       }
     }
-    
-    #if 0
-    if(lhs.id()==ID_dereference) // might alias stuff
-    {
-      for(objectst::const_iterator
-          o_it=objects.begin();
-          o_it!=objects.end();
-          o_it++)
-      {
-        if(ssa_domain.may_alias(*o_it, lhs_object))
-        {
-          // we might write to that one as well
-          
-        }
-      }
-    }
-    #endif
   }
 }
 
