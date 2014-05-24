@@ -20,11 +20,12 @@ class summarizert:public safety_checkert
 public:
   explicit inline summarizert(const namespacet &_ns):
     safety_checkert(_ns),
-    show_vcc(false)
+    show_vcc(false),
+    simplify(false)
   {
   }
   
-  bool show_vcc;
+  bool show_vcc, simplify;
 
   virtual resultt operator()(
     const goto_functionst &goto_functions);

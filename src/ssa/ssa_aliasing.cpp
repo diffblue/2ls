@@ -17,6 +17,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/cprover_prefix.h>
 #include <util/std_expr.h>
 #include <util/pointer_predicates.h>
+#include <util/pointer_offset_size.h>
+#include <util/arith_tools.h>
 
 #include <ansi-c/c_types.h>
 
@@ -180,7 +182,24 @@ exprt alias_value(
   if(e1_type==e2_type)
     return e2;
 
-  unary_exprt offset(ID_pointer_offset, e1.pointer(), size_type());
+  exprt offset=pointer_offset(e1.pointer());
+
+  // array index possible?
+  if(e2_type.id()==ID_array &&
+     e1_type==ns.follow(e2_type.subtype()))
+  {
+    // this assumes well-alignedness
+
+    mp_integer element_size=pointer_offset_size(ns, e2_type.subtype());
+
+    if(element_size==1)
+      return index_exprt(e2, offset, e1.type());
+    else if(element_size>1)
+    {
+      exprt index=div_exprt(offset, from_integer(element_size, offset.type()));
+      return index_exprt(e2, index, e1.type());
+    }
+  }
 
   binary_exprt byte_extract(ID_byte_extract_little_endian, e1.type());
   byte_extract.op0()=e2;

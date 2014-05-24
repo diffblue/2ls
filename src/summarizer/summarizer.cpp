@@ -14,6 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <solvers/flattening/bv_pointers.h>
 
 #include "../ssa/local_ssa.h"
+#include "../ssa/simplify_ssa.h"
 
 #include "summarizer.h"
 
@@ -86,6 +87,13 @@ void summarizert::analyze(
   
   // build SSA
   local_SSAt SSA(f_it->second, ns);
+  
+  // simplify, if requested
+  if(simplify)
+  {
+    status() << "Simplifying" <<messaget::eom;
+    ::simplify(SSA, ns);
+  }
 
   // non-incremental version
 

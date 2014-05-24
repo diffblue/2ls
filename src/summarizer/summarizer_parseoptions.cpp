@@ -262,6 +262,7 @@ int summarizer_parseoptionst::doit()
     
     summarizer.set_message_handler(get_message_handler());
     summarizer.set_verbosity(get_verbosity());
+    summarizer.simplify=!cmdline.isset("no-simplify");
 
     if(cmdline.isset("show-vcc"))
     {
