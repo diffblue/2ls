@@ -13,7 +13,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <langapi/language_util.h>
 #endif
 
+#include <util/prefix.h>
+#include <util/cprover_prefix.h>
 #include <util/std_expr.h>
+#include <util/pointer_predicates.h>
 
 #include <ansi-c/c_types.h>
 
@@ -40,6 +43,15 @@ bool may_alias(
   std::cout << "MAY ALIAS1 " << from_expr(ns, "", e1) << " "
                              << from_expr(ns, "", e2) << "\n";
   #endif
+
+  // __CPROVER symbols
+  if(e1.id()==ID_symbol &&
+     has_prefix(id2string(to_symbol_expr(e1).get_identifier()), CPROVER_PREFIX))
+    return false;
+
+  if(e2.id()==ID_symbol &&
+     has_prefix(id2string(to_symbol_expr(e2).get_identifier()), CPROVER_PREFIX))
+    return false;
 
   // The same?
   if(e1==e2)
@@ -76,27 +88,29 @@ bool may_alias(
 
     return may_alias(i1.array(), i2.array(), ns);
   }
+
+  const typet &t1=ns.follow(e1.type());
+  const typet &t2=ns.follow(e2.type());
+  
+  // Is one a scalar pointer?
+  if(e1.id()==ID_dereference &&
+     (t1.id()==ID_signedbv || t1.id()==ID_unsignedbv))
+    return true;
+  
+  if(e2.id()==ID_dereference &&
+     (t2.id()==ID_signedbv || t2.id()==ID_unsignedbv))
+    return true;
   
   // Is one a pointer?
   if(e1.id()==ID_dereference ||
      e2.id()==ID_dereference)
   {
-    const typet &t1=ns.follow(e1.type());
-    const typet &t2=ns.follow(e2.type());
+    // look at the types
 
     // same type?
     if(t1==t2)
       return true;
-
-    #if 0    
-    // either one a scalar?
-    if(t1.id()==ID_signedbv || t1.id()==ID_unsignedbv)
-      return true;
-
-    if(t2.id()==ID_signedbv || t2.id()==ID_unsignedbv)
-      return true;
-    #endif
-
+      
     // should consider further options, e.g., struct prefixes      
     return false;
   }
@@ -129,7 +143,9 @@ exprt alias_guard(
   if(e2_type.id()==ID_array ||
      e2_type.id()==ID_struct ||
      e2_type.id()==ID_union)
-    return same_object_exprt(e1.pointer(), e2_address);
+  {
+    return same_object(e1.pointer(), e2_address);
+  }
 
   // in some cases, we can use plain equality
   exprt lhs=e1.pointer();
