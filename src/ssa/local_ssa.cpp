@@ -512,7 +512,7 @@ exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
         exprt guard=alias_guard(dereference_expr, o_it->get_expr(), ns);
         exprt value=alias_value(dereference_expr, read_rhs(*o_it, loc), ns);
         guard=read_rhs_rec(guard, loc);
-        value=read_rhs_rec(guard, loc);
+        value=read_rhs_rec(value, loc);
 
         result=if_exprt(guard, value, result);
       }
