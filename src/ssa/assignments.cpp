@@ -62,7 +62,8 @@ Function: assignmentst::assign
 \*******************************************************************/
 
 void assignmentst::assign(
-  const exprt &lhs, goto_programt::const_targett loc,
+  const exprt &lhs,
+  goto_programt::const_targett loc,
   const namespacet &ns)
 {
   if(lhs.id()==ID_typecast)
@@ -87,7 +88,10 @@ void assignmentst::assign(
     const member_exprt &member_expr=to_member_expr(lhs);
     const typet &compound_type=ns.follow(member_expr.struct_op().type());
     if(compound_type.id()==ID_union)
+    {
       assign(member_expr.struct_op(), loc, ns);
+      return;
+    }
   }
 
   const typet &lhs_type=ns.follow(lhs.type());
