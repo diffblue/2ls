@@ -218,12 +218,33 @@ int summarizer_parseoptionst::doit()
 
   //if(cmdline.isset("inline"))
   {
-    status() << "Function Pointer Removal" << eom;
-    remove_function_pointers(
-      goto_model, cmdline.isset("pointer-check"));
+    try
+    {
+      status() << "Function Pointer Removal" << eom;
+      remove_function_pointers(
+        goto_model, cmdline.isset("pointer-check"));
 
-    status() << "Performing full inlining" << eom;
-    goto_inline(goto_model, ui_message_handler);
+      status() << "Performing full inlining" << eom;
+      goto_inline(goto_model, ui_message_handler);
+    }
+
+    catch(const std::string error_msg)
+    {
+      error() << error_msg << messaget::eom;
+      return 8;
+    }
+
+    catch(const char *error_msg)
+    {
+      error() << error_msg << messaget::eom;
+      return 8;
+    }
+
+    catch(int)
+    {
+      return 8;
+    }
+
   }
     
   label_properties(goto_model);
