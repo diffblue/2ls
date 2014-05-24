@@ -66,37 +66,37 @@ public:
   typedef std::map<locationt, nodet> nodest;
   nodest nodes;
 
+  const namespacet &ns;
+  const goto_functiont &goto_function;
+  
   // auxiliary functions
   enum kindt { PHI, OUT, LOOP_BACK, LOOP_SELECT };
   symbol_exprt name(const ssa_objectt &, kindt kind, locationt loc) const;
   symbol_exprt name(const ssa_objectt &, const ssa_domaint::deft &) const;
   symbol_exprt name_input(const ssa_objectt &) const;
   void replace_side_effects_rec(exprt &, locationt, unsigned &) const;
+  exprt read_lhs(const exprt &, locationt loc) const;
   exprt read_rhs(const exprt &, locationt loc) const;
   exprt read_rhs_address_of_rec(const exprt &expr, locationt loc) const;
   exprt read_rhs_rec(const exprt &, locationt loc) const;
   symbol_exprt read_rhs(const ssa_objectt &, locationt loc) const;
   exprt read_node_in(const ssa_objectt &, locationt loc) const;
-  exprt read_lhs(const exprt &, locationt loc) const;
+  void assign_rec(const exprt &lhs, const exprt &rhs, locationt loc);
   ssa_objectt guard_symbol() const;
   symbol_exprt guard_symbol(locationt loc) const
   { return name(guard_symbol(), OUT, guard_map[loc].guard_source); }
-  void assign_rec(const exprt &lhs, const exprt &rhs, locationt loc);
   
   bool has_static_lifetime(const ssa_objectt &) const;
   bool has_static_lifetime(const exprt &) const;
 
-  const namespacet &ns;
-  const goto_functiont &goto_function;
-  
   typedef assignmentst::objectst objectst;
   assignmentst assignments;
   
-protected:
   guard_mapt guard_map;
   ssa_ait ssa_analysis;
   std::string suffix; // an extra suffix
 
+protected:
   // build the SSA formulas
   void build_SSA();
 
@@ -104,8 +104,6 @@ protected:
   void build_phi_nodes(locationt loc);
   void build_transfer(locationt loc);
   void build_guard(locationt loc);
-  
-  exprt same_object(const ssa_objectt &, const ssa_objectt &) const;
 };
 
 std::list<exprt> & operator <<

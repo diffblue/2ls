@@ -23,6 +23,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "local_ssa.h"
 #include "malloc_ssa.h"
 #include "address_canonizer.h"
+#include "ssa_aliasing.h"
 
 /*******************************************************************\
 
@@ -486,7 +487,7 @@ exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
   else if(expr.id()==ID_dereference)
   {
     // might alias with whatnot
-    assert(expr.operands().size()==1);
+    const dereference_exprt &dereference_expr=to_dereference_expr(expr);
     
     ssa_objectt object(expr, ns);
     
@@ -506,11 +507,11 @@ exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
         o_it!=assignments.objects.end(); o_it++)
     {
       if(*o_it!=object &&
-         assignmentst::may_alias(object, *o_it) &&
-         o_it->get_expr().type()==expr.type())
+         may_alias(dereference_expr, o_it->get_expr(), ns))
       {
-        exprt guard=same_object(*o_it, object);
-        result=if_exprt(read_rhs(guard, loc), read_rhs(*o_it, loc), result);
+        exprt guard=read_rhs(alias_guard(dereference_expr, o_it->get_expr(), ns), loc);
+        exprt value=read_rhs(alias_value(dereference_expr, o_it->get_expr(), ns), loc);
+        result=if_exprt(guard, value, result);
       }
     }
     
@@ -633,39 +634,6 @@ void local_SSAt::replace_side_effects_rec(
       "."+i2string(counter)+suffix;
     expr.set(ID_C_identifier, identifier);
   }
-}
-
-/*******************************************************************\
-
-Function: local_SSAt::same_object
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-exprt local_SSAt::same_object(
-  const ssa_objectt &o1,
-  const ssa_objectt &o2) const
-{
-  exprt o1_expr=o1.get_expr();
-  exprt o2_expr=o2.get_expr();
-
-  exprt o1_address=
-    o1_expr.id()==ID_dereference?to_dereference_expr(o1_expr).pointer():
-    address_of_exprt(o1_expr);
-  
-  exprt o2_address=
-    o2_expr.id()==ID_dereference?to_dereference_expr(o2_expr).pointer():
-    address_of_exprt(o2_expr);
-  
-  if(o1_address.type()!=o2_address.type())
-    o1_address.make_typecast(o2_address.type());
-
-  return equal_exprt(o1_address, o2_address);
 }
 
 /*******************************************************************\
@@ -828,6 +796,8 @@ void local_SSAt::assign_rec(
     // aliasing on writing
     if(lhs.id()==ID_dereference)
     {
+      const dereference_exprt &dereference_expr=to_dereference_expr(lhs);
+    
       // go over all assigned objects
       for(std::set<ssa_objectt>::const_iterator
           o_it=assigned.begin();
@@ -838,7 +808,8 @@ void local_SSAt::assign_rec(
         {
           const symbol_exprt ssa_symbol=name(*o_it, OUT, loc);
           
-          exprt guard=same_object(lhs_object, *o_it);
+          exprt guard=alias_guard(dereference_expr, o_it->get_expr(), ns);
+          exprt value=alias_value(dereference_expr, o_it->get_expr(), ns);
 
           exprt ssa_rhs=if_exprt(
             read_rhs(guard, loc),

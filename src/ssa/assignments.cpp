@@ -7,6 +7,7 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 #include "assignments.h"
+#include "ssa_aliasing.h"
 
 /*******************************************************************\
 
@@ -126,47 +127,11 @@ void assignmentst::assign(
           o_it++)
       {
         if(*o_it!=ssa_object &&
-           may_alias(*o_it, ssa_object))
+           may_alias(o_it->get_expr(), ssa_object.get_expr(), ns))
           assign(*o_it, loc, ns);
       }
     }    
   }
-}
-
-/*******************************************************************\
-
-Function: assignmentst::may_alias
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-bool assignmentst::may_alias(
-  const ssa_objectt &o1, const ssa_objectt &o2)
-{
-  const exprt &e1=o1.get_expr();
-  const exprt &e2=o2.get_expr();
-
-  // The same?
-  if(e1==e2)
-    return true;
-
-  // Is one a pointer?
-  if(e1.id()==ID_dereference || e2.id()==ID_dereference)
-  {
-    // Type matches?
-    if(e1.type()==e2.type())
-      return true;
-    
-    // Give up, but should consider more options
-    return false;
-  }
-  else
-    return false; // both different objects
 }
 
 /*******************************************************************\
