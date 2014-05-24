@@ -482,35 +482,28 @@ exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
     assert(expr.operands().size()==1);
     
     ssa_objectt object(expr, ns);
+    
+    exprt result;
 
     if(object)
-    {
-      exprt result=read_rhs(object, loc);
-
-      for(objectst::const_iterator
-          o_it=assignments.objects.begin();
-          o_it!=assignments.objects.end(); o_it++)
-      {
-        if(*o_it!=object &&
-           assignmentst::may_alias(object, *o_it) &&
-           o_it->get_expr().type()==expr.type())
-        {
-          exprt guard=same_object(*o_it, object);
-          result=if_exprt(read_rhs(guard, loc), read_rhs(*o_it, loc), result);
-        }
-      }
-      
-      return result;
-    }
+      result=read_rhs(object, loc);
     else
+      result=nil_exprt();
+
+    for(objectst::const_iterator
+        o_it=assignments.objects.begin();
+        o_it!=assignments.objects.end(); o_it++)
     {
-      // produce a nondet_symbol for this
-      exprt nondet_symbol(ID_nondet_symbol, expr.type());
-      //nondet_counter++;
-      irep_idt identifier="ssa::deref"+i2string(0)+suffix;
-      nondet_symbol.set(ID_identifier, identifier);
-      return nondet_symbol;
+      if(*o_it!=object &&
+         assignmentst::may_alias(object, *o_it) &&
+         o_it->get_expr().type()==expr.type())
+      {
+        exprt guard=same_object(*o_it, object);
+        result=if_exprt(read_rhs(guard, loc), read_rhs(*o_it, loc), result);
+      }
     }
+    
+    return result;
   }
   else if(expr.id()==ID_index)
   {
