@@ -490,7 +490,6 @@ exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
     const dereference_exprt &dereference_expr=to_dereference_expr(expr);
     
     ssa_objectt object(expr, ns);
-    
     exprt result;
 
     if(object)
@@ -502,15 +501,19 @@ exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
       result=symbol_exprt(expr.get(ID_C_identifier), expr.type());
     }
 
+    // case split for aliasing
     for(objectst::const_iterator
         o_it=assignments.objects.begin();
         o_it!=assignments.objects.end(); o_it++)
     {
       if(*o_it!=object &&
-         may_alias(dereference_expr, o_it->get_expr(), ns))
+         may_alias(expr, o_it->get_expr(), ns))
       {
-        exprt guard=read_rhs(alias_guard(dereference_expr, o_it->get_expr(), ns), loc);
-        exprt value=read_rhs(alias_value(dereference_expr, o_it->get_expr(), ns), loc);
+        exprt guard=alias_guard(dereference_expr, o_it->get_expr(), ns);
+        exprt value=alias_value(dereference_expr, read_rhs(*o_it, loc), ns);
+        guard=read_rhs_rec(guard, loc);
+        value=read_rhs_rec(guard, loc);
+
         result=if_exprt(guard, value, result);
       }
     }
@@ -740,7 +743,7 @@ void local_SSAt::assign_rec(
   locationt loc)
 {
   const typet &type=ns.follow(lhs.type());
-
+  
   if(type.id()==ID_struct)
   {
     // need to split up
