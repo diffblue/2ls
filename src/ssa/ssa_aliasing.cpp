@@ -95,6 +95,13 @@ bool may_alias(
   const typet &t1=ns.follow(e1.type());
   const typet &t2=ns.follow(e2.type());
   
+  // Pointers only alias with other pointers, a restriction.
+  if(t1.id()==ID_pointer)
+    return t2.id()==ID_pointer;
+  
+  if(t2.id()==ID_pointer)
+    return t1.id()==ID_pointer;
+  
   // Is one a scalar pointer?
   if(e1.id()==ID_dereference &&
      (t1.id()==ID_signedbv || t1.id()==ID_unsignedbv))

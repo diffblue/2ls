@@ -15,6 +15,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/i2string.h>
 #include <util/expr_util.h>
 #include <util/decision_procedure.h>
+#include <util/byte_operators.h>
 
 #include <goto-symex/adjust_float_expressions.h>
 
@@ -815,10 +816,27 @@ void local_SSAt::assign_rec(
           exprt guard=alias_guard(dereference_expr, o_it->get_expr(), ns);
           exprt value=alias_value(dereference_expr, read_rhs(*o_it, loc), ns);
           
-          exprt ssa_rhs=if_exprt(
-            read_rhs(guard, loc),
-            read_rhs(rhs, loc),
-            read_rhs(*o_it, loc));
+          exprt final_rhs=nil_exprt();
+          
+          // merge rhs into value
+          if(value.id()==ID_symbol)
+            final_rhs=rhs;
+          else if(value.id()==ID_byte_extract_little_endian)
+            final_rhs=byte_update_little_endian_exprt(
+                            value.op0(), value.op1(), rhs);
+          else if(value.id()==ID_byte_extract_big_endian)
+          {
+          }
+          
+          exprt ssa_rhs;
+          
+          if(final_rhs.is_nil())
+            ssa_rhs=read_rhs(*o_it, loc);
+          else
+            ssa_rhs=if_exprt(
+              read_rhs(guard, loc),
+              read_rhs(final_rhs, loc),
+              read_rhs(*o_it, loc));
           
           equal_exprt equality(ssa_symbol, ssa_rhs);
           nodes[loc].equalities.push_back(equality);
