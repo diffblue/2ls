@@ -14,9 +14,9 @@ class summarizert
   summary_store(_summary_store) //, analyzer(_analyzer)
   {}
 
-  typedef predicatet preconditiont;
+  typedef summaryt::predicatet preconditiont;
   typedef irep_idt function_namet;
-  typedef local_SSAt function_bodyt;
+  typedef local_SSAt* function_bodyt;
   typedef std::map<function_namet, preconditiont> preconditionst;
   typedef std::map<function_namet, function_bodyt> functionst;
   typedef functionst::value_type functiont;

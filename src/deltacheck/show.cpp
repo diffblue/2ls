@@ -214,22 +214,6 @@ void show_ssa(
   local_SSA.output(out);
 }
 
-void test_summarizer(
-  const irep_idt &id,
-  const goto_functionst::goto_functiont &goto_function,
-  const namespacet &ns,
-  std::ostream &out)
-{
-  local_SSAt local_SSA(goto_function, ns);
-  local_SSA.assertions_to_constraints();
-  //  local_SSA.output(out);
-
-  summary_storet summary_store;
-  summarizert summarizer(summary_store);
-  summaryt summary = summarizer.summarize(
-    summarizert::functiont(id,local_SSA));
-}
-
 /*******************************************************************\
 
 Function: show_ssa
@@ -248,6 +232,11 @@ void show_ssa(
   std::ostream &out,
   message_handlert &message_handler)
 {
+#if 1
+  summary_storet summary_store;
+  summarizert summarizer(summary_store);
+#endif
+
   for(indext::file_to_functiont::const_iterator
       file_it=index.file_to_function.begin();
       file_it!=index.file_to_function.end();
@@ -286,8 +275,12 @@ void show_ssa(
           
       show_ssa(*index_fkt, ns, out);
 
-#if 0
-      test_summarizer(id,*index_fkt, ns, out);
+#if 1
+    local_SSAt local_SSA(*index_fkt, ns);
+    local_SSA.assertions_to_constraints();
+    summaryt summary = summarizer.summarize(
+      summarizert::functiont(id,&local_SSA));
+    summary.output(out,ns);
 #endif
       
       out << std::endl;
