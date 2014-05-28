@@ -273,15 +273,17 @@ void show_ssa(
       out << ">>>> Function " << id << " in " << file_it->first
           << std::endl;
           
-      show_ssa(*index_fkt, ns, out);
+      goto_functionst::goto_functiont fct = *index_fkt;
+      preprocess_returns(fct);
+      show_ssa(fct, ns, out);
 
 #if 0
      //call summarizer per function
-    local_SSAt local_SSA(*index_fkt, ns);
-    local_SSA.assertions_to_constraints();
-    summaryt summary = summarizer.summarize(
+      local_SSAt local_SSA(fct, ns);
+      local_SSA.assertions_to_constraints();
+      summaryt summary = summarizer.summarize(
       summarizert::functiont(id,&local_SSA));
-    summary.output(out,ns);
+      summary.output(out,ns);
 #endif
       
       out << std::endl;
@@ -295,7 +297,9 @@ void show_ssa(
     {
       const goto_functionst::function_mapt::const_iterator m_it=
         model.goto_functions.function_map.find(*fkt_it);
-      local_SSAt* local_SSA = new local_SSAt(m_it->second, ns);
+      goto_functionst::goto_functiont fct = m_it->second;
+      preprocess_returns(fct);
+      local_SSAt* local_SSA = new local_SSAt(fct, ns);
       local_SSA->assertions_to_constraints();
       sfunctions[*fkt_it] = local_SSA;
     }
@@ -305,7 +309,7 @@ void show_ssa(
     {
       out << ">>>> Summary for " << *fkt_it << std::endl;
       summary_store.get(*fkt_it).output(out,ns);
-      out << std::endl;
+      out <<  std::endl;
     }
 #endif
   }

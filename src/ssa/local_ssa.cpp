@@ -79,21 +79,16 @@ void local_SSAt::get_entry_exit_vars()
     entry_vars.push_back(symbol.symbol_expr());
   }
 
-  //TODO: renaming of return values
   forall_goto_program_instructions(it, goto_function.body)
   {
     if(it->is_return()) 
     {
       const code_returnt &code=to_code_return(it->code);
       assert(code.operands().size()==1);
-      exprt rhs = code.op0(); 
-      symbol_exprt lhs = return_symbol(rhs.type(),it);
-      //TODO: 
-      //code_assignt assignment(lhs,rhs);
-      exit_vars.push_back(lhs);
+      assert(code.op0().id()==ID_symbol); //assumes preprocessing of returns
+      exit_vars.push_back(to_symbol_expr(code.op0()));
     }
   }
-
 }
 
 /*******************************************************************\
@@ -616,24 +611,6 @@ symbol_exprt local_SSAt::name(
 
 /*******************************************************************\
 
-Function: local_SSAt::return_symbol
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-symbol_exprt local_SSAt::return_symbol(typet type, locationt loc)
-{
-  unsigned cnt=loc->location_number;
-  return symbol_exprt("ssa::$return#"+i2string(cnt), type);
-}
-
-/*******************************************************************\
-
 Function: local_SSAt::name
 
   Inputs:
@@ -928,4 +905,52 @@ std::list<exprt> & operator << (
   }
   
   return dest;
+}
+
+/*******************************************************************\
+
+Function: local_SSAt::return_symbol
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+symbol_exprt return_symbol(typet type, local_SSAt::locationt loc)
+{
+  unsigned cnt=loc->location_number;
+  return symbol_exprt("ssa::$return#"+i2string(cnt), type);
+}
+
+/*******************************************************************\
+
+Function: preprocess_returns
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void preprocess_returns(goto_functionst::goto_functiont &goto_function)
+{
+  Forall_goto_program_instructions(it, goto_function.body)
+  {
+    if(it->is_return()) 
+    {
+      code_returnt &code = to_code_return(it->code);
+      assert(code.operands().size()==1);
+      exprt rhs = code.op0(); 
+      symbol_exprt lhs = return_symbol(rhs.type(),it);
+      code.op0() = lhs;
+      goto_programt::targett newi = goto_function.body.insert_before(it);
+      newi->make_assignment();
+      newi->code = code_assignt(lhs,rhs);
+    }
+  }
 }

@@ -84,7 +84,6 @@ public:
   { return name(guard_symbol(), OUT, guard_map[loc].guard_source); }
   void assign_rec(const exprt &lhs, const exprt &rhs, locationt loc);
   void get_entry_exit_vars();
-  symbol_exprt return_symbol(typet type, locationt loc);
   
   bool has_static_lifetime(const ssa_objectt &) const;
   bool has_static_lifetime(const exprt &) const;
@@ -113,5 +112,8 @@ protected:
 
 std::list<exprt> & operator <<
   (std::list<exprt> &dest, const local_SSAt &src);
+
+void preprocess_returns(goto_functionst::goto_functiont &goto_function);
+symbol_exprt return_symbol(typet type, local_SSAt::locationt loc);
 
 #endif
