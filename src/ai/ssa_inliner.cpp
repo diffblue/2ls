@@ -12,35 +12,36 @@ void ssa_inlinert::replace(local_SSAt::nodet &node,
 
   counter++;
 
-  //constraints for transformer
-  exprt transformer = summary.transformer;
-  rename(transformer);
-  node.constraints.push_back(transformer);
+  //equalities for arguments
+  summaryt::var_listt::const_iterator it1 = summary.entry_vars.begin();
+  for(exprt::operandst::const_iterator it2 = funapp_expr.arguments().begin();
+      it2 != funapp_expr.arguments().end(); it2++, it1++)
+  {
+    assert(it1!=summary.entry_vars.end());
+    exprt rhs = *it2; //copy
+    rename(rhs);
+    new_equs.push_back(equal_exprt(*it1,rhs));
+  }
 
+  //constraints for transformer
+  node.constraints.push_back(summary.transformer);  //copy
+  exprt &transformer = node.constraints.back();
+  rename(transformer);
+  
   //constraints for return values
   exprt::operandst retvals;
   retvals.reserve(summary.exit_vars.size());
   for(summaryt::var_listt::const_iterator it3 = summary.exit_vars.begin();
       it3 != summary.exit_vars.end(); it3++)
   {
-    symbol_exprt rhs = *it3;
+    symbol_exprt rhs = *it3; //copy
     rename(rhs);
     retvals.push_back(equal_exprt(equ_it->lhs(),rhs));
   }
-  node.constraints.push_back(disjunction(retvals));
+  if(retvals.size()>0) node.constraints.push_back(disjunction(retvals));
 
-  //equalities for arguments
-  rm_equs.insert(equ_it);
-  summaryt::var_listt::const_iterator it1 = summary.entry_vars.begin();
-  for(exprt::operandst::const_iterator it2 = funapp_expr.arguments().begin();
-      it2 != funapp_expr.arguments().end(); it2++, it1++)
-  {
-    assert(it1!=summary.entry_vars.end());
-    exprt rhs = *it2;
-    rename(rhs);
-    new_equs.push_back(equal_exprt(*it1,rhs));
-  }
   //remove obsolete equalities
+  rm_equs.insert(equ_it);
   for(std::set<local_SSAt::nodet::equalitiest::iterator>::iterator it = rm_equs.begin();
       it != rm_equs.end(); it++) 
   {
@@ -50,11 +51,73 @@ void ssa_inlinert::replace(local_SSAt::nodet &node,
   node.equalities.insert(node.equalities.end(),new_equs.begin(),new_equs.end());
 }
 
-void ssa_inlinert::replace(local_SSAt::nodet &node, 
+void ssa_inlinert::replace(local_SSAt::nodest &nodes,
+		       local_SSAt::nodet &node, 
                        local_SSAt::nodet::equalitiest::iterator equ_it, 
                        const local_SSAt &function)
 {
-  assert(false);
+  function_application_exprt funapp_expr = to_function_application_expr(equ_it->rhs());
+  local_SSAt::nodest new_nodes;
+  local_SSAt::nodet::equalitiest new_equs;
+  std::set<local_SSAt::nodet::equalitiest::iterator> rm_equs;
+
+  counter++;
+
+  //equalities for arguments
+  local_SSAt::var_listt::const_iterator it1 = function.entry_vars.begin();
+  for(exprt::operandst::const_iterator it2 = funapp_expr.arguments().begin();
+      it2 != funapp_expr.arguments().end(); it2++, it1++)
+  {
+    assert(it1!=function.entry_vars.end());
+    exprt rhs = *it2; //copy
+    rename(rhs);
+    new_equs.push_back(equal_exprt(*it1,rhs));
+  }
+
+  //add function body
+  for(local_SSAt::nodest::const_iterator n_it = function.nodes.begin();
+      n_it != function.nodes.end(); n_it++)
+  {
+    new_nodes[n_it->first] = n_it->second;  //copy
+    local_SSAt::nodet &n = new_nodes[n_it->first];
+    for(local_SSAt::nodet::equalitiest::iterator e_it = n.equalities.begin();
+	e_it != n.equalities.end(); e_it++)
+    {
+      rename(*e_it);
+    }
+    for(local_SSAt::nodet::constraintst::iterator c_it = n.constraints.begin();
+	c_it != n.constraints.end(); c_it++)
+    {
+      rename(*c_it);
+    }  
+    std::cout << "new node: ";
+    new_nodes[n_it->first].output(std::cout,function.ns);
+  }
+ 
+  //constraints for return values
+  exprt::operandst retvals;
+  retvals.reserve(function.exit_vars.size());
+  for(summaryt::var_listt::const_iterator it3 = function.exit_vars.begin();
+      it3 != function.exit_vars.end(); it3++)
+  {
+    symbol_exprt rhs = *it3;
+    rename(rhs);
+    retvals.push_back(equal_exprt(equ_it->lhs(),rhs));
+  }
+  if(retvals.size()>0) node.constraints.push_back(disjunction(retvals));
+
+  //remove obsolete equalities
+  rm_equs.insert(equ_it);
+  for(std::set<local_SSAt::nodet::equalitiest::iterator>::iterator it = rm_equs.begin();
+      it != rm_equs.end(); it++) 
+  {
+    node.equalities.erase(*it);
+  }
+  //insert new equalities
+  node.equalities.insert(node.equalities.end(),
+    new_equs.begin(),new_equs.end());
+  //insert new nodes
+  nodes.insert(new_nodes.begin(),new_nodes.end());
 }
 
 void ssa_inlinert::havoc(local_SSAt::nodet &node, 

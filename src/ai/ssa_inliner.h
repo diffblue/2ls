@@ -15,7 +15,10 @@ class ssa_inlinert
                        local_SSAt::nodet::equalitiest::iterator equ_it, 
                        summaryt summary);
 
-  void replace(local_SSAt::nodet &node, 
+  //TODO: problem: local_SSAt::nodest maps a goto program target to a single SSA node,
+  //               for inlining we require a target to map to several SSA nodes
+  void replace(local_SSAt::nodest &nodes,
+		       local_SSAt::nodet &node, 
                        local_SSAt::nodet::equalitiest::iterator equ_it, 
                        const local_SSAt &function);
 

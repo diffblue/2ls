@@ -94,6 +94,7 @@ void summarizert::compute_summary_rec(function_namet function_name)
       //replace
       std::cout << "Inlining summary for " << fname << std::endl;
       inliner.replace(n->second,e,summary);
+      //inliner.replace(nodes,n->second,e,*functions[fname]); //just for test
       break; //relies on assumption above
     }
   }
