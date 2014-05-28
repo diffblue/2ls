@@ -2,6 +2,7 @@
 #define CPROVER_DELTACHECK_SUMMARIZER_H
 
 #include "summary.h"
+#include "ssa_inliner.h"
 #include "../ssa/local_ssa.h"
 //#include "../deltacheck/analyzer.h"
 
@@ -10,8 +11,11 @@ class summary_storet;
 class summarizert
 {
  public:
- summarizert(summary_storet &_summary_store/*,analyzert &_analyzer*/) : 
-  summary_store(_summary_store) //, analyzer(_analyzer)
+ summarizert(summary_storet &_summary_store
+   /*,analyzert &_analyzer*/) : 
+    summary_store(_summary_store), 
+  //analyzer(_analyzer),
+    inliner()
   {}
 
   typedef summaryt::predicatet preconditiont;
@@ -30,6 +34,7 @@ class summarizert
  protected:
   summary_storet &summary_store;
   //  analyzert &analyzer;
+  ssa_inlinert inliner;
   functionst functions;
   preconditionst preconditions;
 

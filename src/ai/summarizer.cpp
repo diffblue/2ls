@@ -54,10 +54,9 @@ void summarizert::compute_summary_rec(function_namet function_name)
   local_SSAt::nodest nodes = functions[function_name]->nodes; //copy nodes
 
   // replace calls with summaries
+  // TODO: functions with side effects!
   for(local_SSAt::nodest::iterator n = nodes.begin(); n!=nodes.end(); n++)
   {
-    local_SSAt::nodet::equalitiest new_equs;
-    std::set<local_SSAt::nodet::equalitiest::iterator> rm_equs;
     for(local_SSAt::nodet::equalitiest::iterator e = n->second.equalities.begin();
         e != n->second.equalities.end(); e++)
     {
@@ -65,6 +64,7 @@ void summarizert::compute_summary_rec(function_namet function_name)
 
       function_application_exprt f = to_function_application_expr(e->rhs());
       assert(f.function().id()==ID_symbol); //no function pointers
+      assert(n->second.equalities.size()==1); //assumption: only a single equality in the node
       irep_idt fname = to_symbol_expr(f.function()).get_identifier();
       summaryt summary; 
       bool recompute = false;
@@ -82,8 +82,8 @@ void summarizert::compute_summary_rec(function_namet function_name)
       else // havoc function call by default
       {
         std::cout << "Function " << fname << " not found" << std::endl;
-        rm_equs.insert(e);
-        continue;
+        inliner.havoc(n->second,e);
+        break; //relies on assumption above
       }
       if(recompute) 
       {
@@ -93,32 +93,9 @@ void summarizert::compute_summary_rec(function_namet function_name)
       }
       //replace
       std::cout << "Inlining summary for " << fname << std::endl;
-      //TODO: need some renaming
-      n->second.constraints.push_back(summary.transformer);
-      //constraints for return values
-      exprt::operandst retvals;
-      retvals.reserve(summary.exit_vars.size());
-      for(summaryt::var_listt::const_iterator it3 = summary.exit_vars.begin();
-          it3 != summary.exit_vars.end(); it3++)
-      {
-        retvals.push_back(equal_exprt(e->lhs(),*it3));
-      }
-      n->second.constraints.push_back(disjunction(retvals));
-      rm_equs.insert(e);
-      //equalities for arguments
-      summaryt::var_listt::const_iterator it1 = summary.entry_vars.begin();
-      for(exprt::operandst::const_iterator it2 = f.arguments().begin();
-          it2 != f.arguments().end(); it2++, it1++)
-      {
-        assert(it1!=summary.entry_vars.end());
-        new_equs.push_back(equal_exprt(*it1,*it2));
-      }
+      inliner.replace(n->second,e,summary);
+      break; //relies on assumption above
     }
-    //remove obsolete equalities
-    for(std::set<local_SSAt::nodet::equalitiest::iterator>::iterator it = rm_equs.begin();
-	it != rm_equs.end(); it++) n->second.equalities.erase(*it);
-    //insert new equalities
-    n->second.equalities.insert(n->second.equalities.end(),new_equs.begin(),new_equs.end());
   }
 
   std::cout << "function to be analyzed: " << std::endl;
