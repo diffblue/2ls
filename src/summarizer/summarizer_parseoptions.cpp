@@ -216,7 +216,7 @@ int summarizer_parseoptionst::doit()
     
   // now do full inlining, if requested
 
-  //if(cmdline.isset("inline"))
+  if(cmdline.isset("inline"))
   {
     try
     {
