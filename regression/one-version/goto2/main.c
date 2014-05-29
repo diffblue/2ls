@@ -17,5 +17,6 @@ int main()
   l4: x=1; goto check;
 
   check:
+  // should fail
   assert(x==1);
 }

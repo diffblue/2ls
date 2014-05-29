@@ -1,7 +1,6 @@
 CORE
-main.o
+main.c
 
 ^EXIT=0$
 ^SIGNAL=0$
-^Properties passed: 6$
-^Properties failed: 0$
+^** 0 of 6 failed$

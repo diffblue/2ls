@@ -1,7 +1,7 @@
 CORE
-main.o
+main.c
 --pointer-check
 ^EXIT=0$
 ^SIGNAL=0$
-^Properties passed: 4$
-^Properties failed: 0$
+^** 0 of 4 failed$
+^VERIFICATION SUCCESSFUL$
