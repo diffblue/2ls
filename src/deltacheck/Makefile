@@ -35,9 +35,11 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       ../functions/path_util$(OBJEXT) \
       ../functions/index$(OBJEXT) \
       ../ai/ssa_cfg$(OBJEXT) \
-     ../ai/summary$(OBJEXT) \
      ../ai/ssa_inliner$(OBJEXT) \
-     ../ai/summarizer$(OBJEXT)
+     ../ai/summarizer$(OBJEXT) \
+     ../ai/interval_map_domain$(OBJEXT)\
+     ../ai/interval_map$(OBJEXT)\
+     ../ai/interval_widening$(OBJEXT)
 
 include $(CBMC)/src/config.inc
 include $(CBMC)/src/common

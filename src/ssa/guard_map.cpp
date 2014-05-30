@@ -65,7 +65,7 @@ void guard_mapt::build(const goto_programt &src)
   
     if(it->is_goto())
     {
-      map[it->get_target()].add_in(it, it->guard);
+      map[it->get_target()].add_in(it, it->guard);  
       map[next].add_in(it, boolean_negate(it->guard));
     }
     else if(it->is_assume())

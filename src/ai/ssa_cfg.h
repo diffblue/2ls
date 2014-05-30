@@ -4,15 +4,9 @@
 #include <goto-programs/goto_functions.h>
 
 #include "fixpoint.h"
+#include "concrete_transformer.h"
+
 #include "../ssa/local_ssa.h"
-
-struct ssa_cfg_concrete_transformert {
-  typedef std::vector<equal_exprt> equalitiest;
-  equalitiest equalities;
-
-  typedef std::vector<exprt> constraintst;
-  constraintst constraints;
-};
 
 struct ssa_cfg_edget {
   ssa_cfg_concrete_transformert transformer;

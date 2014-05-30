@@ -1,4 +1,4 @@
-SUBDIRS = deltacheck deltagit ssa solver ai functions html
+SUBDIRS = deltacheck deltagit ssa solver functions html
 
 all: deltacheck 
 #deltagit
@@ -11,7 +11,7 @@ $(SUBDIRS):
 
 # Dependencies
 
-deltacheck: ssa solver ai functions html
+deltacheck: ssa solver functions html
 deltagit: html
 
 

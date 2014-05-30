@@ -49,7 +49,7 @@ public:
     constraintst constraints;
     
     typedef std::set<locationt> incomingt;
-    incomingt incoming;
+    //incomingt incoming;
     
     void output(std::ostream &, const namespacet &) const;
 
@@ -94,8 +94,9 @@ public:
   typedef assignmentst::objectst objectst;
   assignmentst assignments;
   
-protected:
+//protected:
   guard_mapt guard_map;
+protected:
   ssa_ait ssa_analysis;
   std::string suffix; // an extra suffix  
 

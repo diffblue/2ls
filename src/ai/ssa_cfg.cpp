@@ -33,7 +33,37 @@ ssa_cfgt::ssa_cfgt(const local_SSAt &local_ssa) :
     nodes.insert(node);    
         
     const local_SSAt::nodet &ssa_node=node_it->second;
-     
+    
+    
+    std::cout << "Node " << node << std::endl;
+         
+    std::cout << "incoming: " ;
+    /*
+    
+    for(local_SSAt::nodet::incomingt::iterator
+        incoming_it=ssa_node.incoming.begin();
+        incoming_it!=ssa_node.incoming.end();
+        ++incoming_it)
+    {
+      std::cout << (*incoming_it)->location_number << " ";
+    
+    }
+    
+    */
+    
+    const guard_mapt::entryt& entry=local_ssa.guard_map[loc];
+    
+    for(guard_mapt::incomingt::const_iterator
+        incoming_it=entry.incoming.begin();
+        incoming_it!=entry.incoming.end();
+        ++incoming_it)
+    {
+      std::cout << incoming_it->guard_source->location_number << " ";
+    }
+    
+    std::cout << std::endl;
+         
+         
     for(local_SSAt::nodet::equalitiest::const_iterator
         e_it=ssa_node.equalities.begin();
         e_it!=ssa_node.equalities.end();
@@ -42,6 +72,9 @@ ssa_cfgt::ssa_cfgt(const local_SSAt &local_ssa) :
       find_symbols(e_it->op1(), reader[node]);
 
       writer[e_it->op0()]=node;
+
+      std::cout << from_expr(*e_it) << std::endl;
+
     }
 
     for(local_SSAt::nodet::constraintst::const_iterator
@@ -51,6 +84,9 @@ ssa_cfgt::ssa_cfgt(const local_SSAt &local_ssa) :
     {
     
       std::set<exprt> dest;
+      
+      std::cout << from_expr(*c_it) << std::endl;
+      
       find_symbols(c_it->op0(), reader[node]);
       find_symbols(c_it->op1(), reader[node]);
     }

@@ -270,7 +270,7 @@ void local_SSAt::build_guard(locationt loc)
     
     sources.push_back(source);
   }
-
+  
   // the below produces 'false' if there is no source
   exprt rhs=disjunction(sources);
   
