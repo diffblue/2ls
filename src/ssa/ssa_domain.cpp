@@ -223,17 +223,33 @@ void ssa_ait::initialize(const goto_functionst::goto_functiont &goto_function)
 {
   ait<ssa_domaint>::initialize(goto_function);
 
-  // make entry instruction have a source for the parameters
+  // Make entry instruction have a source for the all objects.
+
   if(!goto_function.body.instructions.empty())
   {
     locationt e=goto_function.body.instructions.begin();
     ssa_domaint &entry=operator[](e);
+    
+    #if 0
+    // parameters
     const code_typet::parameterst &parameters=goto_function.type.parameters();
     for(code_typet::parameterst::const_iterator p_it=parameters.begin();
         p_it!=parameters.end();
         p_it++)
     {
       irep_idt id=p_it->get_identifier();
+      entry.def_map[id].source=e;
+      entry.def_map[id].def.loc=e;
+      entry.def_map[id].def.kind=ssa_domaint::deft::INPUT;
+    }
+    #endif
+    
+    for(assignmentst::objectst::const_iterator
+        o_it=assignments.objects.begin();
+        o_it!=assignments.objects.end();
+        o_it++)
+    {
+      irep_idt id=o_it->get_identifier();
       entry.def_map[id].source=e;
       entry.def_map[id].def.loc=e;
       entry.def_map[id].def.kind=ssa_domaint::deft::INPUT;

@@ -41,11 +41,16 @@ public:
   public:
     inline entryt():has_guard(false) { }
     bool has_guard;
+    
+    // if location has a guard of its own this is a self-pointer
     locationt guard_source;
+    
+    // if it has a guard of its own:
     incomingt incoming;
 
     inline void add_in(locationt l, exprt g)
     {
+      has_guard=true;
       incoming.push_back(edget(l, g));
     }
   };

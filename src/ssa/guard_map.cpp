@@ -75,19 +75,9 @@ void guard_mapt::build(const goto_programt &src)
     }
   }
 
-  // The following nodes get a guard:
-  // 1) everything that's a branch target
-  // 2) the entry location
-  // 3) successors of assumptions
-
-  forall_goto_program_instructions(it, src)
-  {
-    entryt &entry=map[it];
-  
-    if(it==src.instructions.begin() ||
-       !entry.incoming.empty())
-      entry.has_guard=true;
-  }
+  // Also make the function entry location have a guard
+  if(!src.instructions.empty())
+    map[src.instructions.begin()].has_guard=true;
   
   // now assign the guard sources accordingly
 
@@ -99,11 +89,11 @@ void guard_mapt::build(const goto_programt &src)
     
     if(entry.has_guard)
     {
-      entry.guard_source=it;
+      entry.guard_source=it; // self-pointer
       g=it;
     }
     else
-      entry.guard_source=g;
+      entry.guard_source=g; // previous
   }
   
   // now do guard sources of edges
