@@ -96,7 +96,26 @@ void guard_mapt::build(const goto_programt &src)
       entry.guard_source=g; // previous
   }
   
+  // add a source edge from previous instructions
+  // to all but first instruction with guard
+  
+  locationt previous;
+  
+  forall_goto_program_instructions(it, src)
+  {
+    entryt &entry=map[it];
+    
+    // no need if previous is a goto
+    if(it!=src.instructions.begin() &&
+       entry.has_guard &&
+       !previous->is_goto())
+      entry.add_in(previous, true_exprt());
+    
+    previous=it;
+  }
+  
   // now do guard sources of edges
+
   for(mapt::iterator m_it=map.begin(); m_it!=map.end(); m_it++)
   {
     for(incomingt::iterator i_it=m_it->second.incoming.begin();
