@@ -260,7 +260,8 @@ int summarizer_parseoptionst::doit()
 
   if(cmdline.isset("show-ssa"))
   {
-    show_ssa(goto_model, std::cout, ui_message_handler);
+    bool simplify=!cmdline.isset("no-simplify");
+    show_ssa(goto_model, simplify, std::cout, ui_message_handler);
     return 7;
   }
 

@@ -18,6 +18,7 @@ class message_handlert;
 
 void show_ssa(
   const goto_modelt &,
+  bool simplify,
   std::ostream &,
   message_handlert &);
 

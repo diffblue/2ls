@@ -16,6 +16,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "../ssa/ssa_domain.h"
 #include "../ssa/guard_map.h"
 #include "../ssa/local_ssa.h"
+#include "../ssa/simplify_ssa.h"
+
 //#include "ssa_fixed_point.h"
 
 /*******************************************************************\
@@ -134,11 +136,13 @@ Function: show_ssa
 
 void show_ssa(
   const goto_functionst::goto_functiont &goto_function,
+  bool simplify,
   const namespacet &ns,
   std::ostream &out)
 {
   local_SSAt local_SSA(goto_function, ns);
   local_SSA.assertions_to_constraints();
+  if(simplify) ::simplify(local_SSA, ns);
   local_SSA.output(out);
 }
 
@@ -156,6 +160,7 @@ Function: show_ssa
 
 void show_ssa(
   const goto_modelt &goto_model,
+  bool simplify,
   std::ostream &out,
   message_handlert &message_handler)
 {
@@ -165,7 +170,7 @@ void show_ssa(
   {
     out << ">>>> Function " << f_it->first << "\n";
           
-    show_ssa(f_it->second, ns, out);
+    show_ssa(f_it->second, simplify, ns, out);
       
     out << "\n";
   }
