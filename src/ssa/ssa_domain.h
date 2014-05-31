@@ -99,7 +99,7 @@ protected:
   friend class ssa_domaint;
 
   // The overload below is needed to make the entry point get a source
-  // for the function parameters.
+  // for all objects.
   virtual void initialize(const goto_functionst::goto_functiont &goto_function);
 };
 
