@@ -78,7 +78,7 @@ void ssa_domaint::transform(
   ai_baset &ai,
   const namespacet &ns)
 {
-  if(from->is_assign() || from->is_decl())
+  if(from->is_assign() || from->is_decl() || from->is_function_call())
   {
     const std::set<ssa_objectt> &assigns=
       static_cast<ssa_ait &>(ai).assignments.get(from);

@@ -43,6 +43,12 @@ void assignmentst::build(
       const code_declt &code_decl=to_code_decl(it->code);
       assign(code_decl.symbol(), it, ns);
     }
+    else if(it->is_function_call())
+    {
+      const code_function_callt &code_function_call=to_code_function_call(it->code);
+      if(code_function_call.lhs().is_not_nil())
+        assign(code_function_call.lhs(), it, ns);
+    }
     else if(it->is_dead())
     {
     }

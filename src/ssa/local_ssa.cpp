@@ -194,9 +194,14 @@ void local_SSAt::build_transfer(locationt loc)
   {
     const code_function_callt &code_function_call=
       to_code_function_call(loc->code);
-
+      
     if(code_function_call.lhs().is_not_nil())
     {
+      // generate a symbol for rhs
+      irep_idt identifier="ssa::return_value"+i2string(loc->location_number);
+      symbol_exprt rhs(identifier, code_function_call.lhs().type());
+      
+      assign_rec(code_function_call.lhs(), rhs, loc);
     }
   }
 }

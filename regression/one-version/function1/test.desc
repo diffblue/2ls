@@ -1,7 +1,7 @@
-KNOWNBUG
+CORE
 main.c
 
-^EXIT=0$
+^EXIT=10$
 ^SIGNAL=0$
-^** 0 of 1 failed$
-^VERIFICATION SUCCESSFUL$
+^** 1 of 1 failed$
+^VERIFICATION FAILED$
