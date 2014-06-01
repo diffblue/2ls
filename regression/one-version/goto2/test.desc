@@ -1,8 +1,7 @@
 CORE
 main.c
-
-^EXIT=0$
+--inline
+^EXIT=10$
 ^SIGNAL=0$
-^Properties passed: 0$
-^Properties failed: 1$
-^Properties warned: 0$
+^** 1 of 1 failed$
+^VERIFICATION FAILED$
