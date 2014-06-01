@@ -97,20 +97,24 @@ void guard_mapt::build(const goto_programt &src)
       entry.guard_source=g; // previous
   }
   
-  // add a source edge from previous instructions
-  // to all but first instruction with guard
-  
+  // Locations with guards get the successor edge
+  // in the CFG.
+
   locationt previous;
   
   forall_goto_program_instructions(it, src)
   {
-    entryt &entry=map[it];
+    // skip first, which has no predecessor
+    if(it!=src.instructions.begin())
+    {
+      entryt &entry=map[it];
     
-    // no need if previous is a goto
-    if(it!=src.instructions.begin() &&
-       entry.has_guard &&
-       !previous->is_goto())
-      entry.add_in(previous, SUCCESSOR);
+      // no need if previous is a goto
+      if(entry.has_guard &&
+         !previous->is_goto() &&
+         !previous->is_assume())
+        entry.add_in(previous, SUCCESSOR);
+    }
     
     previous=it;
   }
