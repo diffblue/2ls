@@ -35,6 +35,7 @@ public:
     case TAKEN: return out << "BTK";
     case NOT_TAKEN: return out << "BNT";
     case ASSUME: return out << "ASS";
+    default: return out << "?";
     }
   }
 
