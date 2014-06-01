@@ -27,6 +27,11 @@ void show_defs(
   std::ostream &,
   message_handlert &);
 
+void show_assignments(
+  const goto_modelt &,
+  std::ostream &,
+  message_handlert &);
+
 void show_guards(
   const goto_modelt &,
   std::ostream &,

@@ -22,6 +22,56 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
+Function: show_assignments
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void show_assignments(
+  const goto_functionst::goto_functiont &goto_function,
+  const namespacet &ns,
+  std::ostream &out)
+{
+  assignmentst assignments(goto_function.body, ns);
+  assignments.output(ns, goto_function.body, out);
+}
+
+/*******************************************************************\
+
+Function: show_assignments
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void show_assignments(
+  const goto_modelt &goto_model,
+  std::ostream &out,
+  message_handlert &message_handler)
+{
+  const namespacet ns(goto_model.symbol_table);
+  
+  forall_goto_functions(f_it, goto_model.goto_functions)
+  {
+    out << ">>>> Function " << f_it->first << "\n";
+          
+    show_assignments(f_it->second, ns, out);
+      
+    out << "\n";
+  }
+}
+
+/*******************************************************************\
+
 Function: show_defs
 
   Inputs:

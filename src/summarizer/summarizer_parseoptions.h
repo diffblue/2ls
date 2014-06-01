@@ -37,7 +37,7 @@ class optionst;
   "(round-to-nearest)(round-to-plus-inf)(round-to-minus-inf)(round-to-zero)" \
   "(inline)" \
   "(show-locs)(show-vcc)(show-properties)(show-trace)" \
-  "(show-goto-functions)(show-guards)(show-defs)(show-ssa)" \
+  "(show-goto-functions)(show-guards)(show-defs)(show-ssa)(show-assignments)" \
   "(property):" \
   "(no-simplify)(no-unwinding-assertions)(no-propagation)"
   // the last line is for CBMC-regression testing only

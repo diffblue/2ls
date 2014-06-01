@@ -229,6 +229,12 @@ int summarizer_parseoptionst::doit()
     return 7;
   }
 
+  if(cmdline.isset("show-assignments"))
+  {
+    show_assignments(goto_model, std::cout, ui_message_handler);
+    return 7;
+  }
+
   if(cmdline.isset("show-guards"))
   {
     show_guards(goto_model, std::cout, ui_message_handler);
