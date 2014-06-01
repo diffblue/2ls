@@ -1,7 +1,7 @@
 CORE
 main.c
 
-^EXIT=0$
+^EXIT=10$
 ^SIGNAL=0$
-^Properties passed: 0$
-^Properties failed: 2$
+^** 2 of 2 failed$
+^VERIFICATION FAILED$
