@@ -23,12 +23,55 @@ Function: collect_objects_rec
 void collect_objects_rec(
   const exprt &src,
   const namespacet &ns,
+  std::set<ssa_objectt> &dest);
+
+void collect_objects_address_of_rec(
+  const exprt &src,
+  const namespacet &ns,
+  std::set<ssa_objectt> &dest)
+{
+  if(src.id()==ID_index)
+  {
+    collect_objects_address_of_rec(to_index_expr(src).array(), ns, dest);
+    collect_objects_rec(to_index_expr(src).index(), ns, dest);
+  }
+  else if(src.id()==ID_dereference)
+  {
+    collect_objects_rec(to_dereference_expr(src).pointer(), ns, dest);
+  }
+  else if(src.id()==ID_member)
+  {
+    collect_objects_address_of_rec(to_member_expr(src).struct_op(), ns, dest);
+  }
+}
+
+/*******************************************************************\
+
+Function: collect_objects_rec
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void collect_objects_rec(
+  const exprt &src,
+  const namespacet &ns,
   std::set<ssa_objectt> &dest)
 {
   if(src.id()==ID_code)
   {
     forall_operands(it, src)
       collect_objects_rec(*it, ns, dest);
+    return;
+  }
+  else if(src.id()==ID_address_of)
+  {
+    collect_objects_address_of_rec(
+      to_address_of_expr(src).object(), ns, dest);
     return;
   }
 

@@ -497,7 +497,9 @@ exprt local_SSAt::read_rhs(const exprt &expr, locationt loc) const
   unsigned counter=0;
   replace_side_effects_rec(tmp, loc, counter);
   
-  return read_rhs_rec(tmp, loc);
+  exprt result=read_rhs_rec(tmp, loc);
+  
+  return result;
 }
 
 /*******************************************************************\
@@ -526,7 +528,7 @@ exprt local_SSAt::read_rhs_address_of_rec(
   else if(expr.id()==ID_member)
   {
     member_exprt tmp=to_member_expr(expr);
-    tmp.struct_op()=read_rhs_rec(tmp.struct_op(), loc);
+    tmp.struct_op()=read_rhs_address_of_rec(tmp.struct_op(), loc);
     return tmp;
   }
   else if(expr.id()==ID_index)
