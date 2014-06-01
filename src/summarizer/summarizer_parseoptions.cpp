@@ -214,50 +214,6 @@ int summarizer_parseoptionst::doit()
   if(get_goto_program(options, goto_model))
     return 6;
     
-  // now do full inlining, if requested
-
-  if(cmdline.isset("inline"))
-  {
-    try
-    {
-      status() << "Function Pointer Removal" << eom;
-      remove_function_pointers(
-        goto_model, cmdline.isset("pointer-check"));
-
-      status() << "Performing full inlining" << eom;
-      goto_inline(goto_model, ui_message_handler);
-    }
-
-    catch(const std::string error_msg)
-    {
-      error() << error_msg << messaget::eom;
-      return 8;
-    }
-
-    catch(const char *error_msg)
-    {
-      error() << error_msg << messaget::eom;
-      return 8;
-    }
-
-    catch(int)
-    {
-      return 8;
-    }
-
-  }
-    
-  label_properties(goto_model);
-
-  if(cmdline.isset("show-properties"))
-  {
-    show_properties(goto_model, get_ui());
-    return 0;
-  }
-
-  if(set_properties(goto_model))
-    return 7;
-
   if(cmdline.isset("show-ssa"))
   {
     bool simplify=!cmdline.isset("no-simplify");
@@ -569,6 +525,29 @@ bool summarizer_parseoptionst::process_goto_program(
       show_loop_ids(get_ui(), goto_model);
       return true;
     }
+
+    // now do full inlining, if requested
+
+    if(cmdline.isset("inline"))
+    {
+      status() << "Function Pointer Removal" << eom;
+      remove_function_pointers(
+        goto_model, cmdline.isset("pointer-check"));
+
+      status() << "Performing full inlining" << eom;
+      goto_inline(goto_model, ui_message_handler);
+    }
+
+    label_properties(goto_model);
+
+    if(cmdline.isset("show-properties"))
+    {
+      show_properties(goto_model, get_ui());
+      return true;
+    }
+
+    if(set_properties(goto_model))
+      return true;
 
     // show it?
     if(cmdline.isset("show-goto-functions"))
