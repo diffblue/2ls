@@ -122,26 +122,15 @@ void assignmentst::assign(
     return; // done
   }
 
-  const ssa_objectt ssa_object(lhs, ns);
-  
-  if(ssa_object)
+  // this might alias all sorts of stuff
+  for(std::set<ssa_objectt>::const_iterator
+      o_it=objects.begin();
+      o_it!=objects.end();
+      o_it++)
   {
-    assign(ssa_object, loc, ns);
-
-    if(lhs.id()==ID_dereference)
-    {
-      // this might alias other stuff
-      for(std::set<ssa_objectt>::const_iterator
-          o_it=objects.begin();
-          o_it!=objects.end();
-          o_it++)
-      {
-        if(*o_it!=ssa_object &&
-           may_alias(o_it->get_expr(), ssa_object.get_expr(), ns))
-          assign(*o_it, loc, ns);
-      }
-    }    
-  }
+    if(ssa_may_alias(o_it->get_expr(), lhs, ns))
+      assign(*o_it, loc, ns);
+  }    
 }
 
 /*******************************************************************\
