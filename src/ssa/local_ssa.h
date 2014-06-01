@@ -76,6 +76,7 @@ public:
   ssa_objectt guard_symbol() const;
   symbol_exprt guard_symbol(locationt loc) const
   { return name(guard_symbol(), OUT, guard_map[loc].guard_source); }
+  exprt edge_guard(locationt from, locationt to) const;
   
   // auxiliary functions
   enum kindt { PHI, OUT, LOOP_BACK, LOOP_SELECT };

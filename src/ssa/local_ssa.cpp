@@ -62,6 +62,36 @@ void local_SSAt::build_SSA()
 
 /*******************************************************************\
 
+Function: local_SSAt::edge_guard
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt local_SSAt::edge_guard(locationt from, locationt to) const
+{
+  if(from->is_goto())
+  {
+    // big question: taken or not taken?
+    if(to==from->get_target())
+      return and_exprt(guard_symbol(from), cond_symbol(from));
+    else
+      return and_exprt(guard_symbol(from), not_exprt(cond_symbol(from)));
+  }
+  else if(from->is_assume())
+  {
+    return and_exprt(guard_symbol(from), cond_symbol(from));
+  }
+  else
+    return guard_symbol(from);
+}
+
+/*******************************************************************\
+
 Function: local_SSAt::build_phi_nodes
 
   Inputs:
@@ -106,7 +136,7 @@ void local_SSAt::build_phi_nodes(locationt loc)
       {
         // it's a forward edge
         exprt incoming_value=name(*o_it, incoming_it->second);
-        exprt incoming_guard=guard_symbol(incoming_it->first);
+        exprt incoming_guard=edge_guard(incoming_it->first, loc);
 
         if(rhs.is_nil()) // first
           rhs=incoming_value;
