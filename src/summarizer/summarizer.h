@@ -49,12 +49,17 @@ public:
 protected:
   void report_statistics();
 
-  void analyze(const goto_functionst::function_mapt::const_iterator f_it);
-  
   void initialize_property_map(
     const goto_functionst &goto_functions);
 
   void do_show_vcc(const local_SSAt &, const goto_programt::const_targett);
+
+  resultt check_properties(
+    const goto_functionst &goto_functions);
+
+  void check_properties(
+    const goto_functionst::function_mapt::const_iterator f_it);
+  
 };
 
 #endif

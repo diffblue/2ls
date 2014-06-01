@@ -33,20 +33,30 @@ Function: summarizert::operator()
 summarizert::resultt summarizert::operator()(
   const goto_functionst &goto_functions)
 {
-  // get the entry point
-  const goto_functionst::function_mapt::const_iterator
-    f_it=goto_functions.function_map.find(goto_functions.entry_point());
-    
-  if(f_it==goto_functions.function_map.end())
-    throw "Failed to find entry point, please complete linking.";
+  return check_properties(goto_functions);
+}
 
+/*******************************************************************\
+
+Function: summarizert::check_properties
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+summarizert::resultt summarizert::check_properties(
+  const goto_functionst &goto_functions)
+{
   // properties
-  
   initialize_property_map(goto_functions);
 
-  // analyze entry function
-  
-  analyze(f_it);
+  // analyze all the functions
+  forall_goto_functions(f_it, goto_functions)
+    check_properties(f_it);
   
   for(property_mapt::const_iterator
       p_it=property_map.begin(); p_it!=property_map.end(); p_it++)
@@ -58,7 +68,7 @@ summarizert::resultt summarizert::operator()(
 
 /*******************************************************************\
 
-Function: summarizert::analyze
+Function: summarizert::check_properties
 
   Inputs:
 
@@ -70,9 +80,11 @@ Function: summarizert::analyze
 
 #include "../ssa/ssa_domain.h"
 
-void summarizert::analyze(
+void summarizert::check_properties(
   const goto_functionst::function_mapt::const_iterator f_it)
 {
+  if(!f_it->second.body.has_assertion()) return;
+
   #if 0
   assignmentst assignments(f_it->second.body, ns);
   //assignments.output(ns, f_it->second.body, std::cout);

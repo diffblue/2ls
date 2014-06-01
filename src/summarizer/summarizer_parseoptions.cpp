@@ -213,6 +213,8 @@ int summarizer_parseoptionst::doit()
 
   if(get_goto_program(options, goto_model))
     return 6;
+
+  // options for various debug outputs
     
   if(cmdline.isset("show-ssa"))
   {
