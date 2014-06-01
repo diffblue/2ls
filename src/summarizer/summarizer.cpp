@@ -8,6 +8,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <iostream>
 
+#include <util/simplify_expr.h>
 #include <langapi/language_util.h>
 
 #include <solvers/sat/satcheck.h>
@@ -139,8 +140,14 @@ void summarizert::check_properties(
     solver << SSA;
 
     // give negation of property to solver
+
+    exprt negated_property=SSA.read_rhs(not_exprt(i_it->guard), i_it);
+
+    if(simplify)
+      negated_property=::simplify_expr(negated_property, ns);
+  
     solver << SSA.guard_symbol(i_it);          
-    solver << SSA.read_rhs(not_exprt(i_it->guard), i_it);
+    solver << negated_property;
     
     // solve
     switch(solver())
@@ -206,8 +213,13 @@ void summarizert::do_show_vcc(
 
   std::cout << "|--------------------------\n";
   
+  exprt property_rhs=SSA.read_rhs(i_it->guard, i_it);
+  
+  if(simplify)
+    property_rhs=::simplify_expr(property_rhs, ns);
+  
   implies_exprt property(
-    SSA.guard_symbol(i_it), SSA.read_rhs(i_it->guard, i_it));
+    SSA.guard_symbol(i_it), property_rhs);
 
   std::cout << "{1} " << from_expr(ns, "", property) << "\n";
   
