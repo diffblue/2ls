@@ -25,11 +25,45 @@ public:
   
   typedef goto_programt::const_targett locationt;    
 
+  enum kindt { SUCCESSOR, TAKEN, NOT_TAKEN, ASSUME } kind;
+  
+  friend std::ostream & operator << (std::ostream &out, kindt kind)
+  {
+    switch(kind)
+    {
+    case SUCCESSOR: return out << "SUC";
+    case TAKEN: return out << "BTK";
+    case NOT_TAKEN: return out << "BNT";
+    case ASSUME: return out << "ASS";
+    }
+  }
+
   struct edget
   {
     locationt from, guard_source;
-    exprt guard;
-    inline edget(locationt f, exprt g):from(f), guard(g)
+    kindt kind;
+    
+    bool is_branch_not_taken() const
+    {
+      return kind==NOT_TAKEN;
+    }
+
+    bool is_branch_taken() const
+    {
+      return kind==TAKEN;
+    }
+
+    bool is_assume() const
+    {
+      return kind==ASSUME;
+    }
+
+    bool is_successor() const
+    {
+      return kind==SUCCESSOR;
+    }
+
+    inline edget(locationt f, kindt k):from(f), kind(k)
     {
     }
   };
@@ -48,10 +82,10 @@ public:
     // if it has a guard of its own:
     incomingt incoming;
 
-    inline void add_in(locationt l, exprt g)
+    inline void add_in(locationt l, kindt k)
     {
       has_guard=true;
-      incoming.push_back(edget(l, g));
+      incoming.push_back(edget(l, k));
     }
   };
   

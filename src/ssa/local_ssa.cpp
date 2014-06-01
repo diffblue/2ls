@@ -42,7 +42,7 @@ void local_SSAt::build_SSA()
 {
   // perform SSA data-flow analysis
   ssa_analysis(goto_function, ns);
-
+  
   // now build phi-nodes
   forall_goto_program_instructions(i_it, goto_function.body)
     build_phi_nodes(i_it);
@@ -50,6 +50,10 @@ void local_SSAt::build_SSA()
   // now build transfer functions
   forall_goto_program_instructions(i_it, goto_function.body)
     build_transfer(i_it);
+
+  // now build branching conditions
+  forall_goto_program_instructions(i_it, goto_function.body)
+    build_cond(i_it);
 
   // now build guards
   forall_goto_program_instructions(i_it, goto_function.body)
@@ -83,8 +87,7 @@ void local_SSAt::build_phi_nodes(locationt loc)
           
     if(p_it==phi_nodes.end()) continue; // none
     
-    // yes
-    // source -> def map
+    // Yes. Get the source -> def map.
     const std::map<locationt, ssa_domaint::deft> &incoming=p_it->second;
 
     exprt rhs=nil_exprt();
@@ -170,6 +173,29 @@ void local_SSAt::build_transfer(locationt loc)
   
 /*******************************************************************\
 
+Function: local_SSAt::build_cond
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void local_SSAt::build_cond(locationt loc)
+{
+  // anything to be built?
+  if(!loc->is_goto() &&
+     !loc->is_assume()) return;
+  
+  // produce a symbol for the renamed branching condition
+  equal_exprt equality(cond_symbol(loc), read_rhs(loc->guard, loc));
+  nodes[loc].equalities.push_back(equality);
+}
+
+/*******************************************************************\
+
 Function: local_SSAt::build_guard
 
   Inputs:
@@ -200,8 +226,6 @@ void local_SSAt::build_guard(locationt loc)
   {
     const guard_mapt::edget &edge=*i_it;
     
-    if(edge.guard.is_false()) continue;
-    
     exprt source;
     
     // might be backwards
@@ -216,7 +240,18 @@ void local_SSAt::build_guard(locationt loc)
     else
     {
       symbol_exprt gs=name(guard_symbol(), OUT, edge.guard_source);
-      source=and_exprt(gs, read_rhs(edge.guard, edge.from));
+      exprt cond;
+      
+      if(edge.is_branch_taken() || edge.is_assume())
+        cond=cond_symbol(edge.from);
+      else if(edge.is_branch_not_taken())
+        cond=boolean_negate(cond_symbol(edge.from));
+      else if(edge.is_successor())
+        cond=true_exprt();
+      else
+        assert(false);
+
+      source=and_exprt(gs, cond);
     }
     
     sources.push_back(source);
@@ -253,6 +288,23 @@ void local_SSAt::assertions_to_constraints()
       nodes[i_it].constraints.push_back(implication);
     }
   }  
+}
+
+/*******************************************************************\
+
+Function: local_SSAt::cond_symbol
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+ssa_objectt local_SSAt::cond_symbol() const
+{
+  return ssa_objectt(symbol_exprt("ssa::$cond", bool_typet()), ns);
 }
 
 /*******************************************************************\
@@ -693,9 +745,9 @@ symbol_exprt local_SSAt::name(
   const ssa_objectt &object,
   const ssa_domaint::deft &def) const
 {
-  if(def.kind==ssa_domaint::deft::INPUT)
+  if(def.is_input())
     return name_input(object);
-  else if(def.kind==ssa_domaint::deft::PHI)
+  else if(def.is_phi())
     return name(object, PHI, def.loc);
   else
     return name(object, OUT, def.loc);
