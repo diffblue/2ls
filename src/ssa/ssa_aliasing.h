@@ -13,7 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/namespace.h>
 
 bool ssa_may_alias(const exprt &, const exprt &, const namespacet &);
-exprt ssa_alias_guard(const exprt &, const exprt &, const namespacet &);
-exprt ssa_alias_value(const exprt &, const exprt &, const namespacet &);
+exprt ssa_alias_guard(const dereference_exprt &, const exprt &, const namespacet &);
+exprt ssa_alias_value(const dereference_exprt &, const exprt &, const namespacet &);
 
 #endif

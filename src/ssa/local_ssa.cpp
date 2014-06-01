@@ -600,7 +600,7 @@ exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
          ssa_may_alias(expr, o_it->get_expr(), ns))
       {
         exprt guard=ssa_alias_guard(dereference_expr, o_it->get_expr(), ns);
-        exprt value=ssa_alias_value(dereference_expr, o_it->get_expr(), ns);
+        exprt value=ssa_alias_value(dereference_expr, read_rhs(*o_it, loc), ns);
         guard=read_rhs_rec(guard, loc);
         value=read_rhs_rec(value, loc);
 
@@ -874,6 +874,8 @@ void local_SSAt::assign_rec(
     }
   }
 
+  ssa_objectt lhs_object(lhs, ns);
+
   exprt rhs_read=read_rhs(rhs, loc);
 
   const std::set<ssa_objectt> &assigned=
@@ -884,41 +886,49 @@ void local_SSAt::assign_rec(
       a_it!=assigned.end();
       a_it++)
   {
-    if(!ssa_may_alias(a_it->get_expr(), lhs, ns))
-      continue;
-      
-    if(a_it->get_expr().id()==ID_dereference)
-      continue;
-
     const symbol_exprt ssa_symbol=name(*a_it, OUT, loc);
-
-    exprt guard=ssa_alias_guard(lhs, a_it->get_expr(), ns);
-    exprt value=ssa_alias_value(lhs, a_it->get_expr(), ns);
-    
-    exprt final_rhs=nil_exprt();
-    
-    // read the value and the rhs
-    value=read_rhs(value, loc);
-    
-    // merge rhs into value
-    if(value.id()==ID_symbol)
-      final_rhs=rhs_read;
-    else if(value.id()==ID_byte_extract_little_endian)
-      final_rhs=byte_update_little_endian_exprt(
-                      value.op0(), value.op1(), rhs_read);
-    else if(value.id()==ID_byte_extract_big_endian)
-      final_rhs=byte_update_big_endian_exprt(
-                      value.op0(), value.op1(), rhs_read);
-    
     exprt ssa_rhs;
+
+    if(lhs_object==*a_it)
+    {
+      ssa_rhs=rhs_read;
+    }
+    else if(lhs.id()==ID_dereference) // might alias stuff
+    {
+      const dereference_exprt &dereference_expr=
+        to_dereference_expr(lhs);
     
-    if(final_rhs.is_nil())
-      ssa_rhs=read_rhs(*a_it, loc);
+      if(!ssa_may_alias(dereference_expr, a_it->get_expr(), ns))
+        continue;
+        
+      exprt guard=ssa_alias_guard(dereference_expr, a_it->get_expr(), ns);
+      exprt value=ssa_alias_value(dereference_expr, read_rhs(*a_it, loc), ns);
+      
+      exprt final_rhs=nil_exprt();
+      
+      // read the value and the rhs
+      value=read_rhs(value, loc);
+      
+      // merge rhs into value
+      if(value.id()==ID_symbol)
+        final_rhs=rhs_read;
+      else if(value.id()==ID_byte_extract_little_endian)
+        final_rhs=byte_update_little_endian_exprt(
+                        value.op0(), value.op1(), rhs_read);
+      else if(value.id()==ID_byte_extract_big_endian)
+        final_rhs=byte_update_big_endian_exprt(
+                        value.op0(), value.op1(), rhs_read);
+      
+      if(final_rhs.is_nil())
+        ssa_rhs=read_rhs(*a_it, loc);
+      else
+        ssa_rhs=if_exprt(
+          read_rhs(guard, loc),
+          final_rhs, // read_rhs done above
+          read_rhs(*a_it, loc));
+    }
     else
-      ssa_rhs=if_exprt(
-        read_rhs(guard, loc),
-        final_rhs, // read_rhs done above
-        read_rhs(*a_it, loc));
+      continue;
     
     equal_exprt equality(ssa_symbol, ssa_rhs);
     nodes[loc].equalities.push_back(equality);

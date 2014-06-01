@@ -141,50 +141,39 @@ Function: ssa_alias_guard
 \*******************************************************************/
 
 exprt ssa_alias_guard(
-  const exprt &e1,
+  const dereference_exprt &e1,
   const exprt &e2,
   const namespacet &ns)
 {
-  if(e1==e2)
+  const exprt e1_pointer=e1.pointer();
+
+  const typet &e2_type=ns.follow(e2.type());
+
+  exprt e2_address=address_of_exprt(e2);
+
+  // is e2 an array, struct, or union?
+  if(e2_type.id()==ID_array ||
+     e2_type.id()==ID_struct ||
+     e2_type.id()==ID_union)
   {
-    return true_exprt();
-  }
-  else if(e1.id()==ID_dereference)
-  {
-    const exprt e1_pointer=to_dereference_expr(e1).pointer();
-  
-    const typet &e2_type=ns.follow(e2.type());
-
-    exprt e2_address=address_of_exprt(e2);
-
-    // is e2 an array, struct, or union?
-    if(e2_type.id()==ID_array ||
-       e2_type.id()==ID_struct ||
-       e2_type.id()==ID_union)
-    {
-      return same_object(e1_pointer, e2_address);
-    }
-
-    // in some cases, we can use plain equality
-    mp_integer size1=pointer_offset_size(ns, e1.type());
-    mp_integer size2=pointer_offset_size(ns, e2.type());
-    
-    if(size1>=size2)
-    {
-      exprt lhs=e1_pointer;
-      exprt rhs=e2_address;
-      if(ns.follow(rhs.type())!=ns.follow(lhs.type()))
-        rhs=typecast_exprt(rhs, lhs.type());
-    
-      return equal_exprt(lhs, rhs);
-    }
-    
     return same_object(e1_pointer, e2_address);
   }
-  else
+
+  // in some cases, we can use plain equality
+  mp_integer size1=pointer_offset_size(ns, e1.type());
+  mp_integer size2=pointer_offset_size(ns, e2.type());
+  
+  if(size1>=size2)
   {
-    assert(false);
+    exprt lhs=e1_pointer;
+    exprt rhs=e2_address;
+    if(ns.follow(rhs.type())!=ns.follow(lhs.type()))
+      rhs=typecast_exprt(rhs, lhs.type());
+  
+    return equal_exprt(lhs, rhs);
   }
+  
+  return same_object(e1_pointer, e2_address);
 }
 
 /*******************************************************************\
@@ -200,50 +189,41 @@ Function: ssa_alias_value
 \*******************************************************************/
 
 exprt ssa_alias_value(
-  const exprt &e1,
+  const dereference_exprt &e1,
   const exprt &e2,
   const namespacet &ns)
 {
-  if(e1==e2)
-    return e1;
-  else if(e1.id()==ID_dereference)
+  const exprt &e1_pointer=e1.pointer();
+  
+  const typet &e1_type=ns.follow(e1.type());
+  const typet &e2_type=ns.follow(e2.type());
+
+  // type matches?
+  if(e1_type==e2_type)
+    return e2;
+
+  exprt offset=pointer_offset(e1_pointer);
+
+  // array index possible?
+  if(e2_type.id()==ID_array &&
+     e1_type==ns.follow(e2_type.subtype()))
   {
-    const exprt &e1_pointer=to_dereference_expr(e1).pointer();
-    
-    const typet &e1_type=ns.follow(e1.type());
-    const typet &e2_type=ns.follow(e2.type());
+    // this assumes well-alignedness
 
-    // type matches?
-    if(e1_type==e2_type)
-      return e2;
+    mp_integer element_size=pointer_offset_size(ns, e2_type.subtype());
 
-    exprt offset=pointer_offset(e1_pointer);
-
-    // array index possible?
-    if(e2_type.id()==ID_array &&
-       e1_type==ns.follow(e2_type.subtype()))
+    if(element_size==1)
+      return index_exprt(e2, offset, e1.type());
+    else if(element_size>1)
     {
-      // this assumes well-alignedness
-
-      mp_integer element_size=pointer_offset_size(ns, e2_type.subtype());
-
-      if(element_size==1)
-        return index_exprt(e2, offset, e1.type());
-      else if(element_size>1)
-      {
-        exprt index=div_exprt(offset, from_integer(element_size, offset.type()));
-        return index_exprt(e2, index, e1.type());
-      }
+      exprt index=div_exprt(offset, from_integer(element_size, offset.type()));
+      return index_exprt(e2, index, e1.type());
     }
+  }
 
-    byte_extract_exprt byte_extract(byte_extract_id(), e1.type());
-    byte_extract.op()=e2;
-    byte_extract.offset()=offset;
-    
-    return byte_extract; 
-  }
-  else
-  {
-    assert(false);
-  }
+  byte_extract_exprt byte_extract(byte_extract_id(), e1.type());
+  byte_extract.op()=e2;
+  byte_extract.offset()=offset;
+  
+  return byte_extract; 
 }
