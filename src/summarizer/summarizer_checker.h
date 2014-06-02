@@ -14,14 +14,16 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/safety_checker.h>
 
 #include "../ssa/local_ssa.h"
+#include "../ai/summarizer.h"
 
 class summarizer_checkert:public safety_checkert
 {
 public:
-  explicit inline summarizer_checkert(const namespacet &_ns):
+  explicit inline summarizer_checkert(const namespacet &_ns, summarizert &_summarizer):
     safety_checkert(_ns),
     show_vcc(false),
-    simplify(false)
+    simplify(false),
+    summarizer(_summarizer)
   {
   }
   
@@ -47,6 +49,8 @@ public:
   property_mapt property_map;
 
 protected:
+  summarizert summarizer;
+
   void report_statistics();
 
   void initialize_property_map(

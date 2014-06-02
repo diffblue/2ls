@@ -1,6 +1,6 @@
-SUBDIRS = deltacheck deltagit ssa solver functions html
+SUBDIRS = summarizer ssa solver ai
 
-all: deltacheck 
+all: summarizer 
 #deltagit
 
 .PHONY: $(SUBDIRS)

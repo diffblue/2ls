@@ -36,6 +36,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <cbmc/version.h>
 
 #include "summarizer_parseoptions.h"
+#include "../ai/summary_store.h"
+#include "../ai/summarizer.h"
 #include "summarizer_checker.h"
 #include "show.h"
 
@@ -244,7 +246,9 @@ int summarizer_parseoptionst::doit()
   try
   {
     namespacet ns(goto_model.symbol_table);
-    summarizer_checkert summarizer_checker(ns);
+    summary_storet summary_store;
+    summarizert summarizer(summary_store);
+    summarizer_checkert summarizer_checker(ns,summarizer);
     
     summarizer_checker.set_message_handler(get_message_handler());
     summarizer_checker.set_verbosity(get_verbosity());
