@@ -74,6 +74,11 @@ void guard_mapt::build(const goto_programt &src)
       // these are much like gotos to a sink location
       map[next].add_in(it, ASSUME);
     }
+    else if(it->is_function_call())
+    {
+      // functions might not return
+      map[next].add_in(it, FUNCTION_CALL);
+    }
   }
 
   // Also make the function entry location have a guard
@@ -112,7 +117,8 @@ void guard_mapt::build(const goto_programt &src)
       // no need if previous is a goto
       if(entry.has_guard &&
          !previous->is_goto() &&
-         !previous->is_assume())
+         !previous->is_assume() &&
+         !previous->is_function_call())
         entry.add_in(previous, SUCCESSOR);
     }
     

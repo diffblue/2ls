@@ -277,7 +277,9 @@ void local_SSAt::build_guard(locationt loc)
       symbol_exprt gs=name(guard_symbol(), OUT, edge.guard_source);
       exprt cond;
       
-      if(edge.is_branch_taken() || edge.is_assume())
+      if(edge.is_branch_taken() ||
+         edge.is_assume() ||
+         edge.is_function_call())
         cond=cond_symbol(edge.from);
       else if(edge.is_branch_not_taken())
         cond=boolean_negate(cond_symbol(edge.from));
