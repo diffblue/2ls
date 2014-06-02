@@ -28,6 +28,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/link_to_library.h>
 #include <goto-programs/goto_inline.h>
 #include <goto-programs/xml_goto_trace.h>
+#include <goto-programs/remove_returns.h>
 
 #include <analyses/goto_check.h>
 
@@ -213,7 +214,7 @@ int summarizer_parseoptionst::doit()
 
   if(get_goto_program(options, goto_model))
     return 6;
-
+    
   // options for various debug outputs
     
   if(cmdline.isset("show-ssa"))
@@ -544,6 +545,12 @@ bool summarizer_parseoptionst::process_goto_program(
 
       status() << "Performing full inlining" << eom;
       goto_inline(goto_model, ui_message_handler);
+    }
+    else
+    {
+      // we don't use returns
+      remove_returns(goto_model);
+      goto_model.goto_functions.update();
     }
 
     label_properties(goto_model);
