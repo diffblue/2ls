@@ -14,15 +14,17 @@ Author: Peter Schrammel
 #include "../ssa/local_ssa.h"
 //#include "../deltacheck/analyzer.h"
 
+#include <util/time_stopping.h>
+
+#include <goto-programs/safety_checker.h>
+
 class summary_storet;
 
 class summarizert
 {
  public:
- summarizert(summary_storet &_summary_store
-   /*,analyzert &_analyzer*/) : 
+ summarizert(summary_storet &_summary_store) : 
     summary_store(_summary_store), 
-  //analyzer(_analyzer),
     inliner()
   {}
 
@@ -43,7 +45,6 @@ class summarizert
 
  protected:
   summary_storet &summary_store;
-  //  analyzert &analyzer;
   ssa_inlinert inliner;
   functionst functions;
   preconditionst preconditions;

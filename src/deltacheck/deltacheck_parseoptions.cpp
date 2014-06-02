@@ -21,7 +21,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <cpp/cpp_language.h>
 
 #include "../functions/index.h"
-
 #include "deltacheck_parseoptions.h"
 #include "version.h"
 #include "analyzer.h"

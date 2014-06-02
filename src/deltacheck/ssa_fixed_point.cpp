@@ -54,8 +54,8 @@ void ssa_fixed_pointt::tie_inputs_together(std::list<exprt> &dest)
     {
       symbol_exprt s_old(p_old[p].get_identifier(), p_old[p].type());
       symbol_exprt s_new(p_new[p].get_identifier(), p_new[p].type());
-      s_old=SSA_old.name_input(ssa_objectt(s_old));
-      s_new=SSA_new.name_input(ssa_objectt(s_new));
+      s_old=SSA_old.name_input(ssa_objectt(s_old, ns));
+      s_new=SSA_new.name_input(ssa_objectt(s_new, ns));
 
       dest.push_back(equal_exprt(s_old, s_new));
     }

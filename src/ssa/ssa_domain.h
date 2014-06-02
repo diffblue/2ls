@@ -63,8 +63,10 @@ public:
   typedef std::map<irep_idt, def_entryt> def_mapt;
   def_mapt def_map;
   
-  // the phi nodes map identifiers to incoming branches:
-  // map from source to definition
+  // The phi nodes map identifiers to incoming branches:
+  // map from source to definition.
+  // Warning: as this maps locations, which are memory addresses,
+  // the ordering in the second map is non-deterministic.
   typedef std::map<irep_idt, std::map<locationt, deft> > phi_nodest;
   phi_nodest phi_nodes;
 
@@ -99,7 +101,7 @@ protected:
   friend class ssa_domaint;
 
   // The overload below is needed to make the entry point get a source
-  // for the function parameters.
+  // for all objects.
   virtual void initialize(const goto_functionst::goto_functiont &goto_function);
 };
 

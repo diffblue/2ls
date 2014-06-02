@@ -36,7 +36,8 @@ void guard_mapt::output(
     for(incomingt::const_iterator in_it=entry.incoming.begin();
         in_it!=entry.incoming.end();
         in_it++)
-      out << " " << in_it->guard_source->location_number;
+      out << " " << in_it->guard_source->location_number
+          << " (" << in_it->kind << ")";
         
     out << "\n";
   }
@@ -65,29 +66,19 @@ void guard_mapt::build(const goto_programt &src)
   
     if(it->is_goto())
     {
-      map[it->get_target()].add_in(it, it->guard);  
-      map[next].add_in(it, boolean_negate(it->guard));
+      map[it->get_target()].add_in(it, TAKEN);
+      map[next].add_in(it, NOT_TAKEN);
     }
     else if(it->is_assume())
     {
       // these are much like gotos to a sink location
-      map[next].add_in(it, it->guard);
+      map[next].add_in(it, ASSUME);
     }
   }
 
-  // The following nodes get a guard:
-  // 1) everything that's a branch target
-  // 2) the entry location
-  // 3) successors of assumptions
-
-  forall_goto_program_instructions(it, src)
-  {
-    entryt &entry=map[it];
-  
-    if(it==src.instructions.begin() ||
-       !entry.incoming.empty())
-      entry.has_guard=true;
-  }
+  // Also make the function entry location have a guard
+  if(!src.instructions.empty())
+    map[src.instructions.begin()].has_guard=true;
   
   // now assign the guard sources accordingly
 
@@ -99,14 +90,37 @@ void guard_mapt::build(const goto_programt &src)
     
     if(entry.has_guard)
     {
-      entry.guard_source=it;
+      entry.guard_source=it; // self-pointer
       g=it;
     }
     else
-      entry.guard_source=g;
+      entry.guard_source=g; // previous
+  }
+  
+  // Locations with guards get the successor edge
+  // in the CFG.
+
+  locationt previous;
+  
+  forall_goto_program_instructions(it, src)
+  {
+    // skip first, which has no predecessor
+    if(it!=src.instructions.begin())
+    {
+      entryt &entry=map[it];
+    
+      // no need if previous is a goto
+      if(entry.has_guard &&
+         !previous->is_goto() &&
+         !previous->is_assume())
+        entry.add_in(previous, SUCCESSOR);
+    }
+    
+    previous=it;
   }
   
   // now do guard sources of edges
+
   for(mapt::iterator m_it=map.begin(); m_it!=map.end(); m_it++)
   {
     for(incomingt::iterator i_it=m_it->second.incoming.begin();

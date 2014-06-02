@@ -1,12 +1,7 @@
 include ../config.inc
-CBMC ?= ../..
 
-SRC = deltacheck_main.cpp deltacheck_parseoptions.cpp \
-      rename.cpp ssa_fixed_point.cpp source_diff.cpp change_impact.cpp \
-      html_report.cpp analyzer.cpp syntax_highlighting.cpp \
-      show.cpp properties.cpp report_source_code.cpp \
-      get_source.cpp statistics.cpp \
-      $(CBMC)/src/cbmc/xml_interface.cpp
+SRC = summarizer_main.cpp summarizer_parseoptions.cpp \
+      summarizer.cpp show.cpp
 
 OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       $(CBMC)/src/linking/linking$(LIBEXT) \
@@ -20,8 +15,6 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       $(CBMC)/src/xmllang/xmllang$(LIBEXT) \
       $(CBMC)/src/solvers/solvers$(LIBEXT) \
       $(CBMC)/src/util/util$(LIBEXT) \
-      ../html/logo$(OBJEXT) \
-      ../html/html_escape$(OBJEXT) \
       ../ssa/local_ssa$(OBJEXT) \
       ../ssa/malloc_ssa$(OBJEXT) \
       ../ssa/ssa_domain$(OBJEXT) \
@@ -30,16 +23,7 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       ../ssa/ssa_object$(OBJEXT) \
       ../ssa/address_canonizer$(OBJEXT) \
       ../ssa/ssa_aliasing$(OBJEXT) \
-      ../ai/ssa_cfg$(OBJEXT)\
-      ../ai/ssa_inliner$(OBJEXT)\
-      ../ai/summary$(OBJEXT)\
-      ../ai/summarizer$(OBJEXT)\
-      ../ai/interval_map$(OBJEXT)\
-      ../ai/interval_map_domain$(OBJEXT)\
-      ../ai/interval_widening$(OBJEXT)\
-      ../solver/predicate$(OBJEXT) \
-      ../solver/solver$(OBJEXT) \
-      ../solver/fixed_point$(OBJEXT) \
+      ../ssa/simplify_ssa$(OBJEXT) \
       ../functions/summary$(OBJEXT) \
       ../functions/get_function$(OBJEXT) \
       ../functions/path_util$(OBJEXT) \
@@ -58,9 +42,9 @@ LIBS =
 
 # $(CUDD)/obj/libobj.a 
 
-CLEANFILES = deltacheck$(EXEEXT)
+CLEANFILES = summarizer$(EXEEXT)
 
-all: deltacheck$(EXEEXT)
+all: summarizer$(EXEEXT)
 
 ifneq ($(wildcard $(CBMC)/src/cpp/Makefile),)
   OBJ += $(CBMC)/src/cpp/cpp$(LIBEXT)
@@ -72,25 +56,8 @@ ifneq ($(wildcard $(CBMC)/src/java/Makefile),)
   CXXFLAGS += -DHAVE_JAVA
 endif
 
-ifneq ($(wildcard $(CBMC)/src/specc/Makefile),)
-  OBJ += $(CBMC)/src/specc/specc$(LIBEXT)
-  CP_CXXFLAGS += -DHAVE_SPECC
-endif
-
-ifneq ($(wildcard $(CBMC)/src/php/Makefile),)
-  OBJ += $(CBMC)/src/php/php$(LIBEXT)
-  CXXFLAGS += -DHAVE_PHP
-endif
-
-# HTML Header
-
-html_report$(OBJEXT): report_header.inc
-
-report_header.inc: report_header.html
-	../html/to_c_string.perl < report_header.html > $@
-
 ###############################################################################
 
-deltacheck$(EXEEXT): $(OBJ)
+summarizer$(EXEEXT): $(OBJ)
 	$(LINKBIN)
 
