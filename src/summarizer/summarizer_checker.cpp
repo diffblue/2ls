@@ -55,6 +55,15 @@ summarizer_checkert::resultt summarizer_checkert::check_properties(
   // properties
   initialize_property_map(goto_functions);
 
+  // compute summaries for all the functions
+  summarizert::functionst functions;
+  forall_goto_functions(f_it, goto_functions)
+  {
+    if(f_it->first=="c::assert") continue;
+    functions[f_it->first] = new local_SSAt(f_it->second, ns);
+  }
+  summarizer.summarize(functions);
+
   // analyze all the functions
   forall_goto_functions(f_it, goto_functions)
     check_properties(f_it);

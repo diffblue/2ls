@@ -16,8 +16,6 @@ Author: Peter Schrammel
 
 #include <util/time_stopping.h>
 
-#include <goto-programs/safety_checker.h>
-
 class summary_storet;
 
 class summarizert
