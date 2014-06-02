@@ -15,10 +15,10 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "../ssa/local_ssa.h"
 
-class summarizert:public safety_checkert
+class summary_checkert:public safety_checkert
 {
 public:
-  explicit inline summarizert(const namespacet &_ns):
+  explicit inline summary_checkert(const namespacet &_ns):
     safety_checkert(_ns),
     show_vcc(false),
     simplify(false)
