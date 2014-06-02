@@ -13,6 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #endif
 
 #include <util/i2string.h>
+#include <util/prefix.h>
 #include <util/expr_util.h>
 #include <util/decision_procedure.h>
 
@@ -34,9 +35,6 @@ Function: local_SSAt::build_SSA
 
 void local_SSAt::build_SSA()
 {
-  // entry and exit variables
-  get_entry_exit_vars();
-
   // perform SSA data-flow analysis
   ssa_analysis(goto_function, ns);
 
@@ -51,6 +49,10 @@ void local_SSAt::build_SSA()
   // now build guards
   forall_goto_program_instructions(i_it, goto_function.body)
     build_guard(i_it);
+
+  // entry and exit variables
+  get_entry_exit_vars();
+
 }
 
 /*******************************************************************\
@@ -79,16 +81,62 @@ void local_SSAt::get_entry_exit_vars()
     entry_vars.push_back(symbol.symbol_expr());
   }
 
-  forall_goto_program_instructions(it, goto_function.body)
+  for(nodest::iterator n = nodes.begin(); n!=nodes.end(); n++)
   {
-    if(it->is_return()) 
+    for(nodet::equalitiest::iterator e = n->second.equalities.begin();
+        e != n->second.equalities.end(); e++)
     {
-      const code_returnt &code=to_code_return(it->code);
-      assert(code.operands().size()==1);
-      assert(code.op0().id()==ID_symbol); //assumes preprocessing of returns
-      exit_vars.push_back(to_symbol_expr(code.op0()));
+      if(e->lhs().id()==ID_symbol) 
+      {
+	symbol_exprt s = to_symbol_expr(e->lhs());
+        if(has_prefix(id2string(s.get_identifier()),"ssa::$return")) exit_vars.push_back(s);
+      }
     }
   }
+
+}
+
+/*******************************************************************\
+
+Function: local_SSAt::get_globals
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void local_SSAt::get_globals(const exprt &expr, std::set<symbol_exprt> &globals)
+{
+  if(expr.id()==ID_symbol) 
+  {
+    symbol_exprt s = to_symbol_expr(expr);
+    if(is_global_symbol(s.get_identifier())) globals.insert(s);
+  }
+  for(exprt::operandst::const_iterator it = expr.operands().begin();
+      it != expr.operands().end(); it++)
+  {
+    get_globals(*it,globals);
+  }
+}   
+
+bool local_SSAt::is_global_symbol(const irep_idt &id)
+{
+  symbol_tablet::symbolst::const_iterator it = ns.get_symbol_table().symbols.find(id);
+  if(it==ns.get_symbol_table().symbols.end()) return false;
+  if(it->second.is_lvalue && it->second.is_static_lifetime) 
+  {
+    std::cout << "global symbol: " << id << std::endl;
+    return true;
+  } 
+  return false;
+}
+
+std::string local_SSAt::strip_suffix(const std::string &id)
+{
+  return id.substr(0,id.find("#"));
 }
 
 /*******************************************************************\
@@ -200,17 +248,19 @@ void local_SSAt::build_transfer(locationt loc)
     //TODO: functions with side effects
     if(code_function_call.lhs().is_not_nil())
     {
+      exprt ssa_lhs = read_rhs(code_function_call.lhs(), loc);          
+
       function_application_exprt ssa_rhs;
       ssa_rhs.function() = code_function_call.function();
       ssa_rhs.type() = code_function_call.lhs().type();
       ssa_rhs.arguments() = code_function_call.arguments(); 
+
       for(function_application_exprt::argumentst::iterator it = 
            ssa_rhs.arguments().begin();it!=ssa_rhs.arguments().end(); it++) 
       {
         *it = read_rhs(*it,loc);
       }
 
-      exprt ssa_lhs = read_rhs(code_function_call.lhs(), loc);          
       equal_exprt equality(ssa_lhs, ssa_rhs);
       nodes[loc].equalities.push_back(equality);
     }
@@ -909,7 +959,7 @@ std::list<exprt> & operator << (
 
 /*******************************************************************\
 
-Function: local_SSAt::return_symbol
+Function: return_symbol
 
   Inputs:
 
@@ -922,7 +972,7 @@ Function: local_SSAt::return_symbol
 symbol_exprt return_symbol(typet type, local_SSAt::locationt loc)
 {
   unsigned cnt=loc->location_number;
-  return symbol_exprt("ssa::$return#"+i2string(cnt), type);
+  return symbol_exprt("ssa::$return"+i2string(cnt), type);
 }
 
 /*******************************************************************\

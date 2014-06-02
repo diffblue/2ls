@@ -20,9 +20,9 @@ class summarizert
 
   typedef summaryt::predicatet preconditiont;
   typedef irep_idt function_namet;
-  typedef local_SSAt* function_bodyt;
+  typedef local_SSAt function_bodyt;
   typedef std::map<function_namet, preconditiont> preconditionst;
-  typedef std::map<function_namet, function_bodyt> functionst;
+  typedef std::map<function_namet, function_bodyt*> functionst;
   typedef functionst::value_type functiont;
 
   summaryt summarize(const functiont &function, const preconditiont &precondition); 
@@ -30,6 +30,8 @@ class summarizert
 
   void summarize(const functionst &functions, const preconditionst &preconditions); 
   void summarize(const functionst &functions); 
+
+  void inline_summaries(local_SSAt::nodest &nodes, bool recursive=false);
 
  protected:
   summary_storet &summary_store;

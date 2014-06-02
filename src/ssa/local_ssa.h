@@ -109,6 +109,10 @@ protected:
   void build_guard(locationt loc);
   
   exprt same_object(const ssa_objectt &, const ssa_objectt &) const;
+
+  void get_globals(const exprt &expr, std::set<symbol_exprt> &globals);
+  bool is_global_symbol(const irep_idt &id);
+  std::string strip_suffix(const std::string &id);
 };
 
 std::list<exprt> & operator <<

@@ -51,8 +51,26 @@ void summarizert::run()
 
 void summarizert::compute_summary_rec(function_namet function_name)
 {
-  local_SSAt::nodest nodes = functions[function_name]->nodes; //copy nodes
+  local_SSAt::nodest nodes = functions[function_name]->nodes; //copy
+  inline_summaries(nodes,true); 
 
+  std::cout << "function to be analyzed: " << std::endl;
+  for(local_SSAt::nodest::iterator n = nodes.begin(); n!=nodes.end(); n++)
+    if(!n->second.empty()) n->second.output(std::cout,functions[function_name]->ns);
+
+  //analyze
+  //TODO
+  //analyzer.analyze(nodes);
+  summaryt summary;
+  summary.entry_vars = functions[function_name]->entry_vars;
+  summary.exit_vars = functions[function_name]->exit_vars;
+  summary.precondition = preconditions.at(function_name);
+  summary.transformer = true_exprt(); //analyzer.get_result(); //TODO
+  summary_store.put(function_name,summary);
+}
+
+void summarizert::inline_summaries(local_SSAt::nodest &nodes, bool recursive)
+{
   // replace calls with summaries
   // TODO: functions with side effects!
   for(local_SSAt::nodest::iterator n = nodes.begin(); n!=nodes.end(); n++)
@@ -78,7 +96,7 @@ void summarizert::compute_summary_rec(function_namet function_name)
 	  //      otherwise compute new one: recompute = true;
       }
       // compute summary if function_name in functions
-      else if(functions.find(fname)!=functions.end()) recompute = true;
+      else if(functions.find(fname)!=functions.end() && recursive) recompute = true;
       else // havoc function call by default
       {
         std::cout << "Function " << fname << " not found" << std::endl;
@@ -98,19 +116,4 @@ void summarizert::compute_summary_rec(function_namet function_name)
       break; //relies on assumption above
     }
   }
-
-  std::cout << "function to be analyzed: " << std::endl;
-  for(local_SSAt::nodest::iterator n = nodes.begin(); n!=nodes.end(); n++)
-    if(!n->second.empty()) n->second.output(std::cout,functions[function_name]->ns);
-
-  //analyze
-  //TODO
-  // analyzer.analyze(nodes);
-  summaryt summary;
-  summary.entry_vars = functions[function_name]->entry_vars;
-  summary.exit_vars = functions[function_name]->exit_vars;
-  summary.precondition = preconditions.at(function_name);
-  summary.transformer = true_exprt(); //analyzer.get_result(); //TODO
-  summary_store.put(function_name,summary);
 }
-
