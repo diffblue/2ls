@@ -60,6 +60,7 @@ summary_checkert::resultt summary_checkert::check_properties(
   forall_goto_functions(f_it, goto_functions)
   {
     if(f_it->first=="c::assert") continue;
+    if(f_it->first=="c::__CPROVER_assume") continue;
     functions[f_it->first] = new local_SSAt(f_it->second, ns);
   }
   summarizer.summarize(functions);
@@ -90,6 +91,8 @@ Function: summary_checkert::check_properties
 
 #include "../ssa/ssa_domain.h"
 
+#include "../ai/ssa_cfg.h"
+
 void summary_checkert::check_properties(
   const goto_functionst::function_mapt::const_iterator f_it)
 {
@@ -109,6 +112,8 @@ void summary_checkert::check_properties(
   
   // build SSA
   local_SSAt SSA(f_it->second, ns);
+
+  //ssa_cfgt ssa_cfg(SSA);
 
   // inline summaries
   summarizer.inline_summaries(SSA.nodes);

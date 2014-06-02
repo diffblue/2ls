@@ -218,6 +218,9 @@ void show_ssa(
   
   forall_goto_functions(f_it, goto_model.goto_functions)
   {
+    if(f_it->first=="c::assert") continue;
+    if(f_it->first=="c::__CPROVER_assume") continue;
+  
     out << ">>>> Function " << f_it->first << "\n";
           
     show_ssa(f_it->second, simplify, ns, out);
