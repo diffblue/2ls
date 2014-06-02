@@ -38,7 +38,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "summarizer_parseoptions.h"
 #include "../ai/summary_store.h"
 #include "../ai/summarizer.h"
-#include "summarizer_checker.h"
+#include "summary_checker.h"
 #include "show.h"
 
 /*******************************************************************\
@@ -248,30 +248,30 @@ int summarizer_parseoptionst::doit()
     namespacet ns(goto_model.symbol_table);
     summary_storet summary_store;
     summarizert summarizer(summary_store);
-    summarizer_checkert summarizer_checker(ns,summarizer);
+    summary_checkert summary_checker(ns,summarizer);
     
-    summarizer_checker.set_message_handler(get_message_handler());
-    summarizer_checker.set_verbosity(get_verbosity());
-    summarizer_checker.simplify=!cmdline.isset("no-simplify");
+    summary_checker.set_message_handler(get_message_handler());
+    summary_checker.set_verbosity(get_verbosity());
+    summary_checker.simplify=!cmdline.isset("no-simplify");
 
     if(cmdline.isset("show-vcc"))
     {
       std::cout << "VERIFICATION CONDITIONS:\n\n";
-      summarizer_checker.show_vcc=true;
-      summarizer_checker(goto_model.goto_functions);
+      summary_checker.show_vcc=true;
+      summary_checker(goto_model.goto_functions);
       return 0;
     }
     
     // do actual analysis
-    switch(summarizer_checker(goto_model.goto_functions))
+    switch(summary_checker(goto_model.goto_functions))
     {
     case safety_checkert::SAFE:
-      report_properties(goto_model, summarizer_checker.property_map);
+      report_properties(goto_model, summary_checker.property_map);
       report_success();
       return 0;
     
     case safety_checkert::UNSAFE:
-      report_properties(goto_model, summarizer_checker.property_map);
+      report_properties(goto_model, summary_checker.property_map);
       report_failure();
       return 10;
     
@@ -610,9 +610,9 @@ Function: summarizer_parseoptionst::report_properties
 
 void summarizer_parseoptionst::report_properties(
   const goto_modelt &goto_model,
-  const summarizer_checkert::property_mapt &property_map)
+  const summary_checkert::property_mapt &property_map)
 {
-  for(summarizer_checkert::property_mapt::const_iterator
+  for(summary_checkert::property_mapt::const_iterator
       it=property_map.begin();
       it!=property_map.end();
       it++)
@@ -626,9 +626,9 @@ void summarizer_parseoptionst::report_properties(
 
       switch(it->second.status)
       {
-      case summarizer_checkert::PASS: status_string="OK"; break;
-      case summarizer_checkert::FAIL: status_string="FAILURE"; break;
-      case summarizer_checkert::UNKNOWN: status_string="OK"; break;
+      case summary_checkert::PASS: status_string="OK"; break;
+      case summary_checkert::FAIL: status_string="FAILURE"; break;
+      case summary_checkert::UNKNOWN: status_string="OK"; break;
       }
 
       xml_result.set_attribute("status", status_string);
@@ -641,15 +641,15 @@ void summarizer_parseoptionst::report_properties(
                << it->second.description << ": ";
       switch(it->second.status)
       {
-      case summarizer_checkert::PASS: status() << "OK"; break;
-      case summarizer_checkert::FAIL: status() << "FAILED"; break;
-      case summarizer_checkert::UNKNOWN: status() << "OK"; break;
+      case summary_checkert::PASS: status() << "OK"; break;
+      case summary_checkert::FAIL: status() << "FAILED"; break;
+      case summary_checkert::UNKNOWN: status() << "OK"; break;
       }
       status() << eom;
     }
 
     if(cmdline.isset("show-trace") &&
-       it->second.status==summarizer_checkert::FAIL)
+       it->second.status==summary_checkert::FAIL)
       show_counterexample(goto_model, it->second.error_trace);
   }
 
@@ -659,11 +659,11 @@ void summarizer_parseoptionst::report_properties(
 
     unsigned failed=0;
 
-    for(summarizer_checkert::property_mapt::const_iterator
+    for(summary_checkert::property_mapt::const_iterator
         it=property_map.begin();
         it!=property_map.end();
         it++)
-      if(it->second.status==summarizer_checkert::FAIL)
+      if(it->second.status==summary_checkert::FAIL)
         failed++;
     
     status() << "** " << failed

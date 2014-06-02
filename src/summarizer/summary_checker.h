@@ -6,8 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef CPROVER_SUMMARIZER_CHECKER_H
-#define CPROVER_SUMMARIZER_CHECKER_H
+#ifndef CPROVER_SUMMARY_CHECKER_H
+#define CPROVER_SUMMARY_CHECKER_H
 
 #include <util/time_stopping.h>
 
@@ -16,10 +16,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "../ssa/local_ssa.h"
 #include "../ai/summarizer.h"
 
-class summarizer_checkert:public safety_checkert
+class summary_checkert:public safety_checkert
 {
 public:
-  explicit inline summarizer_checkert(const namespacet &_ns, summarizert &_summarizer):
+  explicit inline summary_checkert(const namespacet &_ns, summarizert &_summarizer):
     safety_checkert(_ns),
     show_vcc(false),
     simplify(false),

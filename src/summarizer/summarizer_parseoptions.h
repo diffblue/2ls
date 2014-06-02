@@ -17,7 +17,7 @@ Author: Daniel Kroening, kroening@kroening.com
 class goto_modelt;
 class optionst;
 
-#include "summarizer_checker.h"
+#include "summary_checker.h"
 
 #define SUMMARIZER_OPTIONS \
   "(function):" \
@@ -74,7 +74,7 @@ protected:
 
   void report_properties(
     const goto_modelt &,
-    const summarizer_checkert::property_mapt &);  
+    const summary_checkert::property_mapt &);  
 
   void show_counterexample(
     const goto_modelt &,
