@@ -1,5 +1,25 @@
+/*******************************************************************\
+
+Module: Summary
+
+Author: Peter Schrammel
+
+\*******************************************************************/
+
 #include "summary.h"
 #include <langapi/language_util.h>
+
+/*******************************************************************\
+
+Function: summaryt::output()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 
 void summaryt::output(std::ostream &out, const namespacet &ns) const
 {

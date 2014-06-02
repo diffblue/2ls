@@ -1,6 +1,26 @@
+/*******************************************************************\
+
+Module: SSA Inliner
+
+Author: Peter Schrammel
+
+\*******************************************************************/
+
 #include <util/i2string.h>
 
 #include "ssa_inliner.h"
+
+/*******************************************************************\
+
+Function: ssa_inlinert::replace()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 
 void ssa_inlinert::replace(local_SSAt::nodet &node, 
                        local_SSAt::nodet::equalitiest::iterator equ_it, 
@@ -50,6 +70,18 @@ void ssa_inlinert::replace(local_SSAt::nodet &node,
   //insert new equalities
   node.equalities.insert(node.equalities.end(),new_equs.begin(),new_equs.end());
 }
+
+/*******************************************************************\
+
+Function: ssa_inlinert::replace()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 
 void ssa_inlinert::replace(local_SSAt::nodest &nodes,
 		       local_SSAt::nodet &node, 
@@ -120,11 +152,35 @@ void ssa_inlinert::replace(local_SSAt::nodest &nodes,
   nodes.insert(new_nodes.begin(),new_nodes.end());
 }
 
+/*******************************************************************\
+
+Function: ssa_inlinert::havoc()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
 void ssa_inlinert::havoc(local_SSAt::nodet &node, 
 	     local_SSAt::nodet::equalitiest::iterator &equ_it)
 {
     node.equalities.erase(equ_it);
 }
+
+/*******************************************************************\
+
+Function: ssa_inlinert::rename()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 
 void ssa_inlinert::rename(exprt &expr) 
 {

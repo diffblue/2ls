@@ -1,3 +1,11 @@
+/*******************************************************************\
+
+Module: Summarizer
+
+Author: Peter Schrammel
+
+\*******************************************************************/
+
 #ifndef CPROVER_DELTACHECK_SUMMARIZER_H
 #define CPROVER_DELTACHECK_SUMMARIZER_H
 

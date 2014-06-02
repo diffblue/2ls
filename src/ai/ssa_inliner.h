@@ -1,3 +1,11 @@
+/*******************************************************************\
+
+Module: SSA Inliner
+
+Author: Peter Schrammel
+
+\*******************************************************************/
+
 #ifndef CPROVER_DELTACHECK_SSA_INLINER_H
 #define CPROVER_DELTACHECK_SSA_INLINER_H
 

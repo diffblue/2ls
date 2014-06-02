@@ -1,8 +1,27 @@
-#include <iostream>
+/*******************************************************************\
 
+Module: Summarizer
+
+Author: Peter Schrammel
+
+\*******************************************************************/
+
+#include <iostream>
 
 #include "summarizer.h"
 #include "summary_store.h"
+
+/*******************************************************************\
+
+Function: summarizert::summarize()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 
 summaryt summarizert::summarize(const functiont &function, const preconditiont &precondition)
 {
@@ -14,10 +33,34 @@ summaryt summarizert::summarize(const functiont &function, const preconditiont &
   return summary_store.get(function.first);
 }
 
+/*******************************************************************\
+
+Function: summarizert::summarize()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
 summaryt summarizert::summarize(const functiont &function)
 { 
   return summarize(function,true_exprt()); 
 } 
+
+/*******************************************************************\
+
+Function: summarizert::summarize()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 
 void summarizert::summarize(const functionst &_functions)
 {
@@ -29,12 +72,36 @@ void summarizert::summarize(const functionst &_functions)
   summarize(_functions,_preconditions);
 }
 
+/*******************************************************************\
+
+Function: summarizert::summarize()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
 void summarizert::summarize(const functionst &_functions,const preconditionst &_preconditions)
 {
   functions = _functions;
   preconditions = _preconditions;
   run();
 }
+
+/*******************************************************************\
+
+Function: summarizert::run()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 
 void summarizert::run()
 {
@@ -48,6 +115,18 @@ void summarizert::run()
     else std::cout << "Summary for function " << it->first << " exists already" << std::endl;
   }
 }
+
+/*******************************************************************\
+
+Function: summarizert::compute_summary_rec()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 
 void summarizert::compute_summary_rec(function_namet function_name)
 {
@@ -68,6 +147,18 @@ void summarizert::compute_summary_rec(function_namet function_name)
   summary.transformer = true_exprt(); //analyzer.get_result(); //TODO
   summary_store.put(function_name,summary);
 }
+
+/*******************************************************************\
+
+Function: summarizert::inline_summaries()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 
 void summarizert::inline_summaries(local_SSAt::nodest &nodes, bool recursive)
 {
