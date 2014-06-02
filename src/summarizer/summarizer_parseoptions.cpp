@@ -248,6 +248,9 @@ int summarizer_parseoptionst::doit()
     namespacet ns(goto_model.symbol_table);
     summary_storet summary_store;
     summarizert summarizer(summary_store);
+    summarizer.set_message_handler(get_message_handler());
+    summarizer.set_verbosity(get_verbosity());
+
     summary_checkert summary_checker(ns,summarizer);
     
     summary_checker.set_message_handler(get_message_handler());

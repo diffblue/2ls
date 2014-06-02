@@ -110,9 +110,9 @@ void summarizert::run()
   //TODO: replace simple iterator by something following the call graph
   for(functionst::const_iterator it = functions.begin(); it!=functions.end(); it++)
   {
-    std::cout << "Summarizing function " << it->first << std::endl;
+    status() << "Summarizing function " << it->first << eom;
     if(!summary_store.exists(it->first)) compute_summary_rec(it->first);
-    else std::cout << "Summary for function " << it->first << " exists already" << std::endl;
+    else status() << "Summary for function " << it->first << " exists already" << eom;
   }
 }
 
@@ -133,9 +133,11 @@ void summarizert::compute_summary_rec(function_namet function_name)
   local_SSAt::nodest nodes = functions[function_name]->nodes; //copy
   inline_summaries(nodes,true); 
 
-  std::cout << "function to be analyzed: " << std::endl;
+  std::ostringstream out;
+  out << "function to be analyzed: " << std::endl;
   for(local_SSAt::nodest::iterator n = nodes.begin(); n!=nodes.end(); n++)
-    if(!n->second.empty()) n->second.output(std::cout,functions[function_name]->ns);
+    if(!n->second.empty()) n->second.output(out,functions[function_name]->ns);
+  debug() << out.str() << eom;
 
   //analyze
   //TODO
@@ -180,7 +182,7 @@ void summarizert::inline_summaries(local_SSAt::nodest &nodes, bool recursive)
       // replace call with summary if it exists 
       if(summary_store.exists(fname)) 
       {
-        std::cout << "Using existing summary for function " << fname << std::endl;
+        status() << "Using existing summary for function " << fname << eom;
 	summary = summary_store.get(fname);
 	  //TODO: check whether summary applies (as soon as context-sensitive)
 	  //      (requires retrieving the local context from the current analysis), 
@@ -190,20 +192,18 @@ void summarizert::inline_summaries(local_SSAt::nodest &nodes, bool recursive)
       else if(functions.find(fname)!=functions.end() && recursive) recompute = true;
       else // havoc function call by default
       {
-        std::cout << "Function " << fname << " not found" << std::endl;
+        status() << "Function " << fname << " not found" << eom;
         inliner.havoc(n->second,e);
         break; //relies on assumption above
       }
       if(recompute) 
       {
-        std::cout << "Recursively summarizing function " << fname << std::endl;
+        status() << "Recursively summarizing function " << fname << eom;
         compute_summary_rec(fname);
         summary = summary_store.get(fname);
       }
       //replace
-      std::cout << "Inlining summary for " << fname << std::endl;
       inliner.replace(n->second,e,summary);
-      //inliner.replace(nodes,n->second,e,*functions[fname]); //just for test
       break; //relies on assumption above
     }
   }

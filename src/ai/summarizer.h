@@ -9,6 +9,7 @@ Author: Peter Schrammel
 #ifndef CPROVER_DELTACHECK_SUMMARIZER_H
 #define CPROVER_DELTACHECK_SUMMARIZER_H
 
+#include <util/message.h>
 #include "summary.h"
 #include "ssa_inliner.h"
 #include "../ssa/local_ssa.h"
@@ -18,7 +19,7 @@ Author: Peter Schrammel
 
 class summary_storet;
 
-class summarizert
+class summarizert : public messaget
 {
  public:
  summarizert(summary_storet &_summary_store) : 
