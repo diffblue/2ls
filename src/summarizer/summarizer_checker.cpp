@@ -17,11 +17,11 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "../ssa/local_ssa.h"
 #include "../ssa/simplify_ssa.h"
 
-#include "summarizer.h"
+#include "summarizer_checker.h"
 
 /*******************************************************************\
 
-Function: summarizert::operator()
+Function: summarizer_checkert::operator()
 
   Inputs:
 
@@ -31,7 +31,7 @@ Function: summarizert::operator()
 
 \*******************************************************************/
 
-summarizert::resultt summarizert::operator()(
+summarizer_checkert::resultt summarizer_checkert::operator()(
   const goto_functionst &goto_functions)
 {
   return check_properties(goto_functions);
@@ -39,7 +39,7 @@ summarizert::resultt summarizert::operator()(
 
 /*******************************************************************\
 
-Function: summarizert::check_properties
+Function: summarizer_checkert::check_properties
 
   Inputs:
 
@@ -49,7 +49,7 @@ Function: summarizert::check_properties
 
 \*******************************************************************/
 
-summarizert::resultt summarizert::check_properties(
+summarizer_checkert::resultt summarizer_checkert::check_properties(
   const goto_functionst &goto_functions)
 {
   // properties
@@ -69,7 +69,7 @@ summarizert::resultt summarizert::check_properties(
 
 /*******************************************************************\
 
-Function: summarizert::check_properties
+Function: summarizer_checkert::check_properties
 
   Inputs:
 
@@ -81,7 +81,7 @@ Function: summarizert::check_properties
 
 #include "../ssa/ssa_domain.h"
 
-void summarizert::check_properties(
+void summarizer_checkert::check_properties(
   const goto_functionst::function_mapt::const_iterator f_it)
 {
   if(!f_it->second.body.has_assertion()) return;
@@ -169,7 +169,7 @@ void summarizert::check_properties(
   
 /*******************************************************************\
 
-Function: summarizert::report_statistics()
+Function: summarizer_checkert::report_statistics()
 
   Inputs:
 
@@ -179,13 +179,13 @@ Function: summarizert::report_statistics()
 
 \*******************************************************************/
 
-void summarizert::report_statistics()
+void summarizer_checkert::report_statistics()
 {
 }
   
 /*******************************************************************\
 
-Function: summarizert::do_show_vcc
+Function: summarizer_checkert::do_show_vcc
 
   Inputs:
 
@@ -195,7 +195,7 @@ Function: summarizert::do_show_vcc
 
 \*******************************************************************/
 
-void summarizert::do_show_vcc(
+void summarizer_checkert::do_show_vcc(
   const local_SSAt &SSA,
   const goto_programt::const_targett i_it)
 {
@@ -228,7 +228,7 @@ void summarizert::do_show_vcc(
 
 /*******************************************************************\
 
-Function: summarizert::initialize_property_map
+Function: summarizer_checkert::initialize_property_map
 
   Inputs:
 
@@ -238,7 +238,7 @@ Function: summarizert::initialize_property_map
 
 \*******************************************************************/
 
-void summarizert::initialize_property_map(
+void summarizer_checkert::initialize_property_map(
   const goto_functionst &goto_functions)
 {
   for(goto_functionst::function_mapt::const_iterator

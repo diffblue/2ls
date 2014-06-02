@@ -6,17 +6,20 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef CPROVER_SUMMARIZER_H
-#define CPROVER_SUMMARIZER_H
+#ifndef CPROVER_SUMMARIZER_CHECKER_H
+#define CPROVER_SUMMARIZER_CHECKER_H
 
 #include <util/time_stopping.h>
 
+#include <goto-programs/safety_checker.h>
+
 #include "../ssa/local_ssa.h"
 
-class summarizert
+class summarizer_checkert:public safety_checkert
 {
 public:
-  explicit inline summarizert(const namespacet &_ns):
+  explicit inline summarizer_checkert(const namespacet &_ns):
+    safety_checkert(_ns),
     show_vcc(false),
     simplify(false)
   {
