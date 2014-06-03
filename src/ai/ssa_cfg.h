@@ -11,6 +11,11 @@
 struct ssa_cfg_edget {
   ssa_cfg_concrete_transformert transformer;
   unsigned pred, succ;
+  
+  bool operator<(const ssa_cfg_edget &other) const {
+    return pred < other.pred 
+        || (pred==other.pred && succ<other.succ);
+  }
 };
 
 
@@ -28,20 +33,25 @@ public:
     return adjacency[n];
   }
   
-  virtual unsigned get_pred_node(ssa_cfg_edget &e) {
+  virtual unsigned get_pred_node(const ssa_cfg_edget &e) {
     return e.pred;
   }
   
-  virtual unsigned get_succ_node(ssa_cfg_edget &e) {
+  virtual unsigned get_succ_node(const ssa_cfg_edget &e) {
     return e.succ;
   }
   
-  virtual ssa_cfg_concrete_transformert &get_transformer(ssa_cfg_edget &e) {
+  virtual const ssa_cfg_concrete_transformert &get_transformer(const ssa_cfg_edget &e) {
     return e.transformer;
   }
   
   virtual nodest &get_nodes() {
     return nodes;
+  }
+  
+  virtual unsigned get_entry_node()
+  {
+    return entry_node;
   }
   
   
@@ -51,6 +61,8 @@ public:
 protected:
   
   const goto_functiont &goto_function;
+  
+  unsigned entry_node;
   
   nodest nodes;
   

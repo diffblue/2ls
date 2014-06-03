@@ -2,6 +2,16 @@
 
 #include "interval_map_domain.h"
                      
+                     
+interval_map_domaint::~interval_map_domaint()
+{
+}
+
+
+bool interval_map_domaint::is_leq(const interval_mapt &v1, const interval_mapt &v2)
+{
+  return false;
+}
                             
 interval_mapt interval_map_domaint::transform(const interval_mapt &v,
                                 const ssa_cfg_concrete_transformert &t)

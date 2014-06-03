@@ -92,6 +92,8 @@ Function: summary_checkert::check_properties
 #include "../ssa/ssa_domain.h"
 
 #include "../ai/ssa_cfg.h"
+#include "../ai/interval_map_domain.h"
+
 
 void summary_checkert::check_properties(
   const goto_functionst::function_mapt::const_iterator f_it)
@@ -113,7 +115,29 @@ void summary_checkert::check_properties(
   // build SSA
   local_SSAt SSA(f_it->second, ns);
 
-  //ssa_cfgt ssa_cfg(SSA);
+  // build data-flow graph
+  ssa_cfgt ssa_cfg(SSA);
+  
+  // local interval analysis
+  interval_widening_thresholdst interval_widening_thresholds;
+  
+  interval_map_domaint interval_domain(interval_widening_thresholds);
+  
+  typedef fixpointt<unsigned, 
+              ssa_cfg_edget, 
+              interval_mapt,
+              ssa_cfg_concrete_transformert> interval_fixpointt;
+  
+  // compute fixpoint
+  interval_fixpointt fix(ssa_cfg, interval_domain);
+  
+  interval_fixpointt::resultt fixpoint;
+  
+  fix.analyze(0, // initial node
+                   interval_domain.bottom(),
+                   10,
+                   10,
+                   fixpoint); 
 
   // inline summaries
   summarizer.inline_summaries(SSA.nodes);

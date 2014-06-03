@@ -34,7 +34,7 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       ../ai/summarizer$(OBJEXT)\
       ../ai/interval_map$(OBJEXT)\
       ../ai/interval_map_domain$(OBJEXT)\
-      ../ai/interval_widening$(OBJEXT)\
+      ../ai/interval_widening$(OBJEXT)
 
 
 include $(CBMC)/src/config.inc

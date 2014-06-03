@@ -22,13 +22,13 @@ class cfgt
 {
  public:
   typedef std::set<Node> nodest;
-  typedef std::vector<Edge> edgest;
+  typedef std::set<Edge> edgest;
 
   virtual nodest &get_nodes() = 0;
   virtual edgest &get_succ_edges(Node n) = 0;
-  virtual Node get_pred_node(Edge &e) = 0;
-  virtual Node get_succ_node(Edge &e) = 0;
-  virtual ConcreteTransformer &get_transformer(Edge &e) = 0;
+  virtual Node get_pred_node(const Edge &e) = 0;
+  virtual Node get_succ_node(const Edge &e) = 0;
+  virtual const ConcreteTransformer &get_transformer(const Edge &e) = 0;
 };
 
 /******************************************************************************\
@@ -63,18 +63,20 @@ class fixpointt
   typedef typename cfgt<Node,Edge,ConcreteTransformer>::edgest edgest;
   typedef std::map<Node,AbstractValue> resultt;
 
+  typedef hash_set_cont<Node> visitedt;
+
   /****************************************************************************/
-  resultt &analyze(const Node initial_node,
-                   const AbstractValue &initial_value, 
-                   unsigned widening_start,
-                   unsigned widening_descend)
+  void analyze(const Node initial_node,
+               const AbstractValue &initial_value, 
+               unsigned widening_start,
+               unsigned widening_descend,
+               resultt &result)
   {
     //compute iteration strategy
-    strategyt strategy = compute_strategy();
+    strategyt strategy = compute_strategy(initial_node);
 
     //initialize result structure
-    resultt result;
-    nodest nodes = cfg.get_nodes();
+    nodest &nodes = cfg.get_nodes();
     for(typename nodest::iterator it = nodes.begin(); it!=nodes.end(); it++)
     {
       result[*it] = domain.bottom();
@@ -83,8 +85,6 @@ class fixpointt
 
     //run strategy
     run_strategy(strategy,result,widening_start,widening_descend);
-
-    return result;
   }
 
  protected:
@@ -108,7 +108,7 @@ class fixpointt
     std::map<unsigned, std::set<Node> > scc_map;
     //Tarjan SCC
     unsigned index = 0;
-    std::list<Node> visited;
+    visitedt visited;
     std::list<Node> stack;
     std::map<Node , unsigned> indices;
     std::map<Node , unsigned> lowlinks;
@@ -122,26 +122,26 @@ class fixpointt
     unsigned i=0;
     assert(visited.size()>0);    
     unsigned first_index_scc = UINT_MAX;
-    for(typename std::list<Node>::iterator it = visited.begin(); 
+    for(typename visitedt::iterator it = visited.begin(); 
         it != visited.end(); it++, i++) 
     {
       strategy[i].node = *it;
       strategy[i].loop_head_index = UINT_MAX;
-      strategy[i].widen = false;
+      strategy[i].do_widen = false;
       if(scc_map[index].find(*it)!=scc_map[index].end())
       {
         if(first_index_scc == UINT_MAX) // first element of scc
         {
-	  first_index_scc = i;
-          strategy[i].widen = true;
-	}
+	        first_index_scc = i;
+          strategy[i].do_widen = true;
+	      }
         scc_map[index].erase(*it);
         if(scc_map[index].size()==0) // last element of scc
-	{
+      	{
           index++;
           strategy[i].loop_head_index = first_index_scc;
           first_index_scc = UINT_MAX;
-	}
+	      }
       }
     }
 
@@ -150,7 +150,7 @@ class fixpointt
     for(unsigned i=0;i<strategy.size();i++)
     {
       std::cout << "(" << strategy[i].node;
-      if(strategy[i].widen) std::cout << "w";
+      if(strategy[i].do_widen) std::cout << "w";
       if(strategy[i].loop_head_index!=UINT_MAX) 
         std::cout << "l[" << strategy[i].loop_head_index << "]";
       std::cout << ")" << strategy[i].node;
@@ -166,36 +166,41 @@ class fixpointt
   /****************************************************************************/
   void scc_rec(Node n, 
                std::map<unsigned, std::set<Node> > &scc_map,
-               std::list<Node> &visited, 
+               visitedt &visited, 
 	       std::list<Node> &stack, 
 	       unsigned &index,
 	       std::map<Node, unsigned> &indices,
 	       std::map<Node, unsigned> &lowlinks)
   {
-    visited.push_back(n);
+    visited.insert(n);
     stack.push_back(n);
     index++;
-    indices[n] = lowlinks[n] = index;   
-    nodest succs = cfg.get_succ_nodes(n);
-    for(typename nodest::iterator it = succs; it != succs.end(); it++) 
+    indices[n] = lowlinks[n] = index;
+    edgest &edges=cfg.get_succ_edges(n);
+    
+    for(typename edgest::iterator it = edges.begin(); 
+        it != edges.end(); ++it) 
     {
-      if(visited.find(*it)==visited.end()) 
+      Node succ=it->succ;
+    
+      if(visited.find(succ)==visited.end()) 
       {
-	scc_rec(*it,scc_map,visited,stack,index,indices,lowlinks);
-	lowlinks[n] = std::min(lowlinks[*it],lowlinks[n]);
+	      scc_rec(succ,scc_map,visited,stack,index,indices,lowlinks);
+	      lowlinks[n] = std::min(lowlinks[succ],lowlinks[n]);
       }
       else 
       {
-	bool found = false;
-	for(typename std::list<Node>::iterator i = stack.begin(); 
-	    i!=stack.end(); i++) 
+	      bool found = false;
+	      for(typename std::list<Node>::iterator i = stack.begin(); 
+	          i!=stack.end(); i++) 
         {
-	  if(*i==*it) { found = true; break; }
-	}
-	if(found) 
+	        if(*i==succ) { found = true; break; }
+	      }
+	      
+	      if(found) 
         {
-	  lowlinks[n] = std::min(indices[*it],lowlinks[n]);
-	}
+	        lowlinks[n] = std::min(indices[succ],lowlinks[n]);
+	      }
       }
     }
     if(lowlinks[n]!=indices[n]) return;
@@ -209,15 +214,18 @@ class fixpointt
     while(t!=n);
   }
 
+  typedef hash_map_cont<Node, edgest > edges_to_processt;
+
   /****************************************************************************/
   void run_strategy(const strategyt &strategy, resultt &result, 
                     unsigned widening_start, unsigned widening_descend) 
   {
-    std::map<Node, edgest> edges_to_process;
+
+    edges_to_processt edges_to_process;
 
     for(unsigned i=0; i<strategy.size(); i++)
     {
-      if(!strategy[i].widen) // not in a loop
+      if(!strategy[i].do_widen) // not in a loop
       {
         process_strategy_node(strategy[i].node,result,false,edges_to_process);
       }
@@ -256,7 +264,7 @@ class fixpointt
   }
 
   bool run_strategy_loop(const strategyt &strategy, unsigned &index,
-		    resultt &result, std::map<Node, edgest> &edges_to_process,
+		    resultt &result, edges_to_processt &edges_to_process,
                     unsigned max_iterations, bool widen) 
   {
     unsigned i = index;
@@ -270,7 +278,7 @@ class fixpointt
       for(i=index; i<strategy.size(); i++)
       {
         converged = converged &&
-          process_strategy_node(strategy[i].n, result, widen, edges_to_process);
+          process_strategy_node(strategy[i].node, result, widen, edges_to_process);
         if(strategy[i].loop_head_index==index) break;
       }
 
@@ -286,7 +294,7 @@ class fixpointt
   }
 
   bool process_strategy_node(Node n, resultt &result, bool widen,
-    std::map<Node, edgest> &edges_to_process)
+    edges_to_processt &edges_to_process)
   {
 #if DEBUG
     std::cout << "processing node " << n << std::endl;
@@ -311,8 +319,8 @@ class fixpointt
     result[n] = newv;
 
     //update worklist
-    edgest succs = cfg.get_succ_edges(n);
-    for(typename edgest::iterator e = succs.begin(); e!=succs.end(); e++) 
+    typename edges_to_processt::mapped_type succs=cfg.get_succ_edges(n);
+    for(typename edges_to_processt::mapped_type::iterator e = succs.begin(); e!=succs.end(); e++) 
     {
       edges_to_process[cfg.get_succ_node(*e)].insert(*e);
     }

@@ -11,13 +11,15 @@
   There's already a class called interval_domaint in CProver.
   Therefore we're using the longer name interval_map_domaint.
  */
-class interval_map_domaint : domaint<interval_mapt, ssa_cfg_concrete_transformert>
+class interval_map_domaint : public domaint<interval_mapt, ssa_cfg_concrete_transformert>
 {
 public:
 
   interval_map_domaint(interval_widening_thresholdst &__interval_widening_thresholds)
     : interval_widening_thresholds(__interval_widening_thresholds) 
     {}
+
+  virtual ~interval_map_domaint();
 
   virtual interval_mapt bottom() 
   { 

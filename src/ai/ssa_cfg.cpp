@@ -8,6 +8,10 @@
 ssa_cfgt::ssa_cfgt(const local_SSAt &local_ssa) :
   goto_function(local_ssa.goto_function)
 {
+
+  // NOTE: we assume that the entry node has the smallest number
+  entry_node=local_ssa.nodes.begin()->first->location_number;
+
   // map from expression to location that writes it
   
   typedef std::map<unsigned, local_SSAt::locationt> location_mapt;
@@ -82,11 +86,6 @@ ssa_cfgt::ssa_cfgt(const local_SSAt &local_ssa) :
         c_it!=ssa_node.constraints.end();
         c_it++)
     {
-    
-      std::set<exprt> dest;
-      
-      std::cout << from_expr(*c_it) << std::endl;
-      
       find_symbols(c_it->op0(), reader[node]);
       find_symbols(c_it->op1(), reader[node]);
     }
