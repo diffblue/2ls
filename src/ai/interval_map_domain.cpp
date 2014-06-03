@@ -7,11 +7,6 @@ interval_map_domaint::~interval_map_domaint()
 {
 }
 
-
-bool interval_map_domaint::is_leq(const interval_mapt &v1, const interval_mapt &v2)
-{
-  return false;
-}
                             
 interval_mapt interval_map_domaint::transform(const interval_mapt &v,
                                 const ssa_cfg_concrete_transformert &t)
@@ -35,18 +30,19 @@ interval_mapt interval_map_domaint::transform(const interval_mapt &v,
 
 
                             
-interval_mapt interval_map_domaint::widen(const interval_mapt &v1, 
-                                          const interval_mapt &v2)
+bool interval_map_domaint::widen(interval_mapt &v1, 
+                                 const interval_mapt &v2)
 {
-  interval_mapt result;
  
-  for(interval_mapt::int_mapt::const_iterator 
+  bool result=false;
+ 
+  for(interval_mapt::int_mapt::iterator 
       it=v1.int_map.begin();
-      it!=v1.int_map.end(); ) // no it++
+      it!=v1.int_map.end(); ++it) 
   {
     const irep_idt &var=it->first;
   
-    const integer_intervalt &interval1=it->second;
+    integer_intervalt &interval1=it->second;
     
     integer_intervalt interval2;
     
@@ -55,43 +51,26 @@ interval_mapt interval_map_domaint::widen(const interval_mapt &v1,
     if(it2!=v2.int_map.end())
       interval2=it2->second;
          
-    integer_intervalt& result_interval=result.int_map[var];     
-    
     // lower bound
-    if(interval1.lower_set && interval2.lower_set)
-    {
-      if(interval2.lower<interval1.lower)
-        result_interval.lower=interval_widening_thresholds.lower_bound(var, interval2.lower, result_interval.lower_set);
-      else
-        result_interval.set_lower(interval1.lower);
-    }
-    else
-    {
-      // we don't set any bound -- implicitly this means -infinity
-    }
+    if(interval2.lower<interval1.lower || !interval2.lower_set)
+      interval1.make_le_than(interval_widening_thresholds.lower_bound(var, interval2.lower, interval1.lower_set));
+    
+    result=result && (!interval1.lower_set || interval2.upper_set && interval1.lower <= interval2.lower);
     
     // upper bound
-    if(interval1.upper_set && interval2.upper_set)
-    {
-      if(interval2.lower>interval1.lower)
-        result_interval.upper=interval_widening_thresholds.upper_bound(var, interval2.upper, result_interval.lower_set);
-      else
-        result_interval.set_upper(interval1.upper);
-    }
-    else
-    {
-      // we don't set any bound -- implicitly this means +infinity
-    }
+    if(interval2.lower>interval1.lower || !interval2.upper_set)
+      interval1.make_ge_than(interval_widening_thresholds.upper_bound(var, interval2.upper, interval1.upper_set));
       
+    result=result && (!interval1.upper_set || interval2.upper_set && interval1.upper >= interval2.upper);
   }
   
-  for(interval_mapt::float_mapt::const_iterator 
+  for(interval_mapt::float_mapt::iterator 
       it=v1.float_map.begin();
-      it!=v1.float_map.end(); ) // no it++
+      it!=v1.float_map.end(); ++it) 
   {
     const irep_idt &var=it->first;
   
-    const ieee_float_intervalt &interval1=it->second;
+    ieee_float_intervalt &interval1=it->second;
     
     ieee_float_intervalt interval2;
     
@@ -100,37 +79,70 @@ interval_mapt interval_map_domaint::widen(const interval_mapt &v1,
     if(it2!=v2.float_map.end())
       interval2=it2->second;
          
-    ieee_float_intervalt& result_interval=result.float_map[var];     
-    
     // lower bound
-    if(interval1.lower_set && interval2.lower_set)
-    {
-      if(interval2.lower<interval1.lower)
-        result_interval.lower=interval_widening_thresholds.lower_bound(var, interval2.lower, result_interval.lower_set);
-      else
-        result_interval.set_lower(interval1.lower);
-    }
-    else
-    {
-      // we don't set any bound -- implicitly this means -infinity
-    }
+    if(interval2.lower<interval1.lower || !interval2.lower_set)
+      interval1.make_le_than(interval_widening_thresholds.lower_bound(var, interval2.lower, interval1.lower_set));
+    
+    result=result && (!interval1.lower_set || interval2.upper_set && interval1.lower <= interval2.lower);
     
     // upper bound
-    if(interval1.upper_set && interval2.upper_set)
-    {
-      if(interval2.lower>interval1.lower)
-        result_interval.upper=interval_widening_thresholds.upper_bound(var, interval2.upper, result_interval.lower_set);
-      else
-        result_interval.set_upper(interval1.upper);
-    }
-    else
-    {
-      // we don't set any bound -- implicitly this means +infinity
-    }    
+    if(interval2.lower>interval1.lower || !interval2.upper_set)
+      interval1.make_ge_than(interval_widening_thresholds.upper_bound(var, interval2.upper, interval1.upper_set));
+      
+    result=result && (!interval1.upper_set || interval2.upper_set && interval1.upper >= interval2.upper);  
   }
  
   return result;
 }                            
 
+
+void interval_map_domaint::output(const interval_mapt &v, std::ostream& out)
+{
+
+
+  for(interval_mapt::int_mapt::const_iterator 
+      it=v.int_map.begin();
+      it!=v.int_map.end(); ++it)
+  {
+    const irep_idt &var=it->first;
+    
+    const integer_intervalt &interval=it->second;
+
+    out << id2string(var) << " : [" ;
+    
+    if(!interval.lower_set)
+      out << "-INF";
+    else
+      out << interval.lower;
+    
+    if(!interval.upper_set)
+      out << "INF";
+    else
+      out << interval.upper;
+    out << "] ";  
+  }  
+
+  for(interval_mapt::float_mapt::const_iterator 
+      it=v.float_map.begin();
+      it!=v.float_map.end(); ++it) 
+  {
+    const irep_idt &var=it->first;
+    
+    const ieee_float_intervalt &interval=it->second;
+
+    out << id2string(var) << " : [" ;
+    
+    if(!interval.lower_set)
+      out << "-INF";
+    else
+      out << interval.lower;
+    
+    if(!interval.upper_set)
+      out << "INF";
+    else
+      out << interval.upper;    
+    out << "] ";
+  }
+}
 
 

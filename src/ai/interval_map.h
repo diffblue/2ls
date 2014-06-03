@@ -14,6 +14,7 @@ public:
 
   bool join(const interval_mapt &b);
   bool meet(const interval_mapt &b);
+  bool is_leq(const interval_mapt &b);
 
   // auxiliary functions for abstract transformer
   void havoc_rec(const exprt &);

@@ -26,24 +26,25 @@ public:
     return interval_mapt(); 
   }
   
-  virtual bool is_leq(const interval_mapt &v1, const interval_mapt &v2);
-  virtual interval_mapt join(const interval_mapt &v1, 
-                             const interval_mapt &v2)
+  // return true if v1 has changed
+  virtual bool join(interval_mapt &v1, 
+                    const interval_mapt &v2)
   {
-    interval_mapt tmp(v1);
-    tmp.join(v2);
-    return tmp;
+    return v1.join(v2);
   }
   
-  virtual interval_mapt widen(const interval_mapt &v1, 
-                              const interval_mapt &v2);
+  // return true if v2 contains v1
+  virtual bool widen(interval_mapt &v1, 
+                     const interval_mapt &v2);
+                     
   virtual interval_mapt transform(const interval_mapt &v,
                                   const ssa_cfg_concrete_transformert &t);
+   
+   
+  virtual void output(const interval_mapt &v, std::ostream& out);
                                   
 protected:
   interval_widening_thresholdst &interval_widening_thresholds;
-  
-
 };
 
 #endif

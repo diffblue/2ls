@@ -39,13 +39,16 @@ class domaint
 {
  public:
   virtual AbstractValue bottom() = 0;
-  virtual bool is_leq(const AbstractValue &v1, const AbstractValue &v2) = 0;
-  virtual AbstractValue join(const AbstractValue &v1, 
-                             const AbstractValue &v2) = 0;
-  virtual AbstractValue widen(const AbstractValue &v1, 
-                              const AbstractValue &v2) = 0;
+  // return true if v1 has changed
+  virtual bool join(AbstractValue &v1, 
+                    const AbstractValue &v2) = 0;
+  // return true if v2 contains v1
+  virtual bool widen(AbstractValue &v1, 
+                     const AbstractValue &v2) = 0;
   virtual AbstractValue transform(const AbstractValue &v,
                                   const ConcreteTransformer &t) = 0;
+                                  
+  virtual void output(const AbstractValue &v, std::ostream& out)=0;
 };
 
 /******************************************************************************\
@@ -86,6 +89,23 @@ class fixpointt
     //run strategy
     run_strategy(strategy,result,widening_start,widening_descend);
   }
+
+
+  void output(std::ostream &out, resultt &result)
+  {
+    out << "fixpointt output\n";
+  
+    for(typename resultt::const_iterator
+        map_it=result.begin();
+        map_it!=result.end();
+        ++map_it)
+    {
+      out << map_it->first << " ";
+      domain.output(map_it->second, out);
+      out << "\n";
+    }
+  }
+
 
  protected:
   cfgt<Node,Edge,ConcreteTransformer> &cfg;
@@ -303,28 +323,38 @@ class fixpointt
     //update abstract value for node
     AbstractValue newv = result[n];
     edgest preds = edges_to_process[n];
+    
+    bool change=false;
     for(typename edgest::iterator e = preds.begin(); e!=preds.end(); e++) 
     {
       AbstractValue v = domain.transform(result[cfg.get_pred_node(*e)],
-					   cfg.get_transformer(*e));
-      newv = domain.join(newv,v);
+					                               cfg.get_transformer(*e));
+      change=domain.join(newv,v)||change;
     }
+    
     edges_to_process[n].clear();
 
-    //widening
-    if(widen) newv = domain.widen(result[n],newv);
-
-    //check convergence
-    if(domain.is_leq(newv,result[n])) return true; 
-    result[n] = newv;
-
-    //update worklist
-    typename edges_to_processt::mapped_type succs=cfg.get_succ_edges(n);
-    for(typename edges_to_processt::mapped_type::iterator e = succs.begin(); e!=succs.end(); e++) 
+    if(change)
     {
-      edges_to_process[cfg.get_succ_node(*e)].insert(*e);
+      //widening
+      if(widen)
+      {
+        if(domain.widen(result[n],newv))
+          return true; 
+        else
+          result[n] = newv;
+      }
+      
+      //update worklist
+      typename edges_to_processt::mapped_type succs=cfg.get_succ_edges(n);
+      for(typename edges_to_processt::mapped_type::iterator e = succs.begin(); e!=succs.end(); e++) 
+      {
+        edges_to_process[cfg.get_succ_node(*e)].insert(*e);
+      }  
+      return false;
     }
-    return false;
+    
+    return true;
   }
 
 };

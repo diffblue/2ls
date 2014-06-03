@@ -11,6 +11,11 @@ Author: Peter Schrammel
 #include "summarizer.h"
 #include "summary_store.h"
 
+#include "ssa_cfg.h"
+#include "interval_map_domain.h"
+
+
+
 /*******************************************************************\
 
 Function: summarizert::summarize()
@@ -147,6 +152,32 @@ void summarizert::compute_summary_rec(function_namet function_name)
   summary.exit_vars = functions[function_name]->exit_vars;
   summary.precondition = preconditions.at(function_name);
   summary.transformer = true_exprt(); //analyzer.get_result(); //TODO
+  
+  
+  // TODO: put into analysis wrapper class
+  // local interval analysis
+  ssa_cfgt ssa_cfg(*functions[function_name]);
+  interval_widening_thresholdst interval_widening_thresholds;
+  
+  interval_map_domaint interval_domain(interval_widening_thresholds);
+  
+  typedef fixpointt<unsigned, ssa_cfg_edget, interval_mapt,
+              ssa_cfg_concrete_transformert> interval_fixpointt;
+  
+  // compute fixpoint
+  interval_fixpointt fix(ssa_cfg, interval_domain);
+  
+  interval_fixpointt::resultt fixpoint;
+  
+  fix.analyze(0, // initial node
+                   interval_domain.bottom(),
+                   10,
+                   10,
+                   fixpoint); 
+
+  fix.output(status(), fixpoint);
+  // end of interval computation
+  
   summary_store.put(function_name,summary);
 }
 
