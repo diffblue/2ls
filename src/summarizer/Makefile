@@ -1,7 +1,8 @@
 include ../config.inc
 
 SRC = summarizer_main.cpp summarizer_parseoptions.cpp \
-      summary_checker.cpp show.cpp
+      summary_checker.cpp show.cpp function_summary.cpp \
+      summary_db.cpp
 
 OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       $(CBMC)/src/linking/linking$(LIBEXT) \
