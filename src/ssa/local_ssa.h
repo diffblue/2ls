@@ -70,6 +70,9 @@ public:
   typedef std::vector<symbol_exprt> var_listt;
   var_listt entry_vars, exit_vars;  
 
+  const namespacet &ns;
+  const goto_functiont &goto_function;
+  
   // guards
   ssa_objectt cond_symbol() const;
   symbol_exprt cond_symbol(locationt loc) const
@@ -78,7 +81,7 @@ public:
   symbol_exprt guard_symbol(locationt loc) const
   { return name(guard_symbol(), OUT, guard_map[loc].guard_source); }
   exprt edge_guard(locationt from, locationt to) const;
-
+  
   // auxiliary functions
   enum kindt { PHI, OUT, LOOP_BACK, LOOP_SELECT };
   symbol_exprt name(const ssa_objectt &, kindt kind, locationt loc) const;
@@ -98,18 +101,16 @@ public:
   bool has_static_lifetime(const ssa_objectt &) const;
   bool has_static_lifetime(const exprt &) const;
 
-  const namespacet &ns;
-  const goto_functiont &goto_function;
-  
   typedef assignmentst::objectst objectst;
   assignmentst assignments;
   
 //protected:
   guard_mapt guard_map;
-protected:
-  ssa_ait ssa_analysis;
-  std::string suffix; // an extra suffix  
 
+  ssa_ait ssa_analysis;
+  std::string suffix; // an extra suffix
+
+protected:
   // build the SSA formulas
   void build_SSA();
 
@@ -127,10 +128,10 @@ protected:
 std::list<exprt> & operator <<
   (std::list<exprt> &dest, const local_SSAt &src);
 
-class decision_proceduret & operator <<
-  (class decision_proceduret &dest, const local_SSAt &src);
-
 void preprocess_returns(goto_functionst::goto_functiont &goto_function);
 symbol_exprt return_symbol(typet type, local_SSAt::locationt loc);
+
+class decision_proceduret & operator <<
+  (class decision_proceduret &dest, const local_SSAt &src);
 
 #endif

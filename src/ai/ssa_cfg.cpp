@@ -143,7 +143,7 @@ ssa_cfgt::ssa_cfgt(const local_SSAt &local_ssa) :
       edge.transformer.constraints=ssa_node.constraints;
     }
     
-    adjacency[edge.pred].push_back(edge);
+    adjacency[edge.pred].insert(edge);
     
     ++connections;
   }
@@ -185,13 +185,13 @@ void ssa_cfgt::dot_output(std::ostream &out)
         edge_it!=edges.end();
         ++edge_it)
      {
-        ssa_cfg_edget &edge=*edge_it;
+        const ssa_cfg_edget &edge=*edge_it;
 
         out << edge.pred << " -> " << edge.succ;
 
         out << " [label=\"";
 
-        ssa_cfg_concrete_transformert &transformer=edge.transformer;
+        const ssa_cfg_concrete_transformert &transformer=edge.transformer;
 
         for(ssa_cfg_concrete_transformert::equalitiest::const_iterator
             e_it=transformer.equalities.begin();

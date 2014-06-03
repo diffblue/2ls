@@ -25,7 +25,7 @@ public:
   
   typedef goto_programt::const_targett locationt;    
 
-  enum kindt { SUCCESSOR, TAKEN, NOT_TAKEN, ASSUME } kind;
+  enum kindt { SUCCESSOR, TAKEN, NOT_TAKEN, ASSUME, FUNCTION_CALL } kind;
   
   friend std::ostream & operator << (std::ostream &out, kindt kind)
   {
@@ -35,6 +35,7 @@ public:
     case TAKEN: return out << "BTK";
     case NOT_TAKEN: return out << "BNT";
     case ASSUME: return out << "ASS";
+    case FUNCTION_CALL: return out << "FKT";
     default: return out << "?";
     }
   }
@@ -62,6 +63,11 @@ public:
     bool is_successor() const
     {
       return kind==SUCCESSOR;
+    }
+
+    bool is_function_call() const
+    {
+      return kind==FUNCTION_CALL;
     }
 
     inline edget(locationt f, kindt k):from(f), kind(k)

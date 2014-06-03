@@ -283,7 +283,7 @@ void local_SSAt::build_transfer(locationt loc)
   {
     const code_function_callt &code_function_call=
       to_code_function_call(loc->code);
-
+      
 
     /* DIFF from trunk
      if(code_function_call.lhs().is_not_nil())
@@ -387,9 +387,12 @@ void local_SSAt::build_guard(locationt loc)
     else
     {
       symbol_exprt gs=name(guard_symbol(), OUT, edge.guard_source);
+
       exprt cond;
       
-      if(edge.is_branch_taken() || edge.is_assume())
+      if(edge.is_branch_taken() ||
+         edge.is_assume() ||
+         edge.is_function_call())
         cond=cond_symbol(edge.from);
       else if(edge.is_branch_not_taken())
         cond=boolean_negate(cond_symbol(edge.from));
@@ -1282,3 +1285,4 @@ decision_proceduret & operator << (
   
   return dest;
 }
+
