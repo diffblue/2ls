@@ -171,8 +171,8 @@ void summarizert::compute_summary_rec(function_namet function_name)
   
   fix.analyze(0, // initial node
                    interval_domain.bottom(),
-                   1,
-                   1,
+                   2,
+                   2,
                    fixpoint); 
 
   fix.output(status(), fixpoint);
@@ -224,7 +224,6 @@ void summarizert::inline_summaries(local_SSAt::nodest &nodes, bool recursive)
       {
         status() << "Function " << fname << " not found" << eom;
         inliner.havoc(n->second,e);
-        break; //relies on assumption above
       }
       if(recompute) 
       {

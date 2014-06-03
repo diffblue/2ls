@@ -51,8 +51,8 @@ class summarizert : public messaget
   void run();
 
  private:
-  typedef std::map<function_namet, bool> flag_mapt;
-  flag_mapt summary_updated;
+  //typedef std::map<function_namet, bool> flag_mapt;
+  //flag_mapt summary_updated;
 
   void compute_summary_rec(function_namet function_name);
 };

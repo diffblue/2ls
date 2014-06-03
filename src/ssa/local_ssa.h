@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/std_expr.h>
 
 #include <goto-programs/goto_functions.h>
+#include <analyses/natural_loops.h>
 
 #include "ssa_domain.h"
 #include "guard_map.h"
