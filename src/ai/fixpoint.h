@@ -116,7 +116,7 @@ class fixpointt
    public:
     Node node;
     bool do_widen;
-    int loop_head_index;
+    unsigned loop_head_index;
   }; 
 
   typedef std::vector<strategy_nodet> strategyt;
@@ -173,7 +173,7 @@ class fixpointt
       if(strategy[i].do_widen) std::cout << "w";
       if(strategy[i].loop_head_index!=UINT_MAX) 
         std::cout << "l[" << strategy[i].loop_head_index << "]";
-      std::cout << ")" << strategy[i].node;
+      std::cout << ")";
     }
     std::cout << std::endl;
 #endif
