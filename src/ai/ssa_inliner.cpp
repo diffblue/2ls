@@ -62,13 +62,6 @@ void ssa_inlinert::replace(local_SSAt::nodet &node,
 
   //remove obsolete equalities
   rm_equs.insert(equ_it);
-  for(std::set<local_SSAt::nodet::equalitiest::iterator>::iterator it = rm_equs.begin();
-      it != rm_equs.end(); it++) 
-  {
-    node.equalities.erase(*it);
-  }
-  //insert new equalities
-  node.equalities.insert(node.equalities.end(),new_equs.begin(),new_equs.end());
 }
 
 /*******************************************************************\
@@ -89,9 +82,6 @@ void ssa_inlinert::replace(local_SSAt::nodest &nodes,
                        const local_SSAt &function)
 {
   function_application_exprt funapp_expr = to_function_application_expr(equ_it->rhs());
-  local_SSAt::nodest new_nodes;
-  local_SSAt::nodet::equalitiest new_equs;
-  std::set<local_SSAt::nodet::equalitiest::iterator> rm_equs;
 
   counter++;
 
@@ -140,16 +130,6 @@ void ssa_inlinert::replace(local_SSAt::nodest &nodes,
 
   //remove obsolete equalities
   rm_equs.insert(equ_it);
-  for(std::set<local_SSAt::nodet::equalitiest::iterator>::iterator it = rm_equs.begin();
-      it != rm_equs.end(); it++) 
-  {
-    node.equalities.erase(*it);
-  }
-  //insert new equalities
-  node.equalities.insert(node.equalities.end(),
-    new_equs.begin(),new_equs.end());
-  //insert new nodes
-  nodes.insert(new_nodes.begin(),new_nodes.end());
 }
 
 /*******************************************************************\
@@ -167,7 +147,7 @@ Function: ssa_inlinert::havoc()
 void ssa_inlinert::havoc(local_SSAt::nodet &node, 
 	     local_SSAt::nodet::equalitiest::iterator &equ_it)
 {
-    node.equalities.erase(equ_it);
+    rm_equs.insert(equ_it);
 }
 
 /*******************************************************************\
@@ -195,4 +175,42 @@ void ssa_inlinert::rename(exprt &expr)
   {
     rename(*it);
   }
+}
+
+/*******************************************************************\
+
+Function: ssa_inlinert::commit_node()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: apply changes to node, must be called after replace and havoc
+          (needed because replace and havoc usually called while 
+           iterating over equalities,
+           and hence we cannot modify them)
+
+\*******************************************************************/
+
+void ssa_inlinert::commit_node(local_SSAt::nodet &node)
+{
+  //remove obsolete equalities
+  for(std::set<local_SSAt::nodet::equalitiest::iterator>::iterator it = rm_equs.begin();
+      it != rm_equs.end(); it++) 
+  {
+    node.equalities.erase(*it);
+  }
+  rm_equs.clear();
+  //insert new equalities
+  node.equalities.insert(node.equalities.end(),
+    new_equs.begin(),new_equs.end());
+  new_equs.clear();
+}
+
+void ssa_inlinert::commit_nodes(local_SSAt::nodest &nodes)
+
+{
+  //insert new nodes
+  nodes.insert(new_nodes.begin(),new_nodes.end());
+  new_nodes.clear();
 }

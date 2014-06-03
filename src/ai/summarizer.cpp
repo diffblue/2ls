@@ -171,8 +171,8 @@ void summarizert::compute_summary_rec(function_namet function_name)
   
   fix.analyze(0, // initial node
                    interval_domain.bottom(),
-                   10,
-                   10,
+                   1,
+                   1,
                    fixpoint); 
 
   fix.output(status(), fixpoint);
@@ -206,7 +206,6 @@ void summarizert::inline_summaries(local_SSAt::nodest &nodes, bool recursive)
 
       function_application_exprt f = to_function_application_expr(e->rhs());
       assert(f.function().id()==ID_symbol); //no function pointers
-      assert(n->second.equalities.size()==1); //assumption: only a single equality in the node
       irep_idt fname = to_symbol_expr(f.function()).get_identifier();
       summaryt summary; 
       bool recompute = false;
@@ -235,7 +234,8 @@ void summarizert::inline_summaries(local_SSAt::nodest &nodes, bool recursive)
       }
       //replace
       inliner.replace(n->second,e,summary);
-      break; //relies on assumption above
     }
+    inliner.commit_node(n->second);
   }
+  inliner.commit_nodes(nodes);
 }

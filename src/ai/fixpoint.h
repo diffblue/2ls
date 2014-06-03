@@ -95,10 +95,8 @@ class fixpointt
   {
     out << "fixpointt output\n";
   
-    for(typename resultt::const_iterator
-        map_it=result.begin();
-        map_it!=result.end();
-        ++map_it)
+    for(typename resultt::const_iterator map_it=result.begin();
+        map_it!=result.end(); ++map_it)
     {
       out << map_it->first << " ";
       domain.output(map_it->second, out);
@@ -152,16 +150,16 @@ class fixpointt
       {
         if(first_index_scc == UINT_MAX) // first element of scc
         {
-	        first_index_scc = i;
+	  first_index_scc = i;
           strategy[i].do_widen = true;
-	      }
+	}
         scc_map[index].erase(*it);
         if(scc_map[index].size()==0) // last element of scc
       	{
           index++;
           strategy[i].loop_head_index = first_index_scc;
           first_index_scc = UINT_MAX;
-	      }
+        }
       }
     }
 
@@ -205,22 +203,22 @@ class fixpointt
     
       if(visited.find(succ)==visited.end()) 
       {
-	      scc_rec(succ,scc_map,visited,stack,index,indices,lowlinks);
-	      lowlinks[n] = std::min(lowlinks[succ],lowlinks[n]);
+	scc_rec(succ,scc_map,visited,stack,index,indices,lowlinks);
+	 lowlinks[n] = std::min(lowlinks[succ],lowlinks[n]);
       }
       else 
       {
-	      bool found = false;
-	      for(typename std::list<Node>::iterator i = stack.begin(); 
-	          i!=stack.end(); i++) 
+        bool found = false;
+        for(typename std::list<Node>::iterator i = stack.begin(); 
+             i!=stack.end(); i++) 
         {
-	        if(*i==succ) { found = true; break; }
-	      }
+	  if(*i==succ) { found = true; break; }
+	}
 	      
-	      if(found) 
+        if(found) 
         {
-	        lowlinks[n] = std::min(indices[succ],lowlinks[n]);
-	      }
+	  lowlinks[n] = std::min(indices[succ],lowlinks[n]);
+        }
       }
     }
     if(lowlinks[n]!=indices[n]) return;
@@ -328,8 +326,8 @@ class fixpointt
     for(typename edgest::iterator e = preds.begin(); e!=preds.end(); e++) 
     {
       AbstractValue v = domain.transform(result[cfg.get_pred_node(*e)],
-					                               cfg.get_transformer(*e));
-      change=domain.join(newv,v)||change;
+					 cfg.get_transformer(*e));
+      change = domain.join(newv,v) || change;
     }
     
     edges_to_process[n].clear();
@@ -347,7 +345,8 @@ class fixpointt
       
       //update worklist
       typename edges_to_processt::mapped_type succs=cfg.get_succ_edges(n);
-      for(typename edges_to_processt::mapped_type::iterator e = succs.begin(); e!=succs.end(); e++) 
+      for(typename edges_to_processt::mapped_type::iterator e = succs.begin(); 
+          e!=succs.end(); e++) 
       {
         edges_to_process[cfg.get_succ_node(*e)].insert(*e);
       }  

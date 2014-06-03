@@ -33,8 +33,15 @@ class ssa_inlinert
   void havoc(local_SSAt::nodet &node, 
 	     local_SSAt::nodet::equalitiest::iterator &equ_it);
 
+  //apply changes to node, must be called after replace and havoc
+  void commit_node(local_SSAt::nodet &node);
+  void commit_nodes(local_SSAt::nodest &nodes);
+
  protected:
   unsigned counter;
+  local_SSAt::nodest new_nodes;
+  local_SSAt::nodet::equalitiest new_equs;
+  std::set<local_SSAt::nodet::equalitiest::iterator> rm_equs;
 
   void rename(exprt &expr);
 
