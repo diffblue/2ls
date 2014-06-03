@@ -10,7 +10,7 @@ ssa_cfgt::ssa_cfgt(const local_SSAt &local_ssa) :
 {
 
   // NOTE: we assume that the entry node has the smallest number
-  entry_node=local_ssa.nodes.begin()->first->location_number;
+  entry_node=local_ssa.goto_function.body.instructions.front().location_number;
 
   // map from expression to location that writes it
   

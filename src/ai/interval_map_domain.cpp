@@ -55,13 +55,13 @@ bool interval_map_domaint::widen(interval_mapt &v1,
     if(interval2.lower<interval1.lower || !interval2.lower_set)
       interval1.make_le_than(interval_widening_thresholds.lower_bound(var, interval2.lower, interval1.lower_set));
     
-    result=result && (!interval1.lower_set || interval2.upper_set && interval1.lower <= interval2.lower);
+    result=result && (!interval1.lower_set || (interval2.upper_set && interval1.lower <= interval2.lower));
     
     // upper bound
     if(interval2.lower>interval1.lower || !interval2.upper_set)
       interval1.make_ge_than(interval_widening_thresholds.upper_bound(var, interval2.upper, interval1.upper_set));
       
-    result=result && (!interval1.upper_set || interval2.upper_set && interval1.upper >= interval2.upper);
+    result=result && (!interval1.upper_set || (interval2.upper_set && interval1.upper >= interval2.upper));
   }
   
   for(interval_mapt::float_mapt::iterator 
@@ -83,13 +83,13 @@ bool interval_map_domaint::widen(interval_mapt &v1,
     if(interval2.lower<interval1.lower || !interval2.lower_set)
       interval1.make_le_than(interval_widening_thresholds.lower_bound(var, interval2.lower, interval1.lower_set));
     
-    result=result && (!interval1.lower_set || interval2.upper_set && interval1.lower <= interval2.lower);
+    result=result && (!interval1.lower_set || (interval2.upper_set && interval1.lower <= interval2.lower));
     
     // upper bound
     if(interval2.lower>interval1.lower || !interval2.upper_set)
       interval1.make_ge_than(interval_widening_thresholds.upper_bound(var, interval2.upper, interval1.upper_set));
       
-    result=result && (!interval1.upper_set || interval2.upper_set && interval1.upper >= interval2.upper);  
+    result=result && (!interval1.upper_set || (interval2.upper_set && interval1.upper >= interval2.upper));  
   }
  
   return result;
