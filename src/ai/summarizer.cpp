@@ -112,34 +112,6 @@ Function: summarizert::run()
 void summarizert::run()
 {
 
-  // collect the transformer  
-  concrete_transformerst transformers;  
-  
-  for(functionst::const_iterator it = functions.begin(); it!=functions.end(); it++)
-  {
-    transformers.convert(*it->second);
-  }
-
-  // compute the fixpoint
-
-  interval_widening_thresholdst interval_widening_thresholds;
-  
-  interval_map_domaint interval_domain(interval_widening_thresholds);
-  
-  
-  typedef fixpointt<interval_mapt, concrete_transformert> interval_fixpointt;
-
-  // compute fixpoint
-  interval_fixpointt fix(transformers.transformers, interval_domain);
-  
-  interval_fixpointt::resultt fixpoint;
-  
-  fix.analyze(fixpoint, 3, 3); 
-
-  fix.output(status(), fixpoint);
-  // end of interval computation
-
-
   //TODO: compute fixed point (if any descendents in the call graph are updated)
   //TODO: make context sensitive (currently, only globally given preconditions are used)
   //TODO: replace simple iterator by something following the call graph
@@ -173,6 +145,26 @@ void summarizert::compute_summary_rec(function_namet function_name)
   for(local_SSAt::nodest::iterator n = nodes.begin(); n!=nodes.end(); n++)
     if(!n->second.empty()) n->second.output(out,functions[function_name]->ns);
   debug() << out.str() << eom;
+
+  // collect the transformer  
+  concrete_transformerst transformers;  
+  transformers.convert(nodes);
+
+  // compute the fixpoint
+  interval_widening_thresholdst interval_widening_thresholds;
+  interval_map_domaint interval_domain(interval_widening_thresholds);
+ 
+  typedef fixpointt<interval_mapt, concrete_transformert> interval_fixpointt;
+
+  // compute fixpoint
+  interval_fixpointt fix(transformers.transformers, interval_domain);
+  
+  interval_fixpointt::resultt fixpoint;
+  
+  fix.analyze(fixpoint, 3, 3); 
+
+  fix.output(status(), fixpoint);
+  // end of interval computation
 
   //analyze
   //TODO
@@ -229,6 +221,7 @@ void summarizert::inline_summaries(local_SSAt::nodest &nodes, bool recursive)
       {
         status() << "Function " << fname << " not found" << eom;
         inliner.havoc(n->second,e);
+        continue;
       }
       if(recompute) 
       {

@@ -5,15 +5,12 @@
 #include "concrete_transformers.h"
 
 
-void concrete_transformerst::convert(const local_SSAt &local_ssa)
+void concrete_transformerst::convert(const local_SSAt::nodest &nodes)
 {
-  
-  typedef goto_functionst::goto_functiont goto_functiont;
-  goto_functiont goto_function(local_ssa.goto_function);
 
   for(local_SSAt::nodest::const_iterator 
-      node_it=local_ssa.nodes.begin();
-      node_it!=local_ssa.nodes.end();
+      node_it=nodes.begin();
+      node_it!=nodes.end();
       ++node_it)
   {
     const local_SSAt::nodet &node=node_it->second;

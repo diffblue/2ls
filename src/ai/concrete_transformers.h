@@ -17,7 +17,7 @@ public:
   
   typedef goto_functionst::goto_functiont goto_functiont;
 
-  void convert(const local_SSAt &local_ssa);
+  void convert(const local_SSAt::nodest &nodes);
   
   void output(std::ostream &out);
     
