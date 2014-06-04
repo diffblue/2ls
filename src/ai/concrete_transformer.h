@@ -18,9 +18,9 @@ struct concrete_transformert
                                                     
   inline bool is_equality() const {return kind==equality; }
   inline bool is_constraint() const {return kind==constraint; }
-  inline exprt& lhs()  { assert(is_equality()); return op0; }
-  inline exprt& rhs()  { assert(is_equality()); return op1; }
-  inline exprt& expr() { assert(is_constraint()); return op0; }
+  inline const exprt& lhs()  const { assert(is_equality()); return op0; }
+  inline const exprt& rhs()  const { assert(is_equality()); return op1; }
+  inline const exprt& expr() const { assert(is_constraint()); return op0; }
 };
 
 #endif

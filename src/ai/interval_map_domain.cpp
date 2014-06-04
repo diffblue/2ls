@@ -82,12 +82,12 @@ interval_mapt interval_map_domaint::transform(const interval_mapt &v,
   {
     const exprt &lhs=t.lhs();
     const exprt &rhs=t.rhs();
-    assume_rec(lhs, ID_equal, rhs)
+    result.assume_rec(lhs, ID_equal, rhs);
   }
   else
   {
     const exprt &expr=t.expr();
-    assume_rec(expr)
+    result.assume_rec(expr);
   }
   
   return result;
