@@ -1,3 +1,11 @@
+/*******************************************************************\
+
+Module: Interval maps
+
+Author: Bjorn Wachter
+
+\*******************************************************************/
+
 #include <map>
 #include <iostream>
 
@@ -70,9 +78,18 @@ void interval_mapt::havoc_rec(const exprt &lhs)
     irep_idt identifier=to_symbol_expr(lhs).get_identifier();
 
     if(is_int(lhs.type()))
-      int_map.erase(identifier);
+    {
+      integer_intervalt &integer_interval(int_map[identifier]);
+      integer_interval.lower_set=false;
+      integer_interval.upper_set=false;
+    }  
     else if(is_float(lhs.type()))
-      float_map.erase(identifier);
+    {
+      ieee_float_intervalt &float_interval(float_map[identifier]);
+    
+      float_interval.lower_set=false;
+      float_interval.upper_set=false;
+    }
   }
   else if(lhs.id()==ID_typecast)
   {
@@ -162,7 +179,7 @@ void interval_mapt::assume_rec(const exprt &lhs, irep_idt id, const exprt &rhs)
     throw "unexpected id " + from_expr(lhs) + " " + id2string(id) + " " + from_expr(rhs);
 
   #ifdef DEBUG  
-  std::cout << "assume_rec: " 
+  std::cout << "   assume_rec: " 
             << from_expr(lhs) << " " << id << " "
             << from_expr(rhs) << "\n";
   #endif
@@ -223,6 +240,188 @@ void interval_mapt::assume_rec(const exprt &lhs, irep_idt id, const exprt &rhs)
       rhs_i=lhs_i;
     }
   }
+  else if(lhs.id()==ID_symbol)
+  {
+    irep_idt lhs_identifier=to_symbol_expr(lhs).get_identifier();
+  
+    int_replace_mapt int_replace_map;
+    float_replace_mapt float_replace_map;
+    
+    eval_rec(rhs, int_replace_map, float_replace_map);
+    
+    if(is_int(rhs.type()))
+    {
+      const integer_intervalt &integer_interval=int_replace_map[rhs];
+      mp_integer tmp=integer_interval.upper;
+      if(id==ID_lt) ++tmp;
+      int_map[lhs_identifier].make_le_than(tmp);
+    }
+    else if(is_float(rhs.type()))
+    {
+      const ieee_float_intervalt &float_interval=float_replace_map[rhs];
+      ieee_floatt tmp(float_interval.upper);
+      if(id==ID_lt) tmp.increment();
+      float_map[lhs_identifier].make_le_than(tmp);
+    }
+  }
+  else if(rhs.id()==ID_symbol)
+  {
+    irep_idt rhs_identifier=to_symbol_expr(rhs).get_identifier();
+  
+    int_replace_mapt int_replace_map;
+    float_replace_mapt float_replace_map;
+    
+    eval_rec(lhs, int_replace_map, float_replace_map);
+    
+    if(is_int(lhs.type()))
+    {
+      const integer_intervalt &integer_interval=int_replace_map[lhs];
+      mp_integer tmp=integer_interval.lower;
+      if(id==ID_lt) ++tmp;
+      int_map[rhs_identifier].make_ge_than(tmp);
+    }
+    else if(is_float(lhs.type()))
+    {
+      const ieee_float_intervalt &float_interval=float_replace_map[lhs];
+      ieee_floatt tmp(float_interval.lower);
+      if(id==ID_lt) tmp.increment();
+      float_map[rhs_identifier].make_ge_than(tmp);
+    }
+  }
+  
 }
+              
+
+// interval arithmetic -- move this into the interval_template data structure
+template<typename T>
+interval_templatet<T> make_plus(const std::vector<interval_templatet<T> > & operands)
+{
+  interval_templatet<T> result;
+  
+  bool lower_set=true;
+  
+  for(unsigned i=0; i<operands.size(); ++i)
+  {
+    lower_set=lower_set && operands[i].lower_set;
+  }
+  
+  bool upper_set=true;
+  
+  for(unsigned i=0; i<operands.size(); ++i)
+  {
+    upper_set=upper_set && operands[i].upper_set;
+  }
+
+  if(lower_set)
+  {
+    T lower=operands[0].lower;
+    
+    for(unsigned i=1; i<operands.size(); ++i)
+    {
+      lower+=operands[i].lower;
+    }
+    
+    result.make_ge_than(lower);
+  }
+  
+  if(upper_set)
+  {
+    T upper=operands[0].upper;
+    
+    for(unsigned i=1; i<operands.size(); ++i)
+    {
+      upper+=operands[i].upper;
+    }
+    
+    result.make_le_than(upper);
+  }
+  
+  return result;
+}
+
+
+
+void interval_mapt::eval_rec(const exprt& expr, 
+                             int_replace_mapt& int_replace_map, 
+                             float_replace_mapt& float_replace_map)
+{
+  if(expr.id()==ID_constant)
+  {
+    //
+    if(is_int(expr.type()))
+    {
+      mp_integer constant;
+      to_integer(expr, constant);
+      int_replace_map[expr]=integer_intervalt(constant);
+    }
+    else if(is_float(expr.type()) && is_float(expr.type()))
+    {
+      ieee_floatt constant(to_constant_expr(expr));
+    
+      float_replace_map[expr]=ieee_float_intervalt(constant);
+    }
+  }
+
+  else
+
+  if(expr.id()==ID_symbol)
+  {
+    // look up the symbol in the interval map
+    irep_idt identifier=to_symbol_expr(expr).get_identifier();
+    
+    if(is_int(expr.type()))
+    {
+      int_replace_map[expr]=int_map[identifier];
+    }
+    else if(is_float(expr.type()) && is_float(expr.type()))
+    {
+      float_replace_map[expr]=float_map[identifier];
+    }
+  }
+  
+  else 
+  
+  if(   expr.id()==ID_plus 
+     || expr.id()==ID_minus
+     || expr.id()==ID_mult)
+  {
+    // recursively evaluate subexpressions
+    forall_operands(it, expr)
+      eval_rec(*it, int_replace_map, float_replace_map);
+
+    // carry out the arithmetic operation
+    if(is_int(expr.type()))
+    {
+      // fetch the operands
+      const exprt::operandst &operands=expr.operands();
+      std::vector<integer_intervalt> interval_operands;
+      
+      for(unsigned i=0; i<operands.size(); ++i)
+      {
+        interval_operands.push_back(int_replace_map[operands[i]]);
+      }      
+
+      if(expr.id()==ID_plus)
+      {
+        assert(operands.size()==2);
+        int_replace_map[expr]=make_plus(interval_operands);
+      }
+            
+      
+          
+    }
+  }
+
+  else
+  
+  if(expr.id()==ID_typecast)
+  {
+    // potential conversion between interval types
+  }
+
+  
+
+}
+              
               
 

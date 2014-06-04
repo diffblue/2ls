@@ -82,7 +82,26 @@ interval_mapt interval_map_domaint::transform(const interval_mapt &v,
   {
     const exprt &lhs=t.lhs();
     const exprt &rhs=t.rhs();
+    
+    //#ifdef DEBUG
+    std::cout << "transformer " << from_expr(lhs) << " == " << from_expr(rhs) << std::endl;
+    //#endif
+
+    result.havoc_rec(lhs);
+    
+    //#ifdef DEBUG
+    std::cout << "after havoc " << std::endl;
+    output(result, std::cout);
+    //#endif
+    
     result.assume_rec(lhs, ID_equal, rhs);
+    
+    //#ifdef DEBUG
+    std::cout << "after assume_rec " << std::endl;
+    output(result, std::cout);
+    //#endif
+    
+    
   }
   else
   {
@@ -118,13 +137,13 @@ bool interval_map_domaint::widen(interval_mapt &v1,
          
     // lower bound
     if(interval2.lower<interval1.lower || !interval2.lower_set)
-      interval1.make_le_than(interval_widening_thresholds.lower_bound(var, interval2.lower, interval1.lower_set));
+      interval1.make_ge_than(interval_widening_thresholds.lower_bound(var, interval2.lower, interval1.lower_set));
     
     result=result && (!interval1.lower_set || (interval2.upper_set && interval1.lower <= interval2.lower));
     
     // upper bound
     if(interval2.lower>interval1.lower || !interval2.upper_set)
-      interval1.make_ge_than(interval_widening_thresholds.upper_bound(var, interval2.upper, interval1.upper_set));
+      interval1.make_le_than(interval_widening_thresholds.upper_bound(var, interval2.upper, interval1.upper_set));
       
     result=result && (!interval1.upper_set || (interval2.upper_set && interval1.upper >= interval2.upper));
   }
@@ -146,13 +165,13 @@ bool interval_map_domaint::widen(interval_mapt &v1,
          
     // lower bound
     if(interval2.lower<interval1.lower || !interval2.lower_set)
-      interval1.make_le_than(interval_widening_thresholds.lower_bound(var, interval2.lower, interval1.lower_set));
+      interval1.make_ge_than(interval_widening_thresholds.lower_bound(var, interval2.lower, interval1.lower_set));
     
     result=result && (!interval1.lower_set || (interval2.upper_set && interval1.lower <= interval2.lower));
     
     // upper bound
     if(interval2.lower>interval1.lower || !interval2.upper_set)
-      interval1.make_ge_than(interval_widening_thresholds.upper_bound(var, interval2.upper, interval1.upper_set));
+      interval1.make_le_than(interval_widening_thresholds.upper_bound(var, interval2.upper, interval1.upper_set));
       
     result=result && (!interval1.upper_set || (interval2.upper_set && interval1.upper >= interval2.upper));  
   }

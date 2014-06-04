@@ -26,8 +26,11 @@ public:
 
   // auxiliary functions for abstract transformer
   void havoc_rec(const exprt &);
+    
   void assume_rec(const exprt &, bool negation=false);
   void assume_rec(const exprt &lhs, irep_idt id, const exprt &rhs);
+  
+  
   
   static bool is_int(const typet &src)
   {
@@ -38,7 +41,16 @@ public:
   {
     return src.id()==ID_floatbv;
   }
+
+protected:
+  // expression evaluation
+  typedef std::map<exprt, integer_intervalt> int_replace_mapt;
+  typedef std::map<exprt, ieee_float_intervalt> float_replace_mapt;
   
+  // final result to be found in int_replace_map[expr] or in float_replace_map[expr]
+  void eval_rec(const exprt& expr, 
+                int_replace_mapt& int_replace_map, 
+                float_replace_mapt& float_replace_map);
 };
 
 #endif
