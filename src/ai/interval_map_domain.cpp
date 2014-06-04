@@ -80,11 +80,14 @@ interval_mapt interval_map_domaint::transform(const interval_mapt &v,
   
   if(t.is_equality())
   {
-    // to do
+    const exprt &lhs=t.lhs();
+    const exprt &rhs=t.rhs();
+    assume_rec(lhs, ID_equal, rhs)
   }
   else
   {
-    // to do
+    const exprt &expr=t.expr();
+    assume_rec(expr)
   }
   
   return result;
