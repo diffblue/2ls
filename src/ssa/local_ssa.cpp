@@ -101,6 +101,8 @@ void local_SSAt::get_entry_exit_vars()
 	symbol_exprt s = to_symbol_expr(e->lhs());
         if(has_prefix(id2string(s.get_identifier()),"ssa::$return")) exit_vars.push_back(s);
       }
+      //get_globals(e->lhs(),global_out); //TODO
+      //get_globals(e->rhs(),global_in); //TODO
     }
   }
 
@@ -123,7 +125,7 @@ void local_SSAt::get_globals(const exprt &expr, std::set<symbol_exprt> &globals)
   if(expr.id()==ID_symbol) 
   {
     symbol_exprt s = to_symbol_expr(expr);
-    if(is_global_symbol(s.get_identifier())) globals.insert(s);
+    if(has_static_lifetime(s)) globals.insert(s);
   }
   for(exprt::operandst::const_iterator it = expr.operands().begin();
       it != expr.operands().end(); it++)
@@ -131,23 +133,6 @@ void local_SSAt::get_globals(const exprt &expr, std::set<symbol_exprt> &globals)
     get_globals(*it,globals);
   }
 }   
-
-bool local_SSAt::is_global_symbol(const irep_idt &id)
-{
-  symbol_tablet::symbolst::const_iterator it = ns.get_symbol_table().symbols.find(id);
-  if(it==ns.get_symbol_table().symbols.end()) return false;
-  if(it->second.is_lvalue && it->second.is_static_lifetime) 
-  {
-    std::cout << "global symbol: " << id << std::endl;
-    return true;
-  } 
-  return false;
-}
-
-std::string local_SSAt::strip_suffix(const std::string &id)
-{
-  return id.substr(0,id.find("#"));
-}
 
 /*******************************************************************\
 

@@ -69,7 +69,9 @@ public:
   
   // function entry and exit variables
   typedef std::vector<symbol_exprt> var_listt;
+  typedef std::set<symbol_exprt> var_sett;
   var_listt entry_vars, exit_vars;  
+  var_sett global_in, global_out;  
 
   const namespacet &ns;
   const goto_functiont &goto_function;
@@ -122,8 +124,6 @@ protected:
   void build_guard(locationt loc);
 
   void get_globals(const exprt &expr, std::set<symbol_exprt> &globals);
-  bool is_global_symbol(const irep_idt &id);
-  std::string strip_suffix(const std::string &id);
 };
 
 std::list<exprt> & operator <<

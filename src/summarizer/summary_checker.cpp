@@ -61,7 +61,9 @@ summary_checkert::resultt summary_checkert::check_properties(
   {
     if(f_it->first=="c::assert") continue;
     if(f_it->first=="c::__CPROVER_assume") continue;
-    functions[f_it->first] = new local_SSAt(f_it->second, ns);
+    goto_functionst::goto_functiont f = f_it->second;
+    preprocess_returns(f);
+    functions[f_it->first] = new local_SSAt(f, ns);
   }
   summarizer.summarize(functions);
 

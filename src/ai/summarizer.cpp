@@ -175,7 +175,12 @@ void summarizert::compute_summary_rec(function_namet function_name)
   summary.exit_vars = functions[function_name]->exit_vars;
   summary.precondition = preconditions.at(function_name);
   summary.transformer = true_exprt(); //analyzer.get_result(); //TODO
-   
+
+  out.clear();
+  out << std::endl << "Summary for function " << function_name << std::endl;
+  summary.output(out,functions[function_name]->ns);   
+  debug() << out.str() << eom;
+
   summary_store.put(function_name,summary);
 }
 
