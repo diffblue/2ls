@@ -28,7 +28,7 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       ../functions/get_function$(OBJEXT) \
       ../functions/path_util$(OBJEXT) \
       ../functions/index$(OBJEXT) \
-      ../ai/ssa_cfg$(OBJEXT)\
+      ../ai/concrete_transformers$(OBJEXT)\
       ../ai/ssa_inliner$(OBJEXT)\
       ../ai/summary$(OBJEXT)\
       ../ai/summarizer$(OBJEXT)\

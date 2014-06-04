@@ -9,22 +9,19 @@ interval_map_domaint::~interval_map_domaint()
 
                             
 interval_mapt interval_map_domaint::transform(const interval_mapt &v,
-                                const ssa_cfg_concrete_transformert &t)
+                                const concrete_transformert &t)
 {
-  interval_mapt result(v);
-
-  for(unsigned i=0; i<t.equalities.size(); ++i)
+  interval_mapt result;
+  
+  if(t.is_equality())
   {
-    const equal_exprt &equal=t.equalities[i];
-    result.assume_rec(equal.op0(), ID_equal, equal.op1());
+    // to do
   }
-
-  for(unsigned i=0; i<t.constraints.size(); ++i)
+  else
   {
-    const exprt &constraint=t.constraints[i];
-    result.assume_rec(constraint);
+    // to do
   }
-
+  
   return result;
 }                                
 

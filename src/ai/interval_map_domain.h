@@ -11,7 +11,7 @@
   There's already a class called interval_domaint in CProver.
   Therefore we're using the longer name interval_map_domaint.
  */
-class interval_map_domaint : public domaint<interval_mapt, ssa_cfg_concrete_transformert>
+class interval_map_domaint : public domaint<interval_mapt, concrete_transformert>
 {
 public:
 
@@ -38,7 +38,7 @@ public:
                      const interval_mapt &v2);
                      
   virtual interval_mapt transform(const interval_mapt &v,
-                                  const ssa_cfg_concrete_transformert &t);
+                                  const concrete_transformert &t);
    
    
   virtual void output(const interval_mapt &v, std::ostream& out);

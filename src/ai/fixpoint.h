@@ -42,7 +42,7 @@ class fixpointt
 {
  public:
   typedef AbstractValue resultt;
-  typedef std::set<ConcreteTransformer> systemt;
+  typedef std::vector<ConcreteTransformer> systemt;
  
   fixpointt(systemt &_sys, 
             domaint<AbstractValue,ConcreteTransformer> &_domain) 
@@ -50,10 +50,10 @@ class fixpointt
 
 
   /****************************************************************************/
-  void analyze(const AbstractValue &initial_value, 
+  void analyze(resultt &result,
                unsigned widening_start,
-               unsigned widening_descend,
-               resultt &result)
+               unsigned widening_descend
+               )
   {
 #if DEBUG
     std::cout << "ascending iterations" << std::endl;
