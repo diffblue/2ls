@@ -147,8 +147,7 @@ void summarizert::compute_summary_rec(function_namet function_name)
   debug() << out.str() << eom;
 
   // collect the transformer  
-  concrete_transformerst transformers;  
-  transformers.convert(nodes);
+  concrete_transformerst transformers(nodes);  
 
   // compute the fixpoint
   interval_widening_thresholdst interval_widening_thresholds;
@@ -161,6 +160,8 @@ void summarizert::compute_summary_rec(function_namet function_name)
   
   interval_fixpointt::resultt fixpoint;
   
+  interval_domain.initialise(fixpoint, transformers);
+ 
   fix.analyze(fixpoint, 3, 3); 
 
   fix.output(status(), fixpoint);

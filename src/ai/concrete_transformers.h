@@ -17,11 +17,21 @@ public:
   
   typedef goto_functionst::goto_functiont goto_functiont;
 
-  void convert(const local_SSAt::nodest &nodes);
+  concrete_transformerst(const local_SSAt::nodest &nodes);
   
-  void output(std::ostream &out);
+  typedef std::set<symbol_exprt> symbols_sett;
+  
+  // information about symbols
+
     
-  // joins at loop heads
+  // output to stream
+  void output(std::ostream &out);  
+
+  // symbols
+  symbols_sett symbols, free_symbols, bound_symbols;
+   
+protected:
+  void compute_symbols();
 };
 
 

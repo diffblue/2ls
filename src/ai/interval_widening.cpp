@@ -1,3 +1,12 @@
+/*******************************************************************\
+
+Module: Interval widening
+
+Author: Bjorn Wachter
+
+\*******************************************************************/
+
+
 #include <goto-programs/goto_functions.h>
 
 #include "interval_map.h"

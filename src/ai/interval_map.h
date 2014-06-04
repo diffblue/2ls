@@ -1,3 +1,11 @@
+/*******************************************************************\
+
+Module: Intervals
+
+Author: Bjorn Wachter
+
+\*******************************************************************/
+
 #ifndef CPROVER_INTERVAL_MAP_H
 #define CPROVER_INTERVAL_MAP_H
 

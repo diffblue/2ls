@@ -2,15 +2,10 @@
 #define CPROVER_INTERVAL_MAP_DOMAIN
 
 #include "fixpoint.h"
-#include "concrete_transformer.h"
+#include "concrete_transformers.h"
 #include "interval_map.h"
 #include "interval_widening.h"
 
-
-/*
-  There's already a class called interval_domaint in CProver.
-  Therefore we're using the longer name interval_map_domaint.
- */
 class interval_map_domaint : public domaint<interval_mapt, concrete_transformert>
 {
 public:
@@ -25,6 +20,8 @@ public:
   { 
     return interval_mapt(); 
   }
+  
+  void initialise(interval_mapt&, const concrete_transformerst &transformers);
   
   // return true if v1 has changed
   virtual bool join(interval_mapt &v1, 
@@ -43,6 +40,19 @@ public:
    
   virtual void output(const interval_mapt &v, std::ostream& out);
                                   
+                                                                    
+  static bool is_int(const typet &src)
+  {
+    return src.id()==ID_signedbv || src.id()==ID_unsignedbv;
+  }
+
+  static bool is_float(const typet &src)
+  {
+    return src.id()==ID_floatbv;
+  }
+
+  
+                            
 protected:
   interval_widening_thresholdst &interval_widening_thresholds;
 };

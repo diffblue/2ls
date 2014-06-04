@@ -1,7 +1,72 @@
+/*******************************************************************\
+
+Module: Interval domain
+
+Author: Bjorn Wachter
+
+\*******************************************************************/
+
 #include <goto-programs/goto_functions.h>
 
 #include "interval_map_domain.h"
                      
+
+
+
+void interval_map_domaint::initialise(interval_mapt& result, const concrete_transformerst &transformers)
+{
+  typedef concrete_transformerst::symbols_sett symbols_sett;
+
+  // set free symbols to top
+  for(symbols_sett::const_iterator 
+      it=transformers.free_symbols.begin();
+      it!=transformers.free_symbols.end();
+      ++it)
+  {
+    const symbol_exprt &symbol_expr=*it;
+       
+    const irep_idt &id=symbol_expr.get_identifier();
+    
+    if(is_int(symbol_expr.type()))
+    {
+      result.int_map[id].lower_set=false;
+      result.int_map[id].upper_set=false;
+    }
+    else if(is_float(symbol_expr.type()))
+    {
+      result.float_map[id].lower_set=false;
+      result.float_map[id].upper_set=false;
+    }
+    
+  }
+  
+  // set bound symbols to bottom
+  for(symbols_sett::const_iterator 
+      it=transformers.bound_symbols.begin();
+      it!=transformers.bound_symbols.end();
+      ++it)
+  {
+    const symbol_exprt &symbol_expr=*it;
+    const irep_idt &id=symbol_expr.get_identifier();
+    
+    if(is_int(symbol_expr.type()))
+    {
+      mp_integer zero(0), one(1);
+      result.int_map[id].set_lower(one);
+      result.int_map[id].set_upper(zero);
+    } if(is_float(symbol_expr.type()))
+    {
+      ieee_floatt zero;
+      zero.from_float(0.0);
+      ieee_floatt one;
+      one.from_float(1.0);
+      result.float_map[id].set_lower(one);
+      result.float_map[id].set_upper(zero);   
+    }
+  }
+}
+
+
                      
 interval_map_domaint::~interval_map_domaint()
 {
@@ -11,7 +76,7 @@ interval_map_domaint::~interval_map_domaint()
 interval_mapt interval_map_domaint::transform(const interval_mapt &v,
                                 const concrete_transformert &t)
 {
-  interval_mapt result;
+  interval_mapt result(v);
   
   if(t.is_equality())
   {
@@ -106,17 +171,19 @@ void interval_map_domaint::output(const interval_mapt &v, std::ostream& out)
     const integer_intervalt &interval=it->second;
 
     out << id2string(var) << " : [" ;
-    
+        
     if(!interval.lower_set)
       out << "-INF";
     else
       out << interval.lower;
     
+    out << ",";
+    
     if(!interval.upper_set)
       out << "INF";
     else
       out << interval.upper;
-    out << "] ";  
+    out << "]\n";  
   }  
 
   for(interval_mapt::float_mapt::const_iterator 
@@ -138,7 +205,7 @@ void interval_map_domaint::output(const interval_mapt &v, std::ostream& out)
       out << "INF";
     else
       out << interval.upper;    
-    out << "] ";
+    out << "]\n";
   }
 }
 
