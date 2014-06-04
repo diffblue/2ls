@@ -30,11 +30,13 @@ public:
     return identifier;
   }
   
+  // The identifier is unique, so ordering and comparison
+  // can be done on the identifier.
   inline bool operator<(const ssa_objectt &other) const
   {
     return identifier<other.identifier;
   }
-  
+
   inline bool operator==(const ssa_objectt &other) const
   {
     return identifier==other.identifier;
