@@ -4,7 +4,7 @@
 #include <goto-programs/goto_functions.h>
 
 #include "fixpoint.h"
-#include "concrete_transformer.h"
+#include "constraint_system.h"
 
 #include "../ssa/local_ssa.h"
 
@@ -19,10 +19,8 @@ struct ssa_cfg_edget {
 };
 
 
-class ssa_cfgt : 
-  public cfgt<unsigned, 
-              ssa_cfg_edget, 
-              ssa_cfg_concrete_transformert>
+class interval_transformer : 
+  public concrete
 {
 public:
   typedef goto_functionst::goto_functiont goto_functiont;

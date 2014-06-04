@@ -1,7 +1,7 @@
-#ifndef CPROVER_CONCRETE_TRANSFORMER_H
+#ifndef CPROVER_CONSTRAINT_SYSTEM_H
 #define CPROVER_CONCRETE_TRANSFORMER_H
 
-struct ssa_cfg_concrete_transformert 
+struct constraint_systemt 
 {
   typedef std::vector<equal_exprt> equalitiest;
   equalitiest equalities;

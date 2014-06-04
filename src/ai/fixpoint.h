@@ -74,7 +74,7 @@ class fixpointt
   void output(std::ostream &out, resultt &result)
   {
     out << "fixpoint output: ";
-    domain.output(map_it->second, out);
+    domain.output(result, out);
     out << std::endl;
   }
 
@@ -85,7 +85,6 @@ class fixpointt
   /****************************************************************************/
   bool run(resultt &result, unsigned max_iterations, bool widen) 
   {
-    unsigned i = index;
     for(unsigned iteration=0; iteration<max_iterations; iteration++)
     {
 #if DEBUG
