@@ -87,17 +87,18 @@ interval_mapt interval_map_domaint::transform(const interval_mapt &v,
     std::cout << "transformer " << from_expr(lhs) << " == " << from_expr(rhs) << std::endl;
     //#endif
 
-    result.havoc_rec(lhs);
-    
     //#ifdef DEBUG
-    std::cout << "after havoc " << std::endl;
+    std::cout << "before " << std::endl;
     output(result, std::cout);
     //#endif
-    
+
+
+
+    result.havoc_rec(lhs);   
     result.assume_rec(lhs, ID_equal, rhs);
     
     //#ifdef DEBUG
-    std::cout << "after assume_rec " << std::endl;
+    std::cout << "after " << std::endl;
     output(result, std::cout);
     //#endif
     
