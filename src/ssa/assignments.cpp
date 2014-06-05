@@ -50,11 +50,13 @@ void assignmentst::build_assignment_map(
       // * any dirty locals
       
       for(objectst::const_iterator
-          o_it=dirty_locals.begin(); o_it!=dirty_locals.end(); o_it++)
+          o_it=ssa_objects.dirty_locals.begin();
+          o_it!=ssa_objects.dirty_locals.end(); o_it++)
         assign(*o_it, it, ns);
 
       for(objectst::const_iterator
-          o_it=globals.begin(); o_it!=globals.end(); o_it++)
+          o_it=ssa_objects.globals.begin();
+          o_it!=ssa_objects.globals.end(); o_it++)
         assign(*o_it, it, ns);
 
       // the call might come with an assignment
@@ -136,8 +138,8 @@ void assignmentst::assign(
 
   // this might alias all sorts of stuff
   for(std::set<ssa_objectt>::const_iterator
-      o_it=objects.begin();
-      o_it!=objects.end();
+      o_it=ssa_objects.objects.begin();
+      o_it!=ssa_objects.objects.end();
       o_it++)
   {
     if(ssa_may_alias(o_it->get_expr(), lhs, ns))
@@ -182,17 +184,6 @@ void assignmentst::output(
   const goto_programt &goto_program,
   std::ostream &out)
 {
-  #if 1
-  for(objectst::const_iterator
-      o_it=objects.begin();
-      o_it!=objects.end();
-      o_it++)
-  {
-    out << o_it->get_identifier() << "\n";
-  }
-        
-  #else
-
   forall_goto_program_instructions(i_it, goto_program)
   {
     out << "**** " << i_it->location_number << " "
@@ -213,6 +204,4 @@ void assignmentst::output(
         
     out << "\n";
   }
-  
-  #endif
 }

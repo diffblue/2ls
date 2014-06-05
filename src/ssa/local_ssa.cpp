@@ -108,8 +108,8 @@ void local_SSAt::build_phi_nodes(locationt loc)
   nodet &node=nodes[loc];
 
   for(objectst::const_iterator
-      o_it=assignments.ssa_objects.objects.begin();
-      o_it!=assignments.ssa_objects.objects.end(); o_it++)
+      o_it=ssa_objects.objects.begin();
+      o_it!=ssa_objects.objects.end(); o_it++)
   {
     // phi-node here?
     ssa_domaint::phi_nodest::const_iterator p_it=
@@ -411,8 +411,8 @@ exprt local_SSAt::read_lhs(
   ssa_objectt object(expr, ns);
 
   // is this an object we track?
-  if(assignments.objects.find(object)!=
-     assignments.objects.end())
+  if(ssa_objects.objects.find(object)!=
+     ssa_objects.objects.end())
   {
     // yes, it is
     if(assignments.assigns(loc, object))
@@ -595,8 +595,8 @@ exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
 
     // case split for aliasing
     for(objectst::const_iterator
-        o_it=assignments.objects.begin();
-        o_it!=assignments.objects.end(); o_it++)
+        o_it=ssa_objects.objects.begin();
+        o_it!=ssa_objects.objects.end(); o_it++)
     {
       if(*o_it!=object &&
          ssa_may_alias(expr, o_it->get_expr(), ns))
@@ -659,8 +659,8 @@ exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
   }
 
   // is this an object we track?
-  if(assignments.objects.find(object)!=
-     assignments.objects.end())
+  if(ssa_objects.objects.find(object)!=
+     ssa_objects.objects.end())
   {
     return read_rhs(object, loc);
   }
