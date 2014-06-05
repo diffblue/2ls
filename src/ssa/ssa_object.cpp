@@ -138,6 +138,28 @@ void ssa_objectst::collect_objects(
 
 /*******************************************************************\
 
+Function: ssa_objectst::categorize_objects
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void ssa_objectst::categorize_objects(const namespacet &ns)
+{
+  for(objectst::const_iterator o_it=objects.begin();
+      o_it!=objects.end();
+      o_it++)
+  {
+    
+  }
+}
+
+/*******************************************************************\
+
 Function: ssa_objectt::object_id_rec
 
   Inputs:

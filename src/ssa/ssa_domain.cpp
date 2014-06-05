@@ -244,9 +244,9 @@ void ssa_ait::initialize(const goto_functionst::goto_functiont &goto_function)
     }
     #endif
     
-    for(assignmentst::objectst::const_iterator
-        o_it=assignments.objects.begin();
-        o_it!=assignments.objects.end();
+    for(ssa_objectst::objectst::const_iterator
+        o_it=assignments.ssa_objects.objects.begin();
+        o_it!=assignments.ssa_objects.objects.end();
         o_it++)
     {
       irep_idt id=o_it->get_identifier();

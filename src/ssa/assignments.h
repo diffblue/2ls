@@ -16,6 +16,8 @@ Author: Daniel Kroening, kroening@kroening.com
 class assignmentst
 {
 public:
+  const ssa_objectst &ssa_objects;
+
   typedef ssa_objectst::objectst objectst;
 
   typedef std::map<goto_programt::const_targett, objectst> assignment_mapt;
@@ -50,8 +52,6 @@ public:
     std::ostream &);
   
 protected:
-  const ssa_objectst &ssa_objects;
-
   void build_assignment_map(const goto_programt &, const namespacet &);
 
   void assign(
