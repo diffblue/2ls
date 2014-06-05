@@ -87,22 +87,8 @@ interval_mapt interval_map_domaint::transform(const interval_mapt &v,
     std::cout << "transformer " << from_expr(lhs) << " == " << from_expr(rhs) << std::endl;
     //#endif
 
-    //#ifdef DEBUG
-    //std::cout << "before " << std::endl;
-    //output(result, std::cout);
-    //#endif
-
-
-
     result.havoc_rec(lhs);   
-    result.assume_rec(lhs, ID_equal, rhs);
-    
-    //#ifdef DEBUG
-    //std::cout << "after " << std::endl;
-    output(result, std::cout);
-    //#endif
-    
-    
+    result.assume_rec(lhs, ID_equal, rhs);   
   }
   else
   {
@@ -193,20 +179,28 @@ void interval_map_domaint::output(const interval_mapt &v, std::ostream& out)
     
     const integer_intervalt &interval=it->second;
 
-    out << id2string(var) << " : [" ;
-        
-    if(!interval.lower_set)
-      out << "-INF";
+    out << id2string(var);
+
+    if(interval.is_bottom())
+      out << " : BOT";
     else
-      out << interval.lower;
-    
-    out << ",";
-    
-    if(!interval.upper_set)
-      out << "INF";
-    else
-      out << interval.upper;
-    out << "]\n";  
+    {
+      out << " : [" ;
+          
+      if(!interval.lower_set)
+        out << "-INF";
+      else
+        out << interval.lower;
+      
+      out << ",";
+      
+      if(!interval.upper_set)
+        out << "INF";
+      else
+        out << interval.upper;
+      out << "]";
+    }
+    out <<"\n";  
   }  
 
   for(interval_mapt::float_mapt::const_iterator 

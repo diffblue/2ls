@@ -34,10 +34,11 @@ bool interval_mapt::join(const interval_mapt &b)
     }
     else
     {
-      if(it->second.join(b_it->second))
-        result=true;
-
-      it++;
+      if(!b_it->second.is_bottom())
+      {
+        result=it->second.join(b_it->second);
+        it++;
+      }
     }
   }
 
@@ -55,10 +56,11 @@ bool interval_mapt::join(const interval_mapt &b)
     }
     else
     {
-      if(it->second.join(b_it->second))
-        result=true;
-
-      it++;
+      if(!b_it->second.is_bottom())
+      {
+        result=it->second.join(b_it->second);
+        it++;
+      }
     }
   }
 
