@@ -196,7 +196,7 @@ void local_SSAt::build_phi_nodes(locationt loc)
 
     exprt rhs=nil_exprt();
 
-    if(do_lb==false)
+    if(!do_lb)
     {
       // We distinguish forwards- from backwards-edges,
       // and do forwards-edges first, which gives them
@@ -328,8 +328,6 @@ void local_SSAt::build_transfer(locationt loc)
 +      assign_rec(code_function_call.lhs(), rhs, loc);
      */
 
-
-    //TODO: functions with side effects
     if(code_function_call.lhs().is_not_nil())
     {
       exprt ssa_lhs = read_rhs(code_function_call.lhs(), loc);          
@@ -339,14 +337,7 @@ void local_SSAt::build_transfer(locationt loc)
       ssa_rhs.type() = code_function_call.lhs().type();
       ssa_rhs.arguments() = code_function_call.arguments(); 
 
-      for(function_application_exprt::argumentst::iterator it = 
-           ssa_rhs.arguments().begin();it!=ssa_rhs.arguments().end(); it++) 
-      {
-        *it = read_rhs(*it,loc);
-      }
-
-      equal_exprt equality(ssa_lhs, ssa_rhs);
-      nodes[loc].equalities.push_back(equality);
+      assign_rec(code_function_call.lhs(), ssa_rhs, loc);
     }
   }
 }
