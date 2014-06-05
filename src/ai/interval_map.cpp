@@ -302,7 +302,48 @@ void interval_mapt::assume_rec(const exprt &lhs, irep_idt id, const exprt &rhs)
 
 // interval arithmetic -- move this into the interval_template data structure
 template<typename T>
-interval_templatet<T> make_plus(const std::vector<interval_templatet<T> > & operands)
+interval_templatet<T> make_plus(const interval_templatet<T>& op0,
+                                const interval_templatet<T>& op1)
+{
+  interval_templatet<T> result;
+  
+  if(op0.lower_set && op1.lower_set)
+  {
+    result.make_ge_than(op0.lower + op1.lower);
+  }
+  
+  if(op0.upper_set && op1.upper_set)
+  {
+    result.make_le_than(op0.upper + op1.upper);
+  }
+  
+  return result;
+}
+
+// interval arithmetic -- move this into the interval_template data structure
+template<typename T>
+interval_templatet<T> make_minus(const interval_templatet<T>& op0,
+                                 const interval_templatet<T>& op1)
+{
+  interval_templatet<T> result;
+  
+  if(op0.lower_set && op1.lower_set)
+  {
+    result.make_ge_than(op0.lower - op1.upper);
+  }
+  
+  if(op0.upper_set && op1.upper_set)
+  {
+    result.make_le_than(op0.upper - op1.lower);
+  }
+  
+  return result;
+}
+
+
+// interval arithmetic -- move this into the interval_template data structure
+template<typename T>
+interval_templatet<T> make_and(const std::vector<interval_templatet<T> > & operands)
 {
   interval_templatet<T> result;
   
@@ -391,7 +432,8 @@ void interval_mapt::eval_rec(const exprt& expr,
   
   if(   expr.id()==ID_plus 
      || expr.id()==ID_minus
-     || expr.id()==ID_mult)
+     || expr.id()==ID_mult
+     || expr.id()==ID_if)
   {
     // recursively evaluate subexpressions
     forall_operands(it, expr)
@@ -412,7 +454,12 @@ void interval_mapt::eval_rec(const exprt& expr,
       if(expr.id()==ID_plus)
       {
         assert(operands.size()==2);
-        int_replace_map[expr]=make_plus(interval_operands);
+        int_replace_map[expr]=make_plus(interval_operands[0], interval_operands[1]);
+      }
+      else if(expr.id()==ID_minus)
+      {
+        assert(operands.size()==2);
+        int_replace_map[expr]=make_minus(interval_operands[0], interval_operands[1]);     
       }
             
       

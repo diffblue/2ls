@@ -111,7 +111,7 @@ class fixpointt
       {
         //widening
       	if(widen)
-	{
+	      {
       	  if(domain.widen(result,newv)) return true; 
       	  else result = newv;
         }
