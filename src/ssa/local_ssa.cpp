@@ -98,7 +98,7 @@ void local_SSAt::get_entry_exit_vars()
     {
       if(e->lhs().id()==ID_symbol) 
       {
-	symbol_exprt s = to_symbol_expr(e->lhs());
+	      symbol_exprt s = to_symbol_expr(e->lhs());
         if(has_prefix(id2string(s.get_identifier()),"ssa::$return")) exit_vars.push_back(s);
       }
       //get_globals(e->lhs(),global_out); //TODO
@@ -196,46 +196,94 @@ void local_SSAt::build_phi_nodes(locationt loc)
 
     exprt rhs=nil_exprt();
 
-    // We distinguish forwards- from backwards-edges,
-    // and do forwards-edges first, which gives them
-    // _lower_ priority in the ITE. Inputs are always
-    // forward edges.
-    
-    for(std::map<locationt, ssa_domaint::deft>::const_iterator
-        incoming_it=incoming.begin();
-        incoming_it!=incoming.end();
-        incoming_it++)
-      if(incoming_it->second.is_input() ||
-         incoming_it->first->location_number < loc->location_number)
-      {
-        // it's a forward edge
-        exprt incoming_value=name(*o_it, incoming_it->second);
-        exprt incoming_guard=edge_guard(incoming_it->first, loc);
+    if(do_lb==false)
+    {
+      // We distinguish forwards- from backwards-edges,
+      // and do forwards-edges first, which gives them
+      // _lower_ priority in the ITE. Inputs are always
+      // forward edges.
+      
+      for(std::map<locationt, ssa_domaint::deft>::const_iterator
+          incoming_it=incoming.begin();
+          incoming_it!=incoming.end();
+          incoming_it++)
+        if(incoming_it->second.is_input() ||
+           incoming_it->first->location_number < loc->location_number)
+        {
+          // it's a forward edge
+          exprt incoming_value=name(*o_it, incoming_it->second);
+          exprt incoming_guard=edge_guard(incoming_it->first, loc);
 
-        if(rhs.is_nil()) // first
-          rhs=incoming_value;
-        else
-          rhs=if_exprt(incoming_guard, incoming_value, rhs);
-      }
-     
-    // now do backwards
+          if(rhs.is_nil()) // first
+            rhs=incoming_value;
+          else
+            rhs=if_exprt(incoming_guard, incoming_value, rhs);
+        }
+       
+      // now do backwards
 
-    for(std::map<locationt, ssa_domaint::deft>::const_iterator
-        incoming_it=incoming.begin();
-        incoming_it!=incoming.end();
-        incoming_it++)
-      if(!incoming_it->second.is_input() &&
-         incoming_it->first->location_number >= loc->location_number)
-      {
-        // it's a backwards edge
-        exprt incoming_value=name(*o_it, LOOP_BACK, incoming_it->first);
-        exprt incoming_select=name(guard_symbol(), LOOP_SELECT, incoming_it->first);
+      for(std::map<locationt, ssa_domaint::deft>::const_iterator
+          incoming_it=incoming.begin();
+          incoming_it!=incoming.end();
+          incoming_it++)
+        if(!incoming_it->second.is_input() &&
+           incoming_it->first->location_number >= loc->location_number)
+        {
+          // it's a backwards edge
+          exprt incoming_value=name(*o_it, incoming_it->second); 
+          exprt incoming_select=name(guard_symbol(), LOOP_SELECT, incoming_it->first);
 
-        if(rhs.is_nil()) // first
-          rhs=incoming_value;
-        else
-          rhs=if_exprt(incoming_select, incoming_value, rhs);
-      }
+          if(rhs.is_nil()) // first
+            rhs=incoming_value;
+          else
+            rhs=if_exprt(incoming_select, incoming_value, rhs);
+        }
+    }
+   
+    else
+    {
+
+      // We distinguish forwards- from backwards-edges,
+      // and do forwards-edges first, which gives them
+      // _lower_ priority in the ITE. Inputs are always
+      // forward edges.
+      
+      for(std::map<locationt, ssa_domaint::deft>::const_iterator
+          incoming_it=incoming.begin();
+          incoming_it!=incoming.end();
+          incoming_it++)
+        if(incoming_it->second.is_input() ||
+           incoming_it->first->location_number < loc->location_number)
+        {
+          // it's a forward edge
+          exprt incoming_value=name(*o_it, incoming_it->second);
+          exprt incoming_guard=edge_guard(incoming_it->first, loc);
+
+          if(rhs.is_nil()) // first
+            rhs=incoming_value;
+          else
+            rhs=if_exprt(incoming_guard, incoming_value, rhs);
+        }
+       
+      // now do backwards
+
+      for(std::map<locationt, ssa_domaint::deft>::const_iterator
+          incoming_it=incoming.begin();
+          incoming_it!=incoming.end();
+          incoming_it++)
+        if(!incoming_it->second.is_input() &&
+           incoming_it->first->location_number >= loc->location_number)
+        {
+          // it's a backwards edge
+          exprt incoming_value=name(*o_it, LOOP_BACK, incoming_it->first);
+          exprt incoming_select=name(guard_symbol(), LOOP_SELECT, incoming_it->first);
+
+          if(rhs.is_nil()) // first
+            rhs=incoming_value;
+          else
+            rhs=if_exprt(incoming_select, incoming_value, rhs);
+        }
+    }
 
     symbol_exprt lhs=name(*o_it, PHI, loc);
     

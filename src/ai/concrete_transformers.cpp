@@ -1,6 +1,7 @@
 #include <algorithm>
 
 #include <util/find_symbols.h>
+#include <util/string2int.h>
 
 #include "concrete_transformers.h"
 
@@ -57,7 +58,6 @@ void concrete_transformerst::compute_symbols()
                       bound_symbols.end(),
                       std::inserter(free_symbols, free_symbols.end()));
 }
-
 
 void concrete_transformerst::output(std::ostream &out)
 {
