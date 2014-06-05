@@ -115,7 +115,7 @@ void collect_objects_rec(
 
 /*******************************************************************\
 
-Function: collect_objects
+Function: ssa_objectst::collect_objects
 
   Inputs:
 
@@ -125,15 +125,14 @@ Function: collect_objects
 
 \*******************************************************************/
 
-void collect_objects(
+void ssa_objectst::collect_objects(
   const goto_programt &src,
-  const namespacet &ns,
-  std::set<ssa_objectt> &dest)
+  const namespacet &ns)
 {
   forall_goto_program_instructions(it, src)
   {
-    collect_objects_rec(it->guard, ns, dest);
-    collect_objects_rec(it->code, ns, dest);
+    collect_objects_rec(it->guard, ns, objects);
+    collect_objects_rec(it->code, ns, objects);
   }
 }
 
