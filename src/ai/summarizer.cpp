@@ -198,6 +198,7 @@ Function: summarizert::inline_summaries()
 
 void summarizert::inline_summaries(local_SSAt::nodest &nodes, bool recursive)
 {
+  ssa_inlinert inliner;
   // replace calls with summaries
   // TODO: functions with side effects!
   for(local_SSAt::nodest::iterator n = nodes.begin(); n!=nodes.end(); n++)
@@ -236,6 +237,7 @@ void summarizert::inline_summaries(local_SSAt::nodest &nodes, bool recursive)
         summary = summary_store.get(fname);
       }
       //replace
+      status() << "Replacing function " << fname << eom;
       inliner.replace(n->second,e,summary);
     }
     inliner.commit_node(n->second);

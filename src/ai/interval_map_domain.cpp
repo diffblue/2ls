@@ -88,8 +88,8 @@ interval_mapt interval_map_domaint::transform(const interval_mapt &v,
     //#endif
 
     //#ifdef DEBUG
-    std::cout << "before " << std::endl;
-    output(result, std::cout);
+    //std::cout << "before " << std::endl;
+    //output(result, std::cout);
     //#endif
 
 
@@ -98,7 +98,7 @@ interval_mapt interval_map_domaint::transform(const interval_mapt &v,
     result.assume_rec(lhs, ID_equal, rhs);
     
     //#ifdef DEBUG
-    std::cout << "after " << std::endl;
+    //std::cout << "after " << std::endl;
     output(result, std::cout);
     //#endif
     

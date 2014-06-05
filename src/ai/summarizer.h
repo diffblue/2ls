@@ -23,8 +23,7 @@ class summarizert : public messaget
 {
  public:
  summarizert(summary_storet &_summary_store) : 
-    summary_store(_summary_store), 
-    inliner()
+    summary_store(_summary_store)
   {}
 
   typedef summaryt::predicatet preconditiont;
@@ -44,7 +43,6 @@ class summarizert : public messaget
 
  protected:
   summary_storet &summary_store;
-  ssa_inlinert inliner;
   functionst functions;
   preconditionst preconditions;
 

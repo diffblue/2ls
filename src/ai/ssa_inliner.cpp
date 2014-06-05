@@ -27,8 +27,6 @@ void ssa_inlinert::replace(local_SSAt::nodet &node,
                        summaryt summary)
 {
   function_application_exprt funapp_expr = to_function_application_expr(equ_it->rhs());
-  local_SSAt::nodet::equalitiest new_equs;
-  std::set<local_SSAt::nodet::equalitiest::iterator> rm_equs;
 
   counter++;
 
