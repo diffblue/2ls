@@ -6,6 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <analyses/dirty.h>
+
 #include "ssa_object.h"
 
 /*******************************************************************\
@@ -126,10 +128,10 @@ Function: ssa_objectst::collect_objects
 \*******************************************************************/
 
 void ssa_objectst::collect_objects(
-  const goto_programt &src,
+  const goto_functionst::goto_functiont &src,
   const namespacet &ns)
 {
-  forall_goto_program_instructions(it, src)
+  forall_goto_program_instructions(it, src.body)
   {
     collect_objects_rec(it->guard, ns, objects);
     collect_objects_rec(it->code, ns, objects);
@@ -148,14 +150,63 @@ Function: ssa_objectst::categorize_objects
 
 \*******************************************************************/
 
-void ssa_objectst::categorize_objects(const namespacet &ns)
+void ssa_objectst::categorize_objects(
+  const goto_functionst::goto_functiont &goto_function,
+  const namespacet &ns)
 {
+  dirtyt dirty(goto_function);
+
   for(objectst::const_iterator o_it=objects.begin();
       o_it!=objects.end();
       o_it++)
   {
-    
+    exprt root_object=o_it->get_root_object();
+    if(root_object.id()==ID_symbol)
+    {
+      const symbolt &symbol=ns.lookup(root_object);
+      if(symbol.is_procedure_local())
+      {
+        if(dirty(symbol.name))
+          dirty_locals.insert(*o_it);
+        else
+          clean_locals.insert(*o_it);
+      }
+      else
+        globals.insert(*o_it);
+    }
   }
+}
+
+/*******************************************************************\
+
+Function: ssa_objectt::get_root_object_rec
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt ssa_objectt::get_root_object_rec(const exprt &src)
+{
+  if(src.id()==ID_symbol)
+  {
+    return src;
+  }
+  else if(src.id()==ID_member)
+  {
+    const member_exprt &member_expr=to_member_expr(src);
+    return member_expr.struct_op();
+  }
+  else if(src.id()==ID_index)
+  {
+    const index_exprt &index_expr=to_index_expr(src);
+    return index_expr.array();
+  }
+  else
+    return nil_exprt();
 }
 
 /*******************************************************************\

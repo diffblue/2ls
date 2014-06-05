@@ -28,7 +28,7 @@ public:
     const namespacet &_ns,
     const std::string &_suffix=""):
     ns(_ns), goto_function(_goto_function), 
-    ssa_objects(_goto_function.body, ns),
+    ssa_objects(_goto_function, ns),
     assignments(_goto_function.body, ns, ssa_objects),
     guard_map(_goto_function.body),
     ssa_analysis(assignments),

@@ -9,7 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_ASSIGNMENTS_H
 #define CPROVER_ASSIGNMENTS_H
 
-#include <goto-programs/goto_program.h>
+#include <goto-programs/goto_functions.h>
 
 #include "ssa_object.h"
 

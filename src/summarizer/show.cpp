@@ -37,7 +37,7 @@ void show_assignments(
   const namespacet &ns,
   std::ostream &out)
 {
-  ssa_objectst ssa_objects(goto_function.body, ns);
+  ssa_objectst ssa_objects(goto_function, ns);
   assignmentst assignments(goto_function.body, ns, ssa_objects);
   assignments.output(ns, goto_function.body, out);
 }
@@ -88,7 +88,7 @@ void show_defs(
   const namespacet &ns,
   std::ostream &out)
 {
-  ssa_objectst ssa_objects(goto_function.body, ns);
+  ssa_objectst ssa_objects(goto_function, ns);
   assignmentst assignments(goto_function.body, ns, ssa_objects);
   ssa_ait ssa_analysis(assignments);
   ssa_analysis(goto_function, ns);
