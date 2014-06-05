@@ -11,7 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
-Function: assignmentst::build
+Function: assignmentst::build_assignment_map
 
   Inputs:
 
@@ -21,12 +21,10 @@ Function: assignmentst::build
 
 \*******************************************************************/
 
-void assignmentst::build(
+void assignmentst::build_assignment_map(
   const goto_programt &goto_program,
   const namespacet &ns)
 {
-  collect_objects(goto_program, ns, objects);
-
   forall_goto_program_instructions(it, goto_program)
   {
     // make sure we have the location in the map
@@ -46,6 +44,20 @@ void assignmentst::build(
     else if(it->is_function_call())
     {
       const code_function_callt &code_function_call=to_code_function_call(it->code);
+
+      // functions may alter state almost arbitrarily:
+      // * any global-scoped variables
+      // * any dirty locals
+      
+      for(objectst::const_iterator
+          o_it=dirty_locals.begin(); o_it!=dirty_locals.end(); o_it++)
+        assign(*o_it, it, ns);
+
+      for(objectst::const_iterator
+          o_it=globals.begin(); o_it!=globals.end(); o_it++)
+        assign(*o_it, it, ns);
+
+      // the call might come with an assignment
       if(code_function_call.lhs().is_not_nil())
         assign(code_function_call.lhs(), it, ns);
     }

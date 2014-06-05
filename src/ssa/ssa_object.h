@@ -60,9 +60,28 @@ protected:
   static irep_idt object_id_rec(const exprt &src, const namespacet &);
 };
 
-void collect_objects(
-  const goto_programt &,
-  const namespacet &,
-  std::set<ssa_objectt> &);
+class ssa_objectst
+{
+public:
+  // objects, plus categorization
+  typedef std::set<ssa_objectt> objectst;
+  objectst objects, dirty_locals, clean_locals, globals;
+
+  ssa_objectst(
+    const goto_programt &goto_program,
+    const namespacet &ns)
+  {
+    collect_objects(goto_program, ns);
+    categorize_objects(ns);
+  }
+  
+protected:
+  void collect_objects(
+    const goto_programt &,
+    const namespacet &);
+
+  void categorize_objects(const namespacet &);
+};
+
 
 #endif

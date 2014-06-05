@@ -108,8 +108,8 @@ void local_SSAt::build_phi_nodes(locationt loc)
   nodet &node=nodes[loc];
 
   for(objectst::const_iterator
-      o_it=assignments.objects.begin();
-      o_it!=assignments.objects.end(); o_it++)
+      o_it=assignments.ssa_objects.objects.begin();
+      o_it!=assignments.ssa_objects.objects.end(); o_it++)
   {
     // phi-node here?
     ssa_domaint::phi_nodest::const_iterator p_it=

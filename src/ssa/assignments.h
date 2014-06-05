@@ -16,9 +16,10 @@ Author: Daniel Kroening, kroening@kroening.com
 class assignmentst
 {
 public:
-  typedef std::set<ssa_objectt> objectst;
-  objectst objects;
+  ssa_objectst ssa_objects;
   
+  typedef ssa_objectst::objectst objectst;
+
   typedef std::map<goto_programt::const_targett, objectst> assignment_mapt;
   assignment_mapt assignment_map;
   
@@ -38,9 +39,10 @@ public:
 
   explicit assignmentst(
     const goto_programt &_goto_program,
-    const namespacet &_ns)
+    const namespacet &_ns):
+    ssa_objects(_goto_program, _ns)
   {
-    build(_goto_program, _ns);
+    build_assignment_map(_goto_program, _ns);
   }
   
   void output(
@@ -49,7 +51,7 @@ public:
     std::ostream &);
   
 protected:
-  void build(const goto_programt &, const namespacet &);
+  void build_assignment_map(const goto_programt &, const namespacet &);
 
   void assign(
     const exprt &lhs, goto_programt::const_targett,
