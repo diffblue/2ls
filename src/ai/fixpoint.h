@@ -93,7 +93,9 @@ class fixpointt
       //update abstract values
       AbstractValue newv = result;
 
+#if DEBUG
       domain.output(newv, std::cout);
+#endif
 
       bool change=false;
       for(typename systemt::iterator t = sys.begin(); t!=sys.end(); t++) 
@@ -102,20 +104,21 @@ class fixpointt
         change = domain.join(newv,v) || change;
       }
 
-
-
       if(change) 
       {
         //widening
       	if(widen)
-	      {
-      	  if(domain.widen(result,newv))
-	          return true; 
-      	  else
-	          result = newv;
+	{
+      	  if(domain.widen(result,newv)) return true; 
+      	  else result = newv;
         }
+        else result = newv;
       }
       else return true;
+
+#if DEBUG
+      //domain.output(result, std::cout);
+#endif
     }
     return false; //not converged
   }

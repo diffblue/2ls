@@ -171,8 +171,10 @@ void summarizert::compute_summary_rec(function_namet function_name)
   //TODO
   //analyzer.analyze(nodes);
   summaryt summary;
-  summary.entry_vars = functions[function_name]->entry_vars;
-  summary.exit_vars = functions[function_name]->exit_vars;
+  summary.params = functions[function_name]->params;
+  summary.returns = functions[function_name]->returns;
+  summary.globals_in = functions[function_name]->globals_in;
+  summary.globals_out = functions[function_name]->globals_out;
   summary.precondition = preconditions.at(function_name);
   summary.transformer = true_exprt(); //analyzer.get_result(); //TODO
 

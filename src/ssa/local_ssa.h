@@ -70,10 +70,10 @@ public:
   nodest nodes;
   
   // function entry and exit variables
-  typedef std::vector<symbol_exprt> var_listt;
+  typedef std::list<symbol_exprt> var_listt;
   typedef std::set<symbol_exprt> var_sett;
-  var_listt entry_vars, exit_vars;  
-  var_sett global_in, global_out;  
+  var_listt params;  
+  var_sett returns, globals_in, globals_out;  
 
   const namespacet &ns;
   const goto_functiont &goto_function;

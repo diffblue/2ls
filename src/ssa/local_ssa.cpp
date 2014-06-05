@@ -88,7 +88,7 @@ void local_SSAt::get_entry_exit_vars()
     const code_typet::argumentt &argument=*it;
     const irep_idt &identifier=argument.get_identifier();
     const symbolt &symbol=ns.lookup(identifier);
-    entry_vars.push_back(symbol.symbol_expr());
+    params.push_back(symbol.symbol_expr());
   }
 
   for(nodest::iterator n = nodes.begin(); n!=nodes.end(); n++)
@@ -99,7 +99,7 @@ void local_SSAt::get_entry_exit_vars()
       if(e->lhs().id()==ID_symbol) 
       {
 	      symbol_exprt s = to_symbol_expr(e->lhs());
-        if(has_prefix(id2string(s.get_identifier()),"ssa::$return")) exit_vars.push_back(s);
+        if(has_prefix(id2string(s.get_identifier()),"ssa::$return")) returns.insert(s);
       }
       //get_globals(e->lhs(),global_out); //TODO
       //get_globals(e->rhs(),global_in); //TODO

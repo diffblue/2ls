@@ -24,6 +24,7 @@ Function: ssa_inlinert::replace()
 
 void ssa_inlinert::replace(local_SSAt::nodet &node, 
                        local_SSAt::nodet::equalitiest::iterator equ_it, 
+		       //var_sett globals, //names of globals at call site
                        summaryt summary)
 {
   function_application_exprt funapp_expr = to_function_application_expr(equ_it->rhs());
@@ -31,15 +32,18 @@ void ssa_inlinert::replace(local_SSAt::nodet &node,
   counter++;
 
   //equalities for arguments
-  summaryt::var_listt::const_iterator it1 = summary.entry_vars.begin();
+  summaryt::var_listt::const_iterator it1 = summary.params.begin();
   for(exprt::operandst::const_iterator it2 = funapp_expr.arguments().begin();
       it2 != funapp_expr.arguments().end(); it2++, it1++)
   {
-    assert(it1!=summary.entry_vars.end());
+    assert(it1!=summary.params.end());
     exprt rhs = *it2; //copy
     rename(rhs);
     new_equs.push_back(equal_exprt(*it1,rhs));
   }
+
+  //TODO: equalities for globals_in
+  //TODO: rename "globals_out in caller" to globals_out in caller
 
   //constraints for transformer
   node.constraints.push_back(summary.transformer);  //copy
@@ -48,9 +52,9 @@ void ssa_inlinert::replace(local_SSAt::nodet &node,
   
   //constraints for return values
   exprt::operandst retvals;
-  retvals.reserve(summary.exit_vars.size());
-  for(summaryt::var_listt::const_iterator it3 = summary.exit_vars.begin();
-      it3 != summary.exit_vars.end(); it3++)
+  retvals.reserve(summary.returns.size());
+  for(summaryt::var_sett::const_iterator it3 = summary.returns.begin();
+      it3 != summary.returns.end(); it3++)
   {
     symbol_exprt rhs = *it3; //copy
     rename(rhs);
@@ -84,11 +88,11 @@ void ssa_inlinert::replace(local_SSAt::nodest &nodes,
   counter++;
 
   //equalities for arguments
-  local_SSAt::var_listt::const_iterator it1 = function.entry_vars.begin();
+  local_SSAt::var_listt::const_iterator it1 = function.params.begin();
   for(exprt::operandst::const_iterator it2 = funapp_expr.arguments().begin();
       it2 != funapp_expr.arguments().end(); it2++, it1++)
   {
-    assert(it1!=function.entry_vars.end());
+    assert(it1!=function.params.end());
     exprt rhs = *it2; //copy
     rename(rhs);
     new_equs.push_back(equal_exprt(*it1,rhs));
@@ -116,9 +120,9 @@ void ssa_inlinert::replace(local_SSAt::nodest &nodes,
  
   //constraints for return values
   exprt::operandst retvals;
-  retvals.reserve(function.exit_vars.size());
-  for(summaryt::var_listt::const_iterator it3 = function.exit_vars.begin();
-      it3 != function.exit_vars.end(); it3++)
+  retvals.reserve(function.returns.size());
+  for(summaryt::var_sett::const_iterator it3 = function.returns.begin();
+      it3 != function.returns.end(); it3++)
   {
     symbol_exprt rhs = *it3;
     rename(rhs);

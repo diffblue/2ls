@@ -10,6 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #define CPROVER_DELTACHECK_SUMMARY_H
 
 #include <iostream>
+#include <set>
 
 #include <util/std_expr.h>
 
@@ -18,8 +19,10 @@ class summaryt
  public:
   typedef exprt predicatet;
 
-  typedef std::vector<symbol_exprt> var_listt;
-  var_listt entry_vars, exit_vars;
+  typedef std::list<symbol_exprt> var_listt;
+  typedef std::set<symbol_exprt> var_sett;
+  var_listt params;
+  var_sett returns, globals_in, globals_out;
 
   //void from_fixedpoint(class ssa_fixed_pointt &);
   
