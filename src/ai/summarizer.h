@@ -39,7 +39,8 @@ class summarizert : public messaget
   void summarize(const functionst &functions, const preconditionst &preconditions); 
   void summarize(const functionst &functions); 
 
-  void inline_summaries(local_SSAt::nodest &nodes, bool recursive=false);
+  void inline_summaries(const function_namet &function_name, local_SSAt::nodest &nodes, 
+                        bool recursive=false);
 
  protected:
   summary_storet &summary_store;
@@ -52,7 +53,7 @@ class summarizert : public messaget
   //typedef std::map<function_namet, bool> flag_mapt;
   //flag_mapt summary_updated;
 
-  void compute_summary_rec(function_namet function_name);
+  void compute_summary_rec(const function_namet &function_name);
 };
 
 

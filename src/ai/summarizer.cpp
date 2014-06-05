@@ -135,10 +135,11 @@ Function: summarizert::compute_summary_rec()
 
 \*******************************************************************/
 
-void summarizert::compute_summary_rec(function_namet function_name)
+void summarizert::compute_summary_rec(const function_namet &function_name)
 {
   local_SSAt::nodest nodes = functions[function_name]->nodes; //copy
-  inline_summaries(nodes,true); 
+  inline_summaries(function_name,nodes,true); 
+  // functions[function_name]->get_entry_exit_vars();
 
   std::ostringstream out;
   out << "function to be analyzed: " << std::endl;
@@ -198,11 +199,12 @@ Function: summarizert::inline_summaries()
 
 \*******************************************************************/
 
-void summarizert::inline_summaries(local_SSAt::nodest &nodes, bool recursive)
+void summarizert::inline_summaries(const function_namet &function_name, 
+  local_SSAt::nodest &nodes, bool recursive)
 {
   ssa_inlinert inliner;
   // replace calls with summaries
-  // TODO: functions with side effects!
+  // TODO: functions with pointers passed as parameters
   for(local_SSAt::nodest::iterator n = nodes.begin(); n!=nodes.end(); n++)
   {
     for(local_SSAt::nodet::equalitiest::iterator e = n->second.equalities.begin();
@@ -238,11 +240,24 @@ void summarizert::inline_summaries(local_SSAt::nodest &nodes, bool recursive)
         compute_summary_rec(fname);
         summary = summary_store.get(fname);
       }
-      //replace
+
       status() << "Replacing function " << fname << eom;
-      inliner.replace(n->second,e,summary);
+      //getting globals at call site
+      local_SSAt::var_sett globals; 
+      functions[function_name]->get_globals(n->first,globals);
+
+#if DEBUG
+      std::cout << "globals at call site: ";
+      for(summaryt::var_sett::const_iterator it = globals.begin();
+          it != globals.end(); it++)
+         std::cout << from_expr(functions[function_name]->ns,"",*it) << " ";
+      std::cout << std::endl;
+#endif
+
+      //replace
+      inliner.replace(nodes,n,e,globals,summary);
     }
-    inliner.commit_node(n->second);
+    inliner.commit_node(n);
   }
   inliner.commit_nodes(nodes);
 }

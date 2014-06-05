@@ -114,7 +114,7 @@ void summary_checkert::check_properties(
   local_SSAt SSA(f_it->second, ns);
 
   // inline summaries
-  summarizer.inline_summaries(SSA.nodes);
+  summarizer.inline_summaries(f_it->first,SSA.nodes);
   
   // simplify, if requested
   if(simplify)

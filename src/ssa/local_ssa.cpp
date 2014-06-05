@@ -101,11 +101,15 @@ void local_SSAt::get_entry_exit_vars()
 	      symbol_exprt s = to_symbol_expr(e->lhs());
         if(has_prefix(id2string(s.get_identifier()),"ssa::$return")) returns.insert(s);
       }
-      //get_globals(e->lhs(),global_out); //TODO
-      //get_globals(e->rhs(),global_in); //TODO
     }
   }
 
+  //get globals in and out
+  goto_programt::const_targett first = goto_function.body.instructions.begin();
+  get_globals(first,globals_in);
+
+  goto_programt::const_targett last = goto_function.body.instructions.end(); last--;
+  get_globals(last,globals_out);
 }
 
 /*******************************************************************\
@@ -120,18 +124,22 @@ Function: local_SSAt::get_globals
 
 \*******************************************************************/
 
-void local_SSAt::get_globals(const exprt &expr, std::set<symbol_exprt> &globals)
+void local_SSAt::get_globals(locationt loc, std::set<symbol_exprt> &globals)
 {
-  if(expr.id()==ID_symbol) 
-  {
-    symbol_exprt s = to_symbol_expr(expr);
-    if(has_static_lifetime(s)) globals.insert(s);
-  }
-  for(exprt::operandst::const_iterator it = expr.operands().begin();
-      it != expr.operands().end(); it++)
-  {
-    get_globals(*it,globals);
-  }
+  const ssa_domaint &ssa_domain=ssa_analysis[loc];
+  for(ssa_domaint::def_mapt::const_iterator d_it = ssa_domain.def_map.begin();
+      d_it != ssa_domain.def_map.end(); d_it++)
+    {
+      if(has_prefix(id2string(d_it->first),"ssa::$return")) continue; //TODO: remove this line when returns are done
+      const symbolt &symbol=ns.lookup(d_it->first);
+         
+      if(has_static_lifetime(symbol.symbol_expr()))
+	{
+          const ssa_objectt ssa_object(symbol.symbol_expr(),ns);
+	  globals.insert(name(ssa_object,d_it->second.def));
+          //globals.insert(to_symbol_expr(read_rhs(symbol.symbol_expr(),loc)));
+	}
+    }
 }   
 
 /*******************************************************************\
@@ -328,17 +336,20 @@ void local_SSAt::build_transfer(locationt loc)
 +      assign_rec(code_function_call.lhs(), rhs, loc);
      */
 
-    if(code_function_call.lhs().is_not_nil())
+    exprt lhs = code_function_call.lhs();
+
+    //TODO: functions without return value are ignored
+    if(code_function_call.lhs().is_nil())
     {
-      exprt ssa_lhs = read_rhs(code_function_call.lhs(), loc);          
-
-      function_application_exprt ssa_rhs;
-      ssa_rhs.function() = code_function_call.function();
-      ssa_rhs.type() = code_function_call.lhs().type();
-      ssa_rhs.arguments() = code_function_call.arguments(); 
-
-      assign_rec(code_function_call.lhs(), ssa_rhs, loc);
+      irep_idt identifier="ssa::dummy"+i2string(loc->location_number);
+      lhs = symbol_exprt(identifier, code_function_call.lhs().type());
     }
+    function_application_exprt ssa_rhs;
+    ssa_rhs.function() = code_function_call.function();
+    ssa_rhs.type() = code_function_call.lhs().type();
+    ssa_rhs.arguments() = code_function_call.arguments(); 
+
+    assign_rec(lhs, ssa_rhs, loc);
   }
 }
   
@@ -524,6 +535,7 @@ symbol_exprt local_SSAt::read_rhs(
   if(d_it==ssa_domain.def_map.end())
   {
     // not written so far, it's input
+
     return name_input(object);
   }
   else
@@ -1027,6 +1039,7 @@ void local_SSAt::assign_rec(
       a_it++)
   {
     const symbol_exprt ssa_symbol=name(*a_it, OUT, loc);
+   
     exprt ssa_rhs;
 
     if(lhs_object==*a_it)
@@ -1171,8 +1184,9 @@ bool local_SSAt::has_static_lifetime(const exprt &src) const
     return has_static_lifetime(to_member_expr(src).struct_op());
   else if(src.id()==ID_symbol)
   {
-    const symbolt &s=ns.lookup(to_symbol_expr(src));
-    return s.is_static_lifetime;
+    const symbolt *s;
+    if(ns.lookup(to_symbol_expr(src).get_identifier(),s)) return false;
+    return s->is_static_lifetime;
   }
   else
     return false;

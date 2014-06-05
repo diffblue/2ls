@@ -117,6 +117,8 @@ public:
   
   bool do_lb; // put in loop-back symbols
 
+  void get_globals(locationt loc, std::set<symbol_exprt> &globals);
+
 protected:
   // build the SSA formulas
   void build_SSA();
@@ -127,7 +129,6 @@ protected:
   void build_cond(locationt loc);
   void build_guard(locationt loc);
 
-  void get_globals(const exprt &expr, std::set<symbol_exprt> &globals);
 };
 
 std::list<exprt> & operator <<
