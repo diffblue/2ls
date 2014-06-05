@@ -21,46 +21,52 @@ bool interval_mapt::join(const interval_mapt &b)
   bool result=false;
 
   for(int_mapt::iterator it=int_map.begin();
-      it!=int_map.end(); ) // no it++
+      it!=int_map.end(); ++it)
   {
-    const int_mapt::const_iterator b_it=b.int_map.begin();
+    const int_mapt::const_iterator b_it=b.int_map.find(it->first);
     if(b_it==b.int_map.end())
     {
-      int_mapt::iterator next=it;
-      next++; // will go away with C++11, as erase() returns next
-      int_map.erase(it);
-      it=next;
-      result=true;
+      result=!it->second.is_top();
+      it->second.lower_set=it->second.upper_set=false;
     }
     else
     {
-      if(!b_it->second.is_bottom())
+    
+      if(b_it->second.is_bottom())
+        result=false;
+      else if(it->second.is_bottom())
       {
-        result=it->second.join(b_it->second);
-        it++;
-      }
+        it->second=b_it->second;
+        result=true;
+      } 
+      else
+        result=it->second.join(b_it->second) || result;
     }
   }
 
   for(float_mapt::iterator it=float_map.begin();
-      it!=float_map.end(); ) // no it++
+      it!=float_map.end(); ++it)
   {
-    const float_mapt::const_iterator b_it=b.float_map.begin();
+    const float_mapt::const_iterator b_it=b.float_map.find(it->first);
     if(b_it==b.float_map.end())
     {
-      float_mapt::iterator next=it;
-      next++; // will go away with C++11, as erase() returns next
-      float_map.erase(it);
-      it=next;
-      result=true;
+      result=!it->second.is_top();
+      it->second.lower_set=it->second.upper_set=false;
     }
     else
     {
-      if(!b_it->second.is_bottom())
+      if(b_it->second.is_bottom())
+        result=false;
+      else if(it->second.is_bottom())
       {
-        result=it->second.join(b_it->second);
-        it++;
-      }
+        it->second=b_it->second;
+        result=true;
+      } 
+      else
+        result=it->second.join(b_it->second) || result;
+        
+        
+        
     }
   }
 

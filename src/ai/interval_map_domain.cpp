@@ -84,7 +84,7 @@ interval_mapt interval_map_domaint::transform(const interval_mapt &v,
     const exprt &rhs=t.rhs();
     
     //#ifdef DEBUG
-    std::cout << "transformer " << from_expr(lhs) << " == " << from_expr(rhs) << std::endl;
+    std::cout << "* transformer " << from_expr(lhs) << " == " << from_expr(rhs) << std::endl;
     //#endif
 
     result.havoc_rec(lhs);   
@@ -94,6 +94,10 @@ interval_mapt interval_map_domaint::transform(const interval_mapt &v,
   {
     const exprt &expr=t.expr();
     result.assume_rec(expr);
+    
+    //#ifdef DEBUG
+    std::cout << "* transformer [" << from_expr(expr) << "]" << std::endl;
+    //#endif
   }
   
   return result;

@@ -102,31 +102,9 @@ class fixpointt
       bool change=false;
       for(typename systemt::iterator t = sys.begin(); t!=sys.end(); t++) 
       {
-
-        #ifdef DEBUG
-        std::cout << "== before transf\n";      
-        domain.output(newv, std::cout);
-        #endif
-
         AbstractValue v = domain.transform(newv,*t);
 
-        #ifdef DEBUG
-        std::cout << "== after transf\n";
-        domain.output(v, std::cout);
-        #endif
-       
-        change = domain.join(newv,v) || change;
-
-        #ifdef DEBUG        
-        std::cout << "== join with \n";
-        domain.output(newv, std::cout);
-        std::cout << "== ... gives \n";
-        
-        domain.output(newv, std::cout);
-        
-        
-        #endif
-        
+        change = domain.join(newv,v) || change;        
       }
 
       if(change) 

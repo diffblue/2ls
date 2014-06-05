@@ -11,6 +11,7 @@ $(SUBDIRS):
 
 # Dependencies
 
+summarizer: ai ssa solver functions html
 deltacheck: ssa solver functions html
 deltagit: html
 

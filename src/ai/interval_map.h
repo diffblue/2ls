@@ -14,8 +14,8 @@ Author: Bjorn Wachter
 class interval_mapt
 {
 public:
-  typedef std::map<irep_idt, integer_intervalt> int_mapt;
-  typedef std::map<irep_idt, ieee_float_intervalt> float_mapt;
+  typedef hash_map_cont<irep_idt, integer_intervalt, irep_id_hash> int_mapt;
+  typedef hash_map_cont<irep_idt, ieee_float_intervalt, irep_id_hash> float_mapt;
 
   int_mapt int_map;
   float_mapt float_map;
