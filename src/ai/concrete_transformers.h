@@ -17,7 +17,7 @@ public:
   
   typedef goto_functionst::goto_functiont goto_functiont;
 
-  concrete_transformerst(const local_SSAt::nodest&);
+  concrete_transformerst(const namespacet& ns, const local_SSAt::nodest&);
   
   
   typedef std::set<symbol_exprt> symbols_sett;
@@ -32,9 +32,13 @@ public:
   symbols_sett symbols, free_symbols, bound_symbols;
    
 protected:
+  const namespacet &ns;
+
   void compute_symbols();
 
   exprt resolve_lb(const exprt &src, const local_SSAt& ssa);
+  
+  bool is_guard_cond(const exprt &) const;
 };
 
 
