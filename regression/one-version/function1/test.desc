@@ -3,5 +3,5 @@ main.c
 
 ^EXIT=10$
 ^SIGNAL=0$
-^** 1 of 1 failed$
+^** 2 of 2 failed$
 ^VERIFICATION FAILED$
