@@ -9,7 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_SSA_OBJECTS_H
 #define CPROVER_SSA_OBJECTS_H
 
-#include <goto-programs/goto_program.h>
+#include <goto-programs/goto_functions.h>
 
 class ssa_objectt
 {
@@ -30,11 +30,13 @@ public:
     return identifier;
   }
   
+  // The identifier is unique, so ordering and comparison
+  // can be done on the identifier.
   inline bool operator<(const ssa_objectt &other) const
   {
     return identifier<other.identifier;
   }
-  
+
   inline bool operator==(const ssa_objectt &other) const
   {
     return identifier==other.identifier;
@@ -50,17 +52,44 @@ public:
   {
     return identifier.empty()?0:(void *)&identifier;
   }
+  
+  exprt get_root_object() const
+  {
+    return get_root_object_rec(expr);
+  }
 
 protected:
   exprt expr;
   irep_idt identifier;
 
   static irep_idt object_id_rec(const exprt &src, const namespacet &);
+  static exprt get_root_object_rec(const exprt &);
 };
 
-void collect_objects(
-  const goto_programt &,
-  const namespacet &,
-  std::set<ssa_objectt> &);
+class ssa_objectst
+{
+public:
+  // objects, plus categorization
+  typedef std::set<ssa_objectt> objectst;
+  objectst objects, dirty_locals, clean_locals, globals;
+
+  ssa_objectst(
+    const goto_functionst::goto_functiont &goto_function,
+    const namespacet &ns)
+  {
+    collect_objects(goto_function, ns);
+    categorize_objects(goto_function, ns);
+  }
+  
+protected:
+  void collect_objects(
+    const goto_functionst::goto_functiont &,
+    const namespacet &);
+
+  void categorize_objects(
+    const goto_functionst::goto_functiont &,
+    const namespacet &);
+};
+
 
 #endif

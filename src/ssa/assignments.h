@@ -9,16 +9,17 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_ASSIGNMENTS_H
 #define CPROVER_ASSIGNMENTS_H
 
-#include <goto-programs/goto_program.h>
+#include <goto-programs/goto_functions.h>
 
 #include "ssa_object.h"
 
 class assignmentst
 {
 public:
-  typedef std::set<ssa_objectt> objectst;
-  objectst objects;
-  
+  const ssa_objectst &ssa_objects;
+
+  typedef ssa_objectst::objectst objectst;
+
   typedef std::map<goto_programt::const_targett, objectst> assignment_mapt;
   assignment_mapt assignment_map;
   
@@ -38,9 +39,11 @@ public:
 
   explicit assignmentst(
     const goto_programt &_goto_program,
-    const namespacet &_ns)
+    const namespacet &_ns,
+    const ssa_objectst &_ssa_objects):
+    ssa_objects(_ssa_objects)
   {
-    build(_goto_program, _ns);
+    build_assignment_map(_goto_program, _ns);
   }
   
   void output(
@@ -49,7 +52,7 @@ public:
     std::ostream &);
   
 protected:
-  void build(const goto_programt &, const namespacet &);
+  void build_assignment_map(const goto_programt &, const namespacet &);
 
   void assign(
     const exprt &lhs, goto_programt::const_targett,

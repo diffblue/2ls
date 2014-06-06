@@ -63,15 +63,15 @@ void ssa_fixed_pointt::tie_inputs_together(std::list<exprt> &dest)
   // 2) globals
   
   for(local_SSAt::objectst::const_iterator
-      it=SSA_new.assignments.objects.begin();
-      it!=SSA_new.assignments.objects.end();
+      it=SSA_new.ssa_objects.objects.begin();
+      it!=SSA_new.ssa_objects.objects.end();
       it++)
   {
     if(!SSA_new.has_static_lifetime(*it))
       continue;
       
-    if(SSA_old.assignments.objects.find(*it)==
-       SSA_old.assignments.objects.end())
+    if(SSA_old.ssa_objects.objects.find(*it)==
+       SSA_old.ssa_objects.objects.end())
       continue;
     
     symbol_exprt s_new=SSA_new.name_input(*it);
@@ -112,8 +112,8 @@ void ssa_fixed_pointt::do_backwards_edge(
   // Record the objects modified by the loop to get
   // 'primed' (post-state) and 'unprimed' (pre-state) variables.
   for(local_SSAt::objectst::const_iterator
-      o_it=SSA.assignments.objects.begin();
-      o_it!=SSA.assignments.objects.end();
+      o_it=SSA.ssa_objects.objects.begin();
+      o_it!=SSA.ssa_objects.objects.end();
       o_it++)
   {
     symbol_exprt in=SSA.name(*o_it, local_SSAt::LOOP_BACK, from);
