@@ -1,6 +1,7 @@
 void doit(int x)
 {
-  int z;
+  __CPROVER_assume(x>=5);
+  int z = 0;
   while(z<=10)
   {
     z = z + x;
