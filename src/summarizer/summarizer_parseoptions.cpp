@@ -249,6 +249,7 @@ int summarizer_parseoptionst::doit()
     summary_checker.set_message_handler(get_message_handler());
     summary_checker.set_verbosity(get_verbosity());
     summary_checker.simplify=!cmdline.isset("no-simplify");
+    summary_checker.fixed_point=!cmdline.isset("no-fixed-point");
 
     if(cmdline.isset("show-vcc"))
     {

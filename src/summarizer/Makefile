@@ -30,6 +30,7 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       ../functions/path_util$(OBJEXT) \
       ../functions/index$(OBJEXT) \
       ../domains/fixed_point$(OBJEXT) \
+      ../domains/ssa_fixed_point$(OBJEXT) \
       ../domains/predicate$(OBJEXT)
 
 include $(CBMC)/src/config.inc

@@ -16,6 +16,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "../ssa/local_ssa.h"
 #include "../ssa/simplify_ssa.h"
+#include "../domains/ssa_fixed_point.h"
 
 #include "summary_checker.h"
 
@@ -73,7 +74,12 @@ summary_checkert::resultt summary_checkert::check_properties(
       status() << "Simplifying" << messaget::eom;
       ::simplify(SSA, ns);
     }
+    
+    // fixed-point for loops
+    status() << "Fixed-point" << messaget::eom;
+    ssa_fixed_point(SSA, ns);
 
+    status() << "Checking properties" << messaget::eom;
     check_properties(ns, SSA, f_it);
   }
   

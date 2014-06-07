@@ -20,11 +20,12 @@ class summary_checkert:public property_checkert
 public:
   inline summary_checkert():
     show_vcc(false),
-    simplify(false)
+    simplify(false),
+    fixed_point(false)
   {
   }
   
-  bool show_vcc, simplify;
+  bool show_vcc, simplify, fixed_point;
 
   virtual resultt operator()(const goto_modelt &);
 
