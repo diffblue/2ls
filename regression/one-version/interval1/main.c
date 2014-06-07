@@ -9,12 +9,5 @@ int main()
   assert(x!=4);
   assert(y<=1);
   
-  // harder: requires loop invariant
-  unsigned z;
-  
-  for(z=0; z!=100; z++);
-  
-  assert(z==100);
-  
   return 0;
 }
