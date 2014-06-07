@@ -244,8 +244,7 @@ int summarizer_parseoptionst::doit()
 
   try
   {
-    namespacet ns(goto_model.symbol_table);
-    summary_checkert summary_checker(ns);
+    summary_checkert summary_checker;
     
     summary_checker.set_message_handler(get_message_handler());
     summary_checker.set_verbosity(get_verbosity());
@@ -255,19 +254,19 @@ int summarizer_parseoptionst::doit()
     {
       std::cout << "VERIFICATION CONDITIONS:\n\n";
       summary_checker.show_vcc=true;
-      summary_checker(goto_model.goto_functions);
+      summary_checker(goto_model);
       return 0;
     }
     
     // do actual analysis
-    switch(summary_checker(goto_model.goto_functions))
+    switch(summary_checker(goto_model))
     {
-    case safety_checkert::SAFE:
+    case property_checkert::PASS:
       report_properties(goto_model, summary_checker.property_map);
       report_success();
       return 0;
     
-    case safety_checkert::UNSAFE:
+    case property_checkert::FAIL:
       report_properties(goto_model, summary_checker.property_map);
       report_failure();
       return 10;
@@ -613,9 +612,9 @@ Function: summarizer_parseoptionst::report_properties
 
 void summarizer_parseoptionst::report_properties(
   const goto_modelt &goto_model,
-  const summary_checkert::property_mapt &property_map)
+  const property_checkert::property_mapt &property_map)
 {
-  for(summary_checkert::property_mapt::const_iterator
+  for(property_checkert::property_mapt::const_iterator
       it=property_map.begin();
       it!=property_map.end();
       it++)
@@ -623,36 +622,21 @@ void summarizer_parseoptionst::report_properties(
     if(get_ui()==ui_message_handlert::XML_UI)
     {
       xmlt xml_result("result");
-      xml_result.set_attribute("claim", id2string(it->first));
-
-      std::string status_string;
-
-      switch(it->second.status)
-      {
-      case summary_checkert::PASS: status_string="OK"; break;
-      case summary_checkert::FAIL: status_string="FAILURE"; break;
-      case summary_checkert::UNKNOWN: status_string="OK"; break;
-      }
-
-      xml_result.set_attribute("status", status_string);
-
+      xml_result.set_attribute("property", id2string(it->first));
+      xml_result.set_attribute("status", property_checkert::as_string(it->second.result));
       std::cout << xml_result << "\n";
     }
     else
     {
       status() << "[" << it->first << "] "
-               << it->second.description << ": ";
-      switch(it->second.status)
-      {
-      case summary_checkert::PASS: status() << "OK"; break;
-      case summary_checkert::FAIL: status() << "FAILED"; break;
-      case summary_checkert::UNKNOWN: status() << "OK"; break;
-      }
-      status() << eom;
+               << it->second.location->location.get_comment()
+               << ": "
+               << property_checkert::as_string(it->second.result)
+               << eom;
     }
 
     if(cmdline.isset("show-trace") &&
-       it->second.status==summary_checkert::FAIL)
+       it->second.result==property_checkert::FAIL)
       show_counterexample(goto_model, it->second.error_trace);
   }
 
@@ -662,11 +646,11 @@ void summarizer_parseoptionst::report_properties(
 
     unsigned failed=0;
 
-    for(summary_checkert::property_mapt::const_iterator
+    for(property_checkert::property_mapt::const_iterator
         it=property_map.begin();
         it!=property_map.end();
         it++)
-      if(it->second.status==summary_checkert::FAIL)
+      if(it->second.result==property_checkert::FAIL)
         failed++;
     
     status() << "** " << failed

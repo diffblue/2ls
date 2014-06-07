@@ -28,7 +28,9 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       ../functions/summary$(OBJEXT) \
       ../functions/get_function$(OBJEXT) \
       ../functions/path_util$(OBJEXT) \
-      ../functions/index$(OBJEXT)
+      ../functions/index$(OBJEXT) \
+      ../domains/fixed_point$(OBJEXT) \
+      ../domains/predicate$(OBJEXT)
 
 include $(CBMC)/src/config.inc
 include $(CBMC)/src/common
