@@ -59,7 +59,23 @@ summary_checkert::resultt summary_checkert::check_properties(
 
   // analyze all the functions
   forall_goto_functions(f_it, goto_model.goto_functions)
-    check_properties(ns, f_it);
+  {
+    if(!f_it->second.body.has_assertion()) continue;
+
+    status() << "Analyzing " << f_it->first << messaget::eom;
+    
+    // build SSA
+    local_SSAt SSA(f_it->second, ns);
+    
+    // simplify, if requested
+    if(simplify)
+    {
+      status() << "Simplifying" << messaget::eom;
+      ::simplify(SSA, ns);
+    }
+
+    check_properties(ns, SSA, f_it);
+  }
   
   for(property_mapt::const_iterator
       p_it=property_map.begin(); p_it!=property_map.end(); p_it++)
@@ -85,32 +101,9 @@ Function: summary_checkert::check_properties
 
 void summary_checkert::check_properties(
   const namespacet &ns,
+  const local_SSAt &SSA,
   const goto_functionst::function_mapt::const_iterator f_it)
 {
-  if(!f_it->second.body.has_assertion()) return;
-
-  #if 0
-  assignmentst assignments(f_it->second.body, ns);
-  //assignments.output(ns, f_it->second.body, std::cout);
-  
-  ssa_ait ssa_ai(assignments);
-  ssa_ai(f_it->second.body, ns);
-  ssa_ai.output(ns, f_it->second.body, std::cout);
-  return;
-  #endif
-  
-  status() << "Analyzing " << f_it->first << messaget::eom;
-  
-  // build SSA
-  local_SSAt SSA(f_it->second, ns);
-  
-  // simplify, if requested
-  if(simplify)
-  {
-    status() << "Simplifying" << messaget::eom;
-    ::simplify(SSA, ns);
-  }
-
   // non-incremental version
 
   const goto_programt &goto_program=f_it->second.body;

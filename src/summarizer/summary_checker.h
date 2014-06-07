@@ -44,6 +44,7 @@ protected:
 
   void check_properties(
     const namespacet &,
+    const local_SSAt &,
     const goto_functionst::function_mapt::const_iterator f_it);
 };
 
