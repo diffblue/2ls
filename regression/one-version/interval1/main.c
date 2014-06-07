@@ -15,4 +15,6 @@ int main()
   for(z=0; z!=100; z++);
   
   assert(z==100);
+  
+  return 0;
 }
