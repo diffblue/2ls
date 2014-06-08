@@ -22,7 +22,8 @@ public:
   constraintst transition_relation;
   
   predicatet::state_var_listt pre_state_vars, post_state_vars;
-  
+
+  // this is over pre_state_vars  
   predicatet state_predicate;
 
   void output(std::ostream &) const;

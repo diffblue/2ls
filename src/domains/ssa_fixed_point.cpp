@@ -32,11 +32,16 @@ void ssa_fixed_point(local_SSAt &SSA, const namespacet &ns)
   fixed_pointt fixed_point(ns);
 
   // get all backwards edges
+  
+  typedef std::map<goto_programt::const_targett, predicatet::state_var_listt> var_mapt;
+  var_mapt var_map;
 
   forall_goto_program_instructions(i_it, SSA.goto_function.body)
   {
     if(i_it->is_backwards_goto())
     {
+      predicatet::state_var_listt &vars=var_map[i_it];
+    
       // Record the objects modified by the loop to get
       // 'primed' (post-state) and 'unprimed' (pre-state) variables.
       for(local_SSAt::objectst::const_iterator
@@ -49,11 +54,18 @@ void ssa_fixed_point(local_SSAt &SSA, const namespacet &ns)
       
         fixed_point.pre_state_vars.push_back(in);
         fixed_point.post_state_vars.push_back(out);
+        vars.push_back(out);
       }
 
-      ssa_objectt guard=SSA.guard_symbol();
-      fixed_point.pre_state_vars.push_back(SSA.name(guard, local_SSAt::LOOP_BACK, i_it));
-      fixed_point.post_state_vars.push_back(SSA.name(guard, local_SSAt::OUT, i_it));
+      {
+        ssa_objectt guard=SSA.guard_symbol();
+        symbol_exprt in=SSA.name(guard, local_SSAt::LOOP_BACK, i_it);
+        symbol_exprt out=SSA.name(guard, local_SSAt::OUT, i_it);
+        
+        fixed_point.pre_state_vars.push_back(in);
+        fixed_point.post_state_vars.push_back(out);
+        vars.push_back(out);
+      }
     }
   }
 
@@ -62,4 +74,13 @@ void ssa_fixed_point(local_SSAt &SSA, const namespacet &ns)
 
   // kick off fixed-point computation
   fixed_point();
+  
+  // add fixed-point as constraints back into SSA
+  for(var_mapt::const_iterator
+      v_it=var_map.begin();
+      v_it!=var_map.end();
+      v_it++)
+  {
+    
+  }
 }
