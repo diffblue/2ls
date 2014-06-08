@@ -1,6 +1,6 @@
 #include "strategy_solver_base.h"
 
-class strategy_solver_binary_searcht 
+class strategy_solver_binary_searcht : public strategy_solver_baset 
 {
  public:
   strategy_solver_binary_searcht(const local_SSAt &program, loopvarst loopvars, 

@@ -1,3 +1,5 @@
+#include <set>
+
 #include "strategy_solver_base.h"
 
 bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
