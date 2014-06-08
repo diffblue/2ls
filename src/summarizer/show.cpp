@@ -242,10 +242,12 @@ Function: show_fixed_point
 
 void show_fixed_point(
   const goto_functionst::goto_functiont &goto_function,
+  bool simplify,
   const namespacet &ns,
   std::ostream &out)
 {
   local_SSAt local_SSA(goto_function, ns);
+  if(simplify) ::simplify(local_SSA, ns);
   ssa_fixed_point(local_SSA);
   local_SSA.output(out);
 }
@@ -262,55 +264,21 @@ Function: show_fixed_points
 
 \*******************************************************************/
 
-/*
 void show_fixed_points(
-  const indext &index,
-  const optionst &options,
+  const goto_modelt &goto_model,
+  bool simplify,
   std::ostream &out,
   message_handlert &message_handler)
 {
-  for(indext::file_to_functiont::const_iterator
-      file_it=index.file_to_function.begin();
-      file_it!=index.file_to_function.end();
-      file_it++)
-  {
-    // read the file
-    goto_modelt model;
-    read_goto_binary(index.full_path(file_it->first), model, message_handler);
-    
-    // add the properties
-    goto_check(options, model);
-    model.goto_functions.update();
-    label_properties(model.goto_functions);
-
-    const namespacet ns(model.symbol_table);
-    const std::set<irep_idt> &functions=file_it->second;
-
-    // now do all functions from model
-    for(std::set<irep_idt>::const_iterator
-        fkt_it=functions.begin();
-        fkt_it!=functions.end();
-        fkt_it++)
-    {
-      const irep_idt &id=*fkt_it;
-
-      const goto_functionst::function_mapt::const_iterator m_it=
-        model.goto_functions.function_map.find(id);
-        
-      assert(m_it!=model.goto_functions.function_map.end());
-      
-      const goto_functionst::goto_functiont *index_fkt=
-        &m_it->second;
-    
-      out << ">>>> Function " << id << " in " << file_it->first
-          << std::endl;
-          
-      show_fixed_point(*index_fkt, ns, out);
-      
-      out << std::endl;
-    }
-  }
+  const namespacet ns(goto_model.symbol_table);
   
+  forall_goto_functions(f_it, goto_model.goto_functions)
+  {
+    out << ">>>> Function " << f_it->first << "\n";
+          
+    show_fixed_point(f_it->second, simplify, ns, out);
+      
+    out << "\n";
+  }
 }
-*/
 
