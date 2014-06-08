@@ -27,9 +27,9 @@ Function: ssa_fixed_point
 
 \*******************************************************************/
 
-void ssa_fixed_point(local_SSAt &SSA, const namespacet &ns)
+void ssa_fixed_point(local_SSAt &SSA)
 {
-  fixed_pointt fixed_point(ns);
+  fixed_pointt fixed_point(SSA.ns);
 
   // get all backwards edges
   

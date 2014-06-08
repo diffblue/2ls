@@ -18,7 +18,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "../ssa/local_ssa.h"
 #include "../ssa/simplify_ssa.h"
 
-//#include "ssa_fixed_point.h"
+#include "../domains/ssa_fixed_point.h"
 
 /*******************************************************************\
 
@@ -240,17 +240,15 @@ Function: show_fixed_point
 
 \*******************************************************************/
 
-/*
 void show_fixed_point(
   const goto_functionst::goto_functiont &goto_function,
   const namespacet &ns,
   std::ostream &out)
 {
   local_SSAt local_SSA(goto_function, ns);
-  ssa_fixed_pointt ssa_fixed_point(local_SSA, ns);
-  ssa_fixed_point.output(out);
+  ssa_fixed_point(local_SSA);
+  local_SSA.output(out);
 }
-*/
 
 /*******************************************************************\
 

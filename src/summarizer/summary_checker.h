@@ -37,14 +37,12 @@ protected:
   void report_statistics();
 
   void do_show_vcc(
-    const namespacet &,
     const local_SSAt &,
     const goto_programt::const_targett);
 
   resultt check_properties(const goto_modelt &);
 
   void check_properties(
-    const namespacet &,
     const local_SSAt &,
     const goto_functionst::function_mapt::const_iterator f_it);
 };

@@ -11,6 +11,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "../ssa/local_ssa.h"
 
-void ssa_fixed_point(local_SSAt &, const namespacet &);
+void ssa_fixed_point(local_SSAt &);
 
 #endif

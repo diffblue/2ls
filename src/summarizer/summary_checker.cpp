@@ -77,10 +77,10 @@ summary_checkert::resultt summary_checkert::check_properties(
     
     // fixed-point for loops
     status() << "Fixed-point" << messaget::eom;
-    ssa_fixed_point(SSA, ns);
+    ssa_fixed_point(SSA);
 
     status() << "Checking properties" << messaget::eom;
-    check_properties(ns, SSA, f_it);
+    check_properties(SSA, f_it);
   }
   
   for(property_mapt::const_iterator
@@ -106,7 +106,6 @@ Function: summary_checkert::check_properties
 #include "../ssa/ssa_domain.h"
 
 void summary_checkert::check_properties(
-  const namespacet &ns,
   const local_SSAt &SSA,
   const goto_functionst::function_mapt::const_iterator f_it)
 {
@@ -127,13 +126,13 @@ void summary_checkert::check_properties(
 
     if(show_vcc)
     {
-      do_show_vcc(ns, SSA, i_it);
+      do_show_vcc(SSA, i_it);
       continue;
     }
   
     // solver
     satcheckt satcheck;
-    bv_pointerst solver(ns, satcheck);
+    bv_pointerst solver(SSA.ns, satcheck);
   
     satcheck.set_message_handler(get_message_handler());
     solver.set_message_handler(get_message_handler());
@@ -146,7 +145,7 @@ void summary_checkert::check_properties(
     exprt negated_property=SSA.read_rhs(not_exprt(i_it->guard), i_it);
 
     if(simplify)
-      negated_property=::simplify_expr(negated_property, ns);
+      negated_property=::simplify_expr(negated_property, SSA.ns);
   
     solver << SSA.guard_symbol(i_it);          
     solver << negated_property;
@@ -199,7 +198,6 @@ Function: summary_checkert::do_show_vcc
 \*******************************************************************/
 
 void summary_checkert::do_show_vcc(
-  const namespacet &ns,
   const local_SSAt &SSA,
   const goto_programt::const_targett i_it)
 {
@@ -213,19 +211,19 @@ void summary_checkert::do_show_vcc(
   for(std::list<exprt>::const_iterator c_it=ssa_constraints.begin();
       c_it!=ssa_constraints.end();
       c_it++, i++)
-    std::cout << "{-" << i << "} " << from_expr(ns, "", *c_it) << "\n";
+    std::cout << "{-" << i << "} " << from_expr(SSA.ns, "", *c_it) << "\n";
 
   std::cout << "|--------------------------\n";
   
   exprt property_rhs=SSA.read_rhs(i_it->guard, i_it);
   
   if(simplify)
-    property_rhs=::simplify_expr(property_rhs, ns);
+    property_rhs=::simplify_expr(property_rhs, SSA.ns);
   
   implies_exprt property(
     SSA.guard_symbol(i_it), property_rhs);
 
-  std::cout << "{1} " << from_expr(ns, "", property) << "\n";
+  std::cout << "{1} " << from_expr(SSA.ns, "", property) << "\n";
   
   std::cout << "\n";
 }
