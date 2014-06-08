@@ -33,15 +33,10 @@ void ssa_fixed_point(local_SSAt &SSA, const namespacet &ns)
 
   // get all backwards edges
   
-  typedef std::map<goto_programt::const_targett, predicatet::state_var_listt> var_mapt;
-  var_mapt var_map;
-
   forall_goto_program_instructions(i_it, SSA.goto_function.body)
   {
     if(i_it->is_backwards_goto())
     {
-      predicatet::state_var_listt &vars=var_map[i_it];
-    
       // Record the objects modified by the loop to get
       // 'primed' (post-state) and 'unprimed' (pre-state) variables.
       for(local_SSAt::objectst::const_iterator
@@ -54,7 +49,6 @@ void ssa_fixed_point(local_SSAt &SSA, const namespacet &ns)
       
         fixed_point.pre_state_vars.push_back(in);
         fixed_point.post_state_vars.push_back(out);
-        vars.push_back(out);
       }
 
       {
@@ -64,7 +58,6 @@ void ssa_fixed_point(local_SSAt &SSA, const namespacet &ns)
         
         fixed_point.pre_state_vars.push_back(in);
         fixed_point.post_state_vars.push_back(out);
-        vars.push_back(out);
       }
     }
   }
@@ -75,12 +68,16 @@ void ssa_fixed_point(local_SSAt &SSA, const namespacet &ns)
   // kick off fixed-point computation
   fixed_point();
   
-  // add fixed-point as constraints back into SSA
-  for(var_mapt::const_iterator
-      v_it=var_map.begin();
-      v_it!=var_map.end();
-      v_it++)
+  // Add fixed-point as constraints back into SSA.
+  // We simply use the last CFG node. It would be prettier to put
+  // these close to the loops.
+  if(!SSA.goto_function.body.instructions.empty())
   {
-    
+    goto_programt::const_targett loc=
+      SSA.goto_function.body.instructions.end();
+    loc--;
+    local_SSAt::nodet &node=SSA.nodes[loc];
+      
+    fixed_point.state_predicate.get_constraints(node.constraints);
   }
 }

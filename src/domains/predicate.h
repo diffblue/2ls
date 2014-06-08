@@ -56,6 +56,8 @@ public:
 
     return true;
   }
+  
+  void get_constraints(std::vector<exprt> &) const;
 
 protected:
   // for now, we can track:

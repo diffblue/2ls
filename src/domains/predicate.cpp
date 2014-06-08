@@ -59,6 +59,27 @@ void predicatet::get(const solvert &solver)
   
 /*******************************************************************\
 
+Function: predicatet::get_constraints
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void predicatet::get_constraints(std::vector<exprt> &dest) const
+{
+  for(unsigned v=0; v<state_vars.size(); v++)
+  {
+    unsigned eq=uuf.find(v);
+    if(eq!=v) dest.push_back(equal_exprt(state_vars[v], state_vars[eq]));
+  }
+}
+
+/*******************************************************************\
+
 Function: predicatet::set_to_true
 
   Inputs:
