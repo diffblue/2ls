@@ -1,0 +1,17 @@
+1) Get the CBMC source, via
+
+   svn co http://www.cprover.org/svn/cbmc/trunk cbmc-trunk
+
+   Follow the compilation instructions that come with CBMC, and make sure
+   that CBMC compiles.
+
+2) Do
+
+   cp src/config.inc.template src/config.inc
+
+3) Edit src/config.inc to point to the location of the cbmc trunk produced
+   in step 1.
+
+4) Do
+
+   cd src; make
