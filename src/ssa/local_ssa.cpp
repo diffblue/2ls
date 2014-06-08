@@ -253,7 +253,7 @@ void local_SSAt::build_guard(locationt loc)
   // the very first 'loc' trivially gets 'true' as source
   if(loc==goto_function.body.instructions.begin())
     sources.push_back(true_exprt());
-
+    
   for(guard_mapt::incomingt::const_iterator
       i_it=entry.incoming.begin();
       i_it!=entry.incoming.end();
@@ -263,17 +263,24 @@ void local_SSAt::build_guard(locationt loc)
     
     exprt source;
     
-    // might be backwards
-    if(edge.from->is_backwards_goto())
+    // might be backwards branch taken edge
+    if(edge.is_branch_taken() &&
+       edge.from->is_backwards_goto())
     {
+      // The loop selector indicates whether the path comes from
+      // above (entering the loop) or below (iterating).
+      // By convention, we use the loop select symbol for the location
+      // of the backwards goto.
       symbol_exprt loop_select=
-        name(guard_symbol(), LOOP_SELECT, edge.guard_source);
+        name(guard_symbol(), LOOP_SELECT, edge.from);
 
       source=loop_select;
       // need constraing for edge.cond
     }
     else
     {
+      // the other cases are basically similar
+      
       symbol_exprt gs=name(guard_symbol(), OUT, edge.guard_source);
       exprt cond;
       
