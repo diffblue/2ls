@@ -542,14 +542,14 @@ bool summarizer_parseoptionst::process_goto_program(
       return true;
     }
 
+    status() << "Function Pointer Removal" << eom;
+    remove_function_pointers(
+      goto_model, cmdline.isset("pointer-check"));
+
     // now do full inlining, if requested
 
     if(cmdline.isset("inline"))
     {
-      status() << "Function Pointer Removal" << eom;
-      remove_function_pointers(
-        goto_model, cmdline.isset("pointer-check"));
-
       status() << "Performing full inlining" << eom;
       goto_inline(goto_model, ui_message_handler);
     }
