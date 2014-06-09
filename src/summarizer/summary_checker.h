@@ -14,6 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/property_checker.h>
 
 #include "../ssa/local_ssa.h"
+#include "../ai/summary_store.h"
 #include "../ai/summarizer.h"
 
 class summary_checkert:public property_checkert
@@ -22,7 +23,9 @@ public:
   inline summary_checkert():
     show_vcc(false),
     simplify(false),
-    fixed_point(false)
+    fixed_point(false),
+    summary_store(),
+    summarizer(summary_store)
   {
   }
   
@@ -35,6 +38,7 @@ public:
   time_periodt sat_time;
 
 protected:
+  summary_storet summary_store;
   summarizert summarizer;
 
   void report_statistics();

@@ -58,18 +58,6 @@ summary_checkert::resultt summary_checkert::check_properties(
   
   const namespacet ns(goto_model.symbol_table);
 
-  // compute summaries for all the functions
-  summarizert::functionst functions;
-  forall_goto_functions(f_it, goto_functions)
-  {
-    if(f_it->first=="c::assert") continue;
-    if(f_it->first=="c::__CPROVER_assume") continue;
-    goto_functionst::goto_functiont f = f_it->second;
-    //preprocess_returns(f);
-    functions[f_it->first] = new local_SSAt(f, ns);
-  }
-  summarizer.summarize(functions);
-
   // analyze all the functions
   forall_goto_functions(f_it, goto_model.goto_functions)
   {
@@ -118,9 +106,10 @@ Function: summary_checkert::check_properties
 #include "../ssa/ssa_domain.h"
 
 void summary_checkert::check_properties(
-  const local_SSAt &SSA,
+  const local_SSAt &SSA0,
   const goto_functionst::function_mapt::const_iterator f_it)
 {
+  local_SSAt SSA = SSA0;
   if(!f_it->second.body.has_assertion()) return;
 
   #if 0
@@ -135,18 +124,17 @@ void summary_checkert::check_properties(
   
   status() << "Analyzing " << f_it->first << messaget::eom;
   
-  // build SSA
-  local_SSAt SSA(f_it->second, ns);
-
   // inline summaries
   summarizer.inline_summaries(f_it->first,SSA.nodes);
   
+  #if 0
   // simplify, if requested
   if(simplify)
   {
     status() << "Simplifying" <<messaget::eom;
     ::simplify(SSA, ns);
   }
+  #endif
 
   // non-incremental version
 
