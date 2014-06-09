@@ -14,7 +14,8 @@ Author: Daniel Kroening, kroening@kroening.com
 class fixed_pointt
 {
 public:
-  explicit fixed_pointt(const namespacet &_ns):ns(_ns)
+  explicit fixed_pointt(const namespacet &_ns)
+    : ns(_ns)
     //    class strategy_solver_baset &_strategy_solver)
     //   strategy_solver(_strategy_solver) {}
 
