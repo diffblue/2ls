@@ -11,6 +11,24 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "../ssa/local_ssa.h"
 
-void ssa_fixed_point(local_SSAt &);
+class ssa_analyzert
+{
+public:
+  typedef strategy_solver_baset::constraintst constraintst;
+  typedef strategy_solver_baset::var_listt var_listt;
+
+  explicit ssa_analyzert(const namespacet &_ns)
+    : ns(_ns)
+  {
+  }  
+
+  void operator()(local_SSAt &SSA);
+
+protected:
+  const namespacet &ns;
+  strategy_solver_baset::invariantt inv;
+  unsigned iteration_number;
+};
+
 
 #endif

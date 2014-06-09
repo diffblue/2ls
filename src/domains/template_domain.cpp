@@ -34,10 +34,17 @@ template_domaint::row_valuet template_domaint::between(
   assert(false); //types do not match or are not supported
 }
 
-exprt template_domaint::to_row_constraint(const rowt &row, const row_valuet &row_value)
+exprt template_domaint::get_row_constraint(const rowt &row, const row_valuet &row_value)
 {
   assert(row<templ.size());
   return binary_relation_exprt(templ[row],ID_le,row_value);
+}
+
+exprt template_domaint::get_row_constraint(const rowt &row, const valuet &value)
+{
+  assert(row<templ.size());
+  assert(value.size()==templ.size());
+  return binary_relation_exprt(templ[row],ID_le,value[row]);
 }
 
 exprt template_domaint::to_constraints(const valuet &value)

@@ -1,23 +1,21 @@
 #include "strategy_solver_enumeration.h"
 
-bool strategy_solver_baset::solve(invariantt &inv, const strategyt &strategy)
+void strategy_solver_enumerationt::solve(invariantt &inv, const strategyt &strategy)
 {
-  for(s_it,strategy)
+  for(strategyt::const_iterator s_it = strategy.begin();
+    s_it != strategy.end(); s_it++)
   {
     //get model 
   
     //new context
-    solver << s_it->second;
  
-    exprt c = template_domain.get_row_constraint(s_it->first);
+    exprt c = template_domain.get_row_constraint(*s_it,inv);
 
     solver << not_exprt(c);
-    modelt model = solver.decide();
-    if(satisfiable) 
+    if(solver() == decision_proceduret::D_SATISFIABLE) 
     {
-      inv[s_it->first] = model;  
+      //inv[s_it->first] = model;  
     }
    //delete context
   }
-  return false;
 }

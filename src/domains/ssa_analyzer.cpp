@@ -8,8 +8,14 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #define DEBUG
 
-#include "fixed_point.h"
-#include "ssa_fixed_point.h"
+#include "strategy_solver_base.h"
+#include "strategy_solver_enumeration.h"
+#include "strategy_solver_binsearch.h"
+#include "ssa_analyzer.h"
+
+#include <solvers/sat/satcheck.h>
+#include <solvers/flattening/bv_pointers.h>
+
 
 #ifdef DEBUG
 #include <iostream>
@@ -17,7 +23,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
-Function: ssa_fixed_point
+Function: ssa_analyzert::operator()
 
   Inputs:
 
@@ -27,15 +33,15 @@ Function: ssa_fixed_point
 
 \*******************************************************************/
 
-void ssa_fixed_point(local_SSAt &SSA)
+void ssa_analyzert::operator()(local_SSAt &SSA)
 {
+
   if(SSA.goto_function.body.instructions.empty())
     return;
 
-  fixed_pointt fixed_point(SSA.ns);
+    var_listt pre_state_vars, post_state_vars;
 
   // get all backwards edges
-  
   forall_goto_program_instructions(i_it, SSA.goto_function.body)
   {
     if(i_it->is_backwards_goto())
@@ -50,8 +56,8 @@ void ssa_fixed_point(local_SSAt &SSA)
         symbol_exprt in=SSA.name(*o_it, local_SSAt::LOOP_BACK, i_it);
         symbol_exprt out=SSA.read_rhs(*o_it, i_it);
       
-        fixed_point.pre_state_vars.push_back(in);
-        fixed_point.post_state_vars.push_back(out);
+        pre_state_vars.push_back(in);
+        post_state_vars.push_back(out);
       }
 
       {
@@ -59,25 +65,59 @@ void ssa_fixed_point(local_SSAt &SSA)
         symbol_exprt in=SSA.name(guard, local_SSAt::LOOP_BACK, i_it);
         symbol_exprt out=SSA.name(guard, local_SSAt::OUT, i_it);
         
-        fixed_point.pre_state_vars.push_back(in);
-        fixed_point.post_state_vars.push_back(out);
+        pre_state_vars.push_back(in);
+        post_state_vars.push_back(out);
       }
     }
   }
 
-  // transition relation
-  fixed_point.transition_relation << SSA;
+  constraintst transition_relation;
+  transition_relation << SSA;
 
-  // kick off fixed-point computation
-  fixed_point();
+  template_domaint::templatet templ;
+  var_listt vars = pre_state_vars;
+  //vars.insert(SSA.params.begin(),SSA.params.end());
+  //vars.insert(SSA.returns.begin(),SSA.returns.end());
+  //vars.insert(SSA.globals_in.begin(),SSA.globals_in.end());
+  //vars.insert(SSA.globals_out.begin(),SSA.globals_out.end());
+  make_interval_template(templ, vars); //TODO: get template from options
+  template_domaint template_domain(templ);
+
+  // solver
+  satcheckt satcheck;//TODO: get solver from options
+  bv_pointerst solver(ns, satcheck);
   
-  // Add fixed-point as constraints back into SSA.
-  // We simply use the last CFG node. It would be prettier to put
-  // these close to the loops.
-  goto_programt::const_targett loc=
-    SSA.goto_function.body.instructions.end();
-  loc--;
-  local_SSAt::nodet &node=SSA.nodes[loc];
+  //satcheck.set_message_handler(get_message_handler());
+  //solver.set_message_handler(get_message_handler()); 
+
+  //TODO: get strategy solver from options
+  strategy_solver_enumerationt strategy_solver(transition_relation, pre_state_vars, post_state_vars,
+					template_domain, solver);
+
+  iteration_number=0;
+  
+  bool change;
+
+  do
+  {
+    iteration_number++;
     
-  fixed_point.state_predicate.get_constraints(node.constraints);
+    #ifdef DEBUG
+    std::cout << "\n"
+              << "******** Forward least fixed-point iteration #"
+              << iteration_number << "\n";
+    #endif
+   
+    strategy_solver_baset::strategyt strategy;
+    change = strategy_solver.improve(inv,strategy);
+
+    if(change) strategy_solver.solve(inv,strategy);
+  }
+  while(change);
+
+  #ifdef DEBUG
+  std::cout << "Fixed-point after " << iteration_number
+            << " iteration(s)\n";
+  template_domain.output_value(std::cout,inv,ns);
+  #endif
 }

@@ -19,7 +19,9 @@ public:
 
   row_valuet between(const row_valuet &lower, const row_valuet &upper);
 
-  exprt to_row_constraint(const rowt &row, const row_valuet &row_value);
+  exprt get_row_constraint(const rowt &row, const row_valuet &row_value);
+  exprt get_row_constraint(const rowt &row, const valuet &value);
+
   exprt to_constraints(const valuet &value);
   exprt to_not_constraints(const valuet &value);
 

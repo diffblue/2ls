@@ -9,7 +9,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #define DEBUG
 
 #include "fixed_point.h"
-#include "template_domain.h"
 
 #ifdef DEBUG
 #include <iostream>
@@ -75,25 +74,17 @@ Function: fixed_pointt::iteration
 bool fixed_pointt::iteration()
 {
   #if 0
-  bool can_improve = strategy_solver.improve(inv,strategy);
-  if(!can_improve) return false;
-
-  strategy_solver.solve(inv,strategy);
-
-  return true;
-  #endif
-
-  //solvert solver(ns);
+  solvert solver(ns);
 
   // Feed transition relation into solver.
   for(constraintst::const_iterator
       it=transition_relation.begin();
       it!=transition_relation.end();
-      it++) ;
-    //solver << *it;
+      it++)
+    solver << *it;
 
   // Feed current state predicate into solver.
-  // state_predicate.set_to_true(solver);
+  state_predicate.set_to_true(solver);
   
   #ifdef DEBUG
   std::cout << "Entry state:\n";
@@ -101,11 +92,11 @@ bool fixed_pointt::iteration()
   #endif
 
   // solve
-  //solver.dec_solve();
+  solver.dec_solve();
  
   #ifdef DEBUG
   std::cout << "=======================\n";
-  //solver.print_assignment(std::cout);
+  solver.print_assignment(std::cout);
   std::cout << "=======================\n";
   #endif
 
@@ -113,7 +104,7 @@ bool fixed_pointt::iteration()
   predicatet post_state;
   post_state.state_vars=post_state_vars;
   
-  //post_state.get(solver);
+  post_state.get(solver);
 
   #ifdef DEBUG
   std::cout << "Post state:\n";
@@ -126,6 +117,8 @@ bool fixed_pointt::iteration()
     
   // Form disjunction of previous state predicate and the new one.
   return state_predicate.disjunction(post_state);
+  #endif
+  return false;
 }
 
 /*******************************************************************\
