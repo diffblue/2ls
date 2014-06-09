@@ -6,22 +6,35 @@
 class template_domaint
 {
 public:
-  typedef exprt rowt; 
-  typedef std::vector<rowt> templatet; 
-  typedef constant_exprt valuet; // "bound"
-  typedef std::vector<valuet> invariantt;
+  typedef unsigned rowt;
+  typedef exprt row_exprt; 
+  typedef std::vector<row_exprt> templatet; 
+  typedef constant_exprt row_valuet; // "bound"
+  typedef std::vector<row_valuet> valuet;
 
-  template_domaint() {}
+ template_domaint(templatet &_template) :
+   templ(_template) 
+ {}
 
-  valuet between(const valuet &lower, const valuet &upper);
+  row_valuet between(const row_valuet &lower, const row_valuet &upper);
 
-  exprt make_row_constraint(const rowt &row, const valuet &value);
-  valuet make_row_constraint(const rowt &row, const valuet &value);
+  exprt make_row_constraint(const rowt &row, const row_valuet &value);
+  exprt make_constraints(const valuet &inv);
+  inline row_valuet get_value(const rowt &row, const valuet &inv);
+
+  void output_invariant(std::ostream &out, const valuet &inv, const namespacet &ns) const;
+  void output_template(std::ostream &out, const namespacet &ns) const;
 
 protected:
-  templatet template;
+  templatet templ;
   
-
 };
+
+void make_interval_template(template_domaint::templatet &templ,
+			   const predicatet::state_var_listt &vars);
+void make_zone_template(template_domaint::templatet &templ,
+			   const predicatet::state_var_listt &vars);
+void make_octagon_template(template_domaint::templatet &templ,
+			   const predicatet::state_var_listt &vars);
 
 #endif
