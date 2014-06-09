@@ -38,6 +38,14 @@ class strategy_solver_baset
   template_domaint &template_domain;
   prop_convt &solver;
 
+ private:
+  bvt strategy_literals;
+
+  void instrument_template_rows(exprt &expr);
+  template_domaint::rowt get_template_row();
+  exprt get_blocking_constraint(template_domaint::rowt);
+  void encode_row(template_domaint::rowt row, exprt::operandst &c);
+
 };
 
 #endif

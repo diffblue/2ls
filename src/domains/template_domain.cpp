@@ -123,12 +123,17 @@ void template_domaint::output_template(std::ostream &out, const namespacet &ns) 
   }
 }
 
+unsigned template_domaint::template_size() const
+{
+  return templ.size();
+}
+
 void make_interval_template(template_domaint::templatet &templ, 
-  const predicatet::state_var_listt &vars)
+  const template_domaint::var_listt &vars)
 {
   templ.clear();
   templ.reserve(2*vars.size());
-  for(predicatet::state_var_listt::const_iterator v = vars.begin(); 
+  for(template_domaint::var_listt::const_iterator v = vars.begin(); 
       v!=vars.end(); v++)
   {
     templ.push_back(*v);
@@ -137,16 +142,16 @@ void make_interval_template(template_domaint::templatet &templ,
 }
 
 void make_zone_template(template_domaint::templatet &templ, 
-  const predicatet::state_var_listt &vars)
+  const template_domaint::var_listt &vars)
 { 
   templ.clear();
   templ.reserve(2*vars.size()+vars.size()*(vars.size()-1));
-  for(predicatet::state_var_listt::const_iterator v1 = vars.begin(); 
+  for(template_domaint::var_listt::const_iterator v1 = vars.begin(); 
       v1!=vars.end(); v1++)
   {
     templ.push_back(*v1);
     templ.push_back(unary_minus_exprt(*v1,v1->type()));
-    for(predicatet::state_var_listt::const_iterator v2 = v1; 
+    for(template_domaint::var_listt::const_iterator v2 = v1; 
         v2!=vars.end(); v2++)
     {
       templ.push_back(minus_exprt(*v1,*v2));
@@ -156,16 +161,16 @@ void make_zone_template(template_domaint::templatet &templ,
 }
 
 void make_octagon_template(template_domaint::templatet &templ,
-  const predicatet::state_var_listt &vars)
+  const template_domaint::var_listt &vars)
 {
   templ.clear();
   templ.reserve(2*vars.size()+2*vars.size()*(vars.size()-1));
-  for(predicatet::state_var_listt::const_iterator v1 = vars.begin(); 
+  for(template_domaint::var_listt::const_iterator v1 = vars.begin(); 
       v1!=vars.end(); v1++)
   {
     templ.push_back(*v1);
     templ.push_back(unary_minus_exprt(*v1,v1->type()));
-    for(predicatet::state_var_listt::const_iterator v2 = v1; 
+    for(template_domaint::var_listt::const_iterator v2 = v1; 
         v2!=vars.end(); v2++)
     {
       templ.push_back(minus_exprt(*v1,*v2));
@@ -175,3 +180,4 @@ void make_octagon_template(template_domaint::templatet &templ,
     }
   }
 }
+

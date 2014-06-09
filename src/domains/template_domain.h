@@ -12,6 +12,7 @@ public:
   typedef std::vector<row_exprt> templatet; 
   typedef constant_exprt row_valuet; // "bound"
   typedef std::vector<row_valuet> valuet;
+  typedef std::vector<symbol_exprt> var_listt;
 
  template_domaint(templatet &_template) :
    templ(_template) 
@@ -33,16 +34,18 @@ public:
   void output_value(std::ostream &out, const valuet &value, const namespacet &ns) const;
   void output_template(std::ostream &out, const namespacet &ns) const;
 
+  inline unsigned template_size() const;
+
 protected:
   templatet templ;
   
 };
 
 void make_interval_template(template_domaint::templatet &templ,
-			   const predicatet::state_var_listt &vars);
+			   const template_domaint::var_listt &vars);
 void make_zone_template(template_domaint::templatet &templ,
-			   const predicatet::state_var_listt &vars);
+			   const template_domaint::var_listt &vars);
 void make_octagon_template(template_domaint::templatet &templ,
-			   const predicatet::state_var_listt &vars);
+			   const template_domaint::var_listt &vars);
 
 #endif
