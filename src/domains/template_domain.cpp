@@ -19,13 +19,19 @@ template_domaint::row_valuet template_domaint::between(
   {
     ieee_floatt vlower(to_constant_expr(lower));
     ieee_floatt vupper(to_constant_expr(upper));
-    vupper -= vlower;
-    ieee_floatt two;
-    two.from_float(2.0);
-    vupper /= two;
-    return vupper.to_expr();
+    if(vlower.get_sign()==vupper.get_sign()) 
+    {
+      mp_integer plower = vlower.pack(); //compute "median" float number
+      mp_integer pupper = vupper.pack();
+      ieee_floatt res;
+      res.unpack((plower-pupper)/2); //...by computing integer mean
+      return res.to_expr();
+    }
+    ieee_floatt res;
+    res.make_zero();
+    return res.to_expr();
   }
-  assert(false); //types do not match
+  assert(false); //types do not match or are not supported
 }
 
 exprt template_domaint::to_row_constraint(const rowt &row, const row_valuet &row_value)
@@ -71,6 +77,27 @@ inline void template_domaint::set_row_value(
   assert(value.size()==templ.size());
   value[row] = row_value;
 }
+
+template_domaint::row_valuet template_domaint::get_max_row_value(
+  const template_domaint::rowt &row)
+{
+  if(templ[row].type().id()==ID_signedbv)
+  {
+    return to_signedbv_type(templ[row].type()).largest_expr();
+  }
+  if(templ[row].type().id()==ID_unsignedbv)
+  {
+    return to_unsignedbv_type(templ[row].type()).largest_expr();
+  }
+  if(templ[row].type().id()==ID_floatbv) 
+  {
+    ieee_floatt max;
+    max.make_fltmax();
+    return max.to_expr();
+  }
+  assert(false); //type not supported
+}
+
 
 void template_domaint::output_value(std::ostream &out, const valuet &value, 
   const namespacet &ns) const

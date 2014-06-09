@@ -2,13 +2,10 @@
 
 bool strategy_solver_baset::solve(invariantt &inv, const strategyt &strategy)
 {
-  template_domaint::valuet lower = template_domain.get_lower();
-  template_domaint::valuet upper = template_domain.get_upper();
-  
-  solver << program.convert();
-  solver << template_domain.convert(inv);
   for(s_it,strategy)
   {
+    //get model 
+  
     //new context
     solver << s_it->second;
  

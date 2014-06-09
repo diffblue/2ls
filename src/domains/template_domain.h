@@ -22,8 +22,11 @@ public:
   exprt to_row_constraint(const rowt &row, const row_valuet &row_value);
   exprt to_constraints(const valuet &value);
   exprt to_not_constraints(const valuet &value);
+
   inline row_valuet get_row_value(const rowt &row, const valuet &inv);
   inline void set_row_value(const rowt &row, const row_valuet &row_value, valuet &value);
+
+  row_valuet get_max_row_value(const rowt &row);
 
   void output_value(std::ostream &out, const valuet &value, const namespacet &ns) const;
   void output_template(std::ostream &out, const namespacet &ns) const;
