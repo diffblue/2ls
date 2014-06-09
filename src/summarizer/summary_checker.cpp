@@ -16,6 +16,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "../ssa/local_ssa.h"
 #include "../ssa/simplify_ssa.h"
+#include "../domains/ssa_fixed_point.h"
 
 #include "summary_checker.h"
 
@@ -31,10 +32,10 @@ Function: summary_checkert::operator()
 
 \*******************************************************************/
 
-summary_checkert::resultt summary_checkert::operator()(
-  const goto_functionst &goto_functions)
+property_checkert::resultt summary_checkert::operator()(
+  const goto_modelt &goto_model)
 {
-  return check_properties(goto_functions);
+  return check_properties(goto_model);
 }
 
 /*******************************************************************\
@@ -50,10 +51,12 @@ Function: summary_checkert::check_properties
 \*******************************************************************/
 
 summary_checkert::resultt summary_checkert::check_properties(
-  const goto_functionst &goto_functions)
+  const goto_modelt &goto_model)
 {
   // properties
-  initialize_property_map(goto_functions);
+  initialize_property_map(goto_model.goto_functions);
+  
+  const namespacet ns(goto_model.symbol_table);
 
   // compute summaries for all the functions
   summarizert::functionst functions;
@@ -68,15 +71,36 @@ summary_checkert::resultt summary_checkert::check_properties(
   summarizer.summarize(functions);
 
   // analyze all the functions
-  forall_goto_functions(f_it, goto_functions)
-    check_properties(f_it);
+  forall_goto_functions(f_it, goto_model.goto_functions)
+  {
+    if(!f_it->second.body.has_assertion()) continue;
+
+    status() << "Analyzing " << f_it->first << messaget::eom;
+    
+    // build SSA
+    local_SSAt SSA(f_it->second, ns);
+    
+    // simplify, if requested
+    if(simplify)
+    {
+      status() << "Simplifying" << messaget::eom;
+      ::simplify(SSA, ns);
+    }
+    
+    // fixed-point for loops
+    status() << "Fixed-point" << messaget::eom;
+    ssa_fixed_point(SSA);
+
+    status() << "Checking properties" << messaget::eom;
+    check_properties(SSA, f_it);
+  }
   
   for(property_mapt::const_iterator
       p_it=property_map.begin(); p_it!=property_map.end(); p_it++)
-    if(p_it->second.status==FAIL)
-      return safety_checkert::UNSAFE;
+    if(p_it->second.result==FAIL)
+      return property_checkert::FAIL;
     
-  return safety_checkert::SAFE;
+  return property_checkert::PASS;
 }
 
 /*******************************************************************\
@@ -94,6 +118,7 @@ Function: summary_checkert::check_properties
 #include "../ssa/ssa_domain.h"
 
 void summary_checkert::check_properties(
+  const local_SSAt &SSA,
   const goto_functionst::function_mapt::const_iterator f_it)
 {
   if(!f_it->second.body.has_assertion()) return;
@@ -136,7 +161,7 @@ void summary_checkert::check_properties(
       continue;
   
     const locationt &location=i_it->location;  
-    irep_idt property_name=location.get_property_id();
+    irep_idt property_id=location.get_property_id();
 
     if(show_vcc)
     {
@@ -146,7 +171,7 @@ void summary_checkert::check_properties(
   
     // solver
     satcheckt satcheck;
-    bv_pointerst solver(ns, satcheck);
+    bv_pointerst solver(SSA.ns, satcheck);
   
     satcheck.set_message_handler(get_message_handler());
     solver.set_message_handler(get_message_handler());
@@ -159,7 +184,7 @@ void summary_checkert::check_properties(
     exprt negated_property=SSA.read_rhs(not_exprt(i_it->guard), i_it);
 
     if(simplify)
-      negated_property=::simplify_expr(negated_property, ns);
+      negated_property=::simplify_expr(negated_property, SSA.ns);
   
     solver << SSA.guard_symbol(i_it);          
     solver << negated_property;
@@ -168,15 +193,16 @@ void summary_checkert::check_properties(
     switch(solver())
     {
     case decision_proceduret::D_SATISFIABLE:
-      property_map[property_name].status=FAIL;
+      property_map[property_id].result=FAIL;
       break;
       
     case decision_proceduret::D_UNSATISFIABLE:
-      property_map[property_name].status=PASS;
+      property_map[property_id].result=PASS;
       break;
 
     case decision_proceduret::D_ERROR:    
     default:
+      property_map[property_id].result=ERROR;
       throw "error from decision procedure";
     }
   }
@@ -224,62 +250,20 @@ void summary_checkert::do_show_vcc(
   for(std::list<exprt>::const_iterator c_it=ssa_constraints.begin();
       c_it!=ssa_constraints.end();
       c_it++, i++)
-    std::cout << "{-" << i << "} " << from_expr(ns, "", *c_it) << "\n";
+    std::cout << "{-" << i << "} " << from_expr(SSA.ns, "", *c_it) << "\n";
 
   std::cout << "|--------------------------\n";
   
   exprt property_rhs=SSA.read_rhs(i_it->guard, i_it);
   
   if(simplify)
-    property_rhs=::simplify_expr(property_rhs, ns);
+    property_rhs=::simplify_expr(property_rhs, SSA.ns);
   
   implies_exprt property(
     SSA.guard_symbol(i_it), property_rhs);
 
-  std::cout << "{1} " << from_expr(ns, "", property) << "\n";
+  std::cout << "{1} " << from_expr(SSA.ns, "", property) << "\n";
   
   std::cout << "\n";
 }
 
-/*******************************************************************\
-
-Function: summary_checkert::initialize_property_map
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void summary_checkert::initialize_property_map(
-  const goto_functionst &goto_functions)
-{
-  for(goto_functionst::function_mapt::const_iterator
-      it=goto_functions.function_map.begin();
-      it!=goto_functions.function_map.end();
-      it++)
-    if(!it->second.is_inlined() ||
-       it->first==goto_functions.entry_point())
-    {
-      const goto_programt &goto_program=it->second.body;
-    
-      for(goto_programt::instructionst::const_iterator
-          it=goto_program.instructions.begin();
-          it!=goto_program.instructions.end();
-          it++)
-      {
-        if(!it->is_assert())
-          continue;
-      
-        const locationt &location=it->location;
-      
-        irep_idt property_name=location.get_property_id();
-        
-        property_entryt &property_entry=property_map[property_name];
-        property_entry.status=UNKNOWN;
-        property_entry.description=location.get_comment();
-      }
-    }
-}

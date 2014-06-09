@@ -37,11 +37,10 @@ void show_guards(
   std::ostream &,
   message_handlert &);
 
-/*
 void show_fixed_points(
   const goto_modelt &,
+  bool simplify,
   std::ostream &,
   message_handlert &);
-*/
 
 #endif

@@ -36,10 +36,11 @@ class optionst;
   "(string-abstraction)(no-arch)(arch):(floatbv)(fixedbv)" \
   "(round-to-nearest)(round-to-plus-inf)(round-to-minus-inf)(round-to-zero)" \
   "(inline)" \
-  "(show-locs)(show-vcc)(show-properties)(show-trace)" \
+  "(show-locs)(show-vcc)(show-properties)(show-trace)(show-fixed-points)" \
   "(show-goto-functions)(show-guards)(show-defs)(show-ssa)(show-assignments)" \
   "(property):" \
-  "(no-simplify)(no-unwinding-assertions)(no-propagation)"
+  "(no-simplify)(no-fixed-point)" \
+  "(no-unwinding-assertions)(no-propagation)"
   // the last line is for CBMC-regression testing only
 
 class summarizer_parseoptionst:

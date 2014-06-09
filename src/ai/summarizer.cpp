@@ -142,7 +142,7 @@ void summarizert::compute_summary_rec(const function_namet &function_name)
   // functions[function_name]->get_entry_exit_vars();
 
   std::ostringstream out;
-  out << "function to be analyzed: " << std::endl;
+  out << "Function body for " << function_name << " to be analyzed: " << std::endl;
   for(local_SSAt::nodest::iterator n = nodes.begin(); n!=nodes.end(); n++)
     if(!n->second.empty()) n->second.output(out,functions[function_name]->ns);
   debug() << out.str() << eom;
