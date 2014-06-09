@@ -4,9 +4,8 @@
 
 bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
 {
-  solver << program.convert();
-  solver << template_domain.convert(inv);
-  solver << template_domain.convert(template_domain.complement(inv),loopvars);
+  solver << template_domain.to_constraints(inv);
+  solver << template_domain.to_not_constraints(inv);
   modelt model = solver.decide();
   if(satisfiable) 
   {

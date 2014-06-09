@@ -19,8 +19,9 @@ public:
 
   row_valuet between(const row_valuet &lower, const row_valuet &upper);
 
-  exprt make_row_constraint(const rowt &row, const row_valuet &row_value);
-  exprt make_constraints(const valuet &value);
+  exprt to_row_constraint(const rowt &row, const row_valuet &row_value);
+  exprt to_constraints(const valuet &value);
+  exprt to_not_constraints(const valuet &value);
   inline row_valuet get_row_value(const rowt &row, const valuet &inv);
   inline void set_row_value(const rowt &row, const row_valuet &row_value, valuet &value);
 
