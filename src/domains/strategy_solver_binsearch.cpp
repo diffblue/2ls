@@ -1,9 +1,7 @@
-#include "strategy_solver_binary_search.h"
+#include "strategy_solver_binsearch.h"
 
-bool strategy_solver_baset::solve(invariantt &inv, const strategyt &strategy)
+bool strategy_solver_binsearcht::solve(invariantt &inv, const strategyt &strategy)
 {
-  template_domaint::valuet lower = template_domain.get_lower();
-  template_domaint::valuet upper = template_domain.get_upper();
   
   solver << program.convert();
   solver << template_domain.convert(inv);
@@ -11,6 +9,9 @@ bool strategy_solver_baset::solve(invariantt &inv, const strategyt &strategy)
   {
     //new context
     solver << s_it->second;
+
+    template_domaint::valuet upper = template_domain.get_upper();
+    template_domaint::valuet lower = template_domain.get_value(inv,s_it->first);
  
     while (lower <= upper)   
     {

@@ -11,6 +11,17 @@ public:
   typedef constant_exprt valuet; // "bound"
   typedef std::vector<valuet> invariantt;
 
+  template_domaint() {}
+
+  valuet between(const valuet &lower, const valuet &upper);
+
+  exprt make_row_constraint(const rowt &row, const valuet &value);
+  valuet make_row_constraint(const rowt &row, const valuet &value);
+
+protected:
+  templatet template;
+  
+
 };
 
 #endif
