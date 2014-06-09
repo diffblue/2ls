@@ -2,6 +2,7 @@
 
 #include <util/arith_tools.h>
 #include <util/ieee_float.h>
+#include <langapi/languages.h>
 
 template_domaint::row_valuet template_domaint::between(
   const row_valuet &lower, const row_valuet &upper)
@@ -44,12 +45,37 @@ exprt template_domaint::make_constraints(const valuet &value)
   return conjunction(c); 
 }
 
-inline template_domaint::row_valuet template_domaint::get_value(
+inline template_domaint::row_valuet template_domaint::get_row_value(
   const rowt &row, const valuet &value)
 {
   assert(row<value.size());
   assert(value.size()==templ.size());
   return value[row];
+}
+
+inline void template_domaint::set_row_value(
+  const rowt &row, const template_domaint::row_valuet &row_value, valuet &value)
+{
+  assert(row<value.size());
+  assert(value.size()==templ.size());
+  value[row] = row_value;
+}
+
+void template_domaint::output_value(std::ostream &out, const valuet &value, 
+  const namespacet &ns) const
+{
+  for(unsigned row = 0; row<templ.size(); row++)
+  {
+    out << from_expr(ns,"",templ[row]) << " <= " << from_expr(ns,"",value[row]) << std::endl;
+  }
+}
+
+void template_domaint::output_template(std::ostream &out, const namespacet &ns) const
+{
+  for(unsigned row = 0; row<templ.size(); row++)
+  {
+    out << from_expr(ns,"",templ[row]) << " <= CONST" << std::endl;
+  }
 }
 
 void make_interval_template(template_domaint::templatet &templ, 

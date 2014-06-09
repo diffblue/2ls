@@ -21,10 +21,10 @@ public:
 
   exprt make_row_constraint(const rowt &row, const row_valuet &row_value);
   exprt make_constraints(const valuet &value);
-  inline row_valuet get_value(const rowt &row, const valuet &inv);
-  inline void set_value(const rowt &row, row_valuet row_value, valuet &value);
+  inline row_valuet get_row_value(const rowt &row, const valuet &inv);
+  inline void set_row_value(const rowt &row, const row_valuet &row_value, valuet &value);
 
-  void output_invariant(std::ostream &out, const valuet &inv, const namespacet &ns) const;
+  void output_value(std::ostream &out, const valuet &value, const namespacet &ns) const;
   void output_template(std::ostream &out, const namespacet &ns) const;
 
 protected:
