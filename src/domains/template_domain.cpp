@@ -61,7 +61,7 @@ void make_interval_template(template_domaint::templatet &templ,
       v!=vars.end(); v++)
   {
     templ.push_back(*v);
-    templ.push_back(unary_minus_exprt(*v));
+    templ.push_back(unary_minus_exprt(*v,v->type()));
   }
 }
 
@@ -74,7 +74,7 @@ void make_zone_template(template_domaint::templatet &templ,
       v1!=vars.end(); v1++)
   {
     templ.push_back(*v1);
-    templ.push_back(unary_minus_exprt(*v1));
+    templ.push_back(unary_minus_exprt(*v1,v1->type()));
     for(predicatet::state_var_listt::const_iterator v2 = v1; 
         v2!=vars.end(); v2++)
     {
@@ -93,7 +93,7 @@ void make_octagon_template(template_domaint::templatet &templ,
       v1!=vars.end(); v1++)
   {
     templ.push_back(*v1);
-    templ.push_back(unary_minus_exprt(*v1));
+    templ.push_back(unary_minus_exprt(*v1,v1->type()));
     for(predicatet::state_var_listt::const_iterator v2 = v1; 
         v2!=vars.end(); v2++)
     {

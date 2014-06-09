@@ -1,5 +1,6 @@
 #ifndef CPROVER_TEMPLATE_DOMAIN_H
 #define CPROVER_TEMPLATE_DOMAIN_H
+#include "predicate.h"
 
 #include <util/std_expr.h>
 
