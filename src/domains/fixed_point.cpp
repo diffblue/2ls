@@ -9,6 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #define DEBUG
 
 #include "fixed_point.h"
+#include "template_domain.h"
 
 #ifdef DEBUG
 #include <iostream>
@@ -73,6 +74,15 @@ Function: fixed_pointt::iteration
 
 bool fixed_pointt::iteration()
 {
+  #if 0
+  bool can_improve = strategy_solver.improve(inv,strategy);
+  if(!can_improve) return false;
+
+  strategy_solver.solve(inv,strategy);
+
+  return true;
+  #endif
+
   //solvert solver(ns);
 
   // Feed transition relation into solver.
