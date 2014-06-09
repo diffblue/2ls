@@ -19,9 +19,10 @@ public:
 
   row_valuet between(const row_valuet &lower, const row_valuet &upper);
 
-  exprt make_row_constraint(const rowt &row, const row_valuet &value);
-  exprt make_constraints(const valuet &inv);
+  exprt make_row_constraint(const rowt &row, const row_valuet &row_value);
+  exprt make_constraints(const valuet &value);
   inline row_valuet get_value(const rowt &row, const valuet &inv);
+  inline void set_value(const rowt &row, row_valuet row_value, valuet &value);
 
   void output_invariant(std::ostream &out, const valuet &inv, const namespacet &ns) const;
   void output_template(std::ostream &out, const namespacet &ns) const;

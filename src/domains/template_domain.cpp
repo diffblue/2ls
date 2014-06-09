@@ -27,29 +27,29 @@ template_domaint::row_valuet template_domaint::between(
   assert(false); //types do not match
 }
 
-exprt template_domaint::make_row_constraint(const rowt &row, const row_valuet &value)
+exprt template_domaint::make_row_constraint(const rowt &row, const row_valuet &row_value)
 {
   assert(row<templ.size());
-  return binary_relation_exprt(templ[row],ID_le,value);
+  return binary_relation_exprt(templ[row],ID_le,row_value);
 }
 
-exprt template_domaint::make_constraints(const valuet &inv)
+exprt template_domaint::make_constraints(const valuet &value)
 {
-  assert(inv.size()==templ.size());
+  assert(value.size()==templ.size());
   exprt::operandst c; 
   for(unsigned row = 0; row<templ.size(); row++)
   {
-    c.push_back(binary_relation_exprt(templ[row],ID_le,inv[row]));
+    c.push_back(binary_relation_exprt(templ[row],ID_le,value[row]));
   }
   return conjunction(c); 
 }
 
 inline template_domaint::row_valuet template_domaint::get_value(
-  const rowt &row, const valuet &inv)
+  const rowt &row, const valuet &value)
 {
-  assert(row<inv.size());
-  assert(inv.size()==templ.size());
-  return inv[row];
+  assert(row<value.size());
+  assert(value.size()==templ.size());
+  return value[row];
 }
 
 void make_interval_template(template_domaint::templatet &templ, 
