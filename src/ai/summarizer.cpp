@@ -147,6 +147,7 @@ void summarizert::compute_summary_rec(const function_namet &function_name)
     if(!n->second.empty()) n->second.output(out,functions[function_name]->ns);
   debug() << out.str() << eom;
 
+  /*
   // collect the transformer  
   concrete_transformerst transformers(functions[function_name]->ns, nodes);  
 
@@ -167,10 +168,12 @@ void summarizert::compute_summary_rec(const function_namet &function_name)
 
   fix.output(status(), fixpoint);
   // end of interval computation
+  */
+  
 
   //analyze
-  //TODO
-  //analyzer.analyze(nodes);
+  //ssa_analyzert analyzer();
+  //analyzer(nodes);
   summaryt summary;
   summary.params = functions[function_name]->params;
   summary.returns = functions[function_name]->returns;

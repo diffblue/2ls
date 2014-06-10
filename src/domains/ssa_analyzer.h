@@ -6,10 +6,11 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef DELTACHECK_SSA_FIXED_POINT_H
-#define DELTACHECK_SSA_FIXED_POINT_H
+#ifndef DELTACHECK_SSA_ANALYZER_H
+#define DELTACHECK_SSA_ANALYZER_H
 
 #include "../ssa/local_ssa.h"
+#include "strategy_solver_base.h"
 
 class ssa_analyzert
 {

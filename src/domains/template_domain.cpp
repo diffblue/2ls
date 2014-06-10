@@ -98,7 +98,7 @@ void template_domaint::make_not_constraints(const valuet &value,
   }
 }
 
-inline template_domaint::row_valuet template_domaint::get_row_value(
+template_domaint::row_valuet template_domaint::get_row_value(
   const rowt &row, const valuet &value)
 {
   assert(row<value.size());
@@ -106,7 +106,7 @@ inline template_domaint::row_valuet template_domaint::get_row_value(
   return value[row];
 }
 
-inline void template_domaint::set_row_value(
+void template_domaint::set_row_value(
   const rowt &row, const template_domaint::row_valuet &row_value, valuet &value)
 {
   assert(row<value.size());

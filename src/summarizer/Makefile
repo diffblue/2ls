@@ -39,6 +39,11 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       ../functions/index$(OBJEXT) \
       ../domains/fixed_point$(OBJEXT) \
       ../domains/ssa_fixed_point$(OBJEXT) \
+      ../domains/template_domain$(OBJEXT) \
+      ../domains/strategy_solver_base$(OBJEXT) \
+      ../domains/strategy_solver_enumeration$(OBJEXT) \
+      ../domains/strategy_solver_binsearch$(OBJEXT) \
+      ../domains/ssa_analyzer$(OBJEXT) \
       ../domains/predicate$(OBJEXT)
 
 

@@ -5,8 +5,6 @@ void strategy_solver_binsearcht::solve(invariantt &inv, const strategyt &strateg
   for(strategyt::const_iterator s_it = strategy.begin();
     s_it != strategy.end(); s_it++)
   {
-    template_domaint::row_valuet v = to_constant_expr(solver.get(strategy_value_exprs[*s_it]));
-
     template_domaint::row_valuet upper = template_domain.get_max_row_value(*s_it);
     template_domaint::row_valuet lower = to_constant_expr(solver.get(strategy_value_exprs[*s_it]));
  
