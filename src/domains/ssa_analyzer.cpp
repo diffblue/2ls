@@ -136,3 +136,15 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
   template_domain.output_value(std::cout,inv,ns);
   #endif
 }
+
+exprt ssa_analyzert::get_result()
+{
+  assert(false);
+  //  return strategy_solver.get_invariant();
+}
+
+exprt ssa_analyzert::get_result(var_listt vars) //projects on vars
+{
+  assert(false);
+  //  return strategy_solver.get_invariant(vars);
+}

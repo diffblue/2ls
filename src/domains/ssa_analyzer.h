@@ -27,6 +27,9 @@ public:
 
   void operator()(local_SSAt &SSA);
 
+  exprt get_result();
+  exprt get_result(var_listt vars); //projects on vars
+
 protected:
   const namespacet &ns;
   optionst &options;

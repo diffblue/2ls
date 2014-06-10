@@ -84,10 +84,8 @@ void template_domaint::make_not_constraints(const valuet &value,
   exprt::operandst &value_exprs)
 {
   assert(value.size()==templ.size());
-  cond_exprs.clear();
-  cond_exprs.reserve(templ.size());
-  value_exprs.clear();
-  value_exprs.reserve(templ.size());
+  cond_exprs.resize(templ.size());
+  value_exprs.resize(templ.size());
 
   exprt::operandst c; 
   for(unsigned row = 0; row<templ.size(); row++)
