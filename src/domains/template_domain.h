@@ -24,10 +24,12 @@ public:
   exprt get_row_constraint(const rowt &row, const valuet &value);
 
   exprt to_constraints(const valuet &value);
-  exprt to_not_constraints(const valuet &value);
+  void make_not_constraints(const valuet &value,
+			   exprt::operandst &cond_exprs, 
+			   exprt::operandst &value_exprs);
 
-  inline row_valuet get_row_value(const rowt &row, const valuet &inv);
-  inline void set_row_value(const rowt &row, const row_valuet &row_value, valuet &value);
+  row_valuet get_row_value(const rowt &row, const valuet &inv);
+  void set_row_value(const rowt &row, const row_valuet &row_value, valuet &value);
 
   row_valuet get_max_row_value(const rowt &row);
 

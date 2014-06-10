@@ -38,10 +38,9 @@ class strategy_solver_baset
   template_domaint &template_domain;
   prop_convt &solver;
 
- private:
-  bvt strategy_literals;
-
-  void preprocess_template_rows(exprt &expr);
+  //handles on values to retrieve from model
+  bvt strategy_cond_literals;
+  exprt::operandst strategy_value_exprs;
 
 };
 

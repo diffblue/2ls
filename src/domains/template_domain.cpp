@@ -13,6 +13,7 @@ template_domaint::row_valuet template_domaint::between(
     mp_integer vlower, vupper;
     to_integer(lower, vlower);
     to_integer(upper, vupper);
+    assert(vupper>=vlower);
     return from_integer((vupper-vlower)/2,lower.type());
   }
   if(lower.type().id()==ID_floatbv && upper.type().id()==ID_floatbv)
@@ -23,6 +24,7 @@ template_domaint::row_valuet template_domaint::between(
     {
       mp_integer plower = vlower.pack(); //compute "median" float number
       mp_integer pupper = vupper.pack();
+      //assert(pupper>=plower);
       ieee_floatt res;
       res.unpack((plower-pupper)/2); //...by computing integer mean
       return res.to_expr();
@@ -58,15 +60,18 @@ exprt template_domaint::to_constraints(const valuet &value)
   return conjunction(c); 
 }
 
-exprt template_domaint::to_not_constraints(const valuet &value)
+void template_domaint::make_not_constraints(const valuet &value,
+  exprt::operandst &cond_exprs, 
+  exprt::operandst &value_exprs)
 {
   assert(value.size()==templ.size());
   exprt::operandst c; 
   for(unsigned row = 0; row<templ.size(); row++)
   {
-    c.push_back(binary_relation_exprt(templ[row],ID_gt,value[row]));
+    value_exprs[row] = templ[row];
+    cond_exprs[row] = binary_relation_exprt(value_exprs[row],ID_gt,value[row]);
+    c.push_back(cond_exprs[row]);
   }
-  return disjunction(c); 
 }
 
 inline template_domaint::row_valuet template_domaint::get_row_value(
@@ -127,6 +132,10 @@ unsigned template_domaint::template_size()
 {
   return templ.size();
 }
+
+
+
+
 
 void make_interval_template(template_domaint::templatet &templ, 
   const template_domaint::var_listt &vars)
