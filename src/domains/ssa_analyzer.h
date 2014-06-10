@@ -18,8 +18,10 @@ public:
   typedef strategy_solver_baset::constraintst constraintst;
   typedef strategy_solver_baset::var_listt var_listt;
 
-  explicit ssa_analyzert(const namespacet &_ns)
-    : ns(_ns)
+  explicit ssa_analyzert(const namespacet &_ns, 
+                         optionst &_options)
+    : ns(_ns),
+      options(_options)
   {
   }  
 
@@ -27,6 +29,7 @@ public:
 
 protected:
   const namespacet &ns;
+  optionst &options;
   strategy_solver_baset::invariantt inv;
   unsigned iteration_number;
 };

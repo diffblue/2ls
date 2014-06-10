@@ -8,6 +8,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #define DEBUG
 
+#include <util/options.h>
+
 #include "strategy_solver_base.h"
 #include "strategy_solver_enumeration.h"
 #include "strategy_solver_binsearch.h"
@@ -80,7 +82,20 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
   //vars.insert(SSA.returns.begin(),SSA.returns.end());
   //vars.insert(SSA.globals_in.begin(),SSA.globals_in.end());
   //vars.insert(SSA.globals_out.begin(),SSA.globals_out.end());
-  make_interval_template(templ, vars); //TODO: get template from options
+  
+  if(options.get_bool_option("intervals"))
+  {
+    make_interval_template(templ, vars);
+  }
+  else if(options.get_bool_option("octagons"))
+  {
+    make_octagon_template(templ, vars); 
+  }
+  else
+  {
+    make_interval_template(templ, vars); // default
+  }
+    
   template_domaint template_domain(templ);
 
   // solver
