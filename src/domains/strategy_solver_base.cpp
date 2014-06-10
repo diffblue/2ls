@@ -8,16 +8,18 @@
 bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
 {
   strategy.clear();
+
+  //new context
   solver << template_domain.to_constraints(inv); //TODO: add assumption literal
 
   exprt::operandst strategy_cond_exprs;
-  template_domain.make_not_constraints(inv, strategy_cond_exprs, strategy_value_exprs); //TODO: add assumption literal
+  template_domain.make_not_constraints(inv, strategy_cond_exprs, strategy_value_exprs); 
   for(unsigned i = 0; i<strategy_cond_exprs.size(); i++)
   {
     strategy_cond_literals[i] = solver.convert(strategy_cond_exprs[i]);
     strategy_cond_exprs[i] = literal_exprt(strategy_cond_literals[i]);
   }
-  solver << disjunction(strategy_cond_exprs);
+  solver << disjunction(strategy_cond_exprs); //TODO: add assumption literal
 
   bool first = true;
   while(true)

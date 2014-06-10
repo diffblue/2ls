@@ -19,6 +19,7 @@ public:
  {}
 
   row_valuet between(const row_valuet &lower, const row_valuet &upper);
+  bool leq(const row_valuet &v1, const row_valuet &v2);
 
   exprt get_row_constraint(const rowt &row, const row_valuet &row_value);
   exprt get_row_constraint(const rowt &row, const valuet &value);

@@ -36,6 +36,25 @@ template_domaint::row_valuet template_domaint::between(
   assert(false); //types do not match or are not supported
 }
 
+bool template_domaint::leq(const row_valuet &v1, const row_valuet &v2)
+{
+  if(v1.type()==v2.type() && 
+     (v1.type().id()==ID_signedbv || v1.type().id()==ID_unsignedbv))
+  {
+    mp_integer vv1, vv2;
+    to_integer(v1, vv1);
+    to_integer(v2, vv2);
+    return vv1<=vv2;
+  }
+  if(v1.type().id()==ID_floatbv && v2.type().id()==ID_floatbv)
+  {
+    ieee_floatt vv1(to_constant_expr(v1));
+    ieee_floatt vv2(to_constant_expr(v2));
+    return vv1<=vv2;
+  }
+  assert(false); //types do not match or are not supported
+}
+
 exprt template_domaint::get_row_constraint(const rowt &row, const row_valuet &row_value)
 {
   assert(row<templ.size());
@@ -65,6 +84,11 @@ void template_domaint::make_not_constraints(const valuet &value,
   exprt::operandst &value_exprs)
 {
   assert(value.size()==templ.size());
+  cond_exprs.clear();
+  cond_exprs.reserve(templ.size());
+  value_exprs.clear();
+  value_exprs.reserve(templ.size());
+
   exprt::operandst c; 
   for(unsigned row = 0; row<templ.size(); row++)
   {

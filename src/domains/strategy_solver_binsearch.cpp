@@ -1,38 +1,30 @@
 #include "strategy_solver_binsearch.h"
 
-bool strategy_solver_binsearcht::solve(invariantt &inv, const strategyt &strategy)
+void strategy_solver_binsearcht::solve(invariantt &inv, const strategyt &strategy)
 {
-  
-  solver << program.convert();
-  solver << template_domain.convert(inv);
-  for(s_it,strategy)
+  for(strategyt::const_iterator s_it = strategy.begin();
+    s_it != strategy.end(); s_it++)
   {
-    //new context
-    solver << s_it->second;
+    template_domaint::row_valuet v = to_constant_expr(solver.get(strategy_value_exprs[*s_it]));
 
-    template_domaint::valuet upper = template_domain.get_upper();
-    template_domaint::valuet lower = template_domain.get_value(inv,s_it->first);
+    template_domaint::row_valuet upper = template_domain.get_max_row_value(*s_it);
+    template_domaint::row_valuet lower = to_constant_expr(solver.get(strategy_value_exprs[*s_it]));
  
-    while (lower <= upper)   
+    while (template_domain.leq(lower,upper))   
     {
-      template_domaint::valuet middle = template_domain.between(lower,upper);
-      exprt c = template_domain.make_row_constraint(s_it->first,middle);
+      template_domaint::row_valuet middle = template_domain.between(lower,upper);
+      exprt c = template_domain.get_row_constraint(*s_it,middle);
 
-      solver << not_exprt(c); // e > middle
-      modelt model = solver.decide();
-      if(satisfiable) 
-      {
-        lower = middle; //model;
-      }
-      else
-      {
-        upper = middle;
-      }
+      //new context
+      solver << not_exprt(c); // e > middle, TODO: add assumption literal
+
+      if(solver() == decision_proceduret::D_SATISFIABLE) lower = middle; //model;
+      else upper = middle;
+
+      //delete context
     }
    
-    inv[s_it->first] = lower;  
-
-    //delete context
+    template_domain.set_row_value(*s_it,lower,inv);
   }
-  return false;
+  //delete context
 }
