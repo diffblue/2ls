@@ -13,10 +13,14 @@ public:
   typedef constant_exprt row_valuet; // "bound"
   typedef std::vector<row_valuet> valuet;
   typedef std::vector<symbol_exprt> var_listt;
+  typedef false_exprt bottom_exprt; //marker for bottom
 
  template_domaint(templatet &_template) :
    templ(_template) 
  {}
+
+  void bottom(valuet &value);
+  void set_to_top(const var_listt &top_vars, valuet &value);
 
   row_valuet between(const row_valuet &lower, const row_valuet &upper);
   bool leq(const row_valuet &v1, const row_valuet &v2);

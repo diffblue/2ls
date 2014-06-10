@@ -4,6 +4,27 @@
 #include <util/ieee_float.h>
 #include <langapi/languages.h>
 
+void template_domaint::bottom(valuet &value)
+{
+  value.resize(templ.size());
+  for(unsigned row = 0; row<templ.size(); row++)
+  {
+    value[row] = bottom_exprt();
+  }
+}
+
+void template_domaint::set_to_top(const var_listt &top_vars, valuet &value)
+{
+  assert(value.size()==templ.size());
+  for(unsigned row = 0; row<templ.size(); row++)
+  {
+    if(/*templ[row] contains var in top_vars*/)
+    {
+      value[row] = get_max_row_value(row);
+    }
+  }
+}
+
 template_domaint::row_valuet template_domaint::between(
   const row_valuet &lower, const row_valuet &upper)
 {
