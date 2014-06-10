@@ -66,6 +66,9 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
       
         pre_state_vars.push_back(in);
         post_state_vars.push_back(out);
+        
+        std::cout << "Adding " << from_expr(ns, "", in) << " " << from_expr(ns, "", out) << std::endl;
+        
       }
 
       {
