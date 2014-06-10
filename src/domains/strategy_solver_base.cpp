@@ -18,6 +18,8 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
   rename(strategy_cond_exprs);
   rename(strategy_value_exprs);
   
+  strategy_cond_literals.resize(strategy_cond_exprs.size());
+  
   for(unsigned i = 0; i<strategy_cond_exprs.size(); i++)
   {
     strategy_cond_literals[i] = solver.convert(strategy_cond_exprs[i]);
