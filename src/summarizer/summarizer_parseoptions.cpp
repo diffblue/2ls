@@ -250,9 +250,24 @@ int summarizer_parseoptionst::doit()
     return 7;
   }
 
+  if(cmdline.isset("intervals"))
+  {
+    show_guards(goto_model, std::cout, ui_message_handler);
+    return 7;
+  }
+
+  if(cmdline.isset("octagons"))
+  {
+    show_guards(goto_model, std::cout, ui_message_handler);
+    return 7;
+  }
+
+
+
+
   try
   {
-    summary_checkert summary_checker;
+    summary_checkert summary_checker(options);
     
     summary_checker.set_message_handler(get_message_handler());
     summary_checker.set_verbosity(get_verbosity());

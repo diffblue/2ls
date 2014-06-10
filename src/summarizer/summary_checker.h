@@ -20,10 +20,11 @@ Author: Daniel Kroening, kroening@kroening.com
 class summary_checkert:public property_checkert
 {
 public:
-  inline summary_checkert():
+  inline summary_checkert(optionst &_options):
     show_vcc(false),
     simplify(false),
     fixed_point(false),
+    options(_options),
     summary_store(),
     summarizer(summary_store)
   {
@@ -38,6 +39,8 @@ public:
   time_periodt sat_time;
 
 protected:
+  optionst &options;
+
   summary_storet summary_store;
   summarizert summarizer;
 

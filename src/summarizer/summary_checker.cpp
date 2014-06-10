@@ -8,6 +8,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <iostream>
 
+#include <util/options.h>
 #include <util/simplify_expr.h>
 #include <langapi/language_util.h>
 
@@ -78,7 +79,7 @@ summary_checkert::resultt summary_checkert::check_properties(
     
     // fixed-point for loops
     status() << "Fixed-point" << messaget::eom;
-    ssa_analyzert ssa_analyzer(ns);
+    ssa_analyzert ssa_analyzer(ns, options);
     ssa_analyzer(SSA);
     //ssa_fixed_point(SSA);
 
