@@ -119,7 +119,6 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
 
   #endif  
     
-    
   template_domaint template_domain(templ);
 
   #ifdef DEBUG

@@ -33,10 +33,13 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
     strategy_cond_literals[i] = bv[0];
         
     strategy_cond_exprs[i] = literal_exprt(strategy_cond_literals[i]);
+
+    std::cout << "cond_expr after: " << strategy_cond_exprs[i] << std::endl;
     
-    std::cout << "literal " << (strategy_cond_literals[i].is_false() ? "0" : strategy_cond_literals[i].is_true() ? "1" : "X") << std::endl;
+    //    std::cout << "literal " << (strategy_cond_literals[i].is_false() ? "0" : strategy_cond_literals[i].is_true() ? "1" : "X") << std::endl;
 
   }
+  
   solver << disjunction(strategy_cond_exprs); //TODO: add assumption literal
 
   bool first = true;
@@ -50,6 +53,7 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
       {
         if(solver.l_get(strategy_cond_literals[row]).is_true()) 
 	{
+	  std::cout << "adding to strategy: " << row << std::endl;
           strategy.push_back(row);
           //add blocking constraint
           solver << literal_exprt(!strategy_cond_literals[row]); //TODO: add assumption literal

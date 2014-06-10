@@ -36,6 +36,7 @@ class strategy_solver_baset
       renaming_map[*it1]=*it2;    
     }
   
+    // adding program constraints to solver db
     for(constraintst::const_iterator it = program.begin(); it != program.end(); it++)
     {
       solver << *it;
