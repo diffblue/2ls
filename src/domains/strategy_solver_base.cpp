@@ -1,3 +1,4 @@
+#include <iostream>
 #include <set>
 #include <cmath>
 
@@ -21,8 +22,12 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
   strategy_cond_literals.resize(strategy_cond_exprs.size());
   
   for(unsigned i = 0; i<strategy_cond_exprs.size(); i++)
-  {
+  {  
     strategy_cond_literals[i] = solver.convert(strategy_cond_exprs[i]);
+    
+    if(!strategy_cond_literals[i].is_constant())
+      solver.set_frozen(strategy_cond_literals[i]);
+    
     strategy_cond_exprs[i] = literal_exprt(strategy_cond_literals[i]);
   }
   solver << disjunction(strategy_cond_exprs); //TODO: add assumption literal
