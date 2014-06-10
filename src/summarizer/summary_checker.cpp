@@ -63,7 +63,7 @@ summary_checkert::resultt summary_checkert::check_properties(
   // analyze all the functions
   forall_goto_functions(f_it, goto_model.goto_functions)
   {
-    if(!f_it->second.body.has_assertion()) continue;
+    if(!f_it->second.body_available) continue;
 
     status() << "Analyzing " << f_it->first << messaget::eom;
     

@@ -252,14 +252,12 @@ int summarizer_parseoptionst::doit()
 
   if(cmdline.isset("intervals"))
   {
-    show_guards(goto_model, std::cout, ui_message_handler);
-    return 7;
+    options.set_option("intervals", true);
   }
 
   if(cmdline.isset("octagons"))
   {
-    show_guards(goto_model, std::cout, ui_message_handler);
-    return 7;
+    options.set_option("octagons", true);
   }
 
 
