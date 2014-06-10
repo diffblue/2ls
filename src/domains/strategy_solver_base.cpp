@@ -2,6 +2,7 @@
 #include <set>
 #include <cmath>
 
+#include <solvers/flattening/bv_pointers.h>
 #include <util/i2string.h>
 
 #include "strategy_solver_base.h"
@@ -23,12 +24,16 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
   
   for(unsigned i = 0; i<strategy_cond_exprs.size(); i++)
   {  
-    strategy_cond_literals[i] = solver.convert(strategy_cond_exprs[i]);
-    
-    if(!strategy_cond_literals[i].is_constant())
-      solver.set_frozen(strategy_cond_literals[i]);
-    
+    bvt bv(solver.convert_bv(strategy_cond_exprs[i]));
+  
+    solver.set_frozen(bv);
+  
+    strategy_cond_literals[i] = bv[0];
+        
     strategy_cond_exprs[i] = literal_exprt(strategy_cond_literals[i]);
+    
+    std::cout << "literal " << (strategy_cond_literals[i].is_false() ? "0" : strategy_cond_literals[i].is_true() ? "1" : "X") << std::endl;
+
   }
   solver << disjunction(strategy_cond_exprs); //TODO: add assumption literal
 

@@ -21,7 +21,7 @@ class strategy_solver_baset
   explicit strategy_solver_baset(const constraintst &program,
     var_listt &_pre_state_vars, var_listt &_post_state_vars,
     template_domaint &_template_domain,
-    prop_convt &_solver) :
+    bv_pointerst &_solver) :
     pre_state_vars(_pre_state_vars), post_state_vars(_post_state_vars),
     template_domain(_template_domain),
     solver(_solver)
@@ -56,7 +56,7 @@ class strategy_solver_baset
   }
   
   template_domaint &template_domain;
-  prop_convt &solver;
+  bv_pointerst &solver;
 
   //handles on values to retrieve from model
   bvt strategy_cond_literals;
