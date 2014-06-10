@@ -123,7 +123,7 @@ void template_domaint::output_template(std::ostream &out, const namespacet &ns) 
   }
 }
 
-unsigned template_domaint::template_size() const
+unsigned template_domaint::template_size()
 {
   return templ.size();
 }

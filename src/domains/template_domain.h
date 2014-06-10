@@ -34,7 +34,7 @@ public:
   void output_value(std::ostream &out, const valuet &value, const namespacet &ns) const;
   void output_template(std::ostream &out, const namespacet &ns) const;
 
-  inline unsigned template_size() const;
+  unsigned template_size();
 
 protected:
   templatet templ;
