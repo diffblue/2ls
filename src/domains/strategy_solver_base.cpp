@@ -24,6 +24,8 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
   
   for(unsigned i = 0; i<strategy_cond_exprs.size(); i++)
   {  
+    std::cout << "cond_expr: " << strategy_cond_exprs[i] << std::endl;
+
     bvt bv(solver.convert_bv(strategy_cond_exprs[i]));
   
     solver.set_frozen(bv);
@@ -40,7 +42,7 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
   bool first = true;
   while(true)
   {
-    std::cout << "solver()" << std::endl;
+    std::cout << "solver(): ";
     if(solver() == decision_proceduret::D_SATISFIABLE) 
     { 
       std::cout << "SAT" << std::endl;
@@ -57,6 +59,7 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
     }
     else 
     {
+      std::cout << "UNSAT" << std::endl;
       if(first) return false;
       return true;
     }

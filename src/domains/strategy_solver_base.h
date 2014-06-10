@@ -36,7 +36,10 @@ class strategy_solver_baset
       renaming_map[*it1]=*it2;    
     }
   
-    //solver << program;
+    for(constraintst::const_iterator it = program.begin(); it != program.end(); it++)
+    {
+      solver << *it;
+    }
   }
 
   virtual void solve(invariantt &inv, const strategyt &strategy) { assert(false); }

@@ -33,7 +33,7 @@ void template_domaint::set_to_top(const var_listt &top_vars, valuet &value)
   
     if(has_symbol(row_expr, top_symbols))
     {
-      value[row] = get_max_row_value(row);
+      value[row] = true_exprt(); //get_max_row_value(row); //marker for oo
     }
   }
 }
