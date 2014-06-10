@@ -126,8 +126,8 @@ void template_domaint::make_not_constraints(const valuet &value,
   for(unsigned row = 0; row<templ.size(); row++)
   {
     value_exprs[row] = templ[row];
-    if(is_row_value_neginf(value[row])) cond_exprs[row] = false_exprt();
-    else if(is_row_value_inf(value[row])) cond_exprs[row] = true_exprt();  
+    if(is_row_value_neginf(value[row])) cond_exprs[row] = true_exprt(); //negate
+    else if(is_row_value_inf(value[row])) cond_exprs[row] = false_exprt();  
     else cond_exprs[row] = binary_relation_exprt(value_exprs[row],ID_gt,value[row]);
     c.push_back(cond_exprs[row]);
   }
