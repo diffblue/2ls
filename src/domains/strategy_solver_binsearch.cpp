@@ -12,6 +12,8 @@ void strategy_solver_binsearcht::solve(invariantt &inv, const strategyt &strateg
     {
       template_domaint::row_valuet middle = template_domain.between(lower,upper);
       exprt c = template_domain.get_row_constraint(*s_it,middle);
+  
+      replace_expr(renaming_map, c);
 
       //new context
       solver << not_exprt(c); // e > middle, TODO: add assumption literal

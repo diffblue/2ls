@@ -1,6 +1,7 @@
 #ifndef CPROVER_STRATEGY_SOLVER_BASE
 #define CPROVER_STRATEGY_SOLVER_BASE 
 
+#include <util/replace_expr.h>
 #include <map>
 
 #include "template_domain.h"
@@ -25,6 +26,16 @@ class strategy_solver_baset
     template_domain(_template_domain),
     solver(_solver)
   {
+    // build replace map
+    assert(pre_state_vars.size()==post_state_vars.size());
+    var_listt::const_iterator it1=pre_state_vars.begin();
+    var_listt::const_iterator it2=post_state_vars.begin();
+  
+    for(; it1!=pre_state_vars.end(); ++it1, ++it2)
+    {
+      renaming_map[*it1]=*it2;    
+    }
+  
     //solver << program;
   }
 
@@ -35,13 +46,21 @@ class strategy_solver_baset
  protected:
   var_listt &pre_state_vars;
   var_listt &post_state_vars;
+  
+  replace_mapt renaming_map;
+  
+  inline void rename(exprt::operandst &operands)
+  {
+    for(unsigned i=0; i<operands.size(); ++i)
+      replace_expr(renaming_map, operands[i]);
+  }
+  
   template_domaint &template_domain;
   prop_convt &solver;
 
   //handles on values to retrieve from model
   bvt strategy_cond_literals;
   exprt::operandst strategy_value_exprs;
-
 };
 
 #endif
