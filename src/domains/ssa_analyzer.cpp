@@ -10,6 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/options.h>
 
+
 #include "strategy_solver_base.h"
 #include "strategy_solver_enumeration.h"
 #include "strategy_solver_binsearch.h"
@@ -41,7 +42,12 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
   if(SSA.goto_function.body.instructions.empty())
     return;
 
-    var_listt pre_state_vars, post_state_vars;
+
+  #ifdef DEBUG
+  std::cout << "ssa_analyzert::operator()" << std::endl;
+  #endif
+
+  var_listt pre_state_vars, post_state_vars;
 
   // get all backwards edges
   forall_goto_program_instructions(i_it, SSA.goto_function.body)
@@ -78,10 +84,13 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
 
   template_domaint::templatet templ;
   var_listt vars = pre_state_vars;
-  //vars.insert(SSA.params.begin(),SSA.params.end());
-  //vars.insert(SSA.returns.begin(),SSA.returns.end());
-  //vars.insert(SSA.globals_in.begin(),SSA.globals_in.end());
-  //vars.insert(SSA.globals_out.begin(),SSA.globals_out.end());
+  var_listt top_vars;
+  top_vars.insert(top_vars.end(), SSA.params.begin(), SSA.params.end());
+  top_vars.insert(top_vars.end(), SSA.globals_in.begin(), SSA.globals_in.end());
+  vars.insert(vars.end(), SSA.params.begin(),SSA.params.end());
+  vars.insert(vars.end(), SSA.returns.begin(),SSA.returns.end());
+  vars.insert(vars.end(), SSA.globals_in.begin(),SSA.globals_in.end());
+  vars.insert(vars.end(), SSA.globals_out.begin(),SSA.globals_out.end());
   
   if(options.get_bool_option("intervals"))
   {
@@ -96,7 +105,25 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
     make_interval_template(templ, vars); // default
   }
     
+  #ifdef DEBUG
+  std::cout << "**** Template *****" << std::endl;
+  std::cout << "  var size " << vars.size() << std::endl
+            << "  params size " << SSA.params.size() << std::endl
+            << "  pre_state " << pre_state_vars.size() << std::endl;
+
+  #endif  
+    
+    
   template_domaint template_domain(templ);
+
+  #ifdef DEBUG
+  std::cout << "template size " << templ.size() << std::endl;
+  
+  template_domain.output_template(std::cout, ns);
+  #endif  
+    
+  
+
 
   // solver
   satcheckt satcheck;//TODO: get solver from options
@@ -110,6 +137,11 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
 					template_domain, solver);
 
   iteration_number=0;
+
+
+  // intialise inv
+  template_domain.bottom(inv);
+  template_domain.set_to_top(top_vars, inv);
   
   bool change;
 

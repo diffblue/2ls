@@ -1,5 +1,6 @@
 #include "template_domain.h"
 
+#include <util/find_symbols.h>
 #include <util/arith_tools.h>
 #include <util/ieee_float.h>
 #include <langapi/languages.h>
@@ -16,9 +17,21 @@ void template_domaint::bottom(valuet &value)
 void template_domaint::set_to_top(const var_listt &top_vars, valuet &value)
 {
   assert(value.size()==templ.size());
+  
+  find_symbols_sett top_symbols;
+  for(var_listt::const_iterator 
+      it=top_vars.begin();
+      it!=top_vars.end(); 
+      ++it)
+  {
+    top_symbols.insert(it->get_identifier());
+  }
+  
   for(unsigned row = 0; row<templ.size(); row++)
   {
-    if(/*templ[row] contains var in top_vars*/)
+    const exprt &row_expr=templ[row];
+  
+    if(has_symbol(row_expr, top_symbols))
     {
       value[row] = get_max_row_value(row);
     }
