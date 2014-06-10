@@ -6,7 +6,7 @@
 
 #include "template_domain.h"
 
-#include <solvers/prop/prop_conv.h>
+#include <solvers/flattening/bv_pointers.h>
 
 
 class strategy_solver_baset 

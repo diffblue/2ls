@@ -40,19 +40,26 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
   bool first = true;
   while(true)
   {
+    std::cout << "solver()" << std::endl;
     if(solver() == decision_proceduret::D_SATISFIABLE) 
     { 
+      std::cout << "SAT" << std::endl;
       for(unsigned row=0;row<strategy_cond_literals.size(); row++)
       {
         if(solver.l_get(strategy_cond_literals[row]).is_true()) 
-	      {
+	{
           strategy.push_back(row);
           //add blocking constraint
           solver << literal_exprt(!strategy_cond_literals[row]); //TODO: add assumption literal
       	}
       }
+      return true; //skip outer loop
     }
-    else if(first) return false;
+    else 
+    {
+      if(first) return false;
+      return true;
+    }
     first = false;
   }
 }

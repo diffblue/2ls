@@ -164,7 +164,16 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
     strategy_solver_baset::strategyt strategy;
     change = strategy_solver.improve(inv,strategy);
 
-    if(change) strategy_solver.solve(inv,strategy);
+    if(change) 
+    {
+      strategy_solver.solve(inv,strategy);
+
+      #ifdef DEBUG
+      std::cout << "Value after " << iteration_number
+            << " iteration(s):\n";
+      template_domain.output_value(std::cout,inv,ns);
+      #endif
+    }
   }
   while(change);
 

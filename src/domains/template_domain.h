@@ -13,7 +13,6 @@ public:
   typedef constant_exprt row_valuet; // "bound"
   typedef std::vector<row_valuet> valuet;
   typedef std::vector<symbol_exprt> var_listt;
-  typedef false_exprt bottom_exprt; //marker for bottom
 
  template_domaint(templatet &_template) :
    templ(_template) 
@@ -42,6 +41,8 @@ public:
   void output_template(std::ostream &out, const namespacet &ns) const;
 
   unsigned template_size();
+  bool is_row_value_inf(const row_valuet & row_value) const;
+  bool is_row_value_neginf(const row_valuet & row_value) const;
 
 protected:
   templatet templ;
