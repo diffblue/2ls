@@ -254,7 +254,10 @@ int summarizer_parseoptionst::doit()
   {
     options.set_option("intervals", true);
   }
-
+  if(cmdline.isset("zones"))
+  {
+    options.set_option("zones", true);
+  }
   if(cmdline.isset("octagons"))
   {
     options.set_option("octagons", true);

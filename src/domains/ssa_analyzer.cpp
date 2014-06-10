@@ -86,18 +86,21 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
   transition_relation << SSA;
 
   template_domaint::templatet templ;
-  var_listt vars = pre_state_vars;
   var_listt top_vars;
-  top_vars.insert(top_vars.end(), SSA.params.begin(), SSA.params.end());
-  top_vars.insert(top_vars.end(), SSA.globals_in.begin(), SSA.globals_in.end());
-  vars.insert(vars.end(), SSA.params.begin(),SSA.params.end());
-  vars.insert(vars.end(), SSA.returns.begin(),SSA.returns.end());
-  vars.insert(vars.end(), SSA.globals_in.begin(),SSA.globals_in.end());
-  vars.insert(vars.end(), SSA.globals_out.begin(),SSA.globals_out.end());
+  add_vars(SSA.params,top_vars);
+  add_vars(SSA.globals_in,top_vars);
+  var_listt vars = top_vars;
+  add_vars(pre_state_vars,vars);
+  add_vars(SSA.returns,vars);
+  add_vars(SSA.globals_out,vars);
   
   if(options.get_bool_option("intervals"))
   {
     make_interval_template(templ, vars);
+  }
+  else if(options.get_bool_option("zones"))
+  {
+    make_zone_template(templ, vars); 
   }
   else if(options.get_bool_option("octagons"))
   {
@@ -172,6 +175,7 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
   #endif
 }
 
+
 exprt ssa_analyzert::get_result()
 {
   assert(false);
@@ -182,4 +186,37 @@ exprt ssa_analyzert::get_result(var_listt vars) //projects on vars
 {
   assert(false);
   //  return strategy_solver.get_invariant(vars);
+}
+
+void ssa_analyzert::add_vars(const local_SSAt::var_listt &vars_to_add, 
+    var_listt &vars)
+{
+  for(local_SSAt::var_listt::const_iterator it = vars_to_add.begin();
+      it != vars_to_add.end(); it++)
+  {
+    if(it->type().id()==ID_unsignedbv || it->type().id()==ID_signedbv ||
+       it->type().id()==ID_floatbv) vars.push_back(*it);
+  }
+}
+
+void ssa_analyzert::add_vars(const local_SSAt::var_sett &vars_to_add, 
+    var_listt &vars)
+{
+  for(local_SSAt::var_sett::const_iterator it = vars_to_add.begin();
+      it != vars_to_add.end(); it++)
+  {
+    if(it->type().id()==ID_unsignedbv || it->type().id()==ID_signedbv ||
+       it->type().id()==ID_floatbv) vars.push_back(*it);
+  }
+}
+
+void ssa_analyzert::add_vars(const var_listt &vars_to_add, 
+    var_listt &vars)
+{
+  for(var_listt::const_iterator it = vars_to_add.begin();
+      it != vars_to_add.end(); it++)
+  {
+    if(it->type().id()==ID_unsignedbv || it->type().id()==ID_signedbv ||
+       it->type().id()==ID_floatbv) vars.push_back(*it);
+  }
 }
