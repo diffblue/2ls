@@ -28,7 +28,7 @@ public:
     const goto_functiont &_goto_function,
     const namespacet &_ns,
     const std::string &_suffix="",
-    bool _do_lb=false):
+    bool _do_lb=true):
     ns(_ns), goto_function(_goto_function), 
     ssa_objects(_goto_function, ns),
     assignments(_goto_function.body, ns, ssa_objects),
