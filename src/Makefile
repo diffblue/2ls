@@ -1,4 +1,4 @@
-SUBDIRS = deltacheck deltagit ssa solver functions html summarizer
+SUBDIRS = deltacheck deltagit ssa solver functions html summarizer domains
 
 all: deltacheck deltagit summarizer
 
@@ -12,6 +12,7 @@ $(SUBDIRS):
 
 deltacheck: ssa solver functions html
 deltagit: html
+summarizer: ssa solver functions domains
 
 clean: $(patsubst %, %_clean, $(SUBDIRS))
 
