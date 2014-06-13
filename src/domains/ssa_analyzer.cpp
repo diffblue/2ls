@@ -49,9 +49,14 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
 
   var_listt pre_state_vars, post_state_vars;
 
-  std::map<symbol_exprt, locationt> var_locations;
+  template_domaint::var_guardst var_guards;
 
+  var_listt top_vars;
+  add_vars(SSA.params,top_vars);
+  add_vars(SSA.globals_in,top_vars);
+  var_listt vars = top_vars;
 
+  for(unsigned i=0; i<top_vars.size(); ++i) var_guards.push_back(true_exprt());
 
   // get all backwards edges
   forall_goto_program_instructions(i_it, SSA.goto_function.body)
@@ -72,15 +77,15 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
         symbol_exprt in=SSA.name(*o_it, local_SSAt::LOOP_BACK, i_it);
         symbol_exprt out=SSA.read_rhs(*o_it, i_it);
       
-        var_guard.push_back(guard);
+        var_guards.push_back(guard);
       
         pre_state_vars.push_back(in);
         post_state_vars.push_back(out);
         
-        std::cout << "Adding " << from_expr(ns, "", in) << " " << from_expr(ns, "", out) << std::endl;
-        
+        std::cout << "Adding " << from_expr(ns, "", in) << " " << 
+          from_expr(ns, "", out) << std::endl;        
       }
-
+      /*
       {
         ssa_objectt guard=SSA.guard_symbol();
         symbol_exprt in=SSA.name(guard, local_SSAt::LOOP_BACK, i_it);
@@ -88,15 +93,14 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
         
         pre_state_vars.push_back(in);
         post_state_vars.push_back(out);
-        var_guard.push_back(true_exprt());
-      }
+        var_guards.push_back(true_exprt());
+      }*/
     } 
   }
   
   for(unsigned i=0; i<pre_state_vars.size(); ++i)
   {
-    std::cout << from_expr(pre_state_vars[i]) << " guard " << from_expr(var_guard[i]) << std::endl;
-  
+    std::cout << from_expr(pre_state_vars[i]) << " guard " << from_expr(var_guards[i]) << std::endl;  
   }
 
 
@@ -104,34 +108,29 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
   transition_relation << SSA;
 
   template_domaint::templatet templ;
-  var_listt top_vars;
-  add_vars(SSA.params,top_vars);
-  add_vars(SSA.globals_in,top_vars);
-  var_listt vars = top_vars;
-  
-  
-  std::vector<exprt> var_guard;
-  
-  
+   
   add_vars(pre_state_vars,vars);
-  add_vars(SSA.returns,vars);
-  add_vars(SSA.globals_out,vars); //guard at exit location?
+  var_listt added_returns = add_vars(SSA.returns,vars);
+  var_listt added_globals_out = add_vars(SSA.globals_out,vars); //TODO: guard at exit location?
+
+for(unsigned i=0; i<added_returns.size()+added_globals_out.size(); ++i) 
+    var_guards.push_back(true_exprt()); //TODO: replace this stuff
   
   if(options.get_bool_option("intervals"))
   {
-    make_interval_template(templ, vars);
+    make_interval_template(templ, vars, var_guards);
   }
   else if(options.get_bool_option("zones"))
   {
-    make_zone_template(templ, vars); 
+    make_zone_template(templ, vars, var_guards); 
   }
   else if(options.get_bool_option("octagons"))
   {
-    make_octagon_template(templ, vars); 
+    make_octagon_template(templ, vars, var_guards); 
   }
   else
   {
-    make_interval_template(templ, vars); // default
+    make_interval_template(templ, vars, var_guards); // default
   }
     
   #ifdef DEBUG
@@ -219,35 +218,44 @@ exprt ssa_analyzert::get_result(var_listt vars) //projects on vars
   //  return strategy_solver.get_invariant(vars);
 }
 
-void ssa_analyzert::add_vars(const local_SSAt::var_listt &vars_to_add, 
+bool ssa_analyzert::add_vars_filter(const symbol_exprt &s)
+{
+  return s.type().id()==ID_unsignedbv || s.type().id()==ID_signedbv ||
+    s.type().id()==ID_floatbv;
+}
+
+ssa_analyzert::var_listt ssa_analyzert::add_vars(const local_SSAt::var_listt &vars_to_add, 
     var_listt &vars)
 {
+  var_listt vars_added;
   for(local_SSAt::var_listt::const_iterator it = vars_to_add.begin();
       it != vars_to_add.end(); it++)
   {
-    if(it->type().id()==ID_unsignedbv || it->type().id()==ID_signedbv ||
-       it->type().id()==ID_floatbv) vars.push_back(*it);
+    if(add_vars_filter(*it)) { vars.push_back(*it); vars_added.push_back(*it); }
   }
+  return vars_added;
 }
 
-void ssa_analyzert::add_vars(const local_SSAt::var_sett &vars_to_add, 
+ssa_analyzert::var_listt ssa_analyzert::add_vars(const local_SSAt::var_sett &vars_to_add, 
     var_listt &vars)
 {
+  var_listt vars_added;
   for(local_SSAt::var_sett::const_iterator it = vars_to_add.begin();
       it != vars_to_add.end(); it++)
   {
-    if(it->type().id()==ID_unsignedbv || it->type().id()==ID_signedbv ||
-       it->type().id()==ID_floatbv) vars.push_back(*it);
+    if(add_vars_filter(*it)) { vars.push_back(*it); vars_added.push_back(*it); }
   }
+  return vars_added;
 }
 
-void ssa_analyzert::add_vars(const var_listt &vars_to_add, 
+ssa_analyzert::var_listt ssa_analyzert::add_vars(const var_listt &vars_to_add, 
     var_listt &vars)
 {
+  var_listt vars_added;
   for(var_listt::const_iterator it = vars_to_add.begin();
       it != vars_to_add.end(); it++)
   {
-    if(it->type().id()==ID_unsignedbv || it->type().id()==ID_signedbv ||
-       it->type().id()==ID_floatbv) vars.push_back(*it);
+    if(add_vars_filter(*it)) { vars.push_back(*it); vars_added.push_back(*it); }
   }
+  return vars_added;
 }

@@ -36,9 +36,10 @@ protected:
   strategy_solver_baset::invariantt inv;
   unsigned iteration_number;
 
-  void add_vars(const var_listt &vars_to_add, var_listt &vars);
-  void add_vars(const local_SSAt::var_listt &vars_to_add, var_listt &vars);
-  void add_vars(const local_SSAt::var_sett &vars_to_add, var_listt &vars);
+  bool add_vars_filter(const symbol_exprt &s);
+  var_listt add_vars(const var_listt &vars_to_add, var_listt &vars);
+  var_listt add_vars(const local_SSAt::var_listt &vars_to_add, var_listt &vars);
+  var_listt add_vars(const local_SSAt::var_sett &vars_to_add, var_listt &vars);
 
 };
 

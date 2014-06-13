@@ -14,15 +14,14 @@ public:
   typedef constant_exprt row_valuet; // "bound"
   typedef std::vector<row_valuet> valuet;
   typedef std::vector<symbol_exprt> var_listt;
-  typedef std::vector<std::pair<symbol_exprt,exprt> > var_guardst; 
+  typedef std::vector<exprt> var_guardst; 
 
   typedef struct 
   {
     guardst guards;
     row_exprst rows;
 
-    unsigned size() { return rows.size(); 
-} 
+    unsigned size() { return rows.size(); } 
   } templatet;
 
  template_domaint(templatet &_template) :
@@ -61,10 +60,13 @@ protected:
 };
 
 void make_interval_template(template_domaint::templatet &templ,
-			   const template_domaint::var_guardst &var_guards);
+			   const template_domaint::var_listt &vars,
+			   const template_domaint::var_guardst &guards);
 void make_zone_template(template_domaint::templatet &templ,
-			   const template_domaint::var_guardst &var_guards);
+			   const template_domaint::var_listt &vars,
+			   const template_domaint::var_guardst &guards);
 void make_octagon_template(template_domaint::templatet &templ,
-			   const template_domaint::var_guardst &var_guards);
+			   const template_domaint::var_listt &vars,
+			   const template_domaint::var_guardst &guards);
 
 #endif
