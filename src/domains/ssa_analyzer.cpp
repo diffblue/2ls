@@ -128,10 +128,7 @@ for(unsigned i=0; i<added_returns.size()+added_globals_out.size(); ++i)
   {
     make_octagon_template(templ, vars, var_guards); 
   }
-  else
-  {
-    make_interval_template(templ, vars, var_guards); // default
-  }
+  else assert(false);
     
   #ifdef DEBUG
   std::cout << "**** Template *****" << std::endl;
@@ -160,8 +157,23 @@ for(unsigned i=0; i<added_returns.size()+added_globals_out.size(); ++i)
   //solver.set_message_handler(get_message_handler()); 
 
   //TODO: get strategy solver from options
-  strategy_solver_enumerationt strategy_solver(transition_relation, pre_state_vars, post_state_vars,
+  strategy_solver_baset *strategy_solver;
+  if(options.get_bool_option("enum-solver"))
+  {
+    strategy_solver = new strategy_solver_enumerationt(transition_relation, pre_state_vars, post_state_vars,
 					       template_domain, solver, ns);
+  }
+  else if(options.get_bool_option("binsearch-solver"))
+  {
+    strategy_solver = new strategy_solver_binsearcht(transition_relation, pre_state_vars, post_state_vars,
+					       template_domain, solver, ns);
+  }
+  /*  else if(options.get_bool_option("opt-solver"))
+  {
+    strategy_solver = new strategy_solver_optt(transition_relation, pre_state_vars, post_state_vars,
+					       template_domain, solver, ns);
+  }*/
+  else assert(false);
 
   iteration_number=0;
 
@@ -183,11 +195,11 @@ for(unsigned i=0; i<added_returns.size()+added_globals_out.size(); ++i)
     #endif
    
     strategy_solver_baset::strategyt strategy;
-    change = strategy_solver.improve(inv,strategy);
+    change = strategy_solver->improve(inv,strategy);
 
     if(change) 
     {
-      strategy_solver.solve(inv,strategy);
+      strategy_solver->solve(inv,strategy);
 
       #ifdef DEBUG
       std::cout << "Value after " << iteration_number
@@ -203,6 +215,8 @@ for(unsigned i=0; i<added_returns.size()+added_globals_out.size(); ++i)
             << " iteration(s)\n";
   template_domain.output_value(std::cout,inv,ns);
   #endif
+
+  delete strategy_solver;
 }
 
 

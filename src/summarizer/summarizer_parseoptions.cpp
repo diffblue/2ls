@@ -250,19 +250,27 @@ int summarizer_parseoptionst::doit()
     return 7;
   }
 
-  if(cmdline.isset("intervals"))
-  {
-    options.set_option("intervals", true);
-  }
   if(cmdline.isset("zones"))
   {
     options.set_option("zones", true);
   }
-  if(cmdline.isset("octagons"))
+  else if(cmdline.isset("octagons"))
   {
     options.set_option("octagons", true);
   }
+  else //if(cmdline.isset("intervals")) //default
+  {
+    options.set_option("intervals", true);
+  }
 
+  if(cmdline.isset("binsearch-solver"))
+  {
+    options.set_option("binsearch-solver", true);
+  }
+  else //if(cmdline.isset("enum-solver")) //default
+  {
+    options.set_option("enum-solver", true);
+  }
 
 
 
