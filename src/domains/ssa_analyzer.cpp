@@ -49,11 +49,18 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
 
   var_listt pre_state_vars, post_state_vars;
 
+  std::vector<exprt> var_guard;
+
+
   // get all backwards edges
   forall_goto_program_instructions(i_it, SSA.goto_function.body)
   {
     if(i_it->is_backwards_goto())
     {
+    
+      exprt guard=SSA.guard_symbol(i_it);
+      
+    
       // Record the objects modified by the loop to get
       // 'primed' (post-state) and 'unprimed' (pre-state) variables.
       for(local_SSAt::objectst::const_iterator
@@ -63,6 +70,8 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
       {
         symbol_exprt in=SSA.name(*o_it, local_SSAt::LOOP_BACK, i_it);
         symbol_exprt out=SSA.read_rhs(*o_it, i_it);
+      
+        var_guard.push_back(guard);
       
         pre_state_vars.push_back(in);
         post_state_vars.push_back(out);
@@ -78,9 +87,17 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
         
         pre_state_vars.push_back(in);
         post_state_vars.push_back(out);
+        var_guard.push_back(true_exprt());
       }
     }
   }
+  
+  for(unsigned i=0; i<pre_state_vars.size(); ++i)
+  {
+    std::cout << from_expr(pre_state_vars[i]) << " guard " << from_expr(var_guard[i]) << std::endl;
+  
+  }
+
 
   constraintst transition_relation;
   transition_relation << SSA;
@@ -92,7 +109,7 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
   var_listt vars = top_vars;
   add_vars(pre_state_vars,vars);
   add_vars(SSA.returns,vars);
-  add_vars(SSA.globals_out,vars);
+  add_vars(SSA.globals_out,vars); //guard at exit location?
   
   if(options.get_bool_option("intervals"))
   {
