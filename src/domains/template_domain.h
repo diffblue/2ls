@@ -9,13 +9,24 @@ class template_domaint
 public:
   typedef unsigned rowt;
   typedef exprt row_exprt; 
-  typedef std::vector<row_exprt> templatet; 
+  typedef std::vector<exprt> guardst; 
+  typedef std::vector<row_exprt> row_exprst; 
   typedef constant_exprt row_valuet; // "bound"
   typedef std::vector<row_valuet> valuet;
   typedef std::vector<symbol_exprt> var_listt;
+  typedef std::vector<std::pair<symbol_exprt,exprt> > var_guardst; 
+
+  typedef struct 
+  {
+    guardst guards;
+    row_exprst rows;
+
+    unsigned size() { return rows.size(); 
+} 
+  } templatet;
 
  template_domaint(templatet &_template) :
-   templ(_template) 
+  templ(_template) 
  {}
 
   void bottom(valuet &value);
@@ -45,15 +56,15 @@ public:
   bool is_row_value_neginf(const row_valuet & row_value) const;
 
 protected:
-  templatet templ;
+  templatet &templ;
   
 };
 
 void make_interval_template(template_domaint::templatet &templ,
-			   const template_domaint::var_listt &vars);
+			   const template_domaint::var_guardst &var_guards);
 void make_zone_template(template_domaint::templatet &templ,
-			   const template_domaint::var_listt &vars);
+			   const template_domaint::var_guardst &var_guards);
 void make_octagon_template(template_domaint::templatet &templ,
-			   const template_domaint::var_listt &vars);
+			   const template_domaint::var_guardst &var_guards);
 
 #endif

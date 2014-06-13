@@ -29,7 +29,7 @@ void template_domaint::set_to_top(const var_listt &top_vars, valuet &value)
   
   for(unsigned row = 0; row<templ.size(); row++)
   {
-    const exprt &row_expr=templ[row];
+    const exprt &row_expr=templ.rows[row];
   
     if(has_symbol(row_expr, top_symbols))
     {
@@ -94,7 +94,7 @@ exprt template_domaint::get_row_constraint(const rowt &row, const row_valuet &ro
   assert(row<templ.size());
   if(is_row_value_neginf(row_value)) return false_exprt();
   if(is_row_value_inf(row_value)) return true_exprt();
-  return binary_relation_exprt(templ[row],ID_le,row_value);
+  return implies_exprt(templ.guards[row], binary_relation_exprt(templ.rows[row],ID_le,row_value));
 }
 
 exprt template_domaint::get_row_constraint(const rowt &row, const valuet &value)
@@ -125,7 +125,7 @@ void template_domaint::make_not_constraints(const valuet &value,
   exprt::operandst c; 
   for(unsigned row = 0; row<templ.size(); row++)
   {
-    value_exprs[row] = templ[row];
+    value_exprs[row] = templ.rows[row];
     if(is_row_value_neginf(value[row])) cond_exprs[row] = true_exprt(); //negate
     else if(is_row_value_inf(value[row])) cond_exprs[row] = false_exprt();  
     else cond_exprs[row] = binary_relation_exprt(value_exprs[row],ID_gt,value[row]);
@@ -152,15 +152,15 @@ void template_domaint::set_row_value(
 template_domaint::row_valuet template_domaint::get_max_row_value(
   const template_domaint::rowt &row)
 {
-  if(templ[row].type().id()==ID_signedbv)
+  if(templ.rows[row].type().id()==ID_signedbv)
   {
-    return to_signedbv_type(templ[row].type()).largest_expr();
+    return to_signedbv_type(templ.rows[row].type()).largest_expr();
   }
-  if(templ[row].type().id()==ID_unsignedbv)
+  if(templ.rows[row].type().id()==ID_unsignedbv)
   {
-    return to_unsignedbv_type(templ[row].type()).largest_expr();
+    return to_unsignedbv_type(templ.rows[row].type()).largest_expr();
   }
-  if(templ[row].type().id()==ID_floatbv) 
+  if(templ.rows[row].type().id()==ID_floatbv) 
   {
     ieee_floatt max;
     max.make_fltmax();
@@ -175,11 +175,12 @@ void template_domaint::output_value(std::ostream &out, const valuet &value,
 {
   for(unsigned row = 0; row<templ.size(); row++)
   {
-    out << from_expr(ns,"",templ[row]) << " <= ";
+    out << from_expr(ns,"",templ.guards[row]) << " ===> ";
+    out << " ( " << from_expr(ns,"",templ.rows[row]) << " <= ";
     if(is_row_value_neginf(value[row])) out << "-oo";
     else if(is_row_value_inf(value[row])) out << "oo";
     else out << from_expr(ns,"",value[row]);
-    out << std::endl;
+    out << " )" << std::endl;
   }
 }
 
@@ -187,7 +188,8 @@ void template_domaint::output_template(std::ostream &out, const namespacet &ns) 
 {
   for(unsigned row = 0; row<templ.size(); row++)
   {
-    out << from_expr(ns,"",templ[row]) << " <= CONST" << std::endl;
+    out << from_expr(ns,"",templ.guards[row]) << " ===> (";
+    out << from_expr(ns,"",templ.rows[row]) << " <= CONST )" << std::endl;
   }
 }
 
@@ -209,55 +211,73 @@ bool template_domaint::is_row_value_inf(const row_valuet & row_value) const
 
 
 void make_interval_template(template_domaint::templatet &templ, 
-  const template_domaint::var_listt &vars)
+  const template_domaint::var_guardst &var_guards)
 {
-  templ.clear();
-  templ.reserve(2*vars.size());
-  for(template_domaint::var_listt::const_iterator v = vars.begin(); 
-      v!=vars.end(); v++)
+  unsigned size = 2*var_guards.size();
+  templ.rows.clear(); templ.rows.reserve(size);
+  templ.guards.clear(); templ.guards.reserve(size);
+  for(template_domaint::var_guardst::const_iterator v = var_guards.begin(); 
+      v!=var_guards.end(); v++)
   {
-    templ.push_back(*v);
-    templ.push_back(unary_minus_exprt(*v,v->type()));
+    templ.rows.push_back(v->first);
+    templ.guards.push_back(v->second);
+    templ.rows.push_back(unary_minus_exprt(v->first,v->second.type()));
+    templ.guards.push_back(v->second);
   }
+  assert(templ.rows.size() == templ.guards.size());
 }
 
 void make_zone_template(template_domaint::templatet &templ, 
-  const template_domaint::var_listt &vars)
+  const template_domaint::var_guardst &var_guards)
 { 
-  templ.clear();
-  templ.reserve(2*vars.size()+vars.size()*(vars.size()-1));
-  for(template_domaint::var_listt::const_iterator v1 = vars.begin(); 
-      v1!=vars.end(); v1++)
+  unsigned size = 2*var_guards.size()+var_guards.size()*(var_guards.size()-1);
+  templ.rows.clear(); templ.rows.reserve(size);
+  templ.guards.clear(); templ.guards.reserve(size);
+  for(template_domaint::var_guardst::const_iterator v1 = var_guards.begin(); 
+      v1!=var_guards.end(); v1++)
   {
-    templ.push_back(*v1);
-    templ.push_back(unary_minus_exprt(*v1,v1->type()));
-    for(template_domaint::var_listt::const_iterator v2 = v1; 
-        v2!=vars.end(); v2++)
+    templ.rows.push_back(v1->first); 
+    templ.guards.push_back(v1->second);
+    templ.rows.push_back(unary_minus_exprt(v1->first,v1->second.type()));
+    templ.guards.push_back(v1->second);
+    for(template_domaint::var_guardst::const_iterator v2 = v1; 
+        v2!=var_guards.end(); v2++)
     {
-      templ.push_back(minus_exprt(*v1,*v2));
-      templ.push_back(minus_exprt(*v2,*v1));
+      templ.rows.push_back(minus_exprt(v1->first,v2->first));
+      templ.guards.push_back(and_exprt(v1->second,v2->second));
+      templ.rows.push_back(minus_exprt(v2->first,v1->first));
+      templ.guards.push_back(and_exprt(v1->second,v2->second));
     }
   }
+  assert(templ.rows.size() == templ.guards.size());
 }
 
 void make_octagon_template(template_domaint::templatet &templ,
-  const template_domaint::var_listt &vars)
+  const template_domaint::var_guardst &var_guards)
 {
-  templ.clear();
-  templ.reserve(2*vars.size()+2*vars.size()*(vars.size()-1));
-  for(template_domaint::var_listt::const_iterator v1 = vars.begin(); 
-      v1!=vars.end(); v1++)
+  unsigned size =  2*var_guards.size()+2*var_guards.size()*(var_guards.size()-1);
+  templ.rows.clear(); templ.rows.reserve(size);
+  templ.guards.clear(); templ.guards.reserve(size);
+  for(template_domaint::var_guardst::const_iterator v1 = var_guards.begin(); 
+      v1!=var_guards.end(); v1++)
   {
-    templ.push_back(*v1);
-    templ.push_back(unary_minus_exprt(*v1,v1->type()));
-    for(template_domaint::var_listt::const_iterator v2 = v1; 
-        v2!=vars.end(); v2++)
+    templ.rows.push_back(v1->first); 
+    templ.guards.push_back(v1->second);
+    templ.rows.push_back(unary_minus_exprt(v1->first,v1->second.type()));
+    templ.guards.push_back(v1->second);
+    for(template_domaint::var_guardst::const_iterator v2 = v1; 
+        v2!=var_guards.end(); v2++)
     {
-      templ.push_back(minus_exprt(*v1,*v2));
-      templ.push_back(minus_exprt(*v2,*v1));
-      templ.push_back(plus_exprt(*v1,*v2));
-      templ.push_back(plus_exprt(*v2,*v1));
+      templ.rows.push_back(minus_exprt(v1->first,v2->first));
+      templ.guards.push_back(and_exprt(v1->second,v2->second));
+      templ.rows.push_back(minus_exprt(v2->first,v1->first));
+      templ.guards.push_back(and_exprt(v1->second,v2->second));
+      templ.rows.push_back(plus_exprt(v1->first,v2->first));
+      templ.guards.push_back(and_exprt(v1->second,v2->second));
+      templ.rows.push_back(plus_exprt(v2->first,v1->first));
+      templ.guards.push_back(and_exprt(v1->second,v2->second));
     }
   }
+  assert(templ.rows.size() == templ.guards.size());
 }
 
