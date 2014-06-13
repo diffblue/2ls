@@ -12,7 +12,7 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
   strategy.clear();
 
   //new context
-  solver << template_domain.to_constraints(inv); //TODO: add assumption literal
+  //solver << template_domain.to_constraints(inv); //TODO: add assumption literal
 
   exprt::operandst strategy_cond_exprs;
   template_domain.make_not_constraints(inv, strategy_cond_exprs, strategy_value_exprs); 

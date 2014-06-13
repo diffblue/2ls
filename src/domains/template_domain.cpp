@@ -1,5 +1,7 @@
 #include "template_domain.h"
 
+#include <iostream>
+
 #include <util/find_symbols.h>
 #include <util/arith_tools.h>
 #include <util/ieee_float.h>
@@ -92,7 +94,7 @@ bool template_domaint::leq(const row_valuet &v1, const row_valuet &v2)
 exprt template_domaint::get_row_constraint(const rowt &row, const row_valuet &row_value)
 {
   assert(row<templ.size());
-  if(is_row_value_neginf(row_value)) return false_exprt();
+  if(is_row_value_neginf(row_value)) return implies_exprt(templ.guards[row], false_exprt());
   if(is_row_value_inf(row_value)) return true_exprt();
   return implies_exprt(templ.guards[row], binary_relation_exprt(templ.rows[row],ID_le,row_value));
 }
@@ -126,9 +128,7 @@ void template_domaint::make_not_constraints(const valuet &value,
   for(unsigned row = 0; row<templ.size(); row++)
   {
     value_exprs[row] = templ.rows[row];
-    if(is_row_value_neginf(value[row])) cond_exprs[row] = true_exprt(); //negate
-    else if(is_row_value_inf(value[row])) cond_exprs[row] = false_exprt();  
-    else cond_exprs[row] = binary_relation_exprt(value_exprs[row],ID_gt,value[row]);
+    cond_exprs[row] = not_exprt(get_row_constraint(row,value));
     c.push_back(cond_exprs[row]);
   }
 }
@@ -293,3 +293,68 @@ void make_octagon_template(template_domaint::templatet &templ,
   assert(templ.rows.size() == templ.guards.size());
 }
 
+mp_integer simplify_const_int(const exprt &expr)
+{
+  if(expr.id()==ID_constant) 
+  {
+    mp_integer v;
+    to_integer(expr, v);
+    return v;
+  }
+  if(expr.id()==ID_unary_minus) return -simplify_const_int(expr.op0());
+  if(expr.id()==ID_plus) return simplify_const_int(expr.op0())+simplify_const_int(expr.op1());
+  if(expr.id()==ID_minus) return simplify_const_int(expr.op0())-simplify_const_int(expr.op1());
+  if(expr.id()==ID_mult) return simplify_const_int(expr.op0())*simplify_const_int(expr.op1());  
+  assert(false); //not implemented
+}
+
+ieee_floatt simplify_const_float(const exprt &expr)
+{
+  if(expr.id()==ID_constant) 
+  {
+    ieee_floatt v(to_constant_expr(expr));
+    return v;
+  }
+  if(expr.id()==ID_unary_minus) 
+  {
+    ieee_floatt v = simplify_const_float(expr.op0());
+    v.set_sign(!v.get_sign());
+    return v; 
+  }
+  if(expr.id()==ID_plus) 
+  {
+    ieee_floatt v1 = simplify_const_float(expr.op0());
+    ieee_floatt v2 = simplify_const_float(expr.op1());
+    v1 += v2;
+    return v1; 
+  }
+  if(expr.id()==ID_minus)
+  {
+    ieee_floatt v1 = simplify_const_float(expr.op0());
+    ieee_floatt v2 = simplify_const_float(expr.op1());
+    v1 -= v2;
+    return v1; 
+  }
+  if(expr.id()==ID_mult)
+  {
+    ieee_floatt v1 = simplify_const_float(expr.op0());
+    ieee_floatt v2 = simplify_const_float(expr.op1());
+    v1 *= v2;
+    return v1; 
+  }
+  assert(false); //not implemented
+}
+
+constant_exprt simplify_const(const exprt &expr)
+{
+  if(expr.id()==ID_constant) return to_constant_expr(expr);
+  if(expr.type().id()==ID_signedbv || expr.type().id()==ID_unsignedbv)
+  {
+    return to_constant_expr(from_integer(simplify_const_int(expr),expr.type()));
+  }
+    if(expr.type().id()==ID_floatbv)
+  {
+    return to_constant_expr(simplify_const_float(expr).to_expr());
+  }
+  assert(false); //type not supported
+}

@@ -21,10 +21,10 @@ class strategy_solver_baset
   explicit strategy_solver_baset(const constraintst &program,
     var_listt &_pre_state_vars, var_listt &_post_state_vars,
     template_domaint &_template_domain,
-    bv_pointerst &_solver) :
+    bv_pointerst &_solver, const namespacet &_ns) :
     pre_state_vars(_pre_state_vars), post_state_vars(_post_state_vars),
     template_domain(_template_domain),
-    solver(_solver)
+      solver(_solver), ns(_ns)
   {
     // build replace map
     assert(pre_state_vars.size()==post_state_vars.size());
@@ -61,6 +61,7 @@ class strategy_solver_baset
   
   template_domaint &template_domain;
   bv_pointerst &solver;
+  const namespacet &ns;
 
   //handles on values to retrieve from model
   bvt strategy_cond_literals;

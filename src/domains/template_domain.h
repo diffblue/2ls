@@ -69,4 +69,6 @@ void make_octagon_template(template_domaint::templatet &templ,
 			   const template_domaint::var_listt &vars,
 			   const template_domaint::var_guardst &guards);
 
+constant_exprt simplify_const(const exprt &expr);
+
 #endif

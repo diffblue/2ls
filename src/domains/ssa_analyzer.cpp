@@ -114,7 +114,7 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
   var_listt added_globals_out = add_vars(SSA.globals_out,vars); //TODO: guard at exit location?
 
 for(unsigned i=0; i<added_returns.size()+added_globals_out.size(); ++i) 
-    var_guards.push_back(true_exprt()); //TODO: replace this stuff
+    var_guards.push_back(false_exprt()); //TODO: replace this stuff
   
   if(options.get_bool_option("intervals"))
   {
@@ -161,7 +161,7 @@ for(unsigned i=0; i<added_returns.size()+added_globals_out.size(); ++i)
 
   //TODO: get strategy solver from options
   strategy_solver_enumerationt strategy_solver(transition_relation, pre_state_vars, post_state_vars,
-					template_domain, solver);
+					       template_domain, solver, ns);
 
   iteration_number=0;
 
