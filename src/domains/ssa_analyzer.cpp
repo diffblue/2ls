@@ -49,7 +49,8 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
 
   var_listt pre_state_vars, post_state_vars;
 
-  std::vector<exprt> var_guard;
+  std::map<symbol_exprt, locationt> var_locations;
+
 
 
   // get all backwards edges
@@ -89,7 +90,7 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
         post_state_vars.push_back(out);
         var_guard.push_back(true_exprt());
       }
-    }
+    } 
   }
   
   for(unsigned i=0; i<pre_state_vars.size(); ++i)
@@ -107,6 +108,11 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
   add_vars(SSA.params,top_vars);
   add_vars(SSA.globals_in,top_vars);
   var_listt vars = top_vars;
+  
+  
+  std::vector<exprt> var_guard;
+  
+  
   add_vars(pre_state_vars,vars);
   add_vars(SSA.returns,vars);
   add_vars(SSA.globals_out,vars); //guard at exit location?
