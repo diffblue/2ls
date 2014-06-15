@@ -11,9 +11,12 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
 {
   strategy.clear();
 
-  literalt &activation_literal = new_context();
-  //solver << or_exprt(template_domain.to_constraints(inv),
-  //  literal_exprt(activation_literal)); 
+  literalt activation_literal = new_context();
+
+  exprt inv_expr = template_domain.to_constraints(inv);
+  std::cout << "inv: " << from_expr(ns,"",inv_expr) << std::endl;
+  solver << or_exprt(inv_expr,
+    literal_exprt(activation_literal)); 
 
   exprt::operandst strategy_cond_exprs;
   template_domain.make_not_constraints(inv, 
@@ -35,7 +38,7 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
   }
   
   solver << or_exprt(disjunction(strategy_cond_exprs),
-		     literal_exprt(activation_literal)); 
+     literal_exprt(activation_literal)); 
 
   bool first = true;
   while(true)
@@ -68,16 +71,15 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
   }
 }
 
-literalt &strategy_solver_baset::new_context() 
+literalt strategy_solver_baset::new_context() 
 {
   literalt activation_literal = solver.convert(
       symbol_exprt("goto_symex::\\act$"+
       i2string(activation_literal_counter++), bool_typet()));
 
-  activation_literals.push_back(!activation_literal);
-
+  activation_literals.push_back(activation_literal);
   solver.set_assumptions(activation_literals);
-  return activation_literals.back();
+  return !activation_literals.back();
 }
 
 void strategy_solver_baset::pop_context() 

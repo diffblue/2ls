@@ -23,7 +23,7 @@ void strategy_solver_binsearcht::solve(invariantt &inv, const strategyt &strateg
   
       replace_expr(renaming_map, c);
 
-      literalt &activation_literal = new_context();
+      literalt activation_literal = new_context();
       solver << or_exprt(not_exprt(c),
 			 literal_exprt(activation_literal)); // e > middle
 

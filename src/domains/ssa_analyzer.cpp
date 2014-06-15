@@ -146,32 +146,32 @@ for(unsigned i=0; i<added_returns.size()+added_globals_out.size(); ++i)
   template_domain.output_template(std::cout, ns);
   #endif  
     
-  
-
 
   // solver
-  satcheckt satcheck;//TODO: get solver from options
+  //TODO: get solver from options
+  satcheck_minisat_no_simplifiert satcheck;
   bv_pointerst solver(ns, satcheck);
   
   //satcheck.set_message_handler(get_message_handler());
   //solver.set_message_handler(get_message_handler()); 
 
-  //TODO: get strategy solver from options
+  // get strategy solver from options
   strategy_solver_baset *strategy_solver;
   if(options.get_bool_option("enum-solver"))
   {
-    strategy_solver = new strategy_solver_enumerationt(transition_relation, pre_state_vars, post_state_vars,
-					       template_domain, solver, ns);
+    strategy_solver = new strategy_solver_enumerationt(
+      transition_relation, pre_state_vars, post_state_vars,
+      template_domain, solver, ns);
   }
   else if(options.get_bool_option("binsearch-solver"))
   {
-    strategy_solver = new strategy_solver_binsearcht(transition_relation, pre_state_vars, post_state_vars,
-					       template_domain, solver, ns);
+    strategy_solver = new strategy_solver_binsearcht(
+      transition_relation, pre_state_vars, post_state_vars,
+      template_domain, solver, ns);
   }
   /*  else if(options.get_bool_option("opt-solver"))
   {
-    strategy_solver = new strategy_solver_optt(transition_relation, pre_state_vars, post_state_vars,
-					       template_domain, solver, ns);
+    strategy_solver = new strategy_solver_optt(transition_relation, pre_state_vars, post_state_vars, template_domain, solver, ns);
   }*/
   else assert(false);
 

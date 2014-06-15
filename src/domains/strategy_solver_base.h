@@ -70,7 +70,7 @@ class strategy_solver_baset
   //context assumption literals
   bvt activation_literals;
   unsigned activation_literal_counter;
-  literalt &new_context();
+  literalt new_context();
   void pop_context();
 
 };
