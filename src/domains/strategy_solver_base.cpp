@@ -74,7 +74,7 @@ literalt &strategy_solver_baset::new_context()
       symbol_exprt("goto_symex::\\act$"+
       i2string(activation_literal_counter++), bool_typet()));
 
-  activation_literals.push_back(activation_literal);
+  activation_literals.push_back(!activation_literal);
 
   solver.set_assumptions(activation_literals);
   return activation_literals.back();
