@@ -23,17 +23,18 @@ void strategy_solver_binsearcht::solve(invariantt &inv, const strategyt &strateg
   
       replace_expr(renaming_map, c);
 
-      //new context
-      solver << not_exprt(c); // e > middle, TODO: add assumption literal
+      literalt &activation_literal = new_context();
+      solver << or_exprt(not_exprt(c),
+			 literal_exprt(activation_literal)); // e > middle
 
       if(solver() == decision_proceduret::D_SATISFIABLE) lower = middle; //model;
       else upper = middle;
 
-      //delete context
+      pop_context();
     }
    
     std::cout << "update value: " << from_expr(ns,"",lower) << std::endl;
     template_domain.set_row_value(*s_it,lower,inv);
   }
-  //delete context
+  pop_context();
 }

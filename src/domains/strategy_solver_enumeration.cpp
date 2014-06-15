@@ -16,5 +16,5 @@ void strategy_solver_enumerationt::solve(invariantt &inv, const strategyt &strat
     template_domain.set_row_value(*s_it,v,inv);
   }
   
-  //delete context
+  pop_context();
 }

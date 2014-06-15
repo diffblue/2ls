@@ -11,8 +11,9 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
 {
   strategy.clear();
 
-  //new context
-  //solver << template_domain.to_constraints(inv); //TODO: add assumption literal
+  literalt &activation_literal = new_context();
+  //solver << or_exprt(template_domain.to_constraints(inv),
+  //  literal_exprt(activation_literal)); 
 
   exprt::operandst strategy_cond_exprs;
   template_domain.make_not_constraints(inv, 
@@ -33,7 +34,8 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
     strategy_cond_exprs[i] = literal_exprt(strategy_cond_literals[i]);
   }
   
-  solver << disjunction(strategy_cond_exprs); //TODO: add assumption literal
+  solver << or_exprt(disjunction(strategy_cond_exprs),
+		     literal_exprt(activation_literal)); 
 
   bool first = true;
   while(true)
@@ -49,7 +51,8 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
 	  std::cout << "adding to strategy: " << row << std::endl;
           strategy.push_back(row);
           //add blocking constraint
-          solver << literal_exprt(!strategy_cond_literals[row]); //TODO: add assumption literal
+          solver << or_exprt(literal_exprt(!strategy_cond_literals[row]),
+  		      literal_exprt(activation_literal));
       	}
       }
       assert(strategy.size()>0);
@@ -79,6 +82,7 @@ literalt &strategy_solver_baset::new_context()
 
 void strategy_solver_baset::pop_context() 
 {
+  assert(!activation_literals.empty());
   literalt activation_literal = activation_literals.back();
   activation_literals.pop_back();
   solver.set_to_true(literal_exprt(activation_literal));
