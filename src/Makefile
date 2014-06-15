@@ -1,4 +1,4 @@
-SUBDIRS = summarizer ssa solver ai
+SUBDIRS = summarizer ssa solver ai domains
 
 all: summarizer 
 #deltagit
@@ -11,7 +11,7 @@ $(SUBDIRS):
 
 # Dependencies
 
-summarizer: ai ssa solver functions html
+summarizer: ai domains ssa solver functions html
 deltacheck: ssa solver functions html
 deltagit: html
 

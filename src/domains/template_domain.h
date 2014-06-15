@@ -61,13 +61,16 @@ protected:
 
 void make_interval_template(template_domaint::templatet &templ,
 			   const template_domaint::var_listt &vars,
-			   const template_domaint::var_guardst &guards);
+			   const template_domaint::var_guardst &guards,
+                           const namespacet &ns);
 void make_zone_template(template_domaint::templatet &templ,
 			   const template_domaint::var_listt &vars,
-			   const template_domaint::var_guardst &guards);
+			   const template_domaint::var_guardst &guards,
+                           const namespacet &ns);
 void make_octagon_template(template_domaint::templatet &templ,
 			   const template_domaint::var_listt &vars,
-			   const template_domaint::var_guardst &guards);
+			   const template_domaint::var_guardst &guards,
+                           const namespacet &ns);
 
 constant_exprt simplify_const(const exprt &expr);
 

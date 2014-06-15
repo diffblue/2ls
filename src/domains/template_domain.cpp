@@ -5,6 +5,7 @@
 #include <util/find_symbols.h>
 #include <util/arith_tools.h>
 #include <util/ieee_float.h>
+#include <util/simplify_expr.h>
 #include <langapi/languages.h>
 
 void template_domaint::bottom(valuet &value)
@@ -212,7 +213,8 @@ bool template_domaint::is_row_value_inf(const row_valuet & row_value) const
 
 void make_interval_template(template_domaint::templatet &templ, 
   const template_domaint::var_listt &vars,
-  const template_domaint::var_guardst &guards)
+  const template_domaint::var_guardst &guards,
+  const namespacet &ns)
 {
   assert(vars.size() == guards.size());
   unsigned size = 2*vars.size();
@@ -233,7 +235,8 @@ void make_interval_template(template_domaint::templatet &templ,
 
 void make_zone_template(template_domaint::templatet &templ, 
   const template_domaint::var_listt &vars,
-  const template_domaint::var_guardst &guards)
+  const template_domaint::var_guardst &guards,
+  const namespacet &ns)
 { 
   assert(vars.size() == guards.size());
   unsigned size = 2*vars.size()+vars.size()*(vars.size()-1);
@@ -247,14 +250,16 @@ void make_zone_template(template_domaint::templatet &templ,
     templ.guards.push_back(*g1);
     templ.rows.push_back(unary_minus_exprt(*v1,v1->type()));
     templ.guards.push_back(*g1);
-    template_domaint::var_guardst::const_iterator g2 = g1; 
-    for(template_domaint::var_listt::const_iterator v2 = v1;
-        v2!=vars.end(); v2++, g2++)
+    template_domaint::var_guardst::const_iterator g2 = g1; g2++; 
+    template_domaint::var_listt::const_iterator v2 = v1; v2++;
+    for(;v2!=vars.end(); v2++, g2++)
     {
+      exprt g = and_exprt(*g1,*g2);
+      simplify(g,ns);
       templ.rows.push_back(minus_exprt(*v1,*v2));
-      templ.guards.push_back(and_exprt(*g1,*g2));
+      templ.guards.push_back(g);
       templ.rows.push_back(minus_exprt(*v2,*v1));
-      templ.guards.push_back(and_exprt(*g1,*g2));
+      templ.guards.push_back(g);
     }
   }
   assert(templ.rows.size() == templ.guards.size());
@@ -262,7 +267,8 @@ void make_zone_template(template_domaint::templatet &templ,
 
 void make_octagon_template(template_domaint::templatet &templ,
   const template_domaint::var_listt &vars,
-  const template_domaint::var_guardst &guards)
+  const template_domaint::var_guardst &guards,
+  const namespacet &ns)
 {
   assert(vars.size() == guards.size());
   unsigned size =  2*vars.size()+2*vars.size()*(vars.size()-1);
@@ -276,18 +282,20 @@ void make_octagon_template(template_domaint::templatet &templ,
     templ.guards.push_back(*g1);
     templ.rows.push_back(unary_minus_exprt(*v1,v1->type()));
     templ.guards.push_back(*g1);
-    template_domaint::var_guardst::const_iterator g2 = g1; 
-    for(template_domaint::var_listt::const_iterator v2 = v1;
-        v2!=vars.end(); v2++, g2++)
+    template_domaint::var_guardst::const_iterator g2 = g1; g2++; 
+    template_domaint::var_listt::const_iterator v2 = v1; v2++;
+    for(;v2!=vars.end(); v2++, g2++)
     {
+      exprt g = and_exprt(*g1,*g2);
+      simplify(g,ns);
       templ.rows.push_back(minus_exprt(*v1,*v2));
-      templ.guards.push_back(and_exprt(*g1,*g2));
+      templ.guards.push_back(g);
       templ.rows.push_back(minus_exprt(*v2,*v1));
-      templ.guards.push_back(and_exprt(*g1,*g2));
+      templ.guards.push_back(g);
       templ.rows.push_back(plus_exprt(*v1,*v2));
-      templ.guards.push_back(and_exprt(*g1,*g2));
-      templ.rows.push_back(plus_exprt(*v2,*v1));
-      templ.guards.push_back(and_exprt(*g1,*g2));
+      templ.guards.push_back(g);
+      templ.rows.push_back(minus_exprt(unary_minus_exprt(*v1,v1->type()),*v2));
+      templ.guards.push_back(g);
     }
   }
   assert(templ.rows.size() == templ.guards.size());
