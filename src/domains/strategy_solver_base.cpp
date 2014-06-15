@@ -15,7 +15,8 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
   //solver << template_domain.to_constraints(inv); //TODO: add assumption literal
 
   exprt::operandst strategy_cond_exprs;
-  template_domain.make_not_constraints(inv, strategy_cond_exprs, strategy_value_exprs); 
+  template_domain.make_not_constraints(inv, 
+    strategy_cond_exprs, strategy_value_exprs); 
   
   rename(strategy_cond_exprs);
   rename(strategy_value_exprs);
@@ -51,6 +52,7 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
           solver << literal_exprt(!strategy_cond_literals[row]); //TODO: add assumption literal
       	}
       }
+      assert(strategy.size()>0);
       return true; //skip outer loop
     }
     else 
@@ -63,3 +65,22 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
   }
 }
 
+literalt &strategy_solver_baset::new_context() 
+{
+  literalt activation_literal = solver.convert(
+      symbol_exprt("goto_symex::\\act$"+
+      i2string(activation_literal_counter++), bool_typet()));
+
+  activation_literals.push_back(activation_literal);
+
+  solver.set_assumptions(activation_literals);
+  return activation_literals.back();
+}
+
+void strategy_solver_baset::pop_context() 
+{
+  literalt activation_literal = activation_literals.back();
+  activation_literals.pop_back();
+  solver.set_to_true(literal_exprt(activation_literal));
+  solver.set_assumptions(activation_literals);
+}

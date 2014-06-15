@@ -24,7 +24,7 @@ class strategy_solver_baset
     bv_pointerst &_solver, const namespacet &_ns) :
     pre_state_vars(_pre_state_vars), post_state_vars(_post_state_vars),
     template_domain(_template_domain),
-      solver(_solver), ns(_ns)
+      solver(_solver), ns(_ns),activation_literal_counter(0)
   {
     // build replace map
     assert(pre_state_vars.size()==post_state_vars.size());
@@ -66,6 +66,13 @@ class strategy_solver_baset
   //handles on values to retrieve from model
   bvt strategy_cond_literals;
   exprt::operandst strategy_value_exprs;
+
+  //context assumption literals
+  bvt activation_literals;
+  unsigned activation_literal_counter;
+  literalt &new_context();
+  void pop_context();
+
 };
 
 #endif
