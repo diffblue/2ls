@@ -14,7 +14,7 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
   literalt activation_literal = new_context();
 
   exprt inv_expr = template_domain.to_pre_constraints(inv);
-  std::cout << "inv: " << from_expr(ns,"",inv_expr) << std::endl;
+  std::cout << "pre-inv: " << from_expr(ns,"",inv_expr) << std::endl;
   solver << or_exprt(inv_expr,
     literal_exprt(activation_literal)); 
 
@@ -27,16 +27,17 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
   
   strategy_cond_literals.resize(strategy_cond_exprs.size());
   
+  std::cout << "post-inv: ";
   for(unsigned i = 0; i<strategy_cond_exprs.size(); i++)
   {  
-    std::cout << "cond_expr: " << from_expr(ns,"",strategy_cond_exprs[i]) << std::endl;
+    std::cout << (i>0 ? " || " : "") << from_expr(ns,"",strategy_cond_exprs[i]) ;
 
-    bvt bv(solver.convert_bv(strategy_cond_exprs[i]));
-    solver.set_frozen(bv);
-    strategy_cond_literals[i] = bv[0];
+    strategy_cond_literals[i] = solver.convert(strategy_cond_exprs[i]);
+    solver.set_frozen(strategy_cond_literals[i]);
     strategy_cond_exprs[i] = literal_exprt(strategy_cond_literals[i]);
   }
-  
+  std::cout << std::endl;
+
   solver << or_exprt(disjunction(strategy_cond_exprs),
      literal_exprt(activation_literal)); 
 

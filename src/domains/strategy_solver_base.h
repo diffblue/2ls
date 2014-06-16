@@ -3,6 +3,7 @@
 
 #include <util/replace_expr.h>
 #include <map>
+#include <iostream>
 
 #include "template_domain.h"
 
@@ -29,16 +30,18 @@ class strategy_solver_baset
     // adding program constraints to solver db
     for(constraintst::const_iterator it = program.begin(); it != program.end(); it++)
     {
+      std::cout << "program: " << from_expr(ns,"",*it) << std::endl;
+
       solver << *it;
     }
 
     // adding renamed program constraints to solver db
-    for(constraintst::const_iterator it = program.begin(); it != program.end(); it++)
+    /*  for(constraintst::const_iterator it = program.begin(); it != program.end(); it++)
     {
       exprt e = *it;
       replace_expr(renaming_map,e);
       solver << e;
-    }  
+      }  */
 }
 
   virtual void solve(invariantt &inv, const strategyt &strategy) { assert(false); }

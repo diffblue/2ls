@@ -99,48 +99,6 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
     } 
   }
   
-  constraintst transition_relation;
-  transition_relation << SSA;
-
-  /* renaming from pre into post-state */
-  assert(pre_state_vars.size()==post_state_vars.size());
-  var_listt::const_iterator it1=pre_state_vars.begin();
-  var_listt::const_iterator it2=post_state_vars.begin();
-
-  for(; it1!=pre_state_vars.end(); ++it1, ++it2)
-  {
-    renaming_map[*it1]=*it2;    
-    renaming_map[*it2]=*it2;    
-  }
-
-  for(constraintst::const_iterator it = transition_relation.begin(); 
-    it != transition_relation.end(); it++)
-  {
-    std::set<symbol_exprt> symbols;
-    find_symbols(*it,symbols);
-
-    for(std::set<symbol_exprt>::const_iterator s_it = symbols.begin(); 
-      s_it != symbols.end(); s_it++)
-    {
-      if(renaming_map.find(*s_it)==renaming_map.end())
-      {
-
-      
-        renaming_map[*s_it] = *s_it;  
-        symbol_exprt &s = to_symbol_expr(renaming_map[*s_it]);
-        s.set_identifier(id2string(s.get_identifier())+"'");
-
-        std::cout << "Replaced " << from_expr(ns, "", *s_it) << " by " << from_expr(ns, "", s) << std::endl; 
-      }
-      else
-      {
-      
-        std::cout << "Already contained " << from_expr(ns, "", *s_it) << std::endl;        
-      
-      }
-    }
-  }  
-
   
   
   for(unsigned i=0; i<pre_state_vars.size(); ++i)
@@ -163,6 +121,57 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
     var_kinds.push_back(template_domaint::OUT);
   }
   
+
+  constraintst transition_relation;
+  transition_relation << SSA;
+
+  /* renaming from pre into post-state */
+  assert(pre_state_vars.size()==post_state_vars.size());
+  var_listt::const_iterator it1=pre_state_vars.begin();
+  var_listt::const_iterator it2=post_state_vars.begin();
+  for(; it1!=pre_state_vars.end(); ++it1, ++it2)
+  {
+    renaming_map[*it1]=*it2;    
+    //    renaming_map[*it2]=*it2;    
+  }
+  /*  for(var_listt::const_iterator it=top_vars.begin(); it!=top_vars.end(); ++it)
+  {
+    renaming_map[*it]=*it;    
+  }
+  for(var_listt::const_iterator it=added_returns.begin(); it!=added_returns.end(); ++it)
+  {
+    renaming_map[*it]=*it;    
+  }
+  for(var_listt::const_iterator it=added_globals_out.begin(); it!=added_globals_out.end(); ++it)
+  {
+    renaming_map[*it]=*it;    
+  }
+  for(constraintst::const_iterator it = transition_relation.begin(); 
+    it != transition_relation.end(); it++)
+  {
+    std::set<symbol_exprt> symbols;
+    find_symbols(*it,symbols);
+
+    for(std::set<symbol_exprt>::const_iterator s_it = symbols.begin(); 
+      s_it != symbols.end(); s_it++)
+    {
+      if(renaming_map.find(*s_it)==renaming_map.end())
+      {
+        renaming_map[*s_it] = *s_it;  
+        symbol_exprt &s = to_symbol_expr(renaming_map[*s_it]);
+        s.set_identifier(id2string(s.get_identifier())+"'");
+
+        std::cout << "Replaced " << from_expr(ns, "", *s_it) << " by " << from_expr(ns, "", s) << std::endl; 
+      }
+      else
+      {
+        std::cout << "Already contained " << from_expr(ns, "", *s_it) << std::endl;        
+      }
+    }
+  }  
+  */
+
+
   if(options.get_bool_option("intervals"))
   {
     make_interval_template(templ, vars, var_pre_guards, var_post_guards, var_kinds, ns);
