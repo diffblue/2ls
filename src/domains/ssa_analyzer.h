@@ -23,19 +23,22 @@ public:
   explicit ssa_analyzert(const namespacet &_ns, 
                          optionst &_options)
     : ns(_ns),
-      options(_options)
+      options(_options),
+      inv_inout(true_exprt()),
+      inv_loop(true_exprt())
   {
   }  
 
   void operator()(local_SSAt &SSA);
 
-  exprt get_result();
-  exprt get_result(var_listt vars); //projects on vars
+  void get_summary(exprt &result);
+  void get_loop_invariants(exprt &result);
 
 protected:
   const namespacet &ns;
   optionst &options;
   strategy_solver_baset::invariantt inv;
+  exprt inv_inout, inv_loop;
   unsigned iteration_number;
   
   replace_mapt renaming_map;

@@ -15,7 +15,7 @@ public:
   typedef std::vector<row_valuet> valuet;
   typedef std::vector<symbol_exprt> var_listt;
   typedef std::vector<exprt> var_guardst; 
-  typedef enum {LOOP, IN, OUT} kindt;
+  typedef enum {LOOP, IN, OUT, OUTL} kindt;
   typedef std::vector<kindt> kindst; 
 
   typedef struct 

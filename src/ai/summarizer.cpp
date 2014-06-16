@@ -180,7 +180,7 @@ void summarizert::compute_summary_rec(const function_namet &function_name)
   summary.globals_in = functions[function_name]->globals_in;
   summary.globals_out = functions[function_name]->globals_out;
   summary.precondition = preconditions.at(function_name);
-  summary.transformer = true_exprt(); //analyzer.get_result(); //TODO
+  summary.transformer = true_exprt(); //analyzer.get_summary(summary.transformer); //TODO
 
   out.clear();
   out << std::endl << "Summary for function " << function_name << std::endl;

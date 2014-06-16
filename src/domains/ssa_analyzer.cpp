@@ -235,20 +235,21 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
   template_domain.output_value(std::cout,inv,ns);
   #endif
 
+  template_domain.project_on_inout(inv,inv_inout);
+  template_domain.project_on_loops(inv,inv_loop);
+
   delete strategy_solver;
 }
 
 
-exprt ssa_analyzert::get_result()
+void ssa_analyzert::get_summary(exprt &result)
 {
-  assert(false);
-  //  return strategy_solver.get_invariant();
+  result = inv_inout;
 }
 
-exprt ssa_analyzert::get_result(var_listt vars) //projects on vars
+void ssa_analyzert::get_loop_invariants(exprt &result) 
 {
-  assert(false);
-  //  return strategy_solver.get_invariant(vars);
+  result = inv_loop;
 }
 
 bool ssa_analyzert::add_vars_filter(const symbol_exprt &s)

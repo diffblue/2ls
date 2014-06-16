@@ -155,7 +155,8 @@ Function: template_domaint::get_row_pre_constraint
 exprt template_domaint::get_row_pre_constraint(const rowt &row, const row_valuet &row_value)
 {
   assert(row<templ.size());
-  if(templ.kinds[row]==OUT) return true_exprt();
+  kindt k = templ.kinds[row];
+  if(k==OUT || k==OUTL) return true_exprt();
   if(is_row_value_neginf(row_value)) return implies_exprt(templ.pre_guards[row], false_exprt());
   if(is_row_value_inf(row_value)) return true_exprt();
   return implies_exprt(templ.pre_guards[row], binary_relation_exprt(templ.rows[row],ID_le,row_value));
@@ -313,7 +314,8 @@ void template_domaint::project_on_inout(const valuet &value, exprt &result)
   c.reserve(templ.size());
   for(unsigned row = 0; row<templ.size(); row++)
   {
-    if(templ.kinds[row]==LOOP) continue;
+    kindt k = templ.kinds[row];
+    if(k==LOOP || k==OUTL) continue;
     const row_valuet &row_value = value[row];
     if(is_row_value_neginf(row_value)) c.push_back(false_exprt());
     else if(is_row_value_inf(row_value)) c.push_back(true_exprt());
@@ -400,7 +402,7 @@ void template_domaint::output_value(std::ostream &out, const valuet &value,
       out << from_expr(ns,"",templ.post_guards[row]) << " ] ===> ";
       break;
     case IN: out << "(IN)   "; break;
-    case OUT: out << "(OUT)  "; break;
+    case OUT: case OUTL: out << "(OUT)  "; break;
     default: assert(false);
     }
     out << " ( " << from_expr(ns,"",templ.rows[row]) << " <= ";
@@ -434,7 +436,7 @@ void template_domaint::output_template(std::ostream &out, const namespacet &ns) 
       out << from_expr(ns,"",templ.post_guards[row]) << " ] ===> ";
       break;
     case IN: out << "(IN)   "; break;
-    case OUT: out << "(OUT)  "; break;
+    case OUT: case OUTL: out << "(OUT)  "; break;
     default: assert(false);
     }
     out << from_expr(ns,"",templ.rows[row]) << " <= CONST )" << std::endl;
@@ -596,7 +598,9 @@ void make_zone_template(template_domaint::templatet &templ,
       simplify(pre_g,ns);
       simplify(post_g,ns);
       template_domaint::kindt k = 
-        (*k1==template_domaint::OUT || *k2==template_domaint::OUT ? template_domaint::OUT :
+        (*k1==template_domaint::OUT || *k2==template_domaint::OUT ? 
+	 (*k1==template_domaint::LOOP || *k2==template_domaint::LOOP ?  template_domaint::OUTL :
+          template_domaint::OUT) :
          (*k1==template_domaint::LOOP || *k2==template_domaint::LOOP ? template_domaint::LOOP : 
           template_domaint::IN));
       for(unsigned i=0;i<2;i++) 
@@ -668,7 +672,9 @@ void make_octagon_template(template_domaint::templatet &templ,
       simplify(pre_g,ns);
       simplify(post_g,ns);
       template_domaint::kindt k = 
-        (*k1==template_domaint::OUT || *k2==template_domaint::OUT ? template_domaint::OUT :
+        (*k1==template_domaint::OUT || *k2==template_domaint::OUT ? 
+	 (*k1==template_domaint::LOOP || *k2==template_domaint::LOOP ?  template_domaint::OUTL :
+          template_domaint::OUT) :
          (*k1==template_domaint::LOOP || *k2==template_domaint::LOOP ? template_domaint::LOOP : 
           template_domaint::IN));
       for(unsigned i=0;i<4;i++) 
