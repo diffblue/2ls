@@ -651,6 +651,7 @@ mp_integer simplify_const_int(const exprt &expr)
   if(expr.id()==ID_plus) return simplify_const_int(expr.op0())+simplify_const_int(expr.op1());
   if(expr.id()==ID_minus) return simplify_const_int(expr.op0())-simplify_const_int(expr.op1());
   if(expr.id()==ID_mult) return simplify_const_int(expr.op0())*simplify_const_int(expr.op1());  
+  if(expr.id()==ID_symbol) return 0;
   assert(false); //not implemented
 }
 
@@ -688,6 +689,12 @@ ieee_floatt simplify_const_float(const exprt &expr)
     v1 *= v2;
     return v1; 
   }
+  if(expr.id()==ID_symbol)
+  {
+    ieee_floatt v;
+    v.make_zero();
+    return v; 
+  }
   assert(false); //not implemented
 }
 
@@ -698,7 +705,7 @@ constant_exprt simplify_const(const exprt &expr)
   {
     return to_constant_expr(from_integer(simplify_const_int(expr),expr.type()));
   }
-    if(expr.type().id()==ID_floatbv)
+  if(expr.type().id()==ID_floatbv)
   {
     return to_constant_expr(simplify_const_float(expr).to_expr());
   }

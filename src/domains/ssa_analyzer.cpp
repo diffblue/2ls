@@ -71,8 +71,9 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
     if(i_it->is_backwards_goto())
     {
     
-      exprt pre_guard= and_exprt(SSA.guard_symbol(i_it->get_target()), SSA.name(SSA.guard_symbol(), local_SSAt::LOOP_SELECT, i_it->get_target()));
-      exprt post_guard= SSA.guard_symbol(i_it);
+      exprt pre_guard = and_exprt(SSA.guard_symbol(i_it->get_target()), 
+        SSA.name(SSA.guard_symbol(), local_SSAt::LOOP_SELECT, i_it->get_target()));
+      exprt post_guard = SSA.guard_symbol(i_it);
     
       // Record the objects modified by the loop to get
       // 'primed' (post-state) and 'unprimed' (pre-state) variables.
@@ -128,8 +129,8 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
 
   for(unsigned i=0; i<added_returns.size()+added_globals_out.size(); ++i) 
   {
-    var_pre_guards.push_back(false_exprt()); //TODO: replace this stuff
-    var_post_guards.push_back(false_exprt()); //TODO: replace this stuff
+    var_pre_guards.push_back(true_exprt()); //TODO: replace this stuff
+    var_post_guards.push_back(true_exprt()); //TODO: replace this stuff
     var_kinds.push_back(template_domaint::OUT);
   }
   

@@ -54,8 +54,8 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
 	  std::cout << "adding to strategy: " << row << std::endl;
           strategy.push_back(row);
           //add blocking constraint
-          solver << or_exprt(literal_exprt(!strategy_cond_literals[row]),
-  		      literal_exprt(activation_literal));
+          //solver << or_exprt(literal_exprt(!strategy_cond_literals[row]),
+	  //	      literal_exprt(activation_literal));
       	}
       }
       assert(strategy.size()>0);
