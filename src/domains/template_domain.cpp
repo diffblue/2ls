@@ -533,6 +533,7 @@ void make_zone_template(template_domaint::templatet &templ,
     template_domaint::kindst::const_iterator k2 = kinds.begin();
     for(;v2!=vars.end(); v2++, pre_g2++, post_g2++, k2++)
     {
+      if(v1->type()!=v2->type()) continue; //disallow mixed types in template rows
       templ.rows.push_back(minus_exprt(*v1,*v2));
       templ.rows.push_back(minus_exprt(*v2,*v1));
       exprt pre_g = and_exprt(*pre_g1,*pre_g2);
@@ -602,6 +603,7 @@ void make_octagon_template(template_domaint::templatet &templ,
     template_domaint::kindst::const_iterator k2 = kinds.begin();
     for(;v2!=vars.end(); v2++, pre_g2++, post_g2++, k2++)
     {
+      if(v1->type()!=v2->type()) continue; //disallow mixed types in template rows
       templ.rows.push_back(minus_exprt(*v1,*v2));
       templ.rows.push_back(minus_exprt(*v2,*v1));
       templ.rows.push_back(plus_exprt(*v1,*v2));
