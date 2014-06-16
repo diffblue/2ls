@@ -49,14 +49,21 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
 
   var_listt pre_state_vars, post_state_vars;
 
-  template_domaint::var_guardst var_guards;
+  template_domaint::var_guardst var_pre_guards;
+  template_domaint::var_guardst var_post_guards;
+  template_domaint::kindst var_kinds;
 
   var_listt top_vars;
   add_vars(SSA.params,top_vars);
   add_vars(SSA.globals_in,top_vars);
   var_listt vars = top_vars;
 
-  for(unsigned i=0; i<top_vars.size(); ++i) var_guards.push_back(true_exprt());
+  for(unsigned i=0; i<top_vars.size(); ++i) 
+  {
+    var_pre_guards.push_back(true_exprt());
+    var_post_guards.push_back(true_exprt());
+    var_kinds.push_back(template_domaint::IN);
+  }
 
   // get all backwards edges
   forall_goto_program_instructions(i_it, SSA.goto_function.body)
@@ -76,7 +83,9 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
         symbol_exprt in=SSA.name(*o_it, local_SSAt::LOOP_BACK, i_it);
         symbol_exprt out=SSA.read_rhs(*o_it, i_it);
       
-        var_guards.push_back(guard);
+        var_pre_guards.push_back(guard);
+        var_post_guards.push_back(guard);
+        var_kinds.push_back(template_domaint::LOOP);
       
         pre_state_vars.push_back(in);
         post_state_vars.push_back(out);
@@ -112,7 +121,8 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
   
   for(unsigned i=0; i<pre_state_vars.size(); ++i)
   {
-    std::cout << from_expr(pre_state_vars[i]) << " guard " << from_expr(var_guards[i]) << std::endl;  
+    std::cout << from_expr(pre_state_vars[i]) << " pre-guard:  " << from_expr(var_pre_guards[i]) << std::endl;  
+    std::cout << from_expr(pre_state_vars[i]) << " post-guard: " << from_expr(var_post_guards[i]) << std::endl;  
   }
 
 
@@ -126,19 +136,23 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
   var_listt added_globals_out = add_vars(SSA.globals_out,vars); //TODO: guard at exit location?
 
   for(unsigned i=0; i<added_returns.size()+added_globals_out.size(); ++i) 
-    var_guards.push_back(true_exprt()); //TODO: replace this stuff
+  {
+    var_pre_guards.push_back(false_exprt()); //TODO: replace this stuff
+    var_post_guards.push_back(false_exprt()); //TODO: replace this stuff
+    var_kinds.push_back(template_domaint::OUT);
+  }
   
   if(options.get_bool_option("intervals"))
   {
-    make_interval_template(templ, vars, var_guards, var_guards, ns);
+    make_interval_template(templ, vars, var_pre_guards, var_post_guards, var_kinds, ns);
   }
   else if(options.get_bool_option("zones"))
   {
-    make_zone_template(templ, vars, var_guards, var_guards, ns); 
+    make_zone_template(templ, vars, var_pre_guards, var_post_guards, var_kinds, ns); 
   }
   else if(options.get_bool_option("octagons"))
   {
-    make_octagon_template(templ, vars, var_guards, var_guards, ns); 
+    make_octagon_template(templ, vars, var_pre_guards, var_post_guards, var_kinds, ns); 
   }
   else assert(false);
     

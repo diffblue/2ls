@@ -8,6 +8,18 @@
 #include <util/simplify_expr.h>
 #include <langapi/languages.h>
 
+/*******************************************************************\
+
+Function: template_domaint::bottom
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
 void template_domaint::bottom(valuet &value)
 {
   value.resize(templ.size());
@@ -16,6 +28,18 @@ void template_domaint::bottom(valuet &value)
     value[row] = false_exprt(); //marker for -oo
   }
 }
+
+/*******************************************************************\
+
+Function: template_domaint::set_to_top
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 
 void template_domaint::set_to_top(const var_listt &top_vars, valuet &value)
 {
@@ -40,6 +64,18 @@ void template_domaint::set_to_top(const var_listt &top_vars, valuet &value)
     }
   }
 }
+
+/*******************************************************************\
+
+Function: template_domaint::between
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 
 template_domaint::row_valuet template_domaint::between(
   const row_valuet &lower, const row_valuet &upper)
@@ -73,6 +109,18 @@ template_domaint::row_valuet template_domaint::between(
   assert(false); //types do not match or are not supported
 }
 
+/*******************************************************************\
+
+Function: template_domaint::leq
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
 bool template_domaint::leq(const row_valuet &v1, const row_valuet &v2)
 {
   if(v1.type()==v2.type() && 
@@ -92,21 +140,27 @@ bool template_domaint::leq(const row_valuet &v1, const row_valuet &v2)
   assert(false); //types do not match or are not supported
 }
 
+/*******************************************************************\
+
+Function: template_domaint::get_row_pre_constraint
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
 exprt template_domaint::get_row_pre_constraint(const rowt &row, const row_valuet &row_value)
 {
   assert(row<templ.size());
+  if(templ.kinds[row]==OUT) return true_exprt();
   if(is_row_value_neginf(row_value)) return implies_exprt(templ.pre_guards[row], false_exprt());
   if(is_row_value_inf(row_value)) return true_exprt();
   return implies_exprt(templ.pre_guards[row], binary_relation_exprt(templ.rows[row],ID_le,row_value));
 }
 
-exprt template_domaint::get_row_post_constraint(const rowt &row, const row_valuet &row_value)
-{
-  assert(row<templ.size());
-  if(is_row_value_neginf(row_value)) return implies_exprt(templ.post_guards[row], false_exprt());
-  if(is_row_value_inf(row_value)) return true_exprt();
-  return implies_exprt(templ.post_guards[row], binary_relation_exprt(templ.rows[row],ID_le,row_value));
-}
 
 exprt template_domaint::get_row_pre_constraint(const rowt &row, const valuet &value)
 {
@@ -114,11 +168,44 @@ exprt template_domaint::get_row_pre_constraint(const rowt &row, const valuet &va
   return get_row_pre_constraint(row,value[row]);
 }
 
+/*******************************************************************\
+
+Function: template_domaint::get_row_post_constraint
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt template_domaint::get_row_post_constraint(const rowt &row, const row_valuet &row_value)
+{
+  assert(row<templ.size());
+  if(templ.kinds[row]==IN) return true_exprt();
+  if(is_row_value_neginf(row_value)) return implies_exprt(templ.post_guards[row], false_exprt());
+  if(is_row_value_inf(row_value)) return true_exprt();
+  return implies_exprt(templ.post_guards[row], binary_relation_exprt(templ.rows[row],ID_le,row_value));
+}
+
 exprt template_domaint::get_row_post_constraint(const rowt &row, const valuet &value)
 {
   assert(value.size()==templ.size());
   return get_row_post_constraint(row,value[row]);
 }
+
+/*******************************************************************\
+
+Function: template_domaint::to_pre_constraints
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 
 exprt template_domaint::to_pre_constraints(const valuet &value)
 {
@@ -130,6 +217,18 @@ exprt template_domaint::to_pre_constraints(const valuet &value)
   }
   return conjunction(c); 
 }
+
+/*******************************************************************\
+
+Function: template_domaint::make_not_post_constraints
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 
 void template_domaint::make_not_post_constraints(const valuet &value,
   exprt::operandst &cond_exprs, 
@@ -147,6 +246,18 @@ void template_domaint::make_not_post_constraints(const valuet &value,
   }
 }
 
+/*******************************************************************\
+
+Function: template_domaint::get_row_value
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
 template_domaint::row_valuet template_domaint::get_row_value(
   const rowt &row, const valuet &value)
 {
@@ -155,6 +266,19 @@ template_domaint::row_valuet template_domaint::get_row_value(
   return value[row];
 }
 
+
+/*******************************************************************\
+
+Function: template_domaint::set_row_value
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
 void template_domaint::set_row_value(
   const rowt &row, const template_domaint::row_valuet &row_value, valuet &value)
 {
@@ -162,6 +286,19 @@ void template_domaint::set_row_value(
   assert(value.size()==templ.size());
   value[row] = row_value;
 }
+
+
+/*******************************************************************\
+
+Function: template_domaint::get_row_max_value
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 
 template_domaint::row_valuet template_domaint::get_max_row_value(
   const template_domaint::rowt &row)
@@ -184,13 +321,33 @@ template_domaint::row_valuet template_domaint::get_max_row_value(
 }
 
 
+/*******************************************************************\
+
+Function: template_domaint::output_value
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
 void template_domaint::output_value(std::ostream &out, const valuet &value, 
   const namespacet &ns) const
 {
   for(unsigned row = 0; row<templ.size(); row++)
   {
-    out << "[ " << from_expr(ns,"",templ.pre_guards[row]) << " | ";
-    out << from_expr(ns,"",templ.post_guards[row]) << " ] ===> ";
+    switch(templ.kinds[row])
+    {
+    case LOOP:
+      out << "(LOOP) [ " << from_expr(ns,"",templ.pre_guards[row]) << " | ";
+      out << from_expr(ns,"",templ.post_guards[row]) << " ] ===> ";
+      break;
+    case IN: out << "(IN)   "; break;
+    case OUT: out << "(OUT)  "; break;
+    default: assert(false);
+    }
     out << " ( " << from_expr(ns,"",templ.rows[row]) << " <= ";
     if(is_row_value_neginf(value[row])) out << "-oo";
     else if(is_row_value_inf(value[row])) out << "oo";
@@ -199,80 +356,168 @@ void template_domaint::output_value(std::ostream &out, const valuet &value,
   }
 }
 
+/*******************************************************************\
+
+Function: template_domaint::output_template
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
 void template_domaint::output_template(std::ostream &out, const namespacet &ns) const
 {
   for(unsigned row = 0; row<templ.size(); row++)
   {
-    out << "[ " << from_expr(ns,"",templ.pre_guards[row]) << " | ";
-    out << from_expr(ns,"",templ.post_guards[row]) << " ] ===> ";
+    switch(templ.kinds[row])
+    {
+    case LOOP:
+      out << "(LOOP) [ " << from_expr(ns,"",templ.pre_guards[row]) << " | ";
+      out << from_expr(ns,"",templ.post_guards[row]) << " ] ===> ";
+      break;
+    case IN: out << "(IN)   "; break;
+    case OUT: out << "(OUT)  "; break;
+    default: assert(false);
+    }
     out << from_expr(ns,"",templ.rows[row]) << " <= CONST )" << std::endl;
   }
 }
+
+/*******************************************************************\
+
+Function: template_domaint::template_size
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 
 unsigned template_domaint::template_size()
 {
   return templ.size();
 }
 
+/*******************************************************************\
+
+Function: template_domaint::is_row_value_neginf
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
 bool template_domaint::is_row_value_neginf(const row_valuet & row_value) const
 {
   return row_value.get(ID_value)==ID_false;
 }
+
+/*******************************************************************\
+
+Function: template_domaint::is_row_value_inf
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 
 bool template_domaint::is_row_value_inf(const row_valuet & row_value) const
 {
   return row_value.get(ID_value)==ID_true;
 }
 
+/*******************************************************************\
 
+Function: make_interval_template
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 
 void make_interval_template(template_domaint::templatet &templ, 
   const template_domaint::var_listt &vars,
   const template_domaint::var_guardst &pre_guards,
   const template_domaint::var_guardst &post_guards,
+  const template_domaint::kindst &kinds,
   const namespacet &ns)
 {
   assert(vars.size() == pre_guards.size());
   assert(vars.size() == post_guards.size());
+  assert(vars.size() == kinds.size());
   unsigned size = 2*vars.size();
   templ.rows.clear(); templ.rows.reserve(size);
   templ.pre_guards.clear(); templ.pre_guards.reserve(size);
   templ.post_guards.clear(); templ.post_guards.reserve(size);
+  templ.kinds.clear(); templ.kinds.reserve(size);
   
   template_domaint::var_guardst::const_iterator pre_g = pre_guards.begin();
   template_domaint::var_guardst::const_iterator post_g = post_guards.begin();
+  template_domaint::kindst::const_iterator k = kinds.begin();
   for(template_domaint::var_listt::const_iterator v = vars.begin(); 
-      v!=vars.end(); v++, pre_g++, post_g++)
+      v!=vars.end(); v++, pre_g++, post_g++, k++)
   {
     templ.rows.push_back(*v);
-    templ.rows.push_back(unary_minus_exprt(*v,v->type()));
+    templ.rows.push_back(unary_minus_exprt(*v,v->type())); 
     for(unsigned i=0;i<2;i++) 
     {
       templ.pre_guards.push_back(*pre_g);
       templ.post_guards.push_back(*post_g);
+      templ.kinds.push_back(*k);
     }
   }
   assert(templ.rows.size() == templ.pre_guards.size());
   assert(templ.rows.size() == templ.post_guards.size());
+  assert(templ.rows.size() == templ.kinds.size());
 }
+
+/*******************************************************************\
+
+Function: make_zone_template
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 
 void make_zone_template(template_domaint::templatet &templ, 
   const template_domaint::var_listt &vars,
   const template_domaint::var_guardst &pre_guards,
   const template_domaint::var_guardst &post_guards,
+  const template_domaint::kindst &kinds,
   const namespacet &ns)
 { 
   assert(vars.size() == pre_guards.size());
   assert(vars.size() == post_guards.size());
+  assert(vars.size() == kinds.size());
   unsigned size = 2*vars.size()+vars.size()*(vars.size()-1);
   templ.rows.clear(); templ.rows.reserve(size);
   templ.pre_guards.clear(); templ.pre_guards.reserve(size);
   templ.post_guards.clear(); templ.post_guards.reserve(size);
+  templ.kinds.clear(); templ.kinds.reserve(size);
 
   template_domaint::var_guardst::const_iterator pre_g1 = pre_guards.begin();
   template_domaint::var_guardst::const_iterator post_g1 = post_guards.begin();
+  template_domaint::kindst::const_iterator k1 = kinds.begin();
   for(template_domaint::var_listt::const_iterator v1 = vars.begin(); 
-      v1!=vars.end(); v1++, pre_g1++, post_g1++)
+      v1!=vars.end(); v1++, pre_g1++, post_g1++, k1++)
   {
     templ.rows.push_back(*v1); 
     templ.rows.push_back(unary_minus_exprt(*v1,v1->type()));
@@ -280,11 +525,13 @@ void make_zone_template(template_domaint::templatet &templ,
     {
       templ.pre_guards.push_back(*pre_g1);
       templ.post_guards.push_back(*post_g1);
+      templ.kinds.push_back(*k1);
     }
     template_domaint::var_guardst::const_iterator pre_g2 = pre_guards.begin();
     template_domaint::var_guardst::const_iterator post_g2 = post_guards.begin();
     template_domaint::var_listt::const_iterator v2 = v1; v2++;
-    for(;v2!=vars.end(); v2++, pre_g2++, post_g2++)
+    template_domaint::kindst::const_iterator k2 = kinds.begin();
+    for(;v2!=vars.end(); v2++, pre_g2++, post_g2++, k2++)
     {
       templ.rows.push_back(minus_exprt(*v1,*v2));
       templ.rows.push_back(minus_exprt(*v2,*v1));
@@ -292,21 +539,40 @@ void make_zone_template(template_domaint::templatet &templ,
       exprt post_g = and_exprt(*post_g1,*post_g2);
       simplify(pre_g,ns);
       simplify(post_g,ns);
+      template_domaint::kindt k = 
+        (*k1==template_domaint::OUT || *k2==template_domaint::OUT ? template_domaint::OUT :
+         (*k1==template_domaint::LOOP || *k2==template_domaint::LOOP ? template_domaint::LOOP : 
+          template_domaint::IN));
       for(unsigned i=0;i<2;i++) 
       {
         templ.pre_guards.push_back(pre_g);
         templ.post_guards.push_back(post_g);
+        templ.kinds.push_back(k);
       }    
     }
   }
   assert(templ.rows.size() == templ.pre_guards.size());
   assert(templ.rows.size() == templ.post_guards.size());
+  assert(templ.rows.size() == templ.kinds.size());
 }
+
+/*******************************************************************\
+
+Function: make_octagon_template
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 
 void make_octagon_template(template_domaint::templatet &templ,
   const template_domaint::var_listt &vars,
   const template_domaint::var_guardst &pre_guards,
   const template_domaint::var_guardst &post_guards,
+  const template_domaint::kindst &kinds,
   const namespacet &ns)
 {
   assert(vars.size() == pre_guards.size());
@@ -318,8 +584,9 @@ void make_octagon_template(template_domaint::templatet &templ,
 
   template_domaint::var_guardst::const_iterator pre_g1 = pre_guards.begin();
   template_domaint::var_guardst::const_iterator post_g1 = post_guards.begin();
+  template_domaint::kindst::const_iterator k1 = kinds.begin();
   for(template_domaint::var_listt::const_iterator v1 = vars.begin(); 
-      v1!=vars.end(); v1++, pre_g1++, post_g1++)
+      v1!=vars.end(); v1++, pre_g1++, post_g1++, k1++)
   {
     templ.rows.push_back(*v1); 
     templ.rows.push_back(unary_minus_exprt(*v1,v1->type()));
@@ -327,11 +594,13 @@ void make_octagon_template(template_domaint::templatet &templ,
     {
       templ.pre_guards.push_back(*pre_g1);
       templ.post_guards.push_back(*post_g1);
+      templ.kinds.push_back(*k1);
     }
     template_domaint::var_guardst::const_iterator pre_g2 = pre_guards.begin();
     template_domaint::var_guardst::const_iterator post_g2 = post_guards.begin();
     template_domaint::var_listt::const_iterator v2 = v1; v2++;
-    for(;v2!=vars.end(); v2++, pre_g2++, post_g2++)
+    template_domaint::kindst::const_iterator k2 = kinds.begin();
+    for(;v2!=vars.end(); v2++, pre_g2++, post_g2++, k2++)
     {
       templ.rows.push_back(minus_exprt(*v1,*v2));
       templ.rows.push_back(minus_exprt(*v2,*v1));
@@ -341,16 +610,34 @@ void make_octagon_template(template_domaint::templatet &templ,
       exprt post_g = and_exprt(*post_g1,*post_g2);
       simplify(pre_g,ns);
       simplify(post_g,ns);
+      template_domaint::kindt k = 
+        (*k1==template_domaint::OUT || *k2==template_domaint::OUT ? template_domaint::OUT :
+         (*k1==template_domaint::LOOP || *k2==template_domaint::LOOP ? template_domaint::LOOP : 
+          template_domaint::IN));
       for(unsigned i=0;i<4;i++) 
       {
         templ.pre_guards.push_back(pre_g);
         templ.post_guards.push_back(post_g);
+        templ.kinds.push_back(k);
       }
     }
   }
   assert(templ.rows.size() == templ.pre_guards.size());
   assert(templ.rows.size() == templ.post_guards.size());
+  assert(templ.rows.size() == templ.kinds.size());
 }
+
+/*******************************************************************\
+
+Function: simplify_const
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 
 mp_integer simplify_const_int(const exprt &expr)
 {

@@ -15,12 +15,15 @@ public:
   typedef std::vector<row_valuet> valuet;
   typedef std::vector<symbol_exprt> var_listt;
   typedef std::vector<exprt> var_guardst; 
+  typedef enum {LOOP, IN, OUT} kindt;
+  typedef std::vector<kindt> kindst; 
 
   typedef struct 
   {
     guardst pre_guards;
     guardst post_guards;
     row_exprst rows;
+    kindst kinds;
 
     unsigned size() { return rows.size(); } 
   } templatet;
@@ -66,16 +69,19 @@ void make_interval_template(template_domaint::templatet &templ,
 			   const template_domaint::var_listt &vars,
 			   const template_domaint::var_guardst &pre_guards,
 			   const template_domaint::var_guardst &post_guards,
+			   const template_domaint::kindst &kinds,
                            const namespacet &ns);
 void make_zone_template(template_domaint::templatet &templ,
 			   const template_domaint::var_listt &vars,
 			   const template_domaint::var_guardst &pre_guards,
 			   const template_domaint::var_guardst &post_guards,
+			   const template_domaint::kindst &kinds,
                            const namespacet &ns);
 void make_octagon_template(template_domaint::templatet &templ,
 			   const template_domaint::var_listt &vars,
 			   const template_domaint::var_guardst &pre_guards,
 			   const template_domaint::var_guardst &post_guards,
+			   const template_domaint::kindst &kinds,
                            const namespacet &ns);
 
 constant_exprt simplify_const(const exprt &expr);
