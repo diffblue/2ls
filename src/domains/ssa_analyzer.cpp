@@ -73,7 +73,7 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
     {
     
       exprt pre_guard = and_exprt(SSA.guard_symbol(i_it->get_target()), 
-        SSA.name(SSA.guard_symbol(), local_SSAt::LOOP_SELECT, i_it->get_target()));
+        SSA.name(SSA.guard_symbol(), local_SSAt::LOOP_SELECT, i_it));
       exprt post_guard = SSA.guard_symbol(i_it);
     
       // Record the objects modified by the loop to get
@@ -124,9 +124,19 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
     {
       if(renaming_map.find(*s_it)==renaming_map.end())
       {
+
+      
         renaming_map[*s_it] = *s_it;  
         symbol_exprt &s = to_symbol_expr(renaming_map[*s_it]);
         s.set_identifier(id2string(s.get_identifier())+"'");
+
+        std::cout << "Replaced " << from_expr(ns, "", *s_it) << " by " << from_expr(ns, "", s) << std::endl; 
+      }
+      else
+      {
+      
+        std::cout << "Already contained " << from_expr(ns, "", *s_it) << std::endl;        
+      
       }
     }
   }  
