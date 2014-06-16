@@ -64,8 +64,7 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
     if(i_it->is_backwards_goto())
     {
     
-      exprt guard=SSA.guard_symbol(i_it);
-      
+      exprt guard= and_exprt(SSA.guard_symbol(i_it->get_target()), SSA.name(SSA.guard_symbol(), local_SSAt::LOOP_SELECT, i_it->get_target()));
     
       // Record the objects modified by the loop to get
       // 'primed' (post-state) and 'unprimed' (pre-state) variables.
@@ -98,6 +97,19 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
     } 
   }
   
+  /* renaming from pre into post-state */
+  assert(pre_state_vars.size()==post_state_vars.size());
+  var_listt::const_iterator it1=pre_state_vars.begin();
+  var_listt::const_iterator it2=post_state_vars.begin();
+
+  for(; it1!=pre_state_vars.end(); ++it1, ++it2)
+  {
+    renaming_map[*it1]=*it2;    
+  }
+
+  
+  
+  
   for(unsigned i=0; i<pre_state_vars.size(); ++i)
   {
     std::cout << from_expr(pre_state_vars[i]) << " guard " << from_expr(var_guards[i]) << std::endl;  
@@ -113,8 +125,8 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
   var_listt added_returns = add_vars(SSA.returns,vars);
   var_listt added_globals_out = add_vars(SSA.globals_out,vars); //TODO: guard at exit location?
 
-for(unsigned i=0; i<added_returns.size()+added_globals_out.size(); ++i) 
-    var_guards.push_back(false_exprt()); //TODO: replace this stuff
+  for(unsigned i=0; i<added_returns.size()+added_globals_out.size(); ++i) 
+    var_guards.push_back(true_exprt()); //TODO: replace this stuff
   
   if(options.get_bool_option("intervals"))
   {
@@ -134,6 +146,7 @@ for(unsigned i=0; i<added_returns.size()+added_globals_out.size(); ++i)
   std::cout << "**** Template *****" << std::endl;
   std::cout << "  var size " << vars.size() << std::endl
             << "  params size " << SSA.params.size() << std::endl
+            << "  returns size " << SSA.returns.size() << std::endl
             << "  pre_state " << pre_state_vars.size() << std::endl;
 
   #endif  
@@ -160,13 +173,13 @@ for(unsigned i=0; i<added_returns.size()+added_globals_out.size(); ++i)
   if(options.get_bool_option("enum-solver"))
   {
     strategy_solver = new strategy_solver_enumerationt(
-      transition_relation, pre_state_vars, post_state_vars,
+      transition_relation, renaming_map,
       template_domain, solver, ns);
   }
   else if(options.get_bool_option("binsearch-solver"))
   {
     strategy_solver = new strategy_solver_binsearcht(
-      transition_relation, pre_state_vars, post_state_vars,
+      transition_relation, renaming_map,
       template_domain, solver, ns);
   }
   /*  else if(options.get_bool_option("opt-solver"))

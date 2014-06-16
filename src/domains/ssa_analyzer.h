@@ -9,6 +9,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef DELTACHECK_SSA_ANALYZER_H
 #define DELTACHECK_SSA_ANALYZER_H
 
+#include <util/replace_expr.h>
+
 #include "../ssa/local_ssa.h"
 #include "strategy_solver_base.h"
 
@@ -35,6 +37,8 @@ protected:
   optionst &options;
   strategy_solver_baset::invariantt inv;
   unsigned iteration_number;
+  
+  replace_mapt renaming_map;
 
   bool add_vars_filter(const symbol_exprt &s);
   var_listt add_vars(const var_listt &vars_to_add, var_listt &vars);

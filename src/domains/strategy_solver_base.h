@@ -19,23 +19,13 @@ class strategy_solver_baset
   typedef std::vector<template_domaint::rowt> strategyt;
 
   explicit strategy_solver_baset(const constraintst &program,
-    var_listt &_pre_state_vars, var_listt &_post_state_vars,
+    replace_mapt &_renaming_map,
     template_domaint &_template_domain,
     bv_pointerst &_solver, const namespacet &_ns) :
-    pre_state_vars(_pre_state_vars), post_state_vars(_post_state_vars),
+    renaming_map(_renaming_map),
     template_domain(_template_domain),
       solver(_solver), ns(_ns),activation_literal_counter(0)
-  {
-    // build replace map
-    assert(pre_state_vars.size()==post_state_vars.size());
-    var_listt::const_iterator it1=pre_state_vars.begin();
-    var_listt::const_iterator it2=post_state_vars.begin();
-  
-    for(; it1!=pre_state_vars.end(); ++it1, ++it2)
-    {
-      renaming_map[*it1]=*it2;    
-    }
-  
+  { 
     // adding program constraints to solver db
     for(constraintst::const_iterator it = program.begin(); it != program.end(); it++)
     {
@@ -47,11 +37,8 @@ class strategy_solver_baset
 
   virtual bool improve(const invariantt &inv, strategyt &strategy);
 
- protected:
-  var_listt &pre_state_vars;
-  var_listt &post_state_vars;
-  
-  replace_mapt renaming_map;
+ protected: 
+  replace_mapt &renaming_map;
   
   inline void rename(exprt::operandst &operands)
   {
