@@ -36,7 +36,7 @@ public:
   void set_to_top(const var_listt &top_vars, valuet &value);
 
   row_valuet between(const row_valuet &lower, const row_valuet &upper);
-  bool leq(const row_valuet &v1, const row_valuet &v2);
+  bool less_than(const row_valuet &v1, const row_valuet &v2);
 
   exprt get_row_pre_constraint(const rowt &row, const row_valuet &row_value);
   exprt get_row_post_constraint(const rowt &row, const row_valuet &row_value);
@@ -59,6 +59,9 @@ public:
   unsigned template_size();
   bool is_row_value_inf(const row_valuet & row_value) const;
   bool is_row_value_neginf(const row_valuet & row_value) const;
+
+  void project_on_loops(const valuet &value, exprt &result);
+  void project_on_inout(const valuet &value, exprt &result);
 
 protected:
   templatet &templ;

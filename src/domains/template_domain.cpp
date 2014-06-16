@@ -121,7 +121,7 @@ Function: template_domaint::leq
 
 \*******************************************************************/
 
-bool template_domaint::leq(const row_valuet &v1, const row_valuet &v2)
+bool template_domaint::less_than(const row_valuet &v1, const row_valuet &v2)
 {
   if(v1.type()==v2.type() && 
      (v1.type().id()==ID_signedbv || v1.type().id()==ID_unsignedbv))
@@ -129,13 +129,13 @@ bool template_domaint::leq(const row_valuet &v1, const row_valuet &v2)
     mp_integer vv1, vv2;
     to_integer(v1, vv1);
     to_integer(v2, vv2);
-    return vv1<=vv2;
+    return vv1<vv2;
   }
   if(v1.type().id()==ID_floatbv && v2.type().id()==ID_floatbv)
   {
     ieee_floatt vv1(to_constant_expr(v1));
     ieee_floatt vv2(to_constant_expr(v2));
-    return vv1<=vv2;
+    return vv1<vv2;
   }
   assert(false); //types do not match or are not supported
 }
@@ -266,6 +266,61 @@ template_domaint::row_valuet template_domaint::get_row_value(
   return value[row];
 }
 
+/*******************************************************************\
+
+Function: template_domaint::project_on_loops
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void template_domaint::project_on_loops(const valuet &value, exprt &result)
+{
+  assert(value.size()==templ.size());
+  exprt::operandst c;
+  c.reserve(templ.size());
+  for(unsigned row = 0; row<templ.size(); row++)
+  {
+    if(templ.kinds[row]!=LOOP) continue;
+    const row_valuet &row_value = value[row];
+    if(is_row_value_neginf(row_value)) c.push_back(false_exprt());
+    else if(is_row_value_inf(row_value)) c.push_back(true_exprt());
+    else c.push_back(binary_relation_exprt(templ.rows[row],ID_le,row_value));
+  }
+  result = conjunction(c);
+}
+
+/*******************************************************************\
+
+Function: template_domaint::project_on_inout
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void template_domaint::project_on_inout(const valuet &value, exprt &result)
+{
+  assert(value.size()==templ.size());
+  exprt::operandst c;
+  c.reserve(templ.size());
+  for(unsigned row = 0; row<templ.size(); row++)
+  {
+    if(templ.kinds[row]==LOOP) continue;
+    const row_valuet &row_value = value[row];
+    if(is_row_value_neginf(row_value)) c.push_back(false_exprt());
+    else if(is_row_value_inf(row_value)) c.push_back(true_exprt());
+    else c.push_back(binary_relation_exprt(templ.rows[row],ID_le,row_value));
+  }
+  result = conjunction(c);
+}
 
 /*******************************************************************\
 
