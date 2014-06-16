@@ -19,6 +19,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <solvers/sat/satcheck.h>
 #include <solvers/flattening/bv_pointers.h>
 
+#include <util/find_symbols.h>
 
 #ifdef DEBUG
 #include <iostream>
@@ -98,6 +99,9 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
     } 
   }
   
+  constraintst transition_relation;
+  transition_relation << SSA;
+
   /* renaming from pre into post-state */
   assert(pre_state_vars.size()==post_state_vars.size());
   var_listt::const_iterator it1=pre_state_vars.begin();
@@ -106,9 +110,27 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
   for(; it1!=pre_state_vars.end(); ++it1, ++it2)
   {
     renaming_map[*it1]=*it2;    
+    renaming_map[*it2]=*it2;    
   }
 
-  
+  for(constraintst::const_iterator it = transition_relation.begin(); 
+    it != transition_relation.end(); it++)
+  {
+    std::set<symbol_exprt> symbols;
+    find_symbols(*it,symbols);
+
+    for(std::set<symbol_exprt>::const_iterator s_it = symbols.begin(); 
+      s_it != symbols.end(); s_it++)
+    {
+      if(renaming_map.find(*s_it)==renaming_map.end())
+      {
+        renaming_map[*s_it] = *s_it;  
+        symbol_exprt &s = to_symbol_expr(renaming_map[*s_it]);
+        s.set_identifier(id2string(s.get_identifier())+"'");
+      }
+    }
+  }  
+
   
   
   for(unsigned i=0; i<pre_state_vars.size(); ++i)
@@ -117,9 +139,6 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
     std::cout << from_expr(pre_state_vars[i]) << " post-guard: " << from_expr(var_post_guards[i]) << std::endl;  
   }
 
-
-  constraintst transition_relation;
-  transition_relation << SSA;
 
   template_domaint::templatet templ;
    
@@ -240,7 +259,6 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
 
   delete strategy_solver;
 }
-
 
 void ssa_analyzert::get_summary(exprt &result)
 {

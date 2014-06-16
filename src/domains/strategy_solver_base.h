@@ -31,7 +31,15 @@ class strategy_solver_baset
     {
       solver << *it;
     }
-  }
+
+    // adding renamed program constraints to solver db
+    for(constraintst::const_iterator it = program.begin(); it != program.end(); it++)
+    {
+      exprt e = *it;
+      replace_expr(renaming_map,e);
+      solver << e;
+    }  
+}
 
   virtual void solve(invariantt &inv, const strategyt &strategy) { assert(false); }
 
@@ -45,7 +53,7 @@ class strategy_solver_baset
     for(unsigned i=0; i<operands.size(); ++i)
       replace_expr(renaming_map, operands[i]);
   }
-  
+
   template_domaint &template_domain;
   bv_pointerst &solver;
   const namespacet &ns;
