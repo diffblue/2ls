@@ -15,7 +15,7 @@ void strategy_solver_binsearcht::solve(invariantt &inv, const strategyt &strateg
     while (template_domain.leq(lower,upper))   
     {
       template_domaint::row_valuet middle = template_domain.between(lower,upper);
-      exprt c = template_domain.get_row_constraint(*s_it,middle);
+      exprt c = template_domain.get_row_post_constraint(*s_it,middle);
 
       std::cout << "upper: " << from_expr(ns,"",upper) << std::endl;
       std::cout << "middle: " << from_expr(ns,"",middle) << std::endl;

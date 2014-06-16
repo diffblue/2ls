@@ -18,7 +18,8 @@ public:
 
   typedef struct 
   {
-    guardst guards;
+    guardst pre_guards;
+    guardst post_guards;
     row_exprst rows;
 
     unsigned size() { return rows.size(); } 
@@ -34,11 +35,13 @@ public:
   row_valuet between(const row_valuet &lower, const row_valuet &upper);
   bool leq(const row_valuet &v1, const row_valuet &v2);
 
-  exprt get_row_constraint(const rowt &row, const row_valuet &row_value);
-  exprt get_row_constraint(const rowt &row, const valuet &value);
+  exprt get_row_pre_constraint(const rowt &row, const row_valuet &row_value);
+  exprt get_row_post_constraint(const rowt &row, const row_valuet &row_value);
+  exprt get_row_pre_constraint(const rowt &row, const valuet &value);
+  exprt get_row_post_constraint(const rowt &row, const valuet &value);
 
-  exprt to_constraints(const valuet &value);
-  void make_not_constraints(const valuet &value,
+  exprt to_pre_constraints(const valuet &value);
+  void make_not_post_constraints(const valuet &value,
 			   exprt::operandst &cond_exprs, 
 			   exprt::operandst &value_exprs);
 
@@ -61,15 +64,18 @@ protected:
 
 void make_interval_template(template_domaint::templatet &templ,
 			   const template_domaint::var_listt &vars,
-			   const template_domaint::var_guardst &guards,
+			   const template_domaint::var_guardst &pre_guards,
+			   const template_domaint::var_guardst &post_guards,
                            const namespacet &ns);
 void make_zone_template(template_domaint::templatet &templ,
 			   const template_domaint::var_listt &vars,
-			   const template_domaint::var_guardst &guards,
+			   const template_domaint::var_guardst &pre_guards,
+			   const template_domaint::var_guardst &post_guards,
                            const namespacet &ns);
 void make_octagon_template(template_domaint::templatet &templ,
 			   const template_domaint::var_listt &vars,
-			   const template_domaint::var_guardst &guards,
+			   const template_domaint::var_guardst &pre_guards,
+			   const template_domaint::var_guardst &post_guards,
                            const namespacet &ns);
 
 constant_exprt simplify_const(const exprt &expr);

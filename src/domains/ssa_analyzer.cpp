@@ -118,15 +118,15 @@ for(unsigned i=0; i<added_returns.size()+added_globals_out.size(); ++i)
   
   if(options.get_bool_option("intervals"))
   {
-    make_interval_template(templ, vars, var_guards, ns);
+    make_interval_template(templ, vars, var_guards, var_guards, ns);
   }
   else if(options.get_bool_option("zones"))
   {
-    make_zone_template(templ, vars, var_guards, ns); 
+    make_zone_template(templ, vars, var_guards, var_guards, ns); 
   }
   else if(options.get_bool_option("octagons"))
   {
-    make_octagon_template(templ, vars, var_guards, ns); 
+    make_octagon_template(templ, vars, var_guards, var_guards, ns); 
   }
   else assert(false);
     

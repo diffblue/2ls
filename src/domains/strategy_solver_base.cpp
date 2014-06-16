@@ -13,13 +13,13 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
 
   literalt activation_literal = new_context();
 
-  exprt inv_expr = template_domain.to_constraints(inv);
+  exprt inv_expr = template_domain.to_pre_constraints(inv);
   std::cout << "inv: " << from_expr(ns,"",inv_expr) << std::endl;
   solver << or_exprt(inv_expr,
     literal_exprt(activation_literal)); 
 
   exprt::operandst strategy_cond_exprs;
-  template_domain.make_not_constraints(inv, 
+  template_domain.make_not_post_constraints(inv, 
     strategy_cond_exprs, strategy_value_exprs); 
   
   rename(strategy_cond_exprs);
