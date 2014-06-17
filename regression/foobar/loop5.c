@@ -4,7 +4,7 @@ void doit()
 {
 
   int x;
-  int y;
+  unsigned y;
   x=0;
   y=0;
   
@@ -15,4 +15,5 @@ void doit()
   }
   
   z=x+y;
+  assert(z<=50);
 }
