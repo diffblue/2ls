@@ -3,9 +3,10 @@ void doit()
 
   int x;
   int y;
-  
+  int z;
   x=0;
   y=0;
+  z=0;
   
   while(x<10)
   {
@@ -13,5 +14,5 @@ void doit()
     ++y;
   }
   
-  int z=x+y;
+  z=x+y;
 }
