@@ -539,7 +539,19 @@ void make_interval_template(template_domaint::templatet &templ,
       v!=vars.end(); v++, pre_g++, post_g++, k++)
   {
     templ.rows.push_back(*v);
-    templ.rows.push_back(unary_minus_exprt(*v,v->type())); 
+    typet new_type = v->type();
+    if(new_type.id()==ID_signedbv) 
+    {
+      signedbv_typet &new_typebv = to_signedbv_type(new_type);
+      new_typebv.set_width(new_typebv.get_width()+1); 
+    }
+    if(new_type.id()==ID_unsignedbv) 
+    {
+      unsignedbv_typet &old_type = to_unsignedbv_type(new_type);
+      new_type = signedbv_typet(old_type.get_width()+1); 
+    }
+    unary_minus_exprt new_expr(typecast_exprt(*v,new_type),new_type);
+    templ.rows.push_back(new_expr); 
     for(unsigned i=0;i<2;i++) 
     {
       templ.pre_guards.push_back(*pre_g);
@@ -720,11 +732,17 @@ mp_integer simplify_const_int(const exprt &expr)
     to_integer(expr, v);
     return v;
   }
+  if(expr.id()==ID_typecast) 
+  {
+    const exprt &op0 = expr.op0();
+    assert(op0.type().id()==ID_signedbv || op0.type().id()==ID_unsignedbv);
+    return simplify_const_int(op0);
+  }
   if(expr.id()==ID_unary_minus) return -simplify_const_int(expr.op0());
   if(expr.id()==ID_plus) return simplify_const_int(expr.op0())+simplify_const_int(expr.op1());
   if(expr.id()==ID_minus) return simplify_const_int(expr.op0())-simplify_const_int(expr.op1());
   if(expr.id()==ID_mult) return simplify_const_int(expr.op0())*simplify_const_int(expr.op1());  
-  if(expr.id()==ID_symbol) return 0;
+  if(expr.id()==ID_symbol) return 0; //default value if not substituted in expr
   assert(false); //not implemented
 }
 
@@ -734,6 +752,17 @@ ieee_floatt simplify_const_float(const exprt &expr)
   {
     ieee_floatt v(to_constant_expr(expr));
     return v;
+  }
+  if(expr.id()==ID_typecast) 
+  {
+    const exprt &op0 = expr.op0();
+    if(op0.type().id()==ID_signedbv || op0.type().id()==ID_unsignedbv)
+    {
+      ieee_floatt v;
+      v.from_integer(simplify_const_int(op0));
+      return v; 
+    }
+    assert(false);
   }
   if(expr.id()==ID_unary_minus) 
   {
@@ -762,7 +791,7 @@ ieee_floatt simplify_const_float(const exprt &expr)
     v1 *= v2;
     return v1; 
   }
-  if(expr.id()==ID_symbol)
+  if(expr.id()==ID_symbol)  //default value if not substituted in expr
   {
     ieee_floatt v;
     v.make_zero();
@@ -774,9 +803,20 @@ ieee_floatt simplify_const_float(const exprt &expr)
 constant_exprt simplify_const(const exprt &expr)
 {
   if(expr.id()==ID_constant) return to_constant_expr(expr);
-  if(expr.type().id()==ID_signedbv || expr.type().id()==ID_unsignedbv)
+  //  if(expr.id()==ID_typecast) return to_constant_expr(expr.op0());
+  if(expr.type().id()==ID_signedbv) 
   {
-    return to_constant_expr(from_integer(simplify_const_int(expr),expr.type()));
+    mp_integer res = simplify_const_int(expr);
+    const signedbv_typet &type = to_signedbv_type(expr.type());
+    if(res<type.smallest() || res>type.largest()) assert(false);
+    return to_constant_expr(from_integer(res,expr.type()));
+  }
+  if(expr.type().id()==ID_unsignedbv)
+  {
+    mp_integer res = simplify_const_int(expr);
+    const unsignedbv_typet &type = to_unsignedbv_type(expr.type());
+    if(res<type.smallest() || res>type.largest()) assert(false);
+    return to_constant_expr(from_integer(res,expr.type()));
   }
   if(expr.type().id()==ID_floatbv)
   {
