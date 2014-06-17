@@ -155,6 +155,10 @@ literalt strategy_solver_baset::new_context()
       symbol_exprt("goto_symex::\\act$"+
       i2string(activation_literal_counter++), bool_typet()));
 
+#if 0
+    std::cout << "new context: " << activation_literal<< std::endl;
+#endif
+
   activation_literals.push_back(activation_literal);
   solver.set_assumptions(activation_literals);
   return !activation_literals.back();
@@ -170,5 +174,10 @@ void strategy_solver_baset::pop_context()
 #else
   formula.push_back(!activation_literal);
 #endif
+
+#if 0
+    std::cout << "pop context: " << activation_literal<< std::endl;
+#endif
+
   solver.set_assumptions(activation_literals);
 }

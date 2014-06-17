@@ -87,7 +87,8 @@ template_domaint::row_valuet template_domaint::between(
     to_integer(lower, vlower);
     to_integer(upper, vupper);
     assert(vupper>=vlower);
-    return from_integer((vupper-vlower)/2,lower.type());
+    if(vlower+1==vupper) return from_integer(vlower,lower.type()); //floor
+    return from_integer((vupper+vlower)/2,lower.type());
   }
   if(lower.type().id()==ID_floatbv && upper.type().id()==ID_floatbv)
   {
@@ -99,7 +100,7 @@ template_domaint::row_valuet template_domaint::between(
       mp_integer pupper = vupper.pack();
       //assert(pupper>=plower);
       ieee_floatt res;
-      res.unpack((plower-pupper)/2); //...by computing integer mean
+      res.unpack((plower+pupper)/2); //...by computing integer mean
       return res.to_expr();
     }
     ieee_floatt res;
