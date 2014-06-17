@@ -9,6 +9,7 @@
 
 #include <solvers/flattening/bv_pointers.h>
 
+#define DEBUG_FORMULA
 
 class strategy_solver_baset 
 {
@@ -30,9 +31,18 @@ class strategy_solver_baset
     // adding program constraints to solver db
     for(constraintst::const_iterator it = program.begin(); it != program.end(); it++)
     {
-      std::cout << "program: " << from_expr(ns,"",*it) << std::endl;
 
+#ifndef DEBUG_FORMULA
+      std::cout << "program: " << from_expr(ns,"",*it) << std::endl;
       solver << *it;
+#else
+      literalt l = solver.convert(*it);
+      if(!l.is_constant()) 
+      {
+        std::cout << "literal " << l << ": " << from_expr(ns,"",*it) << std::endl;
+        formula.push_back(l);
+      }
+#endif
     }
 
     // adding renamed program constraints to solver db
@@ -70,6 +80,7 @@ class strategy_solver_baset
   unsigned activation_literal_counter;
   literalt new_context();
   void pop_context();
+  bvt formula;
 
 };
 

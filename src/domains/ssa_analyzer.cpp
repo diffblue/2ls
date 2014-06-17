@@ -20,6 +20,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <solvers/flattening/bv_pointers.h>
 
 #include <util/find_symbols.h>
+#include <util/arith_tools.h>
 
 #ifdef DEBUG
 #include <iostream>
@@ -235,10 +236,15 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
   iteration_number=0;
 
 
-  // intialise inv
+  // initialize inv
   template_domain.bottom(inv);
   template_domain.set_to_top(top_vars, inv);
-  
+  /*  if(inv.size()==2)
+    {
+  inv[0] = from_integer(1, pre_state_vars[0].type());
+  inv[1] = from_integer(1, pre_state_vars[0].type());
+  }*/
+
   bool change;
 
   do
