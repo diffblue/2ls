@@ -135,7 +135,7 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
     renaming_map[*it1]=*it2;    
     //    renaming_map[*it2]=*it2;    
   }
-  /*  for(var_listt::const_iterator it=top_vars.begin(); it!=top_vars.end(); ++it)
+  /*for(var_listt::const_iterator it=top_vars.begin(); it!=top_vars.end(); ++it)
   {
     renaming_map[*it]=*it;    
   }
@@ -147,6 +147,7 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
   {
     renaming_map[*it]=*it;    
   }
+  */
   for(constraintst::const_iterator it = transition_relation.begin(); 
     it != transition_relation.end(); it++)
   {
@@ -159,18 +160,12 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
       if(renaming_map.find(*s_it)==renaming_map.end())
       {
         renaming_map[*s_it] = *s_it;  
-        symbol_exprt &s = to_symbol_expr(renaming_map[*s_it]);
-        s.set_identifier(id2string(s.get_identifier())+"'");
-
-        std::cout << "Replaced " << from_expr(ns, "", *s_it) << " by " << from_expr(ns, "", s) << std::endl; 
-      }
-      else
-      {
-        std::cout << "Already contained " << from_expr(ns, "", *s_it) << std::endl;        
+     //   symbol_exprt &s = to_symbol_expr(renaming_map[*s_it]);
+     //   s.set_identifier(id2string(s.get_identifier())+"'");
       }
     }
   }  
-  */
+
 
 
   if(options.get_bool_option("intervals"))

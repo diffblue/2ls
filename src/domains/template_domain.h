@@ -38,6 +38,7 @@ public:
   row_valuet between(const row_valuet &lower, const row_valuet &upper);
   bool less_than(const row_valuet &v1, const row_valuet &v2);
 
+  exprt get_row_constraint(const rowt &row, const row_valuet &row_value);
   exprt get_row_pre_constraint(const rowt &row, const row_valuet &row_value);
   exprt get_row_post_constraint(const rowt &row, const row_valuet &row_value);
   exprt get_row_pre_constraint(const rowt &row, const valuet &value);
@@ -63,7 +64,7 @@ public:
   void project_on_loops(const valuet &value, exprt &result);
   void project_on_inout(const valuet &value, exprt &result);
 
-protected:
+//protected:
   templatet &templ;
   
 };

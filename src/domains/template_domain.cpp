@@ -152,6 +152,16 @@ Function: template_domaint::get_row_pre_constraint
 
 \*******************************************************************/
 
+exprt template_domaint::get_row_constraint(const rowt &row, const row_valuet &row_value)
+{
+  assert(row<templ.size());
+  kindt k = templ.kinds[row];
+  if(k==OUT || k==OUTL) return true_exprt();
+  if(is_row_value_neginf(row_value)) return false_exprt();
+  if(is_row_value_inf(row_value)) return true_exprt();
+  return binary_relation_exprt(templ.rows[row],ID_le,row_value);
+}
+
 exprt template_domaint::get_row_pre_constraint(const rowt &row, const row_valuet &row_value)
 {
   assert(row<templ.size());

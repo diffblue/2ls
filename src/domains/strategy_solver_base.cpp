@@ -23,7 +23,7 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
   literalt l = solver.convert(or_exprt(inv_expr, literal_exprt(activation_literal)));
   if(!l.is_constant()) 
   {
-    std::cout << "literal " << l << ": " << from_expr(ns,"",inv_expr) << std::endl;
+    std::cout << "literal " << l << ": " << from_expr(ns,"",or_exprt(inv_expr, literal_exprt(activation_literal))) << std::endl;
     formula.push_back(l);
   }
 #endif
@@ -53,13 +53,16 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
   solver << or_exprt(disjunction(strategy_cond_exprs),
 		     literal_exprt(activation_literal));
 #else
-  l = solver.convert(
-      or_exprt(disjunction(strategy_cond_exprs),
-	       literal_exprt(activation_literal)));
+
+  exprt expr_act=
+    or_exprt(disjunction(strategy_cond_exprs),
+	       literal_exprt(activation_literal));
+
+  l = solver.convert(expr_act);
   if(!l.is_constant()) 
   {
     std::cout << "literal " << l << ": " << 
-      from_expr(ns,"",disjunction(strategy_cond_exprs)) << std::endl;
+      from_expr(ns,"", expr_act) << std::endl;
     formula.push_back(l);
   }
 #endif
@@ -78,15 +81,44 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
     if(solver() == decision_proceduret::D_SATISFIABLE) 
     { 
       std::cout << "SAT" << std::endl;
+      
+      #ifdef DEBUG_FORMULA
+      for(unsigned i=0; i<whole_formula.size(); i++) 
+      {
+ 	      std::cout << "literal: " << whole_formula[i] << " " << solver.l_get(whole_formula[i]) << std::endl;
+      }
+          
+      for(unsigned i=0; i<template_domain.templ.size(); i++) 
+      {
+        exprt c = template_domain.get_row_constraint(i,inv[i]);
+ 	      std::cout << "cond: " << from_expr(ns, "", c) << " " << from_expr(ns, "", solver.get(c)) << std::endl;
+ 	      std::cout << "guards: " << from_expr(ns, "", template_domain.templ.pre_guards[i]) << " " << from_expr(ns, "", solver.get(template_domain.templ.pre_guards[i])) << std::endl;
+ 	      std::cout << "guards: " << from_expr(ns, "", template_domain.templ.post_guards[i]) << " " << from_expr(ns, "", solver.get(template_domain.templ.post_guards[i])) << std::endl; 	     	    
+ 	    }    
+          
+      for(replace_mapt::const_iterator
+          it=renaming_map.begin();
+          it!=renaming_map.end();    
+          ++it)
+          
+      {
+        std::cout << "replace_map (1st): " << from_expr(ns, "", it->first) << " " << from_expr(ns, "", solver.get(it->first)) << std::endl;
+        std::cout << "replace_map (2nd): " << from_expr(ns, "", it->second) << " " << from_expr(ns, "", solver.get(it->second)) << std::endl;
+      }
+          
+          
+      #endif
+      
+      
       for(unsigned row=0;row<strategy_cond_literals.size(); row++)
       {
         if(solver.l_get(strategy_cond_literals[row]).is_true()) 
-	{
-	  std::cout << "adding to strategy: " << row << std::endl;
+      	{
+      	  std::cout << "adding to strategy: " << row << std::endl;
           strategy.push_back(row);
           //add blocking constraint
           //solver << or_exprt(literal_exprt(!strategy_cond_literals[row]),
-	  //	      literal_exprt(activation_literal));
+	        //	      literal_exprt(activation_literal));
       	}
       }
       assert(strategy.size()>0);
@@ -97,10 +129,12 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
       std::cout << "UNSAT" << std::endl;
 
 #ifdef DEBUG_FORMULA
-      for(unsigned i=0; i<formula.size(); i++) 
+      for(unsigned i=0; i<whole_formula.size(); i++) 
       {
-        if(solver.is_in_conflict(formula[i]))
-   	  std::cout << "is_in_conflict: " << formula[i] << std::endl;
+        if(solver.is_in_conflict(whole_formula[i]))
+   	      std::cout << "is_in_conflict: " << whole_formula[i] << std::endl;
+   	    else
+  	      std::cout << "not_in_conflict: " << whole_formula[i] << std::endl;
       }
 #endif
 
@@ -128,9 +162,9 @@ void strategy_solver_baset::pop_context()
   literalt activation_literal = activation_literals.back();
   activation_literals.pop_back();
 #ifndef DEBUG_FORMULA
-  solver.set_to_true(literal_exprt(activation_literal));
+  solver.set_to_false(literal_exprt(activation_literal));
 #else
-  formula.push_back(activation_literal);
+  formula.push_back(!activation_literal);
 #endif
   solver.set_assumptions(activation_literals);
 }
