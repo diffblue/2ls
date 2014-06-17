@@ -1,9 +1,9 @@
-void doit()
+void main()
 {
   unsigned x = 0;  
 
   while(x<10)
     ++x;
 
-  x=x;
+  assert(x<=10);
 }

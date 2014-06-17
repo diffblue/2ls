@@ -6,10 +6,12 @@ int foo(int y)
   return 0;
 }
 
-void doit(int x)
+void main()
 {
   g = 1;
+  int x;
   int z = foo(x);
   g++;
   assert(g>=1);
+  assert(z==0);
 }

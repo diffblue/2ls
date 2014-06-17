@@ -1,6 +1,4 @@
-int z;
-
-void doit()
+void main()
 {
 
   int x;
@@ -14,5 +12,8 @@ void doit()
     ++y;
   }
   
-  z=x+y;
+  int z=x+y;
+
+  assert(z>=0);
+  assert(z<=20);
 }

@@ -1,9 +1,6 @@
-int x;  
-
-
-void doit()
+void main()
 {
-  x = 0;
+  int x = 0;
 
   while(x<10)
     ++x;
@@ -14,4 +11,6 @@ void doit()
   while(x>-10)
     --x;
 
+  assert(-10<=x);
+  asset(x<=20);
 }
