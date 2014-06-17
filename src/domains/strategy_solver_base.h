@@ -9,7 +9,7 @@
 
 #include <solvers/flattening/bv_pointers.h>
 
-#define DEBUG_FORMULA
+//#define DEBUG_FORMULA
 
 class strategy_solver_baset 
 {

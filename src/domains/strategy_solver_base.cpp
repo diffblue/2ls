@@ -85,16 +85,19 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
       #ifdef DEBUG_FORMULA
       for(unsigned i=0; i<whole_formula.size(); i++) 
       {
- 	      std::cout << "literal: " << whole_formula[i] << " " << solver.l_get(whole_formula[i]) << std::endl;
+ 	std::cout << "literal: " << whole_formula[i] << " " << 
+          solver.l_get(whole_formula[i]) << std::endl;
       }
           
       for(unsigned i=0; i<template_domain.templ.size(); i++) 
       {
         exprt c = template_domain.get_row_constraint(i,inv[i]);
- 	      std::cout << "cond: " << from_expr(ns, "", c) << " " << from_expr(ns, "", solver.get(c)) << std::endl;
- 	      std::cout << "guards: " << from_expr(ns, "", template_domain.templ.pre_guards[i]) << " " << from_expr(ns, "", solver.get(template_domain.templ.pre_guards[i])) << std::endl;
- 	      std::cout << "guards: " << from_expr(ns, "", template_domain.templ.post_guards[i]) << " " << from_expr(ns, "", solver.get(template_domain.templ.post_guards[i])) << std::endl; 	     	    
- 	    }    
+ 	std::cout << "cond: " << from_expr(ns, "", c) << " " << 
+          from_expr(ns, "", solver.get(c)) << std::endl;
+ 	std::cout << "guards: " << from_expr(ns, "", template_domain.templ.pre_guards[i]) << 
+          " " << from_expr(ns, "", solver.get(template_domain.templ.pre_guards[i])) << std::endl;
+ 	std::cout << "guards: " << from_expr(ns, "", template_domain.templ.post_guards[i]) << " " 
+          << from_expr(ns, "", solver.get(template_domain.templ.post_guards[i])) << std::endl; 	     	     }    
           
       for(replace_mapt::const_iterator
           it=renaming_map.begin();
@@ -102,11 +105,12 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
           ++it)
           
       {
-        std::cout << "replace_map (1st): " << from_expr(ns, "", it->first) << " " << from_expr(ns, "", solver.get(it->first)) << std::endl;
-        std::cout << "replace_map (2nd): " << from_expr(ns, "", it->second) << " " << from_expr(ns, "", solver.get(it->second)) << std::endl;
+        std::cout << "replace_map (1st): " << from_expr(ns, "", it->first) << " " << 
+          from_expr(ns, "", solver.get(it->first)) << std::endl;
+        std::cout << "replace_map (2nd): " << from_expr(ns, "", it->second) << " " << 
+          from_expr(ns, "", solver.get(it->second)) << std::endl;
       }
-          
-          
+                  
       #endif
       
       

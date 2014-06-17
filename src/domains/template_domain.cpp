@@ -409,13 +409,13 @@ void template_domaint::output_value(std::ostream &out, const valuet &value,
     {
     case LOOP:
       out << "(LOOP) [ " << from_expr(ns,"",templ.pre_guards[row]) << " | ";
-      out << from_expr(ns,"",templ.post_guards[row]) << " ] ===> ";
+      out << from_expr(ns,"",templ.post_guards[row]) << " ] ===> " << std::endl << "       ";
       break;
     case IN: out << "(IN)   "; break;
     case OUT: case OUTL: out << "(OUT)  "; break;
     default: assert(false);
     }
-    out << " ( " << from_expr(ns,"",templ.rows[row]) << " <= ";
+    out << "( " << from_expr(ns,"",templ.rows[row]) << " <= ";
     if(is_row_value_neginf(value[row])) out << "-oo";
     else if(is_row_value_inf(value[row])) out << "oo";
     else out << from_expr(ns,"",value[row]);
@@ -443,13 +443,14 @@ void template_domaint::output_template(std::ostream &out, const namespacet &ns) 
     {
     case LOOP:
       out << "(LOOP) [ " << from_expr(ns,"",templ.pre_guards[row]) << " | ";
-      out << from_expr(ns,"",templ.post_guards[row]) << " ] ===> ";
+      out << from_expr(ns,"",templ.post_guards[row]) << " ] ===> " << std::endl << "      ";
       break;
     case IN: out << "(IN)   "; break;
     case OUT: case OUTL: out << "(OUT)  "; break;
     default: assert(false);
     }
-    out << from_expr(ns,"",templ.rows[row]) << " <= CONST )" << std::endl;
+    out << "( " << 
+        from_expr(ns,"",templ.rows[row]) << " <= CONST )" << std::endl;
   }
 }
 
@@ -506,6 +507,77 @@ bool template_domaint::is_row_value_inf(const row_valuet & row_value) const
 
 /*******************************************************************\
 
+Function: extend_expr_types
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: increases bitvector sizes such that there are no overflows
+
+\*******************************************************************/
+
+void extend_expr_types(exprt &expr)
+{
+  if(expr.id()==ID_symbol) return;
+  if(expr.id()==ID_unary_minus)
+  {
+    extend_expr_types(expr.op0());
+    typet new_type = expr.op0().type();
+    if(new_type.id()==ID_signedbv) 
+    {
+      signedbv_typet &new_typebv = to_signedbv_type(new_type);
+      new_typebv.set_width(new_typebv.get_width()+1); 
+    }
+    if(new_type.id()==ID_unsignedbv) 
+    {
+      unsignedbv_typet &old_type = to_unsignedbv_type(new_type);
+      new_type = signedbv_typet(old_type.get_width()+1); 
+    }
+    expr = unary_minus_exprt(typecast_exprt(expr.op0(),new_type),new_type);
+    return;
+  }
+  if(expr.id()==ID_plus || expr.id()==ID_minus)
+  {
+    extend_expr_types(expr.op0());
+    extend_expr_types(expr.op1());
+    unsigned size0 = 0, size1  = 0;
+    if(expr.op0().type().id()==ID_signedbv) 
+      size0 =  to_signedbv_type(expr.op0().type()).get_width();
+    if(expr.op0().type().id()==ID_unsignedbv) 
+      size0 =  to_unsignedbv_type(expr.op0().type()).get_width();
+    if(expr.op1().type().id()==ID_signedbv) 
+      size1 =  to_signedbv_type(expr.op1().type()).get_width();
+    if(expr.op1().type().id()==ID_unsignedbv) 
+      size1 =  to_unsignedbv_type(expr.op1().type()).get_width();
+    assert(size0>0); assert(size1>0); //TODO: implement floats
+    typet new_type = expr.op0().type();
+    if(expr.op0().type().id()==expr.op1().type().id())
+    {
+     if(new_type.id()==ID_signedbv) 
+       to_signedbv_type(new_type).set_width(std::max(size0,size1)+1);
+     if(new_type.id()==ID_unsignedbv) 
+       to_unsignedbv_type(new_type).set_width(std::max(size0,size1)+1);
+    }
+    else
+    {
+     if(new_type.id()==ID_signedbv) 
+       to_signedbv_type(new_type).set_width(size0<=size1 ? size1+2 : size0+1);
+     if(new_type.id()==ID_unsignedbv) 
+       new_type = signedbv_typet(size1<=size0 ? size0+2 : size1+1);
+    }
+    if(expr.id()==ID_plus)
+      expr = plus_exprt(typecast_exprt(expr.op0(),new_type),typecast_exprt(expr.op1(),new_type));
+    if(expr.id()==ID_minus)
+      expr = minus_exprt(typecast_exprt(expr.op0(),new_type),typecast_exprt(expr.op1(),new_type));
+    return;
+  }
+  //TODO: implement mult
+  assert(false);
+}
+
+/*******************************************************************\
+
 Function: make_interval_template
 
   Inputs:
@@ -539,19 +611,9 @@ void make_interval_template(template_domaint::templatet &templ,
       v!=vars.end(); v++, pre_g++, post_g++, k++)
   {
     templ.rows.push_back(*v);
-    typet new_type = v->type();
-    if(new_type.id()==ID_signedbv) 
-    {
-      signedbv_typet &new_typebv = to_signedbv_type(new_type);
-      new_typebv.set_width(new_typebv.get_width()+1); 
-    }
-    if(new_type.id()==ID_unsignedbv) 
-    {
-      unsignedbv_typet &old_type = to_unsignedbv_type(new_type);
-      new_type = signedbv_typet(old_type.get_width()+1); 
-    }
-    unary_minus_exprt new_expr(typecast_exprt(*v,new_type),new_type);
-    templ.rows.push_back(new_expr); 
+    unary_minus_exprt um_expr(*v,v->type());
+    extend_expr_types(um_expr);
+    templ.rows.push_back(um_expr); 
     for(unsigned i=0;i<2;i++) 
     {
       templ.pre_guards.push_back(*pre_g);
@@ -599,7 +661,9 @@ void make_zone_template(template_domaint::templatet &templ,
       v1!=vars.end(); v1++, pre_g1++, post_g1++, k1++)
   {
     templ.rows.push_back(*v1); 
-    templ.rows.push_back(unary_minus_exprt(*v1,v1->type()));
+    unary_minus_exprt um_expr(*v1,v1->type());
+    extend_expr_types(um_expr);
+    templ.rows.push_back(um_expr); 
     for(unsigned i=0;i<2;i++) 
     {
       templ.pre_guards.push_back(*pre_g1);
@@ -612,9 +676,14 @@ void make_zone_template(template_domaint::templatet &templ,
     template_domaint::kindst::const_iterator k2 = kinds.begin();
     for(;v2!=vars.end(); v2++, pre_g2++, post_g2++, k2++)
     {
-      if(v1->type()!=v2->type()) continue; //disallow mixed types in template rows
-      templ.rows.push_back(minus_exprt(*v1,*v2));
-      templ.rows.push_back(minus_exprt(*v2,*v1));
+      minus_exprt m_expr1(*v1,*v2);
+      extend_expr_types(m_expr1);
+      templ.rows.push_back(m_expr1);
+
+      minus_exprt m_expr2(*v2,*v1);
+      extend_expr_types(m_expr2);
+      templ.rows.push_back(m_expr2);
+
       exprt pre_g = and_exprt(*pre_g1,*pre_g2);
       exprt post_g = and_exprt(*post_g1,*post_g2);
       simplify(pre_g,ns);
@@ -671,7 +740,9 @@ void make_octagon_template(template_domaint::templatet &templ,
       v1!=vars.end(); v1++, pre_g1++, post_g1++, k1++)
   {
     templ.rows.push_back(*v1); 
-    templ.rows.push_back(unary_minus_exprt(*v1,v1->type()));
+    unary_minus_exprt um_expr(*v1,v1->type());
+    extend_expr_types(um_expr);
+    templ.rows.push_back(um_expr); 
     for(unsigned i=0;i<2;i++) 
     {
       templ.pre_guards.push_back(*pre_g1);
@@ -684,11 +755,22 @@ void make_octagon_template(template_domaint::templatet &templ,
     template_domaint::kindst::const_iterator k2 = kinds.begin();
     for(;v2!=vars.end(); v2++, pre_g2++, post_g2++, k2++)
     {
-      if(v1->type()!=v2->type()) continue; //disallow mixed types in template rows
-      templ.rows.push_back(minus_exprt(*v1,*v2));
-      templ.rows.push_back(minus_exprt(*v2,*v1));
-      templ.rows.push_back(plus_exprt(*v1,*v2));
-      templ.rows.push_back(minus_exprt(unary_minus_exprt(*v1,v1->type()),*v2));
+      minus_exprt m_expr1(*v1,*v2);
+      extend_expr_types(m_expr1);
+      templ.rows.push_back(m_expr1);
+
+      minus_exprt m_expr2(*v2,*v1);
+      extend_expr_types(m_expr2);
+      templ.rows.push_back(m_expr2);
+
+      plus_exprt p_expr1(*v1,*v2);
+      extend_expr_types(p_expr1);
+      templ.rows.push_back(p_expr1);
+
+      plus_exprt p_expr2(unary_minus_exprt(*v1,v1->type()),*v2);
+      extend_expr_types(p_expr2);
+      templ.rows.push_back(p_expr2);
+
       exprt pre_g = and_exprt(*pre_g1,*pre_g2);
       exprt post_g = and_exprt(*post_g1,*post_g2);
       simplify(pre_g,ns);
