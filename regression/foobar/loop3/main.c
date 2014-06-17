@@ -1,6 +1,5 @@
 void main()
 {
-
   int x;
   int y;
   x=0;
@@ -15,5 +14,5 @@ void main()
   int z=x+y;
 
   assert(z>=0);
-  assert(z<=20);
+  assert(z<=30);
 }

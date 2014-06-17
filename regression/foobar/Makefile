@@ -1,10 +1,12 @@
 default: goto-binaries tests.log
 
+SOLVER = --binsearch-solver
+
 test:
-	@../test.pl -c ../../../src/summarizer/summarizer
+	@../test.pl -c "../../../src/summarizer/summarizer $(SOLVER)"
 
 tests.log: ../test.pl
-	@../test.pl -c ../../../src/summarizer/summarizer
+	@../test.pl -c "../../../src/summarizer/summarizer $(SOLVER)"
 
 show:
 	@for dir in *; do \

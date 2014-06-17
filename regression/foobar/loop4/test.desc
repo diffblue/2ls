@@ -3,5 +3,4 @@ main.o
 
 ^EXIT=0$
 ^SIGNAL=0$
-^Properties passed: 1$
-^Properties failed: 0$
+^** 0 of 2 failed$
