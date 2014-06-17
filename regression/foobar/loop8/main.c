@@ -12,5 +12,5 @@ void main()
     --x;
 
   assert(-10<=x);
-  asset(x<=20);
+  assert(x<=20);
 }
