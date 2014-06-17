@@ -81,6 +81,17 @@ summary_checkert::resultt summary_checkert::check_properties(
     status() << "Fixed-point" << messaget::eom;
     ssa_analyzert ssa_analyzer(ns, options);
     ssa_analyzer(SSA);
+
+    // Add fixed-point as constraints back into SSA.
+    // We simply use the last CFG node. It would be prettier to put
+    // these close to the loops.
+    goto_programt::const_targett loc=
+      SSA.goto_function.body.instructions.end();
+    loc--;
+    local_SSAt::nodet &node=SSA.nodes[loc];
+    exprt inv;
+    ssa_analyzer.get_loop_invariants(inv);
+    node.constraints.push_back(inv);
     //ssa_fixed_point(SSA);
 
     status() << "Checking properties" << messaget::eom;
