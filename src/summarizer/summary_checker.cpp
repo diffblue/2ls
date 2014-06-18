@@ -37,8 +37,175 @@ Function: summary_checkert::operator()
 property_checkert::resultt summary_checkert::operator()(
   const goto_modelt &goto_model)
 {
+  /* SSA_functions(goto_model);
+  summarize();
+  return check_properties(); */
   return check_properties(goto_model);
 }
+
+/*******************************************************************\
+
+Function: summary_checkert::SSA_functions
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void summary_checkert::SSA_functions(const goto_modelt &goto_model)
+{
+  // properties
+  initialize_property_map(goto_model.goto_functions);
+  
+  const namespacet ns(goto_model.symbol_table);
+
+  // compute SSA for all the functions
+  forall_goto_functions(f_it, goto_model.goto_functions)
+  {
+    if(!f_it->second.body_available) continue;
+
+    status() << "Computing SSA of " << f_it->first << messaget::eom;
+    
+    functions[f_it->first] = new local_SSAt(f_it->second, ns);
+    
+    // simplify, if requested
+    if(simplify)
+    {
+      status() << "Simplifying" << messaget::eom;
+      ::simplify(*functions[f_it->first], ns);
+    }
+
+    functions[f_it->first]->output(status()); //TODO: SEG FAULT
+  }
+}
+
+/*******************************************************************\
+
+Function: summary_checkert::summarize
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void summary_checkert::summarize()
+{
+  summarizer.summarize(functions);
+}
+
+/*******************************************************************\
+
+Function: summary_checkert::check_properties
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+summary_checkert::resultt summary_checkert::check_properties()
+{
+  // analyze all the functions
+  for(summarizert::functionst::const_iterator f_it = functions.begin();
+      f_it != functions.end(); f_it++)
+  {
+    status() << "Checking properties of " << f_it->first << messaget::eom;
+    check_properties(f_it);
+  }
+  
+  for(property_mapt::const_iterator
+      p_it=property_map.begin(); p_it!=property_map.end(); p_it++)
+    if(p_it->second.result==FAIL)
+      return property_checkert::FAIL;
+    
+  return property_checkert::PASS;
+}
+
+/*******************************************************************\
+
+Function: summary_checkert::check_properties
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void summary_checkert::check_properties(
+   const summarizert::functionst::const_iterator f_it)
+{
+  const local_SSAt &SSA = *f_it->second;
+  if(!SSA.goto_function.body.has_assertion()) return;
+  
+  // non-incremental version
+
+  const goto_programt &goto_program=SSA.goto_function.body;
+
+  for(goto_programt::instructionst::const_iterator
+      i_it=goto_program.instructions.begin();
+      i_it!=goto_program.instructions.end();
+      i_it++)
+  {
+    if(!i_it->is_assert())
+      continue;
+  
+    const locationt &location=i_it->location;  
+    irep_idt property_id=location.get_property_id();
+
+    if(show_vcc)
+    {
+      do_show_vcc(SSA, i_it);
+      continue;
+    }
+  
+    // solver
+    satcheckt satcheck;
+    bv_pointerst solver(SSA.ns, satcheck);
+  
+    satcheck.set_message_handler(get_message_handler());
+    solver.set_message_handler(get_message_handler());
+    
+    // give SSA to solver
+    solver << SSA;
+
+    // give negation of property to solver
+
+    exprt negated_property=SSA.read_rhs(not_exprt(i_it->guard), i_it);
+
+    if(simplify)
+      negated_property=::simplify_expr(negated_property, SSA.ns);
+  
+    solver << SSA.guard_symbol(i_it);          
+    solver << negated_property;
+    
+    // solve
+    switch(solver())
+    {
+    case decision_proceduret::D_SATISFIABLE:
+      property_map[property_id].result=FAIL;
+      break;
+      
+    case decision_proceduret::D_UNSATISFIABLE:
+      property_map[property_id].result=PASS;
+      break;
+
+    case decision_proceduret::D_ERROR:    
+    default:
+      property_map[property_id].result=ERROR;
+      throw "error from decision procedure";
+    }
+  }
+} 
 
 /*******************************************************************\
 

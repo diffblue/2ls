@@ -11,6 +11,11 @@ Author: Peter Schrammel
 #include "summarizer.h"
 #include "summary_store.h"
 
+#include "../domains/ssa_analyzer.h"
+
+#include "../ssa/local_ssa.h"
+#include "../ssa/simplify_ssa.h"
+
 #include "concrete_transformers.h"
 #include "interval_map_domain.h"
 
@@ -29,7 +34,7 @@ Function: summarizert::summarize()
 
 \*******************************************************************/
 
-summaryt summarizert::summarize(const functiont &function, const preconditiont &precondition)
+summaryt summarizert::summarize(functiont &function, const preconditiont &precondition)
 {
   functions.clear();
   preconditions.clear();
@@ -51,7 +56,7 @@ Function: summarizert::summarize()
 
 \*******************************************************************/
 
-summaryt summarizert::summarize(const functiont &function)
+summaryt summarizert::summarize(functiont &function)
 { 
   return summarize(function,true_exprt()); 
 } 
@@ -68,7 +73,7 @@ Function: summarizert::summarize()
 
 \*******************************************************************/
 
-void summarizert::summarize(const functionst &_functions)
+void summarizert::summarize(functionst &_functions)
 {
   preconditionst _preconditions;
   for(functionst::const_iterator it = _functions.begin(); it!=_functions.end(); it++)
@@ -90,7 +95,7 @@ Function: summarizert::summarize()
 
 \*******************************************************************/
 
-void summarizert::summarize(const functionst &_functions,const preconditionst &_preconditions)
+void summarizert::summarize(functionst &_functions,const preconditionst &_preconditions)
 {
   functions = _functions;
   preconditions = _preconditions;
@@ -111,9 +116,8 @@ Function: summarizert::run()
 
 void summarizert::run()
 {
-
-  //TODO: compute fixed point (if any descendents in the call graph are updated)
-  //TODO: make context sensitive (currently, only globally given preconditions are used)
+  //TODO: make context sensitive (currently, only globally given preconditions are used),
+  //      compute fixed point (if any descendents in the call graph are updated)
   //TODO: replace simple iterator by something following the call graph
   for(functionst::const_iterator it = functions.begin(); it!=functions.end(); it++)
   {
@@ -137,57 +141,45 @@ Function: summarizert::compute_summary_rec()
 
 void summarizert::compute_summary_rec(const function_namet &function_name)
 {
-  local_SSAt::nodest nodes = functions[function_name]->nodes; //copy
-  inline_summaries(function_name,nodes,true); 
+  local_SSAt &SSA = *functions[function_name]; 
+  inline_summaries(function_name,SSA.nodes,true); 
   // functions[function_name]->get_entry_exit_vars();
 
   std::ostringstream out;
   out << "Function body for " << function_name << " to be analyzed: " << std::endl;
-  for(local_SSAt::nodest::iterator n = nodes.begin(); n!=nodes.end(); n++)
-    if(!n->second.empty()) n->second.output(out,functions[function_name]->ns);
+  for(local_SSAt::nodest::iterator n = SSA.nodes.begin(); n!=SSA.nodes.end(); n++)
+    if(!n->second.empty()) n->second.output(out,SSA.ns);
   debug() << out.str() << eom;
 
-  /*
-  // collect the transformer  
-  concrete_transformerst transformers(functions[function_name]->ns, nodes);  
-
-  // compute the fixpoint
-  interval_widening_thresholdst interval_widening_thresholds;
-  interval_map_domaint interval_domain(interval_widening_thresholds);
- 
-  typedef fixpointt<interval_mapt, concrete_transformert> interval_fixpointt;
-
-  // compute fixpoint
-  interval_fixpointt fix(transformers.transformers, interval_domain);
-  
-  interval_fixpointt::resultt fixpoint;
-  
-  interval_domain.initialise(fixpoint, transformers);
- 
-  fix.analyze(fixpoint, 3, 3); 
-
-  fix.output(status(), fixpoint);
-  // end of interval computation
-  */
-  
-
   //analyze
-  //ssa_analyzert analyzer();
-  //analyzer(nodes);
+  ssa_analyzert analyzer(SSA.ns, options);
+  analyzer(SSA);
+
   summaryt summary;
-  summary.params = functions[function_name]->params;
-  summary.returns = functions[function_name]->returns;
-  summary.globals_in = functions[function_name]->globals_in;
-  summary.globals_out = functions[function_name]->globals_out;
+  summary.params =SSA.params;
+  summary.returns =SSA.returns;
+  summary.globals_in =SSA.globals_in;
+  summary.globals_out =SSA.globals_out;
   summary.precondition = preconditions.at(function_name);
-  summary.transformer = true_exprt(); //analyzer.get_summary(summary.transformer); //TODO
+  analyzer.get_summary(summary.transformer);
 
   out.clear();
   out << std::endl << "Summary for function " << function_name << std::endl;
-  summary.output(out,functions[function_name]->ns);   
+  summary.output(out,SSA.ns);   
   debug() << out.str() << eom;
 
   summary_store.put(function_name,summary);
+
+  // Add loop invariants as constraints back into SSA.
+  // We simply use the last CFG node. It would be prettier to put
+  // these close to the loops.
+  goto_programt::const_targett loc=
+    SSA.goto_function.body.instructions.end();
+  loc--;
+  local_SSAt::nodet &node=SSA.nodes[loc];
+  exprt inv;
+  analyzer.get_loop_invariants(inv);
+  node.constraints.push_back(inv);
 }
 
 /*******************************************************************\

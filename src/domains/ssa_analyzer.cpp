@@ -113,12 +113,14 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
    
   add_vars(pre_state_vars,vars);
   var_listt added_returns = add_vars(SSA.returns,vars);
-  var_listt added_globals_out = add_vars(SSA.globals_out,vars); //TODO: guard at exit location?
+  var_listt added_globals_out = add_vars(SSA.globals_out,vars); 
 
   for(unsigned i=0; i<added_returns.size()+added_globals_out.size(); ++i) 
   {
-    var_pre_guards.push_back(true_exprt()); //TODO: replace this stuff
-    var_post_guards.push_back(true_exprt()); //TODO: replace this stuff
+    goto_programt::const_targett t = SSA.goto_function.body.instructions.end(); t--;
+    exprt guard = SSA.guard_symbol(t);
+    var_pre_guards.push_back(true_exprt()); 
+    var_post_guards.push_back(guard); 
     var_kinds.push_back(template_domaint::OUT);
   }
   

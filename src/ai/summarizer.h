@@ -10,6 +10,7 @@ Author: Peter Schrammel
 #define CPROVER_DELTACHECK_SUMMARIZER_H
 
 #include <util/message.h>
+#include <util/options.h>
 #include "summary.h"
 #include "ssa_inliner.h"
 #include "../ssa/local_ssa.h"
@@ -22,7 +23,8 @@ class summary_storet;
 class summarizert : public messaget
 {
  public:
- summarizert(summary_storet &_summary_store) : 
+ summarizert(optionst &_options, summary_storet &_summary_store) : 
+    options(_options),
     summary_store(_summary_store)
   {}
 
@@ -33,16 +35,17 @@ class summarizert : public messaget
   typedef std::map<function_namet, function_bodyt*> functionst;
   typedef functionst::value_type functiont;
 
-  summaryt summarize(const functiont &function, const preconditiont &precondition); 
-  summaryt summarize(const functiont &function);
+  summaryt summarize(functiont &function, const preconditiont &precondition); 
+  summaryt summarize(functiont &function);
 
-  void summarize(const functionst &functions, const preconditionst &preconditions); 
-  void summarize(const functionst &functions); 
+  void summarize(functionst &functions, const preconditionst &preconditions); 
+  void summarize(functionst &functions); 
 
   void inline_summaries(const function_namet &function_name, local_SSAt::nodest &nodes, 
                         bool recursive=false);
 
  protected:
+  optionst &options;
   summary_storet &summary_store;
   functionst functions;
   preconditionst preconditions;
