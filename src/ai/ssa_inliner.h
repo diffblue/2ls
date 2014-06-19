@@ -20,7 +20,8 @@ class ssa_inlinert
   void replace(local_SSAt::nodest &nodes,
 	       local_SSAt::nodest::iterator node,
                local_SSAt::nodet::equalitiest::iterator equ_it, 
-	       const local_SSAt::var_sett &globals, //names of globals at call site
+	       const local_SSAt::var_sett &cs_globals_in, //incoming globals at call site
+	       const local_SSAt::var_sett &cs_globals_out, //outgoing globals at call site
                const summaryt &summary);
 
   //TODO: problem: local_SSAt::nodest maps a goto program target to a single SSA node,
@@ -28,7 +29,8 @@ class ssa_inlinert
   void replace(local_SSAt::nodest &nodes,
 	       local_SSAt::nodest::iterator node, 
                local_SSAt::nodet::equalitiest::iterator equ_it, 
-	       const local_SSAt::var_sett &globals, //names of globals at call site
+	       const local_SSAt::var_sett &cs_globals_in, //incoming globals at call site
+	       const local_SSAt::var_sett &cs_globals_out, //outgoing globals at call site
                const local_SSAt &function);
 
   void havoc(local_SSAt::nodet &node, 
@@ -52,9 +54,9 @@ class ssa_inlinert
   void replace_return_values(local_SSAt::nodest::iterator node, 
 			     local_SSAt::nodet::equalitiest::iterator equ_it,
 			     const local_SSAt::var_sett &returns);
-  void replace_globals_out(local_SSAt::nodest &nodes,
-			   local_SSAt::nodest::iterator node,
-			   const local_SSAt::var_sett &globals_out);
+  void replace_globals_out(const local_SSAt::var_sett &globals_out, 
+			   const local_SSAt::var_sett &cs_globals_in,  
+			   const local_SSAt::var_sett &cs_globals_out);
 
   void rename(exprt &expr);
   void rename_globals(exprt &expr, const local_SSAt::var_sett &globals);

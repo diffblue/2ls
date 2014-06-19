@@ -249,19 +249,22 @@ void summarizert::inline_summaries(const function_namet &function_name,
 
       status() << "Replacing function " << fname << eom;
       //getting globals at call site
-      local_SSAt::var_sett globals; 
-      functions[function_name]->get_globals(n->first,globals);
+      local_SSAt::var_sett cs_globals_in, cs_globals_out; 
+      goto_programt::const_targett loc = n->first;
+      functions[function_name]->get_globals(loc,cs_globals_in);
+      assert(loc!=functions[function_name]->goto_function.body.instructions.end());
+      functions[function_name]->get_globals(++loc,cs_globals_out);
 
-#if DEBUG
+#if 0
       std::cout << "globals at call site: ";
-      for(summaryt::var_sett::const_iterator it = globals.begin();
-          it != globals.end(); it++)
+      for(summaryt::var_sett::const_iterator it = cs_globals_out.begin();
+          it != cs_globals_out.end(); it++)
          std::cout << from_expr(functions[function_name]->ns,"",*it) << " ";
       std::cout << std::endl;
 #endif
 
       //replace
-      inliner.replace(nodes,n,e,globals,summary);
+      inliner.replace(nodes,n,e,cs_globals_in,cs_globals_out,summary);
     }
     inliner.commit_node(n);
   }

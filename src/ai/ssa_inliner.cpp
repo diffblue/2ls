@@ -18,14 +18,15 @@ Function: ssa_inlinert::replace()
 
  Outputs:
 
- Purpose:
+ Purpose: inline summary
 
 \*******************************************************************/
 
 void ssa_inlinert::replace(local_SSAt::nodest &nodes,
                        local_SSAt::nodest::iterator node, 
                        local_SSAt::nodet::equalitiest::iterator equ_it, 
-		       const local_SSAt::var_sett &globals, //names of globals at call site
+		       const local_SSAt::var_sett &cs_globals_in,
+		       const local_SSAt::var_sett &cs_globals_out, 
                        const summaryt &summary)
 {
   function_application_exprt funapp_expr = to_function_application_expr(equ_it->rhs());
@@ -36,7 +37,7 @@ void ssa_inlinert::replace(local_SSAt::nodest &nodes,
   replace_params(summary.params,funapp_expr);
 
   //equalities for globals_in
-  replace_globals_in(summary.globals_in,globals);
+  replace_globals_in(summary.globals_in,cs_globals_in);
 
   //constraints for transformer
   node->second.constraints.push_back(summary.transformer);  //copy
@@ -49,8 +50,8 @@ void ssa_inlinert::replace(local_SSAt::nodest &nodes,
   //remove obsolete equalities
   rm_equs.insert(equ_it);
 
-  //rename "globals_out in caller" to globals_out in caller
-  replace_globals_out(nodes,node,summary.globals_out);
+  //equalities for globals out (including unmodified globals)
+  replace_globals_out(summary.globals_out,cs_globals_in,cs_globals_out);
 }
 
 /*******************************************************************\
@@ -61,14 +62,15 @@ Function: ssa_inlinert::replace()
 
  Outputs:
 
- Purpose:
+ Purpose: inline function 
 
 \*******************************************************************/
 
 void ssa_inlinert::replace(local_SSAt::nodest &nodes,
                        local_SSAt::nodest::iterator node, 
                        local_SSAt::nodet::equalitiest::iterator equ_it, 
-		       const local_SSAt::var_sett &globals, //names of globals at call site
+		       const local_SSAt::var_sett &cs_globals_in,
+		       const local_SSAt::var_sett &cs_globals_out, 
                        const local_SSAt &function)
 {
   function_application_exprt funapp_expr = to_function_application_expr(equ_it->rhs());
@@ -79,7 +81,7 @@ void ssa_inlinert::replace(local_SSAt::nodest &nodes,
   replace_params(function.params,funapp_expr);
 
   //equalities for globals_in
-  replace_globals_in(function.globals_in,globals);
+  replace_globals_in(function.globals_in,cs_globals_in);
 
   //add function body
   for(local_SSAt::nodest::const_iterator n_it = function.nodes.begin();
@@ -107,8 +109,8 @@ void ssa_inlinert::replace(local_SSAt::nodest &nodes,
   //remove obsolete equalities
   rm_equs.insert(equ_it);
 
-  //rename "globals_out in caller" to globals_out in caller
-  replace_globals_out(nodes,node,function.globals_out);
+  //equalities for globals out (including unmodified globals)
+  replace_globals_out(function.globals_out,cs_globals_in,cs_globals_out);
 }
 
 /*******************************************************************\
@@ -207,23 +209,22 @@ Function: ssa_inlinert::replace_globals_out()
 
 \*******************************************************************/
 
-void ssa_inlinert::replace_globals_out(local_SSAt::nodest &nodes,
-				       local_SSAt::nodest::iterator node,
-                                       const local_SSAt::var_sett &globals_out)
+void ssa_inlinert::replace_globals_out(const local_SSAt::var_sett &globals_out, 
+				       const local_SSAt::var_sett &cs_globals_in,  
+				       const local_SSAt::var_sett &cs_globals_out)
 {
-  //rename "globals_out in caller" to globals_out in caller
-  for(node++; node != nodes.end(); node++)
+
+  //equalities for globals_out
+  for(summaryt::var_sett::const_iterator it = cs_globals_out.begin();
+      it != cs_globals_out.end(); it++)
   {
-    for(local_SSAt::nodet::equalitiest::iterator it = node->second.equalities.begin();
-        it != node->second.equalities.end(); it++)
-    {
-      rename_globals(it->rhs(),globals_out);
-    }
-    for(local_SSAt::nodet::constraintst::iterator it = node->second.constraints.begin();
-        it != node->second.constraints.end(); it++)
-    {
-      rename_globals(*it,globals_out);
-    }  
+    symbol_exprt rhs = *it; //copy
+    symbol_exprt lhs;
+    if(find_corresponding_symbol(*it,globals_out,lhs))
+      rename(lhs);
+    else
+      assert(find_corresponding_symbol(*it,cs_globals_in,lhs));
+    new_equs.push_back(equal_exprt(lhs,rhs));
   }
 }
 
