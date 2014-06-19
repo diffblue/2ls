@@ -6,7 +6,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#define DEBUG
+//#define DEBUG
 
 #include <util/options.h>
 
@@ -21,6 +21,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/find_symbols.h>
 #include <util/arith_tools.h>
+#include <util/simplify_expr.h>
 
 #ifdef DEBUG
 #include <iostream>
@@ -94,19 +95,23 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
         pre_state_vars.push_back(in);
         post_state_vars.push_back(out);
         
+  #ifdef DEBUG
         std::cout << "Adding " << from_expr(ns, "", in) << " " << 
           from_expr(ns, "", out) << std::endl;        
-      }
+  #endif
+     }
     } 
   }
   
   
   
+#ifdef DEBUG
   for(unsigned i=0; i<pre_state_vars.size(); ++i)
   {
     std::cout << from_expr(pre_state_vars[i]) << " pre-guard:  " << from_expr(var_pre_guards[i]) << std::endl;  
     std::cout << from_expr(pre_state_vars[i]) << " post-guard: " << from_expr(var_post_guards[i]) << std::endl;  
   }
+#endif
 
 
   template_domaint::templatet templ;
@@ -137,6 +142,7 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
     renaming_map[*it1]=*it2;    
     //    renaming_map[*it2]=*it2;    
   }
+#ifdef DEBUG
   /*for(var_listt::const_iterator it=top_vars.begin(); it!=top_vars.end(); ++it)
   {
     renaming_map[*it]=*it;    
@@ -167,7 +173,7 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
       }
     }
   }  
-
+#endif
 
 
   if(options.get_bool_option("intervals"))
@@ -190,7 +196,6 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
             << "  params size " << SSA.params.size() << std::endl
             << "  returns size " << SSA.returns.size() << std::endl
             << "  pre_state " << pre_state_vars.size() << std::endl;
-
   #endif  
     
   template_domaint template_domain(templ);
@@ -229,6 +234,10 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
     strategy_solver = new strategy_solver_optt(transition_relation, pre_state_vars, post_state_vars, template_domain, solver, ns);
   }*/
   else assert(false);
+
+  strategy_solver->set_message_handler(get_message_handler());
+  strategy_solver->set_verbosity(get_verbosity());
+
 
   iteration_number=0;
 

@@ -14,16 +14,16 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
   literalt activation_literal = new_context();
 
   exprt inv_expr = template_domain.to_pre_constraints(inv);
-  std::cout << "pre-inv: " << from_expr(ns,"",inv_expr) << std::endl;
+  debug() << "pre-inv: " << from_expr(ns,"",inv_expr) << eom;
 
 #ifndef DEBUG_FORMULA
   solver << or_exprt(inv_expr, literal_exprt(activation_literal));
 #else
-  std::cout << "literal " << activation_literal << std::endl;
+  debug() << "literal " << activation_literal << eom;
   literalt l = solver.convert(or_exprt(inv_expr, literal_exprt(activation_literal)));
   if(!l.is_constant()) 
   {
-    std::cout << "literal " << l << ": " << from_expr(ns,"",or_exprt(inv_expr, literal_exprt(activation_literal))) << std::endl;
+    debug() << "literal " << l << ": " << from_expr(ns,"",or_exprt(inv_expr, literal_exprt(activation_literal))) <<eom;
     formula.push_back(l);
   }
 #endif
@@ -37,16 +37,16 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
   
   strategy_cond_literals.resize(strategy_cond_exprs.size());
   
-  std::cout << "post-inv: ";
+  debug() << "post-inv: ";
   for(unsigned i = 0; i<strategy_cond_exprs.size(); i++)
   {  
-    std::cout << (i>0 ? " || " : "") << from_expr(ns,"",strategy_cond_exprs[i]) ;
+    debug() << (i>0 ? " || " : "") << from_expr(ns,"",strategy_cond_exprs[i]) ;
 
     strategy_cond_literals[i] = solver.convert(strategy_cond_exprs[i]);
     //solver.set_frozen(strategy_cond_literals[i]);
     strategy_cond_exprs[i] = literal_exprt(strategy_cond_literals[i]);
   }
-  std::cout << std::endl;
+  debug() << eom;
 
 
 #ifndef DEBUG_FORMULA
@@ -61,8 +61,8 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
   l = solver.convert(expr_act);
   if(!l.is_constant()) 
   {
-    std::cout << "literal " << l << ": " << 
-      from_expr(ns,"", expr_act) << std::endl;
+    debug() << "literal " << l << ": " << 
+      from_expr(ns,"", expr_act) <<eom;
     formula.push_back(l);
   }
 #endif
@@ -70,7 +70,7 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
   bool first = true;
   while(true)
   {
-    std::cout << "solver(): ";
+    debug() << "solver(): ";
 
 #ifdef DEBUG_FORMULA
     bvt whole_formula = formula;
@@ -80,24 +80,24 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
 
     if(solver() == decision_proceduret::D_SATISFIABLE) 
     { 
-      std::cout << "SAT" << std::endl;
+      debug() << "SAT" << eom;
       
       #ifdef DEBUG_FORMULA
       for(unsigned i=0; i<whole_formula.size(); i++) 
       {
- 	std::cout << "literal: " << whole_formula[i] << " " << 
-          solver.l_get(whole_formula[i]) << std::endl;
+ 	debug() << "literal: " << whole_formula[i] << " " << 
+          solver.l_get(whole_formula[i]) << eom;
       }
           
       for(unsigned i=0; i<template_domain.templ.size(); i++) 
       {
         exprt c = template_domain.get_row_constraint(i,inv[i]);
- 	std::cout << "cond: " << from_expr(ns, "", c) << " " << 
-          from_expr(ns, "", solver.get(c)) << std::endl;
- 	std::cout << "guards: " << from_expr(ns, "", template_domain.templ.pre_guards[i]) << 
-          " " << from_expr(ns, "", solver.get(template_domain.templ.pre_guards[i])) << std::endl;
- 	std::cout << "guards: " << from_expr(ns, "", template_domain.templ.post_guards[i]) << " " 
-          << from_expr(ns, "", solver.get(template_domain.templ.post_guards[i])) << std::endl; 	     	     }    
+ 	debug() << "cond: " << from_expr(ns, "", c) << " " << 
+          from_expr(ns, "", solver.get(c)) << eom;
+ 	debug() << "guards: " << from_expr(ns, "", template_domain.templ.pre_guards[i]) << 
+          " " << from_expr(ns, "", solver.get(template_domain.templ.pre_guards[i])) << eom;
+ 	debug() << "guards: " << from_expr(ns, "", template_domain.templ.post_guards[i]) << " " 
+          << from_expr(ns, "", solver.get(template_domain.templ.post_guards[i])) << eom; 	     	     }    
           
       for(replace_mapt::const_iterator
           it=renaming_map.begin();
@@ -105,10 +105,10 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
           ++it)
           
       {
-        std::cout << "replace_map (1st): " << from_expr(ns, "", it->first) << " " << 
-          from_expr(ns, "", solver.get(it->first)) << std::endl;
-        std::cout << "replace_map (2nd): " << from_expr(ns, "", it->second) << " " << 
-          from_expr(ns, "", solver.get(it->second)) << std::endl;
+        debug() << "replace_map (1st): " << from_expr(ns, "", it->first) << " " << 
+          from_expr(ns, "", solver.get(it->first)) << eom;
+        debug() << "replace_map (2nd): " << from_expr(ns, "", it->second) << " " << 
+          from_expr(ns, "", solver.get(it->second)) << eom;
       }
                   
       #endif
@@ -118,7 +118,7 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
       {
         if(solver.l_get(strategy_cond_literals[row]).is_true()) 
       	{
-      	  std::cout << "adding to strategy: " << row << std::endl;
+      	  debug() << "adding to strategy: " << row << eom;
           strategy.push_back(row);
           //add blocking constraint
           //solver << or_exprt(literal_exprt(!strategy_cond_literals[row]),
@@ -130,15 +130,15 @@ bool strategy_solver_baset::improve(const invariantt &inv, strategyt &strategy)
     }
     else 
     {
-      std::cout << "UNSAT" << std::endl;
+      debug() << "UNSAT" << eom;
 
 #ifdef DEBUG_FORMULA
       for(unsigned i=0; i<whole_formula.size(); i++) 
       {
         if(solver.is_in_conflict(whole_formula[i]))
-   	      std::cout << "is_in_conflict: " << whole_formula[i] << std::endl;
+   	      debug() << "is_in_conflict: " << whole_formula[i] << eom;
    	    else
-  	      std::cout << "not_in_conflict: " << whole_formula[i] << std::endl;
+  	      debug() << "not_in_conflict: " << whole_formula[i] << eom;
       }
 #endif
 
@@ -156,7 +156,7 @@ literalt strategy_solver_baset::new_context()
       i2string(activation_literal_counter++), bool_typet()));
 
 #if 0
-    std::cout << "new context: " << activation_literal<< std::endl;
+    debug() << "new context: " << activation_literal<< eom;
 #endif
 
   activation_literals.push_back(activation_literal);
@@ -176,7 +176,7 @@ void strategy_solver_baset::pop_context()
 #endif
 
 #if 0
-    std::cout << "pop context: " << activation_literal<< std::endl;
+    debug() << "pop context: " << activation_literal<< eom;
 #endif
 
   solver.set_assumptions(activation_literals);

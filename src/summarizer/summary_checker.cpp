@@ -37,10 +37,11 @@ Function: summary_checkert::operator()
 property_checkert::resultt summary_checkert::operator()(
   const goto_modelt &goto_model)
 {
-  /* SSA_functions(goto_model);
+  const namespacet ns(goto_model.symbol_table);
+  SSA_functions(goto_model,ns);
   summarize();
-  return check_properties(); */
-  return check_properties(goto_model);
+  return check_properties(); 
+  // return check_properties(goto_model);
 }
 
 /*******************************************************************\
@@ -55,13 +56,11 @@ Function: summary_checkert::SSA_functions
 
 \*******************************************************************/
 
-void summary_checkert::SSA_functions(const goto_modelt &goto_model)
+void summary_checkert::SSA_functions(const goto_modelt &goto_model,  const namespacet &ns)
 {
   // properties
   initialize_property_map(goto_model.goto_functions);
   
-  const namespacet ns(goto_model.symbol_table);
-
   // compute SSA for all the functions
   forall_goto_functions(f_it, goto_model.goto_functions)
   {
@@ -69,16 +68,17 @@ void summary_checkert::SSA_functions(const goto_modelt &goto_model)
 
     status() << "Computing SSA of " << f_it->first << messaget::eom;
     
-    functions[f_it->first] = new local_SSAt(f_it->second, ns);
+    local_SSAt *SSA = new local_SSAt(f_it->second, ns);
     
     // simplify, if requested
     if(simplify)
     {
       status() << "Simplifying" << messaget::eom;
-      ::simplify(*functions[f_it->first], ns);
+      ::simplify(*SSA, ns);
     }
 
-    functions[f_it->first]->output(status()); //TODO: SEG FAULT
+    SSA->output(debug()); debug() << eom;
+    functions[f_it->first] = SSA;
   }
 }
 
@@ -95,7 +95,10 @@ Function: summary_checkert::summarize
 \*******************************************************************/
 
 void summary_checkert::summarize()
-{
+{    
+  summarizer.set_message_handler(get_message_handler());
+  summarizer.set_verbosity(get_verbosity());
+
   summarizer.summarize(functions);
 }
 

@@ -58,7 +58,7 @@ protected:
     const local_SSAt &,
     const goto_programt::const_targett);
 
-  void SSA_functions(const goto_modelt &);
+  void SSA_functions(const goto_modelt &, const namespacet &ns);
 
   void summarize();
 

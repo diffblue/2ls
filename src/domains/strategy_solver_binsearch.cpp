@@ -9,7 +9,7 @@ void strategy_solver_binsearcht::solve(invariantt &inv, const strategyt &strateg
   {
 
 #if 1
-    std::cout << "processing strategy: " << *s_it << std::endl;
+    debug() << "processing strategy: " << *s_it << eom;
 #endif
 
     template_domaint::row_valuet upper = template_domain.get_max_row_value(*s_it);
@@ -23,22 +23,22 @@ void strategy_solver_binsearcht::solve(invariantt &inv, const strategyt &strateg
       exprt c = template_domain.get_row_post_constraint(*s_it,middle);
 
 #if 0
-      std::cout << "upper: " << from_expr(ns,"",upper) << std::endl;
-      std::cout << "middle: " << from_expr(ns,"",middle) << std::endl;
-      std::cout << "lower: " << from_expr(ns,"",lower) << std::endl;
+      debug() << "upper: " << from_expr(ns,"",upper) << eom;
+      debug() << "middle: " << from_expr(ns,"",middle) << eom;
+      debug() << "lower: " << from_expr(ns,"",lower) << eom;
 #endif
   
       replace_expr(renaming_map, c);
 
       literalt activation_literal = new_context();
-      //      std::cout << "constraint: " << from_expr(ns, "", not_exprt(c)) << std::endl;
+      //      debug() << "constraint: " << from_expr(ns, "", not_exprt(c)) << eom;
       solver << or_exprt(not_exprt(c),
 			 literal_exprt(activation_literal)); // e > middle
 
       if(solver() == decision_proceduret::D_SATISFIABLE) 
       { 
 #if 0
-	std::cout << "SAT" << std::endl;
+	debug() << "SAT" << eom;
 #endif
 
         lower = middle;
@@ -47,7 +47,7 @@ void strategy_solver_binsearcht::solve(invariantt &inv, const strategyt &strateg
       else 
       {
 #if 0
-	std::cout << "UNSAT" << std::endl;
+	debug() << "UNSAT" << eom;
 #endif
 
         upper = middle;
@@ -56,7 +56,7 @@ void strategy_solver_binsearcht::solve(invariantt &inv, const strategyt &strateg
     }
    
 #if 1
-    std::cout << "update value: " << from_expr(ns,"",lower) << std::endl;
+    debug() << "update value: " << from_expr(ns,"",lower) << eom;
 #endif
 
     template_domain.set_row_value(*s_it,lower,inv);

@@ -11,7 +11,7 @@
 
 //#define DEBUG_FORMULA
 
-class strategy_solver_baset 
+class strategy_solver_baset : public messaget
 {
 
  public:
@@ -33,25 +33,17 @@ class strategy_solver_baset
     {
 
 #ifndef DEBUG_FORMULA
-      std::cout << "program: " << from_expr(ns,"",*it) << std::endl;
+      debug() << "program: " << from_expr(ns,"",*it) << eom;
       solver << *it;
 #else
       literalt l = solver.convert(*it);
       if(!l.is_constant()) 
       {
-        std::cout << "literal " << l << ": " << from_expr(ns,"",*it) << std::endl;
+        debug() << "literal " << l << ": " << from_expr(ns,"",*it) << eom;
         formula.push_back(l);
       }
 #endif
     }
-
-    // adding renamed program constraints to solver db
-    /*  for(constraintst::const_iterator it = program.begin(); it != program.end(); it++)
-    {
-      exprt e = *it;
-      replace_expr(renaming_map,e);
-      solver << e;
-      }  */
 }
 
   virtual void solve(invariantt &inv, const strategyt &strategy) { assert(false); }

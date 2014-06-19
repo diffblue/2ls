@@ -23,7 +23,7 @@ class summary_storet;
 class summarizert : public messaget
 {
  public:
- summarizert(optionst &_options, summary_storet &_summary_store) : 
+ summarizert(const optionst &_options, summary_storet &_summary_store) : 
     options(_options),
     summary_store(_summary_store)
   {}
@@ -45,7 +45,7 @@ class summarizert : public messaget
                         bool recursive=false);
 
  protected:
-  optionst &options;
+  const optionst &options;
   summary_storet &summary_store;
   functionst functions;
   preconditionst preconditions;

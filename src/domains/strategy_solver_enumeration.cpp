@@ -12,7 +12,7 @@ void strategy_solver_enumerationt::solve(invariantt &inv, const strategyt &strat
     exprt value = solver.get(strategy_value_exprs[*s_it]);
     //    std::cout << "raw value: " << from_expr(ns,"",value) << std::endl;
     template_domaint::row_valuet v = simplify_const(value);
-    std::cout << "row value " << from_expr(ns, "", value) << " simplified value: " << from_expr(ns,"",v) << std::endl;
+    debug() << "row value " << from_expr(ns, "", value) << " simplified value: " << from_expr(ns,"",v) << eom;
     template_domain.set_row_value(*s_it,v,inv);
   }
   

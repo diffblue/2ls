@@ -8,6 +8,9 @@ Author: Peter Schrammel
 
 #include <iostream>
 
+#include <util/simplify_expr.h>
+
+
 #include "summarizer.h"
 #include "summary_store.h"
 
@@ -145,14 +148,19 @@ void summarizert::compute_summary_rec(const function_namet &function_name)
   inline_summaries(function_name,SSA.nodes,true); 
   // functions[function_name]->get_entry_exit_vars();
 
-  std::ostringstream out;
-  out << "Function body for " << function_name << " to be analyzed: " << std::endl;
-  for(local_SSAt::nodest::iterator n = SSA.nodes.begin(); n!=SSA.nodes.end(); n++)
-    if(!n->second.empty()) n->second.output(out,SSA.ns);
-  debug() << out.str() << eom;
+  {
+    std::ostringstream out;
+    out << "Function body for " << function_name << " to be analyzed: " << std::endl;
+    for(local_SSAt::nodest::iterator n = SSA.nodes.begin(); n!=SSA.nodes.end(); n++)
+      if(!n->second.empty()) n->second.output(out,SSA.ns);
+    debug() << out.str() << eom;
+  }
 
   //analyze
   ssa_analyzert analyzer(SSA.ns, options);
+  analyzer.set_message_handler(get_message_handler());
+  analyzer.set_verbosity(get_verbosity());
+
   analyzer(SSA);
 
   summaryt summary;
@@ -162,11 +170,14 @@ void summarizert::compute_summary_rec(const function_namet &function_name)
   summary.globals_out =SSA.globals_out;
   summary.precondition = preconditions.at(function_name);
   analyzer.get_summary(summary.transformer);
+  simplify_expr(summary.transformer, SSA.ns);
 
-  out.clear();
-  out << std::endl << "Summary for function " << function_name << std::endl;
-  summary.output(out,SSA.ns);   
-  debug() << out.str() << eom;
+  {
+    std::ostringstream out;
+    out << std::endl << "Summary for function " << function_name << std::endl;
+    summary.output(out,SSA.ns);   
+    status() << out.str() << eom;
+  }
 
   summary_store.put(function_name,summary);
 
