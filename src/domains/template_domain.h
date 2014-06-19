@@ -32,8 +32,7 @@ public:
   templ(_template) 
  {}
 
-  void bottom(valuet &value);
-  void set_to_top(const var_listt &top_vars, valuet &value);
+  void initialize(valuet &value);
 
   row_valuet between(const row_valuet &lower, const row_valuet &upper);
   bool less_than(const row_valuet &v1, const row_valuet &v2);

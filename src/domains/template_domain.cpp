@@ -10,7 +10,7 @@
 
 /*******************************************************************\
 
-Function: template_domaint::bottom
+Function: template_domaint::initialize
 
   Inputs:
 
@@ -20,48 +20,13 @@ Function: template_domaint::bottom
 
 \*******************************************************************/
 
-void template_domaint::bottom(valuet &value)
+void template_domaint::initialize(valuet &value)
 {
   value.resize(templ.size());
   for(unsigned row = 0; row<templ.size(); row++)
   {
-    value[row] = false_exprt(); //marker for -oo
-  }
-}
-
-/*******************************************************************\
-
-Function: template_domaint::set_to_top
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void template_domaint::set_to_top(const var_listt &top_vars, valuet &value)
-{
-  assert(value.size()==templ.size());
-  
-  find_symbols_sett top_symbols;
-  for(var_listt::const_iterator 
-      it=top_vars.begin();
-      it!=top_vars.end(); 
-      ++it)
-  {
-    top_symbols.insert(it->get_identifier());
-  }
-  
-  for(unsigned row = 0; row<templ.size(); row++)
-  {
-    const exprt &row_expr=templ.rows[row];
-  
-    if(has_symbol(row_expr, top_symbols))
-    {
-      value[row] = true_exprt(); //get_max_row_value(row); //marker for oo
-    }
+    if(templ.kinds[row]==IN) value[row] = true_exprt(); //marker for oo
+    else value[row] = false_exprt(); //marker for -oo
   }
 }
 
@@ -197,7 +162,7 @@ exprt template_domaint::get_row_post_constraint(const rowt &row, const row_value
   assert(row<templ.size());
   if(templ.kinds[row]==IN) return true_exprt();
   if(is_row_value_neginf(row_value)) return implies_exprt(templ.post_guards[row], false_exprt());
-  if(is_row_value_inf(row_value)) return true_exprt();
+  if(is_row_value_inf(row_value)) return implies_exprt(templ.post_guards[row], true_exprt());
   return implies_exprt(templ.post_guards[row], binary_relation_exprt(templ.rows[row],ID_le,row_value));
 }
 
@@ -447,7 +412,10 @@ void template_domaint::output_template(std::ostream &out, const namespacet &ns) 
       out << from_expr(ns,"",templ.post_guards[row]) << " ] ===> " << std::endl << "      ";
       break;
     case IN: out << "(IN)   "; break;
-    case OUT: case OUTL: out << "(OUT)  "; break;
+    case OUT: case OUTL:
+      out << "(OUT)  "; 
+      out << from_expr(ns,"",templ.post_guards[row]) << " ===> " << std::endl << "      ";
+      break;
     default: assert(false);
     }
     out << "( " << 
@@ -530,7 +498,7 @@ void extend_expr_types(exprt &expr)
       signedbv_typet &new_typebv = to_signedbv_type(new_type);
       new_typebv.set_width(new_typebv.get_width()+1); 
     }
-    if(new_type.id()==ID_unsignedbv) 
+    else if(new_type.id()==ID_unsignedbv) 
     {
       unsignedbv_typet &old_type = to_unsignedbv_type(new_type);
       new_type = signedbv_typet(old_type.get_width()+1); 
@@ -557,19 +525,24 @@ void extend_expr_types(exprt &expr)
     {
      if(new_type.id()==ID_signedbv) 
        to_signedbv_type(new_type).set_width(std::max(size0,size1)+1);
-     if(new_type.id()==ID_unsignedbv) 
-       to_unsignedbv_type(new_type).set_width(std::max(size0,size1)+1);
+     else if(new_type.id()==ID_unsignedbv) 
+     {
+       if(expr.id()==ID_minus) 
+         new_type = signedbv_typet(std::max(size0,size1)+1);
+       else 
+         to_unsignedbv_type(new_type).set_width(std::max(size0,size1)+1);
+     }
     }
     else
     {
      if(new_type.id()==ID_signedbv) 
        to_signedbv_type(new_type).set_width(size0<=size1 ? size1+2 : size0+1);
-     if(new_type.id()==ID_unsignedbv) 
+     else if(new_type.id()==ID_unsignedbv) 
        new_type = signedbv_typet(size1<=size0 ? size0+2 : size1+1);
     }
     if(expr.id()==ID_plus)
       expr = plus_exprt(typecast_exprt(expr.op0(),new_type),typecast_exprt(expr.op1(),new_type));
-    if(expr.id()==ID_minus)
+    else if(expr.id()==ID_minus)
       expr = minus_exprt(typecast_exprt(expr.op0(),new_type),typecast_exprt(expr.op1(),new_type));
     return;
   }
@@ -671,10 +644,10 @@ void make_zone_template(template_domaint::templatet &templ,
       templ.post_guards.push_back(*post_g1);
       templ.kinds.push_back(*k1);
     }
-    template_domaint::var_guardst::const_iterator pre_g2 = pre_guards.begin();
-    template_domaint::var_guardst::const_iterator post_g2 = post_guards.begin();
+    template_domaint::var_guardst::const_iterator pre_g2 = pre_g1; pre_g2++;
+    template_domaint::var_guardst::const_iterator post_g2 = post_g1; post_g2++;
     template_domaint::var_listt::const_iterator v2 = v1; v2++;
-    template_domaint::kindst::const_iterator k2 = kinds.begin();
+    template_domaint::kindst::const_iterator k2 = k1; k2++;
     for(;v2!=vars.end(); v2++, pre_g2++, post_g2++, k2++)
     {
       minus_exprt m_expr1(*v1,*v2);
@@ -750,10 +723,10 @@ void make_octagon_template(template_domaint::templatet &templ,
       templ.post_guards.push_back(*post_g1);
       templ.kinds.push_back(*k1);
     }
-    template_domaint::var_guardst::const_iterator pre_g2 = pre_guards.begin();
-    template_domaint::var_guardst::const_iterator post_g2 = post_guards.begin();
+    template_domaint::var_guardst::const_iterator pre_g2 = pre_g1; pre_g2++;
+    template_domaint::var_guardst::const_iterator post_g2 = post_g1; post_g2++;
     template_domaint::var_listt::const_iterator v2 = v1; v2++;
-    template_domaint::kindst::const_iterator k2 = kinds.begin();
+    template_domaint::kindst::const_iterator k2 = k1; k2++;
     for(;v2!=vars.end(); v2++, pre_g2++, post_g2++, k2++)
     {
       minus_exprt m_expr1(*v1,*v2);
@@ -891,14 +864,16 @@ constant_exprt simplify_const(const exprt &expr)
   {
     mp_integer res = simplify_const_int(expr);
     const signedbv_typet &type = to_signedbv_type(expr.type());
-    if(res<type.smallest() || res>type.largest()) assert(false);
+    assert(res>=type.smallest());
+    assert(res<=type.largest());
     return to_constant_expr(from_integer(res,expr.type()));
   }
   if(expr.type().id()==ID_unsignedbv)
   {
     mp_integer res = simplify_const_int(expr);
     const unsignedbv_typet &type = to_unsignedbv_type(expr.type());
-    if(res<type.smallest() || res>type.largest()) assert(false);
+    assert(res>=type.smallest());
+    assert(res<=type.largest());
     return to_constant_expr(from_integer(res,expr.type()));
   }
   if(expr.type().id()==ID_floatbv)

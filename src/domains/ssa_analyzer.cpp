@@ -200,10 +200,10 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
     
   template_domaint template_domain(templ);
 
-  #ifdef DEBUG
-  std::cout << "template size " << templ.size() << std::endl;
+  #if 1
+  debug() << "template size " << templ.size() << eom;
   
-  template_domain.output_template(std::cout, ns);
+  template_domain.output_template(debug(), ns); debug() << eom;
   #endif  
     
 
@@ -243,8 +243,8 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
 
 
   // initialize inv
-  template_domain.bottom(inv);
-  template_domain.set_to_top(top_vars, inv);
+  template_domain.initialize(inv);
+  // template_domain.set_to_top(top_vars, inv);
   /*  if(inv.size()==2)
     {
   inv[0] = from_integer(1, pre_state_vars[0].type());
