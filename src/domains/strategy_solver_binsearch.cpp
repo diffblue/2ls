@@ -8,18 +8,17 @@ void strategy_solver_binsearcht::solve(invariantt &inv, const strategyt &strateg
     s_it != strategy.end(); s_it++)
   {
 
-#if 1
+#if 0
     debug() << "processing strategy: " << *s_it << eom;
 #endif
 
     template_domaint::row_valuet upper = template_domain.get_max_row_value(*s_it);
-    template_domaint::row_valuet lower = simplify_const(solver.get(strategy_value_exprs[*s_it]));
-    template_domaint::row_valuet middle = upper;
+    template_domaint::row_valuet lower = template_domain.get_min_row_value(*s_it);
+    //simplify_const(solver.get(strategy_value_exprs[*s_it]));
 
- 
-    while (template_domain.less_than(lower,middle))   
+    while(template_domain.less_than(lower,upper))   
     {
-      middle = template_domain.between(lower,upper);
+      template_domaint::row_valuet middle = template_domain.between(lower,upper);
       exprt c = template_domain.get_row_post_constraint(*s_it,middle);
 
 #if 0
@@ -31,7 +30,11 @@ void strategy_solver_binsearcht::solve(invariantt &inv, const strategyt &strateg
       replace_expr(renaming_map, c);
 
       literalt activation_literal = new_context();
-      //      debug() << "constraint: " << from_expr(ns, "", not_exprt(c)) << eom;
+
+#if 0
+      debug() << "constraint: " << from_expr(ns, "", not_exprt(c)) << eom;
+#endif
+
       solver << or_exprt(not_exprt(c),
 			 literal_exprt(activation_literal)); // e > middle
 
@@ -41,7 +44,8 @@ void strategy_solver_binsearcht::solve(invariantt &inv, const strategyt &strateg
 	debug() << "SAT" << eom;
 #endif
 
-        lower = middle;
+        if(!template_domain.less_than(lower,middle)) lower=upper;
+        else lower = middle;
         //simplify_const(solver.get(strategy_value_exprs[*s_it]));
       }
       else 
@@ -55,7 +59,7 @@ void strategy_solver_binsearcht::solve(invariantt &inv, const strategyt &strateg
       pop_context();
     }
    
-#if 1
+#if 0
     debug() << "update value: " << from_expr(ns,"",lower) << eom;
 #endif
 

@@ -353,6 +353,37 @@ template_domaint::row_valuet template_domaint::get_max_row_value(
   assert(false); //type not supported
 }
 
+/*******************************************************************\
+
+Function: template_domaint::get_row_max_value
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+template_domaint::row_valuet template_domaint::get_min_row_value(
+  const template_domaint::rowt &row)
+{
+  if(templ.rows[row].type().id()==ID_signedbv)
+  {
+    return to_signedbv_type(templ.rows[row].type()).smallest_expr();
+  }
+  if(templ.rows[row].type().id()==ID_unsignedbv)
+  {
+    return to_unsignedbv_type(templ.rows[row].type()).smallest_expr();
+  }
+  if(templ.rows[row].type().id()==ID_floatbv) 
+  {
+    ieee_floatt min;
+    min.make_fltmin();
+    return min.to_expr();
+  }
+  assert(false); //type not supported
+}
 
 /*******************************************************************\
 

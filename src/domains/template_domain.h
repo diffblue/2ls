@@ -52,6 +52,7 @@ public:
   void set_row_value(const rowt &row, const row_valuet &row_value, valuet &value);
 
   row_valuet get_max_row_value(const rowt &row);
+  row_valuet get_min_row_value(const rowt &row);
 
   void output_value(std::ostream &out, const valuet &value, const namespacet &ns) const;
   void output_template(std::ostream &out, const namespacet &ns) const;
