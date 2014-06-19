@@ -149,6 +149,8 @@ void summary_checkert::check_properties(
 {
   const local_SSAt &SSA = *f_it->second;
   if(!SSA.goto_function.body.has_assertion()) return;
+
+  SSA.output(debug()); debug() << eom;
   
   // non-incremental version
 

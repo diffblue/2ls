@@ -134,7 +134,7 @@ exprt template_domaint::get_row_pre_constraint(const rowt &row, const row_valuet
   kindt k = templ.kinds[row];
   if(k==OUT || k==OUTL) return true_exprt();
   if(is_row_value_neginf(row_value)) return implies_exprt(templ.pre_guards[row], false_exprt());
-  if(is_row_value_inf(row_value)) return true_exprt();
+  if(is_row_value_inf(row_value)) return implies_exprt(templ.pre_guards[row], true_exprt());
   return implies_exprt(templ.pre_guards[row], binary_relation_exprt(templ.rows[row],ID_le,row_value));
 }
 

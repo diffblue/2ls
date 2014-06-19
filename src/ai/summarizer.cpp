@@ -124,7 +124,7 @@ void summarizert::run()
   //TODO: replace simple iterator by something following the call graph
   for(functionst::const_iterator it = functions.begin(); it!=functions.end(); it++)
   {
-    status() << "Summarizing function " << it->first << eom;
+    status() << "\nSummarizing function " << it->first << eom;
     if(!summary_store.exists(it->first)) compute_summary_rec(it->first);
     else status() << "Summary for function " << it->first << " exists already" << eom;
   }
@@ -191,6 +191,8 @@ void summarizert::compute_summary_rec(const function_namet &function_name)
   exprt inv;
   analyzer.get_loop_invariants(inv);
   node.constraints.push_back(inv);
+
+  status() << "Adding loop invariant: " << from_expr(SSA.ns, "", inv) << eom;
 }
 
 /*******************************************************************\
