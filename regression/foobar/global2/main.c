@@ -1,9 +1,8 @@
 int g;
 
-int foo() 
+void foo() 
 { 
   g=10;
-  return 0;
 }
 
 int bar() 
@@ -15,7 +14,7 @@ void main()
 {
   g = 1;
   int x;
-  x = foo();
+  foo();
   x = bar();
   assert(g==10);
   assert(x==20);

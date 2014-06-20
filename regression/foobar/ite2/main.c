@@ -6,9 +6,8 @@ int foo(int x, int y)
 }
 int bar(int x) 
 {   
-  int res = 2;
-  if(x) res = 1;
-  return res; 
+  if(x) return 1;
+  return return 2
 }
 
 void main()
