@@ -1,6 +1,7 @@
 default: goto-binaries tests.log
 
-SOLVER = --binsearch-solver
+SOLVER = --verbosity 10
+#--binsearch-solver
 
 test:
 	@../test.pl -c "../../../src/summarizer/summarizer $(SOLVER)"
