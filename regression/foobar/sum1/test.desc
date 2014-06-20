@@ -1,5 +1,5 @@
 CORE
-main.o
+main.c
 --octagons
 ^EXIT=0$
 ^SIGNAL=0$
