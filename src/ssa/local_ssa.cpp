@@ -325,26 +325,14 @@ void local_SSAt::build_transfer(locationt loc)
   {
     const code_function_callt &code_function_call=
       to_code_function_call(loc->code);
-      
-
-    /* DIFF from trunk
-     if(code_function_call.lhs().is_not_nil())
-     {
-+      // generate a symbol for rhs
-+      irep_idt identifier="ssa::return_value"+i2string(loc->location_number);
-+      symbol_exprt rhs(identifier, code_function_call.lhs().type());
-+      
-+      assign_rec(code_function_call.lhs(), rhs, loc);
-     */
 
     exprt lhs = code_function_call.lhs();
 
-    //TODO: functions without return value are ignored
-    if(code_function_call.lhs().is_nil())
+    /*   if(code_function_call.lhs().is_nil())
     {
       irep_idt identifier="ssa::dummy"+i2string(loc->location_number);
       lhs = symbol_exprt(identifier, code_function_call.lhs().type());
-    }
+      } */
     function_application_exprt ssa_rhs;
     ssa_rhs.function() = code_function_call.function();
     ssa_rhs.type() = code_function_call.lhs().type();
@@ -1087,6 +1075,13 @@ void local_SSAt::assign_rec(
           read_rhs(guard, loc),
           final_rhs, // read_rhs done above
           read_rhs(*a_it, loc));
+    }
+    else if(lhs.id()==ID_nil) // functions without return value
+    {
+      irep_idt identifier="ssa::dummy"+i2string(loc->location_number);
+      equal_exprt equality(symbol_exprt(identifier, bool_typet()), rhs_read);
+      nodes[loc].equalities.push_back(equality);
+      continue;
     }
     else
       continue;
