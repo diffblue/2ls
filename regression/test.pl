@@ -54,7 +54,7 @@ sub test($$$$$) {
   $options =~ s/$ign//g if(defined($ign));
 
   my $output = $input;
-  $output =~ s/\.(o|gb|xml)$/.out/;
+  $output =~ s/\.(c|o|gb|xml)$/.out/;
 
   if($output eq $input) {
     print("Error in test file -- $test\n");
