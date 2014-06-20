@@ -1081,7 +1081,7 @@ void local_SSAt::assign_rec(
       irep_idt identifier="ssa::dummy"+i2string(loc->location_number);
       equal_exprt equality(symbol_exprt(identifier, bool_typet()), rhs_read);
       nodes[loc].equalities.push_back(equality);
-      continue;
+      break;
     }
     else
       continue;
