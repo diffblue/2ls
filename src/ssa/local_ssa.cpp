@@ -106,10 +106,11 @@ void local_SSAt::get_entry_exit_vars()
   for(ssa_domaint::def_mapt::const_iterator d_it = ssa_domain.def_map.begin();
       d_it != ssa_domain.def_map.end(); d_it++)
   {
-    const symbolt &symbol=ns.lookup(d_it->first);
+    const symbolt *symbol;
+    if(!ns.lookup(d_it->first,symbol)) continue;
     if(has_prefix(id2string(d_it->first),CPROVER_RETURN_VALUE_IDENTIFIER))
     {
-      const ssa_objectt ssa_object(symbol.symbol_expr(),ns);
+      const ssa_objectt ssa_object(symbol->symbol_expr(),ns);
       returns.insert(name(ssa_object,d_it->second.def));
     }
   }
@@ -132,15 +133,15 @@ void local_SSAt::get_globals(locationt loc, std::set<symbol_exprt> &globals)
   const ssa_domaint &ssa_domain=ssa_analysis[loc];
   for(ssa_domaint::def_mapt::const_iterator d_it = ssa_domain.def_map.begin();
       d_it != ssa_domain.def_map.end(); d_it++)
+  {
+    const symbolt *symbol;
+    if(!ns.lookup(d_it->first,symbol)) continue;         
+    if(has_static_lifetime(symbol->symbol_expr()))
     {
-      const symbolt &symbol=ns.lookup(d_it->first);
-         
-      if(has_static_lifetime(symbol.symbol_expr()))
-	{
-          const ssa_objectt ssa_object(symbol.symbol_expr(),ns);
-	  globals.insert(name(ssa_object,d_it->second.def));
-	}
+      const ssa_objectt ssa_object(symbol->symbol_expr(),ns);
+      globals.insert(name(ssa_object,d_it->second.def));
     }
+  }
 }   
 
 /*******************************************************************\

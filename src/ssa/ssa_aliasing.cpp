@@ -14,6 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #endif
 
 #include <util/prefix.h>
+#include <util/suffix.h>
 #include <util/cprover_prefix.h>
 #include <util/std_expr.h>
 #include <util/pointer_predicates.h>
@@ -66,6 +67,14 @@ bool ssa_may_alias(
 
   if(e2.id()==ID_symbol &&
      has_prefix(id2string(to_symbol_expr(e2).get_identifier()), CPROVER_PREFIX))
+    return false;
+
+  if(e1.id()==ID_symbol &&
+     has_suffix(id2string(to_symbol_expr(e1).get_identifier()), "#return_value"))
+    return false;
+
+  if(e2.id()==ID_symbol &&
+     has_suffix(id2string(to_symbol_expr(e2).get_identifier()), "#return_value"))
     return false;
 
   // Both member?
