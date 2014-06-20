@@ -20,6 +20,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <goto-symex/adjust_float_expressions.h>
 
+#include <goto-instrument/merge_returns.h>
+
 #include <langapi/language_util.h>
 
 #include "local_ssa.h"
@@ -81,6 +83,7 @@ void local_SSAt::get_entry_exit_vars()
 {
   //TODO: functions with side effects
 
+  //get parameters
   const code_typet::argumentst &argument_types=goto_function.type.arguments();
   for(code_typet::argumentst::const_iterator
       it=argument_types.begin(); it!=argument_types.end(); it++)
@@ -91,25 +94,25 @@ void local_SSAt::get_entry_exit_vars()
     params.push_back(symbol.symbol_expr());
   }
 
-  for(nodest::iterator n = nodes.begin(); n!=nodes.end(); n++)
-  {
-    for(nodet::equalitiest::iterator e = n->second.equalities.begin();
-        e != n->second.equalities.end(); e++)
-    {
-      if(e->lhs().id()==ID_symbol) 
-      {
-	      symbol_exprt s = to_symbol_expr(e->lhs());
-        if(has_prefix(id2string(s.get_identifier()),"ssa::$return")) returns.insert(s);
-      }
-    }
-  }
-
   //get globals in and out
   goto_programt::const_targett first = goto_function.body.instructions.begin();
   get_globals(first,globals_in);
 
   goto_programt::const_targett last = goto_function.body.instructions.end(); last--;
   get_globals(last,globals_out);
+
+  //get return value
+  const ssa_domaint &ssa_domain=ssa_analysis[last];
+  for(ssa_domaint::def_mapt::const_iterator d_it = ssa_domain.def_map.begin();
+      d_it != ssa_domain.def_map.end(); d_it++)
+  {
+    const symbolt &symbol=ns.lookup(d_it->first);
+    if(has_prefix(id2string(d_it->first),CPROVER_RETURN_VALUE_IDENTIFIER))
+    {
+      const ssa_objectt ssa_object(symbol.symbol_expr(),ns);
+      returns.insert(name(ssa_object,d_it->second.def));
+    }
+  }
 }
 
 /*******************************************************************\
@@ -130,14 +133,12 @@ void local_SSAt::get_globals(locationt loc, std::set<symbol_exprt> &globals)
   for(ssa_domaint::def_mapt::const_iterator d_it = ssa_domain.def_map.begin();
       d_it != ssa_domain.def_map.end(); d_it++)
     {
-      if(has_prefix(id2string(d_it->first),"ssa::$return")) continue; //TODO: remove this line when returns are done
       const symbolt &symbol=ns.lookup(d_it->first);
          
       if(has_static_lifetime(symbol.symbol_expr()))
 	{
           const ssa_objectt ssa_object(symbol.symbol_expr(),ns);
 	  globals.insert(name(ssa_object,d_it->second.def));
-          //globals.insert(to_symbol_expr(read_rhs(symbol.symbol_expr(),loc)));
 	}
     }
 }   
