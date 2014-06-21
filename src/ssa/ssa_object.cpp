@@ -150,6 +150,8 @@ Function: ssa_objectst::categorize_objects
 
 \*******************************************************************/
 
+#include <iostream>
+
 void ssa_objectst::categorize_objects(
   const goto_functionst::goto_functiont &goto_function,
   const namespacet &ns)
@@ -164,12 +166,20 @@ void ssa_objectst::categorize_objects(
     if(root_object.id()==ID_symbol)
     {
       const symbolt &symbol=ns.lookup(root_object);
+    std::cout << "RO: " << symbol.name << "\n";
       if(symbol.is_procedure_local())
       {
+        std::cout << "PROC LOC\n";
         if(dirty(symbol.name))
+        {
+        std::cout << "DIRTY " << o_it->get_identifier() << "\n";
           dirty_locals.insert(*o_it);
+        }
         else
+        {
+        std::cout << "CLEAN\n";
           clean_locals.insert(*o_it);
+        }
       }
       else
         globals.insert(*o_it);
@@ -289,7 +299,38 @@ bool is_struct_member(const member_exprt &src, const namespacet &ns)
 
 /*******************************************************************\
 
-Function: ssa_objectt::object_id_rec
+Function: get_struct_rec
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+const exprt &get_struct_rec(const exprt &src, const namespacet &ns)
+{
+  // Returns X for X(.member)*, where
+  // all members are struct members.
+  if(src.id()==ID_member)
+  {
+    const member_exprt &member_expr=to_member_expr(src);
+    const exprt &compound_op=member_expr.struct_op();
+
+    // need to distinguish union and struct members
+    if(is_struct_member(member_expr, ns))
+      return get_struct_rec(compound_op, ns);
+    else
+      return src;
+  }
+  else
+    return src;
+}
+
+/*******************************************************************\
+
+Function: is_symbol_struct_member
 
   Inputs:
 
@@ -303,21 +344,27 @@ Function: ssa_objectt::object_id_rec
 // all members are struct members.
 bool is_symbol_struct_member(const exprt &src, const namespacet &ns)
 {
-  if(src.id()==ID_member)
-  {
-    const member_exprt &member_expr=to_member_expr(src);
-    const exprt &compound_op=member_expr.struct_op();
+  return get_struct_rec(src, ns).id()==ID_symbol;
+}
 
-    // need to distinguish union and struct members
-    if(is_struct_member(member_expr, ns))
-      return is_symbol_struct_member(compound_op, ns);
-    else
-      return false;
-  }
-  else if(src.id()==ID_symbol)
-    return true;
-  else
-    return false;
+/*******************************************************************\
+
+Function: is_symbol_or_deref_struct_member
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+// Returns true for ((*ptr)|symbol)(.member)*, where
+// all members are struct members.
+bool is_symbol_or_deref_struct_member(const exprt &src, const namespacet &ns)
+{
+  exprt struct_op=get_struct_rec(src, ns);
+  return struct_op.id()==ID_struct || struct_op.id()==ID_dereference;
 }
 
 /*******************************************************************\
@@ -332,26 +379,10 @@ Function: is_deref_struct_member
 
 \*******************************************************************/
 
-// Returns true for ((*ptr)|symbol)(.member)*, where
+// Returns true for (*ptr)(.member)*, where
 // all members are struct members.
-bool is_symbol_or_deref_struct_member(const exprt &src, const namespacet &ns)
+bool is_deref_struct_member(const exprt &src, const namespacet &ns)
 {
-  if(src.id()==ID_member)
-  {
-    const member_exprt &member_expr=to_member_expr(src);
-    const exprt &compound_op=member_expr.struct_op();
-
-    // need to distinguish union and struct members
-    if(is_struct_member(member_expr, ns))
-      return is_symbol_struct_member(compound_op, ns);
-    else
-      return false;
-  }
-  else if(src.id()==ID_symbol)
-    return true;
-  else if(src.id()==ID_dereference)
-    return true;
-  else
-    return false;
+  return get_struct_rec(src, ns).id()==ID_dereference;
 }
 

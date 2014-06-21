@@ -103,4 +103,8 @@ bool is_symbol_struct_member(const exprt &, const namespacet &);
 // all members are struct members.
 bool is_symbol_or_deref_struct_member(const exprt &, const namespacet &);
 
+// Returns true for (*ptr)(.member)*, where
+// all members are struct members.
+bool is_deref_struct_member(const exprt &, const namespacet &);
+
 #endif
