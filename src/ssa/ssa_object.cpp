@@ -150,8 +150,6 @@ Function: ssa_objectst::categorize_objects
 
 \*******************************************************************/
 
-#include <iostream>
-
 void ssa_objectst::categorize_objects(
   const goto_functionst::goto_functiont &goto_function,
   const namespacet &ns)
@@ -166,20 +164,12 @@ void ssa_objectst::categorize_objects(
     if(root_object.id()==ID_symbol)
     {
       const symbolt &symbol=ns.lookup(root_object);
-    std::cout << "RO: " << symbol.name << "\n";
       if(symbol.is_procedure_local())
       {
-        std::cout << "PROC LOC\n";
         if(dirty(symbol.name))
-        {
-        std::cout << "DIRTY " << o_it->get_identifier() << "\n";
           dirty_locals.insert(*o_it);
-        }
         else
-        {
-        std::cout << "CLEAN\n";
           clean_locals.insert(*o_it);
-        }
       }
       else
         globals.insert(*o_it);
