@@ -332,9 +332,9 @@ Function: is_deref_struct_member
 
 \*******************************************************************/
 
-// Returns true for (*ptr)(.member)*, where
+// Returns true for ((*ptr)|symbol)(.member)*, where
 // all members are struct members.
-bool is_deref_struct_member(const exprt &src, const namespacet &ns)
+bool is_symbol_or_deref_struct_member(const exprt &src, const namespacet &ns)
 {
   if(src.id()==ID_member)
   {
@@ -348,6 +348,8 @@ bool is_deref_struct_member(const exprt &src, const namespacet &ns)
       return false;
   }
   else if(src.id()==ID_symbol)
+    return true;
+  else if(src.id()==ID_dereference)
     return true;
   else
     return false;

@@ -86,65 +86,62 @@ void assignmentst::assign(
   goto_programt::const_targett loc,
   const namespacet &ns)
 {
+  if(is_symbol_or_deref_struct_member(lhs, ns))
+  {
+    const typet &lhs_type=ns.follow(lhs.type());
+    
+    if(lhs_type.id()==ID_struct)
+    {
+      // Are we assigning an entire struct?
+      // If so, need to split into pieces, recursively.
+    
+      const struct_typet &struct_type=to_struct_type(lhs_type);
+      const struct_typet::componentst &components=struct_type.components();
+      
+      for(struct_typet::componentst::const_iterator
+          it=components.begin();
+          it!=components.end();
+          it++)
+      {
+        member_exprt new_lhs(lhs, it->get_name(), it->type());
+        assign(new_lhs, loc, ns); // recursive call
+      }
+      
+      return; // done
+    }
+    
+    // this might alias all sorts of stuff
+    for(std::set<ssa_objectt>::const_iterator
+        o_it=ssa_objects.objects.begin();
+        o_it!=ssa_objects.objects.end();
+        o_it++)
+    {
+      if(ssa_may_alias(o_it->get_expr(), lhs, ns))
+        assign(*o_it, loc, ns);
+    }    
+
+    return; // done
+  }
+
   if(lhs.id()==ID_typecast)
   {
     assign(to_typecast_expr(lhs).op(), loc, ns);
-    return;
   }
   else if(lhs.id()==ID_if)
   {
     assign(to_if_expr(lhs).true_case(), loc, ns);
     assign(to_if_expr(lhs).false_case(), loc, ns);
-    return;
   }
   else if(lhs.id()==ID_index)
   {
     assign(to_index_expr(lhs).array(), loc, ns);
-    return;
   }
   else if(lhs.id()==ID_member)
   {
-    // need to distinguish struct and union members
+    // non-flattened struct or union member
     const member_exprt &member_expr=to_member_expr(lhs);
-    const typet &compound_type=ns.follow(member_expr.struct_op().type());
-    if(compound_type.id()==ID_union)
-    {
-      assign(member_expr.struct_op(), loc, ns);
-      return;
-    }
+    assign(member_expr.struct_op(), loc, ns);
   }
-
-  const typet &lhs_type=ns.follow(lhs.type());
-  
-  if(lhs_type.id()==ID_struct)
-  {
-    // Are we assigning an entire struct?
-    // If so, need to split into pieces, recursively.
-  
-    const struct_typet &struct_type=to_struct_type(lhs_type);
-    const struct_typet::componentst &components=struct_type.components();
-    
-    for(struct_typet::componentst::const_iterator
-        it=components.begin();
-        it!=components.end();
-        it++)
-    {
-      member_exprt new_lhs(lhs, it->get_name(), it->type());
-      assign(new_lhs, loc, ns); // recursive call
-    }
-    
-    return; // done
-  }
-
-  // this might alias all sorts of stuff
-  for(std::set<ssa_objectt>::const_iterator
-      o_it=ssa_objects.objects.begin();
-      o_it!=ssa_objects.objects.end();
-      o_it++)
-  {
-    if(ssa_may_alias(o_it->get_expr(), lhs, ns))
-      assign(*o_it, loc, ns);
-  }    
 }
 
 /*******************************************************************\
