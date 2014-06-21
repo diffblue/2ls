@@ -268,10 +268,14 @@ irep_idt ssa_objectt::object_id_rec(
   }
   else if(src.id()==ID_dereference)
   {
+    #if 0
     const dereference_exprt &dereference_expr=to_dereference_expr(src);
     irep_idt pointer_object=object_id_rec(dereference_expr.pointer(), ns);
     if(pointer_object==irep_idt()) return irep_idt();
     return id2string(pointer_object)+"'obj";
+    #else
+    return irep_idt();
+    #endif
   }
   else
     return irep_idt();
