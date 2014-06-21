@@ -719,7 +719,7 @@ void local_SSAt::replace_side_effects_rec(
     else
       throw "unexpected side effect: "+id2string(statement);
   }
-  else if(expr.id()==ID_dereference)
+  else if(is_deref_struct_member(expr, ns))
   {
     // We generate a symbol identifier in case dereferencing turns
     // out to need one.
