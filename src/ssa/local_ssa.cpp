@@ -841,106 +841,118 @@ void local_SSAt::assign_rec(
   const exprt &rhs,
   locationt loc)
 {
+  bool flag_symbol=is_symbol_struct_member(lhs, ns);
+  bool flag_deref=is_symbol_or_deref_struct_member(lhs, ns);
+
   const typet &type=ns.follow(lhs.type());
   
-  if(type.id()==ID_struct)
+  if(flag_symbol || flag_deref)
   {
-    // need to split up
-
-    const struct_typet &struct_type=to_struct_type(type);
-    const struct_typet::componentst &components=struct_type.components();
-    
-    for(struct_typet::componentst::const_iterator
-        it=components.begin();
-        it!=components.end();
-        it++)
+    if(type.id()==ID_struct)
     {
-      member_exprt new_lhs(lhs, it->get_name(), it->type());
-      member_exprt new_rhs(rhs, it->get_name(), it->type());
-      assign_rec(new_lhs, new_rhs, loc);
+      // need to split up
+
+      const struct_typet &struct_type=to_struct_type(type);
+      const struct_typet::componentst &components=struct_type.components();
+      
+      for(struct_typet::componentst::const_iterator
+          it=components.begin();
+          it!=components.end();
+          it++)
+      {
+        member_exprt new_lhs(lhs, it->get_name(), it->type());
+        member_exprt new_rhs(rhs, it->get_name(), it->type());
+        assign_rec(new_lhs, new_rhs, loc);
+      }
+
+      return;
     }
-    
-    return; // done
+
+    ssa_objectt lhs_object(lhs, ns);
+
+    exprt rhs_read=read_rhs(rhs, loc);
+
+    const std::set<ssa_objectt> &assigned=
+      assignments.get(loc);
+
+    for(std::set<ssa_objectt>::const_iterator
+        a_it=assigned.begin();
+        a_it!=assigned.end();
+        a_it++)
+    {
+      const symbol_exprt ssa_symbol=name(*a_it, OUT, loc);
+      exprt ssa_rhs;
+
+      if(lhs_object==*a_it)
+      {
+        ssa_rhs=rhs_read;
+      }
+      else if(lhs.id()==ID_dereference) // might alias stuff
+      {
+        const dereference_exprt &dereference_expr=
+          to_dereference_expr(lhs);
+      
+        if(!ssa_may_alias(dereference_expr, a_it->get_expr(), ns))
+          continue;
+          
+        exprt guard=ssa_alias_guard(dereference_expr, a_it->get_expr(), ns);
+        exprt value=ssa_alias_value(dereference_expr, read_rhs(*a_it, loc), ns);
+        
+        exprt final_rhs=nil_exprt();
+        
+        // read the value and the rhs
+        value=read_rhs(value, loc);
+        
+        // merge rhs into value
+        if(value.id()==ID_symbol)
+          final_rhs=rhs_read;
+        else if(value.id()==ID_byte_extract_little_endian)
+          final_rhs=byte_update_little_endian_exprt(
+                          value.op0(), value.op1(), rhs_read);
+        else if(value.id()==ID_byte_extract_big_endian)
+          final_rhs=byte_update_big_endian_exprt(
+                          value.op0(), value.op1(), rhs_read);
+        
+        if(final_rhs.is_nil())
+          ssa_rhs=read_rhs(*a_it, loc);
+        else
+          ssa_rhs=if_exprt(
+            read_rhs(guard, loc),
+            final_rhs, // read_rhs done above
+            read_rhs(*a_it, loc));
+      }
+      else
+        continue;
+      
+      equal_exprt equality(ssa_symbol, ssa_rhs);
+      nodes[loc].equalities.push_back(equality);
+    }
   }
-  
-  if(lhs.id()==ID_index)
+  else if(lhs.id()==ID_index)
   {
     const index_exprt &index_expr=to_index_expr(lhs);
     exprt new_rhs=with_exprt(index_expr.array(), index_expr.index(), rhs);
     assign_rec(index_expr.array(), new_rhs, loc);
-    return;
   }
   else if(lhs.id()==ID_member)
   {
-    // need to distinguish struct and union members
+    // These are non-flattened struct or union members.
     const member_exprt &member_expr=to_member_expr(lhs);
     const exprt &compound=member_expr.struct_op();
     const typet &compound_type=ns.follow(compound.type());
+
     if(compound_type.id()==ID_union)
     {
       union_exprt new_rhs(member_expr.get_component_name(), rhs, compound.type());
       assign_rec(member_expr.struct_op(), new_rhs, loc);
     }
-  }
-
-  ssa_objectt lhs_object(lhs, ns);
-
-  exprt rhs_read=read_rhs(rhs, loc);
-
-  const std::set<ssa_objectt> &assigned=
-    assignments.get(loc);
-
-  for(std::set<ssa_objectt>::const_iterator
-      a_it=assigned.begin();
-      a_it!=assigned.end();
-      a_it++)
-  {
-    const symbol_exprt ssa_symbol=name(*a_it, OUT, loc);
-    exprt ssa_rhs;
-
-    if(lhs_object==*a_it)
+    else if(compound_type.id()==ID_struct)
     {
-      ssa_rhs=rhs_read;
+      exprt member_name(ID_member_name);
+      member_name.set(ID_component_name, member_expr.get_component_name());
+      with_exprt new_rhs(compound, member_name, rhs);
+      assign_rec(compound, new_rhs, loc);
     }
-    else if(lhs.id()==ID_dereference) // might alias stuff
-    {
-      const dereference_exprt &dereference_expr=
-        to_dereference_expr(lhs);
-    
-      if(!ssa_may_alias(dereference_expr, a_it->get_expr(), ns))
-        continue;
-        
-      exprt guard=ssa_alias_guard(dereference_expr, a_it->get_expr(), ns);
-      exprt value=ssa_alias_value(dereference_expr, read_rhs(*a_it, loc), ns);
-      
-      exprt final_rhs=nil_exprt();
-      
-      // read the value and the rhs
-      value=read_rhs(value, loc);
-      
-      // merge rhs into value
-      if(value.id()==ID_symbol)
-        final_rhs=rhs_read;
-      else if(value.id()==ID_byte_extract_little_endian)
-        final_rhs=byte_update_little_endian_exprt(
-                        value.op0(), value.op1(), rhs_read);
-      else if(value.id()==ID_byte_extract_big_endian)
-        final_rhs=byte_update_big_endian_exprt(
-                        value.op0(), value.op1(), rhs_read);
-      
-      if(final_rhs.is_nil())
-        ssa_rhs=read_rhs(*a_it, loc);
-      else
-        ssa_rhs=if_exprt(
-          read_rhs(guard, loc),
-          final_rhs, // read_rhs done above
-          read_rhs(*a_it, loc));
-    }
-    else
-      continue;
-    
-    equal_exprt equality(ssa_symbol, ssa_rhs);
-    nodes[loc].equalities.push_back(equality);
   }
 }
 
