@@ -233,10 +233,9 @@ irep_idt ssa_objectt::object_id_rec(
   {
     const member_exprt &member_expr=to_member_expr(src);
     const exprt &compound_op=member_expr.struct_op();
-    const typet &compound_type=ns.follow(compound_op.type());
     
     // need to distinguish union and struct members
-    if(compound_type.id()==ID_struct)
+    if(is_struct_member(member_expr, ns))
     {
       irep_idt compound_object=object_id_rec(compound_op, ns);
       if(compound_object==irep_idt()) return irep_idt();
@@ -244,8 +243,6 @@ irep_idt ssa_objectt::object_id_rec(
       return id2string(compound_object)+
              "."+id2string(member_expr.get_component_name());
     }
-    else if(compound_type.id()==ID_union)
-      return irep_idt();
     else
       return irep_idt();
   }
@@ -268,5 +265,91 @@ irep_idt ssa_objectt::object_id_rec(
   }
   else
     return irep_idt();
+}
+
+/*******************************************************************\
+
+Function: is_struct_member
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool is_struct_member(const member_exprt &src, const namespacet &ns)
+{
+  const exprt &compound_op=src.struct_op();
+  const typet &compound_type=ns.follow(compound_op.type());
+
+  return compound_type.id()==ID_struct;
+}
+
+/*******************************************************************\
+
+Function: ssa_objectt::object_id_rec
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+// Returns true for symbol(.member)*, where
+// all members are struct members.
+bool is_symbol_struct_member(const exprt &src, const namespacet &ns)
+{
+  if(src.id()==ID_member)
+  {
+    const member_exprt &member_expr=to_member_expr(src);
+    const exprt &compound_op=member_expr.struct_op();
+
+    // need to distinguish union and struct members
+    if(is_struct_member(member_expr, ns))
+      return is_symbol_struct_member(compound_op, ns);
+    else
+      return false;
+  }
+  else if(src.id()==ID_symbol)
+    return true;
+  else
+    return false;
+}
+
+/*******************************************************************\
+
+Function: is_deref_struct_member
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+// Returns true for (*ptr)(.member)*, where
+// all members are struct members.
+bool is_deref_struct_member(const exprt &src, const namespacet &ns)
+{
+  if(src.id()==ID_member)
+  {
+    const member_exprt &member_expr=to_member_expr(src);
+    const exprt &compound_op=member_expr.struct_op();
+
+    // need to distinguish union and struct members
+    if(is_struct_member(member_expr, ns))
+      return is_symbol_struct_member(compound_op, ns);
+    else
+      return false;
+  }
+  else if(src.id()==ID_symbol)
+    return true;
+  else
+    return false;
 }
 
