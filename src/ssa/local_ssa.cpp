@@ -573,7 +573,36 @@ Function: local_SSAt::read_rhs_rec
 
 exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
 {
-  if(expr.id()==ID_sideeffect)
+  if(is_deref_struct_member(expr, ns))
+  {
+    // Stuff like (*ptr).m1.m2 or simply *ptr.
+    // This might alias with whatnot.
+
+    // We use the identifier produced by
+    // local_SSAt::replace_side_effects_rec
+    exprt result=symbol_exprt(expr.get(ID_C_identifier), expr.type());
+
+    // case split for aliasing
+    for(objectst::const_iterator
+        o_it=ssa_objects.objects.begin();
+        o_it!=ssa_objects.objects.end(); o_it++)
+    {
+      if(ssa_may_alias(expr, o_it->get_expr(), ns))
+      {
+        std::cout << "MAY ALIASa: " << from_expr(ns, "", expr) << "\n";
+        std::cout << "MAY ALIASb: " << from_expr(ns, "", o_it->get_expr()) << "\n";
+        exprt guard=ssa_alias_guard(expr, o_it->get_expr(), ns);
+        exprt value=ssa_alias_value(expr, read_rhs(*o_it, loc), ns);
+        guard=read_rhs_rec(guard, loc);
+        value=read_rhs_rec(value, loc);
+
+        result=if_exprt(guard, value, result);
+      }
+    }
+    
+    return result;
+  }
+  else if(expr.id()==ID_sideeffect)
   {
     throw "unexpected side effect in read_rhs_rec";
   }
@@ -585,39 +614,6 @@ exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
   }
   else if(expr.id()==ID_dereference)
   {
-    // might alias with whatnot
-    const dereference_exprt &dereference_expr=to_dereference_expr(expr);
-    
-    ssa_objectt object(expr, ns);
-    exprt result;
-
-    if(object)
-      result=read_rhs(object, loc);
-    else
-    {
-      // we use the identifier produced by
-      // local_SSAt::replace_side_effects_rec
-      result=symbol_exprt(expr.get(ID_C_identifier), expr.type());
-    }
-
-    // case split for aliasing
-    for(objectst::const_iterator
-        o_it=ssa_objects.objects.begin();
-        o_it!=ssa_objects.objects.end(); o_it++)
-    {
-      if(*o_it!=object &&
-         ssa_may_alias(expr, o_it->get_expr(), ns))
-      {
-        exprt guard=ssa_alias_guard(dereference_expr, o_it->get_expr(), ns);
-        exprt value=ssa_alias_value(dereference_expr, read_rhs(*o_it, loc), ns);
-        guard=read_rhs_rec(guard, loc);
-        value=read_rhs_rec(value, loc);
-
-        result=if_exprt(guard, value, result);
-      }
-    }
-    
-    return result;
   }
   else if(expr.id()==ID_index)
   {

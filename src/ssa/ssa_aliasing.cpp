@@ -25,6 +25,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <ansi-c/c_types.h>
 
 #include "ssa_aliasing.h"
+#include "address_canonizer.h"
 
 /*******************************************************************\
 
@@ -128,7 +129,9 @@ bool ssa_may_alias(
 
     // same type?
     if(t1==t2)
+    {
       return true;
+    }
       
     // should consider further options, e.g., struct prefixes      
     return false;
@@ -150,39 +153,29 @@ Function: ssa_alias_guard
 \*******************************************************************/
 
 exprt ssa_alias_guard(
-  const dereference_exprt &e1,
+  const exprt &e1,
   const exprt &e2,
   const namespacet &ns)
 {
-  const exprt e1_pointer=e1.pointer();
-
-  const typet &e2_type=ns.follow(e2.type());
-
-  exprt e2_address=address_of_exprt(e2);
-
-  // is e2 an array, struct, or union?
-  if(e2_type.id()==ID_array ||
-     e2_type.id()==ID_struct ||
-     e2_type.id()==ID_union)
-  {
-    return same_object(e1_pointer, e2_address);
-  }
-
-  // in some cases, we can use plain equality
+  exprt a1=address_canonizer(address_of_exprt(e1), ns);
+  exprt a2=address_canonizer(address_of_exprt(e2), ns);
+  
+  // in some cases, we can use plain address equality,
+  // as we assume well-aligned-ness
   mp_integer size1=pointer_offset_size(ns, e1.type());
   mp_integer size2=pointer_offset_size(ns, e2.type());
   
   if(size1>=size2)
   {
-    exprt lhs=e1_pointer;
-    exprt rhs=e2_address;
+    exprt lhs=a1;
+    exprt rhs=a2;
     if(ns.follow(rhs.type())!=ns.follow(lhs.type()))
       rhs=typecast_exprt(rhs, lhs.type());
   
     return equal_exprt(lhs, rhs);
   }
   
-  return same_object(e1_pointer, e2_address);
+  return same_object(a1, a2);
 }
 
 /*******************************************************************\
@@ -198,12 +191,10 @@ Function: ssa_alias_value
 \*******************************************************************/
 
 exprt ssa_alias_value(
-  const dereference_exprt &e1,
+  const exprt &e1,
   const exprt &e2,
   const namespacet &ns)
 {
-  const exprt &e1_pointer=e1.pointer();
-  
   const typet &e1_type=ns.follow(e1.type());
   const typet &e2_type=ns.follow(e2.type());
 
@@ -211,7 +202,10 @@ exprt ssa_alias_value(
   if(e1_type==e2_type)
     return e2;
 
-  exprt offset=pointer_offset(e1_pointer);
+  exprt a1=address_canonizer(address_of_exprt(e1), ns);
+  exprt a2=address_canonizer(address_of_exprt(e2), ns);
+  
+  exprt offset1=pointer_offset(a1);
 
   // array index possible?
   if(e2_type.id()==ID_array &&
@@ -222,17 +216,17 @@ exprt ssa_alias_value(
     mp_integer element_size=pointer_offset_size(ns, e2_type.subtype());
 
     if(element_size==1)
-      return index_exprt(e2, offset, e1.type());
+      return index_exprt(e2, offset1, e1.type());
     else if(element_size>1)
     {
-      exprt index=div_exprt(offset, from_integer(element_size, offset.type()));
+      exprt index=div_exprt(offset1, from_integer(element_size, offset1.type()));
       return index_exprt(e2, index, e1.type());
     }
   }
 
   byte_extract_exprt byte_extract(byte_extract_id(), e1.type());
   byte_extract.op()=e2;
-  byte_extract.offset()=offset;
+  byte_extract.offset()=offset1;
   
   return byte_extract; 
 }
