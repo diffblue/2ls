@@ -589,8 +589,6 @@ exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
     {
       if(ssa_may_alias(expr, o_it->get_expr(), ns))
       {
-        std::cout << "MAY ALIASa: " << from_expr(ns, "", expr) << "\n";
-        std::cout << "MAY ALIASb: " << from_expr(ns, "", o_it->get_expr()) << "\n";
         exprt guard=ssa_alias_guard(expr, o_it->get_expr(), ns);
         exprt value=ssa_alias_value(expr, read_rhs(*o_it, loc), ns);
         guard=read_rhs_rec(guard, loc);
