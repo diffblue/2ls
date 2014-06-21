@@ -364,7 +364,7 @@ Function: is_symbol_or_deref_struct_member
 bool is_symbol_or_deref_struct_member(const exprt &src, const namespacet &ns)
 {
   exprt struct_op=get_struct_rec(src, ns);
-  return struct_op.id()==ID_struct || struct_op.id()==ID_dereference;
+  return struct_op.id()==ID_symbol || struct_op.id()==ID_dereference;
 }
 
 /*******************************************************************\
