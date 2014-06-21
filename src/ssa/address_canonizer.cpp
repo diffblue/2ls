@@ -102,6 +102,19 @@ exprt address_canonizer(
     tmp.false_case()=address_canonizer(tmp.false_case(), ns);
     return tmp;
   }
+  else if(address.id()==ID_typecast)
+  {
+    typecast_exprt tmp=to_typecast_expr(address);
+    
+    // cast from another pointer?
+    if(tmp.op().type().id()==ID_pointer)
+    {
+      tmp.op()=address_canonizer(tmp.op(), ns);
+      return tmp;
+    }
+
+    return address;
+  }
   else
     return address;
 }
