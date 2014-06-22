@@ -70,6 +70,8 @@ void guard_mapt::build(const goto_programt &src)
       
       if(!it->guard.is_true())
         map[next].add_in(it, NOT_TAKEN);
+      else
+        map[next].has_guard=true;
     }
     else if(it->is_assume())
     {
