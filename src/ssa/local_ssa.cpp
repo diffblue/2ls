@@ -948,6 +948,26 @@ void local_SSAt::assign_rec(
       assign_rec(compound, new_rhs, loc);
     }
   }
+  else if(lhs.id()==ID_complex_real)
+  {
+    assert(lhs.operands().size()==1);
+    const exprt &op=lhs.op0();
+    const complex_typet &complex_type=to_complex_type(op.type());
+    exprt imag_op=unary_exprt(ID_complex_imag, op, complex_type.subtype());
+    complex_exprt new_rhs(rhs, imag_op, complex_type);
+    assign_rec(op, new_rhs, loc);
+  }
+  else if(lhs.id()==ID_complex_imag)
+  {
+    assert(lhs.operands().size()==1);
+    const exprt &op=lhs.op0();
+    const complex_typet &complex_type=to_complex_type(op.type());
+    exprt real_op=unary_exprt(ID_complex_real, op, complex_type.subtype());
+    complex_exprt new_rhs(real_op, rhs, complex_type);
+    assign_rec(op, new_rhs, loc);
+  }
+  else
+    throw "UNKNOWN LHS: "+lhs.id_string();
 }
 
 /*******************************************************************\

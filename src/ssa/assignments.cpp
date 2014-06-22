@@ -142,6 +142,11 @@ void assignmentst::assign(
     const member_exprt &member_expr=to_member_expr(lhs);
     assign(member_expr.struct_op(), loc, ns);
   }
+  else if(lhs.id()==ID_complex_real || lhs.id()==ID_complex_imag)
+  {
+    assert(lhs.operands().size()==1);
+    assign(lhs.op0(), loc, ns);
+  }
 }
 
 /*******************************************************************\
