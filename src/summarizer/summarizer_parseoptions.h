@@ -38,7 +38,7 @@ class optionst;
   "(inline)" \
   "(show-locs)(show-vcc)(show-properties)(show-trace)(show-fixed-points)" \
   "(show-goto-functions)(show-guards)(show-defs)(show-ssa)(show-assignments)" \
-  "(property):" \
+  "(property):(all-properties)" \
   "(no-simplify)(no-fixed-point)" \
   "(no-unwinding-assertions)(no-propagation)"
   // the last line is for CBMC-regression testing only
