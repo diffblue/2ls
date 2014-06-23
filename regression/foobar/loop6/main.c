@@ -10,5 +10,5 @@ void main()
   }
   
   int z=x+y;
-  assert(z==20);
+  assert(z<=20);
 }

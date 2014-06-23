@@ -404,6 +404,8 @@ void local_SSAt::build_guard(locationt loc)
     if(edge.is_branch_taken() &&
        edge.from->is_backwards_goto())
     {
+      continue; //TODO: Why do we need that?
+
       // The loop selector indicates whether the path comes from
       // above (entering the loop) or below (iterating).
       // By convention, we use the loop select symbol for the location
@@ -412,7 +414,7 @@ void local_SSAt::build_guard(locationt loc)
         name(guard_symbol(), LOOP_SELECT, edge.from);
 
       source=loop_select;
-      // need constraining for edge.cond
+      // TODO: need constraining for edge.cond?
     }
     else
     {

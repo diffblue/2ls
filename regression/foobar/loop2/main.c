@@ -1,8 +1,8 @@
-int x = 0;  
-int y = 0;
 
 void main()
 {
+  int x = 0;  
+  int y = 0;
 
   while(x<10)
     ++x;
@@ -10,8 +10,6 @@ void main()
   while(y<10)
     ++y;
 
-  assert(x>=0);
-  assert(x<=10);
-  assert(y>=0);
-  assert(y<=10);
+  assert(x==10);
+  assert(y==10);
 }

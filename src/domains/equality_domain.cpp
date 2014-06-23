@@ -211,7 +211,6 @@ void equality_domaint::output_domain(std::ostream &out,
       break;
     default: assert(false);
     }
-    out << "( " << 
-        from_expr(ns,"",vars[index]) << std::endl;
+    out << from_expr(ns,"",vars[index]) << std::endl;
   }
 }
