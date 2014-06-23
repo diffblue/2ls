@@ -2,9 +2,7 @@ int main()
 {
   int i, j;
 
-  while(i!=10)
-  {
-  }
+  __CPROVER_assume(i!=10);
   
   while(j!=10)
   {
