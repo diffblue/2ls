@@ -57,8 +57,8 @@ bool ssa_may_alias(
   if(e1.id()==ID_symbol &&
      e2.id()==ID_symbol)
   {
-    // not the same, so different
-    return false;
+    return to_symbol_expr(e1).get_identifier()==
+           to_symbol_expr(e2).get_identifier();
   }
     
   // __CPROVER symbols
