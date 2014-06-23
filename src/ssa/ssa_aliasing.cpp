@@ -21,6 +21,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/pointer_offset_size.h>
 #include <util/arith_tools.h>
 #include <util/byte_operators.h>
+#include <util/base_type.h>
+#include <util/expr_util.h>
 
 #include <ansi-c/c_types.h>
 
@@ -105,7 +107,17 @@ bool ssa_may_alias(
   const typet &t1=ns.follow(e1.type());
   const typet &t2=ns.follow(e2.type());
   
-  // Pointers only alias with other pointers, a restriction.
+  // If one is an array, consider the elements
+  if(t1.id()==ID_array)
+    if(ssa_may_alias(index_exprt(e1, gen_zero(index_type()), t1.subtype()), e2, ns))
+      return true;
+  
+  if(t2.id()==ID_array)
+    if(ssa_may_alias(e1, index_exprt(e2, gen_zero(index_type()), t2.subtype()), ns))
+      return true;
+  
+  // Pointers only alias with other pointers,
+  // which is a restriction.
   if(t1.id()==ID_pointer)
     return t2.id()==ID_pointer;
   
@@ -128,11 +140,11 @@ bool ssa_may_alias(
     // look at the types
 
     // same type?
-    if(t1==t2)
+    if(base_type_eq(t1, t2, ns))
     {
       return true;
     }
-      
+    
     // should consider further options, e.g., struct prefixes      
     return false;
   }
