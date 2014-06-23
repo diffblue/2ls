@@ -107,7 +107,7 @@ void local_SSAt::get_entry_exit_vars()
       d_it != ssa_domain.def_map.end(); d_it++)
   {
     const symbolt *symbol;
-    if(!ns.lookup(d_it->first,symbol)) continue;
+    if(ns.lookup(d_it->first,symbol)) continue;         
     if(has_prefix(id2string(d_it->first),CPROVER_RETURN_VALUE_IDENTIFIER))
     {
       const ssa_objectt ssa_object(symbol->symbol_expr(),ns);
@@ -135,7 +135,7 @@ void local_SSAt::get_globals(locationt loc, std::set<symbol_exprt> &globals)
       d_it != ssa_domain.def_map.end(); d_it++)
   {
     const symbolt *symbol;
-    if(!ns.lookup(d_it->first,symbol)) continue;         
+    if(ns.lookup(d_it->first,symbol)) continue;         
     if(has_static_lifetime(symbol->symbol_expr()))
     {
       const ssa_objectt ssa_object(symbol->symbol_expr(),ns);
