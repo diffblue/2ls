@@ -14,6 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "strategy_solver_base.h"
 #include "strategy_solver_enumeration.h"
 #include "strategy_solver_binsearch.h"
+#include "strategy_solver_equality.h"
 #include "ssa_analyzer.h"
 
 #include <solvers/sat/satcheck.h>
@@ -41,14 +42,10 @@ Function: ssa_analyzert::operator()
 
 void ssa_analyzert::operator()(local_SSAt &SSA)
 {
-
   if(SSA.goto_function.body.instructions.empty())
     return;
 
-
-  #ifdef DEBUG
-  std::cout << "ssa_analyzert::operator()" << std::endl;
-  #endif
+  // gather information for creating domains
 
   var_listt pre_state_vars, post_state_vars;
 
@@ -103,16 +100,15 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
     } 
   }
   
-  
-  
 #ifdef DEBUG
   for(unsigned i=0; i<pre_state_vars.size(); ++i)
   {
-    std::cout << from_expr(pre_state_vars[i]) << " pre-guard:  " << from_expr(var_pre_guards[i]) << std::endl;  
-    std::cout << from_expr(pre_state_vars[i]) << " post-guard: " << from_expr(var_post_guards[i]) << std::endl;  
+    std::cout << from_expr(pre_state_vars[i]) << " pre-guard:  " << 
+      from_expr(var_pre_guards[i]) << std::endl;  
+    std::cout << from_expr(pre_state_vars[i]) << " post-guard: " << 
+      from_expr(var_post_guards[i]) << std::endl;  
   }
 #endif
-
 
   template_domaint::templatet templ;
    
@@ -122,40 +118,23 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
 
   for(unsigned i=0; i<added_returns.size()+added_globals_out.size(); ++i) 
   {
-    goto_programt::const_targett t = SSA.goto_function.body.instructions.end(); t--;
+    goto_programt::const_targett t = 
+      SSA.goto_function.body.instructions.end(); t--;
     exprt guard = SSA.guard_symbol(t);
     var_pre_guards.push_back(true_exprt()); 
     var_post_guards.push_back(guard); 
     var_kinds.push_back(template_domaint::OUT);
   }
   
-
-  constraintst transition_relation;
-  transition_relation << SSA;
-
-  /* renaming from pre into post-state */
+  // building map for renaming from pre into post-state
   assert(pre_state_vars.size()==post_state_vars.size());
   var_listt::const_iterator it1=pre_state_vars.begin();
   var_listt::const_iterator it2=post_state_vars.begin();
   for(; it1!=pre_state_vars.end(); ++it1, ++it2)
   {
     renaming_map[*it1]=*it2;    
-    //    renaming_map[*it2]=*it2;    
   }
 #ifdef DEBUG
-  /*for(var_listt::const_iterator it=top_vars.begin(); it!=top_vars.end(); ++it)
-  {
-    renaming_map[*it]=*it;    
-  }
-  for(var_listt::const_iterator it=added_returns.begin(); it!=added_returns.end(); ++it)
-  {
-    renaming_map[*it]=*it;    
-  }
-  for(var_listt::const_iterator it=added_globals_out.begin(); it!=added_globals_out.end(); ++it)
-  {
-    renaming_map[*it]=*it;    
-  }
-  */
   for(constraintst::const_iterator it = transition_relation.begin(); 
     it != transition_relation.end(); it++)
   {
@@ -168,88 +147,94 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
       if(renaming_map.find(*s_it)==renaming_map.end())
       {
         renaming_map[*s_it] = *s_it;  
-     //   symbol_exprt &s = to_symbol_expr(renaming_map[*s_it]);
-     //   s.set_identifier(id2string(s.get_identifier())+"'");
       }
     }
   }  
 #endif
 
-
+  //get domain from command line options
   if(options.get_bool_option("intervals"))
   {
-    make_interval_template(templ, vars, var_pre_guards, var_post_guards, var_kinds, ns);
+    make_interval_template(templ, vars, 
+      var_pre_guards, var_post_guards, var_kinds, ns);
   }
   else if(options.get_bool_option("zones"))
   {
-    make_zone_template(templ, vars, var_pre_guards, var_post_guards, var_kinds, ns); 
+    make_zone_template(templ, vars, 
+      var_pre_guards, var_post_guards, var_kinds, ns); 
   }
   else if(options.get_bool_option("octagons"))
   {
-    make_octagon_template(templ, vars, var_pre_guards, var_post_guards, var_kinds, ns); 
+    make_octagon_template(templ, vars, 
+      var_pre_guards, var_post_guards, var_kinds, ns); 
+  }
+  else if(options.get_bool_option("equalities"))
+  {
+    //nothing to do
   }
   else assert(false);
     
   #ifdef DEBUG
-  std::cout << "**** Template *****" << std::endl;
+  std::cout << "**** Function stats *****" << std::endl;
   std::cout << "  var size " << vars.size() << std::endl
             << "  params size " << SSA.params.size() << std::endl
             << "  returns size " << SSA.returns.size() << std::endl
             << "  pre_state " << pre_state_vars.size() << std::endl;
   #endif  
-    
-  template_domaint template_domain(templ);
-
-  #if 1
-  debug() << "template size " << templ.size() << eom;
   
-  template_domain.output_template(debug(), ns); debug() << eom;
-  #endif  
-    
-
+  constraintst transition_relation;
+  transition_relation << SSA;
+  
   // solver
-  //TODO: get solver from options
+  //TODO: get backend solver from options
   satcheck_minisat_no_simplifiert satcheck;
   bv_pointerst solver(ns, satcheck);
-  
-  //satcheck.set_message_handler(get_message_handler());
-  //solver.set_message_handler(get_message_handler()); 
 
   // get strategy solver from options
   strategy_solver_baset *strategy_solver;
-  if(options.get_bool_option("enum-solver"))
+  domaint *domain; 
+  strategy_solver_baset::invariantt *inv;
+  if(options.get_bool_option("equalities"))
   {
-    strategy_solver = new strategy_solver_enumerationt(
-      transition_relation, renaming_map,
-      template_domain, solver, ns);
+    domain = new equality_domaint(vars, var_kinds);
+    strategy_solver = new strategy_solver_equalityt(
+        transition_relation, renaming_map,
+        *static_cast<equality_domaint *>(domain), solver, ns);
+    inv = new equality_domaint::equ_valuet();
   }
-  else if(options.get_bool_option("binsearch-solver"))
+  else
   {
-    strategy_solver = new strategy_solver_binsearcht(
-      transition_relation, renaming_map,
-      template_domain, solver, ns);
+    inv = new template_domaint::templ_valuet();
+    if(options.get_bool_option("enum-solver"))
+    {
+      domain = new template_domaint(templ);
+      strategy_solver = new strategy_solver_enumerationt(
+        transition_relation, renaming_map,
+        *static_cast<template_domaint *>(domain), solver, ns);
+    }
+    else if(options.get_bool_option("binsearch-solver"))
+    {
+      domain = new template_domaint(templ);
+      strategy_solver = new strategy_solver_binsearcht(
+        transition_relation, renaming_map,
+        *static_cast<template_domaint *>(domain), solver, ns);
+    }
+    else assert(false);
   }
-  /*  else if(options.get_bool_option("opt-solver"))
-  {
-    strategy_solver = new strategy_solver_optt(transition_relation, pre_state_vars, post_state_vars, template_domain, solver, ns);
-  }*/
-  else assert(false);
 
   strategy_solver->set_message_handler(get_message_handler());
   strategy_solver->set_verbosity(get_verbosity());
+
+#if 1
+  domain->output_domain(debug(), ns); debug() << eom;
+#endif  
 
 
   iteration_number=0;
 
 
   // initialize inv
-  template_domain.initialize(inv);
-  // template_domain.set_to_top(top_vars, inv);
-  /*  if(inv.size()==2)
-    {
-  inv[0] = from_integer(1, pre_state_vars[0].type());
-  inv[1] = from_integer(1, pre_state_vars[0].type());
-  }*/
+  domain->initialize(*inv);
 
   bool change;
 
@@ -263,17 +248,15 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
               << iteration_number << "\n";
     #endif
    
-    strategy_solver_baset::strategyt strategy;
-    change = strategy_solver->improve(inv,strategy);
+    change = strategy_solver->iterate(*inv);
 
     if(change) 
     {
-      strategy_solver->solve(inv,strategy);
 
       #ifdef DEBUG
       std::cout << "Value after " << iteration_number
             << " iteration(s):\n";
-      template_domain.output_value(std::cout,inv,ns);
+      domain->output_value(std::cout,*inv,ns);
       #endif
     }
   }
@@ -282,13 +265,14 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
   #ifdef DEBUG
   std::cout << "Fixed-point after " << iteration_number
             << " iteration(s)\n";
-  template_domain.output_value(std::cout,inv,ns);
+  domain->output_value(std::cout,*inv,ns);
   #endif
 
-  template_domain.project_on_inout(inv,inv_inout);
-  template_domain.project_on_loops(inv,inv_loop);
-
+  domain->project_on_inout(*inv,inv_inout);
+  domain->project_on_loops(*inv,inv_loop);
   delete strategy_solver;
+  delete inv;
+  delete domain;
 }
 
 void ssa_analyzert::get_summary(exprt &result)

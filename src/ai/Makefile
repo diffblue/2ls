@@ -1,8 +1,7 @@
 include ../config.inc
 CBMC ?= ../..
 
-SRC = concrete_transformers.cpp  interval_map.cpp  interval_map_domain.cpp\
-      interval_widening.cpp
+SRC = 
 
 include $(CBMC)/src/config.inc
 include $(CBMC)/src/common

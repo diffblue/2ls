@@ -37,8 +37,8 @@ public:
 protected:
   const namespacet &ns;
   const optionst &options;
-  strategy_solver_baset::invariantt inv;
-  exprt inv_inout, inv_loop;
+  exprt inv_inout;
+  exprt inv_loop;
   unsigned iteration_number;
   
   replace_mapt renaming_map;

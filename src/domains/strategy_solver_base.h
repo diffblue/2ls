@@ -1,13 +1,13 @@
-#ifndef CPROVER_STRATEGY_SOLVER_BASE
-#define CPROVER_STRATEGY_SOLVER_BASE 
+#ifndef CPROVER_STRATEGY_SOLVER_BASE_H
+#define CPROVER_STRATEGY_SOLVER_BASE_H 
 
-#include <util/replace_expr.h>
 #include <map>
 #include <iostream>
 
-#include "template_domain.h"
-
+#include <util/replace_expr.h>
 #include <solvers/flattening/bv_pointers.h>
+
+#include "domain.h"
 
 //#define DEBUG_FORMULA
 
@@ -17,19 +17,21 @@ class strategy_solver_baset : public messaget
  public:
   typedef std::list<exprt> constraintst;
   typedef std::vector<symbol_exprt> var_listt;
-  typedef template_domaint::valuet invariantt;
-  typedef std::vector<template_domaint::rowt> strategyt;
+  typedef domaint::valuet invariantt;
 
-  explicit strategy_solver_baset(const constraintst &program,
+  explicit strategy_solver_baset(
+    const constraintst &program,
     replace_mapt &_renaming_map,
-    template_domaint &_template_domain,
-    bv_pointerst &_solver, const namespacet &_ns) :
+    bv_pointerst &_solver, 
+    const namespacet &_ns) :
     renaming_map(_renaming_map),
-    template_domain(_template_domain),
-      solver(_solver), ns(_ns),activation_literal_counter(0)
+    solver(_solver), 
+    ns(_ns),
+    activation_literal_counter(0)
   { 
     // adding program constraints to solver db
-    for(constraintst::const_iterator it = program.begin(); it != program.end(); it++)
+    for(constraintst::const_iterator it = program.begin(); 
+        it != program.end(); it++)
     {
 
 #ifndef DEBUG_FORMULA
@@ -46,20 +48,18 @@ class strategy_solver_baset : public messaget
     }
 }
 
-  virtual void solve(invariantt &inv, const strategyt &strategy) { assert(false); }
-
-  virtual bool improve(const invariantt &inv, strategyt &strategy);
+  virtual bool iterate(invariantt &inv) { assert(false); }
 
  protected: 
   replace_mapt &renaming_map;
   
+  inline void rename(exprt &expr) { replace_expr(renaming_map, expr); }
   inline void rename(exprt::operandst &operands)
   {
     for(unsigned i=0; i<operands.size(); ++i)
       replace_expr(renaming_map, operands[i]);
   }
 
-  template_domaint &template_domain;
   bv_pointerst &solver;
   const namespacet &ns;
 
@@ -72,6 +72,7 @@ class strategy_solver_baset : public messaget
   unsigned activation_literal_counter;
   literalt new_context();
   void pop_context();
+  void make_context_permanent();
   bvt formula;
 
 };

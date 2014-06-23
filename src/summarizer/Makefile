@@ -30,22 +30,22 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       ../functions/get_function$(OBJEXT) \
       ../functions/path_util$(OBJEXT) \
       ../functions/index$(OBJEXT) \
-      ../ai/concrete_transformers$(OBJEXT)\
       ../ai/ssa_inliner$(OBJEXT)\
       ../ai/summary$(OBJEXT)\
       ../ai/summarizer$(OBJEXT)\
-      ../ai/interval_map$(OBJEXT)\
-      ../ai/interval_map_domain$(OBJEXT)\
-      ../ai/interval_widening$(OBJEXT) \
       ../functions/index$(OBJEXT) \
       ../domains/fixed_point$(OBJEXT) \
       ../domains/ssa_fixed_point$(OBJEXT) \
       ../domains/template_domain$(OBJEXT) \
+      ../domains/equality_domain$(OBJEXT) \
+      ../domains/equality_domain$(OBJEXT) \
+      ../domains/strategy_solver_equality$(OBJEXT) \
       ../domains/strategy_solver_base$(OBJEXT) \
       ../domains/strategy_solver_enumeration$(OBJEXT) \
       ../domains/strategy_solver_binsearch$(OBJEXT) \
       ../domains/ssa_analyzer$(OBJEXT) \
       ../domains/predicate$(OBJEXT)
+
 
 
 include $(CBMC)/src/config.inc

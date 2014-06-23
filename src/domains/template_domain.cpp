@@ -22,11 +22,12 @@ Function: template_domaint::initialize
 
 void template_domaint::initialize(valuet &value)
 {
-  value.resize(templ.size());
+  templ_valuet &v = static_cast<templ_valuet&>(value);
+  v.resize(templ.size());
   for(unsigned row = 0; row<templ.size(); row++)
   {
-    if(templ.kinds[row]==IN) value[row] = true_exprt(); //marker for oo
-    else value[row] = false_exprt(); //marker for -oo
+    if(templ.kinds[row]==IN) v[row] = true_exprt(); //marker for oo
+    else v[row] = false_exprt(); //marker for -oo
   }
 }
 
@@ -133,13 +134,16 @@ exprt template_domaint::get_row_pre_constraint(const rowt &row, const row_valuet
   assert(row<templ.size());
   kindt k = templ.kinds[row];
   if(k==OUT || k==OUTL) return true_exprt();
-  if(is_row_value_neginf(row_value)) return implies_exprt(templ.pre_guards[row], false_exprt());
-  if(is_row_value_inf(row_value)) return implies_exprt(templ.pre_guards[row], true_exprt());
-  return implies_exprt(templ.pre_guards[row], binary_relation_exprt(templ.rows[row],ID_le,row_value));
+  if(is_row_value_neginf(row_value)) 
+    return implies_exprt(templ.pre_guards[row], false_exprt());
+  if(is_row_value_inf(row_value)) 
+   return implies_exprt(templ.pre_guards[row], true_exprt());
+  return implies_exprt(templ.pre_guards[row], 
+    binary_relation_exprt(templ.rows[row],ID_le,row_value));
 }
 
 
-exprt template_domaint::get_row_pre_constraint(const rowt &row, const valuet &value)
+exprt template_domaint::get_row_pre_constraint(const rowt &row, const templ_valuet &value)
 {
   assert(value.size()==templ.size());
   return get_row_pre_constraint(row,value[row]);
@@ -166,7 +170,7 @@ exprt template_domaint::get_row_post_constraint(const rowt &row, const row_value
   return implies_exprt(templ.post_guards[row], binary_relation_exprt(templ.rows[row],ID_le,row_value));
 }
 
-exprt template_domaint::get_row_post_constraint(const rowt &row, const valuet &value)
+exprt template_domaint::get_row_post_constraint(const rowt &row, const templ_valuet &value)
 {
   assert(value.size()==templ.size());
   return get_row_post_constraint(row,value[row]);
@@ -184,7 +188,7 @@ Function: template_domaint::to_pre_constraints
 
 \*******************************************************************/
 
-exprt template_domaint::to_pre_constraints(const valuet &value)
+exprt template_domaint::to_pre_constraints(const templ_valuet &value)
 {
   assert(value.size()==templ.size());
   exprt::operandst c; 
@@ -207,7 +211,7 @@ Function: template_domaint::make_not_post_constraints
 
 \*******************************************************************/
 
-void template_domaint::make_not_post_constraints(const valuet &value,
+void template_domaint::make_not_post_constraints(const templ_valuet &value,
   exprt::operandst &cond_exprs, 
   exprt::operandst &value_exprs)
 {
@@ -236,7 +240,7 @@ Function: template_domaint::get_row_value
 \*******************************************************************/
 
 template_domaint::row_valuet template_domaint::get_row_value(
-  const rowt &row, const valuet &value)
+  const rowt &row, const templ_valuet &value)
 {
   assert(row<value.size());
   assert(value.size()==templ.size());
@@ -257,16 +261,17 @@ Function: template_domaint::project_on_loops
 
 void template_domaint::project_on_loops(const valuet &value, exprt &result)
 {
-  assert(value.size()==templ.size());
+  const templ_valuet &v = static_cast<const templ_valuet &>(value);
+  assert(v.size()==templ.size());
   exprt::operandst c;
   c.reserve(templ.size());
   for(unsigned row = 0; row<templ.size(); row++)
   {
     if(templ.kinds[row]!=LOOP) continue;
-    const row_valuet &row_value = value[row];
-    if(is_row_value_neginf(row_value)) c.push_back(false_exprt());
-    else if(is_row_value_inf(row_value)) c.push_back(true_exprt());
-    else c.push_back(binary_relation_exprt(templ.rows[row],ID_le,row_value));
+    const row_valuet &row_v = v[row];
+    if(is_row_value_neginf(row_v)) c.push_back(false_exprt());
+    else if(is_row_value_inf(row_v)) c.push_back(true_exprt());
+    else c.push_back(binary_relation_exprt(templ.rows[row],ID_le,row_v));
   }
   result = conjunction(c);
 }
@@ -285,17 +290,18 @@ Function: template_domaint::project_on_inout
 
 void template_domaint::project_on_inout(const valuet &value, exprt &result)
 {
-  assert(value.size()==templ.size());
+  const templ_valuet &v = static_cast<const templ_valuet &>(value);
+  assert(v.size()==templ.size());
   exprt::operandst c;
   c.reserve(templ.size());
   for(unsigned row = 0; row<templ.size(); row++)
   {
     kindt k = templ.kinds[row];
     if(k==LOOP || k==OUTL) continue;
-    const row_valuet &row_value = value[row];
-    if(is_row_value_neginf(row_value)) c.push_back(false_exprt());
-    else if(is_row_value_inf(row_value)) c.push_back(true_exprt());
-    else c.push_back(binary_relation_exprt(templ.rows[row],ID_le,row_value));
+    const row_valuet &row_v = v[row];
+    if(is_row_value_neginf(row_v)) c.push_back(false_exprt());
+    else if(is_row_value_inf(row_v)) c.push_back(true_exprt());
+    else c.push_back(binary_relation_exprt(templ.rows[row],ID_le,row_v));
   }
   result = conjunction(c);
 }
@@ -313,7 +319,7 @@ Function: template_domaint::set_row_value
 \*******************************************************************/
 
 void template_domaint::set_row_value(
-  const rowt &row, const template_domaint::row_valuet &row_value, valuet &value)
+  const rowt &row, const template_domaint::row_valuet &row_value, templ_valuet &value)
 {
   assert(row<value.size());
   assert(value.size()==templ.size());
@@ -400,6 +406,7 @@ Function: template_domaint::output_value
 void template_domaint::output_value(std::ostream &out, const valuet &value, 
   const namespacet &ns) const
 {
+  const templ_valuet &v = static_cast<const templ_valuet &>(value);
   for(unsigned row = 0; row<templ.size(); row++)
   {
     switch(templ.kinds[row])
@@ -413,16 +420,16 @@ void template_domaint::output_value(std::ostream &out, const valuet &value,
     default: assert(false);
     }
     out << "( " << from_expr(ns,"",templ.rows[row]) << " <= ";
-    if(is_row_value_neginf(value[row])) out << "-oo";
-    else if(is_row_value_inf(value[row])) out << "oo";
-    else out << from_expr(ns,"",value[row]);
+    if(is_row_value_neginf(v[row])) out << "-oo";
+    else if(is_row_value_inf(v[row])) out << "oo";
+    else out << from_expr(ns,"",v[row]);
     out << " )" << std::endl;
   }
 }
 
 /*******************************************************************\
 
-Function: template_domaint::output_template
+Function: template_domaint::output_domain
 
   Inputs:
 
@@ -432,7 +439,7 @@ Function: template_domaint::output_template
 
 \*******************************************************************/
 
-void template_domaint::output_template(std::ostream &out, const namespacet &ns) const
+void template_domaint::output_domain(std::ostream &out, const namespacet &ns) const
 {
   for(unsigned row = 0; row<templ.size(); row++)
   {

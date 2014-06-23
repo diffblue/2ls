@@ -19,11 +19,6 @@ Author: Peter Schrammel
 #include "../ssa/local_ssa.h"
 #include "../ssa/simplify_ssa.h"
 
-#include "concrete_transformers.h"
-#include "interval_map_domain.h"
-
-
-
 
 /*******************************************************************\
 

@@ -14,7 +14,6 @@ Author: Peter Schrammel
 #include "summary.h"
 #include "ssa_inliner.h"
 #include "../ssa/local_ssa.h"
-//#include "../deltacheck/analyzer.h"
 
 #include <util/time_stopping.h>
 

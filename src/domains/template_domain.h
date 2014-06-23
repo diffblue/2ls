@@ -1,22 +1,22 @@
 #ifndef CPROVER_TEMPLATE_DOMAIN_H
 #define CPROVER_TEMPLATE_DOMAIN_H
-#include "predicate.h"
+
+#include "domain.h"
 
 #include <util/std_expr.h>
 
-class template_domaint
+class template_domaint : public domaint
 {
 public:
   typedef unsigned rowt;
   typedef exprt row_exprt; 
-  typedef std::vector<exprt> guardst; 
   typedef std::vector<row_exprt> row_exprst; 
   typedef constant_exprt row_valuet; // "bound"
-  typedef std::vector<row_valuet> valuet;
-  typedef std::vector<symbol_exprt> var_listt;
   typedef std::vector<exprt> var_guardst; 
-  typedef enum {LOOP, IN, OUT, OUTL} kindt;
-  typedef std::vector<kindt> kindst; 
+
+  class templ_valuet : public domaint::valuet, public std::vector<row_valuet> 
+  {
+  };
 
   typedef struct 
   {
@@ -32,7 +32,7 @@ public:
   templ(_template) 
  {}
 
-  void initialize(valuet &value);
+  virtual void initialize(valuet &value);
 
   row_valuet between(const row_valuet &lower, const row_valuet &upper);
   bool less_than(const row_valuet &v1, const row_valuet &v2);
@@ -40,31 +40,31 @@ public:
   exprt get_row_constraint(const rowt &row, const row_valuet &row_value);
   exprt get_row_pre_constraint(const rowt &row, const row_valuet &row_value);
   exprt get_row_post_constraint(const rowt &row, const row_valuet &row_value);
-  exprt get_row_pre_constraint(const rowt &row, const valuet &value);
-  exprt get_row_post_constraint(const rowt &row, const valuet &value);
+  exprt get_row_pre_constraint(const rowt &row, const templ_valuet &value);
+  exprt get_row_post_constraint(const rowt &row, const templ_valuet &value);
 
-  exprt to_pre_constraints(const valuet &value);
-  void make_not_post_constraints(const valuet &value,
+  exprt to_pre_constraints(const templ_valuet &value);
+  void make_not_post_constraints(const templ_valuet &value,
 			   exprt::operandst &cond_exprs, 
 			   exprt::operandst &value_exprs);
 
-  row_valuet get_row_value(const rowt &row, const valuet &inv);
-  void set_row_value(const rowt &row, const row_valuet &row_value, valuet &value);
+  row_valuet get_row_value(const rowt &row, const templ_valuet &value);
+  void set_row_value(const rowt &row, const row_valuet &row_value, templ_valuet &value);
 
   row_valuet get_max_row_value(const rowt &row);
   row_valuet get_min_row_value(const rowt &row);
 
-  void output_value(std::ostream &out, const valuet &value, const namespacet &ns) const;
-  void output_template(std::ostream &out, const namespacet &ns) const;
+  virtual void output_value(std::ostream &out, const valuet &value, const namespacet &ns) const;
+  virtual void output_domain(std::ostream &out, const namespacet &ns) const;
 
   unsigned template_size();
   bool is_row_value_inf(const row_valuet & row_value) const;
   bool is_row_value_neginf(const row_valuet & row_value) const;
 
-  void project_on_loops(const valuet &value, exprt &result);
-  void project_on_inout(const valuet &value, exprt &result);
+  virtual void project_on_loops(const valuet &value, exprt &result);
+  virtual void project_on_inout(const valuet &value, exprt &result);
 
-//protected:
+protected:
   templatet &templ;
   
 };

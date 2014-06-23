@@ -252,28 +252,52 @@ int summarizer_parseoptionst::doit()
     return 7;
   }
 
-  if(cmdline.isset("zones"))
+  if(cmdline.isset("equalities"))
   {
-    options.set_option("zones", true);
+    options.set_option("equalities", true);
+    status() << "Using equalities domain ";
   }
-  else if(cmdline.isset("octagons"))
+  else 
   {
-    options.set_option("octagons", true);
-  }
-  else //if(cmdline.isset("intervals")) //default
-  {
-    options.set_option("intervals", true);
-  }
+    if(cmdline.isset("zones"))
+      {
+	options.set_option("zones", true);
+	status() << "Using zones domain ";
+      }
+    else if(cmdline.isset("octagons"))
+      {
+	options.set_option("octagons", true);
+	status() << "Using octagons domain ";
+      }
+    else //if(cmdline.isset("intervals")) //default
+      {
+	options.set_option("intervals", true);
+	status() << "Using intervals domain ";
+      }
 
-  if(cmdline.isset("binsearch-solver"))
-  {
-    options.set_option("binsearch-solver", true);
+    if(cmdline.isset("binsearch-solver"))
+      {
+	options.set_option("binsearch-solver", true);
+	status() << "with binary search solver";
+      }
+    else //if(cmdline.isset("enum-solver")) //default
+      {
+	options.set_option("enum-solver", true);
+	status() << "with enumeration solver";
+      }
   }
-  else //if(cmdline.isset("enum-solver")) //default
-  {
-    options.set_option("enum-solver", true);
-  }
+  status() << eom;
 
+  if(cmdline.isset("equalities") &&
+     cmdline.isset("enum-solver"))
+  {
+    warning() << "Option --enum-solver ignored" << eom;
+  }
+  if(cmdline.isset("equalities") &&
+     cmdline.isset("binsearch-solver"))
+  {
+    warning() << "Option --binsearch-solver ignored" << eom;
+  }
 
 
   try
