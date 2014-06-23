@@ -114,11 +114,11 @@ bool ssa_may_alias(
   
   // Is one a scalar pointer?
   if(e1.id()==ID_dereference &&
-     (t1.id()==ID_signedbv || t1.id()==ID_unsignedbv))
+     (t1.id()==ID_signedbv || t1.id()==ID_unsignedbv || t1.id()==ID_floatbv))
     return true;
   
   if(e2.id()==ID_dereference &&
-     (t2.id()==ID_signedbv || t2.id()==ID_unsignedbv))
+     (t2.id()==ID_signedbv || t2.id()==ID_unsignedbv || t1.id()==ID_floatbv))
     return true;
   
   // Is one a pointer?
