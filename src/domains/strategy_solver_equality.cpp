@@ -51,7 +51,7 @@ bool strategy_solver_equalityt::iterate(invariantt &_inv)
     for(e_it = rm_equs.begin(); e_it!=rm_equs.end(); e_it++)
     {
       todo_disequs.insert(*e_it);
-      todo_equs.erase(e_it);
+      todo_equs.erase(*e_it);
     }
   }
   else //check disequalities

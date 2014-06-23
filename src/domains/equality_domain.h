@@ -10,20 +10,32 @@
 
 class equality_domaint : public domaint
 {
-public:
- typedef std::pair<vart,vart> var_pairt;
+ public:
+  typedef std::pair<vart,vart> var_pairt;
+  typedef std::set<equality_domaint::var_pairt> var_pairst;
 
- equality_domaint(const var_listt &_vars, const kindst &_kinds) :
-  vars(_vars), kinds(_kinds) 
- {}
+  equality_domaint(const var_listt &_vars, const kindst &_kinds) 
+  {
+    make_template(_vars,_kinds);
+  }
 
   class equ_valuet : public valuet 
   {
    public:
 
     union_find<vart> equs;
-    std::set<var_pairt> disequs;
+    var_pairst disequs;
   };
+
+  typedef struct 
+  {
+    // guardst pre_guards;
+    // guardst post_guards;
+    std::vector<equality_domaint::var_pairt> var_pairs;
+    kindst kinds;
+
+    unsigned size() const { return var_pairs.size(); } 
+  } templatet;
 
   virtual void initialize(valuet &value);
 
@@ -42,12 +54,13 @@ public:
   virtual void project_on_loops(const valuet &value, exprt &result);
   virtual void project_on_inout(const valuet &value, exprt &result);
 
-  const var_listt &get_vars() const { return vars; }
+  void get_var_pairs(var_pairst &var_pairs);
   
 
  protected:
-  var_listt vars;
-  kindst kinds;
+  templatet templ;
+
+  void make_template(const var_listt &vars, const kindst &kinds);
 };
 
 #endif
