@@ -1,12 +1,14 @@
 void foo(int *x) 
 { 
+  x++;
   *x = 10;
 }
 
 void main()
 {
-  int x;
+  int x[2];
   foo(&x);
-  assert(x==10);
+  int y = x[1];
+  assert(y==10);
 }
 
