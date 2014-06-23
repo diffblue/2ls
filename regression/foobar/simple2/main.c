@@ -1,12 +1,14 @@
 int foo(int x) 
 { 
-  return x;
+  if(x) return 9;
+  return 10;
 }
 
 void main()
 {
-  int x = 10;
+  int x;
   x = foo(x);
-  assert(x==10);
+  assert(9<=x && x<=10);
 }
+
 
