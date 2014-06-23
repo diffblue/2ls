@@ -70,11 +70,13 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
   {
     if(i_it->is_backwards_goto())
     {
-    
+                  
       exprt pre_guard = and_exprt(SSA.guard_symbol(i_it->get_target()), 
         SSA.name(SSA.guard_symbol(), local_SSAt::LOOP_SELECT, i_it));
       exprt post_guard = SSA.guard_symbol(i_it);
-    
+      
+      const ssa_domaint::phi_nodest &phi_nodes=SSA.ssa_analysis[i_it->get_target()].phi_nodes;
+      
       // Record the objects modified by the loop to get
       // 'primed' (post-state) and 'unprimed' (pre-state) variables.
       for(local_SSAt::objectst::const_iterator
@@ -82,6 +84,11 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
           o_it!=SSA.ssa_objects.objects.end();
           o_it++)
       {
+        ssa_domaint::phi_nodest::const_iterator p_it=
+        phi_nodes.find(o_it->get_identifier());
+
+        if(p_it==phi_nodes.end()) continue; // object not modified in this loop
+
         symbol_exprt in=SSA.name(*o_it, local_SSAt::LOOP_BACK, i_it);
         symbol_exprt out=SSA.read_rhs(*o_it, i_it);
       
