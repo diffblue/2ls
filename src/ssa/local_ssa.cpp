@@ -632,6 +632,7 @@ exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
   }
   else if(expr.id()==ID_dereference)
   {
+    // caught by case above
   }
   else if(expr.id()==ID_index)
   {
