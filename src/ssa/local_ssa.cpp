@@ -274,8 +274,12 @@ void local_SSAt::build_guard(locationt loc)
       symbol_exprt loop_select=
         name(guard_symbol(), LOOP_SELECT, edge.from);
 
-      source=loop_select;
+      #if 0
+      source=false_exprt();
+      #else
       // need constraing for edge.cond
+      source=loop_select;
+      #endif
     }
     else
     {
