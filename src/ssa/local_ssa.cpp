@@ -598,6 +598,22 @@ exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
       }
     }
     
+    // may alias literals
+    for(ssa_objectst::literalst::const_iterator
+        o_it=ssa_objects.literals.begin();
+        o_it!=ssa_objects.literals.end(); o_it++)
+    {
+      if(ssa_may_alias(expr, *o_it, ns))
+      {
+        exprt guard=ssa_alias_guard(expr, *o_it, ns);
+        exprt value=ssa_alias_value(expr, read_rhs(*o_it, loc), ns);
+        guard=read_rhs_rec(guard, loc);
+        value=read_rhs_rec(value, loc);
+
+        result=if_exprt(guard, value, result);
+      }
+    }
+    
     return result;
   }
   else if(expr.id()==ID_sideeffect)
@@ -863,7 +879,7 @@ void local_SSAt::assign_rec(
     }
 
     ssa_objectt lhs_object(lhs, ns);
-
+    
     exprt rhs_read=read_rhs(rhs, loc);
 
     const std::set<ssa_objectt> &assigned=
@@ -876,7 +892,7 @@ void local_SSAt::assign_rec(
     {
       const symbol_exprt ssa_symbol=name(*a_it, OUT, loc);
       exprt ssa_rhs;
-
+      
       if(lhs_object==*a_it)
       {
         ssa_rhs=rhs_read;

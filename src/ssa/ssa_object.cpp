@@ -25,25 +25,36 @@ Function: collect_objects_rec
 void collect_objects_rec(
   const exprt &src,
   const namespacet &ns,
-  std::set<ssa_objectt> &dest);
+  std::set<ssa_objectt> &objects,
+  std::set<exprt> &literals);
 
 void collect_objects_address_of_rec(
   const exprt &src,
   const namespacet &ns,
-  std::set<ssa_objectt> &dest)
+  std::set<ssa_objectt> &objects,
+  std::set<exprt> &literals)
 {
   if(src.id()==ID_index)
   {
-    collect_objects_address_of_rec(to_index_expr(src).array(), ns, dest);
-    collect_objects_rec(to_index_expr(src).index(), ns, dest);
+    collect_objects_address_of_rec(
+      to_index_expr(src).array(), ns, objects, literals);
+
+    collect_objects_rec(
+      to_index_expr(src).index(), ns, objects, literals);
   }
   else if(src.id()==ID_dereference)
   {
-    collect_objects_rec(to_dereference_expr(src).pointer(), ns, dest);
+    collect_objects_rec(
+      to_dereference_expr(src).pointer(), ns, objects, literals);
   }
   else if(src.id()==ID_member)
   {
-    collect_objects_address_of_rec(to_member_expr(src).struct_op(), ns, dest);
+    collect_objects_address_of_rec(
+      to_member_expr(src).struct_op(), ns, objects, literals);
+  }
+  else if(src.id()==ID_string_constant)
+  {
+    literals.insert(src);
   }
 }
 
@@ -62,18 +73,19 @@ Function: collect_objects_rec
 void collect_objects_rec(
   const exprt &src,
   const namespacet &ns,
-  std::set<ssa_objectt> &dest)
+  std::set<ssa_objectt> &objects,
+  std::set<exprt> &literals)
 {
   if(src.id()==ID_code)
   {
     forall_operands(it, src)
-      collect_objects_rec(*it, ns, dest);
+      collect_objects_rec(*it, ns, objects, literals);
     return;
   }
   else if(src.id()==ID_address_of)
   {
     collect_objects_address_of_rec(
-      to_address_of_expr(src).object(), ns, dest);
+      to_address_of_expr(src).object(), ns, objects, literals);
     return;
   }
 
@@ -100,18 +112,18 @@ void collect_objects_rec(
           it++)
       {
         member_exprt new_src(src, it->get_name(), it->type());
-        collect_objects_rec(new_src, ns, dest); // recursive call
+        collect_objects_rec(new_src, ns, objects, literals); // recursive call
       }
       
       return; // done
     }
     
-    dest.insert(ssa_object);
+    objects.insert(ssa_object);
   }
   else
   {
     forall_operands(it, src)
-      collect_objects_rec(*it, ns, dest);
+      collect_objects_rec(*it, ns, objects, literals);
   }
 }
 
@@ -133,8 +145,8 @@ void ssa_objectst::collect_objects(
 {
   forall_goto_program_instructions(it, src.body)
   {
-    collect_objects_rec(it->guard, ns, objects);
-    collect_objects_rec(it->code, ns, objects);
+    collect_objects_rec(it->guard, ns, objects, literals);
+    collect_objects_rec(it->code, ns, objects, literals);
   }
 }
 

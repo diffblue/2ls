@@ -72,6 +72,10 @@ public:
   // objects, plus categorization
   typedef std::set<ssa_objectt> objectst;
   objectst objects, dirty_locals, clean_locals, globals;
+  
+  // literals whose address is taken
+  typedef std::set<exprt> literalst;
+  literalst literals;
 
   ssa_objectst(
     const goto_functionst::goto_functiont &goto_function,
