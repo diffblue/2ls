@@ -9,12 +9,61 @@ Date: June 2014
 \*******************************************************************/
 
 #include <util/simplify_expr.h>
+#include <util/std_expr.h>
 
 #include "ssa_build_goto_trace.h"
 
 /*******************************************************************\
 
-Function: build_goto_trace
+Function: finalize_lhs
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt finalize_lhs(
+  const exprt &src,
+  const local_SSAt &local_SSA,
+  const prop_convt &prop_conv,
+  goto_programt::const_targett current_pc)
+{
+  if(src.id()==ID_symbol)
+    return src;
+  else if(src.id()==ID_index)
+  {
+    index_exprt tmp=to_index_expr(src);
+    tmp.array()=finalize_lhs(tmp.array(), local_SSA, prop_conv, current_pc);
+    tmp.index()=simplify_expr(prop_conv.get(local_SSA.read_rhs(tmp.index(), current_pc)), local_SSA.ns);
+    return tmp;
+  }
+  else if(src.id()==ID_dereference)
+  {
+    address_of_exprt tmp1(src);
+    exprt tmp2=local_SSA.read_rhs(tmp1, current_pc);
+    exprt tmp3=prop_conv.get(tmp2);
+    exprt tmp4=tmp3;
+    if(tmp4.id()==ID_constant && tmp4.type().id()==ID_pointer &&
+       tmp4.operands().size()==1 && tmp4.op0().id()==ID_address_of)
+      tmp4=to_address_of_expr(tmp4.op0()).object();
+    return tmp4;
+  }
+  else if(src.id()==ID_member)
+  {
+    member_exprt tmp=to_member_expr(src);
+    tmp.struct_op()=finalize_lhs(tmp.struct_op(), local_SSA, prop_conv, current_pc);
+    return tmp;
+  }
+  else
+    return src;
+}
+
+/*******************************************************************\
+
+Function: record_step
 
   Inputs:
 
@@ -28,11 +77,12 @@ void record_step(
   const local_SSAt &local_SSA,
   const prop_convt &prop_conv,
   goto_programt::const_targett current_pc,
-  goto_tracet &goto_trace)
+  goto_tracet &goto_trace,
+  unsigned &step_nr)
 {
   goto_trace_stept step;
   step.pc=current_pc;
-  step.step_nr=goto_trace.steps.size();
+  step.step_nr=step_nr;
   step.thread_nr=0;
 
   switch(current_pc->type)
@@ -61,8 +111,8 @@ void record_step(
     {
       // failed or not?
       exprt cond=current_pc->guard;
-      exprt cond_symbol=local_SSA.read_rhs(cond, current_pc);
-      exprt cond_value=prop_conv.get(cond_symbol);
+      exprt cond_read=local_SSA.read_rhs(cond, current_pc);
+      exprt cond_value=simplify_expr(prop_conv.get(cond_read), local_SSA.ns);
       if(cond_value.is_false())
       {
         step.type=goto_trace_stept::ASSERT;
@@ -87,12 +137,16 @@ void record_step(
       exprt rhs_ssa=local_SSA.read_rhs(code_assign.rhs(), current_pc);
       exprt rhs_value=prop_conv.get(rhs_ssa);
       exprt rhs_simplified=simplify_expr(rhs_value, local_SSA.ns);
+      exprt lhs_ssa=finalize_lhs(code_assign.lhs(), local_SSA, prop_conv, current_pc);
+      exprt lhs_simplified=simplify_expr(lhs_ssa, local_SSA.ns);
+
       step.type=goto_trace_stept::ASSIGNMENT;
       // step.lhs_object
       // step.lhs_object_value
-      step.full_lhs=code_assign.lhs();
+      step.full_lhs=lhs_simplified;
       step.full_lhs_value=rhs_simplified;
       goto_trace.add_step(step);
+      step_nr++;
     }
     break;
 
@@ -131,9 +185,11 @@ void build_goto_trace(
 
   current_pc=local_SSA.goto_function.body.instructions.begin();
   
+  unsigned step_nr=1;
+  
   while(current_pc!=local_SSA.goto_function.body.instructions.end())
   {
-    record_step(local_SSA, prop_conv, current_pc, goto_trace);
+    record_step(local_SSA, prop_conv, current_pc, goto_trace, step_nr);
     
     if(!goto_trace.steps.empty() &&
        goto_trace.steps.back().is_assert())
