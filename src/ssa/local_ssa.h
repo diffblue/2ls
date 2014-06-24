@@ -115,7 +115,7 @@ public:
   ssa_ait ssa_analysis;
   std::string suffix; // an extra suffix
 
-  void get_globals(locationt loc, std::set<symbol_exprt> &globals);
+  void get_globals(locationt loc, std::set<symbol_exprt> &globals, bool returns=true);
 
 protected:
   // build the SSA formulas

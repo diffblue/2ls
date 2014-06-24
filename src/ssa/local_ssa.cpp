@@ -94,7 +94,7 @@ void local_SSAt::get_entry_exit_vars()
 
   //get globals in and out (includes return value)
   goto_programt::const_targett first = goto_function.body.instructions.begin();
-  get_globals(first,globals_in);
+  get_globals(first,globals_in,false); //filters out #return_value
 
   goto_programt::const_targett last = goto_function.body.instructions.end(); last--;
   get_globals(last,globals_out);
@@ -112,7 +112,7 @@ Function: local_SSAt::get_globals
 
 \*******************************************************************/
 
-void local_SSAt::get_globals(locationt loc, std::set<symbol_exprt> &globals)
+void local_SSAt::get_globals(locationt loc, std::set<symbol_exprt> &globals, bool returns)
 {
   const ssa_domaint &ssa_domain=ssa_analysis[loc];
   for(ssa_domaint::def_mapt::const_iterator d_it = ssa_domain.def_map.begin();
@@ -122,6 +122,7 @@ void local_SSAt::get_globals(locationt loc, std::set<symbol_exprt> &globals)
     if(ns.lookup(d_it->first,symbol)) continue;         
     if(has_static_lifetime(symbol->symbol_expr()))
     {
+      if(!returns && id2string(symbol->name).find("#return_value")!=std::string::npos) continue;
       const ssa_objectt ssa_object(symbol->symbol_expr(),ns);
       globals.insert(name(ssa_object,d_it->second.def));
     }

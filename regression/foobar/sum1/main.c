@@ -1,13 +1,15 @@
+#include <limits.h>
+
 int max(int x, int y) 
 { 
   if(x>y) return x;
-  else return y; 
+  return y; 
 }
 
 int inv(int x) 
 {   
-  int res = -x; 
-  return res;
+  __CPROVER_assume(x>INT_MIN); //would not be needed if we did not extend the bitvector sizes
+  return -x; 
 }
 
 void main()
@@ -18,5 +20,8 @@ void main()
   int y=inv(x);
   int z=max(y,0);
 
-  assert(z<=x);
+  assert(y<=-2);
+  assert(y==-x);
+  assert(z>=0);
+  assert(z>=y);
 }

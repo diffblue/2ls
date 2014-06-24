@@ -787,7 +787,7 @@ void template_domaint::make_octagon_template(templatet &templ,
       extend_expr_types(p_expr1);
       templ.rows.push_back(p_expr1);
 
-      plus_exprt p_expr2(unary_minus_exprt(*v1,v1->type()),*v2);
+      minus_exprt p_expr2(unary_minus_exprt(*v1,v1->type()),*v2);
       extend_expr_types(p_expr2);
       templ.rows.push_back(p_expr2);
 
