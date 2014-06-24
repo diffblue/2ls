@@ -361,7 +361,7 @@ void local_SSAt::build_guard(locationt loc)
       symbol_exprt loop_select=
         name(guard_symbol(), LOOP_SELECT, edge.from);
 
-      #if 0
+      #if 1
       source=false_exprt();
       #else
       // TODO: need constraing for edge.cond
@@ -1029,7 +1029,7 @@ void local_SSAt::assign_rec(
       else if(lhs.id()==ID_nil) // functions without return value
       {
         irep_idt identifier="ssa::dummy"+i2string(loc->location_number);
-        equal_exprt equality(symbol_exprt(identifier, bool_typet()), rhs);     	
+        equal_exprt equality(symbol_exprt(identifier, bool_typet()), rhs_read);     	
         nodes[loc].equalities.push_back(equality);
         break;
       }
