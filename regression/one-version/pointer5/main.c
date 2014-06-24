@@ -16,7 +16,8 @@ int main()
   
   if(p==q)
     assert(*p==2);
-    
+
+  // aliasing with other stuff    
   if(q==&i)
     assert(i==2);
   else
