@@ -72,6 +72,10 @@ public:
   // objects, plus categorization
   typedef std::set<ssa_objectt> objectst;
   objectst objects, dirty_locals, clean_locals, globals;
+  
+  // literals whose address is taken
+  typedef std::set<exprt> literalst;
+  literalst literals;
 
   ssa_objectst(
     const goto_functionst::goto_functiont &goto_function,
@@ -91,5 +95,20 @@ protected:
     const namespacet &);
 };
 
+// Returns true if the member expression is a struct member
+// expression.
+bool is_struct_member(const member_exprt &, const namespacet &);
+
+// Returns true for symbol(.member)*, where
+// all members are struct members.
+bool is_symbol_struct_member(const exprt &, const namespacet &);
+
+// Returns true for ((*ptr)|symbol)(.member)*, where
+// all members are struct members.
+bool is_symbol_or_deref_struct_member(const exprt &, const namespacet &);
+
+// Returns true for (*ptr)(.member)*, where
+// all members are struct members.
+bool is_deref_struct_member(const exprt &, const namespacet &);
 
 #endif

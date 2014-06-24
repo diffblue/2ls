@@ -14,6 +14,7 @@ $(SUBDIRS):
 summarizer: ai domains ssa solver functions html
 deltacheck: ssa solver functions html
 deltagit: html
+summarizer: ssa solver functions domains
 
 
 clean: $(patsubst %, %_clean, $(SUBDIRS))

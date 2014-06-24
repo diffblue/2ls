@@ -25,25 +25,36 @@ Function: collect_objects_rec
 void collect_objects_rec(
   const exprt &src,
   const namespacet &ns,
-  std::set<ssa_objectt> &dest);
+  std::set<ssa_objectt> &objects,
+  std::set<exprt> &literals);
 
 void collect_objects_address_of_rec(
   const exprt &src,
   const namespacet &ns,
-  std::set<ssa_objectt> &dest)
+  std::set<ssa_objectt> &objects,
+  std::set<exprt> &literals)
 {
   if(src.id()==ID_index)
   {
-    collect_objects_address_of_rec(to_index_expr(src).array(), ns, dest);
-    collect_objects_rec(to_index_expr(src).index(), ns, dest);
+    collect_objects_address_of_rec(
+      to_index_expr(src).array(), ns, objects, literals);
+
+    collect_objects_rec(
+      to_index_expr(src).index(), ns, objects, literals);
   }
   else if(src.id()==ID_dereference)
   {
-    collect_objects_rec(to_dereference_expr(src).pointer(), ns, dest);
+    collect_objects_rec(
+      to_dereference_expr(src).pointer(), ns, objects, literals);
   }
   else if(src.id()==ID_member)
   {
-    collect_objects_address_of_rec(to_member_expr(src).struct_op(), ns, dest);
+    collect_objects_address_of_rec(
+      to_member_expr(src).struct_op(), ns, objects, literals);
+  }
+  else if(src.id()==ID_string_constant)
+  {
+    literals.insert(src);
   }
 }
 
@@ -62,18 +73,19 @@ Function: collect_objects_rec
 void collect_objects_rec(
   const exprt &src,
   const namespacet &ns,
-  std::set<ssa_objectt> &dest)
+  std::set<ssa_objectt> &objects,
+  std::set<exprt> &literals)
 {
   if(src.id()==ID_code)
   {
     forall_operands(it, src)
-      collect_objects_rec(*it, ns, dest);
+      collect_objects_rec(*it, ns, objects, literals);
     return;
   }
   else if(src.id()==ID_address_of)
   {
     collect_objects_address_of_rec(
-      to_address_of_expr(src).object(), ns, dest);
+      to_address_of_expr(src).object(), ns, objects, literals);
     return;
   }
 
@@ -100,18 +112,18 @@ void collect_objects_rec(
           it++)
       {
         member_exprt new_src(src, it->get_name(), it->type());
-        collect_objects_rec(new_src, ns, dest); // recursive call
+        collect_objects_rec(new_src, ns, objects, literals); // recursive call
       }
       
       return; // done
     }
     
-    dest.insert(ssa_object);
+    objects.insert(ssa_object);
   }
   else
   {
     forall_operands(it, src)
-      collect_objects_rec(*it, ns, dest);
+      collect_objects_rec(*it, ns, objects, literals);
   }
 }
 
@@ -133,8 +145,8 @@ void ssa_objectst::collect_objects(
 {
   forall_goto_program_instructions(it, src.body)
   {
-    collect_objects_rec(it->guard, ns, objects);
-    collect_objects_rec(it->code, ns, objects);
+    collect_objects_rec(it->guard, ns, objects, literals);
+    collect_objects_rec(it->code, ns, objects, literals);
   }
 }
 
@@ -233,10 +245,9 @@ irep_idt ssa_objectt::object_id_rec(
   {
     const member_exprt &member_expr=to_member_expr(src);
     const exprt &compound_op=member_expr.struct_op();
-    const typet &compound_type=ns.follow(compound_op.type());
     
     // need to distinguish union and struct members
-    if(compound_type.id()==ID_struct)
+    if(is_struct_member(member_expr, ns))
     {
       irep_idt compound_object=object_id_rec(compound_op, ns);
       if(compound_object==irep_idt()) return irep_idt();
@@ -244,8 +255,6 @@ irep_idt ssa_objectt::object_id_rec(
       return id2string(compound_object)+
              "."+id2string(member_expr.get_component_name());
     }
-    else if(compound_type.id()==ID_union)
-      return irep_idt();
     else
       return irep_idt();
   }
@@ -261,12 +270,125 @@ irep_idt ssa_objectt::object_id_rec(
   }
   else if(src.id()==ID_dereference)
   {
+    #if 0
     const dereference_exprt &dereference_expr=to_dereference_expr(src);
     irep_idt pointer_object=object_id_rec(dereference_expr.pointer(), ns);
     if(pointer_object==irep_idt()) return irep_idt();
     return id2string(pointer_object)+"'obj";
+    #else
+    return irep_idt();
+    #endif
   }
   else
     return irep_idt();
+}
+
+/*******************************************************************\
+
+Function: is_struct_member
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool is_struct_member(const member_exprt &src, const namespacet &ns)
+{
+  const exprt &compound_op=src.struct_op();
+  const typet &compound_type=ns.follow(compound_op.type());
+
+  return compound_type.id()==ID_struct;
+}
+
+/*******************************************************************\
+
+Function: get_struct_rec
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+const exprt &get_struct_rec(const exprt &src, const namespacet &ns)
+{
+  // Returns X for X(.member)*, where
+  // all members are struct members.
+  if(src.id()==ID_member)
+  {
+    const member_exprt &member_expr=to_member_expr(src);
+    const exprt &compound_op=member_expr.struct_op();
+
+    // need to distinguish union and struct members
+    if(is_struct_member(member_expr, ns))
+      return get_struct_rec(compound_op, ns);
+    else
+      return src;
+  }
+  else
+    return src;
+}
+
+/*******************************************************************\
+
+Function: is_symbol_struct_member
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+// Returns true for symbol(.member)*, where
+// all members are struct members.
+bool is_symbol_struct_member(const exprt &src, const namespacet &ns)
+{
+  return get_struct_rec(src, ns).id()==ID_symbol;
+}
+
+/*******************************************************************\
+
+Function: is_symbol_or_deref_struct_member
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+// Returns true for ((*ptr)|symbol)(.member)*, where
+// all members are struct members.
+bool is_symbol_or_deref_struct_member(const exprt &src, const namespacet &ns)
+{
+  exprt struct_op=get_struct_rec(src, ns);
+  return struct_op.id()==ID_symbol || struct_op.id()==ID_dereference;
+}
+
+/*******************************************************************\
+
+Function: is_deref_struct_member
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+// Returns true for (*ptr)(.member)*, where
+// all members are struct members.
+bool is_deref_struct_member(const exprt &src, const namespacet &ns)
+{
+  return get_struct_rec(src, ns).id()==ID_dereference;
 }
 

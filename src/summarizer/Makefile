@@ -26,6 +26,7 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       ../ssa/address_canonizer$(OBJEXT) \
       ../ssa/ssa_aliasing$(OBJEXT) \
       ../ssa/simplify_ssa$(OBJEXT) \
+      ../ssa/ssa_build_goto_trace$(OBJEXT) \
       ../functions/summary$(OBJEXT) \
       ../functions/get_function$(OBJEXT) \
       ../functions/path_util$(OBJEXT) \

@@ -6,6 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <ansi-c/c_types.h>
+
 #include <util/std_expr.h>
 #include <util/pointer_offset_size.h>
 
@@ -44,11 +46,32 @@ exprt address_canonizer(
     {
       // get offset
       exprt offset=member_offset_expr(to_member_expr(object), ns);
-      return address;
+      
+      // &x.m  ---> (&x)+offset
+      
+      address_of_exprt address_of_expr(to_member_expr(object).struct_op());
+      exprt rec_result=address_canonizer(address_of_expr, ns); // rec. call
+
+      pointer_typet byte_pointer(unsigned_char_type());
+      typecast_exprt typecast_expr(rec_result, byte_pointer);
+      plus_exprt sum(typecast_expr, offset);
+      if(sum.type()!=address.type()) sum.make_typecast(address.type());
+      
+      return sum;
     }
     else if(object.id()==ID_index)
     {
-      return address;
+      // &(x[i]) ---> (&x)+i
+      address_of_exprt address_of_expr(to_index_expr(object).array());
+      exprt rec_result=address_canonizer(address_of_expr, ns); // rec. call
+
+      pointer_typet pointer_type;
+      pointer_type.subtype()=object.type();
+      typecast_exprt typecast_expr(rec_result, pointer_type);
+      plus_exprt sum(typecast_expr, to_index_expr(object).index());
+      if(sum.type()!=address.type()) sum.make_typecast(address.type());
+      
+      return sum;
     }
     else
       return address;
@@ -78,6 +101,19 @@ exprt address_canonizer(
     tmp.true_case()=address_canonizer(tmp.true_case(), ns);
     tmp.false_case()=address_canonizer(tmp.false_case(), ns);
     return tmp;
+  }
+  else if(address.id()==ID_typecast)
+  {
+    typecast_exprt tmp=to_typecast_expr(address);
+    
+    // cast from another pointer?
+    if(tmp.op().type().id()==ID_pointer)
+    {
+      tmp.op()=address_canonizer(tmp.op(), ns);
+      return tmp;
+    }
+
+    return address;
   }
   else
     return address;

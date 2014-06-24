@@ -17,6 +17,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "../ssa/local_ssa.h"
 #include "../ssa/simplify_ssa.h"
+#include "../ssa/ssa_build_goto_trace.h"
 #include "../domains/ssa_fixed_point.h"
 #include "../domains/ssa_analyzer.h"
 
@@ -364,20 +365,23 @@ void summary_checkert::check_properties(
     solver << SSA.guard_symbol(i_it);          
     solver << negated_property;
     
+    property_statust &property_status=property_map[property_id];
+    
     // solve
     switch(solver())
     {
     case decision_proceduret::D_SATISFIABLE:
-      property_map[property_id].result=FAIL;
+      property_status.result=FAIL;
+      build_goto_trace(SSA, solver, property_status.error_trace);
       break;
       
     case decision_proceduret::D_UNSATISFIABLE:
-      property_map[property_id].result=PASS;
+      property_status.result=PASS;
       break;
 
     case decision_proceduret::D_ERROR:    
     default:
-      property_map[property_id].result=ERROR;
+      property_status.result=ERROR;
       throw "error from decision procedure";
     }
   }
