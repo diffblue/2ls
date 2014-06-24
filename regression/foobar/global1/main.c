@@ -1,7 +1,10 @@
+#include <limits.h>
+
 int g;
 
 int foo(int y) 
 { 
+  __CPROVER_assume(g<INT_MAX);
   if(y) g++;
   return 0;
 }
