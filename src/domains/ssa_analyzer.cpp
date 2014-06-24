@@ -45,13 +45,18 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
   if(SSA.goto_function.body.instructions.empty())
     return;
 
+  // handle special functions
+
+  const irep_idt &function_id = SSA.goto_function.body.instructions.front().function;
+  bool is_initialize = (id2string(function_id)=="c::__CPROVER_initialize");
+
   // gather information for creating domains
 
   var_listt pre_state_vars, post_state_vars;
 
-  template_domaint::var_guardst var_pre_guards;
-  template_domaint::var_guardst var_post_guards;
-  template_domaint::kindst var_kinds;
+  domaint::guardst var_pre_guards;
+  domaint::guardst var_post_guards;
+  domaint::kindst var_kinds;
 
   var_listt top_vars;
   add_vars(SSA.params,top_vars);
@@ -62,7 +67,7 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
   {
     var_pre_guards.push_back(true_exprt());
     var_post_guards.push_back(true_exprt());
-    var_kinds.push_back(template_domaint::IN);
+    var_kinds.push_back(domaint::IN);
   }
 
   // get all backwards edges
@@ -94,7 +99,7 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
       
         var_pre_guards.push_back(pre_guard);
         var_post_guards.push_back(post_guard);
-        var_kinds.push_back(template_domaint::LOOP);
+        var_kinds.push_back(domaint::LOOP);
       
         pre_state_vars.push_back(in);
         post_state_vars.push_back(out);
@@ -129,7 +134,7 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
     exprt guard = SSA.guard_symbol(t);
     var_pre_guards.push_back(true_exprt()); 
     var_post_guards.push_back(guard); 
-    var_kinds.push_back(template_domaint::OUT);
+    var_kinds.push_back(domaint::OUT);
   }
   
   // building map for renaming from pre into post-state
@@ -159,19 +164,19 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
 #endif
 
   //get domain from command line options
-  if(options.get_bool_option("intervals"))
+  if(options.get_bool_option("intervals") || is_initialize)
   {
-    make_interval_template(templ, vars, 
+    template_domaint::make_interval_template(templ, vars, 
       var_pre_guards, var_post_guards, var_kinds, ns);
   }
   else if(options.get_bool_option("zones"))
   {
-    make_zone_template(templ, vars, 
+    template_domaint::make_zone_template(templ, vars, 
       var_pre_guards, var_post_guards, var_kinds, ns); 
   }
   else if(options.get_bool_option("octagons"))
   {
-    make_octagon_template(templ, vars, 
+    template_domaint::make_octagon_template(templ, vars, 
       var_pre_guards, var_post_guards, var_kinds, ns); 
   }
   else if(options.get_bool_option("equalities"))
@@ -199,7 +204,7 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
   strategy_solver_baset *strategy_solver;
   domaint *domain; 
   strategy_solver_baset::invariantt *inv;
-  if(options.get_bool_option("equalities"))
+  if(options.get_bool_option("equalities") && !is_initialize)
   {
     domain = new equality_domaint(vars, 
       var_pre_guards, var_post_guards, var_kinds, ns);
@@ -211,7 +216,7 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
   else
   {
     inv = new template_domaint::templ_valuet();
-    if(options.get_bool_option("enum-solver"))
+    if(options.get_bool_option("enum-solver") || is_initialize)
     {
       domain = new template_domaint(templ);
       strategy_solver = new strategy_solver_enumerationt(

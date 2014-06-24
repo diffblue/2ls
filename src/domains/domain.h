@@ -38,6 +38,15 @@ public:
   virtual void project_on_inout(const valuet &value, exprt &result) 
     { assert(false); }
 
+  static kindt merge_kinds(kindt k1, kindt k2)
+  {
+    return (k1==OUT || 
+            k2==OUT ?  (k1==LOOP || 
+                        k2==LOOP ?  OUTL : OUT) :
+                       (k1==LOOP || k2==LOOP ? LOOP :  IN));
+  }
+
+
 };
 
 #endif

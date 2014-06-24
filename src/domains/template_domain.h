@@ -12,7 +12,6 @@ public:
   typedef exprt row_exprt; 
   typedef std::vector<row_exprt> row_exprst; 
   typedef constant_exprt row_valuet; // "bound"
-  typedef std::vector<exprt> var_guardst; 
 
   class templ_valuet : public domaint::valuet, public std::vector<row_valuet> 
   {
@@ -64,30 +63,31 @@ public:
   virtual void project_on_loops(const valuet &value, exprt &result);
   virtual void project_on_inout(const valuet &value, exprt &result);
 
+  static void make_interval_template(templatet &templ,
+			      const var_listt &vars,
+			      const guardst &pre_guards,
+			      const guardst &post_guards,
+			      const kindst &kinds,
+			      const namespacet &ns);
+  static void make_zone_template(templatet &templ,
+			  const var_listt &vars,
+			  const guardst &pre_guards,
+			  const guardst &post_guards,
+			  const kindst &kinds,
+			  const namespacet &ns);
+  static void make_octagon_template(templatet &templ,
+			     const var_listt &vars,
+			     const guardst &pre_guards,
+			     const guardst &post_guards,
+			     const kindst &kinds,
+			     const namespacet &ns);
+
 protected:
   templatet &templ;
   
 };
 
-void make_interval_template(template_domaint::templatet &templ,
-			   const template_domaint::var_listt &vars,
-			   const template_domaint::var_guardst &pre_guards,
-			   const template_domaint::var_guardst &post_guards,
-			   const template_domaint::kindst &kinds,
-                           const namespacet &ns);
-void make_zone_template(template_domaint::templatet &templ,
-			   const template_domaint::var_listt &vars,
-			   const template_domaint::var_guardst &pre_guards,
-			   const template_domaint::var_guardst &post_guards,
-			   const template_domaint::kindst &kinds,
-                           const namespacet &ns);
-void make_octagon_template(template_domaint::templatet &templ,
-			   const template_domaint::var_listt &vars,
-			   const template_domaint::var_guardst &pre_guards,
-			   const template_domaint::var_guardst &post_guards,
-			   const template_domaint::kindst &kinds,
-                           const namespacet &ns);
-
+void extend_expr_types(exprt &expr);
 constant_exprt simplify_const(const exprt &expr);
 
 #endif

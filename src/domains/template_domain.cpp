@@ -600,11 +600,11 @@ Function: make_interval_template
 
 \*******************************************************************/
 
-void make_interval_template(template_domaint::templatet &templ, 
-  const template_domaint::var_listt &vars,
-  const template_domaint::var_guardst &pre_guards,
-  const template_domaint::var_guardst &post_guards,
-  const template_domaint::kindst &kinds,
+void template_domaint::make_interval_template(templatet &templ, 
+  const var_listt &vars,
+  const guardst &pre_guards,
+  const guardst &post_guards,
+  const kindst &kinds,
   const namespacet &ns)
 {
   assert(vars.size() == pre_guards.size());
@@ -616,12 +616,14 @@ void make_interval_template(template_domaint::templatet &templ,
   templ.post_guards.clear(); templ.post_guards.reserve(size);
   templ.kinds.clear(); templ.kinds.reserve(size);
   
-  template_domaint::var_guardst::const_iterator pre_g = pre_guards.begin();
-  template_domaint::var_guardst::const_iterator post_g = post_guards.begin();
-  template_domaint::kindst::const_iterator k = kinds.begin();
-  for(template_domaint::var_listt::const_iterator v = vars.begin(); 
+  guardst::const_iterator pre_g = pre_guards.begin();
+  guardst::const_iterator post_g = post_guards.begin();
+  kindst::const_iterator k = kinds.begin();
+  for(var_listt::const_iterator v = vars.begin(); 
       v!=vars.end(); v++, pre_g++, post_g++, k++)
   {
+    if(*k==IN) continue;
+
     templ.rows.push_back(*v);
     unary_minus_exprt um_expr(*v,v->type());
     extend_expr_types(um_expr);
@@ -650,11 +652,11 @@ Function: make_zone_template
 
 \*******************************************************************/
 
-void make_zone_template(template_domaint::templatet &templ, 
-  const template_domaint::var_listt &vars,
-  const template_domaint::var_guardst &pre_guards,
-  const template_domaint::var_guardst &post_guards,
-  const template_domaint::kindst &kinds,
+void template_domaint::make_zone_template(templatet &templ, 
+  const var_listt &vars,
+  const guardst &pre_guards,
+  const guardst &post_guards,
+  const kindst &kinds,
   const namespacet &ns)
 { 
   assert(vars.size() == pre_guards.size());
@@ -666,28 +668,34 @@ void make_zone_template(template_domaint::templatet &templ,
   templ.post_guards.clear(); templ.post_guards.reserve(size);
   templ.kinds.clear(); templ.kinds.reserve(size);
 
-  template_domaint::var_guardst::const_iterator pre_g1 = pre_guards.begin();
-  template_domaint::var_guardst::const_iterator post_g1 = post_guards.begin();
-  template_domaint::kindst::const_iterator k1 = kinds.begin();
-  for(template_domaint::var_listt::const_iterator v1 = vars.begin(); 
+  guardst::const_iterator pre_g1 = pre_guards.begin();
+  guardst::const_iterator post_g1 = post_guards.begin();
+  kindst::const_iterator k1 = kinds.begin();
+  for(var_listt::const_iterator v1 = vars.begin(); 
       v1!=vars.end(); v1++, pre_g1++, post_g1++, k1++)
   {
-    templ.rows.push_back(*v1); 
-    unary_minus_exprt um_expr(*v1,v1->type());
-    extend_expr_types(um_expr);
-    templ.rows.push_back(um_expr); 
-    for(unsigned i=0;i<2;i++) 
+    if(*k1!=IN) 
     {
-      templ.pre_guards.push_back(*pre_g1);
-      templ.post_guards.push_back(*post_g1);
-      templ.kinds.push_back(*k1);
+      templ.rows.push_back(*v1); 
+      unary_minus_exprt um_expr(*v1,v1->type());
+      extend_expr_types(um_expr);
+      templ.rows.push_back(um_expr); 
+      for(unsigned i=0;i<2;i++) 
+      {
+        templ.pre_guards.push_back(*pre_g1);
+	templ.post_guards.push_back(*post_g1);
+	templ.kinds.push_back(*k1);
+      }
     }
-    template_domaint::var_guardst::const_iterator pre_g2 = pre_g1; pre_g2++;
-    template_domaint::var_guardst::const_iterator post_g2 = post_g1; post_g2++;
-    template_domaint::var_listt::const_iterator v2 = v1; v2++;
-    template_domaint::kindst::const_iterator k2 = k1; k2++;
+    guardst::const_iterator pre_g2 = pre_g1; pre_g2++;
+    guardst::const_iterator post_g2 = post_g1; post_g2++;
+    var_listt::const_iterator v2 = v1; v2++;
+    kindst::const_iterator k2 = k1; k2++;
     for(;v2!=vars.end(); v2++, pre_g2++, post_g2++, k2++)
     {
+      kindt k = domaint::merge_kinds(*k1,*k2);
+      if(k==IN) continue;
+
       minus_exprt m_expr1(*v1,*v2);
       extend_expr_types(m_expr1);
       templ.rows.push_back(m_expr1);
@@ -700,12 +708,6 @@ void make_zone_template(template_domaint::templatet &templ,
       exprt post_g = and_exprt(*post_g1,*post_g2);
       simplify(pre_g,ns);
       simplify(post_g,ns);
-      template_domaint::kindt k = 
-        (*k1==template_domaint::OUT || *k2==template_domaint::OUT ? 
-	 (*k1==template_domaint::LOOP || *k2==template_domaint::LOOP ?  template_domaint::OUTL :
-          template_domaint::OUT) :
-         (*k1==template_domaint::LOOP || *k2==template_domaint::LOOP ? template_domaint::LOOP : 
-          template_domaint::IN));
       for(unsigned i=0;i<2;i++) 
       {
         templ.pre_guards.push_back(pre_g);
@@ -731,11 +733,11 @@ Function: make_octagon_template
 
 \*******************************************************************/
 
-void make_octagon_template(template_domaint::templatet &templ,
-  const template_domaint::var_listt &vars,
-  const template_domaint::var_guardst &pre_guards,
-  const template_domaint::var_guardst &post_guards,
-  const template_domaint::kindst &kinds,
+void template_domaint::make_octagon_template(templatet &templ,
+  const var_listt &vars,
+  const guardst &pre_guards,
+  const guardst &post_guards,
+  const kindst &kinds,
   const namespacet &ns)
 {
   assert(vars.size() == pre_guards.size());
@@ -745,28 +747,34 @@ void make_octagon_template(template_domaint::templatet &templ,
   templ.pre_guards.clear(); templ.pre_guards.reserve(size);
   templ.post_guards.clear(); templ.post_guards.reserve(size);
 
-  template_domaint::var_guardst::const_iterator pre_g1 = pre_guards.begin();
-  template_domaint::var_guardst::const_iterator post_g1 = post_guards.begin();
-  template_domaint::kindst::const_iterator k1 = kinds.begin();
-  for(template_domaint::var_listt::const_iterator v1 = vars.begin(); 
+  guardst::const_iterator pre_g1 = pre_guards.begin();
+  guardst::const_iterator post_g1 = post_guards.begin();
+  kindst::const_iterator k1 = kinds.begin();
+  for(var_listt::const_iterator v1 = vars.begin(); 
       v1!=vars.end(); v1++, pre_g1++, post_g1++, k1++)
   {
-    templ.rows.push_back(*v1); 
-    unary_minus_exprt um_expr(*v1,v1->type());
-    extend_expr_types(um_expr);
-    templ.rows.push_back(um_expr); 
-    for(unsigned i=0;i<2;i++) 
+    if(*k1!=IN) 
     {
-      templ.pre_guards.push_back(*pre_g1);
-      templ.post_guards.push_back(*post_g1);
-      templ.kinds.push_back(*k1);
+      templ.rows.push_back(*v1); 
+      unary_minus_exprt um_expr(*v1,v1->type());
+      extend_expr_types(um_expr);
+      templ.rows.push_back(um_expr); 
+      for(unsigned i=0;i<2;i++) 
+      {
+        templ.pre_guards.push_back(*pre_g1);
+	templ.post_guards.push_back(*post_g1);
+	templ.kinds.push_back(*k1);
+      }
     }
-    template_domaint::var_guardst::const_iterator pre_g2 = pre_g1; pre_g2++;
-    template_domaint::var_guardst::const_iterator post_g2 = post_g1; post_g2++;
-    template_domaint::var_listt::const_iterator v2 = v1; v2++;
-    template_domaint::kindst::const_iterator k2 = k1; k2++;
+    guardst::const_iterator pre_g2 = pre_g1; pre_g2++;
+    guardst::const_iterator post_g2 = post_g1; post_g2++;
+    var_listt::const_iterator v2 = v1; v2++;
+    kindst::const_iterator k2 = k1; k2++;
     for(;v2!=vars.end(); v2++, pre_g2++, post_g2++, k2++)
     {
+      kindt k = domaint::merge_kinds(*k1,*k2);
+      if(k==IN) continue;
+
       minus_exprt m_expr1(*v1,*v2);
       extend_expr_types(m_expr1);
       templ.rows.push_back(m_expr1);
@@ -787,12 +795,6 @@ void make_octagon_template(template_domaint::templatet &templ,
       exprt post_g = and_exprt(*post_g1,*post_g2);
       simplify(pre_g,ns);
       simplify(post_g,ns);
-      template_domaint::kindt k = 
-        (*k1==template_domaint::OUT || *k2==template_domaint::OUT ? 
-	 (*k1==template_domaint::LOOP || *k2==template_domaint::LOOP ?  template_domaint::OUTL :
-          template_domaint::OUT) :
-         (*k1==template_domaint::LOOP || *k2==template_domaint::LOOP ? template_domaint::LOOP : 
-          template_domaint::IN));
       for(unsigned i=0;i<4;i++) 
       {
         templ.pre_guards.push_back(pre_g);

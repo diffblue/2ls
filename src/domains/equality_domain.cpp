@@ -335,6 +335,9 @@ void equality_domaint::make_template(
     kindst::const_iterator k2 = k1; k2++;
     for(;v2!=vars.end(); v2++, pre_g2++, post_g2++, k2++)
     {
+      kindt k = domaint::merge_kinds(*k1,*k2);
+      if(k==IN) continue;
+
       symbol_exprt vv1 = *v1;
       symbol_exprt vv2 = *v2;
       if(!adapt_types(vv1,vv2)) continue;
@@ -343,14 +346,6 @@ void equality_domaint::make_template(
       exprt post_g = and_exprt(*post_g1,*post_g2);
       simplify(pre_g,ns);
       simplify(post_g,ns);
-      kindt k = 
-        (*k1==OUT || 
-         *k2==OUT ? (*k1==LOOP || 
-                     *k2==LOOP ?  OUTL : OUT) :
-         (*k1==LOOP || 
-          *k2==LOOP ? LOOP : IN));
-
-      if(k==IN) continue;
 
       templ.var_pairs.push_back(var_pairt(vv1,vv2));
       templ.pre_guards.push_back(pre_g);
