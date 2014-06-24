@@ -27,15 +27,13 @@ public:
   inline local_SSAt(
     const goto_functiont &_goto_function,
     const namespacet &_ns,
-    const std::string &_suffix="",
-    bool _do_lb=true):
+    const std::string &_suffix=""):
     ns(_ns), goto_function(_goto_function), 
     ssa_objects(_goto_function, ns),
     assignments(_goto_function.body, ns, ssa_objects),
     guard_map(_goto_function.body),
     ssa_analysis(assignments),
-    suffix(_suffix),
-    do_lb(_do_lb)
+    suffix(_suffix) 
   {
     build_SSA();
   }
@@ -74,7 +72,7 @@ public:
   typedef std::list<symbol_exprt> var_listt;
   typedef std::set<symbol_exprt> var_sett;
   var_listt params;  
-  var_sett returns, globals_in, globals_out;  
+  var_sett globals_in, globals_out;  
 
   const namespacet &ns;
   const goto_functiont &goto_function;
@@ -116,8 +114,6 @@ public:
 
   ssa_ait ssa_analysis;
   std::string suffix; // an extra suffix
-  
-  bool do_lb; // put in loop-back symbols
 
   void get_globals(locationt loc, std::set<symbol_exprt> &globals);
 

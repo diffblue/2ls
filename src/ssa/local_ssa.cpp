@@ -20,8 +20,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <goto-symex/adjust_float_expressions.h>
 
-#include <goto-instrument/merge_returns.h>
-
 #include <langapi/language_util.h>
 
 #include "local_ssa.h"
@@ -94,26 +92,12 @@ void local_SSAt::get_entry_exit_vars()
     params.push_back(symbol.symbol_expr());
   }
 
-  //get globals in and out
+  //get globals in and out (includes return value)
   goto_programt::const_targett first = goto_function.body.instructions.begin();
   get_globals(first,globals_in);
 
   goto_programt::const_targett last = goto_function.body.instructions.end(); last--;
   get_globals(last,globals_out);
-
-  //get return value
-  const ssa_domaint &ssa_domain=ssa_analysis[last];
-  for(ssa_domaint::def_mapt::const_iterator d_it = ssa_domain.def_map.begin();
-      d_it != ssa_domain.def_map.end(); d_it++)
-  {
-    const symbolt *symbol;
-    if(ns.lookup(d_it->first,symbol)) continue;         
-    if(has_prefix(id2string(d_it->first),CPROVER_RETURN_VALUE_IDENTIFIER))
-    {
-      const ssa_objectt ssa_object(symbol->symbol_expr(),ns);
-      returns.insert(name(ssa_object,d_it->second.def));
-    }
-  }
 }
 
 /*******************************************************************\
@@ -206,19 +190,17 @@ void local_SSAt::build_phi_nodes(locationt loc)
 
     exprt rhs=nil_exprt();
 
-    if(!do_lb)
-    {
-      // We distinguish forwards- from backwards-edges,
-      // and do forwards-edges first, which gives them
-      // _lower_ priority in the ITE. Inputs are always
-      // forward edges.
+    // We distinguish forwards- from backwards-edges,
+    // and do forwards-edges first, which gives them
+    // _lower_ priority in the ITE. Inputs are always
+    // forward edges.
       
-      for(std::map<locationt, ssa_domaint::deft>::const_iterator
+    for(std::map<locationt, ssa_domaint::deft>::const_iterator
           incoming_it=incoming.begin();
-          incoming_it!=incoming.end();
-          incoming_it++)
-        if(incoming_it->second.is_input() ||
-           incoming_it->first->location_number < loc->location_number)
+	incoming_it!=incoming.end();
+	incoming_it++)
+      if(incoming_it->second.is_input() ||
+	 incoming_it->first->location_number < loc->location_number)
         {
           // it's a forward edge
           exprt incoming_value=name(*o_it, incoming_it->second);
@@ -230,59 +212,14 @@ void local_SSAt::build_phi_nodes(locationt loc)
             rhs=if_exprt(incoming_guard, incoming_value, rhs);
         }
        
-      // now do backwards
+    // now do backwards
 
-      for(std::map<locationt, ssa_domaint::deft>::const_iterator
+    for(std::map<locationt, ssa_domaint::deft>::const_iterator
           incoming_it=incoming.begin();
-          incoming_it!=incoming.end();
-          incoming_it++)
-        if(!incoming_it->second.is_input() &&
-           incoming_it->first->location_number >= loc->location_number)
-        {
-          // it's a backwards edge
-          exprt incoming_value=name(*o_it, incoming_it->second); 
-          exprt incoming_select=name(guard_symbol(), LOOP_SELECT, incoming_it->first);
-
-          if(rhs.is_nil()) // first
-            rhs=incoming_value;
-          else
-            rhs=if_exprt(incoming_select, incoming_value, rhs);
-        }
-    }
-   
-    else
-    {
-
-      // We distinguish forwards- from backwards-edges,
-      // and do forwards-edges first, which gives them
-      // _lower_ priority in the ITE. Inputs are always
-      // forward edges.
-      
-      for(std::map<locationt, ssa_domaint::deft>::const_iterator
-          incoming_it=incoming.begin();
-          incoming_it!=incoming.end();
-          incoming_it++)
-        if(incoming_it->second.is_input() ||
-           incoming_it->first->location_number < loc->location_number)
-        {
-          // it's a forward edge
-          exprt incoming_value=name(*o_it, incoming_it->second);
-          exprt incoming_guard=edge_guard(incoming_it->first, loc);
-
-          if(rhs.is_nil()) // first
-            rhs=incoming_value;
-          else
-            rhs=if_exprt(incoming_guard, incoming_value, rhs);
-        }
-       
-      // now do backwards
-
-      for(std::map<locationt, ssa_domaint::deft>::const_iterator
-          incoming_it=incoming.begin();
-          incoming_it!=incoming.end();
-          incoming_it++)
-        if(!incoming_it->second.is_input() &&
-           incoming_it->first->location_number >= loc->location_number)
+	incoming_it!=incoming.end();
+	incoming_it++)
+      if(!incoming_it->second.is_input() &&
+	 incoming_it->first->location_number >= loc->location_number)
         {
           // it's a backwards edge
           exprt incoming_value=name(*o_it, LOOP_BACK, incoming_it->first);
@@ -293,7 +230,6 @@ void local_SSAt::build_phi_nodes(locationt loc)
           else
             rhs=if_exprt(incoming_select, incoming_value, rhs);
         }
-    }
 
     symbol_exprt lhs=name(*o_it, PHI, loc);
     
@@ -322,6 +258,22 @@ void local_SSAt::build_transfer(locationt loc)
 
     assign_rec(code_assign.lhs(), code_assign.rhs(), loc);
   }
+  /*
+  else if(loc->is_function_call())
+  {
+    const code_function_callt &code_function_call=
+      to_code_function_call(loc->code);
+      
+    if(code_function_call.lhs().is_not_nil())
+    {
+      // generate a symbol for rhs
+      irep_idt identifier="ssa::return_value"+i2string(loc->location_number);
+      symbol_exprt rhs(identifier, code_function_call.lhs().type());
+      
+      assign_rec(code_function_call.lhs(), rhs, loc);
+    }
+  }
+*/
   else if(loc->is_function_call())
   {
     const code_function_callt &code_function_call=
@@ -329,18 +281,13 @@ void local_SSAt::build_transfer(locationt loc)
 
     exprt lhs = code_function_call.lhs();
 
-    /*   if(code_function_call.lhs().is_nil())
-    {
-      irep_idt identifier="ssa::dummy"+i2string(loc->location_number);
-      lhs = symbol_exprt(identifier, code_function_call.lhs().type());
-      } */
     function_application_exprt ssa_rhs;
     ssa_rhs.function() = code_function_call.function();
     ssa_rhs.type() = code_function_call.lhs().type();
     ssa_rhs.arguments() = code_function_call.arguments(); 
 
     assign_rec(lhs, ssa_rhs, loc);
-  }
+    }
 }
   
 /*******************************************************************\
@@ -1238,54 +1185,6 @@ std::list<exprt> & operator << (
   }
   
   return dest;
-}
-
-/*******************************************************************\
-
-Function: return_symbol
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-symbol_exprt return_symbol(typet type, local_SSAt::locationt loc)
-{
-  unsigned cnt=loc->location_number;
-  return symbol_exprt("ssa::$return"+i2string(cnt), type);
-}
-
-/*******************************************************************\
-
-Function: preprocess_returns
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void preprocess_returns(goto_functionst::goto_functiont &goto_function)
-{
-  Forall_goto_program_instructions(it, goto_function.body)
-  {
-    if(it->is_return()) 
-    {
-      code_returnt &code = to_code_return(it->code);
-      assert(code.operands().size()==1);
-      exprt rhs = code.op0(); 
-      symbol_exprt lhs = return_symbol(rhs.type(),it);
-      code.op0() = lhs;
-      goto_programt::targett newi = goto_function.body.insert_before(it);
-      newi->make_assignment();
-      newi->code = code_assignt(lhs,rhs);
-    }
-  }
 }
 
 /*******************************************************************\

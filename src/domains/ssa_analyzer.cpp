@@ -120,10 +120,9 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
   template_domaint::templatet templ;
    
   add_vars(pre_state_vars,vars);
-  var_listt added_returns = add_vars(SSA.returns,vars);
   var_listt added_globals_out = add_vars(SSA.globals_out,vars); 
 
-  for(unsigned i=0; i<added_returns.size()+added_globals_out.size(); ++i) 
+  for(unsigned i=0; i<added_globals_out.size(); ++i) 
   {
     goto_programt::const_targett t = 
       SSA.goto_function.body.instructions.end(); t--;
@@ -185,7 +184,6 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
   std::cout << "**** Function stats *****" << std::endl;
   std::cout << "  var size " << vars.size() << std::endl
             << "  params size " << SSA.params.size() << std::endl
-            << "  returns size " << SSA.returns.size() << std::endl
             << "  pre_state " << pre_state_vars.size() << std::endl;
   #endif  
   
@@ -203,7 +201,8 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
   strategy_solver_baset::invariantt *inv;
   if(options.get_bool_option("equalities"))
   {
-    domain = new equality_domaint(vars, var_kinds);
+    domain = new equality_domaint(vars, 
+      var_pre_guards, var_post_guards, var_kinds, ns);
     strategy_solver = new strategy_solver_equalityt(
         transition_relation, renaming_map,
         *static_cast<equality_domaint *>(domain), solver, ns);

@@ -8,5 +8,6 @@ void main()
 {
   int x = 0;
   x = foo(x);
+  x = foo(x);
   assert(x==0);
 }

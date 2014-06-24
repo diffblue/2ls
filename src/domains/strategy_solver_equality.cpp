@@ -24,6 +24,10 @@ bool strategy_solver_equalityt::iterate(invariantt &_inv)
     solver << or_exprt(literal_exprt(cond_literal),
                        literal_exprt(activation_literal));
 
+    debug() << "Checking equality " << eom;
+    debug() << "Pre: " << from_expr(ns, "", pre_expr) << eom;
+    debug() << "Post: " << from_expr(ns, "", post_expr) << eom;
+
     if(solver() == decision_proceduret::D_SATISFIABLE) 
     { 
       debug() << "SAT" << eom;
@@ -42,17 +46,18 @@ bool strategy_solver_equalityt::iterate(invariantt &_inv)
     todo_equs.erase(e_it);
 
     //check status of remaining equalities
-    worklistt rm_equs;
+    /*   worklistt rm_equs;
     for(e_it = todo_equs.begin(); e_it!=todo_equs.end(); e_it++)
     {
-      if(solver.get(e_it->first)!=solver.get(e_it->second))
+      equality_domaint::var_pairt vv = equality_domain.get_var_pair(*e_it);
+      if(solver.get(vv.first)!=solver.get(vv.second))
         rm_equs.insert(*e_it);
     }
     for(e_it = rm_equs.begin(); e_it!=rm_equs.end(); e_it++)
     {
       todo_disequs.insert(*e_it);
       todo_equs.erase(*e_it);
-    }
+      } */
   }
   else //check disequalities
   {
@@ -71,6 +76,10 @@ bool strategy_solver_equalityt::iterate(invariantt &_inv)
 
     solver << or_exprt(literal_exprt(cond_literal),
                        literal_exprt(activation_literal));
+
+    debug() << "Checking disequality " << eom;
+    debug() << "Pre: " << from_expr(ns, "", pre_expr) << eom;
+    debug() << "Post: " << from_expr(ns, "", post_expr) << eom;
 
     if(solver() == decision_proceduret::D_SATISFIABLE) 
     { 

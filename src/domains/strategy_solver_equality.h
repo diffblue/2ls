@@ -16,7 +16,7 @@ class strategy_solver_equalityt : public strategy_solver_baset
   strategy_solver_baset(program, _renaming_map, _solver, _ns),
     equality_domain(_equality_domain)
   {
-    equality_domain.get_var_pairs(todo_equs);
+    equality_domain.get_index_set(todo_equs);
   }
 
   virtual bool iterate(invariantt &inv);
@@ -24,7 +24,7 @@ class strategy_solver_equalityt : public strategy_solver_baset
  protected:
   equality_domaint &equality_domain;
 
-  typedef equality_domaint::var_pairst worklistt;
+  typedef std::set<unsigned> worklistt;
   worklistt todo_equs;
   worklistt todo_disequs;
 };

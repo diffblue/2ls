@@ -141,7 +141,6 @@ void summarizert::compute_summary_rec(const function_namet &function_name)
 {
   local_SSAt &SSA = *functions[function_name]; 
   inline_summaries(function_name,SSA.nodes,true); 
-  // functions[function_name]->get_entry_exit_vars();
 
   {
     std::ostringstream out;
@@ -160,7 +159,6 @@ void summarizert::compute_summary_rec(const function_namet &function_name)
 
   summaryt summary;
   summary.params =SSA.params;
-  summary.returns =SSA.returns;
   summary.globals_in =SSA.globals_in;
   summary.globals_out =SSA.globals_out;
   summary.precondition = preconditions.at(function_name);

@@ -44,9 +44,6 @@ void ssa_inlinert::replace(local_SSAt::nodest &nodes,
   exprt &transformer = node->second.constraints.back();
   rename(transformer);
   
-  //constraints for return values
-  replace_return_values(node,equ_it,summary.returns);
-
   //remove obsolete equalities
   rm_equs.insert(equ_it);
 
@@ -103,9 +100,6 @@ void ssa_inlinert::replace(local_SSAt::nodest &nodes,
     new_nodes[n_it->first].output(std::cout,function.ns);
   }
  
-  //constraints for return values
-  replace_return_values(node,equ_it,function.returns);
-
   //remove obsolete equalities
   rm_equs.insert(equ_it);
 
@@ -165,36 +159,6 @@ void ssa_inlinert::replace_params(const local_SSAt::var_listt &params,
     rename(lhs);
     new_equs.push_back(equal_exprt(lhs,*it));
   }
-}
-
-
-/*******************************************************************\
-
-Function: ssa_inlinert::replace_return_values()
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void ssa_inlinert::replace_return_values(local_SSAt::nodest::iterator node, 
-					 local_SSAt::nodet::equalitiest::iterator equ_it,
-					 const local_SSAt::var_sett &returns)
-{
-  //constraints for return values
-  exprt::operandst retvals;
-  retvals.reserve(returns.size());
-  for(summaryt::var_sett::const_iterator it = returns.begin();
-      it != returns.end(); it++)
-  {
-    symbol_exprt rhs = *it;
-    rename(rhs);
-    retvals.push_back(equal_exprt(equ_it->lhs(),rhs));
-  }
-  if(retvals.size()>0) node->second.constraints.push_back(disjunction(retvals));
 }
 
 /*******************************************************************\
@@ -270,40 +234,6 @@ void ssa_inlinert::rename(exprt &expr)
       it != expr.operands().end(); it++)
   {
     rename(*it);
-  }
-}
-
-/*******************************************************************\
-
-Function: ssa_inlinert::rename_globals
-
-  Inputs:
-
- Outputs:
-
- Purpose: replace globals in expr by corresponding variable in globals
-
-\*******************************************************************/
-
-void ssa_inlinert::rename_globals(exprt &expr, const local_SSAt::var_sett &globals) 
-{
-  if(expr.id()==ID_symbol) 
-  {
-    symbol_exprt &s = to_symbol_expr(expr);
-    //for each occurrence 
-    symbol_exprt s_new;
-    if(find_corresponding_symbol(s,globals,s_new))
-    {
-      rename(s_new);
-      std::cout << "replace global " << s.get_identifier() << " by modified global " << 
-        s_new.get_identifier() << std::endl;
-      s.set_identifier(s_new.get_identifier());
-    }
-  }
-  for(exprt::operandst::iterator it = expr.operands().begin();
-      it != expr.operands().end(); it++)
-  {
-    rename_globals(*it,globals);
   }
 }
 

@@ -28,8 +28,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/link_to_library.h>
 #include <goto-programs/goto_inline.h>
 #include <goto-programs/xml_goto_trace.h>
-
-#include <goto-instrument/merge_returns.h>
+#include <goto-programs/remove_returns.h>
 
 #include <analyses/goto_check.h>
 
@@ -574,8 +573,8 @@ bool summarizer_parseoptionst::process_goto_program(
     status() << "Generic Property Instrumentation" << eom;
     goto_check(options, goto_model);
 
-    // merge returns
-    merge_returns(goto_model.symbol_table, goto_model.goto_functions);
+    // remove returns
+    remove_returns(goto_model);
     
     // recalculate numbers, etc.
     goto_model.goto_functions.update();
