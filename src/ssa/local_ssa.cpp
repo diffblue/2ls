@@ -276,20 +276,23 @@ void local_SSAt::build_transfer(locationt loc)
     }
   }
 */
-
   else if(loc->is_function_call())
   {
+    //TODO: CPROVER main function has no global variables which leads to failure on inlining    
+    //      This is just a workaround.
+    if(loc->function=="main") return;
+
     const code_function_callt &code_function_call=
       to_code_function_call(loc->code);
 
     exprt lhs = code_function_call.lhs();
 
-    function_application_exprt ssa_rhs;
-    ssa_rhs.function() = code_function_call.function();
-    ssa_rhs.type() = code_function_call.lhs().type();
-    ssa_rhs.arguments() = code_function_call.arguments(); 
+    function_application_exprt rhs;
+    rhs.function() = code_function_call.function();
+    rhs.type() = code_function_call.lhs().type();
+    rhs.arguments() = code_function_call.arguments(); 
 
-    assign_rec(lhs, ssa_rhs, loc);
+    assign_rec(lhs, rhs, loc);
   }
 }
   
@@ -946,12 +949,13 @@ void local_SSAt::assign_rec(
   const exprt &rhs,
   locationt loc)
 {
+
   bool flag_symbol=is_symbol_struct_member(lhs, ns);
   bool flag_deref=is_symbol_or_deref_struct_member(lhs, ns);
 
   const typet &type=ns.follow(lhs.type());
   
-  if(flag_symbol || flag_deref || lhs.id()==ID_nil)
+  if(flag_symbol || flag_deref)
   {
     if(type.id()==ID_struct)
     {
@@ -1026,13 +1030,6 @@ void local_SSAt::assign_rec(
             final_rhs, // read_rhs done above
             read_rhs(*a_it, loc));
       }
-      else if(lhs.id()==ID_nil) // functions without return value
-      {
-        irep_idt identifier="ssa::dummy"+i2string(loc->location_number);
-        equal_exprt equality(symbol_exprt(identifier, bool_typet()), rhs_read);     	
-        nodes[loc].equalities.push_back(equality);
-        break;
-      }
       else
         continue;
       
@@ -1083,6 +1080,13 @@ void local_SSAt::assign_rec(
     exprt real_op=unary_exprt(ID_complex_real, op, complex_type.subtype());
     complex_exprt new_rhs(real_op, rhs, complex_type);
     assign_rec(op, new_rhs, loc);
+  }
+  else if(lhs.id()==ID_nil) // functions without return value
+  {
+    exprt rhs_read=read_rhs(rhs, loc);
+    irep_idt identifier="ssa::dummy"+i2string(loc->location_number);
+    equal_exprt equality(symbol_exprt(identifier, nil_typet()), rhs_read);     	
+    nodes[loc].equalities.push_back(equality);
   }
   else
     throw "UNKNOWN LHS: "+lhs.id_string();
