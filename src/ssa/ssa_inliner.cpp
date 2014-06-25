@@ -210,16 +210,7 @@ void ssa_inlinert::replace(local_SSAt::nodest &nodes,
       n_it != function.nodes.end(); n_it++)
   {
     local_SSAt::nodet n = n_it->second;  //copy
-    for(local_SSAt::nodet::equalitiest::iterator e_it = n.equalities.begin();
-	e_it != n.equalities.end(); e_it++)
-    {
-      rename(*e_it);
-    }
-    for(local_SSAt::nodet::constraintst::iterator c_it = n.constraints.begin();
-	c_it != n.constraints.end(); c_it++)
-    {
-      rename(*c_it);
-    }  
+    rename(n);
     merge_into_nodes(new_nodes,n_it->first,n);
   }
  
@@ -358,6 +349,32 @@ void ssa_inlinert::rename(exprt &expr)
   {
     rename(*it);
   }
+}
+
+/*******************************************************************\
+
+Function: ssa_inlinert::rename()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void ssa_inlinert::rename(local_SSAt::nodet &node) 
+{
+  for(local_SSAt::nodet::equalitiest::iterator e_it = node.equalities.begin();
+      e_it != node.equalities.end(); e_it++)
+  {
+    rename(*e_it);
+  }
+  for(local_SSAt::nodet::constraintst::iterator c_it = node.constraints.begin();
+      c_it != node.constraints.end(); c_it++)
+  {
+    rename(*c_it);
+  }  
 }
 
 /*******************************************************************\

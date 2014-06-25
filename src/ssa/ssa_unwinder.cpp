@@ -22,15 +22,57 @@ Function: ssa_unwindert::unwind
 
 \*******************************************************************/
 
-void ssa_unwindert::unwind(local_SSAt &SSA, unsigned unwind)
+void ssa_unwindert::unwind(local_SSAt &SSA, unsigned unwind_max)
 {
   // get all backwards edges
   forall_goto_program_instructions(i_it, SSA.goto_function.body)
   {
     if(i_it->is_backwards_goto())
     {
-      local_SSAt::locationt loc = i_it->get_target(); 
+      local_SSAt::locationt loop_head = i_it->get_target(); 
+
+      for(unsigned unwind=0; unwind<unwind_max; unwind++)
+      {
+	//TODO: adjust loop_head phis
+        for(local_SSAt::locationt it = loop_head;
+            it != i_it; it++)
+	{
+	  local_SSAt::nodest::const_iterator n_it = SSA.nodes.find(it);
+          if(n_it==SSA.nodes.end()) continue;
+          local_SSAt::nodet n = n_it->second; //copy;
+          rename(n,unwind);
+          merge_into_nodes(new_nodes,it,n);
+        }
+      }
     } 
+  }
+  commit_nodes(SSA.nodes);
+}
+
+/*******************************************************************\
+
+Function: ssa_unwindert::rename()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void ssa_unwindert::rename(exprt &expr, unsigned index) 
+{
+  if(expr.id()==ID_symbol) 
+  {
+    symbol_exprt &sexpr = to_symbol_expr(expr);
+    irep_idt id = id2string(sexpr.get_identifier())+"%"+i2string(index);
+    sexpr.set_identifier(id);
+  }
+  for(exprt::operandst::iterator it = expr.operands().begin();
+      it != expr.operands().end(); it++)
+  {
+    rename(*it, index);
   }
 }
 
@@ -46,24 +88,23 @@ Function: ssa_inlinert::rename()
 
 \*******************************************************************/
 
-void ssa_inlinert::rename(exprt &expr, unsigned index) 
+void ssa_unwindert::rename(local_SSAt::nodet &node, unsigned index) 
 {
-  if(expr.id()==ID_symbol) 
+  for(local_SSAt::nodet::equalitiest::iterator e_it = node.equalities.begin();
+      e_it != node.equalities.end(); e_it++)
   {
-    symbol_exprt &sexpr = to_symbol_expr(expr);
-    irep_idt id = id2string(sexpr.get_identifier())+"%"+i2string(index);
-    sexpr.set_identifier(id);
+    rename(*e_it, index);
   }
-  for(exprt::operandst::iterator it = expr.operands().begin();
-      it != expr.operands().end(); it++)
+  for(local_SSAt::nodet::constraintst::iterator c_it = node.constraints.begin();
+      c_it != node.constraints.end(); c_it++)
   {
-    rename(*it);
-  }
+    rename(*c_it, index);
+  }  
 }
 
 /*******************************************************************\
 
-Function: ssa_inlinert::commit_nodes()
+Function: ssa_unwindert::commit_nodes()
 
   Inputs:
 
@@ -73,7 +114,7 @@ Function: ssa_inlinert::commit_nodes()
 
 \*******************************************************************/
 
-void ssa_inlinert::commit_nodes(local_SSAt::nodest &nodes)
+void ssa_unwindert::commit_nodes(local_SSAt::nodest &nodes)
 {
   //insert new nodes
   for(local_SSAt::nodest::const_iterator n_it = new_nodes.begin();
@@ -86,7 +127,7 @@ void ssa_inlinert::commit_nodes(local_SSAt::nodest &nodes)
 
 /*******************************************************************\
 
-Function: ssa_inlinert::merge_node()
+Function: ssa_unwindert::merge_node()
 
   Inputs:
 
@@ -96,7 +137,7 @@ Function: ssa_inlinert::merge_node()
 
 \*******************************************************************/
 
-void ssa_inlinert::merge_into_nodes(local_SSAt::nodest &nodes, 
+void ssa_unwindert::merge_into_nodes(local_SSAt::nodest &nodes, 
   const local_SSAt::locationt &loc, const local_SSAt::nodet &new_n)
 {
   local_SSAt::nodest::iterator it = nodes.find(loc);

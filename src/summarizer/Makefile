@@ -26,11 +26,12 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       ../ssa/ssa_aliasing$(OBJEXT) \
       ../ssa/simplify_ssa$(OBJEXT) \
       ../ssa/ssa_build_goto_trace$(OBJEXT) \
+      ../ssa/ssa_inliner$(OBJEXT)\
+      ../ssa/ssa_unwinder$(OBJEXT)\
       ../functions/summary$(OBJEXT) \
       ../functions/get_function$(OBJEXT) \
       ../functions/path_util$(OBJEXT) \
       ../functions/index$(OBJEXT) \
-      ../ssa/ssa_inliner$(OBJEXT)\
       ../functions/index$(OBJEXT) \
       ../domains/fixed_point$(OBJEXT) \
       ../domains/ssa_fixed_point$(OBJEXT) \

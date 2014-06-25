@@ -27,6 +27,7 @@ class ssa_unwindert : public messaget
   local_SSAt::nodest new_nodes;
 
   void rename(exprt &expr, unsigned index);
+  void rename(local_SSAt::nodet &node, unsigned index);
 
  private:
   void merge_into_nodes(local_SSAt::nodest &nodes, 
