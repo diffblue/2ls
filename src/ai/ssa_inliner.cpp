@@ -12,6 +12,113 @@ Author: Peter Schrammel
 
 /*******************************************************************\
 
+Function: ssa_inlinert::replace
+
+  Inputs:
+
+ Outputs: 
+
+ Purpose: replaces function calls by summaries
+          if available in the summary store
+          and does nothing otherwise
+
+\*******************************************************************/
+
+
+void ssa_inlinert::replace(local_SSAt &SSA,
+	     const summary_storet &summary_store)
+{
+  for(local_SSAt::nodest::iterator n = SSA.nodes.begin(); n!=SSA.nodes.end(); n++)
+  {
+    for(local_SSAt::nodet::equalitiest::iterator e = n->second.equalities.begin();
+        e != n->second.equalities.end(); e++)
+    {
+      if(e->rhs().id() != ID_function_application) continue;
+
+      function_application_exprt f = to_function_application_expr(e->rhs());
+      assert(f.function().id()==ID_symbol); //no function pointers
+      irep_idt fname = to_symbol_expr(f.function()).get_identifier();
+
+      if(summary_store.exists(fname)) 
+      {
+        summaryt summary = summary_store.get(fname);
+
+        status() << "Replacing function " << fname << " by summary" << eom;
+
+	//getting globals at call site
+	local_SSAt::var_sett cs_globals_in, cs_globals_out; 
+	goto_programt::const_targett loc = n->first;
+	SSA.get_globals(loc,cs_globals_in);
+	assert(loc!=SSA.goto_function.body.instructions.end());
+	SSA.get_globals(++loc,cs_globals_out);
+
+        //replace
+        replace(SSA.nodes,n,e,cs_globals_in,cs_globals_out,summary);
+      }
+      commit_node(n);
+    }
+    commit_nodes(SSA.nodes);
+  }
+}
+
+/*******************************************************************\
+
+Function: ssa_inlinert::replace
+
+  Inputs:
+
+ Outputs: 
+
+ Purpose: replaces inlines functions 
+          if SSA is available in functions
+          and does nothing otherwise
+
+\*******************************************************************/
+
+void ssa_inlinert::replace(local_SSAt &SSA,
+               const std::map<irep_idt, local_SSAt*> &functions, bool recursive)
+{
+  //assert(!recursive); //TODO, not implemented
+
+  for(local_SSAt::nodest::iterator n = SSA.nodes.begin(); n!=SSA.nodes.end(); n++)
+  {
+    for(local_SSAt::nodet::equalitiest::iterator e = n->second.equalities.begin();
+        e != n->second.equalities.end(); e++)
+    {
+      if(e->rhs().id() != ID_function_application) continue;
+
+      function_application_exprt f = to_function_application_expr(e->rhs());
+      assert(f.function().id()==ID_symbol); //no function pointers
+      irep_idt fname = to_symbol_expr(f.function()).get_identifier();
+
+      if(functions.find(fname)!=functions.end()) 
+      {
+        status() << "Inlining function " << fname << eom;
+
+	//getting globals at call site
+	local_SSAt::var_sett cs_globals_in, cs_globals_out; 
+	goto_programt::const_targett loc = n->first;
+	SSA.get_globals(loc,cs_globals_in);
+	assert(loc!=SSA.goto_function.body.instructions.end());
+	SSA.get_globals(++loc,cs_globals_out);
+
+        local_SSAt fSSA = *functions.at(fname);
+        if(recursive)
+	{
+          replace(fSSA,functions,true);
+	}
+
+        //replace
+        replace(SSA.nodes,n,e,cs_globals_in,cs_globals_out,fSSA);
+      }
+      commit_node(n);
+    }
+    commit_nodes(SSA.nodes);
+  }
+}
+
+/*******************************************************************\
+
 Function: ssa_inlinert::replace()
 
   Inputs:
@@ -335,3 +442,4 @@ irep_idt ssa_inlinert::get_original_identifier(const symbol_exprt &s)
   if(pos!=std::string::npos) id = id.substr(0,pos);
   return id;
 }
+

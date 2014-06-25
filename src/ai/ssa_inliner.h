@@ -12,7 +12,9 @@ Author: Peter Schrammel
 #include "summary.h"
 #include "../ssa/local_ssa.h"
 
-class ssa_inlinert
+class summary_storet;
+
+class ssa_inlinert : public messaget
 {
  public:
   ssa_inlinert() : counter(0) {}
@@ -24,14 +26,21 @@ class ssa_inlinert
 	       const local_SSAt::var_sett &cs_globals_out, //outgoing globals at call site
                const summaryt &summary);
 
+  void replace(local_SSAt &SSA,
+               const summary_storet &summary_store);
+
   //TODO: problem: local_SSAt::nodest maps a goto program target to a single SSA node,
   //               for inlining we require a target to map to several SSA nodes
+  //     (not sure anymore why this is a problem...)
   void replace(local_SSAt::nodest &nodes,
 	       local_SSAt::nodest::iterator node, 
                local_SSAt::nodet::equalitiest::iterator equ_it, 
 	       const local_SSAt::var_sett &cs_globals_in, //incoming globals at call site
 	       const local_SSAt::var_sett &cs_globals_out, //outgoing globals at call site
                const local_SSAt &function);
+
+  void replace(local_SSAt &SSA,
+               const std::map<irep_idt, local_SSAt*> &functions, bool recursive=false);
 
   void havoc(local_SSAt::nodet &node, 
 	     local_SSAt::nodet::equalitiest::iterator &equ_it);
