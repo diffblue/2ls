@@ -6,12 +6,12 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
-#ifndef CPROVER_DELTACHECK_SUMMARIZER_H
-#define CPROVER_DELTACHECK_SUMMARIZER_H
+#ifndef CPROVER_SUMMARIZER_H
+#define CPROVER_SUMMARIZER_H
 
 #include <util/message.h>
 #include <util/options.h>
-#include "ssa_inliner.h"
+#include "../ssa/ssa_inliner.h"
 #include "../ssa/local_ssa.h"
 
 #include <util/time_stopping.h>
@@ -19,7 +19,7 @@ Author: Peter Schrammel
 class summarizert : public messaget
 {
  public:
- summarizert(const optionst &_options, summary_storet &_summary_store) : 
+ summarizert(const optionst &_options, summary_dbt &_summary_db) : 
     options(_options),
     summary_store(_summary_store)
   {}
@@ -42,16 +42,13 @@ class summarizert : public messaget
 
  protected:
   const optionst &options;
-  summary_storet &summary_store;
+  summary_dbt &summary_db;
   functionst functions;
   preconditionst preconditions;
 
   void run();
 
  private:
-  //typedef std::map<function_namet, bool> flag_mapt;
-  //flag_mapt summary_updated;
-
   void compute_summary_rec(const function_namet &function_name);
 };
 

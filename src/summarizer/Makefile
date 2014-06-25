@@ -1,8 +1,8 @@
 include ../config.inc
 
 SRC = summarizer_main.cpp summarizer_parseoptions.cpp \
-      summary_checker.cpp show.cpp function_summary.cpp \
-      summary_db.cpp
+      summary_checker.cpp show.cpp \
+      summary_db.cpp summarizer.cpp summary.cpp
 
 OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       $(CBMC)/src/linking/linking$(LIBEXT) \
@@ -30,9 +30,7 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       ../functions/get_function$(OBJEXT) \
       ../functions/path_util$(OBJEXT) \
       ../functions/index$(OBJEXT) \
-      ../ai/ssa_inliner$(OBJEXT)\
-      ../ai/summary$(OBJEXT)\
-      ../ai/summarizer$(OBJEXT)\
+      ../ssa/ssa_inliner$(OBJEXT)\
       ../functions/index$(OBJEXT) \
       ../domains/fixed_point$(OBJEXT) \
       ../domains/ssa_fixed_point$(OBJEXT) \

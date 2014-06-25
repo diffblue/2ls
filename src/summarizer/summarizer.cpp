@@ -12,7 +12,7 @@ Author: Peter Schrammel
 
 
 #include "summarizer.h"
-#include "summary_store.h"
+#include "summary_db.h"
 
 #include "../domains/ssa_analyzer.h"
 
@@ -39,7 +39,7 @@ summaryt summarizert::summarize(functiont &function, const preconditiont &precon
   functions[function.first] = function.second;
   preconditions[function.first] = precondition; 
   run();
-  return summary_store.get(function.first);
+  return summary_db.get(function.first);
 }
 
 /*******************************************************************\
@@ -120,7 +120,7 @@ void summarizert::run()
   for(functionst::const_iterator it = functions.begin(); it!=functions.end(); it++)
   {
     status() << "\nSummarizing function " << it->first << eom;
-    if(!summary_store.exists(it->first)) compute_summary_rec(it->first);
+    if(!summary_db.exists(it->first)) compute_summary_rec(it->first);
     else status() << "Summary for function " << it->first << " exists already" << eom;
   }
 }
@@ -172,7 +172,7 @@ void summarizert::compute_summary_rec(const function_namet &function_name)
     status() << out.str() << eom;
   }
 
-  summary_store.put(function_name,summary);
+  summary_db.put(function_name,summary);
 
   // Add loop invariants as constraints back into SSA.
   // We simply use the last CFG node. It would be prettier to put
@@ -219,10 +219,10 @@ void summarizert::inline_summaries(const function_namet &function_name,
       summaryt summary; 
       bool recompute = false;
       // replace call with summary if it exists 
-      if(summary_store.exists(fname)) 
+      if(summary_db.exists(fname)) 
       {
         status() << "Using existing summary for function " << fname << eom;
-	summary = summary_store.get(fname);
+	summary = summary_db.get(fname);
 	  //TODO: check whether summary applies (as soon as context-sensitive)
 	  //      (requires retrieving the local context from the current analysis), 
 	  //      otherwise compute new one: recompute = true;
@@ -239,7 +239,7 @@ void summarizert::inline_summaries(const function_namet &function_name,
       {
         status() << "Recursively summarizing function " << fname << eom;
         compute_summary_rec(fname);
-        summary = summary_store.get(fname);
+        summary = summary_db.get(fname);
       }
 
       status() << "Replacing function " << fname << eom;

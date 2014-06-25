@@ -292,7 +292,10 @@ void local_SSAt::build_transfer(locationt loc)
     rhs.type() = code_function_call.lhs().type();
     rhs.arguments() = code_function_call.arguments(); 
 
-    assign_rec(lhs, rhs, loc);
+    exprt rhs_read=read_rhs(rhs, loc);
+    irep_idt identifier="ssa::dummy"+i2string(loc->location_number);
+    equal_exprt equality(symbol_exprt(identifier, nil_typet()), rhs_read);     	
+    nodes[loc].equalities.push_back(equality);
   }
 }
   
@@ -1080,13 +1083,6 @@ void local_SSAt::assign_rec(
     exprt real_op=unary_exprt(ID_complex_real, op, complex_type.subtype());
     complex_exprt new_rhs(real_op, rhs, complex_type);
     assign_rec(op, new_rhs, loc);
-  }
-  else if(lhs.id()==ID_nil) // functions without return value
-  {
-    exprt rhs_read=read_rhs(rhs, loc);
-    irep_idt identifier="ssa::dummy"+i2string(loc->location_number);
-    equal_exprt equality(symbol_exprt(identifier, nil_typet()), rhs_read);     	
-    nodes[loc].equalities.push_back(equality);
   }
   else
     throw "UNKNOWN LHS: "+lhs.id_string();

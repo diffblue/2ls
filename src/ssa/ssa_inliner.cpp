@@ -26,7 +26,7 @@ Function: ssa_inlinert::replace
 
 
 void ssa_inlinert::replace(local_SSAt &SSA,
-	     const summary_storet &summary_store)
+	     const summary_dbt &summary_db)
 {
   for(local_SSAt::nodest::iterator n = SSA.nodes.begin(); n!=SSA.nodes.end(); n++)
   {
@@ -39,9 +39,9 @@ void ssa_inlinert::replace(local_SSAt &SSA,
       assert(f.function().id()==ID_symbol); //no function pointers
       irep_idt fname = to_symbol_expr(f.function()).get_identifier();
 
-      if(summary_store.exists(fname)) 
+      if(summary_db.exists(fname)) 
       {
-        summaryt summary = summary_store.get(fname);
+        summaryt summary = summary_db.get(fname);
 
         status() << "Replacing function " << fname << " by summary" << eom;
 

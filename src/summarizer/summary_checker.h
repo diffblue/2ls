@@ -14,8 +14,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/property_checker.h>
 
 #include "../ssa/local_ssa.h"
-#include "../ai/summary_store.h"
-#include "../ai/summarizer.h"
+#include "summary_db.h"
+#include "summarizer.h"
 
 class summary_checkert:public property_checkert
 {
@@ -25,8 +25,8 @@ public:
     simplify(false),
     fixed_point(false),
     options(_options),
-    summary_store(),
-    summarizer(_options,summary_store)
+    summary_db(),
+    summarizer(_options,summary_db)
   {
   }
   
@@ -48,7 +48,7 @@ public:
 protected:
   optionst &options;
 
-  summary_storet summary_store;
+  summary_dbt summary_db;
   summarizert summarizer;
   summarizert::functionst functions;
 

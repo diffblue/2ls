@@ -6,15 +6,15 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
-#ifndef CPROVER_DELTACHECK_SSA_INLINER_H
-#define CPROVER_DELTACHECK_SSA_INLINER_H
+#ifndef CPROVER_SSA_INLINER_H
+#define CPROVER_SSA_INLINER_H
 
 #include <util/message.h>
 
-#include "summary_store.h"
+#include "../summarizer/summary_db.h"
 #include "../ssa/local_ssa.h"
 
-class summary_storet;
+class summary_dbt;
 
 class ssa_inlinert : public messaget
 {
@@ -29,7 +29,7 @@ class ssa_inlinert : public messaget
                const summaryt &summary);
 
   void replace(local_SSAt &SSA,
-               const summary_storet &summary_store);
+               const summary_dbt &summary_db);
 
   void replace(local_SSAt::nodest &nodes,
 	       local_SSAt::nodest::iterator node, 
