@@ -1,7 +1,7 @@
 #ifndef CPROVER_SUMMARYSTORE_H
 #define CPROVER_SUMMARYSTORE_H
 
-#include "summarizer.h"
+#include "summary.h"
 #include <util/std_expr.h>
 
 class summary_storet

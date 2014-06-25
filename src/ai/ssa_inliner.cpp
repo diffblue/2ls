@@ -55,6 +55,7 @@ void ssa_inlinert::replace(local_SSAt &SSA,
         //replace
         replace(SSA.nodes,n,e,cs_globals_in,cs_globals_out,summary);
       }
+      else debug() << "No summary available for function " << fname << eom;
       commit_node(n);
     }
     commit_nodes(SSA.nodes);
@@ -76,10 +77,9 @@ Function: ssa_inlinert::replace
 \*******************************************************************/
 
 void ssa_inlinert::replace(local_SSAt &SSA,
-               const std::map<irep_idt, local_SSAt*> &functions, bool recursive)
+               const std::map<irep_idt, local_SSAt*> &functions, 
+	       bool recursive, bool rename)
 {
-  //assert(!recursive); //TODO, not implemented
-
   for(local_SSAt::nodest::iterator n = SSA.nodes.begin(); n!=SSA.nodes.end(); n++)
   {
     for(local_SSAt::nodet::equalitiest::iterator e = n->second.equalities.begin();
@@ -94,23 +94,37 @@ void ssa_inlinert::replace(local_SSAt &SSA,
       if(functions.find(fname)!=functions.end()) 
       {
         status() << "Inlining function " << fname << eom;
+        local_SSAt fSSA = *functions.at(fname); //copy
 
-	//getting globals at call site
-	local_SSAt::var_sett cs_globals_in, cs_globals_out; 
-	goto_programt::const_targett loc = n->first;
-	SSA.get_globals(loc,cs_globals_in);
-	assert(loc!=SSA.goto_function.body.instructions.end());
-	SSA.get_globals(++loc,cs_globals_out);
+        if(rename)
+        {
+	  //getting globals at call site
+	  local_SSAt::var_sett cs_globals_in, cs_globals_out; 
+	  goto_programt::const_targett loc = n->first;
+	  SSA.get_globals(loc,cs_globals_in);
+	  assert(loc!=SSA.goto_function.body.instructions.end());
+	  SSA.get_globals(++loc,cs_globals_out);
 
-        local_SSAt fSSA = *functions.at(fname);
-        if(recursive)
+	  if(recursive)
+	    {
+	      replace(fSSA,functions,true);
+	    }
+
+	  //replace
+	  replace(SSA.nodes,n,e,cs_globals_in,cs_globals_out,fSSA);
+        }
+        else // just add to nodes
 	{
-          replace(fSSA,functions,true);
-	}
+	  for(local_SSAt::nodest::const_iterator n_it = fSSA.nodes.begin();
+	      n_it != fSSA.nodes.end(); n_it++)
+	  {
+            debug() << "new node: "; n_it->second.output(debug(),fSSA.ns); debug() << eom;
 
-        //replace
-        replace(SSA.nodes,n,e,cs_globals_in,cs_globals_out,fSSA);
+	    merge_into_nodes(new_nodes,n_it->first,n_it->second);
+	  }
+	}
       }
+      else debug() << "No body available for function " << fname << eom;
       commit_node(n);
     }
     commit_nodes(SSA.nodes);
@@ -160,13 +174,17 @@ void ssa_inlinert::replace(local_SSAt::nodest &nodes,
 
 /*******************************************************************\
 
-Function: ssa_inlinert::replace()
+ Function: ssa_inlinert::replace()
 
-  Inputs:
+ Inputs:
 
  Outputs:
 
  Purpose: inline function 
+
+ Remark: local_SSAt::nodest maps a goto program target to a single SSA node,
+         when inlining several calls to the same function 
+         instructions appear factorized by the goto program targets 
 
 \*******************************************************************/
 
@@ -191,8 +209,7 @@ void ssa_inlinert::replace(local_SSAt::nodest &nodes,
   for(local_SSAt::nodest::const_iterator n_it = function.nodes.begin();
       n_it != function.nodes.end(); n_it++)
   {
-    new_nodes[n_it->first] = n_it->second;  //copy
-    local_SSAt::nodet &n = new_nodes[n_it->first];
+    local_SSAt::nodet n = n_it->second;  //copy
     for(local_SSAt::nodet::equalitiest::iterator e_it = n.equalities.begin();
 	e_it != n.equalities.end(); e_it++)
     {
@@ -203,8 +220,7 @@ void ssa_inlinert::replace(local_SSAt::nodest &nodes,
     {
       rename(*c_it);
     }  
-    std::cout << "new node: ";
-    new_nodes[n_it->first].output(std::cout,function.ns);
+    merge_into_nodes(new_nodes,n_it->first,n);
   }
  
   //remove obsolete equalities
@@ -387,11 +403,53 @@ Function: ssa_inlinert::commit_nodes()
 \*******************************************************************/
 
 void ssa_inlinert::commit_nodes(local_SSAt::nodest &nodes)
-
 {
   //insert new nodes
-  nodes.insert(new_nodes.begin(),new_nodes.end());
+  for(local_SSAt::nodest::const_iterator n_it = new_nodes.begin();
+      n_it != new_nodes.end(); n_it++)
+  {
+    merge_into_nodes(nodes,n_it->first,n_it->second);
+  }
   new_nodes.clear();
+}
+
+/*******************************************************************\
+
+Function: ssa_inlinert::merge_node()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: merges equalities and constraints of two nodes into the first one
+
+\*******************************************************************/
+
+void ssa_inlinert::merge_into_nodes(local_SSAt::nodest &nodes, 
+  const local_SSAt::locationt &loc, const local_SSAt::nodet &new_n)
+{
+  local_SSAt::nodest::iterator it = nodes.find(loc);
+  if(it==nodes.end()) //insert
+  {
+    debug() << "insert new node" << eom;
+
+    nodes[loc] = new_n;
+  }
+  else //merge nodes
+  {
+    debug() << "merge node " << eom;
+
+    for(local_SSAt::nodet::equalitiest::const_iterator e_it = new_n.equalities.begin();
+	e_it != new_n.equalities.end(); e_it++)
+    {
+      it->second.equalities.push_back(*e_it);
+    }
+    for(local_SSAt::nodet::constraintst::const_iterator c_it = new_n.constraints.begin();
+	c_it != new_n.constraints.end(); c_it++)
+    {
+      it->second.constraints.push_back(*c_it);
+    }  
+  }
 }
 
 /*******************************************************************\

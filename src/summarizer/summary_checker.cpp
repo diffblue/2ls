@@ -81,6 +81,17 @@ void summary_checkert::SSA_functions(const goto_modelt &goto_model,  const names
     SSA->output(debug()); debug() << eom;
     functions[f_it->first] = SSA;
   }
+
+#if 0
+  // inline c::main and __CPROVER_initialize
+  ssa_inlinert ssa_inliner;
+  ssa_inliner.set_message_handler(get_message_handler());
+  ssa_inliner.set_verbosity(get_verbosity());     
+
+  ssa_inliner.replace(*functions[ID_main],functions,false,false);
+  
+  functions[ID_main]->output(debug()); debug() << eom;
+#endif
 }
 
 /*******************************************************************\

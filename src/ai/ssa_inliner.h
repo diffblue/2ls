@@ -9,7 +9,9 @@ Author: Peter Schrammel
 #ifndef CPROVER_DELTACHECK_SSA_INLINER_H
 #define CPROVER_DELTACHECK_SSA_INLINER_H
 
-#include "summary.h"
+#include <util/message.h>
+
+#include "summary_store.h"
 #include "../ssa/local_ssa.h"
 
 class summary_storet;
@@ -29,9 +31,6 @@ class ssa_inlinert : public messaget
   void replace(local_SSAt &SSA,
                const summary_storet &summary_store);
 
-  //TODO: problem: local_SSAt::nodest maps a goto program target to a single SSA node,
-  //               for inlining we require a target to map to several SSA nodes
-  //     (not sure anymore why this is a problem...)
   void replace(local_SSAt::nodest &nodes,
 	       local_SSAt::nodest::iterator node, 
                local_SSAt::nodet::equalitiest::iterator equ_it, 
@@ -40,7 +39,9 @@ class ssa_inlinert : public messaget
                const local_SSAt &function);
 
   void replace(local_SSAt &SSA,
-               const std::map<irep_idt, local_SSAt*> &functions, bool recursive=false);
+               const std::map<irep_idt, local_SSAt*> &functions, 
+               bool recursive=false,
+               bool rename=true);
 
   void havoc(local_SSAt::nodet &node, 
 	     local_SSAt::nodet::equalitiest::iterator &equ_it);
@@ -63,6 +64,10 @@ class ssa_inlinert : public messaget
   void replace_globals_out(const local_SSAt::var_sett &globals_out, 
 			   const local_SSAt::var_sett &cs_globals_in,  
 			   const local_SSAt::var_sett &cs_globals_out);
+
+  void merge_into_nodes(local_SSAt::nodest &nodes, 
+			const local_SSAt::locationt &loc, 
+                        const local_SSAt::nodet &new_n);
 
   void rename(exprt &expr);
 

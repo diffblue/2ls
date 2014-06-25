@@ -11,13 +11,10 @@ Author: Peter Schrammel
 
 #include <util/message.h>
 #include <util/options.h>
-#include "summary.h"
 #include "ssa_inliner.h"
 #include "../ssa/local_ssa.h"
 
 #include <util/time_stopping.h>
-
-class summary_storet;
 
 class summarizert : public messaget
 {

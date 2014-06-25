@@ -280,7 +280,7 @@ void local_SSAt::build_transfer(locationt loc)
   {
     //TODO: CPROVER main function has no global variables which leads to failure on inlining    
     //      This is just a workaround.
-    if(loc->function=="main") return;
+    if(loc->function==ID_main) return;
 
     const code_function_callt &code_function_call=
       to_code_function_call(loc->code);
