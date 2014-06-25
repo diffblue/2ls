@@ -21,7 +21,7 @@ class summarizert : public messaget
  public:
  summarizert(const optionst &_options, summary_dbt &_summary_db) : 
     options(_options),
-    summary_store(_summary_store)
+    summary_db(_summary_db)
   {}
 
   typedef summaryt::predicatet preconditiont;

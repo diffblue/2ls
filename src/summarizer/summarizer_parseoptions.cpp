@@ -37,8 +37,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <cbmc/version.h>
 
 #include "summarizer_parseoptions.h"
-#include "../ai/summary_store.h"
-#include "../ai/summarizer.h"
+#include "summary_db.h"
+#include "summarizer.h"
 #include "summary_checker.h"
 #include "show.h"
 
