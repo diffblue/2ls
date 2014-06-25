@@ -6,6 +6,8 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+#include <iostream>
+
 #include <util/i2string.h>
 
 #include "ssa_unwinder.h"
@@ -24,25 +26,91 @@ Function: ssa_unwindert::unwind
 
 void ssa_unwindert::unwind(local_SSAt &SSA, unsigned unwind_max)
 {
-  // get all backwards edges
+  if(unwind_max==0) return; 
+
   forall_goto_program_instructions(i_it, SSA.goto_function.body)
   {
-    if(i_it->is_backwards_goto())
+    if(i_it->is_backwards_goto()) //we've found a loop
     {
       local_SSAt::locationt loop_head = i_it->get_target(); 
 
+      // get variables at beginning and end of loop body
+      std::map<exprt, exprt> pre_post_exprs;
+
+      const ssa_domaint::phi_nodest &phi_nodes =
+        SSA.ssa_analysis[i_it->get_target()].phi_nodes;
+
+      for(local_SSAt::objectst::const_iterator
+          o_it=SSA.ssa_objects.objects.begin();
+          o_it!=SSA.ssa_objects.objects.end();
+          o_it++)
+      {
+        ssa_domaint::phi_nodest::const_iterator p_it =
+        phi_nodes.find(o_it->get_identifier());
+
+        if(p_it==phi_nodes.end()) continue; // object not modified in this loop
+
+        symbol_exprt pre = SSA.name(*o_it, local_SSAt::LOOP_BACK, i_it);
+        symbol_exprt post = SSA.read_rhs(*o_it, i_it);
+
+        pre_post_exprs[pre] = post;
+      }
+
+       // unwind that loop
       for(unsigned unwind=0; unwind<unwind_max; unwind++)
       {
-	//TODO: adjust loop_head phis
-        for(local_SSAt::locationt it = loop_head;
-            it != i_it; it++)
+	// insert loop_head
+        local_SSAt::nodet node = SSA.nodes[loop_head]; //copy
+	for(local_SSAt::nodet::equalitiest::iterator e_it = node.equalities.begin();
+	    e_it != node.equalities.end(); e_it++)
+	{
+	  if(e_it->rhs().id()!=ID_if) 
+	  {
+            rm_equs.insert(e_it);
+            continue;
+	  }
+
+          if_exprt &e = to_if_expr(e_it->rhs());
+         
+          if(unwind==0)
+	  {
+	    rename(e_it->lhs(),unwind);
+            e_it->rhs() = e.false_case();
+	  }
+          else
+	  {
+	    e_it->rhs() = pre_post_exprs[e.true_case()];
+	    rename(e_it->rhs(),unwind-1);
+	    rename(e_it->lhs(),unwind);
+	  }
+	}
+        commit_node(node);
+	std::cout << "node: "; node.output(std::cout,SSA.ns); std::cout << std::endl;
+        merge_into_nodes(new_nodes,loop_head,node);
+
+        // insert body
+        local_SSAt::locationt it = loop_head; it++;
+        for(;it != i_it; it++)
 	{
 	  local_SSAt::nodest::const_iterator n_it = SSA.nodes.find(it);
           if(n_it==SSA.nodes.end()) continue;
+
           local_SSAt::nodet n = n_it->second; //copy;
           rename(n,unwind);
           merge_into_nodes(new_nodes,it,n);
         }
+      }
+
+      // feed last unwinding into original loop_head
+      local_SSAt::nodet &node = SSA.nodes[loop_head]; //modify in place
+      for(local_SSAt::nodet::equalitiest::iterator e_it = node.equalities.begin();
+          e_it != node.equalities.end(); e_it++)
+      {
+        if(e_it->rhs().id()!=ID_if) continue;
+        
+        if_exprt &e = to_if_expr(e_it->rhs());
+        e.false_case() = pre_post_exprs[e.true_case()];
+        rename(e.false_case(),unwind_max-1);
       }
     } 
   }
@@ -100,6 +168,29 @@ void ssa_unwindert::rename(local_SSAt::nodet &node, unsigned index)
   {
     rename(*c_it, index);
   }  
+}
+
+/*******************************************************************\
+
+Function: ssa_inlinert::commit_node()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: apply changes to node
+
+\*******************************************************************/
+
+void ssa_unwindert::commit_node(local_SSAt::nodet &node)
+{
+  //remove obsolete equalities
+  for(std::set<local_SSAt::nodet::equalitiest::iterator>::iterator it = rm_equs.begin();
+      it != rm_equs.end(); it++) 
+  {
+    node.equalities.erase(*it);
+  }
+  rm_equs.clear();
 }
 
 /*******************************************************************\
