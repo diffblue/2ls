@@ -8,6 +8,9 @@
 class domaint
 {
 public:
+
+  virtual ~domaint() {}
+
   typedef symbol_exprt vart;
   typedef std::vector<vart> var_listt;
 

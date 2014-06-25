@@ -691,6 +691,7 @@ void template_domaint::make_zone_template(templatet &templ,
     guardst::const_iterator post_g2 = post_g1; post_g2++;
     var_listt::const_iterator v2 = v1; v2++;
     kindst::const_iterator k2 = k1; k2++;
+    
     for(;v2!=vars.end(); v2++, pre_g2++, post_g2++, k2++)
     {
       kindt k = domaint::merge_kinds(*k1,*k2);

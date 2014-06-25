@@ -202,7 +202,11 @@ void summary_checkert::check_properties(
     if(simplify)
       negated_property=::simplify_expr(negated_property, SSA.ns);
   
-    solver << SSA.guard_symbol(i_it);          
+    solver << SSA.guard_symbol(i_it);    
+    
+    std::cout << "negated property " << from_expr(SSA.ns, "", negated_property) << std::endl;
+    
+          
     solver << negated_property;
     
     // solve
