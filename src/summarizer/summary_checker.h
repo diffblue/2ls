@@ -56,7 +56,8 @@ protected:
 
   void do_show_vcc(
     const local_SSAt &,
-    const goto_programt::const_targett);
+    const goto_programt::const_targett,
+    const local_SSAt::nodet::assertionst::const_iterator &);
 
   void SSA_functions(const goto_modelt &, const namespacet &ns);
 
