@@ -104,8 +104,6 @@ Function: summary_checkert::check_properties
 
 \*******************************************************************/
 
-#include "../ssa/ssa_domain.h"
-
 void summary_checkert::check_properties(
   const local_SSAt &SSA,
   const goto_functionst::function_mapt::const_iterator f_it)
@@ -142,13 +140,8 @@ void summary_checkert::check_properties(
     solver << SSA;
 
     // give negation of property to solver
+    exprt negated_property=not_exprt(SSA.assertion(i_it));
 
-    exprt negated_property=SSA.read_rhs(not_exprt(i_it->guard), i_it);
-
-    if(simplify)
-      negated_property=::simplify_expr(negated_property, SSA.ns);
-  
-    solver << SSA.guard_symbol(i_it);          
     solver << negated_property;
     
     property_statust &property_status=property_map[property_id];
@@ -219,14 +212,8 @@ void summary_checkert::do_show_vcc(
 
   std::cout << "|--------------------------\n";
   
-  exprt property_rhs=SSA.read_rhs(i_it->guard, i_it);
+  exprt property=SSA.assertion(i_it);
   
-  if(simplify)
-    property_rhs=::simplify_expr(property_rhs, SSA.ns);
-  
-  implies_exprt property(
-    SSA.guard_symbol(i_it), property_rhs);
-
   std::cout << "{1} " << from_expr(SSA.ns, "", property) << "\n";
   
   std::cout << "\n";

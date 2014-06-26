@@ -58,6 +58,10 @@ void local_SSAt::build_SSA()
   // now build guards
   forall_goto_program_instructions(i_it, goto_function.body)
     build_guard(i_it);
+
+  // now build assertions
+  forall_goto_program_instructions(i_it, goto_function.body)
+    build_assertions(i_it);
 }
 
 /*******************************************************************\

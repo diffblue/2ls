@@ -193,7 +193,6 @@ void show_ssa(
   std::ostream &out)
 {
   local_SSAt local_SSA(goto_function, ns);
-  local_SSA.assertions_to_constraints();
   if(simplify) ::simplify(local_SSA, ns);
   local_SSA.output(out);
 }
