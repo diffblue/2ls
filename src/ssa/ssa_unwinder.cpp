@@ -61,7 +61,8 @@ void ssa_unwindert::unwind(local_SSAt &SSA, unsigned unwind_max)
       {
 	// insert loop_head
         local_SSAt::nodet node = SSA.nodes[loop_head]; //copy
-	for(local_SSAt::nodet::equalitiest::iterator e_it = node.equalities.begin();
+	for(local_SSAt::nodet::equalitiest::iterator 
+            e_it = node.equalities.begin();
 	    e_it != node.equalities.end(); e_it++)
 	{
 	  if(e_it->rhs().id()!=ID_if) 
@@ -84,7 +85,6 @@ void ssa_unwindert::unwind(local_SSAt &SSA, unsigned unwind_max)
 	    rename(e_it->lhs(),unwind);
 	  }
 	}
-	//	std::cout << "node: "; node.output(std::cout,SSA.ns); std::cout << std::endl;
         merge_into_nodes(new_nodes,loop_head,node);
 
         // insert body
@@ -102,7 +102,8 @@ void ssa_unwindert::unwind(local_SSAt &SSA, unsigned unwind_max)
 
       // feed last unwinding into original loop_head
       local_SSAt::nodet &node = SSA.nodes[loop_head]; //modify in place
-      for(local_SSAt::nodet::equalitiest::iterator e_it = node.equalities.begin();
+      for(local_SSAt::nodet::equalitiest::iterator 
+          e_it = node.equalities.begin();
           e_it != node.equalities.end(); e_it++)
       {
         if(e_it->rhs().id()!=ID_if) continue;
@@ -113,7 +114,7 @@ void ssa_unwindert::unwind(local_SSAt &SSA, unsigned unwind_max)
       }
     } 
   }
-  commit_nodes(SSA.nodes);
+  commit_nodes(SSA.nodes); //apply changes
 }
 
 /*******************************************************************\
@@ -167,29 +168,17 @@ void ssa_unwindert::rename(local_SSAt::nodet &node, unsigned index)
   {
     rename(*c_it, index);
   }  
-}
-
-/*******************************************************************\
-
-Function: ssa_inlinert::commit_node()
-
-  Inputs:
-
- Outputs:
-
- Purpose: apply changes to node
-
-\*******************************************************************/
-
-void ssa_unwindert::commit_node(local_SSAt::nodet &node)
-{
-  //remove obsolete equalities
-  for(std::set<local_SSAt::nodet::equalitiest::iterator>::iterator it = rm_equs.begin();
-      it != rm_equs.end(); it++) 
+  for(local_SSAt::nodet::assertionst::iterator a_it = node.assertions.begin();
+      a_it != node.assertions.end(); a_it++)
   {
-    node.equalities.erase(*it);
-  }
-  rm_equs.clear();
+    rename(*a_it, index);
+  }  
+  for(local_SSAt::nodet::function_callst::iterator 
+      f_it = node.function_calls.begin();
+      f_it != node.function_calls.end(); f_it++)
+  {
+    rename(*f_it, index);
+  }  
 }
 
 /*******************************************************************\
@@ -241,22 +230,26 @@ void ssa_unwindert::merge_into_nodes(local_SSAt::nodest &nodes,
   {
     debug() << "merge node " << eom;
 
-    for(local_SSAt::nodet::equalitiest::const_iterator e_it = new_n.equalities.begin();
+    for(local_SSAt::nodet::equalitiest::const_iterator 
+        e_it = new_n.equalities.begin();
 	e_it != new_n.equalities.end(); e_it++)
     {
       it->second.equalities.push_back(*e_it);
     }
-    for(local_SSAt::nodet::constraintst::const_iterator c_it = new_n.constraints.begin();
+    for(local_SSAt::nodet::constraintst::const_iterator 
+        c_it = new_n.constraints.begin();
 	c_it != new_n.constraints.end(); c_it++)
     {
       it->second.constraints.push_back(*c_it);
     }  
-    for(local_SSAt::nodet::assertionst::const_iterator a_it = new_n.assertions.begin();
+    for(local_SSAt::nodet::assertionst::const_iterator 
+        a_it = new_n.assertions.begin();
 	a_it != new_n.assertions.end(); a_it++)
     {
       it->second.assertions.push_back(*a_it);
     }  
-    for(local_SSAt::nodet::function_callst::const_iterator f_it = new_n.function_calls.begin();
+    for(local_SSAt::nodet::function_callst::const_iterator 
+        f_it = new_n.function_calls.begin();
 	f_it != new_n.function_calls.end(); f_it++)
     {
       it->second.function_calls.push_back(*f_it);

@@ -22,11 +22,8 @@ class ssa_unwindert : public messaget
 
 
  protected:
-  //apply changes, must be called after replace and havoc
   void commit_nodes(local_SSAt::nodest &nodes);
-  void commit_node(local_SSAt::nodet &node);
   local_SSAt::nodest new_nodes;
-  std::set<local_SSAt::nodet::equalitiest::iterator> rm_equs;
 
   void rename(exprt &expr, unsigned index);
   void rename(local_SSAt::nodet &node, unsigned index);
