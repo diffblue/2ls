@@ -340,6 +340,25 @@ void local_SSAt::build_assertions(locationt loc)
 
 /*******************************************************************\
 
+Function: local_SSAt::assertion
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: returns assertion for a given location
+
+\*******************************************************************/
+
+exprt local_SSAt::assertion(locationt loc) const
+{
+  nodest::const_iterator n_it=nodes.find(loc);
+  if(n_it==nodes.end()) return nil_exprt();
+  return n_it->second.assertion;
+}
+
+/*******************************************************************\
+
 Function: local_SSAt::assertions_to_constraints
 
   Inputs:

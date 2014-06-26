@@ -81,12 +81,7 @@ public:
   { return name(guard_symbol(), OUT, guard_map[loc].guard_source); }
   exprt edge_guard(locationt from, locationt to) const;
   
-  exprt assertion(locationt loc) const
-  {
-    nodest::const_iterator n_it=nodes.find(loc);
-    if(n_it==nodes.end()) return nil_exprt();
-    return n_it->second.assertion;
-  }
+  exprt assertion(locationt loc) const;
   
   // auxiliary functions
   enum kindt { PHI, OUT, LOOP_BACK, LOOP_SELECT };
