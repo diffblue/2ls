@@ -48,7 +48,12 @@ void simplify(local_SSAt &ssa, const namespacet &ns)
       *c_it=simplify_expr(*c_it, ns);
     }
     
-    if(node.assertion.is_not_nil())
-      node.assertion=simplify_expr(node.assertion, ns);
+    for(local_SSAt::nodet::assertionst::iterator
+        a_it=node.assertions.begin();
+        a_it!=node.assertions.end();
+        a_it++)
+    {
+      *a_it=simplify_expr(*a_it, ns);
+    }
   }
 }

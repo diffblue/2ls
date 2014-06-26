@@ -427,27 +427,27 @@ void local_SSAt::build_assertions(locationt loc)
   {
     exprt c=read_rhs(loc->guard, loc);
     exprt g=guard_symbol(loc);    
-    nodes[loc].assertion=implies_exprt(g, c);
+    nodes[loc].assertions.push_back(implies_exprt(g, c));
   }
 }
 
 /*******************************************************************\
 
-Function: local_SSAt::assertion
+Function: local_SSAt::assertions
 
   Inputs:
 
  Outputs:
 
- Purpose: returns assertion for a given location
+ Purpose: returns assertions for a given location
 
 \*******************************************************************/
 
-exprt local_SSAt::assertion(locationt loc) const
+local_SSAt::nodet::assertionst local_SSAt::assertions(locationt loc) const
 {
   nodest::const_iterator n_it=nodes.find(loc);
-  if(n_it==nodes.end()) return nil_exprt();
-  return n_it->second.assertion;
+  if(n_it==nodes.end()) return nodet::assertionst();
+  return n_it->second.assertions;
 }
 
 /*******************************************************************\
@@ -470,8 +470,8 @@ void local_SSAt::assertions_to_constraints()
       n_it++)
   {
     nodet &node=n_it->second;
-    if(node.assertion.is_not_nil())
-      node.constraints.push_back(node.assertion);
+    node.constraints.insert(node.constraints.end(),
+			    node.assertions.begin(),node.assertions.end());
   }  
 }
 
@@ -1186,8 +1186,11 @@ void local_SSAt::nodet::output(
       e_it++)
     out << "(C) " << from_expr(ns, "", *e_it) << "\n";
 
-  if(assertion.is_not_nil())
-    out << "(A) " << from_expr(ns, "", assertion) << "\n";
+  for(assertionst::const_iterator
+      a_it=assertions.begin();
+      a_it!=assertions.end();
+      a_it++)
+    out << "(A) " << from_expr(ns, "", *a_it) << "\n";
 }
 
 /*******************************************************************\

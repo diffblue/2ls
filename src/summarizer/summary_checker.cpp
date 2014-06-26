@@ -379,7 +379,7 @@ void summary_checkert::check_properties(
     solver << SSA;
 
     // give negation of property to solver
-    exprt negated_property=not_exprt(SSA.assertion(i_it));
+    exprt negated_property=not_exprt(SSA.assertions(i_it).front()); //TODO
 
     solver << negated_property;
     
@@ -451,7 +451,7 @@ void summary_checkert::do_show_vcc(
 
   std::cout << "|--------------------------\n";
   
-  exprt property=SSA.assertion(i_it);
+  exprt property=SSA.assertions(i_it).front(); //TODO
   
   std::cout << "{1} " << from_expr(SSA.ns, "", property) << "\n";
   

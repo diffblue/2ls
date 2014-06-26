@@ -44,7 +44,7 @@ public:
   class nodet
   {
   public:
-    inline nodet():assertion(nil_exprt()) { }
+    inline nodet():function_call(nil_exprt()) { }
   
     typedef std::vector<equal_exprt> equalitiest;
     equalitiest equalities;
@@ -52,14 +52,17 @@ public:
     typedef std::vector<exprt> constraintst;
     constraintst constraints;
 
-    exprt assertion;
+    typedef std::vector<exprt> assertionst;
+    assertionst assertions;
     
+    exprt function_call;
+
     void output(std::ostream &, const namespacet &) const;
 
     inline bool empty() const
     {
       return equalities.empty() && constraints.empty() && 
-             assertion.is_nil();
+	assertions.empty() && function_call.is_nil();
     }
   };
   
@@ -88,7 +91,7 @@ public:
   { return name(guard_symbol(), OUT, guard_map[loc].guard_source); }
   exprt edge_guard(locationt from, locationt to) const;
   
-  exprt assertion(locationt loc) const;
+  nodet::assertionst assertions(locationt loc) const;
   
   // auxiliary functions
   enum kindt { PHI, OUT, LOOP_BACK, LOOP_SELECT };
