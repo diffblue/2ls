@@ -64,6 +64,10 @@ void local_SSAt::build_SSA()
   forall_goto_program_instructions(i_it, goto_function.body)
     build_assertions(i_it);
 
+  // now build function calls
+  forall_goto_program_instructions(i_it, goto_function.body)
+    build_function_call(i_it);
+
   // entry and exit variables
   get_entry_exit_vars();
 }
@@ -82,8 +86,6 @@ Function: local_SSAt::get_entry_exit_vars
 
 void local_SSAt::get_entry_exit_vars()
 {
-  //TODO: functions with side effects
-
   //get parameters
   const code_typet::argumentst &argument_types=goto_function.type.arguments();
   for(code_typet::argumentst::const_iterator
@@ -260,26 +262,25 @@ void local_SSAt::build_transfer(locationt loc)
   if(loc->is_assign())
   {
     const code_assignt &code_assign=to_code_assign(loc->code);
-
     assign_rec(code_assign.lhs(), code_assign.rhs(), loc);
   }
-  /*
-  else if(loc->is_function_call())
-  {
-    const code_function_callt &code_function_call=
-      to_code_function_call(loc->code);
-      
-    if(code_function_call.lhs().is_not_nil())
-    {
-      // generate a symbol for rhs
-      irep_idt identifier="ssa::return_value"+i2string(loc->location_number);
-      symbol_exprt rhs(identifier, code_function_call.lhs().type());
-      
-      assign_rec(code_function_call.lhs(), rhs, loc);
-    }
-  }
-*/
-  else if(loc->is_function_call())
+}
+  
+/*******************************************************************\
+
+Function: local_SSAt::build_transfer
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void local_SSAt::build_function_call(locationt loc)
+{
+  if(loc->is_function_call())
   {
     //TODO: CPROVER main function has no global variables which leads to failure on inlining    
     //      This is just a workaround.
@@ -288,20 +289,15 @@ void local_SSAt::build_transfer(locationt loc)
     const code_function_callt &code_function_call=
       to_code_function_call(loc->code);
 
-    exprt lhs = code_function_call.lhs();
+    function_application_exprt f;
+    f.function() = code_function_call.function();
+    f.type() = code_function_call.lhs().type();
+    f.arguments() = code_function_call.arguments(); 
 
-    function_application_exprt rhs;
-    rhs.function() = code_function_call.function();
-    rhs.type() = code_function_call.lhs().type();
-    rhs.arguments() = code_function_call.arguments(); 
-
-    exprt rhs_read=read_rhs(rhs, loc);
-    irep_idt identifier="ssa::dummy"+i2string(loc->location_number);
-    equal_exprt equality(symbol_exprt(identifier, nil_typet()), rhs_read);     	
-    nodes[loc].equalities.push_back(equality);
+    nodes[loc].function_calls.push_back(read_rhs(f, loc));
   }
 }
-  
+
 /*******************************************************************\
 
 Function: local_SSAt::build_cond

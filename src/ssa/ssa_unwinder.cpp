@@ -251,5 +251,15 @@ void ssa_unwindert::merge_into_nodes(local_SSAt::nodest &nodes,
     {
       it->second.constraints.push_back(*c_it);
     }  
+    for(local_SSAt::nodet::assertionst::const_iterator a_it = new_n.assertions.begin();
+	a_it != new_n.assertions.end(); a_it++)
+    {
+      it->second.assertions.push_back(*a_it);
+    }  
+    for(local_SSAt::nodet::function_callst::const_iterator f_it = new_n.function_calls.begin();
+	f_it != new_n.function_calls.end(); f_it++)
+    {
+      it->second.function_calls.push_back(*f_it);
+    }  
   }
 }

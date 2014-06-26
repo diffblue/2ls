@@ -44,7 +44,7 @@ public:
   class nodet
   {
   public:
-    inline nodet():function_call(nil_exprt()) { }
+    inline nodet() { }
   
     typedef std::vector<equal_exprt> equalitiest;
     equalitiest equalities;
@@ -55,14 +55,15 @@ public:
     typedef std::vector<exprt> assertionst;
     assertionst assertions;
     
-    exprt function_call;
+    typedef std::vector<exprt> function_callst;
+    function_callst function_calls;
 
     void output(std::ostream &, const namespacet &) const;
 
     inline bool empty() const
     {
       return equalities.empty() && constraints.empty() && 
-	assertions.empty() && function_call.is_nil();
+	assertions.empty() && function_calls.empty();
     }
   };
   
@@ -133,6 +134,7 @@ protected:
   void build_transfer(locationt loc);
   void build_cond(locationt loc);
   void build_guard(locationt loc);
+  void build_function_call(locationt loc);
   void build_assertions(locationt loc);
 };
 

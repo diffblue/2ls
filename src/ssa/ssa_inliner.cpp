@@ -375,6 +375,16 @@ void ssa_inlinert::rename(local_SSAt::nodet &node)
   {
     rename(*c_it);
   }  
+  for(local_SSAt::nodet::assertionst::iterator a_it = node.assertions.begin();
+      a_it != node.assertions.end(); a_it++)
+  {
+    rename(*a_it);
+  }  
+  for(local_SSAt::nodet::function_callst::iterator f_it = node.function_calls.begin();
+      f_it != node.function_calls.end(); f_it++)
+  {
+    rename(*f_it);
+  }  
 }
 
 /*******************************************************************\
