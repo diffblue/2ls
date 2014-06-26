@@ -57,7 +57,7 @@ void ssa_unwindert::unwind(local_SSAt &SSA, unsigned unwind_max)
       }
 
        // unwind that loop
-      for(unsigned unwind=0; unwind<unwind_max; unwind++)
+      for(unsigned unwind=unwind_max; unwind>0; unwind--)
       {
 	// insert loop_head
         local_SSAt::nodet node = SSA.nodes[loop_head]; //copy
@@ -66,13 +66,13 @@ void ssa_unwindert::unwind(local_SSAt &SSA, unsigned unwind_max)
 	{
 	  if(e_it->rhs().id()!=ID_if) 
 	  {
-            rm_equs.insert(e_it);
+            rename(*e_it,unwind);
             continue;
 	  }
 
           if_exprt &e = to_if_expr(e_it->rhs());
          
-          if(unwind==0)
+          if(unwind==unwind_max)
 	  {
 	    rename(e_it->lhs(),unwind);
             e_it->rhs() = e.false_case();
@@ -80,12 +80,11 @@ void ssa_unwindert::unwind(local_SSAt &SSA, unsigned unwind_max)
           else
 	  {
 	    e_it->rhs() = pre_post_exprs[e.true_case()];
-	    rename(e_it->rhs(),unwind-1);
+	    rename(e_it->rhs(),unwind+1);
 	    rename(e_it->lhs(),unwind);
 	  }
 	}
-        commit_node(node);
-	std::cout << "node: "; node.output(std::cout,SSA.ns); std::cout << std::endl;
+	//	std::cout << "node: "; node.output(std::cout,SSA.ns); std::cout << std::endl;
         merge_into_nodes(new_nodes,loop_head,node);
 
         // insert body
@@ -110,7 +109,7 @@ void ssa_unwindert::unwind(local_SSAt &SSA, unsigned unwind_max)
         
         if_exprt &e = to_if_expr(e_it->rhs());
         e.false_case() = pre_post_exprs[e.true_case()];
-        rename(e.false_case(),unwind_max-1);
+        rename(e.false_case(),1);
       }
     } 
   }

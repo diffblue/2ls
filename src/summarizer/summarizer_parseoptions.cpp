@@ -115,6 +115,9 @@ void summarizer_parseoptionst::get_command_line_options(optionst &options)
   if(cmdline.isset("unwindset"))
     options.set_option("unwindset", cmdline.getval("unwindset"));
 
+  if(cmdline.isset("unwind"))
+    options.set_option("unwind", cmdline.getval("unwind"));
+
   // check array bounds
   if(cmdline.isset("bounds-check"))
     options.set_option("bounds-check", true);

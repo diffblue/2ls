@@ -60,9 +60,12 @@ void local_SSAt::build_SSA()
   forall_goto_program_instructions(i_it, goto_function.body)
     build_guard(i_it);
 
+  // now build assertions
+  forall_goto_program_instructions(i_it, goto_function.body)
+    build_assertions(i_it);
+
   // entry and exit variables
   get_entry_exit_vars();
-
 }
 
 /*******************************************************************\
@@ -408,6 +411,47 @@ void local_SSAt::build_guard(locationt loc)
 
 /*******************************************************************\
 
+Function: local_SSAt::build_assertions
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: turns assertions into constraints
+
+\*******************************************************************/
+
+void local_SSAt::build_assertions(locationt loc)
+{
+  if(loc->is_assert())
+  {
+    exprt c=read_rhs(loc->guard, loc);
+    exprt g=guard_symbol(loc);    
+    nodes[loc].assertion=implies_exprt(g, c);
+  }
+}
+
+/*******************************************************************\
+
+Function: local_SSAt::assertion
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: returns assertion for a given location
+
+\*******************************************************************/
+
+exprt local_SSAt::assertion(locationt loc) const
+{
+  nodest::const_iterator n_it=nodes.find(loc);
+  if(n_it==nodes.end()) return nil_exprt();
+  return n_it->second.assertion;
+}
+
+/*******************************************************************\
+
 Function: local_SSAt::assertions_to_constraints
 
   Inputs:
@@ -420,15 +464,14 @@ Function: local_SSAt::assertions_to_constraints
 
 void local_SSAt::assertions_to_constraints()
 {
-  forall_goto_program_instructions(i_it, goto_function.body)
+  for(nodest::iterator
+      n_it=nodes.begin();
+      n_it!=nodes.end();
+      n_it++)
   {
-    if(i_it->is_assert())
-    {
-      exprt c=read_rhs(i_it->guard, i_it);
-      exprt g=guard_symbol(i_it);
-      implies_exprt implication(g, c);
-      nodes[i_it].constraints.push_back(implication);
-    }
+    nodet &node=n_it->second;
+    if(node.assertion.is_not_nil())
+      node.constraints.push_back(node.assertion);
   }  
 }
 
@@ -1143,6 +1186,8 @@ void local_SSAt::nodet::output(
       e_it++)
     out << "(C) " << from_expr(ns, "", *e_it) << "\n";
 
+  if(assertion.is_not_nil())
+    out << "(A) " << from_expr(ns, "", assertion) << "\n";
 }
 
 /*******************************************************************\

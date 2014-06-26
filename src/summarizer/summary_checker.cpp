@@ -20,6 +20,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "../ssa/ssa_build_goto_trace.h"
 #include "../domains/ssa_fixed_point.h"
 #include "../domains/ssa_analyzer.h"
+#include "../ssa/ssa_unwinder.h"
+
 
 #include "summary_checker.h"
 
@@ -76,6 +78,14 @@ void summary_checkert::SSA_functions(const goto_modelt &goto_model,  const names
     {
       status() << "Simplifying" << messaget::eom;
       ::simplify(*SSA, ns);
+    }
+
+    unsigned unwind = options.get_unsigned_int_option("unwind");
+    if(unwind>0);
+    {
+      status() << "Unwinding" << messaget::eom;
+      ssa_unwindert ssa_unwinder;
+      ssa_unwinder.unwind(*SSA,unwind);
     }
 
     SSA->output(debug()); debug() << eom;
@@ -306,8 +316,6 @@ Function: summary_checkert::check_properties
 
 \*******************************************************************/
 
-#include "../ssa/ssa_domain.h"
-
 void summary_checkert::check_properties(
   const local_SSAt &SSA0,
   const goto_functionst::function_mapt::const_iterator f_it)
@@ -371,13 +379,8 @@ void summary_checkert::check_properties(
     solver << SSA;
 
     // give negation of property to solver
+    exprt negated_property=not_exprt(SSA.assertion(i_it));
 
-    exprt negated_property=SSA.read_rhs(not_exprt(i_it->guard), i_it);
-
-    if(simplify)
-      negated_property=::simplify_expr(negated_property, SSA.ns);
-  
-    solver << SSA.guard_symbol(i_it);          
     solver << negated_property;
     
     property_statust &property_status=property_map[property_id];
@@ -448,14 +451,8 @@ void summary_checkert::do_show_vcc(
 
   std::cout << "|--------------------------\n";
   
-  exprt property_rhs=SSA.read_rhs(i_it->guard, i_it);
+  exprt property=SSA.assertion(i_it);
   
-  if(simplify)
-    property_rhs=::simplify_expr(property_rhs, SSA.ns);
-  
-  implies_exprt property(
-    SSA.guard_symbol(i_it), property_rhs);
-
   std::cout << "{1} " << from_expr(SSA.ns, "", property) << "\n";
   
   std::cout << "\n";

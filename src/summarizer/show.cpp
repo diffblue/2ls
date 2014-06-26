@@ -186,8 +186,6 @@ Function: show_ssa
 
 \*******************************************************************/
 
-#include "../ssa/ssa_unwinder.h"
-
 void show_ssa(
   const goto_functionst::goto_functiont &goto_function,
   bool simplify,
@@ -195,14 +193,7 @@ void show_ssa(
   std::ostream &out)
 {
   local_SSAt local_SSA(goto_function, ns);
-  local_SSA.assertions_to_constraints();
   if(simplify) ::simplify(local_SSA, ns);
-
-#if 0
-  ssa_unwindert ssa_unwinder;
-  ssa_unwinder.unwind(local_SSA,2);
-#endif
-
   local_SSA.output(out);
 }
 

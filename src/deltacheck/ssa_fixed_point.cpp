@@ -333,6 +333,9 @@ void ssa_fixed_pointt::generate_countermodel(
     {
       countermodel_expr(*e_it, expressions);
     }
+    
+    if(node.assertion.is_not_nil())
+      countermodel_expr(node.assertion, expressions);
   }
   
   if(use_old)
@@ -359,6 +362,9 @@ void ssa_fixed_pointt::generate_countermodel(
       {
         countermodel_expr(*e_it, expressions);
       }
+
+      if(node.assertion.is_not_nil())
+        countermodel_expr(node.assertion, expressions);
     }
   }
   

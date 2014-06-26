@@ -47,5 +47,8 @@ void simplify(local_SSAt &ssa, const namespacet &ns)
     {
       *c_it=simplify_expr(*c_it, ns);
     }
+    
+    if(node.assertion.is_not_nil())
+      node.assertion=simplify_expr(node.assertion, ns);
   }
 }

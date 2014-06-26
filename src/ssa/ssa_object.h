@@ -47,7 +47,9 @@ public:
     return identifier!=other.identifier;
   }
   
-  // this is for use in if(...) tests
+  // This is for use in if(...) tests, and
+  // implements the 'safe bool' idiom. Shall be replaced
+  // by C++11 explict conversion to bool one day.
   operator void *() const
   {
     return identifier.empty()?0:(void *)&identifier;
