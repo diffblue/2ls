@@ -48,9 +48,8 @@ public:
 
     typedef std::vector<exprt> constraintst;
     constraintst constraints;
-    
-    typedef std::set<locationt> incomingt;
-    incomingt incoming;
+
+    exprt assertion;
     
     void output(std::ostream &, const namespacet &) const;
 
@@ -113,6 +112,7 @@ protected:
   void build_transfer(locationt loc);
   void build_cond(locationt loc);
   void build_guard(locationt loc);
+  void build_assertions(locationt loc);
 };
 
 std::list<exprt> & operator <<
