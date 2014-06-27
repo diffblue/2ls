@@ -5,8 +5,11 @@
 #include <util/find_symbols.h>
 #include <util/arith_tools.h>
 #include <util/ieee_float.h>
+#include <util/i2string.h>
 #include <util/simplify_expr.h>
 #include <langapi/languages.h>
+
+#define SYMB_BOUND_VAR "symb_bound#"
 
 /*******************************************************************\
 
@@ -115,7 +118,7 @@ Function: template_domaint::get_row_pre_constraint
 
  Outputs:
 
- Purpose:
+ Purpose: pre_guard ==> row_expr <= row_value
 
 \*******************************************************************/
 
@@ -157,20 +160,25 @@ Function: template_domaint::get_row_post_constraint
 
  Outputs:
 
- Purpose:
+ Purpose: row_expr <= row_value
 
 \*******************************************************************/
 
-exprt template_domaint::get_row_post_constraint(const rowt &row, const row_valuet &row_value)
+exprt template_domaint::get_row_post_constraint(const rowt &row, 
+  const row_valuet &row_value)
 {
   assert(row<templ.size());
   if(templ.kinds[row]==IN) return true_exprt();
-  if(is_row_value_neginf(row_value)) return implies_exprt(templ.post_guards[row], false_exprt());
-  if(is_row_value_inf(row_value)) return implies_exprt(templ.post_guards[row], true_exprt());
-  return implies_exprt(templ.post_guards[row], binary_relation_exprt(templ.rows[row],ID_le,row_value));
+  if(is_row_value_neginf(row_value)) 
+    return implies_exprt(templ.post_guards[row], false_exprt());
+  if(is_row_value_inf(row_value)) 
+    return implies_exprt(templ.post_guards[row], true_exprt());
+  return implies_exprt(templ.post_guards[row], 
+    binary_relation_exprt(templ.rows[row],ID_le,row_value));
 }
 
-exprt template_domaint::get_row_post_constraint(const rowt &row, const templ_valuet &value)
+exprt template_domaint::get_row_post_constraint(const rowt &row, 
+  const templ_valuet &value)
 {
   assert(value.size()==templ.size());
   return get_row_post_constraint(row,value[row]);
@@ -184,7 +192,7 @@ Function: template_domaint::to_pre_constraints
 
  Outputs:
 
- Purpose:
+ Purpose: /\_all_rows ( pre_guard ==> (row_expr <= row_value) )
 
 \*******************************************************************/
 
@@ -207,7 +215,8 @@ Function: template_domaint::make_not_post_constraints
 
  Outputs:
 
- Purpose:
+ Purpose: for all rows !(post_guard ==> (row_expr <= row_value))
+          to be connected disjunctively
 
 \*******************************************************************/
 
@@ -226,6 +235,137 @@ void template_domaint::make_not_post_constraints(const templ_valuet &value,
     cond_exprs[row] = not_exprt(get_row_post_constraint(row,value));
   }
 }
+
+/*******************************************************************\
+
+Function: template_domaint::get_row_symb_value
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: generates symbolic value symbol
+
+\*******************************************************************/
+
+exprt template_domaint::get_row_symb_value(const rowt &row)
+{
+  assert(row<templ.size());
+  return symbol_exprt(SYMB_BOUND_VAR+i2string(row),templ.rows[row].type());
+}
+
+/*******************************************************************\
+
+Function: template_domaint::get_row_symb_pre_constraint
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: pre_guard ==> (row_expr <= symb_value)
+
+\*******************************************************************/
+
+exprt template_domaint::get_row_symb_pre_constraint(const rowt &row)
+{
+  assert(row<templ.size());
+  kindt k = templ.kinds[row];
+  if(k==OUT || k==OUTL) return true_exprt();
+  return implies_exprt(templ.pre_guards[row], 
+    binary_relation_exprt(templ.rows[row],ID_le,get_row_symb_value(row)));
+}
+
+/*******************************************************************\
+
+Function: template_domaint::get_row_symb_post_constraint
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: post_guard ==> (row_expr >= row_symb_value)  
+
+\*******************************************************************/
+
+exprt template_domaint::get_row_symb_post_constraint(const rowt &row)
+{
+  assert(row<templ.size());
+  if(templ.kinds[row]==IN) return true_exprt();
+  return implies_exprt(templ.post_guards[row], 
+    binary_relation_exprt(templ.rows[row],ID_ge,get_row_symb_value(row)));
+}
+
+
+/*******************************************************************\
+
+Function: template_domaint::to_symb_pre_constraints
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: pre_guard ==> (row_expr <= symb_row_value)
+
+\*******************************************************************/
+
+exprt template_domaint::to_symb_pre_constraints(const templ_valuet &value)
+{
+  assert(value.size()==templ.size());
+  exprt::operandst c; 
+  for(unsigned row = 0; row<templ.size(); row++)
+  {
+    c.push_back(get_row_symb_pre_constraint(row));
+    c.push_back(get_row_symb_value_constraint(row,value[row]));
+  }
+  return conjunction(c); 
+}
+
+/*******************************************************************\
+
+Function: template_domaint::make_symb_post_constraints
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: post_guard ==> (row_expr >= symb_row_value)
+
+\*******************************************************************/
+
+void template_domaint::make_symb_post_constraints(exprt::operandst &cond_exprs, 
+			          exprt::operandst &value_exprs)
+{
+  cond_exprs.resize(templ.size());
+  value_exprs.resize(templ.size());
+
+  exprt::operandst c; 
+  for(unsigned row = 0; row<templ.size(); row++)
+  {
+    value_exprs[row] = get_row_symb_value(row);
+    cond_exprs[row] = get_row_symb_post_constraint(row);
+  }
+}
+
+/*******************************************************************\
+
+Function: template_domaint::get_row_symb_value_constraint
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: row_value <= symb_row_value
+
+\*******************************************************************/
+
+exprt template_domaint::get_row_symb_value_constraint(const rowt &row, 
+						const row_valuet &row_value)
+{
+  if(is_row_value_neginf(row_value)) return false_exprt();
+  if(is_row_value_inf(row_value)) return true_exprt();
+  return binary_relation_exprt(row_value,ID_le,get_row_symb_value(row));
+}
+
 
 /*******************************************************************\
 

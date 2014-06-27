@@ -18,10 +18,13 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
   solver << or_exprt(inv_expr, literal_exprt(activation_literal));
 #else
   debug() << "literal " << activation_literal << eom;
-  literalt l = solver.convert(or_exprt(inv_expr, literal_exprt(activation_literal)));
+  literalt l = solver.convert(or_exprt(inv_expr, 
+                              literal_exprt(activation_literal)));
   if(!l.is_constant()) 
   {
-    debug() << "literal " << l << ": " << from_expr(ns,"",or_exprt(inv_expr, literal_exprt(activation_literal))) <<eom;
+    debug() << "literal " << l << ": " << 
+      from_expr(ns,"",or_exprt(inv_expr, literal_exprt(activation_literal))) 
+      << eom;
     formula.push_back(l);
   }
 #endif
@@ -38,7 +41,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
   debug() << "post-inv: ";
   for(unsigned i = 0; i<strategy_cond_exprs.size(); i++)
   {  
-    debug() << (i>0 ? " || " : "") << from_expr(ns,"",strategy_cond_exprs[i]) ;
+    debug() << (i>0 ? " || " : "") << from_expr(ns,"",strategy_cond_exprs[i]);
 
     strategy_cond_literals[i] = solver.convert(strategy_cond_exprs[i]);
     //solver.set_frozen(strategy_cond_literals[i]);
@@ -69,7 +72,8 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 
 #ifdef DEBUG_FORMULA
   bvt whole_formula = formula;
-  whole_formula.insert(whole_formula.end(),activation_literals.begin(),activation_literals.end());
+  whole_formula.insert(whole_formula.end(),activation_literals.begin(),
+                       activation_literals.end());
   solver.set_assumptions(whole_formula);
 #endif
 
@@ -90,10 +94,13 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
       debug() << "cond: " << from_expr(ns, "", c) << " " << 
 	    from_expr(ns, "", solver.get(c)) << eom;
       debug() << "guards: " << 
-       from_expr(ns, "", template_domain.templ.pre_guards[i]) << 
-        " " << from_expr(ns, "", solver.get(template_domain.templ.pre_guards[i])) << eom;
-      debug() << "guards: " << from_expr(ns, "", template_domain.templ.post_guards[i]) << " " 
-	  << from_expr(ns, "", solver.get(template_domain.templ.post_guards[i])) << eom; 	     	     
+        from_expr(ns, "", template_domain.templ.pre_guards[i]) << 
+        " " << from_expr(ns, "", 
+          solver.get(template_domain.templ.pre_guards[i])) << eom;
+      debug() << "guards: " << from_expr(ns, "", 
+          template_domain.templ.post_guards[i]) << " " 
+	  << from_expr(ns, "", 
+               solver.get(template_domain.templ.post_guards[i])) << eom;
     }    
           
     for(replace_mapt::const_iterator
@@ -101,10 +108,11 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
           it!=renaming_map.end();    
           ++it)
     {
-      debug() << "replace_map (1st): " << from_expr(ns, "", it->first) << " " <<
+      debug() << "replace_map (1st): " << 
+            from_expr(ns, "", it->first) << " " <<
 	    from_expr(ns, "", solver.get(it->first)) << eom;
-      debug() << "replace_map (2nd): " << from_expr(ns, "", it->second) << " " << 
-	    from_expr(ns, "", solver.get(it->second)) << eom;
+      debug() << "replace_map (2nd): " << from_expr(ns, "", it->second) << " " 
+            << from_expr(ns, "", solver.get(it->second)) << eom;
     }
                   
 #endif
