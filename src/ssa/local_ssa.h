@@ -55,7 +55,7 @@ public:
     typedef std::vector<exprt> assertionst;
     assertionst assertions;
     
-    typedef std::vector<exprt> function_callst;
+    typedef std::vector<function_application_exprt> function_callst;
     function_callst function_calls;
 
     void output(std::ostream &, const namespacet &) const;

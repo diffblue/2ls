@@ -72,13 +72,14 @@ void summary_checkert::SSA_functions(const goto_modelt &goto_model,  const names
 
     status() << "Computing SSA of " << f_it->first << messaget::eom;
     
-    local_SSAt *SSA = new local_SSAt(f_it->second, ns);
+    ssa_db.create(f_it->first, f_it->second, ns);
+    local_SSAt &SSA = ssa_db.get(f_it->first);
     
     // simplify, if requested
     if(simplify)
     {
       status() << "Simplifying" << messaget::eom;
-      ::simplify(*SSA, ns);
+      ::simplify(SSA, ns);
     }
 
     unsigned unwind = options.get_unsigned_int_option("unwind");
@@ -86,11 +87,10 @@ void summary_checkert::SSA_functions(const goto_modelt &goto_model,  const names
     {
       status() << "Unwinding" << messaget::eom;
       ssa_unwindert ssa_unwinder;
-      ssa_unwinder.unwind(*SSA,unwind);
+      ssa_unwinder.unwind(SSA,unwind);
     }
 
-    SSA->output(debug()); debug() << eom;
-    functions[f_it->first] = SSA;
+    SSA.output(debug()); debug() << eom;
   }
 
 #if 0
@@ -99,9 +99,9 @@ void summary_checkert::SSA_functions(const goto_modelt &goto_model,  const names
   ssa_inliner.set_message_handler(get_message_handler());
   ssa_inliner.set_verbosity(get_verbosity());     
 
-  ssa_inliner.replace(*functions[ID_main],functions,false,false);
+  ssa_inliner.replace(ssa_db.get(ID_main),functions,false,false);
   
-  functions[ID_main]->output(debug()); debug() << eom;
+  ssa_db.get(ID_main).output(debug()); debug() << eom;
 #endif
 }
 
@@ -122,7 +122,7 @@ void summary_checkert::summarize()
   summarizer.set_message_handler(get_message_handler());
   summarizer.set_verbosity(get_verbosity());
 
-  summarizer.summarize(functions);
+  summarizer.summarize(ssa_db.functions());
 }
 
 /*******************************************************************\
@@ -140,8 +140,8 @@ Function: summary_checkert::check_properties
 summary_checkert::resultt summary_checkert::check_properties()
 {
   // analyze all the functions
-  for(summarizert::functionst::const_iterator f_it = functions.begin();
-      f_it != functions.end(); f_it++)
+  for(summarizert::functionst::const_iterator f_it = ssa_db.functions().begin();
+      f_it != ssa_db.functions().end(); f_it++)
   {
     status() << "Checking properties of " << f_it->first << messaget::eom;
     check_properties(f_it);
@@ -348,7 +348,7 @@ void summary_checkert::check_properties(
   status() << "Analyzing " << f_it->first << messaget::eom;
   
   // inline summaries
-  summarizer.inline_summaries(f_it->first,SSA.nodes);
+  summarizer.inline_summaries(f_it->first,SSA);
   
   #if 0
   // simplify, if requested

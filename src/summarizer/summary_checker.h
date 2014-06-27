@@ -14,6 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/property_checker.h>
 
 #include "../ssa/local_ssa.h"
+#include "ssa_db.h"
 #include "summary_db.h"
 #include "summarizer.h"
 
@@ -25,18 +26,11 @@ public:
     simplify(false),
     fixed_point(false),
     options(_options),
-    summary_db(),
+    ssa_db(),summary_db(),
     summarizer(_options,summary_db)
   {
   }
   
-  ~summary_checkert()
-  {
-    for(summarizert::functionst::iterator it = functions.begin();
-        it != functions.end(); it++)
-      delete it->second;
-  }
-
   bool show_vcc, simplify, fixed_point;
 
   virtual resultt operator()(const goto_modelt &);
@@ -48,9 +42,9 @@ public:
 protected:
   optionst &options;
 
+  ssa_dbt ssa_db;
   summary_dbt summary_db;
   summarizert summarizer;
-  summarizert::functionst functions;
 
   void report_statistics();
 

@@ -12,6 +12,7 @@ Author: Peter Schrammel
 #include <util/message.h>
 
 #include "../summarizer/summary_db.h"
+#include "../summarizer/ssa_db.h"
 #include "../ssa/local_ssa.h"
 
 class summary_dbt;
@@ -23,9 +24,11 @@ class ssa_inlinert : public messaget
 
   void replace(local_SSAt::nodest &nodes,
 	       local_SSAt::nodest::iterator node,
-               local_SSAt::nodet::equalitiest::iterator equ_it, 
-	       const local_SSAt::var_sett &cs_globals_in, //incoming globals at call site
-	       const local_SSAt::var_sett &cs_globals_out, //outgoing globals at call site
+               local_SSAt::nodet::function_callst::iterator f_it, 
+	       const local_SSAt::var_sett &cs_globals_in, 
+                  //incoming globals at call site
+	       const local_SSAt::var_sett &cs_globals_out, 
+                  //outgoing globals at call site
                const summaryt &summary);
 
   void replace(local_SSAt &SSA,
@@ -33,18 +36,20 @@ class ssa_inlinert : public messaget
 
   void replace(local_SSAt::nodest &nodes,
 	       local_SSAt::nodest::iterator node, 
-               local_SSAt::nodet::equalitiest::iterator equ_it, 
-	       const local_SSAt::var_sett &cs_globals_in, //incoming globals at call site
-	       const local_SSAt::var_sett &cs_globals_out, //outgoing globals at call site
+               local_SSAt::nodet::function_callst::iterator f_it, 
+	       const local_SSAt::var_sett &cs_globals_in, 
+                  //incoming globals at call site
+	       const local_SSAt::var_sett &cs_globals_out, 
+                  //outgoing globals at call site
                const local_SSAt &function);
 
   void replace(local_SSAt &SSA,
-               const std::map<irep_idt, local_SSAt*> &functions, 
+               const ssa_dbt &ssa_db, 
                bool recursive=false,
                bool rename=true);
 
   void havoc(local_SSAt::nodet &node, 
-	     local_SSAt::nodet::equalitiest::iterator &equ_it);
+	     local_SSAt::nodet::function_callst::iterator f_it);
 
   //apply changes to node, must be called after replace and havoc
   void commit_node(local_SSAt::nodest::iterator node);
@@ -54,7 +59,7 @@ class ssa_inlinert : public messaget
   unsigned counter;
   local_SSAt::nodest new_nodes;
   local_SSAt::nodet::equalitiest new_equs;
-  std::set<local_SSAt::nodet::equalitiest::iterator> rm_equs;
+  std::set<local_SSAt::nodet::function_callst::iterator> rm_function_calls;
 
  private:
   void replace_globals_in(const local_SSAt::var_sett &globals_in, 

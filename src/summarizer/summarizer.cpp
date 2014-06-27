@@ -32,7 +32,8 @@ Function: summarizert::summarize()
 
 \*******************************************************************/
 
-summaryt summarizert::summarize(functiont &function, const preconditiont &precondition)
+summaryt summarizert::summarize(functiont &function, 
+				const preconditiont &precondition)
 {
   functions.clear();
   preconditions.clear();
@@ -74,7 +75,8 @@ Function: summarizert::summarize()
 void summarizert::summarize(functionst &_functions)
 {
   preconditionst _preconditions;
-  for(functionst::const_iterator it = _functions.begin(); it!=_functions.end(); it++)
+  for(functionst::const_iterator it = _functions.begin(); 
+      it!=_functions.end(); it++)
   {
     _preconditions[it->first] = true_exprt();
   }
@@ -117,11 +119,13 @@ void summarizert::run()
   //TODO: make context sensitive (currently, only globally given preconditions are used),
   //      compute fixed point (if any descendents in the call graph are updated)
   //TODO: replace simple iterator by something following the call graph
-  for(functionst::const_iterator it = functions.begin(); it!=functions.end(); it++)
+  for(functionst::const_iterator it = functions.begin(); 
+      it!=functions.end(); it++)
   {
     status() << "\nSummarizing function " << it->first << eom;
     if(!summary_db.exists(it->first)) compute_summary_rec(it->first);
-    else status() << "Summary for function " << it->first << " exists already" << eom;
+    else status() << "Summary for function " << it->first << 
+           " exists already" << eom;
   }
 }
 
@@ -140,13 +144,17 @@ Function: summarizert::compute_summary_rec()
 void summarizert::compute_summary_rec(const function_namet &function_name)
 {
   local_SSAt &SSA = *functions[function_name]; 
-  inline_summaries(function_name,SSA.nodes,true); 
+  inline_summaries(function_name,SSA,true); 
 
   {
     std::ostringstream out;
-    out << "Function body for " << function_name << " to be analyzed: " << std::endl;
-    for(local_SSAt::nodest::iterator n = SSA.nodes.begin(); n!=SSA.nodes.end(); n++)
+    out << "Function body for " << function_name << 
+      " to be analyzed: " << std::endl;
+    for(local_SSAt::nodest::iterator n = SSA.nodes.begin(); 
+        n!=SSA.nodes.end(); n++)
+    {
       if(!n->second.empty()) n->second.output(out,SSA.ns);
+    }
     debug() << out.str() << eom;
   }
 
@@ -201,21 +209,21 @@ Function: summarizert::inline_summaries()
 \*******************************************************************/
 
 void summarizert::inline_summaries(const function_namet &function_name, 
-  local_SSAt::nodest &nodes, bool recursive)
+  local_SSAt &SSA, bool recursive)
 {
   ssa_inlinert inliner;
   // replace calls with summaries
   // TODO: functions with pointers passed as parameters
-  for(local_SSAt::nodest::iterator n = nodes.begin(); n!=nodes.end(); n++)
+  for(local_SSAt::nodest::iterator n = SSA.nodes.begin(); 
+      n!=SSA.nodes.end(); n++)
   {
-    for(local_SSAt::nodet::equalitiest::iterator e = n->second.equalities.begin();
-        e != n->second.equalities.end(); e++)
+    for(local_SSAt::nodet::function_callst::iterator 
+        f_it = n->second.function_calls.begin();
+        f_it != n->second.function_calls.end(); f_it++)
     {
-      if(e->rhs().id() != ID_function_application) continue;
+      assert(f_it->function().id()==ID_symbol); //no function pointers
+      irep_idt fname = to_symbol_expr(f_it->function()).get_identifier();
 
-      function_application_exprt f = to_function_application_expr(e->rhs());
-      assert(f.function().id()==ID_symbol); //no function pointers
-      irep_idt fname = to_symbol_expr(f.function()).get_identifier();
       summaryt summary; 
       bool recompute = false;
       // replace call with summary if it exists 
@@ -228,11 +236,12 @@ void summarizert::inline_summaries(const function_namet &function_name,
 	  //      otherwise compute new one: recompute = true;
       }
       // compute summary if function_name in functions
-      else if(functions.find(fname)!=functions.end() && recursive) recompute = true;
+      else if(functions.find(fname)!=functions.end() && recursive) 
+        recompute = true;
       else // havoc function call by default
       {
         status() << "Function " << fname << " not found" << eom;
-        inliner.havoc(n->second,e);
+        inliner.havoc(n->second,f_it);
         continue;
       }
       if(recompute) 
@@ -246,9 +255,9 @@ void summarizert::inline_summaries(const function_namet &function_name,
       //getting globals at call site
       local_SSAt::var_sett cs_globals_in, cs_globals_out; 
       goto_programt::const_targett loc = n->first;
-      functions[function_name]->get_globals(loc,cs_globals_in);
-      assert(loc!=functions[function_name]->goto_function.body.instructions.end());
-      functions[function_name]->get_globals(++loc,cs_globals_out);
+      SSA.get_globals(loc,cs_globals_in);
+      assert(loc!=SSA.goto_function.body.instructions.end());
+      SSA.get_globals(++loc,cs_globals_out);
 
 #if 0
       std::cout << "globals at call site: ";
@@ -259,9 +268,9 @@ void summarizert::inline_summaries(const function_namet &function_name,
 #endif
 
       //replace
-      inliner.replace(nodes,n,e,cs_globals_in,cs_globals_out,summary);
+      inliner.replace(SSA.nodes,n,f_it,cs_globals_in,cs_globals_out,summary);
     }
     inliner.commit_node(n);
   }
-  inliner.commit_nodes(nodes);
+  inliner.commit_nodes(SSA.nodes);
 }

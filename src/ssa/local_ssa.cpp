@@ -294,7 +294,8 @@ void local_SSAt::build_function_call(locationt loc)
     f.type() = code_function_call.lhs().type();
     f.arguments() = code_function_call.arguments(); 
 
-    nodes[loc].function_calls.push_back(read_rhs(f, loc));
+    nodes[loc].function_calls.push_back(
+      to_function_application_expr(read_rhs(f, loc)));
   }
 }
 

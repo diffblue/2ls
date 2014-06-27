@@ -19,11 +19,11 @@ public:
   virtual void load() const {}
   virtual void save() const {}
 
-  virtual summaryt get(function_namet function_name) const 
+  virtual summaryt get(const function_namet &function_name) const 
     { return store.at(function_name); }
-  virtual bool exists(function_namet function_name) const  
+  virtual bool exists(const function_namet &function_name) const  
     { return store.find(function_name)!=store.end(); }
-  virtual void put(function_namet function_name, summaryt summary) 
+  virtual void put(const function_namet &function_name, const summaryt &summary)
     { store[function_name] = summary; }
 
  protected:
