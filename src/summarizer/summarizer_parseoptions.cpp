@@ -900,6 +900,7 @@ void summarizer_parseoptionst::help()
     "\n"
     "Backend options:\n"
     " --intervals                  use interval domain\n"
+    " --equalities                 use equalities and disequalities domain\n"
     " --zones                      use zone domain\n"
     " --octagons                   use octagon domain\n"
     " --enum-solver                use solver based on model enumeration\n"
