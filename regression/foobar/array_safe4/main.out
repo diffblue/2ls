@@ -1,0 +1,732 @@
+file main.c: Parsing
+Converting
+Type-checking main
+Generating GOTO Program
+Adding CPROVER library
+Partial Inlining
+Generic Property Instrumentation
+Function Pointer Removal
+Using intervals domain with binary search solver
+Computing SSA of main
+Simplifying
+Unwinding
+*** 0 
+(E) $guard#0 == TRUE
+
+*** 1 
+(E) $guard#1 == ($cond#0 && $guard#0)
+
+*** 2 
+(E) $guard#2 == ($cond#1 && $guard#1)
+
+
+Computing SSA of c::__CPROVER_initialize
+Simplifying
+Unwinding
+*** 3 file <built-in-additions> line 57
+(E) __CPROVER_rounding_mode#3 == 0
+(E) $guard#3 == TRUE
+
+*** 4 file <built-in-additions> line 30
+(E) __CPROVER_deallocated#4 == NULL
+
+*** 5 file <built-in-additions> line 31
+(E) __CPROVER_dead_object#5 == NULL
+
+*** 6 file <built-in-additions> line 32
+(E) __CPROVER_malloc_object#6 == NULL
+
+*** 7 file <built-in-additions> line 33
+(E) __CPROVER_malloc_size#7 == 0ul
+
+*** 8 file <built-in-additions> line 34
+(E) __CPROVER_malloc_is_new_array#8 == FALSE
+
+*** 9 file <built-in-additions> line 35
+(E) __CPROVER_memory_leak#9 == NULL
+
+*** 10 file <built-in-additions> line 78
+(E) __CPROVER_pipe_count#10 == 0u
+
+*** 11 file <built-in-additions> line 22
+(E) __CPROVER_threads_exited#11 == ARRAY_OF(FALSE)
+
+*** 12 file <built-in-additions> line 23
+(E) __CPROVER_next_thread_id#12 == 0ul
+
+
+Computing SSA of c::foo
+Simplifying
+Unwinding
+*** 14 file main.c line 5 function foo
+(E) $guard#14 == TRUE
+
+*** 15 file main.c line 6 function foo
+(A) !(9l + A == ((signed int *)NULL)) || !$guard#14
+
+*** 16 file main.c line 6 function foo
+(A) !INVALID-POINTER(A) || !$guard#14
+
+*** 17 file main.c line 6 function foo
+(A) !(POINTER_OBJECT(A) == POINTER_OBJECT(__CPROVER_deallocated)) || !$guard#14
+
+*** 18 file main.c line 6 function foo
+(A) !(POINTER_OBJECT(A) == POINTER_OBJECT(__CPROVER_dead_object)) || !$guard#14
+
+*** 19 file main.c line 6 function foo
+(A) !(36 + POINTER_OFFSET(A) < 0) && __CPROVER_malloc_size >= 40ul + (unsigned long int)POINTER_OFFSET(A) || !(POINTER_OBJECT(A) == POINTER_OBJECT(__CPROVER_malloc_object)) || !$guard#14
+
+*** 20 file main.c line 6 function foo
+(A) !(36 + POINTER_OFFSET(A) < 0) && OBJECT_SIZE(A) >= 40 + POINTER_OFFSET(A) || DYNAMIC_OBJECT(A) || !$guard#14
+
+*** 21 file main.c line 6 function foo
+(E) i#21 == (9l + A == &i ? 0 : i#14)
+
+*** 22 file main.c line 7 function foo
+(E) i#22 == 0
+
+*** 23 file main.c line 7 function foo
+(E) i#phi23 == ($guard#ls31 ? i#lb31 : i#22)
+(E) $guard#23 == $guard#14
+(A) !(A + (signed long int)i#phi23 == ((signed int *)NULL)) || !$guard#23
+
+*** 24 file main.c line 7 function foo
+(A) !INVALID-POINTER(A) || !$guard#23
+
+*** 25 file main.c line 7 function foo
+(A) !(POINTER_OBJECT(A) == POINTER_OBJECT(__CPROVER_deallocated)) || !$guard#23
+
+*** 26 file main.c line 7 function foo
+(A) !(POINTER_OBJECT(A) == POINTER_OBJECT(__CPROVER_dead_object)) || !$guard#23
+
+*** 27 file main.c line 7 function foo
+(A) !(4 * (signed long int)i#phi23 + POINTER_OFFSET(A) < 0) && __CPROVER_malloc_size >= 4ul * (unsigned long int)(signed long int)i#phi23 + 4ul + (unsigned long int)POINTER_OFFSET(A) || !(POINTER_OBJECT(A) == POINTER_OBJECT(__CPROVER_malloc_object)) || !$guard#23
+
+*** 28 file main.c line 7 function foo
+(A) !(4 * (signed long int)i#phi23 + POINTER_OFFSET(A) < 0) && OBJECT_SIZE(A) >= 4 * (signed long int)i#phi23 + 4 + POINTER_OFFSET(A) || DYNAMIC_OBJECT(A) || !$guard#23
+
+*** 29 file main.c line 7 function foo
+(E) $cond#29 == ((A + (signed long int)i#phi23 == &i ? i#phi23 : deref29.1) == 0)
+
+*** 30 file main.c line 7 function foo
+(E) i#30 == 1 + i#phi23
+(E) $guard#30 == (!$cond#29 && $guard#23)
+
+*** 31 file main.c line 7 function foo
+(E) $cond#31 == TRUE
+
+*** 32 file main.c line 9 function foo
+(E) $guard#32 == ($cond#29 && $guard#23)
+(A) i#phi23 <= 10 || !$guard#32
+
+*** 34 file main.c line 10 function foo
+(E) foo#return_value#34 == nondet_symbol(ssa::nondet34.1)
+
+*** 35 file main.c line 10 function foo
+(E) $cond#35 == TRUE
+
+*** 36 file main.c line 10 function foo
+(E) $guard#36 == ($cond#35 && $guard#32)
+
+
+Computing SSA of c::main
+Simplifying
+Unwinding
+*** 37 file main.c line 13 function main
+(E) $guard#37 == TRUE
+
+*** 38 file main.c line 15 function main
+
+*** 39 file main.c line 16 function main
+(E) __CPROVER_dead_object#39 == (nondet_symbol(ssa::nondet39.1) ? &A : __CPROVER_dead_object#38)
+(E) $guard#39 == ($cond#38 && $guard#37)
+
+*** 41 file main.c line 16 function main
+(E) main#return_value#41 == nondet_symbol(ssa::nondet41.1)
+
+*** 42 file main.c line 16 function main
+(E) $cond#42 == TRUE
+
+*** 43 file main.c line 16 function main
+(E) $guard#43 == ($cond#42 && $guard#39)
+
+
+
+Summarizing function main
+Function body for main to be analyzed: 
+(E) $guard#2 == ($cond#1 && $guard#1)
+(E) $guard#1 == ($cond#0 && $guard#0)
+(E) $guard#0 == TRUE
+
+
+pre-inv: TRUE
+post-inv: 
+solver(): UNSAT
+
+Summary for function main
+params: 
+returns: 
+globals_in: 
+globals_out: 
+precondition: TRUE
+transformer: TRUE
+
+Adding loop invariant: TRUE
+
+Summarizing function c::__CPROVER_initialize
+Function body for c::__CPROVER_initialize to be analyzed: 
+(E) __CPROVER_malloc_is_new_array#8 == FALSE
+(E) __CPROVER_threads_exited#11 == ARRAY_OF(FALSE)
+(E) __CPROVER_next_thread_id#12 == 0ul
+(E) __CPROVER_pipe_count#10 == 0u
+(E) __CPROVER_malloc_object#6 == NULL
+(E) __CPROVER_dead_object#5 == NULL
+(E) __CPROVER_malloc_size#7 == 0ul
+(E) __CPROVER_rounding_mode#3 == 0
+(E) $guard#3 == TRUE
+(E) __CPROVER_deallocated#4 == NULL
+(E) __CPROVER_memory_leak#9 == NULL
+
+(OUT)  $guard#3 ===> 
+      ( __CPROVER_rounding_mode#3 <= CONST )
+(OUT)  $guard#3 ===> 
+      ( -((signed int)__CPROVER_rounding_mode#3) <= CONST )
+(OUT)  $guard#3 ===> 
+      ( __CPROVER_pipe_count#10 <= CONST )
+(OUT)  $guard#3 ===> 
+      ( -((signed __CPROVER_bitvector[33])__CPROVER_pipe_count#10) <= CONST )
+(OUT)  $guard#3 ===> 
+      ( __CPROVER_malloc_size#7 <= CONST )
+(OUT)  $guard#3 ===> 
+      ( -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size#7) <= CONST )
+(OUT)  $guard#3 ===> 
+      ( __CPROVER_next_thread_id#12 <= CONST )
+(OUT)  $guard#3 ===> 
+      ( -((signed __CPROVER_bitvector[65])__CPROVER_next_thread_id#12) <= CONST )
+
+pre-inv: TRUE && TRUE && TRUE && TRUE && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#3 ==> FALSE) || !($guard#3 ==> FALSE) || !($guard#3 ==> FALSE) || !($guard#3 ==> FALSE) || !($guard#3 ==> FALSE) || !($guard#3 ==> FALSE) || !($guard#3 ==> FALSE) || !($guard#3 ==> FALSE)
+solver(): SAT
+updating row: 0
+raw value; 0, simplified value: 0
+updating row: 1
+raw value; -((signed int)0), simplified value: 0
+updating row: 2
+raw value; 0u, simplified value: 0u
+updating row: 3
+raw value; -((signed __CPROVER_bitvector[33])0u), simplified value: 0
+updating row: 4
+raw value; 0ul, simplified value: 0ul
+updating row: 5
+raw value; -((signed __CPROVER_bitvector[65])0ul), simplified value: 0
+updating row: 6
+raw value; 0ul, simplified value: 0ul
+updating row: 7
+raw value; -((signed __CPROVER_bitvector[65])0ul), simplified value: 0
+pre-inv: TRUE && TRUE && TRUE && TRUE && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#3 ==> __CPROVER_rounding_mode#3 <= 0) || !($guard#3 ==> -((signed int)__CPROVER_rounding_mode#3) <= 0) || !($guard#3 ==> __CPROVER_pipe_count#10 <= 0u) || !($guard#3 ==> -((signed __CPROVER_bitvector[33])__CPROVER_pipe_count#10) <= 0) || !($guard#3 ==> __CPROVER_malloc_size#7 <= 0ul) || !($guard#3 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size#7) <= 0) || !($guard#3 ==> __CPROVER_next_thread_id#12 <= 0ul) || !($guard#3 ==> -((signed __CPROVER_bitvector[65])__CPROVER_next_thread_id#12) <= 0)
+solver(): UNSAT
+
+Summary for function c::__CPROVER_initialize
+params: 
+returns: 
+globals_in: __CPROVER_threads_exited __CPROVER_malloc_is_new_array __CPROVER_dead_object __CPROVER_deallocated __CPROVER_malloc_object __CPROVER_memory_leak __CPROVER_rounding_mode __CPROVER_pipe_count __CPROVER_malloc_size __CPROVER_next_thread_id 
+globals_out: __CPROVER_threads_exited#11 __CPROVER_malloc_is_new_array#8 __CPROVER_dead_object#5 __CPROVER_deallocated#4 __CPROVER_malloc_object#6 __CPROVER_memory_leak#9 __CPROVER_rounding_mode#3 __CPROVER_pipe_count#10 __CPROVER_malloc_size#7 __CPROVER_next_thread_id#12 
+precondition: TRUE
+transformer: __CPROVER_rounding_mode#3 <= 0 && -((signed int)__CPROVER_rounding_mode#3) <= 0 && __CPROVER_pipe_count#10 <= 0u && -((signed __CPROVER_bitvector[33])__CPROVER_pipe_count#10) <= 0 && __CPROVER_malloc_size#7 <= 0ul && -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size#7) <= 0 && __CPROVER_next_thread_id#12 <= 0ul && -((signed __CPROVER_bitvector[65])__CPROVER_next_thread_id#12) <= 0
+
+Adding loop invariant: TRUE
+
+Summarizing function c::foo
+Function body for c::foo to be analyzed: 
+(E) i#21 == (9l + A == &i ? 0 : i#14)
+(E) i#30 == 1 + i#phi23
+(E) $guard#30 == (!$cond#29 && $guard#23)
+(A) !(36 + POINTER_OFFSET(A) < 0) && __CPROVER_malloc_size >= 40ul + (unsigned long int)POINTER_OFFSET(A) || !(POINTER_OBJECT(A) == POINTER_OBJECT(__CPROVER_malloc_object)) || !$guard#14
+(E) $guard#14 == TRUE
+(E) $guard#36 == ($cond#35 && $guard#32)
+(A) !(POINTER_OBJECT(A) == POINTER_OBJECT(__CPROVER_dead_object)) || !$guard#14
+(E) $cond#35 == TRUE
+(E) $cond#31 == TRUE
+(E) $cond#29 == ((A + (signed long int)i#phi23 == &i ? i#phi23 : deref29.1) == 0)
+(A) !(4 * (signed long int)i#phi23 + POINTER_OFFSET(A) < 0) && OBJECT_SIZE(A) >= 4 * (signed long int)i#phi23 + 4 + POINTER_OFFSET(A) || DYNAMIC_OBJECT(A) || !$guard#23
+(A) !(4 * (signed long int)i#phi23 + POINTER_OFFSET(A) < 0) && __CPROVER_malloc_size >= 4ul * (unsigned long int)(signed long int)i#phi23 + 4ul + (unsigned long int)POINTER_OFFSET(A) || !(POINTER_OBJECT(A) == POINTER_OBJECT(__CPROVER_malloc_object)) || !$guard#23
+(E) i#phi23 == ($guard#ls31 ? i#lb31 : i#22)
+(E) $guard#23 == $guard#14
+(A) !(A + (signed long int)i#phi23 == ((signed int *)NULL)) || !$guard#23
+(A) !(POINTER_OBJECT(A) == POINTER_OBJECT(__CPROVER_dead_object)) || !$guard#23
+(A) !(POINTER_OBJECT(A) == POINTER_OBJECT(__CPROVER_deallocated)) || !$guard#23
+(E) i#22 == 0
+(A) !INVALID-POINTER(A) || !$guard#23
+(E) foo#return_value#34 == nondet_symbol(ssa::nondet34.1)
+(A) !(36 + POINTER_OFFSET(A) < 0) && OBJECT_SIZE(A) >= 40 + POINTER_OFFSET(A) || DYNAMIC_OBJECT(A) || !$guard#14
+(A) !(9l + A == ((signed int *)NULL)) || !$guard#14
+(A) !(POINTER_OBJECT(A) == POINTER_OBJECT(__CPROVER_deallocated)) || !$guard#14
+(A) !INVALID-POINTER(A) || !$guard#14
+(E) $guard#32 == ($cond#29 && $guard#23)
+(A) i#phi23 <= 10 || !$guard#32
+
+(LOOP) [ $guard#23 && $guard#ls31 | $guard#30 ] ===> 
+      ( i#lb31 <= CONST )
+(LOOP) [ $guard#23 && $guard#ls31 | $guard#30 ] ===> 
+      ( -((signed int)i#lb31) <= CONST )
+(OUT)  $guard#36 ===> 
+      ( foo#return_value#34 <= CONST )
+(OUT)  $guard#36 ===> 
+      ( -((signed int)foo#return_value#34) <= CONST )
+(OUT)  $guard#36 ===> 
+      ( __CPROVER_malloc_size <= CONST )
+(OUT)  $guard#36 ===> 
+      ( -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= CONST )
+
+pre-inv: ($guard#23 && $guard#ls31 ==> FALSE) && ($guard#23 && $guard#ls31 ==> FALSE) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> FALSE) || !($guard#30 ==> FALSE) || !($guard#36 ==> FALSE) || !($guard#36 ==> FALSE) || !($guard#36 ==> FALSE) || !($guard#36 ==> FALSE)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 1) && ($guard#23 && $guard#ls31 ==> FALSE) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 1) || !($guard#30 ==> FALSE) || !($guard#36 ==> FALSE) || !($guard#36 ==> FALSE) || !($guard#36 ==> FALSE) || !($guard#36 ==> FALSE)
+solver(): SAT
+improving row: 1
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 1) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 1) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> FALSE) || !($guard#36 ==> FALSE) || !($guard#36 ==> FALSE) || !($guard#36 ==> FALSE)
+solver(): SAT
+improving row: 2
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 1) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 1) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> FALSE) || !($guard#36 ==> FALSE) || !($guard#36 ==> FALSE)
+solver(): SAT
+improving row: 3
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 1) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 1) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> FALSE) || !($guard#36 ==> FALSE)
+solver(): SAT
+improving row: 4
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 1) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 1) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> FALSE)
+solver(): SAT
+improving row: 5
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 1) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 1) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 2) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 2) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 3) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 3) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 4) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 4) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 5) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 5) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 6) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 6) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 7) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 7) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 8) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 8) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 9) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 9) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 10) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 10) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 11) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 11) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 12) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 12) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 13) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 13) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 14) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 14) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 15) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 15) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 16) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 16) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 17) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 17) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 18) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 18) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 19) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 19) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 20) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 20) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 21) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 21) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 22) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 22) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 23) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 23) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 24) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 24) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 25) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 25) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 26) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 26) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 27) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 27) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 28) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 28) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 29) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 29) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 30) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 30) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 31) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 31) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 32) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 32) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 33) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 33) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 34) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 34) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 35) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 35) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 36) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 36) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 37) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 37) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 38) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 38) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 39) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 39) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 40) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 40) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 41) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 41) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 42) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 42) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 43) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 43) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 44) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 44) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 45) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 45) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 46) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 46) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 47) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 47) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 48) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 48) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 49) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 49) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 50) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 50) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 51) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 51) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 52) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 52) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 53) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 53) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 54) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 54) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 55) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 55) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 56) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 56) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 57) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 57) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 58) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 58) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 59) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 59) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 60) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 60) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 61) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 61) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 62) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 62) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 63) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 63) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 64) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 64) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 65) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 65) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 66) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 66) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 67) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 67) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 68) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 68) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 69) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 69) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 70) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 70) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 71) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 71) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 72) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 72) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 73) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 73) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 74) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 74) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 75) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 75) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 76) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 76) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 77) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 77) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 78) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 78) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 79) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 79) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 80) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 80) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 81) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 81) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 82) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 82) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 83) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 83) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 84) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 84) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 85) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 85) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 86) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 86) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 87) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 87) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 88) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 88) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 89) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 89) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 90) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 90) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 91) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 91) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 92) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 92) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 93) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 93) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 94) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 94) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 95) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 95) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 96) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 96) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 97) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 97) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 98) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 98) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 99) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 99) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 100) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 100) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 101) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 101) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 102) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 102) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 103) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 103) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 104) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 104) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 105) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 105) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 106) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#30 ==> i#30 <= 106) || !($guard#30 ==> -((signed int)i#30) <= -1) || !($guard#36 ==> foo#return_value#34 <= 2147483647) || !($guard#36 ==> -((signed int)foo#return_value#34) <= 2147483648) || !($guard#36 ==> __CPROVER_malloc_size <= 18446744073709551615ul) || !($guard#36 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size) <= 0)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#23 && $guard#ls31 ==> i#lb31 <= 107) && ($guard#23 && $guard#ls31 ==> -((signed int)i#lb31) <= -1) && TRUE && TRUE && TRUE && TRUE
+EXIT=0
+SIGNAL=2

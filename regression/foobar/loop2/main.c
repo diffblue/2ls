@@ -4,6 +4,11 @@ void main()
   int x = 0;  
   int y = 0;
 
+
+int x = 0;  
+int y = 0;
+
+
   while(x<10)
     ++x;
 

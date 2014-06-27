@@ -1,0 +1,351 @@
+file main.c: Parsing
+Converting
+Type-checking main
+Generating GOTO Program
+Adding CPROVER library
+Partial Inlining
+Generic Property Instrumentation
+Function Pointer Removal
+Using intervals domain with binary search solver
+Computing SSA of main
+Simplifying
+Unwinding
+*** 0 
+(E) $guard#0 == TRUE
+
+*** 1 
+(E) $guard#1 == ($cond#0 && $guard#0)
+
+*** 2 
+(E) $guard#2 == ($cond#1 && $guard#1)
+
+
+Computing SSA of c::__CPROVER_initialize
+Simplifying
+Unwinding
+*** 3 file <built-in-additions> line 57
+(E) __CPROVER_rounding_mode#3 == 0
+(E) $guard#3 == TRUE
+
+*** 4 file <built-in-additions> line 30
+(E) __CPROVER_deallocated#4 == NULL
+
+*** 5 file <built-in-additions> line 31
+(E) __CPROVER_dead_object#5 == NULL
+
+*** 6 file <built-in-additions> line 32
+(E) __CPROVER_malloc_object#6 == NULL
+
+*** 7 file <built-in-additions> line 33
+(E) __CPROVER_malloc_size#7 == 0ul
+
+*** 8 file <built-in-additions> line 34
+(E) __CPROVER_malloc_is_new_array#8 == FALSE
+
+*** 9 file <built-in-additions> line 35
+(E) __CPROVER_memory_leak#9 == NULL
+
+*** 10 file <built-in-additions> line 78
+(E) __CPROVER_pipe_count#10 == 0u
+
+*** 11 file <built-in-additions> line 22
+(E) __CPROVER_threads_exited#11 == ARRAY_OF(FALSE)
+
+*** 12 file <built-in-additions> line 23
+(E) __CPROVER_next_thread_id#12 == 0ul
+
+
+Computing SSA of c::main
+Simplifying
+Unwinding
+*** 14 file main.c line 4 function main
+(E) $guard#14 == TRUE
+
+*** 16 file main.c line 7 function main
+(E) i#16 == 0
+
+*** 17 file main.c line 7 function main
+(E) i#phi17 == ($guard#ls22 ? i#lb22 : i#16)
+(E) $guard#17 == $guard#14
+(A) 4 * (signed long int)i#phi17 >= 0 || !$guard#17
+
+*** 18 file main.c line 7 function main
+(A) (signed long int)i#phi17 < 10l || !$guard#17
+
+*** 19 file main.c line 7 function main
+(E) $cond#19 == (A#14[(signed long int)i#phi17] == 0)
+
+*** 20 file main.c line 9 function main
+(E) $cond#20 == i#phi17 >= 10
+(E) $guard#20 == (!$cond#19 && $guard#17)
+
+*** 21 file main.c line 7 function main
+(E) i#21 == 1 + i#phi17
+(E) $guard#21 == (!$cond#20 && $guard#20)
+
+*** 22 file main.c line 7 function main
+(E) $cond#22 == TRUE
+
+*** 23 file main.c line 13 function main
+(E) $guard#23 == ($cond#19 && $guard#17 || $cond#20 && $guard#20)
+(A) i#phi17 <= 10 || !$guard#23
+
+*** 26 file main.c line 14 function main
+(E) main#return_value#26 == nondet_symbol(ssa::nondet26.1)
+
+*** 27 file main.c line 14 function main
+(E) $cond#27 == TRUE
+
+*** 28 file main.c line 14 function main
+(E) $guard#28 == ($cond#27 && $guard#23)
+
+
+
+Summarizing function main
+Function body for main to be analyzed: 
+(E) $guard#1 == ($cond#0 && $guard#0)
+(E) $guard#0 == TRUE
+(E) $guard#2 == ($cond#1 && $guard#1)
+
+
+pre-inv: TRUE
+post-inv: 
+solver(): UNSAT
+
+Summary for function main
+params: 
+returns: 
+globals_in: 
+globals_out: 
+precondition: TRUE
+transformer: TRUE
+
+Adding loop invariant: TRUE
+
+Summarizing function c::__CPROVER_initialize
+Function body for c::__CPROVER_initialize to be analyzed: 
+(E) __CPROVER_malloc_size#7 == 0ul
+(E) __CPROVER_malloc_object#6 == NULL
+(E) __CPROVER_dead_object#5 == NULL
+(E) __CPROVER_deallocated#4 == NULL
+(E) __CPROVER_malloc_is_new_array#8 == FALSE
+(E) __CPROVER_rounding_mode#3 == 0
+(E) $guard#3 == TRUE
+(E) __CPROVER_threads_exited#11 == ARRAY_OF(FALSE)
+(E) __CPROVER_next_thread_id#12 == 0ul
+(E) __CPROVER_memory_leak#9 == NULL
+(E) __CPROVER_pipe_count#10 == 0u
+
+(OUT)  $guard#3 ===> 
+      ( __CPROVER_rounding_mode#3 <= CONST )
+(OUT)  $guard#3 ===> 
+      ( -((signed int)__CPROVER_rounding_mode#3) <= CONST )
+(OUT)  $guard#3 ===> 
+      ( __CPROVER_pipe_count#10 <= CONST )
+(OUT)  $guard#3 ===> 
+      ( -((signed __CPROVER_bitvector[33])__CPROVER_pipe_count#10) <= CONST )
+(OUT)  $guard#3 ===> 
+      ( __CPROVER_malloc_size#7 <= CONST )
+(OUT)  $guard#3 ===> 
+      ( -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size#7) <= CONST )
+(OUT)  $guard#3 ===> 
+      ( __CPROVER_next_thread_id#12 <= CONST )
+(OUT)  $guard#3 ===> 
+      ( -((signed __CPROVER_bitvector[65])__CPROVER_next_thread_id#12) <= CONST )
+
+pre-inv: TRUE && TRUE && TRUE && TRUE && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#3 ==> FALSE) || !($guard#3 ==> FALSE) || !($guard#3 ==> FALSE) || !($guard#3 ==> FALSE) || !($guard#3 ==> FALSE) || !($guard#3 ==> FALSE) || !($guard#3 ==> FALSE) || !($guard#3 ==> FALSE)
+solver(): SAT
+updating row: 0
+raw value; 0, simplified value: 0
+updating row: 1
+raw value; -((signed int)0), simplified value: 0
+updating row: 2
+raw value; 0u, simplified value: 0u
+updating row: 3
+raw value; -((signed __CPROVER_bitvector[33])0u), simplified value: 0
+updating row: 4
+raw value; 0ul, simplified value: 0ul
+updating row: 5
+raw value; -((signed __CPROVER_bitvector[65])0ul), simplified value: 0
+updating row: 6
+raw value; 0ul, simplified value: 0ul
+updating row: 7
+raw value; -((signed __CPROVER_bitvector[65])0ul), simplified value: 0
+pre-inv: TRUE && TRUE && TRUE && TRUE && TRUE && TRUE && TRUE && TRUE
+post-inv: !($guard#3 ==> __CPROVER_rounding_mode#3 <= 0) || !($guard#3 ==> -((signed int)__CPROVER_rounding_mode#3) <= 0) || !($guard#3 ==> __CPROVER_pipe_count#10 <= 0u) || !($guard#3 ==> -((signed __CPROVER_bitvector[33])__CPROVER_pipe_count#10) <= 0) || !($guard#3 ==> __CPROVER_malloc_size#7 <= 0ul) || !($guard#3 ==> -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size#7) <= 0) || !($guard#3 ==> __CPROVER_next_thread_id#12 <= 0ul) || !($guard#3 ==> -((signed __CPROVER_bitvector[65])__CPROVER_next_thread_id#12) <= 0)
+solver(): UNSAT
+
+Summary for function c::__CPROVER_initialize
+params: 
+returns: 
+globals_in: __CPROVER_threads_exited __CPROVER_malloc_is_new_array __CPROVER_dead_object __CPROVER_deallocated __CPROVER_malloc_object __CPROVER_memory_leak __CPROVER_rounding_mode __CPROVER_pipe_count __CPROVER_malloc_size __CPROVER_next_thread_id 
+globals_out: __CPROVER_threads_exited#11 __CPROVER_malloc_is_new_array#8 __CPROVER_dead_object#5 __CPROVER_deallocated#4 __CPROVER_malloc_object#6 __CPROVER_memory_leak#9 __CPROVER_rounding_mode#3 __CPROVER_pipe_count#10 __CPROVER_malloc_size#7 __CPROVER_next_thread_id#12 
+precondition: TRUE
+transformer: __CPROVER_rounding_mode#3 <= 0 && -((signed int)__CPROVER_rounding_mode#3) <= 0 && __CPROVER_pipe_count#10 <= 0u && -((signed __CPROVER_bitvector[33])__CPROVER_pipe_count#10) <= 0 && __CPROVER_malloc_size#7 <= 0ul && -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size#7) <= 0 && __CPROVER_next_thread_id#12 <= 0ul && -((signed __CPROVER_bitvector[65])__CPROVER_next_thread_id#12) <= 0
+
+Adding loop invariant: TRUE
+
+Summarizing function c::main
+Function body for c::main to be analyzed: 
+(E) $guard#23 == ($cond#19 && $guard#17 || $cond#20 && $guard#20)
+(A) i#phi17 <= 10 || !$guard#23
+(A) (signed long int)i#phi17 < 10l || !$guard#17
+(E) $cond#20 == i#phi17 >= 10
+(E) $guard#20 == (!$cond#19 && $guard#17)
+(E) i#21 == 1 + i#phi17
+(E) $guard#21 == (!$cond#20 && $guard#20)
+(E) $cond#22 == TRUE
+(E) i#16 == 0
+(E) $cond#27 == TRUE
+(E) i#phi17 == ($guard#ls22 ? i#lb22 : i#16)
+(E) $guard#17 == $guard#14
+(A) 4 * (signed long int)i#phi17 >= 0 || !$guard#17
+(E) $cond#19 == (A#14[(signed long int)i#phi17] == 0)
+(E) $guard#28 == ($cond#27 && $guard#23)
+(E) main#return_value#26 == nondet_symbol(ssa::nondet26.1)
+(E) $guard#14 == TRUE
+
+(LOOP) [ $guard#17 && $guard#ls22 | $guard#21 ] ===> 
+      ( i#lb22 <= CONST )
+(LOOP) [ $guard#17 && $guard#ls22 | $guard#21 ] ===> 
+      ( -((signed int)i#lb22) <= CONST )
+(OUT)  $guard#28 ===> 
+      ( main#return_value#26 <= CONST )
+(OUT)  $guard#28 ===> 
+      ( -((signed int)main#return_value#26) <= CONST )
+
+pre-inv: ($guard#17 && $guard#ls22 ==> FALSE) && ($guard#17 && $guard#ls22 ==> FALSE) && TRUE && TRUE
+post-inv: !($guard#21 ==> FALSE) || !($guard#21 ==> FALSE) || !($guard#28 ==> FALSE) || !($guard#28 ==> FALSE)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#17 && $guard#ls22 ==> i#lb22 <= 1) && ($guard#17 && $guard#ls22 ==> FALSE) && TRUE && TRUE
+post-inv: !($guard#21 ==> i#21 <= 1) || !($guard#21 ==> FALSE) || !($guard#28 ==> FALSE) || !($guard#28 ==> FALSE)
+solver(): SAT
+improving row: 1
+pre-inv: ($guard#17 && $guard#ls22 ==> i#lb22 <= 1) && ($guard#17 && $guard#ls22 ==> -((signed int)i#lb22) <= -1) && TRUE && TRUE
+post-inv: !($guard#21 ==> i#21 <= 1) || !($guard#21 ==> -((signed int)i#21) <= -1) || !($guard#28 ==> FALSE) || !($guard#28 ==> FALSE)
+solver(): SAT
+improving row: 2
+pre-inv: ($guard#17 && $guard#ls22 ==> i#lb22 <= 1) && ($guard#17 && $guard#ls22 ==> -((signed int)i#lb22) <= -1) && TRUE && TRUE
+post-inv: !($guard#21 ==> i#21 <= 1) || !($guard#21 ==> -((signed int)i#21) <= -1) || !($guard#28 ==> main#return_value#26 <= 2147483647) || !($guard#28 ==> FALSE)
+solver(): SAT
+improving row: 3
+pre-inv: ($guard#17 && $guard#ls22 ==> i#lb22 <= 1) && ($guard#17 && $guard#ls22 ==> -((signed int)i#lb22) <= -1) && TRUE && TRUE
+post-inv: !($guard#21 ==> i#21 <= 1) || !($guard#21 ==> -((signed int)i#21) <= -1) || !($guard#28 ==> main#return_value#26 <= 2147483647) || !($guard#28 ==> -((signed int)main#return_value#26) <= 2147483648)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#17 && $guard#ls22 ==> i#lb22 <= 2) && ($guard#17 && $guard#ls22 ==> -((signed int)i#lb22) <= -1) && TRUE && TRUE
+post-inv: !($guard#21 ==> i#21 <= 2) || !($guard#21 ==> -((signed int)i#21) <= -1) || !($guard#28 ==> main#return_value#26 <= 2147483647) || !($guard#28 ==> -((signed int)main#return_value#26) <= 2147483648)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#17 && $guard#ls22 ==> i#lb22 <= 3) && ($guard#17 && $guard#ls22 ==> -((signed int)i#lb22) <= -1) && TRUE && TRUE
+post-inv: !($guard#21 ==> i#21 <= 3) || !($guard#21 ==> -((signed int)i#21) <= -1) || !($guard#28 ==> main#return_value#26 <= 2147483647) || !($guard#28 ==> -((signed int)main#return_value#26) <= 2147483648)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#17 && $guard#ls22 ==> i#lb22 <= 4) && ($guard#17 && $guard#ls22 ==> -((signed int)i#lb22) <= -1) && TRUE && TRUE
+post-inv: !($guard#21 ==> i#21 <= 4) || !($guard#21 ==> -((signed int)i#21) <= -1) || !($guard#28 ==> main#return_value#26 <= 2147483647) || !($guard#28 ==> -((signed int)main#return_value#26) <= 2147483648)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#17 && $guard#ls22 ==> i#lb22 <= 5) && ($guard#17 && $guard#ls22 ==> -((signed int)i#lb22) <= -1) && TRUE && TRUE
+post-inv: !($guard#21 ==> i#21 <= 5) || !($guard#21 ==> -((signed int)i#21) <= -1) || !($guard#28 ==> main#return_value#26 <= 2147483647) || !($guard#28 ==> -((signed int)main#return_value#26) <= 2147483648)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#17 && $guard#ls22 ==> i#lb22 <= 6) && ($guard#17 && $guard#ls22 ==> -((signed int)i#lb22) <= -1) && TRUE && TRUE
+post-inv: !($guard#21 ==> i#21 <= 6) || !($guard#21 ==> -((signed int)i#21) <= -1) || !($guard#28 ==> main#return_value#26 <= 2147483647) || !($guard#28 ==> -((signed int)main#return_value#26) <= 2147483648)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#17 && $guard#ls22 ==> i#lb22 <= 7) && ($guard#17 && $guard#ls22 ==> -((signed int)i#lb22) <= -1) && TRUE && TRUE
+post-inv: !($guard#21 ==> i#21 <= 7) || !($guard#21 ==> -((signed int)i#21) <= -1) || !($guard#28 ==> main#return_value#26 <= 2147483647) || !($guard#28 ==> -((signed int)main#return_value#26) <= 2147483648)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#17 && $guard#ls22 ==> i#lb22 <= 8) && ($guard#17 && $guard#ls22 ==> -((signed int)i#lb22) <= -1) && TRUE && TRUE
+post-inv: !($guard#21 ==> i#21 <= 8) || !($guard#21 ==> -((signed int)i#21) <= -1) || !($guard#28 ==> main#return_value#26 <= 2147483647) || !($guard#28 ==> -((signed int)main#return_value#26) <= 2147483648)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#17 && $guard#ls22 ==> i#lb22 <= 9) && ($guard#17 && $guard#ls22 ==> -((signed int)i#lb22) <= -1) && TRUE && TRUE
+post-inv: !($guard#21 ==> i#21 <= 9) || !($guard#21 ==> -((signed int)i#21) <= -1) || !($guard#28 ==> main#return_value#26 <= 2147483647) || !($guard#28 ==> -((signed int)main#return_value#26) <= 2147483648)
+solver(): SAT
+improving row: 0
+pre-inv: ($guard#17 && $guard#ls22 ==> i#lb22 <= 10) && ($guard#17 && $guard#ls22 ==> -((signed int)i#lb22) <= -1) && TRUE && TRUE
+post-inv: !($guard#21 ==> i#21 <= 10) || !($guard#21 ==> -((signed int)i#21) <= -1) || !($guard#28 ==> main#return_value#26 <= 2147483647) || !($guard#28 ==> -((signed int)main#return_value#26) <= 2147483648)
+solver(): UNSAT
+
+Summary for function c::main
+params: 
+returns: 
+globals_in: 
+globals_out: main#return_value#26 
+precondition: TRUE
+transformer: main#return_value#26 <= 2147483647 && -((signed int)main#return_value#26) <= 2147483648
+
+Adding loop invariant: i#lb22 <= 10 && -((signed int)i#lb22) <= -1
+Checking properties of main
+Checking properties of c::__CPROVER_initialize
+Checking properties of c::main
+*** 14 file main.c line 4 function main
+(E) $guard#14 == TRUE
+
+*** 16 file main.c line 7 function main
+(E) i#16 == 0
+
+*** 17 file main.c line 7 function main
+(E) i#phi17 == ($guard#ls22 ? i#lb22 : i#16)
+(E) $guard#17 == $guard#14
+(A) 4 * (signed long int)i#phi17 >= 0 || !$guard#17
+
+*** 18 file main.c line 7 function main
+(A) (signed long int)i#phi17 < 10l || !$guard#17
+
+*** 19 file main.c line 7 function main
+(E) $cond#19 == (A#14[(signed long int)i#phi17] == 0)
+
+*** 20 file main.c line 9 function main
+(E) $cond#20 == i#phi17 >= 10
+(E) $guard#20 == (!$cond#19 && $guard#17)
+
+*** 21 file main.c line 7 function main
+(E) i#21 == 1 + i#phi17
+(E) $guard#21 == (!$cond#20 && $guard#20)
+
+*** 22 file main.c line 7 function main
+(E) $cond#22 == TRUE
+
+*** 23 file main.c line 13 function main
+(E) $guard#23 == ($cond#19 && $guard#17 || $cond#20 && $guard#20)
+(A) i#phi17 <= 10 || !$guard#23
+
+*** 26 file main.c line 14 function main
+(E) main#return_value#26 == nondet_symbol(ssa::nondet26.1)
+
+*** 27 file main.c line 14 function main
+(E) $cond#27 == TRUE
+
+*** 28 file main.c line 14 function main
+(E) $guard#28 == ($cond#27 && $guard#23)
+(C) i#lb22 <= 10 && -((signed int)i#lb22) <= -1
+
+
+negated property !(4 * (signed long int)i#phi17 >= 0)
+Post-processing
+Solving with MiniSAT 2.2.0 with simplifier
+1502 variables, 4595 clauses
+SAT checker: negated claim is UNSATISFIABLE, i.e., holds
+negated property !((signed long int)i#phi17 < 10l)
+Post-processing
+Solving with MiniSAT 2.2.0 with simplifier
+1129 variables, 3203 clauses
+SAT checker: negated claim is SATISFIABLE, i.e., does not hold
+negated property !(i#phi17 <= 10)
+Post-processing
+Solving with MiniSAT 2.2.0 with simplifier
+1091 variables, 3128 clauses
+SAT checker: negated claim is UNSATISFIABLE, i.e., holds
+[main.1.0] array `A' lower bound: OK
+[main.2.0] array `A' upper bound: FAILURE
+[main.3.0] assertion i <= 10: OK
+
+** 1 of 3 failed
+VERIFICATION FAILED
+EXIT=10
+SIGNAL=0
