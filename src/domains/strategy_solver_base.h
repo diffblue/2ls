@@ -35,13 +35,14 @@ class strategy_solver_baset : public messaget
     {
 
 #ifndef DEBUG_FORMULA
-      debug() << "program: " << from_expr(ns,"",*it) << eom;
+      //      std::cout << "program: " << from_expr(ns,"",*it) << std::endl;
       solver << *it;
 #else
       literalt l = solver.convert(*it);
       if(!l.is_constant()) 
       {
-        debug() << "literal " << l << ": " << from_expr(ns,"",*it) << eom;
+	std::cout << "literal " << l << ": " << from_expr(ns,"",*it) 
+          << std::endl;
         formula.push_back(l);
       }
 #endif

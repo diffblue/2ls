@@ -78,14 +78,14 @@ bool strategy_solver_enumerationt::iterate(invariantt &_inv)
   { 
     debug() << "SAT" << eom;
       
-    #ifdef DEBUG_FORMULA
+    #if 0
     for(unsigned i=0; i<whole_formula.size(); i++) 
     {
       debug() << "literal: " << whole_formula[i] << " " << 
         solver.l_get(whole_formula[i]) << eom;
     }
           
-    for(unsigned i=0; i<template_domain.templ.size(); i++) 
+    for(unsigned i=0; i<template_domain.template_size(); i++) 
     {
       exprt c = template_domain.get_row_constraint(i,inv[i]);
       debug() << "cond: " << from_expr(ns, "", c) << " " << 

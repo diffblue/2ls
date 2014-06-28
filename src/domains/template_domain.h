@@ -4,6 +4,7 @@
 #include "domain.h"
 
 #include <util/std_expr.h>
+#include <set>
 
 class template_domaint : public domaint
 {
@@ -48,11 +49,13 @@ public:
 
   // value -> symbolic bound constraints (for optimization)
   exprt to_symb_pre_constraints(const templ_valuet &value);
-  void make_symb_post_constraints(exprt::operandst &cond_exprs, 
-			          exprt::operandst &value_exprs);
+  exprt to_symb_pre_constraints(const templ_valuet &value,
+				const std::set<rowt> &symb_rows);
+  exprt to_symb_post_constraints();
   exprt get_row_symb_value_constraint(const rowt &row, 
 				      const row_valuet &row_value);
-  exprt get_row_symb_pre_constraint(const rowt &row);
+  exprt get_row_symb_pre_constraint(const rowt &row, 
+				      const row_valuet &row_value);
   exprt get_row_symb_post_constraint(const rowt &row);
 
 
@@ -98,10 +101,11 @@ public:
 			     const kindst &kinds,
 			     const namespacet &ns);
 
+  exprt get_row_symb_value(const rowt &row);
+
 protected:
   templatet &templ;
 
-  exprt get_row_symb_value(const rowt &row);
   
 };
 

@@ -145,23 +145,6 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
   {
     renaming_map[*it1]=*it2;    
   }
-#ifdef DEBUG
-  for(constraintst::const_iterator it = transition_relation.begin(); 
-    it != transition_relation.end(); it++)
-  {
-    std::set<symbol_exprt> symbols;
-    find_symbols(*it,symbols);
-
-    for(std::set<symbol_exprt>::const_iterator s_it = symbols.begin(); 
-      s_it != symbols.end(); s_it++)
-    {
-      if(renaming_map.find(*s_it)==renaming_map.end())
-      {
-        renaming_map[*s_it] = *s_it;  
-      }
-    }
-  }  
-#endif
 
   //get domain from command line options
   if(options.get_bool_option("intervals") || is_initialize)
@@ -194,6 +177,24 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
   
   constraintst transition_relation;
   transition_relation << SSA;
+
+#ifdef DEBUG
+  for(constraintst::const_iterator it = transition_relation.begin(); 
+    it != transition_relation.end(); it++)
+  {
+    std::set<symbol_exprt> symbols;
+    find_symbols(*it,symbols);
+
+    for(std::set<symbol_exprt>::const_iterator s_it = symbols.begin(); 
+      s_it != symbols.end(); s_it++)
+    {
+      if(renaming_map.find(*s_it)==renaming_map.end())
+      {
+        renaming_map[*s_it] = *s_it;  
+      }
+    }
+  }  
+#endif
   
   // solver
   //TODO: get backend solver from options

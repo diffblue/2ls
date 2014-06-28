@@ -122,7 +122,8 @@ Function: template_domaint::get_row_pre_constraint
 
 \*******************************************************************/
 
-exprt template_domaint::get_row_constraint(const rowt &row, const row_valuet &row_value)
+exprt template_domaint::get_row_constraint(const rowt &row, 
+  const row_valuet &row_value)
 {
   assert(row<templ.size());
   kindt k = templ.kinds[row];
@@ -132,7 +133,8 @@ exprt template_domaint::get_row_constraint(const rowt &row, const row_valuet &ro
   return binary_relation_exprt(templ.rows[row],ID_le,row_value);
 }
 
-exprt template_domaint::get_row_pre_constraint(const rowt &row, const row_valuet &row_value)
+exprt template_domaint::get_row_pre_constraint(const rowt &row, 
+  const row_valuet &row_value)
 {
   assert(row<templ.size());
   kindt k = templ.kinds[row];
@@ -146,7 +148,8 @@ exprt template_domaint::get_row_pre_constraint(const rowt &row, const row_valuet
 }
 
 
-exprt template_domaint::get_row_pre_constraint(const rowt &row, const templ_valuet &value)
+exprt template_domaint::get_row_pre_constraint(const rowt &row, 
+  const templ_valuet &value)
 {
   assert(value.size()==templ.size());
   return get_row_pre_constraint(row,value[row]);
@@ -266,13 +269,16 @@ Function: template_domaint::get_row_symb_pre_constraint
 
 \*******************************************************************/
 
-exprt template_domaint::get_row_symb_pre_constraint(const rowt &row)
+exprt template_domaint::get_row_symb_pre_constraint(const rowt &row, 
+  const row_valuet &row_value)
 {
   assert(row<templ.size());
   kindt k = templ.kinds[row];
   if(k==OUT || k==OUTL) return true_exprt();
   return implies_exprt(templ.pre_guards[row], 
+		       //and_exprt(
     binary_relation_exprt(templ.rows[row],ID_le,get_row_symb_value(row)));
+		       //      get_row_symb_value_constraint(row,row_value)));
 }
 
 /*******************************************************************\
@@ -283,7 +289,7 @@ Function: template_domaint::get_row_symb_post_constraint
 
  Outputs:
 
- Purpose: post_guard ==> (row_expr >= row_symb_value)  
+ Purpose: post_guard && (row_expr >= row_symb_value)  (!!!)
 
 \*******************************************************************/
 
@@ -291,7 +297,7 @@ exprt template_domaint::get_row_symb_post_constraint(const rowt &row)
 {
   assert(row<templ.size());
   if(templ.kinds[row]==IN) return true_exprt();
-  return implies_exprt(templ.post_guards[row], 
+  return and_exprt(templ.post_guards[row],
     binary_relation_exprt(templ.rows[row],ID_ge,get_row_symb_value(row)));
 }
 
@@ -314,15 +320,41 @@ exprt template_domaint::to_symb_pre_constraints(const templ_valuet &value)
   exprt::operandst c; 
   for(unsigned row = 0; row<templ.size(); row++)
   {
-    c.push_back(get_row_symb_pre_constraint(row));
-    c.push_back(get_row_symb_value_constraint(row,value[row]));
+    c.push_back(get_row_symb_pre_constraint(row,value[row]));
   }
   return conjunction(c); 
 }
 
 /*******************************************************************\
 
-Function: template_domaint::make_symb_post_constraints
+Function: template_domaint::to_symb_pre_constraints
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: pre_guard ==> (row_expr <= symb_row_value)
+
+\*******************************************************************/
+
+exprt template_domaint::to_symb_pre_constraints(const templ_valuet &value,
+						const std::set<rowt> &symb_rows)
+{
+  assert(value.size()==templ.size());
+  exprt::operandst c; 
+  for(unsigned row = 0; row<templ.size(); row++)
+  {
+    if(symb_rows.find(row)!=symb_rows.end())
+      c.push_back(get_row_symb_pre_constraint(row,value[row]));
+    else
+      c.push_back(get_row_pre_constraint(row,value[row]));
+  }
+  return conjunction(c); 
+}
+
+/*******************************************************************\
+
+Function: template_domaint::to_symb_post_constraints
 
   Inputs:
 
@@ -332,18 +364,14 @@ Function: template_domaint::make_symb_post_constraints
 
 \*******************************************************************/
 
-void template_domaint::make_symb_post_constraints(exprt::operandst &cond_exprs, 
-			          exprt::operandst &value_exprs)
+exprt template_domaint::to_symb_post_constraints()
 {
-  cond_exprs.resize(templ.size());
-  value_exprs.resize(templ.size());
-
   exprt::operandst c; 
   for(unsigned row = 0; row<templ.size(); row++)
   {
-    value_exprs[row] = get_row_symb_value(row);
-    cond_exprs[row] = get_row_symb_post_constraint(row);
+    c.push_back(get_row_symb_post_constraint(row));
   }
+  return conjunction(c); 
 }
 
 /*******************************************************************\
