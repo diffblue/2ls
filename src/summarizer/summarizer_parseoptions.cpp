@@ -84,7 +84,7 @@ void summarizer_parseoptionst::eval_verbosity()
       v=10;
   }
   
-  set_verbosity(v);
+  ui_message_handler.set_verbosity(v);
 }
 
 /*******************************************************************\
@@ -254,7 +254,6 @@ int summarizer_parseoptionst::doit()
     summary_checkert summary_checker;
     
     summary_checker.set_message_handler(get_message_handler());
-    summary_checker.set_verbosity(get_verbosity());
     summary_checker.simplify=!cmdline.isset("no-simplify");
     summary_checker.fixed_point=!cmdline.isset("no-fixed-point");
 

@@ -75,7 +75,7 @@ void deltacheck_parseoptionst::eval_verbosity()
       v=10;
   }
   
-  set_verbosity(v);
+  ui_message_handler.set_verbosity(v);
 }
 
 /*******************************************************************\
