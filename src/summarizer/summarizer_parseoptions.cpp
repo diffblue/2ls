@@ -422,10 +422,12 @@ bool summarizer_parseoptionst::get_goto_program(
         error() << "failed to figure out type of file `" <<  filename << "'" << eom;
         return true;
       }
+      
+      language->set_message_handler(get_message_handler());
                                                                 
       status("Parsing", filename);
   
-      if(language->parse(infile, filename, get_message_handler()))
+      if(language->parse(infile, filename))
       {
         error() << "PARSING ERROR" << eom;
         return true;
