@@ -67,7 +67,7 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
 
   for(unsigned i=0; i<top_vars.size(); ++i) 
   {
-    var_pre_guards.push_back(first_guard); //TODO: get first guard
+    var_pre_guards.push_back(first_guard); 
     var_post_guards.push_back(first_guard);
     var_kinds.push_back(domaint::IN);
   }
@@ -98,7 +98,9 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
 
         symbol_exprt in=SSA.name(*o_it, local_SSAt::LOOP_BACK, i_it);
         symbol_exprt out=SSA.read_rhs(*o_it, i_it);
-      
+
+        if(!add_vars_filter(in)) continue;      
+
         var_pre_guards.push_back(pre_guard);
         var_post_guards.push_back(post_guard);
         var_kinds.push_back(domaint::LOOP);
