@@ -198,9 +198,6 @@ int summarizer_parseoptionst::doit()
     return 0;
   }
 
-  register_language(new_ansi_c_language);
-  register_language(new_cpp_language);
-
   //
   // command line options
   //
@@ -209,6 +206,14 @@ int summarizer_parseoptionst::doit()
   get_command_line_options(options);
 
   eval_verbosity();
+  
+  //
+  // Print a banner
+  //
+  status("SUMMARIZER version tbd");
+
+  register_language(new_ansi_c_language);
+  register_language(new_cpp_language);
 
   goto_modelt goto_model;
 
