@@ -63,10 +63,12 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
   add_vars(SSA.globals_in,top_vars);
   var_listt vars = top_vars;
 
+  exprt first_guard = SSA.guard_symbol(SSA.goto_function.body.instructions.begin());
+
   for(unsigned i=0; i<top_vars.size(); ++i) 
   {
-    var_pre_guards.push_back(true_exprt());
-    var_post_guards.push_back(true_exprt());
+    var_pre_guards.push_back(first_guard); //TODO: get first guard
+    var_post_guards.push_back(first_guard);
     var_kinds.push_back(domaint::IN);
   }
 
@@ -146,6 +148,13 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
     renaming_map[*it1]=*it2;    
   }
 
+  #ifdef DEBUG
+  std::cout << "**** Function stats *****" << std::endl;
+  std::cout << "  var size " << vars.size() << std::endl
+            << "  params size " << SSA.params.size() << std::endl
+            << "  pre_state " << pre_state_vars.size() << std::endl;
+  #endif  
+
   //get domain from command line options
   if(options.get_bool_option("intervals") || is_initialize)
   {
@@ -167,13 +176,6 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
     //nothing to do
   }
   else assert(false);
-    
-  #ifdef DEBUG
-  std::cout << "**** Function stats *****" << std::endl;
-  std::cout << "  var size " << vars.size() << std::endl
-            << "  params size " << SSA.params.size() << std::endl
-            << "  pre_state " << pre_state_vars.size() << std::endl;
-  #endif  
   
   constraintst transition_relation;
   transition_relation << SSA;
