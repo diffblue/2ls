@@ -86,6 +86,7 @@ void summarizer_parseoptionst::eval_verbosity()
       v=10;
   }
   
+  ui_message_handler.set_verbosity(v);
 }
 
 /*******************************************************************\
@@ -202,9 +203,6 @@ int summarizer_parseoptionst::doit()
     return 0;
   }
 
-  register_language(new_ansi_c_language);
-  register_language(new_cpp_language);
-
   //
   // command line options
   //
@@ -213,6 +211,14 @@ int summarizer_parseoptionst::doit()
   get_command_line_options(options);
 
   eval_verbosity();
+  
+  //
+  // Print a banner
+  //
+  status("SUMMARIZER version tbd");
+
+  register_language(new_ansi_c_language);
+  register_language(new_cpp_language);
 
   goto_modelt goto_model;
 
@@ -473,6 +479,8 @@ bool summarizer_parseoptionst::get_goto_program(
         error() << "failed to figure out type of file `" <<  filename << "'" << eom;
         return true;
       }
+      
+      language->set_message_handler(get_message_handler());
                                                                 
       status("Parsing", filename);
   
