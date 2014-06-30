@@ -895,6 +895,7 @@ void summarizer_parseoptionst::help()
     " --show-properties            show the properties\n"
     " --no-assertions              ignore user assertions\n"
     " --no-assumptions             ignore user assumptions\n"
+    " --inline                     inline all functions into main "
     "\n"
     "Backend options:\n"
     " --intervals                  use interval domain\n"
