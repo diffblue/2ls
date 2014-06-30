@@ -83,7 +83,7 @@ void summary_checkert::SSA_functions(const goto_modelt &goto_model,  const names
     }
 
     unsigned unwind = options.get_unsigned_int_option("unwind");
-    if(unwind>0);
+    if(unwind>0)
     {
       status() << "Unwinding" << messaget::eom;
       ssa_unwindert ssa_unwinder;

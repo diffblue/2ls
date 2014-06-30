@@ -1188,6 +1188,12 @@ void local_SSAt::nodet::output(
       a_it!=assertions.end();
       a_it++)
     out << "(A) " << from_expr(ns, "", *a_it) << "\n";
+
+  for(function_callst::const_iterator
+      f_it=function_calls.begin();
+      f_it!=function_calls.end();
+      f_it++)
+    out << "(F) " << from_expr(ns, "", *f_it) << "\n";
 }
 
 /*******************************************************************\
