@@ -5,10 +5,10 @@ int main(void) {
   int i;
 
   for (i = 0; A[i] != 0; i++) {
-    if (i >= N) {
+    if (i >= N-1) {
       break;
     }
   }
 
-  assert(i <= N);
+  assert(i < N);
 }

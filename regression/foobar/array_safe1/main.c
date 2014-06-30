@@ -6,5 +6,5 @@ int main(void) {
     A[i] = i;
   }
 
-//  assert(A[1023] == 1023);
+  assert(A[1023] == 1023);
 }

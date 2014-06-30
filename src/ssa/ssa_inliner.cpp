@@ -511,10 +511,11 @@ bool ssa_inlinert::find_corresponding_symbol(const symbol_exprt &s,
 					 const local_SSAt::var_sett &globals,
                                          symbol_exprt &s_found)
 {
+  const irep_idt &s_orig_id = get_original_identifier(s);
   for(local_SSAt::var_sett::const_iterator it = globals.begin();
       it != globals.end(); it++)
   {
-    if(get_original_identifier(s)==get_original_identifier(*it))
+    if(s_orig_id == get_original_identifier(*it))
     {
       s_found = *it;
       return true;
@@ -531,7 +532,7 @@ Function: ssa_inlinert::get_original_identifier
 
  Outputs: 
 
- Purpose: TODO: better way to do that?
+ Purpose: TODO: this is potentially buggy, better way to do that?
 
 \*******************************************************************/
 
