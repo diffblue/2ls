@@ -239,7 +239,6 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
   }
 
   strategy_solver->set_message_handler(get_message_handler());
-  strategy_solver->set_verbosity(get_verbosity());
 
 #if 1
   domain->output_domain(debug(), ns); debug() << eom;

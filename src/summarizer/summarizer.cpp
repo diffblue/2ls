@@ -161,7 +161,6 @@ void summarizert::compute_summary_rec(const function_namet &function_name)
   //analyze
   ssa_analyzert analyzer(SSA.ns, options);
   analyzer.set_message_handler(get_message_handler());
-  analyzer.set_verbosity(get_verbosity());
 
   analyzer(SSA);
 
