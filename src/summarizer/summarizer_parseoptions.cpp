@@ -86,7 +86,6 @@ void summarizer_parseoptionst::eval_verbosity()
       v=10;
   }
   
-  set_verbosity(v);
 }
 
 /*******************************************************************\
@@ -307,7 +306,6 @@ int summarizer_parseoptionst::doit()
     summary_checkert summary_checker(options);
     
     summary_checker.set_message_handler(get_message_handler());
-    summary_checker.set_verbosity(get_verbosity());
     summary_checker.simplify=!cmdline.isset("no-simplify");
     summary_checker.fixed_point=!cmdline.isset("no-fixed-point");
 
@@ -478,7 +476,7 @@ bool summarizer_parseoptionst::get_goto_program(
                                                                 
       status("Parsing", filename);
   
-      if(language->parse(infile, filename, get_message_handler()))
+      if(language->parse(infile, filename))
       {
         error() << "PARSING ERROR" << eom;
         return true;

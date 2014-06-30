@@ -16,6 +16,9 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       $(CBMC)/src/xmllang/xmllang$(LIBEXT) \
       $(CBMC)/src/solvers/solvers$(LIBEXT) \
       $(CBMC)/src/util/util$(LIBEXT) \
+
+
+DELTA_OBJ+=\
       ../ssa/local_ssa$(OBJEXT) \
       ../ssa/malloc_ssa$(OBJEXT) \
       ../ssa/ssa_domain$(OBJEXT) \
@@ -45,7 +48,7 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       ../domains/ssa_analyzer$(OBJEXT) \
       ../domains/predicate$(OBJEXT)
 
-
+OBJ+=$(DELTA_OBJ)
 
 include $(CBMC)/src/config.inc
 include $(CBMC)/src/common
@@ -62,7 +65,7 @@ CP_CXXFLAGS +=-g
 
 # $(CUDD)/obj/libobj.a 
 
-CLEANFILES = summarizer$(EXEEXT)
+CLEANFILES = summarizer$(EXEEXT) $(DELTA_OBJ)
 
 all: summarizer$(EXEEXT)
 

@@ -97,7 +97,6 @@ void summary_checkert::SSA_functions(const goto_modelt &goto_model,  const names
   // inline c::main and __CPROVER_initialize
   ssa_inlinert ssa_inliner;
   ssa_inliner.set_message_handler(get_message_handler());
-  ssa_inliner.set_verbosity(get_verbosity());     
 
   ssa_inliner.replace(ssa_db.get(ID_main),functions,false,false);
   
@@ -120,7 +119,6 @@ Function: summary_checkert::summarize
 void summary_checkert::summarize()
 {    
   summarizer.set_message_handler(get_message_handler());
-  summarizer.set_verbosity(get_verbosity());
 
   summarizer.summarize(ssa_db.functions());
 }
