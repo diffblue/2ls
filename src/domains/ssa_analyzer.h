@@ -43,6 +43,12 @@ protected:
   
   replace_mapt renaming_map;
 
+  void collect_variables(const local_SSAt &SSA,
+			 var_listt &vars,
+			 domaint::guardst &pre_guards,
+			 domaint::guardst &post_guards,
+			 domaint::kindst &kinds);
+
   bool add_vars_filter(const symbol_exprt &s);
   var_listt add_vars(const var_listt &vars_to_add, var_listt &vars);
   var_listt add_vars(const local_SSAt::var_listt &vars_to_add, var_listt &vars);
