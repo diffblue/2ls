@@ -86,7 +86,7 @@ void summarizer_parseoptionst::eval_verbosity()
       v=10;
   }
   
-  ui_message_handler.set_verbosity(v);
+  set_verbosity(v);
 }
 
 /*******************************************************************\
