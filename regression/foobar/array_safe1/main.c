@@ -1,10 +1,12 @@
+#define SIZE 1024
+
 int main(void) {
-  int A[2048];
+  int A[SIZE];
   int i;
 
-  for (i = 0; i < 1024; i++) {
+  for (i = 0; i < SIZE; i++) {
     A[i] = i;
   }
 
-  assert(A[1023] == 1023);
+  assert(A[SIZE-1] == SIZE-1);
 }
