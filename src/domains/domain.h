@@ -11,7 +11,7 @@ public:
 
   virtual ~domaint() {}
 
-  typedef symbol_exprt vart;
+  typedef exprt vart;
   typedef std::vector<vart> var_listt;
 
   typedef enum {LOOP, IN, OUT, OUTL} kindt;
@@ -49,13 +49,10 @@ public:
   virtual void project_on_inout(const valuet &value, exprt &result) 
     { assert(false); }
 
-  static kindt merge_kinds(kindt k1, kindt k2)
-  {
-    return (k1==OUT || 
-            k2==OUT ?  (k1==LOOP || 
-                        k2==LOOP ?  OUTL : OUT) :
-                       (k1==LOOP || k2==LOOP ? LOOP :  IN));
-  }
+  static kindt merge_kinds(kindt k1, kindt k2);
+
+  static void output_var_specs(std::ostream &out, const var_specst &var_specs,
+			       const namespacet &ns);
 
 
 };

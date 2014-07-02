@@ -241,8 +241,10 @@ void ssa_inlinert::replace_globals_in(const local_SSAt::var_sett &globals_in,
     symbol_exprt lhs = *it; //copy
     rename(lhs);
     symbol_exprt rhs;
-    assert(find_corresponding_symbol(*it,globals,rhs));
-    new_equs.push_back(equal_exprt(lhs,rhs));
+    if(find_corresponding_symbol(*it,globals,rhs))
+      new_equs.push_back(equal_exprt(lhs,rhs));
+    else
+      warning() << "'" << it->get_identifier() << "' not bound in caller" << eom;
   }
 }
 
@@ -281,7 +283,7 @@ Function: ssa_inlinert::replace_globals_out()
 
  Outputs:
 
- Purpose:
+ Purpose: equalities for globals out (including unmodified globals)
 
 \*******************************************************************/
 

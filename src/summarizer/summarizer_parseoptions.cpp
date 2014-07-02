@@ -259,6 +259,12 @@ int summarizer_parseoptionst::doit()
     return 7;
   }
 
+  if(cmdline.isset("arrays"))
+  {
+    options.set_option("arrays", true);
+    status() << "Do not ignore array contents" << eom;
+  }
+
   if(cmdline.isset("equalities"))
   {
     options.set_option("equalities", true);
@@ -282,15 +288,15 @@ int summarizer_parseoptionst::doit()
 	status() << "Using intervals domain ";
       }
 
-    if(cmdline.isset("binsearch-solver"))
-      {
-	options.set_option("binsearch-solver", true);
-	status() << "with binary search solver";
-      }
-    else //if(cmdline.isset("enum-solver")) //default
+    if(cmdline.isset("enum-solver")) 
       {
 	options.set_option("enum-solver", true);
 	status() << "with enumeration solver";
+      }
+    else //if(cmdline.isset("binsearch-solver")) //default
+      {
+	options.set_option("binsearch-solver", true);
+	status() << "with binary search solver";
       }
   }
   status() << eom;
@@ -912,6 +918,7 @@ void summarizer_parseoptionst::help()
     " --octagons                   use octagon domain\n"
     " --enum-solver                use solver based on model enumeration\n"
     " --binsearch-solver           use solver based on binary search\n"
+    " --arrays                     do not ignore array contents\n"
     "\n"
     "Other options:\n"
     " --version                    show version and exit\n"

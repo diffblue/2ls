@@ -287,37 +287,50 @@ Function: equality_domaint::make_template
 
 bool adapt_types(exprt &v1, exprt &v2)
 {
-  unsigned size1 = 0, size2 = 0;
-  if(v1.type().id()==ID_signedbv) 
-    size1 =  to_signedbv_type(v1.type()).get_width();
-  if(v1.type().id()==ID_unsignedbv) 
-    size1 =  to_unsignedbv_type(v1.type()).get_width();
-  if(v2.type().id()==ID_signedbv) 
-    size2 =  to_signedbv_type(v2.type()).get_width();
-  if(v2.type().id()==ID_unsignedbv) 
-    size2 =  to_unsignedbv_type(v2.type()).get_width();
-  assert(size1>0); assert(size2>0); //TODO: implement floats
-
-  if(v1.type().id()==v2.type().id())
+  //signed, unsigned integers
+  if((v1.type().id()==ID_signedbv || v1.type().id()==ID_unsignedbv) &&
+     (v2.type().id()==ID_signedbv || v2.type().id()==ID_unsignedbv)) 
   {
-    if(size1==size2) return true;
+    unsigned size1 = 0, size2 = 0;
+    if(v1.type().id()==ID_signedbv) 
+      size1 =  to_signedbv_type(v1.type()).get_width();
+    if(v1.type().id()==ID_unsignedbv) 
+      size1 =  to_unsignedbv_type(v1.type()).get_width();
+    if(v2.type().id()==ID_signedbv) 
+      size2 =  to_signedbv_type(v2.type()).get_width();
+    if(v2.type().id()==ID_unsignedbv) 
+      size2 =  to_unsignedbv_type(v2.type()).get_width();
 
-    typet new_type = v1.type();
-    if(new_type.id()==ID_signedbv) 
-      to_signedbv_type(new_type).set_width(std::max(size1,size2));
-    else //if(new_type.id()==ID_unsignedbv) 
-      to_unsignedbv_type(new_type).set_width(std::max(size1,size2));
+    if(v1.type().id()==v2.type().id())
+      {
+	if(size1==size2) return true;
 
-    if(size1>size2) v2 = typecast_exprt(v2,new_type);
-    else v1 = typecast_exprt(v1,new_type);
+	typet new_type = v1.type();
+	if(new_type.id()==ID_signedbv) 
+	  to_signedbv_type(new_type).set_width(std::max(size1,size2));
+	else //if(new_type.id()==ID_unsignedbv) 
+	  to_unsignedbv_type(new_type).set_width(std::max(size1,size2));
+
+	if(size1>size2) v2 = typecast_exprt(v2,new_type);
+	else v1 = typecast_exprt(v1,new_type);
+	return true;
+      }
+  
+    //types are different
+    typet new_type = signedbv_typet(std::max(size1,size2)+1);
+    v1 = typecast_exprt(v1,new_type);
+    v2 = typecast_exprt(v2,new_type);
     return true;
   }
+
+  if(v1.type().id()==ID_array && v2.type().id()==ID_array) 
+  {
+    if(v1.type().subtype() != v2.type().subtype()) return false;
+    if(to_array_type(v1.type()).size() != to_array_type(v2.type()).size()) return false;
+    return true; 
+  }
   
-  //types are different
-  typet new_type = signedbv_typet(std::max(size1,size2)+1);
-  v1 = typecast_exprt(v1,new_type);
-  v2 = typecast_exprt(v2,new_type);
-  return true;
+  return false; //types incompatible
 }
 
 void equality_domaint::make_template(
@@ -342,8 +355,8 @@ void equality_domaint::make_template(
       simplify(pre_g,ns);
       simplify(post_g,ns);
 
-      symbol_exprt vv1 = v1->var;
-      symbol_exprt vv2 = v2->var;
+      exprt vv1 = v1->var;
+      exprt vv2 = v2->var;
       if(!adapt_types(vv1,vv2)) continue;
 
       templ.push_back(template_rowt());

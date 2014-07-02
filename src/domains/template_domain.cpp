@@ -700,6 +700,7 @@ Function: extend_expr_types
 void extend_expr_types(exprt &expr)
 {
   if(expr.id()==ID_symbol) return;
+  if(expr.id()==ID_index) return;
   if(expr.id()==ID_unary_minus)
   {
     extend_expr_types(expr.op0());
@@ -1035,6 +1036,7 @@ mp_integer simplify_const_int(const exprt &expr)
   if(expr.id()==ID_minus) return simplify_const_int(expr.op0())-simplify_const_int(expr.op1());
   if(expr.id()==ID_mult) return simplify_const_int(expr.op0())*simplify_const_int(expr.op1());  
   if(expr.id()==ID_symbol) return 0; //default value if not substituted in expr
+  if(expr.id()==ID_index) return 0; //default value if not substituted in expr
   assert(false); //not implemented
 }
 

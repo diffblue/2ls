@@ -120,23 +120,51 @@ Function: local_SSAt::get_globals
 \*******************************************************************/
 
 void local_SSAt::get_globals(locationt loc, std::set<symbol_exprt> &globals, 
-  bool returns)
+			     bool returns)
 {
-  const ssa_domaint &ssa_domain=ssa_analysis[loc];
-  for(ssa_domaint::def_mapt::const_iterator d_it = ssa_domain.def_map.begin();
-      d_it != ssa_domain.def_map.end(); d_it++)
   {
-    const symbolt *symbol;
-    if(ns.lookup(d_it->first,symbol)) continue;         
-    if(has_static_lifetime(symbol->symbol_expr()))
+    const std::set<ssa_objectt> &ssa_globals = assignments.ssa_objects.globals;
+    for(std::set<ssa_objectt>::const_iterator it = ssa_globals.begin();
+      it != ssa_globals.end(); it++)
     {
+#if 1
+      std::cout << "global: " << from_expr(ns, "", read_rhs(it->get_expr(),loc)) << std::endl;
+#endif
       if(!returns && 
-          id2string(symbol->name).find("#return_value")!=std::string::npos) 
-        continue;
-      const ssa_objectt ssa_object(symbol->symbol_expr(),ns);
-      globals.insert(name(ssa_object,d_it->second.def));
+	 id2string(it->get_identifier()).find("#return_value")!=std::string::npos) 
+	continue;
+
+      globals.insert(to_symbol_expr(read_rhs(it->get_expr(),loc)));
     }
   }
+
+  /*
+  {
+    const ssa_domaint &ssa_domain=ssa_analysis[loc];
+    for(ssa_domaint::def_mapt::const_iterator d_it = ssa_domain.def_map.begin();
+	d_it != ssa_domain.def_map.end(); d_it++)
+      {
+#if 0
+	std::cout << "looking up symbol: " << d_it->first << std::endl;
+#endif
+
+	const symbolt *symbol;
+	if(ns.lookup(d_it->first,symbol)) continue;         
+
+#if 0
+	std::cout << "found!" << std::endl;
+#endif
+
+	if(symbol->is_static_lifetime)
+	  {
+	    if(!returns && 
+	       id2string(symbol->name).find("#return_value")!=std::string::npos) 
+	      continue;
+	    const ssa_objectt ssa_object(symbol->symbol_expr(),ns);
+	    globals.insert(name(ssa_object,d_it->second.def));
+	  }
+      }
+    } */
 }   
 
 /*******************************************************************\

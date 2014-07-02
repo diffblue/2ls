@@ -211,6 +211,8 @@ void summarizert::inline_summaries(const function_namet &function_name,
   local_SSAt &SSA, bool recursive)
 {
   ssa_inlinert inliner;
+  inliner.set_message_handler(get_message_handler());
+
   // replace calls with summaries
   // TODO: functions with pointers passed as parameters
   for(local_SSAt::nodest::iterator n = SSA.nodes.begin(); 

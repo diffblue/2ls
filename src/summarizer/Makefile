@@ -40,7 +40,7 @@ DELTA_OBJ+=\
       ../domains/ssa_fixed_point$(OBJEXT) \
       ../domains/template_domain$(OBJEXT) \
       ../domains/equality_domain$(OBJEXT) \
-      ../domains/equality_domain$(OBJEXT) \
+      ../domains/domain$(OBJEXT) \
       ../domains/strategy_solver_equality$(OBJEXT) \
       ../domains/strategy_solver_base$(OBJEXT) \
       ../domains/strategy_solver_enumeration$(OBJEXT) \

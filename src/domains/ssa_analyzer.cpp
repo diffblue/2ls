@@ -23,6 +23,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/find_symbols.h>
 #include <util/arith_tools.h>
 #include <util/simplify_expr.h>
+#include <util/mp_arith.h>
 
 #ifdef DEBUG
 #include <iostream>
@@ -252,12 +253,12 @@ void ssa_analyzert::collect_variables(const local_SSAt &SSA,
   {
     if(i_it->is_backwards_goto())
     {
-                  
       exprt pre_guard = and_exprt(SSA.guard_symbol(i_it->get_target()), 
         SSA.name(SSA.guard_symbol(), local_SSAt::LOOP_SELECT, i_it));
       exprt post_guard = SSA.guard_symbol(i_it);
       
-      const ssa_domaint::phi_nodest &phi_nodes=SSA.ssa_analysis[i_it->get_target()].phi_nodes;
+      const ssa_domaint::phi_nodest &phi_nodes = 
+        SSA.ssa_analysis[i_it->get_target()].phi_nodes;
       
       // Record the objects modified by the loop to get
       // 'primed' (post-state) and 'unprimed' (pre-state) variables.
@@ -273,8 +274,6 @@ void ssa_analyzert::collect_variables(const local_SSAt &SSA,
 
         symbol_exprt in=SSA.name(*o_it, local_SSAt::LOOP_BACK, i_it);
         symbol_exprt out=SSA.read_rhs(*o_it, i_it);
-
-        //if(!add_vars_filter(in)) continue; //TODO: should be done differently
 
         add_var(in,pre_guard,post_guard,domaint::LOOP,var_specs);
       
@@ -318,6 +317,10 @@ void ssa_analyzert::collect_variables(const local_SSAt &SSA,
             << "  params size " << SSA.params.size() << std::endl
             << "  pre_state " << pre_state_vars.size() << std::endl;
   #endif  
+
+  debug() << "Template variables: " << eom;
+  domaint::output_var_specs(debug(),var_specs,SSA.ns); debug() << eom;
+
 }
 
 /*******************************************************************\
@@ -332,7 +335,8 @@ Function: ssa_analyzert::filter_template_domain
 
 \*******************************************************************/
 
-domaint::var_specst ssa_analyzert::filter_template_domain(const domaint::var_specst& var_specs)
+domaint::var_specst ssa_analyzert::filter_template_domain(
+  const domaint::var_specst& var_specs)
 {
   domaint::var_specst new_var_specs;
   for(domaint::var_specst::const_iterator v = var_specs.begin(); 
@@ -360,18 +364,14 @@ Function: ssa_analyzert::filter_equality_domain
 
 \*******************************************************************/
 
-domaint::var_specst ssa_analyzert::filter_equality_domain(const domaint::var_specst& var_specs)
+domaint::var_specst ssa_analyzert::filter_equality_domain(
+  const domaint::var_specst& var_specs)
 {
   domaint::var_specst new_var_specs;
   for(domaint::var_specst::const_iterator v = var_specs.begin(); 
       v!=var_specs.end(); v++)
   {
-    const domaint::vart &s = v->var;
-    if(s.type().id()==ID_unsignedbv || s.type().id()==ID_signedbv ||
-       s.type().id()==ID_floatbv)
-    {
-      new_var_specs.push_back(*v);
-    }
+    new_var_specs.push_back(*v);
   }
   return new_var_specs;
 }
@@ -396,10 +396,29 @@ void ssa_analyzert::add_var(const domaint::vart &var,
 {
   var_specs.push_back(domaint::var_spect());
   domaint::var_spect &var_spec = var_specs.back();
-  var_spec.var = var;
   var_spec.pre_guard = pre_guard;
   var_spec.post_guard = post_guard;
   var_spec.kind = kind;
+  var_spec.var = var;
+
+  debug() << "var type: " << var.type() << eom;
+  
+  //arrays
+  if(var.type().id()==ID_array && options.get_bool_option("arrays"))
+  {
+    const array_typet &array_type = to_array_type(var.type());
+    mp_integer size;
+    to_integer(array_type.size(), size);
+    for(mp_integer i=0; i<size; i=i+1) 
+    {
+      var_specs.push_back(domaint::var_spect());
+      domaint::var_spect &var_spec = var_specs.back();
+      var_spec.pre_guard = pre_guard;
+      var_spec.post_guard = post_guard;
+      var_spec.kind = kind;
+      var_spec.var = index_exprt(var,from_integer(i,array_type.size().type()));
+    }
+  }
 }
 
 void ssa_analyzert::add_vars(const local_SSAt::var_listt &vars_to_add, 
