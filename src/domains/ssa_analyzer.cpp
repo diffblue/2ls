@@ -50,27 +50,26 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
   bool is_initialize = (id2string(function_id)=="c::__CPROVER_initialize");
 
   // gather information for creating domains
-  var_listt vars;
-  domaint::guardst pre_guards, post_guards;
-  domaint::kindst kinds;
-  collect_variables(SSA, vars, pre_guards, post_guards, kinds);
+  domaint::var_specst var_specs;
+  collect_variables(SSA, var_specs);
 
   //get domain from command line options
   template_domaint::templatet templ;
+  templ.clear();
   if(options.get_bool_option("intervals") || is_initialize)
   {
-    template_domaint::make_interval_template(templ, vars, 
-      pre_guards, post_guards, kinds, ns);
+    domaint::var_specst new_var_specs = filter_template_domain(var_specs);
+    template_domaint::add_interval_template(templ, new_var_specs, ns);
   }
   else if(options.get_bool_option("zones"))
   {
-    template_domaint::make_zone_template(templ, vars, 
-      pre_guards, post_guards, kinds, ns); 
+    domaint::var_specst new_var_specs = filter_template_domain(var_specs);
+    template_domaint::add_zone_template(templ, new_var_specs, ns); 
   }
   else if(options.get_bool_option("octagons"))
   {
-    template_domaint::make_octagon_template(templ, vars, 
-      pre_guards, post_guards, kinds, ns); 
+    domaint::var_specst new_var_specs = filter_template_domain(var_specs);
+    template_domaint::add_octagon_template(templ, new_var_specs, ns); 
   }
   else if(options.get_bool_option("equalities"))
   {
@@ -110,8 +109,8 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
   strategy_solver_baset::invariantt *inv;
   if(options.get_bool_option("equalities") && !is_initialize)
   {
-    domain = new equality_domaint(vars, 
-      pre_guards, post_guards, kinds, ns);
+    domaint::var_specst new_var_specs = filter_equality_domain(var_specs);
+    domain = new equality_domaint(new_var_specs, ns);
     strategy_solver = new strategy_solver_equalityt(
         transition_relation, renaming_map,
         *static_cast<equality_domaint *>(domain), solver, ns);    
@@ -189,40 +188,66 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
   delete domain;
 }
 
+/*******************************************************************\
+
+Function: ssa_analyzert::get_summary
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
 void ssa_analyzert::get_summary(exprt &result)
 {
   result = inv_inout;
 }
+
+/*******************************************************************\
+
+Function: ssa_analyzert::get_loop_invariants
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 
 void ssa_analyzert::get_loop_invariants(exprt &result) 
 {
   result = inv_loop;
 }
 
+/*******************************************************************\
+
+Function: ssa_analyzert::collect_variables
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
 void ssa_analyzert::collect_variables(const local_SSAt &SSA,
-				      var_listt &vars,
-				      domaint::guardst &pre_guards,
-				      domaint::guardst &post_guards,
-				      domaint::kindst &kinds)
+				      domaint::var_specst &var_specs)
 {
-  var_listt top_vars;
-  add_vars(SSA.params,top_vars);
-  add_vars(SSA.globals_in,top_vars);
-  vars = top_vars;
+  var_specs.clear();
 
-
+  // add params and globals_in
   exprt first_guard = SSA.guard_symbol(SSA.goto_function.body.instructions.begin());
+  add_vars(SSA.params,first_guard,first_guard,domaint::IN,var_specs);
+  add_vars(SSA.globals_in,first_guard,first_guard,domaint::IN,var_specs);
 
-  for(unsigned i=0; i<top_vars.size(); ++i) 
-  {
-    pre_guards.push_back(first_guard); 
-    post_guards.push_back(first_guard);
-    kinds.push_back(domaint::IN);
-  }
-
+  // used for renaming map
   var_listt pre_state_vars, post_state_vars;
 
-  // get all backwards edges
+  // add loop variables
   forall_goto_program_instructions(i_it, SSA.goto_function.body)
   {
     if(i_it->is_backwards_goto())
@@ -249,11 +274,9 @@ void ssa_analyzert::collect_variables(const local_SSAt &SSA,
         symbol_exprt in=SSA.name(*o_it, local_SSAt::LOOP_BACK, i_it);
         symbol_exprt out=SSA.read_rhs(*o_it, i_it);
 
-        if(!add_vars_filter(in)) continue;      
+        //if(!add_vars_filter(in)) continue; //TODO: should be done differently
 
-        pre_guards.push_back(pre_guard);
-        post_guards.push_back(post_guard);
-        kinds.push_back(domaint::LOOP);
+        add_var(in,pre_guard,post_guard,domaint::LOOP,var_specs);
       
         pre_state_vars.push_back(in);
         post_state_vars.push_back(out);
@@ -276,18 +299,9 @@ void ssa_analyzert::collect_variables(const local_SSAt &SSA,
   }
 #endif
 
-  add_vars(pre_state_vars,vars);
-  var_listt added_globals_out = add_vars(SSA.globals_out,vars); 
-
-  for(unsigned i=0; i<added_globals_out.size(); ++i) 
-  {
-    goto_programt::const_targett t = 
-      SSA.goto_function.body.instructions.end(); t--;
-    exprt guard = SSA.guard_symbol(t);
-    pre_guards.push_back(true_exprt()); 
-    post_guards.push_back(guard); 
-    kinds.push_back(domaint::OUT);
-  }
+  // add globals_out (includes return values)
+  exprt last_guard = SSA.guard_symbol(--SSA.goto_function.body.instructions.end());
+  add_vars(SSA.globals_out,last_guard,last_guard,domaint::OUT,var_specs);
   
   // building map for renaming from pre into post-state
   assert(pre_state_vars.size()==post_state_vars.size());
@@ -306,44 +320,117 @@ void ssa_analyzert::collect_variables(const local_SSAt &SSA,
   #endif  
 }
 
-bool ssa_analyzert::add_vars_filter(const symbol_exprt &s)
-{
-  return s.type().id()==ID_unsignedbv || s.type().id()==ID_signedbv ||
-    s.type().id()==ID_floatbv;
-}
+/*******************************************************************\
 
-ssa_analyzert::var_listt ssa_analyzert::add_vars(const local_SSAt::var_listt &vars_to_add, 
-    var_listt &vars)
+Function: ssa_analyzert::filter_template_domain
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+domaint::var_specst ssa_analyzert::filter_template_domain(const domaint::var_specst& var_specs)
 {
-  var_listt vars_added;
-  for(local_SSAt::var_listt::const_iterator it = vars_to_add.begin();
-      it != vars_to_add.end(); it++)
+  domaint::var_specst new_var_specs;
+  for(domaint::var_specst::const_iterator v = var_specs.begin(); 
+      v!=var_specs.end(); v++)
   {
-    if(add_vars_filter(*it)) { vars.push_back(*it); vars_added.push_back(*it); }
+    const domaint::vart &s = v->var;
+    if(s.type().id()==ID_unsignedbv || s.type().id()==ID_signedbv ||
+       s.type().id()==ID_floatbv)
+    {
+      new_var_specs.push_back(*v);
+    }
   }
-  return vars_added;
+  return new_var_specs;
 }
 
-ssa_analyzert::var_listt ssa_analyzert::add_vars(const local_SSAt::var_sett &vars_to_add, 
-    var_listt &vars)
+/*******************************************************************\
+
+Function: ssa_analyzert::filter_equality_domain
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+domaint::var_specst ssa_analyzert::filter_equality_domain(const domaint::var_specst& var_specs)
 {
-  var_listt vars_added;
+  domaint::var_specst new_var_specs;
+  for(domaint::var_specst::const_iterator v = var_specs.begin(); 
+      v!=var_specs.end(); v++)
+  {
+    const domaint::vart &s = v->var;
+    if(s.type().id()==ID_unsignedbv || s.type().id()==ID_signedbv ||
+       s.type().id()==ID_floatbv)
+    {
+      new_var_specs.push_back(*v);
+    }
+  }
+  return new_var_specs;
+}
+
+/*******************************************************************\
+
+Function: ssa_analyzert::add_vars
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void ssa_analyzert::add_var(const domaint::vart &var, 
+			    const domaint::guardt &pre_guard, 
+			    const domaint::guardt &post_guard,
+			    const domaint::kindt &kind,
+			    domaint::var_specst &var_specs)
+{
+  var_specs.push_back(domaint::var_spect());
+  domaint::var_spect &var_spec = var_specs.back();
+  var_spec.var = var;
+  var_spec.pre_guard = pre_guard;
+  var_spec.post_guard = post_guard;
+  var_spec.kind = kind;
+}
+
+void ssa_analyzert::add_vars(const local_SSAt::var_listt &vars_to_add, 
+			     const domaint::guardt &pre_guard, 
+			     const domaint::guardt &post_guard,
+			     const domaint::kindt &kind,
+			     domaint::var_specst &var_specs)
+{
+  for(local_SSAt::var_listt::const_iterator it = vars_to_add.begin();
+      it != vars_to_add.end(); it++) 
+    add_var(*it,pre_guard,post_guard,kind,var_specs);
+}
+
+void ssa_analyzert::add_vars(const local_SSAt::var_sett &vars_to_add, 
+			     const domaint::guardt &pre_guard, 
+			     const domaint::guardt &post_guard,
+			     const domaint::kindt &kind,
+			     domaint::var_specst &var_specs)
+{
   for(local_SSAt::var_sett::const_iterator it = vars_to_add.begin();
       it != vars_to_add.end(); it++)
-  {
-    if(add_vars_filter(*it)) { vars.push_back(*it); vars_added.push_back(*it); }
-  }
-  return vars_added;
+    add_var(*it,pre_guard,post_guard,kind,var_specs);
 }
 
-ssa_analyzert::var_listt ssa_analyzert::add_vars(const var_listt &vars_to_add, 
-    var_listt &vars)
+void ssa_analyzert::add_vars(const var_listt &vars_to_add, 
+			     const domaint::guardt &pre_guard, 
+			     const domaint::guardt &post_guard,
+			     const domaint::kindt &kind,
+			     domaint::var_specst &var_specs)
 {
-  var_listt vars_added;
   for(var_listt::const_iterator it = vars_to_add.begin();
       it != vars_to_add.end(); it++)
-  {
-    if(add_vars_filter(*it)) { vars.push_back(*it); vars_added.push_back(*it); }
-  }
-  return vars_added;
+    add_var(*it,pre_guard,post_guard,kind,var_specs);
 }

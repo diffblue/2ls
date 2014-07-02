@@ -16,13 +16,10 @@ class equality_domaint : public domaint
   typedef std::set<unsigned> index_sett;
 
   equality_domaint(
-    const var_listt &vars, 
-    const guardst &pre_guards,
-    const guardst &post_guards,
-    const kindst &kinds,
+    const var_specst &var_specs,
     const namespacet &ns) 
   {
-    make_template(vars,pre_guards,post_guards,kinds,ns);
+    make_template(var_specs,ns);
   }
 
   class equ_valuet : public valuet 
@@ -35,13 +32,13 @@ class equality_domaint : public domaint
 
   typedef struct 
   {
-    guardst pre_guards;
-    guardst post_guards;
-    std::vector<equality_domaint::var_pairt> var_pairs;
-    kindst kinds;
+    guardt pre_guard;
+    guardt post_guard;
+    equality_domaint::var_pairt var_pair;
+    kindt kind;
+  } template_rowt;
 
-    unsigned size() const { return var_pairs.size(); } 
-  } templatet;
+  typedef std::vector<template_rowt> templatet;
 
   virtual void initialize(valuet &value);
 
@@ -67,10 +64,7 @@ class equality_domaint : public domaint
   templatet templ;
 
   void make_template(
-    const var_listt &vars,
-    const guardst &pre_guards,
-    const guardst &post_guards,
-    const kindst &kind,
+    const var_specst &var_specs,
     const namespacet &ns);
 };
 

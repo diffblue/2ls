@@ -27,40 +27,52 @@ void equality_domaint::initialize(valuet &value)
   v.disequs.clear();
 }
 
+/*******************************************************************\
+
+Function: equality_domaint::get_pre_equ_constraint
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
 exprt equality_domaint::get_pre_equ_constraint(unsigned index)
 {
   assert(index<templ.size());
-  kindt k = templ.kinds[index];
-  if(k==OUT || k==OUTL) return true_exprt();
-  const var_pairt &vv = templ.var_pairs[index];
-  return implies_exprt(templ.pre_guards[index],equal_exprt(vv.first,vv.second));
+  const template_rowt &templ_row = templ[index];
+  if(templ_row.kind==OUT || templ_row.kind==OUTL) return true_exprt();
+  const var_pairt &vv = templ_row.var_pair;
+  return implies_exprt(templ_row.pre_guard,equal_exprt(vv.first,vv.second));
 }
 
 exprt equality_domaint::get_post_not_equ_constraint(unsigned index)
 {
   assert(index<templ.size());
-  kindt k = templ.kinds[index];
-  if(k==IN) return true_exprt();
-  const var_pairt &vv = templ.var_pairs[index];
-  return not_exprt(implies_exprt(templ.post_guards[index],equal_exprt(vv.first,vv.second)));
+  const template_rowt &templ_row = templ[index];
+  if(templ_row.kind==IN) return true_exprt();
+  const var_pairt &vv = templ_row.var_pair;
+  return not_exprt(implies_exprt(templ_row.post_guard,equal_exprt(vv.first,vv.second)));
 }
 
 exprt equality_domaint::get_pre_disequ_constraint(unsigned index)
 {
   assert(index<templ.size());
-  kindt k = templ.kinds[index];
-  if(k==OUT || k==OUTL) return true_exprt();
-  const var_pairt &vv = templ.var_pairs[index];
-  return implies_exprt(templ.pre_guards[index],notequal_exprt(vv.first,vv.second));
+  const template_rowt &templ_row = templ[index];
+  if(templ_row.kind==OUT || templ_row.kind==OUTL) return true_exprt();
+  const var_pairt &vv = templ_row.var_pair;
+  return implies_exprt(templ_row.pre_guard,notequal_exprt(vv.first,vv.second));
 }
 
 exprt equality_domaint::get_post_not_disequ_constraint(unsigned index)
 {
   assert(index<templ.size());
-  kindt k = templ.kinds[index];
-  if(k==IN) return true_exprt();
-  const var_pairt &vv = templ.var_pairs[index];
-  return not_exprt(implies_exprt(templ.post_guards[index],notequal_exprt(vv.first,vv.second)));
+  const template_rowt &templ_row = templ[index];
+  if(templ_row.kind==IN) return true_exprt();
+  const var_pairt &vv = templ_row.var_pair;
+  return not_exprt(implies_exprt(templ_row.post_guard,notequal_exprt(vv.first,vv.second)));
 }
 
 
@@ -84,7 +96,7 @@ void equality_domaint::project_on_loops(const valuet &value, exprt &result)
   exprt::operandst c;
   for(unsigned index = 0; index<templ.size(); index++)
   {
-    const var_pairt &vv = templ.var_pairs[index];
+    const var_pairt &vv = templ[index].var_pair;
     //    if(templ.kinds[row]!=LOOP) continue;
     if(v.equs.same_set(vv.first,vv.second)) 
       c.push_back(equal_exprt(vv.first,vv.second));
@@ -93,7 +105,7 @@ void equality_domaint::project_on_loops(const valuet &value, exprt &result)
   for(index_sett::const_iterator it = v.disequs.begin(); it != v.disequs.end(); it++)
   {
     //    if(templ.kinds[row]!=LOOP) continue;
-    const var_pairt &vv = templ.var_pairs[*it];
+    const var_pairt &vv = templ[*it].var_pair;
     c.push_back(notequal_exprt(vv.first,vv.second));
   }
   result = conjunction(c);
@@ -119,7 +131,7 @@ void equality_domaint::project_on_inout(const valuet &value, exprt &result)
   exprt::operandst c;
   for(unsigned index = 0; index<templ.size(); index++)
   {
-    const var_pairt &vv = templ.var_pairs[index];
+    const var_pairt &vv = templ[index].var_pair;
     //    if(k==LOOP || k==OUTL) continue;
     if(v.equs.same_set(vv.first,vv.second)) 
       c.push_back(equal_exprt(vv.first,vv.second));
@@ -128,7 +140,7 @@ void equality_domaint::project_on_inout(const valuet &value, exprt &result)
   for(index_sett::const_iterator it = v.disequs.begin(); it != v.disequs.end(); it++)
   {
     //    if(k==LOOP || k==OUTL) continue;
-    const var_pairt &vv = templ.var_pairs[*it];
+    const var_pairt &vv = templ[*it].var_pair;
     c.push_back(notequal_exprt(vv.first,vv.second));
   }
   result = conjunction(c); 
@@ -150,7 +162,7 @@ void equality_domaint::set_equal(
   unsigned index, equ_valuet &value)
 {
   assert(index<templ.size());
-  const var_pairt &vv = templ.var_pairs[index];
+  const var_pairt &vv = templ[index].var_pair;
   value.equs.make_union(vv.first,vv.second);
 }
 
@@ -188,7 +200,7 @@ Function: equality_domaint::get_var_pair
 const equality_domaint::var_pairt &equality_domaint::get_var_pair(unsigned index)
 {
   assert(index<templ.size());
-  return templ.var_pairs[index];
+  return templ[index].var_pair;
 }
 
 /*******************************************************************\
@@ -211,7 +223,7 @@ void equality_domaint::output_value(std::ostream &out, const valuet &value,
 
   for(unsigned index = 0; index<templ.size(); index++)
   {
-    const var_pairt &vv = templ.var_pairs[index];
+    const var_pairt &vv = templ[index].var_pair;
     if(v.equs.same_set(vv.first,vv.second)) 
     {
       out << from_expr(ns,"",vv.first) << " == " << from_expr(ns,"",vv.second) << std::endl;
@@ -220,7 +232,7 @@ void equality_domaint::output_value(std::ostream &out, const valuet &value,
 
   for(index_sett::const_iterator it = v.disequs.begin(); it != v.disequs.end(); it++)
   {
-    const var_pairt &vv = templ.var_pairs[*it];
+    const var_pairt &vv = templ[*it].var_pair;
     out << from_expr(ns,"",vv.first) << " != " << from_expr(ns,"",vv.second) << std::endl;
   }
 }
@@ -242,20 +254,21 @@ void equality_domaint::output_domain(std::ostream &out,
 {
   for(unsigned index = 0; index<templ.size(); index++)
   {
-    switch(templ.kinds[index])
+    const template_rowt &templ_row = templ[index];
+    switch(templ_row.kind)
     {
     case LOOP:
-      out << "(LOOP) [ " << from_expr(ns,"",templ.pre_guards[index]) << " | ";
-      out << from_expr(ns,"",templ.post_guards[index]) << " ] ===> " << std::endl << "      ";
+      out << "(LOOP) [ " << from_expr(ns,"",templ_row.pre_guard) << " | ";
+      out << from_expr(ns,"",templ_row.post_guard) << " ] ===> " << std::endl << "      ";
       break;
     case IN: out << "(IN)   "; break;
     case OUT: case OUTL:
       out << "(OUT)  "; 
-      out << from_expr(ns,"",templ.post_guards[index]) << " ===> " << std::endl << "      ";
+      out << from_expr(ns,"",templ_row.post_guard) << " ===> " << std::endl << "      ";
       break;
     default: assert(false);
     }
-    const var_pairt &vv = templ.var_pairs[index];
+    const var_pairt &vv = templ_row.var_pair;
     out << from_expr(ns,"",vv.first) << " =!= " << from_expr(ns,"",vv.second) << std::endl;
   }
 }
@@ -308,54 +321,39 @@ bool adapt_types(exprt &v1, exprt &v2)
 }
 
 void equality_domaint::make_template(
-  const var_listt &vars,
-  const guardst &pre_guards,
-  const guardst &post_guards,
-  const kindst &kinds,
+  const var_specst &var_specs,
   const namespacet &ns)
 { 
-  assert(vars.size() == pre_guards.size());
-  assert(vars.size() == post_guards.size());
-  assert(vars.size() == kinds.size());
-  unsigned size = vars.size(); //just an estimate
-  templ.var_pairs.clear(); templ.var_pairs.reserve(size);
-  templ.pre_guards.clear(); templ.pre_guards.reserve(size);
-  templ.post_guards.clear(); templ.post_guards.reserve(size);
-  templ.kinds.clear(); templ.kinds.reserve(size);
+  unsigned size = var_specs.size(); //just an estimate
+  templ.clear();
+  templ.reserve(size); 
 
-  guardst::const_iterator pre_g1 = pre_guards.begin();
-  guardst::const_iterator post_g1 = post_guards.begin();
-  kindst::const_iterator k1 = kinds.begin();
-  for(var_listt::const_iterator v1 = vars.begin(); 
-      v1!=vars.end(); v1++, pre_g1++, post_g1++, k1++)
+  for(var_specst::const_iterator v1 = var_specs.begin(); 
+      v1!=var_specs.end(); v1++)
   {
-    guardst::const_iterator pre_g2 = pre_g1; pre_g2++;
-    guardst::const_iterator post_g2 = post_g1; post_g2++;
-    var_listt::const_iterator v2 = v1; v2++;
-    kindst::const_iterator k2 = k1; k2++;
-    for(;v2!=vars.end(); v2++, pre_g2++, post_g2++, k2++)
+    var_specst::const_iterator v2 = v1; v2++;
+    for(; v2!=var_specs.end(); v2++)
     {
-      kindt k = domaint::merge_kinds(*k1,*k2);
-      if(k==IN) continue;
+      kindt k = domaint::merge_kinds(v1->kind,v2->kind);
+      if(k==IN) continue; //TODO: must be done in caller (for preconditions, e.g.)
 
-      symbol_exprt vv1 = *v1;
-      symbol_exprt vv2 = *v2;
-      if(!adapt_types(vv1,vv2)) continue;
-
-      exprt pre_g = and_exprt(*pre_g1,*pre_g2);
-      exprt post_g = and_exprt(*post_g1,*post_g2);
+      exprt pre_g = and_exprt(v1->pre_guard,v2->pre_guard);
+      exprt post_g = and_exprt(v1->post_guard,v2->post_guard);
       simplify(pre_g,ns);
       simplify(post_g,ns);
 
-      templ.var_pairs.push_back(var_pairt(vv1,vv2));
-      templ.pre_guards.push_back(pre_g);
-      templ.post_guards.push_back(post_g);
-      templ.kinds.push_back(k);
+      symbol_exprt vv1 = v1->var;
+      symbol_exprt vv2 = v2->var;
+      if(!adapt_types(vv1,vv2)) continue;
+
+      templ.push_back(template_rowt());
+      template_rowt &templ_row = templ.back();
+      templ_row.var_pair = var_pairt(vv1,vv2);
+      templ_row.pre_guard = pre_g;
+      templ_row.post_guard = post_g;
+      templ_row.kind = k;
     }
   }
-  assert(templ.var_pairs.size() == templ.pre_guards.size());
-  assert(templ.var_pairs.size() == templ.post_guards.size());
-  assert(templ.var_pairs.size() == templ.kinds.size());
 }
 
 /*******************************************************************\

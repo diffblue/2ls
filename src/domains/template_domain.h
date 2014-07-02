@@ -11,7 +11,6 @@ class template_domaint : public domaint
 public:
   typedef unsigned rowt;
   typedef exprt row_exprt; 
-  typedef std::vector<row_exprt> row_exprst; 
   typedef constant_exprt row_valuet; // "bound"
 
   class templ_valuet : public domaint::valuet, public std::vector<row_valuet> 
@@ -20,17 +19,17 @@ public:
 
   typedef struct 
   {
-    guardst pre_guards;
-    guardst post_guards;
-    row_exprst rows;
-    kindst kinds;
+    guardt pre_guard;
+    guardt post_guard;
+    row_exprt expr;
+    kindt kind;
+  } template_rowt;
 
-    unsigned size() { return rows.size(); } 
-  } templatet;
+  typedef std::vector<template_rowt> templatet;
 
- template_domaint(templatet &_template) :
-  templ(_template) 
- {}
+  template_domaint(templatet &_template) :
+   templ(_template) 
+  {}
 
   // initialize value
   virtual void initialize(valuet &value);
@@ -82,24 +81,15 @@ public:
   unsigned template_size();
 
   // generating templates
-  static void make_interval_template(templatet &templ,
-			      const var_listt &vars,
-			      const guardst &pre_guards,
-			      const guardst &post_guards,
-			      const kindst &kinds,
+  static void add_interval_template(templatet &templ,
+			      const var_specst &var_specs,
 			      const namespacet &ns);
-  static void make_zone_template(templatet &templ,
-			  const var_listt &vars,
-			  const guardst &pre_guards,
-			  const guardst &post_guards,
-			  const kindst &kinds,
-			  const namespacet &ns);
-  static void make_octagon_template(templatet &templ,
-			     const var_listt &vars,
-			     const guardst &pre_guards,
-			     const guardst &post_guards,
-			     const kindst &kinds,
-			     const namespacet &ns);
+  static void add_zone_template(templatet &templ,
+				 const var_specst &var_specs,
+				 const namespacet &ns);
+  static void add_octagon_template(templatet &templ,
+				    const var_specst &var_specs,
+				    const namespacet &ns);
 
   exprt get_row_symb_value(const rowt &row);
 

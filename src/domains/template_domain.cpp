@@ -29,7 +29,7 @@ void template_domaint::initialize(valuet &value)
   v.resize(templ.size());
   for(unsigned row = 0; row<templ.size(); row++)
   {
-    if(templ.kinds[row]==IN) v[row] = true_exprt(); //marker for oo
+    if(templ[row].kind==IN) v[row] = true_exprt(); //marker for oo
     else v[row] = false_exprt(); //marker for -oo
   }
 }
@@ -126,25 +126,26 @@ exprt template_domaint::get_row_constraint(const rowt &row,
   const row_valuet &row_value)
 {
   assert(row<templ.size());
-  kindt k = templ.kinds[row];
+  kindt k = templ[row].kind;
   if(k==OUT || k==OUTL) return true_exprt();
   if(is_row_value_neginf(row_value)) return false_exprt();
   if(is_row_value_inf(row_value)) return true_exprt();
-  return binary_relation_exprt(templ.rows[row],ID_le,row_value);
+  return binary_relation_exprt(templ[row].expr,ID_le,row_value);
 }
 
 exprt template_domaint::get_row_pre_constraint(const rowt &row, 
   const row_valuet &row_value)
 {
   assert(row<templ.size());
-  kindt k = templ.kinds[row];
+  const template_rowt &templ_row = templ[row];
+  kindt k = templ_row.kind;
   if(k==OUT || k==OUTL) return true_exprt();
   if(is_row_value_neginf(row_value)) 
-    return implies_exprt(templ.pre_guards[row], false_exprt());
+    return implies_exprt(templ_row.pre_guard, false_exprt());
   if(is_row_value_inf(row_value)) 
-   return implies_exprt(templ.pre_guards[row], true_exprt());
-  return implies_exprt(templ.pre_guards[row], 
-    binary_relation_exprt(templ.rows[row],ID_le,row_value));
+   return implies_exprt(templ_row.pre_guard, true_exprt());
+  return implies_exprt(templ_row.pre_guard, 
+    binary_relation_exprt(templ_row.expr,ID_le,row_value));
 }
 
 
@@ -171,13 +172,14 @@ exprt template_domaint::get_row_post_constraint(const rowt &row,
   const row_valuet &row_value)
 {
   assert(row<templ.size());
-  if(templ.kinds[row]==IN) return true_exprt();
+  const template_rowt &templ_row = templ[row];
+  if(templ_row.kind==IN) return true_exprt();
   if(is_row_value_neginf(row_value)) 
-    return implies_exprt(templ.post_guards[row], false_exprt());
+    return implies_exprt(templ_row.post_guard, false_exprt());
   if(is_row_value_inf(row_value)) 
-    return implies_exprt(templ.post_guards[row], true_exprt());
-  return implies_exprt(templ.post_guards[row], 
-    binary_relation_exprt(templ.rows[row],ID_le,row_value));
+    return implies_exprt(templ_row.post_guard, true_exprt());
+  return implies_exprt(templ_row.post_guard, 
+    binary_relation_exprt(templ_row.expr,ID_le,row_value));
 }
 
 exprt template_domaint::get_row_post_constraint(const rowt &row, 
@@ -234,7 +236,7 @@ void template_domaint::make_not_post_constraints(const templ_valuet &value,
   exprt::operandst c; 
   for(unsigned row = 0; row<templ.size(); row++)
   {
-    value_exprs[row] = templ.rows[row];
+    value_exprs[row] = templ[row].expr;
     cond_exprs[row] = not_exprt(get_row_post_constraint(row,value));
   }
 }
@@ -254,7 +256,7 @@ Function: template_domaint::get_row_symb_value
 exprt template_domaint::get_row_symb_value(const rowt &row)
 {
   assert(row<templ.size());
-  return symbol_exprt(SYMB_BOUND_VAR+i2string(row),templ.rows[row].type());
+  return symbol_exprt(SYMB_BOUND_VAR+i2string(row),templ[row].expr.type());
 }
 
 /*******************************************************************\
@@ -273,12 +275,10 @@ exprt template_domaint::get_row_symb_pre_constraint(const rowt &row,
   const row_valuet &row_value)
 {
   assert(row<templ.size());
-  kindt k = templ.kinds[row];
-  if(k==OUT || k==OUTL) return true_exprt();
-  return implies_exprt(templ.pre_guards[row], 
-		       //and_exprt(
-    binary_relation_exprt(templ.rows[row],ID_le,get_row_symb_value(row)));
-		       //      get_row_symb_value_constraint(row,row_value)));
+  const template_rowt &templ_row = templ[row];
+  if(templ_row.kind==OUT || templ_row.kind==OUTL) return true_exprt();
+  return implies_exprt(templ_row.pre_guard, 
+    binary_relation_exprt(templ_row.expr,ID_le,get_row_symb_value(row)));
 }
 
 /*******************************************************************\
@@ -296,9 +296,10 @@ Function: template_domaint::get_row_symb_post_constraint
 exprt template_domaint::get_row_symb_post_constraint(const rowt &row)
 {
   assert(row<templ.size());
-  if(templ.kinds[row]==IN) return true_exprt();
-  return and_exprt(templ.post_guards[row],
-    binary_relation_exprt(templ.rows[row],ID_ge,get_row_symb_value(row)));
+  const template_rowt &templ_row = templ[row];
+  if(templ_row.kind==IN) return true_exprt();
+  return and_exprt(templ_row.post_guard,
+    binary_relation_exprt(templ_row.expr,ID_ge,get_row_symb_value(row)));
 }
 
 
@@ -435,11 +436,11 @@ void template_domaint::project_on_loops(const valuet &value, exprt &result)
   c.reserve(templ.size());
   for(unsigned row = 0; row<templ.size(); row++)
   {
-    if(templ.kinds[row]!=LOOP) continue;
+    if(templ[row].kind!=LOOP) continue;
     const row_valuet &row_v = v[row];
     if(is_row_value_neginf(row_v)) c.push_back(false_exprt());
     else if(is_row_value_inf(row_v)) c.push_back(true_exprt());
-    else c.push_back(binary_relation_exprt(templ.rows[row],ID_le,row_v));
+    else c.push_back(binary_relation_exprt(templ[row].expr,ID_le,row_v));
   }
   result = conjunction(c);
 }
@@ -464,12 +465,12 @@ void template_domaint::project_on_inout(const valuet &value, exprt &result)
   c.reserve(templ.size());
   for(unsigned row = 0; row<templ.size(); row++)
   {
-    kindt k = templ.kinds[row];
-    if(k==LOOP || k==OUTL) continue;
+    const template_rowt &templ_row = templ[row];
+    if(templ_row.kind==LOOP || templ_row.kind==OUTL) continue;
     const row_valuet &row_v = v[row];
     if(is_row_value_neginf(row_v)) c.push_back(false_exprt());
     else if(is_row_value_inf(row_v)) c.push_back(true_exprt());
-    else c.push_back(binary_relation_exprt(templ.rows[row],ID_le,row_v));
+    else c.push_back(binary_relation_exprt(templ_row.expr,ID_le,row_v));
   }
   result = conjunction(c);
 }
@@ -510,15 +511,16 @@ Function: template_domaint::get_row_max_value
 template_domaint::row_valuet template_domaint::get_max_row_value(
   const template_domaint::rowt &row)
 {
-  if(templ.rows[row].type().id()==ID_signedbv)
+  const template_rowt &templ_row = templ[row];
+  if(templ_row.expr.type().id()==ID_signedbv)
   {
-    return to_signedbv_type(templ.rows[row].type()).largest_expr();
+    return to_signedbv_type(templ_row.expr.type()).largest_expr();
   }
-  if(templ.rows[row].type().id()==ID_unsignedbv)
+  if(templ_row.expr.type().id()==ID_unsignedbv)
   {
-    return to_unsignedbv_type(templ.rows[row].type()).largest_expr();
+    return to_unsignedbv_type(templ_row.expr.type()).largest_expr();
   }
-  if(templ.rows[row].type().id()==ID_floatbv) 
+  if(templ_row.expr.type().id()==ID_floatbv) 
   {
     ieee_floatt max;
     max.make_fltmax();
@@ -542,15 +544,16 @@ Function: template_domaint::get_row_max_value
 template_domaint::row_valuet template_domaint::get_min_row_value(
   const template_domaint::rowt &row)
 {
-  if(templ.rows[row].type().id()==ID_signedbv)
+  const template_rowt &templ_row = templ[row];
+  if(templ_row.expr.type().id()==ID_signedbv)
   {
-    return to_signedbv_type(templ.rows[row].type()).smallest_expr();
+    return to_signedbv_type(templ_row.expr.type()).smallest_expr();
   }
-  if(templ.rows[row].type().id()==ID_unsignedbv)
+  if(templ_row.expr.type().id()==ID_unsignedbv)
   {
-    return to_unsignedbv_type(templ.rows[row].type()).smallest_expr();
+    return to_unsignedbv_type(templ_row.expr.type()).smallest_expr();
   }
-  if(templ.rows[row].type().id()==ID_floatbv) 
+  if(templ_row.expr.type().id()==ID_floatbv) 
   {
     ieee_floatt min;
     min.make_fltmin();
@@ -577,17 +580,18 @@ void template_domaint::output_value(std::ostream &out, const valuet &value,
   const templ_valuet &v = static_cast<const templ_valuet &>(value);
   for(unsigned row = 0; row<templ.size(); row++)
   {
-    switch(templ.kinds[row])
+    const template_rowt &templ_row = templ[row];
+    switch(templ_row.kind)
     {
     case LOOP:
-      out << "(LOOP) [ " << from_expr(ns,"",templ.pre_guards[row]) << " | ";
-      out << from_expr(ns,"",templ.post_guards[row]) << " ] ===> " << std::endl << "       ";
+      out << "(LOOP) [ " << from_expr(ns,"",templ_row.pre_guard) << " | ";
+      out << from_expr(ns,"",templ_row.post_guard) << " ] ===> " << std::endl << "       ";
       break;
     case IN: out << "(IN)   "; break;
     case OUT: case OUTL: out << "(OUT)  "; break;
     default: assert(false);
     }
-    out << "( " << from_expr(ns,"",templ.rows[row]) << " <= ";
+    out << "( " << from_expr(ns,"",templ_row.expr) << " <= ";
     if(is_row_value_neginf(v[row])) out << "-oo";
     else if(is_row_value_inf(v[row])) out << "oo";
     else out << from_expr(ns,"",v[row]);
@@ -611,21 +615,22 @@ void template_domaint::output_domain(std::ostream &out, const namespacet &ns) co
 {
   for(unsigned row = 0; row<templ.size(); row++)
   {
-    switch(templ.kinds[row])
+    const template_rowt &templ_row = templ[row];
+    switch(templ_row.kind)
     {
     case LOOP:
-      out << "(LOOP) [ " << from_expr(ns,"",templ.pre_guards[row]) << " | ";
-      out << from_expr(ns,"",templ.post_guards[row]) << " ] ===> " << std::endl << "      ";
+      out << "(LOOP) [ " << from_expr(ns,"",templ_row.pre_guard) << " | ";
+      out << from_expr(ns,"",templ_row.post_guard) << " ] ===> " << std::endl << "      ";
       break;
     case IN: out << "(IN)   "; break;
     case OUT: case OUTL:
       out << "(OUT)  "; 
-      out << from_expr(ns,"",templ.post_guards[row]) << " ===> " << std::endl << "      ";
+      out << from_expr(ns,"",templ_row.post_guard) << " ===> " << std::endl << "      ";
       break;
     default: assert(false);
     }
     out << "( " << 
-        from_expr(ns,"",templ.rows[row]) << " <= CONST )" << std::endl;
+        from_expr(ns,"",templ_row.expr) << " <= CONST )" << std::endl;
   }
 }
 
@@ -768,44 +773,40 @@ Function: make_interval_template
 
 \*******************************************************************/
 
-void template_domaint::make_interval_template(templatet &templ, 
-  const var_listt &vars,
-  const guardst &pre_guards,
-  const guardst &post_guards,
-  const kindst &kinds,
-  const namespacet &ns)
+void template_domaint::add_interval_template(templatet &templ, 
+					      const var_specst &var_specs,
+					      const namespacet &ns)
 {
-  assert(vars.size() == pre_guards.size());
-  assert(vars.size() == post_guards.size());
-  assert(vars.size() == kinds.size());
-  unsigned size = 2*vars.size();
-  templ.rows.clear(); templ.rows.reserve(size);
-  templ.pre_guards.clear(); templ.pre_guards.reserve(size);
-  templ.post_guards.clear(); templ.post_guards.reserve(size);
-  templ.kinds.clear(); templ.kinds.reserve(size);
+  unsigned size = 2*var_specs.size();
+  templ.reserve(templ.size()+size);
   
-  guardst::const_iterator pre_g = pre_guards.begin();
-  guardst::const_iterator post_g = post_guards.begin();
-  kindst::const_iterator k = kinds.begin();
-  for(var_listt::const_iterator v = vars.begin(); 
-      v!=vars.end(); v++, pre_g++, post_g++, k++)
+  for(var_specst::const_iterator v = var_specs.begin(); 
+      v!=var_specs.end(); v++)
   {
-    if(*k==IN) continue;
+    if(v->kind==IN) continue; //TODO: must be done in caller (for preconditions, e.g.)
 
-    templ.rows.push_back(*v);
-    unary_minus_exprt um_expr(*v,v->type());
-    extend_expr_types(um_expr);
-    templ.rows.push_back(um_expr); 
-    for(unsigned i=0;i<2;i++) 
+    // x
     {
-      templ.pre_guards.push_back(*pre_g);
-      templ.post_guards.push_back(*post_g);
-      templ.kinds.push_back(*k);
+      templ.push_back(template_rowt());
+      template_rowt &templ_row = templ.back();
+      templ_row.expr = v->var;
+      templ_row.pre_guard = v->pre_guard;
+      templ_row.post_guard = v->post_guard;
+      templ_row.kind = v->kind;
+    }
+
+    // -x
+    {
+      templ.push_back(template_rowt());
+      template_rowt &templ_row = templ.back();
+      unary_minus_exprt um_expr(v->var,v->var.type());
+      extend_expr_types(um_expr);
+      templ_row.expr = um_expr;
+      templ_row.pre_guard = v->pre_guard;
+      templ_row.post_guard = v->post_guard;
+      templ_row.kind = v->kind;
     }
   }
-  assert(templ.rows.size() == templ.pre_guards.size());
-  assert(templ.rows.size() == templ.post_guards.size());
-  assert(templ.rows.size() == templ.kinds.size());
 }
 
 /*******************************************************************\
@@ -820,74 +821,77 @@ Function: make_zone_template
 
 \*******************************************************************/
 
-void template_domaint::make_zone_template(templatet &templ, 
-  const var_listt &vars,
-  const guardst &pre_guards,
-  const guardst &post_guards,
-  const kindst &kinds,
-  const namespacet &ns)
+void template_domaint::add_zone_template(templatet &templ, 
+					  const var_specst &var_specs,
+					  const namespacet &ns)
 { 
-  assert(vars.size() == pre_guards.size());
-  assert(vars.size() == post_guards.size());
-  assert(vars.size() == kinds.size());
-  unsigned size = 2*vars.size()+vars.size()*(vars.size()-1);
-  templ.rows.clear(); templ.rows.reserve(size);
-  templ.pre_guards.clear(); templ.pre_guards.reserve(size);
-  templ.post_guards.clear(); templ.post_guards.reserve(size);
-  templ.kinds.clear(); templ.kinds.reserve(size);
-
-  guardst::const_iterator pre_g1 = pre_guards.begin();
-  guardst::const_iterator post_g1 = post_guards.begin();
-  kindst::const_iterator k1 = kinds.begin();
-  for(var_listt::const_iterator v1 = vars.begin(); 
-      v1!=vars.end(); v1++, pre_g1++, post_g1++, k1++)
+  unsigned size = 2*var_specs.size()+var_specs.size()*(var_specs.size()-1);
+  templ.reserve(templ.size()+size);
+  
+  for(var_specst::const_iterator v1 = var_specs.begin(); 
+      v1!=var_specs.end(); v1++)
   {
-    if(*k1!=IN) 
+    if(v1->kind!=IN) //TODO: must be done in caller (for preconditions, e.g.)
     {
-      templ.rows.push_back(*v1); 
-      unary_minus_exprt um_expr(*v1,v1->type());
-      extend_expr_types(um_expr);
-      templ.rows.push_back(um_expr); 
-      for(unsigned i=0;i<2;i++) 
+      // x
       {
-        templ.pre_guards.push_back(*pre_g1);
-	templ.post_guards.push_back(*post_g1);
-	templ.kinds.push_back(*k1);
+	templ.push_back(template_rowt());
+	template_rowt &templ_row = templ.back();
+	templ_row.expr = v1->var;
+	templ_row.pre_guard = v1->pre_guard;
+	templ_row.post_guard = v1->post_guard;
+	templ_row.kind = v1->kind;
+      }
+
+      // -x
+      {
+	templ.push_back(template_rowt());
+	template_rowt &templ_row = templ.back();
+	unary_minus_exprt um_expr(v1->var,v1->var.type());
+	extend_expr_types(um_expr);
+	templ_row.expr = um_expr;
+	templ_row.pre_guard = v1->pre_guard;
+	templ_row.post_guard = v1->post_guard;
+	templ_row.kind = v1->kind;
       }
     }
-    guardst::const_iterator pre_g2 = pre_g1; pre_g2++;
-    guardst::const_iterator post_g2 = post_g1; post_g2++;
-    var_listt::const_iterator v2 = v1; v2++;
-    kindst::const_iterator k2 = k1; k2++;
-    
-    for(;v2!=vars.end(); v2++, pre_g2++, post_g2++, k2++)
+
+    var_specst::const_iterator v2 = v1; v2++;
+    for(; v2!=var_specs.end(); v2++)
     {
-      kindt k = domaint::merge_kinds(*k1,*k2);
-      if(k==IN) continue;
+      kindt k = domaint::merge_kinds(v1->kind,v2->kind);
+      if(k==IN) continue; //TODO: must be done in caller (for preconditions, e.g.)
 
-      minus_exprt m_expr1(*v1,*v2);
-      extend_expr_types(m_expr1);
-      templ.rows.push_back(m_expr1);
-
-      minus_exprt m_expr2(*v2,*v1);
-      extend_expr_types(m_expr2);
-      templ.rows.push_back(m_expr2);
-
-      exprt pre_g = and_exprt(*pre_g1,*pre_g2);
-      exprt post_g = and_exprt(*post_g1,*post_g2);
+      exprt pre_g = and_exprt(v1->pre_guard,v2->pre_guard);
+      exprt post_g = and_exprt(v1->post_guard,v2->post_guard);
       simplify(pre_g,ns);
       simplify(post_g,ns);
-      for(unsigned i=0;i<2;i++) 
+
+      // x1 - x2
       {
-        templ.pre_guards.push_back(pre_g);
-        templ.post_guards.push_back(post_g);
-        templ.kinds.push_back(k);
-      }    
+	templ.push_back(template_rowt());
+	template_rowt &templ_row = templ.back();
+        minus_exprt m_expr(v1->var,v2->var);
+        extend_expr_types(m_expr);
+	templ_row.expr = m_expr;
+	templ_row.pre_guard = pre_g;
+	templ_row.post_guard = post_g;
+	templ_row.kind = k;
+      }
+
+      // x2 - x1
+      {
+	templ.push_back(template_rowt());
+	template_rowt &templ_row = templ.back();
+        minus_exprt m_expr(v2->var,v1->var);
+        extend_expr_types(m_expr);
+	templ_row.expr = m_expr;
+	templ_row.pre_guard = pre_g;
+	templ_row.post_guard = post_g;
+	templ_row.kind = k;
+      }
     }
   }
-  assert(templ.rows.size() == templ.pre_guards.size());
-  assert(templ.rows.size() == templ.post_guards.size());
-  assert(templ.rows.size() == templ.kinds.size());
 }
 
 /*******************************************************************\
@@ -902,79 +906,102 @@ Function: make_octagon_template
 
 \*******************************************************************/
 
-void template_domaint::make_octagon_template(templatet &templ,
-  const var_listt &vars,
-  const guardst &pre_guards,
-  const guardst &post_guards,
-  const kindst &kinds,
-  const namespacet &ns)
+void template_domaint::add_octagon_template(templatet &templ,
+					     const var_specst &var_specs,
+					     const namespacet &ns)
 {
-  assert(vars.size() == pre_guards.size());
-  assert(vars.size() == post_guards.size());
-  unsigned size =  2*vars.size()+2*vars.size()*(vars.size()-1);
-  templ.rows.clear(); templ.rows.reserve(size);
-  templ.pre_guards.clear(); templ.pre_guards.reserve(size);
-  templ.post_guards.clear(); templ.post_guards.reserve(size);
-
-  guardst::const_iterator pre_g1 = pre_guards.begin();
-  guardst::const_iterator post_g1 = post_guards.begin();
-  kindst::const_iterator k1 = kinds.begin();
-  for(var_listt::const_iterator v1 = vars.begin(); 
-      v1!=vars.end(); v1++, pre_g1++, post_g1++, k1++)
+  unsigned size = 2*var_specs.size()+2*var_specs.size()*(var_specs.size()-1);
+  templ.reserve(templ.size()+size);
+  
+  for(var_specst::const_iterator v1 = var_specs.begin(); 
+      v1!=var_specs.end(); v1++)
   {
-    if(*k1!=IN) 
+    if(v1->kind!=IN) //TODO: must be done in caller (for preconditions, e.g.)
     {
-      templ.rows.push_back(*v1); 
-      unary_minus_exprt um_expr(*v1,v1->type());
-      extend_expr_types(um_expr);
-      templ.rows.push_back(um_expr); 
-      for(unsigned i=0;i<2;i++) 
+      // x
       {
-        templ.pre_guards.push_back(*pre_g1);
-	templ.post_guards.push_back(*post_g1);
-	templ.kinds.push_back(*k1);
+	templ.push_back(template_rowt());
+	template_rowt &templ_row = templ.back();
+	templ_row.expr = v1->var;
+	templ_row.pre_guard = v1->pre_guard;
+	templ_row.post_guard = v1->post_guard;
+	templ_row.kind = v1->kind;
+      }
+
+      // -x
+      {
+	templ.push_back(template_rowt());
+	template_rowt &templ_row = templ.back();
+	unary_minus_exprt um_expr(v1->var,v1->var.type());
+	extend_expr_types(um_expr);
+	templ_row.expr = um_expr;
+	templ_row.pre_guard = v1->pre_guard;
+	templ_row.post_guard = v1->post_guard;
+	templ_row.kind = v1->kind;
       }
     }
-    guardst::const_iterator pre_g2 = pre_g1; pre_g2++;
-    guardst::const_iterator post_g2 = post_g1; post_g2++;
-    var_listt::const_iterator v2 = v1; v2++;
-    kindst::const_iterator k2 = k1; k2++;
-    for(;v2!=vars.end(); v2++, pre_g2++, post_g2++, k2++)
+
+    var_specst::const_iterator v2 = v1; v2++;
+    for(; v2!=var_specs.end(); v2++)
     {
-      kindt k = domaint::merge_kinds(*k1,*k2);
-      if(k==IN) continue;
+      kindt k = domaint::merge_kinds(v1->kind,v2->kind);
+      if(k==IN) continue; //TODO: must be done in caller (for preconditions, e.g.)
 
-      minus_exprt m_expr1(*v1,*v2);
-      extend_expr_types(m_expr1);
-      templ.rows.push_back(m_expr1);
-
-      minus_exprt m_expr2(*v2,*v1);
-      extend_expr_types(m_expr2);
-      templ.rows.push_back(m_expr2);
-
-      plus_exprt p_expr1(*v1,*v2);
-      extend_expr_types(p_expr1);
-      templ.rows.push_back(p_expr1);
-
-      minus_exprt p_expr2(unary_minus_exprt(*v1,v1->type()),*v2);
-      extend_expr_types(p_expr2);
-      templ.rows.push_back(p_expr2);
-
-      exprt pre_g = and_exprt(*pre_g1,*pre_g2);
-      exprt post_g = and_exprt(*post_g1,*post_g2);
+      exprt pre_g = and_exprt(v1->pre_guard,v2->pre_guard);
+      exprt post_g = and_exprt(v1->post_guard,v2->post_guard);
       simplify(pre_g,ns);
       simplify(post_g,ns);
-      for(unsigned i=0;i<4;i++) 
+
+      // x1 - x2
       {
-        templ.pre_guards.push_back(pre_g);
-        templ.post_guards.push_back(post_g);
-        templ.kinds.push_back(k);
+	templ.push_back(template_rowt());
+	template_rowt &templ_row = templ.back();
+        minus_exprt m_expr(v1->var,v2->var);
+        extend_expr_types(m_expr);
+	templ_row.expr = m_expr;
+	templ_row.pre_guard = pre_g;
+	templ_row.post_guard = post_g;
+	templ_row.kind = k;
+      }
+
+      // -x1 + x2
+      {
+	templ.push_back(template_rowt());
+	template_rowt &templ_row = templ.back();
+        minus_exprt m_expr(v2->var,v1->var);
+        extend_expr_types(m_expr);
+	templ_row.expr = m_expr;
+	templ_row.pre_guard = pre_g;
+	templ_row.post_guard = post_g;
+	templ_row.kind = k;
+      }
+
+      // -x1 - x2
+      {
+	templ.push_back(template_rowt());
+	template_rowt &templ_row = templ.back();
+        minus_exprt p_expr(unary_minus_exprt(v1->var,v1->var.type()),v2->var);
+        extend_expr_types(p_expr);
+	templ_row.expr = p_expr;
+	templ_row.pre_guard = pre_g;
+	templ_row.post_guard = post_g;
+	templ_row.kind = k;
+      }
+
+      // x1 + x2
+      {
+	templ.push_back(template_rowt());
+	template_rowt &templ_row = templ.back();
+        plus_exprt p_expr(v1->var,v2->var);
+        extend_expr_types(p_expr);
+	templ_row.expr = p_expr;
+	templ_row.pre_guard = pre_g;
+	templ_row.post_guard = post_g;
+	templ_row.kind = k;
       }
     }
   }
-  assert(templ.rows.size() == templ.pre_guards.size());
-  assert(templ.rows.size() == templ.post_guards.size());
-  assert(templ.rows.size() == templ.kinds.size());
+
 }
 
 /*******************************************************************\

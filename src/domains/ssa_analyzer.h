@@ -43,16 +43,34 @@ protected:
   
   replace_mapt renaming_map;
 
-  void collect_variables(const local_SSAt &SSA,
-			 var_listt &vars,
-			 domaint::guardst &pre_guards,
-			 domaint::guardst &post_guards,
-			 domaint::kindst &kinds);
 
-  bool add_vars_filter(const symbol_exprt &s);
-  var_listt add_vars(const var_listt &vars_to_add, var_listt &vars);
-  var_listt add_vars(const local_SSAt::var_listt &vars_to_add, var_listt &vars);
-  var_listt add_vars(const local_SSAt::var_sett &vars_to_add, var_listt &vars);
+  // functions for extracting information for template generation
+
+  void collect_variables(const local_SSAt &SSA,
+			 domaint::var_specst &var_specs);
+
+  domaint::var_specst filter_template_domain(const domaint::var_specst& var_specs);
+  domaint::var_specst filter_equality_domain(const domaint::var_specst& var_specs);
+  void add_var(const domaint::vart &var_to_add, 			    
+	       const domaint::guardt &pre_guard, 
+	       const domaint::guardt &post_guard,
+	       const domaint::kindt &kind,
+	       domaint::var_specst &var_specs);
+  void add_vars(const var_listt &vars_to_add, 			    
+		const domaint::guardt &pre_guard, 
+		const domaint::guardt &post_guard,
+		const domaint::kindt &kind,
+		domaint::var_specst &var_specs);
+  void add_vars(const local_SSAt::var_listt &vars_to_add,
+		const domaint::guardt &pre_guard, 
+		const domaint::guardt &post_guard,
+		const domaint::kindt &kind,
+		domaint::var_specst &var_specs);
+  void add_vars(const local_SSAt::var_sett &vars_to_add,
+		const domaint::guardt &pre_guard, 
+		const domaint::guardt &post_guard,
+		const domaint::kindt &kind,
+		domaint::var_specst &var_specs);
 
 };
 

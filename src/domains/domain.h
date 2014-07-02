@@ -15,9 +15,17 @@ public:
   typedef std::vector<vart> var_listt;
 
   typedef enum {LOOP, IN, OUT, OUTL} kindt;
-  typedef std::vector<kindt> kindst; 
 
-  typedef std::vector<exprt> guardst; 
+  typedef exprt guardt; 
+
+  typedef struct {
+    guardt pre_guard;
+    guardt post_guard;
+    vart var;
+    kindt kind;
+  } var_spect;
+
+  typedef std::vector<var_spect> var_specst; 
 
   class valuet {
    public:
