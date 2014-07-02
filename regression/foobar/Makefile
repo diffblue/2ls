@@ -1,12 +1,12 @@
 default: tests.log
 
-SOLVER = --verbosity 10 --binsearch-solver
+FLAGS = --verbosity 10
 
 test:
-	@../test.pl -c "../../../src/summarizer/summarizer $(SOLVER)"
+	@../test.pl -c "../../../src/summarizer/summarizer $(FLAGS)"
 
 tests.log: ../test.pl
-	@../test.pl -c "../../../src/summarizer/summarizer $(SOLVER)"
+	@../test.pl -c "../../../src/summarizer/summarizer $(FLAGS)"
 
 show:
 	@for dir in *; do \

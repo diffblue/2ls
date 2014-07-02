@@ -1,6 +1,6 @@
-CORE
+KNOWNBUG
 main.c
---bounds-check --pointer-check --enum-solver
+--bounds-check --pointer-check
 ^EXIT=0$
 ^SIGNAL=0$
 ^VERIFICATION SUCCESSFUL$
