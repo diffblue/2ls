@@ -18,7 +18,7 @@ int pass_through_array (int x)
 int main (void) {
   int x;
 
-  assert(x == pass_through_array(x));
+  assert(x == pass_through_array(x));  //out of reach to prove that
 
   return 1;
 }

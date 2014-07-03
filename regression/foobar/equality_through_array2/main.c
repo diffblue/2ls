@@ -1,4 +1,4 @@
-#define LIMIT 10
+#define LIMIT 2
 
 void main ()
 {
@@ -15,7 +15,7 @@ void main ()
   __CPROVER_assume(0 <= y && y < LIMIT);
   __CPROVER_assume(x + y < LIMIT);
 
-  assert(a[x] + a[y] == x + y);
+  assert(a[x] + a[y] == x + y); //out of reach to prove that
 
   return 1;
 }

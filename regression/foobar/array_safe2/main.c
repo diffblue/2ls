@@ -1,6 +1,6 @@
-#define SZ 2048
+#define SZ 1
 
-int main(void) {
+void main(void) {
   int A[SZ];
   int B[SZ];
   int i;
@@ -11,5 +11,5 @@ int main(void) {
     B[i] = tmp;
   }
 
-  assert(A[5] == B[5]);
+  assert(A[0] == B[0]);
 }

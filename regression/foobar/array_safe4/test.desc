@@ -1,6 +1,6 @@
 KNOWNBUG
 main.c
---bounds-check --pointer-check
+--bounds-check --pointer-check --arrays
 ^EXIT=0$
 ^SIGNAL=0$
 ^VERIFICATION SUCCESSFUL$

@@ -8,5 +8,5 @@ int main(void) {
     A[i] = i;
   }
 
-  assert(A[SIZE-1] == SIZE-1);
+  assert(A[SIZE-1] == SIZE-1); //currently out of reach to prove that without unrolling
 }

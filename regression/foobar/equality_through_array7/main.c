@@ -1,4 +1,4 @@
-#define LIMIT 10
+#define LIMIT 2
 
 int a[LIMIT];
 

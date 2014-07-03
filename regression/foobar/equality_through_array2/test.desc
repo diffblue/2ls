@@ -1,6 +1,6 @@
-CORE
+KNOWNBUG
 main.c
---equalities
+--octagons
 ^EXIT=0$
 ^SIGNAL=0$
 ^VERIFICATION SUCCESSFUL$
