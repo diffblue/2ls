@@ -181,6 +181,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
     {
       template_domaint::row_valuet middle = 
 	  template_domain.between(lower,upper);
+      if(!template_domain.less_than(lower,middle)) middle = upper;
 
       // row_symb_value >= middle
       exprt c = template_domain.get_row_symb_value_constraint(row,middle);
@@ -251,7 +252,6 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
       }
 #endif
       
-      	if(!template_domain.less_than(lower,middle)) upper = middle;
       	lower = middle;
       }
       else 
@@ -269,6 +269,8 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 	      debug() << "not_in_conflict: " << whole_formula[i] << eom;
         }
 #endif
+
+        if(!template_domain.less_than(middle,upper)) middle = lower;
 
 	upper = middle;
       }

@@ -1,4 +1,4 @@
-#define SIZE 5
+#define SIZE 3
 
 void main (void)
 {
@@ -9,7 +9,5 @@ void main (void)
 
   assert(a[0]==1);
   assert(a[1]<=SIZE); 
-  assert(a[2]<=SIZE);
-  assert(a[3]<=SIZE);
-  assert(a[4]<=SIZE);
+  assert(a[2]<=SIZE); //fails with binary search (may actually also fail with enumeration, if different models were produced). The problem is that for 0<=i<=3, the solver might return a model with i=1, then a[i] = i+1 leaves a[2] unbounded. The template should include a guard that forces an update of a[2] only to happen if the index expression i is equal to 2, what requires knowledge about the index expressions used in assignments...
 }
