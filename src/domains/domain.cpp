@@ -21,7 +21,10 @@ void domaint::output_var_specs(std::ostream &out, const var_specst &var_specs,
 	  out << "(LOOP) [ " << from_expr(ns,"",v->pre_guard) << " | ";
 	  out << from_expr(ns,"",v->post_guard) << " ]: ";
 	  break;
-	case IN: out << "(IN)   "; break;
+        case IN: 
+          out << "(IN)   ";
+          out << from_expr(ns,"",v->pre_guard) << " ===> " << ": ";
+          break;
 	case OUT: case OUTL:
 	  out << "(OUT)  "; 
 	  out << from_expr(ns,"",v->post_guard) << ": ";

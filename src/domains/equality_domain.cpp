@@ -261,7 +261,10 @@ void equality_domaint::output_domain(std::ostream &out,
       out << "(LOOP) [ " << from_expr(ns,"",templ_row.pre_guard) << " | ";
       out << from_expr(ns,"",templ_row.post_guard) << " ] ===> " << std::endl << "      ";
       break;
-    case IN: out << "(IN)   "; break;
+    case IN: 
+      out << "(IN)   ";
+      out << from_expr(ns,"",templ_row.pre_guard) << " ===> " << std::endl << "      ";
+      break;
     case OUT: case OUTL:
       out << "(OUT)  "; 
       out << from_expr(ns,"",templ_row.post_guard) << " ===> " << std::endl << "      ";
@@ -323,12 +326,15 @@ bool adapt_types(exprt &v1, exprt &v2)
     return true;
   }
 
-  if(v1.type().id()==ID_array && v2.type().id()==ID_array) 
+  if(v1.id()==ID_index || v2.id()==ID_index) 
   {
-    if(v1.type().subtype() != v2.type().subtype()) return false;
-    if(to_array_type(v1.type()).size() != to_array_type(v2.type()).size()) return false;
-    return true; 
-  }
+#if 0
+    std::cout << "v1: " << v1 << std::endl;
+    std::cout << "v2: " << v2 << std::endl;
+#endif
+    //TODO: implement
+    return false; 
+  } 
   
   return false; //types incompatible
 }
@@ -348,7 +354,7 @@ void equality_domaint::make_template(
     for(; v2!=var_specs.end(); v2++)
     {
       kindt k = domaint::merge_kinds(v1->kind,v2->kind);
-      if(k==IN) continue; //TODO: must be done in caller (for preconditions, e.g.)
+      //if(k==IN) continue; //TODO: must be done in caller (for preconditions, e.g.)
 
       exprt pre_g = and_exprt(v1->pre_guard,v2->pre_guard);
       exprt post_g = and_exprt(v1->post_guard,v2->post_guard);

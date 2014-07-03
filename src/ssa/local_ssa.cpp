@@ -127,7 +127,7 @@ void local_SSAt::get_globals(locationt loc, std::set<symbol_exprt> &globals,
     for(std::set<ssa_objectt>::const_iterator it = ssa_globals.begin();
       it != ssa_globals.end(); it++)
     {
-#if 1
+#if 0
       std::cout << "global: " << from_expr(ns, "", read_rhs(it->get_expr(),loc)) << std::endl;
 #endif
       if(!returns && 

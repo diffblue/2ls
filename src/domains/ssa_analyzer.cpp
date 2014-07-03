@@ -270,7 +270,7 @@ void ssa_analyzert::collect_variables(const local_SSAt &SSA,
         ssa_domaint::phi_nodest::const_iterator p_it=
         phi_nodes.find(o_it->get_identifier());
 
-        if(p_it==phi_nodes.end()) continue; // object not modified in this loop
+	if(p_it==phi_nodes.end()) continue; // object not modified in this loop
 
         symbol_exprt in=SSA.name(*o_it, local_SSAt::LOOP_BACK, i_it);
         symbol_exprt out=SSA.read_rhs(*o_it, i_it);
@@ -285,6 +285,33 @@ void ssa_analyzert::collect_variables(const local_SSAt &SSA,
           from_expr(ns, "", out) << std::endl;        
   #endif
      }
+
+      /*
+      // local nondet variables
+      const ssa_domaint &ssa_domain=SSA.ssa_analysis[i_it->get_target()];
+      for(local_SSAt::objectst::const_iterator
+          o_it=SSA.ssa_objects.objects.begin();
+          o_it!=SSA.ssa_objects.objects.end();
+          o_it++)
+      {
+        ssa_domaint::def_mapt::const_iterator 
+          d_it = ssa_domain.def_map.find(o_it->get_identifier());
+	if(d_it!=ssa_domain.def_map.end()) 
+	{
+  #if 1
+        std::cout << "ssa_object " << o_it->get_identifier() <<
+		  ": " << d_it->second.def.is_input() << std::endl;        
+  #endif
+	  symbol_exprt in=SSA.name_input(*o_it);
+          exprt guard = SSA.guard_symbol(i_it->get_target());
+	  add_var(in,guard,guard,domaint::IN,var_specs);
+
+  #if 1
+          std::cout << "Adding " << from_expr(ns, "", in) << std::endl;        
+  #endif
+	}
+      }
+      */
     } 
   }
   
@@ -394,15 +421,16 @@ void ssa_analyzert::add_var(const domaint::vart &var,
 			    const domaint::kindt &kind,
 			    domaint::var_specst &var_specs)
 {
-  var_specs.push_back(domaint::var_spect());
-  domaint::var_spect &var_spec = var_specs.back();
-  var_spec.pre_guard = pre_guard;
-  var_spec.post_guard = post_guard;
-  var_spec.kind = kind;
-  var_spec.var = var;
+  if(var.type().id()!=ID_array)
+  {
+    var_specs.push_back(domaint::var_spect());
+    domaint::var_spect &var_spec = var_specs.back();
+    var_spec.pre_guard = pre_guard;
+    var_spec.post_guard = post_guard;
+    var_spec.kind = kind;
+    var_spec.var = var;
+  }
 
-  debug() << "var type: " << var.type() << eom;
-  
   //arrays
   if(var.type().id()==ID_array && options.get_bool_option("arrays"))
   {
@@ -413,10 +441,11 @@ void ssa_analyzert::add_var(const domaint::vart &var,
     {
       var_specs.push_back(domaint::var_spect());
       domaint::var_spect &var_spec = var_specs.back();
+      constant_exprt index = from_integer(i,array_type.size().type());
       var_spec.pre_guard = pre_guard;
       var_spec.post_guard = post_guard;
       var_spec.kind = kind;
-      var_spec.var = index_exprt(var,from_integer(i,array_type.size().type()));
+      var_spec.var = index_exprt(var,index);
     }
   }
 }

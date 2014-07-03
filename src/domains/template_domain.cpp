@@ -3,8 +3,6 @@
 #include <iostream>
 
 #include <util/find_symbols.h>
-#include <util/arith_tools.h>
-#include <util/ieee_float.h>
 #include <util/i2string.h>
 #include <util/simplify_expr.h>
 #include <langapi/languages.h>
@@ -622,7 +620,10 @@ void template_domaint::output_domain(std::ostream &out, const namespacet &ns) co
       out << "(LOOP) [ " << from_expr(ns,"",templ_row.pre_guard) << " | ";
       out << from_expr(ns,"",templ_row.post_guard) << " ] ===> " << std::endl << "      ";
       break;
-    case IN: out << "(IN)   "; break;
+    case IN: 
+      out << "(IN)   ";
+      out << from_expr(ns,"",templ_row.pre_guard) << " ===> " << std::endl << "      ";
+      break;
     case OUT: case OUTL:
       out << "(OUT)  "; 
       out << from_expr(ns,"",templ_row.post_guard) << " ===> " << std::endl << "      ";
@@ -1035,8 +1036,24 @@ mp_integer simplify_const_int(const exprt &expr)
   if(expr.id()==ID_plus) return simplify_const_int(expr.op0())+simplify_const_int(expr.op1());
   if(expr.id()==ID_minus) return simplify_const_int(expr.op0())-simplify_const_int(expr.op1());
   if(expr.id()==ID_mult) return simplify_const_int(expr.op0())*simplify_const_int(expr.op1());  
-  if(expr.id()==ID_symbol) return 0; //default value if not substituted in expr
-  if(expr.id()==ID_index) return 0; //default value if not substituted in expr
+  if(expr.id()==ID_symbol) 
+  {
+    std::cout << "substituting default value for " << expr << std::endl;
+    return 0; //default value if not substituted in expr
+  }
+  if(expr.id()==ID_index) 
+  {
+    const index_exprt &index_expr = to_index_expr(expr);
+    const typet &array_type = to_array_type(index_expr.array().type()).subtype();
+    if(array_type.id()==ID_signedbv || array_type.id()==ID_unsignedbv)
+    {
+      mp_integer mp_index = simplify_const_int(index_expr.index());
+      unsigned index = integer2unsigned(mp_index); //TODO: might overflow
+      assert(index<(index_expr.array().operands().size()));
+      return simplify_const_int(index_expr.array().operands()[index]);
+    }
+    assert(false); //not implemented
+  }
   assert(false); //not implemented
 }
 
@@ -1089,7 +1106,23 @@ ieee_floatt simplify_const_float(const exprt &expr)
   {
     ieee_floatt v;
     v.make_zero();
+
+    std::cout << "substituting default value for " << expr << std::endl;
+
     return v; 
+  }
+  if(expr.id()==ID_index) 
+  {
+    const index_exprt &index_expr = to_index_expr(expr);
+    const typet &array_type = to_array_type(index_expr.array().type()).subtype();
+    if(array_type.id()==ID_float)
+    {
+      mp_integer mp_index = simplify_const_int(index_expr.index());
+      unsigned index = integer2unsigned(mp_index); //TODO: might overflow
+      assert(index<(index_expr.array().operands().size()));
+      return simplify_const_float(index_expr.array().operands()[index]);
+    }
+    assert(false); //not implemented
   }
   assert(false); //not implemented
 }
@@ -1097,6 +1130,30 @@ ieee_floatt simplify_const_float(const exprt &expr)
 constant_exprt simplify_const(const exprt &expr)
 {
   if(expr.id()==ID_constant) return to_constant_expr(expr);
+  if(expr.id()==ID_index) 
+  {
+    const index_exprt &index_expr = to_index_expr(expr);
+    const typet &array_type = to_array_type(index_expr.array().type()).subtype();
+    if(array_type.id()==ID_signedbv)
+    {
+      mp_integer res = simplify_const_int(index_expr);
+      const signedbv_typet &type = to_signedbv_type(expr.type());
+      assert(res>=type.smallest());
+      assert(res<=type.largest());
+      return to_constant_expr(from_integer(res,expr.type()));
+    }
+    if(array_type.id()==ID_unsignedbv)
+    {
+      mp_integer res = simplify_const_int(index_expr);
+      const unsignedbv_typet &type = to_unsignedbv_type(expr.type());
+      assert(res>=type.smallest());
+      assert(res<=type.largest());
+      return to_constant_expr(from_integer(res,expr.type()));
+    }
+    if(array_type.id()==ID_float)
+      return to_constant_expr(simplify_const_float(index_expr).to_expr());
+    assert(false); //not implemented
+  }
   //  if(expr.id()==ID_typecast) return to_constant_expr(expr.op0());
   if(expr.type().id()==ID_signedbv) 
   {

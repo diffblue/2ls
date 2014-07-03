@@ -260,6 +260,10 @@ void summarizert::inline_summaries(const function_namet &function_name,
       assert(loc!=SSA.goto_function.body.instructions.end());
       SSA.get_globals(++loc,cs_globals_out);
 
+      /*      for(summaryt::var_sett::const_iterator it = summary.globals_in.begin();
+          it != summary.globals_in.end(); it++)
+	  std::cout << "global " << SSA.read_rhs(*it,loc) << std::endl; */
+    
 #if 0
       std::cout << "globals at call site: ";
       for(summaryt::var_sett::const_iterator it = cs_globals_out.begin();

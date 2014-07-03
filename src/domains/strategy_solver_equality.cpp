@@ -39,6 +39,10 @@ bool strategy_solver_equalityt::iterate(invariantt &_inv)
       
       equality_domain.set_equal(*e_it,inv);
       solver << pre_expr; //make permanent
+
+      //due to transitivity, we would like to recheck equalities that did not hold
+      todo_equs.insert(todo_disequs.begin(),todo_disequs.end());
+      todo_disequs.clear();
     }
 
     pop_context();
