@@ -52,6 +52,8 @@ class summarizert : public messaget
 
   void compute_summary_rec(const function_namet &function_name);
 
+  void join_summaries(const summaryt &existing_summary, summaryt &new_summary);
+
 };
 
 

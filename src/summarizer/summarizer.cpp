@@ -19,6 +19,7 @@ Author: Peter Schrammel
 #include "../ssa/local_ssa.h"
 #include "../ssa/simplify_ssa.h"
 
+#define PRECISE_JOIN
 
 /*******************************************************************\
 
@@ -199,6 +200,9 @@ void summarizert::compute_summary_rec(const function_namet &function_name)
   summary.globals_out =SSA.globals_out;
   summary.precondition = preconditions.at(function_name);
   analyzer.get_summary(summary.transformer);
+#ifdef PRECISE_JOIN
+  summary.transformer = implies_exprt(summary.precondition,summary.transformer);
+#endif
   simplify_expr(summary.transformer, SSA.ns);
 
   {
@@ -208,8 +212,13 @@ void summarizert::compute_summary_rec(const function_namet &function_name)
     status() << out.str() << eom;
   }
 
+  if(summary_db.exists(function_name)) 
+  {
+    summaryt old_summary = summary_db.get(function_name);
+    join_summaries(old_summary,summary);
+  }
   summary_db.put(function_name,summary);
-
+  
   // Add loop invariants as constraints back into SSA.
   // We simply use the last CFG node. It would be prettier to put
   // these close to the loops.
@@ -309,3 +318,103 @@ void summarizert::inline_summaries(const function_namet &function_name,
   }
   inliner.commit_nodes(SSA.nodes);
 }
+
+/*******************************************************************\
+
+Function: summarizert::join_summaries()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void summarizert::join_summaries(const summaryt &existing_summary, summaryt &new_summary)
+{
+  assert(existing_summary.params == new_summary.params);
+  assert(existing_summary.globals_in == new_summary.globals_in);
+  assert(existing_summary.globals_out == new_summary.globals_out);
+  new_summary.precondition = or_exprt(existing_summary.precondition,
+					   new_summary.precondition);
+#ifdef PRECISE_JOIN
+  new_summary.transformer = and_exprt(existing_summary.transformer,
+    implies_exprt(new_summary.precondition,new_summary.transformer));
+#else
+  new_summary.transformer = or_exprt(existing_summary.transformer,
+    new_summary.transformer);
+#endif
+}
+
+/*******************************************************************\
+
+Function: summarizert::inline_precondition_assertions()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\******************************************************************
+
+void summarizert::inline_precondition_assertions(const function_namet &function_name, 
+  local_SSAt &SSA)
+{
+  ssa_inlinert inliner;
+  inliner.set_message_handler(get_message_handler());
+
+  // add precondition assertion for each call
+  for(local_SSAt::nodest::iterator n = SSA.nodes.begin(); 
+      n!=SSA.nodes.end(); n++)
+  {
+    for(local_SSAt::nodet::function_callst::iterator 
+        f_it = n->second.function_calls.begin();
+        f_it != n->second.function_calls.end(); f_it++)
+    {
+      assert(f_it->function().id()==ID_symbol); //no function pointers
+      irep_idt fname = to_symbol_expr(f_it->function()).get_identifier();
+
+      summaryt summary; 
+      bool recompute = false;
+      // replace call with summary if it exists 
+      if(summary_db.exists(fname)) 
+      {
+        status() << "Using existing summary for function " << fname << eom;
+	summary = summary_db.get(fname);
+        
+      }
+      // compute summary if function_name in functions
+      else if(functions.find(fname)!=functions.end() && recursive &&
+              fname!=function_name) // no recursive calls
+        recompute = true;
+      else // havoc function call by default
+      {
+        status() << "Function " << fname << " not found" << eom;
+        inliner.havoc(n->second,f_it);
+        continue;
+      }
+      if(recompute) 
+      {
+        status() << "Recursively summarizing function " << fname << eom;
+        compute_summary_rec(fname);
+        summary = summary_db.get(fname);
+      }
+
+      status() << "Replacing function " << fname << eom;
+      //getting globals at call site
+      local_SSAt::var_sett cs_globals_in, cs_globals_out; 
+      goto_programt::const_targett loc = n->first;
+      SSA.get_globals(loc,cs_globals_in);
+      assert(loc!=SSA.goto_function.body.instructions.end());
+      SSA.get_globals(++loc,cs_globals_out);
+
+      //replace
+      inliner.replace(SSA.nodes,n,f_it,cs_globals_in,cs_globals_out,summary);
+    }
+    inliner.commit_node(n);
+  }
+  inliner.commit_nodes(SSA.nodes);
+}
+*/
