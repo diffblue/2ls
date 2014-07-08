@@ -325,6 +325,13 @@ bool adapt_types(exprt &v1, exprt &v2)
     v2 = typecast_exprt(v2,new_type);
     return true;
   }
+  if(v1.type().id()==ID_pointer && v2.type().id()==ID_pointer) 
+  {
+    if(to_pointer_type(v1.type()).subtype() == 
+       to_pointer_type(v2.type()).subtype())
+      return true;
+    return false;
+  }
 
   if(v1.id()==ID_index || v2.id()==ID_index) 
   {
@@ -350,6 +357,18 @@ void equality_domaint::make_template(
   for(var_specst::const_iterator v1 = var_specs.begin(); 
       v1!=var_specs.end(); v1++)
   {
+    // NULL pointer checks
+    if(v1->var.type().id()==ID_pointer)
+    {
+      templ.push_back(template_rowt());
+      template_rowt &templ_row = templ.back();
+      templ_row.var_pair = var_pairt(v1->var,
+				     null_pointer_exprt(to_pointer_type(v1->var.type())));
+      templ_row.pre_guard = v1->pre_guard;
+      templ_row.post_guard = v1->post_guard;
+      templ_row.kind = v1->kind;      
+    }
+
     var_specst::const_iterator v2 = v1; v2++;
     for(; v2!=var_specs.end(); v2++)
     {
