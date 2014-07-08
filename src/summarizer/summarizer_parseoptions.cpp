@@ -259,6 +259,13 @@ int summarizer_parseoptionst::doit()
     return 7;
   }
 
+  if(cmdline.isset("context-sensitive"))
+  {
+    options.set_option("context-sensitive", true);
+    status() << "Context-sensitive analysis from " << 
+      goto_model.goto_functions.entry_point() << eom;
+  }
+
   if(cmdline.isset("arrays"))
   {
     options.set_option("arrays", true);
@@ -270,8 +277,7 @@ int summarizer_parseoptionst::doit()
     options.set_option("havoc", true);
     status() << "Havocking loops and function calls";
   }
-  else 
-  if(cmdline.isset("equalities"))
+  else if(cmdline.isset("equalities"))
   {
     options.set_option("equalities", true);
     status() << "Using equalities domain ";
@@ -937,6 +943,7 @@ void summarizer_parseoptionst::help()
     " --inline                     inline all functions into main\n"
     "\n"
     "Backend options:\n"
+    " --context-sensitive          context-sensitive analysis from entry point\n"
     " --havoc                      havoc loops and function calls\n"
     " --intervals                  use interval domain\n"
     " --equalities                 use equalities and disequalities domain\n"

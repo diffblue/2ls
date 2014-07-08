@@ -37,6 +37,8 @@ class summarizert : public messaget
   void summarize(functionst &functions, const preconditionst &preconditions); 
   void summarize(functionst &functions); 
 
+  void summarize(functionst &functions, const function_namet &entry_function); 
+
   void inline_summaries(const function_namet &function_name, local_SSAt &SSA, 
                         bool recursive=false);
 
@@ -48,8 +50,8 @@ class summarizert : public messaget
 
   void run();
 
- private:
   void compute_summary_rec(const function_namet &function_name);
+
 };
 
 

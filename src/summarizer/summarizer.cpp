@@ -95,6 +95,35 @@ Function: summarizert::summarize()
 
 \*******************************************************************/
 
+void summarizert::summarize(functionst &_functions, const function_namet &function_name)
+{
+  functions = _functions;
+
+  preconditions.clear();
+  for(functionst::const_iterator it = _functions.begin(); 
+      it!=_functions.end(); it++)
+  {
+    preconditions[it->first] = true_exprt();
+  }
+
+  status() << "\nSummarizing function " << function_name << eom;
+  if(!summary_db.exists(function_name)) compute_summary_rec(function_name);
+  else status() << "Summary for function " << function_name << 
+	 " exists already" << eom;
+}
+
+/*******************************************************************\
+
+Function: summarizert::summarize()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
 void summarizert::summarize(functionst &_functions,const preconditionst &_preconditions)
 {
   functions = _functions;

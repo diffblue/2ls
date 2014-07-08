@@ -43,7 +43,7 @@ property_checkert::resultt summary_checkert::operator()(
 {
   const namespacet ns(goto_model.symbol_table);
   SSA_functions(goto_model,ns);
-  if(!options.get_bool_option("havoc")) summarize();
+  if(!options.get_bool_option("havoc")) summarize(goto_model);
   return check_properties(); 
   // return check_properties(goto_model);
 }
@@ -116,11 +116,15 @@ Function: summary_checkert::summarize
 
 \*******************************************************************/
 
-void summary_checkert::summarize()
+void summary_checkert::summarize(const goto_modelt &goto_model)
 {    
   summarizer.set_message_handler(get_message_handler());
 
-  summarizer.summarize(ssa_db.functions());
+  if(options.get_bool_option("context-sensitive"))
+    summarizer.summarize(ssa_db.functions(),
+			 goto_model.goto_functions.entry_point());
+  else
+    summarizer.summarize(ssa_db.functions());
 }
 
 /*******************************************************************\

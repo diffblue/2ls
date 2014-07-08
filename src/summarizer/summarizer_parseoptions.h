@@ -39,6 +39,7 @@ class optionst;
   "(string-abstraction)(no-arch)(arch):(floatbv)(fixedbv)" \
   "(round-to-nearest)(round-to-plus-inf)(round-to-minus-inf)(round-to-zero)" \
   "(inline)" \
+  "(context-sensitive)" \
   "(show-locs)(show-vcc)(show-properties)(show-trace)(show-fixed-points)" \
   "(show-goto-functions)(show-guards)(show-defs)(show-ssa)(show-assignments)" \
   "(property):(all-properties)" \

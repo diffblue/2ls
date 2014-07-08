@@ -55,7 +55,7 @@ protected:
 
   void SSA_functions(const goto_modelt &, const namespacet &ns);
 
-  void summarize();
+  void summarize(const goto_modelt &);
 
   property_checkert::resultt check_properties();
   void check_properties(const summarizert::functionst::const_iterator f_it);
