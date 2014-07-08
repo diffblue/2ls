@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-void foo(int *x)
+void foo(int **x)
 {
   x = NULL;
 }
