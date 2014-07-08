@@ -325,6 +325,8 @@ bool adapt_types(exprt &v1, exprt &v2)
     v2 = typecast_exprt(v2,new_type);
     return true;
   }
+
+  //pointer equality
   if(v1.type().id()==ID_pointer && v2.type().id()==ID_pointer) 
   {
     if(to_pointer_type(v1.type()).subtype() == 

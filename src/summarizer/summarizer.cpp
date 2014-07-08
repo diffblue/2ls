@@ -237,7 +237,8 @@ void summarizert::inline_summaries(const function_namet &function_name,
 	  //      otherwise compute new one: recompute = true;
       }
       // compute summary if function_name in functions
-      else if(functions.find(fname)!=functions.end() && recursive) 
+      else if(functions.find(fname)!=functions.end() && recursive &&
+              fname!=function_name) // havoc recursive calls
         recompute = true;
       else // havoc function call by default
       {
