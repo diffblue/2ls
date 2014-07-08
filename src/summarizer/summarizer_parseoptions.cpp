@@ -265,6 +265,12 @@ int summarizer_parseoptionst::doit()
     status() << "Do not ignore array contents" << eom;
   }
 
+  if(cmdline.isset("havoc"))
+  {
+    options.set_option("havoc", true);
+    status() << "Havocking loops and function calls";
+  }
+  else 
   if(cmdline.isset("equalities"))
   {
     options.set_option("equalities", true);
@@ -301,17 +307,36 @@ int summarizer_parseoptionst::doit()
   }
   status() << eom;
 
-  if(cmdline.isset("equalities") &&
+  if((cmdline.isset("equalities") || cmdline.isset("havoc")) &&
      cmdline.isset("enum-solver"))
   {
     warning() << "Option --enum-solver ignored" << eom;
   }
-  if(cmdline.isset("equalities") &&
+  if((cmdline.isset("equalities") || cmdline.isset("havoc"))  &&
      cmdline.isset("binsearch-solver"))
   {
     warning() << "Option --binsearch-solver ignored" << eom;
   }
-
+  if(cmdline.isset("havoc")  &&
+    cmdline.isset("equalities"))
+  {
+    warning() << "Option --equalities ignored" << eom;
+  }
+  if((cmdline.isset("equalities") || cmdline.isset("havoc"))  &&
+     cmdline.isset("intervals"))
+  {
+    warning() << "Option --intervals ignored" << eom;
+  }
+  if((cmdline.isset("equalities") || cmdline.isset("havoc"))  &&
+     cmdline.isset("zones"))
+  {
+    warning() << "Option --zones ignored" << eom;
+  }
+  if((cmdline.isset("equalities") || cmdline.isset("havoc"))  &&
+     cmdline.isset("octagons"))
+  {
+    warning() << "Option --octagons ignored" << eom;
+  }
 
   try
   {
@@ -912,6 +937,7 @@ void summarizer_parseoptionst::help()
     " --inline                     inline all functions into main\n"
     "\n"
     "Backend options:\n"
+    " --havoc                      havoc loops and function calls\n"
     " --intervals                  use interval domain\n"
     " --equalities                 use equalities and disequalities domain\n"
     " --zones                      use zone domain\n"
