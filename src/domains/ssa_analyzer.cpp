@@ -229,6 +229,24 @@ void ssa_analyzert::get_loop_invariants(exprt &result)
 
 /*******************************************************************\
 
+Function: ssa_analyzert::get_calling_contexts
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void ssa_analyzert::get_calling_contexts(calling_contextst &result)
+{
+  assert(compute_calling_contexts);
+  result = calling_contexts;
+}
+
+/*******************************************************************\
+
 Function: ssa_analyzert::collect_variables
 
   Inputs:
@@ -319,6 +337,33 @@ void ssa_analyzert::collect_variables(const local_SSAt &SSA,
     } 
   }
   
+  /*
+  // collect context variables to track //TODO: create domain var data structure
+  for(local_SSAt::nodest::iterator n = SSA.nodes.begin(); 
+      n!=SSA.nodes.end(); n++)
+  {
+    for(local_SSAt::nodet::function_callst::iterator 
+        f_it = n->second.function_calls.begin();
+        f_it != n->second.function_calls.end(); f_it++)
+    {
+      assert(f_it->function().id()==ID_symbol); //no function pointers
+
+      //getting globals at call site
+      SSA.get_globals(n->first,cs_globals_in[f_it]);
+
+      //add function arguments
+      for(exprt::operandst::const_iterator it =  f_it->arguments().begin();
+          it !=  f_it->arguments().end(); it++)
+      {
+	std::set<symbol_exprt> symbols;
+	find_symbols(*it,symbols);        
+	context_vars[f_it].insert(symbols.begin(),symbols.end());
+      }
+    }
+  }
+   */
+
+
 #ifdef DEBUG
   for(unsigned i=0; i<pre_state_vars.size(); ++i)
   {

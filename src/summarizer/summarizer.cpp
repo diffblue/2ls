@@ -182,8 +182,8 @@ void summarizert::compute_summary_rec(const function_namet &function_name)
 {
   local_SSAt &SSA = *functions[function_name]; 
 
-  //check_preconditions(function_name,SSA);
-  //compute_preconditions(function_name,SSA);
+  check_preconditions(function_name,SSA);
+  compute_preconditions(function_name,SSA);
   inline_summaries(function_name,SSA,true); 
 
   {
@@ -280,9 +280,6 @@ void summarizert::inline_summaries(const function_namet &function_name,
       {
         status() << "Using existing summary for function " << fname << eom;
 	summary = summary_db.get(fname);
-	  //TODO: check whether summary applies (as soon as context-sensitive)
-	  //      (requires retrieving the local context from the current analysis), 
-	  //      otherwise compute new one: recompute = true;
       }
       // compute summary if function_name in functions
       else if(functions.find(fname)!=functions.end() && recursive &&
@@ -497,7 +494,7 @@ Function: summarizert::compute_preconditions()
 
  Outputs:
 
- Purpose: computes callee preconditions from the caller context
+ Purpose: computes callee preconditions from the calling context
 
 \******************************************************************/
 
@@ -508,11 +505,10 @@ void summarizert::compute_preconditions(
   ssa_inlinert inliner;
   inliner.set_message_handler(get_message_handler());
 
-  typedef std::map<local_SSAt::nodet::function_callst::iterator, 
-		   local_SSAt::var_sett> context_varst;
-  context_varst context_vars;
-
-  // collect context variables to track //TODO: create domain var data structure
+  // collect globals at call site
+  std::map<local_SSAt::nodet::function_callst::iterator, local_SSAt::var_sett>
+    cs_globals_in;
+ 
   for(local_SSAt::nodest::iterator n = SSA.nodes.begin(); 
       n!=SSA.nodes.end(); n++)
   {
@@ -522,34 +518,33 @@ void summarizert::compute_preconditions(
     {
       assert(f_it->function().id()==ID_symbol); //no function pointers
 
-      //getting globals at call site
-      SSA.get_globals(n->first,context_vars[f_it]);
-
-      //add function arguments
-      for(exprt::operandst::const_iterator it =  f_it->arguments().begin();
-          it !=  f_it->arguments().end(); it++)
-      {
-	std::set<symbol_exprt> symbols;
-	find_symbols(*it,symbols);        
-	context_vars[f_it].insert(symbols.begin(),symbols.end());
-      }
+      SSA.get_globals(n->first,cs_globals_in[f_it]);
     }
   }
 
-  if(context_vars.empty()) return; //nothing to do
+  if(cs_globals_in.empty()) return; //nothing to do
 
-  //analyze
+  // analyze
   ssa_analyzert analyzer(SSA.ns, options);
   analyzer.set_message_handler(get_message_handler());
+  analyzer.compute_calling_contexts = true;
+  analyzer(SSA,preconditions[function_name]);
 
-  // analyzer(SSA,context_vars); //TODO
+  ssa_analyzert::calling_contextst calling_contexts;
+  analyzer.get_calling_contexts(calling_contexts);
 
-  for(context_varst::iterator it = context_vars.begin();
-      it != context_vars.end(); it++)
+  // set preconditions
+  for(ssa_analyzert::calling_contextst::iterator it = calling_contexts.begin();
+      it != calling_contexts.end(); it++)
   {
     const irep_idt &fname = to_symbol_expr(it->first->function()).get_identifier();
-    preconditiont precondition;
-    //  analyzer.get_projection(it->second,precondition); //TODO
+    local_SSAt &fSSA = *functions[fname]; 
+
+    preconditiont precondition = it->second;
+    inliner.rename_to_callee(it->first, fSSA.params,
+			     cs_globals_in[it->first],fSSA.globals_in,
+			     precondition);
+
     if(preconditions.find(fname)!=preconditions.end())
       preconditions[fname] = or_exprt(preconditions[fname],precondition);
     else
