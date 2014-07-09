@@ -56,6 +56,8 @@ class summarizert : public messaget
 
   void join_summaries(const summaryt &existing_summary, summaryt &new_summary);
 
+  void compute_preconditions(const function_namet &function_name, 
+			     local_SSAt &SSA);
 };
 
 

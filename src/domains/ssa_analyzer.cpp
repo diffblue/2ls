@@ -41,7 +41,7 @@ Function: ssa_analyzert::operator()
 
 \*******************************************************************/
 
-void ssa_analyzert::operator()(local_SSAt &SSA)
+void ssa_analyzert::operator()(local_SSAt &SSA, const exprt &precondition)
 {
   if(SSA.goto_function.body.instructions.empty())
     return;
@@ -78,8 +78,12 @@ void ssa_analyzert::operator()(local_SSAt &SSA)
   }
   else assert(false);
   
+  // convert SSA to transition relation
   constraintst transition_relation;
   transition_relation << SSA;
+
+  // add precondition
+  transition_relation.push_back(precondition);
 
 #ifdef DEBUG
   for(constraintst::const_iterator it = transition_relation.begin(); 

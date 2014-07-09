@@ -11,7 +11,7 @@ Author: Peter Schrammel
 #include <util/simplify_expr.h>
 #include <solvers/sat/satcheck.h>
 #include <solvers/flattening/bv_pointers.h>
-
+#include <util/find_symbols.h>
 
 #include "summarizer.h"
 #include "summary_db.h"
@@ -182,7 +182,8 @@ void summarizert::compute_summary_rec(const function_namet &function_name)
 {
   local_SSAt &SSA = *functions[function_name]; 
 
-  check_preconditions(function_name,*functions.at(function_name));
+  //check_preconditions(function_name,SSA);
+  //compute_preconditions(function_name,SSA);
   inline_summaries(function_name,SSA,true); 
 
   {
@@ -201,7 +202,7 @@ void summarizert::compute_summary_rec(const function_namet &function_name)
   ssa_analyzert analyzer(SSA.ns, options);
   analyzer.set_message_handler(get_message_handler());
 
-  analyzer(SSA);
+  analyzer(SSA,preconditions[function_name]);
 
   summaryt summary;
   summary.params =SSA.params;
@@ -488,3 +489,70 @@ void summarizert::check_preconditions(
   //now, only function calls which need recomputing of their summaries are left
 }
 
+/*******************************************************************\
+
+Function: summarizert::compute_preconditions()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: computes callee preconditions from the caller context
+
+\******************************************************************/
+
+void summarizert::compute_preconditions(
+  const function_namet &function_name, 
+  local_SSAt &SSA)
+{
+  ssa_inlinert inliner;
+  inliner.set_message_handler(get_message_handler());
+
+  typedef std::map<local_SSAt::nodet::function_callst::iterator, 
+		   local_SSAt::var_sett> context_varst;
+  context_varst context_vars;
+
+  // collect context variables to track //TODO: create domain var data structure
+  for(local_SSAt::nodest::iterator n = SSA.nodes.begin(); 
+      n!=SSA.nodes.end(); n++)
+  {
+    for(local_SSAt::nodet::function_callst::iterator 
+        f_it = n->second.function_calls.begin();
+        f_it != n->second.function_calls.end(); f_it++)
+    {
+      assert(f_it->function().id()==ID_symbol); //no function pointers
+
+      //getting globals at call site
+      SSA.get_globals(n->first,context_vars[f_it]);
+
+      //add function arguments
+      for(exprt::operandst::const_iterator it =  f_it->arguments().begin();
+          it !=  f_it->arguments().end(); it++)
+      {
+	std::set<symbol_exprt> symbols;
+	find_symbols(*it,symbols);        
+	context_vars[f_it].insert(symbols.begin(),symbols.end());
+      }
+    }
+  }
+
+  if(context_vars.empty()) return; //nothing to do
+
+  //analyze
+  ssa_analyzert analyzer(SSA.ns, options);
+  analyzer.set_message_handler(get_message_handler());
+
+  // analyzer(SSA,context_vars); //TODO
+
+  for(context_varst::iterator it = context_vars.begin();
+      it != context_vars.end(); it++)
+  {
+    const irep_idt &fname = to_symbol_expr(it->first->function()).get_identifier();
+    preconditiont precondition;
+    //  analyzer.get_projection(it->second,precondition); //TODO
+    if(preconditions.find(fname)!=preconditions.end())
+      preconditions[fname] = or_exprt(preconditions[fname],precondition);
+    else
+      preconditions[fname] = precondition;
+  }
+}

@@ -29,7 +29,7 @@ public:
   {
   }  
 
-  void operator()(local_SSAt &SSA);
+  void operator()(local_SSAt &SSA, const exprt &precondition = true_exprt());
 
   void get_summary(exprt &result);
   void get_loop_invariants(exprt &result);
