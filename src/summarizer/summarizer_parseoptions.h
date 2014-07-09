@@ -40,7 +40,7 @@ class optionst;
   "(round-to-nearest)(round-to-plus-inf)(round-to-minus-inf)(round-to-zero)" \
   "(inline)(inline-main)" \
   "(context-sensitive)" \
-  "(show-locs)(show-vcc)(show-properties)(show-trace)(show-fixed-points)" \
+  "(show-locs)(show-vcc)(show-properties)(show-trace)(show-fixed-points)(show-stats)" \
   "(show-goto-functions)(show-guards)(show-defs)(show-ssa)(show-assignments)" \
   "(property):(all-properties)" \
   "(no-simplify)(no-fixed-point)" \
@@ -84,6 +84,28 @@ protected:
   void show_counterexample(
     const goto_modelt &,
     const class goto_tracet &);
+          
+  struct expr_statst {
+    bool has_malloc;
+    bool has_string;
+    bool has_array;
+    bool has_pointer;
+    
+    expr_statst()
+    : has_malloc(false)
+    , has_string(false)
+    , has_array(false)
+    , has_pointer(false)
+    {}
+  };    
+   
+  void expr_stats_rec(
+    const exprt &expr,
+    expr_statst &stats);  
+      
+  void show_stats(
+    const goto_modelt &,
+    std::ostream &);    
             
   void eval_verbosity();
 

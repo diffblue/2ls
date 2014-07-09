@@ -2,6 +2,8 @@
 
 #include "strategy_solver_binsearch.h"
 
+// #define DEBUG_FORMULA
+
 bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 {
   template_domaint::templ_valuet &inv = 
@@ -180,7 +182,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
     while(template_domain.less_than(lower,upper))   
     {
       template_domaint::row_valuet middle = 
-	  template_domain.between(lower,upper);
+	      template_domain.between(lower,upper);
       if(!template_domain.less_than(lower,middle)) middle = upper;
 
       // row_symb_value >= middle

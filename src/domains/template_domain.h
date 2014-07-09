@@ -97,6 +97,8 @@ public:
   exprt get_row_symb_value(const rowt &row);
 
 protected:
+  friend class strategy_solver_binsearcht;
+
   templatet &templ;
 
   

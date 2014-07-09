@@ -27,6 +27,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/loop_ids.h>
 #include <goto-programs/link_to_library.h>
 #include <goto-programs/goto_inline.h>
+#include <goto-programs/goto_functions.h>
 #include <goto-programs/xml_goto_trace.h>
 #include <goto-programs/remove_returns.h>
 
@@ -241,6 +242,12 @@ int summarizer_parseoptionst::doit()
     return 7;
   }
 
+  if(cmdline.isset("show-stats"))
+  {
+    show_stats(goto_model, std::cout);
+    return 7;
+  }
+
   if(cmdline.isset("show-defs"))
   {
     show_defs(goto_model, std::cout, ui_message_handler);
@@ -397,6 +404,124 @@ int summarizer_parseoptionst::doit()
   debug() << eom;
   #endif
 }
+
+
+/*******************************************************************\
+
+Function: summarizer_parseoptionst::show_stats
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+
+void summarizer_parseoptionst::expr_stats_rec(
+    const exprt &expr,
+    expr_statst &stats)
+{
+  
+  if(expr.id()==ID_sideeffect)
+  {
+    const side_effect_exprt &side_effect_expr=to_side_effect_expr(expr);
+    const irep_idt &statement=side_effect_expr.get_statement();
+
+    if(statement==ID_malloc)
+    {
+      stats.has_malloc=true;
+    }
+    else if(statement==ID_nondet)
+    {
+      // done in statet:instantiate_rec
+    }
+  }
+
+  if(expr.id()==ID_symbol )
+  {
+  
+  }
+  
+  if(expr.has_operands())
+  {
+    forall_operands(it, expr)
+    {
+      expr_stats_rec(*it, stats);    
+    }
+  }
+}
+      
+
+/*******************************************************************\
+
+Function: summarizer_parseoptionst::expr_stats_rec
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void summarizer_parseoptionst::show_stats(const goto_modelt &goto_model,
+                                          std::ostream &out)
+{
+
+  expr_statst stats;
+
+  unsigned nr_functions=0;
+
+  // analyze all the functions
+  forall_goto_functions(f_it, goto_model.goto_functions)
+  {
+    if(!f_it->second.body_available) continue;
+
+    ++nr_functions;
+
+    const goto_programt &goto_program=f_it->second.body;
+
+    for(goto_programt::instructionst::const_iterator
+      i_it=goto_program.instructions.begin();
+      i_it!=goto_program.instructions.end();
+      i_it++)
+    {
+      const goto_programt::instructiont &instruction=*i_it;
+
+      switch(instruction.type)
+      {
+        case ASSIGN:
+          {
+            const code_assignt &assign=to_code_assign(instruction.code);
+            expr_stats_rec(assign.lhs(), stats);          
+            expr_stats_rec(assign.rhs(), stats);          
+          }
+          break;
+        case ASSUME:
+          expr_stats_rec(instruction.guard, stats);
+          break;
+        case ASSERT:
+          expr_stats_rec(instruction.guard, stats);
+          break;
+        case GOTO:
+          expr_stats_rec(instruction.guard, stats);
+          break;
+        default:
+          // skip
+          break;
+      } // switch
+    } // forall instructions
+  } // forall functions
+
+  out << " =============== STATS  =============== " << std::endl;
+  out << "  nr of functions " << nr_functions << std::endl; 
+  out << "  malloc " << (stats.has_malloc ? "YES" : "NO") << std::endl;
+  out << "  arrays " << (stats.has_malloc ? "YES" : "NO") << std::endl;
+  out << "  strings " << (stats.has_malloc ? "YES" : "NO") << std::endl;
+}
+
 
 /*******************************************************************\
 
@@ -961,6 +1086,7 @@ void summarizer_parseoptionst::help()
     " --little-endian              allow little-endian word-byte conversions\n"
     " --big-endian                 allow big-endian word-byte conversions\n"
     " --unsigned-char              make \"char\" unsigned by default\n"
+    " --show-stats                 show statistics about program\n"
     " --show-parse-tree            show parse tree\n"
     " --show-symbol-table          show symbol table\n"
     " --show-goto-functions        show goto program\n"
