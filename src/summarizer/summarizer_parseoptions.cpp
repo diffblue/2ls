@@ -408,7 +408,7 @@ int summarizer_parseoptionst::doit()
 
 /*******************************************************************\
 
-Function: summarizer_parseoptionst::show_stats
+Function: summarizer_parseoptionst::expr_stats_rec
 
   Inputs:
 
@@ -456,7 +456,7 @@ void summarizer_parseoptionst::expr_stats_rec(
 
 /*******************************************************************\
 
-Function: summarizer_parseoptionst::expr_stats_rec
+Function: summarizer_parseoptionst::show_stats
 
   Inputs:
 
