@@ -56,6 +56,7 @@ class equality_domaint : public domaint
 
   virtual void project_on_loops(const valuet &value, exprt &result);
   virtual void project_on_inout(const valuet &value, exprt &result);
+  virtual void project_on_vars(const valuet &value, const var_sett &vars, exprt &result);
 
   void get_index_set(index_sett &indices); 
   const var_pairt &get_var_pair(unsigned index);

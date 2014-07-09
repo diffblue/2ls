@@ -475,6 +475,51 @@ void template_domaint::project_on_inout(const valuet &value, exprt &result)
 
 /*******************************************************************\
 
+Function: template_domaint::project_on_vars
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void template_domaint::project_on_vars(const valuet &value, 
+				       const var_sett &vars, exprt &result)
+{
+  const templ_valuet &v = static_cast<const templ_valuet &>(value);
+  assert(v.size()==templ.size());
+  exprt::operandst c;
+  for(unsigned row = 0; row<templ.size(); row++)
+  {
+    const template_rowt &templ_row = templ[row];
+
+    std::set<symbol_exprt> symbols;
+    find_symbols(templ_row.expr,symbols);
+
+    bool pure = true;
+    for(std::set<symbol_exprt>::iterator it = symbols.begin();
+	it != symbols.end(); it++)
+    {
+      if(vars.find(*it)==vars.end()) 
+      {
+        pure = false;
+        break;
+      }
+    }
+    if(!pure) continue;
+
+    const row_valuet &row_v = v[row];
+    if(is_row_value_neginf(row_v)) c.push_back(false_exprt());
+    else if(is_row_value_inf(row_v)) c.push_back(true_exprt());
+    else c.push_back(binary_relation_exprt(templ_row.expr,ID_le,row_v));
+  }
+  result = conjunction(c);
+}
+
+/*******************************************************************\
+
 Function: template_domaint::set_row_value
 
   Inputs:

@@ -2,6 +2,8 @@
 #define CPROVER_DOMAIN_H
 
 #include <iostream>
+#include <set>
+
 #include <util/std_expr.h>
 #include <langapi/language_util.h>
 
@@ -13,6 +15,7 @@ public:
 
   typedef exprt vart;
   typedef std::vector<vart> var_listt;
+  typedef std::set<vart> var_sett;
 
   typedef enum {LOOP, IN, OUT, OUTL} kindt;
 
@@ -47,6 +50,8 @@ public:
   virtual void project_on_loops(const valuet &value, exprt &result) 
     { assert(false); }
   virtual void project_on_inout(const valuet &value, exprt &result) 
+    { assert(false); }
+  virtual void project_on_vars(const valuet &value, const var_sett &vars, exprt &result) 
     { assert(false); }
 
   static kindt merge_kinds(kindt k1, kindt k2);

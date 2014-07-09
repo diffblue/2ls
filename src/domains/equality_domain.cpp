@@ -97,14 +97,14 @@ void equality_domaint::project_on_loops(const valuet &value, exprt &result)
   for(unsigned index = 0; index<templ.size(); index++)
   {
     const var_pairt &vv = templ[index].var_pair;
-    //    if(templ.kinds[row]!=LOOP) continue;
+    //    if(templ.kinds[row]!=LOOP) continue; //TODO
     if(v.equs.same_set(vv.first,vv.second)) 
       c.push_back(equal_exprt(vv.first,vv.second));
   }
 
   for(index_sett::const_iterator it = v.disequs.begin(); it != v.disequs.end(); it++)
   {
-    //    if(templ.kinds[row]!=LOOP) continue;
+    //    if(templ.kinds[row]!=LOOP) continue; //TODO
     const var_pairt &vv = templ[*it].var_pair;
     c.push_back(notequal_exprt(vv.first,vv.second));
   }
@@ -132,15 +132,57 @@ void equality_domaint::project_on_inout(const valuet &value, exprt &result)
   for(unsigned index = 0; index<templ.size(); index++)
   {
     const var_pairt &vv = templ[index].var_pair;
-    //    if(k==LOOP || k==OUTL) continue;
+    //    if(k==LOOP || k==OUTL) continue; //TODO
     if(v.equs.same_set(vv.first,vv.second)) 
       c.push_back(equal_exprt(vv.first,vv.second));
   }
 
   for(index_sett::const_iterator it = v.disequs.begin(); it != v.disequs.end(); it++)
   {
-    //    if(k==LOOP || k==OUTL) continue;
+    //    if(k==LOOP || k==OUTL) continue; //TODO
     const var_pairt &vv = templ[*it].var_pair;
+    c.push_back(notequal_exprt(vv.first,vv.second));
+  }
+  result = conjunction(c); 
+}
+
+/*******************************************************************\
+
+Function: template_domaint::project_on_vars
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void equality_domaint::project_on_vars(const valuet &value, 
+				       const var_sett &vars, exprt &result)
+{
+  const equ_valuet &_v = static_cast<const equ_valuet &>(value);
+  equ_valuet v = _v;
+
+  exprt::operandst c;
+  for(unsigned index = 0; index<templ.size(); index++)
+  {
+    const var_pairt &vv = templ[index].var_pair;
+
+    if(vars.find(vv.first)==vars.end() || vars.find(vv.second)==vars.end())
+      continue;
+
+    if(v.equs.same_set(vv.first,vv.second)) 
+      c.push_back(equal_exprt(vv.first,vv.second));
+  }
+
+  for(index_sett::const_iterator it = v.disequs.begin(); it != v.disequs.end(); it++)
+  {
+    const var_pairt &vv = templ[*it].var_pair;
+
+    if(vars.find(vv.first)==vars.end() || vars.find(vv.second)==vars.end())
+      continue;
+
     c.push_back(notequal_exprt(vv.first,vv.second));
   }
   result = conjunction(c); 

@@ -79,6 +79,7 @@ public:
   // projection  
   virtual void project_on_loops(const valuet &value, exprt &result);
   virtual void project_on_inout(const valuet &value, exprt &result);
+  virtual void project_on_vars(const valuet &value, const var_sett &vars, exprt &result);
 
   unsigned template_size();
 

@@ -147,15 +147,12 @@ Function: summarizert::run()
 
  Outputs:
 
- Purpose:
+ Purpose: just summarize each function in functions
 
 \*******************************************************************/
 
 void summarizert::run()
 {
-  //TODO: make context sensitive (currently, only globally given preconditions are used),
-  //      compute fixed point (if any descendents in the call graph are updated)
-  //TODO: replace simple iterator by something following the call graph
   for(functionst::const_iterator it = functions.begin(); 
       it!=functions.end(); it++)
   {
@@ -182,6 +179,7 @@ void summarizert::compute_summary_rec(const function_namet &function_name)
 {
   local_SSAt &SSA = *functions[function_name]; 
 
+  // recursively compute summaries for function calls
   check_preconditions(function_name,SSA);
   compute_preconditions(function_name,SSA);
   inline_summaries(function_name,SSA,true); 
@@ -204,6 +202,7 @@ void summarizert::compute_summary_rec(const function_namet &function_name)
 
   analyzer(SSA,preconditions[function_name]);
 
+  // create summary
   summaryt summary;
   summary.params =SSA.params;
   summary.globals_in =SSA.globals_in;
@@ -222,6 +221,7 @@ void summarizert::compute_summary_rec(const function_namet &function_name)
     status() << out.str() << eom;
   }
 
+  // store summary in db
   if(summary_db.exists(function_name)) 
   {
     summaryt old_summary = summary_db.get(function_name);
