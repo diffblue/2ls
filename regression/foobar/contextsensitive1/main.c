@@ -12,6 +12,6 @@ void main()
   int y = sign(x);
   x = -x;
   int z = sign(x);
-  assert(z<y);
+  assert(-1<=y && y<=1 && -1<=z && z<=1);
 }
 
