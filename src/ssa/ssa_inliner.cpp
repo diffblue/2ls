@@ -424,10 +424,11 @@ void ssa_inlinert::rename_to_caller(local_SSAt::nodet::function_callst::iterator
     symbol_exprt cg;
     if(find_corresponding_symbol(*it,cs_globals_in,cg))
       replace_map[*it] = cg;
-    else
+    else 
     {
-      replace_map[*it] = exprt(ID_nondet_symbol, it->type());
       warning() << "'" << it->get_identifier() << "' not bound in caller" << eom;
+      replace_map[*it] = 
+        symbol_exprt(id2string(it->get_identifier())+"@"+i2string(++counter),it->type());
     }
   }
 
@@ -469,7 +470,11 @@ void ssa_inlinert::rename_to_callee(local_SSAt::nodet::function_callst::iterator
     if(find_corresponding_symbol(*it,globals_in,cg))
       replace_map[*it] = cg;
     else
-      replace_map[*it] = exprt(ID_nondet_symbol, it->type());
+    {
+      warning() << "'" << it->get_identifier() << "' not bound in caller" << eom;
+      replace_map[*it] =
+        symbol_exprt(id2string(it->get_identifier())+"@"+i2string(++counter),it->type());
+    }
   }
 
   replace_expr(replace_map,expr);
@@ -620,7 +625,7 @@ Function: ssa_inlinert::get_original_identifier
 
  Outputs: 
 
- Purpose: TODO: this is potentially buggy, better way to do that?
+ Purpose: TODO: this is a potential source of bugs. Better way to do that?
 
 \*******************************************************************/
 

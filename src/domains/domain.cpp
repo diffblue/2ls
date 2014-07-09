@@ -23,7 +23,7 @@ void domaint::output_var_specs(std::ostream &out, const var_specst &var_specs,
 	  break;
         case IN: 
           out << "(IN)   ";
-          out << from_expr(ns,"",v->pre_guard) << " ===> " << ": ";
+          out << from_expr(ns,"",v->pre_guard) << ": ";
           break;
 	case OUT: case OUTL:
 	  out << "(OUT)  "; 

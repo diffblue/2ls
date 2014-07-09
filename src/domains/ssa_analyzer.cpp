@@ -186,8 +186,22 @@ void ssa_analyzert::operator()(local_SSAt &SSA, const exprt &precondition)
   domain->output_value(std::cout,*inv,ns);
   #endif
 
+  // retrieve I/O relation
   domain->project_on_inout(*inv,inv_inout);
+
+  // retrieve loop invariants
   domain->project_on_loops(*inv,inv_loop);
+
+  // retrieve calling contexts
+  if(compute_calling_contexts)
+  {
+    for(calling_context_varst::iterator it = calling_context_vars.begin();
+	it != calling_context_vars.end(); it++)
+    {
+      domain->project_on_vars(*inv,calling_context_vars[it->first],calling_contexts[it->first]);
+    }
+  }
+
   delete strategy_solver;
   delete inv;
   delete domain;
@@ -257,8 +271,8 @@ Function: ssa_analyzert::collect_variables
 
 \*******************************************************************/
 
-void ssa_analyzert::collect_variables(const local_SSAt &SSA,
-				      domaint::var_specst &var_specs)
+void ssa_analyzert::collect_variables(local_SSAt &SSA,
+			 domaint::var_specst &var_specs)
 {
   var_specs.clear();
 
@@ -336,47 +350,48 @@ void ssa_analyzert::collect_variables(const local_SSAt &SSA,
       */
     } 
   }
-  
-  /*
-  // collect context variables to track //TODO: create domain var data structure
-  for(local_SSAt::nodest::iterator n = SSA.nodes.begin(); 
-      n!=SSA.nodes.end(); n++)
+
+  if(compute_calling_contexts)  // collect context variables to track
   {
-    for(local_SSAt::nodet::function_callst::iterator 
+    for(local_SSAt::nodest::iterator n = SSA.nodes.begin(); 
+      n!=SSA.nodes.end(); n++)
+    {
+      exprt guard = SSA.guard_symbol(n->first);
+      for(local_SSAt::nodet::function_callst::iterator 
         f_it = n->second.function_calls.begin();
         f_it != n->second.function_calls.end(); f_it++)
-    {
-      assert(f_it->function().id()==ID_symbol); //no function pointers
-
-      //getting globals at call site
-      SSA.get_globals(n->first,cs_globals_in[f_it]);
-
-      //add function arguments
-      for(exprt::operandst::const_iterator it =  f_it->arguments().begin();
-          it !=  f_it->arguments().end(); it++)
       {
-	std::set<symbol_exprt> symbols;
-	find_symbols(*it,symbols);        
-	context_vars[f_it].insert(symbols.begin(),symbols.end());
+        assert(f_it->function().id()==ID_symbol); //no function pointers
+
+        //getting globals at call site
+        local_SSAt::var_sett cs_globals_in;
+        SSA.get_globals(n->first,cs_globals_in,false,false); //filter out return values
+
+        for(local_SSAt::var_sett::iterator v_it = cs_globals_in.begin();
+	    v_it != cs_globals_in.end(); v_it++)
+	{
+          if(calling_context_vars[f_it].find(*v_it)!=calling_context_vars[f_it].end())
+	    add_var(*v_it,guard,guard,domaint::OUT,var_specs);
+	}
+
+        //add function arguments
+        for(exprt::operandst::const_iterator a_it =  f_it->arguments().begin();
+          a_it !=  f_it->arguments().end(); a_it++)
+        {
+	  std::set<symbol_exprt> args;
+	  find_symbols(*a_it,args);        
+  	  add_vars(args,guard,guard,domaint::OUT,var_specs);
+          calling_context_vars[f_it].insert(args.begin(),args.end());
+        }
       }
     }
   }
-   */
-
-
-#ifdef DEBUG
-  for(unsigned i=0; i<pre_state_vars.size(); ++i)
+  else
   {
-    std::cout << from_expr(pre_state_vars[i]) << " pre-guard:  " << 
-      from_expr(pre_guards[i]) << std::endl;  
-    std::cout << from_expr(pre_state_vars[i]) << " post-guard: " << 
-      from_expr(post_guards[i]) << std::endl;  
+    // add globals_out (includes return values)
+    exprt last_guard = SSA.guard_symbol(--SSA.goto_function.body.instructions.end());
+    add_vars(SSA.globals_out,last_guard,last_guard,domaint::OUT,var_specs);
   }
-#endif
-
-  // add globals_out (includes return values)
-  exprt last_guard = SSA.guard_symbol(--SSA.goto_function.body.instructions.end());
-  add_vars(SSA.globals_out,last_guard,last_guard,domaint::OUT,var_specs);
   
   // building map for renaming from pre into post-state
   assert(pre_state_vars.size()==post_state_vars.size());

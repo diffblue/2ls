@@ -654,6 +654,12 @@ bool summarizer_parseoptionst::process_goto_program(
       goto_inline(goto_model, ui_message_handler);
     }
 
+    //inline c::__CPROVER_initialize and c::main
+    if(cmdline.isset("inline-main"))
+    {
+      inline_main(goto_model); 
+    }
+
     label_properties(goto_model);
 
     if(cmdline.isset("show-properties"))
@@ -698,6 +704,50 @@ bool summarizer_parseoptionst::process_goto_program(
   }
   
   return false;
+}
+
+/*******************************************************************\
+
+Function: summarizer_parseoptionst::inline_main
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void summarizer_parseoptionst::inline_main(goto_modelt &goto_model)
+{
+  goto_programt &main = goto_model.goto_functions.function_map[ID_main].body;
+  goto_programt::targett target = main.instructions.begin();
+  while(target!=main.instructions.end())
+  {
+    if(target->is_function_call())
+    {
+      const code_function_callt &code_function_call=
+        to_code_function_call(target->code);
+      irep_idt fname = code_function_call.function().get(ID_identifier); 
+
+      debug() << "Inlining " << fname << eom;
+
+      goto_programt tmp;
+      tmp.copy_from(goto_model.goto_functions.function_map[fname].body);
+      (--tmp.instructions.end())->make_skip();
+      goto_model.goto_functions.function_map.erase(fname);
+    
+      goto_programt::targett next_target(target);
+      target->make_skip();
+      next_target++;
+      main.instructions.splice(next_target, tmp.instructions);
+      target=next_target;
+    }
+    else target++;
+  }
+
+  goto_model.goto_functions.update();
+  goto_model.goto_functions.compute_loop_numbers();
 }
 
 /*******************************************************************\

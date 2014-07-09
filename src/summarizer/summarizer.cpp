@@ -182,7 +182,9 @@ void summarizert::compute_summary_rec(const function_namet &function_name)
   // recursively compute summaries for function calls
   check_preconditions(function_name,SSA);
   compute_preconditions(function_name,SSA);
-  inline_summaries(function_name,SSA,true); 
+  inline_summaries(function_name,SSA,true,true); 
+
+  status() << "Analyzing function "  << function_name << eom;
 
   {
     std::ostringstream out;
@@ -256,16 +258,20 @@ Function: summarizert::inline_summaries()
 \*******************************************************************/
 
 void summarizert::inline_summaries(const function_namet &function_name, 
-  local_SSAt &SSA, bool recursive)
+				   local_SSAt &SSA, bool recursive, 
+				   bool always_recompute)
 {
   ssa_inlinert inliner;
   inliner.set_message_handler(get_message_handler());
 
   // replace calls with summaries
   // TODO: functions with pointers passed as parameters
-  for(local_SSAt::nodest::iterator n = SSA.nodes.begin(); 
-      n!=SSA.nodes.end(); n++)
+  forall_goto_program_instructions(i_it, SSA.goto_function.body)
   {
+    if(!i_it->is_function_call()) continue;
+
+    local_SSAt::nodest::iterator n = SSA.nodes.find(i_it);
+
     for(local_SSAt::nodet::function_callst::iterator 
         f_it = n->second.function_calls.begin();
         f_it != n->second.function_calls.end(); f_it++)
@@ -274,22 +280,27 @@ void summarizert::inline_summaries(const function_namet &function_name,
       irep_idt fname = to_symbol_expr(f_it->function()).get_identifier();
 
       summaryt summary; 
-      bool recompute = false;
-      // replace call with summary if it exists 
-      if(summary_db.exists(fname)) 
+      bool recompute = false || always_recompute;
+      if(!always_recompute) 
       {
-        status() << "Using existing summary for function " << fname << eom;
-	summary = summary_db.get(fname);
-      }
-      // compute summary if function_name in functions
-      else if(functions.find(fname)!=functions.end() && recursive &&
-              fname!=function_name) // havoc recursive calls
-        recompute = true;
-      else // havoc function call by default
-      {
-        status() << "Function " << fname << " not found" << eom;
-        inliner.havoc(n->second,f_it);
-        continue;
+        // replace call with summary if it exists 
+        if(summary_db.exists(fname)) 
+        {
+          status() << "Using existing summary for function " << fname << eom;
+  	  summary = summary_db.get(fname);
+        }
+        // compute summary if function_name in functions
+        else if(functions.find(fname)!=functions.end() && recursive &&
+                fname!=function_name) // havoc recursive calls
+	{
+           recompute = true;
+	}
+        else // havoc function call by default
+        {
+          status() << "Function " << fname << " not found" << eom;
+           inliner.havoc(n->second,f_it);
+          continue;
+        }
       }
       if(recompute) 
       {
@@ -371,6 +382,8 @@ void summarizert::check_preconditions(
   const function_namet &function_name, 
   local_SSAt &SSA)
 {
+  status() << "Checking preconditions" << eom;
+
   ssa_inlinert inliner;
   inliner.set_message_handler(get_message_handler());
 
@@ -502,8 +515,14 @@ void summarizert::compute_preconditions(
   const function_namet &function_name, 
   local_SSAt &SSA)
 {
+  status() << "Computing preconditions from calling context" << eom;
+
   ssa_inlinert inliner;
   inliner.set_message_handler(get_message_handler());
+
+  ssa_analyzert analyzer(SSA.ns, options);
+  analyzer.set_message_handler(get_message_handler());
+  analyzer.compute_calling_contexts = true;
 
   // collect globals at call site
   std::map<local_SSAt::nodet::function_callst::iterator, local_SSAt::var_sett>
@@ -519,15 +538,13 @@ void summarizert::compute_preconditions(
       assert(f_it->function().id()==ID_symbol); //no function pointers
 
       SSA.get_globals(n->first,cs_globals_in[f_it]);
+      analyzer.calling_context_vars[f_it].insert(SSA.globals_in.begin(),SSA.globals_in.end());
     }
   }
 
   if(cs_globals_in.empty()) return; //nothing to do
 
   // analyze
-  ssa_analyzert analyzer(SSA.ns, options);
-  analyzer.set_message_handler(get_message_handler());
-  analyzer.compute_calling_contexts = true;
   analyzer(SSA,preconditions[function_name]);
 
   ssa_analyzert::calling_contextst calling_contexts;
@@ -545,9 +562,12 @@ void summarizert::compute_preconditions(
 			     cs_globals_in[it->first],fSSA.globals_in,
 			     precondition);
 
-    if(preconditions.find(fname)!=preconditions.end())
-      preconditions[fname] = or_exprt(preconditions[fname],precondition);
-    else
+    debug() << "Calling context for " << from_expr(SSA.ns, "", *it->first) << ": " 
+	    << from_expr(SSA.ns, "", precondition) << eom;
+
+    if(preconditions[fname].is_true())
       preconditions[fname] = precondition;
+    else
+      preconditions[fname] = or_exprt(preconditions[fname],precondition);
   }
 }

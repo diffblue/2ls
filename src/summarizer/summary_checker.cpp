@@ -42,6 +42,7 @@ property_checkert::resultt summary_checkert::operator()(
   const goto_modelt &goto_model)
 {
   const namespacet ns(goto_model.symbol_table);
+
   SSA_functions(goto_model,ns);
   if(!options.get_bool_option("havoc")) summarize(goto_model);
   return check_properties(); 

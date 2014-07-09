@@ -124,7 +124,7 @@ public:
   std::string suffix; // an extra suffix
 
   void get_globals(locationt loc, std::set<symbol_exprt> &globals, 
-		   bool returns=true);
+		   bool with_own_returns=true, bool with_all_returns=true);
 
 protected:
   // build the SSA formulas

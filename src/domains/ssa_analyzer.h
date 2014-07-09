@@ -20,6 +20,8 @@ public:
   typedef strategy_solver_baset::constraintst constraintst;
   typedef strategy_solver_baset::var_listt var_listt;
   typedef std::map<local_SSAt::nodet::function_callst::iterator, exprt> calling_contextst;
+  typedef std::map<local_SSAt::nodet::function_callst::iterator, domaint::var_sett> 
+    calling_context_varst;
 
   explicit ssa_analyzert(const namespacet &_ns, 
                          const optionst &_options)
@@ -39,6 +41,7 @@ public:
   void get_calling_contexts(calling_contextst &result);
 
   bool compute_calling_contexts;
+  calling_context_varst calling_context_vars;
 
 protected:
   const namespacet &ns;
@@ -53,7 +56,7 @@ protected:
 
   // functions for extracting information for template generation
 
-  void collect_variables(const local_SSAt &SSA,
+  void collect_variables(local_SSAt &SSA,
 			 domaint::var_specst &var_specs);
 
   domaint::var_specst filter_template_domain(const domaint::var_specst& var_specs);
