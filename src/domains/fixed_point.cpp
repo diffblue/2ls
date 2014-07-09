@@ -118,6 +118,8 @@ bool fixed_pointt::iteration()
   // Form disjunction of previous state predicate and the new one.
   return state_predicate.disjunction(post_state);
   #endif
+  
+  return false;
 }
 
 /*******************************************************************\
