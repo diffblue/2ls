@@ -42,7 +42,7 @@ class summarizert : public messaget
   void inline_summaries(const function_namet &function_name, local_SSAt &SSA, 
                         bool recursive=false);
 
-  void check_precondition_assertions(const function_namet &function_name, local_SSAt &SSA);
+  void check_preconditions(const function_namet &function_name, local_SSAt &SSA);
 
  protected:
   const optionst &options;

@@ -182,7 +182,7 @@ void summarizert::compute_summary_rec(const function_namet &function_name)
 {
   local_SSAt &SSA = *functions[function_name]; 
 
-  check_precondition_assertions(function_name,*functions.at(function_name));
+  check_preconditions(function_name,*functions.at(function_name));
   inline_summaries(function_name,SSA,true); 
 
   {
@@ -359,7 +359,7 @@ void summarizert::join_summaries(const summaryt &existing_summary,
 
 /*******************************************************************\
 
-Function: summarizert::check_precondition_assertions()
+Function: summarizert::check_preconditions()
 
   Inputs:
 
@@ -369,7 +369,7 @@ Function: summarizert::check_precondition_assertions()
 
 \******************************************************************/
 
-void summarizert::check_precondition_assertions(
+void summarizert::check_preconditions(
   const function_namet &function_name, 
   local_SSAt &SSA)
 {
@@ -390,8 +390,31 @@ void summarizert::check_precondition_assertions(
       if(summary_db.exists(fname)) 
       {
 	summaryt summary = summary_db.get(fname);
-        if(summary.precondition.is_true()) continue;
-        n->second.assertions.push_back(summary.precondition);
+        if(summary.precondition.is_true()) //precondition trivially holds
+	{
+	  //getting globals at call site
+	  local_SSAt::var_sett cs_globals_in, cs_globals_out; 
+	  goto_programt::const_targett loc = n->first;
+	  SSA.get_globals(loc,cs_globals_in);
+	  assert(loc!=SSA.goto_function.body.instructions.end());
+	  SSA.get_globals(++loc,cs_globals_out);
+
+          status() << "Precondition trivially holds, replacing by summary." << eom;
+          inliner.replace(SSA.nodes,n,f_it,
+                          cs_globals_in,cs_globals_out,summary_db.get(fname));
+	  continue;
+	}
+
+	exprt assertion = not_exprt(summary.precondition);
+
+	//getting globals at call site
+	local_SSAt::var_sett cs_globals_in; 
+	SSA.get_globals(n->first,cs_globals_in);
+
+	inliner.rename_to_caller(f_it,summary.params,
+				 cs_globals_in,summary.globals_in,assertion);
+
+        n->second.assertions.push_back(assertion);
         status() << "Precondition assertion for function " << fname << eom;
       }
       else if(functions.find(fname)==functions.end())
@@ -428,7 +451,8 @@ void summarizert::check_precondition_assertions(
       solver.set_message_handler(get_message_handler());
     
       solver << SSA;
-      solver << not_exprt(n->second.assertions.front());
+      solver << n->second.assertions.front();
+
       switch(solver())
       {
 	case decision_proceduret::D_SATISFIABLE:
@@ -461,5 +485,6 @@ void summarizert::check_precondition_assertions(
   }
   inliner.commit_nodes(SSA.nodes);
 
+  //now, only function calls which need recomputing of their summaries are left
 }
 

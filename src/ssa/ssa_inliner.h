@@ -55,6 +55,18 @@ class ssa_inlinert : public messaget
   void commit_node(local_SSAt::nodest::iterator node);
   void commit_nodes(local_SSAt::nodest &nodes);
 
+  //functions for renaming preconditions to calling context
+  void rename_to_caller(local_SSAt::nodet::function_callst::iterator f_it, 
+			       const local_SSAt::var_listt &params, 
+			       const local_SSAt::var_sett &cs_globals_in, 
+			       const local_SSAt::var_sett &globals_in, 
+			       exprt &expr);
+  void rename_to_callee(local_SSAt::nodet::function_callst::iterator f_it, 
+			       const local_SSAt::var_listt &params, 
+			       const local_SSAt::var_sett &cs_globals_in, 
+			       const local_SSAt::var_sett &globals_in, 
+			       exprt &expr);
+
  protected:
   unsigned counter;
   local_SSAt::nodest new_nodes;

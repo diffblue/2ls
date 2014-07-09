@@ -7,6 +7,7 @@ Author: Peter Schrammel
 \*******************************************************************/
 
 #include <util/i2string.h>
+#include <util/replace_expr.h>
 
 #include "ssa_inliner.h"
 
@@ -387,6 +388,91 @@ void ssa_inlinert::rename(local_SSAt::nodet &node)
   {
     rename(*f_it);
   }  
+}
+
+/*******************************************************************\
+
+Function: ssa_inlinert::rename_to_caller
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void ssa_inlinert::rename_to_caller(local_SSAt::nodet::function_callst::iterator f_it, 
+				    const local_SSAt::var_listt &params, 
+				    const local_SSAt::var_sett &cs_globals_in, 
+				    const local_SSAt::var_sett &globals_in, 
+				    exprt &expr)
+{
+  replace_mapt replace_map;
+
+  local_SSAt::var_listt::const_iterator p_it = params.begin();
+  for(exprt::operandst::const_iterator it = f_it->arguments().begin();
+      it !=  f_it->arguments().end(); it++, p_it++)
+  {
+    assert(p_it!=params.end());
+    replace_map[*p_it] = *it;
+  }
+
+  for(summaryt::var_sett::const_iterator it = globals_in.begin();
+      it != globals_in.end(); it++)
+  {
+    symbol_exprt cg;
+    if(find_corresponding_symbol(*it,cs_globals_in,cg))
+      replace_map[*it] = cg;
+    else
+    {
+      replace_map[*it] = exprt(ID_nondet_symbol, it->type());
+      warning() << "'" << it->get_identifier() << "' not bound in caller" << eom;
+    }
+  }
+
+  replace_expr(replace_map,expr);
+}
+
+/*******************************************************************\
+
+Function: ssa_inlinert::rename_to_callee
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void ssa_inlinert::rename_to_callee(local_SSAt::nodet::function_callst::iterator f_it, 
+				    const local_SSAt::var_listt &params, 
+				    const local_SSAt::var_sett &cs_globals_in, 
+				    const local_SSAt::var_sett &globals_in, 
+				    exprt &expr)
+{
+  replace_mapt replace_map;
+
+  local_SSAt::var_listt::const_iterator p_it = params.begin();
+  for(exprt::operandst::const_iterator it =  f_it->arguments().begin();
+      it !=  f_it->arguments().end(); it++, p_it++)
+  {
+    assert(p_it!=params.end());
+    replace_map[*it] = *p_it;
+  }
+
+  for(summaryt::var_sett::const_iterator it = cs_globals_in.begin();
+      it != cs_globals_in.end(); it++)
+  {
+    symbol_exprt cg;
+    if(find_corresponding_symbol(*it,globals_in,cg))
+      replace_map[*it] = cg;
+    else
+      replace_map[*it] = exprt(ID_nondet_symbol, it->type());
+  }
+
+  replace_expr(replace_map,expr);
 }
 
 /*******************************************************************\
