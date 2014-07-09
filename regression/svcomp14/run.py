@@ -82,7 +82,7 @@ class Command(object):
 
 
 # timeout
-timeout=900
+timeout=100
 
 
 
