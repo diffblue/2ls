@@ -9,7 +9,7 @@ void main()
 {
   int x;
 
-  g = g;
+  //g = g;
 
   if(x) 
   {
