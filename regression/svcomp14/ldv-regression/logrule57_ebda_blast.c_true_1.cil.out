@@ -1,0 +1,180 @@
+SUMMARIZER version tbd
+file /home/bjowac/deltacheck/branches/summary/regression/svcomp14/ldv-regression/rule57_ebda_blast.c_true_1.cil.c: Parsing
+Converting
+Type-checking rule57_ebda_blast.c_true_1.cil
+Generating GOTO Program
+Adding CPROVER library
+Partial Inlining
+Generic Property Instrumentation
+Function Pointer Removal
+Using equalities domain 
+Computing SSA of main
+Simplifying
+Computing SSA of c::__CPROVER_initialize
+Simplifying
+Computing SSA of c::__blast_assert
+Simplifying
+Computing SSA of c::kfree
+Simplifying
+Computing SSA of c::ibmphp_find_same_bus_num
+Simplifying
+Computing SSA of c::fillslotinfo
+Simplifying
+Computing SSA of c::ibmphp_init_devno
+Simplifying
+Computing SSA of c::ebda_rsrc_controller
+Simplifying
+Computing SSA of c::main
+Simplifying
+
+Summarizing function main
+Recursively summarizing function c::main
+Recursively summarizing function c::ebda_rsrc_controller
+Recursively summarizing function c::kfree
+
+Summary for function c::kfree
+params: p 
+returns: 
+globals_in: tmp_slot freed_tmp_slot 
+globals_out: tmp_slot freed_tmp_slot#phi35 
+precondition: TRUE
+transformer: TRUE ==> tmp_slot == tmp_slot
+
+Adding loop invariant: tmp_slot == tmp_slot
+Replacing function c::kfree
+Recursively summarizing function c::ibmphp_init_devno
+
+Summary for function c::ibmphp_init_devno
+params: ptr 
+returns: 
+globals_in: 
+globals_out: ibmphp_init_devno#return_value#56 
+precondition: TRUE
+transformer: TRUE ==> TRUE
+
+Adding loop invariant: TRUE
+Replacing function c::ibmphp_init_devno
+Recursively summarizing function c::fillslotinfo
+
+Summary for function c::fillslotinfo
+params: ptr 
+returns: 
+globals_in: 
+globals_out: fillslotinfo#return_value#50 
+precondition: TRUE
+transformer: TRUE ==> TRUE
+
+Adding loop invariant: TRUE
+Replacing function c::fillslotinfo
+Using existing summary for function c::kfree
+Replacing function c::kfree
+Recursively summarizing function c::ibmphp_find_same_bus_num
+
+Summary for function c::ibmphp_find_same_bus_num
+params: 
+returns: 
+globals_in: 
+globals_out: ibmphp_find_same_bus_num#return_value#44 
+precondition: TRUE
+transformer: TRUE ==> TRUE
+
+Adding loop invariant: TRUE
+Replacing function c::ibmphp_find_same_bus_num
+
+Summary for function c::ebda_rsrc_controller
+params: 
+returns: 
+globals_in: tmp_slot freed_tmp_slot used_tmp_slot 
+globals_out: ibmphp_find_same_bus_num#return_value#phi134 tmp_slot#phi134 ebda_rsrc_controller#return_value#phi134 fillslotinfo#return_value#phi134 freed_tmp_slot#phi134 ibmphp_init_devno#return_value#phi134 used_tmp_slot#phi134 
+precondition: TRUE
+transformer: TRUE ==> TRUE
+
+Adding loop invariant: TRUE
+Replacing function c::ebda_rsrc_controller
+Recursively summarizing function c::__blast_assert
+
+Summary for function c::__blast_assert
+params: 
+returns: 
+globals_in: 
+globals_out: 
+precondition: TRUE
+transformer: TRUE ==> TRUE
+
+Adding loop invariant: TRUE
+Replacing function c::__blast_assert
+
+Summary for function c::main
+params: 
+returns: 
+globals_in: freed_tmp_slot used_tmp_slot 
+globals_out: freed_tmp_slot#phi140 used_tmp_slot#phi140 
+precondition: TRUE
+transformer: TRUE ==> TRUE
+
+Adding loop invariant: TRUE
+Replacing function c::main
+Recursively summarizing function c::__CPROVER_initialize
+
+Summary for function c::__CPROVER_initialize
+params: 
+returns: 
+globals_in: __CPROVER_threads_exited __CPROVER_malloc_is_new_array __CPROVER_dead_object __CPROVER_deallocated __CPROVER_malloc_object __CPROVER_memory_leak tmp_slot __CPROVER_rounding_mode freed_tmp_slot used_tmp_slot __CPROVER_pipe_count __CPROVER_malloc_size __CPROVER_next_thread_id 
+globals_out: __CPROVER_threads_exited#8 __CPROVER_malloc_is_new_array#14 __CPROVER_dead_object#11 __CPROVER_deallocated#10 __CPROVER_malloc_object#12 __CPROVER_memory_leak#15 tmp_slot#4 __CPROVER_rounding_mode#3 freed_tmp_slot#6 used_tmp_slot#5 __CPROVER_pipe_count#7 __CPROVER_malloc_size#13 __CPROVER_next_thread_id#9 
+precondition: TRUE
+transformer: TRUE ==> __CPROVER_rounding_mode#3 <= 0 && -((signed int)__CPROVER_rounding_mode#3) <= 0 && freed_tmp_slot#6 <= 1 && -((signed int)freed_tmp_slot#6) <= -1 && used_tmp_slot#5 <= 0 && -((signed int)used_tmp_slot#5) <= 0 && __CPROVER_pipe_count#7 <= 0u && -((signed __CPROVER_bitvector[33])__CPROVER_pipe_count#7) <= 0 && __CPROVER_malloc_size#13 <= 0ul && -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size#13) <= 0 && __CPROVER_next_thread_id#9 <= 0ul && -((signed __CPROVER_bitvector[65])__CPROVER_next_thread_id#9) <= 0
+
+Adding loop invariant: TRUE
+Replacing function c::__CPROVER_initialize
+
+Summary for function main
+params: 
+returns: 
+globals_in: 
+globals_out: 
+precondition: TRUE
+transformer: TRUE ==> TRUE
+
+Adding loop invariant: TRUE
+
+Summarizing function c::__CPROVER_initialize
+Summary for function c::__CPROVER_initialize exists already
+
+Summarizing function c::__blast_assert
+Summary for function c::__blast_assert exists already
+
+Summarizing function c::kfree
+Summary for function c::kfree exists already
+
+Summarizing function c::ibmphp_find_same_bus_num
+Summary for function c::ibmphp_find_same_bus_num exists already
+
+Summarizing function c::fillslotinfo
+Summary for function c::fillslotinfo exists already
+
+Summarizing function c::ibmphp_init_devno
+Summary for function c::ibmphp_init_devno exists already
+
+Summarizing function c::ebda_rsrc_controller
+Summary for function c::ebda_rsrc_controller exists already
+
+Summarizing function c::main
+Summary for function c::main exists already
+Checking properties of main
+Checking properties of c::__CPROVER_initialize
+Checking properties of c::__blast_assert
+negated property TRUE
+Post-processing
+Solving with MiniSAT 2.2.0 with simplifier
+1 variables, 0 clauses
+SAT checker: negated claim is SATISFIABLE, i.e., does not hold
+Checking properties of c::kfree
+Checking properties of c::ibmphp_find_same_bus_num
+Checking properties of c::fillslotinfo
+Checking properties of c::ibmphp_init_devno
+Checking properties of c::ebda_rsrc_controller
+Checking properties of c::main
+[__blast_assert.1.0] error label: FAILURE
+
+** 1 of 1 failed
+VERIFICATION FAILED

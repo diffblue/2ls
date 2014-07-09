@@ -1,0 +1,253 @@
+SUMMARIZER version tbd
+file /home/bjowac/deltacheck/branches/summary/regression/svcomp14/ldv-regression/stateful_check_false.cil.c: Parsing
+Converting
+Type-checking stateful_check_false.cil
+Generating GOTO Program
+Adding CPROVER library
+Partial Inlining
+Generic Property Instrumentation
+Function Pointer Removal
+Using equalities domain 
+Computing SSA of main
+Simplifying
+Computing SSA of c::__CPROVER_initialize
+Simplifying
+Computing SSA of c::__blast_assert
+Simplifying
+Computing SSA of c::__VERIFIER_nondet_int
+Simplifying
+Computing SSA of c::mutex_lock
+Simplifying
+Computing SSA of c::mutex_unlock
+Simplifying
+Computing SSA of c::check_final_state
+Simplifying
+Computing SSA of c::misc_release
+Simplifying
+Computing SSA of c::misc_llseek
+Simplifying
+Computing SSA of c::misc_read
+Simplifying
+Computing SSA of c::misc_open
+Simplifying
+Computing SSA of c::my_init
+Simplifying
+Computing SSA of c::main
+Simplifying
+
+Summarizing function main
+Recursively summarizing function c::main
+Recursively summarizing function c::misc_llseek
+
+Summary for function c::misc_llseek
+params: 
+returns: 
+globals_in: 
+globals_out: misc_llseek#return_value#51 
+precondition: TRUE
+transformer: TRUE ==> TRUE
+
+Adding loop invariant: TRUE
+Replacing function c::misc_llseek
+Recursively summarizing function c::misc_release
+Recursively summarizing function c::mutex_lock
+Recursively summarizing function c::__blast_assert
+
+Summary for function c::__blast_assert
+params: 
+returns: 
+globals_in: 
+globals_out: 
+precondition: TRUE
+transformer: TRUE ==> TRUE
+
+Adding loop invariant: TRUE
+Replacing function c::__blast_assert
+
+Summary for function c::mutex_lock
+params: 
+returns: 
+globals_in: ldv_mutex 
+globals_out: ldv_mutex#27 
+precondition: TRUE
+transformer: TRUE ==> TRUE
+
+Adding loop invariant: TRUE
+Replacing function c::mutex_lock
+Using existing summary for function c::mutex_lock
+Replacing function c::mutex_lock
+Recursively summarizing function c::mutex_unlock
+Precondition trivially holds, replacing by summary.
+
+Summary for function c::mutex_unlock
+params: 
+returns: 
+globals_in: ldv_mutex 
+globals_out: ldv_mutex#33 
+precondition: TRUE
+transformer: TRUE ==> TRUE
+
+Adding loop invariant: TRUE
+Replacing function c::mutex_unlock
+Using existing summary for function c::mutex_lock
+Replacing function c::mutex_lock
+
+Summary for function c::misc_release
+params: 
+returns: 
+globals_in: open_called 
+globals_out: misc_release#return_value#48 open_called#phi48 
+precondition: TRUE
+transformer: TRUE ==> open_called == misc_release#return_value#48 && open_called == open_called#phi48 && misc_release#return_value#48 == open_called#phi48
+
+Adding loop invariant: open_called == misc_release#return_value#48 && open_called == open_called#phi48 && misc_release#return_value#48 == open_called#phi48
+Replacing function c::misc_release
+Recursively summarizing function c::misc_read
+
+Summary for function c::misc_read
+params: 
+returns: 
+globals_in: 
+globals_out: misc_read#return_value#54 
+precondition: TRUE
+transformer: TRUE ==> TRUE
+
+Adding loop invariant: TRUE
+Replacing function c::misc_read
+Recursively summarizing function c::my_init
+
+Summary for function c::my_init
+params: 
+returns: 
+globals_in: open_called 
+globals_out: my_init#return_value#71 open_called#70 
+precondition: TRUE
+transformer: TRUE ==> my_init#return_value#71 == open_called#70
+
+Adding loop invariant: my_init#return_value#71 == open_called#70
+Replacing function c::my_init
+Recursively summarizing function c::misc_open
+
+Summary for function c::misc_open
+params: 
+returns: 
+globals_in: open_called 
+globals_out: misc_open#return_value#phi69 open_called#phi69 
+precondition: TRUE
+transformer: TRUE ==> TRUE
+
+Adding loop invariant: TRUE
+Replacing function c::misc_open
+Recursively summarizing function c::check_final_state
+Precondition trivially holds, replacing by summary.
+
+Summary for function c::check_final_state
+params: 
+returns: 
+globals_in: ldv_mutex 
+globals_out: ldv_mutex#phi39 
+precondition: TRUE
+transformer: TRUE ==> ldv_mutex == ldv_mutex#phi39
+
+Adding loop invariant: ldv_mutex == ldv_mutex#phi39
+Replacing function c::check_final_state
+
+Summary for function c::main
+params: 
+returns: 
+globals_in: 
+globals_out: 
+precondition: TRUE
+transformer: TRUE ==> TRUE
+
+Adding loop invariant: TRUE
+Replacing function c::main
+Recursively summarizing function c::__CPROVER_initialize
+
+Summary for function c::__CPROVER_initialize
+params: 
+returns: 
+globals_in: __CPROVER_threads_exited __CPROVER_malloc_is_new_array __CPROVER_dead_object __CPROVER_deallocated __CPROVER_malloc_object __CPROVER_memory_leak __CPROVER_rounding_mode ldv_mutex open_called __CPROVER_pipe_count __CPROVER_malloc_size __CPROVER_next_thread_id 
+globals_out: __CPROVER_threads_exited#4 __CPROVER_malloc_is_new_array#10 __CPROVER_dead_object#7 __CPROVER_deallocated#6 __CPROVER_malloc_object#8 __CPROVER_memory_leak#11 __CPROVER_rounding_mode#12 ldv_mutex#13 open_called#14 __CPROVER_pipe_count#3 __CPROVER_malloc_size#9 __CPROVER_next_thread_id#5 
+precondition: TRUE
+transformer: TRUE ==> __CPROVER_rounding_mode#12 <= 0 && -((signed int)__CPROVER_rounding_mode#12) <= 0 && ldv_mutex#13 <= 1 && -((signed int)ldv_mutex#13) <= -1 && open_called#14 <= 0 && -((signed int)open_called#14) <= 0 && __CPROVER_pipe_count#3 <= 0u && -((signed __CPROVER_bitvector[33])__CPROVER_pipe_count#3) <= 0 && __CPROVER_malloc_size#9 <= 0ul && -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size#9) <= 0 && __CPROVER_next_thread_id#5 <= 0ul && -((signed __CPROVER_bitvector[65])__CPROVER_next_thread_id#5) <= 0
+
+Adding loop invariant: TRUE
+Replacing function c::__CPROVER_initialize
+
+Summary for function main
+params: 
+returns: 
+globals_in: 
+globals_out: 
+precondition: TRUE
+transformer: TRUE ==> TRUE
+
+Adding loop invariant: TRUE
+
+Summarizing function c::__CPROVER_initialize
+Summary for function c::__CPROVER_initialize exists already
+
+Summarizing function c::__blast_assert
+Summary for function c::__blast_assert exists already
+
+Summarizing function c::__VERIFIER_nondet_int
+
+Summary for function c::__VERIFIER_nondet_int
+params: 
+returns: 
+globals_in: 
+globals_out: __VERIFIER_nondet_int#return_value#20 
+precondition: TRUE
+transformer: TRUE ==> TRUE
+
+Adding loop invariant: TRUE
+
+Summarizing function c::mutex_lock
+Summary for function c::mutex_lock exists already
+
+Summarizing function c::mutex_unlock
+Summary for function c::mutex_unlock exists already
+
+Summarizing function c::check_final_state
+Summary for function c::check_final_state exists already
+
+Summarizing function c::misc_release
+Summary for function c::misc_release exists already
+
+Summarizing function c::misc_llseek
+Summary for function c::misc_llseek exists already
+
+Summarizing function c::misc_read
+Summary for function c::misc_read exists already
+
+Summarizing function c::misc_open
+Summary for function c::misc_open exists already
+
+Summarizing function c::my_init
+Summary for function c::my_init exists already
+
+Summarizing function c::main
+Summary for function c::main exists already
+Checking properties of main
+Checking properties of c::__CPROVER_initialize
+Checking properties of c::__blast_assert
+negated property TRUE
+Post-processing
+Solving with MiniSAT 2.2.0 with simplifier
+1 variables, 0 clauses
+SAT checker: negated claim is SATISFIABLE, i.e., does not hold
+Checking properties of c::__VERIFIER_nondet_int
+Checking properties of c::mutex_lock
+Checking properties of c::mutex_unlock
+Checking properties of c::check_final_state
+Checking properties of c::misc_release
+Checking properties of c::misc_llseek
+Checking properties of c::misc_read
+Checking properties of c::misc_open
+Checking properties of c::my_init
+Checking properties of c::main
+[__blast_assert.1.0] error label: FAILURE
+
+** 1 of 1 failed
+VERIFICATION FAILED

@@ -1,0 +1,81 @@
+SUMMARIZER version tbd
+file /home/bjowac/deltacheck/branches/summary/regression/svcomp14/bitvector/num_conversion_1_true.c: Parsing
+Converting
+Type-checking num_conversion_1_true
+Generating GOTO Program
+Adding CPROVER library
+Partial Inlining
+Generic Property Instrumentation
+Function Pointer Removal
+Using equalities domain 
+Computing SSA of main
+Simplifying
+Computing SSA of c::__CPROVER_initialize
+Simplifying
+Computing SSA of c::__VERIFIER_assert
+Simplifying
+Computing SSA of c::main
+Simplifying
+
+Summarizing function main
+
+Summary for function main
+params: 
+returns: 
+globals_in: 
+globals_out: 
+precondition: TRUE
+transformer: TRUE
+
+Adding loop invariant: TRUE
+
+Summarizing function c::__CPROVER_initialize
+
+Summary for function c::__CPROVER_initialize
+params: 
+returns: 
+globals_in: __CPROVER_threads_exited __CPROVER_malloc_is_new_array __CPROVER_dead_object __CPROVER_deallocated __CPROVER_malloc_object __CPROVER_memory_leak __CPROVER_rounding_mode __CPROVER_pipe_count __CPROVER_malloc_size __CPROVER_next_thread_id 
+globals_out: __CPROVER_threads_exited#3 __CPROVER_malloc_is_new_array#10 __CPROVER_dead_object#7 __CPROVER_deallocated#6 __CPROVER_malloc_object#8 __CPROVER_memory_leak#11 __CPROVER_rounding_mode#5 __CPROVER_pipe_count#12 __CPROVER_malloc_size#9 __CPROVER_next_thread_id#4 
+precondition: TRUE
+transformer: __CPROVER_rounding_mode#5 <= 0 && -((signed int)__CPROVER_rounding_mode#5) <= 0 && __CPROVER_pipe_count#12 <= 0u && -((signed __CPROVER_bitvector[33])__CPROVER_pipe_count#12) <= 0 && __CPROVER_malloc_size#9 <= 0ul && -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size#9) <= 0 && __CPROVER_next_thread_id#4 <= 0ul && -((signed __CPROVER_bitvector[65])__CPROVER_next_thread_id#4) <= 0
+
+Adding loop invariant: TRUE
+
+Summarizing function c::__VERIFIER_assert
+
+Summary for function c::__VERIFIER_assert
+params: cond 
+returns: 
+globals_in: 
+globals_out: 
+precondition: TRUE
+transformer: TRUE
+
+Adding loop invariant: TRUE
+
+Summarizing function c::main
+Using existing summary for function c::__VERIFIER_assert
+Replacing function c::__VERIFIER_assert
+
+Summary for function c::main
+params: 
+returns: 
+globals_in: 
+globals_out: main#return_value#37 
+precondition: TRUE
+transformer: (signed __CPROVER_bitvector[33])y#lb35 == (signed __CPROVER_bitvector[33])main#return_value#37 && (signed __CPROVER_bitvector[33])c#lb35 == (signed __CPROVER_bitvector[33])main#return_value#37
+
+Adding loop invariant: (signed __CPROVER_bitvector[33])y#lb35 == (signed __CPROVER_bitvector[33])main#return_value#37 && (signed __CPROVER_bitvector[33])c#lb35 == (signed __CPROVER_bitvector[33])main#return_value#37
+Checking properties of main
+Checking properties of c::__CPROVER_initialize
+Checking properties of c::__VERIFIER_assert
+negated property TRUE
+Post-processing
+Solving with MiniSAT 2.2.0 with simplifier
+34 variables, 33 clauses
+SAT checker: negated claim is SATISFIABLE, i.e., does not hold
+Checking properties of c::main
+[__VERIFIER_assert.1.0] error label: FAILURE
+
+** 1 of 1 failed
+VERIFICATION FAILED

@@ -1,0 +1,8 @@
+SUMMARIZER version tbd
+file /home/bjowac/deltacheck/branches/summary/regression/svcomp14/ldv-regression/callfpointer.c_false.cil.c: Parsing
+Converting
+Type-checking callfpointer.c_false.cil
+Generating GOTO Program
+Adding CPROVER library
+Partial Inlining
+Generic Property Instrumentation

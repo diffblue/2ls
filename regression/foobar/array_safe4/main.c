@@ -3,14 +3,23 @@
 int foo(int *A)
 {
   int i;
-  A[N-1] = 0;
-  for (i = 0; A[i] != 0; i++) {
+  A[9] = 0;
+  for (i = 0; i<N; i++) {
+    A[i]=i;
   }
-  assert(i <= N);
 }
 
 int main(void) {
   int A[N];
 
   foo(A);
+
+  int X[N+1];
+
+  foo(X);
+  
+  int i;
+  for (i = 0; i<N; i++) {
+    A[i]=i;
+  }
 }

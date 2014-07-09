@@ -22,6 +22,8 @@ int main()
  
   assert(a % g == 0);
   assert(b % g == 0);
+
+  assert(a % g == 0 && b % g ==0);
   
   return 0;
 }

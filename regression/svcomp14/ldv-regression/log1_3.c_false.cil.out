@@ -1,0 +1,159 @@
+SUMMARIZER version tbd
+file /home/bjowac/deltacheck/branches/summary/regression/svcomp14/ldv-regression/1_3.c_false.cil.c: Parsing
+Converting
+Type-checking 1_3.c_false.cil
+Generating GOTO Program
+Adding CPROVER library
+Partial Inlining
+Generic Property Instrumentation
+Function Pointer Removal
+Using zones domain with binary search solver
+Computing SSA of main
+Simplifying
+Computing SSA of c::__CPROVER_initialize
+Simplifying
+Computing SSA of c::malloc
+Simplifying
+Computing SSA of c::__blast_assert
+Simplifying
+Computing SSA of c::getrr
+Simplifying
+Computing SSA of c::getPtr
+Simplifying
+Computing SSA of c::freePtr
+Simplifying
+Computing SSA of c::main
+Simplifying
+
+Summarizing function main
+Recursively summarizing function c::__CPROVER_initialize
+
+Summary for function c::__CPROVER_initialize
+params: 
+returns: 
+globals_in: __CPROVER_threads_exited __CPROVER_malloc_is_new_array __CPROVER_dead_object __CPROVER_deallocated __CPROVER_malloc_object __CPROVER_memory_leak __CPROVER_rounding_mode __CPROVER_pipe_count __CPROVER_malloc_size __CPROVER_next_thread_id 
+globals_out: __CPROVER_threads_exited#4 __CPROVER_malloc_is_new_array#11 __CPROVER_dead_object#8 __CPROVER_deallocated#7 __CPROVER_malloc_object#9 __CPROVER_memory_leak#12 __CPROVER_rounding_mode#6 __CPROVER_pipe_count#3 __CPROVER_malloc_size#10 __CPROVER_next_thread_id#5 
+precondition: TRUE
+transformer: TRUE ==> __CPROVER_rounding_mode#6 <= 0 && -((signed int)__CPROVER_rounding_mode#6) <= 0 && __CPROVER_pipe_count#3 <= 0u && -((signed __CPROVER_bitvector[33])__CPROVER_pipe_count#3) <= 0 && __CPROVER_malloc_size#10 <= 0ul && -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size#10) <= 0 && __CPROVER_next_thread_id#5 <= 0ul && -((signed __CPROVER_bitvector[65])__CPROVER_next_thread_id#5) <= 0
+
+Adding loop invariant: TRUE
+Replacing function c::__CPROVER_initialize
+Recursively summarizing function c::main
+Recursively summarizing function c::freePtr
+Recursively summarizing function c::__blast_assert
+
+Summary for function c::__blast_assert
+params: 
+returns: 
+globals_in: 
+globals_out: 
+precondition: TRUE
+transformer: TRUE ==> TRUE
+
+Adding loop invariant: TRUE
+Replacing function c::__blast_assert
+
+Summary for function c::freePtr
+params: ptr 
+returns: 
+globals_in: 
+globals_out: 
+precondition: TRUE
+transformer: TRUE ==> TRUE
+
+Adding loop invariant: TRUE
+Replacing function c::freePtr
+Using existing summary for function c::freePtr
+Replacing function c::freePtr
+Recursively summarizing function c::getPtr
+Recursively summarizing function c::getrr
+
+Summary for function c::getrr
+params: 
+returns: 
+globals_in: __CPROVER_malloc_is_new_array __CPROVER_deallocated __CPROVER_malloc_object __CPROVER_memory_leak __CPROVER_malloc_size 
+globals_out: __CPROVER_malloc_is_new_array#49 __CPROVER_deallocated#45 __CPROVER_malloc_object#47 __CPROVER_memory_leak#51 getrr#return_value#60 __CPROVER_malloc_size#48 
+precondition: TRUE
+transformer: TRUE ==> (signed __CPROVER_bitvector[65])__CPROVER_malloc_size - (signed __CPROVER_bitvector[65])__CPROVER_malloc_size#48 <= 18446744073709551611 && (signed __CPROVER_bitvector[65])__CPROVER_malloc_size#48 - (signed __CPROVER_bitvector[65])__CPROVER_malloc_size <= 4 && __CPROVER_malloc_size#48 <= 18446744073709551615ul && -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size#48) <= 0
+
+Adding loop invariant: TRUE
+Replacing function c::getrr
+
+Summary for function c::getPtr
+params: 
+returns: 
+globals_in: 
+globals_out: getPtr#return_value#72 getrr#return_value#68 
+precondition: TRUE
+transformer: TRUE ==> TRUE
+
+Adding loop invariant: TRUE
+Replacing function c::getPtr
+
+Summary for function c::main
+params: 
+returns: 
+globals_in: 
+globals_out: getPtr#return_value#91 main#return_value#92 
+precondition: TRUE
+transformer: TRUE ==> main#return_value#92 <= 0 && -((signed int)main#return_value#92) <= 0
+
+Adding loop invariant: TRUE
+Replacing function c::main
+
+Summary for function main
+params: 
+returns: 
+globals_in: 
+globals_out: 
+precondition: TRUE
+transformer: TRUE ==> TRUE
+
+Adding loop invariant: TRUE
+
+Summarizing function c::__CPROVER_initialize
+Summary for function c::__CPROVER_initialize exists already
+
+Summarizing function c::malloc
+
+Summary for function c::malloc
+params: malloc_size 
+returns: 
+globals_in: __CPROVER_malloc_is_new_array __CPROVER_deallocated __CPROVER_malloc_object __CPROVER_memory_leak __CPROVER_malloc_size 
+globals_out: __CPROVER_malloc_is_new_array#22 __CPROVER_deallocated#18 __CPROVER_malloc_object#20 __CPROVER_memory_leak#24 malloc#return_value#25 __CPROVER_malloc_size#21 
+precondition: TRUE
+transformer: TRUE ==> (signed __CPROVER_bitvector[65])malloc_size - (signed __CPROVER_bitvector[65])__CPROVER_malloc_size#21 <= 18446744073709551615 && (signed __CPROVER_bitvector[65])__CPROVER_malloc_size#21 - (signed __CPROVER_bitvector[65])malloc_size <= 18446744073709551615 && (signed __CPROVER_bitvector[65])__CPROVER_malloc_size - (signed __CPROVER_bitvector[65])__CPROVER_malloc_size#21 <= 18446744073709551615 && (signed __CPROVER_bitvector[65])__CPROVER_malloc_size#21 - (signed __CPROVER_bitvector[65])__CPROVER_malloc_size <= 18446744073709551615 && __CPROVER_malloc_size#21 <= 18446744073709551615ul && -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size#21) <= 0
+
+Adding loop invariant: TRUE
+
+Summarizing function c::__blast_assert
+Summary for function c::__blast_assert exists already
+
+Summarizing function c::getrr
+Summary for function c::getrr exists already
+
+Summarizing function c::getPtr
+Summary for function c::getPtr exists already
+
+Summarizing function c::freePtr
+Summary for function c::freePtr exists already
+
+Summarizing function c::main
+Summary for function c::main exists already
+Checking properties of main
+Checking properties of c::__CPROVER_initialize
+Checking properties of c::malloc
+Checking properties of c::__blast_assert
+negated property TRUE
+Post-processing
+Solving with MiniSAT 2.2.0 with simplifier
+1 variables, 0 clauses
+SAT checker: negated claim is SATISFIABLE, i.e., does not hold
+Checking properties of c::getrr
+Checking properties of c::getPtr
+Checking properties of c::freePtr
+Checking properties of c::main
+[__blast_assert.1.0] error label: FAILURE
+
+** 1 of 1 failed
+VERIFICATION FAILED

@@ -1,0 +1,167 @@
+SUMMARIZER version tbd
+file /home/bjowac/deltacheck/branches/summary/regression/svcomp14/ldv-regression/ex3_forlist.c_true.cil.c: Parsing
+Converting
+Type-checking ex3_forlist.c_true.cil
+Generating GOTO Program
+Adding CPROVER library
+Partial Inlining
+Generic Property Instrumentation
+Function Pointer Removal
+Using zones domain with binary search solver
+Computing SSA of main
+Simplifying
+Computing SSA of c::__CPROVER_initialize
+Simplifying
+Computing SSA of c::__blast_assert
+Simplifying
+Computing SSA of c::init
+Simplifying
+Computing SSA of c::f
+Simplifying
+Computing SSA of c::g
+Simplifying
+Computing SSA of c::malloc
+Simplifying
+Computing SSA of c::main
+Simplifying
+
+Summarizing function main
+Recursively summarizing function c::main
+Recursively summarizing function c::malloc
+substituting default value for ("symbol" "type" ("signedbv" "width" ("32") "#c_type" ("signed_int")) "identifier" ("c::malloc::size"))
+
+Summary for function c::malloc
+params: size 
+returns: 
+globals_in: counter 
+globals_out: malloc#return_value#89 counter#88 
+precondition: TRUE
+transformer: TRUE ==> (signed int)size - (signed int)counter#88 <= 4294967295 && (signed int)counter#88 - (signed int)size <= 4294967295 && (signed int)counter - (signed int)counter#88 <= 4294967295 && (signed int)counter#88 - (signed int)counter <= 1 && counter#88 <= 2147483647 && -((signed int)counter#88) <= 2147483648
+
+Adding loop invariant: TRUE
+Replacing function c::malloc
+Recursively summarizing function c::init
+
+Summary for function c::init
+params: 
+returns: 
+globals_in: pp pstate 
+globals_out: pp#phi22 pstate#phi22 
+precondition: TRUE
+transformer: TRUE ==> TRUE
+
+Adding loop invariant: i#lb30 <= 2 && -((signed int)i#lb30) <= -1
+Replacing function c::init
+Using existing summary for function c::malloc
+Replacing function c::malloc
+Recursively summarizing function c::f
+
+Summary for function c::f
+params: pointer 
+returns: 
+globals_in: pp pstate 
+globals_out: pp#phi55 pstate#phi55 
+precondition: TRUE
+transformer: TRUE ==> TRUE
+
+Adding loop invariant: i#lb54 <= 2 && -((signed int)i#lb54) <= -1 && (signed int)i#lb54 - (signed int)__cil_tmp4#lb54 <= 2 && (signed __CPROVER_bitvector[34])__cil_tmp4#lb54 - (signed __CPROVER_bitvector[34])i#lb54 <= -1 && (signed int)i#lb54 - (signed int)__cil_tmp5#lb54 <= 1 && (signed __CPROVER_bitvector[34])__cil_tmp5#lb54 - (signed __CPROVER_bitvector[34])i#lb54 <= 4294967294 && __cil_tmp4#lb54 <= 0u && -((signed __CPROVER_bitvector[33])__cil_tmp4#lb54) <= 0 && (signed __CPROVER_bitvector[33])__cil_tmp4#lb54 - (signed __CPROVER_bitvector[33])__cil_tmp5#lb54 <= -1 && (signed __CPROVER_bitvector[33])__cil_tmp5#lb54 - (signed __CPROVER_bitvector[33])__cil_tmp4#lb54 <= 4294967295 && __cil_tmp5#lb54 <= 4294967295u && -((signed __CPROVER_bitvector[33])__cil_tmp5#lb54) <= -1
+Replacing function c::f
+Using existing summary for function c::f
+Replacing function c::f
+Recursively summarizing function c::g
+Recursively summarizing function c::__blast_assert
+
+Summary for function c::__blast_assert
+params: 
+returns: 
+globals_in: 
+globals_out: 
+precondition: TRUE
+transformer: TRUE ==> TRUE
+
+Adding loop invariant: TRUE
+Replacing function c::__blast_assert
+
+Summary for function c::g
+params: pointer 
+returns: 
+globals_in: pp pstate 
+globals_out: pp#phi66 pstate#phi66 
+precondition: TRUE
+transformer: TRUE ==> TRUE
+
+Adding loop invariant: i#lb79 <= 2 && -((signed int)i#lb79) <= -1 && (signed int)i#lb79 - (signed int)__cil_tmp3#lb79 <= 2 && (signed __CPROVER_bitvector[34])__cil_tmp3#lb79 - (signed __CPROVER_bitvector[34])i#lb79 <= 4294967294 && (signed int)i#lb79 - (signed int)__cil_tmp4#lb79 <= 2 && (signed __CPROVER_bitvector[34])__cil_tmp4#lb79 - (signed __CPROVER_bitvector[34])i#lb79 <= 4294967294 && __cil_tmp3#lb79 <= 4294967295u && -((signed __CPROVER_bitvector[33])__cil_tmp3#lb79) <= 0 && (signed __CPROVER_bitvector[33])__cil_tmp3#lb79 - (signed __CPROVER_bitvector[33])__cil_tmp4#lb79 <= 4294967295 && (signed __CPROVER_bitvector[33])__cil_tmp4#lb79 - (signed __CPROVER_bitvector[33])__cil_tmp3#lb79 <= 4294967295 && __cil_tmp4#lb79 <= 4294967295u && -((signed __CPROVER_bitvector[33])__cil_tmp4#lb79) <= 0
+Replacing function c::g
+Using existing summary for function c::g
+Replacing function c::g
+
+Summary for function c::main
+params: 
+returns: 
+globals_in: 
+globals_out: malloc#return_value#phi157 main#return_value#phi157 
+precondition: TRUE
+transformer: TRUE ==> main#return_value#phi157 <= 0 && -((signed int)main#return_value#phi157) <= 1
+
+Adding loop invariant: TRUE
+Replacing function c::main
+Recursively summarizing function c::__CPROVER_initialize
+
+Summary for function c::__CPROVER_initialize
+params: 
+returns: 
+globals_in: __CPROVER_threads_exited pp pstate __CPROVER_malloc_is_new_array __CPROVER_dead_object __CPROVER_deallocated __CPROVER_malloc_object __CPROVER_memory_leak __CPROVER_rounding_mode counter __CPROVER_pipe_count __CPROVER_malloc_size __CPROVER_next_thread_id 
+globals_out: __CPROVER_threads_exited#6 pp#15 pstate#3 __CPROVER_malloc_is_new_array#12 __CPROVER_dead_object#9 __CPROVER_deallocated#8 __CPROVER_malloc_object#10 __CPROVER_memory_leak#13 __CPROVER_rounding_mode#14 counter#4 __CPROVER_pipe_count#5 __CPROVER_malloc_size#11 __CPROVER_next_thread_id#7 
+precondition: TRUE
+transformer: TRUE ==> __CPROVER_rounding_mode#14 <= 0 && -((signed int)__CPROVER_rounding_mode#14) <= 0 && counter#4 <= 1 && -((signed int)counter#4) <= -1 && __CPROVER_pipe_count#5 <= 0u && -((signed __CPROVER_bitvector[33])__CPROVER_pipe_count#5) <= 0 && __CPROVER_malloc_size#11 <= 0ul && -((signed __CPROVER_bitvector[65])__CPROVER_malloc_size#11) <= 0 && __CPROVER_next_thread_id#7 <= 0ul && -((signed __CPROVER_bitvector[65])__CPROVER_next_thread_id#7) <= 0
+
+Adding loop invariant: TRUE
+Replacing function c::__CPROVER_initialize
+
+Summary for function main
+params: 
+returns: 
+globals_in: 
+globals_out: 
+precondition: TRUE
+transformer: TRUE ==> TRUE
+
+Adding loop invariant: TRUE
+
+Summarizing function c::__CPROVER_initialize
+Summary for function c::__CPROVER_initialize exists already
+
+Summarizing function c::__blast_assert
+Summary for function c::__blast_assert exists already
+
+Summarizing function c::init
+Summary for function c::init exists already
+
+Summarizing function c::f
+Summary for function c::f exists already
+
+Summarizing function c::g
+Summary for function c::g exists already
+
+Summarizing function c::malloc
+Summary for function c::malloc exists already
+
+Summarizing function c::main
+Summary for function c::main exists already
+Checking properties of main
+Checking properties of c::__CPROVER_initialize
+Checking properties of c::__blast_assert
+negated property TRUE
+Post-processing
+Solving with MiniSAT 2.2.0 with simplifier
+1 variables, 0 clauses
+SAT checker: negated claim is SATISFIABLE, i.e., does not hold
+Checking properties of c::init
+Checking properties of c::f
+Checking properties of c::g
+Checking properties of c::malloc
+Checking properties of c::main
+[__blast_assert.1.0] error label: FAILURE
+
+** 1 of 1 failed
+VERIFICATION FAILED
