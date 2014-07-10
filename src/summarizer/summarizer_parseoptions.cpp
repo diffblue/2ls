@@ -417,21 +417,25 @@ void summarizer_parseoptionst::type_stats_rec(
     const namespacet &ns)
 {
 
-	const typet &full_type=ns.follow(type);
-
-	if(full_type.id()==ID_array)
+  if(type.id()==ID_symbol)
+    type_stats_rec(ns.follow(type), stats, ns);
+	
+	if(type.id()==ID_pointer || type.id()==ID_array)
 	{
 		stats.has_array=true;
+				
+		const typet &subtype=ns.follow(type.subtype());
 		
-		if(full_type.subtype().id()==ID_char)
-		{
-			stats.has_string=true;
+		if(subtype.id()==ID_signedbv ||
+       subtype.id()==ID_unsignedbv)
+    {
+  		stats.has_string=(to_bitvector_type(subtype).get_width()==config.ansi_c.char_width);
 		}
 	}
-
-  if(full_type.has_subtypes())
+	
+  if(type.has_subtypes())
   {
-  	forall_subtypes(it, full_type)
+  	forall_subtypes(it, type)
   	{
   		type_stats_rec(*it, stats, ns);
   	}
