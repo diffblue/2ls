@@ -36,6 +36,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <langapi/mode.h>
 
 #include <cbmc/version.h>
+#include "version.h"
 
 #include "summarizer_parseoptions.h"
 #include "summary_db.h"
@@ -203,7 +204,7 @@ int summarizer_parseoptionst::doit()
 {
   if(cmdline.isset("version"))
   {
-    std::cout << CBMC_VERSION << std::endl;
+    std::cout << SUMMARIZER_VERSION " (based on CBMC " CBMC_VERSION ")" << std::endl;
     return 0;
   }
 
@@ -219,7 +220,7 @@ int summarizer_parseoptionst::doit()
   //
   // Print a banner
   //
-  status("SUMMARIZER version tbd");
+  status("SUMMARIZER version " SUMMARIZER_VERSION " (based on CBMC " CBMC_VERSION ")");
 
   register_language(new_ansi_c_language);
   register_language(new_cpp_language);
@@ -1066,11 +1067,12 @@ void summarizer_parseoptionst::help()
 {
   std::cout <<
     "\n"
-    "* *  Summarizer " CBMC_VERSION " - Copyright (C) 2014 ";
+    "* *  Summarizer " SUMMARIZER_VERSION " - Copyright (C) 2014                  * *\n"
+    "* *  (based on CBMC " CBMC_VERSION " ";
     
-  std::cout << "(" << (sizeof(void *)*8) << "-bit version)";
+  std::cout << "(" << (sizeof(void *)*8) << "-bit version))";
     
-  std::cout << "   * *\n";
+  std::cout << "                   * *\n";
     
   std::cout <<
     "* *                    Daniel Kroening                      * *\n"
@@ -1123,6 +1125,7 @@ void summarizer_parseoptionst::help()
     " --no-assertions              ignore user assertions\n"
     " --no-assumptions             ignore user assumptions\n"
     " --inline                     inline all functions into main\n"
+    " --inline-partial nr          inline functions smaller than the given nr of instructions\n"
     "\n"
     "Backend options:\n"
     " --context-sensitive          context-sensitive analysis from entry point\n"
