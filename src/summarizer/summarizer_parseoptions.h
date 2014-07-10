@@ -99,6 +99,11 @@ protected:
     {}
   };    
    
+  void type_stats_rec(
+    const typet &type,
+    expr_statst &stats,
+    const namespacet &ns);
+   
   void expr_stats_rec(
     const exprt &expr,
     expr_statst &stats);  

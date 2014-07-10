@@ -410,6 +410,35 @@ int summarizer_parseoptionst::doit()
 }
 
 
+
+void summarizer_parseoptionst::type_stats_rec(
+    const typet &type,
+    expr_statst &stats,
+    const namespacet &ns)
+{
+
+	const typet &full_type=ns.follow(type);
+
+	if(full_type.id()==ID_array)
+	{
+		stats.has_array=true;
+		
+		if(full_type.subtype().id()==ID_char)
+		{
+			stats.has_string=true;
+		}
+	}
+
+  if(full_type.has_subtypes())
+  {
+  	forall_subtypes(it, full_type)
+  	{
+  		type_stats_rec(*it, stats, ns);
+  	}
+  } 
+}
+
+
 /*******************************************************************\
 
 Function: summarizer_parseoptionst::expr_stats_rec
@@ -445,7 +474,7 @@ void summarizer_parseoptionst::expr_stats_rec(
 
   if(expr.id()==ID_symbol )
   {
-  
+  	
   }
   
   if(expr.has_operands())
@@ -473,6 +502,8 @@ Function: summarizer_parseoptionst::show_stats
 void summarizer_parseoptionst::show_stats(const goto_modelt &goto_model,
                                           std::ostream &out)
 {
+
+  const namespacet ns(goto_model.symbol_table);
 
   expr_statst stats;
 
@@ -515,6 +546,13 @@ void summarizer_parseoptionst::show_stats(const goto_modelt &goto_model,
         case GOTO:
           expr_stats_rec(instruction.guard, stats);
           break;
+          
+        case DECL:
+        	// someone declaring an array
+	        type_stats_rec(to_code_decl(instruction.code).symbol().type(), stats, ns);
+        
+        	break;  
+          
         default:
           // skip
           break;
@@ -526,8 +564,8 @@ void summarizer_parseoptionst::show_stats(const goto_modelt &goto_model,
   out << "  nr of functions: " << nr_functions << std::endl; 
   out << "  nr of loops: " << nr_loops << std::endl; 
   out << "  malloc: " << (stats.has_malloc ? "YES" : "NO") << std::endl;
-  out << "  arrays: " << (stats.has_malloc ? "YES" : "NO") << std::endl;
-  out << "  strings: " << (stats.has_malloc ? "YES" : "NO") << std::endl;
+  out << "  arrays: " << (stats.has_array ? "YES" : "NO") << std::endl;
+  out << "  strings: " << (stats.has_string ? "YES" : "NO") << std::endl;
 }
 
 
