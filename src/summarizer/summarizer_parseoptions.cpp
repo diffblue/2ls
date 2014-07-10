@@ -756,6 +756,10 @@ bool summarizer_parseoptionst::process_goto_program(
     status() << "Generic Property Instrumentation" << eom;
     goto_check(options, goto_model);
 
+    status() << "Function Pointer Removal" << eom;
+    remove_function_pointers(
+      goto_model, cmdline.isset("pointer-check"));
+
     // remove returns
     remove_returns(goto_model);
     
@@ -765,10 +769,8 @@ bool summarizer_parseoptionst::process_goto_program(
     // add loop ids
     goto_model.goto_functions.compute_loop_numbers();
     
-
     // if we aim to cover, replace
     // all assertions by false to prevent simplification
-    
     if(cmdline.isset("cover-assertions"))
       make_assertions_false(goto_model);
 
@@ -778,10 +780,6 @@ bool summarizer_parseoptionst::process_goto_program(
       show_loop_ids(get_ui(), goto_model);
       return true;
     }
-
-    status() << "Function Pointer Removal" << eom;
-    remove_function_pointers(
-      goto_model, cmdline.isset("pointer-check"));
 
     // now do full inlining, if requested
     if(cmdline.isset("inline"))
