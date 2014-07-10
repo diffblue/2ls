@@ -119,6 +119,9 @@ void summarizer_parseoptionst::get_command_line_options(optionst &options)
   if(cmdline.isset("unwind"))
     options.set_option("unwind", cmdline.getval("unwind"));
 
+  if(cmdline.isset("inline-partial"))
+    options.set_option("inline-partial", cmdline.getval("inline-partial"));
+
   // check array bounds
   if(cmdline.isset("bounds-check"))
     options.set_option("bounds-check", true);
@@ -737,8 +740,12 @@ bool summarizer_parseoptionst::process_goto_program(
   try
   {
     // do partial inlining
-    status() << "Partial Inlining" << eom;
-    goto_partial_inline(goto_model, ui_message_handler);
+    if(cmdline.isset("inline-partial"))
+    {
+      unsigned limit = options.get_unsigned_int_option("inline-partial");
+      status() << "Performing partial inlining (" << limit << ")" << eom;
+      goto_partial_inline(goto_model, ui_message_handler, limit);
+    }
     
     // add generic checks
     status() << "Generic Property Instrumentation" << eom;
@@ -772,7 +779,6 @@ bool summarizer_parseoptionst::process_goto_program(
       goto_model, cmdline.isset("pointer-check"));
 
     // now do full inlining, if requested
-
     if(cmdline.isset("inline"))
     {
       status() << "Performing full inlining" << eom;
