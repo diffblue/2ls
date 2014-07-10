@@ -477,6 +477,7 @@ void summarizer_parseoptionst::show_stats(const goto_modelt &goto_model,
   expr_statst stats;
 
   unsigned nr_functions=0;
+  unsigned nr_loops=0;
 
   // analyze all the functions
   forall_goto_functions(f_it, goto_model.goto_functions)
@@ -493,6 +494,8 @@ void summarizer_parseoptionst::show_stats(const goto_modelt &goto_model,
       i_it++)
     {
       const goto_programt::instructiont &instruction=*i_it;
+
+      if(i_it->is_backwards_goto()) nr_loops++;
 
       switch(instruction.type)
       {
@@ -520,10 +523,11 @@ void summarizer_parseoptionst::show_stats(const goto_modelt &goto_model,
   } // forall functions
 
   out << " =============== STATS  =============== " << std::endl;
-  out << "  nr of functions " << nr_functions << std::endl; 
-  out << "  malloc " << (stats.has_malloc ? "YES" : "NO") << std::endl;
-  out << "  arrays " << (stats.has_malloc ? "YES" : "NO") << std::endl;
-  out << "  strings " << (stats.has_malloc ? "YES" : "NO") << std::endl;
+  out << "  nr of functions: " << nr_functions << std::endl; 
+  out << "  nr of loops: " << nr_loops << std::endl; 
+  out << "  malloc: " << (stats.has_malloc ? "YES" : "NO") << std::endl;
+  out << "  arrays: " << (stats.has_malloc ? "YES" : "NO") << std::endl;
+  out << "  strings: " << (stats.has_malloc ? "YES" : "NO") << std::endl;
 }
 
 
