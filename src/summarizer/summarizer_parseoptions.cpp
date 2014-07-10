@@ -511,6 +511,7 @@ void summarizer_parseoptionst::show_stats(const goto_modelt &goto_model,
 
   expr_statst stats;
 
+  unsigned nr_instructions=0;
   unsigned nr_functions=0;
   unsigned nr_loops=0;
 
@@ -528,6 +529,7 @@ void summarizer_parseoptionst::show_stats(const goto_modelt &goto_model,
       i_it!=goto_program.instructions.end();
       i_it++)
     {
+      nr_instructions++;
       const goto_programt::instructiont &instruction=*i_it;
 
       if(i_it->is_backwards_goto()) nr_loops++;
@@ -565,6 +567,7 @@ void summarizer_parseoptionst::show_stats(const goto_modelt &goto_model,
   } // forall functions
 
   out << " =============== STATS  =============== " << std::endl;
+  out << "  nr of instructions: " << nr_instructions << std::endl; 
   out << "  nr of functions: " << nr_functions << std::endl; 
   out << "  nr of loops: " << nr_loops << std::endl; 
   out << "  malloc: " << (stats.has_malloc ? "YES" : "NO") << std::endl;
@@ -802,7 +805,7 @@ bool summarizer_parseoptionst::process_goto_program(
     remove_function_pointers(
       goto_model, cmdline.isset("pointer-check"));
 
-    // remove returns
+    // remove returns (must be done after function pointer removal)
     remove_returns(goto_model);
     
     // recalculate numbers, etc.
