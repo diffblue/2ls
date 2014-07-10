@@ -21,9 +21,9 @@ int do2(int x)
 void main()
 {
   int y = do1(x);
-  assert(-1<=y && y<=1);
+  assert(y==1);
   x = -x;
   int z = do2(x);
-  assert(z==-1);
+  assert(-1<=z && z<=1);
 }
 

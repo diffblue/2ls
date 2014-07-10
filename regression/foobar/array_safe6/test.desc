@@ -1,6 +1,6 @@
 CORE
 main.c
---zones --context-sensitive --inline-main
+--intervals --context-sensitive --array-abstraction
 ^EXIT=0$
 ^SIGNAL=0$
 ^VERIFICATION SUCCESSFUL$
