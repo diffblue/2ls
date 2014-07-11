@@ -28,6 +28,8 @@ void ssa_unwindert::unwind(local_SSAt &SSA, unsigned unwind_max)
 {
   if(unwind_max==0) return; 
 
+  // TODO: currently does not work for nested loops!
+
   forall_goto_program_instructions(i_it, SSA.goto_function.body)
   {
     if(i_it->is_backwards_goto()) //we've found a loop

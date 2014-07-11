@@ -30,6 +30,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/goto_functions.h>
 #include <goto-programs/xml_goto_trace.h>
 #include <goto-programs/remove_returns.h>
+#include <goto-programs/array_abstraction.h>
 
 #include <analyses/goto_check.h>
 
@@ -837,6 +838,14 @@ bool summarizer_parseoptionst::process_goto_program(
     if(cmdline.isset("inline-main"))
     {
       inline_main(goto_model); 
+    }
+
+    // do array abstraction
+    if(cmdline.isset("array-abstraction"))
+    {
+      status() << "Performing array abstraction" << eom;
+      array_abstraction(goto_model.symbol_table, ui_message_handler,
+                        goto_model.goto_functions);
     }
 
     label_properties(goto_model);

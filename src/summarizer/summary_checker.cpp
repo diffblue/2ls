@@ -44,8 +44,15 @@ property_checkert::resultt summary_checkert::operator()(
   const namespacet ns(goto_model.symbol_table);
 
   SSA_functions(goto_model,ns);
+  //loop
+  //  refine domain
+  //  loop from 0 to k do
+  //    unwind k
   if(!options.get_bool_option("havoc")) summarize(goto_model);
   return check_properties(); 
+  //    if safe exit
+  //  done
+  //done
   // return check_properties(goto_model);
 }
 
