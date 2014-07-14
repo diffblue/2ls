@@ -35,6 +35,7 @@ void ssa_unwindert::unwind(local_SSAt &SSA, unsigned unwind_max)
     if(i_it->is_backwards_goto()) //we've found a loop
     {
       local_SSAt::locationt loop_head = i_it->get_target(); 
+      //      const irep_idt loop_id=goto_programt::loop_id(i_it);
 
       // get variables at beginning and end of loop body
       std::map<exprt, exprt> pre_post_exprs;
