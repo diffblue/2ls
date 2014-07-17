@@ -243,7 +243,10 @@ void ssa_inlinert::replace_globals_in(const local_SSAt::var_sett &globals_in,
     rename(lhs);
     symbol_exprt rhs;
     if(find_corresponding_symbol(*it,globals,rhs))
+    {
+      debug() << "binding: " << lhs.get_identifier() << " == " << rhs.get_identifier() << eom;
       new_equs.push_back(equal_exprt(lhs,rhs));
+    }
     else
       warning() << "'" << it->get_identifier() << "' not bound in caller" << eom;
   }
@@ -632,8 +635,25 @@ Function: ssa_inlinert::get_original_identifier
 irep_idt ssa_inlinert::get_original_identifier(const symbol_exprt &s)
 {
   std::string id = id2string(s.get_identifier());
-  size_t pos = id.find("#");
-  if(pos==std::string::npos) pos = id.find("@");
+
+  //find first #@%!$ where afterwards there are no letters
+  size_t pos = std::string::npos;
+  for(size_t i=0;i<id.size();i++)
+  {
+    char c = id.at(i);
+    if(pos==std::string::npos)
+    {
+      if(c=='#' || c=='@' || c=='%' || c=='!' || c=='$')
+        pos = i;
+    }
+    else
+    {
+      if(!(c=='#' || c=='@' || c=='%' || c=='!' || c=='$') &&
+         !(c=='p' || c=='h' || c=='i') &&
+         !('0'<=c && c<='9'))
+        pos = std::string::npos;
+    }
+  }
   if(pos!=std::string::npos) id = id.substr(0,pos);
   return id;
 }
