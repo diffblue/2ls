@@ -786,6 +786,7 @@ void array_abstractiont::abstract_function_call(
 
       str_args.back()=idx;
     }
+    
 
     if(!is_ptr_argument(abstract_type))
       str_args.back()=str_args.back();
@@ -1071,6 +1072,9 @@ const typet& array_abstractiont::build_abstraction_type_rec(const typet &type,
 
   if(eff_type.id()==ID_array || eff_type.id()==ID_pointer)
   {
+    map_entry.first->second=string_struct;
+
+    /*
     // char* or void* or char[]
     if(is_char_type(eff_type.subtype()) ||
         eff_type.subtype().id() == ID_empty)
@@ -1088,6 +1092,7 @@ const typet& array_abstractiont::build_abstraction_type_rec(const typet &type,
             pointer_typet(subt);
       }
     }
+    */
   }
   else if(eff_type.id()==ID_struct || eff_type.id()==ID_union)
   {
