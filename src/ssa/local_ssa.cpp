@@ -797,7 +797,9 @@ exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
   }
   else if(expr.id()==ID_sideeffect)
   {
-    throw "unexpected side effect in read_rhs_rec";
+    // ignore
+
+    //throw "unexpected side effect in read_rhs_rec";
   }
   else if(expr.id()==ID_address_of)
   {
@@ -913,7 +915,10 @@ void local_SSAt::replace_side_effects_rec(
       expr=malloc_ssa(side_effect_expr, tmp_suffix, ns);
     }
     else
-      throw "unexpected side effect: "+id2string(statement);
+    {
+      //throw "unexpected side effect: "+id2string(statement);
+      // ignore
+    }
   }
   else if(is_deref_struct_member(expr, ns))
   {
