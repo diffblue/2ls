@@ -810,10 +810,10 @@ void array_abstractiont::abstract_function_call(
       assert(type_eq(new_lhs.type(),
             abstract_ret_type, ns));
 
-      if(is_ptr_argument(abstract_ret_type))
+      //if(is_ptr_argument(abstract_ret_type))
         str_args.push_back(new_lhs);
-      else
-        str_args.push_back(address_of_exprt(new_lhs));
+      //else
+      //  str_args.push_back(address_of_exprt(new_lhs));
     }
   }
 
@@ -1309,7 +1309,7 @@ bool array_abstractiont::build_pointer(const exprt &object,
     if(write) return true;
 
     if(build_wrap(a.object(), dest, write)) return true;
-    dest=address_of_exprt(dest);
+    //dest=address_of_exprt(dest);
     return false;
   }
   else if(ptr.pointer.id()==ID_symbol &&
