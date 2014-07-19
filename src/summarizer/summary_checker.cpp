@@ -19,7 +19,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "../ssa/local_ssa.h"
 #include "../ssa/simplify_ssa.h"
 #include "../ssa/ssa_build_goto_trace.h"
-#include "../domains/ssa_fixed_point.h"
 #include "../domains/ssa_analyzer.h"
 #include "../ssa/ssa_unwinder.h"
 
@@ -312,7 +311,6 @@ summary_checkert::resultt summary_checkert::check_properties(
     exprt inv;
     ssa_analyzer.get_loop_invariants(inv);
     node.constraints.push_back(inv);
-    //ssa_fixed_point(SSA);
 
     status() << "Checking properties" << messaget::eom;
     check_properties(SSA, f_it);
