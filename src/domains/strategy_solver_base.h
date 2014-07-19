@@ -35,7 +35,9 @@ class strategy_solver_baset : public messaget
     {
 
 #ifndef DEBUG_FORMULA
-      //      std::cout << "program: " << from_expr(ns,"",*it) << std::endl;
+#if 0
+      std::cout << "program: " << from_expr(ns,"",*it) << std::endl;
+#endif
       solver << *it;
 #else
       literalt l = solver.convert(*it);

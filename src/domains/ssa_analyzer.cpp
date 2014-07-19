@@ -144,6 +144,7 @@ void ssa_analyzert::operator()(local_SSAt &SSA, const exprt &precondition)
   strategy_solver->set_message_handler(get_message_handler());
 
 #if 1
+  debug() << "Template: " << eom;
   domain->output_domain(debug(), ns); debug() << eom;
 #endif  
 
