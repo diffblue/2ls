@@ -241,6 +241,13 @@ int summarizer_parseoptionst::doit()
     return 7;
   }
 
+  if(cmdline.isset("show-fixed-points"))
+  {
+    bool simplify=!cmdline.isset("no-simplify");
+    show_fixed_points(goto_model, simplify, std::cout, ui_message_handler);
+    return 7;
+  }
+
   if(cmdline.isset("show-stats"))
   {
     show_stats(goto_model, std::cout);

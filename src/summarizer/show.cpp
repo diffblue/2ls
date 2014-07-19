@@ -18,6 +18,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "../ssa/local_ssa.h"
 #include "../ssa/simplify_ssa.h"
 
+#include "../domains/ssa_fixed_point.h"
 
 /*******************************************************************\
 
@@ -224,6 +225,60 @@ void show_ssa(
     out << ">>>> Function " << f_it->first << "\n";
           
     show_ssa(f_it->second, simplify, ns, out);
+      
+    out << "\n";
+  }
+}
+
+/*******************************************************************\
+
+Function: show_fixed_point
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void show_fixed_point(
+  const goto_functionst::goto_functiont &goto_function,
+  bool simplify,
+  const namespacet &ns,
+  std::ostream &out)
+{
+  local_SSAt local_SSA(goto_function, ns);
+  if(simplify) ::simplify(local_SSA, ns);
+  ssa_fixed_point(local_SSA);
+  local_SSA.output(out);
+}
+
+/*******************************************************************\
+
+Function: show_fixed_points
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void show_fixed_points(
+  const goto_modelt &goto_model,
+  bool simplify,
+  std::ostream &out,
+  message_handlert &message_handler)
+{
+  const namespacet ns(goto_model.symbol_table);
+  
+  forall_goto_functions(f_it, goto_model.goto_functions)
+  {
+    out << ">>>> Function " << f_it->first << "\n";
+          
+    show_fixed_point(f_it->second, simplify, ns, out);
       
     out << "\n";
   }
