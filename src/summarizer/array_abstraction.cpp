@@ -199,8 +199,8 @@ void array_abstractiont::operator()(goto_functionst &dest)
   Forall_goto_functions(it, dest)
   {
     // don't instrument our internal functions
-    //    if(has_prefix(id2string(it->first), CPROVER_PREFIX))
-    //      continue;
+    if(has_prefix(id2string(it->first), CPROVER_PREFIX))
+      continue;
 
     sym_suffix="#str$"+id2string(it->first);
     add_str_arguments(it->first, it->second);
