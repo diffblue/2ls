@@ -1,7 +1,7 @@
 SUMMARIZER=../../../src/summarizer/summarizer
-#CHECKS="--div-by-zero-check --signed-overflow-check --array-abstraction"
-CHECKS="--div-by-zero-check --signed-overflow-check --bounds-check --pointer-check"
-SETS="a2ps" 
+CHECKS="--div-by-zero-check --signed-overflow-check --array-abstraction --pointer-check"
+#CHECKS="--div-by-zero-check --signed-overflow-check --bounds-check --pointer-check"
+SETS="a2ps bison-2.5 grep-2.12"
 
 TIMEOUT=900
 
