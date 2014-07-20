@@ -188,6 +188,13 @@ void summarizer_parseoptionst::get_command_line_options(optionst &options)
   // magic error label
   if(cmdline.isset("error-label"))
     options.set_option("error-label", cmdline.getval("error-label"));
+
+  // use incremental assertion checks
+  if(cmdline.isset("non-incremental"))
+    options.set_option("incremental", false);
+  else
+    options.set_option("incremental", true);
+
 }
 
 /*******************************************************************\

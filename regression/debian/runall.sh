@@ -1,7 +1,8 @@
 SUMMARIZER=../../../src/summarizer/summarizer
 CHECKS="--div-by-zero-check --signed-overflow-check --array-abstraction --pointer-check"
 #CHECKS="--div-by-zero-check --signed-overflow-check --bounds-check --pointer-check"
-SETS="a2ps bison-2.5 grep-2.12"
+SETS="openjpeg-1.3"
+#SETS="a2ps bison-2.5 grep-2.12 openjpeg-1.3"
 
 TIMEOUT=900
 

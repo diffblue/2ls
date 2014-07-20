@@ -58,13 +58,9 @@ protected:
   void summarize(const goto_modelt &);
 
   property_checkert::resultt check_properties();
-  void check_properties(const summarizert::functionst::const_iterator f_it);
+  void check_properties_non_incremental(const summarizert::functionst::const_iterator f_it);
+  void check_properties_incremental(const summarizert::functionst::const_iterator f_it);
 
-  resultt check_properties(const goto_modelt &);
-
-  void check_properties(
-    const local_SSAt &,
-    const goto_functionst::function_mapt::const_iterator f_it);
 };
 
 #endif

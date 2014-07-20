@@ -28,6 +28,7 @@ class optionst;
   "(signed-overflow-check)(unsigned-overflow-check)" \
   "(float-overflow-check)(nan-check)" \
   "(array-abstraction)" \
+  "(non-incremental)" \
   "(no-assertions)(no-assumptions)" \
   "(16)(32)(64)(LP64)(ILP64)(LLP64)(ILP32)(LP32)" \
   "(little-endian)(big-endian)" \

@@ -15,6 +15,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <solvers/sat/satcheck.h>
 #include <solvers/flattening/bv_pointers.h>
+#include <solvers/prop/cover_goals.h>
+#include <solvers/prop/literal_expr.h>
 
 #include "../ssa/local_ssa.h"
 #include "../ssa/simplify_ssa.h"
@@ -70,7 +72,7 @@ Function: summary_checkert::SSA_functions
 void summary_checkert::SSA_functions(const goto_modelt &goto_model,  const namespacet &ns)
 {
   // properties
-  //initialize_property_map(goto_model.goto_functions); //does not work in case of unwinding
+  initialize_property_map(goto_model.goto_functions);
   
   // compute SSA for all the functions
   forall_goto_functions(f_it, goto_model.goto_functions)
@@ -153,7 +155,10 @@ summary_checkert::resultt summary_checkert::check_properties()
       f_it != ssa_db.functions().end(); f_it++)
   {
     status() << "Checking properties of " << f_it->first << messaget::eom;
-    check_properties(f_it);
+    if(options.get_bool_option("incremental"))
+      check_properties_incremental(f_it);
+    else
+      check_properties_non_incremental(f_it);
   }
   
   for(property_mapt::const_iterator
@@ -176,7 +181,7 @@ Function: summary_checkert::check_properties
 
 \*******************************************************************/
 
-void summary_checkert::check_properties(
+void summary_checkert::check_properties_non_incremental(
    const summarizert::functionst::const_iterator f_it)
 {
   const local_SSAt &SSA = *f_it->second;
@@ -271,105 +276,48 @@ Function: summary_checkert::check_properties
 
 \*******************************************************************/
 
-summary_checkert::resultt summary_checkert::check_properties(
-  const goto_modelt &goto_model)
+struct goalt
 {
-  // properties
-  //initialize_property_map(goto_model.goto_functions); //does not work in case of unwinding
-  
-  const namespacet ns(goto_model.symbol_table);
+  // a property holds if all instances of it are true
+  exprt::operandst conjuncts;
+  std::string description;
 
-  // analyze all the functions
-  forall_goto_functions(f_it, goto_model.goto_functions)
+  explicit goalt(const goto_programt::instructiont &instruction)
   {
-    if(!f_it->second.body_available) continue;
-
-    status() << "Analyzing " << f_it->first << messaget::eom;
-    
-    // build SSA
-    local_SSAt SSA(f_it->second, ns);
-    
-    // simplify, if requested
-    if(simplify)
-    {
-      status() << "Simplifying" << messaget::eom;
-      ::simplify(SSA, ns);
-    }
-    
-    // fixed-point for loops
-    status() << "Fixed-point" << messaget::eom;
-    ssa_analyzert ssa_analyzer(ns, options);
-    ssa_analyzer(SSA);
-
-    // Add fixed-point as constraints back into SSA.
-    // We simply use the last CFG node. It would be prettier to put
-    // these close to the loops.
-    goto_programt::const_targett loc=
-      SSA.goto_function.body.instructions.end();
-    loc--;
-    local_SSAt::nodet &node=SSA.nodes[loc];
-    exprt inv;
-    ssa_analyzer.get_loop_invariants(inv);
-    node.constraints.push_back(inv);
-
-    status() << "Checking properties" << messaget::eom;
-    check_properties(SSA, f_it);
+    description=id2string(instruction.location.get_comment());
   }
   
-  for(property_mapt::const_iterator
-      p_it=property_map.begin(); p_it!=property_map.end(); p_it++)
-    if(p_it->second.result==FAIL)
-      return property_checkert::FAIL;
-    
-  return property_checkert::PASS;
-}
-
-/*******************************************************************\
-
-Function: summary_checkert::check_properties
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void summary_checkert::check_properties(
-  const local_SSAt &SSA0,
-  const goto_functionst::function_mapt::const_iterator f_it)
-{
-  local_SSAt SSA = SSA0;
-  if(!f_it->second.body.has_assertion()) return;
-
-  #if 0
-  assignmentst assignments(f_it->second.body, ns);
-  //assignments.output(ns, f_it->second.body, std::cout);
-  
-  ssa_ait ssa_ai(assignments);
-  ssa_ai(f_it->second.body, ns);
-  ssa_ai.output(ns, f_it->second.body, std::cout);
-  return;
-  #endif
-  
-  status() << "Analyzing " << f_it->first << messaget::eom;
-  
-  // inline summaries
-  summarizer.inline_summaries(f_it->first,SSA);
-  
-  #if 0
-  // simplify, if requested
-  if(simplify)
+  goalt()
   {
-    status() << "Simplifying" <<messaget::eom;
-    ::simplify(SSA, ns);
   }
-  #endif
+};
 
-  // non-incremental version
+void summary_checkert::check_properties_incremental(
+   const summarizert::functionst::const_iterator f_it)
+{
+  const local_SSAt &SSA = *f_it->second;
+  if(!SSA.goto_function.body.has_assertion()) return;
 
-  const goto_programt &goto_program=f_it->second.body;
+  SSA.output(debug()); debug() << eom;
+  
+  // incremental version
+
+  // solver
+  satcheckt satcheck;
+  bv_pointerst solver(SSA.ns, satcheck);
+  
+  satcheck.set_message_handler(get_message_handler());
+  solver.set_message_handler(get_message_handler());
+    
+  // give SSA to solver
+  solver << SSA;
+
+  // Collect _all_ goals in `goal_map'.
+  // This maps claim IDs to 'goalt'
+  typedef std::map<irep_idt, goalt> goal_mapt;
+  goal_mapt goal_map;
+
+  const goto_programt &goto_program=SSA.goto_function.body;
 
   for(goto_programt::instructionst::const_iterator
       i_it=goto_program.instructions.begin();
@@ -389,53 +337,54 @@ void summary_checkert::check_properties(
         a_it++, property_counter++)
     {
       irep_idt property_id = 
-	id2string(location.get_property_id())+"."+i2string(property_counter);
-      property_map[property_id].location = i_it;
+	id2string(location.get_property_id());
+      //      property_map[property_id].location = i_it;
 
-      if(show_vcc)
-      {
-	do_show_vcc(SSA, i_it, a_it);
-	continue;
-      }
-  
-      // solver
-      satcheckt satcheck;
-      bv_pointerst solver(SSA.ns, satcheck);
-  
-      satcheck.set_message_handler(get_message_handler());
-      solver.set_message_handler(get_message_handler());
-    
-      // give SSA to solver
-      solver << SSA;
+      exprt property=*a_it;
 
-      // give negation of property to solver
-      exprt negated_property=not_exprt(*a_it); //TODO
-
-      solver << negated_property;
-    
-      property_statust &property_status=property_map[property_id];
-    
-      // solve
-      switch(solver())
-      {
-	case decision_proceduret::D_SATISFIABLE:
-	  property_status.result=FAIL;
-	  build_goto_trace(SSA, solver, property_status.error_trace);
-	  break;
-      
-	case decision_proceduret::D_UNSATISFIABLE:
-	  property_status.result=PASS;
-	  break;
-
-	case decision_proceduret::D_ERROR:    
-	default:
-	  property_status.result=ERROR;
-	  throw "error from decision procedure";
-      }
+      if(simplify)
+	property=::simplify_expr(property, SSA.ns);
+ 
+#if 0 
+      std::cout << "property: " << from_expr(SSA.ns, "", property) << std::endl;
+#endif
+ 
+      goal_map[property_id].conjuncts.push_back(property);
     }
   }
-} 
   
+  cover_goalst cover_goals(solver);
+  
+  for(goal_mapt::const_iterator
+      it=goal_map.begin();
+      it!=goal_map.end();
+      it++)
+  {
+    // Our goal is to falsify a property.
+    // The following is TRUE if the conjunction is empty.
+    literalt p=!solver.convert(conjunction(it->second.conjuncts));
+    cover_goals.add(p);
+  }
+
+  status() << "Running " << solver.decision_procedure_text() << eom;
+
+  cover_goals();  
+
+  std::list<cover_goalst::cover_goalt>::const_iterator g_it=
+    cover_goals.goals.begin();
+  for(goal_mapt::const_iterator
+      it=goal_map.begin();
+      it!=goal_map.end();
+      it++, g_it++)
+  {
+    property_map[it->first].result=g_it->covered?FAIL:PASS;
+  }
+
+  debug() << "** " << cover_goals.number_covered()
+           << " of " << cover_goals.size() << " failed ("
+           << cover_goals.iterations() << " iterations)" << eom;
+} 
+
 /*******************************************************************\
 
 Function: summary_checkert::report_statistics()
