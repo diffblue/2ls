@@ -204,63 +204,56 @@ void summary_checkert::check_properties_non_incremental(
     const locationt &location=i_it->location;  
     const local_SSAt::nodet &node = SSA.nodes.at(i_it);
 
-    unsigned property_counter = 0;
+    irep_idt property_id = id2string(location.get_property_id());
+    property_map[property_id].location = i_it;
+    
+    exprt::operandst conjuncts;
     for(local_SSAt::nodet::assertionst::const_iterator
 	  a_it=node.assertions.begin();
         a_it!=node.assertions.end();
-        a_it++, property_counter++)
+        a_it++)
     {
-      irep_idt property_id = 
-	id2string(location.get_property_id())+"."+i2string(property_counter);
-      property_map[property_id].location = i_it;
+      conjuncts.push_back(*a_it);
 
       if(show_vcc)
       {
-	do_show_vcc(SSA, i_it, a_it);
-	continue;
-      }
-  
-      // solver
-      satcheckt satcheck;
-      bv_pointerst solver(SSA.ns, satcheck);
-  
-      satcheck.set_message_handler(get_message_handler());
-      solver.set_message_handler(get_message_handler());
-    
-      // give SSA to solver
-      solver << SSA;
-
-      // give negation of property to solver
-
-      exprt negated_property=SSA.read_rhs(not_exprt(i_it->guard), i_it);
-
-      if(simplify)
-	negated_property=::simplify_expr(negated_property, SSA.ns);
-  
-      solver << SSA.guard_symbol(i_it);    
-    
-      std::cout << "negated property " << from_expr(SSA.ns, "", negated_property) << std::endl;
-    
-          
-      solver << negated_property;
-    
-      // solve
-      switch(solver())
-      {
-	case decision_proceduret::D_SATISFIABLE:
-	  property_map[property_id].result=FAIL;
-	  break;
-      
-	case decision_proceduret::D_UNSATISFIABLE:
-	  property_map[property_id].result=PASS;
-	  break;
-
-	case decision_proceduret::D_ERROR:    
-	default:
-	  property_map[property_id].result=ERROR;
-	  throw "error from decision procedure";
+        do_show_vcc(SSA, i_it, a_it);
+        continue;
       }
     }
+    exprt property = not_exprt(conjunction(conjuncts));
+    if(simplify)
+      property=::simplify_expr(property, SSA.ns);
+  
+    // solver
+    satcheckt satcheck;
+    bv_pointerst solver(SSA.ns, satcheck);
+ 
+    satcheck.set_message_handler(get_message_handler());
+    solver.set_message_handler(get_message_handler());
+    
+    // give SSA to solver
+    solver << SSA;
+
+    // give negated property to solver
+    solver << property;
+    
+    // solve
+    switch(solver())
+      {
+      case decision_proceduret::D_SATISFIABLE:
+	property_map[property_id].result=FAIL;
+	break;
+      
+      case decision_proceduret::D_UNSATISFIABLE:
+	property_map[property_id].result=PASS;
+	break;
+
+      case decision_proceduret::D_ERROR:    
+      default:
+	property_map[property_id].result=ERROR;
+	throw "error from decision procedure";
+      }
   }
 } 
 
@@ -330,16 +323,18 @@ void summary_checkert::check_properties_incremental(
     const locationt &location=i_it->location;  
     const local_SSAt::nodet &node = SSA.nodes.at(i_it);
 
+    irep_idt property_id = id2string(location.get_property_id());
+    //    std::cout << "property_id: " << property_id << std::endl;
+    //    std::cout << "location_number: " << location.as_string() << std::endl;
+
+    property_map[property_id].location = i_it;
+
     unsigned property_counter = 0;
     for(local_SSAt::nodet::assertionst::const_iterator
 	  a_it=node.assertions.begin();
         a_it!=node.assertions.end();
         a_it++, property_counter++)
     {
-      irep_idt property_id = 
-	id2string(location.get_property_id());
-      //      property_map[property_id].location = i_it;
-
       exprt property=*a_it;
 
       if(simplify)

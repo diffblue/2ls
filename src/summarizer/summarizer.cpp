@@ -410,7 +410,8 @@ void summarizert::check_preconditions(
 	  assert(loc!=SSA.goto_function.body.instructions.end());
 	  SSA.get_globals(++loc,cs_globals_out);
 
-          status() << "Precondition trivially holds, replacing by summary." << eom;
+          status() << "Precondition trivially holds, replacing by summary." 
+                   << eom;
           inliner.replace(SSA.nodes,n,f_it,
                           cs_globals_in,cs_globals_out,summary_db.get(fname));
 	  continue;
@@ -538,7 +539,8 @@ void summarizert::compute_preconditions(
       assert(f_it->function().id()==ID_symbol); //no function pointers
 
       SSA.get_globals(n->first,cs_globals_in[f_it]);
-      analyzer.calling_context_vars[f_it].insert(SSA.globals_in.begin(),SSA.globals_in.end());
+      analyzer.calling_context_vars[f_it].insert(
+        SSA.globals_in.begin(),SSA.globals_in.end());
     }
   }
 
@@ -554,7 +556,8 @@ void summarizert::compute_preconditions(
   for(ssa_analyzert::calling_contextst::iterator it = calling_contexts.begin();
       it != calling_contexts.end(); it++)
   {
-    const irep_idt &fname = to_symbol_expr(it->first->function()).get_identifier();
+    const irep_idt &fname = 
+      to_symbol_expr(it->first->function()).get_identifier();
     local_SSAt &fSSA = *functions[fname]; 
 
     preconditiont precondition = it->second;
@@ -562,7 +565,8 @@ void summarizert::compute_preconditions(
 			     cs_globals_in[it->first],fSSA.globals_in,
 			     precondition);
 
-    debug() << "Calling context for " << from_expr(SSA.ns, "", *it->first) << ": " 
+    debug() << "Calling context for " << 
+               from_expr(SSA.ns, "", *it->first) << ": " 
 	    << from_expr(SSA.ns, "", precondition) << eom;
 
     if(preconditions[fname].is_true())
