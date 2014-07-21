@@ -412,10 +412,10 @@ Function: summary_checkert::report_statistics()
 
 void summary_checkert::report_statistics()
 {
-  debug() << "** statistics: " << eom;
-  debug() << "  number of solver instances: " << solver_instances << eom;
-  debug() << "  number of solver calls: " << solver_calls << eom;
-  debug() << eom;
+  statistics() << "** statistics: " << eom;
+  statistics() << "  number of solver instances: " << solver_instances << eom;
+  statistics() << "  number of solver calls: " << solver_calls << eom;
+  statistics() << eom;
 }
   
 /*******************************************************************\
