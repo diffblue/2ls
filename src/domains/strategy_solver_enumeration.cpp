@@ -66,7 +66,7 @@ bool strategy_solver_enumerationt::iterate(invariantt &_inv)
   }
 #endif
 
-  debug() << "solver(): ";
+  debug() << "solve(): ";
 
 #ifdef DEBUG_FORMULA
   bvt whole_formula = formula;
@@ -74,7 +74,7 @@ bool strategy_solver_enumerationt::iterate(invariantt &_inv)
   solver.set_assumptions(whole_formula);
 #endif
 
-  if(solver() == decision_proceduret::D_SATISFIABLE) 
+  if(solve() == decision_proceduret::D_SATISFIABLE) 
   { 
     debug() << "SAT" << eom;
       

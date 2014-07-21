@@ -21,7 +21,9 @@ class summarizert : public messaget
  public:
  summarizert(const optionst &_options, summary_dbt &_summary_db) : 
     options(_options),
-    summary_db(_summary_db)
+    summary_db(_summary_db),
+    solver_instances(0),
+    solver_calls(0)
   {}
 
   typedef summaryt::predicatet preconditiont;
@@ -44,6 +46,9 @@ class summarizert : public messaget
 
   void check_preconditions(const function_namet &function_name, local_SSAt &SSA);
 
+  unsigned get_number_of_solver_instances() { return solver_instances; }
+  unsigned get_number_of_solver_calls() { return solver_calls; }
+
  protected:
   const optionst &options;
   summary_dbt &summary_db;
@@ -58,6 +63,9 @@ class summarizert : public messaget
 
   void compute_preconditions(const function_namet &function_name, 
 			     local_SSAt &SSA);
+
+  unsigned solver_instances;
+  unsigned solver_calls;
 };
 
 

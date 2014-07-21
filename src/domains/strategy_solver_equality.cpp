@@ -28,7 +28,7 @@ bool strategy_solver_equalityt::iterate(invariantt &_inv)
     debug() << "Pre: " << from_expr(ns, "", pre_expr) << eom;
     debug() << "Post: " << from_expr(ns, "", post_expr) << eom;
 
-    if(solver() == decision_proceduret::D_SATISFIABLE) 
+    if(solve() == decision_proceduret::D_SATISFIABLE) 
     { 
       debug() << "SAT" << eom;
       todo_disequs.insert(*e_it);
@@ -85,7 +85,7 @@ bool strategy_solver_equalityt::iterate(invariantt &_inv)
     debug() << "Pre: " << from_expr(ns, "", pre_expr) << eom;
     debug() << "Post: " << from_expr(ns, "", post_expr) << eom;
 
-    if(solver() == decision_proceduret::D_SATISFIABLE) 
+    if(solve() == decision_proceduret::D_SATISFIABLE) 
     { 
       debug() << "SAT" << eom;
     }

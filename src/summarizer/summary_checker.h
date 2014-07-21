@@ -27,7 +27,9 @@ public:
     fixed_point(false),
     options(_options),
     ssa_db(),summary_db(),
-    summarizer(_options,summary_db)
+    summarizer(_options,summary_db),
+    solver_instances(0),
+    solver_calls(0)
   {
   }
   
@@ -46,6 +48,8 @@ protected:
   summary_dbt summary_db;
   summarizert summarizer;
 
+  unsigned solver_instances;
+  unsigned solver_calls;
   void report_statistics();
 
   void do_show_vcc(

@@ -30,7 +30,8 @@ public:
       ns(_ns),
       options(_options),
       inv_inout(true_exprt()),
-      inv_loop(true_exprt())
+      inv_loop(true_exprt()),
+      solver_calls(0)
   {
   }  
 
@@ -42,6 +43,8 @@ public:
 
   bool compute_calling_contexts;
   calling_context_varst calling_context_vars;
+
+  unsigned get_number_of_solver_calls() { return solver_calls; }
 
 protected:
   const namespacet &ns;
@@ -61,6 +64,8 @@ protected:
 
   domaint::var_specst filter_template_domain(const domaint::var_specst& var_specs);
   domaint::var_specst filter_equality_domain(const domaint::var_specst& var_specs);
+
+  unsigned solver_calls;
 
 private:
   void add_var(const domaint::vart &var_to_add, 			    

@@ -243,6 +243,11 @@ void summarizert::compute_summary_rec(const function_namet &function_name)
   node.constraints.push_back(inv);
 
   status() << "Adding loop invariant: " << from_expr(SSA.ns, "", inv) << eom;
+
+  //statistics
+  solver_instances++;
+  solver_calls += analyzer.get_number_of_solver_calls();
+
 }
 
 /*******************************************************************\
@@ -492,6 +497,10 @@ void summarizert::check_preconditions(
 	}
         default: assert(false); break;
       }
+
+      //statistics
+      solver_instances++;
+      solver_calls++;
     }
     inliner.commit_node(n);
   }
@@ -574,4 +583,8 @@ void summarizert::compute_preconditions(
     else
       preconditions[fname] = or_exprt(preconditions[fname],precondition);
   }
+
+  //statistics
+  solver_instances++;
+  solver_calls += analyzer.get_number_of_solver_calls();
 }

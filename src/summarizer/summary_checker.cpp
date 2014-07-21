@@ -50,7 +50,9 @@ property_checkert::resultt summary_checkert::operator()(
   //  loop from 0 to k do
   //    unwind k
   if(!options.get_bool_option("havoc")) summarize(goto_model);
-  return check_properties(); 
+  property_checkert::resultt result =  check_properties(); 
+  report_statistics();
+  return result;
   //    if safe exit
   //  done
   //done
@@ -134,6 +136,10 @@ void summary_checkert::summarize(const goto_modelt &goto_model)
 			 goto_model.goto_functions.entry_point());
   else
     summarizer.summarize(ssa_db.functions());
+
+  //statistics
+  solver_instances += summarizer.get_number_of_solver_instances();
+  solver_calls += summarizer.get_number_of_solver_calls();
 }
 
 /*******************************************************************\
@@ -258,6 +264,10 @@ void summary_checkert::check_properties_non_incremental(
 	property_map[property_id].result=ERROR;
 	throw "error from decision procedure";
       }
+
+    //statistics
+    solver_instances++;
+    solver_calls ++;;
   }
 } 
 
@@ -379,6 +389,10 @@ void summary_checkert::check_properties_incremental(
     property_map[it->first].result=g_it->covered?FAIL:PASS;
   }
 
+  //statistics
+  solver_instances++;
+  solver_calls += cover_goals.iterations();
+
   debug() << "** " << cover_goals.number_covered()
            << " of " << cover_goals.size() << " failed ("
            << cover_goals.iterations() << " iterations)" << eom;
@@ -398,6 +412,10 @@ Function: summary_checkert::report_statistics()
 
 void summary_checkert::report_statistics()
 {
+  debug() << "** statistics: " << eom;
+  debug() << "  number of solver instances: " << solver_instances << eom;
+  debug() << "  number of solver calls: " << solver_calls << eom;
+  debug() << eom;
 }
   
 /*******************************************************************\

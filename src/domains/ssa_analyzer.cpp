@@ -203,6 +203,9 @@ void ssa_analyzert::operator()(local_SSAt &SSA, const exprt &precondition)
     }
   }
 
+  //statistics
+  solver_calls += strategy_solver->get_number_of_solver_calls();
+
   delete strategy_solver;
   delete inv;
   delete domain;

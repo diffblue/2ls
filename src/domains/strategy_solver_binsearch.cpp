@@ -77,7 +77,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 #endif
 
 #if 0
-  debug() << "solver(): ";
+  debug() << "solve(): ";
 #endif
 
 #ifdef DEBUG_FORMULA
@@ -87,7 +87,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
   solver.set_assumptions(whole_formula);
 #endif
 
-  if(solver() == decision_proceduret::D_SATISFIABLE) //improvement check
+  if(solve() == decision_proceduret::D_SATISFIABLE) //improvement check
   { 
 #if 0
     debug() << "SAT" << eom;
@@ -224,7 +224,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
       solver.set_assumptions(whole_formula);
 #endif
 
-      if(solver() == decision_proceduret::D_SATISFIABLE) 
+      if(solve() == decision_proceduret::D_SATISFIABLE) 
       { 
 #if 0
 	debug() << "SAT" << eom;

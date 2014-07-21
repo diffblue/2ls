@@ -27,7 +27,8 @@ class strategy_solver_baset : public messaget
     renaming_map(_renaming_map),
     solver(_solver), 
     ns(_ns),
-    activation_literal_counter(0)
+    activation_literal_counter(0),
+    solver_calls(0)
   { 
     // adding program constraints to solver db
     for(constraintst::const_iterator it = program.begin(); 
@@ -53,6 +54,8 @@ class strategy_solver_baset : public messaget
 
   virtual bool iterate(invariantt &inv) { assert(false); }
 
+  unsigned get_number_of_solver_calls() { return solver_calls; }
+
  protected: 
   replace_mapt &renaming_map;
   
@@ -64,6 +67,12 @@ class strategy_solver_baset : public messaget
   }
 
   bv_pointerst &solver;
+
+  inline decision_proceduret::resultt solve() {
+    solver_calls++;
+    return solver();    
+  }
+
   const namespacet &ns;
 
   //handles on values to retrieve from model
@@ -78,6 +87,8 @@ class strategy_solver_baset : public messaget
   void make_context_permanent();
   bvt formula;
 
+  //statistics
+  unsigned solver_calls;
 };
 
 #endif
