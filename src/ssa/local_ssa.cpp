@@ -93,8 +93,13 @@ void local_SSAt::get_entry_exit_vars()
   {
     const code_typet::argumentt &argument=*it;
     const irep_idt &identifier=argument.get_identifier();
-    const symbolt &symbol=ns.lookup(identifier);
-    params.push_back(symbol.symbol_expr());
+
+    //    const symbolt &symbol=ns.lookup(identifier);
+
+    const symbolt *symbol;
+    if(ns.lookup(identifier,symbol)) continue;         
+
+    params.push_back(symbol->symbol_expr());
   }
 
   //get globals in 

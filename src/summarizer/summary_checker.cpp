@@ -204,7 +204,11 @@ void summary_checkert::check_properties_non_incremental(
     const locationt &location=i_it->location;  
     const local_SSAt::nodet &node = SSA.nodes.at(i_it);
 
-    irep_idt property_id = id2string(location.get_property_id());
+    irep_idt property_id = location.get_property_id();
+
+    if(property_id=="") //TODO: some properties do not show up in initialize_property_map
+      continue;     
+
     property_map[property_id].location = i_it;
     
     exprt::operandst conjuncts;
@@ -323,11 +327,10 @@ void summary_checkert::check_properties_incremental(
     const locationt &location=i_it->location;  
     const local_SSAt::nodet &node = SSA.nodes.at(i_it);
 
-    irep_idt property_id = id2string(location.get_property_id());
-    //    std::cout << "property_id: " << property_id << std::endl;
-    //    std::cout << "location_number: " << location.as_string() << std::endl;
+    irep_idt property_id = location.get_property_id();
 
-    property_map[property_id].location = i_it;
+    if(property_id=="") //TODO: some properties do not show up in initialize_property_map
+      continue;     
 
     unsigned property_counter = 0;
     for(local_SSAt::nodet::assertionst::const_iterator
@@ -339,11 +342,12 @@ void summary_checkert::check_properties_incremental(
 
       if(simplify)
 	property=::simplify_expr(property, SSA.ns);
- 
-#if 0 
+
+#if 1 
       std::cout << "property: " << from_expr(SSA.ns, "", property) << std::endl;
 #endif
  
+      property_map[property_id].location = i_it;
       goal_map[property_id].conjuncts.push_back(property);
     }
   }
