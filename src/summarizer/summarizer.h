@@ -23,7 +23,8 @@ class summarizert : public messaget
     options(_options),
     summary_db(_summary_db),
     solver_instances(0),
-    solver_calls(0)
+    solver_calls(0),
+    summaries_used(0)
   {}
 
   typedef summaryt::predicatet preconditiont;
@@ -41,13 +42,9 @@ class summarizert : public messaget
 
   void summarize(functionst &functions, const function_namet &entry_function); 
 
-  void inline_summaries(const function_namet &function_name, local_SSAt &SSA, 
-                        bool recursive=false, bool always_recompute=false);
-
-  void check_preconditions(const function_namet &function_name, local_SSAt &SSA);
-
   unsigned get_number_of_solver_instances() { return solver_instances; }
   unsigned get_number_of_solver_calls() { return solver_calls; }
+  unsigned get_number_of_summaries_used() { return summaries_used; }
 
  protected:
   const optionst &options;
@@ -61,11 +58,34 @@ class summarizert : public messaget
 
   void join_summaries(const summaryt &existing_summary, summaryt &new_summary);
 
-  void compute_preconditions(const function_namet &function_name, 
-			     local_SSAt &SSA);
+  void inline_summaries(const function_namet &function_name, local_SSAt &SSA, 
+                        bool recursive, bool always_recompute);
+  void inline_summaries(const function_namet &function_name, local_SSAt &SSA); 
 
+  void check_preconditions(const function_namet &function_name, 
+			   local_SSAt &SSA,
+                           ssa_inlinert &inliner);
+  void compute_preconditions(const function_namet &function_name, 
+			     local_SSAt &SSA,
+                             ssa_inlinert &inliner);
+
+  bool check_precondition(const function_namet &function_name, 
+			  local_SSAt::nodest::iterator node, 
+			  local_SSAt::nodet::function_callst::iterator f_it,
+                          local_SSAt &SSA,
+                          ssa_inlinert &inliner);
+
+  void compute_precondition(const function_namet &function_name, 
+			    local_SSAt::nodest::iterator node, 
+			    local_SSAt::nodet::function_callst::iterator f_it,
+			    local_SSAt &SSA,
+                            ssa_inlinert &inliner);
+
+
+  //statistics
   unsigned solver_instances;
   unsigned solver_calls;
+  unsigned summaries_used;
 };
 
 

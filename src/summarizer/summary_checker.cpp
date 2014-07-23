@@ -353,7 +353,7 @@ void summary_checkert::check_properties_incremental(
       if(simplify)
 	property=::simplify_expr(property, SSA.ns);
 
-#if 1 
+#if 0 
       std::cout << "property: " << from_expr(SSA.ns, "", property) << std::endl;
 #endif
  
@@ -415,6 +415,8 @@ void summary_checkert::report_statistics()
   statistics() << "** statistics: " << eom;
   statistics() << "  number of solver instances: " << solver_instances << eom;
   statistics() << "  number of solver calls: " << solver_calls << eom;
+  statistics() << "  number of summaries used: " 
+               << summarizer.get_number_of_summaries_used() << eom;
   statistics() << eom;
 }
   
