@@ -1,6 +1,6 @@
 default: tests.log
 
-FLAGS = --verbosity 10
+FLAGS = --verbosity 10 --context-sensitive
 
 test:
 	@../test.pl -c "../../../src/summarizer/summarizer $(FLAGS)"
