@@ -533,6 +533,11 @@ void summarizer_parseoptionst::show_stats(const goto_modelt &goto_model,
 
     const goto_programt &goto_program=f_it->second.body;
 
+#if 0
+    statistics() << "function size of " << f_it->first << ": " 
+                 << goto_program.instructions.size() << eom;
+#endif
+
     for(goto_programt::instructionst::const_iterator
       i_it=goto_program.instructions.begin();
       i_it!=goto_program.instructions.end();
@@ -803,7 +808,17 @@ bool summarizer_parseoptionst::process_goto_program(
     {
       unsigned limit = options.get_unsigned_int_option("inline-partial");
       status() << "Performing partial inlining (" << limit << ")" << eom;
-      goto_partial_inline(goto_model, ui_message_handler, limit);
+      goto_partial_inline(goto_model, ui_message_handler, limit/2);
+      //TODO: where is limit multiplied by 2???
+
+      //remove inlined functions
+      Forall_goto_functions(f_it, goto_model.goto_functions)
+        if(f_it->first!=ID_main &&
+           f_it->second.body.instructions.size()<=2*(limit/2))
+	{
+          f_it->second.body_available=false;
+          f_it->second.body.clear();
+	}
     }
     
     // add generic checks
