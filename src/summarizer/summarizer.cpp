@@ -113,7 +113,7 @@ void summarizert::summarize(functionst &_functions,
   status() << "\nSummarizing function " << function_name << eom;
   if(!summary_db.exists(function_name)) 
   {
-    compute_summary_rec(function_name);
+    compute_summary_rec(function_name,true);
   }
   else status() << "Summary for function " << function_name << 
 	 " exists already" << eom;
@@ -175,7 +175,8 @@ Function: summarizert::compute_summary_rec()
 
 \*******************************************************************/
 
-void summarizert::compute_summary_rec(const function_namet &function_name)
+void summarizert::compute_summary_rec(const function_namet &function_name,
+				      bool context_sensitive)
 {
   local_SSAt &SSA = *functions[function_name]; 
 
@@ -183,7 +184,7 @@ void summarizert::compute_summary_rec(const function_namet &function_name)
   //check_preconditions(function_name,SSA);
   //compute_preconditions(function_name,SSA);
   //inline_summaries(function_name,SSA,true,true); 
-  inline_summaries(function_name,SSA); 
+  inline_summaries(function_name,SSA,context_sensitive); 
 
   status() << "Analyzing function "  << function_name << eom;
 
@@ -264,7 +265,7 @@ Function: summarizert::inline_summaries()
 \*******************************************************************/
 
 void summarizert::inline_summaries(const function_namet &function_name, 
-				   local_SSAt &SSA)
+				   local_SSAt &SSA, bool context_sensitive)
 {
   ssa_inlinert inliner;
   inliner.set_message_handler(get_message_handler());
@@ -297,7 +298,8 @@ void summarizert::inline_summaries(const function_namet &function_name,
 
     if(!check_precondition(function_name,n_it,f_it,SSA,inliner))
     {
-      compute_precondition(function_name,n_it,f_it,SSA,inliner);
+      if(context_sensitive) 
+        compute_precondition(function_name,n_it,f_it,SSA,inliner);
 
       irep_idt fname = to_symbol_expr(f_it->function()).get_identifier();
       status() << "Recursively summarizing function " << fname << eom;

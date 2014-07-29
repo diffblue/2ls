@@ -54,13 +54,15 @@ class summarizert : public messaget
 
   void run();
 
-  void compute_summary_rec(const function_namet &function_name);
+  void compute_summary_rec(const function_namet &function_name,
+                           bool context_sensitive = false);
 
   void join_summaries(const summaryt &existing_summary, summaryt &new_summary);
 
   void inline_summaries(const function_namet &function_name, local_SSAt &SSA, 
                         bool recursive, bool always_recompute);
-  void inline_summaries(const function_namet &function_name, local_SSAt &SSA); 
+  void inline_summaries(const function_namet &function_name, local_SSAt &SSA,
+                        bool context_sensitive = false); 
 
   void check_preconditions(const function_namet &function_name, 
 			   local_SSAt &SSA,
