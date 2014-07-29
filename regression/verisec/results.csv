@@ -1,0 +1,682 @@
+Tool:
+executable,cbmc --unwind 5 --no-unwinding-assertions --unwind 5  --bounds-check
+parameters,
+=======
+Detailed outcomes:
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-6-2-fixed/mime7to8_arr_three_chars_med_test_ok.c,CORRECT PROOF,0.364458
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-4-2/wu-ftpd.c,ERROR,0.163985
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-4-2/strcpy_strcat_bad.c,CORRECT ALARM,0.164541
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-7-1/iter2_prefixShort_arr_bad.c,WRONG PROOF,0.164051
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-7-1/apache.c,ERROR,0.164053
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-17/mime7to8_ptr_two_chars_heavy_test_bad.c,WRONG PROOF,0.314524
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-6/loop_bad.c,WRONG PROOF,0.164049
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-15-9/mime7to8_ptr_three_chars_med_test_bad.c,WRONG PROOF,0.164082
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-2-1-fixed/iter1_prefixLong_ptr_ok.c,CORRECT PROOF,0.214118
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-2-1-fixed/apache.c,ERROR,0.166000
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0206-1-1-fixed/mime_fromqp_arr_ok.c,WRONG ALARM,0.214093
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-3-2-fixed/wu-ftpd.c,ERROR,0.164025
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-3-2-fixed/prefix_simp_ok.c,WRONG ALARM,0.464521
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-1337-3-fixed/close-angle_ptr_two_tests_ok.c,CORRECT PROOF,0.169840
+/home/bjowac/Downloads/string-tests/verisec/./madwifi-cve-2006-6332-2-1-fixed/no_sprintf_ok.c,CORRECT PROOF,0.264254
+/home/bjowac/Downloads/string-tests/verisec/./libgd-cve-2007-0455-1/gd_full_bad.c,WRONG PROOF,61.909080
+/home/bjowac/Downloads/string-tests/verisec/./samba-cve-2007-0453-2-fixed/simp_ok.c,CORRECT PROOF,0.164143
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-10-1-fixed/glob3_ptr_ok.c,CORRECT PROOF,0.214775
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-5-fixed/iter_ints_ok.c,WRONG ALARM,1.318123
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-5-fixed/wu-ftpd.c,ERROR,0.164179
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-5-2-fixed/mime7to8_arr_three_chars_heavy_test_ok.c,CORRECT PROOF,0.815376
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-5-1-fixed/iter_ints_ok.c,WRONG ALARM,1.316124
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-5-1-fixed/wu-ftpd.c,ERROR,0.164007
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-33-fixed/cases3_stripFullBoth_arr_ok.c,CORRECT PROOF,0.414574
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-2-fixed/wu-ftpd.c,ERROR,0.164119
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-2-fixed/prefix_ok.c,WRONG ALARM,1.316211
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-4-3/glob2_int_bad.c,WRONG PROOF,0.364693
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2003-0161-1-1-fixed/prescan_arr_med_test_ok.c,CORRECT PROOF,0.214099
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-6-5/mime7to8_arr_three_chars_med_test_bad.c,CORRECT ALARM,0.314321
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-4-1/mime7to8_arr_one_char_no_test_bad.c,CORRECT ALARM,0.164093
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-10-fixed/cases1_stripFullStart_arr_inlined_ok.c,CORRECT PROOF,0.314255
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-15-1-fixed/mime7to8_ptr_three_chars_med_test_ok.c,CORRECT PROOF,0.214125
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-12-2-fixed/mime7to8_ptr_one_char_med_test_ok.c,CORRECT PROOF,0.163987
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-4-1-fixed/glob2_int_ok.c,CORRECT PROOF,0.364467
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-15-3/mime7to8_ptr_three_chars_med_test_bad.c,WRONG PROOF,0.214108
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-5-9-fixed/mime7to8_arr_three_chars_heavy_test_ok.c,CORRECT PROOF,0.815462
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-1-6/mime2-bad.c,CORRECT ALARM,6.726787
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-6-7-fixed/mime7to8_arr_three_chars_med_test_ok.c,CORRECT PROOF,0.314458
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-11/cases1_stripNone_arr_bad.c,CORRECT ALARM,0.164007
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-2003-0466-1-fixed/wu-ftpd.c,ERROR,0.164022
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-2003-0466-1-fixed/almost_simple_ok.c,CORRECT PROOF,0.314755
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-8-3/iter2_prefixShort_ptr_bad.c,WRONG PROOF,0.164511
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-8-3/apache.c,ERROR,0.164416
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-6/mime7to8_arr_three_chars_med_test_bad.c,CORRECT ALARM,0.315253
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-1337-4-14/crackaddr_bad.c,WRONG PROOF,2.719085
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-10-1/mime7to8_arr_two_chars_no_test_bad.c,CORRECT ALARM,0.164278
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-21-fixed/cases2_stripFullEnd_arr_ok.c,CORRECT PROOF,0.214148
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-2-2/mime7to8_arr_one_char_heavy_test_bad.c,CORRECT ALARM,0.314379
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-9-1-fixed/mime7to8_arr_two_chars_med_test_ok.c,CORRECT PROOF,0.264199
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-18-6/mime7to8_ptr_two_chars_med_test_bad.c,WRONG PROOF,0.164184
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-8-fixed/noAnyMeta_ptr_ok.c,CORRECT PROOF,0.214150
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-12-1/mime7to8_ptr_one_char_med_test_bad.c,WRONG PROOF,0.164377
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-11-1/mime7to8_ptr_one_char_heavy_test_bad.c,WRONG PROOF,0.314382
+/home/bjowac/Downloads/string-tests/verisec/./bind-ca-1999-14-4-fixed/both_ok.c,CORRECT PROOF,0.314244
+/home/bjowac/Downloads/string-tests/verisec/./bind-ca-1999-14-4-fixed/bind.c,ERROR,0.164104
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-42-fixed/cases3_stripSpacesBoth_arr_inlined_ok.c,CORRECT PROOF,0.264222
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-17-fixed/cases1_stripSpacesStart_arr_ok.c,CORRECT PROOF,0.214114
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-9-fixed/glob3_int_ok.c,CORRECT PROOF,0.214080
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-31-fixed/cases2_stripSpacesStart_arr_ok.c,CORRECT PROOF,0.214149
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-6-fixed/cases1_stripFullBoth_arr_inlined_ok.c,CORRECT PROOF,0.314246
+/home/bjowac/Downloads/string-tests/verisec/./samba-cve-2007-0453-2/simp_bad.c,WRONG PROOF,0.264081
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-10-2/mime7to8_arr_two_chars_no_test_bad.c,CORRECT ALARM,0.164040
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-38/cases3_stripFullStart_arr_inlined_bad.c,CORRECT ALARM,0.314235
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-3-2/mime7to8_arr_one_char_med_test_bad.c,CORRECT ALARM,0.214115
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-7/iter2_prefixShort_arr_bad.c,WRONG PROOF,0.163953
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-7/apache.c,ERROR,0.163999
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-1337-4-12/crackaddr_bad.c,WRONG PROOF,2.618750
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-4-fixed/apache.c,ERROR,0.114208
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-4-fixed/iter1_prefixShort_ptr_ok.c,CORRECT PROOF,0.163939
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-0906-2-1/parse_dns_reply_no_cast_bad.c,WRONG PROOF,0.314265
+/home/bjowac/Downloads/string-tests/verisec/./madwifi-cve-2006-6332-3-fixed/giwscan_cb_ok.c,CORRECT PROOF,0.163947
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2003-0161-2/prescan_arr_min_test_bad.c,CORRECT ALARM,0.213947
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-14-8/mime7to8_ptr_three_chars_heavy_test_bad.c,WRONG PROOF,0.464520
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-17-1/mime7to8_ptr_two_chars_heavy_test_bad.c,WRONG PROOF,0.364555
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-6-1/mime7to8_arr_three_chars_med_test_bad.c,CORRECT ALARM,0.314201
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-3-2/iter1_prefixShort_arr_bad.c,WRONG PROOF,0.163918
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-3-2/apache.c,ERROR,0.167351
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-16/mime7to8_ptr_three_chars_no_test_bad.c,WRONG PROOF,0.164021
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0206-1/mime_fromqp_arr_bad.c,CORRECT ALARM,0.214058
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0206-2-fixed/mime_fromqp_ptr_ok.c,CORRECT PROOF,0.163893
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-1-4/mime2-bad.c,CORRECT ALARM,6.978321
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2006-3747-5-fixed/simp3_ok.c,CORRECT PROOF,0.314275
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2003-0681-2/buildfname_arr_two_gecos_bad.c,CORRECT ALARM,0.465100
+/home/bjowac/Downloads/string-tests/verisec/./madwifi-cve-2006-6332-1-fixed/interproc_ok.c,CORRECT PROOF,0.264343
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-17-1-fixed/mime7to8_ptr_two_chars_heavy_test_ok.c,CORRECT PROOF,0.370414
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-13-1-fixed/mime7to8_ptr_one_char_no_test_ok.c,CORRECT PROOF,0.164012
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-6-1-fixed/wu-ftpd.c,ERROR,0.164103
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-6-1-fixed/iter_ints_simp_ok.c,CORRECT PROOF,0.515762
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-5-4/mime7to8_arr_three_chars_heavy_test_bad.c,CORRECT ALARM,0.765273
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-14-2-fixed/mime7to8_ptr_three_chars_heavy_test_ok.c,CORRECT PROOF,0.415067
+/home/bjowac/Downloads/string-tests/verisec/./bind-ca-1999-14-1-fixed/bind.c,ERROR,0.113842
+/home/bjowac/Downloads/string-tests/verisec/./bind-ca-1999-14-1-fixed/expands_vars_ok.c,CORRECT PROOF,0.264392
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-11-fixed/mime7to8_ptr_one_char_heavy_test_ok.c,CORRECT PROOF,0.264166
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-45-fixed/cases3_stripSpacesStart_arr_ok.c,CORRECT PROOF,0.264671
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-19/mime7to8_ptr_two_chars_no_test_bad.c,WRONG PROOF,0.164041
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-2003-0466-1/wu-ftpd.c,ERROR,0.163979
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-2003-0466-1/almost_simple_bad.c,WRONG PROOF,0.314886
+/home/bjowac/Downloads/string-tests/verisec/./bind-ca-1999-14-6-fixed/bind.c,ERROR,0.164024
+/home/bjowac/Downloads/string-tests/verisec/./bind-ca-1999-14-6-fixed/simp_ok.c,CORRECT PROOF,0.264235
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-5-1/iter2_prefixLong_arr_bad.c,WRONG PROOF,0.214100
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-5-1/apache.c,ERROR,0.163962
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-18-3/mime7to8_ptr_two_chars_med_test_bad.c,WRONG PROOF,0.164011
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2003-0681-2-1/buildfname_arr_two_gecos_bad.c,CORRECT ALARM,0.414789
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-2/apache.c,ERROR,0.164063
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-2/iter1_prefixLong_ptr_bad.c,WRONG PROOF,0.214150
+/home/bjowac/Downloads/string-tests/verisec/./madwifi-cve-2006-6332-2/no_sprintf_bad.c,WRONG PROOF,0.264240
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-1-1-fixed/iter1_prefixLong_arr_ok.c,CORRECT PROOF,0.214466
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-1-1-fixed/apache.c,ERROR,0.163977
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-6/cases1_stripFullBoth_arr_inlined_bad.c,CORRECT ALARM,0.315217
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-2/mime7to8_arr_one_char_heavy_test_bad.c,CORRECT ALARM,0.314318
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-19-1/mime7to8_ptr_two_chars_no_test_bad.c,WRONG PROOF,0.164020
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-16-1-fixed/mime7to8_ptr_three_chars_no_test_ok.c,CORRECT PROOF,0.163965
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-1337-4-24/crackaddr_bad.c,WRONG PROOF,2.568706
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-23-fixed/cases2_stripFullStart_arr_ok.c,CORRECT PROOF,0.314382
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-27/cases2_stripSpacesBoth_arr_bad.c,CORRECT ALARM,0.214200
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2006-3747-6-fixed/strncmp_ok.c,CORRECT PROOF,0.314340
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-18-6-fixed/mime7to8_ptr_two_chars_med_test_ok.c,CORRECT PROOF,0.164033
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-9-4/mime7to8_arr_two_chars_med_test_bad.c,CORRECT ALARM,0.264230
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-24/cases2_stripFullStart_arr_inlined_bad.c,CORRECT ALARM,0.264197
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2006-3747-1-fixed/full_ok.c,CORRECT PROOF,0.314342
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-10-fixed/glob3_ptr_ok.c,CORRECT PROOF,0.214160
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-18-1/mime7to8_ptr_two_chars_med_test_bad.c,WRONG PROOF,0.163962
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-1-fixed/parse_config_ok.c,CORRECT PROOF,0.615508
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-6-9/mime7to8_arr_three_chars_med_test_bad.c,CORRECT ALARM,0.314333
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-16-1/mime7to8_ptr_three_chars_no_test_bad.c,WRONG PROOF,0.164049
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-1337-4-6/crackaddr_bad.c,WRONG PROOF,2.568790
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-3-fixed/iter1_prefixShort_arr_ok.c,CORRECT PROOF,0.169890
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-3-fixed/apache.c,ERROR,0.163945
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-5-fixed/mime7to8_arr_three_chars_heavy_test_ok.c,CORRECT PROOF,0.815305
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-6-8/mime7to8_arr_three_chars_med_test_bad.c,CORRECT ALARM,0.314270
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-6-3-fixed/mime7to8_arr_three_chars_med_test_ok.c,CORRECT PROOF,0.314367
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-13/mime7to8_ptr_one_char_no_test_bad.c,WRONG PROOF,0.163987
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-22-fixed/cases2_stripFullEnd_arr_inlined_ok.c,CORRECT PROOF,0.214168
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-15-7/mime7to8_ptr_three_chars_med_test_bad.c,WRONG PROOF,0.164213
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2006-3747-1/full_bad.c,WRONG PROOF,0.364311
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-7-fixed/wu-ftpd.c,ERROR,0.164080
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-7-fixed/strcpy_strcat_ok.c,CORRECT PROOF,0.264260
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-3-fixed/mime7to8_arr_one_char_med_test_ok.c,CORRECT PROOF,0.216913
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-37-fixed/cases3_stripFullStart_arr_ok.c,CORRECT PROOF,0.364381
+/home/bjowac/Downloads/string-tests/verisec/./edbrowse-cve-2006-6909-2/strchr_bad.c,WRONG PROOF,0.264380
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0206-2-2/mime_fromqp_ptr_bad.c,WRONG PROOF,0.164143
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2001-0653-2/tTflag_arr_one_loop_bad.c,WRONG PROOF,0.163991
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-12-fixed/loop_ptr_ok.c,CORRECT PROOF,0.164058
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-16-3-fixed/mime7to8_ptr_three_chars_no_test_ok.c,CORRECT PROOF,0.163958
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-9-1/glob3_int_bad.c,WRONG PROOF,0.214113
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-14-5-fixed/mime7to8_ptr_three_chars_heavy_test_ok.c,CORRECT PROOF,0.464585
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-1-1/mime2-bad.c,CORRECT ALARM,6.229290
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-15-3-fixed/mime7to8_ptr_three_chars_med_test_ok.c,CORRECT PROOF,0.219886
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-8-6-fixed/mime7to8_arr_two_chars_heavy_test_ok.c,CORRECT PROOF,0.514701
+/home/bjowac/Downloads/string-tests/verisec/./madwifi-cve-2006-6332-1/interproc_bad.c,WRONG PROOF,0.264129
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-1-2/iter1_prefixLong_arr_bad.c,WRONG PROOF,0.214147
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-1-2/apache.c,ERROR,0.163937
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-2003-0466-3-fixed/no_symlinks_ok.c,CORRECT PROOF,0.314231
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-2003-0466-3-fixed/wu-ftpd.c,ERROR,0.164539
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-5-4-fixed/mime7to8_arr_three_chars_heavy_test_ok.c,CORRECT PROOF,0.816129
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-5-9/mime7to8_arr_three_chars_heavy_test_bad.c,CORRECT ALARM,0.765337
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-14-3/mime7to8_ptr_three_chars_heavy_test_bad.c,WRONG PROOF,0.414535
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-4-2-fixed/glob2_int_ok.c,CORRECT PROOF,0.364408
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0206-2-1-fixed/mime_fromqp_ptr_ok.c,CORRECT PROOF,0.163987
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-2-fixed/guard_random_index_ok.c,CORRECT PROOF,0.264224
+/home/bjowac/Downloads/string-tests/verisec/./bind-ca-1999-14-2-fixed/bind.c,ERROR,0.164065
+/home/bjowac/Downloads/string-tests/verisec/./bind-ca-1999-14-2-fixed/simp_ok.c,CORRECT PROOF,0.269442
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-1337-4-8/crackaddr_bad.c,WRONG PROOF,2.568756
+/home/bjowac/Downloads/string-tests/verisec/./bind-cve-2001-0011-3-fixed/small_ok.c,CORRECT PROOF,0.314371
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-6-fixed/loop_ok.c,CORRECT PROOF,0.164127
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-5-7-fixed/mime7to8_arr_three_chars_heavy_test_ok.c,CORRECT PROOF,0.815320
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-5-3/mime7to8_arr_three_chars_heavy_test_bad.c,CORRECT ALARM,0.765143
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-10/glob3_ptr_bad.c,WRONG PROOF,0.214147
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-1337-4-1/crackaddr_bad.c,WRONG PROOF,2.568569
+/home/bjowac/Downloads/string-tests/verisec/./bind-ca-1999-14-5-fixed/bind.c,ERROR,0.165557
+/home/bjowac/Downloads/string-tests/verisec/./bind-ca-1999-14-5-fixed/expand_ok.c,CORRECT PROOF,0.264407
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-7/wu-ftpd.c,ERROR,0.163996
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-7/strcpy_strcat_bad.c,WRONG PROOF,0.264270
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-2-3/mime7to8_arr_one_char_heavy_test_bad.c,CORRECT ALARM,0.314403
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-4/wu-ftpd.c,ERROR,0.164440
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-4/strcpy_strcat_bad.c,CORRECT ALARM,0.164024
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-14-8-fixed/mime7to8_ptr_three_chars_heavy_test_ok.c,CORRECT PROOF,0.414537
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-44-fixed/cases3_stripSpacesEnd_arr_inlined_ok.c,CORRECT PROOF,0.214058
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-9-3/mime7to8_arr_two_chars_med_test_bad.c,CORRECT ALARM,0.264224
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-6-6-fixed/mime7to8_arr_three_chars_med_test_ok.c,CORRECT PROOF,0.314343
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-14-1-fixed/mime7to8_ptr_three_chars_heavy_test_ok.c,CORRECT PROOF,0.464630
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-41-fixed/cases3_stripSpacesBoth_arr_ok.c,CORRECT PROOF,0.264605
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2003-0681-3-1/util-bad.c,WRONG PROOF,0.364462
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2006-3747-4/simp2_bad.c,WRONG PROOF,0.315113
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-2003-0466-5/wu-ftpd.c,ERROR,0.164037
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-2003-0466-5/symlinks_bad.c,WRONG PROOF,0.414415
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-8-1/iter2_prefixShort_ptr_bad.c,WRONG PROOF,0.164114
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-8-1/apache.c,ERROR,0.165352
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-31/cases2_stripSpacesStart_arr_bad.c,CORRECT ALARM,0.216012
+/home/bjowac/Downloads/string-tests/verisec/./libgd-cve-2007-0455-4/gd_some_entities_bad.c,WRONG PROOF,1.165971
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2003-0681-1/buildfname_arr_one_gecos_bad.c,CORRECT ALARM,0.415236
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-3-2/wu-ftpd.c,ERROR,0.163981
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-3-2/prefix_simp_bad.c,CORRECT ALARM,0.464576
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0206-1-2/mime_fromqp_arr_bad.c,CORRECT ALARM,0.264224
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-5/glob2_ptr_bad.c,WRONG PROOF,0.364346
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-42/cases3_stripSpacesBoth_arr_inlined_bad.c,CORRECT ALARM,0.264371
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-14-fixed/mime7to8_ptr_three_chars_heavy_test_ok.c,CORRECT PROOF,0.464563
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-1337-4-18/crackaddr_bad.c,WRONG PROOF,2.619516
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-7-3-fixed/mime7to8_arr_three_chars_no_test_ok.c,CORRECT PROOF,0.164051
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-46/cases3_stripSpacesStart_arr_inlined_bad.c,CORRECT ALARM,0.264266
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-1-3/mime2-bad.c,CORRECT ALARM,6.430739
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-33/cases3_stripFullBoth_arr_bad.c,CORRECT ALARM,0.314213
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-5-2-fixed/glob2_ptr_ok.c,CORRECT PROOF,0.364336
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-10-2-fixed/glob3_ptr_ok.c,CORRECT PROOF,0.214137
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-10-fixed/mime7to8_arr_two_chars_no_test_ok.c,CORRECT PROOF,0.163948
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-37/cases3_stripFullStart_arr_bad.c,CORRECT ALARM,0.314841
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-10-2/glob3_ptr_bad.c,WRONG PROOF,0.214137
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-1337-4-13/crackaddr_bad.c,WRONG PROOF,2.769254
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2006-3747-6/strncmp_bad.c,CORRECT ALARM,0.314485
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-1337-4-16/crackaddr_bad.c,WRONG PROOF,3.070224
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0206-1-fixed/mime_fromqp_arr_ok.c,WRONG ALARM,0.214574
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-1337-4-25/crackaddr_bad.c,WRONG PROOF,2.876697
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-7-fixed/mime7to8_arr_three_chars_no_test_ok.c,CORRECT PROOF,0.164354
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-0906-1/parse_dns_reply_cast_bad.c,WRONG PROOF,0.314500
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-34-fixed/cases3_stripFullBoth_arr_inlined_ok.c,CORRECT PROOF,0.416189
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-6-1/iter_ints_simp_bad.c,WRONG PROOF,0.514939
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-6-1/wu-ftpd.c,ERROR,0.164006
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-6-2/apache.c,ERROR,0.163999
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-6-2/iter2_prefixLong_ptr_bad.c,WRONG PROOF,0.214148
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-11-3-fixed/mime7to8_ptr_one_char_heavy_test_ok.c,CORRECT PROOF,0.314226
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-4-2-fixed/apache.c,ERROR,0.164035
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-4-2-fixed/iter1_prefixShort_ptr_ok.c,CORRECT PROOF,0.214989
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-40/cases3_stripNone_arr_inlined_bad.c,CORRECT ALARM,0.217179
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-28/cases2_stripSpacesBoth_arr_inlined_bad.c,CORRECT ALARM,0.264191
+/home/bjowac/Downloads/string-tests/verisec/./spamassassin-bid-6679-fixed/loop_ok.c,CORRECT PROOF,0.166301
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2006-3747-2/full_ptr_bad.c,WRONG PROOF,0.364338
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-46-fixed/cases3_stripSpacesStart_arr_inlined_ok.c,CORRECT PROOF,0.264489
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-11/mime7to8_ptr_one_char_heavy_test_bad.c,WRONG PROOF,0.315180
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-6/iter_ints_simp_bad.c,WRONG PROOF,0.514822
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-6/wu-ftpd.c,ERROR,0.164365
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2003-0161-1-2-fixed/prescan_arr_med_test_ok.c,CORRECT PROOF,0.214261
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-7-1-fixed/mime7to8_arr_three_chars_no_test_ok.c,CORRECT PROOF,0.164025
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-8-fixed/mime7to8_arr_two_chars_heavy_test_ok.c,CORRECT PROOF,0.572902
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-2003-0466-5-fixed/symlinks_ok.c,CORRECT PROOF,0.468939
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-2003-0466-5-fixed/wu-ftpd.c,ERROR,0.164433
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2006-3747-5/simp3_bad.c,WRONG PROOF,0.314530
+/home/bjowac/Downloads/string-tests/verisec/./bind-ca-1999-14-6/bind.c,ERROR,0.164681
+/home/bjowac/Downloads/string-tests/verisec/./bind-ca-1999-14-6/simp_bad.c,WRONG PROOF,0.314323
+/home/bjowac/Downloads/string-tests/verisec/./bind-ca-1999-14-3-fixed/bind.c,ERROR,0.169984
+/home/bjowac/Downloads/string-tests/verisec/./bind-ca-1999-14-3-fixed/two_expands_ok.c,CORRECT PROOF,0.314416
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-3-2-fixed/iter1_prefixShort_arr_ok.c,CORRECT PROOF,0.218920
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-3-2-fixed/apache.c,ERROR,0.164085
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-14-4/mime7to8_ptr_three_chars_heavy_test_bad.c,WRONG PROOF,0.464556
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2003-0161-1/prescan_arr_med_test_bad.c,CORRECT ALARM,0.214918
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-19-2/mime7to8_ptr_two_chars_no_test_bad.c,WRONG PROOF,0.164555
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-1337-2-fixed/close-angle_ptr_one_test_ok.c,CORRECT PROOF,0.164119
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-2-3-fixed/mime7to8_arr_one_char_heavy_test_ok.c,CORRECT PROOF,0.365819
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2003-0681-2-1-fixed/buildfname_arr_two_gecos_ok.c,WRONG ALARM,0.514655
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-18-1-fixed/mime7to8_ptr_two_chars_med_test_ok.c,CORRECT PROOF,0.214131
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-6-7/mime7to8_arr_three_chars_med_test_bad.c,CORRECT ALARM,0.364393
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-8/mime7to8_arr_two_chars_heavy_test_bad.c,CORRECT ALARM,0.565180
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-6-fixed/mime7to8_arr_three_chars_med_test_ok.c,CORRECT PROOF,0.366485
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-1/bounds_bad.c,WRONG PROOF,0.166210
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-0906-2/parse_dns_reply_no_cast_bad.c,WRONG PROOF,0.264279
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2001-0653-2-fixed/tTflag_arr_one_loop_ok.c,CORRECT PROOF,0.168552
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-1337-2/close-angle_ptr_one_test_bad.c,WRONG PROOF,0.164685
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-2003-0466-4-fixed/wu-ftpd.c,ERROR,0.164121
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-2003-0466-4-fixed/simple_ok.c,CORRECT PROOF,0.314322
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-2-fixed/mime7to8_arr_one_char_heavy_test_ok.c,CORRECT PROOF,0.364946
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-7-2/mime7to8_arr_three_chars_no_test_bad.c,CORRECT ALARM,0.164193
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-17-fixed/mime7to8_ptr_two_chars_heavy_test_ok.c,CORRECT PROOF,0.364328
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-1337-4-19/crackaddr_bad.c,WRONG PROOF,2.872439
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-26/cases2_stripNone_arr_inlined_bad.c,CORRECT ALARM,0.163955
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-18-3-fixed/mime7to8_ptr_two_chars_med_test_ok.c,CORRECT PROOF,0.214080
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-44/cases3_stripSpacesEnd_arr_inlined_bad.c,CORRECT ALARM,0.214432
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-17-5-fixed/mime7to8_ptr_two_chars_heavy_test_ok.c,CORRECT PROOF,0.365083
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-40-fixed/cases3_stripNone_arr_inlined_ok.c,CORRECT PROOF,0.216394
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-3-fixed/guard_strchr_ok.c,CORRECT PROOF,0.315461
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-0906-1-1-fixed/parse_dns_reply_cast_ok.c,CORRECT PROOF,0.314229
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-36/cases3_stripFullEnd_arr_inlined_bad.c,CORRECT ALARM,0.214140
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-3-fixed/anyMeta_ptr_ok.c,CORRECT PROOF,0.215051
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-15-6/mime7to8_ptr_three_chars_med_test_bad.c,WRONG PROOF,0.214099
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0206-2/mime_fromqp_ptr_bad.c,WRONG PROOF,0.163889
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-3-fixed/wu-ftpd.c,ERROR,0.163991
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-3-fixed/prefix_simp_ok.c,WRONG ALARM,0.515418
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-1-fixed/wu-ftpd.c,ERROR,0.165478
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-1-fixed/simple_ok.c,CORRECT PROOF,0.164792
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-5-1/iter_ints_bad.c,CORRECT ALARM,1.317429
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-5-1/wu-ftpd.c,ERROR,0.164048
+/home/bjowac/Downloads/string-tests/verisec/./gxine-cve-2007-0406/simp_bad.c,WRONG PROOF,0.164362
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-6-1/apache.c,ERROR,0.164251
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-6-1/iter2_prefixLong_ptr_bad.c,WRONG PROOF,0.214989
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-4-1-fixed/wu-ftpd.c,ERROR,0.164030
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-4-1-fixed/strcpy_strcat_ok.c,WRONG ALARM,0.314339
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-15-5/mime7to8_ptr_three_chars_med_test_bad.c,WRONG PROOF,0.214052
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-1-5/mime2-bad.c,CORRECT ALARM,6.880610
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-9-fixed/mime7to8_arr_two_chars_med_test_ok.c,CORRECT PROOF,0.266491
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-5/iter2_prefixLong_arr_bad.c,WRONG PROOF,0.214066
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-5/apache.c,ERROR,0.164109
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-1-2/mime2-bad.c,CORRECT ALARM,6.879149
+/home/bjowac/Downloads/string-tests/verisec/./libgd-cve-2007-0455-1-fixed/gd_full_ok.c,CORRECT PROOF,66.960214
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-8-1/mime7to8_arr_two_chars_heavy_test_bad.c,CORRECT ALARM,0.517901
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2003-0161-2-1/prescan_arr_min_test_bad.c,CORRECT ALARM,0.214135
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-9-1-fixed/glob3_int_ok.c,CORRECT PROOF,0.214178
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-2-1/prefix_bad.c,CORRECT ALARM,1.216217
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-2-1/wu-ftpd.c,ERROR,0.164992
+/home/bjowac/Downloads/string-tests/verisec/./bind-ca-1999-14-3/two_expands_bad.c,WRONG PROOF,0.264226
+/home/bjowac/Downloads/string-tests/verisec/./bind-ca-1999-14-3/bind.c,ERROR,0.164754
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-32/cases2_stripSpacesStart_arr_inlined_bad.c,CORRECT ALARM,0.214096
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-6-4-fixed/mime7to8_arr_three_chars_med_test_ok.c,CORRECT PROOF,0.314811
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-35-fixed/cases3_stripFullEnd_arr_ok.c,CORRECT PROOF,0.214047
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-5-8-fixed/mime7to8_arr_three_chars_heavy_test_ok.c,CORRECT PROOF,0.815096
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-7-3/iter2_prefixShort_arr_bad.c,WRONG PROOF,0.164075
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-7-3/apache.c,ERROR,0.166207
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-26-fixed/cases2_stripNone_arr_inlined_ok.c,CORRECT PROOF,0.163933
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-0906-1-1/parse_dns_reply_cast_bad.c,WRONG PROOF,0.264233
+/home/bjowac/Downloads/string-tests/verisec/./edbrowse-cve-2006-6909-1-fixed/no_strcmp_ok.c,CORRECT PROOF,0.514589
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-8/iter2_prefixShort_ptr_bad.c,WRONG PROOF,0.164032
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-8/apache.c,ERROR,0.164005
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2006-3747-2-fixed/full_ptr_ok.c,CORRECT PROOF,0.314212
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-8/cases1_stripFullEnd_arr_inlined_bad.c,CORRECT ALARM,0.214077
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-1337-4-11/crackaddr_bad.c,WRONG PROOF,2.568621
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-7-fixed/noAnyMeta_int_ok.c,CORRECT PROOF,0.214037
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-14/mime7to8_ptr_three_chars_heavy_test_bad.c,WRONG PROOF,0.415071
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-1/parse_config_bad.c,CORRECT ALARM,0.514597
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-4-fixed/wu-ftpd.c,ERROR,0.164042
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-4-fixed/strcpy_strcat_ok.c,WRONG ALARM,0.314217
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-2/guard_random_index_bad.c,WRONG PROOF,0.264256
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-12-2/mime7to8_ptr_one_char_med_test_bad.c,WRONG PROOF,0.164554
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-34/cases3_stripFullBoth_arr_inlined_bad.c,CORRECT ALARM,0.314212
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-3/wu-ftpd.c,ERROR,0.163929
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-3/prefix_simp_bad.c,CORRECT ALARM,0.464620
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-4-2/glob2_int_bad.c,WRONG PROOF,0.364331
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-9-2-fixed/mime7to8_arr_two_chars_med_test_ok.c,CORRECT PROOF,0.264176
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-5-fixed/glob2_ptr_ok.c,CORRECT PROOF,0.364301
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-12-3-fixed/mime7to8_ptr_one_char_med_test_ok.c,CORRECT PROOF,0.164544
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-3-1-fixed/iter1_prefixShort_arr_ok.c,CORRECT PROOF,0.163971
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-3-1-fixed/apache.c,ERROR,0.165076
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-9-4-fixed/mime7to8_arr_two_chars_med_test_ok.c,CORRECT PROOF,0.264207
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-1337-4-27/crackaddr_bad.c,WRONG PROOF,2.569962
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-35/cases3_stripFullEnd_arr_bad.c,CORRECT ALARM,0.214554
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-8-2/iter2_prefixShort_ptr_bad.c,WRONG PROOF,0.166131
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-8-2/apache.c,ERROR,0.164050
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-1-2-fixed/iter1_prefixLong_arr_ok.c,CORRECT PROOF,0.213995
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-1-2-fixed/apache.c,ERROR,0.163974
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-9-2/mime7to8_arr_two_chars_med_test_bad.c,CORRECT ALARM,0.264198
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-1337-4-23/crackaddr_bad.c,WRONG PROOF,2.568606
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-5-3-fixed/mime7to8_arr_three_chars_heavy_test_ok.c,CORRECT PROOF,0.815225
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-10-1/glob3_ptr_bad.c,WRONG PROOF,0.214164
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-4-2/apache.c,ERROR,0.163975
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-4-2/iter1_prefixShort_ptr_bad.c,WRONG PROOF,0.164527
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-2-fixed/anyMeta_int_ok.c,CORRECT PROOF,0.164052
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-2-1/apache.c,ERROR,0.164209
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-2-1/iter1_prefixLong_ptr_bad.c,WRONG PROOF,0.213995
+/home/bjowac/Downloads/string-tests/verisec/./madwifi-cve-2006-6332-1-1-fixed/interproc_ok.c,CORRECT PROOF,0.264302
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2003-0161-2-fixed/prescan_arr_min_test_ok.c,CORRECT PROOF,0.214187
+/home/bjowac/Downloads/string-tests/verisec/./bind-ca-1999-14-5/expand_bad.c,WRONG PROOF,0.264730
+/home/bjowac/Downloads/string-tests/verisec/./bind-ca-1999-14-5/bind.c,ERROR,0.166021
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-14-fixed/cases1_stripSpacesBoth_arr_inlined_ok.c,CORRECT PROOF,0.214057
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-8-6/mime7to8_arr_two_chars_heavy_test_bad.c,CORRECT ALARM,0.515739
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-5-3/iter2_prefixLong_arr_bad.c,WRONG PROOF,0.214102
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-5-3/apache.c,ERROR,0.164062
+/home/bjowac/Downloads/string-tests/verisec/./bind-cve-2001-0011-3/small_bad.c,WRONG PROOF,0.314192
+/home/bjowac/Downloads/string-tests/verisec/./libgd-cve-2007-0455-2-fixed/gd_no_entities_ok.c,CORRECT PROOF,0.214039
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-11-fixed/cases1_stripNone_arr_ok.c,CORRECT PROOF,0.164068
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-13/cases1_stripSpacesBoth_arr_bad.c,CORRECT ALARM,0.214094
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-6-9-fixed/mime7to8_arr_three_chars_med_test_ok.c,CORRECT PROOF,0.314343
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2006-3747-3-fixed/simp1_ok.c,CORRECT PROOF,0.164668
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-4-1/apache.c,ERROR,0.163982
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-4-1/iter1_prefixShort_ptr_bad.c,WRONG PROOF,0.165101
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-15/mime7to8_ptr_three_chars_med_test_bad.c,WRONG PROOF,0.163969
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-9-6-fixed/mime7to8_arr_two_chars_med_test_ok.c,CORRECT PROOF,0.264602
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-1/wu-ftpd.c,ERROR,0.163964
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-1/simple_bad.c,WRONG PROOF,0.164039
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-1-1/parse_config_bad.c,CORRECT ALARM,0.715002
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-9/cases1_stripFullStart_arr_bad.c,CORRECT ALARM,0.264137
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-7-3/mime7to8_arr_three_chars_no_test_bad.c,CORRECT ALARM,0.163896
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-5-6-fixed/mime7to8_arr_three_chars_heavy_test_ok.c,CORRECT PROOF,0.815397
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-10/mime7to8_arr_two_chars_no_test_bad.c,CORRECT ALARM,0.164091
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-19-fixed/mime7to8_ptr_two_chars_no_test_ok.c,CORRECT PROOF,0.164196
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-18-4/mime7to8_ptr_two_chars_med_test_bad.c,WRONG PROOF,0.164062
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-13-fixed/mime7to8_ptr_one_char_no_test_ok.c,CORRECT PROOF,0.163988
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-5/mime7to8_arr_three_chars_heavy_test_bad.c,CORRECT ALARM,0.766326
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-15-1/mime7to8_ptr_three_chars_med_test_bad.c,WRONG PROOF,0.214040
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-5-5/mime7to8_arr_three_chars_heavy_test_bad.c,CORRECT ALARM,0.815244
+/home/bjowac/Downloads/string-tests/verisec/./bind-cve-2001-0011-1-fixed/big_ok.c,CORRECT PROOF,1.716824
+/home/bjowac/Downloads/string-tests/verisec/./libgd-cve-2007-0455-2/gd_no_entities_bad.c,WRONG PROOF,0.214041
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-9-2/glob3_int_bad.c,WRONG PROOF,0.214030
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-1337-4-3/crackaddr_bad.c,WRONG PROOF,2.619581
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-2-1-fixed/mime7to8_arr_one_char_heavy_test_ok.c,CORRECT PROOF,0.314318
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-12/mime7to8_ptr_one_char_med_test_bad.c,WRONG PROOF,0.165852
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-18/cases1_stripSpacesStart_arr_inlined_bad.c,CORRECT ALARM,0.214058
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-36-fixed/cases3_stripFullEnd_arr_inlined_ok.c,CORRECT PROOF,0.214593
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-15-2-fixed/mime7to8_ptr_three_chars_med_test_ok.c,CORRECT PROOF,0.214049
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-8-1-fixed/mime7to8_arr_two_chars_heavy_test_ok.c,CORRECT PROOF,0.564766
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-2-2-fixed/iter1_prefixLong_ptr_ok.c,CORRECT PROOF,0.214079
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-2-2-fixed/apache.c,ERROR,0.164168
+/home/bjowac/Downloads/string-tests/verisec/./libgd-cve-2007-0455-3-fixed/gd_simp_ok.c,CORRECT PROOF,0.164404
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-14-4-fixed/mime7to8_ptr_three_chars_heavy_test_ok.c,CORRECT PROOF,0.464495
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-10-2-fixed/mime7to8_arr_two_chars_no_test_ok.c,CORRECT PROOF,0.164042
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2003-0681-3/util-bad.c,WRONG PROOF,0.364882
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-4-1/glob2_int_bad.c,WRONG PROOF,0.367177
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-1337-4-17/crackaddr_bad.c,WRONG PROOF,2.618617
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-5-1-fixed/glob2_ptr_ok.c,CORRECT PROOF,0.364452
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-7/mime7to8_arr_three_chars_no_test_bad.c,CORRECT ALARM,0.163945
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-30-fixed/cases2_stripSpacesEnd_arr_inlined_ok.c,CORRECT PROOF,0.214118
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-4-3-fixed/glob2_int_ok.c,CORRECT PROOF,0.364549
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-45/cases3_stripSpacesStart_arr_bad.c,CORRECT ALARM,0.264139
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-29/cases2_stripSpacesEnd_arr_bad.c,CORRECT ALARM,0.164012
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2003-0161-1-2/prescan_arr_med_test_bad.c,CORRECT ALARM,0.214060
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-15/cases1_stripSpacesEnd_arr_bad.c,CORRECT ALARM,0.164037
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0206-1-2-fixed/mime_fromqp_arr_ok.c,WRONG ALARM,0.213986
+/home/bjowac/Downloads/string-tests/verisec/./spamassassin-bid-6679/loop_bad.c,CORRECT ALARM,0.614868
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-19/cases2_stripFullBoth_arr_bad.c,CORRECT ALARM,0.314262
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-3/mime7to8_arr_one_char_med_test_bad.c,CORRECT ALARM,0.214194
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-3-1/mime7to8_arr_one_char_med_test_bad.c,CORRECT ALARM,0.214070
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-5-8/mime7to8_arr_three_chars_heavy_test_bad.c,CORRECT ALARM,0.815261
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-12-3/mime7to8_ptr_one_char_med_test_bad.c,WRONG PROOF,0.164052
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-1337-4-15/crackaddr_bad.c,WRONG PROOF,2.670358
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-14-1/mime7to8_ptr_three_chars_heavy_test_bad.c,WRONG PROOF,0.414765
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2003-0681-2-fixed/buildfname_arr_two_gecos_ok.c,WRONG ALARM,0.464702
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2001-0653-1-fixed/my-main.c,ERROR,0.031707
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2001-0653-1-fixed/tTflag-ok.c,ERROR,0.031708
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-13-1/mime7to8_ptr_one_char_no_test_bad.c,WRONG PROOF,0.164076
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-7-2-fixed/mime7to8_arr_three_chars_no_test_ok.c,CORRECT PROOF,0.163988
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-2-fixed/iter1_prefixLong_ptr_ok.c,CORRECT PROOF,0.214097
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-2-fixed/apache.c,ERROR,0.164015
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-10-1-fixed/mime7to8_arr_two_chars_no_test_ok.c,CORRECT PROOF,0.164024
+/home/bjowac/Downloads/string-tests/verisec/./bind-ca-1999-14-1/bind.c,ERROR,0.164538
+/home/bjowac/Downloads/string-tests/verisec/./bind-ca-1999-14-1/expands_vars_bad.c,WRONG PROOF,0.264187
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-6-1-fixed/mime7to8_arr_three_chars_med_test_ok.c,CORRECT PROOF,0.314236
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-17-5/mime7to8_ptr_two_chars_heavy_test_bad.c,WRONG PROOF,0.364270
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-17-3-fixed/mime7to8_ptr_two_chars_heavy_test_ok.c,CORRECT PROOF,0.364333
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-3-3-fixed/mime7to8_arr_one_char_med_test_ok.c,CORRECT PROOF,0.214716
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-8-4-fixed/mime7to8_arr_two_chars_heavy_test_ok.c,CORRECT PROOF,0.568596
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-2-2-fixed/mime7to8_arr_one_char_heavy_test_ok.c,CORRECT PROOF,0.314393
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-2003-0466-2/wu-ftpd.c,ERROR,0.164053
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-2003-0466-2/istrrchr_bad.c,WRONG PROOF,0.314335
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-25-fixed/cases2_stripNone_arr_ok.c,CORRECT PROOF,0.164000
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-20-fixed/cases2_stripFullBoth_arr_inlined_ok.c,CORRECT PROOF,0.314840
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-2-1/mime7to8_arr_one_char_heavy_test_bad.c,CORRECT ALARM,0.314257
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-10/cases1_stripFullStart_arr_inlined_bad.c,CORRECT ALARM,0.264244
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-3-3/mime7to8_arr_one_char_med_test_bad.c,CORRECT ALARM,0.214730
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-5-6/mime7to8_arr_three_chars_heavy_test_bad.c,CORRECT ALARM,0.765034
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-9/mime7to8_arr_two_chars_med_test_bad.c,CORRECT ALARM,0.265004
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-15-9-fixed/mime7to8_ptr_three_chars_med_test_ok.c,CORRECT PROOF,0.214030
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0206-2-1/mime_fromqp_ptr_bad.c,WRONG PROOF,0.163988
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-11-1-fixed/mime7to8_ptr_one_char_heavy_test_ok.c,CORRECT PROOF,0.264167
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2006-3747-4-fixed/simp2_ok.c,CORRECT PROOF,0.264141
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-4/apache.c,ERROR,0.164016
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-4/iter1_prefixShort_ptr_bad.c,WRONG PROOF,0.164033
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-30/cases2_stripSpacesEnd_arr_inlined_bad.c,CORRECT ALARM,0.164047
+/home/bjowac/Downloads/string-tests/verisec/./edbrowse-cve-2006-6909-3/strcmp_bad.c,WRONG PROOF,0.815392
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-0906-2-fixed/parse_dns_reply_no_cast_ok.c,CORRECT PROOF,0.264143
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-23/cases2_stripFullStart_arr_bad.c,CORRECT ALARM,0.264295
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2003-0161-2-2-fixed/prescan_arr_min_test_ok.c,CORRECT PROOF,0.214055
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-9-3-fixed/mime7to8_arr_two_chars_med_test_ok.c,CORRECT PROOF,0.264117
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-15-8/mime7to8_ptr_three_chars_med_test_bad.c,WRONG PROOF,0.214117
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0206-1-1/mime_fromqp_arr_bad.c,CORRECT ALARM,0.214036
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-1-fixed/bounds_ok.c,CORRECT PROOF,0.164017
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-1/iter1_prefixLong_arr_bad.c,WRONG PROOF,0.214129
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-1/apache.c,ERROR,0.163960
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-1337-1-fixed/close-angle_ptr_no_test_ok.c,CORRECT PROOF,0.164102
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-15-4-fixed/mime7to8_ptr_three_chars_med_test_ok.c,CORRECT PROOF,0.214090
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-4-fixed/glob2_int_ok.c,CORRECT PROOF,0.364318
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2003-0161-2-2/prescan_arr_min_test_bad.c,CORRECT ALARM,0.214178
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-1/mime2-bad.c,CORRECT ALARM,6.475532
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-1337-4-10/crackaddr_bad.c,WRONG PROOF,2.719742
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-27-fixed/cases2_stripSpacesBoth_arr_ok.c,CORRECT PROOF,0.214095
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-1337-4-20/crackaddr_bad.c,WRONG PROOF,2.668531
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-6-5-fixed/mime7to8_arr_three_chars_med_test_ok.c,CORRECT PROOF,0.318727
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2003-0681-1-1/buildfname_arr_one_gecos_bad.c,CORRECT ALARM,0.414404
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-5-1/mime7to8_arr_three_chars_heavy_test_bad.c,CORRECT ALARM,0.765307
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2003-0681-1-fixed/buildfname_arr_one_gecos_ok.c,WRONG ALARM,0.514676
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-8-5/mime7to8_arr_two_chars_heavy_test_bad.c,CORRECT ALARM,0.514689
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-5-5-fixed/mime7to8_arr_three_chars_heavy_test_ok.c,CORRECT PROOF,0.816587
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2001-0653-1/my-main.c,ERROR,0.031678
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2001-0653-1/tTflag-bad.c,ERROR,0.031879
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-9-5/mime7to8_arr_two_chars_med_test_bad.c,CORRECT ALARM,0.264262
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-7/cases1_stripFullEnd_arr_bad.c,CORRECT ALARM,0.215034
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-29-fixed/cases2_stripSpacesEnd_arr_ok.c,CORRECT PROOF,0.163944
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-3/iter1_prefixShort_arr_bad.c,WRONG PROOF,0.163954
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-3/apache.c,ERROR,0.163991
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-16-3/mime7to8_ptr_three_chars_no_test_bad.c,WRONG PROOF,0.163947
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-39/cases3_stripNone_arr_bad.c,CORRECT ALARM,0.163999
+/home/bjowac/Downloads/string-tests/verisec/./stubs/stubs.c,ERROR,0.163960
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-4-fixed/mime7to8_arr_one_char_no_test_ok.c,CORRECT PROOF,0.164043
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-15-4/mime7to8_ptr_three_chars_med_test_bad.c,WRONG PROOF,0.214857
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-12/cases1_stripNone_arr_inlined_bad.c,CORRECT ALARM,0.164117
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-2/prefix_bad.c,CORRECT ALARM,1.215900
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-2/wu-ftpd.c,ERROR,0.164005
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-1337-1/close-angle_ptr_no_test_bad.c,WRONG PROOF,0.163982
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-11-3/mime7to8_ptr_one_char_heavy_test_bad.c,WRONG PROOF,0.264174
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2003-0161-2-1-fixed/prescan_arr_min_test_ok.c,CORRECT PROOF,0.164016
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-5-fixed/cases1_stripFullBoth_arr_ok.c,CORRECT PROOF,0.314526
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-6-2/mime7to8_arr_three_chars_med_test_bad.c,CORRECT ALARM,0.314146
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-9/glob3_int_bad.c,WRONG PROOF,0.214117
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-4/guard_strstr_bad.c,WRONG PROOF,0.264092
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-3/guard_strchr_bad.c,WRONG PROOF,0.264147
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-1337-4-7/crackaddr_bad.c,WRONG PROOF,2.619680
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-14-7-fixed/mime7to8_ptr_three_chars_heavy_test_ok.c,CORRECT PROOF,0.469311
+/home/bjowac/Downloads/string-tests/verisec/./bind-ca-1999-14-7-fixed/bind.c,ERROR,0.164092
+/home/bjowac/Downloads/string-tests/verisec/./bind-ca-1999-14-7-fixed/vars_ok.c,CORRECT PROOF,0.264420
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-8/noAnyMeta_ptr_bad.c,WRONG PROOF,0.214046
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-5-7/mime7to8_arr_three_chars_heavy_test_bad.c,CORRECT ALARM,0.815157
+/home/bjowac/Downloads/string-tests/verisec/./samba-cve-2007-0453-1/nonsimp_bad.c,CORRECT ALARM,0.264821
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-1337-4-2/crackaddr_bad.c,WRONG PROOF,2.724802
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-7/noAnyMeta_int_bad.c,WRONG PROOF,0.214090
+/home/bjowac/Downloads/string-tests/verisec/./samba-cve-2007-0453-1-fixed/nonsimp_ok.c,WRONG ALARM,0.164312
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-11/loop_int_bad.c,WRONG PROOF,0.168184
+/home/bjowac/Downloads/string-tests/verisec/./madwifi-cve-2006-6332-2-1/no_sprintf_bad.c,WRONG PROOF,0.314589
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-9-2-fixed/glob3_int_ok.c,CORRECT PROOF,0.214270
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-19-fixed/cases2_stripFullBoth_arr_ok.c,CORRECT PROOF,0.314266
+/home/bjowac/Downloads/string-tests/verisec/./bind-ca-1999-14-7/bind.c,ERROR,0.163895
+/home/bjowac/Downloads/string-tests/verisec/./bind-ca-1999-14-7/vars_bad.c,WRONG PROOF,0.269136
+/home/bjowac/Downloads/string-tests/verisec/./libgd-cve-2007-0455-4-fixed/gd_some_entities_ok.c,CORRECT PROOF,1.216887
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-12/loop_ptr_bad.c,WRONG PROOF,0.163846
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-14/cases1_stripSpacesBoth_arr_inlined_bad.c,CORRECT ALARM,0.214032
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-0906-1-fixed/parse_dns_reply_cast_ok.c,CORRECT PROOF,0.264131
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-3-1-fixed/mime7to8_arr_one_char_med_test_ok.c,CORRECT PROOF,0.275057
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-18-5/mime7to8_ptr_two_chars_med_test_bad.c,WRONG PROOF,0.214586
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-43/cases3_stripSpacesEnd_arr_bad.c,CORRECT ALARM,0.214114
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-41/cases3_stripSpacesBoth_arr_bad.c,CORRECT ALARM,0.264177
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-3-1/iter1_prefixShort_arr_bad.c,WRONG PROOF,0.214074
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-3-1/apache.c,ERROR,0.169650
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-7-fixed/cases1_stripFullEnd_arr_ok.c,CORRECT PROOF,0.221654
+/home/bjowac/Downloads/string-tests/verisec/./bind-ca-1999-14-2/bind.c,ERROR,0.168548
+/home/bjowac/Downloads/string-tests/verisec/./bind-ca-1999-14-2/simp_bad.c,WRONG PROOF,0.320623
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-3-1/wu-ftpd.c,ERROR,0.171992
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-3-1/prefix_simp_bad.c,CORRECT ALARM,0.517750
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-11-2/mime7to8_ptr_one_char_heavy_test_bad.c,WRONG PROOF,0.314456
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2003-0161-1-1/prescan_arr_med_test_bad.c,CORRECT ALARM,0.221570
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-14-7/mime7to8_ptr_three_chars_heavy_test_bad.c,WRONG PROOF,0.475332
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-15-fixed/mime7to8_ptr_three_chars_med_test_ok.c,CORRECT PROOF,0.213996
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-1-1/iter1_prefixLong_arr_bad.c,WRONG PROOF,0.214043
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-1-1/apache.c,ERROR,0.165184
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-1337-3/close-angle_ptr_two_tests_bad.c,WRONG PROOF,0.164102
+/home/bjowac/Downloads/string-tests/verisec/./edbrowse-cve-2006-6909-3-fixed/strcmp_ok.c,CORRECT PROOF,0.915315
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-3-2-fixed/mime7to8_arr_one_char_med_test_ok.c,CORRECT PROOF,0.215025
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-18-2-fixed/mime7to8_ptr_two_chars_med_test_ok.c,CORRECT PROOF,0.214056
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-4-1-fixed/mime7to8_arr_one_char_no_test_ok.c,CORRECT PROOF,0.167042
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-8-fixed/cases1_stripFullEnd_arr_inlined_ok.c,CORRECT PROOF,0.214168
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-8-5-fixed/mime7to8_arr_two_chars_heavy_test_ok.c,CORRECT PROOF,0.564661
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-9-5-fixed/mime7to8_arr_two_chars_med_test_ok.c,CORRECT PROOF,0.264290
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-8-2/mime7to8_arr_two_chars_heavy_test_bad.c,CORRECT ALARM,0.614795
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-32-fixed/cases2_stripSpacesStart_arr_inlined_ok.c,CORRECT PROOF,0.214094
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-14-5/mime7to8_ptr_three_chars_heavy_test_bad.c,WRONG PROOF,0.464695
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-21/cases2_stripFullEnd_arr_bad.c,CORRECT ALARM,0.219067
+/home/bjowac/Downloads/string-tests/verisec/./madwifi-cve-2006-6332-2-fixed/no_sprintf_ok.c,CORRECT PROOF,0.314286
+/home/bjowac/Downloads/string-tests/verisec/./bind-cve-2001-0011-2/med_bad.c,WRONG PROOF,0.314325
+/home/bjowac/Downloads/string-tests/verisec/./bind-cve-2001-0011-2/med_ok.c,CORRECT PROOF,0.314227
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-15-2/mime7to8_ptr_three_chars_med_test_bad.c,WRONG PROOF,0.214109
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-2-2/apache.c,ERROR,0.163991
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-2-2/iter1_prefixLong_ptr_bad.c,WRONG PROOF,0.214029
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-12-fixed/mime7to8_ptr_one_char_med_test_ok.c,CORRECT PROOF,0.164368
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-19-1-fixed/mime7to8_ptr_two_chars_no_test_ok.c,CORRECT PROOF,0.164109
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-12-1-fixed/mime7to8_ptr_one_char_med_test_ok.c,CORRECT PROOF,0.164045
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-15-5-fixed/mime7to8_ptr_three_chars_med_test_ok.c,CORRECT PROOF,0.214202
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-28-fixed/cases2_stripSpacesBoth_arr_inlined_ok.c,CORRECT PROOF,0.214019
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-6-3/apache.c,ERROR,0.164029
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-6-3/iter2_prefixLong_ptr_bad.c,WRONG PROOF,0.214078
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-17-2-fixed/mime7to8_ptr_two_chars_heavy_test_ok.c,CORRECT PROOF,0.364339
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-15-7-fixed/mime7to8_ptr_three_chars_med_test_ok.c,CORRECT PROOF,0.214152
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-2-2-fixed/wu-ftpd.c,ERROR,0.163976
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-2-2-fixed/prefix_ok.c,WRONG ALARM,1.316212
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2003-0161-1-fixed/prescan_arr_med_test_ok.c,CORRECT PROOF,0.214174
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-5-1-fixed/mime7to8_arr_three_chars_heavy_test_ok.c,CORRECT PROOF,0.815281
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-18-fixed/cases1_stripSpacesStart_arr_inlined_ok.c,CORRECT PROOF,0.214185
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-0906-2-1-fixed/parse_dns_reply_no_cast_ok.c,CORRECT PROOF,0.264060
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-1337-4-5/crackaddr_bad.c,WRONG PROOF,2.618525
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-18-4-fixed/mime7to8_ptr_two_chars_med_test_ok.c,CORRECT PROOF,0.164040
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-5-2/glob2_ptr_bad.c,WRONG PROOF,0.364232
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-13-fixed/cases1_stripSpacesBoth_arr_ok.c,CORRECT PROOF,0.214065
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-9-1/mime7to8_arr_two_chars_med_test_bad.c,CORRECT ALARM,0.264611
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2003-0681-1-1-fixed/buildfname_arr_one_gecos_ok.c,WRONG ALARM,0.464477
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-15-8-fixed/mime7to8_ptr_three_chars_med_test_ok.c,CORRECT PROOF,0.214381
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-14-6-fixed/mime7to8_ptr_three_chars_heavy_test_ok.c,CORRECT PROOF,0.464699
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-14-3-fixed/mime7to8_ptr_three_chars_heavy_test_ok.c,CORRECT PROOF,0.464597
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-17/cases1_stripSpacesStart_arr_bad.c,CORRECT ALARM,0.214144
+/home/bjowac/Downloads/string-tests/verisec/./gxine-cve-2007-0406-fixed/simp_ok.c,CORRECT PROOF,0.164313
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-6-8-fixed/mime7to8_arr_three_chars_med_test_ok.c,CORRECT PROOF,0.314330
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-14-6/mime7to8_ptr_three_chars_heavy_test_bad.c,WRONG PROOF,0.414395
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-7-1/mime7to8_arr_three_chars_no_test_bad.c,CORRECT ALARM,0.163999
+/home/bjowac/Downloads/string-tests/verisec/./edbrowse-cve-2006-6909-1/no_strcmp_bad.c,WRONG PROOF,0.514634
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-17-4/mime7to8_ptr_two_chars_heavy_test_bad.c,WRONG PROOF,0.366327
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-8-3-fixed/mime7to8_arr_two_chars_heavy_test_ok.c,CORRECT PROOF,0.564827
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-14-2/mime7to8_ptr_three_chars_heavy_test_bad.c,WRONG PROOF,0.414541
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-3-1-fixed/wu-ftpd.c,ERROR,0.164052
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-3-1-fixed/prefix_simp_ok.c,WRONG ALARM,0.514837
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-4-1/wu-ftpd.c,ERROR,0.164002
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-4-1/strcpy_strcat_bad.c,CORRECT ALARM,0.164014
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-6-3/mime7to8_arr_three_chars_med_test_bad.c,CORRECT ALARM,0.314296
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-4-1-fixed/apache.c,ERROR,0.164060
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-4-1-fixed/iter1_prefixShort_ptr_ok.c,CORRECT PROOF,0.164490
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-4-fixed/guard_strstr_ok.c,CORRECT PROOF,0.264599
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-17-4-fixed/mime7to8_ptr_two_chars_heavy_test_ok.c,CORRECT PROOF,0.364581
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0206-2-2-fixed/mime_fromqp_ptr_ok.c,CORRECT PROOF,0.164063
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-24-fixed/cases2_stripFullStart_arr_inlined_ok.c,CORRECT PROOF,0.314208
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-2003-0466-2-fixed/istrrchr_ok.c,CORRECT PROOF,0.314267
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-2003-0466-2-fixed/wu-ftpd.c,ERROR,0.164607
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-43-fixed/cases3_stripSpacesEnd_arr_ok.c,CORRECT PROOF,0.214252
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-25/cases2_stripNone_arr_bad.c,CORRECT ALARM,0.164177
+/home/bjowac/Downloads/string-tests/verisec/./edbrowse-cve-2006-6909-2-fixed/strchr_ok.c,CORRECT PROOF,0.317340
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-17-3/mime7to8_ptr_two_chars_heavy_test_bad.c,WRONG PROOF,0.314292
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-1337-4-22/crackaddr_bad.c,WRONG PROOF,2.669314
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-12-fixed/cases1_stripNone_arr_inlined_ok.c,CORRECT PROOF,0.164041
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-6/apache.c,ERROR,0.164045
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-6/iter2_prefixLong_ptr_bad.c,WRONG PROOF,0.214075
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-1337-4-9/crackaddr_bad.c,WRONG PROOF,2.768959
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-20/cases2_stripFullBoth_arr_inlined_bad.c,CORRECT ALARM,0.314775
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-5-1/glob2_ptr_bad.c,WRONG PROOF,0.364382
+/home/bjowac/Downloads/string-tests/verisec/./bind-ca-1999-14-4/bind.c,ERROR,0.164057
+/home/bjowac/Downloads/string-tests/verisec/./bind-ca-1999-14-4/both_bad.c,WRONG PROOF,0.264155
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-1337-4-26/crackaddr_bad.c,WRONG PROOF,2.670835
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-5/iter_ints_bad.c,CORRECT ALARM,1.215898
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-5/wu-ftpd.c,ERROR,0.163969
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-2-2/prefix_bad.c,CORRECT ALARM,1.266947
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-2-2/wu-ftpd.c,ERROR,0.165524
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-16/cases1_stripSpacesEnd_arr_inlined_bad.c,CORRECT ALARM,0.165079
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-18/mime7to8_ptr_two_chars_med_test_bad.c,WRONG PROOF,0.165032
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-1-1-fixed/parse_config_ok.c,CORRECT PROOF,0.614833
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-3/anyMeta_ptr_bad.c,WRONG PROOF,0.264733
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-8-4/mime7to8_arr_two_chars_heavy_test_bad.c,CORRECT ALARM,0.564759
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-5-2/mime7to8_arr_three_chars_heavy_test_bad.c,CORRECT ALARM,0.815705
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2006-3747-3/simp1_bad.c,CORRECT ALARM,0.165566
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-8-3/mime7to8_arr_two_chars_heavy_test_bad.c,CORRECT ALARM,0.514704
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-38-fixed/cases3_stripFullStart_arr_inlined_ok.c,CORRECT PROOF,0.314192
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-4/mime7to8_arr_one_char_no_test_bad.c,CORRECT ALARM,0.163933
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-6-6/mime7to8_arr_three_chars_med_test_bad.c,CORRECT ALARM,0.364367
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-2003-0466-4/wu-ftpd.c,ERROR,0.164001
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-2003-0466-4/simple_bad.c,WRONG PROOF,0.315811
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-11-2-fixed/mime7to8_ptr_one_char_heavy_test_ok.c,CORRECT PROOF,0.315085
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-2-1-fixed/wu-ftpd.c,ERROR,0.164087
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-2-1-fixed/prefix_ok.c,WRONG ALARM,1.316057
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2001-0653-3/tTflag_arr_two_loops_bad.c,WRONG PROOF,0.264659
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-17-2/mime7to8_ptr_two_chars_heavy_test_bad.c,WRONG PROOF,0.364357
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-9-fixed/cases1_stripFullStart_arr_ok.c,CORRECT PROOF,0.314237
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-5-2/iter2_prefixLong_arr_bad.c,WRONG PROOF,0.214072
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-5-2/apache.c,ERROR,0.163986
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-2/anyMeta_int_bad.c,WRONG PROOF,0.264211
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-1337-4/crackaddr_bad.c,WRONG PROOF,2.769539
+/home/bjowac/Downloads/string-tests/verisec/./bind-cve-2001-0011-1/big_bad.c,WRONG PROOF,1.767812
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-19-2-fixed/mime7to8_ptr_two_chars_no_test_ok.c,CORRECT PROOF,0.164335
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-11-fixed/loop_int_ok.c,CORRECT PROOF,0.164021
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-2003-0466-3/wu-ftpd.c,ERROR,0.163875
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-2003-0466-3/no_symlinks_bad.c,WRONG PROOF,0.315098
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-22/cases2_stripFullEnd_arr_inlined_bad.c,CORRECT ALARM,0.214120
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-39-fixed/cases3_stripNone_arr_ok.c,CORRECT PROOF,0.214042
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-16-fixed/cases1_stripSpacesEnd_arr_inlined_ok.c,CORRECT PROOF,0.164516
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-15-fixed/cases1_stripSpacesEnd_arr_ok.c,CORRECT PROOF,0.164111
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2001-0653-3-fixed/tTflag_arr_two_loops_ok.c,CORRECT PROOF,0.264693
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-18-fixed/mime7to8_ptr_two_chars_med_test_ok.c,CORRECT PROOF,0.163952
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-1337-4-21/crackaddr_bad.c,WRONG PROOF,2.720434
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-2002-1337-4-4/crackaddr_bad.c,WRONG PROOF,2.718735
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-1-fixed/iter1_prefixLong_arr_ok.c,CORRECT PROOF,0.214754
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-1-fixed/apache.c,ERROR,0.163948
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-18-2/mime7to8_ptr_two_chars_med_test_bad.c,WRONG PROOF,0.167892
+/home/bjowac/Downloads/string-tests/verisec/./libgd-cve-2007-0455-3/gd_simp_bad.c,WRONG PROOF,0.163947
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-16-2-fixed/mime7to8_ptr_three_chars_no_test_ok.c,CORRECT PROOF,0.163890
+/home/bjowac/Downloads/string-tests/verisec/./openser-cve-2006-6749-5/cases1_stripFullBoth_arr_bad.c,CORRECT ALARM,0.314484
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-18-5-fixed/mime7to8_ptr_two_chars_med_test_ok.c,CORRECT PROOF,0.164061
+/home/bjowac/Downloads/string-tests/verisec/./madwifi-cve-2006-6332-3/giwscan_cb_bad.c,WRONG PROOF,0.163896
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-16-2/mime7to8_ptr_three_chars_no_test_bad.c,WRONG PROOF,0.164526
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-7-2/iter2_prefixShort_arr_bad.c,WRONG PROOF,0.163963
+/home/bjowac/Downloads/string-tests/verisec/./apache-cve-2004-0940-7-2/apache.c,ERROR,0.164288
+/home/bjowac/Downloads/string-tests/verisec/./netbsd-libc-cve-2006-6652-4/glob2_int_bad.c,WRONG PROOF,0.364419
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-9-6/mime7to8_arr_two_chars_med_test_bad.c,CORRECT ALARM,0.264206
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-15-6-fixed/mime7to8_ptr_three_chars_med_test_ok.c,CORRECT PROOF,0.214138
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-4-2-fixed/wu-ftpd.c,ERROR,0.163936
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-4-2-fixed/strcpy_strcat_ok.c,WRONG ALARM,0.314228
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-6-4/mime7to8_arr_three_chars_med_test_bad.c,CORRECT ALARM,0.314454
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-8-2-fixed/mime7to8_arr_two_chars_heavy_test_ok.c,CORRECT PROOF,0.617183
+/home/bjowac/Downloads/string-tests/verisec/./madwifi-cve-2006-6332-1-1/interproc_bad.c,WRONG PROOF,0.314414
+/home/bjowac/Downloads/string-tests/verisec/./sendmail-cve-1999-0047-16-fixed/mime7to8_ptr_three_chars_no_test_ok.c,CORRECT PROOF,0.164167
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-6-fixed/wu-ftpd.c,ERROR,0.167386
+/home/bjowac/Downloads/string-tests/verisec/./wu-ftpd-cve-1999-0368-6-fixed/iter_ints_simp_ok.c,CORRECT PROOF,0.564744
+=======
+Summary:
+available results,569
+correct results,368
+correct proofs,238
+correct alarms,130
+wrong proofs,180
+wrong alarms,19
+unknown results,99
+CPU time,436.00321912765503
+score,-910
