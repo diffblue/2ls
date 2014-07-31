@@ -12,6 +12,10 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <sys/stat.h>
 
+#ifdef _WIN32
+#include <direct.h>
+#endif
+
 #include <util/prefix.h>
 #include <util/tempfile.h>
 
