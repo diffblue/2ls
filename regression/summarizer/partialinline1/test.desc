@@ -1,6 +1,6 @@
 CORE
 main.c
---inline-partial 2
+--inline-partial 5
 ^EXIT=10$
 ^SIGNAL=0$
 ^** 1 of 2 failed$

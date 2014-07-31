@@ -1,7 +1,6 @@
-CORE
+KNOWNBUG
 main.c
---inline-partial 3
+--zones --context-sensitive
 ^EXIT=0$
 ^SIGNAL=0$
 ^VERIFICATION SUCCESSFUL$
-
