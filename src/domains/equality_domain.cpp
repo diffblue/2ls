@@ -169,7 +169,9 @@ void equality_domaint::project_on_vars(const valuet &value,
   {
     const var_pairt &vv = templ[index].var_pair;
 
-    if(vars.find(vv.first)==vars.end() || vars.find(vv.second)==vars.end())
+    if(vars.find(vv.first)==vars.end() || 
+       vars.find(vv.second)==vars.end() && 
+       vv.second.id()!=ID_constant && vv.second.op0().id()!=ID_NULL)
       continue;
 
     if(v.equs.same_set(vv.first,vv.second)) 
@@ -180,7 +182,9 @@ void equality_domaint::project_on_vars(const valuet &value,
   {
     const var_pairt &vv = templ[*it].var_pair;
 
-    if(vars.find(vv.first)==vars.end() || vars.find(vv.second)==vars.end())
+    if(vars.find(vv.first)==vars.end() || 
+       vars.find(vv.second)==vars.end() && 
+       vv.second.id()!=ID_constant && vv.second.op0().id()!=ID_NULL)
       continue;
 
     c.push_back(notequal_exprt(vv.first,vv.second));

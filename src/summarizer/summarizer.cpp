@@ -117,6 +117,17 @@ void summarizert::summarize(functionst &_functions,
   }
   else status() << "Summary for function " << function_name << 
 	 " exists already" << eom;
+
+  //adding preconditions to SSA for assertion check
+  for(functionst::const_iterator it = _functions.begin(); 
+      it!=_functions.end(); it++)
+  {
+    goto_programt::const_targett loc=
+      it->second->goto_function.body.instructions.end();
+    loc--;
+    local_SSAt::nodet &node=it->second->nodes[loc];
+    node.constraints.push_back(preconditions[it->first]);
+  }
 }
 
 /*******************************************************************\
@@ -181,9 +192,6 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
   local_SSAt &SSA = *functions[function_name]; 
 
   // recursively compute summaries for function calls
-  //check_preconditions(function_name,SSA);
-  //compute_preconditions(function_name,SSA);
-  //inline_summaries(function_name,SSA,true,true); 
   inline_summaries(function_name,SSA,context_sensitive); 
 
   status() << "Analyzing function "  << function_name << eom;
@@ -304,7 +312,7 @@ void summarizert::inline_summaries(const function_namet &function_name,
       irep_idt fname = to_symbol_expr(f_it->function()).get_identifier();
       status() << "Recursively summarizing function " << fname << eom;
 
-      compute_summary_rec(fname);
+      compute_summary_rec(fname,context_sensitive);
       summaryt summary = summary_db.get(fname);
 
       status() << "Replacing function " << fname << eom;
