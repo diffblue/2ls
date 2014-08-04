@@ -121,11 +121,11 @@ void renamet::operator()(typet &type)
     code_typet &code_type=to_code_type(type);
     operator()(code_type.return_type());
 
-    code_typet::argumentst &arguments=code_type.arguments();
+    code_typet::parameterst &parameters=code_type.parameters();
 
-    for(code_typet::argumentst::iterator
-        it=arguments.begin();
-        it!=arguments.end();
+    for(code_typet::parameterst::iterator
+        it=parameters.begin();
+        it!=parameters.end();
         it++)
     {
       operator()(*it);

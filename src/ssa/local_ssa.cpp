@@ -664,7 +664,7 @@ exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
     
     return result;
   }
-  else if(expr.id()==ID_sideeffect)
+  else if(expr.id()==ID_side_effect)
   {
     throw "unexpected side effect in read_rhs_rec";
   }
@@ -754,7 +754,7 @@ void local_SSAt::replace_side_effects_rec(
   Forall_operands(it, expr)
     replace_side_effects_rec(*it, loc, counter);
 
-  if(expr.id()==ID_sideeffect)
+  if(expr.id()==ID_side_effect)
   {
     const side_effect_exprt &side_effect_expr=
       to_side_effect_expr(expr);
