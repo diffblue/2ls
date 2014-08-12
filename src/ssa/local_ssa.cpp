@@ -87,12 +87,12 @@ Function: local_SSAt::get_entry_exit_vars
 void local_SSAt::get_entry_exit_vars()
 {
   //get parameters
-  const code_typet::argumentst &argument_types=goto_function.type.arguments();
-  for(code_typet::argumentst::const_iterator
-      it=argument_types.begin(); it!=argument_types.end(); it++)
+  const code_typet::parameterst &parameter_types=goto_function.type.parameters();
+  for(code_typet::parameterst::const_iterator
+      it=parameter_types.begin(); it!=parameter_types.end(); it++)
   {
-    const code_typet::argumentt &argument=*it;
-    const irep_idt &identifier=argument.get_identifier();
+    const code_typet::parametert &parameter=*it;
+    const irep_idt &identifier=parameter.get_identifier();
 
     //    const symbolt &symbol=ns.lookup(identifier);
 
@@ -800,7 +800,7 @@ exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
     
     return result;
   }
-  else if(expr.id()==ID_sideeffect)
+  else if(expr.id()==ID_side_effect)
   {
     // ignore
 
@@ -892,7 +892,7 @@ void local_SSAt::replace_side_effects_rec(
   Forall_operands(it, expr)
     replace_side_effects_rec(*it, loc, counter);
 
-  if(expr.id()==ID_sideeffect)
+  if(expr.id()==ID_side_effect)
   {
     const side_effect_exprt &side_effect_expr=
       to_side_effect_expr(expr);

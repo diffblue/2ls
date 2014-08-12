@@ -470,7 +470,7 @@ void summarizer_parseoptionst::expr_stats_rec(
     expr_statst &stats)
 {
   
-  if(expr.id()==ID_sideeffect)
+  if(expr.id()==ID_side_effect)
   {
     const side_effect_exprt &side_effect_expr=to_side_effect_expr(expr);
     const irep_idt &statement=side_effect_expr.get_statement();
