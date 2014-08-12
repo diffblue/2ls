@@ -199,7 +199,8 @@ void ssa_analyzert::operator()(local_SSAt &SSA, const exprt &precondition)
     for(calling_context_varst::iterator it = calling_context_vars.begin();
 	it != calling_context_vars.end(); it++)
     {
-      domain->project_on_vars(*inv,calling_context_vars[it->first],calling_contexts[it->first]);
+      domain->project_on_vars(*inv,calling_context_vars[it->first],
+                              calling_contexts[it->first]);
     }
   }
 

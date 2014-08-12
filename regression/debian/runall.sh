@@ -1,10 +1,10 @@
 SUMMARIZER=../../../src/summarizer/summarizer
-CHECKS="--div-by-zero-check --signed-overflow-check --array-abstraction --pointer-check"
-#CHECKS="--div-by-zero-check --signed-overflow-check --bounds-check --pointer-check"
-SETS="openjpeg-1.3"
+#CHECKS="--div-by-zero-check --signed-overflow-check --array-abstraction --pointer-check"
+CHECKS="--div-by-zero-check --signed-overflow-check --bounds-check --pointer-check"
+SETS="grep-2.12"
 #SETS="a2ps bison-2.5 grep-2.12 openjpeg-1.3"
 
-TIMEOUT=900
+TIMEOUT=1800
 
 for o in havoc intervals equalities zones
 do
@@ -22,7 +22,7 @@ do
   done
 done
 
-for o in intervals equalities zones
+for o in 
 do
   for d in $SETS
   do
@@ -36,6 +36,19 @@ do
     done
     cd ..
   done
+done
+
+for d in $SETS 
+do
+  cd $d
+  rm -f ../$d.unwind0.log
+  for f in *.o 
+  do 
+    echo $d/$f "using unwind0"
+    echo "FILE:" $f >> ../$d.unwind0.log
+    (time (perl -e 'alarm shift @ARGV; exec @ARGV' $TIMEOUT $SUMMARIZER $CHECKS $f --havoc --inline)) &>> ../$d.unwind0.log
+  done
+  cd ..
 done
 
 for d in $SETS 

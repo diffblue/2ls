@@ -22,7 +22,7 @@ class summaryt
   typedef std::list<symbol_exprt> var_listt;
   typedef std::set<symbol_exprt> var_sett;
   var_listt params;
-  var_sett returns, globals_in, globals_out;
+  var_sett globals_in, globals_out;
 
   //void from_fixedpoint(class ssa_fixed_pointt &);
   

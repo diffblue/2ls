@@ -28,11 +28,6 @@ void summaryt::output(std::ostream &out, const namespacet &ns) const
       it != params.end(); it++)
     out << from_expr(ns,"",*it) << " ";
   out << std::endl;
-  out << "returns: ";
-  for(summaryt::var_sett::const_iterator it = returns.begin();
-      it != returns.end(); it++)
-    out << from_expr(ns,"",*it) << " ";
-  out << std::endl;
   out << "globals_in: ";
   for(summaryt::var_sett::const_iterator it = globals_in.begin();
       it != globals_in.end(); it++)

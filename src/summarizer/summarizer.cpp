@@ -216,9 +216,9 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
 
   // create summary
   summaryt summary;
-  summary.params =SSA.params;
-  summary.globals_in =SSA.globals_in;
-  summary.globals_out =SSA.globals_out;
+  summary.params = SSA.params;
+  summary.globals_in = SSA.globals_in;
+  summary.globals_out = SSA.globals_out;
   summary.precondition = preconditions.at(function_name);
   analyzer.get_summary(summary.transformer);
 #ifdef PRECISE_JOIN
