@@ -53,7 +53,8 @@ class ssa_inlinert : public messaget
 
   //apply changes to node, must be called after replace and havoc
   void commit_node(local_SSAt::nodest::iterator node);
-  void commit_nodes(local_SSAt::nodest &nodes);
+  bool commit_nodes(local_SSAt::nodest &nodes,
+                    local_SSAt::nodest::iterator n_pos);
 
   //functions for renaming preconditions to calling context
   void rename_to_caller(local_SSAt::nodet::function_callst::iterator f_it, 
@@ -73,7 +74,6 @@ class ssa_inlinert : public messaget
   local_SSAt::nodet::equalitiest new_equs;
   std::set<local_SSAt::nodet::function_callst::iterator> rm_function_calls;
 
- private:
   void replace_globals_in(const local_SSAt::var_sett &globals_in, 
                           const local_SSAt::var_sett &globals);
   void replace_params(const local_SSAt::var_listt &params,
@@ -81,10 +81,6 @@ class ssa_inlinert : public messaget
   void replace_globals_out(const local_SSAt::var_sett &globals_out, 
 			   const local_SSAt::var_sett &cs_globals_in,  
 			   const local_SSAt::var_sett &cs_globals_out);
-
-  void merge_into_nodes(local_SSAt::nodest &nodes, 
-			const local_SSAt::locationt &loc, 
-                        const local_SSAt::nodet &new_n);
 
   void rename(exprt &expr);
   void rename(local_SSAt::nodet &node);

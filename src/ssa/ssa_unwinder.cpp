@@ -28,93 +28,98 @@ void ssa_unwindert::unwind(local_SSAt &SSA, unsigned unwind_max)
 {
   if(unwind_max==0) return; 
 
-  forall_goto_program_instructions(i_it, SSA.goto_function.body)
+  for(local_SSAt::nodest::iterator n_it = SSA.nodes.begin(); 
+      n_it != SSA.nodes.end(); n_it++)
   {
-    if(i_it->is_backwards_goto()) //we've found a loop
-    {
-      local_SSAt::locationt loop_head = i_it->get_target(); 
-      //      const irep_idt loop_id=goto_programt::loop_id(i_it);
+    if(n_it->loophead == SSA.nodes.end()) continue;
+    //we've found a loop
 
-      // get variables at beginning and end of loop body
-      std::map<exprt, exprt> pre_post_exprs;
+    local_SSAt::locationt loop_head = n_it->loophead->location; 
 
-      const ssa_domaint::phi_nodest &phi_nodes =
-        SSA.ssa_analysis[i_it->get_target()].phi_nodes;
+    std::cout << "loop head: " << std::endl;
+    n_it->loophead->output(std::cout,SSA.ns);
 
-      for(local_SSAt::objectst::const_iterator
+    // get variables at beginning and end of loop body
+    std::map<exprt, exprt> pre_post_exprs;
+
+    const ssa_domaint::phi_nodest &phi_nodes =
+      SSA.ssa_analysis[loop_head].phi_nodes;
+
+    for(local_SSAt::objectst::const_iterator
           o_it=SSA.ssa_objects.objects.begin();
-          o_it!=SSA.ssa_objects.objects.end();
-          o_it++)
-      {
-        ssa_domaint::phi_nodest::const_iterator p_it =
-        phi_nodes.find(o_it->get_identifier());
+	o_it!=SSA.ssa_objects.objects.end();
+	o_it++)
+    {
+      ssa_domaint::phi_nodest::const_iterator p_it =
+	phi_nodes.find(o_it->get_identifier());
 
-        if(p_it==phi_nodes.end()) continue; // object not modified in this loop
+      if(p_it==phi_nodes.end()) continue; // object not modified in this loop
 
-        symbol_exprt pre = SSA.name(*o_it, local_SSAt::LOOP_BACK, i_it);
-        symbol_exprt post = SSA.read_rhs(*o_it, i_it);
+      symbol_exprt pre = 
+	SSA.name(*o_it, local_SSAt::LOOP_BACK, n_it->location);
+      symbol_exprt post = SSA.read_rhs(*o_it, n_it->location);
 
-        pre_post_exprs[pre] = post;
-      }
+      pre_post_exprs[pre] = post;
+    }
 
-       // unwind that loop
-      for(unsigned unwind=unwind_max; unwind>0; unwind--)
-      {
-	// insert loop_head
-        local_SSAt::nodet node = SSA.nodes[loop_head]; //copy
-	for(local_SSAt::nodet::equalitiest::iterator 
-            e_it = node.equalities.begin();
-	    e_it != node.equalities.end(); e_it++)
-	{
-	  if(e_it->rhs().id()!=ID_if) 
-	  {
-            rename(*e_it,unwind);
-            continue;
-	  }
-
-          if_exprt &e = to_if_expr(e_it->rhs());
-         
-          if(unwind==unwind_max)
-	  {
-	    rename(e_it->lhs(),unwind);
-            e_it->rhs() = e.false_case();
-	  }
-          else
-	  {
-	    e_it->rhs() = pre_post_exprs[e.true_case()];
-	    rename(e_it->rhs(),unwind+1);
-	    rename(e_it->lhs(),unwind);
-	  }
-	}
-        merge_into_nodes(new_nodes,loop_head,node);
-
-        // insert body
-        local_SSAt::locationt it = loop_head; it++;
-        for(;it != i_it; it++)
-	{
-	  local_SSAt::nodest::const_iterator n_it = SSA.nodes.find(it);
-          if(n_it==SSA.nodes.end()) continue;
-
-          local_SSAt::nodet n = n_it->second; //copy;
-          rename(n,unwind);
-          merge_into_nodes(new_nodes,it,n);
-        }
-      }
-
-      // feed last unwinding into original loop_head
-      local_SSAt::nodet &node = SSA.nodes[loop_head]; //modify in place
+    // unwind that loop
+    for(unsigned unwind=unwind_max; unwind>0; unwind--)
+    {
+      // insert loop_head
+      local_SSAt::nodet node = *n_it->loophead; //copy
       for(local_SSAt::nodet::equalitiest::iterator 
-          e_it = node.equalities.begin();
-          e_it != node.equalities.end(); e_it++)
+	    e_it = node.equalities.begin();
+	  e_it != node.equalities.end(); e_it++)
       {
-        if(e_it->rhs().id()!=ID_if) continue;
-        
-        if_exprt &e = to_if_expr(e_it->rhs());
-        e.false_case() = pre_post_exprs[e.true_case()];
-        rename(e.false_case(),1);
+	if(e_it->rhs().id()!=ID_if) 
+	{
+	  rename(*e_it,unwind);
+	  continue;
+	}
+
+	if_exprt &e = to_if_expr(e_it->rhs());
+         
+	if(unwind==unwind_max)
+	{
+	  rename(e_it->lhs(),unwind);
+	  e_it->rhs() = e.false_case();
+	}
+	else
+	{
+	  e_it->rhs() = pre_post_exprs[e.true_case()];
+	  rename(e_it->rhs(),unwind+1);
+	  rename(e_it->lhs(),unwind);
+	}
+      }        
+      new_nodes.push_back(node);
+
+      // insert body
+      local_SSAt::nodest::iterator it = n_it->loophead; it++;
+      for(;it != n_it; it++)
+      {
+	local_SSAt::nodet n = *it; //copy;
+	rename(n,unwind);
+	new_nodes.push_back(n);
       }
-    } 
-    commit_nodes(SSA.nodes); //apply changes
+    }
+
+    // feed last unwinding into original loop_head, modified in place
+    for(local_SSAt::nodet::equalitiest::iterator 
+          e_it = n_it->loophead->equalities.begin();
+	e_it != n_it->loophead->equalities.end(); e_it++)
+    {
+      if(e_it->rhs().id()!=ID_if) continue;
+        
+      if_exprt &e = to_if_expr(e_it->rhs());
+      e.false_case() = pre_post_exprs[e.true_case()];
+      rename(e.false_case(),1);
+    }
+    commit_nodes(SSA.nodes,n_it->loophead); //apply changes
+
+#if 0
+    std::cout << "SSA after loop: " << std::endl;
+    SSA.output(std::cout);
+#endif
   }
 }
 
@@ -194,66 +199,9 @@ Function: ssa_unwindert::commit_nodes()
 
 \*******************************************************************/
 
-void ssa_unwindert::commit_nodes(local_SSAt::nodest &nodes)
+void ssa_unwindert::commit_nodes(local_SSAt::nodest &nodes,
+                                 local_SSAt::nodest::iterator n_pos)
 {
-  //insert new nodes
-  for(local_SSAt::nodest::const_iterator n_it = new_nodes.begin();
-      n_it != new_nodes.end(); n_it++)
-  {
-    merge_into_nodes(nodes,n_it->first,n_it->second);
-  }
-  new_nodes.clear();
+  nodes.splice(n_pos,new_nodes,new_nodes.begin(),new_nodes.end());
 }
 
-/*******************************************************************\
-
-Function: ssa_unwindert::merge_node()
-
-  Inputs:
-
- Outputs:
-
- Purpose: merges equalities and constraints of two nodes into the first one
-
-\*******************************************************************/
-
-void ssa_unwindert::merge_into_nodes(local_SSAt::nodest &nodes, 
-  const local_SSAt::locationt &loc, const local_SSAt::nodet &new_n)
-{
-  local_SSAt::nodest::iterator it = nodes.find(loc);
-  if(it==nodes.end()) //insert
-  {
-    debug() << "insert new node" << eom;
-
-    nodes[loc] = new_n;
-  }
-  else //merge nodes
-  {
-    debug() << "merge node " << eom;
-
-    for(local_SSAt::nodet::equalitiest::const_iterator 
-        e_it = new_n.equalities.begin();
-	e_it != new_n.equalities.end(); e_it++)
-    {
-      it->second.equalities.push_back(*e_it);
-    }
-    for(local_SSAt::nodet::constraintst::const_iterator 
-        c_it = new_n.constraints.begin();
-	c_it != new_n.constraints.end(); c_it++)
-    {
-      it->second.constraints.push_back(*c_it);
-    }  
-    for(local_SSAt::nodet::assertionst::const_iterator 
-        a_it = new_n.assertions.begin();
-	a_it != new_n.assertions.end(); a_it++)
-    {
-      it->second.assertions.push_back(*a_it);
-    }  
-    for(local_SSAt::nodet::function_callst::const_iterator 
-        f_it = new_n.function_calls.begin();
-	f_it != new_n.function_calls.end(); f_it++)
-    {
-      it->second.function_calls.push_back(*f_it);
-    }  
-  }
-}

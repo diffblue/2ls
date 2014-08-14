@@ -290,16 +290,17 @@ void ssa_analyzert::collect_variables(local_SSAt &SSA,
   var_listt pre_state_vars, post_state_vars;
 
   // add loop variables
-  forall_goto_program_instructions(i_it, SSA.goto_function.body)
+  for(local_SSAt::nodest::iterator n_it = SSA.nodes.begin(); 
+      n_it != SSA.nodes.end(); n_it++)
   {
-    if(i_it->is_backwards_goto())
+    if(n_it->loophead != SSA.nodes.end()) //we've found a loop
     {
-      exprt pre_guard = and_exprt(SSA.guard_symbol(i_it->get_target()), 
-        SSA.name(SSA.guard_symbol(), local_SSAt::LOOP_SELECT, i_it));
-      exprt post_guard = SSA.guard_symbol(i_it);
+      exprt pre_guard = and_exprt(SSA.guard_symbol(n_it->loophead->location), 
+        SSA.name(SSA.guard_symbol(), local_SSAt::LOOP_SELECT, n_it->location));
+      exprt post_guard = SSA.guard_symbol(n_it->location);
       
       const ssa_domaint::phi_nodest &phi_nodes = 
-        SSA.ssa_analysis[i_it->get_target()].phi_nodes;
+        SSA.ssa_analysis[n_it->loophead->location].phi_nodes;
       
       // Record the objects modified by the loop to get
       // 'primed' (post-state) and 'unprimed' (pre-state) variables.
@@ -313,8 +314,8 @@ void ssa_analyzert::collect_variables(local_SSAt &SSA,
 
 	if(p_it==phi_nodes.end()) continue; // object not modified in this loop
 
-        symbol_exprt in=SSA.name(*o_it, local_SSAt::LOOP_BACK, i_it);
-        symbol_exprt out=SSA.read_rhs(*o_it, i_it);
+        symbol_exprt in=SSA.name(*o_it, local_SSAt::LOOP_BACK, n_it->location);
+        symbol_exprt out=SSA.read_rhs(*o_it, n_it->location);
 
         add_var(in,pre_guard,post_guard,domaint::LOOP,var_specs);
       
@@ -361,16 +362,16 @@ void ssa_analyzert::collect_variables(local_SSAt &SSA,
     for(local_SSAt::nodest::iterator n = SSA.nodes.begin(); 
       n!=SSA.nodes.end(); n++)
     {
-      exprt guard = SSA.guard_symbol(n->first);
+      exprt guard = SSA.guard_symbol(n->location);
       for(local_SSAt::nodet::function_callst::iterator 
-        f_it = n->second.function_calls.begin();
-        f_it != n->second.function_calls.end(); f_it++)
+        f_it = n->function_calls.begin();
+        f_it != n->function_calls.end(); f_it++)
       {
         assert(f_it->function().id()==ID_symbol); //no function pointers
 
         //getting globals at call site
         local_SSAt::var_sett cs_globals_in;
-        SSA.get_globals(n->first,cs_globals_in,false,false); //filter out return values
+        SSA.get_globals(n->location,cs_globals_in,false,false); //filter out return values
 
         for(local_SSAt::var_sett::iterator v_it = cs_globals_in.begin();
 	    v_it != cs_globals_in.end(); v_it++)
@@ -394,7 +395,8 @@ void ssa_analyzert::collect_variables(local_SSAt &SSA,
   else
   {
     // add globals_out (includes return values)
-    exprt last_guard = SSA.guard_symbol(--SSA.goto_function.body.instructions.end());
+    exprt last_guard = 
+      SSA.guard_symbol(--SSA.goto_function.body.instructions.end());
     add_vars(SSA.globals_out,last_guard,last_guard,domaint::OUT,var_specs);
   }
   

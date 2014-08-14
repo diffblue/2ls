@@ -29,7 +29,7 @@ void simplify(local_SSAt &ssa, const namespacet &ns)
       n_it!=ssa.nodes.end();
       n_it++)
   {
-    local_SSAt::nodet &node=n_it->second;
+    local_SSAt::nodet &node=*n_it;
     
     for(local_SSAt::nodet::equalitiest::iterator
         e_it=node.equalities.begin();

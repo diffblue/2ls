@@ -44,8 +44,13 @@ public:
   class nodet
   {
   public:
-    inline nodet() { }
-  
+    inline nodet(
+      locationt _location,
+      std::list<nodet>::iterator _loophead) 
+      : location(_location), 
+        loophead(_loophead)
+      { }
+ 
     typedef std::vector<equal_exprt> equalitiest;
     equalitiest equalities;
 
@@ -57,6 +62,9 @@ public:
     
     typedef std::vector<function_application_exprt> function_callst;
     function_callst function_calls;
+
+    locationt location; //link to goto instruction
+    std::list<nodet>::iterator loophead; //link to loop head node
 
     void output(std::ostream &, const namespacet &) const;
 
@@ -71,7 +79,7 @@ public:
   void assertions_to_constraints();
 
   // all the SSA nodes  
-  typedef std::map<locationt, nodet> nodest;
+  typedef std::list<nodet> nodest;
   nodest nodes;
   
   // function entry and exit variables
@@ -92,7 +100,7 @@ public:
   { return name(guard_symbol(), OUT, guard_map[loc].guard_source); }
   exprt edge_guard(locationt from, locationt to) const;
   
-  nodet::assertionst assertions(locationt loc) const;
+  //  nodet::assertionst assertions(locationt loc) const;
   
   // auxiliary functions
   enum kindt { PHI, OUT, LOOP_BACK, LOOP_SELECT };
@@ -125,6 +133,9 @@ public:
 
   void get_globals(locationt loc, std::set<symbol_exprt> &globals, 
 		   bool with_own_returns=true, bool with_all_returns=true);
+
+  nodest::iterator find_node(locationt loc);
+  nodest::const_iterator find_node(locationt loc) const;
 
 protected:
   // build the SSA formulas

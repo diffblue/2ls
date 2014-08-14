@@ -208,7 +208,7 @@ void summary_checkert::check_properties_non_incremental(
       continue;
   
     const locationt &location=i_it->location;  
-    const local_SSAt::nodet &node = SSA.nodes.at(i_it);
+    const local_SSAt::nodet &node = *SSA.find_node(i_it);
 
     irep_idt property_id = location.get_property_id();
 
@@ -335,7 +335,7 @@ void summary_checkert::check_properties_incremental(
       continue;
   
     const locationt &location=i_it->location;  
-    const local_SSAt::nodet &node = SSA.nodes.at(i_it);
+    const local_SSAt::nodet &node = *SSA.find_node(i_it);
 
     irep_idt property_id = location.get_property_id();
 

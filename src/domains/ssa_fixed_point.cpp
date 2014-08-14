@@ -74,10 +74,6 @@ void ssa_fixed_point(local_SSAt &SSA)
   // Add fixed-point as constraints back into SSA.
   // We simply use the last CFG node. It would be prettier to put
   // these close to the loops.
-  goto_programt::const_targett loc=
-    SSA.goto_function.body.instructions.end();
-  loc--;
-  local_SSAt::nodet &node=SSA.nodes[loc];
-    
-  fixed_point.state_predicate.get_constraints(node.constraints);
+  assert(SSA.nodes.begin()!=SSA.nodes.end());
+  fixed_point.state_predicate.get_constraints(SSA.nodes.back().constraints);
 }

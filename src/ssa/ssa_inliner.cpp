@@ -25,16 +25,15 @@ Function: ssa_inlinert::replace
 
 \*******************************************************************/
 
-
 void ssa_inlinert::replace(local_SSAt &SSA,
 	     const summary_dbt &summary_db)
 {
-  for(local_SSAt::nodest::iterator n = SSA.nodes.begin(); 
-      n!=SSA.nodes.end(); n++)
+  for(local_SSAt::nodest::iterator n_it = SSA.nodes.begin(); 
+      n_it != SSA.nodes.end(); n_it++)
   {
     for(local_SSAt::nodet::function_callst::iterator 
-        f_it = n->second.function_calls.begin();
-        f_it != n->second.function_calls.end(); f_it++)
+        f_it = n_it->function_calls.begin();
+        f_it != n_it->function_calls.end(); f_it++)
     {
       assert(f_it->function().id()==ID_symbol); //no function pointers
       irep_idt fname = to_symbol_expr(f_it->function()).get_identifier();
@@ -47,21 +46,21 @@ void ssa_inlinert::replace(local_SSAt &SSA,
 
 	//getting globals at call site
 	local_SSAt::var_sett cs_globals_in, cs_globals_out; 
-	goto_programt::const_targett loc = n->first;
+	goto_programt::const_targett loc = n_it->location;
 	SSA.get_globals(loc,cs_globals_in);
 	assert(loc!=SSA.goto_function.body.instructions.end());
 	SSA.get_globals(++loc,cs_globals_out);
 
         //replace
-        replace(SSA.nodes,n,f_it,cs_globals_in,cs_globals_out,summary);
+        replace(SSA.nodes,n_it,f_it,cs_globals_in,cs_globals_out,summary);
 
         //remove function_call
         rm_function_calls.insert(f_it);
       }
       else debug() << "No summary available for function " << fname << eom;
-      commit_node(n);
+      commit_node(n_it);
     }
-    commit_nodes(SSA.nodes);
+    commit_nodes(SSA.nodes,n_it);
   }
 }
 
@@ -83,12 +82,12 @@ void ssa_inlinert::replace(local_SSAt &SSA,
                const ssa_dbt &ssa_db, 
 	       bool recursive, bool rename)
 {
-  for(local_SSAt::nodest::iterator n = SSA.nodes.begin(); 
-      n!=SSA.nodes.end(); n++)
+  for(local_SSAt::nodest::iterator n_it = SSA.nodes.begin(); 
+      n_it != SSA.nodes.end(); n_it++)
   {
     for(local_SSAt::nodet::function_callst::iterator 
-        f_it = n->second.function_calls.begin();
-        f_it != n->second.function_calls.end(); f_it++)
+        f_it = n_it->function_calls.begin();
+        f_it != n_it->function_calls.end(); f_it++)
     {
       assert(f_it->function().id()==ID_symbol); //no function pointers
       irep_idt fname = to_symbol_expr(f_it->function()).get_identifier();
@@ -102,7 +101,7 @@ void ssa_inlinert::replace(local_SSAt &SSA,
         {
 	  //getting globals at call site
 	  local_SSAt::var_sett cs_globals_in, cs_globals_out; 
-	  goto_programt::const_targett loc = n->first;
+	  goto_programt::const_targett loc = n_it->location;
 	  SSA.get_globals(loc,cs_globals_in);
 	  assert(loc!=SSA.goto_function.body.instructions.end());
 	  SSA.get_globals(++loc,cs_globals_out);
@@ -113,24 +112,24 @@ void ssa_inlinert::replace(local_SSAt &SSA,
 	  }
 
 	  //replace
-	  replace(SSA.nodes,n,f_it,cs_globals_in,cs_globals_out,fSSA);
+	  replace(SSA.nodes,n_it,f_it,cs_globals_in,cs_globals_out,fSSA);
         }
         else // just add to nodes
 	{
-	  for(local_SSAt::nodest::const_iterator n_it = fSSA.nodes.begin();
-	      n_it != fSSA.nodes.end(); n_it++)
+          for(local_SSAt::nodest::const_iterator fn_it = fSSA.nodes.begin();
+	      fn_it != fSSA.nodes.end(); fn_it++)
 	  {
-            debug() << "new node: "; n_it->second.output(debug(),fSSA.ns); 
+            debug() << "new node: "; fn_it->output(debug(),fSSA.ns); 
             debug() << eom;
 
-	    merge_into_nodes(new_nodes,n_it->first,n_it->second);
+            new_nodes.push_back(*fn_it);
 	  }
 	}
       }
       else debug() << "No body available for function " << fname << eom;
-      commit_node(n);
+      commit_node(n_it);
     }
-    commit_nodes(SSA.nodes);
+    commit_nodes(SSA.nodes,n_it);
   }
 }
 
@@ -162,8 +161,8 @@ void ssa_inlinert::replace(local_SSAt::nodest &nodes,
   replace_globals_in(summary.globals_in,cs_globals_in);
 
   //constraints for transformer
-  node->second.constraints.push_back(summary.transformer);  //copy
-  exprt &transformer = node->second.constraints.back();
+  node->constraints.push_back(summary.transformer);  //copy
+  exprt &transformer = node->constraints.back();
   rename(transformer);
   
   //remove function call
@@ -208,9 +207,9 @@ void ssa_inlinert::replace(local_SSAt::nodest &nodes,
   for(local_SSAt::nodest::const_iterator n_it = function.nodes.begin();
       n_it != function.nodes.end(); n_it++)
   {
-    local_SSAt::nodet n = n_it->second;  //copy
+    local_SSAt::nodet n = *n_it;  //copy
     rename(n);
-    merge_into_nodes(new_nodes,n_it->first,n);
+    new_nodes.push_back(n);
   }
  
   //remove function call
@@ -244,11 +243,13 @@ void ssa_inlinert::replace_globals_in(const local_SSAt::var_sett &globals_in,
     symbol_exprt rhs;
     if(find_corresponding_symbol(*it,globals,rhs))
     {
-      debug() << "binding: " << lhs.get_identifier() << " == " << rhs.get_identifier() << eom;
+      debug() << "binding: " << lhs.get_identifier() << " == " 
+              << rhs.get_identifier() << eom;
       new_equs.push_back(equal_exprt(lhs,rhs));
     }
     else
-      warning() << "'" << it->get_identifier() << "' not bound in caller" << eom;
+      warning() << "'" << it->get_identifier() 
+                << "' not bound in caller" << eom;
   }
 }
 
@@ -405,11 +406,12 @@ Function: ssa_inlinert::rename_to_caller
 
 \*******************************************************************/
 
-void ssa_inlinert::rename_to_caller(local_SSAt::nodet::function_callst::iterator f_it, 
-				    const local_SSAt::var_listt &params, 
-				    const local_SSAt::var_sett &cs_globals_in, 
-				    const local_SSAt::var_sett &globals_in, 
-				    exprt &expr)
+void ssa_inlinert::rename_to_caller(
+  local_SSAt::nodet::function_callst::iterator f_it, 
+  const local_SSAt::var_listt &params, 
+  const local_SSAt::var_sett &cs_globals_in, 
+  const local_SSAt::var_sett &globals_in, 
+  exprt &expr)
 {
   replace_mapt replace_map;
 
@@ -429,9 +431,11 @@ void ssa_inlinert::rename_to_caller(local_SSAt::nodet::function_callst::iterator
       replace_map[*it] = cg;
     else 
     {
-      warning() << "'" << it->get_identifier() << "' not bound in caller" << eom;
+      warning() << "'" << it->get_identifier() 
+                << "' not bound in caller" << eom;
       replace_map[*it] = 
-        symbol_exprt(id2string(it->get_identifier())+"@"+i2string(++counter),it->type());
+        symbol_exprt(id2string(it->get_identifier())+
+        "@"+i2string(++counter),it->type());
     }
   }
 
@@ -450,11 +454,12 @@ Function: ssa_inlinert::rename_to_callee
 
 \*******************************************************************/
 
-void ssa_inlinert::rename_to_callee(local_SSAt::nodet::function_callst::iterator f_it, 
-				    const local_SSAt::var_listt &params, 
-				    const local_SSAt::var_sett &cs_globals_in, 
-				    const local_SSAt::var_sett &globals_in, 
-				    exprt &expr)
+void ssa_inlinert::rename_to_callee(
+  local_SSAt::nodet::function_callst::iterator f_it, 
+  const local_SSAt::var_listt &params, 
+  const local_SSAt::var_sett &cs_globals_in, 
+  const local_SSAt::var_sett &globals_in, 
+  exprt &expr)
 {
   replace_mapt replace_map;
 
@@ -474,9 +479,11 @@ void ssa_inlinert::rename_to_callee(local_SSAt::nodet::function_callst::iterator
       replace_map[*it] = cg;
     else
     {
-      warning() << "'" << it->get_identifier() << "' not bound in caller" << eom;
+      warning() << "'" << it->get_identifier() 
+                << "' not bound in caller" << eom;
       replace_map[*it] =
-        symbol_exprt(id2string(it->get_identifier())+"@"+i2string(++counter),it->type());
+        symbol_exprt(id2string(it->get_identifier())+
+        "@"+i2string(++counter),it->type());
     }
   }
 
@@ -505,12 +512,12 @@ void ssa_inlinert::commit_node(local_SSAt::nodest::iterator node)
       it = rm_function_calls.begin();
       it != rm_function_calls.end(); it++) 
   {
-    node->second.function_calls.erase(*it);
+    node->function_calls.erase(*it);
   }
   rm_function_calls.clear();
 
   //insert new equalities
-  node->second.equalities.insert(node->second.equalities.end(),
+  node->equalities.insert(node->equalities.end(),
     new_equs.begin(),new_equs.end());
   new_equs.clear();
 }
@@ -523,72 +530,16 @@ Function: ssa_inlinert::commit_nodes()
 
  Outputs:
 
- Purpose:
+ Purpose: returns true if no nodes were to be committed
 
 \*******************************************************************/
 
-void ssa_inlinert::commit_nodes(local_SSAt::nodest &nodes)
+bool ssa_inlinert::commit_nodes(local_SSAt::nodest &nodes,
+                                 local_SSAt::nodest::iterator n_pos)
 {
-  //insert new nodes
-  for(local_SSAt::nodest::const_iterator n_it = new_nodes.begin();
-      n_it != new_nodes.end(); n_it++)
-  {
-    merge_into_nodes(nodes,n_it->first,n_it->second);
-  }
-  new_nodes.clear();
-}
-
-/*******************************************************************\
-
-Function: ssa_inlinert::merge_node()
-
-  Inputs:
-
- Outputs:
-
- Purpose: merges equalities and constraints of two nodes into the first one
-
-\*******************************************************************/
-
-void ssa_inlinert::merge_into_nodes(local_SSAt::nodest &nodes, 
-  const local_SSAt::locationt &loc, const local_SSAt::nodet &new_n)
-{
-  local_SSAt::nodest::iterator it = nodes.find(loc);
-  if(it==nodes.end()) //insert
-  {
-    debug() << "insert new node" << eom;
-
-    nodes[loc] = new_n;
-  }
-  else //merge nodes
-  {
-    debug() << "merge node " << eom;
-
-    for(local_SSAt::nodet::equalitiest::const_iterator 
-        e_it = new_n.equalities.begin();
-	e_it != new_n.equalities.end(); e_it++)
-    {
-      it->second.equalities.push_back(*e_it);
-    }
-    for(local_SSAt::nodet::constraintst::const_iterator 
-        c_it = new_n.constraints.begin();
-	c_it != new_n.constraints.end(); c_it++)
-    {
-      it->second.constraints.push_back(*c_it);
-    }  
-    for(local_SSAt::nodet::assertionst::const_iterator 
-        a_it = new_n.assertions.begin();
-	a_it != new_n.assertions.end(); a_it++)
-    {
-      it->second.assertions.push_back(*a_it);
-    }  
-    for(local_SSAt::nodet::function_callst::const_iterator 
-        f_it = new_n.function_calls.begin();
-	f_it != new_n.function_calls.end(); f_it++)
-    {
-      it->second.function_calls.push_back(*f_it);
-    }  
-  }
+  if(new_nodes.empty()) return true;
+  nodes.splice(n_pos,new_nodes,new_nodes.begin(),new_nodes.end());
+  return false;
 }
 
 /*******************************************************************\

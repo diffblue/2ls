@@ -20,18 +20,13 @@ class ssa_unwindert : public messaget
 
   void unwind(local_SSAt &SSA, unsigned unwind);
 
-
  protected:
-  void commit_nodes(local_SSAt::nodest &nodes);
+  void commit_nodes(local_SSAt::nodest &nodes,
+                    local_SSAt::nodest::iterator n_pos);
   local_SSAt::nodest new_nodes;
 
   void rename(exprt &expr, unsigned index);
   void rename(local_SSAt::nodet &node, unsigned index);
-
- private:
-  void merge_into_nodes(local_SSAt::nodest &nodes, 
-			const local_SSAt::locationt &loc, 
-                        const local_SSAt::nodet &new_n);
 
 };
 
