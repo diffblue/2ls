@@ -1,8 +1,7 @@
 SUMMARIZER=../../../src/summarizer/summarizer
 #CHECKS="--div-by-zero-check --signed-overflow-check --array-abstraction"
 CHECKS="--div-by-zero-check --signed-overflow-check --bounds-check --pointer-check"
-SETS="bitvector bitvector-regression ldv-regression"
-# ssh ssh-simplified" 
+SETS="bitvector bitvector-regression ldv-regression ssh ssh-simplified"
 
 TIMEOUT=1800
 
