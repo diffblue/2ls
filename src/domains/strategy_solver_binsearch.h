@@ -1,0 +1,23 @@
+#ifndef CPROVER_STRATEGY_SOLVER_BINSEARCH_H 
+#define CPROVER_STRATEGY_SOLVER_BINSEARCH_H 
+
+#include "strategy_solver_base.h"
+#include "template_domain.h"
+
+class strategy_solver_binsearcht : public strategy_solver_baset 
+{
+ public:
+  explicit strategy_solver_binsearcht(const constraintst &program,
+    template_domaint &_template_domain,
+    bv_pointerst &_solver, const namespacet &_ns) : 
+  strategy_solver_baset(program, _solver, _ns),
+  template_domain(_template_domain) {}
+
+  virtual bool iterate(invariantt &inv);
+
+ protected:
+  template_domaint &template_domain;
+
+};
+
+#endif
