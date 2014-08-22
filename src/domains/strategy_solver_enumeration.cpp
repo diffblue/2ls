@@ -31,9 +31,6 @@ bool strategy_solver_enumerationt::iterate(invariantt &_inv)
   template_domain.make_not_post_constraints(inv, 
     strategy_cond_exprs, strategy_value_exprs); 
   
-  rename(strategy_cond_exprs);
-  rename(strategy_value_exprs);
-  
   strategy_cond_literals.resize(strategy_cond_exprs.size());
   
   debug() << "post-inv: ";

@@ -176,8 +176,10 @@ exprt template_domaint::get_row_post_constraint(const rowt &row,
     return implies_exprt(templ_row.post_guard, false_exprt());
   if(is_row_value_inf(row_value)) 
     return implies_exprt(templ_row.post_guard, true_exprt());
-  return implies_exprt(templ_row.post_guard, 
+  exprt c = implies_exprt(templ_row.post_guard, 
     binary_relation_exprt(templ_row.expr,ID_le,row_value));
+  rename(c);
+  return c;
 }
 
 exprt template_domaint::get_row_post_constraint(const rowt &row, 
@@ -235,6 +237,7 @@ void template_domaint::make_not_post_constraints(const templ_valuet &value,
   for(unsigned row = 0; row<templ.size(); row++)
   {
     value_exprs[row] = templ[row].expr;
+    rename(value_exprs[row]);
     cond_exprs[row] = not_exprt(get_row_post_constraint(row,value));
   }
 }
@@ -296,8 +299,10 @@ exprt template_domaint::get_row_symb_post_constraint(const rowt &row)
   assert(row<templ.size());
   const template_rowt &templ_row = templ[row];
   if(templ_row.kind==IN) return true_exprt();
-  return and_exprt(templ_row.post_guard,
+  exprt c = and_exprt(templ_row.post_guard,
     binary_relation_exprt(templ_row.expr,ID_ge,get_row_symb_value(row)));
+  rename(c);
+  return c;
 }
 
 
@@ -390,7 +395,9 @@ exprt template_domaint::get_row_symb_value_constraint(const rowt &row,
 {
   if(is_row_value_neginf(row_value)) return false_exprt();
   if(is_row_value_inf(row_value)) return true_exprt();
-  return binary_relation_exprt(row_value,ID_le,get_row_symb_value(row));
+  exprt c = binary_relation_exprt(row_value,ID_le,get_row_symb_value(row));
+  rename(c);
+  return c;
 }
 
 

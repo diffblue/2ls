@@ -54,7 +54,9 @@ exprt equality_domaint::get_post_not_equ_constraint(unsigned index)
   const template_rowt &templ_row = templ[index];
   if(templ_row.kind==IN) return true_exprt();
   const var_pairt &vv = templ_row.var_pair;
-  return not_exprt(implies_exprt(templ_row.post_guard,equal_exprt(vv.first,vv.second)));
+  exprt c = not_exprt(implies_exprt(templ_row.post_guard,equal_exprt(vv.first,vv.second)));
+  rename(c);
+  return c;
 }
 
 exprt equality_domaint::get_pre_disequ_constraint(unsigned index)
@@ -72,7 +74,9 @@ exprt equality_domaint::get_post_not_disequ_constraint(unsigned index)
   const template_rowt &templ_row = templ[index];
   if(templ_row.kind==IN) return true_exprt();
   const var_pairt &vv = templ_row.var_pair;
-  return not_exprt(implies_exprt(templ_row.post_guard,notequal_exprt(vv.first,vv.second)));
+  exprt c = not_exprt(implies_exprt(templ_row.post_guard,notequal_exprt(vv.first,vv.second)));
+  rename(c);
+  return c;
 }
 
 

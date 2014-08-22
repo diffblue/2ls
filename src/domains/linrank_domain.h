@@ -29,8 +29,10 @@ public:
 
   typedef std::vector<template_rowt> templatet;
 
-  template_domaint(templatet &_template) :
-   templ(_template) 
+  template_domaint(replace_mapt &_renaming_map, 
+                   templatet &_template) :
+    domaint(_renaming_map),
+    templ(_template) 
   {}
 
   // initialize value

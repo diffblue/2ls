@@ -6,11 +6,12 @@
 
 #include <util/std_expr.h>
 #include <langapi/language_util.h>
+#include <util/replace_expr.h>
 
 class domaint
 {
 public:
-
+  domaint(replace_mapt &_renaming_map) : renaming_map(_renaming_map) {}
   virtual ~domaint() {}
 
   typedef exprt vart;
@@ -59,6 +60,15 @@ public:
   static void output_var_specs(std::ostream &out, const var_specst &var_specs,
 			       const namespacet &ns);
 
+ protected:
+  replace_mapt &renaming_map;
+  
+  inline void rename(exprt &expr) { replace_expr(renaming_map, expr); }
+  inline void rename(exprt::operandst &operands)
+  {
+    for(unsigned i=0; i<operands.size(); ++i)
+      replace_expr(renaming_map, operands[i]);
+  }
 
 };
 

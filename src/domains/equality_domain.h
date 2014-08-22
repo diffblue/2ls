@@ -15,9 +15,10 @@ class equality_domaint : public domaint
   typedef std::set<var_pairt> var_pairst;
   typedef std::set<unsigned> index_sett;
 
-  equality_domaint(
+  equality_domaint(replace_mapt &_renaming_map, 
     const var_specst &var_specs,
     const namespacet &ns) 
+    : domaint(_renaming_map)
   {
     make_template(var_specs,ns);
   }

@@ -39,9 +39,6 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
   template_domain.make_not_post_constraints(inv, 
     strategy_cond_exprs, strategy_value_exprs); 
   
-  rename(strategy_cond_exprs);
-  rename(strategy_value_exprs);
-  
   strategy_cond_literals.resize(strategy_cond_exprs.size());
   
 #if 0
@@ -157,7 +154,6 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 #endif
 
     exprt post_inv_expr = template_domain.get_row_symb_post_constraint(row);
-    rename(post_inv_expr);
 
 #ifndef DEBUG_FORMULA
     solver << or_exprt(post_inv_expr, literal_exprt(activation_literal1));
@@ -193,8 +189,6 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
       debug() << "middle: " << from_expr(ns,"",middle) << eom;
       debug() << "lower: " << from_expr(ns,"",lower) << eom;
 #endif
-      
-      rename(c);
 
       literalt activation_literal2 = new_context(); // binary search iteration
 

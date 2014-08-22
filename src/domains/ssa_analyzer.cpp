@@ -115,9 +115,9 @@ void ssa_analyzert::operator()(local_SSAt &SSA, const exprt &precondition)
   if(options.get_bool_option("equalities") && !is_initialize)
   {
     domaint::var_specst new_var_specs = filter_equality_domain(var_specs);
-    domain = new equality_domaint(new_var_specs, ns);
+    domain = new equality_domaint(renaming_map, new_var_specs, ns);
     strategy_solver = new strategy_solver_equalityt(
-        transition_relation, renaming_map,
+        transition_relation, 
         *static_cast<equality_domaint *>(domain), solver, ns);    
     inv = new equality_domaint::equ_valuet();
   }
@@ -126,16 +126,16 @@ void ssa_analyzert::operator()(local_SSAt &SSA, const exprt &precondition)
     inv = new template_domaint::templ_valuet();
     if(options.get_bool_option("enum-solver") || is_initialize)
     {
-      domain = new template_domaint(templ);
+      domain = new template_domaint(renaming_map,templ);
       strategy_solver = new strategy_solver_enumerationt(
-        transition_relation, renaming_map,
+        transition_relation, 
         *static_cast<template_domaint *>(domain), solver, ns);
     }
     else if(options.get_bool_option("binsearch-solver"))
     {
-      domain = new template_domaint(templ);
+      domain = new template_domaint(renaming_map,templ);
       strategy_solver = new strategy_solver_binsearcht(
-        transition_relation, renaming_map,
+        transition_relation, 
         *static_cast<template_domaint *>(domain), solver, ns);
     }
     else assert(false);

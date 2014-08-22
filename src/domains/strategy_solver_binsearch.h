@@ -8,10 +8,9 @@ class strategy_solver_binsearcht : public strategy_solver_baset
 {
  public:
   explicit strategy_solver_binsearcht(const constraintst &program,
-    replace_mapt &_renaming_map,
     template_domaint &_template_domain,
     bv_pointerst &_solver, const namespacet &_ns) : 
-  strategy_solver_baset(program, _renaming_map, _solver, _ns),
+  strategy_solver_baset(program, _solver, _ns),
   template_domain(_template_domain) {}
 
   virtual bool iterate(invariantt &inv);

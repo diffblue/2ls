@@ -4,7 +4,6 @@
 #include <map>
 #include <iostream>
 
-#include <util/replace_expr.h>
 #include <solvers/flattening/bv_pointers.h>
 
 #include "domain.h"
@@ -21,10 +20,8 @@ class strategy_solver_baset : public messaget
 
   explicit strategy_solver_baset(
     const constraintst &program,
-    replace_mapt &_renaming_map,
     bv_pointerst &_solver, 
     const namespacet &_ns) :
-    renaming_map(_renaming_map),
     solver(_solver), 
     ns(_ns),
     activation_literal_counter(0),
@@ -57,15 +54,6 @@ class strategy_solver_baset : public messaget
   unsigned get_number_of_solver_calls() { return solver_calls; }
 
  protected: 
-  replace_mapt &renaming_map;
-  
-  inline void rename(exprt &expr) { replace_expr(renaming_map, expr); }
-  inline void rename(exprt::operandst &operands)
-  {
-    for(unsigned i=0; i<operands.size(); ++i)
-      replace_expr(renaming_map, operands[i]);
-  }
-
   bv_pointerst &solver;
 
   inline decision_proceduret::resultt solve() {
