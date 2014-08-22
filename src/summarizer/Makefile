@@ -48,8 +48,6 @@ DELTA_OBJ+=\
       ../domains/strategy_solver_binsearch$(OBJEXT) \
       ../domains/ssa_analyzer$(OBJEXT) \
       ../domains/predicate$(OBJEXT)
-#      ../domains/ranking_solver_enumeration$(OBJEXT) \
-#      ../domains/linrank_domain$(OBJEXT)
 
 OBJ+=$(DELTA_OBJ)
 
