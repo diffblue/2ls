@@ -42,6 +42,7 @@ class optionst;
   "(round-to-nearest)(round-to-plus-inf)(round-to-minus-inf)(round-to-zero)" \
   "(inline)(inline-main)(inline-partial):" \
   "(context-sensitive)" \
+  "(preconditions)(sufficient)" \
   "(show-locs)(show-vcc)(show-properties)(show-trace)(show-fixed-points)(show-stats)" \
   "(show-goto-functions)(show-guards)(show-defs)(show-ssa)(show-assignments)" \
   "(property):(all-properties)" \

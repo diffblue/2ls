@@ -27,11 +27,11 @@ class summaryt
   //void from_fixedpoint(class ssa_fixed_pointt &);
   
   // a summary has two parts:
-  // 1) precondition (a predicate over entry_vars)
+  // 1) precondition (a predicate over entry_vars (and exit_vars))
   // 2) transformer (a predicate over entry_vars and exit_vars)
   
-  predicatet precondition;
-  predicatet transformer;
+  predicatet precondition; //let's call it the caller-based summary
+  predicatet transformer; // this is the callee-based summary
 
   void output(std::ostream &out, const namespacet &ns) const;
 

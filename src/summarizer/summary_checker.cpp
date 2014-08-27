@@ -43,13 +43,23 @@ property_checkert::resultt summary_checkert::operator()(
   const goto_modelt &goto_model)
 {
   const namespacet ns(goto_model.symbol_table);
+  bool preconditions = options.get_bool_option("preconditions");
 
   SSA_functions(goto_model,ns);
   //loop
   //  refine domain
   //  loop from 0 to k do
   //    unwind k
-  if(!options.get_bool_option("havoc")) summarize(goto_model);
+
+  if(!options.get_bool_option("havoc")) 
+    summarize(goto_model,!preconditions,options.get_bool_option("sufficient"));
+
+  if(preconditions) 
+  {
+    report_preconditions();
+    return property_checkert::UNKNOWN;
+  }
+
   property_checkert::resultt result =  check_properties(); 
   report_statistics();
   return result;
@@ -127,15 +137,17 @@ Function: summary_checkert::summarize
 
 \*******************************************************************/
 
-void summary_checkert::summarize(const goto_modelt &goto_model)
+void summary_checkert::summarize(const goto_modelt &goto_model, 
+				 bool backward, bool sufficient)
 {    
   summarizer.set_message_handler(get_message_handler());
 
   if(options.get_bool_option("context-sensitive"))
     summarizer.summarize(ssa_db.functions(),
-			 goto_model.goto_functions.entry_point());
+			 goto_model.goto_functions.entry_point(),
+                         backward,sufficient);
   else
-    summarizer.summarize(ssa_db.functions());
+    summarizer.summarize(ssa_db.functions(),backward,sufficient);
 
   //statistics
   solver_instances += summarizer.get_number_of_solver_instances();
@@ -456,3 +468,30 @@ void summary_checkert::do_show_vcc(
   std::cout << "\n";
 }
 
+/*******************************************************************\
+
+Function: summary_checkert::report_preconditions
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void summary_checkert::report_preconditions()
+{
+  bool sufficient = options.get_bool_option("sufficient");
+  result() << eom;
+  result() << "** Preconditions: " << eom;
+  summarizert::functionst &functions = ssa_db.functions();
+  for(summarizert::functionst::iterator it = functions.begin();
+      it != functions.end(); it++)
+  {
+    exprt precondition = summary_db.get(it->first).precondition;
+    if(sufficient) precondition = not_exprt(precondition);
+    result() << eom << "[" << it->first << "]: " 
+	     << from_expr(it->second->ns, "", precondition) << eom;
+  }
+}

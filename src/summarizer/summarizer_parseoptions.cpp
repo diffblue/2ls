@@ -195,6 +195,13 @@ void summarizer_parseoptionst::get_command_line_options(optionst &options)
   else
     options.set_option("incremental", true);
 
+  // compute preconditions
+  if(cmdline.isset("preconditions"))
+    options.set_option("preconditions", true);
+
+  // compute necessary/sufficient preconditions
+  if(cmdline.isset("sufficient"))
+    options.set_option("sufficient", true);
 }
 
 /*******************************************************************\
@@ -394,6 +401,7 @@ int summarizer_parseoptionst::doit()
       return 10;
     
     default:
+      if(options.get_bool_option("preconditions")) return 0;
       return 8;
     }
   }
@@ -1208,6 +1216,8 @@ void summarizer_parseoptionst::help()
     " --inline-partial nr          inline functions smaller than the given nr of instructions\n"
     "\n"
     "Backend options:\n"
+    " --preconditions              compute preconditions\n"
+    " --sufficient                 sufficient preconditions (default: necessary)\n"
     " --context-sensitive          context-sensitive analysis from entry point\n"
     " --havoc                      havoc loops and function calls\n"
     " --intervals                  use interval domain\n"

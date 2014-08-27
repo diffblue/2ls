@@ -79,6 +79,7 @@ public:
   virtual void output_domain(std::ostream &out, const namespacet &ns) const;
 
   // projection  
+  virtual void project_on_out(const valuet &value, exprt &result);
   virtual void project_on_loops(const valuet &value, exprt &result);
   virtual void project_on_inout(const valuet &value, exprt &result);
   virtual void project_on_vars(const valuet &value, const var_sett &vars, exprt &result);
@@ -102,7 +103,11 @@ protected:
   friend class strategy_solver_binsearcht;
 
   templatet &templ;
-
+ 
+  void project_row_on_kind(const templ_valuet &value, 
+                           rowt row,
+			   kindt kind,
+			   exprt::operandst &c);
   
 };
 

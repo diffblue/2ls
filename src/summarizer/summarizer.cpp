@@ -25,7 +25,7 @@ Author: Peter Schrammel
 
 /*******************************************************************\
 
-Function: summarizert::summarize()
+Function: summarizert::initialize_preconditions()
 
   Inputs:
 
@@ -35,15 +35,35 @@ Function: summarizert::summarize()
 
 \*******************************************************************/
 
-summaryt summarizert::summarize(functiont &function, 
-				const preconditiont &precondition)
+void summarizert::initialize_preconditions(functionst &_functions, 
+					   bool forward, 
+					   bool sufficient)
 {
-  functions.clear();
   preconditions.clear();
-  functions[function.first] = function.second;
-  preconditions[function.first] = precondition; 
-  run();
-  return summary_db.get(function.first);
+  for(functionst::const_iterator it = _functions.begin(); 
+      it!=_functions.end(); it++)
+  {
+    if(forward) preconditions[it->first] = true_exprt();
+    else
+    {
+      local_SSAt &SSA = *it->second; 
+      exprt::operandst c;
+      for(local_SSAt::nodest::iterator n_it = SSA.nodes.begin();
+	  n_it != SSA.nodes.end(); n_it++)
+	{
+	  if(n_it->assertions.empty()) continue;
+
+	  for(local_SSAt::nodet::assertionst::iterator 
+		a_it = n_it->assertions.begin();
+	      a_it != n_it->assertions.end(); a_it++)
+	    {
+	      if(sufficient) c.push_back(not_exprt(*a_it));
+              else c.push_back(*a_it);
+	    }
+	}
+      preconditions[it->first] = conjunction(c);
+    }
+  }
 }
 
 /*******************************************************************\
@@ -58,32 +78,20 @@ Function: summarizert::summarize()
 
 \*******************************************************************/
 
-summaryt summarizert::summarize(functiont &function)
-{ 
-  return summarize(function,true_exprt()); 
-} 
-
-/*******************************************************************\
-
-Function: summarizert::summarize()
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void summarizert::summarize(functionst &_functions)
+void summarizert::summarize(functionst &_functions, bool forward, 
+			    bool sufficient)
 {
-  preconditionst _preconditions;
-  for(functionst::const_iterator it = _functions.begin(); 
-      it!=_functions.end(); it++)
+  initialize_preconditions(_functions,forward,sufficient);
+  functions = _functions;
+  for(functionst::const_iterator it = functions.begin(); 
+      it!=functions.end(); it++)
   {
-    _preconditions[it->first] = true_exprt();
+    status() << "\nSummarizing function " << it->first << eom;
+    if(!summary_db.exists(it->first)) 
+      compute_summary_rec(it->first,false,forward,sufficient);
+    else status() << "Summary for function " << it->first << 
+           " exists already" << eom;
   }
-  summarize(_functions,_preconditions);
 }
 
 /*******************************************************************\
@@ -99,21 +107,16 @@ Function: summarizert::summarize()
 \*******************************************************************/
 
 void summarizert::summarize(functionst &_functions, 
-			    const function_namet &function_name)
+			    const function_namet &function_name,
+                            bool forward, bool sufficient)
 {
+  initialize_preconditions(_functions,forward,sufficient);
   functions = _functions;
-
-  preconditions.clear();
-  for(functionst::const_iterator it = _functions.begin(); 
-      it!=_functions.end(); it++)
-  {
-    preconditions[it->first] = true_exprt();
-  }
 
   status() << "\nSummarizing function " << function_name << eom;
   if(!summary_db.exists(function_name)) 
   {
-    compute_summary_rec(function_name,true);
+    compute_summary_rec(function_name,true,forward,sufficient);
   }
   else status() << "Summary for function " << function_name << 
 	 " exists already" << eom;
@@ -124,50 +127,6 @@ void summarizert::summarize(functionst &_functions,
   {
     if(it->second->nodes.empty()) continue;
     it->second->nodes.front().constraints.push_back(preconditions[it->first]);
-  }
-}
-
-/*******************************************************************\
-
-Function: summarizert::summarize()
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void summarizert::summarize(functionst &_functions,
-			    const preconditionst &_preconditions)
-{
-  functions = _functions;
-  preconditions = _preconditions;
-  run();
-}
-
-/*******************************************************************\
-
-Function: summarizert::run()
-
-  Inputs:
-
- Outputs:
-
- Purpose: just summarize each function in functions
-
-\*******************************************************************/
-
-void summarizert::run()
-{
-  for(functionst::const_iterator it = functions.begin(); 
-      it!=functions.end(); it++)
-  {
-    status() << "\nSummarizing function " << it->first << eom;
-    if(!summary_db.exists(it->first)) compute_summary_rec(it->first);
-    else status() << "Summary for function " << it->first << 
-           " exists already" << eom;
   }
 }
 
@@ -184,12 +143,14 @@ Function: summarizert::compute_summary_rec()
 \*******************************************************************/
 
 void summarizert::compute_summary_rec(const function_namet &function_name,
-				      bool context_sensitive)
+				      bool context_sensitive,
+				      bool forward,
+				      bool sufficient)
 {
   local_SSAt &SSA = *functions[function_name]; 
 
   // recursively compute summaries for function calls
-  inline_summaries(function_name,SSA,context_sensitive); 
+  inline_summaries(function_name,SSA,context_sensitive,forward,sufficient); 
 
   status() << "Analyzing function "  << function_name << eom;
 
@@ -209,19 +170,24 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
   ssa_analyzert analyzer(SSA.ns, options);
   analyzer.set_message_handler(get_message_handler());
 
-  analyzer(SSA,preconditions[function_name]);
+  analyzer(SSA,preconditions[function_name],forward);
 
   // create summary
   summaryt summary;
   summary.params = SSA.params;
   summary.globals_in = SSA.globals_in;
   summary.globals_out = SSA.globals_out;
-  summary.precondition = preconditions.at(function_name);
+  if(forward) summary.precondition = preconditions.at(function_name);
+  else analyzer.get_postcondition(summary.precondition);
   analyzer.get_summary(summary.transformer);
 #ifdef PRECISE_JOIN
   summary.transformer = implies_exprt(summary.precondition,summary.transformer);
 #endif
   simplify_expr(summary.transformer, SSA.ns);
+
+#if 0 
+  simplify_expr(summary.precondition, SSA.ns); //does not help
+#endif 
 
   {
     std::ostringstream out;
@@ -267,7 +233,8 @@ Function: summarizert::inline_summaries()
 \*******************************************************************/
 
 void summarizert::inline_summaries(const function_namet &function_name, 
-				   local_SSAt &SSA, bool context_sensitive)
+				   local_SSAt &SSA, bool context_sensitive,
+				   bool forward, bool sufficient)
 {
   ssa_inlinert inliner;
   inliner.set_message_handler(get_message_handler());
@@ -297,12 +264,12 @@ void summarizert::inline_summaries(const function_namet &function_name,
     if(!check_precondition(function_name,n_it,f_it,SSA,inliner))
     {
       if(context_sensitive) 
-        compute_precondition(function_name,n_it,f_it,SSA,inliner);
+        compute_precondition(function_name,n_it,f_it,SSA,inliner,forward);
 
       irep_idt fname = to_symbol_expr(f_it->function()).get_identifier();
       status() << "Recursively summarizing function " << fname << eom;
 
-      compute_summary_rec(fname,context_sensitive);
+      compute_summary_rec(fname,context_sensitive,forward,sufficient);
       summaryt summary = summary_db.get(fname);
 
       status() << "Replacing function " << fname << eom;
@@ -325,6 +292,7 @@ void summarizert::inline_summaries(const function_namet &function_name,
 }
 
 
+  //obsolete
 /*******************************************************************\
 
 Function: summarizert::inline_summaries()
@@ -336,7 +304,7 @@ Function: summarizert::inline_summaries()
  Purpose:
 
 \*******************************************************************/
-
+/*
 void summarizert::inline_summaries(const function_namet &function_name, 
 				   local_SSAt &SSA, bool recursive, 
 				   bool always_recompute)
@@ -413,6 +381,7 @@ void summarizert::inline_summaries(const function_namet &function_name,
   }
   assert(inliner.commit_nodes(SSA.nodes,SSA.nodes.end()));
 }
+*/
 
 /*******************************************************************\
 
@@ -585,7 +554,7 @@ Function: summarizert::check_preconditions()
  Purpose:
 
 \******************************************************************/
-
+/*
 void summarizert::check_preconditions(
   const function_namet &function_name, 
   local_SSAt &SSA,
@@ -711,7 +680,7 @@ void summarizert::check_preconditions(
 
   //now, only function calls which need recomputing of their summaries are left
 }
-
+*/
 /*******************************************************************\
 
 Function: summarizert::compute_precondition ()
@@ -730,7 +699,8 @@ void summarizert::compute_precondition(
   local_SSAt::nodest::iterator n_it, 
   local_SSAt::nodet::function_callst::iterator f_it,
   local_SSAt &SSA,
-  ssa_inlinert &inliner)
+  ssa_inlinert &inliner,
+  bool forward)
 {
   assert(f_it->function().id()==ID_symbol); //no function pointers
   irep_idt fname = to_symbol_expr(f_it->function()).get_identifier();
@@ -752,7 +722,7 @@ void summarizert::compute_precondition(
   if(cs_globals_in.empty()) return; //nothing to do
 
   // analyze
-  analyzer(SSA,preconditions[function_name]);
+  analyzer(SSA,preconditions[function_name],forward);
 
   ssa_analyzert::calling_contextst calling_contexts;
   analyzer.get_calling_contexts(calling_contexts);
@@ -792,7 +762,7 @@ Function: summarizert::compute_preconditions()
           for all function calls
 
 \******************************************************************/
-
+/*
 void summarizert::compute_preconditions(
   const function_namet &function_name, 
   local_SSAt &SSA,
@@ -858,3 +828,4 @@ void summarizert::compute_preconditions(
   solver_instances++;
   solver_calls += analyzer.get_number_of_solver_calls();
 }
+*/
