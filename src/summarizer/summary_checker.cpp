@@ -120,8 +120,8 @@ void summary_checkert::check_properties(
     if(!i_it->is_assert())
       continue;
   
-    const locationt &location=i_it->location;  
-    irep_idt property_id=location.get_property_id();
+    const source_locationt &source_location=i_it->source_location;  
+    irep_idt property_id=source_location.get_property_id();
 
     if(show_vcc)
     {
@@ -198,8 +198,8 @@ void summary_checkert::do_show_vcc(
   const local_SSAt &SSA,
   const goto_programt::const_targett i_it)
 {
-  std::cout << i_it->location << "\n";
-  std::cout << i_it->location.get_comment() << "\n";
+  std::cout << i_it->source_location << "\n";
+  std::cout << i_it->source_location.get_comment() << "\n";
   
   std::list<exprt> ssa_constraints;
   ssa_constraints << SSA;

@@ -189,7 +189,7 @@ void assignmentst::output(
   forall_goto_program_instructions(i_it, goto_program)
   {
     out << "**** " << i_it->location_number << " "
-        << i_it->location << "\n";
+        << i_it->source_location << "\n";
     
     assignment_mapt::const_iterator m_it=assignment_map.find(i_it);
     if(m_it==assignment_map.end()) throw "location not found";

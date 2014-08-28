@@ -1056,7 +1056,7 @@ void local_SSAt::output(std::ostream &out) const
     if(n_it->second.empty()) continue;
 
     out << "*** " << i_it->location_number
-        << " " << i_it->location << "\n";
+        << " " << i_it->source_location << "\n";
     n_it->second.output(out, ns);
     out << "\n";
   }

@@ -643,7 +643,7 @@ void summarizer_parseoptionst::report_properties(
     else
     {
       status() << "[" << it->first << "] "
-               << it->second.location->location.get_comment()
+               << it->second.location->source_location.get_comment()
                << ": "
                << property_checkert::as_string(it->second.result)
                << eom;
