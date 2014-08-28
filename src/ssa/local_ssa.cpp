@@ -828,8 +828,8 @@ symbol_exprt local_SSAt::name(
 
   new_symbol_expr.set_identifier(new_id);
   
-  if(object.get_expr().location().is_not_nil())
-    new_symbol_expr.location()=object.get_expr().location();
+  if(object.get_expr().source_location().is_not_nil())
+    new_symbol_expr.add_source_location()=object.get_expr().source_location();
   
   return new_symbol_expr;
 }
@@ -878,7 +878,7 @@ symbol_exprt local_SSAt::name_input(const ssa_objectt &object) const
   new_symbol_expr.set_identifier(new_id);
 
   if(object.get_expr().location().is_not_nil())
-    new_symbol_expr.location()=object.get_expr().location();
+    new_symbol_expr.add_source_location()=object.get_expr().source_location();
 
   return new_symbol_expr;
 }
