@@ -59,11 +59,13 @@ protected:
 
   void SSA_functions(const goto_modelt &, const namespacet &ns);
 
-  void summarize(const goto_modelt &);
+  void summarize(const goto_modelt &, bool forward=true, bool sufficient=false);
 
   property_checkert::resultt check_properties();
   void check_properties_non_incremental(const summarizert::functionst::const_iterator f_it);
   void check_properties_incremental(const summarizert::functionst::const_iterator f_it);
+
+  void report_preconditions();
 
 };
 

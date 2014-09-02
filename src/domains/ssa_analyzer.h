@@ -35,8 +35,11 @@ public:
   {
   }  
 
-  void operator()(local_SSAt &SSA, const exprt &precondition = true_exprt());
+  void operator()(local_SSAt &SSA, 
+                  const exprt &precondition = true_exprt(),
+                  bool forward=true);
 
+  void get_postcondition(exprt &result);
   void get_summary(exprt &result);
   void get_loop_invariants(exprt &result);
   void get_calling_contexts(calling_contextst &result);
@@ -49,6 +52,7 @@ public:
 protected:
   const namespacet &ns;
   const optionst &options;
+  exprt inv_out;
   exprt inv_inout;
   exprt inv_loop;
   calling_contextst calling_contexts;
@@ -60,10 +64,13 @@ protected:
   // functions for extracting information for template generation
 
   void collect_variables(local_SSAt &SSA,
-			 domaint::var_specst &var_specs);
+			 domaint::var_specst &var_specs,
+                         bool forward);
 
   domaint::var_specst filter_template_domain(const domaint::var_specst& var_specs);
   domaint::var_specst filter_equality_domain(const domaint::var_specst& var_specs);
+
+  void prepare_backward_analysis(local_SSAt &SSA);
 
   unsigned solver_calls;
 

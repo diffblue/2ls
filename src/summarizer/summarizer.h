@@ -34,13 +34,12 @@ class summarizert : public messaget
   typedef std::map<function_namet, function_bodyt*> functionst;
   typedef functionst::value_type functiont;
 
-  summaryt summarize(functiont &function, const preconditiont &precondition); 
-  summaryt summarize(functiont &function);
+  void summarize(functionst &functions,
+                 bool forward, bool sufficient); 
 
-  void summarize(functionst &functions, const preconditionst &preconditions); 
-  void summarize(functionst &functions); 
-
-  void summarize(functionst &functions, const function_namet &entry_function); 
+  void summarize(functionst &functions, 
+                 const function_namet &entry_function,
+                 bool forward, bool sufficient); 
 
   unsigned get_number_of_solver_instances() { return solver_instances; }
   unsigned get_number_of_solver_calls() { return solver_calls; }
@@ -52,24 +51,25 @@ class summarizert : public messaget
   functionst functions;
   preconditionst preconditions;
 
-  void run();
-
   void compute_summary_rec(const function_namet &function_name,
-                           bool context_sensitive = false);
+                           bool context_sensitive, bool forward,
+                           bool sufficient);
 
   void join_summaries(const summaryt &existing_summary, summaryt &new_summary);
 
-  void inline_summaries(const function_namet &function_name, local_SSAt &SSA, 
-                        bool recursive, bool always_recompute);
+  //obsolete
+  /*  void inline_summaries(const function_namet &function_name, local_SSAt &SSA, 
+      bool recursive, bool always_recompute);*/
   void inline_summaries(const function_namet &function_name, local_SSAt &SSA,
-                        bool context_sensitive = false); 
+                        bool context_sensitive, bool forward, bool sufficient); 
 
-  void check_preconditions(const function_namet &function_name, 
+  //obsolete
+  /*  void check_preconditions(const function_namet &function_name, 
 			   local_SSAt &SSA,
                            ssa_inlinert &inliner);
   void compute_preconditions(const function_namet &function_name, 
 			     local_SSAt &SSA,
-                             ssa_inlinert &inliner);
+                             ssa_inlinert &inliner);*/
 
   bool check_precondition(const function_namet &function_name, 
 			  local_SSAt::nodest::iterator node, 
@@ -77,12 +77,17 @@ class summarizert : public messaget
                           local_SSAt &SSA,
                           ssa_inlinert &inliner);
 
+  //computes precondition in caller context
   void compute_precondition(const function_namet &function_name, 
 			    local_SSAt::nodest::iterator node, 
 			    local_SSAt::nodet::function_callst::iterator f_it,
 			    local_SSAt &SSA,
-                            ssa_inlinert &inliner);
+                            ssa_inlinert &inliner,
+                            bool forward);
 
+  void initialize_preconditions(functionst &_functions, 
+				bool forward, 
+				bool sufficient);
 
   //statistics
   unsigned solver_instances;

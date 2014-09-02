@@ -41,7 +41,9 @@ Function: ssa_analyzert::operator()
 
 \*******************************************************************/
 
-void ssa_analyzert::operator()(local_SSAt &SSA, const exprt &precondition)
+void ssa_analyzert::operator()(local_SSAt &SSA, 
+                               const exprt &precondition, 
+                               bool forward)
 {
   if(SSA.goto_function.body.instructions.empty())
     return;
@@ -50,9 +52,11 @@ void ssa_analyzert::operator()(local_SSAt &SSA, const exprt &precondition)
   const irep_idt &function_id = SSA.goto_function.body.instructions.front().function;
   bool is_initialize = (id2string(function_id)=="c::__CPROVER_initialize");
 
+  if(!forward) prepare_backward_analysis(SSA);  
+
   // gather information for creating domains
   domaint::var_specst var_specs;
-  collect_variables(SSA, var_specs);
+  collect_variables(SSA, var_specs, forward);
 
   //get domain from command line options
   template_domaint::templatet templ;
@@ -82,7 +86,7 @@ void ssa_analyzert::operator()(local_SSAt &SSA, const exprt &precondition)
   constraintst transition_relation;
   transition_relation << SSA;
 
-  // add precondition
+  // add precondition (or conjunction of assertions in backward analysis)
   transition_relation.push_back(precondition);
 
 #ifdef DEBUG
@@ -187,6 +191,9 @@ void ssa_analyzert::operator()(local_SSAt &SSA, const exprt &precondition)
   domain->output_value(std::cout,*inv,ns);
   #endif
 
+  // retrieve postcondition
+  domain->project_on_out(*inv,inv_out);
+
   // retrieve I/O relation
   domain->project_on_inout(*inv,inv_inout);
 
@@ -210,6 +217,23 @@ void ssa_analyzert::operator()(local_SSAt &SSA, const exprt &precondition)
   delete strategy_solver;
   delete inv;
   delete domain;
+}
+
+/*******************************************************************\
+
+Function: ssa_analyzert::get_postcondition
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void ssa_analyzert::get_postcondition(exprt &result)
+{
+  result = inv_out;
 }
 
 /*******************************************************************\
@@ -277,14 +301,19 @@ Function: ssa_analyzert::collect_variables
 \*******************************************************************/
 
 void ssa_analyzert::collect_variables(local_SSAt &SSA,
-			 domaint::var_specst &var_specs)
+				      domaint::var_specst &var_specs,
+                                      bool forward)
 {
   var_specs.clear();
 
   // add params and globals_in
   exprt first_guard = SSA.guard_symbol(SSA.goto_function.body.instructions.begin());
-  add_vars(SSA.params,first_guard,first_guard,domaint::IN,var_specs);
-  add_vars(SSA.globals_in,first_guard,first_guard,domaint::IN,var_specs);
+  add_vars(SSA.params,first_guard,first_guard,
+           forward ? domaint::IN : domaint::OUT,
+           var_specs);
+  add_vars(SSA.globals_in,first_guard,first_guard,
+           forward ? domaint::IN : domaint::OUT,
+           var_specs);
 
   // used for renaming map
   var_listt pre_state_vars, post_state_vars;
@@ -377,7 +406,9 @@ void ssa_analyzert::collect_variables(local_SSAt &SSA,
 	    v_it != cs_globals_in.end(); v_it++)
 	{
           if(calling_context_vars[f_it].find(*v_it)!=calling_context_vars[f_it].end())
-	    add_var(*v_it,guard,guard,domaint::OUT,var_specs);
+	    add_var(*v_it,guard,guard,
+                    forward ? domaint::OUT : domaint::IN,
+                    var_specs);
 	}
 
         //add function arguments
@@ -385,7 +416,8 @@ void ssa_analyzert::collect_variables(local_SSAt &SSA,
           a_it !=  f_it->arguments().end(); a_it++)
         {
 	  std::set<symbol_exprt> args;
-	  find_symbols(*a_it,args);        
+	  find_symbols(*a_it,args); 
+          //TODO: forward/backward       
   	  add_vars(args,guard,guard,domaint::OUT,var_specs);
           calling_context_vars[f_it].insert(args.begin(),args.end());
         }
@@ -397,7 +429,9 @@ void ssa_analyzert::collect_variables(local_SSAt &SSA,
     // add globals_out (includes return values)
     exprt last_guard = 
       SSA.guard_symbol(--SSA.goto_function.body.instructions.end());
-    add_vars(SSA.globals_out,last_guard,last_guard,domaint::OUT,var_specs);
+    add_vars(SSA.globals_out,last_guard,last_guard,
+             forward ? domaint::OUT : domaint::IN,
+             var_specs);
   }
   
   // building map for renaming from pre into post-state
@@ -552,4 +586,26 @@ void ssa_analyzert::add_vars(const var_listt &vars_to_add,
   for(var_listt::const_iterator it = vars_to_add.begin();
       it != vars_to_add.end(); it++)
     add_var(*it,pre_guard,post_guard,kind,var_specs);
+}
+
+/*******************************************************************\
+
+Function: ssa_analyzert::prepare_backward_analysis
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void ssa_analyzert::prepare_backward_analysis(local_SSAt &SSA)
+{
+  // havoc first guard for backward analysis
+  local_SSAt::nodest::iterator n_it = SSA.nodes.begin(); 
+  assert(n_it != SSA.nodes.end());
+  local_SSAt::nodet::equalitiest::iterator e_it = n_it->equalities.end(); 
+  assert(!n_it->equalities.empty());
+  n_it->equalities.erase(--e_it);
 }

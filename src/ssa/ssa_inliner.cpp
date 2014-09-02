@@ -160,7 +160,10 @@ void ssa_inlinert::replace(local_SSAt::nodest &nodes,
   //equalities for globals_in
   replace_globals_in(summary.globals_in,cs_globals_in);
 
-  //constraints for transformer
+  //constraints for precondition and transformer
+  node->constraints.push_back(summary.precondition);  //copy
+  exprt &precondition = node->constraints.back();
+  rename(precondition);
   node->constraints.push_back(summary.transformer);  //copy
   exprt &transformer = node->constraints.back();
   rename(transformer);
