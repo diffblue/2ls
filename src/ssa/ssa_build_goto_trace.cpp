@@ -116,7 +116,7 @@ void record_step(
       if(cond_value.is_false())
       {
         step.type=goto_trace_stept::ASSERT;
-        step.comment=id2string(current_pc->location.get_comment());
+        step.comment=id2string(current_pc->source_location.get_comment());
         step.cond_expr=cond;
         step.cond_value=false;
         goto_trace.add_step(step);

@@ -119,7 +119,7 @@ void get_source(
 
   // get last line of function
   
-  const locationt &last=goto_program.instructions.back().location;
+  const source_locationt &last=goto_program.instructions.back().source_location;
   
   if(last.get_file()!=file)
   {
