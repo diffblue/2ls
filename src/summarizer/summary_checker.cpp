@@ -219,10 +219,10 @@ void summary_checkert::check_properties_non_incremental(
     if(!i_it->is_assert())
       continue;
   
-    const locationt &location=i_it->location;  
+    const source_locationt &source_location=i_it->source_location;  
     const local_SSAt::nodet &node = *SSA.find_node(i_it);
 
-    irep_idt property_id = location.get_property_id();
+    irep_idt property_id=source_location.get_property_id();
 
     if(property_id=="") //TODO: some properties do not show up in initialize_property_map
       continue;     
@@ -303,13 +303,25 @@ struct goalt
 
   explicit goalt(const goto_programt::instructiont &instruction)
   {
-    description=id2string(instruction.location.get_comment());
+    description=id2string(instruction.source_location.get_comment());
   }
   
   goalt()
   {
   }
 };
+
+/*******************************************************************\
+
+Function: summary_checkert::check_properties_incremental
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 
 void summary_checkert::check_properties_incremental(
    const summarizert::functionst::const_iterator f_it)
@@ -346,7 +358,7 @@ void summary_checkert::check_properties_incremental(
     if(!i_it->is_assert())
       continue;
   
-    const locationt &location=i_it->location;  
+    const locationt &location=i_it->source_location;  
     const local_SSAt::nodet &node = *SSA.find_node(i_it);
 
     irep_idt property_id = location.get_property_id();
@@ -449,8 +461,8 @@ void summary_checkert::do_show_vcc(
   const goto_programt::const_targett i_it,
   const local_SSAt::nodet::assertionst::const_iterator &a_it)
 {
-  std::cout << i_it->location << "\n";
-  std::cout << i_it->location.get_comment() << "\n";
+  std::cout << i_it->source_location << "\n";
+  std::cout << i_it->source_location.get_comment() << "\n";
   
   std::list<exprt> ssa_constraints;
   ssa_constraints << SSA;

@@ -44,7 +44,7 @@ void report_properties(
       p_it!=properties.end();
       p_it++, count++)
   {
-    const locationt &location=p_it->loc->location;
+    const source_locationt &source_location=p_it->loc->source_location;
   
     out << "<tr class=\"property\""
            " onMouseOver=\"property_event(this,'over',null);\""
@@ -65,19 +65,19 @@ void report_properties(
              "</td> <!-- unknown -->\n";
     
     out << "  <td>";
-    out << html_escape(location.get_file());
+    out << html_escape(source_location.get_file());
     out << "</td>\n";
 
     out << "  <td>";
-    out << html_escape(location.get_line());
+    out << html_escape(source_location.get_line());
     out << "</td>\n";
     
     out << "  <td>";
-    out << html_escape(location.get_property_class());
+    out << html_escape(source_location.get_property_class());
     out << "</td>\n";
     
     out << "  <td>";
-    out << html_escape(location.get_comment());
+    out << html_escape(source_location.get_comment());
     out << "</td>\n";
     
     out << "</tr>\n\n";
@@ -108,8 +108,8 @@ void report_properties(
       p_it++)
   {
     message.status()
-      << "[" << p_it->loc->location.get_property_id() << "] "
-      << p_it->loc->location.get_comment() << ": ";
+      << "[" << p_it->loc->source_location.get_property_id() << "] "
+      << p_it->loc->source_location.get_comment() << ": ";
     if(p_it->status.is_true())
       message.status() << "OK";
     else if(p_it->status.is_false())
@@ -236,7 +236,7 @@ void report_countermodel(
       if(v_it_lhs!=property.value_map.end())
       {
         std::string var=from_expr(ns, "", *e_it);
-        std::string var_loc=var+"@"+id2string(i_it->location.get_line());
+        std::string var_loc=var+"@"+id2string(i_it->source_location.get_line());
         out << "ce" << count << "['" << var_loc
             << "." << ++var_count[var_loc]
             << "']='"
@@ -260,7 +260,7 @@ void report_countermodel(
         continue;
 
       std::string var=from_expr(ns, "", *e_it);
-      std::string var_loc=var+"@"+id2string(i_it->location.get_line());
+      std::string var_loc=var+"@"+id2string(i_it->source_location.get_line());
       out << "ce" << count << "['" << var_loc
           << "." << ++var_count[var_loc]
           << "']='"

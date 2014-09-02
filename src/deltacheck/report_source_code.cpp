@@ -37,15 +37,15 @@ std::string get_errors(
   for(propertiest::const_iterator
       p_it=properties.begin(); p_it!=properties.end(); p_it++)
   {
-    if(line.file==p_it->loc->location.get_file() &&
-       i2string(line.line_no)==as_string(p_it->loc->location.get_line()))
+    if(line.file==p_it->loc->source_location.get_file() &&
+       i2string(line.line_no)==as_string(p_it->loc->source_location.get_line()))
     {
       if(p_it->status.is_false())
       {
         if(!errors.empty()) errors+="<br>";
 
-        irep_idt property=p_it->loc->location.get_property_class();
-        irep_idt comment=p_it->loc->location.get_comment();
+        irep_idt property=p_it->loc->source_location.get_property_class();
+        irep_idt comment=p_it->loc->source_location.get_comment();
 
         if(comment=="")
           errors+=as_string(property);
@@ -72,14 +72,14 @@ Function: report_source_code
 
 void report_source_code(
   const std::string &path_prefix,
-  const locationt &location,
+  const source_locationt &source_location,
   const goto_programt &goto_program,
   const propertiest &properties,
   std::ostream &out,
   message_handlert &message_handler)
 {
   std::list<linet> lines;
-  get_source(path_prefix, location, goto_program, lines, message_handler);
+  get_source(path_prefix, source_location, goto_program, lines, message_handler);
   
   out << "<p>\n";
   out << "<table class=\"source\"><tr>\n";
@@ -148,11 +148,11 @@ Function: report_source_code
 
 void report_source_code(
   const std::string &path_prefix_old,
-  const locationt &location_old,
+  const source_locationt &location_old,
   const goto_programt &goto_program_old,
   const std::string &description_old,
   const std::string &path_prefix_new,
-  const locationt &location_new,
+  const source_locationt &location_new,
   const goto_programt &goto_program_new,
   const std::string &description_new,
   const propertiest &properties,

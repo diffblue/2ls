@@ -978,8 +978,8 @@ symbol_exprt local_SSAt::name(
 
   new_symbol_expr.set_identifier(new_id);
   
-  if(object.get_expr().location().is_not_nil())
-    new_symbol_expr.location()=object.get_expr().location();
+  if(object.get_expr().source_location().is_not_nil())
+    new_symbol_expr.add_source_location()=object.get_expr().source_location();
   
   return new_symbol_expr;
 }
@@ -1028,7 +1028,7 @@ symbol_exprt local_SSAt::name_input(const ssa_objectt &object) const
   new_symbol_expr.set_identifier(new_id);
 
   if(object.get_expr().location().is_not_nil())
-    new_symbol_expr.location()=object.get_expr().location();
+    new_symbol_expr.add_source_location()=object.get_expr().source_location();
 
   return new_symbol_expr;
 }
@@ -1207,7 +1207,7 @@ void local_SSAt::output(std::ostream &out) const
     if(n_it->empty()) continue;
 
     out << "*** " << n_it->location->location_number
-        << " " << n_it->location->location << "\n";
+        << " " << n_it->location->source_location << "\n";
     n_it->output(out, ns);
     out << "\n";
   }
