@@ -30,13 +30,6 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       ../ssa/ssa_object$(OBJEXT) \
       ../ssa/address_canonizer$(OBJEXT) \
       ../ssa/ssa_aliasing$(OBJEXT) \
-      ../ai/ssa_cfg$(OBJEXT)\
-      ../ai/ssa_inliner$(OBJEXT)\
-      ../ai/summary$(OBJEXT)\
-      ../ai/summarizer$(OBJEXT)\
-      ../ai/interval_map$(OBJEXT)\
-      ../ai/interval_map_domain$(OBJEXT)\
-      ../ai/interval_widening$(OBJEXT)\
       ../solver/predicate$(OBJEXT) \
       ../solver/solver$(OBJEXT) \
       ../solver/fixed_point$(OBJEXT) \
