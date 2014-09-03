@@ -195,6 +195,18 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
     summary.output(out,SSA.ns);   
     status() << out.str() << eom;
   }
+  
+  // Add loop invariants as constraints back into SSA.
+  // We simply use the last CFG node. It would be prettier to put
+  // these close to the loops.
+  exprt inv;
+  analyzer.get_loop_invariants(inv);
+  status() << "Adding loop invariant: " << from_expr(SSA.ns, "", inv) << eom;
+  // always do precise join here (otherwise we have to store the loop invariant
+  // in the summary and handle its updates like the transformer's
+  inv = implies_exprt(summary.precondition,inv);
+  assert(SSA.nodes.begin()!=SSA.nodes.end());
+  SSA.nodes.back().constraints.push_back(inv);
 
   // store summary in db
   if(summary_db.exists(function_name)) 
@@ -203,16 +215,6 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
     join_summaries(old_summary,summary);
   }
   summary_db.put(function_name,summary);
-  
-  // Add loop invariants as constraints back into SSA.
-  // We simply use the last CFG node. It would be prettier to put
-  // these close to the loops.
-  exprt inv;
-  analyzer.get_loop_invariants(inv);
-  assert(SSA.nodes.begin()!=SSA.nodes.end());
-  SSA.nodes.back().constraints.push_back(inv);
-
-  status() << "Adding loop invariant: " << from_expr(SSA.ns, "", inv) << eom;
 
   //statistics
   solver_instances++;
@@ -715,11 +717,10 @@ void summarizert::compute_precondition(
   std::map<local_SSAt::nodet::function_callst::iterator, local_SSAt::var_sett>
     cs_globals_in;
  
-  SSA.get_globals(n_it->location,cs_globals_in[f_it]);
+  if(forward) SSA.get_globals(n_it->location,cs_globals_in[f_it]);
+  else SSA.get_globals((++n_it)->location,cs_globals_in[f_it]);
   analyzer.calling_context_vars[f_it].insert(
-  SSA.globals_in.begin(),SSA.globals_in.end());
-
-  if(cs_globals_in.empty()) return; //nothing to do
+    SSA.globals_in.begin(),SSA.globals_in.end());
 
   // analyze
   analyzer(SSA,preconditions[function_name],forward);

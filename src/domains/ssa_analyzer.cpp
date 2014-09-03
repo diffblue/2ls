@@ -400,24 +400,30 @@ void ssa_analyzert::collect_variables(local_SSAt &SSA,
 
         //getting globals at call site
         local_SSAt::var_sett cs_globals_in;
-        SSA.get_globals(n->location,cs_globals_in,false,false); //filter out return values
+        if(forward)
+          SSA.get_globals(n->location,cs_globals_in,false,false); //filter out return values
+        else
+	{
+          local_SSAt::nodest::iterator nnext = n; nnext++;
+          SSA.get_globals(nnext->location,cs_globals_in,true,true); //with return values
+	}
 
         for(local_SSAt::var_sett::iterator v_it = cs_globals_in.begin();
 	    v_it != cs_globals_in.end(); v_it++)
 	{
           if(calling_context_vars[f_it].find(*v_it)!=calling_context_vars[f_it].end())
 	    add_var(*v_it,guard,guard,
-                    forward ? domaint::OUT : domaint::IN,
+                    domaint::OUT, //the same for both forward and backward
                     var_specs);
 	}
 
         //add function arguments
+        if(!forward) continue; // nothing to do
         for(exprt::operandst::const_iterator a_it =  f_it->arguments().begin();
           a_it !=  f_it->arguments().end(); a_it++)
         {
 	  std::set<symbol_exprt> args;
 	  find_symbols(*a_it,args); 
-          //TODO: forward/backward       
   	  add_vars(args,guard,guard,domaint::OUT,var_specs);
           calling_context_vars[f_it].insert(args.begin(),args.end());
         }
@@ -603,9 +609,9 @@ Function: ssa_analyzert::prepare_backward_analysis
 void ssa_analyzert::prepare_backward_analysis(local_SSAt &SSA)
 {
   // havoc first guard for backward analysis
-  local_SSAt::nodest::iterator n_it = SSA.nodes.begin(); 
+  /*  local_SSAt::nodest::iterator n_it = SSA.nodes.begin(); 
   assert(n_it != SSA.nodes.end());
   local_SSAt::nodet::equalitiest::iterator e_it = n_it->equalities.end(); 
   assert(!n_it->equalities.empty());
-  n_it->equalities.erase(--e_it);
+  n_it->equalities.erase(--e_it); */
 }

@@ -1,0 +1,6 @@
+CORE
+main.c
+--equalities --context-sensitive --preconditions
+^EXIT=0$
+^SIGNAL=0$
+^$
