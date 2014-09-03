@@ -61,11 +61,12 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
 
 	// generate the new constraint
 	constraint = linrank_domain.get_row_symb_contraint(row_values, row, values);
-	literalt activation_literal1 = new_context();
 
 	// instantiate a new solver
-	satcheck_minisat_no_simplifiert satcheck;
-	bv_pointerst solver1(ns, satcheck);
+	satcheck_minisat_no_simplifiert satcheck1;
+	bv_pointerst solver1(ns, satcheck1);
+
+	literalt activation_literal1 = new_context();
 
 	solver1 << or_exprt(constraint, literal_exprt(activation_literal1));
 
@@ -104,7 +105,6 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
     debug() << "UNSAT" << eom;
 
   }
-
 
   pop_context();
 
