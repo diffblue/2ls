@@ -2,142 +2,110 @@
 
 #include <util/simplify_expr.h>
 #include "ranking_solver_enumeration.h"
+#include <solvers/sat/satcheck.h>
+#include <solvers/flattening/bv_pointers.h>
 
-bool ranking_solver_enumerationt::iterate(invariantt &_inv)
+
+
+bool ranking_solver_enumerationt::iterate(invariantt &_rank)
 {
-  linrank_domaint::templ_valuet &inv = 
-    static_cast<linrank_domaint::templ_valuet &>(_inv);
+  linrank_domaint::templ_valuet &rank = 
+    static_cast<linrank_domaint::templ_valuet &>(_rank);
 
   bool improved = false;
 
   literalt activation_literal = new_context();
 
-  exprt inv_expr = linrank_domain.to_pre_constraints(inv);
-  debug() << "pre-inv: " << from_expr(ns,"",inv_expr) << eom;
+  //handles on values to retrieve from model
+  linrank_domaint::pre_post_valuest rank_value_exprs;
+  exprt::operandst rank_cond_exprs;
+  bvt rank_cond_literals;
 
-#ifndef DEBUG_FORMULA
-  solver << or_exprt(inv_expr, literal_exprt(activation_literal));
-#else
-  debug() << "literal " << activation_literal << eom;
-  literalt l = solver.convert(or_exprt(inv_expr, literal_exprt(activation_literal)));
-  if(!l.is_constant()) 
-  {
-    debug() << "literal " << l << ": " << from_expr(ns,"",or_exprt(inv_expr, literal_exprt(activation_literal))) <<eom;
-    formula.push_back(l);
-  }
-#endif
+  exprt rank_expr = linrank_domain.get_not_constraints(rank, rank_cond_exprs, rank_value_exprs);
 
-  exprt::operandst strategy_cond_exprs;
-  linrank_domain.make_not_post_constraints(inv, 
-    strategy_cond_exprs, strategy_value_exprs); 
+  solver << or_exprt(rank_expr, literal_exprt(activation_literal));
+
+  rank_cond_literals.resize(rank_cond_exprs.size());
   
-  strategy_cond_literals.resize(strategy_cond_exprs.size());
-  
-  debug() << "post-inv: ";
-  for(unsigned i = 0; i<strategy_cond_exprs.size(); i++)
+  for(unsigned i = 0; i < rank_cond_exprs.size(); i++)
   {  
-    debug() << (i>0 ? " || " : "") << from_expr(ns,"",strategy_cond_exprs[i]) ;
-
-    strategy_cond_literals[i] = solver.convert(strategy_cond_exprs[i]);
-    //solver.set_frozen(strategy_cond_literals[i]);
-    strategy_cond_exprs[i] = literal_exprt(strategy_cond_literals[i]);
+    rank_cond_literals[i] = solver.convert(rank_cond_exprs[i]);
+    rank_cond_exprs[i] = literal_exprt(rank_cond_literals[i]);
   }
-  debug() << eom;
-
-
-#ifndef DEBUG_FORMULA
-  solver << or_exprt(disjunction(strategy_cond_exprs),
-		     literal_exprt(activation_literal));
-#else
-
-  exprt expr_act=
-    or_exprt(disjunction(strategy_cond_exprs),
-	       literal_exprt(activation_literal));
-
-  l = solver.convert(expr_act);
-  if(!l.is_constant()) 
-  {
-    debug() << "literal " << l << ": " << 
-      from_expr(ns,"", expr_act) <<eom;
-    formula.push_back(l);
-  }
-#endif
 
   debug() << "solve(): ";
 
-#ifdef DEBUG_FORMULA
-  bvt whole_formula = formula;
-  whole_formula.insert(whole_formula.end(),activation_literals.begin(),activation_literals.end());
-  solver.set_assumptions(whole_formula);
-#endif
 
   if(solve() == decision_proceduret::D_SATISFIABLE) 
   { 
     debug() << "SAT" << eom;
-      
-    #if 0
-    for(unsigned i=0; i<whole_formula.size(); i++) 
+
+    // retrieve values from the model x_i and x'_i
+    linrank_domaint::pre_post_valuest values;
+  
+    for(unsigned row = 0; row < rank_cond_literals.size(); row++)
     {
-      debug() << "literal: " << whole_formula[i] << " " << 
-        solver.l_get(whole_formula[i]) << eom;
-    }
-          
-    for(unsigned i=0; i<linrank_domain.template_size(); i++) 
-    {
-      exprt c = linrank_domain.get_row_constraint(i,inv[i]);
-      debug() << "cond: " << from_expr(ns, "", c) << " " << 
-          from_expr(ns, "", solver.get(c)) << eom;
-      debug() << "guards: " << from_expr(ns, "", linrank_domain.templ.pre_guards[i]) << 
-          " " << from_expr(ns, "", solver.get(linrank_domain.templ.pre_guards[i])) << eom;
-      debug() << "guards: " << from_expr(ns, "", linrank_domain.templ.post_guards[i]) << " " 
-          << from_expr(ns, "", solver.get(linrank_domain.templ.post_guards[i])) << eom; 	     	     }    
-          
-    for(replace_mapt::const_iterator
-          it=renaming_map.begin();
-          it!=renaming_map.end();    
-          ++it)
-          
-    {
-      debug() << "replace_map (1st): " << from_expr(ns, "", it->first) << " " << 
-          from_expr(ns, "", solver.get(it->first)) << eom;
-      debug() << "replace_map (2nd): " << from_expr(ns, "", it->second) << " " << 
-          from_expr(ns, "", solver.get(it->second)) << eom;
-    }
-                  
-    #endif
-      
-      
-    for(unsigned row=0;row<strategy_cond_literals.size(); row++)
-    {
-      if(solver.l_get(strategy_cond_literals[row]).is_true()) 
+      if(solver.l_get(rank_cond_literals[row]).is_true()) 
       {
-        debug() << "updating row: " << row << eom;
+	for(linrank_domaint::pre_post_valuest::iterator it = rank_value_exprs.begin(); it != rank_value_exprs.end(); ++it) {
+	  // model for x_i
+	  exprt value = solver.get(it->first);
+	  // model for x'_i
+	  exprt post_value = solver.get(it->second);
+	  // record all the values
+	  values.push_back(std::make_pair(value, post_value));
+	}
 
-        exprt value = solver.get(strategy_value_exprs[row]);
-        linrank_domaint::row_valuet v = simplify_const(value);
+	linrank_domaint::row_valuet row_values;
+	exprt constraint;
 
-        debug() << "raw value; " << from_expr(ns, "", value) << 
-          ", simplified value: " << from_expr(ns,"",v) << eom;
+	// generate the new constraint
+	constraint = linrank_domain.get_row_symb_contraint(row_values, row, values);
+	literalt activation_literal1 = new_context();
 
-        linrank_domain.set_row_value(row,v,inv);
+	// instantiate a new solver
+	satcheck_minisat_no_simplifiert satcheck;
+	bv_pointerst solver1(ns, satcheck);
+
+	solver1 << or_exprt(constraint, literal_exprt(activation_literal1));
+
+	if(solve() == decision_proceduret::D_SATISFIABLE) { 
+
+	  std::vector<exprt> c = row_values.c;
+
+	  // new_row_values will contain the new values for c and d
+	  linrank_domaint::row_valuet new_row_values;
+
+	  // get the model for all c
+	  for(std::vector<exprt>::iterator it = c.begin(); it != c.end(); ++it) {
+	    exprt v = solver1.get(*it);
+	    new_row_values.c.push_back(v);
+	  }
+
+	  // get the model for d
+	  new_row_values.d = solver1.get(row_values.d);
+
+	  // update the current template
+	  linrank_domain.set_row_value(row, new_row_values, rank);
+
+	  improved = true;
+	}
+	else {
+	  debug() << "Second solver: UNSAT" << eom;
+	}
+
+	pop_context();
       }
     }
-    improved = true;
+
   }
   else 
   {
     debug() << "UNSAT" << eom;
 
-#ifdef DEBUG_FORMULA
-    for(unsigned i=0; i<whole_formula.size(); i++) 
-    {
-      if(solver.is_in_conflict(whole_formula[i]))
-        debug() << "is_in_conflict: " << whole_formula[i] << eom;
-      else
-        debug() << "not_in_conflict: " << whole_formula[i] << eom;
-     }
-#endif    
   }
+
+
   pop_context();
 
   return improved;

@@ -7,6 +7,8 @@
 #include <util/arith_tools.h>
 #include <util/ieee_float.h>
 #include <set>
+#include <vector>
+#include <iostream>
 
 class linrank_domaint : public domaint
 {
@@ -38,7 +40,8 @@ public:
   } template_rowt;
 
   typedef std::vector<template_rowt> templatet;
-  typedef std::vector<std::pairt<exprt,exprt> > pre_post_valuest;
+  //typedef std::vector<std::pair<exprt::operandst,exprt::operandst> > pre_post_valuest;
+  typedef std::vector<std::pair<exprt,exprt> > pre_post_valuest;
 
 
   linrank_domaint(replace_mapt &_renaming_map, 
