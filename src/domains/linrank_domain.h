@@ -14,7 +14,9 @@ class linrank_domaint : public domaint
 {
 public:
   typedef unsigned rowt;
-  typedef exprt row_exprt; 
+  //typedef std::vector<std::pair<exprt::operandst,exprt::operandst> > pre_post_valuest;
+  typedef std::vector<std::pair<exprt,exprt> > pre_post_valuest;
+  typedef pre_post_valuest row_exprt;
   typedef struct
   {
     std::vector<exprt> c;
@@ -40,8 +42,7 @@ public:
   } template_rowt;
 
   typedef std::vector<template_rowt> templatet;
-  //typedef std::vector<std::pair<exprt::operandst,exprt::operandst> > pre_post_valuest;
-  typedef std::vector<std::pair<exprt,exprt> > pre_post_valuest;
+
 
 
   linrank_domaint(replace_mapt &_renaming_map, 
@@ -76,7 +77,7 @@ public:
   virtual void project_on_inout(const valuet &value, exprt &result);
   virtual void project_on_vars(const valuet &value, const var_sett &vars, exprt &result);
 
-  unsigned template_size();
+  unsigned template_size() {return templ.size();}
 
   // generating templates
   static void add_template(templatet &templ,
