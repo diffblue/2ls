@@ -169,22 +169,27 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
   //check termination of function calls
   bool has_loops = false;
   bool calls_terminate = true;
-  for(local_SSAt::nodest::iterator n_it = SSA.nodes.begin(); 
-        n_it!=SSA.nodes.end(); n_it++)
+  if(options.get_bool_option("termination"))
   {
-    for(local_SSAt::nodet::function_callst::iterator f_it = n_it->function_calls.begin();
-        f_it != n_it->function_calls.end(); f_it++)
+    for(local_SSAt::nodest::iterator n_it = SSA.nodes.begin(); 
+        n_it!=SSA.nodes.end(); n_it++)
     {
-      bool call_terminates = summary_db.get(function_name).terminates;
-      if(!call_terminates) 
+      for(local_SSAt::nodet::function_callst::iterator f_it = n_it->function_calls.begin();
+	  f_it != n_it->function_calls.end(); f_it++)
       {
-	calls_terminate = false;
-	break;
+	irep_idt fname = to_symbol_expr(f_it->function()).get_identifier();
+	bool call_terminates = summary_db.get(fname).terminates;
+	if(!call_terminates) 
+	{
+	  calls_terminate = false;
+	  break;
+	}
       }
+      if(!calls_terminate) break; //nothing to prove further
+      if(n_it->loophead != SSA.nodes.end()) has_loops = true;
     }
-    if(!calls_terminate) break; //nothing to prove further
-    if(n_it->loophead != SSA.nodes.end()) has_loops = true;
   }
+  else calls_terminate = false;
 
   //analyze
   ssa_analyzert analyzer(SSA.ns, options);
@@ -209,17 +214,40 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
   simplify_expr(summary.precondition, SSA.ns); //does not help
 #endif 
 
+  // Add loop invariants as constraints back into SSA.
+  // We simply use the last CFG node. It would be prettier to put
+  // these close to the loops.
+  exprt inv;
+  analyzer.get_loop_invariants(inv);
+  assert(SSA.nodes.begin()!=SSA.nodes.end());
+  SSA.nodes.back().constraints.push_back(inv);
+
+  status() << "Adding loop invariant: " << from_expr(SSA.ns, "", inv) << eom;
+
   //check termination
-  debug() << "function calls " << 
-    (calls_terminate ? "terminate" : " do not terminate") << eom;
-  debug() << "function " << 
-    (has_loops ? "has loops" : " does not have loops") << eom;
-  if(calls_terminate && has_loops) 
+  if(options.get_bool_option("termination"))
   {
-    //TODO: compute ranking functions
+    debug() << "function calls " << 
+      (calls_terminate ? "terminate" : " do not terminate") << eom;
+    debug() << "function " << 
+      (has_loops ? "has loops" : " does not have loops") << eom;
+    if(calls_terminate && has_loops) 
+    {
+      ssa_analyzert analyzer1(SSA.ns, options);
+      analyzer1.set_message_handler(get_message_handler());
+      analyzer1.compute_ranking_functions = true;
+      analyzer1(SSA,preconditions[function_name],forward); //TODO: not sure about !forward
+      analyzer1.get_loop_invariants(summary.termination_argument);
+      //TODO: extract information whether there a ranking function was found for all loops
+      summary.terminates = false;
+     
+      //statistics
+      solver_instances++;
+      solver_calls += analyzer1.get_number_of_solver_calls();
+    }
+    else if(!calls_terminate) summary.terminates = false;
+    else if(!has_loops) summary.terminates = true;
   }
-  else if(!calls_terminate) summary.terminates = false;
-  else if(!has_loops) summary.terminates = true;
 
   {
     std::ostringstream out;
@@ -235,21 +263,10 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
     join_summaries(old_summary,summary);
   }
   summary_db.put(function_name,summary);
-  
-  // Add loop invariants as constraints back into SSA.
-  // We simply use the last CFG node. It would be prettier to put
-  // these close to the loops.
-  exprt inv;
-  analyzer.get_loop_invariants(inv);
-  assert(SSA.nodes.begin()!=SSA.nodes.end());
-  SSA.nodes.back().constraints.push_back(inv);
-
-  status() << "Adding loop invariant: " << from_expr(SSA.ns, "", inv) << eom;
 
   //statistics
   solver_instances++;
   solver_calls += analyzer.get_number_of_solver_calls();
-
 }
 
 /*******************************************************************\
