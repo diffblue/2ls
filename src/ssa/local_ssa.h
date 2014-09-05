@@ -65,6 +65,7 @@ public:
 
     locationt location; //link to goto instruction
     std::list<nodet>::iterator loophead; //link to loop head node
+       // otherwise points to nodes.end() 
 
     void output(std::ostream &, const namespacet &) const;
 

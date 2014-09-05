@@ -166,6 +166,26 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
     debug() << out.str() << eom;
   }
 
+  //check termination of function calls
+  bool has_loops = false;
+  bool calls_terminate = true;
+  for(local_SSAt::nodest::iterator n_it = SSA.nodes.begin(); 
+        n_it!=SSA.nodes.end(); n_it++)
+  {
+    for(local_SSAt::nodet::function_callst::iterator f_it = n_it->function_calls.begin();
+        f_it != n_it->function_calls.end(); f_it++)
+    {
+      bool call_terminates = summary_db.get(function_name).terminates;
+      if(!call_terminates) 
+      {
+	calls_terminate = false;
+	break;
+      }
+    }
+    if(!calls_terminate) break; //nothing to prove further
+    if(n_it->loophead != SSA.nodes.end()) has_loops = true;
+  }
+
   //analyze
   ssa_analyzert analyzer(SSA.ns, options);
   analyzer.set_message_handler(get_message_handler());
@@ -188,6 +208,18 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
 #if 0 
   simplify_expr(summary.precondition, SSA.ns); //does not help
 #endif 
+
+  //check termination
+  debug() << "function calls " << 
+    (calls_terminate ? "terminate" : " do not terminate") << eom;
+  debug() << "function " << 
+    (has_loops ? "has loops" : " does not have loops") << eom;
+  if(calls_terminate && has_loops) 
+  {
+    //TODO: compute ranking functions
+  }
+  else if(!calls_terminate) summary.terminates = false;
+  else if(!has_loops) summary.terminates = true;
 
   {
     std::ostringstream out;
