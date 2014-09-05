@@ -15,6 +15,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "strategy_solver_enumeration.h"
 #include "strategy_solver_binsearch.h"
 #include "strategy_solver_equality.h"
+#include "ranking_solver_enumeration.h"
 #include "ssa_analyzer.h"
 
 #include <solvers/sat/satcheck.h>
@@ -116,7 +117,17 @@ void ssa_analyzert::operator()(local_SSAt &SSA,
   strategy_solver_baset *strategy_solver;
   domaint *domain; 
   strategy_solver_baset::invariantt *inv;
-  if(options.get_bool_option("equalities") && !is_initialize)
+  if(options.get_bool_option("termination") && compute_ranking_functions)
+  {
+    linrank_domaint::templatet templ;
+    generate_template_for_termination(SSA,templ);
+    domain = new linrank_domaint(renaming_map, templ);
+    strategy_solver = new ranking_solver_enumerationt(
+        transition_relation, 
+        *static_cast<linrank_domaint *>(domain), solver, ns);    
+    inv = new linrank_domaint::templ_valuet();
+  }  
+  else if(options.get_bool_option("equalities") && !is_initialize)
   {
     domaint::var_specst new_var_specs = filter_equality_domain(var_specs);
     domain = new equality_domaint(renaming_map, new_var_specs, ns);
@@ -286,6 +297,60 @@ void ssa_analyzert::get_calling_contexts(calling_contextst &result)
 {
   assert(compute_calling_contexts);
   result = calling_contexts;
+}
+
+/*******************************************************************\
+
+Function: ssa_analyzert::generate_template_for_termination
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void ssa_analyzert::generate_template_for_termination(local_SSAt &SSA,
+				      linrank_domaint::templatet &templ)
+{
+
+  // add loop variables
+  for(local_SSAt::nodest::iterator n_it = SSA.nodes.begin(); 
+      n_it != SSA.nodes.end(); n_it++)
+  {
+    if(n_it->loophead != SSA.nodes.end()) //we've found a loop
+    {
+      domaint::var_specst var_specs;
+      exprt pre_guard = and_exprt(SSA.guard_symbol(n_it->loophead->location), 
+        SSA.name(SSA.guard_symbol(), local_SSAt::LOOP_SELECT, n_it->location));
+      exprt post_guard = SSA.guard_symbol(n_it->location);
+      
+      const ssa_domaint::phi_nodest &phi_nodes = 
+        SSA.ssa_analysis[n_it->loophead->location].phi_nodes;
+      
+      // Record the objects modified by the loop to get
+      // 'primed' (post-state) and 'unprimed' (pre-state) variables.
+      for(local_SSAt::objectst::const_iterator
+          o_it=SSA.ssa_objects.objects.begin();
+          o_it!=SSA.ssa_objects.objects.end();
+          o_it++)
+      {
+        ssa_domaint::phi_nodest::const_iterator p_it=
+        phi_nodes.find(o_it->get_identifier());
+
+	if(p_it==phi_nodes.end()) continue; // object not modified in this loop
+
+        symbol_exprt in=SSA.name(*o_it, local_SSAt::LOOP_BACK, n_it->location);
+        symbol_exprt out=SSA.read_rhs(*o_it, n_it->location);
+
+        add_var(in,pre_guard,post_guard,domaint::LOOP,var_specs);     
+      }
+      
+      filter_template_domain(var_specs);
+      linrank_domaint::add_template(templ,var_specs,SSA.ns);
+    } 
+  }
 }
 
 /*******************************************************************\

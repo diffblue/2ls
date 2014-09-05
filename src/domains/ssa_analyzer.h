@@ -27,6 +27,7 @@ public:
                          const optionst &_options)
     : 
       compute_calling_contexts(false),
+      compute_ranking_functions(false),
       ns(_ns),
       options(_options),
       inv_inout(true_exprt()),
@@ -47,6 +48,8 @@ public:
   bool compute_calling_contexts;
   calling_context_varst calling_context_vars;
 
+  bool compute_ranking_functions;
+
   unsigned get_number_of_solver_calls() { return solver_calls; }
 
 protected:
@@ -66,6 +69,8 @@ protected:
   void collect_variables(local_SSAt &SSA,
 			 domaint::var_specst &var_specs,
                          bool forward);
+  void generate_template_for_termination(local_SSAt &SSA,
+					 linrank_domaint::templatet &templ);
 
   domaint::var_specst filter_template_domain(const domaint::var_specst& var_specs);
   domaint::var_specst filter_equality_domain(const domaint::var_specst& var_specs);
