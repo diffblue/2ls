@@ -87,6 +87,8 @@ public:
 protected:
   templatet &templ;
 
+  bool is_row_value_false(const row_valuet & row_value) const;
+
   
 };
 

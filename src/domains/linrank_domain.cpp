@@ -8,14 +8,14 @@
 #include <util/simplify_expr.h>
 #include <langapi/languages.h>
 
-#define SYMB_BOUND_VAR "symb_bound#"
+#define SYMB_BOUND_VAR "symb_coeff#"
 
 void linrank_domaint::initialize(valuet &value)
 {
 	templ_valuet &v = static_cast<templ_valuet&>(value);
 	v.resize(templ.size());
 	for(unsigned row = 0; row<templ.size(); row++)
-		v[row] = false_exprt();
+		v[row].d = false_exprt();
 }
 
 exprt linrank_domaint::get_not_constraints(const linrank_domaint::templ_valuet &value,
@@ -28,21 +28,30 @@ exprt linrank_domaint::get_not_constraints(const linrank_domaint::templ_valuet &
 	for(unsigned row = 0; row<templ.size(); row++)
 	{
 		value_exprs[row] = templ[row].expr;
-		rename(value_exprs[row]);
+		//	rename(value_exprs[row]);
 
-		exprt sum_first = value[row].d;
-		exprt sum_second = value[row].d;
-		for(int i = 0; i < value[row].c.size(); ++i)
+                if(is_row_value_false(value[row]))
 		{
-			sum_first = plus_exprt(sum_first, mult_exprt(value[row].c[i], templ[row].expr[i].first));
-			sum_second = plus_exprt(sum_second, mult_exprt(value[row].c[i], templ[row].expr[i].second));
+		  // !(g => false)
+		  cond_exprs[row] = 
+		    and_exprt(templ[row].pre_guard, templ[row].post_guard);
 		}
+		else
+		{
+		  exprt sum_first = value[row].d;
+		  exprt sum_second = value[row].d;
+		  for(int i = 0; i < value[row].c.size(); ++i)
+		    {
+		      sum_first = plus_exprt(sum_first, mult_exprt(value[row].c[i], templ[row].expr[i].first));
+		      sum_second = plus_exprt(sum_second, mult_exprt(value[row].c[i], templ[row].expr[i].second));
+		    }
 
-		exprt bounded = binary_relation_exprt(sum_first, ID_g, constant_exprt(0, value[row].d.type()));
-		exprt decreasing = binary_relation_exprt(sum_first, ID_g, sum_second);
+		  exprt bounded = binary_relation_exprt(sum_first, ID_gt, constant_exprt(0, value[row].d.type()));
+		  exprt decreasing = binary_relation_exprt(sum_first, ID_gt, sum_second);
 
-		cond_exprs[row] = implies_exprt(and_exprt(templ[row].pre_guard, templ[row].post_guard),
-				not_exprt(and_exprt(bounded, decreasing)));
+		  cond_exprs[row] = not_exprt(implies_exprt(and_exprt(templ[row].pre_guard, templ[row].post_guard),
+						  and_exprt(bounded, decreasing)));
+		}
 	}
 
 	return conjunction(cond_exprs);
@@ -54,18 +63,18 @@ exprt linrank_domaint::get_row_symb_contraint(linrank_domaint::row_valuet &symb_
 {
 	symb_values.c.resize(values.size());
 
-	symb_values.d = symbol_exprt(SYMB_BOUND_VAR+"d", values[0].first.type());
+	symb_values.d = symbol_exprt(SYMB_BOUND_VAR+"d!"+i2string(row), values[0].first.type());
 	exprt sum_first = symb_values.d;
 	exprt sum_second = symb_values.d;
 	for(int i = 0; i < symb_values.c.size(); ++i)
 	{
-		symb_values.c[i] = symbol_exprt(SYMB_BOUND_VAR+i2string(i), values[i].first.type());
+		symb_values.c[i] = symbol_exprt(SYMB_BOUND_VAR+"c!"+i2string(row)+"$"+i2string(i), values[i].first.type());
 		sum_first = plus_exprt(sum_first, mult_exprt(symb_values.c[i], values[i].first));
 		sum_second = plus_exprt(sum_second, mult_exprt(symb_values.c[i], values[i].second));
 	}
 
-	exprt bounded = binary_relation_exprt(sum_first, ID_g, constant_exprt(0, symb_values.d.type()));
-	exprt decreasing = binary_relation_exprt(sum_first, ID_g, sum_second);
+	exprt bounded = binary_relation_exprt(sum_first, ID_gt, constant_exprt(0, symb_values.d.type()));
+	exprt decreasing = binary_relation_exprt(sum_first, ID_gt, sum_second);
 
 	return implies_exprt(and_exprt(templ[row].pre_guard, templ[row].post_guard),
 			and_exprt(bounded, decreasing));
@@ -181,22 +190,67 @@ void linrank_domaint::project_on_vars(const valuet &value, const var_sett &vars,
 	result = conjunction(c);
 }
 
+/*******************************************************************\
+
+Function: linrank_domaint::add_template
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: This is called for each loop.
+
+\*******************************************************************/
+
 void linrank_domaint::add_template(templatet &templ,
 					      const var_specst &var_specs,
 					      const namespacet &ns)
 {
-	templ.reserve(templ.size()+var_specs.size());
+  bool has_loop = false;
+  for(var_specst::const_iterator v = var_specs.begin();
+      v!=var_specs.end(); v++)
+    {
+      if(v->kind==LOOP) 
+      {
+	has_loop = true;
+        break;
+      }
+    }
+  if(!has_loop) return;
 
-	for(var_specst::const_iterator v = var_specs.begin();
-				v!=var_specs.end(); v++)
-	{
-		if(v->kind!=LOOP) continue;
+  templ.reserve(templ.size()+1);
+  templ.push_back(template_rowt());
+  template_rowt &templ_row = templ.back();
+  templ_row.kind = LOOP;
 
-		templ.push_back(template_rowt());
-		template_rowt &templ_row = templ.back();
-		templ_row.expr = v->var;
-		templ_row.pre_guard = v->pre_guard;
-		templ_row.post_guard = v->post_guard;
-		templ_row.kind = v->kind;
-	}
+  exprt::operandst preg;
+  exprt::operandst postg;
+
+  for(var_specst::const_iterator v = var_specs.begin();
+      v!=var_specs.end(); v++)
+    {
+      if(v->kind!=LOOP) continue;
+      preg.push_back(v->pre_guard);
+      postg.push_back(v->post_guard);
+      templ_row.expr.push_back(std::pair<exprt,exprt>(v->var,rename(v->var)));
+    }
+
+  templ_row.pre_guard = conjunction(preg);
+  templ_row.post_guard = conjunction(postg);
+}
+/*******************************************************************\
+
+Function: linrank_domaint::is_row_value_false
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool linrank_domaint::is_row_value_false(const row_valuet & row_value) const
+{
+  return row_value.d.get(ID_value)==ID_false;
 }
