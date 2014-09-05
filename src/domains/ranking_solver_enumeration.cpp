@@ -14,6 +14,10 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
 
   bool improved = false;
 
+  // instantiate the "inner" solver
+  satcheck_minisat_no_simplifiert satcheck1;
+  bv_pointerst solver1(ns, satcheck1);
+
   literalt activation_literal = new_context();
 
   //handles on values to retrieve from model
@@ -62,15 +66,9 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
 	// generate the new constraint
 	constraint = linrank_domain.get_row_symb_contraint(row_values, row, values);
 
-	// instantiate a new solver
-	satcheck_minisat_no_simplifiert satcheck1;
-	bv_pointerst solver1(ns, satcheck1);
+	solver1 << constraint;
 
-	literalt activation_literal1 = new_context();
-
-	solver1 << or_exprt(constraint, literal_exprt(activation_literal1));
-
-	if(solve() == decision_proceduret::D_SATISFIABLE) { 
+	if(solver1() == decision_proceduret::D_SATISFIABLE) { 
 
 	  std::vector<exprt> c = row_values.c;
 
@@ -94,8 +92,6 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
 	else {
 	  debug() << "Second solver: UNSAT" << eom;
 	}
-
-	pop_context();
       }
     }
 
