@@ -13,6 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "../ssa/local_ssa.h"
 #include "strategy_solver_base.h"
+#include "linrank_domain.h"
 
 class ssa_analyzert : public messaget
 {
