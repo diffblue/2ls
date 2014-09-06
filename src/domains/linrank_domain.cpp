@@ -29,7 +29,7 @@ exprt linrank_domaint::get_not_constraints(const linrank_domaint::templ_valuet &
 	{
     value_exprs.insert(value_exprs.end(), templ[row].expr.begin(), templ[row].expr.end()); //FIXME appending?
 
-                if(is_row_value_false(value[row]))
+    if(is_row_value_false(value[row]))
 		{
 		  // !(g => false)
 		  cond_exprs[row] = 
@@ -40,10 +40,10 @@ exprt linrank_domaint::get_not_constraints(const linrank_domaint::templ_valuet &
 		  exprt sum_first = value[row].d;
 		  exprt sum_second = value[row].d;
 		  for(int i = 0; i < value[row].c.size(); ++i)
-		    {
-		      sum_first = plus_exprt(sum_first, mult_exprt(value[row].c[i], templ[row].expr[i].first));
-		      sum_second = plus_exprt(sum_second, mult_exprt(value[row].c[i], templ[row].expr[i].second));
-		    }
+      {
+        sum_first = plus_exprt(sum_first, mult_exprt(value[row].c[i], templ[row].expr[i].first));
+        sum_second = plus_exprt(sum_second, mult_exprt(value[row].c[i], templ[row].expr[i].second));
+      }
 
 		  exprt bounded = binary_relation_exprt(sum_first, ID_gt, constant_exprt(0, value[row].d.type()));
 		  exprt decreasing = binary_relation_exprt(sum_first, ID_gt, sum_second);
@@ -225,13 +225,13 @@ void linrank_domaint::add_template(templatet &templ,
   bool has_loop = false;
   for(var_specst::const_iterator v = var_specs.begin();
       v!=var_specs.end(); v++)
+  {
+    if(v->kind==LOOP)
     {
-      if(v->kind==LOOP) 
-      {
-	has_loop = true;
-        break;
-      }
+      has_loop = true;
+      break;
     }
+  }
   if(!has_loop) return;
 
   templ.reserve(templ.size()+1);
@@ -244,12 +244,12 @@ void linrank_domaint::add_template(templatet &templ,
 
   for(var_specst::const_iterator v = var_specs.begin();
       v!=var_specs.end(); v++)
-    {
-      if(v->kind!=LOOP) continue;
-      preg.push_back(v->pre_guard);
-      postg.push_back(v->post_guard);
-      templ_row.expr.push_back(std::pair<exprt,exprt>(v->var,v->var));//FIXME: change the second v->var?
-    }
+  {
+    if(v->kind!=LOOP) continue;
+    preg.push_back(v->pre_guard);
+    postg.push_back(v->post_guard);
+    templ_row.expr.push_back(std::pair<exprt,exprt>(v->var,v->var));//FIXME: change the second v->var?
+  }
 
   templ_row.pre_guard = conjunction(preg);
   templ_row.post_guard = conjunction(postg);
