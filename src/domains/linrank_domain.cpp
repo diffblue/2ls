@@ -23,12 +23,11 @@ exprt linrank_domaint::get_not_constraints(const linrank_domaint::templ_valuet &
 			    linrank_domaint::pre_post_valuest &value_exprs)
 {
 	cond_exprs.resize(value.size());
-	value_exprs.resize(value.size());
+// 	value_exprs.resize(value.size());
 
-	for(unsigned row = 0; row<templ.size(); row++)
+  for(unsigned row = 0; row<templ.size(); row++)
 	{
-		value_exprs[row] = templ[row].expr;
-		//	rename(value_exprs[row]);
+    value_exprs.insert(value_exprs.end(), templ[row].expr.begin(), templ[row].expr.end()); //FIXME appending?
 
                 if(is_row_value_false(value[row]))
 		{
@@ -63,12 +62,12 @@ exprt linrank_domaint::get_row_symb_contraint(linrank_domaint::row_valuet &symb_
 {
 	symb_values.c.resize(values.size());
 
-	symb_values.d = symbol_exprt(SYMB_BOUND_VAR+"d!"+i2string(row), values[0].first.type());
+	symb_values.d = symbol_exprt(SYMB_BOUND_VAR+std::string("d!")+i2string(row), values[0].first.type());
 	exprt sum_first = symb_values.d;
 	exprt sum_second = symb_values.d;
 	for(int i = 0; i < symb_values.c.size(); ++i)
 	{
-		symb_values.c[i] = symbol_exprt(SYMB_BOUND_VAR+"c!"+i2string(row)+"$"+i2string(i), values[i].first.type());
+		symb_values.c[i] = symbol_exprt(SYMB_BOUND_VAR+std::string("c!")+i2string(row)+"$"+i2string(i), values[i].first.type());
 		sum_first = plus_exprt(sum_first, mult_exprt(symb_values.c[i], values[i].first));
 		sum_second = plus_exprt(sum_second, mult_exprt(symb_values.c[i], values[i].second));
 	}
@@ -95,7 +94,7 @@ void linrank_domaint::set_row_value(const rowt &row, const row_valuet &row_value
 }
 
 void linrank_domaint::output_value(std::ostream &out, const valuet &value,
-  const namespacet &ns)
+  const namespacet &ns) const
 {
   const templ_valuet &v = static_cast<const templ_valuet &>(value);
   for(unsigned row = 0; row<templ.size(); row++)
@@ -111,11 +110,15 @@ void linrank_domaint::output_value(std::ostream &out, const valuet &value,
 //    case OUT: case OUTL: out << "(OUT)  "; break;
     default: assert(false);
     }
-    out << "( " << from_expr(ns,"",templ_row.expr) << " <= " << from_expr(ns,"",v[row]) << " )" << std::endl;
+
+    out << "( d <= " << from_expr(ns,"",v[row].d) << " )" << std::endl;
+    for(unsigned i = 0; i<templ_row.expr.size(); ++i)
+      out << "( " << from_expr(ns,"",templ_row.expr[i].first) << " <= " << from_expr(ns,"",v[row].c[i]) << " )" << std::endl;
+
   }
 }
 
-void linrank_domaint::output_domain(std::ostream &out, const namespacet &ns)
+void linrank_domaint::output_domain(std::ostream &out, const namespacet &ns) const
 {
   for(unsigned row = 0; row<templ.size(); row++)
   {
@@ -136,8 +139,10 @@ void linrank_domaint::output_domain(std::ostream &out, const namespacet &ns)
 //      break;
     default: assert(false);
     }
-    out << "( " <<
-        from_expr(ns,"",templ_row.expr) << " <= CONST )" << std::endl;
+
+    for(unsigned i = 0; i<templ_row.expr.size(); ++i)
+      out << "( " <<
+          from_expr(ns,"",templ_row.expr[i].first) << " <= CONST )" << std::endl;
   }
 }
 
@@ -149,9 +154,16 @@ void linrank_domaint::project_on_loops(const valuet &value, exprt &result)
 	c.reserve(templ.size());
 	for(unsigned row = 0; row<templ.size(); row++)
 	{
-		project_row_on_kind(v,row,LOOP,c);
+// 		project_row_on_kind(v,row,LOOP,c);
 		assert(templ[row].kind == LOOP);
-		c.push_back(binary_relation_exprt(templ[row].expr,ID_le,v[row]));
+
+    if(is_row_value_false(v[row])) c.push_back(false_exprt());
+    else
+    {
+      //FIXME:
+      for(unsigned i=0; i<templ[row].expr.size(); ++i)
+        c.push_back(binary_relation_exprt(templ[row].expr[i].first,ID_le,v[row].c[i]));
+    }
 	}
 	result = conjunction(c);
 }
@@ -170,8 +182,10 @@ void linrank_domaint::project_on_vars(const valuet &value, const var_sett &vars,
 	{
 		const template_rowt &templ_row = templ[row];
 
+    //FIXME:
 		std::set<symbol_exprt> symbols;
-		find_symbols(templ_row.expr,symbols);
+    for(unsigned i=0; i<templ_row.expr.size(); ++i)
+      find_symbols(templ_row.expr[i].first,symbols);
 
 		bool pure = true;
 		for(std::set<symbol_exprt>::iterator it = symbols.begin();
@@ -185,7 +199,9 @@ void linrank_domaint::project_on_vars(const valuet &value, const var_sett &vars,
 		}
 		if(!pure) continue;
 
-		c.push_back(binary_relation_exprt(templ_row.expr,ID_le,v[row]));
+    //FIXME:
+    for(unsigned i=0; i<templ_row.expr.size(); ++i)
+      c.push_back(binary_relation_exprt(templ_row.expr[i].first,ID_le,v[row].c[i]));
 	}
 	result = conjunction(c);
 }
@@ -232,7 +248,7 @@ void linrank_domaint::add_template(templatet &templ,
       if(v->kind!=LOOP) continue;
       preg.push_back(v->pre_guard);
       postg.push_back(v->post_guard);
-      templ_row.expr.push_back(std::pair<exprt,exprt>(v->var,rename(v->var)));
+      templ_row.expr.push_back(std::pair<exprt,exprt>(v->var,v->var));//FIXME: change the second v->var?
     }
 
   templ_row.pre_guard = conjunction(preg);
