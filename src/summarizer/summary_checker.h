@@ -66,6 +66,7 @@ protected:
   void check_properties_incremental(const summarizert::functionst::const_iterator f_it);
 
   void report_preconditions();
+  resultt report_termination();
 
 };
 

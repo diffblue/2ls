@@ -60,6 +60,12 @@ property_checkert::resultt summary_checkert::operator()(
     return property_checkert::UNKNOWN;
   }
 
+  if(options.get_bool_option("termination")) 
+  {
+    property_checkert::resultt all_terminate = report_termination();
+    return all_terminate;
+  }
+
   property_checkert::resultt result =  check_properties(); 
   report_statistics();
   return result;
@@ -506,4 +512,34 @@ void summary_checkert::report_preconditions()
     result() << eom << "[" << it->first << "]: " 
 	     << from_expr(it->second->ns, "", precondition) << eom;
   }
+}
+
+/*******************************************************************\
+
+Function: summary_checkert::report_termination
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+property_checkert::resultt summary_checkert::report_termination()
+{
+  result() << eom;
+  result() << "** Termination: " << eom;
+  bool all_terminate = true; 
+  summarizert::functionst &functions = ssa_db.functions();
+  for(summarizert::functionst::iterator it = functions.begin();
+      it != functions.end(); it++)
+  {
+    bool terminates = summary_db.get(it->first).terminates;
+    all_terminate = all_terminate && terminates;
+    result() << "[" << it->first << "]: " 
+	     << (terminates ? "yes" : "don't know") << eom;
+  }
+  if(all_terminate) return property_checkert::PASS;
+  return property_checkert::FAIL;
 }

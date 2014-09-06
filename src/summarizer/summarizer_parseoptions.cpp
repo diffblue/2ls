@@ -395,12 +395,14 @@ int summarizer_parseoptionst::doit()
     switch(summary_checker(goto_model))
     {
     case property_checkert::PASS:
-      report_properties(goto_model, summary_checker.property_map);
+      if(!options.get_bool_option("termination"))
+        report_properties(goto_model, summary_checker.property_map);
       report_success();
       return 0;
     
     case property_checkert::FAIL:
-      report_properties(goto_model, summary_checker.property_map);
+      if(!options.get_bool_option("termination"))
+        report_properties(goto_model, summary_checker.property_map);
       report_failure();
       return 10;
     

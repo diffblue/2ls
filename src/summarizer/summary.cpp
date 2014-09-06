@@ -40,6 +40,8 @@ void summaryt::output(std::ostream &out, const namespacet &ns) const
   out << std::endl;
   out << "precondition: " << from_expr(ns,"",precondition) << std::endl;
   out << "transformer: " << from_expr(ns,"",transformer) << std::endl;
-  out << "termination argument: " << from_expr(ns,"",termination_argument) << std::endl;
+  out << "termination argument: " << 
+    (termination_argument.is_nil() ? "not computed" : 
+     from_expr(ns,"",termination_argument)) << std::endl;
   out << "terminates: " << (terminates ? "yes" : "don't know") << std::endl;
 }
