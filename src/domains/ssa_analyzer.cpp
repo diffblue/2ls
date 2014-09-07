@@ -57,7 +57,8 @@ void ssa_analyzert::operator()(local_SSAt &SSA,
 
   // gather information for creating domains
   domaint::var_specst var_specs;
-  collect_variables(SSA, var_specs, forward);
+  if(!(options.get_bool_option("termination") && compute_ranking_functions))
+    collect_variables(SSA, var_specs, forward);
 
   //get domain from command line options
   template_domaint::templatet templ;
@@ -116,12 +117,12 @@ void ssa_analyzert::operator()(local_SSAt &SSA,
   // get strategy solver from options
   strategy_solver_baset *strategy_solver;
   domaint *domain; 
+  linrank_domaint::templatet linrank_templ;
   strategy_solver_baset::invariantt *inv;
   if(options.get_bool_option("termination") && compute_ranking_functions)
   {
-    linrank_domaint::templatet templ;
-    generate_template_for_termination(SSA,templ);
-    domain = new linrank_domaint(renaming_map, templ);
+    generate_template_for_termination(SSA,linrank_templ);
+    domain = new linrank_domaint(renaming_map, linrank_templ);
     strategy_solver = new ranking_solver_enumerationt(
         transition_relation, 
         *static_cast<linrank_domaint *>(domain), solver, ns);    
@@ -348,6 +349,10 @@ void ssa_analyzert::generate_template_for_termination(local_SSAt &SSA,
       }
       
       filter_template_domain(var_specs);
+
+      debug() << "Template variables: " << eom;
+      domaint::output_var_specs(debug(),var_specs,SSA.ns); debug() << eom;
+
       linrank_domaint::add_template(templ,var_specs,SSA.ns);
     } 
   }

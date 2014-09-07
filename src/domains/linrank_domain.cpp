@@ -103,18 +103,18 @@ void linrank_domaint::output_value(std::ostream &out, const valuet &value,
     switch(templ_row.kind)
     {
     case LOOP:
-      out << "(LOOP) [ " << from_expr(ns,"",templ_row.pre_guard) << " | ";
+      out << "(RANK) [ " << from_expr(ns,"",templ_row.pre_guard) << " | ";
       out << from_expr(ns,"",templ_row.post_guard) << " ] ===> " << std::endl << "       ";
       break;
-//    case IN: out << "(IN)   "; break;
-//    case OUT: case OUTL: out << "(OUT)  "; break;
     default: assert(false);
     }
 
-    out << "( d <= " << from_expr(ns,"",v[row].d) << " )" << std::endl;
     for(unsigned i = 0; i<templ_row.expr.size(); ++i)
-      out << "( " << from_expr(ns,"",templ_row.expr[i].first) << " <= " << from_expr(ns,"",v[row].c[i]) << " )" << std::endl;
-
+    {
+      out << from_expr(ns,"",v[row].c[i]) << " * "
+	  << from_expr(ns,"",templ_row.expr[i].first) << " + ";
+    }
+    out << from_expr(ns,"",v[row].d) << std::endl;
   }
 }
 
@@ -126,23 +126,19 @@ void linrank_domaint::output_domain(std::ostream &out, const namespacet &ns) con
     switch(templ_row.kind)
     {
     case LOOP:
-      out << "(LOOP) [ " << from_expr(ns,"",templ_row.pre_guard) << " | ";
-      out << from_expr(ns,"",templ_row.post_guard) << " ] ===> " << std::endl << "      ";
+      out << "(RANK) (" << from_expr(ns,"",templ_row.pre_guard) << ") && ("
+          << from_expr(ns,"",templ_row.post_guard) << ") ===> " 
+          << std::endl << "      ";
       break;
-//    case IN:
-//      out << "(IN)   ";
-//      out << from_expr(ns,"",templ_row.pre_guard) << " ===> " << std::endl << "      ";
-//      break;
-//    case OUT: case OUTL:
-//      out << "(OUT)  ";
-//      out << from_expr(ns,"",templ_row.post_guard) << " ===> " << std::endl << "      ";
-//      break;
     default: assert(false);
     }
 
     for(unsigned i = 0; i<templ_row.expr.size(); ++i)
-      out << "( " <<
-          from_expr(ns,"",templ_row.expr[i].first) << " <= CONST )" << std::endl;
+    {
+      out << "c" << i << " * "
+	  << from_expr(ns,"",templ_row.expr[i].first) << " + ";
+    }
+    out << "d" << std::endl;
   }
 }
 
