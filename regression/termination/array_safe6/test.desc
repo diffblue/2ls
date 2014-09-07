@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 main.c
 --intervals --context-sensitive --array-abstraction
 ^EXIT=0$
