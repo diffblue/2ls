@@ -60,17 +60,17 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
 	  values.push_back(std::make_pair(value, post_value));
 	}
 
-	linrank_domaint::row_valuet row_values;
+	linrank_domaint::row_valuet symb_values;
 	exprt constraint;
 
 	// generate the new constraint
-	constraint = linrank_domain.get_row_symb_contraint(row_values, row, values);
+	constraint = linrank_domain.get_row_symb_contraint(symb_values, row, values);
 
 	solver1 << constraint;
 
 	if(solver1() == decision_proceduret::D_SATISFIABLE) { 
 
-	  std::vector<exprt> c = row_values.c;
+	  std::vector<exprt> c = symb_values.c;
 
 	  // new_row_values will contain the new values for c and d
 	  linrank_domaint::row_valuet new_row_values;
@@ -82,7 +82,7 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
 	  }
 
 	  // get the model for d
-	  new_row_values.d = solver1.get(row_values.d);
+	  new_row_values.d = solver1.get(symb_values.d);
 
 	  // update the current template
 	  linrank_domain.set_row_value(row, new_row_values, rank);
