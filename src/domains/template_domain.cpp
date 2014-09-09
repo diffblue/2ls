@@ -793,6 +793,9 @@ Function: extend_expr_types
 
 void extend_expr_types(exprt &expr)
 {
+//  std::cerr << "expr: " << expr << std::endl;
+  if(expr.id()==ID_typecast) assert(false);
+  if(expr.id()==ID_constant) return;
   if(expr.id()==ID_symbol) return;
   if(expr.id()==ID_index) return;
   if(expr.id()==ID_unary_minus)
@@ -815,7 +818,9 @@ void extend_expr_types(exprt &expr)
   if(expr.id()==ID_plus || expr.id()==ID_minus)
   {
     extend_expr_types(expr.op0());
+//  std::cerr << "op0: " << expr.op0() << std::endl;
     extend_expr_types(expr.op1());
+//  std::cerr << "op1: " << expr.op1() << std::endl;
     unsigned size0 = 0, size1  = 0;
     if(expr.op0().type().id()==ID_signedbv) 
       size0 =  to_signedbv_type(expr.op0().type()).get_width();
@@ -830,29 +835,51 @@ void extend_expr_types(exprt &expr)
     if(expr.op0().type().id()==expr.op1().type().id())
     {
      if(new_type.id()==ID_signedbv) 
-       to_signedbv_type(new_type).set_width(std::max(size0,size1)+1);
+       new_type = signedbv_typet(std::max(size0,size1)+1);
      else if(new_type.id()==ID_unsignedbv) 
      {
        if(expr.id()==ID_minus) 
          new_type = signedbv_typet(std::max(size0,size1)+1);
        else 
-         to_unsignedbv_type(new_type).set_width(std::max(size0,size1)+1);
+         new_type = unsignedbv_typet(std::max(size0,size1)+1);
      }
+     else assert(false);
     }
     else
     {
      if(new_type.id()==ID_signedbv) 
-       to_signedbv_type(new_type).set_width(size0<=size1 ? size1+2 : size0+1);
+       new_type = signedbv_typet(size0<=size1 ? size1+2 : size0+1);
      else if(new_type.id()==ID_unsignedbv) 
        new_type = signedbv_typet(size1<=size0 ? size0+2 : size1+1);
+     else assert(false);
     }
     if(expr.id()==ID_plus)
       expr = plus_exprt(typecast_exprt(expr.op0(),new_type),typecast_exprt(expr.op1(),new_type));
     else if(expr.id()==ID_minus)
       expr = minus_exprt(typecast_exprt(expr.op0(),new_type),typecast_exprt(expr.op1(),new_type));
+     else assert(false);
     return;
   }
   //TODO: implement mult
+  if(expr.id()==ID_mult)
+  {
+    extend_expr_types(expr.op0());
+    extend_expr_types(expr.op1());
+    unsigned size0 = 0, size1  = 0;
+    if(expr.op0().type().id()==ID_signedbv) 
+      size0 =  to_signedbv_type(expr.op0().type()).get_width();
+    if(expr.op0().type().id()==ID_unsignedbv) 
+      size0 =  to_unsignedbv_type(expr.op0().type()).get_width();
+    if(expr.op1().type().id()==ID_signedbv) 
+      size1 =  to_signedbv_type(expr.op1().type()).get_width();
+    if(expr.op1().type().id()==ID_unsignedbv) 
+      size1 =  to_unsignedbv_type(expr.op1().type()).get_width();
+    assert(size0>0); assert(size1>0); //TODO: implement floats
+    typet new_type = signedbv_typet(size0+size1+1);
+    expr = mult_exprt(typecast_exprt(expr.op0(),new_type),typecast_exprt(expr.op1(),new_type));
+    return;
+  }
+  std::cerr << "expr: " << expr << std::endl;
   assert(false);
 }
 

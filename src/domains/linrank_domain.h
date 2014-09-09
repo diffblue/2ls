@@ -45,10 +45,8 @@ public:
 
 
 
-  linrank_domaint(replace_mapt &_renaming_map, 
-                   templatet &_template) :
-    domaint(_renaming_map),
-    templ(_template) 
+  linrank_domaint(replace_mapt &_renaming_map) :
+    domaint(_renaming_map)
   {}
 
   // initialize value
@@ -57,7 +55,7 @@ public:
   // value -> constraints
   exprt get_not_constraints(const templ_valuet &value,
 			    exprt::operandst &cond_exprs,// identical to before 
-			    pre_post_valuest &value_exprs); // (x, x')
+			    std::vector<pre_post_valuest> &value_exprs); // (x, x')
   exprt get_row_symb_contraint(row_valuet &symb_values, // contains vars c and d
 			       const rowt &row,
 			       pre_post_valuest &values
@@ -67,6 +65,7 @@ public:
   // set, get value
   row_valuet get_row_value(const rowt &row, const templ_valuet &value);
   void set_row_value(const rowt &row, const row_valuet &row_value, templ_valuet &value);
+  void set_row_value_to_true(const rowt &row, templ_valuet &value);
 
   // printing
   virtual void output_value(std::ostream &out, const valuet &value, const namespacet &ns) const;
@@ -81,14 +80,14 @@ public:
   unsigned template_size() {return templ.size();}
 
   // generating templates
-  static void add_template(templatet &templ,
-			      const var_specst &var_specs,
-			      const namespacet &ns);
+  void add_template(const var_specst &var_specs,
+		    const namespacet &ns);
 
 protected:
-  templatet &templ;
+  templatet templ;
 
   bool is_row_value_false(const row_valuet & row_value) const;
+  bool is_row_value_true(const row_valuet & row_value) const;
 
   
 };

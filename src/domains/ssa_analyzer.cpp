@@ -57,8 +57,8 @@ void ssa_analyzert::operator()(local_SSAt &SSA,
 
   // gather information for creating domains
   domaint::var_specst var_specs;
-  if(!(options.get_bool_option("termination") && compute_ranking_functions))
-    collect_variables(SSA, var_specs, forward);
+  //if(!(options.get_bool_option("termination") && compute_ranking_functions))
+  collect_variables(SSA, var_specs, forward);
 
   //get domain from command line options
   template_domaint::templatet templ;
@@ -117,12 +117,12 @@ void ssa_analyzert::operator()(local_SSAt &SSA,
   // get strategy solver from options
   strategy_solver_baset *strategy_solver;
   domaint *domain; 
-  linrank_domaint::templatet linrank_templ;
   strategy_solver_baset::invariantt *inv;
   if(options.get_bool_option("termination") && compute_ranking_functions)
   {
-    generate_template_for_termination(SSA,linrank_templ);
-    domain = new linrank_domaint(renaming_map, linrank_templ);
+    linrank_domaint *linrank_domain = new linrank_domaint(renaming_map);
+    domain = linrank_domain;
+    generate_template_for_termination(SSA,*linrank_domain);
     strategy_solver = new ranking_solver_enumerationt(
         transition_relation, 
         *static_cast<linrank_domaint *>(domain), solver, ns);    
@@ -313,8 +313,10 @@ Function: ssa_analyzert::generate_template_for_termination
 \*******************************************************************/
 
 void ssa_analyzert::generate_template_for_termination(local_SSAt &SSA,
-				      linrank_domaint::templatet &templ)
+				      linrank_domaint &dom)
 {
+  // used for renaming map
+  var_listt pre_state_vars, post_state_vars; //TODO: find a better solution for that
 
   // add loop variables
   for(local_SSAt::nodest::iterator n_it = SSA.nodes.begin(); 
@@ -345,16 +347,28 @@ void ssa_analyzert::generate_template_for_termination(local_SSAt &SSA,
         symbol_exprt in=SSA.name(*o_it, local_SSAt::LOOP_BACK, n_it->location);
         symbol_exprt out=SSA.read_rhs(*o_it, n_it->location);
 
-        add_var(in,pre_guard,post_guard,domaint::LOOP,var_specs);     
-      }
+        add_var(in,pre_guard,post_guard,domaint::LOOP,var_specs);  
+   
+        pre_state_vars.push_back(in);
+        post_state_vars.push_back(out);
+     }
       
       filter_template_domain(var_specs);
 
       debug() << "Template variables: " << eom;
       domaint::output_var_specs(debug(),var_specs,SSA.ns); debug() << eom;
 
-      linrank_domaint::add_template(templ,var_specs,SSA.ns);
+      dom.add_template(var_specs,SSA.ns);
     } 
+  }
+
+  // building map for renaming from pre into post-state
+  assert(pre_state_vars.size()==post_state_vars.size());
+  var_listt::const_iterator it1=pre_state_vars.begin();
+  var_listt::const_iterator it2=post_state_vars.begin();
+  for(; it1!=pre_state_vars.end(); ++it1, ++it2)
+  {
+    renaming_map[*it1]=*it2;    
   }
 }
 

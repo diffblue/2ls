@@ -10,6 +10,8 @@
 
 #define SYMB_BOUND_VAR "symb_coeff#"
 
+#define EXTEND_TYPES
+
 void linrank_domaint::initialize(valuet &value)
 {
 	templ_valuet &v = static_cast<templ_valuet&>(value);
@@ -20,23 +22,34 @@ void linrank_domaint::initialize(valuet &value)
 
 exprt linrank_domaint::get_not_constraints(const linrank_domaint::templ_valuet &value,
 			    exprt::operandst &cond_exprs,
-			    linrank_domaint::pre_post_valuest &value_exprs)
+			std::vector<linrank_domaint::pre_post_valuest> &value_exprs)
 {
   cond_exprs.resize(value.size());
-  value_exprs.clear();
+  value_exprs.resize(value.size());
 
   for(unsigned row = 0; row<templ.size(); row++)
   {
-    value_exprs.insert(value_exprs.end(), templ[row].expr.begin(), templ[row].expr.end()); 
+    value_exprs[row].insert(value_exprs[row].end(),templ[row].expr.begin(),templ[row].expr.end()); 
 
-    if(is_row_value_false(value[row]))
+    if(is_row_value_true(value[row]))
+    {
+      // !(g => true)
+      cond_exprs[row] = 
+	not_exprt(and_exprt(templ[row].pre_guard, templ[row].post_guard)); //TEST
+    }
+    else if(is_row_value_false(value[row]))
     {
       // !(g => false)
       cond_exprs[row] = 
-	and_exprt(templ[row].pre_guard, templ[row].post_guard);
+	and_exprt(templ[row].pre_guard, templ[row].post_guard); //TEST
     }
     else
     {
+      std::cout << "value.c.size: " << value[row].c.size() << std::endl;
+      std::cout << "temp.expr.size: " << templ[row].expr.size() << std::endl;
+
+      assert(value[row].c.size()==templ[row].expr.size());
+
       exprt sum_first = value[row].d;
       exprt sum_second = value[row].d;
       for(int i = 0; i < value[row].c.size(); ++i)
@@ -44,6 +57,11 @@ exprt linrank_domaint::get_not_constraints(const linrank_domaint::templ_valuet &
         sum_first = plus_exprt(sum_first, mult_exprt(value[row].c[i], templ[row].expr[i].first));
         sum_second = plus_exprt(sum_second, mult_exprt(value[row].c[i], templ[row].expr[i].second));
       }
+      //extend types
+#ifdef EXTEND_TYPES
+      extend_expr_types(sum_first);
+      extend_expr_types(sum_second);
+#endif
 
       exprt bounded = binary_relation_exprt(sum_first, ID_gt, from_integer(mp_integer(0),value[row].d.type()));
       exprt decreasing = binary_relation_exprt(sum_first, ID_gt, sum_second);
@@ -66,19 +84,23 @@ exprt linrank_domaint::get_row_symb_contraint(linrank_domaint::row_valuet &symb_
 			       values[0].first.type());
   exprt sum_first = symb_values.d;
   exprt sum_second = symb_values.d;
-  for(int i = 0; i < symb_values.c.size(); ++i)
+  for(int i = 0; i < values.size(); ++i)
   {
     symb_values.c[i] = symbol_exprt(SYMB_BOUND_VAR+std::string("c!")+i2string(row)+"$"+i2string(i), values[i].first.type());
     sum_first = plus_exprt(sum_first, mult_exprt(symb_values.c[i], values[i].first));
     sum_second = plus_exprt(sum_second, mult_exprt(symb_values.c[i], values[i].second));
   }
+  //extend types
+#ifdef EXTEND_TYPES
+  extend_expr_types(sum_first);
+  extend_expr_types(sum_second);
+#endif
 
   exprt bounded = binary_relation_exprt(sum_first, ID_gt, 
        from_integer(mp_integer(0),symb_values.d.type()));
   exprt decreasing = binary_relation_exprt(sum_first, ID_gt, sum_second);
 
-  return implies_exprt(and_exprt(templ[row].pre_guard, templ[row].post_guard),
-		       and_exprt(bounded, decreasing));
+  return and_exprt(bounded, decreasing);
 }
 
 linrank_domaint::row_valuet linrank_domaint::get_row_value(const rowt &row, const templ_valuet &value)
@@ -93,6 +115,13 @@ void linrank_domaint::set_row_value(const rowt &row, const row_valuet &row_value
 	assert(row<value.size());
 	assert(value.size()==templ.size());
 	value[row] = row_value;
+}
+
+void linrank_domaint::set_row_value_to_true(const rowt &row, templ_valuet &value)
+{
+	assert(row<value.size());
+	assert(value.size()==templ.size());
+	value[row].d = true_exprt();
 }
 
 void linrank_domaint::output_value(std::ostream &out, const valuet &value,
@@ -157,15 +186,21 @@ void linrank_domaint::project_on_loops(const valuet &value, exprt &result)
     if(is_row_value_false(v[row])) c.push_back(false_exprt());
     else
     {
-      //FIXME:
       for(unsigned i=0; i<templ[row].expr.size(); ++i)
       {
 	if(is_row_value_false(v[row]))
 	{
-	  //!(g => false)
+	  //(g => false)
 	  c.push_back(implies_exprt(
 			and_exprt(templ[row].pre_guard, templ[row].post_guard),
 			false_exprt()));
+	}
+	if(is_row_value_true(v[row]))
+	{
+	  //(g => true)
+	  c.push_back(implies_exprt(
+			and_exprt(templ[row].pre_guard, templ[row].post_guard),
+			true_exprt()));
 	}
 	else
 	{
@@ -178,7 +213,11 @@ void linrank_domaint::project_on_loops(const valuet &value, exprt &result)
 	    sum_second = plus_exprt(sum_second, mult_exprt(v[row].c[i], 
 							   templ[row].expr[i].second));
 	  }
-
+	  //extend types
+#ifdef EXTEND_TYPES
+	  extend_expr_types(sum_first);
+	  extend_expr_types(sum_second);
+#endif
 	  exprt bounded = binary_relation_exprt(sum_first, ID_gt, 
 						from_integer(mp_integer(0), v[row].d.type()));
 	  exprt decreasing = binary_relation_exprt(sum_first, ID_gt, sum_second);
@@ -250,9 +289,8 @@ Function: linrank_domaint::add_template
 
 \*******************************************************************/
 
-void linrank_domaint::add_template(templatet &templ,
-					      const var_specst &var_specs,
-					      const namespacet &ns)
+void linrank_domaint::add_template(const var_specst &var_specs,
+				   const namespacet &ns)
 {
   bool has_loop = false;
   for(var_specst::const_iterator v = var_specs.begin();
@@ -280,12 +318,15 @@ void linrank_domaint::add_template(templatet &templ,
     if(v->kind!=LOOP) continue;
     preg.push_back(v->pre_guard);
     postg.push_back(v->post_guard);
-    templ_row.expr.push_back(std::pair<exprt,exprt>(v->var,v->var));//FIXME: change the second v->var?
+    exprt vpost = v->var; //copy
+    rename(vpost);
+    templ_row.expr.push_back(std::pair<exprt,exprt>(v->var,vpost));
   }
 
   templ_row.pre_guard = conjunction(preg);
   templ_row.post_guard = conjunction(postg);
 }
+
 /*******************************************************************\
 
 Function: linrank_domaint::is_row_value_false
@@ -301,4 +342,21 @@ Function: linrank_domaint::is_row_value_false
 bool linrank_domaint::is_row_value_false(const row_valuet & row_value) const
 {
   return row_value.d.get(ID_value)==ID_false;
+}
+
+/*******************************************************************\
+
+Function: linrank_domaint::is_row_value_true
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool linrank_domaint::is_row_value_true(const row_valuet & row_value) const
+{
+  return row_value.d.get(ID_value)==ID_true;
 }

@@ -71,7 +71,7 @@ protected:
 			 domaint::var_specst &var_specs,
                          bool forward);
   void generate_template_for_termination(local_SSAt &SSA,
-					 linrank_domaint::templatet &templ);
+					 linrank_domaint &dom);
 
   domaint::var_specst filter_template_domain(const domaint::var_specst& var_specs);
   domaint::var_specst filter_equality_domain(const domaint::var_specst& var_specs);

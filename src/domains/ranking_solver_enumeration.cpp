@@ -21,7 +21,7 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
   literalt activation_literal = new_context();
 
   //handles on values to retrieve from model
-  linrank_domaint::pre_post_valuest rank_value_exprs;
+  std::vector<linrank_domaint::pre_post_valuest> rank_value_exprs;
   exprt::operandst rank_cond_exprs;
   bvt rank_cond_literals;
 
@@ -30,7 +30,7 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
 #ifndef DEBUG_FORMULA
   solver << or_exprt(rank_expr, literal_exprt(activation_literal));
 #else
-  debug() << "(RANK) Rank constraint : " << rank_expr << eom; 
+  debug() << "(RANK) Rank constraint : " << from_expr(ns,"",rank_expr) << eom; 
   debug() << "(RANK) literal " << activation_literal << eom;
   literalt l = solver.convert(or_exprt(rank_expr, literal_exprt(activation_literal)));
   if(!l.is_constant()) 
@@ -61,21 +61,25 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
   if(solve() == decision_proceduret::D_SATISFIABLE) 
   { 
     debug() << "SAT" << eom;
-
-    // retrieve values from the model x_i and x'_i
-    linrank_domaint::pre_post_valuest values;
   
     for(unsigned row = 0; row < rank_cond_literals.size(); row++)
     {
+      // retrieve values from the model x_i and x'_i
+      linrank_domaint::pre_post_valuest values;
+  
       if(solver.l_get(rank_cond_literals[row]).is_true()) 
       {
-	for(linrank_domaint::pre_post_valuest::iterator it = rank_value_exprs.begin(); it != rank_value_exprs.end(); ++it) {
+	for(linrank_domaint::pre_post_valuest::iterator it = rank_value_exprs[row].begin(); 
+	    it != rank_value_exprs[row].end(); ++it) 
+       {
 	  // model for x_i
 	  exprt value = solver.get(it->first);
-	  debug() << "(RANK) Value for " << it->first << ": " << value << eom;
+	  debug() << "(RANK) Row " << row << " Value for " << from_expr(ns,"",it->first) 
+		  << ": " << from_expr(ns,"",value) << eom;
 	  // model for x'_i
 	  exprt post_value = solver.get(it->second);
-	  debug() << "(RANK) Value for " << it->second << ": " << post_value << eom;
+	  debug() << "(RANK) Row " << row << " Value for " << from_expr(ns,"",it->second) 
+		  << ": " << from_expr(ns,"",post_value) << eom;
 	  // record all the values
 	  values.push_back(std::make_pair(value, post_value));
 	}
@@ -88,10 +92,16 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
 
 	// generate the new constraint
 	constraint = linrank_domain.get_row_symb_contraint(symb_values, row, values);
+	debug() << "Inner Solver: " << row << " constraint " 
+		    << from_expr(ns,"", constraint) << eom;
 
 	solver1 << constraint;
 
-	if(solver1() == decision_proceduret::D_SATISFIABLE) { 
+	debug() << "inner solve()" << eom;
+
+	if(solver1() == decision_proceduret::D_SATISFIABLE) 
+	{ 
+	  debug() << "inner solver: SAT" << eom;
 
 	  std::vector<exprt> c = symb_values.c;
 
@@ -99,21 +109,31 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
 	  linrank_domaint::row_valuet new_row_values;
 
 	  // get the model for all c
-	  for(std::vector<exprt>::iterator it = c.begin(); it != c.end(); ++it) {
+	  for(std::vector<exprt>::iterator it = c.begin(); it != c.end(); ++it) 
+	  {
 	    exprt v = solver1.get(*it);
 	    new_row_values.c.push_back(v);
+	    debug() << "Inner Solver: " << row << " c value for " 
+		    << from_expr(ns,"", *it) << ": " 
+		    << from_expr(ns,"", v)  << eom;
 	  }
 
 	  // get the model for d
 	  new_row_values.d = solver1.get(symb_values.d);
+	  debug() << "Inner Solver: " << row << " d value for " 
+		  << from_expr(ns,"", symb_values.d)<< ": " 
+		  << from_expr(ns,"", new_row_values.d)  << eom;
 
 	  // update the current template
 	  linrank_domain.set_row_value(row, new_row_values, rank);
 
 	  improved = true;
 	}
-	else {
-	  debug() << "Second solver: UNSAT" << eom;
+	else 
+	{
+	  debug() << "inner solver: UNSAT" << eom;
+          // no ranking function for the current template
+	  linrank_domain.set_row_value_to_true(row, rank);
 	}
       }
     }
