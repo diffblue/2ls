@@ -5,7 +5,7 @@
 #include <solvers/sat/satcheck.h>
 #include <solvers/flattening/bv_pointers.h>
 
-
+#define DEBUG_FORMULA 
 
 bool ranking_solver_enumerationt::iterate(invariantt &_rank)
 {
@@ -27,7 +27,20 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
 
   exprt rank_expr = linrank_domain.get_not_constraints(rank, rank_cond_exprs, rank_value_exprs);
 
+#ifndef DEBUG_FORMULA
   solver << or_exprt(rank_expr, literal_exprt(activation_literal));
+#else
+  debug() << "(RANK) Rank constraint : " << rank_expr << eom; 
+  debug() << "(RANK) literal " << activation_literal << eom;
+  literalt l = solver.convert(or_exprt(rank_expr, literal_exprt(activation_literal)));
+  if(!l.is_constant()) 
+  {
+    debug() << "(RANK) literal " << l << ": " << from_expr(ns,"",or_exprt(rank_expr, literal_exprt(activation_literal))) <<eom;
+    formula.push_back(l);
+  }
+#endif
+
+
 
   rank_cond_literals.resize(rank_cond_exprs.size());
   
@@ -39,6 +52,11 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
 
   debug() << "solve(): ";
 
+#ifdef DEBUG_FORMULA
+  bvt whole_formula = formula;
+  whole_formula.insert(whole_formula.end(),activation_literals.begin(),activation_literals.end());
+  solver.set_assumptions(whole_formula);
+#endif
 
   if(solve() == decision_proceduret::D_SATISFIABLE) 
   { 
@@ -54,14 +72,19 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
 	for(linrank_domaint::pre_post_valuest::iterator it = rank_value_exprs.begin(); it != rank_value_exprs.end(); ++it) {
 	  // model for x_i
 	  exprt value = solver.get(it->first);
+	  debug() << "(RANK) Value for " << it->first << ": " << value << eom;
 	  // model for x'_i
 	  exprt post_value = solver.get(it->second);
+	  debug() << "(RANK) Value for " << it->second << ": " << post_value << eom;
 	  // record all the values
 	  values.push_back(std::make_pair(value, post_value));
 	}
 
 	linrank_domaint::row_valuet symb_values;
 	exprt constraint;
+
+
+
 
 	// generate the new constraint
 	constraint = linrank_domain.get_row_symb_contraint(symb_values, row, values);
