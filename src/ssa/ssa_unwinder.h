@@ -12,6 +12,7 @@ Author: Peter Schrammel
 #include <util/message.h>
 
 #include "../ssa/local_ssa.h"
+#include "../summarizer/ssa_db.h"
 
 class ssa_unwindert : public messaget
 {
@@ -30,7 +31,7 @@ class ssa_unwindert : public messaget
 
 };
 
-class ssa_new_unwindert	: public messaget
+class ssa_local_unwindert	: public messaget
 {
 	local_SSAt& SSA;
 	unsigned int current_unwinding;
@@ -45,6 +46,7 @@ class ssa_new_unwindert	: public messaget
 		loop_nodest loop_nodes;
 
 		tree_loopnodet(){}
+
 		void output(std::ostream& out,const namespacet& ns)
 		{
 
@@ -60,6 +62,7 @@ class ssa_new_unwindert	: public messaget
 					it!=loop_nodes.end();it++)
 			{
 				it->output(out,ns);
+
 			}
 		}
 	};
@@ -77,9 +80,29 @@ public :
 		root_node.output(out,SSA.ns);
 	}
 	std::list<symbol_exprt> enabling_exprs;
-	ssa_new_unwindert(local_SSAt& _SSA): SSA(_SSA),
+	ssa_local_unwindert(local_SSAt& _SSA): SSA(_SSA),
 			current_unwinding(0){ construct_loop_tree();}
 	void unwind(unsigned int k);
+
+};
+
+class ssa_new_unwindert	: public messaget
+{
+
+public:
+	typedef std::map<irep_idt,ssa_local_unwindert> unwinder_mapt;
+		typedef std::pair<irep_idt,ssa_local_unwindert> unwinder_pairt;
+	ssa_new_unwindert(ssa_dbt& _db);
+
+	bool unwind(const irep_idt id,unsigned int k);
+
+	void unwind_all(unsigned int k);
+
+	void output(std::ostream & out);
+protected:
+	ssa_dbt& ssa_db;
+
+	unwinder_mapt unwinder_map;
 
 };
 
