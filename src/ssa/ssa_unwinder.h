@@ -82,7 +82,7 @@ public :
 	std::list<symbol_exprt> enabling_exprs;
 	ssa_local_unwindert(local_SSAt& _SSA): SSA(_SSA),
 			current_unwinding(0){ construct_loop_tree();}
-	void unwind(unsigned int k);
+	bool unwind(unsigned int k);
 
 };
 
@@ -96,7 +96,7 @@ public:
 
 	bool unwind(const irep_idt id,unsigned int k);
 
-	void unwind_all(unsigned int k);
+	bool unwind_all(unsigned int k);
 
 	void output(std::ostream & out);
 protected:

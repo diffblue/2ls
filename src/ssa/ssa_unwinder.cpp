@@ -333,9 +333,9 @@ void ssa_local_unwindert::construct_loop_tree()
  * Pre condition : k must be greater than current_unwinding
  *
  *****************************************************************************/
-void ssa_local_unwindert::unwind(unsigned int k)
+bool ssa_local_unwindert::unwind(unsigned int k)
 {
-	assert(k>current_unwinding);
+	if(k<=current_unwinding) return false;
 	local_SSAt::nodest new_nodes;
 	for(loop_nodest::iterator it=root_node.loop_nodes.begin();
 			it!=root_node.loop_nodes.end();it++)
@@ -346,6 +346,7 @@ void ssa_local_unwindert::unwind(unsigned int k)
 	SSA.nodes.splice(SSA.nodes.begin(),new_nodes);
 	current_unwinding=k;
 
+	return true;
 }
 void ssa_local_unwindert::rename(exprt &expr, std::string suffix)
 {
@@ -576,8 +577,7 @@ bool ssa_new_unwindert::unwind(const irep_idt id,unsigned int k)
 
 		it=unwinder_map.find(id);
 		if(it==unwinder_map.end()) return false;
-		it->second.unwind(k);
-		return true;
+		return it->second.unwind(k);
 
 	}
 
@@ -593,15 +593,16 @@ bool ssa_new_unwindert::unwind(const irep_idt id,unsigned int k)
  *
  *****************************************************************************/
 
-void ssa_new_unwindert::unwind_all(unsigned int k)
+bool ssa_new_unwindert::unwind_all(unsigned int k)
 	{
 
-
+	 bool result=true;
 		for(unwinder_mapt::iterator it=unwinder_map.begin();
 				it!=unwinder_map.end();it++)
 		{
-			it->second.unwind(k);
+			result= result && it->second.unwind(k);
 		}
+		return result;
 	}
 
 /*****************************************************************************\
