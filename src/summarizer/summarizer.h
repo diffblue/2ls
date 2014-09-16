@@ -57,19 +57,9 @@ class summarizert : public messaget
 
   void join_summaries(const summaryt &existing_summary, summaryt &new_summary);
 
-  //obsolete
-  /*  void inline_summaries(const function_namet &function_name, local_SSAt &SSA, 
-      bool recursive, bool always_recompute);*/
   void inline_summaries(const function_namet &function_name, local_SSAt &SSA,
-                        bool context_sensitive, bool forward, bool sufficient); 
-
-  //obsolete
-  /*  void check_preconditions(const function_namet &function_name, 
-			   local_SSAt &SSA,
-                           ssa_inlinert &inliner);
-  void compute_preconditions(const function_namet &function_name, 
-			     local_SSAt &SSA,
-                             ssa_inlinert &inliner);*/
+                        bool context_sensitive, bool forward, bool sufficient,
+			bool &calls_terminate); 
 
   bool check_precondition(const function_namet &function_name, 
 			  local_SSAt::nodest::iterator node, 
@@ -88,6 +78,8 @@ class summarizert : public messaget
   void initialize_preconditions(functionst &_functions, 
 				bool forward, 
 				bool sufficient);
+
+  bool check_termination_argument(exprt expr);
 
   //statistics
   unsigned solver_instances;
