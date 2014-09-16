@@ -5,8 +5,10 @@ void main()
   while(x<10)
   {
     ++x;
+//    if(x%2) continue;
+//    ++x;
     assert(x<=10);
   }
-
+//  x = x;
   assert(x==10);
 }

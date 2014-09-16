@@ -238,8 +238,10 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
       analyzer1.compute_ranking_functions = true;
       analyzer1(SSA,preconditions[function_name],forward); //TODO: not sure about !forward
       analyzer1.get_loop_invariants(summary.termination_argument);
+
       //TODO: extract information whether there a ranking function was found for all loops
-      summary.terminates = false;
+      simplify_expr(summary.termination_argument, SSA.ns);
+      summary.terminates = !summary.termination_argument.is_false(); //TODO: not sure whether this is ok
      
       //statistics
       solver_instances++;

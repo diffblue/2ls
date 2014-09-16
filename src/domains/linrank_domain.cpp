@@ -34,14 +34,13 @@ exprt linrank_domaint::get_not_constraints(const linrank_domaint::templ_valuet &
     if(is_row_value_true(value[row]))
     {
       // !(g => true)
-      cond_exprs[row] = 
-	not_exprt(and_exprt(templ[row].pre_guard, templ[row].post_guard)); //TEST
+      cond_exprs[row] = false_exprt();
     }
     else if(is_row_value_false(value[row]))
     {
       // !(g => false)
       cond_exprs[row] = 
-	and_exprt(templ[row].pre_guard, templ[row].post_guard); //TEST
+	not_exprt(and_exprt(templ[row].pre_guard, templ[row].post_guard)); 
     }
     else
     {
@@ -63,7 +62,7 @@ exprt linrank_domaint::get_not_constraints(const linrank_domaint::templ_valuet &
       extend_expr_types(sum_second);
 #endif
 
-      exprt bounded = binary_relation_exprt(sum_first, ID_gt, from_integer(mp_integer(0),value[row].d.type()));
+      exprt bounded = binary_relation_exprt(sum_first, ID_gt, from_integer(mp_integer(0),sum_first.type()));
       exprt decreasing = binary_relation_exprt(sum_first, ID_gt, sum_second);
 
       cond_exprs[row] = not_exprt(implies_exprt(and_exprt(templ[row].pre_guard, templ[row].post_guard),
@@ -97,7 +96,7 @@ exprt linrank_domaint::get_row_symb_contraint(linrank_domaint::row_valuet &symb_
 #endif
 
   exprt bounded = binary_relation_exprt(sum_first, ID_gt, 
-       from_integer(mp_integer(0),symb_values.d.type()));
+       from_integer(mp_integer(0),sum_first.type()));
   exprt decreasing = binary_relation_exprt(sum_first, ID_gt, sum_second);
 
   return and_exprt(bounded, decreasing);
@@ -219,7 +218,7 @@ void linrank_domaint::project_on_loops(const valuet &value, exprt &result)
 	  extend_expr_types(sum_second);
 #endif
 	  exprt bounded = binary_relation_exprt(sum_first, ID_gt, 
-						from_integer(mp_integer(0), v[row].d.type()));
+						from_integer(mp_integer(0), sum_first.type()));
 	  exprt decreasing = binary_relation_exprt(sum_first, ID_gt, sum_second);
 
 	  c.push_back(implies_exprt(and_exprt(templ[row].pre_guard, templ[row].post_guard),
