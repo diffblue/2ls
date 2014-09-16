@@ -40,7 +40,7 @@ exprt linrank_domaint::get_not_constraints(const linrank_domaint::templ_valuet &
     {
       // !(g => false)
       cond_exprs[row] = 
-	not_exprt(and_exprt(templ[row].pre_guard, templ[row].post_guard)); 
+	and_exprt(templ[row].pre_guard, templ[row].post_guard); 
     }
     else
     {
@@ -70,7 +70,7 @@ exprt linrank_domaint::get_not_constraints(const linrank_domaint::templ_valuet &
     }
   }
 
-  return conjunction(cond_exprs);
+  return disjunction(cond_exprs);
 }
 
 exprt linrank_domaint::get_row_symb_contraint(linrank_domaint::row_valuet &symb_values, // contains vars c and d
@@ -165,10 +165,10 @@ void linrank_domaint::output_domain(std::ostream &out, const namespacet &ns) con
 
     for(unsigned i = 0; i<templ_row.expr.size(); ++i)
     {
-      out << "c" << i << " * "
+      out << "c!" << row << "$" << i << " * "
 	  << from_expr(ns,"",templ_row.expr[i].first) << " + ";
     }
-    out << "d" << std::endl;
+    out << "d!" << row << std::endl;
   }
 }
 
