@@ -594,8 +594,11 @@ bool summarizert::check_termination_argument(exprt expr)
   }
   else
   {
-    assert(expr.id()==ID_implies);
-    if(expr.op1().is_true()) return false;
+    if(expr.id()==ID_implies)
+    {
+      if(expr.op1().is_true()) return false;
+    }
+    else return !expr.is_true();
   }
   return true;
 }
