@@ -43,6 +43,11 @@ class ssa_local_unwindert	: public messaget
 		local_SSAt::nodest body_nodes;
 		//local_SSAt::nodet::iterator loophead_node;
 		std::map<exprt,exprt> pre_post_exprs;
+#if 0
+		symbol_exprt entry_guard;
+		symbol_exprt exit_guard;
+		symbol_exprt cond_expr;
+#endif
 		loop_nodest loop_nodes;
 
 		tree_loopnodet(){}

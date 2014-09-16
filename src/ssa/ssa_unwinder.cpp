@@ -265,8 +265,14 @@ void ssa_local_unwindert::construct_loop_tree()
 			//tree_loopnodet for the nested loop
 			current_stack.push_back(tree_loopnodet());
 			current_node = &current_stack.back();
-			//first node in body_nodes is always the
-			//loop-head of the loop
+			// ASSUME : first node in body_nodes is always the
+			// loop-head of the loop except root_node
+#if 0
+			//get the guard for the loophead to be reachable
+			//get the loop condition
+			current_node->entry_guard=SSA.guard_symbol(n_it->location);
+			current_node->cond_expr=SSA.cond_symbol(n_it->location);
+#endif
 			current_node->body_nodes.push_back(*n_it);
 
 			{
@@ -297,7 +303,15 @@ void ssa_local_unwindert::construct_loop_tree()
 		{
 			//we've found the end of the loop so move
 			// up the stack
+
+			//ASSUME : the last node in the body_nodes
+			// of a loop is always the back-edge node
 			current_node->body_nodes.push_back(*n_it);
+#if 0
+			//get the guard at the end of the loop body
+			//this guard needs to be fed to the next iteration
+			current_node->exit_guard=SSA.guard_symbol(n_it->location);
+#endif
 			assert(!current_stack.empty());
 			//assert would fail for unstructured program
 			current_stack.pop_back();
@@ -403,25 +417,30 @@ void ssa_local_unwindert::rename(local_SSAt::nodet& node,std::string suffix)
  *
  *     L1_1
  *        L2_1
+ *        L2_connector
+ *     L1_connector
  *        and if we move to unwind_depth==2
  *
- *     L1_1
- *        L2_1
- *        L2_2 //partial
- *        L2_*
  *     L1_2
- *        L2_1 //full
- *        L2_2
- *        L2_*
- *     L1_*
+ *        L2_2 //full
+ *        L2_1
+ *        L2_connector
+ *     L1_1
+ *        L2_2 // partial
+ *        L2_1
+ *        L2_connector
+ *     L1_connector
+ *
  *
  *   See that for L1_1 needs to be unwound partially and so is the case of
  *   loops nested inside it
- *   L1_2 on the other hand has to be unwound fully. Also, Li_* are
+ *   L1_2 on the other hand has to be unwound fully. Also, Li_connector are
  *   loop head nodes that connect the unwinding with the rest of the code.
  *   These connections needs to be broken for incremental unwinding so
  *   their equalities are transfered as constraint where new symbol
  *   new_sym => e (e is an equality)
+ *   The topmost loop head also needs to change as it is the only one
+ *   where phi nodes exist
  *   is introduced. To force the equality, set new_sym to true
  *
  *****************************************************************************/
@@ -449,27 +468,45 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
 			}
 		}
 
-			unsigned int min_iter=full?0:current_unwinding;
-			for(unsigned int i=min_iter;i<unwind_depth;i++)
+		unsigned int min_iter=full?0:current_unwinding;
+		for(unsigned int i=min_iter;i<unwind_depth;i++)
+		{
+			//process the loophead first
+			local_SSAt::nodest::iterator it = current_loop.body_nodes.begin();
+			//unwinding is done from bottom to top, so topmost unwinding
+			// is special and is done after this loop
+			if(i<unwind_depth-1)
 			{
-				//process the loophead first
-				local_SSAt::nodest::iterator it = current_loop.body_nodes.begin();
-
-
-				{
-					local_SSAt::nodet node = *it; //copy
-					      for(local_SSAt::nodet::equalitiest::iterator
-						    e_it = node.equalities.begin();
-						  e_it != node.equalities.end(); e_it++)
-					      {
-						if(e_it->rhs().id()!=ID_if)
+				local_SSAt::nodet node = *it; //copy
+				      for(local_SSAt::nodet::equalitiest::iterator
+					    e_it = node.equalities.begin();
+					  e_it != node.equalities.end(); e_it++)
+				      {
+					if(e_it->rhs().id()!=ID_if)
+					{
+						if(e_it->lhs()==SSA.guard_symbol(node.location))
 						{
-						  rename(*e_it,suffix+"%"+i2string(i));
-						  continue;
+							//ASSUME : last node in body_nodes is
+							// always the back-edge node
+							//This back edge nodes gives us the reachability
+							//guard at the end of the loop,
+							//which should be used as reachability guard
+							//from previous to current iteration
+							rename(e_it->lhs(),suffix+'%'+i2string(i));
+							exprt e = SSA.guard_symbol(current_loop.body_nodes.rbegin()->location);
+							rename(e,suffix+"%"+i2string(i+1));
+							e_it->rhs()=e;
+
 						}
+						else
+						{
+							rename(*e_it,suffix+"%"+i2string(i));
+						}
+					  continue;
+					}
 
-						if_exprt &e = to_if_expr(e_it->rhs());
-
+					if_exprt &e = to_if_expr(e_it->rhs());
+#if 0
 						if(i==0)
 						{//for the first iteration, take the input
 							//coming from above
@@ -477,16 +514,19 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
 						  e_it->rhs() = e.false_case();
 						}
 						else
-						{
-							//for other iterations, take the loopback
-							//value
-						  e_it->rhs() = current_loop.pre_post_exprs[e.true_case()];
-						  rename(e_it->rhs(),suffix+"%"+i2string(i-1));
-						  rename(e_it->lhs(),suffix+"%"+i2string(i));
-						}
-					      }
-					      new_nodes.push_back(node);
-				}
+#endif
+					{
+						//for other iterations, take the loopback
+						//value
+					  e_it->rhs() = current_loop.pre_post_exprs[e.true_case()];
+					  rename(e_it->rhs(),suffix+"%"+i2string(i+1));
+					  rename(e_it->lhs(),suffix+"%"+i2string(i));
+					}
+				      }
+				      new_nodes.push_back(node);
+			}
+
+				it++;
 				//now process the rest of the nodes
 			for(;it!=current_loop.body_nodes.end();it++)
 			{
@@ -498,9 +538,16 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
 			}
 
 			}
-			//copy the original loop head as the last iteration
-			{
+
+
 				symbol_exprt new_sym("unwind_"+i2string(unwind_depth),bool_typet());
+				enabling_exprs.push_back(new_sym);
+
+				//only the last element in enabling_exprs needs to be
+				//set to true, all others should be set to false to enable constraint
+				// wrt current unwind_depth
+			{
+					//copy the original loop head as the first (topmost)iteration
 				local_SSAt::nodest::iterator it = current_loop.body_nodes.begin();
 				local_SSAt::nodet node = *it; //copy
 				for(local_SSAt::nodet::equalitiest::iterator
@@ -512,20 +559,53 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
 				      if(e_it->rhs().id()==ID_if)
 				      {
 
-				      if_exprt &e = to_if_expr(e_it->rhs());
-				      e.false_case() = current_loop.pre_post_exprs[e.true_case()];
-				      rename(e.false_case(),suffix+"%"+i2string(unwind_depth-1));
-				      //eventually, this false case should be replaced to handle
-				      // that loop can exit before unwind_depth is reached
+				    	  rename(e_it->lhs(),suffix+"%"+i2string(unwind_depth-1));
+
+				      }
+				      else
+				      {
+				    	  rename(*e_it,suffix+"%"+i2string(unwind_depth-1));
 				      }
 				      exprt e = implies_exprt(new_sym,*e_it);
 				      node.constraints.push_back(e);
 				    }
 				node.equalities.clear();
 				new_nodes.push_back(node);
-				enabling_exprs.push_back(new_sym);
-				//only the last element in enabling_exprs needs to be
-				//set to true, all others should be set to false
+
+			}
+
+			//now the connector node
+			{
+				//copy the original loop head
+
+				local_SSAt::nodet node = current_loop.body_nodes.front();
+
+				exprt guard_e = SSA.guard_symbol(node.location);
+				exprt cond_e = SSA.cond_symbol(node.location);
+				for(local_SSAt::nodet::equalitiest::iterator
+						e_it=node.equalities.begin();
+						e_it!=node.equalities.end();e_it++)
+				{
+					exprt e = e_it->lhs();
+					exprt re = e;
+					rename(re,suffix+"%"+i2string(0));
+					for(unsigned int i=1;i<unwind_depth;i++)
+					{
+						exprt cond_expr = and_exprt(cond_e,guard_e);
+						exprt true_expr = e;
+						rename(true_expr,suffix+"%"+i2string(i));
+						exprt false_expr = re;
+						re = if_exprt(cond_expr,true_expr,false_expr);
+					}
+
+					e_it->rhs() = re;
+
+					exprt ie = implies_exprt(new_sym,*e_it);
+					node.constraints.push_back(ie);
+
+				}
+				node.equalities.clear();
+				new_nodes.push_back(node);
 			}
 
 
