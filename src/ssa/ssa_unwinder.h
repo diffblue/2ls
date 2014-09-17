@@ -37,6 +37,7 @@ class ssa_local_unwindert	: public messaget
 	unsigned int current_unwinding;
 	class tree_loopnodet;
 	typedef std::list<tree_loopnodet> loop_nodest;
+	bool loopless;
 	class tree_loopnodet
 	{
 	public:
@@ -69,6 +70,7 @@ class ssa_local_unwindert	: public messaget
 				it->output(out,ns);
 
 			}
+
 		}
 	};
 	tree_loopnodet root_node;
@@ -82,7 +84,8 @@ class ssa_local_unwindert	: public messaget
 public :
 	void output(std::ostream& out)
 	{
-		root_node.output(out,SSA.ns);
+		//root_node.output(out,SSA.ns);
+		SSA.output(out);
 	}
 	std::list<symbol_exprt> enabling_exprs;
 	ssa_local_unwindert(local_SSAt& _SSA): SSA(_SSA),
