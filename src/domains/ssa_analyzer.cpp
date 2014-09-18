@@ -329,8 +329,9 @@ void ssa_analyzert::collect_variables(local_SSAt &SSA,
     {
       exprt lhguard = SSA.guard_symbol(n_it->loophead->location);
       unwinder_rename(to_symbol_expr(lhguard),*n_it);
-      exprt pre_guard = and_exprt(lhguard, 
-        SSA.name(SSA.guard_symbol(), local_SSAt::LOOP_SELECT, n_it->location));
+      exprt lsguard = SSA.name(SSA.guard_symbol(), local_SSAt::LOOP_SELECT, n_it->location);
+      unwinder_rename(to_symbol_expr(lsguard),*n_it);
+      exprt pre_guard = and_exprt(lhguard,lsguard);
       exprt post_guard = SSA.guard_symbol(n_it->location);
       unwinder_rename(to_symbol_expr(post_guard),*n_it);
       
@@ -350,6 +351,7 @@ void ssa_analyzert::collect_variables(local_SSAt &SSA,
 	if(p_it==phi_nodes.end()) continue; // object not modified in this loop
 
         symbol_exprt in=SSA.name(*o_it, local_SSAt::LOOP_BACK, n_it->location);
+        unwinder_rename(in,*n_it);
         symbol_exprt out=SSA.read_rhs(*o_it, n_it->location);
         unwinder_rename(out,*n_it);
 
