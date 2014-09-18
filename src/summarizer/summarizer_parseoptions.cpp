@@ -202,6 +202,10 @@ void summarizer_parseoptionst::get_command_line_options(optionst &options)
   // compute necessary/sufficient preconditions
   if(cmdline.isset("sufficient"))
     options.set_option("sufficient", true);
+
+ // do k-induction refinement
+  if(cmdline.isset("k-induction"))
+    options.set_option("k-induction", true);
 }
 
 /*******************************************************************\
@@ -1216,6 +1220,7 @@ void summarizer_parseoptionst::help()
     " --inline-partial nr          inline functions smaller than the given nr of instructions\n"
     "\n"
     "Backend options:\n"
+    " --k-induction                use k-induction\n"
     " --preconditions              compute preconditions\n"
     " --sufficient                 sufficient preconditions (default: necessary)\n"
     " --context-sensitive          context-sensitive analysis from entry point\n"

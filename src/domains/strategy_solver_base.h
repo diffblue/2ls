@@ -53,6 +53,8 @@ class strategy_solver_baset : public messaget
 
   unsigned get_number_of_solver_calls() { return solver_calls; }
 
+  static exprt make_enabling_exprs(const std::list<symbol_exprt> enabling_exprs);
+
  protected: 
   bv_pointerst &solver;
 

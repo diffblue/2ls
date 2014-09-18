@@ -86,6 +86,9 @@ void ssa_analyzert::operator()(local_SSAt &SSA,
   constraintst transition_relation;
   transition_relation << SSA;
 
+  // TODO: must be made incremental in future
+  transition_relation.push_back(strategy_solver_baset::make_enabling_exprs(SSA.enabling_exprs));
+
   // add precondition (or conjunction of asssertion in backward analysis)
   transition_relation.push_back(precondition);
 

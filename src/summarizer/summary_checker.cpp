@@ -103,13 +103,13 @@ void summary_checkert::SSA_functions(const goto_modelt &goto_model,  const names
       status() << "Simplifying" << messaget::eom;
       ::simplify(SSA, ns);
     }
- // }
+  }
     unsigned unwind = options.get_unsigned_int_option("unwind");
     if(unwind>0)
     {
       status() << "Unwinding" << messaget::eom;
-      ssa_unwindert ssa_unwinder;
-#if 0
+      //ssa_unwindert ssa_unwinder;
+#if 1
       ssa_new_unwindert ssa_unwinder(ssa_db);
       for(unsigned int i=1;i<=unwind;i+=2)
       {
@@ -121,9 +121,9 @@ void summary_checkert::SSA_functions(const goto_modelt &goto_model,  const names
       //ssa_unwinder.unwind(SSA,unwind);
     }
 
-    SSA.output(debug()); debug() << eom;
-    }
- //exit(1);
+    // SSA.output(debug()); debug() << eom;
+    //  }
+ exit(1);
 
 #if 0
   // inline c::main and __CPROVER_initialize
@@ -270,7 +270,14 @@ void summary_checkert::check_properties_non_incremental(
 
     // give negated property to solver
     solver << property;
-    
+
+#if 0   
+    //for future incremental usagae 
+    solver->set_assumptions(
+      strategy_solver_baset::convert_enabling_exprs(solver,SSA.enabling_exprs));
+#endif
+    solver << strategy_solver_baset::make_enabling_exprs(SSA.enabling_exprs);
+
     // solve
     switch(solver())
       {
@@ -353,6 +360,13 @@ void summary_checkert::check_properties_incremental(
     
   // give SSA to solver
   solver << SSA;
+
+#if 0   
+    //for future incremental usagae 
+    solver->set_assumptions(
+      strategy_solver_baset::convert_enabling_exprs(solver,SSA.enabling_exprs));
+#endif
+    solver << strategy_solver_baset::make_enabling_exprs(SSA.enabling_exprs);
 
   // Collect _all_ goals in `goal_map'.
   // This maps claim IDs to 'goalt'

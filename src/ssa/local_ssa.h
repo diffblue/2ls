@@ -81,6 +81,9 @@ public:
   // all the SSA nodes  
   typedef std::list<nodet> nodest;
   nodest nodes;
+
+  // for incremental unwinding
+  std::list<symbol_exprt> enabling_exprs;
   
   // function entry and exit variables
   typedef std::list<symbol_exprt> var_listt;
