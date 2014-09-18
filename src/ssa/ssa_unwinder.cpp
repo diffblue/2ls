@@ -571,6 +571,7 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
         if_exprt &e = to_if_expr(e_it->rhs());
         rename(e.cond(),suffix + "%" + i2string(unwind_depth - 1));
         rename(e.true_case(),suffix + "%" + i2string(unwind_depth - 1));
+        rename(e.false_case(),suffix);
       }
       else if  (SSA.guard_symbol(node.location) == e_it->lhs()) {
 
