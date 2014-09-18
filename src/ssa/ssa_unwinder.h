@@ -80,7 +80,7 @@ class ssa_local_unwindert	: public messaget
 	void construct_loop_tree();
 	void unwind(tree_loopnodet& current_loop,
 			std::string suffix,bool full,
-			const unsigned int unwind_depth,local_SSAt::nodest& new_ndoes);
+			const unsigned int unwind_depth,symbol_exprt& new_sym,local_SSAt::nodest& new_ndoes);
 	void rename(local_SSAt::nodet& node,std::string suffix);
 	void rename(exprt &expr, std::string suffix);
 
@@ -93,7 +93,7 @@ public :
 	//std::list<symbol_exprt> enabling_exprs;
 	ssa_local_unwindert(local_SSAt& _SSA): SSA(_SSA),
 			current_unwinding(0){ construct_loop_tree();}
-	void unwind(unsigned int k);
+	void unwind(const irep_idt& fname,unsigned int k);
 
 };
 

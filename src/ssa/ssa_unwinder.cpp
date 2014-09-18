@@ -360,15 +360,18 @@ void ssa_local_unwindert::construct_loop_tree() {
  * Pre condition : k must be greater than current_unwinding
  *
  *****************************************************************************/
-void ssa_local_unwindert::unwind(unsigned int k) {
+void ssa_local_unwindert::unwind(const irep_idt& fname,unsigned int k) {
   if (loopless)
     return;
   if (k <= current_unwinding)
     assert(false && "unwind depth smaller than previous unwinding!!");
   local_SSAt::nodest new_nodes;
+  irep_idt func_name = as_string(fname)+"unwind_"+i2string(k);
+  symbol_exprt new_sym(func_name,bool_typet());
+  SSA.enabling_exprs.push_back(new_sym);
   for (loop_nodest::iterator it = root_node.loop_nodes.begin();
       it != root_node.loop_nodes.end(); it++) {
-    unwind(*it, "", false, k, new_nodes);
+    unwind(*it, "", false, k, new_sym,new_nodes);
   }
 //commit all the nodes
   SSA.nodes.splice(SSA.nodes.begin(), new_nodes);
@@ -458,7 +461,7 @@ void ssa_local_unwindert::rename(local_SSAt::nodet& node, std::string suffix) {
  *
  *****************************************************************************/
 void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
-    std::string suffix, bool full, const unsigned int unwind_depth,
+    std::string suffix, bool full, const unsigned int unwind_depth, symbol_exprt& new_sym,
     local_SSAt::nodest& new_nodes) {
 
   // a loop has to have at least one body_node, if not, it can not
@@ -471,7 +474,7 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
     for (loop_nodest::iterator it = current_loop.loop_nodes.begin();
         it != current_loop.loop_nodes.end(); it++) {
 
-      unwind((*it), suffix + "%" + i2string(i), tmp, unwind_depth, new_nodes);
+      unwind((*it), suffix + "%" + i2string(i), tmp, unwind_depth,new_sym, new_nodes);
 
     }
   }
@@ -549,8 +552,8 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
 
   }
 
-  symbol_exprt new_sym("unwind_" + i2string(unwind_depth), bool_typet());
-  SSA.enabling_exprs.push_back(new_sym);
+  //symbol_exprt new_sym("unwind_" + i2string(unwind_depth), bool_typet());
+  //SSA.enabling_exprs.push_back(new_sym);
 
   //only the last element in enabling_exprs needs to be
   //set to true, all others should be set to false to enable constraint
@@ -562,8 +565,14 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
     for (local_SSAt::nodet::equalitiest::iterator e_it =
         node.equalities.begin(); e_it != node.equalities.end(); e_it++) {
 
-      if (e_it->rhs().id() == ID_if
-          || SSA.guard_symbol(node.location) == e_it->lhs()) {
+      if (e_it->rhs().id() == ID_if)
+      {
+        rename(e_it->lhs(), suffix + "%" + i2string(unwind_depth - 1));
+        if_exprt &e = to_if_expr(e_it->rhs());
+        rename(e.cond(),suffix + "%" + i2string(unwind_depth - 1));
+        rename(e.true_case(),suffix + "%" + i2string(unwind_depth - 1));
+      }
+      else if  (SSA.guard_symbol(node.location) == e_it->lhs()) {
 
         rename(e_it->lhs(), suffix + "%" + i2string(unwind_depth - 1));
         rename(e_it->rhs(),suffix);
@@ -622,6 +631,7 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
       }
 
       e_it->rhs() = re;
+      rename(e_it->lhs(),suffix);
 
       exprt ie = implies_exprt(new_sym, *e_it);
       node.constraints.push_back(ie);
@@ -672,7 +682,7 @@ void ssa_unwindert::unwind(const irep_idt id, unsigned int k) {
   it = unwinder_map.find(id);
   if (it == unwinder_map.end())
     assert(false && "Function not found");
-   it->second.unwind(k);
+   it->second.unwind(it->first,k);
 
 }
 
@@ -694,7 +704,7 @@ void ssa_unwindert::unwind_all(unsigned int k) {
 
   for (unwinder_mapt::iterator it = unwinder_map.begin();
       it != unwinder_map.end(); it++) {
-    it->second.unwind(k);
+    it->second.unwind(it->first,k);
   }
 
 }
