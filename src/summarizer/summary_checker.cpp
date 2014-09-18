@@ -272,7 +272,7 @@ void summary_checkert::check_properties_non_incremental(
     solver->set_assumptions(
       strategy_solver_baset::convert_enabling_exprs(solver,SSA.enabling_exprs));
 #endif
-    solver << strategy_solver_baset::make_enabling_exprs(SSA.enabling_exprs);
+    solver << SSA.get_enabling_exprs();
 
     // solve
     switch(solver())
@@ -362,7 +362,12 @@ void summary_checkert::check_properties_incremental(
     solver->set_assumptions(
       strategy_solver_baset::convert_enabling_exprs(solver,SSA.enabling_exprs));
 #endif
-    solver << strategy_solver_baset::make_enabling_exprs(SSA.enabling_exprs);
+  exprt enabling_expr = SSA.get_enabling_exprs();
+  solver << enabling_expr;
+
+#if 0   
+  debug() << "(C) " << from_expr(SSA.ns,"",enabling_expr) << eom;
+#endif
 
   // Collect _all_ goals in `goal_map'.
   // This maps claim IDs to 'goalt'

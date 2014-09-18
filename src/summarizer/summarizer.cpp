@@ -163,6 +163,7 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
     {
       if(!n->empty()) n->output(out,SSA.ns);
     }
+    out << "(enable) " << from_expr(SSA.ns, "", SSA.get_enabling_exprs()) << "\n";
     debug() << out.str() << eom;
   }
 

@@ -84,7 +84,8 @@ public:
 
   // for incremental unwinding
   std::list<symbol_exprt> enabling_exprs;
-  
+  exprt get_enabling_exprs() const;
+
   // function entry and exit variables
   typedef std::list<symbol_exprt> var_listt;
   typedef std::set<symbol_exprt> var_sett;

@@ -33,7 +33,7 @@ class strategy_solver_baset : public messaget
     {
 
 #ifndef DEBUG_FORMULA
-#if 0
+#if 1
       std::cout << "program: " << from_expr(ns,"",*it) << std::endl;
 #endif
       solver << *it;
@@ -52,8 +52,6 @@ class strategy_solver_baset : public messaget
   virtual bool iterate(invariantt &inv) { assert(false); }
 
   unsigned get_number_of_solver_calls() { return solver_calls; }
-
-  static exprt make_enabling_exprs(const std::list<symbol_exprt> enabling_exprs);
 
  protected: 
   bv_pointerst &solver;

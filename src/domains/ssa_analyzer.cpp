@@ -87,7 +87,7 @@ void ssa_analyzert::operator()(local_SSAt &SSA,
   transition_relation << SSA;
 
   // TODO: must be made incremental in future
-  transition_relation.push_back(strategy_solver_baset::make_enabling_exprs(SSA.enabling_exprs));
+  transition_relation.push_back(SSA.get_enabling_exprs());
 
   // add precondition (or conjunction of asssertion in backward analysis)
   transition_relation.push_back(precondition);
@@ -327,9 +327,12 @@ void ssa_analyzert::collect_variables(local_SSAt &SSA,
   {
     if(n_it->loophead != SSA.nodes.end()) //we've found a loop
     {
-      exprt pre_guard = and_exprt(SSA.guard_symbol(n_it->loophead->location), 
+      exprt lhguard = SSA.guard_symbol(n_it->loophead->location);
+      unwinder_rename(to_symbol_expr(lhguard),*n_it);
+      exprt pre_guard = and_exprt(lhguard, 
         SSA.name(SSA.guard_symbol(), local_SSAt::LOOP_SELECT, n_it->location));
       exprt post_guard = SSA.guard_symbol(n_it->location);
+      unwinder_rename(to_symbol_expr(post_guard),*n_it);
       
       const ssa_domaint::phi_nodest &phi_nodes = 
         SSA.ssa_analysis[n_it->loophead->location].phi_nodes;
@@ -348,6 +351,7 @@ void ssa_analyzert::collect_variables(local_SSAt &SSA,
 
         symbol_exprt in=SSA.name(*o_it, local_SSAt::LOOP_BACK, n_it->location);
         symbol_exprt out=SSA.read_rhs(*o_it, n_it->location);
+        unwinder_rename(out,*n_it);
 
         add_var(in,pre_guard,post_guard,domaint::LOOP,var_specs);
       
@@ -617,4 +621,29 @@ void ssa_analyzert::prepare_backward_analysis(local_SSAt &SSA)
   local_SSAt::nodet::equalitiest::iterator e_it = n_it->equalities.end(); 
   assert(!n_it->equalities.empty());
   n_it->equalities.erase(--e_it); */
+}
+
+/*******************************************************************\
+
+Function: ssa_analyzert::unwinder_rename
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: add unwinder suffix to a variable
+
+\*******************************************************************/
+
+void ssa_analyzert::unwinder_rename(symbol_exprt &var,const local_SSAt::nodet &node)
+{
+  //only to be called for backedge nodes
+  assert(node.equalities.size()==1);
+  //this is a hack: copy suffix from 'cond' equality to var
+  std::string id = id2string(to_symbol_expr(node.equalities[0].op0()).get_identifier());
+  size_t pos = id.find_first_of("%");
+  if(pos==std::string::npos) return;
+  std::string suffix = id.substr(pos);
+  var.set_identifier(id2string(var.get_identifier())+suffix);
+  std::cout << "new id: " << var.get_identifier() << std::endl;
 }

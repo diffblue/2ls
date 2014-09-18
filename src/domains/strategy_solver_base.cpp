@@ -58,16 +58,4 @@ void strategy_solver_baset::make_context_permanent()
   solver.set_assumptions(activation_literals);
 }
 
-exprt strategy_solver_baset::make_enabling_exprs(const std::list<symbol_exprt> enabling_exprs)
-{
-  exprt::operandst result;
-  result.reserve(enabling_exprs.size());
-  for(std::list<symbol_exprt>::const_iterator it = enabling_exprs.begin();
-      it != enabling_exprs.end(); ++it)
-  {
-    std::list<symbol_exprt>::const_iterator lh = it; lh++;
-    if(lh != enabling_exprs.end()) result.push_back(not_exprt(*it));
-    else result.push_back(*it);
-  }
-  return conjunction(result);
-}
+
