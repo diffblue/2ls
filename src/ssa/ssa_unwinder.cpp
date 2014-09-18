@@ -569,8 +569,15 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
       {
         rename(e_it->lhs(), suffix + "%" + i2string(unwind_depth - 1));
         if_exprt &e = to_if_expr(e_it->rhs());
-        rename(e.cond(),suffix + "%" + i2string(unwind_depth - 1));
-        rename(e.true_case(),suffix + "%" + i2string(unwind_depth - 1));
+      //  rename(e.cond(),suffix + "%" + i2string(unwind_depth - 1));
+      //  rename(e.true_case(),suffix + "%" + i2string(unwind_depth - 1));
+
+        //VERY DIRTY HACK, condition and true case at the topmost iteration
+        // are free variables, so suffixing "0" so that it always matches
+        //with the bottom most iteration. Later in the analysis these suffixes
+        //are needed to be matched :-(
+        rename(e.cond(),suffix + "%" + i2string(0));
+        rename(e.true_case(),suffix + "%" + i2string(0));
         rename(e.false_case(),suffix);
       }
       else if  (SSA.guard_symbol(node.location) == e_it->lhs()) {
