@@ -37,6 +37,7 @@ class ssa_local_unwindert	: public messaget
 	unsigned int current_unwinding;
 	class tree_loopnodet;
 	typedef std::list<tree_loopnodet> loop_nodest;
+	typedef std::map<irep_idt,local_SSAt::nodest::iterator> loopends_mapt;
 	bool loopless;
 	class tree_loopnodet
 	{
@@ -50,6 +51,7 @@ class ssa_local_unwindert	: public messaget
 		symbol_exprt cond_expr;
 #endif
 		loop_nodest loop_nodes;
+		loopends_mapt loopends_map;
 
 		tree_loopnodet(){}
 

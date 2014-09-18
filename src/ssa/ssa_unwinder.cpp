@@ -254,8 +254,7 @@ void ssa_local_unwindert::construct_loop_tree() {
       current_node->cond_expr=SSA.cond_symbol(n_it->location);
 #endif
       current_node->body_nodes.push_back(*n_it);
-      std::cout << "loop head node" << std::endl;
-      current_node->body_nodes.back().output(std::cout, SSA.ns);
+
 #if 0
       {
         //compute pre_post_exprs for the current loop
@@ -290,6 +289,9 @@ void ssa_local_unwindert::construct_loop_tree() {
       // of a loop is always the back-edge node
       current_node->body_nodes.push_back(*n_it);
 
+      //reset the back-edge
+      current_node->body_nodes.rbegin()->loophead=SSA.nodes.end();
+
       {
         local_SSAt::nodet loophead = current_node->body_nodes.front();
         //compute pre_post_exprs for the current loop
@@ -311,7 +313,7 @@ void ssa_local_unwindert::construct_loop_tree() {
           symbol_exprt post = SSA.read_rhs(*o_it, n_it->location);
 
           current_node->pre_post_exprs[pre] = post;
-          std::cout << pre << "  ---" << post << std::endl;
+
         }
       }
 
@@ -323,21 +325,11 @@ void ssa_local_unwindert::construct_loop_tree() {
       assert(!current_stack.empty());
       //assert would fail for unstructured program
       current_stack.pop_back();
-      std::cout << "printing loop node" << std::endl;
-      for (local_SSAt::nodest::iterator it = current_node->body_nodes.begin();
-          it != current_node->body_nodes.end(); it++) {
-        it->output(std::cout, SSA.ns);
-      }
+
       tree_loopnodet* new_current_node = current_stack.back();
       //hope push_back does a copy by value
       new_current_node->loop_nodes.push_back(*current_node);
-      for (std::map<exprt, exprt>::iterator it =
-          new_current_node->loop_nodes.back().pre_post_exprs.begin();
-          it != new_current_node->loop_nodes.back().pre_post_exprs.end();
-          it++) {
-        std::cout << "Pre :" << it->first << " Post :" << it->second
-            << std::endl;
-      }
+
       delete current_node;
 
       current_node = new_current_node;
@@ -535,6 +527,16 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
       rename(new_node, suffix + "%" + i2string(i));
       new_nodes.push_back(new_node);
     }
+    if(i==0)
+    {
+      //this is a full unwinding, so end of the loop must be stored
+      local_SSAt::nodest::iterator le_it = new_nodes.end();
+      le_it--; //now points to the last element of the bottom most iteration
+
+      //store the end of this loop, its "loophead" field will be
+      //pointed to the topmost loophead node
+      current_loop.loopends_map[suffix] = le_it;
+    }
 
   }
 
@@ -555,6 +557,7 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
           || SSA.guard_symbol(node.location) == e_it->lhs()) {
 
         rename(e_it->lhs(), suffix + "%" + i2string(unwind_depth - 1));
+        rename(e_it->rhs(),suffix);
 
       } else {
         rename(*e_it, suffix + "%" + i2string(unwind_depth - 1));
@@ -564,6 +567,22 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
     }
     node.equalities.clear();
     new_nodes.push_back(node);
+
+
+    local_SSAt::nodest::iterator le_it = new_nodes.end();
+    le_it--; //points to the topmost loophead node
+
+    //insert the backedge
+    current_loop.loopends_map[suffix]->loophead=le_it;
+
+    //print for debugging
+#if 1
+    std::cout << "Loop end node------" << std::endl;
+    current_loop.loopends_map[suffix]->output(std::cout,SSA.ns);
+    std::cout << "Corresponding loop head node----" << std::endl;
+    current_loop.loopends_map[suffix]->loophead->output(std::cout,SSA.ns);
+#endif
+
 
   }
 
