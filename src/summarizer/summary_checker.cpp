@@ -108,22 +108,18 @@ void summary_checkert::SSA_functions(const goto_modelt &goto_model,  const names
     if(unwind>0)
     {
       status() << "Unwinding" << messaget::eom;
-      //ssa_unwindert ssa_unwinder;
-#if 1
-      ssa_new_unwindert ssa_unwinder(ssa_db);
-      for(unsigned int i=1;i<=unwind;i+=2)
-      {
-    	  ssa_unwinder.unwind_all(i);
+
+
+        ssa_unwinder.init();
+    	  ssa_unwinder.unwind_all(unwind);
     	  ssa_unwinder.output(debug()); debug() <<eom;
 
-      }
-#endif
-      //ssa_unwinder.unwind(SSA,unwind);
+
+
     }
 
-    // SSA.output(debug()); debug() << eom;
-    //  }
- exit(1);
+
+
 
 #if 0
   // inline c::main and __CPROVER_initialize

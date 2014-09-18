@@ -13,7 +13,7 @@ Author: Peter Schrammel
 
 #include "../ssa/local_ssa.h"
 #include "../summarizer/ssa_db.h"
-
+#if 0
 class ssa_unwindert : public messaget
 {
  public:
@@ -30,6 +30,7 @@ class ssa_unwindert : public messaget
   void rename(local_SSAt::nodet &node, unsigned index);
 
 };
+#else
 
 class ssa_local_unwindert	: public messaget
 {
@@ -89,31 +90,35 @@ public :
 		//root_node.output(out,SSA.ns);
 		SSA.output(out);
 	}
-	std::list<symbol_exprt> enabling_exprs;
+	//std::list<symbol_exprt> enabling_exprs;
 	ssa_local_unwindert(local_SSAt& _SSA): SSA(_SSA),
 			current_unwinding(0){ construct_loop_tree();}
-	bool unwind(unsigned int k);
+	void unwind(unsigned int k);
 
 };
 
-class ssa_new_unwindert	: public messaget
+class ssa_unwindert	: public messaget
 {
 
 public:
 	typedef std::map<irep_idt,ssa_local_unwindert> unwinder_mapt;
 		typedef std::pair<irep_idt,ssa_local_unwindert> unwinder_pairt;
-	ssa_new_unwindert(ssa_dbt& _db);
 
-	bool unwind(const irep_idt id,unsigned int k);
+	ssa_unwindert(ssa_dbt& _db);
 
-	bool unwind_all(unsigned int k);
+	void init();
+
+	void unwind(const irep_idt id,unsigned int k);
+
+	void unwind_all(unsigned int k);
 
 	void output(std::ostream & out);
 protected:
 	ssa_dbt& ssa_db;
-
+	bool is_initialized;
 	unwinder_mapt unwinder_map;
 
 };
+#endif
 
 #endif

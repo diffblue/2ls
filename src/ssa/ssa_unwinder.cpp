@@ -21,7 +21,7 @@
  Purpose: unwinds all loops the given number of times
 
  \*******************************************************************/
-
+#if 0
 void ssa_unwindert::unwind(local_SSAt &SSA, unsigned unwind_max) {
   if (unwind_max == 0)
     return;
@@ -181,6 +181,7 @@ void ssa_unwindert::commit_nodes(local_SSAt::nodest &nodes,
   nodes.splice(n_pos, new_nodes, new_nodes.begin(), new_nodes.end());
 }
 
+#else
 /*******************************************************************
  Struct: compare_node_iterators
 
@@ -359,11 +360,11 @@ void ssa_local_unwindert::construct_loop_tree() {
  * Pre condition : k must be greater than current_unwinding
  *
  *****************************************************************************/
-bool ssa_local_unwindert::unwind(unsigned int k) {
+void ssa_local_unwindert::unwind(unsigned int k) {
   if (loopless)
-    return true;
+    return;
   if (k <= current_unwinding)
-    return false;
+    assert(false && "unwind depth smaller than previous unwinding!!");
   local_SSAt::nodest new_nodes;
   for (loop_nodest::iterator it = root_node.loop_nodes.begin();
       it != root_node.loop_nodes.end(); it++) {
@@ -373,7 +374,7 @@ bool ssa_local_unwindert::unwind(unsigned int k) {
   SSA.nodes.splice(SSA.nodes.begin(), new_nodes);
   current_unwinding = k;
 
-  return true;
+
 }
 void ssa_local_unwindert::rename(exprt &expr, std::string suffix) {
   if (expr.id() == ID_symbol) {
@@ -419,21 +420,22 @@ void ssa_local_unwindert::rename(local_SSAt::nodet& node, std::string suffix) {
  *  Purpose : this function does a delta unwinding of loops
  *    For example if current_unwinding==1
  *
- *     L1_1
- *        L2_1
- *        L2_connector
- *     L1_connector
+ *    uwind1=> L1_1_head
+ *     uwind1=> L2_1_head
+ *              L2_1_body
+ *     uwind1=> L2_connector
+ *     uwind1=> L1_connector
  *        and if we move to unwind_depth==2
  *
- *     L1_2
- *        L2_2 //full
- *        L2_1
- *        L2_connector
- *     L1_1
- *        L2_2 // partial
- *        L2_1
- *        L2_connector
- *     L1_connector
+ *     uwind2=>   L1_2_head
+ *                L2_2 //full
+ *                L2_1
+ *      uwind2=>  L2_connector
+ *                L1_1_head
+ *       uwind2=>   L2_2_head // partial
+ *                  L2_1
+ *       uwind2=>   L2_connector
+ *       uwind2=>   L1_connector
  *
  *
  *   See that for L1_1 needs to be unwound partially and so is the case of
@@ -446,6 +448,13 @@ void ssa_local_unwindert::rename(local_SSAt::nodet& node, std::string suffix) {
  *   The topmost loop head also needs to change as it is the only one
  *   where phi nodes exist
  *   is introduced. To force the equality, set new_sym to true
+ *
+ *   Backedge from the end of every Li_1 to Li_k_head (k being the unwind_depth)
+ *   is maintained via an iterator.
+ *
+ *   WARNING : Order of the nodes are completely arbitrary and should not
+ *   be relied on at all. e.g. In the resulting SSA.nodes, a loop body
+ *   may appear after loop head
  *
  *****************************************************************************/
 void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
@@ -541,7 +550,7 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
   }
 
   symbol_exprt new_sym("unwind_" + i2string(unwind_depth), bool_typet());
-  enabling_exprs.push_back(new_sym);
+  SSA.enabling_exprs.push_back(new_sym);
 
   //only the last element in enabling_exprs needs to be
   //set to true, all others should be set to false to enable constraint
@@ -576,7 +585,7 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
     current_loop.loopends_map[suffix]->loophead=le_it;
 
     //print for debugging
-#if 1
+#if 0
     std::cout << "Loop end node------" << std::endl;
     current_loop.loopends_map[suffix]->output(std::cout,SSA.ns);
     std::cout << "Corresponding loop head node----" << std::endl;
@@ -626,23 +635,19 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
 
 /*****************************************************************************\
  *
- * Function :
+ * Function : ssa_unwindert::ssa_unwindert
  *
- * Input :
+ * Input : reference to ssa_db
  *
  * Output :
  *
- * Purpose :
+ * Purpose : Constructor, set is_initialized to false. Initializer init()
+ * must be invoked before unwind functions are called
  *
  *****************************************************************************/
-ssa_new_unwindert::ssa_new_unwindert(ssa_dbt& _db) :
-    ssa_db(_db) {
-  ssa_dbt::functionst& funcs = ssa_db.functions();
-  for (ssa_dbt::functionst::iterator it = funcs.begin(); it != funcs.end();
-      it++) {
-    unwinder_map.insert(
-        unwinder_pairt(it->first, ssa_local_unwindert((*(it->second)))));
-  }
+ssa_unwindert::ssa_unwindert(ssa_dbt& _db) :
+    ssa_db(_db),is_initialized(false) {
+
 
 }
 
@@ -655,17 +660,19 @@ ssa_new_unwindert::ssa_new_unwindert(ssa_dbt& _db) :
  * Output : false - if id does not correspond to any goto-function in the
  * 			unwinder_map
  *
- * Purpose : incrementally unwind a function 'id' up to depth k
+ * Purpose : incrementally unwind a function 'id' up to depth k. Initializer
+ * must have been invoked before calling this function
  *
  *****************************************************************************/
 
-bool ssa_new_unwindert::unwind(const irep_idt id, unsigned int k) {
+void ssa_unwindert::unwind(const irep_idt id, unsigned int k) {
+  assert(is_initialized);
   unwinder_mapt::iterator it;
 
   it = unwinder_map.find(id);
   if (it == unwinder_map.end())
-    return false;
-  return it->second.unwind(k);
+    assert(false && "Function not found");
+   it->second.unwind(k);
 
 }
 
@@ -681,14 +688,15 @@ bool ssa_new_unwindert::unwind(const irep_idt id, unsigned int k) {
  *
  *****************************************************************************/
 
-bool ssa_new_unwindert::unwind_all(unsigned int k) {
+void ssa_unwindert::unwind_all(unsigned int k) {
 
-  bool result = true;
+  assert(is_initialized);
+
   for (unwinder_mapt::iterator it = unwinder_map.begin();
       it != unwinder_map.end(); it++) {
-    result = result && it->second.unwind(k);
+    it->second.unwind(k);
   }
-  return result;
+
 }
 
 /*****************************************************************************\
@@ -703,7 +711,7 @@ bool ssa_new_unwindert::unwind_all(unsigned int k) {
  *
  *****************************************************************************/
 
-void ssa_new_unwindert::output(std::ostream & out) {
+void ssa_unwindert::output(std::ostream & out) {
   for (unwinder_mapt::iterator it = unwinder_map.begin();
       it != unwinder_map.end(); it++) {
     out << "Unwinding for function" << it->first << std::endl;
@@ -711,3 +719,29 @@ void ssa_new_unwindert::output(std::ostream & out) {
   }
 }
 
+/*****************************************************************************\
+ *
+ * Function : ssa_unwindert::init
+ *
+ * Input :
+ *
+ * Output :
+ *
+ * Purpose : Initialize unwinder_map by computing hierarchical tree_loopnodet
+ *           for every goto-function
+ *           Set is_initialized to true. Initializer must be called before
+ *           unwind funcitions are called.
+ *
+ *****************************************************************************/
+void ssa_unwindert::init()
+{
+  ssa_dbt::functionst& funcs = ssa_db.functions();
+    for (ssa_dbt::functionst::iterator it = funcs.begin(); it != funcs.end();
+        it++) {
+      unwinder_map.insert(
+          unwinder_pairt(it->first, ssa_local_unwindert((*(it->second)))));
+    }
+    is_initialized=true;
+}
+
+#endif

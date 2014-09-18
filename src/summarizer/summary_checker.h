@@ -14,6 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/property_checker.h>
 
 #include "../ssa/local_ssa.h"
+#include "../ssa/ssa_unwinder.h"
 #include "ssa_db.h"
 #include "summary_db.h"
 #include "summarizer.h"
@@ -29,8 +30,9 @@ public:
     ssa_db(),summary_db(),
     summarizer(_options,summary_db),
     solver_instances(0),
-    solver_calls(0)
+    solver_calls(0),ssa_unwinder(ssa_db)
   {
+
   }
   
   bool show_vcc, simplify, fixed_point;
@@ -50,6 +52,7 @@ protected:
 
   unsigned solver_instances;
   unsigned solver_calls;
+  ssa_unwindert ssa_unwinder;
   void report_statistics();
 
   void do_show_vcc(
