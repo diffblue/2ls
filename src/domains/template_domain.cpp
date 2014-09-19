@@ -460,12 +460,23 @@ void template_domaint::project_on_vars(valuet &value,
     if(!pure) continue;
 
     const row_valuet &row_v = v[row];
-    if(is_row_value_neginf(row_v)) 
-      c.push_back(implies_exprt(templ_row.pre_guard,false_exprt()));
-    else if(is_row_value_inf(row_v)) 
-      c.push_back(implies_exprt(templ_row.pre_guard,true_exprt()));
-    else c.push_back(implies_exprt(templ_row.pre_guard,
-				   binary_relation_exprt(templ_row.expr,ID_le,row_v)));
+    if(templ_row.kind==LOOP)
+    {
+      if(is_row_value_neginf(row_v)) 
+	c.push_back(implies_exprt(templ_row.pre_guard,false_exprt()));
+      else if(is_row_value_inf(row_v)) 
+	c.push_back(implies_exprt(templ_row.pre_guard,true_exprt()));
+      else c.push_back(implies_exprt(templ_row.pre_guard,
+		       binary_relation_exprt(templ_row.expr,ID_le,row_v)));
+    }
+    else
+    {
+      if(is_row_value_neginf(row_v)) 
+	c.push_back(false_exprt());
+      else if(is_row_value_inf(row_v)) 
+	c.push_back(true_exprt());
+      else c.push_back(binary_relation_exprt(templ_row.expr,ID_le,row_v));
+    }
   }
   result = conjunction(c);
 }

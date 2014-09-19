@@ -25,6 +25,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "../ssa/ssa_unwinder.h"
 #include <cstdlib>
 
+#include "show.h"
 
 #include "summary_checker.h"
 
@@ -436,6 +437,10 @@ void summary_checkert::check_properties_incremental(
       it++, g_it++)
   {
     property_map[it->first].result=g_it->covered?FAIL:PASS;
+    if(g_it->covered) 
+    {
+      show_error_trace(it->first,SSA,solver,debug(),get_message_handler());
+    }
   }
 
   //statistics

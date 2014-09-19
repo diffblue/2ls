@@ -101,25 +101,39 @@ void equality_domaint::project_on_vars(valuet &value,
   {
     const var_pairt &vv = templ[index].var_pair;
 
+    std::cout << vv.second << std::endl;
     if(vars.find(vv.first)==vars.end() || 
        vars.find(vv.second)==vars.end() && 
-       vv.second.id()!=ID_constant && vv.second.op0().id()!=ID_NULL)
+       !(vv.second.id()==ID_constant && 
+	 to_constant_expr(vv.second).get_value()=="NULL"))
       continue;
 
     if(v.equs.same_set(vv.first,vv.second)) 
-      c.push_back(equal_exprt(vv.first,vv.second));
+    {
+      if(templ[index].kind==LOOP)
+        c.push_back(implies_exprt(templ[index].pre_guard,
+				  equal_exprt(vv.first,vv.second)));
+      else
+        c.push_back(equal_exprt(vv.first,vv.second));
+    }
   }
 
-  for(index_sett::const_iterator it = v.disequs.begin(); it != v.disequs.end(); it++)
+  for(index_sett::const_iterator it = v.disequs.begin(); 
+      it != v.disequs.end(); it++)
   {
     const var_pairt &vv = templ[*it].var_pair;
 
     if(vars.find(vv.first)==vars.end() || 
        vars.find(vv.second)==vars.end() && 
-       vv.second.id()!=ID_constant && vv.second.op0().id()!=ID_NULL)
+       !(vv.second.id()==ID_constant && 
+	 to_constant_expr(vv.second).get_value()=="NULL"))
       continue;
 
-    c.push_back(notequal_exprt(vv.first,vv.second));
+      if(templ[*it].kind==LOOP)
+        c.push_back(implies_exprt(templ[*it].pre_guard,
+				  notequal_exprt(vv.first,vv.second)));
+      else
+        c.push_back(notequal_exprt(vv.first,vv.second));
   }
   result = conjunction(c); 
 }
@@ -175,7 +189,8 @@ Function: equality_domaint::get_var_pair
 
 \*******************************************************************/
 
-const equality_domaint::var_pairt &equality_domaint::get_var_pair(unsigned index)
+const equality_domaint::var_pairt &equality_domaint::get_var_pair(
+  unsigned index)
 {
   assert(index<templ.size());
   return templ[index].var_pair;
@@ -204,14 +219,17 @@ void equality_domaint::output_value(std::ostream &out, const valuet &value,
     const var_pairt &vv = templ[index].var_pair;
     if(v.equs.same_set(vv.first,vv.second)) 
     {
-      out << from_expr(ns,"",vv.first) << " == " << from_expr(ns,"",vv.second) << std::endl;
+      out << from_expr(ns,"",vv.first) << " == " 
+	  << from_expr(ns,"",vv.second) << std::endl;
     }
   }
 
-  for(index_sett::const_iterator it = v.disequs.begin(); it != v.disequs.end(); it++)
+  for(index_sett::const_iterator it = v.disequs.begin(); 
+      it != v.disequs.end(); it++)
   {
     const var_pairt &vv = templ[*it].var_pair;
-    out << from_expr(ns,"",vv.first) << " != " << from_expr(ns,"",vv.second) << std::endl;
+    out << from_expr(ns,"",vv.first) << " != " 
+	<< from_expr(ns,"",vv.second) << std::endl;
   }
 }
 
@@ -237,20 +255,24 @@ void equality_domaint::output_domain(std::ostream &out,
     {
     case LOOP:
       out << "(LOOP) [ " << from_expr(ns,"",templ_row.pre_guard) << " | ";
-      out << from_expr(ns,"",templ_row.post_guard) << " ] ===> " << std::endl << "      ";
+      out << from_expr(ns,"",templ_row.post_guard) 
+	  << " ] ===> " << std::endl << "      ";
       break;
     case IN: 
       out << "(IN)   ";
-      out << from_expr(ns,"",templ_row.pre_guard) << " ===> " << std::endl << "      ";
+      out << from_expr(ns,"",templ_row.pre_guard) << " ===> " 
+	  << std::endl << "      ";
       break;
     case OUT: case OUTL:
       out << "(OUT)  "; 
-      out << from_expr(ns,"",templ_row.post_guard) << " ===> " << std::endl << "      ";
+      out << from_expr(ns,"",templ_row.post_guard) << " ===> " 
+	  << std::endl << "      ";
       break;
     default: assert(false);
     }
     const var_pairt &vv = templ_row.var_pair;
-    out << from_expr(ns,"",vv.first) << " =!= " << from_expr(ns,"",vv.second) << std::endl;
+    out << from_expr(ns,"",vv.first) << " =!= " 
+	<< from_expr(ns,"",vv.second) << std::endl;
   }
 }
 
@@ -343,7 +365,7 @@ void equality_domaint::make_template(
       templ.push_back(template_rowt());
       template_rowt &templ_row = templ.back();
       templ_row.var_pair = var_pairt(v1->var,
-				     null_pointer_exprt(to_pointer_type(v1->var.type())));
+		   null_pointer_exprt(to_pointer_type(v1->var.type())));
       templ_row.pre_guard = v1->pre_guard;
       templ_row.post_guard = v1->post_guard;
       templ_row.kind = v1->kind;      

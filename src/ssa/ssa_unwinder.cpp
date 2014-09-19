@@ -704,15 +704,15 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
  *****************************************************************************/
 
 void ssa_local_unwindert::unwinder_rename(symbol_exprt &var,
-					  const local_SSAt::nodet &node, bool pre) const
+  const local_SSAt::nodet &node, bool pre) const
 {
   //only to be called for backedge nodes
-  //The node _MUST_ look like cond"suffix" = TRUE
   //This is very dirty hack :-(
-  assert(node.equalities.size()==1);
   if(current_unwinding==0) return;
-  //this is a hack: copy suffix from 'cond' equality to var
-  std::string id = id2string(to_symbol_expr(node.equalities[0].op0()).get_identifier());
+  assert(node.equalities.size()>=1);
+  //copy suffix from equality lhs to var
+  std::string id = 
+    id2string(to_symbol_expr(node.equalities[0].op0()).get_identifier());
   size_t pos = id.find_first_of("%");
   if(pos==std::string::npos) return;
   size_t pos1 = id.find_last_of("%");

@@ -1,7 +1,7 @@
 include ../config.inc
 
 SRC = summarizer_main.cpp summarizer_parseoptions.cpp \
-      summary_checker.cpp show.cpp \
+      show.cpp summary_checker.cpp  \
       summary_db.cpp summarizer.cpp summary.cpp ssa_db.cpp \
       array_abstraction.cpp
 

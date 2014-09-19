@@ -1,4 +1,4 @@
-CORE
+KNOWNBUG
 main.c
 --intervals --arrays --enum-solver
 ^EXIT=0$
