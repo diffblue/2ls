@@ -185,45 +185,42 @@ void linrank_domaint::project_on_loops(const valuet &value, exprt &result)
     if(is_row_value_false(v[row])) c.push_back(false_exprt());
     else
     {
-      for(unsigned i=0; i<templ[row].expr.size(); ++i)
+      if(is_row_value_false(v[row]))
       {
-	if(is_row_value_false(v[row]))
+	//(g => false)
+	c.push_back(implies_exprt(
+		      and_exprt(templ[row].pre_guard, templ[row].post_guard),
+		      false_exprt()));
+      }
+      else if(is_row_value_true(v[row]))
+      {
+	//(g => true)
+	c.push_back(implies_exprt(
+		      and_exprt(templ[row].pre_guard, templ[row].post_guard),
+		      true_exprt()));
+      }
+      else
+      {
+	exprt sum_first = v[row].d;
+	exprt sum_second = v[row].d;
+	for(int i = 0; i < v[row].c.size(); ++i)
 	{
-	  //(g => false)
-	  c.push_back(implies_exprt(
-			and_exprt(templ[row].pre_guard, templ[row].post_guard),
-			false_exprt()));
+	  sum_first = plus_exprt(sum_first, mult_exprt(v[row].c[i], 
+						       templ[row].expr[i].first));
+	  sum_second = plus_exprt(sum_second, mult_exprt(v[row].c[i], 
+							 templ[row].expr[i].second));
 	}
-	if(is_row_value_true(v[row]))
-	{
-	  //(g => true)
-	  c.push_back(implies_exprt(
-			and_exprt(templ[row].pre_guard, templ[row].post_guard),
-			true_exprt()));
-	}
-	else
-	{
-	  exprt sum_first = v[row].d;
-	  exprt sum_second = v[row].d;
-	  for(int i = 0; i < v[row].c.size(); ++i)
-	  {
-	    sum_first = plus_exprt(sum_first, mult_exprt(v[row].c[i], 
-							 templ[row].expr[i].first));
-	    sum_second = plus_exprt(sum_second, mult_exprt(v[row].c[i], 
-							   templ[row].expr[i].second));
-	  }
-	  //extend types
+	//extend types
 #ifdef EXTEND_TYPES
-	  extend_expr_types(sum_first);
-	  extend_expr_types(sum_second);
+	extend_expr_types(sum_first);
+	extend_expr_types(sum_second);
 #endif
-	  exprt bounded = binary_relation_exprt(sum_first, ID_gt, 
-						from_integer(mp_integer(0), sum_first.type()));
-	  exprt decreasing = binary_relation_exprt(sum_first, ID_gt, sum_second);
+	exprt bounded = binary_relation_exprt(sum_first, ID_gt, 
+					      from_integer(mp_integer(0), sum_first.type()));
+	exprt decreasing = binary_relation_exprt(sum_first, ID_gt, sum_second);
 
-	  c.push_back(implies_exprt(and_exprt(templ[row].pre_guard, templ[row].post_guard),
-						    and_exprt(bounded, decreasing)));
-	}
+	c.push_back(implies_exprt(and_exprt(templ[row].pre_guard, templ[row].post_guard),
+				  and_exprt(bounded, decreasing)));
       }
     }
   }
