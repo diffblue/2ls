@@ -70,8 +70,6 @@ protected:
 		const domaint::kindt &kind,
 		domaint::var_specst &var_specs);
 
-  void unwinder_rename(symbol_exprt &var,const local_SSAt::nodet &node);
-
 };
 
 

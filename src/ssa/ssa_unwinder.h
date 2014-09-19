@@ -96,7 +96,7 @@ public :
 ssa_local_unwindert(local_SSAt& _SSA);
   void unwind(const irep_idt& fname,unsigned int k);
 
-  void unwinder_rename(symbol_exprt &var,const local_SSAt::nodet &node);
+  void unwinder_rename(symbol_exprt &var,const local_SSAt::nodet &node, bool pre) const;
 };
 
 class ssa_unwindert	: public messaget

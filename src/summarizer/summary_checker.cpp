@@ -114,8 +114,10 @@ void summary_checkert::SSA_functions(const goto_modelt &goto_model,  const names
   {
     status() << "Unwinding" << messaget::eom;
 
+    ssa_unwinder.init_localunwinders();
+
 //    ssa_unwinder.unwind(f_it->first,unwind);
-    ssa_unwinder.unwind_all(unwind);
+    ssa_unwinder.unwind_all(unwind+1);
     ssa_unwinder.output(debug()); debug() <<eom;
   }
 

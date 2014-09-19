@@ -42,12 +42,12 @@ void template_generator_baset::collect_variables_loop(local_SSAt &SSA,bool forwa
     if(n_it->loophead != SSA.nodes.end()) //we've found a loop
     {
       exprt lhguard = SSA.guard_symbol(n_it->loophead->location);
-      unwinder_rename(to_symbol_expr(lhguard),*n_it);
+      ssa_local_unwinder.unwinder_rename(to_symbol_expr(lhguard),*n_it,true);
       exprt lsguard = SSA.name(SSA.guard_symbol(), local_SSAt::LOOP_SELECT, n_it->location);
-      unwinder_rename(to_symbol_expr(lsguard),*n_it);
+      ssa_local_unwinder.unwinder_rename(to_symbol_expr(lsguard),*n_it,true);
       exprt pre_guard = and_exprt(lhguard,lsguard);
       exprt post_guard = SSA.guard_symbol(n_it->location);
-      unwinder_rename(to_symbol_expr(post_guard),*n_it);
+      ssa_local_unwinder.unwinder_rename(to_symbol_expr(post_guard),*n_it,false);
       
       const ssa_domaint::phi_nodest &phi_nodes = 
         SSA.ssa_analysis[n_it->loophead->location].phi_nodes;
@@ -65,9 +65,9 @@ void template_generator_baset::collect_variables_loop(local_SSAt &SSA,bool forwa
 	if(p_it==phi_nodes.end()) continue; // object not modified in this loop
 
         symbol_exprt in=SSA.name(*o_it, local_SSAt::LOOP_BACK, n_it->location);
-        unwinder_rename(in,*n_it);
+        ssa_local_unwinder.unwinder_rename(in,*n_it,true);
         symbol_exprt out=SSA.read_rhs(*o_it, n_it->location);
-        unwinder_rename(out,*n_it);
+        ssa_local_unwinder.unwinder_rename(out,*n_it,false);
 
         add_var(in,pre_guard,post_guard,domaint::LOOP,var_specs);
       
@@ -273,28 +273,3 @@ void template_generator_baset::add_vars(const var_listt &vars_to_add,
     add_var(*it,pre_guard,post_guard,kind,var_specs);
 }
 
-
-/*******************************************************************\
-
-Function: template_generator_baset::unwinder_rename
-
-  Inputs:
-
- Outputs:
-
- Purpose: add unwinder suffix to a variable
-
-\*******************************************************************/
-
-void template_generator_baset::unwinder_rename(symbol_exprt &var,const local_SSAt::nodet &node)
-{
-  //only to be called for backedge nodes
-  assert(node.equalities.size()==1);
-  //this is a hack: copy suffix from 'cond' equality to var
-  std::string id = id2string(to_symbol_expr(node.equalities[0].op0()).get_identifier());
-  size_t pos = id.find_first_of("%");
-  if(pos==std::string::npos) return;
-  std::string suffix = id.substr(pos);
-  var.set_identifier(id2string(var.get_identifier())+suffix);
-  std::cout << "new id: " << var.get_identifier() << std::endl;
-}

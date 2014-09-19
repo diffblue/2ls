@@ -247,6 +247,7 @@ void ssa_local_unwindert::init() {
   }
 
   if (loopheads.empty()) {
+    is_initialized = true;
     loopless = true;
     return;
   }
@@ -702,7 +703,8 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
  *
  *****************************************************************************/
 
-void ssa_local_unwindert::unwinder_rename(symbol_exprt &var,const local_SSAt::nodet &node)
+void ssa_local_unwindert::unwinder_rename(symbol_exprt &var,
+					  const local_SSAt::nodet &node, bool pre) const
 {
   //only to be called for backedge nodes
   //The node _MUST_ look like cond"suffix" = TRUE
@@ -715,14 +717,15 @@ void ssa_local_unwindert::unwinder_rename(symbol_exprt &var,const local_SSAt::no
   if(pos==std::string::npos) return;
   size_t pos1 = id.find_last_of("%");
   std::string suffix;
+  unsigned unwinding = pre ? current_unwinding-1 : 0;
   if(pos==pos1)
   {
-     suffix = "%"+i2string(current_unwinding-1);
+     suffix = "%"+i2string(unwinding);
   }
   else
   {
     suffix = id.substr(pos,pos1-pos);
-    suffix += "%"+i2string(current_unwinding-1);
+    suffix += "%"+i2string(unwinding);
   }
 
 
