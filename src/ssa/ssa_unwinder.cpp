@@ -183,6 +183,23 @@ void ssa_unwindert::commit_nodes(local_SSAt::nodest &nodes,
 }
 
 #else
+/*****************************************************************************\
+ *
+ * Function : ssa_local_unwindert::ssa_local_unwindert
+ *
+ * Input : _SSA - a reference to an object of type local_SSAt
+ *
+ * Output :
+ *
+ * Purpose : This just initialises the reference and does nothing else. A
+ *            separate initialier init() is provided to populate the
+ *            hierarchical loop
+ *            data structure
+ *
+ *
+ *****************************************************************************/
+ssa_local_unwindert::ssa_local_unwindert(local_SSAt& _SSA): SSA(_SSA),
+    current_unwinding(0),is_initialized(false){ }
 /*******************************************************************
  Struct: compare_node_iterators
 
@@ -203,7 +220,7 @@ struct compare_node_iteratorst {
   }
 };
 /*****************************************************************************\
- * Function : ssa_local_unwindert::construct_loop_tree
+ * Function : ssa_local_unwindert::init
  *
  * Inputs : None
  *
@@ -211,11 +228,12 @@ struct compare_node_iteratorst {
  *
  * Purpose : from local_SSA, construct a hierarchical tree_loopnodet rooted at
  * root_node. loophead of a loop is always stored as the first node in
- * body_nodes. A nested loop is stored as a tree_loopnodet in loop_nodes
+ * body_nodes. A backedge node is always the last node in body_nodes.
+ *  A nested loop is stored as a tree_loopnodet in loop_nodes
  *
  *****************************************************************************/
 
-void ssa_local_unwindert::construct_loop_tree() {
+void ssa_local_unwindert::init() {
   std::set<local_SSAt::nodest::iterator, compare_node_iteratorst> loopheads;
 
   loopheads.clear();
@@ -347,6 +365,7 @@ void ssa_local_unwindert::construct_loop_tree() {
   SSA.nodes.clear();
   SSA.nodes.insert(SSA.nodes.begin(), root_node.body_nodes.begin(),
 		   root_node.body_nodes.end());
+  is_initialized=true;
 
 }
 /*****************************************************************************\
@@ -362,6 +381,7 @@ void ssa_local_unwindert::construct_loop_tree() {
  *
  *****************************************************************************/
 void ssa_local_unwindert::unwind(const irep_idt& fname,unsigned int k) {
+  assert(is_initialized);
   if (loopless)
     return;
   if (k <= current_unwinding)
@@ -656,6 +676,63 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
 
 /*****************************************************************************\
  *
+ * Function : ssa_local_unwindert::unwinder_rename
+ *
+ * Input : var, node
+ *
+ * Output : var is returned with a suffix that reflects the current unwinding
+ *          with the context taken from the node
+ *
+ *          E.g.
+ *
+ *          node must look like
+ *
+ *          cond"somesuffix" == TRUE
+ *
+ *          e.g. cond%1%2%5%0 == TRUE
+ *
+ *          and variable might be guard#ls25
+ *
+ *          if the current_unwinding is 6
+ *
+ *          the variable should be converted to guard#ls25%1%2%5%5
+ *
+ *          Note that if current_unwinding is X then suffixes can have at most
+ *          X-1 in its parts
+ *
+ *****************************************************************************/
+
+void ssa_local_unwindert::unwinder_rename(symbol_exprt &var,const local_SSAt::nodet &node)
+{
+  //only to be called for backedge nodes
+  //The node _MUST_ look like cond"suffix" = TRUE
+  //This is very dirty hack :-(
+  assert(node.equalities.size()==1);
+  if(current_unwinding==0) return;
+  //this is a hack: copy suffix from 'cond' equality to var
+  std::string id = id2string(to_symbol_expr(node.equalities[0].op0()).get_identifier());
+  size_t pos = id.find_first_of("%");
+  if(pos==std::string::npos) return;
+  size_t pos1 = id.find_last_of("%");
+  std::string suffix;
+  if(pos==pos1)
+  {
+     suffix = "%"+i2string(current_unwinding-1);
+  }
+  else
+  {
+    suffix = id.substr(pos,pos1-pos);
+    suffix += "%"+i2string(current_unwinding-1);
+  }
+
+
+  var.set_identifier(id2string(var.get_identifier())+suffix);
+#ifdef DEBUG
+  std::cout << "new id: " << var.get_identifier() << std::endl;
+#endif
+}
+/*****************************************************************************\
+ *
  * Function : ssa_unwindert::ssa_unwindert
  *
  * Input : reference to ssa_db
@@ -733,6 +810,7 @@ void ssa_unwindert::unwind_all(unsigned int k) {
  *****************************************************************************/
 
 void ssa_unwindert::output(std::ostream & out) {
+  if(!is_initialized) return;
   for (unwinder_mapt::iterator it = unwinder_map.begin();
        it != unwinder_map.end(); it++) {
     out << "Unwinding for function" << it->first << std::endl;
@@ -761,6 +839,17 @@ void ssa_unwindert::init()
        it++) {
     unwinder_map.insert(
       unwinder_pairt(it->first, ssa_local_unwindert((*(it->second)))));
+  }
+
+
+}
+
+void ssa_unwindert::init_localunwinders()
+{
+  for(unwinder_mapt::iterator it=unwinder_map.begin();
+      it!=unwinder_map.end();it++)
+  {
+     it->second.init();
   }
   is_initialized=true;
 }
