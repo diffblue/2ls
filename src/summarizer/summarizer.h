@@ -12,16 +12,23 @@ Author: Peter Schrammel
 #include <util/message.h>
 #include <util/options.h>
 #include "../ssa/ssa_inliner.h"
+#include "../ssa/ssa_unwinder.h"
 #include "../ssa/local_ssa.h"
+#include "ssa_db.h"
 
 #include <util/time_stopping.h>
 
 class summarizert : public messaget
 {
  public:
- summarizert(const optionst &_options, summary_dbt &_summary_db) : 
+ summarizert(const optionst &_options, 
+	     summary_dbt &_summary_db,
+             ssa_dbt &_ssa_db,
+             ssa_unwindert &_ssa_unwinder) : 
     options(_options),
     summary_db(_summary_db),
+    ssa_db(_ssa_db),
+    ssa_unwinder(_ssa_unwinder),
     solver_instances(0),
     solver_calls(0),
     summaries_used(0)
@@ -31,14 +38,12 @@ class summarizert : public messaget
   typedef irep_idt function_namet;
   typedef local_SSAt function_bodyt;
   typedef std::map<function_namet, preconditiont> preconditionst;
-  typedef std::map<function_namet, function_bodyt*> functionst;
+  typedef ssa_dbt::functionst functionst;
   typedef functionst::value_type functiont;
 
-  void summarize(functionst &functions,
-                 bool forward, bool sufficient); 
+  void summarize(bool forward, bool sufficient); 
 
-  void summarize(functionst &functions, 
-                 const function_namet &entry_function,
+  void summarize(const function_namet &entry_function,
                  bool forward, bool sufficient); 
 
   unsigned get_number_of_solver_instances() { return solver_instances; }
@@ -48,7 +53,8 @@ class summarizert : public messaget
  protected:
   const optionst &options;
   summary_dbt &summary_db;
-  functionst functions;
+  ssa_dbt &ssa_db;
+  ssa_unwindert &ssa_unwinder;
   preconditionst preconditions;
 
   void compute_summary_rec(const function_namet &function_name,
@@ -57,19 +63,8 @@ class summarizert : public messaget
 
   void join_summaries(const summaryt &existing_summary, summaryt &new_summary);
 
-  //obsolete
-  /*  void inline_summaries(const function_namet &function_name, local_SSAt &SSA, 
-      bool recursive, bool always_recompute);*/
   void inline_summaries(const function_namet &function_name, local_SSAt &SSA,
                         bool context_sensitive, bool forward, bool sufficient); 
-
-  //obsolete
-  /*  void check_preconditions(const function_namet &function_name, 
-			   local_SSAt &SSA,
-                           ssa_inlinert &inliner);
-  void compute_preconditions(const function_namet &function_name, 
-			     local_SSAt &SSA,
-                             ssa_inlinert &inliner);*/
 
   bool check_precondition(const function_namet &function_name, 
 			  local_SSAt::nodest::iterator node, 

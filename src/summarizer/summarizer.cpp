@@ -78,13 +78,11 @@ Function: summarizert::summarize()
 
 \*******************************************************************/
 
-void summarizert::summarize(functionst &_functions, bool forward, 
-			    bool sufficient)
+void summarizert::summarize(bool forward, bool sufficient)
 {
-  initialize_preconditions(_functions,forward,sufficient);
-  functions = _functions;
-  for(functionst::const_iterator it = functions.begin(); 
-      it!=functions.end(); it++)
+  initialize_preconditions(ssa_db.functions(),forward,sufficient);
+  for(functionst::const_iterator it = ssa_db.functions().begin(); 
+      it!=ssa_db.functions().end(); it++)
   {
     status() << "\nSummarizing function " << it->first << eom;
     if(!summary_db.exists(it->first)) 
@@ -106,12 +104,10 @@ Function: summarizert::summarize()
 
 \*******************************************************************/
 
-void summarizert::summarize(functionst &_functions, 
-			    const function_namet &function_name,
+void summarizert::summarize(const function_namet &function_name,
                             bool forward, bool sufficient)
 {
-  initialize_preconditions(_functions,forward,sufficient);
-  functions = _functions;
+  initialize_preconditions(ssa_db.functions(),forward,sufficient);
 
   status() << "\nSummarizing function " << function_name << eom;
   if(!summary_db.exists(function_name)) 
@@ -122,8 +118,8 @@ void summarizert::summarize(functionst &_functions,
 	 " exists already" << eom;
 
   //adding preconditions to SSA for assertion check
-  for(functionst::const_iterator it = _functions.begin(); 
-      it!=_functions.end(); it++)
+  for(functionst::const_iterator it = ssa_db.functions().begin(); 
+      it!=ssa_db.functions().end(); it++)
   {
     if(it->second->nodes.empty()) continue;
     it->second->nodes.front().constraints.push_back(preconditions[it->first]);
@@ -147,7 +143,7 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
 				      bool forward,
 				      bool sufficient)
 {
-  local_SSAt &SSA = *functions[function_name]; 
+  local_SSAt &SSA = ssa_db.get(function_name); 
 
   // recursively compute summaries for function calls
   inline_summaries(function_name,SSA,context_sensitive,forward,sufficient); 
@@ -294,98 +290,6 @@ void summarizert::inline_summaries(const function_namet &function_name,
   }
 }
 
-
-  //obsolete
-/*******************************************************************\
-
-Function: summarizert::inline_summaries()
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-/*
-void summarizert::inline_summaries(const function_namet &function_name, 
-				   local_SSAt &SSA, bool recursive, 
-				   bool always_recompute)
-{
-  ssa_inlinert inliner;
-  inliner.set_message_handler(get_message_handler());
-
-  // replace calls with summaries
-  // TODO: functions with pointers passed as parameters
-  for(local_SSAt::nodest::iterator n_it = SSA.nodes.begin();
-      n_it != SSA.nodes.end(); n_it++)
-  {
-    if(n_it->function_calls.empty()) continue;
-
-
-    for(local_SSAt::nodet::function_callst::iterator 
-        f_it = n_it->function_calls.begin();
-        f_it != n_it->function_calls.end(); f_it++)
-    {
-      assert(f_it->function().id()==ID_symbol); //no function pointers
-      irep_idt fname = to_symbol_expr(f_it->function()).get_identifier();
-
-      summaryt summary; 
-      bool recompute = false || always_recompute;
-      if(!always_recompute) 
-      {
-        // replace call with summary if it exists 
-        if(summary_db.exists(fname)) 
-        {
-          status() << "Using existing summary for function " << fname << eom;
-  	  summary = summary_db.get(fname);
-        }
-        // compute summary if function_name in functions
-        else if(functions.find(fname)!=functions.end() && recursive &&
-                fname!=function_name) // havoc recursive calls
-	{
-          recompute = true;
-	}
-        else // havoc function call by default
-        {
-          status() << "Function " << fname << " not found" << eom;
-          inliner.havoc(*n_it,f_it);
-          continue;
-        }
-      }
-      if(recompute) 
-      {
-        status() << "Recursively summarizing function " << fname << eom;
-        compute_summary_rec(fname);
-        summary = summary_db.get(fname);
-      }
-
-      status() << "Replacing function " << fname << eom;
-      //getting globals at call site
-      local_SSAt::var_sett cs_globals_in, cs_globals_out; 
-      goto_programt::const_targett loc = n_it->location;
-      SSA.get_globals(loc,cs_globals_in);
-      assert(loc!=SSA.goto_function.body.instructions.end());
-      SSA.get_globals(++loc,cs_globals_out);
-
-#if 0
-      std::cout << "globals at call site: ";
-      for(summaryt::var_sett::const_iterator it = cs_globals_out.begin();
-          it != cs_globals_out.end(); it++)
-         std::cout << from_expr(functions[function_name]->ns,"",*it) << " ";
-      std::cout << std::endl;
-#endif
-
-      //replace
-      inliner.replace(SSA.nodes,n_it,f_it,cs_globals_in,cs_globals_out,summary);
-      summaries_used++;
-    }
-    inliner.commit_node(n_it);
-  }
-  assert(inliner.commit_nodes(SSA.nodes,SSA.nodes.end()));
-}
-*/
-
 /*******************************************************************\
 
 Function: summarizert::join_summaries()
@@ -477,7 +381,7 @@ bool summarizert::check_precondition(
       precondition_holds = false;
     }
   }
-  else if(functions.find(fname)==functions.end())
+  else if(!ssa_db.exists(fname))
   {
     status() << "Function " << fname << " not found" << eom;
     inliner.havoc(*n_it,f_it);
@@ -548,144 +452,6 @@ bool summarizert::check_precondition(
 
 /*******************************************************************\
 
-Function: summarizert::check_preconditions()
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\******************************************************************/
-/*
-void summarizert::check_preconditions(
-  const function_namet &function_name, 
-  local_SSAt &SSA,
-  ssa_inlinert &inliner)
-{
-  status() << "Checking preconditions" << eom;
-
-  // add precondition assertion for each call
-  for(local_SSAt::nodest::iterator n_it = SSA.nodes.begin(); 
-      n_it!=SSA.nodes.end(); n_it++)
-  {
-    for(local_SSAt::nodet::function_callst::iterator 
-        f_it = n_it->function_calls.begin();
-        f_it != n_it->function_calls.end(); f_it++)
-    {
-      assert(f_it->function().id()==ID_symbol); //no function pointers
-      irep_idt fname = to_symbol_expr(f_it->function()).get_identifier();
-
-      if(summary_db.exists(fname)) 
-      {
-	summaryt summary = summary_db.get(fname);
-        if(summary.precondition.is_true()) //precondition trivially holds
-	{
-	  //getting globals at call site
-	  local_SSAt::var_sett cs_globals_in, cs_globals_out; 
-	  goto_programt::const_targett loc = n_it->location;
-	  SSA.get_globals(loc,cs_globals_in);
-	  assert(loc!=SSA.goto_function.body.instructions.end());
-	  SSA.get_globals(++loc,cs_globals_out);
-
-          status() << "Precondition trivially holds, replacing by summary." 
-                   << eom;
-          inliner.replace(SSA.nodes,n_it,f_it,
-                          cs_globals_in,cs_globals_out,summary_db.get(fname));
-          summaries_used++;
-	  continue;
-	}
-
-	exprt assertion = not_exprt(summary.precondition);
-
-	//getting globals at call site
-	local_SSAt::var_sett cs_globals_in; 
-	SSA.get_globals(n_it->location,cs_globals_in);
-
-	inliner.rename_to_caller(f_it,summary.params,
-				 cs_globals_in,summary.globals_in,assertion);
-
-        n_it->assertions.push_back(assertion);
-        status() << "Precondition assertion for function " << fname << eom;
-      }
-      else if(functions.find(fname)==functions.end())
-      {
-        status() << "Function " << fname << " not found" << eom;
-        inliner.havoc(*n_it,f_it);
-        continue;
-      }
-    }
-    inliner.commit_node(n_it);
-  }
-  assert(inliner.commit_nodes(SSA.nodes,SSA.nodes.end()));
-
-  // non-incremental precondition check, TODO: make incremental
-  for(local_SSAt::nodest::iterator n_it = SSA.nodes.begin(); 
-      n_it!=SSA.nodes.end(); n_it++)
-  {
-    if(!n_it->function_calls.empty() &&
-       !n_it->assertions.empty())
-    {
-      assert(n_it->assertions.size()==1);
-
-      local_SSAt::nodet::function_callst::iterator 
-        f_it = n_it->function_calls.begin();      
-      assert(f_it->function().id()==ID_symbol); //no function pointers
-      irep_idt fname = to_symbol_expr(f_it->function()).get_identifier();
-
-      status() << "Checking precondition for function " << fname << eom;
-      
-      satcheckt satcheck;
-      bv_pointerst solver(SSA.ns, satcheck);
-  
-      satcheck.set_message_handler(get_message_handler());
-      solver.set_message_handler(get_message_handler());
-    
-      solver << SSA;
-      solver << n_it->assertions.front();
-
-      switch(solver())
-      {
-	case decision_proceduret::D_SATISFIABLE:
-          n_it->assertions.clear();
-          status() << "Precondition does not hold, need to recompute summary." << eom;
-          break;
-	case decision_proceduret::D_UNSATISFIABLE:
-	{
-          //TODO: assume precondition for next check
-
-          n_it->assertions.clear();
-
-	  //getting globals at call site
-	  local_SSAt::var_sett cs_globals_in, cs_globals_out; 
-	  goto_programt::const_targett loc = n_it->location;
-	  SSA.get_globals(loc,cs_globals_in);
-	  assert(loc!=SSA.goto_function.body.instructions.end());
-	  SSA.get_globals(++loc,cs_globals_out);
-
-          status() << "Precondition holds, replacing by summary." << eom;
-          inliner.replace(SSA.nodes,n_it,f_it,
-                          cs_globals_in,cs_globals_out,summary_db.get(fname));
-          summaries_used++;
-                
-          break;
-	}
-        default: assert(false); break;
-      }
-
-      //statistics
-      solver_instances++;
-      solver_calls++;
-    }
-    inliner.commit_node(n_it);
-  }
-  assert(inliner.commit_nodes(SSA.nodes,SSA.nodes.end()));
-
-  //now, only function calls which need recomputing of their summaries are left
-}
-*/
-/*******************************************************************\
-
 Function: summarizert::compute_precondition ()
 
   Inputs:
@@ -730,7 +496,7 @@ void summarizert::compute_precondition(
   analyzer.get_calling_contexts(calling_contexts);
 
   // set preconditions
-  local_SSAt &fSSA = *functions[fname]; 
+  local_SSAt &fSSA = ssa_db.get(fname); 
 
   preconditiont precondition = calling_contexts[f_it];
   inliner.rename_to_callee(f_it, fSSA.params,
@@ -751,83 +517,3 @@ void summarizert::compute_precondition(
   solver_calls += analyzer.get_number_of_solver_calls();
 }
 
-
-/*******************************************************************\
-
-Function: summarizert::compute_preconditions()
-
-  Inputs:
-
- Outputs:
-
- Purpose: computes callee preconditions from the calling context
-          for all function calls
-
-\******************************************************************/
-/*
-void summarizert::compute_preconditions(
-  const function_namet &function_name, 
-  local_SSAt &SSA,
-  ssa_inlinert &inliner)
-{
-  status() << "Computing preconditions from calling context" << eom;
-
-  ssa_analyzert analyzer(SSA.ns, options);
-  analyzer.set_message_handler(get_message_handler());
-  analyzer.compute_calling_contexts = true;
-
-  // collect globals at call site
-  std::map<local_SSAt::nodet::function_callst::iterator, local_SSAt::var_sett>
-    cs_globals_in;
- 
-  for(local_SSAt::nodest::iterator n_it = SSA.nodes.begin(); 
-      n_it!=SSA.nodes.end(); n_it++)
-  {
-    for(local_SSAt::nodet::function_callst::iterator 
-        f_it = n_it->function_calls.begin();
-        f_it != n_it->function_calls.end(); f_it++)
-    {
-      assert(f_it->function().id()==ID_symbol); //no function pointers
-
-      SSA.get_globals(n_it->location,cs_globals_in[f_it]);
-      analyzer.calling_context_vars[f_it].insert(
-        SSA.globals_in.begin(),SSA.globals_in.end());
-    }
-  }
-
-  if(cs_globals_in.empty()) return; //nothing to do
-
-  // analyze
-  analyzer(SSA,preconditions[function_name]);
-
-  ssa_analyzert::calling_contextst calling_contexts;
-  analyzer.get_calling_contexts(calling_contexts);
-
-  // set preconditions
-  for(ssa_analyzert::calling_contextst::iterator it = calling_contexts.begin();
-      it != calling_contexts.end(); it++)
-  {
-    const irep_idt &fname = 
-      to_symbol_expr(it->first->function()).get_identifier();
-    local_SSAt &fSSA = *functions[fname]; 
-
-    preconditiont precondition = it->second;
-    inliner.rename_to_callee(it->first, fSSA.params,
-			     cs_globals_in[it->first],fSSA.globals_in,
-			     precondition);
-
-    debug() << "Calling context for " << 
-               from_expr(SSA.ns, "", *it->first) << ": " 
-	    << from_expr(SSA.ns, "", precondition) << eom;
-
-    if(preconditions[fname].is_true())
-      preconditions[fname] = precondition;
-    else
-      preconditions[fname] = or_exprt(preconditions[fname],precondition);
-  }
-
-  //statistics
-  solver_instances++;
-  solver_calls += analyzer.get_number_of_solver_calls();
-}
-*/

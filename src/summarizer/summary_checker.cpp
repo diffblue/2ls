@@ -150,11 +150,10 @@ void summary_checkert::summarize(const goto_modelt &goto_model,
   summarizer.set_message_handler(get_message_handler());
 
   if(options.get_bool_option("context-sensitive"))
-    summarizer.summarize(ssa_db.functions(),
-			 goto_model.goto_functions.entry_point(),
+    summarizer.summarize(goto_model.goto_functions.entry_point(),
                          backward,sufficient);
   else
-    summarizer.summarize(ssa_db.functions(),backward,sufficient);
+    summarizer.summarize(backward,sufficient);
 
   //statistics
   solver_instances += summarizer.get_number_of_solver_instances();

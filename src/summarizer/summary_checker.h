@@ -28,9 +28,10 @@ public:
     fixed_point(false),
     options(_options),
     ssa_db(),summary_db(),
-    summarizer(_options,summary_db),
+    ssa_unwinder(ssa_db),
+    summarizer(_options,summary_db,ssa_db,ssa_unwinder),
     solver_instances(0),
-    solver_calls(0),ssa_unwinder(ssa_db)
+    solver_calls(0)
   {
 
   }
@@ -48,11 +49,11 @@ protected:
 
   ssa_dbt ssa_db;
   summary_dbt summary_db;
+  ssa_unwindert ssa_unwinder;
   summarizert summarizer;
 
   unsigned solver_instances;
   unsigned solver_calls;
-  ssa_unwindert ssa_unwinder;
   void report_statistics();
 
   void do_show_vcc(
