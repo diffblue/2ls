@@ -423,106 +423,6 @@ template_domaint::row_valuet template_domaint::get_row_value(
 
 /*******************************************************************\
 
-Function: template_domaint::project_on_loops
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void template_domaint::project_row_on_kind(const templ_valuet &value, 
-                                           rowt row,
-                                           kindt kind,
-                                           exprt::operandst &c)
-{
-    if(templ[row].kind!=kind) return;
-    const row_valuet &row_v = value[row];
-    if(is_row_value_neginf(row_v)) c.push_back(false_exprt());
-    else if(is_row_value_inf(row_v)) c.push_back(true_exprt());
-    else c.push_back(binary_relation_exprt(templ[row].expr,ID_le,row_v));
-}
-
-/*******************************************************************\
-
-Function: template_domaint::project_on_out
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void template_domaint::project_on_out(const valuet &value, exprt &result)
-{
-  const templ_valuet &v = static_cast<const templ_valuet &>(value);
-  assert(v.size()==templ.size());
-  exprt::operandst c;
-  c.reserve(templ.size());
-  for(unsigned row = 0; row<templ.size(); row++)
-  {
-    project_row_on_kind(v,row,OUT,c);
-  }
-  result = conjunction(c);
-}
-
-/*******************************************************************\
-
-Function: template_domaint::project_on_loops
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void template_domaint::project_on_loops(const valuet &value, exprt &result)
-{
-  const templ_valuet &v = static_cast<const templ_valuet &>(value);
-  assert(v.size()==templ.size());
-  exprt::operandst c;
-  c.reserve(templ.size());
-  for(unsigned row = 0; row<templ.size(); row++)
-  {
-    project_row_on_kind(v,row,LOOP,c);
-  }
-  result = conjunction(c);
-}
-
-/*******************************************************************\
-
-Function: template_domaint::project_on_inout
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void template_domaint::project_on_inout(const valuet &value, exprt &result)
-{
-  const templ_valuet &v = static_cast<const templ_valuet &>(value);
-  assert(v.size()==templ.size());
-  exprt::operandst c;
-  c.reserve(templ.size());
-  for(unsigned row = 0; row<templ.size(); row++)
-  {
-    project_row_on_kind(v,row,IN,c);
-    project_row_on_kind(v,row,OUT,c);
-  }
-  result = conjunction(c);
-}
-
-/*******************************************************************\
-
 Function: template_domaint::project_on_vars
 
   Inputs:
@@ -533,10 +433,11 @@ Function: template_domaint::project_on_vars
 
 \*******************************************************************/
 
-void template_domaint::project_on_vars(const valuet &value, 
+void template_domaint::project_on_vars(valuet &value, 
 				       const var_sett &vars, exprt &result)
 {
   const templ_valuet &v = static_cast<const templ_valuet &>(value);
+
   assert(v.size()==templ.size());
   exprt::operandst c;
   for(unsigned row = 0; row<templ.size(); row++)
@@ -868,9 +769,8 @@ Function: make_interval_template
 
 \*******************************************************************/
 
-void template_domaint::add_interval_template(templatet &templ, 
-					      const var_specst &var_specs,
-					      const namespacet &ns)
+void template_domaint::add_interval_template(const var_specst &var_specs,
+					     const namespacet &ns)
 {
   unsigned size = 2*var_specs.size();
   templ.reserve(templ.size()+size);
@@ -916,9 +816,8 @@ Function: make_zone_template
 
 \*******************************************************************/
 
-void template_domaint::add_zone_template(templatet &templ, 
-					  const var_specst &var_specs,
-					  const namespacet &ns)
+void template_domaint::add_zone_template(const var_specst &var_specs,
+					 const namespacet &ns)
 { 
   unsigned size = 2*var_specs.size()+var_specs.size()*(var_specs.size()-1);
   templ.reserve(templ.size()+size);
@@ -1001,9 +900,8 @@ Function: make_octagon_template
 
 \*******************************************************************/
 
-void template_domaint::add_octagon_template(templatet &templ,
-					     const var_specst &var_specs,
-					     const namespacet &ns)
+void template_domaint::add_octagon_template(const var_specst &var_specs,
+					    const namespacet &ns)
 {
   unsigned size = 2*var_specs.size()+2*var_specs.size()*(var_specs.size()-1);
   templ.reserve(templ.size()+size);

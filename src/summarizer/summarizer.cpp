@@ -17,6 +17,8 @@ Author: Peter Schrammel
 #include "summary_db.h"
 
 #include "../domains/ssa_analyzer.h"
+#include "../domains/template_generator_summary.h"
+#include "../domains/template_generator_callingcontext.h"
 
 #include "../ssa/local_ssa.h"
 #include "../ssa/simplify_ssa.h"
@@ -167,7 +169,10 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
   ssa_analyzert analyzer(SSA.ns, options);
   analyzer.set_message_handler(get_message_handler());
 
-  analyzer(SSA,preconditions[function_name],forward);
+  template_generator_summaryt template_generator(options,ssa_unwinder.get(function_name));
+  template_generator(SSA,forward);
+
+  analyzer(SSA,preconditions[function_name],template_generator);
 
   // create summary
   summaryt summary;
@@ -175,8 +180,8 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
   summary.globals_in = SSA.globals_in;
   summary.globals_out = SSA.globals_out;
   if(forward) summary.precondition = preconditions.at(function_name);
-  else analyzer.get_postcondition(summary.precondition);
-  analyzer.get_summary(summary.transformer);
+  else analyzer.get_result(summary.precondition,template_generator.out_vars());
+  analyzer.get_result(summary.transformer,template_generator.inout_vars());
 #ifdef PRECISE_JOIN
   summary.transformer = implies_exprt(summary.precondition,summary.transformer);
 #endif
@@ -197,7 +202,7 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
   // We simply use the last CFG node. It would be prettier to put
   // these close to the loops.
   exprt inv;
-  analyzer.get_loop_invariants(inv);
+  analyzer.get_result(inv,template_generator.loop_vars());
   status() << "Adding loop invariant: " << from_expr(SSA.ns, "", inv) << eom;
   // always do precise join here (otherwise we have to store the loop invariant
   // in the summary and handle its updates like the transformer's
@@ -478,27 +483,24 @@ void summarizert::compute_precondition(
 
   ssa_analyzert analyzer(SSA.ns, options);
   analyzer.set_message_handler(get_message_handler());
-  analyzer.compute_calling_contexts = true;
+
+  template_generator_callingcontextt template_generator(options,ssa_unwinder.get(function_name));
+  template_generator(SSA,n_it,f_it,forward);
 
   // collect globals at call site
   std::map<local_SSAt::nodet::function_callst::iterator, local_SSAt::var_sett>
     cs_globals_in;
- 
   if(forward) SSA.get_globals(n_it->location,cs_globals_in[f_it]);
   else SSA.get_globals((++n_it)->location,cs_globals_in[f_it]);
-  analyzer.calling_context_vars[f_it].insert(
-    SSA.globals_in.begin(),SSA.globals_in.end());
 
   // analyze
-  analyzer(SSA,preconditions[function_name],forward);
-
-  ssa_analyzert::calling_contextst calling_contexts;
-  analyzer.get_calling_contexts(calling_contexts);
+  analyzer(SSA,preconditions[function_name],template_generator);
 
   // set preconditions
   local_SSAt &fSSA = ssa_db.get(fname); 
 
-  preconditiont precondition = calling_contexts[f_it];
+  preconditiont precondition;
+  analyzer.get_result(precondition,template_generator.callingcontext_vars());
   inliner.rename_to_callee(f_it, fSSA.params,
 			     cs_globals_in[f_it],fSSA.globals_in,
 			     precondition);

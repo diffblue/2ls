@@ -29,10 +29,8 @@ public:
 
   typedef std::vector<template_rowt> templatet;
 
-  template_domaint(replace_mapt &_renaming_map, 
-                   templatet &_template) :
-    domaint(_renaming_map),
-    templ(_template) 
+  template_domaint(replace_mapt &_renaming_map) :
+    domaint(_renaming_map)
   {}
 
   // initialize value
@@ -79,22 +77,16 @@ public:
   virtual void output_domain(std::ostream &out, const namespacet &ns) const;
 
   // projection  
-  virtual void project_on_out(const valuet &value, exprt &result);
-  virtual void project_on_loops(const valuet &value, exprt &result);
-  virtual void project_on_inout(const valuet &value, exprt &result);
-  virtual void project_on_vars(const valuet &value, const var_sett &vars, exprt &result);
+  virtual void project_on_vars(valuet &value, const var_sett &vars, exprt &result);
 
   unsigned template_size();
 
   // generating templates
-  static void add_interval_template(templatet &templ,
-			      const var_specst &var_specs,
+  void add_interval_template(const var_specst &var_specs,
 			      const namespacet &ns);
-  static void add_zone_template(templatet &templ,
-				 const var_specst &var_specs,
+  void add_zone_template(const var_specst &var_specs,
 				 const namespacet &ns);
-  static void add_octagon_template(templatet &templ,
-				    const var_specst &var_specs,
+  void add_octagon_template(const var_specst &var_specs,
 				    const namespacet &ns);
 
   exprt get_row_symb_value(const rowt &row);
@@ -102,12 +94,7 @@ public:
 protected:
   friend class strategy_solver_binsearcht;
 
-  templatet &templ;
- 
-  void project_row_on_kind(const templ_valuet &value, 
-                           rowt row,
-			   kindt kind,
-			   exprt::operandst &c);
+  templatet templ;
   
 };
 

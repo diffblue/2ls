@@ -103,23 +103,21 @@ void summary_checkert::SSA_functions(const goto_modelt &goto_model,  const names
       status() << "Simplifying" << messaget::eom;
       ::simplify(SSA, ns);
     }
+
+    SSA.output(debug()); debug() << eom;
   }
-    unsigned unwind = options.get_unsigned_int_option("unwind");
-    if(unwind>0)
-    {
-      status() << "Unwinding" << messaget::eom;
 
+  ssa_unwinder.init();
 
-        ssa_unwinder.init();
-    	  ssa_unwinder.unwind_all(unwind);
-    	  ssa_unwinder.output(debug()); debug() <<eom;
+  unsigned unwind = options.get_unsigned_int_option("unwind");
+  if(unwind>0)
+  {
+    status() << "Unwinding" << messaget::eom;
 
-
-
-    }
-
-
-
+//    ssa_unwinder.unwind(f_it->first,unwind);
+    ssa_unwinder.unwind_all(unwind);
+    ssa_unwinder.output(debug()); debug() <<eom;
+  }
 
 #if 0
   // inline c::main and __CPROVER_initialize

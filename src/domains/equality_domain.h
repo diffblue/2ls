@@ -55,22 +55,13 @@ class equality_domaint : public domaint
     const namespacet &ns) const;
   virtual void output_domain(std::ostream &out, const namespacet &ns) const;
 
-  virtual void project_on_out(const valuet &value, exprt &result);
-  virtual void project_on_loops(const valuet &value, exprt &result);
-  virtual void project_on_inout(const valuet &value, exprt &result);
-  virtual void project_on_vars(const valuet &value, const var_sett &vars, exprt &result);
+  virtual void project_on_vars(valuet &value, const var_sett &vars, exprt &result);
 
   void get_index_set(index_sett &indices); 
   const var_pairt &get_var_pair(unsigned index);
 
  protected:
   templatet templ;
-
-  void project_row_on_kind(equ_valuet &value, 
-			   unsigned index,
-			   kindt kind,
-			   bool equality,
-			   exprt::operandst &c);
 
   void make_template(
     const var_specst &var_specs,

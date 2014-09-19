@@ -21,13 +21,14 @@
  Purpose: unwinds all loops the given number of times
 
  \*******************************************************************/
+
 #if 0
 void ssa_unwindert::unwind(local_SSAt &SSA, unsigned unwind_max) {
   if (unwind_max == 0)
     return;
 
   for (local_SSAt::nodest::iterator n_it = SSA.nodes.begin();
-      n_it != SSA.nodes.end(); n_it++) {
+       n_it != SSA.nodes.end(); n_it++) {
     if (n_it->loophead == SSA.nodes.end())
       continue;
     //we've found a loop
@@ -41,13 +42,13 @@ void ssa_unwindert::unwind(local_SSAt &SSA, unsigned unwind_max) {
     std::map<exprt, exprt> pre_post_exprs;
 
     const ssa_domaint::phi_nodest &phi_nodes =
-        SSA.ssa_analysis[loop_head].phi_nodes;
+      SSA.ssa_analysis[loop_head].phi_nodes;
 
     for (local_SSAt::objectst::const_iterator o_it =
-        SSA.ssa_objects.objects.begin(); o_it != SSA.ssa_objects.objects.end();
-        o_it++) {
+	   SSA.ssa_objects.objects.begin(); o_it != SSA.ssa_objects.objects.end();
+	 o_it++) {
       ssa_domaint::phi_nodest::const_iterator p_it = phi_nodes.find(
-          o_it->get_identifier());
+	o_it->get_identifier());
 
       if (p_it == phi_nodes.end())
         continue; // object not modified in this loop
@@ -63,7 +64,7 @@ void ssa_unwindert::unwind(local_SSAt &SSA, unsigned unwind_max) {
       // insert loop_head
       local_SSAt::nodet node = *n_it->loophead; //copy
       for (local_SSAt::nodet::equalitiest::iterator e_it =
-          node.equalities.begin(); e_it != node.equalities.end(); e_it++) {
+	     node.equalities.begin(); e_it != node.equalities.end(); e_it++) {
         if (e_it->rhs().id() != ID_if) {
           rename(*e_it, unwind);
           continue;
@@ -94,8 +95,8 @@ void ssa_unwindert::unwind(local_SSAt &SSA, unsigned unwind_max) {
 
     // feed last unwinding into original loop_head, modified in place
     for (local_SSAt::nodet::equalitiest::iterator e_it =
-        n_it->loophead->equalities.begin();
-        e_it != n_it->loophead->equalities.end(); e_it++) {
+	   n_it->loophead->equalities.begin();
+	 e_it != n_it->loophead->equalities.end(); e_it++) {
       if (e_it->rhs().id() != ID_if)
         continue;
 
@@ -130,7 +131,7 @@ void ssa_unwindert::rename(exprt &expr, unsigned index) {
     sexpr.set_identifier(id);
   }
   for (exprt::operandst::iterator it = expr.operands().begin();
-      it != expr.operands().end(); it++) {
+       it != expr.operands().end(); it++) {
     rename(*it, index);
   }
 }
@@ -148,19 +149,19 @@ void ssa_unwindert::rename(exprt &expr, unsigned index) {
 
 void ssa_unwindert::rename(local_SSAt::nodet &node, unsigned index) {
   for (local_SSAt::nodet::equalitiest::iterator e_it = node.equalities.begin();
-      e_it != node.equalities.end(); e_it++) {
+       e_it != node.equalities.end(); e_it++) {
     rename(*e_it, index);
   }
   for (local_SSAt::nodet::constraintst::iterator c_it =
-      node.constraints.begin(); c_it != node.constraints.end(); c_it++) {
+	 node.constraints.begin(); c_it != node.constraints.end(); c_it++) {
     rename(*c_it, index);
   }
   for (local_SSAt::nodet::assertionst::iterator a_it = node.assertions.begin();
-      a_it != node.assertions.end(); a_it++) {
+       a_it != node.assertions.end(); a_it++) {
     rename(*a_it, index);
   }
   for (local_SSAt::nodet::function_callst::iterator f_it =
-      node.function_calls.begin(); f_it != node.function_calls.end(); f_it++) {
+	 node.function_calls.begin(); f_it != node.function_calls.end(); f_it++) {
     rename(*f_it, index);
   }
 }
@@ -177,7 +178,7 @@ void ssa_unwindert::rename(local_SSAt::nodet &node, unsigned index) {
  \*******************************************************************/
 
 void ssa_unwindert::commit_nodes(local_SSAt::nodest &nodes,
-    local_SSAt::nodest::iterator n_pos) {
+				 local_SSAt::nodest::iterator n_pos) {
   nodes.splice(n_pos, new_nodes, new_nodes.begin(), new_nodes.end());
 }
 
@@ -197,7 +198,7 @@ void ssa_unwindert::commit_nodes(local_SSAt::nodest &nodes,
  \*******************************************************************/
 struct compare_node_iteratorst {
   bool operator()(const local_SSAt::nodest::iterator& a,
-      const local_SSAt::nodest::iterator& b) const {
+		  const local_SSAt::nodest::iterator& b) const {
     return ((unsigned long) (&(*a)) < (unsigned long) (&(*b)));
   }
 };
@@ -219,7 +220,7 @@ void ssa_local_unwindert::construct_loop_tree() {
 
   loopheads.clear();
   for (local_SSAt::nodest::iterator n_it = SSA.nodes.begin();
-      n_it != SSA.nodes.end(); n_it++) {
+       n_it != SSA.nodes.end(); n_it++) {
     //continue until a back-edge is found
     if (n_it->loophead == SSA.nodes.end())
       continue;
@@ -239,7 +240,7 @@ void ssa_local_unwindert::construct_loop_tree() {
   current_stack.push_back(&root_node);
   current_node = current_stack.back();
   for (local_SSAt::nodest::iterator n_it = SSA.nodes.begin();
-      n_it != SSA.nodes.end(); n_it++) {
+       n_it != SSA.nodes.end(); n_it++) {
     if (loopheads.find(n_it) != loopheads.end()) {
       //we've found a loop-head, so create a
       //tree_loopnodet for the nested loop
@@ -261,20 +262,20 @@ void ssa_local_unwindert::construct_loop_tree() {
         //compute pre_post_exprs for the current loop
 
         const ssa_domaint::phi_nodest &phi_nodes =
-        SSA.ssa_analysis[n_it->location].phi_nodes;
+	  SSA.ssa_analysis[n_it->location].phi_nodes;
 
         for(local_SSAt::objectst::const_iterator
-            o_it=SSA.ssa_objects.objects.begin();
+	      o_it=SSA.ssa_objects.objects.begin();
             o_it!=SSA.ssa_objects.objects.end();
             o_it++)
         {
           ssa_domaint::phi_nodest::const_iterator p_it =
-          phi_nodes.find(o_it->get_identifier());
+	    phi_nodes.find(o_it->get_identifier());
 
           if(p_it==phi_nodes.end()) continue; // object not modified in this loop
 
           symbol_exprt pre =
-          SSA.name(*o_it, local_SSAt::LOOP_BACK, n_it->location);
+	    SSA.name(*o_it, local_SSAt::LOOP_BACK, n_it->location);
           symbol_exprt post = SSA.read_rhs(*o_it, n_it->location);
 
           current_node->pre_post_exprs[pre] = post;
@@ -298,19 +299,19 @@ void ssa_local_unwindert::construct_loop_tree() {
         //compute pre_post_exprs for the current loop
 
         const ssa_domaint::phi_nodest &phi_nodes =
-            SSA.ssa_analysis[loophead.location].phi_nodes;
+	  SSA.ssa_analysis[loophead.location].phi_nodes;
 
         for (local_SSAt::objectst::const_iterator o_it =
-            SSA.ssa_objects.objects.begin();
-            o_it != SSA.ssa_objects.objects.end(); o_it++) {
+	       SSA.ssa_objects.objects.begin();
+	     o_it != SSA.ssa_objects.objects.end(); o_it++) {
           ssa_domaint::phi_nodest::const_iterator p_it = phi_nodes.find(
-              o_it->get_identifier());
+	    o_it->get_identifier());
 
           if (p_it == phi_nodes.end())
             continue; // object not modified in this loop
 
           symbol_exprt pre = SSA.name(*o_it, local_SSAt::LOOP_BACK,
-              n_it->location);
+				      n_it->location);
           symbol_exprt post = SSA.read_rhs(*o_it, n_it->location);
 
           current_node->pre_post_exprs[pre] = post;
@@ -345,7 +346,7 @@ void ssa_local_unwindert::construct_loop_tree() {
   // so avoid duplicates by removing them from SSA.nodes
   SSA.nodes.clear();
   SSA.nodes.insert(SSA.nodes.begin(), root_node.body_nodes.begin(),
-      root_node.body_nodes.end());
+		   root_node.body_nodes.end());
 
 }
 /*****************************************************************************\
@@ -370,7 +371,7 @@ void ssa_local_unwindert::unwind(const irep_idt& fname,unsigned int k) {
   symbol_exprt new_sym(func_name,bool_typet());
   SSA.enabling_exprs.push_back(new_sym);
   for (loop_nodest::iterator it = root_node.loop_nodes.begin();
-      it != root_node.loop_nodes.end(); it++) {
+       it != root_node.loop_nodes.end(); it++) {
     unwind(*it, "", false, k, new_sym,new_nodes);
   }
 //commit all the nodes
@@ -386,25 +387,25 @@ void ssa_local_unwindert::rename(exprt &expr, std::string suffix) {
     sexpr.set_identifier(id);
   }
   for (exprt::operandst::iterator it = expr.operands().begin();
-      it != expr.operands().end(); it++) {
+       it != expr.operands().end(); it++) {
     rename(*it, suffix);
   }
 }
 void ssa_local_unwindert::rename(local_SSAt::nodet& node, std::string suffix) {
   for (local_SSAt::nodet::equalitiest::iterator e_it = node.equalities.begin();
-      e_it != node.equalities.end(); e_it++) {
+       e_it != node.equalities.end(); e_it++) {
     rename(*e_it, suffix);
   }
   for (local_SSAt::nodet::constraintst::iterator c_it =
-      node.constraints.begin(); c_it != node.constraints.end(); c_it++) {
+	 node.constraints.begin(); c_it != node.constraints.end(); c_it++) {
     rename(*c_it, suffix);
   }
   for (local_SSAt::nodet::assertionst::iterator a_it = node.assertions.begin();
-      a_it != node.assertions.end(); a_it++) {
+       a_it != node.assertions.end(); a_it++) {
     rename(*a_it, suffix);
   }
   for (local_SSAt::nodet::function_callst::iterator f_it =
-      node.function_calls.begin(); f_it != node.function_calls.end(); f_it++) {
+	 node.function_calls.begin(); f_it != node.function_calls.end(); f_it++) {
     rename(*f_it, suffix);
   }
 }
@@ -461,8 +462,8 @@ void ssa_local_unwindert::rename(local_SSAt::nodet& node, std::string suffix) {
  *
  *****************************************************************************/
 void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
-    std::string suffix, bool full, const unsigned int unwind_depth, symbol_exprt& new_sym,
-    local_SSAt::nodest& new_nodes) {
+				 std::string suffix, bool full, const unsigned int unwind_depth, symbol_exprt& new_sym,
+				 local_SSAt::nodest& new_nodes) {
 
   // a loop has to have at least one body_node, if not, it can not
   // have a nested loop either so return
@@ -472,7 +473,7 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
   for (unsigned int i = 0; i < unwind_depth; i++) {
     bool tmp = i < current_unwinding ? full : true;
     for (loop_nodest::iterator it = current_loop.loop_nodes.begin();
-        it != current_loop.loop_nodes.end(); it++) {
+	 it != current_loop.loop_nodes.end(); it++) {
 
       unwind((*it), suffix + "%" + i2string(i), tmp, unwind_depth,new_sym, new_nodes);
 
@@ -488,7 +489,7 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
     if (i > 0) {
       local_SSAt::nodet node = *it; //copy
       for (local_SSAt::nodet::equalitiest::iterator e_it =
-          node.equalities.begin(); e_it != node.equalities.end(); e_it++) {
+	     node.equalities.begin(); e_it != node.equalities.end(); e_it++) {
         if (e_it->rhs().id() != ID_if) {
           if (e_it->lhs() == SSA.guard_symbol(node.location)) {
             //ASSUME : last node in body_nodes is
@@ -499,7 +500,7 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
             //from previous to current iteration
             rename(e_it->lhs(), suffix + '%' + i2string(i - 1));
             exprt e = SSA.guard_symbol(
-                current_loop.body_nodes.rbegin()->location);
+	      current_loop.body_nodes.rbegin()->location);
             rename(e, suffix + "%" + i2string(i));
             e_it->rhs() = e;
 
@@ -513,7 +514,7 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
 #if 0
         if(i==0)
         {							//for the first iteration, take the input
-                      //coming from above
+	  //coming from above
           rename(e_it->lhs(),suffix+"%"+i2string(i));
           e_it->rhs() = e.false_case();
         }
@@ -563,14 +564,14 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
     local_SSAt::nodest::iterator it = current_loop.body_nodes.begin();
     local_SSAt::nodet node = *it; //copy
     for (local_SSAt::nodet::equalitiest::iterator e_it =
-        node.equalities.begin(); e_it != node.equalities.end(); e_it++) {
+	   node.equalities.begin(); e_it != node.equalities.end(); e_it++) {
 
       if (e_it->rhs().id() == ID_if)
       {
         rename(e_it->lhs(), suffix + "%" + i2string(unwind_depth - 1));
         if_exprt &e = to_if_expr(e_it->rhs());
-       rename(e.cond(),suffix + "%" + i2string(unwind_depth - 1));
-       rename(e.true_case(),suffix + "%" + i2string(unwind_depth - 1));
+	rename(e.cond(),suffix + "%" + i2string(unwind_depth - 1));
+	rename(e.true_case(),suffix + "%" + i2string(unwind_depth - 1));
 
 #if 0
         //VERY DIRTY HACK, condition and true case at the topmost iteration
@@ -623,7 +624,7 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
     exprt guard_e = SSA.guard_symbol(node.location);
     exprt cond_e = SSA.cond_symbol(node.location);
     for (local_SSAt::nodet::equalitiest::iterator e_it =
-        node.equalities.begin(); e_it != node.equalities.end(); e_it++) {
+	   node.equalities.begin(); e_it != node.equalities.end(); e_it++) {
       exprt e = e_it->lhs();
       exprt re = e;
       rename(re, suffix + "%" + i2string(0));
@@ -666,7 +667,7 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
  *
  *****************************************************************************/
 ssa_unwindert::ssa_unwindert(ssa_dbt& _db) :
-    ssa_db(_db),is_initialized(false) {
+  ssa_db(_db),is_initialized(false) {
 
 
 }
@@ -692,7 +693,7 @@ void ssa_unwindert::unwind(const irep_idt id, unsigned int k) {
   it = unwinder_map.find(id);
   if (it == unwinder_map.end())
     assert(false && "Function not found");
-   it->second.unwind(it->first,k);
+  it->second.unwind(it->first,k);
 
 }
 
@@ -713,7 +714,7 @@ void ssa_unwindert::unwind_all(unsigned int k) {
   assert(is_initialized);
 
   for (unwinder_mapt::iterator it = unwinder_map.begin();
-      it != unwinder_map.end(); it++) {
+       it != unwinder_map.end(); it++) {
     it->second.unwind(it->first,k);
   }
 
@@ -733,7 +734,7 @@ void ssa_unwindert::unwind_all(unsigned int k) {
 
 void ssa_unwindert::output(std::ostream & out) {
   for (unwinder_mapt::iterator it = unwinder_map.begin();
-      it != unwinder_map.end(); it++) {
+       it != unwinder_map.end(); it++) {
     out << "Unwinding for function" << it->first << std::endl;
     it->second.output(out);
   }
@@ -756,12 +757,12 @@ void ssa_unwindert::output(std::ostream & out) {
 void ssa_unwindert::init()
 {
   ssa_dbt::functionst& funcs = ssa_db.functions();
-    for (ssa_dbt::functionst::iterator it = funcs.begin(); it != funcs.end();
-        it++) {
-      unwinder_map.insert(
-          unwinder_pairt(it->first, ssa_local_unwindert((*(it->second)))));
-    }
-    is_initialized=true;
+  for (ssa_dbt::functionst::iterator it = funcs.begin(); it != funcs.end();
+       it++) {
+    unwinder_map.insert(
+      unwinder_pairt(it->first, ssa_local_unwindert((*(it->second)))));
+  }
+  is_initialized=true;
 }
 
 #endif

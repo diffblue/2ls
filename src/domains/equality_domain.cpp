@@ -81,126 +81,6 @@ exprt equality_domaint::get_post_not_disequ_constraint(unsigned index)
 
 /*******************************************************************\
 
-Function: equality_domaint::project_equ_on_loops
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void equality_domaint::project_row_on_kind(equ_valuet &value, 
-				       unsigned index,
-				       kindt kind,
-				       bool equality,
-				       exprt::operandst &c)
-{
-  if(templ[index].kind!=kind) return;
-  const var_pairt &vv = templ[index].var_pair;
-  if(equality)
-  {
-    if(value.equs.same_set(vv.first,vv.second)) 
-      c.push_back(equal_exprt(vv.first,vv.second));
-  }
-  else c.push_back(not_exprt(equal_exprt(vv.first,vv.second)));
-}
-
-/*******************************************************************\
-
-Function: equality_domaint::project_on_out
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void equality_domaint::project_on_out(const valuet &value, exprt &result)
-{
-  const equ_valuet &_v = static_cast<const equ_valuet &>(value);
-  equ_valuet v = _v;
-
-  exprt::operandst c;
-  for(unsigned index = 0; index<templ.size(); index++)
-  {
-    project_row_on_kind(v,index,OUT,true,c);
-  }
-
-  for(index_sett::iterator it = v.disequs.begin(); it != v.disequs.end(); it++)
-  {
-    project_row_on_kind(v,*it,OUT,false,c);
-  }
-  result = conjunction(c); 
-}
-
-/*******************************************************************\
-
-Function: equality_domaint::project_on_loops
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void equality_domaint::project_on_loops(const valuet &value, exprt &result)
-{
-  const equ_valuet &_v = static_cast<const equ_valuet &>(value);
-  equ_valuet v = _v;
-
-  exprt::operandst c;
-  for(unsigned index = 0; index<templ.size(); index++)
-  {
-    project_row_on_kind(v,index,LOOP,true,c);
-  }
-
-  for(index_sett::iterator it = v.disequs.begin(); it != v.disequs.end(); it++)
-  {
-    project_row_on_kind(v,*it,LOOP,false,c);
-  }
-  result = conjunction(c);
-}
-
-/*******************************************************************\
-
-Function: equality_domaint::project_on_inout
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void equality_domaint::project_on_inout(const valuet &value, exprt &result)
-{
-  const equ_valuet &_v = static_cast<const equ_valuet &>(value);
-  equ_valuet v = _v;
-
-  exprt::operandst c;
-  for(unsigned index = 0; index<templ.size(); index++)
-  {
-    project_row_on_kind(v,index,IN,true,c);
-    project_row_on_kind(v,index,OUT,true,c);
-  }
-
-  for(index_sett::iterator it = v.disequs.begin(); it != v.disequs.end(); it++)
-  {
-    project_row_on_kind(v,*it,IN,false,c);
-    project_row_on_kind(v,*it,OUT,false,c);
-  }
-  result = conjunction(c); 
-}
-
-/*******************************************************************\
-
 Function: template_domaint::project_on_vars
 
   Inputs:
@@ -211,11 +91,10 @@ Function: template_domaint::project_on_vars
 
 \*******************************************************************/
 
-void equality_domaint::project_on_vars(const valuet &value, 
+void equality_domaint::project_on_vars(valuet &value, 
 				       const var_sett &vars, exprt &result)
 {
-  const equ_valuet &_v = static_cast<const equ_valuet &>(value);
-  equ_valuet v = _v;
+  equ_valuet &v = static_cast<equ_valuet &>(value);
 
   exprt::operandst c;
   for(unsigned index = 0; index<templ.size(); index++)

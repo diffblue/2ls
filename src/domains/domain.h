@@ -48,15 +48,8 @@ public:
   virtual void output_domain(std::ostream &out, 
     const namespacet &ns) const { assert(false); }
 
-  //TODO: not useful to make value const (e.g. union-find)
-  virtual void project_on_out(const valuet &value, exprt &result) 
-    { assert(false); }
-  virtual void project_on_loops(const valuet &value, exprt &result) 
-    { assert(false); }
-  virtual void project_on_inout(const valuet &value, exprt &result) 
-    { assert(false); }
-  virtual void project_on_vars(const valuet &value, const var_sett &vars, exprt &result) 
-    { assert(false); }
+  virtual void project_on_vars(valuet &value, const var_sett &vars, exprt &result) 
+    { assert(false); } //(not useful to make value const (e.g. union-find))
 
   static kindt merge_kinds(kindt k1, kindt k2);
 
