@@ -1,6 +1,6 @@
 CORE
 main.c
---intervals --arrays --enum-solver
+--intervals 
 ^EXIT=0$
 ^SIGNAL=0$
 ^VERIFICATION SUCCESSFUL$

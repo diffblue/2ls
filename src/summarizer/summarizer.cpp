@@ -582,12 +582,14 @@ Function: summarizert::check_termination_argument()
 
 bool summarizert::check_termination_argument(exprt expr)
 {
+  if(expr.is_false()) return true;
   // should be of the form /\_i g_i => R_i
   if(expr.id()==ID_and)
   {
     for(exprt::operandst::iterator it = expr.operands().begin(); 
       it != expr.operands().end(); it++)
     {
+      if(it->is_false()) return true;
       assert(it->id()==ID_implies);
       if(it->op1().is_true()) return false;
     }

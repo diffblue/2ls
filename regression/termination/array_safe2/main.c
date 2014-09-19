@@ -1,4 +1,4 @@
-#define SZ 1
+#define SZ 3
 
 void main(void) {
   int A[SZ];

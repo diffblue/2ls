@@ -1,6 +1,6 @@
 #include <assert.h>
 
-#define SIZE 1
+#define SIZE 5
 
 struct str
 {
