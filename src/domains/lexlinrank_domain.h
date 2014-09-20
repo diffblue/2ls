@@ -1,5 +1,5 @@
-#ifndef CPROVER_LINRANK_DOMAIN_H
-#define CPROVER_LINRANK_DOMAIN_H
+#ifndef CPROVER_LEXLINRANK_DOMAIN_H
+#define CPROVER_LEXLINRANK_DOMAIN_H
 
 #include "domain.h"
 
@@ -10,7 +10,7 @@
 #include <vector>
 #include <iostream>
 
-class linrank_domaint : public domaint
+class lexlinrank_domaint : public domaint
 {
 public:
   typedef unsigned rowt;
@@ -47,7 +47,7 @@ public:
 
 
 
-  linrank_domaint(replace_mapt &_renaming_map) :
+  lexlinrank_domaint(replace_mapt &_renaming_map) :
     domaint(_renaming_map)
   {}
 
@@ -58,12 +58,13 @@ public:
   exprt get_not_constraints(const templ_valuet &value,
 			    exprt::operandst &cond_exprs,// identical to before 
 			    std::vector<pre_post_valuest> &value_exprs); // (x, x')
-  exprt get_row_symb_contraint(row_valuet &symb_values, // contains vars c and d
+  exprt get_row_symb_constraint(row_valuet &symb_values, // contains vars c and d
 			       const rowt &row,
 			       pre_post_valuest &values
 			       );
 
-  void add_element(templ_valuet &value);
+  void add_element(row_valuet &value)
+    { value.push_back(row_value_elementt()); }
 
   // set, get value
   row_valuet get_row_value(const rowt &row, const templ_valuet &value);

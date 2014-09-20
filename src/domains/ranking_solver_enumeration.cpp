@@ -91,7 +91,7 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
 
 
 	// generate the new constraint
-	constraint = linrank_domain.get_row_symb_contraint(symb_values, row, values);
+	constraint = linrank_domain.get_row_symb_constraint(symb_values, row, values);
 	debug() << "Inner Solver: " << row << " constraint " 
 		    << from_expr(ns,"", constraint) << eom;
 

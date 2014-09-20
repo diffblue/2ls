@@ -56,7 +56,7 @@ public:
   exprt get_not_constraints(const templ_valuet &value,
 			    exprt::operandst &cond_exprs,// identical to before 
 			    std::vector<pre_post_valuest> &value_exprs); // (x, x')
-  exprt get_row_symb_contraint(row_valuet &symb_values, // contains vars c and d
+  exprt get_row_symb_constraint(row_valuet &symb_values, // contains vars c and d
 			       const rowt &row,
 			       pre_post_valuest &values
 			       );

@@ -51,7 +51,7 @@ exprt linrank_domaint::get_not_constraints(const linrank_domaint::templ_valuet &
 
       exprt sum_first = value[row].d;
       exprt sum_second = value[row].d;
-      for(int i = 0; i < value[row].c.size(); ++i)
+      for(unsigned i = 0; i < value[row].c.size(); ++i)
       {
         sum_first = plus_exprt(sum_first, mult_exprt(value[row].c[i], templ[row].expr[i].first));
         sum_second = plus_exprt(sum_second, mult_exprt(value[row].c[i], templ[row].expr[i].second));
@@ -73,7 +73,7 @@ exprt linrank_domaint::get_not_constraints(const linrank_domaint::templ_valuet &
   return disjunction(cond_exprs);
 }
 
-exprt linrank_domaint::get_row_symb_contraint(linrank_domaint::row_valuet &symb_values, // contains vars c and d
+exprt linrank_domaint::get_row_symb_constraint(linrank_domaint::row_valuet &symb_values, // contains vars c and d
 					      const linrank_domaint::rowt &row,
 					      linrank_domaint::pre_post_valuest &values)
 {
@@ -83,7 +83,7 @@ exprt linrank_domaint::get_row_symb_contraint(linrank_domaint::row_valuet &symb_
 			       values[0].first.type());
   exprt sum_first = symb_values.d;
   exprt sum_second = symb_values.d;
-  for(int i = 0; i < values.size(); ++i)
+  for(unsigned i = 0; i < values.size(); ++i)
   {
     symb_values.c[i] = symbol_exprt(SYMB_BOUND_VAR+std::string("c!")+i2string(row)+"$"+i2string(i), values[i].first.type());
     sum_first = plus_exprt(sum_first, mult_exprt(symb_values.c[i], values[i].first));
@@ -203,7 +203,7 @@ void linrank_domaint::project_on_loops(const valuet &value, exprt &result)
       {
 	exprt sum_first = v[row].d;
 	exprt sum_second = v[row].d;
-	for(int i = 0; i < v[row].c.size(); ++i)
+	for(unsigned i = 0; i < v[row].c.size(); ++i)
 	{
 	  sum_first = plus_exprt(sum_first, mult_exprt(v[row].c[i], 
 						       templ[row].expr[i].first));
