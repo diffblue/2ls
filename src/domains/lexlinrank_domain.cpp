@@ -51,6 +51,7 @@ exprt lexlinrank_domaint::get_not_constraints(const lexlinrank_domaint::templ_va
       std::cout << "temp.expr.size: " << templ[row].expr.size() << std::endl;
 
       exprt::operandst d;
+      d.reserve(value[row].size());
       for(unsigned elm=0; elm<value[row].size(); ++elm)
       {
         std::cout << "value[" << elm << "].c.size: " << value[row][elm].c.size() << std::endl;
@@ -58,6 +59,7 @@ exprt lexlinrank_domaint::get_not_constraints(const lexlinrank_domaint::templ_va
         assert(value[row][elm].c.size()==templ[row].expr.size());
 
         exprt::operandst c;
+        c.reserve(2 + value[row].size() - (elm+1));
 
         exprt sum_first = value[row][elm].d;
         exprt sum_second = value[row][elm].d;
@@ -119,6 +121,7 @@ exprt lexlinrank_domaint::get_row_symb_constraint(lexlinrank_domaint::row_valuet
   // desired elements in the lexicographic before calling this function
 
   exprt::operandst d;
+  d.reserve(symb_values.size());
 
   // we iterate in reverse as we init symbols the inner iteration uses
   for(unsigned elm=symb_values.size()-1; elm>=0; --elm)
@@ -129,6 +132,7 @@ exprt lexlinrank_domaint::get_row_symb_constraint(lexlinrank_domaint::row_valuet
                values[0].first.type());
 
     exprt::operandst c;
+    c.reserve(2 + symb_values.size() - (elm+1));
 
     exprt sum_first = symb_values[elm].d;
     exprt sum_second = symb_values[elm].d;
@@ -280,9 +284,11 @@ void lexlinrank_domaint::project_on_loops(const valuet &value, exprt &result)
       else
       {
         exprt::operandst d;
+        d.reserve(v[row].size());
         for(unsigned elm=0; elm<v[row].size(); ++elm)
         {
           exprt::operandst con;
+          con.reserve(2 + v[row].size() - (elm+1));
 
           exprt sum_first = v[row][elm].d;
           exprt sum_second = v[row][elm].d;
