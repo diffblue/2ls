@@ -9,11 +9,11 @@ void main()
     ++y;
   }
 
-  while(y<20)
+  while(y<30)
   {
     ++y;
     ++x;
   }
 
-  assert(x==20 && y==20);
+  assert(x==30 && y==30);
 }

@@ -128,8 +128,9 @@ exprt lexlinrank_domaint::get_row_symb_constraint(lexlinrank_domaint::row_valuet
   {
     symb_values[elm].c.resize(values.size());
 
-    symb_values[elm].d = symbol_exprt(SYMB_BOUND_VAR+std::string("d!")+i2string(row)+std::string("$")+i2string(elm),
-               values[0].first.type());
+    symb_values[elm].d = 
+      symbol_exprt(SYMB_BOUND_VAR+std::string("d!")+i2string(row)+std::string("$")+i2string(elm),
+		   signedbv_typet(32));
 
     exprt::operandst c;
     c.reserve(2 + symb_values.size() - (elm+1));
@@ -138,7 +139,9 @@ exprt lexlinrank_domaint::get_row_symb_constraint(lexlinrank_domaint::row_valuet
     exprt sum_second = symb_values[elm].d;
     for(unsigned i = 0; i < values.size(); ++i)
     {
-      symb_values[elm].c[i] = symbol_exprt(SYMB_BOUND_VAR+std::string("c!")+i2string(row)+"$"+i2string(elm)+"$"+i2string(i), values[i].first.type());
+      symb_values[elm].c[i] = 
+       symbol_exprt(SYMB_BOUND_VAR+std::string("c!")+i2string(row)+"$"+i2string(elm)+"$"+i2string(i),
+		     signedbv_typet(32));
       sum_first = plus_exprt(sum_first, mult_exprt(symb_values[elm].c[i], values[i].first));
       sum_second = plus_exprt(sum_second, mult_exprt(symb_values[elm].c[i], values[i].second));
     }
@@ -264,81 +267,77 @@ void lexlinrank_domaint::project_on_loops(const valuet &value, exprt &result)
   {
     assert(templ[row].kind == LOOP);
 
-    if(is_row_value_false(v[row])) c.push_back(false_exprt());
+    if(is_row_value_false(v[row]))
+    {
+      //(g => false)
+      c.push_back(implies_exprt(
+		    and_exprt(templ[row].pre_guard, templ[row].post_guard),
+		    false_exprt()));
+    }
+    else if(is_row_value_true(v[row]))
+    {
+      //(g => true)
+      c.push_back(implies_exprt(
+		    and_exprt(templ[row].pre_guard, templ[row].post_guard),
+		    true_exprt()));
+    }
     else
     {
-      if(is_row_value_false(v[row]))
+      exprt::operandst d;
+      d.reserve(v[row].size());
+      for(unsigned elm=0; elm<v[row].size(); ++elm)
       {
-	//(g => false)
-	c.push_back(implies_exprt(
-		      and_exprt(templ[row].pre_guard, templ[row].post_guard),
-		      false_exprt()));
-      }
-      else if(is_row_value_true(v[row]))
-      {
-	//(g => true)
-	c.push_back(implies_exprt(
-		      and_exprt(templ[row].pre_guard, templ[row].post_guard),
-		      true_exprt()));
-      }
-      else
-      {
-        exprt::operandst d;
-        d.reserve(v[row].size());
-        for(unsigned elm=0; elm<v[row].size(); ++elm)
-        {
-          exprt::operandst con;
-          con.reserve(2 + v[row].size() - (elm+1));
+	exprt::operandst con;
+	con.reserve(2 + v[row].size() - (elm+1));
 
-          exprt sum_first = v[row][elm].d;
-          exprt sum_second = v[row][elm].d;
-          for(unsigned i = 0; i < v[row][elm].c.size(); ++i)
-          {
-            sum_first = plus_exprt(sum_first, mult_exprt(v[row][elm].c[i],
-                           templ[row].expr[i].first));
-            sum_second = plus_exprt(sum_second, mult_exprt(v[row][elm].c[i],
-                       templ[row].expr[i].second));
-          }
-          //extend types
+	exprt sum_first = v[row][elm].d;
+	exprt sum_second = v[row][elm].d;
+	for(unsigned i = 0; i < v[row][elm].c.size(); ++i)
+	{
+	  sum_first = plus_exprt(sum_first, mult_exprt(v[row][elm].c[i],
+						       templ[row].expr[i].first));
+	  sum_second = plus_exprt(sum_second, mult_exprt(v[row][elm].c[i],
+							 templ[row].expr[i].second));
+	}
+	//extend types
 #ifdef EXTEND_TYPES
-          extend_expr_types(sum_first);
-          extend_expr_types(sum_second);
+	extend_expr_types(sum_first);
+	extend_expr_types(sum_second);
 #endif
-          // bounded
-          con.push_back( binary_relation_exprt(sum_first, ID_gt,
-                        from_integer(mp_integer(0), sum_first.type())) );
-          // decreasing
-          con.push_back( binary_relation_exprt(sum_first, ID_gt, sum_second) );
+	// bounded
+	con.push_back( binary_relation_exprt(sum_first, ID_gt,
+					     from_integer(mp_integer(0), sum_first.type())) );
+	// decreasing
+	con.push_back( binary_relation_exprt(sum_first, ID_gt, sum_second) );
 
-          for(unsigned elm2=elm+1; elm2<v[row].size(); ++elm2)
-          {
-            // excluding d from the sums as it cancels itself
-            exprt sum_first2 = from_integer(mp_integer(0), v[row][elm2].d.type());
-            exprt sum_second2 = from_integer(mp_integer(0), v[row][elm2].d.type());
-            for(unsigned i = 0; i < v[row][elm2].c.size(); ++i)
-            {
-              sum_first2 = plus_exprt(sum_first2, mult_exprt(v[row][elm2].c[i],
-                             templ[row].expr[i].first));
-              sum_second2 = plus_exprt(sum_second2, mult_exprt(v[row][elm2].c[i],
-                         templ[row].expr[i].second));
-            }
-            //extend types
+	for(unsigned elm2=elm+1; elm2<v[row].size(); ++elm2)
+	{
+	  // excluding d from the sums as it cancels itself
+	  exprt sum_first2 = from_integer(mp_integer(0), v[row][elm2].d.type());
+	  exprt sum_second2 = from_integer(mp_integer(0), v[row][elm2].d.type());
+	  for(unsigned i = 0; i < v[row][elm2].c.size(); ++i)
+	  {
+	    sum_first2 = plus_exprt(sum_first2, mult_exprt(v[row][elm2].c[i],
+							   templ[row].expr[i].first));
+	    sum_second2 = plus_exprt(sum_second2, mult_exprt(v[row][elm2].c[i],
+							     templ[row].expr[i].second));
+	  }
+	  //extend types
 #ifdef EXTEND_TYPES
-            extend_expr_types(sum_first2);
-            extend_expr_types(sum_second2);
+	  extend_expr_types(sum_first2);
+	  extend_expr_types(sum_second2);
 #endif
-            // non-increasing
-            con.push_back( binary_relation_exprt(sum_first2, ID_ge, sum_second2) );
-          }
+	  // non-increasing
+	  con.push_back( binary_relation_exprt(sum_first2, ID_ge, sum_second2) );
+	}
 
-          d.push_back(
-            implies_exprt(
-                and_exprt(templ[row].pre_guard, templ[row].post_guard),
-                conjunction(con)) );
-        }
-
-        c.push_back(disjunction(d));
+	d.push_back(
+	  implies_exprt(
+	    and_exprt(templ[row].pre_guard, templ[row].post_guard),
+	    conjunction(con)) );
       }
+
+      c.push_back(disjunction(d));
     }
   }
   result = conjunction(c);

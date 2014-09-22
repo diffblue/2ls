@@ -80,12 +80,13 @@ exprt linrank_domaint::get_row_symb_constraint(linrank_domaint::row_valuet &symb
   symb_values.c.resize(values.size());
 
   symb_values.d = symbol_exprt(SYMB_BOUND_VAR+std::string("d!")+i2string(row), 
-			       values[0].first.type());
+			       signedbv_typet(32)); //coefficients are 32bit signed integers
   exprt sum_first = symb_values.d;
   exprt sum_second = symb_values.d;
   for(unsigned i = 0; i < values.size(); ++i)
   {
-    symb_values.c[i] = symbol_exprt(SYMB_BOUND_VAR+std::string("c!")+i2string(row)+"$"+i2string(i), values[i].first.type());
+    symb_values.c[i] = symbol_exprt(SYMB_BOUND_VAR+std::string("c!")+i2string(row)+"$"+i2string(i), 
+				    signedbv_typet(32));  //coefficients are 32bit signed integers
     sum_first = plus_exprt(sum_first, mult_exprt(symb_values.c[i], values[i].first));
     sum_second = plus_exprt(sum_second, mult_exprt(symb_values.c[i], values[i].second));
   }
@@ -182,46 +183,42 @@ void linrank_domaint::project_on_loops(const valuet &value, exprt &result)
   {
     assert(templ[row].kind == LOOP);
 
-    if(is_row_value_false(v[row])) c.push_back(false_exprt());
+    if(is_row_value_false(v[row]))
+    {
+      //(g => false)
+      c.push_back(implies_exprt(
+		    and_exprt(templ[row].pre_guard, templ[row].post_guard),
+		    false_exprt()));
+    }
+    else if(is_row_value_true(v[row]))
+    {
+      //(g => true)
+      c.push_back(implies_exprt(
+		    and_exprt(templ[row].pre_guard, templ[row].post_guard),
+		    true_exprt()));
+    }
     else
     {
-      if(is_row_value_false(v[row]))
+      exprt sum_first = v[row].d;
+      exprt sum_second = v[row].d;
+      for(unsigned i = 0; i < v[row].c.size(); ++i)
       {
-	//(g => false)
-	c.push_back(implies_exprt(
-		      and_exprt(templ[row].pre_guard, templ[row].post_guard),
-		      false_exprt()));
+	sum_first = plus_exprt(sum_first, mult_exprt(v[row].c[i], 
+						     templ[row].expr[i].first));
+	sum_second = plus_exprt(sum_second, mult_exprt(v[row].c[i], 
+						       templ[row].expr[i].second));
       }
-      else if(is_row_value_true(v[row]))
-      {
-	//(g => true)
-	c.push_back(implies_exprt(
-		      and_exprt(templ[row].pre_guard, templ[row].post_guard),
-		      true_exprt()));
-      }
-      else
-      {
-	exprt sum_first = v[row].d;
-	exprt sum_second = v[row].d;
-	for(unsigned i = 0; i < v[row].c.size(); ++i)
-	{
-	  sum_first = plus_exprt(sum_first, mult_exprt(v[row].c[i], 
-						       templ[row].expr[i].first));
-	  sum_second = plus_exprt(sum_second, mult_exprt(v[row].c[i], 
-							 templ[row].expr[i].second));
-	}
-	//extend types
+      //extend types
 #ifdef EXTEND_TYPES
-	extend_expr_types(sum_first);
-	extend_expr_types(sum_second);
+      extend_expr_types(sum_first);
+      extend_expr_types(sum_second);
 #endif
-	exprt bounded = binary_relation_exprt(sum_first, ID_gt, 
-					      from_integer(mp_integer(0), sum_first.type()));
-	exprt decreasing = binary_relation_exprt(sum_first, ID_gt, sum_second);
+      exprt bounded = binary_relation_exprt(sum_first, ID_gt, 
+					    from_integer(mp_integer(0), sum_first.type()));
+      exprt decreasing = binary_relation_exprt(sum_first, ID_gt, sum_second);
 
-	c.push_back(implies_exprt(and_exprt(templ[row].pre_guard, templ[row].post_guard),
-				  and_exprt(bounded, decreasing)));
-      }
+      c.push_back(implies_exprt(and_exprt(templ[row].pre_guard, templ[row].post_guard),
+				and_exprt(bounded, decreasing)));
     }
   }
   result = conjunction(c);

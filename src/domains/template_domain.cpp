@@ -440,9 +440,10 @@ void template_domaint::project_row_on_kind(const templ_valuet &value,
 {
     if(templ[row].kind!=kind) return;
     const row_valuet &row_v = value[row];
-    if(is_row_value_neginf(row_v)) c.push_back(false_exprt());
-    else if(is_row_value_inf(row_v)) c.push_back(true_exprt());
-    else c.push_back(binary_relation_exprt(templ[row].expr,ID_le,row_v));
+    if(is_row_value_neginf(row_v)) c.push_back(implies_exprt(templ[row].pre_guard,false_exprt()));
+    else if(is_row_value_inf(row_v)) c.push_back(implies_exprt(templ[row].pre_guard,true_exprt()));
+    else c.push_back(implies_exprt(templ[row].pre_guard,
+				    binary_relation_exprt(templ[row].expr,ID_le,row_v)));
 }
 
 /*******************************************************************\

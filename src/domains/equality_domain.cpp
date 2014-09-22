@@ -102,9 +102,12 @@ void equality_domaint::project_row_on_kind(equ_valuet &value,
   if(equality)
   {
     if(value.equs.same_set(vv.first,vv.second)) 
+//      c.push_back(implies_exprt(templ[index].pre_guard,equal_exprt(vv.first,vv.second))); //not sure whether we need these implications here
       c.push_back(equal_exprt(vv.first,vv.second));
   }
-  else c.push_back(not_exprt(equal_exprt(vv.first,vv.second)));
+  else 
+    c.push_back(not_exprt(equal_exprt(vv.first,vv.second)));
+//c.push_back(implies_exprt(templ[index].pre_guard,not_exprt(equal_exprt(vv.first,vv.second))));
 }
 
 /*******************************************************************\

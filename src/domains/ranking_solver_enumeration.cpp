@@ -18,6 +18,7 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
   satcheck_minisat_no_simplifiert satcheck1;
   bv_pointerst solver1(ns, satcheck1);
 
+  //context for "outer" solver
   literalt activation_literal = new_context();
 
   //handles on values to retrieve from model
@@ -86,9 +87,6 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
 
 	linrank_domaint::row_valuet symb_values;
 	exprt constraint;
-
-
-
 
 	// generate the new constraint
 	constraint = linrank_domain.get_row_symb_constraint(symb_values, row, values);
