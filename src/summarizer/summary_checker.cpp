@@ -48,27 +48,56 @@ property_checkert::resultt summary_checkert::operator()(
   bool preconditions = options.get_bool_option("preconditions");
 
   SSA_functions(goto_model,ns);
-  //loop
-  //  refine domain
-  //  loop from 0 to k do
-  //    unwind k
 
-  if(!options.get_bool_option("havoc")) 
-    summarize(goto_model,!preconditions,options.get_bool_option("sufficient"));
+  if(!options.get_bool_option("k-induction"))
+  {  
+    if(!options.get_bool_option("havoc")) 
+      summarize(goto_model,!preconditions,options.get_bool_option("sufficient"));
 
-  if(preconditions) 
-  {
-    report_preconditions();
-    return property_checkert::UNKNOWN;
+    if(preconditions) 
+    {
+      report_preconditions();
+      return property_checkert::UNKNOWN;
+    }
+
+    property_checkert::resultt result =  check_properties(); 
+    report_statistics();
+    return result;
   }
+  else //k-induction
+  {
+    property_checkert::resultt result = property_checkert::UNKNOWN;
+    unsigned max_unwind = options.get_unsigned_int_option("unwind");
 
-  property_checkert::resultt result =  check_properties(); 
-  report_statistics();
-  return result;
-  //    if safe exit
-  //  done
-  //done
-  // return check_properties(goto_model);
+    //TODO (later): loop
+    //TODO (later):   refine domain
+    for(unsigned unwind = 0; unwind<=max_unwind; unwind++)
+    {
+      status() << "Unwinding (k=" << unwind << ")" << messaget::eom;
+      if(unwind>0) 
+      {
+        summary_db.clear();
+        ssa_unwinder.unwind_all(unwind+1);
+      }
+
+      if(!options.get_bool_option("havoc")) 
+        summarize(goto_model);
+
+      result =  check_properties(); 
+      report_statistics();
+      if(result == property_checkert::PASS) 
+      {
+        status() << "K-induction successful after " << unwind << " unwinding(s)" << messaget::eom;
+        break;
+      }
+      else if(unwind==0 && max_unwind>0) //TODO: unwind==2 => 1 (additional) unwinding
+      {
+        ssa_unwinder.init_localunwinders();
+      }
+    }
+    return result;
+  }
+  //TODO (later): done
 }
 
 /*******************************************************************\
@@ -111,7 +140,7 @@ void summary_checkert::SSA_functions(const goto_modelt &goto_model,  const names
   ssa_unwinder.init();
 
   unsigned unwind = options.get_unsigned_int_option("unwind");
-  if(unwind>0)
+  if(!options.get_bool_option("k-induction") && unwind>0)
   {
     status() << "Unwinding" << messaget::eom;
 
@@ -146,15 +175,15 @@ Function: summary_checkert::summarize
 \*******************************************************************/
 
 void summary_checkert::summarize(const goto_modelt &goto_model, 
-				 bool backward, bool sufficient)
+				 bool forward, bool sufficient)
 {    
   summarizer.set_message_handler(get_message_handler());
 
   if(options.get_bool_option("context-sensitive"))
     summarizer.summarize(goto_model.goto_functions.entry_point(),
-                         backward,sufficient);
+                         forward,sufficient);
   else
-    summarizer.summarize(backward,sufficient);
+    summarizer.summarize(forward,sufficient);
 
   //statistics
   solver_instances += summarizer.get_number_of_solver_instances();

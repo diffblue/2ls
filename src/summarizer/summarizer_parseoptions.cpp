@@ -30,7 +30,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/goto_functions.h>
 #include <goto-programs/xml_goto_trace.h>
 #include <goto-programs/remove_returns.h>
-//#include <goto-programs/array_abstraction.h>
 #include "array_abstraction.h"
 
 #include <analyses/goto_check.h>
