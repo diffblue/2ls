@@ -63,8 +63,7 @@ public:
 			       pre_post_valuest &values
 			       );
 
-  void add_element(row_valuet &value)
-    { value.push_back(row_value_elementt()); }
+  void add_element(const rowt &row, templ_valuet &value);
 
   // set, get value
   row_valuet get_row_value(const rowt &row, const templ_valuet &value);

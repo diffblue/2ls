@@ -14,14 +14,14 @@
 
 void lexlinrank_domaint::initialize(valuet &value)
 {
-	templ_valuet &v = static_cast<templ_valuet&>(value);
-	v.resize(templ.size());
-	for(unsigned row = 0; row<templ.size(); row++)
-	{
-	  // TODO: maybe do v[row].clear() instead
-		v[row].resize(1);
-		v[row][0].d = false_exprt();
-	}
+  templ_valuet &v = static_cast<templ_valuet&>(value);
+  v.resize(templ.size());
+  for(unsigned row = 0; row<templ.size(); row++)
+  {
+    v[row].resize(1);
+    v[row][0].d = false_exprt();
+    v[row][0].c.clear();
+  }
 }
 
 exprt lexlinrank_domaint::get_not_constraints(const lexlinrank_domaint::templ_valuet &value,
@@ -124,7 +124,7 @@ exprt lexlinrank_domaint::get_row_symb_constraint(lexlinrank_domaint::row_valuet
   d.reserve(symb_values.size());
 
   // we iterate in reverse as we init symbols the inner iteration uses
-  for(unsigned elm=symb_values.size()-1; elm>=0; --elm)
+  for(int elm=symb_values.size()-1; elm>=0; --elm)
   {
     symb_values[elm].c.resize(values.size());
 
@@ -472,4 +472,26 @@ Function: lexlinrank_domaint::is_row_value_true
 bool lexlinrank_domaint::is_row_value_true(const row_valuet & row_value) const
 {
   return row_value.size() == 1 && row_value[0].d.get(ID_value) == ID_true;
+}
+
+/*******************************************************************\
+
+Function: lexlinrank_domaint::add_element
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void lexlinrank_domaint::add_element(const rowt &row, templ_valuet &value)
+{ 
+  value[row].push_back(row_value_elementt());
+  for(unsigned i=0; i<value[row].size(); i++)
+  {
+    value[row][i].c.clear();
+    value[row][i].d = false_exprt();
+  }
 }

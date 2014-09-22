@@ -85,6 +85,10 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
 	}
 
 	lexlinrank_domaint::row_valuet symb_values;
+        symb_values.resize(rank[row].size());
+
+	debug() << "elements: " << rank[row].size() << eom;
+
 	exprt constraint;
 
 
@@ -103,6 +107,7 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
 
 	  // new_row_values will contain the new values for c and d
 	  lexlinrank_domaint::row_valuet new_row_values;
+          new_row_values.resize(rank[row].size());
 
 	  for(unsigned constraint_no = 0; constraint_no < symb_values.size(); ++constraint_no) {
 
