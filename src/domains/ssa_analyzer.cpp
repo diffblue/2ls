@@ -8,6 +8,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 //#define DEBUG
 
+
 #include <util/options.h>
 
 
@@ -16,6 +17,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "strategy_solver_binsearch.h"
 #include "strategy_solver_equality.h"
 #include "ranking_solver_enumeration.h"
+#include "lexlinrank_solver_enumeration.h"
 #include "ssa_analyzer.h"
 
 #include <solvers/sat/satcheck.h>
@@ -120,6 +122,7 @@ void ssa_analyzert::operator()(local_SSAt &SSA,
   strategy_solver_baset::invariantt *inv;
   if(options.get_bool_option("termination") && compute_ranking_functions)
   {
+#ifndef LEXICOGRAPHIC
     linrank_domaint *linrank_domain = new linrank_domaint(renaming_map);
     domain = linrank_domain;
     generate_template_for_termination(SSA,*linrank_domain);
@@ -127,6 +130,15 @@ void ssa_analyzert::operator()(local_SSAt &SSA,
         transition_relation, 
         *static_cast<linrank_domaint *>(domain), solver, ns);    
     inv = new linrank_domaint::templ_valuet();
+#else
+    lexlinrank_domaint *linrank_domain = new lexlinrank_domaint(renaming_map);
+    domain = linrank_domain;
+    generate_template_for_termination(SSA,*linrank_domain);
+    strategy_solver = new lexlinrank_solver_enumerationt(
+        transition_relation, 
+        *static_cast<lexlinrank_domaint *>(domain), solver, ns);    
+    inv = new lexlinrank_domaint::templ_valuet();
+#endif
   }  
   else if(options.get_bool_option("equalities") && !is_initialize)
   {
@@ -313,7 +325,11 @@ Function: ssa_analyzert::generate_template_for_termination
 \*******************************************************************/
 
 void ssa_analyzert::generate_template_for_termination(local_SSAt &SSA,
+#ifndef LEXICOGRAPHIC
 				      linrank_domaint &dom)
+#else 
+				      lexlinrank_domaint &dom)
+#endif 
 {
   // used for renaming map
   var_listt pre_state_vars, post_state_vars; //TODO: find a better solution for that

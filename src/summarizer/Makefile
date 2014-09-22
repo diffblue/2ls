@@ -49,7 +49,9 @@ DELTA_OBJ+=\
       ../domains/ssa_analyzer$(OBJEXT) \
       ../domains/predicate$(OBJEXT) \
       ../domains/ranking_solver_enumeration$(OBJEXT) \
-      ../domains/linrank_domain$(OBJEXT)
+      ../domains/linrank_domain$(OBJEXT) \
+      ../domains/lexlinrank_solver_enumeration$(OBJEXT) \
+      ../domains/lexlinrank_domain$(OBJEXT)
 
 OBJ+=$(DELTA_OBJ)
 

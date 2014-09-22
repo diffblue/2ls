@@ -14,6 +14,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "../ssa/local_ssa.h"
 #include "strategy_solver_base.h"
 #include "linrank_domain.h"
+#include "lexlinrank_domain.h"
+
+#define LEXICOGRAPHIC
 
 class ssa_analyzert : public messaget
 {
@@ -71,7 +74,12 @@ protected:
 			 domaint::var_specst &var_specs,
                          bool forward);
   void generate_template_for_termination(local_SSAt &SSA,
+#ifndef LEXICOGRAPHIC
 					 linrank_domaint &dom);
+#else
+					 lexlinrank_domaint &dom);
+#endif
+
 
   domaint::var_specst filter_template_domain(const domaint::var_specst& var_specs);
   domaint::var_specst filter_equality_domain(const domaint::var_specst& var_specs);
