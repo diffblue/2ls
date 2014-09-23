@@ -9,6 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
+#include <climits>
 
 #include <util/string2int.h>
 #include <util/config.h>
@@ -204,7 +205,13 @@ void summarizer_parseoptionst::get_command_line_options(optionst &options)
 
  // do k-induction refinement
   if(cmdline.isset("k-induction"))
+  {
     options.set_option("k-induction", true);
+    if(options.get_unsigned_int_option("unwind")==0)
+      options.set_option("unwind",UINT_MAX);
+  }
+
+  
 }
 
 /*******************************************************************\
