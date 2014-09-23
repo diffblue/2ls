@@ -11,6 +11,7 @@ Author: Peter Schrammel
 #include <util/simplify_expr.h>
 #include <solvers/sat/satcheck.h>
 #include <solvers/flattening/bv_pointers.h>
+#include <solvers/smt2/smt2_dec.h>
 #include <util/find_symbols.h>
 
 #include "summarizer.h"
@@ -455,7 +456,9 @@ bool summarizert::check_precondition(
 
   // precondition check
   satcheckt satcheck;
-  bv_pointerst solver(SSA.ns, satcheck);
+  smt2_dect solver(SSA.ns, "summarizer", "", "QF_BV", smt2_dect::Z3);
+  //bv_pointerst solver(SSA.ns, satcheck);
+  //bv_pointerst solver(SSA.ns, smt);
   
   satcheck.set_message_handler(get_message_handler());
   solver.set_message_handler(get_message_handler());

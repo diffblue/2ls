@@ -4,8 +4,9 @@
 #include "ranking_solver_enumeration.h"
 #include <solvers/sat/satcheck.h>
 #include <solvers/flattening/bv_pointers.h>
+#include <solvers/smt2/smt2_dec.h>
 
-#define DEBUG_FORMULA 
+//#define DEBUG_FORMULA 
 
 bool ranking_solver_enumerationt::iterate(invariantt &_rank)
 {
@@ -17,6 +18,7 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
   // instantiate the "inner" solver
   satcheck_minisat_no_simplifiert satcheck1;
   bv_pointerst solver1(ns, satcheck1);
+  //smt2_dect solver1(ns, "summarizer", "", "QF_BV", smt2_dect::Z3);
 
   //context for "outer" solver
   literalt activation_literal = new_context();
@@ -90,6 +92,7 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
 
 	// generate the new constraint
 	constraint = linrank_domain.get_row_symb_constraint(symb_values, row, values);
+	simplify_expr(constraint, ns);
 	debug() << "Inner Solver: " << row << " constraint " 
 		    << from_expr(ns,"", constraint) << eom;
 
@@ -97,8 +100,10 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
 
 	debug() << "inner solve()" << eom;
 
+
 	if(solver1() == decision_proceduret::D_SATISFIABLE) 
 	{ 
+
 	  debug() << "inner solver: SAT" << eom;
 
 	  std::vector<exprt> c = symb_values.c;
@@ -129,6 +134,7 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
 	}
 	else 
 	{
+
 	  debug() << "inner solver: UNSAT" << eom;
           // no ranking function for the current template
 	  linrank_domain.set_row_value_to_true(row, rank);
