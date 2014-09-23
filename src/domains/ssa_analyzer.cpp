@@ -98,20 +98,20 @@ void ssa_analyzert::operator()(local_SSAt &SSA,
   }
   else
   {
-    result = new template_domaint::templ_valuet();
+    result = new tpolyhedra_domaint::templ_valuet();
     if(options.get_bool_option("enum-solver") || is_initialize)
     {
-      domain = new template_domaint(template_generator.renaming_map);
+      domain = new tpolyhedra_domaint(template_generator.renaming_map);
       strategy_solver = new strategy_solver_enumerationt(
         transition_relation, 
-        *static_cast<template_domaint *>(domain), solver, ns);
+        *static_cast<tpolyhedra_domaint *>(domain), solver, ns);
     }
     else if(options.get_bool_option("binsearch-solver"))
     {
-      domain = new template_domaint(template_generator.renaming_map);
+      domain = new tpolyhedra_domaint(template_generator.renaming_map);
       strategy_solver = new strategy_solver_binsearcht(
         transition_relation, 
-        *static_cast<template_domaint *>(domain), solver, ns);
+        *static_cast<tpolyhedra_domaint *>(domain), solver, ns);
     }
     else assert(false);
   }
@@ -120,19 +120,19 @@ void ssa_analyzert::operator()(local_SSAt &SSA,
   if(options.get_bool_option("intervals") || is_initialize)
   {
     template_generator.filter_template_domain();
-    static_cast<template_domaint *>(domain)->add_interval_template(
+    static_cast<tpolyhedra_domaint *>(domain)->add_interval_template(
       template_generator.var_specs, ns);
   }
   else if(options.get_bool_option("zones"))
   {
     template_generator.filter_template_domain();
-    static_cast<template_domaint *>(domain)->add_zone_template(
+    static_cast<tpolyhedra_domaint *>(domain)->add_zone_template(
       template_generator.var_specs, ns);
   }
   else if(options.get_bool_option("octagons"))
   {
     template_generator.filter_template_domain();
-    static_cast<template_domaint *>(domain)->add_octagon_template(
+    static_cast<tpolyhedra_domaint *>(domain)->add_octagon_template(
       template_generator.var_specs, ns);
   }
 

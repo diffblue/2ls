@@ -39,7 +39,7 @@ DELTA_OBJ+=\
       ../functions/index$(OBJEXT) \
       ../domains/fixed_point$(OBJEXT) \
       ../domains/ssa_fixed_point$(OBJEXT) \
-      ../domains/template_domain$(OBJEXT) \
+      ../domains/tpolyhedra_domain$(OBJEXT) \
       ../domains/equality_domain$(OBJEXT) \
       ../domains/domain$(OBJEXT) \
       ../domains/strategy_solver_equality$(OBJEXT) \

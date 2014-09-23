@@ -1,4 +1,4 @@
-#include "template_domain.h"
+#include "tpolyhedra_domain.h"
 
 #include <iostream>
 
@@ -11,7 +11,7 @@
 
 /*******************************************************************\
 
-Function: template_domaint::initialize
+Function: tpolyhedra_domaint::initialize
 
   Inputs:
 
@@ -21,7 +21,7 @@ Function: template_domaint::initialize
 
 \*******************************************************************/
 
-void template_domaint::initialize(valuet &value)
+void tpolyhedra_domaint::initialize(valuet &value)
 {
   templ_valuet &v = static_cast<templ_valuet&>(value);
   v.resize(templ.size());
@@ -34,7 +34,7 @@ void template_domaint::initialize(valuet &value)
 
 /*******************************************************************\
 
-Function: template_domaint::between
+Function: tpolyhedra_domaint::between
 
   Inputs:
 
@@ -44,7 +44,7 @@ Function: template_domaint::between
 
 \*******************************************************************/
 
-template_domaint::row_valuet template_domaint::between(
+tpolyhedra_domaint::row_valuet tpolyhedra_domaint::between(
   const row_valuet &lower, const row_valuet &upper)
 {
   if(lower.type()==upper.type() && 
@@ -79,7 +79,7 @@ template_domaint::row_valuet template_domaint::between(
 
 /*******************************************************************\
 
-Function: template_domaint::leq
+Function: tpolyhedra_domaint::leq
 
   Inputs:
 
@@ -89,7 +89,7 @@ Function: template_domaint::leq
 
 \*******************************************************************/
 
-bool template_domaint::less_than(const row_valuet &v1, const row_valuet &v2)
+bool tpolyhedra_domaint::less_than(const row_valuet &v1, const row_valuet &v2)
 {
   if(v1.type()==v2.type() && 
      (v1.type().id()==ID_signedbv || v1.type().id()==ID_unsignedbv))
@@ -110,7 +110,7 @@ bool template_domaint::less_than(const row_valuet &v1, const row_valuet &v2)
 
 /*******************************************************************\
 
-Function: template_domaint::get_row_pre_constraint
+Function: tpolyhedra_domaint::get_row_pre_constraint
 
   Inputs:
 
@@ -120,7 +120,7 @@ Function: template_domaint::get_row_pre_constraint
 
 \*******************************************************************/
 
-exprt template_domaint::get_row_constraint(const rowt &row, 
+exprt tpolyhedra_domaint::get_row_constraint(const rowt &row, 
   const row_valuet &row_value)
 {
   assert(row<templ.size());
@@ -131,7 +131,7 @@ exprt template_domaint::get_row_constraint(const rowt &row,
   return binary_relation_exprt(templ[row].expr,ID_le,row_value);
 }
 
-exprt template_domaint::get_row_pre_constraint(const rowt &row, 
+exprt tpolyhedra_domaint::get_row_pre_constraint(const rowt &row, 
   const row_valuet &row_value)
 {
   assert(row<templ.size());
@@ -147,7 +147,7 @@ exprt template_domaint::get_row_pre_constraint(const rowt &row,
 }
 
 
-exprt template_domaint::get_row_pre_constraint(const rowt &row, 
+exprt tpolyhedra_domaint::get_row_pre_constraint(const rowt &row, 
   const templ_valuet &value)
 {
   assert(value.size()==templ.size());
@@ -156,7 +156,7 @@ exprt template_domaint::get_row_pre_constraint(const rowt &row,
 
 /*******************************************************************\
 
-Function: template_domaint::get_row_post_constraint
+Function: tpolyhedra_domaint::get_row_post_constraint
 
   Inputs:
 
@@ -166,7 +166,7 @@ Function: template_domaint::get_row_post_constraint
 
 \*******************************************************************/
 
-exprt template_domaint::get_row_post_constraint(const rowt &row, 
+exprt tpolyhedra_domaint::get_row_post_constraint(const rowt &row, 
   const row_valuet &row_value)
 {
   assert(row<templ.size());
@@ -182,7 +182,7 @@ exprt template_domaint::get_row_post_constraint(const rowt &row,
   return c;
 }
 
-exprt template_domaint::get_row_post_constraint(const rowt &row, 
+exprt tpolyhedra_domaint::get_row_post_constraint(const rowt &row, 
   const templ_valuet &value)
 {
   assert(value.size()==templ.size());
@@ -191,7 +191,7 @@ exprt template_domaint::get_row_post_constraint(const rowt &row,
 
 /*******************************************************************\
 
-Function: template_domaint::to_pre_constraints
+Function: tpolyhedra_domaint::to_pre_constraints
 
   Inputs:
 
@@ -201,7 +201,7 @@ Function: template_domaint::to_pre_constraints
 
 \*******************************************************************/
 
-exprt template_domaint::to_pre_constraints(const templ_valuet &value)
+exprt tpolyhedra_domaint::to_pre_constraints(const templ_valuet &value)
 {
   assert(value.size()==templ.size());
   exprt::operandst c; 
@@ -214,7 +214,7 @@ exprt template_domaint::to_pre_constraints(const templ_valuet &value)
 
 /*******************************************************************\
 
-Function: template_domaint::make_not_post_constraints
+Function: tpolyhedra_domaint::make_not_post_constraints
 
   Inputs:
 
@@ -225,7 +225,7 @@ Function: template_domaint::make_not_post_constraints
 
 \*******************************************************************/
 
-void template_domaint::make_not_post_constraints(const templ_valuet &value,
+void tpolyhedra_domaint::make_not_post_constraints(const templ_valuet &value,
   exprt::operandst &cond_exprs, 
   exprt::operandst &value_exprs)
 {
@@ -244,7 +244,7 @@ void template_domaint::make_not_post_constraints(const templ_valuet &value,
 
 /*******************************************************************\
 
-Function: template_domaint::get_row_symb_value
+Function: tpolyhedra_domaint::get_row_symb_value
 
   Inputs:
 
@@ -254,7 +254,7 @@ Function: template_domaint::get_row_symb_value
 
 \*******************************************************************/
 
-exprt template_domaint::get_row_symb_value(const rowt &row)
+exprt tpolyhedra_domaint::get_row_symb_value(const rowt &row)
 {
   assert(row<templ.size());
   return symbol_exprt(SYMB_BOUND_VAR+i2string(row),templ[row].expr.type());
@@ -262,7 +262,7 @@ exprt template_domaint::get_row_symb_value(const rowt &row)
 
 /*******************************************************************\
 
-Function: template_domaint::get_row_symb_pre_constraint
+Function: tpolyhedra_domaint::get_row_symb_pre_constraint
 
   Inputs:
 
@@ -272,7 +272,7 @@ Function: template_domaint::get_row_symb_pre_constraint
 
 \*******************************************************************/
 
-exprt template_domaint::get_row_symb_pre_constraint(const rowt &row, 
+exprt tpolyhedra_domaint::get_row_symb_pre_constraint(const rowt &row, 
   const row_valuet &row_value)
 {
   assert(row<templ.size());
@@ -284,7 +284,7 @@ exprt template_domaint::get_row_symb_pre_constraint(const rowt &row,
 
 /*******************************************************************\
 
-Function: template_domaint::get_row_symb_post_constraint
+Function: tpolyhedra_domaint::get_row_symb_post_constraint
 
   Inputs:
 
@@ -294,7 +294,7 @@ Function: template_domaint::get_row_symb_post_constraint
 
 \*******************************************************************/
 
-exprt template_domaint::get_row_symb_post_constraint(const rowt &row)
+exprt tpolyhedra_domaint::get_row_symb_post_constraint(const rowt &row)
 {
   assert(row<templ.size());
   const template_rowt &templ_row = templ[row];
@@ -308,7 +308,7 @@ exprt template_domaint::get_row_symb_post_constraint(const rowt &row)
 
 /*******************************************************************\
 
-Function: template_domaint::to_symb_pre_constraints
+Function: tpolyhedra_domaint::to_symb_pre_constraints
 
   Inputs:
 
@@ -318,7 +318,7 @@ Function: template_domaint::to_symb_pre_constraints
 
 \*******************************************************************/
 
-exprt template_domaint::to_symb_pre_constraints(const templ_valuet &value)
+exprt tpolyhedra_domaint::to_symb_pre_constraints(const templ_valuet &value)
 {
   assert(value.size()==templ.size());
   exprt::operandst c; 
@@ -331,7 +331,7 @@ exprt template_domaint::to_symb_pre_constraints(const templ_valuet &value)
 
 /*******************************************************************\
 
-Function: template_domaint::to_symb_pre_constraints
+Function: tpolyhedra_domaint::to_symb_pre_constraints
 
   Inputs:
 
@@ -341,7 +341,7 @@ Function: template_domaint::to_symb_pre_constraints
 
 \*******************************************************************/
 
-exprt template_domaint::to_symb_pre_constraints(const templ_valuet &value,
+exprt tpolyhedra_domaint::to_symb_pre_constraints(const templ_valuet &value,
 						const std::set<rowt> &symb_rows)
 {
   assert(value.size()==templ.size());
@@ -358,7 +358,7 @@ exprt template_domaint::to_symb_pre_constraints(const templ_valuet &value,
 
 /*******************************************************************\
 
-Function: template_domaint::to_symb_post_constraints
+Function: tpolyhedra_domaint::to_symb_post_constraints
 
   Inputs:
 
@@ -368,7 +368,7 @@ Function: template_domaint::to_symb_post_constraints
 
 \*******************************************************************/
 
-exprt template_domaint::to_symb_post_constraints()
+exprt tpolyhedra_domaint::to_symb_post_constraints()
 {
   exprt::operandst c; 
   for(unsigned row = 0; row<templ.size(); row++)
@@ -380,7 +380,7 @@ exprt template_domaint::to_symb_post_constraints()
 
 /*******************************************************************\
 
-Function: template_domaint::get_row_symb_value_constraint
+Function: tpolyhedra_domaint::get_row_symb_value_constraint
 
   Inputs:
 
@@ -390,7 +390,7 @@ Function: template_domaint::get_row_symb_value_constraint
 
 \*******************************************************************/
 
-exprt template_domaint::get_row_symb_value_constraint(const rowt &row, 
+exprt tpolyhedra_domaint::get_row_symb_value_constraint(const rowt &row, 
 						const row_valuet &row_value)
 {
   if(is_row_value_neginf(row_value)) return false_exprt();
@@ -403,7 +403,7 @@ exprt template_domaint::get_row_symb_value_constraint(const rowt &row,
 
 /*******************************************************************\
 
-Function: template_domaint::get_row_value
+Function: tpolyhedra_domaint::get_row_value
 
   Inputs:
 
@@ -413,7 +413,7 @@ Function: template_domaint::get_row_value
 
 \*******************************************************************/
 
-template_domaint::row_valuet template_domaint::get_row_value(
+tpolyhedra_domaint::row_valuet tpolyhedra_domaint::get_row_value(
   const rowt &row, const templ_valuet &value)
 {
   assert(row<value.size());
@@ -423,7 +423,7 @@ template_domaint::row_valuet template_domaint::get_row_value(
 
 /*******************************************************************\
 
-Function: template_domaint::project_on_vars
+Function: tpolyhedra_domaint::project_on_vars
 
   Inputs:
 
@@ -433,7 +433,7 @@ Function: template_domaint::project_on_vars
 
 \*******************************************************************/
 
-void template_domaint::project_on_vars(valuet &value, 
+void tpolyhedra_domaint::project_on_vars(valuet &value, 
 				       const var_sett &vars, exprt &result)
 {
   const templ_valuet &v = static_cast<const templ_valuet &>(value);
@@ -483,7 +483,7 @@ void template_domaint::project_on_vars(valuet &value,
 
 /*******************************************************************\
 
-Function: template_domaint::set_row_value
+Function: tpolyhedra_domaint::set_row_value
 
   Inputs:
 
@@ -493,8 +493,8 @@ Function: template_domaint::set_row_value
 
 \*******************************************************************/
 
-void template_domaint::set_row_value(
-  const rowt &row, const template_domaint::row_valuet &row_value, templ_valuet &value)
+void tpolyhedra_domaint::set_row_value(
+  const rowt &row, const tpolyhedra_domaint::row_valuet &row_value, templ_valuet &value)
 {
   assert(row<value.size());
   assert(value.size()==templ.size());
@@ -504,7 +504,7 @@ void template_domaint::set_row_value(
 
 /*******************************************************************\
 
-Function: template_domaint::get_row_max_value
+Function: tpolyhedra_domaint::get_row_max_value
 
   Inputs:
 
@@ -514,8 +514,8 @@ Function: template_domaint::get_row_max_value
 
 \*******************************************************************/
 
-template_domaint::row_valuet template_domaint::get_max_row_value(
-  const template_domaint::rowt &row)
+tpolyhedra_domaint::row_valuet tpolyhedra_domaint::get_max_row_value(
+  const tpolyhedra_domaint::rowt &row)
 {
   const template_rowt &templ_row = templ[row];
   if(templ_row.expr.type().id()==ID_signedbv)
@@ -537,7 +537,7 @@ template_domaint::row_valuet template_domaint::get_max_row_value(
 
 /*******************************************************************\
 
-Function: template_domaint::get_row_max_value
+Function: tpolyhedra_domaint::get_row_max_value
 
   Inputs:
 
@@ -547,8 +547,8 @@ Function: template_domaint::get_row_max_value
 
 \*******************************************************************/
 
-template_domaint::row_valuet template_domaint::get_min_row_value(
-  const template_domaint::rowt &row)
+tpolyhedra_domaint::row_valuet tpolyhedra_domaint::get_min_row_value(
+  const tpolyhedra_domaint::rowt &row)
 {
   const template_rowt &templ_row = templ[row];
   if(templ_row.expr.type().id()==ID_signedbv)
@@ -570,7 +570,7 @@ template_domaint::row_valuet template_domaint::get_min_row_value(
 
 /*******************************************************************\
 
-Function: template_domaint::output_value
+Function: tpolyhedra_domaint::output_value
 
   Inputs:
 
@@ -580,7 +580,7 @@ Function: template_domaint::output_value
 
 \*******************************************************************/
 
-void template_domaint::output_value(std::ostream &out, const valuet &value, 
+void tpolyhedra_domaint::output_value(std::ostream &out, const valuet &value, 
   const namespacet &ns) const
 {
   const templ_valuet &v = static_cast<const templ_valuet &>(value);
@@ -607,7 +607,7 @@ void template_domaint::output_value(std::ostream &out, const valuet &value,
 
 /*******************************************************************\
 
-Function: template_domaint::output_domain
+Function: tpolyhedra_domaint::output_domain
 
   Inputs:
 
@@ -617,7 +617,7 @@ Function: template_domaint::output_domain
 
 \*******************************************************************/
 
-void template_domaint::output_domain(std::ostream &out, const namespacet &ns) const
+void tpolyhedra_domaint::output_domain(std::ostream &out, const namespacet &ns) const
 {
   for(unsigned row = 0; row<templ.size(); row++)
   {
@@ -645,7 +645,7 @@ void template_domaint::output_domain(std::ostream &out, const namespacet &ns) co
 
 /*******************************************************************\
 
-Function: template_domaint::template_size
+Function: tpolyhedra_domaint::template_size
 
   Inputs:
 
@@ -655,14 +655,14 @@ Function: template_domaint::template_size
 
 \*******************************************************************/
 
-unsigned template_domaint::template_size()
+unsigned tpolyhedra_domaint::template_size()
 {
   return templ.size();
 }
 
 /*******************************************************************\
 
-Function: template_domaint::is_row_value_neginf
+Function: tpolyhedra_domaint::is_row_value_neginf
 
   Inputs:
 
@@ -672,14 +672,14 @@ Function: template_domaint::is_row_value_neginf
 
 \*******************************************************************/
 
-bool template_domaint::is_row_value_neginf(const row_valuet & row_value) const
+bool tpolyhedra_domaint::is_row_value_neginf(const row_valuet & row_value) const
 {
   return row_value.get(ID_value)==ID_false;
 }
 
 /*******************************************************************\
 
-Function: template_domaint::is_row_value_inf
+Function: tpolyhedra_domaint::is_row_value_inf
 
   Inputs:
 
@@ -689,7 +689,7 @@ Function: template_domaint::is_row_value_inf
 
 \*******************************************************************/
 
-bool template_domaint::is_row_value_inf(const row_valuet & row_value) const
+bool tpolyhedra_domaint::is_row_value_inf(const row_valuet & row_value) const
 {
   return row_value.get(ID_value)==ID_true;
 }
@@ -783,7 +783,7 @@ Function: make_interval_template
 
 \*******************************************************************/
 
-void template_domaint::add_interval_template(const var_specst &var_specs,
+void tpolyhedra_domaint::add_interval_template(const var_specst &var_specs,
 					     const namespacet &ns)
 {
   unsigned size = 2*var_specs.size();
@@ -830,7 +830,7 @@ Function: make_zone_template
 
 \*******************************************************************/
 
-void template_domaint::add_zone_template(const var_specst &var_specs,
+void tpolyhedra_domaint::add_zone_template(const var_specst &var_specs,
 					 const namespacet &ns)
 { 
   unsigned size = 2*var_specs.size()+var_specs.size()*(var_specs.size()-1);
@@ -914,7 +914,7 @@ Function: make_octagon_template
 
 \*******************************************************************/
 
-void template_domaint::add_octagon_template(const var_specst &var_specs,
+void tpolyhedra_domaint::add_octagon_template(const var_specst &var_specs,
 					    const namespacet &ns)
 {
   unsigned size = 2*var_specs.size()+2*var_specs.size()*(var_specs.size()-1);

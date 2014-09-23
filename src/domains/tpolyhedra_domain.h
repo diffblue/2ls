@@ -8,7 +8,7 @@
 #include <util/ieee_float.h>
 #include <set>
 
-class template_domaint : public domaint
+class tpolyhedra_domaint : public domaint
 {
 public:
   typedef unsigned rowt;
@@ -29,7 +29,7 @@ public:
 
   typedef std::vector<template_rowt> templatet;
 
-  template_domaint(replace_mapt &_renaming_map) :
+  tpolyhedra_domaint(replace_mapt &_renaming_map) :
     domaint(_renaming_map)
   {}
 
