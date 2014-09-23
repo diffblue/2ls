@@ -1,5 +1,5 @@
 #include "linrank_domain.h"
-#include "template_domain.h"
+#include "tpolyhedra_domain.h"
 
 #include <iostream>
 
@@ -173,8 +173,43 @@ void linrank_domaint::output_domain(std::ostream &out, const namespacet &ns) con
   }
 }
 
-void linrank_domaint::project_on_loops(const valuet &value, exprt &result)
+void linrank_domaint::project_on_vars(valuet &value, const var_sett &vars, exprt &result)
 {
+
+//TODO
+#if 0
+	const templ_valuet &v = static_cast<const templ_valuet &>(value);
+	assert(v.size()==templ.size());
+	exprt::operandst c;
+	for(unsigned row = 0; row<templ.size(); row++)
+	{
+		const template_rowt &templ_row = templ[row];
+
+    //FIXME:
+		std::set<symbol_exprt> symbols;
+    for(unsigned i=0; i<templ_row.expr.size(); ++i)
+      find_symbols(templ_row.expr[i].first,symbols);
+
+		bool pure = true;
+		for(std::set<symbol_exprt>::iterator it = symbols.begin();
+					it != symbols.end(); it++)
+		{
+			if(vars.find(*it)==vars.end())
+			{
+				pure = false;
+				break;
+			}
+		}
+		if(!pure) continue;
+
+    //FIXME:
+    for(unsigned i=0; i<templ_row.expr.size(); ++i)
+      c.push_back(binary_relation_exprt(templ_row.expr[i].first,ID_le,v[row].c[i]));
+	}
+	result = conjunction(c);
+#endif
+
+
   const templ_valuet &v = static_cast<const templ_valuet &>(value);
   assert(v.size()==templ.size());
   exprt::operandst c;
@@ -222,52 +257,6 @@ void linrank_domaint::project_on_loops(const valuet &value, exprt &result)
     }
   }
   result = conjunction(c);
-}
-
-void linrank_domaint::project_on_out(const valuet &value, exprt &result)
-{
-  result = true_exprt();
-}
-
-void linrank_domaint::project_on_inout(const valuet &value, exprt &result)
-{
-  result = true_exprt();
-}
-
-void linrank_domaint::project_on_vars(const valuet &value, const var_sett &vars, exprt &result)
-{
-#if 0
-	const templ_valuet &v = static_cast<const templ_valuet &>(value);
-	assert(v.size()==templ.size());
-	exprt::operandst c;
-	for(unsigned row = 0; row<templ.size(); row++)
-	{
-		const template_rowt &templ_row = templ[row];
-
-    //FIXME:
-		std::set<symbol_exprt> symbols;
-    for(unsigned i=0; i<templ_row.expr.size(); ++i)
-      find_symbols(templ_row.expr[i].first,symbols);
-
-		bool pure = true;
-		for(std::set<symbol_exprt>::iterator it = symbols.begin();
-					it != symbols.end(); it++)
-		{
-			if(vars.find(*it)==vars.end())
-			{
-				pure = false;
-				break;
-			}
-		}
-		if(!pure) continue;
-
-    //FIXME:
-    for(unsigned i=0; i<templ_row.expr.size(); ++i)
-      c.push_back(binary_relation_exprt(templ_row.expr[i].first,ID_le,v[row].c[i]));
-	}
-	result = conjunction(c);
-#endif
-result = true_exprt();
 }
 
 /*******************************************************************\

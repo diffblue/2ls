@@ -79,128 +79,6 @@ exprt equality_domaint::get_post_not_disequ_constraint(unsigned index)
   return c;
 }
 
-/*******************************************************************\
-
-Function: equality_domaint::project_equ_on_loops
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void equality_domaint::project_row_on_kind(equ_valuet &value, 
-				       unsigned index,
-				       kindt kind,
-				       bool equality,
-				       exprt::operandst &c)
-{
-  if(templ[index].kind!=kind) return;
-  const var_pairt &vv = templ[index].var_pair;
-  if(equality)
-  {
-    if(value.equs.same_set(vv.first,vv.second)) 
-//      c.push_back(implies_exprt(templ[index].pre_guard,equal_exprt(vv.first,vv.second))); //not sure whether we need these implications here
-      c.push_back(equal_exprt(vv.first,vv.second));
-  }
-  else 
-    c.push_back(not_exprt(equal_exprt(vv.first,vv.second)));
-//c.push_back(implies_exprt(templ[index].pre_guard,not_exprt(equal_exprt(vv.first,vv.second))));
-}
-
-/*******************************************************************\
-
-Function: equality_domaint::project_on_out
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void equality_domaint::project_on_out(const valuet &value, exprt &result)
-{
-  const equ_valuet &_v = static_cast<const equ_valuet &>(value);
-  equ_valuet v = _v;
-
-  exprt::operandst c;
-  for(unsigned index = 0; index<templ.size(); index++)
-  {
-    project_row_on_kind(v,index,OUT,true,c);
-  }
-
-  for(index_sett::iterator it = v.disequs.begin(); it != v.disequs.end(); it++)
-  {
-    project_row_on_kind(v,*it,OUT,false,c);
-  }
-  result = conjunction(c); 
-}
-
-/*******************************************************************\
-
-Function: equality_domaint::project_on_loops
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void equality_domaint::project_on_loops(const valuet &value, exprt &result)
-{
-  const equ_valuet &_v = static_cast<const equ_valuet &>(value);
-  equ_valuet v = _v;
-
-  exprt::operandst c;
-  for(unsigned index = 0; index<templ.size(); index++)
-  {
-    project_row_on_kind(v,index,LOOP,true,c);
-  }
-
-  for(index_sett::iterator it = v.disequs.begin(); it != v.disequs.end(); it++)
-  {
-    project_row_on_kind(v,*it,LOOP,false,c);
-  }
-  result = conjunction(c);
-}
-
-/*******************************************************************\
-
-Function: equality_domaint::project_on_inout
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void equality_domaint::project_on_inout(const valuet &value, exprt &result)
-{
-  const equ_valuet &_v = static_cast<const equ_valuet &>(value);
-  equ_valuet v = _v;
-
-  exprt::operandst c;
-  for(unsigned index = 0; index<templ.size(); index++)
-  {
-    project_row_on_kind(v,index,IN,true,c);
-    project_row_on_kind(v,index,OUT,true,c);
-  }
-
-  for(index_sett::iterator it = v.disequs.begin(); it != v.disequs.end(); it++)
-  {
-    project_row_on_kind(v,*it,IN,false,c);
-    project_row_on_kind(v,*it,OUT,false,c);
-  }
-  result = conjunction(c); 
-}
 
 /*******************************************************************\
 
@@ -214,36 +92,49 @@ Function: template_domaint::project_on_vars
 
 \*******************************************************************/
 
-void equality_domaint::project_on_vars(const valuet &value, 
+void equality_domaint::project_on_vars(valuet &value, 
 				       const var_sett &vars, exprt &result)
 {
-  const equ_valuet &_v = static_cast<const equ_valuet &>(value);
-  equ_valuet v = _v;
+  equ_valuet &v = static_cast<equ_valuet &>(value);
 
   exprt::operandst c;
   for(unsigned index = 0; index<templ.size(); index++)
   {
     const var_pairt &vv = templ[index].var_pair;
 
+    std::cout << vv.second << std::endl;
     if(vars.find(vv.first)==vars.end() || 
        vars.find(vv.second)==vars.end() && 
-       vv.second.id()!=ID_constant && vv.second.op0().id()!=ID_NULL)
+       !(vv.second.id()==ID_constant && 
+	 to_constant_expr(vv.second).get_value()=="NULL"))
       continue;
 
     if(v.equs.same_set(vv.first,vv.second)) 
-      c.push_back(equal_exprt(vv.first,vv.second));
+    {
+      if(templ[index].kind==LOOP)
+        c.push_back(implies_exprt(templ[index].pre_guard,
+				  equal_exprt(vv.first,vv.second)));
+      else
+        c.push_back(equal_exprt(vv.first,vv.second));
+    }
   }
 
-  for(index_sett::const_iterator it = v.disequs.begin(); it != v.disequs.end(); it++)
+  for(index_sett::const_iterator it = v.disequs.begin(); 
+      it != v.disequs.end(); it++)
   {
     const var_pairt &vv = templ[*it].var_pair;
 
     if(vars.find(vv.first)==vars.end() || 
        vars.find(vv.second)==vars.end() && 
-       vv.second.id()!=ID_constant && vv.second.op0().id()!=ID_NULL)
+       !(vv.second.id()==ID_constant && 
+	 to_constant_expr(vv.second).get_value()=="NULL"))
       continue;
 
-    c.push_back(notequal_exprt(vv.first,vv.second));
+      if(templ[*it].kind==LOOP)
+        c.push_back(implies_exprt(templ[*it].pre_guard,
+				  notequal_exprt(vv.first,vv.second)));
+      else
+        c.push_back(notequal_exprt(vv.first,vv.second));
   }
   result = conjunction(c); 
 }
@@ -299,7 +190,8 @@ Function: equality_domaint::get_var_pair
 
 \*******************************************************************/
 
-const equality_domaint::var_pairt &equality_domaint::get_var_pair(unsigned index)
+const equality_domaint::var_pairt &equality_domaint::get_var_pair(
+  unsigned index)
 {
   assert(index<templ.size());
   return templ[index].var_pair;
@@ -328,14 +220,17 @@ void equality_domaint::output_value(std::ostream &out, const valuet &value,
     const var_pairt &vv = templ[index].var_pair;
     if(v.equs.same_set(vv.first,vv.second)) 
     {
-      out << from_expr(ns,"",vv.first) << " == " << from_expr(ns,"",vv.second) << std::endl;
+      out << from_expr(ns,"",vv.first) << " == " 
+	  << from_expr(ns,"",vv.second) << std::endl;
     }
   }
 
-  for(index_sett::const_iterator it = v.disequs.begin(); it != v.disequs.end(); it++)
+  for(index_sett::const_iterator it = v.disequs.begin(); 
+      it != v.disequs.end(); it++)
   {
     const var_pairt &vv = templ[*it].var_pair;
-    out << from_expr(ns,"",vv.first) << " != " << from_expr(ns,"",vv.second) << std::endl;
+    out << from_expr(ns,"",vv.first) << " != " 
+	<< from_expr(ns,"",vv.second) << std::endl;
   }
 }
 
@@ -361,20 +256,24 @@ void equality_domaint::output_domain(std::ostream &out,
     {
     case LOOP:
       out << "(LOOP) [ " << from_expr(ns,"",templ_row.pre_guard) << " | ";
-      out << from_expr(ns,"",templ_row.post_guard) << " ] ===> " << std::endl << "      ";
+      out << from_expr(ns,"",templ_row.post_guard) 
+	  << " ] ===> " << std::endl << "      ";
       break;
     case IN: 
       out << "(IN)   ";
-      out << from_expr(ns,"",templ_row.pre_guard) << " ===> " << std::endl << "      ";
+      out << from_expr(ns,"",templ_row.pre_guard) << " ===> " 
+	  << std::endl << "      ";
       break;
     case OUT: case OUTL:
       out << "(OUT)  "; 
-      out << from_expr(ns,"",templ_row.post_guard) << " ===> " << std::endl << "      ";
+      out << from_expr(ns,"",templ_row.post_guard) << " ===> " 
+	  << std::endl << "      ";
       break;
     default: assert(false);
     }
     const var_pairt &vv = templ_row.var_pair;
-    out << from_expr(ns,"",vv.first) << " =!= " << from_expr(ns,"",vv.second) << std::endl;
+    out << from_expr(ns,"",vv.first) << " =!= " 
+	<< from_expr(ns,"",vv.second) << std::endl;
   }
 }
 
@@ -467,7 +366,7 @@ void equality_domaint::make_template(
       templ.push_back(template_rowt());
       template_rowt &templ_row = templ.back();
       templ_row.var_pair = var_pairt(v1->var,
-				     null_pointer_exprt(to_pointer_type(v1->var.type())));
+		   null_pointer_exprt(to_pointer_type(v1->var.type())));
       templ_row.pre_guard = v1->pre_guard;
       templ_row.post_guard = v1->post_guard;
       templ_row.kind = v1->kind;      

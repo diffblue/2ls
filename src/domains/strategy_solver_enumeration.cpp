@@ -5,14 +5,14 @@
 
 bool strategy_solver_enumerationt::iterate(invariantt &_inv)
 {
-  template_domaint::templ_valuet &inv = 
-    static_cast<template_domaint::templ_valuet &>(_inv);
+  tpolyhedra_domaint::templ_valuet &inv = 
+    static_cast<tpolyhedra_domaint::templ_valuet &>(_inv);
 
   bool improved = false;
 
   literalt activation_literal = new_context();
 
-  exprt inv_expr = template_domain.to_pre_constraints(inv);
+  exprt inv_expr = tpolyhedra_domain.to_pre_constraints(inv);
   debug() << "pre-inv: " << from_expr(ns,"",inv_expr) << eom;
 
 #ifndef DEBUG_FORMULA
@@ -28,7 +28,7 @@ bool strategy_solver_enumerationt::iterate(invariantt &_inv)
 #endif
 
   exprt::operandst strategy_cond_exprs;
-  template_domain.make_not_post_constraints(inv, 
+  tpolyhedra_domain.make_not_post_constraints(inv, 
     strategy_cond_exprs, strategy_value_exprs); 
   
   strategy_cond_literals.resize(strategy_cond_exprs.size());
@@ -82,15 +82,15 @@ bool strategy_solver_enumerationt::iterate(invariantt &_inv)
         solver.l_get(whole_formula[i]) << eom;
     }
           
-    for(unsigned i=0; i<template_domain.template_size(); i++) 
+    for(unsigned i=0; i<tpolyhedra_domain.template_size(); i++) 
     {
-      exprt c = template_domain.get_row_constraint(i,inv[i]);
+      exprt c = tpolyhedra_domain.get_row_constraint(i,inv[i]);
       debug() << "cond: " << from_expr(ns, "", c) << " " << 
           from_expr(ns, "", solver.get(c)) << eom;
-      debug() << "guards: " << from_expr(ns, "", template_domain.templ.pre_guards[i]) << 
-          " " << from_expr(ns, "", solver.get(template_domain.templ.pre_guards[i])) << eom;
-      debug() << "guards: " << from_expr(ns, "", template_domain.templ.post_guards[i]) << " " 
-          << from_expr(ns, "", solver.get(template_domain.templ.post_guards[i])) << eom; 	     	     }    
+      debug() << "guards: " << from_expr(ns, "", tpolyhedra_domain.templ.pre_guards[i]) << 
+          " " << from_expr(ns, "", solver.get(tpolyhedra_domain.templ.pre_guards[i])) << eom;
+      debug() << "guards: " << from_expr(ns, "", tpolyhedra_domain.templ.post_guards[i]) << " " 
+          << from_expr(ns, "", solver.get(tpolyhedra_domain.templ.post_guards[i])) << eom; 	     	     }    
           
     for(replace_mapt::const_iterator
           it=renaming_map.begin();
@@ -114,12 +114,12 @@ bool strategy_solver_enumerationt::iterate(invariantt &_inv)
         debug() << "updating row: " << row << eom;
 
         exprt value = solver.get(strategy_value_exprs[row]);
-        template_domaint::row_valuet v = simplify_const(value);
+        tpolyhedra_domaint::row_valuet v = simplify_const(value);
 
         debug() << "raw value; " << from_expr(ns, "", value) << 
           ", simplified value: " << from_expr(ns,"",v) << eom;
 
-        template_domain.set_row_value(row,v,inv);
+        tpolyhedra_domain.set_row_value(row,v,inv);
       }
     }
     improved = true;

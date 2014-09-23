@@ -18,6 +18,7 @@ public:
 
   virtual void load() const {}
   virtual void save() const {}
+  virtual void clear() { store.clear(); }
 
   virtual summaryt get(const function_namet &function_name) const 
     { return store.at(function_name); }

@@ -30,7 +30,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/goto_functions.h>
 #include <goto-programs/xml_goto_trace.h>
 #include <goto-programs/remove_returns.h>
-//#include <goto-programs/array_abstraction.h>
 #include "array_abstraction.h"
 
 #include <analyses/goto_check.h>
@@ -206,6 +205,10 @@ void summarizer_parseoptionst::get_command_line_options(optionst &options)
   // compute ranking functions
   if(cmdline.isset("termination"))
     options.set_option("termination", true);
+
+ // do k-induction refinement
+  if(cmdline.isset("k-induction"))
+    options.set_option("k-induction", true);
 }
 
 /*******************************************************************\
@@ -1223,6 +1226,7 @@ void summarizer_parseoptionst::help()
     "\n"
     "Backend options:\n"
     " --termination                compute ranking functions to prove termination\n"
+    " --k-induction                use k-induction\n"
     " --preconditions              compute preconditions\n"
     " --sufficient                 sufficient preconditions (default: necessary)\n"
     " --context-sensitive          context-sensitive analysis from entry point\n"

@@ -75,10 +75,7 @@ public:
   virtual void output_domain(std::ostream &out, const namespacet &ns) const;
 
   // projection  
-  virtual void project_on_out(const valuet &value, exprt &result);
-  virtual void project_on_loops(const valuet &value, exprt &result);
-  virtual void project_on_inout(const valuet &value, exprt &result);
-  virtual void project_on_vars(const valuet &value, const var_sett &vars, exprt &result);
+  virtual void project_on_vars(valuet &value, const var_sett &vars, exprt &result);
 
   unsigned template_size() {return templ.size();}
 
@@ -91,6 +88,8 @@ protected:
 
   bool is_row_value_false(const row_valuet & row_value) const;
   bool is_row_value_true(const row_valuet & row_value) const;
+  bool is_row_element_value_false(const row_value_elementt & row_value_element) const;
+  bool is_row_element_value_true(const row_value_elementt & row_value_element) const;
 
   
 };

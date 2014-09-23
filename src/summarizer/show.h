@@ -12,6 +12,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <string>
 #include <ostream>
 
+#include <solvers/prop/prop_conv.h>
+
 #include <goto-programs/goto_model.h>
 
 class message_handlert;
@@ -42,5 +44,15 @@ void show_fixed_points(
   bool simplify,
   std::ostream &,
   message_handlert &);
+
+//shows raw error trace
+void show_error_trace(
+  const irep_idt &property_id,
+  const local_SSAt &SSA, 
+  prop_convt &solver,
+  std::ostream &,
+  message_handlert &);
+
+
 
 #endif

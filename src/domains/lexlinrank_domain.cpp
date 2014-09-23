@@ -1,5 +1,5 @@
 #include "lexlinrank_domain.h"
-#include "template_domain.h"
+#include "tpolyhedra_domain.h"
 
 #include <iostream>
 
@@ -35,24 +35,24 @@ exprt lexlinrank_domaint::get_not_constraints(const lexlinrank_domaint::templ_va
   {
     value_exprs[row].insert(value_exprs[row].end(),templ[row].expr.begin(),templ[row].expr.end()); 
 
-    if(is_row_value_true(value[row]))
-    {
-      // !(g => true)
-      cond_exprs[row] = false_exprt();
-    }
-    else if(is_row_value_false(value[row]))
-    {
-      // !(g => false)
-      cond_exprs[row] = 
-          and_exprt(templ[row].pre_guard, templ[row].post_guard);
-    }
-    else
-    {
-      std::cout << "temp.expr.size: " << templ[row].expr.size() << std::endl;
+    std::cout << "temp.expr.size: " << templ[row].expr.size() << std::endl;
 
-      exprt::operandst d;
-      d.reserve(value[row].size());
-      for(unsigned elm=0; elm<value[row].size(); ++elm)
+    exprt::operandst elmts;
+    elmts.reserve(value[row].size());
+    for(unsigned elm=0; elm<value[row].size(); ++elm)
+    {
+      if(is_row_element_value_true(value[row][elm]))
+      {
+	// !(g => true)
+	cond_exprs[row] = false_exprt();
+      }
+      else if(is_row_element_value_false(value[row][elm]))
+      {
+	// !(g => false)
+	cond_exprs[row] = 
+          and_exprt(templ[row].pre_guard, templ[row].post_guard);
+      }
+      else
       {
         std::cout << "value[" << elm << "].c.size: " << value[row][elm].c.size() << std::endl;
 
@@ -99,14 +99,14 @@ exprt lexlinrank_domaint::get_not_constraints(const lexlinrank_domaint::templ_va
           c.push_back( binary_relation_exprt(sum_first2, ID_ge, sum_second2) );
         }
 
-        d.push_back(conjunction(c));
+        elmts.push_back(conjunction(c));
       }
 
       cond_exprs[row] =
         not_exprt(
           implies_exprt(
               and_exprt(templ[row].pre_guard, templ[row].post_guard),
-              disjunction(d)));
+              disjunction(elmts)));
     }
   }
 
@@ -257,8 +257,41 @@ void lexlinrank_domaint::output_domain(std::ostream &out, const namespacet &ns) 
   }
 }
 
-void lexlinrank_domaint::project_on_loops(const valuet &value, exprt &result)
+void lexlinrank_domaint::project_on_vars(valuet &value, const var_sett &vars, exprt &result)
 {
+//TODO: fix this
+#if 0
+	const templ_valuet &v = static_cast<const templ_valuet &>(value);
+	assert(v.size()==templ.size());
+	exprt::operandst c;
+	for(unsigned row = 0; row<templ.size(); row++)
+	{
+		const template_rowt &templ_row = templ[row];
+
+    //FIXME:
+		std::set<symbol_exprt> symbols;
+    for(unsigned i=0; i<templ_row.expr.size(); ++i)
+      find_symbols(templ_row.expr[i].first,symbols);
+
+		bool pure = true;
+		for(std::set<symbol_exprt>::iterator it = symbols.begin();
+					it != symbols.end(); it++)
+		{
+			if(vars.find(*it)==vars.end())
+			{
+				pure = false;
+				break;
+			}
+		}
+		if(!pure) continue;
+
+    //FIXME:
+    for(unsigned i=0; i<templ_row.expr.size(); ++i)
+      c.push_back(binary_relation_exprt(templ_row.expr[i].first,ID_le,v[row].c[i]));
+	}
+	result = conjunction(c);
+#endif
+
   const templ_valuet &v = static_cast<const templ_valuet &>(value);
   assert(v.size()==templ.size());
   exprt::operandst c;
@@ -267,25 +300,25 @@ void lexlinrank_domaint::project_on_loops(const valuet &value, exprt &result)
   {
     assert(templ[row].kind == LOOP);
 
-    if(is_row_value_false(v[row]))
+    exprt::operandst elmnts;
+    elmnts.reserve(v[row].size());
+    for(unsigned elm=0; elm<v[row].size(); ++elm)
     {
-      //(g => false)
-      c.push_back(implies_exprt(
-		    and_exprt(templ[row].pre_guard, templ[row].post_guard),
-		    false_exprt()));
-    }
-    else if(is_row_value_true(v[row]))
-    {
-      //(g => true)
-      c.push_back(implies_exprt(
-		    and_exprt(templ[row].pre_guard, templ[row].post_guard),
-		    true_exprt()));
-    }
-    else
-    {
-      exprt::operandst d;
-      d.reserve(v[row].size());
-      for(unsigned elm=0; elm<v[row].size(); ++elm)
+      if(is_row_element_value_false(v[row][elm]))
+      {
+	//(g => false)
+	c.push_back(implies_exprt(
+		      and_exprt(templ[row].pre_guard, templ[row].post_guard),
+		      false_exprt()));
+      }
+      else if(is_row_element_value_true(v[row][elm]))
+      {
+	//(g => true)
+	c.push_back(implies_exprt(
+		      and_exprt(templ[row].pre_guard, templ[row].post_guard),
+		      true_exprt()));
+      }
+      else
       {
 	exprt::operandst con;
 	con.reserve(2 + v[row].size() - (elm+1));
@@ -331,62 +364,16 @@ void lexlinrank_domaint::project_on_loops(const valuet &value, exprt &result)
 	  con.push_back( binary_relation_exprt(sum_first2, ID_ge, sum_second2) );
 	}
 
-	d.push_back(
+	elmnts.push_back(
 	  implies_exprt(
 	    and_exprt(templ[row].pre_guard, templ[row].post_guard),
 	    conjunction(con)) );
       }
 
-      c.push_back(disjunction(d));
+      c.push_back(disjunction(elmnts));
     }
   }
   result = conjunction(c);
-}
-
-void lexlinrank_domaint::project_on_out(const valuet &value, exprt &result)
-{
-  result = true_exprt();
-}
-
-void lexlinrank_domaint::project_on_inout(const valuet &value, exprt &result)
-{
-  result = true_exprt();
-}
-
-void lexlinrank_domaint::project_on_vars(const valuet &value, const var_sett &vars, exprt &result)
-{
-#if 0
-	const templ_valuet &v = static_cast<const templ_valuet &>(value);
-	assert(v.size()==templ.size());
-	exprt::operandst c;
-	for(unsigned row = 0; row<templ.size(); row++)
-	{
-		const template_rowt &templ_row = templ[row];
-
-    //FIXME:
-		std::set<symbol_exprt> symbols;
-    for(unsigned i=0; i<templ_row.expr.size(); ++i)
-      find_symbols(templ_row.expr[i].first,symbols);
-
-		bool pure = true;
-		for(std::set<symbol_exprt>::iterator it = symbols.begin();
-					it != symbols.end(); it++)
-		{
-			if(vars.find(*it)==vars.end())
-			{
-				pure = false;
-				break;
-			}
-		}
-		if(!pure) continue;
-
-    //FIXME:
-    for(unsigned i=0; i<templ_row.expr.size(); ++i)
-      c.push_back(binary_relation_exprt(templ_row.expr[i].first,ID_le,v[row].c[i]));
-	}
-	result = conjunction(c);
-#endif
-result = true_exprt();
 }
 
 /*******************************************************************\
@@ -453,7 +440,13 @@ Function: lexlinrank_domaint::is_row_value_false
 
 bool lexlinrank_domaint::is_row_value_false(const row_valuet & row_value) const
 {
-  return row_value.size() == 1 && row_value[0].d.get(ID_value) == ID_false;
+  assert(false);
+  //return row_value.size() >= 1 && row_value[0].d.get(ID_value) == ID_false;
+}
+
+bool lexlinrank_domaint::is_row_element_value_false(const row_value_elementt & row_value_element) const
+{
+  return row_value_element.d.get(ID_value) == ID_false;
 }
 
 /*******************************************************************\
@@ -470,7 +463,13 @@ Function: lexlinrank_domaint::is_row_value_true
 
 bool lexlinrank_domaint::is_row_value_true(const row_valuet & row_value) const
 {
-  return row_value.size() == 1 && row_value[0].d.get(ID_value) == ID_true;
+  assert(false);
+  // return row_value.size() == 1 && row_value[0].d.get(ID_value) == ID_true;
+}
+
+bool lexlinrank_domaint::is_row_element_value_true(const row_value_elementt & row_value_element) const
+{
+  return row_value_element.d.get(ID_value) == ID_true;
 }
 
 /*******************************************************************\

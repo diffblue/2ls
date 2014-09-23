@@ -6,14 +6,14 @@
 
 bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 {
-  template_domaint::templ_valuet &inv = 
-    static_cast<template_domaint::templ_valuet &>(_inv);
+  tpolyhedra_domaint::templ_valuet &inv = 
+    static_cast<tpolyhedra_domaint::templ_valuet &>(_inv);
 
   bool improved = false;
 
   literalt activation_literal0 = new_context(); //for improvement check
 
-  exprt inv_expr = template_domain.to_pre_constraints(inv);
+  exprt inv_expr = tpolyhedra_domain.to_pre_constraints(inv);
 
 #if 0
   debug() << "improvement check: " << eom;
@@ -36,7 +36,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 #endif
 
   exprt::operandst strategy_cond_exprs;
-  template_domain.make_not_post_constraints(inv, 
+  tpolyhedra_domain.make_not_post_constraints(inv, 
     strategy_cond_exprs, strategy_value_exprs); 
   
   strategy_cond_literals.resize(strategy_cond_exprs.size());
@@ -97,19 +97,19 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
         solver.l_get(whole_formula[i]) << eom;
     }
           
-    for(unsigned i=0; i<template_domain.template_size(); i++) 
+    for(unsigned i=0; i<tpolyhedra_domain.template_size(); i++) 
     {
-      exprt c = template_domain.get_row_constraint(i,inv[i]);
+      exprt c = tpolyhedra_domain.get_row_constraint(i,inv[i]);
       debug() << "cond: " << from_expr(ns, "", c) << " " << 
 	    from_expr(ns, "", solver.get(c)) << eom;
       debug() << "guards: " << 
-        from_expr(ns, "", template_domain.templ.pre_guards[i]) << 
+        from_expr(ns, "", tpolyhedra_domain.templ.pre_guards[i]) << 
         " " << from_expr(ns, "", 
-          solver.get(template_domain.templ.pre_guards[i])) << eom;
+          solver.get(tpolyhedra_domain.templ.pre_guards[i])) << eom;
       debug() << "guards: " << from_expr(ns, "", 
-          template_domain.templ.post_guards[i]) << " " 
+          tpolyhedra_domain.templ.post_guards[i]) << " " 
 	  << from_expr(ns, "", 
-               solver.get(template_domain.templ.post_guards[i])) << eom;
+               solver.get(tpolyhedra_domain.templ.post_guards[i])) << eom;
     }    
 #endif
 
@@ -122,13 +122,13 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
     }
 
     debug() << "improving row: " << row << eom;
-    std::set<template_domaint::rowt> improve_rows;
+    std::set<tpolyhedra_domaint::rowt> improve_rows;
     improve_rows.insert(row);
 
-    template_domaint::row_valuet upper = 
-      template_domain.get_max_row_value(row);
-    template_domaint::row_valuet lower = 
-      //  template_domain.get_min_row_value(row);
+    tpolyhedra_domaint::row_valuet upper = 
+      tpolyhedra_domain.get_max_row_value(row);
+    tpolyhedra_domaint::row_valuet lower = 
+      //  tpolyhedra_domain.get_min_row_value(row);
     simplify_const(solver.get(strategy_value_exprs[row]));
 
     pop_context();  //improvement check
@@ -136,7 +136,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
     literalt activation_literal1 = new_context(); //symbolic value system
 
     exprt pre_inv_expr = 
-      template_domain.to_symb_pre_constraints(inv,improve_rows);
+      tpolyhedra_domain.to_symb_pre_constraints(inv,improve_rows);
 
 #ifndef DEBUG_FORMULA
     solver << or_exprt(pre_inv_expr, literal_exprt(activation_literal1));
@@ -153,7 +153,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
     }
 #endif
 
-    exprt post_inv_expr = template_domain.get_row_symb_post_constraint(row);
+    exprt post_inv_expr = tpolyhedra_domain.get_row_symb_post_constraint(row);
 
 #ifndef DEBUG_FORMULA
     solver << or_exprt(post_inv_expr, literal_exprt(activation_literal1));
@@ -175,14 +175,14 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
     debug() << "post-inv: " << from_expr(ns,"",post_inv_expr) << eom;
 #endif
 
-    while(template_domain.less_than(lower,upper))   
+    while(tpolyhedra_domain.less_than(lower,upper))   
     {
-      template_domaint::row_valuet middle = 
-	      template_domain.between(lower,upper);
-      if(!template_domain.less_than(lower,middle)) middle = upper;
+      tpolyhedra_domaint::row_valuet middle = 
+	      tpolyhedra_domain.between(lower,upper);
+      if(!tpolyhedra_domain.less_than(lower,middle)) middle = upper;
 
       // row_symb_value >= middle
-      exprt c = template_domain.get_row_symb_value_constraint(row,middle);
+      exprt c = tpolyhedra_domain.get_row_symb_value_constraint(row,middle);
 
 #if 0
       debug() << "upper: " << from_expr(ns,"",upper) << eom;
@@ -225,11 +225,11 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 #endif
 	
 #if 0
-      for(unsigned i=0; i<template_domain.template_size(); i++) 
+      for(unsigned i=0; i<tpolyhedra_domain.template_size(); i++) 
       {
         debug() <<  
-          from_expr(ns, "", template_domain.get_row_symb_value(i)) << " " << 
-	  from_expr(ns, "", solver.get(template_domain.get_row_symb_value(i))) 
+          from_expr(ns, "", tpolyhedra_domain.get_row_symb_value(i)) << " " << 
+	  from_expr(ns, "", solver.get(tpolyhedra_domain.get_row_symb_value(i))) 
           << eom;
       }
 #endif
@@ -266,7 +266,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
         }
 #endif
 
-        if(!template_domain.less_than(middle,upper)) middle = lower;
+        if(!tpolyhedra_domain.less_than(middle,upper)) middle = lower;
 
 	upper = middle;
       }
@@ -279,7 +279,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 
     pop_context();  //symbolic value system
 
-    template_domain.set_row_value(row,lower,inv);
+    tpolyhedra_domain.set_row_value(row,lower,inv);
     improved = true;
   }
   else 

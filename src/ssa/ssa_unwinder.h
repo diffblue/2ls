@@ -12,7 +12,8 @@ Author: Peter Schrammel
 #include <util/message.h>
 
 #include "../ssa/local_ssa.h"
-
+#include "../summarizer/ssa_db.h"
+#if 0
 class ssa_unwindert : public messaget
 {
  public:
@@ -29,5 +30,101 @@ class ssa_unwindert : public messaget
   void rename(local_SSAt::nodet &node, unsigned index);
 
 };
+#else
+
+class ssa_local_unwindert : public messaget
+{
+  local_SSAt& SSA;
+  unsigned int current_unwinding;
+  class tree_loopnodet;
+  typedef std::list<tree_loopnodet> loop_nodest;
+  typedef std::map<irep_idt,local_SSAt::nodest::iterator> loopends_mapt;
+  bool loopless;
+  class tree_loopnodet
+  {
+  public:
+    local_SSAt::nodest body_nodes;
+    //local_SSAt::nodet::iterator loophead_node;
+    std::map<exprt,exprt> pre_post_exprs;
+#if 0
+    symbol_exprt entry_guard;
+    symbol_exprt exit_guard;
+    symbol_exprt cond_expr;
+#endif
+    loop_nodest loop_nodes;
+    loopends_mapt loopends_map;
+
+    tree_loopnodet(){}
+
+    void output(std::ostream& out,const namespacet& ns)
+    {
+
+
+      out << "Body nodes" << std::endl;
+      for(local_SSAt::nodest::iterator it=body_nodes.begin();
+	  it!=body_nodes.end();it++)
+      {
+	it->output(out,ns);
+      }
+      out << "Nested loop nodes" << std::endl;
+      for(loop_nodest::iterator it=loop_nodes.begin();
+	  it!=loop_nodes.end();it++)
+      {
+	it->output(out,ns);
+
+      }
+
+    }
+  };
+  tree_loopnodet root_node;
+
+  void unwind(tree_loopnodet& current_loop,
+	      std::string suffix,bool full,
+	      const unsigned int unwind_depth,symbol_exprt& new_sym,local_SSAt::nodest& new_ndoes);
+  void rename(local_SSAt::nodet& node,std::string suffix);
+  void rename(exprt &expr, std::string suffix);
+ // void init();
+  bool is_initialized;
+public :
+  void init();
+  void output(std::ostream& out)
+  {
+    //root_node.output(out,SSA.ns);
+    SSA.output(out);
+  }
+  //std::list<symbol_exprt> enabling_exprs;
+ssa_local_unwindert(local_SSAt& _SSA);
+  void unwind(const irep_idt& fname,unsigned int k);
+
+  void unwinder_rename(symbol_exprt &var,const local_SSAt::nodet &node, bool pre) const;
+};
+
+class ssa_unwindert	: public messaget
+{
+
+public:
+  typedef std::map<irep_idt,ssa_local_unwindert> unwinder_mapt;
+  typedef std::pair<irep_idt,ssa_local_unwindert> unwinder_pairt;
+
+  ssa_unwindert(ssa_dbt& _db);
+
+  void init();
+
+  void init_localunwinders();
+
+  void unwind(const irep_idt id,unsigned int k);
+
+  void unwind_all(unsigned int k);
+
+  ssa_local_unwindert &get(const irep_idt& fname) { return unwinder_map.at(fname); }
+
+  void output(std::ostream & out);
+protected:
+  ssa_dbt& ssa_db;
+  bool is_initialized;
+  unwinder_mapt unwinder_map;
+
+};
+#endif
 
 #endif

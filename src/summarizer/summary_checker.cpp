@@ -23,7 +23,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "../ssa/ssa_build_goto_trace.h"
 #include "../domains/ssa_analyzer.h"
 #include "../ssa/ssa_unwinder.h"
+#include <cstdlib>
 
+#include "show.h"
 
 #include "summary_checker.h"
 
@@ -46,33 +48,61 @@ property_checkert::resultt summary_checkert::operator()(
   bool preconditions = options.get_bool_option("preconditions");
 
   SSA_functions(goto_model,ns);
-  //loop
-  //  refine domain
-  //  loop from 0 to k do
-  //    unwind k
 
-  if(!options.get_bool_option("havoc")) 
-    summarize(goto_model,!preconditions,options.get_bool_option("sufficient"));
+  if(!options.get_bool_option("k-induction"))
+  {  
+    if(!options.get_bool_option("havoc")) 
+      summarize(goto_model,!preconditions,options.get_bool_option("sufficient"));
 
-  if(preconditions) 
-  {
-    report_preconditions();
-    return property_checkert::UNKNOWN;
+    if(preconditions) 
+    {
+      report_preconditions();
+      return property_checkert::UNKNOWN;
+    }
+
+    if(options.get_bool_option("termination")) 
+    {
+      property_checkert::resultt all_terminate = report_termination();
+      return all_terminate;
+    }
+
+    property_checkert::resultt result =  check_properties(); 
+    report_statistics();
+    return result;
   }
-
-  if(options.get_bool_option("termination")) 
+  else //k-induction
   {
-    property_checkert::resultt all_terminate = report_termination();
-    return all_terminate;
-  }
+    property_checkert::resultt result = property_checkert::UNKNOWN;
+    unsigned max_unwind = options.get_unsigned_int_option("unwind");
 
-  property_checkert::resultt result =  check_properties(); 
-  report_statistics();
-  return result;
-  //    if safe exit
-  //  done
-  //done
-  // return check_properties(goto_model);
+    //TODO (later): loop
+    //TODO (later):   refine domain
+    for(unsigned unwind = 0; unwind<=max_unwind; unwind++)
+    {
+      status() << "Unwinding (k=" << unwind << ")" << messaget::eom;
+      if(unwind>0) 
+      {
+        summary_db.clear();
+        ssa_unwinder.unwind_all(unwind+1);
+      }
+
+      if(!options.get_bool_option("havoc")) 
+        summarize(goto_model);
+
+      result =  check_properties(); 
+      report_statistics();
+      if(result == property_checkert::PASS) 
+      {
+        status() << "K-induction successful after " << unwind << " unwinding(s)" << messaget::eom;
+        break;
+      }
+      else if(unwind==0 && max_unwind>0) //TODO: unwind==2 => 1 (additional) unwinding
+      {
+        ssa_unwinder.init_localunwinders();
+      }
+    }
+    return result;
+  }
 }
 
 /*******************************************************************\
@@ -109,15 +139,21 @@ void summary_checkert::SSA_functions(const goto_modelt &goto_model,  const names
       ::simplify(SSA, ns);
     }
 
-    unsigned unwind = options.get_unsigned_int_option("unwind");
-    if(unwind>0)
-    {
-      status() << "Unwinding" << messaget::eom;
-      ssa_unwindert ssa_unwinder;
-      ssa_unwinder.unwind(SSA,unwind);
-    }
-
     SSA.output(debug()); debug() << eom;
+  }
+
+  ssa_unwinder.init();
+
+  unsigned unwind = options.get_unsigned_int_option("unwind");
+  if(!options.get_bool_option("k-induction") && unwind>0)
+  {
+    status() << "Unwinding" << messaget::eom;
+
+    ssa_unwinder.init_localunwinders();
+
+//    ssa_unwinder.unwind(f_it->first,unwind);
+    ssa_unwinder.unwind_all(unwind+1);
+    ssa_unwinder.output(debug()); debug() <<eom;
   }
 
 #if 0
@@ -144,16 +180,15 @@ Function: summary_checkert::summarize
 \*******************************************************************/
 
 void summary_checkert::summarize(const goto_modelt &goto_model, 
-				 bool backward, bool sufficient)
+				 bool forward, bool sufficient)
 {    
   summarizer.set_message_handler(get_message_handler());
 
   if(options.get_bool_option("context-sensitive"))
-    summarizer.summarize(ssa_db.functions(),
-			 goto_model.goto_functions.entry_point(),
-                         backward,sufficient);
+    summarizer.summarize(goto_model.goto_functions.entry_point(),
+                         forward,sufficient);
   else
-    summarizer.summarize(ssa_db.functions(),backward,sufficient);
+    summarizer.summarize(forward,sufficient);
 
   //statistics
   solver_instances += summarizer.get_number_of_solver_instances();
@@ -265,7 +300,14 @@ void summary_checkert::check_properties_non_incremental(
 
     // give negated property to solver
     solver << property;
-    
+
+#if 0   
+    //for future incremental usagae 
+    solver->set_assumptions(
+      strategy_solver_baset::convert_enabling_exprs(solver,SSA.enabling_exprs));
+#endif
+    solver << SSA.get_enabling_exprs();
+
     // solve
     switch(solver())
       {
@@ -349,6 +391,18 @@ void summary_checkert::check_properties_incremental(
   // give SSA to solver
   solver << SSA;
 
+#if 0   
+    //for future incremental usagae 
+    solver->set_assumptions(
+      strategy_solver_baset::convert_enabling_exprs(solver,SSA.enabling_exprs));
+#endif
+  exprt enabling_expr = SSA.get_enabling_exprs();
+  solver << enabling_expr;
+
+#if 0   
+  debug() << "(C) " << from_expr(SSA.ns,"",enabling_expr) << eom;
+#endif
+
   // Collect _all_ goals in `goal_map'.
   // This maps claim IDs to 'goalt'
   typedef std::map<irep_idt, goalt> goal_mapt;
@@ -417,6 +471,10 @@ void summary_checkert::check_properties_incremental(
       it++, g_it++)
   {
     property_map[it->first].result=g_it->covered?FAIL:PASS;
+    if(g_it->covered) 
+    {
+      show_error_trace(it->first,SSA,solver,debug(),get_message_handler());
+    }
   }
 
   //statistics

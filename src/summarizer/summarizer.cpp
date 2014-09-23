@@ -18,6 +18,9 @@ Author: Peter Schrammel
 #include "summary_db.h"
 
 #include "../domains/ssa_analyzer.h"
+#include "../domains/template_generator_summary.h"
+#include "../domains/template_generator_callingcontext.h"
+#include "../domains/template_generator_ranking.h"
 
 #include "../ssa/local_ssa.h"
 #include "../ssa/simplify_ssa.h"
@@ -79,13 +82,11 @@ Function: summarizert::summarize()
 
 \*******************************************************************/
 
-void summarizert::summarize(functionst &_functions, bool forward, 
-			    bool sufficient)
+void summarizert::summarize(bool forward, bool sufficient)
 {
-  initialize_preconditions(_functions,forward,sufficient);
-  functions = _functions;
-  for(functionst::const_iterator it = functions.begin(); 
-      it!=functions.end(); it++)
+  initialize_preconditions(ssa_db.functions(),forward,sufficient);
+  for(functionst::const_iterator it = ssa_db.functions().begin(); 
+      it!=ssa_db.functions().end(); it++)
   {
     status() << "\nSummarizing function " << it->first << eom;
     if(!summary_db.exists(it->first)) 
@@ -107,12 +108,10 @@ Function: summarizert::summarize()
 
 \*******************************************************************/
 
-void summarizert::summarize(functionst &_functions, 
-			    const function_namet &function_name,
+void summarizert::summarize(const function_namet &function_name,
                             bool forward, bool sufficient)
 {
-  initialize_preconditions(_functions,forward,sufficient);
-  functions = _functions;
+  initialize_preconditions(ssa_db.functions(),forward,sufficient);
 
   status() << "\nSummarizing function " << function_name << eom;
   if(!summary_db.exists(function_name)) 
@@ -123,8 +122,8 @@ void summarizert::summarize(functionst &_functions,
 	 " exists already" << eom;
 
   //adding preconditions to SSA for assertion check
-  for(functionst::const_iterator it = _functions.begin(); 
-      it!=_functions.end(); it++)
+  for(functionst::const_iterator it = ssa_db.functions().begin(); 
+      it!=ssa_db.functions().end(); it++)
   {
     if(it->second->nodes.empty()) continue;
     it->second->nodes.front().constraints.push_back(preconditions[it->first]);
@@ -148,7 +147,7 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
 				      bool forward,
 				      bool sufficient)
 {
-  local_SSAt &SSA = *functions[function_name]; 
+  local_SSAt &SSA = ssa_db.get(function_name); 
   
   bool calls_terminate = true;
   // recursively compute summaries for function calls
@@ -166,6 +165,7 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
     {
       if(!n->empty()) n->output(out,SSA.ns);
     }
+    out << "(enable) " << from_expr(SSA.ns, "", SSA.get_enabling_exprs()) << "\n";
     debug() << out.str() << eom;
   }
 
@@ -183,7 +183,10 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
   ssa_analyzert analyzer(SSA.ns, options);
   analyzer.set_message_handler(get_message_handler());
 
-  analyzer(SSA,preconditions[function_name],forward);
+  template_generator_summaryt template_generator(options,ssa_unwinder.get(function_name));
+  template_generator(SSA,forward);
+
+  analyzer(SSA,preconditions[function_name],template_generator);
 
   // create summary
   summaryt summary;
@@ -191,8 +194,8 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
   summary.globals_in = SSA.globals_in;
   summary.globals_out = SSA.globals_out;
   if(forward) summary.precondition = preconditions.at(function_name);
-  else analyzer.get_postcondition(summary.precondition);
-  analyzer.get_summary(summary.transformer);
+  else analyzer.get_result(summary.precondition,template_generator.out_vars());
+  analyzer.get_result(summary.transformer,template_generator.inout_vars());
 #ifdef PRECISE_JOIN
   summary.transformer = implies_exprt(summary.precondition,summary.transformer);
 #endif
@@ -206,11 +209,13 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
   // We simply use the last CFG node. It would be prettier to put
   // these close to the loops.
   exprt inv;
-  analyzer.get_loop_invariants(inv);
+  analyzer.get_result(inv,template_generator.loop_vars());
+  status() << "Adding loop invariant: " << from_expr(SSA.ns, "", inv) << eom;
+  // always do precise join here (otherwise we have to store the loop invariant
+  // in the summary and handle its updates like the transformer's
+  inv = implies_exprt(summary.precondition,inv);
   assert(SSA.nodes.begin()!=SSA.nodes.end());
   SSA.nodes.back().constraints.push_back(inv);
-
-  status() << "Adding loop invariant: " << from_expr(SSA.ns, "", inv) << eom;
 
   //check termination
   if(options.get_bool_option("termination"))
@@ -221,11 +226,14 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
       (has_loops ? "has loops" : " does not have loops") << eom;
     if(calls_terminate && has_loops) 
     {
+      template_generator_rankingt template_generator(options,ssa_unwinder.get(function_name));
+      template_generator(SSA,forward);
+
       ssa_analyzert analyzer1(SSA.ns, options);
       analyzer1.set_message_handler(get_message_handler());
       analyzer1.compute_ranking_functions = true;
-      analyzer1(SSA,preconditions[function_name],forward); //TODO: not sure about !forward
-      analyzer1.get_loop_invariants(summary.termination_argument);
+      analyzer1(SSA,preconditions[function_name],template_generator);
+      analyzer1.get_result(summary.termination_argument,template_generator.all_vars());
 
       //extract information whether there a ranking function was found for all loops
       summary.terminates = check_termination_argument(summary.termination_argument); 
@@ -432,7 +440,7 @@ bool summarizert::check_precondition(
       precondition_holds = false;
     }
   }
-  else if(functions.find(fname)==functions.end())
+  else if(!ssa_db.exists(fname))
   {
     status() << "Function " << fname << " not found" << eom;
     inliner.havoc(*n_it,f_it);
@@ -531,28 +539,24 @@ void summarizert::compute_precondition(
 
   ssa_analyzert analyzer(SSA.ns, options);
   analyzer.set_message_handler(get_message_handler());
-  analyzer.compute_calling_contexts = true;
+
+  template_generator_callingcontextt template_generator(options,ssa_unwinder.get(function_name));
+  template_generator(SSA,n_it,f_it,forward);
 
   // collect globals at call site
   std::map<local_SSAt::nodet::function_callst::iterator, local_SSAt::var_sett>
     cs_globals_in;
- 
-  SSA.get_globals(n_it->location,cs_globals_in[f_it]);
-  analyzer.calling_context_vars[f_it].insert(
-  SSA.globals_in.begin(),SSA.globals_in.end());
-
-  if(cs_globals_in.empty()) return; //nothing to do
+  if(forward) SSA.get_globals(n_it->location,cs_globals_in[f_it]);
+  else SSA.get_globals((++n_it)->location,cs_globals_in[f_it]);
 
   // analyze
-  analyzer(SSA,preconditions[function_name],forward);
-
-  ssa_analyzert::calling_contextst calling_contexts;
-  analyzer.get_calling_contexts(calling_contexts);
+  analyzer(SSA,preconditions[function_name],template_generator);
 
   // set preconditions
-  local_SSAt &fSSA = *functions[fname]; 
+  local_SSAt &fSSA = ssa_db.get(fname); 
 
-  preconditiont precondition = calling_contexts[f_it];
+  preconditiont precondition;
+  analyzer.get_result(precondition,template_generator.callingcontext_vars());
   inliner.rename_to_callee(f_it, fSSA.params,
 			     cs_globals_in[f_it],fSSA.globals_in,
 			     precondition);

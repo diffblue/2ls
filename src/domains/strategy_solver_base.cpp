@@ -57,3 +57,5 @@ void strategy_solver_baset::make_context_permanent()
 
   solver.set_assumptions(activation_literals);
 }
+
+

@@ -1211,6 +1211,7 @@ void local_SSAt::output(std::ostream &out) const
     n_it->output(out, ns);
     out << "\n";
   }
+  out << "(enable) " << from_expr(ns, "", get_enabling_exprs()) << "\n\n";
 }
 
 /*******************************************************************\
@@ -1379,3 +1380,28 @@ decision_proceduret & operator << (
   return dest;
 }
 
+/*******************************************************************\
+
+Function: local_SSAt::get_enabling_expr
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt local_SSAt::get_enabling_exprs() const
+{
+  exprt::operandst result;
+  result.reserve(enabling_exprs.size());
+  for(std::list<symbol_exprt>::const_iterator it = enabling_exprs.begin();
+      it != enabling_exprs.end(); ++it)
+  {
+    std::list<symbol_exprt>::const_iterator lh = it; lh++;
+    if(lh != enabling_exprs.end()) result.push_back(not_exprt(*it));
+    else result.push_back(*it);
+  }
+  return conjunction(result);
+}

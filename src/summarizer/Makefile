@@ -1,7 +1,7 @@
 include ../config.inc
 
 SRC = summarizer_main.cpp summarizer_parseoptions.cpp \
-      summary_checker.cpp show.cpp \
+      show.cpp summary_checker.cpp  \
       summary_db.cpp summarizer.cpp summary.cpp ssa_db.cpp \
       array_abstraction.cpp
 
@@ -39,15 +39,19 @@ DELTA_OBJ+=\
       ../functions/index$(OBJEXT) \
       ../domains/fixed_point$(OBJEXT) \
       ../domains/ssa_fixed_point$(OBJEXT) \
-      ../domains/template_domain$(OBJEXT) \
+      ../domains/tpolyhedra_domain$(OBJEXT) \
       ../domains/equality_domain$(OBJEXT) \
       ../domains/domain$(OBJEXT) \
       ../domains/strategy_solver_equality$(OBJEXT) \
       ../domains/strategy_solver_base$(OBJEXT) \
       ../domains/strategy_solver_enumeration$(OBJEXT) \
       ../domains/strategy_solver_binsearch$(OBJEXT) \
+      ../domains/template_generator_base$(OBJEXT) \
+      ../domains/template_generator_summary$(OBJEXT) \
+      ../domains/template_generator_callingcontext$(OBJEXT) \
       ../domains/ssa_analyzer$(OBJEXT) \
       ../domains/predicate$(OBJEXT) \
+      ../domains/template_generator_ranking$(OBJEXT) \
       ../domains/ranking_solver_enumeration$(OBJEXT) \
       ../domains/linrank_domain$(OBJEXT) \
       ../domains/lexlinrank_solver_enumeration$(OBJEXT) \

@@ -6,7 +6,8 @@
 #include <solvers/flattening/bv_pointers.h>
 
 #define DEBUG_FORMULA 
-#define MAXELEMENTS 5
+#define MAX_ELEMENTS 1
+#define MAX_INNER_ITERATIONS 20
 
 
 bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
@@ -116,7 +117,8 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
 
 	debug() << "inner solve()" << eom;
 
-	if(solver1() == decision_proceduret::D_SATISFIABLE && no_outer_refinements < MAXELEMENTS) 
+	if(solver1() == decision_proceduret::D_SATISFIABLE && 
+	   no_outer_refinements < MAX_INNER_ITERATIONS) 
 	{ 
 
 	  no_outer_refinements++;
@@ -161,7 +163,7 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
 	else {
 	  debug() << "(RANK) inner solver: UNSAT or reached max number of outer refinements" << eom;
 
-	  if (no_outer_refinements == MAXELEMENTS) {
+	  if (no_outer_refinements == MAX_INNER_ITERATIONS) {
 	    debug() << "(RANK) inner solver: reached max number of outer refinements" << eom;
 	    lexlinrank_domain.add_element(row, rank);
 	    no_outer_refinements = 0;
@@ -170,7 +172,7 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
 	  else {
 	    // UNSAT
 	    debug() << "inner solver: UNSAT" << eom;
-	    if(no_refinements_per_row[row] == MAXELEMENTS-1) {
+	    if(no_refinements_per_row[row] == MAX_ELEMENTS-1) {
 	      debug() << "(RANK) reached the max no of refinements and no ranking function was found" << eom;
 	      // no ranking function for the current template
 	      lexlinrank_domain.set_row_value_to_true(row, rank);
