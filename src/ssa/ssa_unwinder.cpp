@@ -508,7 +508,9 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
     //unwinding is done from bottom to top, so topmost unwinding
     // is special and is done after this loop
     if (i > 0) {
+
       local_SSAt::nodet node = *it; //copy
+      assert(node.assertions.empty()); //loophead must not have assertions!
       for (local_SSAt::nodet::equalitiest::iterator e_it =
 	     node.equalities.begin(); e_it != node.equalities.end(); e_it++) {
         if (e_it->rhs().id() != ID_if) {
@@ -559,6 +561,13 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
       local_SSAt::nodet new_node = (*it);
 
       rename(new_node, suffix + "%" + i2string(i));
+      if(i>0)
+      { //convert all assert to assumes for k-induction
+        //except the bottom most iteration
+        //later change it to use C++11 move semantics for efficiency
+      new_node.constraints = new_node.assertions;
+      new_node.assertions.clear();
+      }
       new_nodes.push_back(new_node);
     }
     if(i==0)
