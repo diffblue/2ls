@@ -217,7 +217,7 @@ summary_checkert::resultt summary_checkert::check_properties()
   
   for(property_mapt::const_iterator
       p_it=property_map.begin(); p_it!=property_map.end(); p_it++)
-    if(p_it->second.result==FAIL)
+    if(p_it->second.result!=PASS)
       return property_checkert::FAIL;
     
   return property_checkert::PASS;
@@ -263,6 +263,9 @@ void summary_checkert::check_properties_non_incremental(
     if(property_id=="") //TODO: some properties do not show up in initialize_property_map
       continue;     
 
+    //do not recheck properties that have already been decided
+    if(property_map[property_id].result!=UNKNOWN) continue; 
+
     property_map[property_id].location = i_it;
     
     exprt::operandst conjuncts;
@@ -303,12 +306,32 @@ void summary_checkert::check_properties_non_incremental(
 #endif
     solver << SSA.get_enabling_exprs();
 
+    //freeze loop head selects
+    for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
+        n_it != SSA.nodes.end(); n_it++)
+    {
+      if(n_it->loophead==SSA.nodes.end()) continue;
+      symbol_exprt lsguard = SSA.name(SSA.guard_symbol(), local_SSAt::LOOP_SELECT, n_it->location);
+      ssa_unwinder.get(f_it->first).unwinder_rename(lsguard,*n_it,true);
+      solver.set_frozen(solver.convert(lsguard));
+    }
+
     // solve
     switch(solver())
       {
-      case decision_proceduret::D_SATISFIABLE:
-	property_map[property_id].result=FAIL;
-	break;
+      case decision_proceduret::D_SATISFIABLE: 
+      {
+	bool spurious = is_spurious(f_it->first,SSA,solver) ;
+	debug() << "[" << property_id << "] is " << (spurious ? "" : "not") << " spurious" << eom;
+
+	property_map[property_id].result = spurious ? UNKNOWN : FAIL;
+
+	if(!spurious)
+	{
+	  show_error_trace(f_it->first,SSA,solver,debug(),get_message_handler());
+	}
+	break; 
+      }
       
       case decision_proceduret::D_UNSATISFIABLE:
 	property_map[property_id].result=PASS;
@@ -417,6 +440,9 @@ void summary_checkert::check_properties_incremental(
     const local_SSAt::nodet &node = *SSA.find_node(i_it);
 
     irep_idt property_id = location.get_property_id();
+
+    //do not recheck properties that have already been decided
+    if(property_map[property_id].result!=UNKNOWN) continue; 
 
     if(property_id=="") //TODO: some properties do not show up in initialize_property_map
       continue;     
@@ -564,5 +590,56 @@ void summary_checkert::report_preconditions()
     if(sufficient) precondition = not_exprt(precondition);
     result() << eom << "[" << it->first << "]: " 
 	     << from_expr(it->second->ns, "", precondition) << eom;
+  }
+}
+
+
+/*******************************************************************\
+
+Function: summary_checkert::is_spurious
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: checks whether a countermodel is spurious
+
+\*******************************************************************/
+
+bool summary_checkert::is_spurious(const irep_idt &function_name, const local_SSAt &SSA, prop_convt &solver)
+{
+  //check loop head choices in model
+  bool invariants_involved = false;
+  exprt::operandst loopselects;
+  for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
+        n_it != SSA.nodes.end(); n_it++)
+  {
+    if(n_it->loophead==SSA.nodes.end()) continue;
+    symbol_exprt lsguard = SSA.name(SSA.guard_symbol(), local_SSAt::LOOP_SELECT, n_it->location);
+    ssa_unwinder.get(function_name).unwinder_rename(lsguard,*n_it,true);
+    loopselects.push_back(not_exprt(lsguard));
+    if(solver.get(lsguard).is_true()) 
+    {
+      invariants_involved = true; 
+      break;
+    }
+  }
+  if(!invariants_involved) return false;
+  
+  solver << conjunction(loopselects);
+
+  switch(solver())
+  {
+  case decision_proceduret::D_SATISFIABLE:
+    return false;
+    break;
+      
+  case decision_proceduret::D_UNSATISFIABLE:
+    return true;
+    break;
+
+  case decision_proceduret::D_ERROR:    
+  default:
+    throw "error from decision procedure";
   }
 }

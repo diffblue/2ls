@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/time_stopping.h>
 
 #include <goto-programs/property_checker.h>
+#include <solvers/prop/prop_conv.h>
 
 #include "../ssa/local_ssa.h"
 #include "../ssa/ssa_unwinder.h"
@@ -68,6 +69,8 @@ protected:
   property_checkert::resultt check_properties();
   void check_properties_non_incremental(const summarizert::functionst::const_iterator f_it);
   void check_properties_incremental(const summarizert::functionst::const_iterator f_it);
+
+  bool is_spurious(const irep_idt &function_name, const local_SSAt &, prop_convt&);
 
   void report_preconditions();
 
