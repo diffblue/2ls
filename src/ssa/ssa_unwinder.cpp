@@ -551,7 +551,7 @@ void ssa_local_unwindert::rename(exprt &expr, std::string suffix,
        fsuffix = fsuffix.substr(0,pos);
 
     }
-        irep_idt id = id2string(vid) + suffix;
+        irep_idt id = id2string(vid) + fsuffix;
         sexpr.set_identifier(id);
         return;
   }
