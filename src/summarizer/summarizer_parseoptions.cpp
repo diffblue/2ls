@@ -211,6 +211,11 @@ void summarizer_parseoptionst::get_command_line_options(optionst &options)
       options.set_option("unwind",UINT_MAX);
   }
 
+  // check for spuriousness of assertion failures
+  if(cmdline.isset("no-spurious-check"))
+    options.set_option("spurious-check", false);
+  else
+    options.set_option("spurious-check", true);
   
 }
 
@@ -1235,6 +1240,7 @@ void summarizer_parseoptionst::help()
     "\n"
     "Backend options:\n"
     " --k-induction                use k-induction\n"
+    " --no-spurious-check          do not check spuriousness of failed assertions\n"
     " --preconditions              compute preconditions\n"
     " --sufficient                 sufficient preconditions (default: necessary)\n"
     " --context-sensitive          context-sensitive analysis from entry point\n"

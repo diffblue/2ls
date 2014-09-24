@@ -313,14 +313,17 @@ void summary_checkert::check_properties_non_incremental(
       {
       case decision_proceduret::D_SATISFIABLE: 
       {
-	bool spurious = is_spurious(loophead_selects,solver) ;
-	debug() << "[" << property_id << "] is " << (spurious ? "" : "not") << " spurious" << eom;
-
-	property_map[property_id].result = spurious ? UNKNOWN : FAIL;
-
-	if(!spurious)
+	if(options.get_bool_option("spurious-check"))
 	{
-	  show_error_trace(f_it->first,SSA,solver,debug(),get_message_handler());
+	  bool spurious = is_spurious(loophead_selects,solver) ;
+	  debug() << "[" << property_id << "] is " << (spurious ? "" : "not") << " spurious" << eom;
+
+	  property_map[property_id].result = spurious ? UNKNOWN : FAIL;
+
+	  if(!spurious)
+	  {
+	    show_error_trace(f_it->first,SSA,solver,debug(),get_message_handler());
+	  }
 	}
 	break; 
       }
@@ -376,7 +379,8 @@ void summary_checkert::check_properties_incremental(
   //freeze loop head selects
   exprt::operandst loophead_selects = get_loophead_selects(f_it->first,SSA,solver);
 
-  cover_goals_extt cover_goals(solver,loophead_selects,property_map);
+  cover_goals_extt cover_goals(solver,loophead_selects,property_map,
+			       options.get_bool_option("spurious-check"));
 
 #if 0   
     //for future incremental usagae 
@@ -641,6 +645,8 @@ Function: summary_checkert::cover_goals_extt::assignment
 
 void summary_checkert::cover_goals_extt::assignment()
 {
+  if(!spurious_check) return;
+
   //check loop head choices in model
   bool invariants_involved = false;
   for(exprt::operandst::const_iterator l_it = loophead_selects.begin();
@@ -664,6 +670,7 @@ void summary_checkert::cover_goals_extt::assignment()
 	property_map[it->first].result = FAIL;
       }
     }
+    return;
   }
 
   // force avoiding paths going through invariants

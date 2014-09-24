@@ -100,9 +100,11 @@ protected:
     public:
       explicit inline cover_goals_extt(prop_convt &_prop_conv,
 				       const exprt::operandst& _loophead_selects,
-	property_mapt &_property_map):
+				       property_mapt &_property_map,
+				       bool _spurious_check):
           cover_goalst(_prop_conv), 
           property_map(_property_map), 
+	  spurious_check(_spurious_check),
 	  loophead_selects(_loophead_selects),
 	  activation_literal_counter(0)
           {}
@@ -112,6 +114,7 @@ protected:
 
     protected:
       property_mapt &property_map;
+      bool spurious_check;
       exprt::operandst loophead_selects;
       unsigned activation_literal_counter;
 
