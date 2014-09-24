@@ -46,6 +46,7 @@ class ssa_local_unwindert : public messaget
     local_SSAt::nodest body_nodes;
     //local_SSAt::nodet::iterator loophead_node;
     std::map<exprt,exprt> pre_post_exprs;
+    std::set<irep_idt> vars_modified;
 #if 0
     symbol_exprt entry_guard;
     symbol_exprt exit_guard;
@@ -81,8 +82,14 @@ class ssa_local_unwindert : public messaget
   void unwind(tree_loopnodet& current_loop,
 	      std::string suffix,bool full,
 	      const unsigned int unwind_depth,symbol_exprt& new_sym,local_SSAt::nodest& new_ndoes);
-  void rename(local_SSAt::nodet& node,std::string suffix);
-  void rename(exprt &expr, std::string suffix);
+  void rename(local_SSAt::nodet& node,std::string suffix,
+      const int iteration,const tree_loopnodet& current_loop);
+  void rename(exprt &expr, std::string suffix,
+      const int iteration,const tree_loopnodet& current_loop);
+  bool need_renaming(const tree_loopnodet& current_loop,
+      const irep_idt& id);
+
+  irep_idt get_base_name(const irep_idt& id);
  // void init();
   bool is_initialized;
 public :

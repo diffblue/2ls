@@ -183,6 +183,24 @@ void ssa_unwindert::commit_nodes(local_SSAt::nodest &nodes,
 }
 
 #else
+/*****************************************************************************
+ *
+ *  Function : ssa_local_unwindert::get_base_name
+ *
+ *  Input : id - symbol name
+ *
+ *  Output : irep_id - a symbol name which is stripped off of all suffixes
+ *            beginnign with the first #
+ *
+ *****************************************************************************/
+irep_idt ssa_local_unwindert::get_base_name(const irep_idt& id)
+{
+  std::string s = id2string(id);
+  std::size_t pos = s.find("#");
+  if(pos==std::string::npos) {return id;}
+  std::string s1=s.substr(0,pos);
+  return irep_idt(s1);
+}
 /*****************************************************************************\
  *
  * Function : ssa_local_unwindert::ssa_local_unwindert
@@ -328,6 +346,10 @@ void ssa_local_unwindert::init() {
 
           if (p_it == phi_nodes.end())
             continue; // object not modified in this loop
+          //capture which variables are modified
+          //this will be used during renaming
+          current_node->vars_modified.insert(o_it->get_identifier());
+
 
           symbol_exprt pre = SSA.name(*o_it, local_SSAt::LOOP_BACK,
 				      n_it->location);
@@ -352,6 +374,7 @@ void ssa_local_unwindert::init() {
       new_current_node->loop_nodes.push_back(*current_node);
 
       delete current_node;
+
 
       current_node = new_current_node;
     } else {
@@ -401,33 +424,98 @@ void ssa_local_unwindert::unwind(const irep_idt& fname,unsigned int k) {
 
 
 }
-void ssa_local_unwindert::rename(exprt &expr, std::string suffix) {
+/*****************************************************************************\
+ *
+ *  Function : ssa_local_unwindert::need_renaming
+ *
+ *  Input : current_loop - the current context of renaming,
+ *             id - id to be renamed
+ *
+ *  Output : bool - If id needs to be renamed within current context
+ *
+ *  Purpose : If a symbol starts with "$cond" or "$guard" it will always have
+ *              to be renamed in the current context. If the variable
+ *              is modified in the current context (loop) then also it has to
+ *              be renamed
+ *
+ *****************************************************************************/
+bool ssa_local_unwindert::need_renaming(const tree_loopnodet& current_loop,
+    const irep_idt& id)
+{
+
+  irep_idt base_id = get_base_name(id);
+
+  std::string s = id2string(base_id);
+  if(s.find("$cond")!=std::string::npos) return true;
+  if(s.find("$guard")!=std::string::npos) return true;
+  if(current_loop.vars_modified.find(base_id)!=current_loop.vars_modified.end())
+    {return true;}
+  return false;
+}
+
+
+/*****************************************************************************\
+ *
+ *   Function : ssa_local_unwindert::rename
+ *
+ *   Input : expr - to be renamed, suffix - parent context,
+ *          iteration - iteration in the current context(loop), current_loop
+ *
+ *   Output :
+ *
+ *   Purpose : expr is renamed with iteration of the current_loop appended
+ *             if it is modified in the current_loop or if it starts
+ *             with "$cond" or "$guard". For all other cases,
+ *             only the parent context (suffix) is added to the expression
+ *
+ *             A negative iteration indicates that it must only get parent
+ *             suffix
+ *
+ *
+ *
+ *
+ *****************************************************************************/
+void ssa_local_unwindert::rename(exprt &expr, std::string suffix,
+    const int iteration,const tree_loopnodet& current_loop) {
   if (expr.id() == ID_symbol) {
     symbol_exprt &sexpr = to_symbol_expr(expr);
-    irep_idt id = id2string(sexpr.get_identifier()) + suffix;
+    irep_idt vid=sexpr.get_identifier();
+
+    if(iteration<0 || !need_renaming(current_loop,vid))
+    {
+
+    irep_idt id = id2string(vid) + suffix;
     sexpr.set_identifier(id);
+    }
+    else
+    {
+
+      irep_idt id=id2string(vid) + suffix + "%" + i2string(iteration);
+      sexpr.set_identifier(id);
+    }
   }
   for (exprt::operandst::iterator it = expr.operands().begin();
        it != expr.operands().end(); it++) {
-    rename(*it, suffix);
+    rename(*it, suffix,iteration,current_loop);
   }
 }
-void ssa_local_unwindert::rename(local_SSAt::nodet& node, std::string suffix) {
+void ssa_local_unwindert::rename(local_SSAt::nodet& node, std::string suffix,
+    const int iteration,const tree_loopnodet& current_loop) {
   for (local_SSAt::nodet::equalitiest::iterator e_it = node.equalities.begin();
        e_it != node.equalities.end(); e_it++) {
-    rename(*e_it, suffix);
+    rename(*e_it, suffix,iteration,current_loop);
   }
   for (local_SSAt::nodet::constraintst::iterator c_it =
 	 node.constraints.begin(); c_it != node.constraints.end(); c_it++) {
-    rename(*c_it, suffix);
+    rename(*c_it, suffix,iteration,current_loop);
   }
   for (local_SSAt::nodet::assertionst::iterator a_it = node.assertions.begin();
        a_it != node.assertions.end(); a_it++) {
-    rename(*a_it, suffix);
+    rename(*a_it, suffix,iteration,current_loop);
   }
   for (local_SSAt::nodet::function_callst::iterator f_it =
 	 node.function_calls.begin(); f_it != node.function_calls.end(); f_it++) {
-    rename(*f_it, suffix);
+    rename(*f_it, suffix,iteration,current_loop);
   }
 }
 /*****************************************************************************\
@@ -521,14 +609,14 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
             //guard at the end of the loop,
             //which should be used as reachability guard
             //from previous to current iteration
-            rename(e_it->lhs(), suffix + '%' + i2string(i - 1));
+            rename(e_it->lhs(), suffix, i-1,current_loop);
             exprt e = SSA.guard_symbol(
 	      current_loop.body_nodes.rbegin()->location);
-            rename(e, suffix + "%" + i2string(i));
+            rename(e, suffix, i,current_loop);
             e_it->rhs() = e;
 
           } else {
-            rename(*e_it, suffix + "%" + i2string(i - 1));
+            rename(*e_it, suffix, i-1,current_loop);
           }
           continue;
         }
@@ -538,7 +626,7 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
         if(i==0)
         {							//for the first iteration, take the input
 	  //coming from above
-          rename(e_it->lhs(),suffix+"%"+i2string(i));
+          rename(e_it->lhs(),suffix, i,current_loop);
           e_it->rhs() = e.false_case();
         }
         else
@@ -547,8 +635,8 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
           //for other iterations, take the loopback
           //value
           e_it->rhs() = current_loop.pre_post_exprs[e.true_case()];
-          rename(e_it->rhs(), suffix + "%" + i2string(i));
-          rename(e_it->lhs(), suffix + "%" + i2string(i - 1));
+          rename(e_it->rhs(), suffix, i,current_loop);
+          rename(e_it->lhs(), suffix, i-1,current_loop);
         }
       }
       new_nodes.push_back(node);
@@ -560,7 +648,7 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
       //copy the body node, rename and store in new_nodes
       local_SSAt::nodet new_node = (*it);
 
-      rename(new_node, suffix + "%" + i2string(i));
+      rename(new_node, suffix, i,current_loop);
       if(i>0)
       { //convert all assert to assumes for k-induction
         //except the bottom most iteration
@@ -598,10 +686,10 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
 
       if (e_it->rhs().id() == ID_if)
       {
-        rename(e_it->lhs(), suffix + "%" + i2string(unwind_depth - 1));
+        rename(e_it->lhs(), suffix, unwind_depth-1,current_loop);
         if_exprt &e = to_if_expr(e_it->rhs());
-	rename(e.cond(),suffix + "%" + i2string(unwind_depth - 1));
-	rename(e.true_case(),suffix + "%" + i2string(unwind_depth - 1));
+	rename(e.cond(),suffix, unwind_depth-1,current_loop);
+	rename(e.true_case(),suffix, unwind_depth-1,current_loop);
 
 #if 0
         //VERY DIRTY HACK, condition and true case at the topmost iteration
@@ -611,15 +699,15 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
         rename(e.cond(),suffix + "%" + i2string(0));
         rename(e.true_case(),suffix + "%" + i2string(0));
 #endif
-        rename(e.false_case(),suffix);
+        rename(e.false_case(),suffix,-1,current_loop);
       }
       else if  (SSA.guard_symbol(node.location) == e_it->lhs()) {
 
-        rename(e_it->lhs(), suffix + "%" + i2string(unwind_depth - 1));
-        rename(e_it->rhs(),suffix);
+        rename(e_it->lhs(), suffix, unwind_depth-1,current_loop);
+        rename(e_it->rhs(),suffix,-1,current_loop);
 
       } else {
-        rename(*e_it, suffix + "%" + i2string(unwind_depth - 1));
+        rename(*e_it, suffix, unwind_depth-1,current_loop);
       }
       node.enabling_expr = new_sym;
       //exprt e = implies_exprt(new_sym, *e_it);
@@ -658,22 +746,22 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
 	   node.equalities.begin(); e_it != node.equalities.end(); e_it++) {
       exprt e = e_it->lhs();
       exprt re = e;
-      rename(re, suffix + "%" + i2string(0));
+      rename(re, suffix, 0,current_loop);
       for (unsigned int i = 1; i < unwind_depth; i++) {
         exprt ce = cond_e;
-        rename(ce, suffix + "%" + i2string(i));
+        rename(ce, suffix, i,current_loop);
         exprt ge = guard_e;
-        rename(ge, suffix + "%" + i2string(i));
+        rename(ge, suffix, i,current_loop);
 
         exprt cond_expr = and_exprt(ce, ge);
         exprt true_expr = e;
-        rename(true_expr, suffix + "%" + i2string(i));
+        rename(true_expr, suffix,i,current_loop);
         exprt false_expr = re;
         re = if_exprt(cond_expr, true_expr, false_expr);
       }
 
       e_it->rhs() = re;
-      rename(e_it->lhs(),suffix);
+      rename(e_it->lhs(),suffix,-1,current_loop);
 
       node.enabling_expr = new_sym;
       //exprt ie = implies_exprt(new_sym, *e_it);
