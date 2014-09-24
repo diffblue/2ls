@@ -609,6 +609,8 @@ bool summary_checkert::is_spurious(const exprt::operandst &loophead_selects, pro
   // force avoiding paths going through invariants
   solver << conjunction(loophead_selects);
 
+  solver_calls++; //statistics
+
   switch(solver())
   {
   case decision_proceduret::D_SATISFIABLE:
@@ -700,5 +702,6 @@ void summary_checkert::cover_goals_extt::assignment()
   }
 
   prop_conv << literal_exprt(activation_literal);
- 
+
+  _iterations++; //statistics
 }
