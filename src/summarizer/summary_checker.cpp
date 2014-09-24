@@ -367,7 +367,7 @@ void summary_checkert::check_properties_incremental(
   // incremental version
 
   // solver
-  satcheckt satcheck;
+  satcheckt satcheck; //satcheck_minisat_no_simplifiert 
   bv_pointerst solver(SSA.ns, satcheck);
   
   satcheck.set_message_handler(get_message_handler());
@@ -580,6 +580,10 @@ exprt::operandst summary_checkert::get_loophead_selects(const irep_idt &function
     loophead_selects.push_back(not_exprt(lsguard));
     solver.set_frozen(solver.convert(lsguard));
   }
+  literalt loophead_selects_literal = solver.convert(conjunction(loophead_selects));
+  if(!loophead_selects_literal.is_constant())
+    solver.set_frozen(loophead_selects_literal);
+
   return loophead_selects;
 }
 
@@ -709,6 +713,8 @@ void summary_checkert::cover_goals_extt::assignment()
   }
 
   prop_conv << literal_exprt(activation_literal);
+  assumptions.resize(0);
+  prop_conv.set_assumptions(assumptions);
 
   _iterations++; //statistics
 }

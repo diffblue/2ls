@@ -33,7 +33,7 @@ class strategy_solver_baset : public messaget
     {
 
 #ifndef DEBUG_FORMULA
-#if 1
+#if 0
       std::cout << "program: " << from_expr(ns,"",*it) << std::endl;
 #endif
       solver << *it;
