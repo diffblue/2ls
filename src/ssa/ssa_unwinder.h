@@ -39,13 +39,16 @@ class ssa_local_unwindert : public messaget
   class tree_loopnodet;
   typedef std::list<tree_loopnodet> loop_nodest;
   typedef std::map<irep_idt,local_SSAt::nodest::iterator> loopends_mapt;
+  typedef std::map<irep_idt,int> modvar_levelt;
   bool loopless;
   class tree_loopnodet
   {
   public:
+    tree_loopnodet* parent;
     local_SSAt::nodest body_nodes;
     //local_SSAt::nodet::iterator loophead_node;
     std::map<exprt,exprt> pre_post_exprs;
+    modvar_levelt modvar_level;
     std::set<irep_idt> vars_modified;
 #if 0
     symbol_exprt entry_guard;
@@ -55,7 +58,7 @@ class ssa_local_unwindert : public messaget
     loop_nodest loop_nodes;
     loopends_mapt loopends_map;
 
-    tree_loopnodet(){}
+    tree_loopnodet(){parent=NULL;}
 
     void output(std::ostream& out,const namespacet& ns)
     {
@@ -83,10 +86,10 @@ class ssa_local_unwindert : public messaget
 	      std::string suffix,bool full,
 	      const unsigned int unwind_depth,symbol_exprt& new_sym,local_SSAt::nodest& new_ndoes);
   void rename(local_SSAt::nodet& node,std::string suffix,
-      const int iteration,const tree_loopnodet& current_loop);
+      const int iteration,tree_loopnodet& current_loop);
   void rename(exprt &expr, std::string suffix,
-      const int iteration,const tree_loopnodet& current_loop);
-  bool need_renaming(const tree_loopnodet& current_loop,
+      const int iteration,tree_loopnodet& current_loop);
+  int need_renaming(tree_loopnodet& current_loop,
       const irep_idt& id);
 
   irep_idt get_base_name(const irep_idt& id);

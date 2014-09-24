@@ -389,6 +389,28 @@ void ssa_local_unwindert::init() {
   SSA.nodes.clear();
   SSA.nodes.insert(SSA.nodes.begin(), root_node.body_nodes.begin(),
 		   root_node.body_nodes.end());
+
+  //pointers of tree_loopnodet are stable now and they must not be
+  //modified beyond this point. Now populate "parent" field of
+  //every node
+  std::list<tree_loopnodet*> worklist;
+  worklist.push_back(&root_node);
+  while(!worklist.empty())
+  {
+    tree_loopnodet* current_node = worklist.back();
+    worklist.pop_back();
+
+    if(current_node->loop_nodes.empty()) continue;
+    for(loop_nodest::iterator it=current_node->loop_nodes.begin();
+        it!=current_node->loop_nodes.end();it++)
+    {
+      it->parent = current_node;
+      worklist.push_back(&(*it));
+    }
+
+  }
+
+
   is_initialized=true;
 
 }
@@ -439,18 +461,36 @@ void ssa_local_unwindert::unwind(const irep_idt& fname,unsigned int k) {
  *              be renamed
  *
  *****************************************************************************/
-bool ssa_local_unwindert::need_renaming(const tree_loopnodet& current_loop,
+int ssa_local_unwindert::need_renaming(tree_loopnodet& current_loop,
     const irep_idt& id)
 {
 
-  irep_idt base_id = get_base_name(id);
+  //irep_idt base_id = get_base_name(id);
+modvar_levelt::iterator mit = current_loop.modvar_level.find(id);
+  if(mit!=current_loop.modvar_level.end())
+  {
+    return mit->second;
+  }
 
-  std::string s = id2string(base_id);
-  if(s.find("$cond")!=std::string::npos) return true;
-  if(s.find("$guard")!=std::string::npos) return true;
-  if(current_loop.vars_modified.find(base_id)!=current_loop.vars_modified.end())
-    {return true;}
-  return false;
+  //std::string s = id2string(base_id);
+ // if(s.find("$cond")!=std::string::npos) return true;
+ // if(s.find("$guard")!=std::string::npos) return true;
+  if(current_loop.vars_modified.find(id)!=current_loop.vars_modified.end())
+    {
+
+     current_loop.modvar_level[id]=0;
+     return 0;
+
+    }
+
+    if(current_loop.parent==NULL) {  current_loop.modvar_level[id]=-1; return -1;}
+    int mylevel = need_renaming(*current_loop.parent,id);
+    if(mylevel < 0) { current_loop.modvar_level[id]=-1; return -1;}
+    current_loop.modvar_level[id] = mylevel+1;
+    return mylevel+1;
+
+
+
 }
 
 
@@ -476,31 +516,53 @@ bool ssa_local_unwindert::need_renaming(const tree_loopnodet& current_loop,
  *
  *****************************************************************************/
 void ssa_local_unwindert::rename(exprt &expr, std::string suffix,
-    const int iteration,const tree_loopnodet& current_loop) {
+    const int iteration,tree_loopnodet& current_loop) {
   if (expr.id() == ID_symbol) {
     symbol_exprt &sexpr = to_symbol_expr(expr);
     irep_idt vid=sexpr.get_identifier();
+    irep_idt base_id = get_base_name(vid);
 
-    if(iteration<0 || !need_renaming(current_loop,vid))
+    int mylevel;
+    if(iteration<0)
     {
 
     irep_idt id = id2string(vid) + suffix;
     sexpr.set_identifier(id);
+    return;
     }
-    else
+
+    std::string s = id2string(base_id);
+    if(s.find("$guard")!=std::string::npos
+        || s.find("$cond")!=std::string::npos
+        || (mylevel = need_renaming(current_loop,base_id)) ==0)
     {
 
       irep_idt id=id2string(vid) + suffix + "%" + i2string(iteration);
       sexpr.set_identifier(id);
+      return;
     }
+    if(mylevel<0) return;
+
+    std::string fsuffix = suffix;
+    std::size_t pos;
+    for(unsigned int i=1;i<mylevel;i++)
+    {
+       pos = fsuffix.find_last_of("%");
+       fsuffix = fsuffix.substr(0,pos);
+
+    }
+        irep_idt id = id2string(vid) + suffix;
+        sexpr.set_identifier(id);
+        return;
   }
+
   for (exprt::operandst::iterator it = expr.operands().begin();
        it != expr.operands().end(); it++) {
     rename(*it, suffix,iteration,current_loop);
   }
 }
 void ssa_local_unwindert::rename(local_SSAt::nodet& node, std::string suffix,
-    const int iteration,const tree_loopnodet& current_loop) {
+    const int iteration,tree_loopnodet& current_loop) {
   for (local_SSAt::nodet::equalitiest::iterator e_it = node.equalities.begin();
        e_it != node.equalities.end(); e_it++) {
     rename(*e_it, suffix,iteration,current_loop);
