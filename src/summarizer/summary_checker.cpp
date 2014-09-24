@@ -15,7 +15,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <solvers/sat/satcheck.h>
 #include <solvers/flattening/bv_pointers.h>
-#include <solvers/prop/cover_goals.h>
 #include <solvers/prop/literal_expr.h>
 
 #include "../ssa/local_ssa.h"
@@ -307,21 +306,14 @@ void summary_checkert::check_properties_non_incremental(
     solver << SSA.get_enabling_exprs();
 
     //freeze loop head selects
-    for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
-        n_it != SSA.nodes.end(); n_it++)
-    {
-      if(n_it->loophead==SSA.nodes.end()) continue;
-      symbol_exprt lsguard = SSA.name(SSA.guard_symbol(), local_SSAt::LOOP_SELECT, n_it->location);
-      ssa_unwinder.get(f_it->first).unwinder_rename(lsguard,*n_it,true);
-      solver.set_frozen(solver.convert(lsguard));
-    }
+    exprt::operandst loophead_selects = get_loophead_selects(f_it->first,SSA,solver);
 
     // solve
     switch(solver())
       {
       case decision_proceduret::D_SATISFIABLE: 
       {
-	bool spurious = is_spurious(f_it->first,SSA,solver) ;
+	bool spurious = is_spurious(loophead_selects,solver) ;
 	debug() << "[" << property_id << "] is " << (spurious ? "" : "not") << " spurious" << eom;
 
 	property_map[property_id].result = spurious ? UNKNOWN : FAIL;
@@ -348,34 +340,6 @@ void summary_checkert::check_properties_non_incremental(
     solver_calls ++;;
   }
 } 
-
-/*******************************************************************\
-
-Function: summary_checkert::check_properties
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-struct goalt
-{
-  // a property holds if all instances of it are true
-  exprt::operandst conjuncts;
-  std::string description;
-
-  explicit goalt(const goto_programt::instructiont &instruction)
-  {
-    description=id2string(instruction.source_location.get_comment());
-  }
-  
-  goalt()
-  {
-  }
-};
 
 /*******************************************************************\
 
@@ -409,6 +373,11 @@ void summary_checkert::check_properties_incremental(
   // give SSA to solver
   solver << SSA;
 
+  //freeze loop head selects
+  exprt::operandst loophead_selects = get_loophead_selects(f_it->first,SSA,solver);
+
+  cover_goals_extt cover_goals(solver,loophead_selects,property_map);
+
 #if 0   
     //for future incremental usagae 
     solver->set_assumptions(
@@ -420,11 +389,6 @@ void summary_checkert::check_properties_incremental(
 #if 0   
   debug() << "(C) " << from_expr(SSA.ns,"",enabling_expr) << eom;
 #endif
-
-  // Collect _all_ goals in `goal_map'.
-  // This maps claim IDs to 'goalt'
-  typedef std::map<irep_idt, goalt> goal_mapt;
-  goal_mapt goal_map;
 
   const goto_programt &goto_program=SSA.goto_function.body;
 
@@ -463,15 +427,13 @@ void summary_checkert::check_properties_incremental(
 #endif
  
       property_map[property_id].location = i_it;
-      goal_map[property_id].conjuncts.push_back(property);
+      cover_goals.goal_map[property_id].conjuncts.push_back(property);
     }
   }
-  
-  cover_goalst cover_goals(solver);
-  
-  for(goal_mapt::const_iterator
-      it=goal_map.begin();
-      it!=goal_map.end();
+    
+  for(cover_goals_extt::goal_mapt::const_iterator
+      it=cover_goals.goal_map.begin();
+      it!=cover_goals.goal_map.end();
       it++)
   {
     // Our goal is to falsify a property.
@@ -486,16 +448,12 @@ void summary_checkert::check_properties_incremental(
 
   std::list<cover_goalst::cover_goalt>::const_iterator g_it=
     cover_goals.goals.begin();
-  for(goal_mapt::const_iterator
-      it=goal_map.begin();
-      it!=goal_map.end();
+  for(cover_goals_extt::goal_mapt::const_iterator
+      it=cover_goals.goal_map.begin();
+      it!=cover_goals.goal_map.end();
       it++, g_it++)
   {
-    property_map[it->first].result=g_it->covered?FAIL:PASS;
-    if(g_it->covered) 
-    {
-      show_error_trace(it->first,SSA,solver,debug(),get_message_handler());
-    }
+    if(!g_it->covered) property_map[it->first].result=PASS;
   }
 
   //statistics
@@ -593,6 +551,33 @@ void summary_checkert::report_preconditions()
   }
 }
 
+/*******************************************************************\
+
+Function: summary_checkert::is_spurious
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: checks whether a countermodel is spurious
+
+\*******************************************************************/
+
+exprt::operandst summary_checkert::get_loophead_selects(const irep_idt &function_name, 
+						       const local_SSAt &SSA, prop_convt &solver)
+{
+  exprt::operandst loophead_selects;
+  for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
+      n_it != SSA.nodes.end(); n_it++)
+  {
+    if(n_it->loophead==SSA.nodes.end()) continue;
+    symbol_exprt lsguard = SSA.name(SSA.guard_symbol(), local_SSAt::LOOP_SELECT, n_it->location);
+    ssa_unwinder.get(function_name).unwinder_rename(lsguard,*n_it,true);
+    loophead_selects.push_back(not_exprt(lsguard));
+    solver.set_frozen(solver.convert(lsguard));
+  }
+  return loophead_selects;
+}
 
 /*******************************************************************\
 
@@ -606,19 +591,14 @@ Function: summary_checkert::is_spurious
 
 \*******************************************************************/
 
-bool summary_checkert::is_spurious(const irep_idt &function_name, const local_SSAt &SSA, prop_convt &solver)
+bool summary_checkert::is_spurious(const exprt::operandst &loophead_selects, prop_convt &solver)
 {
   //check loop head choices in model
   bool invariants_involved = false;
-  exprt::operandst loopselects;
-  for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
-        n_it != SSA.nodes.end(); n_it++)
+  for(exprt::operandst::const_iterator l_it = loophead_selects.begin();
+        l_it != loophead_selects.end(); l_it++)
   {
-    if(n_it->loophead==SSA.nodes.end()) continue;
-    symbol_exprt lsguard = SSA.name(SSA.guard_symbol(), local_SSAt::LOOP_SELECT, n_it->location);
-    ssa_unwinder.get(function_name).unwinder_rename(lsguard,*n_it,true);
-    loopselects.push_back(not_exprt(lsguard));
-    if(solver.get(lsguard).is_true()) 
+    if(solver.get(l_it->op0()).is_true()) 
     {
       invariants_involved = true; 
       break;
@@ -626,7 +606,8 @@ bool summary_checkert::is_spurious(const irep_idt &function_name, const local_SS
   }
   if(!invariants_involved) return false;
   
-  solver << conjunction(loopselects);
+  // force avoiding paths going through invariants
+  solver << conjunction(loophead_selects);
 
   switch(solver())
   {
@@ -642,4 +623,82 @@ bool summary_checkert::is_spurious(const irep_idt &function_name, const local_SS
   default:
     throw "error from decision procedure";
   }
+}
+
+/*******************************************************************\
+
+Function: summary_checkert::cover_goals_extt::assignment
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: checks whether a countermodel is spurious
+
+\*******************************************************************/
+
+void summary_checkert::cover_goals_extt::assignment()
+{
+  //check loop head choices in model
+  bool invariants_involved = false;
+  for(exprt::operandst::const_iterator l_it = loophead_selects.begin();
+        l_it != loophead_selects.end(); l_it++)
+  {
+    if(prop_conv.get(l_it->op0()).is_true()) 
+    {
+      invariants_involved = true; 
+      break;
+    }
+  }
+  if(!invariants_involved) 
+  {
+    std::list<cover_goalst::cover_goalt>::const_iterator g_it=goals.begin();
+    for(goal_mapt::const_iterator it=goal_map.begin();
+	it!=goal_map.end(); it++, g_it++)
+    {
+      if(property_map[it->first].result==UNKNOWN &&
+	 prop_conv.l_get(g_it->condition).is_true())
+      {
+	property_map[it->first].result = FAIL;
+      }
+    }
+  }
+
+  // force avoiding paths going through invariants
+  literalt activation_literal = prop_conv.convert(
+      symbol_exprt("cover::\\act$"+
+      i2string(activation_literal_counter++), bool_typet()));
+
+  prop_conv << or_exprt(conjunction(loophead_selects),literal_exprt(activation_literal));
+  bvt assumptions;
+  assumptions.push_back(!activation_literal);
+  prop_conv.set_assumptions(assumptions);
+
+  switch(prop_conv())
+  {
+  case decision_proceduret::D_SATISFIABLE:
+  {
+    std::list<cover_goalst::cover_goalt>::const_iterator g_it=goals.begin();
+    for(goal_mapt::const_iterator it=goal_map.begin();
+	it!=goal_map.end(); it++, g_it++)
+    {
+      if(property_map[it->first].result==UNKNOWN &&
+	 prop_conv.l_get(g_it->condition).is_true())
+      {
+	property_map[it->first].result = FAIL;
+        //show_error_trace(it->first,SSA,solver,debug(),get_message_handler());
+      }
+    }
+    break;
+  } 
+  case decision_proceduret::D_UNSATISFIABLE:
+    break;
+
+  case decision_proceduret::D_ERROR:    
+  default:
+    throw "error from decision procedure";
+  }
+
+  prop_conv << literal_exprt(activation_literal);
+ 
 }

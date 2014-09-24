@@ -1,6 +1,6 @@
 CORE
 main.c
 --havoc --unwind 1
-^EXIT=1$
+^EXIT=10$
 ^SIGNAL=0$
-^[main.1] assertion x == 0: FAILURE$
+^.*FAILURE$

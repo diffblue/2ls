@@ -13,6 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <goto-programs/property_checker.h>
 #include <solvers/prop/prop_conv.h>
+#include <solvers/prop/cover_goals.h>
 
 #include "../ssa/local_ssa.h"
 #include "../ssa/ssa_unwinder.h"
@@ -70,9 +71,52 @@ protected:
   void check_properties_non_incremental(const summarizert::functionst::const_iterator f_it);
   void check_properties_incremental(const summarizert::functionst::const_iterator f_it);
 
-  bool is_spurious(const irep_idt &function_name, const local_SSAt &, prop_convt&);
+  exprt::operandst get_loophead_selects(const irep_idt &function_name, const local_SSAt &, prop_convt &);
+  bool is_spurious(const exprt::operandst& loophead_selects, prop_convt&);
 
   void report_preconditions();
+
+
+  //cover goals extended with spuriousness check
+
+  struct goalt
+  {
+    // a property holds if all instances of it are true
+    exprt::operandst conjuncts;
+    std::string description;
+
+    explicit goalt(const goto_programt::instructiont &instruction)
+      {
+	description=id2string(instruction.source_location.get_comment());
+      }
+  
+    goalt()
+      {
+      }
+  };
+
+  class cover_goals_extt : public cover_goalst
+  {
+    public:
+      explicit inline cover_goals_extt(prop_convt &_prop_conv,
+				       const exprt::operandst& _loophead_selects,
+	property_mapt &_property_map):
+          cover_goalst(_prop_conv), 
+          property_map(_property_map), 
+	  loophead_selects(_loophead_selects),
+	  activation_literal_counter(0)
+          {}
+
+      typedef std::map<irep_idt, goalt> goal_mapt;
+      goal_mapt goal_map;
+
+    protected:
+      property_mapt &property_map;
+      exprt::operandst loophead_selects;
+      unsigned activation_literal_counter;
+
+      virtual void assignment();
+  };
 
 };
 

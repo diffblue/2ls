@@ -1,6 +1,6 @@
 CORE
 main.c
 --havoc
-^EXIT=1$
+^EXIT=10$
 ^SIGNAL=0$
-^[main.1] assertion x == 0: UNKNOWN$
+^.*UNKNOWN$
