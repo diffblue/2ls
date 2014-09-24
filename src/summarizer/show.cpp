@@ -304,7 +304,7 @@ void show_error_trace(const irep_idt &property_id,
 		message_handlert &message_handler)
 
 {
-  out << "\n*** Abstract error trace for property " << property_id << "\n";  
+  out << "\n*** Error trace for property " << property_id << "\n";  
   for (local_SSAt::nodest::const_iterator n_it =
      SSA.nodes.begin(); n_it != SSA.nodes.end(); n_it++) 
   {

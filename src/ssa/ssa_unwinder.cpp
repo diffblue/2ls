@@ -621,10 +621,11 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
       } else {
         rename(*e_it, suffix + "%" + i2string(unwind_depth - 1));
       }
-      exprt e = implies_exprt(new_sym, *e_it);
-      node.constraints.push_back(e);
+      node.enabling_expr = new_sym;
+      //exprt e = implies_exprt(new_sym, *e_it);
+      //node.constraints.push_back(e);
     }
-    node.equalities.clear();
+    //node.equalities.clear();
     new_nodes.push_back(node);
 
 
@@ -674,11 +675,12 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
       e_it->rhs() = re;
       rename(e_it->lhs(),suffix);
 
-      exprt ie = implies_exprt(new_sym, *e_it);
-      node.constraints.push_back(ie);
+      node.enabling_expr = new_sym;
+      //exprt ie = implies_exprt(new_sym, *e_it);
+      //node.constraints.push_back(ie);
 
     }
-    node.equalities.clear();
+    //node.equalities.clear();
     new_nodes.push_back(node);
   }
 

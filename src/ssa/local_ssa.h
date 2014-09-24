@@ -47,10 +47,13 @@ public:
     inline nodet(
       locationt _location,
       std::list<nodet>::iterator _loophead) 
-      : location(_location), 
+      : enabling_expr(true_exprt()),
+        location(_location), 
         loophead(_loophead)
       { }
- 
+
+    exprt enabling_expr; //for incremental unwinding
+
     typedef std::vector<equal_exprt> equalitiest;
     equalitiest equalities;
 

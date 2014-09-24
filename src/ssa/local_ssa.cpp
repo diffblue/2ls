@@ -1230,6 +1230,8 @@ void local_SSAt::nodet::output(
   std::ostream &out,
   const namespacet &ns) const
 {
+  if(!enabling_expr.is_true()) 
+    out << "(enable) " << from_expr(ns, "", enabling_expr) << "\n";
   for(equalitiest::const_iterator
       e_it=equalities.begin();
       e_it!=equalities.end();
@@ -1326,7 +1328,10 @@ std::list<exprt> & operator << (
         e_it!=n_it->equalities.end();
         e_it++)
     {
-      dest.push_back(*e_it);
+      if(!n_it->enabling_expr.is_true()) 
+	dest.push_back(implies_exprt(n_it->enabling_expr,*e_it));
+      else
+        dest.push_back(*e_it);
     }
 
     for(local_SSAt::nodet::constraintst::const_iterator
@@ -1334,7 +1339,10 @@ std::list<exprt> & operator << (
         c_it!=n_it->constraints.end();
         c_it++)
     {
-      dest.push_back(*c_it);
+      if(!n_it->enabling_expr.is_true()) 
+	dest.push_back(implies_exprt(n_it->enabling_expr,*c_it));
+      else
+        dest.push_back(*c_it);
     }
   }
   
