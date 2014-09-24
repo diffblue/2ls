@@ -6,8 +6,8 @@
 #include <solvers/flattening/bv_pointers.h>
 
 #define DEBUG_FORMULA 
-#define MAX_ELEMENTS 1
-#define MAX_INNER_ITERATIONS 20
+#define MAX_ELEMENTS 2 // lexicographic components
+#define MAX_OUTER_ITERATIONS 20
 
 
 bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
@@ -16,18 +16,13 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
     static_cast<lexlinrank_domaint::templ_valuet &>(_rank);
 
   bool improved = false;
-  static std::vector<int> no_refinements_per_row;
-  no_refinements_per_row.resize(rank.size());
+  static std::vector<int> number_elements_per_row;
+  number_elements_per_row.resize(rank.size());
 
-  static int no_outer_refinements;
-  //no_outer_refinements = 0;
+  static int number_outer_iterations;
+  //number_outer_iterations = 0;
 
   debug() << "(RANK) no rows = " << rank.size() << eom;
-
-  // initialize no of refinements to 0
-  // for(unsigned i=0; i<no_refinements_per_row.size(); ++i)
-  //   no_refinements_per_row[i] = 0;
-
 
   // instantiate the "inner" solver
   satcheck_minisat_no_simplifiert satcheck1;
@@ -118,13 +113,13 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
 	debug() << "inner solve()" << eom;
 
 	if(solver1() == decision_proceduret::D_SATISFIABLE && 
-	   no_outer_refinements < MAX_INNER_ITERATIONS) 
+	   number_outer_iterations < MAX_OUTER_ITERATIONS) 
 	{ 
 
-	  no_outer_refinements++;
+	  number_outer_iterations++;
 	  
-	  debug() << "(RANK) inner solver: number of outer refinements = " << no_outer_refinements << eom;
-
+	  debug() << "(RANK) inner solver: number of outer refinements = " << number_outer_iterations << eom;
+	  debug() << "(RANK) inner solver: number of components for row " << row << " is " << number_outer_iterations << eom;
 	  debug() << "(RANK) inner solver: SAT" << eom;
 
 	  // new_row_values will contain the new values for c and d
@@ -163,27 +158,18 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
 	else {
 	  debug() << "(RANK) inner solver: UNSAT or reached max number of outer refinements" << eom;
 
-	  if (no_outer_refinements == MAX_INNER_ITERATIONS) {
-	    debug() << "(RANK) inner solver: reached max number of outer refinements" << eom;
-	    lexlinrank_domain.add_element(row, rank);
-	    no_outer_refinements = 0;
-	    improved = true;
+	  if(number_elements_per_row[row] == MAX_ELEMENTS-1) {
+	    debug() << "(RANK) reached the max no of refinements and no ranking function was found" << eom;
+	    // no ranking function for the current template
+	    lexlinrank_domain.set_row_value_to_true(row, rank);
 	  }
 	  else {
-	    // UNSAT
-	    debug() << "inner solver: UNSAT" << eom;
-	    if(no_refinements_per_row[row] == MAX_ELEMENTS-1) {
-	      debug() << "(RANK) reached the max no of refinements and no ranking function was found" << eom;
-	      // no ranking function for the current template
-	      lexlinrank_domain.set_row_value_to_true(row, rank);
-	    }
-	    else {
-	      no_refinements_per_row[row]++;
-	      debug() << "(RANK) increasing the no of refinements to " << no_refinements_per_row[row] << eom;
-	      lexlinrank_domain.add_element(row, rank);
-	      no_outer_refinements = 0;
-	      improved = true;
-	    }
+	    debug() << "(RANK) inner solver: reached max number of outer refinements" << eom;
+	    lexlinrank_domain.add_element(row, rank);
+	    number_outer_iterations = 0;
+	    number_elements_per_row[row]++;
+	    debug() << "(RANK) the no of refinements for row " << row << " was increased to " << number_elements_per_row[row] << eom;
+	    improved = true;
 	  }
 	}
       }
