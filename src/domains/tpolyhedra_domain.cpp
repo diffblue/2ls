@@ -820,7 +820,7 @@ void tpolyhedra_domaint::add_interval_template(const var_specst &var_specs,
   for(var_specst::const_iterator v = var_specs.begin(); 
       v!=var_specs.end(); v++)
   {
-    if(v->kind==IN) continue; //TODO: must be done in caller (for preconditions, e.g.)
+    if(v->kind==IN) continue; 
 
     // x
     {
@@ -867,7 +867,7 @@ void tpolyhedra_domaint::add_zone_template(const var_specst &var_specs,
   for(var_specst::const_iterator v1 = var_specs.begin(); 
       v1!=var_specs.end(); v1++)
   {
-    if(v1->kind!=IN) //TODO: must be done in caller (for preconditions, e.g.)
+    if(v1->kind!=IN)
     {
       // x
       {
@@ -896,7 +896,8 @@ void tpolyhedra_domaint::add_zone_template(const var_specst &var_specs,
     for(; v2!=var_specs.end(); v2++)
     {
       kindt k = domaint::merge_kinds(v1->kind,v2->kind);
-      if(k==IN) continue; //TODO: must be done in caller (for preconditions, e.g.)
+      if(k==IN) continue; 
+      if(k==LOOP && v1->pre_guard!=v2->pre_guard) continue; //TEST: we need better heuristics
 
       exprt pre_g = and_exprt(v1->pre_guard,v2->pre_guard);
       exprt post_g = and_exprt(v1->post_guard,v2->post_guard);
@@ -951,7 +952,7 @@ void tpolyhedra_domaint::add_octagon_template(const var_specst &var_specs,
   for(var_specst::const_iterator v1 = var_specs.begin(); 
       v1!=var_specs.end(); v1++)
   {
-    if(v1->kind!=IN) //TODO: must be done in caller (for preconditions, e.g.)
+    if(v1->kind!=IN) 
     {
       // x
       {
@@ -980,7 +981,8 @@ void tpolyhedra_domaint::add_octagon_template(const var_specst &var_specs,
     for(; v2!=var_specs.end(); v2++)
     {
       kindt k = domaint::merge_kinds(v1->kind,v2->kind);
-      if(k==IN) continue; //TODO: must be done in caller (for preconditions, e.g.)
+      if(k==IN) continue; 
+      if(k==LOOP && v1->pre_guard!=v2->pre_guard) continue; //TEST: we need better heuristics
 
       exprt pre_g = and_exprt(v1->pre_guard,v2->pre_guard);
       exprt post_g = and_exprt(v1->post_guard,v2->post_guard);
