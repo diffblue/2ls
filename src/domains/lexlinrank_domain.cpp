@@ -12,6 +12,9 @@
 
 #define EXTEND_TYPES
 
+#define COEFF_C_SIZE 2
+#define COEFF_D_SIZE 10
+
 void lexlinrank_domaint::initialize(valuet &value)
 {
   templ_valuet &v = static_cast<templ_valuet&>(value);
@@ -130,7 +133,7 @@ exprt lexlinrank_domaint::get_row_symb_constraint(lexlinrank_domaint::row_valuet
 
     symb_values[elm].d = 
       symbol_exprt(SYMB_BOUND_VAR+std::string("d!")+i2string(row)+std::string("$")+i2string(elm),
-		   signedbv_typet(32));
+		   signedbv_typet(COEFF_D_SIZE));
 
     exprt::operandst c;
     c.reserve(2 + symb_values.size() - (elm+1));
@@ -141,7 +144,7 @@ exprt lexlinrank_domaint::get_row_symb_constraint(lexlinrank_domaint::row_valuet
     {
       symb_values[elm].c[i] = 
        symbol_exprt(SYMB_BOUND_VAR+std::string("c!")+i2string(row)+"$"+i2string(elm)+"$"+i2string(i),
-		     signedbv_typet(32));
+		     signedbv_typet(COEFF_C_SIZE));
       sum_first = plus_exprt(sum_first, mult_exprt(symb_values[elm].c[i], values[i].first));
       sum_second = plus_exprt(sum_second, mult_exprt(symb_values[elm].c[i], values[i].second));
     }

@@ -1,5 +1,4 @@
 #include <iostream>
-
 #include <util/simplify_expr.h>
 #include "ranking_solver_enumeration.h"
 #include <solvers/sat/satcheck.h>
