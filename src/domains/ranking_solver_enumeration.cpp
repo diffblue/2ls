@@ -6,6 +6,8 @@
 #include <solvers/flattening/bv_pointers.h>
 #include <solvers/smt2/smt2_dec.h>
 
+#define MAX_OUTER_ITERATIONS 20
+
 //#define DEBUG_FORMULA 
 
 bool ranking_solver_enumerationt::iterate(invariantt &_rank)
@@ -19,6 +21,7 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
   satcheck_minisat_no_simplifiert satcheck1;
   bv_pointerst solver1(ns, satcheck1);
   //smt2_dect solver1(ns, "summarizer", "", "QF_BV", smt2_dect::Z3);
+  static int number_outer_iterations;
 
   //context for "outer" solver
   literalt activation_literal = new_context();
@@ -101,7 +104,8 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
 	debug() << "inner solve()" << eom;
 
 
-	if(solver1() == decision_proceduret::D_SATISFIABLE) 
+	if(solver1() == decision_proceduret::D_SATISFIABLE && 
+	   number_outer_iterations < MAX_OUTER_ITERATIONS) 
 	{ 
 
 	  debug() << "inner solver: SAT" << eom;

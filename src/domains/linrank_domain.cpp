@@ -12,6 +12,9 @@
 
 #define EXTEND_TYPES
 
+#define COEFF_C_SIZE 32
+#define COEFF_D_SIZE 32
+
 void linrank_domaint::initialize(valuet &value)
 {
 	templ_valuet &v = static_cast<templ_valuet&>(value);
@@ -80,13 +83,13 @@ exprt linrank_domaint::get_row_symb_constraint(linrank_domaint::row_valuet &symb
   symb_values.c.resize(values.size());
 
   symb_values.d = symbol_exprt(SYMB_BOUND_VAR+std::string("d!")+i2string(row), 
-			       signedbv_typet(32)); //coefficients are 32bit signed integers
+			       signedbv_typet(COEFF_D_SIZE)); //coefficients are signed integers
   exprt sum_first = symb_values.d;
   exprt sum_second = symb_values.d;
   for(unsigned i = 0; i < values.size(); ++i)
   {
     symb_values.c[i] = symbol_exprt(SYMB_BOUND_VAR+std::string("c!")+i2string(row)+"$"+i2string(i), 
-				    signedbv_typet(32));  //coefficients are 32bit signed integers
+				  signedbv_typet(COEFF_C_SIZE));  //coefficients are signed integers
     sum_first = plus_exprt(sum_first, mult_exprt(symb_values.c[i], values[i].first));
     sum_second = plus_exprt(sum_second, mult_exprt(symb_values.c[i], values[i].second));
   }
