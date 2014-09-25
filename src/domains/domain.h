@@ -38,6 +38,9 @@ public:
 
   virtual void initialize(valuet &value) { assert(false); }
 
+  //returns true as long as further refinements are possible
+  virtual bool refine() { return false; }
+
   // virtual exprt to_pre_constraints(const valuet &value) { assert(false); }
   // virtual void make_not_post_constraints(const valuet &value,
   //			   exprt::operandst &cond_exprs, 
