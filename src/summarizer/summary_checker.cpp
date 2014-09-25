@@ -306,7 +306,8 @@ void summary_checkert::check_properties_non_incremental(
     solver << SSA.get_enabling_exprs();
 
     //freeze loop head selects
-    exprt::operandst loophead_selects = get_loophead_selects(f_it->first,SSA,solver);
+    exprt::operandst loophead_selects = 
+      get_loophead_selects(f_it->first,SSA,solver);
 
     // solve
     switch(solver())
@@ -316,13 +317,15 @@ void summary_checkert::check_properties_non_incremental(
 	if(options.get_bool_option("spurious-check"))
 	{
 	  bool spurious = is_spurious(loophead_selects,solver) ;
-	  debug() << "[" << property_id << "] is " << (spurious ? "" : "not ") << "spurious" << eom;
+	  debug() << "[" << property_id << "] is " << 
+	    (spurious ? "" : "not ") << "spurious" << eom;
 
 	  property_map[property_id].result = spurious ? UNKNOWN : FAIL;
 
 	  if(!spurious)
 	  {
-	    show_error_trace(f_it->first,SSA,solver,debug(),get_message_handler());
+	    show_error_trace(f_it->first,SSA,solver,
+			     debug(),get_message_handler());
 	  }
 	}
 	break; 
@@ -567,8 +570,9 @@ Function: summary_checkert::is_spurious
 
 \*******************************************************************/
 
-exprt::operandst summary_checkert::get_loophead_selects(const irep_idt &function_name, 
-						       const local_SSAt &SSA, prop_convt &solver)
+exprt::operandst summary_checkert::get_loophead_selects(
+  const irep_idt &function_name, 
+  const local_SSAt &SSA, prop_convt &solver)
 {
   exprt::operandst loophead_selects;
   for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
@@ -583,6 +587,8 @@ exprt::operandst summary_checkert::get_loophead_selects(const irep_idt &function
   literalt loophead_selects_literal = solver.convert(conjunction(loophead_selects));
   if(!loophead_selects_literal.is_constant())
     solver.set_frozen(loophead_selects_literal);
+
+  //  std::cout << "loophead_selects: " << from_expr(SSA.ns,"",conjunction(loophead_selects)) << std::endl;
 
   return loophead_selects;
 }
@@ -599,7 +605,8 @@ Function: summary_checkert::is_spurious
 
 \*******************************************************************/
 
-bool summary_checkert::is_spurious(const exprt::operandst &loophead_selects, prop_convt &solver)
+bool summary_checkert::is_spurious(const exprt::operandst &loophead_selects, 
+				   prop_convt &solver)
 {
   //check loop head choices in model
   bool invariants_involved = false;

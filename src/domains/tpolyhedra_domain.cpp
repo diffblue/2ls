@@ -9,6 +9,8 @@
 
 #define SYMB_BOUND_VAR "symb_bound#"
 
+#define ENABLE_HEURISTICS
+
 /*******************************************************************\
 
 Function: tpolyhedra_domaint::initialize
@@ -50,12 +52,42 @@ tpolyhedra_domaint::row_valuet tpolyhedra_domaint::between(
   if(lower.type()==upper.type() && 
      (lower.type().id()==ID_signedbv || lower.type().id()==ID_unsignedbv))
   {
+    typet type = lower.type();
     mp_integer vlower, vupper;
     to_integer(lower, vlower);
     to_integer(upper, vupper);
     assert(vupper>=vlower);
     if(vlower+1==vupper) return from_integer(vlower,lower.type()); //floor
-    return from_integer((vupper+vlower)/2,lower.type());
+
+#ifdef ENABLE_HEURISTICS
+    //heuristics
+    if(type.id()==ID_unsignedbv && 
+       vlower<mp_integer(128) && 
+       vupper==to_unsignedbv_type(type).largest())
+    {
+      return from_integer(mp_integer(256),type);
+    }
+    if(type.id()==ID_signedbv)
+    { 
+      if(vlower==to_signedbv_type(type).smallest() && 
+	 vupper==to_signedbv_type(type).largest())
+      {
+        return from_integer(mp_integer(0),to_signedbv_type(type));
+      }
+      if((vlower>mp_integer(-128) && vlower<mp_integer(128))&& 
+	 vupper==to_signedbv_type(type).largest())
+      {
+        return from_integer(mp_integer(256),type);
+      }
+      if(vlower==to_signedbv_type(type).smallest() && 
+	 (vupper>mp_integer(-128) && vupper<mp_integer(128)))
+      {
+        return from_integer(mp_integer(-256),type);
+      }
+    }
+#endif
+
+    return from_integer((vupper+vlower)/2,type);
   }
   if(lower.type().id()==ID_floatbv && upper.type().id()==ID_floatbv)
   {
