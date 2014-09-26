@@ -8,12 +8,13 @@
 #include <util/simplify_expr.h>
 #include <langapi/languages.h>
 
-#define SYMB_BOUND_VAR "symb_coeff#"
+#define SYMB_COEFF_VAR "symb_coeff#"
 
 #define EXTEND_TYPES
+#define DIFFERENCE_ENCODING
 
-#define COEFF_C_SIZE 2
-#define COEFF_D_SIZE 10
+#define COEFF_C_SIZE 10
+#define MAX_REFINEMENT 2
 
 void lexlinrank_domaint::initialize(valuet &value)
 {
@@ -22,9 +23,16 @@ void lexlinrank_domaint::initialize(valuet &value)
   for(unsigned row = 0; row<templ.size(); row++)
   {
     v[row].resize(1);
-    v[row][0].d = false_exprt();
-    v[row][0].c.clear();
+    v[row][0].c.resize(1);
+    v[row][0].c[0] = false_exprt();
   }
+}
+
+bool lexlinrank_domaint::refine()
+{
+  if(refinement_level>=MAX_REFINEMENT) return false;
+  refinement_level++;
+  return true;
 }
 
 exprt lexlinrank_domaint::get_not_constraints(const lexlinrank_domaint::templ_valuet &value,
@@ -37,8 +45,6 @@ exprt lexlinrank_domaint::get_not_constraints(const lexlinrank_domaint::templ_va
   for(unsigned row = 0; row<templ.size(); row++)
   {
     value_exprs[row].insert(value_exprs[row].end(),templ[row].expr.begin(),templ[row].expr.end()); 
-
-    std::cout << "temp.expr.size: " << templ[row].expr.size() << std::endl;
 
     exprt::operandst elmts;
     elmts.reserve(value[row].size());
@@ -57,49 +63,89 @@ exprt lexlinrank_domaint::get_not_constraints(const lexlinrank_domaint::templ_va
       }
       else
       {
-        std::cout << "value[" << elm << "].c.size: " << value[row][elm].c.size() << std::endl;
-
         assert(value[row][elm].c.size()==templ[row].expr.size());
+        assert(value[row][elm].c.size()>=1);
 
         exprt::operandst c;
         c.reserve(2 + value[row].size() - (elm+1));
 
-        exprt sum_first = value[row][elm].d;
-        exprt sum_second = value[row][elm].d;
-        for(unsigned i = 0; i < value[row][elm].c.size(); ++i)
+#ifdef DIFFERENCE_ENCODING
+        exprt sum = mult_exprt(value[row][elm].c[0],
+            minus_exprt(templ[row].expr[0].first,
+                templ[row].expr[0].second));
+#else
+        exprt sum_pre = mult_exprt(value[row][elm].c[0],templ[row].expr[0].first);
+        exprt sum_post = mult_exprt(value[row][elm].c[0],templ[row].expr[0].second);
+#endif
+        for(unsigned i = 1; i < value[row][elm].c.size(); ++i)
         {
-          sum_first = plus_exprt(sum_first, mult_exprt(value[row][elm].c[i], templ[row].expr[i].first));
-          sum_second = plus_exprt(sum_second, mult_exprt(value[row][elm].c[i], templ[row].expr[i].second));
+#ifdef DIFFERENCE_ENCODING
+          sum = plus_exprt(sum, mult_exprt(value[row][elm].c[i],
+              minus_exprt(templ[row].expr[i].first,
+                  templ[row].expr[i].second)));
+#else
+          sum_pre = plus_exprt(sum_pre,
+              mult_exprt(value[row][elm].c[i],
+                  templ[row].expr[i].first));
+          sum_post = plus_exprt(sum_post,
+              mult_exprt(value[row][elm].c[i],
+                  templ[row].expr[i].second));
+#endif
         }
         //extend types
+#ifdef DIFFERENCE_ENCODING
 #ifdef EXTEND_TYPES
-        extend_expr_types(sum_first);
-        extend_expr_types(sum_second);
+      extend_expr_types(sum);
+#endif
+      exprt decreasing = binary_relation_exprt(sum, ID_gt,
+          from_integer(mp_integer(0),sum.type()));
+#else
+#ifdef EXTEND_TYPES
+      extend_expr_types(sum_pre);
+      extend_expr_types(sum_post);
+#endif
+      exprt decreasing = binary_relation_exprt(sum_pre, ID_gt,sum_post);
 #endif
 
-        // bounded
-        c.push_back( binary_relation_exprt(sum_first, ID_gt, from_integer(mp_integer(0),sum_first.type())) );
-        // decreasing
-        c.push_back( binary_relation_exprt(sum_first, ID_gt, sum_second) );
+        c.push_back(decreasing);
 
         for(unsigned elm2=elm+1; elm2<value[row].size(); ++elm2)
         {
-          // excluding d from the sums as it cancels itself
-          exprt sum_first2 = from_integer(mp_integer(0), value[row][elm2].d.type());
-          exprt sum_second2 = from_integer(mp_integer(0), value[row][elm2].d.type());
-          for(unsigned i = 0; i < value[row][elm2].c.size(); ++i)
+#ifdef DIFFERENCE_ENCODING
+          exprt sum2 = mult_exprt(value[row][elm2].c[0],
+              minus_exprt(templ[row].expr[0].first,
+                  templ[row].expr[0].second));
+#else
+          exprt sum_pre2 = mult_exprt(value[row][elm2].c[0],templ[row].expr[0].first);
+          exprt sum_post2 = mult_exprt(value[row][elm2].c[0],templ[row].expr[0].first);
+#endif
+          for(unsigned i = 1; i < value[row][elm2].c.size(); ++i)
           {
-            sum_first2 = plus_exprt(sum_first2, mult_exprt(value[row][elm2].c[i], templ[row].expr[i].first));
-            sum_second2 = plus_exprt(sum_second2, mult_exprt(value[row][elm2].c[i], templ[row].expr[i].second));
+#ifdef DIFFERENCE_ENCODING
+            sum2 = plus_exprt(sum2, mult_exprt(value[row][elm2].c[i],
+                minus_exprt(templ[row].expr[i].first,
+                    templ[row].expr[i].second)));
+#else
+            sum_pre2 = plus_exprt(sum_pre2, mult_exprt(value[row][elm2].c[i], templ[row].expr[i].first));
+            sum_post2 = plus_exprt(sum_post2, mult_exprt(value[row][elm2].c[i], templ[row].expr[i].second));
+#endif
           }
-          //extend types
+
+#ifdef DIFFERENCE_ENCODING
 #ifdef EXTEND_TYPES
-          extend_expr_types(sum_first2);
-          extend_expr_types(sum_second2);
+          extend_expr_types(sum2);
+#endif
+          exprt non_inc = binary_relation_exprt(sum2, ID_gt,
+              from_integer(mp_integer(0),sum2.type()));
+#else
+#ifdef EXTEND_TYPES
+          extend_expr_types(sum_pre2);
+          extend_expr_types(sum_post2);
+#endif
+          exprt non_inc = binary_relation_exprt(sum_pre2, ID_ge, sum_post2);
 #endif
 
-          // non-increasing
-          c.push_back( binary_relation_exprt(sum_first2, ID_ge, sum_second2) );
+          c.push_back(non_inc);
         }
 
         elmts.push_back(conjunction(c));
@@ -116,9 +162,10 @@ exprt lexlinrank_domaint::get_not_constraints(const lexlinrank_domaint::templ_va
   return disjunction(cond_exprs);
 }
 
-exprt lexlinrank_domaint::get_row_symb_constraint(lexlinrank_domaint::row_valuet &symb_values, // contains vars c and d
-					      const lexlinrank_domaint::rowt &row,
-					      lexlinrank_domaint::pre_post_valuest &values)
+exprt lexlinrank_domaint::get_row_symb_constraint(row_valuet &symb_values, // contains vars c and d
+					      const rowt &row,
+					      const pre_post_valuest &values,
+					      exprt &refinement_constraint)
 {
   // NOTE: I assume symb_values.size was set to the number of
   // desired elements in the lexicographic before calling this function
@@ -130,57 +177,141 @@ exprt lexlinrank_domaint::get_row_symb_constraint(lexlinrank_domaint::row_valuet
   for(int elm=symb_values.size()-1; elm>=0; --elm)
   {
     symb_values[elm].c.resize(values.size());
-
-    symb_values[elm].d = 
-      symbol_exprt(SYMB_BOUND_VAR+std::string("d!")+i2string(row)+std::string("$")+i2string(elm),
-		   signedbv_typet(COEFF_D_SIZE));
+    assert(values.size()>=1);
 
     exprt::operandst c;
     c.reserve(2 + symb_values.size() - (elm+1));
 
-    exprt sum_first = symb_values[elm].d;
-    exprt sum_second = symb_values[elm].d;
-    for(unsigned i = 0; i < values.size(); ++i)
-    {
-      symb_values[elm].c[i] = 
-       symbol_exprt(SYMB_BOUND_VAR+std::string("c!")+i2string(row)+"$"+i2string(elm)+"$"+i2string(i),
-		     signedbv_typet(COEFF_C_SIZE));
-      sum_first = plus_exprt(sum_first, mult_exprt(symb_values[elm].c[i], values[i].first));
-      sum_second = plus_exprt(sum_second, mult_exprt(symb_values[elm].c[i], values[i].second));
-    }
-    //extend types
-#ifdef EXTEND_TYPES
-    extend_expr_types(sum_first);
-    extend_expr_types(sum_second);
+    symb_values[elm].c[0] = symbol_exprt(SYMB_COEFF_VAR+std::string("c!")+
+         i2string(row)+"$"+i2string(elm)+"$0",
+         signedbv_typet(COEFF_C_SIZE));  //coefficients are signed integers
+
+#ifdef DIFFERENCE_ENCODING
+    exprt sum = mult_exprt(symb_values[elm].c[0],
+        minus_exprt(values[0].first, values[0].second));
+#else
+    exprt sum_pre = mult_exprt(symb_values[elm].c[0],values[0].first);
+    exprt sum_post = mult_exprt(symb_values[elm].c[0],values[0].second);
 #endif
 
-    // bounded
-    c.push_back( binary_relation_exprt(sum_first, ID_gt,
-         from_integer(mp_integer(0),sum_first.type())) );
-    // decreasing
-    c.push_back( binary_relation_exprt(sum_first, ID_gt, sum_second) );
+//    symb_values[elm].d =
+//      symbol_exprt(SYMB_BOUND_VAR+std::string("d!")+i2string(row)+std::string("$")+i2string(elm),
+//		   signedbv_typet(COEFF_D_SIZE));
+
+    for(unsigned i = 1; i < values.size(); ++i)
+    {
+      symb_values[elm].c[i] = 
+       symbol_exprt(SYMB_COEFF_VAR+std::string("c!")+i2string(row)+"$"+i2string(elm)+"$"+i2string(i),
+		     signedbv_typet(COEFF_C_SIZE));
+#ifdef DIFFERENCE_ENCODING
+      sum = plus_exprt(sum, mult_exprt(symb_values[elm].c[i],
+           minus_exprt(values[i].first, values[i].second)));
+#else
+      sum_pre = plus_exprt(sum_pre,
+           mult_exprt(symb_values[elm].c[i], values[i].first));
+      sum_post = plus_exprt(sum_post,
+           mult_exprt(symb_values[elm].c[i], values[i].second));
+#endif
+    }
+
+#ifdef DIFFERENCE_ENCODING
+#ifdef EXTEND_TYPES
+    extend_expr_types(sum);
+#endif
+    exprt decreasing = binary_relation_exprt(sum, ID_gt,
+        from_integer(mp_integer(0),sum.type()));
+#else
+#ifdef EXTEND_TYPES
+    extend_expr_types(sum_pre);
+    extend_expr_types(sum_post);
+#endif
+    exprt decreasing = binary_relation_exprt(sum_pre, ID_gt,sum_post);
+#endif
+
+    c.push_back(decreasing);
 
     for(unsigned elm2=elm+1; elm2<symb_values.size(); ++elm2)
     {
-      // excluding d from the sums as it cancels itself
-      exprt sum_first2 = from_integer(mp_integer(0), symb_values[elm2].d.type());
-      exprt sum_second2 = from_integer(mp_integer(0), symb_values[elm2].d.type());
-      for(unsigned i = 0; i < values.size(); ++i)
-      {
-        sum_first2 = plus_exprt(sum_first2, mult_exprt(symb_values[elm2].c[i], values[i].first));
-        sum_second2 = plus_exprt(sum_second2, mult_exprt(symb_values[elm2].c[i], values[i].second));
-      }
-      //extend types
-#ifdef EXTEND_TYPES
-      extend_expr_types(sum_first2);
-      extend_expr_types(sum_second2);
+#ifdef DIFFERENCE_ENCODING
+      exprt sum2 = mult_exprt(symb_values[elm2].c[0],
+          minus_exprt(values[0].first, values[0].second));
+#else
+      exprt sum_pre2 = mult_exprt(symb_values[elm2].c[0],values[0].first);
+      exprt sum_post2 = mult_exprt(symb_values[elm2].c[0],values[0].second);
 #endif
-      // non-increasing
-      c.push_back( binary_relation_exprt(sum_first2, ID_ge, sum_second2) );
+
+//    symb_values[elm].d =
+//      symbol_exprt(SYMB_BOUND_VAR+std::string("d!")+i2string(row)+std::string("$")+i2string(elm),
+//       signedbv_typet(COEFF_D_SIZE));
+
+      for(unsigned i = 1; i < values.size(); ++i)
+      {
+#ifdef DIFFERENCE_ENCODING
+        sum2 = plus_exprt(sum2, mult_exprt(symb_values[elm2].c[i],
+            minus_exprt(values[i].first, values[i].second)));
+#else
+        sum_pre2 = plus_exprt(sum_pre2,
+            mult_exprt(symb_values[elm2].c[i], values[i].first));
+        sum_post2 = plus_exprt(sum_post2,
+            mult_exprt(symb_values[elm2].c[i], values[i].second));
+#endif
+      }
+
+#ifdef DIFFERENCE_ENCODING
+#ifdef EXTEND_TYPES
+      extend_expr_types(sum2);
+#endif
+      exprt non_inc = binary_relation_exprt(sum2, ID_ge,
+          from_integer(mp_integer(0),sum.type()));
+#else
+#ifdef EXTEND_TYPES
+      extend_expr_types(sum_pre2);
+      extend_expr_types(sum_post2);
+#endif
+      exprt non_inc = binary_relation_exprt(sum_pre2, ID_ge,sum_post2);
+#endif
+      c.push_back(non_inc);
     }
 
     d.push_back(conjunction(c));
   }
+
+  exprt::operandst ref_constraints;
+#if 1
+  //refinement
+  if(refinement_level==0)
+  {
+    for(unsigned elm=0; elm<symb_values.size(); ++elm)
+    {
+      for(unsigned i = 0; i < values.size(); ++i)
+      {
+        ref_constraints.push_back(
+          binary_relation_exprt(symb_values[elm].c[i],ID_ge,
+      from_integer(mp_integer(-1),symb_values[elm].c[i].type())));
+        ref_constraints.push_back(
+          binary_relation_exprt(symb_values[elm].c[i],ID_le,
+      from_integer(mp_integer(1),symb_values[elm].c[i].type())));
+      }
+    }
+  }
+  else if(refinement_level==1)
+  {
+    for(unsigned elm=0; elm<symb_values.size(); ++elm)
+    {
+      for(unsigned i = 0; i < values.size(); ++i)
+      {
+        ref_constraints.push_back(
+          binary_relation_exprt(symb_values[elm].c[i],ID_ge,
+      from_integer(mp_integer(-10),symb_values[elm].c[i].type())));
+        ref_constraints.push_back(
+          binary_relation_exprt(symb_values[elm].c[i],ID_le,
+      from_integer(mp_integer(10),symb_values[elm].c[i].type())));
+      }
+    }
+  }
+#endif
+
+  refinement_constraint = conjunction(ref_constraints);
 
   return disjunction(d);
 }
@@ -204,7 +335,8 @@ void lexlinrank_domaint::set_row_value_to_true(const rowt &row, templ_valuet &va
 	assert(row<value.size());
 	assert(value.size()==templ.size());
 	value[row].resize(1);
-	value[row][0].d = true_exprt();
+	value[row][0].c.resize(1);
+	value[row][0].c[0] = true_exprt();
 }
 
 void lexlinrank_domaint::output_value(std::ostream &out, const valuet &value,
@@ -228,10 +360,11 @@ void lexlinrank_domaint::output_value(std::ostream &out, const valuet &value,
       out << "       ";
       for(unsigned i = 0; i<templ_row.expr.size(); ++i)
       {
+        if(i>0) out << " + ";
         out << from_expr(ns,"",v[row][elm].c[i]) << " * "
-            << from_expr(ns,"",templ_row.expr[i].first) << " + ";
+            << from_expr(ns,"",templ_row.expr[i].first);
       }
-      out << from_expr(ns,"",v[row][elm].d) << std::endl;
+      out << std::endl;
     }
   }
 }
@@ -253,48 +386,17 @@ void lexlinrank_domaint::output_domain(std::ostream &out, const namespacet &ns) 
 
     for(unsigned i = 0; i<templ_row.expr.size(); ++i)
     {
+      if(i>0) out << " + ";
       out << "c!" << row << "$" << i << " * "
-	  << from_expr(ns,"",templ_row.expr[i].first) << " + ";
+          << from_expr(ns,"",templ_row.expr[i].first);
     }
-    out << "d!" << row << std::endl;
+    out << std::endl;
   }
 }
 
 void lexlinrank_domaint::project_on_vars(valuet &value, const var_sett &vars, exprt &result)
 {
-//TODO: fix this
-#if 0
-	const templ_valuet &v = static_cast<const templ_valuet &>(value);
-	assert(v.size()==templ.size());
-	exprt::operandst c;
-	for(unsigned row = 0; row<templ.size(); row++)
-	{
-		const template_rowt &templ_row = templ[row];
-
-    //FIXME:
-		std::set<symbol_exprt> symbols;
-    for(unsigned i=0; i<templ_row.expr.size(); ++i)
-      find_symbols(templ_row.expr[i].first,symbols);
-
-		bool pure = true;
-		for(std::set<symbol_exprt>::iterator it = symbols.begin();
-					it != symbols.end(); it++)
-		{
-			if(vars.find(*it)==vars.end())
-			{
-				pure = false;
-				break;
-			}
-		}
-		if(!pure) continue;
-
-    //FIXME:
-    for(unsigned i=0; i<templ_row.expr.size(); ++i)
-      c.push_back(binary_relation_exprt(templ_row.expr[i].first,ID_le,v[row].c[i]));
-	}
-	result = conjunction(c);
-#endif
-
+  //don't do any projection
   const templ_valuet &v = static_cast<const templ_valuet &>(value);
   assert(v.size()==templ.size());
   exprt::operandst c;
@@ -323,54 +425,55 @@ void lexlinrank_domaint::project_on_vars(valuet &value, const var_sett &vars, ex
       }
       else
       {
-	exprt::operandst con;
-	con.reserve(2 + v[row].size() - (elm+1));
+        assert(v[row][elm].c.size()==templ[row].expr.size());
+        assert(v[row][elm].c.size()>=1);
 
-	exprt sum_first = v[row][elm].d;
-	exprt sum_second = v[row][elm].d;
-	for(unsigned i = 0; i < v[row][elm].c.size(); ++i)
-	{
-	  sum_first = plus_exprt(sum_first, mult_exprt(v[row][elm].c[i],
-						       templ[row].expr[i].first));
-	  sum_second = plus_exprt(sum_second, mult_exprt(v[row][elm].c[i],
-							 templ[row].expr[i].second));
-	}
+        exprt::operandst con;
+        con.reserve(2 + v[row].size() - (elm+1));
+
+        exprt sum = mult_exprt(v[row][elm].c[0],
+             minus_exprt(templ[row].expr[0].first,
+                 templ[row].expr[0].second));
+
+        for(unsigned i = 0; i < v[row][elm].c.size(); ++i)
+        {
+          sum = plus_exprt(sum, mult_exprt(v[row][elm].c[i],
+              minus_exprt(templ[row].expr[i].first,
+                  templ[row].expr[i].second)));
+        }
 	//extend types
 #ifdef EXTEND_TYPES
-	extend_expr_types(sum_first);
-	extend_expr_types(sum_second);
+        extend_expr_types(sum);
 #endif
-	// bounded
-	con.push_back( binary_relation_exprt(sum_first, ID_gt,
-					     from_integer(mp_integer(0), sum_first.type())) );
-	// decreasing
-	con.push_back( binary_relation_exprt(sum_first, ID_gt, sum_second) );
+        exprt decreasing = binary_relation_exprt(sum, ID_gt,
+            from_integer(mp_integer(0),sum.type()));
+        con.push_back(decreasing);
 
-	for(unsigned elm2=elm+1; elm2<v[row].size(); ++elm2)
-	{
-	  // excluding d from the sums as it cancels itself
-	  exprt sum_first2 = from_integer(mp_integer(0), v[row][elm2].d.type());
-	  exprt sum_second2 = from_integer(mp_integer(0), v[row][elm2].d.type());
-	  for(unsigned i = 0; i < v[row][elm2].c.size(); ++i)
-	  {
-	    sum_first2 = plus_exprt(sum_first2, mult_exprt(v[row][elm2].c[i],
-							   templ[row].expr[i].first));
-	    sum_second2 = plus_exprt(sum_second2, mult_exprt(v[row][elm2].c[i],
-							     templ[row].expr[i].second));
-	  }
+        for(unsigned elm2=elm+1; elm2<v[row].size(); ++elm2)
+        {
+          exprt sum2 = mult_exprt(v[row][elm2].c[0],
+             minus_exprt(templ[row].expr[0].first,
+                 templ[row].expr[0].second));
+
+          for(unsigned i = 0; i < v[row][elm2].c.size(); ++i)
+          {
+            sum2 = plus_exprt(sum2, mult_exprt(v[row][elm2].c[i],
+                          minus_exprt(templ[row].expr[i].first,
+                              templ[row].expr[i].second)));
+          }
 	  //extend types
 #ifdef EXTEND_TYPES
-	  extend_expr_types(sum_first2);
-	  extend_expr_types(sum_second2);
+          extend_expr_types(sum2);
 #endif
-	  // non-increasing
-	  con.push_back( binary_relation_exprt(sum_first2, ID_ge, sum_second2) );
-	}
+          exprt non_inc = binary_relation_exprt(sum2, ID_ge,
+	              from_integer(mp_integer(0),sum.type()));
+          con.push_back(non_inc);
+        }
 
-	elmnts.push_back(
-	  implies_exprt(
-	    and_exprt(templ[row].pre_guard, templ[row].post_guard),
-	    conjunction(con)) );
+        elmnts.push_back(
+          implies_exprt(
+            and_exprt(templ[row].pre_guard, templ[row].post_guard),
+            conjunction(con)) );
       }
 
       c.push_back(disjunction(elmnts));
@@ -449,7 +552,8 @@ bool lexlinrank_domaint::is_row_value_false(const row_valuet & row_value) const
 
 bool lexlinrank_domaint::is_row_element_value_false(const row_value_elementt & row_value_element) const
 {
-  return row_value_element.d.get(ID_value) == ID_false;
+  assert(row_value_element.c.size()>=1);
+  return row_value_element.c[0].get(ID_value)==ID_false;
 }
 
 /*******************************************************************\
@@ -472,7 +576,8 @@ bool lexlinrank_domaint::is_row_value_true(const row_valuet & row_value) const
 
 bool lexlinrank_domaint::is_row_element_value_true(const row_value_elementt & row_value_element) const
 {
-  return row_value_element.d.get(ID_value) == ID_true;
+  assert(row_value_element.c.size()>=1);
+  return row_value_element.c[0].get(ID_value)==ID_true;
 }
 
 /*******************************************************************\
@@ -492,7 +597,7 @@ void lexlinrank_domaint::add_element(const rowt &row, templ_valuet &value)
   value[row].push_back(row_value_elementt());
   for(unsigned i=0; i<value[row].size(); i++)
   {
-    value[row][i].c.clear();
-    value[row][i].d = false_exprt();
+    value[row][i].c.resize(1);
+    value[row][i].c[0] = false_exprt();
   }
 }
