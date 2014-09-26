@@ -307,16 +307,17 @@ void pretty_print_termination_argument(std::ostream &out, const namespacet &ns, 
         out << from_expr(ns,"",it->op0()) << " ==> ";
         if(it->op1().id()==ID_gt)
           out << from_expr(ns,"",it->op1().op0());
-        // TODO: should the ID_and in the following line be ID_or?
-        else if(it->op1().id()==ID_and) // needed for lexicographic ones
+        else if(it->op1().id()==ID_or) // needed for lexicographic ones
         {
           for(exprt::operandst::const_iterator it_lex = it->op1().operands().begin();
               it_lex != it->op1().operands().end(); it_lex++)
           {
+            assert(it_lex->id() == ID_and);
+
             if(it_lex == it->op1().operands().begin()) out << "(";
             else out << std::endl << "   " << "     " << ",";
             //TODO: print something nicer
-            out << from_expr(ns,"",*it_lex);
+            out << from_expr(ns,"",it_lex->op0());
           }
           out << ")";
         }

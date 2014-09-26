@@ -67,7 +67,7 @@ exprt lexlinrank_domaint::get_not_constraints(const lexlinrank_domaint::templ_va
         assert(value[row][elm].c.size()>=1);
 
         exprt::operandst c;
-        c.reserve(2 + value[row].size() - (elm+1));
+        c.reserve(1 + value[row].size() - (elm+1));
 
 #ifdef DIFFERENCE_ENCODING
         exprt sum = mult_exprt(value[row][elm].c[0],
@@ -180,7 +180,7 @@ exprt lexlinrank_domaint::get_row_symb_constraint(row_valuet &symb_values, // co
     assert(values.size()>=1);
 
     exprt::operandst c;
-    c.reserve(2 + symb_values.size() - (elm+1));
+    c.reserve(1 + symb_values.size() - (elm+1));
 
     symb_values[elm].c[0] = symbol_exprt(SYMB_COEFF_VAR+std::string("c!")+
          i2string(row)+"$"+i2string(elm)+"$0",
@@ -399,37 +399,37 @@ void lexlinrank_domaint::project_on_vars(valuet &value, const var_sett &vars, ex
   //don't do any projection
   const templ_valuet &v = static_cast<const templ_valuet &>(value);
   assert(v.size()==templ.size());
-  exprt::operandst c;
+  exprt::operandst c; // c is the conjunction of all rows
   c.reserve(templ.size());
   for(unsigned row = 0; row<templ.size(); row++)
   {
     assert(templ[row].kind == LOOP);
 
-    exprt::operandst elmnts;
-    elmnts.reserve(v[row].size());
-    for(unsigned elm=0; elm<v[row].size(); ++elm)
+    if(is_row_element_value_false(v[row][0]))
     {
-      if(is_row_element_value_false(v[row][elm]))
-      {
-	//(g => false)
-	c.push_back(implies_exprt(
-		      and_exprt(templ[row].pre_guard, templ[row].post_guard),
-		      false_exprt()));
-      }
-      else if(is_row_element_value_true(v[row][elm]))
-      {
-	//(g => true)
-	c.push_back(implies_exprt(
-		      and_exprt(templ[row].pre_guard, templ[row].post_guard),
-		      true_exprt()));
-      }
-      else
+      //(g => false)
+      c.push_back(implies_exprt(
+        and_exprt(templ[row].pre_guard, templ[row].post_guard),
+        false_exprt()));
+    }
+    else if(is_row_element_value_true(v[row][0]))
+    {
+      //(g => true)
+      c.push_back(implies_exprt(
+        and_exprt(templ[row].pre_guard, templ[row].post_guard),
+        true_exprt()));
+    }
+    else
+    {
+      exprt::operandst d; // d is the disjunction of lexicographic elements
+      c.reserve(v[row].size());
+      for(unsigned elm=0; elm<v[row].size(); ++elm)
       {
         assert(v[row][elm].c.size()==templ[row].expr.size());
         assert(v[row][elm].c.size()>=1);
 
-        exprt::operandst con;
-        con.reserve(2 + v[row].size() - (elm+1));
+        exprt::operandst con; // con is the constraints for a single element of the lexicography
+        con.reserve(1 + v[row].size() - (elm+1));
 
         exprt sum = mult_exprt(v[row][elm].c[0],
              minus_exprt(templ[row].expr[0].first,
@@ -470,13 +470,13 @@ void lexlinrank_domaint::project_on_vars(valuet &value, const var_sett &vars, ex
           con.push_back(non_inc);
         }
 
-        elmnts.push_back(
-          implies_exprt(
-            and_exprt(templ[row].pre_guard, templ[row].post_guard),
-            conjunction(con)) );
+        d.push_back(conjunction(con));
       }
 
-      c.push_back(disjunction(elmnts));
+      c.push_back(
+        implies_exprt(
+          and_exprt(templ[row].pre_guard, templ[row].post_guard),
+          disjunction(d)) );
     }
   }
   result = conjunction(c);
