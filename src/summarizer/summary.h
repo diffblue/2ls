@@ -32,6 +32,7 @@ class summaryt
   
   predicatet precondition; //let's call it the caller-based summary
   predicatet transformer; // this is the callee-based summary
+  predicatet invariant; 
 
   void output(std::ostream &out, const namespacet &ns) const;
 

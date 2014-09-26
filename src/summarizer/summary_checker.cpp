@@ -294,6 +294,8 @@ void summary_checkert::check_properties_non_incremental(
     
     // give SSA to solver
     solver << SSA;
+    if(summary_db.exists(f_it->first))
+      solver << summary_db.get(f_it->first).invariant;
 
     // give negated property to solver
     solver << property;
@@ -378,6 +380,8 @@ void summary_checkert::check_properties_incremental(
     
   // give SSA to solver
   solver << SSA;
+  if(summary_db.exists(f_it->first))
+    solver << summary_db.get(f_it->first).invariant;
 
   //freeze loop head selects
   exprt::operandst loophead_selects = get_loophead_selects(f_it->first,SSA,solver);

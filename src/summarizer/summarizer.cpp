@@ -192,6 +192,8 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
   simplify_expr(summary.precondition, SSA.ns); //does not help
 #endif 
 
+  analyzer.get_result(summary.invariant,template_generator.loop_vars());
+
   {
     std::ostringstream out;
     out << std::endl << "Summary for function " << function_name << std::endl;
@@ -199,18 +201,6 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
     status() << out.str() << eom;
   }
   
-  // Add loop invariants as constraints back into SSA.
-  // We simply use the last CFG node. It would be prettier to put
-  // these close to the loops.
-  exprt inv;
-  analyzer.get_result(inv,template_generator.loop_vars());
-  status() << "Adding loop invariant: " << from_expr(SSA.ns, "", inv) << eom;
-  // always do precise join here (otherwise we have to store the loop invariant
-  // in the summary and handle its updates like the transformer's
-  inv = implies_exprt(summary.precondition,inv);
-  assert(SSA.nodes.begin()!=SSA.nodes.end());
-  SSA.nodes.back().constraints.push_back(inv);
-
   // store summary in db
   if(summary_db.exists(function_name)) 
   {
@@ -319,9 +309,13 @@ void summarizert::join_summaries(const summaryt &existing_summary,
 #ifdef PRECISE_JOIN
   new_summary.transformer = and_exprt(existing_summary.transformer,
     implies_exprt(new_summary.precondition,new_summary.transformer));
+  new_summary.invariant = and_exprt(existing_summary.invariant,
+    implies_exprt(new_summary.precondition,new_summary.invariant));
 #else
   new_summary.transformer = or_exprt(existing_summary.transformer,
     new_summary.transformer);
+  new_summary.invariant = or_exprt(existing_summary.invariant,
+    new_summary.invariant);
 #endif
 }
 
