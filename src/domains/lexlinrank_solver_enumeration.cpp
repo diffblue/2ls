@@ -119,7 +119,7 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
 	  number_outer_iterations++;
 	  
 	  debug() << "(RANK) inner solver: number of outer refinements = " << number_outer_iterations << eom;
-	  debug() << "(RANK) inner solver: number of components for row " << row << " is " << number_outer_iterations << eom;
+	  debug() << "(RANK) inner solver: number of components for row " << row << " is " << number_elements_per_row[row] << eom;
 	  debug() << "(RANK) inner solver: SAT" << eom;
 
 	  // new_row_values will contain the new values for c and d
