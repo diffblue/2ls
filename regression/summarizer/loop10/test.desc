@@ -1,6 +1,6 @@
-CORE
+KNOWNBUG
 main.c
---havoc --unwind 1
-^EXIT=10$
+
+^EXIT=0$
 ^SIGNAL=0$
-^.*FAILURE$
+^VERIFICATION SUCCESSFUL$

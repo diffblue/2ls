@@ -5,8 +5,10 @@ void main()
 
   while(y)
   {
+    int z;
+    y = z;
     ++x;
   }
 
-  assert(x==0); //should hold, but requires y==0 => x==0
+  assert(x==0);
 }

@@ -13,6 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "strategy_solver_base.h"
 #include "strategy_solver_enumeration.h"
+#include "solver_enumeration.h"
 #include "strategy_solver_binsearch.h"
 #include "strategy_solver_equality.h"
 #include "ssa_analyzer.h"

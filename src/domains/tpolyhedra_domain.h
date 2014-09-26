@@ -36,6 +36,8 @@ public:
   // initialize value
   virtual void initialize(valuet &value);
 
+  virtual void join(valuet &value1, const valuet &value2);
+
   // value -> constraints
   exprt get_row_constraint(const rowt &row, const row_valuet &row_value);
   exprt get_row_pre_constraint(const rowt &row, const row_valuet &row_value);

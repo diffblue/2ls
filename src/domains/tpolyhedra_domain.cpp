@@ -36,6 +36,36 @@ void tpolyhedra_domaint::initialize(valuet &value)
 
 /*******************************************************************\
 
+Function: tpolyhedra_domaint::join
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void tpolyhedra_domaint::join(valuet &value1, const valuet &value2)
+{
+  templ_valuet &v1 = static_cast<templ_valuet&>(value1);
+  const templ_valuet &v2 = static_cast<const templ_valuet&>(value2);
+  assert(v1.size()==templ.size());
+  assert(v1.size()==v2.size());
+  for(unsigned row = 0; row<templ.size(); row++)
+  {
+    if(is_row_value_inf(v1[row]) || is_row_value_inf(v2[row])) 
+      v1[row] = true_exprt();
+    else if(is_row_value_neginf(v1[row])) v1[row] = v2[row];
+    else if(!is_row_value_neginf(v2[row])) 
+    {
+      if(less_than(v1[row],v2[row])) v1[row] = v2[row];
+    }
+  }
+}
+
+/*******************************************************************\
+
 Function: tpolyhedra_domaint::between
 
   Inputs:
@@ -111,7 +141,7 @@ tpolyhedra_domaint::row_valuet tpolyhedra_domaint::between(
 
 /*******************************************************************\
 
-Function: tpolyhedra_domaint::leq
+Function: tpolyhedra_domaint::less_than
 
   Inputs:
 
