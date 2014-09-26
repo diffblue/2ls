@@ -7,6 +7,8 @@
 #include <solvers/flattening/bv_pointers.h>
 
 #include "domain.h"
+#include "util.h"
+
 
 //#define DEBUG_FORMULA
 
