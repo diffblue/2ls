@@ -1373,7 +1373,10 @@ decision_proceduret & operator << (
         e_it!=n_it->equalities.end();
         e_it++)
     {
-      dest << *e_it;
+      if(!n_it->enabling_expr.is_true()) 
+	dest << implies_exprt(n_it->enabling_expr,*e_it);
+      else
+        dest << *e_it;
     }
 
     for(local_SSAt::nodet::constraintst::const_iterator
@@ -1381,7 +1384,10 @@ decision_proceduret & operator << (
         c_it!=n_it->constraints.end();
         c_it++)
     {
-      dest << *c_it;
+      if(!n_it->enabling_expr.is_true()) 
+	dest << implies_exprt(n_it->enabling_expr,*c_it);
+      else
+        dest << *c_it;
     }
   }
   

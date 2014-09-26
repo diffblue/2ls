@@ -61,6 +61,7 @@ property_checkert::resultt summary_checkert::operator()(
 
     property_checkert::resultt result =  check_properties(); 
     report_statistics();
+    if(result==property_checkert::UNKNOWN) result = property_checkert::FAIL;
     return result;
   }
   else //k-induction
@@ -86,7 +87,12 @@ property_checkert::resultt summary_checkert::operator()(
       report_statistics();
       if(result == property_checkert::PASS) 
       {
-        status() << "K-induction successful after " << unwind << " unwinding(s)" << messaget::eom;
+        status() << "k-induction proof found after " << unwind << " unwinding(s)" << messaget::eom;
+        break;
+      }
+      else if(result == property_checkert::FAIL) 
+      {
+        status() << "k-induction counterexample found after " << unwind << " unwinding(s)" << messaget::eom;
         break;
       }
       else if(unwind==0 && max_unwind>0) //TODO: unwind==2 => 1 (additional) unwinding
@@ -214,12 +220,17 @@ summary_checkert::resultt summary_checkert::check_properties()
       check_properties_non_incremental(f_it);
   }
   
+  summary_checkert::resultt result = property_checkert::PASS;
   for(property_mapt::const_iterator
       p_it=property_map.begin(); p_it!=property_map.end(); p_it++)
-    if(p_it->second.result!=PASS)
+  {
+    if(p_it->second.result==FAIL)
       return property_checkert::FAIL;
+    if(p_it->second.result==UNKNOWN)
+      result = property_checkert::UNKNOWN;
+  }
     
-  return property_checkert::PASS;
+  return result;
 }
 
 /*******************************************************************\
