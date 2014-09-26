@@ -119,7 +119,7 @@ Function: local_SSAt::get_globals
 \*******************************************************************/
 
 void local_SSAt::get_globals(locationt loc, std::set<symbol_exprt> &globals, 
-			     bool with_own_returns, bool with_all_returns)
+			     bool with_own_returns, bool with_all_returns) const
 {
   {
     const std::set<ssa_objectt> &ssa_globals = assignments.ssa_objects.globals;

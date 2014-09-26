@@ -21,18 +21,14 @@ public:
   typedef strategy_solver_baset::constraintst constraintst;
   typedef strategy_solver_baset::var_listt var_listt;
 
-  explicit ssa_analyzert(const namespacet &_ns, 
-                         const optionst &_options)
+  explicit ssa_analyzert()
     : 
-    ns(_ns),
-    options(_options),
     solver_calls(0)
     {
     }  
 
     ~ssa_analyzert() 
     {
-      if(domain!=NULL) delete domain;
       if(result!=NULL) delete result;
     }
 
@@ -45,10 +41,7 @@ public:
   unsigned get_number_of_solver_calls() { return solver_calls; }
 
 protected:
-  const namespacet &ns;
-  const optionst &options;
-
-  domaint *domain;
+  domaint *domain; //template generator is responsable for the domain object
   domaint::valuet *result;
 
   //statistics

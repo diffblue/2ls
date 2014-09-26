@@ -7,8 +7,43 @@ Author: Peter Schrammel
 \*******************************************************************/
 
 #include "template_generator_callingcontext.h"
+#include "equality_domain.h"
+#include "tpolyhedra_domain.h"
 
 #include <util/find_symbols.h>
+
+/*******************************************************************\
+
+Function: template_generator_callingcontextt::operator()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void template_generator_callingcontextt::operator()(const local_SSAt &SSA,
+		  local_SSAt::nodest::const_iterator n_it,
+		  local_SSAt::nodet::function_callst::const_iterator f_it,
+			  bool forward)
+{
+  handle_special_functions(SSA); // we have to call that to prevent trouble!
+
+  collect_variables_loop(SSA,forward);
+  collect_variables_callingcontext(SSA,n_it,f_it,forward);
+
+  //get domain from command line options
+  instantiate_standard_domains(SSA);  
+
+#if 1
+  debug() << "Template variables: " << eom;
+  domaint::output_var_specs(debug(),var_specs,SSA.ns); debug() << eom;
+  debug() << "Template: " << eom;
+  domain_ptr->output_domain(debug(), SSA.ns); debug() << eom;
+#endif  
+}
 
 /*******************************************************************\
 
@@ -23,9 +58,9 @@ Function: template_generator_callingcontextt::collect_variables_callingcontext
 \*******************************************************************/
 
 void template_generator_callingcontextt::collect_variables_callingcontext(
-  local_SSAt &SSA,    
-  local_SSAt::nodest::iterator n_it,
-  local_SSAt::nodet::function_callst::iterator f_it,
+  const local_SSAt &SSA,    
+  local_SSAt::nodest::const_iterator n_it,
+  local_SSAt::nodet::function_callst::const_iterator f_it,
   bool forward)
 {
   exprt guard = SSA.guard_symbol(n_it->location);
@@ -38,7 +73,7 @@ void template_generator_callingcontextt::collect_variables_callingcontext(
   }
   else
   {
-    local_SSAt::nodest::iterator nnext = n_it; nnext++;
+    local_SSAt::nodest::const_iterator nnext = n_it; nnext++;
     SSA.get_globals(nnext->location,cs_globals_in,true,true); //with return values
   }
 

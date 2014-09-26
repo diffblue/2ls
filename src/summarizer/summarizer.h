@@ -21,7 +21,7 @@ Author: Peter Schrammel
 class summarizert : public messaget
 {
  public:
- summarizert(const optionst &_options, 
+ summarizert(optionst &_options, 
 	     summary_dbt &_summary_db,
              ssa_dbt &_ssa_db,
              ssa_unwindert &_ssa_unwinder) : 
@@ -51,7 +51,7 @@ class summarizert : public messaget
   unsigned get_number_of_summaries_used() { return summaries_used; }
 
  protected:
-  const optionst &options;
+  optionst &options;
   summary_dbt &summary_db;
   ssa_dbt &ssa_db;
   ssa_unwindert &ssa_unwinder;

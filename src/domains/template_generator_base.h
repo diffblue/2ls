@@ -21,7 +21,7 @@ class template_generator_baset : public messaget
 public:
   typedef strategy_solver_baset::var_listt var_listt;
 
-  explicit template_generator_baset(const optionst &_options,
+  explicit template_generator_baset(optionst &_options,
                                     ssa_local_unwindert &_ssa_local_unwinder)
     : 
   options(_options),
@@ -29,25 +29,34 @@ public:
   {
   }  
 
-  virtual void operator()(local_SSAt &SSA, bool forward=true) 
+  virtual ~template_generator_baset() 
+  {
+    if(domain_ptr!=NULL) delete domain_ptr;
+  }
+
+  virtual void operator()(const local_SSAt &SSA, bool forward=true) 
   { 
     assert(false);
   }
 
   virtual domaint::var_sett all_vars();
 
-  void filter_template_domain();
-  void filter_equality_domain();
+  domaint *domain() { return domain_ptr; }
 
   domaint::var_specst var_specs;
   replace_mapt renaming_map;
 
-protected:
-  const optionst &options;
-  const ssa_local_unwindert &ssa_local_unwinder;
+  optionst options; // we may override options
 
-  virtual void collect_variables_loop(local_SSAt &SSA,
+protected:
+  const ssa_local_unwindert &ssa_local_unwinder;
+  domaint* domain_ptr;
+
+  virtual void collect_variables_loop(const local_SSAt &SSA,
                          bool forward);
+
+  void filter_template_domain();
+  void filter_equality_domain();
 
   void add_var(const domaint::vart &var_to_add, 			    
 	       const domaint::guardt &pre_guard, 
@@ -69,6 +78,9 @@ protected:
 		const domaint::guardt &post_guard,
 		const domaint::kindt &kind,
 		domaint::var_specst &var_specs);
+
+  virtual void handle_special_functions(const local_SSAt &SSA);
+  void instantiate_standard_domains(const local_SSAt &SSA);
 
 };
 

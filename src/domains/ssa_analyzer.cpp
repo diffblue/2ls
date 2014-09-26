@@ -48,10 +48,6 @@ void ssa_analyzert::operator()(local_SSAt &SSA,
 {
   if(SSA.goto_function.body.instructions.empty())
     return;
-
-  // handle special functions
-  const irep_idt &function_id = SSA.goto_function.body.instructions.front().function;
-  bool is_initialize = (id2string(function_id)=="c::__CPROVER_initialize");
   
   // convert SSA to transition relation
   constraintst transition_relation;
@@ -62,91 +58,44 @@ void ssa_analyzert::operator()(local_SSAt &SSA,
 
   // add precondition (or conjunction of asssertion in backward analysis)
   transition_relation.push_back(precondition);
-
-#ifdef DEBUG
-  for(constraintst::const_iterator it = transition_relation.begin(); 
-    it != transition_relation.end(); it++)
-  {
-    std::set<symbol_exprt> symbols;
-    find_symbols(*it,symbols);
-
-    for(std::set<symbol_exprt>::const_iterator s_it = symbols.begin(); 
-      s_it != symbols.end(); s_it++)
-    {
-      if(renaming_map.find(*s_it)==renaming_map.end())
-      {
-        renaming_map[*s_it] = *s_it;  
-      }
-    }
-  }  
-#endif
   
   // solver
   //TODO: get backend solver from options
   satcheck_minisat_no_simplifiert satcheck;
-  bv_pointerst solver(ns, satcheck);
+  bv_pointerst solver(SSA.ns, satcheck);
+
+  domain = template_generator.domain();
 
   // get strategy solver from options
   strategy_solver_baset *strategy_solver;
-  if(options.get_bool_option("equalities") && !is_initialize)
+  if(template_generator.options.get_bool_option("equalities"))
   {
-    template_generator.filter_equality_domain();
-    domain = new equality_domaint(template_generator.renaming_map, template_generator.var_specs, ns);
     strategy_solver = new strategy_solver_equalityt(
         transition_relation, 
-        *static_cast<equality_domaint *>(domain), solver, ns);    
+        *static_cast<equality_domaint *>(domain), solver, SSA.ns);    
     result = new equality_domaint::equ_valuet();
   }
   else
   {
     result = new tpolyhedra_domaint::templ_valuet();
-    if(options.get_bool_option("enum-solver") || is_initialize)
+    if(template_generator.options.get_bool_option("enum-solver"))
     {
-      domain = new tpolyhedra_domaint(template_generator.renaming_map);
       strategy_solver = new strategy_solver_enumerationt(
         transition_relation, 
-        *static_cast<tpolyhedra_domaint *>(domain), solver, ns);
+        *static_cast<tpolyhedra_domaint *>(domain), solver, SSA.ns);
     }
-    else if(options.get_bool_option("binsearch-solver"))
+    else if(template_generator.options.get_bool_option("binsearch-solver"))
     {
-      domain = new tpolyhedra_domaint(template_generator.renaming_map);
       strategy_solver = new strategy_solver_binsearcht(
         transition_relation, 
-        *static_cast<tpolyhedra_domaint *>(domain), solver, ns);
+        *static_cast<tpolyhedra_domaint *>(domain), solver, SSA.ns);
     }
     else assert(false);
   }
 
-  //get domain from command line options
-  if(options.get_bool_option("intervals") || is_initialize)
-  {
-    template_generator.filter_template_domain();
-    static_cast<tpolyhedra_domaint *>(domain)->add_interval_template(
-      template_generator.var_specs, ns);
-  }
-  else if(options.get_bool_option("zones"))
-  {
-    template_generator.filter_template_domain();
-    static_cast<tpolyhedra_domaint *>(domain)->add_zone_template(
-      template_generator.var_specs, ns);
-  }
-  else if(options.get_bool_option("octagons"))
-  {
-    template_generator.filter_template_domain();
-    static_cast<tpolyhedra_domaint *>(domain)->add_octagon_template(
-      template_generator.var_specs, ns);
-  }
-
   strategy_solver->set_message_handler(get_message_handler());
 
-#if 1
-  debug() << "Template: " << eom;
-  domain->output_domain(debug(), ns); debug() << eom;
-#endif  
-
-
   unsigned iteration_number=0;
-
 
   // initialize inv
   domain->initialize(*result);
@@ -171,7 +120,7 @@ void ssa_analyzert::operator()(local_SSAt &SSA,
       #ifdef DEBUG
       std::cout << "Value after " << iteration_number
             << " iteration(s):\n";
-      domain->output_value(std::cout,*result,ns);
+      domain->output_value(std::cout,*result,SSA.ns);
       #endif
     }
   }
@@ -180,7 +129,7 @@ void ssa_analyzert::operator()(local_SSAt &SSA,
   #ifdef DEBUG
   std::cout << "Fixed-point after " << iteration_number
             << " iteration(s)\n";
-  domain->output_value(std::cout,*result,ns);
+  domain->output_value(std::cout,*result,SSA.ns);
   #endif
 
   //statistics

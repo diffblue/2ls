@@ -166,10 +166,11 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
   }
 
   //analyze
-  ssa_analyzert analyzer(SSA.ns, options);
+  ssa_analyzert analyzer;
   analyzer.set_message_handler(get_message_handler());
 
   template_generator_summaryt template_generator(options,ssa_unwinder.get(function_name));
+  template_generator.set_message_handler(get_message_handler());
   template_generator(SSA,forward);
 
   analyzer(SSA,preconditions[function_name],template_generator);
@@ -481,10 +482,11 @@ void summarizert::compute_precondition(
 
   status() << "Computing calling context for function " << fname << eom;
 
-  ssa_analyzert analyzer(SSA.ns, options);
+  ssa_analyzert analyzer;
   analyzer.set_message_handler(get_message_handler());
 
   template_generator_callingcontextt template_generator(options,ssa_unwinder.get(function_name));
+  template_generator.set_message_handler(get_message_handler());
   template_generator(SSA,n_it,f_it,forward);
 
   // collect globals at call site
