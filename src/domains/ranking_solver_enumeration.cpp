@@ -1,11 +1,9 @@
 #include <iostream>
 #include <util/simplify_expr.h>
 #include "ranking_solver_enumeration.h"
-#include <solvers/sat/satcheck.h>
-#include <solvers/flattening/bv_pointers.h>
 #include <solvers/smt2/smt2_dec.h>
 
-#define MAX_OUTER_ITERATIONS 20
+#define MAX_INNER_ITERATIONS 20
 
 //#define DEBUG_FORMULA 
 
@@ -16,13 +14,7 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
 
   bool improved = false;
 
-  // instantiate the "inner" solver
-  satcheck_minisat_no_simplifiert satcheck1;
-  bv_pointerst solver1(ns, satcheck1);
-  //smt2_dect solver1(ns, "summarizer", "", "QF_BV", smt2_dect::Z3);
-  static int number_outer_iterations;
-
-  //context for "outer" solver
+  //context for "inner" solver
   literalt activation_literal = new_context();
 
   //handles on values to retrieve from model
@@ -44,8 +36,6 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
     formula.push_back(l);
   }
 #endif
-
-
 
   rank_cond_literals.resize(rank_cond_exprs.size());
   
@@ -91,44 +81,50 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
 
 	linrank_domaint::row_valuet symb_values;
 	exprt constraint;
+	exprt refinement_constraint;
 
 	// generate the new constraint
-	constraint = linrank_domain.get_row_symb_constraint(symb_values, row, values);
+	constraint = linrank_domain.get_row_symb_constraint(symb_values, row, 
+							    values,refinement_constraint);
 	simplify_expr(constraint, ns);
 	debug() << "Inner Solver: " << row << " constraint " 
 		    << from_expr(ns,"", constraint) << eom;
 
-	solver1 << constraint;
+	inner_solver << constraint;
 
 	debug() << "inner solve()" << eom;
 
+        //set assumptions for refinement
+        bvt assumptions;
+        if(refinement_constraint.is_true()) assumptions.resize(0); //no assumptions
+        else
+	{
+          assumptions.resize(1);
+          assumptions[0] = inner_solver.convert(refinement_constraint);
+	}					
+        inner_solver.set_assumptions(assumptions);
 
-	if(solver1() == decision_proceduret::D_SATISFIABLE && 
-	   number_outer_iterations < MAX_OUTER_ITERATIONS) 
+        //solve
+	if(inner_solver() == decision_proceduret::D_SATISFIABLE && 
+	   number_inner_iterations < MAX_INNER_ITERATIONS) 
 	{ 
 
 	  debug() << "inner solver: SAT" << eom;
 
 	  std::vector<exprt> c = symb_values.c;
 
-	  // new_row_values will contain the new values for c and d
+	  // new_row_values will contain the new values for c 
 	  linrank_domaint::row_valuet new_row_values;
 
 	  // get the model for all c
 	  for(std::vector<exprt>::iterator it = c.begin(); it != c.end(); ++it) 
 	  {
-	    exprt v = solver1.get(*it);
+	    exprt v = inner_solver.get(*it);
 	    new_row_values.c.push_back(v);
 	    debug() << "Inner Solver: " << row << " c value for " 
 		    << from_expr(ns,"", *it) << ": " 
 		    << from_expr(ns,"", v)  << eom;
 	  }
-
-	  // get the model for d
-	  new_row_values.d = solver1.get(symb_values.d);
-	  debug() << "Inner Solver: " << row << " d value for " 
-		  << from_expr(ns,"", symb_values.d)<< ": " 
-		  << from_expr(ns,"", new_row_values.d)  << eom;
 
 	  // update the current template
 	  linrank_domain.set_row_value(row, new_row_values, rank);
@@ -137,10 +133,18 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
 	}
 	else 
 	{
-
 	  debug() << "inner solver: UNSAT" << eom;
-          // no ranking function for the current template
-	  linrank_domain.set_row_value_to_true(row, rank);
+
+	  if(linrank_domain.refine()) 
+	  {
+	    debug() << "refining..." << eom;
+	    improved = true; //refinement possible
+	  }
+	  else
+	  {
+            // no ranking function for the current template
+	    linrank_domain.set_row_value_to_true(row, rank);
+	  }
 	}
       }
     }

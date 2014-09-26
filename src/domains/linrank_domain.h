@@ -14,20 +14,12 @@ class linrank_domaint : public domaint
 {
 public:
   typedef unsigned rowt;
-  //typedef std::vector<std::pair<exprt::operandst,exprt::operandst> > pre_post_valuest;
   typedef std::vector<std::pair<exprt,exprt> > pre_post_valuest;
   typedef pre_post_valuest row_exprt;
   typedef struct
   {
     std::vector<exprt> c;
-    exprt d;
   } row_valuet;
-
-  /*  typedef struct
-  {
-    std::vector<symbol_exprt> c;
-    symbol_exprt d;
-    } row_symb_valuet; */
 
   class templ_valuet : public domaint::valuet, public std::vector<row_valuet> 
   {
@@ -43,22 +35,24 @@ public:
 
   typedef std::vector<template_rowt> templatet;
 
-
-
   linrank_domaint(replace_mapt &_renaming_map) :
-    domaint(_renaming_map)
+      domaint(_renaming_map),
+      refinement_level(0)
   {}
 
   // initialize value
   virtual void initialize(valuet &value);
 
+  virtual bool refine();
+
   // value -> constraints
   exprt get_not_constraints(const templ_valuet &value,
 			    exprt::operandst &cond_exprs,// identical to before 
 			    std::vector<pre_post_valuest> &value_exprs); // (x, x')
-  exprt get_row_symb_constraint(row_valuet &symb_values, // contains vars c and d
+  exprt get_row_symb_constraint(row_valuet &symb_values, // contains vars c
 			       const rowt &row,
-			       pre_post_valuest &values
+			       const pre_post_valuest &values,
+			       exprt &refinement_constraint
 			       );
 
 
@@ -82,6 +76,7 @@ public:
 
 protected:
   templatet templ;
+  unsigned refinement_level;
 
   bool is_row_value_false(const row_valuet & row_value) const;
   bool is_row_value_true(const row_valuet & row_value) const;

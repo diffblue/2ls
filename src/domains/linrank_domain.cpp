@@ -8,31 +8,44 @@
 #include <util/simplify_expr.h>
 #include <langapi/languages.h>
 
-#define SYMB_BOUND_VAR "symb_coeff#"
+#define SYMB_COEFF_VAR "symb_coeff#"
 
 #define EXTEND_TYPES
+#define DIFFERENCE_ENCODING
 
 #define COEFF_C_SIZE 32
-#define COEFF_D_SIZE 32
+#define MAX_REFINEMENT 1
 
 void linrank_domaint::initialize(valuet &value)
 {
-	templ_valuet &v = static_cast<templ_valuet&>(value);
-	v.resize(templ.size());
-	for(unsigned row = 0; row<templ.size(); row++)
-		v[row].d = false_exprt();
+  templ_valuet &v = static_cast<templ_valuet&>(value);
+  v.resize(templ.size());
+  for(unsigned row = 0; row<templ.size(); row++)
+  {
+    v[row].c.resize(1);
+    v[row].c[0] = false_exprt();
+  }
 }
 
-exprt linrank_domaint::get_not_constraints(const linrank_domaint::templ_valuet &value,
-			    exprt::operandst &cond_exprs,
-			std::vector<linrank_domaint::pre_post_valuest> &value_exprs)
+bool linrank_domaint::refine()
+{ 
+  if(refinement_level>=MAX_REFINEMENT) return false;
+  refinement_level++; 
+  return true;
+}
+
+exprt linrank_domaint::get_not_constraints(
+  const linrank_domaint::templ_valuet &value,
+  exprt::operandst &cond_exprs,
+  std::vector<linrank_domaint::pre_post_valuest> &value_exprs)
 {
   cond_exprs.resize(value.size());
   value_exprs.resize(value.size());
 
   for(unsigned row = 0; row<templ.size(); row++)
   {
-    value_exprs[row].insert(value_exprs[row].end(),templ[row].expr.begin(),templ[row].expr.end()); 
+    value_exprs[row].insert(value_exprs[row].end(),
+			    templ[row].expr.begin(),templ[row].expr.end()); 
 
     if(is_row_value_true(value[row]))
     {
@@ -47,63 +60,132 @@ exprt linrank_domaint::get_not_constraints(const linrank_domaint::templ_valuet &
     }
     else
     {
-      std::cout << "value.c.size: " << value[row].c.size() << std::endl;
-      std::cout << "temp.expr.size: " << templ[row].expr.size() << std::endl;
-
       assert(value[row].c.size()==templ[row].expr.size());
+      assert(value[row].c.size()>=1);
 
-      exprt sum_first = value[row].d;
-      exprt sum_second = value[row].d;
-      for(unsigned i = 0; i < value[row].c.size(); ++i)
-      {
-        sum_first = plus_exprt(sum_first, mult_exprt(value[row].c[i], templ[row].expr[i].first));
-        sum_second = plus_exprt(sum_second, mult_exprt(value[row].c[i], templ[row].expr[i].second));
-      }
-      //extend types
-#ifdef EXTEND_TYPES
-      extend_expr_types(sum_first);
-      extend_expr_types(sum_second);
+#ifdef DIFFERENCE_ENCODING
+      exprt sum = mult_exprt(value[row].c[0], 
+			     minus_exprt(templ[row].expr[0].first,
+					 templ[row].expr[0].second));
+#else
+      exprt sum_pre = mult_exprt(value[row].c[0],templ[row].expr[0].first);
+      exprt sum_post = mult_exprt(value[row].c[0],templ[row].expr[0].second);
 #endif
+      for(unsigned i = 1; i < value[row].c.size(); ++i)
+      {
+#ifdef DIFFERENCE_ENCODING
+        sum = plus_exprt(sum, mult_exprt(value[row].c[i], 
+					 minus_exprt(templ[row].expr[i].first,
+					 templ[row].expr[i].second)));
+#else
+	sum_pre = plus_exprt(sum_pre,
+			     mult_exprt(value[row].c[i],
+					templ[row].expr[i].first));
+	sum_post = plus_exprt(sum_post,
+			     mult_exprt(value[row].c[i],
+					templ[row].expr[i].second));
+#endif
+      }
 
-      exprt bounded = binary_relation_exprt(sum_first, ID_gt, from_integer(mp_integer(0),sum_first.type()));
-      exprt decreasing = binary_relation_exprt(sum_first, ID_gt, sum_second);
-
-      cond_exprs[row] = not_exprt(implies_exprt(and_exprt(templ[row].pre_guard, templ[row].post_guard),
-						and_exprt(bounded, decreasing)));
+#ifdef DIFFERENCE_ENCODING
+#ifdef EXTEND_TYPES
+      extend_expr_types(sum);
+#endif
+      exprt decreasing = binary_relation_exprt(sum, ID_gt, 
+	from_integer(mp_integer(0),sum.type()));
+#else
+#ifdef EXTEND_TYPES
+      extend_expr_types(sum_pre);
+      extend_expr_types(sum_post);
+#endif
+      exprt decreasing = binary_relation_exprt(sum_pre, ID_gt,sum_post);
+#endif
+      cond_exprs[row] = not_exprt(implies_exprt(
+			  and_exprt(templ[row].pre_guard, 
+				    templ[row].post_guard),
+                          decreasing));
     }
   }
 
   return disjunction(cond_exprs);
 }
 
-exprt linrank_domaint::get_row_symb_constraint(linrank_domaint::row_valuet &symb_values, // contains vars c and d
-					      const linrank_domaint::rowt &row,
-					      linrank_domaint::pre_post_valuest &values)
+exprt linrank_domaint::get_row_symb_constraint(
+  linrank_domaint::row_valuet &symb_values, // contains vars c
+  const linrank_domaint::rowt &row,
+  const pre_post_valuest &values,
+  exprt &refinement_constraint)
 {
   symb_values.c.resize(values.size());
+  assert(values.size()>=1);
+  symb_values.c[0] = symbol_exprt(SYMB_COEFF_VAR+std::string("c!")+
+		       i2string(row)+"$0",
+    signedbv_typet(COEFF_C_SIZE));  //coefficients are signed integers
 
-  symb_values.d = symbol_exprt(SYMB_BOUND_VAR+std::string("d!")+i2string(row), 
-			       signedbv_typet(COEFF_D_SIZE)); //coefficients are signed integers
-  exprt sum_first = symb_values.d;
-  exprt sum_second = symb_values.d;
-  for(unsigned i = 0; i < values.size(); ++i)
-  {
-    symb_values.c[i] = symbol_exprt(SYMB_BOUND_VAR+std::string("c!")+i2string(row)+"$"+i2string(i), 
-				  signedbv_typet(COEFF_C_SIZE));  //coefficients are signed integers
-    sum_first = plus_exprt(sum_first, mult_exprt(symb_values.c[i], values[i].first));
-    sum_second = plus_exprt(sum_second, mult_exprt(symb_values.c[i], values[i].second));
-  }
-  //extend types
+#ifdef DIFFERENCE_ENCODING
+      exprt sum = mult_exprt(symb_values.c[0], 
+			     minus_exprt(values[0].first,
+					 values[0].second));
+#else
+      exprt sum_pre = mult_exprt(symb_values.c[0],values[0].first);
+      exprt sum_post = mult_exprt(symb_values.c[0],values[0].second);
+#endif
+      for(unsigned i = 1; i < symb_values.c.size(); ++i)
+      {
+	symb_values.c[i] = symbol_exprt(
+          SYMB_COEFF_VAR+std::string("c!")+i2string(row)+"$"+i2string(i),
+           signedbv_typet(COEFF_C_SIZE));  //coefficients are signed integers
+#ifdef DIFFERENCE_ENCODING
+        sum = plus_exprt(sum, mult_exprt(symb_values.c[i], 
+					 minus_exprt(values[i].first,
+					 values[i].second)));
+#else
+	sum_pre = plus_exprt(sum_pre,
+			     mult_exprt(symb_values.c[i],
+					values[i].first));
+	sum_post = plus_exprt(sum_post,
+			     mult_exprt(symb_values.c[i],
+					values[i].second));
+#endif
+      }
+
+  exprt::operandst constraints;
+  exprt::operandst ref_constraints;
+
+#ifdef DIFFERENCE_ENCODING
 #ifdef EXTEND_TYPES
-  extend_expr_types(sum_first);
-  extend_expr_types(sum_second);
+      extend_expr_types(sum);
+#endif
+      exprt decreasing = binary_relation_exprt(sum, ID_gt, 
+	from_integer(mp_integer(0),sum.type()));
+#else
+#ifdef EXTEND_TYPES
+      extend_expr_types(sum_pre);
+      extend_expr_types(sum_post);
+#endif
+      exprt decreasing = binary_relation_exprt(sum_pre, ID_gt,sum_post);
 #endif
 
-  exprt bounded = binary_relation_exprt(sum_first, ID_gt, 
-       from_integer(mp_integer(0),sum_first.type()));
-  exprt decreasing = binary_relation_exprt(sum_first, ID_gt, sum_second);
+  constraints.push_back(decreasing);
 
-  return and_exprt(bounded, decreasing);
+#if 1
+  //refinement
+  if(refinement_level==0)
+  {
+    for(unsigned i = 0; i < values.size(); ++i)
+    {
+      ref_constraints.push_back(
+        binary_relation_exprt(symb_values.c[i],ID_ge,
+	  from_integer(mp_integer(-1),symb_values.c[i].type())));
+      ref_constraints.push_back(
+        binary_relation_exprt(symb_values.c[i],ID_le,
+	  from_integer(mp_integer(1),symb_values.c[i].type())));
+    }
+  }
+#endif
+
+  refinement_constraint = conjunction(ref_constraints);
+  return conjunction(constraints);
 }
 
 linrank_domaint::row_valuet linrank_domaint::get_row_value(const rowt &row, const templ_valuet &value)
@@ -124,7 +206,8 @@ void linrank_domaint::set_row_value_to_true(const rowt &row, templ_valuet &value
 {
 	assert(row<value.size());
 	assert(value.size()==templ.size());
-	value[row].d = true_exprt();
+	value[row].c.resize(1);
+	value[row].c[0]= true_exprt();
 }
 
 void linrank_domaint::output_value(std::ostream &out, const valuet &value,
@@ -145,10 +228,11 @@ void linrank_domaint::output_value(std::ostream &out, const valuet &value,
 
     for(unsigned i = 0; i<templ_row.expr.size(); ++i)
     {
+      if(i>0) out << " + ";
       out << from_expr(ns,"",v[row].c[i]) << " * "
-	  << from_expr(ns,"",templ_row.expr[i].first) << " + ";
+	  << from_expr(ns,"",templ_row.expr[i].first);
     }
-    out << from_expr(ns,"",v[row].d) << std::endl;
+    out << std::endl;
   }
 }
 
@@ -169,50 +253,17 @@ void linrank_domaint::output_domain(std::ostream &out, const namespacet &ns) con
 
     for(unsigned i = 0; i<templ_row.expr.size(); ++i)
     {
+      if(i>0) out << " + ";
       out << "c!" << row << "$" << i << " * "
-	  << from_expr(ns,"",templ_row.expr[i].first) << " + ";
+	  << from_expr(ns,"",templ_row.expr[i].first);
     }
-    out << "d!" << row << std::endl;
+    out << std::endl;
   }
 }
 
 void linrank_domaint::project_on_vars(valuet &value, const var_sett &vars, exprt &result)
 {
-
-//TODO
-#if 0
-	const templ_valuet &v = static_cast<const templ_valuet &>(value);
-	assert(v.size()==templ.size());
-	exprt::operandst c;
-	for(unsigned row = 0; row<templ.size(); row++)
-	{
-		const template_rowt &templ_row = templ[row];
-
-    //FIXME:
-		std::set<symbol_exprt> symbols;
-    for(unsigned i=0; i<templ_row.expr.size(); ++i)
-      find_symbols(templ_row.expr[i].first,symbols);
-
-		bool pure = true;
-		for(std::set<symbol_exprt>::iterator it = symbols.begin();
-					it != symbols.end(); it++)
-		{
-			if(vars.find(*it)==vars.end())
-			{
-				pure = false;
-				break;
-			}
-		}
-		if(!pure) continue;
-
-    //FIXME:
-    for(unsigned i=0; i<templ_row.expr.size(); ++i)
-      c.push_back(binary_relation_exprt(templ_row.expr[i].first,ID_le,v[row].c[i]));
-	}
-	result = conjunction(c);
-#endif
-
-
+  //don't do any projection
   const templ_valuet &v = static_cast<const templ_valuet &>(value);
   assert(v.size()==templ.size());
   exprt::operandst c;
@@ -237,26 +288,29 @@ void linrank_domaint::project_on_vars(valuet &value, const var_sett &vars, exprt
     }
     else
     {
-      exprt sum_first = v[row].d;
-      exprt sum_second = v[row].d;
-      for(unsigned i = 0; i < v[row].c.size(); ++i)
+      assert(v[row].c.size()==templ[row].expr.size());
+      assert(v[row].c.size()>=1);
+
+      exprt sum = mult_exprt(v[row].c[0], 
+			     minus_exprt(templ[row].expr[0].first,
+					 templ[row].expr[0].second));
+      for(unsigned i = 1; i < v[row].c.size(); ++i)
       {
-	sum_first = plus_exprt(sum_first, mult_exprt(v[row].c[i], 
-						     templ[row].expr[i].first));
-	sum_second = plus_exprt(sum_second, mult_exprt(v[row].c[i], 
-						       templ[row].expr[i].second));
+        sum = plus_exprt(sum, mult_exprt(v[row].c[i], 
+					 minus_exprt(templ[row].expr[i].first,
+					 templ[row].expr[i].second)));
       }
       //extend types
 #ifdef EXTEND_TYPES
-      extend_expr_types(sum_first);
-      extend_expr_types(sum_second);
+      extend_expr_types(sum);
 #endif
-      exprt bounded = binary_relation_exprt(sum_first, ID_gt, 
-					    from_integer(mp_integer(0), sum_first.type()));
-      exprt decreasing = binary_relation_exprt(sum_first, ID_gt, sum_second);
 
-      c.push_back(implies_exprt(and_exprt(templ[row].pre_guard, templ[row].post_guard),
-				and_exprt(bounded, decreasing)));
+      exprt decreasing = binary_relation_exprt(sum, ID_gt, 
+	from_integer(mp_integer(0),sum.type()));
+      c.push_back(implies_exprt(
+			  and_exprt(templ[row].pre_guard, 
+				    templ[row].post_guard),
+                          decreasing));
     }
   }
   result = conjunction(c);
@@ -326,7 +380,8 @@ Function: linrank_domaint::is_row_value_false
 
 bool linrank_domaint::is_row_value_false(const row_valuet & row_value) const
 {
-  return row_value.d.get(ID_value)==ID_false;
+  assert(row_value.c.size()>=1);
+  return row_value.c[0].get(ID_value)==ID_false;
 }
 
 /*******************************************************************\
@@ -343,5 +398,6 @@ Function: linrank_domaint::is_row_value_true
 
 bool linrank_domaint::is_row_value_true(const row_valuet & row_value) const
 {
-  return row_value.d.get(ID_value)==ID_true;
+  assert(row_value.c.size()>=1);
+  return row_value.c[0].get(ID_value)==ID_true;
 }
