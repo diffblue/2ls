@@ -8,6 +8,8 @@
 #include <iostream>
 
 #include <util/i2string.h>
+#include <util/string2int.h>
+#include <limits>
 
 #include "ssa_unwinder.h"
 
@@ -405,6 +407,13 @@ void ssa_local_unwindert::init() {
         it!=current_node->loop_nodes.end();it++)
     {
       it->parent = current_node;
+#if 0
+      // if a variable is modified in child loop then consider it modified
+      //for the current loop for the purpose of renaming
+      //NOTE : this code only looks at the child. Not sure if you should look at
+      // all the descendents for the purpose of renaming
+      current_node->vars_modified.insert(it->vars_modified.begin(),it->vars_modified.end());
+#endif
       worklist.push_back(&(*it));
     }
 
@@ -483,7 +492,7 @@ modvar_levelt::iterator mit = current_loop.modvar_level.find(id);
 
     }
 
-    if(current_loop.parent==NULL) {  current_loop.modvar_level[id]=-1; return -1;}
+    if(current_loop.parent==NULL && current_loop.parent!=&root_node) {  current_loop.modvar_level[id]=-1; return -1;}
     int mylevel = need_renaming(*current_loop.parent,id);
     if(mylevel < 0) { current_loop.modvar_level[id]=-1; return -1;}
     current_loop.modvar_level[id] = mylevel+1;
@@ -493,7 +502,17 @@ modvar_levelt::iterator mit = current_loop.modvar_level.find(id);
 
 }
 
+unsigned int ssa_local_unwindert::get_last_iteration(std::string& suffix, bool& result)
+{
+  std::size_t pos = suffix.find_last_of("%");
+  if(pos==std::string::npos) {result=false; return 0;}
+   unsigned int val = safe_string2unsigned(suffix.substr(pos+1));
+   if(val >= std::numeric_limits<int>::max()) assert(false);
+   suffix=suffix.substr(0,pos);
+   result = true;
+   return val;
 
+}
 /*****************************************************************************\
  *
  *   Function : ssa_local_unwindert::rename
@@ -761,7 +780,23 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
         rename(e.cond(),suffix + "%" + i2string(0));
         rename(e.true_case(),suffix + "%" + i2string(0));
 #endif
-        rename(e.false_case(),suffix,-1,current_loop);
+//for false_case the value comes from above so evaluate in the parent
+// context
+        //if no enclosing loop then no need to rename the false_case
+        if(current_loop.parent!=NULL && current_loop.parent!= &root_node)
+       {
+
+        bool result;
+        std::string parent_suffix = suffix;
+        unsigned int parent_iteration=get_last_iteration(parent_suffix,result);
+
+        //if there is an enclosing loop, it must return with a valid iteration
+        if(!result) assert(false);
+
+          rename(e.false_case(),parent_suffix,parent_iteration,*current_loop.parent);
+
+       }
+
       }
       else if  (SSA.guard_symbol(node.location) == e_it->lhs()) {
 

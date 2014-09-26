@@ -91,7 +91,7 @@ class ssa_local_unwindert : public messaget
       const int iteration,tree_loopnodet& current_loop);
   int need_renaming(tree_loopnodet& current_loop,
       const irep_idt& id);
-
+  unsigned int get_last_iteration(std::string& suffix, bool& result);
   irep_idt get_base_name(const irep_idt& id);
  // void init();
   bool is_initialized;
