@@ -13,8 +13,8 @@
 #define EXTEND_TYPES
 #define DIFFERENCE_ENCODING
 
-#define COEFF_C_SIZE 32
-#define MAX_REFINEMENT 1
+#define COEFF_C_SIZE 10
+#define MAX_REFINEMENT 2
 
 void linrank_domaint::initialize(valuet &value)
 {
@@ -180,6 +180,18 @@ exprt linrank_domaint::get_row_symb_constraint(
       ref_constraints.push_back(
         binary_relation_exprt(symb_values.c[i],ID_le,
 	  from_integer(mp_integer(1),symb_values.c[i].type())));
+    }
+  }
+  else if(refinement_level==1)
+  {
+    for(unsigned i = 0; i < values.size(); ++i)
+    {
+      ref_constraints.push_back(
+        binary_relation_exprt(symb_values.c[i],ID_ge,
+	  from_integer(mp_integer(-10),symb_values.c[i].type())));
+      ref_constraints.push_back(
+        binary_relation_exprt(symb_values.c[i],ID_le,
+	  from_integer(mp_integer(10),symb_values.c[i].type())));
     }
   }
 #endif
