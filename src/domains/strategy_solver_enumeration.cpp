@@ -1,7 +1,9 @@
 #include <iostream>
 
 #include <util/simplify_expr.h>
+
 #include "strategy_solver_enumeration.h"
+#include "util.h"
 
 bool strategy_solver_enumerationt::iterate(invariantt &_inv)
 {

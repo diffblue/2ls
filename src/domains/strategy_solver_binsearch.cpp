@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "strategy_solver_binsearch.h"
+#include "util.h"
 
 // #define DEBUG_FORMULA
 

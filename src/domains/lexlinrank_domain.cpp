@@ -1,5 +1,5 @@
 #include "lexlinrank_domain.h"
-#include "tpolyhedra_domain.h"
+#include "util.h"
 
 #include <iostream>
 

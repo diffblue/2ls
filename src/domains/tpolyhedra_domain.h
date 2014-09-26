@@ -2,7 +2,6 @@
 #define CPROVER_TEMPLATE_DOMAIN_H
 
 #include "domain.h"
-
 #include <util/std_expr.h>
 #include <util/arith_tools.h>
 #include <util/ieee_float.h>
@@ -97,12 +96,5 @@ protected:
   templatet templ;
   
 };
-
-void extend_expr_types(exprt &expr);
-constant_exprt simplify_const(const exprt &expr);
-ieee_floatt simplify_const_float(const exprt &expr);
-mp_integer simplify_const_int(const exprt &expr);
-
-
 
 #endif

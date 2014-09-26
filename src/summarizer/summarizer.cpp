@@ -611,3 +611,5 @@ bool summarizert::check_termination_argument(exprt expr)
   }
   return true;
 }
+
+
