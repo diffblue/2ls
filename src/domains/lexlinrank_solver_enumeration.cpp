@@ -2,8 +2,6 @@
 
 #include <util/simplify_expr.h>
 #include "lexlinrank_solver_enumeration.h"
-#include <solvers/sat/satcheck.h>
-#include <solvers/flattening/bv_pointers.h>
 
 #define DEBUG_FORMULA 
 #define MAX_ELEMENTS 2 // lexicographic components
@@ -19,14 +17,14 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
   static std::vector<int> number_elements_per_row;
   number_elements_per_row.resize(rank.size());
 
-  static int number_outer_iterations;
+  //static int number_outer_iterations;
   //number_outer_iterations = 0;
 
   debug() << "(RANK) no rows = " << rank.size() << eom;
 
   // instantiate the "inner" solver
-  satcheck_minisat_no_simplifiert satcheck1;
-  bv_pointerst solver1(ns, satcheck1);
+  //satcheck_minisat_no_simplifiert satcheck1;
+  //bv_pointerst inner_solver(ns, satcheck1);
 
   literalt activation_literal = new_context();
 
@@ -101,18 +99,33 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
 	debug() << "elements: " << rank[row].size() << eom;
 
 	exprt constraint;
-
+	exprt refinement_constraint;
 
 	// generate the new constraint
-	constraint = lexlinrank_domain.get_row_symb_constraint(symb_values, row, values);
+	constraint = lexlinrank_domain.get_row_symb_constraint(symb_values, row, values, refinement_constraint);
+
+	simplify_expr(constraint, ns);
 	debug() << "Inner Solver: " << row << " constraint " 
 		    << from_expr(ns,"", constraint) << eom;
 
-	solver1 << constraint;
+	inner_solver << constraint;
 
 	debug() << "inner solve()" << eom;
 
-	if(solver1() == decision_proceduret::D_SATISFIABLE && 
+        //set assumptions for refinement
+        bvt assumptions;
+        if(refinement_constraint.is_true()) assumptions.resize(0); //no assumptions
+        else
+	{
+          assumptions.resize(1);
+          assumptions[0] = inner_solver.convert(refinement_constraint);
+	}	
+
+	//debug() << "LALALA" << eom;
+        inner_solver.set_assumptions(assumptions);
+
+	// solve
+	if(inner_solver() == decision_proceduret::D_SATISFIABLE && 
 	   number_outer_iterations < MAX_OUTER_ITERATIONS) 
 	{ 
 
@@ -134,7 +147,7 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
 	    // get the model for all c
 	    for(std::vector<exprt>::iterator it = c.begin(); it != c.end(); ++it) 
 	      {
-		exprt v = solver1.get(*it);
+		exprt v = inner_solver.get(*it);
 		new_row_values[constraint_no].c.push_back(v);
 		debug() << "Inner Solver: " << row << " c value for " 
 			<< from_expr(ns,"", *it) << ": " 
@@ -142,10 +155,10 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
 	      }
 
 	    // get the model for d
-	    new_row_values[constraint_no].d = solver1.get(symb_values[constraint_no].d);
-	    debug() << "Inner Solver: " << row << " d value for " 
-		    << from_expr(ns,"", symb_values[constraint_no].d)<< ": " 
-		    << from_expr(ns,"", new_row_values[constraint_no].d)  << eom;
+	    // new_row_values[constraint_no].d = inner_solver.get(symb_values[constraint_no].d);
+	    // debug() << "Inner Solver: " << row << " d value for " 
+	    // 	    << from_expr(ns,"", symb_values[constraint_no].d)<< ": " 
+	    // 	    << from_expr(ns,"", new_row_values[constraint_no].d)  << eom;
 
 	  }
 
