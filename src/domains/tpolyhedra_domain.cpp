@@ -317,7 +317,7 @@ Function: tpolyhedra_domaint::get_row_symb_value
 
 \*******************************************************************/
 
-exprt tpolyhedra_domaint::get_row_symb_value(const rowt &row)
+symbol_exprt tpolyhedra_domaint::get_row_symb_value(const rowt &row)
 {
   assert(row<templ.size());
   return symbol_exprt(SYMB_BOUND_VAR+i2string(row),templ[row].expr.type());
@@ -427,16 +427,17 @@ Function: tpolyhedra_domaint::to_symb_post_constraints
 
  Outputs:
 
- Purpose: post_guard ==> (row_expr >= symb_row_value)
+ Purpose: /\_i post_guard ==> (row_expr >= symb_row_value)
 
 \*******************************************************************/
 
-exprt tpolyhedra_domaint::to_symb_post_constraints()
+exprt tpolyhedra_domaint::to_symb_post_constraints(const std::set<rowt> &symb_rows)
 {
   exprt::operandst c; 
-  for(unsigned row = 0; row<templ.size(); row++)
+  for(std::set<rowt>::const_iterator it = symb_rows.begin(); 
+      it != symb_rows.end(); it++)
   {
-    c.push_back(get_row_symb_post_constraint(row));
+    c.push_back(get_row_symb_post_constraint(*it));
   }
   return conjunction(c); 
 }

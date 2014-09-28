@@ -54,7 +54,7 @@ public:
   exprt to_symb_pre_constraints(const templ_valuet &value);
   exprt to_symb_pre_constraints(const templ_valuet &value,
 				const std::set<rowt> &symb_rows);
-  exprt to_symb_post_constraints();
+  exprt to_symb_post_constraints(const std::set<rowt> &symb_rows);
   exprt get_row_symb_value_constraint(const rowt &row, 
 				      const row_valuet &row_value);
   exprt get_row_symb_pre_constraint(const rowt &row, 
@@ -91,7 +91,7 @@ public:
   void add_octagon_template(const var_specst &var_specs,
 				    const namespacet &ns);
 
-  exprt get_row_symb_value(const rowt &row);
+  symbol_exprt get_row_symb_value(const rowt &row);
 
 protected:
   friend class strategy_solver_binsearcht;

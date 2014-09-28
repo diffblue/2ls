@@ -23,18 +23,24 @@ bool strategy_solver_equalityt::iterate(invariantt &_inv)
     solver << or_exprt(literal_exprt(cond_literal),
                        literal_exprt(activation_literal));
 
+#if 0
     debug() << "Checking equality " << eom;
     debug() << "Pre: " << from_expr(ns, "", pre_expr) << eom;
     debug() << "Post: " << from_expr(ns, "", post_expr) << eom;
+#endif
 
     if(solve() == decision_proceduret::D_SATISFIABLE) 
     { 
+#if 0
       debug() << "SAT" << eom;
+#endif
       todo_disequs.insert(*e_it);
     }
     else  //equality holds
     {
+#if 0
       debug() << "UNSAT" << eom;
+#endif
       
       equality_domain.set_equal(*e_it,inv);
       solver << pre_expr; //make permanent
@@ -79,9 +85,11 @@ bool strategy_solver_equalityt::iterate(invariantt &_inv)
     solver << or_exprt(literal_exprt(cond_literal),
                        literal_exprt(activation_literal));
 
+#if 0
     debug() << "Checking disequality " << eom;
     debug() << "Pre: " << from_expr(ns, "", pre_expr) << eom;
     debug() << "Post: " << from_expr(ns, "", post_expr) << eom;
+#endif
 
     if(solve() == decision_proceduret::D_SATISFIABLE) 
     { 
@@ -89,8 +97,9 @@ bool strategy_solver_equalityt::iterate(invariantt &_inv)
     }
     else  //equality holds
     {
+#if 0
       debug() << "UNSAT" << eom;
-      
+#endif      
       equality_domain.set_disequal(*e_it,inv);
       solver << pre_expr; //make permanent
     }
