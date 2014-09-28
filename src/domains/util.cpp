@@ -281,19 +281,12 @@ constant_exprt simplify_const(const exprt &expr)
 
 void remove_typecast(exprt& expr)
 {
+  for(exprt::operandst::iterator it = expr.operands().begin();
+            it != expr.operands().end(); ++it)
+    remove_typecast(*it);
+
   if (expr.id() == ID_typecast)
-  {
-    remove_typecast(expr.op0());
     expr = expr.op0();
-  }
-  else
-  {
-    for(exprt::operandst::iterator it = expr.operands().begin();
-          it != expr.operands().end(); ++it)
-    {
-      remove_typecast(*it);
-    }
-  }
 }
 
 /*******************************************************************\
@@ -327,12 +320,12 @@ void pretty_print_termination_argument(std::ostream &out, const namespacet &ns, 
         else if(it->op1().id()==ID_or) // needed for lexicographic ones
         {
           for(exprt::operandst::const_iterator it_lex = it->op1().operands().begin();
-              it_lex != it->op1().operands().end(); it_lex++)
+              it_lex != it->op1().operands().end(); ++it_lex)
           {
             assert(it_lex->id() == ID_and);
 
             if(it_lex == it->op1().operands().begin()) out << "(";
-            else out << std::endl << "   " << "     " << ",";
+            else out << std::endl << "   " << "       " << ",";
 
             exprt rr = it_lex->op0();
             remove_typecast(rr);

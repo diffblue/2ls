@@ -37,28 +37,29 @@ bool lexlinrank_domaint::refine()
 
 exprt lexlinrank_domaint::get_not_constraints(const lexlinrank_domaint::templ_valuet &value,
 			    exprt::operandst &cond_exprs,
-			std::vector<lexlinrank_domaint::pre_post_valuest> &value_exprs)
+			    std::vector<pre_post_valuest> &value_exprs)
 {
   cond_exprs.resize(value.size());
   value_exprs.resize(value.size());
 
   for(unsigned row = 0; row<templ.size(); row++)
   {
-    value_exprs[row].insert(value_exprs[row].end(),templ[row].expr.begin(),templ[row].expr.end()); 
+    value_exprs[row] = templ[row].expr;
 
     exprt::operandst elmts;
     elmts.reserve(value[row].size());
     for(unsigned elm=0; elm<value[row].size(); ++elm)
     {
+      // looks to me like the following if branch and else-if branch should be outside the for-loop
       if(is_row_element_value_true(value[row][elm]))
       {
-	// !(g => true)
-	cond_exprs[row] = false_exprt();
+        // !(g => true)
+        cond_exprs[row] = false_exprt();
       }
       else if(is_row_element_value_false(value[row][elm]))
       {
-	// !(g => false)
-	cond_exprs[row] = 
+        // !(g => false)
+        cond_exprs[row] =
           and_exprt(templ[row].pre_guard, templ[row].post_guard);
       }
       else
@@ -135,7 +136,7 @@ exprt lexlinrank_domaint::get_not_constraints(const lexlinrank_domaint::templ_va
 #ifdef EXTEND_TYPES
           extend_expr_types(sum2);
 #endif
-          exprt non_inc = binary_relation_exprt(sum2, ID_gt,
+          exprt non_inc = binary_relation_exprt(sum2, ID_ge,
               from_integer(mp_integer(0),sum2.type()));
 #else
 #ifdef EXTEND_TYPES
@@ -159,6 +160,7 @@ exprt lexlinrank_domaint::get_not_constraints(const lexlinrank_domaint::templ_va
     }
   }
 
+  // should this be conjunction?
   return disjunction(cond_exprs);
 }
 
@@ -422,7 +424,7 @@ void lexlinrank_domaint::project_on_vars(valuet &value, const var_sett &vars, ex
     else
     {
       exprt::operandst d; // d is the disjunction of lexicographic elements
-      c.reserve(v[row].size());
+      d.reserve(v[row].size());
       for(unsigned elm=0; elm<v[row].size(); ++elm)
       {
         assert(v[row][elm].c.size()==templ[row].expr.size());
@@ -435,7 +437,7 @@ void lexlinrank_domaint::project_on_vars(valuet &value, const var_sett &vars, ex
              minus_exprt(templ[row].expr[0].first,
                  templ[row].expr[0].second));
 
-        for(unsigned i = 0; i < v[row][elm].c.size(); ++i)
+        for(unsigned i = 1; i < v[row][elm].c.size(); ++i)
         {
           sum = plus_exprt(sum, mult_exprt(v[row][elm].c[i],
               minus_exprt(templ[row].expr[i].first,
@@ -455,7 +457,7 @@ void lexlinrank_domaint::project_on_vars(valuet &value, const var_sett &vars, ex
              minus_exprt(templ[row].expr[0].first,
                  templ[row].expr[0].second));
 
-          for(unsigned i = 0; i < v[row][elm2].c.size(); ++i)
+          for(unsigned i = 1; i < v[row][elm2].c.size(); ++i)
           {
             sum2 = plus_exprt(sum2, mult_exprt(v[row][elm2].c[i],
                           minus_exprt(templ[row].expr[i].first,
