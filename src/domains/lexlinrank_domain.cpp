@@ -44,6 +44,21 @@ exprt lexlinrank_domaint::get_not_constraints(const lexlinrank_domaint::templ_va
 
   for(unsigned row = 0; row<templ.size(); row++)
   {
+    // I moved the if/else-if outside from the for-loop below temporarily
+    if(is_row_element_value_true(value[row][0]))
+    {
+      // !(g => true)
+      cond_exprs[row] = false_exprt();
+    }
+    else if(is_row_element_value_false(value[row][0]))
+    {
+      // !(g => false)
+      cond_exprs[row] =
+        and_exprt(templ[row].pre_guard, templ[row].post_guard);
+    }
+    else
+    {
+
     value_exprs[row] = templ[row].expr;
 
     exprt::operandst elmts;
@@ -51,18 +66,18 @@ exprt lexlinrank_domaint::get_not_constraints(const lexlinrank_domaint::templ_va
     for(unsigned elm=0; elm<value[row].size(); ++elm)
     {
       // looks to me like the following if branch and else-if branch should be outside the for-loop
-      if(is_row_element_value_true(value[row][elm]))
-      {
-        // !(g => true)
-        cond_exprs[row] = false_exprt();
-      }
-      else if(is_row_element_value_false(value[row][elm]))
-      {
-        // !(g => false)
-        cond_exprs[row] =
-          and_exprt(templ[row].pre_guard, templ[row].post_guard);
-      }
-      else
+//      if(is_row_element_value_true(value[row][elm]))
+//      {
+//        // !(g => true)
+//        cond_exprs[row] = false_exprt();
+//      }
+//      else if(is_row_element_value_false(value[row][elm]))
+//      {
+//        // !(g => false)
+//        cond_exprs[row] =
+//          and_exprt(templ[row].pre_guard, templ[row].post_guard);
+//      }
+//      else
       {
         assert(value[row][elm].c.size()==templ[row].expr.size());
         assert(value[row][elm].c.size()>=1);
@@ -157,6 +172,7 @@ exprt lexlinrank_domaint::get_not_constraints(const lexlinrank_domaint::templ_va
           implies_exprt(
               and_exprt(templ[row].pre_guard, templ[row].post_guard),
               disjunction(elmts)));
+    }
     }
   }
 
