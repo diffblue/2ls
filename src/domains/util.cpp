@@ -279,6 +279,23 @@ constant_exprt simplify_const(const exprt &expr)
   assert(false); //type not supported
 }
 
+void remove_typecast(exprt& expr)
+{
+  if (expr.id() == ID_typecast)
+  {
+    remove_typecast(expr.op0());
+    expr = expr.op0();
+  }
+  else
+  {
+    for(exprt::operandst::iterator it = expr.operands().begin();
+          it != expr.operands().end(); ++it)
+    {
+      remove_typecast(*it);
+    }
+  }
+}
+
 /*******************************************************************\
 
 Function: pretty_print_termination_argument()
@@ -316,8 +333,10 @@ void pretty_print_termination_argument(std::ostream &out, const namespacet &ns, 
 
             if(it_lex == it->op1().operands().begin()) out << "(";
             else out << std::endl << "   " << "     " << ",";
-            //TODO: print something nicer
-            out << from_expr(ns,"",it_lex->op0());
+
+            exprt rr = it_lex->op0();
+            remove_typecast(rr);
+            out << from_expr(ns,"",rr);
           }
           out << ")";
         }
