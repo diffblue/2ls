@@ -36,3 +36,4 @@ void sipmabubble(int a, int b, int c, int d) {
       d = nondet();
           return;
 }
+void main() {}

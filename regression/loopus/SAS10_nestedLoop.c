@@ -15,3 +15,4 @@ void nestedLoop(int n, int m, int N){
     }
   }
 }
+void main() {}

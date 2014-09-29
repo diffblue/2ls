@@ -8,3 +8,4 @@ void counterex1b(int n, int x, int y)
     while(y<=n && random()) y++;
   }
 }
+void main() {}

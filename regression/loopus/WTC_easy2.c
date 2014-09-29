@@ -6,3 +6,4 @@ void easy2(int a) {
       }
           return;
 }
+void main() {}

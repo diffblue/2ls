@@ -12,3 +12,4 @@ void aa_17(int a, int b) {
         return;
     }
 }
+void main() {}

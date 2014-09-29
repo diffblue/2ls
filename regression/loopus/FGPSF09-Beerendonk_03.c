@@ -5,3 +5,4 @@ void aa_03(int a, int b) {
       b = a + b;
     }
 }
+void main() {}

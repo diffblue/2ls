@@ -18,3 +18,4 @@ void ex09(int a, int b, int c, int d) {
       }
           return;
 }
+void main() {}

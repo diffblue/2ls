@@ -30,3 +30,4 @@ void aa_24(int a, int b) {
         return;
     }
 }
+void main() {}

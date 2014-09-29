@@ -12,3 +12,4 @@ void c(int a, int b, int c) {
         return;
     }
 }
+void main() {}

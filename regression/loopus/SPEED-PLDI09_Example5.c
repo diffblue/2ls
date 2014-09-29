@@ -20,3 +20,4 @@ void Example5(int a, int b, int c) {
     else
         return;
 }
+void main() {}

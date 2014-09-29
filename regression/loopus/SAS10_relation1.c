@@ -15,3 +15,4 @@ int relation1(){
 
   return 0;
 }
+void main() {}

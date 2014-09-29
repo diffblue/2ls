@@ -7,3 +7,4 @@ void easy1(int z) {
   }
 }
 
+void main() {}

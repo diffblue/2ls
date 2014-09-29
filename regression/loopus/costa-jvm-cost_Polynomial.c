@@ -13,3 +13,4 @@ Polynomial *copy(Polynomial *this) {
 		copy->coefs[i] = this->coefs[i];
 	return copy;
 }
+void main() {}

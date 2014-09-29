@@ -11,3 +11,4 @@ void speedpldi3(int m, int n){
       ++i;
     }
 }
+void main() {}

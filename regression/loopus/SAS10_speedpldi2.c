@@ -12,3 +12,4 @@ void speedpldi2(int n, int m){
       ZZ: v2 = 0;
   }
 }
+void main() {}

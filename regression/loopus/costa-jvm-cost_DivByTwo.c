@@ -6,3 +6,4 @@ int divByTwo(int n) {
 	}
 	return acu;
 }
+void main() {}

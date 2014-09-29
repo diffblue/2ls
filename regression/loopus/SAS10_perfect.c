@@ -16,3 +16,4 @@ int perfect(int x){
 
   return (y3 == 0);
 }
+void main() {}

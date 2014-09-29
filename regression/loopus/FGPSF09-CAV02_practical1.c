@@ -16,3 +16,4 @@ void practical1(int a, int b) {
         }
     }
 }
+void main() {}

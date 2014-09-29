@@ -15,3 +15,4 @@ void ack(int a, int b, int c) {
         return;
     }
 }
+void main() {}

@@ -15,3 +15,4 @@ int nd_loop(){
 
   return 0;
 }
+void main() {}

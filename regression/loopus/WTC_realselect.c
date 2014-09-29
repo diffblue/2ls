@@ -32,3 +32,4 @@ void realselect(int a, int b, int c, int d, int e) {
       d = nondet();
           return;
 }
+void main() {}

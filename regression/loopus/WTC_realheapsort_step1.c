@@ -20,3 +20,4 @@ void realheapsort_step1( float t[], float temp, int N)
       }
   }
 }
+void main() {}

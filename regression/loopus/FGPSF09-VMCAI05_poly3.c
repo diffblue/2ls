@@ -14,3 +14,4 @@ void poly3(int a, int b, int c) {
         return;
     }
 }
+void main() {}

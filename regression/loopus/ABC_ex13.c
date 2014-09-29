@@ -33,3 +33,4 @@ void ex13(int a, int b, int c, int d, int e, int f) {
       }
           return;
 }
+void main() {}

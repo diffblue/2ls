@@ -36,3 +36,4 @@ void realheapsort_step2(float t[], float temp,
   }
 }
   
+void main() {}

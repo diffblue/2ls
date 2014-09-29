@@ -4,3 +4,4 @@ void ex04(int n) {
       for (int k = 0; k <= j - 1; k = k + 1)
         ;
 } 
+void main() {}

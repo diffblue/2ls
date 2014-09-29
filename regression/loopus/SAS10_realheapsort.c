@@ -47,3 +47,4 @@ void realheapsort(int N, float t[])
       }
   }
 }
+void main() {}

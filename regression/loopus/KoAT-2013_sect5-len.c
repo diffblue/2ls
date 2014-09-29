@@ -8,3 +8,4 @@ void sect5_len(int a, int b) {
     }
       return;
 }
+void main() {}

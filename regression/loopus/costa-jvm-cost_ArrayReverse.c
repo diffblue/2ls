@@ -10,3 +10,4 @@ int *arrayReverse(int a[], int length) {
 
 	return r;
 }
+void main() {}

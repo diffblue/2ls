@@ -15,3 +15,4 @@ void aa_20(int a, int b) {
         }
     }
 }
+void main() {}

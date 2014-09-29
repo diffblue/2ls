@@ -16,3 +16,4 @@ void loops(int n){
 
 }
 
+void main() {}

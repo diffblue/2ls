@@ -15,3 +15,4 @@ void linear(int a) {
   else
     return;
 }
+void main() {}

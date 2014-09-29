@@ -13,3 +13,4 @@ void Dis2(int a, int b, int c) {
       }
           return;
 }
+void main() {}

@@ -22,3 +22,4 @@ int wcet1 (int n) {
 
   return 0;
 }
+void main() {}

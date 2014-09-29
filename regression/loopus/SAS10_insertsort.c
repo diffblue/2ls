@@ -10,3 +10,4 @@ void insertsort(int a[], int length)
                 a[j+1] = value;
         }
 }
+void main() {}

@@ -24,3 +24,4 @@ void ax(int a, int b, int c) {
           }
       }
 }
+void main() {}

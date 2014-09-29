@@ -7,3 +7,4 @@ void SimpleSingle(int a, int b) {
       }
           return;
 }
+void main() {}

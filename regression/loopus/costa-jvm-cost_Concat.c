@@ -15,3 +15,4 @@ int *concat(int a[], int b[], int lengthA, int lengthB) {
 
 	return r;
 }
+void main() {}

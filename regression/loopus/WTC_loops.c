@@ -41,3 +41,4 @@ void loops(int a, int b, int c) {
     else
       return;
 }
+void main() {}

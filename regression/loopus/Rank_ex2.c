@@ -34,3 +34,4 @@ void ex2(int a, int b, int c, int d, int e) {
       e = nondet();
           return;
 }
+void main() {}

@@ -53,3 +53,4 @@ void realbubble(int a, int b, int c, int d, int e, int f) {
       f = nondet();
           return;
 }
+void main() {}

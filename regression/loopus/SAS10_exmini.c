@@ -15,3 +15,4 @@ int exmini(int i, int j, int k)
   return 0;
 
 }
+void main() {}

@@ -14,3 +14,4 @@ int add(int n){
 	}
 	return res;
 }
+void main() {}

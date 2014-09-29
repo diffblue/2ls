@@ -17,3 +17,4 @@ void ex10(int a, int b, int c) {
       }
           return;
 }
+void main() {}

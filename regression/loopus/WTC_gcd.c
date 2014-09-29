@@ -20,3 +20,4 @@ void gcd(int a, int b) {
     else
       return;
 }
+void main() {}

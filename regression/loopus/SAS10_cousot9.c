@@ -14,3 +14,4 @@ int cousot9(int j, int N){
 
   return 0;
 }
+void main() {}

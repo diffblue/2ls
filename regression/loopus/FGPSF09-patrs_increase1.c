@@ -5,3 +5,4 @@ void increase1(int a, int b) {
       b = b + 1;
     }
 }
+void main() {}

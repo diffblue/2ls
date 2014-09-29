@@ -6,3 +6,4 @@ void complete2(int a, int b) {
       b = nondet();
     }
 }
+void main() {}

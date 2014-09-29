@@ -28,3 +28,4 @@ void aaron2(int a, int b, int c, int d) {
     else
       return;
 }
+void main() {}

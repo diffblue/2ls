@@ -11,3 +11,4 @@ int while2(int N){
   }
   return 0;
 }
+void main() {}

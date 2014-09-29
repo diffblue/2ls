@@ -8,3 +8,4 @@ int easy2(int z) {
 }
 return 0;
 }
+void main() {}

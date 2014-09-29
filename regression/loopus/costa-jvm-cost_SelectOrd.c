@@ -26,3 +26,4 @@ int selectOrd(int lv, int v[]) {
 //	}
 	return 1;
 }
+void main() {}

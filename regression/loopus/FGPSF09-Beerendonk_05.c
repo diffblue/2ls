@@ -7,3 +7,4 @@ void aa_05(int a, int b, int c) {
       b = nondet();
     }
 }
+void main() {}

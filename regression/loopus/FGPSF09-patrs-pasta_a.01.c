@@ -16,3 +16,4 @@ void a(int a, int b) {
         }
     }
 }
+void main() {}

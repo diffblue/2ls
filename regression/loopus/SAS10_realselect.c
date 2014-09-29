@@ -18,3 +18,4 @@ void realselect(int numbers[], int array_size)
     numbers[min] = temp;
   }
 }
+void main() {}

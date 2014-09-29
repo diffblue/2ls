@@ -15,3 +15,4 @@ void aa_21(int a, int b, int c) {
         }
     }
 }
+void main() {}

@@ -7,3 +7,4 @@ void aa_04(int a, int b) {
       b = tmp0;
     }
 }
+void main() {}

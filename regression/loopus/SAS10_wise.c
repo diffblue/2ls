@@ -4,3 +4,4 @@ void wise(int x, int y){
     if(x < y) ++x;
     else ++y;
 }
+void main() {}

@@ -8,3 +8,4 @@ void direct_n_log_n(int a, int b) {
   else
       return;
 }
+void main() {}

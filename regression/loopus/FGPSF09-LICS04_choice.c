@@ -15,3 +15,4 @@ void choice(int a, int b) {
         return;
     }
 }
+void main() {}

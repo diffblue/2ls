@@ -12,3 +12,4 @@ void random1d(int max) {
   }
 
 }
+void main() {}

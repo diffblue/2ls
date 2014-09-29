@@ -9,3 +9,4 @@ void sect1_quad(int a, int b) {
         b = b - 1;
       }
 }
+void main() {}

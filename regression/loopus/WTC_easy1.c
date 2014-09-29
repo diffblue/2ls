@@ -14,3 +14,4 @@ void easy1(int a, int b) {
       }
           return;
 }
+void main() {}

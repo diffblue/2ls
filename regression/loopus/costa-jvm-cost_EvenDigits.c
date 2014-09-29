@@ -11,3 +11,4 @@ int evenDigits(int n){
 	}
 	return acu;
 }
+void main() {}

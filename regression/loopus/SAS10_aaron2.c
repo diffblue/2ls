@@ -16,3 +16,4 @@ int aaron2(int tx, int x, int y) {
   }
   return 0;
 }
+void main() {}

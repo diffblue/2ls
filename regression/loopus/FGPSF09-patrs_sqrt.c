@@ -11,3 +11,4 @@ void aa_sqrt(int a, int b, int c, int d) {
     }
       return;
 }
+void main() {}

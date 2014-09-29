@@ -23,3 +23,4 @@ int rsd (int r)
 
   
 }
+void main() {}

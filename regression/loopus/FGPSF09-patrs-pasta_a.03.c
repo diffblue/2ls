@@ -124,3 +124,4 @@ void a(int a, int b, int c, int d) {
   else
     return;
 }
+void main() {}

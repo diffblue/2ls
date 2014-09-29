@@ -9,3 +9,4 @@ int ax(int i, int j, int n) {
 
   return 0;
 }
+void main() {}

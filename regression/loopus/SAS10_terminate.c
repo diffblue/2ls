@@ -7,3 +7,4 @@ void terminate(int i, int j, int k){
     k--;
   }
 }
+void main() {}

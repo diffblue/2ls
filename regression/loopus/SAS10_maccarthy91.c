@@ -26,3 +26,4 @@ void sipma91(int x, int z){
     }
   }
 }
+void main() {}

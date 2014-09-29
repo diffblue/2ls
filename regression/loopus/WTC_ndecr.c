@@ -7,3 +7,4 @@ void ndecr(int a) {
       }
           return;
 }
+void main() {}

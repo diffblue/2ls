@@ -12,3 +12,4 @@ void increase3(int a, int b, int c) {
         return;
     }
 }
+void main() {}

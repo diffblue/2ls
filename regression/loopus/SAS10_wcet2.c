@@ -10,3 +10,4 @@ int wcet2 (int i) {
   }
   return 0;
 }
+void main() {}

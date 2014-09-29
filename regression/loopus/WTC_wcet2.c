@@ -17,3 +17,4 @@ void wcet2(int a, int b) {
       }
           return;
 }
+void main() {}

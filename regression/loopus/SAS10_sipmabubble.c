@@ -20,3 +20,4 @@ void sipmabubble(int A[100], int n) {
 	}
   }
 }
+void main() {}

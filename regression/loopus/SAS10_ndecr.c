@@ -10,3 +10,4 @@ int ndecr (int n)
   return 0;
 
 }
+void main() {}

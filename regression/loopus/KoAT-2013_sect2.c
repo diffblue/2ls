@@ -22,3 +22,4 @@ void sect2(int a, int b, int c, int d) {
           }
       }
 }
+void main() {}

@@ -33,3 +33,4 @@ ListReverse *listInter(ListReverse *l1, ListReverse *l2) {
 //	if (aux!=null) return 1;
 //	else return 0;
 //}
+void main() {}

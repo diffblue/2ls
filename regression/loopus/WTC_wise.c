@@ -23,3 +23,4 @@ void wise(int a, int b) {
     else
       return;
 }
+void main() {}

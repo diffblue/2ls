@@ -20,3 +20,4 @@ void sect5_sumSum(int a, int b, int c, int d) {
         }
     }
 }
+void main() {}

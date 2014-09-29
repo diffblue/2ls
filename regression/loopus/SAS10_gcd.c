@@ -5,3 +5,4 @@ void gcd(int x, int y){
     if(x<y) y = y-x;
     else x = x-y;
 }
+void main() {}

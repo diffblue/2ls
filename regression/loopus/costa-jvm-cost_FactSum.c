@@ -18,3 +18,4 @@ int doSum(int n) {
 	}
 	return s;
 }
+void main() {}

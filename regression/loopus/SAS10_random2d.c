@@ -21,3 +21,4 @@ void random2d(int N) {
     }
   }
 }
+void main() {}

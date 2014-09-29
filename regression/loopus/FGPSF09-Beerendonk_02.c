@@ -6,3 +6,4 @@ void aa_02(int a, int b) {
       b = b + 1;
     }
 }
+void main() {}

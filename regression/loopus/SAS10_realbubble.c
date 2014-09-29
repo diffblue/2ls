@@ -20,3 +20,4 @@ void realbubble(int *array, int length)
   } /*end for i*/
       
 }/*end bubbleSort*/
+void main() {}

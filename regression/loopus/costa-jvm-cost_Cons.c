@@ -17,3 +17,4 @@ LinkedList *copy(LinkedList *c) {
 	}
 	return cons;
 }
+void main() {}

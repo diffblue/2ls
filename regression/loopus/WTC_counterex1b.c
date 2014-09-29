@@ -82,3 +82,4 @@ evalfbb8in:
       g = nondet();
           return;
 }
+void main() {}

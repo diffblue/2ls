@@ -8,3 +8,4 @@ void complete1(int a, int b, int c, int d) {
       d = nondet();
     }
 }
+void main() {}

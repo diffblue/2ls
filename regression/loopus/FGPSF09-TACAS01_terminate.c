@@ -8,3 +8,4 @@ void terminate(int a, int b, int c) {
       b = b - 1;
     }
 }
+void main() {}

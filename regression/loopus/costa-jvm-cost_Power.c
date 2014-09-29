@@ -11,3 +11,4 @@ int power(int x, int n) {
 	}
 	return x;
 }
+void main() {}

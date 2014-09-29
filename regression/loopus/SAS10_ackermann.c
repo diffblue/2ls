@@ -24,3 +24,4 @@ void ackermann(int a, int b, int c, int d, int e) {
   }
   e = nondet();
 }
+void main() {}

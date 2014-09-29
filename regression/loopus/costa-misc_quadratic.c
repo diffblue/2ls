@@ -8,3 +8,4 @@ void costamisc_quadratic(int n) {
 			;
 	}
 }
+void main() {}

@@ -15,3 +15,4 @@ void aa_22(int a, int b) {
         }
     }
 }
+void main() {}

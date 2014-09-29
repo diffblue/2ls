@@ -6,3 +6,4 @@ void div(int a, int b) {
     }
       return;
 }
+void main() {}

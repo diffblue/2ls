@@ -19,3 +19,4 @@ ListReverse *reverse(ListReverse *x) {
 	return result;
 }
 
+void main() {}

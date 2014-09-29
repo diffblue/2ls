@@ -27,3 +27,4 @@ void SequentialSingle(int a, int b, int c) {
         c = nondet();
             return;
 }
+void main() {}

@@ -5,3 +5,4 @@ void ex15(int m, int n, int p, int q) {
 				for (int l = q; l <= j; l = l + 1)
 					;
 }
+void main() {}

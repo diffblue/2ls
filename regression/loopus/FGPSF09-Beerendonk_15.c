@@ -14,3 +14,4 @@ void aa_15(int a, int b) {
         return;
     }
 }
+void main() {}

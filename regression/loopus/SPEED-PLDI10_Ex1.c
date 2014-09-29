@@ -41,3 +41,4 @@ void Ex1(int a, int b, int c, int d, int e) {
       e = nondet();
           return;
 }
+void main() {}

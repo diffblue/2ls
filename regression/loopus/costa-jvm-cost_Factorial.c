@@ -14,3 +14,4 @@ int fact(int n) {
 	}
 	return fac;
 }
+void main() {}

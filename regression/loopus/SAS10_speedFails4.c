@@ -19,3 +19,4 @@ int speedFails4(int x, int n, int b){
 }
 
 //YESSSSSSSSSSSSSSSSSSSSSSSSsss
+void main() {}

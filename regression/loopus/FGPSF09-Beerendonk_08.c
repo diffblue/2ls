@@ -6,3 +6,4 @@ void aa_08(int a, int b) {
       a = a - 1;
     }
 }
+void main() {}

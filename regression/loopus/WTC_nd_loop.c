@@ -9,3 +9,4 @@ void nd_loop(int a, int b) {
       b = nondet();
           return;
 }
+void main() {}

@@ -24,3 +24,4 @@ void speedpldi2(int a, int b, int c) {
     else
       return;
 }
+void main() {}

@@ -16,3 +16,4 @@ void complete3(int a, int b) {
         }
     }
 }
+void main() {}

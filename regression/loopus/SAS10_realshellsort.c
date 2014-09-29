@@ -22,3 +22,4 @@ void realshellsort(int numbers[], int array_size)
     increment = increment/2;
   }
 }
+void main() {}

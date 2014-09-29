@@ -6,3 +6,4 @@ void sumto_no_if(int a, int b) {
     }
       return;
 }
+void main() {}

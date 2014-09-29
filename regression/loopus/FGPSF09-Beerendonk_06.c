@@ -6,3 +6,4 @@ void aa_06(int a, int b) {
       a = 2*b;
     }
 }
+void main() {}

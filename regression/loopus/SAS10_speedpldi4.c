@@ -11,3 +11,4 @@ void speedpldi4(int m, int n){
       i -= m;
 }
   
+void main() {}

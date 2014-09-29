@@ -20,3 +20,4 @@ void speedpldi4(int a, int b) {
     else
       return;
 }
+void main() {}
