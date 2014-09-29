@@ -42,6 +42,7 @@ void summaryt::output(std::ostream &out, const namespacet &ns) const
   out << std::endl;
   out << "precondition: " << from_expr(ns,"",precondition) << std::endl;
   out << "transformer: " << from_expr(ns,"",transformer) << std::endl;
+  out << "invariant: " << from_expr(ns,"",invariant) << std::endl;
   out << "termination argument: ";
   if(termination_argument.is_nil()) out << "not computed";
   else pretty_print_termination_argument(out,ns,termination_argument);

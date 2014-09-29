@@ -7,6 +7,8 @@ Author: Peter Schrammel
 \*******************************************************************/
 
 #include "template_generator_base.h"
+#include "equality_domain.h"
+#include "tpolyhedra_domain.h"
 
 #include <util/find_symbols.h>
 #include <util/arith_tools.h>
@@ -30,13 +32,13 @@ Function: template_generator_baset::collect_variables_loop
 
 \*******************************************************************/
 
-void template_generator_baset::collect_variables_loop(local_SSAt &SSA,bool forward)
+void template_generator_baset::collect_variables_loop(const local_SSAt &SSA,bool forward)
 {
   // used for renaming map
   var_listt pre_state_vars, post_state_vars;
 
   // add loop variables
-  for(local_SSAt::nodest::iterator n_it = SSA.nodes.begin(); 
+  for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin(); 
       n_it != SSA.nodes.end(); n_it++)
   {
     if(n_it->loophead != SSA.nodes.end()) //we've found a loop
@@ -273,3 +275,67 @@ void template_generator_baset::add_vars(const var_listt &vars_to_add,
     add_var(*it,pre_guard,post_guard,kind,var_specs);
 }
 
+/*******************************************************************\
+
+Function: template_generator_baset::handle_special_functions
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void template_generator_baset::handle_special_functions(const local_SSAt &SSA)
+{
+  const irep_idt &function_id = SSA.goto_function.body.instructions.front().function;
+  if(id2string(function_id) == "c::__CPROVER_initialize")
+  {
+    options.set_option("intervals",true);
+    options.set_option("enum-solver",true);
+  }
+}
+
+/*******************************************************************\
+
+Function: template_generator_baset::instantiate_standard_domains
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void template_generator_baset::instantiate_standard_domains(const local_SSAt &SSA)
+{
+  //get domain from command line options
+  if(options.get_bool_option("equalities"))
+  {
+    filter_equality_domain();
+    domain_ptr = new equality_domaint(renaming_map, var_specs, SSA.ns);
+  }
+  else if(options.get_bool_option("intervals"))
+  {
+    domain_ptr = new tpolyhedra_domaint(renaming_map);
+    filter_template_domain();
+    static_cast<tpolyhedra_domaint *>(domain_ptr)->add_interval_template(
+      var_specs, SSA.ns);
+  }
+  else if(options.get_bool_option("zones"))
+  {
+    domain_ptr = new tpolyhedra_domaint(renaming_map);
+    filter_template_domain();
+    static_cast<tpolyhedra_domaint *>(domain_ptr)->add_zone_template(
+      var_specs, SSA.ns);
+  }
+  else if(options.get_bool_option("octagons"))
+  {
+    domain_ptr = new tpolyhedra_domaint(renaming_map);
+    filter_template_domain();
+    static_cast<tpolyhedra_domaint *>(domain_ptr)->add_octagon_template(
+      var_specs, SSA.ns);
+  }
+}

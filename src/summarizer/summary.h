@@ -35,6 +35,7 @@ summaryt() : termination_argument(nil_exprt()), terminates(false) {}
   
   predicatet precondition; //let's call it the caller-based summary
   predicatet transformer; // this is the callee-based summary
+  predicatet invariant; 
 
   predicatet termination_argument;
   bool terminates;

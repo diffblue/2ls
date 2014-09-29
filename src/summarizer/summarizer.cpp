@@ -180,10 +180,11 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
   }
 
   //analyze
-  ssa_analyzert analyzer(SSA.ns, options);
+  ssa_analyzert analyzer;
   analyzer.set_message_handler(get_message_handler());
 
   template_generator_summaryt template_generator(options,ssa_unwinder.get(function_name));
+  template_generator.set_message_handler(get_message_handler());
   template_generator(SSA,forward);
 
   analyzer(SSA,preconditions[function_name],template_generator);
@@ -205,17 +206,7 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
   simplify_expr(summary.precondition, SSA.ns); //does not help
 #endif 
 
-  // Add loop invariants as constraints back into SSA.
-  // We simply use the last CFG node. It would be prettier to put
-  // these close to the loops.
-  exprt inv;
-  analyzer.get_result(inv,template_generator.loop_vars());
-  status() << "Adding loop invariant: " << from_expr(SSA.ns, "", inv) << eom;
-  // always do precise join here (otherwise we have to store the loop invariant
-  // in the summary and handle its updates like the transformer's
-  inv = implies_exprt(summary.precondition,inv);
-  assert(SSA.nodes.begin()!=SSA.nodes.end());
-  SSA.nodes.back().constraints.push_back(inv);
+  analyzer.get_result(summary.invariant,template_generator.loop_vars());
 
   //check termination
   if(options.get_bool_option("termination"))
@@ -226,18 +217,25 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
       (has_loops ? "has loops" : " does not have loops") << eom;
     if(calls_terminate && has_loops) 
     {
+       //temporarily add invariant to SSA
+      SSA.nodes.push_back(local_SSAt::nodet(SSA.nodes.back().location, SSA.nodes.end()));
+      SSA.nodes.back().constraints.push_back(summary.invariant);
+
       template_generator_rankingt template_generator(options,ssa_unwinder.get(function_name));
+      template_generator.set_message_handler(get_message_handler());
       template_generator(SSA,forward);
 
-      ssa_analyzert analyzer1(SSA.ns, options);
+      ssa_analyzert analyzer1;
       analyzer1.set_message_handler(get_message_handler());
-      analyzer1.compute_ranking_functions = true;
+
       analyzer1(SSA,preconditions[function_name],template_generator);
       analyzer1.get_result(summary.termination_argument,template_generator.all_vars());
 
       //extract information whether there a ranking function was found for all loops
       summary.terminates = check_termination_argument(summary.termination_argument); 
      
+      SSA.nodes.pop_back(); //remove invariant from SSA
+
       //statistics
       solver_instances++;
       solver_calls += analyzer1.get_number_of_solver_calls();
@@ -372,9 +370,13 @@ void summarizert::join_summaries(const summaryt &existing_summary,
 #ifdef PRECISE_JOIN
   new_summary.transformer = and_exprt(existing_summary.transformer,
     implies_exprt(new_summary.precondition,new_summary.transformer));
+  new_summary.invariant = and_exprt(existing_summary.invariant,
+    implies_exprt(new_summary.precondition,new_summary.invariant));
 #else
   new_summary.transformer = or_exprt(existing_summary.transformer,
     new_summary.transformer);
+  new_summary.invariant = or_exprt(existing_summary.invariant,
+    new_summary.invariant);
 #endif
 }
 
@@ -537,10 +539,11 @@ void summarizert::compute_precondition(
 
   status() << "Computing calling context for function " << fname << eom;
 
-  ssa_analyzert analyzer(SSA.ns, options);
+  ssa_analyzert analyzer;
   analyzer.set_message_handler(get_message_handler());
 
   template_generator_callingcontextt template_generator(options,ssa_unwinder.get(function_name));
+  template_generator.set_message_handler(get_message_handler());
   template_generator(SSA,n_it,f_it,forward);
 
   // collect globals at call site

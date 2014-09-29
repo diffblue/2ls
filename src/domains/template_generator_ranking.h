@@ -15,25 +15,18 @@ class template_generator_rankingt : public template_generator_baset
 {
 public:
 
-  explicit template_generator_rankingt(const optionst &_options,
+  explicit template_generator_rankingt(optionst &_options,
                                     ssa_local_unwindert &_ssa_local_unwinder)
     : 
   template_generator_baset(_options,_ssa_local_unwinder)
   {
   }  
 
-  virtual void operator()(local_SSAt &SSA, 
-                  bool forward=true)
-  {
-    collect_variables_ranking(SSA,forward);
-
-    debug() << "Template variables: " << eom;
-    domaint::output_var_specs(debug(),var_specs,SSA.ns); debug() << eom;
-  }
+  virtual void operator()(const local_SSAt &SSA, bool forward=true);
 
 protected:  
 
-  virtual void collect_variables_ranking(local_SSAt &SSA,
+  virtual void collect_variables_ranking(const local_SSAt &SSA,
                          bool forward);
 
 };

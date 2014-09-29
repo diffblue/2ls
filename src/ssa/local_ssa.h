@@ -137,7 +137,7 @@ public:
   std::string suffix; // an extra suffix
 
   void get_globals(locationt loc, std::set<symbol_exprt> &globals, 
-		   bool with_own_returns=true, bool with_all_returns=true);
+		   bool with_own_returns=true, bool with_all_returns=true) const;
 
   nodest::iterator find_node(locationt loc);
   nodest::const_iterator find_node(locationt loc) const;

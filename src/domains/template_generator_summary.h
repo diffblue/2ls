@@ -15,22 +15,14 @@ class template_generator_summaryt : public template_generator_baset
 {
 public:
 
-  explicit template_generator_summaryt(const optionst &_options,
+  explicit template_generator_summaryt(optionst &_options,
                                     ssa_local_unwindert &_ssa_local_unwinder)
     : 
   template_generator_baset(_options,_ssa_local_unwinder)
   {
   }  
 
-  virtual void operator()(local_SSAt &SSA, 
-                  bool forward=true)
-  {
-    collect_variables_loop(SSA,forward);
-    collect_variables_inout(SSA,forward);
-
-    debug() << "Template variables: " << eom;
-    domaint::output_var_specs(debug(),var_specs,SSA.ns); debug() << eom;
-  }
+  virtual void operator()(const local_SSAt &SSA, bool forward=true);
 
   virtual domaint::var_sett inout_vars();
   virtual domaint::var_sett loop_vars();
@@ -38,7 +30,7 @@ public:
 
 protected:  
 
-  virtual void collect_variables_inout(local_SSAt &SSA,
+  virtual void collect_variables_inout(const local_SSAt &SSA,
                          bool forward);
 
 };
