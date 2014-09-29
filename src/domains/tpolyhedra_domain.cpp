@@ -129,11 +129,11 @@ tpolyhedra_domaint::row_valuet tpolyhedra_domaint::between(
       mp_integer plower = vlower.pack(); //compute "median" float number
       mp_integer pupper = vupper.pack();
       //assert(pupper>=plower);
-      ieee_floatt res;
+      ieee_floatt res(to_floatbv_type(lower.type()));
       res.unpack((plower+pupper)/2); //...by computing integer mean
       return res.to_expr();
     }
-    ieee_floatt res;
+    ieee_floatt res(to_floatbv_type(lower.type()));
     res.make_zero();
     return res.to_expr();
   }
@@ -592,7 +592,7 @@ tpolyhedra_domaint::row_valuet tpolyhedra_domaint::get_max_row_value(
   }
   if(templ_row.expr.type().id()==ID_floatbv) 
   {
-    ieee_floatt max;
+    ieee_floatt max(to_floatbv_type(templ_row.expr.type()));
     max.make_fltmax();
     return max.to_expr();
   }
@@ -625,7 +625,7 @@ tpolyhedra_domaint::row_valuet tpolyhedra_domaint::get_min_row_value(
   }
   if(templ_row.expr.type().id()==ID_floatbv) 
   {
-    ieee_floatt min;
+    ieee_floatt min(to_floatbv_type(templ_row.expr.type()));
     min.make_fltmin();
     return min.to_expr();
   }
