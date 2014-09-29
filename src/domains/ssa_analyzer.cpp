@@ -15,7 +15,14 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "strategy_solver_enumeration.h"
 #include "strategy_solver_binsearch.h"
 #include "strategy_solver_equality.h"
+#include "linrank_domain.h"
+#include "lexlinrank_domain.h"
+#include "ranking_solver_enumeration.h"
+#include "lexlinrank_solver_enumeration.h"
+#include "template_generator_ranking.h"
+
 #include "ssa_analyzer.h"
+
 
 #include <solvers/sat/satcheck.h>
 #include <solvers/flattening/bv_pointers.h>
@@ -67,7 +74,21 @@ void ssa_analyzert::operator()(local_SSAt &SSA,
 
   // get strategy solver from options
   strategy_solver_baset *strategy_solver;
-  if(template_generator.options.get_bool_option("equalities"))
+  if(template_generator.options.get_bool_option("compute-ranking-functions"))
+  {
+#ifndef LEXICOGRAPHIC
+    strategy_solver = new ranking_solver_enumerationt(
+        transition_relation, 
+        *static_cast<linrank_domaint *>(domain), solver, SSA.ns);    
+    result = new linrank_domaint::templ_valuet();
+#else
+    strategy_solver = new lexlinrank_solver_enumerationt(
+        transition_relation, 
+        *static_cast<lexlinrank_domaint *>(domain), solver, SSA.ns);    
+    result = new lexlinrank_domaint::templ_valuet();
+#endif
+  }  
+  else if(template_generator.options.get_bool_option("equalities"))
   {
     strategy_solver = new strategy_solver_equalityt(
         transition_relation, 

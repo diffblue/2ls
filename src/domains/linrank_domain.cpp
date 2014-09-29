@@ -39,6 +39,7 @@ exprt linrank_domaint::get_not_constraints(
   exprt::operandst &cond_exprs,
   std::vector<linrank_domaint::pre_post_valuest> &value_exprs)
 {
+  assert(value.size()==templ.size());
   cond_exprs.resize(value.size());
   value_exprs.resize(value.size());
 

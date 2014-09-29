@@ -46,7 +46,7 @@ public:
   domaint::var_specst var_specs;
   replace_mapt renaming_map;
 
-  optionst options; // we may override options
+  optionst options; // copy: we may override options
 
 protected:
   const ssa_local_unwindert &ssa_local_unwinder;

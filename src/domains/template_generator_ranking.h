@@ -11,6 +11,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "template_generator_base.h"
 
+#define LEXICOGRAPHIC
+
 class template_generator_rankingt : public template_generator_baset
 {
 public:
