@@ -350,13 +350,9 @@ void pretty_print_termination_argument(std::ostream &out, const namespacet &ns, 
               it_lex != it->op1().operands().end(); ++it_lex)
           {
             assert(it_lex->id() == ID_and);
-
             if(it_lex == it->op1().operands().begin()) out << "(";
             else out << std::endl << "   " << "       " << ",";
-
-            exprt rr = it_lex->op0();
-            remove_typecast(rr);
-            out << from_expr(ns,"",rr);
+            out << from_expr(ns,"",it_lex->op0());
           }
           out << ")";
         }
