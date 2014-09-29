@@ -156,8 +156,17 @@ exprt linrank_domaint::get_row_symb_constraint(
 #ifdef EXTEND_TYPES
       extend_expr_types(sum);
 #endif
-      exprt decreasing = binary_relation_exprt(sum, ID_gt, 
-	from_integer(mp_integer(0),sum.type()));
+      constant_exprt cst;
+      if(sum.type().id()==ID_unsignedbv || sum.type().id()==ID_signedbv)
+        cst = from_integer(mp_integer(0),sum.type());
+      else if(sum.type().id()==ID_floatbv)
+      {
+	ieee_floatt zero(to_floatbv_type(sum.type()));
+	zero.make_zero();
+        cst = zero.to_expr();
+      }
+      else assert(false);
+      exprt decreasing = binary_relation_exprt(sum, ID_gt,cst);
 #else
 #ifdef EXTEND_TYPES
       extend_expr_types(sum_pre);

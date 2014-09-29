@@ -5,7 +5,7 @@
 
 #define DEBUG_FORMULA 
 #define MAX_ELEMENTS 2 // lexicographic components
-#define MAX_OUTER_ITERATIONS 20
+#define MAX_OUTER_ITERATIONS 50
 
 
 bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)

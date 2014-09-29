@@ -11,7 +11,7 @@
 #define SYMB_COEFF_VAR "symb_coeff#"
 
 #define EXTEND_TYPES
-#define DIFFERENCE_ENCODING
+//#define DIFFERENCE_ENCODING
 
 #define COEFF_C_SIZE 10
 #define MAX_REFINEMENT 2
@@ -46,23 +46,22 @@ exprt lexlinrank_domaint::get_not_constraints(const lexlinrank_domaint::templ_va
   {
     value_exprs[row] = templ[row].expr;
 
-    exprt::operandst elmts;
-    elmts.reserve(value[row].size());
-    for(unsigned elm=0; elm<value[row].size(); ++elm)
+    if(is_row_value_true(value[row]))
     {
-      // looks to me like the following if branch and else-if branch should be outside the for-loop
-      if(is_row_element_value_true(value[row][elm]))
-      {
-        // !(g => true)
-        cond_exprs[row] = false_exprt();
-      }
-      else if(is_row_element_value_false(value[row][elm]))
-      {
-        // !(g => false)
-        cond_exprs[row] =
-          and_exprt(templ[row].pre_guard, templ[row].post_guard);
-      }
-      else
+      // !(g => true)
+      cond_exprs[row] = false_exprt();
+    }
+    else if(is_row_value_false(value[row]))
+    {
+      // !(g => false)
+      cond_exprs[row] =
+	and_exprt(templ[row].pre_guard, templ[row].post_guard);
+    }
+    else
+    {
+      exprt::operandst elmts;
+      elmts.reserve(value[row].size());
+      for(unsigned elm=0; elm<value[row].size(); ++elm)
       {
         assert(value[row][elm].c.size()==templ[row].expr.size());
         assert(value[row][elm].c.size()>=1);
@@ -72,8 +71,8 @@ exprt lexlinrank_domaint::get_not_constraints(const lexlinrank_domaint::templ_va
 
 #ifdef DIFFERENCE_ENCODING
         exprt sum = mult_exprt(value[row][elm].c[0],
-            minus_exprt(templ[row].expr[0].first,
-                templ[row].expr[0].second));
+			       minus_exprt(templ[row].expr[0].first,
+					   templ[row].expr[0].second));
 #else
         exprt sum_pre = mult_exprt(value[row][elm].c[0],templ[row].expr[0].first);
         exprt sum_post = mult_exprt(value[row][elm].c[0],templ[row].expr[0].second);
@@ -82,30 +81,30 @@ exprt lexlinrank_domaint::get_not_constraints(const lexlinrank_domaint::templ_va
         {
 #ifdef DIFFERENCE_ENCODING
           sum = plus_exprt(sum, mult_exprt(value[row][elm].c[i],
-              minus_exprt(templ[row].expr[i].first,
-                  templ[row].expr[i].second)));
+					   minus_exprt(templ[row].expr[i].first,
+						       templ[row].expr[i].second)));
 #else
           sum_pre = plus_exprt(sum_pre,
-              mult_exprt(value[row][elm].c[i],
-                  templ[row].expr[i].first));
+			       mult_exprt(value[row][elm].c[i],
+					  templ[row].expr[i].first));
           sum_post = plus_exprt(sum_post,
-              mult_exprt(value[row][elm].c[i],
-                  templ[row].expr[i].second));
+				mult_exprt(value[row][elm].c[i],
+					   templ[row].expr[i].second));
 #endif
         }
         //extend types
 #ifdef DIFFERENCE_ENCODING
 #ifdef EXTEND_TYPES
-      extend_expr_types(sum);
+	extend_expr_types(sum);
 #endif
-      exprt decreasing = binary_relation_exprt(sum, ID_gt,
-          from_integer(mp_integer(0),sum.type()));
+	exprt decreasing = binary_relation_exprt(sum, ID_gt,
+						 from_integer(mp_integer(0),sum.type()));
 #else
 #ifdef EXTEND_TYPES
-      extend_expr_types(sum_pre);
-      extend_expr_types(sum_post);
+	extend_expr_types(sum_pre);
+	extend_expr_types(sum_post);
 #endif
-      exprt decreasing = binary_relation_exprt(sum_pre, ID_gt,sum_post);
+	exprt decreasing = binary_relation_exprt(sum_pre, ID_gt,sum_post);
 #endif
 
         c.push_back(decreasing);
@@ -114,8 +113,8 @@ exprt lexlinrank_domaint::get_not_constraints(const lexlinrank_domaint::templ_va
         {
 #ifdef DIFFERENCE_ENCODING
           exprt sum2 = mult_exprt(value[row][elm2].c[0],
-              minus_exprt(templ[row].expr[0].first,
-                  templ[row].expr[0].second));
+				  minus_exprt(templ[row].expr[0].first,
+					      templ[row].expr[0].second));
 #else
           exprt sum_pre2 = mult_exprt(value[row][elm2].c[0],templ[row].expr[0].first);
           exprt sum_post2 = mult_exprt(value[row][elm2].c[0],templ[row].expr[0].first);
@@ -124,8 +123,8 @@ exprt lexlinrank_domaint::get_not_constraints(const lexlinrank_domaint::templ_va
           {
 #ifdef DIFFERENCE_ENCODING
             sum2 = plus_exprt(sum2, mult_exprt(value[row][elm2].c[i],
-                minus_exprt(templ[row].expr[i].first,
-                    templ[row].expr[i].second)));
+					       minus_exprt(templ[row].expr[i].first,
+							   templ[row].expr[i].second)));
 #else
             sum_pre2 = plus_exprt(sum_pre2, mult_exprt(value[row][elm2].c[i], templ[row].expr[i].first));
             sum_post2 = plus_exprt(sum_post2, mult_exprt(value[row][elm2].c[i], templ[row].expr[i].second));
@@ -137,7 +136,7 @@ exprt lexlinrank_domaint::get_not_constraints(const lexlinrank_domaint::templ_va
           extend_expr_types(sum2);
 #endif
           exprt non_inc = binary_relation_exprt(sum2, ID_ge,
-              from_integer(mp_integer(0),sum2.type()));
+						from_integer(mp_integer(0),sum2.type()));
 #else
 #ifdef EXTEND_TYPES
           extend_expr_types(sum_pre2);
@@ -155,8 +154,8 @@ exprt lexlinrank_domaint::get_not_constraints(const lexlinrank_domaint::templ_va
       cond_exprs[row] =
         not_exprt(
           implies_exprt(
-              and_exprt(templ[row].pre_guard, templ[row].post_guard),
-              disjunction(elmts)));
+	    and_exprt(templ[row].pre_guard, templ[row].post_guard),
+	    disjunction(elmts)));
 
     }
   }
@@ -166,9 +165,9 @@ exprt lexlinrank_domaint::get_not_constraints(const lexlinrank_domaint::templ_va
 }
 
 exprt lexlinrank_domaint::get_row_symb_constraint(row_valuet &symb_values, // contains vars c and d
-					      const rowt &row,
-					      const pre_post_valuest &values,
-					      exprt &refinement_constraint)
+						  const rowt &row,
+						  const pre_post_valuest &values,
+						  exprt &refinement_constraint)
 {
   // NOTE: I assume symb_values.size was set to the number of
   // desired elements in the lexicographic before calling this function
@@ -186,12 +185,12 @@ exprt lexlinrank_domaint::get_row_symb_constraint(row_valuet &symb_values, // co
     c.reserve(1 + symb_values.size() - (elm+1));
 
     symb_values[elm].c[0] = symbol_exprt(SYMB_COEFF_VAR+std::string("c!")+
-         i2string(row)+"$"+i2string(elm)+"$0",
-         signedbv_typet(COEFF_C_SIZE));  //coefficients are signed integers
+					 i2string(row)+"$"+i2string(elm)+"$0",
+					 signedbv_typet(COEFF_C_SIZE));  //coefficients are signed integers
 
 #ifdef DIFFERENCE_ENCODING
     exprt sum = mult_exprt(symb_values[elm].c[0],
-        minus_exprt(values[0].first, values[0].second));
+			   minus_exprt(values[0].first, values[0].second));
 #else
     exprt sum_pre = mult_exprt(symb_values[elm].c[0],values[0].first);
     exprt sum_post = mult_exprt(symb_values[elm].c[0],values[0].second);
@@ -408,14 +407,14 @@ void lexlinrank_domaint::project_on_vars(valuet &value, const var_sett &vars, ex
   {
     assert(templ[row].kind == LOOP);
 
-    if(is_row_element_value_false(v[row][0]))
+    if(is_row_value_false(v[row]))
     {
       //(g => false)
       c.push_back(implies_exprt(
         and_exprt(templ[row].pre_guard, templ[row].post_guard),
         false_exprt()));
     }
-    else if(is_row_element_value_true(v[row][0]))
+    else if(is_row_value_true(v[row]))
     {
       //(g => true)
       c.push_back(implies_exprt(
@@ -549,12 +548,14 @@ Function: lexlinrank_domaint::is_row_value_false
 
 bool lexlinrank_domaint::is_row_value_false(const row_valuet & row_value) const
 {
-  assert(false);
-  //return row_value.size() >= 1 && row_value[0].d.get(ID_value) == ID_false;
+  assert(row_value.size()>=1);
+  assert(row_value[0].c.size()>=1);
+  return row_value[0].c[0].get(ID_value)==ID_false;
 }
 
 bool lexlinrank_domaint::is_row_element_value_false(const row_value_elementt & row_value_element) const
 {
+  assert(false);
   assert(row_value_element.c.size()>=1);
   return row_value_element.c[0].get(ID_value)==ID_false;
 }
@@ -573,12 +574,14 @@ Function: lexlinrank_domaint::is_row_value_true
 
 bool lexlinrank_domaint::is_row_value_true(const row_valuet & row_value) const
 {
-  assert(false);
-  // return row_value.size() == 1 && row_value[0].d.get(ID_value) == ID_true;
+  assert(row_value.size()>=1);
+  assert(row_value[0].c.size()>=1);
+  return row_value[0].c[0].get(ID_value)==ID_true;
 }
 
 bool lexlinrank_domaint::is_row_element_value_true(const row_value_elementt & row_value_element) const
 {
+  assert(false);
   assert(row_value_element.c.size()>=1);
   return row_value_element.c[0].get(ID_value)==ID_true;
 }

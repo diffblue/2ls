@@ -13,6 +13,17 @@ Function: extend_expr_types
 
 \*******************************************************************/
 
+unsigned get_bitvector_width(const exprt &expr)
+{
+  if(expr.type().id()==ID_signedbv) 
+    return to_signedbv_type(expr.type()).get_width();
+  if(expr.type().id()==ID_unsignedbv) 
+    return to_unsignedbv_type(expr.type()).get_width();
+  if(expr.type().id()==ID_floatbv) 
+    return to_floatbv_type(expr.type()).get_width();
+  assert(false); //type not implemented
+}
+
 void extend_expr_types(exprt &expr)
 {
 //  std::cerr << "expr: " << expr << std::endl;
@@ -43,16 +54,9 @@ void extend_expr_types(exprt &expr)
 //  std::cerr << "op0: " << expr.op0() << std::endl;
     extend_expr_types(expr.op1());
 //  std::cerr << "op1: " << expr.op1() << std::endl;
-    unsigned size0 = 0, size1  = 0;
-    if(expr.op0().type().id()==ID_signedbv) 
-      size0 =  to_signedbv_type(expr.op0().type()).get_width();
-    if(expr.op0().type().id()==ID_unsignedbv) 
-      size0 =  to_unsignedbv_type(expr.op0().type()).get_width();
-    if(expr.op1().type().id()==ID_signedbv) 
-      size1 =  to_signedbv_type(expr.op1().type()).get_width();
-    if(expr.op1().type().id()==ID_unsignedbv) 
-      size1 =  to_unsignedbv_type(expr.op1().type()).get_width();
-    assert(size0>0); assert(size1>0); //TODO: implement floats
+    unsigned size0 = get_bitvector_width(expr.op0());
+    unsigned size1 = get_bitvector_width(expr.op1());
+    assert(size0>0); assert(size1>0); 
     typet new_type = expr.op0().type();
     if(expr.op0().type().id()==expr.op1().type().id())
     {
@@ -65,41 +69,57 @@ void extend_expr_types(exprt &expr)
        else 
          new_type = unsignedbv_typet(std::max(size0,size1)+1);
      }
-     else assert(false);
+     else if(new_type.id()==ID_floatbv) {} //TODO: shall we extend floats?
+     else assert(false); 
     }
-    else
+    else //operands do not have the same type 
     {
      if(new_type.id()==ID_signedbv) 
        new_type = signedbv_typet(size0<=size1 ? size1+2 : size0+1);
      else if(new_type.id()==ID_unsignedbv) 
        new_type = signedbv_typet(size1<=size0 ? size0+2 : size1+1);
-     else assert(false);
+     else assert(false); //TODO: implement floats
     }
     if(expr.id()==ID_plus)
       expr = plus_exprt(typecast_exprt(expr.op0(),new_type),typecast_exprt(expr.op1(),new_type));
     else if(expr.id()==ID_minus)
       expr = minus_exprt(typecast_exprt(expr.op0(),new_type),typecast_exprt(expr.op1(),new_type));
-     else assert(false);
+     else assert(false); //TODO: implement floats
     return;
   }
-  //TODO: implement mult
   if(expr.id()==ID_mult)
   {
     extend_expr_types(expr.op0());
     extend_expr_types(expr.op1());
-    unsigned size0 = 0, size1  = 0;
-    if(expr.op0().type().id()==ID_signedbv) 
-      size0 =  to_signedbv_type(expr.op0().type()).get_width();
-    if(expr.op0().type().id()==ID_unsignedbv) 
-      size0 =  to_unsignedbv_type(expr.op0().type()).get_width();
-    if(expr.op1().type().id()==ID_signedbv) 
-      size1 =  to_signedbv_type(expr.op1().type()).get_width();
-    if(expr.op1().type().id()==ID_unsignedbv) 
-      size1 =  to_unsignedbv_type(expr.op1().type()).get_width();
-    assert(size0>0); assert(size1>0); //TODO: implement floats
-    typet new_type = signedbv_typet(size0+size1+1);
-    expr = mult_exprt(typecast_exprt(expr.op0(),new_type),typecast_exprt(expr.op1(),new_type));
-    return;
+    unsigned size0 = get_bitvector_width(expr.op0());
+    unsigned size1 = get_bitvector_width(expr.op1());
+     assert(size0>0); assert(size1>0); 
+    if((expr.op0().type().id()==ID_unsignedbv || expr.op0().type().id()==ID_signedbv) &&
+       (expr.op1().type().id()==ID_unsignedbv || expr.op1().type().id()==ID_signedbv))
+    {
+      typet new_type = signedbv_typet(size0+size1+1);
+      expr = mult_exprt(typecast_exprt(expr.op0(),new_type),typecast_exprt(expr.op1(),new_type));
+      return;
+    }
+    else if(expr.op0().type().id()==ID_floatbv && expr.op1().type().id()==ID_floatbv)
+    {
+      // TODO: shall we extend floats? 
+    }
+    else if((expr.op0().type().id()==ID_unsignedbv || expr.op0().type().id()==ID_signedbv) &&
+        expr.op1().type().id()==ID_floatbv)
+    {
+      typet new_type = expr.op1().type(); // TODO: shall we extend floats? 
+      expr = mult_exprt(typecast_exprt(expr.op0(),new_type),expr.op1());
+      return;
+    }
+    else if((expr.op1().type().id()==ID_unsignedbv || expr.op1().type().id()==ID_signedbv) &&
+        expr.op0().type().id()==ID_floatbv)
+    {
+      typet new_type = expr.op0().type(); // TODO: shall we extend floats? 
+      expr = mult_exprt(expr.op0(),typecast_exprt(expr.op1(),new_type));
+      return;
+    }
+    else assert(false); 
   }
   std::cerr << "expr: " << expr << std::endl;
   assert(false);
@@ -173,6 +193,10 @@ ieee_floatt simplify_const_float(const exprt &expr)
       ieee_floatt v;
       v.from_integer(simplify_const_int(op0));
       return v; 
+    }
+    if(op0.type().id()==ID_floatbv)
+    {
+      return ieee_floatt(simplify_const(op0));
     }
     assert(false);
   }
@@ -301,8 +325,11 @@ Function: pretty_print_termination_argument()
 
 \******************************************************************/
 
-void pretty_print_termination_argument(std::ostream &out, const namespacet &ns, const exprt &expr)
+void pretty_print_termination_argument(std::ostream &out, const namespacet &ns, const exprt &_expr)
 {
+  exprt expr = _expr;
+  remove_typecast(expr);
+
   if(expr.id()==ID_and)
   {
     // should be of the form /\_i g_i => R_i
