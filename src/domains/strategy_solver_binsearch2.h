@@ -10,13 +10,15 @@ class strategy_solver_binsearch2t : public strategy_solver_baset
   explicit strategy_solver_binsearch2t(const constraintst &program,
     tpolyhedra_domaint &_tpolyhedra_domain,
     bv_pointerst &_solver, const namespacet &_ns) : 
-  strategy_solver_baset(program, _solver, _ns),
-  tpolyhedra_domain(_tpolyhedra_domain) {}
+    strategy_solver_baset(program, _solver, _ns),
+    tpolyhedra_domain(_tpolyhedra_domain),
+    sum_bound_counter(0) {}
 
   virtual bool iterate(invariantt &inv);
 
  protected:
   tpolyhedra_domaint &tpolyhedra_domain;
+  unsigned sum_bound_counter;
 
 };
 
