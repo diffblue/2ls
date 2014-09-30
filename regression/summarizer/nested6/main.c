@@ -1,14 +1,11 @@
 void main()
 {
-  int x;
-  __CPROVER_assume(x==5);
-  int i,j;
-  for(i=0; i<x; i++)
+  int x,y;
+  for(x=0;x<10;x++)
   {
-    int y;
-    __CPROVER_assume(y==100);
-    for(j=0; j<y; j+=x);
+    for(y=0;y<20;y++);
   }
-  assert(i==5);
-  assert(100<=j && j<=105);
+
+  assert(x==10);
+  assert(y==20);
 }
