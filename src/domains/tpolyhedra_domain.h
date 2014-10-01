@@ -2,6 +2,7 @@
 #define CPROVER_TEMPLATE_DOMAIN_H
 
 #include "domain.h"
+
 #include <util/std_expr.h>
 #include <util/arith_tools.h>
 #include <util/ieee_float.h>
@@ -35,6 +36,8 @@ public:
   // initialize value
   virtual void initialize(valuet &value);
 
+  virtual void join(valuet &value1, const valuet &value2);
+
   // value -> constraints
   exprt get_row_constraint(const rowt &row, const row_valuet &row_value);
   exprt get_row_pre_constraint(const rowt &row, const row_valuet &row_value);
@@ -51,7 +54,7 @@ public:
   exprt to_symb_pre_constraints(const templ_valuet &value);
   exprt to_symb_pre_constraints(const templ_valuet &value,
 				const std::set<rowt> &symb_rows);
-  exprt to_symb_post_constraints();
+  exprt to_symb_post_constraints(const std::set<rowt> &symb_rows);
   exprt get_row_symb_value_constraint(const rowt &row, 
 				      const row_valuet &row_value);
   exprt get_row_symb_pre_constraint(const rowt &row, 
@@ -88,7 +91,7 @@ public:
   void add_octagon_template(const var_specst &var_specs,
 				    const namespacet &ns);
 
-  exprt get_row_symb_value(const rowt &row);
+  symbol_exprt get_row_symb_value(const rowt &row);
 
 protected:
   friend class strategy_solver_binsearcht;
@@ -96,5 +99,12 @@ protected:
   templatet templ;
   
 };
+
+void extend_expr_types(exprt &expr);
+constant_exprt simplify_const(const exprt &expr);
+ieee_floatt simplify_const_float(const exprt &expr);
+mp_integer simplify_const_int(const exprt &expr);
+
+
 
 #endif

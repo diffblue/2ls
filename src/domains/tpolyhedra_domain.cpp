@@ -10,6 +10,8 @@
 
 #define SYMB_BOUND_VAR "symb_bound#"
 
+#define ENABLE_HEURISTICS
+
 /*******************************************************************\
 
 Function: tpolyhedra_domaint::initialize
@@ -35,6 +37,36 @@ void tpolyhedra_domaint::initialize(valuet &value)
 
 /*******************************************************************\
 
+Function: tpolyhedra_domaint::join
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void tpolyhedra_domaint::join(valuet &value1, const valuet &value2)
+{
+  templ_valuet &v1 = static_cast<templ_valuet&>(value1);
+  const templ_valuet &v2 = static_cast<const templ_valuet&>(value2);
+  assert(v1.size()==templ.size());
+  assert(v1.size()==v2.size());
+  for(unsigned row = 0; row<templ.size(); row++)
+  {
+    if(is_row_value_inf(v1[row]) || is_row_value_inf(v2[row])) 
+      v1[row] = true_exprt();
+    else if(is_row_value_neginf(v1[row])) v1[row] = v2[row];
+    else if(!is_row_value_neginf(v2[row])) 
+    {
+      if(less_than(v1[row],v2[row])) v1[row] = v2[row];
+    }
+  }
+}
+
+/*******************************************************************\
+
 Function: tpolyhedra_domaint::between
 
   Inputs:
@@ -51,12 +83,42 @@ tpolyhedra_domaint::row_valuet tpolyhedra_domaint::between(
   if(lower.type()==upper.type() && 
      (lower.type().id()==ID_signedbv || lower.type().id()==ID_unsignedbv))
   {
+    typet type = lower.type();
     mp_integer vlower, vupper;
     to_integer(lower, vlower);
     to_integer(upper, vupper);
     assert(vupper>=vlower);
     if(vlower+1==vupper) return from_integer(vlower,lower.type()); //floor
-    return from_integer((vupper+vlower)/2,lower.type());
+
+#ifdef ENABLE_HEURISTICS
+    //heuristics
+    if(type.id()==ID_unsignedbv && 
+       vlower<mp_integer(128) && 
+       vupper==to_unsignedbv_type(type).largest())
+    {
+      return from_integer(mp_integer(256),type);
+    }
+    if(type.id()==ID_signedbv)
+    { 
+      if(vlower==to_signedbv_type(type).smallest() && 
+	 vupper==to_signedbv_type(type).largest())
+      {
+        return from_integer(mp_integer(0),to_signedbv_type(type));
+      }
+      if((vlower>mp_integer(-128) && vlower<mp_integer(128))&& 
+	 vupper==to_signedbv_type(type).largest())
+      {
+        return from_integer(mp_integer(256),type);
+      }
+      if(vlower==to_signedbv_type(type).smallest() && 
+	 (vupper>mp_integer(-128) && vupper<mp_integer(128)))
+      {
+        return from_integer(mp_integer(-256),type);
+      }
+    }
+#endif
+
+    return from_integer((vupper+vlower)/2,type);
   }
   if(lower.type().id()==ID_floatbv && upper.type().id()==ID_floatbv)
   {
@@ -80,7 +142,7 @@ tpolyhedra_domaint::row_valuet tpolyhedra_domaint::between(
 
 /*******************************************************************\
 
-Function: tpolyhedra_domaint::leq
+Function: tpolyhedra_domaint::less_than
 
   Inputs:
 
@@ -255,7 +317,7 @@ Function: tpolyhedra_domaint::get_row_symb_value
 
 \*******************************************************************/
 
-exprt tpolyhedra_domaint::get_row_symb_value(const rowt &row)
+symbol_exprt tpolyhedra_domaint::get_row_symb_value(const rowt &row)
 {
   assert(row<templ.size());
   return symbol_exprt(SYMB_BOUND_VAR+i2string(row),templ[row].expr.type());
@@ -365,16 +427,17 @@ Function: tpolyhedra_domaint::to_symb_post_constraints
 
  Outputs:
 
- Purpose: post_guard ==> (row_expr >= symb_row_value)
+ Purpose: /\_i post_guard ==> (row_expr >= symb_row_value)
 
 \*******************************************************************/
 
-exprt tpolyhedra_domaint::to_symb_post_constraints()
+exprt tpolyhedra_domaint::to_symb_post_constraints(const std::set<rowt> &symb_rows)
 {
   exprt::operandst c; 
-  for(unsigned row = 0; row<templ.size(); row++)
+  for(std::set<rowt>::const_iterator it = symb_rows.begin(); 
+      it != symb_rows.end(); it++)
   {
-    c.push_back(get_row_symb_post_constraint(row));
+    c.push_back(get_row_symb_post_constraint(*it));
   }
   return conjunction(c); 
 }
@@ -695,6 +758,7 @@ bool tpolyhedra_domaint::is_row_value_inf(const row_valuet & row_value) const
   return row_value.get(ID_value)==ID_true;
 }
 
+
 /*******************************************************************\
 
 Function: make_interval_template
@@ -716,7 +780,7 @@ void tpolyhedra_domaint::add_interval_template(const var_specst &var_specs,
   for(var_specst::const_iterator v = var_specs.begin(); 
       v!=var_specs.end(); v++)
   {
-    if(v->kind==IN) continue; //TODO: must be done in caller (for preconditions, e.g.)
+    if(v->kind==IN) continue; 
 
     // x
     {
@@ -763,7 +827,7 @@ void tpolyhedra_domaint::add_zone_template(const var_specst &var_specs,
   for(var_specst::const_iterator v1 = var_specs.begin(); 
       v1!=var_specs.end(); v1++)
   {
-    if(v1->kind!=IN) //TODO: must be done in caller (for preconditions, e.g.)
+    if(v1->kind!=IN)
     {
       // x
       {
@@ -792,7 +856,8 @@ void tpolyhedra_domaint::add_zone_template(const var_specst &var_specs,
     for(; v2!=var_specs.end(); v2++)
     {
       kindt k = domaint::merge_kinds(v1->kind,v2->kind);
-      if(k==IN) continue; //TODO: must be done in caller (for preconditions, e.g.)
+      if(k==IN) continue; 
+      if(k==LOOP && v1->pre_guard!=v2->pre_guard) continue; //TEST: we need better heuristics
 
       exprt pre_g = and_exprt(v1->pre_guard,v2->pre_guard);
       exprt post_g = and_exprt(v1->post_guard,v2->post_guard);
@@ -847,7 +912,7 @@ void tpolyhedra_domaint::add_octagon_template(const var_specst &var_specs,
   for(var_specst::const_iterator v1 = var_specs.begin(); 
       v1!=var_specs.end(); v1++)
   {
-    if(v1->kind!=IN) //TODO: must be done in caller (for preconditions, e.g.)
+    if(v1->kind!=IN) 
     {
       // x
       {
@@ -876,7 +941,8 @@ void tpolyhedra_domaint::add_octagon_template(const var_specst &var_specs,
     for(; v2!=var_specs.end(); v2++)
     {
       kindt k = domaint::merge_kinds(v1->kind,v2->kind);
-      if(k==IN) continue; //TODO: must be done in caller (for preconditions, e.g.)
+      if(k==IN) continue; 
+      if(k==LOOP && v1->pre_guard!=v2->pre_guard) continue; //TEST: we need better heuristics
 
       exprt pre_g = and_exprt(v1->pre_guard,v2->pre_guard);
       exprt post_g = and_exprt(v1->post_guard,v2->post_guard);
@@ -934,4 +1000,3 @@ void tpolyhedra_domaint::add_octagon_template(const var_specst &var_specs,
   }
 
 }
-
