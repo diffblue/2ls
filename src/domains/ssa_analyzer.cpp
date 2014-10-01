@@ -14,6 +14,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "strategy_solver_base.h"
 #include "strategy_solver_enumeration.h"
 #include "strategy_solver_binsearch.h"
+#include "strategy_solver_binsearch2.h"
+
 #include "strategy_solver_equality.h"
 #include "linrank_domain.h"
 #include "lexlinrank_domain.h"
@@ -106,7 +108,12 @@ void ssa_analyzert::operator()(local_SSAt &SSA,
     }
     else if(template_generator.options.get_bool_option("binsearch-solver"))
     {
-      strategy_solver = new strategy_solver_binsearcht(
+      strategy_solver = 
+#ifndef BINSEARCH_SUM
+        new strategy_solver_binsearcht(
+#else
+        new strategy_solver_binsearch2t(
+#endif
         transition_relation, 
         *static_cast<tpolyhedra_domaint *>(domain), solver, SSA.ns);
     }

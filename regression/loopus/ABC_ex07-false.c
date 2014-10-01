@@ -1,14 +1,14 @@
-int nondet();
+#include <limits.h>
 
-void ex05(int a, int b, int c) {
+void ex07(int a, int b, int c, int d) {
     a = 1;
       while (b >= a) {
         c = 1;
           while (1) {
-            if (a >= c) {
+            if (d >= c) {
               c = c + 1;
             }
-            else if (c >= a + 1) {
+            else if (c >= d + 1) {
               a = a + 1;
                 break;
             }
@@ -18,4 +18,7 @@ void ex05(int a, int b, int c) {
       }
           return;
 }
-void main() {}
+void main() 
+{
+  //ex07(1,INT_MAX,1,INT_MAX); does not terminate
+}

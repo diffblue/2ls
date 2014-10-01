@@ -47,6 +47,7 @@ DELTA_OBJ+=\
       ../domains/strategy_solver_base$(OBJEXT) \
       ../domains/strategy_solver_enumeration$(OBJEXT) \
       ../domains/strategy_solver_binsearch$(OBJEXT) \
+      ../domains/strategy_solver_binsearch2$(OBJEXT) \
       ../domains/template_generator_base$(OBJEXT) \
       ../domains/template_generator_summary$(OBJEXT) \
       ../domains/template_generator_callingcontext$(OBJEXT) \

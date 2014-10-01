@@ -1,14 +1,13 @@
 int nondet();
 
-void ex03(int a, int b, int c, int d, int e) {
-    a = 1;
-      while (b >= a) {
+void ex14(int a, int b, int c, int d, int e) {
+      while (b >= 1) {
         c = 1;
           while (1) {
             if (a >= c) {
-              d = a + 1;
+              d = b;
               while (1) {
-                if (b >= d) {
+                if (b + c >= d) {
                   e = 1;
                   while (1) {
                     if (d >= e) {
@@ -22,7 +21,7 @@ void ex03(int a, int b, int c, int d, int e) {
                       return;
                   }
                 }
-                else if (d >= b + 1) {
+                else if (d >= b + c + 1) {
                   c = c + 1;
                     break;
                 }
@@ -31,8 +30,8 @@ void ex03(int a, int b, int c, int d, int e) {
               }
             }
             else if (c >= a + 1) {
-              a = a + 1;
-              break;
+              b = b - 1;
+                break;
             }
             else
               return;

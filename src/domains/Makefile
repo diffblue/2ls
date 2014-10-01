@@ -8,6 +8,7 @@ SRC = predicate.cpp fixed_point.cpp ssa_fixed_point.cpp \
   linrank_domain.cpp lexlinrank_domain.cpp\
   ranking_solver_enumeration.cpp lexlinrank_solver_enumeration.cpp \
   strategy_solver_enumeration.cpp strategy_solver_binsearch.cpp \
+  strategy_solver_binsearch2.cpp \
   template_generator_base.cpp template_generator_summary.cpp \
   template_generator_callingcontext.cpp template_generator_ranking.cpp
 
