@@ -836,7 +836,7 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
     //copy the original loop head
 
     local_SSAt::nodet node = current_loop.body_nodes.front();
-
+    bool is_do_while=false;
     exprt guard_e = SSA.guard_symbol(node.location);
     exprt cond_e ;//= SSA.cond_symbol(node.location);
 
@@ -853,11 +853,27 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
       exprt e = SSA.cond_symbol(loopend_node->location);
       cond_e=not_exprt(e);
       node.equalities.push_back(equal_exprt(e,true_exprt()));
-
+      is_do_while=true;
     }
     for (local_SSAt::nodet::equalitiest::iterator e_it =
 	   node.equalities.begin(); e_it != node.equalities.end(); e_it++) {
-      exprt e = e_it->lhs();
+      exprt e;
+
+      //= e_it->lhs();
+
+      if(is_do_while
+          && (e_it->rhs().id()==ID_if))
+      {
+
+          if_exprt ife1 = to_if_expr(e_it->rhs());
+          e = current_loop.pre_post_exprs[ife1.true_case()];
+
+
+      }
+      else
+      {
+        e = e_it->lhs();
+      }
       exprt re = e;
       rename(re, suffix, 0,current_loop);
       for (unsigned int i = 1; i < unwind_depth; i++) {
@@ -874,6 +890,7 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
       }
 
       e_it->rhs() = re;
+      e_it->lhs()=e;
       rename(e_it->lhs(),suffix,-1,current_loop);
 
       node.enabling_expr = new_sym;
