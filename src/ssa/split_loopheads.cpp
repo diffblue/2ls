@@ -22,6 +22,7 @@ void split_loopheads(goto_modelt &goto_model)
     Forall_goto_program_instructions(i_it, f_it->second.body)
     {
       if(!i_it->is_backwards_goto()) continue;
+      if(i_it->guard.is_true()) continue;
       goto_programt::targett loophead = i_it->get_target();
       if(!loophead->is_goto() && !loophead->is_assume()) continue;
       
