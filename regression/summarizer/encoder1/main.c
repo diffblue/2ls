@@ -45,7 +45,7 @@ int main () {
   while (last != EOF);
 
   assert(inputBytes == encodedBytes);
-  //assert(outputBytes <= 2 * inputBytes);
+  assert(outputBytes <= 2 * inputBytes);
 
   return 0;
 }

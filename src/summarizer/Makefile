@@ -30,6 +30,7 @@ DELTA_OBJ+=\
       ../ssa/ssa_aliasing$(OBJEXT) \
       ../ssa/simplify_ssa$(OBJEXT) \
       ../ssa/ssa_build_goto_trace$(OBJEXT) \
+      ../ssa/split_loopheads$(OBJEXT)\
       ../ssa/ssa_inliner$(OBJEXT)\
       ../ssa/ssa_unwinder$(OBJEXT)\
       ../functions/summary$(OBJEXT) \

@@ -44,7 +44,6 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
     strategy_cond_literals[i] = solver.convert(strategy_cond_exprs[i]);
     strategy_cond_exprs[i] = literal_exprt(strategy_cond_literals[i]);
   }
-  debug() << eom;
 
   solver << or_exprt(disjunction(strategy_cond_exprs),
 		     literal_exprt(activation_literal0));
