@@ -4,12 +4,11 @@ void main()
   do
   {
     int y=0;
-    do
+    while(y<20)
     {
       y++;
     }
-    while(y<10);
-    assert(y==10);
+    assert(y==20);
   }
   while(++x<10);
   assert(x==10);

@@ -4,13 +4,13 @@ void main()
   int y;
   while(x<10)
   {
-    y=0;
+    y=-1;
     do
     {
       y++;
     }
-    while(y<10);
-    assert(y==10);
+    while(y<x);
+    assert(y==x); //this one is damn hard to prove
     x++;
   }
   assert(x==10);

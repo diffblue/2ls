@@ -1,16 +1,17 @@
 void main()
 {
   int x=0;
-  do
+  int y;
+  while(x<10)
   {
-    int y=0;
+    y=-1;
     do
     {
       y++;
     }
-    while(y<10);
-    assert(y==10);
+    while(y<x);
+    assert(y>=x); 
+    x++;
   }
-  while(++x<10);
   assert(x==10);
 }

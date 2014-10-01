@@ -8,8 +8,8 @@ void main()
     {
       y++;
     }
-    while(y<10);
-    assert(y==10);
+    while(y<20);
+    assert(y==20);
   }
   while(++x<10);
   assert(x==10);

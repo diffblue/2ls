@@ -3,7 +3,7 @@ void main()
   int x,y,z;  
   __CPROVER_assume(x>=0);
   __CPROVER_assume(x==y);
-  __CPROVER_assume(-1<=z && z<=-1);
+  __CPROVER_assume(-20<=z && z<=-1);
 
   do
   {
@@ -12,5 +12,5 @@ void main()
   }
   while(x>0);
 
-  assert(3*y>=3*z);
+  assert(y>=z); //requires a template with coefficients != 1, 0, -1
 }

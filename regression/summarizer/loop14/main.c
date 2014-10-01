@@ -8,7 +8,12 @@ void main()
   {
     if(y) x--;
     else x += z;
+    assert(z>=-20);
+    assert(x>=-19);
+    assert(x>=z);
   }
 
-  assert(x>=z);
+  assert(z>=-20);
+  assert(x>=-20);
+  assert(x>=z); //can only be verified if relation between x and z known
 }
