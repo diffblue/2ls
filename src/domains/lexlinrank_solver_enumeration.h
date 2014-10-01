@@ -17,7 +17,8 @@ class lexlinrank_solver_enumerationt : public strategy_solver_baset
     lexlinrank_domain(_lexlinrank_domain), 
     inner_satcheck(),
     inner_solver(_ns, inner_satcheck), 
-    number_outer_iterations(0)
+    number_outer_iterations(0),
+    number_refinements(0)
       {}
 
   virtual bool iterate(invariantt &inv);
@@ -28,8 +29,8 @@ class lexlinrank_solver_enumerationt : public strategy_solver_baset
   // the "inner" solver
   satcheck_minisat_no_simplifiert inner_satcheck;
   bv_pointerst inner_solver;
-  int number_outer_iterations;
-
+  unsigned number_outer_iterations;
+  unsigned number_refinements;
 
 };
 
