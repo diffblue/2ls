@@ -40,7 +40,7 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
   solver << or_exprt(disjunction(strategy_cond_exprs),
 		     literal_exprt(activation_literal0));
 
-#if 0
+#if 1
   debug() << "solve(): ";
 #endif
 
@@ -52,7 +52,7 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
   bool improved_from_neginf = false;
   while(solve() == decision_proceduret::D_SATISFIABLE) //improvement check
   { 
-#if 0
+#if 1
     debug() << "SAT" << eom;
 #endif
     improved = true;
@@ -62,7 +62,7 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
     {
       if(solver.l_get(strategy_cond_literals[row]).is_true()) 
       {
-#if 0
+#if 1
         debug() << "improve row " << row  << eom;
 #endif
         improve_rows.insert(row);
@@ -82,7 +82,7 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
 
   if(!improved) //done
   {
-#if 0
+#if 1
     debug() << "UNSAT" << eom;
 #endif
     return improved;
@@ -101,7 +101,7 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
   std::map<tpolyhedra_domaint::rowt,symbol_exprt>::iterator 
     it = symb_values.begin();
   exprt _lower = lower_values[it->first];
-#if 0
+#if 1
   debug() << "update row " << it->first << ": " 
 	    << from_expr(ns,"",lower_values[it->first]) << eom;
 #endif
@@ -115,7 +115,7 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
     _upper = plus_exprt(_upper,tpolyhedra_domain.get_max_row_value(it->first));
     _lower = plus_exprt(_lower,lower_values[it->first]);
 
-#if 0
+#if 1
 	    debug() << "update row " << it->first << ": " 
 		    << from_expr(ns,"",lower_values[it->first]) << eom;
 #endif
@@ -137,7 +137,7 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
   symbol_exprt sum_bound(SUM_BOUND_VAR+i2string(sum_bound_counter++),sum.type());
   solver << or_exprt(equal_exprt(sum_bound,sum),
 		     literal_exprt(activation_literal1)); 
-#if 0
+#if 1
   debug() << from_expr(ns,"",equal_exprt(sum_bound,sum)) << eom;
 #endif
 
@@ -151,7 +151,7 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
       assert(sum_bound.type()==middle.type());
       exprt c = binary_relation_exprt(sum_bound,ID_ge,middle);
 
-#if 0
+#if 1
       debug() << "upper: " << from_expr(ns,"",upper) << eom;
       debug() << "middle: " << from_expr(ns,"",middle) << eom;
       debug() << "lower: " << from_expr(ns,"",lower) << eom;
@@ -159,7 +159,7 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
 
       literalt activation_literal2 = new_context(); // binary search iteration
 
-#if 0
+#if 1
       debug() << "constraint: " << from_expr(ns, "", c) << eom;
 #endif
 
@@ -167,7 +167,7 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
 
       if(solve() == decision_proceduret::D_SATISFIABLE) 
 	{ 
-#if 0
+#if 1
 	  debug() << "SAT" << eom;
 #endif
      
@@ -176,11 +176,11 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
 	  for(std::map<tpolyhedra_domaint::rowt,symbol_exprt>::iterator 
 		it = symb_values.begin(); it != symb_values.end(); it++)
 	  { 
-#if 0
+#if 1
 	    debug() << "update row " << it->first << " " << from_expr(ns,"",it->second) << ": ";
 #endif
 	    constant_exprt lower_row = simplify_const(solver.get(it->second));
-#if 0
+#if 1
 	    debug() << from_expr(ns,"",lower_row) << eom;
 #endif
 	    tpolyhedra_domain.set_row_value(it->first,lower_row,inv);
@@ -188,7 +188,7 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
 	}
       else 
 	{
-#if 0
+#if 1
 	  debug() << "UNSAT" << eom;
 #endif
 

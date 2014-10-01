@@ -1209,6 +1209,8 @@ void local_SSAt::output(std::ostream &out) const
     out << "*** " << n_it->location->location_number
         << " " << n_it->location->source_location << "\n";
     n_it->output(out, ns);
+    if(n_it->loophead!=nodes.end()) 
+      out << "loop back to location " << n_it->loophead->location->location_number << "\n";
     out << "\n";
   }
   out << "(enable) " << from_expr(ns, "", get_enabling_exprs()) << "\n\n";

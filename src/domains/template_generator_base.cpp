@@ -48,8 +48,12 @@ void template_generator_baset::collect_variables_loop(const local_SSAt &SSA,bool
       exprt lsguard = SSA.name(SSA.guard_symbol(), local_SSAt::LOOP_SELECT, n_it->location);
       ssa_local_unwinder.unwinder_rename(to_symbol_expr(lsguard),*n_it,true);
       exprt pre_guard = and_exprt(lhguard,lsguard);
-      exprt post_guard = SSA.guard_symbol(n_it->location);
-      ssa_local_unwinder.unwinder_rename(to_symbol_expr(post_guard),*n_it,false);
+
+      exprt pguard = SSA.guard_symbol(n_it->location);
+      ssa_local_unwinder.unwinder_rename(to_symbol_expr(pguard),*n_it,false);
+      exprt pcond = SSA.cond_symbol(n_it->location);
+      ssa_local_unwinder.unwinder_rename(to_symbol_expr(pcond),*n_it,false);
+      exprt post_guard = and_exprt(pguard,pcond);
       
       const ssa_domaint::phi_nodest &phi_nodes = 
         SSA.ssa_analysis[n_it->loophead->location].phi_nodes;
