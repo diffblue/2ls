@@ -22,6 +22,11 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
 
   exprt inv_expr = tpolyhedra_domain.to_pre_constraints(inv);
 
+#if 0
+  debug() << "improvement check: " << eom;
+  debug() << "pre-inv: " << from_expr(ns,"",inv_expr) << eom;
+#endif
+
   solver << or_exprt(inv_expr, literal_exprt(activation_literal0));
 
   exprt::operandst strategy_cond_exprs;
@@ -29,6 +34,10 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
     strategy_cond_exprs, strategy_value_exprs); 
   
   strategy_cond_literals.resize(strategy_cond_exprs.size());
+
+#if 0
+  debug() << "post-inv: " << from_expr(ns,"",disjunction(strategy_cond_exprs)) << eom;
+#endif
   
   for(unsigned i = 0; i<strategy_cond_exprs.size(); i++)
   {  
@@ -76,7 +85,7 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
       }
     }
     solver << or_exprt(conjunction(blocking_constraint),
-		     literal_exprt(activation_literal0));
+	literal_exprt(activation_literal0)); 
   }
   pop_context(); //improvement check
 
@@ -89,13 +98,10 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
   }
 
   //symbolic value system
-  literalt activation_literal1 = new_context(); //symbolic value system
   exprt pre_inv_expr = 
     tpolyhedra_domain.to_symb_pre_constraints(inv,improve_rows);
-  solver << or_exprt(pre_inv_expr, literal_exprt(activation_literal1));
   exprt post_inv_expr = 
     tpolyhedra_domain.to_symb_post_constraints(improve_rows);
-  solver << or_exprt(post_inv_expr, literal_exprt(activation_literal1));
 
   assert(lower_values.size()>=1);
   std::map<tpolyhedra_domaint::rowt,symbol_exprt>::iterator 
@@ -125,6 +131,9 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
   //do not solve system if we have just reached a new loop (the system will be very large!)
   if(improved_from_neginf) return improved;
 
+  literalt activation_literal1 = new_context(); //symbolic value system
+  solver << or_exprt(pre_inv_expr, literal_exprt(activation_literal1));
+  solver << or_exprt(post_inv_expr, literal_exprt(activation_literal1));
   extend_expr_types(sum);
   extend_expr_types(_upper);
   extend_expr_types(_lower);

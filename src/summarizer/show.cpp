@@ -7,6 +7,7 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 #include <util/options.h>
+#include <util/find_symbols.h>
 #include <solvers/prop/prop_conv.h>
 
 #include <goto-programs/read_goto_binary.h>
@@ -297,6 +298,24 @@ Function: show_trace
 
 \*******************************************************************/
 
+void print_symbols(const local_SSAt &SSA, 
+		prop_convt &solver,
+		std::ostream &out,
+	        const exprt &expr)
+{
+  if(expr.id()==ID_symbol)
+  {
+    out << from_expr(SSA.ns, "",expr) << " == " << 
+      from_expr(SSA.ns, "", solver.get(expr)) << "\n";
+    return;
+  }
+  for(exprt::operandst::const_iterator it = expr.operands().begin();
+      it != expr.operands().end(); it++)
+  {
+    print_symbols(SSA,solver,out,*it);
+  }
+}
+
 void show_error_trace(const irep_idt &property_id, 
 		const local_SSAt &SSA, 
 		prop_convt &solver,
@@ -311,8 +330,14 @@ void show_error_trace(const irep_idt &property_id,
     for (local_SSAt::nodet::equalitiest::const_iterator e_it =
 	   n_it->equalities.begin(); e_it != n_it->equalities.end(); e_it++) 
     {
-      out << from_expr(SSA.ns, "", e_it->op0()) << " == " << 
-          from_expr(SSA.ns, "", solver.get(e_it->op0())) << "\n";
+      print_symbols(SSA,solver,out,*e_it);
+      // out << from_expr(SSA.ns, "", e_it->op0()) << " == " << 
+      //    from_expr(SSA.ns, "", solver.get(e_it->op0())) << "\n";
+    }
+    for (local_SSAt::nodet::constraintst::const_iterator c_it =
+	   n_it->constraints.begin(); c_it != n_it->constraints.end(); c_it++) 
+    {
+      print_symbols(SSA,solver,out,*c_it);
     }
   }
   out << "\n";
