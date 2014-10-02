@@ -734,7 +734,20 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
       { //convert all assert to assumes for k-induction
         //except the bottom most iteration
         //later change it to use C++11 move semantics for efficiency
-      new_node.constraints = new_node.assertions;
+
+        //assertions should be converted to assume only if you are in the step case
+        //of k-induction and not the base case. that means
+        // you want guardls=> assume and \not guardls => assert
+        // as of now this conflicts with checking spurious examples
+        //so just removing the assertion if it is NOT the bottom most iteration.
+        // Unless you have checked it for all unwinding less than k, this will
+        // lead to unsoundness (a bug may not be found if the assertion can fail in iterations
+        //other than the last
+
+        //exprt guard_select = SSA.name(SSA.guard_symbol(),
+          //  local_SSAt::LOOP_SELECT, current_loop.body_nodes.begin()->location);
+        //rename(guard_select,suffix,i,current_loop);
+      //new_node.constraints = new_node.assertions;
       new_node.assertions.clear();
       }
       new_nodes.push_back(new_node);
