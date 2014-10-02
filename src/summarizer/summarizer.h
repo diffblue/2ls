@@ -91,6 +91,8 @@ class summarizert : public messaget
 				bool forward, 
 				bool sufficient);
 
+  void do_termination(const function_namet &function_name, 
+		      local_SSAt &SSA, summaryt &summary);
   bool check_termination_argument(exprt expr);
 
   //statistics
