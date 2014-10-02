@@ -73,6 +73,12 @@ class summarizert : public messaget
                           local_SSAt &SSA,
                           ssa_inlinert &inliner);
 
+  bool check_call_reachable(
+    const function_namet &function_name,
+    local_SSAt::nodest::iterator n_it, 
+    local_SSAt::nodet::function_callst::iterator f_it,
+    local_SSAt &SSA);
+
   //computes precondition in caller context
   void compute_precondition(const function_namet &function_name, 
 			    local_SSAt::nodest::iterator node, 

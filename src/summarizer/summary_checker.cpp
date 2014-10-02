@@ -45,16 +45,17 @@ property_checkert::resultt summary_checkert::operator()(
   const goto_modelt &goto_model)
 {
   const namespacet ns(goto_model.symbol_table);
-  bool preconditions = options.get_bool_option("preconditions");
 
   SSA_functions(goto_model,ns);
 
   if(!options.get_bool_option("k-induction"))
   {  
     if(!options.get_bool_option("havoc")) 
-      summarize(goto_model,!preconditions,options.get_bool_option("sufficient"));
+      summarize(goto_model,!options.get_bool_option("preconditions") ||
+			   options.get_bool_option("termination"),
+		options.get_bool_option("sufficient"));
 
-    if(preconditions) 
+    if(options.get_bool_option("preconditions")) 
     {
       report_preconditions();
       return property_checkert::UNKNOWN;
@@ -593,10 +594,12 @@ property_checkert::resultt summary_checkert::report_termination()
   for(summarizert::functionst::iterator it = functions.begin();
       it != functions.end(); it++)
   {
-    bool terminates = summary_db.get(it->first).terminates;
+    bool terminates = true;
+    bool computed = summary_db.exists(it->first);
+    if(computed) terminates = summary_db.get(it->first).terminates;
     all_terminate = all_terminate && terminates;
     result() << "[" << it->first << "]: " 
-	     << (terminates ? "yes" : "don't know") << eom;
+	     << (!computed ? "not computed" : (terminates ? "yes" : "don't know")) << eom;
   }
   if(all_terminate) return property_checkert::PASS;
   return property_checkert::FAIL;

@@ -211,6 +211,7 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
   //check termination
   if(options.get_bool_option("termination"))
   {
+    //TODO: check whether function calls are reachable!
     debug() << "function calls " << 
       (calls_terminate ? "terminate" : " do not terminate") << eom;
     debug() << "function " << 
@@ -231,7 +232,7 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
       analyzer1(SSA,preconditions[function_name],template_generator);
       analyzer1.get_result(summary.termination_argument,template_generator.all_vars());
 
-      //extract information whether there a ranking function was found for all loops
+      //extract information whether a ranking function was found for all loops
       summary.terminates = check_termination_argument(summary.termination_argument); 
      
       SSA.nodes.pop_back(); //remove invariant from SSA
@@ -306,12 +307,19 @@ void summarizert::inline_summaries(const function_namet &function_name,
 
     if(!found) break; //no more function calls
 
+    irep_idt fname = to_symbol_expr(f_it->function()).get_identifier();
+
+    if(!check_call_reachable(function_name,n_it,f_it,SSA)) 
+    {
+      n_it++;
+      continue;
+    }
+
     if(!check_precondition(function_name,n_it,f_it,SSA,inliner))
     {
       if(context_sensitive) 
         compute_precondition(function_name,n_it,f_it,SSA,inliner,forward);
 
-      irep_idt fname = to_symbol_expr(f_it->function()).get_identifier();
       status() << "Recursively summarizing function " << fname << eom;
 
       compute_summary_rec(fname,context_sensitive,forward,sufficient);
@@ -330,18 +338,18 @@ void summarizert::inline_summaries(const function_namet &function_name,
       summaries_used++;
       inliner.commit_node(n_it);
       assert(inliner.commit_nodes(SSA.nodes,n_it));
-
-      //get information about callee termination
-      if(options.get_bool_option("termination"))
-      {
-	if(!summary_db.get(fname).terminates) 
-	{
-	  calls_terminate = false;
-	  break;
-	}
-      }
-      else calls_terminate = false;
     }
+
+    //get information about callee termination
+    if(options.get_bool_option("termination"))
+    {
+      if(!summary_db.get(fname).terminates) 
+      {
+	calls_terminate = false;
+	break;
+      }
+    }
+    else calls_terminate = false;
 
     n_it++;
   }
@@ -511,6 +519,61 @@ bool summarizert::check_precondition(
   solver_calls++;
 
   return precondition_holds;
+}
+
+/*******************************************************************\
+
+Function: summarizert::check_call_reachable()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: returns false if function call is not reachable
+
+\******************************************************************/
+
+bool summarizert::check_call_reachable(
+  const function_namet &function_name,
+  local_SSAt::nodest::iterator n_it, 
+  local_SSAt::nodet::function_callst::iterator f_it,
+  local_SSAt &SSA)
+{
+  assert(f_it->function().id()==ID_symbol); //no function pointers
+  irep_idt fname = to_symbol_expr(f_it->function()).get_identifier();
+
+  debug() << "Checking reachability of call to " << fname << eom;
+
+  bool reachable = false;
+  // reachability check
+  satcheckt satcheck;
+  //smt2_dect solver(SSA.ns, "summarizer", "", "QF_BV", smt2_dect::Z3);
+  bv_pointerst solver(SSA.ns, satcheck);
+//  bv_pointerst solver(SSA.ns, smt);
+  
+  satcheck.set_message_handler(get_message_handler());
+  solver.set_message_handler(get_message_handler());
+    
+  solver << SSA;
+  solver << SSA.guard_symbol(n_it->location);
+
+  switch(solver())
+  {
+  case decision_proceduret::D_SATISFIABLE: {
+    reachable = true;
+    debug() << "Call is reachable" << eom;
+    break; }
+  case decision_proceduret::D_UNSATISFIABLE: {
+    debug() << "Call is not reachable" << eom;
+    break; }
+  default: assert(false); break;
+  }
+
+  //statistics
+  solver_instances++;
+  solver_calls++;
+
+  return reachable;
 }
 
 /*******************************************************************\

@@ -43,6 +43,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "summary_db.h"
 #include "summarizer.h"
 #include "summary_checker.h"
+#include "../ssa/split_loopheads.h"
 #include "show.h"
 
 /*******************************************************************\
@@ -848,6 +849,8 @@ bool summarizer_parseoptionst::process_goto_program(
 
     // remove returns (must be done after function pointer removal)
     remove_returns(goto_model);
+
+    split_loopheads(goto_model);
     
     // recalculate numbers, etc.
     goto_model.goto_functions.update();
