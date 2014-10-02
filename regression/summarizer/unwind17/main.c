@@ -6,11 +6,12 @@ void main()
 
   while(x>0)
   { 
+    x = x;
     if(z)  y = y + x;
     else break;
-    x++;
-    if(w) x--;
-    else break;
+    x--;
+    if(w) break; 
+    else x++;
     x -= 3;
   }
 
