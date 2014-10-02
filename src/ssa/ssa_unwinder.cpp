@@ -407,7 +407,7 @@ void ssa_local_unwindert::init() {
         it!=current_node->loop_nodes.end();it++)
     {
       it->parent = current_node;
-#if 0
+#if 1
       // if a variable is modified in child loop then consider it modified
       //for the current loop for the purpose of renaming
       //NOTE : this code only looks at the child. Not sure if you should look at
@@ -492,7 +492,7 @@ modvar_levelt::iterator mit = current_loop.modvar_level.find(id);
 
     }
 
-    if(current_loop.parent==NULL && current_loop.parent!=&root_node) {  current_loop.modvar_level[id]=-1; return -1;}
+    if(current_loop.parent==NULL || current_loop.parent==&root_node) {  current_loop.modvar_level[id]=-1; return -1;}
     int mylevel = need_renaming(*current_loop.parent,id);
     if(mylevel < 0) { current_loop.modvar_level[id]=-1; return -1;}
     current_loop.modvar_level[id] = mylevel+1;
@@ -855,20 +855,29 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
       node.equalities.push_back(equal_exprt(e,true_exprt()));
       is_do_while=true;
     }
+    bool prev_elem_erased=false;
     for (local_SSAt::nodet::equalitiest::iterator e_it =
 	   node.equalities.begin(); e_it != node.equalities.end(); e_it++) {
       exprt e;
 
       //= e_it->lhs();
-
-      if(is_do_while
-          && (e_it->rhs().id()==ID_if))
+      if(prev_elem_erased)
       {
+        e_it--;
+        prev_elem_erased=false;
+      }
 
-          if_exprt ife1 = to_if_expr(e_it->rhs());
-          e = current_loop.pre_post_exprs[ife1.true_case()];
-
-
+      if(is_do_while && (e_it->rhs().id()!=ID_if && SSA.guard_symbol(node.location) != e_it->lhs()
+          && SSA.cond_symbol(loopend_node->location)!=e_it->lhs()))
+      {
+        e_it = node.equalities.erase(e_it);
+        prev_elem_erased=true;
+        continue;
+      }
+      else if(is_do_while && e_it->rhs().id()==ID_if)
+      {
+        if_exprt ife1 = to_if_expr(e_it->rhs());
+        e = current_loop.pre_post_exprs[ife1.true_case()];
       }
       else
       {
