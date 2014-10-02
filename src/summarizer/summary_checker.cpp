@@ -329,7 +329,7 @@ void summary_checkert::check_properties_non_incremental(
       {
 	if(options.get_bool_option("spurious-check"))
 	{
-	  bool spurious = is_spurious(loophead_selects,solver) ;
+	  bool spurious = false; //is_spurious(loophead_selects,solver) ;
 	  debug() << "[" << property_id << "] is " << 
 	    (spurious ? "" : "not ") << "spurious" << eom;
 

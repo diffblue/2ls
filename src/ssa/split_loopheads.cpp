@@ -24,7 +24,6 @@ void split_loopheads(goto_modelt &goto_model)
       if(!i_it->is_backwards_goto()) continue;
       if(i_it->guard.is_true()) continue;
       goto_programt::targett loophead = i_it->get_target();
-      if(!loophead->is_goto() && !loophead->is_assume()) continue;
       
       // inserts the skip
       goto_programt::targett new_loophead = 
@@ -37,6 +36,7 @@ void split_loopheads(goto_modelt &goto_model)
       for(std::set<goto_programt::targett>::iterator j_it = loophead->incoming_edges.begin();
 	  j_it != loophead->incoming_edges.end(); j_it++)
       {
+	if(!(*j_it)->is_goto() || (*j_it)->get_target()!=loophead) continue;
 	(*j_it)->targets.clear();
 	(*j_it)->targets.push_back(new_loophead);
       }

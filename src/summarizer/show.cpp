@@ -339,6 +339,11 @@ void show_error_trace(const irep_idt &property_id,
     {
       print_symbols(SSA,solver,out,*c_it);
     }
+    for (local_SSAt::nodet::assertionst::const_iterator a_it =
+	   n_it->assertions.begin(); a_it != n_it->assertions.end(); a_it++) 
+    {
+      print_symbols(SSA,solver,out,*a_it);
+    }
   }
   out << "\n";
 }
