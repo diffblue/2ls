@@ -8,9 +8,11 @@ int foo(int x)
   return x;
 }
 
-void main()
+int main(int argc, char** argv)
 {
-  int x = 1;
+  __CPROVER_assume(argc==1);
+  int x = argc;
   if(x) x = foo(x);
   else bar(); //unreachable
+  return x;
 }

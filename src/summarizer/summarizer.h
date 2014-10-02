@@ -92,7 +92,7 @@ class summarizert : public messaget
 				bool sufficient);
 
   void do_termination(const function_namet &function_name, 
-		      local_SSAt &SSA, summaryt &summary);
+		      local_SSAt &SSA, summaryt &summary, bool precondition_only);
   bool check_termination_argument(exprt expr);
 
   //statistics

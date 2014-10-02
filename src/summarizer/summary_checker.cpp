@@ -53,7 +53,8 @@ property_checkert::resultt summary_checkert::operator()(
     if(!options.get_bool_option("havoc")) 
       summarize(goto_model,!options.get_bool_option("preconditions") ||
 			   options.get_bool_option("termination"),
-		options.get_bool_option("sufficient"));
+		           options.get_bool_option("sufficient")  ||
+			   options.get_bool_option("termination"));
 
     if(options.get_bool_option("preconditions")) 
     {
@@ -566,10 +567,12 @@ void summary_checkert::report_preconditions()
   for(summarizert::functionst::iterator it = functions.begin();
       it != functions.end(); it++)
   {
-    exprt precondition = summary_db.get(it->first).precondition;
+    exprt precondition;
+    bool computed = summary_db.exists(it->first);
+    if(computed) precondition = summary_db.get(it->first).precondition;
     if(sufficient) precondition = not_exprt(precondition);
     result() << eom << "[" << it->first << "]: " 
-	     << from_expr(it->second->ns, "", precondition) << eom;
+	     << (!computed ? "not computed" : from_expr(it->second->ns, "", precondition)) << eom;
   }
 }
 
