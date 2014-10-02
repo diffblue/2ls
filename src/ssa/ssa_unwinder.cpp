@@ -854,7 +854,20 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
     exprt cond_e ;//= SSA.cond_symbol(node.location);
 
     local_SSAt::nodest::const_reverse_iterator loopend_node = current_loop.body_nodes.rbegin();
-    if(loopend_node->equalities.begin()->rhs().is_true())
+    for(local_SSAt::nodet::equalitiest::const_iterator eqit=loopend_node->equalities.begin();
+        eqit!=loopend_node->equalities.end();eqit++)
+    {
+       if(eqit->lhs()==SSA.cond_symbol(loopend_node->location))
+       {
+          if(!eqit->rhs().is_true())
+       {
+         is_do_while=true;
+
+       }
+        break;
+       }
+    }
+    if(!is_do_while)
     {
       //if while loop, exit condition is in the loop head
       cond_e = SSA.cond_symbol(node.location);
@@ -868,7 +881,7 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
       cond_e=not_exprt(e);
       guard_e=SSA.guard_symbol(loopend_node->location);
       node.equalities.push_back(equal_exprt(e,true_exprt()));
-      is_do_while=true;
+
     }
     bool prev_elem_erased=false;
     for (local_SSAt::nodet::equalitiest::iterator e_it =
