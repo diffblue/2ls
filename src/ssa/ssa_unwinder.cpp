@@ -837,7 +837,7 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
 
     local_SSAt::nodet node = current_loop.body_nodes.front();
     bool is_do_while=false;
-    exprt guard_e = SSA.guard_symbol(node.location);
+    exprt guard_e; //= SSA.guard_symbol(node.location);
     exprt cond_e ;//= SSA.cond_symbol(node.location);
 
     local_SSAt::nodest::const_reverse_iterator loopend_node = current_loop.body_nodes.rbegin();
@@ -845,6 +845,7 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
     {
       //if while loop, exit condition is in the loop head
       cond_e = SSA.cond_symbol(node.location);
+      guard_e=SSA.guard_symbol(node.location);
 
     }
     else
@@ -852,6 +853,7 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
       //if do while loop, condition is the loop end
       exprt e = SSA.cond_symbol(loopend_node->location);
       cond_e=not_exprt(e);
+      guard_e=SSA.guard_symbol(loopend_node->location);
       node.equalities.push_back(equal_exprt(e,true_exprt()));
       is_do_while=true;
     }
@@ -878,6 +880,10 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
       {
         if_exprt ife1 = to_if_expr(e_it->rhs());
         e = current_loop.pre_post_exprs[ife1.true_case()];
+      }
+      else if(is_do_while && e_it->lhs()==SSA.guard_symbol(node.location))
+      {
+        e = SSA.guard_symbol(loopend_node->location);
       }
       else
       {
