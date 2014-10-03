@@ -118,10 +118,7 @@ Function: summary_checkert::SSA_functions
 \*******************************************************************/
 
 void summary_checkert::SSA_functions(const goto_modelt &goto_model,  const namespacet &ns)
-{
-  // properties
-  initialize_property_map(goto_model.goto_functions);
-  
+{  
   // compute SSA for all the functions
   forall_goto_functions(f_it, goto_model.goto_functions)
   {
@@ -165,6 +162,9 @@ void summary_checkert::SSA_functions(const goto_modelt &goto_model,  const names
   
   ssa_db.get(ID_main).output(debug()); debug() << eom;
 #endif
+
+  // properties
+  initialize_property_map(goto_model.goto_functions);
 }
 
 /*******************************************************************\
@@ -266,7 +266,8 @@ void summary_checkert::check_properties_non_incremental(
       continue;
   
     const source_locationt &source_location=i_it->source_location;  
-    const local_SSAt::nodet &node = *SSA.find_node(i_it);
+    std::list<local_SSAt::nodest::const_iterator> assertion_nodes;
+    SSA.find_nodes(i_it,assertion_nodes);
 
     irep_idt property_id=source_location.get_property_id();
 
@@ -279,17 +280,23 @@ void summary_checkert::check_properties_non_incremental(
     property_map[property_id].location = i_it;
     
     exprt::operandst conjuncts;
-    for(local_SSAt::nodet::assertionst::const_iterator
-	  a_it=node.assertions.begin();
-        a_it!=node.assertions.end();
-        a_it++)
+    for(std::list<local_SSAt::nodest::const_iterator>::const_iterator
+	  n_it=assertion_nodes.begin();
+        n_it!=assertion_nodes.end();
+        n_it++)
     {
-      conjuncts.push_back(*a_it);
-
-      if(show_vcc)
+      for(local_SSAt::nodet::assertionst::const_iterator
+	    a_it=(*n_it)->assertions.begin();
+	  a_it!=(*n_it)->assertions.end();
+	  a_it++)
       {
-        do_show_vcc(SSA, i_it, a_it);
-        continue;
+	conjuncts.push_back(*a_it);
+
+	if(show_vcc)
+	{
+	  do_show_vcc(SSA, i_it, a_it);
+	  continue;
+	}
       }
     }
     exprt property = not_exprt(conjunction(conjuncts));
@@ -424,7 +431,8 @@ void summary_checkert::check_properties_incremental(
       continue;
   
     const locationt &location=i_it->source_location;  
-    const local_SSAt::nodet &node = *SSA.find_node(i_it);
+    std::list<local_SSAt::nodest::const_iterator> assertion_nodes;
+    SSA.find_nodes(i_it,assertion_nodes);
 
     irep_idt property_id = location.get_property_id();
 
@@ -435,22 +443,28 @@ void summary_checkert::check_properties_incremental(
       continue;     
 
     unsigned property_counter = 0;
-    for(local_SSAt::nodet::assertionst::const_iterator
-	  a_it=node.assertions.begin();
-        a_it!=node.assertions.end();
-        a_it++, property_counter++)
+    for(std::list<local_SSAt::nodest::const_iterator>::const_iterator
+	  n_it=assertion_nodes.begin();
+        n_it!=assertion_nodes.end();
+        n_it++)
     {
-      exprt property=*a_it;
+      for(local_SSAt::nodet::assertionst::const_iterator
+	    a_it=(*n_it)->assertions.begin();
+	  a_it!=(*n_it)->assertions.end();
+	  a_it++, property_counter++)
+      {
+	exprt property=*a_it;
 
-      if(simplify)
-	property=::simplify_expr(property, SSA.ns);
+	if(simplify)
+	  property=::simplify_expr(property, SSA.ns);
 
 #if 0 
-      std::cout << "property: " << from_expr(SSA.ns, "", property) << std::endl;
+	std::cout << "property: " << from_expr(SSA.ns, "", property) << std::endl;
 #endif
  
-      property_map[property_id].location = i_it;
-      cover_goals.goal_map[property_id].conjuncts.push_back(property);
+	property_map[property_id].location = i_it;
+	cover_goals.goal_map[property_id].conjuncts.push_back(property);
+      }
     }
   }
     

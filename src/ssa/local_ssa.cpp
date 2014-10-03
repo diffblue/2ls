@@ -192,6 +192,26 @@ local_SSAt::nodest::const_iterator local_SSAt::find_node(locationt loc) const
   return n_it;
 }
 
+/*******************************************************************\
+
+Function: local_SSAt::find_nodes
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void local_SSAt::find_nodes(locationt loc, std::list<nodest::const_iterator> &_nodes) const
+{
+  nodest::const_iterator n_it = nodes.begin();
+  for(; n_it != nodes.end(); n_it++)
+  {
+    if(n_it->location == loc) _nodes.push_back(n_it);
+  }
+}
 
 /*******************************************************************\
 

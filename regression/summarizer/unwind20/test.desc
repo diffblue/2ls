@@ -1,6 +1,6 @@
 CORE
 main.c
---unwind 7
+--unwind 10
 ^EXIT=10$
 ^SIGNAL=0$
-^** 1 of 2 failed$
+^** 2 of 2 failed$
