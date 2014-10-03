@@ -22,7 +22,12 @@ class summaryt
   typedef std::list<symbol_exprt> var_listt;
   typedef std::set<symbol_exprt> var_sett;
 
-summaryt() : termination_argument(nil_exprt()), terminates(false) {}
+  summaryt() : 
+    precondition(true_exprt()), 
+    transformer(true_exprt()), 
+    invariant(true_exprt()), 
+    termination_argument(nil_exprt()), 
+    terminates(false) {}
 
   var_listt params;
   var_sett globals_in, globals_out;

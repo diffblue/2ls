@@ -150,9 +150,10 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
   local_SSAt &SSA = ssa_db.get(function_name); 
   
   bool calls_terminate = true;
+  bool has_function_calls = false;  
   // recursively compute summaries for function calls
   inline_summaries(function_name,SSA,context_sensitive,forward,sufficient,
-    calls_terminate); 
+		   calls_terminate, has_function_calls); 
 
   status() << "Analyzing function "  << function_name << eom;
 
@@ -170,14 +171,12 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
   }
 
   bool has_loops = false;  
-  bool has_function_calls = false;  
   if(options.get_bool_option("termination"))
   {
     for(local_SSAt::nodest::iterator n_it = SSA.nodes.begin(); 
         n_it!=SSA.nodes.end(); n_it++)
     {
-      if(n_it->loophead != SSA.nodes.end()) has_loops = true;
-      if(!n_it->function_calls.empty()) has_function_calls = true;
+      if(n_it->loophead != SSA.nodes.end()) { has_loops = true; break; }
     }
   }
 
@@ -191,40 +190,27 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
       (has_loops ? "has loops" : "does not have loops") << eom;
   }
 
-  //analyze
-  ssa_analyzert analyzer;
-  analyzer.set_message_handler(get_message_handler());
-
-  template_generator_summaryt template_generator(options,ssa_unwinder.get(function_name));
-  template_generator.set_message_handler(get_message_handler());
-  template_generator(SSA,forward);
-
-  analyzer(SSA,preconditions[function_name],template_generator);
-
   // create summary
   summaryt summary;
   summary.params = SSA.params;
   summary.globals_in = SSA.globals_in;
   summary.globals_out = SSA.globals_out;
-  if(forward) summary.precondition = preconditions.at(function_name);
-  else analyzer.get_result(summary.precondition,template_generator.out_vars());
-  analyzer.get_result(summary.transformer,template_generator.inout_vars());
-#ifdef PRECISE_JOIN
-  summary.transformer = implies_exprt(summary.precondition,summary.transformer);
-#endif
-  simplify_expr(summary.transformer, SSA.ns);
 
-#if 0 
-  simplify_expr(summary.precondition, SSA.ns); //does not help
-#endif 
-
-  analyzer.get_result(summary.invariant,template_generator.loop_vars());
+  if(!options.get_bool_option("havoc"))
+    do_summary(function_name,SSA,summary,forward);
 
   //check termination
   if(options.get_bool_option("termination"))
   {
     if(has_function_calls && calls_terminate || has_loops) 
-      do_termination(function_name,SSA,summary,!has_loops);
+    {
+      if(!options.get_bool_option("preconditions"))
+        do_termination(function_name,SSA,summary);
+      else if(has_loops)
+        do_termination_with_preconditions(function_name,SSA,summary);
+      else
+        do_termination_preconditions_only(function_name,SSA,summary);
+    }
     else if(!calls_terminate && has_function_calls) 
     {
       summary.precondition = false_exprt();
@@ -247,6 +233,48 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
     join_summaries(old_summary,summary);
   }
   summary_db.put(function_name,summary);
+}
+
+/*******************************************************************\
+
+Function: summarizert::do_summary()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void summarizert::do_summary(const function_namet &function_name, 
+			     local_SSAt &SSA, summaryt &summary,
+                             bool forward)
+{
+  status() << "Computing summary" << eom;
+
+  //analyze
+  ssa_analyzert analyzer;
+  analyzer.set_message_handler(get_message_handler());
+
+  template_generator_summaryt template_generator(options,ssa_unwinder.get(function_name));
+  template_generator.set_message_handler(get_message_handler());
+  template_generator(SSA,forward);
+
+  analyzer(SSA,preconditions[function_name],template_generator);
+  if(forward) summary.precondition = preconditions.at(function_name);
+  else analyzer.get_result(summary.precondition,template_generator.out_vars());
+  analyzer.get_result(summary.transformer,template_generator.inout_vars());
+#ifdef PRECISE_JOIN
+  summary.transformer = implies_exprt(summary.precondition,summary.transformer);
+#endif
+  simplify_expr(summary.transformer, SSA.ns);
+
+#if 0 
+  simplify_expr(summary.precondition, SSA.ns); //does not help
+#endif 
+
+  analyzer.get_result(summary.invariant,template_generator.loop_vars());
 
   //statistics
   solver_instances++;
@@ -266,7 +294,100 @@ Function: summarizert::do_termination()
 \*******************************************************************/
 
 void summarizert::do_termination(const function_namet &function_name, 
-				 local_SSAt &SSA, summaryt &summary, bool precondition_only)
+				 local_SSAt &SSA, summaryt &summary)
+{
+  status() << "Computing termination argument" << eom;
+
+  template_generator_rankingt template_generator1(options,ssa_unwinder.get(function_name));
+  template_generator1.set_message_handler(get_message_handler());
+  template_generator1(SSA,true);
+
+  if(template_generator1.all_vars().empty()) return; //nothing to do 
+
+  //temporarily add invariant to SSA
+  SSA.nodes.push_back(local_SSAt::nodet(SSA.nodes.back().location, SSA.nodes.end()));
+  SSA.nodes.back().constraints.push_back(summary.invariant);
+
+  // compute ranking functions
+  ssa_analyzert analyzer1;
+  analyzer1.set_message_handler(get_message_handler());
+  analyzer1(SSA,preconditions[function_name],template_generator1);
+  analyzer1.get_result(summary.termination_argument,template_generator1.all_vars());     
+
+  //extract information whether a ranking function was found for all loops
+  summary.terminates = check_termination_argument(summary.termination_argument); 
+
+  //statistics
+  solver_instances++;
+  solver_calls += analyzer1.get_number_of_solver_calls();
+
+  SSA.nodes.pop_back(); //remove invariant from SSA
+}
+
+/*******************************************************************\
+
+Function: summarizert::do_termination_preconditions_only()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void summarizert::do_termination_preconditions_only(const function_namet &function_name, 
+				 local_SSAt &SSA, summaryt &summary)
+{
+  status() << "Computing precondition for termination" << eom;
+
+  template_generator_summaryt template_generator2(options,ssa_unwinder.get(function_name));
+  template_generator2.set_message_handler(get_message_handler());
+  template_generator2(SSA,false); //backward
+
+  exprt precondition = preconditions[function_name];
+
+  //temporarily add invariant to SSA
+  SSA.nodes.push_back(local_SSAt::nodet(SSA.nodes.back().location, SSA.nodes.end()));
+  SSA.nodes.back().constraints.push_back(summary.invariant);
+
+  //compute sufficient preconditions w.r.t. termination argument
+  ssa_analyzert analyzer2;
+  analyzer2.set_message_handler(get_message_handler());
+  exprt termination_argument = true_exprt(); //TODO: need disjunction of preconditions
+  if(!summary.termination_argument.is_nil()) 
+    termination_argument = not_exprt(summary.termination_argument);
+  analyzer2(SSA,termination_argument,template_generator2);
+  analyzer2.get_result(summary.precondition,template_generator2.out_vars());
+
+  //classify precondition == false as possibly non-terminating
+  satcheckt satcheck2;
+  bv_pointerst solver2(SSA.ns, satcheck2);
+  solver2 << not_exprt(summary.precondition);
+  summary.terminates = (solver2() == decision_proceduret::D_SATISFIABLE);
+  if(!summary.terminates) summary.precondition = true_exprt();
+
+  //statistics
+  solver_instances += 2;
+  solver_calls += analyzer2.get_number_of_solver_calls() + 1;
+
+  SSA.nodes.pop_back(); //remove invariant from SSA
+}
+
+/*******************************************************************\
+
+Function: summarizert::do_termination_with_preconditions()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void summarizert::do_termination_with_preconditions(const function_namet &function_name, 
+				 local_SSAt &SSA, summaryt &summary)
 {
   exprt precondition = preconditions[function_name];
 
@@ -278,30 +399,36 @@ void summarizert::do_termination(const function_namet &function_name,
   SSA.nodes.push_back(local_SSAt::nodet(SSA.nodes.back().location, SSA.nodes.end()));
   SSA.nodes.back().constraints.push_back(summary.invariant);
 
-  if(!precondition_only)
+  template_generator_rankingt template_generator1(options,ssa_unwinder.get(function_name));
+  template_generator1.set_message_handler(get_message_handler());
+  template_generator1(SSA,true);
+
+  if(!template_generator1.all_vars().empty()) //nothing to do 
   {
     //TODO (later): loop to find weaker preconditions
-
-    if(options.get_bool_option("preconditions"))
-    {
-      //bootstrap with a concrete model for input variables
-      satcheckt satcheck;
-      bv_pointerst solver(SSA.ns, satcheck);
-      satcheck.set_message_handler(get_message_handler());
-      solver.set_message_handler(get_message_handler());
+    satcheckt satcheck1;
+    bv_pointerst solver1(SSA.ns, satcheck1);
+ 
+    //statistics
+    solver_instances++;
+  
+    //bootstrap with a concrete model for input variables
+    satcheck1.set_message_handler(get_message_handler());
+    solver1.set_message_handler(get_message_handler());
     
-      solver << SSA;
-      solver << precondition;
-      solver << SSA.guard_symbol(SSA.nodes.back().location); //last node should be reachable
-      debug() << from_expr(SSA.ns,"",SSA.guard_symbol(SSA.nodes.back().location)) << eom;
-      debug() << from_expr(SSA.ns,"",precondition) << eom;
+    solver1 << SSA;
+    solver1 << precondition;
+    solver1 << SSA.guard_symbol(SSA.nodes.back().location); //last node should be reachable
+    debug() << from_expr(SSA.ns,"",SSA.guard_symbol(SSA.nodes.back().location)) << eom;
+    debug() << from_expr(SSA.ns,"",precondition) << eom;
 
+    while(!summary.terminates)
+    {
       //statistics
-      solver_instances++;
       solver_calls++;
 
       //solve
-      switch(solver())
+      switch(solver1())
       {
       case decision_proceduret::D_SATISFIABLE: {
 	const domaint::var_sett &invars = template_generator2.out_vars();
@@ -309,7 +436,7 @@ void summarizert::do_termination(const function_namet &function_name,
 	for(domaint::var_sett::const_iterator it = invars.begin();
 	    it != invars.end(); it++)
 	{
-	  c.push_back(equal_exprt(*it,solver.get(*it)));
+	  c.push_back(equal_exprt(*it,solver1.get(*it)));
 	}
 	precondition = conjunction(c);
 	debug() << "bootstrap model for precondition: " << from_expr(SSA.ns,"",precondition) << eom;
@@ -323,48 +450,47 @@ void summarizert::do_termination(const function_namet &function_name,
       }
       default: assert(false); break;
       }
+
+      status() << "Computing termination argument" << eom;
+
+      // compute ranking functions
+      ssa_analyzert analyzer1;
+      analyzer1.set_message_handler(get_message_handler());
+      analyzer1(SSA,precondition,template_generator1);
+      analyzer1.get_result(summary.termination_argument,template_generator1.all_vars());     
+
+      //extract information whether a ranking function was found for all loops
+      summary.terminates = check_termination_argument(summary.termination_argument); 
+
+      //statistics
+      solver_instances++;
+      solver_calls += analyzer1.get_number_of_solver_calls();
+
+      if(!summary.terminates) solver1 << not_exprt(precondition);
     }
-
-    template_generator_rankingt template_generator1(options,ssa_unwinder.get(function_name));
-    template_generator1.set_message_handler(get_message_handler());
-    template_generator1(SSA,true);
-
-    // compute ranking functions
-    ssa_analyzert analyzer1;
-    analyzer1.set_message_handler(get_message_handler());
-    analyzer1(SSA,precondition,template_generator1);
-    analyzer1.get_result(summary.termination_argument,template_generator1.all_vars());     
-
-    //statistics
-    solver_instances++;
-    solver_calls += analyzer1.get_number_of_solver_calls();
   }
 
-  if(options.get_bool_option("preconditions"))
-  {
-    //compute sufficient preconditions w.r.t. termination argument
-    ssa_analyzert analyzer2;
-    analyzer2.set_message_handler(get_message_handler());
-    exprt termination_argument = true_exprt(); //TODO: need disjunction of preconditions
-    if(!summary.termination_argument.is_nil()) 
-      termination_argument = not_exprt(summary.termination_argument);
-    analyzer2(SSA,termination_argument,template_generator2);
-    analyzer2.get_result(summary.precondition,template_generator2.out_vars());
-    summary.precondition = summary.precondition;
+  status() << "Computing preconditions for termination" << eom;
+  //compute sufficient preconditions w.r.t. termination argument
+  ssa_analyzert analyzer2;
+  analyzer2.set_message_handler(get_message_handler());
+  exprt termination_argument = SSA.guard_symbol(SSA.nodes.back().location); //TODO: need disjunction of preconditions
+  if(!summary.termination_argument.is_nil()) 
+    termination_argument = and_exprt(termination_argument,summary.termination_argument);
+analyzer2(SSA,not_exprt(termination_argument),template_generator2);
+  analyzer2.get_result(summary.precondition,template_generator2.out_vars());
+  summary.precondition = summary.precondition;
 
-    //classify precondition == false as possibly non-terminating
-    //TODO: requires SAT check
-    summary.terminates = true; //!summary.precondition.is_false();
+  //classify precondition == false as possibly non-terminating
+  satcheckt satcheck2;
+  bv_pointerst solver2(SSA.ns, satcheck2);
+  solver2 << not_exprt(summary.precondition);
+  summary.terminates = (solver2() == decision_proceduret::D_SATISFIABLE);
+  if(!summary.terminates) summary.precondition = true_exprt();
 
-    //statistics
-    solver_instances++;
-    solver_calls += analyzer2.get_number_of_solver_calls();
-  }
-  else
-  {
-    //extract information whether a ranking function was found for all loops
-    summary.terminates = check_termination_argument(summary.termination_argument); 
-  }
+  //statistics
+  solver_instances++;
+  solver_calls += analyzer2.get_number_of_solver_calls();
 
   SSA.nodes.pop_back(); //remove invariant from SSA
 }
@@ -385,7 +511,7 @@ Function: summarizert::inline_summaries()
 void summarizert::inline_summaries(const function_namet &function_name, 
 				   local_SSAt &SSA, bool context_sensitive,
 				   bool forward, bool sufficient,
-                                   bool &calls_terminate)
+                                   bool &calls_terminate, bool &has_function_calls)
 {
   ssa_inlinert inliner;
   inliner.set_message_handler(get_message_handler());
@@ -407,7 +533,7 @@ void summarizert::inline_summaries(const function_namet &function_name,
         found = true;
         break;
       }
-      if(found) break;
+      if(found) { has_function_calls = true; break; }
     }
 
     if(!found) break; //no more function calls

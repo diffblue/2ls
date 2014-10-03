@@ -205,7 +205,10 @@ void summarizer_parseoptionst::get_command_line_options(optionst &options)
 
   // compute ranking functions
   if(cmdline.isset("termination"))
+  {
     options.set_option("termination", true);
+    options.set_option("sufficient", true);
+  }
 
  // do k-induction refinement
   if(cmdline.isset("k-induction"))

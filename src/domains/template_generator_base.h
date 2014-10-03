@@ -41,7 +41,7 @@ public:
 
   virtual domaint::var_sett all_vars();
 
-  domaint *domain() { return domain_ptr; }
+  domaint *domain() { assert(domain_ptr!=NULL); return domain_ptr; }
 
   domaint::var_specst var_specs;
   replace_mapt renaming_map;

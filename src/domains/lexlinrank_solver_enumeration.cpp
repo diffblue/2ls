@@ -5,7 +5,7 @@
 #include "util.h"
 
 //#define DEBUG_OUTER_FORMULA 
-//#define DEBUG_INNER_FORMULA 
+#define DEBUG_INNER_FORMULA 
 #define MAX_ELEMENTS 2 // lexicographic components
 #define MAX_REFINEMENTS 20
 

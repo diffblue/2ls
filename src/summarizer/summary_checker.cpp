@@ -50,10 +50,9 @@ property_checkert::resultt summary_checkert::operator()(
 
   if(!options.get_bool_option("k-induction"))
   {  
-    if(!options.get_bool_option("havoc")) 
+    if(!options.get_bool_option("havoc") || options.get_bool_option("termination")) 
       summarize(goto_model,!options.get_bool_option("preconditions") ||
 			   options.get_bool_option("termination"),
-		           options.get_bool_option("sufficient")  ||
 			   options.get_bool_option("termination"));
 
     if(options.get_bool_option("preconditions")) 

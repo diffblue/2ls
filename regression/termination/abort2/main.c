@@ -10,7 +10,7 @@ int foo(int x)
 
 int main(int argc, char** argv)
 {
-  __CPROVER_assume(argc==1);
+//  __CPROVER_assume(argc==1);
   int x = argc;
   if(x) x = foo(x);
   else bar(); //unreachable

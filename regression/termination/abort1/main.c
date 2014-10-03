@@ -4,9 +4,9 @@ int foo(int x)
   return x;
 }
 
-void main()
+int main(int argc, char** )
 {
-  int x;
+  int x = argc;
   x = foo(x);  
   assert(x<=0);
 }

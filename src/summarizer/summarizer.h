@@ -65,7 +65,7 @@ class summarizert : public messaget
 
   void inline_summaries(const function_namet &function_name, local_SSAt &SSA,
                         bool context_sensitive, bool forward, bool sufficient,
-			bool &calls_terminate); 
+			bool &calls_terminate, bool &has_function_calls); 
 
   bool check_precondition(const function_namet &function_name, 
 			  local_SSAt::nodest::iterator node, 
@@ -91,8 +91,14 @@ class summarizert : public messaget
 				bool forward, 
 				bool sufficient);
 
+  void do_summary(const function_namet &function_name, 
+		  local_SSAt &SSA, summaryt &summary, bool forward);
   void do_termination(const function_namet &function_name, 
-		      local_SSAt &SSA, summaryt &summary, bool precondition_only);
+		      local_SSAt &SSA, summaryt &summary);
+  void do_termination_preconditions_only(const function_namet &function_name, 
+		      local_SSAt &SSA, summaryt &summary);
+  void do_termination_with_preconditions(const function_namet &function_name, 
+		      local_SSAt &SSA, summaryt &summary);
   bool check_termination_argument(exprt expr);
 
   //statistics
