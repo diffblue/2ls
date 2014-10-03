@@ -97,7 +97,7 @@ property_checkert::resultt summary_checkert::operator()(
       }
       else if(unwind==0 && max_unwind>0) //TODO: unwind==2 => 1 (additional) unwinding
       {
-        ssa_unwinder.init_localunwinders(true);
+        ssa_unwinder.init_localunwinders();
       }
     }
     return result;
@@ -142,14 +142,14 @@ void summary_checkert::SSA_functions(const goto_modelt &goto_model,  const names
     SSA.output(debug()); debug() << eom;
   }
 
-  ssa_unwinder.init();
+  ssa_unwinder.init(options.get_bool_option("k-induction"));
 
   unsigned unwind = options.get_unsigned_int_option("unwind");
   if(!options.get_bool_option("k-induction") && unwind>0)
   {
     status() << "Unwinding" << messaget::eom;
 
-    ssa_unwinder.init_localunwinders(options.get_bool_option("k-induction"));
+    ssa_unwinder.init_localunwinders();
 
 //    ssa_unwinder.unwind(f_it->first,unwind);
     ssa_unwinder.unwind_all(unwind+1);

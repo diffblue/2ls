@@ -218,8 +218,8 @@ irep_idt ssa_local_unwindert::get_base_name(const irep_idt& id)
  *
  *
  *****************************************************************************/
-ssa_local_unwindert::ssa_local_unwindert(local_SSAt& _SSA): SSA(_SSA),
-    current_unwinding(0),is_initialized(false){ }
+ssa_local_unwindert::ssa_local_unwindert(local_SSAt& _SSA,bool k_induct): SSA(_SSA),
+    current_unwinding(0),is_initialized(false),is_kinduction(k_induct){ }
 /*******************************************************************
  Struct: compare_node_iterators
 
@@ -828,10 +828,11 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
       local_SSAt::nodet new_node = (*it);
 
       rename(new_node, suffix, i,current_loop);
-      if(i>0)
+      if(is_kinduction &&(
+          (current_loop.is_dowhile && i>0)
+          || (!current_loop.is_dowhile && i>1)))
       { //convert all assert to assumes for k-induction
         //except the bottom most iteration
-        //later change it to use C++11 move semantics for efficiency
 
         //assertions should be converted to assume only if you are in the step case
         //of k-induction and not the base case. that means
@@ -842,9 +843,14 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
         // lead to unsoundness (a bug may not be found if the assertion can fail in iterations
         //other than the last
 
-        //exprt guard_select = SSA.name(SSA.guard_symbol(),
-          //  local_SSAt::LOOP_SELECT, current_loop.body_nodes.begin()->location);
-        //rename(guard_select,suffix,i,current_loop);
+        exprt guard_select = SSA.name(SSA.guard_symbol(),
+            local_SSAt::LOOP_SELECT, current_loop.body_nodes.begin()->location);
+        rename(guard_select,suffix,i,current_loop);
+        for(local_SSAt::nodet::assertionst::iterator ait=new_node.assertions.begin();
+            ait!=new_node.assertions.end();ait++)
+        {
+          new_node.constraints.push_back(implies_exprt(guard_select,*ait));
+        }
       //new_node.constraints = new_node.assertions;
       new_node.assertions.clear();
       }
@@ -1373,13 +1379,13 @@ void ssa_unwindert::output(std::ostream & out) {
  *           unwind funcitions are called.
  *
  *****************************************************************************/
-void ssa_unwindert::init()
+void ssa_unwindert::init(bool kinduction)
 {
   ssa_dbt::functionst& funcs = ssa_db.functions();
   for (ssa_dbt::functionst::iterator it = funcs.begin(); it != funcs.end();
        it++) {
     unwinder_map.insert(
-      unwinder_pairt(it->first, ssa_local_unwindert((*(it->second)))));
+      unwinder_pairt(it->first, ssa_local_unwindert((*(it->second)),kinduction)));
   }
 
 
