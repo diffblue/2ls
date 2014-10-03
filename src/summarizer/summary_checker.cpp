@@ -97,7 +97,7 @@ property_checkert::resultt summary_checkert::operator()(
       }
       else if(unwind==0 && max_unwind>0) //TODO: unwind==2 => 1 (additional) unwinding
       {
-        ssa_unwinder.init_localunwinders();
+        ssa_unwinder.init_localunwinders(true);
       }
     }
     return result;
@@ -149,7 +149,7 @@ void summary_checkert::SSA_functions(const goto_modelt &goto_model,  const names
   {
     status() << "Unwinding" << messaget::eom;
 
-    ssa_unwinder.init_localunwinders();
+    ssa_unwinder.init_localunwinders(options.get_bool_option("k-induction"));
 
 //    ssa_unwinder.unwind(f_it->first,unwind);
     ssa_unwinder.unwind_all(unwind+1);
@@ -312,6 +312,7 @@ void summary_checkert::check_properties_non_incremental(
     solver << property;
 
 #if 0   
+    debug() << "property: " << from_expr(SSA.ns,"",property) << eom;
     //for future incremental usagae 
     solver->set_assumptions(
       strategy_solver_baset::convert_enabling_exprs(solver,SSA.enabling_exprs));
@@ -329,7 +330,7 @@ void summary_checkert::check_properties_non_incremental(
       {
 	if(options.get_bool_option("spurious-check"))
 	{
-	  bool spurious = false; //is_spurious(loophead_selects,solver) ;
+	  bool spurious = is_spurious(loophead_selects,solver) ;
 	  debug() << "[" << property_id << "] is " << 
 	    (spurious ? "" : "not ") << "spurious" << eom;
 
