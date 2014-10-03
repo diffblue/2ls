@@ -23,7 +23,7 @@ class summaryt
   typedef std::set<symbol_exprt> var_sett;
 
   summaryt() : 
-    precondition(true_exprt()), 
+    precondition(nil_exprt()), 
     transformer(true_exprt()), 
     invariant(true_exprt()), 
     termination_argument(nil_exprt()), 

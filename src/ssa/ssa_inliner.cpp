@@ -26,7 +26,8 @@ Function: ssa_inlinert::replace
 \*******************************************************************/
 
 void ssa_inlinert::replace(local_SSAt &SSA,
-	     const summary_dbt &summary_db)
+			   const summary_dbt &summary_db,
+			   bool preconditions_as_assertions)
 {
   for(local_SSAt::nodest::iterator n_it = SSA.nodes.begin(); 
       n_it != SSA.nodes.end(); n_it++)
@@ -52,7 +53,8 @@ void ssa_inlinert::replace(local_SSAt &SSA,
 	SSA.get_globals(++loc,cs_globals_out);
 
         //replace
-        replace(SSA.nodes,n_it,f_it,cs_globals_in,cs_globals_out,summary);
+        replace(SSA,n_it,f_it,cs_globals_in,cs_globals_out,summary,
+		preconditions_as_assertions);
 
         //remove function_call
         rm_function_calls.insert(f_it);
@@ -145,12 +147,13 @@ Function: ssa_inlinert::replace()
 
 \*******************************************************************/
 
-void ssa_inlinert::replace(local_SSAt::nodest &nodes,
+void ssa_inlinert::replace(local_SSAt &SSA,
                        local_SSAt::nodest::iterator node, 
                        local_SSAt::nodet::function_callst::iterator f_it, 
 		       const local_SSAt::var_sett &cs_globals_in,
 		       const local_SSAt::var_sett &cs_globals_out, 
-                       const summaryt &summary)
+                       const summaryt &summary,
+		       bool preconditions_as_assertions)
 {
   counter++;
 
@@ -161,9 +164,22 @@ void ssa_inlinert::replace(local_SSAt::nodest &nodes,
   replace_globals_in(summary.globals_in,cs_globals_in);
 
   //constraints for precondition and transformer
-  node->constraints.push_back(summary.precondition);  //copy
-  exprt &precondition = node->constraints.back();
-  rename(precondition);
+  if(!preconditions_as_assertions)
+  {
+    node->constraints.push_back(
+		and_exprt(SSA.guard_symbol(node->location),
+			  summary.precondition)); 
+    exprt &precondition = node->constraints.back();
+    rename(precondition);
+  }
+  else
+  {
+    node->assertions.push_back(
+		and_exprt(SSA.guard_symbol(node->location),
+			  summary.precondition));  
+    exprt &precondition = node->assertions.back();
+    rename(precondition);
+  }
   node->constraints.push_back(summary.transformer);  //copy
   exprt &transformer = node->constraints.back();
   rename(transformer);

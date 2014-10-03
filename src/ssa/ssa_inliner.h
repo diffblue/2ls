@@ -22,17 +22,19 @@ class ssa_inlinert : public messaget
  public:
   ssa_inlinert() : counter(0) {}
 
-  void replace(local_SSAt::nodest &nodes,
+  void replace(local_SSAt &SSA,
 	       local_SSAt::nodest::iterator node,
                local_SSAt::nodet::function_callst::iterator f_it, 
 	       const local_SSAt::var_sett &cs_globals_in, 
                   //incoming globals at call site
 	       const local_SSAt::var_sett &cs_globals_out, 
                   //outgoing globals at call site
-               const summaryt &summary);
+               const summaryt &summary,
+	       bool preconditions_as_assertions);
 
   void replace(local_SSAt &SSA,
-               const summary_dbt &summary_db);
+               const summary_dbt &summary_db,
+	       bool preconditions_as_assertions);
 
   void replace(local_SSAt::nodest &nodes,
 	       local_SSAt::nodest::iterator node, 

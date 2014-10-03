@@ -202,7 +202,9 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
   //check termination
   if(options.get_bool_option("termination"))
   {
-    if(has_function_calls && calls_terminate || has_loops) 
+    if(has_loops ||
+       options.get_bool_option("preconditions") &&
+       has_function_calls && calls_terminate) 
     {
       if(!options.get_bool_option("preconditions"))
         do_termination(function_name,SSA,summary);
@@ -475,9 +477,12 @@ void summarizert::do_termination_with_preconditions(const function_namet &functi
   ssa_analyzert analyzer2;
   analyzer2.set_message_handler(get_message_handler());
   exprt termination_argument = SSA.guard_symbol(SSA.nodes.back().location); //TODO: need disjunction of preconditions
-  if(!summary.termination_argument.is_nil()) 
-    termination_argument = and_exprt(termination_argument,summary.termination_argument);
-analyzer2(SSA,not_exprt(termination_argument),template_generator2);
+  if(!summary.termination_argument.is_nil())
+  { 
+    termination_argument = and_exprt(termination_argument,
+				     summary.termination_argument);
+  }
+  analyzer2(SSA,not_exprt(termination_argument),template_generator2);
   analyzer2.get_result(summary.precondition,template_generator2.out_vars());
   summary.precondition = summary.precondition;
 
@@ -511,7 +516,8 @@ Function: summarizert::inline_summaries()
 void summarizert::inline_summaries(const function_namet &function_name, 
 				   local_SSAt &SSA, bool context_sensitive,
 				   bool forward, bool sufficient,
-                                   bool &calls_terminate, bool &has_function_calls)
+                                   bool &calls_terminate, 
+				   bool &has_function_calls)
 {
   ssa_inlinert inliner;
   inliner.set_message_handler(get_message_handler());
@@ -546,10 +552,10 @@ void summarizert::inline_summaries(const function_namet &function_name,
       continue;
     }
 
-    if(!check_precondition(function_name,n_it,f_it,SSA,inliner))
+    if(!check_precondition(function_name,n_it,f_it,SSA,inliner,sufficient))
     {
       if(context_sensitive) 
-        compute_precondition(function_name,n_it,f_it,SSA,inliner,forward);
+        compute_calling_context(function_name,n_it,f_it,SSA,inliner,forward);
 
       status() << "Recursively summarizing function " << fname << eom;
 
@@ -565,7 +571,8 @@ void summarizert::inline_summaries(const function_namet &function_name,
       SSA.get_globals(++loc,cs_globals_out);
 
       //replace
-      inliner.replace(SSA.nodes,n_it,f_it,cs_globals_in,cs_globals_out,summary);
+      inliner.replace(SSA,n_it,f_it,cs_globals_in,cs_globals_out,
+		      summary,sufficient);
       summaries_used++;
       inliner.commit_node(n_it);
       assert(inliner.commit_nodes(SSA.nodes,n_it));
@@ -636,7 +643,8 @@ bool summarizert::check_precondition(
   local_SSAt::nodest::iterator n_it, 
   local_SSAt::nodet::function_callst::iterator f_it,
   local_SSAt &SSA,
-  ssa_inlinert &inliner)
+  ssa_inlinert &inliner,
+  bool sufficient)
 {
   assert(f_it->function().id()==ID_symbol); //no function pointers
   irep_idt fname = to_symbol_expr(f_it->function()).get_identifier();
@@ -659,8 +667,9 @@ bool summarizert::check_precondition(
 
       status() << "Precondition trivially holds, replacing by summary." 
                    << eom;
-      inliner.replace(SSA.nodes,n_it,f_it,
-                          cs_globals_in,cs_globals_out,summary_db.get(fname));
+      inliner.replace(SSA,n_it,f_it,
+		      cs_globals_in,cs_globals_out,summary_db.get(fname),
+		      sufficient);
       summaries_used++;
       precondition_holds = true;
     }
@@ -705,8 +714,8 @@ bool summarizert::check_precondition(
 
   // precondition check
   satcheckt satcheck;
-  smt2_dect solver(SSA.ns, "summarizer", "", "QF_BV", smt2_dect::Z3);
-  //bv_pointerst solver(SSA.ns, satcheck);
+  //smt2_dect solver(SSA.ns, "summarizer", "", "QF_BV", smt2_dect::Z3);
+  bv_pointerst solver(SSA.ns, satcheck);
   //bv_pointerst solver(SSA.ns, smt);
   
   satcheck.set_message_handler(get_message_handler());
@@ -734,8 +743,9 @@ bool summarizert::check_precondition(
     SSA.get_globals(++loc,cs_globals_out);
 
     status() << "Precondition holds, replacing by summary." << eom;
-    inliner.replace(SSA.nodes,n_it,f_it,
-		    cs_globals_in,cs_globals_out,summary_db.get(fname));
+    inliner.replace(SSA,n_it,f_it,
+		    cs_globals_in,cs_globals_out,summary_db.get(fname),
+		    sufficient);
     inliner.commit_node(n_it);
     assert(inliner.commit_nodes(SSA.nodes,n_it));
 
@@ -778,9 +788,9 @@ bool summarizert::check_call_reachable(
   bool reachable = false;
   // reachability check
   satcheckt satcheck;
-  //smt2_dect solver(SSA.ns, "summarizer", "", "QF_BV", smt2_dect::Z3);
   bv_pointerst solver(SSA.ns, satcheck);
-//  bv_pointerst solver(SSA.ns, smt);
+  //smt2_dect solver(SSA.ns, "summarizer", "", "QF_BV", smt2_dect::Z3);
+  //bv_pointerst solver(SSA.ns, smt);
   
   satcheck.set_message_handler(get_message_handler());
   solver.set_message_handler(get_message_handler());
@@ -822,7 +832,7 @@ Function: summarizert::compute_precondition ()
 
 \******************************************************************/
 
-void summarizert::compute_precondition(
+void summarizert::compute_calling_context(
   const function_namet &function_name, 
   local_SSAt::nodest::iterator n_it, 
   local_SSAt::nodet::function_callst::iterator f_it,

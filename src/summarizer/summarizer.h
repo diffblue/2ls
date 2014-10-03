@@ -71,7 +71,8 @@ class summarizert : public messaget
 			  local_SSAt::nodest::iterator node, 
 			  local_SSAt::nodet::function_callst::iterator f_it,
                           local_SSAt &SSA,
-                          ssa_inlinert &inliner);
+                          ssa_inlinert &inliner,
+			  bool sufficient);
 
   bool check_call_reachable(
     const function_namet &function_name,
@@ -80,7 +81,7 @@ class summarizert : public messaget
     local_SSAt &SSA);
 
   //computes precondition in caller context
-  void compute_precondition(const function_namet &function_name, 
+  void compute_calling_context(const function_namet &function_name, 
 			    local_SSAt::nodest::iterator node, 
 			    local_SSAt::nodet::function_callst::iterator f_it,
 			    local_SSAt &SSA,
