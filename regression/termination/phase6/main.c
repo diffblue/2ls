@@ -7,7 +7,7 @@ void main()
   {
     if(y<10) x++;
     else x--;
-    y++; //overflows, hence there is no lexicographical ranking function
+    if(y<100) y++;
   }
   assert(x==0);
 }
