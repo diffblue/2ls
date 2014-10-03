@@ -392,6 +392,13 @@ void ssa_local_unwindert::init() {
   SSA.nodes.insert(SSA.nodes.begin(), root_node.body_nodes.begin(),
 		   root_node.body_nodes.end());
 
+  //populate connector for every loop
+  for(loop_nodest::iterator lit=root_node.loop_nodes.begin();
+      lit!=root_node.loop_nodes.end();lit++)
+  {
+    populate_connectors(*lit);
+  }
+
   //pointers of tree_loopnodet are stable now and they must not be
   //modified beyond this point. Now populate "parent" field of
   //every node
@@ -421,6 +428,97 @@ void ssa_local_unwindert::init() {
 
 
   is_initialized=true;
+
+}
+
+void ssa_local_unwindert::populate_connectors(tree_loopnodet& current_loop)
+{
+  typedef std::map<irep_idt,local_SSAt::objectst::iterator> varobj_mapt;
+  varobj_mapt varobj_map;
+  body_nodest::const_iterator it=current_loop.body_nodes.begin();
+
+  body_nodest::const_reverse_iterator lit = current_loop.body_nodes.rbegin();
+
+    unsigned int end_location = lit->location->location_number;
+
+        for(local_SSAt::nodet::equalitiest::const_iterator eqit=lit->equalities.begin();
+            eqit!=lit->equalities.end();eqit++)
+        {
+           if(eqit->lhs()==SSA.cond_symbol(lit->location))
+           {
+              if(!eqit->rhs().is_true())
+           {
+             current_loop.is_dowhile=true;
+
+           }
+            break;
+           }
+        }
+
+  for (local_SSAt::objectst::const_iterator o_it =
+               SSA.ssa_objects.objects.begin();
+             o_it != SSA.ssa_objects.objects.end(); o_it++)
+      {
+        std::set<irep_idt>::const_iterator fit = current_loop.vars_modified.find(o_it->get_identifier());
+        if(fit==current_loop.vars_modified.end()) continue;
+
+        varobj_map[*fit]=o_it;
+        if(!current_loop.is_dowhile)
+        {
+         current_loop.connectors.insert(SSA.name(*o_it,local_SSAt::PHI,it->location));
+        }
+        else
+        {
+          current_loop.connectors.insert(SSA.read_rhs(*o_it,lit->location));
+        }
+      }
+
+if(!current_loop.is_dowhile)
+{
+  current_loop.connectors.insert(SSA.guard_symbol(it->location));
+  current_loop.connectors.insert(SSA.cond_symbol(it->location));
+}
+else
+{
+  current_loop.connectors.insert(SSA.guard_symbol(lit->location));
+  current_loop.connectors.insert(SSA.cond_symbol(lit->location));
+}
+
+for(;it!=current_loop.body_nodes.end();it++)
+{
+  body_nodest::const_iterator next_node = it; next_node++;
+  if(next_node==current_loop.body_nodes.end()) break;
+
+  if(!is_break_node(*it,end_location)) continue;
+
+  for(varobj_mapt::iterator vit=varobj_map.begin();vit!=varobj_map.end();vit++)
+  {
+    current_loop.connectors.insert(SSA.read_rhs(*(vit->second),it->location));
+    current_loop.connectors.insert(SSA.guard_symbol(it->location));
+    current_loop.connectors.insert(SSA.cond_symbol(it->location));
+  }
+
+}
+
+for(loop_nodest::iterator loopit=current_loop.loop_nodes.begin();
+    loopit!=current_loop.loop_nodes.end();loopit++)
+{
+  populate_connectors(*loopit);
+}
+
+}
+
+bool ssa_local_unwindert::is_break_node(const local_SSAt::nodet& node,
+    const unsigned int end_location)
+{
+  local_SSAt::locationt instr = node.location;
+  if(!instr->is_goto()) return false;
+
+  // a break should have only one target
+  if(instr->targets.size()>1) return false;
+
+  if(instr->targets.front()->location_number < end_location ) return false;
+  return true;
 
 }
 /*****************************************************************************\
@@ -843,7 +941,8 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
 
 
   }
-
+  add_connector_node(current_loop,suffix,unwind_depth,new_sym,new_nodes);
+#if 0
   //now the connector node
   {
     //copy the original loop head
@@ -942,9 +1041,178 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
     //node.equalities.clear();
     new_nodes.push_back(node);
   }
-
+#endif
 }
+#if 0
+void ssa_local_unwindert::add_connector_node(tree_loopnodet& current_loop,
+          std::string suffix,
+          const unsigned int unwind_depth,symbol_exprt& new_sym,local_SSAt::nodest& new_nodes)
+{
+    //copy the original loop head
 
+    local_SSAt::nodet node = current_loop.body_nodes.front();
+    bool is_do_while=false;
+    exprt guard_e; //= SSA.guard_symbol(node.location);
+    exprt cond_e ;//= SSA.cond_symbol(node.location);
+
+    local_SSAt::nodest::const_reverse_iterator loopend_node = current_loop.body_nodes.rbegin();
+    for(local_SSAt::nodet::equalitiest::const_iterator eqit=loopend_node->equalities.begin();
+        eqit!=loopend_node->equalities.end();eqit++)
+    {
+       if(eqit->lhs()==SSA.cond_symbol(loopend_node->location))
+       {
+          if(!eqit->rhs().is_true())
+       {
+         is_do_while=true;
+
+       }
+        break;
+       }
+    }
+    if(!is_do_while)
+    {
+      //if while loop, exit condition is in the loop head
+      cond_e = SSA.cond_symbol(node.location);
+      guard_e=SSA.guard_symbol(node.location);
+
+    }
+    else
+    {
+      //if do while loop, condition is the loop end
+      exprt e = SSA.cond_symbol(loopend_node->location);
+      cond_e=not_exprt(e);
+      guard_e=SSA.guard_symbol(loopend_node->location);
+      node.equalities.push_back(equal_exprt(e,true_exprt()));
+
+    }
+    bool prev_elem_erased=false;
+    for (local_SSAt::nodet::equalitiest::iterator e_it =
+     node.equalities.begin(); e_it != node.equalities.end(); e_it++) {
+      exprt e;
+
+      //= e_it->lhs();
+      if(prev_elem_erased)
+      {
+        e_it--;
+        prev_elem_erased=false;
+      }
+
+      if(is_do_while && (e_it->rhs().id()!=ID_if && SSA.guard_symbol(node.location) != e_it->lhs()
+          && SSA.cond_symbol(loopend_node->location)!=e_it->lhs()))
+      {
+        e_it = node.equalities.erase(e_it);
+        prev_elem_erased=true;
+        continue;
+      }
+      else if(is_do_while && e_it->rhs().id()==ID_if)
+      {
+        if_exprt ife1 = to_if_expr(e_it->rhs());
+        e = current_loop.pre_post_exprs[ife1.true_case()];
+      }
+      else if(is_do_while && e_it->lhs()==SSA.guard_symbol(node.location))
+      {
+        e = SSA.guard_symbol(loopend_node->location);
+      }
+      else
+      {
+        e = e_it->lhs();
+      }
+      exprt re = e;
+      rename(re, suffix, 0,current_loop);
+      for (unsigned int i = 1; i < unwind_depth; i++) {
+        exprt ce = cond_e;
+        rename(ce, suffix, i,current_loop);
+        exprt ge = guard_e;
+        rename(ge, suffix, i,current_loop);
+
+        exprt cond_expr = and_exprt(ce, ge);
+        exprt true_expr = e;
+        rename(true_expr, suffix,i,current_loop);
+        exprt false_expr = re;
+        re = if_exprt(cond_expr, true_expr, false_expr);
+      }
+
+      e_it->rhs() = re;
+      e_it->lhs()=e;
+      rename(e_it->lhs(),suffix,-1,current_loop);
+
+      node.enabling_expr = new_sym;
+      //exprt ie = implies_exprt(new_sym, *e_it);
+      //node.constraints.push_back(ie);
+
+    }
+    //node.equalities.clear();
+    new_nodes.push_back(node);
+  }
+
+#else
+void ssa_local_unwindert::add_connector_node(tree_loopnodet& current_loop,
+          std::string suffix,
+          const unsigned int unwind_depth,symbol_exprt& new_sym,local_SSAt::nodest& new_nodes)
+{
+    //copy the original loop head
+
+    local_SSAt::nodet node=current_loop.body_nodes.front();
+
+    exprt guard_e; //= SSA.guard_symbol(node.location);
+    exprt cond_e ;//= SSA.cond_symbol(node.location);
+    if(current_loop.is_dowhile)
+    {
+      body_nodest::const_reverse_iterator bit = current_loop.body_nodes.rbegin();
+      exprt e = SSA.cond_symbol(bit->location);
+      cond_e=not_exprt(e);
+      guard_e=SSA.guard_symbol(bit->location);
+      node= *bit;
+      node.equalities.clear();
+      node.assertions.clear();
+      node.constraints.clear();
+
+    }
+    else
+    {
+      body_nodest::const_iterator bit = current_loop.body_nodes.begin();
+      cond_e=SSA.cond_symbol(bit->location);
+      guard_e=SSA.guard_symbol(bit->location);
+      node=*bit;
+                node.equalities.clear();
+                node.assertions.clear();
+                node.constraints.clear();
+
+    }
+
+    for(exprst::iterator e_it=current_loop.connectors.begin();
+        e_it!=current_loop.connectors.end();e_it++)
+    {
+      exprt e = *e_it;
+      exprt re = e;
+      rename(re, suffix, 0,current_loop);
+      for (unsigned int i = 1; i < unwind_depth; i++) {
+        exprt ce = cond_e;
+        rename(ce, suffix, i,current_loop);
+        exprt ge = guard_e;
+        rename(ge, suffix, i,current_loop);
+
+        exprt cond_expr = and_exprt(ce, ge);
+        exprt true_expr = e;
+        rename(true_expr, suffix,i,current_loop);
+        exprt false_expr = re;
+        re = if_exprt(cond_expr, true_expr, false_expr);
+      }
+      exprt rhs = re;
+      exprt lhs=e;
+
+      rename(lhs,suffix,-1,current_loop);
+      node.equalities.push_back(equal_exprt(lhs,rhs));
+
+      node.enabling_expr = new_sym;
+      //exprt ie = implies_exprt(new_sym, *e_it);
+      //node.constraints.push_back(ie);
+
+    }
+    //node.equalities.clear();
+    new_nodes.push_back(node);
+  }
+#endif
 /*****************************************************************************\
  *
  * Function : ssa_local_unwindert::unwinder_rename
