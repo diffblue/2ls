@@ -6,7 +6,7 @@ void main()
   int y = 1;  
   int u = 0;
 
-  while(x>0 && u < INT_MAX)
+  while(x>0 && u < INT_MAX) //-u, -y, x
   {
     //__CPROVER_assume(u<INT_MAX);
     if(y<10) x++;
