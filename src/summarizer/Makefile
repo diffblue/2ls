@@ -50,12 +50,12 @@ DELTA_OBJ+=\
       ../domains/solver_enumeration$(OBJEXT) \
       ../domains/strategy_solver_binsearch$(OBJEXT) \
       ../domains/strategy_solver_binsearch2$(OBJEXT) \
-      ../domains/strategy_solver_binsearch3$(OBJEXT) \
       ../domains/template_generator_base$(OBJEXT) \
       ../domains/template_generator_summary$(OBJEXT) \
       ../domains/template_generator_callingcontext$(OBJEXT) \
       ../domains/ssa_analyzer$(OBJEXT) \
       ../domains/predicate$(OBJEXT)
+#      ../domains/strategy_solver_binsearch3$(OBJEXT) 
 
 OBJ+=$(DELTA_OBJ)
 
