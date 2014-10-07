@@ -388,13 +388,17 @@ Function: local_SSAt::build_cond
 void local_SSAt::build_cond(locationt loc)
 {
   // anything to be built?
-  if(!loc->is_goto() &&
-     !loc->is_assume()) return;
-  
-  // produce a symbol for the renamed branching condition
-  equal_exprt equality(cond_symbol(loc), read_rhs(loc->guard, loc));
-  (--nodes.end())->equalities.push_back(equality);
-}
+  if(loc->is_goto() || loc->is_assume()) 
+  {
+    // produce a symbol for the renamed branching condition
+    equal_exprt equality(cond_symbol(loc), read_rhs(loc->guard, loc));
+    (--nodes.end())->equalities.push_back(equality);
+  }
+  else if(loc->is_function_call())
+  {
+    equal_exprt equality(cond_symbol(loc), true_exprt());
+    (--nodes.end())->equalities.push_back(equality);
+  }}
 
 /*******************************************************************\
 

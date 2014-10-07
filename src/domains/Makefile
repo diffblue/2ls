@@ -8,7 +8,7 @@ SRC = predicate.cpp fixed_point.cpp ssa_fixed_point.cpp \
   strategy_solver_enumeration.cpp strategy_solver_binsearch.cpp \
   template_generator_base.cpp template_generator_summary.cpp \
   template_generator_callingcontext.cpp \
-  strategy_solver_binsearch2.cpp
+  strategy_solver_binsearch2.cpp strategy_solver_binsearch3.cpp
 
 include $(CBMC)/src/config.inc
 include $(CBMC)/src/common

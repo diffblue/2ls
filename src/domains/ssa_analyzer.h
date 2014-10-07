@@ -15,7 +15,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "strategy_solver_base.h"
 #include "template_generator_base.h"
 
-//#define BINSEARCH_SUM
+#define BINSEARCH_SOLVER strategy_solver_binsearch3t
 
 class ssa_analyzert : public messaget
 {
