@@ -58,21 +58,25 @@ class summarizert : public messaget
   preconditionst preconditions;
 
   void compute_summary_rec(const function_namet &function_name,
-                           bool context_sensitive, bool forward,
+                           bool context_sensitive, 
+			   bool forward,
                            bool sufficient);
 
   void join_summaries(const summaryt &existing_summary, summaryt &new_summary);
 
   void inline_summaries(const function_namet &function_name, local_SSAt &SSA,
                         bool context_sensitive, bool forward, bool sufficient,
-			bool &calls_terminate, bool &has_function_calls); 
+			bool &calls_terminate, bool &has_function_calls,
+			exprt::operandst &postconditions); 
 
   bool check_precondition(const function_namet &function_name, 
 			  local_SSAt::nodest::iterator node, 
 			  local_SSAt::nodet::function_callst::iterator f_it,
                           local_SSAt &SSA,
                           ssa_inlinert &inliner,
-			  bool sufficient);
+			  bool forward,
+			  bool sufficient,
+			  exprt::operandst &postconditions);
 
   bool check_call_reachable(
     const function_namet &function_name,
@@ -93,14 +97,31 @@ class summarizert : public messaget
 				bool sufficient);
 
   void do_summary(const function_namet &function_name, 
-		  local_SSAt &SSA, summaryt &summary, bool forward);
+		  local_SSAt &SSA, summaryt &summary, 
+		  bool forward, bool sufficient,
+		  exprt::operandst postconditions);
   void do_termination(const function_namet &function_name, 
 		      local_SSAt &SSA, summaryt &summary);
   void do_termination_preconditions_only(const function_namet &function_name, 
-		      local_SSAt &SSA, summaryt &summary);
+		      local_SSAt &SSA, summaryt &summary,
+		      exprt::operandst postconditions);
   void do_termination_with_preconditions(const function_namet &function_name, 
-		      local_SSAt &SSA, summaryt &summary);
+		      local_SSAt &SSA, summaryt &summary,
+		      exprt::operandst postconditions);
   bool check_termination_argument(exprt expr);
+
+  exprt collect_postconditions(const function_namet &function_name,
+			       const local_SSAt &SSA, 
+			       const summaryt &summary,
+			       bool forward,
+			       bool sufficient,
+			       bool termination,
+			       exprt::operandst postconditions);
+
+  bool check_end_reachable(const local_SSAt &SSA, 
+			   const summaryt &summary,
+			   const exprt &precondition,
+			   bool forward);
 
   //statistics
   unsigned solver_instances;

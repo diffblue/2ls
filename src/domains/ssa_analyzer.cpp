@@ -56,7 +56,9 @@ void ssa_analyzert::operator()(local_SSAt &SSA,
 {
   if(SSA.goto_function.body.instructions.empty())
     return;
-  
+
+  //TODO: if the template is empty we must at least check for reachability of the end of the function
+
   // convert SSA to transition relation
   constraintst transition_relation;
   transition_relation << SSA;

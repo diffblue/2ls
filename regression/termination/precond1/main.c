@@ -1,11 +1,13 @@
-int foo(int y)
+unsigned foo(unsigned y)
 {
-  for(int x=0; x<10; x+=y);
+  //__CPROVER_assume(y==0);
+  for(unsigned x=0; x<10; x+=y);
   return x;
 }
 
 int main(int argc, char** argv)
 {
-  return foo(argc);
+  unsigned y = argc;
+  return foo(y-1);
 }
 

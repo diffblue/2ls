@@ -192,6 +192,27 @@ local_SSAt::nodest::const_iterator local_SSAt::find_node(locationt loc) const
   return n_it;
 }
 
+/*******************************************************************\
+
+Function: local_SSAt::find_nodes
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void local_SSAt::find_nodes(locationt loc, std::list<nodest::const_iterator> &_nodes) const
+{
+  nodest::const_iterator n_it = nodes.begin();
+  for(; n_it != nodes.end(); n_it++)
+  {
+    if(n_it->location == loc) _nodes.push_back(n_it);
+  }
+}
+
 
 /*******************************************************************\
 
@@ -368,12 +389,17 @@ Function: local_SSAt::build_cond
 void local_SSAt::build_cond(locationt loc)
 {
   // anything to be built?
-  if(!loc->is_goto() &&
-     !loc->is_assume()) return;
-  
-  // produce a symbol for the renamed branching condition
-  equal_exprt equality(cond_symbol(loc), read_rhs(loc->guard, loc));
-  (--nodes.end())->equalities.push_back(equality);
+  if(loc->is_goto() || loc->is_assume()) 
+  {
+    // produce a symbol for the renamed branching condition
+    equal_exprt equality(cond_symbol(loc), read_rhs(loc->guard, loc));
+    (--nodes.end())->equalities.push_back(equality);
+  }
+  else if(loc->is_function_call())
+  {
+    equal_exprt equality(cond_symbol(loc), true_exprt());
+    (--nodes.end())->equalities.push_back(equality);
+  }
 }
 
 /*******************************************************************\

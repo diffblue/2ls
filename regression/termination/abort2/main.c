@@ -10,9 +10,9 @@ int foo(int x)
 
 int main(int argc, char** argv)
 {
-//  __CPROVER_assume(argc==1);
+  //   __CPROVER_assume(argc>10);
   int x = argc;
-  if(x) x = foo(x);
+  if(x>100) x = foo(x);
   else bar(); //unreachable
   return x;
 }

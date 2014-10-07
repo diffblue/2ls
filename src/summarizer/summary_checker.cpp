@@ -53,7 +53,7 @@ property_checkert::resultt summary_checkert::operator()(
     if(!options.get_bool_option("havoc") || options.get_bool_option("termination")) 
       summarize(goto_model,!options.get_bool_option("preconditions") ||
 			   options.get_bool_option("termination"),
-			   options.get_bool_option("termination"));
+			   options.get_bool_option("sufficient"));
 
     if(options.get_bool_option("preconditions")) 
     {
@@ -138,6 +138,22 @@ void summary_checkert::SSA_functions(const goto_modelt &goto_model,  const names
     {
       status() << "Simplifying" << messaget::eom;
       ::simplify(SSA, ns);
+    }
+
+    if(options.get_bool_option("termination"))
+    {
+      //assume assertions
+      for(local_SSAt::nodest::iterator n_it = SSA.nodes.begin();
+	  n_it != SSA.nodes.end(); n_it++)
+      {
+	for(local_SSAt::nodet::assertionst::iterator 
+	      a_it = n_it->assertions.begin();
+	    a_it != n_it->assertions.end(); a_it++)
+	{
+	  n_it->constraints.push_back(*a_it);
+	}
+	n_it->assertions.clear();
+      }
     }
 
     SSA.output(debug()); debug() << eom;
@@ -262,7 +278,8 @@ void summary_checkert::check_properties_non_incremental(
       continue;
   
     const source_locationt &source_location=i_it->source_location;  
-    const local_SSAt::nodet &node = *SSA.find_node(i_it);
+    std::list<local_SSAt::nodest::const_iterator> assertion_nodes;
+    SSA.find_nodes(i_it,assertion_nodes);
 
     irep_idt property_id=source_location.get_property_id();
 
@@ -272,17 +289,23 @@ void summary_checkert::check_properties_non_incremental(
     property_map[property_id].location = i_it;
     
     exprt::operandst conjuncts;
-    for(local_SSAt::nodet::assertionst::const_iterator
-	  a_it=node.assertions.begin();
-        a_it!=node.assertions.end();
-        a_it++)
+    for(std::list<local_SSAt::nodest::const_iterator>::const_iterator
+	  n_it=assertion_nodes.begin();
+        n_it!=assertion_nodes.end();
+        n_it++)
     {
-      conjuncts.push_back(*a_it);
-
-      if(show_vcc)
+      for(local_SSAt::nodet::assertionst::const_iterator
+	    a_it=(*n_it)->assertions.begin();
+	  a_it!=(*n_it)->assertions.end();
+	  a_it++)
       {
-        do_show_vcc(SSA, i_it, a_it);
-        continue;
+	conjuncts.push_back(*a_it);
+
+	if(show_vcc)
+	{
+	  do_show_vcc(SSA, i_it, a_it);
+	  continue;
+	}
       }
     }
     exprt property = not_exprt(conjunction(conjuncts));
@@ -298,6 +321,9 @@ void summary_checkert::check_properties_non_incremental(
     
     // give SSA to solver
     solver << SSA;
+
+    if(summary_db.exists(f_it->first))
+      solver << summary_db.get(f_it->first).invariant;
 
     // give negated property to solver
     solver << property;
@@ -391,6 +417,9 @@ void summary_checkert::check_properties_incremental(
     
   // give SSA to solver
   solver << SSA;
+
+  if(summary_db.exists(f_it->first))
+    solver << summary_db.get(f_it->first).invariant;
 
 #if 0   
     //for future incremental usagae 
@@ -559,7 +588,6 @@ Function: summary_checkert::report_preconditions
 
 void summary_checkert::report_preconditions()
 {
-  bool sufficient = options.get_bool_option("sufficient");
   result() << eom;
   result() << "** Preconditions: " << eom;
   summarizert::functionst &functions = ssa_db.functions();
@@ -569,7 +597,6 @@ void summary_checkert::report_preconditions()
     exprt precondition;
     bool computed = summary_db.exists(it->first);
     if(computed) precondition = summary_db.get(it->first).precondition;
-    if(sufficient) precondition = not_exprt(precondition);
     result() << eom << "[" << it->first << "]: " 
 	     << (!computed ? "not computed" : from_expr(it->second->ns, "", precondition)) << eom;
   }

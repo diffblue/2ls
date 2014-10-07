@@ -166,19 +166,19 @@ void ssa_inlinert::replace(local_SSAt &SSA,
   //constraints for precondition and transformer
   if(!preconditions_as_assertions)
   {
-    node->constraints.push_back(
-		and_exprt(SSA.guard_symbol(node->location),
-			  summary.precondition)); 
-    exprt &precondition = node->constraints.back();
+    exprt precondition = summary.precondition;
     rename(precondition);
+    node->constraints.push_back(
+		implies_exprt(SSA.guard_symbol(node->location),
+			      precondition)); 
   }
   else
   {
-    node->assertions.push_back(
-		and_exprt(SSA.guard_symbol(node->location),
-			  summary.precondition));  
-    exprt &precondition = node->assertions.back();
+    exprt precondition = summary.precondition;
     rename(precondition);
+    node->assertions.push_back(
+		implies_exprt(SSA.guard_symbol(node->location),
+			  precondition));  
   }
   node->constraints.push_back(summary.transformer);  //copy
   exprt &transformer = node->constraints.back();
@@ -426,12 +426,14 @@ Function: ssa_inlinert::rename_to_caller
 \*******************************************************************/
 
 void ssa_inlinert::rename_to_caller(
-  local_SSAt::nodet::function_callst::iterator f_it, 
+  local_SSAt::nodet::function_callst::const_iterator f_it, 
   const local_SSAt::var_listt &params, 
   const local_SSAt::var_sett &cs_globals_in, 
   const local_SSAt::var_sett &globals_in, 
   exprt &expr)
 {
+  assert(params.size()==f_it->arguments().size());
+
   replace_mapt replace_map;
 
   local_SSAt::var_listt::const_iterator p_it = params.begin();
@@ -474,12 +476,14 @@ Function: ssa_inlinert::rename_to_callee
 \*******************************************************************/
 
 void ssa_inlinert::rename_to_callee(
-  local_SSAt::nodet::function_callst::iterator f_it, 
+  local_SSAt::nodet::function_callst::const_iterator f_it, 
   const local_SSAt::var_listt &params, 
   const local_SSAt::var_sett &cs_globals_in, 
   const local_SSAt::var_sett &globals_in, 
   exprt &expr)
 {
+  assert(params.size()==f_it->arguments().size());
+
   replace_mapt replace_map;
 
   local_SSAt::var_listt::const_iterator p_it = params.begin();

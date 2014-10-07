@@ -1,7 +1,7 @@
 void foo(int x) 
 { 
   int y = x;
-  assert(y>=0);
+  assert(y>=10);
 }
 
 int main(int argc, char** argv)
