@@ -121,6 +121,8 @@ void template_generator_rankingt::collect_variables_ranking(const local_SSAt &SS
   #endif
       }
 
+      filter_ranking_domain(new_var_specs);
+
 #ifndef LEXICOGRAPHIC
       static_cast<linrank_domaint *>(domain_ptr)->add_template(
         new_var_specs, SSA.ns);
@@ -134,3 +136,36 @@ void template_generator_rankingt::collect_variables_ranking(const local_SSAt &SS
   }
 }
 
+/*******************************************************************\
+
+Function: template_generator_rankingt::filter_ranking_domain
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void template_generator_rankingt::filter_ranking_domain(domaint::var_specst &var_specs)
+{
+  domaint::var_specst new_var_specs(var_specs);
+  var_specs.clear();
+  for(domaint::var_specst::const_iterator v = new_var_specs.begin(); 
+      v!=new_var_specs.end(); v++)
+  {
+    const domaint::vart &s = v->var;
+    if(s.type().id()==ID_unsignedbv || s.type().id()==ID_signedbv ||
+       s.type().id()==ID_floatbv)
+    {
+      var_specs.push_back(*v);
+    }
+    if(s.type().id()==ID_pointer)
+    {
+      domaint::var_spect new_varspec = *v;
+      new_varspec.var = typecast_exprt(v->var,to_pointer_type(v->var.type()).subtype());
+      var_specs.push_back(new_varspec);
+    }
+  }
+}

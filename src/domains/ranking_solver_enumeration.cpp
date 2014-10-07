@@ -1,6 +1,7 @@
 #include <iostream>
 #include <util/simplify_expr.h>
 #include "ranking_solver_enumeration.h"
+#include "util.h"
 #include <solvers/smt2/smt2_dec.h>
 
 #define MAX_INNER_ITERATIONS 20
@@ -68,7 +69,7 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
 	    it != rank_value_exprs[row].end(); ++it) 
        {
 	  // model for x_i
-	  exprt value = solver.get(it->first);
+	 exprt value = solver.get(it->first);
 	  debug() << "(RANK) Row " << row << " Value for " << from_expr(ns,"",it->first) 
 		  << ": " << from_expr(ns,"",value) << eom;
 	  // model for x'_i

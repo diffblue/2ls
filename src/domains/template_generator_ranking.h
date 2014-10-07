@@ -28,8 +28,10 @@ public:
 
 protected:  
 
-  virtual void collect_variables_ranking(const local_SSAt &SSA,
+  void collect_variables_ranking(const local_SSAt &SSA,
                          bool forward);
+
+  void filter_ranking_domain(domaint::var_specst &var_specs);
 
 };
 

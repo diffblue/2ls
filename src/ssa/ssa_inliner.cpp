@@ -494,6 +494,10 @@ void ssa_inlinert::rename_to_callee(
     replace_map[*it] = *p_it;
   }
 
+  replace_expr(replace_map,expr);
+
+  replace_map.clear(); //arguments might contain globals, 
+                       // thus, we have to replace them separately
   for(summaryt::var_sett::const_iterator it = cs_globals_in.begin();
       it != cs_globals_in.end(); it++)
   {

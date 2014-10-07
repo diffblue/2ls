@@ -15,19 +15,13 @@ Function: extend_expr_types
 
 unsigned get_bitvector_width(const exprt &expr)
 {
-  if(expr.type().id()==ID_signedbv) 
-    return to_signedbv_type(expr.type()).get_width();
-  if(expr.type().id()==ID_unsignedbv) 
-    return to_unsignedbv_type(expr.type()).get_width();
-  if(expr.type().id()==ID_floatbv) 
-    return to_floatbv_type(expr.type()).get_width();
-  assert(false); //type not implemented
+  return to_bitvector_type(expr.type()).get_width();
 }
 
 void extend_expr_types(exprt &expr)
 {
 //  std::cerr << "expr: " << expr << std::endl;
-  if(expr.id()==ID_typecast) assert(false);
+  if(expr.id()==ID_typecast) return;
   if(expr.id()==ID_constant) return;
   if(expr.id()==ID_symbol) return;
   if(expr.id()==ID_index) return;
@@ -93,7 +87,9 @@ void extend_expr_types(exprt &expr)
     extend_expr_types(expr.op1());
     unsigned size0 = get_bitvector_width(expr.op0());
     unsigned size1 = get_bitvector_width(expr.op1());
-     assert(size0>0); assert(size1>0); 
+    //  std::cerr << "expr1: " << expr.op1() << std::endl;
+ 
+    assert(size0>0); assert(size1>0); 
     if((expr.op0().type().id()==ID_unsignedbv || expr.op0().type().id()==ID_signedbv) &&
        (expr.op1().type().id()==ID_unsignedbv || expr.op1().type().id()==ID_signedbv))
     {
@@ -254,7 +250,9 @@ ieee_floatt simplify_const_float(const exprt &expr)
 
 constant_exprt simplify_const(const exprt &expr)
 {
+//  std::cerr << "const: " << expr << std::endl;
   if(expr.id()==ID_constant) return to_constant_expr(expr);
+  //TODO: handle "address_of" constants
   if(expr.id()==ID_index) 
   {
     const index_exprt &index_expr = to_index_expr(expr);

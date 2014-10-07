@@ -187,32 +187,25 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
   //check termination
   if(options.get_bool_option("termination"))
   {
-    if(has_loops ||
-       options.get_bool_option("preconditions") &&
-       has_function_calls) 
+    bool do_preconditions = options.get_bool_option("preconditions");
+    if(!has_loops && !has_function_calls) summary.terminates = true;
+    if(!has_loops && has_function_calls && calls_terminate)
     {
-      if(!options.get_bool_option("preconditions"))
-      {
-	if(calls_terminate)
-          do_termination(function_name,SSA,summary);
-	else
-        {
-	  summary.precondition = false_exprt();
-	  summary.terminates = false;
-	}
-      }
-      else if(has_loops)
-      {
-        do_termination_with_preconditions(function_name,SSA,
+      if(do_preconditions) do_termination_preconditions_only(function_name,SSA,
 					  summary,postconditions);
-      }
-      else
-      {
-        do_termination_preconditions_only(function_name,SSA,
-					  summary,postconditions);
-      }
+      else summary.terminates = true;
+    }   
+    if(has_function_calls && !calls_terminate) 
+    {
+      summary.terminates = false;
+      summary.precondition = false_exprt();
     }
-    else if(!has_loops) summary.terminates = true;
+    if(has_loops && (!has_function_calls || has_function_calls && calls_terminate))
+    {
+      if(do_preconditions) do_termination_with_preconditions(function_name,SSA,
+					  summary,postconditions);
+      else do_termination(function_name,SSA,summary);
+    }  
   }
 
   {
@@ -560,7 +553,7 @@ void summarizert::do_termination_with_preconditions(
   bv_pointerst solver2(SSA.ns, satcheck2);
   solver2 << summary.precondition;
   summary.terminates = (solver2() == decision_proceduret::D_SATISFIABLE);
-  if(!summary.terminates) summary.precondition = true_exprt();
+  if(!summary.terminates) summary.precondition = false_exprt();
 
   //statistics
   solver_instances++;
@@ -899,6 +892,7 @@ bool summarizert::check_call_reachable(
   solver.set_message_handler(get_message_handler());
     
   solver << SSA;
+  solver << preconditions[function_name];
   symbol_exprt guard = SSA.guard_symbol(n_it->location);
   ssa_unwinder.get(function_name).unwinder_rename(guard,*n_it,false);
   solver << guard;

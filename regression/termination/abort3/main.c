@@ -1,7 +1,6 @@
 int foo(int x)
 {
-  int y;
-  if(x<1) while(1) y++;
+  if(x<1) while(1);
   return x;
 }
 
