@@ -1008,6 +1008,9 @@ void summarizer_parseoptionst::report_properties(
       it!=property_map.end();
       it++)
   {
+    if(it->first=="") //TODO: some properties do not show up in initialize_property_map
+      continue;     
+
     if(get_ui()==ui_message_handlert::XML_UI)
     {
       xmlt xml_result("result");
