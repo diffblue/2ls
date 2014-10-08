@@ -674,9 +674,9 @@ void ssa_local_unwindert::rename(exprt &expr, std::string suffix,
   }
   else if(expr.id()==ID_nondet_symbol)
   {
-       symbol_exprt &sexpr = to_symbol_expr(expr);
-        irep_idt id = id2string(sexpr.get_identifier()) + suffix + "%" + i2string(iteration);
-        sexpr.set_identifier(id);
+
+        irep_idt id = expr.get_string(ID_identifier) + suffix + "%" + i2string(iteration);
+        expr.set(ID_identifier,id);
         return;
   }
 
