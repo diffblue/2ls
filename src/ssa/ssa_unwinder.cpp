@@ -672,6 +672,13 @@ void ssa_local_unwindert::rename(exprt &expr, std::string suffix,
         sexpr.set_identifier(id);
         return;
   }
+  else if(expr.id()==ID_nondet_symbol)
+  {
+       symbol_exprt &sexpr = to_symbol_expr(expr);
+        irep_idt id = id2string(sexpr.get_identifier()) + suffix + "%" + i2string(iteration);
+        sexpr.set_identifier(id);
+        return;
+  }
 
   for (exprt::operandst::iterator it = expr.operands().begin();
        it != expr.operands().end(); it++) {
