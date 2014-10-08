@@ -21,6 +21,6 @@ main()
           menor = array[j];                          
     }                       
     
-    __VERIFIER_assert(array[0]>=menor);    
+  __VERIFIER_assert(array[0]>=menor);   
 }
 

@@ -92,29 +92,43 @@ tpolyhedra_domaint::row_valuet tpolyhedra_domaint::between(
 
 #ifdef ENABLE_HEURISTICS
     //heuristics
-    if(type.id()==ID_unsignedbv && 
-       vlower<mp_integer(128) && 
-       vupper==to_unsignedbv_type(type).largest())
+    if(type.id()==ID_unsignedbv)
     {
-      return from_integer(mp_integer(256),type);
+      mp_integer vlargest = to_unsignedbv_type(type).largest();
+      if(vlower==mp_integer(0) && vupper==vlargest)
+        return from_integer(mp_integer(1),type);
+      if(vlower==mp_integer(1) && vupper==vlargest)
+        return from_integer(mp_integer(vupper-1),type);
+      if(vlower==mp_integer(1) && vupper==vlargest-1)
+        return from_integer(mp_integer(2),type);
+      if(vlower<mp_integer(128) && vupper==vlargest)
+        return from_integer(vlargest-1,type);
+      if(vlower<mp_integer(128) && vupper==vlargest-1)
+        return from_integer(mp_integer(255),type); 
     }
     if(type.id()==ID_signedbv)
     { 
-      if(vlower==to_signedbv_type(type).smallest() && 
-	 vupper==to_signedbv_type(type).largest())
-      {
-        return from_integer(mp_integer(0),to_signedbv_type(type));
-      }
-      if((vlower>mp_integer(-128) && vlower<mp_integer(128))&& 
-	 vupper==to_signedbv_type(type).largest())
-      {
-        return from_integer(mp_integer(256),type);
-      }
-      if(vlower==to_signedbv_type(type).smallest() && 
-	 (vupper>mp_integer(-128) && vupper<mp_integer(128)))
-      {
-        return from_integer(mp_integer(-256),type);
-      }
+      mp_integer vlargest = to_signedbv_type(type).largest();
+      if(vlower==-vlargest && vupper==vlargest)
+        return from_integer(mp_integer(0),type);
+      if(vlower==mp_integer(1) && vupper==vlargest)
+        return from_integer(mp_integer(2),type);
+      if(vlower==mp_integer(-1) && vupper==vlargest)
+        return from_integer(mp_integer(0),type);
+      if(vlower==mp_integer(0) &&  vupper==vlargest)
+        return from_integer(mp_integer(vupper-1),type);
+      if(vlower==-(vlargest/2) && vupper==vlargest)
+        return from_integer(mp_integer(vlargest/2+1),type);
+      if(vlower==vlargest/2+1 && vupper==vlargest)
+        return from_integer(mp_integer(vlargest/2+2),type);
+      if(vlower==mp_integer(0) && vupper==vlargest-1)
+        return from_integer(mp_integer(1),type);
+      if(vlower<mp_integer(128) && vupper==vlargest)
+        return from_integer(vlargest-1,type);
+      if(vlower<mp_integer(128) && vupper==vlargest-1)
+        return from_integer(mp_integer(255),type);
+      if(vlower<mp_integer(-128) && vupper==mp_integer(255))
+      return from_integer(mp_integer(-255),type); 
     }
 #endif
 
