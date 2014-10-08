@@ -292,7 +292,12 @@ void ssa_inlinert::replace_params(const local_SSAt::var_listt &params,
   for(exprt::operandst::const_iterator it = funapp_expr.arguments().begin();
       it != funapp_expr.arguments().end(); it++, p_it++)
   {
-    assert(p_it!=params.end());
+    if(p_it==params.end())
+    {
+      warning() << "ignoring excess function arguments" << eom; 
+      continue;
+    }
+    
     exprt lhs = *p_it; //copy
     rename(lhs);
     new_equs.push_back(equal_exprt(lhs,*it));
