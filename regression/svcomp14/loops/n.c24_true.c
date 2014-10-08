@@ -1,9 +1,3 @@
-void __VERIFIER_assert(int cond) {
-  if (!(cond)) {
-    ERROR: goto ERROR;
-  }
-  return;
-}
 #include <string.h>
 extern int __VERIFIER_nondet_int(void);
 
@@ -83,7 +77,7 @@ int main(){
             }
       }
    }
-   __VERIFIER_assert(offset>=0 && offset<=1000);
+   assert(offset>=0 && offset<=1000);
    return 1;
 }
 

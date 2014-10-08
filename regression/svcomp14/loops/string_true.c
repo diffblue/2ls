@@ -1,10 +1,3 @@
-extern void __VERIFIER_assume(int);
-void __VERIFIER_assert(int cond) {
-  if (!(cond)) {
-    ERROR: goto ERROR;
-  }
-  return;
-}
 #define MAX 5
 
 extern char __VERIFIER_nondet_char();
@@ -16,11 +9,11 @@ main()
   
   for(i=0; i<MAX; i++)
     string_A[i]=__VERIFIER_nondet_char();    
-  __VERIFIER_assume(string_A[MAX-1]=='\0');
+  __CPROVER_assume(string_A[MAX-1]=='\0');
 
   for(i=0; i<MAX; i++)
     string_B[i]=__VERIFIER_nondet_char();    
-  __VERIFIER_assume(string_B[MAX-1]=='\0');
+  __CPROVER_assume(string_B[MAX-1]=='\0');
 
   nc_A = 0;
   while(string_A[nc_A]!='\0')
@@ -50,6 +43,6 @@ main()
 
   found = (j>nc_B-1);
   
-  __VERIFIER_assert(found == 0 || found == 1);
+  assert(found == 0 || found == 1);
 }
 
