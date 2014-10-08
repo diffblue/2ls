@@ -4,9 +4,9 @@
 #include "lexlinrank_solver_enumeration.h"
 #include "util.h"
 
-//#define DEBUG_OUTER_FORMULA 
+#define DEBUG_OUTER_FORMULA 
 #define DEBUG_INNER_FORMULA 
-#define MAX_ELEMENTS 2 // lexicographic components
+#define MAX_ELEMENTS 3 // lexicographic components
 #define MAX_REFINEMENTS 20
 
 bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
@@ -14,6 +14,10 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
   lexlinrank_domaint::templ_valuet &rank = 
     static_cast<lexlinrank_domaint::templ_valuet &>(_rank);
 
+
+  satcheck_minisat_no_simplifiert test_satcheck;
+  bv_pointerst test_solver = bv_pointerst(ns, test_satcheck);
+ 
   bool improved = false;
   static std::vector<int> number_elements_per_row;
   number_elements_per_row.resize(rank.size());
@@ -32,14 +36,20 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
 #ifndef DEBUG_OUTER_FORMULA
   solver << or_exprt(rank_expr, literal_exprt(activation_literal));
 #else
-  debug() << "(RANK) Rank constraint : " << from_expr(ns,"",rank_expr) << eom; 
-  debug() << "(RANK) literal " << activation_literal << eom;
+  debug() << "(RANK) Rank constraint : ";
+  pretty_print_termination_argument(debug(), ns, or_exprt(rank_expr, literal_exprt(activation_literal)));
+  debug() << eom; 
+  debug() << "(RANK) activation literal " << activation_literal << eom;
   literalt l = solver.convert(or_exprt(rank_expr, literal_exprt(activation_literal)));
   if(!l.is_constant()) 
-  {
-    debug() << "(RANK) literal " << l << ": " << from_expr(ns,"",or_exprt(rank_expr, literal_exprt(activation_literal))) <<eom;
-    formula.push_back(l);
-  }
+    {
+      debug() << "(RANK) literal " << l << ": ";
+      pretty_print_termination_argument(debug(), ns, or_exprt(rank_expr, literal_exprt(activation_literal)));
+      debug() << eom;
+      formula.clear();
+      formula.push_back(l);
+
+    }
 #endif
 
   rank_cond_literals.resize(rank_cond_exprs.size());
@@ -56,6 +66,17 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
   bvt whole_formula = formula;
   whole_formula.insert(whole_formula.end(),activation_literals.begin(),activation_literals.end());
   solver.set_assumptions(whole_formula);
+
+
+  // check whether the literal is UNSAT to start with
+  test_solver << rank_expr;
+
+  if(test_solver() == decision_proceduret::D_SATISFIABLE)
+    debug() << "test solver: SAT" << eom;
+  else
+    debug() << "test solver: UNSAT" << eom;
+
+
 #endif
 
   if(solve() == decision_proceduret::D_SATISFIABLE) 
@@ -222,6 +243,7 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
 	    debug() << "(RANK) reset the inner solver " << eom;
 	    inner_solver = new bv_pointerst(ns, inner_satcheck);
 	    inner_formula.clear();
+	    formula.clear();
 
 	    lexlinrank_domain.add_element(row, rank);
 	    number_refinements = 0;
@@ -236,9 +258,19 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
   else 
     {
       debug() << "(RANK) outer solver: UNSAT!!" << eom;
+#ifdef DEBUG_OUTER_FORMULA
+      for(unsigned i=0; i<formula.size(); i++) {
+	if(solver.is_in_conflict(formula[i]))
+	  debug() << "(RANK-outer) is_in_conflict: " << formula[i] << eom;
+	else
+	  debug() << "(RANK-outer) not_in_conflict: " << formula[i] << eom;
+      }
+#endif    
+
+
     }
 
   pop_context();
-
+  debug() << "(RANK): outer solver => pop context" << eom;
   return improved;
 }
