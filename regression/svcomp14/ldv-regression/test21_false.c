@@ -1,5 +1,4 @@
 void printf(char *format);
-void assert_fail(void);
 
 extern void *__VERIFIER_nondet_pointer();
 
@@ -23,7 +22,6 @@ int main()
   if (pd1 != 0 && pd1 == pd2) {
     if (!check(pd1, pd2)) {
       printf("ERROR!\n");
-      assert_fail();
       goto ERROR;
     }
   }
@@ -31,5 +29,6 @@ int main()
   return 0;
 
   ERROR:
+      assert(0);
   return 1;
 }
