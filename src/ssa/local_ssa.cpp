@@ -368,9 +368,24 @@ void local_SSAt::build_function_call(locationt loc)
     f.function() = code_function_call.function();
     f.type() = code_function_call.lhs().type();
     f.arguments() = code_function_call.arguments(); 
+    f = to_function_application_expr(read_rhs(f, loc));
 
-    (--nodes.end())->function_calls.push_back(
-      to_function_application_expr(read_rhs(f, loc)));
+    nodest::iterator n_it = --nodes.end();
+    assert(f.function().id()==ID_symbol); //no function pointers
+    irep_idt fname = to_symbol_expr(f.function()).get_identifier();
+ 
+   //add equalities for arguments
+    unsigned i=0;
+    for(exprt::operandst::iterator it =  f.arguments().begin();
+	it !=  f.arguments().end(); it++, i++)
+    {      
+      symbol_exprt arg(id2string(fname)+"#arg"+i2string(i),it->type());
+      n_it->equalities.push_back(equal_exprt(*it,arg));
+      *it = arg;
+    }
+
+    n_it->function_calls.push_back(
+      to_function_application_expr(f));
   }
 }
 

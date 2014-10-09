@@ -14,7 +14,7 @@
 //#define DIFFERENCE_ENCODING
 
 #define COEFF_C_SIZE 10
-#define MAX_REFINEMENT 2
+#define MAX_REFINEMENT 0
 
 void lexlinrank_domaint::initialize(valuet &value)
 {

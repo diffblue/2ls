@@ -4,8 +4,8 @@
 #include "lexlinrank_solver_enumeration.h"
 #include "util.h"
 
-#define DEBUG_OUTER_FORMULA 
-#define DEBUG_INNER_FORMULA 
+//#define DEBUG_OUTER_FORMULA 
+//#define DEBUG_INNER_FORMULA 
 #define MAX_ELEMENTS 3 // lexicographic components
 #define MAX_REFINEMENTS 20
 
@@ -46,7 +46,7 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
       debug() << "(RANK) literal " << l << ": ";
       pretty_print_termination_argument(debug(), ns, or_exprt(rank_expr, literal_exprt(activation_literal)));
       debug() << eom;
-      formula.clear();
+//      formula.clear();
       formula.push_back(l);
 
     }
@@ -67,7 +67,7 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
   whole_formula.insert(whole_formula.end(),activation_literals.begin(),activation_literals.end());
   solver.set_assumptions(whole_formula);
 
-
+#if 0
   // check whether the literal is UNSAT to start with
   test_solver << rank_expr;
 
@@ -75,7 +75,7 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
     debug() << "test solver: SAT" << eom;
   else
     debug() << "test solver: UNSAT" << eom;
-
+#endif
 
 #endif
 
@@ -243,7 +243,7 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
 	    debug() << "(RANK) reset the inner solver " << eom;
 	    inner_solver = new bv_pointerst(ns, inner_satcheck);
 	    inner_formula.clear();
-	    formula.clear();
+//	    formula.clear();
 
 	    lexlinrank_domain.add_element(row, rank);
 	    number_refinements = 0;

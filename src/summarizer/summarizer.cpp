@@ -488,7 +488,7 @@ void summarizert::do_termination_with_preconditions(
       // compute ranking functions
       ssa_analyzert analyzer1;
       analyzer1.set_message_handler(get_message_handler());
-      analyzer1(SSA,precondition,template_generator1);
+      analyzer1(SSA,and_exprt(preconditions[function_name],precondition),template_generator1);
       analyzer1.get_result(summary.termination_argument,
 			   template_generator1.all_vars());     
 
@@ -538,7 +538,7 @@ void summarizert::do_termination_with_preconditions(
   //compute sufficient preconditions w.r.t. termination argument
   ssa_analyzert analyzer2;
   analyzer2.set_message_handler(get_message_handler());
-  analyzer2(SSA,cond,template_generator2);
+  analyzer2(SSA,and_exprt(preconditions[function_name],cond),template_generator2);
   exprt new_precondition;
   analyzer2.get_result(new_precondition,template_generator2.out_vars());
   if(summary.precondition.is_nil())
@@ -659,7 +659,7 @@ void summarizert::inline_summaries(const function_namet &function_name,
     //get information about callee termination
     if(options.get_bool_option("termination"))
     {
-      if(!summary_db.get(fname).terminates) 
+      if(summary_db.exists(fname) && !summary_db.get(fname).terminates) 
       {
 	calls_terminate = false;
 	break;

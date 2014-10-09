@@ -185,7 +185,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
       // row_symb_value >= middle
       exprt c = tpolyhedra_domain.get_row_symb_value_constraint(row,middle);
 
-#if 1
+#if 0
       debug() << "upper: " << from_expr(ns,"",upper) << eom;
       debug() << "middle: " << from_expr(ns,"",middle) << eom;
       debug() << "lower: " << from_expr(ns,"",lower) << eom;

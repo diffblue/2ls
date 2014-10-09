@@ -445,7 +445,11 @@ void ssa_inlinert::rename_to_caller(
   for(exprt::operandst::const_iterator it = f_it->arguments().begin();
       it !=  f_it->arguments().end(); it++, p_it++)
   {
-    assert(p_it!=params.end());
+    if(p_it==params.end())
+    {
+      warning() << "ignoring excess function arguments" << eom; 
+      continue;
+    }
     replace_map[*p_it] = *it;
   }
 
@@ -487,15 +491,17 @@ void ssa_inlinert::rename_to_callee(
   const local_SSAt::var_sett &globals_in, 
   exprt &expr)
 {
-  assert(params.size()==f_it->arguments().size());
-
   replace_mapt replace_map;
 
   local_SSAt::var_listt::const_iterator p_it = params.begin();
   for(exprt::operandst::const_iterator it =  f_it->arguments().begin();
       it !=  f_it->arguments().end(); it++, p_it++)
   {
-    assert(p_it!=params.end());
+    if(p_it==params.end())
+    {
+      warning() << "ignoring excess function arguments" << eom; 
+      continue;
+    }
     replace_map[*it] = *p_it;
   }
 
