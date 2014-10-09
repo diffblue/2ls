@@ -231,9 +231,6 @@ void summarizert::inline_summaries(const function_namet &function_name,
 				   local_SSAt &SSA, bool context_sensitive,
 				   bool forward, bool sufficient)
 {
-  ssa_inlinert inliner;
-  inliner.set_message_handler(get_message_handler());
-
   local_SSAt::nodest::iterator n_it = SSA.nodes.begin();
 
   while(true) //iterate until all function calls are gone
@@ -256,10 +253,10 @@ void summarizert::inline_summaries(const function_namet &function_name,
 
     if(!found) break; //no more function calls
 
-    if(!check_precondition(function_name,n_it,f_it,SSA,inliner))
+    if(!check_precondition(function_name,n_it,f_it,SSA))
     {
       if(context_sensitive) 
-        compute_precondition(function_name,n_it,f_it,SSA,inliner,forward);
+        compute_precondition(function_name,n_it,f_it,SSA,forward);
 
       irep_idt fname = to_symbol_expr(f_it->function()).get_identifier();
       status() << "Recursively summarizing function " << fname << eom;
@@ -276,10 +273,10 @@ void summarizert::inline_summaries(const function_namet &function_name,
       SSA.get_globals(++loc,cs_globals_out);
 
       //replace
-      inliner.replace(SSA.nodes,n_it,f_it,cs_globals_in,cs_globals_out,summary);
+      ssa_inliner.replace(SSA.nodes,n_it,f_it,cs_globals_in,cs_globals_out,summary);
       summaries_used++;
-      inliner.commit_node(n_it);
-      assert(inliner.commit_nodes(SSA.nodes,n_it));
+      ssa_inliner.commit_node(n_it);
+      assert(ssa_inliner.commit_nodes(SSA.nodes,n_it));
     }
 
     n_it++;
@@ -335,8 +332,7 @@ bool summarizert::check_precondition(
   const function_namet &function_name,
   local_SSAt::nodest::iterator n_it, 
   local_SSAt::nodet::function_callst::iterator f_it,
-  local_SSAt &SSA,
-  ssa_inlinert &inliner)
+  local_SSAt &SSA)
 {
   assert(f_it->function().id()==ID_symbol); //no function pointers
   irep_idt fname = to_symbol_expr(f_it->function()).get_identifier();
@@ -359,7 +355,7 @@ bool summarizert::check_precondition(
 
       status() << "Precondition trivially holds, replacing by summary." 
                    << eom;
-      inliner.replace(SSA.nodes,n_it,f_it,
+      ssa_inliner.replace(SSA.nodes,n_it,f_it,
                           cs_globals_in,cs_globals_out,summary_db.get(fname));
       summaries_used++;
       precondition_holds = true;
@@ -372,7 +368,7 @@ bool summarizert::check_precondition(
       local_SSAt::var_sett cs_globals_in; 
       SSA.get_globals(n_it->location,cs_globals_in);
 
-      inliner.rename_to_caller(f_it,summary.params,
+      ssa_inliner.rename_to_caller(f_it,summary.params,
 			       cs_globals_in,summary.globals_in,assertion);
 
       status() << "Precondition assertion for function " << fname << eom;
@@ -384,13 +380,13 @@ bool summarizert::check_precondition(
   else if(!ssa_db.exists(fname))
   {
     status() << "Function " << fname << " not found" << eom;
-    inliner.havoc(*n_it,f_it);
+    ssa_inliner.havoc(*n_it,f_it);
     precondition_holds = true;
   }
   else if(fname == function_name) 
   {
     status() << "Havoc recursive function call to " << fname << eom;
-    inliner.havoc(*n_it,f_it);
+    ssa_inliner.havoc(*n_it,f_it);
     precondition_holds = true;
   }
   else 
@@ -398,8 +394,8 @@ bool summarizert::check_precondition(
     status() << "Function " << fname << " not analyzed yet" << eom;
     return false; //function not seen yet
   }
-  inliner.commit_node(n_it);
-  assert(inliner.commit_nodes(SSA.nodes,n_it));
+  ssa_inliner.commit_node(n_it);
+  assert(ssa_inliner.commit_nodes(SSA.nodes,n_it));
 
   if(precondition_holds) return true;
 
@@ -432,10 +428,10 @@ bool summarizert::check_precondition(
     SSA.get_globals(++loc,cs_globals_out);
 
     status() << "Precondition holds, replacing by summary." << eom;
-    inliner.replace(SSA.nodes,n_it,f_it,
+    ssa_inliner.replace(SSA.nodes,n_it,f_it,
 		    cs_globals_in,cs_globals_out,summary_db.get(fname));
-    inliner.commit_node(n_it);
-    assert(inliner.commit_nodes(SSA.nodes,n_it));
+    ssa_inliner.commit_node(n_it);
+    assert(ssa_inliner.commit_nodes(SSA.nodes,n_it));
 
     summaries_used++;
                 
@@ -468,7 +464,6 @@ void summarizert::compute_precondition(
   local_SSAt::nodest::iterator n_it, 
   local_SSAt::nodet::function_callst::iterator f_it,
   local_SSAt &SSA,
-  ssa_inlinert &inliner,
   bool forward)
 {
   assert(f_it->function().id()==ID_symbol); //no function pointers
@@ -497,7 +492,7 @@ void summarizert::compute_precondition(
 
   preconditiont precondition;
   analyzer.get_result(precondition,template_generator.callingcontext_vars());
-  inliner.rename_to_callee(f_it, fSSA.params,
+  ssa_inliner.rename_to_callee(f_it, fSSA.params,
 			     cs_globals_in[f_it],fSSA.globals_in,
 			     precondition);
 

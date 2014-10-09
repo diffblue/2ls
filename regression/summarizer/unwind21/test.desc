@@ -1,6 +1,6 @@
-CORE
+KNOWNBUG
 main.c
---inline --k-induction
+--k-induction
 ^EXIT=10$
 ^SIGNAL=0$
 ^VERIFICATION FAILED$

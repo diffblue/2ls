@@ -24,11 +24,13 @@ class summarizert : public messaget
  summarizert(optionst &_options, 
 	     summary_dbt &_summary_db,
              ssa_dbt &_ssa_db,
-             ssa_unwindert &_ssa_unwinder) : 
+             ssa_unwindert &_ssa_unwinder,
+	     ssa_inlinert &_ssa_inliner) : 
     options(_options),
     summary_db(_summary_db),
     ssa_db(_ssa_db),
     ssa_unwinder(_ssa_unwinder),
+    ssa_inliner(_ssa_inliner),
     solver_instances(0),
     solver_calls(0),
     summaries_used(0)
@@ -55,6 +57,7 @@ class summarizert : public messaget
   summary_dbt &summary_db;
   ssa_dbt &ssa_db;
   ssa_unwindert &ssa_unwinder;
+  ssa_inlinert &ssa_inliner;
   preconditionst preconditions;
 
   void compute_summary_rec(const function_namet &function_name,
@@ -69,15 +72,13 @@ class summarizert : public messaget
   bool check_precondition(const function_namet &function_name, 
 			  local_SSAt::nodest::iterator node, 
 			  local_SSAt::nodet::function_callst::iterator f_it,
-                          local_SSAt &SSA,
-                          ssa_inlinert &inliner);
+                          local_SSAt &SSA);
 
   //computes precondition in caller context
   void compute_precondition(const function_namet &function_name, 
 			    local_SSAt::nodest::iterator node, 
 			    local_SSAt::nodet::function_callst::iterator f_it,
 			    local_SSAt &SSA,
-                            ssa_inlinert &inliner,
                             bool forward);
 
   void initialize_preconditions(functionst &_functions, 

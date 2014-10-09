@@ -57,6 +57,8 @@ DELTA_OBJ+=\
       ../domains/predicate$(OBJEXT)
 #      ../domains/strategy_solver_binsearch3$(OBJEXT) 
 
+#      ../domains/strategy_solver_binsearch3$(OBJEXT) 
+
 OBJ+=$(DELTA_OBJ)
 
 include $(CBMC)/src/config.inc

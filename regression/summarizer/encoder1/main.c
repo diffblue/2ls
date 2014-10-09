@@ -17,13 +17,13 @@ int main () {
     current = getchar();
     inputBytes += (current == EOF) ? 0 : 1;
 
-    if ((current == last) && (count < UCHAR_MAX - 1)) 
+    if ((current == last) && (count < 5 /*UCHAR_MAX - 1*/)) 
     {
       ++count;
     } 
     else 
     {
-      if (last != EOF)      // Remove to trigger summariser bug
+      if (last != EOF)      
       {
 	if (count > 1) 
         {
@@ -34,7 +34,8 @@ int main () {
         {
 	  putchar(UCHAR_MAX); ++outputBytes;
 	}
-	putchar(last); ++outputBytes;
+	putchar(last); 
+	++outputBytes;
 	encodedBytes += count;
       }
 
@@ -44,8 +45,8 @@ int main () {
   } 
   while (last != EOF);
 
-  assert(inputBytes == encodedBytes);
-  assert(outputBytes <= 2 * inputBytes);
+  assert(inputBytes != encodedBytes); //should fail
+  // assert(outputBytes <= 2 * inputBytes);
 
   return 0;
 }

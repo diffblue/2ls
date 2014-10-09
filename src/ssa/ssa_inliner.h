@@ -13,7 +13,8 @@ Author: Peter Schrammel
 
 #include "../summarizer/summary_db.h"
 #include "../summarizer/ssa_db.h"
-#include "../ssa/local_ssa.h"
+#include "local_ssa.h"
+#include "ssa_unwinder.h"
 
 class summary_dbt;
 
@@ -58,10 +59,10 @@ class ssa_inlinert : public messaget
 
   //functions for renaming preconditions to calling context
   void rename_to_caller(local_SSAt::nodet::function_callst::iterator f_it, 
-			       const local_SSAt::var_listt &params, 
-			       const local_SSAt::var_sett &cs_globals_in, 
-			       const local_SSAt::var_sett &globals_in, 
-			       exprt &expr);
+			const local_SSAt::var_listt &params, 
+			const local_SSAt::var_sett &cs_globals_in, 
+			const local_SSAt::var_sett &globals_in, 
+			exprt &expr);
   void rename_to_callee(local_SSAt::nodet::function_callst::iterator f_it, 
 			       const local_SSAt::var_listt &params, 
 			       const local_SSAt::var_sett &cs_globals_in, 

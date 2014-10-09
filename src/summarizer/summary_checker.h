@@ -17,6 +17,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "../ssa/local_ssa.h"
 #include "../ssa/ssa_unwinder.h"
+#include "../ssa/ssa_inliner.h"
 #include "ssa_db.h"
 #include "summary_db.h"
 #include "summarizer.h"
@@ -31,11 +32,11 @@ public:
     options(_options),
     ssa_db(),summary_db(),
     ssa_unwinder(ssa_db),
-    summarizer(_options,summary_db,ssa_db,ssa_unwinder),
+    summarizer(_options,summary_db,ssa_db,ssa_unwinder,ssa_inliner),
     solver_instances(0),
     solver_calls(0)
   {
-
+    ssa_inliner.set_message_handler(get_message_handler());
   }
   
   bool show_vcc, simplify, fixed_point;
@@ -52,6 +53,7 @@ protected:
   ssa_dbt ssa_db;
   summary_dbt summary_db;
   ssa_unwindert ssa_unwinder;
+  ssa_inlinert ssa_inliner;
   summarizert summarizer;
 
   unsigned solver_instances;
