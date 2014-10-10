@@ -66,7 +66,7 @@ class summarizert : public messaget
 
   void inline_summaries(const function_namet &function_name, local_SSAt &SSA,
                         bool context_sensitive, bool forward, bool sufficient,
-			bool &calls_terminate, bool &has_function_calls,
+			threevalt &calls_terminate, bool &has_function_calls,
 			exprt::operandst &postconditions); 
 
   bool check_precondition(const function_namet &function_name, 
@@ -108,7 +108,7 @@ class summarizert : public messaget
   void do_termination_with_preconditions(const function_namet &function_name, 
 		      local_SSAt &SSA, summaryt &summary,
 		      exprt::operandst postconditions);
-  bool check_termination_argument(exprt expr);
+  threevalt check_termination_argument(exprt expr);
 
   exprt collect_postconditions(const function_namet &function_name,
 			       const local_SSAt &SSA, 

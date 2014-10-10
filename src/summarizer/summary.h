@@ -14,6 +14,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/std_expr.h>
 
+typedef enum{YES, NO, UNKNOWN} threevalt;
+
 class summaryt
 {
  public:
@@ -27,7 +29,7 @@ class summaryt
     transformer(true_exprt()), 
     invariant(true_exprt()), 
     termination_argument(nil_exprt()), 
-    terminates(false) {}
+    terminates(UNKNOWN) {}
 
   var_listt params;
   var_sett globals_in, globals_out;
@@ -43,11 +45,13 @@ class summaryt
   predicatet invariant; 
 
   predicatet termination_argument;
-  bool terminates;
+  threevalt terminates;
 
   void output(std::ostream &out, const namespacet &ns) const;
 
 };
+
+std::string threeval2string(threevalt v);
 
 
 #endif

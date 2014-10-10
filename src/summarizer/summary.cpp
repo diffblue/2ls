@@ -47,5 +47,28 @@ void summaryt::output(std::ostream &out, const namespacet &ns) const
   if(termination_argument.is_nil()) out << "not computed";
   else pretty_print_termination_argument(out,ns,termination_argument);
   out << std::endl;
-  out << "terminates: " << (terminates ? "yes" : "don't know") << std::endl;
+  out << "terminates: " << threeval2string(terminates) << std::endl;
+}
+
+/*******************************************************************\
+
+Function: threeval2string
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::string threeval2string(threevalt v)
+{
+  switch(v)
+  {
+  case YES: return "yes";
+  case NO: return "no";
+  case UNKNOWN: return "unknown";
+  }
+  assert(false);
 }

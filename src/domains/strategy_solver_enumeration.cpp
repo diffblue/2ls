@@ -32,6 +32,9 @@ bool strategy_solver_enumerationt::iterate(invariantt &_inv)
   
   strategy_cond_literals.resize(strategy_cond_exprs.size());
   
+  exprt postinv_expr = or_exprt(disjunction(strategy_cond_exprs),
+				literal_exprt(activation_literal));
+
   debug() << "post-inv: ";
   for(unsigned i = 0; i<strategy_cond_exprs.size(); i++)
   {  
@@ -43,8 +46,8 @@ bool strategy_solver_enumerationt::iterate(invariantt &_inv)
   }
   debug() << eom;
 
-  exprt postinv_expr = or_exprt(disjunction(strategy_cond_exprs),
-				literal_exprt(activation_literal));
+/*  exprt postinv_expr = or_exprt(disjunction(strategy_cond_exprs),
+    literal_exprt(activation_literal));*/
 #ifndef DEBUG_FORMULA
   solver << postinv_expr;
 #else
@@ -84,7 +87,7 @@ bool strategy_solver_enumerationt::iterate(invariantt &_inv)
     }    
     #endif
           
-    #if 1
+    #if 0
     {
       std::set<symbol_exprt> vars;
       find_symbols(preinv_expr,vars); 

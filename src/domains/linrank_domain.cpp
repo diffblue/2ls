@@ -13,7 +13,7 @@
 #define EXTEND_TYPES
 //#define DIFFERENCE_ENCODING
 
-#define COEFF_C_SIZE 32 //10
+#define COEFF_C_SIZE 10
 #define MAX_REFINEMENT 2
 
 void linrank_domaint::initialize(valuet &value)
@@ -184,24 +184,42 @@ exprt linrank_domaint::get_row_symb_constraint(
   {
     for(unsigned i = 0; i < values.size(); ++i)
     {
-      ref_constraints.push_back(
-        binary_relation_exprt(symb_values.c[i],ID_ge,
-	  from_integer(mp_integer(-1),symb_values.c[i].type())));
-      ref_constraints.push_back(
-        binary_relation_exprt(symb_values.c[i],ID_le,
-	  from_integer(mp_integer(1),symb_values.c[i].type())));
+      typet type = symb_values.c[i].type();
+      if(type.id()==ID_signedbv || type.id()==ID_unsignedbv)
+      {
+	ref_constraints.push_back(
+	  binary_relation_exprt(symb_values.c[i],ID_ge,
+				from_integer(mp_integer(-1),type)));
+	ref_constraints.push_back(
+	  binary_relation_exprt(symb_values.c[i],ID_le,
+				from_integer(mp_integer(1),type)));
+      }
+      else if(type.id()==ID_floatbv)
+      {
+	ieee_floatt zero; zero.make_zero();
+	ieee_floatt one; one.from_integer(mp_integer(1));
+	ieee_floatt minusone = one; one.negate();
+	ref_constraints.push_back(or_exprt(or_exprt(
+		     equal_exprt(symb_values.c[i],one.to_expr()),
+      		     equal_exprt(symb_values.c[i],zero.to_expr())),
+		   equal_exprt(symb_values.c[i],minusone.to_expr())));
+      }
     }
   }
   else if(refinement_level==1)
   {
     for(unsigned i = 0; i < values.size(); ++i)
     {
-      ref_constraints.push_back(
-        binary_relation_exprt(symb_values.c[i],ID_ge,
-	  from_integer(mp_integer(-10),symb_values.c[i].type())));
-      ref_constraints.push_back(
-        binary_relation_exprt(symb_values.c[i],ID_le,
-	  from_integer(mp_integer(10),symb_values.c[i].type())));
+      typet type = symb_values.c[i].type();
+      if(type.id()==ID_signedbv || type.id()==ID_unsignedbv)
+      {
+	ref_constraints.push_back(
+	  binary_relation_exprt(symb_values.c[i],ID_ge,
+				from_integer(mp_integer(-10),type)));
+	ref_constraints.push_back(
+	  binary_relation_exprt(symb_values.c[i],ID_le,
+				from_integer(mp_integer(10),type)));
+      }
     }
   }
 #endif
@@ -296,13 +314,13 @@ void linrank_domaint::project_on_vars(valuet &value, const var_sett &vars, exprt
 
     if(is_row_value_true(v[row]))
     {
-      // !(g => true)
-      c.push_back(false_exprt());
+      // (g => true)
+      c.push_back(true_exprt());
     }
     else if(is_row_value_false(v[row]))
     {
-      // !(g => false)
-      c.push_back(and_exprt(templ[row].pre_guard, templ[row].post_guard)); 
+      // (g => false)
+      c.push_back(implies_exprt(and_exprt(templ[row].pre_guard, templ[row].post_guard),false_exprt())); 
     }
     else
     {
@@ -347,8 +365,8 @@ void linrank_domaint::project_on_vars(valuet &value, const var_sett &vars, exprt
       exprt decreasing = binary_relation_exprt(sum_pre, ID_gt,sum_post);
 #endif
       c.push_back(implies_exprt(
-		    //and_exprt(templ[row].pre_guard, 
-		    (templ[row].post_guard),
+		    and_exprt(templ[row].pre_guard, 
+			      templ[row].post_guard),
                           decreasing));
     }
   }

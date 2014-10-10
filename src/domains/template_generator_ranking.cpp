@@ -82,7 +82,7 @@ void template_generator_rankingt::collect_variables_ranking(const local_SSAt &SS
       ssa_local_unwinder.unwinder_rename(to_symbol_expr(lhguard),*n_it,true);
       exprt lsguard = SSA.name(SSA.guard_symbol(), local_SSAt::LOOP_SELECT, n_it->location);
       ssa_local_unwinder.unwinder_rename(to_symbol_expr(lsguard),*n_it,true);
-      exprt pre_guard = and_exprt(lhguard,lsguard);
+      exprt pre_guard = lhguard; //and_exprt(lhguard,lsguard);
 
       exprt pguard = SSA.guard_symbol(n_it->location);
       ssa_local_unwinder.unwinder_rename(to_symbol_expr(pguard),*n_it,false);
@@ -105,7 +105,8 @@ void template_generator_rankingt::collect_variables_ranking(const local_SSAt &SS
 
 	if(p_it==phi_nodes.end()) continue; // object not modified in this loop
 
-        symbol_exprt in=SSA.name(*o_it, local_SSAt::LOOP_BACK, n_it->location);
+//        symbol_exprt in=SSA.name(*o_it, local_SSAt::LOOP_BACK, n_it->location);
+        symbol_exprt in=SSA.name(*o_it, local_SSAt::PHI, n_it->loophead->location);
         ssa_local_unwinder.unwinder_rename(in,*n_it,true);
         symbol_exprt out=SSA.read_rhs(*o_it, n_it->location);
         ssa_local_unwinder.unwinder_rename(out,*n_it,false);

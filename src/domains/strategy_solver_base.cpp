@@ -71,6 +71,7 @@ void strategy_solver_baset::debug_add_to_formula(const exprt &expr)
   else if(!l.is_true()) 
   {
     std::cout << "literal " << l << ": " << from_expr(ns,"",expr) << std::endl;
+    std::cout << "expr: " << expr << std::endl;
     formula.push_back(l);
   }
 }

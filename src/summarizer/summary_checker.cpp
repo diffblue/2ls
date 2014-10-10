@@ -623,12 +623,12 @@ property_checkert::resultt summary_checkert::report_termination()
   for(summarizert::functionst::iterator it = functions.begin();
       it != functions.end(); it++)
   {
-    bool terminates = true;
+    threevalt terminates = YES;
     bool computed = summary_db.exists(it->first);
     if(computed) terminates = summary_db.get(it->first).terminates;
-    all_terminate = all_terminate && terminates;
+    all_terminate = all_terminate && (terminates==YES);
     result() << "[" << it->first << "]: " 
-	     << (!computed ? "not computed" : (terminates ? "yes" : "don't know")) << eom;
+	     << (!computed ? "not computed" : threeval2string(terminates)) << eom;
   }
   if(all_terminate) return property_checkert::PASS;
   return property_checkert::FAIL;

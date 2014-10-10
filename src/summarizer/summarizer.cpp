@@ -131,7 +131,7 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
 {
   local_SSAt &SSA = ssa_db.get(function_name); 
   
-  bool calls_terminate = true;
+  threevalt calls_terminate = YES;
   bool has_function_calls = false;  
   exprt::operandst postconditions;
   // recursively compute summaries for function calls
@@ -167,8 +167,7 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
   {
     debug() << "function " << 
       (has_function_calls ? "has function calls" : "does not have function calls") << eom;
-    debug() << "function calls " << 
-      (calls_terminate ? "terminate" : "do not terminate") << eom;
+    debug() << "function calls terminate: " << threeval2string(calls_terminate) << eom;
     debug() << "function " << 
       (has_loops ? "has loops" : "does not have loops") << eom;
   }
@@ -188,19 +187,19 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
   if(options.get_bool_option("termination"))
   {
     bool do_preconditions = options.get_bool_option("preconditions");
-    if(!has_loops && !has_function_calls) summary.terminates = true;
-    if(!has_loops && has_function_calls && calls_terminate)
+    if(!has_loops && !has_function_calls) summary.terminates = YES;
+    if(!has_loops && has_function_calls && calls_terminate==YES)
     {
       if(do_preconditions) do_termination_preconditions_only(function_name,SSA,
 					  summary,postconditions);
-      else summary.terminates = true;
+      else summary.terminates = YES;
     }   
-    if(has_function_calls && !calls_terminate) 
+    if(has_function_calls && calls_terminate!=YES) 
     {
-      summary.terminates = false;
-      summary.precondition = false_exprt();
+      summary.terminates = calls_terminate;
+      if(do_preconditions) summary.precondition = false_exprt();
     }
-    if(has_loops && (!has_function_calls || has_function_calls && calls_terminate))
+    if(has_loops && (!has_function_calls || has_function_calls && calls_terminate==YES))
     {
       if(do_preconditions) do_termination_with_preconditions(function_name,SSA,
 					  summary,postconditions);
@@ -264,7 +263,7 @@ void summarizert::do_summary(const function_namet &function_name,
   }
   analyzer.get_result(summary.transformer,template_generator.inout_vars());
 #ifdef PRECISE_JOIN
-  if(sufficient) 
+  if(!forward && sufficient) 
     summary.transformer = implies_exprt(summary.precondition,not_exprt(summary.transformer));
   else
     summary.transformer = implies_exprt(summary.precondition,summary.transformer);
@@ -298,6 +297,12 @@ void summarizert::do_termination(const function_namet &function_name,
 				 local_SSAt &SSA, summaryt &summary)
 {
   status() << "Computing termination argument" << eom;
+
+  if(!check_end_reachable(SSA,summary,preconditions[function_name],true))
+  {
+    summary.terminates = NO;
+    return;
+  }
 
   template_generator_rankingt template_generator1(options,ssa_unwinder.get(function_name));
   template_generator1.set_message_handler(get_message_handler());
@@ -360,12 +365,12 @@ void summarizert::do_termination_preconditions_only(
   {
     if(check_end_reachable(SSA,summary,cond,false))
     {
-      summary.terminates = true;
+      summary.terminates = YES;
       summary.precondition = true_exprt();
     }
     else
     {
-      summary.terminates = false;
+      summary.terminates = NO;
       summary.precondition = false_exprt();
     }
     return;
@@ -388,8 +393,8 @@ void summarizert::do_termination_preconditions_only(
   satcheckt satcheck2;
   bv_pointerst solver2(SSA.ns, satcheck2);
   solver2 << summary.precondition;
-  summary.terminates = (solver2() == decision_proceduret::D_SATISFIABLE);
-  if(!summary.terminates) summary.precondition = false_exprt();
+  summary.terminates = (solver2() == decision_proceduret::D_SATISFIABLE) ? YES : UNKNOWN;
+  if(summary.terminates!=YES) summary.precondition = false_exprt();
 
   //statistics
   solver_instances += 2;
@@ -454,7 +459,7 @@ void summarizert::do_termination_with_preconditions(
 			 SSA.guard_symbol(--SSA.goto_function.body.instructions.end())) << eom;
     debug() << from_expr(SSA.ns,"",precondition) << eom;
 
-    while(!summary.terminates)
+    while(summary.terminates!=YES)
     {
       //statistics
       solver_calls++;
@@ -476,7 +481,7 @@ void summarizert::do_termination_with_preconditions(
       case decision_proceduret::D_UNSATISFIABLE: {
 	debug() << "Function does not terminate" << eom;
 	summary.termination_argument = true_exprt();
-	summary.terminates = false;
+	summary.terminates = NO;
 	summary.precondition = false_exprt();
         SSA.nodes.pop_back(); //remove invariant from SSA
 	return; 
@@ -501,7 +506,7 @@ void summarizert::do_termination_with_preconditions(
       solver_instances++;
       solver_calls += analyzer1.get_number_of_solver_calls();
 
-      if(!summary.terminates) 
+      if(summary.terminates!=YES) 
       {
 	solver1 << not_exprt(precondition);
 	//this should not be in the precondition
@@ -526,12 +531,12 @@ void summarizert::do_termination_with_preconditions(
   //if template empty, check at least reachability (should actually be done by analyzer)
     if(!check_end_reachable(SSA,summary,cond,false))
     {
-      summary.terminates = false;
+      summary.terminates = NO;
       summary.precondition = false_exprt();
     }
     else
     {
-      if(summary.terminates) summary.precondition = true_exprt();
+      if(summary.terminates==YES) summary.precondition = true_exprt();
       else summary.precondition = false_exprt();
     }
     SSA.nodes.pop_back(); //remove invariant from SSA
@@ -557,8 +562,8 @@ void summarizert::do_termination_with_preconditions(
   satcheckt satcheck2;
   bv_pointerst solver2(SSA.ns, satcheck2);
   solver2 << summary.precondition;
-  summary.terminates = (solver2() == decision_proceduret::D_SATISFIABLE);
-  if(!summary.terminates) summary.precondition = false_exprt();
+  summary.terminates = (solver2() == decision_proceduret::D_SATISFIABLE) ? YES : UNKNOWN;
+  if(summary.terminates!=YES) summary.precondition = false_exprt();
 
   //statistics
   solver_instances++;
@@ -583,7 +588,7 @@ Function: summarizert::inline_summaries()
 void summarizert::inline_summaries(const function_namet &function_name, 
 				   local_SSAt &SSA, bool context_sensitive,
 				   bool forward, bool sufficient,
-                                   bool &calls_terminate, 
+                                   threevalt &calls_terminate, 
 				   bool &has_function_calls,
 				   exprt::operandst &postconditions)
 {
@@ -650,13 +655,14 @@ void summarizert::inline_summaries(const function_namet &function_name,
     //get information about callee termination
     if(options.get_bool_option("termination"))
     {
-      if(summary_db.exists(fname) && !summary_db.get(fname).terminates) 
+      if(summary_db.exists(fname) && summary_db.get(fname).terminates!=YES &&
+	calls_terminate!=NO) 
       {
-	calls_terminate = false;
+	calls_terminate = summary_db.get(fname).terminates;
 	break;
       }
     }
-    else calls_terminate = false;
+    else calls_terminate = UNKNOWN;
 
     n_it++;
   }
@@ -985,29 +991,33 @@ Function: summarizert::check_termination_argument()
 
 \******************************************************************/
 
-bool summarizert::check_termination_argument(exprt expr)
+threevalt summarizert::check_termination_argument(exprt expr)
 {
-  if(expr.is_false()) return true;
+  if(expr.is_false()) return YES;
   // should be of the form /\_i g_i => R_i
   if(expr.id()==ID_and)
   {
+    threevalt result = YES;
     for(exprt::operandst::iterator it = expr.operands().begin(); 
       it != expr.operands().end(); it++)
     {
-      if(it->is_false()) return true;
-      assert(it->id()==ID_implies);
-      if(it->op1().is_true()) return false;
+      if(it->is_true()) result = UNKNOWN;
+      if(it->id()==ID_implies)
+      {
+        if(it->op1().is_true()) result = UNKNOWN;
+      }
     }
+    return result;
   }
   else
   {
     if(expr.id()==ID_implies)
     {
-      if(expr.op1().is_true()) return false;
+      if(expr.op1().is_true()) return UNKNOWN;
     }
-    else return !expr.is_true();
+    else return !expr.is_true() ? YES : UNKNOWN;
   }
-  return true;
+  return YES;
 }
 
 /*******************************************************************\
@@ -1080,13 +1090,14 @@ bool summarizert::check_end_reachable(
   solver << SSA;
   solver << precondition;
   solver << summary.invariant;
-  if(forward) 
-    solver << 
-      not_exprt(SSA.guard_symbol(--SSA.goto_function.body.instructions.end()));
-  else
-    solver << 
-      not_exprt(SSA.guard_symbol(SSA.goto_function.body.instructions.begin()));
+  exprt guard;
+  if(forward) guard = SSA.guard_symbol(--SSA.goto_function.body.instructions.end());
+  else guard = SSA.guard_symbol(SSA.goto_function.body.instructions.begin());
 
+  debug() << "end check guard: " << from_expr(SSA.ns, "", guard) << eom;
+
+  solver << guard;
+ 
   //statistics
   solver_instances++;
   solver_calls++;
