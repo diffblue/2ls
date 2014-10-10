@@ -58,4 +58,18 @@ void strategy_solver_baset::make_context_permanent()
   solver.set_assumptions(activation_literals);
 }
 
-
+void strategy_solver_baset::debug_add_to_formula(const exprt &expr) 
+{
+  literalt l = solver.convert(expr);
+  if(l.is_false())
+  {
+    literalt dummy = solver.convert(symbol_exprt("goto_symex::\\dummy", bool_typet()));
+    formula.push_back(dummy);
+    formula.push_back(!dummy);
+  }
+  else if(!l.is_true()) 
+  {
+    debug() << "literal " << l << ": " << from_expr(ns,"",expr) <<eom;
+    formula.push_back(l);
+  }
+}

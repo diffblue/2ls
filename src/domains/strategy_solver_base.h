@@ -8,7 +8,7 @@
 
 #include "domain.h"
 
-//#define DEBUG_FORMULA
+#define DEBUG_FORMULA
 
 class strategy_solver_baset : public messaget
 {
@@ -38,18 +38,7 @@ class strategy_solver_baset : public messaget
 #endif
       solver << *it;
 #else
-      literalt l = solver.convert(*it);
-      if(l.is_false())
-      {
-	literalt dummy = solver.convert(symbol_exprt("goto_symex::\\dummy", bool_typet()));
-	formula.push_back(dummy);
-	formula.push_back(!dummy);
-      }
-      else if(!l.is_true()) 
-      {
-	debug() << "literal " << l << ": " << from_expr(ns,"",*it) <<eom;
-	formula.push_back(l);
-      }
+      debug_add_to_formula(*it);
 #endif
     }
 }
@@ -78,7 +67,10 @@ class strategy_solver_baset : public messaget
   literalt new_context();
   void pop_context();
   void make_context_permanent();
+
+  //for debugging
   bvt formula;
+  void debug_add_to_formula(const exprt &expr);
 
   //statistics
   unsigned solver_calls;

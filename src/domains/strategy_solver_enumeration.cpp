@@ -23,17 +23,7 @@ bool strategy_solver_enumerationt::iterate(invariantt &_inv)
   solver << preinv_expr;
 #else
   debug() << "literal " << activation_literal << eom;
-  literalt l = solver.convert(preinv_expr);
-  if(l.is_false())
-  {
-    pop_context();
-    return improved;
-  }
-  else if(!l.is_true()) 
-  {
-    debug() << "literal " << l << ": " << from_expr(ns,"",preinv_expr) <<eom;
-    formula.push_back(l);
-  }
+  debug_add_to_formula(preinv_expr);
 #endif
 
   exprt::operandst strategy_cond_exprs;
@@ -58,17 +48,7 @@ bool strategy_solver_enumerationt::iterate(invariantt &_inv)
 #ifndef DEBUG_FORMULA
   solver << postinv_expr;
 #else
-  l = solver.convert(postinv_expr);
-  if(l.is_false())
-  {
-    pop_context();
-    return improved;
-  }  
-  else if(!l.is_true()) 
-  {
-    debug() << "literal " << l << ": " << from_expr(ns,"", postinv_expr) <<eom;
-    formula.push_back(l);
-  }
+  debug_add_to_formula(postinv_expr);
 #endif
 
   debug() << "solve(): ";
