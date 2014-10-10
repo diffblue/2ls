@@ -10,7 +10,7 @@
 
 #define SYMB_COEFF_VAR "symb_coeff#"
 
-//#define EXTEND_TYPES
+#define EXTEND_TYPES
 //#define DIFFERENCE_ENCODING
 
 #define COEFF_C_SIZE 32 //10

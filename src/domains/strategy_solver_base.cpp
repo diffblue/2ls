@@ -66,10 +66,11 @@ void strategy_solver_baset::debug_add_to_formula(const exprt &expr)
     literalt dummy = solver.convert(symbol_exprt("goto_symex::\\dummy", bool_typet()));
     formula.push_back(dummy);
     formula.push_back(!dummy);
+    std::cout << "literal " << dummy << ", " << !dummy << ": " << from_expr(ns,"",expr) << std::endl;
   }
   else if(!l.is_true()) 
   {
-    debug() << "literal " << l << ": " << from_expr(ns,"",expr) <<eom;
+    std::cout << "literal " << l << ": " << from_expr(ns,"",expr) << std::endl;
     formula.push_back(l);
   }
 }
