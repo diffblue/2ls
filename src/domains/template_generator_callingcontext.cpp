@@ -87,7 +87,6 @@ void template_generator_callingcontextt::collect_variables_callingcontext(
   }
 
   //add function arguments
-  if(!forward) return; // nothing to do
   for(exprt::operandst::const_iterator a_it =  f_it->arguments().begin();
       a_it !=  f_it->arguments().end(); a_it++)
   {

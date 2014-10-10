@@ -28,18 +28,13 @@ void extend_expr_types(exprt &expr)
   if(expr.id()==ID_unary_minus)
   {
     extend_expr_types(expr.op0());
-    typet new_type = expr.op0().type();
-    if(new_type.id()==ID_signedbv) 
+
+    if(expr.op0().type().id()==ID_signedbv || expr.op0().type().id()==ID_unsignedbv)
     {
-      signedbv_typet &new_typebv = to_signedbv_type(new_type);
-      new_typebv.set_width(new_typebv.get_width()+1); 
+      typet new_type = signedbv_typet(get_bitvector_width(expr.op0())+1);
+      expr = unary_minus_exprt(typecast_exprt(expr.op0(),new_type),new_type);
     }
-    else if(new_type.id()==ID_unsignedbv) 
-    {
-      unsignedbv_typet &old_type = to_unsignedbv_type(new_type);
-      new_type = signedbv_typet(old_type.get_width()+1); 
-    }
-    expr = unary_minus_exprt(typecast_exprt(expr.op0(),new_type),new_type);
+    //TODO: shall we extend floats?
     return;
   }
   if(expr.id()==ID_plus || expr.id()==ID_minus)

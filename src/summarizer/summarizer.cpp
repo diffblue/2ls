@@ -255,20 +255,19 @@ void summarizert::do_summary(const function_namet &function_name,
 				      forward,sufficient,false,
 				      postconditions);
 
-  analyzer(SSA,cond,template_generator);
+  analyzer(SSA,and_exprt(preconditions[function_name],cond),template_generator);
   if(forward) summary.precondition = preconditions.at(function_name);
   else 
   {
     analyzer.get_result(summary.precondition,template_generator.out_vars());
-    if(sufficient) 
-    {
-      //TODO: also need under-approx transformer for sufficient precond
-      summary.precondition = not_exprt(summary.precondition);
-    }
+    if(sufficient) summary.precondition = not_exprt(summary.precondition);
   }
   analyzer.get_result(summary.transformer,template_generator.inout_vars());
 #ifdef PRECISE_JOIN
-  summary.transformer = implies_exprt(summary.precondition,summary.transformer);
+  if(sufficient) 
+    summary.transformer = implies_exprt(summary.precondition,not_exprt(summary.transformer));
+  else
+    summary.transformer = implies_exprt(summary.precondition,summary.transformer);
 #endif
   simplify_expr(summary.transformer, SSA.ns);
 
@@ -353,8 +352,9 @@ void summarizert::do_termination_preconditions_only(
   exprt cond = collect_postconditions(function_name,SSA,summary,
 				      false,true,true,
 				      postconditions);
+  //cond = SSA.guard_symbol(--SSA.goto_function.body.instructions.end());
   status() << "POSTCOND: " << from_expr(SSA.ns,"",cond) << eom;
- 
+
   //if template empty, check at least reachability (should actually be done by analyzer)
   if(template_generator2.all_vars().empty())
   {
@@ -478,6 +478,7 @@ void summarizert::do_termination_with_preconditions(
 	summary.termination_argument = true_exprt();
 	summary.terminates = false;
 	summary.precondition = false_exprt();
+        SSA.nodes.pop_back(); //remove invariant from SSA
 	return; 
       }
       default: assert(false); break;
@@ -533,8 +534,12 @@ void summarizert::do_termination_with_preconditions(
       if(summary.terminates) summary.precondition = true_exprt();
       else summary.precondition = false_exprt();
     }
+    SSA.nodes.pop_back(); //remove invariant from SSA
     return;
   }
+
+  SSA.nodes.pop_back(); //TEST
+
   //compute sufficient preconditions w.r.t. termination argument
   ssa_analyzert analyzer2;
   analyzer2.set_message_handler(get_message_handler());
@@ -559,7 +564,7 @@ void summarizert::do_termination_with_preconditions(
   solver_instances++;
   solver_calls += analyzer2.get_number_of_solver_calls();
 
-  SSA.nodes.pop_back(); //remove invariant from SSA
+//  SSA.nodes.pop_back(); //remove invariant from SSA
 }
 
 
@@ -633,20 +638,6 @@ void summarizert::inline_summaries(const function_namet &function_name,
       SSA.get_globals(loc,cs_globals_in);
       assert(loc!=SSA.goto_function.body.instructions.end());
       SSA.get_globals(++loc,cs_globals_out);
-
-      /*
-      //collect postconditions for precondition inference
-      if(!forward)
-      {
-	//guard at call site
-	exprt guard = SSA.guard_symbol(n_it->location);
-	exprt precond = fsummary.precondition;
-
-	inliner.rename_to_caller(f_it,fsummary.params,
-				 cs_globals_in,fsummary.globals_in,precond);
-	postconditions.push_back(implies_exprt(guard,precond));
-      }
-      */
 
       //replace
       inliner.replace(SSA,n_it,f_it,cs_globals_in,cs_globals_out,
@@ -736,7 +727,8 @@ bool summarizert::check_precondition(
   if(summary_db.exists(fname)) 
   {
     summaryt summary = summary_db.get(fname);
-    if(summary.precondition.is_true()) //precondition trivially holds
+    if(summary.precondition.is_true()  //precondition trivially holds
+       || !forward)
     {
       //getting globals at call site
       local_SSAt::var_sett cs_globals_in, cs_globals_out; 
@@ -764,8 +756,8 @@ bool summarizert::check_precondition(
       inliner.rename_to_caller(f_it,summary.params,
 			       cs_globals_in,summary.globals_in,assertion);
 
-      status() << "Precondition assertion for function " << fname << eom;
       n_it->assertions.push_back(assertion);
+      debug() << "precondition assertion: " << from_expr(SSA.ns,"",assertion) << eom;
 
       precondition_holds = false;
     }
@@ -1055,7 +1047,8 @@ exprt summarizert::collect_postconditions(const function_namet &function_name,
     if(!summary.termination_argument.is_nil()) 
       postconditions.push_back(summary.termination_argument);
   }
-  postconditions.push_back(SSA.guard_symbol(--SSA.goto_function.body.instructions.end()));
+  /* if(termination) 
+     postconditions.push_back(SSA.guard_symbol(--SSA.goto_function.body.instructions.end()));*/
   exprt c;
   if(sufficient) c = not_exprt(conjunction(postconditions));
   else c = conjunction(postconditions);

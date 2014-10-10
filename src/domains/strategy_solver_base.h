@@ -39,11 +39,16 @@ class strategy_solver_baset : public messaget
       solver << *it;
 #else
       literalt l = solver.convert(*it);
-      if(!l.is_constant()) 
+      if(l.is_false())
       {
-	std::cout << "literal " << l << ": " << from_expr(ns,"",*it) 
-          << std::endl;
-        formula.push_back(l);
+	literalt dummy = solver.convert(symbol_exprt("goto_symex::\\dummy", bool_typet()));
+	formula.push_back(dummy);
+	formula.push_back(!dummy);
+      }
+      else if(!l.is_true()) 
+      {
+	debug() << "literal " << l << ": " << from_expr(ns,"",*it) <<eom;
+	formula.push_back(l);
       }
 #endif
     }

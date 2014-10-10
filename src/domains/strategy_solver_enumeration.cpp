@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include <util/simplify_expr.h>
+#include <util/find_symbols.h>
 
 #include "strategy_solver_enumeration.h"
 #include "util.h"
@@ -14,17 +15,23 @@ bool strategy_solver_enumerationt::iterate(invariantt &_inv)
 
   literalt activation_literal = new_context();
 
-  exprt inv_expr = tpolyhedra_domain.to_pre_constraints(inv);
-  debug() << "pre-inv: " << from_expr(ns,"",inv_expr) << eom;
+  exprt preinv_expr = tpolyhedra_domain.to_pre_constraints(inv);
+  debug() << "pre-inv: " << from_expr(ns,"",preinv_expr) << eom;
+  preinv_expr = or_exprt(preinv_expr, literal_exprt(activation_literal));
 
 #ifndef DEBUG_FORMULA
-  solver << or_exprt(inv_expr, literal_exprt(activation_literal));
+  solver << preinv_expr;
 #else
   debug() << "literal " << activation_literal << eom;
-  literalt l = solver.convert(or_exprt(inv_expr, literal_exprt(activation_literal)));
-  if(!l.is_constant()) 
+  literalt l = solver.convert(preinv_expr);
+  if(l.is_false())
   {
-    debug() << "literal " << l << ": " << from_expr(ns,"",or_exprt(inv_expr, literal_exprt(activation_literal))) <<eom;
+    pop_context();
+    return improved;
+  }
+  else if(!l.is_true()) 
+  {
+    debug() << "literal " << l << ": " << from_expr(ns,"",preinv_expr) <<eom;
     formula.push_back(l);
   }
 #endif
@@ -46,21 +53,20 @@ bool strategy_solver_enumerationt::iterate(invariantt &_inv)
   }
   debug() << eom;
 
-
+  exprt postinv_expr = or_exprt(disjunction(strategy_cond_exprs),
+				literal_exprt(activation_literal));
 #ifndef DEBUG_FORMULA
-  solver << or_exprt(disjunction(strategy_cond_exprs),
-		     literal_exprt(activation_literal));
+  solver << postinv_expr;
 #else
-
-  exprt expr_act=
-    or_exprt(disjunction(strategy_cond_exprs),
-	       literal_exprt(activation_literal));
-
-  l = solver.convert(expr_act);
-  if(!l.is_constant()) 
+  l = solver.convert(postinv_expr);
+  if(l.is_false())
   {
-    debug() << "literal " << l << ": " << 
-      from_expr(ns,"", expr_act) <<eom;
+    pop_context();
+    return improved;
+  }  
+  else if(!l.is_true()) 
+  {
+    debug() << "literal " << l << ": " << from_expr(ns,"", postinv_expr) <<eom;
     formula.push_back(l);
   }
 #endif
@@ -77,13 +83,15 @@ bool strategy_solver_enumerationt::iterate(invariantt &_inv)
   { 
     debug() << "SAT" << eom;
       
-    #if 0
+    #ifdef DEBUG_FORMULA
     for(unsigned i=0; i<whole_formula.size(); i++) 
     {
       debug() << "literal: " << whole_formula[i] << " " << 
         solver.l_get(whole_formula[i]) << eom;
     }
+    #endif
           
+    #if 0
     for(unsigned i=0; i<tpolyhedra_domain.template_size(); i++) 
     {
       exprt c = tpolyhedra_domain.get_row_constraint(i,inv[i]);
@@ -92,20 +100,38 @@ bool strategy_solver_enumerationt::iterate(invariantt &_inv)
       debug() << "guards: " << from_expr(ns, "", tpolyhedra_domain.templ.pre_guards[i]) << 
           " " << from_expr(ns, "", solver.get(tpolyhedra_domain.templ.pre_guards[i])) << eom;
       debug() << "guards: " << from_expr(ns, "", tpolyhedra_domain.templ.post_guards[i]) << " " 
-          << from_expr(ns, "", solver.get(tpolyhedra_domain.templ.post_guards[i])) << eom; 	     	     }    
+      << from_expr(ns, "", solver.get(tpolyhedra_domain.templ.post_guards[i])) << eom; 	    	    
+    }    
+    #endif
           
-    for(replace_mapt::const_iterator
-          it=renaming_map.begin();
-          it!=renaming_map.end();    
-          ++it)
-          
+    #if 1
     {
-      debug() << "replace_map (1st): " << from_expr(ns, "", it->first) << " " << 
-          from_expr(ns, "", solver.get(it->first)) << eom;
-      debug() << "replace_map (2nd): " << from_expr(ns, "", it->second) << " " << 
-          from_expr(ns, "", solver.get(it->second)) << eom;
+      std::set<symbol_exprt> vars;
+      find_symbols(preinv_expr,vars); 
+
+      for(std::set<symbol_exprt>::const_iterator
+	    it=vars.begin();
+          it!=vars.end();    
+          ++it)
+      {
+	debug() << "var: " << from_expr(ns, "", *it) << " = " << 
+          from_expr(ns, "", solver.get(*it)) << eom;
+      }
     }
-                  
+    for(unsigned i=0; i<tpolyhedra_domain.template_size(); i++) 
+    {
+      std::set<symbol_exprt> vars;
+      find_symbols(strategy_value_exprs[i],vars); 
+
+      for(std::set<symbol_exprt>::const_iterator
+	    it=vars.begin();
+          it!=vars.end();    
+          ++it)
+      {
+	debug() << "var: " << from_expr(ns, "", *it) << " = " << 
+          from_expr(ns, "", solver.get(*it)) << eom;
+      }
+    }
     #endif
       
       

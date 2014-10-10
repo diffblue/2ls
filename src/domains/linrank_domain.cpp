@@ -10,10 +10,10 @@
 
 #define SYMB_COEFF_VAR "symb_coeff#"
 
-#define EXTEND_TYPES
-#define DIFFERENCE_ENCODING
+//#define EXTEND_TYPES
+//#define DIFFERENCE_ENCODING
 
-#define COEFF_C_SIZE 10
+#define COEFF_C_SIZE 32 //10
 #define MAX_REFINEMENT 2
 
 void linrank_domaint::initialize(valuet &value)
@@ -294,44 +294,61 @@ void linrank_domaint::project_on_vars(valuet &value, const var_sett &vars, exprt
   {
     assert(templ[row].kind == LOOP);
 
-    if(is_row_value_false(v[row]))
+    if(is_row_value_true(v[row]))
     {
-      //(g => false)
-      c.push_back(implies_exprt(
-		    and_exprt(templ[row].pre_guard, templ[row].post_guard),
-		    false_exprt()));
+      // !(g => true)
+      c.push_back(false_exprt());
     }
-    else if(is_row_value_true(v[row]))
+    else if(is_row_value_false(v[row]))
     {
-      //(g => true)
-      c.push_back(implies_exprt(
-		    and_exprt(templ[row].pre_guard, templ[row].post_guard),
-		    true_exprt()));
+      // !(g => false)
+      c.push_back(and_exprt(templ[row].pre_guard, templ[row].post_guard)); 
     }
     else
     {
       assert(v[row].c.size()==templ[row].expr.size());
       assert(v[row].c.size()>=1);
 
+#ifdef DIFFERENCE_ENCODING
       exprt sum = mult_exprt(v[row].c[0], 
 			     minus_exprt(templ[row].expr[0].first,
 					 templ[row].expr[0].second));
+#else
+      exprt sum_pre = mult_exprt(v[row].c[0],templ[row].expr[0].first);
+      exprt sum_post = mult_exprt(v[row].c[0],templ[row].expr[0].second);
+#endif
       for(unsigned i = 1; i < v[row].c.size(); ++i)
       {
+#ifdef DIFFERENCE_ENCODING
         sum = plus_exprt(sum, mult_exprt(v[row].c[i], 
 					 minus_exprt(templ[row].expr[i].first,
 					 templ[row].expr[i].second)));
+#else
+	sum_pre = plus_exprt(sum_pre,
+			     mult_exprt(v[row].c[i],
+					templ[row].expr[i].first));
+	sum_post = plus_exprt(sum_post,
+			     mult_exprt(v[row].c[i],
+					templ[row].expr[i].second));
+#endif
       }
-      //extend types
+
+#ifdef DIFFERENCE_ENCODING
 #ifdef EXTEND_TYPES
       extend_expr_types(sum);
 #endif
-
       exprt decreasing = binary_relation_exprt(sum, ID_gt, 
 	from_integer(mp_integer(0),sum.type()));
+#else
+#ifdef EXTEND_TYPES
+      extend_expr_types(sum_pre);
+      extend_expr_types(sum_post);
+#endif
+      exprt decreasing = binary_relation_exprt(sum_pre, ID_gt,sum_post);
+#endif
       c.push_back(implies_exprt(
-			  and_exprt(templ[row].pre_guard, 
-				    templ[row].post_guard),
+		    //and_exprt(templ[row].pre_guard, 
+		    (templ[row].post_guard),
                           decreasing));
     }
   }
