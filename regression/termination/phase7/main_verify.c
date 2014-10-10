@@ -29,7 +29,7 @@ int verify(int x, int y, int u) {
     y++;
 
     // check ranking function
-    if(-u0 <= -u && (-u0 != -u || u0 <= u) && (-u0 != -u || u0 != u || -y0 <= -y))
+    if(x0-u0 <= x-u && (x0-u0 != x-u || -x0-u0 <= -x-u) /*&& (-u0 != -u || u0 != u || -y0 <= -y)*/)
       return 0;
   }
 
