@@ -292,10 +292,11 @@ void ssa_inlinert::replace_params(const local_SSAt::var_listt &params,
   for(exprt::operandst::const_iterator it = funapp_expr.arguments().begin();
       it != funapp_expr.arguments().end(); it++, p_it++)
   {
-    if(p_it==params.end())
+    local_SSAt::var_listt::const_iterator next_p_it = p_it; 
+    if(++next_p_it==params.end()) //TODO: handle ellipsis
     {
       warning() << "ignoring excess function arguments" << eom; 
-      continue;
+      break;
     }
     
     exprt lhs = *p_it; //copy
@@ -445,10 +446,11 @@ void ssa_inlinert::rename_to_caller(
   for(exprt::operandst::const_iterator it = f_it->arguments().begin();
       it !=  f_it->arguments().end(); it++, p_it++)
   {
-    if(p_it==params.end())
+    local_SSAt::var_listt::const_iterator next_p_it = p_it; 
+    if(++next_p_it==params.end()) //TODO: handle ellipsis
     {
       warning() << "ignoring excess function arguments" << eom; 
-      continue;
+      break;
     }
     replace_map[*p_it] = *it;
   }
@@ -497,10 +499,11 @@ void ssa_inlinert::rename_to_callee(
   for(exprt::operandst::const_iterator it =  f_it->arguments().begin();
       it !=  f_it->arguments().end(); it++, p_it++)
   {
-    if(p_it==params.end())
+    local_SSAt::var_listt::const_iterator next_p_it = p_it; 
+    if(++next_p_it==params.end()) //TODO: handle ellipsis
     {
       warning() << "ignoring excess function arguments" << eom; 
-      continue;
+      break;
     }
     replace_map[*it] = *p_it;
   }
