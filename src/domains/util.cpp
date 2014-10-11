@@ -342,10 +342,17 @@ void pretty_print_termination_argument(std::ostream &out, const namespacet &ns, 
           for(exprt::operandst::const_iterator it_lex = it->op1().operands().begin();
               it_lex != it->op1().operands().end(); ++it_lex)
           {
-            assert(it_lex->id() == ID_and);
-            if(it_lex == it->op1().operands().begin()) out << "(";
-            else out << std::endl << "   " << "       " << ",";
-            out << from_expr(ns,"",it_lex->op0());
+            if(it_lex->id() == ID_and)
+	    {
+              if(it_lex == it->op1().operands().begin()) out << "(";
+              else out << "\n   " << "       " << ",";
+              out << from_expr(ns,"",it_lex->op0());
+	    }
+	    else 
+	    {
+              out << "\n   " << "       " << ","
+                  << from_expr(ns,"",*it_lex);
+	    }
           }
           out << ")";
         }
