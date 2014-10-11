@@ -8,7 +8,7 @@
 
 #include "domain.h"
 
-#define DEBUG_FORMULA
+//#define DEBUG_FORMULA
 
 class strategy_solver_baset : public messaget
 {

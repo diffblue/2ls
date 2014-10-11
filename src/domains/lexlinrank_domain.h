@@ -49,6 +49,7 @@ public:
   virtual void initialize(valuet &value);
 
   virtual bool refine();
+  virtual void reset_refinements();
 
   // value -> constraints
   exprt get_not_constraints(const templ_valuet &value,

@@ -39,6 +39,7 @@ public:
   virtual void initialize(valuet &value) { assert(false); }
 
   //returns true as long as further refinements are possible
+  virtual void reset_refinements() { }
   virtual bool refine() { return false; }
 
   // virtual exprt to_pre_constraints(const valuet &value) { assert(false); }

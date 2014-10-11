@@ -11,10 +11,10 @@
 #define SYMB_COEFF_VAR "symb_coeff#"
 
 #define EXTEND_TYPES
-//#define DIFFERENCE_ENCODING
+#define DIFFERENCE_ENCODING
 
 #define COEFF_C_SIZE 10
-#define MAX_REFINEMENT 0
+#define MAX_REFINEMENT 2
 
 void lexlinrank_domaint::initialize(valuet &value)
 {
@@ -33,6 +33,11 @@ bool lexlinrank_domaint::refine()
   if(refinement_level>=MAX_REFINEMENT) return false;
   refinement_level++;
   return true;
+}
+
+void lexlinrank_domaint::reset_refinements()
+{
+  refinement_level = 0;
 }
 
 exprt lexlinrank_domaint::get_not_constraints(const lexlinrank_domaint::templ_valuet &value,
