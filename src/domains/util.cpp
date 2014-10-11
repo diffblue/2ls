@@ -81,8 +81,8 @@ void extend_expr_types(exprt &expr)
     extend_expr_types(expr.op0());
     extend_expr_types(expr.op1());
     unsigned size0 = get_bitvector_width(expr.op0());
+//    std::cerr << "expr1: " << expr.op1() << std::endl;
     unsigned size1 = get_bitvector_width(expr.op1());
-    //  std::cerr << "expr1: " << expr.op1() << std::endl;
  
     assert(size0>0); assert(size1>0); 
     if((expr.op0().type().id()==ID_unsignedbv || expr.op0().type().id()==ID_signedbv) &&

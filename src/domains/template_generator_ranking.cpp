@@ -162,11 +162,13 @@ void template_generator_rankingt::filter_ranking_domain(domaint::var_specst &var
     {
       var_specs.push_back(*v);
     }
+#if 0
     if(s.type().id()==ID_pointer)
     {
       domaint::var_spect new_varspec = *v;
       new_varspec.var = typecast_exprt(v->var,to_pointer_type(v->var.type()).subtype());
       var_specs.push_back(new_varspec);
     }
+#endif
   }
 }
