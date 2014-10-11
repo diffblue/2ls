@@ -4,8 +4,8 @@
 #include "lexlinrank_solver_enumeration.h"
 #include "util.h"
 
-//#define DEBUG_OUTER_FORMULA 
-//#define DEBUG_INNER_FORMULA 
+#define DEBUG_OUTER_FORMULA 
+#define DEBUG_INNER_FORMULA 
 #define MAX_ELEMENTS 3 // lexicographic components
 #define MAX_REFINEMENTS 20
 
@@ -57,7 +57,7 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
   for(unsigned i = 0; i < rank_cond_exprs.size(); i++)
   {  
     rank_cond_literals[i] = solver.convert(rank_cond_exprs[i]);
-    rank_cond_exprs[i] = literal_exprt(rank_cond_literals[i]);
+    //rank_cond_exprs[i] = literal_exprt(rank_cond_literals[i]);
   }
 
   debug() << "solve(): ";
