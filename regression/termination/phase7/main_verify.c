@@ -29,7 +29,14 @@ int verify(int x, int y, int u) {
     y++;
 
     // check ranking function
-    if(x0-u0 <= x-u && (x0-u0 != x-u || -x0-u0 <= -x-u) /*&& (-u0 != -u || u0 != u || -y0 <= -y)*/)
+    if(-(long)u0 <= -(long)u && (-(long)u0 != -(long)u || (long)u0-(long)y0 <= (long)u-(long)y) /*&& (-u0 != -u || u0 != u || -y0 <= -y)*/)
+    //if((long)x0 <= (long)x && ((long)x0 != (long)x || -(long)y0-(long)x0-(long)u0 <= -(long)y-(long)x-(long)u) /*&& (-u0 != -u || u0 != u || -y0 <= -y)*/)
+    //if(-u0 <= -u && (-u0 != -u || -y0 <= -y))
+    //if(-(long)u0+(long)x0 <= -(long)u+(long)x && (-(long)u0+(long)x0 != -(long)u+(long)x || ( -(long)u0-(long)x0 <= -(long)u-(long)x && (-(long)u0-(long)x0 != -(long)u-(long)x || (long)u0+(long)x0 <= (long)u+(long)x))))
+    //if((long)x0 <= (long)x && ((long)x0 != (long)x || -(long)u0-(long)x0 <= -(long)u-(long)x))
+    // if(-(long)u0+(long)x0 <= -(long)u+(long)x && (-(long)u0+(long)x0 != -(long)u+(long)x || 
+    //						    (-(long)u0-(long)x0 <= -(long)u-(long)x && (-(long)u0-(long)x0 != -(long)u-(long)x || 
+    //												(long)u0+(long)x0 <= (long)u+(long)x))))
       return 0;
   }
 
