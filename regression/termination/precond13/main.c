@@ -3,7 +3,7 @@
 int foo(int y)
 {
   int x=0;
-  while(x<10)
+  do
   {
     int x_lb = x;
     x += y;
@@ -11,6 +11,7 @@ int foo(int y)
     //assert(-(x+(x+y))>0);
     //assert(!( (signed __CPROVER_bitvector[65])-1 * (signed __CPROVER_bitvector[65])x_lb <=  (signed __CPROVER_bitvector[65])-1 *  (signed __CPROVER_bitvector[65])x));
   }
+  while(x<10);
 //  if(0) assert(0);
   return x;
 }

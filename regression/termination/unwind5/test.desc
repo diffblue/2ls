@@ -1,6 +1,0 @@
-CORE
-main.c
---unwind 10 --zones
-^EXIT=0$
-^SIGNAL=0$
-^VERIFICATION SUCCESSFUL$

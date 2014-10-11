@@ -248,7 +248,10 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
 	      debug() << "(RANK) inner solver: increasing the number of lexicographic componenets for row " << row << " to " << number_elements_per_row[row] + 1 << eom;
 	      // reset the inner solver
 	      debug() << "(RANK) reset the inner solver " << eom;
-	      inner_solver = new bv_pointerst(ns, inner_satcheck);
+	      delete inner_satcheck;
+	      delete inner_solver;
+	      inner_satcheck = new satcheck_minisat_no_simplifiert();
+	      inner_solver = new bv_pointerst(ns, *inner_satcheck);
 	      inner_formula.clear();
 	      lexlinrank_domain.reset_refinements();
 //	    formula.clear();

@@ -1,6 +1,0 @@
-CORE
-main.c
---unwind 6
-^EXIT=0$
-^SIGNAL=0$
-^VERIFICATION SUCCESSFUL$
