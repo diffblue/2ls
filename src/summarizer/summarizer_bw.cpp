@@ -27,31 +27,6 @@ Author: Peter Schrammel
 
 #define PRECISE_JOIN
 
-
-/*******************************************************************\
-
-Function: summarizert::initialize_preconditions()
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void summarizert::initialize_preconditions(functionst &_functions, 
-					   bool forward, 
-					   bool sufficient)
-{
-  preconditions.clear();
-  for(functionst::const_iterator it = _functions.begin(); 
-      it!=_functions.end(); it++)
-  {
-    preconditions[it->first] = true_exprt();
-  }
-}
-
 /*******************************************************************\
 
 Function: summarizert::summarize()
@@ -66,13 +41,13 @@ Function: summarizert::summarize()
 
 void summarizert::summarize(bool forward, bool sufficient)
 {
-  initialize_preconditions(ssa_db.functions(),forward,sufficient);
+  exprt fw_precondition = true_exprt(); //initial calling context
   for(functionst::const_iterator it = ssa_db.functions().begin(); 
       it!=ssa_db.functions().end(); it++)
   {
     status() << "\nSummarizing function " << it->first << eom;
     if(!summary_db.exists(it->first)) 
-      compute_summary_rec(it->first,false,forward,sufficient);
+      compute_summary_rec(it->first,fw_precondition,false,forward,sufficient);
     else status() << "Summary for function " << it->first << 
            " exists already" << eom;
   }
@@ -93,23 +68,16 @@ Function: summarizert::summarize()
 void summarizert::summarize(const function_namet &function_name,
                             bool forward, bool sufficient)
 {
-  initialize_preconditions(ssa_db.functions(),forward,sufficient);
+  exprt precondition = true_exprt(); //initial calling context
 
   status() << "\nSummarizing function " << function_name << eom;
   if(!summary_db.exists(function_name)) 
   {
-    compute_summary_rec(function_name,true,forward,sufficient);
+    compute_summary_rec(function_name,precondition,
+			true,forward,sufficient);
   }
   else status() << "Summary for function " << function_name << 
 	 " exists already" << eom;
-
-  //adding preconditions to SSA for assertion check
-  for(functionst::const_iterator it = ssa_db.functions().begin(); 
-      it!=ssa_db.functions().end(); it++)
-  {
-    if(it->second->nodes.empty()) continue;
-    it->second->nodes.front().constraints.push_back(preconditions[it->first]);
-  }
 }
 
 /*******************************************************************\
@@ -125,6 +93,7 @@ Function: summarizert::compute_summary_rec()
 \*******************************************************************/
 
 void summarizert::compute_summary_rec(const function_namet &function_name,
+				      const exprt &precondition,
 				      bool context_sensitive,
 				      bool forward,
 				      bool sufficient)
@@ -133,10 +102,10 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
   
   threevalt calls_terminate = YES;
   bool has_function_calls = false;  
-  exprt::operandst postconditions;
   // recursively compute summaries for function calls
-  inline_summaries(function_name,SSA,context_sensitive,forward,sufficient,
-		   calls_terminate, has_function_calls,postconditions); 
+  inline_summaries(function_name,SSA,precondition,
+		   context_sensitive,forward,sufficient,
+		   calls_terminate, has_function_calls); 
 
   status() << "Analyzing function "  << function_name << eom;
 
@@ -149,7 +118,8 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
     {
       if(!n->empty()) n->output(out,SSA.ns);
     }
-    out << "(enable) " << from_expr(SSA.ns, "", SSA.get_enabling_exprs()) << "\n";
+    out << "(enable) " << from_expr(SSA.ns, "", SSA.get_enabling_exprs()) 
+	<< "\n";
     debug() << out.str() << eom;
   }
 
@@ -166,8 +136,10 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
   if(options.get_bool_option("termination"))
   {
     debug() << "function " << 
-      (has_function_calls ? "has function calls" : "does not have function calls") << eom;
-    debug() << "function calls terminate: " << threeval2string(calls_terminate) << eom;
+      (has_function_calls ? "has function calls" : 
+       "does not have function calls") << eom;
+    debug() << "function calls terminate: " << 
+      threeval2string(calls_terminate) << eom;
     debug() << "function " << 
       (has_loops ? "has loops" : "does not have loops") << eom;
   }
@@ -180,7 +152,7 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
 
   if(!options.get_bool_option("havoc"))
   {
-    do_summary(function_name,SSA,summary,forward,sufficient,postconditions);
+    do_summary(function_name,SSA,precondition,summary,forward,sufficient);
   }
 
   //check termination
@@ -190,20 +162,28 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
     if(!has_loops && !has_function_calls) summary.terminates = YES;
     if(!has_loops && has_function_calls && calls_terminate==YES)
     {
-      if(do_preconditions) do_termination_preconditions_only(function_name,SSA,
-					  summary,postconditions);
-      else summary.terminates = YES;
+      if(do_preconditions) 
+	do_termination_preconditions_only(
+	  function_name,SSA,precondition,summary);
+      else 
+      {
+	summary.terminates = YES;
+        if(do_preconditions) summary.bw_precondition = true_exprt();
+      }
     }   
     if(has_function_calls && calls_terminate!=YES) 
     {
       summary.terminates = calls_terminate;
-      if(do_preconditions) summary.precondition = false_exprt();
+      if(do_preconditions) summary.bw_precondition = false_exprt();
     }
-    if(has_loops && (!has_function_calls || has_function_calls && calls_terminate==YES))
+    if(has_loops && 
+       (!has_function_calls || 
+	has_function_calls && calls_terminate==YES))
     {
-      if(do_preconditions) do_termination_with_preconditions(function_name,SSA,
-					  summary,postconditions);
-      else do_termination(function_name,SSA,summary);
+      if(do_preconditions) 
+	do_termination_with_preconditions(
+	  function_name,SSA,precondition,summary);
+      else do_termination(function_name,SSA,precondition,summary);
     }  
   }
 
@@ -237,8 +217,7 @@ Function: summarizert::do_summary()
 
 void summarizert::do_summary(const function_namet &function_name, 
 			     local_SSAt &SSA, summaryt &summary,
-                             bool forward, bool sufficient, 
-			     exprt::operandst postconditions)
+                             bool forward, bool sufficient)
 {
   status() << "Computing summary" << eom;
 
@@ -250,8 +229,12 @@ void summarizert::do_summary(const function_namet &function_name,
   template_generator.set_message_handler(get_message_handler());
   template_generator(SSA,forward);
 
-  exprt cond = collect_postconditions(function_name,SSA,summary,
-				      forward,sufficient,false,
+  exprt cond;
+  exprt::operandst postconditions;
+  if(forward) cond = preconditions[function_name];
+
+  else cond = collect_postconditions(function_name,SSA,summary,
+				      false,sufficient,false,
 				      postconditions);
 
   analyzer(SSA,and_exprt(preconditions[function_name],cond),template_generator);
@@ -298,7 +281,8 @@ void summarizert::do_termination(const function_namet &function_name,
 {
   status() << "Computing termination argument" << eom;
 
-  if(!check_end_reachable(SSA,summary,preconditions[function_name],true))
+  if(!check_end_reachable(function_name,SSA,
+			  summary,preconditions[function_name]))
   {
     summary.terminates = NO;
     return;
@@ -344,7 +328,7 @@ Function: summarizert::do_termination_preconditions_only()
 
 void summarizert::do_termination_preconditions_only(
   const function_namet &function_name, 
-  local_SSAt &SSA, summaryt &summary, exprt::operandst postconditions)
+  local_SSAt &SSA, summaryt &summary)
 {
   status() << "Computing precondition for termination" << eom;
 
@@ -354,6 +338,7 @@ void summarizert::do_termination_preconditions_only(
 
   //  SSA.nodes.front().equalities.erase(++SSA.nodes.front().equalities.begin()); //TEST
 
+  exprt::operandst postconditions;
   exprt cond = collect_postconditions(function_name,SSA,summary,
 				      false,true,true,
 				      postconditions);
@@ -363,7 +348,8 @@ void summarizert::do_termination_preconditions_only(
   //if template empty, check at least reachability (should actually be done by analyzer)
   if(template_generator2.all_vars().empty())
   {
-    if(check_end_reachable(SSA,summary,cond,false))
+    if(check_end_reachable(function_name,SSA,
+			   summary,preconditions[function_name]))
     {
       summary.terminates = YES;
       summary.precondition = true_exprt();
@@ -417,7 +403,7 @@ Function: summarizert::do_termination_with_preconditions()
 
 void summarizert::do_termination_with_preconditions(
   const function_namet &function_name, 
-  local_SSAt &SSA, summaryt &summary, exprt::operandst postconditions)
+  local_SSAt &SSA, summaryt &summary)
 {
   exprt precondition = preconditions[function_name];
 
@@ -522,6 +508,7 @@ void summarizert::do_termination_with_preconditions(
   }
 
   status() << "Computing precondition for termination" << eom;
+  exprt::operandst postconditions;
   exprt cond = collect_postconditions(function_name,SSA,summary,
 				      false,true,true,
 				      postconditions);
@@ -529,7 +516,8 @@ void summarizert::do_termination_with_preconditions(
   if(template_generator2.all_vars().empty())
   {
   //if template empty, check at least reachability (should actually be done by analyzer)
-    if(!check_end_reachable(SSA,summary,cond,false))
+    if(!check_end_reachable(function_name,SSA,
+			    summary,preconditions[function_name]))
     {
       summary.terminates = NO;
       summary.precondition = false_exprt();
@@ -589,8 +577,7 @@ void summarizert::inline_summaries(const function_namet &function_name,
 				   local_SSAt &SSA, bool context_sensitive,
 				   bool forward, bool sufficient,
                                    threevalt &calls_terminate, 
-				   bool &has_function_calls,
-				   exprt::operandst &postconditions)
+				   bool &has_function_calls)
 {
   ssa_inlinert inliner;
   inliner.set_message_handler(get_message_handler());
@@ -626,7 +613,7 @@ void summarizert::inline_summaries(const function_namet &function_name,
     }
 
     if(!check_precondition(function_name,n_it,f_it,SSA,
-			   inliner,forward,sufficient,postconditions))
+			   inliner,forward,sufficient))
     {
       if(context_sensitive) 
         compute_calling_context(function_name,n_it,f_it,SSA,inliner,forward);
@@ -720,8 +707,7 @@ bool summarizert::check_precondition(
   local_SSAt &SSA,
   ssa_inlinert &inliner,
   bool forward,
-  bool sufficient,
-  exprt::operandst &postconditions)
+  bool sufficient)
 {
   assert(f_it->function().id()==ID_symbol); //no function pointers
   irep_idt fname = to_symbol_expr(f_it->function()).get_identifier();
@@ -806,12 +792,13 @@ bool summarizert::check_precondition(
   {
   case decision_proceduret::D_SATISFIABLE: {
     precondition_holds = false;
-
     n_it->assertions.clear();
+
     status() << "Precondition does not hold, need to recompute summary." << eom;
     break; }
   case decision_proceduret::D_UNSATISFIABLE: {
     precondition_holds = true;
+    n_it->assertions.clear();
 
     //getting globals at call site
     local_SSAt::var_sett cs_globals_in, cs_globals_out; 
@@ -822,20 +809,6 @@ bool summarizert::check_precondition(
 
     status() << "Precondition holds, replacing by summary." << eom;
     summaryt summary = summary_db.get(fname);
-
-    /*
-    //collect postconditions for precondition inference
-    if(!forward)
-    {
-      //guard at call site
-      exprt guard = SSA.guard_symbol(n_it->location);
-      exprt precond = summary.precondition;
-
-      inliner.rename_to_caller(f_it,summary.params,
-			       cs_globals_in,summary.globals_in,precond);
-      postconditions.push_back(implies_exprt(guard,precond));
-      }*/
-
 
     inliner.replace(SSA,n_it,f_it,
 		    cs_globals_in,cs_globals_out,summary,
@@ -927,11 +900,12 @@ Function: summarizert::compute_precondition ()
 
 \******************************************************************/
 
-void summarizert::compute_calling_context(
+exprt summarizert::compute_calling_context(
   const function_namet &function_name, 
   local_SSAt::nodest::iterator n_it, 
   local_SSAt::nodet::function_callst::iterator f_it,
   local_SSAt &SSA,
+  const exprt &fw_precondition,
   ssa_inlinert &inliner,
   bool forward)
 {
@@ -954,29 +928,27 @@ void summarizert::compute_calling_context(
   else SSA.get_globals((++n_it)->location,cs_globals_in[f_it]);
 
   // analyze
-  analyzer(SSA,preconditions[function_name],template_generator);
+  analyzer(SSA,fw_precondition,template_generator);
 
   // set preconditions
   local_SSAt &fSSA = ssa_db.get(fname); 
 
-  preconditiont precondition;
-  analyzer.get_result(precondition,template_generator.callingcontext_vars());
+  preconditiont precondition_call;
+  analyzer.get_result(precondition_call,
+		      template_generator.callingcontext_vars());
   inliner.rename_to_callee(f_it, fSSA.params,
 			     cs_globals_in[f_it],fSSA.globals_in,
-			     precondition);
+			     precondition_call);
 
   debug() << "Calling context for " << 
     from_expr(SSA.ns, "", *f_it) << ": " 
-	  << from_expr(SSA.ns, "", precondition) << eom;
-
-  if(preconditions[fname].is_true())
-    preconditions[fname] = precondition;
-  else
-    preconditions[fname] = or_exprt(preconditions[fname],precondition);
+	  << from_expr(SSA.ns, "", precondition_call) << eom;
 
   //statistics
   solver_instances++;
   solver_calls += analyzer.get_number_of_solver_calls();
+
+  return precondition_call;
 }
 
 /*******************************************************************\
@@ -1038,10 +1010,8 @@ exprt summarizert::collect_postconditions(const function_namet &function_name,
    				      bool forward,
    				      bool sufficient,
 				      bool termination,
-  				      exprt::operandst postconditions)
+  				      exprt::operandst &postconditions)
 {
-  if(forward) return preconditions[function_name];
-
   for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
       n_it != SSA.nodes.end(); n_it++)
   {
@@ -1057,8 +1027,10 @@ exprt summarizert::collect_postconditions(const function_namet &function_name,
     if(!summary.termination_argument.is_nil()) 
       postconditions.push_back(summary.termination_argument);
   }
-  /* if(termination) 
-     postconditions.push_back(SSA.guard_symbol(--SSA.goto_function.body.instructions.end()));*/
+
+  exprt guard = SSA.guard_symbol(--SSA.goto_function.body.instructions.end());
+  postconditions.push_back(guard);
+
   exprt c;
   if(sufficient) c = not_exprt(conjunction(postconditions));
   else c = conjunction(postconditions);
@@ -1067,7 +1039,7 @@ exprt summarizert::collect_postconditions(const function_namet &function_name,
 
 /*******************************************************************\
 
-Function: summarizert::check_call_reachable()
+Function: summarizert::check_end_reachable()
 
   Inputs:
 
@@ -1078,10 +1050,10 @@ Function: summarizert::check_call_reachable()
 \******************************************************************/
 
 bool summarizert::check_end_reachable(
+   const function_namet &function_name,
    const local_SSAt &SSA, 
    const summaryt &summary,
-   const exprt &precondition,
-   bool forward)
+   const exprt &precondition)
 {
   satcheckt satcheck;
   bv_pointerst solver(SSA.ns, satcheck);
@@ -1089,10 +1061,16 @@ bool summarizert::check_end_reachable(
   solver.set_message_handler(get_message_handler());
   solver << SSA;
   solver << precondition;
-  solver << summary.invariant;
-  exprt guard;
+  solver << summary.invariant;  
+
+  exprt::operandst postconditions;
+  collect_postconditions(function_name,SSA,summary,
+				   true,false,true,postconditions);
+  exprt guard = disjunction(postconditions); //we want to reach either of them
+  /*
   if(forward) guard = SSA.guard_symbol(--SSA.goto_function.body.instructions.end());
   else guard = SSA.guard_symbol(SSA.goto_function.body.instructions.begin());
+  */
 
   debug() << "end check guard: " << from_expr(SSA.ns, "", guard) << eom;
 
@@ -1103,4 +1081,34 @@ bool summarizert::check_end_reachable(
   solver_calls++;
 
   return solver()==decision_proceduret::D_SATISFIABLE;
+}
+
+/*******************************************************************\
+
+Function: summarizert::assertions_to_assumptions()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: returns the conjunction of all assertions, and clears the
+          assertions
+
+\******************************************************************/
+
+exprt summarizert::assertions_to_assumptions(const local_SSAt &SSA)
+{
+  exprt::operandst c;
+  for(local_SSAt::nodest::iterator n_it = SSA.nodes.begin();
+      n_it != SSA.nodes.end(); n_it++)
+  {
+    for(local_SSAt::nodet::assertionst::iterator 
+	  a_it = n_it->assertions.begin();
+	a_it != n_it->assertions.end(); a_it++)
+    {
+      c.push_back(*a_it);
+    }
+    n_it->assertions.clear();
+  }
+
 }

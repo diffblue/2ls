@@ -34,7 +34,7 @@ public:
       if(result!=NULL) delete result;
     }
 
-  void operator()(local_SSAt &SSA, 
+  void operator()(const local_SSAt &SSA, 
                   const exprt &precondition,
                   template_generator_baset &template_generator);
 

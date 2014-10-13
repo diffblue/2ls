@@ -50,7 +50,7 @@ Function: ssa_analyzert::operator()
 
 \*******************************************************************/
 
-void ssa_analyzert::operator()(local_SSAt &SSA, 
+void ssa_analyzert::operator()(const local_SSAt &SSA, 
                                const exprt &precondition,
                                template_generator_baset &template_generator)
 {

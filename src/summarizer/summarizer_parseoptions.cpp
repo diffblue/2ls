@@ -41,7 +41,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "summarizer_parseoptions.h"
 #include "summary_db.h"
-#include "summarizer.h"
 #include "summary_checker.h"
 #include "../ssa/split_loopheads.h"
 #include "show.h"

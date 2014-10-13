@@ -25,29 +25,36 @@ class summaryt
   typedef std::set<symbol_exprt> var_sett;
 
   summaryt() : 
-    precondition(nil_exprt()), 
-    transformer(true_exprt()), 
-    invariant(true_exprt()), 
+    fw_precondition(nil_exprt()), 
+    fw_transformer(nil_exprt()), 
+    fw_invariant(nil_exprt()), 
+    bw_precondition(nil_exprt()), 
+    bw_transformer(nil_exprt()), 
+    bw_invariant(nil_exprt()), 
     termination_argument(nil_exprt()), 
     terminates(UNKNOWN) {}
 
   var_listt params;
   var_sett globals_in, globals_out;
 
-  //void from_fixedpoint(class ssa_fixed_pointt &);
-  
-  // a summary has two parts:
-  // 1) precondition (a predicate over entry_vars (and exit_vars))
-  // 2) transformer (a predicate over entry_vars and exit_vars)
-  
-  predicatet precondition; //let's call it the caller-based summary
-  predicatet transformer; // this is the callee-based summary
-  predicatet invariant; 
+ 
+  predicatet fw_precondition; // accumulated calling contexts (over-approx)
+  predicatet fw_transformer; // forward summary (over-approx)
+  predicatet fw_invariant; // forward invariant (over-approx)
+  predicatet bw_precondition; // accumulated preconditions (over- or under-approx)
+  predicatet bw_transformer; // backward summary (over- or under-approx)
+  predicatet bw_invariant; // backward invariant (over- or under-approx)
 
   predicatet termination_argument;
   threevalt terminates;
 
   void output(std::ostream &out, const namespacet &ns) const;
+
+ protected:
+  void join(const summaryt &new_summary);
+
+  void combine_or(exprt &olde, const exprt &newe);
+  void combine_and(exprt &olde, const exprt &newe);
 
 };
 

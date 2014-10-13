@@ -23,6 +23,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "../ssa/ssa_build_goto_trace.h"
 #include "../domains/ssa_analyzer.h"
 #include "../ssa/ssa_unwinder.h"
+
+#include "summarizer_fw.h"
+#include "summarizer_fw_term.h"
+
 #include <cstdlib>
 
 #include "show.h"
@@ -45,15 +49,39 @@ property_checkert::resultt summary_checkert::operator()(
   const goto_modelt &goto_model)
 {
   const namespacet ns(goto_model.symbol_table);
+  ssa_inliner.set_message_handler(get_message_handler());
 
   SSA_functions(goto_model,ns);
 
   if(!options.get_bool_option("k-induction"))
   {  
-    if(!options.get_bool_option("havoc") || options.get_bool_option("termination")) 
-      summarize(goto_model,!options.get_bool_option("preconditions") ||
-			   options.get_bool_option("termination"),
-			   options.get_bool_option("sufficient"));
+    if(!options.get_bool_option("havoc") &&
+       !(!options.get_bool_option("preconditions") &&
+	 options.get_bool_option("termination"))) 
+    {
+      //forward analysis
+      summarize(goto_model,true,false);
+    }
+    if(!options.get_bool_option("preconditions") &&
+       options.get_bool_option("termination"))
+    {
+      //termination analysis
+      summarize(goto_model,true,true);
+    }
+    if(!options.get_bool_option("havoc") &&
+       options.get_bool_option("preconditions") &&
+       !options.get_bool_option("termination"))
+    {
+      //backward analysis
+      summarize(goto_model,false,false);
+    }
+    if(!options.get_bool_option("havoc") &&
+       options.get_bool_option("preconditions") &&
+       options.get_bool_option("termination"))
+    {
+      //backward analysis with termination
+      summarize(goto_model,false,true);
+    }
 
     if(options.get_bool_option("preconditions")) 
     {
@@ -88,7 +116,7 @@ property_checkert::resultt summary_checkert::operator()(
       }
 
       if(!options.get_bool_option("havoc")) 
-        summarize(goto_model);
+        summarize(goto_model,true,false);
 
       result =  check_properties(); 
       report_statistics();
@@ -140,7 +168,7 @@ void summary_checkert::SSA_functions(const goto_modelt &goto_model,  const names
       ::simplify(SSA, ns);
     }
 
-    if(options.get_bool_option("termination"))
+    /*    if(options.get_bool_option("termination"))
     {
       //assume assertions
       for(local_SSAt::nodest::iterator n_it = SSA.nodes.begin();
@@ -154,7 +182,7 @@ void summary_checkert::SSA_functions(const goto_modelt &goto_model,  const names
 	}
 	n_it->assertions.clear();
       }
-    }
+      }*/
 
     SSA.output(debug()); debug() << eom;
   }
@@ -175,9 +203,6 @@ void summary_checkert::SSA_functions(const goto_modelt &goto_model,  const names
 
 #if 0
   // inline c::main and __CPROVER_initialize
-  ssa_inlinert ssa_inliner;
-  ssa_inliner.set_message_handler(get_message_handler());
-
   ssa_inliner.replace(ssa_db.get(ID_main),functions,false,false);
   
   ssa_db.get(ID_main).output(debug()); debug() << eom;
@@ -197,19 +222,42 @@ Function: summary_checkert::summarize
 \*******************************************************************/
 
 void summary_checkert::summarize(const goto_modelt &goto_model, 
-				 bool forward, bool sufficient)
+				 bool forward,
+				 bool termination)
 {    
-  summarizer.set_message_handler(get_message_handler());
+  summarizer_baset *summarizer;
 
-  if(options.get_bool_option("context-sensitive"))
-    summarizer.summarize(goto_model.goto_functions.entry_point(),
-                         forward,sufficient);
+  if(forward && !termination)
+    summarizer = new summarizer_fwt(
+      options,summary_db,ssa_db,ssa_unwinder,ssa_inliner);
+  if(forward && termination)
+    summarizer = new summarizer_fw_termt(
+      options,summary_db,ssa_db,ssa_unwinder,ssa_inliner);
+  /* 
+   if(backward && !termination)
+    summarizer = new summarizer_bwt(
+      options,summary_db,ssa_db,ssa_unwinder,ssa_inliner);
+   if(backward && termination)
+    summarizer = new summarizer_bw_termt(
+      options,summary_db,ssa_db,ssa_unwinder,ssa_inliner);
+  */
+
+  assert(summarizer != NULL);
+
+  summarizer->set_message_handler(get_message_handler());
+
+  if(!options.get_bool_option("context-sensitive"))
+    summarizer->summarize();
   else
-    summarizer.summarize(forward,sufficient);
+    summarizer->summarize(goto_model.goto_functions.entry_point());
 
   //statistics
-  solver_instances += summarizer.get_number_of_solver_instances();
-  solver_calls += summarizer.get_number_of_solver_calls();
+  solver_instances += summarizer->get_number_of_solver_instances();
+  solver_calls += summarizer->get_number_of_solver_calls();
+  if(forward && !termination)
+    summaries_used += summarizer->get_number_of_summaries_used();
+
+  delete summarizer;
 }
 
 /*******************************************************************\
@@ -227,7 +275,7 @@ Function: summary_checkert::check_properties
 summary_checkert::resultt summary_checkert::check_properties()
 {
   // analyze all the functions
-  for(summarizert::functionst::const_iterator f_it = ssa_db.functions().begin();
+  for(ssa_dbt::functionst::const_iterator f_it = ssa_db.functions().begin();
       f_it != ssa_db.functions().end(); f_it++)
   {
     status() << "Checking properties of " << f_it->first << messaget::eom;
@@ -258,7 +306,7 @@ Function: summary_checkert::check_properties
 \*******************************************************************/
 
 void summary_checkert::check_properties_non_incremental(
-   const summarizert::functionst::const_iterator f_it)
+   const ssa_dbt::functionst::const_iterator f_it)
 {
   const local_SSAt &SSA = *f_it->second;
   if(!SSA.goto_function.body.has_assertion()) return;
@@ -322,8 +370,15 @@ void summary_checkert::check_properties_non_incremental(
     // give SSA to solver
     solver << SSA;
 
+    // invariant, calling contexts
     if(summary_db.exists(f_it->first))
-      solver << summary_db.get(f_it->first).invariant;
+    {
+      solver << summary_db.get(f_it->first).fw_invariant;
+      solver << summary_db.get(f_it->first).fw_precondition;
+    }
+
+    //callee summaries
+    solver << ssa_inliner.get_summaries(SSA,true,false);
 
     // give negated property to solver
     solver << property;
@@ -399,7 +454,7 @@ Function: summary_checkert::check_properties_incremental
 \*******************************************************************/
 
 void summary_checkert::check_properties_incremental(
-   const summarizert::functionst::const_iterator f_it)
+   const ssa_dbt::functionst::const_iterator f_it)
 {
   const local_SSAt &SSA = *f_it->second;
   if(!SSA.goto_function.body.has_assertion()) return;
@@ -418,8 +473,15 @@ void summary_checkert::check_properties_incremental(
   // give SSA to solver
   solver << SSA;
 
+  // invariant, calling contexts
   if(summary_db.exists(f_it->first))
-    solver << summary_db.get(f_it->first).invariant;
+  {
+    solver << summary_db.get(f_it->first).fw_invariant;
+    solver << summary_db.get(f_it->first).fw_precondition;
+  }
+
+  //callee summaries
+  solver << ssa_inliner.get_summaries(SSA,true,false);
 
 #if 0   
     //for future incremental usagae 
@@ -533,8 +595,7 @@ void summary_checkert::report_statistics()
   statistics() << "** statistics: " << eom;
   statistics() << "  number of solver instances: " << solver_instances << eom;
   statistics() << "  number of solver calls: " << solver_calls << eom;
-  statistics() << "  number of summaries used: " 
-               << summarizer.get_number_of_summaries_used() << eom;
+  statistics() << "  number of summaries used: " << summaries_used << eom;
   statistics() << eom;
 }
   
@@ -590,15 +651,16 @@ void summary_checkert::report_preconditions()
 {
   result() << eom;
   result() << "** Preconditions: " << eom;
-  summarizert::functionst &functions = ssa_db.functions();
-  for(summarizert::functionst::iterator it = functions.begin();
+  ssa_dbt::functionst &functions = ssa_db.functions();
+  for(ssa_dbt::functionst::iterator it = functions.begin();
       it != functions.end(); it++)
   {
     exprt precondition;
     bool computed = summary_db.exists(it->first);
-    if(computed) precondition = summary_db.get(it->first).precondition;
+    if(computed) precondition = summary_db.get(it->first).bw_precondition;
     result() << eom << "[" << it->first << "]: " 
-	     << (!computed ? "not computed" : from_expr(it->second->ns, "", precondition)) << eom;
+	     << (!computed ? "not computed" : 
+		 from_expr(it->second->ns, "", precondition)) << eom;
   }
 }
 
@@ -619,8 +681,8 @@ property_checkert::resultt summary_checkert::report_termination()
   result() << eom;
   result() << "** Termination: " << eom;
   bool all_terminate = true; 
-  summarizert::functionst &functions = ssa_db.functions();
-  for(summarizert::functionst::iterator it = functions.begin();
+  ssa_dbt::functionst &functions = ssa_db.functions();
+  for(ssa_dbt::functionst::iterator it = functions.begin();
       it != functions.end(); it++)
   {
     threevalt terminates = YES;
