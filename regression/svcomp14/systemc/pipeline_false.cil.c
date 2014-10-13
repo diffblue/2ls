@@ -2,12 +2,7 @@ extern int __VERIFIER_nondet_int();
 
 void error(void) 
 { 
-
-  {
-  goto ERROR;
-  ERROR: ;
-  return;
-}
+  assert(0);
 }
 int main_in1_val  ;
 int main_in1_val_t  ;

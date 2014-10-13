@@ -27,5 +27,6 @@ int main()
   return 0;
 
   ERROR:
+  assert(0);
   return 1;
 }

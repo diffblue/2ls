@@ -1,6 +1,6 @@
 void __VERIFIER_assert(int cond) {
   if (!(cond)) {
-    ERROR: goto ERROR;
+    assert(0);
   }
   return;
 }
