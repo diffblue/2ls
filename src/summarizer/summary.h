@@ -29,6 +29,7 @@ class summaryt
     fw_transformer(nil_exprt()), 
     fw_invariant(nil_exprt()), 
     bw_precondition(nil_exprt()), 
+    bw_postcondition(nil_exprt()), 
     bw_transformer(nil_exprt()), 
     bw_invariant(nil_exprt()), 
     termination_argument(nil_exprt()), 
@@ -39,9 +40,11 @@ class summaryt
 
  
   predicatet fw_precondition; // accumulated calling contexts (over-approx)
+  //  predicatet fw_postcondition; // we are not projecting that out currently
   predicatet fw_transformer; // forward summary (over-approx)
   predicatet fw_invariant; // forward invariant (over-approx)
   predicatet bw_precondition; // accumulated preconditions (over- or under-approx)
+  predicatet bw_postcondition; // accumulated postconditions (over- or under-approx)
   predicatet bw_transformer; // backward summary (over- or under-approx)
   predicatet bw_invariant; // backward invariant (over- or under-approx)
 
@@ -50,8 +53,9 @@ class summaryt
 
   void output(std::ostream &out, const namespacet &ns) const;
 
- protected:
   void join(const summaryt &new_summary);
+
+ protected:
 
   void combine_or(exprt &olde, const exprt &newe);
   void combine_and(exprt &olde, const exprt &newe);

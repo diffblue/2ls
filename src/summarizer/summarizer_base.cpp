@@ -55,7 +55,7 @@ void summarizer_baset::summarize()
 
 /*******************************************************************\
 
-Function: summarizervt::summarize()
+Function: summarizer_baset::summarize()
 
   Inputs:
 
@@ -92,9 +92,9 @@ Function: summarizer_baset::check_call_reachable()
 
 bool summarizer_baset::check_call_reachable(
   const function_namet &function_name,
-  local_SSAt &SSA,
-  local_SSAt::nodest::iterator n_it, 
-  local_SSAt::nodet::function_callst::iterator f_it,
+  const local_SSAt &SSA,
+  local_SSAt::nodest::const_iterator n_it, 
+  local_SSAt::nodet::function_callst::const_iterator f_it,
   const exprt& precondition,
   bool forward)
 {
@@ -152,9 +152,9 @@ Function: summarizer_baset::compute_calling_context ()
 
 exprt summarizer_baset::compute_calling_context(
   const function_namet &function_name, 
-  local_SSAt &SSA,
-  local_SSAt::nodest::iterator n_it, 
-  local_SSAt::nodet::function_callst::iterator f_it,
+  const local_SSAt &SSA,
+  local_SSAt::nodest::const_iterator n_it, 
+  local_SSAt::nodet::function_callst::const_iterator f_it,
   const exprt &precondition,
   bool forward)
 {
@@ -172,7 +172,7 @@ exprt summarizer_baset::compute_calling_context(
   template_generator(SSA,n_it,f_it,forward);
 
   // collect globals at call site
-  std::map<local_SSAt::nodet::function_callst::iterator, local_SSAt::var_sett>
+  std::map<local_SSAt::nodet::function_callst::const_iterator, local_SSAt::var_sett>
     cs_globals_in;
   if(forward) SSA.get_globals(n_it->location,cs_globals_in[f_it]);
   else SSA.get_globals((++n_it)->location,cs_globals_in[f_it]);
@@ -203,4 +203,141 @@ exprt summarizer_baset::compute_calling_context(
   solver_calls += analyzer.get_number_of_solver_calls();
 
   return precondition_call;
+}
+
+/*******************************************************************\
+
+Function: summarizer_baset::get_assertions()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: 
+
+\******************************************************************/
+
+void summarizer_baset::get_assertions(const local_SSAt &SSA,
+				      exprt::operandst &assertions)
+{
+  for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
+      n_it != SSA.nodes.end(); n_it++)
+  {
+    for(local_SSAt::nodet::assertionst::const_iterator 
+	  a_it = n_it->assertions.begin();
+	a_it != n_it->assertions.end(); a_it++)
+    {
+      assertions.push_back(*a_it);
+    }
+  }
+}
+
+/*******************************************************************\
+
+Function: summarizer_baset::check_precondition()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: returns false if the summary needs to be recomputed
+
+\******************************************************************/
+
+bool summarizer_baset::check_precondition(
+  const function_namet &function_name,
+  const local_SSAt &SSA,
+  local_SSAt::nodest::const_iterator n_it, 
+  local_SSAt::nodet::function_callst::const_iterator f_it,
+  const exprt &precondition,
+  bool context_sensitive)
+{
+  assert(f_it->function().id()==ID_symbol); //no function pointers
+  irep_idt fname = to_symbol_expr(f_it->function()).get_identifier();
+
+  status() << "Checking precondition of " << fname << eom;
+
+  bool precondition_holds = false;
+  exprt assertion;
+
+  if(summary_db.exists(fname)) 
+  {
+    summaryt summary = summary_db.get(fname);
+    if(!context_sensitive ||
+       summary.fw_precondition.is_true())  //precondition trivially holds
+    {
+      status() << "Precondition trivially holds, replacing by summary." 
+                   << eom;
+      summaries_used++;
+      precondition_holds = true;
+    }
+    else
+    {
+      assertion = summary.fw_precondition;
+
+      //getting globals at call site
+      local_SSAt::var_sett cs_globals_in; 
+      SSA.get_globals(n_it->location,cs_globals_in);
+
+      ssa_inliner.rename_to_caller(f_it,summary.params,
+			       cs_globals_in,summary.globals_in,assertion);
+
+      debug() << "precondition assertion: " << 
+	from_expr(SSA.ns,"",assertion) << eom;
+
+      precondition_holds = false;
+    }
+  }
+  else if(!ssa_db.exists(fname))
+  {
+    status() << "Function " << fname << " not found" << eom;
+    precondition_holds = true;
+  }
+  else if(fname == function_name) 
+  {
+    status() << "Havoc recursive function call to " << fname << eom;
+    precondition_holds = true;
+  }
+  else 
+  {
+    status() << "Function " << fname << " not analyzed yet" << eom;
+    return false; //function not seen yet
+  }
+
+  if(precondition_holds) return true;
+
+  assert(!assertion.is_nil());
+
+  // precondition check
+  satcheckt satcheck;
+  bv_pointerst solver(SSA.ns, satcheck);
+  satcheck.set_message_handler(get_message_handler());
+  solver.set_message_handler(get_message_handler());
+    
+  solver << precondition;
+  solver << SSA;
+  solver << not_exprt(assertion);
+
+  switch(solver())
+  {
+  case decision_proceduret::D_SATISFIABLE: {
+    precondition_holds = false;
+
+    status() << "Precondition does not hold, need to recompute summary." << eom;
+    break; }
+  case decision_proceduret::D_UNSATISFIABLE: {
+    precondition_holds = true;
+
+    status() << "Precondition holds, replacing by summary." << eom;
+    summaries_used++;
+                
+    break; }
+  default: assert(false); break;
+  }
+
+  //statistics
+  solver_instances++;
+  solver_calls++;
+
+  return precondition_holds;
 }

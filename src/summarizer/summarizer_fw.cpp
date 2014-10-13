@@ -72,7 +72,7 @@ void summarizer_fwt::compute_summary_rec(const function_namet &function_name,
 
   if(!options.get_bool_option("havoc"))
   {
-    do_summary(function_name,SSA,summary,context_sensitive);
+    do_summary(function_name,SSA,summary,true_exprt(),context_sensitive);
   }
 
   {
@@ -99,8 +99,9 @@ Function: summarizer_fwt::do_summary()
 \*******************************************************************/
 
 void summarizer_fwt::do_summary(const function_namet &function_name, 
-				local_SSAt &SSA,
+				const local_SSAt &SSA,
 				summaryt &summary,
+				exprt cond,
 				bool context_sensitive)
 {
   status() << "Computing summary" << eom;
@@ -114,8 +115,9 @@ void summarizer_fwt::do_summary(const function_namet &function_name,
   template_generator.set_message_handler(get_message_handler());
   template_generator(SSA,true);
 
-  exprt cond = and_exprt(summary.fw_precondition,
-			 ssa_inliner.get_summaries(SSA,true,false));
+  cond = and_exprt(cond,
+		   and_exprt(summary.fw_precondition,
+			     ssa_inliner.get_summaries(SSA)));
 
   analyzer(SSA,cond,template_generator);
   analyzer.get_result(summary.fw_transformer,template_generator.inout_vars());
@@ -147,13 +149,13 @@ Function: summarizer_fwt::inline_summaries()
 \*******************************************************************/
 
 void summarizer_fwt::inline_summaries(const function_namet &function_name, 
-				   local_SSAt &SSA, const exprt &precondition,
+				   const local_SSAt &SSA, const exprt &precondition,
 				   bool context_sensitive)
 {
-  for(local_SSAt::nodest::iterator n_it = SSA.nodes.begin();
+  for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
       n_it != SSA.nodes.end(); n_it++)
   {
-    for(local_SSAt::nodet::function_callst::iterator f_it = 
+    for(local_SSAt::nodet::function_callst::const_iterator f_it = 
 	  n_it->function_calls.begin();
         f_it != n_it->function_calls.end(); f_it++)
     {
@@ -180,113 +182,4 @@ void summarizer_fwt::inline_summaries(const function_namet &function_name,
   }
 }
 
-/*******************************************************************\
-
-Function: summarizer_fwt::check_precondition()
-
-  Inputs:
-
- Outputs:
-
- Purpose: returns false if the summary needs to be recomputed
-
-\******************************************************************/
-
-bool summarizer_fwt::check_precondition(
-  const function_namet &function_name,
-  local_SSAt &SSA,
-  local_SSAt::nodest::iterator n_it, 
-  local_SSAt::nodet::function_callst::iterator f_it,
-  const exprt &precondition,
-  bool context_sensitive)
-{
-  assert(f_it->function().id()==ID_symbol); //no function pointers
-  irep_idt fname = to_symbol_expr(f_it->function()).get_identifier();
-
-  status() << "Checking precondition of " << fname << eom;
-
-  bool precondition_holds = false;
-
-  if(summary_db.exists(fname)) 
-  {
-    summaryt summary = summary_db.get(fname);
-    if(!context_sensitive ||
-       summary.fw_precondition.is_true())  //precondition trivially holds
-    {
-      status() << "Precondition trivially holds, replacing by summary." 
-                   << eom;
-      summaries_used++;
-      precondition_holds = true;
-    }
-    else
-    {
-      exprt assertion = summary.fw_precondition;
-
-      //getting globals at call site
-      local_SSAt::var_sett cs_globals_in; 
-      SSA.get_globals(n_it->location,cs_globals_in);
-
-      ssa_inliner.rename_to_caller(f_it,summary.params,
-			       cs_globals_in,summary.globals_in,assertion);
-
-      n_it->assertions.push_back(assertion);
-      debug() << "precondition assertion: " << 
-	from_expr(SSA.ns,"",assertion) << eom;
-
-      precondition_holds = false;
-    }
-  }
-  else if(!ssa_db.exists(fname))
-  {
-    status() << "Function " << fname << " not found" << eom;
-    precondition_holds = true;
-  }
-  else if(fname == function_name) 
-  {
-    status() << "Havoc recursive function call to " << fname << eom;
-    precondition_holds = true;
-  }
-  else 
-  {
-    status() << "Function " << fname << " not analyzed yet" << eom;
-    return false; //function not seen yet
-  }
-
-  if(precondition_holds) return true;
-
-  // precondition check
-  satcheckt satcheck;
-  bv_pointerst solver(SSA.ns, satcheck);
-  satcheck.set_message_handler(get_message_handler());
-  solver.set_message_handler(get_message_handler());
-    
-  solver << precondition;
-  solver << SSA;
-  solver << not_exprt(n_it->assertions.front());
-
-  switch(solver())
-  {
-  case decision_proceduret::D_SATISFIABLE: {
-    precondition_holds = false;
-    n_it->assertions.clear();
-
-    status() << "Precondition does not hold, need to recompute summary." << eom;
-    break; }
-  case decision_proceduret::D_UNSATISFIABLE: {
-    precondition_holds = true;
-    n_it->assertions.clear();
-
-    status() << "Precondition holds, replacing by summary." << eom;
-    summaries_used++;
-                
-    break; }
-  default: assert(false); break;
-  }
-
-  //statistics
-  solver_instances++;
-  solver_calls++;
-
-  return precondition_holds;
-}
 

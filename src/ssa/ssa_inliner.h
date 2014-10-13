@@ -29,11 +29,13 @@ class ssa_inlinert : public messaget
 	       local_SSAt::nodest::const_iterator n_it,
                local_SSAt::nodet::function_callst::const_iterator f_it, 
                const summaryt &summary,
-	       bool forward,
-	       bool preconditions_as_assertions);
+   	       bool forward,
+    	       exprt::operandst &preconditions);
   exprt get_summaries(const local_SSAt &SSA,
-	       bool forward,
-	       bool preconditions_as_assertions);
+ 	       bool forward,
+    	       exprt::operandst &preconditions);
+  exprt get_summaries(const local_SSAt &SSA);
+
   void replace(local_SSAt &SSA,
 	       local_SSAt::nodest::iterator node,
                local_SSAt::nodet::function_callst::iterator f_it, 

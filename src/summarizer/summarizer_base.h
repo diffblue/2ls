@@ -63,19 +63,29 @@ class summarizer_baset : public messaget
     { assert(false); }
 
   bool check_call_reachable(const function_namet &function_name,
-			    local_SSAt &SSA,
-			    local_SSAt::nodest::iterator n_it, 
-			    local_SSAt::nodet::function_callst::iterator f_it,
+			    const local_SSAt &SSA,
+			    local_SSAt::nodest::const_iterator n_it, 
+			    local_SSAt::nodet::function_callst::const_iterator f_it,
 			    const exprt& precondition,
 			    bool forward);
 
   exprt compute_calling_context(
 			const function_namet &function_name, 
-			local_SSAt &SSA,
-			local_SSAt::nodest::iterator n_it, 
-			local_SSAt::nodet::function_callst::iterator f_it,
+			const local_SSAt &SSA,
+			local_SSAt::nodest::const_iterator n_it, 
+			local_SSAt::nodet::function_callst::const_iterator f_it,
 			const exprt &precondition,
 			bool forward);
+
+  virtual bool check_precondition(const function_namet &function_name, 
+                          const local_SSAt &SSA,
+			  local_SSAt::nodest::const_iterator node, 
+			  local_SSAt::nodet::function_callst::const_iterator f_it,
+    		          const exprt &precondition,
+                          bool context_sensitive);
+
+  void get_assertions(const local_SSAt &SSA,
+		      exprt::operandst &assertions);
 
   //statistics
   unsigned solver_instances;

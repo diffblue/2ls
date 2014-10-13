@@ -16,16 +16,21 @@ class summary_dbt
 public:
   typedef irep_idt function_namet;
 
-  virtual void load() const {}
-  virtual void save() const {}
-  virtual void clear() { store.clear(); }
+  void load() const {}
+  void save() const {}
+  void clear() { store.clear(); }
 
-  virtual summaryt get(const function_namet &function_name) const 
+  summaryt get(const function_namet &function_name) const 
     { return store.at(function_name); }
-  virtual bool exists(const function_namet &function_name) const  
+  bool exists(const function_namet &function_name) const  
     { return store.find(function_name)!=store.end(); }
-  virtual void put(const function_namet &function_name, const summaryt &summary)
-    { store[function_name] = summary; }
+  void put(const function_namet &function_name, const summaryt &summary)
+  { 
+    if(store.find(function_name)==store.end())
+      store[function_name] = summary; 
+    else
+      store[function_name].join(summary);
+  }
 
  protected:
   std::map<function_namet, summaryt> store;

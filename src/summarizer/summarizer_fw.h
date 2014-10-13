@@ -39,20 +39,14 @@ class summarizer_fwt : public summarizer_baset
                            bool context_sensitive);
 
   void inline_summaries(const function_namet &function_name, 
-			local_SSAt &SSA,
+			const local_SSAt &SSA,
     		        const exprt &precondition,
                         bool context_sensitive); 
 
-  bool check_precondition(const function_namet &function_name, 
-                          local_SSAt &SSA,
-			  local_SSAt::nodest::iterator node, 
-			  local_SSAt::nodet::function_callst::iterator f_it,
-    		          const exprt &precondition,
-                          bool context_sensitive);
-
   void do_summary(const function_namet &function_name, 
-		  local_SSAt &SSA, 
+		  const local_SSAt &SSA, 
 		  summaryt &summary, 
+   		  exprt cond, //additional constraints
 		  bool forward);
 };
 

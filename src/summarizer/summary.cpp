@@ -52,6 +52,9 @@ void summaryt::output(std::ostream &out, const namespacet &ns) const
   out << "backward precondition: " 
       << (bw_precondition.is_nil() ? "not computed" :  
 	  from_expr(ns,"",bw_precondition)) << std::endl;
+  out << "backward postcondition: " 
+      << (bw_postcondition.is_nil() ? "not computed" :  
+	  from_expr(ns,"",bw_postcondition)) << std::endl;
   out << "backward transformer: " 
       << (bw_transformer.is_nil() ? "not computed" :  
 	  from_expr(ns,"",bw_transformer)) << std::endl;
@@ -112,6 +115,7 @@ void summaryt::join(const summaryt &new_summary)
   combine_and(fw_transformer,new_summary.fw_transformer);
   combine_and(fw_invariant,new_summary.fw_invariant);
   combine_and(bw_precondition,new_summary.bw_precondition);
+  combine_or(bw_postcondition,new_summary.bw_postcondition);
   combine_and(bw_transformer,new_summary.bw_transformer);
   combine_and(bw_invariant,new_summary.bw_invariant);
   combine_and(termination_argument,new_summary.termination_argument);

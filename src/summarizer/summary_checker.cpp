@@ -26,6 +26,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "summarizer_fw.h"
 #include "summarizer_fw_term.h"
+#include "summarizer_bw.h"
+//#include "summarizer_bw_term.h"
 
 #include <cstdlib>
 
@@ -233,11 +235,11 @@ void summary_checkert::summarize(const goto_modelt &goto_model,
   if(forward && termination)
     summarizer = new summarizer_fw_termt(
       options,summary_db,ssa_db,ssa_unwinder,ssa_inliner);
-  /* 
-   if(backward && !termination)
+   if(!forward && !termination)
     summarizer = new summarizer_bwt(
       options,summary_db,ssa_db,ssa_unwinder,ssa_inliner);
-   if(backward && termination)
+  /* 
+   if(!forward && termination)
     summarizer = new summarizer_bw_termt(
       options,summary_db,ssa_db,ssa_unwinder,ssa_inliner);
   */
@@ -378,7 +380,7 @@ void summary_checkert::check_properties_non_incremental(
     }
 
     //callee summaries
-    solver << ssa_inliner.get_summaries(SSA,true,false);
+    solver << ssa_inliner.get_summaries(SSA);
 
     // give negated property to solver
     solver << property;
@@ -481,7 +483,7 @@ void summary_checkert::check_properties_incremental(
   }
 
   //callee summaries
-  solver << ssa_inliner.get_summaries(SSA,true,false);
+  solver << ssa_inliner.get_summaries(SSA);
 
 #if 0   
     //for future incremental usagae 

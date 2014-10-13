@@ -29,7 +29,7 @@ exprt ssa_inlinert::get_summary(
   local_SSAt::nodet::function_callst::const_iterator f_it, 
   const summaryt &summary,
   bool forward,
-  bool preconditions_as_assertions)
+  exprt::operandst &preconditions)
 {
   counter++;
 
@@ -38,9 +38,11 @@ exprt ssa_inlinert::get_summary(
   //getting globals at call site
   local_SSAt::var_sett cs_globals_in, cs_globals_out; 
   goto_programt::const_targett loc = n_it->location;
-  SSA.get_globals(loc,cs_globals_in);
+  if(forward) SSA.get_globals(loc,cs_globals_in);
+  else SSA.get_globals(loc,cs_globals_out);
   assert(loc!=SSA.goto_function.body.instructions.end());
-  SSA.get_globals(++loc,cs_globals_out);
+  if(forward) SSA.get_globals(++loc,cs_globals_out);
+  else SSA.get_globals(++loc,cs_globals_in);
 
   //equalities for arguments
   c.push_back(get_replace_params(summary.params,*f_it));
@@ -52,20 +54,17 @@ exprt ssa_inlinert::get_summary(
   exprt precondition;
   if(forward) precondition = summary.fw_precondition;
   else precondition = summary.bw_precondition;
-  if(!preconditions_as_assertions)
+  rename(precondition);
+  precondition = implies_exprt(SSA.guard_symbol(n_it->location),
+			       precondition);
+  c.push_back(precondition); 
+  if(!forward)
   {
-    rename(precondition);
-    c.push_back(
-		implies_exprt(SSA.guard_symbol(n_it->location),
-			      precondition)); 
+    exprt bw_precond = summary.bw_precondition;
+    rename(bw_precond);
+    preconditions.push_back(bw_precond);
   }
-  else
-  {
-    rename(precondition);
-    c.push_back(
-		implies_exprt(SSA.guard_symbol(n_it->location),
-			  precondition));  
-  }
+
   exprt transformer;
   if(forward) transformer = summary.fw_transformer;
   else transformer = summary.bw_transformer;
@@ -91,9 +90,15 @@ Function: ssa_inlinert::get_summaries
 
 \*******************************************************************/
 
+exprt ssa_inlinert::get_summaries(const local_SSAt &SSA)
+{
+  exprt::operandst dummy;
+  return get_summaries(SSA,true,dummy);
+}
+
 exprt ssa_inlinert::get_summaries(const local_SSAt &SSA,
 				  bool forward,
-				  bool preconditions_as_assertions)
+				  exprt::operandst &preconditions)
 {
   exprt result = true_exprt();
   for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
@@ -110,7 +115,7 @@ exprt ssa_inlinert::get_summaries(const local_SSAt &SSA,
       {
         result = and_exprt(result,
   	   get_summary(SSA,n_it,f_it,summary_db.get(fname),
-		       forward,preconditions_as_assertions));
+		       forward,preconditions));
       }
     }
   }
