@@ -9,7 +9,12 @@ struct list_head {
 #line 2 "./assert.h"
 void __blast_assert(void) 
 { 
+
+  {
+  ERROR: 
+#line 4
   assert(0);
+}
 }
 #line 11 "files/rule60_list2.c"
 extern int __VERIFIER_nondet_int(void) ;

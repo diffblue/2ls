@@ -1,6 +1,6 @@
 void __VERIFIER_assert(int cond) {
   if (!(cond)) {
-    ERROR: goto ERROR;
+    ERROR: assert(0);
   }
   return;
 }
@@ -26,6 +26,6 @@ int main()
     
   for(j=0;j<N_COL;j++)
     for(k=0;k<N_LIN;k++)
-      __VERIFIER_assert(matriz[j][k]<maior);    
+assert(matriz[j][k]<maior);    
 }
 

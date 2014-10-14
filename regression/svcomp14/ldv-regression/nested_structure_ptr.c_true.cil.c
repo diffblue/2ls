@@ -22,7 +22,7 @@ void __blast_assert(void)
   {
   ERROR: 
 #line 4
-  goto ERROR;
+  assert(0);
 }
 }
 #line 18 "files/nested_structure_ptr.c"

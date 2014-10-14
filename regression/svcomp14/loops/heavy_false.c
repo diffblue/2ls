@@ -11,7 +11,7 @@ int main(int argc, char **argv)
 				array[i] = array[j] + array[k];
 
 	if (a != 1)
-		goto ERROR;
+		assert(0);
 
 	return array[100];
 ERROR:

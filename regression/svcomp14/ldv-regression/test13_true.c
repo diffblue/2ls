@@ -5,7 +5,7 @@ void check(int *a, int *b) {
         if (a != b) {
                 printf("ERROR\n");
                 assert_fail();
-                goto ERROR;
+                assert(0);
         }
         return;
 

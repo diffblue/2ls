@@ -32,7 +32,7 @@ int main()
       if (!check(&cont, i)) {
         printf("ERROR!\n");
         assert_fail();
-        goto ERROR;
+        assert(0);
       }
     }
   }

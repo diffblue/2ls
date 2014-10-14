@@ -554,7 +554,7 @@ int ssl3_accept(int initial_state )
                                                                                   ret = __VERIFIER_nondet_int();
 #line 413
                                                                                   if (blastFlag == 8) {
-                                                                                    goto ERROR;
+                                                                                    assert(0);
                                                                                   }
 #line 418
                                                                                   if (ret <= 0) {
@@ -669,7 +669,7 @@ int ssl3_accept(int initial_state )
                                                                             ret = __VERIFIER_nondet_int();
 #line 508
                                                                             if (blastFlag == 5) {
-                                                                              goto ERROR;
+                                                                              assert(0);
                                                                             }
 #line 513
                                                                             if (ret <= 0) {
@@ -827,7 +827,7 @@ s__s3__tmp__reuse_message = __VERIFIER_nondet_int();
           if(tmp___7 != 512){
            if(__cil_tmp58 != 4294967294){
             if(l != 4294967266){
-              goto ERROR;
+              assert(0);
 
             }
            }

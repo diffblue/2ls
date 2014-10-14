@@ -21,12 +21,11 @@ int main()
   if (pd->a != global.b) {
     printf("ERROR!\n");
     assert_fail();
-    goto ERROR;
+    assert(0);
   }
 
   return 0;
 
   ERROR:
-  assert(0);
   return 1;
 }

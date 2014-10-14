@@ -1582,7 +1582,7 @@ int ssl3_accept(SSL *s )
                                                                                     blastFlag = 19;
                                                                                   } else {
                                                                                     if (blastFlag == 21) {
-                                                                                      goto ERROR;
+                                                                                      assert(0);
                                                                                     } else {
 
                                                                                     }
@@ -1777,7 +1777,7 @@ int ssl3_accept(SSL *s )
   }
   return (ret);
   ERROR: 
-  goto ERROR;
+  assert(0);
 }
 }
 int ssl3_send_server_certificate(SSL *s ) 

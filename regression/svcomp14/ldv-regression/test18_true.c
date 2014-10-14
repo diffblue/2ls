@@ -16,7 +16,7 @@ int main() {
         if (b != 0) {
                 printf("ERROR\n");
                 assert_fail();
-                goto ERROR;
+                assert(0);
         }
 
         return 0;

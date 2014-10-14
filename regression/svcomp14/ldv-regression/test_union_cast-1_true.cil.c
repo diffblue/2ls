@@ -35,7 +35,7 @@ int main(void)
     {
 #line 29
     //__assert_fail("var.y==10u", "test_union_cast-1-safe.c", 29U, "main");
-    ERROR: goto ERROR;
+    ERROR: assert(0);
     }
   }
   }

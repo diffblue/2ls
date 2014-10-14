@@ -1,6 +1,6 @@
 void __VERIFIER_assert(int cond) {
   if (!(cond)) {
-    assert(0);
+    ERROR: assert(0);
   }
   return;
 }
@@ -23,6 +23,6 @@ main()
           maior = matriz[j][k];                          
     }                       
     
-  __VERIFIER_assert(matriz[0][0]<=maior);    
+assert(matriz[0][0]<=maior);    
 }
 

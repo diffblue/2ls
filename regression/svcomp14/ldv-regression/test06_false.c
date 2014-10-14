@@ -34,7 +34,7 @@ int main() {
     if (*p1 == 0) {
         printf("ERROR\n");
         assert_fail();
-        goto ERROR;
+        assert(0);
     }
 
     return 0;

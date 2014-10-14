@@ -1,6 +1,6 @@
 void __VERIFIER_assert(int cond) {
   if (!(cond)) {
-    ERROR: goto ERROR;
+    ERROR: assert(0);
   }
   return;
 }
@@ -50,7 +50,7 @@ int main(){
 
   for(i = 0; i < nodecount; i++)
     {
-      __VERIFIER_assert(distance[i]>=0);
+assert(distance[i]>=0);
     }
 
   return 0;

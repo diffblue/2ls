@@ -56,7 +56,7 @@ int main(void)
 #line 34
     //__assert_fail("*(((unsigned int *)((&llvm_cbe_var.field0)))) == 10u", "test_union_cast-2-safe.c",
     //              34U, "main");
-    ERROR: goto ERROR;
+    ERROR: assert(0);
     }
   }
   }

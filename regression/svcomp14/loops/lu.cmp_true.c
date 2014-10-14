@@ -1,6 +1,6 @@
 void __VERIFIER_assert(int cond) {
   if (!(cond)) {
-    ERROR: goto ERROR;
+    ERROR: assert(0);
   }
   return;
 }
@@ -95,7 +95,7 @@ void main()
 					if(i == j) a[i][j] *= 10.0;
 					w += a[i][j];
 			}
-                        __VERIFIER_assert(i < 50);
+assert(i < 50);
 			b[i] = w;	
 	}
 

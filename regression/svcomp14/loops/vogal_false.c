@@ -1,6 +1,6 @@
 void __VERIFIER_assert(int cond) {
   if (!(cond)) {
-    ERROR: goto ERROR;
+    ERROR: assert(0);
   }
   return;
 }
@@ -39,5 +39,5 @@ main(void)
     }       
     i++;       
   }    
-  __VERIFIER_assert(cont_aux==cont);                          
+assert(cont_aux==cont);                          
 }

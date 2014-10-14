@@ -1,7 +1,7 @@
 extern void __VERIFIER_assume(int);
 void __VERIFIER_assert(int cond) {
   if (!(cond)) {
-    ERROR: goto ERROR;
+    ERROR: assert(0);
   }
   return;
 }
@@ -16,7 +16,7 @@ main(void)
 
   for(i=0;i<MAX;i++)
     input_string[i] = __VERIFIER_nondet_char();
-  __VERIFIER_assume(input_string[MAX-1]=='\0');
+__CPROVER_assume(input_string[MAX-1]=='\0');
   
   n_caracter = 0;
   while(input_string[n_caracter]!='\0')
@@ -39,6 +39,6 @@ main(void)
     }       
     i++;       
   }    
-  __VERIFIER_assert(cont_aux==cont);                          
+assert(cont_aux==cont);                          
 }
 

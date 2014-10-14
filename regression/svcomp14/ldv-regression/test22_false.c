@@ -30,7 +30,7 @@ int main()
     if (!check(pd2, i)) {
       printf("ERROR!\n");
       assert_fail();
-      goto ERROR;
+      assert(0);
     }
   }
 

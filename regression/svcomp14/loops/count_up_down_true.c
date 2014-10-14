@@ -1,6 +1,6 @@
 void __VERIFIER_assert(int cond) {
   if (!(cond)) {
-    ERROR: goto ERROR;
+    ERROR: assert(0);
   }
   return;
 }
@@ -15,6 +15,6 @@ int main()
     x--;
     y++;
   }
-  __VERIFIER_assert(y==n);
+assert(y==n);
 }
 

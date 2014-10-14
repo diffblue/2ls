@@ -19,7 +19,7 @@ int main() {
   blastFlag = 0;
 
   while (1) {
-             if (s__state <= 8512 && blastFlag > 2) { goto ERROR; }
+             if (s__state <= 8512 && blastFlag > 2) { assert(0); }
               {
                 {
                   {
@@ -169,7 +169,7 @@ int main() {
                                                                               blastFlag = 5;
                                                                             } else {
                                                                               if (blastFlag == 5) {
-                                                                                goto ERROR;
+                                                                                assert(0);
                                                                               }
                                                                             }
                                                                             if (s__hit) {

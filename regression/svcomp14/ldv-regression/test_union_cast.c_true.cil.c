@@ -12,7 +12,7 @@ void __blast_assert(void)
   {
   ERROR: 
 #line 4
-  goto ERROR;
+  assert(0);
 }
 }
 #line 24 "files/test_union_cast.c"

@@ -1,6 +1,6 @@
 void __VERIFIER_assert(int cond) {
   if (!(cond)) {
-    ERROR: goto ERROR;
+    ERROR: assert(0);
   }
   return;
 }
@@ -15,7 +15,7 @@ int glob2 (Char *pathbuf, Char *pathlim)
 
   for (p = pathbuf; p <= pathlim; p++) {
     /* BAD */
-    __VERIFIER_assert(p<=tmp);
+assert(p<=tmp);
     *p = 1;
   }
 

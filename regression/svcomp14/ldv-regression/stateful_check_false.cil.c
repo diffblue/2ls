@@ -4,7 +4,11 @@
 #line 1 "stateful_check.c"
 void __blast_assert(void) 
 { 
+
+  {
+  ERROR: 
   assert(0);
+}
 }
 #line 7 "stateful_check.c"
 int ldv_mutex  =    1;

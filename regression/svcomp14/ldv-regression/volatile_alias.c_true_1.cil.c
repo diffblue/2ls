@@ -23,7 +23,7 @@ int main(void)
   if (__cil_tmp3 != 0) {
     ERROR: 
 #line 20
-    goto ERROR;
+    assert(0);
   } else {
 
   }

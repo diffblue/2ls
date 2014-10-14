@@ -1,6 +1,6 @@
 void __VERIFIER_assert(int cond) {
   if (!(cond)) {
-    ERROR: goto ERROR;
+    ERROR: assert(0);
   }
   return;
 }
@@ -18,7 +18,7 @@ main()
       x=x+y;
      }
   }                           
-  __VERIFIER_assert(y<=0 || (y<0 && x>=100));     
+assert(y<=0 || (y<0 && x>=100));     
 }
 
 

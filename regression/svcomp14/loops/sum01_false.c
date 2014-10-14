@@ -1,6 +1,6 @@
 void __VERIFIER_assert(int cond) {
   if (!(cond)) {
-    ERROR: goto ERROR;
+    ERROR: assert(0);
   }
   return;
 }
@@ -12,5 +12,5 @@ int main() {
     if (i<10)
     sn = sn + a;
   }
-  __VERIFIER_assert(sn==n*a || sn == 0);
+assert(sn==n*a || sn == 0);
 }

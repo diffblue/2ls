@@ -21,7 +21,7 @@ int main()
   if (pd == &d2 && d2.a != 0) {
     printf("ERROR!\n");
     assert_fail();
-    goto ERROR;
+    assert(0);
   }
 
   return 0;

@@ -1,6 +1,6 @@
 void __VERIFIER_assert(int cond) {
   if (!(cond)) {
-    ERROR: goto ERROR;
+    ERROR: assert(0);
   }
   return;
 }
@@ -9,8 +9,8 @@ unsigned int __VERIFIER_nondet_uint();
 void main(){
   int nodecount = __VERIFIER_nondet_int();
   int edgecount = __VERIFIER_nondet_int();
-  __VERIFIER_assume(0 <= nodecount <= 4);
-  __VERIFIER_assume(0 <= edgecount <= 19);
+__CPROVER_assume(0 <= nodecount <= 4);
+__CPROVER_assume(0 <= edgecount <= 19);
   int source = 0;
   int Source[20] = {0,4,1,1,0,0,1,3,4,4,2,2,3,0,0,3,1,2,2,3};
   int Dest[20] = {1,3,4,1,1,4,3,4,3,0,0,0,0,2,3,0,2,1,0,4};
@@ -52,7 +52,7 @@ void main(){
 
   for(i = 0; i < nodecount; i++)
     {
-      __VERIFIER_assert(distance[i]>=0);
+assert(distance[i]>=0);
     }
 
 }

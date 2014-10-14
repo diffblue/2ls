@@ -728,7 +728,7 @@ int ssl3_accept(int initial_state )
                                                                             } else {
 #line 544
                                                                               if (blastFlag == 5) {
-                                                                                goto ERROR;
+                                                                                assert(0);
                                                                               }
                                                                             }
 #line 550
@@ -817,7 +817,7 @@ int ssl3_accept(int initial_state )
         if(s__state == 8496){
          if(cb != 0){
           if(s__info_callback != 0){
-           goto ERROR;
+           assert(0);
           }
          }
         }

@@ -713,7 +713,7 @@ int ssl3_accept(int initial_state )
                                                                             ret = __VERIFIER_nondet_int();
 #line 541
                                                                             if (blastFlag == 4) {
-                                                                              goto ERROR;
+                                                                              assert(0);
                                                                             }
 #line 546
                                                                             if (ret <= 0) {

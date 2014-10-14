@@ -1,6 +1,6 @@
 void __VERIFIER_assert(int cond) {
   if (!(cond)) {
-    ERROR: goto ERROR;
+    ERROR: assert(0);
   }
   return;
 }
@@ -26,7 +26,7 @@ int main(){
 
    a[i]=0;
    a[j]=0;
-   __VERIFIER_assert(j<1025);
+assert(j<1025);
    a[b]=0;
    if (b >= 0 && b < 1023)
       a[b]=1;

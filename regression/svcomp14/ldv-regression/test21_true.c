@@ -24,7 +24,7 @@ int main()
     if (!check(pd1, pd2)) {
       printf("ERROR!\n");
       assert_fail();
-      goto ERROR;
+      assert(0);
     }
   }
 

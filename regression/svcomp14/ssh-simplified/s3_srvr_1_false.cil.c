@@ -721,7 +721,7 @@ int ssl3_accept(int initial_state )
                                                                             } else {
 #line 544
                                                                               if (blastFlag == 3) {
-                                                                                goto ERROR;
+                                                                                assert(0);
                                                                               }
                                                                             }
 #line 550

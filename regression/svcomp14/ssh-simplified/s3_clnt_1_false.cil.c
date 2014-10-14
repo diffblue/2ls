@@ -417,7 +417,7 @@ int ssl3_connect(int initial_state )
                                                                         ret = __VERIFIER_nondet_int();
 #line 334
                                                                         if (blastFlag == 4) {
-                                                                          goto ERROR;
+                                                                          assert(0);
                                                                         }
 #line 339
                                                                         if (ret <= 0) {

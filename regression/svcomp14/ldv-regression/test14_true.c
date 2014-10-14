@@ -8,7 +8,7 @@ int main() {
             pa == pb && *pa != *pb) {
                 printf("ERROR\n");
                 assert_fail();
-                goto ERROR;
+                assert(0);
         }
 
         return 0;

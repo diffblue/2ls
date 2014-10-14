@@ -29,7 +29,7 @@ static void fail(void)
 
   {
   ERROR: assert(0);
-  goto ERROR;
+  assert(0);
 }
 }
 #line 39 "test-0180.c"

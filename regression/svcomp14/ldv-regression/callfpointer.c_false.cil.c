@@ -23,7 +23,7 @@ void h(int i )
   if (i == 1) {
     ERROR: 
 #line 11
-    goto ERROR;
+    assert(0);
   } else {
 
   }

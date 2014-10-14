@@ -1,7 +1,7 @@
 extern int __VERIFIER_nondet_int(void);
 void __VERIFIER_assert(int cond) {
   if (!(cond)) {
-    ERROR: goto ERROR;
+    ERROR: assert(0);
   }
   return;
 }
@@ -23,6 +23,6 @@ int main()
      C[i]=A[i]+B[i];
   
   for(i=0;i<M;i++)
-     __VERIFIER_assert(C[i]==A[i]-B[i]);
+assert(C[i]==A[i]-B[i]);
 }
 

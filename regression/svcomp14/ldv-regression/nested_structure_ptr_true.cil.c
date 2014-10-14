@@ -106,7 +106,7 @@ int main(void)
     {
 #line 26
     //__assert_fail("ptr->x->y->c == 4", "nested_structure_ptr-safe.c", 26U, "main");
-    ERROR: goto ERROR;
+    ERROR: assert(0);
     }
   }
   }

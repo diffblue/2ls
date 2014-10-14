@@ -15,5 +15,5 @@ void main() {
   
   if(k >= 0 && k < i)
     if(y[k] == 0)
-      {ERROR: goto ERROR;}
+      {ERROR: assert(0);}
 }

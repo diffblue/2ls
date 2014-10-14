@@ -8,7 +8,7 @@ void err(void)
   {
   ERROR: 
 #line 13
-  goto ERROR;
+  assert(0);
 }
 }
 #line 16 "files/alias_of_return.c"

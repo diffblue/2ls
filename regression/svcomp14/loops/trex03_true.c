@@ -1,6 +1,6 @@
 void __VERIFIER_assert(int cond) {
   if (!(cond)) {
-    ERROR: goto ERROR;
+    ERROR: assert(0);
   }
   return;
 }
@@ -22,7 +22,7 @@ int main()
     c2=__VERIFIER_nondet_bool();
   }
 
-  __VERIFIER_assert(x1==0 || x2==0 || x3==0);
+assert(x1==0 || x2==0 || x3==0);
   return 0;
 }
 

@@ -8,7 +8,12 @@ struct mutex {
 #line 9 "files/mutex_lock_struct.c"
 void err(void) 
 { 
+
+  {
+  ERROR: 
+#line 10
   assert(0);
+}
 }
 #line 16 "files/mutex_lock_struct.c"
 void mutex_lock(struct mutex *a ) 

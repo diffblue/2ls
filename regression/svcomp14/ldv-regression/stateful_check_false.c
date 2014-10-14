@@ -3,7 +3,7 @@
 # 1 "<command-line>"
 # 1 "stateful_check.c"
 void __blast_assert(void) {
-ERROR: goto ERROR;
+ERROR: assert(0);
 }
 
 

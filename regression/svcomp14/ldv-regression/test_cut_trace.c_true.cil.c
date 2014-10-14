@@ -8,7 +8,7 @@ void __blast_assert(void)
   {
   ERROR: 
 #line 4
-  goto ERROR;
+  assert(0);
 }
 }
 #line 6 "files/test_cut_trace.c"

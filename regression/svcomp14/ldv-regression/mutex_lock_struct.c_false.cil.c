@@ -12,7 +12,7 @@ void err(void)
   {
   ERROR: 
 #line 10
-  goto ERROR;
+  assert(0);
 }
 }
 #line 16 "files/mutex_lock_struct.c"

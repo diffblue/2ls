@@ -15,7 +15,7 @@ int main(int argc, char **argv)
 		if (array[i] == ND)
 			return i;
 
-	goto ERROR;
+	assert(0);
 ERROR:
 	return 0;
 }

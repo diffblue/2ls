@@ -8,7 +8,12 @@ struct path_info {
 #line 2 "./assert.h"
 void __blast_assert(void) 
 { 
+
+  {
+  ERROR: 
+#line 4
   assert(0);
+}
 }
 #line 9 "files/test_address.c"
 void list_add(int *new ) 

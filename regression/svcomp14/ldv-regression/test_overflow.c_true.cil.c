@@ -14,7 +14,7 @@ void __blast_assert(void)
   {
   ERROR: 
 #line 4
-  goto ERROR;
+  assert(0);
 }
 }
 #line 7 "files/test_overflow.c"

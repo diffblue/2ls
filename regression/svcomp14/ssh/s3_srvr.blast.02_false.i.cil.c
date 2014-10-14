@@ -1583,7 +1583,7 @@ int ssl3_accept(SSL *s )
                                                                             switch_1_8673: /* CIL Label */ 
                                                                             ret = __VERIFIER_nondet_int();
                                                                             if (blastFlag == 3) {
-                                                                              goto ERROR;
+                                                                              assert(0);
                                                                             } else {
 
                                                                             }
@@ -1701,7 +1701,7 @@ int ssl3_accept(SSL *s )
   }
   return (ret);
   ERROR: 
-  goto ERROR;
+  assert(0);
 }
 }
 int ssl3_send_server_certificate(SSL *s ) 

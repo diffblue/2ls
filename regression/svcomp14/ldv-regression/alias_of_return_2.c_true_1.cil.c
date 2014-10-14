@@ -8,7 +8,7 @@ void err(void)
   {
   ERROR: 
 #line 14
-  goto ERROR;
+  assert(0);
 }
 }
 #line 16

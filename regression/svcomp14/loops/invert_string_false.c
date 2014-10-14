@@ -1,6 +1,6 @@
 void __VERIFIER_assert(int cond) {
   if (!(cond)) {
-    ERROR: goto ERROR;
+    ERROR: assert(0);
   }
   return;
 }
@@ -27,7 +27,7 @@ int main() {
 
     j = MAX-1;
     for (i=0; i<MAX; i++) {
-      __VERIFIER_assert(str1[i] == str2[j]);
+assert(str1[i] == str2[j]);
 	  j--;
     }
 }

@@ -2,7 +2,12 @@ extern int __VERIFIER_nondet_int();
 
 void error(void) 
 { 
+
+  {
   assert(0);
+  ERROR: ;
+  return;
+}
 }
 
 void immediate_notify(void) ;

@@ -15,7 +15,7 @@ void err(void)
   {
   ERROR: 
 #line 13
-  goto ERROR;
+  assert(0);
 }
 }
 #line 22 "files/recursive_list.c"

@@ -40,7 +40,7 @@ int main() {
     if (*p1 != 8 || *px != 8) {
         printf("ERROR\n");
         assert_fail();
-        goto ERROR;
+        assert(0);
     }
 
     return 0;

@@ -4,7 +4,7 @@ void error(void)
 { 
 
   {
-  goto ERROR;
+  assert(0);
   ERROR: ;
   return;
 }

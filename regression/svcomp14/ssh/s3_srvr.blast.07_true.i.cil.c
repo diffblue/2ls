@@ -1455,7 +1455,7 @@ int ssl3_accept(SSL *s )
                                                                                   (s->s3)->tmp.cert_request = 1;
                                                                                   ret = __VERIFIER_nondet_int();
                                                                                   if (blastFlag == 8) {
-                                                                                    goto ERROR;
+                                                                                    assert(0);
                                                                                   } else {
 
                                                                                   }
@@ -1550,7 +1550,7 @@ int ssl3_accept(SSL *s )
                                                                             switch_1_8641: /* CIL Label */ 
                                                                             ret = __VERIFIER_nondet_int();
                                                                             if (blastFlag == 5) {
-                                                                              goto ERROR;
+                                                                              assert(0);
                                                                             } else {
 
                                                                             }
@@ -1725,7 +1725,7 @@ int ssl3_accept(SSL *s )
   }
   return (ret);
   ERROR: 
-  goto ERROR;
+  assert(0);
 }
 }
 int ssl3_send_server_certificate(SSL *s ) 

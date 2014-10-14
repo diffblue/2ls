@@ -3,7 +3,12 @@
 
 void error(void) 
 { 
+
+  {
+  ERROR: ;
   assert(0);
+  return;
+}
 }
 int m_pc  =    0;
 int t1_pc  =    0;

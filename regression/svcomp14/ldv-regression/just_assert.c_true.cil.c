@@ -10,7 +10,7 @@ int main(void)
   if (0) {
     ERROR: 
 #line 5
-    goto ERROR;
+    assert(0);
   } else {
 
   }

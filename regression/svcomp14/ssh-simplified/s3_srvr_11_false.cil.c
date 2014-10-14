@@ -712,7 +712,7 @@ int ssl3_accept(int initial_state )
                                                                             ret = __VERIFIER_nondet_int();
 #line 541
                                                                             if (blastFlag == 4) {
-                                                                              goto ERROR;
+                                                                              assert(0);
                                                                             }
 #line 546
                                                                             if (ret <= 0) {
@@ -827,7 +827,7 @@ int ssl3_accept(int initial_state )
          if(__cil_tmp58 != 4294967294){
           if(tmp___7 != 1024){
            if(tmp___7 != 512){
-            goto ERROR;
+            assert(0);
            }
           }
          }

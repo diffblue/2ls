@@ -1,6 +1,6 @@
 void __VERIFIER_assert(int cond) {
   if (!(cond)) {
-    assert(0);
+    ERROR: assert(0);
   }
   return;
 }
@@ -18,5 +18,5 @@ int main() {
   SIZE=(__VERIFIER_nondet_uint()/8)+1;
   int a[SIZE];
   a[SIZE/2]=3;
-  __VERIFIER_assert(linear_search(a,SIZE,3));
+assert(linear_search(a,SIZE,3));
 }

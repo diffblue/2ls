@@ -10,7 +10,7 @@ void __VERIFIER_assert(int i)
   if (i == 0) {
     ERROR: 
 #line 8
-    goto ERROR;
+    assert(0);
   } else {
 
   }
@@ -46,7 +46,7 @@ void firstFunction(void)
 #line 36
   __cil_tmp1 = p >= 0;
 #line 36
-  __VERIFIER_assert(__cil_tmp1);
+assert(__cil_tmp1);
   }
 #line 37
   return;

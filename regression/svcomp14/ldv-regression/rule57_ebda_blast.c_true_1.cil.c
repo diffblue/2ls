@@ -28,7 +28,7 @@ void __blast_assert(void)
   {
   ERROR: 
 #line 4
-  goto ERROR;
+  assert(0);
 }
 }
 #line 32 "files/rule57_ebda_blast.c"

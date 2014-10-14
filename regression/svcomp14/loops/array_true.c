@@ -1,6 +1,6 @@
 void __VERIFIER_assert(int cond) {
   if (!(cond)) {
-    ERROR: goto ERROR;
+    ERROR: assert(0);
   }
   return;
 }
@@ -21,6 +21,6 @@ main()
           menor = array[j];                          
     }                       
     
-  __VERIFIER_assert(array[0]>=menor);   
+assert(array[0]>=menor);    
 }
 

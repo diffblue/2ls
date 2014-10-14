@@ -8,7 +8,7 @@ void err(void)
   {
   ERROR: 
 #line 11
-  goto ERROR;
+  assert(0);
 }
 }
 #line 13 "files/mutex_lock_int.c"

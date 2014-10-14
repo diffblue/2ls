@@ -27,7 +27,7 @@ int main()
     if (!check(ad1, i)) {
       printf("ERROR!\n");
       assert_fail();
-      goto ERROR;
+      assert(0);
     }
   }
 

@@ -713,7 +713,7 @@ int ssl3_accept(int initial_state )
                                                                                   } else {
 #line 540
                                                                                     if (blastFlag == 21) {
-                                                                                      goto ERROR;
+                                                                                      assert(0);
                                                                                     }
                                                                                   }
                                                                                 }
@@ -902,7 +902,7 @@ int ssl3_accept(int initial_state )
             if(__cil_tmp58 != 4294967294){
              if(blastFlag != 4){
               if(tmp___7 != 1024){
-                goto ERROR;
+                assert(0);
               }
              }
             }

@@ -1,6 +1,6 @@
 void __VERIFIER_assert(int cond) {
   if (!(cond)) {
-    ERROR: goto ERROR;
+    ERROR: assert(0);
   }
   return;
 }
@@ -23,7 +23,7 @@ int main(){
 
       len++;
    }
-   __VERIFIER_assert(len==5);
+assert(len==5);
    return 1;
 
    
