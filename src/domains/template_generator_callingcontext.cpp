@@ -69,12 +69,11 @@ void template_generator_callingcontextt::collect_variables_callingcontext(
   local_SSAt::var_sett cs_globals_in;
   if(forward)
   {
-    SSA.get_globals(n_it->location,cs_globals_in,false,false); //filter out return values
+    SSA.get_globals(n_it->location,cs_globals_in,true,false,false); //filter out return values
   }
   else
   {
-    local_SSAt::nodest::const_iterator nnext = n_it; nnext++;
-    SSA.get_globals(nnext->location,cs_globals_in,true,true); //with return values
+    SSA.get_globals(n_it->location,cs_globals_in,false,true,true); //with return values
   }
 
   for(local_SSAt::var_sett::iterator v_it = cs_globals_in.begin();

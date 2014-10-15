@@ -38,11 +38,30 @@ exprt ssa_inlinert::get_summary(
   //getting globals at call site
   local_SSAt::var_sett cs_globals_in, cs_globals_out; 
   goto_programt::const_targett loc = n_it->location;
-  if(forward) SSA.get_globals(loc,cs_globals_in);
-  else SSA.get_globals(loc,cs_globals_out);
-  assert(loc!=SSA.goto_function.body.instructions.end());
-  if(forward) SSA.get_globals(++loc,cs_globals_out);
-  else SSA.get_globals(++loc,cs_globals_in);
+  if(forward) 
+  {
+    SSA.get_globals(loc,cs_globals_in);
+    SSA.get_globals(loc,cs_globals_out,false);
+  }
+  else 
+  {
+    SSA.get_globals(loc,cs_globals_out);
+    SSA.get_globals(loc,cs_globals_in,false);
+  }
+
+#if 0
+  std::cout << "cs_globals_in: ";
+  for(summaryt::var_sett::const_iterator it = cs_globals_in.begin();
+      it != cs_globals_in.end(); it++)
+    std::cout << from_expr(SSA.ns,"",*it) << " ";
+  std::cout << std::endl;
+
+  std::cout << "cs_globals_out: ";
+  for(summaryt::var_sett::const_iterator it = cs_globals_out.begin();
+      it != cs_globals_out.end(); it++)
+    std::cout << from_expr(SSA.ns,"",*it) << " ";
+  std::cout << std::endl;
+#endif
 
   //equalities for arguments
   c.push_back(get_replace_params(summary.params,*f_it));
@@ -160,8 +179,7 @@ void ssa_inlinert::replace(local_SSAt &SSA,
 	local_SSAt::var_sett cs_globals_in, cs_globals_out; 
 	goto_programt::const_targett loc = n_it->location;
 	SSA.get_globals(loc,cs_globals_in);
-	assert(loc!=SSA.goto_function.body.instructions.end());
-	SSA.get_globals(++loc,cs_globals_out);
+	SSA.get_globals(loc,cs_globals_out,false);
 
         //replace
         replace(SSA,n_it,f_it,cs_globals_in,cs_globals_out,summary,
@@ -216,8 +234,7 @@ void ssa_inlinert::replace(local_SSAt &SSA,
 	  local_SSAt::var_sett cs_globals_in, cs_globals_out; 
 	  goto_programt::const_targett loc = n_it->location;
 	  SSA.get_globals(loc,cs_globals_in);
-	  assert(loc!=SSA.goto_function.body.instructions.end());
-	  SSA.get_globals(++loc,cs_globals_out);
+	  SSA.get_globals(loc,cs_globals_out,false);
 
 	  if(recursive)
 	  {

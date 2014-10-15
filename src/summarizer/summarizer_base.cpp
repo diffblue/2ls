@@ -175,7 +175,7 @@ exprt summarizer_baset::compute_calling_context(
   std::map<local_SSAt::nodet::function_callst::const_iterator, local_SSAt::var_sett>
     cs_globals_in;
   if(forward) SSA.get_globals(n_it->location,cs_globals_in[f_it]);
-  else SSA.get_globals((++n_it)->location,cs_globals_in[f_it]);
+  else SSA.get_globals(n_it->location,cs_globals_in[f_it],false);
 
   exprt cond = precondition;
   if(!forward) cond = and_exprt(cond,

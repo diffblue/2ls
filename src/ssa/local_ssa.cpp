@@ -98,12 +98,12 @@ void local_SSAt::get_entry_exit_vars()
 
   //get globals in 
   goto_programt::const_targett first = goto_function.body.instructions.begin();
-  get_globals(first,globals_in,false,false); //filters out #return_value
+  get_globals(first,globals_in,true,false,false); //filters out #return_value
 
   //get globals out (includes return value)
   goto_programt::const_targett 
     last = goto_function.body.instructions.end(); last--;
-  get_globals(last,globals_out,true,false);
+  get_globals(last,globals_out,true,true,false);
 }
 
 /*******************************************************************\
@@ -119,7 +119,7 @@ Function: local_SSAt::get_globals
 \*******************************************************************/
 
 void local_SSAt::get_globals(locationt loc, std::set<symbol_exprt> &globals, 
-			     bool with_own_returns, bool with_all_returns) const
+	     bool rhs_value, bool with_own_returns, bool with_all_returns) const
 {
   {
     const std::set<ssa_objectt> &ssa_globals = assignments.ssa_objects.globals;
@@ -143,7 +143,10 @@ void local_SSAt::get_globals(locationt loc, std::set<symbol_exprt> &globals,
            id2string(loc->function)+"#return_value")==std::string::npos)
 	 continue;
 
-      globals.insert(to_symbol_expr(read_rhs(it->get_expr(),loc)));
+      if(rhs_value) 
+        globals.insert(to_symbol_expr(read_rhs(it->get_expr(),loc)));
+      else
+        globals.insert(to_symbol_expr(read_lhs(it->get_expr(),loc)));
     }
   }
 }   
