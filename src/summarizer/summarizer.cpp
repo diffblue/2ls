@@ -269,8 +269,7 @@ void summarizert::inline_summaries(const function_namet &function_name,
       local_SSAt::var_sett cs_globals_in, cs_globals_out; 
       goto_programt::const_targett loc = n_it->location;
       SSA.get_globals(loc,cs_globals_in);
-      assert(loc!=SSA.goto_function.body.instructions.end());
-      SSA.get_globals(++loc,cs_globals_out);
+      SSA.get_globals(loc,cs_globals_out,false);
 
       //replace
       ssa_inliner.replace(SSA.nodes,n_it,f_it,cs_globals_in,cs_globals_out,summary);
@@ -350,8 +349,7 @@ bool summarizert::check_precondition(
       local_SSAt::var_sett cs_globals_in, cs_globals_out; 
       goto_programt::const_targett loc = n_it->location;
       SSA.get_globals(loc,cs_globals_in);
-      assert(loc!=SSA.goto_function.body.instructions.end());
-      SSA.get_globals(++loc,cs_globals_out);
+      SSA.get_globals(loc,cs_globals_out,false);
 
       status() << "Precondition trivially holds, replacing by summary." 
                    << eom;
@@ -424,8 +422,7 @@ bool summarizert::check_precondition(
     local_SSAt::var_sett cs_globals_in, cs_globals_out; 
     goto_programt::const_targett loc = n_it->location;
     SSA.get_globals(loc,cs_globals_in);
-    assert(loc!=SSA.goto_function.body.instructions.end());
-    SSA.get_globals(++loc,cs_globals_out);
+    SSA.get_globals(loc,cs_globals_out,false);
 
     status() << "Precondition holds, replacing by summary." << eom;
     ssa_inliner.replace(SSA.nodes,n_it,f_it,
@@ -482,7 +479,7 @@ void summarizert::compute_precondition(
   std::map<local_SSAt::nodet::function_callst::iterator, local_SSAt::var_sett>
     cs_globals_in;
   if(forward) SSA.get_globals(n_it->location,cs_globals_in[f_it]);
-  else SSA.get_globals((++n_it)->location,cs_globals_in[f_it]);
+  else SSA.get_globals(n_it->location,cs_globals_in[f_it],false);
 
   // analyze
   analyzer(SSA,preconditions[function_name],template_generator);

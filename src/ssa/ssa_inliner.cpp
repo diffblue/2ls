@@ -48,8 +48,7 @@ void ssa_inlinert::replace(local_SSAt &SSA,
 	local_SSAt::var_sett cs_globals_in, cs_globals_out; 
 	goto_programt::const_targett loc = n_it->location;
 	SSA.get_globals(loc,cs_globals_in);
-	assert(loc!=SSA.goto_function.body.instructions.end());
-	SSA.get_globals(++loc,cs_globals_out);
+	SSA.get_globals(loc,cs_globals_out,false);
 
         //replace
         replace(SSA.nodes,n_it,f_it,cs_globals_in,cs_globals_out,summary);
@@ -103,8 +102,7 @@ void ssa_inlinert::replace(local_SSAt &SSA,
 	  local_SSAt::var_sett cs_globals_in, cs_globals_out; 
 	  goto_programt::const_targett loc = n_it->location;
 	  SSA.get_globals(loc,cs_globals_in);
-	  assert(loc!=SSA.goto_function.body.instructions.end());
-	  SSA.get_globals(++loc,cs_globals_out);
+	  SSA.get_globals(loc,cs_globals_out,false);
 
 	  if(recursive)
 	  {
