@@ -850,6 +850,7 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
         // lead to unsoundness (a bug may not be found if the assertion can fail in iterations
         //other than the last
 
+#if 0
         exprt guard_select = SSA.name(SSA.guard_symbol(),
             local_SSAt::LOOP_SELECT, current_loop.body_nodes.begin()->location);
         rename(guard_select,suffix,i,current_loop);
@@ -858,7 +859,10 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
         {
           new_node.constraints.push_back(implies_exprt(guard_select,*ait));
         }
-      //new_node.constraints = new_node.assertions;
+#endif
+      //for linear k-induction (k increases only by 1, you do not need to check if
+        //you are in the step case or not, since for k-1 even base case must have hold
+        new_node.constraints.insert(new_node.constraints.end(),new_node.assertions.begin(),new_node.assertions.end());
       new_node.assertions.clear();
       }
       new_nodes.push_back(new_node);
