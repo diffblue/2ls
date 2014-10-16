@@ -74,6 +74,7 @@ property_checkert::resultt summary_checkert::operator()(
     for(unsigned unwind = 0; unwind<=max_unwind; unwind++)
     {
       status() << "Unwinding (k=" << unwind << ")" << messaget::eom;
+	std::cout << "Current unwinding is " << unwind << std::endl;
       if(unwind>0) 
       {
         summary_db.clear();
