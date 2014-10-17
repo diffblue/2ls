@@ -218,6 +218,7 @@ void summarizer_parseoptionst::get_command_line_options(optionst &options)
   {
     options.set_option("incremental-bmc", true);
     options.set_option("inline", true);
+    options.set_option("havoc", true);
     if(options.get_unsigned_int_option("unwind")==0)
       options.set_option("unwind",UINT_MAX);
   }
