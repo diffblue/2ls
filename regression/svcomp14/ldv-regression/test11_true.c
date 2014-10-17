@@ -4,8 +4,10 @@ void assert_fail(void);
 int main() {
         int a, b, c;
         int *pa, *pb, *pc = &c;
+
+	//__CPROVER_assume(pa!=0);
         if (pc == 0 ||
-            pa == pb && *pa != *pb) {
+               pa == pb && *pa != *pb) {
                 printf("ERROR\n");
                 assert_fail();
                 assert(0);
@@ -19,7 +21,4 @@ int main() {
         }
 
         return 0;
-
-        ERROR:
-        return 1;
 }

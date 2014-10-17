@@ -2,7 +2,7 @@
 
 Module: SSA Unwinder
 
-Author: Peter Schrammel
+Author: Saurabh Joshi
 
 \*******************************************************************/
 
@@ -13,24 +13,6 @@ Author: Peter Schrammel
 
 #include "../ssa/local_ssa.h"
 #include "../summarizer/ssa_db.h"
-#if 0
-class ssa_unwindert : public messaget
-{
- public:
-  ssa_unwindert() {}
-
-  void unwind(local_SSAt &SSA, unsigned unwind);
-
- protected:
-  void commit_nodes(local_SSAt::nodest &nodes,
-                    local_SSAt::nodest::iterator n_pos);
-  local_SSAt::nodest new_nodes;
-
-  void rename(exprt &expr, unsigned index);
-  void rename(local_SSAt::nodet &node, unsigned index);
-
-};
-#else
 
 class ssa_local_unwindert : public messaget
 {
@@ -128,7 +110,7 @@ public:
 
   ssa_unwindert(ssa_dbt& _db);
 
-  void init(bool kinduction);
+  void init(bool kinduction, bool incrementalbmc);
 
   void init_localunwinders();
 
@@ -145,6 +127,5 @@ protected:
   unwinder_mapt unwinder_map;
 
 };
-#endif
 
 #endif

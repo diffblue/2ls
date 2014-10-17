@@ -45,7 +45,7 @@ class optionst;
   "(preconditions)(sufficient)" \
   "(show-locs)(show-vcc)(show-properties)(show-trace)(show-fixed-points)(show-stats)" \
   "(show-goto-functions)(show-guards)(show-defs)(show-ssa)(show-assignments)" \
-  "(property):(all-properties)(k-induction)" \
+  "(property):(all-properties)(k-induction)(incremental-bmc)" \
   "(no-simplify)(no-fixed-point)" \
   "(no-spurious-check)" \
   "(no-unwinding-assertions)(no-propagation)"

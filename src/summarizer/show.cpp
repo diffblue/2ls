@@ -288,7 +288,7 @@ void show_fixed_points(
 
 /*******************************************************************\
 
-Function: show_trace
+Function: show_error_trace
 
   Inputs:
 
@@ -303,11 +303,11 @@ void print_symbols(const local_SSAt &SSA,
 		std::ostream &out,
 	        const exprt &expr)
 {
-  if(expr.id()==ID_symbol)
+//  if(expr.id()==ID_symbol)
   {
     out << from_expr(SSA.ns, "",expr) << " == " << 
       from_expr(SSA.ns, "", solver.get(expr)) << "\n";
-    return;
+    //  return;
   }
   for(exprt::operandst::const_iterator it = expr.operands().begin();
       it != expr.operands().end(); it++)

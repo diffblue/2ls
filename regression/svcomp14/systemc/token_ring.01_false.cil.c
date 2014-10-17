@@ -57,7 +57,7 @@ int tmp_var ;
     M_WAIT: ;
     if (token != local + 1) {
       {
-      error();
+      assert(0);
       }
     } else {
        if(tmp_var <= 5){
@@ -69,7 +69,7 @@ int tmp_var ;
         if(tmp_var <= 5){
            if(tmp_var >= 5){
              if(tmp_var == 5){
-             error();
+             assert(0);
              }
           }
         }

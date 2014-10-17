@@ -48,23 +48,7 @@ property_checkert::resultt summary_checkert::operator()(
 
   SSA_functions(goto_model,ns);
 
-  if(!options.get_bool_option("k-induction"))
-  {  
-    if(!options.get_bool_option("havoc")) 
-      summarize(goto_model,!preconditions,options.get_bool_option("sufficient"));
-
-    if(preconditions) 
-    {
-      report_preconditions();
-      return property_checkert::UNKNOWN;
-    }
-
-    property_checkert::resultt result =  check_properties(); 
-    report_statistics();
-    if(result==property_checkert::UNKNOWN) result = property_checkert::FAIL;
-    return result;
-  }
-  else //k-induction
+  if(options.get_bool_option("k-induction"))
   {
     property_checkert::resultt result = property_checkert::UNKNOWN;
     unsigned max_unwind = options.get_unsigned_int_option("unwind");
@@ -104,6 +88,57 @@ property_checkert::resultt summary_checkert::operator()(
     return result;
   }
   //TODO (later): done
+
+  if(options.get_bool_option("incremental-bmc"))
+  {
+    property_checkert::resultt result = property_checkert::UNKNOWN;
+    unsigned max_unwind = options.get_unsigned_int_option("unwind");
+
+    for(unsigned unwind = 0; unwind<=max_unwind; unwind++)
+    {
+      status() << "Unwinding (k=" << unwind << ")" << messaget::eom;
+	std::cout << "Current unwinding is " << unwind << std::endl;
+      if(unwind>0) 
+      {
+        summary_db.clear();
+        ssa_unwinder.unwind_all(unwind+1);
+      }
+      result =  check_properties(); 
+      report_statistics();
+      if(result == property_checkert::PASS) 
+      {
+        status() << "incremental BMC proof found after " << unwind << " unwinding(s)" << messaget::eom;
+        break;
+      }
+      else if(result == property_checkert::FAIL) 
+      {
+        status() << "incremental BMC counterexample found after " << unwind << " unwinding(s)" << messaget::eom;
+        break;
+      }
+      else if(unwind==0 && max_unwind>0) //TODO: unwind==2 => 1 (additional) unwinding
+      {
+        ssa_unwinder.init_localunwinders();
+      }
+    }
+    return result;
+  }
+
+  // neither k-induction nor bmc
+  {  
+    if(!options.get_bool_option("havoc")) 
+      summarize(goto_model,!preconditions,options.get_bool_option("sufficient"));
+
+    if(preconditions) 
+    {
+      report_preconditions();
+      return property_checkert::UNKNOWN;
+    }
+
+    property_checkert::resultt result =  check_properties(); 
+    report_statistics();
+    if(result==property_checkert::UNKNOWN) result = property_checkert::FAIL;
+    return result;
+  }
 }
 
 /*******************************************************************\
@@ -140,10 +175,12 @@ void summary_checkert::SSA_functions(const goto_modelt &goto_model,  const names
     SSA.output(debug()); debug() << eom;
   }
 
-  ssa_unwinder.init(options.get_bool_option("k-induction"));
+  ssa_unwinder.init(options.get_bool_option("k-induction"),
+		    options.get_bool_option("incremental-bmc"));
 
   unsigned unwind = options.get_unsigned_int_option("unwind");
-  if(!options.get_bool_option("k-induction") && unwind>0)
+  if(!options.get_bool_option("k-induction") && 
+     !options.get_bool_option("incremental-bmc") && unwind>0)
   {
     status() << "Unwinding" << messaget::eom;
 

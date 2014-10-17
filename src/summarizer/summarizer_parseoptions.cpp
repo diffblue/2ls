@@ -208,6 +208,16 @@ void summarizer_parseoptionst::get_command_line_options(optionst &options)
   if(cmdline.isset("k-induction"))
   {
     options.set_option("k-induction", true);
+    options.set_option("inline", true);
+    if(options.get_unsigned_int_option("unwind")==0)
+      options.set_option("unwind",UINT_MAX);
+  }
+
+ // do incremental bmc
+  if(cmdline.isset("incremental-bmc"))
+  {
+    options.set_option("incremental-bmc", true);
+    options.set_option("inline", true);
     if(options.get_unsigned_int_option("unwind")==0)
       options.set_option("unwind",UINT_MAX);
   }
