@@ -1257,6 +1257,7 @@ void summarizer_parseoptionst::help()
     "Backend options:\n"
     " --k-induction                use k-induction\n"
     " --no-spurious-check          do not check spuriousness of failed assertions\n"
+    " --incremental-bmc            use incremental-bmc\n"
     " --preconditions              compute preconditions\n"
     " --sufficient                 sufficient preconditions (default: necessary)\n"
     " --context-sensitive          context-sensitive analysis from entry point\n"
