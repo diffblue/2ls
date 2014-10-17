@@ -46,8 +46,9 @@ irep_idt ssa_local_unwindert::get_base_name(const irep_idt& id)
  *
  *
  *****************************************************************************/
-ssa_local_unwindert::ssa_local_unwindert(local_SSAt& _SSA,bool k_induct): SSA(_SSA),
-    current_unwinding(0),is_initialized(false),is_kinduction(k_induct){ }
+ssa_local_unwindert::ssa_local_unwindert(local_SSAt& _SSA,bool k_induct,
+    bool _ibmc): SSA(_SSA),
+    current_unwinding(0),is_initialized(false),is_kinduction(k_induct),is_ibmc(_ibmc){ }
 /*******************************************************************
  Struct: compare_node_iterators
 
@@ -693,6 +694,29 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
         new_node.constraints.insert(new_node.constraints.end(),new_node.assertions.begin(),new_node.assertions.end());
       new_node.assertions.clear();
       }
+      else if(is_ibmc &&(
+               (current_loop.is_dowhile && i>0)
+               || (!current_loop.is_dowhile && i>1)))
+           { //convert all assert to assumes for incremental-bmc
+             //except the bottom most iteration
+
+             //when you are in base case (guard_select is false)
+        //for k-1 you already have proved that there is no counter-example
+        //with k-1 bound. So converting assertion to assume just helps the solver
+
+
+             exprt guard_select = SSA.name(SSA.guard_symbol(),
+                 local_SSAt::LOOP_SELECT, current_loop.body_nodes.begin()->location);
+             rename(guard_select,suffix,i,current_loop);
+             for(local_SSAt::nodet::assertionst::iterator ait=new_node.assertions.begin();
+                 ait!=new_node.assertions.end();ait++)
+             {
+               new_node.constraints.push_back(implies_exprt(not_exprt(guard_select),*ait));
+             }
+
+
+           new_node.assertions.clear();
+           }
       new_nodes.push_back(new_node);
     }
     if(i==0)
@@ -1218,13 +1242,13 @@ void ssa_unwindert::output(std::ostream & out) {
  *           unwind funcitions are called.
  *
  *****************************************************************************/
-void ssa_unwindert::init(bool kinduction, bool incrementalbmc)
+void ssa_unwindert::init(bool kinduction, bool _ibmc)
 {
   ssa_dbt::functionst& funcs = ssa_db.functions();
   for (ssa_dbt::functionst::iterator it = funcs.begin(); it != funcs.end();
        it++) {
     unwinder_map.insert(
-      unwinder_pairt(it->first, ssa_local_unwindert((*(it->second)),kinduction)));
+      unwinder_pairt(it->first, ssa_local_unwindert((*(it->second)),kinduction,_ibmc)));
   }
 
 

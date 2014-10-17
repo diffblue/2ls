@@ -88,6 +88,7 @@ class ssa_local_unwindert : public messaget
   bool is_initialized;
 public :
   bool is_kinduction;
+  bool is_ibmc;
   void init();
   void output(std::ostream& out)
   {
@@ -95,7 +96,7 @@ public :
     SSA.output(out);
   }
   //std::list<symbol_exprt> enabling_exprs;
-ssa_local_unwindert(local_SSAt& _SSA, bool k_induct);
+ssa_local_unwindert(local_SSAt& _SSA, bool k_induct, bool _ibmc);
   void unwind(const irep_idt& fname,unsigned int k);
 
   void unwinder_rename(symbol_exprt &var,const local_SSAt::nodet &node, bool pre) const;
@@ -110,7 +111,7 @@ public:
 
   ssa_unwindert(ssa_dbt& _db);
 
-  void init(bool kinduction, bool incrementalbmc);
+  void init(bool kinduction, bool _ibmc);
 
   void init_localunwinders();
 
