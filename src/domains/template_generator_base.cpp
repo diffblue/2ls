@@ -13,6 +13,7 @@ Author: Peter Schrammel
 #include <util/find_symbols.h>
 #include <util/arith_tools.h>
 #include <util/simplify_expr.h>
+#include <util/prefix.h>
 #include <util/mp_arith.h>
 
 #ifdef DEBUG
@@ -168,8 +169,9 @@ void template_generator_baset::filter_template_domain()
       v!=new_var_specs.end(); v++)
   {
     const domaint::vart &s = v->var;
-    if(s.type().id()==ID_unsignedbv || s.type().id()==ID_signedbv ||
-       s.type().id()==ID_floatbv)
+    if((s.type().id()==ID_unsignedbv || s.type().id()==ID_signedbv ||
+	s.type().id()==ID_floatbv))
+      //       !has_prefix(s.get_identifier(),"c::__CPROVER_"))
     {
       var_specs.push_back(*v);
     }

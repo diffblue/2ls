@@ -45,8 +45,9 @@ DELTA_OBJ+=\
       ../domains/equality_domain$(OBJEXT) \
       ../domains/domain$(OBJEXT) \
       ../domains/util$(OBJEXT) \
-      ../domains/strategy_solver_equality$(OBJEXT) \
+      ../domains/incremental_solver$(OBJEXT) \
       ../domains/strategy_solver_base$(OBJEXT) \
+      ../domains/strategy_solver_equality$(OBJEXT) \
       ../domains/strategy_solver_enumeration$(OBJEXT) \
       ../domains/solver_enumeration$(OBJEXT) \
       ../domains/strategy_solver_binsearch$(OBJEXT) \
