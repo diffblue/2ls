@@ -7,14 +7,14 @@ void __VERIFIER_assert(int cond) {
 char __VERIFIER_nondet_char();
 
 int main() {
-    unsigned int max = 1;
-    char str1[max], str2[max];
+  unsigned int max = 1;
+  char str1[max], str2[max];
     int i, j;
 
     for (i=0; i<max; i++) {
-      str1[0]=1;//__VERIFIER_nondet_char();
+      str1[i] = __VERIFIER_nondet_char();
     }
-    // str1[max-1]= '\0';
+    str1[max-1]= '\0';
 
     j = 0;
    
@@ -25,7 +25,7 @@ int main() {
 
     j = max-1;
     for (i=0; i<max; i++) {
-assert(str1[i] == str2[j]);
+      assert(str1[i] == str2[j]);
       j--;
     }   
 }

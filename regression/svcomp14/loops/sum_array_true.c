@@ -23,6 +23,6 @@ int main()
      C[i]=A[i]+B[i];
   
   for(i=0;i<M;i++)
-assert(C[i]==A[i]+B[i]);
+  assert(C[i]==A[i]+B[i]);
 }
 

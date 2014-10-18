@@ -3,7 +3,7 @@ include ../config.inc
 SRC = summarizer_main.cpp summarizer_parseoptions.cpp \
       show.cpp summary_checker.cpp  \
       summary_db.cpp summarizer.cpp summary.cpp ssa_db.cpp \
-      array_abstraction.cpp
+      array_abstraction.cpp preprocessing_util.cpp
 
 OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       $(CBMC)/src/linking/linking$(LIBEXT) \
@@ -20,6 +20,7 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
 
 
 DELTA_OBJ+=\
+      $(CBMC)/src/goto-instrument/unwind$(OBJEXT) \
       ../ssa/local_ssa$(OBJEXT) \
       ../ssa/malloc_ssa$(OBJEXT) \
       ../ssa/ssa_domain$(OBJEXT) \

@@ -12,6 +12,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/ui_message.h>
 #include <util/parseoptions.h>
 
+#include <util/replace_symbol.h>
+
 #include <langapi/language_ui.h>
 
 class goto_modelt;
@@ -118,7 +120,12 @@ protected:
             
   void eval_verbosity();
 
+  // diverse preprocessing
   void inline_main(goto_modelt &goto_model);
+  void propagate_constants(goto_modelt &goto_model);
+  void goto_unwind(goto_modelt &goto_model, unsigned k);
+  void replace_types_rec(const replace_symbolt &replace_const, exprt &expr);
+  exprt evaluate_casts_in_constants(const exprt &expr, const typet& parent_type);
 };
 
 #endif

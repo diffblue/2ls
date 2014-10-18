@@ -1,6 +1,6 @@
-THOROUGH
+CORE
 main.c
---zones
+--unwind 1
 ^EXIT=0$
 ^SIGNAL=0$
 ^VERIFICATION SUCCESSFUL$

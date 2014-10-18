@@ -47,6 +47,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "../ssa/split_loopheads.h"
 #include "show.h"
 
+#define UNWIND_GOTO_INTO_LOOP 1
+#define PROPAGATE_CONSTANTS 1
+
 /*******************************************************************\
 
 Function: summarizer_parseoptionst::summarizer_parseoptionst
@@ -887,6 +890,10 @@ bool summarizer_parseoptionst::process_goto_program(
       return true;
     }
 
+#if UNWIND_GOTO_INTO_LOOP
+    goto_unwind(goto_model,2);
+#endif
+
     // now do full inlining, if requested
     if(cmdline.isset("inline"))
     {
@@ -899,6 +906,10 @@ bool summarizer_parseoptionst::process_goto_program(
     {
       inline_main(goto_model); 
     }
+
+#if UNWIND_GOTO_INTO_LOOP
+    propagate_constants(goto_model);
+#endif
 
     // do array abstraction
     if(cmdline.isset("array-abstraction"))
@@ -952,50 +963,6 @@ bool summarizer_parseoptionst::process_goto_program(
   }
   
   return false;
-}
-
-/*******************************************************************\
-
-Function: summarizer_parseoptionst::inline_main
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void summarizer_parseoptionst::inline_main(goto_modelt &goto_model)
-{
-  goto_programt &main = goto_model.goto_functions.function_map[ID_main].body;
-  goto_programt::targett target = main.instructions.begin();
-  while(target!=main.instructions.end())
-  {
-    if(target->is_function_call())
-    {
-      const code_function_callt &code_function_call=
-        to_code_function_call(target->code);
-      irep_idt fname = code_function_call.function().get(ID_identifier); 
-
-      debug() << "Inlining " << fname << eom;
-
-      goto_programt tmp;
-      tmp.copy_from(goto_model.goto_functions.function_map[fname].body);
-      (--tmp.instructions.end())->make_skip();
-      goto_model.goto_functions.function_map.erase(fname);
-    
-      goto_programt::targett next_target(target);
-      target->make_skip();
-      next_target++;
-      main.instructions.splice(next_target, tmp.instructions);
-      target=next_target;
-    }
-    else target++;
-  }
-
-  goto_model.goto_functions.update();
-  goto_model.goto_functions.compute_loop_numbers();
 }
 
 /*******************************************************************\
