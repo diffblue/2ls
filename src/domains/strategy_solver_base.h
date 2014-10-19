@@ -8,6 +8,7 @@
 
 #include "domain.h"
 #include "util.h"
+#include "../domains/incremental_solver.h"
 
 
 //#define DEBUG_FORMULA
@@ -21,61 +22,25 @@ class strategy_solver_baset : public messaget
   typedef domaint::valuet invariantt;
 
   explicit strategy_solver_baset(
-    const constraintst &program,
-    bv_pointerst &_solver, 
+    incremental_solvert &_solver, 
     const namespacet &_ns) :
     solver(_solver), 
     ns(_ns),
-    activation_literal_counter(0),
     solver_calls(0)
-  { 
-    // adding program constraints to solver db
-    for(constraintst::const_iterator it = program.begin(); 
-        it != program.end(); it++)
-    {
-
-#ifndef DEBUG_FORMULA
-#if 0
-      std::cout << "program: " << from_expr(ns,"",*it) << std::endl;
-#endif
-      solver << *it;
-#else
-      literalt l = solver.convert(*it);
-      if(!l.is_constant()) 
-      {
-	std::cout << "literal " << l << ": " << from_expr(ns,"",*it) 
-          << std::endl;
-        formula.push_back(l);
-      }
-#endif
-    }
-}
+  {}
 
   virtual bool iterate(invariantt &inv) { assert(false); }
 
   unsigned get_number_of_solver_calls() { return solver_calls; }
 
  protected: 
-  bv_pointerst &solver;
-
-  inline decision_proceduret::resultt solve() {
-    solver_calls++;
-    return solver();    
-  }
+  incremental_solvert &solver;
 
   const namespacet &ns;
 
   //handles on values to retrieve from model
   bvt strategy_cond_literals;
   exprt::operandst strategy_value_exprs;
-
-  //context assumption literals
-  bvt activation_literals;
-  unsigned activation_literal_counter;
-  literalt new_context();
-  void pop_context();
-  void make_context_permanent();
-  bvt formula;
 
   //statistics
   unsigned solver_calls;

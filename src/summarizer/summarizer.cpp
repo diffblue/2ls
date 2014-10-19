@@ -165,6 +165,10 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
     debug() << out.str() << eom;
   }
 
+  // solver
+  incremental_solvert &solver = ssa_db.get_solver(function_name);
+  solver.set_message_handler(get_message_handler());
+
   //analyze
   ssa_analyzert analyzer;
   analyzer.set_message_handler(get_message_handler());
@@ -173,7 +177,7 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
   template_generator.set_message_handler(get_message_handler());
   template_generator(SSA,forward);
 
-  analyzer(SSA,preconditions[function_name],template_generator);
+  analyzer(solver,SSA,preconditions[function_name],template_generator);
 
   // create summary
   summaryt summary;
@@ -210,7 +214,7 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
   summary_db.put(function_name,summary);
 
   //statistics
-  solver_instances++;
+  //  solver_instances++;
   solver_calls += analyzer.get_number_of_solver_calls();
 
 }
@@ -398,13 +402,14 @@ bool summarizert::check_precondition(
   if(precondition_holds) return true;
 
   // precondition check
-  satcheckt satcheck;
-  bv_pointerst solver(SSA.ns, satcheck);
-  
-  satcheck.set_message_handler(get_message_handler());
+  incremental_solvert &solver = ssa_db.get_solver(function_name);
   solver.set_message_handler(get_message_handler());
     
   solver << SSA;
+  SSA.mark_nodes();
+
+  solver.new_context();
+  solver << SSA.get_enabling_exprs();
   solver << n_it->assertions.front();
 
   switch(solver())
@@ -436,9 +441,7 @@ bool summarizert::check_precondition(
   default: assert(false); break;
   }
 
-  //statistics
-  solver_instances++;
-  solver_calls++;
+  solver.pop_context();
 
   return precondition_holds;
 }
@@ -468,6 +471,10 @@ void summarizert::compute_precondition(
 
   status() << "Computing calling context for function " << fname << eom;
 
+  // solver
+  incremental_solvert &solver = ssa_db.get_solver(function_name);
+  solver.set_message_handler(get_message_handler());
+
   ssa_analyzert analyzer;
   analyzer.set_message_handler(get_message_handler());
 
@@ -482,7 +489,7 @@ void summarizert::compute_precondition(
   else SSA.get_globals(n_it->location,cs_globals_in[f_it],false);
 
   // analyze
-  analyzer(SSA,preconditions[function_name],template_generator);
+  analyzer(solver,SSA,preconditions[function_name],template_generator);
 
   // set preconditions
   local_SSAt &fSSA = ssa_db.get(fname); 
@@ -503,7 +510,7 @@ void summarizert::compute_precondition(
     preconditions[fname] = or_exprt(preconditions[fname],precondition);
 
   //statistics
-  solver_instances++;
+  //  solver_instances++;
   solver_calls += analyzer.get_number_of_solver_calls();
 }
 

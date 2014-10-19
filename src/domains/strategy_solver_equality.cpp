@@ -11,17 +11,16 @@ bool strategy_solver_equalityt::iterate(invariantt &_inv)
   worklistt::iterator e_it = todo_equs.begin();
   if(e_it!=todo_equs.end()) //check equalities
   {
-    literalt activation_literal = new_context();
+    solver.new_context();
 
     exprt pre_expr = equality_domain.get_pre_equ_constraint(*e_it);
 
-    solver << or_exprt(pre_expr,literal_exprt(activation_literal));
+    solver << pre_expr;
     
     exprt post_expr = equality_domain.get_post_not_equ_constraint(*e_it);
-    literalt cond_literal = solver.convert(post_expr);
+    literalt cond_literal = solver.solver.convert(post_expr);
 
-    solver << or_exprt(literal_exprt(cond_literal),
-                       literal_exprt(activation_literal));
+    solver << literal_exprt(cond_literal);
 
 #if 0
     debug() << "Checking equality " << eom;
@@ -29,12 +28,14 @@ bool strategy_solver_equalityt::iterate(invariantt &_inv)
     debug() << "Post: " << from_expr(ns, "", post_expr) << eom;
 #endif
 
-    if(solve() == decision_proceduret::D_SATISFIABLE) 
+    if(solver() == decision_proceduret::D_SATISFIABLE) 
     { 
 #if 0
       debug() << "SAT" << eom;
 #endif
       todo_disequs.insert(*e_it);
+
+      solver.pop_context();
     }
     else  //equality holds
     {
@@ -43,6 +44,9 @@ bool strategy_solver_equalityt::iterate(invariantt &_inv)
 #endif
       
       equality_domain.set_equal(*e_it,inv);
+
+      solver.pop_context();
+
       solver << pre_expr; //make permanent
 
       //due to transitivity, we would like to recheck equalities that did not hold
@@ -50,7 +54,6 @@ bool strategy_solver_equalityt::iterate(invariantt &_inv)
       todo_disequs.clear();
     }
 
-    pop_context();
 
     todo_equs.erase(e_it);
 
@@ -73,17 +76,16 @@ bool strategy_solver_equalityt::iterate(invariantt &_inv)
     e_it = todo_disequs.begin();
     if(e_it==todo_disequs.end()) return false; //done
 
-    literalt activation_literal = new_context();
+    solver.new_context();
 
     exprt pre_expr = equality_domain.get_pre_disequ_constraint(*e_it);
 
-    solver << or_exprt(pre_expr,literal_exprt(activation_literal));
+    solver << pre_expr;
     
     exprt post_expr = equality_domain.get_post_not_disequ_constraint(*e_it);
-    literalt cond_literal = solver.convert(post_expr);
+    literalt cond_literal = solver.solver.convert(post_expr);
 
-    solver << or_exprt(literal_exprt(cond_literal),
-                       literal_exprt(activation_literal));
+    solver << literal_exprt(cond_literal);
 
 #if 0
     debug() << "Checking disequality " << eom;
@@ -91,7 +93,7 @@ bool strategy_solver_equalityt::iterate(invariantt &_inv)
     debug() << "Post: " << from_expr(ns, "", post_expr) << eom;
 #endif
 
-    if(solve() == decision_proceduret::D_SATISFIABLE) 
+    if(solver() == decision_proceduret::D_SATISFIABLE) 
     { 
       debug() << "SAT" << eom;
     }
@@ -104,7 +106,7 @@ bool strategy_solver_equalityt::iterate(invariantt &_inv)
       solver << pre_expr; //make permanent
     }
 
-    pop_context();
+    solver.pop_context();
 
     todo_disequs.erase(e_it);
   }

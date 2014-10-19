@@ -14,6 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/goto_functions.h>
 #include <analyses/natural_loops.h>
 
+#include "../domains/incremental_solver.h"
 #include "ssa_domain.h"
 #include "guard_map.h"
 #include "ssa_object.h"
@@ -47,12 +48,16 @@ public:
     inline nodet(
       locationt _location,
       std::list<nodet>::iterator _loophead) 
-      : enabling_expr(true_exprt()),
+      : 
+        enabling_expr(true_exprt()),
+	marked(false),
         location(_location), 
         loophead(_loophead)
       { }
 
     exprt enabling_expr; //for incremental unwinding
+
+    bool marked; //for incremental solving
 
     typedef std::vector<equal_exprt> equalitiest;
     equalitiest equalities;
@@ -84,6 +89,12 @@ public:
   // all the SSA nodes  
   typedef std::list<nodet> nodest;
   nodest nodes;
+
+  void mark_nodes()
+  {
+      for(nodest::iterator n_it=nodes.begin();
+	  n_it!=nodes.end(); n_it++) n_it->marked = true;
+  }
 
   // for incremental unwinding
   std::list<symbol_exprt> enabling_exprs;
@@ -168,5 +179,8 @@ symbol_exprt return_symbol(typet type, local_SSAt::locationt loc);
 
 class decision_proceduret & operator <<
   (class decision_proceduret &dest, const local_SSAt &src);
+
+class incremental_solvert & operator <<
+  (class incremental_solvert &dest, const local_SSAt &src);
 
 #endif

@@ -7,10 +7,11 @@
 class strategy_solver_binsearcht : public strategy_solver_baset 
 {
  public:
-  explicit strategy_solver_binsearcht(const constraintst &program,
+  explicit strategy_solver_binsearcht(
     tpolyhedra_domaint &_tpolyhedra_domain,
-    bv_pointerst &_solver, const namespacet &_ns) : 
-  strategy_solver_baset(program, _solver, _ns),
+    incremental_solvert &_solver, 
+    const namespacet &_ns) : 
+  strategy_solver_baset(_solver, _ns),
   tpolyhedra_domain(_tpolyhedra_domain) {}
 
   virtual bool iterate(invariantt &inv);

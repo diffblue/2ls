@@ -1,7 +1,7 @@
 include ../config.inc
 
 SRC = summarizer_main.cpp summarizer_parseoptions.cpp \
-      show.cpp summary_checker.cpp  \
+      show.cpp summary_checker.cpp cover_goals_ext.cpp \
       summary_db.cpp summarizer.cpp summary.cpp ssa_db.cpp \
       array_abstraction.cpp preprocessing_util.cpp
 
@@ -49,15 +49,15 @@ DELTA_OBJ+=\
       ../domains/strategy_solver_base$(OBJEXT) \
       ../domains/strategy_solver_equality$(OBJEXT) \
       ../domains/strategy_solver_enumeration$(OBJEXT) \
-      ../domains/solver_enumeration$(OBJEXT) \
       ../domains/strategy_solver_binsearch$(OBJEXT) \
-      ../domains/strategy_solver_binsearch2$(OBJEXT) \
       ../domains/template_generator_base$(OBJEXT) \
       ../domains/template_generator_summary$(OBJEXT) \
       ../domains/template_generator_callingcontext$(OBJEXT) \
       ../domains/ssa_analyzer$(OBJEXT) \
       ../domains/predicate$(OBJEXT)
 #      ../domains/strategy_solver_binsearch3$(OBJEXT) 
+#      ../domains/strategy_solver_binsearch2$(OBJEXT) 
+#      ../domains/solver_enumeration$(OBJEXT) 
 
 #      ../domains/strategy_solver_binsearch3$(OBJEXT) 
 

@@ -1276,6 +1276,8 @@ void local_SSAt::nodet::output(
 {
   if(!enabling_expr.is_true()) 
     out << "(enable) " << from_expr(ns, "", enabling_expr) << "\n";
+  if(!marked) 
+    out << "(not marked)" << "\n";
   for(equalitiest::const_iterator
       e_it=equalities.begin();
       e_it!=equalities.end();
@@ -1367,6 +1369,7 @@ std::list<exprt> & operator << (
   for(local_SSAt::nodest::const_iterator n_it = src.nodes.begin();
     n_it != src.nodes.end(); n_it++)
   {
+    if(n_it->marked) continue;
     for(local_SSAt::nodet::equalitiest::const_iterator
         e_it=n_it->equalities.begin();
         e_it!=n_it->equalities.end();
@@ -1412,6 +1415,53 @@ decision_proceduret & operator << (
   for(local_SSAt::nodest::const_iterator n_it = src.nodes.begin();
     n_it != src.nodes.end(); n_it++)
   {
+    if(n_it->marked) continue;
+    for(local_SSAt::nodet::equalitiest::const_iterator
+        e_it=n_it->equalities.begin();
+        e_it!=n_it->equalities.end();
+        e_it++)
+    {
+      if(!n_it->enabling_expr.is_true()) 
+	dest << implies_exprt(n_it->enabling_expr,*e_it);
+      else
+        dest << *e_it;
+    }
+
+    for(local_SSAt::nodet::constraintst::const_iterator
+        c_it=n_it->constraints.begin();
+        c_it!=n_it->constraints.end();
+        c_it++)
+    {
+      if(!n_it->enabling_expr.is_true()) 
+	dest << implies_exprt(n_it->enabling_expr,*c_it);
+      else
+        dest << *c_it;
+    }
+  }
+  
+  return dest;
+}
+
+/*******************************************************************\
+
+Function: local_SSAt::operator <<
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+incremental_solvert & operator << (
+  incremental_solvert &dest,
+  const local_SSAt &src)
+{
+  for(local_SSAt::nodest::const_iterator n_it = src.nodes.begin();
+    n_it != src.nodes.end(); n_it++)
+  {
+    if(n_it->marked) continue;
     for(local_SSAt::nodet::equalitiest::const_iterator
         e_it=n_it->equalities.begin();
         e_it!=n_it->equalities.end();

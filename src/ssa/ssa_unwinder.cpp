@@ -124,6 +124,7 @@ void ssa_local_unwindert::init() {
       current_node->cond_expr=SSA.cond_symbol(n_it->location);
 #endif
       current_node->body_nodes.push_back(*n_it);
+      current_node->body_nodes.back().marked = false;
 
 #if 0
       {
@@ -158,12 +159,14 @@ void ssa_local_unwindert::init() {
       //ASSUME : the last node in the body_nodes
       // of a loop is always the back-edge node
       current_node->body_nodes.push_back(*n_it);
+      current_node->body_nodes.back().marked = false;
 
       //reset the back-edge
       current_node->body_nodes.rbegin()->loophead=SSA.nodes.end();
 
       {
         local_SSAt::nodet loophead = current_node->body_nodes.front();
+	loophead.marked = false;
         //compute pre_post_exprs for the current loop
 
         const ssa_domaint::phi_nodest &phi_nodes =
@@ -201,7 +204,7 @@ void ssa_local_unwindert::init() {
       current_stack.pop_back();
 
       tree_loopnodet* new_current_node = current_stack.back();
-      //hope push_back does a copy by value
+      //hope push_back does a copy by value - yes it does
       new_current_node->loop_nodes.push_back(*current_node);
 
       delete current_node;
@@ -211,6 +214,7 @@ void ssa_local_unwindert::init() {
     } else {
       //a normal node belongs to body_nodes of the current loop
       current_node->body_nodes.push_back(*n_it);
+      current_node->body_nodes.back().marked=false;
     }
 
   }
@@ -369,7 +373,7 @@ void ssa_local_unwindert::unwind(const irep_idt& fname,unsigned int k) {
   if (k <= current_unwinding)
     assert(false && "unwind depth smaller than previous unwinding!!");
   local_SSAt::nodest new_nodes;
-  irep_idt func_name = as_string(fname)+"unwind_"+i2string(k);
+  irep_idt func_name = "unwind:"+as_string(fname)+"enable_"+i2string(k);
   symbol_exprt new_sym(func_name,bool_typet());
   SSA.enabling_exprs.push_back(new_sym);
   for (loop_nodest::iterator it = root_node.loop_nodes.begin();
@@ -613,6 +617,7 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
     if (i > 0) {
 
       local_SSAt::nodet node = *it; //copy
+      node.marked = false;
       assert(node.assertions.empty()); //loophead must not have assertions!
       for (local_SSAt::nodet::equalitiest::iterator e_it =
 	     node.equalities.begin(); e_it != node.equalities.end(); e_it++) {
@@ -662,6 +667,7 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
     for (; it != current_loop.body_nodes.end(); it++) {
       //copy the body node, rename and store in new_nodes
       local_SSAt::nodet new_node = (*it);
+      new_node.marked = false;
 
       rename(new_node, suffix, i,current_loop);
       if(is_kinduction &&(
@@ -820,6 +826,7 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
     //copy the original loop head
 
     local_SSAt::nodet node = current_loop.body_nodes.front();
+    node.marked = false;
     bool is_do_while=false;
     exprt guard_e; //= SSA.guard_symbol(node.location);
     exprt cond_e ;//= SSA.cond_symbol(node.location);
@@ -923,6 +930,7 @@ void ssa_local_unwindert::add_connector_node(tree_loopnodet& current_loop,
     //copy the original loop head
 
     local_SSAt::nodet node = current_loop.body_nodes.front();
+    node.marked = false;
     bool is_do_while=false;
     exprt guard_e; //= SSA.guard_symbol(node.location);
     exprt cond_e ;//= SSA.cond_symbol(node.location);
@@ -1025,7 +1033,7 @@ void ssa_local_unwindert::add_connector_node(tree_loopnodet& current_loop,
     //copy the original loop head
 
     local_SSAt::nodet node=current_loop.body_nodes.front();
-
+    node.marked = false;
     exprt guard_e; //= SSA.guard_symbol(node.location);
     exprt cond_e ;//= SSA.cond_symbol(node.location);
     if(current_loop.is_dowhile)

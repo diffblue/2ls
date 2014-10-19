@@ -10,22 +10,12 @@ bool strategy_solver_enumerationt::iterate(invariantt &_inv)
 
   bool improved = false;
 
-  literalt activation_literal = new_context();
+  solver.new_context();
 
   exprt inv_expr = tpolyhedra_domain.to_pre_constraints(inv);
   debug() << "pre-inv: " << from_expr(ns,"",inv_expr) << eom;
 
-#ifndef DEBUG_FORMULA
-  solver << or_exprt(inv_expr, literal_exprt(activation_literal));
-#else
-  debug() << "literal " << activation_literal << eom;
-  literalt l = solver.convert(or_exprt(inv_expr, literal_exprt(activation_literal)));
-  if(!l.is_constant()) 
-  {
-    debug() << "literal " << l << ": " << from_expr(ns,"",or_exprt(inv_expr, literal_exprt(activation_literal))) <<eom;
-    formula.push_back(l);
-  }
-#endif
+  solver << inv_expr;
 
   exprt::operandst strategy_cond_exprs;
   tpolyhedra_domain.make_not_post_constraints(inv, 
@@ -38,40 +28,23 @@ bool strategy_solver_enumerationt::iterate(invariantt &_inv)
   {  
     debug() << (i>0 ? " || " : "") << from_expr(ns,"",strategy_cond_exprs[i]) ;
 
-    strategy_cond_literals[i] = solver.convert(strategy_cond_exprs[i]);
+    strategy_cond_literals[i] = solver.solver.convert(strategy_cond_exprs[i]);
     //solver.set_frozen(strategy_cond_literals[i]);
     strategy_cond_exprs[i] = literal_exprt(strategy_cond_literals[i]);
   }
   debug() << eom;
 
-
-#ifndef DEBUG_FORMULA
-  solver << or_exprt(disjunction(strategy_cond_exprs),
-		     literal_exprt(activation_literal));
-#else
-
-  exprt expr_act=
-    or_exprt(disjunction(strategy_cond_exprs),
-	       literal_exprt(activation_literal));
-
-  l = solver.convert(expr_act);
-  if(!l.is_constant()) 
-  {
-    debug() << "literal " << l << ": " << 
-      from_expr(ns,"", expr_act) <<eom;
-    formula.push_back(l);
-  }
-#endif
+  solver << disjunction(strategy_cond_exprs);
 
   debug() << "solve(): ";
 
 #ifdef DEBUG_FORMULA
   bvt whole_formula = formula;
   whole_formula.insert(whole_formula.end(),activation_literals.begin(),activation_literals.end());
-  solver.set_assumptions(whole_formula);
+  solver.solver.set_assumptions(whole_formula);
 #endif
 
-  if(solve() == decision_proceduret::D_SATISFIABLE) 
+  if(solver() == decision_proceduret::D_SATISFIABLE) 
   { 
     debug() << "SAT" << eom;
       
@@ -79,18 +52,18 @@ bool strategy_solver_enumerationt::iterate(invariantt &_inv)
     for(unsigned i=0; i<whole_formula.size(); i++) 
     {
       debug() << "literal: " << whole_formula[i] << " " << 
-        solver.l_get(whole_formula[i]) << eom;
+        solver.solver.l_get(whole_formula[i]) << eom;
     }
           
     for(unsigned i=0; i<tpolyhedra_domain.template_size(); i++) 
     {
       exprt c = tpolyhedra_domain.get_row_constraint(i,inv[i]);
       debug() << "cond: " << from_expr(ns, "", c) << " " << 
-          from_expr(ns, "", solver.get(c)) << eom;
+          from_expr(ns, "", solver.solver.get(c)) << eom;
       debug() << "guards: " << from_expr(ns, "", tpolyhedra_domain.templ.pre_guards[i]) << 
           " " << from_expr(ns, "", solver.get(tpolyhedra_domain.templ.pre_guards[i])) << eom;
       debug() << "guards: " << from_expr(ns, "", tpolyhedra_domain.templ.post_guards[i]) << " " 
-          << from_expr(ns, "", solver.get(tpolyhedra_domain.templ.post_guards[i])) << eom; 	     	     }    
+          << from_expr(ns, "", solver.solver.get(tpolyhedra_domain.templ.post_guards[i])) << eom; 	     	     }    
           
     for(replace_mapt::const_iterator
           it=renaming_map.begin();
@@ -109,11 +82,11 @@ bool strategy_solver_enumerationt::iterate(invariantt &_inv)
       
     for(unsigned row=0;row<strategy_cond_literals.size(); row++)
     {
-      if(solver.l_get(strategy_cond_literals[row]).is_true()) 
+      if(solver.solver.l_get(strategy_cond_literals[row]).is_true()) 
       {
         debug() << "updating row: " << row << eom;
 
-        exprt value = solver.get(strategy_value_exprs[row]);
+        exprt value = solver.solver.get(strategy_value_exprs[row]);
         tpolyhedra_domaint::row_valuet v = simplify_const(value);
 
         debug() << "raw value; " << from_expr(ns, "", value) << 
@@ -131,14 +104,14 @@ bool strategy_solver_enumerationt::iterate(invariantt &_inv)
 #ifdef DEBUG_FORMULA
     for(unsigned i=0; i<whole_formula.size(); i++) 
     {
-      if(solver.is_in_conflict(whole_formula[i]))
+      if(solver.solver.is_in_conflict(whole_formula[i]))
         debug() << "is_in_conflict: " << whole_formula[i] << eom;
       else
         debug() << "not_in_conflict: " << whole_formula[i] << eom;
      }
 #endif    
   }
-  pop_context();
+  solver.pop_context();
 
   return improved;
 }
