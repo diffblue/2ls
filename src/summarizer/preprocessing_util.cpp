@@ -76,12 +76,13 @@ void summarizer_parseoptionst::replace_types_rec(const replace_symbolt &replace_
 }
 
 exprt summarizer_parseoptionst::evaluate_casts_in_constants(const exprt &expr, 
-							    const typet& parent_type)
+		    const typet& parent_type, bool &valid)
 {
+  if(expr.id()==ID_side_effect) valid = false;
   if(expr.type().id()!=ID_signedbv && expr.type().id()!=ID_unsignedbv) return expr;
   exprt r = expr;
-  if(expr.id()==ID_typecast) r = evaluate_casts_in_constants(expr.op0(),expr.type());
-  if(r.id()!=ID_constant) return r;
+  if(expr.id()==ID_typecast) r = evaluate_casts_in_constants(expr.op0(),expr.type(),valid);
+  if(r.id()!=ID_constant) return typecast_exprt(r,parent_type);
   mp_integer v;
   to_integer(to_constant_expr(r), v);
   return from_integer(v,parent_type);
@@ -105,13 +106,23 @@ void summarizer_parseoptionst::propagate_constants(goto_modelt &goto_model)
 	if(collect) replace_const(to_code_assign(i_it->code).rhs());
 	if(collect && to_code_assign(i_it->code).lhs().id()==ID_symbol)
 	{
+	  replace_symbolt::expr_mapt::iterator r_it = 
+             replace_const.expr_map.find(
+             to_symbol_expr(to_code_assign(i_it->code).lhs()).get_identifier());
+	  if(r_it != replace_const.expr_map.end()) 
+	    replace_const.expr_map.erase(r_it);
+					 
 	  std::set<symbol_exprt> symbols;
           find_symbols(to_code_assign(i_it->code).rhs(),symbols);
 	  if(symbols.empty())
 	  {
 	    exprt constant = to_code_assign(i_it->code).rhs();
-	    constant = evaluate_casts_in_constants(constant,constant.type());
-	    replace_const.insert(to_symbol_expr(to_code_assign(i_it->code).lhs()),
+	    bool valid = true;
+	    constant = evaluate_casts_in_constants(constant,constant.type(),
+						   valid);
+	    if(valid) 
+  	      replace_const.insert(
+                to_symbol_expr(to_code_assign(i_it->code).lhs()),
 				 constant);
 	  }
 	}
