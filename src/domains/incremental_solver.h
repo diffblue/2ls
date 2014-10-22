@@ -76,7 +76,7 @@ static inline incremental_solvert & operator << (
   incremental_solvert &dest,
   const exprt &src)
 {
-#if 1
+#if 0
   if(!dest.activation_literals.empty())
     std::cout << "add_to_solver(" << !dest.activation_literals.back() << "): " << from_expr(dest.ns,"",src) << std::endl;
   else

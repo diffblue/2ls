@@ -169,9 +169,9 @@ void template_generator_baset::filter_template_domain()
       v!=new_var_specs.end(); v++)
   {
     const domaint::vart &s = v->var;
+    std::cout << "var: " << s << std::endl;
     if((s.type().id()==ID_unsignedbv || s.type().id()==ID_signedbv ||
-	s.type().id()==ID_floatbv))
-      //       !has_prefix(s.get_identifier(),"c::__CPROVER_"))
+	s.type().id()==ID_floatbv /*|| s.type().id()==ID_c_enum_tag*/))
     {
       var_specs.push_back(*v);
     }

@@ -36,7 +36,10 @@ void template_generator_summaryt::operator()(const local_SSAt &SSA,  bool forwar
   handle_special_functions(SSA); // we have to call that to prevent trouble!
 
   collect_variables_loop(SSA,forward);
-  collect_variables_inout(SSA,forward);
+
+  // do not compute summary for main
+  if(SSA.goto_function.body.instructions.front().function != ID_main)
+    collect_variables_inout(SSA,forward);
 
   instantiate_standard_domains(SSA);
 
