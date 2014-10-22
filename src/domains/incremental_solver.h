@@ -33,6 +33,7 @@ class incremental_solvert : public messaget
     solver(_ns,sat_check), 
     ns(_ns),
     activation_literal_counter(0),
+    domain_number(0),
     solver_calls(0)
   { 
   }
@@ -45,6 +46,8 @@ class incremental_solvert : public messaget
   }
 
   unsigned get_number_of_solver_calls() { return solver_calls; }
+
+  unsigned next_domain_number() { return domain_number++; }
 
   static incremental_solvert *allocate(const namespacet &_ns) 
   { 
@@ -67,6 +70,7 @@ class incremental_solvert : public messaget
   bvt activation_literals;
  protected: 
   unsigned activation_literal_counter;
+  unsigned domain_number; //ids for each domain instance to make symbols unique
 
   //statistics
   unsigned solver_calls;

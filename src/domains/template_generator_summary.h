@@ -22,7 +22,8 @@ public:
   {
   }  
 
-  virtual void operator()(const local_SSAt &SSA, bool forward=true);
+  virtual void operator()(unsigned _domain_number, 
+			  const local_SSAt &SSA, bool forward=true);
 
   virtual domaint::var_sett inout_vars();
   virtual domaint::var_sett loop_vars();

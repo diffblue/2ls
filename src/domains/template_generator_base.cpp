@@ -169,7 +169,11 @@ void template_generator_baset::filter_template_domain()
       v!=new_var_specs.end(); v++)
   {
     const domaint::vart &s = v->var;
+
+#ifdef DEBUG
     std::cout << "var: " << s << std::endl;
+#endif
+
     if((s.type().id()==ID_unsignedbv || s.type().id()==ID_signedbv ||
 	s.type().id()==ID_floatbv /*|| s.type().id()==ID_c_enum_tag*/))
     {
@@ -321,25 +325,29 @@ void template_generator_baset::instantiate_standard_domains(const local_SSAt &SS
   if(options.get_bool_option("equalities"))
   {
     filter_equality_domain();
-    domain_ptr = new equality_domaint(renaming_map, var_specs, SSA.ns);
+    domain_ptr = new equality_domaint(domain_number,
+				      renaming_map, var_specs, SSA.ns);
   }
   else if(options.get_bool_option("intervals"))
   {
-    domain_ptr = new tpolyhedra_domaint(renaming_map);
+    domain_ptr = new tpolyhedra_domaint(domain_number,
+					renaming_map);
     filter_template_domain();
     static_cast<tpolyhedra_domaint *>(domain_ptr)->add_interval_template(
       var_specs, SSA.ns);
   }
   else if(options.get_bool_option("zones"))
   {
-    domain_ptr = new tpolyhedra_domaint(renaming_map);
+    domain_ptr = new tpolyhedra_domaint(domain_number,
+					renaming_map);
     filter_template_domain();
     static_cast<tpolyhedra_domaint *>(domain_ptr)->add_zone_template(
       var_specs, SSA.ns);
   }
   else if(options.get_bool_option("octagons"))
   {
-    domain_ptr = new tpolyhedra_domaint(renaming_map);
+    domain_ptr = new tpolyhedra_domaint(domain_number,
+					renaming_map);
     filter_template_domain();
     static_cast<tpolyhedra_domaint *>(domain_ptr)->add_octagon_template(
       var_specs, SSA.ns);

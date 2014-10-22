@@ -24,11 +24,13 @@ Function: template_generator_callingcontextt::operator()
 
 \*******************************************************************/
 
-void template_generator_callingcontextt::operator()(const local_SSAt &SSA,
+void template_generator_callingcontextt::operator()(unsigned _domain_number, 
+			  const local_SSAt &SSA,
 		  local_SSAt::nodest::const_iterator n_it,
 		  local_SSAt::nodet::function_callst::const_iterator f_it,
 			  bool forward)
 {
+  domain_number = _domain_number;
   handle_special_functions(SSA); // we have to call that to prevent trouble!
 
   collect_variables_loop(SSA,forward);

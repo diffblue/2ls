@@ -11,7 +11,8 @@
 class domaint
 {
 public:
-  domaint(replace_mapt &_renaming_map) : renaming_map(_renaming_map) {}
+ domaint(unsigned _domain_number, replace_mapt &_renaming_map) : 
+  domain_number(_domain_number), renaming_map(_renaming_map) {}
   virtual ~domaint() {}
 
   typedef exprt vart;
@@ -59,6 +60,7 @@ public:
 			       const namespacet &ns);
 
  protected:
+  unsigned domain_number; //serves as id for variables names
   replace_mapt &renaming_map;
   
   inline void rename(exprt &expr) { replace_expr(renaming_map, expr); }

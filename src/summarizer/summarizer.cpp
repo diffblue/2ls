@@ -175,7 +175,7 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
 
   template_generator_summaryt template_generator(options,ssa_unwinder.get(function_name));
   template_generator.set_message_handler(get_message_handler());
-  template_generator(SSA,forward);
+  template_generator(solver.next_domain_number(),SSA,forward);
 
   analyzer(solver,SSA,preconditions[function_name],template_generator);
 
@@ -480,7 +480,7 @@ void summarizert::compute_precondition(
 
   template_generator_callingcontextt template_generator(options,ssa_unwinder.get(function_name));
   template_generator.set_message_handler(get_message_handler());
-  template_generator(SSA,n_it,f_it,forward);
+  template_generator(solver.next_domain_number(),SSA,n_it,f_it,forward);
 
   // collect globals at call site
   std::map<local_SSAt::nodet::function_callst::iterator, local_SSAt::var_sett>
