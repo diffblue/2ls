@@ -11,7 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "template_generator_base.h"
 
-#define LEXICOGRAPHIC
+//#define LEXICOGRAPHIC
 
 class template_generator_rankingt : public template_generator_baset
 {
@@ -24,7 +24,8 @@ public:
   {
   }  
 
-  virtual void operator()(const local_SSAt &SSA, bool forward=true);
+  virtual void operator()(unsigned _domain_number,
+			  const local_SSAt &SSA, bool forward=true);
 
 protected:  
 

@@ -8,11 +8,10 @@ class strategy_solver_equalityt : public strategy_solver_baset
 {
  public:
   explicit strategy_solver_equalityt(
-    const constraintst &program,
     equality_domaint &_equality_domain,
-    bv_pointerst &_solver, 
+    incremental_solvert &_solver, 
     const namespacet &_ns) : 
-  strategy_solver_baset(program, _solver, _ns),
+  strategy_solver_baset(_solver, _ns),
     equality_domain(_equality_domain)
   {
     equality_domain.get_index_set(todo_equs);

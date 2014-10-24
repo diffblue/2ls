@@ -13,9 +13,10 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "strategy_solver_base.h"
 #include "strategy_solver_enumeration.h"
+//#include "solver_enumeration.h"
 #include "strategy_solver_binsearch.h"
-#include "strategy_solver_binsearch2.h"
-
+//#include "strategy_solver_binsearch2.h"
+//#include "strategy_solver_binsearch3.h"
 #include "strategy_solver_equality.h"
 #include "linrank_domain.h"
 #include "lexlinrank_domain.h"
@@ -50,30 +51,23 @@ Function: ssa_analyzert::operator()
 
 \*******************************************************************/
 
-void ssa_analyzert::operator()(const local_SSAt &SSA, 
+void ssa_analyzert::operator()(incremental_solvert &solver,
+			       local_SSAt &SSA, 
                                const exprt &precondition,
                                template_generator_baset &template_generator)
 {
   if(SSA.goto_function.body.instructions.empty())
     return;
 
-  //TODO: if the template is empty we must at least check for reachability of the end of the function
+  solver << SSA;
+  SSA.mark_nodes();
 
-  // convert SSA to transition relation
-  constraintst transition_relation;
-  transition_relation << SSA;
-
-  // TODO: must be made incremental in future
-  transition_relation.push_back(SSA.get_enabling_exprs());
+  solver.new_context();
+  solver << SSA.get_enabling_exprs();
 
   // add precondition (or conjunction of asssertion in backward analysis)
-  transition_relation.push_back(precondition);
+  solver << precondition;
   
-  // solver
-  //TODO: get backend solver from options
-  satcheck_minisat_no_simplifiert satcheck;
-  bv_pointerst solver(SSA.ns, satcheck);
-
   domain = template_generator.domain();
 
   // get strategy solver from options
@@ -82,12 +76,10 @@ void ssa_analyzert::operator()(const local_SSAt &SSA,
   {
 #ifndef LEXICOGRAPHIC
     strategy_solver = new ranking_solver_enumerationt(
-        transition_relation, 
         *static_cast<linrank_domaint *>(domain), solver, SSA.ns);    
     result = new linrank_domaint::templ_valuet();
 #else
     strategy_solver = new lexlinrank_solver_enumerationt(
-        transition_relation, 
         *static_cast<lexlinrank_domaint *>(domain), solver, SSA.ns);    
     result = new lexlinrank_domaint::templ_valuet();
 #endif
@@ -95,7 +87,6 @@ void ssa_analyzert::operator()(const local_SSAt &SSA,
   else if(template_generator.options.get_bool_option("equalities"))
   {
     strategy_solver = new strategy_solver_equalityt(
-        transition_relation, 
         *static_cast<equality_domaint *>(domain), solver, SSA.ns);    
     result = new equality_domaint::equ_valuet();
   }
@@ -105,19 +96,13 @@ void ssa_analyzert::operator()(const local_SSAt &SSA,
     if(template_generator.options.get_bool_option("enum-solver"))
     {
       strategy_solver = new strategy_solver_enumerationt(
-        transition_relation, 
         *static_cast<tpolyhedra_domaint *>(domain), solver, SSA.ns);
     }
     else if(template_generator.options.get_bool_option("binsearch-solver"))
     {
       strategy_solver = 
-#ifndef BINSEARCH_SUM
-        new strategy_solver_binsearcht(
-#else
-        new strategy_solver_binsearch2t(
-#endif
-        transition_relation, 
-        *static_cast<tpolyhedra_domaint *>(domain), solver, SSA.ns);
+        new BINSEARCH_SOLVER(
+          *static_cast<tpolyhedra_domaint *>(domain), solver, SSA.ns);
     }
     else assert(false);
   }
@@ -161,7 +146,10 @@ void ssa_analyzert::operator()(const local_SSAt &SSA,
   domain->output_value(std::cout,*result,SSA.ns);
   #endif
 
+  solver.pop_context();
+
   //statistics
+  solver_instances += strategy_solver->get_number_of_solver_instances();
   solver_calls += strategy_solver->get_number_of_solver_calls();
 
   delete strategy_solver;

@@ -12,7 +12,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 
   bool improved = false;
 
-  literalt activation_literal0 = new_context(); //for improvement check
+  solver.new_context(); //for improvement check
 
   exprt inv_expr = tpolyhedra_domain.to_pre_constraints(inv);
 
@@ -21,20 +21,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
   debug() << "pre-inv: " << from_expr(ns,"",inv_expr) << eom;
 #endif
 
-#ifndef DEBUG_FORMULA
-  solver << or_exprt(inv_expr, literal_exprt(activation_literal0));
-#else
-  debug() << "act literal0 " << activation_literal0 << eom;
-  literalt l = solver.convert(or_exprt(inv_expr, 
-                              literal_exprt(activation_literal0)));
-  if(!l.is_constant()) 
-  {
-    debug() << "literal " << l << ": " << 
-      from_expr(ns,"",or_exprt(inv_expr, literal_exprt(activation_literal0))) 
-      << eom;
-    formula.push_back(l);
-  }
-#endif
+  solver << inv_expr;
 
   exprt::operandst strategy_cond_exprs;
   tpolyhedra_domain.make_not_post_constraints(inv, 
@@ -50,29 +37,13 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 #if 0
     debug() << (i>0 ? " || " : "") << from_expr(ns,"",strategy_cond_exprs[i]);
 #endif
-    strategy_cond_literals[i] = solver.convert(strategy_cond_exprs[i]);
+    strategy_cond_literals[i] = solver.solver.convert(strategy_cond_exprs[i]);
     //solver.set_frozen(strategy_cond_literals[i]);
     strategy_cond_exprs[i] = literal_exprt(strategy_cond_literals[i]);
   }
   debug() << eom;
 
-
-#ifndef DEBUG_FORMULA
-  solver << or_exprt(disjunction(strategy_cond_exprs),
-		     literal_exprt(activation_literal0));
-#else
-  exprt expr_act=
-    or_exprt(disjunction(strategy_cond_exprs),
-	       literal_exprt(activation_literal0));
-
-  l = solver.convert(expr_act);
-  if(!l.is_constant()) 
-  {
-    debug() << "literal " << l << ": " << 
-      from_expr(ns,"", expr_act) <<eom;
-    formula.push_back(l);
-  }
-#endif
+  solver << disjunction(strategy_cond_exprs);
 
 #if 0
   debug() << "solve(): ";
@@ -81,11 +52,11 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 #ifdef DEBUG_FORMULA
   bvt whole_formula = formula;
   whole_formula.insert(whole_formula.end(),activation_literals.begin(),
-                       activation_literals.end());
-  solver.set_assumptions(whole_formula);
+                       solver.activation_literals.end());
+  solver.solver.set_assumptions(whole_formula);
 #endif
 
-  if(solve() == decision_proceduret::D_SATISFIABLE) //improvement check
+  if(solver() == decision_proceduret::D_SATISFIABLE) //improvement check
   { 
 #if 0
     debug() << "SAT" << eom;
@@ -95,7 +66,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
     for(unsigned i=0; i<whole_formula.size(); i++) 
     {
       debug() << "literal: " << whole_formula[i] << " " << 
-        solver.l_get(whole_formula[i]) << eom;
+        solver.solver.l_get(whole_formula[i]) << eom;
     }
           
     for(unsigned i=0; i<tpolyhedra_domain.template_size(); i++) 
@@ -106,11 +77,11 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
       debug() << "guards: " << 
         from_expr(ns, "", tpolyhedra_domain.templ.pre_guards[i]) << 
         " " << from_expr(ns, "", 
-          solver.get(tpolyhedra_domain.templ.pre_guards[i])) << eom;
+          solver.solver.get(tpolyhedra_domain.templ.pre_guards[i])) << eom;
       debug() << "guards: " << from_expr(ns, "", 
           tpolyhedra_domain.templ.post_guards[i]) << " " 
 	  << from_expr(ns, "", 
-               solver.get(tpolyhedra_domain.templ.post_guards[i])) << eom;
+             solver.solver.get(tpolyhedra_domain.templ.post_guards[i])) << eom;
     }    
 #endif
 
@@ -118,7 +89,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
     unsigned row=0;  
     for(;row<strategy_cond_literals.size(); row++)
     {
-      if(solver.l_get(strategy_cond_literals[row]).is_true()) 
+      if(solver.solver.l_get(strategy_cond_literals[row]).is_true()) 
         break;  // we've found a row to improve
     }
 
@@ -130,45 +101,20 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
       tpolyhedra_domain.get_max_row_value(row);
     tpolyhedra_domaint::row_valuet lower = 
       //  tpolyhedra_domain.get_min_row_value(row);
-    simplify_const(solver.get(strategy_value_exprs[row]));
+    simplify_const(solver.solver.get(strategy_value_exprs[row]));
 
-    pop_context();  //improvement check
+    solver.pop_context();  //improvement check
     
-    literalt activation_literal1 = new_context(); //symbolic value system
+    solver.new_context(); //symbolic value system
 
     exprt pre_inv_expr = 
       tpolyhedra_domain.to_symb_pre_constraints(inv,improve_rows);
 
-#ifndef DEBUG_FORMULA
-    solver << or_exprt(pre_inv_expr, literal_exprt(activation_literal1));
-#else
-    debug() << "act literal " << activation_literal1 << eom;
-    literalt l = solver.convert(or_exprt(pre_inv_expr, 
-                              literal_exprt(activation_literal1)));
-    if(!l.is_constant()) 
-    {
-      debug() << "literal " << l << ": " << 
-        from_expr(ns,"",or_exprt(pre_inv_expr, 
-          literal_exprt(activation_literal1))) << eom;
-      formula.push_back(l);
-    }
-#endif
+    solver << pre_inv_expr;
 
     exprt post_inv_expr = tpolyhedra_domain.get_row_symb_post_constraint(row);
 
-#ifndef DEBUG_FORMULA
-    solver << or_exprt(post_inv_expr, literal_exprt(activation_literal1));
-#else
-    literalt l2 = solver.convert(or_exprt(post_inv_expr, 
-                              literal_exprt(activation_literal1)));
-    if(!l2.is_constant()) 
-    {
-      debug() << "literal " << l2 << ": " << 
-        from_expr(ns,"",or_exprt(post_inv_expr, 
-          literal_exprt(activation_literal1))) << eom;
-      formula.push_back(l2);
-    }
-#endif
+    solver << post_inv_expr;
 
 #if 0
     debug() << "symbolic value system: " << eom;
@@ -191,35 +137,22 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
       debug() << "lower: " << from_expr(ns,"",lower) << eom;
 #endif
 
-      literalt activation_literal2 = new_context(); // binary search iteration
+      solver.new_context(); // binary search iteration
 
 #if 0
       debug() << "constraint: " << from_expr(ns, "", c) << eom;
 #endif
 
-#ifndef DEBUG_FORMULA
-      solver << or_exprt(c,literal_exprt(activation_literal2)); 
-#else
-      debug() << "act literal2 " << activation_literal2 << eom;
-      literalt l = solver.convert(or_exprt(c, 
-                              literal_exprt(activation_literal2)));
-      if(!l.is_constant()) 
-      {
-        debug() << "literal " << l << ": " << 
-          from_expr(ns,"",or_exprt(c, 
-          literal_exprt(activation_literal2))) << eom;
-        formula.push_back(l);
-      }
-#endif
+      solver << c;
 
 #ifdef DEBUG_FORMULA
       bvt whole_formula = formula;
       whole_formula.insert(whole_formula.end(),activation_literals.begin(),
                        activation_literals.end());
-      solver.set_assumptions(whole_formula);
+      solver.solver.set_assumptions(whole_formula);
 #endif
 
-      if(solve() == decision_proceduret::D_SATISFIABLE) 
+      if(solver() == decision_proceduret::D_SATISFIABLE) 
       { 
 #if 0
 	debug() << "SAT" << eom;
@@ -230,7 +163,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
       {
         debug() <<  
           from_expr(ns, "", tpolyhedra_domain.get_row_symb_value(i)) << " " << 
-	  from_expr(ns, "", solver.get(tpolyhedra_domain.get_row_symb_value(i))) 
+	  from_expr(ns, "", solver.solver.get(tpolyhedra_domain.get_row_symb_value(i))) 
           << eom;
       }
 #endif
@@ -243,7 +176,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
       {
 	  debug() << "replace_map (1st): " << 
             from_expr(ns, "", it->first) << " " <<
-	    from_expr(ns, "", solver.get(it->first)) << eom;
+	    from_expr(ns, "", solver.solver.get(it->first)) << eom;
 	  debug() << "replace_map (2nd): " << from_expr(ns, "", it->second) << " " 
 		  << from_expr(ns, "", solver.get(it->second)) << eom;
       }
@@ -260,7 +193,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 #ifdef DEBUG_FORMULA
 	for(unsigned i=0; i<whole_formula.size(); i++) 
         {
-	  if(solver.is_in_conflict(whole_formula[i]))
+	  if(solver.solver.is_in_conflict(whole_formula[i]))
 	      debug() << "is_in_conflict: " << whole_formula[i] << eom;
 	  else
 	      debug() << "not_in_conflict: " << whole_formula[i] << eom;
@@ -271,14 +204,14 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 
 	upper = middle;
       }
-      pop_context(); // binary search iteration
+      solver.pop_context(); // binary search iteration
     }
    
 #if 1
     debug() << "update value: " << from_expr(ns,"",lower) << eom;
 #endif
 
-    pop_context();  //symbolic value system
+    solver.pop_context();  //symbolic value system
 
     tpolyhedra_domain.set_row_value(row,lower,inv);
     improved = true;
@@ -289,7 +222,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
     debug() << "UNSAT" << eom;
 #endif
 
-    pop_context(); //improvement check
+    solver.pop_context(); //improvement check
   }
 
   

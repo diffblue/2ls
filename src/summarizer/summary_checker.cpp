@@ -15,7 +15,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <solvers/sat/satcheck.h>
 #include <solvers/flattening/bv_pointers.h>
-#include <solvers/prop/cover_goals.h>
 #include <solvers/prop/literal_expr.h>
 
 #include "../ssa/local_ssa.h"
@@ -55,53 +54,7 @@ property_checkert::resultt summary_checkert::operator()(
 
   SSA_functions(goto_model,ns);
 
-  if(!options.get_bool_option("k-induction"))
-  {  
-    if(!options.get_bool_option("havoc") &&
-       !(!options.get_bool_option("preconditions") &&
-	 options.get_bool_option("termination"))) 
-    {
-      //forward analysis
-      summarize(goto_model,true,false);
-    }
-    if(!options.get_bool_option("preconditions") &&
-       options.get_bool_option("termination"))
-    {
-      //termination analysis
-      summarize(goto_model,true,true);
-    }
-    if(!options.get_bool_option("havoc") &&
-       options.get_bool_option("preconditions") &&
-       !options.get_bool_option("termination"))
-    {
-      //backward analysis
-      summarize(goto_model,false,false);
-    }
-    if(!options.get_bool_option("havoc") &&
-       options.get_bool_option("preconditions") &&
-       options.get_bool_option("termination"))
-    {
-      //backward analysis with termination
-      summarize(goto_model,false,true);
-    }
-
-    if(options.get_bool_option("preconditions")) 
-    {
-      report_preconditions();
-      return property_checkert::UNKNOWN;
-    }
-
-    if(options.get_bool_option("termination")) 
-    {
-      property_checkert::resultt all_terminate = report_termination();
-      return all_terminate;
-    }
-
-    property_checkert::resultt result =  check_properties(); 
-    report_statistics();
-    return result;
-  }
-  else //k-induction
+  if(options.get_bool_option("k-induction"))
   {
     property_checkert::resultt result = property_checkert::UNKNOWN;
     unsigned max_unwind = options.get_unsigned_int_option("unwind");
@@ -111,6 +64,7 @@ property_checkert::resultt summary_checkert::operator()(
     for(unsigned unwind = 0; unwind<=max_unwind; unwind++)
     {
       status() << "Unwinding (k=" << unwind << ")" << messaget::eom;
+	std::cout << "Current unwinding is " << unwind << std::endl;
       if(unwind>0) 
       {
         summary_db.clear();
@@ -118,13 +72,18 @@ property_checkert::resultt summary_checkert::operator()(
       }
 
       if(!options.get_bool_option("havoc")) 
-        summarize(goto_model,true,false);
+        summarize(goto_model);
 
       result =  check_properties(); 
       report_statistics();
       if(result == property_checkert::PASS) 
       {
-        status() << "K-induction successful after " << unwind << " unwinding(s)" << messaget::eom;
+        status() << "k-induction proof found after " << unwind << " unwinding(s)" << messaget::eom;
+        break;
+      }
+      else if(result == property_checkert::FAIL) 
+      {
+        status() << "k-induction counterexample found after " << unwind << " unwinding(s)" << messaget::eom;
         break;
       }
       else if(unwind==0 && max_unwind>0) //TODO: unwind==2 => 1 (additional) unwinding
@@ -134,6 +93,89 @@ property_checkert::resultt summary_checkert::operator()(
     }
     return result;
   }
+  //TODO (later): done
+
+  if(options.get_bool_option("incremental-bmc"))
+  {
+    property_checkert::resultt result = property_checkert::UNKNOWN;
+    unsigned max_unwind = options.get_unsigned_int_option("unwind");
+
+    for(unsigned unwind = 0; unwind<=max_unwind; unwind++)
+    {
+      status() << "Unwinding (k=" << unwind << ")" << eom;
+	std::cout << "Current unwinding is " << unwind << std::endl;
+      if(unwind>0) 
+      {
+        summary_db.clear();
+        ssa_unwinder.unwind_all(unwind+1);
+      }
+      result =  check_properties(); 
+      report_statistics();
+      if(result == property_checkert::PASS) 
+      {
+        status() << "incremental BMC proof found after " << unwind 
+		 << " unwinding(s)" << eom;
+        break;
+      }
+      else if(result == property_checkert::FAIL) 
+      {
+        status() << "incremental BMC counterexample found after " 
+		 << unwind << " unwinding(s)" << eom;
+        break;
+      }
+      else if(unwind==0 && max_unwind>0) //TODO: unwind==2 => 1 (additional) unwinding
+      {
+        ssa_unwinder.init_localunwinders();
+      }
+    }
+    return result;
+  }
+
+  // neither k-induction nor bmc
+  if(!options.get_bool_option("havoc") &&
+     !(!options.get_bool_option("preconditions") &&
+       options.get_bool_option("termination"))) 
+  {
+    //forward analysis
+    summarize(goto_model,true,false);
+  }
+  if(!options.get_bool_option("preconditions") &&
+     options.get_bool_option("termination"))
+  {
+    //termination analysis
+    summarize(goto_model,true,true);
+  }
+  if(!options.get_bool_option("havoc") &&
+     options.get_bool_option("preconditions") &&
+     !options.get_bool_option("termination"))
+  {
+    //backward analysis
+    summarize(goto_model,false,false);
+  }
+  if(!options.get_bool_option("havoc") &&
+     options.get_bool_option("preconditions") &&
+     options.get_bool_option("termination"))
+  {
+    //backward analysis with termination
+    summarize(goto_model,false,true);
+  }
+
+  if(options.get_bool_option("preconditions")) 
+  {
+    report_preconditions();
+    return property_checkert::UNKNOWN;
+  }
+
+  if(options.get_bool_option("termination")) 
+  {
+    property_checkert::resultt all_terminate = report_termination();
+    return all_terminate;
+  }
+
+  property_checkert::resultt result =  check_properties(); 
+  if(result==property_checkert::UNKNOWN) result = property_checkert::FAIL;
+  report_statistics();
+  return result;
 }
 
 /*******************************************************************\
@@ -150,9 +192,6 @@ Function: summary_checkert::SSA_functions
 
 void summary_checkert::SSA_functions(const goto_modelt &goto_model,  const namespacet &ns)
 {
-  // properties
-  initialize_property_map(goto_model.goto_functions);
-  
   // compute SSA for all the functions
   forall_goto_functions(f_it, goto_model.goto_functions)
   {
@@ -169,46 +208,26 @@ void summary_checkert::SSA_functions(const goto_modelt &goto_model,  const names
       status() << "Simplifying" << messaget::eom;
       ::simplify(SSA, ns);
     }
-
-    /*    if(options.get_bool_option("termination"))
-    {
-      //assume assertions
-      for(local_SSAt::nodest::iterator n_it = SSA.nodes.begin();
-	  n_it != SSA.nodes.end(); n_it++)
-      {
-	for(local_SSAt::nodet::assertionst::iterator 
-	      a_it = n_it->assertions.begin();
-	    a_it != n_it->assertions.end(); a_it++)
-	{
-	  n_it->constraints.push_back(*a_it);
-	}
-	n_it->assertions.clear();
-      }
-      }*/
-
     SSA.output(debug()); debug() << eom;
   }
 
-  ssa_unwinder.init();
+  ssa_unwinder.init(options.get_bool_option("k-induction"),
+		    options.get_bool_option("incremental-bmc"));
 
   unsigned unwind = options.get_unsigned_int_option("unwind");
-  if(!options.get_bool_option("k-induction") && unwind>0)
+  if(!options.get_bool_option("k-induction") && 
+     !options.get_bool_option("incremental-bmc") && unwind>0)
   {
     status() << "Unwinding" << messaget::eom;
 
     ssa_unwinder.init_localunwinders();
 
-//    ssa_unwinder.unwind(f_it->first,unwind);
     ssa_unwinder.unwind_all(unwind+1);
     ssa_unwinder.output(debug()); debug() <<eom;
   }
 
-#if 0
-  // inline c::main and __CPROVER_initialize
-  ssa_inliner.replace(ssa_db.get(ID_main),functions,false,false);
-  
-  ssa_db.get(ID_main).output(debug()); debug() << eom;
-#endif
+  // properties
+  initialize_property_map(goto_model.goto_functions);
 }
 
 /*******************************************************************\
@@ -287,12 +306,17 @@ summary_checkert::resultt summary_checkert::check_properties()
       check_properties_non_incremental(f_it);
   }
   
+  summary_checkert::resultt result = property_checkert::PASS;
   for(property_mapt::const_iterator
       p_it=property_map.begin(); p_it!=property_map.end(); p_it++)
+  {
     if(p_it->second.result==FAIL)
       return property_checkert::FAIL;
+    if(p_it->second.result==UNKNOWN)
+      result = property_checkert::UNKNOWN;
+  }
     
-  return property_checkert::PASS;
+  return result;
 }
 
 /*******************************************************************\
@@ -310,12 +334,20 @@ Function: summary_checkert::check_properties
 void summary_checkert::check_properties_non_incremental(
    const ssa_dbt::functionst::const_iterator f_it)
 {
-  const local_SSAt &SSA = *f_it->second;
+  local_SSAt &SSA = *f_it->second;
   if(!SSA.goto_function.body.has_assertion()) return;
 
   SSA.output(debug()); debug() << eom;
   
   // non-incremental version
+
+  // solver
+  incremental_solvert &solver = ssa_db.get_solver(f_it->first);
+  solver.set_message_handler(get_message_handler());
+
+  // give SSA to solver
+  solver << SSA;
+  SSA.mark_nodes();
 
   const goto_programt &goto_program=SSA.goto_function.body;
 
@@ -335,6 +367,9 @@ void summary_checkert::check_properties_non_incremental(
 
     if(property_id=="") //TODO: some properties do not show up in initialize_property_map
       continue;     
+
+    //do not recheck properties that have already been decided
+    if(property_map[property_id].result!=UNKNOWN) continue; 
 
     property_map[property_id].location = i_it;
     
@@ -362,16 +397,9 @@ void summary_checkert::check_properties_non_incremental(
     if(simplify)
       property=::simplify_expr(property, SSA.ns);
   
-    // solver
-    satcheckt satcheck;
-    bv_pointerst solver(SSA.ns, satcheck);
- 
-    satcheck.set_message_handler(get_message_handler());
-    solver.set_message_handler(get_message_handler());
+    solver.new_context();
+    solver << SSA.get_enabling_exprs();
     
-    // give SSA to solver
-    solver << SSA;
-
     // invariant, calling contexts
     if(summary_db.exists(f_it->first))
     {
@@ -385,20 +413,32 @@ void summary_checkert::check_properties_non_incremental(
     // give negated property to solver
     solver << property;
 
-#if 0   
-    //for future incremental usagae 
-    solver->set_assumptions(
-      strategy_solver_baset::convert_enabling_exprs(solver,SSA.enabling_exprs));
-#endif
-    solver << SSA.get_enabling_exprs();
+    //freeze loop head selects
+    exprt::operandst loophead_selects = 
+      get_loophead_selects(f_it->first,SSA,solver.solver);
 
     // solve
     switch(solver())
       {
-      case decision_proceduret::D_SATISFIABLE:
-	property_map[property_id].result=FAIL;
-	break;
-      
+      case decision_proceduret::D_SATISFIABLE: 
+      {
+	if(options.get_bool_option("spurious-check"))
+	{
+	  bool spurious = is_spurious(loophead_selects,solver) ;
+	  debug() << "[" << property_id << "] is " << 
+	    (spurious ? "" : "not ") << "spurious" << eom;
+
+	  property_map[property_id].result = spurious ? UNKNOWN : FAIL;
+
+	  if(!spurious)
+	  {
+	    show_error_trace(f_it->first,SSA,solver.solver,
+			     debug(),get_message_handler());
+	  }
+	}
+	break; 
+      }
+     
       case decision_proceduret::D_UNSATISFIABLE:
 	property_map[property_id].result=PASS;
 	break;
@@ -408,40 +448,9 @@ void summary_checkert::check_properties_non_incremental(
 	property_map[property_id].result=ERROR;
 	throw "error from decision procedure";
       }
-
-    //statistics
-    solver_instances++;
-    solver_calls ++;;
+    solver.pop_context();
   }
 } 
-
-/*******************************************************************\
-
-Function: summary_checkert::check_properties
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-struct goalt
-{
-  // a property holds if all instances of it are true
-  exprt::operandst conjuncts;
-  std::string description;
-
-  explicit goalt(const goto_programt::instructiont &instruction)
-  {
-    description=id2string(instruction.source_location.get_comment());
-  }
-  
-  goalt()
-  {
-  }
-};
 
 /*******************************************************************\
 
@@ -458,7 +467,7 @@ Function: summary_checkert::check_properties_incremental
 void summary_checkert::check_properties_incremental(
    const ssa_dbt::functionst::const_iterator f_it)
 {
-  const local_SSAt &SSA = *f_it->second;
+  local_SSAt &SSA = *f_it->second;
   if(!SSA.goto_function.body.has_assertion()) return;
 
   SSA.output(debug()); debug() << eom;
@@ -466,14 +475,17 @@ void summary_checkert::check_properties_incremental(
   // incremental version
 
   // solver
-  satcheckt satcheck;
-  bv_pointerst solver(SSA.ns, satcheck);
-  
-  satcheck.set_message_handler(get_message_handler());
+  incremental_solvert &solver = ssa_db.get_solver(f_it->first);
   solver.set_message_handler(get_message_handler());
-    
+
   // give SSA to solver
   solver << SSA;
+  SSA.mark_nodes();
+
+  solver.new_context();
+
+  exprt enabling_expr = SSA.get_enabling_exprs();
+  solver << enabling_expr;
 
   // invariant, calling contexts
   if(summary_db.exists(f_it->first))
@@ -485,22 +497,16 @@ void summary_checkert::check_properties_incremental(
   //callee summaries
   solver << ssa_inliner.get_summaries(SSA);
 
-#if 0   
-    //for future incremental usagae 
-    solver->set_assumptions(
-      strategy_solver_baset::convert_enabling_exprs(solver,SSA.enabling_exprs));
-#endif
-  exprt enabling_expr = SSA.get_enabling_exprs();
-  solver << enabling_expr;
+  //freeze loop head selects
+  exprt::operandst loophead_selects = 
+    get_loophead_selects(f_it->first,SSA,solver.solver);
+
+  cover_goals_extt cover_goals(solver,loophead_selects,property_map,
+			       options.get_bool_option("spurious-check"));
 
 #if 0   
   debug() << "(C) " << from_expr(SSA.ns,"",enabling_expr) << eom;
 #endif
-
-  // Collect _all_ goals in `goal_map'.
-  // This maps claim IDs to 'goalt'
-  typedef std::map<irep_idt, goalt> goal_mapt;
-  goal_mapt goal_map;
 
   const goto_programt &goto_program=SSA.goto_function.body;
 
@@ -513,67 +519,69 @@ void summary_checkert::check_properties_incremental(
       continue;
   
     const locationt &location=i_it->source_location;  
-    const local_SSAt::nodet &node = *SSA.find_node(i_it);
+    std::list<local_SSAt::nodest::const_iterator> assertion_nodes;
+    SSA.find_nodes(i_it,assertion_nodes);
 
     irep_idt property_id = location.get_property_id();
+
+    //do not recheck properties that have already been decided
+    if(property_map[property_id].result!=UNKNOWN) continue; 
 
     if(property_id=="") //TODO: some properties do not show up in initialize_property_map
       continue;     
 
     unsigned property_counter = 0;
-    for(local_SSAt::nodet::assertionst::const_iterator
-	  a_it=node.assertions.begin();
-        a_it!=node.assertions.end();
-        a_it++, property_counter++)
+    for(std::list<local_SSAt::nodest::const_iterator>::const_iterator
+	  n_it=assertion_nodes.begin();
+        n_it!=assertion_nodes.end();
+        n_it++)
     {
-      exprt property=*a_it;
+      for(local_SSAt::nodet::assertionst::const_iterator
+	    a_it=(*n_it)->assertions.begin();
+	  a_it!=(*n_it)->assertions.end();
+	  a_it++, property_counter++)
+      {
+	exprt property=*a_it;
 
-      if(simplify)
-	property=::simplify_expr(property, SSA.ns);
+	if(simplify)
+	  property=::simplify_expr(property, SSA.ns);
 
 #if 0 
-      std::cout << "property: " << from_expr(SSA.ns, "", property) << std::endl;
+	std::cout << "property: " << from_expr(SSA.ns, "", property) << std::endl;
 #endif
  
-      property_map[property_id].location = i_it;
-      goal_map[property_id].conjuncts.push_back(property);
+	property_map[property_id].location = i_it;
+	cover_goals.goal_map[property_id].conjuncts.push_back(property);
+      }
     }
   }
-  
-  cover_goalst cover_goals(solver);
-  
-  for(goal_mapt::const_iterator
-      it=goal_map.begin();
-      it!=goal_map.end();
+    
+  for(cover_goals_extt::goal_mapt::const_iterator
+      it=cover_goals.goal_map.begin();
+      it!=cover_goals.goal_map.end();
       it++)
   {
     // Our goal is to falsify a property.
     // The following is TRUE if the conjunction is empty.
-    literalt p=!solver.convert(conjunction(it->second.conjuncts));
+    literalt p=!solver.solver.convert(conjunction(it->second.conjuncts));
     cover_goals.add(p);
   }
 
-  status() << "Running " << solver.decision_procedure_text() << eom;
+  status() << "Running " << solver.solver.decision_procedure_text() << eom;
 
   cover_goals();  
 
-  std::list<cover_goalst::cover_goalt>::const_iterator g_it=
+  std::list<cover_goals_extt::cover_goalt>::const_iterator g_it=
     cover_goals.goals.begin();
-  for(goal_mapt::const_iterator
-      it=goal_map.begin();
-      it!=goal_map.end();
+  for(cover_goals_extt::goal_mapt::const_iterator
+      it=cover_goals.goal_map.begin();
+      it!=cover_goals.goal_map.end();
       it++, g_it++)
   {
-    property_map[it->first].result=g_it->covered?FAIL:PASS;
-    if(g_it->covered) 
-    {
-      show_error_trace(it->first,SSA,solver,debug(),get_message_handler());
-    }
+    if(!g_it->covered) property_map[it->first].result=PASS;
   }
 
-  //statistics
-  solver_instances++;
-  solver_calls += cover_goals.iterations();
+  solver.pop_context();
 
   debug() << "** " << cover_goals.number_covered()
            << " of " << cover_goals.size() << " failed ("
@@ -696,4 +704,88 @@ property_checkert::resultt summary_checkert::report_termination()
   }
   if(all_terminate) return property_checkert::PASS;
   return property_checkert::FAIL;
+}
+
+/*******************************************************************\
+
+Function: summary_checkert::is_spurious
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: checks whether a countermodel is spurious
+
+\*******************************************************************/
+
+exprt::operandst summary_checkert::get_loophead_selects(
+  const irep_idt &function_name, 
+  const local_SSAt &SSA, prop_convt &solver)
+{
+  exprt::operandst loophead_selects;
+  for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
+      n_it != SSA.nodes.end(); n_it++)
+  {
+    if(n_it->loophead==SSA.nodes.end()) continue;
+    symbol_exprt lsguard = SSA.name(SSA.guard_symbol(), local_SSAt::LOOP_SELECT, n_it->location);
+    ssa_unwinder.get(function_name).unwinder_rename(lsguard,*n_it,true);
+    loophead_selects.push_back(not_exprt(lsguard));
+    solver.set_frozen(solver.convert(lsguard));
+  }
+  literalt loophead_selects_literal = solver.convert(conjunction(loophead_selects));
+  if(!loophead_selects_literal.is_constant())
+    solver.set_frozen(loophead_selects_literal);
+
+  //  std::cout << "loophead_selects: " << from_expr(SSA.ns,"",conjunction(loophead_selects)) << std::endl;
+
+  return loophead_selects;
+}
+
+/*******************************************************************\
+
+Function: summary_checkert::is_spurious
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: checks whether a countermodel is spurious
+
+\*******************************************************************/
+
+bool summary_checkert::is_spurious(const exprt::operandst &loophead_selects, 
+				   incremental_solvert &solver)
+{
+  //check loop head choices in model
+  bool invariants_involved = false;
+  for(exprt::operandst::const_iterator l_it = loophead_selects.begin();
+        l_it != loophead_selects.end(); l_it++)
+  {
+    if(solver.solver.get(l_it->op0()).is_true()) 
+    {
+      invariants_involved = true; 
+      break;
+    }
+  }
+  if(!invariants_involved) return false;
+  
+  // force avoiding paths going through invariants
+  solver << conjunction(loophead_selects);
+
+  solver_calls++; //statistics
+
+  switch(solver())
+  {
+  case decision_proceduret::D_SATISFIABLE:
+    return false;
+    break;
+      
+  case decision_proceduret::D_UNSATISFIABLE:
+    return true;
+    break;
+
+  case decision_proceduret::D_ERROR:    
+  default:
+    throw "error from decision procedure";
+  }
 }

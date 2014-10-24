@@ -25,7 +25,6 @@ Author: Peter Schrammel
 #include "../ssa/local_ssa.h"
 #include "../ssa/simplify_ssa.h"
 
-#define PRECISE_JOIN
 
 /*******************************************************************\
 
@@ -158,13 +157,17 @@ Function: summarizer_bwt::do_summary()
 \*******************************************************************/
 
 void summarizer_bwt::do_summary(const function_namet &function_name, 
-				const local_SSAt &SSA,
+				local_SSAt &SSA,
 				const summaryt &old_summary,
 				summaryt &summary,
 				bool context_sensitive)
 {
   bool sufficient = options.get_bool_option("sufficient");
   status() << "Computing preconditions" << eom;
+
+  // solver
+  incremental_solvert &solver = ssa_db.get_solver(function_name);
+  solver.set_message_handler(get_message_handler());
 
   //analyze
   ssa_analyzert analyzer;
@@ -173,7 +176,7 @@ void summarizer_bwt::do_summary(const function_namet &function_name,
   template_generator_summaryt template_generator(
     options,ssa_unwinder.get(function_name));
   template_generator.set_message_handler(get_message_handler());
-  template_generator(SSA,false);
+  template_generator(solver.next_domain_number(),SSA,false);
 
   exprt::operandst c;
   c.push_back(old_summary.fw_precondition);
@@ -191,7 +194,7 @@ void summarizer_bwt::do_summary(const function_namet &function_name,
     c.push_back(not_exprt(conjunction(postcond))); 
   }
 
-  analyzer(SSA,conjunction(c),template_generator);
+  analyzer(solver,SSA,conjunction(c),template_generator);
   analyzer.get_result(summary.bw_transformer,template_generator.inout_vars());
   analyzer.get_result(summary.bw_invariant,template_generator.loop_vars());
   analyzer.get_result(summary.bw_precondition,template_generator.out_vars());
@@ -214,7 +217,7 @@ void summarizer_bwt::do_summary(const function_namet &function_name,
   }
 
   //statistics
-  solver_instances++;
+  solver_instances += analyzer.get_number_of_solver_instances();
   solver_calls += analyzer.get_number_of_solver_calls();
 }
 
@@ -231,7 +234,7 @@ Function: summarizer_bwt::inline_summaries()
 \*******************************************************************/
 
 void summarizer_bwt::inline_summaries(const function_namet &function_name, 
-				   const local_SSAt &SSA, 
+				   local_SSAt &SSA, 
 				   const exprt &postcondition,
 				   bool context_sensitive)
 {
@@ -371,14 +374,19 @@ bool summarizer_bwt::check_postcondition(
 
   assert(!assertion.is_nil());
 
-  // precondition check
-  satcheckt satcheck;
-  bv_pointerst solver(SSA.ns, satcheck);
-  satcheck.set_message_handler(get_message_handler());
+  // postcondition check
+  // solver
+  incremental_solvert &solver = ssa_db.get_solver(function_name);
   solver.set_message_handler(get_message_handler());
-    
-  solver << precondition;
   solver << SSA;
+
+  solver.new_context();
+  solver << SSA.get_enabling_exprs();
+
+  solver << precondition;
+  solver << ssa_inliner.get_summaries(SSA);
+
+  //add postcondition
   solver << not_exprt(assertion);
 
   switch(solver())
@@ -397,10 +405,6 @@ bool summarizer_bwt::check_postcondition(
     break; }
   default: assert(false); break;
   }
-
-  //statistics
-  solver_instances++;
-  solver_calls++;
 
   return precondition_holds;
 }

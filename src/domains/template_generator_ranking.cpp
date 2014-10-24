@@ -32,14 +32,16 @@ Function: template_generator_rankingt::operator()
 
 \*******************************************************************/
 
-void template_generator_rankingt::operator()(const local_SSAt &SSA,  bool forward)
+void template_generator_rankingt::operator()(unsigned _domain_number,
+			  const local_SSAt &SSA,  bool forward)
 {
+  domain_number = _domain_number;
   handle_special_functions(SSA); // we have to call that to prevent trouble!
 
 #ifndef LEXICOGRAPHIC
-  domain_ptr = new linrank_domaint(renaming_map);
+  domain_ptr = new linrank_domaint(domain_number,renaming_map);
 #else
-  domain_ptr = new lexlinrank_domaint(renaming_map);
+  domain_ptr = new lexlinrank_domaint(domain_number,renaming_map);
 #endif
  collect_variables_ranking(SSA,forward);
 

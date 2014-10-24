@@ -35,8 +35,8 @@ public:
 
   typedef std::vector<template_rowt> templatet;
 
-  linrank_domaint(replace_mapt &_renaming_map) :
-      domaint(_renaming_map),
+  linrank_domaint(unsigned _domain_number, replace_mapt &_renaming_map) :
+      domaint(_domain_number, _renaming_map),
       refinement_level(0)
   {}
 

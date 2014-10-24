@@ -42,22 +42,22 @@ class summarizer_bwt : public summarizer_baset
                            bool context_sensitive);
 
   void inline_summaries(const function_namet &function_name, 
-			const local_SSAt &SSA,
+			local_SSAt &SSA,
     		        const exprt &postcondition,
                         bool context_sensitive); 
 
   void do_summary(const function_namet &function_name, 
-		  const local_SSAt &SSA, 
+		  local_SSAt &SSA, 
 		  const summaryt &old_summary,
 		  summaryt &summary, 
 		  bool forward);
 
   virtual bool check_postcondition(const function_namet &function_name, 
-                          const local_SSAt &SSA,
-			  local_SSAt::nodest::const_iterator node, 
-			  local_SSAt::nodet::function_callst::const_iterator f_it,
-    		          const exprt &postcondition,
-                          bool context_sensitive);
+                  const local_SSAt &SSA,
+		  local_SSAt::nodest::const_iterator node, 
+		  local_SSAt::nodet::function_callst::const_iterator f_it,
+    		  const exprt &postcondition,
+                  bool context_sensitive);
 
   void collect_postconditions(const function_namet &function_name,
 			       const local_SSAt &SSA, 

@@ -92,7 +92,7 @@ Function: summarizer_baset::check_call_reachable()
 
 bool summarizer_baset::check_call_reachable(
   const function_namet &function_name,
-  const local_SSAt &SSA,
+  local_SSAt &SSA,
   local_SSAt::nodest::const_iterator n_it, 
   local_SSAt::nodet::function_callst::const_iterator f_it,
   const exprt& precondition,
@@ -104,17 +104,23 @@ bool summarizer_baset::check_call_reachable(
   debug() << "Checking reachability of call to " << fname << eom;
 
   bool reachable = false;
+
   // reachability check
-  satcheckt satcheck;
-  bv_pointerst solver(SSA.ns, satcheck);
-  satcheck.set_message_handler(get_message_handler());
+  // solver
+  incremental_solvert &solver = ssa_db.get_solver(function_name);
   solver.set_message_handler(get_message_handler());
-    
+
   solver << SSA;
+
+  solver.new_context();
+  solver << SSA.get_enabling_exprs();
   solver << precondition;
+  solver << ssa_inliner.get_summaries(SSA);
+
   symbol_exprt guard = SSA.guard_symbol(n_it->location);
   ssa_unwinder.get(function_name).unwinder_rename(guard,*n_it,false);
   solver << guard;
+
   if(!forward) 
     solver << SSA.guard_symbol(--SSA.goto_function.body.instructions.end());
 
@@ -130,9 +136,7 @@ bool summarizer_baset::check_call_reachable(
   default: assert(false); break;
   }
 
-  //statistics
-  solver_instances++;
-  solver_calls++;
+  solver.pop_context();
 
   return reachable;
 }
@@ -152,7 +156,7 @@ Function: summarizer_baset::compute_calling_context ()
 
 exprt summarizer_baset::compute_calling_context(
   const function_namet &function_name, 
-  const local_SSAt &SSA,
+  local_SSAt &SSA,
   local_SSAt::nodest::const_iterator n_it, 
   local_SSAt::nodet::function_callst::const_iterator f_it,
   const exprt &precondition,
@@ -163,13 +167,17 @@ exprt summarizer_baset::compute_calling_context(
 
   status() << "Computing calling context for function " << fname << eom;
 
+  // solver
+  incremental_solvert &solver = ssa_db.get_solver(function_name);
+  solver.set_message_handler(get_message_handler());
+
   ssa_analyzert analyzer;
   analyzer.set_message_handler(get_message_handler());
 
   template_generator_callingcontextt template_generator(
     options,ssa_unwinder.get(function_name));
   template_generator.set_message_handler(get_message_handler());
-  template_generator(SSA,n_it,f_it,forward);
+  template_generator(solver.next_domain_number(),SSA,n_it,f_it,forward);
 
   // collect globals at call site
   std::map<local_SSAt::nodet::function_callst::const_iterator, local_SSAt::var_sett>
@@ -182,7 +190,7 @@ exprt summarizer_baset::compute_calling_context(
     SSA.guard_symbol(--SSA.goto_function.body.instructions.end()));
 
   // analyze
-  analyzer(SSA,cond,template_generator);
+  analyzer(solver,SSA,cond,template_generator);
 
   // set preconditions
   local_SSAt &fSSA = ssa_db.get(fname); 
@@ -199,7 +207,7 @@ exprt summarizer_baset::compute_calling_context(
 	  << from_expr(SSA.ns, "", precondition_call) << eom;
 
   //statistics
-  solver_instances++;
+  solver_instances += analyzer.get_number_of_solver_instances();
   solver_calls += analyzer.get_number_of_solver_calls();
 
   return precondition_call;
@@ -246,7 +254,7 @@ Function: summarizer_baset::check_precondition()
 
 bool summarizer_baset::check_precondition(
   const function_namet &function_name,
-  const local_SSAt &SSA,
+  local_SSAt &SSA,
   local_SSAt::nodest::const_iterator n_it, 
   local_SSAt::nodet::function_callst::const_iterator f_it,
   const exprt &precondition,
@@ -309,13 +317,18 @@ bool summarizer_baset::check_precondition(
   assert(!assertion.is_nil());
 
   // precondition check
-  satcheckt satcheck;
-  bv_pointerst solver(SSA.ns, satcheck);
-  satcheck.set_message_handler(get_message_handler());
+  // solver
+  incremental_solvert &solver = ssa_db.get_solver(function_name);
   solver.set_message_handler(get_message_handler());
-    
-  solver << precondition;
   solver << SSA;
+
+  solver.new_context();
+  solver << SSA.get_enabling_exprs();
+
+  solver << precondition;
+  solver << ssa_inliner.get_summaries(SSA);
+
+  //add precondition
   solver << not_exprt(assertion);
 
   switch(solver())
@@ -335,9 +348,7 @@ bool summarizer_baset::check_precondition(
   default: assert(false); break;
   }
 
-  //statistics
-  solver_instances++;
-  solver_calls++;
+  solver.pop_context();
 
   return precondition_holds;
 }

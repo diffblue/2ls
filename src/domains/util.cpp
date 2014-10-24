@@ -29,7 +29,8 @@ void extend_expr_types(exprt &expr)
   {
     extend_expr_types(expr.op0());
 
-    if(expr.op0().type().id()==ID_signedbv || expr.op0().type().id()==ID_unsignedbv)
+    if(expr.op0().type().id()==ID_signedbv || 
+       expr.op0().type().id()==ID_unsignedbv)
     {
       typet new_type = signedbv_typet(get_bitvector_width(expr.op0())+1);
       expr = unary_minus_exprt(typecast_exprt(expr.op0(),new_type),new_type);
@@ -70,9 +71,11 @@ void extend_expr_types(exprt &expr)
      else assert(false); //TODO: implement floats
     }
     if(expr.id()==ID_plus)
-      expr = plus_exprt(typecast_exprt(expr.op0(),new_type),typecast_exprt(expr.op1(),new_type));
+      expr = plus_exprt(typecast_exprt(expr.op0(),new_type),
+			typecast_exprt(expr.op1(),new_type));
     else if(expr.id()==ID_minus)
-      expr = minus_exprt(typecast_exprt(expr.op0(),new_type),typecast_exprt(expr.op1(),new_type));
+      expr = minus_exprt(typecast_exprt(expr.op0(),new_type),
+			 typecast_exprt(expr.op1(),new_type));
      else assert(false); //TODO: implement floats
     return;
   }
@@ -85,25 +88,31 @@ void extend_expr_types(exprt &expr)
     unsigned size1 = get_bitvector_width(expr.op1());
  
     assert(size0>0); assert(size1>0); 
-    if((expr.op0().type().id()==ID_unsignedbv || expr.op0().type().id()==ID_signedbv) &&
-       (expr.op1().type().id()==ID_unsignedbv || expr.op1().type().id()==ID_signedbv))
+    if((expr.op0().type().id()==ID_unsignedbv || 
+	expr.op0().type().id()==ID_signedbv) &&
+       (expr.op1().type().id()==ID_unsignedbv || 
+	expr.op1().type().id()==ID_signedbv))
     {
       typet new_type = signedbv_typet(size0+size1+1);
-      expr = mult_exprt(typecast_exprt(expr.op0(),new_type),typecast_exprt(expr.op1(),new_type));
+      expr = mult_exprt(typecast_exprt(expr.op0(),new_type),
+			typecast_exprt(expr.op1(),new_type));
       return;
     }
-    else if(expr.op0().type().id()==ID_floatbv && expr.op1().type().id()==ID_floatbv)
+    else if(expr.op0().type().id()==ID_floatbv && 
+	    expr.op1().type().id()==ID_floatbv)
     {
       // TODO: shall we extend floats? 
     }
-    else if((expr.op0().type().id()==ID_unsignedbv || expr.op0().type().id()==ID_signedbv) &&
+    else if((expr.op0().type().id()==ID_unsignedbv || 
+	     expr.op0().type().id()==ID_signedbv) &&
         expr.op1().type().id()==ID_floatbv)
     {
       typet new_type = expr.op1().type(); // TODO: shall we extend floats? 
       expr = mult_exprt(typecast_exprt(expr.op0(),new_type),expr.op1());
       return;
     }
-    else if((expr.op1().type().id()==ID_unsignedbv || expr.op1().type().id()==ID_signedbv) &&
+    else if((expr.op1().type().id()==ID_unsignedbv || 
+	     expr.op1().type().id()==ID_signedbv) &&
         expr.op0().type().id()==ID_floatbv)
     {
       typet new_type = expr.op0().type(); // TODO: shall we extend floats? 

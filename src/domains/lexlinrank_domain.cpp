@@ -11,7 +11,7 @@
 #define SYMB_COEFF_VAR "symb_coeff#"
 
 #define EXTEND_TYPES
-#define DIFFERENCE_ENCODING
+//#define DIFFERENCE_ENCODING
 
 #define COEFF_C_SIZE 10
 #define MAX_REFINEMENT 2

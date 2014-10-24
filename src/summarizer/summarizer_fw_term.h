@@ -46,13 +46,13 @@ class summarizer_fw_termt : public summarizer_fwt
 			bool &has_function_calls); 
 
   void do_termination(const function_namet &function_name, 
-		      const local_SSAt &SSA, 
+		      local_SSAt &SSA, 
 		      summaryt &summary);
 
   threevalt check_termination_argument(exprt expr);
 
   bool check_end_reachable(const function_namet &function_name,
-			   const local_SSAt &SSA, 
+			   local_SSAt &SSA, 
 			   const exprt &cond);
 };
 

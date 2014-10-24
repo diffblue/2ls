@@ -12,10 +12,13 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/time_stopping.h>
 
 #include <goto-programs/property_checker.h>
+#include <solvers/prop/prop_conv.h>
 
+#include "cover_goals_ext.h"
 #include "../ssa/local_ssa.h"
 #include "../ssa/ssa_unwinder.h"
 #include "../ssa/ssa_inliner.h"
+#include "../domains/incremental_solver.h"
 #include "ssa_db.h"
 #include "summary_db.h"
 
@@ -27,12 +30,13 @@ public:
     simplify(false),
     fixed_point(false),
     options(_options),
-    ssa_inliner(summary_db),
+    ssa_db(),summary_db(),
     ssa_unwinder(ssa_db),
+    ssa_inliner(summary_db),
     solver_instances(0),
     solver_calls(0)
   {
-
+    ssa_inliner.set_message_handler(get_message_handler());
   }
   
   bool show_vcc, simplify, fixed_point;
@@ -48,8 +52,8 @@ protected:
 
   ssa_dbt ssa_db;
   summary_dbt summary_db;
-  ssa_inlinert ssa_inliner;
   ssa_unwindert ssa_unwinder;
+  ssa_inlinert ssa_inliner;
 
   unsigned solver_instances;
   unsigned solver_calls;
@@ -63,14 +67,21 @@ protected:
 
   void SSA_functions(const goto_modelt &, const namespacet &ns);
 
-  void summarize(const goto_modelt &, bool forward, bool termination);
+  void summarize(const goto_modelt &, bool forward=true, bool sufficient=false);
 
   property_checkert::resultt check_properties();
-  void check_properties_non_incremental(const ssa_dbt::functionst::const_iterator f_it);
-  void check_properties_incremental(const ssa_dbt::functionst::const_iterator f_it);
+  void check_properties_non_incremental(
+		  const ssa_dbt::functionst::const_iterator f_it);
+  void check_properties_incremental(
+		  const ssa_dbt::functionst::const_iterator f_it);
+
+  exprt::operandst get_loophead_selects(
+    const irep_idt &function_name, const local_SSAt &, prop_convt &);
+  bool is_spurious(const exprt::operandst& loophead_selects, 
+		   incremental_solvert&);
 
   void report_preconditions();
-  resultt report_termination();
+  property_checkert::resultt report_termination();
 
 };
 

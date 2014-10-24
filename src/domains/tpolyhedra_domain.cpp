@@ -334,7 +334,8 @@ Function: tpolyhedra_domaint::get_row_symb_value
 symbol_exprt tpolyhedra_domaint::get_row_symb_value(const rowt &row)
 {
   assert(row<templ.size());
-  return symbol_exprt(SYMB_BOUND_VAR+i2string(row),templ[row].expr.type());
+  return symbol_exprt(SYMB_BOUND_VAR+i2string(domain_number)+"$"+
+		      i2string(row),templ[row].expr.type());
 }
 
 /*******************************************************************\

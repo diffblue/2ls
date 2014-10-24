@@ -4,7 +4,7 @@ SRC = summarizer_base.cpp summarizer_fw.cpp \
       summarizer_fw_term.cpp summarizer_bw.cpp \
       summarizer_main.cpp summarizer_parseoptions.cpp \
       show.cpp summary_checker.cpp  \
-      summary_db.cpp \
+      summary_db.cpp cover_goals_ext.cpp \
       summary.cpp ssa_db.cpp \
       array_abstraction.cpp
 
@@ -47,11 +47,11 @@ DELTA_OBJ+=\
       ../domains/equality_domain$(OBJEXT) \
       ../domains/domain$(OBJEXT) \
       ../domains/util$(OBJEXT) \
+      ../domains/incremental_solver$(OBJEXT) \
       ../domains/strategy_solver_equality$(OBJEXT) \
       ../domains/strategy_solver_base$(OBJEXT) \
       ../domains/strategy_solver_enumeration$(OBJEXT) \
       ../domains/strategy_solver_binsearch$(OBJEXT) \
-      ../domains/strategy_solver_binsearch2$(OBJEXT) \
       ../domains/template_generator_base$(OBJEXT) \
       ../domains/template_generator_summary$(OBJEXT) \
       ../domains/template_generator_callingcontext$(OBJEXT) \
@@ -62,6 +62,9 @@ DELTA_OBJ+=\
       ../domains/linrank_domain$(OBJEXT) \
       ../domains/lexlinrank_solver_enumeration$(OBJEXT) \
       ../domains/lexlinrank_domain$(OBJEXT)
+
+#      ../domains/strategy_solver_binsearch2$(OBJEXT) 
+
 
 OBJ+=$(DELTA_OBJ)
 

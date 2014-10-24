@@ -4,7 +4,6 @@
 #include "lexlinrank_solver_enumeration.h"
 #include "util.h"
 
-//#define DEBUG_OUTER_FORMULA 
 #define DEBUG_INNER_FORMULA 
 #define MAX_ELEMENTS 3 // lexicographic components
 #define MAX_REFINEMENTS 20
@@ -14,61 +13,43 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
   lexlinrank_domaint::templ_valuet &rank = 
     static_cast<lexlinrank_domaint::templ_valuet &>(_rank);
 
-
-  satcheck_minisat_no_simplifiert test_satcheck;
-  bv_pointerst test_solver = bv_pointerst(ns, test_satcheck);
- 
   bool improved = false;
   static std::vector<int> number_elements_per_row;
   number_elements_per_row.resize(rank.size());
 
   debug() << "(RANK) no rows = " << rank.size() << eom;
 
-  literalt activation_literal = new_context();
+  solver.new_context();
 
   //handles on values to retrieve from model
   std::vector<lexlinrank_domaint::pre_post_valuest> rank_value_exprs;
   exprt::operandst rank_cond_exprs;
   bvt rank_cond_literals;
 
-  exprt rank_expr = lexlinrank_domain.get_not_constraints(rank, rank_cond_exprs, rank_value_exprs);
+  exprt rank_expr = lexlinrank_domain.get_not_constraints(rank, 
+    rank_cond_exprs, rank_value_exprs);
 
-#ifndef DEBUG_OUTER_FORMULA
-  solver << or_exprt(rank_expr, literal_exprt(activation_literal));
-#else
-  debug() << "(RANK) Rank constraint : ";
-  pretty_print_termination_argument(debug(), ns, or_exprt(rank_expr, literal_exprt(activation_literal)));
-  debug() << eom; 
-  debug() << "(RANK) activation literal " << activation_literal << eom;
-  literalt l = solver.convert(or_exprt(rank_expr, literal_exprt(activation_literal)));
-  if(!l.is_constant()) 
-  {
-    debug() << "(RANK) literal " << l << ": ";
-    pretty_print_termination_argument(debug(), ns, or_exprt(rank_expr, literal_exprt(activation_literal)));
-    debug() << eom;
-//      formula.clear();
-    formula.push_back(l);
-
-  }
-#endif
+  solver << rank_expr;
 
   rank_cond_literals.resize(rank_cond_exprs.size());
-  
   for(unsigned i = 0; i < rank_cond_exprs.size(); i++)
   {  
-    rank_cond_literals[i] = solver.convert(rank_cond_exprs[i]);
-    //rank_cond_exprs[i] = literal_exprt(rank_cond_literals[i]);
+    rank_cond_literals[i] = solver.solver.convert(rank_cond_exprs[i]);
   }
 
   debug() << "solve(): ";
 
-#ifdef DEBUG_OUTER_FORMULA
+#ifdef DEBUG_FORMULA
   bvt whole_formula = formula;
   whole_formula.insert(whole_formula.end(),activation_literals.begin(),activation_literals.end());
   solver.set_assumptions(whole_formula);
+#endif
 
 #if 0
   // check whether the literal is UNSAT to start with
+  satcheck_minisat_no_simplifiert test_satcheck;
+  bv_pointerst test_solver = bv_pointerst(ns, test_satcheck);
+
   test_solver << rank_expr;
 
   if(test_solver() == decision_proceduret::D_SATISFIABLE)
@@ -77,30 +58,30 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
     debug() << "test solver: UNSAT" << eom;
 #endif
 
-#endif
-
-  if(solve() == decision_proceduret::D_SATISFIABLE) 
+  if(solver() == decision_proceduret::D_SATISFIABLE) 
   { 
     debug() << "(RANK) outer solver: SAT" << eom;
 
-  
     for(unsigned row = 0; row < rank_cond_literals.size(); row++)
     {
       // retrieve values from the model x_i and x'_i
       lexlinrank_domaint::pre_post_valuest values;
   
-      if(solver.l_get(rank_cond_literals[row]).is_true()) 
+      if(solver.solver.l_get(rank_cond_literals[row]).is_true()) 
       {
-	for(lexlinrank_domaint::pre_post_valuest::iterator it = rank_value_exprs[row].begin(); 
+	for(lexlinrank_domaint::pre_post_valuest::iterator it = 
+	      rank_value_exprs[row].begin(); 
 	    it != rank_value_exprs[row].end(); ++it) 
 	{
 	  // model for x_i
-	  exprt value = solver.get(it->first);
-	  debug() << "(RANK) Row " << row << " Value for " << from_expr(ns,"",it->first) 
+	  exprt value = solver.solver.get(it->first);
+	  debug() << "(RANK) Row " << row << " Value for " 
+		  << from_expr(ns,"",it->first) 
 		  << ": " << from_expr(ns,"",value) << eom;
 	  // model for x'_i
-	  exprt post_value = solver.get(it->second);
-	  debug() << "(RANK) Row " << row << " Value for " << from_expr(ns,"",it->second) 
+	  exprt post_value = solver.solver.get(it->second);
+	  debug() << "(RANK) Row " << row << " Value for " 
+		  << from_expr(ns,"",it->second) 
 		  << ": " << from_expr(ns,"",post_value) << eom;
 	  // record all the values
 	  values.push_back(std::make_pair(value, post_value));
@@ -115,11 +96,12 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
 	exprt refinement_constraint;
 
 	// generate the new constraint
-	constraint = lexlinrank_domain.get_row_symb_constraint(symb_values, row, values, refinement_constraint);
+	constraint = lexlinrank_domain.get_row_symb_constraint(symb_values, 
+          row, values, refinement_constraint);
 
 	simplify_expr(constraint, ns);
-	debug() << "(RANK) Constraint sent to the inner Solver: " << row << " constraint ";
-
+	debug() << "(RANK) Constraint sent to the inner Solver: " << row 
+		<< " constraint ";
 	pretty_print_termination_argument(debug(), ns, constraint);
  
 	debug() << eom;
@@ -134,15 +116,15 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
         else
 	{
           assumptions.resize(1);
-          assumptions[0] = inner_solver->convert(refinement_constraint);
+          assumptions[0] = inner_solver->solver.convert(refinement_constraint);
 	}	
 
-        inner_solver->set_assumptions(assumptions);
-
+        inner_solver->solver.set_assumptions(assumptions);
 
 #else
-	literalt inner_l = inner_solver->convert(constraint);
-	debug() << "(RANK-inner) literal " << inner_l << " corresponds to formula ";
+	literalt inner_l = inner_solver->solver.convert(constraint);
+	debug() << "(RANK-inner) literal " << inner_l 
+		<< " corresponds to formula ";
 	pretty_print_termination_argument(debug(), ns, constraint); 	
 	debug() << eom;
 
@@ -153,35 +135,29 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
 
         //set assumptions for refinement
         if(!refinement_constraint.is_true()) {
-	  literalt refinement_l = inner_solver->convert(refinement_constraint);
-	  debug() << "(RANK-inner) literal " << refinement_l << " corresponds to refinement formula ";
-	  pretty_print_termination_argument(debug(), ns, refinement_constraint); 	
-	  debug() << eom;
+	  literalt refinement_l = 
+	    inner_solver->solver.convert(refinement_constraint);
+	  debug() << "(RANK-inner) literal " << refinement_l 
+		  << " corresponds to refinement formula ";
+	  pretty_print_termination_argument(debug(), ns, refinement_constraint)	; debug() << eom;
 	  inner_formula.push_back(refinement_l);
 	}	
 
-	inner_solver->set_assumptions(inner_formula);
+	inner_solver->solver.set_assumptions(inner_formula);
 
 #endif
-
-
-
 	debug() << "(RANK) inner solve()" << eom;
-
-
 	// solve
 	//decision_proceduret::
 	bool inner_solver_result = (*inner_solver)(); 
 	if(inner_solver_result == decision_proceduret::D_SATISFIABLE && 
 	   number_refinements < MAX_REFINEMENTS) 
 	{ 
-
 	  number_refinements++;
 	  
 	  debug() << "(RANK) inner solver: SAT and the max number of refinements was not reached " << eom;
 	  debug() << "(RANK) inner solver: Current number of refinements = " << number_refinements << eom;
 	  debug() << "(RANK) inner solver: Current number of components for row " << row << " is " << number_elements_per_row[row]+1 << eom;
-
 
 	  // new_row_values will contain the new values for c and d
 	  lexlinrank_domaint::row_valuet new_row_values;
@@ -191,20 +167,18 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
 
 	    std::vector<exprt> c = symb_values[constraint_no].c;
 
-
 	    // get the model for all c
 	    for(std::vector<exprt>::iterator it = c.begin(); it != c.end(); ++it) 
 	    {
-	      exprt v = inner_solver->get(*it);
+	      exprt v = inner_solver->solver.get(*it);
 	      new_row_values[constraint_no].c.push_back(v);
-	      debug() << "(RANK) Inner Solver: row " << row << " ==> c value for ";
+	      debug() << "(RANK) Inner Solver: row " << row 
+		      << " ==> c value for ";
 	      pretty_print_termination_argument(debug(), ns, *it); 
 	      debug() << ": "; 
 	      pretty_print_termination_argument(debug(), ns, v);
 	      debug() << eom;
 	    }
-
-
 	  }
 
 	  improved = true;
@@ -213,7 +187,8 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
 	  lexlinrank_domain.set_row_value(row, new_row_values, rank);
 
 	}
-	else {
+	else 
+	{
 	  if(inner_solver_result == decision_proceduret::D_UNSATISFIABLE)
 	    debug() << "(RANK) inner solver: UNSAT" << eom;
 	  else
@@ -224,7 +199,7 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
 #ifdef DEBUG_INNER_FORMULA
 	  for(unsigned i=0; i<inner_formula.size(); i++) 
 	  {
-	    if(inner_solver->is_in_conflict(inner_formula[i]))
+	    if(inner_solver->solver.is_in_conflict(inner_formula[i]))
 	      debug() << "(RANK-inner) is_in_conflict: " << inner_formula[i] << eom;
 	    else
 	      debug() << "(RANK-inner) not_in_conflict: " << inner_formula[i] << eom;
@@ -248,13 +223,10 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
 	      debug() << "(RANK) inner solver: increasing the number of lexicographic componenets for row " << row << " to " << number_elements_per_row[row] + 1 << eom;
 	      // reset the inner solver
 	      debug() << "(RANK) reset the inner solver " << eom;
-	      delete inner_satcheck;
 	      delete inner_solver;
-	      inner_satcheck = new satcheck_minisat_no_simplifiert();
-	      inner_solver = new bv_pointerst(ns, *inner_satcheck);
+	      inner_solver = new incremental_solvert(ns);
 	      inner_formula.clear();
 	      lexlinrank_domain.reset_refinements();
-//	    formula.clear();
 
 	      lexlinrank_domain.add_element(row, rank);
 	      number_refinements = 0;
@@ -272,7 +244,7 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
     debug() << "(RANK) outer solver: UNSAT!!" << eom;
 #ifdef DEBUG_OUTER_FORMULA
     for(unsigned i=0; i<formula.size(); i++) {
-      if(solver.is_in_conflict(formula[i]))
+      if(solver.solver.is_in_conflict(formula[i]))
 	debug() << "(RANK-outer) is_in_conflict: " << formula[i] << eom;
       else
 	debug() << "(RANK-outer) not_in_conflict: " << formula[i] << eom;
@@ -282,7 +254,7 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
 
   }
 
-  pop_context();
+  solver.pop_context();
   debug() << "(RANK): outer solver => pop context" << eom;
   return improved;
 }

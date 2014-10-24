@@ -207,7 +207,8 @@ Function: local_SSAt::find_nodes
 
 \*******************************************************************/
 
-void local_SSAt::find_nodes(locationt loc, std::list<nodest::const_iterator> &_nodes) const
+void local_SSAt::find_nodes(locationt loc, 
+			    std::list<nodest::const_iterator> &_nodes) const
 {
   nodest::const_iterator n_it = nodes.begin();
   for(; n_it != nodes.end(); n_it++)
@@ -215,7 +216,6 @@ void local_SSAt::find_nodes(locationt loc, std::list<nodest::const_iterator> &_n
     if(n_it->location == loc) _nodes.push_back(n_it);
   }
 }
-
 
 /*******************************************************************\
 
@@ -1253,6 +1253,8 @@ void local_SSAt::output(std::ostream &out) const
     out << "*** " << n_it->location->location_number
         << " " << n_it->location->source_location << "\n";
     n_it->output(out, ns);
+    if(n_it->loophead!=nodes.end()) 
+      out << "loop back to location " << n_it->loophead->location->location_number << "\n";
     out << "\n";
   }
   out << "(enable) " << from_expr(ns, "", get_enabling_exprs()) << "\n\n";
@@ -1274,6 +1276,8 @@ void local_SSAt::nodet::output(
   std::ostream &out,
   const namespacet &ns) const
 {
+  if(!marked) 
+    out << "(not marked)" << "\n";
   for(equalitiest::const_iterator
       e_it=equalities.begin();
       e_it!=equalities.end();
@@ -1365,6 +1369,7 @@ std::list<exprt> & operator << (
   for(local_SSAt::nodest::const_iterator n_it = src.nodes.begin();
     n_it != src.nodes.end(); n_it++)
   {
+    if(n_it->marked) continue;
     for(local_SSAt::nodet::equalitiest::const_iterator
         e_it=n_it->equalities.begin();
         e_it!=n_it->equalities.end();
@@ -1404,6 +1409,7 @@ decision_proceduret & operator << (
   for(local_SSAt::nodest::const_iterator n_it = src.nodes.begin();
     n_it != src.nodes.end(); n_it++)
   {
+    if(n_it->marked) continue;
     for(local_SSAt::nodet::equalitiest::const_iterator
         e_it=n_it->equalities.begin();
         e_it!=n_it->equalities.end();
@@ -1418,6 +1424,52 @@ decision_proceduret & operator << (
         c_it++)
     {
       dest << *c_it;
+    }
+  }
+  
+  return dest;
+}
+
+/*******************************************************************\
+
+Function: local_SSAt::operator <<
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+incremental_solvert & operator << (
+  incremental_solvert &dest,
+  const local_SSAt &src)
+{
+  for(local_SSAt::nodest::const_iterator n_it = src.nodes.begin();
+    n_it != src.nodes.end(); n_it++)
+  {
+    if(n_it->marked) continue;
+    for(local_SSAt::nodet::equalitiest::const_iterator
+        e_it=n_it->equalities.begin();
+        e_it!=n_it->equalities.end();
+        e_it++)
+    {
+      if(!n_it->enabling_expr.is_true()) 
+	dest << implies_exprt(n_it->enabling_expr,*e_it);
+      else
+        dest << *e_it;
+    }
+
+    for(local_SSAt::nodet::constraintst::const_iterator
+        c_it=n_it->constraints.begin();
+        c_it!=n_it->constraints.end();
+        c_it++)
+    {
+      if(!n_it->enabling_expr.is_true()) 
+	dest << implies_exprt(n_it->enabling_expr,*c_it);
+      else
+        dest << *c_it;
     }
   }
   

@@ -5,18 +5,19 @@
 #include <solvers/flattening/bv_pointers.h>
 
 #include "strategy_solver_base.h"
+#include "../domains/incremental_solver.h"
 #include "linrank_domain.h"
 
 class ranking_solver_enumerationt : public strategy_solver_baset 
 {
  public:
-  explicit ranking_solver_enumerationt(const constraintst &program,
+  explicit ranking_solver_enumerationt(
     linrank_domaint &_linrank_domain,
-    bv_pointerst &_solver, const namespacet &_ns) : 
-    strategy_solver_baset(program, _solver, _ns),
+    incremental_solvert &_solver, 
+    const namespacet &_ns) : 
+    strategy_solver_baset(_solver, _ns),
     linrank_domain(_linrank_domain),
-    inner_satcheck(),
-    inner_solver(_ns, inner_satcheck), 
+    inner_solver(_ns),
     number_inner_iterations(0)
  {}
 
@@ -26,8 +27,7 @@ class ranking_solver_enumerationt : public strategy_solver_baset
   linrank_domaint &linrank_domain;
 
   // the "inner" solver
-  satcheck_minisat_no_simplifiert inner_satcheck;
-  bv_pointerst inner_solver;
+  incremental_solvert inner_solver;
   int number_inner_iterations;
 
 

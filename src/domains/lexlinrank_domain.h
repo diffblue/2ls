@@ -14,7 +14,6 @@ class lexlinrank_domaint : public domaint
 {
 public:
   typedef unsigned rowt;
-  //typedef std::vector<std::pair<exprt::operandst,exprt::operandst> > pre_post_valuest;
   typedef std::vector<std::pair<exprt,exprt> > pre_post_valuest;
   typedef pre_post_valuest row_exprt;
   typedef struct
@@ -40,8 +39,8 @@ public:
 
 
 
-  lexlinrank_domaint(replace_mapt &_renaming_map) :
-    domaint(_renaming_map),
+  lexlinrank_domaint(unsigned _domain_number, replace_mapt &_renaming_map) :
+    domaint(_domain_number,_renaming_map),
     refinement_level(0)
   {}
 

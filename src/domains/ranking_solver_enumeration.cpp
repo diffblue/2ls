@@ -15,46 +15,35 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
 
   bool improved = false;
 
-  //context for "inner" solver
-  literalt activation_literal = new_context();
+  //context for "outer" solver
+  solver.new_context();
 
   //handles on values to retrieve from model
   std::vector<linrank_domaint::pre_post_valuest> rank_value_exprs;
   exprt::operandst rank_cond_exprs;
   bvt rank_cond_literals;
 
-  exprt rank_expr = linrank_domain.get_not_constraints(rank, rank_cond_exprs, rank_value_exprs);
+  exprt rank_expr = 
+    linrank_domain.get_not_constraints(rank, rank_cond_exprs, rank_value_exprs);
 
-#ifndef DEBUG_FORMULA
-  solver << or_exprt(rank_expr, literal_exprt(activation_literal));
-#else
-  debug() << "(RANK) Rank constraint : " << from_expr(ns,"",rank_expr) << eom; 
-  debug() << "(RANK) literal " << activation_literal << eom;
-  literalt l = solver.convert(or_exprt(rank_expr, literal_exprt(activation_literal)));
-  if(!l.is_constant()) 
-  {
-    debug() << "(RANK) literal " << l << ": " << from_expr(ns,"",or_exprt(rank_expr, literal_exprt(activation_literal))) <<eom;
-    formula.push_back(l);
-  }
-#endif
+  solver << rank_expr;
 
   rank_cond_literals.resize(rank_cond_exprs.size());
-  
-  for(unsigned i = 0; i < rank_cond_exprs.size(); i++)
+  for(unsigned i = 0; i < rank_cond_literals.size(); i++)
   {  
-    rank_cond_literals[i] = solver.convert(rank_cond_exprs[i]);
-    rank_cond_exprs[i] = literal_exprt(rank_cond_literals[i]);
+    rank_cond_literals[i] = solver.solver.convert(rank_cond_exprs[i]);
   }
 
   debug() << "solve(): ";
 
 #ifdef DEBUG_FORMULA
-  bvt whole_formula = formula;
-  whole_formula.insert(whole_formula.end(),activation_literals.begin(),activation_literals.end());
-  solver.set_assumptions(whole_formula);
+    bvt whole_formula = formula;
+    whole_formula.insert(whole_formula.end(),activation_literals.begin(),
+			 activation_literals.end());
+    solver.set_assumptions(whole_formula);
 #endif
 
-  if(solve() == decision_proceduret::D_SATISFIABLE) 
+  if(solver() == decision_proceduret::D_SATISFIABLE) 
   { 
     debug() << "SAT" << eom;
   
@@ -63,18 +52,21 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
       // retrieve values from the model x_i and x'_i
       linrank_domaint::pre_post_valuest values;
   
-      if(solver.l_get(rank_cond_literals[row]).is_true()) 
+      if(solver.solver.l_get(rank_cond_literals[row]).is_true()) 
       {
-	for(linrank_domaint::pre_post_valuest::iterator it = rank_value_exprs[row].begin(); 
+	for(linrank_domaint::pre_post_valuest::iterator it = 
+	      rank_value_exprs[row].begin(); 
 	    it != rank_value_exprs[row].end(); ++it) 
        {
 	  // model for x_i
-	 exprt value = solver.get(it->first);
-	  debug() << "(RANK) Row " << row << " Value for " << from_expr(ns,"",it->first) 
+	 exprt value = solver.solver.get(it->first);
+	  debug() << "(RANK) Row " << row << " Value for " 
+		  << from_expr(ns,"",it->first) 
 		  << ": " << from_expr(ns,"",value) << eom;
 	  // model for x'_i
-	  exprt post_value = solver.get(it->second);
-	  debug() << "(RANK) Row " << row << " Value for " << from_expr(ns,"",it->second) 
+	  exprt post_value = solver.solver.get(it->second);
+	  debug() << "(RANK) Row " << row << " Value for " 
+		  << from_expr(ns,"",it->second) 
 		  << ": " << from_expr(ns,"",post_value) << eom;
 	  // record all the values
 	  values.push_back(std::make_pair(value, post_value));
@@ -85,8 +77,9 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
 	exprt refinement_constraint;
 
 	// generate the new constraint
-	constraint = linrank_domain.get_row_symb_constraint(symb_values, row, 
-							    values,refinement_constraint);
+	constraint = 
+          linrank_domain.get_row_symb_constraint(symb_values, row, 
+					    values,refinement_constraint);
 	simplify_expr(constraint, ns);
 	debug() << "Inner Solver: " << row << " constraint " 
 		    << from_expr(ns,"", constraint) << eom;
@@ -101,9 +94,9 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
         else
 	{
           assumptions.resize(1);
-          assumptions[0] = inner_solver.convert(refinement_constraint);
+          assumptions[0] = inner_solver.solver.convert(refinement_constraint);
 	}					
-        inner_solver.set_assumptions(assumptions);
+        inner_solver.solver.set_assumptions(assumptions);
 
         //solve
 	if(inner_solver() == decision_proceduret::D_SATISFIABLE && 
@@ -120,7 +113,7 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
 	  // get the model for all c
 	  for(std::vector<exprt>::iterator it = c.begin(); it != c.end(); ++it) 
 	  {
-	    exprt v = inner_solver.get(*it);
+	    exprt v = inner_solver.solver.get(*it);
 	    new_row_values.c.push_back(v);
 	    debug() << "Inner Solver: " << row << " c value for " 
 		    << from_expr(ns,"", *it) << ": " 
@@ -154,10 +147,9 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
   else 
   {
     debug() << "UNSAT" << eom;
-
   }
 
-  pop_context();
+  solver.pop_context();
 
   return improved;
 }

@@ -1030,14 +1030,22 @@ void summarizer_parseoptionst::report_properties(
     status() << eom;
 
     unsigned failed=0;
+    unsigned unknown=0;
 
     for(property_checkert::property_mapt::const_iterator
         it=property_map.begin();
         it!=property_map.end();
         it++)
+    {
+      if(it->second.result==property_checkert::UNKNOWN)
+        unknown++;
       if(it->second.result==property_checkert::FAIL)
         failed++;
+    }
     
+    status() << "** " << unknown
+             << " of " << property_map.size() << " unknown"
+             << eom;  
     status() << "** " << failed
              << " of " << property_map.size() << " failed"
              << eom;  
@@ -1232,6 +1240,7 @@ void summarizer_parseoptionst::help()
     "Backend options:\n"
     " --termination                compute ranking functions to prove termination\n"
     " --k-induction                use k-induction\n"
+    " --incremental-bmc            use incremental-bmc\n"
     " --preconditions              compute preconditions\n"
     " --sufficient                 sufficient preconditions (default: necessary)\n"
     " --context-sensitive          context-sensitive analysis from entry point\n"

@@ -1,6 +1,6 @@
 #ifndef CPROVER_STRATEGY_SOLVER_BINSEARCH2_H 
 #define CPROVER_STRATEGY_SOLVER_BINSEARCH2_H 
-
+ 
 #include "strategy_solver_base.h"
 #include "tpolyhedra_domain.h"
 

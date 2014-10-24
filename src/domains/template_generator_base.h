@@ -34,8 +34,10 @@ public:
     if(domain_ptr!=NULL) delete domain_ptr;
   }
 
-  virtual void operator()(const local_SSAt &SSA, bool forward=true) 
+  virtual void operator()(unsigned _domain_number, 
+			  const local_SSAt &SSA, bool forward=true) 
   { 
+    domain_number = _domain_number;
     assert(false);
   }
 
@@ -45,6 +47,7 @@ public:
 
   domaint::var_specst var_specs;
   replace_mapt renaming_map;
+  unsigned domain_number; //serves as id for variables names
 
   optionst options; // copy: we may override options
 

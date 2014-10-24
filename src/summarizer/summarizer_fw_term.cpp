@@ -217,7 +217,7 @@ Function: summarizer_fw_termt::do_termination()
 \*******************************************************************/
 
 void summarizer_fw_termt::do_termination(const function_namet &function_name, 
-				      const local_SSAt &SSA, 
+				      local_SSAt &SSA, 
 				      summaryt &summary)
 {
   status() << "Computing termination argument" << eom;
@@ -234,10 +234,14 @@ void summarizer_fw_termt::do_termination(const function_namet &function_name,
     return;
   }
 
+  // solver
+  incremental_solvert &solver = ssa_db.get_solver(function_name);
+  solver.set_message_handler(get_message_handler());
+
   template_generator_rankingt template_generator1(
     options,ssa_unwinder.get(function_name));
   template_generator1.set_message_handler(get_message_handler());
-  template_generator1(SSA,true);
+  template_generator1(solver.next_domain_number(),SSA,true);
 
   if(template_generator1.all_vars().empty()) return; //nothing to do 
 
@@ -246,7 +250,7 @@ void summarizer_fw_termt::do_termination(const function_namet &function_name,
   // compute ranking functions
   ssa_analyzert analyzer1;
   analyzer1.set_message_handler(get_message_handler());
-  analyzer1(SSA,conjunction(cond),template_generator1);
+  analyzer1(solver,SSA,conjunction(cond),template_generator1);
   analyzer1.get_result(summary.termination_argument,
 		       template_generator1.all_vars());     
 
@@ -255,8 +259,9 @@ void summarizer_fw_termt::do_termination(const function_namet &function_name,
   if(!summary.fw_precondition.is_true())
     summary.termination_argument = implies_exprt(summary.fw_precondition,
 					       summary.termination_argument);
+
   //statistics
-  solver_instances++;
+  solver_instances += analyzer1.get_number_of_solver_instances();
   solver_calls += analyzer1.get_number_of_solver_calls();
 }
 
@@ -315,25 +320,23 @@ Function: summarizer_fw_termt::check_end_reachable()
 
 bool summarizer_fw_termt::check_end_reachable(
    const function_namet &function_name,
-   const local_SSAt &SSA, 
+   local_SSAt &SSA, 
    const exprt &cond)
 {
-  satcheckt satcheck;
-  bv_pointerst solver(SSA.ns, satcheck);
-  satcheck.set_message_handler(get_message_handler());
+  incremental_solvert &solver = ssa_db.get_solver(function_name);
   solver.set_message_handler(get_message_handler());
-
   solver << SSA;
+
+  solver.new_context();
+  solver << SSA.get_enabling_exprs();
+  solver << ssa_inliner.get_summaries(SSA);
+
   solver << cond;
   exprt::operandst assertions;
   assertions.push_back(
     SSA.guard_symbol(--SSA.goto_function.body.instructions.end()));
   get_assertions(SSA,assertions);
   solver << disjunction(assertions); //we want to reach any of them
-
-  //statistics
-  solver_instances++;
-  solver_calls++;
 
   return solver()==decision_proceduret::D_SATISFIABLE;
 }

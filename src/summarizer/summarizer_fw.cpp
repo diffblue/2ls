@@ -99,12 +99,16 @@ Function: summarizer_fwt::do_summary()
 \*******************************************************************/
 
 void summarizer_fwt::do_summary(const function_namet &function_name, 
-				const local_SSAt &SSA,
+				local_SSAt &SSA,
 				summaryt &summary,
 				exprt cond,
 				bool context_sensitive)
 {
   status() << "Computing summary" << eom;
+
+  // solver
+  incremental_solvert &solver = ssa_db.get_solver(function_name);
+  solver.set_message_handler(get_message_handler());
 
   //analyze
   ssa_analyzert analyzer;
@@ -113,13 +117,13 @@ void summarizer_fwt::do_summary(const function_namet &function_name,
   template_generator_summaryt template_generator(
     options,ssa_unwinder.get(function_name));
   template_generator.set_message_handler(get_message_handler());
-  template_generator(SSA,true);
+  template_generator(solver.next_domain_number(),SSA,true);
 
   cond = and_exprt(cond,
 		   and_exprt(summary.fw_precondition,
 			     ssa_inliner.get_summaries(SSA)));
 
-  analyzer(SSA,cond,template_generator);
+  analyzer(solver,SSA,cond,template_generator);
   analyzer.get_result(summary.fw_transformer,template_generator.inout_vars());
   analyzer.get_result(summary.fw_invariant,template_generator.loop_vars());
 
@@ -131,8 +135,7 @@ void summarizer_fwt::do_summary(const function_namet &function_name,
       implies_exprt(summary.fw_precondition,summary.fw_invariant);
   }
 
-  //statistics
-  solver_instances++;
+  solver_instances += analyzer.get_number_of_solver_instances();
   solver_calls += analyzer.get_number_of_solver_calls();
 }
 
@@ -149,7 +152,7 @@ Function: summarizer_fwt::inline_summaries()
 \*******************************************************************/
 
 void summarizer_fwt::inline_summaries(const function_namet &function_name, 
-				   const local_SSAt &SSA, const exprt &precondition,
+				   local_SSAt &SSA, const exprt &precondition,
 				   bool context_sensitive)
 {
   for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();

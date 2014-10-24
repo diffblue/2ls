@@ -63,7 +63,7 @@ class summarizer_baset : public messaget
     { assert(false); }
 
   bool check_call_reachable(const function_namet &function_name,
-			    const local_SSAt &SSA,
+			    local_SSAt &SSA,
 			    local_SSAt::nodest::const_iterator n_it, 
 			    local_SSAt::nodet::function_callst::const_iterator f_it,
 			    const exprt& precondition,
@@ -71,14 +71,14 @@ class summarizer_baset : public messaget
 
   exprt compute_calling_context(
 			const function_namet &function_name, 
-			const local_SSAt &SSA,
+			local_SSAt &SSA,
 			local_SSAt::nodest::const_iterator n_it, 
 			local_SSAt::nodet::function_callst::const_iterator f_it,
 			const exprt &precondition,
 			bool forward);
 
   virtual bool check_precondition(const function_namet &function_name, 
-                          const local_SSAt &SSA,
+                          local_SSAt &SSA,
 			  local_SSAt::nodest::const_iterator node, 
 			  local_SSAt::nodet::function_callst::const_iterator f_it,
     		          const exprt &precondition,

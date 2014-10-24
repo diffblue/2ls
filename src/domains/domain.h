@@ -11,7 +11,8 @@
 class domaint
 {
 public:
-  domaint(replace_mapt &_renaming_map) : renaming_map(_renaming_map) {}
+ domaint(unsigned _domain_number, replace_mapt &_renaming_map) : 
+  domain_number(_domain_number), renaming_map(_renaming_map) {}
   virtual ~domaint() {}
 
   typedef exprt vart;
@@ -42,10 +43,7 @@ public:
   virtual void reset_refinements() { }
   virtual bool refine() { return false; }
 
-  // virtual exprt to_pre_constraints(const valuet &value) { assert(false); }
-  // virtual void make_not_post_constraints(const valuet &value,
-  //			   exprt::operandst &cond_exprs, 
-  //			   exprt::operandst &value_exprs) { assert(false); }
+  virtual void join(valuet &value1, const valuet &value2) { assert(false); }
 
   virtual void output_value(std::ostream &out, const valuet &value, 
     const namespacet &ns) const { assert(false); }
@@ -61,6 +59,7 @@ public:
 			       const namespacet &ns);
 
  protected:
+  unsigned domain_number; //serves as id for variables names
   replace_mapt &renaming_map;
   
   inline void rename(exprt &expr) { replace_expr(renaming_map, expr); }
