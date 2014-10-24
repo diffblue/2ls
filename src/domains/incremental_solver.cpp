@@ -13,7 +13,7 @@ literalt incremental_solvert::new_context()
       symbol_exprt("goto_symex::\\act$"+
       i2string(activation_literal_counter++), bool_typet()));
 
-#if 0
+#ifdef DEBUG_OUTPUT
     debug() << "new context: " << activation_literal<< eom;
 #endif
 
@@ -33,7 +33,7 @@ void incremental_solvert::pop_context()
   formula.push_back(!activation_literal);
 #endif
 
-#if 0
+#ifdef DEBUG_OUTPUT
     debug() << "pop context: " << activation_literal<< eom;
 #endif
 
@@ -51,7 +51,7 @@ void incremental_solvert::make_context_permanent()
   formula.push_back(activation_literal);
 #endif
 
-#if 0
+#ifdef DEBUG_OUTPUT
     debug() << "make context permanent: " << activation_literal<< eom;
 #endif
 
@@ -63,16 +63,23 @@ void incremental_solvert::debug_add_to_formula(const exprt &expr)
   literalt l = solver.convert(expr);
   if(l.is_false())
   {
+#ifdef DEBUG_OUTPUT
     debug() << "literal " << l << ": false = " << from_expr(ns,"",expr) <<eom;
-    literalt dummy = solver.convert(symbol_exprt("goto_symex::\\dummy", bool_typet()));
+#endif
+    literalt dummy = solver.convert(symbol_exprt("goto_symex::\\dummy", 
+						 bool_typet()));
     formula.push_back(dummy);
     formula.push_back(!dummy);
-    std::cout << "literal " << dummy << ", " << !dummy << ": " << from_expr(ns,"",expr) << std::endl;
+#ifdef DEBUG_OUTPUT
+    debug() << "literal " << dummy << ", " << !dummy << ": " 
+	      << from_expr(ns,"",expr) << std::endl;
+#endif
   }
   else if(!l.is_true()) 
   {
+#ifdef DEBUG_OUTPUT
     std::cout << "literal " << l << ": " << from_expr(ns,"",expr) << std::endl;
-    std::cout << "expr: " << expr << std::endl;
+#endif
     formula.push_back(l);
   }
 }

@@ -20,6 +20,7 @@ Author: Peter Schrammel
 
 
 //#define DEBUG_FORMULA
+//#define DEBUG_OUTPUT
 
 class incremental_solvert : public messaget
 {
@@ -41,13 +42,22 @@ class incremental_solvert : public messaget
   virtual void set_message_handler(message_handlert &handler)
   {
     messaget::set_message_handler(handler);
+#if 0
     sat_check.set_message_handler(handler);
     solver.set_message_handler(handler);
+#endif
   }
 
   decision_proceduret::resultt operator()()
   {
     solver_calls++;
+
+#ifdef DEBUG_FORMULA
+    bvt whole_formula = formula;
+    whole_formula.insert(whole_formula.end(),activation_literals.begin(),
+			 activation_literals.end());
+    solver.set_assumptions(whole_formula);
+#endif
 
     return solver();    
   }
@@ -102,7 +112,7 @@ static inline incremental_solvert & operator << (
     dest.solver << src;
 #else
   if(!dest.activation_literals.empty())
-    dest.solver << dest.debug_add_to_formula(
+    dest.debug_add_to_formula(
       or_exprt(src,literal_exprt(!dest.activation_literals.back())));
   else 
     dest.debug_add_to_formula(src);

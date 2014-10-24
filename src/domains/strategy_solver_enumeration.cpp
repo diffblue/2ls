@@ -1,7 +1,10 @@
 #include <iostream>
 
 #include <util/simplify_expr.h>
+#include <util/find_symbols.h>
+
 #include "strategy_solver_enumeration.h"
+#include "util.h"
 
 bool strategy_solver_enumerationt::iterate(invariantt &_inv)
 {
@@ -12,10 +15,10 @@ bool strategy_solver_enumerationt::iterate(invariantt &_inv)
 
   solver.new_context();
 
-  exprt inv_expr = tpolyhedra_domain.to_pre_constraints(inv);
-  debug() << "pre-inv: " << from_expr(ns,"",inv_expr) << eom;
+  exprt preinv_expr = tpolyhedra_domain.to_pre_constraints(inv);
+  debug() << "pre-inv: " << from_expr(ns,"",preinv_expr) << eom;
 
-  solver << inv_expr;
+  solver << preinv_expr;
 
   exprt::operandst strategy_cond_exprs;
   tpolyhedra_domain.make_not_post_constraints(inv, 
@@ -23,6 +26,8 @@ bool strategy_solver_enumerationt::iterate(invariantt &_inv)
   
   strategy_cond_literals.resize(strategy_cond_exprs.size());
   
+  exprt postinv_expr = disjunction(strategy_cond_exprs);
+
   debug() << "post-inv: ";
   for(unsigned i = 0; i<strategy_cond_exprs.size(); i++)
   {  
@@ -38,23 +43,16 @@ bool strategy_solver_enumerationt::iterate(invariantt &_inv)
 
   debug() << "solve(): ";
 
-#ifdef DEBUG_FORMULA
-  bvt whole_formula = formula;
-  whole_formula.insert(whole_formula.end(),activation_literals.begin(),activation_literals.end());
-  solver.solver.set_assumptions(whole_formula);
-#endif
-
   if(solver() == decision_proceduret::D_SATISFIABLE) 
   { 
     debug() << "SAT" << eom;
       
     #if 0
-    for(unsigned i=0; i<whole_formula.size(); i++) 
+    for(unsigned i=0; i<solver.formula.size(); i++) 
     {
-      debug() << "literal: " << whole_formula[i] << " " << 
-        solver.solver.l_get(whole_formula[i]) << eom;
+      debug() << "literal: " << solver.formula[i] << " " << 
+        solver.solver.l_get(solver.formula[i]) << eom;
     }
-          
     for(unsigned i=0; i<tpolyhedra_domain.template_size(); i++) 
     {
       exprt c = tpolyhedra_domain.get_row_constraint(i,inv[i]);
@@ -63,20 +61,36 @@ bool strategy_solver_enumerationt::iterate(invariantt &_inv)
       debug() << "guards: " << from_expr(ns, "", tpolyhedra_domain.templ.pre_guards[i]) << 
           " " << from_expr(ns, "", solver.get(tpolyhedra_domain.templ.pre_guards[i])) << eom;
       debug() << "guards: " << from_expr(ns, "", tpolyhedra_domain.templ.post_guards[i]) << " " 
-          << from_expr(ns, "", solver.solver.get(tpolyhedra_domain.templ.post_guards[i])) << eom; 	     	     }    
-          
-    for(replace_mapt::const_iterator
-          it=renaming_map.begin();
-          it!=renaming_map.end();    
-          ++it)
+          << from_expr(ns, "", solver.solver.get(tpolyhedra_domain.templ.post_guards[i])) << eom; 	     	     
+    }    
           
     {
-      debug() << "replace_map (1st): " << from_expr(ns, "", it->first) << " " << 
-          from_expr(ns, "", solver.get(it->first)) << eom;
-      debug() << "replace_map (2nd): " << from_expr(ns, "", it->second) << " " << 
-          from_expr(ns, "", solver.get(it->second)) << eom;
+      std::set<symbol_exprt> vars;
+      find_symbols(preinv_expr,vars); 
+
+      for(std::set<symbol_exprt>::const_iterator
+	    it=vars.begin();
+          it!=vars.end();    
+          ++it)
+      {
+	debug() << "var: " << from_expr(ns, "", *it) << " = " << 
+          from_expr(ns, "", solver.get(*it)) << eom;
+      }
     }
-                  
+    for(unsigned i=0; i<tpolyhedra_domain.template_size(); i++) 
+    {
+      std::set<symbol_exprt> vars;
+      find_symbols(strategy_value_exprs[i],vars); 
+
+      for(std::set<symbol_exprt>::const_iterator
+	    it=vars.begin();
+          it!=vars.end();    
+          ++it)
+      {
+	debug() << "var: " << from_expr(ns, "", *it) << " = " << 
+          from_expr(ns, "", solver.get(*it)) << eom;
+      }
+    }
     #endif
       
       
@@ -101,13 +115,13 @@ bool strategy_solver_enumerationt::iterate(invariantt &_inv)
   {
     debug() << "UNSAT" << eom;
 
-#ifdef DEBUG_FORMULA
-    for(unsigned i=0; i<whole_formula.size(); i++) 
+#ifdef DEBUG_OUTPUT
+    for(unsigned i=0; i<solver.formula.size(); i++) 
     {
-      if(solver.solver.is_in_conflict(whole_formula[i]))
-        debug() << "is_in_conflict: " << whole_formula[i] << eom;
+      if(solver.solver.is_in_conflict(solver.formula[i]))
+        debug() << "is_in_conflict: " << solver.formula[i] << eom;
       else
-        debug() << "not_in_conflict: " << whole_formula[i] << eom;
+        debug() << "not_in_conflict: " << solver.formula[i] << eom;
      }
 #endif    
   }
