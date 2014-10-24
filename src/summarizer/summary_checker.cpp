@@ -439,7 +439,7 @@ void summary_checkert::check_properties_incremental(
   exprt::operandst loophead_selects = 
     get_loophead_selects(f_it->first,SSA,solver.solver);
 
-  colver_goals_extt cover_goals(solver,loophead_selects,property_map,
+  cover_goals_extt cover_goals(solver,loophead_selects,property_map,
 			       options.get_bool_option("spurious-check"));
 
 #if 0   
@@ -494,7 +494,7 @@ void summary_checkert::check_properties_incremental(
     }
   }
     
-  for(colver_goals_extt::goal_mapt::const_iterator
+  for(cover_goals_extt::goal_mapt::const_iterator
       it=cover_goals.goal_map.begin();
       it!=cover_goals.goal_map.end();
       it++)
@@ -509,9 +509,9 @@ void summary_checkert::check_properties_incremental(
 
   cover_goals();  
 
-  std::list<colver_goals_extt::cover_goalt>::const_iterator g_it=
+  std::list<cover_goals_extt::cover_goalt>::const_iterator g_it=
     cover_goals.goals.begin();
-  for(colver_goals_extt::goal_mapt::const_iterator
+  for(cover_goals_extt::goal_mapt::const_iterator
       it=cover_goals.goal_map.begin();
       it!=cover_goals.goal_map.end();
       it++, g_it++)

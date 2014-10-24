@@ -13,7 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
-Function: colver_goals_extt::~colver_goals_extt
+Function: cover_goals_extt::~cover_goals_extt
 
   Inputs:
 
@@ -23,13 +23,13 @@ Function: colver_goals_extt::~colver_goals_extt
 
 \*******************************************************************/
 
-colver_goals_extt::~colver_goals_extt()
+cover_goals_extt::~cover_goals_extt()
 {
 }
 
 /*******************************************************************\
 
-Function: colver_goals_extt::mark
+Function: cover_goals_extt::mark
 
   Inputs:
 
@@ -39,7 +39,7 @@ Function: colver_goals_extt::mark
 
 \*******************************************************************/
 
-void colver_goals_extt::mark()
+void cover_goals_extt::mark()
 {
   for(std::list<cover_goalt>::iterator
       g_it=goals.begin();
@@ -55,7 +55,7 @@ void colver_goals_extt::mark()
   
 /*******************************************************************\
 
-Function: colver_goals_extt::constaint
+Function: cover_goals_extt::constaint
 
   Inputs:
 
@@ -65,7 +65,7 @@ Function: colver_goals_extt::constaint
 
 \*******************************************************************/
 
-void colver_goals_extt::constraint()
+void cover_goals_extt::constraint()
 {
   exprt::operandst disjuncts;
 
@@ -82,7 +82,7 @@ void colver_goals_extt::constraint()
 
 /*******************************************************************\
 
-Function: colver_goals_extt::freeze_goal_variables
+Function: cover_goals_extt::freeze_goal_variables
 
   Inputs:
 
@@ -92,7 +92,7 @@ Function: colver_goals_extt::freeze_goal_variables
 
 \*******************************************************************/
 
-void colver_goals_extt::freeze_goal_variables()
+void cover_goals_extt::freeze_goal_variables()
 {
   for(std::list<cover_goalt>::const_iterator
       g_it=goals.begin();
@@ -104,7 +104,7 @@ void colver_goals_extt::freeze_goal_variables()
 
 /*******************************************************************\
 
-Function: colver_goals_extt::operator()
+Function: cover_goals_extt::operator()
 
   Inputs:
 
@@ -114,7 +114,7 @@ Function: colver_goals_extt::operator()
 
 \*******************************************************************/
 
-void colver_goals_extt::operator()()
+void cover_goals_extt::operator()()
 {
   _iterations=_number_covered=0;
   
@@ -167,7 +167,7 @@ Function: cover_goals_extt::assignment
 
 \*******************************************************************/
 
-void colver_goals_extt::assignment()
+void cover_goals_extt::assignment()
 {
   if(!spurious_check) return;
 
@@ -184,7 +184,7 @@ void colver_goals_extt::assignment()
   }
   if(!invariants_involved) 
   {
-    std::list<colver_goals_extt::cover_goalt>::const_iterator g_it=goals.begin();
+    std::list<cover_goals_extt::cover_goalt>::const_iterator g_it=goals.begin();
     for(goal_mapt::const_iterator it=goal_map.begin();
 	it!=goal_map.end(); it++, g_it++)
     {
@@ -206,7 +206,7 @@ void colver_goals_extt::assignment()
   {
   case decision_proceduret::D_SATISFIABLE:
   {
-    std::list<colver_goals_extt::cover_goalt>::const_iterator g_it=goals.begin();
+    std::list<cover_goals_extt::cover_goalt>::const_iterator g_it=goals.begin();
     for(goal_mapt::const_iterator it=goal_map.begin();
 	it!=goal_map.end(); it++, g_it++)
     {

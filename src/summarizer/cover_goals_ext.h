@@ -42,10 +42,10 @@ struct goalt
   }
 };
 
-class colver_goals_extt:public messaget
+class cover_goals_extt:public messaget
 {
 public:
-      explicit inline colver_goals_extt(incremental_solvert &_solver,
+      explicit inline cover_goals_extt(incremental_solvert &_solver,
 				   const exprt::operandst& _loophead_selects,
 				   property_checkert::property_mapt &_property_map,
 				   bool _spurious_check):
@@ -55,7 +55,7 @@ public:
 	  loophead_selects(_loophead_selects)
           {}
   
-  virtual ~colver_goals_extt();
+  virtual ~cover_goals_extt();
 
   void operator()();
 
