@@ -148,7 +148,7 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
 #endif
 	debug() << "(RANK) inner solve()" << eom;
 	// solve
-	//decision_proceduret::
+        solver_calls++;
 	bool inner_solver_result = (*inner_solver)(); 
 	if(inner_solver_result == decision_proceduret::D_SATISFIABLE && 
 	   number_refinements < MAX_REFINEMENTS) 
@@ -225,6 +225,7 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
 	      debug() << "(RANK) reset the inner solver " << eom;
 	      delete inner_solver;
 	      inner_solver = new incremental_solvert(ns);
+              solver_instances++;
 	      inner_formula.clear();
 	      lexlinrank_domain.reset_refinements();
 

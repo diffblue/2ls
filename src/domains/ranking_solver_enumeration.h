@@ -19,7 +19,9 @@ class ranking_solver_enumerationt : public strategy_solver_baset
     linrank_domain(_linrank_domain),
     inner_solver(_ns),
     number_inner_iterations(0)
- {}
+ {
+   solver_instances++;
+ }
 
   virtual bool iterate(invariantt &inv);
 

@@ -26,6 +26,7 @@ class strategy_solver_baset : public messaget
     const namespacet &_ns) :
     solver(_solver), 
     ns(_ns),
+    solver_instances(0),
     solver_calls(0)
   {}
 

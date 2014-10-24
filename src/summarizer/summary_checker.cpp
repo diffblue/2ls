@@ -162,12 +162,14 @@ property_checkert::resultt summary_checkert::operator()(
 
   if(options.get_bool_option("preconditions")) 
   {
+    report_statistics();
     report_preconditions();
     return property_checkert::UNKNOWN;
   }
 
   if(options.get_bool_option("termination")) 
   {
+    report_statistics();
     property_checkert::resultt all_terminate = report_termination();
     return all_terminate;
   }
@@ -190,7 +192,8 @@ Function: summary_checkert::SSA_functions
 
 \*******************************************************************/
 
-void summary_checkert::SSA_functions(const goto_modelt &goto_model,  const namespacet &ns)
+void summary_checkert::SSA_functions(const goto_modelt &goto_model,  
+				     const namespacet &ns)
 {
   // compute SSA for all the functions
   forall_goto_functions(f_it, goto_model.goto_functions)
@@ -275,8 +278,7 @@ void summary_checkert::summarize(const goto_modelt &goto_model,
   //statistics
   solver_instances += summarizer->get_number_of_solver_instances();
   solver_calls += summarizer->get_number_of_solver_calls();
-  if(forward && !termination)
-    summaries_used += summarizer->get_number_of_summaries_used();
+  summaries_used += summarizer->get_number_of_summaries_used();
 
   delete summarizer;
 }
@@ -602,6 +604,14 @@ Function: summary_checkert::report_statistics()
 
 void summary_checkert::report_statistics()
 {
+  for(ssa_dbt::functionst::const_iterator f_it = ssa_db.functions().begin();
+	f_it != ssa_db.functions().end(); f_it++)
+  {
+    incremental_solvert &solver = ssa_db.get_solver(f_it->first);
+    unsigned calls = solver.get_number_of_solver_calls();
+    if(calls>0) solver_instances++;
+    solver_calls += calls;
+  }
   statistics() << "** statistics: " << eom;
   statistics() << "  number of solver instances: " << solver_instances << eom;
   statistics() << "  number of solver calls: " << solver_calls << eom;

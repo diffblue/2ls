@@ -99,6 +99,7 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
         inner_solver.solver.set_assumptions(assumptions);
 
         //solve
+	solver_calls++;
 	if(inner_solver() == decision_proceduret::D_SATISFIABLE && 
 	   number_inner_iterations < MAX_INNER_ITERATIONS) 
 	{ 

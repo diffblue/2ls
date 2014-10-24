@@ -20,6 +20,7 @@ class lexlinrank_solver_enumerationt : public strategy_solver_baset
     number_refinements(0)
   {
     inner_solver = new incremental_solvert(_ns);
+    solver_instances++;
   }
 
   virtual bool iterate(invariantt &inv);
