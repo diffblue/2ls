@@ -106,10 +106,8 @@ bool summarizer_baset::check_call_reachable(
   bool reachable = false;
 
   // reachability check
-  // solver
   incremental_solvert &solver = ssa_db.get_solver(function_name);
   solver.set_message_handler(get_message_handler());
-
   solver << SSA;
 
   solver.new_context();

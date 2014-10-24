@@ -35,14 +35,6 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
   }
 
   debug() << "solve(): ";
-
-#ifdef DEBUG_FORMULA
-    bvt whole_formula = formula;
-    whole_formula.insert(whole_formula.end(),activation_literals.begin(),
-			 activation_literals.end());
-    solver.set_assumptions(whole_formula);
-#endif
-
   if(solver() == decision_proceduret::D_SATISFIABLE) 
   { 
     debug() << "SAT" << eom;
@@ -86,19 +78,15 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
 
 	inner_solver << constraint;
 
-	debug() << "inner solve()" << eom;
-
-        //set assumptions for refinement
-        bvt assumptions;
-        if(refinement_constraint.is_true()) assumptions.resize(0); //no assumptions
-        else
+        //refinement
+        if(!refinement_constraint.is_true()) 
 	{
-          assumptions.resize(1);
-          assumptions[0] = inner_solver.solver.convert(refinement_constraint);
-	}					
-        inner_solver.solver.set_assumptions(assumptions);
+	  inner_solver.new_context();
+	  inner_solver << refinement_constraint;
+	}
 
         //solve
+	debug() << "inner solve()" << eom;
 	solver_calls++;
 	if(inner_solver() == decision_proceduret::D_SATISFIABLE && 
 	   number_inner_iterations < MAX_INNER_ITERATIONS) 
@@ -141,6 +129,8 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
 	    linrank_domain.set_row_value_to_true(row, rank);
 	  }
 	}
+
+        if(!refinement_constraint.is_true()) inner_solver.pop_context();
       }
     }
 

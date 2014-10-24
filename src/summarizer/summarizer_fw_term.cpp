@@ -192,10 +192,9 @@ void summarizer_fw_termt::inline_summaries(const function_namet &function_name,
       //get information about callee termination
       if(options.get_bool_option("termination"))
       {
-	if(summary_db.exists(fname) && summary_db.get(fname).terminates!=YES &&
-	   calls_terminate!=NO) 
+	if(summary_db.exists(fname) && summary_db.get(fname).terminates!=YES) 
 	{
-	  calls_terminate = summary_db.get(fname).terminates;
+	  calls_terminate = UNKNOWN; //cannot propagate NO because call reachability might be over-approximating
 	  break;
 	}
       }
@@ -338,5 +337,9 @@ bool summarizer_fw_termt::check_end_reachable(
   get_assertions(SSA,assertions);
   solver << disjunction(assertions); //we want to reach any of them
 
-  return solver()==decision_proceduret::D_SATISFIABLE;
+  bool result = (solver()==decision_proceduret::D_SATISFIABLE);
+
+  solver.pop_context();
+
+  return result;
 }

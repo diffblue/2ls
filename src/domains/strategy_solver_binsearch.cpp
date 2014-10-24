@@ -49,13 +49,6 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
   debug() << "solve(): ";
 #endif
 
-#ifdef DEBUG_FORMULA
-  bvt whole_formula = formula;
-  whole_formula.insert(whole_formula.end(),activation_literals.begin(),
-                       solver.activation_literals.end());
-  solver.solver.set_assumptions(whole_formula);
-#endif
-
   if(solver() == decision_proceduret::D_SATISFIABLE) //improvement check
   { 
 #if 0
@@ -63,10 +56,10 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 #endif
       
 #if 0
-    for(unsigned i=0; i<whole_formula.size(); i++) 
+    for(unsigned i=0; i<solver.formula.size(); i++) 
     {
-      debug() << "literal: " << whole_formula[i] << " " << 
-        solver.solver.l_get(whole_formula[i]) << eom;
+      debug() << "literal: " << solver.formula[i] << " " << 
+        solver.solver.l_get(solver.formula[i]) << eom;
     }
           
     for(unsigned i=0; i<tpolyhedra_domain.template_size(); i++) 
@@ -145,13 +138,6 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 
       solver << c;
 
-#ifdef DEBUG_FORMULA
-      bvt whole_formula = formula;
-      whole_formula.insert(whole_formula.end(),activation_literals.begin(),
-                       activation_literals.end());
-      solver.solver.set_assumptions(whole_formula);
-#endif
-
       if(solver() == decision_proceduret::D_SATISFIABLE) 
       { 
 #if 0
@@ -190,13 +176,13 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 	debug() << "UNSAT" << eom;
 #endif
 
-#ifdef DEBUG_FORMULA
-	for(unsigned i=0; i<whole_formula.size(); i++) 
+#if 0
+	for(unsigned i=0; i<solver.formula.size(); i++) 
         {
-	  if(solver.solver.is_in_conflict(whole_formula[i]))
-	      debug() << "is_in_conflict: " << whole_formula[i] << eom;
+	  if(solver.solver.is_in_conflict(solver.formula[i]))
+	      debug() << "is_in_conflict: " << solver.formula[i] << eom;
 	  else
-	      debug() << "not_in_conflict: " << whole_formula[i] << eom;
+	      debug() << "not_in_conflict: " << solver.formula[i] << eom;
         }
 #endif
 

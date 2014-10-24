@@ -12,14 +12,14 @@ class lexlinrank_solver_enumerationt : public strategy_solver_baset
 {
  public:
   explicit lexlinrank_solver_enumerationt(
-    incremental_solvert &_solver, 
     lexlinrank_domaint &_lexlinrank_domain,
+    incremental_solvert &_solver, 
     const namespacet &_ns) : 
   strategy_solver_baset(_solver, _ns),
     lexlinrank_domain(_lexlinrank_domain), 
     number_refinements(0)
   {
-    inner_solver = new incremental_solvert(_ns);
+    inner_solver = incremental_solvert::allocate(_ns);
     solver_instances++;
   }
 
@@ -31,7 +31,6 @@ class lexlinrank_solver_enumerationt : public strategy_solver_baset
   // the "inner" solver
   incremental_solvert *inner_solver;
   unsigned number_refinements; 
-  bvt inner_formula;  
 
 };
 
