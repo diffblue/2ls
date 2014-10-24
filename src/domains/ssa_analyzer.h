@@ -25,6 +25,7 @@ public:
 
   explicit ssa_analyzert()
     : 
+    solver_instances(0),
     solver_calls(0)
     {
     }  
@@ -41,6 +42,7 @@ public:
 
   void get_result(exprt &result, const domaint::var_sett &vars);
 
+  unsigned get_number_of_solver_instances() { return solver_instances; }
   unsigned get_number_of_solver_calls() { return solver_calls; }
 
 protected:
@@ -48,6 +50,7 @@ protected:
   domaint::valuet *result;
 
   //statistics
+  unsigned solver_instances;
   unsigned solver_calls;
 };
 

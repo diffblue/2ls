@@ -130,6 +130,7 @@ property_checkert::resultt summary_checkert::operator()(
 
     if(preconditions) 
     {
+      report_statistics();
       report_preconditions();
       return property_checkert::UNKNOWN;
     }
@@ -540,14 +541,20 @@ Function: summary_checkert::report_statistics()
 
 void summary_checkert::report_statistics()
 {
-#if 0
+  for(ssa_dbt::functionst::const_iterator f_it = ssa_db.functions().begin();
+	f_it != ssa_db.functions().end(); f_it++)
+  {
+    incremental_solvert &solver = ssa_db.get_solver(f_it->first);
+    unsigned calls = solver.get_number_of_solver_calls();
+    if(calls>0) solver_instances++;
+    solver_calls += calls;
+  }
   statistics() << "** statistics: " << eom;
   statistics() << "  number of solver instances: " << solver_instances << eom;
   statistics() << "  number of solver calls: " << solver_calls << eom;
   statistics() << "  number of summaries used: " 
                << summarizer.get_number_of_summaries_used() << eom;
   statistics() << eom;
-#endif
 }
   
 /*******************************************************************\

@@ -131,6 +131,7 @@ void ssa_analyzert::operator()(incremental_solvert &solver,
 
   //statistics
   solver_calls += strategy_solver->get_number_of_solver_calls();
+  solver_instances += strategy_solver->get_number_of_solver_instances();
 
   delete strategy_solver;
 }

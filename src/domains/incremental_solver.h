@@ -38,10 +38,17 @@ class incremental_solvert : public messaget
   { 
   }
 
+  virtual void set_message_handler(message_handlert &handler)
+  {
+    messaget::set_message_handler(handler);
+    sat_check.set_message_handler(handler);
+    solver.set_message_handler(handler);
+  }
 
   decision_proceduret::resultt operator()()
   {
     solver_calls++;
+
     return solver();    
   }
 
@@ -82,13 +89,15 @@ static inline incremental_solvert & operator << (
 {
 #if 0
   if(!dest.activation_literals.empty())
-    std::cout << "add_to_solver(" << !dest.activation_literals.back() << "): " << from_expr(dest.ns,"",src) << std::endl;
+    std::cout << "add_to_solver(" << !dest.activation_literals.back() << "): " 
+	      << from_expr(dest.ns,"",src) << std::endl;
   else
       std::cout << "add_to_solver: " << from_expr(dest.ns,"",src) << std::endl;
 #endif
 #ifndef DEBUG_FORMULA
   if(!dest.activation_literals.empty())
-    dest.solver << or_exprt(src,literal_exprt(!dest.activation_literals.back()));
+    dest.solver << or_exprt(src,
+			    literal_exprt(!dest.activation_literals.back()));
   else 
     dest.solver << src;
 #else

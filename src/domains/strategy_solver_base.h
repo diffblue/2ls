@@ -26,12 +26,14 @@ class strategy_solver_baset : public messaget
     const namespacet &_ns) :
     solver(_solver), 
     ns(_ns),
+    solver_instances(0),
     solver_calls(0)
   {}
 
   virtual bool iterate(invariantt &inv) { assert(false); }
 
   unsigned get_number_of_solver_calls() { return solver_calls; }
+  unsigned get_number_of_solver_instances() { return solver_instances; }
 
  protected: 
   incremental_solvert &solver;
@@ -42,7 +44,8 @@ class strategy_solver_baset : public messaget
   bvt strategy_cond_literals;
   exprt::operandst strategy_value_exprs;
 
-  //statistics
+  //statistics for additional solvers
+  unsigned solver_instances;
   unsigned solver_calls;
 };
 
