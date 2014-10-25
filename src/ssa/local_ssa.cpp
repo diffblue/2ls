@@ -382,7 +382,8 @@ void local_SSAt::build_function_call(locationt loc)
     for(exprt::operandst::iterator it =  f.arguments().begin();
 	it !=  f.arguments().end(); it++, i++)
     {      
-      symbol_exprt arg(id2string(fname)+"#arg"+i2string(i),it->type());
+      symbol_exprt arg(id2string(fname)+"#"+i2string(loc->location_number)+
+		       "#arg"+i2string(i),it->type());
       n_it->equalities.push_back(equal_exprt(*it,arg));
       *it = arg;
     }

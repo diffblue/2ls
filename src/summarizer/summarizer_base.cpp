@@ -109,6 +109,7 @@ bool summarizer_baset::check_call_reachable(
   incremental_solvert &solver = ssa_db.get_solver(function_name);
   solver.set_message_handler(get_message_handler());
   solver << SSA;
+  SSA.mark_nodes();
 
   solver.new_context();
   solver << SSA.get_enabling_exprs();
@@ -319,6 +320,7 @@ bool summarizer_baset::check_precondition(
   incremental_solvert &solver = ssa_db.get_solver(function_name);
   solver.set_message_handler(get_message_handler());
   solver << SSA;
+  SSA.mark_nodes();
 
   solver.new_context();
   solver << SSA.get_enabling_exprs();

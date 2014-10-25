@@ -105,13 +105,20 @@ void summarizer_fw_termt::compute_summary_rec(
   if(options.get_bool_option("termination") && 
      !options.get_bool_option("preconditions"))
   {
-    if(!has_loops && !has_function_calls) summary.terminates = YES;
+    status() << "Computing termination argument for " << function_name << eom;
+    if(!has_loops && !has_function_calls) 
+    {
+      status() << "Function trivially terminates" << eom;
+      summary.terminates = YES;
+    }
     if(!has_loops && has_function_calls && calls_terminate==YES)
     {
+      status() << "Function terminates" << eom;
       summary.terminates = YES;
     }   
     if(has_function_calls && calls_terminate!=YES) 
     {
+      status() << "Function may terminate" << eom;
       summary.terminates = calls_terminate;
     }
     if(has_loops && 
@@ -219,8 +226,6 @@ void summarizer_fw_termt::do_termination(const function_namet &function_name,
 				      local_SSAt &SSA, 
 				      summaryt &summary)
 {
-  status() << "Computing termination argument" << eom;
-
   // calling context, invariant, function call summaries
   exprt::operandst cond;
   cond.push_back(summary.fw_invariant);
@@ -229,10 +234,12 @@ void summarizer_fw_termt::do_termination(const function_namet &function_name,
 
   if(!check_end_reachable(function_name,SSA,conjunction(cond)))
   {
+    status() << "Function never terminates" << eom;
     summary.terminates = NO;
     return;
   }
 
+  status() << "Synthesizing ranking function to prove termination" << eom;
   // solver
   incremental_solvert &solver = ssa_db.get_solver(function_name);
   solver.set_message_handler(get_message_handler());
@@ -325,6 +332,7 @@ bool summarizer_fw_termt::check_end_reachable(
   incremental_solvert &solver = ssa_db.get_solver(function_name);
   solver.set_message_handler(get_message_handler());
   solver << SSA;
+  SSA.mark_nodes();
 
   solver.new_context();
   solver << SSA.get_enabling_exprs();

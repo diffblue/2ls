@@ -76,6 +76,7 @@ exprt ssa_inlinert::get_summary(
   rename(precondition);
   precondition = implies_exprt(SSA.guard_symbol(n_it->location),
 			       precondition);
+#if 0
   c.push_back(precondition); 
   if(!forward)
   {
@@ -83,6 +84,7 @@ exprt ssa_inlinert::get_summary(
     rename(bw_precond);
     preconditions.push_back(bw_precond);
   }
+#endif
 
   exprt transformer;
   if(forward) transformer = summary.fw_transformer;
@@ -400,9 +402,11 @@ exprt ssa_inlinert::get_replace_globals_in(const local_SSAt::var_sett &globals_i
               << rhs.get_identifier() << eom;
       c.push_back(equal_exprt(lhs,rhs));
     }
+#if 0
     else
       warning() << "'" << it->get_identifier() 
                 << "' not bound in caller" << eom;
+#endif
   }
   return conjunction(c);
 }
@@ -423,9 +427,11 @@ void ssa_inlinert::replace_globals_in(const local_SSAt::var_sett &globals_in,
               << rhs.get_identifier() << eom;
       new_equs.push_back(equal_exprt(lhs,rhs));
     }
+#if 0
     else
       warning() << "'" << it->get_identifier() 
                 << "' not bound in caller" << eom;
+#endif
   }
 }
 
@@ -667,8 +673,10 @@ void ssa_inlinert::rename_to_caller(
       replace_map[*it] = cg;
     else 
     {
+#if 0
       warning() << "'" << it->get_identifier() 
                 << "' not bound in caller" << eom;
+#endif
       replace_map[*it] = 
         symbol_exprt(id2string(it->get_identifier())+
         "@"+i2string(++counter),it->type());
@@ -726,8 +734,10 @@ void ssa_inlinert::rename_to_callee(
       replace_map[*it] = cg;
     else
     {
+#if 0
       warning() << "'" << it->get_identifier() 
                 << "' not bound in caller" << eom;
+#endif
       replace_map[*it] =
         symbol_exprt(id2string(it->get_identifier())+
         "@"+i2string(++counter),it->type());
