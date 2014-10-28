@@ -49,6 +49,10 @@ class summarizer_fw_termt : public summarizer_fwt
 		      local_SSAt &SSA, 
 		      summaryt &summary);
 
+  void do_nontermination(const function_namet &function_name, 
+		      local_SSAt &SSA, 
+		      summaryt &summary);
+
   threevalt check_termination_argument(exprt expr);
 
   bool check_end_reachable(const function_namet &function_name,

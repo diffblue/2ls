@@ -96,7 +96,7 @@ exprt ssa_inlinert::get_summary(
   c.push_back(get_replace_globals_out(summary.globals_out,
 				      cs_globals_in,cs_globals_out));
 
-  return conjunction(c);
+  return implies_exprt(SSA.guard_symbol(n_it->location),conjunction(c));
 }
 
 /*******************************************************************\

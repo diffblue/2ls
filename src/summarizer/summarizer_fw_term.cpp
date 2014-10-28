@@ -43,7 +43,7 @@ void summarizer_fw_termt::compute_summary_rec(
 				      const exprt &precondition,
 				      bool context_sensitive)
 {
-  local_SSAt &SSA = ssa_db.get(function_name); //TODO: make const
+  local_SSAt &SSA = ssa_db.get(function_name); 
   
   // recursively compute summaries for function calls
   threevalt calls_terminate = YES;
@@ -118,8 +118,11 @@ void summarizer_fw_termt::compute_summary_rec(
     }   
     if(has_function_calls && calls_terminate!=YES) 
     {
-      status() << "Function may terminate" << eom;
-      summary.terminates = calls_terminate;
+      summary.terminates = UNKNOWN;
+      // check non-termination if we haven't analyzed this function yet,
+      // otherwise the termination status is UNKNOWN anyways
+      if(!summary_db.exists(function_name))
+        do_nontermination(function_name,SSA,summary);
     }
     if(has_loops && 
        (!has_function_calls || 
@@ -209,6 +212,40 @@ void summarizer_fw_termt::inline_summaries(const function_namet &function_name,
   }
 }
 
+/*******************************************************************\
+
+Function: summarizer_fw_termt::do_nontermination()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void summarizer_fw_termt::do_nontermination(const function_namet &function_name, 
+				      local_SSAt &SSA, 
+				      summaryt &summary)
+{
+  // calling context, invariant, function call summaries
+  exprt::operandst cond;
+  cond.push_back(summary.fw_invariant);
+  cond.push_back(summary.fw_precondition);
+  cond.push_back(ssa_inliner.get_summaries(SSA));
+
+  if(!check_end_reachable(function_name,SSA,conjunction(cond)))
+  {
+    status() << "Function never terminates" << eom;
+    if(summary.fw_precondition.is_true()) summary.fw_transformer = false_exprt();
+    else summary.fw_transformer = implies_exprt(summary.fw_precondition,false_exprt());
+    summary.terminates = NO;
+  }
+  else
+  {
+    status() << "Function may terminate" << eom;
+  }
+}
 
 /*******************************************************************\
 
@@ -232,9 +269,12 @@ void summarizer_fw_termt::do_termination(const function_namet &function_name,
   cond.push_back(summary.fw_precondition);
   cond.push_back(ssa_inliner.get_summaries(SSA));
 
+  // do non-termination check
   if(!check_end_reachable(function_name,SSA,conjunction(cond)))
   {
     status() << "Function never terminates" << eom;
+    if(summary.fw_precondition.is_true()) summary.fw_transformer = false_exprt();
+    else summary.fw_transformer = implies_exprt(summary.fw_precondition,false_exprt());
     summary.terminates = NO;
     return;
   }
