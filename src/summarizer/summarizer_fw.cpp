@@ -49,6 +49,7 @@ void summarizer_fwt::compute_summary_rec(const function_namet &function_name,
 
   status() << "Analyzing function "  << function_name << eom;
 
+#if 0
   {
     std::ostringstream out;
     out << "Function body for " << function_name << 
@@ -62,6 +63,7 @@ void summarizer_fwt::compute_summary_rec(const function_namet &function_name,
 	<< "\n";
     debug() << out.str() << eom;
   }
+#endif
 
   // create summary
   summaryt summary;
@@ -115,7 +117,7 @@ void summarizer_fwt::do_summary(const function_namet &function_name,
   analyzer.set_message_handler(get_message_handler());
 
   template_generator_summaryt template_generator(
-    options,ssa_unwinder.get(function_name));
+    options,ssa_db,ssa_unwinder.get(function_name));
   template_generator.set_message_handler(get_message_handler());
   template_generator(solver.next_domain_number(),SSA,true);
 

@@ -249,7 +249,7 @@ void summary_checkert::summarize(const goto_modelt &goto_model,
 				 bool forward,
 				 bool termination)
 {    
-  summarizer_baset *summarizer;
+  summarizer_baset *summarizer = NULL;
 
   if(forward && !termination)
     summarizer = new summarizer_fwt(

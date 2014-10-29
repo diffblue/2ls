@@ -97,13 +97,18 @@ void summarizer_bwt::compute_summary_rec(const function_namet &function_name,
 				      const exprt &postcondition,
 				      bool context_sensitive)
 {
-  local_SSAt &SSA = ssa_db.get(function_name); //TODO: make const
+  local_SSAt &SSA = ssa_db.get(function_name); 
   
+  const summaryt &old_summary = summary_db.get(function_name);
+
   // recursively compute summaries for function calls
-  inline_summaries(function_name,SSA,postcondition,context_sensitive); 
+  inline_summaries(function_name,SSA,old_summary,
+		   postcondition,context_sensitive,
+		   options.get_bool_option("sufficient")); 
 
   status() << "Analyzing function "  << function_name << eom;
 
+#if 0
   {
     std::ostringstream out;
     out << "Function body for " << function_name << 
@@ -117,8 +122,7 @@ void summarizer_bwt::compute_summary_rec(const function_namet &function_name,
 	<< "\n";
     debug() << out.str() << eom;
   }
-
-  const summaryt &old_summary = summary_db.get(function_name);
+#endif
 
   // create summary
   summaryt summary;
@@ -174,16 +178,16 @@ void summarizer_bwt::do_summary(const function_namet &function_name,
   analyzer.set_message_handler(get_message_handler());
 
   template_generator_summaryt template_generator(
-    options,ssa_unwinder.get(function_name));
+    options,ssa_db,ssa_unwinder.get(function_name));
   template_generator.set_message_handler(get_message_handler());
   template_generator(solver.next_domain_number(),SSA,false);
 
   exprt::operandst c;
   c.push_back(old_summary.fw_precondition);
   c.push_back(old_summary.fw_invariant);
-  c.push_back(ssa_inliner.get_summaries(SSA)); //summaries + preconditions
+  c.push_back(ssa_inliner.get_summaries(SSA)); //forward summaries
   exprt::operandst postcond;
-  c.push_back(ssa_inliner.get_summaries(SSA,false,postcond)); //summaries only
+  c.push_back(ssa_inliner.get_summaries(SSA,false,postcond)); //backward summaries
   collect_postconditions(function_name, SSA, summary, postcond);
   if(!sufficient)
   {
@@ -235,8 +239,10 @@ Function: summarizer_bwt::inline_summaries()
 
 void summarizer_bwt::inline_summaries(const function_namet &function_name, 
 				   local_SSAt &SSA, 
+			           const summaryt &old_summary,
 				   const exprt &postcondition,
-				   bool context_sensitive)
+				   bool context_sensitive,
+                                   bool sufficient)
 {
   for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.end();
       n_it != SSA.nodes.begin(); )
@@ -259,7 +265,7 @@ void summarizer_bwt::inline_summaries(const function_namet &function_name,
 	exprt postcondition_call = true_exprt();
 	if(context_sensitive) 
 	  postcondition_call = compute_calling_context(
-	    function_name,SSA,n_it,f_it,postcondition,false);
+	    function_name,SSA,old_summary,n_it,f_it,postcondition,sufficient);
 
 	irep_idt fname = to_symbol_expr(f_it->function()).get_identifier();
 	status() << "Recursively summarizing function " << fname << eom;
@@ -407,4 +413,93 @@ bool summarizer_bwt::check_postcondition(
   }
 
   return precondition_holds;
+}
+
+/*******************************************************************\
+
+Function: summarizer_bwt::compute_calling_context()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt summarizer_bwt::compute_calling_context(  
+  const function_namet &function_name, 
+  local_SSAt &SSA,
+  summaryt old_summary,
+  local_SSAt::nodest::const_iterator n_it, 
+  local_SSAt::nodet::function_callst::const_iterator f_it,
+  const exprt &postcondition,
+  bool sufficient)
+{
+  assert(f_it->function().id()==ID_symbol); //no function pointers
+  irep_idt fname = to_symbol_expr(f_it->function()).get_identifier();
+
+  status() << "Computing calling context for function " << fname << eom;
+
+  // solver
+  incremental_solvert &solver = ssa_db.get_solver(function_name);
+  solver.set_message_handler(get_message_handler());
+
+  //analyze
+  ssa_analyzert analyzer;
+  analyzer.set_message_handler(get_message_handler());
+
+  template_generator_callingcontextt template_generator(
+    options,ssa_db,ssa_unwinder.get(function_name));
+  template_generator.set_message_handler(get_message_handler());
+  template_generator(solver.next_domain_number(),SSA,n_it,f_it,false);
+
+  // collect globals at call site
+  std::map<local_SSAt::nodet::function_callst::const_iterator, local_SSAt::var_sett>
+    cs_globals_out;
+  SSA.get_globals(n_it->location,cs_globals_out[f_it],false);
+
+  exprt::operandst c;
+  c.push_back(old_summary.fw_precondition);
+  c.push_back(old_summary.fw_invariant);
+  c.push_back(ssa_inliner.get_summaries(SSA)); //forward summaries
+  exprt::operandst postcond;
+  c.push_back(ssa_inliner.get_summaries(SSA,false,postcond)); //backward summaries
+  old_summary.bw_postcondition = postcondition; //that's a bit awkward
+  collect_postconditions(function_name, SSA, old_summary, postcond);
+  if(!sufficient)
+  {
+    c.push_back(conjunction(postcond)); 
+  }
+  else //sufficient
+  {
+    c.push_back(not_exprt(conjunction(postcond))); 
+  }
+
+  analyzer(solver,SSA,conjunction(c),template_generator);
+
+  // set preconditions
+  local_SSAt &fSSA = ssa_db.get(fname); 
+
+  exprt postcondition_call;
+  analyzer.get_result(postcondition_call,
+		      template_generator.callingcontext_vars());
+
+  debug() << "Backward calling context for " << 
+    from_expr(SSA.ns, "", *f_it) << ": " 
+	  << from_expr(SSA.ns, "", postcondition_call) << eom;
+
+  ssa_inliner.rename_to_callee(f_it, fSSA.params,
+			     cs_globals_out[f_it],fSSA.globals_out,
+			     postcondition_call);
+
+  debug() << "Backward calling context for " << 
+    from_expr(SSA.ns, "", *f_it) << ": " 
+	  << from_expr(SSA.ns, "", postcondition_call) << eom;
+
+  //statistics
+  solver_instances += analyzer.get_number_of_solver_instances();
+  solver_calls += analyzer.get_number_of_solver_calls();
+
+  return postcondition_call;
 }

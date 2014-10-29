@@ -285,7 +285,7 @@ void summarizer_fw_termt::do_termination(const function_namet &function_name,
   solver.set_message_handler(get_message_handler());
 
   template_generator_rankingt template_generator1(
-    options,ssa_unwinder.get(function_name));
+    options,ssa_db,ssa_unwinder.get(function_name));
   template_generator1.set_message_handler(get_message_handler());
   template_generator1(solver.next_domain_number(),SSA,true);
 

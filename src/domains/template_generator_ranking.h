@@ -18,9 +18,10 @@ class template_generator_rankingt : public template_generator_baset
 public:
 
   explicit template_generator_rankingt(optionst &_options,
+				    ssa_dbt &_ssa_db,
                                     ssa_local_unwindert &_ssa_local_unwinder)
     : 
-  template_generator_baset(_options,_ssa_local_unwinder)
+  template_generator_baset(_options,_ssa_db,_ssa_local_unwinder)
   {
   }  
 

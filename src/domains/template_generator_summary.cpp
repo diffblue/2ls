@@ -40,7 +40,8 @@ void template_generator_summaryt::operator()(unsigned _domain_number,
   collect_variables_loop(SSA,forward);
 
   // do not compute summary for main
-  if(SSA.goto_function.body.instructions.front().function != ID_main)
+  if(SSA.goto_function.body.instructions.front().function != ID_main ||
+     options.get_bool_option("preconditions"))
     collect_variables_inout(SSA,forward);
 
   instantiate_standard_domains(SSA);

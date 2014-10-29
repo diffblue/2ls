@@ -67,34 +67,35 @@ exprt ssa_inlinert::get_summary(
   c.push_back(get_replace_params(summary.params,*f_it));
 
   //equalities for globals_in
-  c.push_back(get_replace_globals_in(summary.globals_in,cs_globals_in));
+  if(forward)
+    c.push_back(get_replace_globals_in(summary.globals_in,cs_globals_in));
+  else
+    c.push_back(get_replace_globals_in(summary.globals_out,cs_globals_out));
 
-  //constraints for precondition and transformer
-  exprt precondition;
-  if(forward) precondition = summary.fw_precondition;
-  else precondition = summary.bw_precondition;
-  rename(precondition);
-  precondition = implies_exprt(SSA.guard_symbol(n_it->location),
-			       precondition);
-#if 0
-  c.push_back(precondition); 
+  //constraints for preconditions (only backward)
   if(!forward)
   {
-    exprt bw_precond = summary.bw_precondition;
+    exprt bw_precond = summary.bw_precondition.is_nil() ? true_exprt() : summary.bw_precondition;
     rename(bw_precond);
-    preconditions.push_back(bw_precond);
+    preconditions.push_back(implies_exprt(SSA.guard_symbol(n_it->location),
+					  bw_precond));
   }
-#endif
 
+  //constraints for transformer
   exprt transformer;
-  if(forward) transformer = summary.fw_transformer;
-  else transformer = summary.bw_transformer;
+  if(forward) 
+    transformer = summary.fw_transformer.is_nil() ? true_exprt() : summary.fw_transformer;
+  else transformer = summary.bw_transformer.is_nil() ? true_exprt() : summary.bw_transformer;
   rename(transformer);
   c.push_back(transformer);
   
   //equalities for globals out (including unmodified globals)
-  c.push_back(get_replace_globals_out(summary.globals_out,
+  if(forward)
+    c.push_back(get_replace_globals_out(summary.globals_out,
 				      cs_globals_in,cs_globals_out));
+  else
+    c.push_back(get_replace_globals_out(summary.globals_in,
+				      cs_globals_out,cs_globals_in));
 
   return implies_exprt(SSA.guard_symbol(n_it->location),conjunction(c));
 }
@@ -819,6 +820,9 @@ bool ssa_inlinert::find_corresponding_symbol(const symbol_exprt &s,
   for(local_SSAt::var_sett::const_iterator it = globals.begin();
       it != globals.end(); it++)
   {
+#if 0
+    std::cout << s_orig_id << " =?= " << get_original_identifier(*it) << std::endl;
+#endif
     if(s_orig_id == get_original_identifier(*it))
     {
       s_found = *it;

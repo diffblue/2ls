@@ -85,6 +85,12 @@ class ssa_inlinert : public messaget
 			       const local_SSAt::var_sett &globals_in, 
 			       exprt &expr);
 
+  static bool find_corresponding_symbol(const symbol_exprt &s, 
+				 const local_SSAt::var_sett &globals,
+                                 symbol_exprt &s_found);
+
+  static irep_idt get_original_identifier(const symbol_exprt &s);
+
  protected:
   unsigned counter;
   summary_dbt &summary_db;
@@ -111,12 +117,6 @@ class ssa_inlinert : public messaget
 
   void rename(exprt &expr);
   void rename(local_SSAt::nodet &node);
-
-  bool find_corresponding_symbol(const symbol_exprt &s, 
-				 const local_SSAt::var_sett &globals,
-                                 symbol_exprt &s_found);
-
-  irep_idt get_original_identifier(const symbol_exprt &s);
 
 };
 

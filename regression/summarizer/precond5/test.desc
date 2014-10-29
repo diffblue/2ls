@@ -1,0 +1,6 @@
+CORE
+main.c
+--preconditions --sufficient
+^EXIT=0$
+^SIGNAL=0$
+\[c::foo\]: !(len <= 2 && -((signed __CPROVER_bitvector\[33\])len) <= 0)

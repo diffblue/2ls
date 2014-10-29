@@ -9,6 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
+#include <climits>
 
 #include <util/string2int.h>
 #include <util/config.h>
@@ -212,6 +213,22 @@ void summarizer_parseoptionst::get_command_line_options(optionst &options)
  // do k-induction refinement
   if(cmdline.isset("k-induction"))
     options.set_option("k-induction", true);
+
+ // do incremental bmc
+  if(cmdline.isset("incremental-bmc"))
+  {
+    options.set_option("incremental-bmc", true);
+    options.set_option("inline", true);
+    options.set_option("havoc", true);
+    if(options.get_unsigned_int_option("unwind")==0)
+      options.set_option("unwind",UINT_MAX);
+  }
+
+  // check for spuriousness of assertion failures
+  if(cmdline.isset("no-spurious-check"))
+    options.set_option("spurious-check", false);
+  else
+    options.set_option("spurious-check", true);
 }
 
 /*******************************************************************\

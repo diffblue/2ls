@@ -43,14 +43,16 @@ class summarizer_bwt : public summarizer_baset
 
   void inline_summaries(const function_namet &function_name, 
 			local_SSAt &SSA,
+			const summaryt &old_summary,
     		        const exprt &postcondition,
-                        bool context_sensitive); 
+                        bool context_sensitive,
+			bool sufficient); 
 
   void do_summary(const function_namet &function_name, 
 		  local_SSAt &SSA, 
 		  const summaryt &old_summary,
 		  summaryt &summary, 
-		  bool forward);
+		  bool context_sensitive);
 
   virtual bool check_postcondition(const function_namet &function_name, 
                   const local_SSAt &SSA,
@@ -63,6 +65,14 @@ class summarizer_bwt : public summarizer_baset
 			       const local_SSAt &SSA, 
 			       const summaryt &summary,
 			       exprt::operandst &postconditions);
+
+  virtual exprt compute_calling_context(const function_namet &function_name, 
+    local_SSAt &SSA,
+    summaryt old_summary,
+    local_SSAt::nodest::const_iterator n_it, 
+    local_SSAt::nodet::function_callst::const_iterator f_it,
+    const exprt &postcondition,
+    bool sufficient);
 
 };
 

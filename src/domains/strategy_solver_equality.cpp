@@ -95,7 +95,9 @@ bool strategy_solver_equalityt::iterate(invariantt &_inv)
 
     if(solver() == decision_proceduret::D_SATISFIABLE) 
     { 
+#if 0
       debug() << "SAT" << eom;
+#endif      
     }
     else  //equality holds
     {

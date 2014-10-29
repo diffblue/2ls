@@ -174,7 +174,7 @@ exprt summarizer_baset::compute_calling_context(
   analyzer.set_message_handler(get_message_handler());
 
   template_generator_callingcontextt template_generator(
-    options,ssa_unwinder.get(function_name));
+    options,ssa_db,ssa_unwinder.get(function_name));
   template_generator.set_message_handler(get_message_handler());
   template_generator(solver.next_domain_number(),SSA,n_it,f_it,forward);
 
@@ -201,7 +201,7 @@ exprt summarizer_baset::compute_calling_context(
 			     cs_globals_in[f_it],fSSA.globals_in,
 			     precondition_call);
 
-  debug() << "Calling context for " << 
+  debug() << (forward ? "Forward " : "Backward ") << "calling context for " << 
     from_expr(SSA.ns, "", *f_it) << ": " 
 	  << from_expr(SSA.ns, "", precondition_call) << eom;
 

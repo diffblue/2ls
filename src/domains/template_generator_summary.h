@@ -16,9 +16,10 @@ class template_generator_summaryt : public template_generator_baset
 public:
 
   explicit template_generator_summaryt(optionst &_options,
-                                    ssa_local_unwindert &_ssa_local_unwinder)
+ 				    ssa_dbt &_ssa_db,
+                                   ssa_local_unwindert &_ssa_local_unwinder)
     : 
-  template_generator_baset(_options,_ssa_local_unwinder)
+  template_generator_baset(_options,_ssa_db,_ssa_local_unwinder)
   {
   }  
 

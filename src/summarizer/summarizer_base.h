@@ -69,7 +69,7 @@ class summarizer_baset : public messaget
 			    const exprt& precondition,
 			    bool forward);
 
-  exprt compute_calling_context(
+  virtual exprt compute_calling_context(
 			const function_namet &function_name, 
 			local_SSAt &SSA,
 			local_SSAt::nodest::const_iterator n_it, 
