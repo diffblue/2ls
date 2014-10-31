@@ -10,9 +10,6 @@
 #include "util.h"
 #include "../domains/incremental_solver.h"
 
-
-//#define DEBUG_FORMULA
-
 class strategy_solver_baset : public messaget
 {
 
