@@ -18,7 +18,7 @@ Author: Peter Schrammel
 #include "domain.h"
 #include "util.h"
 
-
+//#define DISPLAY_FORMULA
 //#define DEBUG_FORMULA
 //#define DEBUG_OUTPUT
 
@@ -97,7 +97,7 @@ static inline incremental_solvert & operator << (
   incremental_solvert &dest,
   const exprt &src)
 {
-#if 0
+#ifdef DISPLAY_FORMULA
   if(!dest.activation_literals.empty())
     std::cout << "add_to_solver(" << !dest.activation_literals.back() << "): " 
 	      << from_expr(dest.ns,"",src) << std::endl;

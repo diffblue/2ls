@@ -23,17 +23,16 @@ Function: ssa_inlinert::get_summary
 
 \*******************************************************************/
 
-exprt ssa_inlinert::get_summary(
+void ssa_inlinert::get_summary(
   const local_SSAt &SSA,
   local_SSAt::nodest::const_iterator n_it,
   local_SSAt::nodet::function_callst::const_iterator f_it, 
   const summaryt &summary,
-  bool forward,
-  exprt::operandst &preconditions)
+  bool forward, 
+  exprt::operandst &summaries,
+  exprt::operandst &mappings)
 {
   counter++;
-
-  exprt::operandst c;
 
   //getting globals at call site
   local_SSAt::var_sett cs_globals_in, cs_globals_out; 
@@ -64,40 +63,37 @@ exprt ssa_inlinert::get_summary(
 #endif
 
   //equalities for arguments
-  c.push_back(get_replace_params(summary.params,*f_it));
+  mappings.push_back(get_replace_params(summary.params,*f_it));
 
   //equalities for globals_in
   if(forward)
-    c.push_back(get_replace_globals_in(summary.globals_in,cs_globals_in));
+    mappings.push_back(get_replace_globals_in(summary.globals_in,
+					      cs_globals_in));
   else
-    c.push_back(get_replace_globals_in(summary.globals_out,cs_globals_out));
-
-  //constraints for preconditions (only backward)
-  if(!forward)
-  {
-    exprt bw_precond = summary.bw_precondition.is_nil() ? true_exprt() : summary.bw_precondition;
-    rename(bw_precond);
-    preconditions.push_back(implies_exprt(SSA.guard_symbol(n_it->location),
-					  bw_precond));
-  }
+    mappings.push_back(get_replace_globals_in(summary.globals_out,
+					      cs_globals_out));
 
   //constraints for transformer
   exprt transformer;
   if(forward) 
-    transformer = summary.fw_transformer.is_nil() ? true_exprt() : summary.fw_transformer;
-  else transformer = summary.bw_transformer.is_nil() ? true_exprt() : summary.bw_transformer;
+    transformer = summary.fw_transformer.is_nil() ? true_exprt() : 
+      summary.fw_transformer;
+  else 
+  {
+    transformer = summary.bw_transformer.is_nil() ? true_exprt() : 
+      summary.bw_transformer;
+  }
   rename(transformer);
-  c.push_back(transformer);
+  summaries.push_back(implies_exprt(SSA.guard_symbol(n_it->location),
+				    transformer));
   
   //equalities for globals out (including unmodified globals)
   if(forward)
-    c.push_back(get_replace_globals_out(summary.globals_out,
+    mappings.push_back(get_replace_globals_out(summary.globals_out,
 				      cs_globals_in,cs_globals_out));
   else
-    c.push_back(get_replace_globals_out(summary.globals_in,
+    mappings.push_back(get_replace_globals_out(summary.globals_in,
 				      cs_globals_out,cs_globals_in));
-
-  return implies_exprt(SSA.guard_symbol(n_it->location),conjunction(c));
 }
 
 /*******************************************************************\
@@ -114,15 +110,16 @@ Function: ssa_inlinert::get_summaries
 
 exprt ssa_inlinert::get_summaries(const local_SSAt &SSA)
 {
-  exprt::operandst dummy;
-  return get_summaries(SSA,true,dummy);
+  exprt::operandst summaries,mappings;
+  get_summaries(SSA,true,summaries,mappings);
+  return and_exprt(conjunction(mappings),conjunction(summaries));
 }
 
-exprt ssa_inlinert::get_summaries(const local_SSAt &SSA,
+void ssa_inlinert::get_summaries(const local_SSAt &SSA,
 				  bool forward,
-				  exprt::operandst &preconditions)
+                                  exprt::operandst &summaries,
+				  exprt::operandst &mappings)
 {
-  exprt result = true_exprt();
   for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
       n_it != SSA.nodes.end(); n_it++)
   {
@@ -135,13 +132,11 @@ exprt ssa_inlinert::get_summaries(const local_SSAt &SSA,
 
       if(summary_db.exists(fname))
       {
-        result = and_exprt(result,
-  	   get_summary(SSA,n_it,f_it,summary_db.get(fname),
-		       forward,preconditions));
+        get_summary(SSA,n_it,f_it,summary_db.get(fname),
+		       forward,summaries,mappings);
       }
     }
   }
-  return result;
 }
 
 /*******************************************************************\

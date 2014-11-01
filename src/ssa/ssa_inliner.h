@@ -25,15 +25,17 @@ class ssa_inlinert : public messaget
     summary_db(_summary_db)
     {}
 
-  exprt get_summary(const local_SSAt &SSA,
+  void get_summary(const local_SSAt &SSA,
 	       local_SSAt::nodest::const_iterator n_it,
                local_SSAt::nodet::function_callst::const_iterator f_it, 
                const summaryt &summary,
-   	       bool forward,
-    	       exprt::operandst &preconditions);
-  exprt get_summaries(const local_SSAt &SSA,
- 	       bool forward,
-    	       exprt::operandst &preconditions);
+   	       bool forward, 
+  	       exprt::operandst &summaries,
+	       exprt::operandst &mappings);
+  void get_summaries(const local_SSAt &SSA,
+		     bool forward,
+		     exprt::operandst &summaries,
+		     exprt::operandst &mappings);
   exprt get_summaries(const local_SSAt &SSA);
 
   void replace(local_SSAt &SSA,

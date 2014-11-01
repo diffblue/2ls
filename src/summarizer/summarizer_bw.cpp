@@ -40,7 +40,7 @@ Function: summarizer_bwt::summarize()
 
 void summarizer_bwt::summarize()
 {
-  status() << "\nBackwards analysis..." << eom;
+  status() << "\nBackward analysis..." << eom;
  
   exprt postcondition = true_exprt(); //initial calling context
   for(functionst::const_iterator it = ssa_db.functions().begin(); 
@@ -187,7 +187,7 @@ void summarizer_bwt::do_summary(const function_namet &function_name,
   c.push_back(old_summary.fw_invariant);
   c.push_back(ssa_inliner.get_summaries(SSA)); //forward summaries
   exprt::operandst postcond;
-  c.push_back(ssa_inliner.get_summaries(SSA,false,postcond)); //backward summaries
+  ssa_inliner.get_summaries(SSA,false,postcond,c); //backward summaries
   collect_postconditions(function_name, SSA, summary, postcond);
   if(!sufficient)
   {
@@ -295,8 +295,6 @@ void summarizer_bwt::collect_postconditions(
   const summaryt &summary,
   exprt::operandst &postconditions)
 {
-  postconditions.push_back(summary.bw_postcondition);
-
   for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
       n_it != SSA.nodes.end(); n_it++)
   {
@@ -314,7 +312,7 @@ void summarizer_bwt::collect_postconditions(
       }*/
 
   exprt guard = SSA.guard_symbol(--SSA.goto_function.body.instructions.end());
-  postconditions.push_back(guard);
+  postconditions.push_back(and_exprt(guard,summary.bw_postcondition));
 }
 
 /*******************************************************************\
@@ -464,7 +462,7 @@ exprt summarizer_bwt::compute_calling_context(
   c.push_back(old_summary.fw_invariant);
   c.push_back(ssa_inliner.get_summaries(SSA)); //forward summaries
   exprt::operandst postcond;
-  c.push_back(ssa_inliner.get_summaries(SSA,false,postcond)); //backward summaries
+  ssa_inliner.get_summaries(SSA,false,postcond,c); //backward summaries
   old_summary.bw_postcondition = postcondition; //that's a bit awkward
   collect_postconditions(function_name, SSA, old_summary, postcond);
   if(!sufficient)
@@ -485,13 +483,14 @@ exprt summarizer_bwt::compute_calling_context(
   analyzer.get_result(postcondition_call,
 		      template_generator.callingcontext_vars());
 
-  debug() << "Backward calling context for " << 
-    from_expr(SSA.ns, "", *f_it) << ": " 
-	  << from_expr(SSA.ns, "", postcondition_call) << eom;
-
   ssa_inliner.rename_to_callee(f_it, fSSA.params,
 			     cs_globals_out[f_it],fSSA.globals_out,
 			     postcondition_call);
+
+  if(sufficient)
+  {
+    postcondition_call = not_exprt(postcondition_call); 
+  }
 
   debug() << "Backward calling context for " << 
     from_expr(SSA.ns, "", *f_it) << ": " 
