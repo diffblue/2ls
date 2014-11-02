@@ -62,9 +62,10 @@ class summarizer_bwt : public summarizer_baset
                   bool context_sensitive);
 
   void collect_postconditions(const function_namet &function_name,
-			       const local_SSAt &SSA, 
-			       const summaryt &summary,
-			       exprt::operandst &postconditions);
+			      const local_SSAt &SSA, 
+			      const summaryt &summary,
+			      exprt::operandst &postconditions,
+			      bool sufficient);
 
   virtual exprt compute_calling_context(const function_namet &function_name, 
     local_SSAt &SSA,

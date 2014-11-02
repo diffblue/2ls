@@ -46,6 +46,10 @@ bool strategy_solver_enumerationt::iterate(invariantt &_inv)
   if(solver() == decision_proceduret::D_SATISFIABLE) 
   { 
     debug() << "SAT" << eom;
+
+#if 0
+    _inv.basic_value = domaint::valuet::OTHER; //formula is at least satisfiable
+#endif
       
     #if 0
     for(unsigned i=0; i<solver.formula.size(); i++) 

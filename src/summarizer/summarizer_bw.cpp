@@ -188,7 +188,7 @@ void summarizer_bwt::do_summary(const function_namet &function_name,
   c.push_back(ssa_inliner.get_summaries(SSA)); //forward summaries
   exprt::operandst postcond;
   ssa_inliner.get_summaries(SSA,false,postcond,c); //backward summaries
-  collect_postconditions(function_name, SSA, summary, postcond);
+  collect_postconditions(function_name, SSA, summary, postcond,sufficient);
   if(!sufficient)
   {
     c.push_back(conjunction(postcond)); 
@@ -254,7 +254,8 @@ void summarizer_bwt::inline_summaries(const function_namet &function_name,
         f_it != n_it->function_calls.end(); f_it++)
     {
       assert(f_it->function().id()==ID_symbol); //no function pointers
-      if(!check_call_reachable(function_name,SSA,n_it,f_it,postcondition,false)) 
+      if(!sufficient && 
+	 !check_call_reachable(function_name,SSA,n_it,f_it,postcondition,false))
       {
 	continue;
       }
@@ -293,7 +294,8 @@ void summarizer_bwt::collect_postconditions(
   const function_namet &function_name,
   const local_SSAt &SSA, 
   const summaryt &summary,
-  exprt::operandst &postconditions)
+  exprt::operandst &postconditions,
+  bool sufficient)
 {
   for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
       n_it != SSA.nodes.end(); n_it++)
@@ -312,7 +314,10 @@ void summarizer_bwt::collect_postconditions(
       }*/
 
   exprt guard = SSA.guard_symbol(--SSA.goto_function.body.instructions.end());
-  postconditions.push_back(and_exprt(guard,summary.bw_postcondition));
+  if(!sufficient) 
+    postconditions.push_back(and_exprt(guard,summary.bw_postcondition));
+  else
+    postconditions.push_back(implies_exprt(guard,summary.bw_postcondition));
 }
 
 /*******************************************************************\
@@ -464,7 +469,7 @@ exprt summarizer_bwt::compute_calling_context(
   exprt::operandst postcond;
   ssa_inliner.get_summaries(SSA,false,postcond,c); //backward summaries
   old_summary.bw_postcondition = postcondition; //that's a bit awkward
-  collect_postconditions(function_name, SSA, old_summary, postcond);
+  collect_postconditions(function_name, SSA, old_summary, postcond,sufficient);
   if(!sufficient)
   {
     c.push_back(conjunction(postcond)); 
@@ -487,7 +492,8 @@ exprt summarizer_bwt::compute_calling_context(
 			     cs_globals_out[f_it],fSSA.globals_out,
 			     postcondition_call);
 
-  if(sufficient)
+  if(sufficient && 
+     !postcondition_call.is_true()) //TODO: this should actually be handled by ssa_analyzer using a "guard-reachabiliity-only" analysis if template is empty
   {
     postcondition_call = not_exprt(postcondition_call); 
   }
@@ -502,3 +508,4 @@ exprt summarizer_bwt::compute_calling_context(
 
   return postcondition_call;
 }
+ 

@@ -26,6 +26,10 @@ Function: tpolyhedra_domaint::initialize
 
 void tpolyhedra_domaint::initialize(valuet &value)
 {
+#if 0
+  if(templ.size()==0) return domaint::initialize(value);
+#endif
+
   templ_valuet &v = static_cast<templ_valuet&>(value);
   v.resize(templ.size());
   for(unsigned row = 0; row<templ.size(); row++)
@@ -49,6 +53,10 @@ Function: tpolyhedra_domaint::join
 
 void tpolyhedra_domaint::join(valuet &value1, const valuet &value2)
 {
+#if 0
+  if(templ.size()==0) return domaint::join(value1,value2);
+#endif
+
   templ_valuet &v1 = static_cast<templ_valuet&>(value1);
   const templ_valuet &v2 = static_cast<const templ_valuet&>(value2);
   assert(v1.size()==templ.size());
@@ -515,6 +523,10 @@ Function: tpolyhedra_domaint::project_on_vars
 void tpolyhedra_domaint::project_on_vars(valuet &value, 
 				       const var_sett &vars, exprt &result)
 {
+#if 0
+  if(templ.size()==0) return domaint::project_on_vars(value,vars,result);
+#endif
+
   const templ_valuet &v = static_cast<const templ_valuet &>(value);
 
   assert(v.size()==templ.size());

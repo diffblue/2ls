@@ -1,0 +1,6 @@
+CORE
+main.c
+--preconditions --sufficient --context-sensitive --zones
+^EXIT=0$
+^SIGNAL=0$
+\[main\]: !(argc' <= 10 && -((signed __CPROVER_bitvector\[33\])argc') <= -8)

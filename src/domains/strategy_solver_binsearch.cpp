@@ -52,6 +52,10 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
   if(solver() == decision_proceduret::D_SATISFIABLE) //improvement check
   { 
 #if 0
+    _inv.basic_value = domaint::valuet::OTHER; //formula is at least satisfiable
+#endif
+
+#if 0
     debug() << "SAT" << eom;
 #endif
       

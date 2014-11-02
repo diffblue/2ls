@@ -670,7 +670,9 @@ Function: summary_checkert::report_preconditions
 void summary_checkert::report_preconditions()
 {
   result() << eom;
-  result() << "** Preconditions: " << eom;
+  result() << "** " << (options.get_bool_option("sufficient") ? 
+			"Sufficient" : "Necessary")
+	   << " preconditions: " << eom;
   ssa_dbt::functionst &functions = ssa_db.functions();
   for(ssa_dbt::functionst::iterator it = functions.begin();
       it != functions.end(); it++)
@@ -678,6 +680,7 @@ void summary_checkert::report_preconditions()
     exprt precondition;
     bool computed = summary_db.exists(it->first);
     if(computed) precondition = summary_db.get(it->first).bw_precondition;
+    if(precondition.is_nil()) computed = false;
     result() << eom << "[" << it->first << "]: " 
 	     << (!computed ? "not computed" : 
 		 from_expr(it->second->ns, "", precondition)) << eom;
