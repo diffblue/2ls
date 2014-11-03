@@ -241,15 +241,16 @@ exprt summarizer_bw_termt::bootstrap_preconditions(
 			     template_generator_summaryt &template_generator2)
 {
   //bootstrap with a concrete model for input variables
-  solver.new_context();
-  solver << not_exprt(summary.bw_precondition); //find new ones
-  solver << SSA.guard_symbol(--SSA.goto_function.body.instructions.end()); //last node should be reachable
   const domaint::var_sett &invars = template_generator2.out_vars();
+  solver.new_context();
 
   unsigned number_bootstraps = 0;
   exprt termination_argument = true_exprt();
   while(number_bootstraps++ < MAX_BOOTSTRAP_ATTEMPTS)
   {
+    solver << not_exprt(summary.bw_precondition); //find new ones
+    solver << SSA.guard_symbol(--SSA.goto_function.body.instructions.end()); //last node should be reachable
+
     //statistics
     solver_calls++;
 
@@ -266,8 +267,13 @@ exprt summarizer_bw_termt::bootstrap_preconditions(
       precondition = conjunction(c);
       debug() << "bootstrap model for precondition: " 
 	      << from_expr(SSA.ns,"",precondition) << eom;
+      solver.pop_context();
+  }
+    else 
+    { 
+      solver.pop_context();
+      break;
     }
-    else break;
 
     termination_argument = 
       compute_termination_argument(SSA,precondition,
@@ -278,18 +284,18 @@ exprt summarizer_bw_termt::bootstrap_preconditions(
       break;
     }
 
+    solver.new_context();
     solver << not_exprt(precondition); //next one, please!
 #if 0
     //this should not be in the precondition
-    if(summary.precondition.is_nil())
-      summary.precondition = not_exprt(precondition);
+    if(summary.bw_precondition.is_nil())
+      summary.bw_precondition = not_exprt(precondition);
     else 
-      summary.precondition = and_exprt(summary.precondition,
+      summary.bw_precondition = and_exprt(summary.precondition,
 				       not_exprt(precondition));
 #endif
   }
 
-  solver.pop_context();
   return termination_argument;
 }
 
