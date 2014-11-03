@@ -303,7 +303,7 @@ void deltacheck_analyzert::check_all(std::ostream &global_report)
     
     if(!file_report)
     {
-      error() << "failed to open report file `" << file_report
+      error() << "failed to open report file `" << file_report_name
               << "'" << eom;
       return;
     }
