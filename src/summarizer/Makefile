@@ -1,7 +1,8 @@
 include ../config.inc
 
-SRC = summarizer_base.cpp summarizer_fw.cpp \
-      summarizer_fw_term.cpp summarizer_bw.cpp \
+SRC = summarizer_base.cpp  \
+      summarizer_fw.cpp summarizer_bw.cpp \
+      summarizer_fw_term.cpp summarizer_bw_term.cpp \
       summarizer_main.cpp summarizer_parseoptions.cpp \
       show.cpp summary_checker.cpp  \
       summary_db.cpp cover_goals_ext.cpp \

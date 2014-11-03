@@ -8,7 +8,7 @@ int foo(int y)
     int x_lb = x;
     x += y;
     //assert(y>=1);
-    //assert(-(x+(x+y))>0);
+    //assert(-(x-(x+y))>0);
     //assert(!( (signed __CPROVER_bitvector[65])-1 * (signed __CPROVER_bitvector[65])x_lb <=  (signed __CPROVER_bitvector[65])-1 *  (signed __CPROVER_bitvector[65])x));
   }
 //  if(0) assert(0);

@@ -210,6 +210,26 @@ void summarizer_parseoptionst::get_command_line_options(optionst &options)
     options.set_option("sufficient", true);
   }
 
+  if(cmdline.isset("monolithic-ranking-function"))
+  {
+    options.set_option("monolithic-ranking-function", true);
+  }
+  else options.set_option("monolithic-ranking-function", false);
+
+  if(cmdline.isset("lexicographic-ranking-function"))
+  {
+    options.set_option("lexicographic-ranking-function", 
+		       cmdline.getval("lexicographic-ranking-function"));
+  }
+  else options.set_option("lexicographic-ranking-function",3);
+
+  if(cmdline.isset("max-inner-ranking-iterations"))
+  {
+    options.set_option("max-inner-ranking-iterations", 
+		       cmdline.getval("max-inner-ranking-iterations"));
+  }
+  else options.set_option("max-inner-ranking-iterations",20);
+
  // do k-induction refinement
   if(cmdline.isset("k-induction"))
     options.set_option("k-induction", true);
@@ -1272,6 +1292,9 @@ void summarizer_parseoptionst::help()
     " --enum-solver                use solver based on model enumeration\n"
     " --binsearch-solver           use solver based on binary search\n"
     " --arrays                     do not ignore array contents\n"
+    " --lexicographic-ranking-function n          (default n=3)\n"
+    " --monolithic-ranking-function\n"
+    " --max-inner-ranking-iterationsn n           (default n=20)\n"
     "\n"
     "Other options:\n"
     " --version                    show version and exit\n"

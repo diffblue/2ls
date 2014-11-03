@@ -4,10 +4,6 @@
 #include "util.h"
 #include <solvers/smt2/smt2_dec.h>
 
-#define MAX_INNER_ITERATIONS 20
-
-//#define DEBUG_FORMULA 
-
 bool ranking_solver_enumerationt::iterate(invariantt &_rank)
 {
   linrank_domaint::templ_valuet &rank = 
@@ -89,7 +85,7 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
 	debug() << "inner solve()" << eom;
 	solver_calls++;
 	if(inner_solver() == decision_proceduret::D_SATISFIABLE && 
-	   number_inner_iterations < MAX_INNER_ITERATIONS) 
+	   number_inner_iterations < max_inner_iterations) 
 	{ 
 
 	  debug() << "inner solver: SAT" << eom;

@@ -30,7 +30,7 @@ void ssa_inlinert::get_summary(
   const summaryt &summary,
   bool forward, 
   exprt::operandst &summaries,
-  exprt::operandst &mappings)
+  exprt::operandst &bindings)
 {
   counter++;
 
@@ -63,14 +63,14 @@ void ssa_inlinert::get_summary(
 #endif
 
   //equalities for arguments
-  mappings.push_back(get_replace_params(summary.params,*f_it));
+  bindings.push_back(get_replace_params(summary.params,*f_it));
 
   //equalities for globals_in
   if(forward)
-    mappings.push_back(get_replace_globals_in(summary.globals_in,
+    bindings.push_back(get_replace_globals_in(summary.globals_in,
 					      cs_globals_in));
   else
-    mappings.push_back(get_replace_globals_in(summary.globals_out,
+    bindings.push_back(get_replace_globals_in(summary.globals_out,
 					      cs_globals_out));
 
   //constraints for transformer
@@ -89,10 +89,10 @@ void ssa_inlinert::get_summary(
   
   //equalities for globals out (including unmodified globals)
   if(forward)
-    mappings.push_back(get_replace_globals_out(summary.globals_out,
+    bindings.push_back(get_replace_globals_out(summary.globals_out,
 				      cs_globals_in,cs_globals_out));
   else
-    mappings.push_back(get_replace_globals_out(summary.globals_in,
+    bindings.push_back(get_replace_globals_out(summary.globals_in,
 				      cs_globals_out,cs_globals_in));
 }
 
@@ -110,15 +110,15 @@ Function: ssa_inlinert::get_summaries
 
 exprt ssa_inlinert::get_summaries(const local_SSAt &SSA)
 {
-  exprt::operandst summaries,mappings;
-  get_summaries(SSA,true,summaries,mappings);
-  return and_exprt(conjunction(mappings),conjunction(summaries));
+  exprt::operandst summaries,bindings;
+  get_summaries(SSA,true,summaries,bindings);
+  return and_exprt(conjunction(bindings),conjunction(summaries));
 }
 
 void ssa_inlinert::get_summaries(const local_SSAt &SSA,
 				  bool forward,
                                   exprt::operandst &summaries,
-				  exprt::operandst &mappings)
+				  exprt::operandst &bindings)
 {
   for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
       n_it != SSA.nodes.end(); n_it++)
@@ -133,7 +133,7 @@ void ssa_inlinert::get_summaries(const local_SSAt &SSA,
       if(summary_db.exists(fname))
       {
         get_summary(SSA,n_it,f_it,summary_db.get(fname),
-		       forward,summaries,mappings);
+		       forward,summaries,bindings);
       }
     }
   }

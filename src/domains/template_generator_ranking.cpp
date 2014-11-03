@@ -38,11 +38,14 @@ void template_generator_rankingt::operator()(unsigned _domain_number,
   domain_number = _domain_number;
   handle_special_functions(SSA); // we have to call that to prevent trouble!
 
-#ifndef LEXICOGRAPHIC
-  domain_ptr = new linrank_domaint(domain_number,renaming_map);
-#else
-  domain_ptr = new lexlinrank_domaint(domain_number,renaming_map);
-#endif
+  if(options.get_bool_option("monolithic-ranking-function"))
+  {
+    domain_ptr = new linrank_domaint(domain_number,renaming_map);
+  }
+  else
+  {
+    domain_ptr = new lexlinrank_domaint(domain_number,renaming_map);
+  }
  collect_variables_ranking(SSA,forward);
 
  options.set_option("compute-ranking-functions",true);

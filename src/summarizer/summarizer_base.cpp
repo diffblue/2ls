@@ -352,3 +352,43 @@ bool summarizer_baset::check_precondition(
 
   return precondition_holds;
 }
+
+/*******************************************************************\
+
+Function: summarizer_baset::check_end_reachable()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: returns false if the end of the function is not reachable
+
+\******************************************************************/
+
+bool summarizer_baset::check_end_reachable(
+   const function_namet &function_name,
+   local_SSAt &SSA, 
+   const exprt &cond)
+{
+  incremental_solvert &solver = ssa_db.get_solver(function_name);
+  solver.set_message_handler(get_message_handler());
+  solver << SSA;
+  SSA.mark_nodes();
+
+  solver.new_context();
+  solver << SSA.get_enabling_exprs();
+  solver << ssa_inliner.get_summaries(SSA);
+
+  solver << cond;
+  exprt::operandst assertions;
+  assertions.push_back(
+    SSA.guard_symbol(--SSA.goto_function.body.instructions.end()));
+  get_assertions(SSA,assertions);
+  solver << disjunction(assertions); //we want to reach any of them
+
+  bool result = (solver()==decision_proceduret::D_SATISFIABLE);
+
+  solver.pop_context();
+
+  return result;
+}

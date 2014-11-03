@@ -42,13 +42,15 @@ class optionst;
   "(round-to-nearest)(round-to-plus-inf)(round-to-minus-inf)(round-to-zero)" \
   "(inline)(inline-main)(inline-partial):" \
   "(context-sensitive)(termination)" \
+  "(lexicographic-ranking-function):(monolithic-ranking-function)" \
+  "(max-inner-ranking-iterations):" \
   "(preconditions)(sufficient)" \
   "(show-locs)(show-vcc)(show-properties)(show-trace)(show-fixed-points)(show-stats)" \
   "(show-goto-functions)(show-guards)(show-defs)(show-ssa)(show-assignments)" \
   "(property):(all-properties)(k-induction)(incremental-bmc)" \
   "(no-spurious-check)" \
   "(no-simplify)(no-fixed-point)" \
-  "(no-unwinding-assertions)(no-propagation)"
+  "(no-unwinding-assertions)(no-propagation)" 
   // the last line is for CBMC-regression testing only
 
 class summarizer_parseoptionst:

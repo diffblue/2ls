@@ -87,6 +87,10 @@ class summarizer_baset : public messaget
   void get_assertions(const local_SSAt &SSA,
 		      exprt::operandst &assertions);
 
+  bool check_end_reachable(const function_namet &function_name,
+			   local_SSAt &SSA, 
+			   const exprt &cond);
+
   //statistics
   unsigned solver_instances;
   unsigned solver_calls;

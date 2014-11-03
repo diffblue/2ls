@@ -32,6 +32,8 @@ class summarizer_fw_termt : public summarizer_fwt
   summarizer_fwt(_options,_summary_db,_ssa_db,_ssa_unwinder,_ssa_inliner)
   {}
 
+  static threevalt check_termination_argument(exprt expr);
+
  protected:
 
   virtual void compute_summary_rec(const function_namet &function_name,
@@ -53,12 +55,7 @@ class summarizer_fw_termt : public summarizer_fwt
 		      local_SSAt &SSA, 
 		      summaryt &summary);
 
-  threevalt check_termination_argument(exprt expr);
-
-  bool check_end_reachable(const function_namet &function_name,
-			   local_SSAt &SSA, 
-			   const exprt &cond);
-};
+ };
 
 
 #endif

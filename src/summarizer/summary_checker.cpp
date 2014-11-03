@@ -26,7 +26,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "summarizer_fw.h"
 #include "summarizer_fw_term.h"
 #include "summarizer_bw.h"
-//#include "summarizer_bw_term.h"
+#include "summarizer_bw_term.h"
 
 #include <cstdlib>
 
@@ -260,11 +260,9 @@ void summary_checkert::summarize(const goto_modelt &goto_model,
    if(!forward && !termination)
     summarizer = new summarizer_bwt(
       options,summary_db,ssa_db,ssa_unwinder,ssa_inliner);
-  /* 
    if(!forward && termination)
     summarizer = new summarizer_bw_termt(
       options,summary_db,ssa_db,ssa_unwinder,ssa_inliner);
-  */
 
   assert(summarizer != NULL);
 

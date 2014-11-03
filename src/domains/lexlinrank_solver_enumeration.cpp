@@ -6,8 +6,6 @@
 
 //#define DEBUG_OUTER_FORMULA 
 //#define DEBUG_INNER_FORMULA 
-#define MAX_ELEMENTS 3 // lexicographic components
-#define MAX_REFINEMENTS 20
 
 bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
 {
@@ -114,12 +112,12 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
         solver_calls++;
 	bool inner_solver_result = (*inner_solver)(); 
 	if(inner_solver_result == decision_proceduret::D_SATISFIABLE && 
-	   number_refinements < MAX_REFINEMENTS) 
+	   number_inner_iterations < max_inner_iterations) 
 	{ 
-	  number_refinements++;
+	  number_inner_iterations++;
 	  
-	  debug() << "Inner solver: SAT and the max number of refinements was not reached " << eom;
-	  debug() << "Inner solver: Current number of refinements = " << number_refinements << eom;
+	  debug() << "Inner solver: SAT and the max number of iterations was not reached " << eom;
+	  debug() << "Inner solver: Current number of iterations = " << number_inner_iterations << eom;
 	  debug() << "Inner solver: Current number of components for row " << row << " is " << number_elements_per_row[row]+1 << eom;
 
 	  // new_row_values will contain the new values for c and d
@@ -158,9 +156,9 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
 	  if(inner_solver_result == decision_proceduret::D_UNSATISFIABLE)
 	    debug() << "Inner solver: UNSAT" << eom;
 	  else
-	    debug() << "Inner solver: reached max number of refinements" << eom;
+	    debug() << "Inner solver: reached max number of iterations" << eom;
 
-	  debug() << "Inner solver: number of refinements = " << number_refinements << eom;
+	  debug() << "Inner solver: number of iterations = " << number_inner_iterations << eom;
 
 #ifdef DEBUG_INNER_FORMULA
 	  for(unsigned i=0; i<inner_solver->formula.size(); i++) 
@@ -181,7 +179,7 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
 	  }
 	  else
 	  {
-	    if(number_elements_per_row[row] == MAX_ELEMENTS-1) 
+	    if(number_elements_per_row[row] == max_elements-1) 
 	    {
 	      debug() << "Reached the max no of lexicographic components and no ranking function was found" << eom;
 	      // no ranking function for the current template
@@ -190,7 +188,7 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
 	    else 
 	    {
 	      number_elements_per_row[row]++;
-	      debug() << "Inner solver: increasing the number of lexicographic componenets for row " << row << " to " << number_elements_per_row[row] + 1 << eom;
+	      debug() << "Inner solver: increasing the number of lexicographic components for row " << row << " to " << number_elements_per_row[row] + 1 << eom;
 	      // reset the inner solver
 	      debug() << "Reset the inner solver " << eom;
 	      delete inner_solver;
@@ -199,8 +197,8 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
 	      lexlinrank_domain.reset_refinements();
 
 	      lexlinrank_domain.add_element(row, rank);
-	      number_refinements = 0;
-	      debug() << "Inner solver: the number of refinements for row " << row << " was reset to " << number_refinements << eom;
+	      number_inner_iterations = 0;
+	      debug() << "Inner solver: the number of inner iterations for row " << row << " was reset to " << number_inner_iterations << eom;
 	      improved = true;
 	    }
 	  }

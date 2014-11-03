@@ -74,15 +74,25 @@ void ssa_analyzert::operator()(incremental_solvert &solver,
   strategy_solver_baset *strategy_solver;
   if(template_generator.options.get_bool_option("compute-ranking-functions"))
   {
-#ifndef LEXICOGRAPHIC
-    strategy_solver = new ranking_solver_enumerationt(
-        *static_cast<linrank_domaint *>(domain), solver, SSA.ns);    
-    result = new linrank_domaint::templ_valuet();
-#else
-    strategy_solver = new lexlinrank_solver_enumerationt(
-        *static_cast<lexlinrank_domaint *>(domain), solver, SSA.ns);    
-    result = new lexlinrank_domaint::templ_valuet();
-#endif
+    if(template_generator.options.get_bool_option(
+      "monolithic-ranking-function"))
+    {
+      strategy_solver = new ranking_solver_enumerationt(
+        *static_cast<linrank_domaint *>(domain), solver, SSA.ns,
+	template_generator.options.get_unsigned_int_option(
+          "max-inner-ranking-iterations"));    
+      result = new linrank_domaint::templ_valuet();
+    }
+    else
+    {
+      strategy_solver = new lexlinrank_solver_enumerationt(
+        *static_cast<lexlinrank_domaint *>(domain), solver, SSA.ns,
+        template_generator.options.get_unsigned_int_option(
+	  "lexicographic-ranking-function"),
+	template_generator.options.get_unsigned_int_option(
+          "max-inner-ranking-iterations"));
+      result = new lexlinrank_domaint::templ_valuet();
+    }
   }  
   else if(template_generator.options.get_bool_option("equalities"))
   {

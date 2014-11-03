@@ -31,11 +31,11 @@ class ssa_inlinert : public messaget
                const summaryt &summary,
    	       bool forward, 
   	       exprt::operandst &summaries,
-	       exprt::operandst &mappings);
+	       exprt::operandst &bindings);
   void get_summaries(const local_SSAt &SSA,
 		     bool forward,
 		     exprt::operandst &summaries,
-		     exprt::operandst &mappings);
+		     exprt::operandst &bindings);
   exprt get_summaries(const local_SSAt &SSA);
 
   void replace(local_SSAt &SSA,
