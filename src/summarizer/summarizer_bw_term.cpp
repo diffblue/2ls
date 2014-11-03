@@ -246,6 +246,7 @@ exprt summarizer_bw_termt::bootstrap_preconditions(
 
   unsigned number_bootstraps = 0;
   exprt termination_argument = true_exprt();
+  exprt::operandst checked_candidates;
   while(number_bootstraps++ < MAX_BOOTSTRAP_ATTEMPTS)
   {
     solver << not_exprt(summary.bw_precondition); //find new ones
@@ -268,8 +269,8 @@ exprt summarizer_bw_termt::bootstrap_preconditions(
       debug() << "bootstrap model for precondition: " 
 	      << from_expr(SSA.ns,"",precondition) << eom;
       solver.pop_context();
-  }
-    else 
+    }
+    else // whole precondition space covered
     { 
       solver.pop_context();
       break;
@@ -285,15 +286,8 @@ exprt summarizer_bw_termt::bootstrap_preconditions(
     }
 
     solver.new_context();
-    solver << not_exprt(precondition); //next one, please!
-#if 0
-    //this should not be in the precondition
-    if(summary.bw_precondition.is_nil())
-      summary.bw_precondition = not_exprt(precondition);
-    else 
-      summary.bw_precondition = and_exprt(summary.precondition,
-				       not_exprt(precondition));
-#endif
+    checked_candidates.push_back(precondition);
+    solver << not_exprt(disjunction(checked_candidates)); //next one, please!
   }
 
   return termination_argument;

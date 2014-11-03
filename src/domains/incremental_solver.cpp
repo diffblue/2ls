@@ -13,7 +13,7 @@ literalt incremental_solvert::new_context()
       symbol_exprt("goto_symex::\\act$"+
       i2string(activation_literal_counter++), bool_typet()));
 
-#ifdef DEBUG_OUTPUT
+#ifdef DISPLAY_FORMULA
     debug() << "new context: " << activation_literal<< eom;
 #endif
 
@@ -33,8 +33,8 @@ void incremental_solvert::pop_context()
   formula.push_back(!activation_literal);
 #endif
 
-#ifdef DEBUG_OUTPUT
-    debug() << "pop context: " << activation_literal<< eom;
+#ifdef DISPLAY_FORMULA
+    debug() << "pop context: " << activation_literal << eom;
 #endif
 
   solver.set_assumptions(activation_literals);
@@ -51,7 +51,7 @@ void incremental_solvert::make_context_permanent()
   formula.push_back(activation_literal);
 #endif
 
-#ifdef DEBUG_OUTPUT
+#ifdef DISPLAY_FORMULA
     debug() << "make context permanent: " << activation_literal<< eom;
 #endif
 
