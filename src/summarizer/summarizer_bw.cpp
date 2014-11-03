@@ -68,7 +68,7 @@ Function: summarizer_bwt::summarize()
 
 void summarizer_bwt::summarize(const function_namet &function_name)
 {
-  status() << "\nBackwards analysis..." << eom;
+  status() << "\nBackward analysis..." << eom;
 
   exprt postcondition = true_exprt(); //initial calling context
 

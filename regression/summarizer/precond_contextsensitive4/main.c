@@ -1,20 +1,16 @@
-void foo(int a) 
-{ 
-  assert(0);
-}
 
-int bar(int b) 
+int sign(int x) 
 { 
-  int x = b;
-  assert(b!=9);
-  return x;
+  if(x>0) return 1;
+  else if (x==0) return 0;
+  return -1;
 }
 
 int main(int argc, char** argv)
 {
-  int x = argc;
-  if(x==8) foo(x);
-  int y = bar(x);
-  assert(y!=10);
+  int x = argc-1;
+  int y = sign(x);
+  assert(y!=0);
   return 0;
 }
+

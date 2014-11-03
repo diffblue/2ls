@@ -123,6 +123,7 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
 	  {
             // no ranking function for the current template
 	    linrank_domain.set_row_value_to_true(row, rank);
+	    linrank_domain.reset_refinements();
 	  }
 	}
 
@@ -134,6 +135,7 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
   else 
   {
     debug() << "UNSAT" << eom;
+    linrank_domain.reset_refinements();
   }
 
   solver.pop_context();

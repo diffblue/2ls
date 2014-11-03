@@ -170,7 +170,7 @@ void summarizer_bw_termt::do_summary_term(const function_namet &function_name,
   exprt::operandst bindings;
   exprt::operandst postcond;
   ssa_inliner.get_summaries(SSA,false,postcond,bindings); //backward summaries
-  collect_postconditions(function_name, SSA, summary, postcond,false);
+  collect_postconditions(function_name, SSA, summary, postcond,true);
 
   //prepare solver
   solver << SSA;

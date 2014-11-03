@@ -15,7 +15,7 @@ int f(int n, int incx)
 {
   int  nincx = n * incx;
   int i;
-  for (i=1; incx < 0 ? i >= nincx : i <= nincx; i += incx);
+  for (i=0; incx < 0 ? i >= nincx : i <= nincx; i += incx);
 }
 
 int main()
@@ -30,7 +30,7 @@ int main()
   int n=10;
   int incx=20;
  */
-	f(n, incx);
-	return 0;
+  f(n, incx);
+  return 0;
 
 }

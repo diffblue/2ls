@@ -184,6 +184,7 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
 	      debug() << "Reached the max no of lexicographic components and no ranking function was found" << eom;
 	      // no ranking function for the current template
 	      lexlinrank_domain.set_row_value_to_true(row, rank);
+	      lexlinrank_domain.reset_refinements();
 	    }
 	    else 
 	    {
@@ -210,6 +211,7 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
   else 
   {
     debug() << "Outer solver: UNSAT!!" << eom;
+    lexlinrank_domain.reset_refinements();
 #ifdef DEBUG_OUTER_FORMULA
     for(unsigned i=0; i<solver.formula.size(); i++) {
       if(solver.solver.is_in_conflict(solver.formula[i]))
