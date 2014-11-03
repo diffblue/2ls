@@ -9,6 +9,7 @@ int sign(int x)
 int main(int argc, char** argv)
 {
   int x = argc-1;
+  //assert(!(x <= 0 && -((signed __CPROVER_bitvector[33])x) <= 0));
   int y = sign(x);
   assert(y!=0);
   return 0;

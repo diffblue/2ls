@@ -157,10 +157,6 @@ void summarizer_bwt::do_summary(const function_namet &function_name,
   incremental_solvert &solver = ssa_db.get_solver(function_name);
   solver.set_message_handler(get_message_handler());
 
-  //analyze
-  ssa_analyzert analyzer;
-  analyzer.set_message_handler(get_message_handler());
-
   template_generator_summaryt template_generator(
     options,ssa_db,ssa_unwinder.get(function_name));
   template_generator.set_message_handler(get_message_handler());
@@ -182,10 +178,32 @@ void summarizer_bwt::do_summary(const function_namet &function_name,
     c.push_back(not_exprt(conjunction(postcond))); 
   }
 
-  analyzer(solver,SSA,conjunction(c),template_generator);
-  analyzer.get_result(summary.bw_transformer,template_generator.inout_vars());
-  analyzer.get_result(summary.bw_invariant,template_generator.loop_vars());
-  analyzer.get_result(summary.bw_precondition,template_generator.out_vars());
+  if(!template_generator.out_vars().empty())
+  {
+    ssa_analyzert analyzer;
+    analyzer.set_message_handler(get_message_handler());
+    analyzer(solver,SSA,conjunction(c),template_generator);
+    analyzer.get_result(summary.bw_transformer,template_generator.inout_vars());
+    analyzer.get_result(summary.bw_invariant,template_generator.loop_vars());
+    analyzer.get_result(summary.bw_precondition,template_generator.out_vars());
+
+    //statistics
+    solver_instances += analyzer.get_number_of_solver_instances();
+    solver_calls += analyzer.get_number_of_solver_calls();
+  }
+  else // TODO: yet another workaround for ssa_analyzer not being able to handle empty templates properly
+  {
+    solver << SSA;
+    solver.new_context();
+    solver << SSA.get_enabling_exprs();
+    solver << conjunction(c);
+    exprt result = true_exprt();
+    if(solver()==decision_proceduret::D_UNSATISFIABLE) result = false_exprt();
+    solver.pop_context();
+    summary.bw_transformer = result;
+    summary.bw_invariant = result;
+    summary.bw_precondition = result;
+  }
 
   if(sufficient)
   {
@@ -203,10 +221,6 @@ void summarizer_bwt::do_summary(const function_namet &function_name,
     summary.bw_precondition = 
       implies_exprt(summary.bw_postcondition,summary.bw_precondition);
   }
-
-  //statistics
-  solver_instances += analyzer.get_number_of_solver_instances();
-  solver_calls += analyzer.get_number_of_solver_calls();
 }
 
 /*******************************************************************\
@@ -493,3 +507,4 @@ exprt summarizer_bwt::compute_calling_context(
   return postcondition_call;
 }
  
+

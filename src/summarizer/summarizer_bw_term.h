@@ -67,7 +67,8 @@ class summarizer_bw_termt : public summarizer_bwt
 			  summaryt &summary,
    		          const exprt::operandst &postconditions,
 			  incremental_solvert &solver,
-			  template_generator_summaryt &template_generator);
+			  template_generator_summaryt &template_generator,
+			  bool context_sensitive);
 
 };
 

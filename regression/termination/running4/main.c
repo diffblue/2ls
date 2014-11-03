@@ -26,7 +26,7 @@ int foo(int *sx, int n, int incx)
 int bar(int n, int incx) 
 {
   int sx[n];
-  if(100 <= n && n <= 10000 && 0 < incx && incx <= 1000) 
+  if(100 <= n && n <= 10000 && 0 <= incx && incx <= 1000) 
   {
     int stemp = foo(&sx, n, incx);
   }

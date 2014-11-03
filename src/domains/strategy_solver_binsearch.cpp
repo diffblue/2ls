@@ -45,7 +45,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 
   solver << disjunction(strategy_cond_exprs);
 
-#if 0
+#if 1
   debug() << "solve(): ";
 #endif
 
@@ -55,7 +55,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
     _inv.basic_value = domaint::valuet::OTHER; //formula is at least satisfiable
 #endif
 
-#if 0
+#if 1
     debug() << "SAT" << eom;
 #endif
       
@@ -208,7 +208,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
   }
   else 
   {
-#if 0
+#if 1
     debug() << "UNSAT" << eom;
 #endif
 

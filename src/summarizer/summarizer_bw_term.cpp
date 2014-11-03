@@ -183,7 +183,8 @@ void summarizer_bw_termt::do_summary_term(const function_namet &function_name,
 
   if(template_generator1.all_vars().empty())
   {
-    compute_precondition(SSA,summary,postcond,solver,template_generator2);
+    compute_precondition(SSA,summary,postcond,solver,template_generator2,
+					      context_sensitive);
 
     solver.pop_context();
     return;
@@ -201,7 +202,8 @@ void summarizer_bw_termt::do_summary_term(const function_namet &function_name,
     // compute precondition
     postcond.push_back(termination_argument);
     exprt precondition = compute_precondition(SSA,summary,postcond,
-					      solver,template_generator2);
+					      solver,template_generator2,
+					      context_sensitive);
 
     //join results
     if(summary.termination_argument.is_nil())
@@ -342,33 +344,50 @@ exprt summarizer_bw_termt::compute_precondition(local_SSAt &SSA,
 			  summaryt &summary,
    		          const exprt::operandst &postconditions,
 			  incremental_solvert &solver,
-			  template_generator_summaryt &template_generator)
+			  template_generator_summaryt &template_generator,
+			  bool context_sensitive)
 {
   exprt postcond = not_exprt(conjunction(postconditions)); 
 
   //compute backward summary
-  ssa_analyzert analyzer;
-  analyzer.set_message_handler(get_message_handler());
-  analyzer(solver,SSA,postcond,template_generator);
-
   exprt bw_transformer, bw_invariant, bw_precondition;
-  analyzer.get_result(bw_transformer,template_generator.inout_vars());
-  analyzer.get_result(bw_invariant,template_generator.loop_vars());
-  analyzer.get_result(bw_precondition,template_generator.out_vars());
+  if(!template_generator.out_vars().empty())
+  {
+    ssa_analyzert analyzer;
+    analyzer.set_message_handler(get_message_handler());
+    analyzer(solver,SSA,postcond,template_generator);
+    analyzer.get_result(bw_transformer,template_generator.inout_vars());
+    analyzer.get_result(bw_invariant,template_generator.loop_vars());
+    analyzer.get_result(bw_precondition,template_generator.out_vars());
+
+    //statistics
+    solver_instances += analyzer.get_number_of_solver_instances();
+    solver_calls += analyzer.get_number_of_solver_calls();
+  }
+  else // TODO: yet another workaround for ssa_analyzer not being able to handle empty templates properly
+  {
+    solver << SSA;
+    solver.new_context();
+    solver << SSA.get_enabling_exprs();
+    solver << postcond;
+    exprt result = true_exprt();
+    if(solver()==decision_proceduret::D_UNSATISFIABLE) result = false_exprt();
+    solver.pop_context();
+    bw_transformer = result;
+    bw_invariant = result;
+    bw_precondition = result;
+  }
 
   bw_transformer = not_exprt(bw_transformer);
   bw_invariant = not_exprt(bw_invariant);
   bw_precondition = not_exprt(bw_precondition);
 
-  //TODO: context sensitivity
-#if 0
   if(context_sensitive && !summary.bw_postcondition.is_true())
   {
-    bw_transformer = implies_exprt(bw_postcondition,bw_transformer);
-    bw_invariant = implies_exprt(bw_postcondition,bw_invariant);
-    bw_precondition = implies_exprt(bw_postcondition,bw_precondition);
+    bw_transformer = implies_exprt(summary.bw_postcondition,bw_transformer);
+    bw_invariant = implies_exprt(summary.bw_postcondition,bw_invariant);
+    bw_precondition = implies_exprt(summary.bw_postcondition,bw_precondition);
   }
-#endif
 
   //join // TODO: should go into summaryt
   if(summary.bw_transformer.is_nil())
@@ -383,10 +402,6 @@ exprt summarizer_bw_termt::compute_precondition(local_SSAt &SSA,
     summary.bw_invariant = or_exprt(summary.bw_invariant,bw_invariant);
     summary.bw_precondition = or_exprt(summary.bw_precondition,bw_precondition);
   }
-
-  //statistics
-  solver_instances += analyzer.get_number_of_solver_instances();
-  solver_calls += analyzer.get_number_of_solver_calls();
 
   return bw_precondition;
 }
