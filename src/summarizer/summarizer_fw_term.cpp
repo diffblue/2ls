@@ -231,8 +231,8 @@ void summarizer_fw_termt::do_nontermination(
 {
   // calling context, invariant, function call summaries
   exprt::operandst cond;
-  cond.push_back(summary.fw_invariant);
-  cond.push_back(summary.fw_precondition);
+  if(!summary.fw_invariant.is_nil()) cond.push_back(summary.fw_invariant);
+  if(!summary.fw_precondition.is_nil()) cond.push_back(summary.fw_precondition);
   cond.push_back(ssa_inliner.get_summaries(SSA));
 
   if(!check_end_reachable(function_name,SSA,conjunction(cond)))
@@ -266,8 +266,8 @@ void summarizer_fw_termt::do_termination(const function_namet &function_name,
 {
   // calling context, invariant, function call summaries
   exprt::operandst cond;
-  cond.push_back(summary.fw_invariant);
-  cond.push_back(summary.fw_precondition);
+  if(!summary.fw_invariant.is_nil()) cond.push_back(summary.fw_invariant);
+  if(!summary.fw_precondition.is_nil()) cond.push_back(summary.fw_precondition);
   cond.push_back(ssa_inliner.get_summaries(SSA));
 
   // do non-termination check
