@@ -1,0 +1,5 @@
+CORE
+main.c
+--preconditions --zones --context-sensitive
+^EXIT=0$
+SIGNAL=0$
