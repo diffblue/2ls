@@ -46,6 +46,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "../ssa/split_loopheads.h"
 #include "show.h"
 
+//#define ANONYMOUS
+
 /*******************************************************************\
 
 Function: summarizer_parseoptionst::summarizer_parseoptionst
@@ -60,7 +62,7 @@ Function: summarizer_parseoptionst::summarizer_parseoptionst
 
 summarizer_parseoptionst::summarizer_parseoptionst(int argc, const char **argv):
   parseoptions_baset(SUMMARIZER_OPTIONS, argc, argv),
-  language_uit("Summarizer " CBMC_VERSION, cmdline)
+  language_uit("2LS " SUMMARIZER_VERSION, cmdline)
 {
 }
   
@@ -267,7 +269,11 @@ int summarizer_parseoptionst::doit()
 {
   if(cmdline.isset("version"))
   {
+#ifndef ANONYMOUS
     std::cout << SUMMARIZER_VERSION " (based on CBMC " CBMC_VERSION ")" << std::endl;
+#else
+    std::cout << SUMMARIZER_VERSION << std::endl;
+#endif
     return 0;
   }
 
@@ -283,7 +289,11 @@ int summarizer_parseoptionst::doit()
   //
   // Print a banner
   //
+#ifndef ANONYMOUS
   status("SUMMARIZER version " SUMMARIZER_VERSION " (based on CBMC " CBMC_VERSION ")");
+#else
+  status("SUMMARIZER version " SUMMARIZER_VERSION);
+#endif
 
   register_language(new_ansi_c_language);
   register_language(new_cpp_language);
@@ -1214,21 +1224,28 @@ Function: summarizer_parseoptionst::help
 
 void summarizer_parseoptionst::help()
 {
+#ifdef ANONYMOUS
   std::cout <<
     "\n"
-    "* *  Summarizer " SUMMARIZER_VERSION " - Copyright (C) 2014                  * *\n"
+    "* *  2LS " SUMMARIZER_VERSION " - Copyright (C) 2014 ";
+#else
+  std::cout <<
+    "\n"
+    "* *  2LS " SUMMARIZER_VERSION " - Copyright (C) 2014                         * *\n"
     "* *  (based on CBMC " CBMC_VERSION " ";
-    
+#endif    
   std::cout << "(" << (sizeof(void *)*8) << "-bit version))";
     
   std::cout << "                   * *\n";
     
   std::cout <<
+#ifndef ANONYMOUS
     "* *                    Daniel Kroening                      * *\n"
     "* *                 University of Oxford                    * *\n"
     "* *                 kroening@kroening.com                   * *\n"
     "\n"
-    "Usage:                       Purpose:\n"
+#endif    
+    "Usage:                        Purpose:\n"
     "\n"
     " summarizer [-?] [-h] [--help] show help\n"
     " summarizer file.c ...        source file names\n"
@@ -1294,7 +1311,7 @@ void summarizer_parseoptionst::help()
     " --arrays                     do not ignore array contents\n"
     " --lexicographic-ranking-function n          (default n=3)\n"
     " --monolithic-ranking-function\n"
-    " --max-inner-ranking-iterationsn n           (default n=20)\n"
+    " --max-inner-ranking-iterations n           (default n=20)\n"
     "\n"
     "Other options:\n"
     " --version                    show version and exit\n"
