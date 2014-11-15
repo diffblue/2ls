@@ -412,13 +412,13 @@ int deltacheck_parseoptionst::doit()
 
   catch(const char *e)
   {
-    error(e);
+    error() << e << eom;
     return 13;
   }
 
   catch(const std::string &e)
   {
-    error(e);
+    error() << e << eom;
     return 13;
   }
   

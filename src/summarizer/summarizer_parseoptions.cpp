@@ -210,7 +210,7 @@ int summarizer_parseoptionst::doit()
   //
   // Print a banner
   //
-  status("SUMMARIZER version tbd");
+  status() << "SUMMARIZER version tbd" << eom;
 
   register_language(new_ansi_c_language);
   register_language(new_cpp_language);
@@ -330,13 +330,13 @@ bool summarizer_parseoptionst::set_properties(goto_modelt &goto_model)
 
   catch(const char *e)
   {
-    error(e);
+    error() << e << eom;
     return true;
   }
 
   catch(const std::string e)
   {
-    error(e);
+    error() << e << eom;
     return true;
   }
   
@@ -479,13 +479,13 @@ bool summarizer_parseoptionst::get_goto_program(
 
   catch(const char *e)
   {
-    error(e);
+    error() << e << eom;
     return true;
   }
 
   catch(const std::string e)
   {
-    error(e);
+    error() << e << eom;
     return true;
   }
   
@@ -588,13 +588,13 @@ bool summarizer_parseoptionst::process_goto_program(
 
   catch(const char *e)
   {
-    error(e);
+    error() << e << eom;
     return true;
   }
 
   catch(const std::string e)
   {
-    error(e);
+    error() << e << eom;
     return true;
   }
   
