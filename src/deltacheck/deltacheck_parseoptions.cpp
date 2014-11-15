@@ -11,9 +11,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <memory>
 #include <iostream>
 
-#include <util/i2string.h>
 #include <util/config.h>
 #include <util/symbol_table.h>
+#include <util/string2int.h>
 
 #include <langapi/mode.h>
 #include <cbmc/version.h>
@@ -68,7 +68,7 @@ void deltacheck_parseoptionst::eval_verbosity()
   
   if(cmdline.isset("verbosity"))
   {
-    v=atoi(cmdline.getval("verbosity"));
+    v=unsafe_string2int(cmdline.get_value("verbosity"));
     if(v<0)
       v=0;
     else if(v>10)
@@ -99,7 +99,7 @@ void deltacheck_parseoptionst::get_command_line_options(optionst &options)
   }
 
   if(cmdline.isset("debug-level"))
-    options.set_option("debug-level", cmdline.getval("debug-level"));
+    options.set_option("debug-level", cmdline.get_value("debug-level"));
 
   // check array bounds
   if(cmdline.isset("bounds-check"))
@@ -205,19 +205,19 @@ int deltacheck_parseoptionst::doit()
     
     if(cmdline.isset("index"))
     {
-      status() << "Building index `" << cmdline.getval("index") << "'" << eom;
+      status() << "Building index `" << cmdline.get_value("index") << "'" << eom;
       
-      std::ofstream out(cmdline.getval("index"));
+      std::ofstream out(cmdline.get_value("index").c_str());
       if(!out)
       {
         error() << "failed to open output file `"
-                << cmdline.getval("index") << "' " << eom;
+                << cmdline.get_value("index") << "' " << eom;
         return 11;
       }
       
       std::string description;
       if(cmdline.isset("description"))
-        description=cmdline.getval("description");
+        description=cmdline.get_value("description");
       
       indext index;
       index.set_message_handler(get_message_handler());

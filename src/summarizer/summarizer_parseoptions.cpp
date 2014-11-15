@@ -77,7 +77,7 @@ void summarizer_parseoptionst::eval_verbosity()
   
   if(cmdline.isset("verbosity"))
   {
-    v=unsafe_string2int(cmdline.getval("verbosity"));
+    v=unsafe_string2int(cmdline.get_value("verbosity"));
     if(v<0)
       v=0;
     else if(v>10)
@@ -108,10 +108,10 @@ void summarizer_parseoptionst::get_command_line_options(optionst &options)
   }
 
   if(cmdline.isset("debug-level"))
-    options.set_option("debug-level", cmdline.getval("debug-level"));
+    options.set_option("debug-level", cmdline.get_value("debug-level"));
 
   if(cmdline.isset("unwindset"))
-    options.set_option("unwindset", cmdline.getval("unwindset"));
+    options.set_option("unwindset", cmdline.get_value("unwindset"));
 
   // check array bounds
   if(cmdline.isset("bounds-check"))
@@ -175,7 +175,7 @@ void summarizer_parseoptionst::get_command_line_options(optionst &options)
 
   // magic error label
   if(cmdline.isset("error-label"))
-    options.set_option("error-label", cmdline.getval("error-label"));
+    options.set_option("error-label", cmdline.get_value("error-label"));
 }
 
 /*******************************************************************\
