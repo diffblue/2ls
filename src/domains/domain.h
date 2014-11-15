@@ -51,8 +51,8 @@ public:
   { 
     if(value1.basic_value==value2.basic_value ||
        value1.basic_value==valuet::TOP ||
-       value1.basic_value==valuet::OTHER && 
-       value2.basic_value==valuet::BOTTOM) return;
+       (value1.basic_value==valuet::OTHER && 
+        value2.basic_value==valuet::BOTTOM)) return;
     value1.basic_value = value2.basic_value;
   }
 
