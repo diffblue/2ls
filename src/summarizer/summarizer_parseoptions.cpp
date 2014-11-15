@@ -87,7 +87,7 @@ void summarizer_parseoptionst::eval_verbosity()
   
   if(cmdline.isset("verbosity"))
   {
-    v=unsafe_string2int(cmdline.getval("verbosity"));
+    v=unsafe_string2int(cmdline.get_value("verbosity"));
     if(v<0)
       v=0;
     else if(v>10)
@@ -118,16 +118,16 @@ void summarizer_parseoptionst::get_command_line_options(optionst &options)
   }
 
   if(cmdline.isset("debug-level"))
-    options.set_option("debug-level", cmdline.getval("debug-level"));
+    options.set_option("debug-level", cmdline.get_value("debug-level"));
 
   if(cmdline.isset("unwindset"))
-    options.set_option("unwindset", cmdline.getval("unwindset"));
+    options.set_option("unwindset", cmdline.get_value("unwindset"));
 
   if(cmdline.isset("unwind"))
-    options.set_option("unwind", cmdline.getval("unwind"));
+    options.set_option("unwind", cmdline.get_value("unwind"));
 
   if(cmdline.isset("inline-partial"))
-    options.set_option("inline-partial", cmdline.getval("inline-partial"));
+    options.set_option("inline-partial", cmdline.get_value("inline-partial"));
 
   // check array bounds
   if(cmdline.isset("bounds-check"))
@@ -191,7 +191,7 @@ void summarizer_parseoptionst::get_command_line_options(optionst &options)
 
   // magic error label
   if(cmdline.isset("error-label"))
-    options.set_option("error-label", cmdline.getval("error-label"));
+    options.set_option("error-label", cmdline.get_value("error-label"));
 
   // use incremental assertion checks
   if(cmdline.isset("non-incremental"))
@@ -266,7 +266,7 @@ int summarizer_parseoptionst::doit()
   //
   // Print a banner
   //
-  status("SUMMARIZER version " SUMMARIZER_VERSION " (based on CBMC " CBMC_VERSION ")");
+  status() << "SUMMARIZER version " SUMMARIZER_VERSION " (based on CBMC " CBMC_VERSION ")" << eom;
 
   register_language(new_ansi_c_language);
   register_language(new_cpp_language);
@@ -650,13 +650,13 @@ bool summarizer_parseoptionst::set_properties(goto_modelt &goto_model)
 
   catch(const char *e)
   {
-    error(e);
+    error() << e << eom;
     return true;
   }
 
   catch(const std::string e)
   {
-    error(e);
+    error() << e << eom;
     return true;
   }
   
@@ -799,13 +799,13 @@ bool summarizer_parseoptionst::get_goto_program(
 
   catch(const char *e)
   {
-    error(e);
+    error() << e << eom;
     return true;
   }
 
   catch(const std::string e)
   {
-    error(e);
+    error() << e << eom;
     return true;
   }
   
@@ -941,13 +941,13 @@ bool summarizer_parseoptionst::process_goto_program(
 
   catch(const char *e)
   {
-    error(e);
+    error() << e << eom;
     return true;
   }
 
   catch(const std::string e)
   {
-    error(e);
+    error() << e << eom;
     return true;
   }
   

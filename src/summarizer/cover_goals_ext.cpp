@@ -147,7 +147,7 @@ void cover_goals_extt::operator()()
       break;
 
     default:
-      error("decision procedure has failed");
+      error() << "decision procedure has failed" << eom;
       return;
     }
   }
