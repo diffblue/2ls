@@ -290,9 +290,9 @@ int summarizer_parseoptionst::doit()
   // Print a banner
   //
 #ifndef ANONYMOUS
-  status("SUMMARIZER version " SUMMARIZER_VERSION " (based on CBMC " CBMC_VERSION ")");
+  status() << "SUMMARIZER version " SUMMARIZER_VERSION " (based on CBMC " CBMC_VERSION ")" << eom;
 #else
-  status("SUMMARIZER version " SUMMARIZER_VERSION);
+  status() << "SUMMARIZER version " SUMMARIZER_VERSION << eom;
 #endif
 
   register_language(new_ansi_c_language);
@@ -679,13 +679,13 @@ bool summarizer_parseoptionst::set_properties(goto_modelt &goto_model)
 
   catch(const char *e)
   {
-    error(e);
+    error() << e << eom;
     return true;
   }
 
   catch(const std::string e)
   {
-    error(e);
+    error() << e << eom;
     return true;
   }
   
@@ -828,13 +828,13 @@ bool summarizer_parseoptionst::get_goto_program(
 
   catch(const char *e)
   {
-    error(e);
+    error() << e << eom;
     return true;
   }
 
   catch(const std::string e)
   {
-    error(e);
+    error() << e << eom;
     return true;
   }
   
@@ -962,13 +962,13 @@ bool summarizer_parseoptionst::process_goto_program(
 
   catch(const char *e)
   {
-    error(e);
+    error() << e << eom;
     return true;
   }
 
   catch(const std::string e)
   {
-    error(e);
+    error() << e << eom;
     return true;
   }
   
