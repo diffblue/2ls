@@ -19,3 +19,4 @@ void main()
   assert(x==10);
   assert(y==10);
 }
+
