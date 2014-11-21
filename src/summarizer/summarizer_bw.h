@@ -67,7 +67,7 @@ class summarizer_bwt : public summarizer_baset
 			      exprt::operandst &postconditions,
 			      bool sufficient);
 
-  virtual exprt compute_calling_context(const function_namet &function_name, 
+  virtual exprt compute_calling_context2(const function_namet &function_name, 
     local_SSAt &SSA,
     summaryt old_summary,
     local_SSAt::nodest::const_iterator n_it, 

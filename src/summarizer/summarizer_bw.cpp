@@ -263,7 +263,7 @@ void summarizer_bwt::inline_summaries(const function_namet &function_name,
       {
 	exprt postcondition_call = true_exprt();
 	if(context_sensitive) 
-	  postcondition_call = compute_calling_context(
+	  postcondition_call = compute_calling_context2(
 	    function_name,SSA,old_summary,n_it,f_it,postcondition,sufficient);
 
 	irep_idt fname = to_symbol_expr(f_it->function()).get_identifier();
@@ -418,7 +418,7 @@ bool summarizer_bwt::check_postcondition(
 
 /*******************************************************************\
 
-Function: summarizer_bwt::compute_calling_context()
+Function: summarizer_bwt::compute_calling_context2()
 
   Inputs:
 
@@ -428,7 +428,7 @@ Function: summarizer_bwt::compute_calling_context()
 
 \*******************************************************************/
 
-exprt summarizer_bwt::compute_calling_context(  
+exprt summarizer_bwt::compute_calling_context2(  
   const function_namet &function_name, 
   local_SSAt &SSA,
   summaryt old_summary,

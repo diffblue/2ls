@@ -24,7 +24,7 @@ Author: Peter Schrammel
 #include "../ssa/local_ssa.h"
 #include "../ssa/simplify_ssa.h"
 
-#define MAX_PRECONDITION_DISJUNCTS 1
+#define MAX_PRECONDITION_DISJUNCTS 2
 #define MAX_BOOTSTRAP_ATTEMPTS 20
 
 /*******************************************************************\
@@ -139,7 +139,7 @@ Function: summarizer_bw_termt::do_summary_term()
 
  Outputs:
 
- Purpose:
+ Purpose: 
 
 \*******************************************************************/
 
@@ -181,11 +181,21 @@ void summarizer_bw_termt::do_summary_term(const function_namet &function_name,
   solver << ssa_inliner.get_summaries(SSA); //forward summaries
   solver << conjunction(bindings); //bindings for backward summaries
 
+#if 0
+  for(unsigned i=0; i<postcond.size(); i++) //compute preconditions individually, TODO: this should be done more transparently
+  {
+    exprt::operandst postcond2;
+    postcond2.push_back(postcond[i]);
+    compute_precondition(SSA,summary,postcond2,solver,template_generator2,
+					      context_sensitive);
+  }
+  postcond.clear();
+#endif
+
   if(template_generator1.all_vars().empty())
   {
     compute_precondition(SSA,summary,postcond,solver,template_generator2,
 					      context_sensitive);
-
     solver.pop_context();
     return;
   }
@@ -195,29 +205,60 @@ void summarizer_bw_termt::do_summary_term(const function_namet &function_name,
   while(number_disjuncts++ < MAX_PRECONDITION_DISJUNCTS)
   {
     // bootstrap preconditions
-    exprt termination_argument = bootstrap_preconditions(SSA,summary,
-			  solver,template_generator1,template_generator2);
-    if(termination_argument.is_true()) break;
+    exprt termination_argument;
+    if(!bootstrap_preconditions(SSA,summary,
+	     solver,template_generator1,template_generator2,termination_argument)) 
+    {
+      break;
+    }
 
     // compute precondition
-    postcond.push_back(termination_argument);
-    exprt precondition = compute_precondition(SSA,summary,postcond,
-					      solver,template_generator2,
-					      context_sensitive);
-
-    //join results
-    if(summary.termination_argument.is_nil())
+    if(termination_argument.id()==ID_and)  //compute for individual termination arguments separately, TODO: this should be done more transparently
     {
-      summary.termination_argument = 
-	implies_exprt(precondition,termination_argument);
-    }
-    else
-    {
-      summary.termination_argument = and_exprt(summary.termination_argument,
-		  implies_exprt(precondition,termination_argument));
-    }
+      for(unsigned i=0; i<termination_argument.operands().size(); i++)
+      {
+	postcond.push_back(termination_argument.operands()[i]);
 
-    postcond.clear(); //TODO: this is a bit asymmetric: the first precondition is joined with all other sources of non-termination (calls, bw calling context)
+	exprt precondition = compute_precondition(SSA,summary,postcond,
+						  solver,template_generator2,
+						  context_sensitive);
+
+	//join results
+	if(summary.termination_argument.is_nil())
+	{
+	  summary.termination_argument = 
+	    implies_exprt(precondition,termination_argument);
+	}
+	else
+	{
+	  summary.termination_argument = and_exprt(summary.termination_argument,
+					  implies_exprt(precondition,termination_argument));
+	}
+
+        postcond.clear(); //TODO: this is a bit asymmetric: the first precondition is joined with all other sources of non-termination (calls, bw calling context)
+      }
+    }
+    else // do not split termination arguments
+    {
+      postcond.push_back(termination_argument);
+      exprt precondition = compute_precondition(SSA,summary,postcond,
+						solver,template_generator2,
+						context_sensitive);
+
+      //join results
+      if(summary.termination_argument.is_nil())
+      {
+	summary.termination_argument = 
+	  implies_exprt(precondition,termination_argument);
+      }
+      else
+      {
+	summary.termination_argument = and_exprt(summary.termination_argument,
+						 implies_exprt(precondition,termination_argument));
+      }
+
+      postcond.clear(); //TODO: this is a bit asymmetric: the first precondition is joined with all other sources of non-termination (calls, bw calling context)
+    }
   }
 
   solver.pop_context();
@@ -235,19 +276,20 @@ Function: summarizer_bw_termt:::bootstrap_preconditions()
 
 \*******************************************************************/
 
-exprt summarizer_bw_termt::bootstrap_preconditions(
+bool summarizer_bw_termt::bootstrap_preconditions(
 			     local_SSAt &SSA,
 			     summaryt &summary,
                              incremental_solvert &solver, 
 			     template_generator_rankingt &template_generator1,
-			     template_generator_summaryt &template_generator2)
+			     template_generator_summaryt &template_generator2,
+                             exprt &termination_argument)
 {
   //bootstrap with a concrete model for input variables
   const domaint::var_sett &invars = template_generator2.out_vars();
   solver.new_context();
 
   unsigned number_bootstraps = 0;
-  exprt termination_argument = true_exprt();
+  termination_argument = true_exprt();
   exprt::operandst checked_candidates;
   while(number_bootstraps++ < MAX_BOOTSTRAP_ATTEMPTS)
   {
@@ -281,10 +323,11 @@ exprt summarizer_bw_termt::bootstrap_preconditions(
     termination_argument = 
       compute_termination_argument(SSA,precondition,
 				   solver,template_generator1);
+
     if(summarizer_fw_termt::check_termination_argument(
          termination_argument)==YES) 
     {
-      break;
+      return true;
     }
 
     solver.new_context();
@@ -292,7 +335,7 @@ exprt summarizer_bw_termt::bootstrap_preconditions(
     solver << not_exprt(disjunction(checked_candidates)); //next one, please!
   }
 
-  return termination_argument;
+  return false;
 }
 
 /*******************************************************************\

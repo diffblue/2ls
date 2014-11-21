@@ -50,12 +50,13 @@ class summarizer_bw_termt : public summarizer_bwt
 	              const summaryt &old_summary,
 		      summaryt &summary);
  
-  exprt bootstrap_preconditions(
+  bool bootstrap_preconditions(
 			     local_SSAt &SSA,
 			     summaryt &summary,
                              incremental_solvert &solver, 
 			     template_generator_rankingt &template_generator1,
-			     template_generator_summaryt &template_generator2);
+			     template_generator_summaryt &template_generator2,
+                             exprt &termination_argument);
 
   exprt compute_termination_argument(
 			     local_SSAt &SSA,
