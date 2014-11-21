@@ -16,6 +16,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <goto-programs/goto_model.h>
 
+#include "summary.h"
+
 class message_handlert;
 
 void show_ssa(
@@ -53,6 +55,9 @@ void show_error_trace(
   std::ostream &,
   message_handlert &);
 
-
+void show_invariants(
+  const local_SSAt &SSA, 
+  const summaryt &summary,
+  std::ostream &out);
 
 #endif
