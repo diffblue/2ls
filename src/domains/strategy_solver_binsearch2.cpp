@@ -7,8 +7,6 @@
 #include "util.h"
 
 
-// #define DEBUG_FORMULA
-
 #define SUM_BOUND_VAR "sum_bound#"
 
 bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
@@ -18,7 +16,7 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
 
   bool improved = false;
 
-  literalt activation_literal0 = new_context(); //for improvement check
+  solver.new_context(); //for improvement check
 
   exprt inv_expr = tpolyhedra_domain.to_pre_constraints(inv);
 
@@ -27,26 +25,29 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
   debug() << "pre-inv: " << from_expr(ns,"",inv_expr) << eom;
 #endif
 
-  solver << or_exprt(inv_expr, literal_exprt(activation_literal0));
+  solver << inv_expr;
 
   exprt::operandst strategy_cond_exprs;
   tpolyhedra_domain.make_not_post_constraints(inv, 
     strategy_cond_exprs, strategy_value_exprs); 
   
   strategy_cond_literals.resize(strategy_cond_exprs.size());
-
-#if 0
-  debug() << "post-inv: " << from_expr(ns,"",disjunction(strategy_cond_exprs)) << eom;
-#endif
   
+#if 0
+  debug() << "post-inv: ";
+#endif
   for(unsigned i = 0; i<strategy_cond_exprs.size(); i++)
   {  
-    strategy_cond_literals[i] = solver.convert(strategy_cond_exprs[i]);
+#if 0
+    debug() << (i>0 ? " || " : "") << from_expr(ns,"",strategy_cond_exprs[i]);
+#endif
+    strategy_cond_literals[i] = solver.solver.convert(strategy_cond_exprs[i]);
+    //solver.set_frozen(strategy_cond_literals[i]);
     strategy_cond_exprs[i] = literal_exprt(strategy_cond_literals[i]);
   }
+  debug() << eom;
 
-  solver << or_exprt(disjunction(strategy_cond_exprs),
-		     literal_exprt(activation_literal0));
+  solver << disjunction(strategy_cond_exprs);
 
 #if 0
   debug() << "solve(): ";
@@ -58,7 +59,7 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
 
   std::set<tpolyhedra_domaint::rowt> improve_rows;
   bool improved_from_neginf = false;
-  while(solve() == decision_proceduret::D_SATISFIABLE) //improvement check
+  while(solver() == decision_proceduret::D_SATISFIABLE) //improvement check
   { 
 #if 0
     debug() << "SAT" << eom;
@@ -68,7 +69,7 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
     unsigned row=0;  
     for(;row<strategy_cond_literals.size(); row++)
     {
-      if(solver.l_get(strategy_cond_literals[row]).is_true()) 
+      if(solver.solver.l_get(strategy_cond_literals[row]).is_true()) 
       {
 #if 0
         debug() << "improve row " << row  << eom;
@@ -76,17 +77,17 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
         improve_rows.insert(row);
 	symb_values[row] = tpolyhedra_domain.get_row_symb_value(row);
 	lower_values[row] =
-		       simplify_const(solver.get(strategy_value_exprs[row]));
+          simplify_const(solver.solver.get(strategy_value_exprs[row]));
 	blocking_constraint.push_back(
           literal_exprt(!strategy_cond_literals[row]));
-	if(tpolyhedra_domain.is_row_value_neginf(tpolyhedra_domain.get_row_value(row,inv)))
+	if(tpolyhedra_domain.is_row_value_neginf(
+               tpolyhedra_domain.get_row_value(row,inv)))
 	  improved_from_neginf = true;
       }
     }
-    solver << or_exprt(conjunction(blocking_constraint),
-	literal_exprt(activation_literal0)); 
+    solver << conjunction(blocking_constraint);
   }
-  pop_context(); //improvement check
+  solver.pop_context(); //improvement check
 
   if(!improved) //done
   {
@@ -130,9 +131,9 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
   //do not solve system if we have just reached a new loop (the system will be very large!)
   if(improved_from_neginf) return improved;
 
-  literalt activation_literal1 = new_context(); //symbolic value system
-  solver << or_exprt(pre_inv_expr, literal_exprt(activation_literal1));
-  solver << or_exprt(post_inv_expr, literal_exprt(activation_literal1));
+  solver.new_context(); //symbolic value system
+  solver << pre_inv_expr;
+  solver << post_inv_expr;
   extend_expr_types(sum);
   extend_expr_types(_upper);
   extend_expr_types(_lower);
@@ -143,14 +144,14 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
   assert(sum.type()==lower.type());
 
   symbol_exprt sum_bound(SUM_BOUND_VAR+i2string(sum_bound_counter++),sum.type());
-  solver << or_exprt(equal_exprt(sum_bound,sum),
-		     literal_exprt(activation_literal1)); 
+  solver << equal_exprt(sum_bound,sum);
+
 #if 0
   debug() << from_expr(ns,"",equal_exprt(sum_bound,sum)) << eom;
 #endif
 
   while(tpolyhedra_domain.less_than(lower,upper))   
-    {
+  {
       tpolyhedra_domaint::row_valuet middle = 
 	tpolyhedra_domain.between(lower,upper);
       if(!tpolyhedra_domain.less_than(lower,middle)) middle = upper;
@@ -165,15 +166,15 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
       debug() << "lower: " << from_expr(ns,"",lower) << eom;
 #endif
 
-      literalt activation_literal2 = new_context(); // binary search iteration
+      solver.new_context(); // binary search iteration
 
 #if 0
       debug() << "constraint: " << from_expr(ns, "", c) << eom;
 #endif
 
-      solver << or_exprt(c,literal_exprt(activation_literal2)); 
+      solver << c; 
 
-      if(solve() == decision_proceduret::D_SATISFIABLE) 
+      if(solver() == decision_proceduret::D_SATISFIABLE) 
 	{ 
 #if 0
 	  debug() << "SAT" << eom;
@@ -185,9 +186,11 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
 		it = symb_values.begin(); it != symb_values.end(); it++)
 	  { 
 #if 0
-	    debug() << "update row " << it->first << " " << from_expr(ns,"",it->second) << ": ";
+	    debug() << "update row " << it->first << " " 
+		    << from_expr(ns,"",it->second) << ": ";
 #endif
-	    constant_exprt lower_row = simplify_const(solver.get(it->second));
+	    constant_exprt lower_row = 
+              simplify_const(solver.solver.get(it->second));
 #if 0
 	    debug() << from_expr(ns,"",lower_row) << eom;
 #endif
@@ -204,10 +207,10 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
 
 	  upper = middle;
 	}
-      pop_context(); // binary search iteration
+      solver.pop_context(); // binary search iteration
     }   
 
-  pop_context();  //symbolic value system
+  solver.pop_context();  //symbolic value system
 
 
   return improved;

@@ -23,4 +23,5 @@ class strategy_solver_binsearch2t : public strategy_solver_baset
 
 };
 
+
 #endif
