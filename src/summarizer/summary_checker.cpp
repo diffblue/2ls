@@ -61,7 +61,7 @@ property_checkert::resultt summary_checkert::operator()(
 	std::cout << "Current unwinding is " << unwind << std::endl;
       if(unwind>0) 
       {
-        summary_db.clear();
+        summary_db.mark_recompute_all();
         ssa_unwinder.unwind_all(unwind+1);
       }
 

@@ -24,6 +24,8 @@ class summaryt
   var_listt params;
   var_sett globals_in, globals_out;
 
+  explicit summaryt() : mark_recompute(false) {};
+
   //void from_fixedpoint(class ssa_fixed_pointt &);
   
   // a summary has two parts:
@@ -34,7 +36,17 @@ class summaryt
   predicatet transformer; // this is the callee-based summary
   predicatet invariant; 
 
+  bool mark_recompute; //to force recomputation of the summary
+                       // (used for invariant reuse in k-induction)
+
   void output(std::ostream &out, const namespacet &ns) const;
+
+  void join(const summaryt &new_summary);
+
+ protected:
+
+  void combine_or(exprt &olde, const exprt &newe);
+  void combine_and(exprt &olde, const exprt &newe);
 
 };
 

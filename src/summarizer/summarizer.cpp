@@ -23,8 +23,6 @@ Author: Peter Schrammel
 #include "../ssa/local_ssa.h"
 #include "../ssa/simplify_ssa.h"
 
-#define PRECISE_JOIN
-
 /*******************************************************************\
 
 Function: summarizert::initialize_preconditions()
@@ -87,7 +85,8 @@ void summarizert::summarize(bool forward, bool sufficient)
       it!=ssa_db.functions().end(); it++)
   {
     status() << "\nSummarizing function " << it->first << eom;
-    if(!summary_db.exists(it->first)) 
+    if(!summary_db.exists(it->first) || 
+     summary_db.get(it->first).mark_recompute) 
       compute_summary_rec(it->first,false,forward,sufficient);
     else status() << "Summary for function " << it->first << 
            " exists already" << eom;
@@ -112,7 +111,8 @@ void summarizert::summarize(const function_namet &function_name,
   initialize_preconditions(ssa_db.functions(),forward,sufficient);
 
   status() << "\nSummarizing function " << function_name << eom;
-  if(!summary_db.exists(function_name)) 
+  if(!summary_db.exists(function_name) || 
+     summary_db.get(function_name).mark_recompute) 
   {
     compute_summary_rec(function_name,true,forward,sufficient);
   }
@@ -178,7 +178,7 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
   template_generator(solver.next_domain_number(),SSA,forward);
 
   exprt cond = preconditions[function_name];
-#if 1
+#if 0
   if(summary_db.exists(function_name)) //reuse existing invariants
   {
     std::ostringstream out;
@@ -199,16 +199,15 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
   if(forward) summary.precondition = preconditions.at(function_name);
   else analyzer.get_result(summary.precondition,template_generator.out_vars());
   analyzer.get_result(summary.transformer,template_generator.inout_vars());
-#ifdef PRECISE_JOIN
-  summary.transformer = implies_exprt(summary.precondition,summary.transformer);
-#endif
-  simplify_expr(summary.transformer, SSA.ns);
-
-#if 0 
-  simplify_expr(summary.precondition, SSA.ns); //does not help
-#endif 
-
   analyzer.get_result(summary.invariant,template_generator.loop_vars());
+
+  if(context_sensitive && !summary.precondition.is_true())
+  {
+    summary.transformer = 
+      implies_exprt(summary.precondition,summary.transformer);
+    summary.invariant = 
+      implies_exprt(summary.precondition,summary.invariant);
+  }
 
   {
     std::ostringstream out;
@@ -218,11 +217,6 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
   }
   
   // store summary in db
-  if(summary_db.exists(function_name)) 
-  {
-    summaryt old_summary = summary_db.get(function_name);
-    join_summaries(old_summary,summary);
-  }
   summary_db.put(function_name,summary);
 
   //statistics
@@ -300,39 +294,6 @@ void summarizert::inline_summaries(const function_namet &function_name,
 
 /*******************************************************************\
 
-Function: summarizert::join_summaries()
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void summarizert::join_summaries(const summaryt &existing_summary, 
-				 summaryt &new_summary)
-{
-  assert(existing_summary.params == new_summary.params);
-  assert(existing_summary.globals_in == new_summary.globals_in);
-  assert(existing_summary.globals_out == new_summary.globals_out);
-  new_summary.precondition = or_exprt(existing_summary.precondition,
-					   new_summary.precondition);
-#ifdef PRECISE_JOIN
-  new_summary.transformer = and_exprt(existing_summary.transformer,
-    implies_exprt(new_summary.precondition,new_summary.transformer));
-  new_summary.invariant = and_exprt(existing_summary.invariant,
-    implies_exprt(new_summary.precondition,new_summary.invariant));
-#else
-  new_summary.transformer = or_exprt(existing_summary.transformer,
-    new_summary.transformer);
-  new_summary.invariant = or_exprt(existing_summary.invariant,
-    new_summary.invariant);
-#endif
-}
-
-/*******************************************************************\
-
 Function: summarizert::check_precondition()
 
   Inputs:
@@ -359,6 +320,7 @@ bool summarizert::check_precondition(
   if(summary_db.exists(fname)) 
   {
     summaryt summary = summary_db.get(fname);
+    if(summary.mark_recompute) return false;
     if(summary.precondition.is_true()) //precondition trivially holds
     {
       //getting globals at call site

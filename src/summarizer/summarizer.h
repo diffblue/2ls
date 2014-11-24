@@ -64,8 +64,6 @@ class summarizert : public messaget
                            bool context_sensitive, bool forward,
                            bool sufficient);
 
-  void join_summaries(const summaryt &existing_summary, summaryt &new_summary);
-
   void inline_summaries(const function_namet &function_name, local_SSAt &SSA,
                         bool context_sensitive, bool forward, bool sufficient); 
 

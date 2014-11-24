@@ -18,14 +18,15 @@ public:
 
   virtual void load() const {}
   virtual void save() const {}
-  virtual void clear() { store.clear(); }
+  void clear() { store.clear(); }
 
-  virtual summaryt get(const function_namet &function_name) const 
+  summaryt get(const function_namet &function_name) const 
     { return store.at(function_name); }
-  virtual bool exists(const function_namet &function_name) const  
+  bool exists(const function_namet &function_name) const  
     { return store.find(function_name)!=store.end(); }
-  virtual void put(const function_namet &function_name, const summaryt &summary)
-    { store[function_name] = summary; }
+  void put(const function_namet &function_name, const summaryt &summary);
+
+  void mark_recompute_all();
 
  protected:
   std::map<function_namet, summaryt> store;

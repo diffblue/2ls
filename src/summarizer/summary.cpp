@@ -42,3 +42,51 @@ void summaryt::output(std::ostream &out, const namespacet &ns) const
   out << "transformer: " << from_expr(ns,"",transformer) << std::endl;
   out << "invariant: " << from_expr(ns,"",invariant) << std::endl;
 }
+
+/*******************************************************************\
+
+Function: summaryt::join()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void summaryt::combine_and(exprt &olde, const exprt &newe)
+{
+  if(olde.is_nil()) 
+  {
+    olde = newe;
+  }
+  else 
+  {
+    if(newe.is_nil()) return;
+    olde = and_exprt(olde,newe);
+  }
+}
+
+void summaryt::combine_or(exprt &olde, const exprt &newe)
+{
+  if(olde.is_nil()) 
+  {
+    olde = newe;
+  }
+  else 
+  {
+    if(newe.is_nil()) return;
+    olde = or_exprt(olde,newe);
+  }
+}
+
+void summaryt::join(const summaryt &new_summary)
+{
+  assert(params == new_summary.params);
+  assert(globals_in == new_summary.globals_in);
+  assert(globals_out == new_summary.globals_out);
+  combine_or(precondition,new_summary.precondition);
+  combine_and(transformer,new_summary.transformer);
+  combine_and(invariant,new_summary.invariant);
+}
