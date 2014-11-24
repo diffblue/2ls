@@ -98,10 +98,11 @@ bool strategy_solver_binsearch3t::iterate(invariantt &_inv)
   }
 
   //symbolic value system
+  //the true parameter renames program variables in each row
   exprt pre_inv_expr = 
-    tpolyhedra_domain.to_symb_pre_constraints(inv,improve_rows);
+    tpolyhedra_domain.to_symb_pre_constraints(inv,improve_rows,true);
   exprt post_inv_expr = 
-    tpolyhedra_domain.to_symb_post_constraints(improve_rows);
+    tpolyhedra_domain.to_symb_post_constraints(improve_rows,true);
 
   assert(lower_values.size()>=1);
   std::map<tpolyhedra_domaint::rowt,symbol_exprt>::iterator 
@@ -134,11 +135,25 @@ bool strategy_solver_binsearch3t::iterate(invariantt &_inv)
   solver.new_context(); //symbolic value system
   solver << pre_inv_expr;
   solver << post_inv_expr;
+
+  //add renamed SSA for rows 1..n-1
+  for(unsigned i=1; i<symb_values.size(); i++)
+  {
+    //TODO: this must be the full SSA, even with incremental unwinding!
+    std::list<exprt> program;
+    program  << SSA;
+    for(std::list<exprt>::iterator it = program.begin();
+	it != program.end(); it++)
+    {
+      tpolyhedra_domain.rename_for_row(*it,i);
+    }
+    solver << SSA;
+  }
+
   extend_expr_types(sum);
   extend_expr_types(_upper);
   extend_expr_types(_lower);
   tpolyhedra_domaint::row_valuet upper = simplify_const(_upper);
-  //from_integer(mp_integer(512),_upper.type());
   tpolyhedra_domaint::row_valuet lower = simplify_const(_lower);
   assert(sum.type()==upper.type());
   assert(sum.type()==lower.type());

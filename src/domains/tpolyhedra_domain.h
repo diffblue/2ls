@@ -40,7 +40,8 @@ public:
 
   // value -> constraints
   exprt get_row_constraint(const rowt &row, const row_valuet &row_value);
-  exprt get_row_pre_constraint(const rowt &row, const row_valuet &row_value);
+  exprt get_row_pre_constraint(const rowt &row, const row_valuet &row_value,
+				    bool _rename=false);
   exprt get_row_post_constraint(const rowt &row, const row_valuet &row_value);
   exprt get_row_pre_constraint(const rowt &row, const templ_valuet &value);
   exprt get_row_post_constraint(const rowt &row, const templ_valuet &value);
@@ -51,15 +52,20 @@ public:
 			   exprt::operandst &value_exprs);
 
   // value -> symbolic bound constraints (for optimization)
-  exprt to_symb_pre_constraints(const templ_valuet &value);
   exprt to_symb_pre_constraints(const templ_valuet &value,
-				const std::set<rowt> &symb_rows);
-  exprt to_symb_post_constraints(const std::set<rowt> &symb_rows);
+				bool _rename=false);
+  exprt to_symb_pre_constraints(const templ_valuet &value,
+				const std::set<rowt> &symb_rows,
+				bool _rename=false);
+  exprt to_symb_post_constraints(const std::set<rowt> &symb_rows,
+				bool _rename=false);
   exprt get_row_symb_value_constraint(const rowt &row, 
 				      const row_valuet &row_value);
   exprt get_row_symb_pre_constraint(const rowt &row, 
-				      const row_valuet &row_value);
-  exprt get_row_symb_post_constraint(const rowt &row);
+				    const row_valuet &row_value,
+				    bool _rename=false);
+  exprt get_row_symb_post_constraint(const rowt &row,
+				     bool _rename=false);
 
 
   // set, get value
@@ -92,6 +98,8 @@ public:
 				    const namespacet &ns);
 
   symbol_exprt get_row_symb_value(const rowt &row);
+
+  void rename_for_row(exprt &expr, const rowt &row);
 
 protected:
   friend class strategy_solver_binsearcht;

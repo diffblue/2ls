@@ -28,6 +28,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/simplify_expr.h>
 #include <util/mp_arith.h>
 
+#define BINSEARCH_SOLVER strategy_solver_binsearcht(*static_cast<tpolyhedra_domaint *>(domain), solver, SSA.ns)
+//#define BINSEARCH_SOLVER strategy_solver_binsearch2t(*static_cast<tpolyhedra_domaint *>(domain), solver, SSA.ns)
+//#define BINSEARCH_SOLVER strategy_solver_binsearch3t(*static_cast<tpolyhedra_domaint *>(domain), solver, SSA, SSA.ns)
+
 #ifdef DEBUG
 #include <iostream>
 #endif
@@ -82,8 +86,7 @@ void ssa_analyzert::operator()(incremental_solvert &solver,
     else if(template_generator.options.get_bool_option("binsearch-solver"))
     {
       strategy_solver = 
-        new BINSEARCH_SOLVER(
-          *static_cast<tpolyhedra_domaint *>(domain), solver, SSA.ns);
+        new BINSEARCH_SOLVER;
     }
     else assert(false);
   }
