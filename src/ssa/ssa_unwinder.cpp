@@ -10,8 +10,43 @@
 #include <util/i2string.h>
 #include <util/string2int.h>
 #include <limits>
+#include <cstdlib>
 
 #include "ssa_unwinder.h"
+
+
+
+
+void ssa_local_unwindert::dissect_loop_suffix(const irep_idt& id,
+    irep_idt& before_suffix,std::list<unsigned>& iterations,bool baseonly) const
+{
+    std::string s = id2string(id);
+
+    std::size_t pos=s.find_first_of("%");
+    if(pos==std::string::npos) { return;     }
+
+    before_suffix=s.substr(0,pos);
+    if(baseonly) return;
+    std::size_t pos1;
+
+    do
+    {
+      pos1=s.find_first_of("%",pos+1);
+      if(pos1==std::string::npos) continue;
+     // if(pos1==pos+1) {assert(false&& "Ill formed loop suffix");}
+      //TODO use safe string to unsigned
+
+      iterations.push_back(string2integer(s.substr(pos+1,pos1-(pos+1)),10).to_ulong());
+      pos=pos1;
+
+    }while(pos1!=std::string::npos);
+
+    //if(pos==(s.length()-1)) {assert(false && "Ill-formed loop suffix");}
+
+    iterations.push_back(string2integer(s.substr(pos+1)).to_ulong());
+
+}
+
 
 /*****************************************************************************
  *
@@ -48,7 +83,9 @@ irep_idt ssa_local_unwindert::get_base_name(const irep_idt& id)
  *****************************************************************************/
 ssa_local_unwindert::ssa_local_unwindert(local_SSAt& _SSA,bool k_induct,
     bool _ibmc): SSA(_SSA),
-    current_unwinding(0),is_initialized(false),is_kinduction(k_induct),is_ibmc(_ibmc){ }
+    current_unwinding(0),prev_unwinding(std::numeric_limits<unsigned int>::max()),
+    is_initialized(false),is_kinduction(k_induct),
+    is_ibmc(_ibmc){ }
 /*******************************************************************
  Struct: compare_node_iterators
 
@@ -372,6 +409,11 @@ void ssa_local_unwindert::unwind(const irep_idt& fname,unsigned int k) {
     return;
   if (k <= current_unwinding)
     assert(false && "unwind depth smaller than previous unwinding!!");
+
+//watch out for border-line cases
+  //parameter to unwind must never be 0
+    prev_unwinding=current_unwinding;
+
   local_SSAt::nodest new_nodes;
   irep_idt func_name = "unwind:"+as_string(fname)+"enable_"+i2string(k);
   symbol_exprt new_sym(func_name,bool_typet());
@@ -1151,6 +1193,148 @@ void ssa_local_unwindert::unwinder_rename(symbol_exprt &var,
 #ifdef DEBUG
   std::cout << "new id: " << var.get_identifier() << std::endl;
 #endif
+}
+
+
+unsigned ssa_local_unwindert::rename_required(const exprt& e,
+    const unsigned prev_unwinding) const
+{
+  if(e.id()==ID_symbol)
+    {
+      const symbol_exprt& sym=to_symbol_expr(e);
+      irep_idt id = sym.get_identifier();
+
+      std::list<unsigned> iterations;
+      irep_idt basename;
+      dissect_loop_suffix(id,basename,iterations,false);
+      if(iterations.back()==prev_unwinding) return iterations.size();
+
+
+    }
+    else
+    {
+      if(!e.operands().empty())
+      {
+        for(exprt::operandst::const_iterator e_it=e.operands().begin();
+            e_it!=e.operands().end();e_it++)
+        {
+          unsigned depth=rename_required(*e_it,prev_unwinding);
+          if(depth) return depth;
+        }
+      }
+    }
+
+      return 0;
+
+}
+
+
+void ssa_local_unwindert::rename_invariant(exprt& e,const irep_idt& suffix) const
+{
+  if(e.id()==ID_symbol)
+  {
+    symbol_exprt& sym=to_symbol_expr(e);
+    irep_idt id = sym.get_identifier();
+
+    std::list<unsigned> iterations;
+    irep_idt basename;
+    dissect_loop_suffix(id,basename,iterations,true);
+
+
+    sym.set_identifier(id2string(basename)+id2string(suffix));
+  }
+  else
+  {
+    if(!e.operands().empty())
+    {
+      for(exprt::operandst::iterator e_it=e.operands().begin();
+          e_it!=e.operands().end();e_it++)
+      {
+        rename_invariant(*e_it,suffix);
+      }
+    }
+  }
+
+}
+/*****************************************************************************
+ *
+ *  Function : ssa_local_unwindert::rename_invariant
+ *
+ *  Input : inv_in - list of input invariants that is to be renamed for reuse
+ *
+ *  Output : inv_out - list of renamed invariants
+ *
+ *  Purpose : For the purpose of reuse of invariant, rename all
+ *
+ *
+ *****************************************************************************/
+void ssa_local_unwindert::rename_invariant(const exprt::operandst& inv_in,
+    std::vector<exprt>& inv_out,const unsigned prev_unwinding) const
+{
+
+  if(prev_unwinding==0 || prev_unwinding==std::numeric_limits<unsigned int>::max())
+  {
+    return;
+  }
+  for(std::vector<exprt>::const_iterator e_it=inv_in.begin();
+      e_it!=inv_in.end();e_it++)
+  {
+    unsigned depth=rename_required(*e_it,prev_unwinding);
+    if(depth==0) continue;
+
+    std::vector<unsigned> iter_vector(depth-1,0);
+
+    do
+    {
+
+      irep_idt suffix;
+
+      for(std::vector<unsigned>::const_iterator vit=iter_vector.begin();
+          vit!=iter_vector.end();vit++)
+      {
+
+        suffix = id2string(suffix)+"%"+i2string(*vit);
+      }
+      suffix = id2string(suffix)+"%"+i2string(current_unwinding);
+      inv_out.push_back(*e_it);
+      exprt& e = inv_out.back();
+      rename_invariant(e,suffix);
+    }while(odometer_increment(iter_vector,current_unwinding+1));
+
+
+  }
+
+
+
+
+
+}
+
+exprt ssa_local_unwindert::rename_invariant(const exprt& inv_in) const
+{
+  assert(inv_in.id()==ID_and);
+
+ std::vector<exprt> new_inv;
+ rename_invariant(inv_in.operands(),new_inv,prev_unwinding);
+
+ return conjunction(new_inv);
+
+}
+
+
+bool ssa_local_unwindert::odometer_increment(std::vector<unsigned>& odometer,
+    unsigned base) const
+{
+  unsigned i=odometer.size()-1;
+  while(true)
+  {
+    if(odometer[i] < base-1) {odometer[i]++; return true;}
+    odometer[i]=0;
+    if(i==0) return false; //overflow
+    i--;
+
+  }
+return false;
 }
 /*****************************************************************************\
  *

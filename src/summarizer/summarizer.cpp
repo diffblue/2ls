@@ -178,11 +178,14 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
   template_generator(solver.next_domain_number(),SSA,forward);
 
   exprt cond = preconditions[function_name];
-#if 0 
+#if 1
   if(summary_db.exists(function_name)) //reuse existing invariants
   {
+    std::ostringstream out;
     const exprt &old_inv = summary_db.get(function_name).invariant;
     exprt inv = ssa_unwinder.get(function_name).rename_invariant(old_inv);
+    out << "(renamed inv)" << from_expr(SSA.ns,"",inv)<<"\n";
+    debug() << out.str() << eom;
     cond = and_exprt(cond,inv);
   }
 #endif
