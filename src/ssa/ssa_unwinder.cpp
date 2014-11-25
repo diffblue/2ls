@@ -1299,7 +1299,7 @@ void ssa_local_unwindert::rename_invariant(const exprt::operandst& inv_in,
       inv_out.push_back(*e_it);
       exprt& e = inv_out.back();
       rename_invariant(e,suffix);
-    }while(odometer_increment(iter_vector,current_unwinding+1));
+    }while(odometer_increment(iter_vector,current_unwinding));
 
 
   }
