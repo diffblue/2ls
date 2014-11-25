@@ -11,7 +11,7 @@ class strategy_solver_binsearch3t : public strategy_solver_baset
   explicit strategy_solver_binsearch3t(
     tpolyhedra_domaint &_tpolyhedra_domain,
     incremental_solvert &_solver, 
-    const local_SSAt& _SSA,
+    local_SSAt& _SSA,
     const namespacet &_ns) : 
     strategy_solver_baset( _solver, _ns),
     SSA(_SSA),
@@ -21,12 +21,12 @@ class strategy_solver_binsearch3t : public strategy_solver_baset
   virtual bool iterate(invariantt &inv);
 
  protected:
-  const local_SSAt& SSA;
+  local_SSAt &SSA;
   tpolyhedra_domaint &tpolyhedra_domain;
   unsigned sum_bound_counter;
-  /*  std::set<tpolyhedra_domaint::rowt> improve_rows;
-  std::map<tpolyhedra_domaint::rowt,symbol_exprt> symb_values;
-  std::map<tpolyhedra_domaint::rowt,constant_exprt> lower_values;*/
+//  std::set<tpolyhedra_domaint::rowt> improve_rows;
+//  std::map<tpolyhedra_domaint::rowt,symbol_exprt> symb_values;
+//  std::map<tpolyhedra_domaint::rowt,constant_exprt> lower_values;
 
 };
 

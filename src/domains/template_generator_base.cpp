@@ -72,6 +72,7 @@ void template_generator_baset::collect_variables_loop(const local_SSAt &SSA,bool
 	if(p_it==phi_nodes.end()) continue; // object not modified in this loop
 
         symbol_exprt in=SSA.name(*o_it, local_SSAt::LOOP_BACK, n_it->location);
+//        symbol_exprt in=SSA.name(*o_it, local_SSAt::PHI, n_it->loophead->location);
         ssa_local_unwinder.unwinder_rename(in,*n_it,true);
         symbol_exprt out=SSA.read_rhs(*o_it, n_it->location);
         ssa_local_unwinder.unwinder_rename(out,*n_it,false);

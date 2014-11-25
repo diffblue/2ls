@@ -209,7 +209,7 @@ exprt tpolyhedra_domaint::get_row_constraint(const rowt &row,
 }
 
 exprt tpolyhedra_domaint::get_row_pre_constraint(const rowt &row, 
-  const row_valuet &row_value, bool _rename)
+  const row_valuet &row_value)
 {
   assert(row<templ.size());
   const template_rowt &templ_row = templ[row];
@@ -219,10 +219,8 @@ exprt tpolyhedra_domaint::get_row_pre_constraint(const rowt &row,
     return implies_exprt(templ_row.pre_guard, false_exprt());
   if(is_row_value_inf(row_value)) 
    return implies_exprt(templ_row.pre_guard, true_exprt());
-  exprt row_expr = templ_row.expr;
-  if(_rename) rename_for_row(row_expr,row);
   return implies_exprt(templ_row.pre_guard, 
-    binary_relation_exprt(row_expr,ID_le,row_value));
+    binary_relation_exprt(templ_row.expr,ID_le,row_value));
 }
 
 
@@ -353,15 +351,13 @@ Function: tpolyhedra_domaint::get_row_symb_pre_constraint
 \*******************************************************************/
 
 exprt tpolyhedra_domaint::get_row_symb_pre_constraint(const rowt &row, 
-				    const row_valuet &row_value, bool _rename)
+				    const row_valuet &row_value)
 {
   assert(row<templ.size());
   const template_rowt &templ_row = templ[row];
   if(templ_row.kind==OUT || templ_row.kind==OUTL) return true_exprt();
-  exprt row_expr = templ_row.expr;
-  if(_rename) rename_for_row(row_expr,row);
-  return implies_exprt(templ_row.pre_guard, 
-    binary_relation_exprt(row_expr,ID_le,get_row_symb_value(row)));
+  return implies_exprt(templ_row.pre_guard,  //REMARK: and_expr ==> loop15 regression
+    binary_relation_exprt(templ_row.expr,ID_le,get_row_symb_value(row)));
 }
 
 /*******************************************************************\
@@ -376,17 +372,14 @@ Function: tpolyhedra_domaint::get_row_symb_post_constraint
 
 \*******************************************************************/
 
-exprt tpolyhedra_domaint::get_row_symb_post_constraint(const rowt &row, 
-						       bool _rename)
+exprt tpolyhedra_domaint::get_row_symb_post_constraint(const rowt &row)
 {
   assert(row<templ.size());
   const template_rowt &templ_row = templ[row];
   if(templ_row.kind==IN) return true_exprt();
-  exprt row_expr = templ_row.expr;
-  rename(row_expr);
-  if(_rename) rename_for_row(row_expr,row);
   exprt c = and_exprt(templ_row.post_guard,
-    binary_relation_exprt(row_expr,ID_ge,get_row_symb_value(row)));
+    binary_relation_exprt(templ_row.expr,ID_ge,get_row_symb_value(row)));
+  rename(c);
   return c;
 }
 
@@ -403,14 +396,13 @@ Function: tpolyhedra_domaint::to_symb_pre_constraints
 
 \*******************************************************************/
 
-exprt tpolyhedra_domaint::to_symb_pre_constraints(const templ_valuet &value, 
-						  bool _rename)
+exprt tpolyhedra_domaint::to_symb_pre_constraints(const templ_valuet &value)
 {
   assert(value.size()==templ.size());
   exprt::operandst c; 
   for(unsigned row = 0; row<templ.size(); row++)
   {
-    c.push_back(get_row_symb_pre_constraint(row,value[row],_rename));
+    c.push_back(get_row_symb_pre_constraint(row,value[row]));
   }
   return conjunction(c); 
 }
@@ -428,17 +420,16 @@ Function: tpolyhedra_domaint::to_symb_pre_constraints
 \*******************************************************************/
 
 exprt tpolyhedra_domaint::to_symb_pre_constraints(const templ_valuet &value,
-					const std::set<rowt> &symb_rows, 
-					bool _rename)
+					const std::set<rowt> &symb_rows)
 {
   assert(value.size()==templ.size());
   exprt::operandst c; 
   for(unsigned row = 0; row<templ.size(); row++)
   {
     if(symb_rows.find(row)!=symb_rows.end())
-      c.push_back(get_row_symb_pre_constraint(row,value[row],_rename));
+      c.push_back(get_row_symb_pre_constraint(row,value[row]));
     else
-      c.push_back(get_row_pre_constraint(row,value[row],_rename));
+      c.push_back(get_row_pre_constraint(row,value[row]));
   }
   return conjunction(c); 
 }
@@ -456,13 +447,13 @@ Function: tpolyhedra_domaint::to_symb_post_constraints
 \*******************************************************************/
 
 exprt tpolyhedra_domaint::to_symb_post_constraints(
-   const std::set<rowt> &symb_rows, bool _rename)
+   const std::set<rowt> &symb_rows)
 {
   exprt::operandst c; 
   for(std::set<rowt>::const_iterator it = symb_rows.begin(); 
       it != symb_rows.end(); it++)
   {
-    c.push_back(get_row_symb_post_constraint(*it,_rename));
+    c.push_back(get_row_symb_post_constraint(*it));
   }
   return conjunction(c); 
 }
@@ -791,14 +782,26 @@ Function: tpolyhedra_domaint::rename_for_row
 
  Outputs:
 
- Purpose:
+ Purpose: add row suffix to non-symbolic-bound variables in expression 
+          (required for strategy iteration (binsearch3))
 
 \*******************************************************************/
 
 
 void tpolyhedra_domaint::rename_for_row(exprt &expr, const rowt &row)
 {
-  //TODO
+  if(row==0) return; //do not rename
+  if(expr.id()==ID_symbol || expr.id()==ID_nondet_symbol)
+  {
+    const std::string &old_id = expr.get_string(ID_identifier);
+    if(old_id.find(SYMB_BOUND_VAR)==std::string::npos) 
+    {
+      irep_idt id = old_id + "_" + i2string(row);
+      expr.set(ID_identifier,id);
+    }
+  }
+  for(unsigned i=0; i< expr.operands().size(); i++)
+    rename_for_row(expr.operands()[i],row);
 }
 
 

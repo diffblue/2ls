@@ -1,11 +1,11 @@
 void main()
 {
   int x,y;
-  for(x=0;x<10;x++)
+  for(x=0;x<100;x++)
   {
-    for(y=0;y<20;y++);
+    for(y=0;y<200;y++);
   }
 
-  assert(x==10);
-  assert(y==20);
+  assert(x==100);
+  assert(y==200);
 }

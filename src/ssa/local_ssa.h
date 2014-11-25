@@ -95,6 +95,11 @@ public:
       for(nodest::iterator n_it=nodes.begin();
 	  n_it!=nodes.end(); n_it++) n_it->marked = true;
   }
+  void unmark_nodes()
+  {
+      for(nodest::iterator n_it=nodes.begin();
+	  n_it!=nodes.end(); n_it++) n_it->marked = false;
+  }
 
   // for incremental unwinding
   std::list<symbol_exprt> enabling_exprs;

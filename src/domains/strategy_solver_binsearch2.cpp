@@ -71,7 +71,7 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
     {
       if(solver.solver.l_get(strategy_cond_literals[row]).is_true()) 
       {
-#if 0
+#if 1
         debug() << "improve row " << row  << eom;
 #endif
         improve_rows.insert(row);
@@ -107,7 +107,7 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
   std::map<tpolyhedra_domaint::rowt,symbol_exprt>::iterator 
     it = symb_values.begin();
   exprt _lower = lower_values[it->first];
-#if 0
+#if 1
   debug() << "update row " << it->first << ": " 
 	    << from_expr(ns,"",lower_values[it->first]) << eom;
 #endif
@@ -121,7 +121,7 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
     _upper = plus_exprt(_upper,tpolyhedra_domain.get_max_row_value(it->first));
     _lower = plus_exprt(_lower,lower_values[it->first]);
 
-#if 0
+#if 1
 	    debug() << "update row " << it->first << ": " 
 		    << from_expr(ns,"",lower_values[it->first]) << eom;
 #endif
@@ -185,13 +185,13 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
 	  for(std::map<tpolyhedra_domaint::rowt,symbol_exprt>::iterator 
 		it = symb_values.begin(); it != symb_values.end(); it++)
 	  { 
-#if 0
+#if 1
 	    debug() << "update row " << it->first << " " 
 		    << from_expr(ns,"",it->second) << ": ";
 #endif
 	    constant_exprt lower_row = 
               simplify_const(solver.solver.get(it->second));
-#if 0
+#if 1
 	    debug() << from_expr(ns,"",lower_row) << eom;
 #endif
 	    tpolyhedra_domain.set_row_value(it->first,lower_row,inv);

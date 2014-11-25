@@ -53,11 +53,10 @@ bool strategy_solver_binsearch3t::iterate(invariantt &_inv)
   debug() << "solve(): ";
 #endif
 
+  std::set<tpolyhedra_domaint::rowt> improve_rows;
   std::map<tpolyhedra_domaint::rowt,symbol_exprt> symb_values;
   std::map<tpolyhedra_domaint::rowt,constant_exprt> lower_values;
   exprt::operandst blocking_constraint;
-
-  std::set<tpolyhedra_domaint::rowt> improve_rows;
   bool improved_from_neginf = false;
   while(solver() == decision_proceduret::D_SATISFIABLE) //improvement check
   { 
@@ -71,7 +70,7 @@ bool strategy_solver_binsearch3t::iterate(invariantt &_inv)
     {
       if(solver.solver.l_get(strategy_cond_literals[row]).is_true()) 
       {
-#if 0
+#if 1
         debug() << "improve row " << row  << eom;
 #endif
         improve_rows.insert(row);
@@ -98,17 +97,16 @@ bool strategy_solver_binsearch3t::iterate(invariantt &_inv)
   }
 
   //symbolic value system
-  //the true parameter renames program variables in each row
   exprt pre_inv_expr = 
-    tpolyhedra_domain.to_symb_pre_constraints(inv,improve_rows,true);
+    tpolyhedra_domain.to_symb_pre_constraints(inv,improve_rows);
   exprt post_inv_expr = 
-    tpolyhedra_domain.to_symb_post_constraints(improve_rows,true);
+    tpolyhedra_domain.to_symb_post_constraints(improve_rows);
 
   assert(lower_values.size()>=1);
   std::map<tpolyhedra_domaint::rowt,symbol_exprt>::iterator 
     it = symb_values.begin();
   exprt _lower = lower_values[it->first];
-#if 0
+#if 1
   debug() << "update row " << it->first << ": " 
 	    << from_expr(ns,"",lower_values[it->first]) << eom;
 #endif
@@ -122,9 +120,9 @@ bool strategy_solver_binsearch3t::iterate(invariantt &_inv)
     _upper = plus_exprt(_upper,tpolyhedra_domain.get_max_row_value(it->first));
     _lower = plus_exprt(_lower,lower_values[it->first]);
 
-#if 0
-	    debug() << "update row " << it->first << ": " 
-		    << from_expr(ns,"",lower_values[it->first]) << eom;
+#if 1
+    debug() << "update row " << it->first << ": " 
+	    << from_expr(ns,"",lower_values[it->first]) << eom;
 #endif
     tpolyhedra_domain.set_row_value(it->first,lower_values[it->first],inv);
   }
@@ -136,20 +134,44 @@ bool strategy_solver_binsearch3t::iterate(invariantt &_inv)
   solver << pre_inv_expr;
   solver << post_inv_expr;
 
+#if 1
+  debug() << "symbolic value system: " << eom;
+  debug() << "pre-inv: " << from_expr(ns,"",pre_inv_expr) << eom;
+  debug() << "post-inv: " << from_expr(ns,"",post_inv_expr) << eom;
+#endif
+
+/*
   //add renamed SSA for rows 1..n-1
+  SSA.unmark_nodes();
   for(unsigned i=1; i<symb_values.size(); i++)
   {
+    exprt _pre_inv_expr = pre_inv_expr; //copy
+    exprt _post_inv_expr = post_inv_expr; //copy
+//    tpolyhedra_domain.rename_for_row(_pre_inv_expr,i);
+//    tpolyhedra_domain.rename_for_row(_post_inv_expr,i);
+    solver << _pre_inv_expr;
+    solver << _post_inv_expr;
+
+#if 1
+  debug() << "pre-inv " << i << ": " << from_expr(ns,"",_pre_inv_expr) << eom;
+  debug() << "post-inv " << i << ": " << from_expr(ns,"",_post_inv_expr) << eom;
+#endif
+
     //TODO: this must be the full SSA, even with incremental unwinding!
     std::list<exprt> program;
     program  << SSA;
     for(std::list<exprt>::iterator it = program.begin();
 	it != program.end(); it++)
     {
-      tpolyhedra_domain.rename_for_row(*it,i);
+//      tpolyhedra_domain.rename_for_row(*it,i);
+#if 1
+      debug() << "ssa " << i << ": " << from_expr(ns,"",*it) << eom;
+#endif
     }
     solver << SSA;
   }
-
+  SSA.mark_nodes();
+*/
   extend_expr_types(sum);
   extend_expr_types(_upper);
   extend_expr_types(_lower);
@@ -161,7 +183,7 @@ bool strategy_solver_binsearch3t::iterate(invariantt &_inv)
   symbol_exprt sum_bound(SUM_BOUND_VAR+i2string(sum_bound_counter++),sum.type());
   solver << equal_exprt(sum_bound,sum);
 
-#if 0
+#if 1
   debug() << from_expr(ns,"",equal_exprt(sum_bound,sum)) << eom;
 #endif
 
@@ -175,7 +197,7 @@ bool strategy_solver_binsearch3t::iterate(invariantt &_inv)
       assert(sum_bound.type()==middle.type());
       exprt c = binary_relation_exprt(sum_bound,ID_ge,middle);
 
-#if 0
+#if 1
       debug() << "upper: " << from_expr(ns,"",upper) << eom;
       debug() << "middle: " << from_expr(ns,"",middle) << eom;
       debug() << "lower: " << from_expr(ns,"",lower) << eom;
@@ -183,7 +205,7 @@ bool strategy_solver_binsearch3t::iterate(invariantt &_inv)
 
       solver.new_context(); // binary search iteration
 
-#if 0
+#if 1
       debug() << "constraint: " << from_expr(ns, "", c) << eom;
 #endif
 
@@ -200,13 +222,13 @@ bool strategy_solver_binsearch3t::iterate(invariantt &_inv)
 	  for(std::map<tpolyhedra_domaint::rowt,symbol_exprt>::iterator 
 		it = symb_values.begin(); it != symb_values.end(); it++)
 	  { 
-#if 0
+#if 1
 	    debug() << "update row " << it->first << " " 
 		    << from_expr(ns,"",it->second) << ": ";
 #endif
 	    constant_exprt lower_row = 
               simplify_const(solver.solver.get(it->second));
-#if 0
+#if 1
 	    debug() << from_expr(ns,"",lower_row) << eom;
 #endif
 	    tpolyhedra_domain.set_row_value(it->first,lower_row,inv);

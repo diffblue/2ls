@@ -152,19 +152,6 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
 
   status() << "Analyzing function "  << function_name << eom;
 
-  {
-    std::ostringstream out;
-    out << "Function body for " << function_name << 
-      " to be analyzed: " << std::endl;
-    for(local_SSAt::nodest::iterator n = SSA.nodes.begin(); 
-        n!=SSA.nodes.end(); n++)
-    {
-      if(!n->empty()) n->output(out,SSA.ns);
-    }
-    out << "(enable) " << from_expr(SSA.ns, "", SSA.get_enabling_exprs()) << "\n";
-    debug() << out.str() << eom;
-  }
-
   // solver
   incremental_solvert &solver = ssa_db.get_solver(function_name);
   solver.set_message_handler(get_message_handler());
