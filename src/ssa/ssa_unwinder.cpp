@@ -1207,7 +1207,7 @@ unsigned ssa_local_unwindert::rename_required(const exprt& e,
       std::list<unsigned> iterations;
       irep_idt basename;
       dissect_loop_suffix(id,basename,iterations,false);
-      if(iterations.back()==prev_unwinding) return iterations.size();
+      if(iterations.back()==(prev_unwinding-1)) return iterations.size();
 
 
     }
@@ -1295,7 +1295,7 @@ void ssa_local_unwindert::rename_invariant(const exprt::operandst& inv_in,
 
         suffix = id2string(suffix)+"%"+i2string(*vit);
       }
-      suffix = id2string(suffix)+"%"+i2string(current_unwinding);
+      suffix = id2string(suffix)+"%"+i2string(current_unwinding-1);
       inv_out.push_back(*e_it);
       exprt& e = inv_out.back();
       rename_invariant(e,suffix);
@@ -1312,6 +1312,7 @@ void ssa_local_unwindert::rename_invariant(const exprt::operandst& inv_in,
 
 exprt ssa_local_unwindert::rename_invariant(const exprt& inv_in) const
 {
+  if(inv_in.is_true()) return inv_in;
   assert(inv_in.id()==ID_and);
 
  std::vector<exprt> new_inv;
@@ -1325,6 +1326,7 @@ exprt ssa_local_unwindert::rename_invariant(const exprt& inv_in) const
 bool ssa_local_unwindert::odometer_increment(std::vector<unsigned>& odometer,
     unsigned base) const
 {
+  if(odometer.empty()) return false;
   unsigned i=odometer.size()-1;
   while(true)
   {
