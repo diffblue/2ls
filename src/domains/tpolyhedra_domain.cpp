@@ -807,7 +807,7 @@ void tpolyhedra_domaint::rename_for_row(exprt &expr, const rowt &row)
 
 /*******************************************************************\
 
-Function: make_interval_template
+Function: add_interval_template
 
   Inputs:
 
@@ -854,7 +854,7 @@ void tpolyhedra_domaint::add_interval_template(const var_specst &var_specs,
 
 /*******************************************************************\
 
-Function: make_zone_template
+Function: add_zone_template
 
   Inputs:
 
@@ -939,7 +939,95 @@ void tpolyhedra_domaint::add_zone_template(const var_specst &var_specs,
 
 /*******************************************************************\
 
-Function: make_octagon_template
+Function: add_qzone_template
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: +-x^2<=c, x+-y<=c
+
+\*******************************************************************/
+
+void tpolyhedra_domaint::add_qzone_template(const var_specst &var_specs,
+					 const namespacet &ns)
+{ 
+  unsigned size = 2*var_specs.size()+var_specs.size()*(var_specs.size()-1);
+  templ.reserve(templ.size()+size);
+  
+  for(var_specst::const_iterator v1 = var_specs.begin(); 
+      v1!=var_specs.end(); v1++)
+  {
+    if(v1->kind!=IN)
+    {
+      // x*x
+      {
+	templ.push_back(template_rowt());
+	template_rowt &templ_row = templ.back();
+	mult_exprt m_expr(v1->var,v1->var);
+	extend_expr_types(m_expr);
+	templ_row.expr = m_expr;
+	templ_row.pre_guard = v1->pre_guard;
+	templ_row.post_guard = v1->post_guard;
+	templ_row.kind = v1->kind;
+      }
+
+      // -(x*x)
+      {
+	templ.push_back(template_rowt());
+	template_rowt &templ_row = templ.back();
+	mult_exprt m_expr(v1->var,v1->var);
+	unary_minus_exprt um_expr(m_expr,v1->var.type());
+	extend_expr_types(um_expr);
+	templ_row.expr = um_expr;
+	templ_row.pre_guard = v1->pre_guard;
+	templ_row.post_guard = v1->post_guard;
+	templ_row.kind = v1->kind;
+      }
+    }
+
+    var_specst::const_iterator v2 = v1; v2++;
+    for(; v2!=var_specs.end(); v2++)
+    {
+      kindt k = domaint::merge_kinds(v1->kind,v2->kind);
+      if(k==IN) continue; 
+      if(k==LOOP && v1->pre_guard!=v2->pre_guard) continue; //TEST: we need better heuristics
+
+      exprt pre_g = and_exprt(v1->pre_guard,v2->pre_guard);
+      exprt post_g = and_exprt(v1->post_guard,v2->post_guard);
+      simplify(pre_g,ns);
+      simplify(post_g,ns);
+
+      // x1 - x2
+      {
+	templ.push_back(template_rowt());
+	template_rowt &templ_row = templ.back();
+        minus_exprt m_expr(v1->var,v2->var);
+        extend_expr_types(m_expr);
+	templ_row.expr = m_expr;
+	templ_row.pre_guard = pre_g;
+	templ_row.post_guard = post_g;
+	templ_row.kind = k;
+      }
+
+      // x2 - x1
+      {
+	templ.push_back(template_rowt());
+	template_rowt &templ_row = templ.back();
+        minus_exprt m_expr(v2->var,v1->var);
+        extend_expr_types(m_expr);
+	templ_row.expr = m_expr;
+	templ_row.pre_guard = pre_g;
+	templ_row.post_guard = post_g;
+	templ_row.kind = k;
+      }
+    }
+  }
+}
+
+/*******************************************************************\
+
+Function: add_octagon_template
 
   Inputs:
 

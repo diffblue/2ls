@@ -90,6 +90,8 @@ public:
 				 const namespacet &ns);
   void add_octagon_template(const var_specst &var_specs,
 				    const namespacet &ns);
+  void add_qzone_template(const var_specst &var_specs,
+				    const namespacet &ns);
 
   symbol_exprt get_row_symb_value(const rowt &row);
 

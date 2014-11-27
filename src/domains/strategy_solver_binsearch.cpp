@@ -3,8 +3,6 @@
 #include "strategy_solver_binsearch.h"
 #include "util.h"
 
-// #define DEBUG_FORMULA
-
 bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 {
   tpolyhedra_domaint::templ_valuet &inv = 

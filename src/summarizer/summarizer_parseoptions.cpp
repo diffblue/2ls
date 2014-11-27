@@ -129,6 +129,9 @@ void summarizer_parseoptionst::get_command_line_options(optionst &options)
   if(cmdline.isset("inline-partial"))
     options.set_option("inline-partial", cmdline.get_value("inline-partial"));
 
+  if(cmdline.isset("inline"))
+    options.set_option("inline", true);
+
   // check array bounds
   if(cmdline.isset("bounds-check"))
     options.set_option("bounds-check", true);
@@ -192,6 +195,27 @@ void summarizer_parseoptionst::get_command_line_options(optionst &options)
   // magic error label
   if(cmdline.isset("error-label"))
     options.set_option("error-label", cmdline.get_value("error-label"));
+
+  if(cmdline.isset("havoc"))
+    options.set_option("havoc", true);
+  else if(cmdline.isset("equalities"))
+    options.set_option("equalities", true);
+  else 
+  {
+    if(cmdline.isset("zones"))
+      options.set_option("zones", true);
+    else if(cmdline.isset("qzones"))
+      options.set_option("qzones", true);
+    else if(cmdline.isset("octagons"))
+      options.set_option("octagons", true);
+    else //if(cmdline.isset("intervals")) //default
+      options.set_option("intervals", true);
+
+    if(cmdline.isset("enum-solver")) 
+      options.set_option("enum-solver", true);
+    else //if(cmdline.isset("binsearch-solver")) //default
+      options.set_option("binsearch-solver", true);
+  }
 
   // use incremental assertion checks
   if(cmdline.isset("non-incremental"))
@@ -334,76 +358,26 @@ int summarizer_parseoptionst::doit()
     status() << "Do not ignore array contents" << eom;
   }
 
-  if(cmdline.isset("havoc"))
+  //TOOD: check option inconsistencies, ignored options etc
+  if(options.get_bool_option("havoc"))
+    status() << "Havocking loops and function calls" << eom;
+  else if(options.get_bool_option("equalities"))
+    status() << "Using (dis)equalities domain" << eom;
+  else
   {
-    options.set_option("havoc", true);
-    status() << "Havocking loops and function calls";
-  }
-  else if(cmdline.isset("equalities"))
-  {
-    options.set_option("equalities", true);
-    status() << "Using equalities domain ";
-  }
-  else 
-  {
-    if(cmdline.isset("zones"))
-      {
-	options.set_option("zones", true);
-	status() << "Using zones domain ";
-      }
-    else if(cmdline.isset("octagons"))
-      {
-	options.set_option("octagons", true);
-	status() << "Using octagons domain ";
-      }
-    else //if(cmdline.isset("intervals")) //default
-      {
-	options.set_option("intervals", true);
-	status() << "Using intervals domain ";
-      }
-
-    if(cmdline.isset("enum-solver")) 
-      {
-	options.set_option("enum-solver", true);
-	status() << "with enumeration solver";
-      }
-    else //if(cmdline.isset("binsearch-solver")) //default
-      {
-	options.set_option("binsearch-solver", true);
-	status() << "with binary search solver";
-      }
-  }
-  status() << eom;
-
-  if((cmdline.isset("equalities") || cmdline.isset("havoc")) &&
-     cmdline.isset("enum-solver"))
-  {
-    warning() << "Option --enum-solver ignored" << eom;
-  }
-  if((cmdline.isset("equalities") || cmdline.isset("havoc"))  &&
-     cmdline.isset("binsearch-solver"))
-  {
-    warning() << "Option --binsearch-solver ignored" << eom;
-  }
-  if(cmdline.isset("havoc")  &&
-    cmdline.isset("equalities"))
-  {
-    warning() << "Option --equalities ignored" << eom;
-  }
-  if((cmdline.isset("equalities") || cmdline.isset("havoc"))  &&
-     cmdline.isset("intervals"))
-  {
-    warning() << "Option --intervals ignored" << eom;
-  }
-  if((cmdline.isset("equalities") || cmdline.isset("havoc"))  &&
-     cmdline.isset("zones"))
-  {
-    warning() << "Option --zones ignored" << eom;
-  }
-  if((cmdline.isset("equalities") || cmdline.isset("havoc"))  &&
-     cmdline.isset("octagons"))
-  {
-    warning() << "Option --octagons ignored" << eom;
+    if(options.get_bool_option("intervals"))
+      status() << "Using intervals domain";
+    else if(options.get_bool_option("zones"))
+      status() << "Using zones domain";
+    else if(options.get_bool_option("octagons"))
+      status() << "Using octagons domain";
+    else assert(false);
+    if(options.get_bool_option("enum-solver"))
+      status() << " with enumeration solver";
+    else if(options.get_bool_option("binsearch-solver"))
+      status() << " with binary search solver";
+    else assert(false);
+    status() << eom;
   }
 
   try
@@ -847,7 +821,7 @@ bool summarizer_parseoptionst::process_goto_program(
   try
   {
     // do partial inlining
-    if(cmdline.isset("inline-partial"))
+    if(options.get_bool_option("inline-partial"))
     {
       unsigned limit = options.get_unsigned_int_option("inline-partial");
       status() << "Performing partial inlining (" << limit << ")" << eom;
@@ -900,7 +874,7 @@ bool summarizer_parseoptionst::process_goto_program(
 #endif
 
     // now do full inlining, if requested
-    if(cmdline.isset("inline"))
+    if(options.get_bool_option("inline"))
     {
       status() << "Performing full inlining" << eom;
       goto_inline(goto_model, ui_message_handler);

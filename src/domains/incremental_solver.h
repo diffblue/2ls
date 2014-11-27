@@ -19,6 +19,7 @@ Author: Peter Schrammel
 #include "util.h"
 
 
+//#define DISPLAY_FORMULA
 //#define DEBUG_FORMULA
 //#define DEBUG_OUTPUT
 
@@ -97,12 +98,12 @@ static inline incremental_solvert & operator << (
   incremental_solvert &dest,
   const exprt &src)
 {
-#if 0
+#ifdef DISPLAY_FORMULA
   if(!dest.activation_literals.empty())
-    std::cout << "add_to_solver(" << !dest.activation_literals.back() << "): " 
+    std::cerr << "add_to_solver(" << !dest.activation_literals.back() << "): " 
 	      << from_expr(dest.ns,"",src) << std::endl;
   else
-      std::cout << "add_to_solver: " << from_expr(dest.ns,"",src) << std::endl;
+      std::cerr << "add_to_solver: " << from_expr(dest.ns,"",src) << std::endl;
 #endif
 #ifndef DEBUG_FORMULA
   if(!dest.activation_literals.empty())
@@ -127,11 +128,7 @@ static inline incremental_solvert& operator << (
     for(incremental_solvert::constraintst::const_iterator it = src.begin(); 
         it != src.end(); it++)
     {
-#ifndef DEBUG_FORMULA
-      dest.solver << *it;
-#else
-      dest.debug_add_to_formula(*it);
-#endif
+      dest << *it;
     }
   return dest;
 }

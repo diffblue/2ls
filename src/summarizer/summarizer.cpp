@@ -165,7 +165,7 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
   template_generator(solver.next_domain_number(),SSA,forward);
 
   exprt cond = preconditions[function_name];
-#if 1
+#if 0
   if(summary_db.exists(function_name)) //reuse existing invariants
   {
     std::ostringstream out;

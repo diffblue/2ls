@@ -52,16 +52,17 @@ property_checkert::resultt summary_checkert::operator()(
   {
     property_checkert::resultt result = property_checkert::UNKNOWN;
     unsigned max_unwind = options.get_unsigned_int_option("unwind");
+    status() << "Max-unwind is " << max_unwind << eom;
+    ssa_unwinder.init_localunwinders();
 
     //TODO (later): loop
     //TODO (later):   refine domain
     for(unsigned unwind = 0; unwind<=max_unwind; unwind++)
     {
-      status() << "Unwinding (k=" << unwind << ")" << messaget::eom;
-	std::cout << "Current unwinding is " << unwind << std::endl;
-      if(unwind>0) 
+      status() << "Unwinding (k=" << unwind << ")" << eom;
+      //if(unwind>0) 
       {
-        summary_db.mark_recompute_all();
+        summary_db.mark_recompute_all(); //TODO: recompute only functions with loops
         ssa_unwinder.unwind_all(unwind+1);
       }
 
@@ -72,18 +73,18 @@ property_checkert::resultt summary_checkert::operator()(
       report_statistics();
       if(result == property_checkert::PASS) 
       {
-        status() << "k-induction proof found after " << unwind << " unwinding(s)" << messaget::eom;
+        status() << "k-induction proof found after " << unwind << " unwinding(s)" << eom;
         break;
       }
       else if(result == property_checkert::FAIL) 
       {
-        status() << "k-induction counterexample found after " << unwind << " unwinding(s)" << messaget::eom;
+        status() << "k-induction counterexample found after " << unwind << " unwinding(s)" << eom;
         break;
       }
-      else if(unwind==0 && max_unwind>0) //TODO: unwind==2 => 1 (additional) unwinding
+/*      else if(unwind==0 && max_unwind>0) //TODO: unwind==2 => 1 (additional) unwinding
       {
         ssa_unwinder.init_localunwinders();
-      }
+	} */
     }
     return result;
   }

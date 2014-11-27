@@ -353,4 +353,14 @@ void template_generator_baset::instantiate_standard_domains(const local_SSAt &SS
     static_cast<tpolyhedra_domaint *>(domain_ptr)->add_octagon_template(
       var_specs, SSA.ns);
   }
+  else if(options.get_bool_option("qzones"))
+  {
+    domain_ptr = new tpolyhedra_domaint(domain_number,
+					renaming_map);
+    filter_template_domain();
+    static_cast<tpolyhedra_domaint *>(domain_ptr)->add_zone_template(
+      var_specs, SSA.ns);
+    static_cast<tpolyhedra_domaint *>(domain_ptr)->add_qzone_template(
+      var_specs, SSA.ns);
+  }
 }
