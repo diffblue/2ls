@@ -71,6 +71,10 @@ public:
     typedef std::vector<function_application_exprt> function_callst;
     function_callst function_calls;
 
+    //user defined invariant templates
+    typedef std::vector<exprt> templatest;
+    templatest templates;
+
     locationt location; //link to goto instruction
     std::list<nodet>::iterator loophead; //link to loop head node
 

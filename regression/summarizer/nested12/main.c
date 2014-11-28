@@ -7,13 +7,12 @@ int main() {
 
   for(x=0;x<5;x++)
   {
-   sn = nondet_int();
+    sn = nondet_int();
   
-  while(i<n) {
-    sn = sn + a;
-    i++;
-  }
-
+    while(i<n) {
+      sn = sn + a;
+      i++;
+    }
   }
   assert(sn== n*a || sn == 0);
 }

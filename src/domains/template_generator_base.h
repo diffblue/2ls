@@ -84,6 +84,7 @@ protected:
 
   virtual void handle_special_functions(const local_SSAt &SSA);
   void instantiate_standard_domains(const local_SSAt &SSA);
+  bool get_user_defined_templates(const local_SSAt &SSA);
 
 };
 

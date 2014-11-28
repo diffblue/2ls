@@ -84,13 +84,20 @@ public:
   unsigned template_size();
 
   // generating templates
+  template_rowt &add_template_row(
+    const exprt& expr,
+    const exprt& pre_guard,
+    const exprt& post_guard,
+    kindt kind
+    );
+
   void add_interval_template(const var_specst &var_specs,
 			      const namespacet &ns);
-  void add_zone_template(const var_specst &var_specs,
+  void add_difference_template(const var_specst &var_specs,
 				 const namespacet &ns);
-  void add_octagon_template(const var_specst &var_specs,
+  void add_sum_template(const var_specst &var_specs,
 				    const namespacet &ns);
-  void add_qzone_template(const var_specst &var_specs,
+  void add_quadratic_template(const var_specst &var_specs,
 				    const namespacet &ns);
 
   symbol_exprt get_row_symb_value(const rowt &row);

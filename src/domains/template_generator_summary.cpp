@@ -44,7 +44,9 @@ void template_generator_summaryt::operator()(unsigned _domain_number,
      options.get_bool_option("preconditions"))
     collect_variables_inout(SSA,forward);
 
-  instantiate_standard_domains(SSA);
+  // either use standard templates or user-supplied ones
+  if(!get_user_defined_templates(SSA))
+    instantiate_standard_domains(SSA);
 
 #if 1
   debug() << "Template variables: " << eom;

@@ -310,6 +310,43 @@ void template_generator_baset::handle_special_functions(const local_SSAt &SSA)
 
 /*******************************************************************\
 
+Function: template_generator_baset::get_user_defined_templates
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool template_generator_baset::get_user_defined_templates(const local_SSAt &SSA)
+{
+  bool found = false;
+  for(local_SSAt::nodest::const_iterator n_it=SSA.nodes.begin(); 
+      n_it!=SSA.nodes.end(); n_it++)
+  {
+    if(n_it->templates.empty()) continue;
+    for(local_SSAt::nodet::templatest::const_iterator t_it=n_it->templates.begin(); 
+	t_it!=n_it->templates.end(); n_it++)
+    {
+      //template polyhedra
+      if(t_it->id()==ID_ge)
+      {
+	found = true;
+	//static_cast<tpolyhedra_domaint *>(domain_ptr)->add_template_row();
+	//TODO
+      }
+      else
+        warning() << "ignoring unsupported template " 
+		  << from_expr(SSA.ns,"",*t_it);
+    }
+  }
+  return found;
+}
+
+/*******************************************************************\
+
 Function: template_generator_baset::instantiate_standard_domains
 
   Inputs:
@@ -342,7 +379,9 @@ void template_generator_baset::instantiate_standard_domains(const local_SSAt &SS
     domain_ptr = new tpolyhedra_domaint(domain_number,
 					renaming_map);
     filter_template_domain();
-    static_cast<tpolyhedra_domaint *>(domain_ptr)->add_zone_template(
+    static_cast<tpolyhedra_domaint *>(domain_ptr)->add_interval_template(
+      var_specs, SSA.ns);
+    static_cast<tpolyhedra_domaint *>(domain_ptr)->add_difference_template(
       var_specs, SSA.ns);
   }
   else if(options.get_bool_option("octagons"))
@@ -350,7 +389,11 @@ void template_generator_baset::instantiate_standard_domains(const local_SSAt &SS
     domain_ptr = new tpolyhedra_domaint(domain_number,
 					renaming_map);
     filter_template_domain();
-    static_cast<tpolyhedra_domaint *>(domain_ptr)->add_octagon_template(
+    static_cast<tpolyhedra_domaint *>(domain_ptr)->add_interval_template(
+      var_specs, SSA.ns);
+    static_cast<tpolyhedra_domaint *>(domain_ptr)->add_difference_template(
+      var_specs, SSA.ns);
+    static_cast<tpolyhedra_domaint *>(domain_ptr)->add_sum_template(
       var_specs, SSA.ns);
   }
   else if(options.get_bool_option("qzones"))
@@ -358,9 +401,9 @@ void template_generator_baset::instantiate_standard_domains(const local_SSAt &SS
     domain_ptr = new tpolyhedra_domaint(domain_number,
 					renaming_map);
     filter_template_domain();
-    static_cast<tpolyhedra_domaint *>(domain_ptr)->add_zone_template(
+    static_cast<tpolyhedra_domaint *>(domain_ptr)->add_difference_template(
       var_specs, SSA.ns);
-    static_cast<tpolyhedra_domaint *>(domain_ptr)->add_qzone_template(
+    static_cast<tpolyhedra_domaint *>(domain_ptr)->add_quadratic_template(
       var_specs, SSA.ns);
   }
 }

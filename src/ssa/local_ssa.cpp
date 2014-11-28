@@ -27,6 +27,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "address_canonizer.h"
 #include "ssa_aliasing.h"
 
+#define TEMPLATE_DECL "c::__CPROVER_template"
+#define TEMPLATE_PARAM_PREFIX "__CPROVER_template_param"
+
 /*******************************************************************\
 
 Function: local_SSAt::build_SSA
@@ -343,6 +346,12 @@ void local_SSAt::build_transfer(locationt loc)
   if(loc->is_assign())
   {
     const code_assignt &code_assign=to_code_assign(loc->code);
+
+    // ignore return values from template declarations
+    if(code_assign.lhs().id()==ID_symbol && 
+       id2string(code_assign.lhs().get(ID_identifier)).
+       find(TEMPLATE_PARAM_PREFIX)!=std::string::npos) return;
+
     assign_rec(code_assign.lhs(), code_assign.rhs(), loc);
   }
 }
@@ -365,6 +374,17 @@ void local_SSAt::build_function_call(locationt loc)
   {
     const code_function_callt &code_function_call=
       to_code_function_call(loc->code);
+    nodest::iterator n_it = --nodes.end();
+
+    //template declarations
+    if(code_function_call.function().id()==ID_symbol &&
+       has_prefix(TEMPLATE_DECL,
+		  id2string(code_function_call.function().get(ID_identifier))))
+    {
+      assert(code_function_call.arguments().size()==1);
+      n_it->templates.push_back(code_function_call.arguments()[0]);
+      return;
+    }
 
     function_application_exprt f;
     f.function() = code_function_call.function();
@@ -372,7 +392,6 @@ void local_SSAt::build_function_call(locationt loc)
     f.arguments() = code_function_call.arguments(); 
     f = to_function_application_expr(read_rhs(f, loc));
 
-    nodest::iterator n_it = --nodes.end();
     assert(f.function().id()==ID_symbol); //no function pointers
     irep_idt fname = to_symbol_expr(f.function()).get_identifier();
  
