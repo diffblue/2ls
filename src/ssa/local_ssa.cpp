@@ -27,9 +27,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "address_canonizer.h"
 #include "ssa_aliasing.h"
 
-#define TEMPLATE_DECL "c::__CPROVER_template"
-#define TEMPLATE_PARAM_PREFIX "__CPROVER_template_param"
-
 /*******************************************************************\
 
 Function: local_SSAt::build_SSA
@@ -383,6 +380,12 @@ void local_SSAt::build_function_call(locationt loc)
     {
       assert(code_function_call.arguments().size()==1);
       n_it->templates.push_back(code_function_call.arguments()[0]);
+
+#if 0
+      std::cout << "found template declaration: " 
+		<< from_expr(ns,"",code_function_call.arguments()[0]) 
+		<< std::endl;
+#endif
       return;
     }
 

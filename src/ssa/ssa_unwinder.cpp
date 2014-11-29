@@ -1088,7 +1088,7 @@ void ssa_local_unwindert::add_connector_node(tree_loopnodet& current_loop,
       node.equalities.clear();
       node.assertions.clear();
       node.constraints.clear();
-
+      node.templates.clear();
     }
     else
     {
@@ -1096,10 +1096,10 @@ void ssa_local_unwindert::add_connector_node(tree_loopnodet& current_loop,
       cond_e=SSA.cond_symbol(bit->location);
       guard_e=SSA.guard_symbol(bit->location);
       node=*bit;
-                node.equalities.clear();
-                node.assertions.clear();
-                node.constraints.clear();
-
+      node.equalities.clear();
+      node.assertions.clear();
+      node.constraints.clear();
+      node.templates.clear();
     }
 
     for(exprst::iterator e_it=current_loop.connectors.begin();

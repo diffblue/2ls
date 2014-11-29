@@ -161,6 +161,7 @@ void summary_checkert::SSA_functions(const goto_modelt &goto_model,  const names
   forall_goto_functions(f_it, goto_model.goto_functions)
   {
     if(!f_it->second.body_available) continue;
+    if(f_it->first==TEMPLATE_DECL) continue;
 
     status() << "Computing SSA of " << f_it->first << messaget::eom;
     

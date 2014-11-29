@@ -45,7 +45,7 @@ void template_generator_summaryt::operator()(unsigned _domain_number,
     collect_variables_inout(SSA,forward);
 
   // either use standard templates or user-supplied ones
-  if(!get_user_defined_templates(SSA))
+  if(!instantiate_custom_templates(SSA))
     instantiate_standard_domains(SSA);
 
 #if 1

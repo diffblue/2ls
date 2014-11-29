@@ -106,6 +106,7 @@ public:
 
 protected:
   friend class strategy_solver_binsearcht;
+  friend class strategy_solver_enumerationt;
 
   templatet templ;
   

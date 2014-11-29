@@ -82,9 +82,21 @@ protected:
 		const domaint::kindt &kind,
 		domaint::var_specst &var_specs);
 
+  void get_pre_post_guards(const local_SSAt &SSA,
+			   local_SSAt::nodest::const_iterator n_it,
+			   exprt &pre_guard, exprt &post_guard);
+  void get_pre_var(const local_SSAt &SSA,
+  		   local_SSAt::objectst::const_iterator o_it,
+		   local_SSAt::nodest::const_iterator n_it,
+		   symbol_exprt &pre_var);
+
+  void build_custom_expr(const local_SSAt &SSA,
+			 local_SSAt::nodest::const_iterator n_it,
+			 exprt &expr);
+
   virtual void handle_special_functions(const local_SSAt &SSA);
   void instantiate_standard_domains(const local_SSAt &SSA);
-  bool get_user_defined_templates(const local_SSAt &SSA);
+  bool instantiate_custom_templates(const local_SSAt &SSA);
 
 };
 

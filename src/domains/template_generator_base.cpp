@@ -20,6 +20,62 @@ Author: Peter Schrammel
 #include <iostream>
 #endif
 
+/*******************************************************************\
+
+Function: template_generator_baset::get_pre_post_guards
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void template_generator_baset::get_pre_post_guards(const local_SSAt &SSA,
+			 local_SSAt::nodest::const_iterator n_it,
+			 exprt &pre_guard, exprt &post_guard)
+{
+  exprt lhguard = SSA.guard_symbol(n_it->loophead->location);
+  ssa_local_unwinder.unwinder_rename(to_symbol_expr(lhguard),*n_it,true);
+  exprt lsguard = SSA.name(SSA.guard_symbol(), 
+			   local_SSAt::LOOP_SELECT, n_it->location);
+  ssa_local_unwinder.unwinder_rename(to_symbol_expr(lsguard),*n_it,true);
+  pre_guard = and_exprt(lhguard,lsguard);
+
+  exprt pguard = SSA.guard_symbol(n_it->location);
+  ssa_local_unwinder.unwinder_rename(to_symbol_expr(pguard),*n_it,false);
+  exprt pcond = SSA.cond_symbol(n_it->location);
+  ssa_local_unwinder.unwinder_rename(to_symbol_expr(pcond),*n_it,false);
+  post_guard = and_exprt(pguard,pcond);
+}
+
+/*******************************************************************\
+
+Function: template_generator_baset::get_pre_var
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void template_generator_baset::get_pre_var(const local_SSAt &SSA,
+  		         local_SSAt::objectst::const_iterator o_it,
+   		         local_SSAt::nodest::const_iterator n_it,
+			 symbol_exprt &pre_var)
+{
+  pre_var = SSA.name(*o_it, local_SSAt::LOOP_BACK, n_it->location);
+  // pre_var = SSA.name(*o_it, local_SSAt::PHI, n_it->loophead->location);
+  ssa_local_unwinder.unwinder_rename(pre_var,*n_it,true);
+
+  symbol_exprt post_var = SSA.read_rhs(*o_it, n_it->location);
+  ssa_local_unwinder.unwinder_rename(post_var,*n_it,false);
+
+  renaming_map[pre_var]=post_var;    
+}
 
 /*******************************************************************\
 
@@ -44,18 +100,9 @@ void template_generator_baset::collect_variables_loop(const local_SSAt &SSA,bool
   {
     if(n_it->loophead != SSA.nodes.end()) //we've found a loop
     {
-      exprt lhguard = SSA.guard_symbol(n_it->loophead->location);
-      ssa_local_unwinder.unwinder_rename(to_symbol_expr(lhguard),*n_it,true);
-      exprt lsguard = SSA.name(SSA.guard_symbol(), local_SSAt::LOOP_SELECT, n_it->location);
-      ssa_local_unwinder.unwinder_rename(to_symbol_expr(lsguard),*n_it,true);
-      exprt pre_guard = and_exprt(lhguard,lsguard);
+      exprt pre_guard, post_guard;
+      get_pre_post_guards(SSA,n_it,pre_guard, post_guard);
 
-      exprt pguard = SSA.guard_symbol(n_it->location);
-      ssa_local_unwinder.unwinder_rename(to_symbol_expr(pguard),*n_it,false);
-      exprt pcond = SSA.cond_symbol(n_it->location);
-      ssa_local_unwinder.unwinder_rename(to_symbol_expr(pcond),*n_it,false);
-      exprt post_guard = and_exprt(pguard,pcond);
-      
       const ssa_domaint::phi_nodest &phi_nodes = 
         SSA.ssa_analysis[n_it->loophead->location].phi_nodes;
       
@@ -71,16 +118,9 @@ void template_generator_baset::collect_variables_loop(const local_SSAt &SSA,bool
 
 	if(p_it==phi_nodes.end()) continue; // object not modified in this loop
 
-        symbol_exprt in=SSA.name(*o_it, local_SSAt::LOOP_BACK, n_it->location);
-//        symbol_exprt in=SSA.name(*o_it, local_SSAt::PHI, n_it->loophead->location);
-        ssa_local_unwinder.unwinder_rename(in,*n_it,true);
-        symbol_exprt out=SSA.read_rhs(*o_it, n_it->location);
-        ssa_local_unwinder.unwinder_rename(out,*n_it,false);
-
-        add_var(in,pre_guard,post_guard,domaint::LOOP,var_specs);
-      
-        pre_state_vars.push_back(in);
-        post_state_vars.push_back(out);
+        symbol_exprt pre_var;
+	get_pre_var(SSA,o_it,n_it,pre_var);
+        add_var(pre_var,pre_guard,post_guard,domaint::LOOP,var_specs);
         
   #ifdef DEBUG
         std::cout << "Adding " << from_expr(ns, "", in) << " " << 
@@ -115,15 +155,6 @@ void template_generator_baset::collect_variables_loop(const local_SSAt &SSA,bool
       }
       */
     } 
-  }
-  
-  // building map for renaming from pre into post-state
-  assert(pre_state_vars.size()==post_state_vars.size());
-  var_listt::const_iterator it1=pre_state_vars.begin();
-  var_listt::const_iterator it2=post_state_vars.begin();
-  for(; it1!=pre_state_vars.end(); ++it1, ++it2)
-  {
-    renaming_map[*it1]=*it2;    
   }
 }
 
@@ -310,7 +341,55 @@ void template_generator_baset::handle_special_functions(const local_SSAt &SSA)
 
 /*******************************************************************\
 
-Function: template_generator_baset::get_user_defined_templates
+Function: template_generator_baset::build_custom_expr
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: rename custom template to correct SSA identifiers
+
+\*******************************************************************/
+
+void template_generator_baset::build_custom_expr(const local_SSAt &SSA,
+			 local_SSAt::nodest::const_iterator n_it,
+			 exprt &expr)
+{
+  replace_mapt replace_map;
+
+  const ssa_domaint::phi_nodest &phi_nodes = 
+    SSA.ssa_analysis[n_it->loophead->location].phi_nodes;
+      
+  for(local_SSAt::objectst::const_iterator
+          o_it=SSA.ssa_objects.objects.begin();
+          o_it!=SSA.ssa_objects.objects.end();
+          o_it++)
+  {
+    ssa_domaint::phi_nodest::const_iterator p_it=
+      phi_nodes.find(o_it->get_identifier());
+
+    if(p_it!=phi_nodes.end()) //modified in loop
+    {
+      //rename to lb
+      replace_map[o_it->get_expr()] = 
+        SSA.name(*o_it, local_SSAt::LOOP_BACK, n_it->location);
+      //TODO: unwinding
+    }
+    else //not modified in loop
+    {
+      //rename to id valid at loop head
+      replace_map[o_it->get_expr()] = 
+        SSA.read_rhs(*o_it,n_it->loophead->location);
+      //TODO: unwinding
+    }
+  }
+
+  replace_expr(replace_map,expr);
+}
+
+/*******************************************************************\
+
+Function: template_generator_baset::instantiate_custom_templates
 
   Inputs:
 
@@ -320,28 +399,52 @@ Function: template_generator_baset::get_user_defined_templates
 
 \*******************************************************************/
 
-bool template_generator_baset::get_user_defined_templates(const local_SSAt &SSA)
+bool template_generator_baset::instantiate_custom_templates(
+                               const local_SSAt &SSA)
 {
+  // used for renaming map
+  var_listt pre_state_vars, post_state_vars;
+
   bool found = false;
   for(local_SSAt::nodest::const_iterator n_it=SSA.nodes.begin(); 
       n_it!=SSA.nodes.end(); n_it++)
   {
-    if(n_it->templates.empty()) continue;
-    for(local_SSAt::nodet::templatest::const_iterator t_it=n_it->templates.begin(); 
-	t_it!=n_it->templates.end(); n_it++)
+    if(n_it->loophead != SSA.nodes.end()) //we've found a loop
     {
-      //template polyhedra
-      if(t_it->id()==ID_ge)
+      exprt pre_guard, post_guard;
+      get_pre_post_guards(SSA,n_it,pre_guard, post_guard);
+
+      //search for templates in the loop
+      for(local_SSAt::nodest::const_iterator nn_it=n_it->loophead; 
+	  nn_it!=n_it; nn_it++)
       {
-	found = true;
-	//static_cast<tpolyhedra_domaint *>(domain_ptr)->add_template_row();
-	//TODO
+	if(nn_it->templates.empty()) continue;
+	if(nn_it->templates.size()>1000) continue; //TODO: there is an unwinder-related bug
+	for(local_SSAt::nodet::templatest::const_iterator 
+	      t_it=nn_it->templates.begin(); 
+	    t_it!=nn_it->templates.end(); t_it++)
+	{
+	  //template polyhedra
+	  if(t_it->id()==ID_le)
+	  {
+	    if(!found) //create domain
+	    {
+	      domain_ptr = new tpolyhedra_domaint(domain_number,renaming_map);
+	      found = true;
+	    }
+	    exprt expr = t_it->op0();
+	    build_custom_expr(SSA,n_it,expr);
+	    static_cast<tpolyhedra_domaint *>(domain_ptr)->add_template_row(
+	      expr,pre_guard,post_guard,domaint::LOOP);
+	  }
+	  else
+	    warning() << "ignoring unsupported template " 
+		      << from_expr(SSA.ns,"",*t_it) << eom;
+	}
       }
-      else
-        warning() << "ignoring unsupported template " 
-		  << from_expr(SSA.ns,"",*t_it);
     }
   }
+
   return found;
 }
 

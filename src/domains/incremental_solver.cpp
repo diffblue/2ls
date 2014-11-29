@@ -72,13 +72,13 @@ void incremental_solvert::debug_add_to_formula(const exprt &expr)
     formula.push_back(!dummy);
 #ifdef DEBUG_OUTPUT
     debug() << "literal " << dummy << ", " << !dummy << ": " 
-	      << from_expr(ns,"",expr) << std::endl;
+	      << from_expr(ns,"",expr) << eom;
 #endif
   }
   else if(!l.is_true()) 
   {
 #ifdef DEBUG_OUTPUT
-    std::cout << "literal " << l << ": " << from_expr(ns,"",expr) << std::endl;
+    debug() << "literal " << l << ": " << from_expr(ns,"",expr) << eom;
 #endif
     formula.push_back(l);
   }

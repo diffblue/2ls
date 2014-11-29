@@ -39,7 +39,9 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
     //solver.set_frozen(strategy_cond_literals[i]);
     strategy_cond_exprs[i] = literal_exprt(strategy_cond_literals[i]);
   }
+#if 0
   debug() << eom;
+#endif
 
   solver << disjunction(strategy_cond_exprs);
 
@@ -64,15 +66,15 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
     {
       exprt c = tpolyhedra_domain.get_row_constraint(i,inv[i]);
       debug() << "cond: " << from_expr(ns, "", c) << " " << 
-	    from_expr(ns, "", solver.get(c)) << eom;
+	    from_expr(ns, "", solver.solver.get(c)) << eom;
       debug() << "guards: " << 
-        from_expr(ns, "", tpolyhedra_domain.templ.pre_guards[i]) << 
+        from_expr(ns, "", tpolyhedra_domain.templ[i].pre_guard) << 
         " " << from_expr(ns, "", 
-          solver.solver.get(tpolyhedra_domain.templ.pre_guards[i])) << eom;
+          solver.solver.get(tpolyhedra_domain.templ[i].pre_guard)) << eom;
       debug() << "guards: " << from_expr(ns, "", 
-          tpolyhedra_domain.templ.post_guards[i]) << " " 
+          tpolyhedra_domain.templ[i].post_guard) << " " 
 	  << from_expr(ns, "", 
-             solver.solver.get(tpolyhedra_domain.templ.post_guards[i])) << eom;
+             solver.solver.get(tpolyhedra_domain.templ[i].post_guard)) << eom;
     }    
 #endif
 
@@ -191,9 +193,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
       solver.pop_context(); // binary search iteration
     }
    
-#if 1
     debug() << "update value: " << from_expr(ns,"",lower) << eom;
-#endif
 
     solver.pop_context();  //symbolic value system
 
@@ -204,6 +204,16 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
   {
 #if 0
     debug() << "UNSAT" << eom;
+#endif
+
+#ifdef DEBUG_FORMULA
+    for(unsigned i=0; i<solver.formula.size(); i++) 
+    {
+      if(solver.solver.is_in_conflict(solver.formula[i]))
+	debug() << "is_in_conflict: " << solver.formula[i] << eom;
+      else
+	debug() << "not_in_conflict: " << solver.formula[i] << eom;
+    }
 #endif
 
     solver.pop_context(); //improvement check

@@ -19,6 +19,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "guard_map.h"
 #include "ssa_object.h"
 
+#define TEMPLATE_DECL "c::__CPROVER_template"
+#define TEMPLATE_PARAM_PREFIX "__CPROVER_template_param"
+
 class local_SSAt
 {
 public:
@@ -53,7 +56,8 @@ public:
 	marked(false),
         location(_location), 
         loophead(_loophead)
-      { }
+      { 
+      }
 
     exprt enabling_expr; //for incremental unwinding
 
@@ -71,7 +75,7 @@ public:
     typedef std::vector<function_application_exprt> function_callst;
     function_callst function_calls;
 
-    //user defined invariant templates
+    //custom invariant templates
     typedef std::vector<exprt> templatest;
     templatest templates;
 
