@@ -56,7 +56,7 @@ public:
 				const std::set<rowt> &symb_rows);
   exprt to_symb_post_constraints(const std::set<rowt> &symb_rows);
   exprt get_row_symb_value_constraint(const rowt &row, 
-				      const row_valuet &row_value);
+				      const row_valuet &row_value, bool geq=false);
   exprt get_row_symb_pre_constraint(const rowt &row, 
 				    const row_valuet &row_value);
   exprt get_row_symb_post_constraint(const rowt &row);

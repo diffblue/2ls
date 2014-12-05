@@ -466,17 +466,17 @@ Function: tpolyhedra_domaint::get_row_symb_value_constraint
 
  Outputs:
 
- Purpose: row_value <= symb_row_value
+ Purpose: row_value_value <= symb_row
 
 \*******************************************************************/
 
 exprt tpolyhedra_domaint::get_row_symb_value_constraint(const rowt &row, 
-						const row_valuet &row_value)
+			    	const row_valuet &row_value, bool geq)
 {
   if(is_row_value_neginf(row_value)) return false_exprt();
   if(is_row_value_inf(row_value)) return true_exprt();
-  exprt c = binary_relation_exprt(row_value,ID_le,get_row_symb_value(row));
-  //  rename(c); //not sure what this is for
+  exprt c = binary_relation_exprt(get_row_symb_value(row),
+				  geq ? ID_ge : ID_le,row_value);
   return c;
 }
 
