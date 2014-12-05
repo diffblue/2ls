@@ -70,7 +70,7 @@ void summaryt::output(std::ostream &out, const namespacet &ns) const
 
 /*******************************************************************\
 
-Function: summarizer_fwt::join_summaries()
+Function: summaryt::join()
 
   Inputs:
 

@@ -19,12 +19,12 @@ struct SDL_Surface img;
 // c::createBack
 // file Util.h line 35
 //void createBack(struct SDL_Surface **back_surface)
-void createBack(struct SDL_Surface *back_surface)
+void createBack(struct SDL_Surface back_surface)
 {
-  __CPROVER_assume(1<=img.h && img.h<=16384);
-  __CPROVER_assume(1<=img.w && img.w<=16384);
-  __CPROVER_assume(back_surface->w<=16384);
-  __CPROVER_assume(back_surface->h<=16384);
+  __CPROVER_assume(0<=img.h && img.h<=16384);
+  __CPROVER_assume(0<=img.w && img.w<=16384);
+  __CPROVER_assume(back_surface.w<=16384);
+  __CPROVER_assume(back_surface.h<=16384);
   signed int x;
   signed int y;
   struct SDL_Rect pos;
@@ -41,11 +41,11 @@ void createBack(struct SDL_Surface *back_surface)
 
   y = 0;
 //  for( ; !(y >= (*back_surface)->h); y = y + img->h)
-  for( ; !(y >= back_surface->h); y = y + img.h)
+  for( ; !(y >= back_surface.h); y = y + img.h)
   {
     x = 0;
 //    for( ; !(x >= (*back_surface)->w); x = x + img->w)
-    for( ; !(x >= back_surface->w); x = x + img.w)
+    for( ; !(x >= back_surface.w); x = x + img.w)
     {
       pos.x = (signed short int)x;
       pos.y = (signed short int)y;
@@ -61,5 +61,5 @@ void createBack(struct SDL_Surface *back_surface)
 void main()
 {
   struct SDL_Surface back_surface;
-  createBack(&back_surface);
+  createBack(back_surface);
 }
