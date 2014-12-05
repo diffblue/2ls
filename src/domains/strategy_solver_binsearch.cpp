@@ -177,7 +177,8 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 #endif
       
 #ifndef SEARCH_LOWER_HALF
-        lower = middle;
+      lower = simplify_const(
+      	    solver.solver.get(tpolyhedra_domain.get_row_symb_value(row)));
 #else
 //        if(!tpolyhedra_domain.less_than(middle,upper)) middle = lower;
         lower = simplify_const(
