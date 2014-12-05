@@ -151,7 +151,8 @@ domaint::var_sett template_generator_summaryt::loop_vars()
   for(domaint::var_specst::const_iterator v = var_specs.begin(); 
       v!=var_specs.end(); v++)
   {
-    if(v->kind==domaint::LOOP) vars.insert(v->var);
+    if(v->kind==domaint::LOOP || v->kind==domaint::IN) 
+      vars.insert(v->var);
   }
   return vars;
 }
