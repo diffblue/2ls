@@ -9,11 +9,15 @@ bool strategy_solver_predabst::iterate(invariantt &_inv)
     static_cast<predabs_domaint::templ_valuet &>(_inv);
 
   bool improved = false;
-  literalt activation_literal = new_context();
 
-  exprt pre_expr = predabs_domain.to_pre_constraints(inv);
+  solver.new_context();
 
-  solver << or_exprt(pre_expr,literal_exprt(activation_literal));
+  exprt preinv_expr = tpolyhedra_domain.to_pre_constraints(inv);
+#ifdef DEBUG_OUTPUT
+  debug() << "pre-inv: " << from_expr(ns,"",preinv_expr) << eom;
+#endif
+
+  solver << preinv_expr;
     
   exprt::operandst strategy_cond_exprs;
   predabs_domain.make_not_post_constraints(inv, 

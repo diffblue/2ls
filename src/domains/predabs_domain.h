@@ -61,8 +61,12 @@ public:
   unsigned template_size();
 
   // generating templates
-  void add_lin_inequ_template(const var_specst &var_specs,
-			      const namespacet &ns);
+  template_rowt &add_template_row(
+    const exprt& expr,
+    const exprt& pre_guard,
+    const exprt& post_guard,
+    kindt kind
+    );
 
 protected:
   templatet templ;
