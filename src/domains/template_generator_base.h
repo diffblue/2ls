@@ -90,7 +90,8 @@ protected:
 		   local_SSAt::nodest::const_iterator n_it,
 		   symbol_exprt &pre_var);
 
-  void build_custom_expr(const local_SSAt &SSA,
+  bool replace_post(replace_mapt replace_map, exprt &expr);
+  bool build_custom_expr(const local_SSAt &SSA,
 			 local_SSAt::nodest::const_iterator n_it,
 			 exprt &expr);
 

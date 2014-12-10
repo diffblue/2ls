@@ -190,6 +190,13 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
   analyzer.get_result(summary.transformer,template_generator.inout_vars());
   analyzer.get_result(summary.invariant,template_generator.loop_vars());
 
+#if 1
+  // to see all the custom template values
+  exprt whole_result;
+  analyzer.get_result(whole_result,template_generator.all_vars());
+  debug() << "whole result: " << from_expr(SSA.ns,"",whole_result) << eom;
+#endif
+
   if(context_sensitive && !summary.precondition.is_true())
   {
     summary.transformer = 

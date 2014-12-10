@@ -351,11 +351,36 @@ Function: template_generator_baset::build_custom_expr
 
 \*******************************************************************/
 
-void template_generator_baset::build_custom_expr(const local_SSAt &SSA,
+bool template_generator_baset::replace_post(replace_mapt replace_map, exprt &expr)
+{
+  bool replaced = false;
+  if(expr.id()==ID_function_application)
+  {
+    const function_application_exprt &f = to_function_application_expr(expr);
+    if(f.function().get(ID_identifier) == "c::" TEMPLATE_NEWVAR)
+    {
+      std::cout << f.arguments()[0] << std::endl;
+      assert(f.arguments().size()==1);
+      if(f.arguments()[0].id()==ID_typecast) 
+        expr = replace_map[f.arguments()[0].op0()];
+      else
+        expr = replace_map[f.arguments()[0]];
+      return true;
+    }
+  }
+  for(unsigned i=0; i<expr.operands().size(); i++)
+  {
+    bool _replaced = replace_post(replace_map,expr.operands()[i]);
+    replaced = replaced || _replaced;
+  }
+  return replaced;
+}
+
+bool template_generator_baset::build_custom_expr(const local_SSAt &SSA,
 			 local_SSAt::nodest::const_iterator n_it,
 			 exprt &expr)
 {
-  replace_mapt replace_map;
+  replace_mapt replace_map, replace_post_map;
 
   const ssa_domaint::phi_nodest &phi_nodes = 
     SSA.ssa_analysis[n_it->loophead->location].phi_nodes;
@@ -370,9 +395,13 @@ void template_generator_baset::build_custom_expr(const local_SSAt &SSA,
 
     if(p_it!=phi_nodes.end()) //modified in loop
     {
-      //rename to lb
+      //rename to pre
       replace_map[o_it->get_expr()] = 
         SSA.name(*o_it, local_SSAt::LOOP_BACK, n_it->location);
+
+      //rename to post
+      replace_post_map[o_it->get_expr()] = 
+        SSA.read_rhs(*o_it, n_it->location);
       //TODO: unwinding
     }
     else //not modified in loop
@@ -384,7 +413,9 @@ void template_generator_baset::build_custom_expr(const local_SSAt &SSA,
     }
   }
 
+  bool contains_newvar = replace_post(replace_post_map,expr);
   replace_expr(replace_map,expr);
+  return contains_newvar;
 }
 
 /*******************************************************************\
@@ -433,15 +464,31 @@ bool template_generator_baset::instantiate_custom_templates(
 	      found = true;
 	    }
 	    exprt expr = t_it->op0();
-	    build_custom_expr(SSA,n_it,expr);
+	    domaint::kindt k = 
+	      build_custom_expr(SSA,n_it,expr) ? domaint::OUT : domaint::LOOP;
 	    static_cast<tpolyhedra_domaint *>(domain_ptr)->add_template_row(
-	      expr,pre_guard,post_guard,domaint::LOOP);
+	      expr,pre_guard,post_guard,k);
 	  }
 	  else
 	    warning() << "ignoring unsupported template " 
 		      << from_expr(SSA.ns,"",*t_it) << eom;
 	}
       }
+    }
+  }
+
+  // add post vars to var specs to ensure that the results can be retrieved
+  domaint::var_specst new_var_specs(var_specs);
+  var_specs.clear();
+  for(domaint::var_specst::const_iterator v = new_var_specs.begin(); 
+      v!=new_var_specs.end(); v++)
+  {
+    var_specs.push_back(*v);
+    if(v->kind==domaint::LOOP)
+    {
+      var_specs.push_back(*v);
+      replace_expr(renaming_map,var_specs.back().var);
+      var_specs.back().kind = domaint::OUT;
     }
   }
 

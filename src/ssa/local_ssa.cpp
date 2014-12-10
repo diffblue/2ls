@@ -309,6 +309,10 @@ void local_SSAt::build_phi_nodes(locationt loc)
           
     if(p_it==phi_nodes.end()) continue; // none
     
+    //ignore custom template variables
+    if(id2string(o_it->get_identifier()).
+       find(TEMPLATE_PREFIX)!=std::string::npos) continue; 
+
     // Yes. Get the source -> def map.
     const std::map<locationt, ssa_domaint::deft> &incoming=p_it->second;
 
@@ -380,10 +384,23 @@ void local_SSAt::build_transfer(locationt loc)
   {
     const code_assignt &code_assign=to_code_assign(loc->code);
 
-    // ignore return values from template declarations
+    // template declarations    
     if(code_assign.lhs().id()==ID_symbol && 
        id2string(code_assign.lhs().get(ID_identifier)).
-       find(TEMPLATE_PARAM_PREFIX)!=std::string::npos) return;
+         find("return_value_" TEMPLATE_NEWVAR) != std::string::npos)
+    {
+      //propagate equalities through replace map
+      exprt lhs = code_assign.lhs();
+      template_newvars[lhs] = template_newvars[template_last_newvar];
+      template_last_newvar = lhs;
+      return;
+    }
+    if(code_assign.lhs().id()==ID_symbol && 
+       id2string(code_assign.lhs().get(ID_identifier)).
+       find(TEMPLATE_PREFIX)!=std::string::npos) return; 
+    if(code_assign.rhs().id()==ID_symbol && 
+       id2string(code_assign.rhs().get(ID_identifier)).
+       find(TEMPLATE_PREFIX)!=std::string::npos) return; 
 
     assign_rec(code_assign.lhs(), code_assign.rhs(), loc);
   }
@@ -417,23 +434,38 @@ void local_SSAt::build_function_call(locationt loc)
       assert(code_function_call.arguments().size()==1);
       n_it->templates.push_back(code_function_call.arguments()[0]);
 
+      // replace "new" vars
+      replace_expr(template_newvars,n_it->templates.back());
+
 #if 0
       std::cout << "found template declaration: " 
 		<< from_expr(ns,"",code_function_call.arguments()[0]) 
 		<< std::endl;
 #endif
+      template_newvars.clear();
       return;
     }
 
+    //turn function call into expression
     function_application_exprt f;
     f.function() = code_function_call.function();
     f.type() = code_function_call.lhs().type();
     f.arguments() = code_function_call.arguments(); 
-    f = to_function_application_expr(read_rhs(f, loc));
 
+    //access to "new" value in template declarations
+    if(code_function_call.function().id()==ID_symbol &&
+       has_prefix("c::" TEMPLATE_NEWVAR,
+		  id2string(code_function_call.function().get(ID_identifier))))
+    {
+      assert(code_function_call.arguments().size()==1);
+      template_last_newvar = f;
+      template_newvars[template_last_newvar] = template_last_newvar;			
+      return;
+    }
+
+    f = to_function_application_expr(read_rhs(f, loc));
     assert(f.function().id()==ID_symbol); //no function pointers
     irep_idt fname = to_symbol_expr(f.function()).get_identifier();
- 
    //add equalities for arguments
     unsigned i=0;
     for(exprt::operandst::iterator it =  f.arguments().begin();

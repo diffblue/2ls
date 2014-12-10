@@ -19,8 +19,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "guard_map.h"
 #include "ssa_object.h"
 
-#define TEMPLATE_DECL "c::__CPROVER_template"
-#define TEMPLATE_PARAM_PREFIX "__CPROVER_template_param"
+#define TEMPLATE_PREFIX "__CPROVER_template"
+#define TEMPLATE_DECL "c::" TEMPLATE_PREFIX
+#define TEMPLATE_NEWVAR TEMPLATE_PREFIX "_newvar"
+#define TEMPLATE_PARAM_PREFIX TEMPLATE_PREFIX "_param"
 
 class local_SSAt
 {
@@ -183,7 +185,10 @@ protected:
   void build_function_call(locationt loc);
   void build_assertions(locationt loc);
 
+  // custom templates
   void collect_custom_templates();
+  replace_mapt template_newvars;
+  exprt template_last_newvar;
 };
 
 std::list<exprt> & operator <<
