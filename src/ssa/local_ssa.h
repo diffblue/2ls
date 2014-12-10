@@ -182,6 +182,8 @@ protected:
   void build_guard(locationt loc);
   void build_function_call(locationt loc);
   void build_assertions(locationt loc);
+
+  void collect_custom_templates();
 };
 
 std::list<exprt> & operator <<

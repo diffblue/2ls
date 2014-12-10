@@ -61,6 +61,9 @@ void local_SSAt::build_SSA()
     build_function_call(i_it);
   }
 
+  // collect custom templates in loop heads
+  collect_custom_templates();
+
   // entry and exit variables
   get_entry_exit_vars();
 }
@@ -150,6 +153,39 @@ void local_SSAt::get_globals(locationt loc, std::set<symbol_exprt> &globals,
     }
   }
 }   
+
+/*******************************************************************\
+
+Function: local_SSAt::collect_custom_templates
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void local_SSAt::collect_custom_templates()
+{
+  for(local_SSAt::nodest::iterator n_it=nodes.begin(); 
+      n_it!=nodes.end(); n_it++)
+  {
+    if(n_it->loophead != nodes.end()) //we've found a loop
+    {
+      //search for templates in the loop
+      for(local_SSAt::nodest::iterator nn_it=n_it->loophead; 
+	  nn_it!=n_it; nn_it++)
+      {
+	if(nn_it->templates.empty()) continue;
+	n_it->loophead->templates.insert(n_it->loophead->templates.end(),
+					 nn_it->templates.begin(),
+					 nn_it->templates.end());
+	nn_it->templates.clear();
+      }
+    }
+  }
+}
 
 /*******************************************************************\
 
