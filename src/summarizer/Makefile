@@ -42,11 +42,13 @@ DELTA_OBJ+=\
       ../domains/fixed_point$(OBJEXT) \
       ../domains/ssa_fixed_point$(OBJEXT) \
       ../domains/tpolyhedra_domain$(OBJEXT) \
+      ../domains/predabs_domain$(OBJEXT) \
       ../domains/equality_domain$(OBJEXT) \
       ../domains/domain$(OBJEXT) \
       ../domains/util$(OBJEXT) \
       ../domains/incremental_solver$(OBJEXT) \
       ../domains/strategy_solver_base$(OBJEXT) \
+      ../domains/strategy_solver_predabs$(OBJEXT) \
       ../domains/strategy_solver_equality$(OBJEXT) \
       ../domains/strategy_solver_enumeration$(OBJEXT) \
       ../domains/strategy_solver_binsearch$(OBJEXT) \
