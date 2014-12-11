@@ -313,7 +313,7 @@ void predabs_domaint::output_domain(std::ostream &out, const namespacet &ns) con
     default: assert(false);
     }
     out << "( " << 
-        from_expr(ns,"",templ_row.expr) << " <= CONST )" << std::endl;
+        from_expr(ns,"",templ_row.expr) << ")" << std::endl;
   }
 }
 
@@ -334,4 +334,48 @@ unsigned predabs_domaint::template_size()
   return templ.size();
 }
 
+/*******************************************************************\
 
+Function: add_template_row
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+predabs_domaint::template_rowt &predabs_domaint::add_template_row(
+  const exprt& expr,
+  const exprt& pre_guard,
+  const exprt& post_guard,
+  kindt kind
+  )
+{
+  templ.push_back(template_rowt());
+  template_rowt &templ_row = templ.back();
+  templ_row.expr = expr;
+  //extend_expr_types(templ_row.expr);
+  templ_row.pre_guard = pre_guard;
+  templ_row.post_guard = post_guard;
+  templ_row.kind = kind;
+  return templ_row;
+}
+
+/*******************************************************************\
+
+Function: equality_domaint::get_var_pairs
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void predabs_domaint::get_row_set(std::set<rowt> &rows) 
+{
+  for(unsigned i=0;i<templ.size(); i++) rows.insert(i);
+}

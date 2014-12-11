@@ -14,6 +14,7 @@ public:
   typedef unsigned rowt;
   typedef exprt row_exprt; //predicate
   typedef constant_exprt row_valuet; //true/false
+  typedef std::set<rowt> row_sett;
 
   class templ_valuet : public domaint::valuet, public std::vector<row_valuet> 
   {
@@ -29,8 +30,8 @@ public:
 
   typedef std::vector<template_rowt> templatet;
 
-  predabs_domaint(replace_mapt &_renaming_map) :
-    domaint(_renaming_map)
+  predabs_domaint(unsigned _domain_number, replace_mapt &_renaming_map) :
+  domaint(_domain_number, _renaming_map)
   {}
 
   // initialize value
@@ -67,6 +68,8 @@ public:
     const exprt& post_guard,
     kindt kind
     );
+
+  void get_row_set(row_sett &rows); 
 
 protected:
   templatet templ;
