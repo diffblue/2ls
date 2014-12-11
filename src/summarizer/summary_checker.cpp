@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/i2string.h>
 #include <util/simplify_expr.h>
 #include <langapi/language_util.h>
+#include <util/prefix.h>
 
 #include <solvers/sat/satcheck.h>
 #include <solvers/flattening/bv_pointers.h>
@@ -161,10 +162,9 @@ void summary_checkert::SSA_functions(const goto_modelt &goto_model,  const names
   forall_goto_functions(f_it, goto_model.goto_functions)
   {
     if(!f_it->second.body_available) continue;
-    if(f_it->first==TEMPLATE_DECL) continue;
-
+    if(has_prefix(id2string(f_it->first),TEMPLATE_DECL)) continue;
     status() << "Computing SSA of " << f_it->first << messaget::eom;
-    
+   
     ssa_db.create(f_it->first, f_it->second, ns);
     local_SSAt &SSA = ssa_db.get(f_it->first);
     

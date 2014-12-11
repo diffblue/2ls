@@ -249,12 +249,32 @@ exprt tpolyhedra_domaint::get_row_post_constraint(const rowt &row,
   assert(row<templ.size());
   const template_rowt &templ_row = templ[row];
   if(templ_row.kind==IN) return true_exprt();
+
+#if 0 //TEST for disjunctive domains
+  if(templ.size()==4)
+  {
+  exprt guard = true_exprt();
+  if(row==1 || row==3) 
+    return guard = 
+      binary_relation_exprt(templ_row.expr,ID_gt,from_integer(mp_integer(0),templ_row.expr.type()));
+  else
+    return guard =
+      binary_relation_exprt(templ_row.expr,ID_lt,from_integer(mp_integer(0),templ_row.expr.type()));
   if(is_row_value_neginf(row_value)) 
-    return implies_exprt(templ_row.post_guard, false_exprt());
+    return implies_exprt(templ_row.post_guard, implies_exprt(guard,false_exprt()));
   if(is_row_value_inf(row_value)) 
-    return implies_exprt(templ_row.post_guard, true_exprt());
+    return implies_exprt(templ_row.post_guard, implies_exprt(guard,true_exprt()));
   exprt c = implies_exprt(templ_row.post_guard, 
-    binary_relation_exprt(templ_row.expr,ID_le,row_value));
+			  implies_exprt(guard,binary_relation_exprt(templ_row.expr,ID_le,row_value)));
+  }
+#endif
+
+  if(is_row_value_neginf(row_value)) 
+    return implies_exprt(templ_row.post_guard,false_exprt());
+  if(is_row_value_inf(row_value)) 
+    return implies_exprt(templ_row.post_guard,true_exprt());
+  exprt c = implies_exprt(templ_row.post_guard, 
+	    binary_relation_exprt(templ_row.expr,ID_le,row_value));
   rename(c);
   return c;
 }
