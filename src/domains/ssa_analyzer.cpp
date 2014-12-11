@@ -18,6 +18,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "strategy_solver_binsearch2.h"
 #include "strategy_solver_binsearch3.h"
 #include "strategy_solver_equality.h"
+#include "strategy_solver_predabs.h"
 #include "ssa_analyzer.h"
 
 #include <solvers/sat/satcheck.h>
@@ -77,16 +78,22 @@ void ssa_analyzert::operator()(incremental_solvert &solver,
   }
   else
   {
-    result = new tpolyhedra_domaint::templ_valuet();
     if(template_generator.options.get_bool_option("enum-solver"))
     {
+      result = new tpolyhedra_domaint::templ_valuet();
       strategy_solver = new strategy_solver_enumerationt(
         *static_cast<tpolyhedra_domaint *>(domain), solver, SSA.ns);
     }
+    else if(template_generator.options.get_bool_option("predabs-solver"))
+    {
+      result = new predabs_domaint::templ_valuet();
+      strategy_solver = new strategy_solver_predabst(
+        *static_cast<predabs_domaint *>(domain), solver, SSA.ns);
+    }
     else if(template_generator.options.get_bool_option("binsearch-solver"))
     {
-      strategy_solver = 
-        new BINSEARCH_SOLVER;
+      result = new tpolyhedra_domaint::templ_valuet();
+      strategy_solver = new BINSEARCH_SOLVER;
     }
     else assert(false);
   }

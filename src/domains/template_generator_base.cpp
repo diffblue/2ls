@@ -9,6 +9,7 @@ Author: Peter Schrammel
 #include "template_generator_base.h"
 #include "equality_domain.h"
 #include "tpolyhedra_domain.h"
+#include "predabs_domain.h"
 
 #include <util/find_symbols.h>
 #include <util/arith_tools.h>
@@ -436,7 +437,7 @@ bool template_generator_baset::instantiate_custom_templates(
   // used for renaming map
   var_listt pre_state_vars, post_state_vars;
 
-  bool found = false;
+  bool found_poly = false, found_predabs = false;
   for(local_SSAt::nodest::const_iterator n_it=SSA.nodes.begin(); 
       n_it!=SSA.nodes.end(); n_it++)
   {
@@ -448,51 +449,72 @@ bool template_generator_baset::instantiate_custom_templates(
       //search for templates in the loop
       for(local_SSAt::nodest::const_iterator nn_it=n_it->loophead; 
 	  nn_it!=n_it; nn_it++)
-      {
-	if(nn_it->templates.empty()) continue;
-	if(nn_it->templates.size()>1000) continue; //TODO: there is an unwinder-related bug
-	for(local_SSAt::nodet::templatest::const_iterator 
-	      t_it=nn_it->templates.begin(); 
-	    t_it!=nn_it->templates.end(); t_it++)
 	{
-	  //template polyhedra
-	  if(t_it->id()==ID_le)
-	  {
-	    if(!found) //create domain
+	  if(nn_it->templates.empty()) continue;
+	  if(nn_it->templates.size()>1000) continue; //TODO: there is an unwinder-related bug
+	  for(local_SSAt::nodet::templatest::const_iterator 
+		t_it=nn_it->templates.begin(); 
+	      t_it!=nn_it->templates.end(); t_it++)
 	    {
-	      domain_ptr = new tpolyhedra_domaint(domain_number,renaming_map);
-	      found = true;
+
+	      // check whether it is a template polyhedra or a pred abs
+	      std::set<symbol_exprt> symbols;
+	      find_symbols(*t_it, symbols);
+
+	      bool predabs = true;
+	      for(std::set<symbol_exprt>::iterator it = symbols.begin();
+	      	  it != symbols.end(); it++)
+	      	{
+	      	  //std::cout << "Symbol: " << it->get_identifier() << std::endl;	
+	      	  std::size_t found_param = id2string(it->get_identifier()).find(TEMPLATE_PARAM_PREFIX);
+	      	  if (found_param != std::string::npos)
+	      	    {
+	      	      predabs = false;
+	      	      break;
+	      	    }
+	      	}
+
+
+	      //template polyhedra
+	      //if(t_it->id()==ID_le)
+	      if(!predabs && t_it->id()==ID_le)
+		{
+		  std::cout << "[Generator_base] : Polyhedra domain" << std::endl;
+		  if(!found_poly) //create domain
+		    {
+		      domain_ptr = new tpolyhedra_domaint(domain_number,renaming_map);
+		      found_poly = true;
+		    }
+		  exprt expr = t_it->op0();
+		  build_custom_expr(SSA,n_it,expr);
+		  static_cast<tpolyhedra_domaint *>(domain_ptr)->add_template_row(expr,pre_guard,post_guard,domaint::LOOP);
+		}
+	      // pred abs domain
+	      else if (predabs) 
+		{
+		  
+		  options.set_option("predabs-solver",true);
+
+  		  std::cout << "[Generator_base] : Predabs domain" << std::endl;
+		  if(!found_predabs) //create domain
+		    {
+		      domain_ptr = new predabs_domaint(domain_number,renaming_map);
+		      found_predabs = true;
+		    }
+		  exprt expr = *t_it;
+		  build_custom_expr(SSA,n_it,expr);
+		  static_cast<predabs_domaint *>(domain_ptr)->add_template_row(expr,pre_guard,post_guard,domaint::LOOP);
+		  
+		}
+	      else // neither pred abs, nor polyhedra
+		warning() << "ignoring unsupported template " 
+			  << from_expr(SSA.ns,"",*t_it) << eom;
 	    }
-	    exprt expr = t_it->op0();
-	    domaint::kindt k = 
-	      build_custom_expr(SSA,n_it,expr) ? domaint::OUT : domaint::LOOP;
-	    static_cast<tpolyhedra_domaint *>(domain_ptr)->add_template_row(
-	      expr,pre_guard,post_guard,k);
-	  }
-	  else
-	    warning() << "ignoring unsupported template " 
-		      << from_expr(SSA.ns,"",*t_it) << eom;
 	}
-      }
     }
   }
 
-  // add post vars to var specs to ensure that the results can be retrieved
-  domaint::var_specst new_var_specs(var_specs);
-  var_specs.clear();
-  for(domaint::var_specst::const_iterator v = new_var_specs.begin(); 
-      v!=new_var_specs.end(); v++)
-  {
-    var_specs.push_back(*v);
-    if(v->kind==domaint::LOOP)
-    {
-      var_specs.push_back(*v);
-      replace_expr(renaming_map,var_specs.back().var);
-      var_specs.back().kind = domaint::OUT;
-    }
-  }
-
-  return found;
+  return (found_poly || found_predabs);
 }
 
 /*******************************************************************\
