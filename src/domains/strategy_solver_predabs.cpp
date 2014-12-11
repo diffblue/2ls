@@ -3,60 +3,65 @@
 #include <util/simplify_expr.h>
 #include "strategy_solver_predabs.h"
 
+#define DEBUG_OUTPUT
+
 bool strategy_solver_predabst::iterate(invariantt &_inv) 
 {
   predabs_domaint::templ_valuet &inv = 
     static_cast<predabs_domaint::templ_valuet &>(_inv);
 
-  bool improved = false;
+  worklistt::iterator e_it = todo_preds.begin();
+  if(e_it != todo_preds.end()) //check positive preds
+    {
+      solver.new_context();
+      exprt preinv_expr = predabs_domain.get_row_pre_constraint(*e_it, true_exprt());
 
-  solver.new_context();
-
-  exprt preinv_expr = tpolyhedra_domain.to_pre_constraints(inv);
 #ifdef DEBUG_OUTPUT
-  debug() << "pre-inv: " << from_expr(ns,"",preinv_expr) << eom;
+      debug() << "pre-pred: " << from_expr(ns,"",preinv_expr) << eom;
 #endif
 
-  solver << preinv_expr;
+      solver << preinv_expr;
     
-  exprt::operandst strategy_cond_exprs;
-  predabs_domain.make_not_post_constraints(inv, 
-    strategy_cond_exprs); 
-  
-  strategy_cond_literals.resize(strategy_cond_exprs.size());
-  
-  debug() << "post-inv: ";
-  for(unsigned i = 0; i<strategy_cond_exprs.size(); i++)
-  {  
-    debug() << (i>0 ? " || " : "") << from_expr(ns,"",strategy_cond_exprs[i]) ;
+      exprt strategy_cond_expr;
+      strategy_cond_expr = predabs_domain.get_row_post_constraint(*e_it, true_exprt()); 
 
-    strategy_cond_literals[i] = solver.convert(strategy_cond_exprs[i]);
-    strategy_cond_exprs[i] = literal_exprt(strategy_cond_literals[i]);
-  }
-  debug() << eom;
+      literalt cond_literal = solver.solver.convert(not_exprt(strategy_cond_expr));
+      solver << literal_exprt(cond_literal);
 
-  solver << or_exprt(disjunction(strategy_cond_exprs),
-		     literal_exprt(activation_literal));
+#ifdef DEBUG_OUTPUT
+      debug() << "post-pred: " << from_expr(ns,"",not_exprt(strategy_cond_expr)) << eom;
+#endif
 
-  if(solve() == decision_proceduret::D_SATISFIABLE) 
-  { 
-    debug() << "SAT" << eom;
-    for(unsigned row=0;row<strategy_cond_literals.size(); row++)
-    {
-      if(solver.l_get(strategy_cond_literals[row]).is_true()) 
-      {
-        debug() << "updating row: " << row << eom;
-        predabs_domain.set_row_value(row,true_exprt(),inv);
-      }
+
+      if(solver() == decision_proceduret::D_SATISFIABLE) 
+	{ 
+	  debug() << "SAT" << eom;
+
+	  todo_notpreds.insert(*e_it);
+
+	  solver.pop_context();
+
+	}
+      else 
+	{
+
+	  debug() << "UNSAT" << eom;
+
+	  predabs_domain.set_row_value(*e_it, true_exprt(), inv);
+
+	  solver.pop_context();
+
+	  solver << preinv_expr; //make permanent
+
+	  //due to transitivity, we would like to recheck predicates that did not hold
+	  todo_preds.insert(todo_notpreds.begin(),todo_notpreds.end());
+	  todo_notpreds.clear();
+	}
+
+      todo_preds.erase(e_it);
+
+      return true;
     }
-    improved = true;
-  }
-  else 
-  {
-    debug() << "UNSAT" << eom;
-  }
 
-  pop_context();
-
-  return improved;
+  return false;
 }
