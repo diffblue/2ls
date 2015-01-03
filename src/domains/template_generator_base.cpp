@@ -360,7 +360,6 @@ bool template_generator_baset::replace_post(replace_mapt replace_map, exprt &exp
     const function_application_exprt &f = to_function_application_expr(expr);
     if(f.function().get(ID_identifier) == "c::" TEMPLATE_NEWVAR)
     {
-      std::cout << f.arguments()[0] << std::endl;
       assert(f.arguments().size()==1);
       if(f.arguments()[0].id()==ID_typecast) 
         expr = replace_map[f.arguments()[0].op0()];
@@ -445,72 +444,97 @@ bool template_generator_baset::instantiate_custom_templates(
     {
       exprt pre_guard, post_guard;
       get_pre_post_guards(SSA,n_it,pre_guard, post_guard);
+      bool add_post_vars = false;
 
       //search for templates in the loop
       for(local_SSAt::nodest::const_iterator nn_it=n_it->loophead; 
 	  nn_it!=n_it; nn_it++)
+      {
+	if(nn_it->templates.empty()) continue;
+	if(nn_it->templates.size()>1000) continue; //TODO: there is an unwinder-related bug
+	for(local_SSAt::nodet::templatest::const_iterator 
+	      t_it=nn_it->templates.begin(); 
+	    t_it!=nn_it->templates.end(); t_it++)
 	{
-	  if(nn_it->templates.empty()) continue;
-	  if(nn_it->templates.size()>1000) continue; //TODO: there is an unwinder-related bug
-	  for(local_SSAt::nodet::templatest::const_iterator 
-		t_it=nn_it->templates.begin(); 
-	      t_it!=nn_it->templates.end(); t_it++)
-	    {
+	  debug() << "Template expression: " 
+		  << from_expr(SSA.ns,"",*t_it) << eom;
 
-	      // check whether it is a template polyhedra or a pred abs
-	      std::set<symbol_exprt> symbols;
-	      find_symbols(*t_it, symbols);
+	  // check whether it is a template polyhedra or a pred abs
+	  std::set<symbol_exprt> symbols;
+	  find_symbols(*t_it, symbols);
 
-	      bool predabs = true;
-	      for(std::set<symbol_exprt>::iterator it = symbols.begin();
-	      	  it != symbols.end(); it++)
-	      	{
-	      	  //std::cout << "Symbol: " << it->get_identifier() << std::endl;	
-	      	  std::size_t found_param = id2string(it->get_identifier()).find(TEMPLATE_PARAM_PREFIX);
-	      	  if (found_param != std::string::npos)
-	      	    {
-	      	      predabs = false;
-	      	      break;
-	      	    }
-	      	}
-
-
-	      //template polyhedra
-	      //if(t_it->id()==ID_le)
-	      if(!predabs && t_it->id()==ID_le)
-		{
-		  std::cout << "[Generator_base] : Polyhedra domain" << std::endl;
-		  if(!found_poly) //create domain
-		    {
-		      domain_ptr = new tpolyhedra_domaint(domain_number,renaming_map);
-		      found_poly = true;
-		    }
-		  exprt expr = t_it->op0();
-		  build_custom_expr(SSA,n_it,expr);
-		  static_cast<tpolyhedra_domaint *>(domain_ptr)->add_template_row(expr,pre_guard,post_guard,domaint::LOOP);
-		}
-	      // pred abs domain
-	      else if (predabs) 
-		{
-		  
-		  options.set_option("predabs-solver",true);
-
-  		  std::cout << "[Generator_base] : Predabs domain" << std::endl;
-		  if(!found_predabs) //create domain
-		    {
-		      domain_ptr = new predabs_domaint(domain_number,renaming_map);
-		      found_predabs = true;
-		    }
-		  exprt expr = *t_it;
-		  build_custom_expr(SSA,n_it,expr);
-		  static_cast<predabs_domaint *>(domain_ptr)->add_template_row(expr,pre_guard,post_guard,domaint::LOOP);
-		  
-		}
-	      else // neither pred abs, nor polyhedra
-		warning() << "ignoring unsupported template " 
-			  << from_expr(SSA.ns,"",*t_it) << eom;
+	  bool predabs = true;
+	  for(std::set<symbol_exprt>::iterator it = symbols.begin();
+	      it != symbols.end(); it++)
+	  {
+	    //std::cout << "Symbol: " << it->get_identifier() << std::endl;	
+	    std::size_t found_param = 
+	      id2string(it->get_identifier()).find(TEMPLATE_PARAM_PREFIX);
+	    if (found_param != std::string::npos)
+	    {              
+	      predabs = false;
+	      break;
 	    }
+	  }
+
+	  //template polyhedra
+	  if(!predabs && t_it->id()==ID_le)
+	  {
+	    std::cout << "[Generator_base] : Polyhedra domain" << std::endl;
+	    if(!found_poly) //create domain
+	    {
+	      domain_ptr = new tpolyhedra_domaint(domain_number,renaming_map);
+	      found_poly = true;
+	    }
+	    exprt expr = t_it->op0();
+	    bool contains_new_var = build_custom_expr(SSA,n_it,expr);
+	    if(contains_new_var) add_post_vars = true;
+	    static_cast<tpolyhedra_domaint *>(domain_ptr)->add_template_row(
+		expr,pre_guard,
+		contains_new_var ? and_exprt(pre_guard,post_guard) : post_guard,
+		contains_new_var ? domaint::OUT : domaint::LOOP);
+	  }
+	  // pred abs domain
+	  else if (predabs) 
+	  {
+	    options.set_option("predabs-solver",true);
+
+	    std::cout << "[Generator_base] : Predabs domain" << std::endl;
+	    if(!found_predabs) //create domain
+	    {
+	      domain_ptr = new predabs_domaint(domain_number,renaming_map);
+	      found_predabs = true;
+	    }
+	    exprt expr = *t_it;
+	    bool contains_new_var = build_custom_expr(SSA,n_it,expr);
+	    if(contains_new_var) add_post_vars = true;
+	    static_cast<predabs_domaint *>(domain_ptr)->add_template_row(
+		expr,pre_guard,
+		contains_new_var ? and_exprt(pre_guard,post_guard) : post_guard,
+		contains_new_var ? domaint::OUT : domaint::LOOP);
+		  
+	  }
+	  else // neither pred abs, nor polyhedra
+	    warning() << "ignoring unsupported template " 
+		      << from_expr(SSA.ns,"",*t_it) << eom;
 	}
+	if(add_post_vars) //for result retrieval via all_vars() only
+	{
+	  domaint::var_specst new_var_specs(var_specs);
+	  var_specs.clear();
+	  for(domaint::var_specst::const_iterator v = new_var_specs.begin(); 
+	      v!=new_var_specs.end(); v++)
+	  {
+	    var_specs.push_back(*v);
+	    if(v->kind==domaint::LOOP)
+	    {
+	      var_specs.push_back(*v);
+	      var_specs.back().kind = domaint::OUTL;
+              replace_expr(renaming_map,var_specs.back().var);
+	    }
+	  }
+	}
+      }
     }
   }
 

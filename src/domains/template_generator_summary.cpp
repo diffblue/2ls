@@ -48,9 +48,11 @@ void template_generator_summaryt::operator()(unsigned _domain_number,
   if(!instantiate_custom_templates(SSA))
     instantiate_standard_domains(SSA);
 
-#if 1
+#ifdef SHOW_TEMPLATE_VARIABLES
   debug() << "Template variables: " << eom;
   domaint::output_var_specs(debug(),var_specs,SSA.ns); debug() << eom;
+#endif  
+#ifdef SHOW_TEMPLATE
   debug() << "Template: " << eom;
   domain_ptr->output_domain(debug(), SSA.ns); debug() << eom;
 #endif  

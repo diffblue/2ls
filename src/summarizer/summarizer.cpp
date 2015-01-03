@@ -23,6 +23,9 @@ Author: Peter Schrammel
 #include "../ssa/local_ssa.h"
 #include "../ssa/simplify_ssa.h"
 
+//#define REUSE_INVARIANTS
+//#define SHOW_WHOLE_RESULT
+
 /*******************************************************************\
 
 Function: summarizert::initialize_preconditions()
@@ -165,7 +168,7 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
   template_generator(solver.next_domain_number(),SSA,forward);
 
   exprt cond = preconditions[function_name];
-#if 0
+#ifdef REUSE_INVARIANTS
   if(summary_db.exists(function_name)) //reuse existing invariants
   {
     std::ostringstream out;
@@ -190,7 +193,7 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
   analyzer.get_result(summary.transformer,template_generator.inout_vars());
   analyzer.get_result(summary.invariant,template_generator.loop_vars());
 
-#if 1
+#ifdef SHOW_WHOLE_RESULT
   // to see all the custom template values
   exprt whole_result;
   analyzer.get_result(whole_result,template_generator.all_vars());

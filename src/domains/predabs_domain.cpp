@@ -93,7 +93,7 @@ exprt predabs_domaint::get_row_post_constraint(const rowt &row,
   if(templ_row.kind==IN) return true_exprt();
   exprt c = implies_exprt(templ_row.post_guard, 
     implies_exprt(row_value,templ[row].expr));
-  rename(c);
+  if(templ_row.kind==LOOP) rename(c);
   return c;
 }
 

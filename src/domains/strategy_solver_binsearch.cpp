@@ -3,8 +3,6 @@
 #include "strategy_solver_binsearch.h"
 #include "util.h"
 
-//#define SEARCH_LOWER_HALF
-
 bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 {
   tpolyhedra_domaint::templ_valuet &inv = 
@@ -66,9 +64,10 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
           
     for(unsigned i=0; i<tpolyhedra_domain.template_size(); i++) 
     {
-      exprt c = tpolyhedra_domain.get_row_constraint(i,inv[i]);
+      exprt c = tpolyhedra_domain.get_row_post_constraint(i,inv[i]);
       debug() << "cond: " << from_expr(ns, "", c) << " " << 
 	    from_expr(ns, "", solver.solver.get(c)) << eom;
+      debug() << "expr: " << from_expr(ns, "", strategy_value_exprs[i]) << " " 	      << from_expr(ns, "", simplify_const(solver.solver.get(strategy_value_exprs[i]))) << eom;
       debug() << "guards: " << 
         from_expr(ns, "", tpolyhedra_domain.templ[i].pre_guard) << 
         " " << from_expr(ns, "", 
@@ -95,8 +94,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
     tpolyhedra_domaint::row_valuet upper = 
       tpolyhedra_domain.get_max_row_value(row);
     tpolyhedra_domaint::row_valuet lower = 
-      //  tpolyhedra_domain.get_min_row_value(row);
-    simplify_const(solver.solver.get(strategy_value_exprs[row]));
+      simplify_const(solver.solver.get(strategy_value_exprs[row]));
 
     solver.pop_context();  //improvement check
     
@@ -123,14 +121,8 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 	      tpolyhedra_domain.between(lower,upper);
       if(!tpolyhedra_domain.less_than(lower,middle)) middle = upper;
 
-#ifndef SEARCH_LOWER_HALF
       // row_symb_value >= middle
       exprt c = tpolyhedra_domain.get_row_symb_value_constraint(row,middle,true);
-#else
-      // lower <= row_symb_value <= middle
-      exprt c = and_exprt(tpolyhedra_domain.get_row_symb_value_constraint(row,middle),
-			  tpolyhedra_domain.get_row_symb_value_constraint(row,lower,true));
-#endif
 
 #if 0
       debug() << "upper: " << from_expr(ns,"",upper) << eom;
@@ -176,15 +168,8 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
       }
 #endif
       
-#ifndef SEARCH_LOWER_HALF
       lower = simplify_const(
       	    solver.solver.get(tpolyhedra_domain.get_row_symb_value(row)));
-#else
-//        if(!tpolyhedra_domain.less_than(middle,upper)) middle = lower;
-        lower = simplify_const(
-	    solver.solver.get(tpolyhedra_domain.get_row_symb_value(row)));
-	upper = middle;
-#endif
       }
       else 
       {
@@ -202,12 +187,8 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
         }
 #endif
 
-#ifndef SEARCH_LOWER_HALF
         if(!tpolyhedra_domain.less_than(middle,upper)) middle = lower;
 	upper = middle;
-#else
-	lower = middle;
-#endif
       }
       solver.pop_context(); // binary search iteration
     }

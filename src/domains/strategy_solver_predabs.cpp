@@ -37,6 +37,19 @@ bool strategy_solver_predabst::iterate(invariantt &_inv)
 	{ 
 	  debug() << "SAT" << eom;
 
+#if 0         
+	  for(replace_mapt::const_iterator
+		it=predabs_domain.renaming_map.begin();
+	      it!=predabs_domain.renaming_map.end();    
+	      ++it)
+	  {
+	    debug() << "replace_map (1st): " << 
+	      from_expr(ns, "", it->first) << " " <<
+	      from_expr(ns, "", solver.solver.get(it->first)) << eom;
+	    debug() << "replace_map (2nd): " << from_expr(ns, "", it->second) << " " 
+		    << from_expr(ns, "", solver.solver.get(it->second)) << eom;
+	  }
+#endif
 	  todo_notpreds.insert(*e_it);
 
 	  solver.pop_context();

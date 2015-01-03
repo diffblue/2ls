@@ -21,7 +21,7 @@ Author: Peter Schrammel
 
 //#define DISPLAY_FORMULA
 //#define DEBUG_FORMULA
-#define DEBUG_OUTPUT
+//#define DEBUG_OUTPUT
 
 class incremental_solvert : public messaget
 {

@@ -16,6 +16,9 @@ Author: Peter Schrammel
 #include "../ssa/ssa_unwinder.h"
 #include "strategy_solver_base.h"
 
+//#define SHOW_TEMPLATE_VARIABLES
+//#define SHOW_TEMPLATE
+
 class template_generator_baset : public messaget
 {
 public:

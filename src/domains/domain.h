@@ -41,11 +41,6 @@ public:
 
   virtual void join(valuet &value1, const valuet &value2) { assert(false); }
 
-  // virtual exprt to_pre_constraints(const valuet &value) { assert(false); }
-  // virtual void make_not_post_constraints(const valuet &value,
-  //			   exprt::operandst &cond_exprs, 
-  //			   exprt::operandst &value_exprs) { assert(false); }
-
   virtual void output_value(std::ostream &out, const valuet &value, 
     const namespacet &ns) const { assert(false); }
   virtual void output_domain(std::ostream &out, 

@@ -275,7 +275,7 @@ exprt tpolyhedra_domaint::get_row_post_constraint(const rowt &row,
     return implies_exprt(templ_row.post_guard,true_exprt());
   exprt c = implies_exprt(templ_row.post_guard, 
 	    binary_relation_exprt(templ_row.expr,ID_le,row_value));
-  rename(c);
+  if(templ_row.kind==LOOP) rename(c);
   return c;
 }
 
