@@ -12,9 +12,11 @@ int f00 (unsigned int n, int data[]) {
 
   uint64_t costl1 = 0;
   for (i = 0; i < n; ++i, ++costl1) {
-    __CPROVER_template(costl1 / n <= __CPROVER_template_param_int());
+    __CPROVER_template(i <= __CPROVER_template_param_int());
+    __CPROVER_template(-i <= __CPROVER_template_param_int());
+    /*    __CPROVER_template(costl1 / n <= __CPROVER_template_param_int());
     __CPROVER_template(costl1 - i <= __CPROVER_template_param_int());
-    __CPROVER_template(i - costl1 <= __CPROVER_template_param_int()); 
+    __CPROVER_template(i - costl1 <= __CPROVER_template_param_int()); */
     __CPROVER_template(i - __CPROVER_template_newvar(i) <= __CPROVER_template_param_int());
     __CPROVER_template(__CPROVER_template_newvar(i) - i <= __CPROVER_template_param_int());
     total += data[i];
