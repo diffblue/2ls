@@ -23,6 +23,7 @@ public:
 
   explicit ssa_analyzert()
     : 
+    result(NULL),
     solver_instances(0),
     solver_calls(0)
     {
