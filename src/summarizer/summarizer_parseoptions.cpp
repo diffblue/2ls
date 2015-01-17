@@ -408,9 +408,14 @@ int summarizer_parseoptionst::doit()
       report_properties(goto_model, summary_checker.property_map);
       report_failure();
       return 10;
+
+    case property_checkert::UNKNOWN:
+      if(options.get_bool_option("preconditions")) return 0;
+      report_properties(goto_model, summary_checker.property_map);
+      report_unknown();
+      return 5;
     
     default:
-      if(options.get_bool_option("preconditions")) return 0;
       return 8;
     }
   }
@@ -1114,6 +1119,41 @@ void summarizer_parseoptionst::report_failure()
     {
       xmlt xml("cprover-status");
       xml.data="FAILURE";
+      std::cout << xml;
+      std::cout << std::endl;
+    }
+    break;
+    
+  default:
+    assert(false);
+  }
+}
+
+/*******************************************************************\
+
+Function: summarizer_parseoptionst::report_failure
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void summarizer_parseoptionst::report_unknown()
+{
+  result() << "VERIFICATION INCONCLUSIVE" << eom;
+
+  switch(get_ui())
+  {
+  case ui_message_handlert::PLAIN:
+    break;
+    
+  case ui_message_handlert::XML_UI:
+    {
+      xmlt xml("cprover-status");
+      xml.data="UNKNOWN";
       std::cout << xml;
       std::cout << std::endl;
     }

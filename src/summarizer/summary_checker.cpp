@@ -139,7 +139,6 @@ property_checkert::resultt summary_checkert::operator()(
 
     property_checkert::resultt result =  check_properties(); 
     report_statistics();
-    if(result==property_checkert::UNKNOWN) result = property_checkert::FAIL;
     return result;
   }
 }

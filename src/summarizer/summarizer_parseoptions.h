@@ -120,6 +120,7 @@ protected:
     std::ostream &);    
             
   void eval_verbosity();
+  void report_unknown();
 
   // diverse preprocessing
   void inline_main(goto_modelt &goto_model);

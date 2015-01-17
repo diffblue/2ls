@@ -12,5 +12,5 @@ void main()
   }
   while(x>0);
 
-  assert(3*y>=3*z);
+  assert(x==y);
 }
