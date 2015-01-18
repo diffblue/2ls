@@ -50,7 +50,8 @@ class optionst;
   "(show-invariants)" \
   "(property):(all-properties)(k-induction)(incremental-bmc)" \
   "(no-simplify)(no-fixed-point)" \
-  "(no-spurious-check)" \
+  "(no-spurious-check)(no-all-properties)" \
+  "(competition-mode)" \
   "(no-unwinding-assertions)(no-propagation)"
   // the last line is for CBMC-regression testing only
 

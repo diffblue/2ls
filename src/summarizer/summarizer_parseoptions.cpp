@@ -255,7 +255,18 @@ void summarizer_parseoptionst::get_command_line_options(optionst &options)
     options.set_option("spurious-check", false);
   else
     options.set_option("spurious-check", true);
-  
+
+  // all properties (default)
+  if(cmdline.isset("no-all-properties"))
+    options.set_option("all-properties", false);
+  else
+    options.set_option("all-properties", true);
+
+  // competition mode
+  if(cmdline.isset("competition-mode"))
+  {
+    options.set_option("all-properties", false);
+  }
 }
 
 /*******************************************************************\

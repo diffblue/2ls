@@ -298,6 +298,8 @@ void summary_checkert::check_properties_non_incremental(
   local_SSAt &SSA = *f_it->second;
   if(!SSA.goto_function.body.has_assertion()) return;
 
+  bool all_properties = options.get_bool_option("all-properties");
+
   SSA.output(debug()); debug() << eom;
   
   // non-incremental version
@@ -384,10 +386,18 @@ void summary_checkert::check_properties_non_incremental(
 
 	  property_map[property_id].result = spurious ? UNKNOWN : FAIL;
 
+#if 0
 	  if(!spurious)
 	  {
 	    show_error_trace(f_it->first,SSA,solver.solver,
 			     debug(),get_message_handler());
+	  }
+#endif
+
+	  if(!all_properties)  //exit on first failure if requested
+	  {
+	    solver.pop_context();
+	    return;
 	  }
 	}
 	break; 
@@ -424,6 +434,8 @@ void summary_checkert::check_properties_incremental(
   local_SSAt &SSA = *f_it->second;
   if(!SSA.goto_function.body.has_assertion()) return;
 
+  bool all_properties = options.get_bool_option("all-properties");
+
   SSA.output(debug()); debug() << eom;
   
   // incremental version
@@ -449,7 +461,8 @@ void summary_checkert::check_properties_incremental(
     get_loophead_selects(f_it->first,SSA,solver.solver);
 
   cover_goals_extt cover_goals(solver,loophead_selects,property_map,
-			       options.get_bool_option("spurious-check"));
+			       options.get_bool_option("spurious-check"),
+			       all_properties);
 
 #if 0   
   debug() << "(C) " << from_expr(SSA.ns,"",enabling_expr) << eom;
@@ -518,14 +531,17 @@ void summary_checkert::check_properties_incremental(
 
   cover_goals();  
 
-  std::list<cover_goals_extt::cover_goalt>::const_iterator g_it=
-    cover_goals.goals.begin();
-  for(cover_goals_extt::goal_mapt::const_iterator
-      it=cover_goals.goal_map.begin();
-      it!=cover_goals.goal_map.end();
-      it++, g_it++)
+  if(all_properties || cover_goals.number_covered()==0)
   {
-    if(!g_it->covered) property_map[it->first].result=PASS;
+    std::list<cover_goals_extt::cover_goalt>::const_iterator g_it=
+      cover_goals.goals.begin();
+    for(cover_goals_extt::goal_mapt::const_iterator
+	  it=cover_goals.goal_map.begin();
+	it!=cover_goals.goal_map.end();
+	it++, g_it++)
+    {
+      if(!g_it->covered) property_map[it->first].result=PASS;
+    }
   }
 
   solver.pop_context();

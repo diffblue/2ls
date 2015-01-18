@@ -144,6 +144,8 @@ void cover_goals_extt::operator()()
       
       // notify
       assignment();
+
+      if(!all_properties) return; //exit on first failure if requested
       break;
 
     default:
@@ -214,7 +216,9 @@ void cover_goals_extt::assignment()
 	 solver.solver.l_get(g_it->condition).is_true())
       {
 	property_map[it->first].result = property_checkert::FAIL;
-        //show_error_trace(it->first,SSA,solver,debug(),get_message_handler());
+#if 0
+        show_error_trace(it->first,SSA,solver,debug(),get_message_handler());
+#endif
       }
     }
     break;
