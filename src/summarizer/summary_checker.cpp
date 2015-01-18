@@ -61,32 +61,27 @@ property_checkert::resultt summary_checkert::operator()(
     for(unsigned unwind = 0; unwind<=max_unwind; unwind++)
     {
       status() << "Unwinding (k=" << unwind << ")" << eom;
-      //if(unwind>0) 
-      {
-        summary_db.mark_recompute_all(); //TODO: recompute only functions with loops
-        ssa_unwinder.unwind_all(unwind+1);
-      }
+      summary_db.mark_recompute_all(); //TODO: recompute only functions with loops
+      ssa_unwinder.unwind_all(unwind+1);
 
       if(!options.get_bool_option("havoc")) 
         summarize(goto_model);
 
       result =  check_properties(); 
-      report_statistics();
       if(result == property_checkert::PASS) 
       {
-        status() << "k-induction proof found after " << unwind << " unwinding(s)" << eom;
+        status() << "k-induction proof found after " 
+<< unwind << " unwinding(s)" << eom;
         break;
       }
       else if(result == property_checkert::FAIL) 
       {
-        status() << "k-induction counterexample found after " << unwind << " unwinding(s)" << eom;
+        status() << "k-induction counterexample found after " 
+		 << unwind << " unwinding(s)" << eom;
         break;
       }
-/*      else if(unwind==0 && max_unwind>0) //TODO: unwind==2 => 1 (additional) unwinding
-      {
-        ssa_unwinder.init_localunwinders();
-	} */
     }
+    report_statistics();
     return result;
   }
   //TODO (later): done
@@ -95,33 +90,29 @@ property_checkert::resultt summary_checkert::operator()(
   {
     property_checkert::resultt result = property_checkert::UNKNOWN;
     unsigned max_unwind = options.get_unsigned_int_option("unwind");
+    status() << "Max-unwind is " << max_unwind << eom;
+    ssa_unwinder.init_localunwinders();
 
     for(unsigned unwind = 0; unwind<=max_unwind; unwind++)
     {
       status() << "Unwinding (k=" << unwind << ")" << messaget::eom;
-	std::cout << "Current unwinding is " << unwind << std::endl;
-      if(unwind>0) 
-      {
-        summary_db.clear();
-        ssa_unwinder.unwind_all(unwind+1);
-      }
+      summary_db.mark_recompute_all();
+      ssa_unwinder.unwind_all(unwind+1);
       result =  check_properties(); 
-      report_statistics();
       if(result == property_checkert::PASS) 
       {
-        status() << "incremental BMC proof found after " << unwind << " unwinding(s)" << messaget::eom;
+        status() << "incremental BMC proof found after " 
+		 << unwind << " unwinding(s)" << messaget::eom;
         break;
       }
       else if(result == property_checkert::FAIL) 
       {
-        status() << "incremental BMC counterexample found after " << unwind << " unwinding(s)" << messaget::eom;
+        status() << "incremental BMC counterexample found after " 
+		 << unwind << " unwinding(s)" << messaget::eom;
         break;
       }
-      else if(unwind==0 && max_unwind>0) //TODO: unwind==2 => 1 (additional) unwinding
-      {
-        ssa_unwinder.init_localunwinders();
-      }
     }
+    report_statistics();
     return result;
   }
 
@@ -531,7 +522,9 @@ void summary_checkert::check_properties_incremental(
 
   cover_goals();  
 
-  if(all_properties || cover_goals.number_covered()==0)
+  //set all non-covered goals to PASS except if we do not try 
+  //  to cover all goals and we have found a FAIL
+  if(all_properties || cover_goals.number_covered()==0) 
   {
     std::list<cover_goals_extt::cover_goalt>::const_iterator g_it=
       cover_goals.goals.begin();
