@@ -102,7 +102,7 @@ void equality_domaint::project_on_vars(valuet &value,
     const var_pairt &vv = templ[index].var_pair;
 
     std::cout << vv.second << std::endl;
-    if(vars.find(vv.first)==vars.end() || 
+    if((vars.find(vv.first)==vars.end()) || 
        vars.find(vv.second)==vars.end() && 
        !(vv.second.id()==ID_constant && 
 	 to_constant_expr(vv.second).get_value()=="NULL"))
@@ -123,7 +123,7 @@ void equality_domaint::project_on_vars(valuet &value,
   {
     const var_pairt &vv = templ[*it].var_pair;
 
-    if(vars.find(vv.first)==vars.end() || 
+    if((vars.find(vv.first)==vars.end()) || 
        vars.find(vv.second)==vars.end() && 
        !(vv.second.id()==ID_constant && 
 	 to_constant_expr(vv.second).get_value()=="NULL"))

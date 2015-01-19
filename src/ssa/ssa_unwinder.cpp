@@ -415,7 +415,7 @@ void ssa_local_unwindert::unwind(const irep_idt& fname,unsigned int k) {
     prev_unwinding=current_unwinding;
 
   local_SSAt::nodest new_nodes;
-  irep_idt func_name = "unwind:"+as_string(fname)+"enable_"+i2string(k);
+  irep_idt func_name = "unwind:"+as_string(fname)+":enable_"+i2string(k);
   symbol_exprt new_sym(func_name,bool_typet());
   SSA.enabling_exprs.push_back(new_sym);
   for (loop_nodest::iterator it = root_node.loop_nodes.begin();
@@ -480,7 +480,7 @@ unsigned int ssa_local_unwindert::get_last_iteration(std::string& suffix, bool& 
   std::size_t pos = suffix.find_last_of("%");
   if(pos==std::string::npos) {result=false; return 0;}
    unsigned int val = safe_string2unsigned(suffix.substr(pos+1));
-   if(val >= std::numeric_limits<int>::max()) assert(false);
+   assert(val < std::numeric_limits<unsigned int>::max());
    suffix=suffix.substr(0,pos);
    result = true;
    return val;
@@ -526,7 +526,7 @@ void ssa_local_unwindert::rename(exprt &expr, std::string suffix,
     std::string s = id2string(base_id);
     if(s.find("$guard")!=std::string::npos
         || s.find("$cond")!=std::string::npos
-        || (mylevel = need_renaming(current_loop,base_id)) ==0)
+        || (mylevel = need_renaming(current_loop,base_id))==0)
     {
 
       irep_idt id=id2string(vid) + suffix + "%" + i2string(iteration);
@@ -537,7 +537,7 @@ void ssa_local_unwindert::rename(exprt &expr, std::string suffix,
 
     std::string fsuffix = suffix;
     std::size_t pos;
-    for(unsigned int i=1;i<mylevel;i++)
+    for(unsigned int i=1;i<mylevel;i++) //TODO: clean up signed int vs. unsigned int
     {
        pos = fsuffix.find_last_of("%");
        fsuffix = fsuffix.substr(0,pos);

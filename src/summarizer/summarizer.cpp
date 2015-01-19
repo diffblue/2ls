@@ -208,6 +208,7 @@ void summarizert::compute_summary_rec(const function_namet &function_name,
       implies_exprt(summary.precondition,summary.invariant);
   }
 
+  if(!options.get_bool_option("competition-mode"))
   {
     std::ostringstream out;
     out << std::endl << "Summary for function " << function_name << std::endl;

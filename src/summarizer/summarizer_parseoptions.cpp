@@ -265,6 +265,7 @@ void summarizer_parseoptionst::get_command_line_options(optionst &options)
   // competition mode
   if(cmdline.isset("competition-mode"))
   {
+    options.set_option("competition-mode", true);
     options.set_option("all-properties", false);
   }
 }
@@ -902,7 +903,7 @@ bool summarizer_parseoptionst::process_goto_program(
       inline_main(goto_model); 
     }
 
-#if UNWIND_GOTO_INTO_LOOP
+#if PROPAGATE_CONSTANTS
     propagate_constants(goto_model);
 #endif
 

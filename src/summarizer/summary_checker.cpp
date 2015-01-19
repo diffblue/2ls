@@ -64,14 +64,18 @@ property_checkert::resultt summary_checkert::operator()(
       summary_db.mark_recompute_all(); //TODO: recompute only functions with loops
       ssa_unwinder.unwind_all(unwind+1);
 
-      if(!options.get_bool_option("havoc")) 
-        summarize(goto_model);
-
       result =  check_properties(); 
+      if(result == property_checkert::UNKNOWN &&
+	 !options.get_bool_option("havoc")) 
+      {
+        summarize(goto_model);
+        result =  check_properties(); 
+      }
+
       if(result == property_checkert::PASS) 
       {
         status() << "k-induction proof found after " 
-<< unwind << " unwinding(s)" << eom;
+		 << unwind << " unwinding(s)" << eom;
         break;
       }
       else if(result == property_checkert::FAIL) 
@@ -179,7 +183,6 @@ void summary_checkert::SSA_functions(const goto_modelt &goto_model,  const names
 
     ssa_unwinder.init_localunwinders();
 
-//    ssa_unwinder.unwind(f_it->first,unwind);
     ssa_unwinder.unwind_all(unwind+1);
     ssa_unwinder.output(debug()); debug() <<eom;
   }
