@@ -25,7 +25,7 @@ bool strategy_solver_predabst::iterate(invariantt &_inv)
       exprt strategy_cond_expr;
       strategy_cond_expr = predabs_domain.get_row_post_constraint(*e_it, true_exprt()); 
 
-      literalt cond_literal = solver.solver.convert(not_exprt(strategy_cond_expr));
+      literalt cond_literal = solver.convert(not_exprt(strategy_cond_expr));
       solver << literal_exprt(cond_literal);
 
 #ifdef DEBUG_OUTPUT
@@ -45,9 +45,9 @@ bool strategy_solver_predabst::iterate(invariantt &_inv)
 	  {
 	    debug() << "replace_map (1st): " << 
 	      from_expr(ns, "", it->first) << " " <<
-	      from_expr(ns, "", solver.solver.get(it->first)) << eom;
+	      from_expr(ns, "", solver.get(it->first)) << eom;
 	    debug() << "replace_map (2nd): " << from_expr(ns, "", it->second) << " " 
-		    << from_expr(ns, "", solver.solver.get(it->second)) << eom;
+		    << from_expr(ns, "", solver.get(it->second)) << eom;
 	  }
 #endif
 	  todo_notpreds.insert(*e_it);

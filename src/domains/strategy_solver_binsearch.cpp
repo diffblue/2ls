@@ -35,7 +35,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 #if 0
     debug() << (i>0 ? " || " : "") << from_expr(ns,"",strategy_cond_exprs[i]);
 #endif
-    strategy_cond_literals[i] = solver.solver.convert(strategy_cond_exprs[i]);
+    strategy_cond_literals[i] = solver.convert(strategy_cond_exprs[i]);
     //solver.set_frozen(strategy_cond_literals[i]);
     strategy_cond_exprs[i] = literal_exprt(strategy_cond_literals[i]);
   }
@@ -59,23 +59,23 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
     for(unsigned i=0; i<solver.formula.size(); i++) 
     {
       debug() << "literal: " << solver.formula[i] << " " << 
-        solver.solver.l_get(solver.formula[i]) << eom;
+        solver.l_get(solver.formula[i]) << eom;
     }
           
     for(unsigned i=0; i<tpolyhedra_domain.template_size(); i++) 
     {
       exprt c = tpolyhedra_domain.get_row_post_constraint(i,inv[i]);
       debug() << "cond: " << from_expr(ns, "", c) << " " << 
-	    from_expr(ns, "", solver.solver.get(c)) << eom;
-      debug() << "expr: " << from_expr(ns, "", strategy_value_exprs[i]) << " " 	      << from_expr(ns, "", simplify_const(solver.solver.get(strategy_value_exprs[i]))) << eom;
+	    from_expr(ns, "", solver.get(c)) << eom;
+      debug() << "expr: " << from_expr(ns, "", strategy_value_exprs[i]) << " " 	      << from_expr(ns, "", simplify_const(solver.get(strategy_value_exprs[i]))) << eom;
       debug() << "guards: " << 
         from_expr(ns, "", tpolyhedra_domain.templ[i].pre_guard) << 
         " " << from_expr(ns, "", 
-          solver.solver.get(tpolyhedra_domain.templ[i].pre_guard)) << eom;
+          solver.get(tpolyhedra_domain.templ[i].pre_guard)) << eom;
       debug() << "guards: " << from_expr(ns, "", 
           tpolyhedra_domain.templ[i].post_guard) << " " 
 	  << from_expr(ns, "", 
-             solver.solver.get(tpolyhedra_domain.templ[i].post_guard)) << eom;
+             solver.get(tpolyhedra_domain.templ[i].post_guard)) << eom;
     }    
 #endif
 
@@ -83,7 +83,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
     unsigned row=0;  
     for(;row<strategy_cond_literals.size(); row++)
     {
-      if(solver.solver.l_get(strategy_cond_literals[row]).is_true()) 
+      if(solver.l_get(strategy_cond_literals[row]).is_true()) 
         break;  // we've found a row to improve
     }
 
@@ -94,7 +94,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
     tpolyhedra_domaint::row_valuet upper = 
       tpolyhedra_domain.get_max_row_value(row);
     tpolyhedra_domaint::row_valuet lower = 
-      simplify_const(solver.solver.get(strategy_value_exprs[row]));
+      simplify_const(solver.get(strategy_value_exprs[row]));
 
     solver.pop_context();  //improvement check
     
@@ -149,7 +149,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
       {
         debug() <<  
           from_expr(ns, "", tpolyhedra_domain.get_row_symb_value(i)) << " " << 
-	  from_expr(ns, "", solver.solver.get(tpolyhedra_domain.get_row_symb_value(i))) 
+	  from_expr(ns, "", solver.get(tpolyhedra_domain.get_row_symb_value(i))) 
           << eom;
       }
 #endif
@@ -162,14 +162,14 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
       {
 	  debug() << "replace_map (1st): " << 
             from_expr(ns, "", it->first) << " " <<
-	    from_expr(ns, "", solver.solver.get(it->first)) << eom;
+	    from_expr(ns, "", solver.get(it->first)) << eom;
 	  debug() << "replace_map (2nd): " << from_expr(ns, "", it->second) << " " 
 		  << from_expr(ns, "", solver.get(it->second)) << eom;
       }
 #endif
       
       lower = simplify_const(
-      	    solver.solver.get(tpolyhedra_domain.get_row_symb_value(row)));
+      	    solver.get(tpolyhedra_domain.get_row_symb_value(row)));
       }
       else 
       {
@@ -180,7 +180,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 #if 0
 	for(unsigned i=0; i<solver.formula.size(); i++) 
         {
-	  if(solver.solver.is_in_conflict(solver.formula[i]))
+	  if(solver.solver->is_in_conflict(solver.formula[i]))
 	      debug() << "is_in_conflict: " << solver.formula[i] << eom;
 	  else
 	      debug() << "not_in_conflict: " << solver.formula[i] << eom;
@@ -209,7 +209,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 #ifdef DEBUG_FORMULA
     for(unsigned i=0; i<solver.formula.size(); i++) 
     {
-      if(solver.solver.is_in_conflict(solver.formula[i]))
+      if(solver.solver->is_in_conflict(solver.formula[i]))
 	debug() << "is_in_conflict: " << solver.formula[i] << eom;
       else
 	debug() << "not_in_conflict: " << solver.formula[i] << eom;

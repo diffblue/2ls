@@ -18,7 +18,7 @@ bool strategy_solver_equalityt::iterate(invariantt &_inv)
     solver << pre_expr;
     
     exprt post_expr = equality_domain.get_post_not_equ_constraint(*e_it);
-    literalt cond_literal = solver.solver.convert(post_expr);
+    literalt cond_literal = solver.convert(post_expr);
 
     solver << literal_exprt(cond_literal);
 
@@ -83,7 +83,7 @@ bool strategy_solver_equalityt::iterate(invariantt &_inv)
     solver << pre_expr;
     
     exprt post_expr = equality_domain.get_post_not_disequ_constraint(*e_it);
-    literalt cond_literal = solver.solver.convert(post_expr);
+    literalt cond_literal = solver.convert(post_expr);
 
     solver << literal_exprt(cond_literal);
 

@@ -41,7 +41,7 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
 #if 0
     debug() << (i>0 ? " || " : "") << from_expr(ns,"",strategy_cond_exprs[i]);
 #endif
-    strategy_cond_literals[i] = solver.solver.convert(strategy_cond_exprs[i]);
+    strategy_cond_literals[i] = solver.convert(strategy_cond_exprs[i]);
     //solver.set_frozen(strategy_cond_literals[i]);
     strategy_cond_exprs[i] = literal_exprt(strategy_cond_literals[i]);
   }
@@ -69,7 +69,7 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
     unsigned row=0;  
     for(;row<strategy_cond_literals.size(); row++)
     {
-      if(solver.solver.l_get(strategy_cond_literals[row]).is_true()) 
+      if(solver.l_get(strategy_cond_literals[row]).is_true()) 
       {
 #if 1
         debug() << "improve row " << row  << eom;
@@ -77,7 +77,7 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
         improve_rows.insert(row);
 	symb_values[row] = tpolyhedra_domain.get_row_symb_value(row);
 	lower_values[row] =
-          simplify_const(solver.solver.get(strategy_value_exprs[row]));
+          simplify_const(solver.get(strategy_value_exprs[row]));
 	blocking_constraint.push_back(
           literal_exprt(!strategy_cond_literals[row]));
 	if(tpolyhedra_domain.is_row_value_neginf(
@@ -190,7 +190,7 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
 		    << from_expr(ns,"",it->second) << ": ";
 #endif
 	    constant_exprt lower_row = 
-              simplify_const(solver.solver.get(it->second));
+              simplify_const(solver.get(it->second));
 #if 1
 	    debug() << from_expr(ns,"",lower_row) << eom;
 #endif

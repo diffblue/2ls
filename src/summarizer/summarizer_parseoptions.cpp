@@ -370,7 +370,7 @@ int summarizer_parseoptionst::doit()
     status() << "Do not ignore array contents" << eom;
   }
 
-  //TOOD: check option inconsistencies, ignored options etc
+  //TODO: check option inconsistencies, ignored options etc
   if(options.get_bool_option("havoc"))
     status() << "Havocking loops and function calls" << eom;
   else if(options.get_bool_option("equalities"))

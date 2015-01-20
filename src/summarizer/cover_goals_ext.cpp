@@ -46,7 +46,7 @@ void cover_goals_extt::mark()
       g_it!=goals.end();
       g_it++)
     if(!g_it->covered &&
-       solver.solver.l_get(g_it->condition).is_true())
+       solver.l_get(g_it->condition).is_true())
     {
       g_it->covered=true;
       _number_covered++;
@@ -99,7 +99,7 @@ void cover_goals_extt::freeze_goal_variables()
       g_it!=goals.end();
       g_it++)
     if(!g_it->condition.is_constant())
-      solver.solver.set_frozen(g_it->condition);
+      solver.solver->set_frozen(g_it->condition);
 }
 
 /*******************************************************************\
@@ -178,7 +178,7 @@ void cover_goals_extt::assignment()
   for(exprt::operandst::const_iterator l_it = loophead_selects.begin();
         l_it != loophead_selects.end(); l_it++)
   {
-    if(solver.solver.get(l_it->op0()).is_true()) 
+    if(solver.get(l_it->op0()).is_true()) 
     {
       invariants_involved = true; 
       break;
@@ -191,7 +191,7 @@ void cover_goals_extt::assignment()
 	it!=goal_map.end(); it++, g_it++)
     {
       if(property_map[it->first].result==property_checkert::UNKNOWN &&
-	 solver.solver.l_get(g_it->condition).is_true())
+	 solver.l_get(g_it->condition).is_true())
       {
 	property_map[it->first].result = property_checkert::FAIL;
       }
@@ -213,7 +213,7 @@ void cover_goals_extt::assignment()
 	it!=goal_map.end(); it++, g_it++)
     {
       if(property_map[it->first].result==property_checkert::UNKNOWN &&
-	 solver.solver.l_get(g_it->condition).is_true())
+	 solver.l_get(g_it->condition).is_true())
       {
 	property_map[it->first].result = property_checkert::FAIL;
 #if 0

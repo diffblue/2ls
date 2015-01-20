@@ -56,8 +56,6 @@ property_checkert::resultt summary_checkert::operator()(
     status() << "Max-unwind is " << max_unwind << eom;
     ssa_unwinder.init_localunwinders();
 
-    //TODO (later): loop
-    //TODO (later):   refine domain
     for(unsigned unwind = 0; unwind<=max_unwind; unwind++)
     {
       status() << "Unwinding (k=" << unwind << ")" << eom;
@@ -88,7 +86,6 @@ property_checkert::resultt summary_checkert::operator()(
     report_statistics();
     return result;
   }
-  //TODO (later): done
 
   if(options.get_bool_option("incremental-bmc"))
   {
@@ -365,7 +362,7 @@ void summary_checkert::check_properties_non_incremental(
 
     //freeze loop head selects
     exprt::operandst loophead_selects = 
-      get_loophead_selects(f_it->first,SSA,solver.solver);
+      get_loophead_selects(f_it->first,SSA,*solver.solver);
 
     // solve
     switch(solver())
@@ -388,7 +385,7 @@ void summary_checkert::check_properties_non_incremental(
 	  }
 #endif
 
-	  if(!all_properties)  //exit on first failure if requested
+	  if(!spurious && !all_properties)  //exit on first failure if requested
 	  {
 	    solver.pop_context();
 	    return;
@@ -452,7 +449,7 @@ void summary_checkert::check_properties_incremental(
 
   //freeze loop head selects
   exprt::operandst loophead_selects = 
-    get_loophead_selects(f_it->first,SSA,solver.solver);
+    get_loophead_selects(f_it->first,SSA,*solver.solver);
 
   cover_goals_extt cover_goals(solver,loophead_selects,property_map,
 			       options.get_bool_option("spurious-check"),
@@ -517,11 +514,11 @@ void summary_checkert::check_properties_incremental(
   {
     // Our goal is to falsify a property.
     // The following is TRUE if the conjunction is empty.
-    literalt p=!solver.solver.convert(conjunction(it->second.conjuncts));
+    literalt p=!solver.convert(conjunction(it->second.conjuncts));
     cover_goals.add(p);
   }
 
-  status() << "Running " << solver.solver.decision_procedure_text() << eom;
+  status() << "Running " << solver.solver->decision_procedure_text() << eom;
 
   cover_goals();  
 
@@ -643,13 +640,14 @@ void summary_checkert::report_preconditions()
 
 /*******************************************************************\
 
-Function: summary_checkert::is_spurious
+Function: summary_checkert::get_loophead_selects
 
   Inputs:
 
  Outputs:
 
- Purpose: checks whether a countermodel is spurious
+ Purpose: returns the select guards at the loop heads 
+          in order to check whether a countermodel is spurious
 
 \*******************************************************************/
 
@@ -696,7 +694,7 @@ bool summary_checkert::is_spurious(const exprt::operandst &loophead_selects,
   for(exprt::operandst::const_iterator l_it = loophead_selects.begin();
         l_it != loophead_selects.end(); l_it++)
   {
-    if(solver.solver.get(l_it->op0()).is_true()) 
+    if(solver.get(l_it->op0()).is_true()) 
     {
       invariants_involved = true; 
       break;
