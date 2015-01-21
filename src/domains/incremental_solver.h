@@ -21,7 +21,7 @@ Author: Peter Schrammel
 
 //#define NON_INCREMENTAL // (experimental)
 
-#define DISPLAY_FORMULA
+//#define DISPLAY_FORMULA
 //#define DEBUG_FORMULA
 //#define DEBUG_OUTPUT
 
@@ -70,13 +70,13 @@ class incremental_solvert : public messaget
     for(contextst::const_iterator c_it = contexts.begin(); 
         c_it != contexts.end(); c_it++, context_no++)
     {
-#if 1
+#ifdef DISPLAY_FORMULA
         std::cerr << "context: " << context_no << std::endl;
 #endif
       for(incremental_solvert::constraintst::const_iterator it = c_it->begin(); 
           it != c_it->end(); it++)
       {
-#if 1
+#ifdef DISPLAY_FORMULA
         std::cerr << "actual add_to_solver: " << from_expr(ns,"",*it) << std::endl;
 #endif
         *solver << *it;

@@ -12,7 +12,7 @@ void incremental_solvert::new_context()
 #ifdef NON_INCREMENTAL
   contexts.push_back(constraintst());
 
-#if 1
+#if 0
   std::cerr << "new context: " << contexts.size() << std::endl;
 #endif
 
@@ -40,7 +40,7 @@ void incremental_solvert::pop_context()
 #ifdef NON_INCREMENTAL
   assert(!contexts.empty());
 
-#if 1
+#if 0
   std::cerr << "pop context: " << contexts.size() << std::endl;
 #endif
 
