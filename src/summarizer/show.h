@@ -60,4 +60,8 @@ void show_invariants(
   const summaryt &summary,
   std::ostream &out);
 
+void show_ssa_symbols(
+  const local_SSAt &SSA, 
+  std::ostream &out);
+
 #endif

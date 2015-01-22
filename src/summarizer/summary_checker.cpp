@@ -245,6 +245,12 @@ summary_checkert::resultt summary_checkert::check_properties()
       f_it != ssa_db.functions().end(); f_it++)
   {
     status() << "Checking properties of " << f_it->first << messaget::eom;
+
+#if 0
+    //for debugging
+    show_ssa_symbols(*f_it->second,std::cerr);
+#endif
+
     if(options.get_bool_option("incremental"))
       check_properties_incremental(f_it);
     else
