@@ -66,6 +66,15 @@ irep_idt ssa_local_unwindert::get_base_name(const irep_idt& id)
   std::string s1=s.substr(0,pos);
   return irep_idt(s1);
 }
+void ssa_local_unwindert::is_void_func()
+{
+  for (local_SSAt::objectst::const_iterator o_it =
+           SSA.ssa_objects.objects.begin();
+         o_it != SSA.ssa_objects.objects.end(); o_it++) {
+    if(o_it->get_identifier()==return_var){ isvoid=false; break;}
+  }
+
+}
 /*****************************************************************************\
  *
  * Function : ssa_local_unwindert::ssa_local_unwindert
@@ -82,7 +91,7 @@ irep_idt ssa_local_unwindert::get_base_name(const irep_idt& id)
  *
  *****************************************************************************/
 ssa_local_unwindert::ssa_local_unwindert(local_SSAt& _SSA,bool k_induct,
-    bool _ibmc): SSA(_SSA),
+    bool _ibmc):isvoid(true), SSA(_SSA),
     current_unwinding(0),prev_unwinding(std::numeric_limits<unsigned int>::max()),
     is_initialized(false),is_kinduction(k_induct),
     is_ibmc(_ibmc){ }
@@ -99,12 +108,11 @@ ssa_local_unwindert::ssa_local_unwindert(local_SSAt& _SSA,bool k_induct,
  unsigned long
 
  \*******************************************************************/
-struct compare_node_iteratorst {
-  bool operator()(const local_SSAt::nodest::iterator& a,
-		  const local_SSAt::nodest::iterator& b) const {
-    return ((unsigned long) (&(*a)) < (unsigned long) (&(*b)));
-  }
-};
+bool compare_node_iteratorst::operator()(const local_SSAt::nodest::iterator& a,
+    const local_SSAt::nodest::iterator& b) const {
+  return ((unsigned long) (&(*a)) < (unsigned long) (&(*b)));
+}
+
 /*****************************************************************************\
  * Function : ssa_local_unwindert::init
  *
@@ -262,6 +270,11 @@ void ssa_local_unwindert::init() {
   SSA.nodes.insert(SSA.nodes.begin(), root_node.body_nodes.begin(),
 		   root_node.body_nodes.end());
 
+  populate_parents();
+  /*
+   * if(!is_void_func())
+   *RETURN: populate_return_val_mod();
+   */
   //populate connector for every loop
   for(loop_nodest::iterator lit=root_node.loop_nodes.begin();
       lit!=root_node.loop_nodes.end();lit++)
@@ -269,6 +282,8 @@ void ssa_local_unwindert::init() {
     populate_connectors(*lit);
   }
 
+  put_varmod_in_parent();
+#if 0
   //pointers of tree_loopnodet are stable now and they must not be
   //modified beyond this point. Now populate "parent" field of
   //every node
@@ -296,11 +311,100 @@ void ssa_local_unwindert::init() {
 
   }
 
-
+#endif
   is_initialized=true;
 
 }
+void ssa_local_unwindert::propagate_varmod_to_ancestors(const irep_idt& id,tree_loopnodet* current_loop)
+{
+  current_loop->vars_modified.insert(id);
+  if(current_loop->parent!=NULL && current_loop->parent!=&root_node)
+  {
+    propagate_varmod_to_ancestors(id,current_loop->parent);
+  }
+}
 
+void ssa_local_unwindert::populate_parents()
+{
+  std::list<tree_loopnodet*> worklist;
+   worklist.push_back(&root_node);
+   while(!worklist.empty())
+   {
+     tree_loopnodet* current_node = worklist.back();
+     worklist.pop_back();
+
+     if(current_node->loop_nodes.empty()) continue;
+     for(loop_nodest::iterator it=current_node->loop_nodes.begin();
+         it!=current_node->loop_nodes.end();it++)
+     {
+       it->parent = current_node;
+
+       worklist.push_back(&(*it));
+     }
+
+   }
+}
+void ssa_local_unwindert::put_varmod_in_parent()
+{
+  std::list<tree_loopnodet*> worklist;
+   worklist.push_back(&root_node);
+   while(!worklist.empty())
+   {
+     tree_loopnodet* current_node = worklist.back();
+     worklist.pop_back();
+
+     if(current_node->loop_nodes.empty()) continue;
+     for(loop_nodest::iterator it=current_node->loop_nodes.begin();
+         it!=current_node->loop_nodes.end();it++)
+     {
+
+
+       // if a variable is modified in child loop then consider it modified
+       //for the current loop for the purpose of renaming
+       //NOTE : this code only looks at the child. Not sure if you should look at
+       // all the descendents for the purpose of renaming
+       current_node->vars_modified.insert(it->vars_modified.begin(),it->vars_modified.end());
+       worklist.push_back(&(*it));
+     }
+
+   }
+}
+void ssa_local_unwindert::populate_return_val_mod()
+{
+  std::list<tree_loopnodet*> worklist;
+  worklist.push_back(&root_node);
+while(!worklist.empty())
+{
+  tree_loopnodet* current_loop=worklist.back();
+  worklist.pop_back();
+  for(local_SSAt::nodest::iterator nit=current_loop->body_nodes.begin();
+      nit!=current_loop->body_nodes.end();nit++)
+  {
+      for(local_SSAt::nodet::equalitiest::iterator eit=nit->equalities.begin();
+          eit!=nit->equalities.end();eit++)
+      {
+        if(eit->lhs().id()==ID_symbol)
+        {
+          symbol_exprt sym_e=to_symbol_expr(eit->lhs());
+          irep_idt sym_id=sym_e.get_identifier();
+          std::string s = as_string(sym_id);
+          std::size_t pos=s.find(id2string(return_var));
+          if(pos!=std::string::npos)
+          {
+              propagate_varmod_to_ancestors(return_var,current_loop);
+              current_loop->return_nodes.insert(nit);
+          }
+        }
+      }
+  }
+  for(loop_nodest::iterator lit=current_loop->loop_nodes.begin();
+      lit!=current_loop->loop_nodes.end();lit++)
+  {
+    worklist.push_back(&(*lit));
+  }
+}
+
+}
 void ssa_local_unwindert::populate_connectors(tree_loopnodet& current_loop)
 {
   typedef std::map<irep_idt,local_SSAt::objectst::iterator> varobj_mapt;
@@ -358,9 +462,11 @@ for(;it!=current_loop.body_nodes.end();it++)
 {
   body_nodest::const_iterator next_node = it; next_node++;
   if(next_node==current_loop.body_nodes.end()) break;
-
+#if 1
   if(!is_break_node(*it,end_location)) continue;
-
+#else
+  if(!is_break_node(*it,end_location) && !is_return_node(current_loop,it)) continue;
+#endif
   for(varobj_mapt::iterator vit=varobj_map.begin();vit!=varobj_map.end();vit++)
   {
     current_loop.connectors.insert(SSA.read_rhs(*(vit->second),it->location));
@@ -379,7 +485,7 @@ for(loop_nodest::iterator loopit=current_loop.loop_nodes.begin();
 }
 
 bool ssa_local_unwindert::is_break_node(const local_SSAt::nodet& node,
-    const unsigned int end_location)
+    const unsigned int end_location) const
 {
   local_SSAt::locationt instr = node.location;
   if(!instr->is_goto()) return false;
@@ -390,6 +496,13 @@ bool ssa_local_unwindert::is_break_node(const local_SSAt::nodet& node,
   if(instr->targets.front()->location_number < end_location ) return false;
   return true;
 
+}
+
+bool ssa_local_unwindert::is_return_node(const tree_loopnodet& current_loop,
+    const local_SSAt::nodest::iterator& node) const
+{
+  return_nodest::iterator it=current_loop.return_nodes.find(node);
+  return (it!=current_loop.return_nodes.end());
 }
 /*****************************************************************************\
  * Function : ssa_local_unwindert::unwind
@@ -416,6 +529,10 @@ void ssa_local_unwindert::unwind(const irep_idt& fname,unsigned int k) {
 
   local_SSAt::nodest new_nodes;
   irep_idt func_name = "unwind:"+as_string(fname)+":enable_"+i2string(k);
+  if(return_var.empty())
+  {
+   return_var=as_string(fname)+"#return_value";
+  }
   symbol_exprt new_sym(func_name,bool_typet());
   SSA.enabling_exprs.push_back(new_sym);
   for (loop_nodest::iterator it = root_node.loop_nodes.begin();
@@ -513,7 +630,7 @@ void ssa_local_unwindert::rename(exprt &expr, std::string suffix,
     symbol_exprt &sexpr = to_symbol_expr(expr);
     irep_idt vid=sexpr.get_identifier();
     irep_idt base_id = get_base_name(vid);
-
+  //  bool isreturnvar=(as_string(vid).find(as_string(return_var))!=std::string::npos);
     int mylevel;
     if(iteration<0)
     {
@@ -526,6 +643,7 @@ void ssa_local_unwindert::rename(exprt &expr, std::string suffix,
     std::string s = id2string(base_id);
     if(s.find("$guard")!=std::string::npos
         || s.find("$cond")!=std::string::npos
+    //  || isreturnvar
         || (mylevel = need_renaming(current_loop,base_id))==0)
     {
 
@@ -1207,7 +1325,14 @@ unsigned ssa_local_unwindert::rename_required(const exprt& e,
       std::list<unsigned> iterations;
       irep_idt basename;
       dissect_loop_suffix(id,basename,iterations,false);
-      if(iterations.back()==(prev_unwinding-1)) return iterations.size();
+      bool rename_required=true;
+      for(std::list<unsigned>::iterator it=iterations.begin();
+          it!=iterations.end();it++)
+      {
+        if(*it!=(prev_unwinding-1)) rename_required=false;
+      }
+      //if(iterations.back()==(prev_unwinding-1)) return iterations.size();
+      if(rename_required) return iterations.size();
 
 
     }
@@ -1282,7 +1407,7 @@ void ssa_local_unwindert::rename_invariant(const exprt::operandst& inv_in,
     unsigned depth=rename_required(*e_it,prev_unwinding);
     if(depth==0) continue;
 
-    std::vector<unsigned> iter_vector(depth-1,0);
+    std::vector<unsigned> iter_vector(depth-1,current_unwinding-1);
 
     do
     {

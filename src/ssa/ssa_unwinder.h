@@ -14,8 +14,14 @@ Author: Saurabh Joshi
 #include "../ssa/local_ssa.h"
 #include "../summarizer/ssa_db.h"
 
+struct compare_node_iteratorst {
+  bool operator()(const local_SSAt::nodest::iterator& a,
+      const local_SSAt::nodest::iterator& b) const;
+};
 class ssa_local_unwindert : public messaget
 {
+  irep_idt return_var;
+  bool isvoid;
   local_SSAt& SSA;
   unsigned int current_unwinding;
   unsigned int prev_unwinding;
@@ -24,11 +30,14 @@ class ssa_local_unwindert : public messaget
   typedef std::map<irep_idt,local_SSAt::nodest::iterator> loopends_mapt;
   typedef std::map<irep_idt,int> modvar_levelt;
   typedef std::set<exprt> exprst;
+  typedef std::set<local_SSAt::nodest::iterator,compare_node_iteratorst> return_nodest;
   typedef local_SSAt::nodest body_nodest;
   bool loopless;
+
   class tree_loopnodet
   {
   public:
+    return_nodest return_nodes;
     exprst connectors;
     tree_loopnodet* parent;
     local_SSAt::nodest body_nodes;
@@ -68,7 +77,17 @@ class ssa_local_unwindert : public messaget
     }
   };
   tree_loopnodet root_node;
-  bool is_break_node(const local_SSAt::nodet& node,const unsigned int end_location);
+  void put_varmod_in_parent();
+  void populate_parents();
+  void propagate_varmod_to_ancestors(const irep_idt& id,
+      tree_loopnodet* current_loop);
+  void populate_return_val_mod();
+  void is_void_func();
+  bool is_break_node(const local_SSAt::nodet& node,
+      const unsigned int end_location) const;
+  bool is_return_node(const tree_loopnodet& current_loop,
+      const local_SSAt::nodest::iterator& node) const
+
   void populate_connectors(tree_loopnodet& current_loop);
   void unwind(tree_loopnodet& current_loop,
 	      std::string suffix,bool full,
