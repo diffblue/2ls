@@ -13,6 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/simplify_expr.h>
 #include <langapi/language_util.h>
 #include <util/prefix.h>
+#include <goto-programs/write_goto_binary.h>
 
 #include <solvers/sat/satcheck.h>
 #include <solvers/flattening/bv_pointers.h>
@@ -26,6 +27,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <cstdlib>
 
 #include "show.h"
+#include "instrument_goto.h"
 
 #include "summary_checker.h"
 
@@ -729,3 +731,24 @@ bool summary_checkert::is_spurious(const exprt::operandst &loophead_selects,
   }
 }
 
+/*******************************************************************\
+
+Function: summary_checkert::instrument_and_output
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: instruments the code with the inferred information
+          and outputs it to a goto-binary
+
+\*******************************************************************/
+
+void summary_checkert::instrument_and_output(goto_modelt &goto_model)
+{
+  instrument_gotot instrument_goto(options,ssa_db,summary_db);
+  instrument_goto(goto_model);
+  write_goto_binary(options.get_option("instrument-output"), 
+		    goto_model.symbol_table, 
+		    goto_model.goto_functions, get_message_handler());
+}

@@ -409,27 +409,38 @@ int summarizer_parseoptionst::doit()
     }
     
     // do actual analysis
+    int retval;
     switch(summary_checker(goto_model))
     {
     case property_checkert::PASS:
       report_properties(goto_model, summary_checker.property_map);
       report_success();
-      return 0;
+      retval = 0;
+      break;
     
     case property_checkert::FAIL:
       report_properties(goto_model, summary_checker.property_map);
       report_failure();
-      return 10;
+      retval = 10;
+      break;
 
     case property_checkert::UNKNOWN:
       if(options.get_bool_option("preconditions")) return 0;
       report_properties(goto_model, summary_checker.property_map);
       report_unknown();
-      return 5;
+      retval = 5;
+      break;
     
     default:
       return 8;
     }
+
+    if(cmdline.isset("instrument-output"))
+    {
+      summary_checker.instrument_and_output(goto_model);
+    }
+
+    return retval;
   }
   
   catch(const std::string error_msg)
@@ -1252,6 +1263,7 @@ void summarizer_parseoptionst::help()
     " --no-assumptions             ignore user assumptions\n"
     " --inline                     inline all functions into main\n"
     " --inline-partial nr          inline functions smaller than the given nr of instructions\n"
+    " --instrument-output f        output inferred information in goto-binary f\n"
     "\n"
     "Backend options:\n"
     " --k-induction                use k-induction\n"

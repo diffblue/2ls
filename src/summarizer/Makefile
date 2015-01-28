@@ -3,7 +3,8 @@ include ../config.inc
 SRC = summarizer_main.cpp summarizer_parseoptions.cpp \
       show.cpp summary_checker.cpp cover_goals_ext.cpp \
       summary_db.cpp summarizer.cpp summary.cpp ssa_db.cpp \
-      array_abstraction.cpp preprocessing_util.cpp
+      array_abstraction.cpp preprocessing_util.cpp \
+      instrument_goto.cpp
 
 OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       $(CBMC)/src/linking/linking$(LIBEXT) \

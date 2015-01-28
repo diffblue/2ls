@@ -477,6 +477,7 @@ void show_ssa_symbols(
     {
       find_symbols(*a_it,symbols);
     }
+    find_symbols(n_it->enabling_expr,symbols);
   }
 
   for(std::set<symbol_exprt>::const_iterator it = symbols.begin();

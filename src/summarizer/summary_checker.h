@@ -44,6 +44,8 @@ public:
 
   virtual resultt operator()(const goto_modelt &);
 
+  void instrument_and_output(goto_modelt &goto_model);
+
   // statistics
   absolute_timet start_time;
   time_periodt sat_time;

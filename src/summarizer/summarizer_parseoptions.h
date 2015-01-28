@@ -45,6 +45,7 @@ class optionst;
   "(inline)(inline-main)(inline-partial):" \
   "(context-sensitive)" \
   "(preconditions)(sufficient)" \
+  "(instrument-output):" \
   "(show-locs)(show-vcc)(show-properties)(show-trace)(show-fixed-points)(show-stats)" \
   "(show-goto-functions)(show-guards)(show-defs)(show-ssa)(show-assignments)" \
   "(show-invariants)" \
