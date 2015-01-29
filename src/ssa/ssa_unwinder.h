@@ -86,7 +86,7 @@ class ssa_local_unwindert : public messaget
   bool is_break_node(const local_SSAt::nodet& node,
       const unsigned int end_location) const;
   bool is_return_node(const tree_loopnodet& current_loop,
-      const local_SSAt::nodest::iterator& node) const
+		      const local_SSAt::nodest::iterator& node) const;
 
   void populate_connectors(tree_loopnodet& current_loop);
   void unwind(tree_loopnodet& current_loop,

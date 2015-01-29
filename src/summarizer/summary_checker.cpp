@@ -187,7 +187,7 @@ void summary_checkert::SSA_functions(const goto_modelt &goto_model,  const names
   }
 
 #if 0
-  // inline c::main and __CPROVER_initialize
+  // inline main and __CPROVER_initialize
   ssa_inlinert ssa_inliner;
   ssa_inliner.set_message_handler(get_message_handler());
 

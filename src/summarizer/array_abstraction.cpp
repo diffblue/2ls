@@ -894,7 +894,7 @@ Function: array_abstractiont::abstract_ret_val_name
 
 irep_idt array_abstractiont::abstract_ret_val_name(const symbolt &fct)
 {
-  return "c::"+id2string(fct.module)+
+  return id2string(fct.module)+
     "::"+id2string(fct.base_name)+
     "::$return_value_str_abst"+arg_suffix;
 }

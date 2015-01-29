@@ -20,7 +20,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "ssa_object.h"
 
 #define TEMPLATE_PREFIX "__CPROVER_template"
-#define TEMPLATE_DECL "c::" TEMPLATE_PREFIX
+#define TEMPLATE_DECL TEMPLATE_PREFIX
 #define TEMPLATE_NEWVAR TEMPLATE_PREFIX "_newvar"
 #define TEMPLATE_PARAM_PREFIX TEMPLATE_PREFIX "_param"
 

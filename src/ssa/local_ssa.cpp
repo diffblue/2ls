@@ -454,7 +454,7 @@ void local_SSAt::build_function_call(locationt loc)
 
     //access to "new" value in template declarations
     if(code_function_call.function().id()==ID_symbol &&
-       has_prefix("c::" TEMPLATE_NEWVAR,
+       has_prefix(TEMPLATE_NEWVAR,
 		  id2string(code_function_call.function().get(ID_identifier))))
     {
       assert(code_function_call.arguments().size()==1);

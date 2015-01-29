@@ -908,7 +908,7 @@ bool summarizer_parseoptionst::process_goto_program(
       goto_inline(goto_model, ui_message_handler);
     }
 
-    //inline c::__CPROVER_initialize and c::main
+    //inline __CPROVER_initialize and main
     if(cmdline.isset("inline-main"))
     {
       inline_main(goto_model); 

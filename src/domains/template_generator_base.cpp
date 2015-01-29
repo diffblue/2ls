@@ -333,7 +333,7 @@ Function: template_generator_baset::handle_special_functions
 void template_generator_baset::handle_special_functions(const local_SSAt &SSA)
 {
   const irep_idt &function_id = SSA.goto_function.body.instructions.front().function;
-  if(id2string(function_id) == "c::__CPROVER_initialize")
+  if(id2string(function_id) == "__CPROVER_initialize")
   {
     options.set_option("intervals",true);
     options.set_option("enum-solver",true);
@@ -358,7 +358,7 @@ bool template_generator_baset::replace_post(replace_mapt replace_map, exprt &exp
   if(expr.id()==ID_function_application)
   {
     const function_application_exprt &f = to_function_application_expr(expr);
-    if(f.function().get(ID_identifier) == "c::" TEMPLATE_NEWVAR)
+    if(f.function().get(ID_identifier) == TEMPLATE_NEWVAR)
     {
       assert(f.arguments().size()==1);
       if(f.arguments()[0].id()==ID_typecast) 
