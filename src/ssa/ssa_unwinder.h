@@ -14,10 +14,15 @@ Author: Saurabh Joshi
 #include "../ssa/local_ssa.h"
 #include "../summarizer/ssa_db.h"
 
+#define RETVAR "#return_value"
+
 struct compare_node_iteratorst {
   bool operator()(const local_SSAt::nodest::iterator& a,
       const local_SSAt::nodest::iterator& b) const;
+  bool operator()(const local_SSAt::nodest::const_iterator& a,
+      const local_SSAt::nodest::const_iterator& b) const;
 };
+
 class ssa_local_unwindert : public messaget
 {
   irep_idt return_var;
@@ -30,7 +35,7 @@ class ssa_local_unwindert : public messaget
   typedef std::map<irep_idt,local_SSAt::nodest::iterator> loopends_mapt;
   typedef std::map<irep_idt,int> modvar_levelt;
   typedef std::set<exprt> exprst;
-  typedef std::set<local_SSAt::nodest::iterator,compare_node_iteratorst> return_nodest;
+  typedef std::set<local_SSAt::nodest::const_iterator,compare_node_iteratorst> return_nodest;
   typedef local_SSAt::nodest body_nodest;
   bool loopless;
 
@@ -77,6 +82,7 @@ class ssa_local_unwindert : public messaget
     }
   };
   tree_loopnodet root_node;
+  std::string keep_first_two_hash(const std::string& str) const;
   void put_varmod_in_parent();
   void populate_parents();
   void propagate_varmod_to_ancestors(const irep_idt& id,
@@ -86,7 +92,7 @@ class ssa_local_unwindert : public messaget
   bool is_break_node(const local_SSAt::nodet& node,
       const unsigned int end_location) const;
   bool is_return_node(const tree_loopnodet& current_loop,
-		      const local_SSAt::nodest::iterator& node) const;
+      const local_SSAt::nodest::const_iterator& node) const;
 
   void populate_connectors(tree_loopnodet& current_loop);
   void unwind(tree_loopnodet& current_loop,
@@ -112,6 +118,7 @@ class ssa_local_unwindert : public messaget
  // void init();
   bool is_initialized;
 public :
+  void set_return_var(const irep_idt& id);
   void dissect_loop_suffix(const irep_idt& id,
       irep_idt& before_suffix,
       std::list<unsigned>& iterations, bool baseonly) const;

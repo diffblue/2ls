@@ -15,8 +15,18 @@
 #include "ssa_unwinder.h"
 
 
-
-
+void ssa_local_unwindert::set_return_var(const irep_idt& id)
+{
+  return_var="c::"+id2string(id)+"#return_value";
+}
+std::string ssa_local_unwindert::keep_first_two_hash(const std::string& str) const
+{
+   std::size_t pos = str.find('#');
+   if(pos==std::string::npos) return str;
+   pos=str.find('#',pos+1);
+   if(pos==std::string::npos) return str;
+   return str.substr(0,pos);
+}
 void ssa_local_unwindert::dissect_loop_suffix(const irep_idt& id,
     irep_idt& before_suffix,std::list<unsigned>& iterations,bool baseonly) const
 {
@@ -71,8 +81,10 @@ void ssa_local_unwindert::is_void_func()
   for (local_SSAt::objectst::const_iterator o_it =
            SSA.ssa_objects.objects.begin();
          o_it != SSA.ssa_objects.objects.end(); o_it++) {
-    if(o_it->get_identifier()==return_var){ isvoid=false; break;}
+
+    if(as_string(o_it->get_identifier()).find(RETVAR)){ isvoid=false; return;}
   }
+ isvoid=true;
 
 }
 /*****************************************************************************\
@@ -112,7 +124,10 @@ bool compare_node_iteratorst::operator()(const local_SSAt::nodest::iterator& a,
     const local_SSAt::nodest::iterator& b) const {
   return ((unsigned long) (&(*a)) < (unsigned long) (&(*b)));
 }
-
+bool compare_node_iteratorst::operator()(const local_SSAt::nodest::const_iterator& a,
+    const local_SSAt::nodest::const_iterator& b) const {
+  return ((unsigned long) (&(*a)) < (unsigned long) (&(*b)));
+}
 /*****************************************************************************\
  * Function : ssa_local_unwindert::init
  *
@@ -271,10 +286,13 @@ void ssa_local_unwindert::init() {
 		   root_node.body_nodes.end());
 
   populate_parents();
-  /*
-   * if(!is_void_func())
-   *RETURN: populate_return_val_mod();
-   */
+  is_void_func();
+
+    if(!isvoid)
+    {
+    populate_return_val_mod();
+    }
+
   //populate connector for every loop
   for(loop_nodest::iterator lit=root_node.loop_nodes.begin();
       lit!=root_node.loop_nodes.end();lit++)
@@ -372,7 +390,12 @@ void ssa_local_unwindert::put_varmod_in_parent()
 void ssa_local_unwindert::populate_return_val_mod()
 {
   std::list<tree_loopnodet*> worklist;
-  worklist.push_back(&root_node);
+  for(loop_nodest::iterator lit=root_node.loop_nodes.begin();
+      lit!=root_node.loop_nodes.end();lit++)
+  {
+    worklist.push_back(&(*lit));
+  }
+
 while(!worklist.empty())
 {
   tree_loopnodet* current_loop=worklist.back();
@@ -383,15 +406,20 @@ while(!worklist.empty())
       for(local_SSAt::nodet::equalitiest::iterator eit=nit->equalities.begin();
           eit!=nit->equalities.end();eit++)
       {
+
         if(eit->lhs().id()==ID_symbol)
         {
+
           symbol_exprt sym_e=to_symbol_expr(eit->lhs());
           irep_idt sym_id=sym_e.get_identifier();
           std::string s = as_string(sym_id);
-          std::size_t pos=s.find(id2string(return_var));
+
+          std::size_t pos=s.find(RETVAR);
           if(pos!=std::string::npos)
           {
-              propagate_varmod_to_ancestors(return_var,current_loop);
+
+              irep_idt id= keep_first_two_hash(s);
+            propagate_varmod_to_ancestors(id,current_loop);
               current_loop->return_nodes.insert(nit);
           }
         }
@@ -437,6 +465,9 @@ void ssa_local_unwindert::populate_connectors(tree_loopnodet& current_loop)
         if(fit==current_loop.vars_modified.end()) continue;
 
         varobj_map[*fit]=o_it;
+        //though #return_value is added into vars_modified
+        //we don't want PHI connectors for them
+        if(as_string(*fit).find(RETVAR)!=std::string::npos) continue;
         if(!current_loop.is_dowhile)
         {
          current_loop.connectors.insert(SSA.name(*o_it,local_SSAt::PHI,it->location));
@@ -457,22 +488,30 @@ else
   current_loop.connectors.insert(SSA.guard_symbol(lit->location));
   current_loop.connectors.insert(SSA.cond_symbol(lit->location));
 }
+//since loophead is processed we can probably go on?
+it++;
+
 
 for(;it!=current_loop.body_nodes.end();it++)
 {
   body_nodest::const_iterator next_node = it; next_node++;
   if(next_node==current_loop.body_nodes.end()) break;
-#if 1
+
   if(!is_break_node(*it,end_location)) continue;
-#else
-  if(!is_break_node(*it,end_location) && !is_return_node(current_loop,it)) continue;
-#endif
+  //no separete treatment for return nodes required as break nodes
+  // are all nodes with jump out of the loop which include the return
+  //nodes
+
   for(varobj_mapt::iterator vit=varobj_map.begin();vit!=varobj_map.end();vit++)
   {
+    if(it==current_loop.body_nodes.begin() &&
+        (as_string(vit->first).find(RETVAR)!=std::string::npos)) continue;
+
     current_loop.connectors.insert(SSA.read_rhs(*(vit->second),it->location));
     current_loop.connectors.insert(SSA.guard_symbol(it->location));
     current_loop.connectors.insert(SSA.cond_symbol(it->location));
   }
+
 
 }
 
@@ -499,9 +538,9 @@ bool ssa_local_unwindert::is_break_node(const local_SSAt::nodet& node,
 }
 
 bool ssa_local_unwindert::is_return_node(const tree_loopnodet& current_loop,
-    const local_SSAt::nodest::iterator& node) const
+    const local_SSAt::nodest::const_iterator& node) const
 {
-  return_nodest::iterator it=current_loop.return_nodes.find(node);
+  return_nodest::const_iterator it=current_loop.return_nodes.find(node);
   return (it!=current_loop.return_nodes.end());
 }
 /*****************************************************************************\
@@ -529,10 +568,10 @@ void ssa_local_unwindert::unwind(const irep_idt& fname,unsigned int k) {
 
   local_SSAt::nodest new_nodes;
   irep_idt func_name = "unwind:"+as_string(fname)+":enable_"+i2string(k);
-  if(return_var.empty())
+ /* if(return_var.empty())
   {
    return_var=as_string(fname)+"#return_value";
-  }
+  }*/
   symbol_exprt new_sym(func_name,bool_typet());
   SSA.enabling_exprs.push_back(new_sym);
   for (loop_nodest::iterator it = root_node.loop_nodes.begin();
@@ -630,7 +669,7 @@ void ssa_local_unwindert::rename(exprt &expr, std::string suffix,
     symbol_exprt &sexpr = to_symbol_expr(expr);
     irep_idt vid=sexpr.get_identifier();
     irep_idt base_id = get_base_name(vid);
-  //  bool isreturnvar=(as_string(vid).find(as_string(return_var))!=std::string::npos);
+    bool isreturnvar=(as_string(vid).find(RETVAR)!=std::string::npos);
     int mylevel;
     if(iteration<0)
     {
@@ -643,7 +682,7 @@ void ssa_local_unwindert::rename(exprt &expr, std::string suffix,
     std::string s = id2string(base_id);
     if(s.find("$guard")!=std::string::npos
         || s.find("$cond")!=std::string::npos
-    //  || isreturnvar
+        || isreturnvar
         || (mylevel = need_renaming(current_loop,base_id))==0)
     {
 
@@ -1581,6 +1620,7 @@ void ssa_unwindert::init_localunwinders()
   for(unwinder_mapt::iterator it=unwinder_map.begin();
       it!=unwinder_map.end();it++)
   {
+     it->second.set_return_var(it->first);
      it->second.init();
   }
   is_initialized=true;
