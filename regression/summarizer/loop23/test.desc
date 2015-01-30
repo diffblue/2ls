@@ -1,6 +1,6 @@
 CORE
 main.c
-
-^EXIT=0$
+--havoc --unwind 2 --inline
+^EXIT=10$
 ^SIGNAL=0$
 ^VERIFICATION FAILED$
