@@ -166,8 +166,8 @@ public:
 
   void get_globals(locationt loc, std::set<symbol_exprt> &globals, 
 		   bool rhs_value=true, 
-		   bool with_own_returns=true, 
-		   bool with_all_returns=true) const;
+		   bool with_returns=true, 
+		   const irep_idt &returns_for_function="") const;
 
   nodest::iterator find_node(locationt loc);
   nodest::const_iterator find_node(locationt loc) const;

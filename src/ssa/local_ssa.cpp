@@ -101,12 +101,12 @@ void local_SSAt::get_entry_exit_vars()
 
   //get globals in 
   goto_programt::const_targett first = goto_function.body.instructions.begin();
-  get_globals(first,globals_in,true,false,false); //filters out #return_value
+  get_globals(first,globals_in,true,false); //filters out #return_value
 
   //get globals out (includes return value)
   goto_programt::const_targett 
     last = goto_function.body.instructions.end(); last--;
-  get_globals(last,globals_out,true,true,false);
+  get_globals(last,globals_out,true,true,last->function);
 }
 
 /*******************************************************************\
@@ -122,7 +122,8 @@ Function: local_SSAt::get_globals
 \*******************************************************************/
 
 void local_SSAt::get_globals(locationt loc, std::set<symbol_exprt> &globals, 
-	     bool rhs_value, bool with_own_returns, bool with_all_returns) const
+			     bool rhs_value, bool with_returns, 
+			     const irep_idt &returns_for_function) const
 {
   {
     const std::set<ssa_objectt> &ssa_globals = assignments.ssa_objects.globals;
@@ -131,19 +132,19 @@ void local_SSAt::get_globals(locationt loc, std::set<symbol_exprt> &globals,
     {
 #if 0
       std::cout << "global: " 
-                << from_expr(ns, "", read_rhs(it->get_expr(),loc)) << std::endl;
+                << from_expr(ns, "", read_lhs(it->get_expr(),loc)) << std::endl;
 #endif
-      if(!with_own_returns && !with_all_returns &&  
+      if(!with_returns &&  
 	 id2string(it->get_identifier()).find(
            "#return_value") != std::string::npos) 
 	continue;
 
       //filter out return values of other functions
-      if(with_own_returns && !with_all_returns &&
+      if(with_returns && returns_for_function!="" &&
          id2string(it->get_identifier()).find(
            "#return_value") != std::string::npos &&
          id2string(it->get_identifier()).find(
-           id2string(loc->function)+"#return_value")==std::string::npos)
+           id2string(returns_for_function)+"#return_value")==std::string::npos)
 	 continue;
 
       if(rhs_value) 
@@ -153,6 +154,7 @@ void local_SSAt::get_globals(locationt loc, std::set<symbol_exprt> &globals,
     }
   }
 }   
+
 
 /*******************************************************************\
 

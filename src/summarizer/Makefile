@@ -1,8 +1,10 @@
 include ../config.inc
 
-SRC = summarizer_main.cpp summarizer_parseoptions.cpp \
+SRC = summarizer_base.cpp  \
+      summarizer_fw.cpp summarizer_bw.cpp \
+      summarizer_main.cpp summarizer_parseoptions.cpp \
       show.cpp summary_checker.cpp cover_goals_ext.cpp \
-      summary_db.cpp summarizer.cpp summary.cpp ssa_db.cpp \
+      summary_db.cpp summary.cpp ssa_db.cpp \
       array_abstraction.cpp preprocessing_util.cpp \
       instrument_goto.cpp
 

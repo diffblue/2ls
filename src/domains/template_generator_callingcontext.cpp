@@ -9,6 +9,7 @@ Author: Peter Schrammel
 #include "template_generator_callingcontext.h"
 #include "equality_domain.h"
 #include "tpolyhedra_domain.h"
+#include "../ssa/ssa_inliner.h"
 
 #include <util/find_symbols.h>
 
@@ -39,11 +40,9 @@ void template_generator_callingcontextt::operator()(unsigned _domain_number,
   //get domain from command line options
   instantiate_standard_domains(SSA);  
 
-#ifdef SHOW_TEMPLATE_VARIABLES
+#if 1
   debug() << "Template variables: " << eom;
   domaint::output_var_specs(debug(),var_specs,SSA.ns); debug() << eom;
-#endif  
-#ifdef SHOW_TEMPLATE
   debug() << "Template: " << eom;
   domain_ptr->output_domain(debug(), SSA.ns); debug() << eom;
 #endif  
@@ -69,29 +68,38 @@ void template_generator_callingcontextt::collect_variables_callingcontext(
 {
   exprt guard = SSA.guard_symbol(n_it->location);
 
+  assert(f_it->function().id()==ID_symbol); //no function pointers
+  irep_idt fname = to_symbol_expr(f_it->function()).get_identifier();
+  const local_SSAt &fSSA = ssa_db.get(fname);
+
   //getting globals at call site
-  local_SSAt::var_sett cs_globals_in;
+  local_SSAt::var_sett cs_globals_in, globals_in;
   if(forward)
   {
-    SSA.get_globals(n_it->location,cs_globals_in,true,false,false); //filter out return values
+    SSA.get_globals(n_it->location,cs_globals_in,true,false); 
+      //filter out return values
+    globals_in = fSSA.globals_in;
   }
   else
   {
-    local_SSAt::nodest::const_iterator nnext = n_it; nnext++;
-    SSA.get_globals(nnext->location,cs_globals_in,false,true,true); //with return values
+    SSA.get_globals(n_it->location,cs_globals_in,false,true,fname); 
+      //with return values for function call
+    globals_in = fSSA.globals_out;
   }
 
   for(local_SSAt::var_sett::iterator v_it = cs_globals_in.begin();
       v_it != cs_globals_in.end(); v_it++)
   {
-    if(SSA.globals_in.find(*v_it)!=SSA.globals_in.end())
+    symbol_exprt dummy;
+    if(ssa_inlinert::find_corresponding_symbol(*v_it,globals_in,dummy))
       add_var(*v_it,guard,guard,
 	      domaint::OUT, //the same for both forward and backward
 	      var_specs);
   }
 
+  if(!forward) return; //TODO: actually, the context should contain both, arguments and return values 
+
   //add function arguments
-  if(!forward) return; // nothing to do
   for(exprt::operandst::const_iterator a_it =  f_it->arguments().begin();
       a_it !=  f_it->arguments().end(); a_it++)
   {

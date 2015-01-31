@@ -16,8 +16,8 @@ class summary_dbt
 public:
   typedef irep_idt function_namet;
 
-  virtual void load() const {}
-  virtual void save() const {}
+  void load() const {}
+  void save() const {}
   void clear() { store.clear(); }
 
   summaryt get(const function_namet &function_name) const 

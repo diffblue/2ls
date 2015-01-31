@@ -21,20 +21,28 @@ class summaryt
 
   typedef std::list<symbol_exprt> var_listt;
   typedef std::set<symbol_exprt> var_sett;
+
+  summaryt() : 
+    fw_precondition(nil_exprt()), 
+    fw_transformer(nil_exprt()), 
+    fw_invariant(nil_exprt()), 
+    bw_precondition(nil_exprt()), 
+    bw_postcondition(nil_exprt()), 
+    bw_transformer(nil_exprt()), 
+    bw_invariant(nil_exprt()) {}
+
   var_listt params;
   var_sett globals_in, globals_out;
 
-  explicit summaryt() : mark_recompute(false) {};
-
-  //void from_fixedpoint(class ssa_fixed_pointt &);
-  
-  // a summary has two parts:
-  // 1) precondition (a predicate over entry_vars (and exit_vars))
-  // 2) transformer (a predicate over entry_vars and exit_vars)
-  
-  predicatet precondition; //let's call it the caller-based summary
-  predicatet transformer; // this is the callee-based summary
-  predicatet invariant; 
+ 
+  predicatet fw_precondition; // accumulated calling contexts (over-approx)
+  //  predicatet fw_postcondition; // we are not projecting that out currently
+  predicatet fw_transformer; // forward summary (over-approx)
+  predicatet fw_invariant; // forward invariant (over-approx)
+  predicatet bw_precondition; // accumulated preconditions (over- or under-approx)
+  predicatet bw_postcondition; // accumulated postconditions (over- or under-approx)
+  predicatet bw_transformer; // backward summary (over- or under-approx)
+  predicatet bw_invariant; // backward invariant (over- or under-approx)
 
   bool mark_recompute; //to force recomputation of the summary
                        // (used for invariant reuse in k-induction)
@@ -49,6 +57,7 @@ class summaryt
   void combine_and(exprt &olde, const exprt &newe);
 
 };
+
 
 
 #endif

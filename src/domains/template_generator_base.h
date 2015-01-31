@@ -24,10 +24,10 @@ class template_generator_baset : public messaget
 public:
   typedef strategy_solver_baset::var_listt var_listt;
 
-  explicit template_generator_baset(optionst &_options,
+  explicit template_generator_baset(optionst &_options, ssa_dbt &_ssa_db,
                                     ssa_local_unwindert &_ssa_local_unwinder)
     : 
-  options(_options),
+  options(_options), ssa_db(_ssa_db),
   ssa_local_unwinder(_ssa_local_unwinder)
   {
   }  
@@ -46,15 +46,16 @@ public:
 
   virtual domaint::var_sett all_vars();
 
-  domaint *domain() { return domain_ptr; }
+  domaint *domain() { assert(domain_ptr!=NULL); return domain_ptr; }
 
   domaint::var_specst var_specs;
   replace_mapt renaming_map;
   unsigned domain_number; //serves as id for variables names
 
-  optionst options; // we may override options
+  optionst options; // copy: we may override options
 
 protected:
+  const ssa_dbt &ssa_db;
   const ssa_local_unwindert &ssa_local_unwinder;
   domaint* domain_ptr;
 

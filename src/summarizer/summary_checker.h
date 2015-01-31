@@ -21,7 +21,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "../domains/incremental_solver.h"
 #include "ssa_db.h"
 #include "summary_db.h"
-#include "summarizer.h"
 
 class summary_checkert:public property_checkert
 {
@@ -33,9 +32,10 @@ public:
     options(_options),
     ssa_db(),summary_db(),
     ssa_unwinder(ssa_db),
-    summarizer(_options,summary_db,ssa_db,ssa_unwinder,ssa_inliner),
+    ssa_inliner(summary_db),
     solver_instances(0),
-    solver_calls(0)
+    solver_calls(0),
+    summaries_used(0)
   {
     ssa_inliner.set_message_handler(get_message_handler());
   }
@@ -57,10 +57,10 @@ protected:
   summary_dbt summary_db;
   ssa_unwindert ssa_unwinder;
   ssa_inlinert ssa_inliner;
-  summarizert summarizer;
 
   unsigned solver_instances;
   unsigned solver_calls;
+  unsigned summaries_used;
   void report_statistics();
 
   void do_show_vcc(
@@ -70,11 +70,14 @@ protected:
 
   void SSA_functions(const goto_modelt &, const namespacet &ns);
 
-  void summarize(const goto_modelt &, bool forward=true, bool sufficient=false);
+  void summarize(const goto_modelt &, 
+		 bool forward=true, bool termination=false);
 
   property_checkert::resultt check_properties();
-  void check_properties_non_incremental(const summarizert::functionst::const_iterator f_it);
-  void check_properties_incremental(const summarizert::functionst::const_iterator f_it);
+  void check_properties_non_incremental(
+		  const ssa_dbt::functionst::const_iterator f_it);
+  void check_properties_incremental(
+		  const ssa_dbt::functionst::const_iterator f_it);
 
   exprt::operandst get_loophead_selects(
     const irep_idt &function_name, const local_SSAt &, prop_convt &);

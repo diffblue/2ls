@@ -31,6 +31,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "summary_checker.h"
 
+#include "summarizer_fw.h"
+#include "summarizer_bw.h"
+
 /*******************************************************************\
 
 Function: summary_checkert::operator()
@@ -121,8 +124,16 @@ property_checkert::resultt summary_checkert::operator()(
 
   // neither k-induction nor bmc
   {  
-    if(!options.get_bool_option("havoc")) 
-      summarize(goto_model,!preconditions,options.get_bool_option("sufficient"));
+    if(!options.get_bool_option("havoc") && !preconditions) 
+    {
+      //forward analysis
+      summarize(goto_model,true,false);
+    }
+    if(!options.get_bool_option("havoc") && preconditions)
+    {
+      //backward analysis
+      summarize(goto_model,false,false);
+    }
 
     if(preconditions) 
     {
@@ -213,21 +224,33 @@ Function: summary_checkert::summarize
 \*******************************************************************/
 
 void summary_checkert::summarize(const goto_modelt &goto_model, 
-				 bool forward, bool sufficient)
+				 bool forward,
+				 bool termination)
 {    
-  summarizer.set_message_handler(get_message_handler());
+  summarizer_baset *summarizer = NULL;
 
-  if(options.get_bool_option("context-sensitive"))
-    summarizer.summarize(goto_model.goto_functions.entry_point(),
-                         forward,sufficient);
+  if(forward && !termination)
+    summarizer = new summarizer_fwt(
+      options,summary_db,ssa_db,ssa_unwinder,ssa_inliner);
+  if(!forward && !termination)
+    summarizer = new summarizer_bwt(
+      options,summary_db,ssa_db,ssa_unwinder,ssa_inliner);
+  assert(summarizer != NULL);
+
+  summarizer->set_message_handler(get_message_handler());
+
+  if(!options.get_bool_option("context-sensitive"))
+    summarizer->summarize();
   else
-    summarizer.summarize(forward,sufficient);
+    summarizer->summarize(goto_model.goto_functions.entry_point());
 
   //statistics
-  solver_instances += summarizer.get_number_of_solver_instances();
-  solver_calls += summarizer.get_number_of_solver_calls();
-}
+  solver_instances += summarizer->get_number_of_solver_instances();
+  solver_calls += summarizer->get_number_of_solver_calls();
+  summaries_used += summarizer->get_number_of_summaries_used();
 
+  delete summarizer;
+}
 /*******************************************************************\
 
 Function: summary_checkert::check_properties
@@ -243,7 +266,7 @@ Function: summary_checkert::check_properties
 summary_checkert::resultt summary_checkert::check_properties()
 {
   // analyze all the functions
-  for(summarizert::functionst::const_iterator f_it = ssa_db.functions().begin();
+  for(ssa_dbt::functionst::const_iterator f_it = ssa_db.functions().begin();
       f_it != ssa_db.functions().end(); f_it++)
   {
     status() << "Checking properties of " << f_it->first << messaget::eom;
@@ -292,7 +315,7 @@ Function: summary_checkert::check_properties
 \*******************************************************************/
 
 void summary_checkert::check_properties_non_incremental(
-   const summarizert::functionst::const_iterator f_it)
+   const ssa_dbt::functionst::const_iterator f_it)
 {
   local_SSAt &SSA = *f_it->second;
   if(!SSA.goto_function.body.has_assertion()) return;
@@ -362,8 +385,15 @@ void summary_checkert::check_properties_non_incremental(
     solver.new_context();
     solver << SSA.get_enabling_exprs();
 
+    // invariant, calling contexts
     if(summary_db.exists(f_it->first))
-      solver << summary_db.get(f_it->first).invariant;
+    {
+      solver << summary_db.get(f_it->first).fw_invariant;
+      solver << summary_db.get(f_it->first).fw_precondition;
+    }
+
+    //callee summaries
+    solver << ssa_inliner.get_summaries(SSA);
 
     // give negated property to solver
     solver << property;
@@ -428,7 +458,7 @@ Function: summary_checkert::check_properties_incremental
 \*******************************************************************/
 
 void summary_checkert::check_properties_incremental(
-   const summarizert::functionst::const_iterator f_it)
+   const ssa_dbt::functionst::const_iterator f_it)
 {
   local_SSAt &SSA = *f_it->second;
   if(!SSA.goto_function.body.has_assertion()) return;
@@ -452,8 +482,15 @@ void summary_checkert::check_properties_incremental(
   exprt enabling_expr = SSA.get_enabling_exprs();
   solver << enabling_expr;
 
+  // invariant, calling contexts
   if(summary_db.exists(f_it->first))
-    solver << summary_db.get(f_it->first).invariant;
+  {
+    solver << summary_db.get(f_it->first).fw_invariant;
+    solver << summary_db.get(f_it->first).fw_precondition;
+  }
+
+  //callee summaries
+  solver << ssa_inliner.get_summaries(SSA);
 
   //freeze loop head selects
   exprt::operandst loophead_selects = 
@@ -578,7 +615,7 @@ void summary_checkert::report_statistics()
   statistics() << "  number of solver instances: " << solver_instances << eom;
   statistics() << "  number of solver calls: " << solver_calls << eom;
   statistics() << "  number of summaries used: " 
-               << summarizer.get_number_of_summaries_used() << eom;
+               << summaries_used << eom;
   statistics() << eom;
 }
   
@@ -632,17 +669,21 @@ Function: summary_checkert::report_preconditions
 
 void summary_checkert::report_preconditions()
 {
-  bool sufficient = options.get_bool_option("sufficient");
   result() << eom;
-  result() << "** Preconditions: " << eom;
-  summarizert::functionst &functions = ssa_db.functions();
-  for(summarizert::functionst::iterator it = functions.begin();
+  result() << "** " << (options.get_bool_option("sufficient") ? 
+			"Sufficient" : "Necessary")
+	   << " preconditions: " << eom;
+  ssa_dbt::functionst &functions = ssa_db.functions();
+  for(ssa_dbt::functionst::iterator it = functions.begin();
       it != functions.end(); it++)
   {
-    exprt precondition = summary_db.get(it->first).precondition;
-    if(sufficient) precondition = not_exprt(precondition);
+    exprt precondition;
+    bool computed = summary_db.exists(it->first);
+    if(computed) precondition = summary_db.get(it->first).bw_precondition;
+    if(precondition.is_nil()) computed = false;
     result() << eom << "[" << it->first << "]: " 
-	     << from_expr(it->second->ns, "", precondition) << eom;
+	     << (!computed ? "not computed" : 
+		 from_expr(it->second->ns, "", precondition)) << eom;
   }
 }
 
