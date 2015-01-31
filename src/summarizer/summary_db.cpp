@@ -8,9 +8,11 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "summary_db.h"
 
-void summary_dbt::put(const function_namet &function_name, const summaryt &summary)
+void summary_dbt::put(const function_namet &function_name, 
+		      const summaryt &summary)
 { 
-  if(store.find(function_name)==store.end() || store[function_name].mark_recompute)
+  if(store.find(function_name)==store.end() || 
+     store[function_name].mark_recompute)
     store[function_name] = summary; 
   else
     store[function_name].join(summary);

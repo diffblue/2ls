@@ -44,7 +44,8 @@ void summarizer_baset::summarize()
       it!=ssa_db.functions().end(); it++)
   {
     status() << "\nSummarizing function " << it->first << eom;
-    if(!summary_db.exists(it->first)) 
+    if(!summary_db.exists(it->first) || 
+     summary_db.get(it->first).mark_recompute) 
       compute_summary_rec(it->first,precondition,false);
     else status() << "Summary for function " << it->first << 
            " exists already" << eom;
@@ -68,7 +69,8 @@ void summarizer_baset::summarize(const function_namet &function_name)
   exprt precondition = true_exprt(); //initial calling context
 
   status() << "\nSummarizing function " << function_name << eom;
-  if(!summary_db.exists(function_name)) 
+  if(!summary_db.exists(function_name) || 
+     summary_db.get(function_name).mark_recompute) 
   {
     compute_summary_rec(function_name,precondition,true);
   }
@@ -268,6 +270,7 @@ bool summarizer_baset::check_precondition(
   if(summary_db.exists(fname)) 
   {
     summaryt summary = summary_db.get(fname);
+    if(summary.mark_recompute) return false;
     if(!context_sensitive ||
        summary.fw_precondition.is_true())  //precondition trivially holds
     {
