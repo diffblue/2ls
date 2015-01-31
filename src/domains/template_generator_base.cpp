@@ -300,7 +300,7 @@ Function: template_generator_baset::handle_special_functions
 void template_generator_baset::handle_special_functions(const local_SSAt &SSA)
 {
   const irep_idt &function_id = SSA.goto_function.body.instructions.front().function;
-  if(id2string(function_id) == "c::__CPROVER_initialize")
+  if(id2string(function_id) == "__CPROVER_initialize")
   {
     options.set_option("intervals",true);
     options.set_option("enum-solver",true);

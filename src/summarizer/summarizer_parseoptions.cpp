@@ -46,7 +46,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "../ssa/split_loopheads.h"
 #include "show.h"
 
-//#define ANONYMOUS
+#define ANONYMOUS
 
 /*******************************************************************\
 
@@ -290,9 +290,9 @@ int summarizer_parseoptionst::doit()
   // Print a banner
   //
 #ifndef ANONYMOUS
-  status() << "SUMMARIZER version " SUMMARIZER_VERSION " (based on CBMC " CBMC_VERSION ")" << eom;
+  status() << "2LS version " SUMMARIZER_VERSION " (based on CBMC " CBMC_VERSION ")" << eom;
 #else
-  status() << "SUMMARIZER version " SUMMARIZER_VERSION << eom;
+  status() << "2LS version " SUMMARIZER_VERSION << eom;
 #endif
 
   register_language(new_ansi_c_language);
@@ -926,7 +926,7 @@ bool summarizer_parseoptionst::process_goto_program(
       goto_inline(goto_model, ui_message_handler);
     }
 
-    //inline c::__CPROVER_initialize and c::main
+    //inline __CPROVER_initialize and main
     if(cmdline.isset("inline-main"))
     {
       inline_main(goto_model); 

@@ -68,7 +68,8 @@ protected:
 
   void SSA_functions(const goto_modelt &, const namespacet &ns);
 
-  void summarize(const goto_modelt &, bool forward=true, bool sufficient=false);
+  void summarize(const goto_modelt &, 
+		 bool forward=true, bool termination=false);
 
   property_checkert::resultt check_properties();
   void check_properties_non_incremental(
