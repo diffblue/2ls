@@ -29,7 +29,8 @@ class summaryt
     bw_precondition(nil_exprt()), 
     bw_postcondition(nil_exprt()), 
     bw_transformer(nil_exprt()), 
-    bw_invariant(nil_exprt()) {}
+    bw_invariant(nil_exprt()),
+    mark_recompute(false) {}
 
   var_listt params;
   var_sett globals_in, globals_out;
