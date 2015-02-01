@@ -2,6 +2,7 @@ include ../config.inc
 
 SRC = summarizer_base.cpp  \
       summarizer_fw.cpp summarizer_bw.cpp \
+      summarizer_fw_contexts.cpp \
       summarizer_main.cpp summarizer_parseoptions.cpp \
       show.cpp summary_checker.cpp cover_goals_ext.cpp \
       summary_db.cpp summary.cpp ssa_db.cpp \
@@ -78,7 +79,7 @@ LIBS =
 #LIBS = $(CUDD)/cudd/libcudd.a $(CUDD)/mtr/libmtr.a \
 #       $(CUDD)/st/libst.a $(CUDD)/epd/libepd.a $(CUDD)/util/libutil.a
 
-CP_CXXFLAGS +=-g
+CP_CXXFLAGS +=-g -DSHOW_CALLING_CONTEXTS
 
 # $(CUDD)/obj/libobj.a 
 

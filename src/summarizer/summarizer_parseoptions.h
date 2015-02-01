@@ -48,7 +48,8 @@ class optionst;
   "(instrument-output):" \
   "(show-locs)(show-vcc)(show-properties)(show-trace)(show-fixed-points)(show-stats)" \
   "(show-goto-functions)(show-guards)(show-defs)(show-ssa)(show-assignments)" \
-  "(show-invariants)(compute-contexts):" \
+  "(show-invariants)" \
+  "(show-calling-contexts):" \
   "(property):(all-properties)(k-induction)(incremental-bmc)" \
   "(no-simplify)(no-fixed-point)" \
   "(no-spurious-check)(no-all-properties)" \

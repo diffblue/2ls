@@ -34,6 +34,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "summarizer_fw.h"
 #include "summarizer_bw.h"
 
+#ifdef SHOW_CALLING_CONTEXTS
+#include "summarizer_fw_contexts.h"
+#endif
+
 /*******************************************************************\
 
 Function: summary_checkert::operator()
@@ -142,6 +146,11 @@ property_checkert::resultt summary_checkert::operator()(
       return property_checkert::UNKNOWN;
     }
 
+#ifdef SHOW_CALLING_CONTEXTS
+    if(options.get_bool_option("show-calling-contexts"))
+      return property_checkert::UNKNOWN;
+#endif
+
     property_checkert::resultt result =  check_properties(); 
     report_statistics();
     return result;
@@ -229,12 +238,20 @@ void summary_checkert::summarize(const goto_modelt &goto_model,
 {    
   summarizer_baset *summarizer = NULL;
 
+#ifdef SHOW_CALLING_CONTEXTS
+  if(options.get_bool_option("show-calling-contexts"))
+    summarizer = new summarizer_fw_contextst(
+      options,summary_db,ssa_db,ssa_unwinder,ssa_inliner);
+  else
+#endif
+  {
   if(forward && !termination)
     summarizer = new summarizer_fwt(
       options,summary_db,ssa_db,ssa_unwinder,ssa_inliner);
   if(!forward && !termination)
     summarizer = new summarizer_bwt(
       options,summary_db,ssa_db,ssa_unwinder,ssa_inliner);
+  }
   assert(summarizer != NULL);
 
   summarizer->set_message_handler(get_message_handler());
@@ -789,7 +806,9 @@ void summary_checkert::instrument_and_output(goto_modelt &goto_model)
 {
   instrument_gotot instrument_goto(options,ssa_db,summary_db);
   instrument_goto(goto_model);
-  write_goto_binary(options.get_option("instrument-output"), 
+  std::string filename = options.get_option("instrument-output");
+  status() << "Writing instrumented goto-binary " << filename << eom;
+  write_goto_binary(filename, 
 		    goto_model.symbol_table, 
 		    goto_model.goto_functions, get_message_handler());
 }

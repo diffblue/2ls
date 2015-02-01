@@ -116,6 +116,9 @@ void summarizer_parseoptionst::get_command_line_options(optionst &options)
     exit(1);
   }
 
+  if(cmdline.isset("xml-ui"))
+    options.set_option("xml-ui", true);
+
   if(cmdline.isset("debug-level"))
     options.set_option("debug-level", cmdline.get_value("debug-level"));
 
@@ -267,6 +270,23 @@ void summarizer_parseoptionst::get_command_line_options(optionst &options)
     options.set_option("competition-mode", true);
     options.set_option("all-properties", false);
   }
+
+  // instrumentation / output
+  if(cmdline.isset("instrument-output"))
+    options.set_option("instrument-output", 
+		       cmdline.get_value("instrument-output"));
+  
+
+#ifdef SHOW_CALLING_CONTEXTS
+  if(cmdline.isset("show-calling-contexts"))
+  {
+    if(!options.get_bool_option("intervals"))
+      throw "--show-calling-contexts only possible with --intervals";
+    options.set_option("show-calling-contexts", true);
+    options.set_option("do-not-analyze-functions", 
+		       cmdline.get_value("show-calling-contexts"));
+  }
+#endif
 }
 
 /*******************************************************************\
