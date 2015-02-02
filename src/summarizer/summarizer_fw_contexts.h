@@ -43,6 +43,8 @@ class summarizer_fw_contextst : public summarizer_fwt
 
   }
 
+  virtual void summarize();
+
  protected:
   language_uit::uit ui; // use gui format
   std::set<irep_idt> excluded_functions;

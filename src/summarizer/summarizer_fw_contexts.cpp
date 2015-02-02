@@ -28,6 +28,34 @@ Author: Peter Schrammel
 #include "../ssa/local_ssa.h"
 #include "../ssa/simplify_ssa.h"
 
+/*******************************************************************\
+
+Function: summarizer_fw_contextst::summarize()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void summarizer_fw_contextst::summarize()
+{
+  exprt precondition = true_exprt(); //initial calling context
+  for(functionst::const_iterator it = ssa_db.functions().begin(); 
+      it!=ssa_db.functions().end(); it++)
+  {
+    if(excluded_functions.find(it->first)!=excluded_functions.end())
+      continue;
+    status() << "\nSummarizing function " << it->first << eom;
+    if(!summary_db.exists(it->first) || 
+     summary_db.get(it->first).mark_recompute) 
+      compute_summary_rec(it->first,precondition,false);
+    else status() << "Summary for function " << it->first << 
+           " exists already" << eom;
+  }
+}
 
 /*******************************************************************\
 
