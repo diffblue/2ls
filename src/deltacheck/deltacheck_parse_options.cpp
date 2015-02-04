@@ -21,7 +21,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <cpp/cpp_language.h>
 
 #include "../functions/index.h"
-#include "deltacheck_parseoptions.h"
+#include "deltacheck_parse_options.h"
 #include "version.h"
 #include "analyzer.h"
 #include "change_impact.h"
@@ -29,7 +29,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
-Function: deltacheck_parseoptionst::deltacheck_parseoptionst
+Function: deltacheck_parse_optionst::deltacheck_parse_optionst
 
   Inputs:
 
@@ -39,9 +39,9 @@ Function: deltacheck_parseoptionst::deltacheck_parseoptionst
 
 \*******************************************************************/
 
-deltacheck_parseoptionst::deltacheck_parseoptionst(
+deltacheck_parse_optionst::deltacheck_parse_optionst(
   int argc, const char **argv):
-  parseoptions_baset(DELTACHECK_OPTIONS, argc, argv),
+  parse_options_baset(DELTACHECK_OPTIONS, argc, argv),
   xml_interfacet(cmdline),
   ui_message_handler(
     cmdline.isset("xml-ui")?ui_message_handlert::XML_UI:ui_message_handlert::PLAIN,
@@ -51,7 +51,7 @@ deltacheck_parseoptionst::deltacheck_parseoptionst(
   
 /*******************************************************************\
 
-Function: deltacheck_parseoptionst::eval_verbosity
+Function: deltacheck_parse_optionst::eval_verbosity
 
   Inputs:
 
@@ -61,7 +61,7 @@ Function: deltacheck_parseoptionst::eval_verbosity
 
 \*******************************************************************/
 
-void deltacheck_parseoptionst::eval_verbosity()
+void deltacheck_parse_optionst::eval_verbosity()
 {
   // our default verbosity
   int v=messaget::M_STATISTICS;
@@ -80,7 +80,7 @@ void deltacheck_parseoptionst::eval_verbosity()
 
 /*******************************************************************\
 
-Function: deltacheck_parseoptionst::get_command_line_options
+Function: deltacheck_parse_optionst::get_command_line_options
 
   Inputs:
 
@@ -90,7 +90,7 @@ Function: deltacheck_parseoptionst::get_command_line_options
 
 \*******************************************************************/
 
-void deltacheck_parseoptionst::get_command_line_options(optionst &options)
+void deltacheck_parse_optionst::get_command_line_options(optionst &options)
 {
   if(config.set(cmdline))
   {
@@ -152,7 +152,7 @@ void deltacheck_parseoptionst::get_command_line_options(optionst &options)
 
 /*******************************************************************\
 
-Function: deltacheck_parseoptionst::register_langauges
+Function: deltacheck_parse_optionst::register_langauges
 
   Inputs:
 
@@ -162,7 +162,7 @@ Function: deltacheck_parseoptionst::register_langauges
 
 \*******************************************************************/
 
-void deltacheck_parseoptionst::register_languages()
+void deltacheck_parse_optionst::register_languages()
 {
   register_language(new_ansi_c_language);
   register_language(new_cpp_language);
@@ -170,7 +170,7 @@ void deltacheck_parseoptionst::register_languages()
 
 /*******************************************************************\
 
-Function: deltacheck_parseoptionst::doit
+Function: deltacheck_parse_optionst::doit
 
   Inputs:
 
@@ -180,7 +180,7 @@ Function: deltacheck_parseoptionst::doit
 
 \*******************************************************************/
 
-int deltacheck_parseoptionst::doit()
+int deltacheck_parse_optionst::doit()
 {
   if(cmdline.isset("version"))
   {
@@ -438,7 +438,7 @@ int deltacheck_parseoptionst::doit()
 
 /*******************************************************************\
 
-Function: deltacheck_parseoptionst::help
+Function: deltacheck_parse_optionst::help
 
   Inputs:
 
@@ -448,7 +448,7 @@ Function: deltacheck_parseoptionst::help
 
 \*******************************************************************/
 
-void deltacheck_parseoptionst::help()
+void deltacheck_parse_optionst::help()
 {
   std::cout <<
     "\n"
