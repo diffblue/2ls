@@ -11,6 +11,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "../deltacheck/version.h"
 
 #include "storefront_parse_options.h"
+#include "data.h"
+#include "file_view.h"
+#include "trace_view.h"
+#include "property_view.h"
 
 /*******************************************************************\
 
@@ -52,13 +56,22 @@ int storefront_parse_optionst::doit()
 
   try
   {
-    if(cmdline.args.size()==0)
+    if(cmdline.args.empty())
     {
       usage_error();
       return 10;
     }
-
-
+    
+    // read config
+    datat data;
+    
+    for(unsigned i=0; i<cmdline.args.size(); i++)
+      data.read(cmdline.args[i]);
+    
+    // write views
+    file_view(data);
+    property_view(data);
+    trace_view(data);
   }
 
   catch(const std::string &e)
