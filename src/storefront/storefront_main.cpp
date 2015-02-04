@@ -8,7 +8,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/unicode.h>
 
-#include "storefront_parseoptions.h"
+#include "storefront_parse_options.h"
 
 /*******************************************************************\
 
@@ -26,13 +26,13 @@ Function: main
 int wmain(int argc, const wchar_t **argv_wide)
 {
   const char **argv=narrow_argv(argc, argv_wide);
-  storefront_parseoptionst parseoptions(argc, argv);
-  return parseoptions.main();
+  storefront_parse_optionst parse_options(argc, argv);
+  return parse_options.main();
 }
 #else
 int main(int argc, const char **argv)
 {
-  storefront_parseoptionst parseoptions(argc, argv);
-  return parseoptions.main();
+  storefront_parse_optionst parse_options(argc, argv);
+  return parse_options.main();
 }
 #endif

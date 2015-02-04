@@ -1,8 +1,8 @@
 include ../config.inc
 
-SRC = storefront_main.cpp storefront_parseoptions.cpp
+SRC = storefront_main.cpp storefront_parse_options.cpp data.cpp
 
-OBJ+= $(CBMC)/src/util/cmdline$(OBJEXT) \
+OBJ+= $(CBMC)/src/util/util$(LIBEXT) \
       ../html/html_escape$(OBJEXT) \
       ../html/logo$(OBJEXT)
 
