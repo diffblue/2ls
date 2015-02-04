@@ -1,9 +1,9 @@
 include ../config.inc
 CBMC ?= ../..
 
-SRC = deltacheck_main.cpp deltacheck_parseoptions.cpp \
+SRC = deltacheck_main.cpp deltacheck_parse_options.cpp \
       rename.cpp ssa_fixed_point.cpp source_diff.cpp change_impact.cpp \
-      html_report.cpp analyzer.cpp syntax_highlighting.cpp \
+      html_report.cpp analyzer.cpp \
       show.cpp properties.cpp report_source_code.cpp \
       get_source.cpp statistics.cpp \
       $(CBMC)/src/cbmc/xml_interface.cpp
@@ -22,6 +22,7 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       $(CBMC)/src/util/util$(LIBEXT) \
       ../html/logo$(OBJEXT) \
       ../html/html_escape$(OBJEXT) \
+      ../html/syntax_highlighting$(OBJEXT) \
       ../ssa/local_ssa$(OBJEXT) \
       ../ssa/malloc_ssa$(OBJEXT) \
       ../ssa/ssa_domain$(OBJEXT) \

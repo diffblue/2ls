@@ -11,10 +11,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/i2string.h>
 
 #include "../html/html_escape.h"
+#include "../html/syntax_highlighting.h"
 #include "report_source_code.h"
 #include "get_source.h"
 #include "source_diff.h"
-#include "syntax_highlighting.h"
 
 /*******************************************************************\
 
