@@ -1,7 +1,7 @@
 include ../config.inc
 CBMC ?= ../..
 
-SRC = deltagit_main.cpp deltagit_parseoptions.cpp show_jobs.cpp \
+SRC = deltagit_main.cpp deltagit_parse_options.cpp show_jobs.cpp \
       shell_escape.cpp git_log.cpp git_branch.cpp job_status.cpp do_job.cpp \
       deltagit_config.cpp revisions_report.cpp init.cpp reset.cpp \
       log_scale.cpp reanalyse.cpp
