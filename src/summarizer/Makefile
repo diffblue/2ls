@@ -1,6 +1,6 @@
 include ../config.inc
 
-SRC = summarizer_main.cpp summarizer_parseoptions.cpp \
+SRC = summarizer_main.cpp summarizer_parse_options.cpp \
       summary_checker.cpp show.cpp function_summary.cpp \
       summary_db.cpp
 

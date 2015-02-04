@@ -36,13 +36,13 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <cbmc/version.h>
 
-#include "summarizer_parseoptions.h"
+#include "summarizer_parse_options.h"
 #include "summary_checker.h"
 #include "show.h"
 
 /*******************************************************************\
 
-Function: summarizer_parseoptionst::summarizer_parseoptionst
+Function: summarizer_parse_optionst::summarizer_parse_optionst
 
   Inputs:
 
@@ -52,15 +52,15 @@ Function: summarizer_parseoptionst::summarizer_parseoptionst
 
 \*******************************************************************/
 
-summarizer_parseoptionst::summarizer_parseoptionst(int argc, const char **argv):
-  parseoptions_baset(SUMMARIZER_OPTIONS, argc, argv),
+summarizer_parse_optionst::summarizer_parse_optionst(int argc, const char **argv):
+  parse_options_baset(SUMMARIZER_OPTIONS, argc, argv),
   language_uit("Summarizer " CBMC_VERSION, cmdline)
 {
 }
   
 /*******************************************************************\
 
-Function: summarizer_parseoptionst::eval_verbosity
+Function: summarizer_parse_optionst::eval_verbosity
 
   Inputs:
 
@@ -70,7 +70,7 @@ Function: summarizer_parseoptionst::eval_verbosity
 
 \*******************************************************************/
 
-void summarizer_parseoptionst::eval_verbosity()
+void summarizer_parse_optionst::eval_verbosity()
 {
   // this is our default verbosity
   int v=messaget::M_STATISTICS;
@@ -89,7 +89,7 @@ void summarizer_parseoptionst::eval_verbosity()
 
 /*******************************************************************\
 
-Function: summarizer_parseoptionst::get_command_line_options
+Function: summarizer_parse_optionst::get_command_line_options
 
   Inputs:
 
@@ -99,7 +99,7 @@ Function: summarizer_parseoptionst::get_command_line_options
 
 \*******************************************************************/
 
-void summarizer_parseoptionst::get_command_line_options(optionst &options)
+void summarizer_parse_optionst::get_command_line_options(optionst &options)
 {
   if(config.set(cmdline))
   {
@@ -180,7 +180,7 @@ void summarizer_parseoptionst::get_command_line_options(optionst &options)
 
 /*******************************************************************\
 
-Function: summarizer_parseoptionst::doit
+Function: summarizer_parse_optionst::doit
 
   Inputs:
 
@@ -190,7 +190,7 @@ Function: summarizer_parseoptionst::doit
 
 \*******************************************************************/
 
-int summarizer_parseoptionst::doit()
+int summarizer_parse_optionst::doit()
 {
   if(cmdline.isset("version"))
   {
@@ -310,7 +310,7 @@ int summarizer_parseoptionst::doit()
 
 /*******************************************************************\
 
-Function: summarizer_parseoptionst::set_properties
+Function: summarizer_parse_optionst::set_properties
 
   Inputs:
 
@@ -320,7 +320,7 @@ Function: summarizer_parseoptionst::set_properties
 
 \*******************************************************************/
 
-bool summarizer_parseoptionst::set_properties(goto_modelt &goto_model)
+bool summarizer_parse_optionst::set_properties(goto_modelt &goto_model)
 {
   try
   {
@@ -350,7 +350,7 @@ bool summarizer_parseoptionst::set_properties(goto_modelt &goto_model)
 
 /*******************************************************************\
 
-Function: summarizer_parseoptionst::get_goto_program
+Function: summarizer_parse_optionst::get_goto_program
 
   Inputs:
 
@@ -360,7 +360,7 @@ Function: summarizer_parseoptionst::get_goto_program
 
 \*******************************************************************/
   
-bool summarizer_parseoptionst::get_goto_program(
+bool summarizer_parse_optionst::get_goto_program(
   const optionst &options,
   goto_modelt &goto_model)
 {
@@ -505,7 +505,7 @@ bool summarizer_parseoptionst::get_goto_program(
 
 /*******************************************************************\
 
-Function: summarizer_parseoptionst::process_goto_program
+Function: summarizer_parse_optionst::process_goto_program
 
   Inputs:
 
@@ -515,7 +515,7 @@ Function: summarizer_parseoptionst::process_goto_program
 
 \*******************************************************************/
   
-bool summarizer_parseoptionst::process_goto_program(
+bool summarizer_parse_optionst::process_goto_program(
   const optionst &options,
   goto_modelt &goto_model)
 {
@@ -614,7 +614,7 @@ bool summarizer_parseoptionst::process_goto_program(
 
 /*******************************************************************\
 
-Function: summarizer_parseoptionst::report_properties
+Function: summarizer_parse_optionst::report_properties
 
   Inputs:
 
@@ -624,7 +624,7 @@ Function: summarizer_parseoptionst::report_properties
 
 \*******************************************************************/
 
-void summarizer_parseoptionst::report_properties(
+void summarizer_parse_optionst::report_properties(
   const goto_modelt &goto_model,
   const property_checkert::property_mapt &property_map)
 {
@@ -675,7 +675,7 @@ void summarizer_parseoptionst::report_properties(
 
 /*******************************************************************\
 
-Function: summarizer_parseoptionst::report_success
+Function: summarizer_parse_optionst::report_success
 
   Inputs:
 
@@ -685,7 +685,7 @@ Function: summarizer_parseoptionst::report_success
 
 \*******************************************************************/
 
-void summarizer_parseoptionst::report_success()
+void summarizer_parse_optionst::report_success()
 {
   result() << "VERIFICATION SUCCESSFUL" << eom;
 
@@ -710,7 +710,7 @@ void summarizer_parseoptionst::report_success()
 
 /*******************************************************************\
 
-Function: summarizer_parseoptionst::show_counterexample
+Function: summarizer_parse_optionst::show_counterexample
 
   Inputs:
 
@@ -720,7 +720,7 @@ Function: summarizer_parseoptionst::show_counterexample
 
 \*******************************************************************/
 
-void summarizer_parseoptionst::show_counterexample(
+void summarizer_parse_optionst::show_counterexample(
   const goto_modelt &goto_model,
   const goto_tracet &error_trace)
 {
@@ -748,7 +748,7 @@ void summarizer_parseoptionst::show_counterexample(
 
 /*******************************************************************\
 
-Function: summarizer_parseoptionst::report_failure
+Function: summarizer_parse_optionst::report_failure
 
   Inputs:
 
@@ -758,7 +758,7 @@ Function: summarizer_parseoptionst::report_failure
 
 \*******************************************************************/
 
-void summarizer_parseoptionst::report_failure()
+void summarizer_parse_optionst::report_failure()
 {
   result() << "VERIFICATION FAILED" << eom;
 
@@ -783,7 +783,7 @@ void summarizer_parseoptionst::report_failure()
 
 /*******************************************************************\
 
-Function: summarizer_parseoptionst::help
+Function: summarizer_parse_optionst::help
 
   Inputs:
 
@@ -793,7 +793,7 @@ Function: summarizer_parseoptionst::help
 
 \*******************************************************************/
 
-void summarizer_parseoptionst::help()
+void summarizer_parse_optionst::help()
 {
   std::cout <<
     "\n"
