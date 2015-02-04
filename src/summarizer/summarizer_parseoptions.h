@@ -20,7 +20,7 @@ class optionst;
 #include "summary_checker.h"
 
 #define SUMMARIZER_OPTIONS \
-  "(xml-ui)" \
+  "(xml-ui)(html-report):" \
   "(function):" \
   "D:I:" \
   "(depth):(context-bound):(unwind):" \
