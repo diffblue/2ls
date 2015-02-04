@@ -28,6 +28,8 @@ Function: file_view
 
 void print_file(const datat &data, irep_idt file, std::ostream &out)
 {
+  out << "<div class=\"file\">\n";
+  out << "<div class=\"filename\">" << html_escape(file) << "</div>\n";
   out << "<div class=\"listing\">\n";
 
   std::ifstream in(file.c_str());
@@ -71,7 +73,7 @@ void print_file(const datat &data, irep_idt file, std::ostream &out)
     }
   }
   
-  out << "</div>\n\n";
+  out << "</div></div>\n\n";
 }
 
 /*******************************************************************\
@@ -95,7 +97,9 @@ void file_view(const datat &data)
   
   out << "<style type=\"text/css\">\n";
   out << "/* Source-code listing */\n";
+  out << "div.file { float: left; padding-right: 20px; }\n";
   out << "div.listing { font-size: 6px; width: 150px; overflow: scroll; }\n";
+  out << "div.filename { text-align: center; font-size: 12px; width: 150px; }\n";
 
   out << "strong.alarm { font-style: normal; background-color: #ff6633; font-weight: normal; }\n";
   
@@ -106,6 +110,8 @@ void file_view(const datat &data)
   out << "</head>\n";
   
   out << "<body>\n";
+  
+  out << "<center><img src=\"http://www.deltacheck.org/deltacheck_logo_small.png\"></center>\n";
   
   out << "<div class=\"description\">\n";
   out << html_escape(data.description) << "\n";

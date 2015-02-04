@@ -72,6 +72,8 @@ void datat::read(const xmlt &xml)
         else if(e_it->name=="message")
           entry.message=e_it->data;
       }
+      
+      entries.push_back(entry);
     }
     else if(it->name=="description")
     {
