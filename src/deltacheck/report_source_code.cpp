@@ -203,7 +203,8 @@ void report_source_code(
         l_old_it!=lines_old.end() && l_it!=lines_new.end();
         l_old_it++, l_it++)
     {
-      syntax_highlighting.different=(l_old_it->line!=l_it->line);
+      syntax_highlighting.strong_class=
+        (l_old_it->line!=l_it->line)?"different":"";
       syntax_highlighting.line_no=l_it->line_no;
       syntax_highlighting.id_suffix="@old";
       syntax_highlighting(l_old_it->line);
@@ -255,7 +256,8 @@ void report_source_code(
         l_old_it!=lines_old.end() && l_it!=lines_new.end();
         l_old_it++, l_it++)
     {
-      syntax_highlighting.different=(l_old_it->line!=l_it->line);
+      syntax_highlighting.strong_class=
+        (l_old_it->line!=l_it->line)?"different":"";
       syntax_highlighting.line_no=l_it->line_no;
       syntax_highlighting(l_it->line);
     }

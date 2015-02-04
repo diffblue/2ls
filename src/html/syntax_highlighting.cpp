@@ -196,7 +196,9 @@ void syntax_highlightingt::operator()(const std::string &line)
   }
 
   // open tags  
-  if(different) out << "<strong class=\"different\">";
+  if(!strong_class.empty())
+    out << "<strong class=\"" << strong_class << "\">";
+    
   if(comment) out << "<cite>";
 
   std::string token;  
@@ -287,7 +289,7 @@ void syntax_highlightingt::operator()(const std::string &line)
 
   // close tags  
   if(comment) out << "</cite>";
-  if(different) out << "</strong>";
+  if(!strong_class.empty()) out << "</strong>";
   
   out << "\n";
 }
