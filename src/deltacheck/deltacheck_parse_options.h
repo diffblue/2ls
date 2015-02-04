@@ -6,8 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef CPROVER_DELTACHECK_PARSEOPTIONS_H
-#define CPROVER_DELTACHECK_PARSEOPTIONS_H
+#ifndef CPROVER_DELTACHECK_PARSE_OPTIONS_H
+#define CPROVER_DELTACHECK_PARSE_OPTIONS_H
 
 #include <util/ui_message.h>
 #include <util/parse_options.h>
