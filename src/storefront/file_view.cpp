@@ -9,6 +9,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <set>
 #include <fstream>
 
+#include <util/prefix.h>
+
 #include "../html/html_escape.h"
 #include "../html/syntax_highlighting.h"
 
@@ -132,6 +134,12 @@ void file_view(const datat &data)
       f_it!=files.end();
       f_it++)
   {
+    if(has_prefix(id2string(*f_it), "/usr/include/"))
+      continue;
+  
+    if(has_prefix(id2string(*f_it), "<builtin-library>"))
+      continue;
+  
     print_file(data, *f_it, out);
   }
   
