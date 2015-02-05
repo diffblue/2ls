@@ -87,6 +87,11 @@ public:
     buf.erase(0, 1);
     return result;
   }
+  
+  static inline bool is_identifier_char(char ch)
+  {
+    return isalnum(ch) || ch=='_';
+  }
 };
 
 /*******************************************************************\
@@ -109,10 +114,10 @@ std::string tokenizert::peek()
   
   unsigned pos=1;
   
-  if(isalnum(first))
+  if(is_identifier_char(first))
   {
     // identifier or keyword or number
-    for(pos=1; pos<buf.size() && isalnum(buf[pos]); pos++);
+    for(pos=1; pos<buf.size() && is_identifier_char(buf[pos]); pos++);
   }
   else if(first=='"' || first=='\'')
   {
