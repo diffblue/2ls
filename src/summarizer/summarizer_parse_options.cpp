@@ -671,6 +671,56 @@ void summarizer_parse_optionst::report_properties(
              << " of " << property_map.size() << " failed"
              << eom;  
   }
+  
+  if(cmdline.isset("storefront-alarms"))
+  {
+    std::ofstream out(cmdline.get_value("storefront-alarms").c_str());
+    if(!out)
+    {
+      error() << "failed to write to file "
+              << cmdline.get_value("storefront-alarms") << eom;
+    }
+    else
+    {
+      out << "<data>\n";
+
+      for(property_checkert::property_mapt::const_iterator
+          it=property_map.begin();
+          it!=property_map.end();
+          it++)
+      {
+        if(it->second.result!=property_checkert::FAIL) continue;
+
+        out << "<entry>\n";
+
+        out << "  <id>";
+        xmlt::escape(id2string(it->first), out);
+        out << "  </id>\n";
+        
+        const source_locationt &l=it->second.location->source_location;
+
+        out << "  <message>";
+        xmlt::escape(id2string(l.get_comment()), out);
+        out << "  </message>\n";
+
+        out << "  <category>";
+        xmlt::escape(id2string(l.get_property_class()), out);
+        out << "  </category>\n";
+
+        out << "  <file>";
+        xmlt::escape(id2string(l.get_file()), out);
+        out << "  </file>\n";
+
+        out << "  <line>";
+        xmlt::escape(id2string(l.get_line()), out);
+        out << "  </line>\n";
+        
+        out << "</entry>\n\n";
+      }
+      
+      out << "</data>\n";
+    }
+  }
 }
 
 /*******************************************************************\
