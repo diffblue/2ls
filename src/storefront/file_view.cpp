@@ -38,16 +38,16 @@ void print_file(const datat &data, irep_idt file, std::ostream &out)
   }
   else
   {
-    // line to entry number
+    // line to property number
     std::map<unsigned, std::vector<unsigned> > line_map;
     
-    for(datat::entriest::const_iterator
-        e_it=data.entries.begin();
-        e_it!=data.entries.end();
+    for(datat::propertiest::const_iterator
+        e_it=data.properties.begin();
+        e_it!=data.properties.end();
         e_it++)
       if(e_it->file==file)
       {
-        line_map[e_it->line].push_back(e_it-data.entries.begin());
+        line_map[e_it->line].push_back(e_it-data.properties.begin());
       }
   
     syntax_highlightingt syntax_highlighting(out);
@@ -60,9 +60,9 @@ void print_file(const datat &data, irep_idt file, std::ostream &out)
       syntax_highlighting.strong_class="";
       syntax_highlighting.line_no=line_no;
       
-      std::vector<unsigned> &entries=line_map[line_no];
+      std::vector<unsigned> &properties=line_map[line_no];
       
-      if(!entries.empty())
+      if(!properties.empty())
       {
         syntax_highlighting.strong_class="alarm";
       }
@@ -119,9 +119,9 @@ void file_view(const datat &data)
   
   std::set<irep_idt> files;
   
-  for(datat::entriest::const_iterator
-      e_it=data.entries.begin();
-      e_it!=data.entries.end();
+  for(datat::propertiest::const_iterator
+      e_it=data.properties.begin();
+      e_it!=data.properties.end();
       e_it++)
     files.insert(e_it->file);
 

@@ -11,26 +11,26 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/irep.h>
 
-class entryt
-{
-public:
-  irep_idt file;
-  unsigned line;
-  irep_idt category;
-  std::string message;
-};
-
 class datat
 {
 public:
-  typedef std::vector<entryt> entriest;
-  entriest entries;
+  class propertyt
+  {
+  public:
+    irep_idt file;
+    unsigned line;
+    irep_idt category;
+    std::string message;
+  };
+
+  typedef std::vector<propertyt> propertiest;
+  propertiest properties;
   
   std::string description;
 
-  inline void add(const entryt &e)
+  inline void add(const propertyt &e)
   {
-    entries.push_back(e);
+    properties.push_back(e);
   }
   
   void read(const std::string &file);

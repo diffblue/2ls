@@ -54,9 +54,9 @@ void datat::read(const xmlt &xml)
       it!=xml.elements.end();
       it++)
   {
-    if(it->name=="entry")
+    if(it->name=="property")
     {
-      entryt entry;
+      propertyt property;
     
       for(xmlt::elementst::const_iterator
           e_it=it->elements.begin();
@@ -64,16 +64,16 @@ void datat::read(const xmlt &xml)
           e_it++)
       {
         if(e_it->name=="file")
-          entry.file=e_it->data;
+          property.file=e_it->data;
         else if(e_it->name=="line")
-          entry.line=unsafe_string2unsigned(e_it->data);
+          property.line=unsafe_string2unsigned(e_it->data);
         else if(e_it->name=="category")
-          entry.category=e_it->data;
+          property.category=e_it->data;
         else if(e_it->name=="message")
-          entry.message=e_it->data;
+          property.message=e_it->data;
       }
       
-      entries.push_back(entry);
+      properties.push_back(property);
     }
     else if(it->name=="description")
     {
