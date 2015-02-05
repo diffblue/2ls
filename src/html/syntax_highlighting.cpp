@@ -241,21 +241,26 @@ void syntax_highlightingt::operator()(const std::string &line)
 
       if(isdigit(token[0])) // numeral
       {
-        out << token;
+        out << html_escape(token);
       }
       else if(isalpha(token[0]))
       {
         if(is_keyword(token))
-          out << "<em>" << token << "</em>";
+          out << "<em>" << html_escape(token) << "</em>";
         else
         {
-          out << "<var onMouseOver=\"var_tooltip('"
-              << token << id_suffix << "', '" << line_no 
-              << "." << ++var_count[token] << "');\""
-                 " onMouseOut=\"tooltip.hide();\""
-                 ">"
-              << token
-              << "</var>";
+          if(identifier_tooltip)
+            out << "<var onMouseOver=\"var_tooltip('"
+                << token << id_suffix << "', '" << line_no 
+                << "." << ++var_count[token] << "');\""
+                   " onMouseOut=\"tooltip.hide();\""
+                   ">";
+          else
+            out << "<var>";
+          
+          out << html_escape(token);
+
+          out << "</var>";
         }
       }
       else if(token=="/*")
