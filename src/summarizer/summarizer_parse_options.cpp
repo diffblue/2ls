@@ -682,7 +682,10 @@ void summarizer_parse_optionst::report_properties(
     }
     else
     {
-      out << "<data>\n";
+      status() << "writing results into "
+               << cmdline.get_value("storefront-alarms") << eom;
+    
+      out << "<data>\n\n";
 
       for(property_checkert::property_mapt::const_iterator
           it=property_map.begin();
@@ -691,31 +694,31 @@ void summarizer_parse_optionst::report_properties(
       {
         if(it->second.result!=property_checkert::FAIL) continue;
 
-        out << "<entry>\n";
+        out << "<property>\n";
 
         out << "  <id>";
         xmlt::escape(id2string(it->first), out);
-        out << "  </id>\n";
+        out << "</id>\n";
         
         const source_locationt &l=it->second.location->source_location;
 
         out << "  <message>";
         xmlt::escape(id2string(l.get_comment()), out);
-        out << "  </message>\n";
+        out << "</message>\n";
 
         out << "  <category>";
         xmlt::escape(id2string(l.get_property_class()), out);
-        out << "  </category>\n";
+        out << "</category>\n";
 
         out << "  <file>";
         xmlt::escape(id2string(l.get_file()), out);
-        out << "  </file>\n";
+        out << "</file>\n";
 
         out << "  <line>";
         xmlt::escape(id2string(l.get_line()), out);
-        out << "  </line>\n";
+        out << "</line>\n";
         
-        out << "</entry>\n\n";
+        out << "</property>\n\n";
       }
       
       out << "</data>\n";
