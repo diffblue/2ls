@@ -34,7 +34,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <langapi/mode.h>
 
-#include <cbmc/version.h>
+#include "../deltacheck/version.h"
 
 #include "summarizer_parse_options.h"
 #include "summary_checker.h"
@@ -54,7 +54,7 @@ Function: summarizer_parse_optionst::summarizer_parse_optionst
 
 summarizer_parse_optionst::summarizer_parse_optionst(int argc, const char **argv):
   parse_options_baset(SUMMARIZER_OPTIONS, argc, argv),
-  language_uit("Summarizer " CBMC_VERSION, cmdline)
+  language_uit("Summarizer " DELTACHECK_VERSION, cmdline)
 {
 }
   
@@ -194,7 +194,7 @@ int summarizer_parse_optionst::doit()
 {
   if(cmdline.isset("version"))
   {
-    std::cout << CBMC_VERSION << std::endl;
+    std::cout << DELTACHECK_VERSION << std::endl;
     return 0;
   }
 
@@ -210,7 +210,7 @@ int summarizer_parse_optionst::doit()
   //
   // Print a banner
   //
-  status() << "SUMMARIZER version tbd" << eom;
+  status() << "SUMMARIZER version " << DELTACHECK_VERSION << eom;
 
   register_language(new_ansi_c_language);
   register_language(new_cpp_language);
@@ -797,7 +797,7 @@ void summarizer_parse_optionst::help()
 {
   std::cout <<
     "\n"
-    "* *  Summarizer " CBMC_VERSION " - Copyright (C) 2014 ";
+    "* *  Summarizer " DELTACHECK_VERSION " - Copyright (C) 2014-2015 ";
     
   std::cout << "(" << (sizeof(void *)*8) << "-bit version)";
     
