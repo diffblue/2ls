@@ -98,7 +98,7 @@ void file_view(const datat &data)
   out << "<style type=\"text/css\">\n";
   out << "/* Source-code listing */\n";
   out << "div.file { float: left; padding-right: 20px; }\n";
-  out << "div.listing { font-size: 6px; width: 150px; overflow: scroll; }\n";
+  out << "div.listing { font-size: 3px; width: 150px; height: 400px; overflow-y: scroll; overflow-x: scroll; white-space: pre; }\n";
   out << "div.filename { text-align: center; font-size: 12px; width: 150px; }\n";
 
   out << "strong.alarm { font-style: normal; background-color: #ff6633; font-weight: normal; }\n";
