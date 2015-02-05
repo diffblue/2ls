@@ -28,7 +28,9 @@ Function: file_view
 
 void print_file(const datat &data, irep_idt file, std::ostream &out)
 {
-  out << "<div class=\"file\">\n";
+  out << "<div class=\"file\" onclick=\"location.href='"
+      << html_escape(id2string(file)+".html")
+      << "';\" style=\"cursor:pointer;\">\n";
   out << "<div class=\"filename\">" << html_escape(file) << "</div>\n";
   out << "<div class=\"listing\">\n";
 
