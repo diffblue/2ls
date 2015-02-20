@@ -548,9 +548,12 @@ bool summarizer_parse_optionst::process_goto_program(
     status() << "Partial Inlining" << eom;
     goto_partial_inline(goto_model, ui_message_handler);
     
-    // add generic checks
-    status() << "Generic Property Instrumentation" << eom;
-    goto_check(options, goto_model);
+    if(cmdline.isset("check"))
+    {
+      // add generic checks
+      status() << "Generic Property Instrumentation" << eom;
+      goto_check(options, goto_model);
+    }
     
     // recalculate numbers, etc.
     goto_model.goto_functions.update();

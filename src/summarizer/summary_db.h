@@ -6,16 +6,25 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef CPROVER_SUMMARIZER_FUNCTION_SUMMARY_H
-#define CPROVER_SUMMARIZER_FUNCTION_SUMMARY_H
+#ifndef CPROVER_SUMMARIZER_SUMMARY_DB_H
+#define CPROVER_SUMMARIZER_SUMMARY_DB_H
 
-#include "function_summary.h"
+#include <util/message.h>
 
-class summary_dbt
+#include <json/json.h>
+
+class summary_dbt:public messaget
 {
 public:
   // retrieve a summary for function with given identifier
-  const function_summaryt & operator() (const irep_idt &);
+  void read(const std::string &);
+  void write();
+  
+  jsont summary;
+
+protected:
+  std::string current;
+  std::string file_name(const std::string &);
 };
 
 #endif
