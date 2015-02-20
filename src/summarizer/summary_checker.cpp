@@ -1,6 +1,6 @@
 /*******************************************************************\
 
-Module: Summarizer
+Module: Summary Checker
 
 Author: Daniel Kroening, kroening@kroening.com
 

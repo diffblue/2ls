@@ -38,6 +38,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "summarizer_parse_options.h"
 #include "summary_checker.h"
+#include "summarizer.h"
 #include "show.h"
 
 /*******************************************************************\
@@ -253,38 +254,58 @@ int summarizer_parse_optionst::doit()
     show_guards(goto_model, std::cout, ui_message_handler);
     return 7;
   }
-
+  
   try
   {
-    summary_checkert summary_checker;
-    
-    summary_checker.set_message_handler(get_message_handler());
-    summary_checker.simplify=!cmdline.isset("no-simplify");
-    summary_checker.fixed_point=!cmdline.isset("no-fixed-point");
-
-    if(cmdline.isset("show-vcc"))
+    if(cmdline.isset("check"))
     {
-      std::cout << "VERIFICATION CONDITIONS:\n\n";
-      summary_checker.show_vcc=true;
-      summary_checker(goto_model);
+      summary_checkert summary_checker;
+      
+      summary_checker.set_message_handler(get_message_handler());
+      summary_checker.simplify=!cmdline.isset("no-simplify");
+      summary_checker.fixed_point=!cmdline.isset("no-fixed-point");
+
+      if(cmdline.isset("show-vcc"))
+      {
+        std::cout << "VERIFICATION CONDITIONS:\n\n";
+        summary_checker.show_vcc=true;
+        summary_checker(goto_model);
+        return 0;
+      }
+      
+      // do actual analysis
+      switch(summary_checker(goto_model))
+      {
+      case property_checkert::PASS:
+        report_properties(goto_model, summary_checker.property_map);
+        report_success();
+        return 0;
+      
+      case property_checkert::FAIL:
+        report_properties(goto_model, summary_checker.property_map);
+        report_failure();
+        return 10;
+      
+      default:
+        return 8;
+      }
+    }
+    else if(cmdline.isset("summarize"))
+    {
+      summarizert summarizer;
+      
+      summarizer.set_message_handler(get_message_handler());
+      summarizer.simplify=!cmdline.isset("no-simplify");
+      summarizer.fixed_point=!cmdline.isset("no-fixed-point");
+
+      // do actual summarization
+      summarizer(goto_model);
       return 0;
     }
-    
-    // do actual analysis
-    switch(summary_checker(goto_model))
+    else
     {
-    case property_checkert::PASS:
-      report_properties(goto_model, summary_checker.property_map);
-      report_success();
-      return 0;
-    
-    case property_checkert::FAIL:
-      report_properties(goto_model, summary_checker.property_map);
-      report_failure();
-      return 10;
-    
-    default:
-      return 8;
+      usage_error();
+      return 1;
     }
   }
   
@@ -456,6 +477,7 @@ bool summarizer_parse_optionst::get_goto_program(
         return true;
       }
 
+      #if 0
       irep_idt entry_point=goto_model.goto_functions.entry_point();
       
       if(symbol_table.symbols.find(entry_point)==symbol_table.symbols.end())
@@ -463,6 +485,7 @@ bool summarizer_parse_optionst::get_goto_program(
         error() << "No entry point; please provide a main function" << eom;
         return true;
       }
+      #endif
       
       status() << "Generating GOTO Program" << eom;
 
@@ -865,6 +888,11 @@ void summarizer_parse_optionst::help()
     "\n"
     " summarizer [-?] [-h] [--help] show help\n"
     " summarizer file.c ...        source file names\n"
+    " summarizer file.o ...        object file names\n"
+    "\n"
+    "Summarizer has two modes of operation:\n"
+    " summarizer --summarize       compute summaries\n"
+    " summarizer --check           check properties\n"
     "\n"
     "Frontend options:\n"
     " -I path                      set include path (C/C++)\n"
