@@ -323,6 +323,8 @@ void deltacheck_parse_optionst::help()
     "\n"
     "Delta checking options:\n"
     " --show-change-impact         show syntactic change-impact\n"
+    " --description-old text       description of old version\n"
+    " --description-new text       description of new version\n"
     "\n"
     "Safety checks:\n"
     " --bounds-check               add array bounds checks\n"

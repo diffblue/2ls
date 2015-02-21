@@ -119,24 +119,27 @@ void deltacheck_analyzert::check_function(
     
   const symbolt &symbol_new=ns_new.lookup(function);
   
-  std::ofstream function_report(("deltacheck."+id2string(function)+".html").c_str());
-  
-  html_report_header("Function "+id2string(function), function_report);
-
-  function_report << "<h2>Function "
-                  << html_escape(symbol_new.display_name())
-                  << "</h2>\n";
-
   // get corresponding goto_model_old function, if available
 
   const goto_functionst::function_mapt::const_iterator
     fmap_it_old=goto_model_old.goto_functions.function_map.find(function);
     
   goto_functionst::goto_functiont fkt_old_dummy;
+  symbolt symbol_old_dummy;
 
   const goto_functionst::goto_functiont &fkt_old=
     fmap_it_old==goto_model_old.goto_functions.function_map.end()?fkt_old_dummy:
     fmap_it_old->second;
+    
+  const symbolt &symbol_old=
+    fmap_it_old==goto_model_old.goto_functions.function_map.end()?symbol_old_dummy:
+    ns_old.lookup(function);
+    
+  // set up report
+
+  std::ofstream function_report(("deltacheck."+id2string(function)+".html").c_str());
+  
+  html_report_header("Function "+id2string(symbol_new.display_name()), function_report);
 
   // build SSA for each
   status() << "Building SSA" << eom;
@@ -148,7 +151,6 @@ void deltacheck_analyzert::check_function(
   // add assertions in old version as assumptions
   SSA_old.assertions_to_constraints();
 
-  #if 0  
   // now do _joint_ fixed-point
   namespacet joint_ns(
     ns_new.get_symbol_table(),
@@ -157,32 +159,29 @@ void deltacheck_analyzert::check_function(
   statistics.start("Fixed-point");
   ssa_fixed_pointt ssa_fixed_point(SSA_old, SSA_new, joint_ns);
   statistics.stop("Fixed-point");
-  #endif
   
   // now report on assertions
   std::string description_old=
-    //goto_model_old.description==""?"old version":goto_model_old.description;
-    "old version";
+    options.get_option("description-old");
 
   std::string description_new=
-    //goto_model_new.description==""?"new version":goto_model_new.description;
-    "new version";
+    options.get_option("description-new");
+    
+  std::string path_prefix_old="";
+  std::string path_prefix_new="";
 
-  #if 0  
   status() << "Reporting" << eom;
   statistics.start("Reporting");
-  report_properties(ssa_fixed_point.properties, file_report);  
+  //report_properties(ssa_fixed_point.properties, function_report);  
   report_properties(ssa_fixed_point.properties, *this);  
   report_countermodels(SSA_old, SSA_new,
-                       ssa_fixed_point.properties, file_report);  
+                       ssa_fixed_point.properties, function_report);
   report_source_code(
-    path_prefix_old, symbol_old.location, f_old.body, description_old,
-    path_prefix_new, symbol_new.location, f_new.body, description_new,
+    path_prefix_old, symbol_old.location, fkt_old.body, description_old,
+    path_prefix_new, symbol_new.location, fkt_new.body, description_new,
     ssa_fixed_point.properties,
-    file_report, get_message_handler());
-  file_report << "\n";
+    function_report, get_message_handler());
   statistics.stop("Reporting");
-  #endif
   
   // dump statistics
   statistics.html_report_last(function_report);
@@ -192,7 +191,7 @@ void deltacheck_analyzert::check_function(
   collect_statistics(ssa_fixed_point.properties); 
   #endif
 
-  html_report_footer(function_report);
+  function_report << "</body></html>\n";
   
   #if 0
   global_report << "<table class=\"file-table\">\n"
@@ -329,7 +328,9 @@ void deltacheck_analyzert::operator()()
            
   std::string title="DeltaCheck Summary";
 
-  html_report_header(out, "old desc", "new desc", title);
+  html_report_header(
+    out, options.get_option("description-old"),
+         options.get_option("description-new"), title);
 
   statistics.start("Change-impact");
   status() << "Computing syntactic difference" << eom;
@@ -371,15 +372,15 @@ void deltacheck_analyzert::operator()()
   std::ofstream json_out("deltacheck-stat.json");
   
   json_out << "{\n";
-  json_out << "  \"properties\": {";
-  json_out << "    \"unaffected:\" " << statistics.number_map["Unaffected"] << ",\n";
-  json_out << "    \"passed=\"" << statistics.number_map["Passed"] << ",\n";
-  json_out << "    \"failed=\"" << statistics.number_map["Errors"] << ",\n";
-  json_out << "    \"warned=\"" << statistics.number_map["Unknown"] << ",\n";
+  json_out << "  \"properties\": {\n";
+  json_out << "    \"unaffected\": " << statistics.number_map["Unaffected"] << ",\n";
+  json_out << "    \"passed\": " << statistics.number_map["Passed"] << ",\n";
+  json_out << "    \"failed\": " << statistics.number_map["Errors"] << ",\n";
+  json_out << "    \"warned\": " << statistics.number_map["Unknown"] << "\n";
   json_out << "  },\n";
   json_out << "  \"program\": {\n";
   json_out << "    \"LOCs\": " << statistics.number_map["LOCs"] << ",\n";
-  json_out << "    \"Functions\": " << statistics.number_map["Functions"] << "\n";
+  json_out << "    \"functions\": " << statistics.number_map["Functions"] << "\n";
   json_out << "  }\n";
   json_out << "}\n";
 }  
