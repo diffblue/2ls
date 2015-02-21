@@ -221,15 +221,39 @@ void report_source_code(
   for(std::list<linet>::const_iterator
       l_it=lines_new.begin(); l_it!=lines_new.end(); l_it++)
   {
-    std::string errors=get_errors(properties, *l_it);
-    if(!errors.empty())
+    const linet &line=*l_it;
+
+    unsigned count=0;
+    
+    for(propertiest::const_iterator
+        p_it=properties.begin(); p_it!=properties.end(); p_it++, count++)
     {
-      out << "<span style=\"color:#CC0000\" onmouseover=\"tooltip.show('"
-          << html_escape(errors) << "');\""
-                 " onmouseout=\"tooltip.hide();\">"
-          << "&#x2717;"
-          << "</span>";
+      if(line.file==p_it->loc->source_location.get_file() &&
+         i2string(line.line_no)==as_string(p_it->loc->source_location.get_line()))
+      {
+        if(p_it->status.is_false())
+        {
+          irep_idt property=p_it->loc->source_location.get_property_class();
+          irep_idt comment=p_it->loc->source_location.get_comment();
+
+          std::string msg;
+
+          if(comment=="")
+            msg=as_string(property);
+          else
+            msg=as_string(comment);
+
+          out << "<span style=\"cursor:pointer; color:#CC0000\""
+              << " onmouseover=\"tooltip.show('" << html_escape(msg) << "');\""
+              << " onmouseout=\"tooltip.hide();\""
+              << " onClick=\"X_click(this,ce" << count << ");\""
+              << ">"
+              << "&#x2717;"
+              << "</span>";
+        }
+      }
     }
+  
     out << "\n";
   }
     
