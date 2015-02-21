@@ -14,6 +14,24 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
+Function: is_ptr_object
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool is_ptr_object(const exprt &src)
+{
+  return src.id()==ID_symbol &&
+         src.get(ID_ptr_object)!=irep_idt();
+}
+
+/*******************************************************************\
+
 Function: collect_objects_rec
 
   Inputs:
@@ -163,6 +181,51 @@ void ssa_objectst::collect_objects(
 
 /*******************************************************************\
 
+Function: ssa_objectst::add_ptr_objects
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void ssa_objectst::add_ptr_objects(
+  const namespacet &ns)
+{
+  objectst tmp;
+
+  for(objectst::const_iterator o_it=objects.begin();
+      o_it!=objects.end();
+      o_it++)
+  {
+    exprt root_object=o_it->get_root_object();
+    if(root_object.id()==ID_symbol)
+    {
+      if(o_it->type().id()==ID_pointer)
+      {
+        const symbolt &symbol=ns.lookup(root_object);
+        if(symbol.is_parameter)
+          tmp.insert(*o_it);
+      }
+    }
+  }
+  
+  for(objectst::const_iterator o_it=tmp.begin();
+      o_it!=tmp.end();
+      o_it++)
+  {
+    typet type=o_it->type().subtype();
+    irep_idt identifier=id2string(o_it->get_identifier())+"'obj";
+    symbol_exprt ptr_object(identifier, type);
+    ptr_object.set(ID_ptr_object, o_it->get_identifier());
+    collect_objects_rec(ptr_object, ns, objects, literals);
+  }
+}
+
+/*******************************************************************\
+
 Function: ssa_objectst::categorize_objects
 
   Inputs:
@@ -186,16 +249,22 @@ void ssa_objectst::categorize_objects(
     exprt root_object=o_it->get_root_object();
     if(root_object.id()==ID_symbol)
     {
-      const symbolt &symbol=ns.lookup(root_object);
-      if(symbol.is_procedure_local())
+      if(is_ptr_object(root_object))
       {
-        if(dirty(symbol.name))
-          dirty_locals.insert(*o_it);
-        else
-          clean_locals.insert(*o_it);
       }
       else
-        globals.insert(*o_it);
+      {
+        const symbolt &symbol=ns.lookup(root_object);
+        if(symbol.is_procedure_local())
+        {
+          if(dirty(symbol.name))
+            dirty_locals.insert(*o_it);
+          else
+            clean_locals.insert(*o_it);
+        }
+        else
+          globals.insert(*o_it);
+      }
     }
   }
 }
@@ -289,6 +358,10 @@ irep_idt ssa_objectt::object_id_rec(
     #else
     return irep_idt();
     #endif
+  }
+  else if(src.id()==ID_ptr_object)
+  {
+    return id2string(src.get(ID_identifier))+"'obj";
   }
   else
     return irep_idt();

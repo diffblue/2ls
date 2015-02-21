@@ -20,6 +20,11 @@ public:
   {
   }
   
+  inline const typet &type() const
+  {
+    return expr.type();
+  }
+  
   inline const exprt &get_expr() const
   {
     return expr;
@@ -73,7 +78,7 @@ class ssa_objectst
 public:
   // objects, plus categorization
   typedef std::set<ssa_objectt> objectst;
-  objectst objects, dirty_locals, clean_locals, globals;
+  objectst objects, dirty_locals, clean_locals, globals, ptr_objects;
   
   // literals whose address is taken
   typedef std::set<exprt> literalst;
@@ -84,6 +89,7 @@ public:
     const namespacet &ns)
   {
     collect_objects(goto_function, ns);
+    add_ptr_objects(ns);
     categorize_objects(goto_function, ns);
   }
   
@@ -95,7 +101,12 @@ protected:
   void categorize_objects(
     const goto_functionst::goto_functiont &,
     const namespacet &);
+    
+  void add_ptr_objects(
+    const namespacet &);
 };
+
+bool is_ptr_object(const exprt &);
 
 // Returns true if the member expression is a struct member
 // expression.
