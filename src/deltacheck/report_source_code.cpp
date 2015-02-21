@@ -198,6 +198,7 @@ void report_source_code(
 
   {  
     syntax_highlightingt syntax_highlighting(out);
+    syntax_highlighting.identifier_tooltip=true;
     
     for(l_old_it=lines_old.begin(), l_it=lines_new.begin();
         l_old_it!=lines_old.end() && l_it!=lines_new.end();
@@ -275,6 +276,7 @@ void report_source_code(
   
   {
     syntax_highlightingt syntax_highlighting(out);
+    syntax_highlighting.identifier_tooltip=true;
   
     for(l_old_it=lines_old.begin(), l_it=lines_new.begin();
         l_old_it!=lines_old.end() && l_it!=lines_new.end();
