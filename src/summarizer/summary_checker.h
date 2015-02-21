@@ -26,6 +26,7 @@ public:
   }
   
   bool show_vcc, simplify, fixed_point;
+  irep_idt function_to_check;
 
   virtual resultt operator()(const goto_modelt &);
 
@@ -43,8 +44,8 @@ protected:
   resultt check_properties(const goto_modelt &);
 
   void check_properties(
-    const local_SSAt &,
-    const goto_functionst::function_mapt::const_iterator f_it);
+    const goto_functionst::function_mapt::const_iterator f_it,
+    const namespacet &);
 };
 
 #endif

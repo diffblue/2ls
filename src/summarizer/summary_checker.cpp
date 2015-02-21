@@ -63,25 +63,7 @@ summary_checkert::resultt summary_checkert::check_properties(
   forall_goto_functions(f_it, goto_model.goto_functions)
   {
     if(!f_it->second.body.has_assertion()) continue;
-
-    status() << "Analyzing " << f_it->first << messaget::eom;
-    
-    // build SSA
-    local_SSAt SSA(f_it->second, ns);
-    
-    // simplify, if requested
-    if(simplify)
-    {
-      status() << "Simplifying" << messaget::eom;
-      ::simplify(SSA, ns);
-    }
-    
-    // fixed-point for loops
-    status() << "Fixed-point" << messaget::eom;
-    ssa_fixed_point(SSA);
-
-    status() << "Checking properties" << messaget::eom;
-    check_properties(SSA, f_it);
+    check_properties(f_it, ns);
   }
   
   for(property_mapt::const_iterator
@@ -105,10 +87,26 @@ Function: summary_checkert::check_properties
 \*******************************************************************/
 
 void summary_checkert::check_properties(
-  const local_SSAt &SSA,
-  const goto_functionst::function_mapt::const_iterator f_it)
+  const goto_functionst::function_mapt::const_iterator f_it,
+  const namespacet &ns)
 {
-  // non-incremental version
+  status() << "Analyzing " << f_it->first << messaget::eom;
+  
+  // build SSA
+  local_SSAt SSA(f_it->second, ns);
+  
+  // simplify, if requested
+  if(simplify)
+  {
+    status() << "Simplifying" << messaget::eom;
+    ::simplify(SSA, ns);
+  }
+  
+  // fixed-point for loops
+  status() << "Fixed-point" << messaget::eom;
+  ssa_fixed_point(SSA);
+
+  status() << "Checking properties" << messaget::eom;
 
   const goto_programt &goto_program=f_it->second.body;
 
