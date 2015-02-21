@@ -6,6 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <util/expr_util.h>
+
 #include <analyses/dirty.h>
 
 #include "ssa_object.h"
@@ -114,11 +116,9 @@ void collect_objects_rec(
         member_exprt new_src(src, it->get_name(), it->type());
         collect_objects_rec(new_src, ns, objects, literals); // recursive call
       }
-      
-      return; // done
     }
-    
-    objects.insert(ssa_object);
+    else
+      objects.insert(ssa_object);
   }
   else
   {
@@ -143,6 +143,17 @@ void ssa_objectst::collect_objects(
   const goto_functionst::goto_functiont &src,
   const namespacet &ns)
 {
+  // Add objects for parameters.
+  for(goto_functionst::goto_functiont::parameter_identifierst::
+      const_iterator it=src.parameter_identifiers.begin();
+      it!=src.parameter_identifiers.end();
+      it++)
+  {
+    symbol_exprt symbol=symbol_expr(ns.lookup(*it));
+    collect_objects_rec(symbol, ns, objects, literals);
+  }
+
+  // Rummage through body.
   forall_goto_program_instructions(it, src.body)
   {
     collect_objects_rec(it->guard, ns, objects, literals);
