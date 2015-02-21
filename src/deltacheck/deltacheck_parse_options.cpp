@@ -19,13 +19,13 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <cbmc/version.h>
 #include <ansi-c/ansi_c_language.h>
 #include <cpp/cpp_language.h>
+#include <goto-programs/read_goto_binary.h>
 
-#include "../functions/index.h"
 #include "deltacheck_parse_options.h"
 #include "version.h"
 #include "analyzer.h"
 #include "change_impact.h"
-#include "show.h"
+#include "../summarizer/show.h"
 
 /*******************************************************************\
 
@@ -199,215 +199,73 @@ int deltacheck_parse_optionst::doit()
 
   try
   {
-    // We have two phases:
-    // 1) indexing: given some goto-binaries, produce index
-    // 2) delta checking: given two indices, do delta checking
-    
-    if(cmdline.isset("index"))
-    {
-      status() << "Building index `" << cmdline.get_value("index") << "'" << eom;
-      
-      std::ofstream out(cmdline.get_value("index").c_str());
-      if(!out)
-      {
-        error() << "failed to open output file `"
-                << cmdline.get_value("index") << "' " << eom;
-        return 11;
-      }
-      
-      std::string description;
-      if(cmdline.isset("description"))
-        description=cmdline.get_value("description");
-      
-      indext index;
-      index.set_message_handler(get_message_handler());
-
-      if(cmdline.args.size()==0)
-      {
-        // read from stdin
-        std::vector<std::string> files;
-        std::string line;
-        while(std::getline(std::cin, line))
-        {
-          if(!line.empty())
-            files.push_back(line);
-        }
-
-        index.build(files, description);
-      }
-      else
-        index.build(cmdline.args, description);
-
-      index.write(out);
-      return 0;
-    }
-    
     options.set_option("simplify", true);
     options.set_option("assertions", true);
     options.set_option("assumptions", true);
     
-    if(cmdline.isset("show-ssa"))
-    {
-      if(cmdline.args.size()!=1)
-      {
-        usage_error();
-        return 10;
-      }
-
-      indext index;
-      index.set_message_handler(get_message_handler());
-  
-      status() << "Reading index" << eom;
-      index.read(cmdline.args[0]);
-
-      show_ssa(index, options, std::cout, get_message_handler());
-      return 0;
-    }
-
-    if(cmdline.isset("show-defs"))
-    {
-      if(cmdline.args.size()!=1)
-      {
-        usage_error();
-        return 10;
-      }
-
-      indext index;
-      index.set_message_handler(get_message_handler());
-      index.read(cmdline.args[0]);
-
-      show_defs(index, options, std::cout, get_message_handler());
-      return 0;
-    }
-
-    if(cmdline.isset("show-guards"))
-    {
-      if(cmdline.args.size()!=1)
-      {
-        usage_error();
-        return 10;
-      }
-
-      indext index;
-      index.set_message_handler(get_message_handler());
-      index.read(cmdline.args[0]);
-
-      show_guards(index, options, std::cout, get_message_handler());
-      return 0;
-    }
-
-    if(cmdline.isset("show-fixed-points"))
-    {
-      if(cmdline.args.size()!=1)
-      {
-        usage_error();
-        return 10;
-      }
-
-      indext index;
-      index.set_message_handler(get_message_handler());
-      index.read(cmdline.args[0]);
-
-      show_fixed_points(index, options, std::cout, get_message_handler());
-      return 0;
-    }
-
-    if(cmdline.isset("show-properties"))
-    {
-      if(cmdline.args.size()!=1)
-      {
-        usage_error();
-        return 10;
-      }
-
-      indext index;
-      index.set_message_handler(get_message_handler());
-  
-      status() << "Reading index" << eom;
-      index.read(cmdline.args[0]);
-
-      show_properties(index, options, std::cout, get_message_handler());
-      return 0;
-    }
-
-    if(cmdline.isset("show-diff"))
-    {
-      if(cmdline.args.size()!=2)
-      {
-        usage_error();
-        return 10;
-      }
-
-      indext index1, index2;
-      index1.set_message_handler(get_message_handler());
-      index2.set_message_handler(get_message_handler());
-  
-      index1.read(cmdline.args[0]);
-      index2.read(cmdline.args[1]);
-
-      change_impactt change_impact;
-      change_impact.set_message_handler(get_message_handler());
-      
-      change_impact.diff(index1, index2);
-      change_impact.output_diff(std::cout);
-
-      return 0;
-    }
+    if(cmdline.isset("function"))
+      options.set_option("function", cmdline.get_value("function"));
     
-    if(cmdline.isset("show-change-impact"))
-    {
-      if(cmdline.args.size()!=2)
-      {
-        usage_error();
-        return 10;
-      }
-
-      indext index1, index2;
-      index1.set_message_handler(get_message_handler());
-      index2.set_message_handler(get_message_handler());
-  
-      index1.read(cmdline.args[0]);
-      index2.read(cmdline.args[1]);
-
-      change_impactt change_impact;
-      change_impact.set_message_handler(get_message_handler());
-      
-      status() << "Computing syntactic difference" << eom;
-      change_impact.diff(index1, index2);
-
-      status() << "Change-impact analysis" << eom;
-      change_impact.change_impact(index2);
-
-      change_impact.output_change_impact(std::cout);
-
-      return 0;
-    }
-    
-    if(cmdline.args.size()==2)
-    {
-      indext index1, index2;
-      index1.set_message_handler(get_message_handler());
-      index2.set_message_handler(get_message_handler());
-  
-      index1.read(cmdline.args[0]);
-      index2.read(cmdline.args[1]);
-
-      deltacheck_analyzer(index1, index2, options, get_message_handler());
-    }
-    else if(cmdline.args.size()==1)
-    {
-      indext index;
-      index.set_message_handler(get_message_handler());
-  
-      index.read(cmdline.args[0]);
-
-      one_program_analyzer(index, options, get_message_handler());
-    }
-    else
+    if(cmdline.args.size()!=2)
     {
       usage_error();
       return 10;
     }
+
+    if(cmdline.isset("description-old"))
+      options.set_option("description-old", cmdline.get_value("description-old"));
+    else
+      options.set_option("description-old", cmdline.args[0]);
+    
+    if(cmdline.isset("description-new"))
+      options.set_option("description-new", cmdline.get_value("description-new"));
+    else
+      options.set_option("description-new", cmdline.args[1]);
+    
+    status() << "Reading first GOTO program from file" << eom;
+    
+    goto_modelt goto_model1;
+
+    if(read_goto_binary(cmdline.args[0],
+         goto_model1, get_message_handler()))
+      return 10;
+      
+    status() << "Reading second GOTO program from file" << eom;
+    
+    goto_modelt goto_model2;
+
+    if(read_goto_binary(cmdline.args[1],
+         goto_model2, get_message_handler()))
+      return 10;
+      
+    if(cmdline.isset("show-diff"))
+    {
+      change_impactt change_impact;
+      change_impact.set_message_handler(get_message_handler());
+    
+      change_impact.diff(goto_model1, goto_model2);
+      change_impact.output_diff(std::cout);
+    }
+    else if(cmdline.isset("show-change-impact"))
+    {
+      change_impactt change_impact;
+      change_impact.set_message_handler(get_message_handler());
+    
+      status() << "Computing syntactic difference" << eom;
+      change_impact.diff(goto_model1, goto_model2);
+
+      status() << "Change-impact analysis" << eom;
+      change_impact.change_impact(goto_model2);
+
+      change_impact.output_change_impact(std::cout);
+    }
+    else
+    {
+      deltacheck_analyzer(
+        goto_model1, goto_model2, options, get_message_handler());
+    }
+    
+    return 0;
   }
 
   catch(const char *e)
@@ -461,19 +319,9 @@ void deltacheck_parse_optionst::help()
     "Usage:                       Purpose:\n"
     "\n"
     " deltacheck [-?] [-h] [--help] show help\n"
-    " deltacheck --index           \n"
-    "   index-file.xml file(s)     build index for given file(s)\n"
-    " deltacheck --index           \n"
-    "   index-file.xml < list      build index for files given as list\n"
-    " deltacheck index1 index2     delta check two versions\n"
-    "\n"
-    "Indexing options:\n"
+    " deltacheck prog1 prog2       delta check two programs\n"
     "\n"
     "Delta checking options:\n"
-    " --show-ssa                   show SSA\n"
-    " --show-guards                show guards\n"
-    " --show-properties            show the properties\n"
-    " --show-fixed-points          show the fixed-points for the loops\n"
     " --show-change-impact         show syntactic change-impact\n"
     "\n"
     "Safety checks:\n"

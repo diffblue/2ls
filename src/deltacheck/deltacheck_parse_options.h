@@ -20,7 +20,7 @@ Author: Daniel Kroening, kroening@kroening.com
   "(function):" \
   "(debug-level):" \
   "(xml-ui)(xml-interface)" \
-  "(verbosity):(version)(index):(description):" \
+  "(verbosity):(version)(index):(description-old):(description-new):" \
   "(bounds-check)(pointer-check)(div-by-zero-check)" \
   "(signed-overflow-check)(unsigned-overflow-check)(nan-check)" \
   "(show-ssa)(show-defs)(show-guards)(show-fixed-points)" \
