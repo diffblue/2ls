@@ -37,7 +37,7 @@ public:
     build_SSA();
   }
   
-  void output(std::ostream &) const;
+  void output(std::ostream &, bool verbose=false) const;
 
   // the SSA node for a location
   class nodet

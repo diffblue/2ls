@@ -1047,7 +1047,7 @@ Function: local_SSAt::output
 
 \*******************************************************************/
 
-void local_SSAt::output(std::ostream &out) const
+void local_SSAt::output(std::ostream &out, bool verbose) const
 {
   forall_goto_program_instructions(i_it, goto_function.body)
   {
@@ -1055,10 +1055,13 @@ void local_SSAt::output(std::ostream &out) const
     if(n_it==nodes.end()) continue;
     if(n_it->second.empty()) continue;
 
-    out << "*** " << i_it->location_number
-        << " " << i_it->source_location << "\n";
+    if(verbose)
+      out << "*** " << i_it->location_number
+          << " " << i_it->source_location << "\n";
+
     n_it->second.output(out, ns);
-    out << "\n";
+    
+    if(verbose) out << "\n";
   }
 }
 
