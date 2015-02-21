@@ -265,8 +265,8 @@ int summarizer_parse_optionst::doit()
       summary_checker.simplify=!cmdline.isset("no-simplify");
       summary_checker.fixed_point=!cmdline.isset("no-fixed-point");
       
-      if(cmdline.isset("fkt"))
-        summary_checker.function_to_check=cmdline.get_value("fkt");
+      if(cmdline.isset("function"))
+        summary_checker.function_to_check=cmdline.get_value("function");
 
       if(cmdline.isset("show-vcc"))
       {
@@ -302,8 +302,8 @@ int summarizer_parse_optionst::doit()
       summarizer.fixed_point=!cmdline.isset("no-fixed-point");
 
       // do actual summarization
-      if(cmdline.isset("fkt"))
-        summarizer(goto_model, cmdline.get_value("fkt"));
+      if(cmdline.isset("function"))
+        summarizer(goto_model, cmdline.get_value("function"));
       else
         summarizer(goto_model);
         
@@ -470,6 +470,8 @@ bool summarizer_parse_optionst::get_goto_program(
     }
     else
     {
+      // override --function
+      config.main="";
     
       if(parse()) return true;
       if(typecheck()) return true;
