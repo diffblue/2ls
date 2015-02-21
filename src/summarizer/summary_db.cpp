@@ -45,7 +45,7 @@ void summary_dbt::read(const std::string &id)
 {
   current=id;
 
-  summary.clear();
+  summary=jsont::json_object();
 
   parse_json(file_name(id), get_message_handler(), summary);
 }
@@ -65,5 +65,5 @@ Function: summary_dbt::write
 void summary_dbt::write()
 {
   std::ofstream out(file_name(current).c_str());
-  out << summary;
+  out << summary << '\n';
 }
