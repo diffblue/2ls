@@ -1047,21 +1047,42 @@ Function: local_SSAt::output
 
 \*******************************************************************/
 
-void local_SSAt::output(std::ostream &out, bool verbose) const
+void local_SSAt::output(std::ostream &out) const
 {
   forall_goto_program_instructions(i_it, goto_function.body)
   {
     const nodest::const_iterator n_it=nodes.find(i_it);
     if(n_it==nodes.end()) continue;
     if(n_it->second.empty()) continue;
-
-    if(verbose)
-      out << "*** " << i_it->location_number
-          << " " << i_it->source_location << "\n";
-
     n_it->second.output(out, ns);
+  }
+}
+
+/*******************************************************************\
+
+Function: local_SSAt::output_verbose
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void local_SSAt::output_verbose(std::ostream &out) const
+{
+  forall_goto_program_instructions(i_it, goto_function.body)
+  {
+    out << "*** " << i_it->location_number
+        << " " << i_it->source_location << "\n";
+
+    const nodest::const_iterator n_it=nodes.find(i_it);
+
+    if(n_it!=nodes.end())
+      n_it->second.output(out, ns);
     
-    if(verbose) out << "\n";
+    out << "\n";
   }
 }
 
