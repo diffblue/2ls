@@ -178,9 +178,6 @@ void deltacheck_analyzert::check_function(
   std::string description_new=
     options.get_option("description-new");
     
-  std::string path_prefix_old="";
-  std::string path_prefix_new="";
-
   status() << "Reporting" << eom;
   statistics.start("Reporting");
   //report_properties(ssa_fixed_point.properties, function_report);  
@@ -188,8 +185,8 @@ void deltacheck_analyzert::check_function(
   report_countermodels(SSA_old, SSA_new,
                        ssa_fixed_point.properties, function_report);
   report_source_code(
-    path_prefix_old, symbol_old.location, fkt_old.body, description_old,
-    path_prefix_new, symbol_new.location, fkt_new.body, description_new,
+    path_old, symbol_old.location, fkt_old.body, description_old,
+    path_new, symbol_new.location, fkt_new.body, description_new,
     ssa_fixed_point.properties,
     function_report, get_message_handler());
   statistics.stop("Reporting");
