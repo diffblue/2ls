@@ -182,7 +182,7 @@ void revisions_report(
   
   out << "<table>\n"
       << "<tr><td valign=top>\n"
-      << "<img src=\"" << log_scale << "\">\n"
+      << "<img src=\"" << "log_scale.png" << "\">\n"
       << "</td>\n<td>\n";
       
   unsigned counter=0, number_of_jobs=jobs.size();
