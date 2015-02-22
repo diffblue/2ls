@@ -553,9 +553,7 @@ exprt local_SSAt::read_rhs(const exprt &expr, locationt loc) const
   adjust_float_expressions(tmp, ns);
   unsigned counter=0;
   replace_side_effects_rec(tmp, loc, counter);
-  
   exprt result=read_rhs_rec(tmp, loc);
-  
   return result;
 }
 
@@ -637,12 +635,14 @@ exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
     {
       if(ssa_may_alias(expr, o_it->get_expr(), ns))
       {
+        #if 0
         exprt guard=ssa_alias_guard(expr, o_it->get_expr(), ns);
         exprt value=ssa_alias_value(expr, read_rhs(*o_it, loc), ns);
         guard=read_rhs_rec(guard, loc);
         value=read_rhs_rec(value, loc);
 
         result=if_exprt(guard, value, result);
+        #endif
       }
     }
     
@@ -904,7 +904,7 @@ void local_SSAt::assign_rec(
   bool flag_deref=is_symbol_or_deref_struct_member(lhs, ns);
 
   const typet &type=ns.follow(lhs.type());
-  
+
   if(flag_symbol || flag_deref)
   {
     if(type.id()==ID_struct)
@@ -928,7 +928,7 @@ void local_SSAt::assign_rec(
     }
 
     ssa_objectt lhs_object(lhs, ns);
-    
+
     exprt rhs_read=read_rhs(rhs, loc);
 
     const std::set<ssa_objectt> &assigned=
