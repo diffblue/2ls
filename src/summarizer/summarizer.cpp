@@ -98,6 +98,7 @@ void summarizert::summarize(
   const namespacet ns(goto_model.symbol_table);
   
   // build SSA
+  progress() << "Building SSA" << messaget::eom;
   local_SSAt SSA(f_it->second, ns);
   
   // simplify, if requested
