@@ -8,6 +8,7 @@ SRC = deltagit_main.cpp deltagit_parse_options.cpp show_jobs.cpp \
 
 OBJ+= $(CBMC)/src/util/util$(LIBEXT) \
       $(CBMC)/src/xmllang/xmllang$(LIBEXT) \
+      $(CBMC)/src/json/json$(LIBEXT) \
       $(CBMC)/src/big-int/big-int$(LIBEXT) \
       ../html/html_escape$(OBJEXT) \
       ../html/logo$(OBJEXT)
