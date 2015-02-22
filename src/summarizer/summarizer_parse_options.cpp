@@ -257,7 +257,23 @@ int summarizer_parse_optionst::doit()
   
   try
   {
-    if(cmdline.isset("check"))
+    if(cmdline.isset("summarize"))
+    {
+      summarizert summarizer;
+      
+      summarizer.set_message_handler(get_message_handler());
+      summarizer.simplify=!cmdline.isset("no-simplify");
+      summarizer.fixed_point=!cmdline.isset("no-fixed-point");
+
+      // do actual summarization
+      if(cmdline.isset("function"))
+        summarizer(goto_model, cmdline.get_value("function"));
+      else
+        summarizer(goto_model);
+        
+      return 0;
+    }
+    else
     {
       summary_checkert summary_checker;
       
@@ -292,27 +308,6 @@ int summarizer_parse_optionst::doit()
       default:
         return 8;
       }
-    }
-    else if(cmdline.isset("summarize"))
-    {
-      summarizert summarizer;
-      
-      summarizer.set_message_handler(get_message_handler());
-      summarizer.simplify=!cmdline.isset("no-simplify");
-      summarizer.fixed_point=!cmdline.isset("no-fixed-point");
-
-      // do actual summarization
-      if(cmdline.isset("function"))
-        summarizer(goto_model, cmdline.get_value("function"));
-      else
-        summarizer(goto_model);
-        
-      return 0;
-    }
-    else
-    {
-      usage_error();
-      return 1;
     }
   }
   
