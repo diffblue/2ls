@@ -16,7 +16,9 @@ Author: Daniel Kroening, kroening@kroening.com
 class message_handlert;
 
 void deltacheck_analyzer(
+  const std::string &path1,
   const goto_modelt &goto_model1,
+  const std::string &path2,
   const goto_modelt &goto_model2,
   const optionst &options,
   message_handlert &);

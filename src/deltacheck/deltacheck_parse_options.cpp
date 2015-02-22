@@ -25,7 +25,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "version.h"
 #include "analyzer.h"
 #include "change_impact.h"
-#include "../summarizer/show.h"
+#include "../functions/path_util.h"
 
 /*******************************************************************\
 
@@ -261,8 +261,13 @@ int deltacheck_parse_optionst::doit()
     }
     else
     {
+      std::string path1=get_directory(cmdline.args[0]);
+      std::string path2=get_directory(cmdline.args[1]);
+    
       deltacheck_analyzer(
-        goto_model1, goto_model2, options, get_message_handler());
+        path1, goto_model1,
+        path2, goto_model2,
+        options, get_message_handler());
     }
     
     return 0;

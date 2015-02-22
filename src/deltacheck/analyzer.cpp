@@ -12,10 +12,12 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/time_stopping.h>
 #include <util/memory_info.h>
 
-#include <solvers/sat/satcheck.h>
-#include <solvers/flattening/bv_pointers.h>
+//#include <solvers/sat/satcheck.h>
+//#include <solvers/flattening/bv_pointers.h>
 
 #include "../html/html_escape.h"
+#include "../functions/path_util.h"
+
 #include "html_report.h"
 #include "ssa_fixed_point.h"
 #include "statistics.h"
@@ -27,11 +29,15 @@ class deltacheck_analyzert:public messaget
 {
 public:
   deltacheck_analyzert(
+    const std::string &_path_old,
     const goto_modelt &_goto_model_old,
+    const std::string &_path_new,
     const goto_modelt &_goto_model_new,
     const optionst &_options,
     message_handlert &message_handler):
     messaget(message_handler),
+    path_old(_path_old),
+    path_new(_path_new),
     goto_model_old(_goto_model_old),
     goto_model_new(_goto_model_new),
     options(_options)
@@ -43,6 +49,8 @@ public:
   void operator()();
 
 protected:
+  const std::string &path_old;
+  const std::string &path_new;
   const goto_modelt &goto_model_old;
   const goto_modelt &goto_model_new;
   const optionst &options;
@@ -137,7 +145,10 @@ void deltacheck_analyzert::check_function(
     
   // set up report
 
-  std::ofstream function_report(("deltacheck."+id2string(function)+".html").c_str());
+  std::string report_file_name=
+    make_relative_path(path_new, "deltacheck."+id2string(function)+".html");
+    
+  std::ofstream function_report(report_file_name.c_str());
   
   html_report_header("Function "+id2string(symbol_new.display_name()), function_report);
 
@@ -312,7 +323,7 @@ void deltacheck_analyzert::operator()()
   statistics.start("Total-time");
 
   std::string report_file_name=
-    "deltacheck.html";
+    make_relative_path(path_new, "deltacheck.html");
     
   std::ofstream out(report_file_name.c_str());
   
@@ -369,7 +380,9 @@ void deltacheck_analyzert::operator()()
   // Write some statistics into a JSON file, for the benefit
   // of other programs.
   
-  std::ofstream json_out("deltacheck-stat.json");
+  std::string stat_file_name=
+    make_relative_path(path_new, "deltacheck-stat.json");
+  std::ofstream json_out(stat_file_name.c_str());
   
   json_out << "{\n";
   json_out << "  \"properties\": {\n";
@@ -398,12 +411,16 @@ Function: deltacheck_analyzer
 \*******************************************************************/
 
 void deltacheck_analyzer(
+  const std::string &path1,
   const goto_modelt &goto_model1,
+  const std::string &path2,
   const goto_modelt &goto_model2,
   const optionst &options,
   message_handlert &message_handler)
 {
   deltacheck_analyzert checker(
-    goto_model1, goto_model2, options, message_handler);
+    path1, goto_model1,
+    path2, goto_model2,
+    options, message_handler);
   checker();
 }
