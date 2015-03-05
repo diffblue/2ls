@@ -441,7 +441,9 @@ void ssa_local_unwindert::populate_connectors(tree_loopnodet& current_loop)
 
   body_nodest::const_reverse_iterator lit = current_loop.body_nodes.rbegin();
 
+
     unsigned int end_location = lit->location->location_number;
+
 
         for(local_SSAt::nodet::equalitiest::const_iterator eqit=lit->equalities.begin();
             eqit!=lit->equalities.end();eqit++)
@@ -456,6 +458,21 @@ void ssa_local_unwindert::populate_connectors(tree_loopnodet& current_loop)
             break;
            }
         }
+        exprt cond_e;
+        exprt guard_e;
+        exprt loop_continue_e;
+        if(!current_loop.is_dowhile)
+        {
+           cond_e = SSA.cond_symbol(it->location);
+           guard_e=SSA.guard_symbol(it->location);
+            loop_continue_e = and_exprt(cond_e,guard_e);
+        }
+        else
+        {
+           cond_e = SSA.cond_symbol(lit->location);
+           guard_e=SSA.guard_symbol(lit->location);
+           loop_continue_e=and_exprt(not_exprt(cond_e),guard_e);
+         }
 
   for (local_SSAt::objectst::const_iterator o_it =
                SSA.ssa_objects.objects.begin();
@@ -468,25 +485,26 @@ void ssa_local_unwindert::populate_connectors(tree_loopnodet& current_loop)
         //though #return_value is added into vars_modified
         //we don't want PHI connectors for them
         if(as_string(*fit).find(RETVAR)!=std::string::npos) continue;
+
         if(!current_loop.is_dowhile)
         {
-         current_loop.connectors.insert(SSA.name(*o_it,local_SSAt::PHI,it->location));
+         current_loop.connectors.insert(exp_guard_cond_pairt(SSA.name(*o_it,local_SSAt::PHI,it->location),loop_continue_e));
         }
         else
         {
-          current_loop.connectors.insert(SSA.read_rhs(*o_it,lit->location));
+          current_loop.connectors.insert(exp_guard_cond_pairt(SSA.read_rhs(*o_it,lit->location),loop_continue_e));
         }
       }
 
 if(!current_loop.is_dowhile)
 {
-  current_loop.connectors.insert(SSA.guard_symbol(it->location));
-  current_loop.connectors.insert(SSA.cond_symbol(it->location));
+  current_loop.connectors.insert(exp_guard_cond_pairt(SSA.guard_symbol(it->location),loop_continue_e));
+  current_loop.connectors.insert(exp_guard_cond_pairt(SSA.cond_symbol(it->location),loop_continue_e));
 }
 else
 {
-  current_loop.connectors.insert(SSA.guard_symbol(lit->location));
-  current_loop.connectors.insert(SSA.cond_symbol(lit->location));
+  current_loop.connectors.insert(exp_guard_cond_pairt(SSA.guard_symbol(lit->location),loop_continue_e));
+  current_loop.connectors.insert(exp_guard_cond_pairt(SSA.cond_symbol(lit->location),loop_continue_e));
 }
 //since loophead is processed we can probably go on?
 it++;
@@ -501,15 +519,16 @@ for(;it!=current_loop.body_nodes.end();it++)
   //no separete treatment for return nodes required as break nodes
   // are all nodes with jump out of the loop which include the return
   //nodes
+loop_continue_e = and_exprt(SSA.cond_symbol(it->location),SSA.guard_symbol(it->location));
 
   for(varobj_mapt::iterator vit=varobj_map.begin();vit!=varobj_map.end();vit++)
   {
     if(it==current_loop.body_nodes.begin() &&
         (as_string(vit->first).find(RETVAR)!=std::string::npos)) continue;
 
-    current_loop.connectors.insert(SSA.read_rhs(*(vit->second),it->location));
-    current_loop.connectors.insert(SSA.guard_symbol(it->location));
-    current_loop.connectors.insert(SSA.cond_symbol(it->location));
+    current_loop.connectors.insert(exp_guard_cond_pairt(SSA.read_rhs(*(vit->second),it->location),loop_continue_e));
+    current_loop.connectors.insert(exp_guard_cond_pairt(SSA.guard_symbol(it->location),loop_continue_e));
+    current_loop.connectors.insert(exp_guard_cond_pairt(SSA.cond_symbol(it->location),loop_continue_e));
   }
 
 
@@ -1224,7 +1243,7 @@ void ssa_local_unwindert::add_connector_node(tree_loopnodet& current_loop,
     new_nodes.push_back(node);
   }
 
-#else
+#elif 0
 void ssa_local_unwindert::add_connector_node(tree_loopnodet& current_loop,
           std::string suffix,
           const unsigned int unwind_depth,symbol_exprt& new_sym,local_SSAt::nodest& new_nodes)
@@ -1272,6 +1291,52 @@ void ssa_local_unwindert::add_connector_node(tree_loopnodet& current_loop,
         rename(ge, suffix, i,current_loop);
 
         exprt cond_expr = and_exprt(ce, ge);
+        exprt true_expr = e;
+        rename(true_expr, suffix,i,current_loop);
+        exprt false_expr = re;
+        re = if_exprt(cond_expr, true_expr, false_expr);
+      }
+      exprt rhs = re;
+      exprt lhs=e;
+
+      rename(lhs,suffix,-1,current_loop);
+      node.equalities.push_back(equal_exprt(lhs,rhs));
+
+      node.enabling_expr = new_sym;
+      //exprt ie = implies_exprt(new_sym, *e_it);
+      //node.constraints.push_back(ie);
+
+    }
+    //node.equalities.clear();
+    new_nodes.push_back(node);
+  }
+
+#else
+void ssa_local_unwindert::add_connector_node(tree_loopnodet& current_loop,
+          std::string suffix,
+          const unsigned int unwind_depth,symbol_exprt& new_sym,local_SSAt::nodest& new_nodes)
+{
+    //copy the original loop head
+
+    local_SSAt::nodet node=current_loop.body_nodes.front();
+    node.marked = false;
+    node.equalities.clear();
+    node.assertions.clear();
+    node.constraints.clear();
+    node.templates.clear();
+
+
+    for(expr_break_mapt::iterator e_it=current_loop.connectors.begin();
+        e_it!=current_loop.connectors.end();e_it++)
+     {
+      exprt e = e_it->first;
+      exprt re = e;
+      rename(re, suffix, 0,current_loop);
+      for (unsigned int i = 1; i < unwind_depth; i++) {
+
+
+        exprt cond_expr = e_it->second;
+        rename(cond_expr,suffix,i,current_loop);
         exprt true_expr = e;
         rename(true_expr, suffix,i,current_loop);
         exprt false_expr = re;

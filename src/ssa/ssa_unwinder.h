@@ -35,6 +35,11 @@ class ssa_local_unwindert : public messaget
   typedef std::map<irep_idt,local_SSAt::nodest::iterator> loopends_mapt;
   typedef std::map<irep_idt,int> modvar_levelt;
   typedef std::set<exprt> exprst;
+
+  typedef exprt cond_et;
+  typedef exprt guard_et;
+  typedef std::map<exprt, exprt> expr_break_mapt;
+  typedef std::pair<exprt,exprt> exp_guard_cond_pairt;
   typedef std::set<local_SSAt::nodest::const_iterator,compare_node_iteratorst> return_nodest;
   typedef local_SSAt::nodest body_nodest;
   bool loopless;
@@ -43,7 +48,8 @@ class ssa_local_unwindert : public messaget
   {
   public:
     return_nodest return_nodes;
-    exprst connectors;
+    //exprst connectors;
+    expr_break_mapt connectors;
     tree_loopnodet* parent;
     local_SSAt::nodest body_nodes;
     //local_SSAt::nodet::iterator loophead_node;
