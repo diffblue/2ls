@@ -169,6 +169,13 @@ exprt summarizer_baset::compute_calling_context(
   // solver
   incremental_solvert &solver = ssa_db.get_solver(function_name);
   solver.set_message_handler(get_message_handler());
+  solver << SSA;
+  SSA.mark_nodes();
+
+  solver.new_context();
+  solver << SSA.get_enabling_exprs();
+  solver << precondition;
+  solver << ssa_inliner.get_summaries(SSA);
 
   ssa_analyzert analyzer;
   analyzer.set_message_handler(get_message_handler());

@@ -171,11 +171,11 @@ property_checkert::resultt summary_checkert::operator()(
   {
     report_statistics();
     property_checkert::resultt all_terminate = report_termination();
-    return all_terminate;
+    if(all_terminate) return property_checkert::PASS;
+    return property_checkert::UNKNOWN;
   }
 
   property_checkert::resultt result =  check_properties(); 
-  if(result==property_checkert::UNKNOWN) result = property_checkert::FAIL;
   report_statistics();
   return result;
 }
@@ -422,7 +422,8 @@ void summary_checkert::check_properties_non_incremental(
       {
       case decision_proceduret::D_SATISFIABLE: 
       {
-	if(options.get_bool_option("spurious-check"))
+	if(options.get_bool_option("spurious-check") &&
+	   !SSA.has_function_calls())
 	{
 	  bool spurious = is_spurious(loophead_selects,solver) ;
 	  debug() << "[" << property_id << "] is " << 
@@ -502,7 +503,8 @@ void summary_checkert::check_properties_incremental(
     get_loophead_selects(f_it->first,SSA,solver.solver);
 
   cover_goals_extt cover_goals(solver,loophead_selects,property_map,
-			       options.get_bool_option("spurious-check"));
+			       options.get_bool_option("spurious-check") &&
+			       !SSA.has_function_calls());
 
 #if 0   
   debug() << "(C) " << from_expr(SSA.ns,"",enabling_expr) << eom;

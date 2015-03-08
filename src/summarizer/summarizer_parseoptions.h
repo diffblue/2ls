@@ -82,6 +82,7 @@ protected:
 
   void report_success();
   void report_failure();
+  void report_unknown();
 
   void report_properties(
     const goto_modelt &,

@@ -107,6 +107,8 @@ public:
   var_listt params;  
   var_sett globals_in, globals_out;  
 
+  bool has_function_calls() const;
+
   const namespacet &ns;
   const goto_functiont &goto_function;
   

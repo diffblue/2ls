@@ -1503,3 +1503,31 @@ exprt local_SSAt::get_enabling_exprs() const
   }
   return conjunction(result);
 }
+
+/*******************************************************************\
+
+Function: local_SSAt::has_function_calls
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool local_SSAt::has_function_calls() const
+{
+  bool found = false;
+  for(local_SSAt::nodest::const_iterator n_it = nodes.begin();
+    n_it != nodes.end(); n_it++)
+  {
+    if(!n_it->function_calls.empty()) 
+    {
+      found = true;
+      break;
+    }
+  }
+  return found;
+}
+

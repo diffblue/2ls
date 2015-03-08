@@ -51,10 +51,15 @@ void createBack(struct SDL_Surface back_surface)
       pos.y = (signed short int)y;
       pos.w = (unsigned short int)img.w;
       pos.h = (unsigned short int)img.h;
+      //      assert(-x>-(x+img.w));
+            assert(img.w!=0);
+      //      assert(-x+(x+img.w)>0);
 //      pos.w = (unsigned short int)img->w;
 //      pos.h = (unsigned short int)img->h;
 //      SDL_UpperBlit(img, (struct SDL_Rect *)NULL, *back_surface, &pos);
     }
+    //assert(-y>-(y+img.h));
+    //    assert(-y+(y+img.h)>0); 
   }
 }
 

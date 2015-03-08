@@ -1,7 +1,7 @@
 signed long int full_write(signed int fd, const void *buf, unsigned long int len, signed long int cc)
 {
   signed long int total = (signed long int)0;
-  for( ; !(len == 0ul); len = len - (unsigned long int)cc)
+  for( ; !(len <= 0ul); len = len - (unsigned long int)cc)
   {
     if(cc < 0l)
     {

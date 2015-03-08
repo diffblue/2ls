@@ -46,7 +46,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "../ssa/split_loopheads.h"
 #include "show.h"
 
-#define ANONYMOUS
+//#define ANONYMOUS
 
 /*******************************************************************\
 
@@ -445,24 +445,36 @@ int summarizer_parseoptionst::doit()
     }
     
     // do actual analysis
+    int retval;
     switch(summary_checker(goto_model))
     {
     case property_checkert::PASS:
       if(!options.get_bool_option("termination"))
         report_properties(goto_model, summary_checker.property_map);
       report_success();
-      return 0;
+      retval = 0;
+      break;
     
     case property_checkert::FAIL:
       if(!options.get_bool_option("termination"))
         report_properties(goto_model, summary_checker.property_map);
       report_failure();
-      return 10;
+      retval = 10;
+      break;
     
-    default:
+    case property_checkert::UNKNOWN:
+      if(!options.get_bool_option("termination"))
+        report_properties(goto_model, summary_checker.property_map);
       if(options.get_bool_option("preconditions")) return 0;
+      report_unknown();
+      retval = 5;
+      break;
+
+    default:
       return 8;
     }
+
+    return retval;
   }
   
   catch(const std::string error_msg)
@@ -1200,6 +1212,41 @@ void summarizer_parseoptionst::report_failure()
     {
       xmlt xml("cprover-status");
       xml.data="FAILURE";
+      std::cout << xml;
+      std::cout << std::endl;
+    }
+    break;
+    
+  default:
+    assert(false);
+  }
+}
+
+/*******************************************************************\
+
+Function: summarizer_parseoptionst::report_unknown
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void summarizer_parseoptionst::report_unknown()
+{
+  result() << "VERIFICATION INCONCLUSIVE" << eom;
+
+  switch(get_ui())
+  {
+  case ui_message_handlert::PLAIN:
+    break;
+    
+  case ui_message_handlert::XML_UI:
+    {
+      xmlt xml("cprover-status");
+      xml.data="UNKNOWN";
       std::cout << xml;
       std::cout << std::endl;
     }
