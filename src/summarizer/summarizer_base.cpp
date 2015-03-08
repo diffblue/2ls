@@ -174,7 +174,6 @@ exprt summarizer_baset::compute_calling_context(
 
   solver.new_context();
   solver << SSA.get_enabling_exprs();
-  solver << precondition;
   solver << ssa_inliner.get_summaries(SSA);
 
   ssa_analyzert analyzer;
@@ -215,6 +214,8 @@ exprt summarizer_baset::compute_calling_context(
   //statistics
   solver_instances += analyzer.get_number_of_solver_instances();
   solver_calls += analyzer.get_number_of_solver_calls();
+
+  solver.pop_context();
 
   return precondition_call;
 }

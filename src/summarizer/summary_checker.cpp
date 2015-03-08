@@ -170,9 +170,7 @@ property_checkert::resultt summary_checkert::operator()(
   if(options.get_bool_option("termination")) 
   {
     report_statistics();
-    property_checkert::resultt all_terminate = report_termination();
-    if(all_terminate) return property_checkert::PASS;
-    return property_checkert::UNKNOWN;
+    return report_termination();
   }
 
   property_checkert::resultt result =  check_properties(); 
@@ -704,6 +702,7 @@ property_checkert::resultt summary_checkert::report_termination()
   result() << eom;
   result() << "** Termination: " << eom;
   bool all_terminate = true; 
+  bool one_nonterminate = false; 
   ssa_dbt::functionst &functions = ssa_db.functions();
   for(ssa_dbt::functionst::iterator it = functions.begin();
       it != functions.end(); it++)
@@ -712,11 +711,13 @@ property_checkert::resultt summary_checkert::report_termination()
     bool computed = summary_db.exists(it->first);
     if(computed) terminates = summary_db.get(it->first).terminates;
     all_terminate = all_terminate && (terminates==YES);
+    one_nonterminate = one_nonterminate || (terminates==NO);
     result() << "[" << it->first << "]: " 
 	     << (!computed ? "not computed" : threeval2string(terminates)) << eom;
   }
   if(all_terminate) return property_checkert::PASS;
-  return property_checkert::FAIL;
+  if(one_nonterminate) return property_checkert::FAIL;
+  return property_checkert::UNKNOWN;
 }
 
 /*******************************************************************\
