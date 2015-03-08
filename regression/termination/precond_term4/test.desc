@@ -3,4 +3,4 @@ main.c
 --preconditions
 ^EXIT=0$
 ^SIGNAL=0$
-\[c::full_write\]: !(fd <= 2147483647 && -((signed __CPROVER_bitvector\[33\])fd) <= 2147483648 && len <= 18446744073709551615ul && -((signed __CPROVER_bitvector\[65\])len) <= 0 && cc <= 9223372036854775807l && -((signed __CPROVER_bitvector\[65\])cc) <= 0)
+\[full_write\]: !(fd <= 2147483647 && -((signed __CPROVER_bitvector\[33\])fd) <= 2147483648 && len <= 18446744073709551615ul && -((signed __CPROVER_bitvector\[65\])len) <= 0 && cc <= 9223372036854775807l && -((signed __CPROVER_bitvector\[65\])cc) <= 0)
