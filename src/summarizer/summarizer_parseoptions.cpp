@@ -1173,7 +1173,7 @@ void summarizer_parseoptionst::report_failure()
 
 /*******************************************************************\
 
-Function: summarizer_parseoptionst::report_failure
+Function: summarizer_parseoptionst::report_unknown
 
   Inputs:
 

@@ -288,7 +288,7 @@ summary_checkert::resultt summary_checkert::check_properties()
   {
     status() << "Checking properties of " << f_it->first << messaget::eom;
 
-#if 1
+#if 0
     //for debugging
     show_ssa_symbols(*f_it->second,std::cerr);
 #endif
