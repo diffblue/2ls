@@ -218,6 +218,8 @@ void ssa_local_unwindert::init() {
 
       //ASSUME : the last node in the body_nodes
       // of a loop is always the back-edge node
+      //copy assertions after the loop for assertion hoisting
+      current_node->assertions_after_loop = n_it->loophead->assertions_after_loop;
       current_node->body_nodes.push_back(*n_it);
       current_node->body_nodes.back().marked = false;
 
@@ -441,6 +443,7 @@ void ssa_local_unwindert::populate_connectors(tree_loopnodet& current_loop)
 
   body_nodest::const_reverse_iterator lit = current_loop.body_nodes.rbegin();
 
+  std::vector<exprt> exit_conditions;
 
     unsigned int end_location = lit->location->location_number;
 
@@ -465,13 +468,16 @@ void ssa_local_unwindert::populate_connectors(tree_loopnodet& current_loop)
         {
            cond_e = SSA.cond_symbol(it->location);
            guard_e=SSA.guard_symbol(it->location);
+           exit_conditions.push_back(cond_e);
             loop_continue_e = and_exprt(cond_e,guard_e);
         }
         else
         {
            cond_e = SSA.cond_symbol(lit->location);
            guard_e=SSA.guard_symbol(lit->location);
-           loop_continue_e=and_exprt(not_exprt(cond_e),guard_e);
+           exprt not_cond_e=not_exprt(cond_e);
+           exit_conditions.push_back(not_cond_e);
+           loop_continue_e=and_exprt(not_cond_e,guard_e);
          }
 
   for (local_SSAt::objectst::const_iterator o_it =
@@ -519,7 +525,9 @@ for(;it!=current_loop.body_nodes.end();it++)
   //no separete treatment for return nodes required as break nodes
   // are all nodes with jump out of the loop which include the return
   //nodes
-loop_continue_e = and_exprt(SSA.cond_symbol(it->location),SSA.guard_symbol(it->location));
+  exprt break_cond_e=SSA.cond_symbol(it->location);
+loop_continue_e = and_exprt(break_cond_e,SSA.guard_symbol(it->location));
+exit_conditions.push_back(break_cond_e);
 
   for(varobj_mapt::iterator vit=varobj_map.begin();vit!=varobj_map.end();vit++)
   {
@@ -533,6 +541,8 @@ loop_continue_e = and_exprt(SSA.cond_symbol(it->location),SSA.guard_symbol(it->l
 
 
 }
+
+current_loop.exit_condition=disjunction(exit_conditions);
 
 for(loop_nodest::iterator loopit=current_loop.loop_nodes.begin();
     loopit!=current_loop.loop_nodes.end();loopit++)
@@ -879,7 +889,57 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
       }
       new_nodes.push_back(node);
     }
+#if 1
+    //assertion hoisting
+    if(suffix==""){
+//assertion hoisting
+    local_SSAt::nodet node = *it;
+    node.marked=false;
+    node.assertions.clear();
+    node.equalities.clear();
+    node.constraints.clear();
+    node.templates.clear();
+    node.assertions_after_loop.clear();
 
+    if(is_kinduction &&(
+              (current_loop.is_dowhile && i>0)
+              || (!current_loop.is_dowhile && i>1)))
+          { //convert all assert to assumes for k-induction
+            //except the bottom most iteration
+
+            //assertions should be converted to assume only if you are in the step case
+            //of k-induction and not the base case. that means
+            // you want guardls=> assume and \not guardls => assert
+            // as of now this conflicts with checking spurious examples
+            //so just removing the assertion if it is NOT the bottom most iteration.
+            // Unless you have checked it for all unwinding less than k, this will
+            // lead to unsoundness (a bug may not be found if the assertion can fail in iterations
+            //other than the last
+
+
+            exprt guard_select = SSA.name(SSA.guard_symbol(),
+                local_SSAt::LOOP_SELECT, current_loop.body_nodes.rbegin()->location);
+            rename(guard_select,suffix,i,current_loop);
+
+              //if outermost loop, do the asssertion hoisting.
+              //for innerloop assertion hoisting is not necessary because assertions are
+              //assumed in the parent context anyway
+              exprt assertion_hoist_e = conjunction(current_loop.assertions_after_loop);
+              exprt exit_cond_e=current_loop.exit_condition;
+              if(!assertion_hoist_e.is_true()&& !exit_cond_e.is_false())
+              {
+              rename(assertion_hoist_e,suffix,-1,current_loop);
+
+              rename(exit_cond_e,suffix,i,current_loop);
+              exprt hoist_cond_e = and_exprt(guard_select,exit_cond_e);
+              node.constraints.push_back(implies_exprt(hoist_cond_e,assertion_hoist_e));
+              }
+              new_nodes.push_back(node);
+
+
+    }
+    }
+#endif
     it++;
     //now process the rest of the nodes
     for (; it != current_loop.body_nodes.end(); it++) {
@@ -905,8 +965,11 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
 
 #if 1
         exprt guard_select = SSA.name(SSA.guard_symbol(),
-            local_SSAt::LOOP_SELECT, current_loop.body_nodes.begin()->location);
+            local_SSAt::LOOP_SELECT, current_loop.body_nodes.rbegin()->location);
         rename(guard_select,suffix,i,current_loop);
+
+
+
         for(local_SSAt::nodet::assertionst::iterator ait=new_node.assertions.begin();
             ait!=new_node.assertions.end();ait++)
         {

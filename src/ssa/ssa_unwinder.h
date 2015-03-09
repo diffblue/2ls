@@ -49,6 +49,9 @@ class ssa_local_unwindert : public messaget
   public:
     return_nodest return_nodes;
     //exprst connectors;
+    exprt::operandst assertions_after_loop;
+    //exprt::operandst exit_conditions;
+    exprt exit_condition;
     expr_break_mapt connectors;
     tree_loopnodet* parent;
     local_SSAt::nodest body_nodes;
