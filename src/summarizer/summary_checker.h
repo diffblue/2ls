@@ -30,7 +30,7 @@ public:
     simplify(false),
     fixed_point(false),
     options(_options),
-    ssa_db(),summary_db(),
+    ssa_db(_options),summary_db(),
     ssa_unwinder(ssa_db),
     ssa_inliner(summary_db),
     solver_instances(0),

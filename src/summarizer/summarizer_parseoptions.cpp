@@ -194,6 +194,12 @@ void summarizer_parseoptionst::get_command_line_options(optionst &options)
   else
     options.set_option("assumptions", true);
 
+    // use array refinement 
+  if(cmdline.isset("refine"))
+    options.set_option("refine", true);
+  else
+    options.set_option("refine", false);
+  
   // magic error label
   if(cmdline.isset("error-label"))
     options.set_option("error-label", cmdline.get_value("error-label"));

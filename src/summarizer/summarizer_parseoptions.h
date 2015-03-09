@@ -29,7 +29,7 @@ class optionst;
   "(bounds-check)(pointer-check)(div-by-zero-check)(memory-leak-check)" \
   "(signed-overflow-check)(unsigned-overflow-check)" \
   "(float-overflow-check)(nan-check)" \
-  "(array-abstraction)" \
+  "(array-abstraction)(refine)" \
   "(non-incremental)" \
   "(no-assertions)(no-assumptions)" \
   "(16)(32)(64)(LP64)(ILP64)(LLP64)(ILP32)(LP32)" \

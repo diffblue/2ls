@@ -9,6 +9,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_LOCAL_SSA_DB_H
 #define CPROVER_LOCAL_SSA_DB_H
 
+#include <util/options.h>
+
 #include "../ssa/local_ssa.h"
 #include "../domains/incremental_solver.h"
 #include <goto-programs/goto_functions.h>
@@ -20,6 +22,10 @@ public:
   typedef std::map<function_namet, local_SSAt*> functionst;
   typedef std::map<function_namet, incremental_solvert*> solverst;
 
+  explicit ssa_dbt(const optionst &_options) 
+    : options(_options)
+    { }
+  
   ~ssa_dbt() 
   {
     for(functionst::iterator it = store.begin();
@@ -38,7 +44,8 @@ public:
     solverst::iterator it = the_solvers.find(function_name);
     if(it!=the_solvers.end()) return *(it->second);
     the_solvers[function_name] = 
-      incremental_solvert::allocate(store.at(function_name)->ns);
+      incremental_solvert::allocate(store.at(function_name)->ns,
+				    options.get_bool_option("refine"));
     return *the_solvers.at(function_name); 
   }
 
@@ -56,6 +63,7 @@ public:
   }
 
  protected:
+  const optionst &options;
   functionst store;
   solverst the_solvers;
 };

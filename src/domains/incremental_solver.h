@@ -13,6 +13,7 @@ Author: Peter Schrammel
 #include <iostream>
 
 #include <solvers/flattening/bv_pointers.h>
+#include <solvers/refinement/bv_refinement.h>
 #include <solvers/sat/satcheck.h>
 
 #include "domain.h"
@@ -33,7 +34,7 @@ class incremental_solvert : public messaget
   typedef std::list<constraintst> contextst;
 
   explicit incremental_solvert(
-    const namespacet &_ns) :
+    const namespacet &_ns, bool array_refinement) :
     sat_check(NULL),
     solver(NULL), 
     ns(_ns),
@@ -41,7 +42,7 @@ class incremental_solvert : public messaget
     domain_number(0),
     solver_calls(0)
   { 
-    allocate_solvers();
+    allocate_solvers(array_refinement);
     contexts.push_back(constraintst());
   }
 
@@ -102,9 +103,10 @@ class incremental_solvert : public messaget
 
   unsigned next_domain_number() { return domain_number++; }
 
-  static incremental_solvert *allocate(const namespacet &_ns) 
+  static incremental_solvert *allocate(const namespacet &_ns,
+				       bool array_refinement) 
   { 
-    return new incremental_solvert(_ns);
+    return new incremental_solvert(_ns,array_refinement);
   }
 
   propt* sat_check;
@@ -132,14 +134,17 @@ class incremental_solvert : public messaget
   //statistics
   unsigned solver_calls;
 
-  void allocate_solvers()
+  void allocate_solvers(bool array_refinement)
   {
 #ifdef NON_INCREMENTAL
     sat_check = new satcheckt();
 #else
     sat_check = new satcheck_minisat_no_simplifiert();
 #endif
-    solver = new bv_pointerst(ns,*sat_check);
+    if(array_refinement)
+      solver = new bv_refinementt(ns,*sat_check);
+    else
+      solver = new bv_pointerst(ns,*sat_check);
   }
 
   void deallocate_solvers()
