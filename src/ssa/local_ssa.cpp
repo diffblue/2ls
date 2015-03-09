@@ -688,6 +688,8 @@ void local_SSAt::assertions_after_loop()
     {
       loopheads.pop_back();
       n_it->assertions_after_loop = assertion_map[loopheads.back()->location];
+      assertion_map[loopheads.back()->location].clear();
+       //do not consider assertions after another loop
     }
     if(n_it->loophead!=nodes.end()) loopheads.push_back(n_it->loophead);
     if(!n_it->assertions.empty())
