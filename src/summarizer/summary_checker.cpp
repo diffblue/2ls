@@ -302,6 +302,13 @@ summary_checkert::resultt summary_checkert::check_properties()
       check_properties_incremental(f_it);
     else
       check_properties_non_incremental(f_it);
+
+    if(options.get_bool_option("show-invariants")) 
+    {
+      if(!summary_db.exists(f_it->first)) continue;
+      show_invariants(*(f_it->second),summary_db.get(f_it->first),result());
+      result() << eom;
+    }
   }
   
   summary_checkert::resultt result = property_checkert::PASS;

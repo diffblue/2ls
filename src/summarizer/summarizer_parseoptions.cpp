@@ -343,6 +343,11 @@ int summarizer_parseoptionst::doit()
     return 7;
   }
 
+  if(cmdline.isset("show-invariants")) 
+  {
+    options.set_option("show-invariants", true);
+  }
+    
   if(cmdline.isset("context-sensitive"))
   {
     options.set_option("context-sensitive", true);

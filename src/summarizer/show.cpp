@@ -8,6 +8,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/options.h>
 #include <solvers/prop/prop_conv.h>
+#include <util/find_symbols.h>
+#include <util/i2string.h>
+#include <util/string2int.h>
 
 #include <goto-programs/read_goto_binary.h>
 #include <goto-programs/goto_model.h>
@@ -20,6 +23,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "../ssa/simplify_ssa.h"
 
 #include "../domains/ssa_fixed_point.h"
+
+#include "summary.h"
 
 /*******************************************************************\
 
@@ -316,4 +321,92 @@ void show_error_trace(const irep_idt &property_id,
     }
   }
   out << "\n";
+}
+
+/*******************************************************************\
+
+Function: show_invariants
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+local_SSAt::locationt find_loc_by_guard(const local_SSAt &SSA,
+					const symbol_exprt &guard)
+{
+  std::string gstr = id2string(guard.get_identifier());
+  unsigned pos1 = gstr.find("#")+1;
+  unsigned pos2 = gstr.find("%",pos1);
+  unsigned n = safe_string2unsigned(gstr.substr(pos1,pos2));
+  local_SSAt::nodest::const_iterator n_it =SSA.nodes.begin();
+  for(; n_it != SSA.nodes.end(); n_it++)
+  {
+    if(n_it->location->location_number == n) break;
+  }
+  return n_it->location;
+
+}
+
+void purify_identifiers(exprt &expr)
+{
+  if(expr.id()==ID_symbol)
+  {
+    std::string idstr = id2string(to_symbol_expr(expr).get_identifier());
+    to_symbol_expr(expr).set_identifier(idstr.substr(0,idstr.find("#")));
+  }
+  for(unsigned i=0; i<expr.operands().size(); i++)
+  {
+    purify_identifiers(expr.operands()[i]);
+  }
+}
+
+void show_invariant(const local_SSAt &SSA, 
+		const exprt &expr,
+		std::ostream &out)
+{
+  //expected format (/\_j g_j) => inv
+  const exprt &impl = expr.op0();
+  exprt inv = expr.op1(); //copy
+  local_SSAt::locationt loc;
+  if(impl.id()==ID_symbol)
+  {
+    loc = find_loc_by_guard(SSA,to_symbol_expr(impl));
+  }
+  else if(impl.id()==ID_and)
+  {
+    assert(impl.op0().id()==ID_symbol);
+    loc = find_loc_by_guard(SSA,to_symbol_expr(impl.op0()));
+  }
+  else assert(false);
+
+  out << "\n** invariant: " << loc->source_location << "\n";
+  purify_identifiers(inv);
+  out << "  " << from_expr(SSA.ns,"",inv) << "\n";
+}
+
+void show_invariants(const local_SSAt &SSA, 
+		const summaryt &summary,
+		std::ostream &out)
+{
+  if(summary.fw_invariant.is_nil()) return;
+  if(summary.fw_invariant.is_true()) return;
+
+  //expected format /\_i g_i => inv_i
+  if(summary.fw_invariant.id()==ID_implies)
+  {
+    show_invariant(SSA,summary.fw_invariant,out);
+  }
+  else if(summary.fw_invariant.id()==ID_and)
+  {
+    for(unsigned i=0; i<summary.fw_invariant.operands().size(); i++)
+    {
+      assert(summary.fw_invariant.operands()[i].id()==ID_implies);
+      show_invariant(SSA,summary.fw_invariant.operands()[i],out);
+    }
+  }
+  else assert(false);
 }
