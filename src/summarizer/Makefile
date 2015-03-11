@@ -86,7 +86,7 @@ CP_CXXFLAGS +=-g
 
 CLEANFILES = summarizer$(EXEEXT) $(DELTA_OBJ)
 
-all: summarizer$(EXEEXT)
+all: 2ls$(EXEEXT)
 
 ifneq ($(wildcard $(CBMC)/src/cpp/Makefile),)
   OBJ += $(CBMC)/src/cpp/cpp$(LIBEXT)
@@ -100,6 +100,6 @@ endif
 
 ###############################################################################
 
-summarizer$(EXEEXT): $(OBJ)
+2ls$(EXEEXT): $(OBJ)
 	$(LINKBIN)
 
