@@ -11,6 +11,8 @@ Author: Peter Schrammel
 
 #include <langapi/language_util.h>
 
+//#define PRETTY_PRINT
+
 /*******************************************************************\
 
 Function: summaryt::output()
@@ -63,7 +65,12 @@ void summaryt::output(std::ostream &out, const namespacet &ns) const
 	  from_expr(ns,"",bw_invariant)) << std::endl;
   out << "termination argument: ";
   if(termination_argument.is_nil()) out << "not computed";
-  else pretty_print_termination_argument(out,ns,termination_argument);
+  else
+#if PRETTY_PRINT
+    pretty_print_termination_argument(out,ns,termination_argument);
+#else
+    out << from_expr(ns,"",termination_argument) << std::endl; 
+#endif
   out << std::endl;
   out << "terminates: " << threeval2string(terminates) << std::endl;
 }
