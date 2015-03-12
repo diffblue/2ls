@@ -71,6 +71,8 @@ OBJ+=$(DELTA_OBJ)
 include $(CBMC)/src/config.inc
 include $(CBMC)/src/common
 
+CP_CXXFLAGS+= $(SUMMARIZERFLAGS)
+
 INCLUDES= -I $(CBMC)/src
 # \
 #  -I $(CUDD)/cudd -I $(CUDD)/obj -I $(CUDD)/mtr -I $(CUDD)/epd
@@ -79,7 +81,7 @@ LIBS =
 #LIBS = $(CUDD)/cudd/libcudd.a $(CUDD)/mtr/libmtr.a \
 #       $(CUDD)/st/libst.a $(CUDD)/epd/libepd.a $(CUDD)/util/libutil.a
 
-CP_CXXFLAGS +=-g -DSHOW_CALLING_CONTEXTS
+#CP_CXXFLAGS +=-g -DSHOW_CALLING_CONTEXTS
 
 # $(CUDD)/obj/libobj.a 
 

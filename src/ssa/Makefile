@@ -10,6 +10,8 @@ SRC = local_ssa.cpp ssa_domain.cpp translate_union_member.cpp malloc_ssa.cpp \
 include $(CBMC)/src/config.inc
 include $(CBMC)/src/common
 
+CP_CXXFLAGS += $(SUMMARIZERFLAGS)
+
 INCLUDES= -I $(CBMC)/src
 
 CLEANFILES = 
