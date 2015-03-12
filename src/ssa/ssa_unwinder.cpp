@@ -889,7 +889,7 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
       }
       new_nodes.push_back(node);
     }
-#if 1
+#ifdef ASSERTION_HOISTING
     //assertion hoisting
     if(suffix==""){
 //assertion hoisting
@@ -902,8 +902,8 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
     node.assertions_after_loop.clear();
 
     if(is_kinduction &&(
-              (current_loop.is_dowhile && i>0)
-              || (!current_loop.is_dowhile && i>1)))
+              (current_loop.is_dowhile && (i-1)>0)
+              || (!current_loop.is_dowhile && (i-1)>1)))
           { //convert all assert to assumes for k-induction
             //except the bottom most iteration
 
@@ -919,7 +919,7 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
 
             exprt guard_select = SSA.name(SSA.guard_symbol(),
                 local_SSAt::LOOP_SELECT, current_loop.body_nodes.rbegin()->location);
-            rename(guard_select,suffix,i,current_loop);
+            rename(guard_select,suffix,i-1,current_loop);
 
               //if outermost loop, do the asssertion hoisting.
               //for innerloop assertion hoisting is not necessary because assertions are
@@ -930,7 +930,7 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
               {
               rename(assertion_hoist_e,suffix,-1,current_loop);
 
-              rename(exit_cond_e,suffix,i,current_loop);
+              rename(exit_cond_e,suffix,i-1,current_loop);
               exprt hoist_cond_e = and_exprt(guard_select,exit_cond_e);
               node.constraints.push_back(implies_exprt(hoist_cond_e,assertion_hoist_e));
               }
