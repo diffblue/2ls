@@ -34,15 +34,16 @@ class incremental_solvert : public messaget
   typedef std::list<constraintst> contextst;
 
   explicit incremental_solvert(
-    const namespacet &_ns, bool array_refinement) :
+    const namespacet &_ns, bool _array_refinement) :
     sat_check(NULL),
     solver(NULL), 
     ns(_ns),
     activation_literal_counter(0),
     domain_number(0),
+    array_refinement(_array_refinement),
     solver_calls(0)
   { 
-    allocate_solvers(array_refinement);
+    allocate_solvers(_array_refinement);
     contexts.push_back(constraintst());
   }
 
@@ -66,7 +67,7 @@ class incremental_solvert : public messaget
 
 #ifdef NON_INCREMENTAL
     deallocate_solvers();
-    allocate_solvers();
+    allocate_solvers(array_refinement);
     unsigned context_no = 0;
     for(contextst::const_iterator c_it = contexts.begin(); 
         c_it != contexts.end(); c_it++, context_no++)
@@ -127,9 +128,10 @@ class incremental_solvert : public messaget
   //non-incremental solving
   contextst contexts;
 
- protected: 
+ protected:
   unsigned activation_literal_counter;
   unsigned domain_number; //ids for each domain instance to make symbols unique
+  bool array_refinement;
 
   //statistics
   unsigned solver_calls;
@@ -142,7 +144,12 @@ class incremental_solvert : public messaget
     sat_check = new satcheck_minisat_no_simplifiert();
 #endif
     if(array_refinement)
+    {
       solver = new bv_refinementt(ns,*sat_check);
+#ifdef NO_ARITH_REFINEMENT
+      ((bv_refinementt *)solver)->do_arithmetic_refinement = false;
+#endif
+    }
     else
       solver = new bv_pointerst(ns,*sat_check);
   }

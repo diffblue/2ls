@@ -377,7 +377,7 @@ int summarizer_parseoptionst::doit()
     return 7;
   }
 
-  if(cmdline.isset("show-invariants")) //for Mandayam Srivas
+  if(cmdline.isset("show-invariants")) 
   {
     options.set_option("show-invariants", true);
   }
