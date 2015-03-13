@@ -20,6 +20,7 @@ Author: Peter Schrammel
 #include "util.h"
 
 
+//#define NO_ARITH_REFINEMENT
 //#define NON_INCREMENTAL // (experimental)
 
 //#define DISPLAY_FORMULA
