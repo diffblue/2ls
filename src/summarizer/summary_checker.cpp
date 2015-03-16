@@ -432,7 +432,7 @@ void summary_checkert::check_properties_non_incremental(
 
 	  property_map[property_id].result = spurious ? UNKNOWN : FAIL;
 
-#if 0
+#ifdef SHOW_COUNTEREXAMPLE
 	  if(!spurious)
 	  {
 	    show_error_trace(f_it->first,SSA,solver.solver,
