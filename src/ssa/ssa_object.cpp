@@ -313,13 +313,13 @@ Function: ssa_objectt::object_id_rec
 
 \*******************************************************************/
 
-irep_idt ssa_objectt::object_id_rec(
+ssa_objectt::identifiert ssa_objectt::object_id_rec(
   const exprt &src,
   const namespacet &ns)
 {
   if(src.id()==ID_symbol)
   {
-    return to_symbol_expr(src).get_identifier();
+    return identifiert(to_symbol_expr(src).get_identifier());
   }
   else if(src.id()==ID_member)
   {
@@ -330,13 +330,14 @@ irep_idt ssa_objectt::object_id_rec(
     if(is_struct_member(member_expr, ns))
     {
       irep_idt compound_object=object_id_rec(compound_op, ns);
-      if(compound_object==irep_idt()) return irep_idt();
+      if(compound_object==irep_idt()) return identifiert();
     
-      return id2string(compound_object)+
-             "."+id2string(member_expr.get_component_name());
+      return identifiert(
+        id2string(compound_object)+
+        "."+id2string(member_expr.get_component_name()));
     }
     else
-      return irep_idt();
+      return identifiert();
   }
   else if(src.id()==ID_index)
   {
@@ -345,7 +346,7 @@ irep_idt ssa_objectt::object_id_rec(
     return id2string(object_id_rec(index_expr.array()))+
            "["+"]";
     #else
-    return irep_idt();
+    return identifiert();
     #endif
   }
   else if(src.id()==ID_dereference)
@@ -356,15 +357,15 @@ irep_idt ssa_objectt::object_id_rec(
     if(pointer_object==irep_idt()) return irep_idt();
     return id2string(pointer_object)+"'obj";
     #else
-    return irep_idt();
+    return identifiert();
     #endif
   }
   else if(src.id()==ID_ptr_object)
   {
-    return id2string(src.get(ID_identifier))+"'obj";
+    return identifiert(id2string(src.get(ID_identifier))+"'obj");
   }
   else
-    return irep_idt();
+    return identifiert();
 }
 
 /*******************************************************************\
