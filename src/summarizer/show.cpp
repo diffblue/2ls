@@ -56,18 +56,31 @@ Function: show_assignments
 
 void show_assignments(
   const goto_modelt &goto_model,
+  const irep_idt &function,
   std::ostream &out,
   message_handlert &message_handler)
 {
   const namespacet ns(goto_model.symbol_table);
-  
-  forall_goto_functions(f_it, goto_model.goto_functions)
+
+  if(!function.empty())
   {
-    out << ">>>> Function " << f_it->first << "\n";
-          
-    show_assignments(f_it->second, ns, out);
-      
-    out << "\n";
+    goto_functionst::function_mapt::const_iterator
+      f_it=goto_model.goto_functions.function_map.find(function);
+    if(f_it==goto_model.goto_functions.function_map.end())
+      out << "function " << function << " not found\n";
+    else
+      show_assignments(f_it->second, ns, out);
+  }
+  else
+  {
+    forall_goto_functions(f_it, goto_model.goto_functions)
+    {
+      out << ">>>> Function " << f_it->first << "\n";
+            
+      show_assignments(f_it->second, ns, out);
+        
+      out << "\n";
+    }
   }
 }
 
@@ -109,18 +122,31 @@ Function: show_defs
 
 void show_defs(
   const goto_modelt &goto_model,
+  const irep_idt &function,
   std::ostream &out,
   message_handlert &message_handler)
 {
   const namespacet ns(goto_model.symbol_table);
   
-  forall_goto_functions(f_it, goto_model.goto_functions)
+  if(!function.empty())
   {
-    out << ">>>> Function " << f_it->first << "\n";
+    goto_functionst::function_mapt::const_iterator
+      f_it=goto_model.goto_functions.function_map.find(function);
+    if(f_it==goto_model.goto_functions.function_map.end())
+      out << "function " << function << " not found\n";
+    else
+      show_defs(f_it->second, ns, out);
+  }
+  else
+  {
+    forall_goto_functions(f_it, goto_model.goto_functions)
+    {
+      out << ">>>> Function " << f_it->first << "\n";
           
-    show_defs(f_it->second, ns, out);
+      show_defs(f_it->second, ns, out);
       
-    out << "\n";
+      out << "\n";
+    }
   }
 }
 
@@ -159,18 +185,31 @@ Function: show_guards
 
 void show_guards(
   const goto_modelt &goto_model,
+  const irep_idt &function,
   std::ostream &out,
   message_handlert &message_handler)
 {
   const namespacet ns(goto_model.symbol_table);
   
-  forall_goto_functions(f_it, goto_model.goto_functions)
+  if(!function.empty())
   {
-    out << ">>>> Function " << f_it->first << "\n";
+    goto_functionst::function_mapt::const_iterator
+      f_it=goto_model.goto_functions.function_map.find(function);
+    if(f_it==goto_model.goto_functions.function_map.end())
+      out << "function " << function << " not found\n";
+    else
+      show_guards(f_it->second, ns, out);
+  }
+  else
+  {
+    forall_goto_functions(f_it, goto_model.goto_functions)
+    {
+      out << ">>>> Function " << f_it->first << "\n";
           
-    show_guards(f_it->second, ns, out);
+      show_guards(f_it->second, ns, out);
       
-    out << "\n";
+      out << "\n";
+    }
   }
 }
 
@@ -211,19 +250,32 @@ Function: show_ssa
 
 void show_ssa(
   const goto_modelt &goto_model,
+  const irep_idt &function,
   bool simplify,
   std::ostream &out,
   message_handlert &message_handler)
 {
   const namespacet ns(goto_model.symbol_table);
   
-  forall_goto_functions(f_it, goto_model.goto_functions)
+  if(!function.empty())
   {
-    out << ">>>> Function " << f_it->first << "\n";
+    goto_functionst::function_mapt::const_iterator
+      f_it=goto_model.goto_functions.function_map.find(function);
+    if(f_it==goto_model.goto_functions.function_map.end())
+      out << "function " << function << " not found\n";
+    else
+      show_ssa(f_it->second, simplify, ns, out);
+  }
+  else
+  {
+    forall_goto_functions(f_it, goto_model.goto_functions)
+    {
+      out << ">>>> Function " << f_it->first << "\n";
           
-    show_ssa(f_it->second, simplify, ns, out);
+      show_ssa(f_it->second, simplify, ns, out);
       
-    out << "\n";
+      out << "\n";
+    }
   }
 }
 
@@ -265,19 +317,32 @@ Function: show_fixed_points
 
 void show_fixed_points(
   const goto_modelt &goto_model,
+  const irep_idt &function,
   bool simplify,
   std::ostream &out,
   message_handlert &message_handler)
 {
   const namespacet ns(goto_model.symbol_table);
   
-  forall_goto_functions(f_it, goto_model.goto_functions)
+  if(!function.empty())
   {
-    out << ">>>> Function " << f_it->first << "\n";
+    goto_functionst::function_mapt::const_iterator
+      f_it=goto_model.goto_functions.function_map.find(function);
+    if(f_it==goto_model.goto_functions.function_map.end())
+      out << "function " << function << " not found\n";
+    else
+      show_fixed_point(f_it->second, simplify, ns, out);
+  }
+  else
+  {
+    forall_goto_functions(f_it, goto_model.goto_functions)
+    {
+      out << ">>>> Function " << f_it->first << "\n";
           
-    show_fixed_point(f_it->second, simplify, ns, out);
+      show_fixed_point(f_it->second, simplify, ns, out);
       
-    out << "\n";
+      out << "\n";
+    }
   }
 }
 
