@@ -1055,6 +1055,7 @@ void local_SSAt::output(std::ostream &out) const
     if(n_it==nodes.end()) continue;
     if(n_it->second.empty()) continue;
     n_it->second.output(out, ns);
+    out << '\n';
   }
 }
 
