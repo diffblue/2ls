@@ -53,7 +53,7 @@ class optionst;
   "(property):(all-properties)(k-induction)(incremental-bmc)" \
   "(no-simplify)(no-fixed-point)" \
   "(no-spurious-check)(no-all-properties)" \
-  "(competition-mode)" \
+  "(competition-mode)(slice)" \
   "(no-unwinding-assertions)(no-propagation)"
   // the last line is for CBMC-regression testing only
 

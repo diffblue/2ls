@@ -20,8 +20,9 @@ class ssa_slicert : public messaget
   void operator()(std::list<exprt> &dest,
 		  const local_SSAt &src);
 
-  unsigned number_of_sliced_equalities;
-  unsigned number_of_sliced_constraints;
+  //statistics
+  unsigned sliced_equalities;
+  unsigned sliced_constraints;
 
  protected:
   typedef struct 

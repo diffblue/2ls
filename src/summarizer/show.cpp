@@ -371,13 +371,7 @@ local_SSAt::locationt find_loc_by_guard(const local_SSAt &SSA,
   unsigned pos1 = gstr.find("#")+1;
   unsigned pos2 = gstr.find("%",pos1);
   unsigned n = safe_string2unsigned(gstr.substr(pos1,pos2));
-  local_SSAt::nodest::const_iterator n_it =SSA.nodes.begin();
-  for(; n_it != SSA.nodes.end(); n_it++)
-  {
-    if(n_it->location->location_number == n) break;
-  }
-  return n_it->location;
-
+  return SSA.find_location_by_number(n);
 }
 
 void purify_identifiers(exprt &expr)

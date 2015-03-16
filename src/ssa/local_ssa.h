@@ -173,7 +173,8 @@ public:
   nodest::iterator find_node(locationt loc);
   nodest::const_iterator find_node(locationt loc) const;
   void find_nodes(locationt loc, std::list<nodest::const_iterator> &_nodes) const;
-
+  locationt find_location_by_number(unsigned location_number) const;
+  
 protected:
   // build the SSA formulas
   void build_SSA();

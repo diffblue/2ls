@@ -134,6 +134,11 @@ void summarizer_parseoptionst::get_command_line_options(optionst &options)
   if(cmdline.isset("inline"))
     options.set_option("inline", true);
 
+  if(cmdline.isset("slice") && cmdline.isset("inline"))
+    options.set_option("slice", true);
+  else
+    options.set_option("slice", false);
+
   // check array bounds
   if(cmdline.isset("bounds-check"))
     options.set_option("bounds-check", true);
