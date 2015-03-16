@@ -22,6 +22,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <langapi/language_util.h>
 
+#include "ssa_slicer.h"
 #include "local_ssa.h"
 #include "malloc_ssa.h"
 #include "address_canonizer.h"
@@ -1510,6 +1511,10 @@ std::list<exprt> & operator << (
   std::list<exprt> &dest,
   const local_SSAt &src)
 {
+#ifdef SLICING
+  ssa_slicert ssa_slicer;
+  ssa_slicer(dest,src);
+#else
   for(local_SSAt::nodest::const_iterator n_it = src.nodes.begin();
     n_it != src.nodes.end(); n_it++)
   {
@@ -1536,6 +1541,7 @@ std::list<exprt> & operator << (
         dest.push_back(*c_it);
     }
   }
+#endif
   
   return dest;
 }
@@ -1556,6 +1562,13 @@ decision_proceduret & operator << (
   decision_proceduret &dest,
   const local_SSAt &src)
 {
+#ifdef SLICING
+  std::list<exprt> tmp;
+  tmp << src;
+  for(std::list<exprt>::const_iterator it = tmp.begin();
+    it != tmp.end(); it++)
+    dest << *it;
+#else
   for(local_SSAt::nodest::const_iterator n_it = src.nodes.begin();
     n_it != src.nodes.end(); n_it++)
   {
@@ -1582,7 +1595,7 @@ decision_proceduret & operator << (
         dest << *c_it;
     }
   }
-  
+#endif  
   return dest;
 }
 
@@ -1602,6 +1615,13 @@ incremental_solvert & operator << (
   incremental_solvert &dest,
   const local_SSAt &src)
 {
+#ifdef SLICING
+  std::list<exprt> tmp;
+  tmp << src;
+  for(std::list<exprt>::const_iterator it = tmp.begin();
+    it != tmp.end(); it++)
+    dest << *it;
+#else
   for(local_SSAt::nodest::const_iterator n_it = src.nodes.begin();
     n_it != src.nodes.end(); n_it++)
   {
@@ -1628,7 +1648,7 @@ incremental_solvert & operator << (
         dest << *c_it;
     }
   }
-  
+#endif  
   return dest;
 }
 

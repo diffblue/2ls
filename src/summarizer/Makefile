@@ -25,7 +25,7 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
 
 DELTA_OBJ+=\
       $(CBMC)/src/goto-instrument/unwind$(OBJEXT) \
-      ../ssa/local_ssa$(OBJEXT) \
+      ../ssa/ssa_slicer$(OBJEXT) \
       ../ssa/malloc_ssa$(OBJEXT) \
       ../ssa/ssa_domain$(OBJEXT) \
       ../ssa/assignments$(OBJEXT) \
