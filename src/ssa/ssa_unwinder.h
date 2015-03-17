@@ -145,6 +145,42 @@ class ssa_local_unwindert : public messaget
 public :
 #ifdef KIND_ASSUMPTIONS
   const loop_kind_assumptions_mapt& get_kind_assumptions() const;
+  exprt get_assumptions() const
+  {
+    exprt::operandst c;
+    c.reserve(loop_kind_assumptions_map.size());
+    for(loop_kind_assumptions_mapt::const_iterator it =
+	  loop_kind_assumptions_map.begin();
+	it != loop_kind_assumptions_map.end(); ++it)
+    {
+      c.push_back(implies_exprt(it->second.guardls,it->second.assumptions));
+    }
+    return conjunction(c);
+  }
+  exprt get_loopend_guards() const
+  {
+    exprt::operandst c;
+    c.reserve(loop_kind_assumptions_map.size());
+    for(loop_kind_assumptions_mapt::const_iterator it =
+	  loop_kind_assumptions_map.begin();
+	it != loop_kind_assumptions_map.end(); ++it)
+    {
+      c.push_back(implies_exprt(it->second.guardls,it->second.loopend_guard));
+    }
+    return conjunction(c);
+  }
+  exprt get_assertions() const
+  {
+    exprt::operandst c;
+    c.reserve(loop_kind_assumptions_map.size());
+    for(loop_kind_assumptions_mapt::const_iterator it =
+	  loop_kind_assumptions_map.begin();
+	it != loop_kind_assumptions_map.end(); ++it)
+    {
+      c.push_back(it->second.assumptions);
+    }
+    return conjunction(c);
+  }
 #endif
   void set_return_var(const irep_idt& id);
   void dissect_loop_suffix(const irep_idt& id,

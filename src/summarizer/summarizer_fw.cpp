@@ -123,9 +123,14 @@ void summarizer_fwt::do_summary(const function_namet &function_name,
   template_generator.set_message_handler(get_message_handler());
   template_generator(solver.next_domain_number(),SSA,true);
 
-  cond = and_exprt(cond,
-		   and_exprt(summary.fw_precondition,
-			     ssa_inliner.get_summaries(SSA)));
+  exprt::operandst conds;
+  conds.reserve(5);
+  conds.push_back(cond);
+  conds.push_back(summary.fw_precondition);
+  conds.push_back(ssa_inliner.get_summaries(SSA));
+#ifdef KIND_ASSUMPTIONS
+  conds.push_back(ssa_unwinder.get(function_name).get_assumptions());
+#endif
 
 #ifdef REUSE_INVARIANTS
   if(summary_db.exists(function_name)) //reuse existing invariants
@@ -137,9 +142,11 @@ void summarizer_fwt::do_summary(const function_namet &function_name,
     exprt inv = ssa_unwinder.get(function_name).rename_invariant(old_inv);
     out << "(renamed inv)" << from_expr(SSA.ns,"",inv)<<"\n";
     debug() << out.str() << eom;
-    cond = and_exprt(cond,inv);
+    conds.push_back(inv);
   }
 #endif
+
+  cond = conjunction(conds);
 
   analyzer(solver,SSA,cond,template_generator);
   analyzer.get_result(summary.fw_transformer,template_generator.inout_vars());
