@@ -24,6 +24,17 @@ struct compare_node_iteratorst {
       const local_SSAt::nodest::const_iterator& b) const;
 };
 
+#ifdef KIND_ASSUMPTIONS
+struct kind_assumptionst
+{
+public:
+  exprt guardls;
+  exprt assumptions;
+  exprt loopend_guard;
+
+};
+#endif
+
 class ssa_local_unwindert : public messaget
 {
   irep_idt return_var;
@@ -36,7 +47,7 @@ class ssa_local_unwindert : public messaget
   typedef std::map<irep_idt,local_SSAt::nodest::iterator> loopends_mapt;
   typedef std::map<irep_idt,int> modvar_levelt;
   typedef std::set<exprt> exprst;
-
+  //typedef std::list<exprt> kind_assumptionst;
   typedef exprt cond_et;
   typedef exprt guard_et;
   typedef std::map<exprt, exprt> expr_break_mapt;
@@ -44,7 +55,11 @@ class ssa_local_unwindert : public messaget
   typedef std::set<local_SSAt::nodest::const_iterator,compare_node_iteratorst> return_nodest;
   typedef local_SSAt::nodest body_nodest;
   bool loopless;
-
+  //kind_assumptionst kind_assumptions;
+#ifdef KIND_ASSUMPTIONS
+  typedef std::map<const tree_loopnodet*,kind_assumptionst> loop_kind_assumptions_mapt;
+  loop_kind_assumptions_mapt loop_kind_assumptions_map;
+#endif
   class tree_loopnodet
   {
   public:
@@ -128,6 +143,9 @@ class ssa_local_unwindert : public messaget
  // void init();
   bool is_initialized;
 public :
+#ifdef KIND_ASSUMPTIONS
+  const loop_kind_assumptions_mapt& get_kind_assumptions() const;
+#endif
   void set_return_var(const irep_idt& id);
   void dissect_loop_suffix(const irep_idt& id,
       irep_idt& before_suffix,
