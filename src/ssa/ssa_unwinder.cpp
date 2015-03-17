@@ -469,7 +469,12 @@ void ssa_local_unwindert::populate_connectors(tree_loopnodet& current_loop)
            cond_e = SSA.cond_symbol(it->location);
            guard_e=SSA.guard_symbol(it->location);
            exit_conditions.push_back(cond_e);
-            loop_continue_e = and_exprt(cond_e,guard_e);
+           //either you reached head of the loop and exit
+           //or you have not reached the end of the loop
+           //this will happen only for while. What about dowhile?
+           loop_continue_e = and_exprt(cond_e,guard_e);
+            loop_continue_e=or_exprt(loop_continue_e,not_exprt(SSA.guard_symbol(lit->location)));
+
         }
         else
         {
@@ -526,6 +531,7 @@ for(;it!=current_loop.body_nodes.end();it++)
   // are all nodes with jump out of the loop which include the return
   //nodes
   exprt break_cond_e=SSA.cond_symbol(it->location);
+  //NOTE : do we check if the end of the guard has reached in loop_continue_e?
 loop_continue_e = and_exprt(break_cond_e,SSA.guard_symbol(it->location));
 exit_conditions.push_back(break_cond_e);
 
@@ -699,6 +705,7 @@ void ssa_local_unwindert::rename(exprt &expr, std::string suffix,
     irep_idt vid=sexpr.get_identifier();
     irep_idt base_id = get_base_name(vid);
     bool isreturnvar=(as_string(vid).find(RETVAR)!=std::string::npos);
+     isreturnvar= isreturnvar||(as_string(vid).find(RETVAR1)!=std::string::npos);
     int mylevel;
     if(iteration<0)
     {

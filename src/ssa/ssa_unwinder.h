@@ -15,6 +15,7 @@ Author: Saurabh Joshi
 #include "../summarizer/ssa_db.h"
 
 #define RETVAR "#return_value"
+#define RETVAR1 "return_value___VERIFIER_nondet"
 
 struct compare_node_iteratorst {
   bool operator()(const local_SSAt::nodest::iterator& a,
