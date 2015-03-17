@@ -68,8 +68,10 @@ void local_SSAt::build_SSA()
   // entry and exit variables
   get_entry_exit_vars();
 
+#ifdef ASSERTION_HOISTING
   // collect assertions after loop exit (for k-induction assertion hoisting)
   assertions_after_loop();
+#endif
 }
 
 /*******************************************************************\
@@ -717,10 +719,11 @@ void local_SSAt::assertions_after_loop()
     if(n_it->loophead!=nodes.end()) loopheads.push_back(n_it->loophead);
     if(!n_it->assertions.empty())
     {
-      assertion_map[loopheads.back()->location].insert(
-	assertion_map[loopheads.back()->location].end(),
-	n_it->assertions.begin(),
-	n_it->assertions.end());
+      exprt::operandst &a = assertion_map[loopheads.back()->location];
+      for(nodet::assertionst::const_iterator a_it = 
+	    n_it->assertions.begin(); 
+          a_it != n_it->assertions.end(); a_it++)
+	a.push_back(*a_it);
     }
     //TODO: could also add assertions that are on a direct path within a loop
   }
@@ -1463,7 +1466,7 @@ void local_SSAt::nodet::output(
       f_it++)
     out << "(F) " << from_expr(ns, "", *f_it) << "\n";
   
-#if 1
+#if 0
   if(!assertions_after_loop.empty()) 
     out << "(assertions-after-loop) "
 	<< from_expr(ns, "", conjunction(assertions_after_loop)) << "\n";

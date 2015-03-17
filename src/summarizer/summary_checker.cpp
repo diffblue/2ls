@@ -435,7 +435,7 @@ void summary_checkert::check_properties_non_incremental(
 #ifdef SHOW_COUNTEREXAMPLE
 	  if(!spurious)
 	  {
-	    show_error_trace(f_it->first,SSA,solver.solver,
+	    show_error_trace(f_it->first,SSA,*solver.solver,
 			     debug(),get_message_handler());
 	  }
 #endif
