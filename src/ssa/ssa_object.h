@@ -49,7 +49,8 @@ public:
   }
   
   // The identifier is unique, so ordering and comparison
-  // can be done on the identifier.
+  // can be done on the identifier, which in turn is
+  // an integer.
   inline bool operator<(const ssa_objectt &other) const
   {
     return identifier<other.identifier;
