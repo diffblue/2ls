@@ -40,6 +40,7 @@ class optionst;
   "(inline)" \
   "(show-locs)(show-vcc)(show-properties)(show-trace)(show-fixed-points)" \
   "(show-goto-functions)(show-guards)(show-defs)(show-ssa)(show-assignments)" \
+  "(show-value-sets)" \
   "(property):(all-properties)" \
   "(no-simplify)(no-fixed-point)" \
   "(storefront-alarms):" \

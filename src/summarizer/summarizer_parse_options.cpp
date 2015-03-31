@@ -260,6 +260,13 @@ int summarizer_parse_optionst::doit()
     return 7;
   }
   
+  if(cmdline.isset("show-value-sets"))
+  {
+    irep_idt function=cmdline.get_value("function");
+    show_value_sets(goto_model, function, std::cout, ui_message_handler);
+    return 7;
+  }
+  
   try
   {
     if(cmdline.isset("summarize"))

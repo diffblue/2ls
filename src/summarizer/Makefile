@@ -27,6 +27,7 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       ../ssa/ssa_aliasing$(OBJEXT) \
       ../ssa/simplify_ssa$(OBJEXT) \
       ../ssa/ssa_build_goto_trace$(OBJEXT) \
+      ../ssa/ssa_value_set$(OBJEXT) \
       ../functions/summary$(OBJEXT) \
       ../functions/get_function$(OBJEXT) \
       ../functions/path_util$(OBJEXT) \

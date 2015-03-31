@@ -9,64 +9,54 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_SSA_VALUE_SET_H
 #define CPROVER_SSA_VALUE_SET_H
 
-#include <goto-programs/goto_functions.h>
+#include <analyses/ai.h>
 
 #include "ssa_object.h"
 
-class ssa_value_sett
+class ssa_value_domaint:public ai_domain_baset
 {
 public:
-  const ssa_objectst &ssa_objects;
+  virtual void transform(locationt, locationt, ai_baset &, const namespacet &);
+  virtual void output(std::ostream &, const ai_baset &, const namespacet &) const;
+  bool merge(const ssa_value_domaint &, locationt, locationt);
 
-  typedef ssa_objectt::identifiert identifiert;
-
-  // maps object identifiers to their values,
-  // which are sets of object identifiers
-  typedef std::map<identifiert, std::set<identifiert> > value_mapt;
+  struct valuest
+  {
+  public:
+    typedef std::set<ssa_objectt> value_sett;
+    value_sett value_set;
+    bool offset, null, unknown, integer_address;
+    
+    inline valuest():
+      offset(false), null(false), unknown(false), integer_address(false)
+    {
+    }
+    
+    void output(std::ostream &, const namespacet &) const;
+  };
+  
+  // maps objects to values
+  typedef std::map<ssa_objectt, valuest> value_mapt;
   value_mapt value_map;
   
-  #if 0
-  bool assigns(goto_programt::const_targett loc, const ssa_objectt &object) const
-  {
-    assignment_mapt::const_iterator it=assignment_map.find(loc);
-    if(it==assignment_map.end()) return false;
-    return it->second.find(object)!=it->second.end();
-  }
-  
-  inline const objectst &get(goto_programt::const_targett loc) const
-  {
-    assignment_mapt::const_iterator it=assignment_map.find(loc);
-    assert(it!=assignment_map.end());
-    return it->second;
-  }
-
-  explicit assignmentst(
-    const goto_programt &_goto_program,
-    const namespacet &_ns,
-    const ssa_objectst &_ssa_objects):
-    ssa_objects(_ssa_objects)
-  {
-    build_assignment_map(_goto_program, _ns);
-  }
-  #endif
-  
-  void output(
-    const namespacet &ns,
-    const goto_programt &_goto_program,
-    std::ostream &);
-  
 protected:
-  #if 0
-  void build_assignment_map(const goto_programt &, const namespacet &);
+  void assign(
+    const exprt &lhs, const exprt &rhs,
+    const ssa_objectst &,
+    const namespacet &);
+};
 
-  void assign(
-    const exprt &lhs, goto_programt::const_targett,
-    const namespacet &ns);
-    
-  void assign(
-    const ssa_objectt &lhs, goto_programt::const_targett,
-    const namespacet &ns);    
-  #endif
+class ssa_value_ait:public ait<ssa_value_domaint>
+{
+public:
+  ssa_value_ait(const ssa_objectst &_ssa_objects):ssa_objects(_ssa_objects)
+  {
+  }
+
+protected:
+  const ssa_objectst &ssa_objects;
+  
+  friend class ssa_value_domaint;
 };
 
 #endif

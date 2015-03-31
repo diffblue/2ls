@@ -17,6 +17,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "../ssa/guard_map.h"
 #include "../ssa/local_ssa.h"
 #include "../ssa/simplify_ssa.h"
+#include "../ssa/ssa_value_set.h"
 
 #include "../domains/ssa_fixed_point.h"
 
@@ -340,6 +341,71 @@ void show_fixed_points(
       out << ">>>> Function " << f_it->first << "\n";
           
       show_fixed_point(f_it->second, simplify, ns, out);
+      
+      out << "\n";
+    }
+  }
+}
+
+/*******************************************************************\
+
+Function: show_value_set
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void show_value_set(
+  const goto_functionst::goto_functiont &goto_function,
+  const namespacet &ns,
+  std::ostream &out)
+{
+  ssa_objectst ssa_objects(goto_function, ns);
+  ssa_value_ait ssa_value_ai(ssa_objects);
+  ssa_value_ai(goto_function, ns);
+  ssa_value_ai.output(ns, goto_function, out);
+}
+
+/*******************************************************************\
+
+Function: show_value_sets
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void show_value_sets(
+  const goto_modelt &goto_model,
+  const irep_idt &function,
+  std::ostream &out,
+  message_handlert &message_handler)
+{
+  const namespacet ns(goto_model.symbol_table);
+  
+  if(!function.empty())
+  {
+    goto_functionst::function_mapt::const_iterator
+      f_it=goto_model.goto_functions.function_map.find(function);
+    if(f_it==goto_model.goto_functions.function_map.end())
+      out << "function " << function << " not found\n";
+    else
+      show_value_set(f_it->second, ns, out);
+  }
+  else
+  {
+    forall_goto_functions(f_it, goto_model.goto_functions)
+    {
+      out << ">>>> Function " << f_it->first << "\n";
+          
+      show_value_set(f_it->second, ns, out);
       
       out << "\n";
     }

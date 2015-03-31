@@ -29,6 +29,12 @@ void show_defs(
   std::ostream &,
   message_handlert &);
 
+void show_value_sets(
+  const goto_modelt &,
+  const irep_idt &function,
+  std::ostream &,
+  message_handlert &);
+
 void show_assignments(
   const goto_modelt &,
   const irep_idt &function,
