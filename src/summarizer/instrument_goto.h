@@ -35,6 +35,20 @@ public:
 
   ssa_dbt &ssa_db;
   summary_dbt &summary_db;
+  
+  void instrument_function(
+    const irep_idt &function_name,
+    goto_functionst::goto_functiont &function);
+
+  void instrument_body(
+    const local_SSAt &SSA,
+    const exprt &expr,
+    goto_functionst::goto_functiont &function);
+
+  void instrument_instruction(
+    const exprt &expr,
+    goto_programt &dest,
+    goto_programt::targett &target);
 
 };
 

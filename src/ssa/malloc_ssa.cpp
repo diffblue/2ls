@@ -89,7 +89,7 @@ exprt malloc_ssa(
       if(tmp_type.is_not_nil())
       {
         // Did the size get multiplied?
-        mp_integer elem_size=pointer_offset_size(ns, tmp_type);
+        mp_integer elem_size=pointer_offset_size(tmp_type, ns);
         mp_integer alloc_size;
         if(elem_size<0 || to_integer(size, alloc_size))
         {

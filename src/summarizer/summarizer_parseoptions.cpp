@@ -62,7 +62,7 @@ Function: summarizer_parseoptionst::summarizer_parseoptionst
 \*******************************************************************/
 
 summarizer_parseoptionst::summarizer_parseoptionst(int argc, const char **argv):
-  parseoptions_baset(SUMMARIZER_OPTIONS, argc, argv),
+  parse_options_baset(SUMMARIZER_OPTIONS, argc, argv),
   language_uit("Summarizer " CBMC_VERSION, cmdline)
 {
 }

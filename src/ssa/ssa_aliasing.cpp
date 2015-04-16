@@ -174,8 +174,8 @@ exprt ssa_alias_guard(
   
   // in some cases, we can use plain address equality,
   // as we assume well-aligned-ness
-  mp_integer size1=pointer_offset_size(ns, e1.type());
-  mp_integer size2=pointer_offset_size(ns, e2.type());
+  mp_integer size1=pointer_offset_size(e1.type(), ns);
+  mp_integer size2=pointer_offset_size(e2.type(), ns);
   
   if(size1>=size2)
   {
@@ -225,7 +225,7 @@ exprt ssa_alias_value(
   {
     // this assumes well-alignedness
 
-    mp_integer element_size=pointer_offset_size(ns, e2_type.subtype());
+    mp_integer element_size=pointer_offset_size(e2_type.subtype(), ns);
 
     if(element_size==1)
       return index_exprt(e2, offset1, e1.type());

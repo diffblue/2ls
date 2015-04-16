@@ -10,7 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #define CPROVER_SUMMARIZER_PARSEOPTIONS_H
 
 #include <util/ui_message.h>
-#include <util/parseoptions.h>
+#include <util/parse_options.h>
 
 #include <util/replace_symbol.h>
 
@@ -58,7 +58,7 @@ class optionst;
   // the last line is for CBMC-regression testing only
 
 class summarizer_parseoptionst:
-  public parseoptions_baset,
+  public parse_options_baset,
   public language_uit
 {
 public:
