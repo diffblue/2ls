@@ -90,7 +90,7 @@ public:
     inline bool empty() const
     {
       return equalities.empty() && constraints.empty() && 
-	assertions.empty() && function_calls.empty();
+	    assertions.empty() && function_calls.empty();
     }
   };
   
@@ -104,12 +104,12 @@ public:
   void mark_nodes()
   {
       for(nodest::iterator n_it=nodes.begin();
-	  n_it!=nodes.end(); n_it++) n_it->marked = true;
+	        n_it!=nodes.end(); n_it++) n_it->marked = true;
   }
   void unmark_nodes()
   {
       for(nodest::iterator n_it=nodes.begin();
-	  n_it!=nodes.end(); n_it++) n_it->marked = false;
+	        n_it!=nodes.end(); n_it++) n_it->marked = false;
   }
 
   // for incremental unwinding
