@@ -287,6 +287,7 @@ int summarizer_parse_optionst::doit()
     }
     else
     {
+      // otherwise we check properties
       summary_checkert summary_checker;
       
       summary_checker.set_message_handler(get_message_handler());
@@ -577,7 +578,7 @@ bool summarizer_parse_optionst::process_goto_program(
     status() << "Partial Inlining" << eom;
     goto_partial_inline(goto_model, ui_message_handler);
     
-    if(cmdline.isset("check"))
+    if(!cmdline.isset("summarize"))
     {
       // add generic checks
       status() << "Generic Property Instrumentation" << eom;
