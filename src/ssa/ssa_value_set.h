@@ -51,6 +51,13 @@ public:
   typedef std::map<ssa_objectt, valuest> value_mapt;
   value_mapt value_map;
   
+  const valuest operator()(const exprt &src, const namespacet &ns) const
+  {
+    valuest tmp;
+    assign_rhs_rec(tmp, src, ns);
+    return tmp;
+  }
+  
 protected:
   void assign_lhs_rec(
     const exprt &lhs, const exprt &rhs,
@@ -60,14 +67,17 @@ protected:
   void assign_rhs_rec(
     valuest &lhs, const exprt &rhs,
     const namespacet &,
-    bool offset=false);
+    bool offset=false) const;
 };
 
 class ssa_value_ait:public ait<ssa_value_domaint>
 {
 public:
-  ssa_value_ait()
+  ssa_value_ait(
+    const goto_functionst::goto_functiont &goto_function,
+    const namespacet &ns)
   {
+    operator()(goto_function, ns);
   }
 
 protected:

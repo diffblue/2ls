@@ -189,7 +189,7 @@ void ssa_value_domaint::assign_rhs_rec(
   valuest &dest,
   const exprt &rhs,
   const namespacet &ns,
-  bool offset)
+  bool offset) const
 {
   if(rhs.id()==ID_address_of)
   {
@@ -228,7 +228,9 @@ void ssa_value_domaint::assign_rhs_rec(
         it!=tmp.value_set.end();
         it++)
     {
-      dest.merge(value_map[*it]);
+      value_mapt::const_iterator m_it=value_map.find(*it);
+      if(m_it!=value_map.end())
+        dest.merge(m_it->second);
     }
   }
   else
@@ -239,7 +241,9 @@ void ssa_value_domaint::assign_rhs_rec(
   
     if(ssa_object)
     {
-      dest.merge(value_map[ssa_object]);
+      value_mapt::const_iterator m_it=value_map.find(ssa_object);
+      if(m_it!=value_map.end())
+        dest.merge(m_it->second);
     }
     else
     {
