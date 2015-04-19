@@ -29,7 +29,8 @@ public:
     const std::string &_suffix=""):
     ns(_ns), goto_function(_goto_function), 
     ssa_objects(_goto_function, ns),
-    assignments(_goto_function.body, ns, ssa_objects),
+    ssa_value_ai(_goto_function, ns),
+    assignments(_goto_function.body, ns, ssa_objects, ssa_value_ai),
     guard_map(_goto_function.body),
     ssa_analysis(assignments),
     suffix(_suffix)
@@ -103,6 +104,7 @@ public:
 
   ssa_objectst ssa_objects;
   typedef ssa_objectst::objectst objectst;
+  ssa_value_ait ssa_value_ai;
   assignmentst assignments;
   
   guard_mapt guard_map;
