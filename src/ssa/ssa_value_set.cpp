@@ -32,15 +32,17 @@ void ssa_value_domaint::transform(
   if(from->is_assign())
   {
     const code_assignt &assignment=to_code_assign(from->code);
-    assign(assignment.lhs(), assignment.rhs(), ssa_objects, ns);
+    assign_lhs_rec(assignment.lhs(), assignment.rhs(), ssa_objects, ns);
   }
   else if(from->is_goto())
   {
+    // Perhaps look at condition, for stuff like
+    // p!=0 or the like.
   }
   else if(from->is_decl())
   {
     const code_declt &code_decl=to_code_decl(from->code);
-    assign(code_decl.symbol(), nil_exprt(), ssa_objects, ns);
+    assign_lhs_rec(code_decl.symbol(), nil_exprt(), ssa_objects, ns);
   }
   else if(from->is_function_call())
   {
@@ -61,22 +63,22 @@ void ssa_value_domaint::transform(
         o_it=ssa_objects.globals.begin();
         o_it!=ssa_objects.globals.end(); o_it++)
       assign(*o_it, it, ns);
+    #endif
 
     // the call might come with an assignment
     if(code_function_call.lhs().is_not_nil())
-      assign(code_function_call.lhs(), it, ns);
-    #endif
+      assign_lhs_rec(code_function_call.lhs(), nil_exprt(), ssa_objects, ns);
   }
   else if(from->is_dead())
   {
     const code_deadt &code_dead=to_code_dead(from->code);
-    assign(code_dead.symbol(), nil_exprt(), ssa_objects, ns);
+    assign_lhs_rec(code_dead.symbol(), nil_exprt(), ssa_objects, ns);
   }
 }
 
 /*******************************************************************\
 
-Function: ssa_value_domaint::assign
+Function: ssa_value_domaint::assign_lhs_rec
 
   Inputs:
 
@@ -86,11 +88,12 @@ Function: ssa_value_domaint::assign
 
 \*******************************************************************/
 
-void ssa_value_domaint::assign(
+void ssa_value_domaint::assign_lhs_rec(
   const exprt &lhs,
   const exprt &rhs,
   const ssa_objectst &ssa_objects,
-  const namespacet &ns)
+  const namespacet &ns,
+  bool add)
 {
   // is the lhs an object?
   if(is_symbol_or_deref_struct_member(lhs, ns))
@@ -112,53 +115,142 @@ void ssa_value_domaint::assign(
       {
         member_exprt new_lhs(lhs, it->get_name(), it->type());
         member_exprt new_rhs(rhs, it->get_name(), it->type());
-        assign(new_lhs, new_rhs, ssa_objects, ns); // recursive call
+        assign_lhs_rec(new_lhs, new_rhs, ssa_objects, ns, add); // recursive call
       }
       
       return; // done
     }
 
-    #if 0    
-    // this might alias all sorts of stuff
-    for(std::set<ssa_objectt>::const_iterator
-        o_it=ssa_objects.objects.begin();
-        o_it!=ssa_objects.objects.end();
-        o_it++)
+    // object?
+    ssa_objectt ssa_object(lhs, ns);
+    
+    if(ssa_object)
     {
-      if(ssa_may_alias(o_it->get_expr(), lhs, ns))
-        assign(*o_it, loc, ns);
-    }    
-    #endif
+      valuest &lhs_values=value_map[ssa_object];
+      lhs_values.clear();
+      assign_rhs_rec(lhs_values, rhs, ns);
+      if(lhs_values.empty())
+        value_map.erase(ssa_object);
+    }
 
     return; // done
   }
-
-  #if 0
-  if(lhs.id()==ID_typecast)
+  else if(lhs.id()==ID_typecast)
   {
-    assign(to_typecast_expr(lhs).op(), loc, ns);
+    assign_lhs_rec(to_typecast_expr(lhs).op(), rhs, ssa_objects, ns, add);
   }
   else if(lhs.id()==ID_if)
   {
-    assign(to_if_expr(lhs).true_case(), loc, ns);
-    assign(to_if_expr(lhs).false_case(), loc, ns);
+    assign_lhs_rec(to_if_expr(lhs).true_case(), rhs, ssa_objects, ns, true);
+    assign_lhs_rec(to_if_expr(lhs).false_case(), rhs, ssa_objects, ns, true);
   }
   else if(lhs.id()==ID_index)
   {
-    assign(to_index_expr(lhs).array(), loc, ns);
+    assign_lhs_rec(to_index_expr(lhs).array(), rhs, ssa_objects, ns, true);
+  }
+  else if(lhs.id()==ID_dereference)
+  {
+    valuest tmp;
+    assign_rhs_rec(tmp, to_dereference_expr(lhs).pointer(), ns, false);
+    for(valuest::value_sett::const_iterator
+        it=tmp.value_set.begin();
+        it!=tmp.value_set.end();
+        it++)
+    {
+      assign_rhs_rec(value_map[*it], rhs, ns);
+    }
   }
   else if(lhs.id()==ID_member)
   {
+    #if 0
     // non-flattened struct or union member
     const member_exprt &member_expr=to_member_expr(lhs);
     assign(member_expr.struct_op(), loc, ns);
+    #endif
   }
   else if(lhs.id()==ID_complex_real || lhs.id()==ID_complex_imag)
   {
+    #if 0
     assert(lhs.operands().size()==1);
     assign(lhs.op0(), loc, ns);
+    #endif
   }
-  #endif
+}
+
+/*******************************************************************\
+
+Function: ssa_value_domaint::assign_rhs_rec
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void ssa_value_domaint::assign_rhs_rec(
+  valuest &dest,
+  const exprt &rhs,
+  const namespacet &ns,
+  bool offset)
+{
+  if(rhs.id()==ID_address_of)
+  {
+    const exprt &op=to_address_of_expr(rhs).object();
+  
+    ssa_objectt ssa_object(op, ns);
+  
+    if(ssa_object)
+    {
+      dest.value_set.insert(ssa_object);
+      if(offset) dest.offset=true;
+    }
+  }
+  else if(rhs.id()==ID_constant)
+  {
+    if(to_constant_expr(rhs).get_value()==ID_NULL)
+    {
+      dest.null=true;
+    }
+  }
+  else if(rhs.id()==ID_if)
+  {
+    assign_rhs_rec(dest, to_if_expr(rhs).true_case(), ns, offset);
+    assign_rhs_rec(dest, to_if_expr(rhs).false_case(), ns, offset);
+  }
+  else if(rhs.id()==ID_typecast)
+  {
+    assign_rhs_rec(dest, to_typecast_expr(rhs).op(), ns, offset);
+  }
+  else if(rhs.id()==ID_dereference)
+  {
+    valuest tmp;
+    assign_rhs_rec(tmp, to_dereference_expr(rhs).pointer(), ns, false);
+    for(valuest::value_sett::const_iterator
+        it=tmp.value_set.begin();
+        it!=tmp.value_set.end();
+        it++)
+    {
+      dest.merge(value_map[*it]);
+    }
+  }
+  else
+  {
+    // object?
+  
+    ssa_objectt ssa_object(rhs, ns);
+  
+    if(ssa_object)
+    {
+      dest.merge(value_map[ssa_object]);
+    }
+    else
+    {
+      forall_operands(it, rhs)
+        assign_rhs_rec(dest, *it, ns, true);
+    }
+  }
 }
 
 /*******************************************************************\
@@ -185,7 +277,7 @@ void ssa_value_domaint::valuest::output(
   for(value_sett::const_iterator it=value_set.begin();
       it!=value_set.end();
       it++)
-    out << ' ' << it->get_identifier();
+    out << ' ' << '&' << it->get_identifier();
 }
 
 /*******************************************************************\
@@ -218,6 +310,36 @@ void ssa_value_domaint::output(
 
 /*******************************************************************\
 
+Function: ssa_value_domaint::valuest::merge
+
+  Inputs:
+
+ Outputs: Return true if "this" has changed.
+
+ Purpose:
+
+\*******************************************************************/
+
+bool ssa_value_domaint::valuest::merge(const valuest &src)
+{
+  bool result=false;
+
+  // bits
+  if(src.offset && !offset) { offset=true; result=true; }
+  if(src.null && !null) { null=true; result=true; }
+  if(src.unknown && !unknown) { unknown=true; result=true; }
+  if(src.integer_address && !integer_address) { integer_address=true; result=true; }
+
+  // value set
+  unsigned old_size=value_set.size();
+  value_set.insert(src.value_set.begin(), src.value_set.end());
+  if(old_size!=value_set.size()) result=true;
+
+  return result;  
+}
+
+/*******************************************************************\
+
 Function: ssa_value_domaint::merge
 
   Inputs:
@@ -233,5 +355,36 @@ bool ssa_value_domaint::merge(
   locationt from,
   locationt to)
 {
-}
+  value_mapt::iterator v_it=value_map.begin();
+  const value_mapt &new_value_map=other.value_map;
+  bool result=false;
+  
+  for(value_mapt::const_iterator
+      it=new_value_map.begin();
+      it!=new_value_map.end();
+      ) // no it++
+  {
+    if(v_it==value_map.end() || it->first<v_it->first)
+    {
+      value_map.insert(v_it, *it);
+      result=true;
+      it++;
+      continue;
+    }
+    else if(v_it->first<it->first)
+    {
+      v_it++;
+      continue;
+    }
+    
+    assert(v_it->first==it->first);
+      
+    if(v_it->second.merge(it->second))
+      result=true;
 
+    v_it++;
+    it++;
+  }
+  
+  return result;
+}

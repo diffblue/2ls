@@ -33,6 +33,18 @@ public:
     }
     
     void output(std::ostream &, const namespacet &) const;
+    
+    bool merge(const valuest &src);
+    
+    inline void clear()
+    {
+      *this=valuest();
+    }
+    
+    bool empty() const
+    {
+      return value_set.empty() && !null && !unknown && !integer_address;
+    }
   };
   
   // maps objects to values
@@ -40,10 +52,16 @@ public:
   value_mapt value_map;
   
 protected:
-  void assign(
+  void assign_lhs_rec(
     const exprt &lhs, const exprt &rhs,
     const ssa_objectst &,
-    const namespacet &);
+    const namespacet &,
+    bool add=false);
+
+  void assign_rhs_rec(
+    valuest &lhs, const exprt &rhs,
+    const namespacet &,
+    bool offset=false);
 };
 
 class ssa_value_ait:public ait<ssa_value_domaint>
