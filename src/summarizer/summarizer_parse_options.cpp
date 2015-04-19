@@ -221,54 +221,54 @@ int summarizer_parse_optionst::doit()
   if(get_goto_program(options, goto_model))
     return 6;
     
-  // options for various debug outputs
-    
-  if(cmdline.isset("show-ssa"))
-  {
-    bool simplify=!cmdline.isset("no-simplify");
-    irep_idt function=cmdline.get_value("function");
-    show_ssa(goto_model, function, simplify, std::cout, ui_message_handler);
-    return 7;
-  }
-
-  if(cmdline.isset("show-fixed-points"))
-  {
-    bool simplify=!cmdline.isset("no-simplify");
-    irep_idt function=cmdline.get_value("function");
-    show_fixed_points(goto_model, function, simplify, std::cout, ui_message_handler);
-    return 7;
-  }
-
-  if(cmdline.isset("show-defs"))
-  {
-    irep_idt function=cmdline.get_value("function");
-    show_defs(goto_model, function, std::cout, ui_message_handler);
-    return 7;
-  }
-
-  if(cmdline.isset("show-assignments"))
-  {
-    irep_idt function=cmdline.get_value("function");
-    show_assignments(goto_model, function, std::cout, ui_message_handler);
-    return 7;
-  }
-
-  if(cmdline.isset("show-guards"))
-  {
-    irep_idt function=cmdline.get_value("function");
-    show_guards(goto_model, function, std::cout, ui_message_handler);
-    return 7;
-  }
-  
-  if(cmdline.isset("show-value-sets"))
-  {
-    irep_idt function=cmdline.get_value("function");
-    show_value_sets(goto_model, function, std::cout, ui_message_handler);
-    return 7;
-  }
-  
   try
   {
+    // options for various debug outputs
+      
+    if(cmdline.isset("show-ssa"))
+    {
+      bool simplify=!cmdline.isset("no-simplify");
+      irep_idt function=cmdline.get_value("function");
+      show_ssa(goto_model, function, simplify, std::cout, ui_message_handler);
+      return 7;
+    }
+
+    if(cmdline.isset("show-fixed-points"))
+    {
+      bool simplify=!cmdline.isset("no-simplify");
+      irep_idt function=cmdline.get_value("function");
+      show_fixed_points(goto_model, function, simplify, std::cout, ui_message_handler);
+      return 7;
+    }
+
+    if(cmdline.isset("show-defs"))
+    {
+      irep_idt function=cmdline.get_value("function");
+      show_defs(goto_model, function, std::cout, ui_message_handler);
+      return 7;
+    }
+
+    if(cmdline.isset("show-assignments"))
+    {
+      irep_idt function=cmdline.get_value("function");
+      show_assignments(goto_model, function, std::cout, ui_message_handler);
+      return 7;
+    }
+
+    if(cmdline.isset("show-guards"))
+    {
+      irep_idt function=cmdline.get_value("function");
+      show_guards(goto_model, function, std::cout, ui_message_handler);
+      return 7;
+    }
+    
+    if(cmdline.isset("show-value-sets"))
+    {
+      irep_idt function=cmdline.get_value("function");
+      show_value_sets(goto_model, function, std::cout, ui_message_handler);
+      return 7;
+    }
+  
     if(cmdline.isset("summarize"))
     {
       summarizert summarizer;
