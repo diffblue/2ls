@@ -54,7 +54,6 @@ public:
 protected:
   void assign_lhs_rec(
     const exprt &lhs, const exprt &rhs,
-    const ssa_objectst &,
     const namespacet &,
     bool add=false);
 
@@ -67,13 +66,11 @@ protected:
 class ssa_value_ait:public ait<ssa_value_domaint>
 {
 public:
-  ssa_value_ait(const ssa_objectst &_ssa_objects):ssa_objects(_ssa_objects)
+  ssa_value_ait()
   {
   }
 
 protected:
-  const ssa_objectst &ssa_objects;
-  
   friend class ssa_value_domaint;
 };
 

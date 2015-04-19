@@ -26,13 +26,10 @@ void ssa_value_domaint::transform(
   ai_baset &ai,
   const namespacet &ns)
 {
-  const ssa_objectst &ssa_objects=
-    static_cast<const ssa_value_ait &>(ai).ssa_objects;
-
   if(from->is_assign())
   {
     const code_assignt &assignment=to_code_assign(from->code);
-    assign_lhs_rec(assignment.lhs(), assignment.rhs(), ssa_objects, ns);
+    assign_lhs_rec(assignment.lhs(), assignment.rhs(), ns);
   }
   else if(from->is_goto())
   {
@@ -42,7 +39,7 @@ void ssa_value_domaint::transform(
   else if(from->is_decl())
   {
     const code_declt &code_decl=to_code_decl(from->code);
-    assign_lhs_rec(code_decl.symbol(), nil_exprt(), ssa_objects, ns);
+    assign_lhs_rec(code_decl.symbol(), nil_exprt(), ns);
   }
   else if(from->is_function_call())
   {
@@ -67,12 +64,12 @@ void ssa_value_domaint::transform(
 
     // the call might come with an assignment
     if(code_function_call.lhs().is_not_nil())
-      assign_lhs_rec(code_function_call.lhs(), nil_exprt(), ssa_objects, ns);
+      assign_lhs_rec(code_function_call.lhs(), nil_exprt(), ns);
   }
   else if(from->is_dead())
   {
     const code_deadt &code_dead=to_code_dead(from->code);
-    assign_lhs_rec(code_dead.symbol(), nil_exprt(), ssa_objects, ns);
+    assign_lhs_rec(code_dead.symbol(), nil_exprt(), ns);
   }
 }
 
@@ -91,7 +88,6 @@ Function: ssa_value_domaint::assign_lhs_rec
 void ssa_value_domaint::assign_lhs_rec(
   const exprt &lhs,
   const exprt &rhs,
-  const ssa_objectst &ssa_objects,
   const namespacet &ns,
   bool add)
 {
@@ -115,7 +111,7 @@ void ssa_value_domaint::assign_lhs_rec(
       {
         member_exprt new_lhs(lhs, it->get_name(), it->type());
         member_exprt new_rhs(rhs, it->get_name(), it->type());
-        assign_lhs_rec(new_lhs, new_rhs, ssa_objects, ns, add); // recursive call
+        assign_lhs_rec(new_lhs, new_rhs, ns, add); // recursive call
       }
       
       return; // done
@@ -137,16 +133,16 @@ void ssa_value_domaint::assign_lhs_rec(
   }
   else if(lhs.id()==ID_typecast)
   {
-    assign_lhs_rec(to_typecast_expr(lhs).op(), rhs, ssa_objects, ns, add);
+    assign_lhs_rec(to_typecast_expr(lhs).op(), rhs, ns, add);
   }
   else if(lhs.id()==ID_if)
   {
-    assign_lhs_rec(to_if_expr(lhs).true_case(), rhs, ssa_objects, ns, true);
-    assign_lhs_rec(to_if_expr(lhs).false_case(), rhs, ssa_objects, ns, true);
+    assign_lhs_rec(to_if_expr(lhs).true_case(), rhs, ns, true);
+    assign_lhs_rec(to_if_expr(lhs).false_case(), rhs, ns, true);
   }
   else if(lhs.id()==ID_index)
   {
-    assign_lhs_rec(to_index_expr(lhs).array(), rhs, ssa_objects, ns, true);
+    assign_lhs_rec(to_index_expr(lhs).array(), rhs, ns, true);
   }
   else if(lhs.id()==ID_dereference)
   {
