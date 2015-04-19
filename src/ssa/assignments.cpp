@@ -7,7 +7,6 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 #include "assignments.h"
-#include "ssa_aliasing.h"
 
 /*******************************************************************\
 
@@ -110,15 +109,30 @@ void assignmentst::assign(
       return; // done
     }
     
-    // this might alias all sorts of stuff
-    for(std::set<ssa_objectt>::const_iterator
-        o_it=ssa_objects.objects.begin();
-        o_it!=ssa_objects.objects.end();
-        o_it++)
+    if(lhs.id()==ID_dereference)
     {
-      if(ssa_may_alias(o_it->get_expr(), lhs, ns))
-        assign(*o_it, loc, ns);
+      const exprt &pointer=to_dereference_expr(lhs).pointer();
+    
+      // query the value sets
+      const ssa_value_domaint::valuest values=
+        ssa_value_ai[loc](pointer, ns);
+
+      for(ssa_value_domaint::valuest::value_sett::const_iterator
+          it=values.value_set.begin();
+          it!=values.value_set.end();
+          it++)
+        assign(it->get_expr(), loc, ns);
     }    
+    else
+    {
+      // object?
+      ssa_objectt ssa_object(lhs, ns);
+    
+      if(ssa_object)
+      {
+        assign(ssa_object, loc, ns);
+      }
+    }
 
     return; // done
   }
