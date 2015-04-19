@@ -39,8 +39,7 @@ void show_assignments(
   std::ostream &out)
 {
   ssa_objectst ssa_objects(goto_function, ns);
-  ssa_value_ait ssa_value_ai;
-  ssa_value_ai(goto_function, ns);
+  ssa_value_ait ssa_value_ai(goto_function, ns);
   assignmentst assignments(goto_function.body, ns, ssa_objects, ssa_value_ai);
   assignments.output(ns, goto_function.body, out);
 }
@@ -105,8 +104,7 @@ void show_defs(
   std::ostream &out)
 {
   ssa_objectst ssa_objects(goto_function, ns);
-  ssa_value_ait ssa_value_ai;
-  ssa_value_ai(goto_function, ns);
+  ssa_value_ait ssa_value_ai(goto_function, ns);
   assignmentst assignments(goto_function.body, ns, ssa_objects, ssa_value_ai);
   ssa_ait ssa_analysis(assignments);
   ssa_analysis(goto_function, ns);
@@ -369,8 +367,7 @@ void show_value_set(
   std::ostream &out)
 {
   ssa_objectst ssa_objects(goto_function, ns);
-  ssa_value_ait ssa_value_ai;
-  ssa_value_ai(goto_function, ns);
+  ssa_value_ait ssa_value_ai(goto_function, ns);
   ssa_value_ai.output(ns, goto_function, out);
 }
 
