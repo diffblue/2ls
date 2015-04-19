@@ -12,11 +12,13 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/goto_functions.h>
 
 #include "ssa_object.h"
+#include "ssa_value_set.h"
 
 class assignmentst
 {
 public:
   const ssa_objectst &ssa_objects;
+  const ssa_value_ait &ssa_value_ai;
 
   typedef ssa_objectst::objectst objectst;
 
@@ -40,8 +42,10 @@ public:
   explicit assignmentst(
     const goto_programt &_goto_program,
     const namespacet &_ns,
-    const ssa_objectst &_ssa_objects):
-    ssa_objects(_ssa_objects)
+    const ssa_objectst &_ssa_objects,
+    const ssa_value_ait &_ssa_value_ai):
+    ssa_objects(_ssa_objects),
+    ssa_value_ai(_ssa_value_ai)
   {
     build_assignment_map(_goto_program, _ns);
   }
