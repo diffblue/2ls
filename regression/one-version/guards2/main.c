@@ -10,6 +10,6 @@ int main()
   {
   }
   
-  assert(i==10);
-  assert(j==10);  
+  __CPROVER_assert(i==10, "i");
+  __CPROVER_assert(j==10, "j");
 }
