@@ -86,6 +86,8 @@ protected:
     const class goto_tracet &);
             
   void eval_verbosity();
+  
+  void require_entry(const goto_modelt &);
 };
 
 #endif

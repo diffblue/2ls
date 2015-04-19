@@ -385,6 +385,27 @@ bool summarizer_parse_optionst::set_properties(goto_modelt &goto_model)
 
 /*******************************************************************\
 
+Function: summarizer_parse_optionst::require_entry
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+  
+void summarizer_parse_optionst::require_entry(
+  const goto_modelt &goto_model)
+{
+  irep_idt entry_point=goto_model.goto_functions.entry_point();
+      
+  if(goto_model.symbol_table.symbols.find(entry_point)==symbol_table.symbols.end())
+    throw "The program has no entry point; please complete linking";
+}
+
+/*******************************************************************\
+
 Function: summarizer_parse_optionst::get_goto_program
 
   Inputs:
@@ -421,14 +442,6 @@ bool summarizer_parse_optionst::get_goto_program(
       if(cmdline.isset("show-symbol-table"))
       {
         show_symbol_table();
-        return true;
-      }
-      
-      irep_idt entry_point=goto_model.goto_functions.entry_point();
-      
-      if(goto_model.symbol_table.symbols.find(entry_point)==symbol_table.symbols.end())
-      {
-        error() << "The goto binary has no entry point; please complete linking" << eom;
         return true;
       }
     }
