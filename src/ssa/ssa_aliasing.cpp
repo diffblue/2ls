@@ -242,3 +242,65 @@ exprt ssa_alias_value(
   
   return byte_extract; 
 }
+
+/*******************************************************************\
+
+Function: dereference
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt dereference(
+ const exprt &src,
+ const ssa_value_domaint &ssa_value_domain, 
+ const namespacet &ns)
+{
+  if(src.id()==ID_dereference)
+  {
+    const exprt &pointer=to_dereference_expr(src).pointer();
+    exprt pointer_deref=dereference(pointer, ssa_value_domain, ns);
+
+    // object?
+    ssa_objectt ssa_object(pointer_deref, ns);
+    if(ssa_object)
+    {
+      // We use the identifier produced by
+      // local_SSAt::replace_side_effects_rec
+      exprt result=symbol_exprt(src.get(ID_C_identifier), src.type());
+
+      // query the value sets
+      const ssa_value_domaint::valuest values=
+        ssa_value_domain(pointer, ns);
+
+      for(ssa_value_domaint::valuest::value_sett::const_iterator
+          it=values.value_set.begin();
+          it!=values.value_set.end();
+          it++)
+      {
+        exprt guard=ssa_alias_guard(src, it->get_expr(), ns);
+        exprt value=ssa_alias_value(src, it->get_expr(), ns);
+        result=if_exprt(guard, value, result);
+      }
+
+      return result;
+    }
+    
+    return nil_exprt();
+  }
+  else if(src.id()==ID_address_of)
+  {
+    return nil_exprt();
+  }
+  else
+  {
+    exprt tmp=src;
+    Forall_operands(it, tmp)
+      *it=dereference(*it, ssa_value_domain, ns);
+    return tmp;
+  }
+}

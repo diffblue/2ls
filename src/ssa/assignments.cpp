@@ -7,6 +7,7 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 #include "assignments.h"
+#include "ssa_aliasing.h"
 
 /*******************************************************************\
 
@@ -33,7 +34,8 @@ void assignmentst::build_assignment_map(
     if(it->is_assign())
     {
       const code_assignt &code_assign=to_code_assign(it->code);
-      assign(code_assign.lhs(), it, ns);
+      exprt lhs_deref=dereference(code_assign.lhs(), ssa_value_ai[it], ns);
+      assign(lhs_deref, it, ns);
     }
     else if(it->is_decl())
     {
@@ -60,7 +62,10 @@ void assignmentst::build_assignment_map(
 
       // the call might come with an assignment
       if(code_function_call.lhs().is_not_nil())
-        assign(code_function_call.lhs(), it, ns);
+      {
+        exprt lhs_deref=dereference(code_function_call.lhs(), ssa_value_ai[it], ns);
+        assign(lhs_deref, it, ns);
+      }
     }
     else if(it->is_dead())
     {
@@ -111,17 +116,8 @@ void assignmentst::assign(
     
     if(lhs.id()==ID_dereference)
     {
-      const exprt &pointer=to_dereference_expr(lhs).pointer();
+      //const exprt &pointer=to_dereference_expr(lhs).pointer();
     
-      // query the value sets
-      const ssa_value_domaint::valuest values=
-        ssa_value_ai[loc](pointer, ns);
-
-      for(ssa_value_domaint::valuest::value_sett::const_iterator
-          it=values.value_set.begin();
-          it!=values.value_set.end();
-          it++)
-        assign(it->get_expr(), loc, ns);
     }    
     else
     {
