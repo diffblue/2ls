@@ -101,6 +101,8 @@ public:
   
   bool has_static_lifetime(const ssa_objectt &) const;
   bool has_static_lifetime(const exprt &) const;
+  
+  exprt dereference(const exprt &expr, locationt loc) const;
 
   ssa_objectst ssa_objects;
   typedef ssa_objectst::objectst objectst;

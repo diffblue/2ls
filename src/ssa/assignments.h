@@ -17,22 +17,24 @@ Author: Daniel Kroening, kroening@kroening.com
 class assignmentst
 {
 public:
+  typedef goto_programt::const_targett locationt;
+
   const ssa_objectst &ssa_objects;
   const ssa_value_ait &ssa_value_ai;
 
   typedef ssa_objectst::objectst objectst;
 
-  typedef std::map<goto_programt::const_targett, objectst> assignment_mapt;
+  typedef std::map<locationt, objectst> assignment_mapt;
   assignment_mapt assignment_map;
   
-  bool assigns(goto_programt::const_targett loc, const ssa_objectt &object) const
+  bool assigns(locationt loc, const ssa_objectt &object) const
   {
     assignment_mapt::const_iterator it=assignment_map.find(loc);
     if(it==assignment_map.end()) return false;
     return it->second.find(object)!=it->second.end();
   }
   
-  inline const objectst &get(goto_programt::const_targett loc) const
+  inline const objectst &get(locationt loc) const
   {
     assignment_mapt::const_iterator it=assignment_map.find(loc);
     assert(it!=assignment_map.end());
@@ -59,11 +61,11 @@ protected:
   void build_assignment_map(const goto_programt &, const namespacet &);
 
   void assign(
-    const exprt &lhs, goto_programt::const_targett,
+    const exprt &lhs, locationt,
     const namespacet &ns);
     
   void assign(
-    const ssa_objectt &lhs, goto_programt::const_targett,
+    const ssa_objectt &lhs, locationt,
     const namespacet &ns);    
 };
 

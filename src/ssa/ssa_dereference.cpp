@@ -6,7 +6,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-//#define DEBUG
+#define DEBUG
 
 #ifdef DEBUG
 #include <iostream>
@@ -259,24 +259,26 @@ Function: dereference_rec_address_of
 exprt dereference_rec(
  const exprt &src,
  const ssa_value_domaint &ssa_value_domain, 
+ const std::string &nondet_prefix,
  const namespacet &ns);
 
 exprt dereference_rec_address_of(
  const exprt &src,
  const ssa_value_domaint &ssa_value_domain, 
+ const std::string &nondet_prefix,
  const namespacet &ns)
 {
   if(src.id()==ID_index)
   {
     index_exprt tmp=to_index_expr(src);
-    tmp.array()=dereference_rec_address_of(tmp.array(), ssa_value_domain, ns);
-    tmp.index()=dereference_rec(tmp.index(), ssa_value_domain, ns);
+    tmp.array()=dereference_rec_address_of(tmp.array(), ssa_value_domain, nondet_prefix, ns);
+    tmp.index()=dereference_rec(tmp.index(), ssa_value_domain, nondet_prefix, ns);
     return tmp;
   }
   else if(src.id()==ID_member)
   {
     return dereference_rec_address_of(
-      to_member_expr(src).struct_op(), ssa_value_domain, ns);
+      to_member_expr(src).struct_op(), ssa_value_domain, nondet_prefix, ns);
   }
   else
     return src;
@@ -297,12 +299,13 @@ Function: dereference_rec
 exprt dereference_rec(
  const exprt &src,
  const ssa_value_domaint &ssa_value_domain, 
+ const std::string &nondet_prefix,
  const namespacet &ns)
 {
   if(src.id()==ID_dereference)
   {
     const exprt &pointer=to_dereference_expr(src).pointer();
-    exprt pointer_deref=dereference(pointer, ssa_value_domain, ns);
+    exprt pointer_deref=dereference(pointer, ssa_value_domain, nondet_prefix, ns);
 
     // object?
     ssa_objectt ssa_object(pointer_deref, ns);
@@ -310,7 +313,7 @@ exprt dereference_rec(
     {
       // We use the identifier produced by
       // local_SSAt::replace_side_effects_rec
-      exprt result=symbol_exprt(src.get(ID_C_identifier), src.type());
+      exprt result=symbol_exprt(nondet_prefix, src.type());
 
       // query the value sets
       const ssa_value_domaint::valuest values=
@@ -334,15 +337,23 @@ exprt dereference_rec(
   else if(src.id()==ID_member)
   {
     member_exprt tmp1=to_member_expr(src);
-    tmp1.struct_op()=dereference_rec(tmp1.struct_op(), ssa_value_domain, ns);
+    tmp1.struct_op()=dereference_rec(tmp1.struct_op(), ssa_value_domain, nondet_prefix, ns);
+    
+    if(tmp1.struct_op().is_nil())
+      return nil_exprt();
 
     if(tmp1.struct_op().id()==ID_if)
     {
       // push member into ?:
       if_exprt tmp2=to_if_expr(tmp1.struct_op());
       tmp2.type()=tmp1.type();
-      tmp2.true_case()=member_exprt(tmp2.true_case(), tmp1.get_component_name(), tmp1.type());
-      tmp2.false_case()=member_exprt(tmp2.false_case(), tmp1.get_component_name(), tmp1.type());
+
+      if(tmp2.true_case().is_not_nil())
+        tmp2.true_case()=member_exprt(tmp2.true_case(), tmp1.get_component_name(), tmp1.type());
+        
+      if(tmp2.false_case().is_not_nil())
+        tmp2.false_case()=member_exprt(tmp2.false_case(), tmp1.get_component_name(), tmp1.type());
+
       return tmp2;
     }
 
@@ -351,14 +362,14 @@ exprt dereference_rec(
   else if(src.id()==ID_address_of)
   {
     address_of_exprt tmp=to_address_of_expr(src);
-    tmp.object()=dereference_rec_address_of(tmp.object(), ssa_value_domain, ns);
+    tmp.object()=dereference_rec_address_of(tmp.object(), ssa_value_domain, nondet_prefix, ns);
     return tmp;
   }
   else
   {
     exprt tmp=src;
     Forall_operands(it, tmp)
-      *it=dereference_rec(*it, ssa_value_domain, ns);
+      *it=dereference_rec(*it, ssa_value_domain, nondet_prefix, ns);
     return tmp;
   }
 }
@@ -378,13 +389,14 @@ Function: dereference
 exprt dereference(
  const exprt &src,
  const ssa_value_domaint &ssa_value_domain, 
+ const std::string &nondet_prefix,
  const namespacet &ns)
 {
   #ifdef DEBUG
   std::cout << "dereference src: " << from_expr(ns, "", src) << '\n';
   #endif
 
-  exprt tmp1=dereference_rec(src, ssa_value_domain, ns);
+  exprt tmp1=dereference_rec(src, ssa_value_domain, nondet_prefix, ns);
 
   #ifdef DEBUG
   std::cout << "dereference tmp1: " << from_expr(ns, "", tmp1) << '\n';

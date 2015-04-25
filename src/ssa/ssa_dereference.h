@@ -14,13 +14,14 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "ssa_value_set.h"
 
-bool ssa_may_alias(const exprt &, const exprt &, const namespacet &);
-exprt ssa_alias_guard(const exprt &, const exprt &, const namespacet &);
-exprt ssa_alias_value(const exprt &, const exprt &, const namespacet &);
+//bool ssa_may_alias(const exprt &, const exprt &, const namespacet &);
+//exprt ssa_alias_guard(const exprt &, const exprt &, const namespacet &);
+//exprt ssa_alias_value(const exprt &, const exprt &, const namespacet &);
 
 exprt dereference(
   const exprt &,
   const ssa_value_domaint &,
+  const std::string &nondet_prefix,
   const namespacet &);
 
 #endif

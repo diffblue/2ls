@@ -10,6 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #ifdef DEBUG
 #include <iostream>
+#include <langapi/language_util.h>
 #endif
 
 #include <util/i2string.h>
@@ -176,6 +177,25 @@ void local_SSAt::build_phi_nodes(locationt loc)
 
 /*******************************************************************\
 
+Function: local_SSAt::dereference
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt local_SSAt::dereference(const exprt &src, locationt loc) const
+{
+  const ssa_value_domaint &ssa_value_domain=ssa_value_ai[loc];
+  const std::string nondet_prefix="deref#"+i2string(loc->location_number);
+  return ::dereference(src, ssa_value_domain, nondet_prefix, ns);
+}
+
+/*******************************************************************\
+
 Function: local_SSAt::build_transfer
 
   Inputs:
@@ -192,10 +212,8 @@ void local_SSAt::build_transfer(locationt loc)
   {
     const code_assignt &code_assign=to_code_assign(loc->code);
 
-    const ssa_value_domaint &ssa_value_domain=ssa_value_ai[loc];
-    
-    exprt deref_lhs=dereference(code_assign.lhs(), ssa_value_domain, ns);
-    exprt deref_rhs=dereference(code_assign.rhs(), ssa_value_domain, ns);
+    exprt deref_lhs=dereference(code_assign.lhs(), loc);
+    exprt deref_rhs=dereference(code_assign.rhs(), loc);
 
     assign_rec(deref_lhs, deref_rhs, true_exprt(), loc);
   }
@@ -208,8 +226,7 @@ void local_SSAt::build_transfer(locationt loc)
       
     if(lhs.is_not_nil())
     {
-      const ssa_value_domaint &ssa_value_domain=ssa_value_ai[loc];
-      exprt deref_lhs=dereference(lhs, ssa_value_domain, ns);
+      exprt deref_lhs=dereference(lhs, loc);
     
       // generate a symbol for rhs
       irep_idt identifier="ssa::return_value"+i2string(loc->location_number);
@@ -474,7 +491,7 @@ exprt local_SSAt::read_lhs(
   locationt loc) const
 {
   // dereference first
-  exprt tmp1=dereference(expr, ssa_value_ai[loc], ns);
+  exprt tmp1=dereference(expr, loc);
 
   ssa_objectt object(tmp1, ns);
 
@@ -562,11 +579,28 @@ Function: local_SSAt::read_rhs
 
 exprt local_SSAt::read_rhs(const exprt &expr, locationt loc) const
 {
-  exprt tmp=expr;
-  adjust_float_expressions(tmp, ns);
+  exprt tmp1=expr;
+  adjust_float_expressions(tmp1, ns);
+  
   unsigned counter=0;
-  replace_side_effects_rec(tmp, loc, counter);
-  exprt result=read_rhs_rec(tmp, loc);
+  replace_side_effects_rec(tmp1, loc, counter);
+
+  #ifdef DEBUG
+  std::cout << "read_rhs tmp1: " << from_expr(ns, "", tmp1) << '\n';
+  #endif
+  
+  exprt tmp2=dereference(tmp1, loc);
+
+  #ifdef DEBUG
+  std::cout << "read_rhs tmp2: " << from_expr(ns, "", tmp2) << '\n';
+  #endif
+  
+  exprt result=read_rhs_rec(tmp2, loc);
+  
+  #ifdef DEBUG
+  std::cout << "read_rhs result: " << from_expr(ns, "", result) << '\n';
+  #endif
+  
   return result;
 }
 
@@ -632,37 +666,6 @@ Function: local_SSAt::read_rhs_rec
 
 exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
 {
-  #if 0
-  if(is_deref_struct_member(expr, ns))
-  {
-    // Stuff like (*ptr).m1.m2 or simply *ptr.
-    // This might alias with whatnot.
-
-    // We use the identifier produced by
-    // local_SSAt::replace_side_effects_rec
-    exprt result=symbol_exprt(expr.get(ID_C_identifier), expr.type());
-
-    // query the value sets
-    const ssa_value_domaint::valuest values=
-      ssa_value_ai[loc](expr, ns);
-
-    for(ssa_value_domaint::valuest::value_sett::const_iterator
-        it=values.value_set.begin();
-        it!=values.value_set.end();
-        it++)
-    {
-      exprt guard=ssa_alias_guard(expr, it->get_expr(), ns);
-      exprt value=ssa_alias_value(expr, read_rhs(*it, loc), ns);
-      guard=read_rhs_rec(guard, loc);
-      value=read_rhs_rec(value, loc);
-
-      result=if_exprt(guard, value, result);
-    }
-    
-    return result;
-  }
-  else 
-  #endif
   if(expr.id()==ID_side_effect)
   {
     throw "unexpected side effect in read_rhs_rec";
@@ -675,30 +678,7 @@ exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
   }
   else if(expr.id()==ID_dereference)
   {
-    // We use the identifier produced by
-    // local_SSAt::replace_side_effects_rec
-    exprt result=symbol_exprt(expr.get(ID_C_identifier), expr.type());
-
-    const exprt &pointer=to_dereference_expr(expr).pointer();
-  
-    // query the value sets
-    const ssa_value_domaint::valuest values=
-      ssa_value_ai[loc](pointer, ns);
-
-    for(ssa_value_domaint::valuest::value_sett::const_iterator
-        it=values.value_set.begin();
-        it!=values.value_set.end();
-        it++)
-    {
-      exprt guard=ssa_alias_guard(expr, it->get_expr(), ns);
-      exprt value=ssa_alias_value(expr, read_rhs(*it, loc), ns);
-      guard=read_rhs_rec(guard, loc);
-      value=read_rhs_rec(value, loc);
-
-      result=if_exprt(guard, value, result);
-    }
-    
-    return result;
+    throw "unexpected dereference in read_rhs_rec";
   }
   else if(expr.id()==ID_index)
   {
@@ -937,57 +917,15 @@ void local_SSAt::assign_rec(
     }
 
     ssa_objectt lhs_object(lhs, ns);
-
-    exprt rhs_read=read_rhs(rhs, loc);
-
+    
     const std::set<ssa_objectt> &assigned=
       assignments.get(loc);
 
-    for(std::set<ssa_objectt>::const_iterator
-        a_it=assigned.begin();
-        a_it!=assigned.end();
-        a_it++)
+    if(assigned.find(lhs_object)!=assigned.end())
     {
-      const symbol_exprt ssa_symbol=name(*a_it, OUT, loc);
-      exprt ssa_rhs;
-      
-      if(lhs_object==*a_it)
-      {
-        ssa_rhs=rhs_read;
-      }
-      else if(lhs.id()==ID_dereference) // might alias stuff
-      {
-        const dereference_exprt &dereference_expr=
-          to_dereference_expr(lhs);
-      
-        exprt guard=ssa_alias_guard(dereference_expr, a_it->get_expr(), ns);
-        exprt value=ssa_alias_value(dereference_expr, read_rhs(*a_it, loc), ns);
-        
-        exprt final_rhs=nil_exprt();
-        
-        // read the value and the rhs
-        value=read_rhs(value, loc);
-        
-        // merge rhs into value
-        if(value.id()==ID_symbol)
-          final_rhs=rhs_read;
-        else if(value.id()==ID_byte_extract_little_endian)
-          final_rhs=byte_update_little_endian_exprt(
-                          value.op0(), value.op1(), rhs_read);
-        else if(value.id()==ID_byte_extract_big_endian)
-          final_rhs=byte_update_big_endian_exprt(
-                          value.op0(), value.op1(), rhs_read);
-        
-        if(final_rhs.is_nil())
-          ssa_rhs=read_rhs(*a_it, loc);
-        else
-          ssa_rhs=if_exprt(
-            read_rhs(guard, loc),
-            final_rhs, // read_rhs done above
-            read_rhs(*a_it, loc));
-      }
-      else
-        continue;
+      exprt ssa_rhs=read_rhs(rhs, loc);
+
+      const symbol_exprt ssa_symbol=name(lhs_object, OUT, loc);
       
       equal_exprt equality(ssa_symbol, ssa_rhs);
       nodes[loc].equalities.push_back(equality);

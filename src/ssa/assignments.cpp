@@ -34,7 +34,7 @@ void assignmentst::build_assignment_map(
     if(it->is_assign())
     {
       const code_assignt &code_assign=to_code_assign(it->code);
-      exprt lhs_deref=dereference(code_assign.lhs(), ssa_value_ai[it], ns);
+      exprt lhs_deref=dereference(code_assign.lhs(), ssa_value_ai[it], "", ns);
       assign(lhs_deref, it, ns);
     }
     else if(it->is_decl())
@@ -63,7 +63,7 @@ void assignmentst::build_assignment_map(
       // the call might come with an assignment
       if(code_function_call.lhs().is_not_nil())
       {
-        exprt lhs_deref=dereference(code_function_call.lhs(), ssa_value_ai[it], ns);
+        exprt lhs_deref=dereference(code_function_call.lhs(), ssa_value_ai[it], "", ns);
         assign(lhs_deref, it, ns);
       }
     }
@@ -87,7 +87,7 @@ Function: assignmentst::assign
 
 void assignmentst::assign(
   const exprt &lhs,
-  goto_programt::const_targett loc,
+  locationt loc,
   const namespacet &ns)
 {
   if(is_symbol_struct_member(lhs, ns))
@@ -165,7 +165,7 @@ Function: assignmentst::assign
 
 void assignmentst::assign(
   const ssa_objectt &lhs,
-  goto_programt::const_targett loc,
+  locationt loc,
   const namespacet &)
 {
   assignment_map[loc].insert(lhs);
