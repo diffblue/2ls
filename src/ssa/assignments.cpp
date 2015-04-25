@@ -90,7 +90,7 @@ void assignmentst::assign(
   goto_programt::const_targett loc,
   const namespacet &ns)
 {
-  if(is_symbol_or_deref_struct_member(lhs, ns))
+  if(is_symbol_struct_member(lhs, ns))
   {
     const typet &lhs_type=ns.follow(lhs.type());
     
@@ -114,20 +114,12 @@ void assignmentst::assign(
       return; // done
     }
     
-    if(lhs.id()==ID_dereference)
+    // object?
+    ssa_objectt ssa_object(lhs, ns);
+  
+    if(ssa_object)
     {
-      //const exprt &pointer=to_dereference_expr(lhs).pointer();
-    
-    }    
-    else
-    {
-      // object?
-      ssa_objectt ssa_object(lhs, ns);
-    
-      if(ssa_object)
-      {
-        assign(ssa_object, loc, ns);
-      }
+      assign(ssa_object, loc, ns);
     }
 
     return; // done

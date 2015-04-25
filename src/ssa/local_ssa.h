@@ -97,7 +97,7 @@ public:
   exprt read_rhs_rec(const exprt &, locationt loc) const;
   symbol_exprt read_rhs(const ssa_objectt &, locationt loc) const;
   exprt read_node_in(const ssa_objectt &, locationt loc) const;
-  void assign_rec(const exprt &lhs, const exprt &rhs, locationt loc);
+  void assign_rec(const exprt &lhs, const exprt &rhs, const exprt &guard, locationt loc);
   
   bool has_static_lifetime(const ssa_objectt &) const;
   bool has_static_lifetime(const exprt &) const;

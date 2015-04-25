@@ -115,7 +115,7 @@ void local_SSAt::build_phi_nodes(locationt loc)
       o_it=ssa_objects.objects.begin();
       o_it!=ssa_objects.objects.end(); o_it++)
   {
-    // phi-node here?
+    // phi-node for this object here?
     ssa_domaint::phi_nodest::const_iterator p_it=
       phi_nodes.find(o_it->get_identifier());
           
@@ -192,20 +192,30 @@ void local_SSAt::build_transfer(locationt loc)
   {
     const code_assignt &code_assign=to_code_assign(loc->code);
 
-    assign_rec(code_assign.lhs(), code_assign.rhs(), loc);
+    const ssa_value_domaint &ssa_value_domain=ssa_value_ai[loc];
+    
+    exprt deref_lhs=dereference(code_assign.lhs(), ssa_value_domain, ns);
+    exprt deref_rhs=dereference(code_assign.rhs(), ssa_value_domain, ns);
+
+    assign_rec(deref_lhs, deref_rhs, true_exprt(), loc);
   }
   else if(loc->is_function_call())
   {
     const code_function_callt &code_function_call=
       to_code_function_call(loc->code);
       
-    if(code_function_call.lhs().is_not_nil())
+    const exprt &lhs=code_function_call.lhs();
+      
+    if(lhs.is_not_nil())
     {
+      const ssa_value_domaint &ssa_value_domain=ssa_value_ai[loc];
+      exprt deref_lhs=dereference(lhs, ssa_value_domain, ns);
+    
       // generate a symbol for rhs
       irep_idt identifier="ssa::return_value"+i2string(loc->location_number);
       symbol_exprt rhs(identifier, code_function_call.lhs().type());
       
-      assign_rec(code_function_call.lhs(), rhs, loc);
+      assign_rec(deref_lhs, rhs, true_exprt(), loc);
     }
   }
 }
@@ -463,7 +473,10 @@ exprt local_SSAt::read_lhs(
   const exprt &expr,
   locationt loc) const
 {
-  ssa_objectt object(expr, ns);
+  // dereference first
+  exprt tmp1=dereference(expr, ssa_value_ai[loc], ns);
+
+  ssa_objectt object(tmp1, ns);
 
   // is this an object we track?
   if(ssa_objects.objects.find(object)!=
@@ -476,7 +489,7 @@ exprt local_SSAt::read_lhs(
       return read_rhs(object, loc);
   }
   else
-    return read_rhs(expr, loc);
+    return read_rhs(tmp1, loc);
 }
 
 /*******************************************************************\
@@ -793,17 +806,6 @@ void local_SSAt::replace_side_effects_rec(
     else
       throw "unexpected side effect: "+id2string(statement);
   }
-  else if(is_deref_struct_member(expr, ns))
-  {
-    // We generate a symbol identifier in case dereferencing turns
-    // out to need one.
-    counter++;
-    const irep_idt identifier=
-      "ssa::deref"+
-      i2string(loc->location_number)+
-      "."+i2string(counter)+suffix;
-    expr.set(ID_C_identifier, identifier);
-  }
 }
 
 /*******************************************************************\
@@ -907,14 +909,12 @@ Function: local_SSAt::assign_rec
 void local_SSAt::assign_rec(
   const exprt &lhs,
   const exprt &rhs,
+  const exprt &guard,
   locationt loc)
 {
-  bool flag_symbol=is_symbol_struct_member(lhs, ns);
-  bool flag_deref=is_symbol_or_deref_struct_member(lhs, ns);
-
   const typet &type=ns.follow(lhs.type());
 
-  if(flag_symbol || flag_deref)
+  if(is_symbol_struct_member(lhs, ns))
   {
     if(type.id()==ID_struct)
     {
@@ -930,7 +930,7 @@ void local_SSAt::assign_rec(
       {
         member_exprt new_lhs(lhs, it->get_name(), it->type());
         member_exprt new_rhs(rhs, it->get_name(), it->type());
-        assign_rec(new_lhs, new_rhs, loc);
+        assign_rec(new_lhs, new_rhs, guard, loc);
       }
 
       return;
@@ -997,7 +997,7 @@ void local_SSAt::assign_rec(
   {
     const index_exprt &index_expr=to_index_expr(lhs);
     exprt new_rhs=with_exprt(index_expr.array(), index_expr.index(), rhs);
-    assign_rec(index_expr.array(), new_rhs, loc);
+    assign_rec(index_expr.array(), new_rhs, guard, loc);
   }
   else if(lhs.id()==ID_member)
   {
@@ -1009,14 +1009,14 @@ void local_SSAt::assign_rec(
     if(compound_type.id()==ID_union)
     {
       union_exprt new_rhs(member_expr.get_component_name(), rhs, compound.type());
-      assign_rec(member_expr.struct_op(), new_rhs, loc);
+      assign_rec(member_expr.struct_op(), new_rhs, guard, loc);
     }
     else if(compound_type.id()==ID_struct)
     {
       exprt member_name(ID_member_name);
       member_name.set(ID_component_name, member_expr.get_component_name());
       with_exprt new_rhs(compound, member_name, rhs);
-      assign_rec(compound, new_rhs, loc);
+      assign_rec(compound, new_rhs, guard, loc);
     }
   }
   else if(lhs.id()==ID_complex_real)
@@ -1026,7 +1026,7 @@ void local_SSAt::assign_rec(
     const complex_typet &complex_type=to_complex_type(op.type());
     exprt imag_op=unary_exprt(ID_complex_imag, op, complex_type.subtype());
     complex_exprt new_rhs(rhs, imag_op, complex_type);
-    assign_rec(op, new_rhs, loc);
+    assign_rec(op, new_rhs, guard, loc);
   }
   else if(lhs.id()==ID_complex_imag)
   {
@@ -1035,7 +1035,13 @@ void local_SSAt::assign_rec(
     const complex_typet &complex_type=to_complex_type(op.type());
     exprt real_op=unary_exprt(ID_complex_real, op, complex_type.subtype());
     complex_exprt new_rhs(real_op, rhs, complex_type);
-    assign_rec(op, new_rhs, loc);
+    assign_rec(op, new_rhs, guard, loc);
+  }
+  else if(lhs.id()==ID_if)
+  {
+    const if_exprt &if_expr=to_if_expr(lhs);
+    assign_rec(if_expr.true_case(), rhs, and_exprt(guard, if_expr.cond()), loc);
+    assign_rec(if_expr.false_case(), rhs, and_exprt(guard, not_exprt(if_expr.cond())), loc);
   }
   else
     throw "UNKNOWN LHS: "+lhs.id_string();

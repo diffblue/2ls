@@ -92,7 +92,7 @@ void ssa_value_domaint::assign_lhs_rec(
   bool add)
 {
   // is the lhs an object?
-  if(is_symbol_or_deref_struct_member(lhs, ns))
+  if(is_symbol_struct_member(lhs, ns))
   {
     const typet &lhs_type=ns.follow(lhs.type());
     
