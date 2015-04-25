@@ -7,7 +7,7 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 #include "assignments.h"
-#include "ssa_aliasing.h"
+#include "ssa_dereference.h"
 
 /*******************************************************************\
 

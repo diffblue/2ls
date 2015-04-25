@@ -23,7 +23,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "local_ssa.h"
 #include "malloc_ssa.h"
-#include "ssa_aliasing.h"
+#include "ssa_dereference.h"
 #include "address_canonizer.h"
 
 /*******************************************************************\

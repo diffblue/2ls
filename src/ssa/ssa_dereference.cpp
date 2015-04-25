@@ -6,7 +6,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-//#define DEBUG
+#define DEBUG
 
 #ifdef DEBUG
 #include <iostream>
@@ -23,10 +23,11 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/byte_operators.h>
 #include <util/base_type.h>
 #include <util/expr_util.h>
+#include <util/simplify_expr.h>
 
 #include <ansi-c/c_types.h>
 
-#include "ssa_aliasing.h"
+#include "ssa_dereference.h"
 #include "address_canonizer.h"
 
 /*******************************************************************\
@@ -245,7 +246,7 @@ exprt ssa_alias_value(
 
 /*******************************************************************\
 
-Function: dereference
+Function: dereference_rec_address_of
 
   Inputs:
 
@@ -255,7 +256,45 @@ Function: dereference
 
 \*******************************************************************/
 
-exprt dereference(
+exprt dereference_rec(
+ const exprt &src,
+ const ssa_value_domaint &ssa_value_domain, 
+ const namespacet &ns);
+
+exprt dereference_rec_address_of(
+ const exprt &src,
+ const ssa_value_domaint &ssa_value_domain, 
+ const namespacet &ns)
+{
+  if(src.id()==ID_index)
+  {
+    index_exprt tmp=to_index_expr(src);
+    tmp.array()=dereference_rec_address_of(tmp.array(), ssa_value_domain, ns);
+    tmp.index()=dereference_rec(tmp.index(), ssa_value_domain, ns);
+    return tmp;
+  }
+  else if(src.id()==ID_member)
+  {
+    return dereference_rec_address_of(
+      to_member_expr(src).struct_op(), ssa_value_domain, ns);
+  }
+  else
+    return src;
+}
+
+/*******************************************************************\
+
+Function: dereference_rec
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt dereference_rec(
  const exprt &src,
  const ssa_value_domaint &ssa_value_domain, 
  const namespacet &ns)
@@ -292,15 +331,70 @@ exprt dereference(
     
     return nil_exprt();
   }
+  else if(src.id()==ID_member)
+  {
+    member_exprt tmp1=to_member_expr(src);
+    tmp1.struct_op()=dereference_rec(tmp1.struct_op(), ssa_value_domain, ns);
+
+    if(tmp1.struct_op().id()==ID_if)
+    {
+      // push member into ?:
+      if_exprt tmp2=to_if_expr(tmp1.struct_op());
+      tmp2.type()=tmp1.type();
+      tmp2.true_case()=member_exprt(tmp2.true_case(), tmp1.get_component_name(), tmp1.type());
+      tmp2.false_case()=member_exprt(tmp2.false_case(), tmp1.get_component_name(), tmp1.type());
+      return tmp2;
+    }
+
+    return tmp1;
+  }
   else if(src.id()==ID_address_of)
   {
-    return nil_exprt();
+    address_of_exprt tmp=to_address_of_expr(src);
+    tmp.object()=dereference_rec_address_of(tmp.object(), ssa_value_domain, ns);
+    return tmp;
   }
   else
   {
     exprt tmp=src;
     Forall_operands(it, tmp)
-      *it=dereference(*it, ssa_value_domain, ns);
+      *it=dereference_rec(*it, ssa_value_domain, ns);
     return tmp;
   }
+}
+
+/*******************************************************************\
+
+Function: dereference
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt dereference(
+ const exprt &src,
+ const ssa_value_domaint &ssa_value_domain, 
+ const namespacet &ns)
+{
+  #ifdef DEBUG
+  std::cout << "dereference src: " << from_expr(ns, "", src) << '\n';
+  #endif
+
+  exprt tmp1=dereference_rec(src, ssa_value_domain, ns);
+
+  #ifdef DEBUG
+  std::cout << "dereference tmp1: " << from_expr(ns, "", tmp1) << '\n';
+  #endif
+
+  exprt tmp2=simplify_expr(tmp1, ns);
+
+  #ifdef DEBUG
+  std::cout << "dereference tmp2: " << from_expr(ns, "", tmp2) << '\n';
+  #endif
+
+  return tmp2;
 }
