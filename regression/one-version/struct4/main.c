@@ -1,6 +1,6 @@
 struct some_struct
 {
-  int b, c, d;
+  int a, b, c, d;
 };
 
 int main()
@@ -16,4 +16,6 @@ int main()
   // write through pointer
   p->c=1;
   __CPROVER_assert(my_s.c==1, "my_s.c");
+
+  return 0;
 }
