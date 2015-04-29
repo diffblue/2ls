@@ -6,6 +6,8 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+#include <util/string2int.h>
+
 #define DEBUG
 
 #ifdef DEBUG
@@ -15,23 +17,49 @@ Author: Peter Schrammel
 #include  "instrument_goto.h"
 
 
-extern
-local_SSAt::locationt find_loc_by_guard(const local_SSAt &SSA,
-					const symbol_exprt &guard);
+
+local_SSAt::locationt find_loop_by_guard(const local_SSAt &SSA,
+					const symbol_exprt &guard)
+{
+  std::string gstr = id2string(guard.get_identifier());
+  unsigned pos1 = gstr.find("#")+1;
+  unsigned pos2 = gstr.find("%",pos1);
+  unsigned n = safe_string2unsigned(gstr.substr(pos1,pos2));
+
+  local_SSAt::nodest::const_iterator n_it =SSA.nodes.begin();
+
+  for(; n_it != SSA.nodes.end(); n_it++)
+  {
+    if(n_it->location->location_number == n) {
+      // find end of loop
+      break;
+    }
+  }
+
+  if(n_it->loophead==SSA.nodes.end())
+    return n_it->location;
+  else
+    return n_it->loophead->location;
+}
+
 
 void instrument_gotot::instrument_instruction(
   const exprt &expr,
   goto_programt &dest,
   goto_programt::targett &target)
 {
-  if(!target->is_goto())
-    return;
- 
-  std::cout << "target " << target->type << std::endl;
   
-  goto_programt::targett where=target->get_target();
-  --where;
+  goto_programt::targett where=target;
 
+  std::cout << "target " << target->type << " : " << target->source_location << std::endl;
+
+  for(;;++where)
+  {
+    if(where->is_goto() && where->get_target()==target)
+      break;
+  }
+
+  
   goto_programt tmp;
   
   goto_programt::targett assumption=tmp.add_instruction();
@@ -46,7 +74,7 @@ void instrument_gotot::instrument_instruction(
   #endif
 
 
-  dest.update();
+  //dest.update();
 }
 
 extern
@@ -63,17 +91,19 @@ void instrument_gotot::instrument_body(
   const exprt &impl = expr.op0();
   exprt inv = expr.op1(); //copy
 
+  std::cout << "Invariant " << from_expr(inv) << std::endl;
+
   purify_identifiers(inv);
 
   local_SSAt::locationt loc;
   if(impl.id()==ID_symbol)
   {
-    loc = find_loc_by_guard(SSA,to_symbol_expr(impl));
+    loc = find_loop_by_guard(SSA,to_symbol_expr(impl));
   }
   else if(impl.id()==ID_and)
   {
     assert(impl.op0().id()==ID_symbol);
-    loc = find_loc_by_guard(SSA,to_symbol_expr(impl.op0()));
+    loc = find_loop_by_guard(SSA,to_symbol_expr(impl.op0()));
 
   }
   else assert(false);
@@ -82,6 +112,7 @@ void instrument_gotot::instrument_body(
   Forall_goto_program_instructions(it, function.body)
     if(it==loc)
     {
+
       instrument_instruction(inv, function.body, it);
       break;
     }
