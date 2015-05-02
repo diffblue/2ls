@@ -130,6 +130,7 @@ void summary_checkert::check_properties(
     // solver
     satcheckt satcheck;
     bv_pointerst solver(SSA.ns, satcheck);
+    solver.unbounded_array=bv_pointerst::U_ALL;
   
     satcheck.set_message_handler(get_message_handler());
     solver.set_message_handler(get_message_handler());
