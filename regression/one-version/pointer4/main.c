@@ -1,4 +1,4 @@
-int array[1000];
+int array[10000];
 
 int main()
 {
@@ -13,7 +13,7 @@ int main()
   assert(p[0]==10);
 
   // read with index
-  if(index>=0 && index<1000)
+  if(index>=0 && index<10000)
   {
     p=array+index;
     assert(*p==array[index]);
