@@ -279,6 +279,11 @@ void ssa_value_domaint::assign_rhs_rec_address_of(
     assign_rhs_rec_address_of(dest, to_if_expr(rhs).true_case(), ns, offset);
     assign_rhs_rec_address_of(dest, to_if_expr(rhs).false_case(), ns, offset);
   }
+  else if(rhs.id()==ID_index)
+  {
+    if(!to_index_expr(rhs).index().is_zero()) offset=true;
+    assign_rhs_rec_address_of(dest, to_index_expr(rhs).array(), ns, offset);
+  }
 }
 
 /*******************************************************************\

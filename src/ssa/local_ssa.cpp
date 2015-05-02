@@ -6,7 +6,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#define DEBUG
+//#define DEBUG
 
 #ifdef DEBUG
 #include <iostream>
@@ -934,7 +934,8 @@ void local_SSAt::assign_rec(
   else if(lhs.id()==ID_index)
   {
     const index_exprt &index_expr=to_index_expr(lhs);
-    exprt new_rhs=with_exprt(index_expr.array(), index_expr.index(), rhs);
+    exprt ssa_array=index_expr.array();
+    exprt new_rhs=with_exprt(ssa_array, index_expr.index(), rhs);
     assign_rec(index_expr.array(), new_rhs, guard, loc);
   }
   else if(lhs.id()==ID_member)
