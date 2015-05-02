@@ -1,19 +1,19 @@
-int array[100];
+int array[1000];
 
 int main()
 {
-  unsigned int *p;
+  int *p;
   int index;
   
   // read
   p=array;
   assert(p==array);
   array[1]=10;
-  assert(p[1]==10);
+  p++;
+  assert(p[0]==10);
 
-#if 0  
   // read with index
-  if(index>=0 && index<100)
+  if(index>=0 && index<1000)
   {
     p=array+index;
     assert(*p==array[index]);
@@ -23,5 +23,4 @@ int main()
   p=array;
   *(p+3)=3;
   assert(array[3]==3);
-#endif
 }
