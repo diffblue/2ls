@@ -218,6 +218,20 @@ void ssa_value_domaint::assign_rhs_rec(
   {
     assign_rhs_rec(dest, to_typecast_expr(rhs).op(), ns, offset);
   }
+  else if(rhs.id()==ID_plus)
+  {
+    forall_operands(it, rhs)
+    {
+      if(it->type().id()==ID_pointer)
+        assign_rhs_rec(dest, *it, ns, true);
+    }
+  }
+  else if(rhs.id()==ID_minus)
+  {
+    assert(rhs.operands().size()==2);
+    if(rhs.type().id()==ID_pointer)
+      assign_rhs_rec(dest, rhs.op0(), ns, true);
+  }
   else if(rhs.id()==ID_dereference)
   {
     assert(false); // should have been removed
