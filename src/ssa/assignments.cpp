@@ -6,6 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <util/byte_operators.h>
+
 #include "assignments.h"
 #include "ssa_dereference.h"
 
@@ -143,6 +145,13 @@ void assignmentst::assign(
     // non-flattened struct or union member
     const member_exprt &member_expr=to_member_expr(lhs);
     assign(member_expr.struct_op(), loc, ns);
+  }
+  else if(lhs.id()==ID_byte_extract_little_endian ||
+          lhs.id()==ID_byte_extract_big_endian)
+  {
+    const byte_extract_exprt &byte_extract_expr=to_byte_extract_expr(lhs);
+
+    assign(byte_extract_expr.op(), loc, ns);
   }
   else if(lhs.id()==ID_complex_real || lhs.id()==ID_complex_imag)
   {

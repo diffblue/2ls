@@ -981,6 +981,18 @@ void local_SSAt::assign_rec(
     assign_rec(if_expr.true_case(), rhs, and_exprt(guard, if_expr.cond()), loc);
     assign_rec(if_expr.false_case(), rhs, and_exprt(guard, not_exprt(if_expr.cond())), loc);
   }
+  else if(lhs.id()==ID_byte_extract_little_endian ||
+          lhs.id()==ID_byte_extract_big_endian)
+  {
+    const byte_extract_exprt &byte_extract_expr=to_byte_extract_expr(lhs);
+
+    exprt new_lhs=byte_extract_expr.op();
+
+    exprt new_rhs=byte_extract_exprt(
+      byte_extract_expr.id(), rhs, byte_extract_expr.offset(), new_lhs.type());
+
+    assign_rec(new_lhs, new_rhs, guard, loc);
+  }
   else
     throw "UNKNOWN LHS: "+lhs.id_string();
 }
