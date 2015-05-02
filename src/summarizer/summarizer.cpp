@@ -9,19 +9,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "../ssa/local_ssa.h"
 #include "../ssa/simplify_ssa.h"
 
-#if 0
-#include <iostream>
-
-#include <util/simplify_expr.h>
-#include <langapi/language_util.h>
-
-#include <solvers/sat/satcheck.h>
-#include <solvers/flattening/bv_pointers.h>
-
-#include "../ssa/ssa_build_goto_trace.h"
-#include "../domains/ssa_fixed_point.h"
-#endif
-
 #include "function_signature.h"
 #include "summary_db.h"
 #include "summarizer.h"
