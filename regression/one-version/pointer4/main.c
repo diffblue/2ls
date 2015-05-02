@@ -8,9 +8,10 @@ int main()
   // read
   p=array;
   assert(p==array);
-  array[1]=1;
-  assert(p[1]==1);
-  
+  array[1]=10;
+  assert(p[1]==10);
+
+#if 0  
   // read with index
   if(index>=0 && index<100)
   {
@@ -22,4 +23,5 @@ int main()
   p=array;
   *(p+3)=3;
   assert(array[3]==3);
+#endif
 }
