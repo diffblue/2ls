@@ -32,6 +32,46 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
+Function: lift_if
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt lift_if(const exprt &src)
+{
+  if(src.operands().size()==1 && src.op0().id()==ID_if)
+  {
+    // push operator into ?:
+    if_exprt if_expr=to_if_expr(src.op0());
+    if_expr.type()=src.type();
+
+    if(if_expr.true_case().is_not_nil())
+    {
+      exprt previous=if_expr.true_case();
+      if_expr.true_case()=src;
+      if_expr.true_case().op0()=previous;
+    }
+      
+    if(if_expr.false_case().is_not_nil())
+    {
+      exprt previous=if_expr.false_case();
+      if_expr.false_case()=src;
+      if_expr.false_case().op0()=previous;
+    }
+
+    return if_expr;
+  }
+  else
+    return src;
+}
+
+/*******************************************************************\
+
 Function: ssa_may_alias
 
   Inputs:
@@ -246,46 +286,6 @@ exprt ssa_alias_value(
 
 /*******************************************************************\
 
-Function: dereference_rec_address_of
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-exprt dereference_rec(
- const exprt &src,
- const ssa_value_domaint &ssa_value_domain, 
- const std::string &nondet_prefix,
- const namespacet &ns);
-
-exprt dereference_rec_address_of(
- const exprt &src,
- const ssa_value_domaint &ssa_value_domain, 
- const std::string &nondet_prefix,
- const namespacet &ns)
-{
-  if(src.id()==ID_index)
-  {
-    index_exprt tmp=to_index_expr(src);
-    tmp.array()=dereference_rec_address_of(tmp.array(), ssa_value_domain, nondet_prefix, ns);
-    tmp.index()=dereference_rec(tmp.index(), ssa_value_domain, nondet_prefix, ns);
-    return tmp;
-  }
-  else if(src.id()==ID_member)
-  {
-    return dereference_rec_address_of(
-      to_member_expr(src).struct_op(), ssa_value_domain, nondet_prefix, ns);
-  }
-  else
-    return src;
-}
-
-/*******************************************************************\
-
 Function: dereference_rec
 
   Inputs:
@@ -336,34 +336,27 @@ exprt dereference_rec(
   }
   else if(src.id()==ID_member)
   {
-    member_exprt tmp1=to_member_expr(src);
-    tmp1.struct_op()=dereference_rec(tmp1.struct_op(), ssa_value_domain, nondet_prefix, ns);
+    member_exprt tmp=to_member_expr(src);
+    tmp.struct_op()=dereference_rec(tmp.struct_op(), ssa_value_domain, nondet_prefix, ns);
     
-    if(tmp1.struct_op().is_nil())
+    #ifdef DEBUG
+    std::cout << "dereference_rec tmp: " << from_expr(ns, "", tmp) << '\n';
+    #endif
+
+    if(tmp.struct_op().is_nil())
       return nil_exprt();
-
-    if(tmp1.struct_op().id()==ID_if)
-    {
-      // push member into ?:
-      if_exprt tmp2=to_if_expr(tmp1.struct_op());
-      tmp2.type()=tmp1.type();
-
-      if(tmp2.true_case().is_not_nil())
-        tmp2.true_case()=member_exprt(tmp2.true_case(), tmp1.get_component_name(), tmp1.type());
-        
-      if(tmp2.false_case().is_not_nil())
-        tmp2.false_case()=member_exprt(tmp2.false_case(), tmp1.get_component_name(), tmp1.type());
-
-      return tmp2;
-    }
-
-    return tmp1;
+      
+    return lift_if(tmp);
   }
   else if(src.id()==ID_address_of)
   {
     address_of_exprt tmp=to_address_of_expr(src);
-    tmp.object()=dereference_rec_address_of(tmp.object(), ssa_value_domain, nondet_prefix, ns);
-    return tmp;
+    tmp.object()=dereference_rec(tmp.object(), ssa_value_domain, nondet_prefix, ns);
+
+    if(tmp.object().is_nil())
+      return nil_exprt();
+    
+    return lift_if(tmp);
   }
   else
   {

@@ -193,14 +193,7 @@ void ssa_value_domaint::assign_rhs_rec(
   if(rhs.id()==ID_address_of)
   {
     const exprt &op=to_address_of_expr(rhs).object();
-  
-    ssa_objectt ssa_object(op, ns);
-  
-    if(ssa_object)
-    {
-      dest.value_set.insert(ssa_object);
-      if(offset) dest.offset=true;
-    }
+    assign_rhs_rec_address_of(dest, op, ns, offset);
   }
   else if(rhs.id()==ID_constant)
   {
@@ -253,6 +246,38 @@ void ssa_value_domaint::assign_rhs_rec(
       forall_operands(it, rhs)
         assign_rhs_rec(dest, *it, ns, true);
     }
+  }
+}
+
+/*******************************************************************\
+
+Function: ssa_value_domaint::assign_rhs_rec_address_of
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void ssa_value_domaint::assign_rhs_rec_address_of(
+  valuest &dest,
+  const exprt &rhs,
+  const namespacet &ns,
+  bool offset) const
+{
+  ssa_objectt ssa_object(rhs, ns);
+
+  if(ssa_object)
+  {
+    dest.value_set.insert(ssa_object);
+    if(offset) dest.offset=true;
+  }
+  else if(rhs.id()==ID_if)
+  {
+    assign_rhs_rec_address_of(dest, to_if_expr(rhs).true_case(), ns, offset);
+    assign_rhs_rec_address_of(dest, to_if_expr(rhs).false_case(), ns, offset);
   }
 }
 

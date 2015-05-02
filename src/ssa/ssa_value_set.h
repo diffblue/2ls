@@ -68,6 +68,11 @@ protected:
     valuest &lhs, const exprt &rhs,
     const namespacet &,
     bool offset=false) const;
+
+  void assign_rhs_rec_address_of(
+    valuest &lhs, const exprt &rhs,
+    const namespacet &,
+    bool offset=false) const;
 };
 
 class ssa_value_ait:public ait<ssa_value_domaint>
