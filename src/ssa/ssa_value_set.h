@@ -26,9 +26,11 @@ public:
     typedef std::set<ssa_objectt> value_sett;
     value_sett value_set;
     bool offset, null, unknown, integer_address;
+    unsigned alignment;
     
     inline valuest():
-      offset(false), null(false), unknown(false), integer_address(false)
+      offset(false), null(false), unknown(false), integer_address(false),
+      alignment(0)
     {
     }
     
@@ -54,7 +56,7 @@ public:
   const valuest operator()(const exprt &src, const namespacet &ns) const
   {
     valuest tmp;
-    assign_rhs_rec(tmp, src, ns);
+    assign_rhs_rec(tmp, src, ns, false, 0);
     return tmp;
   }
   
@@ -67,12 +69,23 @@ protected:
   void assign_rhs_rec(
     valuest &lhs, const exprt &rhs,
     const namespacet &,
-    bool offset=false) const;
+    bool offset,
+    unsigned alignment) const;
 
   void assign_rhs_rec_address_of(
     valuest &lhs, const exprt &rhs,
     const namespacet &,
-    bool offset=false) const;
+    bool offset,
+    unsigned alignment) const;
+
+  static unsigned merge_alignment(unsigned a, unsigned b)
+  {
+    // could use lcm here
+    if(a==b) return a;
+    if(a==0) return b;
+    if(b==0) return a;
+    return 1;
+  }
 };
 
 class ssa_value_ait:public ait<ssa_value_domaint>

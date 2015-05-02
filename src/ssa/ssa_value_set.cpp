@@ -6,6 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <util/pointer_offset_size.h>
+
 #include "ssa_value_set.h"
 #include "ssa_dereference.h"
 
@@ -129,9 +131,16 @@ void ssa_value_domaint::assign_lhs_rec(
     
     if(ssa_object)
     {
+      valuest tmp_values;
+      assign_rhs_rec(tmp_values, rhs, ns, false, 0);
+
       valuest &lhs_values=value_map[ssa_object];
-      lhs_values.clear();
-      assign_rhs_rec(lhs_values, rhs, ns);
+
+      if(add)
+        lhs_values.merge(tmp_values);
+      else
+        lhs_values=tmp_values;
+
       if(lhs_values.empty())
         value_map.erase(ssa_object);
     }
@@ -188,12 +197,13 @@ void ssa_value_domaint::assign_rhs_rec(
   valuest &dest,
   const exprt &rhs,
   const namespacet &ns,
-  bool offset) const
+  bool offset,
+  unsigned alignment) const
 {
   if(rhs.id()==ID_address_of)
   {
     const exprt &op=to_address_of_expr(rhs).object();
-    assign_rhs_rec_address_of(dest, op, ns, offset);
+    assign_rhs_rec_address_of(dest, op, ns, offset, alignment);
   }
   else if(rhs.id()==ID_constant)
   {
@@ -204,26 +214,36 @@ void ssa_value_domaint::assign_rhs_rec(
   }
   else if(rhs.id()==ID_if)
   {
-    assign_rhs_rec(dest, to_if_expr(rhs).true_case(), ns, offset);
-    assign_rhs_rec(dest, to_if_expr(rhs).false_case(), ns, offset);
+    assign_rhs_rec(dest, to_if_expr(rhs).true_case(), ns, offset, alignment);
+    assign_rhs_rec(dest, to_if_expr(rhs).false_case(), ns, offset, alignment);
   }
   else if(rhs.id()==ID_typecast)
   {
-    assign_rhs_rec(dest, to_typecast_expr(rhs).op(), ns, offset);
+    assign_rhs_rec(dest, to_typecast_expr(rhs).op(), ns, offset, alignment);
   }
   else if(rhs.id()==ID_plus)
   {
     forall_operands(it, rhs)
     {
       if(it->type().id()==ID_pointer)
-        assign_rhs_rec(dest, *it, ns, true);
+      {
+        mp_integer pointer_offset=pointer_offset_size(it->type().subtype(), ns);
+        if(pointer_offset<1) pointer_offset=1;
+        unsigned a=merge_alignment(integer2long(pointer_offset), alignment);
+        assign_rhs_rec(dest, *it, ns, true, a);
+      }
     }
   }
   else if(rhs.id()==ID_minus)
   {
     assert(rhs.operands().size()==2);
     if(rhs.type().id()==ID_pointer)
-      assign_rhs_rec(dest, rhs.op0(), ns, true);
+    {
+      mp_integer pointer_offset=pointer_offset_size(rhs.type().subtype(), ns);
+      if(pointer_offset<1) pointer_offset=1;
+      unsigned a=merge_alignment(integer2long(pointer_offset), alignment);
+      assign_rhs_rec(dest, rhs.op0(), ns, true, a);
+    }
   }
   else if(rhs.id()==ID_dereference)
   {
@@ -234,17 +254,23 @@ void ssa_value_domaint::assign_rhs_rec(
     // object?
   
     ssa_objectt ssa_object(rhs, ns);
-  
+    
     if(ssa_object)
     {
       value_mapt::const_iterator m_it=value_map.find(ssa_object);
+
       if(m_it!=value_map.end())
-        dest.merge(m_it->second);
+      {
+        valuest tmp_values=m_it->second;
+        if(offset) tmp_values.offset=true;
+        tmp_values.alignment=merge_alignment(tmp_values.alignment, alignment);
+        dest.merge(tmp_values);
+      }
     }
     else
     {
       forall_operands(it, rhs)
-        assign_rhs_rec(dest, *it, ns, true);
+        assign_rhs_rec(dest, *it, ns, true, 1);
     }
   }
 }
@@ -265,7 +291,8 @@ void ssa_value_domaint::assign_rhs_rec_address_of(
   valuest &dest,
   const exprt &rhs,
   const namespacet &ns,
-  bool offset) const
+  bool offset,
+  unsigned alignment) const
 {
   ssa_objectt ssa_object(rhs, ns);
 
@@ -276,13 +303,22 @@ void ssa_value_domaint::assign_rhs_rec_address_of(
   }
   else if(rhs.id()==ID_if)
   {
-    assign_rhs_rec_address_of(dest, to_if_expr(rhs).true_case(), ns, offset);
-    assign_rhs_rec_address_of(dest, to_if_expr(rhs).false_case(), ns, offset);
+    assign_rhs_rec_address_of(dest, to_if_expr(rhs).true_case(), ns, offset, alignment);
+    assign_rhs_rec_address_of(dest, to_if_expr(rhs).false_case(), ns, offset, alignment);
   }
   else if(rhs.id()==ID_index)
   {
-    if(!to_index_expr(rhs).index().is_zero()) offset=true;
-    assign_rhs_rec_address_of(dest, to_index_expr(rhs).array(), ns, offset);
+    unsigned a=alignment;
+
+    if(!to_index_expr(rhs).index().is_zero())
+    {
+      offset=true;
+      mp_integer pointer_offset=pointer_offset_size(rhs.type(), ns);
+      if(pointer_offset<1) pointer_offset=1;
+      a=merge_alignment(a, integer2long(pointer_offset));
+    }
+
+    assign_rhs_rec_address_of(dest, to_index_expr(rhs).array(), ns, offset, a);
   }
 }
 
@@ -302,7 +338,12 @@ void ssa_value_domaint::valuest::output(
   std::ostream &out,
   const namespacet &ns) const
 {
-  if(offset) out << " offset";
+  if(offset)
+  {
+    out << " offset";
+    if(alignment!=0) out << "*" << alignment;
+  }
+
   if(null) out << " null";
   if(unknown) out << " unknown";
   if(integer_address) out << " integer_address";
@@ -367,6 +408,9 @@ bool ssa_value_domaint::valuest::merge(const valuest &src)
   unsigned old_size=value_set.size();
   value_set.insert(src.value_set.begin(), src.value_set.end());
   if(old_size!=value_set.size()) result=true;
+  
+  // alignment
+  alignment=merge_alignment(alignment, src.alignment);
 
   return result;  
 }
