@@ -7,6 +7,7 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 #include "ssa_value_set.h"
+#include "ssa_dereference.h"
 
 /*******************************************************************\
 
@@ -29,12 +30,15 @@ void ssa_value_domaint::transform(
   if(from->is_assign())
   {
     const code_assignt &assignment=to_code_assign(from->code);
-    assign_lhs_rec(assignment.lhs(), assignment.rhs(), ns);
+    exprt lhs_deref=dereference(assignment.lhs(), *this, "", ns);
+    exprt rhs_deref=dereference(assignment.rhs(), *this, "", ns);
+    assign_lhs_rec(lhs_deref, rhs_deref, ns);
   }
   else if(from->is_goto())
   {
     // Perhaps look at condition, for stuff like
     // p!=0 or the like.
+    //exprt cond_deref=dereference(from->guard, *this, "", ns);
   }
   else if(from->is_decl())
   {
@@ -64,7 +68,10 @@ void ssa_value_domaint::transform(
 
     // the call might come with an assignment
     if(code_function_call.lhs().is_not_nil())
-      assign_lhs_rec(code_function_call.lhs(), nil_exprt(), ns);
+    {
+      exprt lhs_deref=dereference(code_function_call.lhs(), *this, "", ns);
+      assign_lhs_rec(lhs_deref, nil_exprt(), ns);
+    }
   }
   else if(from->is_dead())
   {
@@ -146,15 +153,7 @@ void ssa_value_domaint::assign_lhs_rec(
   }
   else if(lhs.id()==ID_dereference)
   {
-    valuest tmp;
-    assign_rhs_rec(tmp, to_dereference_expr(lhs).pointer(), ns, false);
-    for(valuest::value_sett::const_iterator
-        it=tmp.value_set.begin();
-        it!=tmp.value_set.end();
-        it++)
-    {
-      assign_rhs_rec(value_map[*it], rhs, ns);
-    }
+    assert(false); // should have been removed
   }
   else if(lhs.id()==ID_member)
   {
@@ -221,17 +220,7 @@ void ssa_value_domaint::assign_rhs_rec(
   }
   else if(rhs.id()==ID_dereference)
   {
-    valuest tmp;
-    assign_rhs_rec(tmp, to_dereference_expr(rhs).pointer(), ns, false);
-    for(valuest::value_sett::const_iterator
-        it=tmp.value_set.begin();
-        it!=tmp.value_set.end();
-        it++)
-    {
-      value_mapt::const_iterator m_it=value_map.find(*it);
-      if(m_it!=value_map.end())
-        dest.merge(m_it->second);
-    }
+    assert(false); // should have been removed
   }
   else
   {
