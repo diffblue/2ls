@@ -6,8 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef CPROVER_SUMMARIZER_PARSEOPTIONS_H
-#define CPROVER_SUMMARIZER_PARSEOPTIONS_H
+#ifndef CPROVER_SUMMARIZER_PARSE_OPTIONS_H
+#define CPROVER_SUMMARIZER_PARSE_OPTIONS_H
 
 #include <util/ui_message.h>
 #include <util/parse_options.h>
@@ -57,7 +57,7 @@ class optionst;
   "(no-unwinding-assertions)(no-propagation)"
   // the last line is for CBMC-regression testing only
 
-class summarizer_parseoptionst:
+class summarizer_parse_optionst:
   public parse_options_baset,
   public language_uit
 {
@@ -65,8 +65,8 @@ public:
   virtual int doit();
   virtual void help();
 
-  summarizer_parseoptionst(int argc, const char **argv);
-  summarizer_parseoptionst(
+  summarizer_parse_optionst(int argc, const char **argv);
+  summarizer_parse_optionst(
     int argc,
     const char **argv,
     const std::string &extra_options);

@@ -3,11 +3,11 @@
 #include <util/arith_tools.h>
 #include <goto-instrument/unwind.h>
 
-#include "summarizer_parseoptions.h"
+#include "summarizer_parse_options.h"
 
 /*******************************************************************\
 
-Function: summarizer_parseoptionst::inline_main
+Function: summarizer_parse_optionst::inline_main
 
   Inputs:
 
@@ -17,7 +17,7 @@ Function: summarizer_parseoptionst::inline_main
 
 \*******************************************************************/
 
-void summarizer_parseoptionst::inline_main(goto_modelt &goto_model)
+void summarizer_parse_optionst::inline_main(goto_modelt &goto_model)
 {
   goto_programt &main = goto_model.goto_functions.function_map[ID_main].body;
   goto_programt::targett target = main.instructions.begin();
@@ -51,7 +51,7 @@ void summarizer_parseoptionst::inline_main(goto_modelt &goto_model)
 
 /*******************************************************************\
 
-Function: summarizer_parseoptionst::propagate_constants
+Function: summarizer_parse_optionst::propagate_constants
 
   Inputs:
 
@@ -66,7 +66,7 @@ Function: summarizer_parseoptionst::propagate_constants
 
 \*******************************************************************/
 
-void summarizer_parseoptionst::replace_types_rec(const replace_symbolt &replace_const, 
+void summarizer_parse_optionst::replace_types_rec(const replace_symbolt &replace_const, 
 						 exprt &expr)
 {
   replace_const(expr.type());
@@ -75,7 +75,7 @@ void summarizer_parseoptionst::replace_types_rec(const replace_symbolt &replace_
     replace_types_rec(replace_const,*it);
 }
 
-exprt summarizer_parseoptionst::evaluate_casts_in_constants(const exprt &expr, 
+exprt summarizer_parse_optionst::evaluate_casts_in_constants(const exprt &expr, 
 		    const typet& parent_type, bool &valid)
 {
   if(expr.id()==ID_side_effect) valid = false;
@@ -88,7 +88,7 @@ exprt summarizer_parseoptionst::evaluate_casts_in_constants(const exprt &expr,
   return from_integer(v,parent_type);
 }
 
-void summarizer_parseoptionst::propagate_constants(goto_modelt &goto_model)
+void summarizer_parse_optionst::propagate_constants(goto_modelt &goto_model)
 {
   namespacet ns(goto_model.symbol_table);
   Forall_goto_functions(f_it, goto_model.goto_functions)
@@ -158,7 +158,7 @@ Function: goto_unwind
 
 \*******************************************************************/
 
-void summarizer_parseoptionst::goto_unwind(goto_modelt &goto_model, unsigned k)
+void summarizer_parse_optionst::goto_unwind(goto_modelt &goto_model, unsigned k)
 {
   
   typedef std::vector<std::pair<goto_programt::targett,goto_programt::targett> > loopst;
