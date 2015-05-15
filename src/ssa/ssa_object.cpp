@@ -167,7 +167,7 @@ void ssa_objectst::collect_objects(
       it!=src.parameter_identifiers.end();
       it++)
   {
-    symbol_exprt symbol=symbol_expr(ns.lookup(*it));
+    symbol_exprt symbol=ns.lookup(*it).symbol_expr();
     collect_objects_rec(symbol, ns, objects, literals);
   }
 
