@@ -24,6 +24,7 @@ public:
     guardt pre_guard;
     guardt post_guard;
     row_exprt expr;
+    exprt aux_expr;
     kindt kind;
   } template_rowt;
 
@@ -88,6 +89,7 @@ public:
     const exprt& expr,
     const exprt& pre_guard,
     const exprt& post_guard,
+    const exprt& aux_expr,
     kindt kind
     );
 

@@ -350,6 +350,7 @@ predabs_domaint::template_rowt &predabs_domaint::add_template_row(
   const exprt& expr,
   const exprt& pre_guard,
   const exprt& post_guard,
+  const exprt& aux_expr,
   kindt kind
   )
 {
@@ -359,6 +360,7 @@ predabs_domaint::template_rowt &predabs_domaint::add_template_row(
   //extend_expr_types(templ_row.expr);
   templ_row.pre_guard = pre_guard;
   templ_row.post_guard = post_guard;
+  templ_row.aux_expr = aux_expr;
   templ_row.kind = kind;
   return templ_row;
 }

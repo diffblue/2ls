@@ -1,5 +1,7 @@
 #include <iostream>
 
+#define DEBUG_OUTPUT
+
 #include <util/simplify_expr.h>
 #include <util/find_symbols.h>
 

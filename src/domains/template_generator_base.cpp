@@ -74,8 +74,51 @@ void template_generator_baset::get_pre_var(const local_SSAt &SSA,
 
   symbol_exprt post_var = SSA.read_rhs(*o_it, n_it->location);
   ssa_local_unwinder.unwinder_rename(post_var,*n_it,false);
+  post_renaming_map[pre_var] = post_var;
 
-  renaming_map[pre_var]=post_var;    
+  rename_aux_post(post_var);
+  aux_renaming_map[pre_var]=post_var;    
+}
+
+/*******************************************************************\
+
+Function: template_generator_baset::get_init_var
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: supposes that loop head PHIs are of the form 
+          xphi = gls?xlb:x0
+
+\*******************************************************************/
+
+void template_generator_baset::get_init_var(const local_SSAt &SSA,
+  		         local_SSAt::objectst::const_iterator o_it,
+   		         local_SSAt::nodest::const_iterator n_it,
+			 symbol_exprt &init_var)
+{
+  symbol_exprt phi_var = SSA.name(*o_it, local_SSAt::PHI, 
+				  n_it->loophead->location);
+  ssa_local_unwinder.unwinder_rename(phi_var,*n_it->loophead,true);
+  for (local_SSAt::nodet::equalitiest::const_iterator e_it =
+	 n_it->loophead->equalities.begin(); 
+       e_it != n_it->loophead->equalities.end(); e_it++) 
+  {
+    if (e_it->rhs().id() == ID_if && 
+        to_symbol_expr(e_it->lhs()).get_identifier()==phi_var.get_identifier()) 
+    {
+      const if_exprt &if_expr = to_if_expr(e_it->rhs());
+      init_var = to_symbol_expr(if_expr.false_case());
+      //should already be renamed for inner loops
+//      ssa_local_unwinder.unwinder_rename(init_var,*n_it->loophead,false);
+      break;
+    }
+  }
+
+  symbol_exprt pre_var = SSA.name(*o_it, local_SSAt::LOOP_BACK, n_it->location);
+  ssa_local_unwinder.unwinder_rename(pre_var,*n_it,true);
+  init_renaming_map[pre_var]=init_var;    
 }
 
 /*******************************************************************\
@@ -121,8 +164,11 @@ void template_generator_baset::collect_variables_loop(const local_SSAt &SSA,bool
 
         symbol_exprt pre_var;
 	get_pre_var(SSA,o_it,n_it,pre_var);
+        symbol_exprt init_var;
+	get_init_var(SSA,o_it,n_it,init_var);
         add_var(pre_var,pre_guard,post_guard,domaint::LOOP,var_specs);
-        
+
+     
   #ifdef DEBUG
         std::cout << "Adding " << from_expr(ns, "", in) << " " << 
           from_expr(ns, "", out) << std::endl;        
@@ -252,16 +298,29 @@ Function: template_generator_baset::add_vars
 
 void template_generator_baset::add_var(const domaint::vart &var, 
 			    const domaint::guardt &pre_guard, 
-			    const domaint::guardt &post_guard,
+			    domaint::guardt post_guard,
 			    const domaint::kindt &kind,
 			    domaint::var_specst &var_specs)
 {
+  exprt aux_expr = true_exprt();
+  if(pre_guard.id()==ID_and)
+  {
+    exprt init_guard = and_exprt(pre_guard.op0(),not_exprt(pre_guard.op1()));
+    symbol_exprt post_var = to_symbol_expr(post_renaming_map[var]);
+    symbol_exprt aux_var = to_symbol_expr(aux_renaming_map[var]);
+    aux_expr = and_exprt(
+      implies_exprt(and_exprt(post_guard, not_exprt(init_guard)),
+			      equal_exprt(aux_var,post_var)),
+      implies_exprt(init_guard,equal_exprt(aux_var,init_renaming_map[var])));
+    post_guard = or_exprt(post_guard,init_guard);
+  }
   if(var.type().id()!=ID_array)
   {
     var_specs.push_back(domaint::var_spect());
     domaint::var_spect &var_spec = var_specs.back();
     var_spec.pre_guard = pre_guard;
     var_spec.post_guard = post_guard;
+    var_spec.aux_expr = aux_expr;
     var_spec.kind = kind;
     var_spec.var = var;
   }
@@ -279,6 +338,7 @@ void template_generator_baset::add_var(const domaint::vart &var,
       constant_exprt index = from_integer(i,array_type.size().type());
       var_spec.pre_guard = pre_guard;
       var_spec.post_guard = post_guard;
+      var_spec.aux_expr = aux_expr;
       var_spec.kind = kind;
       var_spec.var = index_exprt(var,index);
     }
@@ -483,15 +543,17 @@ bool template_generator_baset::instantiate_custom_templates(
 	    std::cout << "[Generator_base] : Polyhedra domain" << std::endl;
 	    if(!found_poly) //create domain
 	    {
-	      domain_ptr = new tpolyhedra_domaint(domain_number,renaming_map);
+	      domain_ptr = new tpolyhedra_domaint(domain_number,aux_renaming_map);
 	      found_poly = true;
 	    }
 	    exprt expr = t_it->op0();
 	    bool contains_new_var = build_custom_expr(SSA,n_it,expr);
+	    exprt aux_expr = false_exprt(); //TODO!!!
 	    if(contains_new_var) add_post_vars = true;
 	    static_cast<tpolyhedra_domaint *>(domain_ptr)->add_template_row(
 		expr,pre_guard,
 		contains_new_var ? and_exprt(pre_guard,post_guard) : post_guard,
+		aux_expr,
 		contains_new_var ? domaint::OUT : domaint::LOOP);
 	  }
 	  // pred abs domain
@@ -502,15 +564,17 @@ bool template_generator_baset::instantiate_custom_templates(
 	    std::cout << "[Generator_base] : Predabs domain" << std::endl;
 	    if(!found_predabs) //create domain
 	    {
-	      domain_ptr = new predabs_domaint(domain_number,renaming_map);
+	      domain_ptr = new predabs_domaint(domain_number,aux_renaming_map);
 	      found_predabs = true;
 	    }
 	    exprt expr = *t_it;
 	    bool contains_new_var = build_custom_expr(SSA,n_it,expr);
+	    exprt aux_expr = false_exprt(); //TODO!!!
 	    if(contains_new_var) add_post_vars = true;
 	    static_cast<predabs_domaint *>(domain_ptr)->add_template_row(
 		expr,pre_guard,
 		contains_new_var ? and_exprt(pre_guard,post_guard) : post_guard,
+		aux_expr,
 		contains_new_var ? domaint::OUT : domaint::LOOP);
 		  
 	  }
@@ -530,7 +594,7 @@ bool template_generator_baset::instantiate_custom_templates(
 	    {
 	      var_specs.push_back(*v);
 	      var_specs.back().kind = domaint::OUTL;
-              replace_expr(renaming_map,var_specs.back().var);
+              replace_expr(aux_renaming_map,var_specs.back().var);
 	    }
 	  }
 	}
@@ -560,12 +624,12 @@ void template_generator_baset::instantiate_standard_domains(const local_SSAt &SS
   {
     filter_equality_domain();
     domain_ptr = new equality_domaint(domain_number,
-				      renaming_map, var_specs, SSA.ns);
+				      aux_renaming_map, var_specs, SSA.ns);
   }
   else if(options.get_bool_option("intervals"))
   {
     domain_ptr = new tpolyhedra_domaint(domain_number,
-					renaming_map);
+					aux_renaming_map);
     filter_template_domain();
     static_cast<tpolyhedra_domaint *>(domain_ptr)->add_interval_template(
       var_specs, SSA.ns);
@@ -573,7 +637,7 @@ void template_generator_baset::instantiate_standard_domains(const local_SSAt &SS
   else if(options.get_bool_option("zones"))
   {
     domain_ptr = new tpolyhedra_domaint(domain_number,
-					renaming_map);
+					aux_renaming_map);
     filter_template_domain();
     static_cast<tpolyhedra_domaint *>(domain_ptr)->add_interval_template(
       var_specs, SSA.ns);
@@ -583,7 +647,7 @@ void template_generator_baset::instantiate_standard_domains(const local_SSAt &SS
   else if(options.get_bool_option("octagons"))
   {
     domain_ptr = new tpolyhedra_domaint(domain_number,
-					renaming_map);
+					aux_renaming_map);
     filter_template_domain();
     static_cast<tpolyhedra_domaint *>(domain_ptr)->add_interval_template(
       var_specs, SSA.ns);
@@ -595,7 +659,7 @@ void template_generator_baset::instantiate_standard_domains(const local_SSAt &SS
   else if(options.get_bool_option("qzones"))
   {
     domain_ptr = new tpolyhedra_domaint(domain_number,
-					renaming_map);
+					aux_renaming_map);
     filter_template_domain();
     static_cast<tpolyhedra_domaint *>(domain_ptr)->add_difference_template(
       var_specs, SSA.ns);

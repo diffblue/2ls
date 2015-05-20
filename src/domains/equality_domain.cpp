@@ -101,11 +101,13 @@ void equality_domaint::project_on_vars(valuet &value,
   {
     const var_pairt &vv = templ[index].var_pair;
 
+#if 0
     std::cout << vv.second << std::endl;
-    if((vars.find(vv.first)==vars.end()) || 
-       vars.find(vv.second)==vars.end() && 
-       !(vv.second.id()==ID_constant && 
-	 to_constant_expr(vv.second).get_value()=="NULL"))
+#endif
+    if(vars.find(vv.first)==vars.end() || 
+       (vars.find(vv.second)==vars.end() && 
+        !(vv.second.id()==ID_constant && 
+	  to_constant_expr(vv.second).get_value()=="NULL")))
       continue;
 
     if(v.equs.same_set(vv.first,vv.second)) 
@@ -123,10 +125,10 @@ void equality_domaint::project_on_vars(valuet &value,
   {
     const var_pairt &vv = templ[*it].var_pair;
 
-    if((vars.find(vv.first)==vars.end()) || 
-       vars.find(vv.second)==vars.end() && 
-       !(vv.second.id()==ID_constant && 
-	 to_constant_expr(vv.second).get_value()=="NULL"))
+    if(vars.find(vv.first)==vars.end() || 
+       (vars.find(vv.second)==vars.end() && 
+        !(vv.second.id()==ID_constant && 
+	  to_constant_expr(vv.second).get_value()=="NULL")))
       continue;
 
       if(templ[*it].kind==LOOP)

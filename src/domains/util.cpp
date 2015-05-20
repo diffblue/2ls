@@ -1,3 +1,5 @@
+#include <util/simplify_expr.h>
+
 #include "util.h"
 
 /*******************************************************************\
@@ -354,3 +356,24 @@ constant_exprt simplify_const(const exprt &expr)
   }
   assert(false); //type not supported
 }
+
+/*******************************************************************\
+
+Function: merge_and
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void merge_and(exprt & result, const exprt &expr1, const exprt &expr2, 
+	       const namespacet &ns)
+{
+  result = expr1;
+  if(expr1!=expr2) result = and_exprt(expr1,expr2);
+  simplify(result,ns);
+}
+

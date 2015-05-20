@@ -49,7 +49,9 @@ public:
   domaint *domain() { assert(domain_ptr!=NULL); return domain_ptr; }
 
   domaint::var_specst var_specs;
-  replace_mapt renaming_map;
+  replace_mapt post_renaming_map;
+  replace_mapt init_renaming_map;
+  replace_mapt aux_renaming_map;
   unsigned domain_number; //serves as id for variables names
 
   optionst options; // copy: we may override options
@@ -67,7 +69,7 @@ protected:
 
   void add_var(const domaint::vart &var_to_add, 			    
 	       const domaint::guardt &pre_guard, 
-	       const domaint::guardt &post_guard,
+	       domaint::guardt post_guard,
 	       const domaint::kindt &kind,
 	       domaint::var_specst &var_specs);
   void add_vars(const var_listt &vars_to_add, 			    
@@ -94,6 +96,11 @@ protected:
 		   local_SSAt::nodest::const_iterator n_it,
 		   symbol_exprt &pre_var);
 
+  void get_init_var(const local_SSAt &SSA,
+  		   local_SSAt::objectst::const_iterator o_it,
+		   local_SSAt::nodest::const_iterator n_it,
+		   symbol_exprt &init_var);
+
   bool replace_post(replace_mapt replace_map, exprt &expr);
   bool build_custom_expr(const local_SSAt &SSA,
 			 local_SSAt::nodest::const_iterator n_it,
@@ -103,6 +110,10 @@ protected:
   void instantiate_standard_domains(const local_SSAt &SSA);
   bool instantiate_custom_templates(const local_SSAt &SSA);
 
+  void rename_aux_post(symbol_exprt &expr) 
+  { 
+    expr.set_identifier(id2string(expr.get_identifier())+"'");
+  }
 };
 
 

@@ -335,7 +335,9 @@ void tpolyhedra_domaint::make_not_post_constraints(const templ_valuet &value,
   {
     value_exprs[row] = templ[row].expr;
     rename(value_exprs[row]);
-    cond_exprs[row] = not_exprt(get_row_post_constraint(row,value));
+    cond_exprs[row] = 
+      and_exprt(templ[row].aux_expr,
+		not_exprt(get_row_post_constraint(row,value)));
   }
 }
 
@@ -400,7 +402,7 @@ exprt tpolyhedra_domaint::get_row_symb_post_constraint(const rowt &row)
   exprt c = and_exprt(templ_row.post_guard,
     binary_relation_exprt(templ_row.expr,ID_ge,get_row_symb_value(row)));
   rename(c);
-  return c;
+  return and_exprt(templ_row.aux_expr,c);
 }
 
 
@@ -726,7 +728,8 @@ void tpolyhedra_domaint::output_domain(std::ostream &out, const namespacet &ns) 
     {
     case LOOP:
       out << "(LOOP) [ " << from_expr(ns,"",templ_row.pre_guard) << " | ";
-      out << from_expr(ns,"",templ_row.post_guard) << " ] ===> " << std::endl << "      ";
+      out << from_expr(ns,"",templ_row.post_guard) << " | ";
+      out << from_expr(ns,"",templ_row.aux_expr) << " ] ===> " << std::endl << "      ";
       break;
     case IN: 
       out << "(IN)   ";
@@ -840,6 +843,7 @@ tpolyhedra_domaint::template_rowt &tpolyhedra_domaint::add_template_row(
   const exprt& expr,
   const exprt& pre_guard,
   const exprt& post_guard,
+  const exprt& aux_expr,
   kindt kind
   )
 {
@@ -849,6 +853,7 @@ tpolyhedra_domaint::template_rowt &tpolyhedra_domaint::add_template_row(
   extend_expr_types(templ_row.expr);
   templ_row.pre_guard = pre_guard;
   templ_row.post_guard = post_guard;
+  templ_row.aux_expr = aux_expr;
   templ_row.kind = kind;
   return templ_row;
 }
@@ -877,11 +882,12 @@ void tpolyhedra_domaint::add_interval_template(const var_specst &var_specs,
     if(v->kind==IN) continue; 
 
     // x
-    add_template_row(v->var,v->pre_guard,v->post_guard,v->kind);
+    add_template_row(v->var,v->pre_guard,v->post_guard,
+		     v->aux_expr, v->kind);
 
     // -x
     add_template_row(unary_minus_exprt(v->var,v->var.type()),
-		     v->pre_guard,v->post_guard,v->kind);
+		     v->pre_guard,v->post_guard,v->aux_expr, v->kind);
   }
 }
 
@@ -913,16 +919,16 @@ void tpolyhedra_domaint::add_difference_template(const var_specst &var_specs,
       if(k==IN) continue; 
       if(k==LOOP && v1->pre_guard!=v2->pre_guard) continue; //TEST: we need better heuristics
 
-      exprt pre_g = and_exprt(v1->pre_guard,v2->pre_guard);
-      exprt post_g = and_exprt(v1->post_guard,v2->post_guard);
-      simplify(pre_g,ns);
-      simplify(post_g,ns);
+      exprt pre_g, post_g, aux_expr;
+      merge_and(pre_g, v1->pre_guard, v2->pre_guard, ns);
+      merge_and(post_g, v1->post_guard, v2->post_guard, ns);
+      merge_and(aux_expr, v1->aux_expr, v2->aux_expr, ns);
 
       // x1 - x2
-      add_template_row(minus_exprt(v1->var,v2->var),pre_g,post_g,k);
+      add_template_row(minus_exprt(v1->var,v2->var),pre_g,post_g,aux_expr,k);
 
       // x2 - x1
-      add_template_row(minus_exprt(v2->var,v1->var),pre_g,post_g,k);
+      add_template_row(minus_exprt(v2->var,v1->var),pre_g,post_g,aux_expr,k);
     }
   }
 }
@@ -952,11 +958,11 @@ void tpolyhedra_domaint::add_quadratic_template(const var_specst &var_specs,
 
     // x
     add_template_row(mult_exprt(v->var,v->var),
-		     v->pre_guard,v->post_guard,v->kind);
+		     v->pre_guard,v->post_guard,v->aux_expr,v->kind);
 
     // -x
     add_template_row(unary_minus_exprt(mult_exprt(v->var,v->var),v->var.type()),
-		     v->pre_guard,v->post_guard,v->kind);
+		     v->pre_guard,v->post_guard,v->aux_expr,v->kind);
   }}
 
 /*******************************************************************\
@@ -987,17 +993,17 @@ void tpolyhedra_domaint::add_sum_template(const var_specst &var_specs,
       if(k==IN) continue; 
       if(k==LOOP && v1->pre_guard!=v2->pre_guard) continue; //TEST: we need better heuristics
 
-      exprt pre_g = and_exprt(v1->pre_guard,v2->pre_guard);
-      exprt post_g = and_exprt(v1->post_guard,v2->post_guard);
-      simplify(pre_g,ns);
-      simplify(post_g,ns);
+      exprt pre_g, post_g, aux_expr;
+      merge_and(pre_g, v1->pre_guard, v2->pre_guard, ns);
+      merge_and(post_g, v1->post_guard, v2->post_guard, ns);
+      merge_and(aux_expr, v1->aux_expr, v2->aux_expr, ns);
 
       // -x1 - x2
       add_template_row(minus_exprt(unary_minus_exprt(v1->var,v1->var.type()),v2->var),
-		       pre_g,post_g,k);
+		       pre_g,post_g,aux_expr,k);
 
       // x1 + x2
-      add_template_row(plus_exprt(v1->var,v2->var),pre_g,post_g,k);
+      add_template_row(plus_exprt(v1->var,v2->var),pre_g,post_g,aux_expr,k);
     }
   }
 
