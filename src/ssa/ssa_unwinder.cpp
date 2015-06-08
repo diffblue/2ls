@@ -1595,27 +1595,22 @@ void ssa_local_unwindert::rename_invariant(const exprt::operandst& inv_in,
       inv_out.push_back(*e_it);
       exprt& e = inv_out.back();
       rename_invariant(e,suffix);
-    }while(odometer_increment(iter_vector,current_unwinding));
-
-
+    } while(odometer_increment(iter_vector,current_unwinding));
   }
-
-
-
-
-
 }
 
 exprt ssa_local_unwindert::rename_invariant(const exprt& inv_in) const
 {
   if(inv_in.is_true()) return inv_in;
-  assert(inv_in.id()==ID_and);
+
+  exprt::operandst inv_in_operands; 
+  if(inv_in.id()!=ID_and) inv_in_operands.push_back(inv_in);
+  else inv_in_operands = inv_in.operands();
 
  std::vector<exprt> new_inv;
- rename_invariant(inv_in.operands(),new_inv,prev_unwinding);
+ rename_invariant(inv_in_operands,new_inv,prev_unwinding);
 
  return conjunction(new_inv);
-
 }
 
 
