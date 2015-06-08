@@ -199,7 +199,7 @@ void summarizer_parse_optionst::get_command_line_options(optionst &options)
   else
     options.set_option("assumptions", true);
 
-    // use array refinement 
+    // use arithmetic refinements
   if(cmdline.isset("refine"))
     options.set_option("refine", true);
   else

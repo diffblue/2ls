@@ -1,6 +1,6 @@
 default: tests.log
 
-FLAGS = --verbosity 10 --refine
+FLAGS = --verbosity 10
 
 test:
 	@../test.pl -c "../../../src/summarizer/summarizer $(FLAGS)"
