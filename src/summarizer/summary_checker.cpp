@@ -412,11 +412,6 @@ void summary_checkert::check_properties_non_incremental(
     //callee summaries
     solver << ssa_inliner.get_summaries(SSA);
 
-#ifdef KIND_ASSUMPTIONS
-    solver.new_context();
-    solver << ssa_unwinder.get(f_it->first).get_assumptions();
-#endif
-
     // give negated property to solver
     solver << property;
 
@@ -447,9 +442,6 @@ void summary_checkert::check_properties_non_incremental(
 
 	  if(!spurious && !all_properties)  //exit on first failure if requested
 	  {
-#ifdef KIND_ASSUMPTIONS
-	    solver.pop_context();
-#endif
 	    solver.pop_context();
 	    return;
 	  }
@@ -458,18 +450,6 @@ void summary_checkert::check_properties_non_incremental(
       }
       
       case decision_proceduret::D_UNSATISFIABLE:
-#ifdef KIND_ASSUMPTIONS
-	if(options.get_bool_option("k-induction"))
-	{
-	  bool unsound = is_k_induction_unsound(
-	    ssa_unwinder.get(f_it->first),SSA,property,solver);
-	  debug() << "[" << property_id << "] k-induction is " << 
-	    (unsound ? "" : "not ") << "unsound" << eom;
-
-	  property_map[property_id].result = unsound ? UNKNOWN : PASS;
-        }
-	else
-#endif
 	  property_map[property_id].result=PASS;
 	break;
 
@@ -478,9 +458,6 @@ void summary_checkert::check_properties_non_incremental(
 	property_map[property_id].result=ERROR;
 	throw "error from decision procedure";
       }
-#ifdef KIND_ASSUMPTIONS
-    solver.pop_context();
-#endif
     solver.pop_context();
   }
 } 
@@ -811,50 +788,6 @@ bool summary_checkert::is_spurious(const exprt::operandst &loophead_selects,
     throw "error from decision procedure";
   }
 }
-
-/*******************************************************************\
-
-Function: summary_checkert::is_k_induction_unsound
-
-  Inputs:
-
- Outputs:
-
- Purpose: checks whether it is unsound to use k-induction
-
-\*******************************************************************/
-
-#ifdef KIND_ASSUMPTIONS
-bool summary_checkert::is_k_induction_unsound(
-  ssa_local_unwindert &ssa_local_unwinder,
-  const local_SSAt &SSA,
-  exprt properties,
-  incremental_solvert &solver)
-{
-  solver.pop_context();
-  solver.new_context();
-  
-  solver << ssa_local_unwinder.get_assumptions();
-  solver << ssa_local_unwinder.get_loopend_guards();
-  
-  solver_calls++; //statistics
-
-  switch(solver())
-  {
-  case decision_proceduret::D_SATISFIABLE:
-    return false;
-    break;
-      
-  case decision_proceduret::D_UNSATISFIABLE:
-    return true;
-    break;
-
-  case decision_proceduret::D_ERROR:    
-  default:
-    throw "error from decision procedure";
-  }
-}
-#endif
 
 /*******************************************************************\
 

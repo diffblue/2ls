@@ -83,12 +83,6 @@ protected:
     const irep_idt &function_name, const local_SSAt &, prop_convt &);
   bool is_spurious(const exprt::operandst& loophead_selects, 
 		   incremental_solvert&);
-#ifdef KIND_ASSUMPTIONS
-  bool is_k_induction_unsound(ssa_local_unwindert &ssa_local_unwinder,
-		       const local_SSAt &SSA,
-		       exprt properties,
-		       incremental_solvert &solver);
-#endif
   void report_preconditions();
 
 };

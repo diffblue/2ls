@@ -24,17 +24,6 @@ struct compare_node_iteratorst {
       const local_SSAt::nodest::const_iterator& b) const;
 };
 
-#ifdef KIND_ASSUMPTIONS
-struct kind_assumptionst
-{
-public:
-  exprt guardls;
-  exprt assumptions;
-  exprt loopend_guard;
-
-};
-#endif
-
 class ssa_local_unwindert : public messaget
 {
   irep_idt return_var;
@@ -47,7 +36,6 @@ class ssa_local_unwindert : public messaget
   typedef std::map<irep_idt,local_SSAt::nodest::iterator> loopends_mapt;
   typedef std::map<irep_idt,int> modvar_levelt;
   typedef std::set<exprt> exprst;
-  //typedef std::list<exprt> kind_assumptionst;
   typedef exprt cond_et;
   typedef exprt guard_et;
   typedef std::map<exprt, exprt> expr_break_mapt;
@@ -55,23 +43,17 @@ class ssa_local_unwindert : public messaget
   typedef std::set<local_SSAt::nodest::const_iterator,compare_node_iteratorst> return_nodest;
   typedef local_SSAt::nodest body_nodest;
   bool loopless;
-  //kind_assumptionst kind_assumptions;
-#ifdef KIND_ASSUMPTIONS
-  typedef std::map<const tree_loopnodet*,kind_assumptionst> loop_kind_assumptions_mapt;
-  loop_kind_assumptions_mapt loop_kind_assumptions_map;
-#endif
+
   class tree_loopnodet
   {
   public:
     return_nodest return_nodes;
     //exprst connectors;
     exprt::operandst assertions_after_loop;
-    //exprt::operandst exit_conditions;
     exprt exit_condition;
     expr_break_mapt connectors;
     tree_loopnodet* parent;
     local_SSAt::nodest body_nodes;
-    //local_SSAt::nodet::iterator loophead_node;
     std::map<exprt,exprt> pre_post_exprs;
     modvar_levelt modvar_level;
     std::set<irep_idt> vars_modified;
@@ -140,48 +122,8 @@ class ssa_local_unwindert : public messaget
           const unsigned int unwind_depth,
           symbol_exprt& new_sym,
           local_SSAt::nodest& new_nodes);
- // void init();
   bool is_initialized;
 public :
-#ifdef KIND_ASSUMPTIONS
-  const loop_kind_assumptions_mapt& get_kind_assumptions() const;
-  exprt get_assumptions() const
-  {
-    exprt::operandst c;
-    c.reserve(loop_kind_assumptions_map.size());
-    for(loop_kind_assumptions_mapt::const_iterator it =
-	  loop_kind_assumptions_map.begin();
-	it != loop_kind_assumptions_map.end(); ++it)
-    {
-      c.push_back(implies_exprt(it->second.guardls,it->second.assumptions));
-    }
-    return conjunction(c);
-  }
-  exprt get_loopend_guards() const
-  {
-    exprt::operandst c;
-    c.reserve(loop_kind_assumptions_map.size());
-    for(loop_kind_assumptions_mapt::const_iterator it =
-	  loop_kind_assumptions_map.begin();
-	it != loop_kind_assumptions_map.end(); ++it)
-    {
-      c.push_back(implies_exprt(it->second.guardls,it->second.loopend_guard));
-    }
-    return conjunction(c);
-  }
-  exprt get_assertions() const
-  {
-    exprt::operandst c;
-    c.reserve(loop_kind_assumptions_map.size());
-    for(loop_kind_assumptions_mapt::const_iterator it =
-	  loop_kind_assumptions_map.begin();
-	it != loop_kind_assumptions_map.end(); ++it)
-    {
-      c.push_back(it->second.assumptions);
-    }
-    return conjunction(c);
-  }
-#endif
   void set_return_var(const irep_idt& id);
   void dissect_loop_suffix(const irep_idt& id,
       irep_idt& before_suffix,
@@ -196,10 +138,8 @@ public :
   void init();
   void output(std::ostream& out)
   {
-    //root_node.output(out,SSA.ns);
     SSA.output(out);
   }
-  //std::list<symbol_exprt> enabling_exprs;
 ssa_local_unwindert(local_SSAt& _SSA, bool k_induct, bool _ibmc);
   void unwind(const irep_idt& fname,unsigned int k);
 

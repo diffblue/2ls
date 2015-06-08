@@ -128,9 +128,6 @@ void summarizer_fwt::do_summary(const function_namet &function_name,
   conds.push_back(cond);
   conds.push_back(summary.fw_precondition);
   conds.push_back(ssa_inliner.get_summaries(SSA));
-#ifdef KIND_ASSUMPTIONS
-  conds.push_back(ssa_unwinder.get(function_name).get_assumptions());
-#endif
 
 #ifdef REUSE_INVARIANTS
   if(summary_db.exists(function_name)) //reuse existing invariants

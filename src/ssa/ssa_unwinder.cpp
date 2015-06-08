@@ -56,18 +56,6 @@ void ssa_local_unwindert::dissect_loop_suffix(const irep_idt& id,
     iterations.push_back(string2integer(s.substr(pos+1)).to_ulong());
 
 }
-#ifdef KIND_ASSUMPTIONS
-const ssa_local_unwindert::loop_kind_assumptions_mapt& ssa_local_unwindert::get_kind_assumptions() const
-{
-  return loop_kind_assumptions_map;
-}
-#endif
-#if 0
-const ssa_local_unwindert::kind_assumptionst& ssa_local_unwindert::get_kind_assumptions() const
-{
-  return kind_assumptions;
-}
-#endif
 /*****************************************************************************
  *
  *  Function : ssa_local_unwindert::get_base_name
@@ -986,45 +974,11 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
         rename(guard_select,suffix,i,current_loop);
 
 
-#ifdef KIND_ASSUMPTIONS
-        if(loop_kind_assumptions_map.find(&current_loop)==loop_kind_assumptions_map.end())
-               {
-                 kind_assumptionst kind_assumptions;
-                 kind_assumptions.guardls=guard_select;
-                 kind_assumptions.assumptions=true_exprt();
-                 exprt le_guard = SSA.guard_symbol(current_loop.body_nodes.rbegin()->location);
-                 if(current_loop.is_dowhile)
-                 {
-                 rename(le_guard,suffix,0,current_loop);
-                 }
-                 else
-                 {
-                   rename(le_guard,suffix,1,current_loop);
-                 }
-                 kind_assumptions.loopend_guard=le_guard;
-                 loop_kind_assumptions_map[&current_loop]=kind_assumptions;
-               }
-               else
-               {
-                 loop_kind_assumptions_map[&current_loop].guardls=guard_select;
-               }
-#endif
-
         for(local_SSAt::nodet::assertionst::iterator ait=new_node.assertions.begin();
             ait!=new_node.assertions.end();ait++)
         {
 //          new_node.constraints.push_back(implies_exprt(not_exprt(guard_select),*ait));
-#ifndef KIND_ASSUMPTIONS
           new_node.constraints.push_back(implies_exprt(guard_select,*ait));
-
-#else
-          {
-          exprt &assumption = loop_kind_assumptions_map[&current_loop].assumptions;
-          assumption = and_exprt(assumption,*ait);
-          }
-
-          //kind_assumptions.push_back(implies_exprt(guard_select,*ait));
-#endif
 //          new_node.constraints.push_back(*ait);
         }
 #else
