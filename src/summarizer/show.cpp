@@ -242,7 +242,7 @@ void show_ssa(
 {
   local_SSAt local_SSA(goto_function, ns);
   if(simplify) ::simplify(local_SSA, ns);
-  local_SSA.output(out);
+  local_SSA.output_verbose(out);
 }
 
 /*******************************************************************\
