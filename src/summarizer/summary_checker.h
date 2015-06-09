@@ -1,6 +1,6 @@
 /*******************************************************************\
 
-Module: Summarizer
+Module: Summary Checker
 
 Author: Daniel Kroening, kroening@kroening.com
 
@@ -41,6 +41,7 @@ public:
   }
   
   bool show_vcc, simplify, fixed_point;
+  irep_idt function_to_check;
 
   virtual resultt operator()(const goto_modelt &);
 

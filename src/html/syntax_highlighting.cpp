@@ -87,6 +87,11 @@ public:
     buf.erase(0, 1);
     return result;
   }
+  
+  static inline bool is_identifier_char(char ch)
+  {
+    return isalnum(ch) || ch=='_';
+  }
 };
 
 /*******************************************************************\
@@ -109,10 +114,10 @@ std::string tokenizert::peek()
   
   unsigned pos=1;
   
-  if(isalnum(first))
+  if(is_identifier_char(first))
   {
     // identifier or keyword or number
-    for(pos=1; pos<buf.size() && isalnum(buf[pos]); pos++);
+    for(pos=1; pos<buf.size() && is_identifier_char(buf[pos]); pos++);
   }
   else if(first=='"' || first=='\'')
   {
@@ -196,7 +201,9 @@ void syntax_highlightingt::operator()(const std::string &line)
   }
 
   // open tags  
-  if(different) out << "<strong class=\"different\">";
+  if(!strong_class.empty())
+    out << "<strong class=\"" << strong_class << "\">";
+    
   if(comment) out << "<cite>";
 
   std::string token;  
@@ -234,21 +241,26 @@ void syntax_highlightingt::operator()(const std::string &line)
 
       if(isdigit(token[0])) // numeral
       {
-        out << token;
+        out << html_escape(token);
       }
       else if(isalpha(token[0]))
       {
         if(is_keyword(token))
-          out << "<em>" << token << "</em>";
+          out << "<em>" << html_escape(token) << "</em>";
         else
         {
-          out << "<var onMouseOver=\"var_tooltip('"
-              << token << id_suffix << "', '" << line_no 
-              << "." << ++var_count[token] << "');\""
-                 " onMouseOut=\"tooltip.hide();\""
-                 ">"
-              << token
-              << "</var>";
+          if(identifier_tooltip)
+            out << "<var onMouseOver=\"var_tooltip('"
+                << token << id_suffix << "', '" << line_no 
+                << "." << ++var_count[token] << "');\""
+                   " onMouseOut=\"tooltip.hide();\""
+                   ">";
+          else
+            out << "<var>";
+          
+          out << html_escape(token);
+
+          out << "</var>";
         }
       }
       else if(token=="/*")
@@ -287,7 +299,7 @@ void syntax_highlightingt::operator()(const std::string &line)
 
   // close tags  
   if(comment) out << "</cite>";
-  if(different) out << "</strong>";
+  if(!strong_class.empty()) out << "</strong>";
   
   out << "\n";
 }

@@ -10,14 +10,17 @@ Author: Daniel Kroening, kroening@kroening.com
 #define CPROVER_SUMMARIZER_SUMMARY_DB_H
 
 #include "summary.h"
+#include <util/message.h>
+#include <json/json.h>
 
-class summary_dbt
+class summary_dbt:public messaget
 {
 public:
   typedef irep_idt function_namet;
 
-  void load() const {}
-  void save() const {}
+  // retrieve a summary for function with given identifier
+  void read(const std::string &);
+  void write();
   void clear() { store.clear(); }
 
   summaryt get(const function_namet &function_name) const 
@@ -28,8 +31,13 @@ public:
 
   void mark_recompute_all();
 
- protected:
+  jsont summary;
+
+protected:
   std::map<function_namet, summaryt> store;
+
+  std::string current;
+  std::string file_name(const std::string &);
 };
 
 #endif

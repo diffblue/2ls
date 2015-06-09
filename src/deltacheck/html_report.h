@@ -11,17 +11,16 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <ostream>
 
-#include "../functions/index.h"
+#include <goto-programs/goto_model.h>
 
 void html_report_header(
   std::ostream &out,
-  const indext &index1, const indext &index2,
+  const std::string &old_desc, const std::string &new_desc,
   const std::string &title);
 
 void html_report_header(
-  std::ostream &out,
-  const indext &index1,
-  const std::string &title);
+  const std::string &title,
+  std::ostream &out);
 
 void html_report_footer(std::ostream &out);
 

@@ -347,14 +347,44 @@ int summarizer_parse_optionst::doit()
   if(cmdline.isset("show-ssa"))
   {
     bool simplify=!cmdline.isset("no-simplify");
-    show_ssa(goto_model, simplify, std::cout, ui_message_handler);
+    irep_idt function=cmdline.get_value("function");
+    show_ssa(goto_model, function, simplify, std::cout, ui_message_handler);
     return 7;
   }
 
   if(cmdline.isset("show-fixed-points"))
   {
     bool simplify=!cmdline.isset("no-simplify");
-    show_fixed_points(goto_model, simplify, std::cout, ui_message_handler);
+    irep_idt function=cmdline.get_value("function");
+    show_fixed_points(goto_model, function, simplify, std::cout, ui_message_handler);
+    return 7;
+  }
+
+  if(cmdline.isset("show-defs"))
+  {
+    irep_idt function=cmdline.get_value("function");
+    show_defs(goto_model, function, std::cout, ui_message_handler);
+    return 7;
+  }
+
+  if(cmdline.isset("show-assignments"))
+  {
+    irep_idt function=cmdline.get_value("function");
+    show_assignments(goto_model, function, std::cout, ui_message_handler);
+    return 7;
+  }
+
+  if(cmdline.isset("show-guards"))
+  {
+    irep_idt function=cmdline.get_value("function");
+    show_guards(goto_model, function, std::cout, ui_message_handler);
+    return 7;
+  }
+    
+  if(cmdline.isset("show-value-sets"))
+  {
+    irep_idt function=cmdline.get_value("function");
+    show_value_sets(goto_model, function, std::cout, ui_message_handler);
     return 7;
   }
 
@@ -364,23 +394,6 @@ int summarizer_parse_optionst::doit()
     return 7;
   }
 
-  if(cmdline.isset("show-defs"))
-  {
-    show_defs(goto_model, std::cout, ui_message_handler);
-    return 7;
-  }
-
-  if(cmdline.isset("show-assignments"))
-  {
-    show_assignments(goto_model, std::cout, ui_message_handler);
-    return 7;
-  }
-
-  if(cmdline.isset("show-guards"))
-  {
-    show_guards(goto_model, std::cout, ui_message_handler);
-    return 7;
-  }
 
   if(cmdline.isset("show-invariants")) 
   {

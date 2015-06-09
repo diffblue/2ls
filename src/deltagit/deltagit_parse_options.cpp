@@ -10,6 +10,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <iostream>
 
+#include <util/string2int.h>
+
 #include "../deltacheck/version.h"
 
 #include "show_jobs.h"
@@ -17,12 +19,12 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "init.h"
 #include "reset.h"
 #include "reanalyse.h"
-#include "deltagit_parseoptions.h"
+#include "deltagit_parse_options.h"
 #include "revisions_report.h"
 
 /*******************************************************************\
 
-Function: deltagit_parseoptionst::deltagit_parseoptionst
+Function: deltagit_parse_optionst::deltagit_parse_optionst
 
   Inputs:
 
@@ -32,15 +34,15 @@ Function: deltagit_parseoptionst::deltagit_parseoptionst
 
 \*******************************************************************/
 
-deltagit_parseoptionst::deltagit_parseoptionst(
+deltagit_parse_optionst::deltagit_parse_optionst(
   int argc, const char **argv):
-  parseoptions_baset(DELTACHECK_OPTIONS, argc, argv)
+  parse_options_baset(DELTACHECK_OPTIONS, argc, argv)
 {
 }
   
 /*******************************************************************\
 
-Function: deltagit_parseoptionst::doit
+Function: deltagit_parse_optionst::doit
 
   Inputs:
 
@@ -50,7 +52,7 @@ Function: deltagit_parseoptionst::doit
 
 \*******************************************************************/
 
-int deltagit_parseoptionst::doit()
+int deltagit_parse_optionst::doit()
 {
   if(cmdline.isset("version"))
   {
@@ -134,9 +136,9 @@ int deltagit_parseoptionst::doit()
       unsigned max_revs=0;
       std::string rel_path;
       if(cmdline.isset("max-revs"))
-        max_revs=atol(cmdline.getval("max-revs"));
+        max_revs=unsafe_string2unsigned(cmdline.get_value("max-revs"));
       if(partial_html)
-        rel_path=cmdline.getval("partial-html");
+        rel_path=cmdline.get_value("partial-html");
       revisions_report(partial_html, rel_path, max_revs);
     }
     else
@@ -163,7 +165,7 @@ int deltagit_parseoptionst::doit()
 
 /*******************************************************************\
 
-Function: deltagit_parseoptionst::help
+Function: deltagit_parse_optionst::help
 
   Inputs:
 
@@ -173,7 +175,7 @@ Function: deltagit_parseoptionst::help
 
 \*******************************************************************/
 
-void deltagit_parseoptionst::help()
+void deltagit_parse_optionst::help()
 {
   std::cout <<
     "\n"

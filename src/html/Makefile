@@ -1,7 +1,7 @@
 include ../config.inc
 CBMC ?= ../..
 
-SRC = logo.cpp html_escape.cpp
+SRC = logo.cpp html_escape.cpp syntax_highlighting.cpp
 
 include $(CBMC)/src/config.inc
 include $(CBMC)/src/common

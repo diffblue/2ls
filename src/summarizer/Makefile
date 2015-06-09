@@ -7,7 +7,7 @@ SRC = summarizer_base.cpp  \
       show.cpp summary_checker.cpp cover_goals_ext.cpp \
       summary_db.cpp summary.cpp ssa_db.cpp \
       array_abstraction.cpp preprocessing_util.cpp \
-      instrument_goto.cpp
+      instrument_goto.cpp function_signature.cpp
 
 OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       $(CBMC)/src/linking/linking$(LIBEXT) \
@@ -19,6 +19,7 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       $(CBMC)/src/pointer-analysis/pointer-analysis$(LIBEXT) \
       $(CBMC)/src/langapi/langapi$(LIBEXT) \
       $(CBMC)/src/xmllang/xmllang$(LIBEXT) \
+      $(CBMC)/src/json/json$(LIBEXT) \
       $(CBMC)/src/solvers/solvers$(LIBEXT) \
       $(CBMC)/src/util/util$(LIBEXT) \
 
@@ -32,12 +33,13 @@ DELTA_OBJ+=\
       ../ssa/guard_map$(OBJEXT) \
       ../ssa/ssa_object$(OBJEXT) \
       ../ssa/address_canonizer$(OBJEXT) \
-      ../ssa/ssa_aliasing$(OBJEXT) \
+      ../ssa/ssa_dereference$(OBJEXT) \
       ../ssa/simplify_ssa$(OBJEXT) \
       ../ssa/ssa_build_goto_trace$(OBJEXT) \
       ../ssa/split_loopheads$(OBJEXT)\
       ../ssa/ssa_inliner$(OBJEXT)\
       ../ssa/ssa_unwinder$(OBJEXT)\
+      ../ssa/ssa_value_set$(OBJEXT) \
       ../functions/summary$(OBJEXT) \
       ../functions/get_function$(OBJEXT) \
       ../functions/path_util$(OBJEXT) \

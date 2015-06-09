@@ -157,11 +157,20 @@ var property_event=function(row, what, ce) {
   }
   else if(what=='click')
   {
-    if(property_selected!=0) property_selected.bgColor='#ffffff';
+    if(property_selected != 0) property_selected.bgColor='#ffffff';
     row.bgColor='#31d1ff';
     property_selected=row;
     var_values=ce;
   }
+}
+
+var X_selected = 0;
+
+var X_click=function(X_span, ce) {
+  if(X_selected != 0) X_selected.style.color='#cc0000';
+  X_span.style.color='#31d1ff';
+  X_selected=X_span;
+  var_values=ce;
 }
 
 var var_tooltip=function(id, where) {

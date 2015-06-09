@@ -6,11 +6,11 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef CPROVER_DELTACHECK_PARSEOPTIONS_H
-#define CPROVER_DELTACHECK_PARSEOPTIONS_H
+#ifndef CPROVER_DELTACHECK_PARSE_OPTIONS_H
+#define CPROVER_DELTACHECK_PARSE_OPTIONS_H
 
 #include <util/ui_message.h>
-#include <util/parseoptions.h>
+#include <util/parse_options.h>
 #include <util/options.h>
 
 #include <goto-programs/goto_functions.h>
@@ -20,15 +20,15 @@ Author: Daniel Kroening, kroening@kroening.com
   "(function):" \
   "(debug-level):" \
   "(xml-ui)(xml-interface)" \
-  "(verbosity):(version)(index):(description):" \
+  "(verbosity):(version)(index):(description-old):(description-new):" \
   "(bounds-check)(pointer-check)(div-by-zero-check)" \
   "(signed-overflow-check)(unsigned-overflow-check)(nan-check)" \
   "(show-ssa)(show-defs)(show-guards)(show-fixed-points)" \
   "(show-properties)(show-change-impact)(show-diff)" \
   "(no-inline)(sat)"
 
-class deltacheck_parseoptionst:
-  public parseoptions_baset,
+class deltacheck_parse_optionst:
+  public parse_options_baset,
   public xml_interfacet,
   public messaget
 {
@@ -36,7 +36,7 @@ public:
   virtual int doit();
   virtual void help();
 
-  deltacheck_parseoptionst(
+  deltacheck_parse_optionst(
     int argc, const char **argv);
 
 protected:

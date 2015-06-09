@@ -11,25 +11,25 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <memory>
 #include <iostream>
 
-#include <util/i2string.h>
 #include <util/config.h>
 #include <util/symbol_table.h>
+#include <util/string2int.h>
 
 #include <langapi/mode.h>
 #include <cbmc/version.h>
 #include <ansi-c/ansi_c_language.h>
 #include <cpp/cpp_language.h>
+#include <goto-programs/read_goto_binary.h>
 
-#include "../functions/index.h"
-#include "deltacheck_parseoptions.h"
+#include "deltacheck_parse_options.h"
 #include "version.h"
 #include "analyzer.h"
 #include "change_impact.h"
-#include "show.h"
+#include "../functions/path_util.h"
 
 /*******************************************************************\
 
-Function: deltacheck_parseoptionst::deltacheck_parseoptionst
+Function: deltacheck_parse_optionst::deltacheck_parse_optionst
 
   Inputs:
 
@@ -39,9 +39,9 @@ Function: deltacheck_parseoptionst::deltacheck_parseoptionst
 
 \*******************************************************************/
 
-deltacheck_parseoptionst::deltacheck_parseoptionst(
+deltacheck_parse_optionst::deltacheck_parse_optionst(
   int argc, const char **argv):
-  parseoptions_baset(DELTACHECK_OPTIONS, argc, argv),
+  parse_options_baset(DELTACHECK_OPTIONS, argc, argv),
   xml_interfacet(cmdline),
   ui_message_handler(
     cmdline.isset("xml-ui")?ui_message_handlert::XML_UI:ui_message_handlert::PLAIN,
@@ -51,7 +51,7 @@ deltacheck_parseoptionst::deltacheck_parseoptionst(
   
 /*******************************************************************\
 
-Function: deltacheck_parseoptionst::eval_verbosity
+Function: deltacheck_parse_optionst::eval_verbosity
 
   Inputs:
 
@@ -61,14 +61,14 @@ Function: deltacheck_parseoptionst::eval_verbosity
 
 \*******************************************************************/
 
-void deltacheck_parseoptionst::eval_verbosity()
+void deltacheck_parse_optionst::eval_verbosity()
 {
   // our default verbosity
   int v=messaget::M_STATISTICS;
   
   if(cmdline.isset("verbosity"))
   {
-    v=atoi(cmdline.getval("verbosity"));
+    v=unsafe_string2int(cmdline.get_value("verbosity"));
     if(v<0)
       v=0;
     else if(v>10)
@@ -80,7 +80,7 @@ void deltacheck_parseoptionst::eval_verbosity()
 
 /*******************************************************************\
 
-Function: deltacheck_parseoptionst::get_command_line_options
+Function: deltacheck_parse_optionst::get_command_line_options
 
   Inputs:
 
@@ -90,7 +90,7 @@ Function: deltacheck_parseoptionst::get_command_line_options
 
 \*******************************************************************/
 
-void deltacheck_parseoptionst::get_command_line_options(optionst &options)
+void deltacheck_parse_optionst::get_command_line_options(optionst &options)
 {
   if(config.set(cmdline))
   {
@@ -99,7 +99,7 @@ void deltacheck_parseoptionst::get_command_line_options(optionst &options)
   }
 
   if(cmdline.isset("debug-level"))
-    options.set_option("debug-level", cmdline.getval("debug-level"));
+    options.set_option("debug-level", cmdline.get_value("debug-level"));
 
   // check array bounds
   if(cmdline.isset("bounds-check"))
@@ -152,7 +152,7 @@ void deltacheck_parseoptionst::get_command_line_options(optionst &options)
 
 /*******************************************************************\
 
-Function: deltacheck_parseoptionst::register_langauges
+Function: deltacheck_parse_optionst::register_langauges
 
   Inputs:
 
@@ -162,7 +162,7 @@ Function: deltacheck_parseoptionst::register_langauges
 
 \*******************************************************************/
 
-void deltacheck_parseoptionst::register_languages()
+void deltacheck_parse_optionst::register_languages()
 {
   register_language(new_ansi_c_language);
   register_language(new_cpp_language);
@@ -170,7 +170,7 @@ void deltacheck_parseoptionst::register_languages()
 
 /*******************************************************************\
 
-Function: deltacheck_parseoptionst::doit
+Function: deltacheck_parse_optionst::doit
 
   Inputs:
 
@@ -180,7 +180,7 @@ Function: deltacheck_parseoptionst::doit
 
 \*******************************************************************/
 
-int deltacheck_parseoptionst::doit()
+int deltacheck_parse_optionst::doit()
 {
   if(cmdline.isset("version"))
   {
@@ -199,226 +199,89 @@ int deltacheck_parseoptionst::doit()
 
   try
   {
-    // We have two phases:
-    // 1) indexing: given some goto-binaries, produce index
-    // 2) delta checking: given two indices, do delta checking
-    
-    if(cmdline.isset("index"))
-    {
-      status() << "Building index `" << cmdline.getval("index") << "'" << eom;
-      
-      std::ofstream out(cmdline.getval("index"));
-      if(!out)
-      {
-        error() << "failed to open output file `"
-                << cmdline.getval("index") << "' " << eom;
-        return 11;
-      }
-      
-      std::string description;
-      if(cmdline.isset("description"))
-        description=cmdline.getval("description");
-      
-      indext index;
-      index.set_message_handler(get_message_handler());
-
-      if(cmdline.args.size()==0)
-      {
-        // read from stdin
-        std::vector<std::string> files;
-        std::string line;
-        while(std::getline(std::cin, line))
-        {
-          if(!line.empty())
-            files.push_back(line);
-        }
-
-        index.build(files, description);
-      }
-      else
-        index.build(cmdline.args, description);
-
-      index.write(out);
-      return 0;
-    }
-    
     options.set_option("simplify", true);
     options.set_option("assertions", true);
     options.set_option("assumptions", true);
     
-    if(cmdline.isset("show-ssa"))
-    {
-      if(cmdline.args.size()!=1)
-      {
-        usage_error();
-        return 10;
-      }
-
-      indext index;
-      index.set_message_handler(get_message_handler());
-  
-      status() << "Reading index" << eom;
-      index.read(cmdline.args[0]);
-
-      show_ssa(index, options, std::cout, get_message_handler());
-      return 0;
-    }
-
-    if(cmdline.isset("show-defs"))
-    {
-      if(cmdline.args.size()!=1)
-      {
-        usage_error();
-        return 10;
-      }
-
-      indext index;
-      index.set_message_handler(get_message_handler());
-      index.read(cmdline.args[0]);
-
-      show_defs(index, options, std::cout, get_message_handler());
-      return 0;
-    }
-
-    if(cmdline.isset("show-guards"))
-    {
-      if(cmdline.args.size()!=1)
-      {
-        usage_error();
-        return 10;
-      }
-
-      indext index;
-      index.set_message_handler(get_message_handler());
-      index.read(cmdline.args[0]);
-
-      show_guards(index, options, std::cout, get_message_handler());
-      return 0;
-    }
-
-    if(cmdline.isset("show-fixed-points"))
-    {
-      if(cmdline.args.size()!=1)
-      {
-        usage_error();
-        return 10;
-      }
-
-      indext index;
-      index.set_message_handler(get_message_handler());
-      index.read(cmdline.args[0]);
-
-      show_fixed_points(index, options, std::cout, get_message_handler());
-      return 0;
-    }
-
-    if(cmdline.isset("show-properties"))
-    {
-      if(cmdline.args.size()!=1)
-      {
-        usage_error();
-        return 10;
-      }
-
-      indext index;
-      index.set_message_handler(get_message_handler());
-  
-      status() << "Reading index" << eom;
-      index.read(cmdline.args[0]);
-
-      show_properties(index, options, std::cout, get_message_handler());
-      return 0;
-    }
-
-    if(cmdline.isset("show-diff"))
-    {
-      if(cmdline.args.size()!=2)
-      {
-        usage_error();
-        return 10;
-      }
-
-      indext index1, index2;
-      index1.set_message_handler(get_message_handler());
-      index2.set_message_handler(get_message_handler());
-  
-      index1.read(cmdline.args[0]);
-      index2.read(cmdline.args[1]);
-
-      change_impactt change_impact;
-      change_impact.set_message_handler(get_message_handler());
-      
-      change_impact.diff(index1, index2);
-      change_impact.output_diff(std::cout);
-
-      return 0;
-    }
+    if(cmdline.isset("function"))
+      options.set_option("function", cmdline.get_value("function"));
     
-    if(cmdline.isset("show-change-impact"))
-    {
-      if(cmdline.args.size()!=2)
-      {
-        usage_error();
-        return 10;
-      }
-
-      indext index1, index2;
-      index1.set_message_handler(get_message_handler());
-      index2.set_message_handler(get_message_handler());
-  
-      index1.read(cmdline.args[0]);
-      index2.read(cmdline.args[1]);
-
-      change_impactt change_impact;
-      change_impact.set_message_handler(get_message_handler());
-      
-      status() << "Computing syntactic difference" << eom;
-      change_impact.diff(index1, index2);
-
-      status() << "Change-impact analysis" << eom;
-      change_impact.change_impact(index2);
-
-      change_impact.output_change_impact(std::cout);
-
-      return 0;
-    }
-    
-    if(cmdline.args.size()==2)
-    {
-      indext index1, index2;
-      index1.set_message_handler(get_message_handler());
-      index2.set_message_handler(get_message_handler());
-  
-      index1.read(cmdline.args[0]);
-      index2.read(cmdline.args[1]);
-
-      deltacheck_analyzer(index1, index2, options, get_message_handler());
-    }
-    else if(cmdline.args.size()==1)
-    {
-      indext index;
-      index.set_message_handler(get_message_handler());
-  
-      index.read(cmdline.args[0]);
-
-      one_program_analyzer(index, options, get_message_handler());
-    }
-    else
+    if(cmdline.args.size()!=2)
     {
       usage_error();
       return 10;
     }
+
+    if(cmdline.isset("description-old"))
+      options.set_option("description-old", cmdline.get_value("description-old"));
+    else
+      options.set_option("description-old", cmdline.args[0]);
+    
+    if(cmdline.isset("description-new"))
+      options.set_option("description-new", cmdline.get_value("description-new"));
+    else
+      options.set_option("description-new", cmdline.args[1]);
+    
+    status() << "Reading first GOTO program from file" << eom;
+    
+    goto_modelt goto_model1;
+
+    if(read_goto_binary(cmdline.args[0],
+         goto_model1, get_message_handler()))
+      return 10;
+      
+    status() << "Reading second GOTO program from file" << eom;
+    
+    goto_modelt goto_model2;
+
+    if(read_goto_binary(cmdline.args[1],
+         goto_model2, get_message_handler()))
+      return 10;
+      
+    if(cmdline.isset("show-diff"))
+    {
+      change_impactt change_impact;
+      change_impact.set_message_handler(get_message_handler());
+    
+      change_impact.diff(goto_model1, goto_model2);
+      change_impact.output_diff(std::cout);
+    }
+    else if(cmdline.isset("show-change-impact"))
+    {
+      change_impactt change_impact;
+      change_impact.set_message_handler(get_message_handler());
+    
+      status() << "Computing syntactic difference" << eom;
+      change_impact.diff(goto_model1, goto_model2);
+
+      status() << "Change-impact analysis" << eom;
+      change_impact.change_impact(goto_model2);
+
+      change_impact.output_change_impact(std::cout);
+    }
+    else
+    {
+      std::string path1=get_directory(cmdline.args[0]);
+      std::string path2=get_directory(cmdline.args[1]);
+    
+      deltacheck_analyzer(
+        path1, goto_model1,
+        path2, goto_model2,
+        options, get_message_handler());
+    }
+    
+    return 0;
   }
 
   catch(const char *e)
   {
-    error(e);
+    error() << e << eom;
     return 13;
   }
 
   catch(const std::string &e)
   {
-    error(e);
+    error() << e << eom;
     return 13;
   }
   
@@ -438,7 +301,7 @@ int deltacheck_parseoptionst::doit()
 
 /*******************************************************************\
 
-Function: deltacheck_parseoptionst::help
+Function: deltacheck_parse_optionst::help
 
   Inputs:
 
@@ -448,11 +311,11 @@ Function: deltacheck_parseoptionst::help
 
 \*******************************************************************/
 
-void deltacheck_parseoptionst::help()
+void deltacheck_parse_optionst::help()
 {
   std::cout <<
     "\n"
-    "* *         DELTACHECK " DELTACHECK_VERSION " - Copyright (C) 2011-2014        * *\n"
+    "* *         DELTACHECK " DELTACHECK_VERSION " - Copyright (C) 2011-2015        * *\n"
     "* *                    based on CBMC " CBMC_VERSION "                    * *\n"
     "* *                     Daniel Kroening                     * *\n"
     "* *      Oxford University, Computer Science Department     * *\n"
@@ -461,20 +324,12 @@ void deltacheck_parseoptionst::help()
     "Usage:                       Purpose:\n"
     "\n"
     " deltacheck [-?] [-h] [--help] show help\n"
-    " deltacheck --index           \n"
-    "   index-file.xml file(s)     build index for given file(s)\n"
-    " deltacheck --index           \n"
-    "   index-file.xml < list      build index for files given as list\n"
-    " deltacheck index1 index2     delta check two versions\n"
-    "\n"
-    "Indexing options:\n"
+    " deltacheck prog1 prog2       delta check two programs\n"
     "\n"
     "Delta checking options:\n"
-    " --show-ssa                   show SSA\n"
-    " --show-guards                show guards\n"
-    " --show-properties            show the properties\n"
-    " --show-fixed-points          show the fixed-points for the loops\n"
     " --show-change-impact         show syntactic change-impact\n"
+    " --description-old text       description of old version\n"
+    " --description-new text       description of new version\n"
     "\n"
     "Safety checks:\n"
     " --bounds-check               add array bounds checks\n"

@@ -1,16 +1,16 @@
 /*******************************************************************\
 
-Module: Abstract Interface for a Function Summary
+Module: Property View
 
 Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include "function_summary.h"
+#include "data.h"
 
 /*******************************************************************\
 
-Function: 
+Function: property_view
 
   Inputs:
 
@@ -19,3 +19,12 @@ Function:
  Purpose:
 
 \*******************************************************************/
+
+void property_view(const class datat &)
+{
+
+}
+
+
+
+

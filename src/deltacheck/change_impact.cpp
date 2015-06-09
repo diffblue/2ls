@@ -27,70 +27,22 @@ Function: change_impactt::diff
 \*******************************************************************/
 
 void change_impactt::diff(
-  const indext &old_index,
-  const indext &new_index)
+  const goto_modelt &old_model,
+  const goto_modelt &new_model)
 {
-  for(indext::file_to_functiont::const_iterator
-      new_file_it=new_index.file_to_function.begin();
-      new_file_it!=new_index.file_to_function.end();
-      new_file_it++)
+  for(goto_functionst::function_mapt::const_iterator
+      new_fkt_it=new_model.goto_functions.function_map.begin();
+      new_fkt_it!=new_model.goto_functions.function_map.end();
+      new_fkt_it++)
   {
-    // read the new file
-    goto_modelt new_model;
-    read_goto_binary(new_index.full_path(new_file_it), new_model, get_message_handler());
+    // try to find 'corresponding function' in old_model
+    goto_functionst::function_mapt::const_iterator
+      old_fkt_it=old_model.goto_functions.function_map.find(new_fkt_it->first);
 
-    // do call graph edges
-    do_call_graph(new_index, new_file_it->first, new_model);
-
-    function_mapt &functions=file_map[new_file_it->first];
-
-    // is there a corresponding old file?
-    indext::file_to_functiont::const_iterator old_file_it=
-      old_index.file_to_function.find(new_file_it->first);
-    
-    if(old_file_it==old_index.file_to_function.end())
-    {
-      for(goto_functionst::function_mapt::const_iterator
-          new_fkt_it=new_model.goto_functions.function_map.begin();
-          new_fkt_it!=new_model.goto_functions.function_map.end();
-          new_fkt_it++)
-      {
-        // no corresponding old file, try elsewhere
-        get_functiont get_function(old_index);
-        
-        goto_functionst::goto_functiont *old_fkt=
-          get_function(new_fkt_it->first);
-          
-        if(old_fkt==NULL)
-        {
-          // old not found, mark as changed
-          functions[new_fkt_it->first].fully_changed=true;
-        }
-        else
-          diff_functions(new_file_it->first, new_fkt_it->first, *old_fkt, new_fkt_it->second);
-      }
-    }
+    if(old_fkt_it==old_model.goto_functions.function_map.end())
+      function_map[new_fkt_it->first].fully_changed=true;
     else
-    {
-      // read the old file
-      goto_modelt old_model;
-      read_goto_binary(old_index.full_path(old_file_it), old_model, get_message_handler());
-      
-      for(goto_functionst::function_mapt::const_iterator
-          new_fkt_it=new_model.goto_functions.function_map.begin();
-          new_fkt_it!=new_model.goto_functions.function_map.end();
-          new_fkt_it++)
-      {
-        // try to find 'corresponding function' in old_model
-        goto_functionst::function_mapt::const_iterator
-          old_fkt_it=old_model.goto_functions.function_map.find(new_fkt_it->first);
-
-        if(old_fkt_it==old_model.goto_functions.function_map.end())
-          functions[new_fkt_it->first].fully_changed=true;
-        else
-          diff_functions(new_file_it->first, new_fkt_it->first, old_fkt_it->second, new_fkt_it->second);
-      }
-    }
+      diff_functions(new_fkt_it->first, old_fkt_it->second, new_fkt_it->second);
   }
 }
 
@@ -107,7 +59,6 @@ Function: change_impactt::diff_functions
 \*******************************************************************/
 
 void change_impactt::diff_functions(
-  const irep_idt &file,
   const irep_idt &function_id,
   const goto_functionst::goto_functiont &old_f,
   const goto_functionst::goto_functiont &new_f)
@@ -134,7 +85,7 @@ void change_impactt::diff_functions(
   }
   
   // now diff
-  datat &data=file_map[file][function_id];
+  datat &data=function_map[function_id];
   
   goto_programt::instructionst::const_iterator
     old_it=old_body.instructions.begin();
@@ -178,48 +129,24 @@ Function: change_impactt::output_diff
 
 void change_impactt::output_diff(std::ostream &out)
 {
-  for(file_mapt::const_iterator
-      file_it=file_map.begin(); file_it!=file_map.end(); file_it++)
+  for(function_mapt::const_iterator
+      fkt_it=function_map.begin();
+      fkt_it!=function_map.end();
+      fkt_it++)
   {
-    const function_mapt &function_map=file_it->second;
-    
-    bool change_found=false;
-    
-    for(function_mapt::const_iterator
-        fkt_it=function_map.begin();
-        fkt_it!=function_map.end();
-        fkt_it++)
-      if(fkt_it->second.has_change())
-      {
-        change_found=true;
-        break;
-      }
-    
-    if(!change_found) continue;
-
-    out << "******* File " << file_it->first << "\n";
-    
-    for(function_mapt::const_iterator
-        fkt_it=function_map.begin();
-        fkt_it!=function_map.end();
-        fkt_it++)
+    if(fkt_it->second.fully_changed)
+      out << fkt_it->first << ": *\n";
+    else if(!fkt_it->second.locs_changed.empty())
     {
-      if(fkt_it->second.fully_changed)
-        out << fkt_it->first << ": *\n";
-      else if(!fkt_it->second.locs_changed.empty())
-      {
-        out << fkt_it->first << ":";
-        for(std::set<unsigned>::const_iterator
-            l_it=fkt_it->second.locs_changed.begin();
-            l_it!=fkt_it->second.locs_changed.end();
-            l_it++)
-          out << " " << *l_it;
+      out << fkt_it->first << ":";
+      for(std::set<unsigned>::const_iterator
+          l_it=fkt_it->second.locs_changed.begin();
+          l_it!=fkt_it->second.locs_changed.end();
+          l_it++)
+        out << " " << *l_it;
 
-        out << "\n";
-      }
+      out << "\n";
     }
-    
-    out << "\n";
   }
 }
 
@@ -237,49 +164,27 @@ Function: change_impactt::output_change_impact
 
 void change_impactt::output_change_impact(std::ostream &out)
 {
-  for(file_mapt::const_iterator
-      file_it=file_map.begin(); file_it!=file_map.end(); file_it++)
+  for(function_mapt::const_iterator
+      fkt_it=function_map.begin();
+      fkt_it!=function_map.end();
+      fkt_it++)
   {
-    const function_mapt &function_map=file_it->second;
-    
-    bool is_affected=false;
-    
-    for(function_mapt::const_iterator
-        fkt_it=function_map.begin();
-        fkt_it!=function_map.end();
-        fkt_it++)
-      if(fkt_it->second.is_affected())
-      {
-        is_affected=true;
-        break;
-      }
-    
-    if(!is_affected) continue;
-
-    out << "******* File " << file_it->first << "\n";
-    
-    for(function_mapt::const_iterator
-        fkt_it=function_map.begin();
-        fkt_it!=function_map.end();
-        fkt_it++)
+    if(fkt_it->second.fully_affected)
+      out << fkt_it->first << "\n";
+    else if(!fkt_it->second.locs_affected.empty())
     {
-      if(fkt_it->second.fully_affected)
-        out << fkt_it->first << "\n";
-      else if(!fkt_it->second.locs_affected.empty())
-      {
-        out << fkt_it->first << ":";
-        for(std::set<unsigned>::const_iterator
-            l_it=fkt_it->second.locs_affected.begin();
-            l_it!=fkt_it->second.locs_affected.end();
-            l_it++)
-          out << " " << *l_it;
+      out << fkt_it->first << ":";
+      for(std::set<unsigned>::const_iterator
+          l_it=fkt_it->second.locs_affected.begin();
+          l_it!=fkt_it->second.locs_affected.end();
+          l_it++)
+        out << " " << *l_it;
 
-        out << "\n";
-      }
+      out << "\n";
     }
-    
-    out << "\n";
   }
+  
+  out << "\n";
 }
 
 /*******************************************************************\
@@ -294,40 +199,29 @@ Function: change_impactt::change_impact
 
 \*******************************************************************/
 
-void change_impactt::change_impact(const indext &new_index)
+void change_impactt::change_impact(const goto_modelt &new_model)
 {
-  std::stack<f_idt> working;
+  std::stack<irep_idt> working;
   
   // stash everything with change into the working set
-  for(file_mapt::const_iterator
-      file_it=file_map.begin();
-      file_it!=file_map.end();
-      file_it++)
+  for(function_mapt::const_iterator
+      function_it=function_map.begin();
+      function_it!=function_map.end();
+      function_it++)
   {
-    for(function_mapt::const_iterator
-        function_it=file_it->second.begin();
-        function_it!=file_it->second.end();
-        function_it++)
+    if(function_it->second.has_change())
     {
-      if(function_it->second.has_change())
-      {
-        f_idt f_id;
-        f_id.function_id=function_it->first;
-        f_id.file=file_it->first;
-        working.push(f_id);
-      }
+      working.push(function_it->first);
     }
   }
-
-  get_functiont get_function(new_index);
 
   // main loop
   while(!working.empty())
   {
-    const f_idt f_id=working.top();
+    const irep_idt f_id=working.top();
     working.pop();
     
-    propagate_affected(new_index, get_function, f_id, working);
+    propagate_affected(new_model, f_id, working);
   }
 }
 
@@ -344,21 +238,22 @@ Function: change_impactt::propagate_affected
 \*******************************************************************/
 
 void change_impactt::propagate_affected(
-  const indext &new_index,
-  get_functiont &get_function,
-  const f_idt &f_id,
-  std::stack<f_idt> &working_fkts)
+  const goto_modelt &new_model,
+  const irep_idt &f_id,
+  std::stack<irep_idt> &working_fkts)
 {
-  datat &data=file_map[f_id.file][f_id.function_id];
+  datat &data=function_map[f_id];
 
   if(data.fully_affected) return; // done already
   
   // get it
-  goto_functionst::goto_functiont *fkt=
-    get_function(f_id.function_id);
-    
-  if(fkt==NULL) return; // give up
-  const goto_programt &body=fkt->body;
+  goto_functionst::function_mapt::const_iterator f_it=
+    new_model.goto_functions.function_map.find(f_id);
+
+  if(f_it==new_model.goto_functions.function_map.end())
+    return; // give up
+
+  const goto_programt &body=f_it->second.body;
   if(body.empty()) return; // give up
   
   std::stack<goto_programt::const_targett> working_locs;
@@ -376,8 +271,8 @@ void change_impactt::propagate_affected(
       if(call.function().id()==ID_symbol)
       {
         const symbol_exprt &symbol=to_symbol_expr(call.function());
-        f_idt called_f_id=get_f_id(new_index, f_id.file, symbol.get_identifier());
-        if(file_map[called_f_id.file][called_f_id.function_id].is_affected())
+        irep_idt called_f_id=symbol.get_identifier();
+        if(function_map[called_f_id].is_affected())
           working_locs.push(l);
       }
     }
@@ -398,7 +293,7 @@ void change_impactt::propagate_affected(
       if(call.function().id()==ID_symbol)
       {
         const symbol_exprt &symbol=to_symbol_expr(call.function());
-        f_idt called_f_id=get_f_id(new_index, f_id.file, symbol.get_identifier());
+        irep_idt called_f_id=symbol.get_identifier();
         make_fully_affected(called_f_id);
       }
     }
@@ -430,23 +325,23 @@ Function: change_impactt::make_fully_affected
 
 \*******************************************************************/
 
-void change_impactt::make_fully_affected(const f_idt &f_id)
+void change_impactt::make_fully_affected(const irep_idt &f_id)
 {
-  std::stack<f_idt> working;
+  std::stack<irep_idt> working;
   
   working.push(f_id);
   
   while(!working.empty())
   {
-    const f_idt f_id=working.top();
+    const irep_idt f_id=working.top();
     working.pop();
     
-    datat &data=file_map[f_id.file][f_id.function_id];
+    datat &data=function_map[f_id];
     if(data.fully_affected) continue;
     data.fully_affected=true;
 
     // recursively make all functions that are called fully affected
-    for(std::set<f_idt>::const_iterator
+    for(std::set<irep_idt>::const_iterator
         called_it=data.calls.begin();
         called_it!=data.calls.end();
         called_it++)
@@ -469,8 +364,6 @@ Function: change_impactt::do_call_graph
 \*******************************************************************/
 
 void change_impactt::do_call_graph(
-  const indext &index,
-  const irep_idt &file,
   const goto_modelt &model)
 {
   for(goto_functionst::function_mapt::const_iterator
@@ -478,11 +371,7 @@ void change_impactt::do_call_graph(
       new_fkt_it!=model.goto_functions.function_map.end();
       new_fkt_it++)
   {
-    f_idt this_f_id;
-    this_f_id.file=file;
-    this_f_id.function_id=new_fkt_it->first;
-  
-    datat &data=file_map[file][new_fkt_it->first];
+    datat &data=function_map[new_fkt_it->first];
 
     const goto_programt &body=new_fkt_it->second.body;
     
@@ -493,9 +382,8 @@ void change_impactt::do_call_graph(
         if(call.function().id()==ID_symbol)
         {
           const symbol_exprt &symbol=to_symbol_expr(call.function());
-          const f_idt called_f_id=get_f_id(index, file, symbol.get_identifier());
+          const irep_idt called_f_id=symbol.get_identifier();
           data.calls.insert(called_f_id);
-          file_map[called_f_id.file][called_f_id.function_id].called_by.insert(this_f_id);
         }
       }
   }
