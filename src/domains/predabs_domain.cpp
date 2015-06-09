@@ -1,5 +1,5 @@
 #include "predabs_domain.h"
-#include "tpolyhedra_domain.h"
+#include "util.h"
 
 #include <iostream>
 
@@ -15,7 +15,7 @@
 /*******************************************************************\
 
 Function: predabs_domaint::initialize
-xs
+
   Inputs:
 
  Outputs:
@@ -149,7 +149,8 @@ void predabs_domaint::make_not_post_constraints(const templ_valuet &value,
   exprt::operandst c; 
   for(unsigned row = 0; row<templ.size(); row++)
   {
-    cond_exprs[row] = not_exprt(get_row_post_constraint(row,value));
+    cond_exprs[row] = and_exprt(templ[row].aux_expr,
+				not_exprt(get_row_post_constraint(row,value)));
   }
 }
 
@@ -268,7 +269,8 @@ void predabs_domaint::output_value(std::ostream &out, const valuet &value,
     {
     case LOOP:
       out << "(LOOP) [ " << from_expr(ns,"",templ_row.pre_guard) << " | ";
-      out << from_expr(ns,"",templ_row.post_guard) << " ] ===> " << std::endl << "       ";
+      out << from_expr(ns,"",templ_row.post_guard) << " | ";
+      out << from_expr(ns,"",templ_row.aux_expr) << " ] ===> " << std::endl << "       ";
       break;
     case IN: out << "(IN)   "; break;
     case OUT: case OUTL: out << "(OUT)  "; break;
@@ -300,7 +302,8 @@ void predabs_domaint::output_domain(std::ostream &out, const namespacet &ns) con
     {
     case LOOP:
       out << "(LOOP) [ " << from_expr(ns,"",templ_row.pre_guard) << " | ";
-      out << from_expr(ns,"",templ_row.post_guard) << " ] ===> " << std::endl << "      ";
+      out << from_expr(ns,"",templ_row.post_guard) << " | ";
+      out << from_expr(ns,"",templ_row.aux_expr) << " ] ===> " << std::endl << "      ";
       break;
     case IN: 
       out << "(IN)   ";

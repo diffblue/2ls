@@ -1,4 +1,5 @@
 #include "equality_domain.h"
+#include "util.h"
 
 #include <iostream>
 
@@ -54,7 +55,9 @@ exprt equality_domaint::get_post_not_equ_constraint(unsigned index)
   const template_rowt &templ_row = templ[index];
   if(templ_row.kind==IN) return true_exprt();
   const var_pairt &vv = templ_row.var_pair;
-  exprt c = not_exprt(implies_exprt(templ_row.post_guard,equal_exprt(vv.first,vv.second)));
+  exprt c = and_exprt(templ_row.aux_expr,
+		      not_exprt(implies_exprt(templ_row.post_guard,
+					    equal_exprt(vv.first,vv.second))));
   rename(c);
   return c;
 }
@@ -74,7 +77,9 @@ exprt equality_domaint::get_post_not_disequ_constraint(unsigned index)
   const template_rowt &templ_row = templ[index];
   if(templ_row.kind==IN) return true_exprt();
   const var_pairt &vv = templ_row.var_pair;
-  exprt c = not_exprt(implies_exprt(templ_row.post_guard,notequal_exprt(vv.first,vv.second)));
+  exprt c = and_exprt(templ_row.aux_expr,
+		      not_exprt(implies_exprt(templ_row.post_guard,
+					  notequal_exprt(vv.first,vv.second))));
   rename(c);
   return c;
 }
@@ -257,7 +262,8 @@ void equality_domaint::output_domain(std::ostream &out,
     {
     case LOOP:
       out << "(LOOP) [ " << from_expr(ns,"",templ_row.pre_guard) << " | ";
-      out << from_expr(ns,"",templ_row.post_guard) 
+      out << from_expr(ns,"",templ_row.post_guard) << " | ";
+      out << from_expr(ns,"",templ_row.aux_expr) 
 	  << " ] ===> " << std::endl << "      ";
       break;
     case IN: 
@@ -370,6 +376,7 @@ void equality_domaint::make_template(
 		   null_pointer_exprt(to_pointer_type(v1->var.type())));
       templ_row.pre_guard = v1->pre_guard;
       templ_row.post_guard = v1->post_guard;
+      templ_row.aux_expr = v1->aux_expr;
       templ_row.kind = v1->kind;      
     }
 
@@ -379,10 +386,10 @@ void equality_domaint::make_template(
       kindt k = domaint::merge_kinds(v1->kind,v2->kind);
       //if(k==IN) continue; //TODO: must be done in caller (for preconditions, e.g.)
 
-      exprt pre_g = and_exprt(v1->pre_guard,v2->pre_guard);
-      exprt post_g = and_exprt(v1->post_guard,v2->post_guard);
-      simplify(pre_g,ns);
-      simplify(post_g,ns);
+      exprt pre_g, post_g, aux_expr;
+      merge_and(pre_g, v1->pre_guard, v2->pre_guard, ns);
+      merge_and(post_g, v1->post_guard, v2->post_guard, ns);
+      merge_and(aux_expr, v1->aux_expr, v2->aux_expr, ns);
 
       exprt vv1 = v1->var;
       exprt vv2 = v2->var;
@@ -393,6 +400,7 @@ void equality_domaint::make_template(
       templ_row.var_pair = var_pairt(vv1,vv2);
       templ_row.pre_guard = pre_g;
       templ_row.post_guard = post_g;
+      templ_row.aux_expr = aux_expr;
       templ_row.kind = k;
     }
   }

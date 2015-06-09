@@ -320,6 +320,7 @@ exprt dereference_rec(
         it!=values.value_set.end();
         it++)
     {
+      //TODO: Here is the problem: The guard has to compare objects
       exprt guard=ssa_alias_guard(src, it->get_expr(), ns);
       exprt value=ssa_alias_value(src, it->get_expr(), ns);
       result=if_exprt(guard, value, result);

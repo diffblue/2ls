@@ -693,7 +693,8 @@ void tpolyhedra_domaint::output_value(std::ostream &out, const valuet &value,
     {
     case LOOP:
       out << "(LOOP) [ " << from_expr(ns,"",templ_row.pre_guard) << " | ";
-      out << from_expr(ns,"",templ_row.post_guard) << " ] ===> " << std::endl << "       ";
+      out << from_expr(ns,"",templ_row.post_guard) << " | ";
+      out << from_expr(ns,"",templ_row.aux_expr) << " ] ===> " << std::endl << "       ";
       break;
     case IN: out << "(IN)   "; break;
     case OUT: case OUTL: out << "(OUT)  "; break;

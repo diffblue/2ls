@@ -5,7 +5,7 @@ void main()
   while(x<10)
   {
     x++; 
-    while(y<x)
+    while(y<x) //equality does not hold at loop head
     {
       y++;
     }

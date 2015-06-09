@@ -114,11 +114,4 @@ protected:
   
 };
 
-void extend_expr_types(exprt &expr);
-constant_exprt simplify_const(const exprt &expr);
-ieee_floatt simplify_const_float(const exprt &expr);
-mp_integer simplify_const_int(const exprt &expr);
-
-
-
 #endif

@@ -502,8 +502,9 @@ bool template_generator_baset::instantiate_custom_templates(
   {
     if(n_it->loophead != SSA.nodes.end()) //we've found a loop
     {
-      exprt pre_guard, post_guard;
+      exprt pre_guard, post_guard, aux_expr;
       get_pre_post_guards(SSA,n_it,pre_guard, post_guard);
+      aux_expr = true_exprt(); //TODO: change to "standard" invariant semantics
       bool add_post_vars = false;
 
       //search for templates in the loop
@@ -527,7 +528,6 @@ bool template_generator_baset::instantiate_custom_templates(
 	  for(std::set<symbol_exprt>::iterator it = symbols.begin();
 	      it != symbols.end(); it++)
 	  {
-	    //std::cout << "Symbol: " << it->get_identifier() << std::endl;	
 	    std::size_t found_param = 
 	      id2string(it->get_identifier()).find(TEMPLATE_PARAM_PREFIX);
 	    if (found_param != std::string::npos)
@@ -540,15 +540,15 @@ bool template_generator_baset::instantiate_custom_templates(
 	  //template polyhedra
 	  if(!predabs && t_it->id()==ID_le)
 	  {
-	    std::cout << "[Generator_base] : Polyhedra domain" << std::endl;
+	    debug() << "Custom template polyhedron found" << eom;
 	    if(!found_poly) //create domain
 	    {
-	      domain_ptr = new tpolyhedra_domaint(domain_number,aux_renaming_map);
+	      domain_ptr = new tpolyhedra_domaint(domain_number,
+		post_renaming_map); //TODO: aux_renaming_map
 	      found_poly = true;
 	    }
 	    exprt expr = t_it->op0();
 	    bool contains_new_var = build_custom_expr(SSA,n_it,expr);
-	    exprt aux_expr = false_exprt(); //TODO!!!
 	    if(contains_new_var) add_post_vars = true;
 	    static_cast<tpolyhedra_domaint *>(domain_ptr)->add_template_row(
 		expr,pre_guard,
@@ -561,15 +561,15 @@ bool template_generator_baset::instantiate_custom_templates(
 	  {
 	    options.set_option("predabs-solver",true);
 
-	    std::cout << "[Generator_base] : Predabs domain" << std::endl;
+	    debug() << "Custom predicate template found" << eom;
 	    if(!found_predabs) //create domain
 	    {
-	      domain_ptr = new predabs_domaint(domain_number,aux_renaming_map);
+	      domain_ptr = new predabs_domaint(domain_number,
+		post_renaming_map); //TODO: aux_renaming_map
 	      found_predabs = true;
 	    }
 	    exprt expr = *t_it;
 	    bool contains_new_var = build_custom_expr(SSA,n_it,expr);
-	    exprt aux_expr = false_exprt(); //TODO!!!
 	    if(contains_new_var) add_post_vars = true;
 	    static_cast<predabs_domaint *>(domain_ptr)->add_template_row(
 		expr,pre_guard,
