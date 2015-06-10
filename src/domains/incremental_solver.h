@@ -140,11 +140,15 @@ class incremental_solvert : public messaget
   void allocate_solvers(bool arith_refinement)
   {
     sat_check = new satcheckt();
+#if 0
+    sat_check = new satcheck_minisat_no_simplifiert();
+#endif
 #ifdef NON_INCREMENTAL
     solver = new bv_pointerst(ns,*sat_check);
 #else
     solver = new bv_refinementt(ns,*sat_check);
     solver->set_all_frozen();
+    ((bv_refinementt *)solver)->do_array_refinement = false;
     ((bv_refinementt *)solver)->do_arithmetic_refinement = arith_refinement;
 #endif
   }

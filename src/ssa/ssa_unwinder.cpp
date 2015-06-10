@@ -472,7 +472,6 @@ void ssa_local_unwindert::populate_connectors(tree_loopnodet& current_loop)
            //this will happen only for while. What about dowhile?
            loop_continue_e = and_exprt(cond_e,guard_e);
             loop_continue_e=or_exprt(loop_continue_e,not_exprt(SSA.guard_symbol(lit->location)));
-
         }
         else
         {

@@ -433,7 +433,7 @@ void summary_checkert::check_properties_non_incremental(
 	  property_map[property_id].result = spurious ? UNKNOWN : FAIL;
 
 #ifdef SHOW_COUNTEREXAMPLE
-	  if(!spurious)
+          if(!spurious)
 	  {
 	    show_error_trace(f_it->first,SSA,*solver.solver,
 			     debug(),get_message_handler());
@@ -735,7 +735,9 @@ exprt::operandst summary_checkert::get_loophead_selects(
   if(!loophead_selects_literal.is_constant())
     solver.set_frozen(loophead_selects_literal);
 
-  //  std::cout << "loophead_selects: " << from_expr(SSA.ns,"",conjunction(loophead_selects)) << std::endl;
+#if 0
+  std::cout << "loophead_selects: " << from_expr(SSA.ns,"",conjunction(loophead_selects)) << std::endl;
+#endif
 
   return loophead_selects;
 }
