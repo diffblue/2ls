@@ -896,53 +896,59 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
     }
 #ifdef ASSERTION_HOISTING
     //assertion hoisting
-    if(suffix==""){
-//assertion hoisting
-    local_SSAt::nodet node = *it;
-    node.marked=false;
-    node.assertions.clear();
-    node.equalities.clear();
-    node.constraints.clear();
-    node.templates.clear();
-    node.assertions_after_loop.clear();
+    if(suffix=="") 
+    {
+      local_SSAt::nodet node = *it;
+      node.marked=false;
+      node.assertions.clear();
+      node.equalities.clear();
+      node.constraints.clear();
+      node.templates.clear();
+      node.assertions_after_loop.clear();
 
-    if(is_kinduction &&(
-              (current_loop.is_dowhile && (i-1)>0)
-              || (!current_loop.is_dowhile && (i-1)>1)))
-          { //convert all assert to assumes for k-induction
-            //except the bottom most iteration
+      if(is_kinduction &&(
+	   (current_loop.is_dowhile && (i-1)>0)
+	   || (!current_loop.is_dowhile && (i-1)>1)))
+      { //convert all assert to assumes for k-induction
+	//except the bottom most iteration
 
-            //assertions should be converted to assume only if you are in the step case
-            //of k-induction and not the base case. that means
-            // you want guardls=> assume and \not guardls => assert
-            // as of now this conflicts with checking spurious examples
-            //so just removing the assertion if it is NOT the bottom most iteration.
-            // Unless you have checked it for all unwinding less than k, this will
-            // lead to unsoundness (a bug may not be found if the assertion can fail in iterations
-            //other than the last
+	//assertions should be converted to assume only if you are in the step case
+	//of k-induction and not the base case. that means
+	// you want guardls=> assume and \not guardls => assert
+	// as of now this conflicts with checking spurious examples
+	//so just removing the assertion if it is NOT the bottom most iteration.
+	// Unless you have checked it for all unwinding less than k, this will
+	// lead to unsoundness (a bug may not be found if the assertion can fail in iterations
+	//other than the last
 
+#if 0
+	exprt guard_loopreach = SSA.guard_symbol(
+	  current_loop.body_nodes.begin()->location);
+	rename(guard_loopreach,suffix,i-1,current_loop);
+#else
+	exprt guard_select = SSA.name(SSA.guard_symbol(),
+				      local_SSAt::LOOP_SELECT, current_loop.body_nodes.rbegin()->location);
+	rename(guard_select,suffix,i-1,current_loop); 
+#endif
+	//if outermost loop, do the assertion hoisting.
+	//for innerloop assertion hoisting is not necessary because assertions are
+	//assumed in the parent context anyway
+	exprt assertion_hoist_e = conjunction(current_loop.assertions_after_loop);
+	exprt exit_cond_e=current_loop.exit_condition;
+	if(!assertion_hoist_e.is_true()&& !exit_cond_e.is_false())
+	{
+	  rename(assertion_hoist_e,suffix,-1,current_loop);
 
-            exprt guard_select = SSA.name(SSA.guard_symbol(),
-                local_SSAt::LOOP_SELECT, current_loop.body_nodes.rbegin()->location);
-            rename(guard_select,suffix,i-1,current_loop);
-
-              //if outermost loop, do the asssertion hoisting.
-              //for innerloop assertion hoisting is not necessary because assertions are
-              //assumed in the parent context anyway
-              exprt assertion_hoist_e = conjunction(current_loop.assertions_after_loop);
-              exprt exit_cond_e=current_loop.exit_condition;
-              if(!assertion_hoist_e.is_true()&& !exit_cond_e.is_false())
-              {
-              rename(assertion_hoist_e,suffix,-1,current_loop);
-
-              rename(exit_cond_e,suffix,i-1,current_loop);
-              exprt hoist_cond_e = and_exprt(guard_select,exit_cond_e);
-              node.constraints.push_back(implies_exprt(hoist_cond_e,assertion_hoist_e));
-              }
-              new_nodes.push_back(node);
-
-
-    }
+	  rename(exit_cond_e,suffix,i-1,current_loop);
+#if 0
+	  exprt hoist_cond_e = and_exprt(guard_loopreach,exit_cond_e);
+#else
+	  exprt hoist_cond_e = and_exprt(guard_select,exit_cond_e);
+#endif
+	  node.constraints.push_back(implies_exprt(hoist_cond_e,assertion_hoist_e));
+	}
+	new_nodes.push_back(node);
+      }
     }
 #endif
     it++;
@@ -954,8 +960,8 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
 
       rename(new_node, suffix, i,current_loop);
       if(is_kinduction && !new_node.assertions.empty() &&(
-          (current_loop.is_dowhile && i>0)
-          || (!current_loop.is_dowhile && i>1)))
+	   (current_loop.is_dowhile && i>0)
+	   || (!current_loop.is_dowhile && i>1)))
       { //convert all assert to assumes for k-induction
         //except the bottom most iteration
 

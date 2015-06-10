@@ -98,8 +98,6 @@ void local_SSAt::get_entry_exit_vars()
     const code_typet::parametert &parameter=*it;
     const irep_idt &identifier=parameter.get_identifier();
 
-    //    const symbolt &symbol=ns.lookup(identifier);
-
     const symbolt *symbol;
     if(ns.lookup(identifier,symbol)) continue;         
 
@@ -743,7 +741,7 @@ void local_SSAt::assertions_after_loop()
   std::list<std::list<nodet>::iterator> loopheads;
   loopheads.push_back(nodes.begin()); 
   nodest::iterator n_it=nodes.end(); 
-  do //collect assertions backwards
+  while(n_it!=nodes.begin()) //collect assertions backwards
   {
     n_it--;
     if(n_it==loopheads.back()) //assign parent-level assertions at loophead
@@ -757,14 +755,10 @@ void local_SSAt::assertions_after_loop()
     if(!n_it->assertions.empty())
     {
       exprt::operandst &a = assertion_map[loopheads.back()->location];
-      for(nodet::assertionst::const_iterator a_it = 
-	    n_it->assertions.begin(); 
-          a_it != n_it->assertions.end(); a_it++)
-	a.push_back(*a_it);
+      a.insert(a.end(),n_it->assertions.begin(),n_it->assertions.end());
     }
     //TODO: could also add assertions that are on a direct path within a loop
   }
-  while(n_it!=nodes.begin());
 }
 
 /*******************************************************************\
@@ -1461,7 +1455,7 @@ void local_SSAt::nodet::output(
       f_it++)
     out << "(F) " << from_expr(ns, "", *f_it) << "\n";
   
-#if 0
+#if 1
   if(!assertions_after_loop.empty()) 
     out << "(assertions-after-loop) "
 	<< from_expr(ns, "", conjunction(assertions_after_loop)) << "\n";
