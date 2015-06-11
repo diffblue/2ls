@@ -50,6 +50,7 @@ class ssa_local_unwindert : public messaget
     return_nodest return_nodes;
     //exprst connectors;
     exprt::operandst assertions_after_loop;
+    exprt::operandst loop_continuation_exprs;
     exprt exit_condition;
     expr_break_mapt connectors;
     tree_loopnodet* parent;
@@ -122,6 +123,8 @@ class ssa_local_unwindert : public messaget
           const unsigned int unwind_depth,
           symbol_exprt& new_sym,
           local_SSAt::nodest& new_nodes);
+  void loop_continuation_conditions(
+      const tree_loopnodet& current_loop, exprt::operandst& loop_cont_e) const;
   void assertion_hoisting(tree_loopnodet& current_loop,
       const local_SSAt::nodet& tmp_node,
       const std::string& suffix, const bool is_kinduction,

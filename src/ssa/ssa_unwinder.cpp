@@ -1034,6 +1034,17 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
       //store the end of this loop, its "loophead" field will be
       //pointed to the topmost loophead node
       current_loop.loopends_map[suffix] = le_it;
+
+      {
+        //add all the loop continuation expressions for the bottom most iterations %0
+        //this is requested by peter
+        //TODO : later document why this is needed
+        exprt loopend_guard = SSA.guard_symbol(current_loop.body_nodes.rbegin()->location);
+        exprt loopend_cond = SSA.cond_symbol(current_loop.body_nodes.rbegin()->location);
+        rename(loopend_guard,suffix,i,current_loop);
+        rename(loopend_cond,suffix,i,current_loop);
+        current_loop.loop_continuation_exprs.push_back(and_exprt(loopend_guard,loopend_cond));
+      }
     }
 
   }
@@ -1436,6 +1447,20 @@ void ssa_local_unwindert::add_connector_node(tree_loopnodet& current_loop,
     new_nodes.push_back(node);
   }
 #endif
+
+void ssa_local_unwindert::loop_continuation_conditions(
+    const tree_loopnodet& current_loop, exprt::operandst& loop_cont_e) const
+{
+  loop_cont_e.insert(loop_cont_e.end(),
+      current_loop.loop_continuation_exprs.begin(),
+      current_loop.loop_continuation_exprs.end());
+  for(loop_nodest::const_iterator it=current_loop.loop_nodes.begin();
+      it!=current_loop.loop_nodes.end();it++)
+  {
+    loop_continuation_conditions(*it,loop_cont_e);
+  }
+}
+
 void ssa_local_unwindert::assertion_hoisting(tree_loopnodet& current_loop,
     const local_SSAt::nodet& tmp_node,
     const std::string& suffix, const bool is_kinduction,
