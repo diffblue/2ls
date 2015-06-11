@@ -139,6 +139,7 @@ public :
   void rename_invariant(const std::vector<exprt>& inv_in,
       std::vector<exprt>& inv_out,const unsigned prev_unwinding) const;
   exprt rename_invariant(const exprt& inv_in) const;
+  void loop_continuation_conditions(exprt::operandst& loop_cont_e) const;
   bool odometer_increment(std::vector<unsigned>& odometer,
       unsigned base) const;
   bool is_kinduction;

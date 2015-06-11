@@ -19,7 +19,7 @@ Author: Daniel Kroening, kroening@kroening.com
 class goto_modelt;
 class optionst;
 
-#include "summary_checker.h"
+#include "summary_checker_base.h"
 
 #define SUMMARIZER_OPTIONS \
   "(xml-ui)" \
@@ -90,7 +90,7 @@ protected:
 
   void report_properties(
     const goto_modelt &,
-    const summary_checkert::property_mapt &);  
+    const summary_checker_baset::property_mapt &);  
 
   void show_counterexample(
     const goto_modelt &,

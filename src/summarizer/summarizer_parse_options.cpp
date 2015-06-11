@@ -42,7 +42,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "summarizer_parse_options.h"
 #include "summary_db.h"
-#include "summary_checker.h"
+#include "summary_checker_ai.h"
+#include "summary_checker_bmc.h"
+#include "summary_checker_kind.h"
 #include "../ssa/split_loopheads.h"
 #include "show.h"
 
@@ -437,52 +439,65 @@ int summarizer_parse_optionst::doit()
 
   try
   {
-    summary_checkert summary_checker(options);
+    summary_checker_baset *summary_checker;
+    if(!options.get_bool_option("k-induction") && 
+       !options.get_bool_option("incremental-bmc"))
+       summary_checker = new summary_checker_ait(options);
+    if(options.get_bool_option("k-induction") && 
+       !options.get_bool_option("incremental-bmc")) 
+       summary_checker = new summary_checker_kindt(options);
+    if(!options.get_bool_option("k-induction") && 
+       options.get_bool_option("incremental-bmc")) 
+       summary_checker = new summary_checker_bmct(options);
     
-    summary_checker.set_message_handler(get_message_handler());
-    summary_checker.simplify=!cmdline.isset("no-simplify");
-    summary_checker.fixed_point=!cmdline.isset("no-fixed-point");
+    summary_checker->set_message_handler(get_message_handler());
+    summary_checker->simplify=!cmdline.isset("no-simplify");
+    summary_checker->fixed_point=!cmdline.isset("no-fixed-point");
 
+    int retval;
     if(cmdline.isset("show-vcc"))
     {
       std::cout << "VERIFICATION CONDITIONS:\n\n";
-      summary_checker.show_vcc=true;
-      summary_checker(goto_model);
-      return 0;
+      summary_checker->show_vcc=true;
+      (*summary_checker)(goto_model);
+      retval = 0;
+      goto clean_up;
     }
     
     // do actual analysis
-    int retval;
-    switch(summary_checker(goto_model))
+    switch((*summary_checker)(goto_model))
     {
     case property_checkert::PASS:
-      report_properties(goto_model, summary_checker.property_map);
+      report_properties(goto_model, summary_checker->property_map);
       report_success();
       retval = 0;
       break;
     
     case property_checkert::FAIL:
-      report_properties(goto_model, summary_checker.property_map);
+      report_properties(goto_model, summary_checker->property_map);
       report_failure();
       retval = 10;
       break;
 
     case property_checkert::UNKNOWN:
-      if(options.get_bool_option("preconditions")) return 0;
-      report_properties(goto_model, summary_checker.property_map);
+      if(options.get_bool_option("preconditions")) 
+	goto clean_up;
+      report_properties(goto_model, summary_checker->property_map);
       report_unknown();
       retval = 5;
       break;
     
     default:
-      return 8;
+      assert(false);
     }
 
     if(cmdline.isset("instrument-output"))
     {
-      summary_checker.instrument_and_output(goto_model);
+      summary_checker->instrument_and_output(goto_model);
     }
 
+  clean_up:
+    delete summary_checker;
     return retval;
   }
   

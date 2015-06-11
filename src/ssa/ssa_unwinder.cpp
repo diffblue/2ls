@@ -1131,6 +1131,12 @@ void ssa_local_unwindert::loop_continuation_conditions(
   }
 }
 
+void ssa_local_unwindert::loop_continuation_conditions(
+    exprt::operandst& loop_cont_e) const
+{
+  loop_continuation_conditions(root_node,loop_cont_e);
+}
+
 void ssa_local_unwindert::assertion_hoisting(tree_loopnodet& current_loop,
     const local_SSAt::nodet& tmp_node,
     const std::string& suffix, const bool is_kinduction,

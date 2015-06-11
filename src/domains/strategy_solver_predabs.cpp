@@ -3,8 +3,6 @@
 #include <util/simplify_expr.h>
 #include "strategy_solver_predabs.h"
 
-#define DEBUG_OUTPUT
-
 bool strategy_solver_predabst::iterate(invariantt &_inv) 
 {
   predabs_domaint::templ_valuet &inv = 

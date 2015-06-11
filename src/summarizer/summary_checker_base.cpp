@@ -1,8 +1,8 @@
 /*******************************************************************\
 
-Module: Summarizer
+Module: Summarizer Checker Base
 
-Author: Daniel Kroening, kroening@kroening.com
+Author: Peter Schrammel
 
 \*******************************************************************/
 
@@ -29,7 +29,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "show.h"
 #include "instrument_goto.h"
 
-#include "summary_checker.h"
+#include "summary_checker_base.h"
 
 #include "summarizer_fw.h"
 #include "summarizer_bw.h"
@@ -40,7 +40,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
-Function: summary_checkert::operator()
+Function: summary_checker_baset::SSA_functions
 
   Inputs:
 
@@ -50,126 +50,7 @@ Function: summary_checkert::operator()
 
 \*******************************************************************/
 
-property_checkert::resultt summary_checkert::operator()(
-  const goto_modelt &goto_model)
-{
-  const namespacet ns(goto_model.symbol_table);
-  bool preconditions = options.get_bool_option("preconditions");
-
-  SSA_functions(goto_model,ns);
-
-  if(options.get_bool_option("k-induction"))
-  {
-    property_checkert::resultt result = property_checkert::UNKNOWN;
-    unsigned max_unwind = options.get_unsigned_int_option("unwind");
-    status() << "Max-unwind is " << max_unwind << eom;
-    ssa_unwinder.init_localunwinders();
-
-    for(unsigned unwind = 0; unwind<=max_unwind; unwind++)
-    {
-      status() << "Unwinding (k=" << unwind << ")" << eom;
-      summary_db.mark_recompute_all(); //TODO: recompute only functions with loops
-      ssa_unwinder.unwind_all(unwind+1);
-
-      result =  check_properties(); 
-      if(result == property_checkert::UNKNOWN &&
-	 !options.get_bool_option("havoc")) 
-      {
-        summarize(goto_model);
-        result =  check_properties(); 
-      }
-
-      if(result == property_checkert::PASS) 
-      {
-        status() << "k-induction proof found after " 
-		 << unwind << " unwinding(s)" << eom;
-        break;
-      }
-      else if(result == property_checkert::FAIL) 
-      {
-        status() << "k-induction counterexample found after " 
-		 << unwind << " unwinding(s)" << eom;
-        break;
-      }
-    }
-    report_statistics();
-    return result;
-  }
-
-  if(options.get_bool_option("incremental-bmc"))
-  {
-    property_checkert::resultt result = property_checkert::UNKNOWN;
-    unsigned max_unwind = options.get_unsigned_int_option("unwind");
-    status() << "Max-unwind is " << max_unwind << eom;
-    ssa_unwinder.init_localunwinders();
-
-    for(unsigned unwind = 0; unwind<=max_unwind; unwind++)
-    {
-      status() << "Unwinding (k=" << unwind << ")" << messaget::eom;
-      summary_db.mark_recompute_all();
-      ssa_unwinder.unwind_all(unwind+1);
-      result =  check_properties(); 
-      if(result == property_checkert::PASS) 
-      {
-        status() << "incremental BMC proof found after " 
-		 << unwind << " unwinding(s)" << messaget::eom;
-        break;
-      }
-      else if(result == property_checkert::FAIL) 
-      {
-        status() << "incremental BMC counterexample found after " 
-		 << unwind << " unwinding(s)" << messaget::eom;
-        break;
-      }
-    }
-    report_statistics();
-    return result;
-  }
-
-  // neither k-induction nor bmc
-  {  
-    if(!options.get_bool_option("havoc") && !preconditions) 
-    {
-      //forward analysis
-      summarize(goto_model,true,false);
-    }
-    if(!options.get_bool_option("havoc") && preconditions)
-    {
-      //backward analysis
-      summarize(goto_model,false,false);
-    }
-
-    if(preconditions) 
-    {
-      report_statistics();
-      report_preconditions();
-      return property_checkert::UNKNOWN;
-    }
-
-#ifdef SHOW_CALLING_CONTEXTS
-    if(options.get_bool_option("show-calling-contexts"))
-      return property_checkert::UNKNOWN;
-#endif
-
-    property_checkert::resultt result =  check_properties(); 
-    report_statistics();
-    return result;
-  }
-}
-
-/*******************************************************************\
-
-Function: summary_checkert::SSA_functions
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void summary_checkert::SSA_functions(const goto_modelt &goto_model,  const namespacet &ns)
+void summary_checker_baset::SSA_functions(const goto_modelt &goto_model,  const namespacet &ns)
 {  
   // compute SSA for all the functions
   forall_goto_functions(f_it, goto_model.goto_functions)
@@ -191,38 +72,13 @@ void summary_checkert::SSA_functions(const goto_modelt &goto_model,  const names
     SSA.output(debug()); debug() << eom;
   }
 
-  ssa_unwinder.init(options.get_bool_option("k-induction"),
-		    options.get_bool_option("incremental-bmc"));
-
-  unsigned unwind = options.get_unsigned_int_option("unwind");
-  if(!options.get_bool_option("k-induction") && 
-     !options.get_bool_option("incremental-bmc") && unwind>0)
-  {
-    status() << "Unwinding" << messaget::eom;
-
-    ssa_unwinder.init_localunwinders();
-
-    ssa_unwinder.unwind_all(unwind+1);
-    ssa_unwinder.output(debug()); debug() <<eom;
-  }
-
-#if 0
-  // inline main and __CPROVER_initialize
-  ssa_inlinert ssa_inliner;
-  ssa_inliner.set_message_handler(get_message_handler());
-
-  ssa_inliner.replace(ssa_db.get(ID_main),functions,false,false);
-  
-  ssa_db.get(ID_main).output(debug()); debug() << eom;
-#endif
-
   // properties
   initialize_property_map(goto_model.goto_functions);
 }
 
 /*******************************************************************\
 
-Function: summary_checkert::summarize
+Function: summary_checker_baset::summarize
 
   Inputs:
 
@@ -232,7 +88,7 @@ Function: summary_checkert::summarize
 
 \*******************************************************************/
 
-void summary_checkert::summarize(const goto_modelt &goto_model, 
+void summary_checker_baset::summarize(const goto_modelt &goto_model, 
 				 bool forward,
 				 bool termination)
 {    
@@ -270,7 +126,7 @@ void summary_checkert::summarize(const goto_modelt &goto_model,
 }
 /*******************************************************************\
 
-Function: summary_checkert::check_properties
+Function: summary_checker_baset::check_properties
 
   Inputs:
 
@@ -280,7 +136,7 @@ Function: summary_checkert::check_properties
 
 \*******************************************************************/
 
-summary_checkert::resultt summary_checkert::check_properties()
+summary_checker_baset::resultt summary_checker_baset::check_properties()
 {
   // analyze all the functions
   for(ssa_dbt::functionst::const_iterator f_it = ssa_db.functions().begin();
@@ -293,10 +149,7 @@ summary_checkert::resultt summary_checkert::check_properties()
     show_ssa_symbols(*f_it->second,std::cerr);
 #endif
 
-    if(options.get_bool_option("incremental"))
-      check_properties_incremental(f_it);
-    else
-      check_properties_non_incremental(f_it);
+    check_properties(f_it);
 
     if(options.get_bool_option("show-invariants")) 
     {
@@ -306,7 +159,7 @@ summary_checkert::resultt summary_checkert::check_properties()
     }
   }
   
-  summary_checkert::resultt result = property_checkert::PASS;
+  summary_checker_baset::resultt result = property_checkert::PASS;
   for(property_mapt::const_iterator
       p_it=property_map.begin(); p_it!=property_map.end(); p_it++)
   {
@@ -321,7 +174,7 @@ summary_checkert::resultt summary_checkert::check_properties()
 
 /*******************************************************************\
 
-Function: summary_checkert::check_properties
+Function: summary_checker_baset::check_properties
 
   Inputs:
 
@@ -331,150 +184,7 @@ Function: summary_checkert::check_properties
 
 \*******************************************************************/
 
-void summary_checkert::check_properties_non_incremental(
-   const ssa_dbt::functionst::const_iterator f_it)
-{
-  local_SSAt &SSA = *f_it->second;
-  if(!SSA.goto_function.body.has_assertion()) return;
-
-  bool all_properties = options.get_bool_option("all-properties");
-
-  SSA.output(debug()); debug() << eom;
-  
-  // non-incremental version
-
-  // solver
-  incremental_solvert &solver = ssa_db.get_solver(f_it->first);
-  solver.set_message_handler(get_message_handler());
-
-  // give SSA to solver
-  solver << SSA;
-  SSA.mark_nodes();
-
-  const goto_programt &goto_program=SSA.goto_function.body;
-
-  for(goto_programt::instructionst::const_iterator
-      i_it=goto_program.instructions.begin();
-      i_it!=goto_program.instructions.end();
-      i_it++)
-  {
-    if(!i_it->is_assert())
-      continue;
-  
-    const source_locationt &source_location=i_it->source_location;  
-    std::list<local_SSAt::nodest::const_iterator> assertion_nodes;
-    SSA.find_nodes(i_it,assertion_nodes);
-
-    irep_idt property_id=source_location.get_property_id();
-
-    if(property_id=="") //TODO: some properties do not show up in initialize_property_map
-      continue;     
-
-    //do not recheck properties that have already been decided
-    if(property_map[property_id].result!=UNKNOWN) continue; 
-
-    property_map[property_id].location = i_it;
-    
-    exprt::operandst conjuncts;
-    for(std::list<local_SSAt::nodest::const_iterator>::const_iterator
-	  n_it=assertion_nodes.begin();
-        n_it!=assertion_nodes.end();
-        n_it++)
-    {
-      for(local_SSAt::nodet::assertionst::const_iterator
-	    a_it=(*n_it)->assertions.begin();
-	  a_it!=(*n_it)->assertions.end();
-	  a_it++)
-      {
-	conjuncts.push_back(*a_it);
-
-	if(show_vcc)
-	{
-	  do_show_vcc(SSA, i_it, a_it);
-	  continue;
-	}
-      }
-    }
-    exprt property = not_exprt(conjunction(conjuncts));
-    if(simplify)
-      property=::simplify_expr(property, SSA.ns);
-  
-    solver.new_context();
-    solver << SSA.get_enabling_exprs();
-
-    // invariant, calling contexts
-    if(summary_db.exists(f_it->first))
-    {
-      solver << summary_db.get(f_it->first).fw_invariant;
-      solver << summary_db.get(f_it->first).fw_precondition;
-    }
-
-    //callee summaries
-    solver << ssa_inliner.get_summaries(SSA);
-
-    // give negated property to solver
-    solver << property;
-
-    //freeze loop head selects
-    exprt::operandst loophead_selects = 
-      get_loophead_selects(f_it->first,SSA,*solver.solver);
-
-    // solve
-    switch(solver())
-      {
-      case decision_proceduret::D_SATISFIABLE: 
-      {
-	if(options.get_bool_option("spurious-check"))
-	{
-	  bool spurious = is_spurious(loophead_selects,solver) ;
-	  debug() << "[" << property_id << "] is " << 
-	    (spurious ? "" : "not ") << "spurious" << eom;
-
-	  property_map[property_id].result = spurious ? UNKNOWN : FAIL;
-
-#ifdef SHOW_COUNTEREXAMPLE
-          if(!spurious)
-	  {
-	    show_error_trace(f_it->first,SSA,*solver.solver,
-			     debug(),get_message_handler());
-	  }
-#endif
-
-	  if(!spurious && !all_properties)  //exit on first failure if requested
-	  {
-	    solver.pop_context();
-	    return;
-	  }
-	}
-	break; 
-      }
-      
-      case decision_proceduret::D_UNSATISFIABLE:
-	  property_map[property_id].result=PASS;
-	break;
-
-      case decision_proceduret::D_ERROR:    
-      default:
-	property_map[property_id].result=ERROR;
-	throw "error from decision procedure";
-      }
-    solver.pop_context();
-  }
-} 
-
-/*******************************************************************\
-
-Function: summary_checkert::check_properties_incremental
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void summary_checkert::check_properties_incremental(
+void summary_checker_baset::check_properties(
    const ssa_dbt::functionst::const_iterator f_it)
 {
   local_SSAt &SSA = *f_it->second;
@@ -512,10 +222,18 @@ void summary_checkert::check_properties_incremental(
   //freeze loop head selects
   exprt::operandst loophead_selects = 
     get_loophead_selects(f_it->first,SSA,*solver.solver);
+  //check whether loops have been fully unwound
+  exprt::operandst loop_continues = 
+    get_loop_continues(f_it->first,SSA,*solver.solver);
+  bool fully_unwound = 
+    is_fully_unwound(loop_continues,loophead_selects,solver);
+  status() << "Loops " << (fully_unwound ? "" : "not ") 
+	   << "fully unwound" << eom;
 
-  cover_goals_extt cover_goals(solver,loophead_selects,property_map,
-			       options.get_bool_option("spurious-check"),
-			       all_properties);
+  cover_goals_extt cover_goals(
+    solver,loophead_selects,property_map,
+    !fully_unwound && options.get_bool_option("spurious-check"),
+    all_properties);
 
 #if 0   
   debug() << "(C) " << from_expr(SSA.ns,"",enabling_expr) << eom;
@@ -608,7 +326,7 @@ void summary_checkert::check_properties_incremental(
 
 /*******************************************************************\
 
-Function: summary_checkert::report_statistics()
+Function: summary_checker_baset::report_statistics()
 
   Inputs:
 
@@ -618,7 +336,7 @@ Function: summary_checkert::report_statistics()
 
 \*******************************************************************/
 
-void summary_checkert::report_statistics()
+void summary_checker_baset::report_statistics()
 {
   for(ssa_dbt::functionst::const_iterator f_it = ssa_db.functions().begin();
 	f_it != ssa_db.functions().end(); f_it++)
@@ -638,7 +356,7 @@ void summary_checkert::report_statistics()
   
 /*******************************************************************\
 
-Function: summary_checkert::do_show_vcc
+Function: summary_checker_baset::do_show_vcc
 
   Inputs:
 
@@ -648,7 +366,7 @@ Function: summary_checkert::do_show_vcc
 
 \*******************************************************************/
 
-void summary_checkert::do_show_vcc(
+void summary_checker_baset::do_show_vcc(
   const local_SSAt &SSA,
   const goto_programt::const_targett i_it,
   const local_SSAt::nodet::assertionst::const_iterator &a_it)
@@ -674,39 +392,7 @@ void summary_checkert::do_show_vcc(
 
 /*******************************************************************\
 
-Function: summary_checkert::report_preconditions
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void summary_checkert::report_preconditions()
-{
-  result() << eom;
-  result() << "** " << (options.get_bool_option("sufficient") ? 
-			"Sufficient" : "Necessary")
-	   << " preconditions: " << eom;
-  ssa_dbt::functionst &functions = ssa_db.functions();
-  for(ssa_dbt::functionst::iterator it = functions.begin();
-      it != functions.end(); it++)
-  {
-    exprt precondition;
-    bool computed = summary_db.exists(it->first);
-    if(computed) precondition = summary_db.get(it->first).bw_precondition;
-    if(precondition.is_nil()) computed = false;
-    result() << eom << "[" << it->first << "]: " 
-	     << (!computed ? "not computed" : 
-		 from_expr(it->second->ns, "", precondition)) << eom;
-  }
-}
-
-/*******************************************************************\
-
-Function: summary_checkert::get_loophead_selects
+Function: summary_checker_baset::get_loophead_selects
 
   Inputs:
 
@@ -717,7 +403,7 @@ Function: summary_checkert::get_loophead_selects
 
 \*******************************************************************/
 
-exprt::operandst summary_checkert::get_loophead_selects(
+exprt::operandst summary_checker_baset::get_loophead_selects(
   const irep_idt &function_name, 
   const local_SSAt &SSA, prop_convt &solver)
 {
@@ -744,7 +430,93 @@ exprt::operandst summary_checkert::get_loophead_selects(
 
 /*******************************************************************\
 
-Function: summary_checkert::is_spurious
+Function: summary_checker_baset::get_loop_continues
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: returns the loop continuation guards at the end of the
+          loops in order to check whether we can unroll further
+
+\*******************************************************************/
+
+exprt::operandst summary_checker_baset::get_loop_continues(
+  const irep_idt &function_name, 
+  const local_SSAt &SSA, prop_convt &solver)
+{
+  exprt::operandst loop_continues;
+
+  ssa_unwinder.get(function_name).loop_continuation_conditions(loop_continues);
+  if(loop_continues.size()==0) 
+  {
+    //TODO: this should actually be done transparently by the unwinder
+    for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
+	n_it != SSA.nodes.end(); n_it++)
+    {
+      if(n_it->loophead==SSA.nodes.end()) continue;
+      symbol_exprt guard = SSA.guard_symbol(n_it->location);
+      symbol_exprt cond = SSA.cond_symbol(n_it->location);
+      loop_continues.push_back(and_exprt(guard,cond));
+    }
+  }
+
+  literalt loop_continues_literal = solver.convert(disjunction(loop_continues));
+  if(!loop_continues_literal.is_constant())
+    solver.set_frozen(loop_continues_literal);
+
+#if 0
+  std::cout << "loophead_continues: " << from_expr(SSA.ns,"",disjunction(loop_continues)) << std::endl;
+#endif
+
+  return loop_continues;
+}
+
+/*******************************************************************\
+
+Function: summary_checker_baset::is_fully_unwound
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: checks whether the loops have been fully unwound
+
+\*******************************************************************/
+
+bool summary_checker_baset::is_fully_unwound(
+  const exprt::operandst &loop_continues, 
+  const exprt::operandst &loophead_selects,
+  incremental_solvert &solver)
+{
+  solver.new_context();
+  solver << and_exprt(conjunction(loophead_selects),
+		      disjunction(loop_continues));
+
+  solver_calls++; //statistics
+
+  switch(solver())
+  {
+  case decision_proceduret::D_SATISFIABLE:
+    solver.pop_context();
+    return false;
+    break;
+      
+  case decision_proceduret::D_UNSATISFIABLE:
+    solver.pop_context();
+    solver << conjunction(loophead_selects); 
+    return true;
+    break;
+
+  case decision_proceduret::D_ERROR:    
+  default:
+    throw "error from decision procedure";
+  }
+}
+
+/*******************************************************************\
+
+Function: summary_checker_baset::is_spurious
 
   Inputs:
 
@@ -754,7 +526,7 @@ Function: summary_checkert::is_spurious
 
 \*******************************************************************/
 
-bool summary_checkert::is_spurious(const exprt::operandst &loophead_selects, 
+bool summary_checker_baset::is_spurious(const exprt::operandst &loophead_selects, 
 				   incremental_solvert &solver)
 {
   //check loop head choices in model
@@ -793,7 +565,7 @@ bool summary_checkert::is_spurious(const exprt::operandst &loophead_selects,
 
 /*******************************************************************\
 
-Function: summary_checkert::instrument_and_output
+Function: summary_checker_baset::instrument_and_output
 
   Inputs:
 
@@ -804,7 +576,7 @@ Function: summary_checkert::instrument_and_output
 
 \*******************************************************************/
 
-void summary_checkert::instrument_and_output(goto_modelt &goto_model)
+void summary_checker_baset::instrument_and_output(goto_modelt &goto_model)
 {
   instrument_gotot instrument_goto(options,ssa_db,summary_db);
   instrument_goto(goto_model);

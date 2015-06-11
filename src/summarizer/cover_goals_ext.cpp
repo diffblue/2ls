@@ -171,20 +171,21 @@ Function: cover_goals_extt::assignment
 
 void cover_goals_extt::assignment()
 {
-  if(!spurious_check) return;
-
   //check loop head choices in model
   bool invariants_involved = false;
-  for(exprt::operandst::const_iterator l_it = loophead_selects.begin();
-        l_it != loophead_selects.end(); l_it++)
+  if(spurious_check)
   {
-    if(solver.get(l_it->op0()).is_true()) 
+    for(exprt::operandst::const_iterator l_it = loophead_selects.begin();
+        l_it != loophead_selects.end(); l_it++)
     {
-      invariants_involved = true; 
-      break;
+      if(solver.get(l_it->op0()).is_true()) 
+      {
+	invariants_involved = true; 
+	break;
+      }
     }
   }
-  if(!invariants_involved) 
+  if(!invariants_involved || !spurious_check) 
   {
     std::list<cover_goals_extt::cover_goalt>::const_iterator g_it=goals.begin();
     for(goal_mapt::const_iterator it=goal_map.begin();

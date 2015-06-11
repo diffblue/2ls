@@ -4,7 +4,10 @@ SRC = summarizer_base.cpp  \
       summarizer_fw.cpp summarizer_bw.cpp \
       summarizer_fw_contexts.cpp \
       summarizer_main.cpp summarizer_parse_options.cpp \
-      show.cpp summary_checker.cpp cover_goals_ext.cpp \
+      show.cpp summary_checker_base.cpp \
+      summary_checker_ai.cpp summary_checker_bmc.cpp \
+      summary_checker_kind.cpp \
+      cover_goals_ext.cpp \
       summary_db.cpp summary.cpp ssa_db.cpp \
       array_abstraction.cpp preprocessing_util.cpp \
       instrument_goto.cpp function_signature.cpp
