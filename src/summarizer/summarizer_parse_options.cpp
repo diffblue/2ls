@@ -916,7 +916,7 @@ bool summarizer_parse_optionst::process_goto_program(
 
       //remove inlined functions
       Forall_goto_functions(f_it, goto_model.goto_functions)
-        if(f_it->first!=ID_main &&
+        if(f_it->first!=ID__start &&
            f_it->second.body.instructions.size()<=2*(limit/2))
 	{
           f_it->second.body_available=false;
