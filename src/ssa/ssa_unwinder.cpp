@@ -894,8 +894,15 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
       new_nodes.push_back(node);
     }
 #ifdef ASSERTION_HOISTING
+    assertion_hoisting(current_loop,*it,suffix,is_kinduction,
+        unwind_depth,new_sym,new_nodes);
+#endif
+#if 0
+
     //assertion hoisting
-    if(suffix=="") 
+    if(suffix=="" && i!=0 && (is_kinduction &&(
+        (current_loop.is_dowhile && (i-1)>0)
+        || (!current_loop.is_dowhile && (i-1)>1))))
     {
       local_SSAt::nodet node = *it;
       node.marked=false;
@@ -905,10 +912,10 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
       node.templates.clear();
       node.assertions_after_loop.clear();
 
-      if(is_kinduction &&(
-	   (current_loop.is_dowhile && (i-1)>0)
-	   || (!current_loop.is_dowhile && (i-1)>1)))
-      { //convert all assert to assumes for k-induction
+    //  if(is_kinduction &&(
+	  // (current_loop.is_dowhile && (i-1)>0)
+	  // || (!current_loop.is_dowhile && (i-1)>1)))
+     // { //convert all assert to assumes for k-induction
 	//except the bottom most iteration
 
 	//assertions should be converted to assume only if you are in the step case
@@ -947,7 +954,7 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
 	  node.constraints.push_back(implies_exprt(hoist_cond_e,assertion_hoist_e));
 	}
 	new_nodes.push_back(node);
-      }
+     // }
     }
 #endif
     it++;
@@ -1429,6 +1436,77 @@ void ssa_local_unwindert::add_connector_node(tree_loopnodet& current_loop,
     new_nodes.push_back(node);
   }
 #endif
+void ssa_local_unwindert::assertion_hoisting(tree_loopnodet& current_loop,
+    const local_SSAt::nodet& tmp_node,
+    const std::string& suffix, const bool is_kinduction,
+    const unsigned int unwind_depth,
+    symbol_exprt& new_sym, local_SSAt::nodest& new_nodes)
+
+{
+
+  if(suffix=="" && is_kinduction)
+  {
+    unsigned lower_bound = current_loop.is_dowhile? 1 : 2;
+    exprt assertion_hoist_e = conjunction(current_loop.assertions_after_loop);
+    exprt guard_select = SSA.name(SSA.guard_symbol(),
+                  local_SSAt::LOOP_SELECT, current_loop.body_nodes.rbegin()->location);
+      rename(guard_select,suffix,unwind_depth-1,current_loop);
+ for(unsigned int i=lower_bound;i<unwind_depth;i++)
+ {
+    //assertion hoisting
+    //if(suffix=="" && (is_kinduction &&(
+     //   (current_loop.is_dowhile && (i-1)>0)
+      //  || (!current_loop.is_dowhile && (i-1)>1))))
+   // {
+      local_SSAt::nodet node= tmp_node;
+      node.marked=false;
+      node.assertions.clear();
+      node.equalities.clear();
+      node.constraints.clear();
+      node.templates.clear();
+      node.assertions_after_loop.clear();
+
+    //  if(is_kinduction &&(
+    // (current_loop.is_dowhile && (i-1)>0)
+    // || (!current_loop.is_dowhile && (i-1)>1)))
+     // { //convert all assert to assumes for k-induction
+  //except the bottom most iteration
+
+  //assertions should be converted to assume only if you are in the step case
+  //of k-induction and not the base case. that means
+  // you want guardls=> assume and \not guardls => assert
+  // as of now this conflicts with checking spurious examples
+  //so just removing the assertion if it is NOT the bottom most iteration.
+  // Unless you have checked it for all unwinding less than k, this will
+  // lead to unsoundness (a bug may not be found if the assertion can fail in iterations
+  //other than the last
+
+
+
+
+  //if outermost loop, do the assertion hoisting.
+  //for innerloop assertion hoisting is not necessary because assertions are
+  //assumed in the parent context anyway
+
+  exprt exit_cond_e=current_loop.exit_condition;
+  if(!assertion_hoist_e.is_true()&& !exit_cond_e.is_false())
+  {
+    //rename(assertion_hoist_e,suffix,-1,current_loop);
+
+    rename(exit_cond_e,suffix,i,current_loop);
+
+    exprt hoist_cond_e = and_exprt(guard_select,exit_cond_e);
+
+    node.constraints.push_back(implies_exprt(hoist_cond_e,assertion_hoist_e));
+    node.enabling_expr = new_sym;
+    new_nodes.push_back(node);
+  }
+
+     // }
+    }
+  }
+
+}
 /*****************************************************************************\
  *
  * Function : ssa_local_unwindert::unwinder_rename

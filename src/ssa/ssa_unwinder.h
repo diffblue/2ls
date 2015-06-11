@@ -122,6 +122,11 @@ class ssa_local_unwindert : public messaget
           const unsigned int unwind_depth,
           symbol_exprt& new_sym,
           local_SSAt::nodest& new_nodes);
+  void assertion_hoisting(tree_loopnodet& current_loop,
+      const local_SSAt::nodet& tmp_node,
+      const std::string& suffix, const bool is_kinduction,
+      const unsigned int unwind_depth,
+      symbol_exprt& new_sym, local_SSAt::nodest& new_nodes);
   bool is_initialized;
 public :
   void set_return_var(const irep_idt& id);
