@@ -24,7 +24,6 @@ Author: Peter Schrammel
 #include "../ssa/local_ssa.h"
 #include "../ssa/simplify_ssa.h"
 
-//#define REUSE_INVARIANTS
 //#define SHOW_WHOLE_RESULT
 
 /*******************************************************************\
@@ -132,14 +131,17 @@ void summarizer_fwt::do_summary(const function_namet &function_name,
 #ifdef REUSE_INVARIANTS
   if(summary_db.exists(function_name)) //reuse existing invariants
   {
-    std::ostringstream out;
     const exprt &old_inv = summary_db.get(function_name).fw_invariant;
+    exprt inv = ssa_unwinder.get(function_name).rename_invariant(old_inv);
+    conds.push_back(inv);
+
+#if 0
+    std::ostringstream out;
     out << "(original inv)" << from_expr(SSA.ns,"",old_inv) << "\n";
     debug() << out.str() << eom;
-    exprt inv = ssa_unwinder.get(function_name).rename_invariant(old_inv);
     out << "(renamed inv)" << from_expr(SSA.ns,"",inv)<<"\n";
     debug() << out.str() << eom;
-    conds.push_back(inv);
+#endif
   }
 #endif
 
