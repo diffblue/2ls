@@ -40,6 +40,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "summary_checker.h"
 #include "summarizer.h"
 #include "show.h"
+#include "horn_encoding.h"
 
 /*******************************************************************\
 
@@ -269,6 +270,38 @@ int summarizer_parse_optionst::doit()
       return 7;
     }
   
+    if(cmdline.isset("horn-encoding"))
+    {
+      status() << "Horn-clause encoding" << eom;
+      namespacet ns(symbol_table);
+      
+      std::string out_file=cmdline.get_value("horn-encoding");
+      
+      if(out_file=="-")
+      {
+        horn_encoding(goto_model, std::cout);
+      }
+      else
+      {
+        #ifdef _MSC_VER
+        std::ofstream out(widen(out_file).c_str());
+        #else
+        std::ofstream out(out_file.c_str());
+        #endif
+        
+        if(!out)
+        {
+          error() << "Failed to open output file "
+                  << out_file << eom;
+          return 1;
+        }
+        
+        horn_encoding(goto_model, out);
+      }
+        
+      return 7;
+    }
+    
     if(cmdline.isset("summarize"))
     {
       summarizert summarizer;

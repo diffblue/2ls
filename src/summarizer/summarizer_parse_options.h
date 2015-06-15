@@ -44,6 +44,7 @@ class optionst;
   "(property):(all-properties)" \
   "(no-simplify)(no-fixed-point)" \
   "(storefront-alarms):" \
+  "(horn-encoding):" \
   "(no-unwinding-assertions)(no-propagation)"
   // the last line is for CBMC-regression testing only
 

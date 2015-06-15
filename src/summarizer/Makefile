@@ -2,7 +2,7 @@ include ../config.inc
 
 SRC = summarizer_main.cpp summarizer_parse_options.cpp \
       summary_checker.cpp show.cpp function_signature.cpp \
-      summary_db.cpp summarizer.cpp
+      summary_db.cpp summarizer.cpp horn_encoding.cpp
 
 OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       $(CBMC)/src/linking/linking$(LIBEXT) \
