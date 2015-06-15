@@ -70,6 +70,7 @@ public:
   // all the SSA nodes  
   typedef std::map<locationt, nodet> nodest;
   nodest nodes;
+  inline nodet &operator[](locationt l) { return nodes[l]; }
 
   const namespacet &ns;
   const goto_functiont &goto_function;
