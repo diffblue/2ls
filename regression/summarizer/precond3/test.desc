@@ -1,6 +1,6 @@
 CORE
 main.c
 --preconditions --sufficient --equalities
-^EXIT=0$
+^EXIT=5$
 ^SIGNAL=0$
-^$
+^\[foo\]: !(x == ((char \*)NULL))$

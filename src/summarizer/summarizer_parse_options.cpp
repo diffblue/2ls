@@ -480,11 +480,11 @@ int summarizer_parse_optionst::doit()
       break;
 
     case property_checkert::UNKNOWN:
+      retval = 5;
       if(options.get_bool_option("preconditions")) 
 	goto clean_up;
       report_properties(goto_model, summary_checker->property_map);
       report_unknown();
-      retval = 5;
       break;
     
     default:

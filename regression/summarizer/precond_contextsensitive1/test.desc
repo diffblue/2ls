@@ -1,6 +1,6 @@
 CORE
 main.c
---equalities --context-sensitive --preconditions
-^EXIT=0$
+--context-sensitive --preconditions
+^EXIT=5$
 ^SIGNAL=0$
-^$
+^\[sign\]: sign#return_value#phi17 <= 0 && -((signed __CPROVER_bitvector\[33\])sign#return_value#phi17) <= 0 ==> x <= 0 && -((signed __CPROVER_bitvector\[33\])x) <= 0$

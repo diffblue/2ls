@@ -44,7 +44,7 @@ property_checkert::resultt summary_checker_ait::operator()(
   initialize_property_map(goto_model.goto_functions);
 
   bool preconditions = options.get_bool_option("preconditions");
-  if(!options.get_bool_option("havoc") && !preconditions) 
+  if(!options.get_bool_option("havoc")) 
   {
     //forward analysis
     summarize(goto_model,true,false);
