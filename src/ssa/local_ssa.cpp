@@ -737,6 +737,8 @@ Function: local_SSAt::assertions_after_loop
 
 void local_SSAt::assertions_after_loop()
 {
+  if(nodes.empty()) 
+    return;
   std::map<locationt,exprt::operandst> assertion_map;
   std::list<std::list<nodet>::iterator> loopheads;
   loopheads.push_back(nodes.begin()); 
@@ -744,14 +746,32 @@ void local_SSAt::assertions_after_loop()
   while(n_it!=nodes.begin()) //collect assertions backwards
   {
     n_it--;
+
+#if 0
+    std::cout << "location: " << n_it->location->location_number << std::endl;
+    std::cout << "loophead: " << loopheads.back()->location->location_number << std::endl;
+#endif
+
     if(n_it==loopheads.back()) //assign parent-level assertions at loophead
     {
       loopheads.pop_back();
-      n_it->assertions_after_loop = assertion_map[loopheads.back()->location];
-      assertion_map[loopheads.back()->location].clear();
+      if(!loopheads.empty())
+      {
+        const exprt::operandst &assertions = 
+          assertion_map[loopheads.back()->location];
+        n_it->assertions_after_loop.insert(n_it->assertions_after_loop.end(),
+					 assertions.begin(),assertions.end());
+        assertion_map[loopheads.back()->location].clear();
        //do not consider assertions after another loop
+      }
+      else // we should have reached the beginning
+	assert(n_it==nodes.begin());
     }
-    if(n_it->loophead!=nodes.end()) loopheads.push_back(n_it->loophead);
+    if(n_it->loophead!=nodes.end()) 
+    {
+      assert(!loopheads.empty());
+      loopheads.push_back(n_it->loophead);
+    }
     if(!n_it->assertions.empty())
     {
       exprt::operandst &a = assertion_map[loopheads.back()->location];

@@ -439,7 +439,7 @@ int summarizer_parse_optionst::doit()
 
   try
   {
-    summary_checker_baset *summary_checker;
+    summary_checker_baset *summary_checker = NULL;
     if(!options.get_bool_option("k-induction") && 
        !options.get_bool_option("incremental-bmc"))
        summary_checker = new summary_checker_ait(options);

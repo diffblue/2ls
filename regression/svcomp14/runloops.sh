@@ -13,11 +13,11 @@ do
   do
     cd $d
     rm -f ../$d.$o.unwind$u.log
-    for f in *.c 
+    for f in *true.c 
     do 
       echo $d/$f "using" $o "unwind" $u
       echo "FILE:" $f >> ../$d.$o.unwind$u.log
-      (time (perl -e 'alarm shift @ARGV; exec @ARGV' $TIMEOUT $SUMMARIZER $CHECKS $f --$o)) &>> ../$d.$o.unwind$u.log
+      (time (perl -e 'alarm shift @ARGV; exec @ARGV' $TIMEOUT $SUMMARIZER $CHECKS $f --unwind $u --$o)) &>> ../$d.$o.unwind$u.log
     done
     cd ..
   done
@@ -32,11 +32,11 @@ do
   do
     cd $d
     rm -f ../$d.inline.$o.unwind$u.log
-    for f in *.c 
+    for f in *true.c 
     do 
       echo $d/$f "using" "inline" $o "unwind" $u
       echo "FILE:" $f >> ../$d.inline.$o.unwind$u.log
-      (time (perl -e 'alarm shift @ARGV; exec @ARGV' $TIMEOUT $SUMMARIZER $CHECKS $f --$o)) &>> ../$d.inline.$o.unwind$u.log
+      (time (perl -e 'alarm shift @ARGV; exec @ARGV' $TIMEOUT $SUMMARIZER $CHECKS $f --unwind $u --$o)) &>> ../$d.inline.$o.unwind$u.log
     done
     cd ..
   done

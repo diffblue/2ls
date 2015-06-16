@@ -1,10 +1,10 @@
 SUMMARIZER=../../../src/summarizer/summarizer
-CHECKS="--div-by-zero-check --signed-overflow-check --array-abstraction --pointer-check"
-#CHECKS="--div-by-zero-check --signed-overflow-check --bounds-check --pointer-check"
-#SETS="openjpeg-1.3 bison-2.5 "
-SETS="a2ps grep-2.12 sendmail-8.14.4"
+#CHECKS="--div-by-zero-check --signed-overflow-check --array-abstraction --pointer-check"
+CHECKS="--div-by-zero-check --signed-overflow-check --bounds-check --pointer-check"
+SETS="sendmail-8.14.4"
+#SETS="a2ps bison-2.5 grep-2.12 openjpeg-1.3"
 
-TIMEOUT=10800
+TIMEOUT=1800
 
 for o in havoc intervals equalities zones
 do
@@ -22,86 +22,28 @@ do
   done
 done
 
-for o in 
+for d in 
 do
-  for d in $SETS
-  do
-    cd $d
-    rm -f ../$d.context_sensitive_$o.log
-    for f in *.c 
-    do 
-      echo $d/$f "using context-sensitive" $o
-      echo "FILE:" $f >> ../$d.context_sensitive_$o.log
-      (time (perl -e 'alarm shift @ARGV; exec @ARGV' $TIMEOUT $SUMMARIZER $CHECKS $f --context-sensitive --$o)) &>> ../$d.context_sensitive_$o.log
-    done
-    cd ..
+  cd $d
+  rm -f ../$d.inline.havoc.log
+  for f in *.o 
+  do 
+    echo $d/$f "using inline"
+    echo "FILE:" $f >> ../$d.inline.havoc.log
+    (time (perl -e 'alarm shift @ARGV; exec @ARGV' $TIMEOUT $SUMMARIZER $CHECKS $f --havoc --inline)) &>> ../$d.inline.havoc.log
   done
 done
 
-for o in havoc intervals equalities zones
+for d in  
 do
-  for d in $SETS
-  do
-    cd $d
-    rm -f ../$d.inline.$o.log
-    for f in *.c 
-    do 
-      echo $d/$f "using inline" $o
-      echo "FILE:" $f >> ../$d.inline.$o.log
-      (time (perl -e 'alarm shift @ARGV; exec @ARGV' $TIMEOUT $SUMMARIZER $CHECKS $f --inline --$o)) &>> ../$d.inline.$o.log
-    done
-    cd ..
+  cd $d
+  rm -f ../$d.inline.unwind5.havoc.log
+  for f in *.o 
+  do 
+    echo $d/$f "using inline unwind5"
+    echo "FILE:" $f >> ../$d.inline.unwind5.havoc.log
+    (time (perl -e 'alarm shift @ARGV; exec @ARGV' $TIMEOUT $SUMMARIZER $CHECKS $f --havoc --inline --unwind 5)) &>> ../$d.inline.unwind5.havoc.log
   done
 done
 
-for o in 1 2 3 4 5
-do
-  for d in $SETS
-  do
-    cd $d
-    rm -f ../$d.unwind$o.havoc.log
-    for f in *.c 
-    do 
-      echo $d/$f "using unwind " $o "havoc"
-      echo "FILE:" $f >> ../$d.unwind$o.havoc.log
-      (time (perl -e 'alarm shift @ARGV; exec @ARGV' $TIMEOUT $SUMMARIZER $CHECKS $f --havoc --unwind $o)) &>> ../$d.unwind$o.havoc.log
-    done
-    cd ..
-  done
-done
-
-for o in 1 2 3 4 5
-do
-  for d in $SETS
-  do
-    cd $d
-    rm -f ../$d.inline.unwind$o.havoc.log
-    for f in *.c 
-    do 
-      echo $d/$f "using inline unwind " $o "havoc"
-      echo "FILE:" $f >> ../$d.inline.unwind$o.havoc.log
-      (time (perl -e 'alarm shift @ARGV; exec @ARGV' $TIMEOUT $SUMMARIZER $CHECKS $f --havoc --unwind $o)) &>> ../$d.inline.unwind$o.havoc.log
-    done
-    cd ..
-  done
-done
-
-for o in havoc intervals equalities zones
-do
-for i in 8 16 32 64
-do
-  for d in $SETS
-  do
-    cd $d
-    rm -f ../$d.partial_inline$i.$o.log
-    for f in *.c 
-    do 
-      echo $d/$f "using partial_inline " $i $o
-      echo "FILE:" $f >> ../$d.partial_inline$i.$o.log
-      (time (perl -e 'alarm shift @ARGV; exec @ARGV' $TIMEOUT $SUMMARIZER $CHECKS $f --$o --inline-partial $i)) &>> ../$d.partial_inline$i.$o.log
-    done
-    cd ..
-  done
-done
-done
 
