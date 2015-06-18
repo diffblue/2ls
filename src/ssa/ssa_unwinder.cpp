@@ -564,7 +564,7 @@ bool ssa_local_unwindert::is_break_node(const local_SSAt::nodet& node,
   // a break should have only one target
   if(instr->targets.size()>1) return false;
 
-  if(instr->targets.front()->location_number < end_location ) return false;
+  if(instr->targets.front()->location_number <= end_location ) return false;
   return true;
 
 }
