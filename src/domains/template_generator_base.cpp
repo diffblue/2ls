@@ -82,7 +82,7 @@ void template_generator_baset::get_pre_var(const local_SSAt &SSA,
 
 /*******************************************************************\
 
-Function: template_generator_baset::get_init_var
+Function: template_generator_baset::get_init_expr
 
   Inputs:
 
@@ -93,10 +93,10 @@ Function: template_generator_baset::get_init_var
 
 \*******************************************************************/
 
-void template_generator_baset::get_init_var(const local_SSAt &SSA,
+void template_generator_baset::get_init_expr(const local_SSAt &SSA,
   		         local_SSAt::objectst::const_iterator o_it,
    		         local_SSAt::nodest::const_iterator n_it,
-			 symbol_exprt &init_var)
+			 exprt &init_expr)
 {
   symbol_exprt phi_var = SSA.name(*o_it, local_SSAt::PHI, 
 				  n_it->loophead->location);
@@ -109,7 +109,7 @@ void template_generator_baset::get_init_var(const local_SSAt &SSA,
         to_symbol_expr(e_it->lhs()).get_identifier()==phi_var.get_identifier()) 
     {
       const if_exprt &if_expr = to_if_expr(e_it->rhs());
-      init_var = to_symbol_expr(if_expr.false_case());
+      init_expr = if_expr.false_case();
       //should already be renamed for inner loops
 //      ssa_local_unwinder.unwinder_rename(init_var,*n_it->loophead,false);
       break;
@@ -118,7 +118,7 @@ void template_generator_baset::get_init_var(const local_SSAt &SSA,
 
   symbol_exprt pre_var = SSA.name(*o_it, local_SSAt::LOOP_BACK, n_it->location);
   ssa_local_unwinder.unwinder_rename(pre_var,*n_it,true);
-  init_renaming_map[pre_var]=init_var;    
+  init_renaming_map[pre_var]=init_expr;    
 }
 
 /*******************************************************************\
@@ -164,8 +164,8 @@ void template_generator_baset::collect_variables_loop(const local_SSAt &SSA,bool
 
         symbol_exprt pre_var;
 	get_pre_var(SSA,o_it,n_it,pre_var);
-        symbol_exprt init_var;
-	get_init_var(SSA,o_it,n_it,init_var);
+        exprt init_expr;
+	get_init_expr(SSA,o_it,n_it,init_expr);
         add_var(pre_var,pre_guard,post_guard,domaint::LOOP,var_specs);
 
      
@@ -306,8 +306,8 @@ void template_generator_baset::add_var(const domaint::vart &var,
   if(pre_guard.id()==ID_and)
   {
     exprt init_guard = and_exprt(pre_guard.op0(),not_exprt(pre_guard.op1()));
-    symbol_exprt post_var = to_symbol_expr(post_renaming_map[var]);
-    symbol_exprt aux_var = to_symbol_expr(aux_renaming_map[var]);
+    exprt post_var = post_renaming_map[var];
+    exprt aux_var = aux_renaming_map[var];
     aux_expr = and_exprt(
       implies_exprt(and_exprt(post_guard, not_exprt(init_guard)),
 			      equal_exprt(aux_var,post_var)),

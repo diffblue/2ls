@@ -96,10 +96,10 @@ protected:
 		   local_SSAt::nodest::const_iterator n_it,
 		   symbol_exprt &pre_var);
 
-  void get_init_var(const local_SSAt &SSA,
+  void get_init_expr(const local_SSAt &SSA,
   		   local_SSAt::objectst::const_iterator o_it,
 		   local_SSAt::nodest::const_iterator n_it,
-		   symbol_exprt &init_var);
+		   exprt &init_expr);
 
   bool replace_post(replace_mapt replace_map, exprt &expr);
   bool build_custom_expr(const local_SSAt &SSA,

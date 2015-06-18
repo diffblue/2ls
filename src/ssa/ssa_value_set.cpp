@@ -6,6 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <iostream>
+
 #include <util/pointer_offset_size.h>
 
 #include "ssa_value_set.h"
@@ -247,6 +249,7 @@ void ssa_value_domaint::assign_rhs_rec(
   }
   else if(rhs.id()==ID_dereference)
   {
+    std::cout << rhs.pretty() << std::endl;
     assert(false); // should have been removed
   }
   else
