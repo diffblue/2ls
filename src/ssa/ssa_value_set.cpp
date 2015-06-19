@@ -102,6 +102,11 @@ void ssa_value_domaint::assign_lhs_rec(
   const namespacet &ns,
   bool add)
 {
+  #if 0
+  std::cout << "assign_lhs_rec lhs: " << from_expr(ns, "", lhs) << '\n';
+  std::cout << "assign_lhs_rec rhs: " << from_expr(ns, "", rhs) << '\n';
+  #endif
+  
   // is the lhs an object?
   if(is_symbol_struct_member(lhs, ns))
   {
@@ -202,6 +207,10 @@ void ssa_value_domaint::assign_rhs_rec(
   bool offset,
   unsigned alignment) const
 {
+#if 0
+  std::cout << "assign_rhs_rec: " << from_expr(ns, "", rhs) << '\n';
+#endif
+  
   if(rhs.id()==ID_address_of)
   {
     const exprt &op=to_address_of_expr(rhs).object();

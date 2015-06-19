@@ -461,10 +461,6 @@ exprt::operandst summary_checker_baset::get_loop_continues(
     }
   }
 
-  literalt loop_continues_literal = solver.convert(disjunction(loop_continues));
-  if(!loop_continues_literal.is_constant())
-    solver.set_frozen(loop_continues_literal);
-
 #if 0
   std::cout << "loophead_continues: " << from_expr(SSA.ns,"",disjunction(loop_continues)) << std::endl;
 #endif
