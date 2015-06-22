@@ -50,6 +50,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #define UNWIND_GOTO_INTO_LOOP 1
 #define PROPAGATE_CONSTANTS 1
+#define REMOVE_MULTIPLE_DEREFERENCES 1
 
 /*******************************************************************\
 
@@ -974,6 +975,10 @@ bool summarizer_parse_optionst::process_goto_program(
 
 #if PROPAGATE_CONSTANTS
     propagate_constants(goto_model);
+#endif
+
+#if REMOVE_MULTIPLE_DEREFERENCES
+    remove_multiple_dereferences(goto_model);
 #endif
 
     // do array abstraction
