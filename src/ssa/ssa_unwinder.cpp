@@ -530,7 +530,10 @@ for(;it!=current_loop.body_nodes.end();it++)
   exprt break_cond_e=SSA.cond_symbol(it->location);
   //NOTE : do we check if the end of the guard has reached in loop_continue_e?
 loop_continue_e = and_exprt(break_cond_e,SSA.guard_symbol(it->location));
+if(is_return_node(current_loop,it))
+{
 exit_conditions.push_back(break_cond_e);
+}
 
   for(varobj_mapt::iterator vit=varobj_map.begin();vit!=varobj_map.end();vit++)
   {
