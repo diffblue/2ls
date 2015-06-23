@@ -135,7 +135,7 @@ void summarizer_fwt::do_summary(const function_namet &function_name,
     exprt inv = ssa_unwinder.get(function_name).rename_invariant(old_inv);
     conds.push_back(inv);
 
-#if 1
+#if 0
     std::ostringstream out;
     out << "(original inv)" << from_expr(SSA.ns,"",old_inv) << "\n";
     debug() << out.str() << eom;
