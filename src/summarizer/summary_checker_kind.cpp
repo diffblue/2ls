@@ -8,6 +8,8 @@ Author: Peter Schrammel
 
 #include "summary_checker_kind.h"
 
+#define GIVE_UP_INVARIANTS 7
+
 /*******************************************************************\
 
 Function: summary_checker_kindt::operator()
@@ -42,7 +44,9 @@ property_checkert::resultt summary_checker_kindt::operator()(
 
     result =  check_properties(); 
     if(result == property_checkert::UNKNOWN &&
-       !options.get_bool_option("havoc")) 
+       !options.get_bool_option("havoc") && 
+       (unwind<GIVE_UP_INVARIANTS || 
+        !options.get_bool_option("competition-mode"))) //magic constant 
     {
       summarize(goto_model);
       result =  check_properties(); 
