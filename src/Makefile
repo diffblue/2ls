@@ -13,10 +13,9 @@ $(SUBDIRS):
 
 # Dependencies
 
-summarizer: domains ssa solver 
+summarizer: domains ssa solver acdl
 deltacheck: ssa solver functions html
 deltagit: html
-summarizer: ssa solver functions domains
 
 
 clean: $(patsubst %, %_clean, $(SUBDIRS))

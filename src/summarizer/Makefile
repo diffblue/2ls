@@ -6,7 +6,7 @@ SRC = summarizer_base.cpp  \
       summarizer_main.cpp summarizer_parse_options.cpp \
       show.cpp summary_checker_base.cpp \
       summary_checker_ai.cpp summary_checker_bmc.cpp \
-      summary_checker_kind.cpp \
+      summary_checker_kind.cpp summary_checker_acdl.cpp \
       cover_goals_ext.cpp \
       summary_db.cpp summary.cpp ssa_db.cpp \
       array_abstraction.cpp preprocessing_util.cpp \
@@ -43,6 +43,7 @@ DELTA_OBJ+=\
       ../ssa/ssa_inliner$(OBJEXT)\
       ../ssa/ssa_unwinder$(OBJEXT)\
       ../ssa/ssa_value_set$(OBJEXT) \
+      ../acdl/acdl_solver$(OBJEXT) \
       ../functions/summary$(OBJEXT) \
       ../functions/get_function$(OBJEXT) \
       ../functions/path_util$(OBJEXT) \

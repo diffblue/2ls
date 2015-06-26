@@ -45,6 +45,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "summary_checker_ai.h"
 #include "summary_checker_bmc.h"
 #include "summary_checker_kind.h"
+#include "summary_checker_acdl.h"
 #include "../ssa/split_loopheads.h"
 #include "show.h"
 
@@ -136,6 +137,12 @@ void summarizer_parse_optionst::get_command_line_options(optionst &options)
 
   if(cmdline.isset("inline"))
     options.set_option("inline", true);
+
+  if(cmdline.isset("acdl"))
+  {
+    options.set_option("acdl", true);
+    options.set_option("inline", true);
+  }
 
   if(cmdline.isset("slice") && cmdline.isset("inline"))
     options.set_option("slice", true);
@@ -432,6 +439,8 @@ int summarizer_parse_optionst::doit()
     else assert(false);
     if(options.get_bool_option("enum-solver"))
       status() << " with enumeration solver";
+    else if(options.get_bool_option("acdl"))
+      status() << " with ACDL solver";
     else if(options.get_bool_option("binsearch-solver"))
       status() << " with binary search solver";
     else assert(false);
@@ -441,15 +450,19 @@ int summarizer_parse_optionst::doit()
   try
   {
     summary_checker_baset *summary_checker = NULL;
-    if(!options.get_bool_option("k-induction") && 
+    if(options.get_bool_option("acdl"))
+       summary_checker = new summary_checker_acdlt(options);
+    else if(!options.get_bool_option("k-induction") && 
        !options.get_bool_option("incremental-bmc"))
        summary_checker = new summary_checker_ait(options);
-    if(options.get_bool_option("k-induction") && 
+    else if(options.get_bool_option("k-induction") && 
        !options.get_bool_option("incremental-bmc")) 
        summary_checker = new summary_checker_kindt(options);
-    if(!options.get_bool_option("k-induction") && 
+    else if(!options.get_bool_option("k-induction") && 
        options.get_bool_option("incremental-bmc")) 
        summary_checker = new summary_checker_bmct(options);
+
+    assert(summary_checker!=NULL);
     
     summary_checker->set_message_handler(get_message_handler());
     summary_checker->simplify=!cmdline.isset("no-simplify");

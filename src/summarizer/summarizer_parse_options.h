@@ -55,6 +55,7 @@ class optionst;
   "(no-simplify)(no-fixed-point)" \
   "(no-spurious-check)(no-all-properties)" \
   "(competition-mode)(slice)" \
+  "(acdl)" \
   "(no-unwinding-assertions)(no-propagation)"
   // the last line is for CBMC-regression testing only
 

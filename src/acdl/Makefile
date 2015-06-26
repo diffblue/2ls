@@ -1,0 +1,18 @@
+include ../config.inc
+CBMC ?= ../..
+
+SRC = acdl_solver.cpp
+
+include $(CBMC)/src/config.inc
+include $(CBMC)/src/common
+
+CP_CXXFLAGS += $(SUMMARIZERFLAGS)
+
+INCLUDES= -I $(CBMC)/src
+
+CLEANFILES = 
+
+all: $(OBJ)
+
+###############################################################################
+
