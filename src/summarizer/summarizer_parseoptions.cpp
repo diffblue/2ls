@@ -1240,7 +1240,7 @@ void summarizer_parseoptionst::help()
     
   std::cout <<
 #ifndef ANONYMOUS
-    "* *                    Daniel Kroening                      * *\n"
+    "* *           Daniel Kroening, Peter Schrammel              * *\n"
     "* *                 University of Oxford                    * *\n"
     "* *                 kroening@kroening.com                   * *\n"
     "\n"

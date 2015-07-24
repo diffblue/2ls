@@ -3,4 +3,4 @@ main.c
 --preconditions --sufficient
 ^EXIT=0$
 ^SIGNAL=0$
-\[main\]: !TRUE
+\[_start\]: !TRUE

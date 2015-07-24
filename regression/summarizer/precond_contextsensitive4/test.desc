@@ -1,6 +1,6 @@
-CORE
+KNOWNBUG
 main.c
 --zones --context-sensitive --preconditions --sufficient
 ^EXIT=0$
 ^SIGNAL=0$
-\[main\]: argc' <= 1 && -((signed __CPROVER_bitvector\[33\])argc') <= -1
+\[_start\]: argc' <= 1 && -((signed __CPROVER_bitvector\[33\])argc') <= -1

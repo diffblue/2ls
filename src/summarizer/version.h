@@ -1,1 +1,1 @@
-#define SUMMARIZER_VERSION "0.2.0"
+#define SUMMARIZER_VERSION "0.1.0"

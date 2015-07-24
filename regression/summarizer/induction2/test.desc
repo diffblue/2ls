@@ -1,4 +1,4 @@
-CORE
+KNOWNBUG
 main.c
 --k-induction --havoc
 ^EXIT=0$
