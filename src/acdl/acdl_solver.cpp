@@ -42,6 +42,7 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
     #endif
    
     // DO STUFF
+    
     change = false;
 
     if(change) 

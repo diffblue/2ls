@@ -44,6 +44,7 @@ DELTA_OBJ+=\
       ../ssa/ssa_unwinder$(OBJEXT)\
       ../ssa/ssa_value_set$(OBJEXT) \
       ../acdl/acdl_solver$(OBJEXT) \
+      ../acdl/acdl_domain$(OBJEXT) \
       ../functions/summary$(OBJEXT) \
       ../functions/get_function$(OBJEXT) \
       ../functions/path_util$(OBJEXT) \
