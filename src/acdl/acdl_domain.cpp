@@ -23,7 +23,7 @@ void acdl_domaint::operator()(const statementt &statement,
 {
 #if 0
   ssa_analyzert ssa_analyzer;
-  incremental_solvert *solver = incremental_solvert::allocate(ns,true);
+  incremental_solvert *solver = incremental_solvert::allocate(SSA.ns,true);
 
   std::vector<valuet> new_values;
   new_values.reserve(vars.size());
@@ -63,7 +63,7 @@ void acdl_domaint::meet(const std::vector<valuet> &old_values,
 	    valuet &new_value)
 {
   new_value = conjunction(old_values);
-  simplify(new_value,ns);
+  simplify(new_value,SSA.ns);
 }
 
 
@@ -83,7 +83,7 @@ void acdl_domaint::join(const std::vector<valuet> &old_values,
 	    valuet &new_value)
 {
   new_value = disjunction(old_values);
-  simplify(new_value,ns);
+  simplify(new_value,SSA.ns);
 }
 
   
@@ -102,7 +102,7 @@ Function: acdl_domaint::contains()
 bool acdl_domaint::contains(const valuet &new_value,
 		const valuet &old_value)
 {
-  incremental_solvert *solver = incremental_solvert::allocate(ns,true);
+  incremental_solvert *solver = incremental_solvert::allocate(SSA.ns,true);
   *solver << and_exprt(new_value,not_exprt(old_value));
   bool result = (*solver)()==decision_proceduret::D_UNSATISFIABLE;
   delete solver;

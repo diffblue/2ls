@@ -18,8 +18,10 @@ public:
   typedef exprt statementt;
   typedef std::vector<symbol_exprt> varst;
 
-  explicit acdl_domaint(local_SSAt &_SSA, const namespacet &_ns)
-    : SSA(_SSA), ns(_ns)
+  explicit acdl_domaint(local_SSAt &_SSA,
+			ssa_dbt &_ssa_db,
+			ssa_local_unwindert &_ssa_local_unwinder)
+    : SSA(_SSA), ssa_db(_ssa_db), ssa_local_unwinder(_ssa_local_unwinder)
     {
       SSA.mark_nodes();
     }  
@@ -41,7 +43,8 @@ public:
 
 protected:
   local_SSAt &SSA;
-  const namespacet &ns;
+  ssa_dbt &ssa_db;
+  ssa_local_unwindert &_ssa_localunwinder;
   
 };
 
