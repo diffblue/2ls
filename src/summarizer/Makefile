@@ -45,6 +45,7 @@ DELTA_OBJ+=\
       ../ssa/ssa_value_set$(OBJEXT) \
       ../acdl/acdl_solver$(OBJEXT) \
       ../acdl/acdl_domain$(OBJEXT) \
+      ../acdl/template_generator_acdl$(OBJEXT) \
       ../functions/summary$(OBJEXT) \
       ../functions/get_function$(OBJEXT) \
       ../functions/path_util$(OBJEXT) \

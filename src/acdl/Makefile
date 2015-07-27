@@ -1,7 +1,7 @@
 include ../config.inc
 CBMC ?= ../..
 
-SRC = acdl_solver.cpp acdl_domain.cpp
+SRC = acdl_solver.cpp acdl_domain.cpp template_generator_acdl.cpp
 
 include $(CBMC)/src/config.inc
 include $(CBMC)/src/common

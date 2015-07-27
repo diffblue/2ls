@@ -1,7 +1,10 @@
 
 #include <util/simplify_expr.h>
 
+#include "../domains/ssa_analyzer.h"
+
 #include "acdl_domain.h"
+#include "template_generator_acdl.h"
 
 /*******************************************************************\
 
@@ -21,7 +24,6 @@ void acdl_domaint::operator()(const statementt &statement,
 		  const valuet &_old_value,
 		  valuet &new_value)
 {
-#if 0
   ssa_analyzert ssa_analyzer;
   incremental_solvert *solver = incremental_solvert::allocate(SSA.ns,true);
 
@@ -30,21 +32,23 @@ void acdl_domaint::operator()(const statementt &statement,
   for(varst::const_iterator it = vars.begin();
       it != vars.end(); ++it)
   {
-    exprt old_value = _old_value;
+    valuet old_value = _old_value;
     //TODO [Rajdeep]: project _old_value on everything in statement but *it
+#if 0
     remove_var(old_value,*it);
+#endif
     
-    template_generator_acdlt template_generator; //TODO [Peter]
-    template_generator(*it);
+    template_generator_acdlt template_generator(options,ssa_db,ssa_local_unwinder); 
+    template_generator(SSA,*it);
     
     ssa_analyzer(*solver, SSA, and_exprt(old_value,statement),template_generator);
-    ssa_analyzer.get_result(var_value);
+    valuet var_value;
+    ssa_analyzer.get_result(var_value,template_generator.all_vars());
 
     new_values.push_back(and_exprt(old_value,var_value));
   }
   meet(new_values,new_value);
   delete solver;
-#endif
 }
 
 /*******************************************************************\

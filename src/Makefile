@@ -1,6 +1,6 @@
 include config.inc
 
-SUBDIRS = summarizer ssa solver domains functions 
+SUBDIRS = summarizer ssa solver domains acdl 
 
 all: summarizer 
 #deltagit
