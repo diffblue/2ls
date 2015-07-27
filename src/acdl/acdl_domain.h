@@ -18,9 +18,10 @@ public:
   typedef exprt statementt;
   typedef std::vector<symbol_exprt> varst;
 
-  explicit acdl_domaint(const namespacet &_ns)
-    : ns(_ns)
+  explicit acdl_domaint(local_SSAt &_SSA, const namespacet &_ns)
+    : SSA(_SSA), ns(_ns)
     {
+      SSA.mark_nodes();
     }  
 
 
@@ -39,6 +40,7 @@ public:
 		const valuet &old_value);
 
 protected:
+  local_SSAt &SSA;
   const namespacet &ns;
   
 };

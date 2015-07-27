@@ -24,8 +24,6 @@ void acdl_domaint::operator()(const statementt &statement,
 #if 0
   ssa_analyzert ssa_analyzer;
   incremental_solvert *solver = incremental_solvert::allocate(ns,true);
-  local_SSAt SSA; //TODO [Peter]: get a dummy SSA from somewhere
-  SSA.mark_nodes();
 
   std::vector<valuet> new_values;
   new_values.reserve(vars.size());
