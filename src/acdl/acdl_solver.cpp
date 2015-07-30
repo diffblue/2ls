@@ -9,6 +9,7 @@ Author: Rajdeep Mukherjee
 
 
 #include "acdl_solver.h"
+#include "acdl_domain.h"
 
 #ifdef DEBUG
 #include <iostream>
@@ -41,7 +42,21 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
 {
   unsigned iteration_number=0;
   bool change;
-
+  typedef std::list<acdl_domaint::statementt> worklist;
+  acdl_domaint::valuet v = true_exprt();
+  
+  typedef std::vector<equal_exprt> first_statement;  
+  
+  //for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin(); 
+  //    n_it != SSA.nodes.end(); n_it++)
+    
+  // wrong attempt: first_statement.push_back(n_it->equalities);
+  // Now each node can have multiple equalities all of which 
+  // needs to be inserted 
+  //first_statement = SSA.nodes.begin()->equalities;
+  
+  // Now insert the first statement into the worklist
+  //worklist.push_back(SSA.nodes.begin()->equalities);
   do
   {
     iteration_number++;
@@ -52,7 +67,8 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
               << iteration_number << std::endl;
     #endif
    
-    // DO STUFF
+    // do it
+
     
     change = false;
 

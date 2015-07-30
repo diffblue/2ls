@@ -11,6 +11,7 @@ Author: Rajdeep Mukherjee
 
 #include <util/options.h>
 #include <goto-programs/property_checker.h>
+#include "acdl_domain.h"
 
 #include "../ssa/local_ssa.h"
 
@@ -18,6 +19,8 @@ class acdl_solvert : public messaget
 {
 public:
 
+  //typedef std::list<exprt> worklist;
+  //typedef exprt valuet;
   explicit acdl_solvert(const optionst &_options)
     : 
     options(_options)
