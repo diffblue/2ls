@@ -45,6 +45,9 @@ public:
   bool contains(const valuet &new_value,
 		const valuet &old_value);
 
+  exprt remove_var(const valuet &_old_value, 
+    const varst &vars);
+
 protected:
   optionst &options;
   local_SSAt &SSA;

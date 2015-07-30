@@ -22,7 +22,18 @@ Function: acdl_solvert::operator()
 
  Outputs:
 
- Purpose:
+ Purpose: Worklist algorithm sketch 
+ list<statementt> worklist;
+ valuet v = true_exprt();
+ // Initialize worklist
+ // wl <-- first_statement in localSSA.nodes;
+ do {
+  s = worklist_pop();
+  post(s,v); // this will update v
+  // Find statements where s.lhs appears in RHS of SSA nodes, insert the whole statement in worklist
+  // To do this, iterate over the localSSA.nodes and collect all these statements
+   populate_worklist(s.lhs); 
+ } while(worklist != 0);
 
 \*******************************************************************/
 

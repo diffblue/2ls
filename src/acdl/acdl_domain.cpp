@@ -112,3 +112,41 @@ bool acdl_domaint::contains(const valuet &new_value,
   delete solver;
   return result;
 }
+
+
+/*******************************************************************\
+
+Function: acdl_domaint::remove_var()
+
+  Inputs: Old_value = (1 <= x && x <= 5) && (0 <= y && y <= 10) vars = x
+
+ Outputs: (0 <= y && y <= 10)
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt acdl_domaint::remove_var(const valuet &_old_value, const varst &vars)
+{
+  valuet::operandst expr_val;  
+  irep_idt sym_name;
+  
+  // check only if the front element of the vector needs to be projected or 
+  // we need to iterate over the vector
+  irep_idt var_name = vars.front().get_identifier(); 
+  for(valuet::operandst::const_iterator
+        it = _old_value.operands().begin();
+        it != _old_value.operands().end();
+        ++it)
+  {
+    exprt sym_expr = *it;
+    forall_operands(it1, sym_expr) {
+      symbol_exprt curr_symbol = to_symbol_expr(*it1);
+      sym_name = curr_symbol.get_identifier(); 
+      if(sym_name == var_name)
+       expr_val.push_back(*it);   
+    }
+  }
+  exprt conjunction_exprt = conjunction(expr_val);
+  return conjunction_exprt;
+}

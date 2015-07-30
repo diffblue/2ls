@@ -1,5 +1,6 @@
 include ../config.inc
 CBMC ?= ../..
+#CBMC = ~/cbmc/trunk
 
 SRC = acdl_solver.cpp acdl_domain.cpp template_generator_acdl.cpp
 
