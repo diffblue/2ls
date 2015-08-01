@@ -5,6 +5,7 @@
 #include <set>
 
 #include <util/std_expr.h>
+#include <util/i2string.h>
 #include <langapi/language_util.h>
 #include <util/replace_expr.h>
 
@@ -27,6 +28,7 @@ public:
     guardt pre_guard;
     guardt post_guard;
     vart var;
+    exprt aux_expr; //some auxiliary per-variable constraint
     kindt kind;
   } var_spect;
 
@@ -78,7 +80,10 @@ public:
   unsigned domain_number; //serves as id for variables names
   replace_mapt &renaming_map;
   
-  inline void rename(exprt &expr) { replace_expr(renaming_map, expr); }
+  inline void rename(exprt &expr) 
+  { 
+    replace_expr(renaming_map, expr); 
+  }
   inline void rename(exprt::operandst &operands)
   {
     for(unsigned i=0; i<operands.size(); ++i)

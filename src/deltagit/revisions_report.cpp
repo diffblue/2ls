@@ -7,10 +7,10 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 #include <cmath>
-#include <cstdlib>
 #include <fstream>
 
-#include <xmllang/xml_parser.h>
+#include <util/string2int.h>
+#include <json/json_parser.h>
 
 #include "../html/html_escape.h"
 #include "../html/logo.h"
@@ -182,7 +182,7 @@ void revisions_report(
   
   out << "<table>\n"
       << "<tr><td valign=top>\n"
-      << "<img src=\"" << log_scale << "\">\n"
+      << "<img src=\"" << "log_scale.png" << "\">\n"
       << "</td>\n<td>\n";
       
   unsigned counter=0, number_of_jobs=jobs.size();
@@ -200,16 +200,13 @@ void revisions_report(
     unsigned passed=0, failed=0;
 
     {    
-      std::string summary_file_name=j_it->get_wd()+"/deltacheck-stat.xml";
-      xmlt deltacheck_summary;
+      std::string summary_file_name=j_it->get_wd()+"/deltacheck-stat.json";
+      jsont deltacheck_summary;
       null_message_handlert null_message_handler;
-      parse_xml(summary_file_name, null_message_handler, deltacheck_summary);
-      xmlt::elementst::const_iterator properties=deltacheck_summary.find("properties");
-      if(properties!=deltacheck_summary.elements.end())
-      {
-        passed=atoi(properties->get_attribute("passed").c_str());
-        failed=atoi(properties->get_attribute("failed").c_str());
-      }
+      parse_json(summary_file_name, null_message_handler, deltacheck_summary);
+      const jsont &properties=deltacheck_summary["properties"];
+      passed=unsafe_string2unsigned(properties["passed"].value);
+      failed=unsafe_string2unsigned(properties["failed"].value);
     }
   
     std::string tooltip=

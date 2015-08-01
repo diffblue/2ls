@@ -36,6 +36,7 @@ class equality_domaint : public domaint
     guardt pre_guard;
     guardt post_guard;
     equality_domaint::var_pairt var_pair;
+    exprt aux_expr;
     kindt kind;
   } template_rowt;
 

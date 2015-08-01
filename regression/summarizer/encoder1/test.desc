@@ -1,6 +1,0 @@
-CORE
-main.c
---inline --k-induction
-^EXIT=10$
-^SIGNAL=0$
-^VERIFICATION FAILED$

@@ -24,6 +24,7 @@ public:
     guardt pre_guard;
     guardt post_guard;
     row_exprt expr;
+    exprt aux_expr;
     kindt kind;
   } template_rowt;
 
@@ -56,9 +57,9 @@ public:
 				const std::set<rowt> &symb_rows);
   exprt to_symb_post_constraints(const std::set<rowt> &symb_rows);
   exprt get_row_symb_value_constraint(const rowt &row, 
-				      const row_valuet &row_value);
+				      const row_valuet &row_value, bool geq=false);
   exprt get_row_symb_pre_constraint(const rowt &row, 
-				      const row_valuet &row_value);
+				    const row_valuet &row_value);
   exprt get_row_symb_post_constraint(const rowt &row);
 
 
@@ -84,27 +85,33 @@ public:
   unsigned template_size();
 
   // generating templates
+  template_rowt &add_template_row(
+    const exprt& expr,
+    const exprt& pre_guard,
+    const exprt& post_guard,
+    const exprt& aux_expr,
+    kindt kind
+    );
+
   void add_interval_template(const var_specst &var_specs,
 			      const namespacet &ns);
-  void add_zone_template(const var_specst &var_specs,
+  void add_difference_template(const var_specst &var_specs,
 				 const namespacet &ns);
-  void add_octagon_template(const var_specst &var_specs,
+  void add_sum_template(const var_specst &var_specs,
+				    const namespacet &ns);
+  void add_quadratic_template(const var_specst &var_specs,
 				    const namespacet &ns);
 
   symbol_exprt get_row_symb_value(const rowt &row);
 
+  void rename_for_row(exprt &expr, const rowt &row);
+
 protected:
   friend class strategy_solver_binsearcht;
+  friend class strategy_solver_enumerationt;
 
   templatet templ;
   
 };
-
-void extend_expr_types(exprt &expr);
-constant_exprt simplify_const(const exprt &expr);
-ieee_floatt simplify_const_float(const exprt &expr);
-mp_integer simplify_const_int(const exprt &expr);
-
-
 
 #endif

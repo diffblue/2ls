@@ -135,7 +135,7 @@ bool ssa_domaint::merge(
       d_it_b++)
   {
     const irep_idt &id=d_it_b->first;
-
+ 
     // check if we have a phi node for 'id'
   
     phi_nodest::iterator p_it=phi_nodes.find(id);

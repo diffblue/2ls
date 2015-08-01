@@ -1,0 +1,6 @@
+CORE
+main.c
+--equalities
+^EXIT=5$
+^SIGNAL=0$
+^VERIFICATION INCONCLUSIVE$

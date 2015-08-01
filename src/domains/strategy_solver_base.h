@@ -10,9 +10,6 @@
 #include "util.h"
 #include "../domains/incremental_solver.h"
 
-
-//#define DEBUG_FORMULA
-
 class strategy_solver_baset : public messaget
 {
 
@@ -44,7 +41,7 @@ class strategy_solver_baset : public messaget
   bvt strategy_cond_literals;
   exprt::operandst strategy_value_exprs;
 
-  //statistics
+  //statistics for additional solvers
   unsigned solver_instances;
   unsigned solver_calls;
 };

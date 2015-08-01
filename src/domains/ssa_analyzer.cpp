@@ -15,15 +15,15 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "strategy_solver_enumeration.h"
 //#include "solver_enumeration.h"
 #include "strategy_solver_binsearch.h"
-//#include "strategy_solver_binsearch2.h"
-//#include "strategy_solver_binsearch3.h"
+#include "strategy_solver_binsearch2.h"
+#include "strategy_solver_binsearch3.h"
 #include "strategy_solver_equality.h"
 #include "linrank_domain.h"
 #include "lexlinrank_domain.h"
 #include "ranking_solver_enumeration.h"
 #include "lexlinrank_solver_enumeration.h"
 #include "template_generator_ranking.h"
-
+#include "strategy_solver_predabs.h"
 #include "ssa_analyzer.h"
 
 
@@ -34,6 +34,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/arith_tools.h>
 #include <util/simplify_expr.h>
 #include <util/mp_arith.h>
+
+#define BINSEARCH_SOLVER strategy_solver_binsearcht(*static_cast<tpolyhedra_domaint *>(domain), solver, SSA.ns)
+//#define BINSEARCH_SOLVER strategy_solver_binsearch2t(*static_cast<tpolyhedra_domaint *>(domain), solver, SSA.ns)
+//#define BINSEARCH_SOLVER strategy_solver_binsearch3t(*static_cast<tpolyhedra_domaint *>(domain), solver, SSA, SSA.ns)
 
 #ifdef DEBUG
 #include <iostream>
@@ -102,17 +106,22 @@ void ssa_analyzert::operator()(incremental_solvert &solver,
   }
   else
   {
-    result = new tpolyhedra_domaint::templ_valuet();
     if(template_generator.options.get_bool_option("enum-solver"))
     {
+      result = new tpolyhedra_domaint::templ_valuet();
       strategy_solver = new strategy_solver_enumerationt(
         *static_cast<tpolyhedra_domaint *>(domain), solver, SSA.ns);
     }
+    else if(template_generator.options.get_bool_option("predabs-solver"))
+    {
+      result = new predabs_domaint::templ_valuet();
+      strategy_solver = new strategy_solver_predabst(
+        *static_cast<predabs_domaint *>(domain), solver, SSA.ns);
+    }
     else if(template_generator.options.get_bool_option("binsearch-solver"))
     {
-      strategy_solver = 
-        new BINSEARCH_SOLVER(
-          *static_cast<tpolyhedra_domaint *>(domain), solver, SSA.ns);
+      result = new tpolyhedra_domaint::templ_valuet();
+      strategy_solver = new BINSEARCH_SOLVER;
     }
     else assert(false);
   }
@@ -161,6 +170,7 @@ void ssa_analyzert::operator()(incremental_solvert &solver,
   //statistics
   solver_instances += strategy_solver->get_number_of_solver_instances();
   solver_calls += strategy_solver->get_number_of_solver_calls();
+  solver_instances += strategy_solver->get_number_of_solver_instances();
 
   delete strategy_solver;
 }

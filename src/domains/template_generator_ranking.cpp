@@ -40,11 +40,11 @@ void template_generator_rankingt::operator()(unsigned _domain_number,
 
   if(options.get_bool_option("monolithic-ranking-function"))
   {
-    domain_ptr = new linrank_domaint(domain_number,renaming_map);
+    domain_ptr = new linrank_domaint(domain_number,post_renaming_map);
   }
   else
   {
-    domain_ptr = new lexlinrank_domaint(domain_number,renaming_map);
+    domain_ptr = new lexlinrank_domaint(domain_number,post_renaming_map);
   }
  collect_variables_ranking(SSA,forward);
 
@@ -119,7 +119,7 @@ void template_generator_rankingt::collect_variables_ranking(const local_SSAt &SS
         add_var(in,pre_guard,post_guard,domaint::LOOP,new_var_specs);
       
         // building map for renaming from pre into post-state
-        renaming_map[in] = out;    
+        post_renaming_map[in] = out;    
        
   #ifdef DEBUG
         std::cout << "Adding " << from_expr(ns, "", in) << " " << 

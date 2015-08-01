@@ -1,6 +1,0 @@
-KNOWNBUG
-main.c
---preconditions --equalities
-^EXIT=0$
-^SIGNAL=0$
-^$

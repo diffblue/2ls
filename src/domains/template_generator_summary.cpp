@@ -39,16 +39,20 @@ void template_generator_summaryt::operator()(unsigned _domain_number,
 
   collect_variables_loop(SSA,forward);
 
-  // do not compute summary for main
-  if(SSA.goto_function.body.instructions.front().function != ID_main ||
+  // do not compute summary for entry-point
+  if(SSA.goto_function.body.instructions.front().function != ID__start ||
      options.get_bool_option("preconditions"))
     collect_variables_inout(SSA,forward);
 
-  instantiate_standard_domains(SSA);
+  // either use standard templates or user-supplied ones
+  if(!instantiate_custom_templates(SSA))
+    instantiate_standard_domains(SSA);
 
-#if 1
+#ifdef SHOW_TEMPLATE_VARIABLES
   debug() << "Template variables: " << eom;
   domaint::output_var_specs(debug(),var_specs,SSA.ns); debug() << eom;
+#endif  
+#ifdef SHOW_TEMPLATE
   debug() << "Template: " << eom;
   domain_ptr->output_domain(debug(), SSA.ns); debug() << eom;
 #endif  
@@ -149,7 +153,8 @@ domaint::var_sett template_generator_summaryt::loop_vars()
   for(domaint::var_specst::const_iterator v = var_specs.begin(); 
       v!=var_specs.end(); v++)
   {
-    if(v->kind==domaint::LOOP) vars.insert(v->var);
+    if(v->kind==domaint::LOOP || v->kind==domaint::IN) 
+      vars.insert(v->var);
   }
   return vars;
 }

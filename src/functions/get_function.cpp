@@ -49,7 +49,7 @@ goto_functionst::goto_functiont * get_functiont::operator()(const irep_idt &id)
 
   current_file_name=index.full_path(file_name);
   
-  status() << "Reading \"" << current_file_name << "\"" << eom;
+  status() << "Reading \"" << id2string(current_file_name) << "\"" << eom;
   
   // read the file
   goto_model.clear();

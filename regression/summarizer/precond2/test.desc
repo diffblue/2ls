@@ -1,6 +1,0 @@
-CORE
-main.c
---preconditions --sufficient
-^EXIT=0$
-^SIGNAL=0$
-^$

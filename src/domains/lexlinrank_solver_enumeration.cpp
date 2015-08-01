@@ -13,7 +13,7 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
     static_cast<lexlinrank_domaint::templ_valuet &>(_rank);
 
   bool improved = false;
-  static std::vector<int> number_elements_per_row;
+  static std::vector<unsigned> number_elements_per_row;
   number_elements_per_row.resize(rank.size());
 
   debug() << "(RANK) no rows = " << rank.size() << eom;
@@ -33,7 +33,7 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
   rank_cond_literals.resize(rank_cond_exprs.size());
   for(unsigned i = 0; i < rank_cond_exprs.size(); i++)
   {  
-    rank_cond_literals[i] = solver.solver.convert(rank_cond_exprs[i]);
+    rank_cond_literals[i] = solver.solver->convert(rank_cond_exprs[i]);
   }
 
   debug() << "Outer solve(): ";
@@ -60,19 +60,19 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
       // retrieve values from the model x_i and x'_i
       lexlinrank_domaint::pre_post_valuest values;
   
-      if(solver.solver.l_get(rank_cond_literals[row]).is_true()) 
+      if(solver.solver->l_get(rank_cond_literals[row]).is_true()) 
       {
 	for(lexlinrank_domaint::pre_post_valuest::iterator it = 
 	      rank_value_exprs[row].begin(); 
 	    it != rank_value_exprs[row].end(); ++it) 
 	{
 	  // model for x_i
-	  exprt value = solver.solver.get(it->first);
+	  exprt value = solver.solver->get(it->first);
 	  debug() << "Row " << row << " Value for " 
 		  << from_expr(ns,"",it->first) 
 		  << ": " << from_expr(ns,"",value) << eom;
 	  // model for x'_i
-	  exprt post_value = solver.solver.get(it->second);
+	  exprt post_value = solver.solver->get(it->second);
 	  debug() << "Row " << row << " Value for " 
 		  << from_expr(ns,"",it->second) 
 		  << ": " << from_expr(ns,"",post_value) << eom;
@@ -133,7 +133,7 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
 	    for(std::vector<exprt>::iterator it = c.begin(); 
 		it != c.end(); ++it) 
 	    {
-	      exprt v = inner_solver->solver.get(*it);
+	      exprt v = inner_solver->solver->get(*it);
 	      new_row_values[constraint_no].c.push_back(v);
 	      debug() << "Inner Solver: row " << row 
 		      << " ==> c value for ";
@@ -163,7 +163,7 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
 #ifdef DEBUG_INNER_FORMULA
 	  for(unsigned i=0; i<inner_solver->formula.size(); i++) 
 	  {
-	    if(inner_solver->solver.is_in_conflict(inner_solver->formula[i]))
+	    if(inner_solver->solver->is_in_conflict(inner_solver->formula[i]))
 	      debug() << "is_in_conflict: " << inner_solver->formula[i] << eom;
 	    else
 	      debug() << "not_in_conflict: " << inner_solver->formula[i] << eom;
@@ -214,7 +214,7 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
     lexlinrank_domain.reset_refinements();
 #ifdef DEBUG_OUTER_FORMULA
     for(unsigned i=0; i<solver.formula.size(); i++) {
-      if(solver.solver.is_in_conflict(solver.formula[i]))
+      if(solver.solver->is_in_conflict(solver.formula[i]))
 	debug() << "is_in_conflict: " << solver.formula[i] << eom;
       else
 	debug() << "not_in_conflict: " << solver.formula[i] << eom;

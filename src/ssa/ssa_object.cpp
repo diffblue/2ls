@@ -6,9 +6,36 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+//#define DEBUG
+
+#ifdef DEBUG
+#include <iostream>
+#include <langapi/language_util.h>
+#endif
+
+#include <util/expr_util.h>
+
 #include <analyses/dirty.h>
 
 #include "ssa_object.h"
+
+/*******************************************************************\
+
+Function: is_ptr_object
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool is_ptr_object(const exprt &src)
+{
+  return src.id()==ID_symbol &&
+         src.get(ID_ptr_object)!=irep_idt();
+}
 
 /*******************************************************************\
 
@@ -34,6 +61,10 @@ void collect_objects_address_of_rec(
   std::set<ssa_objectt> &objects,
   std::set<exprt> &literals)
 {
+#ifdef DEBUG
+  std::cout << "COLLECT ADDRESS OF " << from_expr(ns,"",src) << "\n";
+#endif
+  
   if(src.id()==ID_index)
   {
     collect_objects_address_of_rec(
@@ -56,6 +87,11 @@ void collect_objects_address_of_rec(
   {
     literals.insert(src);
   }
+  else if(src.id()==ID_symbol)
+  {
+    collect_objects_rec(
+      src, ns, objects, literals);
+  }
 }
 
 /*******************************************************************\
@@ -76,6 +112,11 @@ void collect_objects_rec(
   std::set<ssa_objectt> &objects,
   std::set<exprt> &literals)
 {
+
+ #ifdef DEBUG
+  std::cout << "COLLECT " << from_expr(ns,"",src) << "\n";
+ #endif
+
   if(src.id()==ID_code)
   {
     forall_operands(it, src)
@@ -96,7 +137,7 @@ void collect_objects_rec(
     return;
 
   ssa_objectt ssa_object(src, ns);
-  
+
   if(ssa_object)
   {
     if(type.id()==ID_struct)
@@ -114,11 +155,16 @@ void collect_objects_rec(
         member_exprt new_src(src, it->get_name(), it->type());
         collect_objects_rec(new_src, ns, objects, literals); // recursive call
       }
-      
-      return; // done
     }
-    
-    objects.insert(ssa_object);
+    else
+    {
+
+ #ifdef DEBUG
+      std::cout << "OBJECT " << ssa_object.get_identifier() << "\n";
+ #endif
+
+      objects.insert(ssa_object);
+    }
   }
   else
   {
@@ -143,10 +189,66 @@ void ssa_objectst::collect_objects(
   const goto_functionst::goto_functiont &src,
   const namespacet &ns)
 {
+  // Add objects for parameters.
+  for(goto_functionst::goto_functiont::parameter_identifierst::
+      const_iterator it=src.parameter_identifiers.begin();
+      it!=src.parameter_identifiers.end();
+      it++)
+  {
+    symbol_exprt symbol=ns.lookup(*it).symbol_expr();
+    collect_objects_rec(symbol, ns, objects, literals);
+  }
+
+  // Rummage through body.
   forall_goto_program_instructions(it, src.body)
   {
     collect_objects_rec(it->guard, ns, objects, literals);
     collect_objects_rec(it->code, ns, objects, literals);
+  }
+}
+
+/*******************************************************************\
+
+Function: ssa_objectst::add_ptr_objects
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void ssa_objectst::add_ptr_objects(
+  const namespacet &ns)
+{
+  objectst tmp;
+
+  for(objectst::const_iterator o_it=objects.begin();
+      o_it!=objects.end();
+      o_it++)
+  {
+    exprt root_object=o_it->get_root_object();
+    if(root_object.id()==ID_symbol)
+    {
+      if(o_it->type().id()==ID_pointer)
+      {
+        const symbolt &symbol=ns.lookup(root_object);
+        if(symbol.is_parameter)
+          tmp.insert(*o_it);
+      }
+    }
+  }
+  
+  for(objectst::const_iterator o_it=tmp.begin();
+      o_it!=tmp.end();
+      o_it++)
+  {
+    typet type=o_it->type().subtype();
+    irep_idt identifier=id2string(o_it->get_identifier())+"'obj";
+    symbol_exprt ptr_object(identifier, type);
+    ptr_object.set(ID_ptr_object, o_it->get_identifier());
+    collect_objects_rec(ptr_object, ns, objects, literals);
   }
 }
 
@@ -173,18 +275,29 @@ void ssa_objectst::categorize_objects(
       o_it++)
   {
     exprt root_object=o_it->get_root_object();
+
+#ifdef DEBUG
+    std::cout << "CATEGORIZE " << from_expr(ns,"",root_object) << "\n";
+#endif
+
     if(root_object.id()==ID_symbol)
     {
-      const symbolt &symbol=ns.lookup(root_object);
-      if(symbol.is_procedure_local())
+      if(is_ptr_object(root_object))
       {
-        if(dirty(symbol.name))
-          dirty_locals.insert(*o_it);
-        else
-          clean_locals.insert(*o_it);
       }
       else
-        globals.insert(*o_it);
+      {
+        const symbolt &symbol=ns.lookup(root_object);
+        if(symbol.is_procedure_local())
+        {
+          if(dirty(symbol.name))
+            dirty_locals.insert(*o_it);
+          else
+            clean_locals.insert(*o_it);
+        }
+        else
+          globals.insert(*o_it);
+      }
     }
   }
 }
@@ -233,13 +346,13 @@ Function: ssa_objectt::object_id_rec
 
 \*******************************************************************/
 
-irep_idt ssa_objectt::object_id_rec(
+ssa_objectt::identifiert ssa_objectt::object_id_rec(
   const exprt &src,
   const namespacet &ns)
 {
   if(src.id()==ID_symbol)
   {
-    return to_symbol_expr(src).get_identifier();
+    return identifiert(to_symbol_expr(src).get_identifier());
   }
   else if(src.id()==ID_member)
   {
@@ -250,37 +363,29 @@ irep_idt ssa_objectt::object_id_rec(
     if(is_struct_member(member_expr, ns))
     {
       irep_idt compound_object=object_id_rec(compound_op, ns);
-      if(compound_object==irep_idt()) return irep_idt();
+      if(compound_object==irep_idt()) return identifiert();
     
-      return id2string(compound_object)+
-             "."+id2string(member_expr.get_component_name());
+      return identifiert(
+        id2string(compound_object)+
+        "."+id2string(member_expr.get_component_name()));
     }
     else
-      return irep_idt();
+      return identifiert();
   }
   else if(src.id()==ID_index)
   {
-    #if 0
-    const index_exprt &index_expr=to_index_expr(src);
-    return id2string(object_id_rec(index_expr.array()))+
-           "["+"]";
-    #else
-    return irep_idt();
-    #endif
+    return identifiert();
   }
   else if(src.id()==ID_dereference)
   {
-    #if 0
-    const dereference_exprt &dereference_expr=to_dereference_expr(src);
-    irep_idt pointer_object=object_id_rec(dereference_expr.pointer(), ns);
-    if(pointer_object==irep_idt()) return irep_idt();
-    return id2string(pointer_object)+"'obj";
-    #else
-    return irep_idt();
-    #endif
+    return identifiert();
+  }
+  else if(src.id()==ID_ptr_object)
+  {
+    return identifiert(id2string(src.get(ID_identifier))+"'obj");
   }
   else
-    return irep_idt();
+    return identifiert();
 }
 
 /*******************************************************************\

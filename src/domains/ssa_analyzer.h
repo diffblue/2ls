@@ -15,8 +15,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "strategy_solver_base.h"
 #include "template_generator_base.h"
 
-#define BINSEARCH_SOLVER strategy_solver_binsearcht
-
 class ssa_analyzert : public messaget
 {
 public:
@@ -25,7 +23,6 @@ public:
 
   explicit ssa_analyzert()
     : 
-    domain(NULL),
     result(NULL),
     solver_instances(0),
     solver_calls(0)

@@ -31,9 +31,10 @@ class summaryt
     bw_precondition(nil_exprt()), 
     bw_postcondition(nil_exprt()), 
     bw_transformer(nil_exprt()), 
-    bw_invariant(nil_exprt()), 
+    bw_invariant(nil_exprt()),
     termination_argument(nil_exprt()), 
-    terminates(UNKNOWN) {}
+    terminates(UNKNOWN),
+    mark_recompute(false) {}
 
   var_listt params;
   var_sett globals_in, globals_out;
@@ -50,6 +51,9 @@ class summaryt
 
   predicatet termination_argument;
   threevalt terminates;
+
+  bool mark_recompute; //to force recomputation of the summary
+                       // (used for invariant reuse in k-induction)
 
   void output(std::ostream &out, const namespacet &ns) const;
 

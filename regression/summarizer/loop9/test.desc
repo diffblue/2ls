@@ -1,6 +1,0 @@
-CORE
-main.c
---havoc
-^EXIT=10$
-^SIGNAL=0$
-^.*UNKNOWN$

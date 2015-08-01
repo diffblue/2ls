@@ -8,7 +8,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/unicode.h>
 
-#include "deltacheck_parseoptions.h"
+#include "deltacheck_parse_options.h"
 
 /*******************************************************************\
 
@@ -26,13 +26,13 @@ Function: main
 int wmain(int argc, const wchar_t **argv_wide)
 {
   const char **argv=narrow_argv(argc, argv_wide);
-  deltacheck_parseoptionst parseoptions(argc, argv);
-  return parseoptions.main();
+  deltacheck_parse_optionst parse_options(argc, argv);
+  return parse_options.main();
 }
 #else
 int main(int argc, const char **argv)
 {
-  deltacheck_parseoptionst parseoptions(argc, argv);
-  return parseoptions.main();
+  deltacheck_parse_optionst parse_options(argc, argv);
+  return parse_options.main();
 }
 #endif

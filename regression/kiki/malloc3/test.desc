@@ -1,0 +1,6 @@
+CORE
+main.c
+--inline --havoc --unwind 3
+^EXIT=10$
+^SIGNAL=0$
+^** 2 of 5 failed$

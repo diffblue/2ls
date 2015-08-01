@@ -126,7 +126,7 @@ void summarizer_fw_termt::compute_summary_rec(
     }
     if(has_loops && 
        (!has_function_calls || 
-	has_function_calls && calls_terminate==YES))
+	(has_function_calls && calls_terminate==YES)))
     {
       do_termination(function_name,SSA,summary);
     }  

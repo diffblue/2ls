@@ -48,10 +48,11 @@ public:
       explicit inline cover_goals_extt(incremental_solvert &_solver,
 				   const exprt::operandst& _loophead_selects,
 				   property_checkert::property_mapt &_property_map,
-				   bool _spurious_check):
+  			           bool _spurious_check, bool _all_properties):
           solver(_solver), 
           property_map(_property_map), 
 	  spurious_check(_spurious_check),
+	  all_properties(_all_properties),
 	  loophead_selects(_loophead_selects)
           {}
   
@@ -106,7 +107,7 @@ protected:
   unsigned _number_covered, _iterations;
   incremental_solvert &solver;
   property_checkert::property_mapt &property_map;
-  bool spurious_check;
+  bool spurious_check, all_properties;
   exprt::operandst loophead_selects;
 
   // this method is called for each satisfying assignment

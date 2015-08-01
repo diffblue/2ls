@@ -6,10 +6,11 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#define DEBUG
+//#define DEBUG
 
 #ifdef DEBUG
 #include <iostream>
+#include <langapi/language_util.h>
 #endif
 
 #include <util/i2string.h>
@@ -22,10 +23,11 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <langapi/language_util.h>
 
+#include "ssa_slicer.h"
 #include "local_ssa.h"
 #include "malloc_ssa.h"
+#include "ssa_dereference.h"
 #include "address_canonizer.h"
-#include "ssa_aliasing.h"
 
 /*******************************************************************\
 
@@ -61,8 +63,16 @@ void local_SSAt::build_SSA()
     build_function_call(i_it);
   }
 
+  // collect custom templates in loop heads
+  collect_custom_templates();
+
   // entry and exit variables
   get_entry_exit_vars();
+
+#ifdef ASSERTION_HOISTING
+  // collect assertions after loop exit (for k-induction assertion hoisting)
+  assertions_after_loop();
+#endif
 }
 
 /*******************************************************************\
@@ -87,8 +97,6 @@ void local_SSAt::get_entry_exit_vars()
   {
     const code_typet::parametert &parameter=*it;
     const irep_idt &identifier=parameter.get_identifier();
-
-    //    const symbolt &symbol=ns.lookup(identifier);
 
     const symbolt *symbol;
     if(ns.lookup(identifier,symbol)) continue;         
@@ -144,13 +152,53 @@ void local_SSAt::get_globals(locationt loc, std::set<symbol_exprt> &globals,
            id2string(returns_for_function)+"#return_value")==std::string::npos)
 	 continue;
 
-      if(rhs_value) 
-        globals.insert(to_symbol_expr(read_rhs(it->get_expr(),loc)));
+      if(rhs_value)
+      {
+	const exprt &expr = read_rhs(it->get_expr(),loc);
+        globals.insert(to_symbol_expr(expr));
+      }
       else
-        globals.insert(to_symbol_expr(read_lhs(it->get_expr(),loc)));
+      {
+	const exprt &expr = read_lhs(it->get_expr(),loc);
+        globals.insert(to_symbol_expr(expr));
+      }
     }
   }
 }   
+
+
+/*******************************************************************\
+
+Function: local_SSAt::collect_custom_templates
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void local_SSAt::collect_custom_templates()
+{
+  for(local_SSAt::nodest::iterator n_it=nodes.begin(); 
+      n_it!=nodes.end(); n_it++)
+  {
+    if(n_it->loophead != nodes.end()) //we've found a loop
+    {
+      //search for templates in the loop
+      for(local_SSAt::nodest::iterator nn_it=n_it->loophead; 
+	  nn_it!=n_it; nn_it++)
+      {
+	if(nn_it->templates.empty()) continue;
+	n_it->loophead->templates.insert(n_it->loophead->templates.end(),
+					 nn_it->templates.begin(),
+					 nn_it->templates.end());
+	nn_it->templates.clear();
+      }
+    }
+  }
+}
 
 /*******************************************************************\
 
@@ -220,6 +268,28 @@ void local_SSAt::find_nodes(locationt loc,
 
 /*******************************************************************\
 
+Function: local_SSAt::find_location_by_number
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+local_SSAt::locationt local_SSAt::find_location_by_number(unsigned location_number) const
+{
+  local_SSAt::nodest::const_iterator n_it =nodes.begin();
+  for(; n_it != nodes.end(); n_it++)
+  {
+    if(n_it->location->location_number == location_number) break;
+  }
+  return n_it->location;
+}
+
+/*******************************************************************\
+
 Function: local_SSAt::edge_guard
 
   Inputs:
@@ -269,12 +339,20 @@ void local_SSAt::build_phi_nodes(locationt loc)
       o_it=ssa_objects.objects.begin();
       o_it!=ssa_objects.objects.end(); o_it++)
   {
-    // phi-node here?
+    // phi-node for this object here?
     ssa_domaint::phi_nodest::const_iterator p_it=
       phi_nodes.find(o_it->get_identifier());
           
     if(p_it==phi_nodes.end()) continue; // none
+
+ #ifdef DEBUG
+      std::cout << "PHI " << o_it->get_identifier() << "\n";
+ #endif
     
+    //ignore custom template variables
+    if(id2string(o_it->get_identifier()).
+       find(TEMPLATE_PREFIX)!=std::string::npos) continue; 
+
     // Yes. Get the source -> def map.
     const std::map<locationt, ssa_domaint::deft> &incoming=p_it->second;
 
@@ -330,6 +408,25 @@ void local_SSAt::build_phi_nodes(locationt loc)
 
 /*******************************************************************\
 
+Function: local_SSAt::dereference
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt local_SSAt::dereference(const exprt &src, locationt loc) const
+{
+  const ssa_value_domaint &ssa_value_domain=ssa_value_ai[loc];
+  const std::string nondet_prefix="deref#"+i2string(loc->location_number);
+  return ::dereference(src, ssa_value_domain, nondet_prefix, ns);
+}
+
+/*******************************************************************\
+
 Function: local_SSAt::build_transfer
 
   Inputs:
@@ -345,13 +442,35 @@ void local_SSAt::build_transfer(locationt loc)
   if(loc->is_assign())
   {
     const code_assignt &code_assign=to_code_assign(loc->code);
-    assign_rec(code_assign.lhs(), code_assign.rhs(), loc);
+
+    // template declarations    
+    if(code_assign.lhs().id()==ID_symbol && 
+       id2string(code_assign.lhs().get(ID_identifier)).
+         find("return_value_" TEMPLATE_NEWVAR) != std::string::npos)
+    {
+      //propagate equalities through replace map
+      exprt lhs = code_assign.lhs();
+      template_newvars[lhs] = template_newvars[template_last_newvar];
+      template_last_newvar = lhs;
+      return;
+    }
+    if(code_assign.lhs().id()==ID_symbol && 
+       id2string(code_assign.lhs().get(ID_identifier)).
+       find(TEMPLATE_PREFIX)!=std::string::npos) return; 
+    if(code_assign.rhs().id()==ID_symbol && 
+       id2string(code_assign.rhs().get(ID_identifier)).
+       find(TEMPLATE_PREFIX)!=std::string::npos) return; 
+
+    exprt deref_lhs=dereference(code_assign.lhs(), loc);
+    exprt deref_rhs=dereference(code_assign.rhs(), loc);
+
+    assign_rec(deref_lhs, deref_rhs, true_exprt(), loc);
   }
 }
   
 /*******************************************************************\
 
-Function: local_SSAt::build_transfer
+Function: local_SSAt::build_function_call
 
   Inputs:
 
@@ -368,16 +487,61 @@ void local_SSAt::build_function_call(locationt loc)
     const code_function_callt &code_function_call=
       to_code_function_call(loc->code);
 
+    const exprt &lhs=code_function_call.lhs();
+      
+    if(lhs.is_not_nil())
+    {
+      exprt deref_lhs=dereference(lhs, loc);
+    
+      // generate a symbol for rhs
+      irep_idt identifier="ssa::return_value"+i2string(loc->location_number);
+      symbol_exprt rhs(identifier, code_function_call.lhs().type());
+      
+      assign_rec(deref_lhs, rhs, true_exprt(), loc);
+    }
+
+    nodest::iterator n_it = --nodes.end();
+
+    //template declarations
+    if(code_function_call.function().id()==ID_symbol &&
+       has_prefix(TEMPLATE_DECL,
+		  id2string(code_function_call.function().get(ID_identifier))))
+    {
+      assert(code_function_call.arguments().size()==1);
+      n_it->templates.push_back(code_function_call.arguments()[0]);
+
+      // replace "new" vars
+      replace_expr(template_newvars,n_it->templates.back());
+
+#if 0
+      std::cout << "found template declaration: " 
+		<< from_expr(ns,"",code_function_call.arguments()[0]) 
+		<< std::endl;
+#endif
+      template_newvars.clear();
+      return;
+    }
+
+    //turn function call into expression
     function_application_exprt f;
     f.function() = code_function_call.function();
     f.type() = code_function_call.lhs().type();
     f.arguments() = code_function_call.arguments(); 
-    f = to_function_application_expr(read_rhs(f, loc));
 
-    nodest::iterator n_it = --nodes.end();
+    //access to "new" value in template declarations
+    if(code_function_call.function().id()==ID_symbol &&
+       has_prefix(TEMPLATE_NEWVAR,
+		  id2string(code_function_call.function().get(ID_identifier))))
+    {
+      assert(code_function_call.arguments().size()==1);
+      template_last_newvar = f;
+      template_newvars[template_last_newvar] = template_last_newvar;			
+      return;
+    }
+
+    f = to_function_application_expr(read_rhs(f, loc));
     assert(f.function().id()==ID_symbol); //no function pointers
     irep_idt fname = to_symbol_expr(f.function()).get_identifier();
- 
    //add equalities for arguments
     unsigned i=0;
     for(exprt::operandst::iterator it =  f.arguments().begin();
@@ -573,6 +737,64 @@ void local_SSAt::assertions_to_constraints()
 
 /*******************************************************************\
 
+Function: local_SSAt::assertions_after_loop
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: find assertions after loop exit
+
+\*******************************************************************/
+
+void local_SSAt::assertions_after_loop()
+{
+  if(nodes.empty()) 
+    return;
+  std::map<locationt,exprt::operandst> assertion_map;
+  std::list<std::list<nodet>::iterator> loopheads;
+  loopheads.push_back(nodes.begin()); 
+  nodest::iterator n_it=nodes.end(); 
+  while(n_it!=nodes.begin()) //collect assertions backwards
+  {
+    n_it--;
+
+#if 0
+    std::cout << "location: " << n_it->location->location_number << std::endl;
+    std::cout << "loophead: " << loopheads.back()->location->location_number << std::endl;
+#endif
+
+    if(n_it==loopheads.back()) //assign parent-level assertions at loophead
+    {
+      loopheads.pop_back();
+      if(!loopheads.empty())
+      {
+        const exprt::operandst &assertions = 
+          assertion_map[loopheads.back()->location];
+        n_it->assertions_after_loop.insert(n_it->assertions_after_loop.end(),
+					 assertions.begin(),assertions.end());
+        assertion_map[loopheads.back()->location].clear();
+       //do not consider assertions after another loop
+      }
+      else // we should have reached the beginning
+	assert(n_it==nodes.begin());
+    }
+    if(n_it->loophead!=nodes.end()) 
+    {
+      assert(!loopheads.empty());
+      loopheads.push_back(n_it->loophead);
+    }
+    if(!n_it->assertions.empty() && !loopheads.empty())
+    {
+      exprt::operandst &a = assertion_map[loopheads.back()->location];
+      a.insert(a.end(),n_it->assertions.begin(),n_it->assertions.end());
+    }
+    //TODO: could also add assertions that are on a direct path within a loop
+  }
+}
+
+/*******************************************************************\
+
 Function: local_SSAt::cond_symbol
 
   Inputs:
@@ -654,12 +876,24 @@ exprt local_SSAt::read_lhs(
   const exprt &expr,
   locationt loc) const
 {
-  ssa_objectt object(expr, ns);
+  // dereference first
+  exprt tmp1=dereference(expr, loc);
+
+#ifdef DEBUG
+  std::cout << "read_lhs tmp1: " << from_expr(ns, "", tmp1) << '\n';
+#endif
+ 
+  ssa_objectt object(tmp1, ns);
 
   // is this an object we track?
   if(ssa_objects.objects.find(object)!=
      ssa_objects.objects.end())
   {
+ 
+#ifdef DEBUG
+    std::cout << from_expr(ns, "", tmp1) << "is_object" << '\n';
+#endif
+ 
     // yes, it is
     if(assignments.assigns(loc, object))
       return name(object, OUT, loc);
@@ -667,7 +901,7 @@ exprt local_SSAt::read_lhs(
       return read_rhs(object, loc);
   }
   else
-    return read_rhs(expr, loc);
+    return read_rhs(tmp1, loc);
 }
 
 /*******************************************************************\
@@ -740,12 +974,27 @@ Function: local_SSAt::read_rhs
 
 exprt local_SSAt::read_rhs(const exprt &expr, locationt loc) const
 {
-  exprt tmp=expr;
-  adjust_float_expressions(tmp, ns);
-  unsigned counter=0;
-  replace_side_effects_rec(tmp, loc, counter);
+  exprt tmp1=expr;
+  adjust_float_expressions(tmp1, ns);
   
-  exprt result=read_rhs_rec(tmp, loc);
+  unsigned counter=0;
+  replace_side_effects_rec(tmp1, loc, counter);
+
+  #ifdef DEBUG
+  std::cout << "read_rhs tmp1: " << from_expr(ns, "", tmp1) << '\n';
+  #endif
+  
+  exprt tmp2=dereference(tmp1, loc);
+
+  #ifdef DEBUG
+  std::cout << "read_rhs tmp2: " << from_expr(ns, "", tmp2) << '\n';
+  #endif
+  
+  exprt result=read_rhs_rec(tmp2, loc);
+  
+  #ifdef DEBUG
+  std::cout << "read_rhs result: " << from_expr(ns, "", result) << '\n';
+  #endif
   
   return result;
 }
@@ -812,50 +1061,7 @@ Function: local_SSAt::read_rhs_rec
 
 exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
 {
-  if(is_deref_struct_member(expr, ns))
-  {
-    // Stuff like (*ptr).m1.m2 or simply *ptr.
-    // This might alias with whatnot.
-
-    // We use the identifier produced by
-    // local_SSAt::replace_side_effects_rec
-    exprt result=symbol_exprt(expr.get(ID_C_identifier), expr.type());
-
-    // case split for aliasing
-    for(objectst::const_iterator
-        o_it=ssa_objects.objects.begin();
-        o_it!=ssa_objects.objects.end(); o_it++)
-    {
-      if(ssa_may_alias(expr, o_it->get_expr(), ns))
-      {
-        exprt guard=ssa_alias_guard(expr, o_it->get_expr(), ns);
-        exprt value=ssa_alias_value(expr, read_rhs(*o_it, loc), ns);
-        guard=read_rhs_rec(guard, loc);
-        value=read_rhs_rec(value, loc);
-
-        result=if_exprt(guard, value, result);
-      }
-    }
-    
-    // may alias literals
-    for(ssa_objectst::literalst::const_iterator
-        o_it=ssa_objects.literals.begin();
-        o_it!=ssa_objects.literals.end(); o_it++)
-    {
-      if(ssa_may_alias(expr, *o_it, ns))
-      {
-        exprt guard=ssa_alias_guard(expr, *o_it, ns);
-        exprt value=ssa_alias_value(expr, read_rhs(*o_it, loc), ns);
-        guard=read_rhs_rec(guard, loc);
-        value=read_rhs_rec(value, loc);
-
-        result=if_exprt(guard, value, result);
-      }
-    }
-    
-    return result;
-  }
-  else if(expr.id()==ID_side_effect)
+  if(expr.id()==ID_side_effect)
   {
     // ignore
 
@@ -869,7 +1075,7 @@ exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
   }
   else if(expr.id()==ID_dereference)
   {
-    // caught by case above
+    throw "unexpected dereference in read_rhs_rec";
   }
   else if(expr.id()==ID_index)
   {
@@ -968,28 +1174,18 @@ void local_SSAt::replace_side_effects_rec(
     }
     else if(statement==ID_malloc)
     {
-      counter++;
+      assert(false);
+/*      counter++;
       std::string tmp_suffix=
         i2string(loc->location_number)+
         "."+i2string(counter)+suffix;
-      expr=malloc_ssa(side_effect_expr, tmp_suffix, ns);
+	expr=malloc_ssa(side_effect_expr, tmp_suffix, ns);*/
     }
     else
     {
       //throw "unexpected side effect: "+id2string(statement);
       // ignore
     }
-  }
-  else if(is_deref_struct_member(expr, ns))
-  {
-    // We generate a symbol identifier in case dereferencing turns
-    // out to need one.
-    counter++;
-    const irep_idt identifier=
-      "ssa::deref"+
-      i2string(loc->location_number)+
-      "."+i2string(counter)+suffix;
-    expr.set(ID_C_identifier, identifier);
   }
 }
 
@@ -1021,6 +1217,10 @@ symbol_exprt local_SSAt::name(
                    "")+
                   i2string(cnt)+
                   (kind==LOOP_SELECT?std::string(""):suffix);
+
+#ifdef DEBUG
+  std::cout << "name " << kind << ": " << new_id << '\n';
+#endif
 
   new_symbol_expr.set_identifier(new_id);
   
@@ -1070,7 +1270,7 @@ symbol_exprt local_SSAt::name_input(const ssa_objectt &object) const
 {
   symbol_exprt new_symbol_expr(object.get_expr().type()); // copy
   const irep_idt old_id=object.get_identifier();
-  irep_idt new_id=id2string(old_id)+suffix;
+  irep_idt new_id=id2string(old_id)+suffix; //+"#in"
   new_symbol_expr.set_identifier(new_id);
 
   if(object.get_expr().location().is_not_nil())
@@ -1094,15 +1294,12 @@ Function: local_SSAt::assign_rec
 void local_SSAt::assign_rec(
   const exprt &lhs,
   const exprt &rhs,
+  const exprt &guard,
   locationt loc)
 {
-
-  bool flag_symbol=is_symbol_struct_member(lhs, ns);
-  bool flag_deref=is_symbol_or_deref_struct_member(lhs, ns);
-
   const typet &type=ns.follow(lhs.type());
-  
-  if(flag_symbol || flag_deref)
+
+  if(is_symbol_struct_member(lhs, ns))
   {
     if(type.id()==ID_struct)
     {
@@ -1118,7 +1315,7 @@ void local_SSAt::assign_rec(
       {
         member_exprt new_lhs(lhs, it->get_name(), it->type());
         member_exprt new_rhs(rhs, it->get_name(), it->type());
-        assign_rec(new_lhs, new_rhs, loc);
+        assign_rec(new_lhs, new_rhs, guard, loc);
       }
 
       return;
@@ -1126,59 +1323,14 @@ void local_SSAt::assign_rec(
 
     ssa_objectt lhs_object(lhs, ns);
     
-    exprt rhs_read=read_rhs(rhs, loc);
-
     const std::set<ssa_objectt> &assigned=
       assignments.get(loc);
 
-    for(std::set<ssa_objectt>::const_iterator
-        a_it=assigned.begin();
-        a_it!=assigned.end();
-        a_it++)
+    if(assigned.find(lhs_object)!=assigned.end())
     {
-      const symbol_exprt ssa_symbol=name(*a_it, OUT, loc);
-      exprt ssa_rhs;
-      
-      if(lhs_object==*a_it)
-      {
-        ssa_rhs=rhs_read;
-      }
-      else if(lhs.id()==ID_dereference) // might alias stuff
-      {
-        const dereference_exprt &dereference_expr=
-          to_dereference_expr(lhs);
-      
-        if(!ssa_may_alias(dereference_expr, a_it->get_expr(), ns))
-          continue;
-          
-        exprt guard=ssa_alias_guard(dereference_expr, a_it->get_expr(), ns);
-        exprt value=ssa_alias_value(dereference_expr, read_rhs(*a_it, loc), ns);
-        
-        exprt final_rhs=nil_exprt();
-        
-        // read the value and the rhs
-        value=read_rhs(value, loc);
-        
-        // merge rhs into value
-        if(value.id()==ID_symbol)
-          final_rhs=rhs_read;
-        else if(value.id()==ID_byte_extract_little_endian)
-          final_rhs=byte_update_little_endian_exprt(
-                          value.op0(), value.op1(), rhs_read);
-        else if(value.id()==ID_byte_extract_big_endian)
-          final_rhs=byte_update_big_endian_exprt(
-                          value.op0(), value.op1(), rhs_read);
-        
-        if(final_rhs.is_nil())
-          ssa_rhs=read_rhs(*a_it, loc);
-        else
-          ssa_rhs=if_exprt(
-            read_rhs(guard, loc),
-            final_rhs, // read_rhs done above
-            read_rhs(*a_it, loc));
-      }
-      else
-        continue;
+      exprt ssa_rhs=read_rhs(rhs, loc);
+
+      const symbol_exprt ssa_symbol=name(lhs_object, OUT, loc);
       
       equal_exprt equality(ssa_symbol, ssa_rhs);
       (--nodes.end())->equalities.push_back(equality);
@@ -1187,8 +1339,9 @@ void local_SSAt::assign_rec(
   else if(lhs.id()==ID_index)
   {
     const index_exprt &index_expr=to_index_expr(lhs);
-    exprt new_rhs=with_exprt(index_expr.array(), index_expr.index(), rhs);
-    assign_rec(index_expr.array(), new_rhs, loc);
+    exprt ssa_array=index_expr.array();
+    exprt new_rhs=with_exprt(ssa_array, index_expr.index(), rhs);
+    assign_rec(index_expr.array(), new_rhs, guard, loc);
   }
   else if(lhs.id()==ID_member)
   {
@@ -1200,14 +1353,14 @@ void local_SSAt::assign_rec(
     if(compound_type.id()==ID_union)
     {
       union_exprt new_rhs(member_expr.get_component_name(), rhs, compound.type());
-      assign_rec(member_expr.struct_op(), new_rhs, loc);
+      assign_rec(member_expr.struct_op(), new_rhs, guard, loc);
     }
     else if(compound_type.id()==ID_struct)
     {
       exprt member_name(ID_member_name);
       member_name.set(ID_component_name, member_expr.get_component_name());
       with_exprt new_rhs(compound, member_name, rhs);
-      assign_rec(compound, new_rhs, loc);
+      assign_rec(compound, new_rhs, guard, loc);
     }
   }
   else if(lhs.id()==ID_complex_real)
@@ -1217,7 +1370,7 @@ void local_SSAt::assign_rec(
     const complex_typet &complex_type=to_complex_type(op.type());
     exprt imag_op=unary_exprt(ID_complex_imag, op, complex_type.subtype());
     complex_exprt new_rhs(rhs, imag_op, complex_type);
-    assign_rec(op, new_rhs, loc);
+    assign_rec(op, new_rhs, guard, loc);
   }
   else if(lhs.id()==ID_complex_imag)
   {
@@ -1226,7 +1379,25 @@ void local_SSAt::assign_rec(
     const complex_typet &complex_type=to_complex_type(op.type());
     exprt real_op=unary_exprt(ID_complex_real, op, complex_type.subtype());
     complex_exprt new_rhs(real_op, rhs, complex_type);
-    assign_rec(op, new_rhs, loc);
+    assign_rec(op, new_rhs, guard, loc);
+  }
+  else if(lhs.id()==ID_if)
+  {
+    const if_exprt &if_expr=to_if_expr(lhs);
+    assign_rec(if_expr.true_case(), rhs, and_exprt(guard, if_expr.cond()), loc);
+    assign_rec(if_expr.false_case(), rhs, and_exprt(guard, not_exprt(if_expr.cond())), loc);
+  }
+  else if(lhs.id()==ID_byte_extract_little_endian ||
+          lhs.id()==ID_byte_extract_big_endian)
+  {
+    const byte_extract_exprt &byte_extract_expr=to_byte_extract_expr(lhs);
+
+    exprt new_lhs=byte_extract_expr.op();
+
+    exprt new_rhs=byte_extract_exprt(
+      byte_extract_expr.id(), rhs, byte_extract_expr.offset(), new_lhs.type());
+
+    assign_rec(new_lhs, new_rhs, guard, loc);
   }
   else
     throw "UNKNOWN LHS: "+lhs.id_string();
@@ -1251,12 +1422,36 @@ void local_SSAt::output(std::ostream &out) const
         n_it != nodes.end(); n_it++)
   {
     if(n_it->empty()) continue;
+    n_it->output(out, ns);
+    out << '\n';
+  }
+}
 
+/*******************************************************************\
+
+Function: local_SSAt::output_verbose
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void local_SSAt::output_verbose(std::ostream &out) const
+{
+  for(nodest::const_iterator 
+        n_it = nodes.begin();
+        n_it != nodes.end(); n_it++)
+  {
+    if(n_it->empty()) continue;
     out << "*** " << n_it->location->location_number
         << " " << n_it->location->source_location << "\n";
     n_it->output(out, ns);
     if(n_it->loophead!=nodes.end()) 
-      out << "loop back to location " << n_it->loophead->location->location_number << "\n";
+      out << "loop back to location "
+	  << n_it->loophead->location->location_number << "\n";
     out << "\n";
   }
   out << "(enable) " << from_expr(ns, "", get_enabling_exprs()) << "\n\n";
@@ -1278,8 +1473,10 @@ void local_SSAt::nodet::output(
   std::ostream &out,
   const namespacet &ns) const
 {
+#if 0
   if(!marked) 
     out << "(not marked)" << "\n";
+#endif
   for(equalitiest::const_iterator
       e_it=equalities.begin();
       e_it!=equalities.end();
@@ -1303,6 +1500,12 @@ void local_SSAt::nodet::output(
       f_it!=function_calls.end();
       f_it++)
     out << "(F) " << from_expr(ns, "", *f_it) << "\n";
+  
+#if 0
+  if(!assertions_after_loop.empty()) 
+    out << "(assertions-after-loop) "
+	<< from_expr(ns, "", conjunction(assertions_after_loop)) << "\n";
+#endif
 }
 
 /*******************************************************************\
@@ -1368,6 +1571,10 @@ std::list<exprt> & operator << (
   std::list<exprt> &dest,
   const local_SSAt &src)
 {
+#ifdef SLICING
+  ssa_slicert ssa_slicer;
+  ssa_slicer(dest,src);
+#else
   for(local_SSAt::nodest::const_iterator n_it = src.nodes.begin();
     n_it != src.nodes.end(); n_it++)
   {
@@ -1388,6 +1595,7 @@ std::list<exprt> & operator << (
       dest.push_back(*c_it);
     }
   }
+#endif
   
   return dest;
 }
@@ -1408,6 +1616,13 @@ decision_proceduret & operator << (
   decision_proceduret &dest,
   const local_SSAt &src)
 {
+#ifdef SLICING
+  std::list<exprt> tmp;
+  tmp << src;
+  for(std::list<exprt>::const_iterator it = tmp.begin();
+    it != tmp.end(); it++)
+    dest << *it;
+#else
   for(local_SSAt::nodest::const_iterator n_it = src.nodes.begin();
     n_it != src.nodes.end(); n_it++)
   {
@@ -1428,7 +1643,7 @@ decision_proceduret & operator << (
       dest << *c_it;
     }
   }
-  
+#endif  
   return dest;
 }
 
@@ -1448,6 +1663,13 @@ incremental_solvert & operator << (
   incremental_solvert &dest,
   const local_SSAt &src)
 {
+#ifdef SLICING
+  std::list<exprt> tmp;
+  tmp << src;
+  for(std::list<exprt>::const_iterator it = tmp.begin();
+    it != tmp.end(); it++)
+    dest << *it;
+#else
   for(local_SSAt::nodest::const_iterator n_it = src.nodes.begin();
     n_it != src.nodes.end(); n_it++)
   {
@@ -1474,7 +1696,7 @@ incremental_solvert & operator << (
         dest << *c_it;
     }
   }
-  
+#endif  
   return dest;
 }
 

@@ -6,8 +6,10 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <util/byte_operators.h>
+
 #include "assignments.h"
-#include "ssa_aliasing.h"
+#include "ssa_dereference.h"
 
 /*******************************************************************\
 
@@ -34,7 +36,8 @@ void assignmentst::build_assignment_map(
     if(it->is_assign())
     {
       const code_assignt &code_assign=to_code_assign(it->code);
-      assign(code_assign.lhs(), it, ns);
+      exprt lhs_deref=dereference(code_assign.lhs(), ssa_value_ai[it], "", ns);
+      assign(lhs_deref, it, ns);
     }
     else if(it->is_decl())
     {
@@ -61,7 +64,10 @@ void assignmentst::build_assignment_map(
 
       // the call might come with an assignment
       if(code_function_call.lhs().is_not_nil())
-        assign(code_function_call.lhs(), it, ns);
+      {
+        exprt lhs_deref=dereference(code_function_call.lhs(), ssa_value_ai[it], "", ns);
+        assign(lhs_deref, it, ns);
+      }
     }
     else if(it->is_dead())
     {
@@ -83,10 +89,10 @@ Function: assignmentst::assign
 
 void assignmentst::assign(
   const exprt &lhs,
-  goto_programt::const_targett loc,
+  locationt loc,
   const namespacet &ns)
 {
-  if(is_symbol_or_deref_struct_member(lhs, ns))
+  if(is_symbol_struct_member(lhs, ns))
   {
     const typet &lhs_type=ns.follow(lhs.type());
     
@@ -110,15 +116,13 @@ void assignmentst::assign(
       return; // done
     }
     
-    // this might alias all sorts of stuff
-    for(std::set<ssa_objectt>::const_iterator
-        o_it=ssa_objects.objects.begin();
-        o_it!=ssa_objects.objects.end();
-        o_it++)
+    // object?
+    ssa_objectt ssa_object(lhs, ns);
+  
+    if(ssa_object)
     {
-      if(ssa_may_alias(o_it->get_expr(), lhs, ns))
-        assign(*o_it, loc, ns);
-    }    
+      assign(ssa_object, loc, ns);
+    }
 
     return; // done
   }
@@ -142,6 +146,13 @@ void assignmentst::assign(
     const member_exprt &member_expr=to_member_expr(lhs);
     assign(member_expr.struct_op(), loc, ns);
   }
+  else if(lhs.id()==ID_byte_extract_little_endian ||
+          lhs.id()==ID_byte_extract_big_endian)
+  {
+    const byte_extract_exprt &byte_extract_expr=to_byte_extract_expr(lhs);
+
+    assign(byte_extract_expr.op(), loc, ns);
+  }
   else if(lhs.id()==ID_complex_real || lhs.id()==ID_complex_imag)
   {
     assert(lhs.operands().size()==1);
@@ -163,7 +174,7 @@ Function: assignmentst::assign
 
 void assignmentst::assign(
   const ssa_objectt &lhs,
-  goto_programt::const_targett loc,
+  locationt loc,
   const namespacet &)
 {
   assignment_map[loc].insert(lhs);

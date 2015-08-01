@@ -307,7 +307,7 @@ bool summarizer_bw_termt::bootstrap_preconditions(
       for(domaint::var_sett::const_iterator it = invars.begin();
 	  it != invars.end(); it++)
       {
-	c.push_back(equal_exprt(*it,solver.solver.get(*it)));
+	c.push_back(equal_exprt(*it,solver.solver->get(*it)));
       }
       precondition = conjunction(c);
       debug() << "bootstrap model for precondition: " 
