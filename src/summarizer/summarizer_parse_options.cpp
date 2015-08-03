@@ -68,7 +68,7 @@ Function: summarizer_parse_optionst::summarizer_parse_optionst
 
 summarizer_parse_optionst::summarizer_parse_optionst(int argc, const char **argv):
   parse_options_baset(SUMMARIZER_OPTIONS, argc, argv),
-  language_uit("Summarizer " CBMC_VERSION, cmdline)
+  language_uit("2LS " CBMC_VERSION, cmdline)
 {
 }
   
@@ -374,7 +374,7 @@ int summarizer_parse_optionst::doit()
   //
   // Print a banner
   //
-  status() << "SUMMARIZER version " SUMMARIZER_VERSION " (based on CBMC " CBMC_VERSION ")" << eom;
+  status() << "2LS version " SUMMARIZER_VERSION " (based on CBMC " CBMC_VERSION ")" << eom;
 
   register_language(new_ansi_c_language);
   register_language(new_cpp_language);
