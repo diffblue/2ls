@@ -48,7 +48,7 @@ Function: get_source
 
 void get_source(
   const std::string &path_prefix,
-  const locationt &location,
+  const source_locationt &location,
   const goto_programt &goto_program,
   std::list<linet> &dest,
   message_handlert &message_handler)
