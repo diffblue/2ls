@@ -1,0 +1,152 @@
+0> How do we compute abstract forward transformers on the SSA generated from summarizer
+1> ssa_fixed_point.cpp inside domain is used to perform the forward and backward propagation to derive the 
+   strongest post-condition and weakest pre-condition. This is equivalent to the BCP step of the SAT solver. The purpose is to compute 
+   the obvious facts by propagation until a greatest fixed point is reached.
+
+2> Why the divider circuit fails in summarizer. The assertion is simple. What options to run for this ? 
+
+3> Do we follow the CDCL path for implementation or do we follow the AI path for implementation ? For ACDCL, the high level 
+phases are BCP, decision, conflict, learn, backtrack. 
+
+4> One abstract state per program location -- hoe does it handle things like relational ?
+5> For loops, have both option: -- do unwinding and also do join.
+6> Use octagons from Apron library? Does Apron library does not have backward transformer implementation.
+
+7> SSA generation:
+#include <limits.h>
+
+void main() {
+  int x,y,z;
+  _Bool c;
+      
+  // abstract domain for booleans no implemented inside cdfpl
+  // decisions on booleans has to be made
+  if (c)
+   x = -1;
+  else
+   x = 2; 
+  // x = [-1,2]  
+  z = x * x; // z = [0,4]
+  assert((z!=2));
+}
+
+SUMMARIZER version 0.1.0 (based on CBMC 5.1)
+Parsing filter.c
+Converting
+Type-checking filter
+Generating GOTO Program
+Adding CPROVER library
+Generic Property Instrumentation
+Function Pointer Removal
+>>>> Function main
+*** 0 file filter.c line 4 function main
+(not marked)
+(E) $guard#0 == TRUE
+
+*** 4 file filter.c line 9 function main
+(not marked)
+(E) $cond#4 == (c#3 == FALSE)
+
+*** 5 file filter.c line 10 function main
+(not marked)
+(E) x#5 == -1
+(E) $guard#5 == (!$cond#4 && $guard#0)
+
+*** 6 file filter.c line 10 function main
+(not marked)
+(E) $cond#6 == TRUE
+
+*** 7 file filter.c line 12 function main
+(not marked)
+(E) x#7 == 2
+(E) $guard#7 == ($cond#4 && $guard#0)
+
+*** 8 file filter.c line 14 function main
+(not marked)
+(E) z#8 == x#phi8 * x#phi8
+(E) x#phi8 == ($cond#6 && $guard#5 ? x#5 : x#7)
+(E) $guard#8 == ($cond#6 && $guard#5 || $guard#7)
+
+*** 9 file filter.c line 15 function main
+(not marked)
+(A) !$guard#8 || z#8 != 2
+
+(enable) TRUE
+
+
+>>>> Function _start
+*** 15 
+(not marked)
+(E) $cond#15 == TRUE
+(E) $guard#15 == TRUE
+(F) __CPROVER_initialize()
+
+*** 16 file filter.c line 3
+(not marked)
+(E) $cond#16 == TRUE
+(E) $guard#16 == ($cond#15 && $guard#15)
+(F) main()
+
+*** 17 
+(not marked)
+(E) $guard#17 == ($cond#16 && $guard#16)
+
+(enable) TRUE
+
+
+>>>> Function __CPROVER_initialize
+*** 18 
+(not marked)
+(E) $guard#18 == TRUE
+
+*** 19 file <built-in-additions> line 31
+(not marked)
+(E) __CPROVER_dead_object#19 == NULL
+
+*** 20 file <built-in-additions> line 32
+(not marked)
+(E) __CPROVER_malloc_object#20 == NULL
+
+*** 21 file <built-in-additions> line 33
+(not marked)
+(E) __CPROVER_malloc_size#21 == 0ul
+
+*** 22 file <built-in-additions> line 34
+(not marked)
+(E) __CPROVER_malloc_is_new_array#22 == FALSE
+
+*** 23 file <built-in-additions> line 35
+(not marked)
+(E) __CPROVER_memory_leak#23 == NULL
+
+*** 24 file <built-in-additions> line 21
+(not marked)
+(E) __CPROVER_thread_id#24 == 0ul
+
+*** 25 file <built-in-additions> line 57
+(not marked)
+(E) __CPROVER_rounding_mode#25 == 0
+
+*** 26 file <built-in-additions> line 22
+(not marked)
+(E) __CPROVER_threads_exited#26 == ARRAY_OF(FALSE)
+
+*** 27 file <built-in-additions> line 23
+(not marked)
+(E) __CPROVER_next_thread_id#27 == 0ul
+
+*** 28 file <built-in-additions> line 79
+(not marked)
+(E) __CPROVER_pipe_count#28 == 0u
+
+*** 29 file <built-in-additions> line 30
+(not marked)
+(E) __CPROVER_deallocated#29 == NULL
+
+(enable) TRUE
+
+Peter+Bjorn Discussion, 3rd July 2015
+--------------------------------------
+1) ACDL starts with TOP in the beginning and has BOTTOM at all other cfg nodes. It computes the gfp. ACDL only computes the forware abstract transformers
+2) Astree starts with BOTTOM in the beginning and at all other cfg nodes. It computes the lfp. It doesnot compute the backward transformers.
+
