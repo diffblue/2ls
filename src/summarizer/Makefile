@@ -97,7 +97,7 @@ LIBS =
 
 # $(CUDD)/obj/libobj.a 
 
-CLEANFILES = summarizer$(EXEEXT) $(DELTA_OBJ)
+CLEANFILES = 2ls$(EXEEXT) $(DELTA_OBJ)
 
 all: 2ls$(EXEEXT)
 
