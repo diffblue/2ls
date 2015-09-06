@@ -1,0 +1,6 @@
+CORE
+main.c
+--havoc --unwind 2 --inline
+^EXIT=5$
+^SIGNAL=0$
+^VERIFICATION INCONCLUSIVE$

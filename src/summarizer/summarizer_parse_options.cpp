@@ -68,7 +68,7 @@ Function: summarizer_parse_optionst::summarizer_parse_optionst
 
 summarizer_parse_optionst::summarizer_parse_optionst(int argc, const char **argv):
   parse_options_baset(SUMMARIZER_OPTIONS, argc, argv),
-  language_uit("Summarizer " CBMC_VERSION, cmdline)
+  language_uit("2LS " CBMC_VERSION, cmdline)
 {
 }
   
@@ -1289,7 +1289,7 @@ void summarizer_parse_optionst::help()
 {
   std::cout <<
     "\n"
-    "* *  Summarizer " SUMMARIZER_VERSION " - Copyright (C) 2014                  * *\n"
+    "* *  2LS " SUMMARIZER_VERSION " - Copyright (C) 2015                         * *\n"
     "* *  (based on CBMC " CBMC_VERSION " ";
     
   std::cout << "(" << (sizeof(void *)*8) << "-bit version))";
@@ -1297,7 +1297,7 @@ void summarizer_parse_optionst::help()
   std::cout << "                   * *\n";
     
   std::cout <<
-    "* *                    Daniel Kroening                      * *\n"
+    "* *           Daniel Kroening, Peter Schrammel              * *\n"
     "* *                 University of Oxford                    * *\n"
     "* *                 kroening@kroening.com                   * *\n"
     "\n"

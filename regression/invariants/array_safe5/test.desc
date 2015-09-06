@@ -1,0 +1,6 @@
+KNOWNBUG
+main.c
+--intervals --arrays --enum-solver
+^EXIT=0$
+^SIGNAL=0$
+^VERIFICATION SUCCESSFUL$
