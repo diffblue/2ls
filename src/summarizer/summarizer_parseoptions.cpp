@@ -290,9 +290,9 @@ int summarizer_parseoptionst::doit()
   // Print a banner
   //
 #ifndef ANONYMOUS
-  status() << "SUMMARIZER version " SUMMARIZER_VERSION " (based on CBMC " CBMC_VERSION ")" << eom;
+  status() << "2LS version " SUMMARIZER_VERSION " (based on CBMC " CBMC_VERSION ")" << eom;
 #else
-  status() << "SUMMARIZER version " SUMMARIZER_VERSION << eom;
+  status() << "2LS version " SUMMARIZER_VERSION << eom;
 #endif
 
   register_language(new_ansi_c_language);
