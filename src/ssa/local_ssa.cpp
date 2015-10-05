@@ -868,7 +868,7 @@ symbol_exprt local_SSAt::name_input(const ssa_objectt &object) const
   irep_idt new_id=id2string(old_id)+"#in"+suffix;
   new_symbol_expr.set_identifier(new_id);
 
-  if(object.get_expr().location().is_not_nil())
+  if(object.get_expr().source_location().is_not_nil())
     new_symbol_expr.add_source_location()=object.get_expr().source_location();
 
   return new_symbol_expr;
