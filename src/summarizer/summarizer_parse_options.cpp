@@ -30,6 +30,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/goto_inline.h>
 #include <goto-programs/goto_functions.h>
 #include <goto-programs/xml_goto_trace.h>
+#include <goto-programs/graphml_goto_trace.h>
 #include <goto-programs/remove_returns.h>
 #include <goto-programs/remove_skip.h>
 #include "array_abstraction.h"
@@ -340,6 +341,9 @@ void summarizer_parse_optionst::get_command_line_options(optionst &options)
 		       cmdline.get_value("show-calling-contexts"));
   }
 #endif
+
+  if(cmdline.isset("graphml-cex"))
+    options.set_option("graphml-cex", cmdline.get_value("graphml-cex"));
 }
 
 /*******************************************************************\
@@ -1128,6 +1132,9 @@ void summarizer_parse_optionst::report_properties(
     if(cmdline.isset("show-trace") &&
        it->second.result==property_checkert::FAIL)
       show_counterexample(goto_model, it->second.error_trace);
+    if(cmdline.isset("graphml-cex") &&
+       it->second.result==property_checkert::FAIL)
+      show_counterexample(goto_model, it->second.error_trace);
   }
 
   if(!cmdline.isset("property"))
@@ -1227,6 +1234,40 @@ void summarizer_parse_optionst::show_counterexample(
   
   default:
     assert(false);
+  }
+}
+
+/*******************************************************************\
+
+Function: summarizer_parse_optionst::output_graphml_cex
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void summarizer_parse_optionst::output_graphml_cex(
+  const optionst &options,
+  const goto_modelt &goto_model,
+  const goto_tracet &error_trace)
+{
+  const namespacet ns(goto_model.symbol_table);
+  const std::string graphml=options.get_option("graphml-cex");
+  if(!graphml.empty())
+  {
+    graphmlt cex_graph;
+    convert(ns, error_trace, cex_graph);
+
+    if(graphml=="-")
+      write_graphml(cex_graph, std::cout);
+    else
+    {
+      std::ofstream out(graphml.c_str());
+      write_graphml(cex_graph, out);
+    }
   }
 }
 

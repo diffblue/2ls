@@ -52,7 +52,10 @@ class optionst;
   "(property):(all-properties)(k-induction)(incremental-bmc)" \
   "(no-spurious-check)" \
   "(no-simplify)(no-fixed-point)" \
-  "(no-unwinding-assertions)(no-propagation)" 
+  "(graphml-cex):" \
+  "(no-spurious-check)(no-all-properties)" \
+  "(competition-mode)(slice)(no-propagation)" \
+  "(no-unwinding-assertions)"
   // the last line is for CBMC-regression testing only
 
 class summarizer_parse_optionst:
@@ -90,6 +93,11 @@ protected:
     const summary_checker_baset::property_mapt &);  
 
   void show_counterexample(
+    const goto_modelt &,
+    const class goto_tracet &);
+
+  void output_graphml_cex(
+    const optionst &options,
     const goto_modelt &,
     const class goto_tracet &);
           
