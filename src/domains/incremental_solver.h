@@ -111,6 +111,8 @@ class incremental_solvert : public messaget
     return new incremental_solvert(_ns,arith_refinement);
   }
 
+  inline prop_convt & get_solver() { return *solver; }
+
   propt* sat_check;
   prop_convt* solver;
   const namespacet &ns;

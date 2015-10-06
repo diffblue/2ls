@@ -65,7 +65,7 @@ ec=$?
 cat $LOG.ok
 if [ $ec -eq 0 ] 
 then 
-  echo "OK" 
+  echo "TRUE" 
 fi
 if [ $ec -eq 5 ] 
 then 

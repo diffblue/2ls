@@ -342,6 +342,8 @@ void summarizer_parse_optionst::get_command_line_options(optionst &options)
   }
 #endif
 
+  if(cmdline.isset("show-trace"))
+    options.set_option("show-trace", true);
   if(cmdline.isset("graphml-cex"))
     options.set_option("graphml-cex", cmdline.get_value("graphml-cex"));
 }
@@ -511,13 +513,13 @@ int summarizer_parse_optionst::doit()
     switch((*summary_checker)(goto_model))
     {
     case property_checkert::PASS:
-      report_properties(goto_model, summary_checker->property_map);
+      report_properties(options,goto_model, summary_checker->property_map);
       report_success();
       retval = 0;
       break;
     
     case property_checkert::FAIL:
-      report_properties(goto_model, summary_checker->property_map);
+      report_properties(options,goto_model, summary_checker->property_map);
       report_failure();
       retval = 10;
       break;
@@ -526,7 +528,7 @@ int summarizer_parse_optionst::doit()
       retval = 5;
       if(options.get_bool_option("preconditions")) 
 	goto clean_up;
-      report_properties(goto_model, summary_checker->property_map);
+      report_properties(options,goto_model, summary_checker->property_map);
       report_unknown();
       break;
     
@@ -1102,6 +1104,7 @@ Function: summarizer_parse_optionst::report_properties
 \*******************************************************************/
 
 void summarizer_parse_optionst::report_properties(
+  const optionst &options,
   const goto_modelt &goto_model,
   const property_checkert::property_mapt &property_map)
 {
@@ -1134,7 +1137,7 @@ void summarizer_parse_optionst::report_properties(
       show_counterexample(goto_model, it->second.error_trace);
     if(cmdline.isset("graphml-cex") &&
        it->second.result==property_checkert::FAIL)
-      show_counterexample(goto_model, it->second.error_trace);
+      output_graphml_cex(options,goto_model, it->second.error_trace);
   }
 
   if(!cmdline.isset("property"))

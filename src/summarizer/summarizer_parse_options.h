@@ -89,6 +89,7 @@ protected:
   void report_failure();
 
   void report_properties(
+    const optionst &options,
     const goto_modelt &,
     const summary_checker_baset::property_mapt &);  
 

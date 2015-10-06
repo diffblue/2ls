@@ -392,7 +392,7 @@ void print_symbol_values(const local_SSAt &SSA,
   }
 }
 
-void show_error_trace(const irep_idt &property_id, 
+void show_raw_countermodel(const irep_idt &property_id, 
 		const local_SSAt &SSA, 
 		prop_convt &solver,
 		std::ostream &out,

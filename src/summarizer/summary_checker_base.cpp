@@ -239,9 +239,11 @@ void summary_checker_baset::check_properties(
 	   << "fully unwound" << eom;
 
   cover_goals_extt cover_goals(
-    solver,loophead_selects,property_map,
+    SSA,solver,loophead_selects,property_map,
     !fully_unwound && options.get_bool_option("spurious-check"),
-    all_properties);
+    all_properties,
+    options.get_bool_option("show-trace") ||
+    options.get_option("graphml-cex")!="");
 
 #if 0   
   debug() << "(C) " << from_expr(SSA.ns,"",enabling_expr) << eom;

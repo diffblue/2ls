@@ -59,7 +59,7 @@ void show_fixed_points(
   message_handlert &);
 
 //shows raw error trace
-void show_error_trace(
+void show_raw_countermodel(
   const irep_idt &property_id,
   const local_SSAt &SSA, 
   prop_convt &solver,
