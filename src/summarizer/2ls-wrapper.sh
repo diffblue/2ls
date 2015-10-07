@@ -58,11 +58,12 @@ export BIT_WIDTH
 export BM
 
 export LOG=`mktemp -t 2ls-log.XXXXXX`
-trap "rm -f $LOG.ok" EXIT
+trap "rm -f $LOG.ok $LOG.cex" EXIT
 
-./2ls --k-induction --competition-mode --graphml-cex /dev/stdout $BIT_WIDTH $PROPERTY --function $ENTRY $BM >> $LOG.ok 2>&1
+./2ls --k-induction --competition-mode --graphml-cex $LOG.cex $BIT_WIDTH $PROPERTY --function $ENTRY $BM >> $LOG.ok 2>&1
 ec=$?
 cat $LOG.ok
+cat $LOG.cex
 if [ $ec -eq 0 ] 
 then 
   echo "TRUE" 

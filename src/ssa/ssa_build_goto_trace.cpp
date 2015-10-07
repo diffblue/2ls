@@ -4,8 +4,6 @@ Module: Traces of GOTO Programs for SSA Models
 
 Author: Daniel Kroening
 
-Date: June 2014
-
 \*******************************************************************/
 
 #include <util/simplify_expr.h>
@@ -37,12 +35,14 @@ exprt finalize_lhs(
   {
     index_exprt tmp=to_index_expr(src);
     tmp.array()=finalize_lhs(tmp.array(), local_SSA, prop_conv, current_pc);
+    //TODO: consider unwinding suffix
     tmp.index()=simplify_expr(prop_conv.get(local_SSA.read_rhs(tmp.index(), current_pc)), local_SSA.ns);
     return tmp;
   }
   else if(src.id()==ID_dereference)
   {
     address_of_exprt tmp1(src);
+    //TODO: consider unwinding suffix
     exprt tmp2=local_SSA.read_rhs(tmp1, current_pc);
     exprt tmp3=prop_conv.get(tmp2);
     exprt tmp4=tmp3;
@@ -111,6 +111,7 @@ void record_step(
     {
       // failed or not?
       exprt cond=current_pc->guard;
+      //TODO: consider unwinding suffix
       exprt cond_read=local_SSA.read_rhs(cond, current_pc);
       exprt cond_value=simplify_expr(prop_conv.get(cond_read), local_SSA.ns);
       if(cond_value.is_false())
@@ -134,6 +135,7 @@ void record_step(
     {
       const code_assignt &code_assign=
         to_code_assign(current_pc->code);
+      //TODO: consider unwinding suffix
       exprt rhs_ssa=local_SSA.read_rhs(code_assign.rhs(), current_pc);
       exprt rhs_value=prop_conv.get(rhs_ssa);
       exprt rhs_simplified=simplify_expr(rhs_value, local_SSA.ns);
@@ -169,7 +171,7 @@ Function: build_goto_trace
 
  Outputs:
 
- Purpose:
+ Purpose: limitation: works only for a single function
 
 \*******************************************************************/
 
@@ -199,11 +201,13 @@ void build_goto_trace(
     if(current_pc->is_goto())
     {
       // taken or not?
+      //TODO: consider unwinding suffix
       exprt cond_symbol=local_SSA.cond_symbol(current_pc);
       exprt cond_value=prop_conv.get(cond_symbol);
 
       if(cond_value.is_true())
       {
+        //TODO: need odometer for loop unrollings
         if(current_pc->is_backwards_goto())
           current_pc++;
         else
