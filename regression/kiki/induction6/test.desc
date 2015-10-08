@@ -1,0 +1,6 @@
+KNOWNBUG
+main.c
+--k-induction --havoc
+^EXIT=0$
+^SIGNAL=0$
+^VERIFICATION SUCCESSFUL$
