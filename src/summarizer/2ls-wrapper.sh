@@ -75,6 +75,7 @@ fi
 if [ $ec -eq 10 ] 
 then 
   parse_result 
+  cp $LOG.cex witness.graphml
 fi
 exit $ec
 
