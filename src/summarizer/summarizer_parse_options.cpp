@@ -364,7 +364,7 @@ int summarizer_parse_optionst::doit()
 {
   if(cmdline.isset("version"))
   {
-    std::cout << SUMMARIZER_VERSION " (based on CBMC " CBMC_VERSION ")" << std::endl;
+    std::cout << SUMMARIZER_VERSION << std::endl;
     return 0;
   }
     
