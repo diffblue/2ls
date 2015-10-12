@@ -23,18 +23,14 @@ Function: ssa_build_goto_tracet::finalize_lhs
 
 \*******************************************************************/
 
-exprt ssa_build_goto_tracet::finalize_lhs(
-  const exprt &src,
-  const local_SSAt &local_SSA,
-  const prop_convt &prop_conv,
-  goto_programt::const_targett current_pc)
+exprt ssa_build_goto_tracet::finalize_lhs(const exprt &src)
 {
   if(src.id()==ID_symbol)
     return src;
   else if(src.id()==ID_index)
   {
     index_exprt tmp=to_index_expr(src);
-    tmp.array()=finalize_lhs(tmp.array(), local_SSA, prop_conv, current_pc);
+    tmp.array()=finalize_lhs(tmp.array());
     //TODO: consider unwinding suffix
     tmp.index()=simplify_expr(prop_conv.get(local_SSA.read_rhs(tmp.index(), current_pc)), local_SSA.ns);
     return tmp;
@@ -54,7 +50,7 @@ exprt ssa_build_goto_tracet::finalize_lhs(
   else if(src.id()==ID_member)
   {
     member_exprt tmp=to_member_expr(src);
-    tmp.struct_op()=finalize_lhs(tmp.struct_op(), local_SSA, prop_conv, current_pc);
+    tmp.struct_op()=finalize_lhs(tmp.struct_op());
     return tmp;
   }
   else
@@ -74,9 +70,6 @@ Function: ssa_build_goto_tracet::record_step
 \*******************************************************************/
 
 void ssa_build_goto_tracet::record_step(
-  const local_SSAt &local_SSA,
-  const prop_convt &prop_conv,
-  goto_programt::const_targett current_pc,
   goto_tracet &goto_trace,
   unsigned &step_nr)
 {
@@ -155,7 +148,7 @@ void ssa_build_goto_tracet::record_step(
       exprt rhs_ssa=local_SSA.read_rhs(code_assign.rhs(), current_pc);
       exprt rhs_value=prop_conv.get(rhs_ssa);
       exprt rhs_simplified=simplify_expr(rhs_value, local_SSA.ns);
-      exprt lhs_ssa=finalize_lhs(code_assign.lhs(), local_SSA, prop_conv, current_pc);
+      exprt lhs_ssa=finalize_lhs(code_assign.lhs());
       exprt lhs_simplified=simplify_expr(lhs_ssa, local_SSA.ns);
 
       step.type=goto_trace_stept::ASSIGNMENT;
@@ -196,22 +189,19 @@ Function: ssa_build_goto_tracet::operator()
 \*******************************************************************/
 
 void ssa_build_goto_tracet::operator()(
-  const local_SSAt &local_SSA,
-  const prop_convt &prop_conv,
   goto_tracet &goto_trace)
 {
   if(local_SSA.goto_function.body.instructions.empty())
     return;
-  
-  goto_programt::const_targett current_pc;
 
   current_pc=local_SSA.goto_function.body.instructions.begin();
+  unwindings.clear();
   
   unsigned step_nr=1;
   
   while(current_pc!=local_SSA.goto_function.body.instructions.end())
   {
-    record_step(local_SSA, prop_conv, current_pc, goto_trace, step_nr);
+    record_step(goto_trace, step_nr);
     
     if(!goto_trace.steps.empty() &&
        goto_trace.steps.back().is_assert())

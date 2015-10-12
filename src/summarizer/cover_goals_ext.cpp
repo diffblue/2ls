@@ -198,9 +198,8 @@ void cover_goals_extt::assignment()
 	property_map[it->first].result = property_checkert::FAIL;
 	if(build_error_trace)
 	{
-	  ssa_build_goto_tracet build_goto_trace;
-	  build_goto_trace(SSA,solver.get_solver(),
-			   property_map[it->first].error_trace);
+	  ssa_build_goto_tracet build_goto_trace(SSA,solver.get_solver());
+	  build_goto_trace(property_map[it->first].error_trace);
 	  if(!all_properties) 
 	    break;
 	}
@@ -228,9 +227,8 @@ void cover_goals_extt::assignment()
 	property_map[it->first].result = property_checkert::FAIL;
 	if(build_error_trace)
 	{
-	  ssa_build_goto_tracet build_goto_trace;
-	  build_goto_trace(SSA,solver.get_solver(),
-			   property_map[it->first].error_trace);
+	  ssa_build_goto_tracet build_goto_trace(SSA,solver.get_solver());
+	  build_goto_trace(property_map[it->first].error_trace);
 
 #if 0
           show_raw_countermodel(it->first,SSA,solver,debug(),get_message_handler());
