@@ -1753,3 +1753,54 @@ bool local_SSAt::has_function_calls() const
   return found;
 }
 
+/*******************************************************************\
+
+Function: local_SSAt::increment_odometer
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void local_SSAt::increment_odometer(odometert &odometer, odometer_modet mode)
+{
+  switch(mode)
+  {
+  case PUSH:
+    odometer.push_back(0);
+    break;
+  case POP:
+    odometer.pop_back();
+    break;
+  default: 
+    odometer[odometer.size()-1]++;
+    break;
+  }
+}
+
+/*******************************************************************\
+
+Function: local_SSAt::rename_odometer
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void local_SSAt::rename_odometer(exprt &expr, const odometert &odometer)
+{
+  assert(expr.id()==ID_symbol);
+  symbol_exprt &symbol_expr = to_symbol_expr(expr);
+  std::string suffix = "";
+  for(unsigned i=0;i<odometer.size();i++)
+  {
+    suffix += "%" + odometer[i];
+  }
+  symbol_expr.set_identifier(id2string(symbol_expr.get_identifier())+suffix);
+}

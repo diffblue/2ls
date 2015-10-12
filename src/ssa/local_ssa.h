@@ -154,6 +154,14 @@ public:
   exprt read_node_in(const ssa_objectt &, locationt loc) const;
   void assign_rec(const exprt &lhs, const exprt &rhs, const exprt &guard, locationt loc);
 
+  // renaming support for unwinder
+  typedef std::vector<unsigned> odometert;
+  typedef enum { NONE, PUSH, POP } odometer_modet;
+  static void increment_odometer(odometert &odometer, 
+				 odometer_modet mode=NONE);
+  static void rename_odometer(exprt &expr, const odometert &odometer);
+
+
   void get_entry_exit_vars();
   
   bool has_static_lifetime(const ssa_objectt &) const;

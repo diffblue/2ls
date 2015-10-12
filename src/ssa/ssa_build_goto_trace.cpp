@@ -13,7 +13,7 @@ Author: Daniel Kroening
 
 /*******************************************************************\
 
-Function: finalize_lhs
+Function: ssa_build_goto_tracet::finalize_lhs
 
   Inputs:
 
@@ -23,7 +23,7 @@ Function: finalize_lhs
 
 \*******************************************************************/
 
-exprt finalize_lhs(
+exprt ssa_build_goto_tracet::finalize_lhs(
   const exprt &src,
   const local_SSAt &local_SSA,
   const prop_convt &prop_conv,
@@ -63,7 +63,7 @@ exprt finalize_lhs(
 
 /*******************************************************************\
 
-Function: record_step
+Function: ssa_build_goto_tracet::record_step
 
   Inputs:
 
@@ -73,7 +73,7 @@ Function: record_step
 
 \*******************************************************************/
 
-void record_step(
+void ssa_build_goto_tracet::record_step(
   const local_SSAt &local_SSA,
   const prop_convt &prop_conv,
   goto_programt::const_targett current_pc,
@@ -185,7 +185,7 @@ void record_step(
 
 /*******************************************************************\
 
-Function: build_goto_trace
+Function: ssa_build_goto_tracet::operator()
 
   Inputs:
 
@@ -195,7 +195,7 @@ Function: build_goto_trace
 
 \*******************************************************************/
 
-void build_goto_trace(
+void ssa_build_goto_tracet::operator()(
   const local_SSAt &local_SSA,
   const prop_convt &prop_conv,
   goto_tracet &goto_trace)
