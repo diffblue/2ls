@@ -87,7 +87,6 @@ void record_step(
 
   switch(current_pc->type)
   {
-  case GOTO:
   case LOCATION:
   case SKIP:
   case START_THREAD:
@@ -99,14 +98,30 @@ void record_step(
   case CATCH:
     step.type=goto_trace_stept::LOCATION;
     goto_trace.add_step(step);
+    step_nr++;
     break;
 
   case ASSUME:
     step.type=goto_trace_stept::ASSUME;
     step.cond_value=true;
     goto_trace.add_step(step);
+    step_nr++;
     break;
   
+  case GOTO:
+    {
+      exprt cond=current_pc->guard;
+      //TODO: consider unwinding suffix
+      exprt cond_read=local_SSA.read_rhs(cond, current_pc);
+      exprt cond_value=simplify_expr(prop_conv.get(cond_read), local_SSA.ns);
+      step.type=goto_trace_stept::GOTO;
+      step.cond_expr = cond;
+      step.cond_value = cond_value.is_true();
+      goto_trace.add_step(step);
+      step_nr++;
+    }
+    break;
+
   case ASSERT:
     {
       // failed or not?
@@ -121,6 +136,7 @@ void record_step(
         step.cond_expr=cond;
         step.cond_value=false;
         goto_trace.add_step(step);
+        step_nr++;
       }
     }
     break;
@@ -143,10 +159,13 @@ void record_step(
       exprt lhs_simplified=simplify_expr(lhs_ssa, local_SSA.ns);
 
       step.type=goto_trace_stept::ASSIGNMENT;
-      // step.lhs_object
-      // step.lhs_object_value
       step.full_lhs=lhs_simplified;
       step.full_lhs_value=rhs_simplified;
+      if(lhs_simplified.id()==ID_symbol) 
+      {
+	step.lhs_object = to_symbol_expr(lhs_simplified);
+        step.lhs_object_value=rhs_simplified;
+      }      
       goto_trace.add_step(step);
       step_nr++;
     }
@@ -155,6 +174,7 @@ void record_step(
   case OTHER:
     step.type=goto_trace_stept::LOCATION;
     goto_trace.add_step(step);
+    step_nr++;
     break;
     
   case NO_INSTRUCTION_TYPE:

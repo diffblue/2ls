@@ -940,7 +940,7 @@ Function: array_abstractiont::replace_string_macros
 void array_abstractiont::replace_string_macros(
   exprt &expr,
   bool lhs,
-  const locationt &location)
+  const source_locationt &location)
 {
   if(expr.id()=="is_zero_string")
   {
@@ -981,7 +981,7 @@ exprt array_abstractiont::build(
   const exprt &pointer,
   whatt what,
   bool write,
-  const locationt &location)
+  const source_locationt &location)
 {
   // take care of pointer typecasts now
   if(pointer.id()==ID_typecast)

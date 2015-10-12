@@ -259,7 +259,7 @@ void summary_checker_baset::check_properties(
     if(!i_it->is_assert())
       continue;
   
-    const locationt &location=i_it->source_location;  
+    const source_locationt &location=i_it->source_location;  
     std::list<local_SSAt::nodest::const_iterator> assertion_nodes;
     SSA.find_nodes(i_it,assertion_nodes);
 
