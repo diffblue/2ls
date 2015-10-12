@@ -18,6 +18,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/expr_util.h>
 #include <util/decision_procedure.h>
 #include <util/byte_operators.h>
+#include <util/find_symbols.h>
+#include <util/rename_symbol.h>
 
 #include <goto-symex/adjust_float_expressions.h>
 
@@ -1765,25 +1767,26 @@ Function: local_SSAt::increment_odometer
 
 \*******************************************************************/
 
-void local_SSAt::increment_odometer(odometert &odometer, odometer_modet mode)
+void local_SSAt::unwindings_increment(odometert &unwindings, 
+				      odometer_modet mode)
 {
   switch(mode)
   {
   case PUSH:
-    odometer.push_back(0);
+    unwindings.push_back(0);
     break;
   case POP:
-    odometer.pop_back();
+    unwindings.pop_back();
     break;
   default: 
-    odometer[odometer.size()-1]++;
+    unwindings[unwindings.size()-1]++;
     break;
   }
 }
 
 /*******************************************************************\
 
-Function: local_SSAt::rename_odometer
+Function: local_SSAt::unwindings_rename
 
   Inputs:
 
@@ -1793,14 +1796,31 @@ Function: local_SSAt::rename_odometer
 
 \*******************************************************************/
 
-void local_SSAt::rename_odometer(exprt &expr, const odometert &odometer)
+void local_SSAt::unwindings_rename(exprt &expr, 
+				   const odometert &unwindings) const
+
 {
-  assert(expr.id()==ID_symbol);
-  symbol_exprt &symbol_expr = to_symbol_expr(expr);
-  std::string suffix = "";
-  for(unsigned i=0;i<odometer.size();i++)
+  find_symbols_sett symbols;
+  find_symbols(expr,symbols);
+  if(symbols.empty())
+    return;
+
+  rename_symbolt rename_symbol;
+  for(find_symbols_sett::const_iterator 
+	it = symbols.begin();
+      it != symbols.end(); ++it)
   {
-    suffix += "%" + odometer[i];
+    unwindings_def_levelst::const_iterator dl_it = 
+      unwindings_def_levels.find(*it);
+    unsigned def_level = 0;
+    if(dl_it != unwindings_def_levels.end())
+      def_level = dl_it->second;
+    assert(def_level<=unwindings.size());
+    std::string suffix = "";
+    for(unsigned i=0;i<def_level;i++)
+      suffix += "%" + unwindings[i];
+
+    rename_symbol.insert_expr(*it,id2string(*it)+suffix);
   }
-  symbol_expr.set_identifier(id2string(symbol_expr.get_identifier())+suffix);
+  rename_symbol(expr);
 }

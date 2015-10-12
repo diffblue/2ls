@@ -31,15 +31,16 @@ exprt ssa_build_goto_tracet::finalize_lhs(const exprt &src)
   {
     index_exprt tmp=to_index_expr(src);
     tmp.array()=finalize_lhs(tmp.array());
-    //TODO: consider unwinding suffix
-    tmp.index()=simplify_expr(prop_conv.get(local_SSA.read_rhs(tmp.index(), current_pc)), local_SSA.ns);
+    exprt index = local_SSA.read_rhs(tmp.index(), current_pc);
+    local_SSA.unwindings_rename(index,unwindings);
+    tmp.index()=simplify_expr(prop_conv.get(index), local_SSA.ns);
     return tmp;
   }
   else if(src.id()==ID_dereference)
   {
     address_of_exprt tmp1(src);
-    //TODO: consider unwinding suffix
     exprt tmp2=local_SSA.read_rhs(tmp1, current_pc);
+    local_SSA.unwindings_rename(tmp2,unwindings);
     exprt tmp3=prop_conv.get(tmp2);
     exprt tmp4=tmp3;
     if(tmp4.id()==ID_constant && tmp4.type().id()==ID_pointer &&
@@ -104,8 +105,8 @@ void ssa_build_goto_tracet::record_step(
   case GOTO:
     {
       exprt cond=current_pc->guard;
-      //TODO: consider unwinding suffix
       exprt cond_read=local_SSA.read_rhs(cond, current_pc);
+      local_SSA.unwindings_rename(cond_read,unwindings);
       exprt cond_value=simplify_expr(prop_conv.get(cond_read), local_SSA.ns);
       step.type=goto_trace_stept::GOTO;
       step.cond_expr = cond;
@@ -119,8 +120,8 @@ void ssa_build_goto_tracet::record_step(
     {
       // failed or not?
       exprt cond=current_pc->guard;
-      //TODO: consider unwinding suffix
       exprt cond_read=local_SSA.read_rhs(cond, current_pc);
+      local_SSA.unwindings_rename(cond_read,unwindings);
       exprt cond_value=simplify_expr(prop_conv.get(cond_read), local_SSA.ns);
       if(cond_value.is_false())
       {
@@ -144,8 +145,8 @@ void ssa_build_goto_tracet::record_step(
     {
       const code_assignt &code_assign=
         to_code_assign(current_pc->code);
-      //TODO: consider unwinding suffix
       exprt rhs_ssa=local_SSA.read_rhs(code_assign.rhs(), current_pc);
+      local_SSA.unwindings_rename(rhs_ssa,unwindings);
       exprt rhs_value=prop_conv.get(rhs_ssa);
       exprt rhs_simplified=simplify_expr(rhs_value, local_SSA.ns);
       exprt lhs_ssa=finalize_lhs(code_assign.lhs());
@@ -211,8 +212,8 @@ void ssa_build_goto_tracet::operator()(
     if(current_pc->is_goto())
     {
       // taken or not?
-      //TODO: consider unwinding suffix
       exprt cond_symbol=local_SSA.cond_symbol(current_pc);
+      local_SSA.unwindings_rename(cond_symbol,unwindings);
       exprt cond_value=prop_conv.get(cond_symbol);
 
       if(cond_value.is_true())

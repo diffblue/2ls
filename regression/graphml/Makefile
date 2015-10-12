@@ -7,6 +7,7 @@ test:
 	@PWD=`pwd`; \
 	for dir in `find $$PWD/* -maxdepth 1 -type d`; do \
 	  cd $$dir; \
+	  rm cex.graphml; \
 	  $(2LS) main.c $(FLAGS) --graphml-cex cex.graphml > main.out; \
           cd $(CPACHECKER); \
           ./scripts/cpa.sh -witness-check \

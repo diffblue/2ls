@@ -155,11 +155,14 @@ public:
   void assign_rec(const exprt &lhs, const exprt &rhs, const exprt &guard, locationt loc);
 
   // renaming support for unwinder
+  typedef hash_map_cont<irep_idt, unsigned, irep_id_hash> 
+    unwindings_def_levelst;
   typedef std::vector<unsigned> odometert;
   typedef enum { NONE, PUSH, POP } odometer_modet;
-  static void increment_odometer(odometert &odometer, 
+  unwindings_def_levelst unwindings_def_levels;  
+  static void unwindings_increment(odometert &unwindings, 
 				 odometer_modet mode=NONE);
-  static void rename_odometer(exprt &expr, const odometert &odometer);
+  void unwindings_rename(exprt &expr, const odometert &unwindings) const;
 
 
   void get_entry_exit_vars();
