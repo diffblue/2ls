@@ -54,6 +54,7 @@ void local_SSAt::build_SSA()
     if(i_it->is_backwards_goto())
     {
       loophead_node = find_node(i_it->get_target());
+      loopheads.insert(i_it->get_target());
     }
     nodes.push_back(nodet(i_it,loophead_node));
 
@@ -1757,7 +1758,7 @@ bool local_SSAt::has_function_calls() const
 
 /*******************************************************************\
 
-Function: local_SSAt::increment_odometer
+Function: local_SSAt::unwindings_increment
 
   Inputs:
 
@@ -1779,7 +1780,40 @@ void local_SSAt::unwindings_increment(odometert &unwindings,
     unwindings.pop_back();
     break;
   default: 
+    assert(unwindings.size()>=1);
     unwindings[unwindings.size()-1]++;
+    break;
+  }
+}
+
+/*******************************************************************\
+
+Function: local_SSAt::unwindings_decrement
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void local_SSAt::unwindings_decrement(odometert &unwindings, 
+				      odometer_modet mode)
+{
+  switch(mode)
+  {
+  case PUSH:
+    unwindings.push_back(current_unwinding);
+    break;
+  case POP:
+    unwindings.pop_back();
+    break;
+  default: 
+    assert(unwindings.size()>=1);
+    unsigned index = unwindings.size()-1;
+    assert(unwindings[index]>=1);
+    unwindings[index]--;
     break;
   }
 }
@@ -1823,4 +1857,8 @@ void local_SSAt::unwindings_rename(exprt &expr,
     rename_symbol.insert_expr(*it,id2string(*it)+suffix);
   }
   rename_symbol(expr);
+#if 1
+  std::cout << "UNWINDINGS_RENAME: " 
+	    << from_expr(ns, "", expr) << std::endl;
+#endif
 }

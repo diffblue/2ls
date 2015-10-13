@@ -1010,7 +1010,11 @@ bool summarizer_parse_optionst::process_goto_program(
     if(options.get_bool_option("inline"))
     {
       status() << "Performing full inlining" << eom;
-      goto_inline(goto_model, ui_message_handler);
+      if(goto_inline(goto_model, ui_message_handler))
+      {
+        report_unknown();
+	return 5;
+      }
     }
 
     //inline __CPROVER_initialize and main

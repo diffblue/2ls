@@ -1,6 +1,6 @@
 /*******************************************************************\
 
-Module: SSA Slicer
+Module: SSA Slicer --- DEPRECATED
 
 Author: Peter Schrammel
 

@@ -35,6 +35,7 @@ public:
     const namespacet &_ns,
     const std::string &_suffix=""):
     ns(_ns), goto_function(_goto_function), 
+    current_unwinding(0),
     ssa_objects(_goto_function, ns),
     ssa_value_ai(_goto_function, ns),
     assignments(_goto_function.body, ns, ssa_objects, ssa_value_ai),
@@ -138,8 +139,22 @@ public:
   { return name(guard_symbol(), OUT, guard_map[loc].guard_source); }
   exprt edge_guard(locationt from, locationt to) const;
   
-  //  nodet::assertionst assertions(locationt loc) const;
-  
+  // renaming support for unwinder 
+  //   (TODO: this should eventually become the new unwinder)
+  typedef hash_map_cont<irep_idt, unsigned, irep_id_hash> 
+    unwindings_def_levelst;
+  typedef std::vector<unsigned> odometert;
+  typedef enum { NONE, PUSH, POP } odometer_modet;
+  unwindings_def_levelst unwindings_def_levels;  
+  unsigned current_unwinding; //TODO: loop-specific unwindings in future
+  std::set<locationt> loopheads; 
+  void unwindings_increment(odometert &unwindings, 
+				 odometer_modet mode=NONE);
+  void unwindings_decrement(odometert &unwindings, 
+				 odometer_modet mode=NONE);
+  virtual void unwindings_rename(exprt &expr, 
+			 const odometert &unwindings) const;
+
   // auxiliary functions
   enum kindt { PHI, OUT, LOOP_BACK, LOOP_SELECT };
   symbol_exprt name(const ssa_objectt &, kindt kind, locationt loc) const;
@@ -153,17 +168,6 @@ public:
   symbol_exprt read_rhs(const ssa_objectt &, locationt loc) const;
   exprt read_node_in(const ssa_objectt &, locationt loc) const;
   void assign_rec(const exprt &lhs, const exprt &rhs, const exprt &guard, locationt loc);
-
-  // renaming support for unwinder
-  typedef hash_map_cont<irep_idt, unsigned, irep_id_hash> 
-    unwindings_def_levelst;
-  typedef std::vector<unsigned> odometert;
-  typedef enum { NONE, PUSH, POP } odometer_modet;
-  unwindings_def_levelst unwindings_def_levels;  
-  static void unwindings_increment(odometert &unwindings, 
-				 odometer_modet mode=NONE);
-  void unwindings_rename(exprt &expr, const odometert &unwindings) const;
-
 
   void get_entry_exit_vars();
   
