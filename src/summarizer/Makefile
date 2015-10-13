@@ -42,6 +42,7 @@ DELTA_OBJ+=\
       ../ssa/split_loopheads$(OBJEXT)\
       ../ssa/ssa_inliner$(OBJEXT)\
       ../ssa/ssa_unwinder$(OBJEXT)\
+      ../ssa/ssa_unwinder2$(OBJEXT)\
       ../ssa/ssa_value_set$(OBJEXT) \
       ../ssa/const_propagator$(OBJEXT) \
       ../functions/summary$(OBJEXT) \

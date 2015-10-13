@@ -10,7 +10,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #ifdef DEBUG
 #include <iostream>
-#include <langapi/language_util.h>
 #endif
 
 #include <util/i2string.h>
@@ -18,8 +17,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/expr_util.h>
 #include <util/decision_procedure.h>
 #include <util/byte_operators.h>
-#include <util/find_symbols.h>
-#include <util/rename_symbol.h>
 
 #include <goto-symex/adjust_float_expressions.h>
 
@@ -54,7 +51,6 @@ void local_SSAt::build_SSA()
     if(i_it->is_backwards_goto())
     {
       loophead_node = find_node(i_it->get_target());
-      loopheads.insert(i_it->get_target());
     }
     nodes.push_back(nodet(i_it,loophead_node));
 
@@ -965,6 +961,43 @@ exprt local_SSAt::read_node_in(
 
 /*******************************************************************\
 
+Function: local_SSAt::get_def_loc
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+local_SSAt::locationt local_SSAt::get_def_loc(
+  const symbol_exprt &expr, 
+  locationt loc) const
+{
+  ssa_objectt object(expr,ns);
+  if(!object) assert(false);
+  if(ssa_objects.objects.find(object)!=
+     ssa_objects.objects.end())
+  {
+    const irep_idt &identifier=object.get_identifier();
+    const ssa_domaint &ssa_domain=ssa_analysis[loc];
+
+    ssa_domaint::def_mapt::const_iterator d_it=
+      ssa_domain.def_map.find(identifier);
+
+    if(d_it==ssa_domain.def_map.end()) //input
+      return goto_function.body.instructions.begin();
+    else
+      return d_it->second.def.loc; //last definition
+  }
+  else //input
+    return goto_function.body.instructions.begin();
+
+}
+
+/*******************************************************************\
+
 Function: local_SSAt::read_rhs
 
   Inputs:
@@ -1756,109 +1789,3 @@ bool local_SSAt::has_function_calls() const
   return found;
 }
 
-/*******************************************************************\
-
-Function: local_SSAt::unwindings_increment
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void local_SSAt::unwindings_increment(odometert &unwindings, 
-				      odometer_modet mode)
-{
-  switch(mode)
-  {
-  case PUSH:
-    unwindings.push_back(0);
-    break;
-  case POP:
-    unwindings.pop_back();
-    break;
-  default: 
-    assert(unwindings.size()>=1);
-    unwindings[unwindings.size()-1]++;
-    break;
-  }
-}
-
-/*******************************************************************\
-
-Function: local_SSAt::unwindings_decrement
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void local_SSAt::unwindings_decrement(odometert &unwindings, 
-				      odometer_modet mode)
-{
-  switch(mode)
-  {
-  case PUSH:
-    unwindings.push_back(current_unwinding);
-    break;
-  case POP:
-    unwindings.pop_back();
-    break;
-  default: 
-    assert(unwindings.size()>=1);
-    unsigned index = unwindings.size()-1;
-    assert(unwindings[index]>=1);
-    unwindings[index]--;
-    break;
-  }
-}
-
-/*******************************************************************\
-
-Function: local_SSAt::unwindings_rename
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void local_SSAt::unwindings_rename(exprt &expr, 
-				   const odometert &unwindings) const
-
-{
-  find_symbols_sett symbols;
-  find_symbols(expr,symbols);
-  if(symbols.empty())
-    return;
-
-  rename_symbolt rename_symbol;
-  for(find_symbols_sett::const_iterator 
-	it = symbols.begin();
-      it != symbols.end(); ++it)
-  {
-    unwindings_def_levelst::const_iterator dl_it = 
-      unwindings_def_levels.find(*it);
-    unsigned def_level = 0;
-    if(dl_it != unwindings_def_levels.end())
-      def_level = dl_it->second;
-    assert(def_level<=unwindings.size());
-    std::string suffix = "";
-    for(unsigned i=0;i<def_level;i++)
-      suffix += "%" + unwindings[i];
-
-    rename_symbol.insert_expr(*it,id2string(*it)+suffix);
-  }
-  rename_symbol(expr);
-#if 1
-  std::cout << "UNWINDINGS_RENAME: " 
-	    << from_expr(ns, "", expr) << std::endl;
-#endif
-}

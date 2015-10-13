@@ -139,27 +139,15 @@ public:
   { return name(guard_symbol(), OUT, guard_map[loc].guard_source); }
   exprt edge_guard(locationt from, locationt to) const;
   
-  // renaming support for unwinder 
-  //   (TODO: this should eventually become the new unwinder)
-  typedef hash_map_cont<irep_idt, unsigned, irep_id_hash> 
-    unwindings_def_levelst;
-  typedef std::vector<unsigned> odometert;
-  typedef enum { NONE, PUSH, POP } odometer_modet;
-  unwindings_def_levelst unwindings_def_levels;  
-  unsigned current_unwinding; //TODO: loop-specific unwindings in future
-  std::set<locationt> loopheads; 
-  void unwindings_increment(odometert &unwindings, 
-				 odometer_modet mode=NONE);
-  void unwindings_decrement(odometert &unwindings, 
-				 odometer_modet mode=NONE);
-  virtual void unwindings_rename(exprt &expr, 
-			 const odometert &unwindings) const;
+  //TODO: loop-specific unwindings in future, should be moved to ssa_unwinder
+  unsigned current_unwinding; 
 
   // auxiliary functions
   enum kindt { PHI, OUT, LOOP_BACK, LOOP_SELECT };
   symbol_exprt name(const ssa_objectt &, kindt kind, locationt loc) const;
   symbol_exprt name(const ssa_objectt &, const ssa_domaint::deft &) const;
   symbol_exprt name_input(const ssa_objectt &) const;
+  locationt get_def_loc(const symbol_exprt &, locationt loc) const;
   void replace_side_effects_rec(exprt &, locationt, unsigned &) const;
   exprt read_lhs(const exprt &, locationt loc) const;
   exprt read_rhs(const exprt &, locationt loc) const;

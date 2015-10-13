@@ -617,7 +617,7 @@ void ssa_local_unwindert::unwind(const irep_idt& fname,unsigned int k) {
   SSA.nodes.splice(SSA.nodes.begin(), new_nodes);
   current_unwinding = k;
 
-  SSA.current_unwinding = k;
+  SSA.current_unwinding = k-1;
 }
 /*****************************************************************************\
  *

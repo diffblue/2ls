@@ -13,6 +13,7 @@ Author: Daniel Kroening, Peter Schrammel
 #include <solvers/prop/prop_conv.h>
 
 #include "local_ssa.h"
+#include "ssa_unwinder2.h"
 
 class ssa_build_goto_tracet {
 public:
@@ -21,7 +22,8 @@ public:
     const prop_convt &_prop_conv) 
   : 
   local_SSA(_local_SSA),
-  prop_conv(_prop_conv)
+  prop_conv(_prop_conv),
+  ssa_local_unwinder(_local_SSA)  
   {}
 
   void operator()(goto_tracet &);
@@ -30,7 +32,8 @@ protected:
   const local_SSAt &local_SSA;
   const prop_convt &prop_conv;
   goto_programt::const_targett current_pc;
-  local_SSAt::odometert unwindings;
+  ssa_local_unwinder2t ssa_local_unwinder;
+  ssa_local_unwinder2t::odometert unwindings;
 
   exprt finalize_lhs(const exprt &src);
 
