@@ -154,6 +154,13 @@ void ssa_build_goto_tracet::record_step(
       {
 	step.lhs_object = to_symbol_expr(lhs_simplified);
         step.lhs_object_value=rhs_simplified;
+        //filter out internal stuff
+	if(id2string(step.lhs_object.get_identifier()).find("#")
+            != std::string::npos)
+	  break;
+	//filter out undetermined values
+	if(step.lhs_object_value.id()!=ID_constant)
+  	  break;
       }      
       goto_trace.add_step(step);
       step_nr++;
