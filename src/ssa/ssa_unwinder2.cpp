@@ -26,25 +26,24 @@ Function: ssa_local_unwinder2t::increment_unwindings
 
 \*******************************************************************/
 
-void ssa_local_unwinder2t::increment_unwindings(odometert &unwindings, 
-						int mode)
+void ssa_local_unwinder2t::increment_unwindings(int mode)
 {
   if(mode==0) 
   {
-    assert(unwindings.size()>=1);
-    unsigned index = unwindings.size()-1;
-    assert(unwindings[index]>=1);
-    unwindings[index]++;
+    assert(current_unwindings.size()>=1);
+    unsigned index = current_unwindings.size()-1;
+    assert(current_unwindings[index]>=1);
+    current_unwindings[index]++;
   }
   else if(mode>=1)
   {
     assert(mode==1);
-    unwindings.push_back(0);
+    current_unwindings.push_back(0);
   }
   else //mode <=-1
   {
     for(int i=0;i>mode;i--)
-      unwindings.pop_back();
+      current_unwindings.pop_back();
   }
 }
 
@@ -60,25 +59,24 @@ Function: ssa_local_unwinder2t::decrement_unwindings
 
 \*******************************************************************/
 
-void ssa_local_unwinder2t::decrement_unwindings(odometert &unwindings, 
-						int mode)
+void ssa_local_unwinder2t::decrement_unwindings(int mode)
 {
   if(mode==0) 
   {
-    assert(unwindings.size()>=1);
-    unsigned index = unwindings.size()-1;
-    assert(unwindings[index]>=1);
-    unwindings[index]--;
+    assert(current_unwindings.size()>=1);
+    unsigned index = current_unwindings.size()-1;
+    assert(current_unwindings[index]>=1);
+    current_unwindings[index]--;
   }
   else if(mode>=1)
   {
     assert(mode==1);
-    unwindings.push_back(SSA.current_unwinding);
+    current_unwindings.push_back(current_unwinding);
   }
   else //mode <=-1
   {
     for(int i=0;i>mode;i--)
-      unwindings.pop_back();
+      current_unwindings.pop_back();
   }
 }
 
@@ -95,8 +93,10 @@ Function: ssa_local_unwinder2t::odometer_to_string
 \*******************************************************************/
 
 std::string ssa_local_unwinder2t::odometer_to_string(
-  const odometert &odometer, unsigned level)
+  const odometert &odometer, unsigned level) const
 {
+  if(level<odometer.size())
+    return "";
   if(level>odometer.size())
     level = odometer.size();
   std::string suffix = "";
@@ -117,6 +117,7 @@ Function: ssa_local_unwinder2t::rename
 
 \*******************************************************************/
 
+/*
 void ssa_local_unwinder2t::rename(symbol_exprt &expr, 
 				  const odometert &unwindings)
 
@@ -124,6 +125,42 @@ void ssa_local_unwinder2t::rename(symbol_exprt &expr,
   std::string suffix = odometer_to_string(unwindings,
 					  unwindings.size());
   expr.set_identifier(id2string(expr.get_identifier())+suffix);
+}
+*/
+
+/*******************************************************************\
+
+Function: ssa_local_unwinder2t::name
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: overrides local_SSAt::name to add unwinder suffixes
+
+\*******************************************************************/
+
+symbol_exprt ssa_local_unwinder2t::name(const ssa_objectt &object, 
+					kindt kind, locationt def_loc) const
+{
+  symbol_exprt s = local_SSAt::name(object,kind,def_loc);
+  loop_hierarchy_levelt::const_iterator lhl_it =
+    loop_hierarchy_level.find(def_loc);
+  unsigned def_level = 0;
+  if(lhl_it != loop_hierarchy_level.end())
+    def_level = lhl_it->second;
+  std::string suffix = odometer_to_string(current_unwindings,
+					  def_level);
+  s.set_identifier(id2string(s.get_identifier())+suffix);
+#if 1
+  std::cout << "DEF_LOC: " << def_loc->location_number << std::endl;
+  std::cout << "DEF_LEVEL: " << def_level << std::endl;
+  std::cout << "RENAME_SYMBOL: "
+	    << object.get_identifier() << " --> " 
+	    << s.get_identifier() << std::endl;
+#endif
+
+  return s;
 }
 
 /*******************************************************************\
@@ -138,6 +175,7 @@ Function: ssa_local_unwinder2t::read_rhs
 
 \*******************************************************************/
 
+/*
 void ssa_local_unwinder2t::read_rhs(exprt &expr, 
 				  const odometert &unwindings,
 				  local_SSAt::locationt loc)
@@ -154,11 +192,11 @@ void ssa_local_unwinder2t::read_rhs(exprt &expr,
       it != symbols.end(); ++it)
   {
     local_SSAt::locationt def_loc = 
-      SSA.get_def_loc(to_symbol_expr(*it),loc);
+      get_def_loc(to_symbol_expr(*it),loc);
     unsigned def_level = 
       loop_hierarchy_level[def_loc];
     std::string suffix = odometer_to_string(unwindings,def_level);
-    symbol_exprt s = to_symbol_expr(SSA.read_rhs(*it,loc));
+    symbol_exprt s = to_symbol_expr(local_SSAt::read_rhs(*it,loc));
     rename_symbol.insert_expr(it->get_identifier(),
 			      id2string(s.get_identifier())+suffix);
 #if 1
@@ -172,9 +210,10 @@ void ssa_local_unwinder2t::read_rhs(exprt &expr,
   rename_symbol(expr);
 #if 1
   std::cout << "UNWINDINGS_RENAME: " 
-	    << from_expr(SSA.ns, "", expr) << std::endl;
+	    << from_expr(ns, "", expr) << std::endl;
 #endif
 }
+*/
 
 /*******************************************************************\
 
@@ -193,8 +232,8 @@ void ssa_local_unwinder2t::compute_loop_hierarchy()
   unsigned level = 0;
   loop_hierarchy_level.clear();
   goto_programt::const_targett loophead = 
-    SSA.goto_function.body.instructions.begin();
-  forall_goto_program_instructions(i_it, SSA.goto_function.body)
+    goto_function.body.instructions.begin();
+  forall_goto_program_instructions(i_it, goto_function.body)
   {
     bool found = false;
     for(std::set<goto_programt::targett>::const_iterator 

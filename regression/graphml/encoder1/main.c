@@ -1,4 +1,4 @@
-#include <assert.h>
+#include "../svcomp.h"
 #include <stdio.h>
 #include <limits.h>
 
@@ -45,7 +45,7 @@ int main () {
   } 
   while (last != EOF);
 
-  assert(inputBytes != encodedBytes); //should fail
+  __VERIFIER_assert(inputBytes != encodedBytes); //should fail
   // assert(outputBytes <= 2 * inputBytes);
 
   return 0;

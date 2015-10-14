@@ -144,7 +144,7 @@ public:
 
   // auxiliary functions
   enum kindt { PHI, OUT, LOOP_BACK, LOOP_SELECT };
-  symbol_exprt name(const ssa_objectt &, kindt kind, locationt loc) const;
+  virtual symbol_exprt name(const ssa_objectt &, kindt kind, locationt loc) const;
   symbol_exprt name(const ssa_objectt &, const ssa_domaint::deft &) const;
   symbol_exprt name_input(const ssa_objectt &) const;
   locationt get_def_loc(const symbol_exprt &, locationt loc) const;

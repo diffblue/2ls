@@ -1,10 +1,4 @@
-extern void __VERIFIER_error() __attribute__ ((__noreturn__));
-
-extern void *malloc(unsigned long sz);
-
-
-
-extern int __VERIFIER_nondet_int(void);
+#include "../svcomp.h"
 
 typedef unsigned int size_t;
 typedef long __time_t;
@@ -1073,6 +1067,6 @@ int ssl3_connect(SSL *s )
     }
   end:
     return 0;
-  ERROR: assert(0);
+  ERROR: __VERIFIER_assert(0);
   }
 }

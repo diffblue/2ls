@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/options.h>
 
 #include "../ssa/local_ssa.h"
+#include "../ssa/ssa_unwinder2.h"
 #include "../domains/incremental_solver.h"
 #include <goto-programs/goto_functions.h>
 
@@ -19,7 +20,7 @@ class ssa_dbt
 {
 public:
   typedef irep_idt function_namet;
-  typedef std::map<function_namet, local_SSAt*> functionst;
+  typedef std::map<function_namet, ssa_local_unwinder2t*> functionst;
   typedef std::map<function_namet, incremental_solvert*> solverst;
 
   explicit ssa_dbt(const optionst &_options) 
@@ -59,7 +60,7 @@ public:
               const goto_functionst::goto_functiont &goto_function,
               const namespacet &ns) 
   { 
-    store[function_name] = new local_SSAt(goto_function,ns);
+    store[function_name] = new ssa_local_unwinder2t(goto_function,ns);
   }
 
  protected:

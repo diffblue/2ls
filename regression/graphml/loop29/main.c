@@ -1,10 +1,12 @@
+#include "../svcomp.h"
+
 void main() {                                                                     int x;
-  __CPROVER_assume(x==4);
+  if(x!=4) return;
   while(x>0)
   {
     int y;
-    __CPROVER_assume(-3<=y && y<=-1);
+    if(-3>y || y>-1) return;
     x += y;
   }        
-  assert(x==0 || x==-2);                           
+  __VERIFIER_assert(x==0 || x==-2);                           
 } 

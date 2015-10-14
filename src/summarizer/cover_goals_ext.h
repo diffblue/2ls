@@ -13,6 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/property_checker.h>
 
 #include "../ssa/local_ssa.h"
+#include "../ssa/ssa_unwinder2.h"
 #include "../domains/incremental_solver.h"
 
 /*******************************************************************\
@@ -46,7 +47,7 @@ struct goalt
 class cover_goals_extt:public messaget
 {
 public:
-  explicit inline cover_goals_extt(const local_SSAt &_SSA,
+  explicit inline cover_goals_extt(ssa_local_unwinder2t &_SSA,
 				   incremental_solvert &_solver,
 				   const exprt::operandst& _loophead_selects,
 				   property_checkert::property_mapt &_property_map,
@@ -109,7 +110,7 @@ public:
   }
   
 protected:
-  const local_SSAt &SSA;
+  ssa_local_unwinder2t &SSA;
   unsigned _number_covered, _iterations;
   incremental_solvert &solver;
   property_checkert::property_mapt &property_map;

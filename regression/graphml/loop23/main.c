@@ -1,3 +1,4 @@
+#include "../svcomp.h"
 
 int main()
 {
@@ -10,6 +11,6 @@ int y;
    if(x==y) { return x;}
  
 }
-  assert(0);
+  __VERIFIER_assert(0);
   return 0;
 }

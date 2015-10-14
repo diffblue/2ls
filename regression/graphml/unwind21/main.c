@@ -1,3 +1,5 @@
+#include "../svcomp.h"
+
 int foo(int x)
 {
   return x+1;
@@ -10,5 +12,5 @@ void main()
   {
     x = foo(x);
   }
-  assert(x==11);
+  __VERIFIER_assert(x==11);
 }
