@@ -31,14 +31,14 @@ exprt ssa_build_goto_tracet::finalize_lhs(const exprt &src)
   {
     index_exprt tmp=to_index_expr(src);
     tmp.array()=finalize_lhs(tmp.array());
-    exprt index = ssa_local_unwinder2.read_rhs(tmp.index(),current_pc);
-    tmp.index()=simplify_expr(prop_conv.get(index), ssa_local_unwinder2.ns);
+    exprt index = unwindable_local_SSA.read_rhs(tmp.index(),current_pc);
+    tmp.index()=simplify_expr(prop_conv.get(index), unwindable_local_SSA.ns);
     return tmp;
   }
   else if(src.id()==ID_dereference)
   {
     address_of_exprt tmp1(src);
-    exprt tmp2 = ssa_local_unwinder2.read_rhs(tmp1,current_pc);
+    exprt tmp2 = unwindable_local_SSA.read_rhs(tmp1,current_pc);
     exprt tmp3=prop_conv.get(tmp2);
     exprt tmp4=tmp3;
     if(tmp4.id()==ID_constant && tmp4.type().id()==ID_pointer &&
@@ -103,8 +103,8 @@ void ssa_build_goto_tracet::record_step(
   case GOTO:
     {
       exprt cond=current_pc->guard;
-      exprt cond_read = ssa_local_unwinder2.read_rhs(cond,current_pc);
-      exprt cond_value=simplify_expr(prop_conv.get(cond_read), ssa_local_unwinder2.ns);
+      exprt cond_read = unwindable_local_SSA.read_rhs(cond,current_pc);
+      exprt cond_value=simplify_expr(prop_conv.get(cond_read), unwindable_local_SSA.ns);
       step.type=goto_trace_stept::GOTO;
       step.cond_expr = cond;
       step.cond_value = cond_value.is_true();
@@ -117,8 +117,8 @@ void ssa_build_goto_tracet::record_step(
     {
       // failed or not?
       exprt cond=current_pc->guard;
-      exprt cond_read=ssa_local_unwinder2.read_rhs(cond,current_pc);
-      exprt cond_value=simplify_expr(prop_conv.get(cond_read), ssa_local_unwinder2.ns);
+      exprt cond_read=unwindable_local_SSA.read_rhs(cond,current_pc);
+      exprt cond_value=simplify_expr(prop_conv.get(cond_read), unwindable_local_SSA.ns);
       if(cond_value.is_false())
       {
         step.type=goto_trace_stept::ASSERT;
@@ -141,11 +141,11 @@ void ssa_build_goto_tracet::record_step(
     {
       const code_assignt &code_assign=
         to_code_assign(current_pc->code);
-      exprt rhs_ssa=ssa_local_unwinder2.read_rhs(code_assign.rhs(),current_pc);
+      exprt rhs_ssa=unwindable_local_SSA.read_rhs(code_assign.rhs(),current_pc);
       exprt rhs_value=prop_conv.get(rhs_ssa);
-      exprt rhs_simplified=simplify_expr(rhs_value, ssa_local_unwinder2.ns);
+      exprt rhs_simplified=simplify_expr(rhs_value, unwindable_local_SSA.ns);
       exprt lhs_ssa=finalize_lhs(code_assign.lhs());
-      exprt lhs_simplified=simplify_expr(lhs_ssa, ssa_local_unwinder2.ns);
+      exprt lhs_simplified=simplify_expr(lhs_ssa, unwindable_local_SSA.ns);
 
       step.type=goto_trace_stept::ASSIGNMENT;
       step.full_lhs=lhs_simplified;
@@ -194,15 +194,15 @@ Function: ssa_build_goto_tracet::operator()
 void ssa_build_goto_tracet::operator()(
   goto_tracet &goto_trace)
 {
-  if(ssa_local_unwinder2.goto_function.body.instructions.empty())
+  if(unwindable_local_SSA.goto_function.body.instructions.empty())
     return;
 
-  current_pc=ssa_local_unwinder2.goto_function.body.instructions.begin();
-  ssa_local_unwinder2.current_unwindings.clear();  
+  current_pc=unwindable_local_SSA.goto_function.body.instructions.begin();
+  unwindable_local_SSA.current_unwindings.clear();  
   unsigned last_level = 0;
   unsigned step_nr=1;
   
-  while(current_pc!=ssa_local_unwinder2.goto_function.body.instructions.end())
+  while(current_pc!=unwindable_local_SSA.goto_function.body.instructions.end())
   {
 #if 0
     if(current_pc->is_assign())
@@ -217,16 +217,16 @@ void ssa_build_goto_tracet::operator()(
     }
 #endif
     unsigned current_level = 
-      ssa_local_unwinder2.loop_hierarchy_level[current_pc];
+      unwindable_local_SSA.loop_hierarchy_level[current_pc];
     int level_diff = current_level - last_level;
     last_level = current_level;
     if(level_diff!=0)
-      ssa_local_unwinder2.decrement_unwindings(level_diff);
+      unwindable_local_SSA.decrement_unwindings(level_diff);
 #if 1
     std::cout << "location: " << current_pc->location_number << std::endl;
     std::cout << "level_diff: " << level_diff << std::endl;
     std::cout << "unwindings: " 
-	      << ssa_local_unwinder2.odometer_to_string(ssa_local_unwinder2.current_unwindings,100) << std::endl;
+	      << unwindable_local_SSA.odometer_to_string(unwindable_local_SSA.current_unwindings,100) << std::endl;
 #endif
 
     record_step(goto_trace, step_nr);
@@ -239,7 +239,7 @@ void ssa_build_goto_tracet::operator()(
     if(current_pc->is_goto())
     {
       // taken or not?
-      symbol_exprt cond_symbol=ssa_local_unwinder2.cond_symbol(current_pc);
+      symbol_exprt cond_symbol=unwindable_local_SSA.cond_symbol(current_pc);
       exprt cond_value=prop_conv.get(cond_symbol);
 #if 1
       std::cout << "COND: " << cond_symbol.get_identifier() 
@@ -249,7 +249,7 @@ void ssa_build_goto_tracet::operator()(
       {
         if(current_pc->is_backwards_goto())
 	{
-          ssa_local_unwinder2.decrement_unwindings(0);
+          unwindable_local_SSA.decrement_unwindings(0);
 	}
         current_pc=current_pc->get_target();
       }

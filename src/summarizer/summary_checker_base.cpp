@@ -195,7 +195,7 @@ Function: summary_checker_baset::check_properties
 void summary_checker_baset::check_properties(
    const ssa_dbt::functionst::const_iterator f_it)
 {
-  ssa_local_unwinder2t &SSA = *f_it->second;
+  unwindable_local_SSAt &SSA = *f_it->second;
   if(!SSA.goto_function.body.has_assertion()) return;
 
   bool all_properties = options.get_bool_option("all-properties");

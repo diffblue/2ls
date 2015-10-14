@@ -13,10 +13,10 @@ Author: Peter Schrammel, Saurabh Joshi
 
 #include "../ssa/local_ssa.h"
 
-class ssa_local_unwinder2t : public local_SSAt
+class unwindable_local_SSAt : public local_SSAt
 {
 public:
-  ssa_local_unwinder2t(
+  unwindable_local_SSAt(
     const goto_functiont &_goto_function,
     const namespacet &_ns,
     const std::string &_suffix="")
@@ -26,7 +26,7 @@ public:
     compute_loop_hierarchy();
   }
 
-  virtual ~ssa_local_unwinder2t() {}
+  virtual ~unwindable_local_SSAt() {}
 
   virtual symbol_exprt name(const ssa_objectt &, kindt kind, locationt loc) const;
 

@@ -12,11 +12,11 @@ Author: Peter Schrammel, Saurabh Joshi
 #include <util/rename_symbol.h>
 #include <langapi/language_util.h>
 
-#include "ssa_unwinder2.h"
+#include "unwindable_local_ssa.h"
 
 /*******************************************************************\
 
-Function: ssa_local_unwinder2t::increment_unwindings
+Function: unwindable_local_SSAt::increment_unwindings
 
   Inputs:
 
@@ -26,7 +26,7 @@ Function: ssa_local_unwinder2t::increment_unwindings
 
 \*******************************************************************/
 
-void ssa_local_unwinder2t::increment_unwindings(int mode)
+void unwindable_local_SSAt::increment_unwindings(int mode)
 {
   if(mode==0) 
   {
@@ -49,7 +49,7 @@ void ssa_local_unwinder2t::increment_unwindings(int mode)
 
 /*******************************************************************\
 
-Function: ssa_local_unwinder2t::decrement_unwindings
+Function: unwindable_local_SSAt::decrement_unwindings
 
   Inputs:
 
@@ -59,7 +59,7 @@ Function: ssa_local_unwinder2t::decrement_unwindings
 
 \*******************************************************************/
 
-void ssa_local_unwinder2t::decrement_unwindings(int mode)
+void unwindable_local_SSAt::decrement_unwindings(int mode)
 {
   if(mode==0) 
   {
@@ -82,7 +82,7 @@ void ssa_local_unwinder2t::decrement_unwindings(int mode)
 
 /*******************************************************************\
 
-Function: ssa_local_unwinder2t::odometer_to_string
+Function: unwindable_local_SSAt::odometer_to_string
 
   Inputs:
 
@@ -92,7 +92,7 @@ Function: ssa_local_unwinder2t::odometer_to_string
 
 \*******************************************************************/
 
-std::string ssa_local_unwinder2t::odometer_to_string(
+std::string unwindable_local_SSAt::odometer_to_string(
   const odometert &odometer, unsigned level) const
 {
   if(level<odometer.size())
@@ -107,7 +107,7 @@ std::string ssa_local_unwinder2t::odometer_to_string(
 
 /*******************************************************************\
 
-Function: ssa_local_unwinder2t::rename
+Function: unwindable_local_SSAt::rename
 
   Inputs:
 
@@ -118,7 +118,7 @@ Function: ssa_local_unwinder2t::rename
 \*******************************************************************/
 
 /*
-void ssa_local_unwinder2t::rename(symbol_exprt &expr, 
+void unwindable_local_SSAt::rename(symbol_exprt &expr, 
 				  const odometert &unwindings)
 
 {   
@@ -130,7 +130,7 @@ void ssa_local_unwinder2t::rename(symbol_exprt &expr,
 
 /*******************************************************************\
 
-Function: ssa_local_unwinder2t::name
+Function: unwindable_local_SSAt::name
 
   Inputs:
 
@@ -140,7 +140,7 @@ Function: ssa_local_unwinder2t::name
 
 \*******************************************************************/
 
-symbol_exprt ssa_local_unwinder2t::name(const ssa_objectt &object, 
+symbol_exprt unwindable_local_SSAt::name(const ssa_objectt &object, 
 					kindt kind, locationt def_loc) const
 {
   symbol_exprt s = local_SSAt::name(object,kind,def_loc);
@@ -165,7 +165,7 @@ symbol_exprt ssa_local_unwinder2t::name(const ssa_objectt &object,
 
 /*******************************************************************\
 
-Function: ssa_local_unwinder2t::read_rhs
+Function: unwindable_local_SSAt::read_rhs
 
   Inputs:
 
@@ -176,7 +176,7 @@ Function: ssa_local_unwinder2t::read_rhs
 \*******************************************************************/
 
 /*
-void ssa_local_unwinder2t::read_rhs(exprt &expr, 
+void unwindable_local_SSAt::read_rhs(exprt &expr, 
 				  const odometert &unwindings,
 				  local_SSAt::locationt loc)
 
@@ -217,7 +217,7 @@ void ssa_local_unwinder2t::read_rhs(exprt &expr,
 
 /*******************************************************************\
 
-Function: ssa_local_unwinder2t::compute_loop_hierarchy
+Function: unwindable_local_SSAt::compute_loop_hierarchy
 
   Inputs:
 
@@ -227,7 +227,7 @@ Function: ssa_local_unwinder2t::compute_loop_hierarchy
 
 \*******************************************************************/
 
-void ssa_local_unwinder2t::compute_loop_hierarchy()
+void unwindable_local_SSAt::compute_loop_hierarchy()
 {
   unsigned level = 0;
   loop_hierarchy_level.clear();

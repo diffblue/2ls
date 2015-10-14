@@ -13,22 +13,22 @@ Author: Daniel Kroening, Peter Schrammel
 #include <solvers/prop/prop_conv.h>
 
 #include "local_ssa.h"
-#include "ssa_unwinder2.h"
+#include "unwindable_local_ssa.h"
 
 class ssa_build_goto_tracet {
 public:
   ssa_build_goto_tracet(
-    ssa_local_unwinder2t &_ssa_local_unwinder2,
+    unwindable_local_SSAt &_unwindable_local_SSA,
     const prop_convt &_prop_conv) 
   : 
-  ssa_local_unwinder2(_ssa_local_unwinder2),  
+  unwindable_local_SSA(_unwindable_local_SSA),  
   prop_conv(_prop_conv)
   {}
 
   void operator()(goto_tracet &);
 
 protected:
-  ssa_local_unwinder2t &ssa_local_unwinder2;
+  unwindable_local_SSAt &unwindable_local_SSA;
   const prop_convt &prop_conv;
   goto_programt::const_targett current_pc;
 
