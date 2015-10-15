@@ -222,7 +222,7 @@ void ssa_build_goto_tracet::operator()(
     last_level = current_level;
     if(level_diff!=0)
       unwindable_local_SSA.decrement_unwindings(level_diff);
-#if 1
+#if 0
     std::cout << "location: " << current_pc->location_number << std::endl;
     std::cout << "level_diff: " << level_diff << std::endl;
     std::cout << "unwindings: " 
@@ -241,7 +241,7 @@ void ssa_build_goto_tracet::operator()(
       // taken or not?
       symbol_exprt cond_symbol=unwindable_local_SSA.cond_symbol(current_pc);
       exprt cond_value=prop_conv.get(cond_symbol);
-#if 1
+#if 0
       std::cout << "COND: " << cond_symbol.get_identifier() 
 		<< " == " << cond_value.is_true() << std::endl;
 #endif

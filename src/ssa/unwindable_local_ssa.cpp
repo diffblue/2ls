@@ -107,29 +107,6 @@ std::string unwindable_local_SSAt::odometer_to_string(
 
 /*******************************************************************\
 
-Function: unwindable_local_SSAt::rename
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-/*
-void unwindable_local_SSAt::rename(symbol_exprt &expr, 
-				  const odometert &unwindings)
-
-{   
-  std::string suffix = odometer_to_string(unwindings,
-					  unwindings.size());
-  expr.set_identifier(id2string(expr.get_identifier())+suffix);
-}
-*/
-
-/*******************************************************************\
-
 Function: unwindable_local_SSAt::name
 
   Inputs:
@@ -152,7 +129,7 @@ symbol_exprt unwindable_local_SSAt::name(const ssa_objectt &object,
   std::string suffix = odometer_to_string(current_unwindings,
 					  def_level);
   s.set_identifier(id2string(s.get_identifier())+suffix);
-#if 1
+#if 0
   std::cout << "DEF_LOC: " << def_loc->location_number << std::endl;
   std::cout << "DEF_LEVEL: " << def_level << std::endl;
   std::cout << "RENAME_SYMBOL: "
@@ -163,57 +140,6 @@ symbol_exprt unwindable_local_SSAt::name(const ssa_objectt &object,
   return s;
 }
 
-/*******************************************************************\
-
-Function: unwindable_local_SSAt::read_rhs
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-/*
-void unwindable_local_SSAt::read_rhs(exprt &expr, 
-				  const odometert &unwindings,
-				  local_SSAt::locationt loc)
-
-{
-  std::set<symbol_exprt> symbols;
-  find_symbols(expr,symbols);
-  if(symbols.empty())
-    return;
-
-  rename_symbolt rename_symbol;
-  for(std::set<symbol_exprt>::const_iterator 
-	it = symbols.begin();
-      it != symbols.end(); ++it)
-  {
-    local_SSAt::locationt def_loc = 
-      get_def_loc(to_symbol_expr(*it),loc);
-    unsigned def_level = 
-      loop_hierarchy_level[def_loc];
-    std::string suffix = odometer_to_string(unwindings,def_level);
-    symbol_exprt s = to_symbol_expr(local_SSAt::read_rhs(*it,loc));
-    rename_symbol.insert_expr(it->get_identifier(),
-			      id2string(s.get_identifier())+suffix);
-#if 1
-    std::cout << "DEF_LOC: " << def_loc->location_number << std::endl;
-    std::cout << "DEF_LEVEL: " << def_level << std::endl;
-    std::cout << "RENAME_SYMBOL: "
-	      << it->get_identifier() << " --> " 
-	      << id2string(s.get_identifier())+suffix << std::endl;
-#endif
-  }
-  rename_symbol(expr);
-#if 1
-  std::cout << "UNWINDINGS_RENAME: " 
-	    << from_expr(ns, "", expr) << std::endl;
-#endif
-}
-*/
 
 /*******************************************************************\
 
@@ -229,10 +155,8 @@ Function: unwindable_local_SSAt::compute_loop_hierarchy
 
 void unwindable_local_SSAt::compute_loop_hierarchy()
 {
-  unsigned level = 0;
   loop_hierarchy_level.clear();
-  goto_programt::const_targett loophead = 
-    goto_function.body.instructions.begin();
+  std::list<goto_programt::const_targett> loopheads;
   forall_goto_program_instructions(i_it, goto_function.body)
   {
     bool found = false;
@@ -240,20 +164,19 @@ void unwindable_local_SSAt::compute_loop_hierarchy()
 	  t_it = i_it->incoming_edges.begin();
 	t_it != i_it->incoming_edges.end(); ++t_it)
     {
-      if((*t_it)->location_number > i_it->location_number)
+      if((*t_it)->is_backwards_goto())
       {
 	assert(!found); //target of two backwards edges
-	loophead = i_it;
-	level++;
+	loopheads.push_back(i_it);
 	found = true;
       }
     }
-    loop_hierarchy_level[i_it] = level;
+    loop_hierarchy_level[i_it] = loopheads.size();
     if(i_it->is_backwards_goto())
     {
-      assert(loophead == i_it->get_target()); //backwards to current loop head
-      assert(level>=1);
-      level--;
+      assert(!loopheads.empty());
+      assert(loopheads.back() == i_it->get_target()); //backwards to current loop head
+      loopheads.pop_back();
     }
   }
 }
