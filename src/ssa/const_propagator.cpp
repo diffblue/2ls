@@ -120,6 +120,7 @@ void const_propagator_domaint::assign(
 
   values.replace_const(rhs);
 
+  //this is to remove casts in constants propagated into the size of array types
   bool valid = true;
   exprt rhs_val = evaluate_casts_in_constants(rhs,lhs.type(),valid);
   if(valid)
@@ -351,14 +352,18 @@ Function: const_propagator_domaint::evaluate_casts_in_constants
 
  Outputs: 
 
- Purpose:
+ Purpose: 
 
 \*******************************************************************/
 
 exprt const_propagator_domaint::evaluate_casts_in_constants(exprt expr, 
 		    const typet& parent_type, bool &valid) const
 {
-  if(expr.id()==ID_side_effect) valid = false;
+  if(expr.id()==ID_side_effect)
+  {
+    valid = false;
+    return expr;
+  }
   if(expr.type().id()!=ID_signedbv && expr.type().id()!=ID_unsignedbv)
     return expr;
   if(expr.id()==ID_typecast)
@@ -370,6 +375,9 @@ exprt const_propagator_domaint::evaluate_casts_in_constants(exprt expr,
     else
       return expr;
   }
+  //TODO: could be improved to resolve float casts as well...
+  if(expr.type().id()!=ID_signedbv && expr.type().id()!=ID_unsignedbv)
+    return expr;
   mp_integer v;
   to_integer(to_constant_expr(expr), v);
   return from_integer(v,parent_type);
