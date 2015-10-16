@@ -12,7 +12,7 @@ Author: Peter Schrammel
 #include <iostream>
 
 #include <analyses/ai.h>
-#include <util/replace_symbol.h>
+#include "replace_symbol_ext.h"
 
 class const_propagator_domaint:public ai_domain_baset
 {
@@ -25,7 +25,7 @@ public:
   {
   public:
     // maps variables to constants
-    replace_symbolt replace_const;
+    replace_symbol_extt replace_const;
     std::set<irep_idt> top_ids;
     
     void output(std::ostream &, const namespacet &) const;
