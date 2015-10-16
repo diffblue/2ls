@@ -169,13 +169,13 @@ bool const_propagator_domaint::valuest::maps_to_top(const exprt &expr) const
   if(expr.id()==ID_side_effect && 
      to_side_effect_expr(expr).get_statement()==ID_nondet) 
     return true;
-  find_symbols_sett symbols;
-  find_symbols(expr,symbols);
-  for(find_symbols_sett::const_iterator it = symbols.begin();
-      it != symbols.end(); ++it)
-  {
-    if(replace_const.expr_map.find(*it)
+  if(expr.id()==ID_symbol)
+    if(replace_const.expr_map.find(expr.get(ID_identifier))
         == replace_const.expr_map.end())
+      return true;
+  forall_operands(it,expr)
+  {
+    if(maps_to_top(*it))
       return true;
   }
   return false;
