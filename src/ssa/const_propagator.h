@@ -64,6 +64,9 @@ protected:
     exprt rhs,
     const namespacet &ns) const;
 
+  void assign_rec(const exprt &lhs, const exprt &rhs,
+    const namespacet &ns);
+
   exprt evaluate_casts_in_constants(
     exprt expr, 
     const typet& parent_type, 

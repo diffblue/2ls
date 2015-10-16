@@ -126,7 +126,9 @@ exprt malloc_ssa(
       object_type=array_typet(unsigned_char_type(), size);
   }
 
+#ifdef DEBUG
   std::cout << "OBJECT_TYPE: " << from_type(ns, "", object_type) << std::endl;
+#endif
   
   // value
   symbolt value_symbol;

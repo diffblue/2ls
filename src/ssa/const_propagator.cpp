@@ -17,6 +17,37 @@ Author: Peter Schrammel
 
 /*******************************************************************\
 
+Function: const_propagator_domaint::assign_rec
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void const_propagator_domaint::assign_rec(const exprt &lhs, const exprt &rhs,
+  const namespacet &ns)
+{
+  if(lhs.id()==ID_symbol && rhs.type().id()!=ID_array
+                         && rhs.type().id()!=ID_struct
+                         && rhs.type().id()!=ID_union)
+  {
+    if(!values.maps_to_top(rhs))
+      assign(values,lhs,rhs,ns);
+    else
+      values.set_to_top(lhs);
+  }
+#if 0
+  else //TODO: could make field or array element-sensitive
+  {
+  }
+#endif
+}
+
+/*******************************************************************\
+
 Function: const_propagator_domaint::transform
 
   Inputs:
@@ -47,13 +78,7 @@ void const_propagator_domaint::transform(
     const code_assignt &assignment=to_code_assign(from->code);
     const exprt &lhs = assignment.lhs();
     const exprt &rhs = assignment.rhs();
-    if(lhs.id()==ID_symbol)
-    {
-      if(!values.maps_to_top(rhs))
-        assign(values,lhs,rhs,ns);
-      else
-        values.set_to_top(lhs);
-    }
+    assign_rec(lhs,rhs,ns);
   }
   else if(from->is_goto())
   {
@@ -97,7 +122,7 @@ void const_propagator_domaint::transform(
 
 /*******************************************************************\
 
-Function: const_propagator_domaint::assign_rhs_rec
+Function: const_propagator_domaint::assign
 
   Inputs:
 
