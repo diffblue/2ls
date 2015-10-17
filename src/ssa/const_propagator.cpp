@@ -30,9 +30,16 @@ Function: const_propagator_domaint::assign_rec
 void const_propagator_domaint::assign_rec(const exprt &lhs, const exprt &rhs,
   const namespacet &ns)
 {
-  if(lhs.id()==ID_symbol && rhs.type().id()!=ID_array
-                         && rhs.type().id()!=ID_struct
-                         && rhs.type().id()!=ID_union)
+  const typet & rhs_type = ns.follow(rhs.type());
+
+#ifdef DEBUG
+  std::cout << "assign: " << from_expr(ns, "", lhs)
+	    << " := " << from_type(ns, "", rhs_type) << std::endl;
+#endif
+
+  if(lhs.id()==ID_symbol && rhs_type.id()!=ID_array
+                         && rhs_type.id()!=ID_struct
+                         && rhs_type.id()!=ID_union)
   {
     if(!values.maps_to_top(rhs))
       assign(values,lhs,rhs,ns);
@@ -87,22 +94,8 @@ void const_propagator_domaint::transform(
       const exprt &lhs = from->guard.op0(); 
       const exprt &rhs = from->guard.op1();
 
-      //TODO: there could be nasty typecasts
-      if(lhs.id()==ID_symbol && !values.maps_to_top(rhs))
-	assign(values,lhs,rhs,ns);
-      else if(rhs.id()==ID_symbol && !values.maps_to_top(lhs))
-	assign(values,rhs,lhs,ns);    
-    }
-    else if(from->guard.id()==ID_notequal && from->get_target()!=to)
-    {
-      const exprt &lhs = from->guard.op0(); 
-      const exprt &rhs = from->guard.op1();
-
-      //TODO: there could be nasty typecasts
-      if(lhs.id()==ID_symbol && !values.maps_to_top(rhs))
-	assign(values,lhs,rhs,ns);
-      else if(rhs.id()==ID_symbol && !values.maps_to_top(lhs))
-	assign(values,rhs,lhs,ns);
+      assign_rec(lhs,rhs,ns);
+      assign_rec(rhs,lhs,ns);
     }
   }
   else if(from->is_dead())
