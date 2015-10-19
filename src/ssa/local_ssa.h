@@ -35,7 +35,7 @@ public:
     const namespacet &_ns,
     const std::string &_suffix=""):
     ns(_ns), goto_function(_goto_function), 
-    current_unwinding(0),
+    current_unwinding(-1),
     ssa_objects(_goto_function, ns),
     ssa_value_ai(_goto_function, ns),
     assignments(_goto_function.body, ns, ssa_objects, ssa_value_ai),
@@ -140,7 +140,7 @@ public:
   exprt edge_guard(locationt from, locationt to) const;
   
   //TODO: loop-specific unwindings in future, should be moved to ssa_unwinder
-  unsigned current_unwinding; 
+  long current_unwinding; 
 
   // auxiliary functions
   enum kindt { PHI, OUT, LOOP_BACK, LOOP_SELECT };

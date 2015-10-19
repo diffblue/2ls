@@ -44,6 +44,7 @@ exprt ssa_build_goto_tracet::finalize_lhs(const exprt &src)
     if(tmp4.id()==ID_constant && tmp4.type().id()==ID_pointer &&
        tmp4.operands().size()==1 && tmp4.op0().id()==ID_address_of)
       tmp4=to_address_of_expr(tmp4.op0()).object();
+    //TODO: investigate: produces nil sometimes
     return tmp4;
   }
   else if(src.id()==ID_member)
@@ -161,7 +162,9 @@ void ssa_build_goto_tracet::record_step(
 	//filter out undetermined values
 	if(step.lhs_object_value.id()!=ID_constant)
   	  break;
-      }      
+      }
+      if(step.lhs_object.is_nil())
+	break;
       goto_trace.add_step(step);
       step_nr++;
     }

@@ -95,6 +95,8 @@ Function: unwindable_local_SSAt::odometer_to_string
 std::string unwindable_local_SSAt::odometer_to_string(
   const odometert &odometer, unsigned level) const
 {
+  if(current_unwinding<0) //not yet unwind=0
+    return "";
   if(level<odometer.size())
     return "";
   if(level>odometer.size())

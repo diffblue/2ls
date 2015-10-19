@@ -371,6 +371,10 @@ void local_SSAt::build_phi_nodes(locationt loc)
         {
           // it's a forward edge
           exprt incoming_value=name(*o_it, incoming_it->second);
+	  //TODO: investigate: here is some nondeterminism 
+	  //  whether g2 (=g1&c1 (maybe)) or (g1&c1) is used,
+	  //  not sure whether this has consequences
+	  //  (further than the SSA looking different each time you generate it)
           exprt incoming_guard=edge_guard(incoming_it->first, loc);
 
           if(rhs.is_nil()) // first
