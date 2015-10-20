@@ -42,17 +42,14 @@ public:
   std::string odometer_to_string(const odometert &odometer, 
 				 unsigned level) const;
 
-/*  void rename(symbol_exprt &expr, 
-	      const odometert &unwindings);
-  void read_rhs(exprt &expr, 
-		const odometert &unwindings,
-		local_SSAt::locationt loc);*/
+  void rename(exprt &expr);
 
   typedef std::map<local_SSAt::locationt,unsigned>
     loop_hierarchy_levelt;
   loop_hierarchy_levelt loop_hierarchy_level;
 
 protected:
+  irep_idt get_ssa_name(const symbol_exprt &, locationt &loc);
   void compute_loop_hierarchy();
 
 };

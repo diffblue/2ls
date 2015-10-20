@@ -997,7 +997,7 @@ void ssa_local_unwindert::unwind(tree_loopnodet& current_loop,
       {
         //add all the loop continuation expressions for the bottom most iterations %0
         //this is requested by peter
-        //TODO : later document why this is needed
+        //used for checking whether loops have been fully unwound
         exprt loopend_guard = SSA.guard_symbol(current_loop.body_nodes.rbegin()->location);
         exprt loopend_cond = SSA.cond_symbol(current_loop.body_nodes.rbegin()->location);
         rename(loopend_guard,suffix,i,current_loop);

@@ -25,8 +25,10 @@ public:
   void init();
 
   void unwind(unsigned k);
-  void unwind(locationt loop_head_loc, unsigned k)
-  { unwind(loops[loop_head_loc],k); }
+
+  //TODO: not yet sure how to do that
+/*  void unwind(locationt loop_head_loc, unsigned k)
+    { unwind(loops[loop_head_loc],k); } */
 
   //TOOD: this should be loop specific in future, maybe move to unwindable_local_ssa as it is not really unwinder related
   void loop_continuation_conditions(exprt::operandst& loop_cont_e) const;
@@ -45,6 +47,7 @@ protected:
     loopt()
       :
     is_dowhile(false),
+    is_root(false),
     current_unwinding(0)
     {}
 
@@ -52,6 +55,7 @@ protected:
     std::vector<locationt> loop_nodes; //child loops
     exprt loop_continuation_condition;
     bool is_dowhile;
+    bool is_root;
     unsigned current_unwinding;
     exprt::operandst loop_exit_conditions;
 

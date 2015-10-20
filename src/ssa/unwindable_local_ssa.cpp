@@ -10,6 +10,7 @@ Author: Peter Schrammel, Saurabh Joshi
 
 #include <util/find_symbols.h>
 #include <util/rename_symbol.h>
+#include <util/string2int.h>
 #include <langapi/language_util.h>
 
 #include "unwindable_local_ssa.h"
@@ -140,6 +141,67 @@ symbol_exprt unwindable_local_SSAt::name(const ssa_objectt &object,
 #endif
 
   return s;
+}
+
+/*******************************************************************\
+
+Function: unwindable_local_SSAt::rename
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: add unwinder suffixes
+
+\*******************************************************************/
+
+void unwindable_local_SSAt::rename(exprt &expr)
+{
+  if(expr.id()==ID_symbol)
+  {
+    symbol_exprt &s = to_symbol_expr(expr);
+    locationt def_loc;
+    //we could reuse name(), but then we would have to search in the ssa_objects
+    //ENHANCEMENT: maybe better to attach base name, ssa name,
+    //      and def_loc to the symbol_expr itself
+    irep_idt id = get_ssa_name(s,def_loc);
+    loop_hierarchy_levelt::const_iterator lhl_it =
+      loop_hierarchy_level.find(def_loc);
+    unsigned def_level = 0;
+    if(lhl_it != loop_hierarchy_level.end())
+      def_level = lhl_it->second;
+    std::string suffix = odometer_to_string(current_unwindings,
+					    def_level);
+    s.set_identifier(id2string(id)+suffix);
+  }
+  Forall_operands(it,expr)
+    rename(*it);
+}
+
+/*******************************************************************\
+
+Function: unwindable_local_SSAt::get_ssa_name
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: retrieve ssa name, 
+
+\*******************************************************************/
+
+irep_idt unwindable_local_SSAt::get_ssa_name(
+  const symbol_exprt &symbol_expr, locationt &loc)
+{
+  std::string s =  id2string(symbol_expr.get_identifier()); 
+  std::size_t pos2 = s.find("%");
+  std::size_t pos1 = s.find_last_of("#");
+  if(pos1==std::string::npos)
+    return irep_idt(s);
+  if(pos2==std::string::npos)
+    pos2 = s.size();
+  loc = find_location_by_number(safe_string2unsigned(s.substr(pos1,pos2)));
+  return irep_idt(s.substr(pos2));
 }
 
 
