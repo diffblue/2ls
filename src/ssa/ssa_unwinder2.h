@@ -10,6 +10,7 @@ Author: Peter Schrammel, Saurabh Joshi
 #define CPROVER_DELTACHECK_SSA_UNWINDER2_H
 
 #include "unwindable_local_ssa.h"
+#include "../summarizer/ssa_db.h"
 
 class ssa_local_unwinder2t
 {
@@ -17,10 +18,10 @@ public:
   typedef local_SSAt::locationt locationt;
   typedef unwindable_local_SSAt::odometert odometert;
   
-  ssa_local_unwinder2t(const irep_idt& _fname, unwindable_local_SSAt& _SSA,
-		       bool _is_kinduction, bool _is_ibmc)
+  ssa_local_unwinder2t(const irep_idt _fname, unwindable_local_SSAt& _SSA,
+		       bool _is_kinduction, bool _is_bmc)
     :
-    fname(_fname),SSA(_SSA), is_kinduction(_is_kinduction), is_ibmc(_is_ibmc),
+    fname(_fname),SSA(_SSA), is_kinduction(_is_kinduction), is_bmc(_is_bmc),
     current_enabling_expr(true_exprt())
   {}
 
@@ -39,10 +40,12 @@ public:
   //exprt rename_invariant(const exprt& inv_in) const; 
   //void unwinder_rename(symbol_exprt &var,const local_SSAt::nodet &node, bool pre) const;
 
+  void output(std::ostream& out);
+    
 protected:
-  const irep_idt& fname;
+  const irep_idt fname;
   unwindable_local_SSAt& SSA;
-  bool is_kinduction,is_ibmc;
+  bool is_kinduction,is_bmc;
   exprt current_enabling_expr; //TODO must become loop-specific
 
   class loopt //loop tree
@@ -83,13 +86,44 @@ protected:
 
   void unwind(loopt &loop, unsigned k);
   
-  void add_loop_body(loopt &loop);
+  void add_loop_body(loopt &loop, bool is_last);
   void add_loop_head(loopt &loop);
   void add_loop_connector(loopt &loop);
   void add_exit_merges(loopt &loop, unsigned k);
-  void add_assertions(loopt &loop, unsigned k);
   void add_hoisted_assertions(loopt &loop, unsigned k);
-  
+
+  void output(std::ostream& out,const namespacet& ns);
+
+};
+
+class ssa_unwinder2t : public messaget
+{
+
+public:
+  typedef std::map<irep_idt,ssa_local_unwinder2t> unwinder_mapt;
+  typedef std::pair<irep_idt,ssa_local_unwinder2t> unwinder_pairt;
+
+  ssa_unwinder2t(ssa_dbt& _db)
+    :
+    ssa_db(_db), is_initialized(false)
+  {}
+
+  void init(bool is_kinduction, bool is_bmc);
+  void init_localunwinders();
+
+  void unwind(const irep_idt fname, unsigned k);
+  void unwind_all(unsigned k);
+
+  ssa_local_unwinder2t &get(const irep_idt& fname)
+    { return unwinder_map.at(fname); }
+
+  void output(std::ostream & out);
+
+protected:
+  ssa_dbt& ssa_db;
+  bool is_initialized;
+  unwinder_mapt unwinder_map;
+
 };
 
 #endif

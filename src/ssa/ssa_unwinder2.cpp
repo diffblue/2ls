@@ -238,17 +238,16 @@ void ssa_local_unwinder2t::unwind(unsigned k)
 void ssa_local_unwinder2t::unwind(loopt &loop, unsigned k)
 {
   SSA.increment_unwindings(1);
-  for(unsigned i = 0; i<k; ++i)
+  for(unsigned i = 1; i<=k; ++i)
   {
     //add new unwindings of this loop
     if(i>loop.current_unwinding)
     {
-      add_loop_body(loop);
-      if(i==k)
-	add_loop_head(loop);
-      else 
-	add_loop_connector(loop);
+      add_loop_body(loop,i==k);
+      add_loop_connector(loop);
     }
+    if(i==k)
+      add_loop_head(loop);
     //recurse into child loops
     for(std::vector<locationt>::iterator l_it = loop.loop_nodes.begin();
 	l_it != loop.loop_nodes.end(); ++l_it)
@@ -259,8 +258,6 @@ void ssa_local_unwinder2t::unwind(loopt &loop, unsigned k)
   }
   SSA.increment_unwindings(-1);
   add_exit_merges(loop,k);
-  //TODO: not sure whether these could go into loop above
-  add_assertions(loop,k); 
   add_hoisted_assertions(loop,k);
 }
 
@@ -277,7 +274,7 @@ void ssa_local_unwinder2t::unwind(loopt &loop, unsigned k)
  *
  *****************************************************************************/
 
-void ssa_local_unwinder2t::add_loop_body(loopt &loop)
+void ssa_local_unwinder2t::add_loop_body(loopt &loop, bool is_last)
 {
   local_SSAt::nodest::iterator it = loop.body_nodes.begin();
   ++it; //skip loop head, we'll do that separately
@@ -301,8 +298,22 @@ void ssa_local_unwinder2t::add_loop_body(loopt &loop)
     {
       SSA.rename(*f_it);
     }
-    //we'll do assertions later
-    node.assertions.clear();
+    for (local_SSAt::nodet::assertionst::iterator a_it =
+	   node.assertions.begin(); a_it != node.assertions.end(); a_it++)
+    {
+      SSA.rename(*a_it);
+    }
+    //transform assertions into assumptions in for incremental BMC and k-induction
+    if(!is_last && (is_bmc || is_kinduction))
+    {
+      //TODO: while vs dowhile?
+      for (local_SSAt::nodet::assertionst::iterator a_it =
+	     node.assertions.begin(); a_it != node.assertions.end(); a_it++)
+      {
+	node.constraints.push_back(*a_it);
+      }
+      node.assertions.clear();
+    }
   }
 }
 
@@ -419,24 +430,6 @@ void ssa_local_unwinder2t::add_exit_merges(loopt &loop, unsigned k)
 
 /*****************************************************************************
  *
- *  Function : ssa_local_unwinder2t::add_assertions
- *
- *  Input : 
- *
- *  Output : 
- *
- *  Purpose : adds assumptions and assertions for the current instance
- *
- *
- *****************************************************************************/
-
-void ssa_local_unwinder2t::add_assertions(loopt &loop, unsigned k)
-{
-      //TODO
-}
-
-/*****************************************************************************
- *
  *  Function : ssa_local_unwinder2t::add_hoisted_assertions
  *
  *  Input : 
@@ -451,4 +444,151 @@ void ssa_local_unwinder2t::add_assertions(loopt &loop, unsigned k)
 void ssa_local_unwinder2t::add_hoisted_assertions(loopt &loop, unsigned k)
 {
       //TODO
+}
+
+/*****************************************************************************\
+ *
+ * Function : ssa_local_unwinder2t::output
+ *
+ * Input :
+ *
+ * Output :
+ *
+ * Purpose : output loop info
+ *
+ *****************************************************************************/
+
+void ssa_local_unwinder2t::output(std::ostream& out, const namespacet& ns)
+{
+  // TODO
+}
+
+/*****************************************************************************\
+ *
+ * Function : ssa_local_unwinder2t::output
+ *
+ * Input :
+ *
+ * Output :
+ *
+ * Purpose : output local unwinder info
+ *
+ *****************************************************************************/
+
+void ssa_local_unwinder2t::output(std::ostream& out)
+{
+  // TODO
+}
+
+/*****************************************************************************\
+ *
+ * Function : ssa_unwinder2t::unwind
+ *
+ * Input : fname - name of the goto-function to be unwound, k - unwinding depth
+ *
+ * Output : false - if id does not correspond to any goto-function in the
+ * 			unwinder_map
+ *
+ * Purpose : incrementally unwind a function 'id' up to depth k. Initializer
+ * must have been invoked before calling this function
+ *
+ *****************************************************************************/
+
+void ssa_unwinder2t::unwind(const irep_idt fname, unsigned int k)
+{
+  assert(is_initialized);
+  unwinder_mapt::iterator it = unwinder_map.find(fname);
+  assert(it != unwinder_map.end());
+  it->second.unwind(k);
+}
+
+/*****************************************************************************\
+ *
+ * Function : ssa_unwinder2t::unwind_all
+ *
+ * Input :
+ *
+ * Output :
+ *
+ * Purpose :
+ *
+ *****************************************************************************/
+
+void ssa_unwinder2t::unwind_all(unsigned int k)
+{
+  assert(is_initialized);
+
+  for (unwinder_mapt::iterator it = unwinder_map.begin();
+       it != unwinder_map.end(); it++) {
+    it->second.unwind(k);
+  }
+}
+
+/*****************************************************************************\
+ *
+ * Function : ssa_unwinder2t::output
+ *
+ * Input :
+ *
+ * Output :
+ *
+ * Purpose :
+ *
+ *****************************************************************************/
+
+void ssa_unwinder2t::output(std::ostream & out) {
+  if(!is_initialized) return;
+  for (unwinder_mapt::iterator it = unwinder_map.begin();
+       it != unwinder_map.end(); it++) {
+    out << "Unwinding for function" << it->first << std::endl;
+    it->second.output(out);
+  }
+}
+
+/*****************************************************************************\
+ *
+ * Function : ssa_unwinder2t::init
+ *
+ * Input :
+ *
+ * Output :
+ *
+ * Purpose : Initialize unwinder_map by computing hierarchical tree_loopnodet
+ *           for every goto-function
+ *           Set is_initialized to true. Initializer must be called before
+ *           unwind funcitions are called.
+ *
+ *****************************************************************************/
+void ssa_unwinder2t::init(bool is_kinduction, bool is_bmc)
+{
+  ssa_dbt::functionst& funcs = ssa_db.functions();
+  for (ssa_dbt::functionst::iterator it = funcs.begin();
+       it != funcs.end(); it++)
+  {
+    unwinder_map.insert(unwinder_pairt(it->first,
+				       ssa_local_unwinder2t(it->first, (*(it->second)),
+							    is_kinduction, is_bmc)));
+  }
+}
+
+/*****************************************************************************\
+ *
+ * Function : ssa_unwinder2t::init_localunwinders
+ *
+ * Input :
+ *
+ * Output :
+ *
+ * Purpose :
+ *
+ *****************************************************************************/
+
+void ssa_unwinder2t::init_localunwinders()
+{
+  for(unwinder_mapt::iterator it=unwinder_map.begin();
+      it!=unwinder_map.end();it++)
+  {
+    it->second.init();
+  }
+  is_initialized = true;
 }
