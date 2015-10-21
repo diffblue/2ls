@@ -2,7 +2,7 @@
 
 Module: SSA Unwinder
 
-Author: Saurabh Joshi, Peter Schrammel
+Author: Peter Schrammel, Saurabh Joshi
 
 \*******************************************************************/
 
@@ -17,9 +17,11 @@ public:
   typedef local_SSAt::locationt locationt;
   typedef unwindable_local_SSAt::odometert odometert;
   
-  ssa_local_unwinder2t(local_SSAt& _SSA, bool _is_kinduction, bool _is_ibmc)
+  ssa_local_unwinder2t(const irep_idt& _fname, unwindable_local_SSAt& _SSA,
+		       bool _is_kinduction, bool _is_ibmc)
     :
-  SSA(_SSA), is_kinduction(_is_kinduction), is_ibmc(_is_ibmc)
+    fname(_fname),SSA(_SSA), is_kinduction(_is_kinduction), is_ibmc(_is_ibmc),
+    current_enabling_expr(true_exprt())
   {}
 
   void init();
@@ -38,8 +40,10 @@ public:
   //void unwinder_rename(symbol_exprt &var,const local_SSAt::nodet &node, bool pre) const;
 
 protected:
-  local_SSAt& SSA;
+  const irep_idt& fname;
+  unwindable_local_SSAt& SSA;
   bool is_kinduction,is_ibmc;
+  exprt current_enabling_expr; //TODO must become loop-specific
 
   class loopt //loop tree
   {
@@ -53,31 +57,38 @@ protected:
 
     local_SSAt::nodest body_nodes;
     std::vector<locationt> loop_nodes; //child loops
-    exprt loop_continuation_condition;
+    exprt continuation_condition;
     bool is_dowhile;
     bool is_root;
     unsigned current_unwinding;
-    exprt::operandst loop_exit_conditions;
+    exprt::operandst exit_conditions;
+    std::map<symbol_exprt,symbol_exprt> pre_post_map;
 
     //for assertion hoisting
-    struct {
+    typedef struct {
       exprt loop_exit_condition;
       exprt assertion;
     } assertions_after_loopt;
     typedef std::map<locationt,assertions_after_loopt> assertion_hoisting_mapt;
-    assertion_hoisting_mapt assertion_hoisting_mapt;
+    assertion_hoisting_mapt assertion_hoisting_map;
 
   };
   typedef std::map<locationt,loopt> loop_mapt;
   loop_mapt loops;
 
-  void unwind(loopt &loop, unsigned k);
+  void build_loop_tree();
+  void build_pre_post_map();
+  void build_continuation_conditions();
+  void build_exit_conditions();
 
-  void add_loop_body(loopt &loop,  const odometert &unwindings);
-  void add_loop_connectors(loopt &loop,  const odometert &unwindings);
-  void add_exit_merges(loopt &loop,  const odometert &unwindings);
-  void add_assertions(loopt &loop,  const odometert &unwindings);
-  void add_hoisted_assertions(loopt &loop,  const odometert &unwindings);
+  void unwind(loopt &loop, unsigned k);
+  
+  void add_loop_body(loopt &loop);
+  void add_loop_head(loopt &loop);
+  void add_loop_connector(loopt &loop);
+  void add_exit_merges(loopt &loop, unsigned k);
+  void add_assertions(loopt &loop, unsigned k);
+  void add_hoisted_assertions(loopt &loop, unsigned k);
   
 };
 

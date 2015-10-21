@@ -6,12 +6,12 @@ Author: Peter Schrammel, Saurabh Joshi
 
 \*******************************************************************/
 
-#ifndef CPROVER_DELTACHECK_SSA_UNWINDER2_H
-#define CPROVER_DELTACHECK_SSA_UNWINDER2_H
+#ifndef CPROVER_DELTACHECK_SSA_UNWINDABLE_LOCAL_SSA_H
+#define CPROVER_DELTACHECK_SSA_UNWINDABLE_LOCAL_SSA_H
 
 #include <util/message.h>
 
-#include "../ssa/local_ssa.h"
+#include "local_ssa.h"
 
 class unwindable_local_SSAt : public local_SSAt
 {

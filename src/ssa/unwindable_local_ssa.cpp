@@ -200,8 +200,10 @@ irep_idt unwindable_local_SSAt::get_ssa_name(
     return irep_idt(s);
   if(pos2==std::string::npos)
     pos2 = s.size();
+  if(s.substr(pos1,2) == "lb") pos1 += 2;
+  else if(s.substr(pos1,2) == "phi") pos1 += 3;
   loc = find_location_by_number(safe_string2unsigned(s.substr(pos1,pos2)));
-  return irep_idt(s.substr(pos2));
+  return irep_idt(s.substr(0,pos1));
 }
 
 

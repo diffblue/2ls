@@ -7,7 +7,8 @@ SRC = local_ssa.cpp \
       ssa_value_set.cpp address_canonizer.cpp simplify_ssa.cpp \
       ssa_build_goto_trace.cpp ssa_inliner.cpp ssa_unwinder.cpp \
       unwindable_local_ssa.cpp split_loopheads.cpp \
-      const_propagator.cpp replace_symbol_ext.cpp
+      const_propagator.cpp replace_symbol_ext.cpp \
+      ssa_unwinder2.cpp
 #ssa_slicer.cpp 
 
 include $(CBMC)/src/config.inc
