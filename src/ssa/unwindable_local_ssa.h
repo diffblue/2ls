@@ -32,8 +32,7 @@ public:
 
   typedef std::vector<unsigned> odometert;
   odometert current_unwindings;
-
-//  unsigned current_unwinding; //TODO: loop-specific unwindings in future
+  long current_unwinding; //TODO: must go away
 
   // mode==0: current, mode>0 push, mode<0 pop
   void increment_unwindings(int mode);
