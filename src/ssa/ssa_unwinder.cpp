@@ -127,13 +127,13 @@ void ssa_local_unwindert::build_pre_post_map()
     assert(!it->second.body_nodes.empty());
     const locationt &pre_loc = it->second.body_nodes.begin()->location;
     const locationt &post_loc = (--it->second.body_nodes.end())->location;
-    
+
     //guards and conditions
     it->second.pre_post_map[SSA.guard_symbol(pre_loc)] = 
       SSA.guard_symbol(post_loc);
     it->second.pre_post_map[SSA.cond_symbol(pre_loc)] = 
       SSA.cond_symbol(post_loc);
-    
+
     //modified variables
     const ssa_domaint::phi_nodest &phi_nodes =
       SSA.ssa_analysis[pre_loc].phi_nodes;
@@ -147,6 +147,7 @@ void ssa_local_unwindert::build_pre_post_map()
       if (p_it == phi_nodes.end())
 	continue; // object not modified in this loop
 
+      it->second.modified_vars.push_back(o_it->get_expr());
       symbol_exprt pre = SSA.name(*o_it, local_SSAt::PHI,pre_loc);
       it->second.pre_post_map[pre] = SSA.read_rhs(*o_it, post_loc);
     }
@@ -178,12 +179,42 @@ void ssa_local_unwindert::build_exit_conditions()
     for(local_SSAt::nodest::iterator n_it=it->second.body_nodes.begin();
 	n_it!=it->second.body_nodes.end(); n_it++)
     {
-      if(n_it->location->is_goto() &&
-	 n_it->location->get_target()->location_number>location_number_end)
+      if(!n_it->location->is_goto())
+	continue;
+      local_SSAt::nodest::iterator next = n_it; ++next;
+      if(n_it->location->get_target()->location_number>location_number_end)
       {
-	it->second.exit_conditions.push_back(
-	  and_exprt(SSA.guard_symbol(n_it->location),
-		    SSA.cond_symbol(n_it->location)));
+	exprt g = SSA.guard_symbol(n_it->location);
+	exprt c = SSA.cond_symbol(n_it->location);
+        //need disjunction of all exit conditions 
+        //   for each symbol name at exit location
+	for (exprt::operandst::const_iterator 
+	       s_it = it->second.modified_vars.begin(); 
+	     s_it != it->second.modified_vars.end(); s_it++)
+	{
+	  exprt e = SSA.read_rhs(*s_it,n_it->location);
+	  it->second.exit_map[e].push_back(and_exprt(g,c));
+	}
+	it->second.exit_map[g].push_back(and_exprt(g,c));
+	it->second.exit_map[c].push_back(and_exprt(g,c));
+	//TODO: collected assertions for hoisting
+      }
+      else if(next==it->second.body_nodes.end() && 
+	      !n_it->location->guard.is_true())
+      { //this happens in do-whiles 
+        //ENHANCE: transform goto-program to make SSA uniform in this respect
+	exprt g = SSA.guard_symbol(n_it->location);
+	exprt c = SSA.cond_symbol(n_it->location);
+	for (exprt::operandst::const_iterator 
+	       s_it = it->second.modified_vars.begin(); 
+	     s_it != it->second.modified_vars.end(); s_it++)
+	{
+	  exprt e = SSA.read_rhs(*s_it,n_it->location);
+	  it->second.exit_map[e].push_back( 
+	    and_exprt(g,not_exprt(c)));
+	}
+	it->second.exit_map[g].push_back(and_exprt(g,not_exprt(c)));
+	it->second.exit_map[c].push_back(and_exprt(g,not_exprt(c)));
 	//TODO: collected assertions for hoisting
       }
     }
@@ -427,8 +458,8 @@ void ssa_local_unwindert::add_loop_connector(loopt &loop)
       SSA.increment_unwindings(0);
     }
     else if(e_it->lhs().id()==ID_symbol &&
-	    has_prefix(id2string(to_symbol_expr(e_it->lhs()).get_identifier()),
-		       "ssa::$cond"))
+	    !has_prefix(id2string(to_symbol_expr(e_it->lhs()).get_identifier()),
+		       "ssa::$guard"))
     { //this is needed for while loops
       node.equalities.push_back(*e_it);
       SSA.decrement_unwindings(0);
@@ -461,7 +492,6 @@ void ssa_local_unwindert::add_loop_connector(loopt &loop)
 void ssa_local_unwindert::add_exit_merges(loopt &loop, unsigned k)
 {
   SSA.nodes.push_back(loop.body_nodes.front()); //copy loop head
-  const local_SSAt::nodet &orig_node=loop.body_nodes.front();;
   local_SSAt::nodet &node=SSA.nodes.back();
   node.marked = false;
   node.equalities.clear();
@@ -469,33 +499,13 @@ void ssa_local_unwindert::add_exit_merges(loopt &loop, unsigned k)
   node.constraints.clear();
   node.templates.clear();
   node.enabling_expr = current_enabling_expr;
-  exprt exits = disjunction(loop.exit_conditions);
 
-  for (local_SSAt::nodet::equalitiest::const_iterator e_it =
-	 orig_node.equalities.begin(); 
-       e_it != orig_node.equalities.end(); e_it++)
+  for (loopt::exit_mapt::const_iterator x_it = loop.exit_map.begin();
+       x_it != loop.exit_map.end(); x_it++)
   {
-    if(e_it->rhs().id()!=ID_if)
-      continue;
-#if 0
-    std::cout << node.equalities.size() << std::endl;
-    std::cout << e_it->rhs() << std::endl;
-#endif
-    exprt e = loop.is_dowhile ? 
-      loop.pre_post_map[to_symbol_expr(e_it->lhs())] :
-      e_it->lhs();
-    node.equalities.push_back(build_exit_merge(e,exits,k));
+    node.equalities.push_back(build_exit_merge(x_it->first,
+					       disjunction(x_it->second),k));
   }
-
-  //guard and condition
-  exprt g = loop.is_dowhile ?
-    SSA.guard_symbol(loop.body_nodes.back().location) :
-    SSA.guard_symbol(loop.body_nodes.front().location);
-  exprt c = loop.is_dowhile ?
-    SSA.cond_symbol(loop.body_nodes.back().location) :
-    SSA.cond_symbol(loop.body_nodes.front().location);
-  node.equalities.push_back(build_exit_merge(g,exits,k));
-  node.equalities.push_back(build_exit_merge(c,exits,k));
 }
 
 /*****************************************************************************

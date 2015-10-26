@@ -67,8 +67,10 @@ protected:
     bool is_dowhile;
     bool is_root;
     long current_unwinding;
-    exprt::operandst exit_conditions;
+    typedef std::map<exprt,exprt::operandst> exit_mapt;
+    exit_mapt exit_map;
     std::map<symbol_exprt,symbol_exprt> pre_post_map;
+    std::vector<exprt> modified_vars;
 
     //for assertion hoisting
     typedef struct {
