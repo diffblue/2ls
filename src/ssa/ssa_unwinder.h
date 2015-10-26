@@ -21,8 +21,7 @@ public:
   ssa_local_unwindert(const irep_idt _fname, unwindable_local_SSAt& _SSA,
 		       bool _is_kinduction, bool _is_bmc)
     :
-    fname(_fname),SSA(_SSA), is_kinduction(_is_kinduction), is_bmc(_is_bmc),
-    current_enabling_expr(true_exprt())
+    fname(_fname),SSA(_SSA), is_kinduction(_is_kinduction), is_bmc(_is_bmc)
   {}
 
   void init();
@@ -49,7 +48,7 @@ protected:
   const irep_idt fname;
   unwindable_local_SSAt& SSA;
   bool is_kinduction,is_bmc;
-  exprt current_enabling_expr; //TODO must become loop-specific
+  symbol_exprt current_enabling_expr; //TODO must become loop-specific
 
   class loopt //loop tree
   {
@@ -58,15 +57,16 @@ protected:
       :
     is_dowhile(false),
     is_root(false),
-    current_unwinding(0)
+    current_unwinding(-1)
     {}
 
     local_SSAt::nodest body_nodes;
+    //pointer to loop end nodes in SSA for updating current loop head
+    std::map<odometert,local_SSAt::nodest::iterator> end_nodes; 
     std::vector<locationt> loop_nodes; //child loops
-    exprt continuation_condition;
     bool is_dowhile;
     bool is_root;
-    unsigned current_unwinding;
+    long current_unwinding;
     exprt::operandst exit_conditions;
     std::map<symbol_exprt,symbol_exprt> pre_post_map;
 
@@ -84,16 +84,21 @@ protected:
 
   void build_loop_tree();
   void build_pre_post_map();
-  void build_continuation_conditions();
   void build_exit_conditions();
 
-  void unwind(loopt &loop, unsigned k);
+  void unwind(loopt &loop, unsigned k, bool is_new_parent);
+
+  exprt get_continuation_condition(const loopt& loop) const;
+  void loop_continuation_conditions(const loopt& loop, 
+				    exprt::operandst &loop_cont) const;
   
   void add_loop_body(loopt &loop, bool is_last);
   void add_loop_head(loopt &loop);
   void add_loop_connector(loopt &loop);
   void add_exit_merges(loopt &loop, unsigned k);
+  equal_exprt build_exit_merge(exprt e, const exprt &exits, unsigned k);
   void add_hoisted_assertions(loopt &loop, unsigned k);
+
 
   void output(std::ostream& out,const namespacet& ns);
 

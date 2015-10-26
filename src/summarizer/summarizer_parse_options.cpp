@@ -979,25 +979,8 @@ bool summarizer_parse_optionst::process_goto_program(
 
     // remove returns (must be done after function pointer removal)
     remove_returns(goto_model);
-    
-    // recalculate numbers, etc.
-    goto_model.goto_functions.update();
-
-    // add loop ids
-    goto_model.goto_functions.compute_loop_numbers();
-    
-    // if we aim to cover, replace
-    // all assertions by false to prevent simplification
-    if(cmdline.isset("cover-assertions"))
-      make_assertions_false(goto_model);
-
-    // show it?
-    if(cmdline.isset("show-loops"))
-    {
-      show_loop_ids(get_ui(), goto_model);
-      return true;
-    }
-
+   
+ 
 #if UNWIND_GOTO_INTO_LOOP
     goto_unwind(goto_model,2);
 #endif
@@ -1017,18 +1000,6 @@ bool summarizer_parse_optionst::process_goto_program(
       }
     }
 
-    //inline __CPROVER_initialize and main
-    if(cmdline.isset("inline-main"))
-    {
-      inline_main(goto_model); 
-    }
-
-    if(!cmdline.isset("no-propagation"))
-    {
-      status() << "Constant Propagation" << eom;
-      propagate_constants(goto_model);
-    }
-	
     //explicitly initialize all local variables
     nondet_locals(goto_model);
 
@@ -1040,6 +1011,36 @@ bool summarizer_parse_optionst::process_goto_program(
 #if REMOVE_MULTIPLE_DEREFERENCES
     remove_multiple_dereferences(goto_model);
 #endif
+
+    // recalculate numbers, etc.
+    goto_model.goto_functions.update();
+
+    // add loop ids
+    goto_model.goto_functions.compute_loop_numbers();
+
+    //inline __CPROVER_initialize and main
+    if(cmdline.isset("inline-main"))
+    {
+      inline_main(goto_model); 
+    }
+
+    if(!cmdline.isset("no-propagation"))
+    {
+      status() << "Constant Propagation" << eom;
+      propagate_constants(goto_model);
+    }
+
+    // if we aim to cover, replace
+    // all assertions by false to prevent simplification
+    if(cmdline.isset("cover-assertions"))
+      make_assertions_false(goto_model);
+
+    // show it?
+    if(cmdline.isset("show-loops"))
+    {
+      show_loop_ids(get_ui(), goto_model);
+      return true;
+    }
 
     // do array abstraction
     if(cmdline.isset("array-abstraction"))

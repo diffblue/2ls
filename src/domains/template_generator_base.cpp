@@ -37,6 +37,13 @@ void template_generator_baset::get_pre_post_guards(const local_SSAt &SSA,
 			 local_SSAt::nodest::const_iterator n_it,
 			 exprt &pre_guard, exprt &post_guard)
 {
+#if 1
+  std::cout << "post-location: " 
+	    << n_it->location->location_number << std::endl;
+  assert(n_it->loophead != SSA.nodes.end());
+  std::cout << "pre-location: " 
+	    << n_it->loophead->location->location_number << std::endl;
+#endif
   exprt lhguard = SSA.guard_symbol(n_it->loophead->location);
   ssa_local_unwinder.unwinder_rename(to_symbol_expr(lhguard),*n_it,true);
   exprt lsguard = SSA.name(SSA.guard_symbol(), 
@@ -456,13 +463,17 @@ Function: template_generator_baset::instantiate_custom_templates
 
  Outputs:
 
- Purpose:
+ Purpose: [experimental]
 
 \*******************************************************************/
 
 bool template_generator_baset::instantiate_custom_templates(
                                const local_SSAt &SSA)
 {
+  //TODO: the code below cannot work for unwound SSA
+  //  we deactivate it for now
+  return false;
+
   // used for renaming map
   var_listt pre_state_vars, post_state_vars;
 

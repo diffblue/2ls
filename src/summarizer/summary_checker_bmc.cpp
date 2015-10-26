@@ -39,7 +39,7 @@ property_checkert::resultt summary_checker_bmct::operator()(
   {
     status() << "Unwinding (k=" << unwind << ")" << messaget::eom;
     summary_db.mark_recompute_all();
-    ssa_unwinder.unwind_all(unwind+1);
+    ssa_unwinder.unwind_all(unwind);
     result =  check_properties(); 
     if(result == property_checkert::PASS) 
     {

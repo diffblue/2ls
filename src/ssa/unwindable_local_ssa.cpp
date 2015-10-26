@@ -33,7 +33,7 @@ void unwindable_local_SSAt::increment_unwindings(int mode)
   {
     assert(current_unwindings.size()>=1);
     unsigned index = current_unwindings.size()-1;
-    assert(current_unwindings[index]>=1);
+    assert(current_unwindings[index]<std::numeric_limits<unsigned>::max());
     current_unwindings[index]++;
   }
   else if(mode>=1)
@@ -98,14 +98,15 @@ std::string unwindable_local_SSAt::odometer_to_string(
 {
   if(current_unwinding<0) //not yet unwind=0
     return "";
-  if(level<odometer.size())
-    return "";
+//TODO: remove this
+/*  if(level<odometer.size())
+    return "";*/
   if(level>odometer.size())
     level = odometer.size();
-  std::string suffix = "";
+  std::string unwind_suffix = "";
   for(unsigned i=0;i<level;i++)
-    suffix += "%" + std::to_string(odometer[i]);
-  return suffix;
+    unwind_suffix += "%" + std::to_string(odometer[i]);
+  return unwind_suffix;
 }
 
 /*******************************************************************\
@@ -129,9 +130,9 @@ symbol_exprt unwindable_local_SSAt::name(const ssa_objectt &object,
   unsigned def_level = 0;
   if(lhl_it != loop_hierarchy_level.end())
     def_level = lhl_it->second;
-  std::string suffix = odometer_to_string(current_unwindings,
+  std::string unwind_suffix = odometer_to_string(current_unwindings,
 					  def_level);
-  s.set_identifier(id2string(s.get_identifier())+suffix);
+  s.set_identifier(id2string(s.get_identifier())+unwind_suffix+suffix);
 #if 0
   std::cout << "DEF_LOC: " << def_loc->location_number << std::endl;
   std::cout << "DEF_LEVEL: " << def_level << std::endl;
@@ -140,6 +141,38 @@ symbol_exprt unwindable_local_SSAt::name(const ssa_objectt &object,
 	    << s.get_identifier() << std::endl;
 #endif
 
+  return s;
+}
+
+/*******************************************************************\
+
+Function: unwindable_local_SSAt::nondet_symbol
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: overrides local_SSAt::nondet_symbol to add unwinder suffixes
+
+\*******************************************************************/
+
+exprt unwindable_local_SSAt::nondet_symbol(std::string prefix, 
+  const typet &type, locationt loc, unsigned counter) const
+{
+  std::string unwind_suffix = odometer_to_string(current_unwindings,
+					  current_unwindings.size());
+  exprt s(ID_nondet_symbol, type);
+  const irep_idt identifier=
+    prefix+
+    i2string(loc->location_number)+
+    "."+i2string(counter)+unwind_suffix+suffix;
+  s.set(ID_identifier, identifier);
+#if 0
+  std::cout << "DEF_LOC: " << loc->location_number << std::endl;
+  std::cout << "DEF_LEVEL: " << current_unwindings.size() << std::endl;
+  std::cout << "RENAME_SYMBOL: "
+	    << s.get(ID_identifier) << std::endl;
+#endif
   return s;
 }
 
@@ -170,9 +203,25 @@ void unwindable_local_SSAt::rename(exprt &expr)
     unsigned def_level = 0;
     if(lhl_it != loop_hierarchy_level.end())
       def_level = lhl_it->second;
-    std::string suffix = odometer_to_string(current_unwindings,
+    std::string unwind_suffix = odometer_to_string(current_unwindings,
 					    def_level);
-    s.set_identifier(id2string(id)+suffix);
+    s.set_identifier(id2string(id)+unwind_suffix);
+#if 0
+  std::cout << "DEF_LOC: " << def_loc->location_number << std::endl;
+  std::cout << "DEF_LEVEL: " << def_level << std::endl;
+  std::cout << "O.size: " << current_unwindings.size() << std::endl;
+  std::cout << "current: " << current_unwinding << std::endl;
+  std::cout << "RENAME_SYMBOL: "
+	    << id << " --> " 
+	    << s.get_identifier() << std::endl;
+#endif
+  }
+  if(expr.id()==ID_nondet_symbol)
+  {
+    std::string unwind_suffix = odometer_to_string(current_unwindings,
+						   current_unwindings.size());
+    expr.set(ID_identifier, 
+	     id2string(expr.get(ID_identifier))+unwind_suffix+suffix);
   }
   Forall_operands(it,expr)
     rename(*it);
@@ -186,7 +235,7 @@ Function: unwindable_local_SSAt::get_ssa_name
 
  Outputs:
 
- Purpose: retrieve ssa name, 
+ Purpose: retrieve ssa name and location
 
 \*******************************************************************/
 
@@ -200,10 +249,14 @@ irep_idt unwindable_local_SSAt::get_ssa_name(
     return irep_idt(s);
   if(pos2==std::string::npos)
     pos2 = s.size();
-  if(s.substr(pos1,2) == "lb") pos1 += 2;
-  else if(s.substr(pos1,2) == "phi") pos1 += 3;
-  loc = find_location_by_number(safe_string2unsigned(s.substr(pos1,pos2)));
-  return irep_idt(s.substr(0,pos1));
+  if(s.substr(pos1+1,2) == "lb") pos1 += 2;
+  if(s.substr(pos1+1,2) == "ls") pos1 += 2;
+  else if(s.substr(pos1+1,3) == "phi") pos1 += 3;
+#if 0
+  std::cout << s << ", " << s.substr(pos1+1,pos2) << ", " << s.substr(0,pos2) << std::endl;
+#endif
+  loc = find_location_by_number(safe_string2unsigned(s.substr(pos1+1,pos2)));
+  return irep_idt(s.substr(0,pos2));
 }
 
 
@@ -226,22 +279,53 @@ void unwindable_local_SSAt::compute_loop_hierarchy()
   forall_goto_program_instructions(i_it, goto_function.body)
   {
     bool found = false;
+
+#if 0
+    std::cout << "location: " << i_it->location_number << std::endl;
+    std::cout << "- targets:";
+    for(goto_programt::targetst::const_iterator 
+	  t_it = i_it->targets.begin();
+	t_it != i_it->targets.end(); ++t_it)
+      std::cout << " " << i_it->get_target()->location_number;
+    std::cout << std::endl;
+#endif
+
     for(std::set<goto_programt::targett>::const_iterator 
 	  t_it = i_it->incoming_edges.begin();
 	t_it != i_it->incoming_edges.end(); ++t_it)
     {
-      if((*t_it)->is_backwards_goto())
+
+#if 0
+      std::cout << "- incoming: " << (*t_it)->location_number << std::endl;
+#endif
+
+      //cannot use ->is_backwards_goto() here
+      if((*t_it)->location_number>=i_it->location_number)
       {
-	assert(!found); //target of two backwards edges
-	loopheads.push_back(i_it);
+	assert(!found); //should not be target of two backwards edges
 	found = true;
+
+#if 0
+	std::cout << "- new: " << i_it->location_number << std::endl;
+#endif
+
+	loopheads.push_back(i_it);
       }
     }
     loop_hierarchy_level[i_it] = loopheads.size();
     if(i_it->is_backwards_goto())
     {
+
+#if 0
+	std::cout << "- current: " << 
+	  loopheads.back()->location_number << 
+	  ", backwards: " << 
+	  i_it->get_target()->location_number << std::endl;
+#endif
+
       assert(!loopheads.empty());
-      assert(loopheads.back() == i_it->get_target()); //backwards to current loop head
+      //must be backwards goto to current loop head
+      assert(loopheads.back() == i_it->get_target()); 
       loopheads.pop_back();
     }
   }

@@ -21,14 +21,18 @@ public:
     const namespacet &_ns,
     const std::string &_suffix="")
     :
-  local_SSAt(_goto_function,_ns,_suffix)
+    local_SSAt(_goto_function,_ns,_suffix),
+    current_unwinding(-1)
   {
     compute_loop_hierarchy();
   }
 
   virtual ~unwindable_local_SSAt() {}
 
-  virtual symbol_exprt name(const ssa_objectt &, kindt kind, locationt loc) const;
+  virtual symbol_exprt name(const ssa_objectt &, 
+			    kindt kind, locationt loc) const;
+  virtual exprt nondet_symbol(std::string prefix, const typet &type, 
+			      locationt loc, unsigned counter) const;
 
   typedef std::vector<unsigned> odometert;
   odometert current_unwindings;

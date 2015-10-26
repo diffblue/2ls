@@ -6,6 +6,8 @@ Author: Peter Schrammel, Saurabh Joshi
 
 \*******************************************************************/
 
+#include <util/prefix.h>
+
 #include "ssa_unwinder.h"
 
 /*****************************************************************************
@@ -25,8 +27,11 @@ void ssa_local_unwindert::init()
 {
   build_loop_tree();
   build_pre_post_map();
-  build_continuation_conditions();
   build_exit_conditions();
+  unwind(0);
+#if 1
+  SSA.output_verbose(std::cout);
+#endif
 }
 
 /*****************************************************************************
@@ -46,11 +51,10 @@ void ssa_local_unwindert::build_loop_tree()
 {
   //build loop tree structure
   //Assumes that initially the nodes are in the same order as in the goto program
-  std::list<local_SSAt::nodest::const_iterator> loopheads;
-  local_SSAt::nodest::const_iterator n_it = SSA.nodes.end();
-  do
+  std::list<local_SSAt::nodest::iterator> loopheads;
+  local_SSAt::nodest::iterator n_it = --SSA.nodes.end();
+  while(n_it != SSA.nodes.begin())
   {
-    --n_it;
     //end of loop found
     if (n_it->loophead != SSA.nodes.end())
     {
@@ -58,28 +62,49 @@ void ssa_local_unwindert::build_loop_tree()
       if(loopheads.empty())
       {
 	loop.is_root = true;
-	loops[loopheads.back()->location].loop_nodes.push_back(n_it->loophead->location);
+      }
+      else 
+      {
+	loops[loopheads.back()->location].loop_nodes.push_back(
+	  n_it->loophead->location);
       }
       loopheads.push_back(n_it->loophead);
       loop.body_nodes.push_front(*n_it);
+#if 1
+    std::cout << "pop " << n_it->location->location_number 
+      << " for " << n_it->loophead->location->location_number << std::endl;
+#endif
       //this test is ambiguous if the loop condition is true,
       //  but shouldn't have any consequences
       assert(n_it->location->is_backwards_goto());
       loop.is_dowhile = !n_it->location->guard.is_true();
+      SSA.nodes.erase(n_it--);
     }
     //beginning of loop found
-    if (n_it == loopheads.back())
+    else if (n_it == loopheads.back())
     {
+#if 1
+    std::cout << "push " << n_it->location->location_number << std::endl;
+#endif
       loops[n_it->location].body_nodes.push_front(*n_it);
       loopheads.pop_back();
+      loops[n_it->location].body_nodes.back().loophead = 
+	loops[n_it->location].body_nodes.begin();
+      SSA.nodes.erase(n_it--);
     }
     //collect loop body nodes
-    if(!loopheads.empty())
+    else if(!loopheads.empty())
     {
+#if 1
+    std::cout << "add " << n_it->location->location_number 
+      << " for " << loopheads.back()->location->location_number << std::endl;
+#endif
       loops[loopheads.back()->location].body_nodes.push_front(*n_it);
+      SSA.nodes.erase(n_it--);
     }
+    else 
+      --n_it;
   }
-  while(n_it != SSA.nodes.begin());
 }
 
 /*****************************************************************************
@@ -104,8 +129,10 @@ void ssa_local_unwindert::build_pre_post_map()
     const locationt &post_loc = (--it->second.body_nodes.end())->location;
     
     //guards and conditions
-    it->second.pre_post_map[SSA.guard_symbol(pre_loc)] = SSA.guard_symbol(post_loc);
-    it->second.pre_post_map[SSA.cond_symbol(pre_loc)] = SSA.cond_symbol(post_loc);
+    it->second.pre_post_map[SSA.guard_symbol(pre_loc)] = 
+      SSA.guard_symbol(post_loc);
+    it->second.pre_post_map[SSA.cond_symbol(pre_loc)] = 
+      SSA.cond_symbol(post_loc);
     
     //modified variables
     const ssa_domaint::phi_nodest &phi_nodes =
@@ -128,34 +155,6 @@ void ssa_local_unwindert::build_pre_post_map()
 
 /*****************************************************************************
  *
- *  Function : ssa_local_unwindert::build_continuation_conditions
- *
- *  Input : 
- *
- *  Output : 
- *
- *  Purpose : 
- *
- *
- *****************************************************************************/
-
-void ssa_local_unwindert::build_continuation_conditions()
-{
-  for(loop_mapt::iterator it = loops.begin(); it != loops.end(); ++it)
-  {
-    if(it->second.is_dowhile) //take from post
-    {
-      //TODO
-    }
-    else  //take from pre
-    {
-      //TODO
-    }
-  }
-}
-
-/*****************************************************************************
- *
  *  Function : ssa_local_unwindert::build_exit_conditions
  *
  *  Input : 
@@ -172,16 +171,19 @@ void ssa_local_unwindert::build_exit_conditions()
   for(loop_mapt::iterator it = loops.begin(); it != loops.end(); ++it)
   {
     unsigned location_number_end =
-      (--it->second.body_nodes.end())->location->location_number;
+      it->second.body_nodes.back().location->location_number;
+#if 0
+    std::cout << "end: " << location_number_end << std::endl;
+#endif
     for(local_SSAt::nodest::iterator n_it=it->second.body_nodes.begin();
 	n_it!=it->second.body_nodes.end(); n_it++)
     {
       if(n_it->location->is_goto() &&
-	 n_it->location->location_number>location_number_end)
+	 n_it->location->get_target()->location_number>location_number_end)
       {
 	it->second.exit_conditions.push_back(
 	  and_exprt(SSA.guard_symbol(n_it->location),
-		   SSA.cond_symbol(n_it->location)));
+		    SSA.cond_symbol(n_it->location)));
 	//TODO: collected assertions for hoisting
       }
     }
@@ -203,15 +205,21 @@ void ssa_local_unwindert::build_exit_conditions()
 
 void ssa_local_unwindert::unwind(unsigned k)
 {
-  current_enabling_expr = symbol_exprt(id2string(fname)+"::enable"+i2string(k),
-				       bool_typet());
+  if(SSA.current_unwinding >= k)
+    return;
+
+  current_enabling_expr = 
+    symbol_exprt("unwind::"+id2string(fname)+"::enable"+i2string(k),
+		 bool_typet());
+  SSA.enabling_exprs.push_back(current_enabling_expr);
+  SSA.current_unwinding = k; //TODO: just for exploratory integration, must go away
   //recursively unwind everything
   SSA.current_unwindings.clear();
   for(loop_mapt::iterator it = loops.begin(); it != loops.end(); ++it)
   {
     if(!it->second.is_root)
       continue;
-    unwind(it->second,k); //recursive
+    unwind(it->second,k,false); //recursive
     assert(SSA.current_unwindings.empty());
   }
   //update current unwinding
@@ -219,7 +227,6 @@ void ssa_local_unwindert::unwind(unsigned k)
   {
     it->second.current_unwinding=k;
   }
-  SSA.current_unwinding = k; //TODO: just for exploratory integration, must go away
 }
 
 /*****************************************************************************
@@ -236,24 +243,53 @@ void ssa_local_unwindert::unwind(unsigned k)
  *
  *****************************************************************************/
 
-void ssa_local_unwindert::unwind(loopt &loop, unsigned k)
+void ssa_local_unwindert::unwind(loopt &loop, unsigned k, bool is_new_parent)
 {
+  odometert context = SSA.current_unwindings;
   SSA.increment_unwindings(1);
-  for(unsigned i = 1; i<=k; ++i)
+  for(unsigned i = 0; i<=k; ++i)
   {
     //add new unwindings of this loop
-    if(i>loop.current_unwinding)
+    if(i>loop.current_unwinding || is_new_parent)
     {
       add_loop_body(loop,i==k);
-      add_loop_connector(loop);
+      //set new loop end node
+      if(i==0)
+      {
+	assert(loop.end_nodes.find(context) == loop.end_nodes.end());
+	loop.end_nodes[context] = --SSA.nodes.end();
+        assert(loop.end_nodes.find(context) != loop.end_nodes.end());
+#if 1
+	std::cout << "end node for context "
+		  << SSA.odometer_to_string(context,context.size()) << ": "
+	    << loop.end_nodes[context]->location->location_number << " == " 
+	    << loop.body_nodes.back().location->location_number << std::endl;
+#endif
+      }
+      if(i>0)
+      {
+        add_loop_connector(loop);
+      }
     }
     if(i==k)
+    {
       add_loop_head(loop);
+      //update loop head
+#if 1
+	std::cout << "update loop head for context "
+		  << SSA.odometer_to_string(context,context.size()) << ": "
+		  << loop.body_nodes.begin()->location->location_number << std::endl;
+#endif
+      assert(loop.end_nodes.find(context) != loop.end_nodes.end());
+      loop.end_nodes[context]->loophead = --SSA.nodes.end();
+      assert(loop.end_nodes[context]->loophead->location->location_number == 
+	     loop.body_nodes.begin()->location->location_number);
+    }
     //recurse into child loops
     for(std::vector<locationt>::iterator l_it = loop.loop_nodes.begin();
 	l_it != loop.loop_nodes.end(); ++l_it)
     {
-      unwind(loops[*l_it],k);
+      unwind(loops[*l_it],k,i>loop.current_unwinding);
     }
     SSA.increment_unwindings(0);
   }
@@ -281,8 +317,13 @@ void ssa_local_unwindert::add_loop_body(loopt &loop, bool is_last)
   ++it; //skip loop head, we'll do that separately
   for(; it != loop.body_nodes.end(); ++it)
   {
+#if 1
+    std::cout << "add body node: " 
+	      << it->location->location_number << std::endl;
+#endif
     SSA.nodes.push_back(*it); //copy
     local_SSAt::nodet &node = SSA.nodes.back();
+    node.loophead = SSA.nodes.end();
     node.marked = false;
     for (local_SSAt::nodet::equalitiest::iterator e_it =
 	   node.equalities.begin(); e_it != node.equalities.end(); e_it++)
@@ -343,6 +384,9 @@ void ssa_local_unwindert::add_loop_head(loopt &loop)
   {
     SSA.rename(*e_it);
   }
+#if 1
+  std::cout << "add loop head: " << node.location->location_number << std::endl;
+#endif
 }
 
 /*****************************************************************************
@@ -360,26 +404,45 @@ void ssa_local_unwindert::add_loop_head(loopt &loop)
 void ssa_local_unwindert::add_loop_connector(loopt &loop)
 {
   // connector to previous iteration (permanently added)
+  const local_SSAt::nodet &orig_node=loop.body_nodes.front();
   SSA.nodes.push_back(loop.body_nodes.front()); //copy loop head
   local_SSAt::nodet &node=SSA.nodes.back();
+  node.equalities.clear();
+  node.assertions.clear();
+  node.constraints.clear();
+  node.templates.clear();
   node.marked = false;
-  for (local_SSAt::nodet::equalitiest::iterator e_it =
-	 node.equalities.begin(); e_it != node.equalities.end(); e_it++)
+  for (local_SSAt::nodet::equalitiest::const_iterator e_it =
+	 orig_node.equalities.begin(); 
+       e_it != orig_node.equalities.end(); e_it++)
   {
-    if(e_it->rhs().id() == ID_if || //phi
-       e_it->lhs() == SSA.guard_symbol(node.location)) 
+    if(e_it->rhs().id()==ID_if)
     {
-      e_it->rhs() = loop.pre_post_map[to_symbol_expr(e_it->lhs())]; 
-      SSA.rename(e_it->rhs());
+      node.equalities.push_back(*e_it);
+      node.equalities.back().rhs() = 
+	loop.pre_post_map[to_symbol_expr(e_it->lhs())]; 
+      SSA.rename(node.equalities.back().rhs());
       SSA.decrement_unwindings(0);
-      SSA.rename(e_it->lhs());
+      SSA.rename(node.equalities.back().lhs());
       SSA.increment_unwindings(0);
     }
-    else
-    {
-      SSA.rename(*e_it);
+    else if(e_it->lhs().id()==ID_symbol &&
+	    has_prefix(id2string(to_symbol_expr(e_it->lhs()).get_identifier()),
+		       "ssa::$cond"))
+    { //this is needed for while loops
+      node.equalities.push_back(*e_it);
+      SSA.decrement_unwindings(0);
+      SSA.rename(node.equalities.back());
+      SSA.increment_unwindings(0);
     }
   }
+  //continuation guard and condition
+  exprt g_rhs = and_exprt(SSA.guard_symbol(loop.body_nodes.back().location),
+			  SSA.cond_symbol(loop.body_nodes.back().location));
+  SSA.decrement_unwindings(0);
+  exprt g_lhs = SSA.guard_symbol(loop.body_nodes.begin()->location);
+  SSA.increment_unwindings(0);
+  node.equalities.push_back(equal_exprt(g_lhs,g_rhs));
 }
 
 /*****************************************************************************
@@ -398,35 +461,74 @@ void ssa_local_unwindert::add_loop_connector(loopt &loop)
 void ssa_local_unwindert::add_exit_merges(loopt &loop, unsigned k)
 {
   SSA.nodes.push_back(loop.body_nodes.front()); //copy loop head
+  const local_SSAt::nodet &orig_node=loop.body_nodes.front();;
   local_SSAt::nodet &node=SSA.nodes.back();
   node.marked = false;
+  node.equalities.clear();
   node.assertions.clear();
   node.constraints.clear();
   node.templates.clear();
   node.enabling_expr = current_enabling_expr;
   exprt exits = disjunction(loop.exit_conditions);
 
-  for (local_SSAt::nodet::equalitiest::iterator e_it =
-	 node.equalities.begin(); e_it != node.equalities.end(); e_it++)
+  for (local_SSAt::nodet::equalitiest::const_iterator e_it =
+	 orig_node.equalities.begin(); 
+       e_it != orig_node.equalities.end(); e_it++)
   {
-    exprt e = e_it->lhs();
-    exprt re = e_it->lhs();
-    SSA.increment_unwindings(1);
-    SSA.rename(re); //%0
-    for (unsigned int i = 1; i < k; i++)
-    {
-      exprt cond_expr = exits;
-      SSA.rename(cond_expr);
-      exprt true_expr = e;
-      SSA.rename(true_expr);
-      exprt false_expr = re;
-      re = if_exprt(cond_expr, true_expr, false_expr);
-      SSA.increment_unwindings(0);
-    }
-    SSA.increment_unwindings(-1);
-    SSA.rename(e); //lhs
-    node.equalities.push_back(equal_exprt(e,re));
+    if(e_it->rhs().id()!=ID_if)
+      continue;
+#if 0
+    std::cout << node.equalities.size() << std::endl;
+    std::cout << e_it->rhs() << std::endl;
+#endif
+    exprt e = loop.is_dowhile ? 
+      loop.pre_post_map[to_symbol_expr(e_it->lhs())] :
+      e_it->lhs();
+    node.equalities.push_back(build_exit_merge(e,exits,k));
   }
+
+  //guard and condition
+  exprt g = loop.is_dowhile ?
+    SSA.guard_symbol(loop.body_nodes.back().location) :
+    SSA.guard_symbol(loop.body_nodes.front().location);
+  exprt c = loop.is_dowhile ?
+    SSA.cond_symbol(loop.body_nodes.back().location) :
+    SSA.cond_symbol(loop.body_nodes.front().location);
+  node.equalities.push_back(build_exit_merge(g,exits,k));
+  node.equalities.push_back(build_exit_merge(c,exits,k));
+}
+
+/*****************************************************************************
+ *
+ *  Function : ssa_local_unwindert::build_exit_merge
+ *
+ *  Input : 
+ *
+ *  Output : 
+ *
+ *  Purpose : generates exit merge expression for a given expression
+ *
+ *****************************************************************************/
+
+equal_exprt ssa_local_unwindert::build_exit_merge(
+  exprt e, const exprt &exits, unsigned k)
+{
+  exprt re = e;
+  SSA.increment_unwindings(1);
+  SSA.rename(re); //%0
+  for (unsigned i = 1; i <= k; i++)
+  {
+    SSA.increment_unwindings(0);
+    exprt cond_expr = exits;
+    SSA.rename(cond_expr);
+    exprt true_expr = e;
+    SSA.rename(true_expr);
+    exprt false_expr = re;
+    re = if_exprt(cond_expr, true_expr, false_expr);
+  }
+  SSA.increment_unwindings(-1);
+  SSA.rename(e); //lhs
+  return equal_exprt(e,re);
 }
 
 /*****************************************************************************
@@ -496,10 +598,63 @@ void ssa_local_unwindert::output(std::ostream& out)
 void ssa_local_unwindert::loop_continuation_conditions(
   exprt::operandst& loop_cont) const
 {
+  SSA.current_unwindings.clear();
   for(loop_mapt::const_iterator it = loops.begin(); it != loops.end(); ++it)
   {
-    loop_cont.push_back(it->second.continuation_condition);
+    if(!it->second.is_root)
+      continue;
+    loop_continuation_conditions(it->second,loop_cont); //recursive
+    assert(SSA.current_unwindings.empty());
   }
+}
+
+/*****************************************************************************
+ *
+ *  Function : ssa_local_unwindert::get_continuation_condition
+ *
+ *  Input : 
+ *
+ *  Output : 
+ *
+ *  Purpose : 
+ *
+ *
+ *****************************************************************************/
+
+exprt ssa_local_unwindert::get_continuation_condition(const loopt& loop) const
+{
+  return and_exprt(SSA.guard_symbol(loop.body_nodes.back().location),
+   	        SSA.cond_symbol(loop.body_nodes.back().location));
+}
+
+/*****************************************************************************\
+ *
+ * Function : ssa_local_unwindert::loop_continuation_conditions
+ *
+ * Input :
+ *
+ * Output :
+ *
+ * Purpose : recursively construct loop continuation conditions
+ *
+ *****************************************************************************/
+
+void ssa_local_unwindert::loop_continuation_conditions(
+  const loopt& loop, exprt::operandst& loop_cont) const
+{
+  SSA.increment_unwindings(1);
+  loop_cont.push_back(get_continuation_condition(loop)); //%0
+  for(unsigned i=0; i<=loop.current_unwinding; ++i)
+  {
+    //recurse into child loops
+    for(std::vector<locationt>::const_iterator l_it = loop.loop_nodes.begin();
+	l_it != loop.loop_nodes.end(); ++l_it)
+    {
+      loop_continuation_conditions(loops.at(*l_it),loop_cont);
+    }
+    SSA.increment_unwindings(0);
+  }
+  SSA.increment_unwindings(-1);
 }
 
 
@@ -535,10 +690,11 @@ void ssa_local_unwindert::unwinder_rename(symbol_exprt &var,
   const local_SSAt::nodet &node, bool pre) const
 {
   //TODO: replace this by SSA.rename
+  //      this requires odometer information in the nodes
   
   //only to be called for backedge nodes
   //This is very dirty hack :-(
-  if(SSA.current_unwinding==0) return;
+  if(SSA.current_unwinding<0) return;
   assert(node.equalities.size()>=1);
   //copy suffix from equality lhs to var
   std::string id = 
@@ -547,7 +703,7 @@ void ssa_local_unwindert::unwinder_rename(symbol_exprt &var,
   if(pos==std::string::npos) return;
   size_t pos1 = id.find_last_of("%");
   std::string suffix;
-  unsigned unwinding = pre ? SSA.current_unwinding-1 : 0;
+  unsigned unwinding = pre ? SSA.current_unwinding : 0;
   if(pos==pos1)
   {
      suffix = "%"+i2string(unwinding);
@@ -650,8 +806,8 @@ void ssa_unwindert::init(bool is_kinduction, bool is_bmc)
        it != funcs.end(); it++)
   {
     unwinder_map.insert(unwinder_pairt(it->first,
-				       ssa_local_unwindert(it->first, (*(it->second)),
-							    is_kinduction, is_bmc)));
+      ssa_local_unwindert(it->first, (*(it->second)),
+  		          is_kinduction, is_bmc)));
   }
 }
 

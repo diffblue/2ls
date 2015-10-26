@@ -36,7 +36,7 @@ property_checkert::resultt summary_checker_ait::operator()(
 
     ssa_unwinder.init_localunwinders();
 
-    ssa_unwinder.unwind_all(unwind+1);
+    ssa_unwinder.unwind_all(unwind);
     ssa_unwinder.output(debug()); debug() <<eom;
   }
 

@@ -279,12 +279,12 @@ Function: local_SSAt::find_location_by_number
 
 local_SSAt::locationt local_SSAt::find_location_by_number(unsigned location_number) const
 {
-  local_SSAt::nodest::const_iterator n_it =nodes.begin();
-  for(; n_it != nodes.end(); n_it++)
+  forall_goto_program_instructions(it,goto_function.body)
   {
-    if(n_it->location->location_number == location_number) break;
+    if(it->location_number == location_number) 
+      return it;
   }
-  return n_it->location;
+  return goto_function.body.instructions.end();
 }
 
 /*******************************************************************\
@@ -1202,15 +1202,9 @@ void local_SSAt::replace_side_effects_rec(
     if(statement==ID_nondet)
     {
       // turn into nondet_symbol
-      exprt nondet_symbol(ID_nondet_symbol, expr.type());
       counter++;
-      const irep_idt identifier=
-        "ssa::nondet"+
-        i2string(loc->location_number)+
-        "."+i2string(counter)+suffix;
-      nondet_symbol.set(ID_identifier, identifier);
-      
-      expr.swap(nondet_symbol);
+      exprt s = nondet_symbol("ssa::nondet",expr.type(),loc,counter);      
+      expr.swap(s);
     }
     else if(statement==ID_malloc)
     {
@@ -1317,6 +1311,30 @@ symbol_exprt local_SSAt::name_input(const ssa_objectt &object) const
     new_symbol_expr.add_source_location()=object.get_expr().source_location();
 
   return new_symbol_expr;
+}
+
+/*******************************************************************\
+
+Function: local_SSAt::nondet_symbol
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt local_SSAt::nondet_symbol(std::string prefix, const typet &type, 
+				locationt loc, unsigned counter) const
+{
+  exprt s(ID_nondet_symbol, type);
+  const irep_idt identifier=
+    prefix+
+    i2string(loc->location_number)+
+    "."+i2string(counter)+suffix;
+  s.set(ID_identifier, identifier);
+  return s;
 }
 
 /*******************************************************************\
@@ -1492,6 +1510,9 @@ void local_SSAt::output_verbose(std::ostream &out) const
     if(n_it->loophead!=nodes.end()) 
       out << "loop back to location "
 	  << n_it->loophead->location->location_number << "\n";
+    if(!n_it->enabling_expr.is_true()) 
+      out << "enabled if "
+	  << from_expr(ns, "", n_it->enabling_expr) << "\n";
     out << "\n";
   }
   out << "(enable) " << from_expr(ns, "", get_enabling_exprs()) << "\n\n";

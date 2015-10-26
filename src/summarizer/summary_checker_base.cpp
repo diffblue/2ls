@@ -200,7 +200,7 @@ void summary_checker_baset::check_properties(
 
   bool all_properties = options.get_bool_option("all-properties");
 
-  SSA.output(debug()); debug() << eom;
+  SSA.output_verbose(debug()); debug() << eom;
   
   // incremental version
 
@@ -417,6 +417,7 @@ exprt::operandst summary_checker_baset::get_loophead_selects(
   const irep_idt &function_name, 
   const local_SSAt &SSA, prop_convt &solver)
 {
+  //TODO: this should be provided by unwindable_local_SSA
   exprt::operandst loophead_selects;
   for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
       n_it != SSA.nodes.end(); n_it++)
@@ -431,7 +432,7 @@ exprt::operandst summary_checker_baset::get_loophead_selects(
   if(!loophead_selects_literal.is_constant())
     solver.set_frozen(loophead_selects_literal);
 
-#if 0
+#if 1
   std::cout << "loophead_selects: " << from_expr(SSA.ns,"",conjunction(loophead_selects)) << std::endl;
 #endif
 
@@ -455,6 +456,7 @@ exprt::operandst summary_checker_baset::get_loop_continues(
   const irep_idt &function_name, 
   const local_SSAt &SSA, prop_convt &solver)
 {
+  //TODO: this should be provided by unwindable_local_SSA
   exprt::operandst loop_continues;
 
   ssa_unwinder.get(function_name).loop_continuation_conditions(loop_continues);
@@ -471,7 +473,7 @@ exprt::operandst summary_checker_baset::get_loop_continues(
     }
   }
 
-#if 0
+#if 1
   std::cout << "loophead_continues: " << from_expr(SSA.ns,"",disjunction(loop_continues)) << std::endl;
 #endif
 
