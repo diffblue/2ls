@@ -128,12 +128,6 @@ void ssa_local_unwindert::build_pre_post_map()
     const locationt &pre_loc = it->second.body_nodes.begin()->location;
     const locationt &post_loc = (--it->second.body_nodes.end())->location;
 
-    //guards and conditions
-/*    it->second.pre_post_map[SSA.guard_symbol(pre_loc)] = 
-      SSA.guard_symbol(post_loc);
-    it->second.pre_post_map[SSA.cond_symbol(pre_loc)] = 
-    SSA.cond_symbol(post_loc);*/
-
     //modified variables
     const ssa_domaint::phi_nodest &phi_nodes =
       SSA.ssa_analysis[pre_loc].phi_nodes;
@@ -197,7 +191,12 @@ void ssa_local_unwindert::build_exit_conditions()
 	}
 	it->second.exit_map[g].push_back(and_exprt(g,c));
 	it->second.exit_map[c].push_back(and_exprt(g,c));
-	//TODO: collected assertions for hoisting
+	//collect exits for assertion hoisting
+	if(it->second.is_root)
+	{
+	  it->second.assertion_hoisting_map[n_it->location->get_target()]
+	    .exit_conditions.push_back(and_exprt(g,c));
+	}
       }
       else if(next==it->second.body_nodes.end() && 
 	      !n_it->location->guard.is_true())
@@ -215,7 +214,37 @@ void ssa_local_unwindert::build_exit_conditions()
 	}
 	it->second.exit_map[g].push_back(and_exprt(g,not_exprt(c)));
 	it->second.exit_map[c].push_back(and_exprt(g,not_exprt(c)));
-	//TODO: collected assertions for hoisting
+	//collect exits for assertion hoisting
+	if(it->second.is_root)
+	{
+	  it->second.assertion_hoisting_map[n_it->location->get_target()]
+	    .exit_conditions.push_back(and_exprt(g,not_exprt(c)));
+	}
+      }
+    }
+  }
+  //collect assertions for hoisting
+  for(loop_mapt::iterator it = loops.begin(); it != loops.end(); ++it)
+  {
+    if(!it->second.is_root)
+      continue;
+    for(loopt::assertion_hoisting_mapt::iterator 
+	  h_it = it->second.assertion_hoisting_map.begin(); 
+	h_it != it->second.assertion_hoisting_map.end(); ++h_it)
+    {
+      local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
+      //find jump target in nodes
+      while(n_it->location != h_it->first && 
+	    n_it != SSA.nodes.end()) ++n_it;
+      for(; n_it != SSA.nodes.end(); ++n_it)
+      {
+	if(SSA.loop_hierarchy_level[n_it->location]>0) 
+	  break; //we do not collect beyond other loops
+	for (local_SSAt::nodet::assertionst::const_iterator a_it =
+	       n_it->assertions.begin(); a_it != n_it->assertions.end(); a_it++)
+	{
+	  h_it->second.assertions.push_back(*a_it);
+	}
       }
     }
   }
@@ -396,19 +425,15 @@ void ssa_local_unwindert::add_loop_body(loopt &loop)
 
 void ssa_local_unwindert::add_assertions(loopt &loop, bool is_last)
 {
-  
   for(local_SSAt::nodest::iterator it = loop.body_nodes.begin(); 
       it != loop.body_nodes.end(); ++it)
   {
     if(it->assertions.empty())
       continue;
 
-    SSA.nodes.push_back(*it); //copy
+    SSA.nodes.push_back(local_SSAt::nodet(it->location,
+					  SSA.nodes.end())); //add new node
     local_SSAt::nodet &node = SSA.nodes.back();
-    node.equalities.clear();
-    node.constraints.clear();
-    node.function_calls.clear();
-    node.templates.clear();
     for (local_SSAt::nodet::assertionst::iterator a_it =
 	   node.assertions.begin(); a_it != node.assertions.end(); a_it++)
     {
@@ -479,14 +504,9 @@ void ssa_local_unwindert::add_loop_connector(loopt &loop)
 {
   // connector to previous iteration (permanently added)
   const local_SSAt::nodet &orig_node=loop.body_nodes.front();
-  SSA.nodes.push_back(loop.body_nodes.front()); //copy loop head
+  SSA.nodes.push_back(local_SSAt::nodet(orig_node.location,
+					SSA.nodes.end())); //add new node
   local_SSAt::nodet &node=SSA.nodes.back();
-  node.equalities.clear();
-  node.function_calls.clear();
-  node.constraints.clear();
-  node.templates.clear();
-  node.assertions.clear();
-  node.marked = false;
   for (local_SSAt::nodet::equalitiest::const_iterator e_it =
 	 orig_node.equalities.begin(); 
        e_it != orig_node.equalities.end(); e_it++)
@@ -535,14 +555,9 @@ void ssa_local_unwindert::add_loop_connector(loopt &loop)
 
 void ssa_local_unwindert::add_exit_merges(loopt &loop, unsigned k)
 {
-  SSA.nodes.push_back(loop.body_nodes.front()); //copy loop head
+  SSA.nodes.push_back(local_SSAt::nodet(loop.body_nodes.begin()->location,
+					SSA.nodes.end())); //add new node
   local_SSAt::nodet &node=SSA.nodes.back();
-  node.marked = false;
-  node.equalities.clear();
-  node.constraints.clear();
-  node.function_calls.clear();
-  node.templates.clear();
-  node.assertions.clear();
   node.enabling_expr = current_enabling_expr;
 
   for (loopt::exit_mapt::const_iterator x_it = loop.exit_map.begin();
@@ -594,17 +609,33 @@ equal_exprt ssa_local_unwindert::build_exit_merge(
  *
  *  Output : 
  *
- *  Purpose : adds the hoisted assumptions and assertions 
+ *  Purpose : adds the assumptions for hoisted assertions 
               for the current instance
  *
  *****************************************************************************/
 
 void ssa_local_unwindert::add_hoisted_assertions(loopt &loop, bool is_last)
 {
-  for(assertion_hoisting_mapt::const_iterator 
-	it = assertion_hoisting_map.begin(); 
-      it != assertion_hoisting_map.end(); ++it)
+  for(loopt::assertion_hoisting_mapt::const_iterator 
+	it = loop.assertion_hoisting_map.begin(); 
+      it != loop.assertion_hoisting_map.end(); ++it)
   {
+      if(!is_last //only add assumptions if we are not in %0 iteration
+         && is_kinduction) 
+      {
+	exprt e = disjunction(it->second.exit_conditions);
+	SSA.rename(e);
+	SSA.nodes.push_back(local_SSAt::nodet(it->first,
+					      SSA.nodes.end())); //add new node
+	local_SSAt::nodet &node = SSA.nodes.back();
+	node.constraints.push_back(
+          implies_exprt(e,conjunction(it->second.assertions)));
+#if 1
+	std::cout << "adding hoisted assumption: " 
+		  << from_expr(SSA.ns, "", node.constraints.back())
+		  << std::endl;
+#endif
+      }
   }
 }
 

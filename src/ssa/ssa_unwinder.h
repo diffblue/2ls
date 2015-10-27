@@ -72,8 +72,8 @@ protected:
 
     //for assertion hoisting
     typedef struct {
-      exprt loop_exit_condition;
-      exprt assertion;
+      exprt::operandst exit_conditions;
+      exprt::operandst assertions;
     } assertions_after_loopt;
     typedef std::map<locationt,assertions_after_loopt> assertion_hoisting_mapt;
     assertion_hoisting_mapt assertion_hoisting_map;
@@ -98,7 +98,7 @@ protected:
   void add_loop_connector(loopt &loop);
   void add_exit_merges(loopt &loop, unsigned k);
   equal_exprt build_exit_merge(exprt e, const exprt &exits, unsigned k);
-  void add_hoisted_assertions(loopt &loop, unsigned k);
+  void add_hoisted_assertions(loopt &loop, bool is_last);
 };
 
 class ssa_unwindert : public messaget
