@@ -243,7 +243,7 @@ irep_idt unwindable_local_SSAt::get_ssa_name(
   const symbol_exprt &symbol_expr, locationt &loc)
 {
   std::string s =  id2string(symbol_expr.get_identifier()); 
-#if 1
+#if 0
   std::cout << "id: " << s << std::endl;
 #endif
   std::size_t pos2 = s.find("%");

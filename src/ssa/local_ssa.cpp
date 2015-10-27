@@ -67,11 +67,6 @@ void local_SSAt::build_SSA()
 
   // entry and exit variables
   get_entry_exit_vars();
-
-#ifdef ASSERTION_HOISTING
-  // collect assertions after loop exit (for k-induction assertion hoisting)
-  assertions_after_loop();
-#endif
 }
 
 /*******************************************************************\
@@ -634,12 +629,7 @@ void local_SSAt::build_guard(locationt loc)
       symbol_exprt loop_select=
         name(guard_symbol(), LOOP_SELECT, edge.from);
 
-      #if 1
       source=false_exprt();
-      #else
-      // TODO: need constraing for edge.cond
-      source=loop_select;
-      #endif
     }
     else
     {
@@ -697,25 +687,6 @@ void local_SSAt::build_assertions(locationt loc)
 
 /*******************************************************************\
 
-Function: local_SSAt::assertions
-
-  Inputs:
-
- Outputs:
-
- Purpose: returns assertions for a given location
-
-\*******************************************************************/
-
-/*local_SSAt::nodet::assertionst local_SSAt::assertions(locationt loc) const
-{
-  nodest::const_iterator n_it=nodes.find(loc);
-  if(n_it==nodes.end()) return nodet::assertionst();
-  return n_it->second.assertions;
-  }*/
-
-/*******************************************************************\
-
 Function: local_SSAt::assertions_to_constraints
 
   Inputs:
@@ -736,64 +707,6 @@ void local_SSAt::assertions_to_constraints()
     n_it->constraints.insert(n_it->constraints.end(),
 			    n_it->assertions.begin(),n_it->assertions.end());
   }  
-}
-
-/*******************************************************************\
-
-Function: local_SSAt::assertions_after_loop
-
-  Inputs:
-
- Outputs:
-
- Purpose: find assertions after loop exit
-
-\*******************************************************************/
-
-void local_SSAt::assertions_after_loop()
-{
-  if(nodes.empty()) 
-    return;
-  std::map<locationt,exprt::operandst> assertion_map;
-  std::list<std::list<nodet>::iterator> loopheads;
-  loopheads.push_back(nodes.begin()); 
-  nodest::iterator n_it=nodes.end(); 
-  while(n_it!=nodes.begin()) //collect assertions backwards
-  {
-    n_it--;
-
-#if 0
-    std::cout << "location: " << n_it->location->location_number << std::endl;
-    std::cout << "loophead: " << loopheads.back()->location->location_number << std::endl;
-#endif
-
-    if(n_it==loopheads.back()) //assign parent-level assertions at loophead
-    {
-      loopheads.pop_back();
-      if(!loopheads.empty())
-      {
-        const exprt::operandst &assertions = 
-          assertion_map[loopheads.back()->location];
-        n_it->assertions_after_loop.insert(n_it->assertions_after_loop.end(),
-					 assertions.begin(),assertions.end());
-        assertion_map[loopheads.back()->location].clear();
-       //do not consider assertions after another loop
-      }
-      else // we should have reached the beginning
-	assert(n_it==nodes.begin());
-    }
-    if(n_it->loophead!=nodes.end()) 
-    {
-      assert(!loopheads.empty());
-      loopheads.push_back(n_it->loophead);
-    }
-    if(!n_it->assertions.empty() && !loopheads.empty())
-    {
-      exprt::operandst &a = assertion_map[loopheads.back()->location];
-      a.insert(a.end(),n_it->assertions.begin(),n_it->assertions.end());
-    }
-    //TODO: could also add assertions that are on a direct path within a loop
-  }
 }
 
 /*******************************************************************\
@@ -1561,12 +1474,6 @@ void local_SSAt::nodet::output(
       f_it!=function_calls.end();
       f_it++)
     out << "(F) " << from_expr(ns, "", *f_it) << "\n";
-  
-#if 0
-  if(!assertions_after_loop.empty()) 
-    out << "(assertions-after-loop) "
-	<< from_expr(ns, "", conjunction(assertions_after_loop)) << "\n";
-#endif
 }
 
 /*******************************************************************\

@@ -71,7 +71,6 @@ public:
 
     typedef std::vector<exprt> assertionst;
     assertionst assertions;
-    exprt::operandst assertions_after_loop; //for k-induction assertion hoisting
     
     typedef std::vector<function_application_exprt> function_callst;
     function_callst function_calls;
@@ -194,7 +193,6 @@ protected:
   void build_guard(locationt loc);
   void build_function_call(locationt loc);
   void build_assertions(locationt loc);
-  void assertions_after_loop();
 
   // custom templates
   void collect_custom_templates();

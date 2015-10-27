@@ -6,6 +6,8 @@ Author: Peter Schrammel, Saurabh Joshi
 
 \*******************************************************************/
 
+//#define DEBUG
+
 #include <util/prefix.h>
 
 #include "ssa_unwinder.h"
@@ -29,7 +31,7 @@ void ssa_local_unwindert::init()
   build_pre_post_map();
   build_exit_conditions();
   unwind(0);
-#if 1
+#ifdef DEBUG
   SSA.output_verbose(std::cout);
 #endif
 }
@@ -70,7 +72,7 @@ void ssa_local_unwindert::build_loop_tree()
       }
       loopheads.push_back(n_it->loophead);
       loop.body_nodes.push_front(*n_it);
-#if 1
+#ifdef DEBUG
     std::cout << "pop " << n_it->location->location_number 
       << " for " << n_it->loophead->location->location_number << std::endl;
 #endif
@@ -83,7 +85,7 @@ void ssa_local_unwindert::build_loop_tree()
     //beginning of loop found
     else if (n_it == loopheads.back())
     {
-#if 1
+#ifdef DEBUG
     std::cout << "push " << n_it->location->location_number << std::endl;
 #endif
       loops[n_it->location].body_nodes.push_front(*n_it);
@@ -95,7 +97,7 @@ void ssa_local_unwindert::build_loop_tree()
     //collect loop body nodes
     else if(!loopheads.empty())
     {
-#if 1
+#ifdef DEBUG
     std::cout << "add " << n_it->location->location_number 
       << " for " << loopheads.back()->location->location_number << std::endl;
 #endif
@@ -167,7 +169,7 @@ void ssa_local_unwindert::build_exit_conditions()
   {
     unsigned location_number_end =
       it->second.body_nodes.back().location->location_number;
-#if 0
+#ifdef DEBUG
     std::cout << "end: " << location_number_end << std::endl;
 #endif
     for(local_SSAt::nodest::iterator n_it=it->second.body_nodes.begin();
@@ -319,7 +321,7 @@ void ssa_local_unwindert::unwind(loopt &loop, unsigned k, bool is_new_parent)
 	assert(loop.end_nodes.find(context) == loop.end_nodes.end());
 	loop.end_nodes[context] = --SSA.nodes.end();
         assert(loop.end_nodes.find(context) != loop.end_nodes.end());
-#if 1
+#ifdef DEBUG
 	std::cout << "end node for context "
 		  << SSA.odometer_to_string(context,context.size()) << ": "
 	    << loop.end_nodes[context]->location->location_number << " == " 
@@ -335,10 +337,10 @@ void ssa_local_unwindert::unwind(loopt &loop, unsigned k, bool is_new_parent)
     {
       add_loop_head(loop);
       //update loop head
-#if 1
+#ifdef DEBUG
 	std::cout << "update loop head for context "
 		  << SSA.odometer_to_string(context,context.size()) << ": "
-		  << loop.body_nodes.begin()->location->location_number << std::endl;
+	     << loop.body_nodes.begin()->location->location_number << std::endl;
 #endif
       assert(loop.end_nodes.find(context) != loop.end_nodes.end());
       loop.end_nodes[context]->loophead = --SSA.nodes.end();
@@ -383,7 +385,7 @@ void ssa_local_unwindert::add_loop_body(loopt &loop)
        it->function_calls.empty())
       continue;
 
-#if 1
+#ifdef DEBUG
     std::cout << "add body node: " 
 	      << it->location->location_number << std::endl;
 #endif
@@ -402,7 +404,8 @@ void ssa_local_unwindert::add_loop_body(loopt &loop)
       SSA.rename(*c_it);
     }
     for (local_SSAt::nodet::function_callst::iterator f_it =
-	   node.function_calls.begin(); f_it != node.function_calls.end(); f_it++)
+	   node.function_calls.begin(); 
+	 f_it != node.function_calls.end(); f_it++)
     {
       SSA.rename(*f_it);
     }
@@ -434,6 +437,7 @@ void ssa_local_unwindert::add_assertions(loopt &loop, bool is_last)
     SSA.nodes.push_back(local_SSAt::nodet(it->location,
 					  SSA.nodes.end())); //add new node
     local_SSAt::nodet &node = SSA.nodes.back();
+    node.assertions = it->assertions;
     for (local_SSAt::nodet::assertionst::iterator a_it =
 	   node.assertions.begin(); a_it != node.assertions.end(); a_it++)
     {
@@ -483,7 +487,10 @@ void ssa_local_unwindert::add_loop_head(loopt &loop)
   {
     SSA.rename(*e_it);
   }
-#if 1
+  assert(node.constraints.empty());
+  assert(node.function_calls.empty());
+  assert(node.assertions.empty());
+#ifdef DEBUG
   std::cout << "add loop head: " << node.location->location_number << std::endl;
 #endif
 }
@@ -630,7 +637,7 @@ void ssa_local_unwindert::add_hoisted_assertions(loopt &loop, bool is_last)
 	local_SSAt::nodet &node = SSA.nodes.back();
 	node.constraints.push_back(
           implies_exprt(e,conjunction(it->second.assertions)));
-#if 1
+#ifdef DEBUG
 	std::cout << "adding hoisted assumption: " 
 		  << from_expr(SSA.ns, "", node.constraints.back())
 		  << std::endl;
