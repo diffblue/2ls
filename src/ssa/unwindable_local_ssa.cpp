@@ -243,6 +243,9 @@ irep_idt unwindable_local_SSAt::get_ssa_name(
   const symbol_exprt &symbol_expr, locationt &loc)
 {
   std::string s =  id2string(symbol_expr.get_identifier()); 
+#if 1
+  std::cout << "id: " << s << std::endl;
+#endif
   std::size_t pos2 = s.find("%");
   std::size_t pos1 = s.find_last_of("#");
   if(pos1==std::string::npos)
@@ -250,12 +253,15 @@ irep_idt unwindable_local_SSAt::get_ssa_name(
   if(pos2==std::string::npos)
     pos2 = s.size();
   if(s.substr(pos1+1,2) == "lb") pos1 += 2;
-  if(s.substr(pos1+1,2) == "ls") pos1 += 2;
+  else if(s.substr(pos1+1,2) == "ls") pos1 += 2;
   else if(s.substr(pos1+1,3) == "phi") pos1 += 3;
+  else if((pos2 == pos1+13) && (s.substr(pos1+1,12) == "return_value")) 
+    return irep_idt(s);
 #if 0
-  std::cout << s << ", " << s.substr(pos1+1,pos2) << ", " << s.substr(0,pos2) << std::endl;
+  std::cout << s << ", " << s.substr(pos1+1,pos2-pos1-1) << ", " << s.substr(0,pos2) << std::endl;
 #endif
-  loc = find_location_by_number(safe_string2unsigned(s.substr(pos1+1,pos2)));
+  loc = find_location_by_number(
+    safe_string2unsigned(s.substr(pos1+1,pos2-pos1-1)));
   return irep_idt(s.substr(0,pos2));
 }
 

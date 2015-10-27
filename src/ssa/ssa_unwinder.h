@@ -39,8 +39,6 @@ public:
   //exprt rename_invariant(const exprt& inv_in) const; 
   //void unwinder_rename(symbol_exprt &var,const local_SSAt::nodet &node, bool pre) const;
 
-  void output(std::ostream& out);
-
   //TODO: this must go away, should use SSA.rename instead
   void unwinder_rename(symbol_exprt &var,
 		       const local_SSAt::nodet &node, bool pre) const;
@@ -94,16 +92,13 @@ protected:
   void loop_continuation_conditions(const loopt& loop, 
 				    exprt::operandst &loop_cont) const;
   
-  void add_loop_body(loopt &loop, bool is_last);
+  void add_loop_body(loopt &loop);
+  void add_assertions(loopt &loop, bool is_last);
   void add_loop_head(loopt &loop);
   void add_loop_connector(loopt &loop);
   void add_exit_merges(loopt &loop, unsigned k);
   equal_exprt build_exit_merge(exprt e, const exprt &exits, unsigned k);
   void add_hoisted_assertions(loopt &loop, unsigned k);
-
-
-  void output(std::ostream& out,const namespacet& ns);
-
 };
 
 class ssa_unwindert : public messaget
@@ -126,8 +121,6 @@ public:
 
   ssa_local_unwindert &get(const irep_idt& fname)
     { return unwinder_map.at(fname); }
-
-  void output(std::ostream & out);
 
 protected:
   ssa_dbt& ssa_db;
