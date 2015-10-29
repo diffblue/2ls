@@ -37,7 +37,7 @@ void template_generator_baset::get_pre_post_guards(const local_SSAt &SSA,
 			 local_SSAt::nodest::const_iterator n_it,
 			 exprt &pre_guard, exprt &post_guard)
 {
-#if 1
+#if 0
   std::cout << "post-location: " 
 	    << n_it->location->location_number << std::endl;
   assert(n_it->loophead != SSA.nodes.end());
