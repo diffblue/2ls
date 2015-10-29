@@ -98,9 +98,6 @@ std::string unwindable_local_SSAt::odometer_to_string(
 {
   if(current_unwinding<0) //not yet unwind=0
     return "";
-//TODO: remove this
-/*  if(level<odometer.size())
-    return "";*/
   if(level>odometer.size())
     level = odometer.size();
   std::string unwind_suffix = "";
@@ -122,14 +119,10 @@ Function: unwindable_local_SSAt::name
 \*******************************************************************/
 
 symbol_exprt unwindable_local_SSAt::name(const ssa_objectt &object, 
-					kindt kind, locationt def_loc) const
+		kindt kind, locationt def_loc, locationt current_loc) const
 {
   symbol_exprt s = local_SSAt::name(object,kind,def_loc);
-  loop_hierarchy_levelt::const_iterator lhl_it =
-    loop_hierarchy_level.find(def_loc);
-  unsigned def_level = 0;
-  if(lhl_it != loop_hierarchy_level.end())
-    def_level = lhl_it->second;
+  unsigned def_level = get_def_level(def_loc, current_loc);
   std::string unwind_suffix = odometer_to_string(current_unwindings,
 					  def_level);
   s.set_identifier(id2string(s.get_identifier())+unwind_suffix+suffix);
@@ -142,6 +135,54 @@ symbol_exprt unwindable_local_SSAt::name(const ssa_objectt &object,
 #endif
 
   return s;
+}
+
+/*******************************************************************\
+
+Function: unwindable_local_SSAt::get_def_level
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: returns the definition level of a variable in the loop 
+          hierarchy
+
+\*******************************************************************/
+
+unsigned unwindable_local_SSAt::get_def_level(
+  locationt def_loc, locationt current_loc) const
+{
+  loop_hierarchy_levelt::const_iterator lhl_it =
+    loop_hierarchy_level.find(def_loc);
+  unsigned def_level = 0;
+  if(lhl_it != loop_hierarchy_level.end())
+  {
+    def_level = lhl_it->second.level;
+    // If a variable is defined in an other loop (that is on 
+    //   the same level as we are [we should should check that]
+    // then we have to take the "merged version" 
+    // The reason for this is that the "exit mergers" actually
+    // introduce a new SSA variable version on the context level of a loop.
+    loop_hierarchy_levelt::const_iterator current_lhl =
+      loop_hierarchy_level.find(current_loc);
+#if 0
+  std::cout << "def_level: " << def_level << std::endl;
+  std::cout << "loop_number: " << lhl_it->second.loop_number << std::endl;
+  std::cout << "current_location: " << current_loc->location_number << std::endl;
+  std::cout << "current_loop_number: " << current_lhl->second.loop_number << std::endl;
+#endif
+    if(current_lhl != loop_hierarchy_level.end() &&
+       lhl_it->second.loop_number != current_lhl->second.loop_number &&
+       lhl_it->second.level == current_lhl->second.level)
+    {
+      if(current_lhl->second.level>0)
+        def_level = current_lhl->second.level-1;
+      else 
+	def_level = 0;
+    }
+  }
+  return def_level;
 }
 
 /*******************************************************************\
@@ -188,7 +229,7 @@ Function: unwindable_local_SSAt::rename
 
 \*******************************************************************/
 
-void unwindable_local_SSAt::rename(exprt &expr)
+void unwindable_local_SSAt::rename(exprt &expr, locationt current_loc)
 {
   if(expr.id()==ID_symbol)
   {
@@ -198,11 +239,7 @@ void unwindable_local_SSAt::rename(exprt &expr)
     //ENHANCEMENT: maybe better to attach base name, ssa name,
     //      and def_loc to the symbol_expr itself
     irep_idt id = get_ssa_name(s,def_loc);
-    loop_hierarchy_levelt::const_iterator lhl_it =
-      loop_hierarchy_level.find(def_loc);
-    unsigned def_level = 0;
-    if(lhl_it != loop_hierarchy_level.end())
-      def_level = lhl_it->second;
+    unsigned def_level = get_def_level(def_loc, current_loc);
     std::string unwind_suffix = odometer_to_string(current_unwindings,
 					    def_level);
     s.set_identifier(id2string(id)+unwind_suffix);
@@ -224,7 +261,7 @@ void unwindable_local_SSAt::rename(exprt &expr)
 	     id2string(expr.get(ID_identifier))+unwind_suffix+suffix);
   }
   Forall_operands(it,expr)
-    rename(*it);
+    rename(*it, current_loc);
 }
 
 /*******************************************************************\
@@ -282,57 +319,43 @@ void unwindable_local_SSAt::compute_loop_hierarchy()
 {
   loop_hierarchy_level.clear();
   std::list<goto_programt::const_targett> loopheads;
-  forall_goto_program_instructions(i_it, goto_function.body)
+  goto_programt::const_targett i_it = goto_function.body.instructions.end();
+  do
   {
-    bool found = false;
+    --i_it;
 
 #if 0
     std::cout << "location: " << i_it->location_number << std::endl;
-    std::cout << "- targets:";
-    for(goto_programt::targetst::const_iterator 
-	  t_it = i_it->targets.begin();
-	t_it != i_it->targets.end(); ++t_it)
-      std::cout << " " << i_it->get_target()->location_number;
-    std::cout << std::endl;
+    if(i_it->is_goto())
+      std::cout << "- target: " << i_it->get_target()->location_number
+		<< std::endl;
 #endif
 
-    for(std::set<goto_programt::targett>::const_iterator 
-	  t_it = i_it->incoming_edges.begin();
-	t_it != i_it->incoming_edges.end(); ++t_it)
-    {
-
-#if 0
-      std::cout << "- incoming: " << (*t_it)->location_number << std::endl;
-#endif
-
-      //cannot use ->is_backwards_goto() here
-      if((*t_it)->location_number>=i_it->location_number)
-      {
-	assert(!found); //should not be target of two backwards edges
-	found = true;
-
-#if 0
-	std::cout << "- new: " << i_it->location_number << std::endl;
-#endif
-
-	loopheads.push_back(i_it);
-      }
-    }
-    loop_hierarchy_level[i_it] = loopheads.size();
     if(i_it->is_backwards_goto())
     {
+      loopheads.push_back(i_it->get_target());
+      loop_hierarchy_level[loopheads.back()].loop_number = i_it->loop_number;
+    }
+
+    if(!loopheads.empty())
+    {
+      loop_hierarchy_level[i_it].loop_number = 
+	loop_hierarchy_level[loopheads.back()].loop_number;
+      loop_hierarchy_level[i_it].level = loopheads.size();
 
 #if 0
-	std::cout << "- current: " << 
-	  loopheads.back()->location_number << 
-	  ", backwards: " << 
-	  i_it->get_target()->location_number << std::endl;
+      std::cout << "- current: " << 
+	loopheads.back()->location_number  << std::endl;
 #endif
-
-      assert(!loopheads.empty());
-      //must be backwards goto to current loop head
-      assert(loopheads.back() == i_it->get_target()); 
-      loopheads.pop_back();
+	
+      if(i_it == loopheads.back())
+      {
+#if 0
+	std::cout << "- is loop head" << std::endl;
+#endif
+	loopheads.pop_back();
+      }
     }
   }
+  while(i_it != goto_function.body.instructions.begin());
 }

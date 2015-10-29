@@ -29,14 +29,19 @@ public:
 
   virtual ~unwindable_local_SSAt() {}
 
-  virtual symbol_exprt name(const ssa_objectt &, 
-			    kindt kind, locationt loc) const;
+  virtual symbol_exprt name(const ssa_objectt &obj, 
+			    kindt kind, locationt loc) const
+    { return name(obj,kind,loc,loc); }
+  symbol_exprt name(const ssa_objectt &, kindt, 
+		    locationt def_loc, locationt current_loc) const;
   virtual exprt nondet_symbol(std::string prefix, const typet &type, 
 			      locationt loc, unsigned counter) const;
 
+  //control renaming during unwindings
   typedef std::vector<unsigned> odometert;
   odometert current_unwindings;
   long current_unwinding; //TODO: must go away
+  locationt current_location; //TOOD: must go away, not sure how; 
 
   // mode==0: current, mode>0 push, mode<0 pop
   void increment_unwindings(int mode);
@@ -45,14 +50,20 @@ public:
   std::string odometer_to_string(const odometert &odometer, 
 				 unsigned level) const;
 
-  void rename(exprt &expr);
+  void rename(exprt &expr, locationt loc);
 
-  typedef std::map<local_SSAt::locationt,unsigned>
+  typedef struct {
+    unsigned level;
+    unsigned loop_number;
+  } loop_hierarchy_infot;
+
+  typedef std::map<local_SSAt::locationt,loop_hierarchy_infot>
     loop_hierarchy_levelt;
   loop_hierarchy_levelt loop_hierarchy_level;
 
 protected:
   irep_idt get_ssa_name(const symbol_exprt &, locationt &loc);
+  unsigned get_def_level(locationt def_loc, locationt current_loc) const;
   void compute_loop_hierarchy();
 
 };

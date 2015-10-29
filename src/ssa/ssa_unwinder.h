@@ -97,7 +97,8 @@ protected:
   void add_loop_head(loopt &loop);
   void add_loop_connector(loopt &loop);
   void add_exit_merges(loopt &loop, unsigned k);
-  equal_exprt build_exit_merge(exprt e, const exprt &exits, unsigned k);
+  equal_exprt build_exit_merge(exprt e, const exprt &exits, 
+			       unsigned k, locationt loc);
   void add_hoisted_assertions(loopt &loop, bool is_last);
 };
 

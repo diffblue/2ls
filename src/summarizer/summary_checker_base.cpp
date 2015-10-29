@@ -432,7 +432,7 @@ exprt::operandst summary_checker_baset::get_loophead_selects(
   if(!loophead_selects_literal.is_constant())
     solver.set_frozen(loophead_selects_literal);
 
-#if 1
+#if 0
   std::cout << "loophead_selects: " << from_expr(SSA.ns,"",conjunction(loophead_selects)) << std::endl;
 #endif
 
@@ -473,7 +473,7 @@ exprt::operandst summary_checker_baset::get_loop_continues(
     }
   }
 
-#if 1
+#if 0
   std::cout << "loophead_continues: " << from_expr(SSA.ns,"",disjunction(loop_continues)) << std::endl;
 #endif
 

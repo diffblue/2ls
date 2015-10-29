@@ -129,6 +129,7 @@ void ssa_local_unwindert::build_pre_post_map()
     assert(!it->second.body_nodes.empty());
     const locationt &pre_loc = it->second.body_nodes.begin()->location;
     const locationt &post_loc = (--it->second.body_nodes.end())->location;
+    SSA.current_location = pre_loc; //TODO: must go away
 
     //modified variables
     const ssa_domaint::phi_nodest &phi_nodes =
@@ -178,6 +179,7 @@ void ssa_local_unwindert::build_exit_conditions()
       if(!n_it->location->is_goto())
 	continue;
       local_SSAt::nodest::iterator next = n_it; ++next;
+      SSA.current_location = n_it->location; //TODO: must go away
       if(n_it->location->get_target()->location_number>location_number_end)
       {
 	exprt g = SSA.guard_symbol(n_it->location);
@@ -240,7 +242,7 @@ void ssa_local_unwindert::build_exit_conditions()
 	    n_it != SSA.nodes.end()) ++n_it;
       for(; n_it != SSA.nodes.end(); ++n_it)
       {
-	if(SSA.loop_hierarchy_level[n_it->location]>0) 
+	if(SSA.loop_hierarchy_level[n_it->location].level>0) 
 	  break; //we do not collect beyond other loops
 	for (local_SSAt::nodet::assertionst::const_iterator a_it =
 	       n_it->assertions.begin(); a_it != n_it->assertions.end(); a_it++)
@@ -396,18 +398,18 @@ void ssa_local_unwindert::add_loop_body(loopt &loop)
     for (local_SSAt::nodet::equalitiest::iterator e_it =
 	   node.equalities.begin(); e_it != node.equalities.end(); e_it++)
     {
-      SSA.rename(*e_it);
+      SSA.rename(*e_it, node.location);
     }
     for (local_SSAt::nodet::constraintst::iterator c_it =
 	   node.constraints.begin(); c_it != node.constraints.end(); c_it++)
     {
-      SSA.rename(*c_it);
+      SSA.rename(*c_it, node.location);
     }
     for (local_SSAt::nodet::function_callst::iterator f_it =
 	   node.function_calls.begin(); 
 	 f_it != node.function_calls.end(); f_it++)
     {
-      SSA.rename(*f_it);
+      SSA.rename(*f_it, node.location);
     }
     //will do assertions separately
     node.assertions.clear();
@@ -438,10 +440,11 @@ void ssa_local_unwindert::add_assertions(loopt &loop, bool is_last)
 					  SSA.nodes.end())); //add new node
     local_SSAt::nodet &node = SSA.nodes.back();
     node.assertions = it->assertions;
+    SSA.current_location = node.location; //TODO: must go away
     for (local_SSAt::nodet::assertionst::iterator a_it =
 	   node.assertions.begin(); a_it != node.assertions.end(); a_it++)
     {
-      SSA.rename(*a_it);
+      SSA.rename(*a_it, node.location);
       if(!is_last) //only add assumptions if we are not in %0 iteration
       {
         if(is_kinduction) 
@@ -485,7 +488,7 @@ void ssa_local_unwindert::add_loop_head(loopt &loop)
   for (local_SSAt::nodet::equalitiest::iterator e_it =
 	 node.equalities.begin(); e_it != node.equalities.end(); e_it++)
   {
-    SSA.rename(*e_it);
+    SSA.rename(*e_it, node.location);
   }
   assert(node.constraints.empty());
   assert(node.function_calls.empty());
@@ -514,6 +517,7 @@ void ssa_local_unwindert::add_loop_connector(loopt &loop)
   SSA.nodes.push_back(local_SSAt::nodet(orig_node.location,
 					SSA.nodes.end())); //add new node
   local_SSAt::nodet &node=SSA.nodes.back();
+  SSA.current_location = node.location; //TODO: must go away
   for (local_SSAt::nodet::equalitiest::const_iterator e_it =
 	 orig_node.equalities.begin(); 
        e_it != orig_node.equalities.end(); e_it++)
@@ -523,9 +527,9 @@ void ssa_local_unwindert::add_loop_connector(loopt &loop)
       node.equalities.push_back(*e_it);
       node.equalities.back().rhs() = 
 	loop.pre_post_map[to_symbol_expr(e_it->lhs())]; 
-      SSA.rename(node.equalities.back().rhs());
+      SSA.rename(node.equalities.back().rhs(), node.location);
       SSA.decrement_unwindings(0);
-      SSA.rename(node.equalities.back().lhs());
+      SSA.rename(node.equalities.back().lhs(), node.location);
       SSA.increment_unwindings(0);
     }
     else if(e_it->lhs().id()==ID_symbol &&
@@ -534,7 +538,7 @@ void ssa_local_unwindert::add_loop_connector(loopt &loop)
     { //this is needed for while loops
       node.equalities.push_back(*e_it);
       SSA.decrement_unwindings(0);
-      SSA.rename(node.equalities.back());
+      SSA.rename(node.equalities.back(), node.location);
       SSA.increment_unwindings(0);
     }
   }
@@ -571,7 +575,7 @@ void ssa_local_unwindert::add_exit_merges(loopt &loop, unsigned k)
        x_it != loop.exit_map.end(); x_it++)
   {
     node.equalities.push_back(build_exit_merge(x_it->first,
-					       disjunction(x_it->second),k));
+			       disjunction(x_it->second),k,node.location));
   }
 }
 
@@ -588,23 +592,23 @@ void ssa_local_unwindert::add_exit_merges(loopt &loop, unsigned k)
  *****************************************************************************/
 
 equal_exprt ssa_local_unwindert::build_exit_merge(
-  exprt e, const exprt &exits, unsigned k)
+  exprt e, const exprt &exits, unsigned k, locationt loc)
 {
   exprt re = e;
   SSA.increment_unwindings(1);
-  SSA.rename(re); //%0
+  SSA.rename(re, loc); //%0
   for (unsigned i = 1; i <= k; i++)
   {
     SSA.increment_unwindings(0);
     exprt cond_expr = exits;
-    SSA.rename(cond_expr);
+    SSA.rename(cond_expr, loc);
     exprt true_expr = e;
-    SSA.rename(true_expr);
+    SSA.rename(true_expr, loc);
     exprt false_expr = re;
     re = if_exprt(cond_expr, true_expr, false_expr);
   }
   SSA.increment_unwindings(-1);
-  SSA.rename(e); //lhs
+  SSA.rename(e, loc); //lhs
   return equal_exprt(e,re);
 }
 
@@ -631,7 +635,7 @@ void ssa_local_unwindert::add_hoisted_assertions(loopt &loop, bool is_last)
          && is_kinduction) 
       {
 	exprt e = disjunction(it->second.exit_conditions);
-	SSA.rename(e);
+	SSA.rename(e, loop.body_nodes.begin()->location);
 	SSA.nodes.push_back(local_SSAt::nodet(it->first,
 					      SSA.nodes.end())); //add new node
 	local_SSAt::nodet &node = SSA.nodes.back();
@@ -686,6 +690,7 @@ void ssa_local_unwindert::loop_continuation_conditions(
 
 exprt ssa_local_unwindert::get_continuation_condition(const loopt& loop) const
 {
+  SSA.current_location = loop.body_nodes.back().location; //TODO: must go away
   return and_exprt(SSA.guard_symbol(loop.body_nodes.back().location),
    	        SSA.cond_symbol(loop.body_nodes.back().location));
 }

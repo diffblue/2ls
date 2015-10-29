@@ -220,7 +220,7 @@ void ssa_build_goto_tracet::operator()(
     }
 #endif
     unsigned current_level = 
-      unwindable_local_SSA.loop_hierarchy_level[current_pc];
+      unwindable_local_SSA.loop_hierarchy_level[current_pc].level;
     int level_diff = current_level - last_level;
     last_level = current_level;
     if(level_diff!=0)
