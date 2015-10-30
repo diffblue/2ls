@@ -46,7 +46,7 @@ void ssa_domaint::output(
       p_it!=phi_nodes.end();
       p_it++)
   {
-    for(std::map<locationt, deft>::const_iterator
+    for(loc_def_mapt::const_iterator
         n_it=p_it->second.begin();
         n_it!=p_it->second.end();
         n_it++)
@@ -55,7 +55,7 @@ void ssa_domaint::output(
       out << "PHI " << p_it->first << ": "
           << (*n_it).second
           << " from " 
-          << (*n_it).first->location_number << "\n";
+          << (*n_it).first << "\n";
     }
   }
 }
@@ -142,8 +142,8 @@ bool ssa_domaint::merge(
     if(p_it!=phi_nodes.end())
     {
       // yes, simply add to existing phi node
-      std::map<locationt, deft> &phi_node=p_it->second;
-      phi_node[d_it_b->second.source]=d_it_b->second.def;      
+      loc_def_mapt &phi_node=p_it->second;
+      phi_node[d_it_b->second.source->location_number]=d_it_b->second.def;      
       // doesn't get propagated, don't set result to 'true'
       continue;
     }
@@ -186,10 +186,10 @@ bool ssa_domaint::merge(
     {
       // Arg! Data coming from two sources from two different definitions!
       // We produce a new phi node.
-      std::map<locationt, deft> &phi_node=phi_nodes[id];
+      loc_def_mapt &phi_node=phi_nodes[id];
 
-      phi_node[d_it_a->second.source]=d_it_a->second.def;
-      phi_node[d_it_b->second.source]=d_it_b->second.def;
+      phi_node[d_it_a->second.source->location_number]=d_it_a->second.def;
+      phi_node[d_it_b->second.source->location_number]=d_it_b->second.def;
       
       // This phi node is now the new source.
       d_it_a->second.def.loc=to;

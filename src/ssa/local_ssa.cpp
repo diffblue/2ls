@@ -274,12 +274,8 @@ Function: local_SSAt::find_location_by_number
 
 local_SSAt::locationt local_SSAt::find_location_by_number(unsigned location_number) const
 {
-  forall_goto_program_instructions(it,goto_function.body)
-  {
-    if(it->location_number == location_number) 
-      return it;
-  }
-  return goto_function.body.instructions.end();
+  assert(location_number<location_map.size());
+  return location_map[location_number];
 }
 
 /*******************************************************************\
@@ -348,7 +344,7 @@ void local_SSAt::build_phi_nodes(locationt loc)
        find(TEMPLATE_PREFIX)!=std::string::npos) continue; 
 
     // Yes. Get the source -> def map.
-    const std::map<locationt, ssa_domaint::deft> &incoming=p_it->second;
+    const ssa_domaint::loc_def_mapt &incoming=p_it->second;
 
     exprt rhs=nil_exprt();
 
@@ -357,12 +353,12 @@ void local_SSAt::build_phi_nodes(locationt loc)
     // _lower_ priority in the ITE. Inputs are always
     // forward edges.
       
-    for(std::map<locationt, ssa_domaint::deft>::const_iterator
+    for(ssa_domaint::loc_def_mapt::const_iterator
           incoming_it=incoming.begin();
 	incoming_it!=incoming.end();
 	incoming_it++)
       if(incoming_it->second.is_input() ||
-	 incoming_it->first->location_number < loc->location_number)
+	 incoming_it->first < loc->location_number)
         {
           // it's a forward edge
           exprt incoming_value=name(*o_it, incoming_it->second);
@@ -370,7 +366,7 @@ void local_SSAt::build_phi_nodes(locationt loc)
 	  //  whether g2 (=g1&c1 (maybe)) or (g1&c1) is used,
 	  //  not sure whether this has consequences
 	  //  (further than the SSA looking different each time you generate it)
-          exprt incoming_guard=edge_guard(incoming_it->first, loc);
+          exprt incoming_guard=edge_guard(location_map[incoming_it->first],loc);
 
           if(rhs.is_nil()) // first
             rhs=incoming_value;
@@ -380,16 +376,17 @@ void local_SSAt::build_phi_nodes(locationt loc)
        
     // now do backwards
 
-    for(std::map<locationt, ssa_domaint::deft>::const_iterator
+    for(ssa_domaint::loc_def_mapt::const_iterator
           incoming_it=incoming.begin();
 	incoming_it!=incoming.end();
 	incoming_it++)
       if(!incoming_it->second.is_input() &&
-	 incoming_it->first->location_number >= loc->location_number)
+	 incoming_it->first >= loc->location_number)
         {
           // it's a backwards edge
-          exprt incoming_value=name(*o_it, LOOP_BACK, incoming_it->first);
-          exprt incoming_select=name(guard_symbol(), LOOP_SELECT, incoming_it->first);
+	  const locationt &iloc = location_map[incoming_it->first];
+          exprt incoming_value=name(*o_it, LOOP_BACK, iloc);
+          exprt incoming_select=name(guard_symbol(), LOOP_SELECT, iloc);
 
           if(rhs.is_nil()) // first
             rhs=incoming_value;
@@ -858,14 +855,14 @@ exprt local_SSAt::read_node_in(
         
   if(p_it!=phi_nodes.end())
   {
-    const std::map<locationt, ssa_domaint::deft> &incoming=p_it->second;
+    const ssa_domaint::loc_def_mapt &incoming=p_it->second;
 
-    for(std::map<locationt, ssa_domaint::deft>::const_iterator
+    for(ssa_domaint::loc_def_mapt::const_iterator
         incoming_it=incoming.begin();
         incoming_it!=incoming.end();
         incoming_it++)
     {
-      if(incoming_it->first->location_number > loc->location_number)
+      if(incoming_it->first > loc->location_number)
         has_phi=true;
     }
   }
