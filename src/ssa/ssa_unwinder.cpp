@@ -340,13 +340,13 @@ void ssa_local_unwindert::unwind(loopt &loop, unsigned k, bool is_new_parent)
       {
         add_loop_connector(loop);
       }
-      add_assertions(loop,i==0);
       //in while loops we can only hoist in iterations %2 and higher
       //  otherwise we would block the loop exit that is only 
       //  reachable via !guardls
-      add_hoisted_assertions(loop,
-			     loop.is_dowhile && i==0 ||
-			     !loop.is_dowhile && (i==0 || i==1));
+      bool is_last = (loop.is_dowhile && i==0) ||
+	             (!loop.is_dowhile && (i==0 || i==1));
+      add_assertions(loop,is_last);
+      add_hoisted_assertions(loop,is_last);
     }
     if(i==k)
     {
@@ -466,7 +466,7 @@ void ssa_local_unwindert::add_assertions(loopt &loop, bool is_last)
 	  exprt gs = SSA.name(SSA.guard_symbol(), 
 	    local_SSAt::LOOP_SELECT, loop.body_nodes.back().location);
 	  node.constraints.push_back(implies_exprt(not_exprt(gs),*a_it));
-	}
+        }
       }
     }
     if(!is_last && (is_bmc || is_kinduction))
