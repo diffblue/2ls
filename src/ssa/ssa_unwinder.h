@@ -61,7 +61,7 @@ protected:
     local_SSAt::nodest body_nodes;
     //pointer to loop end nodes in SSA for updating current loop head
     std::map<odometert,local_SSAt::nodest::iterator> end_nodes; 
-    std::vector<locationt> loop_nodes; //child loops
+    std::vector<unsigned> loop_nodes; //child loops
     bool is_dowhile;
     bool is_root;
     long current_unwinding;
@@ -79,7 +79,10 @@ protected:
     assertion_hoisting_mapt assertion_hoisting_map;
 
   };
-  typedef std::map<locationt,loopt> loop_mapt;
+
+  //use location numbers as indices, as target addresses make 
+  //  things non-deterministic
+  typedef std::map<unsigned,loopt> loop_mapt;
   loop_mapt loops;
 
   void build_loop_tree();

@@ -60,15 +60,15 @@ void ssa_local_unwindert::build_loop_tree()
     //end of loop found
     if (n_it->loophead != SSA.nodes.end())
     {
-      loopt &loop = loops[n_it->loophead->location];
+      loopt &loop = loops[n_it->loophead->location->location_number];
       if(loopheads.empty())
       {
 	loop.is_root = true;
       }
       else 
       {
-	loops[loopheads.back()->location].loop_nodes.push_back(
-	  n_it->loophead->location);
+	loops[loopheads.back()->location->location_number].loop_nodes.push_back(
+	  n_it->loophead->location->location_number);
       }
       loopheads.push_back(n_it->loophead);
       loop.body_nodes.push_front(*n_it);
@@ -88,10 +88,10 @@ void ssa_local_unwindert::build_loop_tree()
 #ifdef DEBUG
     std::cout << "push " << n_it->location->location_number << std::endl;
 #endif
-      loops[n_it->location].body_nodes.push_front(*n_it);
+      loops[n_it->location->location_number].body_nodes.push_front(*n_it);
       loopheads.pop_back();
-      loops[n_it->location].body_nodes.back().loophead = 
-	loops[n_it->location].body_nodes.begin();
+      loops[n_it->location->location_number].body_nodes.back().loophead = 
+	loops[n_it->location->location_number].body_nodes.begin();
       SSA.nodes.erase(n_it--);
     }
     //collect loop body nodes
@@ -101,7 +101,7 @@ void ssa_local_unwindert::build_loop_tree()
     std::cout << "add " << n_it->location->location_number 
       << " for " << loopheads.back()->location->location_number << std::endl;
 #endif
-      loops[loopheads.back()->location].body_nodes.push_front(*n_it);
+      loops[loopheads.back()->location->location_number].body_nodes.push_front(*n_it);
       SSA.nodes.erase(n_it--);
     }
     else 
@@ -240,10 +240,16 @@ void ssa_local_unwindert::build_exit_conditions()
       //find jump target in nodes
       while(n_it->location != h_it->first && 
 	    n_it != SSA.nodes.end()) ++n_it;
-      for(; n_it != SSA.nodes.end(); ++n_it)
+      local_SSAt::nodest::const_iterator prev = n_it;
+      for(; n_it != SSA.nodes.end(); ++n_it, ++prev)
       {
-	if(SSA.loop_hierarchy_level[n_it->location].level>0) 
-	  break; //we do not collect beyond other loops
+        //we collect only on top level, but not beyond loops
+        //  so, if there is a gap in the nodes, we would jump over a loop
+	if(n_it!=prev && //this would fail in the first iteration otherwise
+	   prev->location->location_number+1 != 
+	   n_it->location->location_number) 
+	  break; 
+	if(n_it==prev) --prev;
 	for (local_SSAt::nodet::assertionst::const_iterator a_it =
 	       n_it->assertions.begin(); a_it != n_it->assertions.end(); a_it++)
 	{
@@ -334,6 +340,13 @@ void ssa_local_unwindert::unwind(loopt &loop, unsigned k, bool is_new_parent)
       {
         add_loop_connector(loop);
       }
+      add_assertions(loop,i==0);
+      //in while loops we can only hoist in iterations %2 and higher
+      //  otherwise we would block the loop exit that is only 
+      //  reachable via !guardls
+      add_hoisted_assertions(loop,
+			     loop.is_dowhile && i==0 ||
+			     !loop.is_dowhile && (i==0 || i==1));
     }
     if(i==k)
     {
@@ -349,10 +362,8 @@ void ssa_local_unwindert::unwind(loopt &loop, unsigned k, bool is_new_parent)
       assert(loop.end_nodes[context]->loophead->location->location_number == 
 	     loop.body_nodes.begin()->location->location_number);
     }
-    add_assertions(loop,i==0);
-    add_hoisted_assertions(loop,i==0);
     //recurse into child loops
-    for(std::vector<locationt>::iterator l_it = loop.loop_nodes.begin();
+    for(std::vector<unsigned>::iterator l_it = loop.loop_nodes.begin();
 	l_it != loop.loop_nodes.end(); ++l_it)
     {
       unwind(loops[*l_it],k,i>loop.current_unwinding);
@@ -632,7 +643,7 @@ void ssa_local_unwindert::add_hoisted_assertions(loopt &loop, bool is_last)
       it != loop.assertion_hoisting_map.end(); ++it)
   {
       if(!is_last //only add assumptions if we are not in %0 iteration
-         && is_kinduction) 
+         && is_kinduction && !it->second.assertions.empty()) 
       {
 	exprt e = disjunction(it->second.exit_conditions);
 	SSA.rename(e, loop.body_nodes.begin()->location);
@@ -715,7 +726,7 @@ void ssa_local_unwindert::loop_continuation_conditions(
   for(unsigned i=0; i<=loop.current_unwinding; ++i)
   {
     //recurse into child loops
-    for(std::vector<locationt>::const_iterator l_it = loop.loop_nodes.begin();
+    for(std::vector<unsigned>::const_iterator l_it = loop.loop_nodes.begin();
 	l_it != loop.loop_nodes.end(); ++l_it)
     {
       loop_continuation_conditions(loops.at(*l_it),loop_cont);
