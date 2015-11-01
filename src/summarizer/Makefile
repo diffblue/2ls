@@ -27,10 +27,9 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       $(CBMC)/src/solvers/solvers$(LIBEXT) \
       $(CBMC)/src/util/util$(LIBEXT) \
 
-
 DELTA_OBJ+=\
       $(CBMC)/src/goto-instrument/unwind$(OBJEXT) \
-      ../ssa/ssa_slicer$(OBJEXT) \
+      ../ssa/local_ssa$(OBJEXT) \
       ../ssa/malloc_ssa$(OBJEXT) \
       ../ssa/ssa_domain$(OBJEXT) \
       ../ssa/assignments$(OBJEXT) \
@@ -43,8 +42,10 @@ DELTA_OBJ+=\
       ../ssa/split_loopheads$(OBJEXT)\
       ../ssa/ssa_inliner$(OBJEXT)\
       ../ssa/ssa_unwinder$(OBJEXT)\
+      ../ssa/unwindable_local_ssa$(OBJEXT)\
       ../ssa/ssa_value_set$(OBJEXT) \
       ../ssa/const_propagator$(OBJEXT) \
+      ../ssa/replace_symbol_ext$(OBJEXT) \
       ../functions/summary$(OBJEXT) \
       ../functions/get_function$(OBJEXT) \
       ../functions/path_util$(OBJEXT) \

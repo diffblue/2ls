@@ -17,6 +17,44 @@ Author: Peter Schrammel
 
 /*******************************************************************\
 
+Function: const_propagator_domaint::assign_rec
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void const_propagator_domaint::assign_rec(const exprt &lhs, const exprt &rhs,
+  const namespacet &ns)
+{
+  const typet & rhs_type = ns.follow(rhs.type());
+
+#ifdef DEBUG
+  std::cout << "assign: " << from_expr(ns, "", lhs)
+	    << " := " << from_type(ns, "", rhs_type) << std::endl;
+#endif
+
+  if(lhs.id()==ID_symbol && rhs_type.id()!=ID_array
+                         && rhs_type.id()!=ID_struct
+                         && rhs_type.id()!=ID_union)
+  {
+    if(!values.maps_to_top(rhs))
+      assign(values,lhs,rhs,ns);
+    else
+      values.set_to_top(lhs);
+  }
+#if 0
+  else //TODO: could make field or array element-sensitive
+  {
+  }
+#endif
+}
+
+/*******************************************************************\
+
 Function: const_propagator_domaint::transform
 
   Inputs:
@@ -47,13 +85,7 @@ void const_propagator_domaint::transform(
     const code_assignt &assignment=to_code_assign(from->code);
     const exprt &lhs = assignment.lhs();
     const exprt &rhs = assignment.rhs();
-    if(lhs.id()==ID_symbol)
-    {
-      if(!values.maps_to_top(rhs))
-        assign(values,lhs,rhs,ns);
-      else
-        values.set_to_top(lhs);
-    }
+    assign_rec(lhs,rhs,ns);
   }
   else if(from->is_goto())
   {
@@ -62,22 +94,8 @@ void const_propagator_domaint::transform(
       const exprt &lhs = from->guard.op0(); 
       const exprt &rhs = from->guard.op1();
 
-      //TODO: there could be nasty typecasts
-      if(lhs.id()==ID_symbol && !values.maps_to_top(rhs))
-	assign(values,lhs,rhs,ns);
-      else if(rhs.id()==ID_symbol && !values.maps_to_top(lhs))
-	assign(values,rhs,lhs,ns);    
-    }
-    else if(from->guard.id()==ID_notequal && from->get_target()!=to)
-    {
-      const exprt &lhs = from->guard.op0(); 
-      const exprt &rhs = from->guard.op1();
-
-      //TODO: there could be nasty typecasts
-      if(lhs.id()==ID_symbol && !values.maps_to_top(rhs))
-	assign(values,lhs,rhs,ns);
-      else if(rhs.id()==ID_symbol && !values.maps_to_top(lhs))
-	assign(values,rhs,lhs,ns);
+      assign_rec(lhs,rhs,ns);
+      assign_rec(rhs,lhs,ns);
     }
   }
   else if(from->is_dead())
@@ -97,7 +115,7 @@ void const_propagator_domaint::transform(
 
 /*******************************************************************\
 
-Function: const_propagator_domaint::assign_rhs_rec
+Function: const_propagator_domaint::assign
 
   Inputs:
 
@@ -120,6 +138,7 @@ void const_propagator_domaint::assign(
 
   values.replace_const(rhs);
 
+  //this is to remove casts in constants propagated into the size of array types
   bool valid = true;
   exprt rhs_val = evaluate_casts_in_constants(rhs,lhs.type(),valid);
   if(valid)
@@ -143,13 +162,13 @@ bool const_propagator_domaint::valuest::maps_to_top(const exprt &expr) const
   if(expr.id()==ID_side_effect && 
      to_side_effect_expr(expr).get_statement()==ID_nondet) 
     return true;
-  find_symbols_sett symbols;
-  find_symbols(expr,symbols);
-  for(find_symbols_sett::const_iterator it = symbols.begin();
-      it != symbols.end(); ++it)
-  {
-    if(replace_const.expr_map.find(*it)
+  if(expr.id()==ID_symbol)
+    if(replace_const.expr_map.find(expr.get(ID_identifier))
         == replace_const.expr_map.end())
+      return true;
+  forall_operands(it,expr)
+  {
+    if(maps_to_top(*it))
       return true;
   }
   return false;
@@ -351,14 +370,18 @@ Function: const_propagator_domaint::evaluate_casts_in_constants
 
  Outputs: 
 
- Purpose:
+ Purpose: 
 
 \*******************************************************************/
 
 exprt const_propagator_domaint::evaluate_casts_in_constants(exprt expr, 
 		    const typet& parent_type, bool &valid) const
 {
-  if(expr.id()==ID_side_effect) valid = false;
+  if(expr.id()==ID_side_effect)
+  {
+    valid = false;
+    return expr;
+  }
   if(expr.type().id()!=ID_signedbv && expr.type().id()!=ID_unsignedbv)
     return expr;
   if(expr.id()==ID_typecast)
@@ -370,6 +393,9 @@ exprt const_propagator_domaint::evaluate_casts_in_constants(exprt expr,
     else
       return expr;
   }
+  //TODO: could be improved to resolve float casts as well...
+  if(expr.type().id()!=ID_signedbv && expr.type().id()!=ID_unsignedbv)
+    return expr;
   mp_integer v;
   to_integer(to_constant_expr(expr), v);
   return from_integer(v,parent_type);

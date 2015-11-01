@@ -364,7 +364,7 @@ int summarizer_parse_optionst::doit()
 {
   if(cmdline.isset("version"))
   {
-    std::cout << SUMMARIZER_VERSION " (based on CBMC " CBMC_VERSION ")" << std::endl;
+    std::cout << SUMMARIZER_VERSION << std::endl;
     return 0;
   }
     
@@ -979,25 +979,8 @@ bool summarizer_parse_optionst::process_goto_program(
 
     // remove returns (must be done after function pointer removal)
     remove_returns(goto_model);
-    
-    // recalculate numbers, etc.
-    goto_model.goto_functions.update();
-
-    // add loop ids
-    goto_model.goto_functions.compute_loop_numbers();
-    
-    // if we aim to cover, replace
-    // all assertions by false to prevent simplification
-    if(cmdline.isset("cover-assertions"))
-      make_assertions_false(goto_model);
-
-    // show it?
-    if(cmdline.isset("show-loops"))
-    {
-      show_loop_ids(get_ui(), goto_model);
-      return true;
-    }
-
+   
+ 
 #if UNWIND_GOTO_INTO_LOOP
     goto_unwind(goto_model,2);
 #endif
@@ -1010,8 +993,30 @@ bool summarizer_parse_optionst::process_goto_program(
     if(options.get_bool_option("inline"))
     {
       status() << "Performing full inlining" << eom;
-      goto_inline(goto_model, ui_message_handler);
+      if(goto_inline(goto_model, ui_message_handler))
+      {
+        report_unknown();
+	return 5;
+      }
     }
+
+    //explicitly initialize all local variables
+    nondet_locals(goto_model);
+
+#if 1
+  //TODO: find a better place for that
+    replace_malloc(goto_model,"");
+#endif
+
+#if REMOVE_MULTIPLE_DEREFERENCES
+    remove_multiple_dereferences(goto_model);
+#endif
+
+    // recalculate numbers, etc.
+    goto_model.goto_functions.update();
+
+    // add loop ids
+    goto_model.goto_functions.compute_loop_numbers();
 
     //inline __CPROVER_initialize and main
     if(cmdline.isset("inline-main"))
@@ -1024,18 +1029,18 @@ bool summarizer_parse_optionst::process_goto_program(
       status() << "Constant Propagation" << eom;
       propagate_constants(goto_model);
     }
-	
-    //explicitly initialize all local variables
-    nondet_locals(goto_model);
 
-#if 1
-  //TODO: find a better place for that
-    replace_malloc(goto_model,"");
-#endif
+    // if we aim to cover, replace
+    // all assertions by false to prevent simplification
+    if(cmdline.isset("cover-assertions"))
+      make_assertions_false(goto_model);
 
-#if REMOVE_MULTIPLE_DEREFERENCES
-    remove_multiple_dereferences(goto_model);
-#endif
+    // show it?
+    if(cmdline.isset("show-loops"))
+    {
+      show_loop_ids(get_ui(), goto_model);
+      return true;
+    }
 
     // do array abstraction
     if(cmdline.isset("array-abstraction"))

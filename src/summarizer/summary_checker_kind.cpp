@@ -40,7 +40,7 @@ property_checkert::resultt summary_checker_kindt::operator()(
   {
     status() << "Unwinding (k=" << unwind << ")" << eom;
     summary_db.mark_recompute_all(); //TODO: recompute only functions with loops
-    ssa_unwinder.unwind_all(unwind+1);
+    ssa_unwinder.unwind_all(unwind);
 
     result =  check_properties(); 
     if(result == property_checkert::UNKNOWN &&

@@ -65,9 +65,8 @@ public:
   
   // The phi nodes map identifiers to incoming branches:
   // map from source to definition.
-  // Warning: as this maps locations, which are memory addresses,
-  // the ordering in the second map is non-deterministic.
-  typedef std::map<irep_idt, std::map<locationt, deft> > phi_nodest;
+  typedef std::map<unsigned, deft> loc_def_mapt;
+  typedef std::map<irep_idt, loc_def_mapt> phi_nodest;
   phi_nodest phi_nodes;
 
   virtual void transform(

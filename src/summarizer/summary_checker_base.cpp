@@ -195,12 +195,12 @@ Function: summary_checker_baset::check_properties
 void summary_checker_baset::check_properties(
    const ssa_dbt::functionst::const_iterator f_it)
 {
-  local_SSAt &SSA = *f_it->second;
+  unwindable_local_SSAt &SSA = *f_it->second;
   if(!SSA.goto_function.body.has_assertion()) return;
 
   bool all_properties = options.get_bool_option("all-properties");
 
-  SSA.output(debug()); debug() << eom;
+  SSA.output_verbose(debug()); debug() << eom;
   
   // incremental version
 
@@ -259,7 +259,7 @@ void summary_checker_baset::check_properties(
     if(!i_it->is_assert())
       continue;
   
-    const locationt &location=i_it->source_location;  
+    const source_locationt &location=i_it->source_location;  
     std::list<local_SSAt::nodest::const_iterator> assertion_nodes;
     SSA.find_nodes(i_it,assertion_nodes);
 
@@ -417,6 +417,7 @@ exprt::operandst summary_checker_baset::get_loophead_selects(
   const irep_idt &function_name, 
   const local_SSAt &SSA, prop_convt &solver)
 {
+  //TODO: this should be provided by unwindable_local_SSA
   exprt::operandst loophead_selects;
   for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
       n_it != SSA.nodes.end(); n_it++)
@@ -455,6 +456,7 @@ exprt::operandst summary_checker_baset::get_loop_continues(
   const irep_idt &function_name, 
   const local_SSAt &SSA, prop_convt &solver)
 {
+  //TODO: this should be provided by unwindable_local_SSA
   exprt::operandst loop_continues;
 
   ssa_unwinder.get(function_name).loop_continuation_conditions(loop_continues);

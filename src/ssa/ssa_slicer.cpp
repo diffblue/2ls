@@ -3,8 +3,6 @@
 #include <util/find_symbols.h>
 #include <util/string2int.h>
 
-#include "local_ssa.cpp"
-
 void print_symbols(std::string msg, const find_symbols_sett &symbols)
 {
   std::cout << msg << ": " << std::endl;
