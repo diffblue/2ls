@@ -987,7 +987,6 @@ bool summarizer_parse_optionst::process_goto_program(
 
     remove_skip(goto_model.goto_functions);
     goto_model.goto_functions.update();
-    split_loopheads(goto_model);
 
     // now do full inlining, if requested
     if(options.get_bool_option("inline"))
@@ -999,6 +998,9 @@ bool summarizer_parse_optionst::process_goto_program(
 	return 5;
       }
     }
+
+    //preprocessing to improve the structure of the SSA for the unwinder
+    split_loopheads(goto_model);
 
     //explicitly initialize all local variables
     nondet_locals(goto_model);

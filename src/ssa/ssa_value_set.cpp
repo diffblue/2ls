@@ -6,7 +6,11 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+//#define DEBUG
+
+#ifdef DEBUG
 #include <iostream>
+#endif
 
 #include <util/pointer_offset_size.h>
 
@@ -102,7 +106,7 @@ void ssa_value_domaint::assign_lhs_rec(
   const namespacet &ns,
   bool add)
 {
-  #if 0
+  #ifdef DEBUG
   std::cout << "assign_lhs_rec lhs: " << from_expr(ns, "", lhs) << '\n';
   std::cout << "assign_lhs_rec rhs: " << from_expr(ns, "", rhs) << '\n';
   #endif
@@ -173,7 +177,10 @@ void ssa_value_domaint::assign_lhs_rec(
   }
   else if(lhs.id()==ID_dereference)
   {
-    assert(false); // should have been removed
+//  assert(false); // should have been removed
+
+    //not yet removed if there is an array inside a struct referenced by pointer
+    assign_lhs_rec(to_dereference_expr(lhs).pointer(), rhs, ns, true);
   }
   else if(lhs.id()==ID_member)
   {
@@ -211,7 +218,7 @@ void ssa_value_domaint::assign_rhs_rec(
   bool offset,
   unsigned alignment) const
 {
-#if 0
+#ifdef DEBUG
   std::cout << "assign_rhs_rec: " << from_expr(ns, "", rhs) << '\n';
 #endif
   
@@ -262,8 +269,11 @@ void ssa_value_domaint::assign_rhs_rec(
   }
   else if(rhs.id()==ID_dereference)
   {
-    std::cout << rhs.pretty() << std::endl;
-    assert(false); // should have been removed
+  //   std::cout << rhs.pretty() << std::endl;
+  //   assert(false); // should have been removed
+
+    //not yet removed if there is an array inside a struct referenced by pointer
+    assign_rhs_rec(dest, rhs.op0(), ns, true, 1);
   }
   else
   {

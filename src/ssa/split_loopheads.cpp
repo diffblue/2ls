@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include <util/std_expr.h>
 #include <util/symbol_table.h>
 
@@ -11,7 +13,8 @@ Inputs:
 
 Outputs:
 
-Purpose: insert skip at jump targets if they are goto or assume instructions
+Purpose: insert skip at jump targets if they are goto, 
+         assume or assert instructions
 
 \*******************************************************************/
 
@@ -22,8 +25,8 @@ void split_loopheads(goto_modelt &goto_model)
     Forall_goto_program_instructions(i_it, f_it->second.body)
     {
       if(!i_it->is_backwards_goto()) continue;
-      if(i_it->guard.is_true()) continue;
       goto_programt::targett loophead = i_it->get_target();
+      if(i_it->guard.is_true() && !loophead->is_assert()) continue;
       
       // inserts the skip
       goto_programt::targett new_loophead = 

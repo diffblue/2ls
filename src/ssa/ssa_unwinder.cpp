@@ -316,6 +316,11 @@ void ssa_local_unwindert::unwind(unsigned k)
 void ssa_local_unwindert::unwind(loopt &loop, unsigned k, bool is_new_parent)
 {
   odometert context = SSA.current_unwindings;
+#ifdef DEBUG
+  std::cout << "unwind(k=" << k << ", is_new_parent=" << is_new_parent << "), ";
+  std::cout << "context=" << SSA.odometer_to_string(context,context.size()) 
+	    << std::endl;
+#endif
   SSA.increment_unwindings(1);
   for(unsigned i = 0; i<=k; ++i)
   {
@@ -366,7 +371,11 @@ void ssa_local_unwindert::unwind(loopt &loop, unsigned k, bool is_new_parent)
     for(std::vector<unsigned>::iterator l_it = loop.loop_nodes.begin();
 	l_it != loop.loop_nodes.end(); ++l_it)
     {
-      unwind(loops[*l_it],k,i>loop.current_unwinding);
+#ifdef DEBUG
+      std::cout << i << ">" << loop.current_unwinding << std::endl;
+#endif
+      unwind(loops[*l_it],k,i>loop.current_unwinding ||
+	                    is_new_parent);
     }
     SSA.increment_unwindings(0);
   }
