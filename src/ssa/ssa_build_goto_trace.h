@@ -34,7 +34,7 @@ protected:
 
   exprt finalize_lhs(const exprt &src);
 
-  void record_step(
+  bool record_step(
     goto_tracet &goto_trace,
     unsigned &step_nr);
 };
