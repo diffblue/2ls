@@ -69,10 +69,11 @@ Function: ssa_build_goto_tracet::record_step
 
 \*******************************************************************/
 
-void ssa_build_goto_tracet::record_step(
+bool ssa_build_goto_tracet::record_step(
   goto_tracet &goto_trace,
   unsigned &step_nr)
 {
+  bool taken = true;
   goto_trace_stept step;
   step.pc=current_pc;
   step.step_nr=step_nr;
@@ -107,10 +108,20 @@ void ssa_build_goto_tracet::record_step(
       exprt cond_read = unwindable_local_SSA.read_rhs(cond,current_pc);
       exprt cond_value=simplify_expr(prop_conv.get(cond_read), unwindable_local_SSA.ns);
       step.type=goto_trace_stept::GOTO;
-      step.cond_expr = cond;
+      step.cond_expr = cond_value; //cond
       step.cond_value = cond_value.is_true();
-      goto_trace.add_step(step);
-      step_nr++;
+#if 0
+      std::cout << "COND " << from_expr(unwindable_local_SSA.ns, "", cond)
+		<< ": " << from_expr(unwindable_local_SSA.ns, "", cond_read)
+		<< " == " << cond_value.is_true() << std::endl;
+#endif
+      if(step.cond_value)
+      {
+        goto_trace.add_step(step);
+        step_nr++;
+      }
+      else
+	taken = false;
     }
     break;
 
@@ -165,6 +176,12 @@ void ssa_build_goto_tracet::record_step(
       }
       if(step.lhs_object.is_nil())
 	break;
+#if 0
+      std::cout << "ASSIGN " << from_expr(unwindable_local_SSA.ns, "", code_assign)
+		<< ": " << from_expr(unwindable_local_SSA.ns, "", rhs_ssa)
+		<< " == " << from_expr(unwindable_local_SSA.ns, 
+				       "", step.full_lhs_value) << std::endl;
+#endif
       goto_trace.add_step(step);
       step_nr++;
     }
@@ -180,6 +197,7 @@ void ssa_build_goto_tracet::record_step(
     assert(false);
     break;
   }
+  return taken;
 }
 
 /*******************************************************************\
@@ -232,32 +250,20 @@ void ssa_build_goto_tracet::operator()(
 	      << unwindable_local_SSA.odometer_to_string(unwindable_local_SSA.current_unwindings,100) << std::endl;
 #endif
 
-    record_step(goto_trace, step_nr);
+    bool taken = record_step(goto_trace, step_nr);
     
     if(!goto_trace.steps.empty() &&
        goto_trace.steps.back().is_assert())
       break; // done
     
     // get successor
-    if(current_pc->is_goto())
+    if(current_pc->is_goto() && taken)
     {
-      // taken or not?
-      symbol_exprt cond_symbol=unwindable_local_SSA.cond_symbol(current_pc);
-      exprt cond_value=prop_conv.get(cond_symbol);
-#if 0
-      std::cout << "COND: " << cond_symbol.get_identifier() 
-		<< " == " << cond_value.is_true() << std::endl;
-#endif
-      if(cond_value.is_true())
+      if(current_pc->is_backwards_goto())
       {
-        if(current_pc->is_backwards_goto())
-	{
-          unwindable_local_SSA.decrement_unwindings(0);
-	}
-        current_pc=current_pc->get_target();
+	unwindable_local_SSA.decrement_unwindings(0);
       }
-      else
-        current_pc++;
+      current_pc=current_pc->get_target();
     }
     else
       current_pc++;
