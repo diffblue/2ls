@@ -130,7 +130,6 @@ exprt acdl_domaint::remove_var(const valuet &_old_value, const varst &vars)
 {
   valuet::operandst expr_val;  
   irep_idt sym_name;
-  
   // check only if the front element of the vector needs to be projected or 
   // we need to iterate over the vector
   irep_idt var_name = vars.front().get_identifier(); 

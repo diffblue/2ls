@@ -330,7 +330,7 @@ void array_abstractiont::add_argument(
   symbolt new_symbol;
   new_symbol.type=type;
   new_symbol.value.make_nil();
-  new_symbol.location=str_args.back().location();
+  new_symbol.location=str_args.back().source_location();
   new_symbol.name=str_args.back().get_identifier();
   new_symbol.module=fct_symbol.module;
   new_symbol.base_name=str_args.back().get_base_name();
@@ -940,7 +940,7 @@ Function: array_abstractiont::replace_string_macros
 void array_abstractiont::replace_string_macros(
   exprt &expr,
   bool lhs,
-  const locationt &location)
+  const source_locationt &location)
 {
   if(expr.id()=="is_zero_string")
   {
@@ -981,7 +981,7 @@ exprt array_abstractiont::build(
   const exprt &pointer,
   whatt what,
   bool write,
-  const locationt &location)
+  const source_locationt &location)
 {
   // take care of pointer typecasts now
   if(pointer.id()==ID_typecast)

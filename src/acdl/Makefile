@@ -13,7 +13,10 @@ INCLUDES= -I $(CBMC)/src
 
 CLEANFILES = 
 
+#all: heaven$(EXEEXT)
 all: $(OBJ)
 
 ###############################################################################
 
+heaven$(EXEEXT): $(OBJ)
+	$(LINKBIN)

@@ -147,6 +147,12 @@ Function Pointer Removal
 
 Peter+Bjorn Discussion, 3rd July 2015
 --------------------------------------
-1) ACDL starts with TOP in the beginning and has BOTTOM at all other cfg nodes. It computes the gfp. ACDL only computes the forware abstract transformers
+1) ACDL starts with TOP in the beginning and has BOTTOM at all other cfg nodes. It computes the gfp. ACDL only computes the forward abstract transformers
 2) Astree starts with BOTTOM in the beginning and at all other cfg nodes. It computes the lfp. It doesnot compute the backward transformers.
+
+
+Note of the summarizer code
+-----------------------------
+1) class nodet is the SSA node for a location.
+
 

@@ -36,27 +36,37 @@ Function: acdl_solvert::operator()
    populate_worklist(s.lhs); 
  } while(worklist != 0);
 
+ In ACDCL, the first element in the worklist is an assertion
 \*******************************************************************/
 
 property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
 {
   unsigned iteration_number=0;
   bool change;
-  typedef std::list<acdl_domaint::statementt> worklist;
+  std::list<acdl_domaint::statementt> worklist;
   acdl_domaint::valuet v = true_exprt();
   
-  typedef std::vector<equal_exprt> first_statement;  
-  
-  //for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin(); 
-  //    n_it != SSA.nodes.end(); n_it++)
-    
-  // wrong attempt: first_statement.push_back(n_it->equalities);
-  // Now each node can have multiple equalities all of which 
-  // needs to be inserted 
-  //first_statement = SSA.nodes.begin()->equalities;
-  
-  // Now insert the first statement into the worklist
-  //worklist.push_back(SSA.nodes.begin()->equalities);
+  std::vector<equal_exprt> first_statement;
+  exprt expression;
+  for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
+      n_it != SSA.nodes.end(); n_it++) {
+    for(local_SSAt::nodet::equalitiest::const_iterator f_it =
+	 	  n_it->equalities.begin(); f_it != n_it->equalities.end(); f_it++) {
+       expression = *f_it;
+       //assert(f_it->.id()==ID_equal);
+	   first_statement.push_back(*f_it);
+       // Now insert the first statement into the worklist
+       worklist.push_back(expression);
+    }
+  }
+  while(worklist.size() > 0)
+  {
+     const exprt l = worklist.back(); worklist.pop_back();
+     //const exprt &rhs = l;
+     std::cout<< "I am building heaven" << std::endl;
+     std::cout<< "The expression is " << l << std::endl;
+     std::vector<acdl_domaint::statementt> predecs;
+  }
   do
   {
     iteration_number++;
