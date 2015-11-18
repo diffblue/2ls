@@ -7,9 +7,12 @@ Author: Rajdeep Mukherjee
 \*******************************************************************/
 
 
+#include <langapi/language_util.h>
 
 #include "acdl_solver.h"
 #include "acdl_domain.h"
+
+
 
 #ifdef DEBUG
 #include <iostream>
@@ -64,7 +67,7 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
      const exprt l = worklist.back(); worklist.pop_back();
      //const exprt &rhs = l;
      std::cout<< "I am building heaven" << std::endl;
-     std::cout<< "The expression is " << l << std::endl;
+     std::cout<< "The expression is " << from_expr(SSA.ns, "", l) << std::endl;
      std::vector<acdl_domaint::statementt> predecs;
   }
   do
