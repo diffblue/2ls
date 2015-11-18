@@ -21,9 +21,11 @@ public:
 
   //typedef std::list<exprt> worklist;
   //typedef exprt valuet;
-  explicit acdl_solvert(const optionst &_options)
+  explicit acdl_solvert(const optionst &_options,
+    acdl_domaint &_domain)
     : 
-    options(_options)
+    options(_options),
+    domain(_domain)
     {
     }  
 
@@ -35,6 +37,7 @@ public:
 
 protected:
   const optionst &options;
+  acdl_domaint &domain;
 };
 
 

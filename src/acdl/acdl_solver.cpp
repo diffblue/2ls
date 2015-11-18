@@ -64,38 +64,36 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
   }
   while(worklist.size() > 0)
   {
-     const exprt l = worklist.back(); worklist.pop_back();
+     const exprt statement = worklist.back(); worklist.pop_back();
      //const exprt &rhs = l;
      std::cout<< "I am building heaven" << std::endl;
-     std::cout<< "The expression is " << from_expr(SSA.ns, "", l) << std::endl;
+     std::cout<< "The expression is " << from_expr(SSA.ns, "", statement) << std::endl;
+
+     // TODO: this is a workaround to handle booleans,
+     //       must be implemented using a product domain
+     if(statement.id()==ID_equal &&
+	to_equal_expr(statement).lhs().type().id()==ID_bool)
+     {
+       std::vector<acdl_domaint::valuet> new_v;
+       new_v.resize(1);
+       new_v[0] = statement;
+       domain.meet(new_v,v);
+     }
+     else
+     {
+       // compute update of abtract value
+       acdl_domaint::varst vars;
+       //TODO: select vars according to iteration strategy
+       std::vector<acdl_domaint::valuet> new_v;
+       new_v.resize(1);
+       domain(statement,vars,v,new_v[0]);
+       domain.meet(new_v,v);
+     }
+
+     // update worklist
      std::vector<acdl_domaint::statementt> predecs;
-  }
-  do
-  {
-    iteration_number++;
     
-    #ifdef DEBUG
-    std::cout << "\n"
-              << "******** Iteration #"
-              << iteration_number << std::endl;
-    #endif
-   
-    // do it
-
-    
-    change = false;
-
-    if(change) 
-    {
-
-      #ifdef DEBUG
-      std::cout << "Value after " << iteration_number
-		<< " iteration(s):" << std::endl;
-//      domain->output_value(std::cout,*result,SSA.ns);
-      #endif
-    }
   }
-  while(change);
 
   return property_checkert::UNKNOWN;
 }
