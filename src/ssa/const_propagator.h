@@ -67,12 +67,6 @@ protected:
   void assign_rec(valuest &values,
 		  const exprt &lhs, const exprt &rhs,
 		  const namespacet &ns);
-
-  exprt evaluate_casts_in_constants(
-    exprt expr, 
-    const typet& parent_type, 
-    bool &valid) const;
-
 };
 
 class const_propagator_ait:public ait<const_propagator_domaint>

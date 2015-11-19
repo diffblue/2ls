@@ -12,6 +12,7 @@ Author: Peter Schrammel
 
 #include <util/find_symbols.h>
 #include <util/arith_tools.h>
+#include <util/simplify_expr.h>
 
 #include "const_propagator.h"
 
@@ -137,17 +138,25 @@ void const_propagator_domaint::assign(
   const namespacet &ns) const
 {
 #ifdef DEBUG
-  std::cout << "assign: " << from_expr(ns, "", lhs)
+  std::cout << "assign:     " << from_expr(ns, "", lhs)
 	    << " := " << from_expr(ns, "", rhs) << std::endl;
 #endif
 
   values.replace_const(rhs);
 
-  //this is to remove casts in constants propagated into the size of array types
-  bool valid = true;
-  exprt rhs_val = evaluate_casts_in_constants(rhs,lhs.type(),valid);
-  if(valid)
-    dest.set_to(lhs,rhs_val);
+#ifdef DEBUG
+  std::cout << "replaced:   " << from_expr(ns, "", lhs)
+	    << " := " << from_expr(ns, "", rhs) << std::endl;
+#endif
+
+  rhs = simplify_expr(rhs, ns);
+
+#ifdef DEBUG
+  std::cout << "simplified: " << from_expr(ns, "", lhs)
+	    << " := " << from_expr(ns, "", rhs) << std::endl;
+#endif
+
+  dest.set_to(lhs,rhs);
 }
 
 /*******************************************************************\
@@ -369,45 +378,6 @@ bool const_propagator_domaint::merge(
 
 /*******************************************************************\
 
-Function: const_propagator_domaint::evaluate_casts_in_constants
-
-  Inputs:
-
- Outputs: 
-
- Purpose: 
-
-\*******************************************************************/
-
-exprt const_propagator_domaint::evaluate_casts_in_constants(exprt expr, 
-		    const typet& parent_type, bool &valid) const
-{
-  if(expr.id()==ID_side_effect)
-  {
-    valid = false;
-    return expr;
-  }
-  if(expr.type().id()!=ID_signedbv && expr.type().id()!=ID_unsignedbv)
-    return expr;
-  if(expr.id()==ID_typecast)
-    expr = evaluate_casts_in_constants(expr.op0(),expr.type(),valid);
-  if(expr.id()!=ID_constant)
-  {
-    if(expr.type()!=parent_type)
-      return typecast_exprt(expr,parent_type);
-    else
-      return expr;
-  }
-  //TODO: evaluate casts from floats
-  if(expr.type().id()!=ID_signedbv && expr.type().id()!=ID_unsignedbv)
-    return expr;
-  mp_integer v;
-  to_integer(to_constant_expr(expr), v);
-  return from_integer(v,parent_type);
-}
-
-/*******************************************************************\
-
 Function: const_propagator_ait::replace
 
   Inputs:
@@ -432,11 +402,13 @@ void const_propagator_ait::replace(
     if(it->is_goto() || it->is_assume() || it->is_assert())
     {
       s_it->second.values.replace_const(it->guard);
+      it->guard = simplify_expr(it->guard,ns);
     }
     else if(it->is_assign())
     {
       exprt &rhs = to_code_assign(it->code).rhs();
       s_it->second.values.replace_const(rhs);
+      rhs = simplify_expr(rhs,ns);
     }
     else if(it->is_function_call())
     {
@@ -444,7 +416,10 @@ void const_propagator_ait::replace(
 	to_code_function_call(it->code).arguments();
       for(exprt::operandst::iterator o_it = args.begin();
 	  o_it != args.end(); ++o_it)
+      {
         s_it->second.values.replace_const(*o_it);
+	*o_it = simplify_expr(*o_it,ns);
+      }
     }
   }
 }
