@@ -44,8 +44,6 @@ DELTA_OBJ+=\
       ../ssa/ssa_unwinder$(OBJEXT)\
       ../ssa/unwindable_local_ssa$(OBJEXT)\
       ../ssa/ssa_value_set$(OBJEXT) \
-      ../ssa/const_propagator$(OBJEXT) \
-      ../ssa/replace_symbol_ext$(OBJEXT) \
       ../functions/summary$(OBJEXT) \
       ../functions/get_function$(OBJEXT) \
       ../functions/path_util$(OBJEXT) \

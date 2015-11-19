@@ -3,7 +3,7 @@
 #include <util/arith_tools.h>
 #include <goto-instrument/unwind.h>
 
-#include "../ssa/const_propagator.h"
+#include <analyses/constant_propagator.h>
 
 #include "summarizer_parse_options.h"
 
@@ -68,7 +68,7 @@ void summarizer_parse_optionst::propagate_constants(goto_modelt &goto_model)
   namespacet ns(goto_model.symbol_table);
   Forall_goto_functions(f_it, goto_model.goto_functions)
   {
-    const_propagator_ait(f_it->second,ns);
+    constant_propagator_ait(f_it->second,ns);
   }
 }
 
