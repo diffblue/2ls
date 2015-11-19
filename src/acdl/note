@@ -155,4 +155,10 @@ Note of the summarizer code
 -----------------------------
 1) class nodet is the SSA node for a location.
 
+***** Discussion with Peter on 18th Nov, 2015 *****
+*) --show-ssa with summarizer show different variable index (x#20) compared to running with --acdl 
+and printing the variables inside acdl code. To resolve this, run acdl as follows:
+./summarizer --inline --acdl main.c
+*) Peter to merge summarizer code base with main trunk so that our brnach is automatically updated.
+
 
