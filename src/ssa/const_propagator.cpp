@@ -398,6 +398,7 @@ exprt const_propagator_domaint::evaluate_casts_in_constants(exprt expr,
     else
       return expr;
   }
+  //TODO: evaluate casts from floats
   if(expr.type().id()!=ID_signedbv && expr.type().id()!=ID_unsignedbv)
     return expr;
   mp_integer v;
