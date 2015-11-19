@@ -38,6 +38,7 @@ bool replace_symbol_extt::replace(exprt &dest) const
   if(!have_to_replace(dest))
     return result;
 
+  // do not replace object in address_of expressions
   if(dest.id()==ID_address_of)
   {
     const exprt &object = to_address_of_expr(dest).object();

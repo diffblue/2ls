@@ -64,8 +64,9 @@ protected:
     exprt rhs,
     const namespacet &ns) const;
 
-  void assign_rec(const exprt &lhs, const exprt &rhs,
-    const namespacet &ns);
+  void assign_rec(valuest &values,
+		  const exprt &lhs, const exprt &rhs,
+		  const namespacet &ns);
 
   exprt evaluate_casts_in_constants(
     exprt expr, 
@@ -82,7 +83,6 @@ public:
     const namespacet &ns)
   {
     operator()(goto_function, ns);
-//    output(ns,goto_function.body,"",std::cout);
     replace(goto_function, ns);
   }
 

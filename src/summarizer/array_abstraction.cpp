@@ -330,7 +330,7 @@ void array_abstractiont::add_argument(
   symbolt new_symbol;
   new_symbol.type=type;
   new_symbol.value.make_nil();
-  new_symbol.location=str_args.back().location();
+  new_symbol.location=str_args.back().source_location();
   new_symbol.name=str_args.back().get_identifier();
   new_symbol.module=fct_symbol.module;
   new_symbol.base_name=str_args.back().get_base_name();

@@ -27,7 +27,9 @@ Function: const_propagator_domaint::assign_rec
 
 \*******************************************************************/
 
-void const_propagator_domaint::assign_rec(const exprt &lhs, const exprt &rhs,
+void const_propagator_domaint::assign_rec(
+  valuest &values,
+  const exprt &lhs, const exprt &rhs,
   const namespacet &ns)
 {
   const typet & rhs_type = ns.follow(rhs.type());
@@ -85,7 +87,7 @@ void const_propagator_domaint::transform(
     const code_assignt &assignment=to_code_assign(from->code);
     const exprt &lhs = assignment.lhs();
     const exprt &rhs = assignment.rhs();
-    assign_rec(lhs,rhs,ns);
+    assign_rec(values,lhs,rhs,ns);
   }
   else if(from->is_goto())
   {
@@ -94,8 +96,11 @@ void const_propagator_domaint::transform(
       const exprt &lhs = from->guard.op0(); 
       const exprt &rhs = from->guard.op1();
 
-      assign_rec(lhs,rhs,ns);
-      assign_rec(rhs,lhs,ns);
+      //two-way propagation 
+      valuest copy_values = values;
+      assign_rec(copy_values,lhs,rhs,ns);
+      assign_rec(values,rhs,lhs,ns);
+      values.merge(copy_values);
     }
   }
   else if(from->is_dead())
@@ -393,7 +398,6 @@ exprt const_propagator_domaint::evaluate_casts_in_constants(exprt expr,
     else
       return expr;
   }
-  //TODO: could be improved to resolve float casts as well...
   if(expr.type().id()!=ID_signedbv && expr.type().id()!=ID_unsignedbv)
     return expr;
   mp_integer v;
