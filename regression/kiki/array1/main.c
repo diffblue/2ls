@@ -2,7 +2,7 @@
 
 int main(int argc, char** argv)
 {
-  short size = 5;
+  short size = 1;
   char s[size];
   for(int i=0; i<size; i++)
   {

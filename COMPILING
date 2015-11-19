@@ -2,7 +2,7 @@
 
 1) Get the CBMC source, via
 
-   svn co -r6042 http://www.cprover.org/svn/cbmc/branches/peter-incremental-unwinding my-cbmc
+   svn co -r6066 http://www.cprover.org/svn/cbmc/branches/peter-incremental-unwinding my-cbmc
 
    Follow the compilation instructions that come with CBMC, and make sure
    that CBMC compiles.
