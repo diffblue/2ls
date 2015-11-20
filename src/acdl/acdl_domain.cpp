@@ -54,10 +54,8 @@ void acdl_domaint::operator()(const statementt &statement,
   for(varst::const_iterator it = vars.begin();
       it != vars.end(); ++it)
   {
-    valuet old_value = _old_value;
-    
     // project _old_value on everything in statement but *it
-    remove_var(old_value,*it);
+    valuet old_value = remove_var(_old_value,*it);
 
 #ifdef DEBUG
     std::cout << "[ACDL-DOMAIN] projected(" << it->get_identifier() << "): "
@@ -178,14 +176,29 @@ Function: acdl_domaint::is_complete()
 
  Outputs:
 
- Purpose:
+ Purpose: This is a very stupid and restrictive gamma-completeness check
 
 \*******************************************************************/
 
 bool acdl_domaint::is_complete(const valuet &value) const
 {
-  // TODO
-  return false;
+  incremental_solvert *solver = incremental_solvert::allocate(SSA.ns,true);
+  *solver << value;
+  
+  decision_proceduret::resultt res = (*solver)();
+  assert(res==decision_proceduret::D_SATISFIABLE);
+
+  //TODO: 
+  // find symbols on value
+  // for each symbol x
+  //   get model m from solver; exprt m = (*solver).get(x)
+  exprt model = false_exprt();
+    // and push !(x=m) into the solver
+  *solver << model;
+  
+  bool result = (*solver)()==decision_proceduret::D_UNSATISFIABLE;
+  delete solver;
+  return result;
 }
 
 /*******************************************************************\
@@ -204,13 +217,16 @@ Function: acdl_domaint::remove_var()
 
 exprt acdl_domaint::remove_var(const valuet &_old_value, const symbol_exprt &var)
 {
+  valuet old_value = _old_value;
+  simplify(old_value,SSA.ns);
+  
   valuet::operandst new_value;  
-  for(valuet::operandst::const_iterator it = _old_value.operands().begin();
-        it != _old_value.operands().end(); ++it)
+  for(valuet::operandst::const_iterator it = old_value.operands().begin();
+        it != old_value.operands().end(); ++it)
   {
     find_symbols_sett symbols;
     find_symbols(*it,symbols);
-    if(symbols.find(var.get_identifier()) != symbols.end())
+    if(symbols.find(var.get_identifier()) == symbols.end())
       new_value.push_back(*it);
   }
   return conjunction(new_value);

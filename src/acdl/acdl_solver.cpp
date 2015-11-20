@@ -188,7 +188,7 @@ acdl_solvert::update_worklist (const local_SSAt &SSA,
       if (check_statement (*e_it, vars)) {
         push_into_worklist(worklist, not_exprt (*e_it));
         #ifdef DEBUG
-        std::cout << "Push: " << from_expr (SSA.ns, "", *e_it) << std::endl;
+        std::cout << "Push: " << from_expr (SSA.ns, "", not_exprt(*e_it)) << std::endl;
         #endif
       }
     }
@@ -356,7 +356,7 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA, acdl_d
 #ifdef DEBUG
       std::cout << "Propagation finished with BOTTOM" << std::endl;
 #endif
-      return property_checkert::PASS;
+      return property_checkert::PASS; //potential UNSAT (modulo decisions)
     }
   }
 
