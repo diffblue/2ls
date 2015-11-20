@@ -1,5 +1,21 @@
+/*******************************************************************\
+
+Module: ACDL Solver
+
+Author: Rajdeep Mukherjee, Peter Schrammel
+
+\*******************************************************************/
+
+
+#define DEBUG
+
+
+#ifdef DEBUG
+#include <iostream>
+#endif
 
 #include <util/simplify_expr.h>
+#include <util/find_symbols.h>
 
 #include "../domains/ssa_analyzer.h"
 
@@ -18,12 +34,18 @@ Function: acdl_domaint::operator()
 
 \*******************************************************************/
 
-
 void acdl_domaint::operator()(const statementt &statement,
 		  const varst &vars,
 		  const valuet &_old_value,
 		  valuet &new_value)
 {
+  new_value = true_exprt();
+  
+#ifdef DEBUG
+    std::cout << "[ACDL-DOMAIN] old value: "
+	      << from_expr(SSA.ns, "", _old_value) << std::endl;
+#endif
+
   ssa_analyzert ssa_analyzer;
   incremental_solvert *solver = incremental_solvert::allocate(SSA.ns,true);
 
@@ -33,11 +55,15 @@ void acdl_domaint::operator()(const statementt &statement,
       it != vars.end(); ++it)
   {
     valuet old_value = _old_value;
-    //TODO [Rajdeep]: project _old_value on everything in statement but *it
-#if 0
-    remove_var(old_value,*it);
-#endif
     
+    // project _old_value on everything in statement but *it
+    remove_var(old_value,*it);
+
+#ifdef DEBUG
+    std::cout << "[ACDL-DOMAIN] projected(" << it->get_identifier() << "): "
+	      << from_expr(SSA.ns, "", old_value) << std::endl;
+#endif
+
     template_generator_acdlt template_generator(options,ssa_db,ssa_local_unwinder); 
     template_generator(SSA,*it);
     
@@ -46,8 +72,19 @@ void acdl_domaint::operator()(const statementt &statement,
     ssa_analyzer.get_result(var_value,template_generator.all_vars());
 
     new_values.push_back(and_exprt(old_value,var_value));
+
+#ifdef DEBUG
+    std::cout << "[ACDL-DOMAIN] new_value(" << it->get_identifier() << "): "
+	      << from_expr(SSA.ns, "", new_values.back()) << std::endl;
+#endif
   }
+    
   meet(new_values,new_value);
+
+#ifdef DEBUG
+    std::cout << "[ACDL-DOMAIN] new_value: "
+	      << from_expr(SSA.ns, "", new_value) << std::endl;
+#endif
   delete solver;
 }
 
@@ -103,8 +140,7 @@ Function: acdl_domaint::contains()
 
 \*******************************************************************/
 
-bool acdl_domaint::contains(const valuet &value1,
-		const valuet &value2)
+bool acdl_domaint::contains(const valuet &value1, const valuet &value2) const
 {
   incremental_solvert *solver = incremental_solvert::allocate(SSA.ns,true);
   *solver << and_exprt(value1,not_exprt(value2));
@@ -113,39 +149,69 @@ bool acdl_domaint::contains(const valuet &value1,
   return result;
 }
 
-
 /*******************************************************************\
 
-Function: acdl_domaint::remove_var()
+Function: acdl_domaint::is_bottom()
 
-  Inputs: Old_value = (1 <= x && x <= 5) && (0 <= y && y <= 10) vars = x
+  Inputs:
 
- Outputs: (0 <= y && y <= 10)
+ Outputs:
 
  Purpose:
 
 \*******************************************************************/
 
-exprt acdl_domaint::remove_var(const valuet &_old_value, const varst &vars)
+bool acdl_domaint::is_bottom(const valuet &value) const
 {
-  valuet::operandst expr_val;  
-  irep_idt sym_name;
-  // check only if the front element of the vector needs to be projected or 
-  // we need to iterate over the vector
-  irep_idt var_name = vars.front().get_identifier(); 
-  for(valuet::operandst::const_iterator
-        it = _old_value.operands().begin();
-        it != _old_value.operands().end();
-        ++it)
+  incremental_solvert *solver = incremental_solvert::allocate(SSA.ns,true);
+  *solver << value;
+  bool result = (*solver)()==decision_proceduret::D_UNSATISFIABLE;
+  delete solver;
+  return result;
+}
+
+/*******************************************************************\
+
+Function: acdl_domaint::is_complete()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool acdl_domaint::is_complete(const valuet &value) const
+{
+  // TODO
+  return false;
+}
+
+/*******************************************************************\
+
+Function: acdl_domaint::remove_var()
+
+  Inputs: example:
+          Old_value = (1 <= x && x <= 5) && (0 <= y && y <= 10) vars = x
+
+ Outputs: example:
+          (0 <= y && y <= 10)
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt acdl_domaint::remove_var(const valuet &_old_value, const symbol_exprt &var)
+{
+  valuet::operandst new_value;  
+  for(valuet::operandst::const_iterator it = _old_value.operands().begin();
+        it != _old_value.operands().end(); ++it)
   {
-    exprt sym_expr = *it;
-    forall_operands(it1, sym_expr) {
-      symbol_exprt curr_symbol = to_symbol_expr(*it1);
-      sym_name = curr_symbol.get_identifier(); 
-      if(sym_name == var_name)
-       expr_val.push_back(*it);   
-    }
+    find_symbols_sett symbols;
+    find_symbols(*it,symbols);
+    if(symbols.find(var.get_identifier()) != symbols.end())
+      new_value.push_back(*it);
   }
-  exprt conjunction_exprt = conjunction(expr_val);
-  return conjunction_exprt;
+  return conjunction(new_value);
 }

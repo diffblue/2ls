@@ -2,7 +2,7 @@
 
 Module: ACDL Solver
 
-Author: Rajdeep Mukherjee
+Author: Rajdeep Mukherjee, Peter Schrammel
 
 \*******************************************************************/
 

@@ -2,7 +2,7 @@
 
 Module: Abstract Domain Interface for ACDL
 
-Author: Daniel Kroening, kroening@kroening.com
+Author: Rajdeep Mukherjee, Peter Schrammel
 
 \*******************************************************************/
 
@@ -43,32 +43,24 @@ public:
 	    valuet &new_value);
     
   bool contains(const valuet &value1,
-		const valuet &value2);
-
-  exprt remove_var(const valuet &_old_value, 
-    const varst &vars);
+		const valuet &value2) const;
 
 
-  void set_bot() { __bot = true;  }
-  void set_top() { __bot = false; }
+  void set_bottom(valuet &value) { value = false_exprt();  }
+  void set_top(valuet &value) { value = true_exprt(); }
 
-  bool is_bot() const { return __bot; }
-  bool is_empty() const;
-  bool is_top() const { return !__bot; }
-  bool is_complete(const exprt &expr)
-  {
-    if(expr.id() == ID_constant)
-      return true;
-    else
-      return false;
-  }
+  bool is_bottom(const valuet &value) const;
+  bool is_top(const valuet &value) const { return value.is_true(); }
+  bool is_complete(const exprt &expr) const;
 
 protected:
   optionst &options;
   local_SSAt &SSA;
   ssa_dbt &ssa_db;
   ssa_local_unwindert &ssa_local_unwinder;
-  bool __bot;
+
+  exprt remove_var(const valuet &_old_value, 
+    const symbol_exprt &var);
   
 };
 

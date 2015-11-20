@@ -2,7 +2,7 @@
 
 Module: ACDL Solver
 
-Author: Rajdeep Mukherjee
+Author: Rajdeep Mukherjee, Peter Schrammel
 
 \*******************************************************************/
 
@@ -217,19 +217,13 @@ acdl_solvert::select_vars (const exprt &statement, acdl_domaint::varst &vars)
     lhs = to_equal_expr (statement).lhs ();
     if (lhs.id () == ID_symbol)
     {
-      #ifdef DEBUG
-      std::cout << "The symbol that is selected now is " << lhs << std::endl;
-      #endif
       vars.push_back (to_symbol_expr (lhs));
     }
-    else
+    else //TODO: more complex lhs
       assert(false);
   }
   else // for constraints
   {
-    #ifdef DEBUG
-    std::cout << "The symbols are pushed from a constraint " << std::endl;
-    #endif
     std::set<symbol_exprt> symbols;
     find_symbols(statement,symbols);
     vars.insert(vars.end(),symbols.begin(), symbols.end());
@@ -339,25 +333,36 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA, acdl_d
     // terminating condition check for populating worklist
     if(!domain.contains(v, new_v[0]))
     {
-      #ifdef DEBUG
-       std::cout << "Old: " << from_expr (SSA.ns, "", v)
-         << std::endl;
-      #endif
-      #ifdef DEBUG
-      std::cout << "New: " << from_expr (SSA.ns, "", new_v[0])
-        << std::endl;
-      #endif
-      // meet is computed because we are doing gfp
-      // v will get the new value of new_v
-      domain.meet (new_v, v);
-      #ifdef DEBUG
-      std::cout << "Updated: " << from_expr (SSA.ns, "", v)
-        << std::endl;
-      #endif
-
       update_worklist(SSA, vars, worklist, statement);
     }
+
+#ifdef DEBUG
+    std::cout << "Old: " << from_expr (SSA.ns, "", v)
+              << std::endl;
+    std::cout << "New: " << from_expr (SSA.ns, "", new_v[0])
+              << std::endl;
+#endif
+
+    // meet is computed because we are doing gfp
+    domain.meet (new_v, v);
+#ifdef DEBUG
+    std::cout << "Updated: " << from_expr (SSA.ns, "", v)
+              << std::endl;
+#endif
+
+    //Cool! We got UNSAT
+    if(domain.is_bottom(v))
+    {
+#ifdef DEBUG
+      std::cout << "Propagation finished with BOTTOM" << std::endl;
+#endif
+      return property_checkert::PASS;
+    }
   }
+
+#ifdef DEBUG
+  std::cout << "Propagation finished with UNKNOWN" << std::endl;
+#endif
 
   return property_checkert::UNKNOWN;
 }
@@ -388,15 +393,33 @@ end
 
 property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
 {
-  acdl_domaint::valuet v = true_exprt();
-  // acdl loop
-  while(true) {
-    // deduction phase in acdl
-    return propagate(SSA, v);
-    // check for conflict
-    if(domain.is_bot())
-      break;
-    if(domain.is_complete(v))
-     return property_checkert::PASS;
+  acdl_domaint::valuet v;
+  domain.set_top(v);
+  property_checkert::resultt result = property_checkert::UNKNOWN;
+
+  while(true)
+  {
+    while(true)
+    {
+      // deduction phase in acdl
+      result = propagate(SSA, v);
+
+      // check for conflict
+      if(result == property_checkert::PASS) //UNSAT
+        break;
+    
+      // check for satisfying assignment
+      if(domain.is_complete(v))
+        return property_checkert::FAIL;
+
+      //TODO: to make it terminate for now:
+      return result;
+    }
+
+    // analyze conflict ...
+
+
+    //TODO: to make it terminate for now:
+    return result;
   }
 }
