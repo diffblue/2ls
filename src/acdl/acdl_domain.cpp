@@ -66,7 +66,7 @@ Function: acdl_domaint::meet()
 void acdl_domaint::meet(const std::vector<valuet> &old_values,
 	    valuet &new_value)
 {
-  new_value = conjunction(old_values);
+  new_value = and_exprt(conjunction(old_values), new_value);
   simplify(new_value,SSA.ns);
 }
 
@@ -86,7 +86,7 @@ Function: acdl_domaint::join()
 void acdl_domaint::join(const std::vector<valuet> &old_values,
 	    valuet &new_value)
 {
-  new_value = disjunction(old_values);
+  new_value = or_exprt(disjunction(old_values), new_value);
   simplify(new_value,SSA.ns);
 }
 

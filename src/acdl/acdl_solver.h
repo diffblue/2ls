@@ -19,8 +19,6 @@ class acdl_solvert : public messaget
 {
 public:
 
-  //typedef std::list<exprt> worklist;
-  //typedef exprt valuet;
   explicit acdl_solvert(const optionst &_options,
     acdl_domaint &_domain)
     : 
@@ -38,11 +36,20 @@ public:
 protected:
   const optionst &options;
   acdl_domaint &domain;
-  typedef std::set<acdl_domaint::statementt> worklistt;
+  //typedef std::set<acdl_domaint::statementt> worklistt;
+  typedef std::list<acdl_domaint::statementt> worklistt;
+  
   virtual void initialize_worklist(const local_SSAt &, worklistt &);
   virtual void select_vars(const exprt &statement, acdl_domaint::varst &vars);
-  void update_worklist(const local_SSAt &SSA, const acdl_domaint::varst &vars, worklistt &worklist, const acdl_domaint::statementt &statement);
+  void update_worklist(const local_SSAt &SSA,
+		       const acdl_domaint::varst &vars,
+		       worklistt &worklist,
+		       const acdl_domaint::statementt &statement);
+  void push_into_worklist (worklistt &worklist, const acdl_domaint::statementt &statement);
+  const acdl_domaint::statementt pop_from_worklist (worklistt &worklist);
+
   bool check_statement (const exprt &expr, const acdl_domaint::varst &vars);
+  
   property_checkert::resultt propagate(const local_SSAt &SSA, acdl_domaint::valuet &v);
 
 };

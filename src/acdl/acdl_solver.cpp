@@ -40,9 +40,9 @@ acdl_solvert::initialize_worklist (const local_SSAt &SSA, worklistt &worklist)
     return;
   assert(!SSA.nodes.front ().equalities.empty ());
   // insert the first element on to the worklist
-  worklist.insert (SSA.nodes.front ().equalities.front ());
+  push_into_worklist(worklist, SSA.nodes.front ().equalities.front ());
   #ifdef DEBUG
-  std::cout << "The first statement of worklist is " << from_expr (SSA.ns, "", SSA.nodes.front().equalities.front ()) << std::endl;
+  std::cout << "First push: " << from_expr (SSA.ns, "", SSA.nodes.front().equalities.front ()) << std::endl;
   #endif
 }
 
@@ -80,6 +80,58 @@ acdl_solvert::check_statement (const exprt &expr,
   return false;
 }
 
+/*******************************************************************\
+
+Function: acdl_solvert::push_into_worklist()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+ \*******************************************************************/
+
+void
+acdl_solvert::push_into_worklist (worklistt &worklist,
+				  const acdl_domaint::statementt &statement)
+{
+#if 1 // list implementation
+  for(worklistt::const_iterator it = worklist.begin();
+      it != worklist.end(); ++it)
+    if(statement == *it)
+      return;
+  worklist.push_back(statement);
+#else // set implementation
+  worklist.insert(statement);
+#endif
+}
+
+/*******************************************************************\
+
+Function: acdl_solvert::pop_from_worklist()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+ \*******************************************************************/
+
+const acdl_domaint::statementt
+acdl_solvert::pop_from_worklist (worklistt &worklist)
+{
+#if 1
+  const acdl_domaint::statementt statement = worklist.front();
+  worklist.pop_front();
+#else
+  worklistt::iterator it = worklist.begin ();
+  const exprt statement = *it;
+  worklist.erase (it);
+#endif
+  return statement;
+}
 
 /*******************************************************************\
 
@@ -112,9 +164,9 @@ acdl_solvert::update_worklist (const local_SSAt &SSA,
       if(*e_it == current_statement) continue;
 
       if (check_statement (*e_it, vars)) {
-        worklist.insert (*e_it);
+        push_into_worklist(worklist, *e_it);
         #ifdef DEBUG
-        std::cout << "The statement that is inserted in worklist is an equality: " << from_expr (SSA.ns, "", *e_it) << std::endl;
+        std::cout << "Push: " << from_expr (SSA.ns, "", *e_it) << std::endl;
         #endif
       }
     }
@@ -123,9 +175,9 @@ acdl_solvert::update_worklist (const local_SSAt &SSA,
     {
       if(*e_it == current_statement) continue;
       if (check_statement (*e_it, vars)) {
-        worklist.insert (*e_it);
+        push_into_worklist(worklist, *e_it);
         #ifdef DEBUG
-        std::cout << "The statement that is inserted in worklist is a constraint: " << from_expr (SSA.ns, "", *e_it) << std::endl;
+        std::cout << "Push: " << from_expr (SSA.ns, "", *e_it) << std::endl;
         #endif
       }
     }
@@ -134,9 +186,9 @@ acdl_solvert::update_worklist (const local_SSAt &SSA,
     {
       if(*e_it == current_statement) continue;
       if (check_statement (*e_it, vars)) {
-        worklist.insert (not_exprt (*e_it));
+        push_into_worklist(worklist, not_exprt (*e_it));
         #ifdef DEBUG
-        std::cout << "The statement that is inserted in worklist is an assertion: " << from_expr (SSA.ns, "", *e_it) << std::endl;
+        std::cout << "Push: " << from_expr (SSA.ns, "", *e_it) << std::endl;
         #endif
       }
     }
@@ -249,11 +301,10 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA, acdl_d
 #endif
   while (!worklist.empty())
   {
-    worklistt::iterator it = worklist.begin ();
-    const exprt statement = *it;
-    worklist.erase (it);
+    const acdl_domaint::statementt statement = pop_from_worklist(worklist);
+    
     #ifdef DEBUG
-    std::cout << "The statement just popped from worklist is " << from_expr (SSA.ns, "", statement)
+    std::cout << "Pop: " << from_expr (SSA.ns, "", statement)
         << std::endl;
     #endif
     acdl_domaint::varst vars;
@@ -274,22 +325,35 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA, acdl_d
     {
       // select vars according to iteration strategy
       select_vars (statement, vars);
+#ifdef DEBUG
+      std::cout << "Selected vars:";
+      for(acdl_domaint::varst::const_iterator v_it = vars.begin();
+	  v_it != vars.end(); ++v_it)
+	std::cout << " " << from_expr (SSA.ns, "", *v_it);
+      std::cout << std::endl;
+#endif
+
       // compute update of abstract value
       domain (statement, vars, v, new_v[0]);
     }
     // terminating condition check for populating worklist
-    if(domain.contains(v, new_v[0])) {
+    if(!domain.contains(v, new_v[0]))
+    {
       #ifdef DEBUG
-       std::cout << "The old value is " << from_expr (SSA.ns, "", v)
+       std::cout << "Old: " << from_expr (SSA.ns, "", v)
          << std::endl;
       #endif
       #ifdef DEBUG
-      std::cout << "The new value of is " << from_expr (SSA.ns, "", new_v[0])
+      std::cout << "New: " << from_expr (SSA.ns, "", new_v[0])
         << std::endl;
       #endif
       // meet is computed because we are doing gfp
       // v will get the new value of new_v
       domain.meet (new_v, v);
+      #ifdef DEBUG
+      std::cout << "Updated: " << from_expr (SSA.ns, "", v)
+        << std::endl;
+      #endif
 
       update_worklist(SSA, vars, worklist, statement);
     }
