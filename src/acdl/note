@@ -160,5 +160,7 @@ Note of the summarizer code
 and printing the variables inside acdl code. To resolve this, run acdl as follows:
 ./summarizer --inline --acdl main.c
 *) Peter to merge summarizer code base with main trunk so that our brnach is automatically updated.
-
+*) Inside acdl_domain, implement is_top, is_bottom, is_complete
+*) Inside acdl_solver, implement the whole acdl loop. Implement the decision, conflict analysis steps.
+For decision see reference of leo's VSIDS heuristic. 
 
