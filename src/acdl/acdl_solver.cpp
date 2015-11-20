@@ -8,7 +8,7 @@ Author: Rajdeep Mukherjee
 
 
 #include <langapi/language_util.h>
-
+#include <util/find_symbols.h>
 #include "acdl_solver.h"
 #include "acdl_domain.h"
 
@@ -18,6 +18,145 @@ Author: Rajdeep Mukherjee
 #include <iostream>
 #endif
 
+/*******************************************************************\
+
+Function: acdl_solvert::operator()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+ \*******************************************************************/
+
+
+void
+acdl_solvert::initialize_worklist (const local_SSAt &SSA, worklistt &worklist)
+{
+  // check for equalitites or constraints or next node
+  if (SSA.nodes.empty ())
+    return;
+  assert(!SSA.nodes.front ().equalities.empty ());
+  // insert the first element on to the worklist
+  worklist.insert (SSA.nodes.front ().equalities.front ());
+}
+
+/*******************************************************************\
+
+Function: acdl_solvert::check_statement()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+ \*******************************************************************/
+
+bool
+acdl_solvert::check_statement (const exprt &expr,
+                               const acdl_domaint::varst &vars)
+{
+
+std::set<symbol_exprt> symbols;
+    find_symbols (expr, symbols);
+    //check if vars appears in the symbols set,
+    // if there is a non-empty intersection, then insert the
+    // equality statement in the worklist
+    for (acdl_domaint::varst::const_iterator it = vars.begin ();
+        it != vars.end (); it++)
+    {
+      if (symbols.find (*it)!=symbols.end())
+      {
+        return true;
+      }
+    }
+    return false;
+}
+
+
+/*******************************************************************\
+
+Function: acdl_solvert::update_worklist()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+ \*******************************************************************/
+
+
+void
+acdl_solvert::update_worklist (const local_SSAt &SSA,
+                               const acdl_domaint::varst &vars,
+                               worklistt &worklist,
+                               const acdl_domaint::statementt &current_statement)
+{
+  // dependency analysis loop for equalities
+  for (local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin ();
+      n_it != SSA.nodes.end (); n_it++)
+  {
+    for (local_SSAt::nodet::equalitiest::const_iterator e_it =
+        n_it->equalities.begin (); e_it != n_it->equalities.end (); e_it++)
+    {
+      if(*e_it == current_statement) continue;
+      if (check_statement (*e_it, vars))
+        worklist.insert (*e_it);
+    }
+    for (local_SSAt::nodet::constraintst::const_iterator e_it =
+        n_it->constraints.begin (); e_it != n_it->constraints.end (); e_it++)
+    {
+      if(*e_it == current_statement) continue;
+      if (check_statement (*e_it, vars))
+        worklist.insert (*e_it);
+    }
+    for (local_SSAt::nodet::assertionst::const_iterator e_it =
+        n_it->assertions.begin (); e_it != n_it->assertions.end (); e_it++)
+    {
+      if(*e_it == current_statement) continue;
+      if (check_statement (*e_it, vars))
+        worklist.insert (not_exprt (*e_it));
+    }
+  }
+}
+
+
+/*******************************************************************
+ Function: acdl_solvert::operator()
+
+ Inputs:
+
+ Outputs:
+
+ Purpose:
+
+ \*******************************************************************/
+
+void
+acdl_solvert::select_vars (const exprt &statement, acdl_domaint::varst &vars)
+{
+  // If it is an equality, then select the lhs for post-condition computation
+  exprt lhs;
+  if (statement.id () == ID_equal)
+  {
+    lhs = to_equal_expr (statement).lhs ();
+    if (lhs.id () == ID_symbol)
+    {
+      vars.push_back (to_symbol_expr (lhs));
+    }
+    else
+      assert(false);
+  }
+  else // for constraints
+  {
+    std::set<symbol_exprt> symbols;
+    find_symbols(statement,symbols);
+    vars.insert(vars.end(),symbols.begin(), symbols.end());
+  }
+}
 /*******************************************************************\
 
 Function: acdl_solvert::operator()
@@ -47,20 +186,17 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
 {
   unsigned iteration_number=0;
   bool change;
-  std::list<acdl_domaint::statementt> equalities_expr;
-  std::list<acdl_domaint::statementt> constraints_expr;
-  std::list<acdl_domaint::statementt> assertions_expr;
-  std::list<acdl_domaint::statementt> worklist;
+
+  worklistt worklist;
   acdl_domaint::valuet v = true_exprt();
   
-  std::vector<equal_exprt> first_statement;
-  local_SSAt::nodest::const_iterator it = SSA.nodes.begin();
-  local_SSAt::nodet::equalitiest::const_iterator first = it->equalities.begin();
-  exprt expression = *first;
+  initialize_worklist(SSA, worklist);
 
-  // insert the first element on to the worklist
-  worklist.push_back(expression);
-  
+#if 1
+  exprt expression;
+  std::list<acdl_domaint::statementt> equalities_expr;
+   std::list<acdl_domaint::statementt> constraints_expr;
+   std::list<acdl_domaint::statementt> assertions_expr;
   // collect all equalities, constraints and assertions
   for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
       n_it != SSA.nodes.end(); n_it++) {
@@ -74,7 +210,6 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
     for(local_SSAt::nodet::assertionst::const_iterator a_it =
     	  n_it->assertions.begin(); a_it != n_it->assertions.end(); a_it++) {
          expression = *a_it;
-         assert(a_it->id()==ID_assert);
          assertions_expr.push_back(expression);
     }
     
@@ -84,57 +219,46 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
          constraints_expr.push_back(expression);
     }
   }
-
-  while(worklist.size() > 0)
+#endif
+  while (!worklist.empty())
   {
-     const exprt statement = worklist.back();
-     worklist.pop_back();
-     std::cout<< "I am building heaven" << std::endl;
-     std::cout<< "The expression is " << from_expr(SSA.ns, "", statement) << std::endl;
+    worklistt::iterator it = worklist.begin ();
+    const exprt statement = *it;
+    worklist.erase (it);
+    std::cout << "I am building heaven" << std::endl;
+    std::cout << "The expression is " << from_expr (SSA.ns, "", statement)
+        << std::endl;
+    acdl_domaint::varst vars;
+    std::vector<acdl_domaint::valuet> new_v;
+    new_v.resize (1);
+    // TODO: this is a workaround to handle booleans,
+    //       must be implemented using a product domain
+    if (statement.id () == ID_equal
+        && to_equal_expr (statement).lhs ().type ().id () == ID_bool)
+    {
+      new_v[0] = statement;
+      // v will get the new value of new_v
+      // collect variables for dependencies
+      std::set<symbol_exprt> symbols;
+      find_symbols(statement,symbols);
+      vars.insert(vars.end(),symbols.begin(), symbols.end());
+    }
+    else
+    {
+      // select vars according to iteration strategy
+      // compute update of abstract value
 
-     // TODO: this is a workaround to handle booleans,
-     //       must be implemented using a product domain
-     if(statement.id()==ID_equal &&
-         to_equal_expr(statement).lhs().type().id()==ID_bool)
-     {
-       std::vector<acdl_domaint::valuet> new_v;
-       new_v.resize(1);
-       new_v[0] = statement;
-       // v will get the new value of new_v
-       domain.meet(new_v,v);
-     }
-     else
-     {
-       //TODO: select vars according to iteration strategy
-       // compute update of abstract value
-       acdl_domaint::varst vars;
-       std::vector<acdl_domaint::valuet> new_v;
-       new_v.resize(1);
-       domain(statement,vars,v,new_v[0]);
-       // meet is computed because we are doing gfp
-       domain.meet(new_v,v);
-     }
-     exprt lhs_var;
-     if(statement.id()==ID_equal)
-       lhs_var = to_equal_expr(statement).lhs();
+      select_vars (statement, vars);
 
-     // dependency analysis loop for equalities
-     for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
-           n_it != SSA.nodes.end(); n_it++) {
-         for(local_SSAt::nodet::equalitiest::const_iterator e_it =
-     	 	  n_it->equalities.begin(); e_it != n_it->equalities.end(); e_it++) {
-            expression = *e_it;
-            assert(e_it->id()==ID_equal);
-            exprt& rhs_var = to_equal_expr(expression).rhs();
-            //check if the lhs_var matches any rhs_var of equalities statement
-            if(rhs_var == lhs_var)
-              // update worklist after computing dependency analysis
-              worklist.push_back(expression);
-         }
-     }
+      domain (statement, vars, v, new_v[0]);
+      // meet is computed because we are doing gfp
 
-     std::vector<acdl_domaint::statementt> predecs;
-   }
+    }
+    if(domain.contains(v, new_v[0])) {
+      domain.meet (new_v, v);
+      update_worklist(SSA, vars, worklist, statement);
+    }
+  }
 
   return property_checkert::UNKNOWN;
 }

@@ -38,6 +38,12 @@ public:
 protected:
   const optionst &options;
   acdl_domaint &domain;
+  typedef std::set<acdl_domaint::statementt> worklistt;
+  virtual void initialize_worklist(const local_SSAt &, worklistt &);
+  virtual void select_vars(const exprt &statement, acdl_domaint::varst &vars);
+  void update_worklist(const local_SSAt &SSA, const acdl_domaint::varst &vars, worklistt &worklist, const acdl_domaint::statementt &statement);
+  bool check_statement (const exprt &expr, const acdl_domaint::varst &vars);
+
 };
 
 

@@ -29,8 +29,10 @@ property_checkert::resultt summary_checker_acdlt::operator()(
   const namespacet ns(goto_model.symbol_table);
 
   SSA_functions(goto_model,ns);
+  ssa_unwinder.init(false,false);
 
   irep_idt entry_point = goto_model.goto_functions.entry_point();
+  std::cout << entry_point << std::endl;
   local_SSAt &SSA = ssa_db.get(entry_point);
   ssa_local_unwindert &ssa_local_unwinder = ssa_unwinder.get(entry_point);
   acdl_domaint acdl_domain(options,SSA,ssa_db,ssa_local_unwinder);
