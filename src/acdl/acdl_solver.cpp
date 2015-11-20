@@ -377,7 +377,7 @@ while true do
     S <- S meet ded(S);
   until S = S meet ded(S);
   if S = bot then break ;                         // conflict
-  if complete(ded,S) then return (not BOTTOM,S); // return SAT model
+  if complete(ded,S) then return (not BOTTOM,S);  // return SAT model
    S <- decision(S);                              // make decision
  end
  L <- analyse conflict(S) ;                       // PHASE 2: Conflict Analysis
@@ -390,6 +390,13 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
 {
   acdl_domaint::valuet v = true_exprt();
   // acdl loop
-
-  return propagate(SSA, v);
+  while(true) {
+    // deduction phase in acdl
+    return propagate(SSA, v);
+    // check for conflict
+    if(domain.is_bot())
+      break;
+    if(domain.is_complete(v))
+     return property_checkert::PASS;
+  }
 }
