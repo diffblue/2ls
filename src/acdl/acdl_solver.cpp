@@ -12,6 +12,7 @@ Author: Rajdeep Mukherjee
 #include "acdl_solver.h"
 #include "acdl_domain.h"
 
+#define DEBUG
 
 
 #ifdef DEBUG
@@ -40,6 +41,9 @@ acdl_solvert::initialize_worklist (const local_SSAt &SSA, worklistt &worklist)
   assert(!SSA.nodes.front ().equalities.empty ());
   // insert the first element on to the worklist
   worklist.insert (SSA.nodes.front ().equalities.front ());
+  #ifdef DEBUG
+  std::cout << "The first statement of worklist is " << from_expr (SSA.ns, "", SSA.nodes.front().equalities.front ()) << std::endl;
+  #endif
 }
 
 /*******************************************************************\
@@ -59,20 +63,21 @@ acdl_solvert::check_statement (const exprt &expr,
                                const acdl_domaint::varst &vars)
 {
 
-std::set<symbol_exprt> symbols;
-    find_symbols (expr, symbols);
-    //check if vars appears in the symbols set,
-    // if there is a non-empty intersection, then insert the
-    // equality statement in the worklist
-    for (acdl_domaint::varst::const_iterator it = vars.begin ();
-        it != vars.end (); it++)
+  std::set<symbol_exprt> symbols;
+  // find all variables in a statement
+  find_symbols (expr, symbols);
+  // check if vars appears in the symbols set,
+  // if there is a non-empty intersection, then insert the
+  // equality statement in the worklist
+  for (acdl_domaint::varst::const_iterator it = vars.begin ();
+      it != vars.end (); it++)
+  {
+    if (symbols.find (*it) != symbols.end ())
     {
-      if (symbols.find (*it)!=symbols.end())
-      {
-        return true;
-      }
+      return true;
     }
-    return false;
+  }
+  return false;
 }
 
 
@@ -99,33 +104,48 @@ acdl_solvert::update_worklist (const local_SSAt &SSA,
   for (local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin ();
       n_it != SSA.nodes.end (); n_it++)
   {
+
     for (local_SSAt::nodet::equalitiest::const_iterator e_it =
         n_it->equalities.begin (); e_it != n_it->equalities.end (); e_it++)
     {
+      // the statement has already been processed, so no action needed
       if(*e_it == current_statement) continue;
-      if (check_statement (*e_it, vars))
+
+      if (check_statement (*e_it, vars)) {
         worklist.insert (*e_it);
+        #ifdef DEBUG
+        std::cout << "The statement that is inserted in worklist is an equality: " << from_expr (SSA.ns, "", *e_it) << std::endl;
+        #endif
+      }
     }
     for (local_SSAt::nodet::constraintst::const_iterator e_it =
         n_it->constraints.begin (); e_it != n_it->constraints.end (); e_it++)
     {
       if(*e_it == current_statement) continue;
-      if (check_statement (*e_it, vars))
+      if (check_statement (*e_it, vars)) {
         worklist.insert (*e_it);
+        #ifdef DEBUG
+        std::cout << "The statement that is inserted in worklist is a constraint: " << from_expr (SSA.ns, "", *e_it) << std::endl;
+        #endif
+      }
     }
     for (local_SSAt::nodet::assertionst::const_iterator e_it =
         n_it->assertions.begin (); e_it != n_it->assertions.end (); e_it++)
     {
       if(*e_it == current_statement) continue;
-      if (check_statement (*e_it, vars))
+      if (check_statement (*e_it, vars)) {
         worklist.insert (not_exprt (*e_it));
+        #ifdef DEBUG
+        std::cout << "The statement that is inserted in worklist is an assertion: " << from_expr (SSA.ns, "", *e_it) << std::endl;
+        #endif
+      }
     }
   }
 }
 
 
 /*******************************************************************
- Function: acdl_solvert::operator()
+ Function: acdl_solvert::select_vars()
 
  Inputs:
 
@@ -145,6 +165,9 @@ acdl_solvert::select_vars (const exprt &statement, acdl_domaint::varst &vars)
     lhs = to_equal_expr (statement).lhs ();
     if (lhs.id () == ID_symbol)
     {
+      #ifdef DEBUG
+      std::cout << "The symbol that is selected now is " << lhs << std::endl;
+      #endif
       vars.push_back (to_symbol_expr (lhs));
     }
     else
@@ -152,6 +175,9 @@ acdl_solvert::select_vars (const exprt &statement, acdl_domaint::varst &vars)
   }
   else // for constraints
   {
+    #ifdef DEBUG
+    std::cout << "The symbols are pushed from a constraint " << std::endl;
+    #endif
     std::set<symbol_exprt> symbols;
     find_symbols(statement,symbols);
     vars.insert(vars.end(),symbols.begin(), symbols.end());
@@ -225,9 +251,10 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
     worklistt::iterator it = worklist.begin ();
     const exprt statement = *it;
     worklist.erase (it);
-    std::cout << "I am building heaven" << std::endl;
-    std::cout << "The expression is " << from_expr (SSA.ns, "", statement)
+    #ifdef DEBUG
+    std::cout << "The statement just popped from worklist is " << from_expr (SSA.ns, "", statement)
         << std::endl;
+    #endif
     acdl_domaint::varst vars;
     std::vector<acdl_domaint::valuet> new_v;
     new_v.resize (1);
@@ -237,7 +264,6 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
         && to_equal_expr (statement).lhs ().type ().id () == ID_bool)
     {
       new_v[0] = statement;
-      // v will get the new value of new_v
       // collect variables for dependencies
       std::set<symbol_exprt> symbols;
       find_symbols(statement,symbols);
@@ -246,16 +272,23 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
     else
     {
       // select vars according to iteration strategy
-      // compute update of abstract value
-
       select_vars (statement, vars);
-
+      // compute update of abstract value
       domain (statement, vars, v, new_v[0]);
-      // meet is computed because we are doing gfp
-
     }
-    if(domain.contains(v, new_v[0])) {
+    // terminating condition check for populating worklist
+    if(domain.contains(new_v[0], v)) {
+      #ifdef DEBUG
+      std::cout << "The old value of is " << from_expr (SSA.ns, "", new_v[0])
+        << std::endl;
+      #endif
+      // meet is computed because we are doing gfp
+      // v will get the new value of new_v
       domain.meet (new_v, v);
+      #ifdef DEBUG
+       std::cout << "The new value is " << from_expr (SSA.ns, "", v)
+         << std::endl;
+      #endif
       update_worklist(SSA, vars, worklist, statement);
     }
   }
