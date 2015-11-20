@@ -48,11 +48,27 @@ public:
   exprt remove_var(const valuet &_old_value, 
     const varst &vars);
 
+
+  void set_bot() { __bot = true;  }
+  void set_top() { __bot = false; }
+
+  bool is_bot() const { return __bot; }
+  bool is_empty() const;
+  bool is_top() const { return !__bot; }
+  bool is_complete(const exprt &expr)
+  {
+    if(expr.id() == ID_constant)
+      return true;
+    else
+      return false;
+  }
+
 protected:
   optionst &options;
   local_SSAt &SSA;
   ssa_dbt &ssa_db;
   ssa_local_unwindert &ssa_local_unwinder;
+  bool __bot;
   
 };
 
