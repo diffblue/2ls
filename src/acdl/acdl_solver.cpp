@@ -208,13 +208,12 @@ Function: acdl_solvert::operator()
  forward abstract analysis to compute the post-condition of a statement
 \************************************************************************/
 
-property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
+property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA, acdl_domaint::valuet &v)
 {
   unsigned iteration_number=0;
   bool change;
 
   worklistt worklist;
-  acdl_domaint::valuet v = true_exprt();
   
   initialize_worklist(SSA, worklist);
 
@@ -277,21 +276,41 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
       domain (statement, vars, v, new_v[0]);
     }
     // terminating condition check for populating worklist
-    if(domain.contains(new_v[0], v)) {
+    if(domain.contains(v, new_v[0])) {
       #ifdef DEBUG
-      std::cout << "The old value of is " << from_expr (SSA.ns, "", new_v[0])
+       std::cout << "The old value is " << from_expr (SSA.ns, "", v)
+         << std::endl;
+      #endif
+      #ifdef DEBUG
+      std::cout << "The new value of is " << from_expr (SSA.ns, "", new_v[0])
         << std::endl;
       #endif
       // meet is computed because we are doing gfp
       // v will get the new value of new_v
       domain.meet (new_v, v);
-      #ifdef DEBUG
-       std::cout << "The new value is " << from_expr (SSA.ns, "", v)
-         << std::endl;
-      #endif
+
       update_worklist(SSA, vars, worklist, statement);
     }
   }
 
   return property_checkert::UNKNOWN;
+}
+
+/*******************************************************************
+ Function: acdl_solvert::operator()
+
+ Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
+{
+  acdl_domaint::valuet v = true_exprt();
+  // acdl loop
+
+  return propagate(SSA, v);
 }

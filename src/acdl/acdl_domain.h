@@ -42,8 +42,8 @@ public:
   void join(const std::vector<valuet> &old_values,
 	    valuet &new_value);
     
-  bool contains(const valuet &new_value,
-		const valuet &old_value);
+  bool contains(const valuet &value1,
+		const valuet &value2);
 
   exprt remove_var(const valuet &_old_value, 
     const varst &vars);

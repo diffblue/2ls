@@ -43,6 +43,7 @@ protected:
   virtual void select_vars(const exprt &statement, acdl_domaint::varst &vars);
   void update_worklist(const local_SSAt &SSA, const acdl_domaint::varst &vars, worklistt &worklist, const acdl_domaint::statementt &statement);
   bool check_statement (const exprt &expr, const acdl_domaint::varst &vars);
+  property_checkert::resultt propagate(const local_SSAt &SSA, acdl_domaint::valuet &v);
 
 };
 

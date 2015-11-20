@@ -103,11 +103,11 @@ Function: acdl_domaint::contains()
 
 \*******************************************************************/
 
-bool acdl_domaint::contains(const valuet &new_value,
-		const valuet &old_value)
+bool acdl_domaint::contains(const valuet &value1,
+		const valuet &value2)
 {
   incremental_solvert *solver = incremental_solvert::allocate(SSA.ns,true);
-  *solver << and_exprt(new_value,not_exprt(old_value));
+  *solver << and_exprt(value1,not_exprt(value2));
   bool result = (*solver)()==decision_proceduret::D_UNSATISFIABLE;
   delete solver;
   return result;
