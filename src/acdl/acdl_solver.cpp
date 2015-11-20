@@ -185,7 +185,7 @@ acdl_solvert::select_vars (const exprt &statement, acdl_domaint::varst &vars)
 }
 /*******************************************************************\
 
-Function: acdl_solvert::operator()
+Function: acdl_solvert::propagate
 
   Inputs:
 
@@ -210,9 +210,11 @@ Function: acdl_solvert::operator()
 
 property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA, acdl_domaint::valuet &v)
 {
+#if 0
   unsigned iteration_number=0;
   bool change;
-
+#endif
+  
   worklistt worklist;
   
   initialize_worklist(SSA, worklist);
@@ -306,18 +308,18 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA, acdl_d
  Purpose:1 while true do
 2 S =
  ;
-3 while true do /* PHASE 1: Model Search */
-4 repeat /* deduction */
-5 S ← S  ded(S);
+3 while true do  PHASE 1: Model Search 
+4 repeat  deduction 
+5 S <- S  ded(S);
 6 until S=S  ded(S);
-7 if S=⊥ then break ; /* conflict */
-8 if complete(ded ,S) then return (not ⊥,S); /* return SAT model */
-9 S ← decision(S); /* make decision */
+7 if S=bot then break ;  conflict 
+8 if complete(ded ,S) then return (not <-,S);  return SAT model 
+9 S <- decision(S);  make decision 
 10 end
-11 L ← analyse conflict(S) ; /* PHASE 2: Conflict Analysis */
+11 L <- analyse conflict(S) ;  PHASE 2: Conflict Analysis 
 12 if L=
- then return (⊥,L); /* return UNSAT */
-13 ded ← ded  ded L; /* learn: refine transformer */
+ then return (bot,L);  return UNSAT 
+13 ded <- ded  ded L;  learn: refine transformer 
 14 end
 
 \*******************************************************************/
