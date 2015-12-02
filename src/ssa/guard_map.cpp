@@ -66,28 +66,28 @@ void guard_mapt::build(const goto_programt &src)
   
     if(it->is_goto())
     {
-      map[it->get_target()].add_in(it, TAKEN);
+      map[it->get_target()->location_number].add_in(it, TAKEN);
       
       if(!it->guard.is_true())
-        map[next].add_in(it, NOT_TAKEN);
+        map[next->location_number].add_in(it, NOT_TAKEN);
       else
-        map[next].has_guard=true;
+        map[next->location_number].has_guard=true;
     }
     else if(it->is_assume())
     {
       // these are much like gotos to a sink location
-      map[next].add_in(it, ASSUME);
+      map[next->location_number].add_in(it, ASSUME);
     }
     else if(it->is_function_call())
     {
       // functions might not return
-      map[next].add_in(it, FUNCTION_CALL);
+      map[next->location_number].add_in(it, FUNCTION_CALL);
     }
   }
 
   // Also make the function entry location have a guard
   if(!src.instructions.empty())
-    map[src.instructions.begin()].has_guard=true;
+    map[src.instructions.begin()->location_number].has_guard=true;
   
   // now assign the guard sources accordingly
 
@@ -95,7 +95,7 @@ void guard_mapt::build(const goto_programt &src)
 
   forall_goto_program_instructions(it, src)
   {
-    entryt &entry=map[it];
+    entryt &entry=map[it->location_number];
     
     if(entry.has_guard)
     {
@@ -116,7 +116,7 @@ void guard_mapt::build(const goto_programt &src)
     // skip first, which has no predecessor
     if(it!=src.instructions.begin())
     {
-      entryt &entry=map[it];
+      entryt &entry=map[it->location_number];
     
       // no need if previous is a goto
       if(entry.has_guard &&

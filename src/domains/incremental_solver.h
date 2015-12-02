@@ -19,7 +19,7 @@ Author: Peter Schrammel
 #include "domain.h"
 #include "util.h"
 
-
+//#define DISPLAY_FORMULA
 //#define NO_ARITH_REFINEMENT
 //#define NON_INCREMENTAL // (experimental)
 
@@ -35,7 +35,7 @@ class incremental_solvert : public messaget
   typedef std::list<constraintst> contextst;
 
   explicit incremental_solvert(
-    const namespacet &_ns, bool _arith_refinement) :
+    const namespacet &_ns, bool _arith_refinement=false) :
     sat_check(NULL),
     solver(NULL), 
     ns(_ns),
@@ -106,10 +106,12 @@ class incremental_solvert : public messaget
   unsigned next_domain_number() { return domain_number++; }
 
   static incremental_solvert *allocate(const namespacet &_ns,
-				       bool array_refinement) 
+				       bool arith_refinement=false) 
   { 
-    return new incremental_solvert(_ns,array_refinement);
+    return new incremental_solvert(_ns,arith_refinement);
   }
+
+  inline prop_convt & get_solver() { return *solver; }
 
   propt* sat_check;
   prop_convt* solver;
@@ -167,8 +169,7 @@ static inline incremental_solvert & operator << (
 #ifdef DISPLAY_FORMULA
   if(!dest.activation_literals.empty())
     std::cerr << "add_to_solver(" << !dest.activation_literals.back() << "): " 
-	      << from_expr(dest.ns,"",src) << std::endl;
-  else
+	      << from_expr(dest.ns,"",src) << std::endl;  else
       std::cerr << "add_to_solver: " << from_expr(dest.ns,"",src) << std::endl;
 #endif
 

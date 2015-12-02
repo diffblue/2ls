@@ -3,6 +3,8 @@
 #include <util/arith_tools.h>
 #include <goto-instrument/unwind.h>
 
+#include <analyses/constant_propagator.h>
+
 #include "summarizer_parse_options.h"
 
 /*******************************************************************\
@@ -57,93 +59,53 @@ Function: summarizer_parse_optionst::propagate_constants
 
  Outputs:
 
- Purpose: makeshift constant propagation to get array sizes right; 
-          requires improvement, for example, there is no propagation 
-                beyond the first branch target
-          array sizes are updated everywhere
-          casts in constants have to be evaluated, because array 
-          sizes must be cast-free
+ Purpose: 
 
 \*******************************************************************/
-
-void summarizer_parse_optionst::replace_types_rec(const replace_symbolt &replace_const, 
-						 exprt &expr)
-{
-  replace_const(expr.type());
-  for(exprt::operandst::iterator it = expr.operands().begin(); 
-      it!=expr.operands().end();it++)
-    replace_types_rec(replace_const,*it);
-}
-
-exprt summarizer_parse_optionst::evaluate_casts_in_constants(const exprt &expr, 
-		    const typet& parent_type, bool &valid)
-{
-  if(expr.id()==ID_side_effect) valid = false;
-  if(expr.type().id()!=ID_signedbv && expr.type().id()!=ID_unsignedbv) return expr;
-  exprt r = expr;
-  if(expr.id()==ID_typecast) r = evaluate_casts_in_constants(expr.op0(),expr.type(),valid);
-  if(r.id()!=ID_constant) return typecast_exprt(r,parent_type);
-  mp_integer v;
-  to_integer(to_constant_expr(r), v);
-  return from_integer(v,parent_type);
-}
 
 void summarizer_parse_optionst::propagate_constants(goto_modelt &goto_model)
 {
   namespacet ns(goto_model.symbol_table);
   Forall_goto_functions(f_it, goto_model.goto_functions)
   {
-    replace_symbolt replace_const;
-    replace_symbolt replace_type;
-    bool collect = true;
+    constant_propagator_ait(f_it->second,ns);
+  }
+}
+
+/*******************************************************************\
+
+Function: summarizer_parse_optionst::nondet_locals
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: explicitly assign a nondet_symbol to local variables
+          this is required by the unwinder, which would be unable
+          to recognise in which scope variables have been declared
+
+\*******************************************************************/
+
+void summarizer_parse_optionst::nondet_locals(goto_modelt &goto_model)
+{
+  namespacet ns(goto_model.symbol_table);
+  Forall_goto_functions(f_it, goto_model.goto_functions)
+  {
     Forall_goto_program_instructions(i_it, f_it->second.body)
     {
-      replace_types_rec(replace_const,i_it->guard);
-      if(i_it->is_target()) collect = false; //replace constants up to first branch target
-      if(i_it->is_assign())
-      {
-        replace_types_rec(replace_const,to_code_assign(i_it->code).rhs());
-	if(collect) replace_const(to_code_assign(i_it->code).rhs());
-	if(collect && to_code_assign(i_it->code).lhs().id()==ID_symbol)
-	{
-	  replace_symbolt::expr_mapt::iterator r_it = 
-             replace_const.expr_map.find(
-             to_symbol_expr(to_code_assign(i_it->code).lhs()).get_identifier());
-	  if(r_it != replace_const.expr_map.end()) 
-	    replace_const.expr_map.erase(r_it);
-					 
-	  std::set<symbol_exprt> symbols;
-          find_symbols(to_code_assign(i_it->code).rhs(),symbols);
-	  if(symbols.empty())
-	  {
-	    exprt constant = to_code_assign(i_it->code).rhs();
-	    bool valid = true;
-	    constant = evaluate_casts_in_constants(constant,constant.type(),
-						   valid);
-	    if(valid) 
-  	      replace_const.insert(
-                to_symbol_expr(to_code_assign(i_it->code).lhs()),
-				 constant);
-	  }
-	}
-	if(to_code_assign(i_it->code).lhs().id()==ID_index)
-	{
-	  replace_types_rec(replace_const,to_code_assign(i_it->code).lhs());
-	}
-      }
-      if(i_it->is_dead()) replace_types_rec(replace_const,to_code_dead(i_it->code).symbol());
       if(i_it->is_decl())
       {
-        if(collect && to_code_decl(i_it->code).symbol().type().id()==ID_array)
-        {
-	  replace_const(to_code_decl(i_it->code).symbol().type());
-          replace_type.insert(to_symbol_expr(to_code_decl(i_it->code).symbol()).get_identifier(),
-				to_code_decl(i_it->code).symbol().type());
-        }
+	const code_declt& decl = to_code_decl(i_it->code);
+        side_effect_expr_nondett nondet(decl.symbol().type());
+	goto_programt::targett t = f_it->second.body.insert_after(i_it);
+	t->make_assignment();
+	code_assignt c(decl.symbol(),nondet);
+	t->code.swap(c);
+	t->source_location = i_it->source_location;
       }
-//      std::cout << "code: " << i_it->code << std::endl;
     }
   }
+  goto_model.goto_functions.update();
 }
 
 /*******************************************************************\
@@ -211,6 +173,8 @@ void summarizer_parse_optionst::goto_unwind(goto_modelt &goto_model, unsigned k)
       t->targets.push_back(iteration_points.front());
     }
   }
+  goto_model.goto_functions.update();
+  goto_model.goto_functions.compute_loop_numbers();
 }
 
 /*******************************************************************\

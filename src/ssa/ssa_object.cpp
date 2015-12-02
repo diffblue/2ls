@@ -6,6 +6,13 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+//#define DEBUG
+
+#ifdef DEBUG
+#include <iostream>
+#include <langapi/language_util.h>
+#endif
+
 #include <util/expr_util.h>
 
 #include <analyses/dirty.h>
@@ -54,6 +61,10 @@ void collect_objects_address_of_rec(
   std::set<ssa_objectt> &objects,
   std::set<exprt> &literals)
 {
+#ifdef DEBUG
+  std::cout << "COLLECT ADDRESS OF " << from_expr(ns,"",src) << "\n";
+#endif
+  
   if(src.id()==ID_index)
   {
     collect_objects_address_of_rec(
@@ -76,6 +87,11 @@ void collect_objects_address_of_rec(
   {
     literals.insert(src);
   }
+  else if(src.id()==ID_symbol)
+  {
+    collect_objects_rec(
+      src, ns, objects, literals);
+  }
 }
 
 /*******************************************************************\
@@ -96,6 +112,11 @@ void collect_objects_rec(
   std::set<ssa_objectt> &objects,
   std::set<exprt> &literals)
 {
+
+ #ifdef DEBUG
+  std::cout << "COLLECT " << from_expr(ns,"",src) << "\n";
+ #endif
+
   if(src.id()==ID_code)
   {
     forall_operands(it, src)
@@ -116,7 +137,7 @@ void collect_objects_rec(
     return;
 
   ssa_objectt ssa_object(src, ns);
-  
+
   if(ssa_object)
   {
     if(type.id()==ID_struct)
@@ -136,7 +157,14 @@ void collect_objects_rec(
       }
     }
     else
+    {
+
+ #ifdef DEBUG
+      std::cout << "OBJECT " << ssa_object.get_identifier() << "\n";
+ #endif
+
       objects.insert(ssa_object);
+    }
   }
   else
   {
@@ -247,6 +275,11 @@ void ssa_objectst::categorize_objects(
       o_it++)
   {
     exprt root_object=o_it->get_root_object();
+
+#ifdef DEBUG
+    std::cout << "CATEGORIZE " << from_expr(ns,"",root_object) << "\n";
+#endif
+
     if(root_object.id()==ID_symbol)
     {
       if(is_ptr_object(root_object))

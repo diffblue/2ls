@@ -42,6 +42,11 @@ public:
     ssa_analysis(assignments),
     suffix(_suffix) 
   {
+    //ENHANCE: in future locst will be used (currently in path-symex/locs.h)
+    location_map.reserve(_goto_function.body.instructions.size());
+    forall_goto_program_instructions(it,_goto_function.body)
+      location_map.push_back(it);
+
     build_SSA();
   }
   
@@ -63,10 +68,6 @@ public:
       { 
       }
 
-    exprt enabling_expr; //for incremental unwinding
-
-    bool marked; //for incremental solving
-
     typedef std::vector<equal_exprt> equalitiest;
     equalitiest equalities;
 
@@ -75,10 +76,12 @@ public:
 
     typedef std::vector<exprt> assertionst;
     assertionst assertions;
-    exprt::operandst assertions_after_loop; //for k-induction assertion hoisting
     
     typedef std::vector<function_application_exprt> function_callst;
     function_callst function_calls;
+
+    exprt enabling_expr; //for incremental unwinding
+    bool marked; //for incremental unwinding
 
     //custom invariant templates
     typedef std::vector<exprt> templatest;
@@ -86,6 +89,7 @@ public:
 
     locationt location; //link to goto instruction
     std::list<nodet>::iterator loophead; //link to loop head node
+       // otherwise points to nodes.end() 
 
     void output(std::ostream &, const namespacet &) const;
 
@@ -105,8 +109,8 @@ public:
 
   void mark_nodes()
   {
-      for(nodest::iterator n_it=nodes.begin();
-	        n_it!=nodes.end(); n_it++) n_it->marked = true;
+    for(nodest::iterator n_it=nodes.begin();
+	n_it!=nodes.end(); n_it++) n_it->marked = true;
   }
   void unmark_nodes()
   {
@@ -124,6 +128,8 @@ public:
   var_listt params;  
   var_sett globals_in, globals_out;  
 
+  bool has_function_calls() const;
+
   const namespacet &ns;
   const goto_functiont &goto_function;
   
@@ -136,13 +142,14 @@ public:
   { return name(guard_symbol(), OUT, guard_map[loc].guard_source); }
   exprt edge_guard(locationt from, locationt to) const;
   
-  //  nodet::assertionst assertions(locationt loc) const;
-  
   // auxiliary functions
   enum kindt { PHI, OUT, LOOP_BACK, LOOP_SELECT };
-  symbol_exprt name(const ssa_objectt &, kindt kind, locationt loc) const;
+  virtual symbol_exprt name(const ssa_objectt &, kindt kind, locationt loc) const;
   symbol_exprt name(const ssa_objectt &, const ssa_domaint::deft &) const;
   symbol_exprt name_input(const ssa_objectt &) const;
+  virtual exprt nondet_symbol(std::string prefix, const typet &type, 
+			      locationt loc, unsigned counter) const;
+  locationt get_def_loc(const symbol_exprt &, locationt loc) const;
   void replace_side_effects_rec(exprt &, locationt, unsigned &) const;
   exprt read_lhs(const exprt &, locationt loc) const;
   exprt read_rhs(const exprt &, locationt loc) const;
@@ -178,9 +185,13 @@ public:
   nodest::iterator find_node(locationt loc);
   nodest::const_iterator find_node(locationt loc) const;
   void find_nodes(locationt loc, std::list<nodest::const_iterator> &_nodes) const;
+
   locationt find_location_by_number(unsigned location_number) const;
   
 protected:
+  typedef std::vector<locationt> location_mapt;
+  location_mapt location_map;
+
   // build the SSA formulas
   void build_SSA();
 
@@ -191,7 +202,6 @@ protected:
   void build_guard(locationt loc);
   void build_function_call(locationt loc);
   void build_assertions(locationt loc);
-  void assertions_after_loop();
 
   // custom templates
   void collect_custom_templates();

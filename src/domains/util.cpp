@@ -2,6 +2,7 @@
 
 #include "util.h"
 
+
 /*******************************************************************\
 
 Function: extend_expr_types
@@ -203,7 +204,7 @@ mp_integer simplify_const_int(const exprt &expr)
   if(expr.id()==ID_symbol) 
   {
 #if 0
-    std::cerr << "substituting default value for " << expr << std::endl;
+    std::cout << "substituting default value for " << expr << std::endl;
 #endif
     return 0; //default value if not substituted in expr
   }
@@ -283,11 +284,9 @@ ieee_floatt simplify_const_float(const exprt &expr)
   {
     ieee_floatt v;
     v.make_zero();
-
 #if 0
-    std::cerr << "substituting default value for " << expr << std::endl;
+    std::cout << "substituting default value for " << expr << std::endl;
 #endif
-
     return v; 
   }
   if(expr.id()==ID_index) 
@@ -308,7 +307,9 @@ ieee_floatt simplify_const_float(const exprt &expr)
 
 constant_exprt simplify_const(const exprt &expr)
 {
+//  std::cerr << "const: " << expr << std::endl;
   if(expr.id()==ID_constant) return to_constant_expr(expr);
+  //TODO: handle "address_of" constants
   if(expr.id()==ID_index) 
   {
     const index_exprt &index_expr = to_index_expr(expr);
@@ -357,6 +358,86 @@ constant_exprt simplify_const(const exprt &expr)
   assert(false); //type not supported
 }
 
+void remove_typecast(exprt& expr)
+{
+  for(exprt::operandst::iterator it = expr.operands().begin();
+            it != expr.operands().end(); ++it)
+    remove_typecast(*it);
+
+  if (expr.id() == ID_typecast)
+    expr = expr.op0();
+}
+
+/*******************************************************************\
+
+Function: pretty_print_termination_argument()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: print ranking argument expressions in a more readable format
+
+\******************************************************************/
+
+void pretty_print_termination_argument(std::ostream &out, const namespacet &ns, const exprt &_expr)
+{
+  exprt expr = _expr;
+  remove_typecast(expr);
+
+  if(expr.id()==ID_and)
+  {
+    // should be of the form /\_i g_i => R_i
+    for(exprt::operandst::const_iterator it = expr.operands().begin(); 
+      it != expr.operands().end(); it++)
+    {
+      out << "\n";
+      if(it == expr.operands().begin()) out << "   "; 
+      else out << "&& ";
+      if(it->id()==ID_implies)
+      {
+        out << from_expr(ns,"",it->op0()) << " ==> ";
+        if(it->op1().id()==ID_gt)
+          out << from_expr(ns,"",it->op1().op0());
+        else if(it->op1().id()==ID_or) // needed for lexicographic ones
+        {
+          for(exprt::operandst::const_iterator it_lex = it->op1().operands().begin();
+              it_lex != it->op1().operands().end(); ++it_lex)
+          {
+            if(it_lex->id() == ID_and)
+	    {
+              if(it_lex == it->op1().operands().begin()) out << "(";
+              else out << "\n   " << "       " << ",";
+              out << from_expr(ns,"",it_lex->op0());
+	    }
+	    else 
+	    {
+              out << "\n   " << "       " << ","
+                  << from_expr(ns,"",*it_lex);
+	    }
+          }
+          out << ")";
+        }
+        else out << from_expr(ns,"",it->op1());
+      }
+      else out << from_expr(ns,"",*it);
+    }
+    return;
+  }
+  else
+  {
+    if(expr.id()==ID_implies)
+    {
+      if(expr.op1().id()==ID_gt)
+      {
+	out << from_expr(ns,"",expr.op0()) << " ==> " << from_expr(ns,"",expr.op1().op0());
+	return;
+      }
+    }
+  }
+  out << from_expr(ns,"",expr);
+}
+
 /*******************************************************************\
 
 Function: merge_and
@@ -376,4 +457,3 @@ void merge_and(exprt & result, const exprt &expr1, const exprt &expr2,
   if(expr1!=expr2) result = and_exprt(expr1,expr2);
   simplify(result,ns);
 }
-

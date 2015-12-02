@@ -11,7 +11,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/ui_message.h>
 #include <util/parse_options.h>
-
 #include <util/replace_symbol.h>
 
 #include <langapi/language_ui.h>
@@ -29,7 +28,7 @@ class optionst;
   "(bounds-check)(pointer-check)(div-by-zero-check)(memory-leak-check)" \
   "(signed-overflow-check)(unsigned-overflow-check)" \
   "(float-overflow-check)(nan-check)" \
-  "(array-abstraction)(refine)" \
+  "(array-abstraction)" \
   "(non-incremental)" \
   "(no-assertions)(no-assumptions)" \
   "(16)(32)(64)(LP64)(ILP64)(LLP64)(ILP32)(LP32)" \
@@ -38,25 +37,26 @@ class optionst;
   "(version)" \
   "(i386-linux)(i386-macos)(i386-win32)(win32)(winx64)(gcc)" \
   "(ppc-macos)(unsigned-char)" \
-  "(havoc)(intervals)(zones)(octagons)(equalities)(qzones)"\
+  "(havoc)(intervals)(zones)(octagons)(equalities)"\
   "(enum-solver)(binsearch-solver)(arrays)"\
   "(string-abstraction)(no-arch)(arch):(floatbv)(fixedbv)" \
   "(round-to-nearest)(round-to-plus-inf)(round-to-minus-inf)(round-to-zero)" \
   "(inline)(inline-main)(inline-partial):" \
-  "(context-sensitive)" \
+  "(context-sensitive)(termination)" \
+  "(lexicographic-ranking-function):(monolithic-ranking-function)" \
+  "(max-inner-ranking-iterations):" \
   "(preconditions)(sufficient)" \
-  "(instrument-output):" \
   "(show-locs)(show-vcc)(show-properties)(show-trace)(show-fixed-points)(show-stats)" \
   "(show-goto-functions)(show-guards)(show-defs)(show-ssa)(show-assignments)" \
-  "(show-value-sets)" \
-  "(show-invariants)" \
-  "(show-calling-contexts):" \
+  "(show-invariants)(std-invariants)" \
   "(property):(all-properties)(k-induction)(incremental-bmc)" \
+  "(no-spurious-check)" \
   "(no-simplify)(no-fixed-point)" \
+  "(graphml-cex):" \
   "(no-spurious-check)(no-all-properties)" \
-  "(competition-mode)(slice)" \
   "(acdl)" \
-  "(no-unwinding-assertions)(no-propagation)"
+  "(competition-mode)(slice)(no-propagation)" \
+  "(no-unwinding-assertions)"
   // the last line is for CBMC-regression testing only
 
 class summarizer_parse_optionst:
@@ -90,10 +90,16 @@ protected:
   void report_failure();
 
   void report_properties(
+    const optionst &options,
     const goto_modelt &,
     const summary_checker_baset::property_mapt &);  
 
   void show_counterexample(
+    const goto_modelt &,
+    const class goto_tracet &);
+
+  void output_graphml_cex(
+    const optionst &options,
     const goto_modelt &,
     const class goto_tracet &);
           
@@ -130,6 +136,7 @@ protected:
   // diverse preprocessing
   void inline_main(goto_modelt &goto_model);
   void propagate_constants(goto_modelt &goto_model);
+  void nondet_locals(goto_modelt &goto_model);
   void goto_unwind(goto_modelt &goto_model, unsigned k);
   void replace_types_rec(const replace_symbolt &replace_const, exprt &expr);
   exprt evaluate_casts_in_constants(const exprt &expr, const typet& parent_type,

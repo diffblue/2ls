@@ -1,0 +1,6 @@
+CORE
+main.c
+--context-sensitive --preconditions
+^EXIT=5$
+^SIGNAL=0$
+\[main\]: !FALSE

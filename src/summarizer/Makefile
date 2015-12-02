@@ -2,6 +2,7 @@ include ../config.inc
 
 SRC = summarizer_base.cpp  \
       summarizer_fw.cpp summarizer_bw.cpp \
+      summarizer_fw_term.cpp summarizer_bw_term.cpp \
       summarizer_fw_contexts.cpp \
       summarizer_main.cpp summarizer_parse_options.cpp \
       show.cpp summary_checker_base.cpp \
@@ -26,10 +27,9 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       $(CBMC)/src/solvers/solvers$(LIBEXT) \
       $(CBMC)/src/util/util$(LIBEXT) \
 
-
 DELTA_OBJ+=\
       $(CBMC)/src/goto-instrument/unwind$(OBJEXT) \
-      ../ssa/ssa_slicer$(OBJEXT) \
+      ../ssa/local_ssa$(OBJEXT) \
       ../ssa/malloc_ssa$(OBJEXT) \
       ../ssa/ssa_domain$(OBJEXT) \
       ../ssa/assignments$(OBJEXT) \
@@ -42,6 +42,7 @@ DELTA_OBJ+=\
       ../ssa/split_loopheads$(OBJEXT)\
       ../ssa/ssa_inliner$(OBJEXT)\
       ../ssa/ssa_unwinder$(OBJEXT)\
+      ../ssa/unwindable_local_ssa$(OBJEXT)\
       ../ssa/ssa_value_set$(OBJEXT) \
       ../acdl/acdl_solver$(OBJEXT) \
       ../acdl/acdl_domain$(OBJEXT) \
@@ -70,9 +71,14 @@ DELTA_OBJ+=\
       ../domains/template_generator_summary$(OBJEXT) \
       ../domains/template_generator_callingcontext$(OBJEXT) \
       ../domains/ssa_analyzer$(OBJEXT) \
-      ../domains/predicate$(OBJEXT)
+      ../domains/predicate$(OBJEXT) \
+      ../domains/template_generator_ranking$(OBJEXT) \
+      ../domains/ranking_solver_enumeration$(OBJEXT) \
+      ../domains/linrank_domain$(OBJEXT) \
+      ../domains/lexlinrank_solver_enumeration$(OBJEXT) \
+      ../domains/lexlinrank_domain$(OBJEXT)
 #      ../domains/solver_enumeration$(OBJEXT) 
-
+#      ../domains/strategy_solver_binsearch2$(OBJEXT) 
 
 OBJ+=$(DELTA_OBJ)
 
@@ -95,7 +101,7 @@ LIBS =
 
 CLEANFILES = summarizer$(EXEEXT) $(DELTA_OBJ)
 
-all: summarizer$(EXEEXT)
+all: 2ls$(EXEEXT)
 
 ifneq ($(wildcard $(CBMC)/src/cpp/Makefile),)
   OBJ += $(CBMC)/src/cpp/cpp$(LIBEXT)
@@ -109,6 +115,6 @@ endif
 
 ###############################################################################
 
-summarizer$(EXEEXT): $(OBJ)
+2ls$(EXEEXT): $(OBJ)
 	$(LINKBIN)
 

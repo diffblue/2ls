@@ -23,6 +23,7 @@ public:
 
 protected:
   void report_preconditions();
+  property_checkert::resultt report_termination();
 
 };
 

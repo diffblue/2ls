@@ -36,20 +36,40 @@ public:
 
   class valuet {
    public:
-    virtual ~valuet() {}
+    typedef enum{TOP,BOTTOM,OTHER} basic_valuet;
+    valuet() : basic_value(OTHER) {}
+    virtual ~valuet()  {}
+
+    basic_valuet basic_value; 
   };
 
-  virtual void initialize(valuet &value) { assert(false); }
+  virtual void initialize(valuet &value) { value.basic_value = valuet::BOTTOM; }
 
-  virtual void join(valuet &value1, const valuet &value2) { assert(false); }
+  //returns true as long as further refinements are possible
+  virtual void reset_refinements() { }
+  virtual bool refine() { return false; }
+
+  virtual void join(valuet &value1, const valuet &value2) 
+  { 
+    if(value1.basic_value==value2.basic_value ||
+       value1.basic_value==valuet::TOP ||
+       (value1.basic_value==valuet::OTHER && 
+        value2.basic_value==valuet::BOTTOM)) return;
+    value1.basic_value = value2.basic_value;
+  }
 
   virtual void output_value(std::ostream &out, const valuet &value, 
     const namespacet &ns) const { assert(false); }
   virtual void output_domain(std::ostream &out, 
     const namespacet &ns) const { assert(false); }
 
-  virtual void project_on_vars(valuet &value, const var_sett &vars, exprt &result) 
-    { assert(false); } //(not useful to make value const (e.g. union-find))
+  virtual void project_on_vars(valuet &value, const var_sett &vars, 
+			       exprt &result) 
+    //(not useful to make value const (e.g. union-find))
+  { 
+    if(value.basic_value==valuet::BOTTOM) result = false_exprt();
+    else result = true_exprt();
+  } 
 
   static kindt merge_kinds(kindt k1, kindt k2);
 

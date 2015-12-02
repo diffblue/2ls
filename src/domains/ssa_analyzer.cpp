@@ -18,8 +18,14 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "strategy_solver_binsearch2.h"
 #include "strategy_solver_binsearch3.h"
 #include "strategy_solver_equality.h"
+#include "linrank_domain.h"
+#include "lexlinrank_domain.h"
+#include "ranking_solver_enumeration.h"
+#include "lexlinrank_solver_enumeration.h"
+#include "template_generator_ranking.h"
 #include "strategy_solver_predabs.h"
 #include "ssa_analyzer.h"
+
 
 #include <solvers/sat/satcheck.h>
 #include <solvers/flattening/bv_pointers.h>
@@ -70,7 +76,29 @@ void ssa_analyzert::operator()(incremental_solvert &solver,
 
   // get strategy solver from options
   strategy_solver_baset *strategy_solver;
-  if(template_generator.options.get_bool_option("equalities"))
+  if(template_generator.options.get_bool_option("compute-ranking-functions"))
+  {
+    if(template_generator.options.get_bool_option(
+      "monolithic-ranking-function"))
+    {
+      strategy_solver = new ranking_solver_enumerationt(
+        *static_cast<linrank_domaint *>(domain), solver, SSA.ns,
+	template_generator.options.get_unsigned_int_option(
+          "max-inner-ranking-iterations"));    
+      result = new linrank_domaint::templ_valuet();
+    }
+    else
+    {
+      strategy_solver = new lexlinrank_solver_enumerationt(
+        *static_cast<lexlinrank_domaint *>(domain), solver, SSA.ns,
+        template_generator.options.get_unsigned_int_option(
+	  "lexicographic-ranking-function"),
+	template_generator.options.get_unsigned_int_option(
+          "max-inner-ranking-iterations"));
+      result = new lexlinrank_domaint::templ_valuet();
+    }
+  }  
+  else if(template_generator.options.get_bool_option("equalities"))
   {
     strategy_solver = new strategy_solver_equalityt(
         *static_cast<equality_domaint *>(domain), solver, SSA.ns);    
@@ -140,6 +168,7 @@ void ssa_analyzert::operator()(incremental_solvert &solver,
   solver.pop_context();
 
   //statistics
+  solver_instances += strategy_solver->get_number_of_solver_instances();
   solver_calls += strategy_solver->get_number_of_solver_calls();
   solver_instances += strategy_solver->get_number_of_solver_instances();
 

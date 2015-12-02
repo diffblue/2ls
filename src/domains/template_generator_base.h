@@ -24,12 +24,14 @@ class template_generator_baset : public messaget
 public:
   typedef strategy_solver_baset::var_listt var_listt;
 
-  explicit template_generator_baset(optionst &_options, ssa_dbt &_ssa_db,
+  explicit template_generator_baset(optionst &_options, 
+				    ssa_dbt &_ssa_db,
                                     ssa_local_unwindert &_ssa_local_unwinder)
     : 
   options(_options), ssa_db(_ssa_db),
   ssa_local_unwinder(_ssa_local_unwinder)
   {
+    std_invariants = options.get_bool_option("std-invariants");
   }  
 
   virtual ~template_generator_baset() 
@@ -60,6 +62,7 @@ protected:
   const ssa_dbt &ssa_db;
   const ssa_local_unwindert &ssa_local_unwinder;
   domaint* domain_ptr;
+  bool std_invariants; //include value at loop entry
 
   virtual void collect_variables_loop(const local_SSAt &SSA,
                          bool forward);

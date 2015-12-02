@@ -1,9 +1,0 @@
-KNOWNBUG
-main.c
---equalities
-^EXIT=0$
-^SIGNAL=0$
-^VERIFICATION SUCCESSFUL$
---
-^warning: ignoring
-

@@ -9,6 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/threeval.h>
 #include <solvers/prop/literal_expr.h>
 
+#include "../ssa/ssa_build_goto_trace.h"
 #include "cover_goals_ext.h"
 
 /*******************************************************************\
@@ -195,6 +196,13 @@ void cover_goals_extt::assignment()
 	 solver.l_get(g_it->condition).is_true())
       {
 	property_map[it->first].result = property_checkert::FAIL;
+	if(build_error_trace)
+	{
+	  ssa_build_goto_tracet build_goto_trace(SSA,solver.get_solver());
+	  build_goto_trace(property_map[it->first].error_trace);
+	  if(!all_properties) 
+	    break;
+	}
       }
     }
     return;
@@ -217,9 +225,17 @@ void cover_goals_extt::assignment()
 	 solver.l_get(g_it->condition).is_true())
       {
 	property_map[it->first].result = property_checkert::FAIL;
+	if(build_error_trace)
+	{
+	  ssa_build_goto_tracet build_goto_trace(SSA,solver.get_solver());
+	  build_goto_trace(property_map[it->first].error_trace);
+
 #if 0
-        show_error_trace(it->first,SSA,solver,debug(),get_message_handler());
+          show_raw_countermodel(it->first,SSA,solver,debug(),get_message_handler());
 #endif
+	  if(!all_properties) 
+	    break;
+	}
       }
     }
     break;

@@ -6,6 +6,8 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+#define SHOW_TEMPLATE
+
 #include "template_generator_summary.h"
 #include "equality_domain.h"
 #include "tpolyhedra_domain.h"

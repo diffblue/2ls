@@ -11,6 +11,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/i2string.h>
 #include <util/string2int.h>
 #include <solvers/prop/prop_conv.h>
+#include <util/find_symbols.h>
+#include <util/i2string.h>
+#include <util/string2int.h>
 
 #include <goto-programs/read_goto_binary.h>
 #include <goto-programs/goto_model.h>
@@ -389,7 +392,7 @@ void print_symbol_values(const local_SSAt &SSA,
   }
 }
 
-void show_error_trace(const irep_idt &property_id, 
+void show_raw_countermodel(const irep_idt &property_id, 
 		const local_SSAt &SSA, 
 		prop_convt &solver,
 		std::ostream &out,

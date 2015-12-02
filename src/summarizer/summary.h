@@ -14,6 +14,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/std_expr.h>
 
+typedef enum{YES, NO, UNKNOWN} threevalt;
+
 class summaryt
 {
  public:
@@ -30,6 +32,8 @@ class summaryt
     bw_postcondition(nil_exprt()), 
     bw_transformer(nil_exprt()), 
     bw_invariant(nil_exprt()),
+    termination_argument(nil_exprt()), 
+    terminates(UNKNOWN),
     mark_recompute(false) {}
 
   var_listt params;
@@ -45,6 +49,9 @@ class summaryt
   predicatet bw_transformer; // backward summary (over- or under-approx)
   predicatet bw_invariant; // backward invariant (over- or under-approx)
 
+  predicatet termination_argument;
+  threevalt terminates;
+
   bool mark_recompute; //to force recomputation of the summary
                        // (used for invariant reuse in k-induction)
 
@@ -59,6 +66,7 @@ class summaryt
 
 };
 
+std::string threeval2string(threevalt v);
 
 
 #endif

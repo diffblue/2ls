@@ -11,6 +11,8 @@ Author: Peter Schrammel
 
 #include <langapi/language_util.h>
 
+//#define PRETTY_PRINT
+
 /*******************************************************************\
 
 Function: summaryt::output()
@@ -61,6 +63,16 @@ void summaryt::output(std::ostream &out, const namespacet &ns) const
   out << "backward invariant: " 
       << (bw_invariant.is_nil() ? "not computed" :  
 	  from_expr(ns,"",bw_invariant)) << std::endl;
+  out << "termination argument: ";
+  if(termination_argument.is_nil()) out << "not computed";
+  else
+#if PRETTY_PRINT
+    pretty_print_termination_argument(out,ns,termination_argument);
+#else
+    out << from_expr(ns,"",termination_argument) << std::endl; 
+#endif
+  out << std::endl;
+  out << "terminates: " << threeval2string(terminates) << std::endl;
 }
 
 /*******************************************************************\
@@ -113,5 +125,39 @@ void summaryt::join(const summaryt &new_summary)
   combine_or(bw_postcondition,new_summary.bw_postcondition);
   combine_and(bw_transformer,new_summary.bw_transformer);
   combine_and(bw_invariant,new_summary.bw_invariant);
+  combine_and(termination_argument,new_summary.termination_argument);
+  switch(new_summary.terminates)
+  {
+  case YES:
+    break;
+  case NO: terminates=NO;
+    break;
+  case UNKNOWN:
+    if(terminates!=NO) terminates=UNKNOWN;
+    break;
+  default: assert(false);
+  }
 }
 
+/*******************************************************************\
+
+Function: threeval2string
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::string threeval2string(threevalt v)
+{
+  switch(v)
+  {
+  case YES: return "yes";
+  case NO: return "no";
+  case UNKNOWN: return "unknown";
+  }
+  assert(false);
+}

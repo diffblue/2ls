@@ -38,7 +38,7 @@ class summarizer_fwt : public summarizer_baset
     		           const exprt &precondition,
                            bool context_sensitive);
 
-  virtual void inline_summaries(const function_namet &function_name, 
+  void inline_summaries(const function_namet &function_name, 
 			local_SSAt &SSA,
     		        const exprt &precondition,
                         bool context_sensitive); 

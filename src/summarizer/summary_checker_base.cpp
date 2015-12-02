@@ -32,7 +32,9 @@ Author: Peter Schrammel
 #include "summary_checker_base.h"
 
 #include "summarizer_fw.h"
+#include "summarizer_fw_term.h"
 #include "summarizer_bw.h"
+#include "summarizer_bw_term.h"
 
 #ifdef SHOW_CALLING_CONTEXTS
 #include "summarizer_fw_contexts.h"
@@ -58,7 +60,7 @@ void summary_checker_baset::SSA_functions(const goto_modelt &goto_model,  const 
     if(!f_it->second.body_available) continue;
     if(has_prefix(id2string(f_it->first),TEMPLATE_DECL)) continue;
     status() << "Computing SSA of " << f_it->first << messaget::eom;
-   
+    
     ssa_db.create(f_it->first, f_it->second, ns);
     local_SSAt &SSA = ssa_db.get(f_it->first);
     
@@ -104,8 +106,14 @@ void summary_checker_baset::summarize(const goto_modelt &goto_model,
   if(forward && !termination)
     summarizer = new summarizer_fwt(
       options,summary_db,ssa_db,ssa_unwinder,ssa_inliner);
+  if(forward && termination)
+    summarizer = new summarizer_fw_termt(
+      options,summary_db,ssa_db,ssa_unwinder,ssa_inliner);
   if(!forward && !termination)
     summarizer = new summarizer_bwt(
+      options,summary_db,ssa_db,ssa_unwinder,ssa_inliner);
+  if(!forward && termination)
+    summarizer = new summarizer_bw_termt(
       options,summary_db,ssa_db,ssa_unwinder,ssa_inliner);
   }
   assert(summarizer != NULL);
@@ -187,12 +195,11 @@ Function: summary_checker_baset::check_properties
 void summary_checker_baset::check_properties(
    const ssa_dbt::functionst::const_iterator f_it)
 {
-  local_SSAt &SSA = *f_it->second;
-  if(!SSA.goto_function.body.has_assertion()) return;
-
+  unwindable_local_SSAt &SSA = *f_it->second;
+  
   bool all_properties = options.get_bool_option("all-properties");
 
-  SSA.output(debug()); debug() << eom;
+  SSA.output_verbose(debug()); debug() << eom;
   
   // incremental version
 
@@ -231,9 +238,11 @@ void summary_checker_baset::check_properties(
 	   << "fully unwound" << eom;
 
   cover_goals_extt cover_goals(
-    solver,loophead_selects,property_map,
+    SSA,solver,loophead_selects,property_map,
     !fully_unwound && options.get_bool_option("spurious-check"),
-    all_properties);
+    all_properties,
+    options.get_bool_option("show-trace") ||
+    options.get_option("graphml-cex")!="");
 
 #if 0   
   debug() << "(C) " << from_expr(SSA.ns,"",enabling_expr) << eom;
@@ -250,16 +259,22 @@ void summary_checker_baset::check_properties(
       continue;
   
     const source_locationt &location=i_it->source_location;
-    std::list<local_SSAt::nodest::const_iterator> assertion_nodes;
-    SSA.find_nodes(i_it,assertion_nodes);
-
     irep_idt property_id = location.get_property_id();
+    
+    if(i_it->guard.is_true())
+    {
+      property_map[property_id].result=PASS;
+      continue;
+    }
 
     //do not recheck properties that have already been decided
     if(property_map[property_id].result!=UNKNOWN) continue; 
 
     if(property_id=="") //TODO: some properties do not show up in initialize_property_map
       continue;     
+
+    std::list<local_SSAt::nodest::const_iterator> assertion_nodes;
+    SSA.find_nodes(i_it,assertion_nodes);
 
     unsigned property_counter = 0;
     for(std::list<local_SSAt::nodest::const_iterator>::const_iterator
@@ -277,7 +292,7 @@ void summary_checker_baset::check_properties(
 	if(simplify)
 	  property=::simplify_expr(property, SSA.ns);
 
-#if 0 
+#if 0
 	std::cout << "property: " << from_expr(SSA.ns, "", property) << std::endl;
 #endif
  
@@ -407,6 +422,7 @@ exprt::operandst summary_checker_baset::get_loophead_selects(
   const irep_idt &function_name, 
   const local_SSAt &SSA, prop_convt &solver)
 {
+  //TODO: this should be provided by unwindable_local_SSA
   exprt::operandst loophead_selects;
   for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
       n_it != SSA.nodes.end(); n_it++)
@@ -445,6 +461,7 @@ exprt::operandst summary_checker_baset::get_loop_continues(
   const irep_idt &function_name, 
   const local_SSAt &SSA, prop_convt &solver)
 {
+  //TODO: this should be provided by unwindable_local_SSA
   exprt::operandst loop_continues;
 
   ssa_unwinder.get(function_name).loop_continuation_conditions(loop_continues);

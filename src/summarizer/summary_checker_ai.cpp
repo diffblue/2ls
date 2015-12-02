@@ -36,23 +36,23 @@ property_checkert::resultt summary_checker_ait::operator()(
 
     ssa_unwinder.init_localunwinders();
 
-    ssa_unwinder.unwind_all(unwind+1);
-    ssa_unwinder.output(debug()); debug() <<eom;
+    ssa_unwinder.unwind_all(unwind);
   }
 
   // properties
   initialize_property_map(goto_model.goto_functions);
 
   bool preconditions = options.get_bool_option("preconditions");
+  bool termination = options.get_bool_option("termination");
   if(!options.get_bool_option("havoc")) 
   {
     //forward analysis
-    summarize(goto_model,true,false);
+    summarize(goto_model,true,termination);
   }
   if(!options.get_bool_option("havoc") && preconditions)
   {
     //backward analysis
-    summarize(goto_model,false,false);
+    summarize(goto_model,false,termination);
   }
 
   if(preconditions) 
@@ -60,6 +60,12 @@ property_checkert::resultt summary_checker_ait::operator()(
     report_statistics();
     report_preconditions();
     return property_checkert::UNKNOWN;
+  }
+
+  if(termination) 
+  {
+    report_statistics();
+    return report_termination();
   }
 
 #ifdef SHOW_CALLINGCONTEXTS
@@ -103,4 +109,39 @@ void summary_checker_ait::report_preconditions()
 	     << (!computed ? "not computed" : 
 		 from_expr(it->second->ns, "", precondition)) << eom;
   }
+}
+
+/*******************************************************************\
+
+Function: summary_checker_ait::report_termination
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+property_checkert::resultt summary_checker_ait::report_termination()
+{
+  result() << eom;
+  result() << "** Termination: " << eom;
+  bool all_terminate = true; 
+  bool one_nonterminate = false; 
+  ssa_dbt::functionst &functions = ssa_db.functions();
+  for(ssa_dbt::functionst::iterator it = functions.begin();
+      it != functions.end(); it++)
+  {
+    threevalt terminates = YES;
+    bool computed = summary_db.exists(it->first);
+    if(computed) terminates = summary_db.get(it->first).terminates;
+    all_terminate = all_terminate && (terminates==YES);
+    one_nonterminate = one_nonterminate || (terminates==NO);
+    result() << "[" << it->first << "]: " 
+	     << (!computed ? "not computed" : threeval2string(terminates)) << eom;
+  }
+  if(all_terminate) return property_checkert::PASS;
+  if(one_nonterminate) return property_checkert::FAIL;
+  return property_checkert::UNKNOWN;
 }

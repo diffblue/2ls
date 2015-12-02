@@ -10,7 +10,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #ifdef DEBUG
 #include <iostream>
-#include <langapi/language_util.h>
 #endif
 
 #include <util/i2string.h>
@@ -68,11 +67,6 @@ void local_SSAt::build_SSA()
 
   // entry and exit variables
   get_entry_exit_vars();
-
-#ifdef ASSERTION_HOISTING
-  // collect assertions after loop exit (for k-induction assertion hoisting)
-  assertions_after_loop();
-#endif
 }
 
 /*******************************************************************\
@@ -152,10 +146,16 @@ void local_SSAt::get_globals(locationt loc, std::set<symbol_exprt> &globals,
            id2string(returns_for_function)+"#return_value")==std::string::npos)
 	 continue;
 
-      if(rhs_value) 
-        globals.insert(to_symbol_expr(read_rhs(it->get_expr(),loc)));
+      if(rhs_value)
+      {
+	const exprt &expr = read_rhs(it->get_expr(),loc);
+        globals.insert(to_symbol_expr(expr));
+      }
       else
-        globals.insert(to_symbol_expr(read_lhs(it->get_expr(),loc)));
+      {
+	const exprt &expr = read_lhs(it->get_expr(),loc);
+        globals.insert(to_symbol_expr(expr));
+      }
     }
   }
 }   
@@ -250,7 +250,8 @@ Function: local_SSAt::find_nodes
 
 \*******************************************************************/
 
-void local_SSAt::find_nodes(locationt loc, std::list<nodest::const_iterator> &_nodes) const
+void local_SSAt::find_nodes(locationt loc, 
+			    std::list<nodest::const_iterator> &_nodes) const
 {
   nodest::const_iterator n_it = nodes.begin();
   for(; n_it != nodes.end(); n_it++)
@@ -273,12 +274,8 @@ Function: local_SSAt::find_location_by_number
 
 local_SSAt::locationt local_SSAt::find_location_by_number(unsigned location_number) const
 {
-  local_SSAt::nodest::const_iterator n_it =nodes.begin();
-  for(; n_it != nodes.end(); n_it++)
-  {
-    if(n_it->location->location_number == location_number) break;
-  }
-  return n_it->location;
+  assert(location_number<location_map.size());
+  return location_map[location_number];
 }
 
 /*******************************************************************\
@@ -337,13 +334,17 @@ void local_SSAt::build_phi_nodes(locationt loc)
       phi_nodes.find(o_it->get_identifier());
           
     if(p_it==phi_nodes.end()) continue; // none
+
+ #ifdef DEBUG
+      std::cout << "PHI " << o_it->get_identifier() << "\n";
+ #endif
     
     //ignore custom template variables
     if(id2string(o_it->get_identifier()).
        find(TEMPLATE_PREFIX)!=std::string::npos) continue; 
 
     // Yes. Get the source -> def map.
-    const std::map<locationt, ssa_domaint::deft> &incoming=p_it->second;
+    const ssa_domaint::loc_def_mapt &incoming=p_it->second;
 
     exprt rhs=nil_exprt();
 
@@ -352,16 +353,20 @@ void local_SSAt::build_phi_nodes(locationt loc)
     // _lower_ priority in the ITE. Inputs are always
     // forward edges.
       
-    for(std::map<locationt, ssa_domaint::deft>::const_iterator
+    for(ssa_domaint::loc_def_mapt::const_iterator
           incoming_it=incoming.begin();
 	incoming_it!=incoming.end();
 	incoming_it++)
       if(incoming_it->second.is_input() ||
-	 incoming_it->first->location_number < loc->location_number)
+	 incoming_it->first < loc->location_number)
         {
           // it's a forward edge
           exprt incoming_value=name(*o_it, incoming_it->second);
-          exprt incoming_guard=edge_guard(incoming_it->first, loc);
+	  //TODO: investigate: here is some nondeterminism 
+	  //  whether g2 (=g1&c1 (maybe)) or (g1&c1) is used,
+	  //  not sure whether this has consequences
+	  //  (further than the SSA looking different each time you generate it)
+          exprt incoming_guard=edge_guard(location_map[incoming_it->first],loc);
 
           if(rhs.is_nil()) // first
             rhs=incoming_value;
@@ -371,16 +376,17 @@ void local_SSAt::build_phi_nodes(locationt loc)
        
     // now do backwards
 
-    for(std::map<locationt, ssa_domaint::deft>::const_iterator
+    for(ssa_domaint::loc_def_mapt::const_iterator
           incoming_it=incoming.begin();
 	incoming_it!=incoming.end();
 	incoming_it++)
       if(!incoming_it->second.is_input() &&
-	 incoming_it->first->location_number >= loc->location_number)
+	 incoming_it->first >= loc->location_number)
         {
           // it's a backwards edge
-          exprt incoming_value=name(*o_it, LOOP_BACK, incoming_it->first);
-          exprt incoming_select=name(guard_symbol(), LOOP_SELECT, incoming_it->first);
+	  const locationt &iloc = location_map[incoming_it->first];
+          exprt incoming_value=name(*o_it, LOOP_BACK, iloc);
+          exprt incoming_select=name(guard_symbol(), LOOP_SELECT, iloc);
 
           if(rhs.is_nil()) // first
             rhs=incoming_value;
@@ -459,7 +465,7 @@ void local_SSAt::build_transfer(locationt loc)
   
 /*******************************************************************\
 
-Function: local_SSAt::build_transfer
+Function: local_SSAt::build_function_call
 
   Inputs:
 
@@ -572,7 +578,8 @@ void local_SSAt::build_cond(locationt loc)
   {
     equal_exprt equality(cond_symbol(loc), true_exprt());
     (--nodes.end())->equalities.push_back(equality);
-  }}
+  }
+}
 
 /*******************************************************************\
 
@@ -619,12 +626,7 @@ void local_SSAt::build_guard(locationt loc)
       symbol_exprt loop_select=
         name(guard_symbol(), LOOP_SELECT, edge.from);
 
-      #if 1
       source=false_exprt();
-      #else
-      // TODO: need constraing for edge.cond
-      source=loop_select;
-      #endif
     }
     else
     {
@@ -682,25 +684,6 @@ void local_SSAt::build_assertions(locationt loc)
 
 /*******************************************************************\
 
-Function: local_SSAt::assertions
-
-  Inputs:
-
- Outputs:
-
- Purpose: returns assertions for a given location
-
-\*******************************************************************/
-
-/*local_SSAt::nodet::assertionst local_SSAt::assertions(locationt loc) const
-{
-  nodest::const_iterator n_it=nodes.find(loc);
-  if(n_it==nodes.end()) return nodet::assertionst();
-  return n_it->second.assertions;
-  }*/
-
-/*******************************************************************\
-
 Function: local_SSAt::assertions_to_constraints
 
   Inputs:
@@ -721,64 +704,6 @@ void local_SSAt::assertions_to_constraints()
     n_it->constraints.insert(n_it->constraints.end(),
 			    n_it->assertions.begin(),n_it->assertions.end());
   }  
-}
-
-/*******************************************************************\
-
-Function: local_SSAt::assertions_after_loop
-
-  Inputs:
-
- Outputs:
-
- Purpose: find assertions after loop exit
-
-\*******************************************************************/
-
-void local_SSAt::assertions_after_loop()
-{
-  if(nodes.empty()) 
-    return;
-  std::map<locationt,exprt::operandst> assertion_map;
-  std::list<std::list<nodet>::iterator> loopheads;
-  loopheads.push_back(nodes.begin()); 
-  nodest::iterator n_it=nodes.end(); 
-  while(n_it!=nodes.begin()) //collect assertions backwards
-  {
-    n_it--;
-
-#if 0
-    std::cout << "location: " << n_it->location->location_number << std::endl;
-    std::cout << "loophead: " << loopheads.back()->location->location_number << std::endl;
-#endif
-
-    if(n_it==loopheads.back()) //assign parent-level assertions at loophead
-    {
-      loopheads.pop_back();
-      if(!loopheads.empty())
-      {
-        const exprt::operandst &assertions = 
-          assertion_map[loopheads.back()->location];
-        n_it->assertions_after_loop.insert(n_it->assertions_after_loop.end(),
-					 assertions.begin(),assertions.end());
-        assertion_map[loopheads.back()->location].clear();
-       //do not consider assertions after another loop
-      }
-      else // we should have reached the beginning
-	assert(n_it==nodes.begin());
-    }
-    if(n_it->loophead!=nodes.end()) 
-    {
-      assert(!loopheads.empty());
-      loopheads.push_back(n_it->loophead);
-    }
-    if(!n_it->assertions.empty())
-    {
-      exprt::operandst &a = assertion_map[loopheads.back()->location];
-      a.insert(a.end(),n_it->assertions.begin(),n_it->assertions.end());
-    }
-    //TODO: could also add assertions that are on a direct path within a loop
-  }
 }
 
 /*******************************************************************\
@@ -867,12 +792,21 @@ exprt local_SSAt::read_lhs(
   // dereference first
   exprt tmp1=dereference(expr, loc);
 
+#ifdef DEBUG
+  std::cout << "read_lhs tmp1: " << from_expr(ns, "", tmp1) << '\n';
+#endif
+ 
   ssa_objectt object(tmp1, ns);
 
   // is this an object we track?
   if(ssa_objects.objects.find(object)!=
      ssa_objects.objects.end())
   {
+ 
+#ifdef DEBUG
+    std::cout << from_expr(ns, "", tmp1) << "is_object" << '\n';
+#endif
+ 
     // yes, it is
     if(assignments.assigns(loc, object))
       return name(object, OUT, loc);
@@ -921,14 +855,14 @@ exprt local_SSAt::read_node_in(
         
   if(p_it!=phi_nodes.end())
   {
-    const std::map<locationt, ssa_domaint::deft> &incoming=p_it->second;
+    const ssa_domaint::loc_def_mapt &incoming=p_it->second;
 
-    for(std::map<locationt, ssa_domaint::deft>::const_iterator
+    for(ssa_domaint::loc_def_mapt::const_iterator
         incoming_it=incoming.begin();
         incoming_it!=incoming.end();
         incoming_it++)
     {
-      if(incoming_it->first->location_number > loc->location_number)
+      if(incoming_it->first > loc->location_number)
         has_phi=true;
     }
   }
@@ -937,6 +871,43 @@ exprt local_SSAt::read_node_in(
     return name(object, LOOP_BACK, loc);
   else
     return read_rhs(object, loc);
+}
+
+/*******************************************************************\
+
+Function: local_SSAt::get_def_loc
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+local_SSAt::locationt local_SSAt::get_def_loc(
+  const symbol_exprt &expr, 
+  locationt loc) const
+{
+  ssa_objectt object(expr,ns);
+  if(!object) assert(false);
+  if(ssa_objects.objects.find(object)!=
+     ssa_objects.objects.end())
+  {
+    const irep_idt &identifier=object.get_identifier();
+    const ssa_domaint &ssa_domain=ssa_analysis[loc];
+
+    ssa_domaint::def_mapt::const_iterator d_it=
+      ssa_domain.def_map.find(identifier);
+
+    if(d_it==ssa_domain.def_map.end()) //input
+      return goto_function.body.instructions.begin();
+    else
+      return d_it->second.def.loc; //last definition
+  }
+  else //input
+    return goto_function.body.instructions.begin();
+
 }
 
 /*******************************************************************\
@@ -1141,23 +1112,18 @@ void local_SSAt::replace_side_effects_rec(
     if(statement==ID_nondet)
     {
       // turn into nondet_symbol
-      exprt nondet_symbol(ID_nondet_symbol, expr.type());
       counter++;
-      const irep_idt identifier=
-        "ssa::nondet"+
-        i2string(loc->location_number)+
-        "."+i2string(counter)+suffix;
-      nondet_symbol.set(ID_identifier, identifier);
-      
-      expr.swap(nondet_symbol);
+      exprt s = nondet_symbol("ssa::nondet",expr.type(),loc,counter);      
+      expr.swap(s);
     }
     else if(statement==ID_malloc)
     {
-      counter++;
+      assert(false);
+/*      counter++;
       std::string tmp_suffix=
         i2string(loc->location_number)+
         "."+i2string(counter)+suffix;
-      expr=malloc_ssa(side_effect_expr, tmp_suffix, ns);
+	expr=malloc_ssa(side_effect_expr, tmp_suffix, ns);*/
     }
     else
     {
@@ -1195,6 +1161,10 @@ symbol_exprt local_SSAt::name(
                    "")+
                   i2string(cnt)+
                   (kind==LOOP_SELECT?std::string(""):suffix);
+
+#ifdef DEBUG
+  std::cout << "name " << kind << ": " << new_id << '\n';
+#endif
 
   new_symbol_expr.set_identifier(new_id);
   
@@ -1251,6 +1221,30 @@ symbol_exprt local_SSAt::name_input(const ssa_objectt &object) const
     new_symbol_expr.add_source_location()=object.get_expr().source_location();
 
   return new_symbol_expr;
+}
+
+/*******************************************************************\
+
+Function: local_SSAt::nondet_symbol
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt local_SSAt::nondet_symbol(std::string prefix, const typet &type, 
+				locationt loc, unsigned counter) const
+{
+  exprt s(ID_nondet_symbol, type);
+  const irep_idt identifier=
+    prefix+
+    i2string(loc->location_number)+
+    "."+i2string(counter)+suffix;
+  s.set(ID_identifier, identifier);
+  return s;
 }
 
 /*******************************************************************\
@@ -1426,6 +1420,9 @@ void local_SSAt::output_verbose(std::ostream &out) const
     if(n_it->loophead!=nodes.end()) 
       out << "loop back to location "
 	  << n_it->loophead->location->location_number << "\n";
+    if(!n_it->enabling_expr.is_true()) 
+      out << "enabled if "
+	  << from_expr(ns, "", n_it->enabling_expr) << "\n";
     out << "\n";
   }
   out << "(enable) " << from_expr(ns, "", get_enabling_exprs()) << "\n\n";
@@ -1447,10 +1444,10 @@ void local_SSAt::nodet::output(
   std::ostream &out,
   const namespacet &ns) const
 {
-  if(!enabling_expr.is_true()) 
-    out << "(enable) " << from_expr(ns, "", enabling_expr) << "\n";
+#if 0
   if(!marked) 
     out << "(not marked)" << "\n";
+#endif
   for(equalitiest::const_iterator
       e_it=equalities.begin();
       e_it!=equalities.end();
@@ -1474,12 +1471,6 @@ void local_SSAt::nodet::output(
       f_it!=function_calls.end();
       f_it++)
     out << "(F) " << from_expr(ns, "", *f_it) << "\n";
-  
-#if 1
-  if(!assertions_after_loop.empty()) 
-    out << "(assertions-after-loop) "
-	<< from_expr(ns, "", conjunction(assertions_after_loop)) << "\n";
-#endif
 }
 
 /*******************************************************************\
@@ -1558,10 +1549,7 @@ std::list<exprt> & operator << (
         e_it!=n_it->equalities.end();
         e_it++)
     {
-      if(!n_it->enabling_expr.is_true()) 
-	dest.push_back(implies_exprt(n_it->enabling_expr,*e_it));
-      else
-        dest.push_back(*e_it);
+      dest.push_back(*e_it);
     }
 
     for(local_SSAt::nodet::constraintst::const_iterator
@@ -1569,10 +1557,7 @@ std::list<exprt> & operator << (
         c_it!=n_it->constraints.end();
         c_it++)
     {
-      if(!n_it->enabling_expr.is_true()) 
-	dest.push_back(implies_exprt(n_it->enabling_expr,*c_it));
-      else
-        dest.push_back(*c_it);
+      dest.push_back(*c_it);
     }
   }
 #endif
@@ -1612,10 +1597,7 @@ decision_proceduret & operator << (
         e_it!=n_it->equalities.end();
         e_it++)
     {
-      if(!n_it->enabling_expr.is_true()) 
-	dest << implies_exprt(n_it->enabling_expr,*e_it);
-      else
-        dest << *e_it;
+      dest << *e_it;
     }
 
     for(local_SSAt::nodet::constraintst::const_iterator
@@ -1623,10 +1605,7 @@ decision_proceduret & operator << (
         c_it!=n_it->constraints.end();
         c_it++)
     {
-      if(!n_it->enabling_expr.is_true()) 
-	dest << implies_exprt(n_it->enabling_expr,*c_it);
-      else
-        dest << *c_it;
+      dest << *c_it;
     }
   }
 #endif  
@@ -1711,3 +1690,31 @@ exprt local_SSAt::get_enabling_exprs() const
   }
   return conjunction(result);
 }
+
+/*******************************************************************\
+
+Function: local_SSAt::has_function_calls
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool local_SSAt::has_function_calls() const
+{
+  bool found = false;
+  for(local_SSAt::nodest::const_iterator n_it = nodes.begin();
+    n_it != nodes.end(); n_it++)
+  {
+    if(!n_it->function_calls.empty()) 
+    {
+      found = true;
+      break;
+    }
+  }
+  return found;
+}
+

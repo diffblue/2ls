@@ -37,6 +37,13 @@ void template_generator_baset::get_pre_post_guards(const local_SSAt &SSA,
 			 local_SSAt::nodest::const_iterator n_it,
 			 exprt &pre_guard, exprt &post_guard)
 {
+#if 0
+  std::cout << "post-location: " 
+	    << n_it->location->location_number << std::endl;
+  assert(n_it->loophead != SSA.nodes.end());
+  std::cout << "pre-location: " 
+	    << n_it->loophead->location->location_number << std::endl;
+#endif
   exprt lhguard = SSA.guard_symbol(n_it->loophead->location);
   ssa_local_unwinder.unwinder_rename(to_symbol_expr(lhguard),*n_it,true);
   exprt lsguard = SSA.name(SSA.guard_symbol(), 
@@ -69,7 +76,6 @@ void template_generator_baset::get_pre_var(const local_SSAt &SSA,
 			 symbol_exprt &pre_var)
 {
   pre_var = SSA.name(*o_it, local_SSAt::LOOP_BACK, n_it->location);
-  // pre_var = SSA.name(*o_it, local_SSAt::PHI, n_it->loophead->location);
   ssa_local_unwinder.unwinder_rename(pre_var,*n_it,true);
 
   symbol_exprt post_var = SSA.read_rhs(*o_it, n_it->location);
@@ -111,7 +117,6 @@ void template_generator_baset::get_init_expr(const local_SSAt &SSA,
       const if_exprt &if_expr = to_if_expr(e_it->rhs());
       init_expr = if_expr.false_case();
       //should already be renamed for inner loops
-//      ssa_local_unwinder.unwinder_rename(init_var,*n_it->loophead,false);
       break;
     }
   }
@@ -168,39 +173,11 @@ void template_generator_baset::collect_variables_loop(const local_SSAt &SSA,bool
 	get_init_expr(SSA,o_it,n_it,init_expr);
         add_var(pre_var,pre_guard,post_guard,domaint::LOOP,var_specs);
 
-     
   #ifdef DEBUG
         std::cout << "Adding " << from_expr(ns, "", in) << " " << 
           from_expr(ns, "", out) << std::endl;        
   #endif
      }
-
-      /*
-      // local nondet variables
-      const ssa_domaint &ssa_domain=SSA.ssa_analysis[i_it->get_target()];
-      for(local_SSAt::objectst::const_iterator
-          o_it=SSA.ssa_objects.objects.begin();
-          o_it!=SSA.ssa_objects.objects.end();
-          o_it++)
-      {
-        ssa_domaint::def_mapt::const_iterator 
-          d_it = ssa_domain.def_map.find(o_it->get_identifier());
-	if(d_it!=ssa_domain.def_map.end()) 
-	{
-  #if 1
-        std::cout << "ssa_object " << o_it->get_identifier() <<
-		  ": " << d_it->second.def.is_input() << std::endl;        
-  #endif
-	  symbol_exprt in=SSA.name_input(*o_it);
-          exprt guard = SSA.guard_symbol(i_it->get_target());
-	  add_var(in,guard,guard,domaint::IN,var_specs);
-
-  #if 1
-          std::cout << "Adding " << from_expr(ns, "", in) << std::endl;        
-  #endif
-	}
-      }
-      */
     } 
   }
 }
@@ -303,7 +280,7 @@ void template_generator_baset::add_var(const domaint::vart &var,
 			    domaint::var_specst &var_specs)
 {
   exprt aux_expr = true_exprt();
-  if(pre_guard.id()==ID_and)
+  if(std_invariants && pre_guard.id()==ID_and)
   {
     exprt init_guard = and_exprt(pre_guard.op0(),not_exprt(pre_guard.op1()));
     exprt post_var = post_renaming_map[var];
@@ -486,13 +463,17 @@ Function: template_generator_baset::instantiate_custom_templates
 
  Outputs:
 
- Purpose:
+ Purpose: [experimental]
 
 \*******************************************************************/
 
 bool template_generator_baset::instantiate_custom_templates(
                                const local_SSAt &SSA)
 {
+  //TODO: the code below cannot work for unwound SSA
+  //  we deactivate it for now
+  return false;
+
   // used for renaming map
   var_listt pre_state_vars, post_state_vars;
 
@@ -619,17 +600,20 @@ Function: template_generator_baset::instantiate_standard_domains
 
 void template_generator_baset::instantiate_standard_domains(const local_SSAt &SSA)
 {
+  replace_mapt &renaming_map =
+    std_invariants ? aux_renaming_map : post_renaming_map;
+  
   //get domain from command line options
   if(options.get_bool_option("equalities"))
   {
     filter_equality_domain();
     domain_ptr = new equality_domaint(domain_number,
-				      aux_renaming_map, var_specs, SSA.ns);
+				      renaming_map, var_specs, SSA.ns);
   }
   else if(options.get_bool_option("intervals"))
   {
     domain_ptr = new tpolyhedra_domaint(domain_number,
-					aux_renaming_map);
+					renaming_map);
     filter_template_domain();
     static_cast<tpolyhedra_domaint *>(domain_ptr)->add_interval_template(
       var_specs, SSA.ns);
@@ -637,29 +621,29 @@ void template_generator_baset::instantiate_standard_domains(const local_SSAt &SS
   else if(options.get_bool_option("zones"))
   {
     domain_ptr = new tpolyhedra_domaint(domain_number,
-					aux_renaming_map);
+					renaming_map);
     filter_template_domain();
-    static_cast<tpolyhedra_domaint *>(domain_ptr)->add_interval_template(
-      var_specs, SSA.ns);
     static_cast<tpolyhedra_domaint *>(domain_ptr)->add_difference_template(
+      var_specs, SSA.ns);
+    static_cast<tpolyhedra_domaint *>(domain_ptr)->add_interval_template(
       var_specs, SSA.ns);
   }
   else if(options.get_bool_option("octagons"))
   {
     domain_ptr = new tpolyhedra_domaint(domain_number,
-					aux_renaming_map);
+					renaming_map);
     filter_template_domain();
-    static_cast<tpolyhedra_domaint *>(domain_ptr)->add_interval_template(
+    static_cast<tpolyhedra_domaint *>(domain_ptr)->add_sum_template(
       var_specs, SSA.ns);
     static_cast<tpolyhedra_domaint *>(domain_ptr)->add_difference_template(
       var_specs, SSA.ns);
-    static_cast<tpolyhedra_domaint *>(domain_ptr)->add_sum_template(
+    static_cast<tpolyhedra_domaint *>(domain_ptr)->add_interval_template(
       var_specs, SSA.ns);
   }
   else if(options.get_bool_option("qzones"))
   {
     domain_ptr = new tpolyhedra_domaint(domain_number,
-					aux_renaming_map);
+					renaming_map);
     filter_template_domain();
     static_cast<tpolyhedra_domaint *>(domain_ptr)->add_difference_template(
       var_specs, SSA.ns);

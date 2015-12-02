@@ -99,7 +99,7 @@ public:
   // Query me! I return the entry for any program location.
   inline const entryt &operator[](const locationt location) const
   {
-    mapt::const_iterator it=map.find(location);
+    mapt::const_iterator it=map.find(location->location_number);
     assert(it!=map.end());
     return it->second;
   }
@@ -111,7 +111,8 @@ public:
 protected:
   void build(const goto_programt &src);
   
-  typedef std::map<locationt, entryt> mapt;
+  //use location number as key to make iteration deterministic
+  typedef std::map<unsigned, entryt> mapt;
   mapt map;
 };
 

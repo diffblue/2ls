@@ -4,6 +4,8 @@ Module: Discover the Guards of Basic Blocks
 
 Author: Daniel Kroening, kroening@kroening.com
 
+SEEMS OBSOLETE
+
 \*******************************************************************/
 
 #ifndef CPROVER_GUARD_DOMAIN_H
@@ -66,7 +68,7 @@ public:
   bool unreachable;
   
   // Keep the guards for all incoming edges.
-  typedef std::map<locationt, guardst> incomingt;
+  typedef std::map<unsigned, guardst> incomingt;
   incomingt incoming;
   
   // returns true iff 'a' and 'b' match in all but the last place

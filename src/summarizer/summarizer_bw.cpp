@@ -20,6 +20,7 @@ Author: Peter Schrammel
 #include "../domains/ssa_analyzer.h"
 #include "../domains/template_generator_summary.h"
 #include "../domains/template_generator_callingcontext.h"
+#include "../domains/template_generator_ranking.h"
 
 #include "../ssa/local_ssa.h"
 #include "../ssa/simplify_ssa.h"

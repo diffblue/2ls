@@ -30,7 +30,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/goto_inline.h>
 #include <goto-programs/goto_functions.h>
 #include <goto-programs/xml_goto_trace.h>
+#include <goto-programs/graphml_goto_trace.h>
 #include <goto-programs/remove_returns.h>
+#include <goto-programs/remove_skip.h>
 #include "array_abstraction.h"
 
 #include <analyses/goto_check.h>
@@ -39,6 +41,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <cbmc/version.h>
 #include "version.h"
+
+#include "../ssa/malloc_ssa.h"
 
 #include "summarizer_parse_options.h"
 #include "summary_db.h"
@@ -50,7 +54,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "show.h"
 
 #define UNWIND_GOTO_INTO_LOOP 1
-#define PROPAGATE_CONSTANTS 1
 #define REMOVE_MULTIPLE_DEREFERENCES 1
 
 /*******************************************************************\
@@ -67,7 +70,7 @@ Function: summarizer_parse_optionst::summarizer_parse_optionst
 
 summarizer_parse_optionst::summarizer_parse_optionst(int argc, const char **argv):
   parse_options_baset(SUMMARIZER_OPTIONS, argc, argv),
-  language_uit("Summarizer " CBMC_VERSION, cmdline)
+  language_uit("2LS " CBMC_VERSION, cmdline)
 {
 }
   
@@ -209,12 +212,18 @@ void summarizer_parse_optionst::get_command_line_options(optionst &options)
   else
     options.set_option("assumptions", true);
 
-    // use arithmetic refinements
+  // use arithmetic refinements
   if(cmdline.isset("refine"))
     options.set_option("refine", true);
   else
     options.set_option("refine", false);
-  
+
+  // compute standard invariants (include value at loop entry)
+  if(cmdline.isset("std-invariants"))
+    options.set_option("std-invariants", true);
+  else
+    options.set_option("std-invariants", false);
+
   // magic error label
   if(cmdline.isset("error-label"))
     options.set_option("error-label", cmdline.get_value("error-label"));
@@ -222,7 +231,10 @@ void summarizer_parse_optionst::get_command_line_options(optionst &options)
   if(cmdline.isset("havoc"))
     options.set_option("havoc", true);
   else if(cmdline.isset("equalities"))
+  {
     options.set_option("equalities", true);
+    options.set_option("std-invariants", true);
+  }
   else 
   {
     if(cmdline.isset("zones"))
@@ -254,9 +266,37 @@ void summarizer_parse_optionst::get_command_line_options(optionst &options)
   if(cmdline.isset("sufficient"))
     options.set_option("sufficient", true);
 
+  // compute ranking functions
+  if(cmdline.isset("termination"))
+  {
+    options.set_option("termination", true);
+    options.set_option("sufficient", true);
+  }
+
+  if(cmdline.isset("monolithic-ranking-function"))
+  {
+    options.set_option("monolithic-ranking-function", true);
+  }
+  else options.set_option("monolithic-ranking-function", false);
+
+  if(cmdline.isset("lexicographic-ranking-function"))
+  {
+    options.set_option("lexicographic-ranking-function", 
+		       cmdline.get_value("lexicographic-ranking-function"));
+  }
+  else options.set_option("lexicographic-ranking-function",3);
+
+  if(cmdline.isset("max-inner-ranking-iterations"))
+  {
+    options.set_option("max-inner-ranking-iterations", 
+		       cmdline.get_value("max-inner-ranking-iterations"));
+  }
+  else options.set_option("max-inner-ranking-iterations",20);
+
  // do k-induction refinement
   if(cmdline.isset("k-induction"))
   {
+    options.set_option("std-invariants", true);
     options.set_option("k-induction", true);
     options.set_option("inline", true);
     if(!cmdline.isset("unwind"))
@@ -308,6 +348,11 @@ void summarizer_parse_optionst::get_command_line_options(optionst &options)
 		       cmdline.get_value("show-calling-contexts"));
   }
 #endif
+
+  if(cmdline.isset("show-trace"))
+    options.set_option("show-trace", true);
+  if(cmdline.isset("graphml-cex"))
+    options.set_option("graphml-cex", cmdline.get_value("graphml-cex"));
 }
 
 /*******************************************************************\
@@ -326,10 +371,10 @@ int summarizer_parse_optionst::doit()
 {
   if(cmdline.isset("version"))
   {
-    std::cout << SUMMARIZER_VERSION " (based on CBMC " CBMC_VERSION ")" << std::endl;
+    std::cout << SUMMARIZER_VERSION << std::endl;
     return 0;
   }
-
+    
   //
   // command line options
   //
@@ -342,7 +387,7 @@ int summarizer_parse_optionst::doit()
   //
   // Print a banner
   //
-  status() << "SUMMARIZER version " SUMMARIZER_VERSION " (based on CBMC " CBMC_VERSION ")" << eom;
+  status() << "2LS version " SUMMARIZER_VERSION " (based on CBMC " CBMC_VERSION ")" << eom;
 
   register_language(new_ansi_c_language);
   register_language(new_cpp_language);
@@ -351,6 +396,12 @@ int summarizer_parse_optionst::doit()
 
   if(get_goto_program(options, goto_model))
     return 6;
+
+  if(cmdline.isset("show-stats"))
+  {
+    show_stats(goto_model, std::cout);
+    return 7;
+  }
 
   // options for various debug outputs
     
@@ -398,13 +449,6 @@ int summarizer_parse_optionst::doit()
     return 7;
   }
 
-  if(cmdline.isset("show-stats"))
-  {
-    show_stats(goto_model, std::cout);
-    return 7;
-  }
-
-
   if(cmdline.isset("show-invariants")) 
   {
     options.set_option("show-invariants", true);
@@ -446,7 +490,7 @@ int summarizer_parse_optionst::doit()
     else assert(false);
     status() << eom;
   }
-
+  
   try
   {
     summary_checker_baset *summary_checker = NULL;
@@ -482,13 +526,13 @@ int summarizer_parse_optionst::doit()
     switch((*summary_checker)(goto_model))
     {
     case property_checkert::PASS:
-      report_properties(goto_model, summary_checker->property_map);
+      report_properties(options,goto_model, summary_checker->property_map);
       report_success();
       retval = 0;
       break;
     
     case property_checkert::FAIL:
-      report_properties(goto_model, summary_checker->property_map);
+      report_properties(options,goto_model, summary_checker->property_map);
       report_failure();
       retval = 10;
       break;
@@ -497,7 +541,7 @@ int summarizer_parse_optionst::doit()
       retval = 5;
       if(options.get_bool_option("preconditions")) 
 	goto clean_up;
-      report_properties(goto_model, summary_checker->property_map);
+      report_properties(options,goto_model, summary_checker->property_map);
       report_unknown();
       break;
     
@@ -948,15 +992,59 @@ bool summarizer_parse_optionst::process_goto_program(
 
     // remove returns (must be done after function pointer removal)
     remove_returns(goto_model);
-    
+   
+ 
+#if UNWIND_GOTO_INTO_LOOP
+    goto_unwind(goto_model,2);
+#endif
+
+    remove_skip(goto_model.goto_functions);
+    goto_model.goto_functions.update();
+
+    // now do full inlining, if requested
+    if(options.get_bool_option("inline"))
+    {
+      status() << "Performing full inlining" << eom;
+      if(goto_inline(goto_model, ui_message_handler))
+      {
+        report_unknown();
+	return 5;
+      }
+    }
+
+    //preprocessing to improve the structure of the SSA for the unwinder
     split_loopheads(goto_model);
+
+    //explicitly initialize all local variables
+    nondet_locals(goto_model);
+
+#if 1
+  //TODO: find a better place for that
+    replace_malloc(goto_model,"");
+#endif
+
+#if REMOVE_MULTIPLE_DEREFERENCES
+    remove_multiple_dereferences(goto_model);
+#endif
 
     // recalculate numbers, etc.
     goto_model.goto_functions.update();
 
     // add loop ids
     goto_model.goto_functions.compute_loop_numbers();
-    
+
+    //inline __CPROVER_initialize and main
+    if(cmdline.isset("inline-main"))
+    {
+      inline_main(goto_model); 
+    }
+
+    if(!cmdline.isset("no-propagation"))
+    {
+      status() << "Constant Propagation" << eom;
+      propagate_constants(goto_model);
+    }
+
     // if we aim to cover, replace
     // all assertions by false to prevent simplification
     if(cmdline.isset("cover-assertions"))
@@ -968,31 +1056,6 @@ bool summarizer_parse_optionst::process_goto_program(
       show_loop_ids(get_ui(), goto_model);
       return true;
     }
-
-#if UNWIND_GOTO_INTO_LOOP
-    goto_unwind(goto_model,2);
-#endif
-
-    // now do full inlining, if requested
-    if(options.get_bool_option("inline"))
-    {
-      status() << "Performing full inlining" << eom;
-      goto_inline(goto_model, ui_message_handler);
-    }
-
-    //inline __CPROVER_initialize and main
-    if(cmdline.isset("inline-main"))
-    {
-      inline_main(goto_model); 
-    }
-
-#if PROPAGATE_CONSTANTS
-    propagate_constants(goto_model);
-#endif
-
-#if REMOVE_MULTIPLE_DEREFERENCES
-    remove_multiple_dereferences(goto_model);
-#endif
 
     // do array abstraction
     if(cmdline.isset("array-abstraction"))
@@ -1061,6 +1124,7 @@ Function: summarizer_parse_optionst::report_properties
 \*******************************************************************/
 
 void summarizer_parse_optionst::report_properties(
+  const optionst &options,
   const goto_modelt &goto_model,
   const property_checkert::property_mapt &property_map)
 {
@@ -1091,6 +1155,9 @@ void summarizer_parse_optionst::report_properties(
     if(cmdline.isset("show-trace") &&
        it->second.result==property_checkert::FAIL)
       show_counterexample(goto_model, it->second.error_trace);
+    if(cmdline.isset("graphml-cex") &&
+       it->second.result==property_checkert::FAIL)
+      output_graphml_cex(options,goto_model, it->second.error_trace);
   }
 
   if(!cmdline.isset("property"))
@@ -1195,6 +1262,40 @@ void summarizer_parse_optionst::show_counterexample(
 
 /*******************************************************************\
 
+Function: summarizer_parse_optionst::output_graphml_cex
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void summarizer_parse_optionst::output_graphml_cex(
+  const optionst &options,
+  const goto_modelt &goto_model,
+  const goto_tracet &error_trace)
+{
+  const namespacet ns(goto_model.symbol_table);
+  const std::string graphml=options.get_option("graphml-cex");
+  if(!graphml.empty())
+  {
+    graphmlt cex_graph;
+    convert(ns, error_trace, cex_graph);
+
+    if(graphml=="-")
+      write_graphml(cex_graph, std::cout);
+    else
+    {
+      std::ofstream out(graphml.c_str());
+      write_graphml(cex_graph, out);
+    }
+  }
+}
+
+/*******************************************************************\
+
 Function: summarizer_parse_optionst::report_failure
 
   Inputs:
@@ -1279,19 +1380,18 @@ void summarizer_parse_optionst::help()
 {
   std::cout <<
     "\n"
-    "* *  Summarizer " SUMMARIZER_VERSION " - Copyright (C) 2014                  * *\n"
+    "* *  2LS " SUMMARIZER_VERSION " - Copyright (C) 2015                         * *\n"
     "* *  (based on CBMC " CBMC_VERSION " ";
-    
   std::cout << "(" << (sizeof(void *)*8) << "-bit version))";
     
   std::cout << "                   * *\n";
     
   std::cout <<
-    "* *                    Daniel Kroening                      * *\n"
+    "* *           Daniel Kroening, Peter Schrammel              * *\n"
     "* *                 University of Oxford                    * *\n"
     "* *                 kroening@kroening.com                   * *\n"
     "\n"
-    "Usage:                       Purpose:\n"
+    "Usage:                        Purpose:\n"
     "\n"
     " summarizer [-?] [-h] [--help] show help\n"
     " summarizer file.c ...        source file names\n"
@@ -1339,11 +1439,10 @@ void summarizer_parse_optionst::help()
     " --no-assumptions             ignore user assumptions\n"
     " --inline                     inline all functions into main\n"
     " --inline-partial nr          inline functions smaller than the given nr of instructions\n"
-    " --instrument-output f        output inferred information in goto-binary f\n"
     "\n"
     "Backend options:\n"
+    " --termination                compute ranking functions to prove termination\n"
     " --k-induction                use k-induction\n"
-    " --no-spurious-check          do not check spuriousness of failed assertions\n"
     " --incremental-bmc            use incremental-bmc\n"
     " --preconditions              compute preconditions\n"
     " --sufficient                 sufficient preconditions (default: necessary)\n"
@@ -1356,6 +1455,9 @@ void summarizer_parse_optionst::help()
     " --enum-solver                use solver based on model enumeration\n"
     " --binsearch-solver           use solver based on binary search\n"
     " --arrays                     do not ignore array contents\n"
+    " --lexicographic-ranking-function n          (default n=3)\n"
+    " --monolithic-ranking-function\n"
+    " --max-inner-ranking-iterations n           (default n=20)\n"
     "\n"
     "Other options:\n"
     " --version                    show version and exit\n"

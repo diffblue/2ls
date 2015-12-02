@@ -1,12 +1,13 @@
-CBMC = ~/cbmc
+CBMC = ~/my-cbmc
 
 # Variables you may want to override
 #CXXFLAGS = -Wall -O0 -g -Werror -Wno-long-long -Wno-sign-compare -Wno-parentheses -Wno-strict-aliasing -pedantic
 
-SUMMARIZERFLAGS = -DREUSE_INVARIANTS -DASSERTION_HOISTING
-#SUMMARIZERFLAGS= -DDEBUG_FORMULA -DDISPLAY_FORMULA -DDEBUG_OUTPUT -DNON_INCREMENTAL -DSLICING -DSHOW_COUNTEREXAMPLE -DASSERTION_HOISTING -DSHOW_CALLING_CONTEXTS -DREUSE_INVARIANTS -DSHOW_TEMPLATE_VARIABLES -DSHOW_TEMPLATE
-#
+#static compilation
+#LINKFLAGS += -static-libgcc -static-libstdc++
 
-# CUDD = ~/progr/deltacheck/trunk/cudd-2.5.0
+#2LS switches
+SUMMARIZER_FLAGS = 
+#-DREUSE_INVARIANTS
 
-CBMC_PATCH = ../patches/lazy-array.patch
+CBMC_PATCH =

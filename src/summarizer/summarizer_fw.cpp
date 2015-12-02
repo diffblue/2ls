@@ -77,6 +77,8 @@ void summarizer_fwt::compute_summary_rec(const function_namet &function_name,
     do_summary(function_name,SSA,summary,true_exprt(),context_sensitive);
   }
 
+
+#if 0
   if(!options.get_bool_option("competition-mode"))
   {
     std::ostringstream out;
@@ -84,9 +86,18 @@ void summarizer_fwt::compute_summary_rec(const function_namet &function_name,
     summary.output(out,SSA.ns);   
     status() << out.str() << eom;
   }
+#endif
 
   // store summary in db
   summary_db.put(function_name,summary);
+
+  if(!options.get_bool_option("competition-mode"))
+  {
+    std::ostringstream out;
+    out << std::endl << "Summary for function " << function_name << std::endl;
+    summary_db.get(function_name).output(out,SSA.ns);   
+    status() << out.str() << eom;
+  }
 }
 
 /*******************************************************************\
