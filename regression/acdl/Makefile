@@ -3,10 +3,10 @@ default: tests.log
 FLAGS = --verbosity 10 --acdl
 
 test:
-	@../test.pl -c "../../../src/summarizer/2ls $(FLAGS)"
+	@../test.pl -c "../../../src/summarizer/summarizer $(FLAGS)"
 
 tests.log: ../test.pl
-	@../test.pl -c "../../../src/summarizer/2ls $(FLAGS)"
+	@../test.pl -c "../../../src/summarizer/summarizer $(FLAGS)"
 
 show:
 	@for dir in *; do \

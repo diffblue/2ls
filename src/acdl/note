@@ -159,8 +159,18 @@ Note of the summarizer code
 *) --show-ssa with summarizer show different variable index (x#20) compared to running with --acdl 
 and printing the variables inside acdl code. To resolve this, run acdl as follows:
 ./summarizer --inline --acdl main.c
-*) Peter to merge summarizer code base with main trunk so that our brnach is automatically updated.
+*) Peter to merge summarizer code base with main trunk so that our branch is automatically updated.
 *) Inside acdl_domain, implement is_top, is_bottom, is_complete
 *) Inside acdl_solver, implement the whole acdl loop. Implement the decision, conflict analysis steps.
 For decision see reference of leo's VSIDS heuristic. 
 
+*) For pre-condition computation, the trick is to perform two way propagation. Project lhs on rhs and project rhs on lhs.
+*) For bottom3 example, * and / does not work. Although + and - work correctly. i
+
+// Daniel's suggestion to handle branches in SSA representation
+Look at guards (guard variables in SSA) and make a decision on guards. 
+Use the boolean part of guard to decide using MiniSAT and the non-boolean part of the guard to decide with 
+abstract domains (intervals). What a decision variable would be in ACDL solver is not known yet !
+
+*) For example where x=1; assert(x==2); is unknown. Because while calculating the projection and 
+computing the new value, (x!=2) can not be expressed by interval domain !!

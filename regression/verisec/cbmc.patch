@@ -1,0 +1,108 @@
+Index: config.inc
+===================================================================
+--- config.inc	(revision 4334)
++++ config.inc	(working copy)
+@@ -1,4 +1,4 @@
+-# Build platform (use one of AUTO, Unix, OSX_Universal, MSVC, Cygwin, MinGW)
++#Build platform (use one of AUTO, Unix, OSX_Universal, MSVC, Cygwin, MinGW)
+ BUILD_ENV = AUTO
+ 
+ # Variables you may want to override
+@@ -11,7 +11,7 @@
+ #CHAFF = ../../zChaff
+ #BOOLEFORCE = ../../booleforce-0.4
+ #MINISAT = ../../MiniSat-p_v1.14
+-MINISAT2 = ../../minisat-2.2.0
++MINISAT2 = ~/minisat-2.2.0
+ #GLUCOSE = ../../glucose2.2
+ #SMVSAT =
+ 
+Index: goto-instrument/goto_instrument_parseoptions.cpp
+===================================================================
+--- goto-instrument/goto_instrument_parseoptions.cpp	(revision 4334)
++++ goto-instrument/goto_instrument_parseoptions.cpp	(working copy)
+@@ -23,6 +23,7 @@
+ #include <goto-programs/read_goto_binary.h>
+ #include <goto-programs/write_goto_binary.h>
+ #include <goto-programs/interpreter.h>
++#include <goto-programs/array_abstraction.h>
+ #include <goto-programs/string_abstraction.h>
+ #include <goto-programs/string_instrumentation.h>
+ #include <goto-programs/loop_ids.h>
+@@ -686,6 +687,13 @@
+       get_message_handler(), goto_functions);
+   }
+ 
++  if(cmdline.isset("array-abstraction"))
++  {
++    status() << "Array Abstraction" << eom;
++    array_abstraction(symbol_table,
++      get_message_handler(), goto_functions);
++  }
++
+   if(cmdline.isset("remove-pointers") ||
+      cmdline.isset("race-check") ||
+      cmdline.isset("mm") ||
+Index: goto-instrument/goto_instrument_parseoptions.h
+===================================================================
+--- goto-instrument/goto_instrument_parseoptions.h	(revision 4334)
++++ goto-instrument/goto_instrument_parseoptions.h	(working copy)
+@@ -50,7 +50,7 @@
+   "(show-symbol-table)(show-points-to)(show-rw-set)" \
+   "(cav11)" \
+   "(show-natural-loops)(accelerate)(havoc-loops)" \
+-  "(error-label):(string-abstraction)" \
++  "(error-label):(string-abstraction)(array-abstraction)" \
+   "(verbosity):(version)(xml-ui)(show-loops)" \
+   "(accelerate)" \
+   "(k-induction):(step-case)(base-case)" \
+Index: goto-programs/Makefile
+===================================================================
+--- goto-programs/Makefile	(revision 4334)
++++ goto-programs/Makefile	(working copy)
+@@ -5,7 +5,7 @@
+       remove_skip.cpp goto_convert_functions.cpp string_instrumentation.cpp \
+       builtin_functions.cpp show_properties.cpp set_properties.cpp \
+       read_goto_binary.cpp goto_asm.cpp elf_reader.cpp \
+-      string_abstraction.cpp destructor.cpp \
++      string_abstraction.cpp array_abstraction.cpp destructor.cpp \
+       read_bin_goto_object.cpp goto_program_irep.cpp interpreter.cpp \
+       interpreter_evaluate.cpp flow_insensitive_analysis.cpp \
+       format_strings.cpp loop_ids.cpp pointer_arithmetic.cpp \
+Index: cbmc/cbmc_parseoptions.cpp
+===================================================================
+--- cbmc/cbmc_parseoptions.cpp	(revision 4334)
++++ cbmc/cbmc_parseoptions.cpp	(working copy)
+@@ -26,6 +26,7 @@
+ #include <goto-programs/set_properties.h>
+ #include <goto-programs/read_goto_binary.h>
+ #include <goto-programs/string_abstraction.h>
++#include <goto-programs/array_abstraction.h>
+ #include <goto-programs/string_instrumentation.h>
+ #include <goto-programs/loop_ids.h>
+ #include <goto-programs/link_to_library.h>
+@@ -764,6 +765,11 @@
+       string_instrumentation(
+         symbol_table, get_message_handler(), goto_functions);
+ 
++    if(cmdline.isset("array-abstraction"))
++      array_abstraction(
++        symbol_table, get_message_handler(), goto_functions);
++
++
+     status() << "Function Pointer Removal" << eom;
+     remove_function_pointers(symbol_table, goto_functions,
+       cmdline.isset("pointer-check"));
+Index: cbmc/cbmc_parseoptions.h
+===================================================================
+--- cbmc/cbmc_parseoptions.h	(revision 4334)
++++ cbmc/cbmc_parseoptions.h	(working copy)
+@@ -49,7 +49,7 @@
+   "(i386-linux)(i386-macos)(i386-win32)(win32)(winx64)(gcc)" \
+   "(ppc-macos)(unsigned-char)" \
+   "(arrays-uf-always)(arrays-uf-never)" \
+-  "(string-abstraction)(no-arch)(arch):" \
++  "(array-abstraction)(string-abstraction)(no-arch)(arch):" \
+   "(round-to-nearest)(round-to-plus-inf)(round-to-minus-inf)(round-to-zero)" \
+   "(decide)" // legacy, and will eventually disappear
+ 
