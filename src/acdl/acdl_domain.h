@@ -45,6 +45,10 @@ public:
   bool contains(const valuet &value1,
 		const valuet &value2) const;
 
+  exprt split(const valuet &value, const symbol_exprt &var, bool upper=false)
+  { //TODO
+    return value; }
+  
 
   void set_bottom(valuet &value) { value = false_exprt();  }
   void set_top(valuet &value) { value = true_exprt(); }

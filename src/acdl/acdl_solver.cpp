@@ -170,25 +170,25 @@ acdl_solvert::update_worklist (const local_SSAt &SSA,
         #endif
       }
     }
-    for (local_SSAt::nodet::constraintst::const_iterator e_it =
-        n_it->constraints.begin (); e_it != n_it->constraints.end (); e_it++)
+    for (local_SSAt::nodet::constraintst::const_iterator c_it =
+        n_it->constraints.begin (); c_it != n_it->constraints.end (); c_it++)
     {
-      if(*e_it == current_statement) continue;
-      if (check_statement (*e_it, vars)) {
-        push_into_worklist(worklist, *e_it);
+      if(*c_it == current_statement) continue;
+      if (check_statement (*c_it, vars)) {
+        push_into_worklist(worklist, *c_it);
         #ifdef DEBUG
-        std::cout << "Push: " << from_expr (SSA.ns, "", *e_it) << std::endl;
+        std::cout << "Push: " << from_expr (SSA.ns, "", *c_it) << std::endl;
         #endif
       }
     }
-    for (local_SSAt::nodet::assertionst::const_iterator e_it =
-        n_it->assertions.begin (); e_it != n_it->assertions.end (); e_it++)
+    for (local_SSAt::nodet::assertionst::const_iterator a_it =
+        n_it->assertions.begin (); a_it != n_it->assertions.end (); a_it++)
     {
-      if(*e_it == current_statement) continue;
-      if (check_statement (*e_it, vars)) {
-        push_into_worklist(worklist, not_exprt (*e_it));
+      if(*a_it == current_statement) continue;
+      if (check_statement (*a_it, vars)) {
+        push_into_worklist(worklist, not_exprt (*a_it));
         #ifdef DEBUG
-        std::cout << "Push: " << from_expr (SSA.ns, "", not_exprt(*e_it)) << std::endl;
+        std::cout << "Push: " << from_expr (SSA.ns, "", not_exprt(*a_it)) << std::endl;
         #endif
       }
     }
@@ -399,6 +399,7 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
 
   while(true)
   {
+    // domain.set_top(v); //  (we won't do that) this avoids backtracking
     while(true)
     {
       // deduction phase in acdl
@@ -412,14 +413,19 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
       if(domain.is_complete(v))
         return property_checkert::FAIL;
 
-      //TODO: to make it terminate for now:
-      return result;
+      // make a decision
+      // TODO
+      // keep information for backtracking associated with this decision point
+      // update the worklist to include all statements relating to the decision variables
+     
+      return result;  //TODO: to make it terminate for now:
     }
 
     // analyze conflict ...
-
-
-    //TODO: to make it terminate for now:
-    return result;
+    // first UIP over conflict graph
+    // add learned clauses
+    // backtrack
+    
+    return result; //TODO: to make it terminate for now:
   }
 }
