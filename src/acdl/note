@@ -174,3 +174,7 @@ abstract domains (intervals). What a decision variable would be in ACDL solver i
 
 *) For example where x=1; assert(x==2); is unknown. Because while calculating the projection and 
 computing the new value, (x!=2) can not be expressed by interval domain !!
+
+*) Computing the update worklist seems to be a problem. All dependencies are not pushed properly now.
+
+*) We now use summarizer/2ls as executable to run acdl. To see the ssa representation, we now do --show-ssa --no-constant-propagate
