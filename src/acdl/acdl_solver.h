@@ -49,9 +49,26 @@ protected:
   const acdl_domaint::statementt pop_from_worklist (worklistt &worklist);
 
   bool check_statement (const exprt &expr, const acdl_domaint::varst &vars);
-  
-  property_checkert::resultt propagate(const local_SSAt &SSA, acdl_domaint::valuet &v);
 
+  typedef struct {
+    exprt root;
+    std::map<exprt, exprt> edges; //reverse edges,
+                                  //i.e. e1 maps to e2 <=> directed edge (e2,e1)
+    std::map<exprt, acdl_domaint::valuet> backtrack_points;
+  } decision_grapht; 
+  
+  property_checkert::resultt propagate(const local_SSAt &SSA,
+				       acdl_domaint::valuet &v,
+				       worklistt &worklist);
+
+  void decide(const local_SSAt &SSA,
+	      acdl_domaint::valuet &v,
+	      decision_grapht &g,
+	      worklistt &worklist);
+  
+  property_checkert::resultt analyze_conflict(const local_SSAt &SSA,
+			acdl_domaint::valuet &v,
+			decision_grapht &g);
 };
 
 

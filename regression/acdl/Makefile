@@ -1,6 +1,6 @@
 default: tests.log
 
-FLAGS = --verbosity 10 --acdl
+FLAGS = --verbosity 10 --acdl --no-propagation
 
 test:
 	@../test.pl -c "../../../src/summarizer/summarizer $(FLAGS)"

@@ -254,16 +254,10 @@ Function: acdl_solvert::propagate
  forward abstract analysis to compute the post-condition of a statement
 \************************************************************************/
 
-property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA, acdl_domaint::valuet &v)
+property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA,
+						   acdl_domaint::valuet &v,
+						   worklistt &worklist)
 {
-#if 0
-  unsigned iteration_number=0;
-  bool change;
-#endif
-  
-  worklistt worklist;
-  
-  initialize_worklist(SSA, worklist);
 
 #if 1
   exprt expression;
@@ -367,6 +361,60 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA, acdl_d
   return property_checkert::UNKNOWN;
 }
 
+
+/*******************************************************************
+
+ Function: acdl_solvert::decide()
+
+ Inputs:
+
+ Outputs:
+
+ Purpose:
+
+ \*******************************************************************/
+
+void
+acdl_solvert::decide (const local_SSAt &SSA,
+		      acdl_domaint::valuet &v,
+		      decision_grapht &g,
+		      worklistt &worklist)
+{
+  //TODO
+
+  // keep information for backtracking associated with this decision point in g
+
+  // update the worklist to include all statements relating to the decision variables
+  //TODO
+
+}
+
+/*******************************************************************
+
+ Function: acdl_solvert::analyze_conflict()
+
+ Inputs:
+
+ Outputs:
+
+ Purpose:
+
+ \*******************************************************************/
+
+property_checkert::resultt 
+acdl_solvert::analyze_conflict(const local_SSAt &SSA,
+			       acdl_domaint::valuet &v,
+			       decision_grapht &g)
+{
+  //TODO
+
+  // first UIP over conflict graph
+  // add learned clauses
+  // backtrack
+
+  return property_checkert::PASS;
+}
+
 /*******************************************************************
  Function: acdl_solvert::operator()
 
@@ -393,17 +441,20 @@ end
 
 property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
 {
+  worklistt worklist;
+  initialize_worklist(SSA, worklist);
+
   acdl_domaint::valuet v;
   domain.set_top(v);
+  decision_grapht g;
+    
   property_checkert::resultt result = property_checkert::UNKNOWN;
-
-  while(true)
+  while(result == property_checkert::UNKNOWN)
   {
-    // domain.set_top(v); //  (we won't do that) this avoids backtracking
     while(true)
     {
       // deduction phase in acdl
-      result = propagate(SSA, v);
+      result = propagate(SSA, v, worklist);
 
       // check for conflict
       if(result == property_checkert::PASS) //UNSAT
@@ -414,18 +465,12 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
         return property_checkert::FAIL;
 
       // make a decision
-      // TODO
-      // keep information for backtracking associated with this decision point
-      // update the worklist to include all statements relating to the decision variables
-     
-      return result;  //TODO: to make it terminate for now:
+      decide(SSA, v, g, worklist);
     }
 
     // analyze conflict ...
-    // first UIP over conflict graph
-    // add learned clauses
-    // backtrack
-    
-    return result; //TODO: to make it terminate for now:
+    result = analyze_conflict(SSA, v, g);
   }
+
+  return result;
 }
