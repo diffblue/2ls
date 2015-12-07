@@ -27,7 +27,7 @@ Function: acdl_solvert::operator()
 
  Outputs:
 
- Purpose:
+ Purpose: Initialize the worklist
 
  \*******************************************************************/
 

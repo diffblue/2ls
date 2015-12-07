@@ -177,4 +177,21 @@ computing the new value, (x!=2) can not be expressed by interval domain !!
 
 *) Computing the update worklist seems to be a problem. All dependencies are not pushed properly now.
 
-*) We now use summarizer/2ls as executable to run acdl. To see the ssa representation, we now do --show-ssa --no-constant-propagate
+*) We now use summarizer/2ls as executable to run acdl. To see the ssa representation, we now do --show-ssa --no-propagation
+../../../src/summarizer/2ls --acdl main.c --show-ssa --no-propagation
+
+*) We plan to build acdl with complete solver support now and no hardcore abstract domain implementation. The major difference 
+between acdl and summarize is that acdl follow small step semantics of the program unlike large block encoding in summarizer.
+
+Discussion with Peter
+---------------------
+1> We do multi-way propagation of abstract values for all nodes in SSA, that is, 
+equalities, assertions and constraints. 
+
+Queries:
+--------
+bottom3 is absolutely fine
+bottom5 is showign unknown when it should show true: What happens when somethings holds ture  ?
+
+
+  
