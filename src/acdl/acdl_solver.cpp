@@ -381,9 +381,23 @@ acdl_solvert::decide (const local_SSAt &SSA,
 		      worklistt &worklist)
 {
   //TODO
+  // use information from VSIDS to choose decision 'variable'
+  // Note: using CFG flow instead can be used to emulate a forward analysis
 
+  // choose a meet irreducible
+  // 1. look at conditions in the SSA
+#if 0  
+  // 2. call acdl_domaint::split
+  exprt decision_expr; //TODO: 'variable' to decide on
+  std::vector<acdl_domaint::valuet> decision;
+  decision.resize(1);
+  decision[0] = domain.split(v,decision_expr);
+  domain.meet(decision,v);
+#endif
+  
   // keep information for backtracking associated with this decision point in g
-
+  //TODO
+  
   // update the worklist to include all statements relating to the decision variables
   //TODO
 

@@ -45,7 +45,7 @@ public:
   bool contains(const valuet &value1,
 		const valuet &value2) const;
 
-  exprt split(const valuet &value, const symbol_exprt &var, bool upper=false)
+  exprt split(const valuet &value, const exprt &expr, bool upper=false)
   { //TODO
     return value; }
   
