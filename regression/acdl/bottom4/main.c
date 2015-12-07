@@ -5,6 +5,6 @@ int main() {
   y = x + 3;
   x = y - 2;
   
-  assert(x==2);
+  assert(x!=2);
 }
 
