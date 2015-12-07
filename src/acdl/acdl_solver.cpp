@@ -197,6 +197,7 @@ acdl_solvert::update_worklist (const local_SSAt &SSA,
 
 
 /*******************************************************************
+
  Function: acdl_solvert::select_vars()
 
  Inputs:
@@ -210,6 +211,8 @@ acdl_solvert::update_worklist (const local_SSAt &SSA,
 void
 acdl_solvert::select_vars (const exprt &statement, acdl_domaint::varst &vars)
 {
+#if 0 //TODO: this was an attempt to implement a forward iteration strategy,
+      //      but we would also need to consider execution order 
   // If it is an equality, then select the lhs for post-condition computation
   exprt lhs;
   if (statement.id () == ID_equal)
@@ -223,6 +226,7 @@ acdl_solvert::select_vars (const exprt &statement, acdl_domaint::varst &vars)
       assert(false);
   }
   else // for constraints
+#endif
   {
     std::set<symbol_exprt> symbols;
     find_symbols(statement,symbols);
