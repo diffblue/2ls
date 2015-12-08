@@ -231,3 +231,26 @@ exprt acdl_domaint::remove_var(const valuet &_old_value, const symbol_exprt &var
   }
   return conjunction(new_value);
 }
+
+/*******************************************************************\
+
+Function: acdl_domaint::split()
+
+  Inputs: example: 
+            expr: x-y
+            value: -1 <= x-y && x-y <= 5 && 0 <= y && y <= 10 && ...
+
+ Outputs: example:
+            2 <= x-y (for upper=true)
+
+ Purpose:
+
+\*******************************************************************/
+
+exprt acdl_domaint::split(const valuet &value, const exprt &expr, 
+			  bool upper)
+{ 
+
+    return value; 
+}
+
