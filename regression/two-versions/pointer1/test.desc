@@ -1,7 +1,0 @@
-CORE
-new.o
-old.o --pointer-check --bounds-check
-^EXIT=0$
-^SIGNAL=0$
-^Properties passed: 18$
-^Properties failed: 0$

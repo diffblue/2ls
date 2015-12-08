@@ -1,7 +1,0 @@
-CORE
-main.o
-
-^EXIT=0$
-^SIGNAL=0$
-^Properties passed: 0$
-^Properties failed: 2$
