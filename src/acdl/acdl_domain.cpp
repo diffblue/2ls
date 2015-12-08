@@ -18,6 +18,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include <util/find_symbols.h>
 
 #include "../domains/ssa_analyzer.h"
+#include "../domains/tpolyhedra_domain.h"
 
 #include "acdl_domain.h"
 #include "template_generator_acdl.h"
@@ -238,19 +239,57 @@ Function: acdl_domaint::split()
 
   Inputs: example: 
             expr: x-y
-            value: -1 <= x-y && x-y <= 5 && 0 <= y && y <= 10 && ...
+            value: -(x-y) <= 1 && x-y <= 5 && -y <= 0 && y <= 10 && ...
 
  Outputs: example:
             2 <= x-y (for upper=true)
 
- Purpose:
+ Purpose: splits constant-bounded expressions in half
 
 \*******************************************************************/
 
 exprt acdl_domaint::split(const valuet &value, const exprt &expr, 
 			  bool upper)
 { 
+  if(value.operands().size()<2)
+    return true_exprt(); //cannot split
 
-    return value; 
+  assert(value.id()==ID_and); //is a conjunction
+  
+  //match template expression
+  constant_exprt u;
+  for(unsigned i=0; i<value.operands().size(); i++)
+  {
+    const exprt &e = value.operands()[i];
+    if(e.id() != ID_le)
+      continue;
+    if(to_binary_relation_expr(e).lhs() == expr)
+    {
+      u = to_constant_expr(to_binary_relation_expr(e).rhs());
+      break;
+    }
+  }
+  constant_exprt l;
+  for(unsigned i=0; i<value.operands().size(); i++)
+  {
+    const exprt &e = value.operands()[i];
+    if(e.id() != ID_le)
+      continue;
+    const exprt &lhs = to_binary_relation_expr(e).lhs();
+    if(lhs.id()==ID_unary_minus && 
+       lhs.op0().id()==ID_typecast &&
+       lhs.op0().op0() == expr)
+    {
+      l = to_constant_expr(to_binary_relation_expr(e).rhs());
+      break;
+    }
+  }
+
+  exprt m = tpolyhedra_domaint::between(l,u);
+
+  if(upper)
+    return binary_relation_exprt(m,ID_le,expr);
+  else
+    return binary_relation_exprt(expr,ID_le,m);
 }
 
