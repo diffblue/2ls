@@ -1,0 +1,117 @@
+2LS version 0.3.4 (based on CBMC 5.2)
+Parsing main.c
+Converting
+Type-checking main
+file main.c line 6 function main: function `assert' is not declared
+Generating GOTO Program
+Adding CPROVER library
+Generic Property Instrumentation
+Function Pointer Removal
+Performing full inlining
+Using intervals domain with ACDL solver
+Computing SSA of _start
+Simplifying
+(E) $guard#0 == TRUE
+
+(E) __CPROVER_dead_object#2 == NULL
+
+(E) __CPROVER_deallocated#3 == NULL
+
+(E) __CPROVER_malloc_is_new_array#4 == FALSE
+
+(E) __CPROVER_malloc_object#5 == NULL
+
+(E) __CPROVER_malloc_size#6 == 0ul
+
+(E) __CPROVER_memory_leak#7 == NULL
+
+(E) __CPROVER_next_thread_id#8 == 0ul
+
+(E) __CPROVER_pipe_count#9 == 0u
+
+(E) __CPROVER_rounding_mode#10 == 0
+
+(E) __CPROVER_thread_id#11 == 0ul
+
+(E) __CPROVER_threads_exited#12 == ARRAY_OF(FALSE)
+
+(E) x#16 == nondet_symbol(ssa::nondet16.1)
+
+(E) y#18 == nondet_symbol(ssa::nondet18.1)
+
+(E) x#19 == 8
+
+(E) y#20 == 2 * x#19
+
+(A) !$guard#0 || y#20 != 14
+
+(E) main#return_value#24 == nondet_symbol(ssa::nondet24.1)
+
+
+_start
+First push: $guard#0 == TRUE
+Pop: $guard#0 == TRUE
+Push: !(!$guard#0 || y#20 != 14)
+Old: TRUE
+New: $guard#0 == TRUE
+Updated: $guard#0 == TRUE
+Pop: !(!$guard#0 || y#20 != 14)
+Selected vars: $guard#0 y#20
+[ACDL-DOMAIN] old value: $guard#0 == TRUE
+[ACDL-DOMAIN] projected(ssa::$guard#0): TRUE
+[ACDL-DOMAIN] new_value(ssa::$guard#0): TRUE && TRUE
+[ACDL-DOMAIN] projected(main::1::y#20): $guard#0 && TRUE
+[ACDL-DOMAIN] new_value(main::1::y#20): $guard#0 && TRUE && y#20 <= 14 && -((signed __CPROVER_bitvector[33])y#20) <= -14
+[ACDL-DOMAIN] new_value: y#20 <= 14 && -((signed __CPROVER_bitvector[33])y#20) <= -14 && $guard#0
+Push: $guard#0 == TRUE
+Push: y#20 == 2 * x#19
+Push: !(!$guard#0 || y#20 != 14)
+Old: $guard#0 == TRUE
+New: y#20 <= 14 && -((signed __CPROVER_bitvector[33])y#20) <= -14 && $guard#0
+Updated: y#20 <= 14 && -((signed __CPROVER_bitvector[33])y#20) <= -14 && $guard#0 == TRUE && $guard#0
+Pop: $guard#0 == TRUE
+Old: y#20 <= 14 && -((signed __CPROVER_bitvector[33])y#20) <= -14 && $guard#0 == TRUE && $guard#0
+New: $guard#0 == TRUE
+Updated: y#20 <= 14 && -((signed __CPROVER_bitvector[33])y#20) <= -14 && $guard#0 == TRUE && $guard#0
+Pop: y#20 == 2 * x#19
+Selected vars: x#19 y#20
+[ACDL-DOMAIN] old value: y#20 <= 14 && -((signed __CPROVER_bitvector[33])y#20) <= -14 && $guard#0 == TRUE && $guard#0
+[ACDL-DOMAIN] projected(main::1::x#19): y#20 <= 14 && -((signed __CPROVER_bitvector[33])y#20) <= -14 && $guard#0 == TRUE && $guard#0
+[ACDL-DOMAIN] new_value(main::1::x#19): y#20 <= 14 && -((signed __CPROVER_bitvector[33])y#20) <= -14 && $guard#0 == TRUE && $guard#0 && x#19 <= 7 && -((signed __CPROVER_bitvector[33])x#19) <= 2147483641
+[ACDL-DOMAIN] projected(main::1::y#20): $guard#0 == TRUE && $guard#0
+[ACDL-DOMAIN] new_value(main::1::y#20): $guard#0 == TRUE && $guard#0 && y#20 <= 2147483646 && -((signed __CPROVER_bitvector[33])y#20) <= 2147483648
+[ACDL-DOMAIN] new_value: x#19 <= 7 && y#20 <= 14 && y#20 <= 2147483646 && -((signed __CPROVER_bitvector[33])x#19) <= 2147483641 && -((signed __CPROVER_bitvector[33])y#20) <= 2147483648 && -((signed __CPROVER_bitvector[33])y#20) <= -14 && $guard#0 == TRUE && $guard#0
+Push: x#19 == 8
+Push: !(!$guard#0 || y#20 != 14)
+Old: y#20 <= 14 && -((signed __CPROVER_bitvector[33])y#20) <= -14 && $guard#0 == TRUE && $guard#0
+New: x#19 <= 7 && y#20 <= 14 && y#20 <= 2147483646 && -((signed __CPROVER_bitvector[33])x#19) <= 2147483641 && -((signed __CPROVER_bitvector[33])y#20) <= 2147483648 && -((signed __CPROVER_bitvector[33])y#20) <= -14 && $guard#0 == TRUE && $guard#0
+Updated: x#19 <= 7 && y#20 <= 14 && y#20 <= 2147483646 && -((signed __CPROVER_bitvector[33])x#19) <= 2147483641 && -((signed __CPROVER_bitvector[33])y#20) <= 2147483648 && -((signed __CPROVER_bitvector[33])y#20) <= -14 && $guard#0 == TRUE && $guard#0
+Pop: !(!$guard#0 || y#20 != 14)
+Selected vars: $guard#0 y#20
+[ACDL-DOMAIN] old value: x#19 <= 7 && y#20 <= 14 && y#20 <= 2147483646 && -((signed __CPROVER_bitvector[33])x#19) <= 2147483641 && -((signed __CPROVER_bitvector[33])y#20) <= 2147483648 && -((signed __CPROVER_bitvector[33])y#20) <= -14 && $guard#0 == TRUE && $guard#0
+[ACDL-DOMAIN] projected(ssa::$guard#0): x#19 <= 7 && y#20 <= 14 && y#20 <= 2147483646 && -((signed __CPROVER_bitvector[33])x#19) <= 2147483641 && -((signed __CPROVER_bitvector[33])y#20) <= 2147483648 && -((signed __CPROVER_bitvector[33])y#20) <= -14
+[ACDL-DOMAIN] new_value(ssa::$guard#0): x#19 <= 7 && y#20 <= 14 && y#20 <= 2147483646 && -((signed __CPROVER_bitvector[33])x#19) <= 2147483641 && -((signed __CPROVER_bitvector[33])y#20) <= 2147483648 && -((signed __CPROVER_bitvector[33])y#20) <= -14 && TRUE
+[ACDL-DOMAIN] projected(main::1::y#20): x#19 <= 7 && -((signed __CPROVER_bitvector[33])x#19) <= 2147483641 && $guard#0 == TRUE && $guard#0
+[ACDL-DOMAIN] new_value(main::1::y#20): x#19 <= 7 && -((signed __CPROVER_bitvector[33])x#19) <= 2147483641 && $guard#0 == TRUE && $guard#0 && y#20 <= 14 && -((signed __CPROVER_bitvector[33])y#20) <= -14
+[ACDL-DOMAIN] new_value: x#19 <= 7 && y#20 <= 14 && y#20 <= 2147483646 && -((signed __CPROVER_bitvector[33])x#19) <= 2147483641 && -((signed __CPROVER_bitvector[33])y#20) <= 2147483648 && -((signed __CPROVER_bitvector[33])y#20) <= -14 && $guard#0 == TRUE && $guard#0
+Old: x#19 <= 7 && y#20 <= 14 && y#20 <= 2147483646 && -((signed __CPROVER_bitvector[33])x#19) <= 2147483641 && -((signed __CPROVER_bitvector[33])y#20) <= 2147483648 && -((signed __CPROVER_bitvector[33])y#20) <= -14 && $guard#0 == TRUE && $guard#0
+New: x#19 <= 7 && y#20 <= 14 && y#20 <= 2147483646 && -((signed __CPROVER_bitvector[33])x#19) <= 2147483641 && -((signed __CPROVER_bitvector[33])y#20) <= 2147483648 && -((signed __CPROVER_bitvector[33])y#20) <= -14 && $guard#0 == TRUE && $guard#0
+Updated: x#19 <= 7 && y#20 <= 14 && y#20 <= 2147483646 && -((signed __CPROVER_bitvector[33])x#19) <= 2147483641 && -((signed __CPROVER_bitvector[33])y#20) <= 2147483648 && -((signed __CPROVER_bitvector[33])y#20) <= -14 && $guard#0 == TRUE && $guard#0
+Pop: x#19 == 8
+Selected vars: x#19
+[ACDL-DOMAIN] old value: x#19 <= 7 && y#20 <= 14 && y#20 <= 2147483646 && -((signed __CPROVER_bitvector[33])x#19) <= 2147483641 && -((signed __CPROVER_bitvector[33])y#20) <= 2147483648 && -((signed __CPROVER_bitvector[33])y#20) <= -14 && $guard#0 == TRUE && $guard#0
+[ACDL-DOMAIN] projected(main::1::x#19): y#20 <= 14 && y#20 <= 2147483646 && -((signed __CPROVER_bitvector[33])y#20) <= 2147483648 && -((signed __CPROVER_bitvector[33])y#20) <= -14 && $guard#0 == TRUE && $guard#0
+[ACDL-DOMAIN] new_value(main::1::x#19): y#20 <= 14 && y#20 <= 2147483646 && -((signed __CPROVER_bitvector[33])y#20) <= 2147483648 && -((signed __CPROVER_bitvector[33])y#20) <= -14 && $guard#0 == TRUE && $guard#0 && x#19 <= 8 && -((signed __CPROVER_bitvector[33])x#19) <= -8
+[ACDL-DOMAIN] new_value: x#19 <= 8 && y#20 <= 14 && y#20 <= 2147483646 && -((signed __CPROVER_bitvector[33])x#19) <= -8 && -((signed __CPROVER_bitvector[33])y#20) <= 2147483648 && -((signed __CPROVER_bitvector[33])y#20) <= -14 && $guard#0 == TRUE && $guard#0
+Push: y#20 == 2 * x#19
+Old: x#19 <= 7 && y#20 <= 14 && y#20 <= 2147483646 && -((signed __CPROVER_bitvector[33])x#19) <= 2147483641 && -((signed __CPROVER_bitvector[33])y#20) <= 2147483648 && -((signed __CPROVER_bitvector[33])y#20) <= -14 && $guard#0 == TRUE && $guard#0
+New: x#19 <= 8 && y#20 <= 14 && y#20 <= 2147483646 && -((signed __CPROVER_bitvector[33])x#19) <= -8 && -((signed __CPROVER_bitvector[33])y#20) <= 2147483648 && -((signed __CPROVER_bitvector[33])y#20) <= -14 && $guard#0 == TRUE && $guard#0
+Updated: x#19 <= 7 && x#19 <= 8 && y#20 <= 14 && y#20 <= 2147483646 && -((signed __CPROVER_bitvector[33])x#19) <= 2147483641 && -((signed __CPROVER_bitvector[33])x#19) <= -8 && -((signed __CPROVER_bitvector[33])y#20) <= 2147483648 && -((signed __CPROVER_bitvector[33])y#20) <= -14 && $guard#0 == TRUE && $guard#0
+Propagation finished with BOTTOM
+[main.assertion.1] assertion y != 14: UNKNOWN
+
+** 1 of 1 unknown
+** 0 of 1 failed
+VERIFICATION SUCCESSFUL
+EXIT=0
+SIGNAL=0
