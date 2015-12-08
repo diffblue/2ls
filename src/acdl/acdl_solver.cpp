@@ -82,6 +82,25 @@ acdl_solvert::check_statement (const exprt &expr,
 
 /*******************************************************************\
 
+Function: acdl_solvert::push_into_assertion_list()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+ \*******************************************************************/
+
+void
+acdl_solvert::push_into_assertion_list (assert_listt &aexpr,
+				  const acdl_domaint::statementt &statement)
+{
+  aexpr.push_back(statement);
+}
+
+/*******************************************************************\
+
 Function: acdl_solvert::push_into_worklist()
 
   Inputs:
@@ -184,6 +203,12 @@ acdl_solvert::update_worklist (const local_SSAt &SSA,
     for (local_SSAt::nodet::assertionst::const_iterator a_it =
         n_it->assertions.begin (); a_it != n_it->assertions.end (); a_it++)
     {
+      // for now, store the decision variable as variables 
+      // that appear only in properties
+      // find all variables in an assert statement
+      assert_listt alist;
+      push_into_assertion_list(alist, *a_it);
+           
       if(*a_it == current_statement) continue;
       if (check_statement (*a_it, vars)) {
         push_into_worklist(worklist, not_exprt (*a_it));
@@ -382,7 +407,8 @@ void
 acdl_solvert::decide (const local_SSAt &SSA,
 		      acdl_domaint::valuet &v,
 		      decision_grapht &g,
-		      worklistt &worklist)
+		      worklistt &worklist,
+          assert_listt &alist)
 {
   //TODO
   // use information from VSIDS to choose decision 'variable'
@@ -390,14 +416,16 @@ acdl_solvert::decide (const local_SSAt &SSA,
 
   // choose a meet irreducible
   // 1. look at conditions in the SSA
-#if 0  
+//#if 0  
   // 2. call acdl_domaint::split
   exprt decision_expr; //TODO: 'variable' to decide on
   std::vector<acdl_domaint::valuet> decision;
   decision.resize(1);
-  decision[0] = domain.split(v,decision_expr);
+  
+  std::cout << "DECISION PHASE: " << from_expr (SSA.ns, "", alist.front()) << std::endl;
+  decision[0] = domain.split(alist.front(),decision_expr);
   domain.meet(decision,v);
-#endif
+//#endif
   
   // keep information for backtracking associated with this decision point in g
   //TODO
@@ -460,6 +488,7 @@ end
 property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
 {
   worklistt worklist;
+  assert_listt alist;
   initialize_worklist(SSA, worklist);
 
   acdl_domaint::valuet v;
@@ -483,7 +512,7 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
         return property_checkert::FAIL;
 
       // make a decision
-      decide(SSA, v, g, worklist);
+      decide(SSA, v, g, worklist, alist);
     }
 
     // analyze conflict ...

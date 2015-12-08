@@ -287,9 +287,14 @@ exprt acdl_domaint::split(const valuet &value, const exprt &expr,
 
   exprt m = tpolyhedra_domaint::between(l,u);
 
-  if(upper)
+  if(upper) {
+    std::cout << "[ACDL-DOMAIN] decision: "
+	      << from_expr(SSA.ns, "", binary_relation_exprt(m,ID_le,expr)) << std::endl;
     return binary_relation_exprt(m,ID_le,expr);
-  else
+  }
+  else {
+    std::cout << "[ACDL-DOMAIN] decision: "
+	      << from_expr(SSA.ns, "", binary_relation_exprt(expr,ID_le,m)) << std::endl;
     return binary_relation_exprt(expr,ID_le,m);
+  }
 }
-

@@ -191,7 +191,83 @@ equalities, assertions and constraints.
 Queries:
 --------
 bottom3 is absolutely fine
-bottom5 is showign unknown when it should show true: What happens when somethings holds ture  ?
+bottom5 is showing unknown when it should show true: What happens when somethings holds ture  ?
+
+Some observations:
+------------------
+1> Consider the following program:
+int main() {
+  int x, y;
+
+  x = 8;
+  y = x;
+  assert(y!=15);
+}
+CBMC with MiniSAT(CDCL solver), cdfpl and acdl -- none of these algorithms made a single decision 
+to infer that the program is safe. Only deductions are performed to ensure that the program is safe.
+
+2> Consider the following program:
+int main() {
+  int x, y;
+
+  x = 1;
+  y = x + 3;
+  x = y - 2;
+
+  assert(x!=2);
+}
+
+***********************************************************
+CBMC with MiniSAT(CDCL solver): --> This made one decision
+***********************************************************
+Solving with MiniSAT 2.2.0 with simplifier
+72 variables, 11 clauses
+SAT checker: negated claim is SATISFIABLE, i.e., does not hold
+restarts              : 1
+conflicts             : 0           
+decisions             : 1           
+propagations          : 4           
+conflict literals     : 0           
+Runtime decision procedure: 0s
+Building error trace
+
+***********************************************************
+Leo's AI --> This made 66 decisions 
+***********************************************************
+ITERATION (decision) 66
+================ 
+{ c::$file::main::1::x in INT: [-2147483648, -2147483648], c::$file::main::1::y in INT: [-2147483648, -2147483648] }
+new dlevel: 67
+scores: -1 -1 
+FAILED TO VERIFY PROGRAM
+Minimal unsafe element: { c::$file::main::1::x in INT: [-2147483648, -2147483648], c::$file::main::1::y in INT: [-2147483648, -2147483648] }== Procedure terminated after 67 iterations 
+
+
+**** Verification failed 
+Found 1 possible assertion violations
+********
+5: ASSERT  x != 2
+    GOTO 6
+    Potential violation: x == 2 && y == 4
+
+    Information over assertion variables: x == 2 
+
+***********************************************************
+ACDL with SSA
+***********************************************************
+Updated: x#19 <= 1 && x#21 <= 2 && x#21 <= 2147483647 && y#20 <= 4 && y#20 <= 2147483647 && -((signed __CPROVER_bitvector[33])x#19) <= -1 && -((signed __CPROVER_bitvector[33])x#21) <= 2147483648 && -((signed __CPROVER_bitvector[33])x#21) <= -2 && -((signed __CPROVER_bitvector[33])y#20) <= 2147483648 && -((signed __CPROVER_bitvector[33])y#20) <= -4 && $guard#0 == TRUE && $guard#0
+Propagation finished with UNKNOWN
+Note that the above constraints means the following: (x_19 = [1,1]) && (x_21 = [2,2]) && (x_21 = [-2^32, 2^32-1]) && (y_20 == [4,4]) && (y_20 == [-2^32, 2^32 - 1]) -- This is the abstract state now. No further deduction can be made now. 
+
+My point: Now, if we decide on latest value of x which is x_21 = [-2^32, 0] (property-guided decision), then do propagation again, then what happens ? 
+The way we can reach BOTTOM immediately when taking a meet of the decision with the present abstract state (shown above) leads to prving unsafety in one decision. 
+Compared to AI, do we need 66 iterations to decide the unsafety of the program. Do we throw away existing abstract state when we make a new decision ? 
+Do we propagate a new decision from the starting node again? 
+
+
+
+
+
 
 
   
