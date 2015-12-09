@@ -133,10 +133,11 @@ Old: x#19 <= 1 && x#21 <= 2 && x#21 <= 2147483647 && y#20 <= 4 && y#20 <= 214748
 New: x#19 <= 1 && x#21 <= 2 && x#21 <= 2147483647 && y#20 <= 4 && y#20 <= 2147483647 && -((signed __CPROVER_bitvector[33])x#19) <= -1 && -((signed __CPROVER_bitvector[33])x#21) <= 2147483648 && -((signed __CPROVER_bitvector[33])x#21) <= -2 && -((signed __CPROVER_bitvector[33])y#20) <= 2147483648 && -((signed __CPROVER_bitvector[33])y#20) <= -4 && $guard#0 == TRUE && $guard#0
 Updated: x#19 <= 1 && x#21 <= 2 && x#21 <= 2147483647 && y#20 <= 4 && y#20 <= 2147483647 && -((signed __CPROVER_bitvector[33])x#19) <= -1 && -((signed __CPROVER_bitvector[33])x#21) <= 2147483648 && -((signed __CPROVER_bitvector[33])x#21) <= -2 && -((signed __CPROVER_bitvector[33])y#20) <= 2147483648 && -((signed __CPROVER_bitvector[33])y#20) <= -4 && $guard#0 == TRUE && $guard#0
 Propagation finished with UNKNOWN
-[main.assertion.1] assertion x != 2: UNKNOWN
+[ACDL-DOMAIN] is_complete: x#19 <= 1 && x#21 <= 2 && x#21 <= 2147483647 && y#20 <= 4 && y#20 <= 2147483647 && -((signed __CPROVER_bitvector[33])x#19) <= -1 && -((signed __CPROVER_bitvector[33])x#21) <= 2147483648 && -((signed __CPROVER_bitvector[33])x#21) <= -2 && -((signed __CPROVER_bitvector[33])y#20) <= 2147483648 && -((signed __CPROVER_bitvector[33])y#20) <= -4 && $guard#0 == TRUE && $guard#0: complete
+[main.assertion.1] assertion x != 2: FAILURE
 
-** 1 of 1 unknown
-** 0 of 1 failed
+** 0 of 1 unknown
+** 1 of 1 failed
 VERIFICATION FAILED
 EXIT=10
 SIGNAL=0

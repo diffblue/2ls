@@ -183,23 +183,46 @@ Function: acdl_domaint::is_complete()
 
 bool acdl_domaint::is_complete(const valuet &value) const
 {
-  incremental_solvert *solver = incremental_solvert::allocate(SSA.ns,true);
+  std::unique_ptr<incremental_solvert> solver(incremental_solvert::allocate(SSA.ns,true));
   *solver << value;
   
   decision_proceduret::resultt res = (*solver)();
   assert(res==decision_proceduret::D_SATISFIABLE);
-
-  //TODO: 
-  // find symbols on value
-  // for each symbol x
-  //   get model m from solver; exprt m = (*solver).get(x)
-  exprt model = false_exprt();
-    // and push !(x=m) into the solver
-  *solver << model;
   
-  bool result = (*solver)()==decision_proceduret::D_UNSATISFIABLE;
-  delete solver;
-  return result;
+  // find symbols in value
+  std::set<symbol_exprt> symbols;
+  find_symbols (value, symbols);
+
+  for(std::set<symbol_exprt>::const_iterator it = symbols.begin();
+      it != symbols.end(); ++it)
+  {
+    exprt m = (*solver).get(*it);
+    solver->new_context();
+    
+    // and push !(x=m) into the solver
+    *solver << not_exprt(equal_exprt(*it,m));
+  
+    if((*solver)()!=decision_proceduret::D_UNSATISFIABLE)
+    {
+#ifdef DEBUG
+      std::cout << "[ACDL-DOMAIN] is_complete: "
+		<< from_expr(SSA.ns, "", value)
+		<< ": not complete"
+		<< std::endl;
+#endif
+      return false;
+    }
+
+    solver->pop_context();
+  }
+  
+#ifdef DEBUG
+  std::cout << "[ACDL-DOMAIN] is_complete: "
+	    << from_expr(SSA.ns, "", value)
+	    << ": complete"
+	    << std::endl;
+#endif
+  return true;
 }
 
 /*******************************************************************\
