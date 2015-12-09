@@ -47,6 +47,7 @@ public:
 
   exprt split(const valuet &value, const exprt &expr, bool upper=false);
   
+  void normalize(valuet &value, const varst &vars);
 
   void set_bottom(valuet &value) { value = false_exprt();  }
   void set_top(valuet &value) { value = true_exprt(); }

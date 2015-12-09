@@ -48,7 +48,7 @@ void acdl_domaint::operator()(const statementt &statement,
 #endif
 
   ssa_analyzert ssa_analyzer;
-  incremental_solvert *solver = incremental_solvert::allocate(SSA.ns,true);
+  std::unique_ptr<incremental_solvert> solver(incremental_solvert::allocate(SSA.ns,true));
 
   std::vector<valuet> new_values;
   new_values.reserve(vars.size());
@@ -84,7 +84,6 @@ void acdl_domaint::operator()(const statementt &statement,
     std::cout << "[ACDL-DOMAIN] new_value: "
 	      << from_expr(SSA.ns, "", new_value) << std::endl;
 #endif
-  delete solver;
 }
 
 /*******************************************************************\
@@ -141,10 +140,9 @@ Function: acdl_domaint::contains()
 
 bool acdl_domaint::contains(const valuet &value1, const valuet &value2) const
 {
-  incremental_solvert *solver = incremental_solvert::allocate(SSA.ns,true);
+  std::unique_ptr<incremental_solvert> solver(incremental_solvert::allocate(SSA.ns,true));
   *solver << and_exprt(value1,not_exprt(value2));
   bool result = (*solver)()==decision_proceduret::D_UNSATISFIABLE;
-  delete solver;
   return result;
 }
 
@@ -162,10 +160,9 @@ Function: acdl_domaint::is_bottom()
 
 bool acdl_domaint::is_bottom(const valuet &value) const
 {
-  incremental_solvert *solver = incremental_solvert::allocate(SSA.ns,true);
+  std::unique_ptr<incremental_solvert> solver(incremental_solvert::allocate(SSA.ns,true));
   *solver << value;
   bool result = (*solver)()==decision_proceduret::D_UNSATISFIABLE;
-  delete solver;
   return result;
 }
 
@@ -183,6 +180,13 @@ Function: acdl_domaint::is_complete()
 
 bool acdl_domaint::is_complete(const valuet &value) const
 {
+#ifdef DEBUG
+  std::cout << "[ACDL-DOMAIN] is_complete? "
+	    << from_expr(SSA.ns, "", value);
+//	    << std::endl;
+#endif
+
+    
   std::unique_ptr<incremental_solvert> solver(incremental_solvert::allocate(SSA.ns,true));
   *solver << value;
   
@@ -196,19 +200,25 @@ bool acdl_domaint::is_complete(const valuet &value) const
   for(std::set<symbol_exprt>::const_iterator it = symbols.begin();
       it != symbols.end(); ++it)
   {
+    if(it->type().id()==ID_bool)
+      continue;
+    
     exprt m = (*solver).get(*it);
     solver->new_context();
-    
+
+#if 0
+    std::cout << "  check "
+	    << from_expr(SSA.ns, "", not_exprt(equal_exprt(*it,m)))
+	    << std::endl;
+#endif
+  
     // and push !(x=m) into the solver
     *solver << not_exprt(equal_exprt(*it,m));
   
     if((*solver)()!=decision_proceduret::D_UNSATISFIABLE)
     {
 #ifdef DEBUG
-      std::cout << "[ACDL-DOMAIN] is_complete: "
-		<< from_expr(SSA.ns, "", value)
-		<< ": not complete"
-		<< std::endl;
+      std::cout << " is not complete" << std::endl;
 #endif
       return false;
     }
@@ -217,10 +227,7 @@ bool acdl_domaint::is_complete(const valuet &value) const
   }
   
 #ifdef DEBUG
-  std::cout << "[ACDL-DOMAIN] is_complete: "
-	    << from_expr(SSA.ns, "", value)
-	    << ": complete"
-	    << std::endl;
+  std::cout << " is complete" << std::endl;
 #endif
   return true;
 }
@@ -320,4 +327,39 @@ exprt acdl_domaint::split(const valuet &value, const exprt &expr,
 	      << from_expr(SSA.ns, "", binary_relation_exprt(expr,ID_le,m)) << std::endl;
     return binary_relation_exprt(expr,ID_le,m);
   }
+}
+
+/*******************************************************************\
+
+Function: acdl_domaint::normalize()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void acdl_domaint::normalize(valuet &value, const varst &vars)
+{
+  valuet _old_value = value;
+
+  //project out vars
+  for(varst::const_iterator it = vars.begin();
+      it != vars.end(); ++it)
+    value = remove_var(value,*it);
+    
+  ssa_analyzert ssa_analyzer;
+  std::unique_ptr<incremental_solvert> solver(incremental_solvert::allocate(SSA.ns,true));
+
+  template_generator_acdlt template_generator(options,ssa_db,ssa_local_unwinder); 
+  template_generator(SSA,vars);
+    
+  ssa_analyzer(*solver, SSA, _old_value,template_generator);
+  valuet new_values;
+  ssa_analyzer.get_result(new_values,template_generator.all_vars());
+
+    
+  value = and_exprt(new_values,value);
 }

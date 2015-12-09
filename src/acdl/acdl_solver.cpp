@@ -368,6 +368,8 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA,
 
     // meet is computed because we are doing gfp
     domain.meet (new_v, v);
+    domain.normalize(v,vars);
+    
 #ifdef DEBUG
     std::cout << "Updated: " << from_expr (SSA.ns, "", v)
               << std::endl;

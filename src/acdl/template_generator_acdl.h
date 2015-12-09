@@ -25,6 +25,7 @@ public:
 
 
   void operator()(const local_SSAt &SSA, const symbol_exprt& var);
+  void operator()(const local_SSAt &SSA, const std::vector<symbol_exprt> &vars);
 
   domaint::var_sett out_vars();
 
