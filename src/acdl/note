@@ -264,8 +264,20 @@ The way we can reach BOTTOM immediately when taking a meet of the decision with 
 Compared to AI, do we need 66 iterations to decide the unsafety of the program. Do we throw away existing abstract state when we make a new decision ? 
 Do we propagate a new decision from the starting node again? 
 
+Meeting with Peter on 9th Dec, 2015
+------------------------------------
+1> We implemented gamma-completeness check to see if the abstract state where 
+every variable has a singleton value indeed is a concrete counterexample. 
+The gamma completeness check is done when deduction is finished (worklist is empty), 
+and every variable in the abstract state has a concrete assignment, we then check if the
+these assignments are indeed a valid counterexample. To do so, we first take the abstract 
+state and for each variable in the abstract state we negate the constraints associated with
+it (eg, !(x == 2)) and decide with the solver whether the conjunction of the abstract state
+with the negated clause involving the variable is UNSAT. If it is UNSAT, then it is a real 
+counterexample. 
 
-
+2> Peter To do: normalization of the abstract state while computing meet. 
+For example, (x == [-2^32, 2^32-1]) && x == [3,3] --> normalize this to --> (x = [3,3])
 
 
 

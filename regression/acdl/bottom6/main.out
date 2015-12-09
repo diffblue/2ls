@@ -50,6 +50,9 @@ Simplifying
 
 _start
 First push: $guard#0 == TRUE
+********************************
+        DEDUCTION PHASE 
+********************************
 Pop: $guard#0 == TRUE
 Push: !(!$guard#0 || y#20 != 14)
 Old: TRUE
@@ -108,7 +111,10 @@ Old: x#19 <= 7 && y#20 <= 14 && y#20 <= 2147483646 && -((signed __CPROVER_bitvec
 New: x#19 <= 8 && y#20 <= 14 && y#20 <= 2147483646 && -((signed __CPROVER_bitvector[33])x#19) <= -8 && -((signed __CPROVER_bitvector[33])y#20) <= 2147483648 && -((signed __CPROVER_bitvector[33])y#20) <= -14 && $guard#0 == TRUE && $guard#0
 Updated: x#19 <= 7 && x#19 <= 8 && y#20 <= 14 && y#20 <= 2147483646 && -((signed __CPROVER_bitvector[33])x#19) <= 2147483641 && -((signed __CPROVER_bitvector[33])x#19) <= -8 && -((signed __CPROVER_bitvector[33])y#20) <= 2147483648 && -((signed __CPROVER_bitvector[33])y#20) <= -14 && $guard#0 == TRUE && $guard#0
 Propagation finished with BOTTOM
-[main.assertion.1] assertion y != 14: FAILURE
+********************************
+    CONFLICT ANALYSIS PHASE
+********************************
+[main.assertion.1] assertion y != 14: UNKNOWN
 
 ** 0 of 1 unknown
 ** 1 of 1 failed

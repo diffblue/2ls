@@ -501,8 +501,16 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
     while(true)
     {
       // deduction phase in acdl
+      std::cout << "********************************" << std::endl;
+      std::cout << "        DEDUCTION PHASE " << std::endl;
+      std::cout << "********************************" << std::endl;
       result = propagate(SSA, v, worklist);
-
+      
+      std::cout << "ASSERTION: " << alist.front() << std::endl; 
+      
+      std::cout << "********************************" << std::endl;
+      std::cout << "    CONFLICT ANALYSIS PHASE" << std::endl;
+      std::cout << "********************************" << std::endl;
       // check for conflict
       if(result == property_checkert::PASS) //UNSAT
         break;
@@ -510,7 +518,10 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
       // check for satisfying assignment
       if(domain.is_complete(v))
         return property_checkert::FAIL;
-
+      
+      std::cout << "********************************" << std::endl;
+      std::cout << "         DECISION PHASE"          << std::endl;
+      std::cout << "********************************" << std::endl;
       // make a decision
       decide(SSA, v, g, worklist, alist);
     }
