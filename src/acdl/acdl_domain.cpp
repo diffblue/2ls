@@ -16,6 +16,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 
 #include <util/simplify_expr.h>
 #include <util/find_symbols.h>
+#include <memory>
 
 #include "../domains/ssa_analyzer.h"
 #include "../domains/tpolyhedra_domain.h"
@@ -200,9 +201,8 @@ bool acdl_domaint::is_complete(const valuet &value) const
   for(std::set<symbol_exprt>::const_iterator it = symbols.begin();
       it != symbols.end(); ++it)
   {
-    if(it->type().id()==ID_bool)
-      continue;
-    
+	// if value == (x=[2,2]) and (*it is x), then 'm' below contains the
+	// value of x which is 2
     exprt m = (*solver).get(*it);
     solver->new_context();
 

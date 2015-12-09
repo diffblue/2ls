@@ -35,7 +35,7 @@ Function: acdl_solvert::operator()
 void
 acdl_solvert::initialize_worklist (const local_SSAt &SSA, worklistt &worklist)
 {
-  // check for equalitites or constraints or next node
+  // check for equalities or constraints or next node
   if (SSA.nodes.empty ())
     return;
   assert(!SSA.nodes.front ().equalities.empty ());
@@ -420,21 +420,83 @@ acdl_solvert::decide (const local_SSAt &SSA,
   // 1. look at conditions in the SSA
 //#if 0  
   // 2. call acdl_domaint::split
-  exprt decision_expr; //TODO: 'variable' to decide on
-  std::vector<acdl_domaint::valuet> decision;
+  exprt decision_expr; //TODO: This characterize the shape of the decisions made, (eg. x < 5 or x-y < 5)
+  std::vector<acdl_domaint::valuet> decision; // container that contains the decision (eg. x == [0,10])
   decision.resize(1);
   
   std::cout << "DECISION PHASE: " << from_expr (SSA.ns, "", alist.front()) << std::endl;
   decision[0] = domain.split(alist.front(),decision_expr);
+  // Take a meet of the decision expression (decision) with the current abstract state (v).
+  // The new abstract state is now in v
   domain.meet(decision,v);
 //#endif
   
   // keep information for backtracking associated with this decision point in g
   //TODO
   
-  // update the worklist to include all statements relating to the decision variables
-  //TODO
+  // First push the new abstract state in to the worklist
+  push_into_worklist(worklist, v);
+  // find all symbols present in decision and store in dec_vars
+  acdl_domaint::varst dec_vars;
+  for (exprt::operandst::const_iterator it = decision[0].operands().begin();
+		  it != decision[0].operands().end(); it++) {
+      if(it->id() == ID_symbol)
+	   dec_vars.insert(dec_vars.end(), to_symbol_expr(it->op0()));
+  }
 
+  // Update the worklist to include all statements relating to the decision variables
+  for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
+       n_it != SSA.nodes.end(); n_it++) {
+     for(local_SSAt::nodet::equalitiest::const_iterator e_it =
+ 	 	  n_it->equalities.begin(); e_it != n_it->equalities.end(); e_it++) {
+    	  assert(e_it->id()==ID_equal);
+    	  find_symbols_sett symbols;
+    	  // find all symbols in equalities statement
+    	  find_symbols(*e_it, symbols);
+    	  // check if variables in dec_vars is present in equalities statements
+    	  for(acdl_domaint::varst::const_iterator it = dec_vars.begin();
+    	        it != dec_vars.end(); ++it)
+    	  {
+    	     if(symbols.find(it->get_identifier()) != symbols.end()) {
+    		   // insert into worklist
+    		   worklist.push_back(*e_it);
+    	     }
+    	  }
+     }
+     for(local_SSAt::nodet::assertionst::const_iterator a_it =
+     	  n_it->assertions.begin(); a_it != n_it->assertions.end(); a_it++) {
+
+    	 find_symbols_sett symbols;
+    	 // find all symbols in equalities statement
+    	 find_symbols(*a_it, symbols);
+    	 // check if variables in dec_vars is present in assertion statements
+    	 for(acdl_domaint::varst::const_iterator it = dec_vars.begin();
+    	         it != dec_vars.end(); ++it)
+    	 {
+    	   if(symbols.find(it->get_identifier()) != symbols.end()) {
+    	     // insert into worklist
+    	     worklist.push_back(*a_it);
+    	   }
+    	 }
+     }
+
+     for(local_SSAt::nodet::constraintst::const_iterator c_it =
+     	  n_it->constraints.begin(); c_it != n_it->constraints.end(); c_it++) {
+
+    	 find_symbols_sett symbols;
+    	 // find all symbols in equalities statement
+    	 find_symbols(*c_it, symbols);
+    	 // check if variables in dec_vars is present in assertion statements
+    	 for(acdl_domaint::varst::const_iterator it = dec_vars.begin();
+    	      it != dec_vars.end(); ++it)
+    	 {
+    	   if(symbols.find(it->get_identifier()) != symbols.end()) {
+    	     // insert into worklist
+    	     worklist.push_back(*c_it);
+    	   }
+    	 }
+     }
+   }
 }
 
 /*******************************************************************

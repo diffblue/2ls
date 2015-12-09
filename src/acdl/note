@@ -277,9 +277,11 @@ with the negated clause involving the variable is UNSAT. If it is UNSAT, then it
 counterexample. 
 
 2> Peter To do: normalization of the abstract state while computing meet. 
-For example, (x == [-2^32, 2^32-1]) && x == [3,3] --> normalize this to --> (x = [3,3])
+For example, (x == [-2^32, 2^32-1]) && (x == [3,3]) --> normalize this to --> (x = [3,3])
 
-
+3> Decision strategy: We decide on a variable using some heuristics and then split the bound 
+of this variable to form a decision expression. Take the meet of the decision expression 
+with the abstract state to derive a new abstract state. 
 
 
   
