@@ -190,10 +190,7 @@ bool acdl_domaint::is_complete(const valuet &value) const
     
   std::unique_ptr<incremental_solvert> solver(incremental_solvert::allocate(SSA.ns,true));
   *solver << value;
-  
-  decision_proceduret::resultt res = (*solver)();
-  assert(res==decision_proceduret::D_SATISFIABLE);
-  
+    
   // find symbols in value
   std::set<symbol_exprt> symbols;
   find_symbols (value, symbols);
@@ -201,15 +198,17 @@ bool acdl_domaint::is_complete(const valuet &value) const
   for(std::set<symbol_exprt>::const_iterator it = symbols.begin();
       it != symbols.end(); ++it)
   {
-	// if value == (x=[2,2]) and (*it is x), then 'm' below contains the
-	// value of x which is 2
+    // if value == (x=[2,2]) and (*it is x), then 'm' below contains the
+    // value of x which is 2
+    decision_proceduret::resultt res = (*solver)();
+    assert(res==decision_proceduret::D_SATISFIABLE);
     exprt m = (*solver).get(*it);
     solver->new_context();
 
 #if 0
     std::cout << "  check "
-	    << from_expr(SSA.ns, "", not_exprt(equal_exprt(*it,m)))
-	    << std::endl;
+	      << from_expr(SSA.ns, "", not_exprt(equal_exprt(*it,m)))
+	      << std::endl;
 #endif
   
     // and push !(x=m) into the solver
