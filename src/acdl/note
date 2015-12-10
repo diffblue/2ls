@@ -283,5 +283,9 @@ For example, (x == [-2^32, 2^32-1]) && (x == [3,3]) --> normalize this to --> (x
 of this variable to form a decision expression. Take the meet of the decision expression 
 with the abstract state to derive a new abstract state. 
 
-
-  
+Queries:
+*> For if-else program in regression, the following is shown by acdl.
+prop_convt::convert_bool got non-boolean expression:
+("constant" "type" ("signedbv" "width" ("32") "#c_type" ("signed_int")) "value" ("00000000000000000000000000000000") "#source_location" ("" "file" ("main.c") "line" ("4") "function" ("main")) "#cformat" ("0"))
+ 
+*> Do I need to pass the expression template like (x-y) or (x) or (x>0) to the split function  

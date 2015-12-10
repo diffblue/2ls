@@ -198,10 +198,10 @@ bool acdl_domaint::is_complete(const valuet &value) const
   for(std::set<symbol_exprt>::const_iterator it = symbols.begin();
       it != symbols.end(); ++it)
   {
-    // if value == (x=[2,2]) and (*it is x), then 'm' below contains the
-    // value of x which is 2
     decision_proceduret::resultt res = (*solver)();
     assert(res==decision_proceduret::D_SATISFIABLE);
+    // if value == (x=[2,2]) and (*it is x), then 'm' below contains the
+    // value of x which is 2
     exprt m = (*solver).get(*it);
     solver->new_context();
 

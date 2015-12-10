@@ -112,7 +112,6 @@ Old: y#20 <= 14 && -((signed __CPROVER_bitvector[33])y#20) <= -14 && x#19 <= 7 &
 New: x#19 <= 8 && y#20 <= 14 && -((signed __CPROVER_bitvector[33])x#19) <= -8 && -((signed __CPROVER_bitvector[33])y#20) <= -14
 Updated: FALSE && FALSE && y#20 <= 14 && -((signed __CPROVER_bitvector[33])y#20) <= -14
 Propagation finished with BOTTOM
-ASSERTION: ("")
 ********************************
     CONFLICT ANALYSIS PHASE
 ********************************

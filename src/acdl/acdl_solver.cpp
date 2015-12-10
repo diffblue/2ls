@@ -410,7 +410,7 @@ acdl_solvert::decide (const local_SSAt &SSA,
 		      acdl_domaint::valuet &v,
 		      decision_grapht &g,
 		      worklistt &worklist,
-          assert_listt &alist)
+              assert_listt &alist)
 {
   //TODO
   // use information from VSIDS to choose decision 'variable'
