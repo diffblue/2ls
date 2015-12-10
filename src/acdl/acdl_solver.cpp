@@ -569,12 +569,10 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
       std::cout << "        DEDUCTION PHASE " << std::endl;
       std::cout << "********************************" << std::endl;
       result = propagate(SSA, v, worklist);
-      
-      std::cout << "ASSERTION: " << alist.front() << std::endl; 
-      
-      std::cout << "********************************" << std::endl;
-      std::cout << "    CONFLICT ANALYSIS PHASE" << std::endl;
-      std::cout << "********************************" << std::endl;
+
+      if(!alist.empty())
+        std::cout << "ASSERTION: " << alist.front() << std::endl; 
+
       // check for conflict
       if(result == property_checkert::PASS) //UNSAT
         break;
@@ -590,7 +588,11 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
       decide(SSA, v, g, worklist, alist);
     }
 
-    // analyze conflict ...
+    std::cout << "********************************" << std::endl;
+    std::cout << "    CONFLICT ANALYSIS PHASE" << std::endl;
+    std::cout << "********************************" << std::endl;
+
+      // analyze conflict ...
     result = analyze_conflict(SSA, v, g);
   }
 
