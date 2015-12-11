@@ -191,6 +191,8 @@ acdl_solvert::update_worklist (const local_SSAt &SSA,
         push_into_worklist(worklist, *e_it);
         #ifdef DEBUG
         std::cout << "Push: " << from_expr (SSA.ns, "", *e_it) << std::endl;
+        std::cout << "LHS: " << from_expr (SSA.ns, "", e_it->lhs()) << std::endl;
+        std::cout << "RHS: " << from_expr (SSA.ns, "", e_it->rhs()) << std::endl;
         #endif
       }
     }
@@ -250,7 +252,7 @@ acdl_solvert::select_vars (const exprt &statement, acdl_domaint::varst &vars)
     lhs = to_equal_expr (statement).lhs ();
     if (lhs.id () == ID_symbol)
     {
-      vars.push_back (to_symbol_expr (lhs));
+      vars.insert (to_symbol_expr (lhs));
     }
     else //TODO: more complex lhs
       assert(false);
@@ -258,9 +260,7 @@ acdl_solvert::select_vars (const exprt &statement, acdl_domaint::varst &vars)
   else // for constraints
 #endif
   {
-    std::set<symbol_exprt> symbols;
-    find_symbols(statement,symbols);
-    vars.insert(vars.end(),symbols.begin(), symbols.end());
+    find_symbols(statement,vars);
   }
 }
 /*******************************************************************\
@@ -339,9 +339,7 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA,
     {
       new_v[0] = statement;
       // collect variables for dependencies
-      std::set<symbol_exprt> symbols;
-      find_symbols(statement,symbols);
-      vars.insert(vars.end(),symbols.begin(), symbols.end());
+      find_symbols(statement,vars);
     }
     else
     {
@@ -445,12 +443,9 @@ acdl_solvert::decide (const local_SSAt &SSA,
   domain.meet(decision,v);
   //#endif
 
-  std::set<symbol_exprt> dec_symbols;
-  // find all symbols in the decision expression
-  find_symbols(decision, dec_symbols);
-  // convert set of symbols to vector of symbols
   acdl_domaint::varst dec_vars;
-  dec_vars.insert(dec_vars.end(), dec_symbols.begin(), dec_symbols.end());
+  // find all symbols in the decision expression
+  find_symbols(decision, dec_vars);
   // update the worklist here 
   update_worklist(SSA, dec_vars, worklist);
 }
@@ -488,12 +483,9 @@ acdl_solvert::analyze_conflict(const local_SSAt &SSA,
   // add learned clauses
   domain.meet(learned_clauses,v);
 
-  std::set<symbol_exprt> learn_symbols;
-  // find all symbols in the learned clause
-  find_symbols(learned_clauses, learn_symbols);
-  // convert set of symbols to vector of symbols
   acdl_domaint::varst learn_vars;
-  learn_vars.insert(learn_vars.end(), learn_symbols.begin(), learn_symbols.end());
+  // find all symbols in the learned clause
+  find_symbols(learned_clauses, learn_vars);
   // update the worklist here 
   update_worklist(SSA, learn_vars, worklist);
 

@@ -19,7 +19,7 @@ public:
   typedef exprt meet_irreduciblet;
   typedef exprt valuet;
   typedef exprt statementt;
-  typedef std::vector<symbol_exprt> varst;
+  typedef std::set<symbol_exprt> varst;
 
   explicit acdl_domaint(optionst &_options,
 			local_SSAt &_SSA,

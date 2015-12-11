@@ -377,7 +377,7 @@ void acdl_domaint::normalize(valuet &value, const varst &vars)
 {
   valuet old_value = value;
 
-  varst clean_vars;
+  std::vector<symbol_exprt> clean_vars;
   
   //project out vars
   for(varst::const_iterator it = vars.begin();
