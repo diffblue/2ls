@@ -294,3 +294,25 @@ prop_convt::convert_bool got non-boolean expression:
 in the beginning or after gamma-completeness.
 
 *) How to check meet irreducible -- implement this. 
+
+Meeting with Peter on 11th Dec, 2015
+-------------------------------------
+*> The guard variable in SSA is determined by the cond variable (for programs without loops). So, 
+when cond==1, it implies guard==1.
+
+*> SAT solver calls in our case is part of the abstract domain  
+
+*> decision_graph contains the following information:
+   edges: if the first decisions is (y<0), second decision is (x>0), then 
+   there is an edge like this. x>0 ----> y<0 ----> nil_exprt() // Note that root is always nil_exprt()
+   backtrack_points: this is map which contains decisions as index and abstract values at each decision points,
+                     for example, backtrack_points[decision] = v; // where v is the abstract value 
+   Our assumption is that the decisions are usually unique. That is, if (x<0) is decided once, then it will not be 
+   decided in future. 
+
+*> split function in the acdl_domain returns meet irreducibles. 
+   For example, if (x!=2) it returns (x <= 1) V (x>=3)
+
+Query:
+1> Can we avoid pushing statements like y#18 == nondet_symbol(ssa::nondet18.1) ?
+

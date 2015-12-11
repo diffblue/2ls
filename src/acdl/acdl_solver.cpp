@@ -477,10 +477,14 @@ acdl_solvert::decide (const local_SSAt &SSA,
   
   // keep information for backtracking associated with this decision point in g
   g.backtrack_points[decision] = v;
+  // Update the edges of the decision graph
+  if(g.edges[g.current_node] == nil_exprt())
+    g.edges[g.current_node] == decision;
 
   // Take a meet of the decision expression (decision) with the current abstract state (v).
   // The new abstract state is now in v
   domain.meet(decision,v);
+  
 
   acdl_domaint::varst dec_vars;
   // find all symbols in the decision expression
@@ -577,9 +581,6 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
       std::cout << "********************************" << std::endl;
       result = propagate(SSA, v, worklist);
 
-      if(!alist.empty())
-        std::cout << "ASSERTION: " << alist.front() << std::endl; 
-
       // check for conflict
       if(result == property_checkert::PASS) //UNSAT
         break;
@@ -599,7 +600,7 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
     std::cout << "    CONFLICT ANALYSIS PHASE" << std::endl;
     std::cout << "********************************" << std::endl;
 
-      // analyze conflict ...
+    // analyze conflict ...
     result = analyze_conflict(SSA, v, worklist, g);
   }
 
