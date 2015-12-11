@@ -35,6 +35,10 @@ Function: acdl_solvert::operator()
 void
 acdl_solvert::initialize_worklist (const local_SSAt &SSA, worklistt &worklist)
 {
+  //TODO: add assertions first
+
+  
+#if 1
   // check for equalities or constraints or next node
   if (SSA.nodes.empty ())
     return;
@@ -44,6 +48,7 @@ acdl_solvert::initialize_worklist (const local_SSAt &SSA, worklistt &worklist)
   #ifdef DEBUG
   std::cout << "First push: " << from_expr (SSA.ns, "", SSA.nodes.front().equalities.front ()) << std::endl;
   #endif
+#endif
 }
 
 /*******************************************************************\
@@ -410,32 +415,37 @@ acdl_solvert::decide (const local_SSAt &SSA,
 		      acdl_domaint::valuet &v,
 		      decision_grapht &g,
 		      worklistt &worklist,
-              assert_listt &alist)
+		      assert_listt &alist)
 {
   //TODO
   // use information from VSIDS to choose decision 'variable'
   // Note: using CFG flow instead can be used to emulate a forward analysis
 
   // choose a meet irreducible
-  // 1. look at conditions in the SSA
+  // 1. pick possible decision from source code 
+  // 1.a. look at conditions in the SSA: cond#3
+  //      decision = cond_var
+  // 1.b. e.g. we have x!=2 in an assertion, then we have meet irreducibles x<=1, x>=3 as potential decisions
 //#if 0  
   // 2. call acdl_domaint::split
   exprt decision_expr; //TODO: This characterize the shape of the decisions made, (eg. x < 5 or x-y < 5)
-  std::vector<acdl_domaint::valuet> decision; // container that contains the decision (eg. x == [0,10])
-  decision.resize(1);
+  acdl_domaint::valuet decision; // container that contains the decision (eg. x == [0,10])
   
   std::cout << "DECISION PHASE: " << from_expr (SSA.ns, "", alist.front()) << std::endl;
-  decision[0] = domain.split(alist.front(),decision_expr);
+  decision = domain.split(alist.front(),decision_expr);
+
+  // update decision graph
+  // TODO
+  
+  // keep information for backtracking associated with this decision point in g
+  g.backtrack_points[decision] = v;
+
   // Take a meet of the decision expression (decision) with the current abstract state (v).
   // The new abstract state is now in v
   domain.meet(decision,v);
-//#endif
-  
-  // keep information for backtracking associated with this decision point in g
-  //TODO
-  
-  // First push the new abstract state in to the worklist
-  push_into_worklist(worklist, v);
+  //#endif
+
+#if 0  
   // find all symbols present in decision and store in dec_vars
   acdl_domaint::varst dec_vars;
   for (exprt::operandst::const_iterator it = decision[0].operands().begin();
@@ -497,6 +507,7 @@ acdl_solvert::decide (const local_SSAt &SSA,
     	 }
      }
    }
+ #endif
 }
 
 /*******************************************************************
@@ -519,8 +530,19 @@ acdl_solvert::analyze_conflict(const local_SSAt &SSA,
   //TODO
 
   // first UIP over conflict graph
-  // add learned clauses
+  exprt decision_reason;
+
+  //generalise
+  exprt learned_clauses;
+  
   // backtrack
+  v = g.backtrack_points[decision_reason];
+  // clean up decision graph and, optionally, backtrack points
+
+  // add learned clauses
+  domain.meet(learned_clauses,v);
+
+  // update worklist
 
   return property_checkert::PASS;
 }
@@ -558,6 +580,7 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
   acdl_domaint::valuet v;
   domain.set_top(v);
   decision_grapht g;
+  g.current_node = nil_exprt(); // root node
     
   property_checkert::resultt result = property_checkert::UNKNOWN;
   while(result == property_checkert::UNKNOWN)

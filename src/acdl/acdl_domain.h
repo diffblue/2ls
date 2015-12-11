@@ -16,6 +16,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 class acdl_domaint : public messaget
 {
 public:
+  typedef exprt meet_irreduciblet;
   typedef exprt valuet;
   typedef exprt statementt;
   typedef std::vector<symbol_exprt> varst;
@@ -38,6 +39,7 @@ public:
 
   void meet(const std::vector<valuet> &old_values,
 	    valuet &new_value);
+  void meet(const valuet &old_value, valuet &new_value);
 
   void join(const std::vector<valuet> &old_values,
 	    valuet &new_value);
@@ -45,7 +47,7 @@ public:
   bool contains(const valuet &value1,
 		const valuet &value2) const;
 
-  exprt split(const valuet &value, const exprt &expr, bool upper=false);
+  meet_irreduciblet split(const valuet &value, const exprt &expr, bool upper=false);
   
   void normalize(valuet &value, const varst &vars);
 

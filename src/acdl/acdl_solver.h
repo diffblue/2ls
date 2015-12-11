@@ -45,7 +45,7 @@ protected:
   void update_worklist(const local_SSAt &SSA,
 		       const acdl_domaint::varst &vars,
 		       worklistt &worklist,
-		       const acdl_domaint::statementt &statement);
+		       const acdl_domaint::statementt &statement=nil_exprt());
   void push_into_worklist (worklistt &worklist, const acdl_domaint::statementt &statement);
   void push_into_assertion_list (assert_listt &aexpr, const acdl_domaint::statementt &statement);
   
@@ -54,10 +54,12 @@ protected:
   bool check_statement (const exprt &expr, const acdl_domaint::varst &vars);
 
   typedef struct {
-    exprt root;
-    std::map<exprt, exprt> edges; //reverse edges,
+    typedef exprt nodet;
+    // root node is assumed nil_exprt()
+    std::map<nodet, nodet> edges; //reverse edges,
                                   //i.e. e1 maps to e2 <=> directed edge (e2,e1)
-    std::map<exprt, acdl_domaint::valuet> backtrack_points;
+    nodet current_node;
+    std::map<nodet, acdl_domaint::valuet> backtrack_points;
   } decision_grapht; 
   
   property_checkert::resultt propagate(const local_SSAt &SSA,

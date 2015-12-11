@@ -106,6 +106,25 @@ void acdl_domaint::meet(const std::vector<valuet> &old_values,
   simplify(new_value,SSA.ns);
 }
 
+/*******************************************************************\
+
+Function: acdl_domaint::meet()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void acdl_domaint::meet(const valuet &old_value,
+	    valuet &new_value)
+{
+  new_value = and_exprt(old_value, new_value);
+  simplify(new_value,SSA.ns);
+}
+
 
 /*******************************************************************\
 
