@@ -268,17 +268,27 @@ exprt acdl_domaint::remove_var(const valuet &_old_value, const symbol_exprt &var
 {
   valuet old_value = _old_value;
   simplify(old_value,SSA.ns);
-  
-  valuet::operandst new_value;  
-  for(valuet::operandst::const_iterator it = old_value.operands().begin();
-        it != old_value.operands().end(); ++it)
+
+  if(old_value.id() == ID_and)
   {
-    find_symbols_sett symbols;
-    find_symbols(*it,symbols);
-    if(symbols.find(var.get_identifier()) == symbols.end())
-      new_value.push_back(*it);
+    valuet::operandst new_value;  
+    for(valuet::operandst::const_iterator it = old_value.operands().begin();
+        it != old_value.operands().end(); ++it)
+    {
+      find_symbols_sett symbols;
+      find_symbols(*it,symbols);
+      if(symbols.find(var.get_identifier()) == symbols.end())
+	new_value.push_back(*it);
+    }
+    return conjunction(new_value);
   }
-  return conjunction(new_value);
+
+  find_symbols_sett symbols;
+  find_symbols(old_value,symbols);
+  if(symbols.find(var.get_identifier()) != symbols.end())
+    return true_exprt();
+
+  return old_value;
 }
 
 /*******************************************************************\
@@ -336,13 +346,17 @@ exprt acdl_domaint::split(const valuet &value, const exprt &expr,
   exprt m = tpolyhedra_domaint::between(l,u);
 
   if(upper) {
+#ifdef DEBUG
     std::cout << "[ACDL-DOMAIN] decision: "
 	      << from_expr(SSA.ns, "", binary_relation_exprt(m,ID_le,expr)) << std::endl;
+#endif
     return binary_relation_exprt(m,ID_le,expr);
   }
   else {
+#ifdef DEBUG
     std::cout << "[ACDL-DOMAIN] decision: "
 	      << from_expr(SSA.ns, "", binary_relation_exprt(expr,ID_le,m)) << std::endl;
+#endif
     return binary_relation_exprt(expr,ID_le,m);
   }
 }
@@ -361,20 +375,31 @@ Function: acdl_domaint::normalize()
 
 void acdl_domaint::normalize(valuet &value, const varst &vars)
 {
-  valuet _old_value = value;
+  valuet old_value = value;
 
+  varst clean_vars;
+  
   //project out vars
   for(varst::const_iterator it = vars.begin();
       it != vars.end(); ++it)
-    value = remove_var(value,*it);
+  {
+    // we only normalize what the abstract domain currently handles
+    if(it->type().id() == ID_signedbv ||
+       it->type().id() == ID_unsignedbv ||
+       it->type().id() == ID_floatbv)
+    {
+      value = remove_var(value,*it);
+      clean_vars.push_back(*it);
+    }
+  }
     
   ssa_analyzert ssa_analyzer;
   std::unique_ptr<incremental_solvert> solver(incremental_solvert::allocate(SSA.ns,true));
 
   template_generator_acdlt template_generator(options,ssa_db,ssa_local_unwinder); 
-  template_generator(SSA,vars);
+  template_generator(SSA,clean_vars);
     
-  ssa_analyzer(*solver, SSA, _old_value,template_generator);
+  ssa_analyzer(*solver, SSA, old_value,template_generator);
   valuet new_values;
   ssa_analyzer.get_result(new_values,template_generator.all_vars());
 
