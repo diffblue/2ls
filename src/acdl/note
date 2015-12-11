@@ -289,3 +289,8 @@ prop_convt::convert_bool got non-boolean expression:
 ("constant" "type" ("signedbv" "width" ("32") "#c_type" ("signed_int")) "value" ("00000000000000000000000000000000") "#source_location" ("" "file" ("main.c") "line" ("4") "function" ("main")) "#cformat" ("0"))
  
 *> Do I need to pass the expression template like (x-y) or (x) or (x>0) to the split function  
+
+*) Since bottom2 has assertion (x==2) which is non-convex, so when is the decision made for this program. Is it 
+in the beginning or after gamma-completeness.
+
+*) How to check meet irreducible -- implement this. 
