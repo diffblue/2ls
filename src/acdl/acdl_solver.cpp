@@ -445,69 +445,14 @@ acdl_solvert::decide (const local_SSAt &SSA,
   domain.meet(decision,v);
   //#endif
 
-#if 0  
-  // find all symbols present in decision and store in dec_vars
+  std::set<symbol_exprt> dec_symbols;
+  // find all symbols in the decision expression
+  find_symbols(decision, dec_symbols);
+  // convert set of symbols to vector of symbols
   acdl_domaint::varst dec_vars;
-  for (exprt::operandst::const_iterator it = decision[0].operands().begin();
-		  it != decision[0].operands().end(); it++) {
-      if(it->id() == ID_symbol)
-	   dec_vars.insert(dec_vars.end(), to_symbol_expr(it->op0()));
-  }
-
-  // Update the worklist to include all statements relating to the decision variables
-  for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
-       n_it != SSA.nodes.end(); n_it++) {
-     for(local_SSAt::nodet::equalitiest::const_iterator e_it =
- 	 	  n_it->equalities.begin(); e_it != n_it->equalities.end(); e_it++) {
-    	  assert(e_it->id()==ID_equal);
-    	  find_symbols_sett symbols;
-    	  // find all symbols in equalities statement
-    	  find_symbols(*e_it, symbols);
-    	  // check if variables in dec_vars is present in equalities statements
-    	  for(acdl_domaint::varst::const_iterator it = dec_vars.begin();
-    	        it != dec_vars.end(); ++it)
-    	  {
-    	     if(symbols.find(it->get_identifier()) != symbols.end()) {
-    		   // insert into worklist
-    		   worklist.push_back(*e_it);
-    	     }
-    	  }
-     }
-     for(local_SSAt::nodet::assertionst::const_iterator a_it =
-     	  n_it->assertions.begin(); a_it != n_it->assertions.end(); a_it++) {
-
-    	 find_symbols_sett symbols;
-    	 // find all symbols in equalities statement
-    	 find_symbols(*a_it, symbols);
-    	 // check if variables in dec_vars is present in assertion statements
-    	 for(acdl_domaint::varst::const_iterator it = dec_vars.begin();
-    	         it != dec_vars.end(); ++it)
-    	 {
-    	   if(symbols.find(it->get_identifier()) != symbols.end()) {
-    	     // insert into worklist
-    	     worklist.push_back(*a_it);
-    	   }
-    	 }
-     }
-
-     for(local_SSAt::nodet::constraintst::const_iterator c_it =
-     	  n_it->constraints.begin(); c_it != n_it->constraints.end(); c_it++) {
-
-    	 find_symbols_sett symbols;
-    	 // find all symbols in equalities statement
-    	 find_symbols(*c_it, symbols);
-    	 // check if variables in dec_vars is present in assertion statements
-    	 for(acdl_domaint::varst::const_iterator it = dec_vars.begin();
-    	      it != dec_vars.end(); ++it)
-    	 {
-    	   if(symbols.find(it->get_identifier()) != symbols.end()) {
-    	     // insert into worklist
-    	     worklist.push_back(*c_it);
-    	   }
-    	 }
-     }
-   }
- #endif
+  dec_vars.insert(dec_vars.end(), dec_symbols.begin(), dec_symbols.end());
+  // update the worklist here 
+  update_worklist(SSA, dec_vars, worklist);
 }
 
 /*******************************************************************
@@ -525,6 +470,7 @@ acdl_solvert::decide (const local_SSAt &SSA,
 property_checkert::resultt 
 acdl_solvert::analyze_conflict(const local_SSAt &SSA,
 			       acdl_domaint::valuet &v,
+             worklistt &worklist, 
 			       decision_grapht &g)
 {
   //TODO
@@ -542,7 +488,14 @@ acdl_solvert::analyze_conflict(const local_SSAt &SSA,
   // add learned clauses
   domain.meet(learned_clauses,v);
 
-  // update worklist
+  std::set<symbol_exprt> learn_symbols;
+  // find all symbols in the learned clause
+  find_symbols(learned_clauses, learn_symbols);
+  // convert set of symbols to vector of symbols
+  acdl_domaint::varst learn_vars;
+  learn_vars.insert(learn_vars.end(), learn_symbols.begin(), learn_symbols.end());
+  // update the worklist here 
+  update_worklist(SSA, learn_vars, worklist);
 
   return property_checkert::PASS;
 }
@@ -616,7 +569,7 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
     std::cout << "********************************" << std::endl;
 
       // analyze conflict ...
-    result = analyze_conflict(SSA, v, g);
+    result = analyze_conflict(SSA, v, worklist, g);
   }
 
   return result;

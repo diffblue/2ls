@@ -74,6 +74,7 @@ protected:
   
   property_checkert::resultt analyze_conflict(const local_SSAt &SSA,
 			acdl_domaint::valuet &v,
+      worklistt &worklist,
 			decision_grapht &g);
 };
 
