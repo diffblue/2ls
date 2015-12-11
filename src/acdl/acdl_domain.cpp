@@ -298,7 +298,8 @@ Function: acdl_domaint::split()
   Inputs: example: 
             expr: x-y
             value: -(x-y) <= 1 && x-y <= 5 && -y <= 0 && y <= 10 && ...
-
+          This is very generic, can be easily extended to octagons and 
+          other richer domains
  Outputs: example:
             2 <= x-y (for upper=true)
 

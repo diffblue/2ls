@@ -11,6 +11,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include <util/find_symbols.h>
 #include "acdl_solver.h"
 #include "acdl_domain.h"
+#include <string>
 
 #define DEBUG
 
@@ -191,8 +192,6 @@ acdl_solvert::update_worklist (const local_SSAt &SSA,
         push_into_worklist(worklist, *e_it);
         #ifdef DEBUG
         std::cout << "Push: " << from_expr (SSA.ns, "", *e_it) << std::endl;
-        std::cout << "LHS: " << from_expr (SSA.ns, "", e_it->lhs()) << std::endl;
-        std::cout << "RHS: " << from_expr (SSA.ns, "", e_it->rhs()) << std::endl;
         #endif
       }
     }
@@ -415,23 +414,64 @@ acdl_solvert::decide (const local_SSAt &SSA,
 		      worklistt &worklist,
 		      assert_listt &alist)
 {
-  //TODO
-  // use information from VSIDS to choose decision 'variable'
-  // Note: using CFG flow instead can be used to emulate a forward analysis
-
-  // choose a meet irreducible
-  // 1. pick possible decision from source code 
-  // 1.a. look at conditions in the SSA: cond#3
-  //      decision = cond_var
-  // 1.b. e.g. we have x!=2 in an assertion, then we have meet irreducibles x<=1, x>=3 as potential decisions
-//#if 0  
-  // 2. call acdl_domaint::split
   exprt decision_expr; //TODO: This characterize the shape of the decisions made, (eg. x < 5 or x-y < 5)
   acdl_domaint::valuet decision; // container that contains the decision (eg. x == [0,10])
   
+  //TODO
+  // use information from VSIDS to choose decision 'variable'
+  
+  // ***********************************************************************
+  // Note: using CFG flow instead can be used to emulate a forward analysis
+  //       This is similar to Astree simulation 
+  // ***********************************************************************
+
+  // choose a meet irreducible
+  // 1. pick possible decision from source code 
+  
+  // *******************************************
+  // 1.a. look at conditions in the SSA: cond#3
+  //      decision = cond_var
+  // *******************************************
+  std::string str("cond");
+  std::string lhs_str;
+  for (local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin ();
+      n_it != SSA.nodes.end (); n_it++)
+  {
+    for (local_SSAt::nodet::equalitiest::const_iterator e_it =
+        n_it->equalities.begin (); e_it != n_it->equalities.end (); e_it++)
+    {
+      const irep_idt &identifier = e_it->lhs().get(ID_identifier);
+      // check if the rhs of an equality is a constant, 
+      // in that case don't do anything  
+      if(e_it->rhs().id() == ID_constant) {}
+      else {
+        lhs_str = id2string(identifier); //e_it->lhs().get(ID_identifier)); 
+        std::size_t found = lhs_str.find(str);
+        if (found!=std::string::npos) {
+#ifdef DEBUG
+        std::cout << "DECISION PHASE: " << from_expr (SSA.ns, "", e_it->lhs()) << std::endl;
+#endif        
+          decision = e_it->lhs();
+        }
+      }
+    }
+  }
+  
+  
+  // *****************************************************
+  // 1.b. e.g. we have x!=2 in an assertion, then we have 
+  // meet irreducibles x<=1, x>=3 as potential decisions
+  // *****************************************************
+
+  
+  // ****************************
+  // 2. call acdl_domaint::split
+  // ****************************
+  #if 0
   std::cout << "DECISION PHASE: " << from_expr (SSA.ns, "", alist.front()) << std::endl;
   decision = domain.split(alist.front(),decision_expr);
-
+  #endif
+  
   // update decision graph
   // TODO
   
@@ -441,7 +481,6 @@ acdl_solvert::decide (const local_SSAt &SSA,
   // Take a meet of the decision expression (decision) with the current abstract state (v).
   // The new abstract state is now in v
   domain.meet(decision,v);
-  //#endif
 
   acdl_domaint::varst dec_vars;
   // find all symbols in the decision expression
