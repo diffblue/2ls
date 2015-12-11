@@ -67,6 +67,20 @@ protected:
   
 };
 
+/*
+class meet_irreducible : public acdl_domaint
+{
+public: 
+ meet_irreducible(const acdl_domaint::valuet& val)
+     :acdl_domaint(val)
+ {
+   //must be complementable
+   assert(is_bottom(val) || is_meet_irreducible(val));
+ }
+
+ meet_irreducible complement() const;
+}
+*/
 
 #endif
  
