@@ -336,6 +336,7 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA,
     if (statement.id () == ID_equal
         && to_equal_expr (statement).lhs ().type ().id () == ID_bool)
     {
+      std::cout << "The control is coming here" << std::endl;
       new_v[0] = statement;
       // collect variables for dependencies
       find_symbols(statement,vars);
@@ -415,6 +416,7 @@ acdl_solvert::decide (const local_SSAt &SSA,
 		      assert_listt &alist)
 {
   exprt decision_expr; //TODO: This characterize the shape of the decisions made, (eg. x < 5 or x-y < 5)
+  exprt decision_var;
   acdl_domaint::valuet decision; // container that contains the decision (eg. x == [0,10])
   
   //TODO
@@ -451,13 +453,15 @@ acdl_solvert::decide (const local_SSAt &SSA,
 #ifdef DEBUG
         std::cout << "DECISION PHASE: " << from_expr (SSA.ns, "", e_it->lhs()) << std::endl;
 #endif        
-          decision = e_it->lhs();
+          decision_var = e_it->lhs();
         }
       }
     }
   }
-  
-  
+  decision = domain.split(decision_var,decision_expr);
+  std::cout << "DECISION SPLITTING VALUE: " << from_expr (SSA.ns, "", decision) << std::endl;
+  equal_exprt dec_expr(decision_var, decision);
+  std::cout << "DECISION SPLITTING EXPR: " << from_expr (SSA.ns, "", dec_expr) << std::endl;
   // *****************************************************
   // 1.b. e.g. we have x!=2 in an assertion, then we have 
   // meet irreducibles x<=1, x>=3 as potential decisions
@@ -483,12 +487,12 @@ acdl_solvert::decide (const local_SSAt &SSA,
 
   // Take a meet of the decision expression (decision) with the current abstract state (v).
   // The new abstract state is now in v
-  domain.meet(decision,v);
+  domain.meet(dec_expr,v);
   
 
   acdl_domaint::varst dec_vars;
   // find all symbols in the decision expression
-  find_symbols(decision, dec_vars);
+  find_symbols(dec_expr, dec_vars);
   // update the worklist here 
   update_worklist(SSA, dec_vars, worklist);
 }
@@ -576,10 +580,10 @@ acdl_solvert::analyze_conflict(const local_SSAt &SSA,
   
   // do propagate here (required for cond variable based decision 
   // heuristic to cover all branches in control flow)
-  property_checkert::resultt result = property_checkert::UNKNOWN;
-  result = propagate(SSA, v, worklist);
+  //property_checkert::resultt result = property_checkert::UNKNOWN;
+  //result = propagate(SSA, v, worklist);
 
-  return result; //property_checkert::UNKNOWN;
+  return property_checkert::UNKNOWN;
 }
 
 /*******************************************************************
@@ -649,10 +653,10 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
 
     // analyze conflict ...
     result = analyze_conflict(SSA, v, worklist, g);
-    if(result == property_checkert::PASS) //UNSAT
+    /*if(result == property_checkert::PASS) //UNSAT
       break;
     else 
-      continue;
+      continue;*/
   }
 
   return result;

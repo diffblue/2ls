@@ -59,6 +59,7 @@ protected:
     std::map<nodet, nodet> edges; //reverse edges,
                                   //i.e. e1 maps to e2 <=> directed edge (e2,e1)
     nodet current_node;
+    int decision_level;
     std::map<nodet, acdl_domaint::valuet> backtrack_points;
   } decision_grapht; 
   

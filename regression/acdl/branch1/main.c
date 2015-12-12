@@ -5,13 +5,14 @@ int main()
      x++;
     else
      x--;
-    if(y>=0)
+ /*   if(y>=0)
      y++;
     else
      y--;
     if(z>=0)
      z++;
     else
-     z--;
- assert((x+y+z) > 0);
+     z--;*/
+ //assert(((x+y+z) < 0));
+ assert(x >= 0);
 }
