@@ -317,3 +317,5 @@ Query:
 1> Can we avoid pushing statements like y#18 == nondet_symbol(ssa::nondet18.1) ?
 2> Check if the edge update implementation inside the decision is correct or not ?
 3> If I have multiple if-else branch, which cond to decide on. Now the last cond is always taken.
+4> If cond == (x==4), then !cond == (x!=4) which cannot be represented in the domain now
+5> Do I need to empty the worklist before updating the worklist in conflict analysis phase ?

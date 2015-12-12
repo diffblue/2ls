@@ -565,15 +565,21 @@ acdl_solvert::analyze_conflict(const local_SSAt &SSA,
   acdl_domaint::varst learn_vars;
   // find all symbols in the learned clause
   find_symbols(learned_clauses, learn_vars);
+  
+  // RM: empty the worklist here
+  while(!worklist.empty()) { 
+    const acdl_domaint::statementt statement = worklist.front();
+    worklist.pop_front();
+  }
   // update the worklist here 
   update_worklist(SSA, learn_vars, worklist);
   
   // do propagate here (required for cond variable based decision 
   // heuristic to cover all branches in control flow)
-  //property_checkert::resultt result = property_checkert::UNKNOWN;
-  //result = propagate(SSA, v, worklist);
+  property_checkert::resultt result = property_checkert::UNKNOWN;
+  result = propagate(SSA, v, worklist);
 
-  return property_checkert::UNKNOWN;
+  return result; //property_checkert::UNKNOWN;
 }
 
 /*******************************************************************
@@ -643,6 +649,10 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
 
     // analyze conflict ...
     result = analyze_conflict(SSA, v, worklist, g);
+    if(result == property_checkert::PASS) //UNSAT
+      break;
+    else 
+      continue;
   }
 
   return result;
