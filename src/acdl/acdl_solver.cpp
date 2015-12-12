@@ -512,13 +512,49 @@ acdl_solvert::analyze_conflict(const local_SSAt &SSA,
 			       decision_grapht &g)
 {
   //TODO
+  // ******* For temporary purpose **********
+  exprt decision_reason;
+  std::string str("cond");
+  std::string lhs_str;
+  for (local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin ();
+      n_it != SSA.nodes.end (); n_it++)
+  {
+    for (local_SSAt::nodet::equalitiest::const_iterator e_it =
+        n_it->equalities.begin (); e_it != n_it->equalities.end (); e_it++)
+    {
+      const irep_idt &identifier = e_it->lhs().get(ID_identifier);
+      // check if the rhs of an equality is a constant, 
+      // in that case don't do anything  
+      if(e_it->rhs().id() == ID_constant) {}
+      else {
+        lhs_str = id2string(identifier); //e_it->lhs().get(ID_identifier)); 
+        std::size_t found = lhs_str.find(str);
+        if (found!=std::string::npos) {
+#ifdef DEBUG
+          //std::cout << "DECISION PHASE: " << from_expr (SSA.ns, "", e_it->lhs()) << std::endl;
+#endif        
+          decision_reason = e_it->lhs();
+        }
+      }
+    }
+  }
+  // ****************************************
+
 
   // first UIP over conflict graph
-  exprt decision_reason;
+  //exprt decision_reason;
 
-  //generalise
-  exprt learned_clauses;
+  // get the learned clause which is 
+  // the negation of the reason of conflict
+  exprt learned_clauses = not_exprt(decision_reason);
   
+  // generalise learned clause
+ 
+ #ifdef DEBUG
+          std::cout << "LEARNED CLAUSE: " << from_expr (SSA.ns, "", learned_clauses) << std::endl;
+ #endif        
+ 
+    
   // backtrack
   v = g.backtrack_points[decision_reason];
   // clean up decision graph and, optionally, backtrack points
@@ -531,8 +567,13 @@ acdl_solvert::analyze_conflict(const local_SSAt &SSA,
   find_symbols(learned_clauses, learn_vars);
   // update the worklist here 
   update_worklist(SSA, learn_vars, worklist);
+  
+  // do propagate here (required for cond variable based decision 
+  // heuristic to cover all branches in control flow)
+  //property_checkert::resultt result = property_checkert::UNKNOWN;
+  //result = propagate(SSA, v, worklist);
 
-  return property_checkert::PASS;
+  return property_checkert::UNKNOWN;
 }
 
 /*******************************************************************
