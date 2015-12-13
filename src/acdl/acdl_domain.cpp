@@ -1,6 +1,6 @@
 /*******************************************************************\
 
-Module: ACDL Solver
+Module: ACDL Domain
 
 Author: Rajdeep Mukherjee, Peter Schrammel
 
@@ -115,7 +115,8 @@ void acdl_domaint::operator()(const statementt &statement,
     }
     else
     {
-      warning() << "WARNING: cannot propagate " << it->get_identifier()
+      warning() << "WARNING: do not know how to propagate " 
+		<< it->get_identifier()
 		<< " of type " << from_type(SSA.ns, "", it->type()) 
 		<< eom;
     }
@@ -312,7 +313,8 @@ Function: acdl_domaint::remove_var()
 
 \*******************************************************************/
 
-exprt acdl_domaint::remove_var(const valuet &_old_value, const symbol_exprt &var)
+exprt acdl_domaint::remove_var(const valuet &_old_value, 
+			       const symbol_exprt &var)
 {
   valuet old_value = _old_value;
   simplify(old_value,SSA.ns);
@@ -358,6 +360,31 @@ Function: acdl_domaint::split()
 exprt acdl_domaint::split(const valuet &value, const exprt &expr, 
 			  bool upper)
 { 
+  if(expr.type().id()==ID_bool)
+  {
+    exprt v_true = simplify_expr(and_exprt(value,expr),SSA.ns);
+    if(v_true.is_false())
+      return true_exprt();
+    exprt v_false = simplify_expr(and_exprt(value,not_exprt(expr)),SSA.ns);
+    if(v_false.is_true())
+      return true_exprt();
+    if(upper)
+      return expr;
+    else
+      return not_exprt(expr);
+  }
+
+  if(!(expr.type().id() == ID_signedbv ||
+     expr.type().id() == ID_unsignedbv ||
+       expr.type().id() == ID_floatbv))
+  {
+    warning() << "WARNING: do not know how to split " 
+	      << from_expr(SSA.ns, "", expr)
+	      << " of type " << from_type(SSA.ns, "", expr.type()) 
+	      << eom;
+    return true_exprt(); 
+  }
+
   if(value.operands().size()<2)
     return true_exprt(); //cannot split
 
