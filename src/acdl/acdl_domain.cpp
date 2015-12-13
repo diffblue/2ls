@@ -64,14 +64,62 @@ void acdl_domaint::operator()(const statementt &statement,
 	      << from_expr(SSA.ns, "", old_value) << std::endl;
 #endif
 
-    template_generator_acdlt template_generator(options,ssa_db,ssa_local_unwinder); 
-    template_generator(SSA,*it);
-    
-    ssa_analyzer(*solver, SSA, and_exprt(old_value,statement),template_generator);
-    valuet var_value;
-    ssa_analyzer.get_result(var_value,template_generator.all_vars());
+    // booleans
+    if(it->type().id()==ID_bool)
+    {
+      valuet var_value;
+      literalt l = solver->solver->convert(*it);
+      if(l.is_true()) 
+	var_value = *it;
+      else if(l.is_false())
+	var_value = not_exprt(*it);
+      else
+      {
+	solver->solver->set_frozen(l);
+	*solver << and_exprt(old_value,statement);
+	
+	if((*solver)() == decision_proceduret::D_SATISFIABLE)
+	{
+	  exprt m = (*solver).get(*it);
+	  if(m.is_true())
+	    var_value = *it;
+	  else
+	    var_value = not_exprt(*it);
+	  solver->new_context();
+	  *solver << not_exprt(*it);
+  	  if((*solver)() == decision_proceduret::D_SATISFIABLE)
+	    var_value = true_exprt(); //don't know
+	  solver->pop_context();
+	}
+	else //bottom
+	  var_value = false_exprt();
+      }
 
-    new_values.push_back(and_exprt(old_value,var_value));
+      new_values.push_back(and_exprt(old_value,var_value));
+    }
+    // numerical variables using templates
+    else if (it->type().id() == ID_signedbv ||
+       it->type().id() == ID_unsignedbv ||
+       it->type().id() == ID_floatbv)
+    {
+      template_generator_acdlt template_generator(
+        options,ssa_db,ssa_local_unwinder); 
+      template_generator(SSA,*it);
+    
+      ssa_analyzer(*solver, SSA, and_exprt(old_value,statement),
+		   template_generator);
+      valuet var_value;
+      ssa_analyzer.get_result(var_value,template_generator.all_vars());
+  
+      new_values.push_back(and_exprt(old_value,var_value));
+    }
+    else
+    {
+      warning() << "WARNING: cannot propagate " << it->get_identifier()
+		<< " of type " << from_type(SSA.ns, "", it->type()) 
+		<< eom;
+    }
+
 
 #ifdef DEBUG
     std::cout << "[ACDL-DOMAIN] new_value(" << it->get_identifier() << "): "

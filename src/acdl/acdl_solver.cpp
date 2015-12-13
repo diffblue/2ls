@@ -295,37 +295,26 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA,
   {
     const acdl_domaint::statementt statement = pop_from_worklist(worklist);
     
-    #ifdef DEBUG
+#ifdef DEBUG
     std::cout << "Pop: " << from_expr (SSA.ns, "", statement)
         << std::endl;
-    #endif
-    acdl_domaint::varst vars;
-    acdl_domaint::valuet new_v;
-    // TODO: this is a workaround to handle booleans,
-    //       must be implemented using a product domain
-    if (statement.id () == ID_equal
-        && to_equal_expr (statement).lhs ().type ().id () == ID_bool)
-    {
-      std::cout << "The control is coming here" << std::endl;
-      new_v = statement;
-      // collect variables for dependencies
-      find_symbols(statement,vars);
-    }
-    else
-    {
-      // select vars according to iteration strategy
-      select_vars (statement, vars);
-#ifdef DEBUG
-      std::cout << "Selected vars:";
-      for(acdl_domaint::varst::const_iterator v_it = vars.begin();
-	  v_it != vars.end(); ++v_it)
-	std::cout << " " << from_expr (SSA.ns, "", *v_it);
-      std::cout << std::endl;
 #endif
 
-      // compute update of abstract value
-      domain (statement, vars, v, new_v);
-    }
+    // select vars according to iteration strategy
+    acdl_domaint::varst vars;
+    select_vars (statement, vars);
+#ifdef DEBUG
+    std::cout << "Selected vars:";
+    for(acdl_domaint::varst::const_iterator v_it = vars.begin();
+	v_it != vars.end(); ++v_it)
+      std::cout << " " << from_expr (SSA.ns, "", *v_it);
+    std::cout << std::endl;
+#endif
+
+    // compute update of abstract value
+    acdl_domaint::valuet new_v;
+    domain (statement, vars, v, new_v);
+
     // terminating condition check for populating worklist
     if(!domain.contains(v, new_v))
     {
