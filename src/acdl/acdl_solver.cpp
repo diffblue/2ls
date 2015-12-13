@@ -542,7 +542,7 @@ acdl_solvert::analyze_conflict(const local_SSAt &SSA,
   //property_checkert::resultt result = property_checkert::UNKNOWN;
   //result = propagate(SSA, v, worklist);
 
-  return property_checkert::UNKNOWN;
+  return property_checkert::PASS;
 }
 
 /*******************************************************************
