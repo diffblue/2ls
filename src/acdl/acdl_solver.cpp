@@ -291,35 +291,6 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA,
 						   acdl_domaint::valuet &v,
 						   worklistt &worklist)
 {
-
-#if 1
-  exprt expression;
-  std::list<acdl_domaint::statementt> equalities_expr;
-   std::list<acdl_domaint::statementt> constraints_expr;
-   std::list<acdl_domaint::statementt> assertions_expr;
-  // collect all equalities, constraints and assertions
-  for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
-      n_it != SSA.nodes.end(); n_it++) {
-    for(local_SSAt::nodet::equalitiest::const_iterator e_it =
-	 	  n_it->equalities.begin(); e_it != n_it->equalities.end(); e_it++) {
-       expression = *e_it;
-       assert(e_it->id()==ID_equal);
-       //std::cout<< "The expression is " << e_it->pretty() << std::endl;
-       equalities_expr.push_back(expression);
-    }
-    for(local_SSAt::nodet::assertionst::const_iterator a_it =
-    	  n_it->assertions.begin(); a_it != n_it->assertions.end(); a_it++) {
-         expression = *a_it;
-         assertions_expr.push_back(expression);
-    }
-    
-    for(local_SSAt::nodet::constraintst::const_iterator c_it =
-    	  n_it->constraints.begin(); c_it != n_it->constraints.end(); c_it++) {
-         expression = *c_it;
-         constraints_expr.push_back(expression);
-    }
-  }
-#endif
   while (!worklist.empty())
   {
     const acdl_domaint::statementt statement = pop_from_worklist(worklist);
@@ -329,15 +300,14 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA,
         << std::endl;
     #endif
     acdl_domaint::varst vars;
-    std::vector<acdl_domaint::valuet> new_v;
-    new_v.resize (1);
+    acdl_domaint::valuet new_v;
     // TODO: this is a workaround to handle booleans,
     //       must be implemented using a product domain
     if (statement.id () == ID_equal
         && to_equal_expr (statement).lhs ().type ().id () == ID_bool)
     {
       std::cout << "The control is coming here" << std::endl;
-      new_v[0] = statement;
+      new_v = statement;
       // collect variables for dependencies
       find_symbols(statement,vars);
     }
@@ -354,10 +324,10 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA,
 #endif
 
       // compute update of abstract value
-      domain (statement, vars, v, new_v[0]);
+      domain (statement, vars, v, new_v);
     }
     // terminating condition check for populating worklist
-    if(!domain.contains(v, new_v[0]))
+    if(!domain.contains(v, new_v))
     {
       update_worklist(SSA, vars, worklist, statement);
     }
@@ -365,7 +335,7 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA,
 #ifdef DEBUG
     std::cout << "Old: " << from_expr (SSA.ns, "", v)
               << std::endl;
-    std::cout << "New: " << from_expr (SSA.ns, "", new_v[0])
+    std::cout << "New: " << from_expr (SSA.ns, "", new_v)
               << std::endl;
 #endif
 
