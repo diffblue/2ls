@@ -421,10 +421,10 @@ acdl_solvert::decide (const local_SSAt &SSA,
   std::cout << "DECISION SPLITTING VALUE: " << from_expr (SSA.ns, "", decision) << std::endl;
   equal_exprt dec_expr(decision_var, decision);
   std::cout << "DECISION SPLITTING EXPR: " << from_expr (SSA.ns, "", dec_expr) << std::endl;
-  // *****************************************************
-  // 1.b. e.g. we have x!=2 in an assertion, then we have 
+  // *****************************************************************
+  // 1.b. e.g. we have x!=2 in an assertion or cond node, then we have 
   // meet irreducibles x<=1, x>=3 as potential decisions
-  // *****************************************************
+  // ****************************************************************
 
   
   // ****************************
@@ -441,8 +441,8 @@ acdl_solvert::decide (const local_SSAt &SSA,
   // keep information for backtracking associated with this decision point in g
   g.backtrack_points[decision] = v;
   // Update the edges of the decision graph
-   g.edges[decision] = g.current_node;
-   g.current_node = decision;
+  g.edges[decision] = g.current_node;
+  g.current_node = decision;
   // Take a meet of the decision expression (decision) with the current abstract state (v).
   // The new abstract state is now in v
   domain.meet(dec_expr,v);

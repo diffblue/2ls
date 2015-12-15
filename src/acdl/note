@@ -332,7 +332,9 @@ guard0 = true            guard0=true
 guard1 = guard0&&cond    guard0=true // no information available about cond which means that they are TOP
 cond = (x<10)           
  x = 5
-For the above situation, we can look ahead upto cond and then compute the abstract value of guard1. 
+For the above situation, we need to look ahead upto x=5 and then compute the abstract value of guard1 
+to mimic the deduction phase of the SAT solver. The deduction phase must guarantee that all informations
+that is obvious must be computed, meaning gfp iteration in AI. 
 
 Consider another situation:
   Statement            Abstract value
@@ -344,3 +346,31 @@ guard1 = guar0&&cond    guard0=true // no information available about cond and g
  y = g, g is symbolic
 
  
+Meeting on 15th December, 2015
+-------------------------------
+1> Update worklist algorithm:
+Intialize the worklist with the assertions at the beginning:
+Let a1, a2, a3 be three assertions. Then, the worklist first 
+stores (!(a1 && a2 && a3)). Compared to our last implementation, 
+where we always store all the statement in the worklist that is 
+dependent on the variables present in the current statement, in 
+our new implementation, we need to store all transitive dependencies 
+in the worklist as well. For this, we need to create a graph where
+for each variables, we need to cache its corresponding transitive 
+dependencies so that when the same variable arise next time, we 
+do not have to track the whole dependencies for that variable again and 
+  simply look at the graph. The contains check in the worklist still 
+  remains the same for terminating condition. The graph must return 
+  set of all statements which are dependant on the current selected 
+  variable.
+  
+2> For Learning, look at Leo's first UIP algorithm and the data 
+structure used there. Make a separate class for conflict_analysis.
+The decision_grapht must have some mechanism to store the deduction 
+as well as this is also needed in the first UIP algorithm.
+
+3> Implement the decision heuristic, where decisions are taken on 
+cond and assertion variables with meet irreducibles, like (x!=5) gives
+us (-2^32,4) meet (6, 2^32-1)
+ 
+   
