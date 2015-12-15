@@ -37,9 +37,46 @@ void
 acdl_solvert::initialize_worklist (const local_SSAt &SSA, worklistt &worklist)
 {
   //TODO: add assertions first
-
+  if (SSA.nodes.empty ())
+    return;
   
-#if 1
+  // insert the assertions like (!(a1 && a2 && a3)) on to the worklist
+  and_exprt::operandst and_expr;
+  for (local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin ();
+      n_it != SSA.nodes.end (); n_it++)
+  {
+    for (local_SSAt::nodet::assertionst::const_iterator a_it =
+        n_it->assertions.begin (); a_it != n_it->assertions.end (); a_it++)
+    {
+       and_expr.push_back(*a_it);
+    }
+  }
+  unsigned int size = and_expr.size();
+#ifdef DEBUG    
+  std::cout << "The number of Assertions are : " << size << std::endl;
+#endif  
+	exprt::operandst::const_iterator it = and_expr.begin();
+	std::cout << "First single assertion push: " << *it << std::endl;
+  if(size == 1) {
+	  exprt::operandst::const_iterator it = and_expr.begin();
+#ifdef DEBUG    
+	  std::cout << "First single assertion push: " << *it << std::endl;
+#endif    
+	  exprt exp = *it;
+	  not_exprt not_exp(exp);
+    push_into_worklist(worklist, not_exp);
+  }
+  else {
+    and_exprt final_and;
+    std::swap(final_and.operands(), and_expr);
+    not_exprt not_exp(final_and);
+#ifdef DEBUG    
+    std::cout << "First push: " << not_exp.pretty() << std::endl;
+#endif    
+    push_into_worklist(worklist, not_exp);
+  }
+
+#if 0
   // check for equalities or constraints or next node
   if (SSA.nodes.empty ())
     return;
