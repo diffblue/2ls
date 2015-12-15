@@ -117,6 +117,10 @@ acdl_solvert::check_statement (const exprt &expr,
   {
     if (symbols.find (*it) != symbols.end ())
     {
+      // find_symbols here may be required to 
+      // find transitive dependencies
+      // in which case make vars non-constant
+      //find_symbols(expr, vars);
       return true;
     }
   }
