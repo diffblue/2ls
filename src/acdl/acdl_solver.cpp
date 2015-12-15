@@ -441,9 +441,8 @@ acdl_solvert::decide (const local_SSAt &SSA,
   // keep information for backtracking associated with this decision point in g
   g.backtrack_points[decision] = v;
   // Update the edges of the decision graph
-  if(g.edges[g.current_node] == nil_exprt())
-    g.edges[g.current_node] == decision;
-
+   g.edges[decision] = g.current_node;
+   g.current_node = decision;
   // Take a meet of the decision expression (decision) with the current abstract state (v).
   // The new abstract state is now in v
   domain.meet(dec_expr,v);

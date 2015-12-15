@@ -321,3 +321,26 @@ Query:
 5> Do I need to empty the worklist before updating the worklist in conflict analysis phase ?
 6> For the present error, either we take separate care for updating worklist for cond variables or 
 the boolean case in acdl domain is wrong because the if-else were properly working without product domain.
+
+Meeting on 14th December, 2015
+---------------------------------
+1> Updating worklist for conditionals seems to be a problem.
+Conside the following case:
+  Statement            Abstract value
+  ---------           ----------------
+guard0 = true            guard0=true
+guard1 = guard0&&cond    guard0=true // no information available about cond which means that they are TOP
+cond = (x<10)           
+ x = 5
+For the above situation, we can look ahead upto cond and then compute the abstract value of guard1. 
+
+Consider another situation:
+  Statement            Abstract value
+  ---------           ----------------
+guard0 = true           guard0=true
+guard1 = guar0&&cond    guard0=true // no information available about cond and guard which means that they are TOP
+ cond = (x<10)
+ x = h, h is symbolic                 
+ y = g, g is symbolic
+
+ 
