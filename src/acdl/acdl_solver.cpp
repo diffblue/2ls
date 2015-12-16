@@ -33,11 +33,93 @@ Function: acdl_solvert::operator()
 
  \*******************************************************************/
 
-
 void
 acdl_solvert::initialize_worklist (const local_SSAt &SSA, worklistt &worklist)
 {
-  //TODO: add assertions first
+  
+  // **********************************************************************
+  // Initialization Strategy: Guarantees top-down and bottom-up propagation 
+  // Assertions -- Top
+  // Leaf node  -- Middle
+  // Rest       -- Bottom
+  // **********************************************************************
+  typedef std::list<acdl_domaint::statementt> assert_worklistt;
+  assert_worklistt assert_worklist; 
+  typedef std::list<acdl_domaint::statementt> predecs_worklistt;
+  predecs_worklistt predecs_worklist; 
+  if (SSA.nodes.empty ())
+    return;
+  // insert the assertions like (!(a1 && a2 && a3)) on to the worklist
+  and_exprt::operandst and_expr;
+  for (local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin ();
+      n_it != SSA.nodes.end (); n_it++)
+  {
+    for (local_SSAt::nodet::assertionst::const_iterator a_it =
+        n_it->assertions.begin (); a_it != n_it->assertions.end (); a_it++)
+    {
+       push_into_worklist(assert_worklist, *a_it);
+       and_expr.push_back(*a_it);
+
+    }
+  }
+  
+  // Push the negation of the assertions into the worklist
+  unsigned int size = and_expr.size();
+	exprt::operandst::const_iterator it = and_expr.begin();
+  if(size == 1) {
+	  exprt::operandst::const_iterator it = and_expr.begin();
+#ifdef DEBUG    
+	  std::cout << "First single assertion push: " << *it << std::endl;
+#endif    
+	  exprt exp = *it;
+	  // push this into worklist at the end as TOP element
+    not_exprt not_exp(exp);
+    worklist.push_back(not_exp);
+  }
+  else {
+    and_exprt final_and;
+    std::swap(final_and.operands(), and_expr);
+    not_exprt not_exp(final_and);
+#ifdef DEBUG    
+    // push this into worklist at the end as TOP element
+    std::cout << "First push: " << not_exp.pretty() << std::endl;
+#endif    
+    worklist.push_back(not_exp);
+  }
+  
+  // Now compute the transitive dependencies
+  //compute fixpoint mu X. assert_nodes u predecessor(X)
+  while(!assert_worklist.empty() > 0) {
+    // collect all the leaf nodes
+    const acdl_domaint::statementt statement = pop_from_worklist(assert_worklist);
+    // select vars in the present statement
+    acdl_domaint::varst vars;
+    select_vars (statement, vars);
+    // compute the predecessors
+    update_worklist(SSA, vars, predecs_worklist, statement);
+    for(std::list<acdl_domaint::statementt>::const_iterator it = predecs_worklist.begin(); it != predecs_worklist.end(); ++it) 
+       {
+         std::list<acdl_domaint::statementt>::iterator finditer = std::find(worklist.begin(), worklist.end(), *it); 
+         if(finditer == worklist.end())
+         {
+           // never seen this statement before
+           push_into_worklist(worklist, *it);
+           push_into_worklist(assert_worklist, *it);
+         }
+       }
+  }
+  
+#ifdef DEBUG    
+   std::cout << "The content of the worklist is as follows: " << std::endl;
+    for(std::list<acdl_domaint::statementt>::const_iterator it = worklist.begin(); it != worklist.end(); ++it) {
+	  std::cout << "Worklist Element::" << from_expr(SSA.ns, "", *it) << std::endl;
+    }
+#endif    
+
+#if 0
+  // **********************************************
+  // Initialization Strategy: Add only assertions
+  // **********************************************
   if (SSA.nodes.empty ())
     return;
   
@@ -76,13 +158,18 @@ acdl_solvert::initialize_worklist (const local_SSAt &SSA, worklistt &worklist)
 #endif    
     push_into_worklist(worklist, not_exp);
   }
+#endif
 
 #if 0
+  // **************************************************
+  // Initialization Strategy: Add the first SSA element
+  // **************************************************
+
   // check for equalities or constraints or next node
   if (SSA.nodes.empty ())
     return;
   assert(!SSA.nodes.front ().equalities.empty ());
-  // insert the first element on to the worklist
+  // insert the first SSA element on to the worklist
   push_into_worklist(worklist, SSA.nodes.front ().equalities.front ());
   #ifdef DEBUG
   std::cout << "First push: " << from_expr (SSA.ns, "", SSA.nodes.front().equalities.front ()) << std::endl;

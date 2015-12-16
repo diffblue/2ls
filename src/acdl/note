@@ -374,3 +374,16 @@ cond and assertion variables with meet irreducibles, like (x!=5) gives
 us (-2^32,4) meet (6, 2^32-1)
  
    
+Meeting on 16th December, 2015
+-------------------------------
+1> Insert into worklist in the following order:
+
+Assert -------> top
+Leaf   -------> Middle
+Rest   -------> Bottom
+
+2> Then while in deduction phase, when popping an element, process the element and then 
+insert the same element in the end of the worklist.
+
+
+
