@@ -8,7 +8,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 
 #include "acdl_decision_heuristics_cond.h"
 
-acdl_domaint::meet_irreduciblet operator()(const local_SSAt &SSA, const acdl_domaint::valuet &value) 
+acdl_domaint::meet_irreduciblet acdl_decision_heuristics_condt::operator()(const local_SSAt &SSA, const acdl_domaint::valuet &value)
 {
   exprt decision_expr; //TODO: This characterize the shape of the decisions made, (eg. x < 5 or x-y < 5)
   exprt decision_var;
@@ -53,10 +53,10 @@ acdl_domaint::meet_irreduciblet operator()(const local_SSAt &SSA, const acdl_dom
       }
     }
   }
-  decision = acdl_solvert::domain.split(decision_var,decision_expr);
+  decision = domain.split(decision_var,decision_expr);
   std::cout << "DECISION SPLITTING VALUE: " << from_expr (SSA.ns, "", decision) << std::endl;
-  equal_exprt dec_expr(decision_var, decision);
-  std::cout << "DECISION SPLITTING EXPR: " << from_expr (SSA.ns, "", dec_expr) << std::endl;
+  //equal_exprt dec_expr(decision_var, decision);
+  //std::cout << "DECISION SPLITTING EXPR: " << from_expr (SSA.ns, "", dec_expr) << std::endl;
 
- return dec_expr;
+ return decision;
 }
