@@ -8,7 +8,8 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 
 #include "acdl_decision_heuristics_cond.h"
 
-acdl_domaint::meet_irreduciblet acdl_decision_heuristics_condt::operator()(const local_SSAt &SSA, const acdl_domaint::valuet &value)
+acdl_domaint::meet_irreduciblet acdl_decision_heuristics_condt::operator()
+(const local_SSAt &SSA, const acdl_domaint::valuet &value)
 {
   exprt decision_expr; //TODO: This characterize the shape of the decisions made, (eg. x < 5 or x-y < 5)
   exprt decision_var;
@@ -53,10 +54,15 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_condt::operator()(const
       }
     }
   }
-  decision = domain.split(decision_var,decision_expr);
+  // For conditional based decision heuristics, 
+  // decision expressions are same as decision variables in split function
+  decision_expr = decision_var;
+  decision = domain.split(decision_var,decision_expr,1);
   std::cout << "DECISION SPLITTING VALUE: " << from_expr (SSA.ns, "", decision) << std::endl;
-  //equal_exprt dec_expr(decision_var, decision);
-  //std::cout << "DECISION SPLITTING EXPR: " << from_expr (SSA.ns, "", dec_expr) << std::endl;
 
- return decision;
+#if 0  
+  equal_exprt dec_expr(decision_var, decision);
+  std::cout << "DECISION SPLITTING EXPR: " << from_expr (SSA.ns, "", dec_expr) << std::endl;
+#endif
+  return decision;
 }

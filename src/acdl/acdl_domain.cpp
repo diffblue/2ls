@@ -360,6 +360,9 @@ Function: acdl_domaint::split()
 exprt acdl_domaint::split(const valuet &value, const exprt &expr, 
 			  bool upper)
 { 
+  std::cout << "[ACDL-DOMAINS] Inside split decision: "
+	      << value.pretty() << std::endl;
+        
   if(expr.type().id()==ID_bool)
   {
     exprt v_true = simplify_expr(and_exprt(value,expr),SSA.ns);
@@ -368,8 +371,11 @@ exprt acdl_domaint::split(const valuet &value, const exprt &expr,
     exprt v_false = simplify_expr(and_exprt(value,not_exprt(expr)),SSA.ns);
     if(v_false.is_true())
       return true_exprt();
-    if(upper)
+    if(upper) {
+      std::cout << "[ACDL-DOMAINS] Inside split decision Upper: "
+	      << value.pretty() << std::endl;
       return expr;
+    }
     else
       return not_exprt(expr);
   }
@@ -421,6 +427,8 @@ exprt acdl_domaint::split(const valuet &value, const exprt &expr,
 
   exprt m = tpolyhedra_domaint::between(l,u);
 
+  std::cout << "[ACDL-DOMAINS] decision: "
+	      << from_expr(SSA.ns, "", binary_relation_exprt(m,ID_le,expr)) << std::endl;
   if(upper) {
 #ifdef DEBUG
     std::cout << "[ACDL-DOMAIN] decision: "
