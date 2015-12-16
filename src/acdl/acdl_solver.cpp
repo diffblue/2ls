@@ -11,6 +11,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include <util/find_symbols.h>
 #include "acdl_solver.h"
 #include "acdl_domain.h"
+#include "acdl_decision_heuristics_cond.h"
 #include <string>
 
 #define DEBUG
@@ -614,6 +615,7 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
   worklistt worklist;
   assert_listt alist;
   initialize_worklist(SSA, worklist);
+  acdl_decision_heuristics_condt dec_cond(domain);
 
   acdl_domaint::valuet v;
   domain.set_top(v);
