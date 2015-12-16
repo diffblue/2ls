@@ -53,7 +53,7 @@ acdl_domaint::meet_irreduciblet operator()(const local_SSAt &SSA, const acdl_dom
       }
     }
   }
-  decision = domain.split(decision_var,decision_expr);
+  decision = acdl_solvert::domain.split(decision_var,decision_expr);
   std::cout << "DECISION SPLITTING VALUE: " << from_expr (SSA.ns, "", decision) << std::endl;
   equal_exprt dec_expr(decision_var, decision);
   std::cout << "DECISION SPLITTING EXPR: " << from_expr (SSA.ns, "", dec_expr) << std::endl;
