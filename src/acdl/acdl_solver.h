@@ -11,19 +11,24 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 
 #include <util/options.h>
 #include <goto-programs/property_checker.h>
-#include "acdl_domain.h"
 
 #include "../ssa/local_ssa.h"
+
+#include "acdl_domain.h"
+#include "acdl_decision_heuristics.h"
+
 
 class acdl_solvert : public messaget
 {
 public:
-
+  
   explicit acdl_solvert(const optionst &_options,
-    acdl_domaint &_domain)
+			acdl_domaint &_domain,
+			acdl_decision_heuristicst &_decision)
     : 
     options(_options),
-    domain(_domain)
+    domain(_domain),
+    decision(_decision)
     {
     }  
 
@@ -36,6 +41,8 @@ public:
 protected:
   const optionst &options;
   acdl_domaint &domain;
+  acdl_decision_heuristicst &decision;
+    
   //typedef std::set<acdl_domaint::statementt> worklistt;
   typedef std::list<acdl_domaint::statementt> worklistt;
   typedef std::list<acdl_domaint::statementt> assert_listt;
