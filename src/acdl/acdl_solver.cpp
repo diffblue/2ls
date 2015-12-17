@@ -565,10 +565,12 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA,
 #endif
       return property_checkert::PASS; //potential UNSAT (modulo decisions)
     }
+    /*else {
+      // For soundness, we decided to insert the 
+      // element that is popped from the worklist
+      update_worklist(SSA, vars, worklist, statement);
+    }*/
 
-    // For soundness, we decided to insert the 
-    // element that is popped from the worklist
-    // push_into_worklist(worklist, statement);
   }
 
 #ifdef DEBUG
