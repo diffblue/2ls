@@ -62,12 +62,14 @@ protected:
 
   typedef struct {
     typedef exprt nodet;
+    typedef std::list<nodet> deduction_list;
     // root node is assumed nil_exprt()
     std::map<nodet, nodet> edges; //reverse edges,
                                   //i.e. e1 maps to e2 <=> directed edge (e2,e1)
     nodet current_node;
     int decision_level;
     std::map<nodet, acdl_domaint::valuet> backtrack_points;
+    std::map<nodet, deduction_list> propagate_list;  // used to store list of deductions
   } decision_grapht; 
   
   property_checkert::resultt propagate(const local_SSAt &SSA,

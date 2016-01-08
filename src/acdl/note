@@ -385,5 +385,19 @@ Rest   -------> Bottom
 2> Then while in deduction phase, when popping an element, process the element and then 
 insert the same element in the end of the worklist.
 
+Meeting on 8th January, 2016
+-------------------------------
+1> The decision_grapht must have some mechanism to store the deduction 
+as well as this is also needed in the first UIP algorithm. How to store this ?
+Show the code of updating the deduction list inside decision and the header file. 
+Also, do we need to pass the decision graph as parameter to the propagate routine 
+because that is where the new abastact value is computed ?
 
+2> Then while in deduction phase, when popping an element, process the element and then 
+insert the same element in the end of the worklist. If we do not do this step, will the
+ analysis be unsound. 
 
+3> Should conflict analysis always return UNKNOWN ? Because after conflict analysis is exited, 
+we are not sure whether all possible cases have been explored. 
+ 
+4> branch3 did not terminate while branch1 terminated (similar program) 

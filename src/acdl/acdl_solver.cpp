@@ -625,6 +625,12 @@ acdl_solvert::decide (const local_SSAt &SSA,
   // Update the edges of the decision graph
   g.edges[dec_expr] = g.current_node;
   g.current_node = dec_expr;
+  // Also save the decision level
+  g.decision_level = 0;
+  // update the deduction list
+  //deduction_list.push_back(v);
+  //g.propagate_list[dec_expr] = g.deduction_list;
+
   // Take a meet of the decision expression (decision) with the current abstract state (v).
   // The new abstract state is now in v
   domain.meet(dec_expr,v);
