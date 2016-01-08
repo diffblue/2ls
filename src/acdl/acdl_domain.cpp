@@ -354,6 +354,8 @@ Function: acdl_domaint::split()
             2 <= x-y (for upper=true)
 
  Purpose: splits constant-bounded expressions in half
+          If the expression is already a singleton then we cannot split
+          and we return false. 
 
 \*******************************************************************/
 
@@ -367,10 +369,10 @@ exprt acdl_domaint::split(const valuet &value, const exprt &expr,
   {
     exprt v_true = simplify_expr(and_exprt(value,expr),SSA.ns);
     if(v_true.is_false())
-      return true_exprt();
+      return false_exprt();
     exprt v_false = simplify_expr(and_exprt(value,not_exprt(expr)),SSA.ns);
     if(v_false.is_true())
-      return true_exprt();
+      return false_exprt();
     if(upper) {
       std::cout << "[ACDL-DOMAINS] Inside split decision Upper: "
 	      << value.pretty() << std::endl;
@@ -388,7 +390,7 @@ exprt acdl_domaint::split(const valuet &value, const exprt &expr,
 	      << from_expr(SSA.ns, "", expr)
 	      << " of type " << from_type(SSA.ns, "", expr.type()) 
 	      << eom;
-    return true_exprt(); 
+    return false_exprt(); 
   }
 
   if(value.operands().size()<2)
@@ -425,6 +427,7 @@ exprt acdl_domaint::split(const valuet &value, const exprt &expr,
     }
   }
 
+  //TODO: check whether we have a singleton, then we cannot split anymore
   exprt m = tpolyhedra_domaint::between(l,u);
 
   std::cout << "[ACDL-DOMAINS] decision: "
