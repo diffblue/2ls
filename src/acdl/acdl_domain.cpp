@@ -247,7 +247,7 @@ Function: acdl_domaint::is_complete()
 
 \*******************************************************************/
 
-bool acdl_domaint::is_complete(const valuet &value) const
+bool acdl_domaint::is_complete(const valuet &value, const varst& symbols) const
 {
 #ifdef DEBUG
   std::cout << "[ACDL-DOMAIN] is_complete? "
@@ -259,9 +259,11 @@ bool acdl_domaint::is_complete(const valuet &value) const
   std::unique_ptr<incremental_solvert> solver(incremental_solvert::allocate(SSA.ns,true));
   *solver << value;
     
+#if 0
   // find symbols in value
   std::set<symbol_exprt> symbols;
   find_symbols (value, symbols);
+#endif
 
   for(std::set<symbol_exprt>::const_iterator it = symbols.begin();
       it != symbols.end(); ++it)

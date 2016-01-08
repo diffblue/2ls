@@ -56,7 +56,7 @@ public:
 
   bool is_bottom(const valuet &value) const;
   bool is_top(const valuet &value) const { return value.is_true(); }
-  bool is_complete(const exprt &expr) const;
+  bool is_complete(const exprt &expr, const varst& vars) const;
 
 protected:
   optionst &options;

@@ -762,6 +762,15 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
   assert_listt alist;
   initialize_worklist(SSA, worklist);
 
+#if 0
+  // collect assertion variables for completeness check: This is not sound
+  std::set<symbol_exprt> assertion_vars;
+  for (local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin ();
+      n_it != SSA.nodes.end (); n_it++)
+    for (local_SSAt::nodet::assertionst::const_iterator a_it =
+        n_it->assertions.begin (); a_it != n_it->assertions.end (); a_it++)
+    find_symbols (*a_it, assertion_vars);
+#endif
 
   acdl_domaint::valuet v;
   domain.set_top(v);
@@ -784,7 +793,9 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
         break;
     
       // check for satisfying assignment
-      if(domain.is_complete(v))
+      std::set<symbol_exprt> completeness_vars;
+      find_symbols (v, completeness_vars);
+      if(domain.is_complete(v, completeness_vars))
         return property_checkert::FAIL;
       
       std::cout << "********************************" << std::endl;
