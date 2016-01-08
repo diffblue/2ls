@@ -397,7 +397,17 @@ because that is where the new abastact value is computed ?
 insert the same element in the end of the worklist. If we do not do this step, will the
  analysis be unsound. 
 
-3> Should conflict analysis always return UNKNOWN ? Because after conflict analysis is exited, 
-we are not sure whether all possible cases have been explored. 
+3> Conflict analysis must return PASS if the learnt clause leads to proving the safety, 
+else it always returns UNKNOWN.
+
+4> branch3 did not terminate while branch2 terminated (similar program)
+
+5> Run through all conditional variables, and pick up the first one where
+decision is not done yet (split does not return false). This continues until 
+split returns false for all conditional variables which means that the decision 
+has been on all conditional variables and there are no conditional variables 
+needed. If that is the case, then return to the meta heuristics to decide on 
+numerical variables (say). — implement this in decision_heuristic_conditional
  
-4> branch3 did not terminate while branch1 terminated (similar program) 
+6> Gama completeness check is too restrictive — now works on singletons 
+  
