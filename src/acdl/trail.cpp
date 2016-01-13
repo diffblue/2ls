@@ -1,6 +1,7 @@
 /*******************************************************************\
 
-Module: Trail datastructure used for backtracking. It stores assignment history and allows retrieval of past variable values
+Module: Trail datastructure used for backtracking. It stores 
+assignment history and allows retrieval of past variable values
 
 Author: Rajdeep Mukherjee, Peter Schrammel
 
