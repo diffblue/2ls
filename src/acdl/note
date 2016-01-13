@@ -410,4 +410,29 @@ needed. If that is the case, then return to the meta heuristics to decide on
 numerical variables (say). — implement this in decision_heuristic_conditional
  
 6> Gama completeness check is too restrictive — now works on singletons 
+ 
+ 
   
+Meeting on 12th January, 2016
+-------------------------------
+For every propagation, we need to keep track of the variable which has been assigned a value 
+
+A trail is a sequentialised version of the implication graph 
+One decision — one propagation 
+Implication graph is a more structured form of trail and contains additional information of causality (implications) — 
+trail and implication graph — separate implementation
+Nodes in an implication graph are either decisions or inferences 
+Flags to determine whether a node is a decision or a inference 
+The nodes of the implication graph are meet irreducibles 
+The domain operator must return list of meet irreducibles that have been 
+inferred 
+Implement a clean implication graph — constraint in the nodes each node 
+are meet irreducibles (implication graph is independent of abstract domain).
+Present decision level and list of implications — get a list of new nodes and 
+for each new node, I have a list of parent nodes — only semantic information is parent node implies this new node, meet irreducible linked to the new node, add a decision (meet irreducible of the decision) —
+  Two methods 
+  1>adding decision — just takes meet irreducible and increment decision level
+  2> add an implication — list of parent nodes, and new node (meet irreducibles associated with it)
+  3> add decision level at which to backtrack
+
+Question 1>  We need to determine the update of meet irreducibles  — for pushing the elements which has been popped from the wordlist
