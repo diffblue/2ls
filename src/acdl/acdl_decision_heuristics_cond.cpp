@@ -67,10 +67,9 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_condt::operator()
 
     decision = domain.split(decision_var,decision_expr,1);
     if(decision.is_false()) {
-      decision = domain.split(decision_var,decision_expr,1);
-      std::cout << "DECISION SPLITTING VALUE: " << from_expr (SSA.ns, "", decision) << std::endl;
       continue;
     }
+    std::cout << "DECISION SPLITTING VALUE: " << from_expr (SSA.ns, "", decision) << std::endl;
   }
 #if 0  
   equal_exprt dec_expr(decision_var, decision);
