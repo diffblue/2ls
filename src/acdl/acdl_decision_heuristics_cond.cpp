@@ -32,6 +32,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_condt::operator()
   // *******************************************
   std::string str("cond");
   std::string lhs_str;
+  conds cond_container;
   for (local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin ();
       n_it != SSA.nodes.end (); n_it++)
   {
@@ -49,17 +50,26 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_condt::operator()
 #ifdef DEBUG
         std::cout << "DECISION PHASE: " << from_expr (SSA.ns, "", e_it->lhs()) << std::endl;
 #endif        
-          decision_var = e_it->lhs();
+          //decision_var = e_it->lhs();
+          // store the conditional variables in a container
+          cond_container.push_back(e_it->lhs()); 
         }
       }
     }
   }
   // For conditional based decision heuristics, 
   // decision expressions are same as decision variables in split function
-  decision_expr = decision_var;
-  decision = domain.split(decision_var,decision_expr,1);
-  std::cout << "DECISION SPLITTING VALUE: " << from_expr (SSA.ns, "", decision) << std::endl;
+  for(std::list<exprt>::const_iterator it = cond_container.begin(); it != cond_container.end(); ++it)
+  {
+    decision_var = *it;
+    decision_expr = decision_var;
 
+    if(domain.split(decision_var,decision_expr,1) != false_exprt()) { 
+      decision = domain.split(decision_var,decision_expr,1);
+      std::cout << "DECISION SPLITTING VALUE: " << from_expr (SSA.ns, "", decision) << std::endl;
+      break;
+    }
+  }
 #if 0  
   equal_exprt dec_expr(decision_var, decision);
   std::cout << "DECISION SPLITTING EXPR: " << from_expr (SSA.ns, "", dec_expr) << std::endl;
