@@ -16,7 +16,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 
 #include "acdl_domain.h"
 #include "acdl_decision_heuristics.h"
-#include "acdl_worklist_initialize.h"
+#include "acdl_worklist_base.h"
 
 class acdl_solvert : public messaget
 {
@@ -24,11 +24,13 @@ public:
   
   explicit acdl_solvert(const optionst &_options,
 			acdl_domaint &_domain,
-			acdl_decision_heuristicst &_decision)
+			acdl_decision_heuristicst &_decision_heuristics,
+                        acdl_worklist_baset &_worklist)
     : 
     options(_options),
     domain(_domain),
-    decision(_decision)
+    decision_heuristics(_decision_heuristics),
+    worklist(_worklist)
     {
     }  
 
@@ -41,26 +43,11 @@ public:
 protected:
   const optionst &options;
   acdl_domaint &domain;
-  acdl_decision_heuristicst &decision;
-  acdl_worklist_initializet &initialize; 
+  acdl_decision_heuristicst &decision_heuristics;
+  acdl_worklist_baset &worklist; 
     
-  //typedef std::set<acdl_domaint::statementt> worklistt;
-  typedef std::list<acdl_domaint::statementt> worklistt;
   typedef std::list<acdl_domaint::statementt> assert_listt;
   
-  virtual void initialize_worklist(const local_SSAt &, worklistt &);
-  virtual void select_vars(const exprt &statement, acdl_domaint::varst &vars);
-  void update_worklist(const local_SSAt &SSA,
-		       const acdl_domaint::varst &vars,
-		       worklistt &worklist,
-		       const acdl_domaint::statementt &statement=nil_exprt());
-  void push_into_worklist (worklistt &worklist, const acdl_domaint::statementt &statement);
-  void push_into_assertion_list (assert_listt &aexpr, const acdl_domaint::statementt &statement);
-  
-  const acdl_domaint::statementt pop_from_worklist (worklistt &worklist);
-
-  bool check_statement (const exprt &expr, const acdl_domaint::varst &vars);
-
   typedef struct {
     typedef exprt nodet;
     typedef std::list<nodet> deduction_list;
@@ -74,18 +61,15 @@ protected:
   } decision_grapht; 
   
   property_checkert::resultt propagate(const local_SSAt &SSA,
-				       acdl_domaint::valuet &v,
-				       worklistt &worklist);
+				       acdl_domaint::valuet &v );
 
   void decide(const local_SSAt &SSA,
 	      acdl_domaint::valuet &v,
 	      decision_grapht &g,
-	      worklistt &worklist,
-        assert_listt &alist);
+	      assert_listt &alist);
   
   property_checkert::resultt analyze_conflict(const local_SSAt &SSA,
 			acdl_domaint::valuet &v,
-      worklistt &worklist,
 			decision_grapht &g);
 };
 

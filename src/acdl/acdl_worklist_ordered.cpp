@@ -6,11 +6,11 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 
 \*******************************************************************/
 
-#include "acdl_worklist_initialize_ordered.h"
+#include "acdl_worklist_ordered.h"
 
 /*******************************************************************\
 
-Function: acdl_worklist_initialize_orderedt::operator()
+Function: acdl_worklist_orderedt::initialize()
 
   Inputs:
 
@@ -21,7 +21,7 @@ Function: acdl_worklist_initialize_orderedt::operator()
  \*******************************************************************/
 
 void
-acdl_worklist_initialize_orderedt::operator() (const local_SSAt &SSA, worklistt &worklist)
+acdl_worklist_orderedt::initialize (const local_SSAt &SSA)
 {
   
   // **********************************************************************
@@ -61,13 +61,13 @@ acdl_worklist_initialize_orderedt::operator() (const local_SSAt &SSA, worklistt 
   //compute fixpoint mu X. assert_nodes u predecessor(X)
   while(!assert_worklist.empty() > 0) {
     // collect all the leaf nodes
-    const acdl_domaint::statementt statement = pop_from_worklist(assert_worklist);
+    const acdl_domaint::statementt statement = pop(assert_worklist);
 
     // select vars in the present statement
     acdl_domaint::varst vars;
     select_vars (statement, vars);
     // compute the predecessors
-    update_worklist(SSA, vars, predecs_worklist, statement);
+    update(SSA, vars, predecs_worklist, statement);
     
     std::list<acdl_domaint::statementt>::iterator 
       iterassert = std::find(assert_list.begin(), assert_list.end(), statement); 
@@ -83,8 +83,8 @@ acdl_worklist_initialize_orderedt::operator() (const local_SSAt &SSA, worklistt 
       if(finditer == worklist.end() && iterassert == assert_list.end())
       {
         // never seen this statement before
-        push_into_worklist(worklist, *it);
-        push_into_worklist(assert_worklist, *it);
+        push(worklist, *it);
+        push(assert_worklist, *it);
       }
     }
   }
@@ -103,13 +103,13 @@ acdl_worklist_initialize_orderedt::operator() (const local_SSAt &SSA, worklistt 
     if(it->id() == ID_equal) {
      exprt expr_rhs = to_equal_expr(*it).rhs();
      if(expr_rhs.id() == ID_constant) 
-       push_into_worklist(leaf_worklist, *it);
+       push(leaf_worklist, *it);
      std::string str("nondet");
      std::string rhs_str=id2string(expr_rhs.get(ID_identifier));
     std::size_t found = rhs_str.find(str); 
     // push the nondet statement in rhs
     if(found != std::string::npos)
-      push_into_worklist(leaf_worklist, *it);
+      push(leaf_worklist, *it);
      
      //exprt expr_rhs = expr.rhs();
      // select vars in the present statement
@@ -128,7 +128,7 @@ acdl_worklist_initialize_orderedt::operator() (const local_SSAt &SSA, worklistt 
          else {
            // pop the element from the list
            //const acdl_domaint::statementt statement = pop_from_worklist(worklist);
-           push_into_worklist(inter_worklist, *it);
+           push(inter_worklist, *it);
          }
         }
       }
@@ -225,7 +225,7 @@ acdl_worklist_initialize_orderedt::operator() (const local_SSAt &SSA, worklistt 
 #endif    
 	  exprt exp = *it;
 	  not_exprt not_exp(exp);
-    push_into_worklist(worklist, not_exp);
+    push(worklist, not_exp);
   }
   else {
     and_exprt final_and;
@@ -234,7 +234,7 @@ acdl_worklist_initialize_orderedt::operator() (const local_SSAt &SSA, worklistt 
 #ifdef DEBUG    
     std::cout << "First push: " << not_exp.pretty() << std::endl;
 #endif    
-    push_into_worklist(worklist, not_exp);
+    push(worklist, not_exp);
   }
 #endif
 
@@ -248,10 +248,28 @@ acdl_worklist_initialize_orderedt::operator() (const local_SSAt &SSA, worklistt 
     return;
   assert(!SSA.nodes.front ().equalities.empty ());
   // insert the first SSA element on to the worklist
-  push_into_worklist(worklist, SSA.nodes.front ().equalities.front ());
+  push(worklist, SSA.nodes.front ().equalities.front ());
   #ifdef DEBUG
   std::cout << "First push: " << from_expr (SSA.ns, "", SSA.nodes.front().equalities.front ()) << std::endl;
   #endif
 #endif
 }
 
+/*******************************************************************\
+
+Function: acdl_worklist_baset::push_into_assertion_list()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+ \*******************************************************************/
+
+void
+acdl_worklist_orderedt::push_into_assertion_list (assert_listt &aexpr,
+				  const acdl_domaint::statementt &statement)
+{
+  aexpr.push_back(statement);
+}

@@ -12,7 +12,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include "acdl_solver.h"
 #include "acdl_domain.h"
 #include "acdl_decision_heuristics_cond.h"
-#include "acdl_worklist_initialize_ordered.h"
+#include "acdl_worklist_ordered.h"
 #include <string>
 
 #define DEBUG
@@ -22,468 +22,6 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include <iostream>
 #endif
 
-/*******************************************************************\
-
-Function: acdl_solvert::operator()
-
-  Inputs:
-
- Outputs:
-
- Purpose: Initialize the worklist
-
- \*******************************************************************/
-
-void
-acdl_solvert::initialize_worklist (const local_SSAt &SSA, worklistt &worklist)
-{
-
-  initialize(SSA, worklist);  
-  // **********************************************************************
-  // Initialization Strategy: Guarantees top-down and bottom-up propagation 
-  // Assertions -- Top
-  // Leaf node  -- Middle
-  // Rest       -- Bottom
-  // **********************************************************************
- /* typedef std::list<acdl_domaint::statementt> assert_worklistt;
-  assert_worklistt assert_worklist; 
-  typedef std::list<acdl_domaint::statementt> predecs_worklistt;
-  predecs_worklistt predecs_worklist; 
-  typedef std::list<acdl_domaint::statementt> leaf_worklistt;
-  leaf_worklistt leaf_worklist; 
-  typedef std::list<acdl_domaint::statementt> inter_worklistt;
-  inter_worklistt inter_worklist; 
-  assert_listt assert_list;
-  if (SSA.nodes.empty ())
-    return;
-  // insert the assertions like (!(a1 && a2 && a3)) on to the worklist
-  and_exprt::operandst and_expr;
-  for (local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin ();
-      n_it != SSA.nodes.end (); n_it++)
-  {
-    for (local_SSAt::nodet::assertionst::const_iterator a_it =
-        n_it->assertions.begin (); a_it != n_it->assertions.end (); a_it++)
-    {
-       push_into_worklist(assert_worklist, *a_it);
-       and_expr.push_back(*a_it);
-       push_into_assertion_list(assert_list, not_exprt(*a_it));
-
-    }
-  }
-  
-  
-  // Now compute the transitive dependencies
-  //compute fixpoint mu X. assert_nodes u predecessor(X)
-  while(!assert_worklist.empty() > 0) {
-    // collect all the leaf nodes
-    const acdl_domaint::statementt statement = pop_from_worklist(assert_worklist);
-
-    // select vars in the present statement
-    acdl_domaint::varst vars;
-    select_vars (statement, vars);
-    // compute the predecessors
-    update_worklist(SSA, vars, predecs_worklist, statement);
-    
-    std::list<acdl_domaint::statementt>::iterator 
-      iterassert = std::find(assert_list.begin(), assert_list.end(), statement); 
-    for(std::list<acdl_domaint::statementt>::const_iterator 
-      it = predecs_worklist.begin(); it != predecs_worklist.end(); ++it) {
-      std::list<acdl_domaint::statementt>::iterator finditer = 
-                  std::find(worklist.begin(), worklist.end(), *it); 
-    
-      // This is required to prevent inserting 
-      // individual assertions to the worklist       
-      std::list<acdl_domaint::statementt>::iterator iterassert = 
-        std::find(assert_list.begin(), assert_list.end(), *it); 
-      if(finditer == worklist.end() && iterassert == assert_list.end())
-      {
-        // never seen this statement before
-        push_into_worklist(worklist, *it);
-        push_into_worklist(assert_worklist, *it);
-      }
-    }
-  }
-#ifdef DEBUG    
-   std::cout << "The content of the sliced but unordered worklist is as follows: " << std::endl;
-    for(std::list<acdl_domaint::statementt>::const_iterator it = worklist.begin(); it != worklist.end(); ++it) {
-	  std::cout << "Sliced Unordered Worklist Element::" << from_expr(SSA.ns, "", *it) << std::endl;
-    }
-#endif    
-  
-  // order the leaf nodes right after all assertions
-  for(std::list<acdl_domaint::statementt>::const_iterator 
-    it = worklist.begin(); it != worklist.end(); ++it) 
-  {
-    // Do we need to separately treat ID_constraint ?
-    if(it->id() == ID_equal) {
-     exprt expr_rhs = to_equal_expr(*it).rhs();
-     if(expr_rhs.id() == ID_constant) 
-       push_into_worklist(leaf_worklist, *it);
-     std::string str("nondet");
-     std::string rhs_str=id2string(expr_rhs.get(ID_identifier));
-    std::size_t found = rhs_str.find(str); 
-    // push the nondet statement in rhs
-    if(found != std::string::npos)
-      push_into_worklist(leaf_worklist, *it);
-     
-     //exprt expr_rhs = expr.rhs();
-     // select vars in the present statement
-     acdl_domaint::varst vars_rhs;
-     select_vars (expr_rhs, vars_rhs);
-
-     for(std::list<acdl_domaint::statementt>::const_iterator it1 = worklist.begin(); it1 != worklist.end(); ++it1)
-      {
-        if(*it == *it1) continue;
-        else {
-         if(!(check_statement(*it1, vars_rhs))) {
-           // *it is a leaf node
-           //push_into_worklist(leaf_worklist, *it);
-         }
-         // this is an intermediate node, not leaf
-         else {
-           // pop the element from the list
-           //const acdl_domaint::statementt statement = pop_from_worklist(worklist);
-           push_into_worklist(inter_worklist, *it);
-         }
-        }
-      }
-    }
-  }
-#ifdef DEBUG
-    for(std::list<acdl_domaint::statementt>::const_iterator it = leaf_worklist.begin(); it != leaf_worklist.end(); ++it) {
-	  std::cout << "Leaf Element::" << from_expr(SSA.ns, "", *it) << std::endl;
-    }
-    for(std::list<acdl_domaint::statementt>::const_iterator it = inter_worklist.begin(); it != inter_worklist.end(); ++it) {
-	  std::cout << "Intermediate Worklist Element::" << from_expr(SSA.ns, "", *it) << std::endl;
-    }
-#endif    
-  // Now prepare the final worklist
-  // empty the worklist
-  
-  worklist.clear();
-  // insert assertions
-  // Push the negation of the assertions into the worklist
-  unsigned int size = and_expr.size();
-	exprt::operandst::const_iterator it = and_expr.begin();
-  if(size == 1) {
-	  exprt::operandst::const_iterator it = and_expr.begin();
-#ifdef DEBUG    
-	  std::cout << "First single assertion push: " << *it << std::endl;
-#endif    
-	  exprt exp = *it;
-	  // push this into worklist at the end as TOP element
-    not_exprt not_exp(exp);
-    worklist.push_back(not_exp);
-  }
-  else {
-    and_exprt final_and;
-    std::swap(final_and.operands(), and_expr);
-    not_exprt not_exp(final_and);
-#ifdef DEBUG    
-    // push this into worklist at the end as TOP element
-    std::cout << "First push: " << not_exp.pretty() << std::endl;
-#endif    
-    worklist.push_back(not_exp);
-  }
-  
-  // insert leaf nodes
-  while(!leaf_worklist.empty() > 0) {
-    const acdl_domaint::statementt statement = pop_from_worklist(leaf_worklist);
-    push_into_worklist(worklist, statement);
-  }
-  
-  // insert intermediate nodes
-  while(!inter_worklist.empty() > 0) {
-    const acdl_domaint::statementt statement = pop_from_worklist(inter_worklist);
-    push_into_worklist(worklist, statement);
-  }
-    
-#ifdef DEBUG    
-   std::cout << "The content of the ordered worklist is as follows: " << std::endl;
-    for(std::list<acdl_domaint::statementt>::const_iterator it = worklist.begin(); it != worklist.end(); ++it) {
-	  std::cout << "Worklist Element::" << from_expr(SSA.ns, "", *it) << std::endl;
-    }
-#endif    
-   
-
-
-#if 0
-  // **********************************************
-  // Initialization Strategy: Add only assertions
-  // **********************************************
-  if (SSA.nodes.empty ())
-    return;
-  
-  // insert the assertions like (!(a1 && a2 && a3)) on to the worklist
-  and_exprt::operandst and_expr;
-  for (local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin ();
-      n_it != SSA.nodes.end (); n_it++)
-  {
-    for (local_SSAt::nodet::assertionst::const_iterator a_it =
-        n_it->assertions.begin (); a_it != n_it->assertions.end (); a_it++)
-    {
-       and_expr.push_back(*a_it);
-    }
-  }
-  unsigned int size = and_expr.size();
-#ifdef DEBUG    
-  std::cout << "The number of Assertions are : " << size << std::endl;
-#endif  
-	exprt::operandst::const_iterator it = and_expr.begin();
-	std::cout << "First single assertion push: " << *it << std::endl;
-  if(size == 1) {
-	  exprt::operandst::const_iterator it = and_expr.begin();
-#ifdef DEBUG    
-	  std::cout << "First single assertion push: " << *it << std::endl;
-#endif    
-	  exprt exp = *it;
-	  not_exprt not_exp(exp);
-    push_into_worklist(worklist, not_exp);
-  }
-  else {
-    and_exprt final_and;
-    std::swap(final_and.operands(), and_expr);
-    not_exprt not_exp(final_and);
-#ifdef DEBUG    
-    std::cout << "First push: " << not_exp.pretty() << std::endl;
-#endif    
-    push_into_worklist(worklist, not_exp);
-  }
-#endif
-
-#if 0
-  // **************************************************
-  // Initialization Strategy: Add the first SSA element
-  // **************************************************
-
-  // check for equalities or constraints or next node
-  if (SSA.nodes.empty ())
-    return;
-  assert(!SSA.nodes.front ().equalities.empty ());
-  // insert the first SSA element on to the worklist
-  push_into_worklist(worklist, SSA.nodes.front ().equalities.front ());
-  #ifdef DEBUG
-  std::cout << "First push: " << from_expr (SSA.ns, "", SSA.nodes.front().equalities.front ()) << std::endl;
-  #endif
-#endif
-*/
-}
-
-
-/*******************************************************************\
-
-Function: acdl_solvert::check_statement()
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
- \*******************************************************************/
-
-bool
-acdl_solvert::check_statement (const exprt &expr,
-                               const acdl_domaint::varst &vars)
-{
-
-  std::set<symbol_exprt> symbols;
-  // find all variables in a statement
-  find_symbols (expr, symbols);
-  // check if vars appears in the symbols set,
-  // if there is a non-empty intersection, then insert the
-  // equality statement in the worklist
-  for (acdl_domaint::varst::const_iterator it = vars.begin ();
-      it != vars.end (); it++)
-  {
-    if (symbols.find (*it) != symbols.end ())
-    {
-      // find_symbols here may be required to 
-      // find transitive dependencies
-      // in which case make vars non-constant
-      //find_symbols(expr, vars);
-      return true;
-    }
-  }
-  return false;
-}
-
-/*******************************************************************\
-
-Function: acdl_solvert::push_into_assertion_list()
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
- \*******************************************************************/
-
-void
-acdl_solvert::push_into_assertion_list (assert_listt &aexpr,
-				  const acdl_domaint::statementt &statement)
-{
-  aexpr.push_back(statement);
-}
-
-/*******************************************************************\
-
-Function: acdl_solvert::push_into_worklist()
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
- \*******************************************************************/
-
-void
-acdl_solvert::push_into_worklist (worklistt &worklist,
-				  const acdl_domaint::statementt &statement)
-{
-#if 1 // list implementation
-  for(worklistt::const_iterator it = worklist.begin();
-      it != worklist.end(); ++it)
-    if(statement == *it)
-      return;
-  worklist.push_back(statement);
-#else // set implementation
-  worklist.insert(statement);
-#endif
-}
-
-/*******************************************************************\
-
-Function: acdl_solvert::pop_from_worklist()
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
- \*******************************************************************/
-
-const acdl_domaint::statementt
-acdl_solvert::pop_from_worklist (worklistt &worklist)
-{
-#if 1
-  const acdl_domaint::statementt statement = worklist.front();
-  worklist.pop_front();
-#else
-  worklistt::iterator it = worklist.begin ();
-  const exprt statement = *it;
-  worklist.erase (it);
-#endif
-  return statement;
-}
-
-/*******************************************************************\
-
-Function: acdl_solvert::update_worklist()
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
- \*******************************************************************/
-
-
-void
-acdl_solvert::update_worklist (const local_SSAt &SSA,
-                               const acdl_domaint::varst &vars,
-                               worklistt &worklist,
-                               const acdl_domaint::statementt &current_statement)
-{
-  // dependency analysis loop for equalities
-  for (local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin ();
-      n_it != SSA.nodes.end (); n_it++)
-  {
-
-    for (local_SSAt::nodet::equalitiest::const_iterator e_it =
-        n_it->equalities.begin (); e_it != n_it->equalities.end (); e_it++)
-    {
-      // the statement has already been processed, so no action needed
-      if(*e_it == current_statement) continue;
-
-      if (check_statement (*e_it, vars)) {
-        push_into_worklist(worklist, *e_it);
-        #ifdef DEBUG
-        std::cout << "Push: " << from_expr (SSA.ns, "", *e_it) << std::endl;
-        #endif
-      }
-    }
-    for (local_SSAt::nodet::constraintst::const_iterator c_it =
-        n_it->constraints.begin (); c_it != n_it->constraints.end (); c_it++)
-    {
-      if(*c_it == current_statement) continue;
-      if (check_statement (*c_it, vars)) {
-        push_into_worklist(worklist, *c_it);
-        #ifdef DEBUG
-        std::cout << "Push: " << from_expr (SSA.ns, "", *c_it) << std::endl;
-        #endif
-      }
-    }
-    for (local_SSAt::nodet::assertionst::const_iterator a_it =
-        n_it->assertions.begin (); a_it != n_it->assertions.end (); a_it++)
-    {
-      // for now, store the decision variable as variables 
-      // that appear only in properties
-      // find all variables in an assert statement
-      assert_listt alist;
-      push_into_assertion_list(alist, *a_it);
-           
-      if(*a_it == current_statement) continue;
-      if (check_statement (*a_it, vars)) {
-        push_into_worklist(worklist, not_exprt (*a_it));
-        #ifdef DEBUG
-        std::cout << "Push: " << from_expr (SSA.ns, "", not_exprt(*a_it)) << std::endl;
-        #endif
-      }
-    }
-  }
-}
-
-
-/*******************************************************************
-
- Function: acdl_solvert::select_vars()
-
- Inputs:
-
- Outputs:
-
- Purpose:
-
- \*******************************************************************/
-
-void
-acdl_solvert::select_vars (const exprt &statement, acdl_domaint::varst &vars)
-{
-#if 0 //TODO: this was an attempt to implement a forward iteration strategy,
-      //      but we would also need to consider execution order 
-  // If it is an equality, then select the lhs for post-condition computation
-  exprt lhs;
-  if (statement.id () == ID_equal)
-  {
-    lhs = to_equal_expr (statement).lhs ();
-    if (lhs.id () == ID_symbol)
-    {
-      vars.insert (to_symbol_expr (lhs));
-    }
-    else //TODO: more complex lhs
-      assert(false);
-  }
-  else // for constraints
-#endif
-  {
-    find_symbols(statement,vars);
-  }
-}
 /*******************************************************************\
 
 Function: acdl_solvert::propagate
@@ -510,12 +48,11 @@ Function: acdl_solvert::propagate
 \************************************************************************/
 
 property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA,
-						   acdl_domaint::valuet &v,
-						   worklistt &worklist)
+						   acdl_domaint::valuet &v)
 {
   while (!worklist.empty())
   {
-    const acdl_domaint::statementt statement = pop_from_worklist(worklist);
+    const acdl_domaint::statementt statement = worklist.pop();
     
 #ifdef DEBUG
     std::cout << "Pop: " << from_expr (SSA.ns, "", statement)
@@ -524,7 +61,7 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA,
 
     // select vars according to iteration strategy
     acdl_domaint::varst vars;
-    select_vars (statement, vars);
+    worklist.select_vars (statement, vars);
 #ifdef DEBUG
     std::cout << "Selected vars:";
     for(acdl_domaint::varst::const_iterator v_it = vars.begin();
@@ -540,7 +77,7 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA,
     // terminating condition check for populating worklist
     if(!domain.contains(v, new_v))
     {
-      update_worklist(SSA, vars, worklist, statement);
+      worklist.update(SSA, vars, statement);
     }
 
 #ifdef DEBUG
@@ -599,11 +136,10 @@ void
 acdl_solvert::decide (const local_SSAt &SSA,
 		      acdl_domaint::valuet &v,
 		      decision_grapht &g,
-		      worklistt &worklist,
 		      assert_listt &alist)
 {
 
-  acdl_domaint::meet_irreduciblet dec_expr=decision(SSA, v);
+  acdl_domaint::meet_irreduciblet dec_expr=decision_heuristics(SSA, v);
   std::cout << "DECISION SPLITTING EXPR: " << from_expr (SSA.ns, "", dec_expr) << std::endl;
   // *****************************************************************
   // 1.b. e.g. we have x!=2 in an assertion or cond node, then we have 
@@ -642,7 +178,7 @@ acdl_solvert::decide (const local_SSAt &SSA,
   // find all symbols in the decision expression
   find_symbols(dec_expr, dec_vars);
   // update the worklist here 
-  update_worklist(SSA, dec_vars, worklist);
+  worklist.update(SSA, dec_vars);
 }
 
 /*******************************************************************
@@ -660,7 +196,6 @@ acdl_solvert::decide (const local_SSAt &SSA,
 property_checkert::resultt 
 acdl_solvert::analyze_conflict(const local_SSAt &SSA,
 			       acdl_domaint::valuet &v,
-             worklistt &worklist, 
 			       decision_grapht &g)
 {
   //TODO
@@ -719,12 +254,13 @@ acdl_solvert::analyze_conflict(const local_SSAt &SSA,
   find_symbols(learned_clauses, learn_vars);
   
   // RM: empty the worklist here
+  // PS: you must not manipulate the worklist directly here, use the methods provided by worklist
   while(!worklist.empty()) { 
     const acdl_domaint::statementt statement = worklist.front();
     worklist.pop_front();
   }
   // update the worklist here 
-  update_worklist(SSA, learn_vars, worklist);
+  worklist.update(SSA, learn_vars);
   
   // do propagate here (required for cond variable based decision 
   // heuristic to cover all branches in control flow)
@@ -760,9 +296,8 @@ end
 
 property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
 {
-  worklistt worklist;
   assert_listt alist;
-  initialize_worklist(SSA, worklist);
+  worklist.initialize(SSA);
 
 #if 0
   // collect assertion variables for completeness check: This is not sound
@@ -788,7 +323,7 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
       std::cout << "********************************" << std::endl;
       std::cout << "        DEDUCTION PHASE " << std::endl;
       std::cout << "********************************" << std::endl;
-      result = propagate(SSA, v, worklist);
+      result = propagate(SSA, v);
 
       // check for conflict
       if(result == property_checkert::PASS) //UNSAT
@@ -804,7 +339,7 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
       std::cout << "         DECISION PHASE"          << std::endl;
       std::cout << "********************************" << std::endl;
       // make a decision
-      decide(SSA, v, g, worklist, alist);
+      decide(SSA, v, g, alist);
     }
 
     std::cout << "********************************" << std::endl;
@@ -812,7 +347,7 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
     std::cout << "********************************" << std::endl;
 
     // analyze conflict ...
-    result = analyze_conflict(SSA, v, worklist, g);
+    result = analyze_conflict(SSA, v, g);
     /*if(result == property_checkert::PASS) //UNSAT
       break;
     else 
