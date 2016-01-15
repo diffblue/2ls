@@ -16,7 +16,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 
 #include "acdl_domain.h"
 #include "acdl_decision_heuristics.h"
-
+#include "acdl_worklist_initialize.h"
 
 class acdl_solvert : public messaget
 {
@@ -42,6 +42,7 @@ protected:
   const optionst &options;
   acdl_domaint &domain;
   acdl_decision_heuristicst &decision;
+  acdl_worklist_initializet &initialize; 
     
   //typedef std::set<acdl_domaint::statementt> worklistt;
   typedef std::list<acdl_domaint::statementt> worklistt;

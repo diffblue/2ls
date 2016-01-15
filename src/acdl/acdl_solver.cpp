@@ -12,6 +12,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include "acdl_solver.h"
 #include "acdl_domain.h"
 #include "acdl_decision_heuristics_cond.h"
+#include "acdl_worklist_initialize_ordered.h"
 #include <string>
 
 #define DEBUG
@@ -36,14 +37,15 @@ Function: acdl_solvert::operator()
 void
 acdl_solvert::initialize_worklist (const local_SSAt &SSA, worklistt &worklist)
 {
-  
+
+  initialize(SSA, worklist);  
   // **********************************************************************
   // Initialization Strategy: Guarantees top-down and bottom-up propagation 
   // Assertions -- Top
   // Leaf node  -- Middle
   // Rest       -- Bottom
   // **********************************************************************
-  typedef std::list<acdl_domaint::statementt> assert_worklistt;
+ /* typedef std::list<acdl_domaint::statementt> assert_worklistt;
   assert_worklistt assert_worklist; 
   typedef std::list<acdl_domaint::statementt> predecs_worklistt;
   predecs_worklistt predecs_worklist; 
@@ -157,9 +159,7 @@ acdl_solvert::initialize_worklist (const local_SSAt &SSA, worklistt &worklist)
 #endif    
   // Now prepare the final worklist
   // empty the worklist
-  /*while(!worklist.empty() > 0)
-    const acdl_domaint::statementt statement = pop_from_worklist(assert_worklist);
-  */
+  
   worklist.clear();
   // insert assertions
   // Push the negation of the assertions into the worklist
@@ -266,7 +266,9 @@ acdl_solvert::initialize_worklist (const local_SSAt &SSA, worklistt &worklist)
   std::cout << "First push: " << from_expr (SSA.ns, "", SSA.nodes.front().equalities.front ()) << std::endl;
   #endif
 #endif
+*/
 }
+
 
 /*******************************************************************\
 

@@ -426,7 +426,7 @@ Flags to determine whether a node is a decision or a inference
 The nodes of the implication graph are meet irreducibles 
 The domain operator must return list of meet irreducibles that have been 
 inferred 
-Implement a clean implication graph — constraint in the nodes each node 
+Implement a clean implication graph — constraint in the nodes, each node 
 are meet irreducibles (implication graph is independent of abstract domain).
 Present decision level and list of implications — get a list of new nodes and 
 for each new node, I have a list of parent nodes — only semantic information is parent node implies this new node, meet irreducible linked to the new node, add a decision (meet irreducible of the decision) —
