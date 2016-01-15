@@ -13,6 +13,7 @@ Author: Peter Schrammel
 #include "../acdl/acdl_solver.h"
 #include "../acdl/acdl_domain.h"
 #include "../acdl/acdl_decision_heuristics_cond.h"
+#include "../acdl/acdl_worklist_ordered.h"
 
 /*******************************************************************\
 
@@ -40,7 +41,9 @@ property_checkert::resultt summary_checker_acdlt::operator()(
   ssa_local_unwindert &ssa_local_unwinder = ssa_unwinder.get(entry_point);
   acdl_domaint acdl_domain(options,SSA,ssa_db,ssa_local_unwinder);
   acdl_decision_heuristics_condt acdl_decision_heuristics(acdl_domain);
-  acdl_solvert acdl_solver(options, acdl_domain, acdl_decision_heuristics);
+  acdl_worklist_orderedt acdl_worklist;
+  acdl_solvert acdl_solver(options, acdl_domain, acdl_decision_heuristics,
+    acdl_worklist);
   acdl_solver.set_message_handler(get_message_handler());
 
   incremental_solvert &solver = ssa_db.get_solver(entry_point);
