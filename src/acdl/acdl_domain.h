@@ -31,7 +31,8 @@ public:
       SSA.mark_nodes();
     }  
 
-
+  //TODO: need to return information about inferred meet irreducibles
+  //        and which meet irreducibles were used to infer this information
   void operator()(const statementt &statement,
 		  const varst &vars,
 		  const valuet &old_value,

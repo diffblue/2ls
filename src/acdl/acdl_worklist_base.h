@@ -25,8 +25,8 @@ public:
 
   virtual void select_vars(const exprt &statement, acdl_domaint::varst &vars);
   virtual void update(const local_SSAt &SSA,
-		       const acdl_domaint::varst &vars,
-		       const acdl_domaint::statementt &statement=nil_exprt());
+		      const acdl_domaint::varst &vars,
+		      const acdl_domaint::statementt &statement=nil_exprt());
     //{ assert(false); }
 
   const acdl_domaint::statementt pop ();
