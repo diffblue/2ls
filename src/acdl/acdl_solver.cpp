@@ -135,8 +135,7 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA,
 void
 acdl_solvert::decide (const local_SSAt &SSA,
 		      acdl_domaint::valuet &v,
-		      decision_grapht &g,
-		      assert_listt &alist)
+		      decision_grapht &g)
 {
 
   acdl_domaint::meet_irreduciblet dec_expr=decision_heuristics(SSA, v);
@@ -254,10 +253,13 @@ acdl_solvert::analyze_conflict(const local_SSAt &SSA,
   find_symbols(learned_clauses, learn_vars);
   
   // RM: empty the worklist here
-  // PS: you must not manipulate the worklist directly here, use the methods provided by worklist
+  // PS: you must not manipulate the worklist directly 
+  // here, use the methods provided by worklist
+  // The below code in while loop is needed, implement pop function from worklist
   while(!worklist.empty()) { 
-    const acdl_domaint::statementt statement = worklist.front();
-    worklist.pop_front();
+    //const acdl_domaint::statementt statement = worklist.front();
+    //worklist.pop_front();
+    worklist.pop();
   }
   // update the worklist here 
   worklist.update(SSA, learn_vars);
@@ -296,7 +298,6 @@ end
 
 property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
 {
-  assert_listt alist;
   worklist.initialize(SSA);
 
 #if 0
@@ -339,7 +340,7 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
       std::cout << "         DECISION PHASE"          << std::endl;
       std::cout << "********************************" << std::endl;
       // make a decision
-      decide(SSA, v, g, alist);
+      decide(SSA, v, g);
     }
 
     std::cout << "********************************" << std::endl;
@@ -348,6 +349,7 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
 
     // analyze conflict ...
     result = analyze_conflict(SSA, v, g);
+    // decision level 0 conflict
     /*if(result == property_checkert::PASS) //UNSAT
       break;
     else 

@@ -23,10 +23,18 @@ public:
   virtual void initialize(const local_SSAt &SSA);
 
 protected:
-  void push_into_assertion_list (assert_listt &aexpr,
+  //typedef std::list<acdl_domaint::statementt> assert_listt;
+  typedef std::list<acdl_domaint::statementt> listt;
+
+  void push_into_list (listt &lexpr,
 				 const acdl_domaint::statementt &statement);
 
+  const acdl_domaint::statementt pop_from_list (listt &lexpr);
 
+  void update (const local_SSAt &SSA,
+      const acdl_domaint::varst &vars,
+      listt &lexpr, 
+      const acdl_domaint::statementt &current_statement);
 };
 
 #endif

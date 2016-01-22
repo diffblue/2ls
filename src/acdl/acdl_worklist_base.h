@@ -18,18 +18,22 @@ class acdl_worklist_baset : public messaget
 {
 public:
   typedef std::list<acdl_domaint::statementt> worklistt;
-
+  typedef std::list<acdl_domaint::statementt> assert_listt;
+  assert_listt alist;
   virtual void initialize(const local_SSAt &)
     { assert(false); }
 
   virtual void select_vars(const exprt &statement, acdl_domaint::varst &vars);
   virtual void update(const local_SSAt &SSA,
 		       const acdl_domaint::varst &vars,
-		       const acdl_domaint::statementt &statement=nil_exprt())
-    { assert(false); }
+		       const acdl_domaint::statementt &statement=nil_exprt());
+    //{ assert(false); }
 
   const acdl_domaint::statementt pop ();
 
+  void push_into_assertion_list (assert_listt &aexpr,
+				 const acdl_domaint::statementt &statement);
+  
   inline bool empty() const { return worklist.empty(); }
   
 protected:

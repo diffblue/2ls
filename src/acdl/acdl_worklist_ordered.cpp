@@ -8,6 +8,8 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 
 #include "acdl_worklist_ordered.h"
 
+
+
 /*******************************************************************\
 
 Function: acdl_worklist_orderedt::initialize()
@@ -49,7 +51,7 @@ acdl_worklist_orderedt::initialize (const local_SSAt &SSA)
     for (local_SSAt::nodet::assertionst::const_iterator a_it =
         n_it->assertions.begin (); a_it != n_it->assertions.end (); a_it++)
     {
-       push_into_worklist(assert_worklist, *a_it);
+       push_into_list(assert_worklist, *a_it);
        and_expr.push_back(*a_it);
        push_into_assertion_list(assert_list, not_exprt(*a_it));
 
@@ -61,7 +63,7 @@ acdl_worklist_orderedt::initialize (const local_SSAt &SSA)
   //compute fixpoint mu X. assert_nodes u predecessor(X)
   while(!assert_worklist.empty() > 0) {
     // collect all the leaf nodes
-    const acdl_domaint::statementt statement = pop(assert_worklist);
+    const acdl_domaint::statementt statement = pop_from_list(assert_worklist);
 
     // select vars in the present statement
     acdl_domaint::varst vars;
@@ -83,8 +85,8 @@ acdl_worklist_orderedt::initialize (const local_SSAt &SSA)
       if(finditer == worklist.end() && iterassert == assert_list.end())
       {
         // never seen this statement before
-        push(worklist, *it);
-        push(assert_worklist, *it);
+        push(*it);
+        push_into_assertion_list(assert_worklist, *it);
       }
     }
   }
@@ -103,13 +105,13 @@ acdl_worklist_orderedt::initialize (const local_SSAt &SSA)
     if(it->id() == ID_equal) {
      exprt expr_rhs = to_equal_expr(*it).rhs();
      if(expr_rhs.id() == ID_constant) 
-       push(leaf_worklist, *it);
+       push_into_list(leaf_worklist, *it);
      std::string str("nondet");
      std::string rhs_str=id2string(expr_rhs.get(ID_identifier));
     std::size_t found = rhs_str.find(str); 
     // push the nondet statement in rhs
     if(found != std::string::npos)
-      push(leaf_worklist, *it);
+      push_into_list(leaf_worklist, *it);
      
      //exprt expr_rhs = expr.rhs();
      // select vars in the present statement
@@ -128,7 +130,7 @@ acdl_worklist_orderedt::initialize (const local_SSAt &SSA)
          else {
            // pop the element from the list
            //const acdl_domaint::statementt statement = pop_from_worklist(worklist);
-           push(inter_worklist, *it);
+           push_into_list(inter_worklist, *it);
          }
         }
       }
@@ -175,14 +177,14 @@ acdl_worklist_orderedt::initialize (const local_SSAt &SSA)
   
   // insert leaf nodes
   while(!leaf_worklist.empty() > 0) {
-    const acdl_domaint::statementt statement = pop_from_worklist(leaf_worklist);
-    push_into_worklist(worklist, statement);
+    const acdl_domaint::statementt statement = pop_from_list(leaf_worklist);
+    push_into_list (worklist, statement);
   }
   
   // insert intermediate nodes
   while(!inter_worklist.empty() > 0) {
-    const acdl_domaint::statementt statement = pop_from_worklist(inter_worklist);
-    push_into_worklist(worklist, statement);
+    const acdl_domaint::statementt statement = pop_from_list(inter_worklist);
+    push_into_list (worklist, statement);
   }
     
 #ifdef DEBUG    
@@ -257,7 +259,7 @@ acdl_worklist_orderedt::initialize (const local_SSAt &SSA)
 
 /*******************************************************************\
 
-Function: acdl_worklist_baset::push_into_assertion_list()
+Function: acdl_worklist_baset::push_into_list()
 
   Inputs:
 
@@ -268,8 +270,97 @@ Function: acdl_worklist_baset::push_into_assertion_list()
  \*******************************************************************/
 
 void
-acdl_worklist_orderedt::push_into_assertion_list (assert_listt &aexpr,
+acdl_worklist_orderedt::push_into_list (listt &lexpr,
 				  const acdl_domaint::statementt &statement)
 {
-  aexpr.push_back(statement);
+  lexpr.push_back(statement);
+}
+
+/*******************************************************************\
+
+Function: acdl_worklist_baset::pop_from_list()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+ \*******************************************************************/
+
+const acdl_domaint::statementt
+acdl_worklist_orderedt::pop_from_list (listt &lexpr)
+{
+  const acdl_domaint::statementt statement = worklist.front();
+  worklist.pop_front();
+  return statement;
+}
+
+
+
+/*******************************************************************\
+
+Function: acdl_worklist_orderedt::update()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+ \*******************************************************************/
+
+void
+acdl_worklist_orderedt::update (const local_SSAt &SSA,
+                               const acdl_domaint::varst &vars,
+                               
+                               listt &lexpr, 
+                               const acdl_domaint::statementt &current_statement)
+{
+  // dependency analysis loop for equalities
+  for (local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin ();
+      n_it != SSA.nodes.end (); n_it++)
+  {
+
+    for (local_SSAt::nodet::equalitiest::const_iterator e_it =
+        n_it->equalities.begin (); e_it != n_it->equalities.end (); e_it++)
+    {
+      // the statement has already been processed, so no action needed
+      if(*e_it == current_statement) continue;
+
+      if (check_statement (*e_it, vars)) {
+        push_into_list (lexpr, *e_it);
+        #ifdef DEBUG
+        std::cout << "Push: " << from_expr (SSA.ns, "", *e_it) << std::endl;
+        #endif
+      }
+    }
+    for (local_SSAt::nodet::constraintst::const_iterator c_it =
+        n_it->constraints.begin (); c_it != n_it->constraints.end (); c_it++)
+    {
+      if(*c_it == current_statement) continue;
+      if (check_statement (*c_it, vars)) {
+        push_into_list (lexpr, *c_it);
+        #ifdef DEBUG
+        std::cout << "Push: " << from_expr (SSA.ns, "", *c_it) << std::endl;
+        #endif
+      }
+    }
+    for (local_SSAt::nodet::assertionst::const_iterator a_it =
+        n_it->assertions.begin (); a_it != n_it->assertions.end (); a_it++)
+    {
+      // for now, store the decision variable as variables 
+      // that appear only in properties
+      // find all variables in an assert statement
+      //assert_listt alist;
+      //push_into_assertion_list(alist, *a_it);
+      if(*a_it == current_statement) continue;
+      if (check_statement (*a_it, vars)) {
+        push_into_list (lexpr, not_exprt (*a_it));
+        #ifdef DEBUG
+        std::cout << "Push: " << from_expr (SSA.ns, "", not_exprt(*a_it)) << std::endl;
+        #endif
+      }
+    }
+  }
 }

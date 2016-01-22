@@ -6,7 +6,29 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 
  \*******************************************************************/
 
+#include <util/find_symbols.h>
 #include "acdl_worklist_base.h"
+
+
+/*******************************************************************\
+
+Function: acdl_worklist_baset::push_into_assertion_list()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+ \*******************************************************************/
+
+void
+acdl_worklist_baset::push_into_assertion_list (assert_listt &aexpr,
+				  const acdl_domaint::statementt &statement)
+{
+  aexpr.push_back(statement);
+}
+
 
 /*******************************************************************	\
 
@@ -128,7 +150,7 @@ acdl_worklist_baset::update (const local_SSAt &SSA,
       if(*e_it == current_statement) continue;
 
       if (check_statement (*e_it, vars)) {
-        push_into_worklist(worklist, *e_it);
+        push(*e_it);
         #ifdef DEBUG
         std::cout << "Push: " << from_expr (SSA.ns, "", *e_it) << std::endl;
         #endif
@@ -139,7 +161,7 @@ acdl_worklist_baset::update (const local_SSAt &SSA,
     {
       if(*c_it == current_statement) continue;
       if (check_statement (*c_it, vars)) {
-        push_into_worklist(worklist, *c_it);
+        push(*c_it);
         #ifdef DEBUG
         std::cout << "Push: " << from_expr (SSA.ns, "", *c_it) << std::endl;
         #endif
@@ -151,12 +173,12 @@ acdl_worklist_baset::update (const local_SSAt &SSA,
       // for now, store the decision variable as variables 
       // that appear only in properties
       // find all variables in an assert statement
-      assert_listt alist;
+      //assert_listt alist;
       push_into_assertion_list(alist, *a_it);
            
       if(*a_it == current_statement) continue;
       if (check_statement (*a_it, vars)) {
-        push_into_worklist(worklist, not_exprt (*a_it));
+        push(not_exprt (*a_it));
         #ifdef DEBUG
         std::cout << "Push: " << from_expr (SSA.ns, "", not_exprt(*a_it)) << std::endl;
         #endif

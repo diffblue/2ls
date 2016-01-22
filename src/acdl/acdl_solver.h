@@ -46,7 +46,7 @@ protected:
   acdl_decision_heuristicst &decision_heuristics;
   acdl_worklist_baset &worklist; 
     
-  typedef std::list<acdl_domaint::statementt> assert_listt;
+  //typedef std::list<acdl_domaint::statementt> assert_listt;
   
   typedef struct {
     typedef exprt nodet;
@@ -65,8 +65,7 @@ protected:
 
   void decide(const local_SSAt &SSA,
 	      acdl_domaint::valuet &v,
-	      decision_grapht &g,
-	      assert_listt &alist);
+	      decision_grapht &g);
   
   property_checkert::resultt analyze_conflict(const local_SSAt &SSA,
 			acdl_domaint::valuet &v,

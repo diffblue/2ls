@@ -436,3 +436,8 @@ for each new node, I have a list of parent nodes — only semantic information i
   3> add decision level at which to backtrack
 
 Question 1>  We need to determine the update of meet irreducibles  — for pushing the elements which has been popped from the wordlist
+
+Meeting on 15th January, 2016
+-------------------------------
+1> Create a separate class for implication graph and separate class for conflict analysis 
+
