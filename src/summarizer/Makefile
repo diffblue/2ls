@@ -47,11 +47,11 @@ DELTA_OBJ+=\
       ../acdl/acdl_solver$(OBJEXT) \
       ../acdl/acdl_domain$(OBJEXT) \
       ../acdl/acdl_worklist_base$(OBJEXT) \
-      ../acdl/acdl__worklist_ordered$(OBJEXT) \
+      ../acdl/acdl_worklist_ordered$(OBJEXT) \
       ../acdl/template_generator_acdl$(OBJEXT) \
       ../acdl/acdl_decision_heuristics_cond$(OBJEXT) \
       ../functions/summary$(OBJEXT) \
-      ../functions/get_function$(OBJEXT) \\
+      ../functions/get_function$(OBJEXT) \
       ../functions/path_util$(OBJEXT) \
       ../functions/index$(OBJEXT) \
       ../functions/index$(OBJEXT) \

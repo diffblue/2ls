@@ -32,7 +32,7 @@ Function: acdl_domaint::operator()
 
  Outputs:
 
- Purpose:
+ Purpose: operator()
 
 \*******************************************************************/
 

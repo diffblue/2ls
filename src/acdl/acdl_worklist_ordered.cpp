@@ -291,11 +291,10 @@ Function: acdl_worklist_baset::pop_from_list()
 const acdl_domaint::statementt
 acdl_worklist_orderedt::pop_from_list (listt &lexpr)
 {
-  const acdl_domaint::statementt statement = worklist.front();
-  worklist.pop_front();
+  const acdl_domaint::statementt statement = lexpr.front();
+  lexpr.pop_front();
   return statement;
 }
-
 
 
 /*******************************************************************\
