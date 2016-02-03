@@ -73,9 +73,11 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA,
     // compute update of abstract value
     acdl_domaint::valuet new_v;
     domain (statement, vars, v, new_v);
+    //TODO: update implication graph
+    //TODO: update worklist based on variables in the consequent
 
     // terminating condition check for populating worklist
-    if(!domain.contains(v, new_v))
+    if(!domain.contains(v, new_v)) //TODO: remove
     {
       worklist.update(SSA, vars, statement);
     }

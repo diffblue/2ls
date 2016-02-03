@@ -22,6 +22,11 @@ public:
   
   virtual void initialize(const local_SSAt &SSA);
 
+  //TODO: overload this function:
+/*  virtual void update(const local_SSAt &SSA,
+		      const acdl_domaint::varst &vars,
+		      const acdl_domaint::statementt &statement=nil_exprt()); */
+
 protected:
   //typedef std::list<acdl_domaint::statementt> assert_listt;
   typedef std::list<acdl_domaint::statementt> listt;
@@ -32,9 +37,10 @@ protected:
   const acdl_domaint::statementt pop_from_list (listt &lexpr);
 
   void update (const local_SSAt &SSA,
-      const acdl_domaint::varst &vars,
-      listt &lexpr, 
-      const acdl_domaint::statementt &current_statement);
+	       const acdl_domaint::varst &vars,
+	       listt &lexpr, 
+	       const acdl_domaint::statementt &current_statement);
+
 };
 
 #endif

@@ -17,7 +17,9 @@ class acdl_domaint : public messaget
 {
 public:
   typedef exprt meet_irreduciblet;
-  typedef exprt valuet;
+  typedef exprt valuet; //TODO: std::vector<meet_irreduciblet>
+  typedef std::vector<meet_irreduciblet> antecedentst;
+  typedef std::vector<meet_irreduciblet, antecedentst> deductionst;
   typedef exprt statementt;
   typedef std::set<symbol_exprt> varst;
 
@@ -33,6 +35,12 @@ public:
 
   //TODO: need to return information about inferred meet irreducibles
   //        and which meet irreducibles were used to infer this information
+  void operator()(const statementt &statement,
+		  const varst &vars,
+		  const valuet &old_value,
+		  deductionst &deductions)
+    { assert(false); }
+
   void operator()(const statementt &statement,
 		  const varst &vars,
 		  const valuet &old_value,
