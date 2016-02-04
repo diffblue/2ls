@@ -7,7 +7,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 \*******************************************************************/
 
 #include "acdl_worklist_ordered.h"
-
+#define DEBUG
 
 
 /*******************************************************************\
@@ -54,7 +54,6 @@ acdl_worklist_orderedt::initialize (const local_SSAt &SSA)
        push_into_list(assert_worklist, *a_it);
        and_expr.push_back(*a_it);
        push_into_assertion_list(assert_list, not_exprt(*a_it));
-
     }
   }
   
@@ -71,8 +70,9 @@ acdl_worklist_orderedt::initialize (const local_SSAt &SSA)
     // compute the predecessors
     update(SSA, vars, predecs_worklist, statement);
     
-    std::list<acdl_domaint::statementt>::iterator 
-      iterassert = std::find(assert_list.begin(), assert_list.end(), statement); 
+    //std::list<acdl_domaint::statementt>::iterator 
+    //  iterassert = std::find(assert_list.begin(), assert_list.end(), statement); 
+    
     for(std::list<acdl_domaint::statementt>::const_iterator 
       it = predecs_worklist.begin(); it != predecs_worklist.end(); ++it) {
       std::list<acdl_domaint::statementt>::iterator finditer = 
@@ -273,6 +273,10 @@ void
 acdl_worklist_orderedt::push_into_list (listt &lexpr,
 				  const acdl_domaint::statementt &statement)
 {
+  for(listt::const_iterator it = lexpr.begin();
+      it != lexpr.end(); ++it)
+    if(statement == *it)
+      return;
   lexpr.push_back(statement);
 }
 

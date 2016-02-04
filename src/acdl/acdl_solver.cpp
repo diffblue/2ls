@@ -74,6 +74,7 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA,
     acdl_domaint::valuet new_v;
     domain (statement, vars, v, new_v);
     //TODO: update implication graph
+    clause_learning.add_deductions(new_v);
     //TODO: update worklist based on variables in the consequent
 
     // terminating condition check for populating worklist
@@ -158,6 +159,7 @@ acdl_solvert::decide (const local_SSAt &SSA,
   
   // update decision graph
   // TODO
+  clause_learning.add_decisions(dec_expr);
   
   // keep information for backtracking associated with this decision point in g
   g.backtrack_points[dec_expr] = v;

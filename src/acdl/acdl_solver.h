@@ -17,6 +17,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include "acdl_domain.h"
 #include "acdl_decision_heuristics.h"
 #include "acdl_worklist_base.h"
+#include "acdl_clause_learning_base.h"
 
 class acdl_solvert : public messaget
 {
@@ -25,12 +26,14 @@ public:
   explicit acdl_solvert(const optionst &_options,
 			acdl_domaint &_domain,
 			acdl_decision_heuristicst &_decision_heuristics,
-                        acdl_worklist_baset &_worklist)
+                        acdl_worklist_baset &_worklist,
+                        acdl_clause_learning_baset &_clause_learning)
     : 
     options(_options),
     domain(_domain),
     decision_heuristics(_decision_heuristics),
-    worklist(_worklist)
+    worklist(_worklist),
+    clause_learning(_clause_learning)
     {
     }  
 
@@ -45,6 +48,7 @@ protected:
   acdl_domaint &domain;
   acdl_decision_heuristicst &decision_heuristics;
   acdl_worklist_baset &worklist; 
+  acdl_clause_learning_baset &clause_learning;
     
   //typedef std::list<acdl_domaint::statementt> assert_listt;
   

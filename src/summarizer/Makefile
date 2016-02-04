@@ -48,6 +48,7 @@ DELTA_OBJ+=\
       ../acdl/acdl_domain$(OBJEXT) \
       ../acdl/acdl_worklist_base$(OBJEXT) \
       ../acdl/acdl_worklist_ordered$(OBJEXT) \
+	    ../acdl/acdl_clause_learning_base$(OBJEXT) \
       ../acdl/template_generator_acdl$(OBJEXT) \
       ../acdl/acdl_decision_heuristics_cond$(OBJEXT) \
       ../functions/summary$(OBJEXT) \

@@ -429,9 +429,10 @@ inferred
 Implement a clean implication graph — constraint in the nodes, each node 
 are meet irreducibles (implication graph is independent of abstract domain).
 Present decision level and list of implications — get a list of new nodes and 
-for each new node, I have a list of parent nodes — only semantic information is parent node implies this new node, meet irreducible linked to the new node, add a decision (meet irreducible of the decision) —
+for each new node, I have a list of parent nodes — only semantic information is parent node implies this new node, meet irreducible linked to the new node, 
+  add a decision (meet irreducible of the decision) —
   Two methods 
-  1>adding decision — just takes meet irreducible and increment decision level
+  1> adding decision — just takes meet irreducible and increment decision level
   2> add an implication — list of parent nodes, and new node (meet irreducibles associated with it)
   3> add decision level at which to backtrack
 
@@ -440,4 +441,52 @@ Question 1>  We need to determine the update of meet irreducibles  — for pushi
 Meeting on 15th January, 2016
 -------------------------------
 1> Create a separate class for implication graph and separate class for conflict analysis 
+
+
+Meeting on 5th February, 2016
+-------------------------------
+1> The implementation of implication graph and domain computation for deduction
+should be separate
+2> The nodes in the implication graph are meet irreducibles.
+Let the current partial assignment be: {x>=0, x<=10, y>=5, y<=8}, all are meet
+irreducibles
+Let the statement be: x'=x+y
+Then, abstract value returned by the domain is: (x' >= 5, x' <= 18), which is a
+meet irreducible
+Now, the deduction information is computed as follows:
+{x >= 0, y >= 5} --> (x' >= 5), here {x>=0, y>=5} is the antecedent or the child
+nodes in the implication graph which points to (x' >= 5) 
+{x <= 10, y <= 8} --> (x' <= 18), here {x<=10, y<=8} is the antecedent or the child
+nodes in the implication graph which points to (x' <= 18)
+
+In particular, we look for which meet irreducibles are responsible for
+deducing which other meet irreducibles, these meet irreducibles are added 
+are added as nodes in the implication graph. We need to infer this information 
+from the SAT solver.
+
+3> Interface to the implication graph: 
+   a> add deduction 
+   b> add decision 
+   c> backtrack to level (index)
+   
+4> Conflict clauses are always added as a "conditional" to the SSA and not as 
+"assignments". Like in SAT solver where conflict clauses are added in the 
+clause database, we need to maintain a separate list of conflict clauses 
+that are discovered. Later, we need to add these conflict clauses as 
+set of SSA's (ultimately added to the worklist) so that they 
+partiticipate in the subsequent deduction phase. Does conflict 
+clause always have to be unit clause after backtracking because 
+literals in conflict clause are flipped to reverse the decision ? 
+ 
+Meeting with Marcelo on 5th February, 2016
+-------------------------------------------
+1> ACDL is a forward cheap analysis which computes strongest post-condition 
+with backward expensive analysis which computes weakest pre-condition. 
+
+2> How do ACDL different from SMT solvers. In SMT, decisions and learning
+happens in a theory solver. In ACDL, decision and learning happens in a 
+domain. Domains in ACDL correspond to theory in SMT. But ACDL performs 
+fix-point theory learning in the conflict analysis phase. 
+
+
 
