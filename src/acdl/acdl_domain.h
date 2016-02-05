@@ -17,9 +17,10 @@ class acdl_domaint : public messaget
 {
 public:
   typedef exprt meet_irreduciblet;
-  typedef exprt valuet; //TODO: std::vector<meet_irreduciblet>
+  typedef std::vector<meet_irreduciblet> valuet; 
   typedef std::vector<meet_irreduciblet> antecedentst;
-  typedef std::vector<meet_irreduciblet, antecedentst> deductionst;
+  typedef std::pair<meet_irreduciblet, antecedentst> deductiont;
+  typedef std::vector<deductiont> deductionst;
   typedef exprt statementt;
   typedef std::set<symbol_exprt> varst;
 
@@ -38,17 +39,13 @@ public:
   void operator()(const statementt &statement,
 		  const varst &vars,
 		  const valuet &old_value,
-		  deductionst &deductions)
-    { assert(false); }
-
-  void operator()(const statementt &statement,
-		  const varst &vars,
-		  const valuet &old_value,
-		  valuet &new_value);
+		  valuet &new_value,
+		  deductionst &deductions);
 
   void meet(const std::vector<valuet> &old_values,
 	    valuet &new_value);
   void meet(const valuet &old_value, valuet &new_value);
+  void meet(const meet_irreduciblet &old_value, valuet &new_value);
 
   void join(const std::vector<valuet> &old_values,
 	    valuet &new_value);
@@ -60,13 +57,27 @@ public:
   
   void normalize(valuet &value, const varst &vars);
 
-  void set_bottom(valuet &value) { value = false_exprt();  }
-  void set_top(valuet &value) { value = true_exprt(); }
+  void set_bottom(valuet &value) { value.clear(); value.push_back(false_exprt());  }
+  void set_top(valuet &value) { value.clear(); }
 
   bool is_bottom(const valuet &value) const;
-  bool is_top(const valuet &value) const { return value.is_true(); }
-  bool is_complete(const exprt &expr, const varst& vars) const;
+  bool is_top(const valuet &value) const { return value.empty(); }
+  bool is_complete(const valuet &value, const varst& vars) const;
 
+
+  inline std::ostream &output(
+    std::ostream &out, const valuet &v)
+  {
+    for(valuet::const_iterator it = v.begin();
+	it != v.end(); ++it)
+    {
+      if(it != v.begin())
+	out << " && ";
+      out << from_expr(SSA.ns, "", *it);
+    }
+    return out;
+  }
+  
 protected:
   optionst &options;
   local_SSAt &SSA;

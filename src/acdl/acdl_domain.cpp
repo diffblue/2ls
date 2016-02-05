@@ -38,9 +38,12 @@ Function: acdl_domaint::operator()
 
 void acdl_domaint::operator()(const statementt &statement,
 		  const varst &vars,
-		  const valuet &_old_value,
-		  valuet &new_value)
+		  const valuet &old_value,
+		  valuet &new_value,
+		  deductionst &deductions)
 {
+  //TODO: compute deductions
+  
   new_value = true_exprt();
   
 #ifdef DEBUG
@@ -170,10 +173,34 @@ Function: acdl_domaint::meet()
 void acdl_domaint::meet(const valuet &old_value,
 	    valuet &new_value)
 {
-  new_value = and_exprt(old_value, new_value);
-  simplify(new_value,SSA.ns);
+  //TODO: fix!
+  new_value.insert(old_value.begin(), old_value.end());
+  
+//  new_value = and_exprt(old_value, new_value);
+//  simplify(new_value,SSA.ns);
 }
 
+/*******************************************************************\
+
+Function: acdl_domaint::meet()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void acdl_domaint::meet(const meet_irreduciblet &old_value,
+	    valuet &new_value)
+{
+  //TODO: fix!
+  new_value.push_back(old_value);
+  
+//  new_value = and_exprt(old_value, new_value);
+//  simplify(new_value,SSA.ns);
+}
 
 /*******************************************************************\
 
@@ -190,8 +217,10 @@ Function: acdl_domaint::join()
 void acdl_domaint::join(const std::vector<valuet> &old_values,
 	    valuet &new_value)
 {
-  new_value = or_exprt(disjunction(old_values), new_value);
-  simplify(new_value,SSA.ns);
+  //TODO: fix!
+
+//  new_value = or_exprt(disjunction(old_values), new_value);
+//  simplify(new_value,SSA.ns);
 }
 
   
@@ -209,10 +238,11 @@ Function: acdl_domaint::contains()
 
 bool acdl_domaint::contains(const valuet &value1, const valuet &value2) const
 {
-  std::unique_ptr<incremental_solvert> solver(incremental_solvert::allocate(SSA.ns,true));
-  *solver << and_exprt(value1,not_exprt(value2));
-  bool result = (*solver)()==decision_proceduret::D_UNSATISFIABLE;
-  return result;
+//  std::unique_ptr<incremental_solvert> solver(incremental_solvert::allocate(SSA.ns,true));
+//  *solver << and_exprt(value1,not_exprt(value2));
+//  bool result = (*solver)()==decision_proceduret::D_UNSATISFIABLE;
+//  return result;
+  return false;
 }
 
 /*******************************************************************\
@@ -229,10 +259,7 @@ Function: acdl_domaint::is_bottom()
 
 bool acdl_domaint::is_bottom(const valuet &value) const
 {
-  std::unique_ptr<incremental_solvert> solver(incremental_solvert::allocate(SSA.ns,true));
-  *solver << value;
-  bool result = (*solver)()==decision_proceduret::D_UNSATISFIABLE;
-  return result;
+  return value.size()==1 && value[0].is_false();
 }
 
 /*******************************************************************\
@@ -249,6 +276,7 @@ Function: acdl_domaint::is_complete()
 
 bool acdl_domaint::is_complete(const valuet &value, const varst& symbols) const
 {
+  /*
 #ifdef DEBUG
   std::cout << "[ACDL-DOMAIN] is_complete? "
 	    << from_expr(SSA.ns, "", value);
@@ -299,6 +327,8 @@ bool acdl_domaint::is_complete(const valuet &value, const varst& symbols) const
   std::cout << " is complete" << std::endl;
 #endif
   return true;
+  */
+  return false;
 }
 
 /*******************************************************************\
@@ -318,7 +348,7 @@ Function: acdl_domaint::remove_var()
 exprt acdl_domaint::remove_var(const valuet &_old_value, 
 			       const symbol_exprt &var)
 {
-  valuet old_value = _old_value;
+/*  valuet old_value = _old_value;
   simplify(old_value,SSA.ns);
 
   if(old_value.id() == ID_and)
@@ -339,7 +369,7 @@ exprt acdl_domaint::remove_var(const valuet &_old_value,
   find_symbols(old_value,symbols);
   if(symbols.find(var.get_identifier()) != symbols.end())
     return true_exprt();
-
+*/
   return old_value;
 }
 
@@ -364,7 +394,7 @@ Function: acdl_domaint::split()
 exprt acdl_domaint::split(const valuet &value, const exprt &expr, 
 			  bool upper)
 { 
-  std::cout << "[ACDL-DOMAINS] Inside split decision: "
+/*  std::cout << "[ACDL-DOMAINS] Inside split decision: "
 	      << value.pretty() << std::endl;
         
   if(expr.type().id()==ID_bool)
@@ -447,7 +477,8 @@ exprt acdl_domaint::split(const valuet &value, const exprt &expr,
 	      << from_expr(SSA.ns, "", binary_relation_exprt(expr,ID_le,m)) << std::endl;
 #endif
     return binary_relation_exprt(expr,ID_le,m);
-  }
+    }*/
+  return true_exprt();
 }
 
 /*******************************************************************\
@@ -464,7 +495,7 @@ Function: acdl_domaint::normalize()
 
 void acdl_domaint::normalize(valuet &value, const varst &vars)
 {
-  valuet old_value = value;
+/*  valuet old_value = value;
 
   std::vector<symbol_exprt> clean_vars;
   
@@ -493,5 +524,5 @@ void acdl_domaint::normalize(valuet &value, const varst &vars)
   ssa_analyzer.get_result(new_values,template_generator.all_vars());
 
     
-  value = and_exprt(new_values,value);
+  value = and_exprt(new_values,value);*/
 }

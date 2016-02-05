@@ -4,7 +4,8 @@ CBMC ?= ../..
 
 SRC = acdl_solver.cpp acdl_domain.cpp template_generator_acdl.cpp \
       acdl_decision_heuristics_cond.cpp \
-      acdl_worklist_base.cpp acdl_worklist_ordered.cpp acdl_clause_learning_base.cpp 
+      acdl_worklist_base.cpp acdl_worklist_ordered.cpp \
+      acdl_conflict_analysis_base.cpp acdl_implication_graph.cpp
 
 include $(CBMC)/src/config.inc
 include $(CBMC)/src/common

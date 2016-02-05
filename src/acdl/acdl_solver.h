@@ -17,7 +17,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include "acdl_domain.h"
 #include "acdl_decision_heuristics.h"
 #include "acdl_worklist_base.h"
-#include "acdl_clause_learning_base.h"
+#include "acdl_conflict_analysis_base.h"
 
 class acdl_solvert : public messaget
 {
@@ -27,13 +27,13 @@ public:
 			acdl_domaint &_domain,
 			acdl_decision_heuristicst &_decision_heuristics,
                         acdl_worklist_baset &_worklist,
-                        acdl_clause_learning_baset &_clause_learning)
+                        acdl_conflict_analysis_baset &_conflict_analysis)
     : 
     options(_options),
     domain(_domain),
     decision_heuristics(_decision_heuristics),
     worklist(_worklist),
-    clause_learning(_clause_learning)
+    conflict_analysis(_conflict_analysis)
     {
     }  
 
@@ -48,32 +48,18 @@ protected:
   acdl_domaint &domain;
   acdl_decision_heuristicst &decision_heuristics;
   acdl_worklist_baset &worklist; 
-  acdl_clause_learning_baset &clause_learning;
-    
-  //typedef std::list<acdl_domaint::statementt> assert_listt;
-  
-  typedef struct {
-    typedef exprt nodet;
-    typedef std::list<nodet> deduction_list;
-    // root node is assumed nil_exprt()
-    std::map<nodet, nodet> edges; //reverse edges,
-                                  //i.e. e1 maps to e2 <=> directed edge (e2,e1)
-    nodet current_node;
-    int decision_level;
-    std::map<nodet, acdl_domaint::valuet> backtrack_points;
-    std::map<nodet, deduction_list> propagate_list;  // used to store list of deductions
-  } decision_grapht; 
+  acdl_conflict_analysis_baset &conflict_analysis;
+  acdl_implication_grapht implication_graph;
+  std::vector<exprt> learned_clauses;
   
   property_checkert::resultt propagate(const local_SSAt &SSA,
 				       acdl_domaint::valuet &v );
 
   void decide(const local_SSAt &SSA,
-	      acdl_domaint::valuet &v,
-	      decision_grapht &g);
+	      acdl_domaint::valuet &v);
   
   property_checkert::resultt analyze_conflict(const local_SSAt &SSA,
-			acdl_domaint::valuet &v,
-			decision_grapht &g);
+			acdl_domaint::valuet &v);
 };
 
 
