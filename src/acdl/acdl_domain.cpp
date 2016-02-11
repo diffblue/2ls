@@ -7,7 +7,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 \*******************************************************************/
 
 
-#define DEBUG
+//#define DEBUG
 
 
 #ifdef DEBUG
@@ -44,7 +44,7 @@ void acdl_domaint::operator()(const statementt &statement,
 {
   //TODO: compute deductions
   
-  new_value = true_exprt();
+  new_value.push_back(true_exprt());
   
 #ifdef DEBUG
     std::cout << "[ACDL-DOMAIN] old value: "
@@ -60,7 +60,9 @@ void acdl_domaint::operator()(const statementt &statement,
       it != vars.end(); ++it)
   {
     // project _old_value on everything in statement but *it
-    valuet old_value = remove_var(_old_value,*it);
+    valuet old_value;
+    // RM: removed for compilation
+    //old_value.push_back(remove_var(_old_value,*it));
 
 #ifdef DEBUG
     std::cout << "[ACDL-DOMAIN] projected(" << it->get_identifier() << "): "
@@ -73,32 +75,33 @@ void acdl_domaint::operator()(const statementt &statement,
       valuet var_value;
       literalt l = solver->solver->convert(*it);
       if(l.is_true()) 
-	      var_value = *it;
+	      var_value.push_back(*it);
       else if(l.is_false())
-	      var_value = not_exprt(*it);
+	      var_value.push_back(not_exprt(*it));
       else
       {
 	      solver->solver->set_frozen(l);
-	      *solver << and_exprt(old_value,statement);
+        // RM: changed old_value to old_value.back()
+	      *solver << and_exprt(old_value.back(),statement);
 	
         if((*solver)() == decision_proceduret::D_SATISFIABLE)
         {
           exprt m = (*solver).get(*it);
           if(m.is_true())
-            var_value = *it;
+            var_value.push_back(*it);
           else
-            var_value = not_exprt(*it);
+            var_value.push_back(not_exprt(*it));
           solver->new_context();
           *solver << not_exprt(*it);
           if((*solver)() == decision_proceduret::D_SATISFIABLE)
-            var_value = true_exprt(); //don't know
+            var_value.push_back(true_exprt()); //don't know
           solver->pop_context();
         }
         else //bottom
-          var_value = false_exprt();
+          var_value.push_back(false_exprt());
       }
-
-      new_values.push_back(and_exprt(old_value,var_value));
+      // RM: commented for compiling
+      // new_values.push_back(and_exprt(old_value,var_value));
     }
     // numerical variables using templates
     else if (it->type().id() == ID_signedbv ||
@@ -109,12 +112,13 @@ void acdl_domaint::operator()(const statementt &statement,
           options,ssa_db,ssa_local_unwinder); 
       template_generator(SSA,*it);
 
-      ssa_analyzer(*solver, SSA, and_exprt(old_value,statement),
+      // RM: commented for compiling
+      /*ssa_analyzer(*solver, SSA, and_exprt(old_value,statement),
           template_generator);
       valuet var_value;
       ssa_analyzer.get_result(var_value,template_generator.all_vars());
 
-      new_values.push_back(and_exprt(old_value,var_value));
+      new_values.push_back(and_exprt(old_value,var_value));*/
     }
     else
     {
@@ -154,8 +158,8 @@ Function: acdl_domaint::meet()
 void acdl_domaint::meet(const std::vector<valuet> &old_values,
 	    valuet &new_value)
 {
-  new_value = and_exprt(conjunction(old_values), new_value);
-  simplify(new_value,SSA.ns);
+  //new_value = and_exprt(conjunction(old_values), new_value);
+  //simplify(new_value,SSA.ns);
 }
 
 /*******************************************************************\
@@ -174,7 +178,7 @@ void acdl_domaint::meet(const valuet &old_value,
 	    valuet &new_value)
 {
   //TODO: fix!
-  new_value.insert(old_value.begin(), old_value.end());
+  //new_value.insert(old_value.begin(), old_value.end());
   
 //  new_value = and_exprt(old_value, new_value);
 //  simplify(new_value,SSA.ns);
@@ -348,8 +352,8 @@ Function: acdl_domaint::remove_var()
 exprt acdl_domaint::remove_var(const valuet &_old_value, 
 			       const symbol_exprt &var)
 {
-/*  valuet old_value = _old_value;
-  simplify(old_value,SSA.ns);
+   exprt old_value = _old_value.back();
+/*  simplify(old_value,SSA.ns);
 
   if(old_value.id() == ID_and)
   {

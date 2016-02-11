@@ -7,11 +7,11 @@ Author: Rajdeep Mukherjee, Peter Schrammel
  \*******************************************************************/
 
 #include <util/find_symbols.h>
-#include "acdl_clause_learning_base.h"
+#include "acdl_conflict_analysis_base.h"
 
 /*******************************************************************\
 
-Function: acdl_clause_learning_baset::
+Function: acdl_conflict_analysis_baset::
 
   Inputs:
 
@@ -20,16 +20,16 @@ Function: acdl_clause_learning_baset::
  Purpose:
 
  \*******************************************************************/
-void acdl_clause_learning_baset::add_deductions
+/*void acdl_implication_grapht::add_deductions
   (const acdl_domaint::meet_irreduciblet &m_ir) {
  
-  g.level = 0;
-}
+  //g.current_level = 0;
+}*/
   
   
 /*******************************************************************\
 
-Function: acdl_clause_learning_baset::
+Function: acdl_conflict_analysis_baset::
 
   Inputs:
 
@@ -38,15 +38,15 @@ Function: acdl_clause_learning_baset::
  Purpose:
 
  \*******************************************************************/
-void acdl_clause_learning_baset::add_decisions
+/*void acdl_implication_grapht::add_decision
   (const acdl_domaint::meet_irreduciblet & m_ir) {
   
-  g.level = 1;
-}
+  //g.current_level = 1;
+}*/
 
 /*******************************************************************\
 
-Function: acdl_clause_learning_baset::
+Function: acdl_conflict_analysis_baset::
 
   Inputs:
 
@@ -55,6 +55,6 @@ Function: acdl_clause_learning_baset::
  Purpose:
 
  \*******************************************************************/
-void acdl_clause_learning_baset::backtrack_to_level(unsigned int idx) {
-  g.level = idx;
+void acdl_conflict_analysis_baset::backtrack_to_level(unsigned int idx) {
+  //g.current_level = idx;
 }

@@ -12,7 +12,8 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_condt::operator()
 (const local_SSAt &SSA, const acdl_domaint::valuet &value)
 {
   exprt decision_expr; //TODO: This characterize the shape of the decisions made, (eg. x < 5 or x-y < 5)
-  exprt decision_var;
+  // RM: changed the type of decision_var from exprt to valuet
+  acdl_domaint::valuet decision_var;
   acdl_domaint::valuet decision; // container that contains the decision (eg. x == [0,10])
   
   //TODO
@@ -59,22 +60,25 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_condt::operator()
   }
   // For conditional based decision heuristics, 
   // decision expressions are same as decision variables in split function
-  decision=false_exprt();
+  decision.push_back(false_exprt());
   for(std::list<exprt>::const_iterator it = cond_container.begin(); it != cond_container.end(); ++it)
   {
-    decision_var = *it;
-    decision_expr = decision_var;
-
-    decision = domain.split(decision_var,decision_expr,1);
-    if(decision.is_false()) {
+    decision_var.push_back(*it);
+    decision_expr = decision_var.back();
+    // RM: domain.split return value pushed to decision
+    decision.push_back(domain.split(decision_var,decision_expr,1));
+    decision_var.pop_back();
+    if(decision.back().is_false()) {
       continue;
+      decision.pop_back();
     }
-    std::cout << "DECISION SPLITTING VALUE: " << from_expr (SSA.ns, "", decision) << std::endl;
+    //std::cout << "DECISION SPLITTING VALUE: " << from_expr (SSA.ns, "", decision) << std::endl;
   }
 #if 0  
   equal_exprt dec_expr(decision_var, decision);
   std::cout << "DECISION SPLITTING EXPR: " << from_expr (SSA.ns, "", dec_expr) << std::endl;
 #endif
   // if decision heuristic return false, no decision has been made
-  return decision;
+  // RM: decision.back() is returned instead of decision
+  return decision.back();
 }

@@ -28,6 +28,7 @@ public:
   {
   }
 
+  acdl_implication_grapht g;
   virtual property_checkert::resultt operator()(
     acdl_implication_grapht &graph,
     exprt &learned_clause)
