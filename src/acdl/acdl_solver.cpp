@@ -74,7 +74,8 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA,
     // compute update of abstract value
     acdl_domaint::valuet new_v;
     acdl_domaint::deductionst deductions;
-    domain (statement, worklist.live_variables, v, new_v, deductions);
+    domain(statement, worklist.live_variables, v, deductions);
+    domain.to_value(deductions,new_v);
     //TODO: update implication graph
     implication_graph.add_deductions(deductions);
     //TODO: update worklist based on variables in the consequent (new_v)

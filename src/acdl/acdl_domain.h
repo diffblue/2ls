@@ -39,8 +39,15 @@ public:
   void operator()(const statementt &statement,
 		  const varst &vars,
 		  const valuet &old_value,
-		  valuet &new_value,
 		  deductionst &deductions);
+
+  //project deductions to value
+  void to_value(const deductionst &deductions, valuet& value)
+  {
+    for(deductionst::const_iterator it = deductions.begin();
+	it != deductions.end(); ++it)
+      value.push_back(it->first);
+  }
 
   void meet(const std::vector<valuet> &old_values,
 	    valuet &new_value);
@@ -50,8 +57,8 @@ public:
   void join(const std::vector<valuet> &old_values,
 	    valuet &new_value);
     
-  bool contains(const valuet &value1,
-		const valuet &value2) const;
+  bool is_contained(const meet_irreduciblet &m,
+		    const valuet &value) const;
 
   meet_irreduciblet split(const valuet &value, const exprt &expr, bool upper=false);
   
@@ -64,7 +71,7 @@ public:
   bool is_top(const valuet &value) const { return value.empty(); }
   bool is_complete(const valuet &value, const varst& vars) const;
 
-
+  //print value
   inline std::ostream &output(
     std::ostream &out, const valuet &v)
   {
@@ -77,6 +84,19 @@ public:
     }
     return out;
   }
+
+  //print deductions
+  inline std::ostream &output(
+    std::ostream &out, const deductionst &d)
+  {
+    for(deductionst::const_iterator it = d.begin();
+	it != d.end(); ++it)
+    {
+      out << from_expr(SSA.ns, "", it->first) << " <== ";
+      output(out,it->second) << std::endl;
+    }
+    return out;
+  }
   
 protected:
   optionst &options;
@@ -84,25 +104,16 @@ protected:
   ssa_dbt &ssa_db;
   ssa_local_unwindert &ssa_local_unwinder;
 
-  exprt remove_var(const valuet &_old_value, 
-    const symbol_exprt &var);
-  
+  void remove_var(const valuet &_old_value, 
+		  const symbol_exprt &var,
+		  valuet &new_value);
+ 
+  void get_antecedents(incremental_solvert &solver,
+		       const valuet &value,
+		       const bvt &value_literals,
+		       antecedentst &antecedents);
+ 
 };
-
-/*
-class meet_irreducible : public acdl_domaint
-{
-public: 
- meet_irreducible(const acdl_domaint::valuet& val)
-     :acdl_domaint(val)
- {
-   //must be complementable
-   assert(is_bottom(val) || is_meet_irreducible(val));
- }
-
- meet_irreducible complement() const;
-}
-*/
 
 #endif
  

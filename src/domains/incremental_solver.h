@@ -100,6 +100,13 @@ class incremental_solvert : public messaget
   exprt get(const exprt& expr) { return solver->get(expr); }
   tvt l_get(literalt l) { return solver->l_get(l); }
   literalt convert(const exprt& expr) { return solver->convert(expr); }
+  void set_assumptions(bvt assumptions) 
+  { 
+    assumptions.insert(assumptions.end(), activation_literals.begin(),
+		       activation_literals.end());
+    solver->set_assumptions(assumptions); 
+  }
+  bool is_in_conflict(literalt l) { return solver->is_in_conflict(l); }
 
   unsigned get_number_of_solver_calls() { return solver_calls; }
 

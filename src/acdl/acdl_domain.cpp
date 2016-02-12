@@ -38,72 +38,96 @@ Function: acdl_domaint::operator()
 
 void acdl_domaint::operator()(const statementt &statement,
 		  const varst &vars,
-		  const valuet &old_value,
-		  valuet &new_value,
+		  const valuet &_old_value,
 		  deductionst &deductions)
 {
-  //TODO: compute deductions
-  
-  new_value.push_back(true_exprt());
-  
 #ifdef DEBUG
     std::cout << "[ACDL-DOMAIN] old value: "
 	      << from_expr(SSA.ns, "", _old_value) << std::endl;
 #endif
 
-  ssa_analyzert ssa_analyzer;
-  std::unique_ptr<incremental_solvert> solver(incremental_solvert::allocate(SSA.ns,true));
-
-  std::vector<valuet> new_values;
-  new_values.reserve(vars.size());
+  deductions.reserve(vars.size());
   for(varst::const_iterator it = vars.begin();
       it != vars.end(); ++it)
   {
+    ssa_analyzert ssa_analyzer;
+    std::unique_ptr<incremental_solvert> solver(
+      incremental_solvert::allocate(SSA.ns,true));
+
     // project _old_value on everything in statement but *it
     valuet old_value;
-    // RM: removed for compilation
-    //old_value.push_back(remove_var(_old_value,*it));
+    remove_var(_old_value,*it,old_value);
 
 #ifdef DEBUG
     std::cout << "[ACDL-DOMAIN] projected(" << it->get_identifier() << "): "
 	      << from_expr(SSA.ns, "", old_value) << std::endl;
 #endif
 
-    // booleans
+    meet_irreduciblet deduced;
+
+    // inference for booleans
     if(it->type().id()==ID_bool)
     {
       valuet var_value;
       literalt l = solver->solver->convert(*it);
-      if(l.is_true()) 
-	      var_value.push_back(*it);
-      else if(l.is_false())
-	      var_value.push_back(not_exprt(*it));
-      else
+      if(l.is_constant())
+	continue;
+      solver->solver->set_frozen(l);
+
+      //get handles on meet irreducibles to check them later
+      bvt value_literals;
+      value_literals.resize(old_value.size());
+      *solver << statement;
+      for(unsigned i=0; i<old_value.size(); i++)
       {
-	      solver->solver->set_frozen(l);
-        // RM: changed old_value to old_value.back()
-	      *solver << and_exprt(old_value.back(),statement);
-	
-        if((*solver)() == decision_proceduret::D_SATISFIABLE)
-        {
-          exprt m = (*solver).get(*it);
-          if(m.is_true())
-            var_value.push_back(*it);
-          else
-            var_value.push_back(not_exprt(*it));
-          solver->new_context();
-          *solver << not_exprt(*it);
-          if((*solver)() == decision_proceduret::D_SATISFIABLE)
-            var_value.push_back(true_exprt()); //don't know
-          solver->pop_context();
-        }
-        else //bottom
-          var_value.push_back(false_exprt());
+	value_literals[i] = solver->convert(old_value[i]);
+	solver->solver->set_frozen(value_literals[i]);
       }
-      // RM: commented for compiling
-      // new_values.push_back(and_exprt(old_value,var_value));
+      solver->set_assumptions(value_literals);
+	
+      if((*solver)() == decision_proceduret::D_SATISFIABLE)
+      {
+	exprt m = solver->get(*it);
+	if(m.is_true())
+	  deduced = *it;
+	else
+	  deduced = not_exprt(*it);
+
+	//test the complement
+	solver->new_context();
+	solver->set_assumptions(value_literals);
+	*solver << not_exprt(*it);
+	if((*solver)() == decision_proceduret::D_SATISFIABLE)
+	{
+	  //"don't know"
+   	  //pop_context not needed
+	  continue;
+	}
+	else
+	{
+	  if(!is_contained(deduced,_old_value))
+	  {
+	    deductions.push_back(deductiont());
+	    deductions.back().first = deduced;
+  	    get_antecedents(*solver,_old_value,value_literals,
+			    deductions.back().second);
+	  }
+	}
+
+	//pop_context not needed
+      }
+      else //bottom
+      {
+	deductions.push_back(deductiont());
+	deductions.back().first = false_exprt();
+	get_antecedents(*solver,_old_value,value_literals,
+			deductions.back().second);
+	
+	break; //at this point we have a conflict, we return
+      }
     }
-    // numerical variables using templates
+
+    // inference for numerical variables using templates
     else if (it->type().id() == ID_signedbv ||
         it->type().id() == ID_unsignedbv ||
         it->type().id() == ID_floatbv)
@@ -112,13 +136,45 @@ void acdl_domaint::operator()(const statementt &statement,
           options,ssa_db,ssa_local_unwinder); 
       template_generator(SSA,*it);
 
-      // RM: commented for compiling
-      /*ssa_analyzer(*solver, SSA, and_exprt(old_value,statement),
+      ssa_analyzer(*solver, SSA, and_exprt(conjunction(old_value),statement),
           template_generator);
-      valuet var_value;
+      exprt var_value;
       ssa_analyzer.get_result(var_value,template_generator.all_vars());
+      valuet var_values;
+      if(var_value.id()==ID_and)
+	var_values = var_value.operands();
+      else
+	var_values.push_back(var_value);
 
-      new_values.push_back(and_exprt(old_value,var_value));*/
+      if(var_values.empty())
+	continue;
+
+      //get deductions
+      //ENHANCE: make assumptions persistent in incremental_solver
+      // so that we can reuse value+statement from above
+      bvt value_literals;
+      value_literals.resize(old_value.size());
+      *solver << statement;
+      for(unsigned i=0; i<old_value.size(); i++)
+      {
+	value_literals[i] = solver->convert(old_value[i]);
+	solver->solver->set_frozen(value_literals[i]);
+      }
+      for(unsigned i=0; i<var_values.size(); ++i)
+      {
+	if(!is_contained(var_values[i],_old_value))
+	{
+	  solver->new_context();
+	  *solver << not_exprt(var_values[i]);
+          solver->set_assumptions(value_literals);
+
+	  deductions.push_back(deductiont());
+	  deductions.back().first = var_values[i];
+	  get_antecedents(*solver,_old_value,value_literals,
+			  deductions.back().second);
+	  solver->pop_context();
+	}
+      }	
     }
     else
     {
@@ -130,18 +186,42 @@ void acdl_domaint::operator()(const statementt &statement,
 
 
 #ifdef DEBUG
-    std::cout << "[ACDL-DOMAIN] new_value(" << it->get_identifier() << "): "
-	      << from_expr(SSA.ns, "", new_values.back()) << std::endl;
+    std::cout << "[ACDL-DOMAIN] deductions(" << it->get_identifier() << "): "
+	      << output(SSA.ns, "", deductions) << std::endl;
 #endif
   }
-    
-  meet(new_values,new_value);
-
-#ifdef DEBUG
-    std::cout << "[ACDL-DOMAIN] new_value: "
-	      << from_expr(SSA.ns, "", new_value) << std::endl;
-#endif
 }
+
+
+/*******************************************************************\
+
+Function: acdl_domaint::get_antecedents()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void acdl_domaint::get_antecedents(incremental_solvert &solver,
+				   const valuet &value,
+				   const bvt &value_literals,
+				   antecedentst &antecedents)
+{
+  for(unsigned i=0; i<value_literals.size(); ++i)
+  {
+    if(solver.is_in_conflict(value_literals[i]))
+       antecedents.push_back(value[i]);
+  }
+  else if (it->type().id() == ID_signedbv ||
+	   it->type().id() == ID_unsignedbv ||
+	   it->type().id() == ID_floatbv)
+  {
+    //TODO
+  }
+ }
 
 /*******************************************************************\
 
@@ -227,10 +307,9 @@ void acdl_domaint::join(const std::vector<valuet> &old_values,
 //  simplify(new_value,SSA.ns);
 }
 
-  
 /*******************************************************************\
 
-Function: acdl_domaint::contains()
+Function: acdl_domaint::is_contained()
 
   Inputs:
 
@@ -240,14 +319,26 @@ Function: acdl_domaint::contains()
 
 \*******************************************************************/
 
-bool acdl_domaint::contains(const valuet &value1, const valuet &value2) const
+bool acdl_domaint::is_contained(const meet_irreduciblet &m, 
+				const valuet &value) const
 {
+  if(m.type().id()==ID_bool)
+  {
+    for(unsigned i=0; i<value.size(); i++)
+    {
+      if(m == value[i]) 
+	return true;
+    }
+    return false;
+  }
+
 //  std::unique_ptr<incremental_solvert> solver(incremental_solvert::allocate(SSA.ns,true));
 //  *solver << and_exprt(value1,not_exprt(value2));
 //  bool result = (*solver)()==decision_proceduret::D_UNSATISFIABLE;
 //  return result;
   return false;
 }
+
 
 /*******************************************************************\
 
@@ -349,32 +440,18 @@ Function: acdl_domaint::remove_var()
 
 \*******************************************************************/
 
-exprt acdl_domaint::remove_var(const valuet &_old_value, 
-			       const symbol_exprt &var)
+void acdl_domaint::remove_var(const valuet &old_value, 
+			      const symbol_exprt &var,
+                              valuet &new_value)
 {
-   exprt old_value = _old_value.back();
-/*  simplify(old_value,SSA.ns);
-
-  if(old_value.id() == ID_and)
+  for(valuet::const_iterator it = old_value.begin();
+      it != old_value.end(); ++it)
   {
-    valuet::operandst new_value;  
-    for(valuet::operandst::const_iterator it = old_value.operands().begin();
-        it != old_value.operands().end(); ++it)
-    {
-      find_symbols_sett symbols;
-      find_symbols(*it,symbols);
-      if(symbols.find(var.get_identifier()) == symbols.end())
-	new_value.push_back(*it);
-    }
-    return conjunction(new_value);
+    find_symbols_sett symbols;
+    find_symbols(*it,symbols);
+    if(symbols.find(var.get_identifier()) == symbols.end())
+      new_value.push_back(*it);
   }
-
-  find_symbols_sett symbols;
-  find_symbols(old_value,symbols);
-  if(symbols.find(var.get_identifier()) != symbols.end())
-    return true_exprt();
-*/
-  return old_value;
 }
 
 /*******************************************************************\
