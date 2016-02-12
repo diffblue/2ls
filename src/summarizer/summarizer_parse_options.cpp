@@ -471,7 +471,7 @@ bool summarizer_parse_optionst::get_goto_program(
            goto_model, get_message_handler()))
         return true;
         
-      config.ansi_c.set_from_symbol_table(goto_model.symbol_table);
+      config.set_from_symbol_table(goto_model.symbol_table);
 
       if(cmdline.isset("show-symbol-table"))
       {
