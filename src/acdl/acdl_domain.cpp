@@ -387,21 +387,21 @@ Function: acdl_domaint::is_complete()
 
 bool acdl_domaint::is_complete(const valuet &value, const varst& symbols) const
 {
-  /*
 #ifdef DEBUG
   std::cout << "[ACDL-DOMAIN] is_complete? "
-	    << from_expr(SSA.ns, "", value);
+	    << from_expr(SSA.ns, "", conjunction(value));
 //	    << std::endl;
 #endif
 
     
-  std::unique_ptr<incremental_solvert> solver(incremental_solvert::allocate(SSA.ns,true));
-  *solver << value;
+  std::unique_ptr<incremental_solvert> solver(
+    incremental_solvert::allocate(SSA.ns,true));
+  *solver << conjunction(value);
     
 #if 0
   // find symbols in value
   std::set<symbol_exprt> symbols;
-  find_symbols (value, symbols);
+  find_symbols (conjunction(value), symbols);
 #endif
 
   for(std::set<symbol_exprt>::const_iterator it = symbols.begin();
@@ -438,8 +438,6 @@ bool acdl_domaint::is_complete(const valuet &value, const varst& symbols) const
   std::cout << " is complete" << std::endl;
 #endif
   return true;
-  */
-  return false;
 }
 
 /*******************************************************************\
@@ -491,22 +489,19 @@ Function: acdl_domaint::split()
 exprt acdl_domaint::split(const valuet &value, const exprt &expr, 
 			  bool upper)
 { 
-/*  std::cout << "[ACDL-DOMAINS] Inside split decision: "
-	      << value.pretty() << std::endl;
+  std::cout << "[ACDL-DOMAIN] Split: "; output(std::cout, value);
         
   if(expr.type().id()==ID_bool)
   {
-    exprt v_true = simplify_expr(and_exprt(value,expr),SSA.ns);
+    exprt v_true = simplify_expr(and_exprt(conjunction(value),expr),SSA.ns);
     if(v_true.is_false())
       return false_exprt();
-    exprt v_false = simplify_expr(and_exprt(value,not_exprt(expr)),SSA.ns);
+    exprt v_false = simplify_expr(and_exprt(conjunction(value),
+					    not_exprt(expr)),SSA.ns);
     if(v_false.is_true())
       return false_exprt();
-    if(upper) {
-      std::cout << "[ACDL-DOMAINS] Inside split decision Upper: "
-	      << value.pretty() << std::endl;
+    if(upper) 
       return expr;
-    }
     else
       return not_exprt(expr);
   }
@@ -522,16 +517,14 @@ exprt acdl_domaint::split(const valuet &value, const exprt &expr,
     return false_exprt(); 
   }
 
-  if(value.operands().size()<2)
-    return true_exprt(); //cannot split
+  if(value.size()<2)
+    return false_exprt(); //cannot split
 
-  assert(value.id()==ID_and); //is a conjunction
-  
   //match template expression
   constant_exprt u;
-  for(unsigned i=0; i<value.operands().size(); i++)
+  for(unsigned i=0; i<value.size(); i++)
   {
-    const exprt &e = value.operands()[i];
+    const exprt &e = value[i];
     if(e.id() != ID_le)
       continue;
     if(to_binary_relation_expr(e).lhs() == expr)
@@ -541,9 +534,9 @@ exprt acdl_domaint::split(const valuet &value, const exprt &expr,
     }
   }
   constant_exprt l;
-  for(unsigned i=0; i<value.operands().size(); i++)
+  for(unsigned i=0; i<value.size(); i++)
   {
-    const exprt &e = value.operands()[i];
+    const exprt &e = value[i];
     if(e.id() != ID_le)
       continue;
     const exprt &lhs = to_binary_relation_expr(e).lhs();
@@ -559,22 +552,22 @@ exprt acdl_domaint::split(const valuet &value, const exprt &expr,
   //TODO: check whether we have a singleton, then we cannot split anymore
   exprt m = tpolyhedra_domaint::between(l,u);
 
-  std::cout << "[ACDL-DOMAINS] decision: "
-	      << from_expr(SSA.ns, "", binary_relation_exprt(m,ID_le,expr)) << std::endl;
-  if(upper) {
+  if(upper) 
+  {
 #ifdef DEBUG
     std::cout << "[ACDL-DOMAIN] decision: "
 	      << from_expr(SSA.ns, "", binary_relation_exprt(m,ID_le,expr)) << std::endl;
 #endif
     return binary_relation_exprt(m,ID_le,expr);
   }
-  else {
+  else 
+  {
 #ifdef DEBUG
     std::cout << "[ACDL-DOMAIN] decision: "
 	      << from_expr(SSA.ns, "", binary_relation_exprt(expr,ID_le,m)) << std::endl;
 #endif
     return binary_relation_exprt(expr,ID_le,m);
-    }*/
+  }
   return true_exprt();
 }
 
@@ -592,7 +585,17 @@ Function: acdl_domaint::normalize()
 
 void acdl_domaint::normalize(valuet &value, const varst &vars)
 {
-/*  valuet old_value = value;
+  for(unsigned i=0; i<value.size(); i++)
+  {
+    if(value[i].is_false())
+    {
+      set_bottom(value);
+      return;
+    }
+  }
+
+#if 0 //I don't think this is needed anymore
+  valuet old_value = value;
 
   std::vector<symbol_exprt> clean_vars;
   
@@ -621,5 +624,6 @@ void acdl_domaint::normalize(valuet &value, const varst &vars)
   ssa_analyzer.get_result(new_values,template_generator.all_vars());
 
     
-  value = and_exprt(new_values,value);*/
+  value = and_exprt(new_values,value);
+#endif
 }
