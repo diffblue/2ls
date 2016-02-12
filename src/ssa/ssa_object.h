@@ -48,6 +48,11 @@ public:
     return identifier;
   }
   
+  inline const symbol_exprt symbol_expr() const
+  {
+    return symbol_exprt(identifier, type());
+  }
+  
   // The identifier is unique, so ordering and comparison
   // can be done on the identifier, which in turn is
   // an integer.
