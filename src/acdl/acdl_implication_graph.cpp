@@ -20,9 +20,9 @@ Function: acdl_implication_grapht::add_deductions
 
  \*******************************************************************/
 void acdl_implication_grapht::add_deductions
-  (const acdl_domaint::deductionst &m_ir) {
- 
-  //g.current_level = 0;
+  (const acdl_domaint::deductionst &m_ir)
+{
+  current_level = 0;
 }
 
 /*******************************************************************\
@@ -37,11 +37,28 @@ Function: acdl_implication_grapht::add_decision
 
  \*******************************************************************/
 void acdl_implication_grapht::add_decision
-  (const acdl_domaint::meet_irreduciblet & m_ir) {
-  
-  //g.current_level = 1;
+  (const acdl_domaint::meet_irreduciblet & m_ir)
+{
+  current_level = 1;
 }
-  
+ 
+
+/*******************************************************************\
+
+Function: acdl_implication_grapht::first_uip
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: 
+
+ \*******************************************************************/
+void acdl_implication_grapht::first_uip(nodest &cut)
+{
+  assert(false);
+}
+
 /*******************************************************************\
 
 Function: acdl_implication_grapht::to_value
@@ -54,6 +71,6 @@ Function: acdl_implication_grapht::to_value
 
  \*******************************************************************/
 void acdl_implication_grapht::to_value
-  (const acdl_domaint::valuet &value)
+  (acdl_domaint::valuet &value) const
 {
 }

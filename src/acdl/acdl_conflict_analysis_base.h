@@ -28,15 +28,14 @@ public:
   {
   }
 
-  acdl_implication_grapht g;
   virtual property_checkert::resultt operator()(
     acdl_implication_grapht &graph,
     exprt &learned_clause)
     { assert(false); }
 
 protected:  
-  virtual void backtrack_to_level(unsigned int index);
-  virtual void generalize_conflict() { assert(false); }
+  virtual void backtrack_to_level(acdl_implication_grapht &graph,unsigned int index);
+  virtual void generalize_conflict(acdl_implication_grapht &graph) { assert(false); }
 
 };
 
