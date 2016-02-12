@@ -33,6 +33,8 @@ public:
   void add_deduction(const acdl_domaint::deductiont &m_ir);
   void add_decision(const acdl_domaint::meet_irreduciblet & m_ir);
 
+  void to_value(acdl_domaint::valuet &value);
+  
 protected:
   unsigned current_level;
 };

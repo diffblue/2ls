@@ -10,7 +10,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 
 /*******************************************************************\
 
-Function: acdl_conflict_analysis_baset::
+Function: acdl_implication_grapht::add_deductions
 
   Inputs:
 
@@ -27,7 +27,7 @@ void acdl_implication_grapht::add_deductions
 
 /*******************************************************************\
 
-Function: acdl_conflict_analysis_baset::
+Function: acdl_implication_grapht::add_decision
 
   Inputs:
 
@@ -42,4 +42,18 @@ void acdl_implication_grapht::add_decision
   //g.current_level = 1;
 }
   
+/*******************************************************************\
 
+Function: acdl_implication_grapht::to_value
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: flatten all node expressions into a vector
+
+ \*******************************************************************/
+void acdl_implication_grapht::to_value
+  (const acdl_domaint::valuet &value)
+{
+}
