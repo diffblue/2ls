@@ -215,12 +215,6 @@ void acdl_domaint::get_antecedents(incremental_solvert &solver,
     if(solver.is_in_conflict(value_literals[i]))
        antecedents.push_back(value[i]);
   }
-  else if (it->type().id() == ID_signedbv ||
-	   it->type().id() == ID_unsignedbv ||
-	   it->type().id() == ID_floatbv)
-  {
-    //TODO
-  }
  }
 
 /*******************************************************************\
@@ -331,12 +325,34 @@ bool acdl_domaint::is_contained(const meet_irreduciblet &m,
     }
     return false;
   }
+  else if (m.type().id() == ID_signedbv ||
+	   m.type().id() == ID_unsignedbv ||
+	   m.type().id() == ID_floatbv)
+  {
+    for(unsigned i=0; i<value.size(); i++)
+    {
+      //check whether this is not a boolean
+      if(value[i].id()==ID_symbol ||
+         (value[i].id()==ID_not && value[i].op0().id()==ID_symbol))
+	continue;
+      if(m == value[i]) 
+	return true;
 
-//  std::unique_ptr<incremental_solvert> solver(incremental_solvert::allocate(SSA.ns,true));
-//  *solver << and_exprt(value1,not_exprt(value2));
-//  bool result = (*solver)()==decision_proceduret::D_UNSATISFIABLE;
-//  return result;
-  return false;
+      //maybe the simplifier does the job
+      exprt f = simplify_expr(and_exprt(value[i],not_exprt(m)),SSA.ns);
+      if(f.is_false())
+	return true;
+
+      std::unique_ptr<incremental_solvert> solver(
+	 incremental_solvert::allocate(SSA.ns,true));
+      *solver << and_exprt(value[i],not_exprt(m));
+      if((*solver)()==decision_proceduret::D_UNSATISFIABLE) 
+	return true;
+    }
+    return false;
+  }
+  
+  assert(false);
 }
 
 
