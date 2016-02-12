@@ -109,6 +109,8 @@ Function: acdl_worklist_baset::pop_from_worklist()
 const acdl_domaint::statementt
 acdl_worklist_baset::pop ()
 {
+  //TODO: must remove variables in statement from live variables
+
 #if 1
   const acdl_domaint::statementt statement = worklist.front();
   worklist.pop_front();

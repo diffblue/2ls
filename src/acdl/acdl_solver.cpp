@@ -59,6 +59,8 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA,
         << std::endl;
 #endif
 
+    /*
+    // TODO: this can go away as we get the variables from the worklist element
     // select vars according to iteration strategy
     acdl_domaint::varst vars;
     worklist.select_vars (statement, vars);
@@ -68,11 +70,11 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA,
 	v_it != vars.end(); ++v_it)
       std::cout << " " << *v_it << std::endl;
 #endif
-
+    */
     // compute update of abstract value
     acdl_domaint::valuet new_v;
     acdl_domaint::deductionst deductions;
-    domain (statement, vars, v, new_v, deductions);
+    domain (statement, worklist.live_variables, v, new_v, deductions);
     //TODO: update implication graph
     implication_graph.add_deductions(deductions);
     //TODO: update worklist based on variables in the consequent (new_v)
@@ -88,7 +90,7 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA,
 
     // meet is computed because we are doing gfp
     domain.meet (new_v, v);
-    domain.normalize(v,vars);
+    domain.normalize(v,worklist.live_variables);
     
 #ifdef DEBUG
     std::cout << "Updated: ";
@@ -103,12 +105,6 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA,
 #endif
       return property_checkert::PASS; //potential UNSAT (modulo decisions)
     }
-    /*else {
-      // For soundness, we decided to insert the 
-      // element that is popped from the worklist
-      update_worklist(SSA, vars, worklist, statement);
-    }*/
-
   }
 
 #ifdef DEBUG

@@ -36,6 +36,7 @@ public:
   
   inline bool empty() const { return worklist.empty(); }
   
+  acdl_domaint::varst live_variables;
 protected:
   worklistt worklist;
   
