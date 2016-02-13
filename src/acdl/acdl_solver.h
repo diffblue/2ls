@@ -52,14 +52,11 @@ protected:
   acdl_implication_grapht implication_graph;
   std::vector<exprt> learned_clauses;
   
-  property_checkert::resultt propagate(const local_SSAt &SSA,
-				       acdl_domaint::valuet &v );
+  property_checkert::resultt propagate(const local_SSAt &SSA);
 
-  void decide(const local_SSAt &SSA,
-	      acdl_domaint::valuet &v);
+  void decide(const local_SSAt &SSA);
   
-  property_checkert::resultt analyze_conflict(const local_SSAt &SSA,
-			acdl_domaint::valuet &v);
+  property_checkert::resultt analyze_conflict(const local_SSAt &SSA);
 };
 
 

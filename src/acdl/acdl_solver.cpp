@@ -47,8 +47,7 @@ Function: acdl_solvert::propagate
  forward abstract analysis to compute the post-condition of a statement
 \************************************************************************/
 
-property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA,
-						   acdl_domaint::valuet &v)
+property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA)
 {
   while (!worklist.empty())
   {
@@ -59,24 +58,12 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA,
         << std::endl;
 #endif
 
-    /*
-    // TODO: this can go away as we get the variables from the worklist element
-    // select vars according to iteration strategy
-    acdl_domaint::varst vars;
-    worklist.select_vars (statement, vars);
-#ifdef DEBUG
-    std::cout << "Selected vars:";
-    for(acdl_domaint::varst::const_iterator v_it = vars.begin();
-	v_it != vars.end(); ++v_it)
-      std::cout << " " << *v_it << std::endl;
-#endif
-    */
     // compute update of abstract value
-    acdl_domaint::valuet new_v;
+    acdl_domaint::valuet v;
     acdl_domaint::deductionst deductions;
+    implication_graph.to_value(v);
     domain(statement, worklist.live_variables, v, deductions);
-    domain.to_value(deductions,new_v);
-    //TODO: update implication graph
+    //update implication graph
     implication_graph.add_deductions(deductions);
     //TODO: update worklist based on variables in the consequent (new_v)
     // - collect variables in new_v
@@ -85,14 +72,13 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA,
 #ifdef DEBUG
     std::cout << "Old: ";
     domain.output(std::cout, v) << std::endl;
+    acdl_domaint::valuet new_v;
+    domain.to_value(deductions,new_v);
     std::cout << "New: ";
     domain.output(std::cout, new_v) << std::endl;
 #endif
 
-    // meet is computed because we are doing gfp
-    domain.meet (new_v, v);
-    domain.normalize(v,worklist.live_variables);
-    
+    implication_graph.to_value(v);
 #ifdef DEBUG
     std::cout << "Updated: ";
     domain.output(std::cout, v) << std::endl;
@@ -129,10 +115,10 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA,
  \*******************************************************************/
 
 void
-acdl_solvert::decide (const local_SSAt &SSA,
-		      acdl_domaint::valuet &v)
+acdl_solvert::decide (const local_SSAt &SSA)
 {
-
+  acdl_domaint::valuet v;
+  implication_graph.to_value(v);
   acdl_domaint::meet_irreduciblet dec_expr=decision_heuristics(SSA, v);
   std::cout << "DECISION SPLITTING EXPR: " << from_expr (SSA.ns, "", dec_expr) << std::endl;
   // *****************************************************************
@@ -191,8 +177,7 @@ acdl_solvert::decide (const local_SSAt &SSA,
  \*******************************************************************/
 
 property_checkert::resultt 
-acdl_solvert::analyze_conflict(const local_SSAt &SSA,
-			       acdl_domaint::valuet &v)
+acdl_solvert::analyze_conflict(const local_SSAt &SSA)
 {
   exprt learned_clause;
   property_checkert::resultt result = conflict_analysis(implication_graph, learned_clause);
@@ -251,9 +236,6 @@ acdl_solvert::analyze_conflict(const local_SSAt &SSA,
   // backtrack
   v = g.backtrack_points[decision_reason];
   // clean up decision graph and, optionally, backtrack points
-
-  // add learned clauses
-  domain.meet(learned_clauses,v);
 
   acdl_domaint::varst learn_vars;
   // find all symbols in the learned clause
@@ -319,9 +301,8 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
     find_symbols (*a_it, assertion_vars);
 #endif
 
-  acdl_domaint::valuet v;
-  domain.set_top(v);
-    
+  implication_graph.clear(); //set to top
+
   property_checkert::resultt result = property_checkert::UNKNOWN;
   while(result == property_checkert::UNKNOWN)
   {
@@ -331,7 +312,7 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
       std::cout << "********************************" << std::endl;
       std::cout << "        DEDUCTION PHASE " << std::endl;
       std::cout << "********************************" << std::endl;
-      result = propagate(SSA, v);
+      result = propagate(SSA);
 
       // check for conflict
       if(result == property_checkert::PASS) //UNSAT
@@ -339,7 +320,9 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
     
       // check for satisfying assignment
       std::set<symbol_exprt> completeness_vars;
-//      find_symbols (v, completeness_vars); //TODO: fix!
+      acdl_domaint::valuet v;
+      implication_graph.to_value(v);
+      //find_symbols (v, completeness_vars); //TODO: fix!
       if(domain.is_complete(v, completeness_vars))
         return property_checkert::FAIL;
       
@@ -347,7 +330,7 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
       std::cout << "         DECISION PHASE"          << std::endl;
       std::cout << "********************************" << std::endl;
       // make a decision
-      decide(SSA, v);
+      decide(SSA);
     }
 
     std::cout << "********************************" << std::endl;
@@ -355,7 +338,7 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
     std::cout << "********************************" << std::endl;
 
     // analyze conflict ...
-    result = analyze_conflict(SSA, v);
+    result = analyze_conflict(SSA);
     // decision level 0 conflict
     if(result == property_checkert::PASS) //UNSAT
       break;

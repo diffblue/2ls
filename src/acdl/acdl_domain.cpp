@@ -7,7 +7,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 \*******************************************************************/
 
 
-//#define DEBUG
+#define DEBUG
 
 
 #ifdef DEBUG
@@ -42,8 +42,8 @@ void acdl_domaint::operator()(const statementt &statement,
 		  deductionst &deductions)
 {
 #ifdef DEBUG
-    std::cout << "[ACDL-DOMAIN] old value: "
-	      << from_expr(SSA.ns, "", _old_value) << std::endl;
+  std::cout << "[ACDL-DOMAIN] old value: ";
+  output(std::cout, _old_value) << std::endl;
 #endif
 
   deductions.reserve(vars.size());
@@ -59,8 +59,8 @@ void acdl_domaint::operator()(const statementt &statement,
     remove_var(_old_value,*it,old_value);
 
 #ifdef DEBUG
-    std::cout << "[ACDL-DOMAIN] projected(" << it->get_identifier() << "): "
-	      << from_expr(SSA.ns, "", old_value) << std::endl;
+    std::cout << "[ACDL-DOMAIN] projected(" << it->get_identifier() << "): ";
+    output(std::cout, old_value) << std::endl;
 #endif
 
     meet_irreduciblet deduced;
@@ -186,8 +186,8 @@ void acdl_domaint::operator()(const statementt &statement,
 
 
 #ifdef DEBUG
-    std::cout << "[ACDL-DOMAIN] deductions(" << it->get_identifier() << "): "
-	      << output(SSA.ns, "", deductions) << std::endl;
+    std::cout << "[ACDL-DOMAIN] deductions(" << it->get_identifier() << "): ";
+    output(std::cout, deductions) << std::endl;
 #endif
   }
 }
