@@ -30,21 +30,22 @@ void acdl_implication_grapht::add_deductions
     acdl_implication_graph_nodet node;
     node.expr = it->first;
     node.is_decision = false;
-    node.level = current_level + 1;
-    current_level = current_level + 1;
+    node.level = current_level;
     acdl_domaint::antecedentst ant = it->second;
     deduce_node.push_back(node);
+    graph::node_indext na = graph::add_node();
     
     // create a node for each antecedents which are 
     // used to infer the new meet irreducible
     for(std::vector<acdl_domaint::meet_irreduciblet>::const_iterator 
       it1 = ant.begin(); it1 != ant.end(); it1++) {
-      acdl_implication_graph_nodet ant_node;
-      ant_node.expr = *it1;
-      ant_node.is_decision = false;
-      ant_node.level = current_level + 1;
-      current_level = current_level + 1;
-      deduce_node.push_back(ant_node);
+       acdl_implication_graph_nodet ant_node;
+       ant_node.expr = *it1;
+       ant_node.is_decision = false;
+       ant_node.level = current_level;
+       deduce_node.push_back(ant_node);
+       graph::node_indext nb = graph::add_node();
+       graph::add_edge(na, nb);
     }
   }
 }
@@ -70,6 +71,7 @@ void acdl_implication_grapht::add_decision
   current_level = current_level + 1;
   nodest decide_node;
   decide_node.push_back(node);
+  graph::add_node();
 }
  
 
@@ -103,4 +105,21 @@ Function: acdl_implication_grapht::to_value
 void acdl_implication_grapht::to_value
   (acdl_domaint::valuet &value) const
 {
+}
+
+
+/*******************************************************************\
+
+Function: acdl_implication_grapht::print_dot_output
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: flatten all node expressions into a vector
+
+ \*******************************************************************/
+void acdl_implication_grapht::print_dot_output()
+{
+  graph::output_dot(std::cout);
 }

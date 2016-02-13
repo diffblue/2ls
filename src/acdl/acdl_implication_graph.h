@@ -34,6 +34,7 @@ public:
   void add_deductions(const acdl_domaint::deductionst &m_ir);
   void add_deduction(const acdl_domaint::deductiont &m_ir);
   void add_decision(const acdl_domaint::meet_irreduciblet & m_ir);
+  void print_dot_output();
 
   void to_value(acdl_domaint::valuet &value) const;
   
