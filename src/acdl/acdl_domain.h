@@ -47,8 +47,6 @@ public:
       value.push_back(it->first);
   }
 
-  void meet(const std::vector<valuet> &old_values,
-	    valuet &new_value);
   void meet(const valuet &old_value, valuet &new_value);
   void meet(const meet_irreduciblet &old_value, valuet &new_value);
 

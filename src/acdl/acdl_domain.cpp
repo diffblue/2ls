@@ -229,33 +229,10 @@ Function: acdl_domaint::meet()
 
 \*******************************************************************/
 
-void acdl_domaint::meet(const std::vector<valuet> &old_values,
-	    valuet &new_value)
-{
-  //new_value = and_exprt(conjunction(old_values), new_value);
-  //simplify(new_value,SSA.ns);
-}
-
-/*******************************************************************\
-
-Function: acdl_domaint::meet()
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void acdl_domaint::meet(const valuet &old_value,
 	    valuet &new_value)
 {
-  //TODO: fix!
-  //new_value.insert(old_value.begin(), old_value.end());
-  
-//  new_value = and_exprt(old_value, new_value);
-//  simplify(new_value,SSA.ns);
+  new_value.insert(new_value.end(), old_value.begin(), old_value.end());
 }
 
 /*******************************************************************\
@@ -273,11 +250,7 @@ Function: acdl_domaint::meet()
 void acdl_domaint::meet(const meet_irreduciblet &old_value,
 	    valuet &new_value)
 {
-  //TODO: fix!
   new_value.push_back(old_value);
-  
-//  new_value = and_exprt(old_value, new_value);
-//  simplify(new_value,SSA.ns);
 }
 
 /*******************************************************************\
@@ -295,10 +268,7 @@ Function: acdl_domaint::join()
 void acdl_domaint::join(const std::vector<valuet> &old_values,
 	    valuet &new_value)
 {
-  //TODO: fix!
-
-//  new_value = or_exprt(disjunction(old_values), new_value);
-//  simplify(new_value,SSA.ns);
+  assert(false);
 }
 
 /*******************************************************************\
