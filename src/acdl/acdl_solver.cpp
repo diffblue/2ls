@@ -72,8 +72,8 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA)
     // - collect variables in new_v
     for(acdl_domaint::valuet::const_iterator 
           it1 = v.begin(); it1 != v.end(); ++it1)
-       //find_symbols(*it1, worklist.live_variables);
-       worklist.live_variables.insert(to_symbol_expr(*it1));
+       find_symbols(*it1, worklist.live_variables);
+       //worklist.live_variables.insert(to_symbol_expr(*it1));
 #ifdef DEBUG
       std::cout << "Worklist live variables are: ";
       for(acdl_domaint::varst::const_iterator it = worklist.live_variables.begin();
@@ -305,7 +305,7 @@ end
 property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
 {
   worklist.initialize(SSA);
-
+ 
 #if 0
   // collect assertion variables for completeness check: This is not sound
   std::set<symbol_exprt> assertion_vars;

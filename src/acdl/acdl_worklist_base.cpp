@@ -162,7 +162,7 @@ acdl_worklist_baset::update (const local_SSAt &SSA,
         push(*e_it);
         
         //  add vars to live variables
-        find_symbols(*e_it, live_variables);
+        //find_symbols(*e_it, live_variables);
         
         #ifdef DEBUG
         std::cout << "Push: " << from_expr (SSA.ns, "", *e_it) << std::endl;
@@ -177,7 +177,7 @@ acdl_worklist_baset::update (const local_SSAt &SSA,
         push(*c_it);
         
         //  add vars to live variables
-        find_symbols(*c_it, live_variables);
+        //find_symbols(*c_it, live_variables);
         
         #ifdef DEBUG
         std::cout << "Push: " << from_expr (SSA.ns, "", *c_it) << std::endl;
@@ -198,7 +198,7 @@ acdl_worklist_baset::update (const local_SSAt &SSA,
         push(not_exprt (*a_it));
         
         //  add vars to live variables
-        find_symbols(*a_it, live_variables);
+        //find_symbols(*a_it, live_variables);
         #ifdef DEBUG
         std::cout << "Push: " << from_expr (SSA.ns, "", not_exprt(*a_it)) << std::endl;
         #endif

@@ -6,6 +6,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 
 \*******************************************************************/
 
+#include <util/find_symbols.h>
 #include "acdl_worklist_ordered.h"
 #define DEBUG
 
@@ -186,15 +187,17 @@ acdl_worklist_orderedt::initialize (const local_SSAt &SSA)
     const acdl_domaint::statementt statement = pop_from_list(inter_worklist);
     push_into_list (worklist, statement);
   }
+  
+  // call initialize live variables
+  initialize_live_variables();
     
 #ifdef DEBUG    
    std::cout << "The content of the ordered worklist is as follows: " << std::endl;
-    for(std::list<acdl_domaint::statementt>::const_iterator it = worklist.begin(); it != worklist.end(); ++it) {
+    for(std::list<acdl_domaint::statementt>::const_iterator 
+      it = worklist.begin(); it != worklist.end(); ++it)
 	  std::cout << "Worklist Element::" << from_expr(SSA.ns, "", *it) << std::endl;
-    }
 #endif    
-   
-
+  
 
 #if 0
   // **********************************************
@@ -368,3 +371,61 @@ acdl_worklist_orderedt::update (const local_SSAt &SSA,
     }
   }
 }
+
+/*******************************************************************\
+
+Function: acdl_worklist_orderedt::initialize()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Initialize the worklist
+
+ \*******************************************************************/
+
+void
+acdl_worklist_orderedt::initialize_live_variables ()
+{
+#if 0  
+  // Strategy 1: initialize live variables by adding all vars
+  for(std::list<acdl_domaint::statementt>::const_iterator 
+      it = worklist.begin(); it != worklist.end(); ++it) {
+    acdl_domaint::varst insert_vars;
+    select_vars(*it, insert_vars);
+    for(acdl_domaint::varst::const_iterator it1 = 
+        insert_vars.begin(); it1 != insert_vars.end(); ++it1)
+      live_variables.insert(*it1);   
+  }
+#endif
+ 
+  // Strategy 2: initialize live variables by inserting only lhs vars 
+  // from ID_equal statements for forward analysis 
+  for(std::list<acdl_domaint::statementt>::const_iterator 
+      it = worklist.begin(); it != worklist.end(); ++it) {
+    if(it->id() == ID_equal) {
+      exprt expr_lhs = to_equal_expr(*it).lhs();
+      find_symbols(expr_lhs, live_variables);
+    }
+  }
+
+#if 0
+  // Strategy 3: initialize live variables by inserting only rhs vars 
+  // from ID_equal statements for backward analysis 
+  for(std::list<acdl_domaint::statementt>::const_iterator 
+      it = worklist.begin(); it != worklist.end(); ++it) {
+    if(it->id() == ID_equal) {
+      exprt expr_rhs = to_equal_expr(*it).rhs();
+      find_symbols(expr_rhs, live_variables);
+    }
+  }
+#endif
+
+#ifdef DEBUG
+  std::cout << "Printing all live variables" << std::endl;
+  for(acdl_domaint::varst::const_iterator 
+    it = live_variables.begin(); it != live_variables.end(); ++it)
+      std::cout << *it << "," << std::endl;
+#endif
+}   
+

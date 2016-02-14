@@ -27,6 +27,7 @@ public:
 		      const acdl_domaint::varst &vars,
 		      const acdl_domaint::statementt &statement=nil_exprt()); */
 
+  virtual void initialize_live_variables();
 protected:
   //typedef std::list<acdl_domaint::statementt> assert_listt;
   typedef std::list<acdl_domaint::statementt> listt;
