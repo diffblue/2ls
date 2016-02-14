@@ -109,7 +109,14 @@ Function: acdl_worklist_baset::pop_from_worklist()
 const acdl_domaint::statementt
 acdl_worklist_baset::pop ()
 {
-  //TODO: must remove variables in statement from live variables
+  // remove variables in statement from live variables
+  find_symbols_sett del_vars;
+  find_symbols(worklist.front(),del_vars);
+  for(acdl_domaint::varst::const_iterator it = 
+    live_variables.begin(); it != live_variables.end(); ++it) {
+     if(del_vars.find(it->get_identifier()) != del_vars.end())
+      live_variables.erase(*it);
+  }
 
 #if 1
   const acdl_domaint::statementt statement = worklist.front();
@@ -153,6 +160,10 @@ acdl_worklist_baset::update (const local_SSAt &SSA,
 
       if (check_statement (*e_it, vars)) {
         push(*e_it);
+        
+        //  add vars to live variables
+        find_symbols(*e_it, live_variables);
+        
         #ifdef DEBUG
         std::cout << "Push: " << from_expr (SSA.ns, "", *e_it) << std::endl;
         #endif
@@ -164,6 +175,10 @@ acdl_worklist_baset::update (const local_SSAt &SSA,
       if(*c_it == current_statement) continue;
       if (check_statement (*c_it, vars)) {
         push(*c_it);
+        
+        //  add vars to live variables
+        find_symbols(*c_it, live_variables);
+        
         #ifdef DEBUG
         std::cout << "Push: " << from_expr (SSA.ns, "", *c_it) << std::endl;
         #endif
@@ -181,6 +196,9 @@ acdl_worklist_baset::update (const local_SSAt &SSA,
       if(*a_it == current_statement) continue;
       if (check_statement (*a_it, vars)) {
         push(not_exprt (*a_it));
+        
+        //  add vars to live variables
+        find_symbols(*a_it, live_variables);
         #ifdef DEBUG
         std::cout << "Push: " << from_expr (SSA.ns, "", not_exprt(*a_it)) << std::endl;
         #endif

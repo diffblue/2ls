@@ -63,12 +63,27 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA)
     acdl_domaint::deductionst deductions;
     implication_graph.to_value(v);
     domain(statement, worklist.live_variables, v, deductions);
-    //update implication graph
+    
+    domain.to_value(deductions,v);
+    // update implication graph
     implication_graph.add_deductions(deductions);
-    //TODO: update worklist based on variables in the consequent (new_v)
+    
+    // update worklist based on variables in the consequent (new_v)
     // - collect variables in new_v
-    // - call worklist.update(SSA, learned_clauses, variables, statement);
-
+    for(acdl_domaint::valuet::const_iterator 
+          it1 = v.begin(); it1 != v.end(); ++it1)
+       //find_symbols(*it1, worklist.live_variables);
+       worklist.live_variables.insert(to_symbol_expr(*it1));
+#ifdef DEBUG
+      std::cout << "Worklist live variables are: ";
+      for(acdl_domaint::varst::const_iterator it = worklist.live_variables.begin();
+        it != worklist.live_variables.end(); ++it)
+        std::cout << *it << "," << std::endl;
+#endif      
+       // - call worklist update
+       worklist.update(SSA, worklist.live_variables);
+   
+    
 #ifdef DEBUG
     std::cout << "Old: ";
     domain.output(std::cout, v) << std::endl;

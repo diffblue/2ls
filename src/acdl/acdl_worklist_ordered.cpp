@@ -320,8 +320,7 @@ acdl_worklist_orderedt::update (const local_SSAt &SSA,
                                listt &lexpr, 
                                const acdl_domaint::statementt &current_statement)
 {
-  //TODO: must add vars to live variables
-  
+   
   // dependency analysis loop for equalities
   for (local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin ();
       n_it != SSA.nodes.end (); n_it++)
