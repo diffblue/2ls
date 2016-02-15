@@ -68,8 +68,8 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA)
     // update implication graph
     implication_graph.add_deductions(deductions);
     
-    // update worklist based on variables in the consequent (new_v)
-    // - collect variables in new_v
+    // update worklist based on variables in the consequent (v)
+    // - collect variables in v
     for(acdl_domaint::valuet::const_iterator 
           it1 = v.begin(); it1 != v.end(); ++it1)
        find_symbols(*it1, worklist.live_variables);

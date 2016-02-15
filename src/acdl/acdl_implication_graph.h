@@ -17,13 +17,18 @@ class acdl_implication_graph_nodet : public graph_nodet<empty_edget>
 public:
   bool is_decision;
   unsigned level;
+  bool conflict;
   acdl_domaint::meet_irreduciblet expr;
 };
 
 class acdl_implication_grapht : public graph<acdl_implication_graph_nodet>
 {
 public:
-  typedef std::vector<acdl_implication_graph_nodet> nodest;
+  //typedef std::vector<acdl_implication_graph_nodet> nodest;
+  typedef std::pair<unsigned, acdl_implication_graph_nodet> node_infot;
+  node_infot node_info;
+  typedef std::vector<node_infot> nodest;
+  nodest nodes;
   
   explicit acdl_implication_grapht()
     :
@@ -35,6 +40,7 @@ public:
   void add_deduction(const acdl_domaint::deductiont &m_ir);
   void add_decision(const acdl_domaint::meet_irreduciblet & m_ir);
   void print_dot_output();
+  int search_node(acdl_implication_graph_nodet &node);
 
   void to_value(acdl_domaint::valuet &value) const;
   
