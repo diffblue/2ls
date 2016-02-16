@@ -110,12 +110,12 @@ const acdl_domaint::statementt
 acdl_worklist_baset::pop ()
 {
   // remove variables in statement from live variables
-  find_symbols_sett del_vars;
+  acdl_domaint::varst del_vars;
   find_symbols(worklist.front(),del_vars);
   for(acdl_domaint::varst::const_iterator it = 
-    live_variables.begin(); it != live_variables.end(); ++it) {
-     if(del_vars.find(it->get_identifier()) != del_vars.end())
-      live_variables.erase(*it);
+    del_vars.begin(); it != del_vars.end(); ++it)
+  {
+    live_variables.erase(*it);
   }
 
 #if 1
@@ -147,6 +147,8 @@ acdl_worklist_baset::update (const local_SSAt &SSA,
                                const acdl_domaint::varst &vars,
                                const acdl_domaint::statementt &current_statement)
 {
+  live_variables.insert(vars.begin(),vars.end());
+  
   // dependency analysis loop for equalities
   for (local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin ();
       n_it != SSA.nodes.end (); n_it++)

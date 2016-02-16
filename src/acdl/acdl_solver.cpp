@@ -70,18 +70,18 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA)
     
     // update worklist based on variables in the consequent (v)
     // - collect variables in v
+    acdl_domaint::varst new_variables;
     for(acdl_domaint::valuet::const_iterator 
           it1 = v.begin(); it1 != v.end(); ++it1)
-       find_symbols(*it1, worklist.live_variables);
-       //worklist.live_variables.insert(to_symbol_expr(*it1));
+       find_symbols(*it1, new_variables);
 #ifdef DEBUG
-      std::cout << "Worklist live variables are: ";
-      for(acdl_domaint::varst::const_iterator it = worklist.live_variables.begin();
-        it != worklist.live_variables.end(); ++it)
+      std::cout << "New worklist live variables are: ";
+      for(acdl_domaint::varst::const_iterator it = new_variables.begin();
+        it != new_variables.end(); ++it)
         std::cout << *it << "," << std::endl;
 #endif      
        // - call worklist update
-       worklist.update(SSA, worklist.live_variables);
+      worklist.update(SSA, new_variables, statement); 
    
     
 #ifdef DEBUG
