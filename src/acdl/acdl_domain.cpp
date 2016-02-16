@@ -89,7 +89,8 @@ void acdl_domaint::operator()(const statementt &statement,
       for(unsigned i=0; i<old_value.size(); i++)
       {
 	value_literals[i] = solver->convert(old_value[i]);
-	solver->solver->set_frozen(value_literals[i]);
+        if(!value_literals[i].is_constant())
+  	  solver->solver->set_frozen(value_literals[i]);
       }
       solver->set_assumptions(value_literals);
 	
@@ -166,7 +167,8 @@ void acdl_domaint::operator()(const statementt &statement,
       for(unsigned i=0; i<old_value.size(); i++)
       {
 	value_literals[i] = solver->convert(old_value[i]);
-	solver->solver->set_frozen(value_literals[i]);
+        if(value_literals[i].is_constant())
+   	  solver->solver->set_frozen(value_literals[i]);
       }
       for(unsigned i=0; i<var_values.size(); ++i)
       {
