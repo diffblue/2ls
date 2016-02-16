@@ -62,6 +62,13 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA)
     acdl_domaint::valuet v;
     acdl_domaint::deductionst deductions;
     implication_graph.to_value(v);
+#ifdef DEBUG
+    std::cout << "Computing abstract value of implication graph: " << std::endl;
+    for(acdl_domaint::valuet::const_iterator it = v.begin();it != v.end(); ++it)
+        std::cout << from_expr(SSA.ns, "", *it) << std::endl;
+#endif    
+
+
     domain(statement, worklist.live_variables, v, deductions);
     
     domain.to_value(deductions,v);

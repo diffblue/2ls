@@ -24,14 +24,15 @@ void acdl_implication_grapht::add_deductions
 {
   for(std::vector<acdl_domaint::deductiont>::const_iterator it 
 	= m_ir.begin(); it != m_ir.end(); it++)
-  { 
-    node_indext na = find_node(*it);
+  {
+    //acdl_domaint::meet_irreduciblet exp = it->first; 
+    int na = find_node(it->first);
     // new node, add to the graph
     if(na == -1)
     {
       na = graph::add_node();
     }
-    acdl_implication_graph_nodet &node (*this)[na];
+    acdl_implication_graph_nodet &node = (*this)[na];
     node.expr = it->first;
     node.is_decision = false;
     node.level = current_level;
@@ -41,7 +42,7 @@ void acdl_implication_grapht::add_deductions
     for(std::vector<acdl_domaint::meet_irreduciblet>::const_iterator 
 	  it1 = ant.begin(); it1 != ant.end(); it1++)
     {
-      node_indext nb = find_node(it1->expr);
+      node_indext nb = find_node(*it1);
 #ifdef DEBUG
       assert(nb!=-1);
       assert(!has_edge(na,nb));
@@ -65,8 +66,8 @@ Function: acdl_implication_grapht::add_decision
 void acdl_implication_grapht::add_decision
   (const acdl_domaint::meet_irreduciblet & m_ir)
 {
-  graph::node_indext &n = graph::add_node();
-  acdl_implication_graph_nodet &node (*this)[n];
+  graph::node_indext n = graph::add_node();
+  acdl_implication_graph_nodet &node = (*this)[n];
   node.expr = m_ir;
   node.is_decision = true;
   node.conflict = false;

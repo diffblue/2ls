@@ -160,7 +160,7 @@ acdl_worklist_baset::update (const local_SSAt &SSA,
       // the statement has already been processed, so no action needed
       if(*e_it == current_statement) continue;
 
-      if (check_statement (*e_it, vars)) {
+      if (check_statement (*e_it, live_variables)) {
         push(*e_it);
         
         //  add vars to live variables
@@ -175,7 +175,7 @@ acdl_worklist_baset::update (const local_SSAt &SSA,
         n_it->constraints.begin (); c_it != n_it->constraints.end (); c_it++)
     {
       if(*c_it == current_statement) continue;
-      if (check_statement (*c_it, vars)) {
+      if (check_statement (*c_it, live_variables)) {
         push(*c_it);
         
         //  add vars to live variables
@@ -196,7 +196,7 @@ acdl_worklist_baset::update (const local_SSAt &SSA,
       push_into_assertion_list(alist, *a_it);
            
       if(*a_it == current_statement) continue;
-      if (check_statement (*a_it, vars)) {
+      if (check_statement (*a_it, live_variables)) {
         push(not_exprt (*a_it));
         
         //  add vars to live variables
