@@ -11,7 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "summary.h"
 #include <util/message.h>
-#include <json/json.h>
+#include <util/json.h>
 
 class summary_dbt:public messaget
 {

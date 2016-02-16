@@ -31,6 +31,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/goto_functions.h>
 #include <goto-programs/xml_goto_trace.h>
 #include <goto-programs/graphml_goto_trace.h>
+#include <goto-programs/json_goto_trace.h>
 #include <goto-programs/remove_returns.h>
 #include <goto-programs/remove_skip.h>
 #include "array_abstraction.h"
@@ -346,6 +347,8 @@ void summarizer_parse_optionst::get_command_line_options(optionst &options)
     options.set_option("show-trace", true);
   if(cmdline.isset("graphml-cex"))
     options.set_option("graphml-cex", cmdline.get_value("graphml-cex"));
+  if(cmdline.isset("json-cex"))
+    options.set_option("json-cex", cmdline.get_value("json-cex"));
 }
 
 /*******************************************************************\
@@ -811,7 +814,7 @@ bool summarizer_parse_optionst::get_goto_program(
            goto_model, get_message_handler()))
         return true;
         
-      config.ansi_c.set_from_symbol_table(goto_model.symbol_table);
+      config.set_from_symbol_table(goto_model.symbol_table);
 
       if(cmdline.isset("show-symbol-table"))
       {
@@ -1145,6 +1148,11 @@ void summarizer_parse_optionst::report_properties(
     if(cmdline.isset("graphml-cex") &&
        it->second.result==property_checkert::FAIL)
       output_graphml_cex(options,goto_model, it->second.error_trace);
+    if(cmdline.isset("json-cex") &&
+       it->second.result==property_checkert::FAIL)
+      output_json_cex(options,
+		      goto_model, it->second.error_trace,
+		      id2string(it->first));
   }
 
   if(!cmdline.isset("property"))
@@ -1279,6 +1287,42 @@ void summarizer_parse_optionst::output_graphml_cex(
       write_graphml(cex_graph, out);
     }
   }
+}
+
+/*******************************************************************\
+
+Function: summarizer_parse_optionst::output_json_cex
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void summarizer_parse_optionst::output_json_cex(
+  const optionst &options,
+  const goto_modelt &goto_model,
+  const goto_tracet &error_trace,
+  const std::string &property_id)
+{
+  if(options.get_option("json-cex")!="")
+  {
+    const namespacet ns(goto_model.symbol_table);
+    jsont json_trace;
+    convert(ns, error_trace, json_trace);
+  
+    if(options.get_option("json-cex")=="-")
+    {
+      std::cout << json_trace;
+    }
+    else
+    {
+      std::ofstream out((options.get_option("json-cex")+"-"+property_id+".json").c_str());
+      out << json_trace << '\n';
+    }
+  }  
 }
 
 /*******************************************************************\
