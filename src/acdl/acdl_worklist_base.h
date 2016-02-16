@@ -22,7 +22,9 @@ public:
   assert_listt alist;
   virtual void initialize(const local_SSAt &)
     { assert(false); }
-
+  
+  virtual void initialize_live_variables()
+  { assert(false); }
   virtual void select_vars(const exprt &statement, acdl_domaint::varst &vars);
   virtual void update(const local_SSAt &SSA,
 		      const acdl_domaint::varst &new_vars,
@@ -35,6 +37,7 @@ public:
 				 const acdl_domaint::statementt &statement);
   
   inline bool empty() const { return worklist.empty(); }
+  void remove_live_variables ();
   
   acdl_domaint::varst live_variables;
 protected:

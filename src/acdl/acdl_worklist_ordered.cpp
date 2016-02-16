@@ -188,9 +188,6 @@ acdl_worklist_orderedt::initialize (const local_SSAt &SSA)
     push_into_list (worklist, statement);
   }
   
-  // call initialize live variables
-  initialize_live_variables();
-    
 #ifdef DEBUG    
    std::cout << "The content of the ordered worklist is as follows: " << std::endl;
     for(std::list<acdl_domaint::statementt>::const_iterator 
@@ -387,8 +384,8 @@ Function: acdl_worklist_orderedt::initialize()
 void
 acdl_worklist_orderedt::initialize_live_variables ()
 {
-#if 0  
-  // Strategy 1: initialize live variables by adding all vars
+//#if 0  
+  //Strategy 1: initialize live variables by adding all vars
   for(std::list<acdl_domaint::statementt>::const_iterator 
       it = worklist.begin(); it != worklist.end(); ++it) {
     acdl_domaint::varst insert_vars;
@@ -397,8 +394,8 @@ acdl_worklist_orderedt::initialize_live_variables ()
         insert_vars.begin(); it1 != insert_vars.end(); ++it1)
       live_variables.insert(*it1);   
   }
-#endif
- 
+//#endif
+/* 
   // Strategy 2: initialize live variables by inserting only lhs vars 
   // from ID_equal statements for forward analysis 
   for(std::list<acdl_domaint::statementt>::const_iterator 
@@ -420,6 +417,7 @@ acdl_worklist_orderedt::initialize_live_variables ()
     }
   }
 #endif
+*/
 
 #ifdef DEBUG
   std::cout << "Printing all live variables" << std::endl;

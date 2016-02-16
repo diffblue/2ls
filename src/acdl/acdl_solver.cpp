@@ -49,6 +49,12 @@ Function: acdl_solvert::propagate
 
 property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA)
 {
+#ifdef DEBUG
+      std::cout << "OUTSIDE WORKLIST live variables inside domain are: ";
+      for(acdl_domaint::varst::const_iterator it = worklist.live_variables.begin();
+        it != worklist.live_variables.end(); ++it)
+      std::cout << from_expr (SSA.ns, "", *it) << std::endl;
+#endif      
   while (!worklist.empty())
   {
     const acdl_domaint::statementt statement = worklist.pop();
@@ -61,14 +67,29 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA)
     // compute update of abstract value
     acdl_domaint::valuet v;
     acdl_domaint::deductionst deductions;
+     
     implication_graph.to_value(v);
+    // check if v is top for the first time 
+    // because ACDL starts with TOP
+    // domain.is_top(v); 
 #ifdef DEBUG
     std::cout << "Computing abstract value of implication graph: " << std::endl;
     for(acdl_domaint::valuet::const_iterator it = v.begin();it != v.end(); ++it)
         std::cout << from_expr(SSA.ns, "", *it) << std::endl;
 #endif    
 
+#ifdef DEBUG
+    std::cout << "Old: ";
+    domain.output(std::cout, v) << std::endl;
+#endif
 
+#ifdef DEBUG
+      std::cout << "ONLY WORKLIST live variables inside domain are: ";
+      for(acdl_domaint::varst::const_iterator it = worklist.live_variables.begin();
+        it != worklist.live_variables.end(); ++it)
+      std::cout << from_expr (SSA.ns, "", *it) << std::endl;
+#endif      
+    
     domain(statement, worklist.live_variables, v, deductions);
     
     domain.to_value(deductions,v);
@@ -81,25 +102,28 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA)
     for(acdl_domaint::valuet::const_iterator 
           it1 = v.begin(); it1 != v.end(); ++it1)
        find_symbols(*it1, new_variables);
+
 #ifdef DEBUG
       std::cout << "New worklist live variables are: ";
       for(acdl_domaint::varst::const_iterator it = new_variables.begin();
         it != new_variables.end(); ++it)
-        std::cout << *it << "," << std::endl;
+      std::cout << from_expr (SSA.ns, "", *it) << std::endl;
 #endif      
-       // - call worklist update
+      // remove from live variables
+      worklist.remove_live_variables();
+      
+      // - call worklist update
       worklist.update(SSA, new_variables, statement); 
    
     
 #ifdef DEBUG
-    std::cout << "Old: ";
-    domain.output(std::cout, v) << std::endl;
-    acdl_domaint::valuet new_v;
-    domain.to_value(deductions,new_v);
     std::cout << "New: ";
-    domain.output(std::cout, new_v) << std::endl;
+    domain.output(std::cout, v) << std::endl;
 #endif
-
+    // abstract value after meet is computed
+    // The abstract value of the implication 
+    // graph gives the meet of new 
+    // deductionst and old deductionst
     implication_graph.to_value(v);
 #ifdef DEBUG
     std::cout << "Updated: ";
@@ -312,6 +336,9 @@ end
 property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
 {
   worklist.initialize(SSA);
+  // call initialize live variables
+  worklist.initialize_live_variables();
+    
  
 #if 0
   // collect assertion variables for completeness check: This is not sound

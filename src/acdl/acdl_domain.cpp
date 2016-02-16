@@ -21,6 +21,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include "../domains/ssa_analyzer.h"
 #include "../domains/tpolyhedra_domain.h"
 
+#include "acdl_worklist_base.h"
 #include "acdl_domain.h"
 #include "template_generator_acdl.h"
 
@@ -45,6 +46,13 @@ void acdl_domaint::operator()(const statementt &statement,
   std::cout << "[ACDL-DOMAIN] old value: ";
   output(std::cout, _old_value) << std::endl;
 #endif
+
+
+#ifdef DEBUG
+      std::cout << "DOMAIN WORKLIST live variables inside domain are: ";
+      for(acdl_domaint::varst::const_iterator it = vars.begin();it != vars.end(); ++it)
+        std::cout << *it << "," << std::endl;
+#endif      
 
   deductions.reserve(vars.size());
   for(varst::const_iterator it = vars.begin();
