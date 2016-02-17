@@ -49,9 +49,10 @@ void acdl_domaint::operator()(const statementt &statement,
 
 
 #ifdef DEBUG
-      std::cout << "DOMAIN WORKLIST live variables inside domain are: ";
-      for(acdl_domaint::varst::const_iterator it = vars.begin();it != vars.end(); ++it)
-        std::cout << *it << "," << std::endl;
+      std::cout << "DOMAIN projected live variables are: ";
+      for(acdl_domaint::varst::const_iterator 
+        it = vars.begin();it != vars.end(); ++it)
+        std::cout << from_expr(SSA.ns, "", *it) << std::endl;
 #endif      
 
   deductions.reserve(vars.size());

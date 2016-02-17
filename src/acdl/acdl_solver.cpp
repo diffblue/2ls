@@ -49,12 +49,6 @@ Function: acdl_solvert::propagate
 
 property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA)
 {
-#ifdef DEBUG
-      std::cout << "OUTSIDE WORKLIST live variables inside domain are: ";
-      for(acdl_domaint::varst::const_iterator it = worklist.live_variables.begin();
-        it != worklist.live_variables.end(); ++it)
-      std::cout << from_expr (SSA.ns, "", *it) << std::endl;
-#endif      
   while (!worklist.empty())
   {
     const acdl_domaint::statementt statement = worklist.pop();
@@ -69,9 +63,7 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA)
     acdl_domaint::deductionst deductions;
      
     implication_graph.to_value(v);
-    // check if v is top for the first time 
-    // because ACDL starts with TOP
-    // domain.is_top(v); 
+
 #ifdef DEBUG
     std::cout << "Computing abstract value of implication graph: " << std::endl;
     for(acdl_domaint::valuet::const_iterator it = v.begin();it != v.end(); ++it)
@@ -83,14 +75,12 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA)
     domain.output(std::cout, v) << std::endl;
 #endif
 
-#ifdef DEBUG
-      std::cout << "ONLY WORKLIST live variables inside domain are: ";
-      for(acdl_domaint::varst::const_iterator it = worklist.live_variables.begin();
-        it != worklist.live_variables.end(); ++it)
-      std::cout << from_expr (SSA.ns, "", *it) << std::endl;
-#endif      
-    
-    domain(statement, worklist.live_variables, v, deductions);
+    // select vars for projection
+    acdl_domaint::varst project_vars;
+    find_symbols(statement,project_vars);
+    acdl_domaint::varst projected_live_vars;
+    projected_live_vars = worklist.check_var_liveness(project_vars); 
+    domain(statement, projected_live_vars, v, deductions);
     
     domain.to_value(deductions,v);
     // update implication graph
@@ -109,9 +99,9 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA)
         it != new_variables.end(); ++it)
       std::cout << from_expr (SSA.ns, "", *it) << std::endl;
 #endif      
-      // remove from live variables
-      worklist.remove_live_variables();
       
+      // remove variables of popped statement from live variables
+      worklist.remove_live_variables(statement);
       // - call worklist update
       worklist.update(SSA, new_variables, statement); 
    
@@ -120,11 +110,13 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA)
     std::cout << "New: ";
     domain.output(std::cout, v) << std::endl;
 #endif
-    // abstract value after meet is computed
+
+    // abstract value after meet is computed here
     // The abstract value of the implication 
     // graph gives the meet of new 
     // deductionst and old deductionst
     implication_graph.to_value(v);
+
 #ifdef DEBUG
     std::cout << "Updated: ";
     domain.output(std::cout, v) << std::endl;
@@ -351,6 +343,12 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
 #endif
 
   implication_graph.clear(); //set to top
+  acdl_domaint::valuet v;
+  implication_graph.to_value(v);
+  // check if abstract value v of the 
+  // implication graph is top for the first time 
+  // because ACDL starts with TOP
+  assert(domain.is_top(v)); 
 
   property_checkert::resultt result = property_checkert::UNKNOWN;
   while(result == property_checkert::UNKNOWN)
