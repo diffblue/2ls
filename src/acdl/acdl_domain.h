@@ -59,6 +59,7 @@ public:
   meet_irreduciblet split(const valuet &value, const exprt &expr, bool upper=false);
   
   void normalize(valuet &value, const varst &vars);
+  void expr_to_value(const exprt &expr, valuet &value);
 
   void set_bottom(valuet &value) { value.clear(); value.push_back(false_exprt());  }
   void set_top(valuet &value) { value.clear(); }
@@ -108,6 +109,8 @@ protected:
 		       const valuet &value,
 		       const bvt &value_literals,
 		       antecedentst &antecedents);
+
+  bool expr_is_true(const exprt &expr);
  
 };
 

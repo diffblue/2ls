@@ -89,8 +89,7 @@ void acdl_domaint::operator()(const statementt &statement,
       for(unsigned i=0; i<old_value.size(); i++)
       {
 	value_literals[i] = solver->convert(old_value[i]);
-        if(!value_literals[i].is_constant())
-  	  solver->solver->set_frozen(value_literals[i]);
+  	solver->solver->set_frozen(value_literals[i]);
       }
       solver->set_assumptions(value_literals);
 	
@@ -150,10 +149,7 @@ void acdl_domaint::operator()(const statementt &statement,
       exprt var_value;
       ssa_analyzer.get_result(var_value,template_generator.all_vars());
       valuet var_values;
-      if(var_value.id()==ID_and)
-	var_values = var_value.operands();
-      else
-	var_values.push_back(var_value);
+      expr_to_value(var_value, var_values);
 
       if(var_values.empty())
 	continue;
@@ -167,11 +163,14 @@ void acdl_domaint::operator()(const statementt &statement,
       for(unsigned i=0; i<old_value.size(); i++)
       {
 	value_literals[i] = solver->convert(old_value[i]);
-        if(value_literals[i].is_constant())
-   	  solver->solver->set_frozen(value_literals[i]);
+ 	solver->solver->set_frozen(value_literals[i]);
       }
       for(unsigned i=0; i<var_values.size(); ++i)
       {
+	literalt l = solver->convert(var_values[i]);
+	if(l.is_constant())
+	  continue;
+
 	if(!is_contained(var_values[i],_old_value))
 	{
 	  solver->new_context();
@@ -606,4 +605,40 @@ void acdl_domaint::normalize(valuet &value, const varst &vars)
     
   value = and_exprt(new_values,value);
 #endif
+}
+
+/*******************************************************************\
+
+Function: acdl_domaint::expr_to_value()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool acdl_domaint::expr_is_true(const exprt &expr)
+{
+  std::unique_ptr<incremental_solvert> solver(
+    incremental_solvert::allocate(SSA.ns,true));
+  *solver << not_exprt(expr);
+  return((*solver)() == decision_proceduret::D_UNSATISFIABLE);
+}
+
+void acdl_domaint::expr_to_value(const exprt &expr, valuet &value)
+{
+  if(expr.id()==ID_and)
+  {
+    forall_operands(it,expr)
+      if(!expr_is_true(expr))
+	value.push_back(expr);
+  }
+  else
+  {
+    if(!expr_is_true(expr))
+      value.push_back(expr);
+  }
+
 }
