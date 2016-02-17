@@ -82,15 +82,16 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA)
     projected_live_vars = worklist.check_var_liveness(project_vars); 
     domain(statement, projected_live_vars, v, deductions);
     
-    domain.to_value(deductions,v);
+    acdl_domaint::valuet new_v;
+    domain.to_value(deductions,new_v);
     // update implication graph
     implication_graph.add_deductions(deductions);
     
-    // update worklist based on variables in the consequent (v)
-    // - collect variables in v
+    // update worklist based on variables in the consequent (new_v)
+    // - collect variables in new_v
     acdl_domaint::varst new_variables;
     for(acdl_domaint::valuet::const_iterator 
-          it1 = v.begin(); it1 != v.end(); ++it1)
+          it1 = new_v.begin(); it1 != new_v.end(); ++it1)
        find_symbols(*it1, new_variables);
 
 #ifdef DEBUG
@@ -108,22 +109,26 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA)
     
 #ifdef DEBUG
     std::cout << "New: ";
-    domain.output(std::cout, v) << std::endl;
+    domain.output(std::cout, new_v) << std::endl;
 #endif
 
     // abstract value after meet is computed here
     // The abstract value of the implication 
     // graph gives the meet of new 
     // deductionst and old deductionst
-    implication_graph.to_value(v);
+    implication_graph.to_value(new_v);
+    
+    // TEST: meet is computed because we are doing gfp
+    //domain.meet (new_v, v);
+    //domain.normalize(v,projected_live_vars);
 
 #ifdef DEBUG
     std::cout << "Updated: ";
-    domain.output(std::cout, v) << std::endl;
+    domain.output(std::cout, new_v) << std::endl;
 #endif
 
     //Cool! We got UNSAT
-    if(domain.is_bottom(v))
+    if(domain.is_bottom(new_v))
     {
 #ifdef DEBUG
       std::cout << "Propagation finished with BOTTOM" << std::endl;
@@ -369,6 +374,7 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
       std::set<symbol_exprt> completeness_vars;
       acdl_domaint::valuet v;
       implication_graph.to_value(v);
+      //completeness_vars = value_to_vars(v);
       //find_symbols (v, completeness_vars); //TODO: fix!
       if(domain.is_complete(v, completeness_vars))
         return property_checkert::FAIL;

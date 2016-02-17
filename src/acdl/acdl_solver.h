@@ -10,6 +10,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #define CPROVER_ACDL_SOLVER_H
 
 #include <util/options.h>
+#include <util/find_symbols.h>
 #include <goto-programs/property_checker.h>
 
 #include "../ssa/local_ssa.h"
@@ -55,6 +56,20 @@ protected:
   property_checkert::resultt propagate(const local_SSAt &SSA);
 
   void decide(const local_SSAt &SSA);
+  acdl_domaint::varst value_to_vars(const acdl_domaint::valuet &value)
+  {
+    acdl_domaint::varst vars;
+    for(acdl_domaint::valuet::const_iterator it = value.begin(); 
+       it != value.end(); it++) {
+      std::set<symbol_exprt> symbols;
+      find_symbols(*it,symbols);
+      for(std::set<symbol_exprt>::const_iterator 
+        it1 = symbols.begin(); it1 != symbols.end(); ++it1) 
+      vars.insert(*it1);
+    }
+    return vars;
+  }
+    
   
   property_checkert::resultt analyze_conflict(const local_SSAt &SSA);
 };
