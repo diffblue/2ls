@@ -563,7 +563,7 @@ Function: acdl_domaint::normalize()
 
 \*******************************************************************/
 
-void acdl_domaint::normalize(valuet &value, const varst &vars)
+void acdl_domaint::normalize(valuet &value)
 {
   for(unsigned i=0; i<value.size(); i++)
   {

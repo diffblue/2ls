@@ -58,7 +58,7 @@ public:
 
   meet_irreduciblet split(const valuet &value, const exprt &expr, bool upper=false);
   
-  void normalize(valuet &value, const varst &vars);
+  void normalize(valuet &value);
   void expr_to_value(const exprt &expr, valuet &value);
 
   void set_bottom(valuet &value) { value.clear(); value.push_back(false_exprt());  }

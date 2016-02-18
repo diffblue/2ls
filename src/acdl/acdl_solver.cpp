@@ -102,7 +102,7 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA)
 #endif      
       
       // remove variables of popped statement from live variables
-      worklist.remove_live_variables(statement);
+      worklist.remove_live_variables(statement); //TODO: this should happen within update()
       // - call worklist update
       worklist.update(SSA, new_variables, statement); 
    
@@ -128,6 +128,7 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA)
 #endif
 
     //Cool! We got UNSAT
+    domain.normalize(new_v);
     if(domain.is_bottom(new_v))
     {
 #ifdef DEBUG
