@@ -52,7 +52,8 @@ void acdl_domaint::operator()(const statementt &statement,
       std::cout << "DOMAIN projected live variables are: ";
       for(acdl_domaint::varst::const_iterator 
         it = vars.begin();it != vars.end(); ++it)
-        std::cout << from_expr(SSA.ns, "", *it) << std::endl;
+        std::cout << from_expr(SSA.ns, "", *it);
+        std::cout << "" << std::endl;
 #endif      
 
   deductions.reserve(vars.size());

@@ -65,7 +65,7 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA)
     implication_graph.to_value(v);
 
 #ifdef DEBUG
-    std::cout << "Computing abstract value of implication graph: " << std::endl;
+    std::cout << "Computing old abstract value of implication graph: " << std::endl;
     for(acdl_domaint::valuet::const_iterator it = v.begin();it != v.end(); ++it)
         std::cout << from_expr(SSA.ns, "", *it) << std::endl;
 #endif    
@@ -94,18 +94,12 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA)
           it1 = new_v.begin(); it1 != new_v.end(); ++it1)
        find_symbols(*it1, new_variables);
 
-#ifdef DEBUG
-      std::cout << "New worklist live variables are: ";
-      for(acdl_domaint::varst::const_iterator it = new_variables.begin();
-        it != new_variables.end(); ++it)
-      std::cout << from_expr (SSA.ns, "", *it) << std::endl;
-#endif      
       
-      // remove variables of popped statement from live variables
-      worklist.remove_live_variables(statement); //TODO: this should happen within update()
       // - call worklist update
       worklist.update(SSA, new_variables, statement); 
    
+      // remove variables of popped statement from live variables
+      worklist.remove_live_variables(SSA, statement); //TODO: this should happen within update()
     
 #ifdef DEBUG
     std::cout << "New: ";
@@ -115,7 +109,8 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA)
     // abstract value after meet is computed here
     // The abstract value of the implication 
     // graph gives the meet of new 
-    // deductionst and old deductionst
+    // deductionst and old deductionst since
+    // we are computing the gfp
     implication_graph.to_value(new_v);
     
     // TEST: meet is computed because we are doing gfp
@@ -123,9 +118,10 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA)
     //domain.normalize(v,projected_live_vars);
 
 #ifdef DEBUG
-    std::cout << "Updated: ";
-    domain.output(std::cout, new_v) << std::endl;
-#endif
+    std::cout << "Computing new abstract value of implication graph: " << std::endl;
+    for(acdl_domaint::valuet::const_iterator it = new_v.begin();it != new_v.end(); ++it)
+        std::cout << from_expr(SSA.ns, "", *it) << std::endl;
+#endif    
 
     //Cool! We got UNSAT
     domain.normalize(new_v);

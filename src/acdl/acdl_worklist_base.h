@@ -37,7 +37,8 @@ public:
 				 const acdl_domaint::statementt &statement);
   
   inline bool empty() const { return worklist.empty(); }
-  void remove_live_variables (const acdl_domaint::statementt & statement);
+  void remove_live_variables (const local_SSAt &SSA, 
+  const acdl_domaint::statementt & statement);
   
   acdl_domaint::varst check_var_liveness (acdl_domaint::varst &vars);
   acdl_domaint::varst live_variables;

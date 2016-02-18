@@ -137,15 +137,51 @@ Function: acdl_worklist_baset::remove_live_variables()
 
  \*******************************************************************/
 
-void acdl_worklist_baset::remove_live_variables (const acdl_domaint::statementt &statement)
+void acdl_worklist_baset::remove_live_variables 
+  (const local_SSAt &SSA, const acdl_domaint::statementt &statement)
 {
+#ifdef DEBUG
+        std::cout << "Popped Statement for live variables: " 
+        << from_expr (SSA.ns, "", statement) << std::endl;
+#endif
+  
   // remove variables in statement from live variables
   acdl_domaint::varst del_vars;
-  find_symbols(statement, del_vars);
+  find_symbols(statement, del_vars);  
+#ifdef DEBUG
+  std::cout << "Variables in Popped Statement: "; 
   for(acdl_domaint::varst::const_iterator it = 
     del_vars.begin(); it != del_vars.end(); ++it)
-  {
-    live_variables.erase(*it);
+      std::cout << from_expr (SSA.ns, "", *it) << " ";
+  std::cout << " " << std::endl;
+#endif
+
+#ifdef DEBUG   
+  std::cout << "Live variables list are as follows: ";
+  for(acdl_domaint::varst::const_iterator it = 
+    live_variables.begin(); it != live_variables.end(); ++it)
+   std::cout << from_expr(SSA.ns, "", *it); 
+   std::cout << " " << std::endl;
+#endif
+  bool found = false;
+  for(acdl_domaint::varst::const_iterator it = 
+    del_vars.begin(); it != del_vars.end(); ++it) {
+   for(std::list<acdl_domaint::statementt>::const_iterator 
+      it1 = worklist.begin(); it1 != worklist.end(); ++it1)
+   {
+     acdl_domaint::varst find_vars;
+     find_symbols(*it1, find_vars);
+     acdl_domaint::varst::const_iterator it2 = find_vars.find(*it);   
+     if(it2 != find_vars.end()) {found = true; break; }
+   }  
+   if(found == false)   
+   {
+#ifdef DEBUG
+        std::cout << "Deleted live variables are: " 
+        << from_expr (SSA.ns, "", *it) << std::endl;
+#endif
+       live_variables.erase(*it);
+   }
   }
 }
 
@@ -208,7 +244,9 @@ acdl_worklist_baset::update (const local_SSAt &SSA,
 
       if (check_statement (*e_it, vars)) {
         push(*e_it);
-        
+        acdl_domaint::varst equal_vars;
+        find_symbols(*e_it, equal_vars);
+        live_variables.insert(equal_vars.begin(), equal_vars.end());    
         #ifdef DEBUG
         std::cout << "Push: " << from_expr (SSA.ns, "", *e_it) << std::endl;
         #endif
@@ -220,6 +258,9 @@ acdl_worklist_baset::update (const local_SSAt &SSA,
       if(*c_it == current_statement) continue;
       if (check_statement (*c_it, vars)) {
         push(*c_it);
+        acdl_domaint::varst constraint_vars;
+        find_symbols(*c_it, constraint_vars);
+        live_variables.insert(constraint_vars.begin(), constraint_vars.end());    
         
         #ifdef DEBUG
         std::cout << "Push: " << from_expr (SSA.ns, "", *c_it) << std::endl;
@@ -238,6 +279,9 @@ acdl_worklist_baset::update (const local_SSAt &SSA,
       if(*a_it == current_statement) continue;
       if (check_statement (*a_it, vars)) {
         push(not_exprt (*a_it));
+        acdl_domaint::varst assert_vars;
+        find_symbols(*a_it, assert_vars);
+        live_variables.insert(assert_vars.begin(), assert_vars.end());    
         
         #ifdef DEBUG
         std::cout << "Push: " << from_expr (SSA.ns, "", not_exprt(*a_it)) << std::endl;
@@ -252,6 +296,16 @@ acdl_worklist_baset::update (const local_SSAt &SSA,
       it = worklist.begin(); it != worklist.end(); ++it)
 	  std::cout << "Updated Worklist Element::" << from_expr(SSA.ns, "", *it) << std::endl;
 #endif    
+
+
+#ifdef DEBUG   
+  std::cout << "The live variables are as follows: ";
+  for(acdl_domaint::varst::const_iterator it = 
+    live_variables.begin(); it != live_variables.end(); ++it)
+   std::cout << from_expr(SSA.ns, "", *it); 
+   std::cout << " " << std::endl;
+#endif
+
 }
 
 
