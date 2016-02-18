@@ -3,7 +3,7 @@ int x, y;
 
 if(y!=0) {
   x=y;
-  assert((y!=0));
+  //assert((y!=0));
 }
 else
   x=y+5;
