@@ -289,7 +289,10 @@ acdl_worklist_baset::update (const local_SSAt &SSA,
       }
     }
   }
-  
+ 
+ // remove variables of popped statement from live variables
+ remove_live_variables(SSA, current_statement); 
+
 #ifdef DEBUG   
    std::cout << "The content of the updated worklist is as follows: " << std::endl;
     for(std::list<acdl_domaint::statementt>::const_iterator 
@@ -299,7 +302,7 @@ acdl_worklist_baset::update (const local_SSAt &SSA,
 
 
 #ifdef DEBUG   
-  std::cout << "The live variables are as follows: ";
+  std::cout << "The updated live variables after removal are as follows: ";
   for(acdl_domaint::varst::const_iterator it = 
     live_variables.begin(); it != live_variables.end(); ++it)
    std::cout << from_expr(SSA.ns, "", *it); 

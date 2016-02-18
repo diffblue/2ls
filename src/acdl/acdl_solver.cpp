@@ -97,9 +97,6 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA)
       
       // - call worklist update
       worklist.update(SSA, new_variables, statement); 
-   
-      // remove variables of popped statement from live variables
-      worklist.remove_live_variables(SSA, statement); //TODO: this should happen within update()
     
 #ifdef DEBUG
     std::cout << "New: ";
