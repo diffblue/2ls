@@ -29,6 +29,7 @@ public:
     current_level(0)
   {}
   
+  unsigned current_level;
   void first_uip(nodest &cut);
   void add_deductions(const acdl_domaint::deductionst &m_ir);
   void add_deduction(const acdl_domaint::deductiont &m_ir);
@@ -38,7 +39,6 @@ public:
   void to_value(acdl_domaint::valuet &value) const;
   
 protected:
-  unsigned current_level;
 
   acdl_implication_graph_nodet::node_indext find_node(const exprt &expr);
 

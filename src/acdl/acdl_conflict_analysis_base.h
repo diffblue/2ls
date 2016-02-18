@@ -21,18 +21,17 @@ class acdl_conflict_analysis_baset : public messaget
 public: 
    
   explicit acdl_conflict_analysis_baset()
-  {
-  }
+  :
+  backtrack_level(0)
+  {}
 
   virtual ~acdl_conflict_analysis_baset()
   {
   }
 
-  virtual property_checkert::resultt operator()(
-    acdl_implication_grapht &graph,
-    exprt &learned_clause)
-    { assert(false); }
-
+  property_checkert::resultt operator()(acdl_implication_grapht &graph, exprt &learned_clause);
+     
+  int backtrack_level;
 protected:  
   virtual void backtrack_to_level(acdl_implication_grapht &graph,unsigned int index);
   virtual void generalize_conflict(acdl_implication_grapht &graph) { assert(false); }
