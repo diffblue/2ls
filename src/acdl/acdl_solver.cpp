@@ -365,12 +365,9 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
         break;
     
       // check for satisfying assignment
-      std::set<symbol_exprt> completeness_vars;
       acdl_domaint::valuet v;
       implication_graph.to_value(v);
-      //completeness_vars = value_to_vars(v);
-      //find_symbols (v, completeness_vars); //TODO: fix!
-      if(domain.is_complete(v, completeness_vars))
+      if(domain.is_complete(v))
         return property_checkert::FAIL;
       
       std::cout << "********************************" << std::endl;
