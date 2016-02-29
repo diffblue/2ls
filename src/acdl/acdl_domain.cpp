@@ -40,6 +40,7 @@ Function: acdl_domaint::operator()
 void acdl_domaint::operator()(const statementt &statement,
 		  const varst &vars,
 		  const valuet &_old_value,
+		  valuet &new_value,
 		  deductionst &deductions)
 {
 #ifdef DEBUG
@@ -81,7 +82,7 @@ void acdl_domaint::operator()(const statementt &statement,
       valuet var_value;
       literalt l = solver->solver->convert(*it);
       if(l.is_constant())
-	continue;
+	continue;  //in this case we don't have information on deductions
       solver->solver->set_frozen(l);
 
       //get handles on meet irreducibles to check them later
@@ -115,12 +116,13 @@ void acdl_domaint::operator()(const statementt &statement,
 	}
 	else
 	{
+	  deductions.push_back(deductiont());
+	  deductions.back().first = deduced;
+	  get_antecedents(*solver,_old_value,value_literals,
+			  deductions.back().second);
 	  if(!is_contained(deduced,_old_value))
 	  {
-	    deductions.push_back(deductiont());
-	    deductions.back().first = deduced;
-  	    get_antecedents(*solver,_old_value,value_literals,
-			    deductions.back().second);
+	    new_value.push_back(deduced);
 	  }
 	}
 
@@ -171,19 +173,24 @@ void acdl_domaint::operator()(const statementt &statement,
       {
 	literalt l = solver->convert(var_values[i]);
 	if(l.is_constant())
-	  continue;
+	  continue; //in this case we don't have information on deductions
+
+	solver->new_context();
+	*solver << not_exprt(var_values[i]);
+	solver->set_assumptions(value_literals);
+
+	decision_proceduret::resultt result = (*solver)();
+	assert(result == decision_proceduret::D_UNSATISFIABLE);
+	    
+	deductions.push_back(deductiont());
+	deductions.back().first = var_values[i];
+	get_antecedents(*solver,_old_value,value_literals,
+			deductions.back().second);
+	solver->pop_context();
 
 	if(!is_contained(var_values[i],_old_value))
 	{
-	  solver->new_context();
-	  *solver << not_exprt(var_values[i]);
-          solver->set_assumptions(value_literals);
-
-	  deductions.push_back(deductiont());
-	  deductions.back().first = var_values[i];
-	  get_antecedents(*solver,_old_value,value_literals,
-			  deductions.back().second);
-	  solver->pop_context();
+	  new_value.push_back(var_values[i]);
 	}
       }	
     }

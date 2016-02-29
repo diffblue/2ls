@@ -37,6 +37,7 @@ public:
   void operator()(const statementt &statement,
 		  const varst &vars,
 		  const valuet &old_value,
+		  valuet &new_value,
 		  deductionst &deductions);
 
   //project deductions to value

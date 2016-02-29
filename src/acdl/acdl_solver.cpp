@@ -80,10 +80,9 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA)
     find_symbols(statement,project_vars);
     acdl_domaint::varst projected_live_vars;
     projected_live_vars = worklist.check_var_liveness(project_vars); 
-    domain(statement, projected_live_vars, v, deductions);
-    
     acdl_domaint::valuet new_v;
-    domain.to_value(deductions,new_v);
+    domain(statement, projected_live_vars, v, new_v, deductions);
+    
     // update implication graph
     implication_graph.add_deductions(deductions);
     
