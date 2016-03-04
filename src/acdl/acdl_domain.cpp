@@ -87,12 +87,17 @@ void acdl_domaint::operator()(const statementt &statement,
 
       //get handles on meet irreducibles to check them later
       bvt value_literals;
-      value_literals.resize(old_value.size());
+      std::vector<int> value_literal_map;
+      value_literals.reserve(old_value.size());
       *solver << statement;
       for(unsigned i=0; i<old_value.size(); i++)
       {
-	value_literals[i] = solver->convert(old_value[i]);
-  	solver->solver->set_frozen(value_literals[i]);
+	literalt l = solver->convert(old_value[i]);
+	if(l.is_constant())
+	  continue;
+	value_literal_map.push_back(i);
+	value_literals.push_back(l);
+  	solver->solver->set_frozen(l);
       }
       solver->set_assumptions(value_literals);
 	
@@ -162,12 +167,16 @@ void acdl_domaint::operator()(const statementt &statement,
       //ENHANCE: make assumptions persistent in incremental_solver
       // so that we can reuse value+statement from above
       bvt value_literals;
-      value_literals.resize(old_value.size());
+      std::vector<int> value_literal_map;
       *solver << statement;
       for(unsigned i=0; i<old_value.size(); i++)
       {
-	value_literals[i] = solver->convert(old_value[i]);
- 	solver->solver->set_frozen(value_literals[i]);
+	literalt l = solver->convert(old_value[i]);
+	if(l.is_constant())
+	  continue;
+	value_literal_map.push_back(i);
+	value_literals.push_back(l);
+  	solver->solver->set_frozen(l);
       }
       for(unsigned i=0; i<var_values.size(); ++i)
       {
@@ -631,7 +640,7 @@ bool acdl_domaint::expr_is_true(const exprt &expr)
   std::unique_ptr<incremental_solvert> solver(
     incremental_solvert::allocate(SSA.ns,true));
   *solver << not_exprt(expr);
-  return((*solver)() == decision_proceduret::D_UNSATISFIABLE);
+  return ((*solver)() == decision_proceduret::D_UNSATISFIABLE);
 }
 
 void acdl_domaint::expr_to_value(const exprt &expr, valuet &value)
@@ -639,8 +648,7 @@ void acdl_domaint::expr_to_value(const exprt &expr, valuet &value)
   if(expr.id()==ID_and)
   {
     forall_operands(it,expr)
-      if(!expr_is_true(expr))
-	value.push_back(expr);
+      expr_to_value(*it, value);
   }
   else
   {
