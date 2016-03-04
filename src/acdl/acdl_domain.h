@@ -67,7 +67,8 @@ public:
 
   bool is_bottom(const valuet &value) const;
   bool is_top(const valuet &value) const { return value.empty(); }
-  bool is_complete(const valuet &value) const;
+  bool is_complete(const valuet &value, 
+		   const std::set<symbol_exprt> &symbols) const;
 
   //print value
   inline std::ostream &output(

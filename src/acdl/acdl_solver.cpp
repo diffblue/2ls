@@ -329,16 +329,21 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
   // call initialize live variables
   worklist.initialize_live_variables();
     
- 
-#if 0
-  // collect assertion variables for completeness check: This is not sound
-  std::set<symbol_exprt> assertion_vars;
+  // collect variables for completeness check
+  std::set<symbol_exprt> all_vars;
   for (local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin ();
-      n_it != SSA.nodes.end (); n_it++)
-    for (local_SSAt::nodet::assertionst::const_iterator a_it =
-        n_it->assertions.begin (); a_it != n_it->assertions.end (); a_it++)
-    find_symbols (*a_it, assertion_vars);
-#endif
+      n_it != SSA.nodes.end (); ++n_it)
+  {
+    for (local_SSAt::nodet::equalitiest::const_iterator it =
+        n_it->equalities.begin (); it != n_it->equalities.end (); ++it)
+      find_symbols (*it, all_vars);
+    for (local_SSAt::nodet::constraintst::const_iterator it =
+        n_it->constraints.begin (); it != n_it->constraints.end (); ++it)
+      find_symbols (*it, all_vars);
+    for (local_SSAt::nodet::assertionst::const_iterator it =
+        n_it->assertions.begin (); it != n_it->assertions.end (); ++it)
+      find_symbols (*it, all_vars);
+  }
 
   implication_graph.clear(); //set to top
   acdl_domaint::valuet v;
@@ -366,7 +371,7 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
       // check for satisfying assignment
       acdl_domaint::valuet v;
       implication_graph.to_value(v);
-      if(domain.is_complete(v))
+      if(domain.is_complete(v, all_vars))
         return property_checkert::FAIL;
       
       std::cout << "********************************" << std::endl;

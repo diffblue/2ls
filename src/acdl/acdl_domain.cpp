@@ -82,7 +82,10 @@ void acdl_domaint::operator()(const statementt &statement,
       valuet var_value;
       literalt l = solver->solver->convert(*it);
       if(l.is_constant())
-	continue;  //in this case we don't have information on deductions
+      {
+	*solver << literal_exprt(l); //TODO: this has only an effect if l is false and then we have deduced a conflict
+	continue; //in this case we don't have information on deductions
+      }
       solver->solver->set_frozen(l);
 
       //get handles on meet irreducibles to check them later
@@ -94,7 +97,10 @@ void acdl_domaint::operator()(const statementt &statement,
       {
 	literalt l = solver->convert(old_value[i]);
 	if(l.is_constant())
+	{
+	  *solver << literal_exprt(l);
 	  continue;
+	}
 	value_literal_map.push_back(i);
 	value_literals.push_back(l);
   	solver->solver->set_frozen(l);
@@ -173,7 +179,10 @@ void acdl_domaint::operator()(const statementt &statement,
       {
 	literalt l = solver->convert(old_value[i]);
 	if(l.is_constant())
+	{
+	  *solver << literal_exprt(l);
 	  continue;
+	}
 	value_literal_map.push_back(i);
 	value_literals.push_back(l);
   	solver->solver->set_frozen(l);
@@ -182,7 +191,10 @@ void acdl_domaint::operator()(const statementt &statement,
       {
 	literalt l = solver->convert(var_values[i]);
 	if(l.is_constant())
+	{
+	  *solver << literal_exprt(l);
 	  continue; //in this case we don't have information on deductions
+	}
 
 	solver->new_context();
 	*solver << not_exprt(var_values[i]);
@@ -382,7 +394,8 @@ Function: acdl_domaint::is_complete()
 
 \*******************************************************************/
 
-bool acdl_domaint::is_complete(const valuet &value) const
+bool acdl_domaint::is_complete(const valuet &value, 
+			       const std::set<symbol_exprt> &symbols) const
 {
 #ifdef DEBUG
   std::cout << "[ACDL-DOMAIN] is_complete? "
@@ -394,10 +407,14 @@ bool acdl_domaint::is_complete(const valuet &value) const
   std::unique_ptr<incremental_solvert> solver(
     incremental_solvert::allocate(SSA.ns,true));
   *solver << conjunction(value);
-    
+
+#if 0   
+  // COMMENT: we cannot take the variables from the value 
+  //          because it might not contain all variables
   // find symbols in value
   std::set<symbol_exprt> symbols;
   find_symbols (conjunction(value), symbols);
+#endif
 
   for(std::set<symbol_exprt>::const_iterator it = symbols.begin();
       it != symbols.end(); ++it)
@@ -407,9 +424,13 @@ bool acdl_domaint::is_complete(const valuet &value) const
     // if value == (x=[2,2]) and (*it is x), then 'm' below contains the
     // value of x which is 2
     exprt m = (*solver).get(*it);
+
+    if(m.id()!=ID_constant)
+      return false;
+
     solver->new_context();
 
-#if 0
+#ifdef DEBUG
     std::cout << "  check "
 	      << from_expr(SSA.ns, "", not_exprt(equal_exprt(*it,m)))
 	      << std::endl;
@@ -512,9 +533,6 @@ exprt acdl_domaint::split(const valuet &value, const exprt &expr,
     return false_exprt(); 
   }
 
-  if(value.size()<2)
-    return false_exprt(); //cannot split
-
   //match template expression
   constant_exprt u;
   for(unsigned i=0; i<value.size(); i++)
@@ -563,7 +581,7 @@ exprt acdl_domaint::split(const valuet &value, const exprt &expr,
 #endif
     return binary_relation_exprt(expr,ID_le,m);
   }
-  return true_exprt();
+  return false_exprt();
 }
 
 /*******************************************************************\
