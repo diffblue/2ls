@@ -25,7 +25,43 @@ void acdl_conflict_analysis_baset::backtrack_to_level(acdl_implication_grapht &g
 {
   
 }
+
+/*******************************************************************\
+
+Function: abstr_dpll_searcht::chronological_backtrack
+ 
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+/*
+bool acdl_conflict_analysis_baset::chronological_backtrack(abstr_elementt& elem)
+{
+  if(graph.current_level == 0)
+    backtrack_level = -1; //no further backtrack possible
+
+  //otherwise get decision element
+  unsigned first_idx = control_trail.back();
+  assert(var_trail.size() >= first_idx + 1);
   
+  literalt dec_lit = lit_from_trail(first_idx);
+
+  cancel_once();
+
+  flip(dec_lit);
+  
+  assign(dec_lit);
+
+  elem = 
+    itv_array_domain.from_itv_assignments(numbering, values);
+  
+  just_backtracked = true;
+  return true;
+}
+*/  
 /*******************************************************************\
 
 Function: acdl_conflict_analysis_baset::operator()
@@ -41,7 +77,23 @@ Function: acdl_conflict_analysis_baset::operator()
   
 property_checkert::resultt acdl_conflict_analysis_baset::operator()
              (acdl_implication_grapht &graph, exprt &learned_clause)
-{ 
+{
+  // abstract dpll strategy, no clause learning
+  /*if(disable_backjumping) {
+    chronological_backtrack(); 
+    // no further backtrack possible
+    if(backtrack_level < 0) {
+      property_checkert::resultt result = property_checkert::PASS;
+      return result;
+    }
+    else 
+    {
+      property_checkert::resultt result = property_checkert::UNKNOWN;
+      return result;
+    }
+  }*/
+  
+   
   acdl_domaint::meet_irreduciblet conflict_clause;
 
   get_conflict_clause(graph, conflict_clause);

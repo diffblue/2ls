@@ -605,13 +605,13 @@ void acdl_domaint::normalize(valuet &value)
       set_bottom(value);
       return;
     }
-  }
-
+  }  
 #if 0 //I don't think this is needed anymore
-  valuet old_value = value;
-
+    else { 
+  exprt old_value = value[i];
+ 
   std::vector<symbol_exprt> clean_vars;
-  
+  valuet new_value;
   //project out vars
   for(varst::const_iterator it = vars.begin();
       it != vars.end(); ++it)
@@ -621,7 +621,7 @@ void acdl_domaint::normalize(valuet &value)
        it->type().id() == ID_unsignedbv ||
        it->type().id() == ID_floatbv)
     {
-      value = remove_var(value,*it);
+      remove_var(value,*it, new_value);
       clean_vars.push_back(*it);
     }
   }
@@ -633,11 +633,13 @@ void acdl_domaint::normalize(valuet &value)
   template_generator(SSA,clean_vars);
     
   ssa_analyzer(*solver, SSA, old_value,template_generator);
-  valuet new_values;
+  exprt new_values;
   ssa_analyzer.get_result(new_values,template_generator.all_vars());
 
-    
-  value = and_exprt(new_values,value);
+  for(unsigned k=0; k<new_value.size(); k++)
+      value.push_back(and_exprt(new_values, new_value[k]));
+ } // end of else
+ }
 #endif
 }
 

@@ -166,6 +166,7 @@ void acdl_worklist_baset::remove_live_variables
   bool found = false;
   for(acdl_domaint::varst::const_iterator it = 
     del_vars.begin(); it != del_vars.end(); ++it) {
+   found = false;
    for(std::list<acdl_domaint::statementt>::const_iterator 
       it1 = worklist.begin(); it1 != worklist.end(); ++it1)
    {

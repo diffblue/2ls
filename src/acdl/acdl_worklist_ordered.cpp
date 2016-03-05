@@ -97,7 +97,7 @@ acdl_worklist_orderedt::initialize (const local_SSAt &SSA)
 	  std::cout << "Sliced Unordered Worklist Element::" << from_expr(SSA.ns, "", *it) << std::endl;
     }
 #endif    
-  
+ 
   // order the leaf nodes right after all assertions
   for(std::list<acdl_domaint::statementt>::const_iterator 
     it = worklist.begin(); it != worklist.end(); ++it) 
@@ -107,13 +107,14 @@ acdl_worklist_orderedt::initialize (const local_SSAt &SSA)
      exprt expr_rhs = to_equal_expr(*it).rhs();
      if(expr_rhs.id() == ID_constant) 
        push_into_list(leaf_worklist, *it);
-     std::string str("nondet");
+    // We do not push nondet elements in to the worklist
+    /* std::string str("nondet");
      std::string rhs_str=id2string(expr_rhs.get(ID_identifier));
     std::size_t found = rhs_str.find(str); 
     // push the nondet statement in rhs
     if(found != std::string::npos)
       push_into_list(leaf_worklist, *it);
-     
+    */ 
      //exprt expr_rhs = expr.rhs();
      // select vars in the present statement
      acdl_domaint::varst vars_rhs;
@@ -126,7 +127,7 @@ acdl_worklist_orderedt::initialize (const local_SSAt &SSA)
          if(!(check_statement(*it1, vars_rhs))) {
            // *it is a leaf node
            //push_into_worklist(leaf_worklist, *it);
-         }
+        }
          // this is an intermediate node, not leaf
          else {
            // pop the element from the list
@@ -137,6 +138,8 @@ acdl_worklist_orderedt::initialize (const local_SSAt &SSA)
       }
     }
   }
+
+    
 #ifdef DEBUG
     for(std::list<acdl_domaint::statementt>::const_iterator it = leaf_worklist.begin(); it != leaf_worklist.end(); ++it) {
 	  std::cout << "Leaf Element::" << from_expr(SSA.ns, "", *it) << std::endl;
@@ -181,7 +184,7 @@ acdl_worklist_orderedt::initialize (const local_SSAt &SSA)
     const acdl_domaint::statementt statement = pop_from_list(leaf_worklist);
     push_into_list (worklist, statement);
   }
-  
+    
   // insert intermediate nodes
   while(!inter_worklist.empty() > 0) {
     const acdl_domaint::statementt statement = pop_from_list(inter_worklist);

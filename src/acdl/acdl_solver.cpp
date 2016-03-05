@@ -120,6 +120,7 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA)
 #endif    
 
     //Cool! We got UNSAT
+    // domain.normalize(new_v, projected_live_vars);
     domain.normalize(new_v);
     if(domain.is_bottom(new_v))
     {
@@ -328,10 +329,11 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
   worklist.initialize(SSA);
   // call initialize live variables
   worklist.initialize_live_variables();
-    
+   
   // collect variables for completeness check
   std::set<symbol_exprt> all_vars;
-  for (local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin ();
+  all_vars = worklist.live_variables; 
+  /*for (local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin ();
       n_it != SSA.nodes.end (); ++n_it)
   {
     for (local_SSAt::nodet::equalitiest::const_iterator it =
@@ -343,7 +345,7 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
     for (local_SSAt::nodet::assertionst::const_iterator it =
         n_it->assertions.begin (); it != n_it->assertions.end (); ++it)
       find_symbols (*it, all_vars);
-  }
+  }*/
 
   implication_graph.clear(); //set to top
   acdl_domaint::valuet v;
