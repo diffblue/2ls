@@ -39,7 +39,8 @@ public:
   void output_graph_node(std::ostream &out, node_indext n) const; 
 
   void to_value(acdl_domaint::valuet &value) const;
-  void remove_edges(node_indext n);
+  void remove_in_edges(node_indext n);
+  void remove_out_edges(node_indext n);
   
   acdl_implication_graph_nodet::node_indext find_node(const exprt &expr);
   

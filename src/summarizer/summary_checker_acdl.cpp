@@ -45,7 +45,7 @@ property_checkert::resultt summary_checker_acdlt::operator()(
   acdl_worklist_orderedt acdl_worklist;
   acdl_conflict_analysis_baset acdl_conflict_analysist(acdl_decision_heuristics);
   acdl_solvert acdl_solver(options, acdl_domain, acdl_decision_heuristics,
-    acdl_worklist, acdl_conflict_analysist);
+    acdl_worklist, acdl_conflict_analysist, acdl_decision_heuristics);
   acdl_solver.set_message_handler(get_message_handler());
 
   incremental_solvert &solver = ssa_db.get_solver(entry_point);

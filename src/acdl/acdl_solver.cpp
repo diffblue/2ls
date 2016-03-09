@@ -226,13 +226,31 @@ acdl_solvert::analyze_conflict(const local_SSAt &SSA)
 {
   exprt learned_clause;
   property_checkert::resultt result = conflict_analysis(implication_graph, learned_clause);
-  //store the learned clause
-  learned_clauses.push_back(learned_clause);
-  
-  //TODO: update worklist
-  // call worklist.push(learned_clause);
+  if(result == property_checkert::PASS) 
+    return result;
+  else {
+    // store the learned clause
+    learned_clauses.push_back(learned_clause);
 
-  return result;
+    acdl_domaint::valuet v;
+    implication_graph.to_value(v);
+    exprt dec_expr = cond_dec_heuristic.dec_trail.back();
+    domain.meet(dec_expr,v);
+#ifdef DEBUG
+    std::cout << "New [Analyze conflict]: ";
+    domain.output(std::cout, v) << std::endl;
+#endif
+
+    acdl_domaint::varst dec_vars;
+    // find all symbols in the decision expression
+    find_symbols(dec_expr, dec_vars);
+    // update the worklist here 
+    worklist.update(SSA, dec_vars);
+    // pop from the decision trail 
+    cond_dec_heuristic.dec_trail.pop_back();
+    result = propagate(SSA);
+    return result;
+  }
 #if 0  
   //TODO
   // ******* For temporary purpose **********
@@ -375,7 +393,7 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
       result = propagate(SSA);
 
       std::cout << "****************************************************" << std::endl;
-      std::cout << " IMPLICATION GRAPH AFTER DECISION PHASE" << std::endl;
+      std::cout << " IMPLICATION GRAPH AFTER DEDUCTION PHASE" << std::endl;
       std::cout << "****************************************************" << std::endl;
       implication_graph.print_graph_output();
       // check for conflict
@@ -403,7 +421,7 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
         break;
       }
       std::cout << "****************************************************" << std::endl;
-      std::cout << " IMPLICATION GRAPH AFTER DECISION PHASE" << std::endl;
+      std::cout << "IMPLICATION GRAPH AFTER DECISION PHASE" << std::endl;
       std::cout << "****************************************************" << std::endl;
       implication_graph.print_graph_output();
     }

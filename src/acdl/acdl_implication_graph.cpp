@@ -149,6 +149,11 @@ void acdl_implication_grapht::output_graph(std::ostream &out) const
   std::cout << "Printing Graph Output -- Total Nodes: " << nodes.size() << std::endl;
   for(node_indext i=0; i<nodes.size(); i++)
     output_graph_node(out, i);
+
+ for(node_indext i=0; i<nodes.size(); i++)
+ {
+   std::cout << "Node number: " << i << "Expression: " << (*this)[i].expr << "In edges: " << nodes[i].in.size() << "Out edges: " << nodes[i].out.size() << std::endl;
+ }
 }
     
 /*******************************************************************\
@@ -216,7 +221,7 @@ Function: acdl_conflict_analysis_baset::remove_edges()
  Purpose: backtracks by one level
 
  \*******************************************************************/
-void acdl_implication_grapht::remove_edges(node_indext n) 
+void acdl_implication_grapht::remove_out_edges(node_indext n) 
 {
   nodet &node=nodes[n];
   unsigned size = node.out.size();
@@ -226,6 +231,14 @@ void acdl_implication_grapht::remove_edges(node_indext n)
     node_indext ni_t = ni->first;
     nodes[ni_t].erase_in(n);
     node.out.clear();
+    // special case for guard node in assertions
+    if(nodes[ni_t].in.size() == 0) {
+      std::cout << "guilty node :" << ni_t << std::endl;
+      nodes[ni_t].erase_in(n);
+      node.out.clear();
+      //nodet &node_0 = nodes[ni_t];
+      //node_0.in.clear();
+    }
     return;
   }
   else {
@@ -235,8 +248,55 @@ void acdl_implication_grapht::remove_edges(node_indext n)
       it!=node.out.end();
       it++) {
     nodes[it->first].erase_in(n);
-    remove_edges(it->first);
+    std::cout << "Removing" << n << " -> " << it->first << std::endl; 
+    remove_out_edges(it->first);
   }
   node.out.clear();
+  }
+}
+
+
+/*******************************************************************\
+
+Function: acdl_conflict_analysis_baset::remove_edges()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: remove in edges
+
+ \*******************************************************************/
+void acdl_implication_grapht::remove_in_edges(node_indext n) 
+{
+  nodet &node=nodes[n];
+  unsigned size = node.in.size();
+  // base case
+  if(size == 0) {
+    typename edgest::const_iterator ni = node.in.begin();
+    node_indext ni_t = ni->first;
+    nodes[ni_t].erase_out(n);
+    node.in.clear();
+    // special case for guard node in assertions
+    if(nodes[ni_t].in.size() == 0) {
+      std::cout << "guilty node :" << ni_t << std::endl;
+      nodes[ni_t].erase_out(n);
+      node.in.clear();
+      //nodet &node_0 = nodes[ni_t];
+      //node_0.out.clear();
+    }
+    return;
+  }
+  else {
+  // delete all outgoing edges
+  for(typename edgest::const_iterator
+      it=node.in.begin();
+      it!=node.in.end();
+      it++) {
+    nodes[it->first].erase_out(n);
+    std::cout << "Removing" << n << " -> " << it->first << std::endl; 
+    remove_in_edges(it->first);
+  }
+  node.in.clear();
   }
 }

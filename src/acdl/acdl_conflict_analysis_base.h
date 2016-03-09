@@ -25,7 +25,8 @@ public:
   explicit acdl_conflict_analysis_baset(acdl_decision_heuristics_condt &_cond_heuristic) 
   :
   cond_heuristic(_cond_heuristic),
-  backtrack_level(0)  
+  backtrack_level(0),
+  disable_backjumping(1)  
   {
   }
   
@@ -47,12 +48,15 @@ public:
   unsigned int backtracks; 
   int backtrack_level;
   bool just_backtracked;
+  bool disable_backjumping;
   void cancel_once(acdl_implication_grapht &graph);
 protected: 
   virtual void backtrack_to_level(acdl_implication_grapht &graph,unsigned int index);
   virtual void generalize_conflict(acdl_implication_grapht &graph) { assert(false); }
 
   void get_conflict_clause(acdl_implication_grapht &graph, acdl_domaint::meet_irreduciblet &clause);
+  exprt flip(acdl_domaint::meet_irreduciblet &m); 
+  void chronological_backtrack(acdl_implication_grapht &graph);
 
 };
 

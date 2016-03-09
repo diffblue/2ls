@@ -37,33 +37,26 @@ Function: abstr_dpll_searcht::chronological_backtrack
  Purpose:
 
 \*******************************************************************/
-
-#if 0 
-void acdl_conflict_analysis_baset::chronological_backtrack(abstr_elementt& elem)
+void acdl_conflict_analysis_baset::chronological_backtrack(acdl_implication_grapht &graph)
 {
-  if(graph.current_level == 0)
+  if(graph.current_level == 0) {
     backtrack_level = -1; //no further backtrack possible
-
-  //otherwise get decision element
-  unsigned first_idx = control_trail.back();
-  assert(var_trail.size() >= first_idx + 1);
- 
+    return;
+  }
+  // otherwise get decision element
   // must return a meet irreducible 
-  literalt dec_lit = lit_from_trail(first_idx);
+  acdl_domaint::meet_irreduciblet expr = cond_heuristic.dec_trail.back();  
+  cancel_once(graph);
 
-  cancel_once();
-
-  flip(dec_lit);
+  exprt exp = flip(expr);
+  // insert new decision element into dec_trail
+  cond_heuristic.dec_trail.push_back(exp);
+  graph.add_decision(exp);
   
-  assign(dec_lit);
-
-  elem = 
-    itv_array_domain.from_itv_assignments(numbering, values);
-  
+  graph.current_level--; 
   just_backtracked = true;
-  return true;
+  //return true;
 }
-#endif  
   
 /*******************************************************************\
 
@@ -76,15 +69,12 @@ Function: acdl_conflict_analysis_baset::operator()
  Purpose:
 
  \*******************************************************************/
-  
-  
 property_checkert::resultt acdl_conflict_analysis_baset::operator()
              (acdl_implication_grapht &graph, exprt &learned_clause)
 {
-  #if 0
   // abstract dpll strategy, no clause learning
   if(disable_backjumping) {
-    chronological_backtrack(); 
+    chronological_backtrack(graph); 
     // no further backtrack possible
     if(backtrack_level < 0) {
       property_checkert::resultt result = property_checkert::PASS;
@@ -96,7 +86,6 @@ property_checkert::resultt acdl_conflict_analysis_baset::operator()
       return result;
     }
   }
-  #endif
    
   acdl_domaint::meet_irreduciblet conflict_clause;
 
@@ -187,8 +176,35 @@ Function: acdl_conflict_analysis_baset::cancel_once()
 void acdl_conflict_analysis_baset::cancel_once(acdl_implication_grapht &graph) 
 {
   const exprt expr = cond_heuristic.dec_trail.back();  
+  // remove everything starting from the present decision node
   int na = graph.find_node(expr);
-  graph.remove_edges(na);
-  cond_heuristic.dec_trail.pop_back();
+  graph.remove_out_edges(na);
+  // remove everything starting from the conflicting node (identified by
+  // false_exprt()  
+  int nb = graph.find_node(false_exprt());
+  std::cout << "The false_exprt node is: " << nb << std::endl;
+  graph.remove_in_edges(nb);
+
+  // cond_heuristic.dec_trail.pop_back();
+  std::cout << "***********************************************" << std::endl;
+  std::cout << "IMPLICATION GRAPH AFTER BACKTRACKING" << std::endl;
+  std::cout << "***********************************************" << std::endl;
+  graph.print_graph_output();
 }
 
+/*******************************************************************\
+
+Function: acdl_conflict_analysis_baset::flip()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: flip present meet irreducible
+
+ \*******************************************************************/
+exprt acdl_conflict_analysis_baset::flip(acdl_domaint::meet_irreduciblet &m) 
+{
+  not_exprt not_exp(m); 
+  return not_exp;
+}
