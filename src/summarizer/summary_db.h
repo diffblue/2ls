@@ -10,8 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #define CPROVER_SUMMARIZER_SUMMARY_DB_H
 
 #include <util/message.h>
-
-#include <json/json.h>
+#include <util/json.h>
 
 class summary_dbt:public messaget
 {

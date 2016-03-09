@@ -9,7 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_SUMMARIZER_FUNCTION_SIGNATURE_H
 #define CPROVER_SUMMARIZER_FUNCTION_SIGNATURE_H
 
-#include <json/json.h>
+#include <util/json.h>
 
 void update_function_signature(const class local_SSAt &, jsont &);
 

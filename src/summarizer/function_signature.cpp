@@ -6,8 +6,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <json/json.h>
-
 #include "../ssa/local_ssa.h"
 #include "function_signature.h"
 
