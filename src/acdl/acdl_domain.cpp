@@ -399,8 +399,8 @@ bool acdl_domaint::is_complete(const valuet &value,
 {
 #ifdef DEBUG
   std::cout << "[ACDL-DOMAIN] is_complete? "
-	    << from_expr(SSA.ns, "", conjunction(value));
-//	    << std::endl;
+	    << from_expr(SSA.ns, "", conjunction(value))
+	    << std::endl;
 #endif
 
     
@@ -425,8 +425,12 @@ bool acdl_domaint::is_complete(const valuet &value,
     // value of x which is 2
     exprt m = (*solver).get(*it);
 
-    if(m.id()!=ID_constant)
+    if(m.id()!=ID_constant) {
+#ifdef DEBUG
+      std::cout << " is not complete" << std::endl;
+#endif
       return false;
+}
 
     solver->new_context();
 

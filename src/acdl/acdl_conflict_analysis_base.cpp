@@ -37,8 +37,9 @@ Function: abstr_dpll_searcht::chronological_backtrack
  Purpose:
 
 \*******************************************************************/
-/*
-bool acdl_conflict_analysis_baset::chronological_backtrack(abstr_elementt& elem)
+
+#if 0 
+void acdl_conflict_analysis_baset::chronological_backtrack(abstr_elementt& elem)
 {
   if(graph.current_level == 0)
     backtrack_level = -1; //no further backtrack possible
@@ -46,7 +47,8 @@ bool acdl_conflict_analysis_baset::chronological_backtrack(abstr_elementt& elem)
   //otherwise get decision element
   unsigned first_idx = control_trail.back();
   assert(var_trail.size() >= first_idx + 1);
-  
+ 
+  // must return a meet irreducible 
   literalt dec_lit = lit_from_trail(first_idx);
 
   cancel_once();
@@ -61,7 +63,8 @@ bool acdl_conflict_analysis_baset::chronological_backtrack(abstr_elementt& elem)
   just_backtracked = true;
   return true;
 }
-*/  
+#endif  
+  
 /*******************************************************************\
 
 Function: acdl_conflict_analysis_baset::operator()
@@ -78,8 +81,9 @@ Function: acdl_conflict_analysis_baset::operator()
 property_checkert::resultt acdl_conflict_analysis_baset::operator()
              (acdl_implication_grapht &graph, exprt &learned_clause)
 {
+  #if 0
   // abstract dpll strategy, no clause learning
-  /*if(disable_backjumping) {
+  if(disable_backjumping) {
     chronological_backtrack(); 
     // no further backtrack possible
     if(backtrack_level < 0) {
@@ -91,8 +95,8 @@ property_checkert::resultt acdl_conflict_analysis_baset::operator()
       property_checkert::resultt result = property_checkert::UNKNOWN;
       return result;
     }
-  }*/
-  
+  }
+  #endif
    
   acdl_domaint::meet_irreduciblet conflict_clause;
 
@@ -154,7 +158,8 @@ Function: acdl_conflict_analysis_baset::get_conflict_clause()
 
  \*******************************************************************/
  
-void acdl_conflict_analysis_baset::get_conflict_clause(acdl_implication_grapht &graph, acdl_domaint::meet_irreduciblet &clause)
+void acdl_conflict_analysis_baset::get_conflict_clause
+  (acdl_implication_grapht &graph, acdl_domaint::meet_irreduciblet &clause)
 {
   if(graph.current_level == 0) {
     backtrack_level = -1;
@@ -166,5 +171,24 @@ void acdl_conflict_analysis_baset::get_conflict_clause(acdl_implication_grapht &
   }
   
   //assert(false);
+}
+
+/*******************************************************************\
+
+Function: acdl_conflict_analysis_baset::cancel_once()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: backtracks by one level
+
+ \*******************************************************************/
+void acdl_conflict_analysis_baset::cancel_once(acdl_implication_grapht &graph) 
+{
+  const exprt expr = cond_heuristic.dec_trail.back();  
+  int na = graph.find_node(expr);
+  graph.remove_edges(na);
+  cond_heuristic.dec_trail.pop_back();
 }
 

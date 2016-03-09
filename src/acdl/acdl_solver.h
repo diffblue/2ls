@@ -55,7 +55,7 @@ protected:
   
   property_checkert::resultt propagate(const local_SSAt &SSA);
 
-  void decide(const local_SSAt &SSA);
+  bool decide(const local_SSAt &SSA);
   acdl_domaint::varst value_to_vars(const acdl_domaint::valuet &value)
   {
     acdl_domaint::varst vars;

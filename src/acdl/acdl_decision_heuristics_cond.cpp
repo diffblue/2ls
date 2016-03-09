@@ -5,7 +5,9 @@ Module: ACDL Decision Heuristics (Branch on Condition Variables)
 Author: Rajdeep Mukherjee, Peter Schrammel
 
 \*******************************************************************/
-
+#include <limits.h>
+#include <fstream>
+#include <cstdlib>
 #include "acdl_decision_heuristics_cond.h"
 
 acdl_domaint::meet_irreduciblet acdl_decision_heuristics_condt::operator()
@@ -54,18 +56,39 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_condt::operator()
     }
   }
   // For conditional based decision heuristics, 
+  // First collect all decision variables which are not singletons
+  std::vector<acdl_domaint::meet_irreduciblet> eligible_vars;
+  acdl_domaint::meet_irreduciblet dec;
+  for(std::list<exprt>::const_iterator itc = cond_container.begin();
+      itc != cond_container.end(); ++itc)
+  {
+    const exprt &decision_expr = *itc;
+    dec = domain.split(value,decision_expr);
+    if(!dec.is_false()) 
+      eligible_vars.push_back(*itc);
+  }
+  // no more decisions can be made
+  if(eligible_vars.size() == 0)
+    return false_exprt();
+  
+  const exprt &v = eligible_vars[rand() % eligible_vars.size()];
+  
   // decision expressions are same as decision variables in split function
   acdl_domaint::meet_irreduciblet decision = false_exprt();
+  decision = domain.split(value,v,true);
+   
+  dec_trail.push_back(decision);
+#if 0
   for(std::list<exprt>::const_iterator it = cond_container.begin();
       it != cond_container.end(); ++it)
   {
     //This characterize the shape of the decisions made, (eg. x < 5 or x-y < 5)
     const exprt &decision_expr = *it;
-    
     decision = domain.split(value,decision_expr,true);
     if(!decision.is_false()) 
       break;
   }
   std::cout << "DECISION SPLITTING VALUE: " << from_expr (SSA.ns, "", decision) << std::endl;
+#endif 
   return decision;
 }

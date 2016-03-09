@@ -34,13 +34,17 @@ public:
   void add_deductions(const acdl_domaint::deductionst &m_ir);
   void add_deduction(const acdl_domaint::deductiont &m_ir);
   void add_decision(const acdl_domaint::meet_irreduciblet & m_ir);
-  void print_dot_output();
+  void print_graph_output();
+  void output_graph(std::ostream &out) const;
+  void output_graph_node(std::ostream &out, node_indext n) const; 
 
   void to_value(acdl_domaint::valuet &value) const;
+  void remove_edges(node_indext n);
+  
+  acdl_implication_graph_nodet::node_indext find_node(const exprt &expr);
   
 protected:
 
-  acdl_implication_graph_nodet::node_indext find_node(const exprt &expr);
 
 };
 

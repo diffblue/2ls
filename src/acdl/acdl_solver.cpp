@@ -151,12 +151,16 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA)
 
  \*******************************************************************/
 
-void
+bool
 acdl_solvert::decide (const local_SSAt &SSA)
 {
   acdl_domaint::valuet v;
   implication_graph.to_value(v);
   acdl_domaint::meet_irreduciblet dec_expr=decision_heuristics(SSA, v);
+  // no new decisions can be made
+  if(dec_expr == false_exprt())
+    return false; 
+
   std::cout << "DECISION SPLITTING EXPR: " << from_expr (SSA.ns, "", dec_expr) << std::endl;
   // *****************************************************************
   // 1.b. e.g. we have x!=2 in an assertion or cond node, then we have 
@@ -192,13 +196,17 @@ acdl_solvert::decide (const local_SSAt &SSA)
   // Take a meet of the decision expression (decision) with the current abstract state (v).
   // The new abstract state is now in v
   domain.meet(dec_expr,v);
+#ifdef DEBUG
+    std::cout << "New: ";
+    domain.output(std::cout, v) << std::endl;
+#endif
   
-
   acdl_domaint::varst dec_vars;
   // find all symbols in the decision expression
   find_symbols(dec_expr, dec_vars);
   // update the worklist here 
   worklist.update(SSA, dec_vars);
+  return true;
 }
 
 /*******************************************************************
@@ -366,6 +374,10 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
       std::cout << "********************************" << std::endl;
       result = propagate(SSA);
 
+      std::cout << "****************************************************" << std::endl;
+      std::cout << " IMPLICATION GRAPH AFTER DECISION PHASE" << std::endl;
+      std::cout << "****************************************************" << std::endl;
+      implication_graph.print_graph_output();
       // check for conflict
       if(result == property_checkert::PASS) //UNSAT
         break;
@@ -380,7 +392,20 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
       std::cout << "         DECISION PHASE"          << std::endl;
       std::cout << "********************************" << std::endl;
       // make a decision
-      decide(SSA);
+      bool status = decide(SSA);
+      if(!status) {
+        std::cout << "Failed to verify program" << std::endl;
+#ifdef DEBUG
+    std::cout << "Minimal unsafe element is" << std::endl;
+    for(acdl_domaint::valuet::const_iterator it = v.begin();it != v.end(); ++it)
+        std::cout << from_expr(SSA.ns, "", *it) << std::endl;
+#endif    
+        break;
+      }
+      std::cout << "****************************************************" << std::endl;
+      std::cout << " IMPLICATION GRAPH AFTER DECISION PHASE" << std::endl;
+      std::cout << "****************************************************" << std::endl;
+      implication_graph.print_graph_output();
     }
 
     std::cout << "********************************" << std::endl;
