@@ -41,9 +41,9 @@ public:
   void to_value(acdl_domaint::valuet &value) const;
   void remove_in_edges(node_indext n);
   void remove_out_edges(node_indext n);
-  
+  int graph_size();  
   acdl_implication_graph_nodet::node_indext find_node(const exprt &expr);
-  
+  void delete_graph_nodes(); 
 protected:
 
 

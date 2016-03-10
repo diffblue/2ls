@@ -53,7 +53,7 @@ void acdl_conflict_analysis_baset::chronological_backtrack(acdl_implication_grap
   cond_heuristic.dec_trail.push_back(exp);
   graph.add_decision(exp);
   
-  graph.current_level--; 
+  graph.current_level--;
   just_backtracked = true;
   //return true;
 }
@@ -184,6 +184,7 @@ void acdl_conflict_analysis_baset::cancel_once(acdl_implication_grapht &graph)
   int nb = graph.find_node(false_exprt());
   std::cout << "The false_exprt node is: " << nb << std::endl;
   graph.remove_in_edges(nb);
+  graph.delete_graph_nodes(); 
 
   // cond_heuristic.dec_trail.pop_back();
   std::cout << "***********************************************" << std::endl;
