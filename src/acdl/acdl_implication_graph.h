@@ -18,6 +18,7 @@ public:
   bool is_decision;
   unsigned level;
   bool conflict;
+  bool deleted;
   acdl_domaint::meet_irreduciblet expr;
 };
 

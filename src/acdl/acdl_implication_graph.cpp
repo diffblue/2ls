@@ -50,6 +50,7 @@ void acdl_implication_grapht::add_deductions
     node.expr = it->first;
     node.is_decision = false;
     node.level = current_level;
+    node.deleted = false;
     
     // create all egdes pointing to this node 
     acdl_domaint::antecedentst ant = it->second;
@@ -58,6 +59,7 @@ void acdl_implication_grapht::add_deductions
     {
       node_indext nb = find_node(*it1);
       nodes[nb].level = current_level;
+      nodes[nb].deleted = false;
       // valid node can't be node 0
       assert(nb != 0);
       std::cout << "[ADD DEDUCTIONS] " << nb << " -> " << na << std::endl;
@@ -91,6 +93,7 @@ void acdl_implication_grapht::add_decision
   node.expr = m_ir;
   node.is_decision = true;
   node.conflict = false;
+  node.deleted = false;
   current_level++;
   node.level = current_level;
 }
@@ -129,7 +132,8 @@ void acdl_implication_grapht::to_value
 {
   for(node_indext i=1; i<size(); i++)
   {
-    value.push_back(nodes[i].expr);
+    if(!nodes[i].deleted)
+     value.push_back(nodes[i].expr);
   }
 }
 
@@ -153,6 +157,28 @@ void acdl_implication_grapht::print_graph_output()
 
 /*******************************************************************\
 
+Function: acdl_implication_grapht::size()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: find the size of the implication graph
+
+ \*******************************************************************/
+int acdl_implication_grapht::graph_size()
+{
+  int sizet=0;
+  for(node_indext i=1; i<size(); i++)
+  {
+    if(nodes[i].deleted == 0)
+     sizet++;
+  }
+  return sizet;
+}
+
+/*******************************************************************\
+
 Function: acdl_implication_grapht::print_dot_output
 
   Inputs:
@@ -165,12 +191,22 @@ Function: acdl_implication_grapht::print_dot_output
     
 void acdl_implication_grapht::output_graph(std::ostream &out) const 
 {
-  std::cout << "Printing Graph Output -- Total Nodes: " << nodes.size() << std::endl;
-  for(node_indext i=1; i<nodes.size(); i++)
-    output_graph_node(out, i);
+  int sizet=0;
+  for(node_indext i=1; i<size(); i++)
+  {
+    if(nodes[i].deleted == 0)
+     sizet++;
+  }
+  std::cout << "Printing Graph Output -- Total Nodes: " << sizet << std::endl;
 
- for(node_indext j=1; j<nodes.size(); j++)
+  for(node_indext i=1; i<size(); i++) {
+    if(nodes[i].deleted==0)
+    output_graph_node(out, i);
+  }
+
+ for(node_indext j=1; j<size(); j++)
  {
+   if(nodes[j].deleted==0)
    std::cout << "Node number: " << j << "  Expression: " << (*this)[j].expr << 
    "  In edges: " << nodes[j].in.size() << "  Out edges: " << nodes[j].out.size() << std::endl;
  }
@@ -234,7 +270,7 @@ acdl_implication_grapht::node_indext acdl_implication_grapht::find_node(const ex
 {
   for(node_indext i=1; i<size(); i++)
   {
-      if((*this)[i].expr == expr)
+      if((*this)[i].expr == expr && (!(*this)[i].deleted))
       return i;
   }
   return -1;
@@ -279,7 +315,7 @@ void acdl_implication_grapht::remove_out_edges(node_indext n)
       it=node.out.begin();
       it!=node.out.end();
       it++) {
-    if(nodes[it->first].level == current_level) {
+    if(nodes[it->first].level == current_level && (!nodes[it->first].deleted)) {
       nodes[it->first].erase_in(n);
       std::cout << "Removing" << n << " -> " << it->first << std::endl; 
       remove_out_edges(it->first);
@@ -329,7 +365,7 @@ void acdl_implication_grapht::remove_in_edges(node_indext n)
       it=node.in.begin();
       it!=node.in.end();
       it++) {
-    if(nodes[it->first].level == current_level) {
+    if(nodes[it->first].level == current_level && (!nodes[it->first].deleted)) {
       nodes[it->first].erase_out(n);
       std::cout << "Removing" << n << " -> " << it->first << std::endl; 
       remove_in_edges(it->first);
@@ -337,22 +373,6 @@ void acdl_implication_grapht::remove_in_edges(node_indext n)
   }
   node.in.clear();
   }
-}
-
-/*******************************************************************\
-
-Function: acdl_implication_grapht::size()
-
-  Inputs:
-
- Outputs:
-
- Purpose: find the size of the implication graph
-
- \*******************************************************************/
-int acdl_implication_grapht::graph_size()
-{
-  return size();
 }
 
 /*******************************************************************\
@@ -372,6 +392,7 @@ void acdl_implication_grapht::delete_graph_nodes()
     if(nodes[i].out.size() == 0 && nodes[i].in.size() == 0) {
      // remove the node 
      // nodes.erase(nodes.begin()+i);
+     nodes[i].deleted = 1;
      std::cout << "Deleted graph node: " << nodes[i].expr << std::endl;   
     }
   }

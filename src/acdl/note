@@ -488,5 +488,14 @@ happens in a theory solver. In ACDL, decision and learning happens in a
 domain. Domains in ACDL correspond to theory in SMT. But ACDL performs 
 fix-point theory learning in the conflict analysis phase. 
 
-
+IMPORTANT POINT:
+----------------
+1> When propagation finish with BOTTOM, empty the worklist and empty the live
+variables. Becuase the present decision lead to BOTTOM, so whatever is in the 
+worklist, everything is invalid and need to be thrown out before we enter into 
+the conflict analysis phase. Remember that we guarantee before entering into
+decision phase, that is the last propagation step before decision, the worklist 
+is empty and live variables are empty. Further, when the propagation finish with 
+BOTTOM, the conflict analysis phase must only start with the learnt clause in
+the worklist and live variables being empty.
 
