@@ -43,9 +43,9 @@ Function: template_generator_acdlt::operator()
 \*******************************************************************/
 
 void template_generator_acdlt::operator()(const local_SSAt &SSA,
-					  const std::vector<symbol_exprt> &vars)
+					  const std::set<symbol_exprt> &vars)
 {
-  for(std::vector<symbol_exprt>::const_iterator it = vars.begin();
+  for(std::set<symbol_exprt>::const_iterator it = vars.begin();
       it != vars.end(); ++it)
     add_var(*it,true_exprt(),true_exprt(),domaint::OUT,var_specs);
   
@@ -59,4 +59,22 @@ void template_generator_acdlt::operator()(const local_SSAt &SSA,
   debug() << "Template: " << eom;
   domain_ptr->output_domain(debug(), SSA.ns); debug() << eom;
 #endif
+}
+
+
+/*******************************************************************\
+
+Function: template_generator_acdlt::positive_template()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void template_generator_acdlt::positive_template(std::vector<exprt> &templates)
+{
+  domain_ptr->positive_template(templates);
 }

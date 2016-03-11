@@ -490,6 +490,30 @@ void acdl_domaint::remove_var(const valuet &old_value,
 
 /*******************************************************************\
 
+Function: acdl_domaint::build_meet_irreducible_templates()
+
+  Inputs: example: x, y
+
+ Outputs: example for interval domain: x, y
+                  for zones domain: x, y, x-y
+                  for octagon domain: x, y, x-y, x+y
+
+ Purpose:
+
+\*******************************************************************/
+
+void acdl_domaint::build_meet_irreducible_templates(
+    const varst &vars,
+    std::vector<exprt> &meet_irreducible_templates)
+{
+  template_generator_acdlt template_generator(options,ssa_db,ssa_local_unwinder); 
+  template_generator(SSA,vars);
+  template_generator.positive_template(meet_irreducible_templates);
+}
+
+
+/*******************************************************************\
+
 Function: acdl_domaint::split()
 
   Inputs: example: 
@@ -506,9 +530,11 @@ Function: acdl_domaint::split()
 
 \*******************************************************************/
 
-exprt acdl_domaint::split(const valuet &value, const exprt &expr, 
+exprt acdl_domaint::split(const valuet &value,
+			  const exprt &meet_irreducible_template, 
 			  bool upper)
-{ 
+{
+  const exprt &expr = meet_irreducible_template;
   std::cout << "[ACDL-DOMAIN] Split: "; output(std::cout, value);
         
   if(expr.type().id()==ID_bool)

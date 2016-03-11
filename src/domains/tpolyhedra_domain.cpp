@@ -1011,13 +1011,35 @@ void tpolyhedra_domaint::add_sum_template(const var_specst &var_specs,
       merge_and(post_g, v1->post_guard, v2->post_guard, ns);
       merge_and(aux_expr, v1->aux_expr, v2->aux_expr, ns);
 
-      // -x1 - x2
-      add_template_row(minus_exprt(unary_minus_exprt(v1->var,v1->var.type()),v2->var),
-		       pre_g,post_g,aux_expr,k);
-
       // x1 + x2
       add_template_row(plus_exprt(v1->var,v2->var),pre_g,post_g,aux_expr,k);
+
+      // -x1 - x2
+      add_template_row(minus_exprt(
+			 unary_minus_exprt(v1->var,v1->var.type()),v2->var),
+		       pre_g,post_g,aux_expr,k);
     }
   }
 
+}
+
+/*******************************************************************\
+
+Function: tpolyhedra_domaint::positive_template()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void tpolyhedra_domaint::positive_template(std::vector<exprt> &templates)
+{
+   templates.reserve(templ.size()/2);
+   for(int i=0;i<templates.size();++i)
+   {
+     templates[i] = templ[2*i].expr;
+   } 
 }

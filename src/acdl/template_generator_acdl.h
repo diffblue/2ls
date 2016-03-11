@@ -25,8 +25,10 @@ public:
 
 
   void operator()(const local_SSAt &SSA, const symbol_exprt& var);
-  void operator()(const local_SSAt &SSA, const std::vector<symbol_exprt> &vars);
+  void operator()(const local_SSAt &SSA, const std::set<symbol_exprt> &vars);
 
+  void positive_template(std::vector<exprt> &templates);
+  
   domaint::var_sett out_vars();
 
 };

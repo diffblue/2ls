@@ -106,6 +106,8 @@ public:
 
   void rename_for_row(exprt &expr, const rowt &row);
 
+  virtual void positive_template(std::vector<exprt> &templates);
+
 protected:
   friend class strategy_solver_binsearcht;
   friend class strategy_solver_enumerationt;

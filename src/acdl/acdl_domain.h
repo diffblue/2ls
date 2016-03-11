@@ -57,7 +57,13 @@ public:
   bool is_contained(const meet_irreduciblet &m,
 		    const valuet &value) const;
 
-  meet_irreduciblet split(const valuet &value, const exprt &expr, bool upper=false);
+  void build_meet_irreducible_templates(
+    const varst &vars,
+    std::vector<exprt> &meet_irreducible_templates);
+  meet_irreduciblet split(
+    const valuet &value,
+    const exprt &meet_irreducible_template,
+    bool upper=false);
   
   void normalize(valuet &value);
   void expr_to_value(const exprt &expr, valuet &value);
