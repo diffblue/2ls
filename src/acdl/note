@@ -488,6 +488,7 @@ happens in a theory solver. In ACDL, decision and learning happens in a
 domain. Domains in ACDL correspond to theory in SMT. But ACDL performs 
 fix-point theory learning in the conflict analysis phase. 
 
+TODO:
 IMPORTANT POINT:
 ----------------
 1> When propagation finish with BOTTOM, empty the worklist and empty the live
@@ -498,4 +499,22 @@ decision phase, that is the last propagation step before decision, the worklist
 is empty and live variables are empty. Further, when the propagation finish with 
 BOTTOM, the conflict analysis phase must only start with the learnt clause in
 the worklist and live variables being empty.
+
+2> nondet  symbols during worklist update is pushed now. Don’t push nondet
+elements when updating worklist.
+
+3> cond = (x <= 0), when a decision is made on cond, then all elements dependent
+on cond is pushed. 
+But in addition to that, all statements dependent on x should also be pushed. We
+do not do this now, so the effect of (x <= 0) is not propagated further. 
+Algo for point 2: 
+a> add (x<=0) as decision in to the implication graph, instead of cond 
+b> update the worklist based on cond (lhs), as well as (x<=0) (rhs). Normally
+we update worklist based on lhs only, but for cond statements we update 
+worklist based on lhs and rhs as well 
+
+4> For the negation of  (cond == (x <= 0)), do the following:
+a> Add !(x<=0) in to the implication graph.  
+b> update the worklist based on cond (lhs), as well as (x<=0) (rhs).
+   but for cond statements we update worklist based on lhs and rhs as well 
 

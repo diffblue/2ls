@@ -332,6 +332,17 @@ acdl_worklist_orderedt::update (const local_SSAt &SSA,
     for (local_SSAt::nodet::equalitiest::const_iterator e_it =
         n_it->equalities.begin (); e_it != n_it->equalities.end (); e_it++)
     {
+      exprt expr_rhs = to_equal_expr(*e_it).rhs();
+      //if(expr_rhs.id() == ID_constant) {
+      std::string str("nondet");
+      expr_rhs = e_it->rhs();
+      std::string rhs_str=id2string(expr_rhs.get(ID_identifier));
+      std::size_t found = rhs_str.find(str); 
+      // push the nondet statement in rhs
+      if(found != std::string::npos) {
+        std::cout << "Not inserting nondet elements " << std::endl; 
+       continue; 
+      }
       // the statement has already been processed, so no action needed
       if(*e_it == current_statement) continue;
 

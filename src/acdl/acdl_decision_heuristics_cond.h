@@ -23,7 +23,8 @@ public:
   
   typedef std::vector<acdl_domaint::meet_irreduciblet> decision_trail;  
   decision_trail dec_trail; 
-  typedef std::list<exprt> conds;
+  typedef std::pair<exprt, exprt> dec_pair;
+  typedef std::list<dec_pair> conds;
   
   virtual acdl_domaint::meet_irreduciblet operator()(
   const local_SSAt &SSA,

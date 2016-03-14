@@ -31,6 +31,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_condt::operator()
   std::string str("cond");
   std::string lhs_str;
   conds cond_container;
+  dec_pair d;
   for (local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin ();
       n_it != SSA.nodes.end (); n_it++)
   {
@@ -50,19 +51,25 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_condt::operator()
 #endif        
           //decision_var = e_it->lhs();
           // store the conditional variables in a container
-          cond_container.push_back(e_it->lhs()); 
+          d.first = e_it->lhs();       
+          d.second = e_it->rhs();       
+          cond_container.push_back(d); 
         }
       }
     }
   }
   // For conditional based decision heuristics, 
   // First collect all decision variables which are not singletons
-  std::vector<acdl_domaint::meet_irreduciblet> eligible_vars;
+  //std::vector<acdl_domaint::meet_irreduciblet> eligible_vars;
+  std::vector<dec_pair> eligible_vars;
   acdl_domaint::meet_irreduciblet dec;
-  for(std::list<exprt>::const_iterator itc = cond_container.begin();
+  /*for(std::list<exprt>::const_iterator itc = cond_container.begin();
+      itc != cond_container.end(); ++itc) */
+
+  for(std::list<dec_pair>::const_iterator itc = cond_container.begin();
       itc != cond_container.end(); ++itc)
   {
-    const exprt &decision_expr = *itc;
+    const exprt &decision_expr = itc->first;
     dec = domain.split(value,decision_expr);
     if(!dec.is_false()) 
       eligible_vars.push_back(*itc);
@@ -71,11 +78,15 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_condt::operator()
   if(eligible_vars.size() == 0)
     return false_exprt();
   
-  const exprt &v = eligible_vars[rand() % eligible_vars.size()];
+  const dec_pair &v1 = eligible_vars[rand() % eligible_vars.size()];
+  const exprt &v = v1.first;
+  //const exprt &v = eligible_vars[rand() % eligible_vars.size()];
   
   // decision expressions are same as decision variables in split function
   acdl_domaint::meet_irreduciblet decision = false_exprt();
   decision = domain.split(value,v,true);
+  
+  
    
   dec_trail.push_back(decision);
 #if 0
