@@ -52,7 +52,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_condt::operator()
           //decision_var = e_it->lhs();
           // store the conditional variables in a container
           d.first = e_it->lhs();       
-          d.second = e_it->rhs();       
+          d.second = *e_it;
           cond_container.push_back(d); 
         }
       }
@@ -78,16 +78,18 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_condt::operator()
   if(eligible_vars.size() == 0)
     return false_exprt();
   
+  //int index = rand() % eligible_vars.size();
   const dec_pair &v1 = eligible_vars[rand() % eligible_vars.size()];
+  //const dec_pair &v1 = eligible_vars[index];
   const exprt &v = v1.first;
+  dec_statement = v1.second;
   //const exprt &v = eligible_vars[rand() % eligible_vars.size()];
-  
+ 
+ 
   // decision expressions are same as decision variables in split function
   acdl_domaint::meet_irreduciblet decision = false_exprt();
   decision = domain.split(value,v,true);
   
-  
-   
   dec_trail.push_back(decision);
 #if 0
   for(std::list<exprt>::const_iterator it = cond_container.begin();

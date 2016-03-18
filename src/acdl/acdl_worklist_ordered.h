@@ -22,6 +22,8 @@ public:
   
   virtual void initialize(const local_SSAt &SSA);
 
+  virtual void dec_update(const local_SSAt &SSA, const acdl_domaint::statementt &stmt);
+
   //TODO: overload this function:
 /*  virtual void update(const local_SSAt &SSA,
 		      const acdl_domaint::varst &vars,

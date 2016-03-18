@@ -25,6 +25,7 @@ public:
   {
     assert(false);
   }
+  acdl_domaint::statementt dec_statement;
 
 protected:
   acdl_domaint &domain;
@@ -39,6 +40,7 @@ protected:
   ~acdl_decision_heuristicst() 
   {
   }
+  
 };
 
 #endif

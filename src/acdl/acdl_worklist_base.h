@@ -22,6 +22,9 @@ public:
   assert_listt alist;
   virtual void initialize(const local_SSAt &)
     { assert(false); }
+
+  virtual void dec_update(const local_SSAt &SSA, const acdl_domaint::statementt &stmt) { assert(false); }
+
   
   virtual void initialize_live_variables()
   { assert(false); }

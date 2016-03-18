@@ -201,11 +201,17 @@ acdl_solvert::decide (const local_SSAt &SSA)
     domain.output(std::cout, v) << std::endl;
 #endif
   
+  // access the decision statement associated with the chosen cond variables
+  acdl_domaint::statementt dec_stmt = decision_heuristics.dec_statement;
+  
   acdl_domaint::varst dec_vars;
   // find all symbols in the decision expression
-  find_symbols(dec_expr, dec_vars);
+  find_symbols(dec_stmt, dec_vars);
+
   // update the worklist here 
-  worklist.update(SSA, dec_vars);
+  //worklist.update(SSA, dec_vars);
+  worklist.dec_update(SSA, dec_stmt);
+  //worklist.update(SSA, dec_vars);
   return true;
 }
 
