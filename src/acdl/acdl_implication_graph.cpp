@@ -96,6 +96,8 @@ void acdl_implication_grapht::add_decision
   node.deleted = false;
   current_level++;
   node.level = current_level;
+  // add the decision to decision trail
+  dec_trail.push_back(m_ir);
 }
  
 

@@ -1,0 +1,207 @@
+2LS version 0.3.4 (based on CBMC 5.3)
+Parsing main.c
+Converting
+Type-checking main
+file main.c line 6 function main: function `assert' is not declared
+Generating GOTO Program
+Adding CPROVER library
+Generic Property Instrumentation
+Function Pointer Removal
+Performing full inlining
+Using intervals domain with ACDL solver
+Computing SSA of _start
+Simplifying
+(E) $guard#0 == TRUE
+
+(E) __CPROVER_dead_object#2 == NULL
+
+(E) __CPROVER_deallocated#3 == NULL
+
+(E) __CPROVER_malloc_is_new_array#4 == FALSE
+
+(E) __CPROVER_malloc_object#5 == NULL
+
+(E) __CPROVER_malloc_size#6 == 0ul
+
+(E) __CPROVER_memory_leak#7 == NULL
+
+(E) __CPROVER_next_thread_id#8 == 0ul
+
+(E) __CPROVER_pipe_count#9 == 0u
+
+(E) __CPROVER_rounding_mode#10 == 0
+
+(E) __CPROVER_thread_id#11 == 0ul
+
+(E) __CPROVER_threads_exited#12 == ARRAY_OF(FALSE)
+
+(E) x#16 == nondet_symbol(ssa::nondet16.1)
+
+(E) y#18 == nondet_symbol(ssa::nondet18.1)
+
+(E) x#19 == 1
+
+(A) x#19 == 1 || !$guard#0
+
+(E) main#return_value#23 == nondet_symbol(ssa::nondet23.1)
+
+
+_start
+Push: $guard#0 == TRUE
+Not inserting nondet elements 
+Not inserting nondet elements 
+Push: x#19 == 1
+Not inserting nondet elements 
+Not inserting nondet elements 
+Not inserting nondet elements 
+Push: !(x#19 == 1 || !$guard#0)
+Not inserting nondet elements 
+Not inserting nondet elements 
+Not inserting nondet elements 
+Push: !(x#19 == 1 || !$guard#0)
+Not inserting nondet elements 
+The content of the sliced but unordered worklist is as follows: 
+Sliced Unordered Worklist Element::$guard#0 == TRUE
+Sliced Unordered Worklist Element::x#19 == 1
+Leaf Element::$guard#0 == TRUE
+Leaf Element::x#19 == 1
+First single assertion push: ("or" "" ("=" "" ("symbol" "type" ("signedbv" "width" ("32") "#c_type" ("signed_int")) "identifier" ("main::1::x#19") "#source_location" ("" "file" ("main.c") "line" ("6") "function" ("main"))) "" ("constant" "type" ("signedbv" "width" ("32") "#c_type" ("signed_int")) "value" ("00000000000000000000000000000001") "#source_location" ("" "file" ("main.c") "line" ("6") "function" ("main")) "#cformat" ("1")) "type" ("bool") "#source_location" ("" "file" ("main.c") "line" ("6") "function" ("main"))) "" ("not" "" ("symbol" "type" ("bool") "identifier" ("ssa::$guard#0")) "type" ("bool")) "type" ("bool"))
+The content of the ordered worklist is as follows: 
+Worklist Element::!(x#19 == 1 || !$guard#0)
+Worklist Element::$guard#0 == TRUE
+Worklist Element::x#19 == 1
+Printing all live variables
+("symbol" "type" ("bool") "identifier" ("ssa::$guard#0")),
+("symbol" "type" ("signedbv" "width" ("32") "#c_type" ("signed_int")) "identifier" ("main::1::x#19") "#source_location" ("" "file" ("main.c") "line" ("6") "function" ("main"))),
+********************************
+        DEDUCTION PHASE 
+********************************
+Pop: !(x#19 == 1 || !$guard#0)
+Computing old abstract value of implication graph: 
+Old: 
+[ACDL-DOMAIN] old value: 
+DOMAIN projected live variables are: $guard#0x#19
+[ACDL-DOMAIN] projected(ssa::$guard#0): 
+[ACDL-DOMAIN] deductions(ssa::$guard#0): $guard#0 <== 
+
+[ACDL-DOMAIN] projected(main::1::x#19): 
+Push: $guard#0 == TRUE
+Not inserting nondet elements 
+Not inserting nondet elements 
+Push: !(x#19 == 1 || !$guard#0)
+Not inserting nondet elements 
+Popped Statement for live variables: !(x#19 == 1 || !$guard#0)
+Variables in Popped Statement: $guard#0 x#19  
+Live variables list are as follows: $guard#0x#19 
+The content of the updated worklist is as follows: 
+Updated Worklist Element::$guard#0 == TRUE
+Updated Worklist Element::x#19 == 1
+Updated Worklist Element::!(x#19 == 1 || !$guard#0)
+The updated live variables after removal are as follows: $guard#0x#19 
+New: $guard#0
+Computing new abstract value of implication graph: 
+$guard#0
+$guard#0
+Pop: $guard#0 == TRUE
+Computing old abstract value of implication graph: 
+$guard#0
+Old: $guard#0
+[ACDL-DOMAIN] old value: $guard#0
+DOMAIN projected live variables are: $guard#0
+[ACDL-DOMAIN] projected(ssa::$guard#0): 
+[ACDL-DOMAIN] deductions(ssa::$guard#0): $guard#0 <== 
+
+Not inserting nondet elements 
+Not inserting nondet elements 
+Not inserting nondet elements 
+Popped Statement for live variables: $guard#0 == TRUE
+Variables in Popped Statement: $guard#0  
+Live variables list are as follows: $guard#0x#19 
+The content of the updated worklist is as follows: 
+Updated Worklist Element::x#19 == 1
+Updated Worklist Element::!(x#19 == 1 || !$guard#0)
+The updated live variables after removal are as follows: $guard#0x#19 
+New: 
+Computing new abstract value of implication graph: 
+$guard#0
+Pop: x#19 == 1
+Computing old abstract value of implication graph: 
+$guard#0
+Old: $guard#0
+[ACDL-DOMAIN] old value: $guard#0
+DOMAIN projected live variables are: x#19
+[ACDL-DOMAIN] projected(main::1::x#19): $guard#0
+[ACDL-DOMAIN] deductions(main::1::x#19): x#19 <= 1 <== 
+-((signed __CPROVER_bitvector[33])x#19) <= -1 <== 
+
+Not inserting nondet elements 
+Not inserting nondet elements 
+Push: !(x#19 == 1 || !$guard#0)
+Not inserting nondet elements 
+Popped Statement for live variables: x#19 == 1
+Variables in Popped Statement: x#19  
+Live variables list are as follows: $guard#0x#19 
+The content of the updated worklist is as follows: 
+Updated Worklist Element::!(x#19 == 1 || !$guard#0)
+The updated live variables after removal are as follows: $guard#0x#19 
+New: x#19 <= 1 && -((signed __CPROVER_bitvector[33])x#19) <= -1
+Computing new abstract value of implication graph: 
+x#19 <= 1
+-((signed __CPROVER_bitvector[33])x#19) <= -1
+$guard#0
+x#19 <= 1
+-((signed __CPROVER_bitvector[33])x#19) <= -1
+Pop: !(x#19 == 1 || !$guard#0)
+Computing old abstract value of implication graph: 
+$guard#0
+x#19 <= 1
+-((signed __CPROVER_bitvector[33])x#19) <= -1
+Old: $guard#0 && x#19 <= 1 && -((signed __CPROVER_bitvector[33])x#19) <= -1
+[ACDL-DOMAIN] old value: $guard#0 && x#19 <= 1 && -((signed __CPROVER_bitvector[33])x#19) <= -1
+DOMAIN projected live variables are: $guard#0x#19
+[ACDL-DOMAIN] projected(ssa::$guard#0): x#19 <= 1 && -((signed __CPROVER_bitvector[33])x#19) <= -1
+[ADD DEDUCTIONS] 1 -> 4
+[ADD DEDUCTIONS] ("symbol" "type" ("bool") "identifier" ("ssa::$guard#0"))@level :0#decision: 0 -> ("constant" "type" ("bool") "value" ("false"))@level: 0#decision: 0
+[ADD DEDUCTIONS] 2 -> 4
+[ADD DEDUCTIONS] ("<=" "" ("symbol" "type" ("signedbv" "width" ("32") "#c_type" ("signed_int")) "identifier" ("main::1::x#19") "#source_location" ("" "file" ("main.c") "line" ("4") "function" ("main"))) "" ("constant" "type" ("signedbv" "width" ("32") "#c_type" ("signed_int")) "value" ("00000000000000000000000000000001")) "type" ("bool"))@level :0#decision: 0 -> ("constant" "type" ("bool") "value" ("false"))@level: 0#decision: 0
+Not inserting nondet elements 
+Not inserting nondet elements 
+Not inserting nondet elements 
+Popped Statement for live variables: !(x#19 == 1 || !$guard#0)
+Variables in Popped Statement: $guard#0 x#19  
+Live variables list are as follows: $guard#0x#19 
+Deleted live variables are: $guard#0
+Deleted live variables are: x#19
+The content of the updated worklist is as follows: 
+The updated live variables after removal are as follows:  
+New: 
+Computing new abstract value of implication graph: 
+$guard#0
+x#19 <= 1
+-((signed __CPROVER_bitvector[33])x#19) <= -1
+FALSE
+Propagation finished with BOTTOM
+****************************************************
+ IMPLICATION GRAPH AFTER DEDUCTION PHASE
+****************************************************
+Printing Graph Output -- Total Nodes: 4
+1 -> 4
+("symbol" "type" ("bool") "identifier" ("ssa::$guard#0"))@level:0@decision:0 -> ("constant" "type" ("bool") "value" ("false"))@level:0@decision:0
+1 -> 4
+2 -> 4
+("<=" "" ("symbol" "type" ("signedbv" "width" ("32") "#c_type" ("signed_int")) "identifier" ("main::1::x#19") "#source_location" ("" "file" ("main.c") "line" ("4") "function" ("main"))) "" ("constant" "type" ("signedbv" "width" ("32") "#c_type" ("signed_int")) "value" ("00000000000000000000000000000001")) "type" ("bool"))@level:0@decision:0 -> ("constant" "type" ("bool") "value" ("false"))@level:0@decision:0
+2 -> 4
+Node number: 1  Expression: ("symbol" "type" ("bool") "identifier" ("ssa::$guard#0"))  In edges: 0  Out edges: 1
+Node number: 2  Expression: ("<=" "" ("symbol" "type" ("signedbv" "width" ("32") "#c_type" ("signed_int")) "identifier" ("main::1::x#19") "#source_location" ("" "file" ("main.c") "line" ("4") "function" ("main"))) "" ("constant" "type" ("signedbv" "width" ("32") "#c_type" ("signed_int")) "value" ("00000000000000000000000000000001")) "type" ("bool"))  In edges: 0  Out edges: 1
+Node number: 3  Expression: ("<=" "" ("unary-" "" ("typecast" "" ("symbol" "type" ("signedbv" "width" ("32") "#c_type" ("signed_int")) "identifier" ("main::1::x#19") "#source_location" ("" "file" ("main.c") "line" ("4") "function" ("main"))) "type" ("signedbv" "width" ("33"))) "type" ("signedbv" "width" ("33"))) "" ("constant" "type" ("signedbv" "width" ("33")) "value" ("111111111111111111111111111111111")) "type" ("bool"))  In edges: 0  Out edges: 0
+Node number: 4  Expression: ("constant" "type" ("bool") "value" ("false"))  In edges: 2  Out edges: 0
+********************************
+    CONFLICT ANALYSIS PHASE
+********************************
+[main.assertion.1] assertion x == 1: FAILURE
+
+** 0 of 1 unknown
+** 1 of 1 failed
+VERIFICATION SUCCESSFUL
+EXIT=0
+SIGNAL=0

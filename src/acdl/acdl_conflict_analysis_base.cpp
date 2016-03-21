@@ -45,12 +45,12 @@ void acdl_conflict_analysis_baset::chronological_backtrack(acdl_implication_grap
   }
   // otherwise get decision element
   // must return a meet irreducible 
-  acdl_domaint::meet_irreduciblet expr = cond_heuristic.dec_trail.back();  
+  acdl_domaint::meet_irreduciblet expr = graph.dec_trail.back(); 
   cancel_once(graph);
 
   exprt exp = flip(expr);
   // insert new decision element into dec_trail
-  cond_heuristic.dec_trail.push_back(exp);
+  graph.dec_trail.push_back(exp);
   graph.add_decision(exp);
   
   graph.current_level--;
@@ -175,7 +175,8 @@ Function: acdl_conflict_analysis_baset::cancel_once()
  \*******************************************************************/
 void acdl_conflict_analysis_baset::cancel_once(acdl_implication_grapht &graph) 
 {
-  const exprt expr = cond_heuristic.dec_trail.back();  
+  const exprt expr = graph.dec_trail.back();  
+
   // remove everything starting from the present decision node
   int na = graph.find_node(expr);
   graph.remove_out_edges(na);
@@ -186,7 +187,6 @@ void acdl_conflict_analysis_baset::cancel_once(acdl_implication_grapht &graph)
   graph.remove_in_edges(nb);
   graph.delete_graph_nodes(); 
 
-  // cond_heuristic.dec_trail.pop_back();
   std::cout << "***********************************************" << std::endl;
   std::cout << "IMPLICATION GRAPH AFTER BACKTRACKING" << std::endl;
   std::cout << "***********************************************" << std::endl;

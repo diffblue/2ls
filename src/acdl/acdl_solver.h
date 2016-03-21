@@ -17,7 +17,6 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 
 #include "acdl_domain.h"
 #include "acdl_decision_heuristics.h"
-#include "acdl_decision_heuristics_cond.h"
 #include "acdl_worklist_base.h"
 #include "acdl_conflict_analysis_base.h"
 
@@ -29,14 +28,13 @@ public:
 			acdl_domaint &_domain,
 			acdl_decision_heuristicst &_decision_heuristics,
                         acdl_worklist_baset &_worklist,
-                        acdl_conflict_analysis_baset &_conflict_analysis, acdl_decision_heuristics_condt &_cond_heuristict)
+                        acdl_conflict_analysis_baset &_conflict_analysis)
     : 
     options(_options),
     domain(_domain),
     decision_heuristics(_decision_heuristics),
     worklist(_worklist),
-    conflict_analysis(_conflict_analysis),
-    cond_dec_heuristic(_cond_heuristict)
+    conflict_analysis(_conflict_analysis)
     {
     }  
 
@@ -52,8 +50,6 @@ protected:
   acdl_decision_heuristicst &decision_heuristics;
   acdl_worklist_baset &worklist; 
   acdl_conflict_analysis_baset &conflict_analysis;
-
-  acdl_decision_heuristics_condt &cond_dec_heuristic;
 
   acdl_implication_grapht implication_graph;
   std::vector<exprt> learned_clauses;

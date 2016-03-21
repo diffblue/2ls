@@ -30,6 +30,9 @@ public:
     current_level(0)
   {}
   
+  typedef std::vector<acdl_domaint::meet_irreduciblet> decision_trail;  
+  decision_trail dec_trail; 
+  
   unsigned current_level;
   void first_uip(nodest &cut);
   void add_deductions(const acdl_domaint::deductionst &m_ir);

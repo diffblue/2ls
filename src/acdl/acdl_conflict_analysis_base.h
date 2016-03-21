@@ -12,7 +12,6 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include <util/graph.h>
 #include <goto-programs/property_checker.h>
 
-#include "acdl_decision_heuristics_cond.h"
 #include "acdl_domain.h"
 #include "acdl_implication_graph.h"
 #include "../ssa/local_ssa.h"
@@ -21,6 +20,7 @@ class acdl_conflict_analysis_baset : public messaget
 {
 public: 
   
+#if 0   
   acdl_decision_heuristics_condt &cond_heuristic;
   explicit acdl_conflict_analysis_baset(acdl_decision_heuristics_condt &_cond_heuristic) 
   :
@@ -33,16 +33,18 @@ public:
   virtual ~acdl_conflict_analysis_baset()
   {
   }
-#if 0   
+  
+#endif
+
   explicit acdl_conflict_analysis_baset()
   :
-  backtrack_level(0)
+  backtrack_level(0),
+  disable_backjumping(1)
   {}
 
   virtual ~acdl_conflict_analysis_baset()
   {
   }
-#endif
 
   property_checkert::resultt operator()(acdl_implication_grapht &graph, exprt &learned_clause);
   unsigned int backtracks; 

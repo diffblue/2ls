@@ -11,7 +11,6 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include <util/find_symbols.h>
 #include "acdl_solver.h"
 #include "acdl_domain.h"
-#include "acdl_decision_heuristics_cond.h"
 #include "acdl_worklist_ordered.h"
 #include <string>
 
@@ -208,10 +207,10 @@ acdl_solvert::decide (const local_SSAt &SSA)
   // find all symbols in the decision expression
   find_symbols(dec_stmt, dec_vars);
 
-  // update the worklist here 
+  // initialize the worklist here with all 
+  // transitive dependencies of decision statement
   //worklist.update(SSA, dec_vars);
   worklist.dec_update(SSA, dec_stmt);
-  //worklist.update(SSA, dec_vars);
   return true;
 }
 
@@ -240,7 +239,9 @@ acdl_solvert::analyze_conflict(const local_SSAt &SSA)
 
     acdl_domaint::valuet v;
     implication_graph.to_value(v);
-    exprt dec_expr = cond_dec_heuristic.dec_trail.back();
+    exprt dec_expr = implication_graph.dec_trail.back();
+
+    //exprt dec_expr = cond_dec_heuristic.dec_trail.back();
     domain.meet(dec_expr,v);
 #ifdef DEBUG
     std::cout << "New [Analyze conflict]: ";
@@ -253,7 +254,8 @@ acdl_solvert::analyze_conflict(const local_SSAt &SSA)
     // update the worklist here 
     worklist.update(SSA, dec_vars);
     // pop from the decision trail 
-    cond_dec_heuristic.dec_trail.pop_back();
+    //cond_dec_heuristic.dec_trail.pop_back();
+    implication_graph.dec_trail.pop_back();
     result = propagate(SSA);
     return result;
   }

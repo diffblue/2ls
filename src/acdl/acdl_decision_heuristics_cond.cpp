@@ -90,7 +90,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_condt::operator()
   acdl_domaint::meet_irreduciblet decision = false_exprt();
   decision = domain.split(value,v,true);
   
-  dec_trail.push_back(decision);
+  //dec_trail.push_back(decision);
 #if 0
   for(std::list<exprt>::const_iterator it = cond_container.begin();
       it != cond_container.end(); ++it)
