@@ -119,14 +119,17 @@ void acdl_domaint::operator()(const statementt &statement,
 	solver->new_context();
 	solver->set_assumptions(value_literals);
 	*solver << not_exprt(*it);
+	std::cout << "deducing in SAT" << std::endl;
 	if((*solver)() == decision_proceduret::D_SATISFIABLE)
-	{
-	  //"don't know"
-   	  //pop_context not needed
+	{ 
+	  std::cout << "not deducing" << std::endl;
+    //"don't know"
+    //pop_context not needed
 	  continue;
 	}
 	else
 	{
+	  std::cout << "actually deducing" << std::endl;
 	  deductions.push_back(deductiont());
 	  deductions.back().first = deduced;
 	  get_antecedents(*solver,_old_value,value_literals,
@@ -141,6 +144,7 @@ void acdl_domaint::operator()(const statementt &statement,
       }
       else //bottom
       {
+	     std::cout << "deducing in BOTTOM" << std::endl;
 	deductions.push_back(deductiont());
 	deductions.back().first = false_exprt();
 	get_antecedents(*solver,_old_value,value_literals,
@@ -178,41 +182,41 @@ void acdl_domaint::operator()(const statementt &statement,
       for(unsigned i=0; i<old_value.size(); i++)
       {
 	literalt l = solver->convert(old_value[i]);
-	if(l.is_constant())
-	{
-	  *solver << literal_exprt(l);
-	  continue;
-	}
-	value_literal_map.push_back(i);
-	value_literals.push_back(l);
-  	solver->solver->set_frozen(l);
+  if(l.is_constant())
+  {
+    *solver << literal_exprt(l);
+    continue;
+  }
+  value_literal_map.push_back(i);
+  value_literals.push_back(l);
+  solver->solver->set_frozen(l);
       }
       for(unsigned i=0; i<var_values.size(); ++i)
       {
-	literalt l = solver->convert(var_values[i]);
-	if(l.is_constant())
-	{
-	  *solver << literal_exprt(l);
-	  continue; //in this case we don't have information on deductions
-	}
+        literalt l = solver->convert(var_values[i]);
+        if(l.is_constant())
+        {
+          *solver << literal_exprt(l);
+          continue; //in this case we don't have information on deductions
+        }
 
-	solver->new_context();
-	*solver << not_exprt(var_values[i]);
-	solver->set_assumptions(value_literals);
+        solver->new_context();
+        *solver << not_exprt(var_values[i]);
+        solver->set_assumptions(value_literals);
 
-	decision_proceduret::resultt result = (*solver)();
-	assert(result == decision_proceduret::D_UNSATISFIABLE);
-	    
-	deductions.push_back(deductiont());
-	deductions.back().first = var_values[i];
-	get_antecedents(*solver,_old_value,value_literals,
-			deductions.back().second);
-	solver->pop_context();
+        decision_proceduret::resultt result = (*solver)();
+        assert(result == decision_proceduret::D_UNSATISFIABLE);
 
-	if(!is_contained(var_values[i],_old_value))
-	{
-	  new_value.push_back(var_values[i]);
-	}
+        deductions.push_back(deductiont());
+        deductions.back().first = var_values[i];
+        get_antecedents(*solver,_old_value,value_literals,
+            deductions.back().second);
+        solver->pop_context();
+
+        if(!is_contained(var_values[i],_old_value))
+        {
+          new_value.push_back(var_values[i]);
+        }
       }	
     }
     else
