@@ -126,6 +126,16 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA)
 #ifdef DEBUG
       std::cout << "Propagation finished with BOTTOM" << std::endl;
 #endif
+      // empty the worklist because the present decision 
+      // lead to bottom, so all information in the 
+      // worklist is irrelevant
+      while(!worklist.empty()) 
+       worklist.pop(); 
+      // empty the live variables because the worklist 
+      // items are no more relevent, hence the live variables
+      // are no more relevant 
+      worklist.live_variables.erase
+      (worklist.live_variables.begin(), worklist.live_variables.end()); 
       return property_checkert::PASS; //potential UNSAT (modulo decisions)
     }
   }
