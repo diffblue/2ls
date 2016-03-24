@@ -23,11 +23,10 @@ public:
   
   typedef std::pair<exprt, acdl_domaint::statementt> dec_pair;
   typedef std::list<dec_pair> conds;
-  
+
   virtual acdl_domaint::meet_irreduciblet operator()(
   const local_SSAt &SSA,
   const acdl_domaint::valuet &value);
-
 };
 
 #endif

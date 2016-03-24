@@ -8,11 +8,39 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include <limits.h>
 #include <fstream>
 #include <cstdlib>
+#include "acdl_solver.h"
 #include "acdl_decision_heuristics_cond.h"
+
+#define DEBUG 1
 
 acdl_domaint::meet_irreduciblet acdl_decision_heuristics_condt::operator()
 (const local_SSAt &SSA, const acdl_domaint::valuet &value)
 {
+#ifdef DEBUG
+  std::cout << "Printing all decision variables" << std::endl;
+  for(std::set<exprt>::const_iterator 
+    it = decision_variables.begin(); it != decision_variables.end(); ++it)
+      std::cout << *it << "," << std::endl;
+#endif
+  // collect the non-singleton variables
+  std::set<exprt> non_singletons;
+  acdl_domaint::meet_irreduciblet val;
+  for(std::set<exprt>::const_iterator 
+    it = decision_variables.begin(); it != decision_variables.end(); ++it) {
+    val = domain.split(value, *it);
+    if(!val.is_false()) 
+      non_singletons.insert(*it);
+   }
+   // no more decisions can be made
+   if(non_singletons.size() == 0)
+     return false_exprt();
+
+#ifdef DEBUG
+  std::cout << "Printing all decision variables" << std::endl;
+  for(std::set<exprt>::const_iterator 
+    it = non_singletons.begin(); it != non_singletons.end(); ++it)
+      std::cout << *it << "," << std::endl;
+#endif
   //TODO
   // use information from VSIDS to choose decision 'variable'
   

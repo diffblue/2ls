@@ -44,6 +44,7 @@ public:
 
   property_checkert::resultt operator()(const local_SSAt &SSA);
 
+  std::set<exprt> decision_variables;
 protected:
   const optionst &options;
   acdl_domaint &domain;

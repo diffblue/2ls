@@ -369,7 +369,7 @@ void acdl_implication_grapht::remove_in_edges(node_indext n)
       it++) {
     if(nodes[it->first].level == current_level && (!nodes[it->first].deleted)) {
       nodes[it->first].erase_out(n);
-      std::cout << "Removing" << n << " -> " << it->first << std::endl; 
+      std::cout << "Removing" << n << " <- " << it->first << std::endl; 
       remove_in_edges(it->first);
     }
   }

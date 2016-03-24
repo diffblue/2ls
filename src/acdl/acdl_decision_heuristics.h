@@ -26,7 +26,7 @@ public:
     assert(false);
   }
   acdl_domaint::statementt dec_statement;
-
+  std::set<exprt> decision_variables;
 protected:
   acdl_domaint &domain;
 

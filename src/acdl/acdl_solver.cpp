@@ -373,6 +373,8 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
   worklist.initialize(SSA);
   // call initialize live variables
   worklist.initialize_live_variables();
+  // initialize the decision variables
+  decision_heuristics.decision_variables = worklist.worklist_vars;
    
   // collect variables for completeness check
   std::set<symbol_exprt> all_vars;

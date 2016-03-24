@@ -19,7 +19,7 @@ public:
   acdl_worklist_baset()
   {
   }
-  
+    
   virtual void initialize(const local_SSAt &SSA);
 
   virtual void dec_update(const local_SSAt &SSA, const acdl_domaint::statementt &stmt);

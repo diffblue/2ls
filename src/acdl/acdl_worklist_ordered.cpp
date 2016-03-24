@@ -190,7 +190,7 @@ acdl_worklist_orderedt::initialize (const local_SSAt &SSA)
     const acdl_domaint::statementt statement = pop_from_list(inter_worklist);
     push_into_list (worklist, statement);
   }
-  
+
 #ifdef DEBUG    
    std::cout << "The content of the ordered worklist is as follows: " << std::endl;
     for(std::list<acdl_domaint::statementt>::const_iterator 
@@ -393,17 +393,25 @@ acdl_worklist_orderedt::dec_update (const local_SSAt &SSA, const acdl_domaint::s
   worklist.push_back(stmt);
 
   acdl_domaint::varst dec_vars;
+  std::set<exprt> dvars;
   // find all symbols in the decision expression
   find_symbols(stmt, dec_vars);
+  find_symbols(stmt, dvars);
+  worklist_vars.insert(dvars.begin(), dvars.end());
   live_variables.insert(dec_vars.begin(),dec_vars.end());
   // insert leaf nodes
   while(!leaf_worklist.empty() > 0) {
     const acdl_domaint::statementt statement = pop_from_list(leaf_worklist);
     push_into_list (worklist, statement);
     acdl_domaint::varst leaf_vars;
+    std::set<exprt> lvars;
+    
     // find all symbols in the leaf expression
     find_symbols(statement, leaf_vars);
     live_variables.insert(leaf_vars.begin(),leaf_vars.end());
+  
+    find_symbols(statement, lvars);
+    worklist_vars.insert(lvars.begin(), lvars.end());
   }
     
   // insert intermediate nodes
@@ -411,9 +419,13 @@ acdl_worklist_orderedt::dec_update (const local_SSAt &SSA, const acdl_domaint::s
     const acdl_domaint::statementt statement = pop_from_list(inter_worklist);
     push_into_list (worklist, statement);
     acdl_domaint::varst inter_vars;
+    std::set<exprt> ivars;
     // find all symbols in the leaf expression
     find_symbols(statement, inter_vars);
     live_variables.insert(inter_vars.begin(),inter_vars.end());
+    
+    find_symbols(statement, ivars);
+    worklist_vars.insert(ivars.begin(), ivars.end());
   }
   
 #ifdef DEBUG    
