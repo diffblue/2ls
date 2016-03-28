@@ -37,7 +37,7 @@ Function: abstr_dpll_searcht::chronological_backtrack
  Purpose:
 
 \*******************************************************************/
-void acdl_conflict_analysis_baset::chronological_backtrack(acdl_implication_grapht &graph)
+void acdl_conflict_analysis_baset::chronological_backtrack(const local_SSAt &SSA, acdl_implication_grapht &graph)
 {
   if(graph.current_level == 0) {
     backtrack_level = -1; //no further backtrack possible
@@ -46,7 +46,7 @@ void acdl_conflict_analysis_baset::chronological_backtrack(acdl_implication_grap
   // otherwise get decision element
   // must return a meet irreducible 
   acdl_domaint::meet_irreduciblet expr = graph.dec_trail.back(); 
-  cancel_once(graph);
+  cancel_once(SSA, graph);
 
   exprt exp = flip(expr);
   // insert new decision element into dec_trail
@@ -70,11 +70,11 @@ Function: acdl_conflict_analysis_baset::operator()
 
  \*******************************************************************/
 property_checkert::resultt acdl_conflict_analysis_baset::operator()
-             (acdl_implication_grapht &graph, exprt &learned_clause)
+             (const local_SSAt &SSA, acdl_implication_grapht &graph, exprt &learned_clause)
 {
   // abstract dpll strategy, no clause learning
   if(disable_backjumping) {
-    chronological_backtrack(graph); 
+    chronological_backtrack(SSA, graph); 
     // no further backtrack possible
     if(backtrack_level < 0) {
       property_checkert::resultt result = property_checkert::PASS;
@@ -173,7 +173,7 @@ Function: acdl_conflict_analysis_baset::cancel_once()
  Purpose: backtracks by one level
 
  \*******************************************************************/
-void acdl_conflict_analysis_baset::cancel_once(acdl_implication_grapht &graph) 
+void acdl_conflict_analysis_baset::cancel_once(const local_SSAt &SSA, acdl_implication_grapht &graph) 
 {
   const exprt expr = graph.dec_trail.back();  
 
@@ -190,7 +190,7 @@ void acdl_conflict_analysis_baset::cancel_once(acdl_implication_grapht &graph)
   std::cout << "***********************************************" << std::endl;
   std::cout << "IMPLICATION GRAPH AFTER BACKTRACKING" << std::endl;
   std::cout << "***********************************************" << std::endl;
-  graph.print_graph_output();
+  graph.print_graph_output(SSA);
 }
 
 /*******************************************************************\

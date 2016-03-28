@@ -20,7 +20,7 @@ Function: acdl_implication_grapht::add_deductions
 
  \*******************************************************************/
 void acdl_implication_grapht::add_deductions
-  (const acdl_domaint::deductionst &m_ir)
+  (const local_SSAt &SSA, const acdl_domaint::deductionst &m_ir)
 {
   // add a dummy node (node 0) when the graph is empty 
   // since the information of node 0 is obscured
@@ -63,8 +63,8 @@ void acdl_implication_grapht::add_deductions
       // valid node can't be node 0
       assert(nb != 0);
       std::cout << "[ADD DEDUCTIONS] " << nb << " -> " << na << std::endl;
-      std::cout << "[ADD DEDUCTIONS] " << nodes[nb].expr << "@level :" << nodes[nb].level << "#decision: " << nodes[nb].is_decision <<  
-      " -> " << nodes[na].expr << "@level: " << nodes[na].level << "#decision: " << nodes[na].is_decision << std::endl;
+      std::cout << "[ADD DEDUCTIONS] " << from_expr(SSA.ns, "", nodes[nb].expr) << "@level :" << nodes[nb].level << "#decision: " << nodes[nb].is_decision <<  
+      " -> " << from_expr(SSA.ns, "", nodes[na].expr) << "@level: " << nodes[na].level << "#decision: " << nodes[na].is_decision << std::endl;
 #ifdef DEBUG
       assert(nb!=-1);
       assert(!has_edge(nb,na));
@@ -151,10 +151,10 @@ Function: acdl_implication_grapht::print_dot_output
  Purpose: print graph output
 
  \*******************************************************************/
-void acdl_implication_grapht::print_graph_output()
+void acdl_implication_grapht::print_graph_output(const local_SSAt &SSA)
 {
   //graph::output_dot(std::cout);
-  output_graph(std::cout);
+  output_graph(SSA, std::cout);
 }
 
 /*******************************************************************\
@@ -191,7 +191,7 @@ Function: acdl_implication_grapht::print_dot_output
 
  \*******************************************************************/
     
-void acdl_implication_grapht::output_graph(std::ostream &out) const 
+void acdl_implication_grapht::output_graph(const local_SSAt &SSA, std::ostream &out) const 
 {
   int sizet=0;
   for(node_indext i=1; i<size(); i++)
@@ -203,13 +203,13 @@ void acdl_implication_grapht::output_graph(std::ostream &out) const
 
   for(node_indext i=1; i<size(); i++) {
     if(nodes[i].deleted==0)
-    output_graph_node(out, i);
+    output_graph_node(SSA, out, i);
   }
 
  for(node_indext j=1; j<size(); j++)
  {
    if(nodes[j].deleted==0)
-   std::cout << "Node number: " << j << "  Expression: " << (*this)[j].expr << 
+   std::cout << "Node number: " << j << "  Expression: " << from_expr(SSA.ns, "", nodes[j].expr) << 
    "  In edges: " << nodes[j].in.size() << "  Out edges: " << nodes[j].out.size() << std::endl;
  }
 }
@@ -225,7 +225,7 @@ Function: acdl_implication_grapht::print_dot_output
  Purpose: print graph output
 
  \*******************************************************************/
-void acdl_implication_grapht::output_graph_node(std::ostream &out, node_indext n) const 
+void acdl_implication_grapht::output_graph_node(const local_SSAt &SSA, std::ostream &out, node_indext n) const 
 {
   
   const nodet &node=nodes[n];
@@ -246,8 +246,8 @@ void acdl_implication_grapht::output_graph_node(std::ostream &out, node_indext n
       it++) {
     out << n << " -> " << it->first << '\n';
     node_indext n1 = it->first;
-    out << nodes[n].expr << "@level:" << nodes[n].level << "@decision:" << nodes[n].is_decision << 
-    " -> " << nodes[n1].expr << "@level:" << nodes[n1].level << "@decision:" << nodes[n1].is_decision << '\n';
+    std::cout << from_expr(SSA.ns, "", nodes[n].expr) << "@level:" << nodes[n].level << "@decision:" << nodes[n].is_decision << 
+    " -> " << from_expr(SSA.ns, "", nodes[n1].expr) << "@level:" << nodes[n1].level << "@decision:" << nodes[n1].is_decision << '\n';
   }
   for(typename edgest::const_iterator
       it=node.out.begin();

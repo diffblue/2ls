@@ -32,9 +32,9 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_condt::operator()
       non_singletons.insert(*it);
    }
    // no more decisions can be made
-   if(non_singletons.size() == 0)
+   /*if(non_singletons.size() == 0)
      return false_exprt();
-
+   */
 #ifdef DEBUG
   std::cout << "Printing all decision variables" << std::endl;
   for(std::set<exprt>::const_iterator 

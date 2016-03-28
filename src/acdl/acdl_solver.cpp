@@ -83,7 +83,7 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA)
     domain(statement, projected_live_vars, v, new_v, deductions);
     
     // update implication graph
-    implication_graph.add_deductions(deductions);
+    implication_graph.add_deductions(SSA, deductions);
     
     // update worklist based on variables in the consequent (new_v)
     // - collect variables in new_v
@@ -240,7 +240,7 @@ property_checkert::resultt
 acdl_solvert::analyze_conflict(const local_SSAt &SSA)
 {
   exprt learned_clause;
-  property_checkert::resultt result = conflict_analysis(implication_graph, learned_clause);
+  property_checkert::resultt result = conflict_analysis(SSA, implication_graph, learned_clause);
   if(result == property_checkert::PASS) 
     return result;
   else {
@@ -415,7 +415,7 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
       std::cout << "****************************************************" << std::endl;
       std::cout << " IMPLICATION GRAPH AFTER DEDUCTION PHASE" << std::endl;
       std::cout << "****************************************************" << std::endl;
-      implication_graph.print_graph_output();
+      implication_graph.print_graph_output(SSA);
       // check for conflict
       if(result == property_checkert::PASS) //UNSAT
         break;
@@ -443,7 +443,7 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
       std::cout << "****************************************************" << std::endl;
       std::cout << "IMPLICATION GRAPH AFTER DECISION PHASE" << std::endl;
       std::cout << "****************************************************" << std::endl;
-      implication_graph.print_graph_output();
+      implication_graph.print_graph_output(SSA);
     }
 
     std::cout << "********************************" << std::endl;

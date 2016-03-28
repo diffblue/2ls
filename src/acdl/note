@@ -518,3 +518,20 @@ a> Add !(x<=0) in to the implication graph.
 b> update the worklist based on cond (lhs), as well as (x<=0) (rhs).
    but for cond statements we update worklist based on lhs and rhs as well 
 
+Discussion:
+1> For the negation of  (cond == (x <= 0)), do the following:
+   a> Add !(cond) in to the implication graph.  
+
+2> Make the decision heuristic structured:
+    init() -- function in acdl_solver that implements the following :
+       dec_heuristic_cond.init() -- initialize the container with boolean variables
+       dec_heuristic_int.init() -- initialize the container with bit-vector variables
+    class dec_heuristic_all : dec_heuristic_baset
+    {
+      decide() {
+        dec_heuristic_cond;  
+        dec_heuristic_bv;  
+      }
+    }
+3> For recursive deductions in Implication graph, when added 10->3, dont add
+3->10    
