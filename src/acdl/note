@@ -535,3 +535,4 @@ Discussion:
     }
 3> For recursive deductions in Implication graph, when added 10->3, dont add
 3->10    
+4> Add learned clause to the conflict_literal container.

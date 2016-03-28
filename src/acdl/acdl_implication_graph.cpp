@@ -40,12 +40,13 @@ void acdl_implication_grapht::add_deductions
     //acdl_domaint::meet_irreduciblet exp = it->first; 
     int na = find_node(it->first);
     // new node, add to the graph
+    // do not insert any cyclic deductions
     if(na == -1)
     {
       na = graph::add_node();
       // new node can't be node 0
       assert(na != 0);
-    }
+    
     acdl_implication_graph_nodet &node = (*this)[na];
     node.expr = it->first;
     node.is_decision = false;
@@ -69,8 +70,12 @@ void acdl_implication_grapht::add_deductions
       assert(nb!=-1);
       assert(!has_edge(nb,na));
 #endif
-      add_edge(nb, na);
+      // logic to determine deduction cycles of length 1
+      //if(!has_edge(na, nb))
+       add_edge(nb, na);
+     }
     }
+    else continue;
   } 
 }
 

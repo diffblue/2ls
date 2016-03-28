@@ -218,9 +218,11 @@ acdl_solvert::decide (const local_SSAt &SSA)
   find_symbols(dec_stmt, dec_vars);
 
   // initialize the worklist here with all 
-  // transitive dependencies of decision statement
-  //worklist.update(SSA, dec_vars);
-  worklist.dec_update(SSA, dec_stmt);
+  // transitive dependencies of the decision
+  //worklist.dec_update(SSA, dec_stmt);
+  
+  worklist.dec_update(SSA, dec_expr);
+
   return true;
 }
 
@@ -258,11 +260,17 @@ acdl_solvert::analyze_conflict(const local_SSAt &SSA)
     domain.output(std::cout, v) << std::endl;
 #endif
 
+
+    // TODO: Push all learnt clauses 
+    // in to the worklist
+
+
     acdl_domaint::varst dec_vars;
     // find all symbols in the decision expression
     find_symbols(dec_expr, dec_vars);
-    // update the worklist here 
-    worklist.update(SSA, dec_vars);
+    // update the worklist based on all transitively dependant elements of the
+    // learnt clause 
+    worklist.dec_update(SSA, dec_expr);
     // pop from the decision trail 
     //cond_dec_heuristic.dec_trail.pop_back();
     implication_graph.dec_trail.pop_back();

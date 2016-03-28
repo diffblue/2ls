@@ -123,18 +123,17 @@ acdl_worklist_orderedt::initialize (const local_SSAt &SSA)
      for(std::list<acdl_domaint::statementt>::const_iterator it1 = worklist.begin(); it1 != worklist.end(); ++it1)
       {
         if(*it == *it1) continue;
-        else {
+        /*else {
          if(!(check_statement(*it1, vars_rhs))) {
            // *it is a leaf node
            //push_into_worklist(leaf_worklist, *it);
-        }
+        }*/
          // this is an intermediate node, not leaf
          else {
            // pop the element from the list
            //const acdl_domaint::statementt statement = pop_from_worklist(worklist);
            push_into_list(inter_worklist, *it);
          }
-        }
       }
     }
   }
@@ -277,7 +276,7 @@ acdl_worklist_orderedt::dec_update (const local_SSAt &SSA, const acdl_domaint::s
 {
   // **********************************************************************
   // Initialization Strategy: Guarantees top-down and bottom-up propagation 
-  // Assertions -- Top
+  // Decision -- Top
   // Leaf node  -- Middle
   // Rest       -- Bottom
   // **********************************************************************
@@ -359,16 +358,13 @@ acdl_worklist_orderedt::dec_update (const local_SSAt &SSA, const acdl_domaint::s
       {
         if(*it == *it1) continue;
         else {
-         if(!(check_statement(*it1, vars_rhs))) {
+         /*if(!(check_statement(*it1, vars_rhs))) {
            // *it is a leaf node
            //push_into_worklist(leaf_worklist, *it);
         }
          // this is an intermediate node, not leaf
-         else {
-           // pop the element from the list
-           //const acdl_domaint::statementt statement = pop_from_worklist(worklist);
+         else {*/
            push_into_list(inter_worklist, *it);
-         }
         }
       }
     }
@@ -390,7 +386,7 @@ acdl_worklist_orderedt::dec_update (const local_SSAt &SSA, const acdl_domaint::s
   */
   worklist.clear();
   // insert decisions as the first statement
-  worklist.push_back(stmt);
+  // worklist.push_back(stmt);
 
   acdl_domaint::varst dec_vars;
   std::set<exprt> dvars;
