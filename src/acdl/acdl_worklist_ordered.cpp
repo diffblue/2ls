@@ -336,6 +336,17 @@ acdl_worklist_orderedt::dec_update (const local_SSAt &SSA, const acdl_domaint::s
   for(std::list<acdl_domaint::statementt>::const_iterator 
     it = worklist.begin(); it != worklist.end(); ++it) 
   {
+    if(it->id() == ID_equal) {
+     exprt expr_rhs = to_equal_expr(*it).rhs();
+     if(expr_rhs.id() == ID_constant) 
+       push_into_list(leaf_worklist, *it);
+     else  
+       push_into_list(inter_worklist, *it);
+    }
+    else
+       push_into_list(inter_worklist, *it);
+  }
+    #if 0
     // Do we need to separately treat ID_constraint ?
     if(it->id() == ID_equal) {
      exprt expr_rhs = to_equal_expr(*it).rhs();
@@ -369,6 +380,7 @@ acdl_worklist_orderedt::dec_update (const local_SSAt &SSA, const acdl_domaint::s
       }
     }
   }
+  #endif
 
     
 #ifdef DEBUG

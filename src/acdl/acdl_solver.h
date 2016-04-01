@@ -45,6 +45,7 @@ public:
   property_checkert::resultt operator()(const local_SSAt &SSA);
 
   std::set<exprt> decision_variables;
+
 protected:
   const optionst &options;
   acdl_domaint &domain;
@@ -73,6 +74,7 @@ protected:
   }
     
   
+  void init();
   property_checkert::resultt analyze_conflict(const local_SSAt &SSA);
 };
 

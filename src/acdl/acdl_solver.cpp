@@ -352,6 +352,35 @@ acdl_solvert::analyze_conflict(const local_SSAt &SSA)
 #endif 
 }
 
+
+/*******************************************************************
+
+ Function: acdl_solvert::init()
+
+ Inputs:
+
+ Outputs:
+
+ Purpose:
+
+ \*******************************************************************/
+/*void acdl_solvert::init() 
+{
+  std::string heur = options.get_option("dec-heur");
+
+  if(heur == "berkmin") 
+    dec_heur = BERKMIN;
+  else if(heur == "range")
+    dec_heur = RANGE;
+  else if(heur == "range-rel")
+    dec_heur = RANGE_REL;
+  else if(heur == "rand")
+    dec_heur = RAND;
+  else 
+    dec_heur = RAND; //DEFAULT
+}
+*/
+
 /*******************************************************************
  Function: acdl_solvert::operator()
 
@@ -378,6 +407,7 @@ end
 
 property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
 {
+  //init();
   worklist.initialize(SSA);
   // call initialize live variables
   worklist.initialize_live_variables();

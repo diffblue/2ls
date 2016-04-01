@@ -51,7 +51,7 @@ DELTA_OBJ+=\
       ../acdl/acdl_conflict_analysis_base$(OBJEXT) \
       ../acdl/acdl_implication_graph$(OBJEXT) \
       ../acdl/template_generator_acdl$(OBJEXT) \
-      ../acdl/acdl_decision_heuristics_cond$(OBJEXT) \
+      ../acdl/acdl_decision_heuristics$(OBJEXT) \
       ../functions/summary$(OBJEXT) \
       ../functions/get_function$(OBJEXT) \
       ../functions/path_util$(OBJEXT) \

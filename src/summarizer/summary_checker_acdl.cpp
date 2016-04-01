@@ -12,7 +12,8 @@ Author: Peter Schrammel
 
 #include "../acdl/acdl_solver.h"
 #include "../acdl/acdl_domain.h"
-#include "../acdl/acdl_decision_heuristics_cond.h"
+//#include "../acdl/acdl_decision_heuristics_cond.h"
+#include "../acdl/acdl_decision_heuristics.h"
 #include "../acdl/acdl_worklist_ordered.h"
 #include "../acdl/acdl_conflict_analysis_base.h"
 
@@ -41,7 +42,8 @@ property_checkert::resultt summary_checker_acdlt::operator()(
   local_SSAt &SSA = ssa_db.get(entry_point);
   ssa_local_unwindert &ssa_local_unwinder = ssa_unwinder.get(entry_point);
   acdl_domaint acdl_domain(options,SSA,ssa_db,ssa_local_unwinder);
-  acdl_decision_heuristics_condt acdl_decision_heuristics(acdl_domain);
+  acdl_decision_heuristicst acdl_decision_heuristics(acdl_domain);
+ // acdl_decision_heuristics_condt acdl_decision_heuristics(acdl_domain);
   acdl_worklist_orderedt acdl_worklist;
   acdl_conflict_analysis_baset acdl_conflict_analysist;
   acdl_solvert acdl_solver(options, acdl_domain, acdl_decision_heuristics,
