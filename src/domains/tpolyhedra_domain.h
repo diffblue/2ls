@@ -71,6 +71,8 @@ public:
   row_valuet get_max_row_value(const rowt &row);
   row_valuet get_min_row_value(const rowt &row);
   static row_valuet between(const row_valuet &lower, const row_valuet &upper);
+  static row_valuet get_max_value(const row_exprt &expr);
+  static row_valuet get_min_value(const row_exprt &expr);
   bool less_than(const row_valuet &v1, const row_valuet &v2);
   bool is_row_value_inf(const row_valuet & row_value) const;
   bool is_row_value_neginf(const row_valuet & row_value) const;

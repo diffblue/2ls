@@ -88,7 +88,7 @@ Function: tpolyhedra_domaint::between
 tpolyhedra_domaint::row_valuet tpolyhedra_domaint::between(
   const row_valuet &lower, const row_valuet &upper)
 {
-  if(lower.type()==upper.type() && 
+  if(lower.type().id()==upper.type().id() && 
      (lower.type().id()==ID_signedbv || lower.type().id()==ID_unsignedbv))
   {
     typet type = lower.type();
@@ -632,17 +632,23 @@ tpolyhedra_domaint::row_valuet tpolyhedra_domaint::get_max_row_value(
   const tpolyhedra_domaint::rowt &row)
 {
   const template_rowt &templ_row = templ[row];
-  if(templ_row.expr.type().id()==ID_signedbv)
+  return get_max_value(templ_row.expr);
+}
+
+tpolyhedra_domaint::row_valuet tpolyhedra_domaint::get_max_value(
+  const row_exprt &expr)
+{
+  if(expr.type().id()==ID_signedbv)
   {
-    return to_signedbv_type(templ_row.expr.type()).largest_expr();
+    return to_signedbv_type(expr.type()).largest_expr();
   }
-  if(templ_row.expr.type().id()==ID_unsignedbv)
+  if(expr.type().id()==ID_unsignedbv)
   {
-    return to_unsignedbv_type(templ_row.expr.type()).largest_expr();
+    return to_unsignedbv_type(expr.type()).largest_expr();
   }
-  if(templ_row.expr.type().id()==ID_floatbv) 
+  if(expr.type().id()==ID_floatbv) 
   {
-    ieee_floatt max(to_floatbv_type(templ_row.expr.type()));
+    ieee_floatt max(to_floatbv_type(expr.type()));
     max.make_fltmax();
     return max.to_expr();
   }
@@ -665,17 +671,23 @@ tpolyhedra_domaint::row_valuet tpolyhedra_domaint::get_min_row_value(
   const tpolyhedra_domaint::rowt &row)
 {
   const template_rowt &templ_row = templ[row];
-  if(templ_row.expr.type().id()==ID_signedbv)
+  return get_min_value(templ_row.expr);
+}
+
+tpolyhedra_domaint::row_valuet tpolyhedra_domaint::get_min_value(
+  const row_exprt &expr)
+{
+  if(expr.type().id()==ID_signedbv)
   {
-    return to_signedbv_type(templ_row.expr.type()).smallest_expr();
+    return to_signedbv_type(expr.type()).smallest_expr();
   }
-  if(templ_row.expr.type().id()==ID_unsignedbv)
+  if(expr.type().id()==ID_unsignedbv)
   {
-    return to_unsignedbv_type(templ_row.expr.type()).smallest_expr();
+    return to_unsignedbv_type(expr.type()).smallest_expr();
   }
-  if(templ_row.expr.type().id()==ID_floatbv) 
+  if(expr.type().id()==ID_floatbv) 
   {
-    ieee_floatt min(to_floatbv_type(templ_row.expr.type()));
+    ieee_floatt min(to_floatbv_type(expr.type()));
     min.make_fltmin();
     return min.to_expr();
   }

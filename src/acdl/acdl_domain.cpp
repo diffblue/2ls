@@ -540,7 +540,8 @@ exprt acdl_domaint::split(const valuet &value,
 			  bool upper)
 {
   const exprt &expr = meet_irreducible_template;
-  std::cout << "[ACDL-DOMAIN] Split: "; output(std::cout, value);
+  std::cout << "[ACDL-DOMAIN] Split(" 
+	    << from_expr(SSA.ns, "", meet_irreducible_template) << "): "; output(std::cout, value);
         
   if(expr.type().id()==ID_bool)
   {
@@ -570,6 +571,7 @@ exprt acdl_domaint::split(const valuet &value,
 
   //match template expression
   constant_exprt u;
+  bool u_is_assigned = false;
   for(unsigned i=0; i<value.size(); i++)
   {
     const exprt &e = value[i];
@@ -578,10 +580,17 @@ exprt acdl_domaint::split(const valuet &value,
     if(to_binary_relation_expr(e).lhs() == expr)
     {
       u = to_constant_expr(to_binary_relation_expr(e).rhs());
+      u_is_assigned = true;
       break;
     }
   }
+  if(!u_is_assigned)
+  {
+    u = tpolyhedra_domaint::get_max_value(expr);
+  }
+
   constant_exprt l;
+  bool l_is_assigned = false;
   for(unsigned i=0; i<value.size(); i++)
   {
     const exprt &e = value[i];
@@ -593,12 +602,16 @@ exprt acdl_domaint::split(const valuet &value,
        lhs.op0().op0() == expr)
     {
       l = to_constant_expr(to_binary_relation_expr(e).rhs());
+      l_is_assigned = true;
       break;
     }
   }
+  if(!l_is_assigned)
+  {
+    l = tpolyhedra_domaint::get_min_value(expr);
+  }
 
   //TODO: check whether we have a singleton, then we cannot split anymore
-  //TODO: figure out why this fails sometimes 
   exprt m = tpolyhedra_domaint::between(l,u);
 
   if(upper) 
