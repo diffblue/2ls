@@ -134,7 +134,7 @@ void acdl_domaint::operator()(const statementt &statement,
 	  deductions.back().first = deduced;
 	  get_antecedents(*solver,_old_value,value_literals,
 			  deductions.back().second);
-	  if(!is_contained(deduced,_old_value))
+	  if(!is_subsumed(deduced,_old_value))
 	  {
 	    new_value.push_back(deduced);
 	  }
@@ -213,8 +213,7 @@ void acdl_domaint::operator()(const statementt &statement,
 			deductions.back().second);
         solver->pop_context();
 
-	//TODO: shouldn't this be the other way round (see bottom8:219)?
-        if(!is_contained(var_values[i],_old_value))
+        if(!is_subsumed(var_values[i],_old_value))
         {
           new_value.push_back(var_values[i]);
         }
@@ -317,6 +316,51 @@ void acdl_domaint::join(const std::vector<valuet> &old_values,
 
 /*******************************************************************\
 
+Function: acdl_domaint::is_subsumed()
+
+  Inputs: example: 1. x<=3, 0<=x && x<=3
+                   2. x<=2, 0<=x && x<=3
+ Outputs: example  1: true
+                   2. false
+ Purpose: is_subsumed(a,b) == not is_strictly_contained(a,b)
+
+\*******************************************************************/
+
+bool acdl_domaint::is_subsumed(const meet_irreduciblet &m, 
+			       const valuet &value) const
+{
+  if(m.type().id()==ID_bool)
+  {
+    for(unsigned i=0; i<value.size(); i++)
+    {
+      if(m == value[i]) 
+	return true;
+    }
+    return false;
+  }
+  if (m.type().id() == ID_signedbv ||
+      m.type().id() == ID_unsignedbv ||
+      m.type().id() == ID_floatbv)
+  {
+    //maybe the simplifier does the job
+    exprt f = simplify_expr(and_exprt(not_exprt(conjunction(value)),m),SSA.ns);
+    if(f.is_false())
+      return false;
+
+    std::unique_ptr<incremental_solvert> solver(
+      incremental_solvert::allocate(SSA.ns,true));
+    *solver << f;
+    if((*solver)()==decision_proceduret::D_UNSATISFIABLE) 
+      return false;
+
+    return true;
+  }
+  
+  assert(false);
+}
+
+/*******************************************************************\
+
 Function: acdl_domaint::is_contained()
 
   Inputs:
@@ -328,7 +372,7 @@ Function: acdl_domaint::is_contained()
 \*******************************************************************/
 
 bool acdl_domaint::is_contained(const meet_irreduciblet &m, 
-				const valuet &value) const
+			       const valuet &value) const
 {
   if(m.type().id()==ID_bool)
   {
@@ -339,9 +383,9 @@ bool acdl_domaint::is_contained(const meet_irreduciblet &m,
     }
     return false;
   }
-  else if (m.type().id() == ID_signedbv ||
-	   m.type().id() == ID_unsignedbv ||
-	   m.type().id() == ID_floatbv)
+  if (m.type().id() == ID_signedbv ||
+      m.type().id() == ID_unsignedbv ||
+      m.type().id() == ID_floatbv)
   {
     for(unsigned i=0; i<value.size(); i++)
     {
@@ -368,7 +412,6 @@ bool acdl_domaint::is_contained(const meet_irreduciblet &m,
   
   assert(false);
 }
-
 
 /*******************************************************************\
 

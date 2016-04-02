@@ -54,8 +54,10 @@ public:
   void join(const std::vector<valuet> &old_values,
 	    valuet &new_value);
     
+  bool is_subsumed(const meet_irreduciblet &m,
+		   const valuet &value) const;
   bool is_contained(const meet_irreduciblet &m,
-		    const valuet &value) const;
+		   const valuet &value) const;
 
   void build_meet_irreducible_templates(
     const varst &vars,
