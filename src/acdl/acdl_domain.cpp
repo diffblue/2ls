@@ -38,10 +38,10 @@ Function: acdl_domaint::operator()
 \*******************************************************************/
 
 void acdl_domaint::operator()(const statementt &statement,
-		  const varst &vars,
-		  const valuet &_old_value,
-		  valuet &new_value,
-		  deductionst &deductions)
+			      const varst &vars,
+			      const valuet &_old_value,
+			      valuet &new_value,
+			      deductionst &deductions)
 {
 #ifdef DEBUG
   std::cout << "[ACDL-DOMAIN] old value: ";
@@ -50,11 +50,11 @@ void acdl_domaint::operator()(const statementt &statement,
 
 
 #ifdef DEBUG
-      std::cout << "DOMAIN projected live variables are: ";
-      for(acdl_domaint::varst::const_iterator 
+  std::cout << "DOMAIN projected live variables are: ";
+  for(acdl_domaint::varst::const_iterator 
         it = vars.begin();it != vars.end(); ++it)
-        std::cout << from_expr(SSA.ns, "", *it);
-        std::cout << "" << std::endl;
+    std::cout << from_expr(SSA.ns, "", *it);
+  std::cout << "" << std::endl;
 #endif      
 
   deductions.reserve(vars.size());
@@ -106,7 +106,8 @@ void acdl_domaint::operator()(const statementt &statement,
   	solver->solver->set_frozen(l);
       }
       solver->set_assumptions(value_literals);
-	
+
+      //TODO: fix braces for the four cases	
       if((*solver)() == decision_proceduret::D_SATISFIABLE)
       {
 	exprt m = solver->get(*it);
@@ -123,8 +124,8 @@ void acdl_domaint::operator()(const statementt &statement,
 	if((*solver)() == decision_proceduret::D_SATISFIABLE)
 	{ 
 	  std::cout << "not deducing" << std::endl;
-    //"don't know"
-    //pop_context not needed
+	  //"don't know"
+	  //pop_context not needed
 	  continue;
 	}
 	else
@@ -144,7 +145,7 @@ void acdl_domaint::operator()(const statementt &statement,
       }
       else //bottom
       {
-	     std::cout << "deducing in BOTTOM" << std::endl;
+	std::cout << "deducing in BOTTOM" << std::endl;
 	deductions.push_back(deductiont());
 	deductions.back().first = false_exprt();
 	get_antecedents(*solver,_old_value,value_literals,
@@ -156,15 +157,15 @@ void acdl_domaint::operator()(const statementt &statement,
 
     // inference for numerical variables using templates
     else if (it->type().id() == ID_signedbv ||
-        it->type().id() == ID_unsignedbv ||
-        it->type().id() == ID_floatbv)
+	     it->type().id() == ID_unsignedbv ||
+	     it->type().id() == ID_floatbv)
     {
       template_generator_acdlt template_generator(
-          options,ssa_db,ssa_local_unwinder); 
+	options,ssa_db,ssa_local_unwinder); 
       template_generator(SSA,*it);
 
       ssa_analyzer(*solver, SSA, and_exprt(conjunction(old_value),statement),
-          template_generator);
+		   template_generator);
       exprt var_value;
       ssa_analyzer.get_result(var_value,template_generator.all_vars());
       valuet var_values;
@@ -182,14 +183,14 @@ void acdl_domaint::operator()(const statementt &statement,
       for(unsigned i=0; i<old_value.size(); i++)
       {
 	literalt l = solver->convert(old_value[i]);
-  if(l.is_constant())
-  {
-    *solver << literal_exprt(l);
-    continue;
-  }
-  value_literal_map.push_back(i);
-  value_literals.push_back(l);
-  solver->solver->set_frozen(l);
+	if(l.is_constant())
+	{
+	  *solver << literal_exprt(l);
+	  continue;
+	}
+	value_literal_map.push_back(i);
+	value_literals.push_back(l);
+	solver->solver->set_frozen(l);
       }
       for(unsigned i=0; i<var_values.size(); ++i)
       {
@@ -210,9 +211,10 @@ void acdl_domaint::operator()(const statementt &statement,
         deductions.push_back(deductiont());
         deductions.back().first = var_values[i];
         get_antecedents(*solver,_old_value,value_literals,
-            deductions.back().second);
+			deductions.back().second);
         solver->pop_context();
 
+	//TODO: shouldn't this be the other way round (see bottom8:219)?
         if(!is_contained(var_values[i],_old_value))
         {
           new_value.push_back(var_values[i]);
@@ -222,9 +224,9 @@ void acdl_domaint::operator()(const statementt &statement,
     else
     {
       warning() << "WARNING: do not know how to propagate " 
-        << it->get_identifier()
-        << " of type " << from_type(SSA.ns, "", it->type()) 
-        << eom;
+		<< it->get_identifier()
+		<< " of type " << from_type(SSA.ns, "", it->type()) 
+		<< eom;
     }
 
 
@@ -256,9 +258,9 @@ void acdl_domaint::get_antecedents(incremental_solvert &solver,
   for(unsigned i=0; i<value_literals.size(); ++i)
   {
     if(solver.is_in_conflict(value_literals[i]))
-       antecedents.push_back(value[i]);
+      antecedents.push_back(value[i]);
   }
- }
+}
 
 /*******************************************************************\
 
@@ -273,7 +275,7 @@ Function: acdl_domaint::meet()
 \*******************************************************************/
 
 void acdl_domaint::meet(const valuet &old_value,
-	    valuet &new_value)
+			valuet &new_value)
 {
   new_value.insert(new_value.end(), old_value.begin(), old_value.end());
 }
@@ -291,7 +293,7 @@ Function: acdl_domaint::meet()
 \*******************************************************************/
 
 void acdl_domaint::meet(const meet_irreduciblet &old_value,
-	    valuet &new_value)
+			valuet &new_value)
 {
   new_value.push_back(old_value);
 }
@@ -309,7 +311,7 @@ Function: acdl_domaint::join()
 \*******************************************************************/
 
 void acdl_domaint::join(const std::vector<valuet> &old_values,
-	    valuet &new_value)
+			valuet &new_value)
 {
   assert(false);
 }
@@ -357,7 +359,7 @@ bool acdl_domaint::is_contained(const meet_irreduciblet &m,
 	return true;
 
       std::unique_ptr<incremental_solvert> solver(
-	 incremental_solvert::allocate(SSA.ns,true));
+	incremental_solvert::allocate(SSA.ns,true));
       *solver << and_exprt(value[i],not_exprt(m));
       if((*solver)()==decision_proceduret::D_UNSATISFIABLE) 
 	return true;
@@ -434,7 +436,7 @@ bool acdl_domaint::is_complete(const valuet &value,
       std::cout << " is not complete" << std::endl;
 #endif
       return false;
-}
+    }
 
     solver->new_context();
 
@@ -507,8 +509,8 @@ Function: acdl_domaint::build_meet_irreducible_templates()
 \*******************************************************************/
 
 void acdl_domaint::build_meet_irreducible_templates(
-    const varst &vars,
-    std::vector<exprt> &meet_irreducible_templates)
+  const varst &vars,
+  std::vector<exprt> &meet_irreducible_templates)
 {
   template_generator_acdlt template_generator(options,ssa_db,ssa_local_unwinder); 
   template_generator(SSA,vars);
@@ -557,7 +559,7 @@ exprt acdl_domaint::split(const valuet &value,
   }
 
   if(!(expr.type().id() == ID_signedbv ||
-     expr.type().id() == ID_unsignedbv ||
+       expr.type().id() == ID_unsignedbv ||
        expr.type().id() == ID_floatbv))
   {
     warning() << "WARNING: do not know how to split " 
@@ -597,6 +599,7 @@ exprt acdl_domaint::split(const valuet &value,
   }
 
   //TODO: check whether we have a singleton, then we cannot split anymore
+  //TODO: figure out why this fails sometimes 
   exprt m = tpolyhedra_domaint::between(l,u);
 
   if(upper) 
@@ -641,39 +644,39 @@ void acdl_domaint::normalize(valuet &value)
     }
   }  
 #if 0 //I don't think this is needed anymore
-    else { 
-  exprt old_value = value[i];
+  else { 
+    exprt old_value = value[i];
  
-  std::vector<symbol_exprt> clean_vars;
-  valuet new_value;
-  //project out vars
-  for(varst::const_iterator it = vars.begin();
-      it != vars.end(); ++it)
-  {
-    // we only normalize what the abstract domain currently handles
-    if(it->type().id() == ID_signedbv ||
-       it->type().id() == ID_unsignedbv ||
-       it->type().id() == ID_floatbv)
+    std::vector<symbol_exprt> clean_vars;
+    valuet new_value;
+    //project out vars
+    for(varst::const_iterator it = vars.begin();
+	it != vars.end(); ++it)
     {
-      remove_var(value,*it, new_value);
-      clean_vars.push_back(*it);
+      // we only normalize what the abstract domain currently handles
+      if(it->type().id() == ID_signedbv ||
+	 it->type().id() == ID_unsignedbv ||
+	 it->type().id() == ID_floatbv)
+      {
+	remove_var(value,*it, new_value);
+	clean_vars.push_back(*it);
+      }
     }
-  }
     
-  ssa_analyzert ssa_analyzer;
-  std::unique_ptr<incremental_solvert> solver(incremental_solvert::allocate(SSA.ns,true));
+    ssa_analyzert ssa_analyzer;
+    std::unique_ptr<incremental_solvert> solver(incremental_solvert::allocate(SSA.ns,true));
 
-  template_generator_acdlt template_generator(options,ssa_db,ssa_local_unwinder); 
-  template_generator(SSA,clean_vars);
+    template_generator_acdlt template_generator(options,ssa_db,ssa_local_unwinder); 
+    template_generator(SSA,clean_vars);
     
-  ssa_analyzer(*solver, SSA, old_value,template_generator);
-  exprt new_values;
-  ssa_analyzer.get_result(new_values,template_generator.all_vars());
+    ssa_analyzer(*solver, SSA, old_value,template_generator);
+    exprt new_values;
+    ssa_analyzer.get_result(new_values,template_generator.all_vars());
 
-  for(unsigned k=0; k<new_value.size(); k++)
+    for(unsigned k=0; k<new_value.size(); k++)
       value.push_back(and_exprt(new_values, new_value[k]));
- } // end of else
- }
+  } // end of else
+}
 #endif
 }
 
