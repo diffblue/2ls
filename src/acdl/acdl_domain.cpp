@@ -107,7 +107,6 @@ void acdl_domaint::operator()(const statementt &statement,
       }
       solver->set_assumptions(value_literals);
 
-      //TODO: fix braces for the four cases	
       if((*solver)() == decision_proceduret::D_SATISFIABLE)
       {
 	exprt m = solver->get(*it);
@@ -119,7 +118,7 @@ void acdl_domaint::operator()(const statementt &statement,
 	//test the complement
 	solver->new_context();
 	solver->set_assumptions(value_literals);
-	*solver << not_exprt(*it);
+	*solver << not_exprt(deduced);
 	std::cout << "deducing in SAT" << std::endl;
 	if((*solver)() == decision_proceduret::D_SATISFIABLE)
 	{ 
