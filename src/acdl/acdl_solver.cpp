@@ -412,9 +412,9 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
   // call initialize live variables
   worklist.initialize_live_variables();
   // initialize the decision variables
-  decision_heuristics.decision_variables.insert(worklist.worklist_vars.begin(), worklist.worklist_vars.end());
+  //decision_heuristics.decision_variables.insert(worklist.worklist_vars.begin(), worklist.worklist_vars.end());
    
-  // decision_heuristics.decision_variables.insert(worklist.live_variables.begin(), worklist.live_variables.end());
+   decision_heuristics.decision_variables.insert(worklist.live_variables.begin(), worklist.live_variables.end());
 #ifdef DEBUG
   std::cout << "Printing all decision variables inside solver" << std::endl;
   for(std::set<exprt>::const_iterator 
