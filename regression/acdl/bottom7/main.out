@@ -75,6 +75,7 @@ Worklist Element::x#19 == 1
 Printing all live variables
 ("symbol" "type" ("bool") "identifier" ("ssa::$guard#0")),
 ("symbol" "type" ("signedbv" "width" ("32") "#c_type" ("signed_int")) "identifier" ("main::1::x#19") "#source_location" ("" "file" ("main.c") "line" ("6") "function" ("main"))),
+Printing all decision variables inside solver
 ********************************
         DEDUCTION PHASE 
 ********************************
