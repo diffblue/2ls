@@ -340,6 +340,8 @@ Function: acdl_domaint::is_subsumed()
                        ((a && b) < b) == ((-(a && b) && b) > 0)
                                       == ((-a || -b) && b > 0)
                                       == ((-a && b) > 0)
+          TODO: This is now the negation of contains, which is 
+                not really what we want.
           contains(a,b) == (b <= a) == ((-a && b) == 0)
 
 \*******************************************************************/
@@ -605,11 +607,21 @@ exprt acdl_domaint::split(const valuet &value,
   if(expr.type().id()==ID_bool)
   {
     exprt v_true = simplify_expr(and_exprt(conjunction(value),expr),SSA.ns);
+#ifdef DEBUG
+    std::cout << "v_true: "
+	      << from_expr(SSA.ns, "", v_true)
+	      << std::endl;
+#endif
     if(v_true.is_false())
       return false_exprt();
     exprt v_false = simplify_expr(and_exprt(conjunction(value),
 					    not_exprt(expr)),SSA.ns);
-    if(v_false.is_true())
+#ifdef DEBUG
+    std::cout << "v_false: "
+	      << from_expr(SSA.ns, "", v_false)
+	      << std::endl;
+#endif
+    if(v_false.is_false())
       return false_exprt();
     if(upper) 
       return expr;
