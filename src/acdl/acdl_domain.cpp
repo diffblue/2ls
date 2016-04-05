@@ -322,7 +322,13 @@ Function: acdl_domaint::is_subsumed()
                    2. x<=2, 0<=x && x<=3
  Outputs: example  1: true
                    2. false
- Purpose: is_subsumed(a,b) == not is_strictly_contained(a,b)
+ Purpose: is_not_subsumed(a,b) == makes it smaller
+                              ((a && b) < b)
+                           exists i: a < b_i  
+                           exists i: -b_i <= -a
+                           exists i: (a && -b_i) == 0)
+
+          contains(a,b) == (b <= a) == ((-a && b) == 0)
 
 \*******************************************************************/
 
@@ -342,17 +348,27 @@ bool acdl_domaint::is_subsumed(const meet_irreduciblet &m,
       m.type().id() == ID_unsignedbv ||
       m.type().id() == ID_floatbv)
   {
-    //maybe the simplifier does the job
-    exprt f = simplify_expr(and_exprt(not_exprt(conjunction(value)),m),SSA.ns);
-    if(f.is_false())
-      return false;
+    for(unsigned i=0; i<value.size(); i++)
+    {
+      //check whether this is not a boolean
+      if(value[i].id()==ID_symbol ||
+         (value[i].id()==ID_not && value[i].op0().id()==ID_symbol))
+	continue;
 
-    std::unique_ptr<incremental_solvert> solver(
-      incremental_solvert::allocate(SSA.ns,true));
-    *solver << f;
-    if((*solver)()==decision_proceduret::D_UNSATISFIABLE) 
-      return false;
+      if(m == value[i]) 
+	return true;
 
+      //maybe the simplifier does the job
+      exprt f = simplify_expr(and_exprt(not_exprt(value[i]),m),SSA.ns);
+      if(f.is_false())
+	return false;
+
+      std::unique_ptr<incremental_solvert> solver(
+	incremental_solvert::allocate(SSA.ns,true));
+      *solver << f;
+      if((*solver)()==decision_proceduret::D_UNSATISFIABLE) 
+	return false;
+    }
     return true;
   }
   
@@ -376,37 +392,29 @@ bool acdl_domaint::is_contained(const meet_irreduciblet &m,
 {
   if(m.type().id()==ID_bool)
   {
+    exprt not_m = simplify_expr(not_exprt(m), SSA.ns);
     for(unsigned i=0; i<value.size(); i++)
     {
-      if(m == value[i]) 
-	return true;
+      if(not_m == value[i]) 
+	return false;
     }
-    return false;
+    return true;
   }
   if (m.type().id() == ID_signedbv ||
       m.type().id() == ID_unsignedbv ||
       m.type().id() == ID_floatbv)
   {
-    for(unsigned i=0; i<value.size(); i++)
-    {
-      //check whether this is not a boolean
-      if(value[i].id()==ID_symbol ||
-         (value[i].id()==ID_not && value[i].op0().id()==ID_symbol))
-	continue;
-      if(m == value[i]) 
-	return true;
+    //maybe the simplifier does the job
+    exprt f = simplify_expr(and_exprt(conjunction(value),not_exprt(m)),SSA.ns);
+    if(f.is_false())
+      return true;
 
-      //maybe the simplifier does the job
-      exprt f = simplify_expr(and_exprt(value[i],not_exprt(m)),SSA.ns);
-      if(f.is_false())
-	return true;
+    std::unique_ptr<incremental_solvert> solver(
+      incremental_solvert::allocate(SSA.ns,true));
+    *solver << f;
+    if((*solver)()==decision_proceduret::D_UNSATISFIABLE) 
+      return true;
 
-      std::unique_ptr<incremental_solvert> solver(
-	incremental_solvert::allocate(SSA.ns,true));
-      *solver << and_exprt(value[i],not_exprt(m));
-      if((*solver)()==decision_proceduret::D_UNSATISFIABLE) 
-	return true;
-    }
     return false;
   }
   
