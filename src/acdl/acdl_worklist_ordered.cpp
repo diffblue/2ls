@@ -624,7 +624,7 @@ acdl_worklist_orderedt::initialize_live_variables ()
   std::cout << "Printing all live variables" << std::endl;
   for(acdl_domaint::varst::const_iterator 
     it = live_variables.begin(); it != live_variables.end(); ++it)
-      std::cout << *it << "," << std::endl;
+      std::cout << it->get_identifier() << "," << std::endl;
 #endif
 }   
 

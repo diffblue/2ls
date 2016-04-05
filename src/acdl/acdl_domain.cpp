@@ -130,13 +130,13 @@ void acdl_domaint::operator()(const statementt &statement,
 	else
 	{
 	  std::cout << "actually deducing" << std::endl;
-	  deductions.push_back(deductiont());
-	  deductions.back().first = deduced;
-	  get_antecedents(*solver,_old_value,value_literals,
-			  deductions.back().second);
 	  if(!is_subsumed(deduced,_old_value))
 	  {
 	    new_value.push_back(deduced);
+	    deductions.push_back(deductiont());
+	    deductions.back().first = deduced;
+	    get_antecedents(*solver,_old_value,value_literals,
+			    deductions.back().second);
 	  }
 	}
 
@@ -167,9 +167,15 @@ void acdl_domaint::operator()(const statementt &statement,
 		   template_generator);
       exprt var_value;
       ssa_analyzer.get_result(var_value,template_generator.all_vars());
+#if 0
+      std::cout << "RESULT: " << from_expr(SSA.ns, "", var_value) << std::endl;
+#endif
       valuet var_values;
-      expr_to_value(var_value, var_values);
+      expr_to_value(simplify_expr(var_value, SSA.ns), var_values);
 
+#if 1
+      std::cout << "RESULT: "; output(std::cout, var_values) << std::endl;
+#endif
       if(var_values.empty())
 	continue;
 
@@ -187,19 +193,20 @@ void acdl_domaint::operator()(const statementt &statement,
 	  *solver << literal_exprt(l);
 	  continue;
 	}
+        std::cout << "track old_value: " << from_expr(SSA.ns, "", old_value[i]) << std::endl;
 	value_literal_map.push_back(i);
 	value_literals.push_back(l);
 	solver->solver->set_frozen(l);
       }
       for(unsigned i=0; i<var_values.size(); ++i)
       {
-        literalt l = solver->convert(var_values[i]);
+/*        literalt l = solver->convert(var_values[i]);
         if(l.is_constant())
         {
           *solver << literal_exprt(l);
           continue; //in this case we don't have information on deductions
         }
-
+*/
         solver->new_context();
         *solver << not_exprt(var_values[i]);
         solver->set_assumptions(value_literals);
@@ -207,16 +214,19 @@ void acdl_domaint::operator()(const statementt &statement,
         decision_proceduret::resultt result = (*solver)();
         assert(result == decision_proceduret::D_UNSATISFIABLE);
 
-        deductions.push_back(deductiont());
-        deductions.back().first = var_values[i];
-        get_antecedents(*solver,_old_value,value_literals,
-			deductions.back().second);
-        solver->pop_context();
-
+	std::cout << "IS_SUBSUMED: " << std::endl;
+	std::cout << "  " << from_expr(SSA.ns, "", var_values[i]) << std::endl; 
+	std::cout << "  "; output(std::cout, _old_value); std::cout << std::endl;
         if(!is_subsumed(var_values[i],_old_value))
         {
+	  std::cout << "adding new value " << from_expr(SSA.ns, "", var_values[i]) << std::endl;
           new_value.push_back(var_values[i]);
+	  deductions.push_back(deductiont());
+	  deductions.back().first = var_values[i];
+	  get_antecedents(*solver,_old_value,value_literals,
+			  deductions.back().second);
         }
+        solver->pop_context();
       }	
     }
     else
@@ -320,14 +330,16 @@ Function: acdl_domaint::is_subsumed()
 
   Inputs: example: 1. x<=3, 0<=x && x<=3
                    2. x<=2, 0<=x && x<=3
+                   3. x<=5, 3<=x && x<=3
+                   4. x<=0, 2<=x && x<=3
  Outputs: example  1: true
                    2. false
+                   3. true
+                   4. false
  Purpose: is_not_subsumed(a,b) == makes it smaller
-                              ((a && b) < b)
-                           exists i: a < b_i  
-                           exists i: -b_i <= -a
-                           exists i: (a && -b_i) == 0)
-
+                       ((a && b) < b) == ((-(a && b) && b) > 0)
+                                      == ((-a || -b) && b > 0)
+                                      == ((-a && b) > 0)
           contains(a,b) == (b <= a) == ((-a && b) == 0)
 
 \*******************************************************************/
@@ -335,7 +347,11 @@ Function: acdl_domaint::is_subsumed()
 bool acdl_domaint::is_subsumed(const meet_irreduciblet &m, 
 			       const valuet &value) const
 {
-  if(m.type().id()==ID_bool)
+  if(value.empty()) //assumes that m is never TOP
+    return false;
+
+  if(m.id()==ID_symbol ||
+     (m.id()==ID_not && m.op0().id()==ID_symbol))
   {
     for(unsigned i=0; i<value.size(); i++)
     {
@@ -344,32 +360,22 @@ bool acdl_domaint::is_subsumed(const meet_irreduciblet &m,
     }
     return false;
   }
-  if (m.type().id() == ID_signedbv ||
-      m.type().id() == ID_unsignedbv ||
-      m.type().id() == ID_floatbv)
+  else
   {
-    for(unsigned i=0; i<value.size(); i++)
-    {
-      //check whether this is not a boolean
-      if(value[i].id()==ID_symbol ||
-         (value[i].id()==ID_not && value[i].op0().id()==ID_symbol))
-	continue;
+    //maybe the simplifier does the job
+/*    exprt f = simplify_expr(and_exprt(conjunction(value), 
+      not_exprt(and_exprt(conjunction(value),m))),SSA.ns);*/
+    exprt f = simplify_expr(and_exprt(conjunction(value),not_exprt(m)),SSA.ns);
+    if(f.is_false())
+      return true;
 
-      if(m == value[i]) 
-	return true;
+    std::unique_ptr<incremental_solvert> solver(
+      incremental_solvert::allocate(SSA.ns,true));
+    *solver << f;
+    if((*solver)()==decision_proceduret::D_UNSATISFIABLE) 
+      return true;
 
-      //maybe the simplifier does the job
-      exprt f = simplify_expr(and_exprt(not_exprt(value[i]),m),SSA.ns);
-      if(f.is_false())
-	return false;
-
-      std::unique_ptr<incremental_solvert> solver(
-	incremental_solvert::allocate(SSA.ns,true));
-      *solver << f;
-      if((*solver)()==decision_proceduret::D_UNSATISFIABLE) 
-	return false;
-    }
-    return true;
+    return false;
   }
   
   assert(false);
@@ -390,7 +396,11 @@ Function: acdl_domaint::is_contained()
 bool acdl_domaint::is_contained(const meet_irreduciblet &m, 
 			       const valuet &value) const
 {
-  if(m.type().id()==ID_bool)
+  if(value.empty()) 
+    return true;
+
+  if(m.id()==ID_symbol ||
+     (m.id()==ID_not && m.op0().id()==ID_symbol))
   {
     exprt not_m = simplify_expr(not_exprt(m), SSA.ns);
     for(unsigned i=0; i<value.size(); i++)
@@ -400,9 +410,7 @@ bool acdl_domaint::is_contained(const meet_irreduciblet &m,
     }
     return true;
   }
-  if (m.type().id() == ID_signedbv ||
-      m.type().id() == ID_unsignedbv ||
-      m.type().id() == ID_floatbv)
+  else
   {
     //maybe the simplifier does the job
     exprt f = simplify_expr(and_exprt(conjunction(value),not_exprt(m)),SSA.ns);
@@ -773,7 +781,8 @@ void acdl_domaint::expr_to_value(const exprt &expr, valuet &value)
   else
   {
     if(!expr_is_true(expr))
+    {
       value.push_back(expr);
+    }
   }
-
 }
