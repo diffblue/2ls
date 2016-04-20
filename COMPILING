@@ -1,6 +1,8 @@
+2LS 0.3
+
 1) Get the CBMC source, via
 
-   svn co http://www.cprover.org/svn/cbmc/trunk cbmc-trunk
+   svn co -r6327 http://www.cprover.org/svn/cbmc/branches/peter-incremental-unwinding my-cbmc
 
    Follow the compilation instructions that come with CBMC, and make sure
    that CBMC compiles.
@@ -9,9 +11,13 @@
 
    cp src/config.inc.template src/config.inc
 
-3) Edit src/config.inc to point to the location of the cbmc trunk produced
+3) Edit src/config.inc to point to the location of my-cbmc produced
    in step 1.
 
 4) Do
 
    cd src; make
+
+5) Run
+  
+   summarizer/2ls

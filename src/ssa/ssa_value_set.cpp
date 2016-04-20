@@ -6,6 +6,12 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+//#define DEBUG
+
+#ifdef DEBUG
+#include <iostream>
+#endif
+
 #include <util/pointer_offset_size.h>
 
 #include "ssa_value_set.h"
@@ -100,6 +106,11 @@ void ssa_value_domaint::assign_lhs_rec(
   const namespacet &ns,
   bool add)
 {
+  #ifdef DEBUG
+  std::cout << "assign_lhs_rec lhs: " << from_expr(ns, "", lhs) << '\n';
+  std::cout << "assign_lhs_rec rhs: " << from_expr(ns, "", rhs) << '\n';
+  #endif
+  
   // is the lhs an object?
   if(is_symbol_struct_member(lhs, ns))
   {
@@ -141,6 +152,10 @@ void ssa_value_domaint::assign_lhs_rec(
       else
         lhs_values=tmp_values;
 
+#if 0
+      std::cout << "value_set: "; lhs_values.output(std::cout,ns); std::cout << std::endl;
+#endif
+  
       if(lhs_values.empty())
         value_map.erase(ssa_object);
     }
@@ -162,7 +177,10 @@ void ssa_value_domaint::assign_lhs_rec(
   }
   else if(lhs.id()==ID_dereference)
   {
-    assert(false); // should have been removed
+//  assert(false); // should have been removed
+
+    //not yet removed if there is an array inside a struct referenced by pointer
+    assign_lhs_rec(to_dereference_expr(lhs).pointer(), rhs, ns, true);
   }
   else if(lhs.id()==ID_member)
   {
@@ -200,6 +218,10 @@ void ssa_value_domaint::assign_rhs_rec(
   bool offset,
   unsigned alignment) const
 {
+#ifdef DEBUG
+  std::cout << "assign_rhs_rec: " << from_expr(ns, "", rhs) << '\n';
+#endif
+  
   if(rhs.id()==ID_address_of)
   {
     const exprt &op=to_address_of_expr(rhs).object();
@@ -247,7 +269,11 @@ void ssa_value_domaint::assign_rhs_rec(
   }
   else if(rhs.id()==ID_dereference)
   {
-    assert(false); // should have been removed
+  //   std::cout << rhs.pretty() << std::endl;
+  //   assert(false); // should have been removed
+
+    //not yet removed if there is an array inside a struct referenced by pointer
+    assign_rhs_rec(dest, rhs.op0(), ns, true, 1);
   }
   else
   {

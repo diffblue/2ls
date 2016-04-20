@@ -1,0 +1,6 @@
+KNOWNBUG
+main.c
+--zones --context-sensitive
+^EXIT=0$
+^SIGNAL=0$
+^VERIFICATION SUCCESSFUL$

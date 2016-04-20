@@ -54,7 +54,7 @@ sub test($$$$$) {
   $options =~ s/$ign//g if(defined($ign));
 
   my $output = $input;
-  $output =~ s/\.(o|c|gb|xml)$/.out/;
+  $output =~ s/\.(c|o|gb|xml)$/.out/;
 
   if($output eq $input) {
     print("Error in test file -- $test\n");
@@ -96,7 +96,7 @@ sub test($$$$$) {
           $included--;
         } else {
           my $r;
-          system "grep '$result' '$output' >/dev/null";
+          system "grep \"$result\" '$output' >/dev/null";
           $r = ($included ? $? != 0 : $? == 0);
           if($r) {
             print LOG "$result [FAILED]\n";

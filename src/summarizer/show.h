@@ -12,7 +12,11 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <string>
 #include <ostream>
 
+#include <solvers/prop/prop_conv.h>
+
 #include <goto-programs/goto_model.h>
+
+#include "summary.h"
 
 class message_handlert;
 
@@ -53,5 +57,22 @@ void show_fixed_points(
   bool simplify,
   std::ostream &,
   message_handlert &);
+
+//shows raw error trace
+void show_raw_countermodel(
+  const irep_idt &property_id,
+  const local_SSAt &SSA, 
+  prop_convt &solver,
+  std::ostream &,
+  message_handlert &);
+
+void show_invariants(
+  const local_SSAt &SSA, 
+  const summaryt &summary,
+  std::ostream &out);
+
+void show_ssa_symbols(
+  const local_SSAt &SSA, 
+  std::ostream &out);
 
 #endif

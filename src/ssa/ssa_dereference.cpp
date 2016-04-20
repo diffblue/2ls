@@ -211,6 +211,13 @@ exprt ssa_alias_guard(
   const namespacet &ns)
 {
   exprt a1=address_canonizer(address_of_exprt(e1), ns);
+  //TODO: We should compare 'base' pointers here because
+  // we have a higher chance that there was no pointer arithmetic
+  // on the base pointer than that the result of the pointer
+  // arithmetic points to a base pointer.
+  // The following hack does that:
+  if(a1.id()==ID_plus) a1 = a1.op0();
+  
   exprt a2=address_canonizer(address_of_exprt(e2), ns);
   
   // in some cases, we can use plain address equality,

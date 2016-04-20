@@ -2,9 +2,7 @@
 
 Module: Traces of GOTO Programs for SSA Models
 
-Author: Daniel Kroening
-
-Date: June 2014
+Author: Daniel Kroening, Peter Schrammel
 
 \*******************************************************************/
 
@@ -15,10 +13,30 @@ Date: June 2014
 #include <solvers/prop/prop_conv.h>
 
 #include "local_ssa.h"
+#include "unwindable_local_ssa.h"
 
-void build_goto_trace(
-  const local_SSAt &,
-  const prop_convt &,
-  goto_tracet &);
+class ssa_build_goto_tracet {
+public:
+  ssa_build_goto_tracet(
+    unwindable_local_SSAt &_unwindable_local_SSA,
+    const prop_convt &_prop_conv) 
+  : 
+  unwindable_local_SSA(_unwindable_local_SSA),  
+  prop_conv(_prop_conv)
+  {}
+
+  void operator()(goto_tracet &);
+
+protected:
+  unwindable_local_SSAt &unwindable_local_SSA;
+  const prop_convt &prop_conv;
+  goto_programt::const_targett current_pc;
+
+  exprt finalize_lhs(const exprt &src);
+
+  bool record_step(
+    goto_tracet &goto_trace,
+    unsigned &step_nr);
+};
 
 #endif

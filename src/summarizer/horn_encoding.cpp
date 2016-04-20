@@ -128,8 +128,9 @@ void horn_encodingt::translate(
       loc!=body.instructions.end();
       loc++)
   {
-    const local_SSAt::nodet &node=local_SSA[loc];
-
+#if 0
+    const local_SSAt::nodet &node=*local_SSA.find_node(loc);
+#endif
     out << "; PC " << loc->location_number
         << " " << loc->source_location << '\n';
 

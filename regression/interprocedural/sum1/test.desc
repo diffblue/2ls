@@ -1,0 +1,6 @@
+CORE
+main.c
+--octagons
+^EXIT=0$
+^SIGNAL=0$
+^** 0 of 4 failed$

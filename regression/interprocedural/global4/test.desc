@@ -1,0 +1,6 @@
+THOROUGH
+main.c
+--zones --context-sensitive --inline-main
+^EXIT=0$
+^SIGNAL=0$
+^VERIFICATION SUCCESSFUL$
