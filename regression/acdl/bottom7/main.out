@@ -65,19 +65,17 @@ Sliced Unordered Worklist Element::$guard#0 == TRUE
 Sliced Unordered Worklist Element::x#19 == 1
 Leaf Element::$guard#0 == TRUE
 Leaf Element::x#19 == 1
-Intermediate Worklist Element::$guard#0 == TRUE
-Intermediate Worklist Element::x#19 == 1
 First single assertion push: ("or" "" ("=" "" ("symbol" "type" ("signedbv" "width" ("32") "#c_type" ("signed_int")) "identifier" ("main::1::x#19") "#source_location" ("" "file" ("main.c") "line" ("6") "function" ("main"))) "" ("constant" "type" ("signedbv" "width" ("32") "#c_type" ("signed_int")) "value" ("00000000000000000000000000000001") "#source_location" ("" "file" ("main.c") "line" ("6") "function" ("main")) "#cformat" ("1")) "type" ("bool") "#source_location" ("" "file" ("main.c") "line" ("6") "function" ("main"))) "" ("not" "" ("symbol" "type" ("bool") "identifier" ("ssa::$guard#0")) "type" ("bool")) "type" ("bool"))
 The content of the ordered worklist is as follows: 
 Worklist Element::!(x#19 == 1 || !$guard#0)
 Worklist Element::$guard#0 == TRUE
 Worklist Element::x#19 == 1
 Printing all live variables
-("symbol" "type" ("bool") "identifier" ("ssa::$guard#0")),
-("symbol" "type" ("signedbv" "width" ("32") "#c_type" ("signed_int")) "identifier" ("main::1::x#19") "#source_location" ("" "file" ("main.c") "line" ("6") "function" ("main"))),
+ssa::$guard#0,
+main::1::x#19,
 Printing all decision variables inside solver
-("symbol" "type" ("bool") "identifier" ("ssa::$guard#0")),
-("symbol" "type" ("signedbv" "width" ("32") "#c_type" ("signed_int")) "identifier" ("main::1::x#19") "#source_location" ("" "file" ("main.c") "line" ("6") "function" ("main"))),
+$guard#0  ,
+x#19  ,
 ********************************
         DEDUCTION PHASE 
 ********************************
@@ -92,6 +90,7 @@ actually deducing
 [ACDL-DOMAIN] deductions(ssa::$guard#0): $guard#0 <== 
 
 [ACDL-DOMAIN] projected(main::1::x#19): 
+RESULT: 
 Push: $guard#0 == TRUE
 Not inserting nondet elements 
 Not inserting nondet elements 
@@ -118,8 +117,7 @@ DOMAIN projected live variables are: $guard#0
 [ACDL-DOMAIN] projected(ssa::$guard#0): 
 deducing in SAT
 actually deducing
-[ACDL-DOMAIN] deductions(ssa::$guard#0): $guard#0 <== 
-
+[ACDL-DOMAIN] deductions(ssa::$guard#0): 
 Not inserting nondet elements 
 Not inserting nondet elements 
 Not inserting nondet elements 
@@ -140,8 +138,18 @@ Old: $guard#0
 [ACDL-DOMAIN] old value: $guard#0
 DOMAIN projected live variables are: x#19
 [ACDL-DOMAIN] projected(main::1::x#19): $guard#0
-[ACDL-DOMAIN] deductions(main::1::x#19): x#19 <= 1 <== 
--((signed __CPROVER_bitvector[33])x#19) <= -1 <== 
+RESULT: !(x#19 >= 2) && !(-((signed __CPROVER_bitvector[33])x#19) >= 0)
+track old_value: $guard#0
+IS_SUBSUMED: 
+  !(x#19 >= 2)
+  $guard#0
+adding new value !(x#19 >= 2)
+IS_SUBSUMED: 
+  !(-((signed __CPROVER_bitvector[33])x#19) >= 0)
+  $guard#0
+adding new value !(-((signed __CPROVER_bitvector[33])x#19) >= 0)
+[ACDL-DOMAIN] deductions(main::1::x#19): !(x#19 >= 2) <== 
+!(-((signed __CPROVER_bitvector[33])x#19) >= 0) <== 
 
 Not inserting nondet elements 
 Not inserting nondet elements 
@@ -153,27 +161,27 @@ Live variables list are as follows: $guard#0x#19
 The content of the updated worklist is as follows: 
 Updated Worklist Element::!(x#19 == 1 || !$guard#0)
 The updated live variables after removal are as follows: $guard#0x#19 
-New: x#19 <= 1 && -((signed __CPROVER_bitvector[33])x#19) <= -1
+New: !(x#19 >= 2) && !(-((signed __CPROVER_bitvector[33])x#19) >= 0)
 Computing new abstract value of implication graph: 
-x#19 <= 1
--((signed __CPROVER_bitvector[33])x#19) <= -1
+!(x#19 >= 2)
+!(-((signed __CPROVER_bitvector[33])x#19) >= 0)
 $guard#0
-x#19 <= 1
--((signed __CPROVER_bitvector[33])x#19) <= -1
+!(x#19 >= 2)
+!(-((signed __CPROVER_bitvector[33])x#19) >= 0)
 Pop: !(x#19 == 1 || !$guard#0)
 Computing old abstract value of implication graph: 
 $guard#0
-x#19 <= 1
--((signed __CPROVER_bitvector[33])x#19) <= -1
-Old: $guard#0 && x#19 <= 1 && -((signed __CPROVER_bitvector[33])x#19) <= -1
-[ACDL-DOMAIN] old value: $guard#0 && x#19 <= 1 && -((signed __CPROVER_bitvector[33])x#19) <= -1
+!(x#19 >= 2)
+!(-((signed __CPROVER_bitvector[33])x#19) >= 0)
+Old: $guard#0 && !(x#19 >= 2) && !(-((signed __CPROVER_bitvector[33])x#19) >= 0)
+[ACDL-DOMAIN] old value: $guard#0 && !(x#19 >= 2) && !(-((signed __CPROVER_bitvector[33])x#19) >= 0)
 DOMAIN projected live variables are: $guard#0x#19
-[ACDL-DOMAIN] projected(ssa::$guard#0): x#19 <= 1 && -((signed __CPROVER_bitvector[33])x#19) <= -1
+[ACDL-DOMAIN] projected(ssa::$guard#0): !(x#19 >= 2) && !(-((signed __CPROVER_bitvector[33])x#19) >= 0)
 deducing in BOTTOM
 [ADD DEDUCTIONS] 1 -> 4
 [ADD DEDUCTIONS] $guard#0@level :0#decision: 0 -> FALSE@level: 0#decision: 0
 [ADD DEDUCTIONS] 2 -> 4
-[ADD DEDUCTIONS] x#19 <= 1@level :0#decision: 0 -> FALSE@level: 0#decision: 0
+[ADD DEDUCTIONS] !(x#19 >= 2)@level :0#decision: 0 -> FALSE@level: 0#decision: 0
 Not inserting nondet elements 
 Not inserting nondet elements 
 Not inserting nondet elements 
@@ -187,8 +195,8 @@ The updated live variables after removal are as follows:
 New: 
 Computing new abstract value of implication graph: 
 $guard#0
-x#19 <= 1
--((signed __CPROVER_bitvector[33])x#19) <= -1
+!(x#19 >= 2)
+!(-((signed __CPROVER_bitvector[33])x#19) >= 0)
 FALSE
 Propagation finished with BOTTOM
 ****************************************************
@@ -199,11 +207,11 @@ Printing Graph Output -- Total Nodes: 4
 $guard#0@level:0@decision:0 -> FALSE@level:0@decision:0
 1 -> 4
 2 -> 4
-x#19 <= 1@level:0@decision:0 -> FALSE@level:0@decision:0
+!(x#19 >= 2)@level:0@decision:0 -> FALSE@level:0@decision:0
 2 -> 4
 Node number: 1  Expression: $guard#0  In edges: 0  Out edges: 1
-Node number: 2  Expression: x#19 <= 1  In edges: 0  Out edges: 1
-Node number: 3  Expression: -((signed __CPROVER_bitvector[33])x#19) <= -1  In edges: 0  Out edges: 0
+Node number: 2  Expression: !(x#19 >= 2)  In edges: 0  Out edges: 1
+Node number: 3  Expression: !(-((signed __CPROVER_bitvector[33])x#19) >= 0)  In edges: 0  Out edges: 0
 Node number: 4  Expression: FALSE  In edges: 2  Out edges: 0
 ********************************
     CONFLICT ANALYSIS PHASE

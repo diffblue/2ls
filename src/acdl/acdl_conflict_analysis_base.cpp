@@ -54,6 +54,8 @@ void acdl_conflict_analysis_baset::chronological_backtrack(const local_SSAt &SSA
   graph.add_decision(exp);
   
   graph.current_level--;
+  // update the backtrack level
+  backtrack_level = graph.current_level;
   just_backtracked = true;
   //return true;
 }

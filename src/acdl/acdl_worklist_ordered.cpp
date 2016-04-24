@@ -55,6 +55,10 @@ acdl_worklist_orderedt::initialize (const local_SSAt &SSA)
        push_into_list(assert_worklist, *a_it);
        and_expr.push_back(*a_it);
        push_into_assertion_list(assert_list, not_exprt(*a_it));
+       // push into worklist_vars
+       acdl_domaint::varst avars;
+       find_symbols(*a_it, avars);
+       worklist_vars.insert(avars.begin(), avars.end());
     }
   }
   
@@ -97,7 +101,26 @@ acdl_worklist_orderedt::initialize (const local_SSAt &SSA)
 	  std::cout << "Sliced Unordered Worklist Element::" << from_expr(SSA.ns, "", *it) << std::endl;
     }
 #endif    
- 
+
+  // order the leaf nodes right after all assertions
+  for(std::list<acdl_domaint::statementt>::const_iterator 
+    it = worklist.begin(); it != worklist.end(); ++it) 
+  {
+    if(it->id() == ID_equal) {
+     exprt expr_rhs = to_equal_expr(*it).rhs();
+     if(expr_rhs.id() == ID_constant || expr_rhs.is_true() || expr_rhs.is_false()) { 
+       push_into_list(leaf_worklist, *it);
+     }
+     else if(expr_rhs.type().id() != ID_constant) { 
+       push_into_list(inter_worklist, *it);
+     }
+    }
+    else {
+       push_into_list(inter_worklist, *it);
+    }
+  }
+
+#if 0 
   // order the leaf nodes right after all assertions
   for(std::list<acdl_domaint::statementt>::const_iterator 
     it = worklist.begin(); it != worklist.end(); ++it) 
@@ -137,7 +160,7 @@ acdl_worklist_orderedt::initialize (const local_SSAt &SSA)
       }
     }
   }
-
+#endif    
     
 #ifdef DEBUG
     for(std::list<acdl_domaint::statementt>::const_iterator it = leaf_worklist.begin(); it != leaf_worklist.end(); ++it) {
@@ -177,17 +200,28 @@ acdl_worklist_orderedt::initialize (const local_SSAt &SSA)
 #endif    
     worklist.push_back(not_exp);
   }
-  
+  acdl_domaint::varst var_leaf;
   // insert leaf nodes
   while(!leaf_worklist.empty() > 0) {
     const acdl_domaint::statementt statement = pop_from_list(leaf_worklist);
     push_into_list (worklist, statement);
+    acdl_domaint::varst lvars;
+    find_symbols(statement, lvars);
+    var_leaf.insert(lvars.begin(), lvars.end());
   }
     
   // insert intermediate nodes
   while(!inter_worklist.empty() > 0) {
     const acdl_domaint::statementt statement = pop_from_list(inter_worklist);
     push_into_list (worklist, statement);
+    // push into worklist_vars
+    acdl_domaint::varst avars;
+    find_symbols(statement, avars);
+    // do not insert any leaf variables
+    for(acdl_domaint::varst::const_iterator it = avars.begin(); it != avars.end(); ++it) {
+     if(var_leaf.find(*it) == var_leaf.end())
+       worklist_vars.insert(*it);
+    }
   }
 
 #ifdef DEBUG    
@@ -333,19 +367,49 @@ acdl_worklist_orderedt::dec_update (const local_SSAt &SSA, const acdl_domaint::s
 #endif    
  
   // order the leaf nodes right after all assertions
+  
+  // order the leaf nodes right after all assertions
   for(std::list<acdl_domaint::statementt>::const_iterator 
     it = worklist.begin(); it != worklist.end(); ++it) 
   {
     if(it->id() == ID_equal) {
      exprt expr_rhs = to_equal_expr(*it).rhs();
-     if(expr_rhs.id() == ID_constant) 
+     if(expr_rhs.id() == ID_constant || expr_rhs.is_true() || expr_rhs.is_false()) { 
        push_into_list(leaf_worklist, *it);
-     else  
+     }
+     else if(expr_rhs.type().id() != ID_constant) { 
+       push_into_list(inter_worklist, *it);
+     }
+    }
+    else {
        push_into_list(inter_worklist, *it);
     }
-    else
-       push_into_list(inter_worklist, *it);
   }
+  
+  
+ #if 0 
+  
+  for(std::list<acdl_domaint::statementt>::const_iterator 
+    it = worklist.begin(); it != worklist.end(); ++it) 
+  {
+    if(it->id() == ID_equal) {
+     exprt expr_rhs = to_equal_expr(*it).rhs();
+     if(expr_rhs.type().id() == ID_constant) { 
+       std::cout << "The type is " << expr_rhs.type().id() << std::endl;
+       std::cout << "pushing equalities into leaf" << std::endl;   
+       push_into_list(leaf_worklist, *it);
+     }
+     else if(expr_rhs.type().id() != ID_constant) { 
+       std::cout << "pushing equalities into inter" << std::endl;   
+       push_into_list(inter_worklist, *it);
+     }
+    }
+    else {
+       std::cout << "pushing constraint" << std::endl;   
+       push_into_list(inter_worklist, *it);
+    }
+  }
+#endif
     #if 0
     // Do we need to separately treat ID_constraint ?
     if(it->id() == ID_equal) {
@@ -401,11 +465,8 @@ acdl_worklist_orderedt::dec_update (const local_SSAt &SSA, const acdl_domaint::s
   // worklist.push_back(stmt);
 
   acdl_domaint::varst dec_vars;
-  std::set<exprt> dvars;
   // find all symbols in the decision expression
   find_symbols(stmt, dec_vars);
-  find_symbols(stmt, dvars);
-  worklist_vars.insert(dvars.begin(), dvars.end());
   live_variables.insert(dec_vars.begin(),dec_vars.end());
   // insert leaf nodes
   while(!leaf_worklist.empty() > 0) {
@@ -419,7 +480,6 @@ acdl_worklist_orderedt::dec_update (const local_SSAt &SSA, const acdl_domaint::s
     live_variables.insert(leaf_vars.begin(),leaf_vars.end());
   
     find_symbols(statement, lvars);
-    worklist_vars.insert(lvars.begin(), lvars.end());
   }
     
   // insert intermediate nodes
@@ -427,13 +487,9 @@ acdl_worklist_orderedt::dec_update (const local_SSAt &SSA, const acdl_domaint::s
     const acdl_domaint::statementt statement = pop_from_list(inter_worklist);
     push_into_list (worklist, statement);
     acdl_domaint::varst inter_vars;
-    std::set<exprt> ivars;
     // find all symbols in the leaf expression
     find_symbols(statement, inter_vars);
     live_variables.insert(inter_vars.begin(),inter_vars.end());
-    
-    find_symbols(statement, ivars);
-    worklist_vars.insert(ivars.begin(), ivars.end());
   }
   
 #ifdef DEBUG    

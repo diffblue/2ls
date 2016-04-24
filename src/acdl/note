@@ -536,3 +536,10 @@ Discussion:
 3> For recursive deductions in Implication graph, when added 10->3, dont add
 3->10    
 4> Add learned clause to the conflict_literal container.
+
+April 2014:
+Query: 
+
+1> Do we change (not flip but select a different variable) the present decision
+when the present decision is not complete ? We always flip the present decision
+when it leads to conflict.

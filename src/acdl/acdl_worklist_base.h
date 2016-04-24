@@ -43,7 +43,7 @@ public:
   
   acdl_domaint::varst check_var_liveness (acdl_domaint::varst &vars);
   acdl_domaint::varst live_variables;
-  std::set<exprt> worklist_vars;
+  acdl_domaint::varst worklist_vars;
 protected:
   worklistt worklist;
   

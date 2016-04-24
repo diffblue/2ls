@@ -75,7 +75,12 @@ void acdl_implication_grapht::add_deductions
        add_edge(nb, na);
      }
     }
-    else continue;
+    else { 
+      // only update the decision level of the consequent node
+      // with the decision level of the current decision
+      nodes[na].level = current_level;
+      continue;
+    }
   } 
 }
 
@@ -105,6 +110,43 @@ void acdl_implication_grapht::add_decision
   dec_trail.push_back(m_ir);
 }
  
+/*******************************************************************\
+
+ Function: acdl_implication_grapht::mark_node()
+
+  Inputs:
+
+  Outputs:
+
+ Purpose: mark nodes of the implication graph starting from 
+          the current decision node to the BOTTOM node using 
+          forward reachability
+
+ \*******************************************************************/
+void acdl_implication_grapht::mark_node(const acdl_domaint::meet_irreduciblet &m)
+{
+  // TODO: pass node_index of start and end node to mark_node
+  // make a recursive implementation
+  int na = find_node(false_exprt());
+  assert(na != -1);
+  int indx = find_node(m);
+  const nodet &node=nodes[indx];
+  assert(node.is_decision == true);
+  assert(node.level == current_level);
+
+  std::list<graph::node_indext> worklist;
+  worklist.push_back(indx);
+  // push the nodes which are only at 
+  // the current decision level
+  for(typename edgest::const_iterator
+      it=node.out.begin();
+      it!=node.out.end();
+      it++) {
+    if(nodes[it->first].level == current_level && (!nodes[it->first].deleted)) {
+      worklist.push_back(it->first);
+    }
+  } 
+}
 
 /*******************************************************************\
 
@@ -119,7 +161,11 @@ Function: acdl_implication_grapht::first_uip
  \*******************************************************************/
 void acdl_implication_grapht::first_uip(nodest &cut)
 {
-   
+  acdl_domaint::meet_irreduciblet dec_expr =  dec_trail.back();
+  mark_node(dec_expr);  
+  acdl_implication_grapht implication_graph;
+  graph_dominators_templatet<graph, false> dominator; 
+
   assert(false);
 }
 
@@ -404,3 +450,4 @@ void acdl_implication_grapht::delete_graph_nodes()
     }
   }
 }
+

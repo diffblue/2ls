@@ -331,17 +331,11 @@ Function: acdl_domaint::is_subsumed()
   Inputs: example: 1. x<=3, 0<=x && x<=3
                    2. x<=2, 0<=x && x<=3
                    3. x<=5, 3<=x && x<=3
-                   4. x<=0, 2<=x && x<=3
  Outputs: example  1: true
                    2. false
-                   3. true
-                   4. false
- Purpose: is_not_subsumed(a,b) == makes it smaller
-                       ((a && b) < b) == ((-(a && b) && b) > 0)
-                                      == ((-a || -b) && b > 0)
-                                      == ((-a && b) > 0)
-          TODO: This is now the negation of contains, which is 
-                not really what we want.
+                   3. false 
+ Purpose: is_subsumed(a,b) == not is_strictly_contained(a,b)
+
           contains(a,b) == (b <= a) == ((-a && b) == 0)
 
 \*******************************************************************/
@@ -603,7 +597,8 @@ exprt acdl_domaint::split(const valuet &value,
   const exprt &expr = meet_irreducible_template;
   std::cout << "[ACDL-DOMAIN] Split(" 
 	    << from_expr(SSA.ns, "", meet_irreducible_template) << "): "; output(std::cout, value);
-        
+  std::cout << "" << std::endl;
+         
   if(expr.type().id()==ID_bool)
   {
     exprt v_true = simplify_expr(and_exprt(conjunction(value),expr),SSA.ns);
@@ -648,10 +643,14 @@ exprt acdl_domaint::split(const valuet &value,
     const exprt &e = value[i];
     if(e.id() != ID_le)
       continue;
+    const exprt &lhs = to_binary_relation_expr(e).lhs();
+    const exprt &rhs = to_binary_relation_expr(e).rhs();
+    std::cout << "[ACDL DOMAIN] lhs type:" << lhs << "rhs type:" << rhs << std::endl;
     if(to_binary_relation_expr(e).lhs() == expr)
     {
       u = to_constant_expr(to_binary_relation_expr(e).rhs());
       u_is_assigned = true;
+      //std::cout << "ASSIGNING UPPER" << std::endl;
       break;
     }
   }
@@ -682,8 +681,17 @@ exprt acdl_domaint::split(const valuet &value,
     l = tpolyhedra_domaint::get_min_value(expr);
   }
 
+ 
   //TODO: check whether we have a singleton, then we cannot split anymore
   exprt m = tpolyhedra_domaint::between(l,u);
+  
+  std::cout << "[ACDL DOMAIN] expr: " << from_expr(SSA.ns, "", expr)
+     << "[ACDL DOMAIN] min: "
+	   << from_expr(SSA.ns, "", l)
+     << "[ACDL DOMAIN] max: " 
+	   << from_expr(SSA.ns, "", u)
+     << "[ACDL DOMAIN] mid: " 
+	   << from_expr(SSA.ns, "", m) << std::endl;
 
   if(upper) 
   {

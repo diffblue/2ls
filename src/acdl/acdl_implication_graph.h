@@ -12,6 +12,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include "../ssa/local_ssa.h"
 #include <util/graph.h>
 #include "acdl_domain.h"
+#include "graph_dominators.h"
 
 class acdl_implication_graph_nodet : public graph_nodet<empty_edget>
 {
@@ -48,6 +49,7 @@ public:
   int graph_size();  
   acdl_implication_graph_nodet::node_indext find_node(const exprt &expr);
   void delete_graph_nodes(); 
+  void mark_node(const acdl_domaint::meet_irreduciblet & m);
 protected:
 
 };

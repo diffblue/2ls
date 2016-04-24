@@ -56,29 +56,41 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristicst::dec_heur_rand
   std::cout << "Printing all decision variables" << std::endl;
   for(std::set<exprt>::const_iterator 
     it = decision_variables.begin(); it != decision_variables.end(); ++it)
-      std::cout << *it << "," << std::endl;
+      std::cout << from_expr(SSA.ns, "", *it) << "  ," << std::endl;
 #endif
   // collect the non-singleton variables
-  std::set<exprt> non_singletons;
+  std::vector<exprt> non_singletons;
+  std::vector<exprt> singletons;
   acdl_domaint::meet_irreduciblet val;
   for(std::set<exprt>::const_iterator 
     it = decision_variables.begin(); it != decision_variables.end(); ++it) {
     val = domain.split(value, *it);
     if(!val.is_false()) 
-      non_singletons.insert(*it);
-   }
+      non_singletons.push_back(val);
+   // collect all singleton variables 
+   else
+     singletons.push_back(*it);
+  }
+  
+  // pop the decision variables which 
+  // are already singletons
+  for(std::vector<exprt>::const_iterator 
+    it = singletons.begin(); it != singletons.end(); ++it) 
+     decision_variables.erase(decision_variables.find(*it)); 
+  
    // no more decisions can be made
-   /*if(non_singletons.size() == 0)
+   if(non_singletons.size() == 0)
      return false_exprt();
-   */
+  
 #ifdef DEBUG
   std::cout << "Printing all non-singletons decision variables" << std::endl;
-  for(std::set<exprt>::const_iterator 
+  for(std::vector<exprt>::const_iterator 
     it = non_singletons.begin(); it != non_singletons.end(); ++it)
-      std::cout << *it << "," << std::endl;
+      std::cout << from_expr(SSA.ns, "", *it) << "  ," << std::endl;
 #endif
   //TODO
   // use information from VSIDS to choose decision 'variable'
+  
   
   // ***********************************************************************
   // Note: using CFG flow instead can be used to emulate a forward analysis
@@ -139,8 +151,15 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristicst::dec_heur_rand
       eligible_vars.push_back(*itc);
   }
   // no more decisions can be made
-  if(eligible_vars.size() == 0)
+  if(eligible_vars.size() == 0) {
     return false_exprt();
+    // check for non-cond decision variables
+    // use complete random decision heuristics from all 
+    // non-singleton decision variables
+    const acdl_domaint::meet_irreduciblet dec_expr_rand = 
+    non_singletons[rand() % non_singletons.size()];
+    return dec_expr_rand;
+  }
   
   //int index = rand() % eligible_vars.size();
   const dec_pair &v1 = eligible_vars[rand() % eligible_vars.size()];
@@ -183,7 +202,8 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristicst::dec_heur_rand
 
  \*******************************************************************/
 
-acdl_domaint::meet_irreduciblet acdl_decision_heuristicst::dec_heur_largest_range(const local_SSAt &SSA, const acdl_domaint::valuet &value, bool phase)
+acdl_domaint::meet_irreduciblet acdl_decision_heuristicst::dec_heur_largest_range
+  (const local_SSAt &SSA, const acdl_domaint::valuet &value, bool phase)
 {
   acdl_domaint::meet_irreduciblet decision;
   return decision;
