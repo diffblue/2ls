@@ -22,6 +22,7 @@ public:
   bool conflict;
   bool deleted;
   acdl_domaint::meet_irreduciblet expr;
+  bool marked;
 };
 
 class acdl_implication_grapht : public graph<acdl_implication_graph_nodet>
@@ -49,9 +50,8 @@ public:
   int graph_size();  
   acdl_implication_graph_nodet::node_indext find_node(const exprt &expr);
   void delete_graph_nodes(); 
-  void mark_node(const acdl_domaint::meet_irreduciblet & m);
+  void mark_node(node_indext start);
 protected:
-
 };
 
 #endif

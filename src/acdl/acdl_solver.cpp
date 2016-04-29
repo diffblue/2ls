@@ -11,7 +11,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include <util/find_symbols.h>
 #include "acdl_solver.h"
 #include "acdl_domain.h"
-#include "acdl_worklist_ordered.h"
+//#include "acdl_worklist_ordered.h"
 #include <string>
 
 #define DEBUG

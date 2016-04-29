@@ -636,11 +636,117 @@ exprt acdl_domaint::split(const valuet &value,
   }
 
   //match template expression
-  constant_exprt u;
-  bool u_is_assigned = false;
+ 
+  // preprocess the elements in v to remove negation
+  // Example: I/P: !(x<=10) --> O/P: (x>=10)
+  std::vector<meet_irreduciblet> new_value;
   for(unsigned i=0; i<value.size(); i++)
   {
     const exprt &e = value[i];
+    // check for expression with negations (ex- !(x<=10) or !(x>=10)) 
+    if(e.id() == ID_not) {
+#ifdef DEBUG
+      std::cout << "The original not expression is " << e << std::endl;
+#endif
+      const exprt &expb = e.op0();
+    
+      // Handle the singleton case: example : !guard#0
+      if(expb.id() != ID_le && expb.id() != ID_ge) 
+      {
+          new_value.push_back(expb);
+          continue;
+      }
+      const exprt &lhs = to_binary_relation_expr(expb).lhs();
+      // For Inputs like (!(-((signed __CPROVER_bitvector[33])x#phi25) >= 1))
+      // --> (x#phi25 >= -1)
+      if(lhs.id()==ID_unary_minus && 
+        lhs.op0().id()==ID_typecast)
+      { 
+        const exprt &rhs = to_binary_relation_expr(expb).rhs();
+        const exprt &expminus = unary_minus_exprt(typecast_exprt(rhs,rhs.type()),rhs.type());
+        if(expb.id() == ID_le) {
+         exprt exp = binary_relation_exprt(lhs,ID_le,expminus);
+#ifdef DEBUG
+         std::cout << "The new negated expression is " << exp  << std::endl;
+#endif
+         new_value.push_back(exp);
+        }
+        else if(expb.id() == ID_ge) {
+         exprt exp = binary_relation_exprt(lhs,ID_ge,expminus);
+#ifdef DEBUG
+         std::cout << "The new negated expression is " << exp  << std::endl;
+#endif         
+         new_value.push_back(exp);
+        }
+      }
+      else {
+        const exprt &rhs = to_binary_relation_expr(expb).rhs();
+        if(expb.id() == ID_le) {
+         exprt exp = binary_relation_exprt(lhs,ID_ge,rhs);
+#ifdef DEBUG
+         std::cout << "The new non-negated expression is " << exp  << std::endl;
+#endif         
+         new_value.push_back(exp);
+        }
+        else if(expb.id() == ID_ge) {
+         exprt exp = binary_relation_exprt(lhs,ID_le,rhs);
+#ifdef DEBUG
+         std::cout << "The new non-negated expression is " << exp  << std::endl;
+#endif         
+         new_value.push_back(exp);
+        }
+      }
+    }
+    // simply copy the value[i] to new_value[i]
+    else {
+      new_value.push_back(value[i]);
+    }
+  }
+  // check the size of new_value and value is same here
+  assert(new_value.size() == value.size());
+
+  // computer lower and upper bound
+  constant_exprt u;
+  bool u_is_assigned = false;
+  constant_exprt l;
+  bool l_is_assigned = false;
+  
+  for(unsigned i=0; i<new_value.size(); i++)
+  {
+    const exprt &e = new_value[i];
+    // Handle the singleton case: example : !guard#0
+    if(e.id() != ID_le && e.id() != ID_ge)
+      continue;
+    const exprt &lhs = to_binary_relation_expr(e).lhs();
+    const exprt &rhs = to_binary_relation_expr(e).rhs();
+    std::cout << "[ACDL DOMAIN] lhs type:" << lhs << "rhs type:" << rhs << std::endl;
+    if(to_binary_relation_expr(e).lhs() == expr)
+    {
+      if(e.id() == ID_le) {
+       u = to_constant_expr(to_binary_relation_expr(e).rhs());
+       u_is_assigned = true;
+      }
+      if(e.id() == ID_ge) {
+       l = to_constant_expr(to_binary_relation_expr(e).rhs());
+       l_is_assigned = true;
+      }
+      if(u_is_assigned && l_is_assigned)
+        break;
+    }
+  }
+  if(!u_is_assigned)
+  {
+    u = tpolyhedra_domaint::get_max_value(expr);
+  }
+  if(!l_is_assigned)
+  {
+    l = tpolyhedra_domaint::get_min_value(expr);
+  }
+
+#if 0
+  for(unsigned i=0; i<new_value.size(); i++)
+  {
+    const exprt &e = new_value[i];
     if(e.id() != ID_le)
       continue;
     const exprt &lhs = to_binary_relation_expr(e).lhs();
@@ -661,9 +767,9 @@ exprt acdl_domaint::split(const valuet &value,
 
   constant_exprt l;
   bool l_is_assigned = false;
-  for(unsigned i=0; i<value.size(); i++)
+  for(unsigned i=0; i<new_value.size(); i++)
   {
-    const exprt &e = value[i];
+    const exprt &e = new_value[i];
     if(e.id() != ID_le)
       continue;
     const exprt &lhs = to_binary_relation_expr(e).lhs();
@@ -680,7 +786,7 @@ exprt acdl_domaint::split(const valuet &value,
   {
     l = tpolyhedra_domaint::get_min_value(expr);
   }
-
+#endif
  
   //TODO: check whether we have a singleton, then we cannot split anymore
   exprt m = tpolyhedra_domaint::between(l,u);
