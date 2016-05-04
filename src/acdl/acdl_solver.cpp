@@ -11,7 +11,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include <util/find_symbols.h>
 #include "acdl_solver.h"
 #include "acdl_domain.h"
-#include "acdl_worklist_ordered.h"
+//#include "acdl_worklist_ordered.h"
 #include <string>
 
 #define DEBUG
@@ -62,6 +62,7 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA)
     acdl_domaint::deductionst deductions;
      
     implication_graph.to_value(v);
+    //domain.normalize_val(v);
 
 #ifdef DEBUG
     std::cout << "Computing old abstract value of implication graph: " << std::endl;
@@ -204,8 +205,9 @@ acdl_solvert::decide (const local_SSAt &SSA)
   
   // Take a meet of the decision expression (decision) with the current abstract state (v).
   // The new abstract state is now in v
-  domain.meet(dec_expr,v);
 #ifdef DEBUG
+    domain.meet(dec_expr,v);
+    domain.normalize_val(v);
     std::cout << "New: ";
     domain.output(std::cout, v) << std::endl;
 #endif
@@ -411,10 +413,27 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
   worklist.initialize(SSA);
   // call initialize live variables
   worklist.initialize_live_variables();
+  std::set<exprt> decision_variable;
   // initialize the decision variables
-  decision_heuristics.decision_variables.insert(worklist.worklist_vars.begin(), worklist.worklist_vars.end());
+  decision_variable.insert(worklist.worklist_vars.begin(), worklist.worklist_vars.end());
+
+  // do not insert guard variables in the decision variables
+  std::string str1("guard");
+  std::string str2("#phi");
+  std::string name;
+  for(std::set<exprt>::const_iterator 
+    it = decision_variable.begin(); 
+    it != decision_variable.end(); ++it)
+  {
+    const irep_idt &identifier = it->get(ID_identifier);
+    name = id2string(identifier);
+    std::size_t found1 = name.find(str1);
+    std::size_t found2 = name.find(str2);
+    if (found1==std::string::npos && found2==std::string::npos) {
+      decision_heuristics.decision_variables.insert(*it);
+    }
+  } 
    
-  //decision_heuristics.decision_variables.insert(worklist.live_variables.begin(), worklist.live_variables.end());
 #ifdef DEBUG
   std::cout << "Printing all decision variables inside solver" << std::endl;
   for(std::set<exprt>::const_iterator 

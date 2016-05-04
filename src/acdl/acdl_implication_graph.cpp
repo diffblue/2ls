@@ -123,29 +123,30 @@ void acdl_implication_grapht::add_decision
           forward reachability
 
  \*******************************************************************/
-void acdl_implication_grapht::mark_node(const acdl_domaint::meet_irreduciblet &m)
+void acdl_implication_grapht::mark_node(node_indext start)
 {
-  // TODO: pass node_index of start and end node to mark_node
-  // make a recursive implementation
-  int na = find_node(false_exprt());
-  assert(na != -1);
-  int indx = find_node(m);
-  const nodet &node=nodes[indx];
-  assert(node.is_decision == true);
-  assert(node.level == current_level);
-
-  std::list<graph::node_indext> worklist;
-  worklist.push_back(indx);
-  // push the nodes which are only at 
-  // the current decision level
-  for(typename edgest::const_iterator
+  nodet &node=nodes[start];
+  unsigned size = node.out.size();
+  // base case
+  if(size == 0) {
+   if(node.expr == false_exprt()) {
+     assert(node.level == current_level);
+     assert(node.deleted == false); 
+     node.marked = true;
+   }
+  }
+  else {
+   for(typename edgest::const_iterator
       it=node.out.begin();
       it!=node.out.end();
       it++) {
-    if(nodes[it->first].level == current_level && (!nodes[it->first].deleted)) {
-      worklist.push_back(it->first);
+    if(nodes[it->first].level == current_level 
+             && (!nodes[it->first].deleted)) {
+      mark_node(it->first);
+      nodes[it->first].marked = true;
     }
-  } 
+   }
+  }
 }
 
 /*******************************************************************\
@@ -162,10 +163,19 @@ Function: acdl_implication_grapht::first_uip
 void acdl_implication_grapht::first_uip(nodest &cut)
 {
   acdl_domaint::meet_irreduciblet dec_expr =  dec_trail.back();
-  mark_node(dec_expr);  
-  acdl_implication_grapht implication_graph;
-  graph_dominators_templatet<graph, false> dominator; 
-
+  node_indext na = find_node(dec_expr);
+  assert(na != -1);
+  int nb = find_node(false_exprt());
+  assert(nb != -1);
+  const nodet &node=nodes[na];
+  assert(node.in.size() == 0);
+  assert(node.is_decision == true);
+  assert(node.level == current_level);
+  //entry_node start;
+  graph::node_indext entry_node=na;
+  // call mark node
+  mark_node(na);  
+  graph_dominators_templatet<graph, false> dominator(graph, graph::node_indext na);
   assert(false);
 }
 

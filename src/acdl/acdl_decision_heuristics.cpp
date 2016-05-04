@@ -79,15 +79,57 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristicst::dec_heur_rand
      decision_variables.erase(decision_variables.find(*it)); 
   
    // no more decisions can be made
-   if(non_singletons.size() == 0)
+   if(non_singletons.size() == 0) {
+#ifdef DEBUG
+     std::cout << "[FALSE DECISION] " << "FALSE" << std::endl;
+#endif
      return false_exprt();
-  
+   }
+
 #ifdef DEBUG
   std::cout << "Printing all non-singletons decision variables" << std::endl;
   for(std::vector<exprt>::const_iterator 
     it = non_singletons.begin(); it != non_singletons.end(); ++it)
       std::cout << from_expr(SSA.ns, "", *it) << "  ," << std::endl;
 #endif
+
+  std::vector<exprt> non_cond;
+  std::vector<exprt> cond;
+  std::string str("cond");
+  std::string name;
+  // separate the non-singleton cond and non_cond variables
+  for(std::vector<exprt>::const_iterator 
+      it = non_singletons.begin(); it != non_singletons.end(); ++it) { 
+    const irep_idt &identifier = it->get(ID_identifier);
+    name = id2string(identifier);
+    std::size_t found = name.find(str);
+    if (found==std::string::npos) 
+      non_cond.push_back(*it);
+    else  
+      cond.push_back(*it);
+  }
+
+  // Make a decision
+  if(cond.size() == 0) {
+    // select non-cond decision variables
+    const acdl_domaint::meet_irreduciblet dec_expr_rand = 
+      non_cond[rand() % non_cond.size()];
+#ifdef DEBUG
+    std::cout << "[NON-COND DECISION] " << dec_expr_rand << std::endl;
+#endif
+    return dec_expr_rand;
+  }
+  else {
+    // select cond decision variables
+    const acdl_domaint::meet_irreduciblet dec_expr_rand = 
+      cond[rand() % cond.size()];
+#ifdef DEBUG
+    std::cout << "[COND DECISION] " << dec_expr_rand << std::endl;
+#endif
+    return dec_expr_rand;
+  }
+        
+    
   //TODO
   // use information from VSIDS to choose decision 'variable'
   
@@ -104,6 +146,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristicst::dec_heur_rand
   // 1.a. look at conditions in the SSA: cond#3
   //      decision = cond_var
   // *******************************************
+#if 0
   std::string str("cond");
   std::string lhs_str;
   conds cond_container;
@@ -187,6 +230,8 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristicst::dec_heur_rand
   std::cout << "DECISION SPLITTING VALUE: " << from_expr (SSA.ns, "", decision) << std::endl;
 #endif 
   return decision;
+#endif
+    
 }
 
 

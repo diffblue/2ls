@@ -52,7 +52,7 @@ void acdl_domaint::operator()(const statementt &statement,
 #ifdef DEBUG
   std::cout << "DOMAIN projected live variables are: ";
   for(acdl_domaint::varst::const_iterator 
-        it = vars.begin();it != vars.end(); ++it)
+      it = vars.begin();it != vars.end(); ++it)
     std::cout << from_expr(SSA.ns, "", *it);
   std::cout << "" << std::endl;
 #endif      
@@ -63,7 +63,7 @@ void acdl_domaint::operator()(const statementt &statement,
   {
     ssa_analyzert ssa_analyzer;
     std::unique_ptr<incremental_solvert> solver(
-      incremental_solvert::allocate(SSA.ns,true));
+        incremental_solvert::allocate(SSA.ns,true));
 
     // project _old_value on everything in statement but *it
     valuet old_value;
@@ -83,8 +83,8 @@ void acdl_domaint::operator()(const statementt &statement,
       literalt l = solver->solver->convert(*it);
       if(l.is_constant())
       {
-	*solver << literal_exprt(l); //TODO: this has only an effect if l is false and then we have deduced a conflict
-	continue; //in this case we don't have information on deductions
+        *solver << literal_exprt(l); //TODO: this has only an effect if l is false and then we have deduced a conflict
+        continue; //in this case we don't have information on deductions
       }
       solver->solver->set_frozen(l);
 
@@ -95,76 +95,75 @@ void acdl_domaint::operator()(const statementt &statement,
       *solver << statement;
       for(unsigned i=0; i<old_value.size(); i++)
       {
-	literalt l = solver->convert(old_value[i]);
-	if(l.is_constant())
-	{
-	  *solver << literal_exprt(l);
-	  continue;
-	}
-	value_literal_map.push_back(i);
-	value_literals.push_back(l);
-  	solver->solver->set_frozen(l);
+        literalt l = solver->convert(old_value[i]);
+        if(l.is_constant())
+        {
+          *solver << literal_exprt(l);
+          continue;
+        }
+        value_literal_map.push_back(i);
+        value_literals.push_back(l);
+        solver->solver->set_frozen(l);
       }
       solver->set_assumptions(value_literals);
 
       if((*solver)() == decision_proceduret::D_SATISFIABLE)
       {
-	exprt m = solver->get(*it);
-	if(m.is_true())
-	  deduced = *it;
-	else
-	  deduced = not_exprt(*it);
+        exprt m = solver->get(*it);
+        if(m.is_true())
+          deduced = *it;
+        else
+          deduced = not_exprt(*it);
 
-	//test the complement
-	solver->new_context();
-	solver->set_assumptions(value_literals);
-	*solver << not_exprt(deduced);
-	std::cout << "deducing in SAT" << std::endl;
-	if((*solver)() == decision_proceduret::D_SATISFIABLE)
-	{ 
-	  std::cout << "not deducing" << std::endl;
-	  //"don't know"
-	  //pop_context not needed
-	  continue;
-	}
-	else
-	{
-	  std::cout << "actually deducing" << std::endl;
-	  if(!is_subsumed(deduced,_old_value))
-	  {
-	    new_value.push_back(deduced);
-	    deductions.push_back(deductiont());
-	    deductions.back().first = deduced;
-	    get_antecedents(*solver,_old_value,value_literals,
-			    deductions.back().second);
-	  }
-	}
+        //test the complement
+        solver->new_context();
+        solver->set_assumptions(value_literals);
+        *solver << not_exprt(deduced);
+        std::cout << "deducing in SAT" << std::endl;
+        if((*solver)() == decision_proceduret::D_SATISFIABLE)
+        { 
+          std::cout << "not deducing" << std::endl;
+          //"don't know"
+          //pop_context not needed
+          continue;
+        }
+	      else
+	      {
+	        std::cout << "actually deducing" << std::endl;
+      	  if(!is_subsumed(deduced,_old_value))
+	        {
+      	    new_value.push_back(deduced);
+	          deductions.push_back(deductiont());
+	          deductions.back().first = deduced;
+	          get_antecedents(*solver,_old_value,value_literals,
+			      deductions.back().second);
+	        }
+	      }
 
-	//pop_context not needed
+    	//pop_context not needed
       }
       else //bottom
       {
-	std::cout << "deducing in BOTTOM" << std::endl;
-	deductions.push_back(deductiont());
-	deductions.back().first = false_exprt();
-	get_antecedents(*solver,_old_value,value_literals,
-			deductions.back().second);
-	
-	break; //at this point we have a conflict, we return
+        std::cout << "deducing in BOTTOM" << std::endl;
+        deductions.push_back(deductiont());
+        deductions.back().first = false_exprt();
+        get_antecedents(*solver,_old_value,value_literals,
+        deductions.back().second);
+        break; //at this point we have a conflict, we return
       }
     }
 
     // inference for numerical variables using templates
     else if (it->type().id() == ID_signedbv ||
-	     it->type().id() == ID_unsignedbv ||
-	     it->type().id() == ID_floatbv)
+        it->type().id() == ID_unsignedbv ||
+        it->type().id() == ID_floatbv)
     {
       template_generator_acdlt template_generator(
-	options,ssa_db,ssa_local_unwinder); 
+          options,ssa_db,ssa_local_unwinder); 
       template_generator(SSA,*it);
 
       ssa_analyzer(*solver, SSA, and_exprt(conjunction(old_value),statement),
-		   template_generator);
+          template_generator);
       exprt var_value;
       ssa_analyzer.get_result(var_value,template_generator.all_vars());
 #if 0
@@ -177,7 +176,7 @@ void acdl_domaint::operator()(const statementt &statement,
       std::cout << "RESULT: "; output(std::cout, var_values) << std::endl;
 #endif
       if(var_values.empty())
-	continue;
+        continue;
 
       //get deductions
       //ENHANCE: make assumptions persistent in incremental_solver
@@ -187,26 +186,26 @@ void acdl_domaint::operator()(const statementt &statement,
       *solver << statement;
       for(unsigned i=0; i<old_value.size(); i++)
       {
-	literalt l = solver->convert(old_value[i]);
-	if(l.is_constant())
-	{
-	  *solver << literal_exprt(l);
-	  continue;
-	}
-        std::cout << "track old_value: " << from_expr(SSA.ns, "", old_value[i]) << std::endl;
-	value_literal_map.push_back(i);
-	value_literals.push_back(l);
-	solver->solver->set_frozen(l);
-      }
-      for(unsigned i=0; i<var_values.size(); ++i)
-      {
-/*        literalt l = solver->convert(var_values[i]);
+        literalt l = solver->convert(old_value[i]);
         if(l.is_constant())
         {
           *solver << literal_exprt(l);
-          continue; //in this case we don't have information on deductions
+          continue;
         }
-*/
+        std::cout << "track old_value: " << from_expr(SSA.ns, "", old_value[i]) << std::endl;
+        value_literal_map.push_back(i);
+        value_literals.push_back(l);
+        solver->solver->set_frozen(l);
+      }
+      for(unsigned i=0; i<var_values.size(); ++i)
+      {
+        /*        literalt l = solver->convert(var_values[i]);
+                  if(l.is_constant())
+                  {
+         *solver << literal_exprt(l);
+         continue; //in this case we don't have information on deductions
+         }
+         */
         solver->new_context();
         *solver << not_exprt(var_values[i]);
         solver->set_assumptions(value_literals);
@@ -214,17 +213,17 @@ void acdl_domaint::operator()(const statementt &statement,
         decision_proceduret::resultt result = (*solver)();
         assert(result == decision_proceduret::D_UNSATISFIABLE);
 
-	std::cout << "IS_SUBSUMED: " << std::endl;
-	std::cout << "  " << from_expr(SSA.ns, "", var_values[i]) << std::endl; 
-	std::cout << "  "; output(std::cout, _old_value); std::cout << std::endl;
+        std::cout << "IS_SUBSUMED: " << std::endl;
+        std::cout << "  " << from_expr(SSA.ns, "", var_values[i]) << std::endl; 
+        std::cout << "  "; output(std::cout, _old_value); std::cout << std::endl;
         if(!is_subsumed(var_values[i],_old_value))
         {
-	  std::cout << "adding new value " << from_expr(SSA.ns, "", var_values[i]) << std::endl;
+          std::cout << "adding new value " << from_expr(SSA.ns, "", var_values[i]) << std::endl;
           new_value.push_back(var_values[i]);
-	  deductions.push_back(deductiont());
-	  deductions.back().first = var_values[i];
-	  get_antecedents(*solver,_old_value,value_literals,
-			  deductions.back().second);
+          deductions.push_back(deductiont());
+          deductions.back().first = var_values[i];
+          get_antecedents(*solver,_old_value,value_literals,
+              deductions.back().second);
         }
         solver->pop_context();
       }	
@@ -232,9 +231,9 @@ void acdl_domaint::operator()(const statementt &statement,
     else
     {
       warning() << "WARNING: do not know how to propagate " 
-		<< it->get_identifier()
-		<< " of type " << from_type(SSA.ns, "", it->type()) 
-		<< eom;
+        << it->get_identifier()
+        << " of type " << from_type(SSA.ns, "", it->type()) 
+        << eom;
     }
 
 
@@ -352,7 +351,7 @@ bool acdl_domaint::is_subsumed(const meet_irreduciblet &m,
     for(unsigned i=0; i<value.size(); i++)
     {
       if(m == value[i]) 
-	return true;
+	     return true;
     }
     return false;
   }
@@ -376,6 +375,7 @@ bool acdl_domaint::is_subsumed(const meet_irreduciblet &m,
   
   assert(false);
 }
+
 
 /*******************************************************************\
 
@@ -636,11 +636,165 @@ exprt acdl_domaint::split(const valuet &value,
   }
 
   //match template expression
-  constant_exprt u;
-  bool u_is_assigned = false;
+ 
+  // preprocess the elements in v to remove negation
+  // Example: I/P: !(x<=10) --> O/P: (x>=10)
+  std::vector<meet_irreduciblet> new_value;
   for(unsigned i=0; i<value.size(); i++)
   {
     const exprt &e = value[i];
+    // check for expression with negations (ex- !(x<=10) or !(x>=10)) 
+    if(e.id() == ID_not) {
+#ifdef DEBUG
+      std::cout << "The original not expression is " << e << std::endl;
+#endif
+      const exprt &expb = e.op0();
+
+      // Handle the singleton case: example : !guard#0
+      if(expb.id() != ID_le && expb.id() != ID_ge) 
+      {
+        new_value.push_back(expb);
+        continue;
+      }
+      const exprt &lhs = to_binary_relation_expr(expb).lhs();
+      const exprt &rhs = to_binary_relation_expr(expb).rhs();
+      if(expb.id() == ID_le) {
+        exprt exp = binary_relation_exprt(lhs,ID_ge,rhs);
+#ifdef DEBUG
+        std::cout << "The new non-negated expression is " << exp  << std::endl;
+#endif         
+        new_value.push_back(exp);
+      }
+      else if(expb.id() == ID_ge) {
+        exprt exp = binary_relation_exprt(lhs,ID_le,rhs);
+#ifdef DEBUG
+        std::cout << "The new non-negated expression is " << exp  << std::endl;
+#endif         
+        new_value.push_back(exp);
+      }
+    } // end not 
+    // simply copy the value[i] to new_value[i]
+    else {
+      new_value.push_back(value[i]);
+    }
+  }
+  // check the size of new_value and value is same here
+  assert(new_value.size() == value.size());
+
+#if 0
+  std::vector<meet_irreduciblet> new_value;
+  for(unsigned i=0; i<value.size(); i++)
+  {
+    const exprt &e = value[i];
+    // check for expression with negations (ex- !(x<=10) or !(x>=10)) 
+    if(e.id() == ID_not) {
+#ifdef DEBUG
+      std::cout << "The original not expression is " << e << std::endl;
+#endif
+      const exprt &expb = e.op0();
+    
+      // Handle the singleton case: example : !guard#0
+      if(expb.id() != ID_le && expb.id() != ID_ge) 
+      {
+          new_value.push_back(expb);
+          continue;
+      }
+      const exprt &lhs = to_binary_relation_expr(expb).lhs();
+      // For Inputs like (!(-((signed __CPROVER_bitvector[33])x#phi25) >= 1))
+      // --> (x#phi25 >= -1)
+      if(lhs.id()==ID_unary_minus && 
+        lhs.op0().id()==ID_typecast)
+      { 
+        const exprt &rhs = to_binary_relation_expr(expb).rhs();
+        const exprt &expminus = unary_minus_exprt(typecast_exprt(rhs,rhs.type()),rhs.type());
+        if(expb.id() == ID_le) {
+         exprt exp = binary_relation_exprt(lhs.op0().op0(),ID_le,expminus);
+#ifdef DEBUG
+         std::cout << "The new negated expression is " << exp  << std::endl;
+#endif
+         new_value.push_back(exp);
+        }
+        else if(expb.id() == ID_ge) {
+         exprt exp = binary_relation_exprt(lhs.op0().op0(),ID_ge,expminus);
+#ifdef DEBUG
+         std::cout << "The new negated expression is " << exp  << std::endl;
+#endif         
+         new_value.push_back(exp);
+        }
+      }
+      else {
+        const exprt &rhs = to_binary_relation_expr(expb).rhs();
+        if(expb.id() == ID_le) {
+         exprt exp = binary_relation_exprt(lhs,ID_ge,rhs);
+#ifdef DEBUG
+         std::cout << "The new non-negated expression is " << exp  << std::endl;
+#endif         
+         new_value.push_back(exp);
+        }
+        else if(expb.id() == ID_ge) {
+         exprt exp = binary_relation_exprt(lhs,ID_le,rhs);
+#ifdef DEBUG
+         std::cout << "The new non-negated expression is " << exp  << std::endl;
+#endif         
+         new_value.push_back(exp);
+        }
+      }
+     } // end not 
+    // simply copy the value[i] to new_value[i]
+    else {
+      new_value.push_back(value[i]);
+    }
+  }
+  // check the size of new_value and value is same here
+  assert(new_value.size() == value.size());
+#endif
+
+#if 0
+  // computer lower and upper bound
+  constant_exprt u;
+  bool u_is_assigned = false;
+  constant_exprt l;
+  bool l_is_assigned = false;
+  
+  for(unsigned i=0; i<new_value.size(); i++)
+  {
+    const exprt &e = new_value[i];
+    // Handle the singleton case: example : !guard#0
+    if(e.id() != ID_le && e.id() != ID_ge)
+      continue;
+    const exprt &lhs = to_binary_relation_expr(e).lhs();
+    const exprt &rhs = to_binary_relation_expr(e).rhs();
+    std::cout << "[ACDL DOMAIN] lhs type:" << lhs << "rhs type:" << rhs << std::endl;
+    if(to_binary_relation_expr(e).lhs() == expr)
+    {
+      if(e.id() == ID_le) {
+       u = to_constant_expr(to_binary_relation_expr(e).rhs());
+       u_is_assigned = true;
+      }
+      if(e.id() == ID_ge) {
+       l = to_constant_expr(to_binary_relation_expr(e).rhs());
+       l_is_assigned = true;
+      }
+      if(u_is_assigned && l_is_assigned)
+        break;
+    }
+  }
+  if(!u_is_assigned)
+  {
+    u = tpolyhedra_domaint::get_max_value(expr);
+  }
+  if(!l_is_assigned)
+  {
+    l = tpolyhedra_domaint::get_min_value(expr);
+  }
+#endif 
+
+#if 0
+  constant_exprt u;
+  bool u_is_assigned = false;
+  for(unsigned i=0; i<new_value.size(); i++)
+  {
+    const exprt &e = new_value[i];
     if(e.id() != ID_le)
       continue;
     const exprt &lhs = to_binary_relation_expr(e).lhs();
@@ -661,9 +815,9 @@ exprt acdl_domaint::split(const valuet &value,
 
   constant_exprt l;
   bool l_is_assigned = false;
-  for(unsigned i=0; i<value.size(); i++)
+  for(unsigned i=0; i<new_value.size(); i++)
   {
-    const exprt &e = value[i];
+    const exprt &e = new_value[i];
     if(e.id() != ID_le)
       continue;
     const exprt &lhs = to_binary_relation_expr(e).lhs();
@@ -680,8 +834,83 @@ exprt acdl_domaint::split(const valuet &value,
   {
     l = tpolyhedra_domaint::get_min_value(expr);
   }
+#endif
+  
+  constant_exprt u;
+  bool u_is_assigned = false;
+  constant_exprt l;
+  bool l_is_assigned = false;
+  // I/P: (x>=0 && x<=10) O/P: l = 0, u = 10 
+  for(unsigned i=0; i<new_value.size(); i++)
+  {
+    const exprt &e = new_value[i];
+    // Handle the singleton case: example : !guard#0
+    if(e.id() != ID_le && e.id() != ID_ge)
+      continue;
+    if(to_binary_relation_expr(e).lhs() == expr)
+    {
+      if(e.id() == ID_le)
+      {
+        u = to_constant_expr(to_binary_relation_expr(e).rhs());
+        u_is_assigned = true;
+        break;
+      }
+      if(e.id() == ID_ge)
+      {
+        l = to_constant_expr(to_binary_relation_expr(e).rhs());
+        l_is_assigned = true;
+        break;
+      }
+    }
+  }
+  mp_integer neg, cneg; 
+  mp_integer negu, cnegu; 
+  for(unsigned i=0; i<new_value.size(); i++)
+  {
+    const exprt &e = new_value[i];
+    // Handle the singleton case: example : !guard#0
+    if(e.id() != ID_le && e.id() != ID_ge)
+      continue;
+    const exprt &lhs = to_binary_relation_expr(e).lhs();
+    if(lhs.id()==ID_unary_minus && 
+        lhs.op0().id()==ID_typecast &&
+        lhs.op0().op0() == expr)
+    {
+      // I/P: (-x <= 10) O/P: l = -10
+      if(e.id() == ID_le) {
+        const exprt &rhs = to_binary_relation_expr(e).rhs();
+        //const exprt &expminus = unary_minus_exprt(typecast_exprt(rhs,rhs.type()),rhs.type());
+        //l = to_constant_expr(expminus);
+        constant_exprt cexpr = to_constant_expr(rhs);
+        to_integer(cexpr, neg);
+        cneg = -neg;
+        l = from_integer(cneg, cexpr.type());  
+        l_is_assigned = true;
+        break;
+      }
+      // I/P: (-x >= 10) O/P: u = -10
+      if(e.id() == ID_ge) {
+        const exprt &rhs = to_binary_relation_expr(e).rhs();
+        //const exprt &expminus = unary_minus_exprt(typecast_exprt(rhs,rhs.type()),rhs.type());
+        //u = to_constant_expr(expminus);
+        constant_exprt cexpru = to_constant_expr(rhs);
+        to_integer(cexpru, negu);
+        cnegu = -negu;
+        u = from_integer(cnegu, cexpru.type());  
+        u_is_assigned = true;
+        break;
+      }
+    }
+  }
+  if(!u_is_assigned)
+  {
+    u = tpolyhedra_domaint::get_max_value(expr);
+  }
+  if(!l_is_assigned)
+  {
+    l = tpolyhedra_domaint::get_min_value(expr);
+  }
 
- 
   //TODO: check whether we have a singleton, then we cannot split anymore
   exprt m = tpolyhedra_domaint::between(l,u);
   
@@ -712,6 +941,130 @@ exprt acdl_domaint::split(const valuet &value,
   return false_exprt();
 }
 
+
+/*******************************************************************\
+
+Function: acdl_domaint::remove_expr()
+
+  Inputs: example:
+          Old_value = (1 <= x && x <= 5) && (0 <= y && y <= 10) 
+          expr = (1 <= x)
+
+ Outputs: example:
+          (x <= 5) && (0 <= y && y <= 10)
+
+ Purpose:
+
+\*******************************************************************/
+
+void acdl_domaint::remove_expr(valuet &old_value, 
+			                         exprt &expr,
+                               valuet &new_value)
+{
+  for(valuet::const_iterator it = old_value.begin();
+      it != old_value.end(); ++it)
+  {
+    if(expr == *it) {
+#ifdef DEBUG
+  std::cout << "[ACDL-DOMAIN] REMOVE EXPR: "
+	      << from_expr(SSA.ns, "", expr) << std::endl 
+        << "[ACDL-DOMAIN] MATCHED VALUE: " 
+	      << from_expr(SSA.ns, "", *it) << std::endl; 
+#endif
+      continue;
+    }
+    else
+      new_value.push_back(*it);  
+  }
+#if 0
+#ifdef DEBUG
+    std::cout << "[ACDL-DOMAIN] remove_expr: "
+	      << from_expr(SSA.ns, "", expr) << std::endl;
+
+  std::cout << "[ACDL-DOMAIN] Content of new_value after removal is: " << std::endl;
+  for(valuet::const_iterator it = new_value.begin();
+      it != new_value.end(); ++it)
+    std::cout << from_expr(SSA.ns, "", *it) << std::endl;
+#endif
+#endif
+}
+
+/*******************************************************************\
+
+Function: acdl_domaint::normalize_val()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void acdl_domaint::normalize_val(valuet &value)
+{
+  valuet val;
+  if(value.empty()) 
+    return;
+  for(unsigned i=0; i<value.size(); i++)
+  {
+    exprt m = value[i];
+    // for expressions like !guard22
+    if(m.id()==ID_symbol ||
+        (m.id()==ID_not && m.op0().id()==ID_symbol))
+    {
+      #if 0
+      exprt not_m = simplify_expr(not_exprt(m), SSA.ns);
+      for(unsigned i=0; i<value.size(); i++)
+      {
+        if(not_m == value[i]) 
+         return false;
+      }
+      #endif
+      val.push_back(m);
+      continue;
+    }
+    else
+    {
+      valuet new_val;
+      remove_expr(value, m, new_val);
+      //maybe the simplifier does the job
+      exprt f1 = and_exprt(conjunction(new_val),not_exprt(m));
+      exprt f = simplify_expr(and_exprt(conjunction(new_val),not_exprt(m)),SSA.ns);
+#ifdef DEBUG
+    std::cout << "[ACDL-DOMAIN] remove_expr: " << from_expr(SSA.ns, "", m) << "SAT query: " 
+	      << from_expr(SSA.ns, "", f) << std::endl;
+#endif
+      if(f.is_false())
+       continue;
+      bool result = check_val(f);
+#ifdef DEBUG
+    std::cout << "[ACDL-DOMAIN] SAT result: "; 
+#endif
+      // check if UNSAT
+      if(result) { 
+#ifdef DEBUG
+        std::cout << "UNSAT " << std::endl;
+#endif        
+        continue;
+      }
+      // if satisfiable, then push into val
+      else {
+#ifdef DEBUG
+        std::cout << "SAT " << std::endl;
+#endif        
+        val.push_back(m);
+      }
+    }
+  }
+  // delete old elements in value
+  for(unsigned i=0; i<value.size(); i++)
+    value.erase(value.begin(), value.end());
+  // load val in to value  
+  for(unsigned i=0; i<val.size(); i++)
+   value.push_back(val[i]);
+}
+
 /*******************************************************************\
 
 Function: acdl_domaint::normalize()
@@ -733,43 +1086,67 @@ void acdl_domaint::normalize(valuet &value)
       set_bottom(value);
       return;
     }
-  }  
-#if 0 //I don't think this is needed anymore
-  else { 
-    exprt old_value = value[i];
- 
-    std::vector<symbol_exprt> clean_vars;
-    valuet new_value;
-    //project out vars
-    for(varst::const_iterator it = vars.begin();
-	it != vars.end(); ++it)
-    {
-      // we only normalize what the abstract domain currently handles
-      if(it->type().id() == ID_signedbv ||
-	 it->type().id() == ID_unsignedbv ||
-	 it->type().id() == ID_floatbv)
+  }
+
+#if 0
+    //I don't think this is needed anymore
+    else { 
+      exprt old_value = value[i];
+
+      std::vector<symbol_exprt> clean_vars;
+      valuet new_value;
+      //project out vars
+      for(varst::const_iterator it = vars.begin();
+          it != vars.end(); ++it)
       {
-	remove_var(value,*it, new_value);
-	clean_vars.push_back(*it);
+        // we only normalize what the abstract domain currently handles
+        if(it->type().id() == ID_signedbv ||
+            it->type().id() == ID_unsignedbv ||
+            it->type().id() == ID_floatbv)
+        {
+          remove_var(value,*it, new_value);
+          clean_vars.push_back(*it);
+        }
       }
-    }
-    
-    ssa_analyzert ssa_analyzer;
-    std::unique_ptr<incremental_solvert> solver(incremental_solvert::allocate(SSA.ns,true));
 
-    template_generator_acdlt template_generator(options,ssa_db,ssa_local_unwinder); 
-    template_generator(SSA,clean_vars);
-    
-    ssa_analyzer(*solver, SSA, old_value,template_generator);
-    exprt new_values;
-    ssa_analyzer.get_result(new_values,template_generator.all_vars());
+      ssa_analyzert ssa_analyzer;
+      std::unique_ptr<incremental_solvert> solver(incremental_solvert::allocate(SSA.ns,true));
 
-    for(unsigned k=0; k<new_value.size(); k++)
-      value.push_back(and_exprt(new_values, new_value[k]));
-  } // end of else
+      template_generator_acdlt template_generator(options,ssa_db,ssa_local_unwinder); 
+      template_generator(SSA,clean_vars);
+
+      ssa_analyzer(*solver, SSA, old_value,template_generator);
+      exprt new_values;
+      ssa_analyzer.get_result(new_values,template_generator.all_vars());
+
+      for(unsigned k=0; k<new_value.size(); k++)
+        value.push_back(and_exprt(new_values, new_value[k]));
+    } // end of else
+  } // end for
+#endif  
 }
-#endif
+
+
+/*******************************************************************\
+
+Function: acdl_domaint::check_val()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool acdl_domaint::check_val(const exprt &expr)
+{
+  std::unique_ptr<incremental_solvert> solver(
+      incremental_solvert::allocate(SSA.ns,true));
+  *solver << expr;
+  return ((*solver)() == decision_proceduret::D_UNSATISFIABLE);
 }
+
 
 /*******************************************************************\
 

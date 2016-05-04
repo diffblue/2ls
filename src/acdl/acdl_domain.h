@@ -68,7 +68,9 @@ public:
     bool upper=false);
   
   void normalize(valuet &value);
+  void normalize_val(valuet &value);
   void expr_to_value(const exprt &expr, valuet &value);
+  bool check_val(const exprt &expr);
 
   void set_bottom(valuet &value) { value.clear(); value.push_back(false_exprt());  }
   void set_top(valuet &value) { value.clear(); }
@@ -115,6 +117,10 @@ protected:
 		  const symbol_exprt &var,
 		  valuet &new_value);
  
+  void remove_expr(valuet &old_value, 
+			             exprt &expr,
+                   valuet &new_value);
+
   void get_antecedents(incremental_solvert &solver,
 		       const valuet &value,
 		       const bvt &value_literals,

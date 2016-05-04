@@ -543,3 +543,13 @@ Query:
 1> Do we change (not flip but select a different variable) the present decision
 when the present decision is not complete ? We always flip the present decision
 when it leads to conflict.
+
+Peter Meeting:
+--------------
+1> Do we make changes to the meet irreducible like !(-x<=10) in the abstract value 
+temporarily for computing l and u for the splitting function or we change all
+these negated meet irreduciblet permanantly in the abstract value itself ?
+
+2> Check the implementation of computing l or u in domain.split. Specially 
+creating meet_irreduciblet like (x >= -10), where I created (-10) with
+mp_integer. 

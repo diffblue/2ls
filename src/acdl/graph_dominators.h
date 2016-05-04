@@ -24,7 +24,7 @@ public:
   typedef std::map<typename G::node_indext,target_sett> dominatorst;
   dominatorst dominators;
 
-  void operator()(G &graph, typename G::node_indext entry_node);
+  virtual void operator()(G &graph, typename G::node_indext entry_node);
 
   typename G::node_indext entry_node;
 
@@ -34,9 +34,11 @@ public:
     target_sett &s, const target_sett& t,
     typename G::node_indext current);
 
-protected:
-  void initialise(G &graph);
-  void fixedpoint(G &graph);
+  virtual void initialise(G &graph);
+  virtual void fixedpoint(G &graph); 
+  
+  protected:
+
 };
 
 /*******************************************************************\
@@ -71,7 +73,7 @@ Function: operator ()
  Purpose: Compute dominators
 
 \*******************************************************************/
-
+/*
 template <class G, bool post_dom>
 void graph_dominators_templatet<G, post_dom>::operator()(G &graph, typename G::node_indext _entry_node)
 {
@@ -79,7 +81,7 @@ void graph_dominators_templatet<G, post_dom>::operator()(G &graph, typename G::n
   initialise(graph);
   fixedpoint(graph);
 }
-
+*/
 /*******************************************************************\
 
 Function: graph_dominators_templatet::initialise
@@ -91,12 +93,13 @@ Function: graph_dominators_templatet::initialise
  Purpose: Initialises the elements of the fixed point analysis
 
 \*******************************************************************/
-
+/*
 template <class G, bool post_dom>
 void graph_dominators_templatet<G, post_dom>::initialise(G &graph)
 {
   dominators.clear();
 }
+*/
 
 /*******************************************************************\
 
@@ -109,7 +112,7 @@ Function: graph_dominators_templatet::fixedpoint
  Purpose: Computes the MOP for the dominator analysis
 
 \*******************************************************************/
-
+/*
 template <class G, bool post_dom>
 void graph_dominators_templatet<G, post_dom>::fixedpoint(G &graph)
 {
@@ -173,7 +176,7 @@ void graph_dominators_templatet<G, post_dom>::fixedpoint(G &graph)
     }
   }
 }
-
+*/
 /*******************************************************************\
 
 Function: graph_dominators_templatet::output
