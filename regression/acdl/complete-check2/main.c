@@ -1,6 +1,5 @@
 int main() {
   int x, y, c;
-
   x = 1;
   if(c) 
     y=2;

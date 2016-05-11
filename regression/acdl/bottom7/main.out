@@ -74,7 +74,6 @@ Printing all live variables
 ssa::$guard#0,
 main::1::x#19,
 Printing all decision variables inside solver
-$guard#0  ,
 x#19  ,
 ********************************
         DEDUCTION PHASE 
@@ -169,6 +168,20 @@ $guard#0
 !(x#19 >= 2)
 !(-((signed __CPROVER_bitvector[33])x#19) >= 0)
 Pop: !(x#19 == 1 || !$guard#0)
+[ACDL-DOMAIN] REMOVE EXPR: !(x#19 >= 2)
+[ACDL-DOMAIN] MATCHED VALUE: !(x#19 >= 2)
+[ACDL-DOMAIN] remove_expr: !(x#19 >= 2)SAT query without simplifiert: $guard#0 && !(-((signed __CPROVER_bitvector[33])x#19) >= 0) && !(!(x#19 >= 2))
+[ACDL-DOMAIN] original SAT query: x#19 >= 2 && !(-((signed __CPROVER_bitvector[33])x#19) >= 0) && $guard#0
+original SAT result: 0
+SAT
+[ACDL-DOMAIN] SAT result: SAT 
+[ACDL-DOMAIN] REMOVE EXPR: !(-((signed __CPROVER_bitvector[33])x#19) >= 0)
+[ACDL-DOMAIN] MATCHED VALUE: !(-((signed __CPROVER_bitvector[33])x#19) >= 0)
+[ACDL-DOMAIN] remove_expr: !(-((signed __CPROVER_bitvector[33])x#19) >= 0)SAT query without simplifiert: $guard#0 && !(x#19 >= 2) && !(!(-((signed __CPROVER_bitvector[33])x#19) >= 0))
+[ACDL-DOMAIN] original SAT query: -((signed __CPROVER_bitvector[33])x#19) >= 0 && !(x#19 >= 2) && $guard#0
+original SAT result: 0
+SAT
+[ACDL-DOMAIN] SAT result: SAT 
 Computing old abstract value of implication graph: 
 $guard#0
 !(x#19 >= 2)

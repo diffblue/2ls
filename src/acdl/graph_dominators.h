@@ -73,7 +73,7 @@ Function: operator ()
  Purpose: Compute dominators
 
 \*******************************************************************/
-/*
+
 template <class G, bool post_dom>
 void graph_dominators_templatet<G, post_dom>::operator()(G &graph, typename G::node_indext _entry_node)
 {
@@ -81,7 +81,7 @@ void graph_dominators_templatet<G, post_dom>::operator()(G &graph, typename G::n
   initialise(graph);
   fixedpoint(graph);
 }
-*/
+
 /*******************************************************************\
 
 Function: graph_dominators_templatet::initialise
@@ -93,13 +93,13 @@ Function: graph_dominators_templatet::initialise
  Purpose: Initialises the elements of the fixed point analysis
 
 \*******************************************************************/
-/*
+
 template <class G, bool post_dom>
 void graph_dominators_templatet<G, post_dom>::initialise(G &graph)
 {
   dominators.clear();
 }
-*/
+
 
 /*******************************************************************\
 
@@ -112,7 +112,7 @@ Function: graph_dominators_templatet::fixedpoint
  Purpose: Computes the MOP for the dominator analysis
 
 \*******************************************************************/
-/*
+
 template <class G, bool post_dom>
 void graph_dominators_templatet<G, post_dom>::fixedpoint(G &graph)
 {
@@ -176,7 +176,7 @@ void graph_dominators_templatet<G, post_dom>::fixedpoint(G &graph)
     }
   }
 }
-*/
+
 /*******************************************************************\
 
 Function: graph_dominators_templatet::output

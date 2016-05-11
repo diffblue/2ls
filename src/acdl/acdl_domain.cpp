@@ -659,19 +659,26 @@ exprt acdl_domaint::split(const valuet &value,
       const exprt &lhs = to_binary_relation_expr(expb).lhs();
       const exprt &rhs = to_binary_relation_expr(expb).rhs();
       if(expb.id() == ID_le) {
-        exprt exp = binary_relation_exprt(lhs,ID_ge,rhs);
+        // !(ID_le) --> ID_gt
+        exprt exp = binary_relation_exprt(lhs,ID_gt,rhs);
 #ifdef DEBUG
         std::cout << "The new non-negated expression is " << exp  << std::endl;
 #endif         
         new_value.push_back(exp);
       }
+      // !(ID_ge) --> ID_lt
       else if(expb.id() == ID_ge) {
-        exprt exp = binary_relation_exprt(lhs,ID_le,rhs);
+        exprt exp = binary_relation_exprt(lhs,ID_lt,rhs);
 #ifdef DEBUG
         std::cout << "The new non-negated expression is " << exp  << std::endl;
 #endif         
         new_value.push_back(exp);
       }
+      else if(expb.id() == ID_lt || expb.id() == ID_gt) {
+        // this must not happen because 
+        // the expressions are now generated as <= or >=
+        assert(false);
+      }  
     } // end not 
     // simply copy the value[i] to new_value[i]
     else {
@@ -836,16 +843,22 @@ exprt acdl_domaint::split(const valuet &value,
   }
 #endif
   
+  exprt vals = conjunction(new_value);
+  std::cout << "conjuncted new value:: " << from_expr(SSA.ns, "", vals) << std::endl;
+  std::cout << "original splitting expr is :: " << from_expr(SSA.ns, "", expr) << std::endl;
+   
+  // computer lower and upper bound
   constant_exprt u;
   bool u_is_assigned = false;
   constant_exprt l;
   bool l_is_assigned = false;
+  mp_integer val1, val2;
   // I/P: (x>=0 && x<=10) O/P: l = 0, u = 10 
   for(unsigned i=0; i<new_value.size(); i++)
   {
     const exprt &e = new_value[i];
     // Handle the singleton case: example : !guard#0
-    if(e.id() != ID_le && e.id() != ID_ge)
+    if(e.id() != ID_le && e.id() != ID_ge && e.id() != ID_lt && e.id() != ID_gt)
       continue;
     if(to_binary_relation_expr(e).lhs() == expr)
     {
@@ -861,6 +874,24 @@ exprt acdl_domaint::split(const valuet &value,
         l_is_assigned = true;
         break;
       }
+      if(e.id() == ID_lt) {
+        constant_exprt cexpr = to_constant_expr(to_binary_relation_expr(e).rhs());
+        to_integer(cexpr, val1);
+        val2 = val1-1;
+        u = from_integer(val2, expr.type());  
+        u_is_assigned = true;
+        std::cout << "the expression is " << from_expr(SSA.ns, "", e) << "the upper value is " 
+        << from_expr(SSA.ns, "", u) << std::endl;
+        break;
+      }
+      if(e.id() == ID_gt) {
+        constant_exprt cexpr = to_constant_expr(to_binary_relation_expr(e).rhs());
+        to_integer(cexpr, val1);
+        val2 = val1+1;
+        l = from_integer(val2, expr.type());  
+        l_is_assigned = true;
+        break;
+      }
     }
   }
   mp_integer neg, cneg; 
@@ -869,7 +900,7 @@ exprt acdl_domaint::split(const valuet &value,
   {
     const exprt &e = new_value[i];
     // Handle the singleton case: example : !guard#0
-    if(e.id() != ID_le && e.id() != ID_ge)
+    if(e.id() != ID_le && e.id() != ID_ge && e.id() != ID_lt && e.id() != ID_gt)
       continue;
     const exprt &lhs = to_binary_relation_expr(e).lhs();
     if(lhs.id()==ID_unary_minus && 
@@ -879,24 +910,40 @@ exprt acdl_domaint::split(const valuet &value,
       // I/P: (-x <= 10) O/P: l = -10
       if(e.id() == ID_le) {
         const exprt &rhs = to_binary_relation_expr(e).rhs();
-        //const exprt &expminus = unary_minus_exprt(typecast_exprt(rhs,rhs.type()),rhs.type());
-        //l = to_constant_expr(expminus);
         constant_exprt cexpr = to_constant_expr(rhs);
         to_integer(cexpr, neg);
         cneg = -neg;
-        l = from_integer(cneg, cexpr.type());  
+        l = from_integer(cneg, expr.type());  
         l_is_assigned = true;
         break;
       }
       // I/P: (-x >= 10) O/P: u = -10
       if(e.id() == ID_ge) {
         const exprt &rhs = to_binary_relation_expr(e).rhs();
-        //const exprt &expminus = unary_minus_exprt(typecast_exprt(rhs,rhs.type()),rhs.type());
-        //u = to_constant_expr(expminus);
         constant_exprt cexpru = to_constant_expr(rhs);
         to_integer(cexpru, negu);
         cnegu = -negu;
-        u = from_integer(cnegu, cexpru.type());  
+        u = from_integer(cnegu, expr.type());  
+        u_is_assigned = true;
+        break;
+      }
+      // I/P: (-x < 10) O/P: l = (-10+1) = -9
+      if(e.id() == ID_lt) {
+        constant_exprt cexpr = to_constant_expr(to_binary_relation_expr(e).rhs());
+        to_integer(cexpr, neg);
+        cneg = (-neg)+1;
+        l = from_integer(cneg, expr.type());  
+        l_is_assigned = true;
+        std::cout << "the expression is " << from_expr(SSA.ns, "", e) << "the lower value is " 
+        << from_expr(SSA.ns, "", l) << std::endl;
+        break;
+      }
+      // I/P: (-x > 10) O/P: l = (-10-1) = -11
+      if(e.id() == ID_gt) {
+        constant_exprt cexpru = to_constant_expr(to_binary_relation_expr(e).rhs());
+        to_integer(cexpru, negu);
+        cnegu = (-negu)-1;
+        u = from_integer(cnegu, expr.type());  
         u_is_assigned = true;
         break;
       }
@@ -912,6 +959,9 @@ exprt acdl_domaint::split(const valuet &value,
   }
 
   //TODO: check whether we have a singleton, then we cannot split anymore
+  if (l==u)
+    return false_exprt();
+
   exprt m = tpolyhedra_domaint::between(l,u);
   
   std::cout << "[ACDL DOMAIN] expr: " << from_expr(SSA.ns, "", expr)
@@ -976,17 +1026,23 @@ void acdl_domaint::remove_expr(valuet &old_value,
     else
       new_value.push_back(*it);  
   }
-#if 0
-#ifdef DEBUG
-    std::cout << "[ACDL-DOMAIN] remove_expr: "
-	      << from_expr(SSA.ns, "", expr) << std::endl;
-
-  std::cout << "[ACDL-DOMAIN] Content of new_value after removal is: " << std::endl;
-  for(valuet::const_iterator it = new_value.begin();
-      it != new_value.end(); ++it)
-    std::cout << from_expr(SSA.ns, "", *it) << std::endl;
-#endif
-#endif
+  
+#if 0  
+  std::set<symbol_exprt> var;
+  // find all variables in a statement
+  find_symbols (expr, var);
+  for(valuet::const_iterator it = old_value.begin();
+      it != old_value.end(); ++it)
+  {
+    find_symbols_sett symbols;
+    find_symbols(*it,symbols);
+    for(varst::const_iterator it1 = var.begin(); 
+                  it1 != var.end(); ++it1) {  
+     if(symbols.find(it1->get_identifier()) != symbols.end() && expr != *it && it->id() != ID_not)
+       new_value.push_back(*it);
+    }
+  }
+#endif  
 }
 
 /*******************************************************************\
@@ -1032,8 +1088,8 @@ void acdl_domaint::normalize_val(valuet &value)
       exprt f1 = and_exprt(conjunction(new_val),not_exprt(m));
       exprt f = simplify_expr(and_exprt(conjunction(new_val),not_exprt(m)),SSA.ns);
 #ifdef DEBUG
-    std::cout << "[ACDL-DOMAIN] remove_expr: " << from_expr(SSA.ns, "", m) << "SAT query: " 
-	      << from_expr(SSA.ns, "", f) << std::endl;
+    std::cout << "[ACDL-DOMAIN] remove_expr: " << from_expr(SSA.ns, "", m) << "SAT query without simplifiert: " 
+	      << from_expr(SSA.ns, "", f1) << std::endl;
 #endif
       if(f.is_false())
        continue;
@@ -1143,8 +1199,21 @@ bool acdl_domaint::check_val(const exprt &expr)
 {
   std::unique_ptr<incremental_solvert> solver(
       incremental_solvert::allocate(SSA.ns,true));
+#ifdef DEBUG
+    std::cout << "[ACDL-DOMAIN] original SAT query: " << from_expr(SSA.ns, "", expr) 
+	      << std::endl;
+#endif
   *solver << expr;
-  return ((*solver)() == decision_proceduret::D_UNSATISFIABLE);
+  decision_proceduret::resultt result = (*solver)();
+  std::cout << "original SAT result: " << result << std::endl;
+  if(result == decision_proceduret::D_UNSATISFIABLE) {
+    std::cout<< "UNSAT" << std::endl;
+    return true;
+  }
+  else {
+    std::cout<< "SAT" << std::endl;
+    return false;
+  }
 }
 
 

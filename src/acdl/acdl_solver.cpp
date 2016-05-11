@@ -62,7 +62,7 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA)
     acdl_domaint::deductionst deductions;
      
     implication_graph.to_value(v);
-    //domain.normalize_val(v);
+    domain.normalize_val(v);
 
 #ifdef DEBUG
     std::cout << "Computing old abstract value of implication graph: " << std::endl;
@@ -166,6 +166,7 @@ acdl_solvert::decide (const local_SSAt &SSA)
 {
   acdl_domaint::valuet v;
   implication_graph.to_value(v);
+  domain.normalize_val(v);
   acdl_domaint::meet_irreduciblet dec_expr=decision_heuristics(SSA, v);
   // no new decisions can be made
   if(dec_expr == false_exprt())
@@ -206,7 +207,10 @@ acdl_solvert::decide (const local_SSAt &SSA)
   // Take a meet of the decision expression (decision) with the current abstract state (v).
   // The new abstract state is now in v
 #ifdef DEBUG
+    std::cout << "FINAL DECISION: " << from_expr (SSA.ns, "", dec_expr) << std::endl;
     domain.meet(dec_expr,v);
+    std::cout << "Before normalize: " << std::endl;
+    domain.output(std::cout, v) << std::endl;
     domain.normalize_val(v);
     std::cout << "New: ";
     domain.output(std::cout, v) << std::endl;
@@ -253,6 +257,7 @@ acdl_solvert::analyze_conflict(const local_SSAt &SSA)
 
     acdl_domaint::valuet v;
     implication_graph.to_value(v);
+    domain.normalize_val(v);
     exprt dec_expr = implication_graph.dec_trail.back();
 
     //exprt dec_expr = cond_dec_heuristic.dec_trail.back();
@@ -415,9 +420,13 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
   worklist.initialize_live_variables();
   std::set<exprt> decision_variable;
   // initialize the decision variables
+  // Note that the decision variable contains
+  // variables only in the slicing, that is, 
+  // related to the property
   decision_variable.insert(worklist.worklist_vars.begin(), worklist.worklist_vars.end());
 
-  // do not insert guard variables in the decision variables
+  // do not insert guard and phi 
+  // variables in the decision variables
   std::string str1("guard");
   std::string str2("#phi");
   std::string name;
@@ -461,6 +470,7 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
   implication_graph.clear(); //set to top
   acdl_domaint::valuet v;
   implication_graph.to_value(v);
+  domain.normalize_val(v);
   // check if abstract value v of the 
   // implication graph is top for the first time 
   // because ACDL starts with TOP
@@ -488,6 +498,7 @@ property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
       // check for satisfying assignment
       acdl_domaint::valuet v;
       implication_graph.to_value(v);
+      domain.normalize_val(v);
       if(domain.is_complete(v, all_vars))
         return property_checkert::FAIL;
       

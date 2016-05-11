@@ -16,11 +16,10 @@ class acdl_graph_dominatort :
  public graph_dominators_templatet<acdl_implication_grapht, false>
 {
   public:
-   virtual void initialise(acdl_implication_grapht &graph);
    virtual void fixedpoint(acdl_implication_grapht &graph);
+   typedef graph_dominators_templatet<acdl_implication_grapht,false> supert;
+   typedef typename supert::target_sett target_sett;
     
-  virtual void operator()(acdl_implication_grapht &graph, typename acdl_implication_grapht::node_indext entry_node);
-
   protected:
 };
 
