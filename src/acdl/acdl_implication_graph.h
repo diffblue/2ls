@@ -14,6 +14,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include "acdl_domain.h"
 #include "graph_dominators.h"
 
+class acdl_graph_dominatort;
 class acdl_implication_graph_nodet : public graph_nodet<empty_edget>
 {
 public:
@@ -28,6 +29,7 @@ public:
 class acdl_implication_grapht : public graph<acdl_implication_graph_nodet>
 {
 public:  
+  friend class acdl_graph_dominatort;
   explicit acdl_implication_grapht()
    : current_level(0)
   {}
@@ -51,7 +53,9 @@ public:
   acdl_implication_graph_nodet::node_indext find_node(const exprt &expr);
   void delete_graph_nodes(); 
   void mark_node(node_indext start);
+
 protected:
 };
+
 
 #endif

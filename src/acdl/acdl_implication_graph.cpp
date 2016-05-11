@@ -7,6 +7,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 \*******************************************************************/
 
 #include "acdl_implication_graph.h"
+#include "acdl_graph_dominator.h"
 
 /*******************************************************************\
 
@@ -175,7 +176,15 @@ void acdl_implication_grapht::first_uip(nodest &cut)
   graph::node_indext entry_node=na;
   // call mark node
   mark_node(na);  
-  graph_dominators_templatet<graph, false> dominator(graph, graph::node_indext na);
+  acdl_graph_dominatort dominator;
+  dominator(*this, na);
+  
+  int size = dominator.dominators.size();
+  // print the dominator
+  //std::ostream &out;
+  //dominator.output(out); 
+  // create a conflict clause
+  //std::cout << "The first UIP is " << dominator.dominators[size]->first std::endl;  
   assert(false);
 }
 

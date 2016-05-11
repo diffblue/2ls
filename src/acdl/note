@@ -553,3 +553,9 @@ these negated meet irreduciblet permanantly in the abstract value itself ?
 2> Check the implementation of computing l or u in domain.split. Specially 
 creating meet_irreduciblet like (x >= -10), where I created (-10) with
 mp_integer. 
+
+3> !(ID_le) --> ID_gt, !(ID_ge) --> ID_lt
+
+4> How to use the return value from the dominator (uip). How can I access the node_index for the UIP ? 
+Look for the dominator that has the smallest target_sett and also contains the
+conflict_node (false_exprt).

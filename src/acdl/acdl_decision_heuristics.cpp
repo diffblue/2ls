@@ -100,15 +100,23 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristicst::dec_heur_rand
   // separate the non-singleton cond and non_cond variables
   for(std::vector<exprt>::const_iterator 
       it = non_singletons.begin(); it != non_singletons.end(); ++it) { 
-    const irep_idt &identifier = it->get(ID_identifier);
-    name = id2string(identifier);
-    std::size_t found = name.find(str);
-    if (found==std::string::npos) 
+    // check if it is not of type x<=10 or x>=10 but 
+    // something like !cond or cond
+    const exprt &e = *it;
+    if(e.id() != ID_le && e.id() != ID_ge && e.id() != ID_lt && e.id() != ID_gt)
+    {
+      exprt exp = it->op0();
+      const irep_idt &identifier = exp.get(ID_identifier);
+      name = id2string(identifier);
+      std::size_t found = name.find(str);
+      if (found!=std::string::npos) 
+        cond.push_back(*it);
+      //cond.push_back(*it);
+    }
+    else   
       non_cond.push_back(*it);
-    else  
-      cond.push_back(*it);
   }
-
+  
   // Make a decision
   if(cond.size() == 0) {
     // select non-cond decision variables

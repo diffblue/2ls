@@ -10,7 +10,7 @@
 
 #define SYMB_BOUND_VAR "symb_bound#"
 
-#define ENABLE_HEURISTICS
+//#define ENABLE_HEURISTICS
 
 /*******************************************************************\
 
