@@ -47,7 +47,7 @@ property_checkert::resultt summary_checker_acdlt::operator()(
   acdl_worklist_orderedt acdl_worklist;
   acdl_conflict_analysis_baset acdl_conflict_analysist;
   acdl_solvert acdl_solver(options, acdl_domain, acdl_decision_heuristics,
-    acdl_worklist, acdl_conflict_analysist);
+  acdl_worklist, acdl_conflict_analysist);
   acdl_solver.set_message_handler(get_message_handler());
 
   incremental_solvert &solver = ssa_db.get_solver(entry_point);
@@ -80,26 +80,26 @@ property_checkert::resultt summary_checker_acdlt::operator()(
     SSA.find_nodes(i_it,assertion_nodes);
 
     for(std::list<local_SSAt::nodest::const_iterator>::const_iterator
-	  n_it=assertion_nodes.begin();
+        n_it=assertion_nodes.begin();
         n_it!=assertion_nodes.end();
         n_it++)
     {
       for(local_SSAt::nodet::assertionst::const_iterator
-	    a_it=(*n_it)->assertions.begin();
-	  a_it!=(*n_it)->assertions.end();
-	  a_it++)
+          a_it=(*n_it)->assertions.begin();
+          a_it!=(*n_it)->assertions.end();
+          a_it++)
       {
-	exprt property=*a_it;
-
-	if(simplify) property=simplify_expr(property, SSA.ns);
-	property_map[property_id].location = i_it;
-	exprt property_value = simplify_expr(solver.get(property), SSA.ns);
-	if(!property_value.is_false())
-	  property_map[property_id].result = property_checkert::FAIL;
+        exprt property=*a_it;
+        
+        if(simplify) property=simplify_expr(property, SSA.ns);
+        property_map[property_id].location = i_it;
+        exprt property_value = simplify_expr(solver.get(property), SSA.ns);
+        if(!property_value.is_false())
+          property_map[property_id].result = property_checkert::FAIL;
       }
     }
   }
-    
+
   return result;
 }
 

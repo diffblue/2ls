@@ -181,8 +181,24 @@ void acdl_implication_grapht::first_uip(nodest &cut)
   
   int size = dominator.dominators.size();
   // print the dominator
-  //std::ostream &out;
-  //dominator.output(out); 
+  dominator.output(std::cout); 
+
+  
+  // find the dominator that is the smallest and 
+  // contains the false_node
+  for(acdl_graph_dominatort::dominatorst::const_iterator it = dominator.dominators.begin();
+      it != dominator.dominators.end(); ++it)
+  {
+    for(acdl_graph_dominatort::target_sett::const_iterator d_it = it->second.begin();
+        d_it!=it->second.end();)
+    {
+      std::cout << *d_it;
+      if (++d_it!=it->second.end()) 
+        std::cout << ", ";
+    }
+    std::cout << "\n";
+  }
+   
   // create a conflict clause
   //std::cout << "The first UIP is " << dominator.dominators[size]->first std::endl;  
   assert(false);

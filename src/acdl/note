@@ -559,3 +559,13 @@ mp_integer.
 4> How to use the return value from the dominator (uip). How can I access the node_index for the UIP ? 
 Look for the dominator that has the smallest target_sett and also contains the
 conflict_node (false_exprt).
+
+Meeting on 12th May 2016
+------------------------
+1> Do we call normalize_val only after we add a new decision to the 
+implication graph so that decision splitting can be done or call normalize_val
+before is_complete() function is called because we need to take into account the 
+implication graph.
+
+2> the conflict clause is constructed depending on the kind of proof
+(propositional, ai, bmc).  
