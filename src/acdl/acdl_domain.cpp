@@ -1049,9 +1049,9 @@ void acdl_domaint::remove_expr(valuet &old_value,
 
 Function: acdl_domaint::normalize_val()
 
-  Inputs:
+  Inputs: (x<=5) && (x<=10) && (y<=3)
 
- Outputs:
+ Outputs: (x<=5) && (y<=3)
 
  Purpose:
 

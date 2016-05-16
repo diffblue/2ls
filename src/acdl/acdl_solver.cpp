@@ -59,10 +59,27 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA)
 
     // compute update of abstract value
     acdl_domaint::valuet v;
+    acdl_domaint::valuet v1;
     acdl_domaint::deductionst deductions;
      
     implication_graph.to_value(v);
-    domain.normalize_val(v);
+    // Do we need to normalize value here since 
+    // this will remove all old decisions that are 
+    // still stored in the implication graph. These 
+    // old decisions can still contribute towards the 
+    // future deductions called in domain operator() below
+    //domain.normalize_val(v);
+
+    // check if domain.normalize_val is correct
+    /*domain.normalize_val(v1);
+    // check if (v != v1) is UNSAT
+    std::unique_ptr<incremental_solvert> solver(
+      incremental_solvert::allocate(SSA.ns,true));
+    not_equal_exprt eqexp(v,v1);
+    *solver << eqexp;
+    decision_proceduret::resultt result = (*solver)();
+    assert(result == decision_proceduret::D_UNSATISFIABLE);
+    */
 
 #ifdef DEBUG
     std::cout << "Computing old abstract value of implication graph: " << std::endl;
