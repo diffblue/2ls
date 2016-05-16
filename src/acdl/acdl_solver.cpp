@@ -431,7 +431,8 @@ end
 
 property_checkert::resultt acdl_solvert::operator()(
   const local_SSAt &SSA,
-  const exprt &assertion)
+  const exprt &assertion,
+  const exprt &additional_constraint)
 {
   //init();
   worklist.initialize(SSA);

@@ -62,7 +62,20 @@ property_checkert::resultt summary_checker_acdlt::operator()(
 
     if(property_id=="") //TODO: some properties do not show up in initialize_property_map
       continue;     
-    
+
+    //get loophead selects
+    exprt::operandst loophead_selects;
+    for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
+	n_it != SSA.nodes.end(); n_it++)
+    {
+      if(n_it->loophead==SSA.nodes.end()) continue;
+      symbol_exprt lsguard = SSA.name(SSA.guard_symbol(),
+				      local_SSAt::LOOP_SELECT, n_it->location);
+      ssa_unwinder.get(entry_point).unwinder_rename(lsguard,*n_it,true);
+      loophead_selects.push_back(not_exprt(lsguard));
+    }
+
+    // iterate over assertions
     std::list<local_SSAt::nodest::const_iterator> assertion_nodes;
     SSA.find_nodes(i_it,assertion_nodes);
 
@@ -92,7 +105,7 @@ property_checkert::resultt summary_checker_acdlt::operator()(
 	acdl_solver.set_message_handler(get_message_handler());
 	property_map[property_id].result =
 	  acdl_solver(ssa_db.get(goto_model.goto_functions.entry_point()),
-	    property);
+		      property, conjunction(loophead_selects));
 
 //	exprt property_value = simplify_expr(acdl_solver.get(property), SSA.ns);
       }

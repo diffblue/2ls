@@ -43,7 +43,8 @@ public:
     }
 
   property_checkert::resultt operator()(const local_SSAt &SSA,
-    const exprt &assertion);
+					const exprt &assertion,
+                                        const exprt &additional_constraint);
 
   std::set<exprt> decision_variables;
 
