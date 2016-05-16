@@ -1,0 +1,6 @@
+CORE
+main.c
+--havoc
+^EXIT=5$
+^SIGNAL=0$
+^.*UNKNOWN$

@@ -31,6 +31,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/goto_functions.h>
 #include <goto-programs/xml_goto_trace.h>
 #include <goto-programs/graphml_goto_trace.h>
+#include <goto-programs/json_goto_trace.h>
 #include <goto-programs/remove_returns.h>
 #include <goto-programs/remove_skip.h>
 #include "array_abstraction.h"
@@ -52,6 +53,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "summary_checker_acdl.h"
 #include "../ssa/split_loopheads.h"
 #include "show.h"
+#include "horn_encoding.h"
 
 #define UNWIND_GOTO_INTO_LOOP 1
 #define REMOVE_MULTIPLE_DEREFERENCES 1
@@ -353,6 +355,8 @@ void summarizer_parse_optionst::get_command_line_options(optionst &options)
     options.set_option("show-trace", true);
   if(cmdline.isset("graphml-cex"))
     options.set_option("graphml-cex", cmdline.get_value("graphml-cex"));
+  if(cmdline.isset("json-cex"))
+    options.set_option("json-cex", cmdline.get_value("json-cex"));
 }
 
 /*******************************************************************\
@@ -521,6 +525,38 @@ int summarizer_parse_optionst::doit()
       retval = 0;
       goto clean_up;
     }
+
+    if(cmdline.isset("horn-encoding"))
+    {
+      status() << "Horn-clause encoding" << eom;
+      namespacet ns(symbol_table);
+      
+      std::string out_file=cmdline.get_value("horn-encoding");
+      
+      if(out_file=="-")
+      {
+        horn_encoding(goto_model, std::cout);
+      }
+      else
+      {
+        #ifdef _MSC_VER
+        std::ofstream out(widen(out_file).c_str());
+        #else
+        std::ofstream out(out_file.c_str());
+        #endif
+        
+        if(!out)
+        {
+          error() << "Failed to open output file "
+                  << out_file << eom;
+          return 1;
+        }
+        
+        horn_encoding(goto_model, out);
+      }
+        
+      return 7;
+    }
     
     // do actual analysis
     switch((*summary_checker)(goto_model))
@@ -688,7 +724,7 @@ void summarizer_parse_optionst::show_stats(const goto_modelt &goto_model,
   // analyze all the functions
   forall_goto_functions(f_it, goto_model.goto_functions)
   {
-    if(!f_it->second.body_available) continue;
+    if(!f_it->second.body_available()) continue;
 
     ++nr_functions;
 
@@ -793,6 +829,27 @@ bool summarizer_parse_optionst::set_properties(goto_modelt &goto_model)
 
 /*******************************************************************\
 
+Function: summarizer_parse_optionst::require_entry
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+  
+void summarizer_parse_optionst::require_entry(
+  const goto_modelt &goto_model)
+{
+  irep_idt entry_point=goto_model.goto_functions.entry_point();
+      
+  if(goto_model.symbol_table.symbols.find(entry_point)==symbol_table.symbols.end())
+    throw "The program has no entry point; please complete linking";
+}
+
+/*******************************************************************\
+
 Function: summarizer_parse_optionst::get_goto_program
 
   Inputs:
@@ -829,14 +886,6 @@ bool summarizer_parse_optionst::get_goto_program(
       if(cmdline.isset("show-symbol-table"))
       {
         show_symbol_table();
-        return true;
-      }
-      
-      irep_idt entry_point=goto_model.goto_functions.entry_point();
-      
-      if(goto_model.symbol_table.symbols.find(entry_point)==symbol_table.symbols.end())
-      {
-        error() << "The goto binary has no entry point; please complete linking" << eom;
         return true;
       }
     }
@@ -899,6 +948,7 @@ bool summarizer_parse_optionst::get_goto_program(
         return true;
       }
 
+      #if 0
       irep_idt entry_point=goto_model.goto_functions.entry_point();
       
       if(symbol_table.symbols.find(entry_point)==symbol_table.symbols.end())
@@ -906,6 +956,7 @@ bool summarizer_parse_optionst::get_goto_program(
         error() << "No entry point; please provide a main function" << eom;
         return true;
       }
+      #endif
       
       status() << "Generating GOTO Program" << eom;
 
@@ -977,7 +1028,6 @@ bool summarizer_parse_optionst::process_goto_program(
         if(f_it->first!=ID__start &&
            f_it->second.body.instructions.size()<=2*(limit/2))
 	{
-          f_it->second.body_available=false;
           f_it->second.body.clear();
 	}
     }
@@ -1158,6 +1208,11 @@ void summarizer_parse_optionst::report_properties(
     if(cmdline.isset("graphml-cex") &&
        it->second.result==property_checkert::FAIL)
       output_graphml_cex(options,goto_model, it->second.error_trace);
+    if(cmdline.isset("json-cex") &&
+       it->second.result==property_checkert::FAIL)
+      output_json_cex(options,
+		      goto_model, it->second.error_trace,
+		      id2string(it->first));
   }
 
   if(!cmdline.isset("property"))
@@ -1292,6 +1347,42 @@ void summarizer_parse_optionst::output_graphml_cex(
       write_graphml(cex_graph, out);
     }
   }
+}
+
+/*******************************************************************\
+
+Function: summarizer_parse_optionst::output_json_cex
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void summarizer_parse_optionst::output_json_cex(
+  const optionst &options,
+  const goto_modelt &goto_model,
+  const goto_tracet &error_trace,
+  const std::string &property_id)
+{
+  if(options.get_option("json-cex")!="")
+  {
+    const namespacet ns(goto_model.symbol_table);
+    jsont json_trace;
+    convert(ns, error_trace, json_trace);
+  
+    if(options.get_option("json-cex")=="-")
+    {
+      std::cout << json_trace;
+    }
+    else
+    {
+      std::ofstream out((options.get_option("json-cex")+"-"+property_id+".json").c_str());
+      out << json_trace << '\n';
+    }
+  }  
 }
 
 /*******************************************************************\

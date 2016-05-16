@@ -1,0 +1,6 @@
+CORE
+main.c
+--context-sensitive --preconditions
+^EXIT=5$
+^SIGNAL=0$
+\[g\]: !(n <= 999 && -((signed __CPROVER_bitvector\[33\])n) <= -1 && incx <= 0 && -((signed __CPROVER_bitvector\[33\])incx) <= 0)

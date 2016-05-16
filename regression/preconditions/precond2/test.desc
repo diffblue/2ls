@@ -1,0 +1,6 @@
+CORE
+main.c
+--preconditions --sufficient
+^EXIT=5$
+^SIGNAL=0$
+^\[foo\]: !(x <= -1 && -((signed __CPROVER_bitvector\[33\])x) <= 2147483648)$

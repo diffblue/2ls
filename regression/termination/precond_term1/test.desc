@@ -1,0 +1,6 @@
+CORE
+main.c
+--preconditions
+^EXIT=5$
+^SIGNAL=0$
+\[_start\]: !(argc' <= 1 && -((signed __CPROVER_bitvector\[33\])argc') <= -1)

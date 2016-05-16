@@ -1,0 +1,6 @@
+CORE
+main.c
+--havoc --k-induction
+^EXIT=10$
+^SIGNAL=0$
+^.*FAILURE$

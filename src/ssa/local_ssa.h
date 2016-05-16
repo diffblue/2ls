@@ -43,9 +43,8 @@ public:
     suffix(_suffix) 
   {
     //ENHANCE: in future locst will be used (currently in path-symex/locs.h)
-    location_map.reserve(_goto_function.body.instructions.size());
     forall_goto_program_instructions(it,_goto_function.body)
-      location_map.push_back(it);
+      location_map[it->location_number] = it;
 
     build_SSA();
   }
@@ -186,12 +185,16 @@ public:
   nodest::const_iterator find_node(locationt loc) const;
   void find_nodes(locationt loc, std::list<nodest::const_iterator> &_nodes) const;
 
-  locationt find_location_by_number(unsigned location_number) const;
-  
-protected:
-  typedef std::vector<locationt> location_mapt;
-  location_mapt location_map;
+  inline locationt get_location(unsigned location_number) const
+  {
+    location_mapt::const_iterator it=location_map.find(location_number);
+    assert(it!=location_map.end());
+    return it->second;
+  }
 
+protected:
+  typedef std::map<unsigned, locationt> location_mapt;
+  location_mapt location_map;
   // build the SSA formulas
   void build_SSA();
 

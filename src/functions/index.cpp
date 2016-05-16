@@ -140,7 +140,7 @@ void indext::index_goto_binary(const irep_idt &file)
       f_it!=goto_model.goto_functions.function_map.end();
       f_it++)
   {
-    if(f_it->second.body_available)
+    if(f_it->second.body_available())
     {
       function_to_file[f_it->first].insert(file);
       file_to_function[file].insert(f_it->first);

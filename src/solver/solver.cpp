@@ -124,7 +124,7 @@ bool solvert::is_equal(const exprt &a, const exprt &b) const
   simplify(tmp_a, ns);
   simplify(tmp_b, ns);
   
-  unsigned a_nr, b_nr;
+  numbering<exprt>::number_type a_nr, b_nr;
   if(expr_numbering.get_number(tmp_a, a_nr)) return false;
   if(expr_numbering.get_number(tmp_b, b_nr)) return false;
   return is_equal(a_nr, b_nr);
@@ -826,7 +826,7 @@ exprt solvert::get(const exprt &expr) const
   exprt tmp=expr;
   simplify(tmp, ns);
 
-  unsigned nr;
+  numbering<exprt>::number_type nr;
 
   if(!expr_numbering.get_number(tmp, nr))
   {

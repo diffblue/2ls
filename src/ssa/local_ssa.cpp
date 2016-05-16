@@ -10,6 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #ifdef DEBUG
 #include <iostream>
+#include <langapi/language_util.h>
 #endif
 
 #include <util/i2string.h>
@@ -262,24 +263,6 @@ void local_SSAt::find_nodes(locationt loc,
 
 /*******************************************************************\
 
-Function: local_SSAt::find_location_by_number
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-local_SSAt::locationt local_SSAt::find_location_by_number(unsigned location_number) const
-{
-  assert(location_number<location_map.size());
-  return location_map[location_number];
-}
-
-/*******************************************************************\
-
 Function: local_SSAt::edge_guard
 
   Inputs:
@@ -366,7 +349,7 @@ void local_SSAt::build_phi_nodes(locationt loc)
 	  //  whether g2 (=g1&c1 (maybe)) or (g1&c1) is used,
 	  //  not sure whether this has consequences
 	  //  (further than the SSA looking different each time you generate it)
-          exprt incoming_guard=edge_guard(location_map[incoming_it->first],loc);
+          exprt incoming_guard=edge_guard(get_location(incoming_it->first),loc);
 
           if(rhs.is_nil()) // first
             rhs=incoming_value;
@@ -384,7 +367,7 @@ void local_SSAt::build_phi_nodes(locationt loc)
 	 incoming_it->first >= loc->location_number)
         {
           // it's a backwards edge
-	  const locationt &iloc = location_map[incoming_it->first];
+	  const locationt &iloc = get_location(incoming_it->first);
           exprt incoming_value=name(*o_it, LOOP_BACK, iloc);
           exprt incoming_select=name(guard_symbol(), LOOP_SELECT, iloc);
 

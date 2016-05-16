@@ -1,0 +1,6 @@
+CORE
+main.c
+--unwind 20
+^EXIT=0$
+^SIGNAL=0$
+^VERIFICATION SUCCESSFUL$
