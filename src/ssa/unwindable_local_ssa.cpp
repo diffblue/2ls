@@ -8,6 +8,8 @@ Author: Peter Schrammel, Saurabh Joshi
 
 #include <iostream>
 
+#include <limits>
+
 #include <util/find_symbols.h>
 #include <util/rename_symbol.h>
 #include <util/string2int.h>
@@ -297,7 +299,7 @@ irep_idt unwindable_local_SSAt::get_ssa_name(
 #if 0
   std::cout << s << ", " << s.substr(pos1+1,pos2-pos1-1) << ", " << s.substr(0,pos2) << std::endl;
 #endif
-  loc = find_location_by_number(
+  loc = get_location(
     safe_string2unsigned(s.substr(pos1+1,pos2-pos1-1)));
   return irep_idt(s.substr(0,pos2));
 }

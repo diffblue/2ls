@@ -57,7 +57,7 @@ void summary_checker_baset::SSA_functions(const goto_modelt &goto_model,  const 
   // compute SSA for all the functions
   forall_goto_functions(f_it, goto_model.goto_functions)
   {
-    if(!f_it->second.body_available) continue;
+    if(!f_it->second.body_available()) continue;
     if(has_prefix(id2string(f_it->first),TEMPLATE_DECL)) continue;
     status() << "Computing SSA of " << f_it->first << messaget::eom;
     
@@ -242,7 +242,8 @@ void summary_checker_baset::check_properties(
     !fully_unwound && options.get_bool_option("spurious-check"),
     all_properties,
     options.get_bool_option("show-trace") ||
-    options.get_option("graphml-cex")!="");
+    options.get_option("graphml-cex")!="" ||
+    options.get_option("json-cex")!="");
 
 #if 0   
   debug() << "(C) " << from_expr(SSA.ns,"",enabling_expr) << eom;
@@ -258,7 +259,7 @@ void summary_checker_baset::check_properties(
     if(!i_it->is_assert())
       continue;
   
-    const source_locationt &location=i_it->source_location;
+    const source_locationt &location=i_it->source_location;  
     irep_idt property_id = location.get_property_id();
     
     if(i_it->guard.is_true())

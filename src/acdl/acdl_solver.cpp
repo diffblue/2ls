@@ -429,7 +429,10 @@ while true do
 end
 \*******************************************************************/
 
-property_checkert::resultt acdl_solvert::operator()(const local_SSAt &SSA)
+property_checkert::resultt acdl_solvert::operator()(
+  const local_SSAt &SSA,
+  const exprt &assertion,
+  const exprt &additional_constraint)
 {
   //init();
   worklist.initialize(SSA);

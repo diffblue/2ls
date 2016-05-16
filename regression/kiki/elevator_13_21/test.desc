@@ -1,0 +1,6 @@
+CORE
+main.c
+--incremental-bmc --competition-mode --unwind 1
+^EXIT=5$
+^SIGNAL=0$
+^VERIFICATION INCONCLUSIVE$

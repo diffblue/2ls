@@ -52,7 +52,7 @@ class optionst;
   "(property):(all-properties)(k-induction)(incremental-bmc)" \
   "(no-spurious-check)" \
   "(no-simplify)(no-fixed-point)" \
-  "(graphml-cex):" \
+  "(graphml-cex):(json-cex):" \
   "(no-spurious-check)(no-all-properties)" \
   "(acdl)" \
   "(competition-mode)(slice)(no-propagation)" \
@@ -102,7 +102,13 @@ protected:
     const optionst &options,
     const goto_modelt &,
     const class goto_tracet &);
-          
+
+  void output_json_cex(
+    const optionst &options,
+    const goto_modelt &goto_model,
+    const goto_tracet &error_trace,
+    const std::string &property_id);
+    
   struct expr_statst {
     bool has_malloc;
     bool has_string;
@@ -132,6 +138,9 @@ protected:
             
   void eval_verbosity();
   void report_unknown();
+
+  void require_entry(
+    const goto_modelt &goto_model);
 
   // diverse preprocessing
   void inline_main(goto_modelt &goto_model);

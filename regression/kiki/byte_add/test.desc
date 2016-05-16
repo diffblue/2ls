@@ -1,0 +1,6 @@
+CORE
+main.c
+--inline --unwind 1 --havoc
+^EXIT=10$
+^SIGNAL=0$
+^.*FAILURE$

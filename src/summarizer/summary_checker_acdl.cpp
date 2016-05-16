@@ -41,19 +41,6 @@ property_checkert::resultt summary_checker_acdlt::operator()(
   std::cout << entry_point << std::endl;
   local_SSAt &SSA = ssa_db.get(entry_point);
   ssa_local_unwindert &ssa_local_unwinder = ssa_unwinder.get(entry_point);
-  acdl_domaint acdl_domain(options,SSA,ssa_db,ssa_local_unwinder);
-  acdl_decision_heuristicst acdl_decision_heuristics(acdl_domain);
- // acdl_decision_heuristics_condt acdl_decision_heuristics(acdl_domain);
-  acdl_worklist_orderedt acdl_worklist;
-  acdl_conflict_analysis_baset acdl_conflict_analysist;
-  acdl_solvert acdl_solver(options, acdl_domain, acdl_decision_heuristics,
-  acdl_worklist, acdl_conflict_analysist);
-  acdl_solver.set_message_handler(get_message_handler());
-
-  incremental_solvert &solver = ssa_db.get_solver(entry_point);
-
-  property_checkert::resultt result =
-    acdl_solver(ssa_db.get(goto_model.goto_functions.entry_point()));
 
   const goto_programt &goto_program=SSA.goto_function.body;
   for(goto_programt::instructionst::const_iterator
@@ -63,7 +50,7 @@ property_checkert::resultt summary_checker_acdlt::operator()(
   {
     if(!i_it->is_assert())
       continue;
-  
+
     const source_locationt &location=i_it->source_location;
     irep_idt property_id = location.get_property_id();
     
@@ -76,6 +63,19 @@ property_checkert::resultt summary_checker_acdlt::operator()(
     if(property_id=="") //TODO: some properties do not show up in initialize_property_map
       continue;     
 
+    //get loophead selects
+    exprt::operandst loophead_selects;
+    for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
+	n_it != SSA.nodes.end(); n_it++)
+    {
+      if(n_it->loophead==SSA.nodes.end()) continue;
+      symbol_exprt lsguard = SSA.name(SSA.guard_symbol(),
+				      local_SSAt::LOOP_SELECT, n_it->location);
+      ssa_unwinder.get(entry_point).unwinder_rename(lsguard,*n_it,true);
+      loophead_selects.push_back(not_exprt(lsguard));
+    }
+
+    // iterate over assertions
     std::list<local_SSAt::nodest::const_iterator> assertion_nodes;
     SSA.find_nodes(i_it,assertion_nodes);
 
@@ -93,13 +93,35 @@ property_checkert::resultt summary_checker_acdlt::operator()(
         
         if(simplify) property=simplify_expr(property, SSA.ns);
         property_map[property_id].location = i_it;
-        exprt property_value = simplify_expr(solver.get(property), SSA.ns);
-        if(!property_value.is_false())
-          property_map[property_id].result = property_checkert::FAIL;
+
+	//TODO: make this incremental
+	acdl_domaint acdl_domain(options,SSA,ssa_db,ssa_local_unwinder);
+	acdl_decision_heuristicst acdl_decision_heuristics(acdl_domain);
+	// acdl_decision_heuristics_condt acdl_decision_heuristics(acdl_domain);
+	acdl_worklist_orderedt acdl_worklist;
+	acdl_conflict_analysis_baset acdl_conflict_analysist;
+	acdl_solvert acdl_solver(options, acdl_domain, acdl_decision_heuristics,
+				 acdl_worklist, acdl_conflict_analysist);
+	acdl_solver.set_message_handler(get_message_handler());
+	property_map[property_id].result =
+	  acdl_solver(ssa_db.get(goto_model.goto_functions.entry_point()),
+		      property, conjunction(loophead_selects));
+
+//	exprt property_value = simplify_expr(acdl_solver.get(property), SSA.ns);
       }
     }
   }
 
+  summary_checker_baset::resultt result = property_checkert::PASS;
+  for(property_mapt::const_iterator
+      p_it=property_map.begin(); p_it!=property_map.end(); p_it++)
+  {
+    if(p_it->second.result==FAIL)
+      return property_checkert::FAIL;
+    if(p_it->second.result==UNKNOWN)
+      result = property_checkert::UNKNOWN;
+  }
+    
   return result;
 }
 

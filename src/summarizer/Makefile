@@ -8,7 +8,7 @@ SRC = summarizer_base.cpp  \
       show.cpp summary_checker_base.cpp \
       summary_checker_ai.cpp summary_checker_bmc.cpp \
       summary_checker_kind.cpp summary_checker_acdl.cpp \
-      cover_goals_ext.cpp \
+      cover_goals_ext.cpp horn_encoding.cpp \
       summary_db.cpp summary.cpp ssa_db.cpp \
       array_abstraction.cpp preprocessing_util.cpp \
       instrument_goto.cpp function_signature.cpp
@@ -50,7 +50,7 @@ DELTA_OBJ+=\
       ../acdl/acdl_worklist_ordered$(OBJEXT) \
       ../acdl/acdl_conflict_analysis_base$(OBJEXT) \
       ../acdl/acdl_graph_dominator$(OBJEXT) \
-			../acdl/acdl_implication_graph$(OBJEXT) \
+      ../acdl/acdl_implication_graph$(OBJEXT) \
       ../acdl/template_generator_acdl$(OBJEXT) \
       ../acdl/acdl_decision_heuristics$(OBJEXT) \
       ../functions/summary$(OBJEXT) \

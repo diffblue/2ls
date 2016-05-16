@@ -1,4 +1,4 @@
-2LS version 0.3.4 (based on CBMC 5.3)
+2LS version 0.3.4 (based on CBMC 5.4)
 Parsing main.c
 Converting
 Type-checking main
@@ -215,10 +215,10 @@ Node number: 4  Expression: FALSE  In edges: 2  Out edges: 0
 ********************************
     CONFLICT ANALYSIS PHASE
 ********************************
-[main.assertion.1] assertion x == 1: FAILURE
+[main.assertion.1] assertion x == 1: OK
 
 ** 0 of 1 unknown
-** 1 of 1 failed
+** 0 of 1 failed
 VERIFICATION SUCCESSFUL
 EXIT=0
 SIGNAL=0

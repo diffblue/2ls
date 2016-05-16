@@ -1,0 +1,6 @@
+CORE
+main.c
+--equalities --context-sensitive
+^EXIT=0$
+^SIGNAL=0$
+^VERIFICATION SUCCESSFUL$

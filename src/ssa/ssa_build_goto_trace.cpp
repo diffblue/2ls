@@ -2,7 +2,7 @@
 
 Module: Traces of GOTO Programs for SSA Models
 
-Author: Daniel Kroening
+Author: Daniel Kroening, Peter Schrammel
 
 \*******************************************************************/
 
@@ -164,7 +164,7 @@ bool ssa_build_goto_tracet::record_step(
       step.full_lhs_value=rhs_simplified;
       if(lhs_simplified.id()==ID_symbol) 
       {
-	step.lhs_object = to_symbol_expr(lhs_simplified);
+	step.lhs_object = to_ssa_expr(lhs_simplified);
         step.lhs_object_value=rhs_simplified;
         //filter out internal stuff
 	if(id2string(step.lhs_object.get_identifier()).find("#")

@@ -6,8 +6,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <iostream>
-
 #include <util/std_types.h>
 #include <util/std_expr.h>
 #include <util/arith_tools.h>

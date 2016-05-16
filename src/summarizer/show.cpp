@@ -443,7 +443,7 @@ local_SSAt::locationt find_loc_by_guard(const local_SSAt &SSA,
   unsigned pos1 = gstr.find("#")+1;
   unsigned pos2 = gstr.find("%",pos1);
   unsigned n = safe_string2unsigned(gstr.substr(pos1,pos2));
-  return SSA.find_location_by_number(n);
+  return SSA.get_location(n);
 }
 
 void purify_identifiers(exprt &expr)
