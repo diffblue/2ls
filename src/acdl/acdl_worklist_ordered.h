@@ -20,9 +20,9 @@ public:
   {
   }
     
-  virtual void initialize(const local_SSAt &SSA);
+  virtual void initialize(const local_SSAt &SSA, const exprt &assertion, const exprt& additional_constraint);
 
-  virtual void dec_update(const local_SSAt &SSA, const acdl_domaint::statementt &stmt);
+  virtual void dec_update(const local_SSAt &SSA, const acdl_domaint::statementt &stmt, const exprt& assertion);
 
   //TODO: overload this function:
 /*  virtual void update(const local_SSAt &SSA,
@@ -42,7 +42,8 @@ protected:
   void update (const local_SSAt &SSA,
 	       const acdl_domaint::varst &vars,
 	       listt &lexpr, 
-	       const acdl_domaint::statementt &current_statement);
+	       const acdl_domaint::statementt &current_statement,
+         const exprt& assertion);
 
 };
 

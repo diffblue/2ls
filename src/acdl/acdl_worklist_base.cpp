@@ -229,7 +229,8 @@ Function: acdl_worklist_baset::update_worklist()
 void
 acdl_worklist_baset::update (const local_SSAt &SSA,
                                const acdl_domaint::varst &vars,
-                               const acdl_domaint::statementt &current_statement)
+                               const acdl_domaint::statementt &current_statement, 
+                               const exprt& assertion)
 {
   live_variables.insert(vars.begin(),vars.end());
   
@@ -278,6 +279,8 @@ acdl_worklist_baset::update (const local_SSAt &SSA,
         #endif
       }
     }
+    
+#if 0     
     for (local_SSAt::nodet::assertionst::const_iterator a_it =
         n_it->assertions.begin (); a_it != n_it->assertions.end (); a_it++)
     {
@@ -298,6 +301,20 @@ acdl_worklist_baset::update (const local_SSAt &SSA,
         std::cout << "Push: " << from_expr (SSA.ns, "", not_exprt(*a_it)) << std::endl;
         #endif
       }
+    }
+#endif    
+    // Push the assertion that is passed to the solver
+    push_into_assertion_list(alist, assertion);
+    if(assertion == current_statement) continue;
+    if (check_statement (assertion, vars)) {
+      push(not_exprt (assertion));
+      acdl_domaint::varst assert_vars;
+      find_symbols(assertion, assert_vars);
+      live_variables.insert(assert_vars.begin(), assert_vars.end());    
+
+#ifdef DEBUG
+      std::cout << "Push: " << from_expr (SSA.ns, "", not_exprt(assertion)) << std::endl;
+#endif
     }
   }
  

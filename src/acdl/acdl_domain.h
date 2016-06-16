@@ -79,7 +79,9 @@ public:
   bool is_top(const valuet &value) const { return value.empty(); }
   bool is_complete(const valuet &value, 
 		   const std::set<symbol_exprt> &symbols) const;
-
+  unsigned compare(const meet_irreduciblet &a, 
+       const meet_irreduciblet &b) const;
+  
   //print value
   inline std::ostream &output(
     std::ostream &out, const valuet &v)
@@ -106,7 +108,7 @@ public:
     }
     return out;
   }
-  
+
 protected:
   optionst &options;
   local_SSAt &SSA;

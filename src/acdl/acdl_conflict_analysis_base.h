@@ -39,26 +39,31 @@ public:
   explicit acdl_conflict_analysis_baset()
   :
   backtrack_level(0),
-  disable_backjumping(1)
+  disable_backjumping(0)
   {}
 
   virtual ~acdl_conflict_analysis_baset()
   {
   }
 
-  property_checkert::resultt operator()(const local_SSAt &SSA, acdl_implication_grapht &graph, exprt &learned_clause);
+  //property_checkert::resultt operator()(const local_SSAt &SSA, acdl_implication_grapht &graph, exprt &learned_clause);
+  bool operator()(const local_SSAt &SSA, acdl_implication_grapht &graph, acdl_domaint::valuet &learned_clause);
   unsigned int backtracks; 
   int backtrack_level;
   bool just_backtracked;
   bool disable_backjumping;
   void cancel_once(const local_SSAt &SSA, acdl_implication_grapht &graph);
+  void cancel_until(const local_SSAt &SSA, acdl_implication_grapht &graph, int lvl); 
+
 protected: 
   virtual void backtrack_to_level(acdl_implication_grapht &graph,unsigned int index);
   virtual void generalize_conflict(acdl_implication_grapht &graph) { assert(false); }
 
-  void get_conflict_clause(acdl_implication_grapht &graph, acdl_domaint::meet_irreduciblet &clause);
+  void get_conflict_clause(const local_SSAt &SSA, acdl_implication_grapht &graph, acdl_domaint::valuet &clause);
   exprt flip(acdl_domaint::meet_irreduciblet &m); 
-  void chronological_backtrack(const local_SSAt &SSA, acdl_implication_grapht &graph);
+  bool chronological_backtrack(const local_SSAt &SSA, acdl_implication_grapht &graph);
+  typedef acdl_domaint::valuet conflict_clauset;
+  typedef std::vector<unsigned> clause_indicest;
 
 };
 
