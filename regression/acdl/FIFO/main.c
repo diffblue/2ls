@@ -125,11 +125,11 @@ _Bool design(_Bool clock, unsigned char dataIn, _Bool push, _Bool pop, _Bool *eq
   // the below should fail
   //*equal = ((srFull == rbFull) && (smain.sr.empty == smain.rb.empty) && (smain.sr.empty | (srDataOut == rbDataOut)));
   *equal = ((srFull == rbFull) && (ssrFIFO.empty == srbFIFO.empty) && (ssrFIFO.empty || (srDataOut == rbDataOut)));
-  assert(srFull == rbFull);
-  assert(srEmpty == rbEmpty);
+  //assert(srFull == rbFull);
+  //assert(srEmpty == rbEmpty);
   //assert(srDataOut == rbDataOut);
   
-  assert(*equal == 1);
+  assert(*equal != 1);
 }
 
 

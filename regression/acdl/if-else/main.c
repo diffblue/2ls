@@ -8,7 +8,6 @@ if(y!=0) {
 else
   x=y+5;
 
-
 /*
  while(nondet_bool())
     x=x+x;

@@ -569,3 +569,15 @@ implication graph.
 
 2> the conflict clause is constructed depending on the kind of proof
 (propositional, ai, bmc).  
+
+Meeting queries 
+-----------------
+1> Does the structure of the implication graph in non-propositional case satisfy the resolution prrof structure ? Otherwise, it is not directly clear if
+first-uip is the right conflict point.
+2> Checking whether a learned clause is a UNIT clause ?
+3> checking whether dominator finds correct, not implemented with marking.
+4> Generalisation 
+5> branch7 example debug 
+6> CAV attend, diffblue (delivery date), dkr to github 
+7> Do we pass the additional constrait from loop head in every deduction step
+separately. Now, we only do it for worklist initialize

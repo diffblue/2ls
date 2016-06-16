@@ -1252,3 +1252,45 @@ void acdl_domaint::expr_to_value(const exprt &expr, valuet &value)
     }
   }
 }
+
+/*******************************************************************\
+
+Function: acdl_domaint::compare()
+
+  Inputs: example: 1. x<=3, x<=5 && y<=10
+                   2. x<=2, x>2 && y<=10
+                   3. x<=5, x>=3 && x<=8 && y<=10 
+ Outputs: example  1: satisfiable (status=0)
+                   2. contradicting (status=1)
+                   3. unknown -- neither satisfiable nor contradicting (status=2)
+\*******************************************************************/
+
+unsigned acdl_domaint::compare(const meet_irreduciblet &a, 
+			       const meet_irreduciblet &b) const
+{
+  std::unique_ptr<incremental_solvert> solver(
+    incremental_solvert::allocate(SSA.ns,true));
+  unsigned int status;  
+  // to check satisfiable, check !(a & !b)
+  exprt f1 = not_exprt(and_exprt(a,not_exprt(b)));
+  
+  *solver << f1;
+  if ((*solver)() == decision_proceduret::D_SATISFIABLE) {
+    status = 0;
+    return status;
+  }
+  
+  // to check contradiction, check !(a & b)
+  exprt f2 = not_exprt(and_exprt(a,b));
+  
+  *solver << f2;
+  if ((*solver)() == decision_proceduret::D_SATISFIABLE) {
+    status = 1;
+    return status;
+  }
+  // unknown: neither contradicting nor satisfiable
+  else {
+    status = 2;
+    return status;
+  }  
+}

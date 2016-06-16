@@ -52,22 +52,72 @@ Not inserting nondet elements
 Not inserting nondet elements 
 Push: x#19 == 1
 Not inserting nondet elements 
-Not inserting nondet elements 
-Not inserting nondet elements 
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
 Push: !(x#19 == 1 || !$guard#0)
 Not inserting nondet elements 
-Not inserting nondet elements 
-Not inserting nondet elements 
+Push: !(x#19 == 1 || !$guard#0)
 Push: !(x#19 == 1 || !$guard#0)
 Not inserting nondet elements 
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Not inserting nondet elements 
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Not inserting nondet elements 
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Not inserting nondet elements 
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Not inserting nondet elements 
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
 The content of the sliced but unordered worklist is as follows: 
 Sliced Unordered Worklist Element::$guard#0 == TRUE
 Sliced Unordered Worklist Element::x#19 == 1
 Leaf Element::$guard#0 == TRUE
 Leaf Element::x#19 == 1
-First single assertion push: ("or" "" ("=" "" ("symbol" "type" ("signedbv" "width" ("32") "#c_type" ("signed_int")) "identifier" ("main::1::x#19") "#source_location" ("" "file" ("main.c") "line" ("6") "function" ("main"))) "" ("constant" "type" ("signedbv" "width" ("32") "#c_type" ("signed_int")) "value" ("00000000000000000000000000000001") "#source_location" ("" "file" ("main.c") "line" ("6") "function" ("main")) "#cformat" ("1")) "type" ("bool") "#source_location" ("" "file" ("main.c") "line" ("6") "function" ("main"))) "" ("not" "" ("symbol" "type" ("bool") "identifier" ("ssa::$guard#0")) "type" ("bool")) "type" ("bool"))
 The content of the ordered worklist is as follows: 
 Worklist Element::!(x#19 == 1 || !$guard#0)
+Worklist Element::TRUE
 Worklist Element::$guard#0 == TRUE
 Worklist Element::x#19 == 1
 Printing all live variables
@@ -91,14 +141,40 @@ actually deducing
 [ACDL-DOMAIN] projected(main::1::x#19): 
 RESULT: 
 Push: $guard#0 == TRUE
-Not inserting nondet elements 
-Not inserting nondet elements 
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
 Push: !(x#19 == 1 || !$guard#0)
 Not inserting nondet elements 
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Not inserting nondet elements 
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Not inserting nondet elements 
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
 Popped Statement for live variables: !(x#19 == 1 || !$guard#0)
 Variables in Popped Statement: $guard#0 x#19  
 Live variables list are as follows: $guard#0x#19 
 The content of the updated worklist is as follows: 
+Updated Worklist Element::TRUE
 Updated Worklist Element::$guard#0 == TRUE
 Updated Worklist Element::x#19 == 1
 Updated Worklist Element::!(x#19 == 1 || !$guard#0)
@@ -106,6 +182,26 @@ The updated live variables after removal are as follows: $guard#0x#19
 New: $guard#0
 Computing new abstract value of implication graph: 
 $guard#0
+$guard#0
+Pop: TRUE
+Computing old abstract value of implication graph: 
+$guard#0
+Old: $guard#0
+[ACDL-DOMAIN] old value: $guard#0
+DOMAIN projected live variables are: 
+Not inserting nondet elements 
+Not inserting nondet elements 
+Not inserting nondet elements 
+Popped Statement for live variables: TRUE
+Variables in Popped Statement:  
+Live variables list are as follows: $guard#0x#19 
+The content of the updated worklist is as follows: 
+Updated Worklist Element::$guard#0 == TRUE
+Updated Worklist Element::x#19 == 1
+Updated Worklist Element::!(x#19 == 1 || !$guard#0)
+The updated live variables after removal are as follows: $guard#0x#19 
+New: 
+Computing new abstract value of implication graph: 
 $guard#0
 Pop: $guard#0 == TRUE
 Computing old abstract value of implication graph: 
@@ -150,10 +246,35 @@ adding new value !(-((signed __CPROVER_bitvector[33])x#19) >= 0)
 [ACDL-DOMAIN] deductions(main::1::x#19): !(x#19 >= 2) <== 
 !(-((signed __CPROVER_bitvector[33])x#19) >= 0) <== 
 
-Not inserting nondet elements 
-Not inserting nondet elements 
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
 Push: !(x#19 == 1 || !$guard#0)
 Not inserting nondet elements 
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Not inserting nondet elements 
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Not inserting nondet elements 
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
+Push: !(x#19 == 1 || !$guard#0)
 Popped Statement for live variables: x#19 == 1
 Variables in Popped Statement: x#19  
 Live variables list are as follows: $guard#0x#19 
@@ -201,21 +322,21 @@ Propagation finished with BOTTOM
 ****************************************************
  IMPLICATION GRAPH AFTER DEDUCTION PHASE
 ****************************************************
-Printing Graph Output -- Total Nodes: 4
+Printing Graph Output -- Total Valid Nodes: 4, Total deleted Nodes: 0
 1 -> 4
-$guard#0@level:0@decision:0 -> FALSE@level:0@decision:0
-1 -> 4
+$guard#0  @level:0 @decision:0 -> FALSE @level:0 @decision:0
 2 -> 4
-!(x#19 >= 2)@level:0@decision:0 -> FALSE@level:0@decision:0
-2 -> 4
-Node number: 1  Expression: $guard#0  In edges: 0  Out edges: 1
-Node number: 2  Expression: !(x#19 >= 2)  In edges: 0  Out edges: 1
-Node number: 3  Expression: !(-((signed __CPROVER_bitvector[33])x#19) >= 0)  In edges: 0  Out edges: 0
-Node number: 4  Expression: FALSE  In edges: 2  Out edges: 0
+!(x#19 >= 2)  @level:0 @decision:0 -> FALSE @level:0 @decision:0
+Node number: 1  Expression: $guard#0  In edges: 0  Out edges: 1  DL vector size: 0   
+Node number: 2  Expression: !(x#19 >= 2)  In edges: 0  Out edges: 1  DL vector size: 0   
+Node number: 3  Expression: !(-((signed __CPROVER_bitvector[33])x#19) >= 0)  In edges: 0  Out edges: 0  DL vector size: 0   
+Node number: 4  Expression: FALSE  In edges: 2  Out edges: 0  DL vector size: 0   
 ********************************
     CONFLICT ANALYSIS PHASE
 ********************************
-[main.assertion.1] assertion x == 1: OK
+No further backtrack possible 
+Procedure terminated after iteration: 0
+[main.assertion.1] assertion x == 1: 
 
 ** 0 of 1 unknown
 ** 0 of 1 failed

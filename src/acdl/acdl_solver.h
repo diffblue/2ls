@@ -43,8 +43,7 @@ public:
     }
 
   property_checkert::resultt operator()(const local_SSAt &SSA,
-					const exprt &assertion,
-                                        const exprt &additional_constraint);
+					const exprt &assertion, const exprt &additional_constraint);
 
   std::set<exprt> decision_variables;
 
@@ -56,11 +55,12 @@ protected:
   acdl_conflict_analysis_baset &conflict_analysis;
 
   acdl_implication_grapht implication_graph;
-  std::vector<exprt> learned_clauses;
+  std::vector<acdl_domaint::valuet> learned_clauses;
+  //std::vector<exprt> learned_clauses;
   
-  property_checkert::resultt propagate(const local_SSAt &SSA);
+  property_checkert::resultt propagate(const local_SSAt &SSA, const exprt& assertion);
 
-  bool decide(const local_SSAt &SSA);
+  bool decide(const local_SSAt &SSA, const exprt& assertion);
   acdl_domaint::varst value_to_vars(const acdl_domaint::valuet &value)
   {
     acdl_domaint::varst vars;
@@ -77,7 +77,7 @@ protected:
     
   
   void init();
-  property_checkert::resultt analyze_conflict(const local_SSAt &SSA);
+  bool analyze_conflict(const local_SSAt &SSA, const exprt& assertion);
 };
 
 

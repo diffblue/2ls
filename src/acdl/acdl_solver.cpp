@@ -46,7 +46,7 @@ Function: acdl_solvert::propagate
  forward abstract analysis to compute the post-condition of a statement
 \************************************************************************/
 
-property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA)
+property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA, const exprt &assertion)
 {
   while (!worklist.empty())
   {
@@ -112,7 +112,7 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA)
 
       
       // - call worklist update
-      worklist.update(SSA, new_variables, statement); 
+      worklist.update(SSA, new_variables, statement, assertion); 
     
 #ifdef DEBUG
     std::cout << "New: ";
@@ -179,7 +179,7 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA)
  \*******************************************************************/
 
 bool
-acdl_solvert::decide (const local_SSAt &SSA)
+acdl_solvert::decide (const local_SSAt &SSA, const exprt& assertion)
 {
   acdl_domaint::valuet v;
   implication_graph.to_value(v);
@@ -244,7 +244,7 @@ acdl_solvert::decide (const local_SSAt &SSA)
   // transitive dependencies of the decision
   //worklist.dec_update(SSA, dec_stmt);
   
-  worklist.dec_update(SSA, dec_expr);
+  worklist.dec_update(SSA, dec_expr, assertion);
 
   return true;
 }
@@ -261,9 +261,70 @@ acdl_solvert::decide (const local_SSAt &SSA)
 
  \*******************************************************************/
 
-property_checkert::resultt 
-acdl_solvert::analyze_conflict(const local_SSAt &SSA)
+//property_checkert::resultt
+bool 
+acdl_solvert::analyze_conflict(const local_SSAt &SSA, const exprt& assertion) 
 {
+ acdl_domaint::valuet learned_clause;
+ if(!conflict_analysis(SSA, implication_graph, learned_clause))
+   return false;
+ else {    
+    if(conflict_analysis.disable_backjumping) {
+      acdl_domaint::valuet v;
+      implication_graph.to_value(v);
+      // call normalize or normalize_val ? 
+      domain.normalize_val(v);
+      exprt dec_expr = implication_graph.dec_trail.back();
+
+      domain.meet(dec_expr,v);
+#ifdef DEBUG
+      std::cout << "New [Analyze conflict]: ";
+      domain.output(std::cout, v) << std::endl;
+#endif
+
+      acdl_domaint::varst dec_vars;
+      // find all symbols in the decision expression
+      find_symbols(dec_expr, dec_vars);
+      // update the worklist based on all transitively dependant elements of the learnt clause 
+      worklist.dec_update(SSA, dec_expr, assertion);
+      // pop from the decision trail 
+      // implication_graph.dec_trail.pop_back();
+      return true;
+    }
+    else {
+      acdl_domaint::valuet v;
+      implication_graph.to_value(v);
+      // call normalize or normalize_val ? 
+      domain.normalize_val(v);
+
+      domain.meet(learned_clause,v);
+      // store the learned clause
+      learned_clauses.push_back(learned_clause);
+      // iterate over learned clauses and convert
+      // them to exprt. Insert these exprts to worklist
+      unsigned i=0;
+      while(i < learned_clauses.size()) {
+        std::cout << "Pushing learned clause into the worklist" << std::endl;
+        acdl_domaint::valuet clause_val = learned_clauses[i];
+        const exprt &clause_expr = conjunction(clause_val);
+        worklist.push(clause_expr);
+        i++;
+      } 
+      acdl_domaint::varst learn_vars;
+      const exprt learned_expr = conjunction(learned_clause);
+      acdl_domaint::statementt learned_stmt = learned_expr;
+      // find all symbols in the decision expression
+      find_symbols(learned_stmt, learn_vars);
+      // update the worklist based on all transitively dependant elements of the
+      // learnt clause 
+      
+      worklist.dec_update(SSA, learned_stmt, assertion);
+      return true;
+    }
+  }
+
+  #if 0
+  // the conflict analysis returns PASS/FAIL/UNKNOWN
   exprt learned_clause;
   property_checkert::resultt result = conflict_analysis(SSA, implication_graph, learned_clause);
   if(result == property_checkert::PASS) 
@@ -274,6 +335,7 @@ acdl_solvert::analyze_conflict(const local_SSAt &SSA)
 
     acdl_domaint::valuet v;
     implication_graph.to_value(v);
+    // call normalize or normalize_val ? 
     domain.normalize_val(v);
     exprt dec_expr = implication_graph.dec_trail.back();
 
@@ -294,13 +356,15 @@ acdl_solvert::analyze_conflict(const local_SSAt &SSA)
     find_symbols(dec_expr, dec_vars);
     // update the worklist based on all transitively dependant elements of the
     // learnt clause 
-    worklist.dec_update(SSA, dec_expr);
+    worklist.dec_update(SSA, dec_expr, assertion);
     // pop from the decision trail 
     //cond_dec_heuristic.dec_trail.pop_back();
     implication_graph.dec_trail.pop_back();
-    result = propagate(SSA);
+    result = propagate(SSA, assertion);
     return result;
   }
+  #endif
+
 #if 0  
   //TODO
   // ******* For temporary purpose **********
@@ -435,7 +499,7 @@ property_checkert::resultt acdl_solvert::operator()(
   const exprt &additional_constraint)
 {
   //init();
-  worklist.initialize(SSA);
+  worklist.initialize(SSA, assertion, additional_constraint);
   // call initialize live variables
   worklist.initialize_live_variables();
   std::set<exprt> decision_variable;
@@ -495,6 +559,7 @@ property_checkert::resultt acdl_solvert::operator()(
   // implication graph is top for the first time 
   // because ACDL starts with TOP
   assert(domain.is_top(v)); 
+  unsigned iteration = 0;
 
   property_checkert::resultt result = property_checkert::UNKNOWN;
   while(result == property_checkert::UNKNOWN)
@@ -505,7 +570,7 @@ property_checkert::resultt acdl_solvert::operator()(
       std::cout << "********************************" << std::endl;
       std::cout << "        DEDUCTION PHASE " << std::endl;
       std::cout << "********************************" << std::endl;
-      result = propagate(SSA);
+      result = propagate(SSA, assertion);
 
       std::cout << "****************************************************" << std::endl;
       std::cout << " IMPLICATION GRAPH AFTER DEDUCTION PHASE" << std::endl;
@@ -526,7 +591,7 @@ property_checkert::resultt acdl_solvert::operator()(
       std::cout << "         DECISION PHASE"          << std::endl;
       std::cout << "********************************" << std::endl;
       // make a decision
-      bool status = decide(SSA);
+      bool status = decide(SSA, assertion);
       if(!status) {
         std::cout << "Failed to verify program" << std::endl;
 #ifdef DEBUG
@@ -540,18 +605,27 @@ property_checkert::resultt acdl_solvert::operator()(
       std::cout << "IMPLICATION GRAPH AFTER DECISION PHASE" << std::endl;
       std::cout << "****************************************************" << std::endl;
       implication_graph.print_graph_output(SSA);
+      std::cout << std::endl 
+          << "ITERATION (decision) " << iteration++ << std::endl
+          <<"================ " << std::endl;
     }
 
     std::cout << "********************************" << std::endl;
     std::cout << "    CONFLICT ANALYSIS PHASE" << std::endl;
     std::cout << "********************************" << std::endl;
 
+    // reset the result 
+    result = property_checkert::UNKNOWN;
     // analyze conflict ...
-    result = analyze_conflict(SSA);
-    // decision level 0 conflict
-    if(result == property_checkert::PASS) //UNSAT
+    // result = analyze_conflict(SSA, assertion);
+    if(!analyze_conflict(SSA, assertion)) {
+      std::cout << "No further backtrack possible " << std::endl;
       break;
+    }
+    // decision level 0 conflict
+    /*if(result == property_checkert::PASS) //UNSAT
+      break;*/
   }
-
-  return result;
+  std::cout << "Procedure terminated after iteration: "  << iteration  << std::endl;
+  // return result;
 }

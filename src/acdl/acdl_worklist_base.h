@@ -20,10 +20,11 @@ public:
   typedef std::list<acdl_domaint::statementt> worklistt;
   typedef std::list<acdl_domaint::statementt> assert_listt;
   assert_listt alist;
-  virtual void initialize(const local_SSAt &)
+  virtual void initialize(const local_SSAt &, const exprt &, const exprt&) 
     { assert(false); }
 
-  virtual void dec_update(const local_SSAt &SSA, const acdl_domaint::statementt &stmt) { assert(false); }
+  virtual void dec_update(const local_SSAt &SSA, const acdl_domaint::statementt &stmt, 
+  const exprt& assertion) { assert(false); }
 
   
   virtual void initialize_live_variables()
@@ -31,7 +32,7 @@ public:
   virtual void select_vars(const exprt &statement, acdl_domaint::varst &vars);
   virtual void update(const local_SSAt &SSA,
 		      const acdl_domaint::varst &new_vars,
-		      const acdl_domaint::statementt &statement=nil_exprt());
+		      const acdl_domaint::statementt &statement=nil_exprt(), const exprt& assertion=true_exprt());
     //{ assert(false); }
 
   const acdl_domaint::statementt pop ();
@@ -44,6 +45,7 @@ public:
   acdl_domaint::varst check_var_liveness (acdl_domaint::varst &vars);
   acdl_domaint::varst live_variables;
   acdl_domaint::varst worklist_vars;
+  void push (const acdl_domaint::statementt &statement);
 protected:
   worklistt worklist;
   
@@ -58,7 +60,6 @@ protected:
   void remove_live_variables (const local_SSAt &SSA, 
          const acdl_domaint::statementt & statement);
   bool check_statement (const exprt &expr, const acdl_domaint::varst &vars);
-  void push (const acdl_domaint::statementt &statement);
 
 };
 

@@ -24,7 +24,7 @@ Function: acdl_worklist_orderedt::initialize()
  \*******************************************************************/
 
 void
-acdl_worklist_orderedt::initialize (const local_SSAt &SSA)
+acdl_worklist_orderedt::initialize (const local_SSAt &SSA, const exprt &assertion, const exprt& additional_constraint)
 {
   
   // **********************************************************************
@@ -45,6 +45,7 @@ acdl_worklist_orderedt::initialize (const local_SSAt &SSA)
   if (SSA.nodes.empty ())
     return;
   // insert the assertions like (!(a1 && a2 && a3)) on to the worklist
+  #if 0
   and_exprt::operandst and_expr;
   for (local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin ();
       n_it != SSA.nodes.end (); n_it++)
@@ -61,7 +62,12 @@ acdl_worklist_orderedt::initialize (const local_SSAt &SSA)
        worklist_vars.insert(avars.begin(), avars.end());
     }
   }
-  
+  #endif
+  push_into_list(assert_worklist, assertion);
+  push_into_assertion_list(assert_list, not_exprt(assertion));
+  acdl_domaint::varst avars;
+  find_symbols(assertion, avars);
+  worklist_vars.insert(avars.begin(), avars.end());
   
   // Now compute the transitive dependencies
   //compute fixpoint mu X. assert_nodes u predecessor(X)
@@ -73,7 +79,7 @@ acdl_worklist_orderedt::initialize (const local_SSAt &SSA)
     acdl_domaint::varst vars;
     select_vars (statement, vars);
     // compute the predecessors
-    update(SSA, vars, predecs_worklist, statement);
+    update(SSA, vars, predecs_worklist, statement, assertion);
     
     //std::list<acdl_domaint::statementt>::iterator 
     //  iterassert = std::find(assert_list.begin(), assert_list.end(), statement); 
@@ -95,6 +101,8 @@ acdl_worklist_orderedt::initialize (const local_SSAt &SSA)
       }
     }
   }
+
+
 #ifdef DEBUG    
    std::cout << "The content of the sliced but unordered worklist is as follows: " << std::endl;
     for(std::list<acdl_domaint::statementt>::const_iterator it = worklist.begin(); it != worklist.end(); ++it) {
@@ -171,11 +179,9 @@ acdl_worklist_orderedt::initialize (const local_SSAt &SSA)
     }
 #endif    
   // Now prepare the final worklist
-  // empty the worklist
-  /*while(!worklist.empty() > 0)
-    const acdl_domaint::statementt statement = pop_from_worklist(assert_worklist);
-  */
   worklist.clear();
+  
+#if 0
   // insert assertions
   // Push the negation of the assertions into the worklist
   unsigned int size = and_expr.size();
@@ -200,6 +206,12 @@ acdl_worklist_orderedt::initialize (const local_SSAt &SSA)
 #endif    
     worklist.push_back(not_exp);
   }
+#endif  
+  // push the assertion and additional constriant
+  // in to the worklist
+  worklist.push_back(not_exprt(assertion));
+  worklist.push_back(additional_constraint);
+  
   acdl_domaint::varst var_leaf;
   // insert leaf nodes
   while(!leaf_worklist.empty() > 0) {
@@ -306,7 +318,7 @@ Function: acdl_worklist_orderedt::dec_update()
  \*******************************************************************/
 
 void
-acdl_worklist_orderedt::dec_update (const local_SSAt &SSA, const acdl_domaint::statementt &stmt)
+acdl_worklist_orderedt::dec_update (const local_SSAt &SSA, const acdl_domaint::statementt &stmt, const exprt& assertion)
 {
   // **********************************************************************
   // Initialization Strategy: Guarantees top-down and bottom-up propagation 
@@ -337,7 +349,7 @@ acdl_worklist_orderedt::dec_update (const local_SSAt &SSA, const acdl_domaint::s
     acdl_domaint::varst vars;
     select_vars (statement, vars);
     // compute the predecessors
-    update(SSA, vars, predecs_worklist, statement);
+    update(SSA, vars, predecs_worklist, statement, assertion);
     
     //std::list<acdl_domaint::statementt>::iterator 
     //  iterassert = std::find(assert_list.begin(), assert_list.end(), statement); 
@@ -564,7 +576,8 @@ acdl_worklist_orderedt::update (const local_SSAt &SSA,
                                const acdl_domaint::varst &vars,
                                
                                listt &lexpr, 
-                               const acdl_domaint::statementt &current_statement)
+                               const acdl_domaint::statementt &current_statement, 
+                               const exprt& assertion)
 {
    
   // dependency analysis loop for equalities
@@ -607,6 +620,7 @@ acdl_worklist_orderedt::update (const local_SSAt &SSA,
         #endif
       }
     }
+  #if 0  
     for (local_SSAt::nodet::assertionst::const_iterator a_it =
         n_it->assertions.begin (); a_it != n_it->assertions.end (); a_it++)
     {
@@ -623,6 +637,15 @@ acdl_worklist_orderedt::update (const local_SSAt &SSA,
         #endif
       }
     }
+  #endif  
+    if(assertion != current_statement) {
+    if (check_statement (assertion, vars)) {
+      push_into_list (lexpr, not_exprt (assertion));
+#ifdef DEBUG
+      std::cout << "Push: " << from_expr (SSA.ns, "", not_exprt(assertion)) << std::endl;
+#endif
+    }
+   }
   }
 }
 
