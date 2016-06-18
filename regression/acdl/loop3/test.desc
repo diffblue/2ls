@@ -1,0 +1,6 @@
+CORE
+main.c
+--unwind 5
+^EXIT=5$
+^SIGNAL=0$
+^VERIFICATION INCONCLUSIVE$

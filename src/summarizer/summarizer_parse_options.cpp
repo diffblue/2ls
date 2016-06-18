@@ -472,6 +472,9 @@ int summarizer_parse_optionst::doit()
   }
 
   //TODO: check option inconsistencies, ignored options etc
+  if(options.get_bool_option("acdl") && 
+     options.get_bool_option("havoc"))
+    throw "--acdl cannot be used with --havoc";
   if(options.get_bool_option("havoc"))
     status() << "Havocking loops and function calls" << eom;
   else if(options.get_bool_option("equalities"))

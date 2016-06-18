@@ -37,6 +37,14 @@ property_checkert::resultt summary_checker_acdlt::operator()(
   SSA_functions(goto_model,ns);
   ssa_unwinder.init(false,false);
 
+  unsigned unwind = options.get_unsigned_int_option("unwind");
+  if(unwind>0)
+  {
+    status() << "Unwinding" << messaget::eom;
+    ssa_unwinder.init_localunwinders();
+    ssa_unwinder.unwind_all(unwind);
+  }
+
   irep_idt entry_point = goto_model.goto_functions.entry_point();
   std::cout << entry_point << std::endl;
   local_SSAt &SSA = ssa_db.get(entry_point);
