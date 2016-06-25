@@ -149,6 +149,16 @@ void summarizer_parse_optionst::get_command_line_options(optionst &options)
     options.set_option("inline", true);
   }
 
+  if(cmdline.isset("acdl-decision"))
+    options.set_option("acdl-decision", cmdline.get_value("acdl-decision"));
+  else 
+    options.set_option("acdl-decision", "random"); //default
+
+  if(cmdline.isset("acdl-conflict"))
+    options.set_option("acdl-conflict", cmdline.get_value("acdl-conflict"));
+  else 
+    options.set_option("acdl-conflict", "first-uip"); //default
+
   if(cmdline.isset("slice") && cmdline.isset("inline"))
     options.set_option("slice", true);
   else
@@ -1535,6 +1545,9 @@ void summarizer_parse_optionst::help()
     " --inline-partial nr          inline functions smaller than the given nr of instructions\n"
     "\n"
     "Backend options:\n"
+    " --acdl                       use ACDL solver\n"
+    " --acdl-decision D            use decision heuristics D\n"
+    " --acdl-conflict C            use conflict analysis heuristics C\n"
     " --termination                compute ranking functions to prove termination\n"
     " --k-induction                use k-induction\n"
     " --incremental-bmc            use incremental-bmc\n"

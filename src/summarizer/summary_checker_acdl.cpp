@@ -15,11 +15,13 @@ Author: Peter Schrammel
 #include "../acdl/acdl_solver.h"
 #include "../acdl/acdl_domain.h"
 #include "../acdl/acdl_decision_heuristics_base.h"
-//#include "../acdl/acdl_decision_heuristics_cond.h"
+//#include "../acdl/acdl_decision_heuristics_random.h"
+//#include "../acdl/acdl_decision_heuristics_....h"
 #include "../acdl/acdl_worklist_base.h"
 #include "../acdl/acdl_worklist_ordered.h"
 #include "../acdl/acdl_conflict_analysis_base.h"
-//#include "../acdl/acdl_conflict_analysis_??.h"
+//#include "../acdl/acdl_conflict_analysis_firstuip.h"
+//#include "../acdl/acdl_conflict_analysis_....h"
 
 /*******************************************************************\
 
@@ -109,16 +111,32 @@ property_checkert::resultt summary_checker_acdlt::operator()(
         //TODO: make the solver incremental
 
         // configure components of acdl solver
+        // domain
         acdl_domaint domain(options,SSA,ssa_db,ssa_local_unwinder);
+
+        // decision heuristics
         std::unique_ptr<acdl_decision_heuristics_baset> decision_heuristics;
-        decision_heuristics = std::unique_ptr<acdl_decision_heuristics_baset>(
-          new acdl_decision_heuristics_baset(domain));
-        std::unique_ptr<acdl_worklist_baset> worklist;
-        worklist = std::unique_ptr<acdl_worklist_baset>(
-          new acdl_worklist_orderedt());
+        if(options.get_option("acdl-decision") == "random")
+          decision_heuristics = std::unique_ptr<acdl_decision_heuristics_baset>(
+            new acdl_decision_heuristics_baset(domain)); //no 'new' with base class!
+// SHOULD BE:
+//            new acdl_decision_heuristics_randomt(domain));
+        //else if(options.get_option("acdl-decision") == "berkmin")
+        // ....
+
+        // worklist (currently there is only one)
+        std::unique_ptr<acdl_worklist_baset> worklist =
+          std::unique_ptr<acdl_worklist_baset>(new acdl_worklist_orderedt());
+
+        // conflict analysis heuristics
         std::unique_ptr<acdl_conflict_analysis_baset> conflict_analysis;
-        conflict_analysis = std::unique_ptr<acdl_conflict_analysis_baset>(
-          new acdl_conflict_analysis_baset());
+        if(options.get_option("acdl-conflict") == "first-uip")
+          conflict_analysis = std::unique_ptr<acdl_conflict_analysis_baset>(
+            new acdl_conflict_analysis_baset()); //no 'new' with base class!
+// SHOULD BE:
+//            new acdl_conflict_analysis_firstuipt());
+        //else if ...
+
         // now instantiate solver
         acdl_solvert acdl_solver(options, domain, 
                                  *decision_heuristics,

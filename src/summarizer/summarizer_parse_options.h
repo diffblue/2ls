@@ -54,7 +54,7 @@ class optionst;
   "(no-simplify)(no-fixed-point)" \
   "(graphml-cex):(json-cex):" \
   "(no-spurious-check)(no-all-properties)" \
-  "(acdl)" \
+  "(acdl)(acdl-decision):(acdl-conflict):" \
   "(competition-mode)(slice)(no-propagation)" \
   "(no-unwinding-assertions)"
   // the last line is for CBMC-regression testing only
