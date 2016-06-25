@@ -125,9 +125,7 @@ ssa::$guard#0,
 main::1::x#19,
 Printing all decision variables inside solver
 x#19  ,
-********************************
-        DEDUCTION PHASE 
-********************************
+The additional constraint for the loop is: TRUE
 Pop: !(x#19 == 1 || !$guard#0)
 Computing old abstract value of implication graph: 
 Old: 
@@ -327,16 +325,11 @@ Printing Graph Output -- Total Valid Nodes: 4, Total deleted Nodes: 0
 $guard#0  @level:0 @decision:0 -> FALSE @level:0 @decision:0
 2 -> 4
 !(x#19 >= 2)  @level:0 @decision:0 -> FALSE @level:0 @decision:0
-Node number: 1  Expression: $guard#0  In edges: 0  Out edges: 1  DL vector size: 0   
-Node number: 2  Expression: !(x#19 >= 2)  In edges: 0  Out edges: 1  DL vector size: 0   
-Node number: 3  Expression: !(-((signed __CPROVER_bitvector[33])x#19) >= 0)  In edges: 0  Out edges: 0  DL vector size: 0   
-Node number: 4  Expression: FALSE  In edges: 2  Out edges: 0  DL vector size: 0   
-********************************
-    CONFLICT ANALYSIS PHASE
-********************************
-No further backtrack possible 
-Procedure terminated after iteration: 0
-[main.assertion.1] assertion x == 1: 
+Node number: 1  Expression: $guard#0  In edges: 0  Out edges: 1 Decision: 0 Deleted: 0 Marked: 0  DL vector: 0   
+Node number: 2  Expression: !(x#19 >= 2)  In edges: 0  Out edges: 1 Decision: 0 Deleted: 0 Marked: 0  DL vector: 0   
+Node number: 3  Expression: !(-((signed __CPROVER_bitvector[33])x#19) >= 0)  In edges: 0  Out edges: 0 Decision: 0 Deleted: 0 Marked: 0  DL vector: 0   
+Node number: 4  Expression: FALSE  In edges: 2  Out edges: 0 Decision: 0 Deleted: 0 Marked: 0  DL vector: 0   
+[main.assertion.1] assertion x == 1: OK
 
 ** 0 of 1 unknown
 ** 0 of 1 failed

@@ -99,7 +99,7 @@ property_checkert::resultt summary_checker_acdlt::operator()(
 	acdl_decision_heuristicst acdl_decision_heuristics(acdl_domain);
 	// acdl_decision_heuristics_condt acdl_decision_heuristics(acdl_domain);
 	acdl_worklist_orderedt acdl_worklist;
-	acdl_conflict_analysis_baset acdl_conflict_analysist;
+	acdl_conflict_analysis_baset acdl_conflict_analysist(acdl_domain);
 	acdl_solvert acdl_solver(options, acdl_domain, acdl_decision_heuristics,
 				 acdl_worklist, acdl_conflict_analysist);
 	acdl_solver.set_message_handler(get_message_handler());

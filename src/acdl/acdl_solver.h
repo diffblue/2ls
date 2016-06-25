@@ -56,7 +56,7 @@ protected:
 
   acdl_implication_grapht implication_graph;
   std::vector<acdl_domaint::valuet> learned_clauses;
-  //std::vector<exprt> learned_clauses;
+  unsigned ITERATION_LIMIT=999999; 
   
   property_checkert::resultt propagate(const local_SSAt &SSA, const exprt& assertion);
 
