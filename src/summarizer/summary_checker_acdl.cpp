@@ -6,16 +6,20 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+#include <memory>
+
 #include <util/simplify_expr.h>
 
 #include "summary_checker_acdl.h"
 
 #include "../acdl/acdl_solver.h"
 #include "../acdl/acdl_domain.h"
+#include "../acdl/acdl_decision_heuristics_base.h"
 //#include "../acdl/acdl_decision_heuristics_cond.h"
-#include "../acdl/acdl_decision_heuristics.h"
+#include "../acdl/acdl_worklist_base.h"
 #include "../acdl/acdl_worklist_ordered.h"
 #include "../acdl/acdl_conflict_analysis_base.h"
+//#include "../acdl/acdl_conflict_analysis_??.h"
 
 /*******************************************************************\
 
@@ -102,20 +106,28 @@ property_checkert::resultt summary_checker_acdlt::operator()(
         if(simplify) property=simplify_expr(property, SSA.ns);
         property_map[property_id].location = i_it;
 
-	//TODO: make this incremental
-	acdl_domaint acdl_domain(options,SSA,ssa_db,ssa_local_unwinder);
-	acdl_decision_heuristicst acdl_decision_heuristics(acdl_domain);
-	// acdl_decision_heuristics_condt acdl_decision_heuristics(acdl_domain);
-	acdl_worklist_orderedt acdl_worklist;
-	acdl_conflict_analysis_baset acdl_conflict_analysist;
-	acdl_solvert acdl_solver(options, acdl_domain, acdl_decision_heuristics,
-				 acdl_worklist, acdl_conflict_analysist);
-	acdl_solver.set_message_handler(get_message_handler());
-	property_map[property_id].result =
-	  acdl_solver(ssa_db.get(goto_model.goto_functions.entry_point()),
-		      property, conjunction(loophead_selects));
+        //TODO: make the solver incremental
 
-//	exprt property_value = simplify_expr(acdl_solver.get(property), SSA.ns);
+        // configure components of acdl solver
+        acdl_domaint domain(options,SSA,ssa_db,ssa_local_unwinder);
+        std::unique_ptr<acdl_decision_heuristics_baset> decision_heuristics;
+        decision_heuristics = std::unique_ptr<acdl_decision_heuristics_baset>(
+          new acdl_decision_heuristics_baset(domain));
+        std::unique_ptr<acdl_worklist_baset> worklist;
+        worklist = std::unique_ptr<acdl_worklist_baset>(
+          new acdl_worklist_orderedt());
+        std::unique_ptr<acdl_conflict_analysis_baset> conflict_analysis;
+        conflict_analysis = std::unique_ptr<acdl_conflict_analysis_baset>(
+          new acdl_conflict_analysis_baset());
+        // now instantiate solver
+        acdl_solvert acdl_solver(options, domain, 
+                                 *decision_heuristics,
+                                 *worklist, 
+                                 *conflict_analysis);
+        acdl_solver.set_message_handler(get_message_handler());
+        property_map[property_id].result =
+          acdl_solver(ssa_db.get(goto_model.goto_functions.entry_point()),
+                      property, conjunction(loophead_selects));
       }
     }
   }

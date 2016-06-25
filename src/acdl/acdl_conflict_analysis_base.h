@@ -6,8 +6,8 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 
 \*******************************************************************/
 
-#ifndef CPROVER_ACDL_CONFLICT_ANALYSIS_H
-#define CPROVER_ACDL_CONFLICT_ANALYSIS_H
+#ifndef CPROVER_ACDL_CONFLICT_ANALYSIS_BASE_H
+#define CPROVER_ACDL_CONFLICT_ANALYSIS_BASE_H
 
 #include <util/graph.h>
 #include <goto-programs/property_checker.h>
@@ -47,7 +47,11 @@ public:
   }
 
   //property_checkert::resultt operator()(const local_SSAt &SSA, acdl_implication_grapht &graph, exprt &learned_clause);
+
+  //Remark: the base class should not implement this function
   bool operator()(const local_SSAt &SSA, acdl_implication_grapht &graph, acdl_domaint::valuet &learned_clause);
+
+  //Remark: all this stuff should go into a separate class derived from this base class
   unsigned int backtracks; 
   int backtrack_level;
   bool just_backtracked;

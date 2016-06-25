@@ -52,7 +52,7 @@ DELTA_OBJ+=\
       ../acdl/acdl_graph_dominator$(OBJEXT) \
       ../acdl/acdl_implication_graph$(OBJEXT) \
       ../acdl/template_generator_acdl$(OBJEXT) \
-      ../acdl/acdl_decision_heuristics$(OBJEXT) \
+      ../acdl/acdl_decision_heuristics_base$(OBJEXT) \
       ../functions/summary$(OBJEXT) \
       ../functions/get_function$(OBJEXT) \
       ../functions/path_util$(OBJEXT) \

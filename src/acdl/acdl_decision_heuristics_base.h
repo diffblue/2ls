@@ -6,30 +6,31 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 
 \*******************************************************************/
 
-#ifndef CPROVER_ACDL_DECISION_HEURISTICS_H
-#define CPROVER_ACDL_DECISION_HEURISTICS_H
+#ifndef CPROVER_ACDL_DECISION_HEURISTICS_BASE_H
+#define CPROVER_ACDL_DECISION_HEURISTICS_BASE_H
 
 #include <goto-programs/property_checker.h>
 
 #include "acdl_domain.h"
 #include "../ssa/local_ssa.h"
 
-class acdl_decision_heuristicst : public messaget
+class acdl_decision_heuristics_baset : public messaget
 {
 public:
   
-  explicit acdl_decision_heuristicst(
+  explicit acdl_decision_heuristics_baset(
     acdl_domaint &_domain)
     : 
   domain(_domain)
   {
   }  
 
-  virtual ~acdl_decision_heuristicst() 
+  virtual ~acdl_decision_heuristics_baset() 
   {
   }
   
   //override this
+  //Remark: the base class should not implement this function
   acdl_domaint::meet_irreduciblet operator()(
     const local_SSAt &SSA,
     const acdl_domaint::valuet &value);
@@ -39,6 +40,7 @@ public:
   acdl_domaint::statementt dec_statement;
   std::set<exprt> decision_variables;
   /******* decision heuristics *******/
+  // Remark: this should go into separate classes derived from this base class
   enum dec_heurt { RANGE, RANGE_REL, BERKMIN, RAND };
   dec_heurt dec_heur;
 

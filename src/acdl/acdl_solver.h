@@ -16,7 +16,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include "../ssa/local_ssa.h"
 
 #include "acdl_domain.h"
-#include "acdl_decision_heuristics.h"
+#include "acdl_decision_heuristics_base.h"
 #include "acdl_worklist_base.h"
 #include "acdl_conflict_analysis_base.h"
 
@@ -26,7 +26,7 @@ public:
   
   explicit acdl_solvert(const optionst &_options,
 			acdl_domaint &_domain,
-			acdl_decision_heuristicst &_decision_heuristics,
+			acdl_decision_heuristics_baset &_decision_heuristics,
                         acdl_worklist_baset &_worklist,
                         acdl_conflict_analysis_baset &_conflict_analysis)
     : 
@@ -50,7 +50,7 @@ public:
 protected:
   const optionst &options;
   acdl_domaint &domain;
-  acdl_decision_heuristicst &decision_heuristics;
+  acdl_decision_heuristics_baset &decision_heuristics;
   acdl_worklist_baset &worklist; 
   acdl_conflict_analysis_baset &conflict_analysis;
 

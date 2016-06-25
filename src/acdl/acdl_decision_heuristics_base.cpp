@@ -9,11 +9,11 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include <fstream>
 #include <cstdlib>
 #include "acdl_solver.h"
-#include "acdl_decision_heuristics.h"
+#include "acdl_decision_heuristics_base.h"
 
 #define DEBUG 1
 
-acdl_domaint::meet_irreduciblet acdl_decision_heuristicst::operator()
+acdl_domaint::meet_irreduciblet acdl_decision_heuristics_baset::operator()
 (const local_SSAt &SSA, const acdl_domaint::valuet &value)
 {
   dec_heur = RAND;
@@ -49,7 +49,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristicst::operator()
 
  \*******************************************************************/
 
-acdl_domaint::meet_irreduciblet acdl_decision_heuristicst::dec_heur_rand
+acdl_domaint::meet_irreduciblet acdl_decision_heuristics_baset::dec_heur_rand
       (const local_SSAt &SSA, const acdl_domaint::valuet &value)
 {
 #ifdef DEBUG
@@ -255,7 +255,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristicst::dec_heur_rand
 
  \*******************************************************************/
 
-acdl_domaint::meet_irreduciblet acdl_decision_heuristicst::dec_heur_largest_range
+acdl_domaint::meet_irreduciblet acdl_decision_heuristics_baset::dec_heur_largest_range
   (const local_SSAt &SSA, const acdl_domaint::valuet &value, bool phase)
 {
   acdl_domaint::meet_irreduciblet decision;
@@ -274,7 +274,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristicst::dec_heur_largest_rang
 
  \*******************************************************************/
 
-acdl_domaint::meet_irreduciblet acdl_decision_heuristicst::dec_heur_berkmin(const local_SSAt &SSA, const acdl_domaint::valuet &value)
+acdl_domaint::meet_irreduciblet acdl_decision_heuristics_baset::dec_heur_berkmin(const local_SSAt &SSA, const acdl_domaint::valuet &value)
 {
   acdl_domaint::meet_irreduciblet decision;
   return decision;

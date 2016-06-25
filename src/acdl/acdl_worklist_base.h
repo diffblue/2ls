@@ -18,6 +18,15 @@ class acdl_worklist_baset : public messaget
 {
 public:
   typedef std::list<acdl_domaint::statementt> worklistt;
+
+  explicit acdl_worklist_baset()
+  {
+  }  
+
+  virtual ~acdl_worklist_baset() 
+  {
+  }
+
   typedef std::list<acdl_domaint::statementt> assert_listt;
   assert_listt alist;
   virtual void initialize(const local_SSAt &, const exprt &, const exprt&) 
@@ -48,14 +57,6 @@ public:
   void push (const acdl_domaint::statementt &statement);
 protected:
   worklistt worklist;
-  
-  explicit acdl_worklist_baset()
-  {
-  }  
-
-  virtual ~acdl_worklist_baset() 
-  {
-  }
 
   void remove_live_variables (const local_SSAt &SSA, 
          const acdl_domaint::statementt & statement);
