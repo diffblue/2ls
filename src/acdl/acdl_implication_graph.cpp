@@ -8,6 +8,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 
 #include "acdl_implication_graph.h"
 #include "acdl_graph_dominator.h"
+# define DEBUG
 
 /*******************************************************************\
 
@@ -133,7 +134,7 @@ void acdl_implication_grapht::add_decision
   node.is_decision = true;
   node.conflict = false;
   node.deleted = false;
-  current_level++;
+  ++current_level;
   //node.level = current_level;
   std::vector<int>::iterator it;
   it = find(node.dec_level.begin(), node.dec_level.end(), current_level);
@@ -156,7 +157,9 @@ Function: acdl_conflict_analysis_baset::check consistency()
  \*******************************************************************/
 void acdl_implication_grapht::check_consistency(int lvl)
 {
+  std::cout << "*********************************************" << std::endl;
   std::cout << "Checking consistency of the implication graph" << std::endl;
+  std::cout << "*********************************************" << std::endl;
   for(node_indext i = 1; i < size(); i++) {
     // all the nodes in graph must have level less or equal to the 
     // backtrack level, the nodes with level>lvl must be deleted
@@ -169,6 +172,7 @@ void acdl_implication_grapht::check_consistency(int lvl)
       #endif
     }
   }
+  std::cout << "The implication graph is consistent, Go ACDL !!" << std::endl;
 }
 /*******************************************************************\
 
@@ -211,7 +215,7 @@ void acdl_implication_grapht::mark_node(node_indext start)
 
 /*******************************************************************\
 
-Function: acdl_implication_grapht::first_uip
+unction: acdl_implication_grapht::first_uip
 
   Inputs:
 
@@ -222,11 +226,17 @@ Function: acdl_implication_grapht::first_uip
  \*******************************************************************/
 acdl_implication_grapht::node_indext  acdl_implication_grapht::first_uip(const local_SSAt &SSA)
 {
+  std::cout << "******************" << std::endl;
+  std::cout << "Computing the UIP" << std::endl;
+  std::cout << "******************" << std::endl;
   acdl_domaint::meet_irreduciblet dec_expr =  dec_trail.back();
   node_indext na = find_node(dec_expr);
   assert(na >= 0);
   int nb = find_node(false_exprt());
   assert(nb >= 0);
+  // the out edges of a false node is zero
+  assert(nodes[nb].out.size() == 0);
+  
   const nodet &node=nodes[na];
   assert(node.in.size() == 0);
   assert(node.is_decision == true);
@@ -246,26 +256,48 @@ acdl_implication_grapht::node_indext  acdl_implication_grapht::first_uip(const l
   bool first_uip_selected = false;
   //acdl_graph_dominatort::dominatorst::const_iterator uip;
   node_indext uip=-1;
+  
+#ifdef DEBUG
+  std::cout << "The current level of conflict is: " << current_level << std::endl;
+#endif
+    
   // find the dominator that is the smallest and 
   // contains the false_node
   std::cout << "searching for uip" << std::endl;
   for(acdl_graph_dominatort::dominatorst::const_iterator it = dominator.dominators.begin();
       it != dominator.dominators.end(); ++it)
   {
+    assert(nodes[it->first].deleted == false);
+#ifdef DEBUG
+    std::cout << "Checking UIP for the following node" << std::endl;
+    std::cout << "node expr: " << from_expr(SSA.ns, "", nodes[it->first].expr) << " node id: " << it->first << " level: " << nodes[it->first].dec_level.back() << std::endl; 
+#endif   
     // check the target list of a dominated node if the dominated 
     // node is at current level and the dominated node is a false_exprt
-    if(nodes[it->first].dec_level.back() == current_level && nodes[it->first].expr == false_exprt())     {
+    if(nodes[it->first].dec_level.back() == current_level && nodes[it->first].expr == false_exprt()) {
+#ifdef DEBUG
+      std::cout << "Searching dominators of BOTTOM" << std::endl;
+#endif
       for(acdl_graph_dominatort::target_sett::const_iterator d_it = it->second.begin();
          d_it!=it->second.end(); ++d_it)
       {
+        assert(nodes[*d_it].deleted == false);
+#ifdef DEBUG
+        std::cout << "node expr: " << nodes[*d_it].expr << " node id: " << *d_it << " level: " << nodes[*d_it].dec_level.back() << std::endl; 
+#endif
         // find dominator that dominates false exprt
         if((it->first != *d_it) && nodes[*d_it].dec_level.back() == current_level) {
+#ifdef DEBUG
+         std::cout << "found a dominator for BOTTOM node" << std::endl; 
+#endif
          // finding the dominator that dominates 
          // largest number of nodes (this implicitly 
          // means finding dominator that is farthest 
          // from the false node -- last uip)
          if(!first_uip_selected) {
+#ifdef DEBUG
            std::cout << "Searching for last uip" << std::endl;
+#endif
            // ******* last uip ********
            if(*d_it < max_node_id) {
              max_node_id = *d_it; 
@@ -274,7 +306,9 @@ acdl_implication_grapht::node_indext  acdl_implication_grapht::first_uip(const l
            }
          }
          else if(first_uip_selected) {
+#ifdef DEBUG
            std::cout << "Searching for first uip" << std::endl;
+#endif
            // ******** first uip ********* 
            if(*d_it > min_node_id) {
              min_node_id = *d_it; 
@@ -286,7 +320,17 @@ acdl_implication_grapht::node_indext  acdl_implication_grapht::first_uip(const l
       }
     }
   }
-  std::cout << "The first uip node is: NODE(" << uip << ")" << " UIP EXPRESSION (" << from_expr(SSA.ns, "", nodes[uip].expr) << ")" << std::endl;
+  
+  std::cout << "Found the UIP" << std::endl;
+  
+  // The UIP node must be a valid node in the graph
+  // if not, then restart the uip search from the 
+  // entry_node = false_exprt. This happens because 
+  // the structure of deductions is such that the 
+  // decision node (entry node for dominator) and the 
+  // BOTTOM node leading to conflict can be disconnected
+  assert(uip <= size());
+  std::cout << "The uip node is: NODE(" << uip << ")" << " UIP EXPRESSION (" << from_expr(SSA.ns, "", nodes[uip].expr) << ")" << std::endl;
   
   // call unmark node
   // unmark(); 
@@ -309,8 +353,49 @@ Function: acdl_implication_grapht:get_reason
 
  \*******************************************************************/
 void acdl_implication_grapht::get_reason
-  (node_indext uip, acdl_domaint::valuet &reason)
+  (const local_SSAt &SSA, node_indext uip, acdl_domaint::valuet &reason)
 {
+  // collect all decision variables 
+  // from the dec trail 
+  std::cout << "inside reason 1" << std::endl;
+  acdl_domaint::valuet dec_normalize;
+  unsigned dec_size = dec_trail.size();
+  int found = -1;
+  for(unsigned j=0; j<dec_size; j++)
+   std::cout << "The dec expr " << j << "is: " << dec_trail[j];
+  
+  for(unsigned i=0; i<dec_size; i++)
+  {
+     std::cout << "inside reason loop" << std::endl;
+     acdl_domaint::meet_irreduciblet dec_exp = dec_trail[i];
+     std::cout << "The dec expr " << i << "is: " << from_expr(SSA.ns, "", dec_exp);
+     int n = find_node(dec_exp);
+     
+     // find if this node has been assigned before
+     // in decision level less than current level
+     // found = search_node__dec_level(n);
+     // some decision nodes could be deleted
+     // due to backtracking, hence the following check
+     // if(n != -1) // && found != -1) 
+     if(nodes[n].is_decision && n!= -1)
+     {
+      std::cout << "the node is decision node" << std::endl;
+      std::cout << "The valid dec expr node " << n << "is: " << from_expr(SSA.ns, "", dec_exp);
+      //assert(nodes[n].is_decision);
+      dec_normalize.push_back(dec_trail[i]);
+     }
+  }
+  
+  std::cout << "outside reason loop" << std::endl;
+  // normalize the decision 
+  // acdl_domaint::normalize_val(dec_normalize);
+  // iterate over all decision nodes and 
+  // insert into reason 
+  // reason = dec_normalize;
+  reason.assign(dec_normalize.begin(), dec_normalize.end());
+  //reason.push_back(nodes[dec_node].expr);
+  
+#if 0  
   // get the uip node
   nodet &node=nodes[uip];
   
@@ -337,6 +422,69 @@ void acdl_implication_grapht::get_reason
       reason.push_back(nodes[dec_node].expr);
     }
   }
+#endif  
+}
+
+
+/*******************************************************************\
+
+Function: acdl_conflict_analysis_baset::search_node__dec_level()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: search if a node has decision level equal to current level
+
+ \*******************************************************************/
+int acdl_implication_grapht::search_node__current_level(node_indext n) 
+{
+  for(unsigned i=0;i<nodes[n].dec_level.size();i++) {
+    if(nodes[n].dec_level[i] == current_level) 
+     return nodes[n].dec_level[i];   
+  }
+  return -1;
+}
+/*******************************************************************\
+
+Function: acdl_conflict_analysis_baset::search_node__dec_level()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: search if a node has decision level less than current level
+
+ \*******************************************************************/
+int acdl_implication_grapht::change_node__current_level(node_indext n) 
+{
+  int dec;
+  for(unsigned i=0;i<nodes[n].dec_level.size();i++) {
+    if(nodes[n].dec_level[i] == current_level) 
+     dec = nodes[n].dec_level[i];   
+     nodes[n].dec_level[i] == -1;
+     return dec;
+  }
+  return -1;
+}
+/*******************************************************************\
+
+Function: acdl_conflict_analysis_baset::search_node__dec_level()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: search if a node has decision level less than current level
+
+ \*******************************************************************/
+int acdl_implication_grapht::search_node__dec_level(node_indext n) 
+{
+  for(unsigned i=0;i<nodes[n].dec_level.size();i++) {
+    if(nodes[n].dec_level[i] < current_level) 
+     return nodes[n].dec_level[i];   
+  }
+  return -1;
 }
 
 /*******************************************************************\
@@ -489,9 +637,9 @@ void acdl_implication_grapht::output_graph(const local_SSAt &SSA, std::ostream &
 
  for(node_indext j=1; j<size(); j++)
  {
-   if(nodes[j].deleted==0)
-   std::cout << "Node number: " << j << "  Expression: " << from_expr(SSA.ns, "", nodes[j].expr) << 
-   "  In edges: " << nodes[j].in.size() << "  Out edges: " << nodes[j].out.size() << "  DL vector: "; 
+   //if(nodes[j].deleted==0)
+     std::cout << "Node number: " << j << "  Expression: " << from_expr(SSA.ns, "", nodes[j].expr) << 
+   "  In edges: " << nodes[j].in.size() << "  Out edges: " << nodes[j].out.size() << " Decision: "<< nodes[j].is_decision << " Deleted: " << nodes[j].deleted << " Marked: " << nodes[j].marked << "  DL vector: "; 
    for(int k=0;k<nodes[j].dec_level.size();k++)
      std::cout <<  nodes[j].dec_level[k] << "   ";
    std::cout << std::endl;
@@ -660,6 +808,7 @@ void acdl_implication_grapht::delete_in_nodes(node_indext n)
       it++) {
       //std::cout << "Checking In" << n << " <- " << it->first << std::endl; 
     if(nodes[it->first].dec_level.back() == current_level) {
+    //if(search_node__current_level(it->first) == current_level) {
       //std::cout << "Removing In" << n << " <- " << it->first << std::endl; 
       std::cout << n << " <- " << it->first << std::endl; 
       delete_in_nodes(it->first);
@@ -702,6 +851,7 @@ void acdl_implication_grapht::delete_out_nodes(node_indext n)
       it++) {
       //std::cout << "Checking Out" << n << " -> " << it->first << std::endl; 
     if(nodes[it->first].dec_level.back() == current_level) {
+    //if(search_node__current_level(it->first) == current_level) {
       //std::cout << "Removing Out" << n << " -> " << it->first << std::endl; 
       std::cout << n << " -> " << it->first << std::endl; 
       delete_out_nodes(it->first);
@@ -772,6 +922,53 @@ void acdl_implication_grapht::remove_in_edges(node_indext n)
   }
 }
 
+
+/*******************************************************************\
+
+Function: acdl_implication_grapht::delete_node()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: adjust decision level vector of a node in implication graph
+
+ \*******************************************************************/
+void acdl_implication_grapht::adjust_decision_level()
+{
+  bool found = 0;
+  std::cout << "The current level is: " << current_level << "graph size is" << size() << std::endl;
+  for(node_indext i=1; i<size(); i++) {    
+     found = search_node__current_level(i); 
+     if(found != -1) { 
+       int dec = search_node__current_level(i);
+       std::cout << "printing the marked node at current level" << nodes[i].expr << std::endl;
+     }
+  }
+  
+  for(node_indext i=1; i<size(); i++) {    
+    if(nodes[i].dec_level.size() > 0) {
+      if(nodes[i].marked && nodes[i].dec_level.back() == current_level) { 
+        nodes[i].dec_level.pop_back();
+      }
+    }
+  }
+  for(node_indext j=1; j<size(); j++) {    
+    // special case
+    // there may be nodes in the graph which may not be 
+    // marked because these nodes are unreachable from 
+    // decision node or false exprt, mark the node here
+
+    if(nodes[j].dec_level.size() > 0) {
+      if(nodes[j].dec_level.back() == current_level && !nodes[j].marked) {
+        std::cout << "special case node !! Node index: " << j << std::endl; 
+        nodes[j].dec_level.pop_back();
+        nodes[j].marked = true;
+      }
+    }
+  }
+}
+
 /*******************************************************************\
 
 Function: acdl_implication_grapht::delete_node()
@@ -786,16 +983,29 @@ Function: acdl_implication_grapht::delete_node()
 void acdl_implication_grapht::delete_graph_nodes()
 {
   for(node_indext i=1; i<size(); i++) {    
-     if(nodes[i].dec_level.back() == current_level && nodes[i].marked) { 
-       nodes[i].dec_level.pop_back();
-       // if the dec_level vector size of a 
-       // node is zero, then delete the node 
-       if(nodes[i].dec_level.size() == 0) {
-         nodes[i].deleted = 1;
-         std::cout << "Deleted graph node: " << nodes[i].expr << std::endl;   
+    // the condition below is OR because there are deductions
+    // which may not be reachable from decision node or false_exprt
+    // in which case they may not be marked, so the only way to identify
+    // these nodes is by checking the decision level of these nodes
+    if(nodes[i].dec_level.size() > 0) {
+      if(nodes[i].dec_level.back() == current_level || nodes[i].marked) { 
+        //if(search_node__current_level(i) == current_level || nodes[i].marked) {
+        nodes[i].dec_level.pop_back();
+        // if the dec_level vector size of a 
+        // node is zero, then delete the node 
+        if(nodes[i].dec_level.size() == 0) {
+          nodes[i].deleted = 1;
+          std::cout << "Deleted graph node: " << nodes[i].expr << std::endl;   
+        }
        }
-     }
-   }
+      }
+      else {
+        if(nodes[i].dec_level.size() == 0) {
+          nodes[i].deleted = 1;
+          std::cout << "Deleted graph node: " << nodes[i].expr << std::endl;   
+        }
+      }
+  }
 #if 0
      // check if the out edges and in edges are zero 
      // or the decision level is set -1 

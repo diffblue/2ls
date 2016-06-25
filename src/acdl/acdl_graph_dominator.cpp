@@ -37,7 +37,7 @@ void acdl_graph_dominatort::fixedpoint(acdl_implication_grapht &graph)
   std::list<typename acdl_implication_grapht::node_indext> worklist;
   std::cout << "The entry node is: " << supert::entry_node << "node expr" << graph.nodes[supert::entry_node].expr << "decision_level" << graph.nodes[supert::entry_node].dec_level.back() << std::endl;
   // assert that the entry node must be a decision node
-  assert(graph.nodes[supert::entry_node].is_decision);
+  // assert(graph.nodes[supert::entry_node].is_decision);
 
   if(graph.size()==0)
     return;

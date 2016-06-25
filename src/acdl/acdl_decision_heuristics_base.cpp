@@ -81,7 +81,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_baset::dec_heur_rand
    // no more decisions can be made
    if(non_singletons.size() == 0) {
 #ifdef DEBUG
-     std::cout << "[FALSE DECISION] " << "FALSE" << std::endl;
+     std::cout << "NO DECISIONS CAN BE MADE " << std::endl;
 #endif
      return false_exprt();
    }

@@ -581,3 +581,8 @@ first-uip is the right conflict point.
 6> CAV attend, diffblue (delivery date), dkr to github 
 7> Do we pass the additional constrait from loop head in every deduction step
 separately. Now, we only do it for worklist initialize
+
+TODO (23rd June, 2016)
+----------------------
+1> Use enable heuristics inside tpolyhedra to not make subsequent iterative decisions
+2> Eugene contact -- conflict clause being UNIT

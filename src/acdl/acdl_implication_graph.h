@@ -56,14 +56,18 @@ public:
   exprt find_node_expr(node_indext n);
   int decision_level(node_indext n);
   acdl_implication_graph_nodet::node_indext find_node(const exprt &expr);
-  void delete_graph_nodes(); 
+  void delete_graph_nodes();
+  void adjust_decision_level(); 
   void mark_node(node_indext start);
   void unmark_nodes();
   acdl_implication_grapht::node_indext find_dec_node(node_indext n); 
-  void get_reason (node_indext uip, acdl_domaint::valuet &reason);
+  void get_reason (const local_SSAt &SSA, node_indext uip, acdl_domaint::valuet &reason);
   void check_consistency(int idx);
   void delete_in_nodes(node_indext n); 
   void delete_out_nodes(node_indext n); 
+  int search_node__dec_level(node_indext n); 
+  int search_node__current_level(node_indext n); 
+  int change_node__current_level(node_indext n); 
 
 protected:
 };

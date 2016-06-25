@@ -36,8 +36,9 @@ public:
   
 #endif
 
-  explicit acdl_conflict_analysis_baset()
+  explicit acdl_conflict_analysis_baset(acdl_domaint &_domain)
   :
+  domain(_domain),
   backtrack_level(0),
   disable_backjumping(0)
   {}
@@ -56,10 +57,11 @@ public:
   int backtrack_level;
   bool just_backtracked;
   bool disable_backjumping;
-  void cancel_once(const local_SSAt &SSA, acdl_implication_grapht &graph);
+  void cancel_once(const local_SSAt &SSA, acdl_implication_grapht &graph, exprt& expr);
   void cancel_until(const local_SSAt &SSA, acdl_implication_grapht &graph, int lvl); 
 
 protected: 
+  acdl_domaint &domain;
   virtual void backtrack_to_level(acdl_implication_grapht &graph,unsigned int index);
   virtual void generalize_conflict(acdl_implication_grapht &graph) { assert(false); }
 

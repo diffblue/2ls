@@ -183,6 +183,19 @@ acdl_solvert::decide (const local_SSAt &SSA, const exprt& assertion)
   acdl_domaint::valuet v;
   implication_graph.to_value(v);
   domain.normalize_val(v);
+  // the decision must know about the learned clause as well
+  // so that it can not make wrong decisions on the variables which 
+  // is already singleton in the learned clause, for example 
+  // learned_clause=!cond21, new_decision=cond21 -- which contradicts
+  unsigned i = 0;
+  if(learned_clauses.size() > 0) {
+    while(i < learned_clauses.size()) {
+      acdl_domaint::valuet clause_val = learned_clauses[i];
+      const exprt &clause_expr = conjunction(clause_val);
+      v.push_back(clause_expr);
+      i++;
+    } 
+  }
   acdl_domaint::meet_irreduciblet dec_expr=decision_heuristics(SSA, v);
   // no new decisions can be made
   if(dec_expr == false_exprt())
@@ -316,7 +329,7 @@ acdl_solvert::analyze_conflict(const local_SSAt &SSA, const exprt& assertion)
       find_symbols(learned_stmt, learn_vars);
       // update the worklist based on all transitively dependant elements of the
       // learnt clause 
-      
+       
       worklist.dec_update(SSA, learned_stmt, assertion);
       return true;
     }
@@ -498,7 +511,10 @@ property_checkert::resultt acdl_solvert::operator()(
   const exprt &additional_constraint)
 {
   //init();
-  worklist.initialize(SSA, assertion, additional_constraint);
+  //worklist.initialize(SSA, assertion, additional_constraint);
+  // pass additioanal constraint and the assertions 
+  // to the worklist
+  worklist.initialize(SSA, assertion, true_exprt());
   // call initialize live variables
   worklist.initialize_live_variables();
   std::set<exprt> decision_variable;
@@ -512,6 +528,7 @@ property_checkert::resultt acdl_solvert::operator()(
   // variables in the decision variables
   std::string str1("guard");
   std::string str2("#phi");
+  std::string str3("#lb");
   std::string name;
   for(std::set<exprt>::const_iterator 
     it = decision_variable.begin(); 
@@ -521,7 +538,8 @@ property_checkert::resultt acdl_solvert::operator()(
     name = id2string(identifier);
     std::size_t found1 = name.find(str1);
     std::size_t found2 = name.find(str2);
-    if (found1==std::string::npos && found2==std::string::npos) {
+    std::size_t found3 = name.find(str3);
+    if (found1==std::string::npos && found2==std::string::npos && found3==std::string::npos) {
       decision_heuristics.decision_variables.insert(*it);
     }
   } 
@@ -532,23 +550,11 @@ property_checkert::resultt acdl_solvert::operator()(
     it = decision_heuristics.decision_variables.begin(); 
     it != decision_heuristics.decision_variables.end(); ++it)
       std::cout << from_expr(SSA.ns, "", *it) << "  ," << std::endl;
+  std::cout << "The additional constraint for the loop is: " << from_expr(SSA.ns, "", additional_constraint) << std::endl;
 #endif
   // collect variables for completeness check
   std::set<symbol_exprt> all_vars;
   all_vars = worklist.live_variables; 
-  /*for (local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin ();
-      n_it != SSA.nodes.end (); ++n_it)
-  {
-    for (local_SSAt::nodet::equalitiest::const_iterator it =
-        n_it->equalities.begin (); it != n_it->equalities.end (); ++it)
-      find_symbols (*it, all_vars);
-    for (local_SSAt::nodet::constraintst::const_iterator it =
-        n_it->constraints.begin (); it != n_it->constraints.end (); ++it)
-      find_symbols (*it, all_vars);
-    for (local_SSAt::nodet::assertionst::const_iterator it =
-        n_it->assertions.begin (); it != n_it->assertions.end (); ++it)
-      find_symbols (*it, all_vars);
-  }*/
 
   implication_graph.clear(); //set to top
   acdl_domaint::valuet v;
@@ -561,71 +567,143 @@ property_checkert::resultt acdl_solvert::operator()(
   unsigned iteration = 0;
 
   property_checkert::resultt result = property_checkert::UNKNOWN;
-  while(result == property_checkert::UNKNOWN)
+  // the result is already decided for programs
+  // which can be solved only using deductions  
+  result = propagate(SSA, assertion);
+  std::cout << "****************************************************" << std::endl;
+  std::cout << " IMPLICATION GRAPH AFTER DEDUCTION PHASE" << std::endl;
+  std::cout << "****************************************************" << std::endl;
+  implication_graph.print_graph_output(SSA);
+  
+  bool complete=false;
+  // if result = UNSAT, then the proof is complete 
+  if(result == property_checkert::PASS)
+    return result; 
+  // if result = UNKNOWN or FAIL, 
+  // then check for completeness
+  else {
+    // check for satisfying assignment
+    acdl_domaint::valuet val;
+    implication_graph.to_value(val);
+    domain.normalize_val(val);
+    if(domain.is_complete(val, all_vars)) {
+      complete = true;
+      return property_checkert::FAIL;
+    }
+  }
+     
+  while(true)
   {
-    while(true)
-    {
-      // deduction phase in acdl
-      std::cout << "********************************" << std::endl;
-      std::cout << "        DEDUCTION PHASE " << std::endl;
-      std::cout << "********************************" << std::endl;
-      result = propagate(SSA, assertion);
+    // check the iteration bound
+    if(ITERATION_LIMIT >= 0 && iteration > ITERATION_LIMIT) {
+#ifdef DEBUG
+      std::cout << "Iteration limit reached" << std::endl; 
+#endif
+      break;
+    }
 
-      std::cout << "****************************************************" << std::endl;
-      std::cout << " IMPLICATION GRAPH AFTER DEDUCTION PHASE" << std::endl;
-      std::cout << "****************************************************" << std::endl;
-      implication_graph.print_graph_output(SSA);
-      // check for conflict
-      if(result == property_checkert::PASS) //UNSAT
-        break;
-    
+    std::cout << std::endl 
+      << "  ITERATION (decision):: " << iteration++ << std::endl
+      << "================================" << std::endl;
+    std::cout << "********************************" << std::endl;
+    std::cout << "         DECISION PHASE"          << std::endl;
+    std::cout << "********************************" << std::endl;
+    // make a decision
+    bool status = decide(SSA, assertion);
+
+    if(!status) {
+      // if the abstract value is complete and 
+      // no more decisions can be made, then 
+      // there is a counterexample. Return result=FAILED. 
+      if (complete) 
+        return result;
+      std::cout << "Failed to verify program" << std::endl;
+#ifdef DEBUG
+      std::cout << "Minimal unsafe element is" << std::endl;
+      for(acdl_domaint::valuet::const_iterator it = v.begin();it != v.end(); ++it)
+        std::cout << from_expr(SSA.ns, "", *it) << std::endl;
+#endif    
+      break;
+    }
+
+    std::cout << "****************************************************" << std::endl;
+    std::cout << "IMPLICATION GRAPH AFTER DECISION PHASE" << std::endl;
+    std::cout << "****************************************************" << std::endl;
+    implication_graph.print_graph_output(SSA);
+
+    // deduction phase in acdl
+    std::cout << "********************************" << std::endl;
+    std::cout << "        DEDUCTION PHASE " << std::endl;
+    std::cout << "********************************" << std::endl;
+    result = propagate(SSA, assertion);
+
+    std::cout << "****************************************************" << std::endl;
+    std::cout << " IMPLICATION GRAPH AFTER DEDUCTION PHASE" << std::endl;
+    std::cout << "****************************************************" << std::endl;
+    implication_graph.print_graph_output(SSA);
+    // completeness check is done when 
+    // result=UNKNOWN or result=FAIL
+    if (result == property_checkert::UNKNOWN || 
+        result == property_checkert::FAIL) 
+    {
       // check for satisfying assignment
       acdl_domaint::valuet v;
       implication_graph.to_value(v);
       domain.normalize_val(v);
-      if(domain.is_complete(v, all_vars))
-        return property_checkert::FAIL;
-      
-      std::cout << "********************************" << std::endl;
-      std::cout << "         DECISION PHASE"          << std::endl;
-      std::cout << "********************************" << std::endl;
-      // make a decision
-      bool status = decide(SSA, assertion);
-      if(!status) {
-        std::cout << "Failed to verify program" << std::endl;
-#ifdef DEBUG
-    std::cout << "Minimal unsafe element is" << std::endl;
-    for(acdl_domaint::valuet::const_iterator it = v.begin();it != v.end(); ++it)
-        std::cout << from_expr(SSA.ns, "", *it) << std::endl;
-#endif    
-        break;
+      // successful execution of is_complete check 
+      // ensures that all variables are singletons
+      // But we invoke another decision phase
+      // to infer that "no more decisions can be made"
+      if(domain.is_complete(v, all_vars)) {
+        // set complete flag to TRUE
+        complete = true;
+        result = property_checkert::FAIL;
       }
-      std::cout << "****************************************************" << std::endl;
-      std::cout << "IMPLICATION GRAPH AFTER DECISION PHASE" << std::endl;
-      std::cout << "****************************************************" << std::endl;
-      implication_graph.print_graph_output(SSA);
-      std::cout << std::endl 
-          << "ITERATION (decision) " << iteration++ << std::endl
-          <<"================ " << std::endl;
     }
+    else {
+      std::cout << "SUCCESSFULLY PROVEN CASE" << std::endl;
+      // check for conflict
+      do 
+      {
+        // call generalize_proof here
+        // generalize_proof();
 
-    std::cout << "********************************" << std::endl;
-    std::cout << "    CONFLICT ANALYSIS PHASE" << std::endl;
-    std::cout << "********************************" << std::endl;
+        std::cout << "********************************" << std::endl;
+        std::cout << "    CONFLICT ANALYSIS PHASE" << std::endl;
+        std::cout << "********************************" << std::endl;
+        // analyze conflict ...
+        if(!analyze_conflict(SSA, assertion)) {
+          std::cout << "No further backtrack possible " << std::endl;
+#ifdef DEBUG
+          unsigned i=0;
+          if(learned_clauses.size() > 0) {
+            std::cout << "The final set of learned clauses are:" << std::endl;
+            while(i < learned_clauses.size()) {
+              acdl_domaint::valuet clause_val = learned_clauses[i];
+              const exprt &clause_expr = conjunction(clause_val);
+              std::cout << "clause " << i << "is: " << from_expr(SSA.ns, "", clause_expr) << std::endl;
+              i++;
+            }
+          }
+#endif
+          goto END; // result = PASS when it breaks for here
+        }
+        // deduction phase in acdl
+        std::cout << "********************************" << std::endl;
+        std::cout << "        DEDUCTION PHASE " << std::endl;
+        std::cout << "********************************" << std::endl;
+        result = propagate(SSA, assertion);
 
-    // reset the result 
-    result = property_checkert::UNKNOWN;
-    // analyze conflict ...
-    // result = analyze_conflict(SSA, assertion);
-    if(!analyze_conflict(SSA, assertion)) {
-      std::cout << "No further backtrack possible " << std::endl;
-      break;
+        std::cout << "****************************************************" << std::endl;
+        std::cout << " IMPLICATION GRAPH AFTER DEDUCTION PHASE" << std::endl;
+        std::cout << "****************************************************" << std::endl;
+        implication_graph.print_graph_output(SSA);
+
+
+      } while(result == property_checkert::PASS); //UNSAT
     }
-    // decision level 0 conflict
-    /*if(result == property_checkert::PASS) //UNSAT
-      break;*/
-  }
+  } // end of while(true)
+  END:
   std::cout << "Procedure terminated after iteration: "  << iteration  << std::endl;
-  // return result;
-  assert(false);
-}
+(??)  // return result;
+(??)}
