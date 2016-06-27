@@ -312,6 +312,33 @@ acdl_solvert::analyze_conflict(const local_SSAt &SSA, const exprt& assertion)
       domain.meet(learned_clause,v);
       // store the learned clause
       learned_clauses.push_back(learned_clause);
+      
+      // iterate over all learned clause and normalize them 
+      // for example- learnt-clause1: (x<=0 && y>=2)
+      // learnt-clause2: (y>=2 && x<=5)
+      // Normalized learned clause: (x<=0 && y>=2) 
+      unsigned j=0,k=0;
+      acdl_domaint::valuet normalize_learned_clause;
+      while(j < learned_clauses.size()) {
+        k=0;
+        acdl_domaint::valuet learned_val = learned_clauses[j];
+        while(k < learned_val.size()) {
+          // check for duplicate
+          acdl_domaint::valuet::iterator it;  
+          it = find(normalize_learned_clause.begin(), normalize_learned_clause.end(), learned_val[k]);
+          if(it == normalize_learned_clause.end())
+            normalize_learned_clause.push_back(learned_val[k]);
+          k++;
+        }
+        j++;
+      }
+
+      // insert the normalized learned clause in to the worklist
+      domain.normalize_val(normalize_learned_clause);
+      const exprt &clause_expr = conjunction(normalize_learned_clause);
+      worklist.push(clause_expr);
+   
+   #if 0   
       // iterate over learned clauses and convert
       // them to exprt. Insert these exprts to worklist
       unsigned i=0;
@@ -321,7 +348,9 @@ acdl_solvert::analyze_conflict(const local_SSAt &SSA, const exprt& assertion)
         const exprt &clause_expr = conjunction(clause_val);
         worklist.push(clause_expr);
         i++;
-      } 
+      }
+    #endif  
+       
       acdl_domaint::varst learn_vars;
       const exprt learned_expr = conjunction(learned_clause);
       acdl_domaint::statementt learned_stmt = learned_expr;
@@ -511,10 +540,13 @@ property_checkert::resultt acdl_solvert::operator()(
   const exprt &additional_constraint)
 {
   //init();
+  // pass additioanal constraint and the assertions 
+  // to the worklist
   //worklist.initialize(SSA, assertion, additional_constraint);
   // pass additioanal constraint and the assertions 
   // to the worklist
   worklist.initialize(SSA, assertion, true_exprt());
+  //worklist.initialize(SSA, assertion, true_exprt());
   // call initialize live variables
   worklist.initialize_live_variables();
   std::set<exprt> decision_variable;
@@ -649,7 +681,9 @@ property_checkert::resultt acdl_solvert::operator()(
       // check for satisfying assignment
       acdl_domaint::valuet v;
       implication_graph.to_value(v);
+      // Do we call normalize_val here ? !!
       domain.normalize_val(v);
+     
       // successful execution of is_complete check 
       // ensures that all variables are singletons
       // But we invoke another decision phase
