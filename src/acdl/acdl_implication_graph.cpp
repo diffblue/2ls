@@ -8,7 +8,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 
 #include "acdl_implication_graph.h"
 #include "acdl_graph_dominator.h"
-# define DEBUG
+#define DEBUG
 
 /*******************************************************************\
 
@@ -176,11 +176,11 @@ void acdl_implication_grapht::check_consistency(int lvl)
 }
 /*******************************************************************\
 
- Function: acdl_implication_grapht::mark_node()
+Function: acdl_implication_grapht::mark_node()
 
   Inputs:
 
-  Outputs:
+ Outputs:
 
  Purpose: mark nodes of the implication graph starting from 
           the current decision node to the BOTTOM node using 
@@ -215,7 +215,7 @@ void acdl_implication_grapht::mark_node(node_indext start)
 
 /*******************************************************************\
 
-unction: acdl_implication_grapht::first_uip
+Function: acdl_implication_grapht::first_uip
 
   Inputs:
 
