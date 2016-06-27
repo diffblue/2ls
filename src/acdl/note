@@ -586,3 +586,9 @@ TODO (23rd June, 2016)
 ----------------------
 1> Use enable heuristics inside tpolyhedra to not make subsequent iterative decisions
 2> Eugene contact -- conflict clause being UNIT
+
+Peter Meeting 
+-------------
+1> branch7 is_completeness check failing despite computing the values correctly
+in the deduction phase. Could be due to normalize_val after deductions or
+decision. 
