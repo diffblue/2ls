@@ -31,6 +31,40 @@ public:
   
   //override this
   //Remark: the base class should not implement this function
+  virtual acdl_domaint::meet_irreduciblet operator()(
+    const local_SSAt &SSA,
+    const acdl_domaint::valuet &value)
+  {
+    assert(false);
+  }
+  
+  acdl_domaint::statementt dec_statement;
+  std::set<exprt> decision_variables;
+  
+protected:
+  acdl_domaint &domain;
+  bool phase;
+};
+#endif
+
+#if 0
+class acdl_decision_heuristics_baset : public messaget
+{
+public:
+  
+  explicit acdl_decision_heuristics_baset(
+    acdl_domaint &_domain)
+    : 
+  domain(_domain)
+  {
+  }  
+
+  virtual ~acdl_decision_heuristics_baset() 
+  {
+  }
+  
+  //override this
+  //Remark: the base class should not implement this function
   acdl_domaint::meet_irreduciblet operator()(
     const local_SSAt &SSA,
     const acdl_domaint::valuet &value);
@@ -59,5 +93,6 @@ protected:
   bool phase;
 
 };
-
 #endif
+
+

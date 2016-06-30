@@ -15,7 +15,7 @@ Author: Peter Schrammel
 #include "../acdl/acdl_solver.h"
 #include "../acdl/acdl_domain.h"
 #include "../acdl/acdl_decision_heuristics_base.h"
-//#include "../acdl/acdl_decision_heuristics_random.h"
+#include "../acdl/acdl_decision_heuristics_rand.h"
 //#include "../acdl/acdl_decision_heuristics_....h"
 #include "../acdl/acdl_worklist_base.h"
 #include "../acdl/acdl_worklist_ordered.h"
@@ -117,10 +117,11 @@ property_checkert::resultt summary_checker_acdlt::operator()(
         // decision heuristics
         std::unique_ptr<acdl_decision_heuristics_baset> decision_heuristics;
         if(options.get_option("acdl-decision") == "random")
-          decision_heuristics = std::unique_ptr<acdl_decision_heuristics_baset>(
-            new acdl_decision_heuristics_baset(domain)); //no 'new' with base class!
+          /*decision_heuristics = std::unique_ptr<acdl_decision_heuristics_baset>(new acdl_decision_heuristics_baset(domain));*/
+   //no 'new' with base class!
 // SHOULD BE:
-//            new acdl_decision_heuristics_randomt(domain));
+//         new acdl_decision_heuristics_randt(domain));
+          decision_heuristics = std::unique_ptr<acdl_decision_heuristics_baset>(new acdl_decision_heuristics_randt(domain));
         //else if(options.get_option("acdl-decision") == "berkmin")
         // ....
 
@@ -132,7 +133,7 @@ property_checkert::resultt summary_checker_acdlt::operator()(
         std::unique_ptr<acdl_conflict_analysis_baset> conflict_analysis;
         if(options.get_option("acdl-conflict") == "first-uip")
           conflict_analysis = std::unique_ptr<acdl_conflict_analysis_baset>(
-            new acdl_conflict_analysis_baset()); //no 'new' with base class!
+            new acdl_conflict_analysis_baset(domain)); //no 'new' with base class!
 // SHOULD BE:
 //            new acdl_conflict_analysis_firstuipt());
         //else if ...

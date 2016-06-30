@@ -575,13 +575,15 @@ property_checkert::resultt acdl_solvert::operator()(
       decision_heuristics.decision_variables.insert(*it);
     }
   } 
-   
+
 #ifdef DEBUG
   std::cout << "Printing all decision variables inside solver" << std::endl;
   for(std::set<exprt>::const_iterator 
     it = decision_heuristics.decision_variables.begin(); 
     it != decision_heuristics.decision_variables.end(); ++it)
-      std::cout << from_expr(SSA.ns, "", *it) << "  ," << std::endl;
+    std::cout << *it << "  ," << std::endl;
+    //std::cout << from_expr(SSA.ns, "", *it) << "  ," << std::endl;
+
   std::cout << "The additional constraint for the loop is: " << from_expr(SSA.ns, "", additional_constraint) << std::endl;
 #endif
   // collect variables for completeness check
@@ -739,5 +741,5 @@ property_checkert::resultt acdl_solvert::operator()(
   } // end of while(true)
   END:
   std::cout << "Procedure terminated after iteration: "  << iteration  << std::endl;
-(??)  // return result;
-(??)}
+  // return result;
+}
