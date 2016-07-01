@@ -540,13 +540,9 @@ property_checkert::resultt acdl_solvert::operator()(
   const exprt &additional_constraint)
 {
   //init();
-  // pass additioanal constraint and the assertions 
-  // to the worklist
-  //worklist.initialize(SSA, assertion, additional_constraint);
-  // pass additioanal constraint and the assertions 
-  // to the worklist
-  worklist.initialize(SSA, assertion, true_exprt());
-  //worklist.initialize(SSA, assertion, true_exprt());
+  // pass additioanal constraint and the assertions to the worklist
+  worklist.initialize(SSA, assertion, additional_constraint);
+  
   // call initialize live variables
   worklist.initialize_live_variables();
   std::set<exprt> decision_variable;
@@ -572,16 +568,17 @@ property_checkert::resultt acdl_solvert::operator()(
     std::size_t found2 = name.find(str2);
     std::size_t found3 = name.find(str3);
     if (found1==std::string::npos && found2==std::string::npos && found3==std::string::npos) {
-      decision_heuristics.decision_variables.insert(*it);
+      decision_heuristics.initialize_dec_variables(*it);
     }
   } 
-   
+
 #ifdef DEBUG
   std::cout << "Printing all decision variables inside solver" << std::endl;
   for(std::set<exprt>::const_iterator 
     it = decision_heuristics.decision_variables.begin(); 
     it != decision_heuristics.decision_variables.end(); ++it)
-      std::cout << from_expr(SSA.ns, "", *it) << "  ," << std::endl;
+     std::cout << from_expr(SSA.ns, "", *it) << "  ," << std::endl;
+
   std::cout << "The additional constraint for the loop is: " << from_expr(SSA.ns, "", additional_constraint) << std::endl;
 #endif
   // collect variables for completeness check
@@ -739,5 +736,5 @@ property_checkert::resultt acdl_solvert::operator()(
   } // end of while(true)
   END:
   std::cout << "Procedure terminated after iteration: "  << iteration  << std::endl;
-(??)  // return result;
-(??)}
+  // return result;
+}

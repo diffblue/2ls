@@ -30,34 +30,20 @@ public:
   }
   
   //override this
-  //Remark: the base class should not implement this function
-  acdl_domaint::meet_irreduciblet operator()(
+  virtual acdl_domaint::meet_irreduciblet operator()(
     const local_SSAt &SSA,
-    const acdl_domaint::valuet &value);
-  /*{
+    const acdl_domaint::valuet &value)
+  {
     assert(false);
-  }*/
+  }
+  
   acdl_domaint::statementt dec_statement;
   std::set<exprt> decision_variables;
-  /******* decision heuristics *******/
-  // Remark: this should go into separate classes derived from this base class
-  enum dec_heurt { RANGE, RANGE_REL, BERKMIN, RAND };
-  dec_heurt dec_heur;
-
-protected:
-  acdl_domaint &domain;
-
   
-  typedef std::pair<exprt, acdl_domaint::statementt> dec_pair;
-  typedef std::list<dec_pair> conds;
-
-  acdl_domaint::meet_irreduciblet dec_heur_largest_range(const local_SSAt &SSA, const acdl_domaint::valuet &value, bool phase);
-  acdl_domaint::meet_irreduciblet dec_heur_berkmin(const local_SSAt &SSA, const acdl_domaint::valuet &value);
-  acdl_domaint::meet_irreduciblet dec_heur_rand(const local_SSAt &SSA, const acdl_domaint::valuet &value);
-
-protected:
+  void initialize_dec_variables(const exprt &exp);
+   
+  protected:
+  acdl_domaint &domain;
   bool phase;
-
 };
-
 #endif
