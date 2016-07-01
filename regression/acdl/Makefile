@@ -1,6 +1,6 @@
 default: tests.log
 
-FLAGS = --verbosity 10 --acdl --no-propagation
+FLAGS = --verbosity 10 --acdl --acdl-decision random
 
 test:
 	@../test.pl -c "../../../src/summarizer/2ls $(FLAGS)"
