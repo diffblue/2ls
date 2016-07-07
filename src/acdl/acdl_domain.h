@@ -82,6 +82,7 @@ public:
   unsigned compare(const meet_irreduciblet &a, 
        const meet_irreduciblet &b) const;
   
+  bool check_val_consistency(valuet &val);
   //print value
   inline std::ostream &output(
     std::ostream &out, const valuet &v)
@@ -129,7 +130,6 @@ protected:
 		       antecedentst &antecedents);
 
   bool expr_is_true(const exprt &expr);
- 
 };
 
 #endif

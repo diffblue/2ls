@@ -48,9 +48,8 @@ DELTA_OBJ+=\
       ../acdl/acdl_domain$(OBJEXT) \
       ../acdl/acdl_worklist_base$(OBJEXT) \
       ../acdl/acdl_worklist_ordered$(OBJEXT) \
-      ../acdl/acdl_conflict_analysis_base$(OBJEXT) \
-      ../acdl/acdl_graph_dominator$(OBJEXT) \
-      ../acdl/acdl_implication_graph$(OBJEXT) \
+      ../acdl/acdl_analyze_conflict_base$(OBJEXT) \
+      ../acdl/acdl_conflict_graph$(OBJEXT) \
       ../acdl/template_generator_acdl$(OBJEXT) \
       ../acdl/acdl_decision_heuristics_base$(OBJEXT) \
       ../acdl/acdl_decision_heuristics_rand$(OBJEXT) \

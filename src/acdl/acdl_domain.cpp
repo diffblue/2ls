@@ -1294,3 +1294,27 @@ unsigned acdl_domaint::compare(const meet_irreduciblet &a,
     return status;
   }  
 }
+
+/*******************************************************************\
+
+Function: acdl_domaint::check_abstract_value()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+  
+bool acdl_domaint::check_val_consistency(valuet &val)
+{
+  std::unique_ptr<incremental_solvert> solver(
+    incremental_solvert::allocate(SSA.ns,true));
+  *solver << conjunction(val);
+  decision_proceduret::resultt res = (*solver)();
+  if(res!=decision_proceduret::D_UNSATISFIABLE)
+    return true;
+  else 
+    return false;  
+}

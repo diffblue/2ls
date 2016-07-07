@@ -19,9 +19,8 @@ Author: Peter Schrammel
 //#include "../acdl/acdl_decision_heuristics_....h"
 #include "../acdl/acdl_worklist_base.h"
 #include "../acdl/acdl_worklist_ordered.h"
-#include "../acdl/acdl_conflict_analysis_base.h"
+#include "../acdl/acdl_analyze_conflict_base.h"
 //#include "../acdl/acdl_conflict_analysis_firstuip.h"
-//#include "../acdl/acdl_conflict_analysis_....h"
 
 /*******************************************************************\
 
@@ -130,10 +129,9 @@ property_checkert::resultt summary_checker_acdlt::operator()(
           std::unique_ptr<acdl_worklist_baset>(new acdl_worklist_orderedt());
 
         // conflict analysis heuristics
-        std::unique_ptr<acdl_conflict_analysis_baset> conflict_analysis;
+        std::unique_ptr<acdl_analyze_conflict_baset> conflict_analysis;
         if(options.get_option("acdl-conflict") == "first-uip")
-          conflict_analysis = std::unique_ptr<acdl_conflict_analysis_baset>(
-            new acdl_conflict_analysis_baset(domain)); //no 'new' with base class!
+          conflict_analysis = std::unique_ptr<acdl_analyze_conflict_baset>(new acdl_analyze_conflict_baset(domain)); //no 'new' with base class!
 // SHOULD BE:
 //            new acdl_conflict_analysis_firstuipt());
         //else if ...

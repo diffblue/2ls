@@ -592,3 +592,65 @@ Peter Meeting
 1> branch7 is_completeness check failing despite computing the values correctly
 in the deduction phase. Could be due to normalize_val after deductions or
 decision. 
+
+Query for July, 2016
+---------------------
+1> conflict analysis separate class -- for backtracking and without backtracking 
+2> why is the SSA for the program below as follows:
+int main()
+{
+  int x=0, y, z;
+  _Bool c;
+  if(c)
+    x=x+1;
+  else
+    x=x-1;
+  assert((x != 0));
+}
+
+SSA without constant propagation:
+---------------------------------
+
+*** 2 file main.c line 3 function main
+(E) x#2 == 0                          
+
+*** 4 file main.c line 3 function main
+(E) y#4 == nondet_symbol(ssa::nondet4.1)
+
+*** 6 file main.c line 3 function main
+(E) z#6 == nondet_symbol(ssa::nondet6.1)
+
+*** 8 file main.c line 4 function main
+(E) c#8 == nondet_symbol(ssa::nondet8.1)
+
+*** 9 file main.c line 5 function main
+(E) $cond#9 == (c#8 == FALSE)         
+
+*** 10 file main.c line 6 function main
+(E) x#10 == 1 + x#2                    
+(E) $guard#10 == (!$cond#9 && $guard#0)
+
+*** 11 file main.c line 6 function main
+(E) $cond#11 == TRUE                   
+
+*** 12 file main.c line 8 function main
+(E) x#12 == -1 + x#2                   
+(E) $guard#12 == ($cond#9 && $guard#0) 
+
+*** 13 file main.c line 9 function main
+(E) x#phi13 == ($guard#12 ? x#12 : x#10)
+(E) $guard#13 == ($cond#11 && $guard#10 || $guard#12)
+(A) !(x#phi13 == 0) || !$guard#13                    
+
+3> how to extract a symbol_exprt from meet_irreducible (x>3);
+exprt lhs = to_binary_relation_expr(exp).lhs(); -- gives the exprt,
+but how to convert this to symbol_exprt
+For meet irreducible (-x<=-2), does the symbol_expr look like x or -x ? 
+
+3> how to extract the number for a symbol_exprt after using hash function
+
+4> Does the last deduction always guarantee us the most recent value of all the
+variables in the program. Then we just trace back the propagation trail until
+the last decision point and get all the updated values of the variables in the
+program. 
+

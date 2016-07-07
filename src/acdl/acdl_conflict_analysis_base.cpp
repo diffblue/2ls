@@ -93,8 +93,6 @@ bool acdl_conflict_analysis_baset::operator()
  
   // no further backtrack possible
   if(backtrack_level < 0) {
-    //property_checkert::resultt result = property_checkert::PASS;
-    //return result;
     return false;
   }
   

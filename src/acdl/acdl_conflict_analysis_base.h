@@ -14,6 +14,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 
 #include "acdl_domain.h"
 #include "acdl_implication_graph.h"
+#include "acdl_conflict_graph.h"
 #include "../ssa/local_ssa.h"
 
 class acdl_conflict_analysis_baset : public messaget

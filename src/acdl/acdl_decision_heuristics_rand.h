@@ -1,6 +1,6 @@
 /*******************************************************************\
 
-Module: ACDL Decision Heuristics (Branch on Condition Variables)
+Module: ACDL Decision Heuristics (random)
 
 Author: Rajdeep Mukherjee, Peter Schrammel
 
