@@ -20,9 +20,58 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include <iostream>
 #endif
 
+
+
+/*******************************************************************
+
+ Function: acdl_solvert::deduce()
+
+ Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+bool acdl_solvert::deduce(const local_SSAt &SSA, const exprt &assertion)
+{
+    assert(analyzes_conflict.learned_clauses.size() != 0);
+    acdl_domaint::valuet v;
+    int conf_lit = -1; 
+    analyzes_conflict.conflicting_clause = -1;
+    conflict_graph.to_value(v);
+    
+    int size_val=v.size();
+    int i=0;
+    // TODO: smart way is to check (*solver << conjunction(clause[i],expr) == UNSAT)
+    while(i < analyzes_conflict.learned_clauses.size()) {
+      acdl_domaint::valuet clause_val = analyzes_conflict.learned_clauses[i];
+      int sizet = clause_val.size();
+      for(int k=0; k<sizet; k++) {
+       exprt exp1 = clause_val[k];
+       // check for each value in abstract value "v"
+       for(int j=0;i<size_val;j++) {
+        exprt exp2 = v[j];
+        if(domain.compare(exp1, exp2)==1)
+          conf_lit = k;
+       }
+      }
+      if(conf_lit == -1) {
+        // this means that the clause is conflicting
+        // since all the literals in the clause are contradicting
+        analyzes_conflict.conflicting_clause = i;
+        // PROPOSITIONAL proof
+        analyzes_conflict.last_proof = analyzes_conflict.PROPOSITIONAL;
+        return true;
+        break;
+      } 
+    }
+    return false;
+}
+
 /*******************************************************************\
 
-Function: acdl_solvert::propagate
+Function: acdl_solvert::propagation
 
   Inputs:
 
@@ -45,7 +94,7 @@ Function: acdl_solvert::propagate
  forward abstract analysis to compute the post-condition of a statement
 \************************************************************************/
 
-property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA, const exprt &assertion)
+property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, const exprt &assertion)
 {
   while (!worklist.empty())
   {
@@ -61,24 +110,13 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA, const 
     acdl_domaint::valuet v1;
     acdl_domaint::deductionst deductions;
      
-    implication_graph.to_value(v);
+    conflict_graph.to_value(v);
     // Do we need to normalize value here since 
     // this will remove all old decisions that are 
     // still stored in the implication graph. These 
     // old decisions can still contribute towards the 
     // future deductions called in domain operator() below
     //domain.normalize_val(v);
-
-    // check if domain.normalize_val is correct
-    /*domain.normalize_val(v1);
-    // check if (v != v1) is UNSAT
-    std::unique_ptr<incremental_solvert> solver(
-      incremental_solvert::allocate(SSA.ns,true));
-    not_equal_exprt eqexp(v,v1);
-    *solver << eqexp;
-    decision_proceduret::resultt result = (*solver)();
-    assert(result == decision_proceduret::D_UNSATISFIABLE);
-    */
 
 #ifdef DEBUG
     std::cout << "Computing old abstract value of implication graph: " << std::endl;
@@ -100,7 +138,8 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA, const 
     domain(statement, projected_live_vars, v, new_v, deductions);
     
     // update implication graph
-    implication_graph.add_deductions(SSA, deductions);
+    //implication_graph.add_deductions(SSA, deductions);
+    conflict_graph.add_deductions(SSA, deductions);
     
     // update worklist based on variables in the consequent (new_v)
     // - collect variables in new_v
@@ -123,7 +162,8 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA, const 
     // graph gives the meet of new 
     // deductionst and old deductionst since
     // we are computing the gfp
-    implication_graph.to_value(new_v);
+    //implication_graph.to_value(new_v);
+    conflict_graph.to_value(new_v);
     
     // TEST: meet is computed because we are doing gfp
     //domain.meet (new_v, v);
@@ -153,6 +193,8 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA, const 
       // are no more relevant 
       worklist.live_variables.erase
       (worklist.live_variables.begin(), worklist.live_variables.end()); 
+      // Abstract Interpretation proof
+      analyzes_conflict.last_proof = analyzes_conflict.ABSINT;
       return property_checkert::PASS; //potential UNSAT (modulo decisions)
     }
   }
@@ -160,10 +202,35 @@ property_checkert::resultt acdl_solvert::propagate(const local_SSAt &SSA, const 
 #ifdef DEBUG
   std::cout << "Propagation finished with UNKNOWN" << std::endl;
 #endif
-
+  
   return property_checkert::UNKNOWN;
 }
 
+/*******************************************************************
+
+ Function: acdl_solvert::propagate()
+
+ Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+property_checkert::resultt acdl_solvert::propagate
+    (const local_SSAt &SSA, const exprt &assertion)
+{
+  if(analyzes_conflict.learned_clauses.size() == 0)
+   return propagation(SSA, assertion);
+  else {
+   // check if the conflict is due to learnt clauses
+   bool conflict = deduce(SSA, assertion);
+   // PROPOSITIONAL proof
+   analyzes_conflict.last_proof = analyzes_conflict.PROPOSITIONAL;
+   if(!conflict)
+    return propagation(SSA, assertion);
+  }
+}
 
 /*******************************************************************
 
@@ -181,16 +248,18 @@ bool
 acdl_solvert::decide (const local_SSAt &SSA, const exprt& assertion)
 {
   acdl_domaint::valuet v;
-  implication_graph.to_value(v);
+  //implication_graph.to_value(v);
+  conflict_graph.to_value(v);
+    
   domain.normalize_val(v);
   // the decision must know about the learned clause as well
   // so that it can not make wrong decisions on the variables which 
   // is already singleton in the learned clause, for example 
   // learned_clause=!cond21, new_decision=cond21 -- which contradicts
   unsigned i = 0;
-  if(learned_clauses.size() > 0) {
-    while(i < learned_clauses.size()) {
-      acdl_domaint::valuet clause_val = learned_clauses[i];
+  if(analyzes_conflict.learned_clauses.size() > 0) {
+    while(i < analyzes_conflict.learned_clauses.size()) {
+      acdl_domaint::valuet clause_val = analyzes_conflict.learned_clauses[i];
       const exprt &clause_expr = conjunction(clause_val);
       v.push_back(clause_expr);
       i++;
@@ -218,7 +287,17 @@ acdl_solvert::decide (const local_SSAt &SSA, const exprt& assertion)
   
   // update decision graph
   // TODO
-  implication_graph.add_decision(dec_expr);
+  // implication_graph.add_decision(dec_expr);
+  conflict_graph.add_decision(dec_expr);
+
+  // check that the meet_ireducibles in the prop trail 
+  // is consistent after adding every decision. The value 
+  // should not lead to UNSAT 
+  // (that is, there must not be x>0, x<0
+  // at the same time in the trail)
+  acdl_domaint::valuet new_value;
+  conflict_graph.to_value(new_value);
+  assert(domain.check_val_consistency(new_value));
 
 #if 0  
   // keep information for backtracking associated with this decision point in g
@@ -272,12 +351,95 @@ acdl_solvert::decide (const local_SSAt &SSA, const exprt& assertion)
  Purpose:
 
  \*******************************************************************/
-
-//property_checkert::resultt
-bool 
-acdl_solvert::analyze_conflict(const local_SSAt &SSA, const exprt& assertion) 
+bool acdl_solvert::analyze_conflict(const local_SSAt &SSA, const exprt& assertion) 
 {
  acdl_domaint::valuet learned_clause;
+ if(!analyzes_conflict(SSA, conflict_graph)) {
+   return false;
+ }
+ else {    
+    if(analyzes_conflict.disable_backjumping) {
+      acdl_domaint::valuet v;
+      conflict_graph.to_value(v);
+      // call normalize or normalize_val ? 
+      domain.normalize_val(v);
+      exprt dec_expr = conflict_graph.prop_trail.back();
+      domain.meet(dec_expr,v);
+#ifdef DEBUG
+      std::cout << "New [Analyze conflict]: ";
+      domain.output(std::cout, v) << std::endl;
+#endif
+
+      acdl_domaint::varst dec_vars;
+      // find all symbols in the decision expression
+      find_symbols(dec_expr, dec_vars);
+      // update the worklist based on all transitively dependant elements of the learnt clause 
+      worklist.dec_update(SSA, dec_expr, assertion);
+      return true;
+    }
+    else {
+      acdl_domaint::valuet v;
+      conflict_graph.to_value(v);
+      // call normalize or normalize_val ? 
+      domain.normalize_val(v);
+
+      domain.meet(learned_clause,v);
+      // store the learned clause
+      // analyzes_conflict.learned_clauses.push_back(learned_clause);
+      
+      // iterate over all learned clause and normalize them 
+      // for example- learnt-clause1: (x<=0 && y>=2)
+      // learnt-clause2: (y>=2 && x<=5)
+      // Normalized learned clause: (x<=0 && y>=2) 
+      unsigned j=0,k=0;
+      acdl_domaint::valuet normalize_learned_clause;
+      while(j < analyzes_conflict.learned_clauses.size()) {
+        k=0;
+        acdl_domaint::valuet learned_val = analyzes_conflict.learned_clauses[j];
+        while(k < learned_val.size()) {
+          // check for duplicate
+          acdl_domaint::valuet::iterator it;  
+          it = find(normalize_learned_clause.begin(), normalize_learned_clause.end(), learned_val[k]);
+          if(it == normalize_learned_clause.end())
+            normalize_learned_clause.push_back(learned_val[k]);
+          k++;
+        }
+        j++;
+      }
+
+      // insert the normalized learned clause in to the worklist
+      domain.normalize_val(normalize_learned_clause);
+      const exprt &clause_expr = conjunction(normalize_learned_clause);
+      worklist.push(clause_expr);
+   
+   #if 0   
+      // iterate over learned clauses and convert
+      // them to exprt. Insert these exprts to worklist
+      unsigned i=0;
+      while(i < learned_clauses.size()) {
+        std::cout << "Pushing learned clause into the worklist" << std::endl;
+        acdl_domaint::valuet clause_val = learned_clauses[i];
+        const exprt &clause_expr = conjunction(clause_val);
+        worklist.push(clause_expr);
+        i++;
+      }
+    #endif  
+       
+      acdl_domaint::varst learn_vars;
+      const exprt learned_expr = conjunction(learned_clause);
+      acdl_domaint::statementt learned_stmt = learned_expr;
+      // find all symbols in the decision expression
+      find_symbols(learned_stmt, learn_vars);
+      // update the worklist based on all transitively dependant elements of the
+      // learnt clause 
+       
+      worklist.dec_update(SSA, learned_stmt, assertion);
+      return true;
+    }
+  }
+
+
+#if 0 // working with implication graph
  if(!conflict_analysis(SSA, implication_graph, learned_clause))
    return false;
  else {    
@@ -363,6 +525,8 @@ acdl_solvert::analyze_conflict(const local_SSAt &SSA, const exprt& assertion)
       return true;
     }
   }
+
+#endif // working above code with graph
 
   #if 0
   // the conflict analysis returns PASS/FAIL/UNKNOWN
@@ -493,22 +657,22 @@ acdl_solvert::analyze_conflict(const local_SSAt &SSA, const exprt& assertion)
  Purpose:
 
  \*******************************************************************/
-/*void acdl_solvert::init() 
+void acdl_solvert::init()
 {
-  std::string heur = options.get_option("dec-heur");
-
-  if(heur == "berkmin") 
-    dec_heur = BERKMIN;
-  else if(heur == "range")
-    dec_heur = RANGE;
-  else if(heur == "range-rel")
-    dec_heur = RANGE_REL;
-  else if(heur == "rand")
-    dec_heur = RAND;
-  else 
-    dec_heur = RAND; //DEFAULT
+  // iterate over all vars
+  for(std::set<symbol_exprt>::iterator it = all_vars.begin();
+    it!=all_vars.end();it++)
+  {
+    //number all symbol_exprts
+    unsigned nr = conflict_graph.numbering_symbol.number(to_symbol_expr(*it));
+    assert(nr == conflict_graph.values.size());   
+    std::pair<int, int> intv;
+    intv.first = -99999;
+    intv.second = -99999;
+    conflict_graph.values.push_back(intv); 
+  }
 }
-*/
+
 
 /*******************************************************************
  Function: acdl_solvert::operator()
@@ -539,8 +703,7 @@ property_checkert::resultt acdl_solvert::operator()(
   const exprt &assertion,
   const exprt &additional_constraint)
 {
-  //init();
-  // pass additioanal constraint and the assertions to the worklist
+  // pass additional constraint and the assertions to the worklist
   worklist.initialize(SSA, assertion, additional_constraint);
   
   // call initialize live variables
@@ -582,27 +745,31 @@ property_checkert::resultt acdl_solvert::operator()(
   std::cout << "The additional constraint for the loop is: " << from_expr(SSA.ns, "", additional_constraint) << std::endl;
 #endif
   // collect variables for completeness check
-  std::set<symbol_exprt> all_vars;
   all_vars = worklist.live_variables; 
+  
+  // initialize values trail
+  init();
 
-  implication_graph.clear(); //set to top
+  conflict_graph.init();
   acdl_domaint::valuet v;
-  implication_graph.to_value(v);
+  conflict_graph.to_value(v);
   domain.normalize_val(v);
   // check if abstract value v of the 
   // implication graph is top for the first time 
   // because ACDL starts with TOP
   assert(domain.is_top(v)); 
+  
   unsigned iteration = 0;
 
   property_checkert::resultt result = property_checkert::UNKNOWN;
   // the result is already decided for programs
   // which can be solved only using deductions  
   result = propagate(SSA, assertion);
+  
   std::cout << "****************************************************" << std::endl;
   std::cout << " IMPLICATION GRAPH AFTER DEDUCTION PHASE" << std::endl;
   std::cout << "****************************************************" << std::endl;
-  implication_graph.print_graph_output(SSA);
+  conflict_graph.dump_trail(SSA);
   
   bool complete=false;
   // if result = UNSAT, then the proof is complete 
@@ -613,7 +780,8 @@ property_checkert::resultt acdl_solvert::operator()(
   else {
     // check for satisfying assignment
     acdl_domaint::valuet val;
-    implication_graph.to_value(val);
+    //implication_graph.to_value(val);
+    conflict_graph.to_value(val);
     domain.normalize_val(val);
     if(domain.is_complete(val, all_vars)) {
       complete = true;
@@ -658,7 +826,7 @@ property_checkert::resultt acdl_solvert::operator()(
     std::cout << "****************************************************" << std::endl;
     std::cout << "IMPLICATION GRAPH AFTER DECISION PHASE" << std::endl;
     std::cout << "****************************************************" << std::endl;
-    implication_graph.print_graph_output(SSA);
+    conflict_graph.dump_trail(SSA);
 
     // deduction phase in acdl
     std::cout << "********************************" << std::endl;
@@ -669,7 +837,7 @@ property_checkert::resultt acdl_solvert::operator()(
     std::cout << "****************************************************" << std::endl;
     std::cout << " IMPLICATION GRAPH AFTER DEDUCTION PHASE" << std::endl;
     std::cout << "****************************************************" << std::endl;
-    implication_graph.print_graph_output(SSA);
+    conflict_graph.dump_trail(SSA);
     // completeness check is done when 
     // result=UNKNOWN or result=FAIL
     if (result == property_checkert::UNKNOWN || 
@@ -677,7 +845,7 @@ property_checkert::resultt acdl_solvert::operator()(
     {
       // check for satisfying assignment
       acdl_domaint::valuet v;
-      implication_graph.to_value(v);
+      conflict_graph.to_value(v);
       // Do we call normalize_val here ? !!
       domain.normalize_val(v);
      
@@ -707,10 +875,10 @@ property_checkert::resultt acdl_solvert::operator()(
           std::cout << "No further backtrack possible " << std::endl;
 #ifdef DEBUG
           unsigned i=0;
-          if(learned_clauses.size() > 0) {
+          if(analyzes_conflict.learned_clauses.size() > 0) {
             std::cout << "The final set of learned clauses are:" << std::endl;
-            while(i < learned_clauses.size()) {
-              acdl_domaint::valuet clause_val = learned_clauses[i];
+            while(i < analyzes_conflict.learned_clauses.size()) {
+              acdl_domaint::valuet clause_val = analyzes_conflict.learned_clauses[i];
               const exprt &clause_expr = conjunction(clause_val);
               std::cout << "clause " << i << "is: " << from_expr(SSA.ns, "", clause_expr) << std::endl;
               i++;
@@ -728,7 +896,7 @@ property_checkert::resultt acdl_solvert::operator()(
         std::cout << "****************************************************" << std::endl;
         std::cout << " IMPLICATION GRAPH AFTER DEDUCTION PHASE" << std::endl;
         std::cout << "****************************************************" << std::endl;
-        implication_graph.print_graph_output(SSA);
+        conflict_graph.dump_trail(SSA);
 
 
       } while(result == property_checkert::PASS); //UNSAT

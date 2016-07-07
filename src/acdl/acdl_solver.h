@@ -18,7 +18,8 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include "acdl_domain.h"
 #include "acdl_decision_heuristics_base.h"
 #include "acdl_worklist_base.h"
-#include "acdl_conflict_analysis_base.h"
+//#include "acdl_conflict_analysis_base.h"
+#include "acdl_analyze_conflict_base.h"
 
 class acdl_solvert : public messaget
 {
@@ -28,13 +29,13 @@ public:
 			acdl_domaint &_domain,
 			acdl_decision_heuristics_baset &_decision_heuristics,
                         acdl_worklist_baset &_worklist,
-                        acdl_conflict_analysis_baset &_conflict_analysis)
+                        acdl_analyze_conflict_baset &_analyze_conflict)
     : 
     options(_options),
     domain(_domain),
     decision_heuristics(_decision_heuristics),
     worklist(_worklist),
-    conflict_analysis(_conflict_analysis)
+    analyzes_conflict(_analyze_conflict)
     {
     }  
 
@@ -52,13 +53,18 @@ protected:
   acdl_domaint &domain;
   acdl_decision_heuristics_baset &decision_heuristics;
   acdl_worklist_baset &worklist; 
-  acdl_conflict_analysis_baset &conflict_analysis;
+  //acdl_conflict_analysis_baset &conflict_analysis;
+  acdl_analyze_conflict_baset &analyzes_conflict;
 
-  acdl_implication_grapht implication_graph;
-  std::vector<acdl_domaint::valuet> learned_clauses;
+  acdl_conflict_grapht conflict_graph;
   unsigned ITERATION_LIMIT=999999; 
   
+  // global propagation module
   property_checkert::resultt propagate(const local_SSAt &SSA, const exprt& assertion);
+  // propagation for chaotic iteration in Abstract interpretation proof
+  property_checkert::resultt propagation(const local_SSAt &SSA, const exprt& assertion);
+  // propagation for learned clauses only
+  bool deduce(const local_SSAt &SSA, const exprt &assertion);
 
   bool decide(const local_SSAt &SSA, const exprt& assertion);
   acdl_domaint::varst value_to_vars(const acdl_domaint::valuet &value)
@@ -74,10 +80,12 @@ protected:
     }
     return vars;
   }
-    
+
   
+  std::set<symbol_exprt> all_vars;
   void init();
   bool analyze_conflict(const local_SSAt &SSA, const exprt& assertion);
+
 };
 
 
