@@ -143,10 +143,10 @@ property_checkert::resultt summary_checker_acdlt::operator()(
                                  *conflict_analysis);
         acdl_solver.set_message_handler(get_message_handler());
         property_map[property_id].result =
-        /*acdl_solver(ssa_db.get(goto_model.goto_functions.entry_point()),
-                    property, conjunction(loophead_selects));*/
         acdl_solver(ssa_db.get(goto_model.goto_functions.entry_point()),
-                    property, true_exprt());
+                    property, conjunction(loophead_selects));
+        /*acdl_solver(ssa_db.get(goto_model.goto_functions.entry_point()),
+                    property, true_exprt());*/
       }
     }
   }

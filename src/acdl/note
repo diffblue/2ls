@@ -654,3 +654,16 @@ variables in the program. Then we just trace back the propagation trail until
 the last decision point and get all the updated values of the variables in the
 program. 
 
+5> we now have a consistency check for the abstract value from implication
+graph -- the trail must not have  
+
+Query for June 11, 2016
+-----------------------
+1> Unit rule implementation: 
+  
+  a> Do we need to take the meet of the unit_literal(meet_irreducible) 
+  with the abstract value before adding to the graph or do we just 
+  add to the graph hoping that normalize would take care of that. 
+
+  b> Check if the implementation is correct ?
+

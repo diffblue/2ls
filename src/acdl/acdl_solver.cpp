@@ -385,7 +385,7 @@ bool acdl_solvert::analyze_conflict(const local_SSAt &SSA, const exprt& assertio
 
       domain.meet(learned_clause,v);
       // store the learned clause
-      // analyzes_conflict.learned_clauses.push_back(learned_clause);
+      analyzes_conflict.learned_clauses.push_back(learned_clause);
       
       // iterate over all learned clause and normalize them 
       // for example- learnt-clause1: (x<=0 && y>=2)
@@ -897,7 +897,6 @@ property_checkert::resultt acdl_solvert::operator()(
         std::cout << " IMPLICATION GRAPH AFTER DEDUCTION PHASE" << std::endl;
         std::cout << "****************************************************" << std::endl;
         conflict_graph.dump_trail(SSA);
-
 
       } while(result == property_checkert::PASS); //UNSAT
     }
