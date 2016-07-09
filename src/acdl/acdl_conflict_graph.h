@@ -55,6 +55,7 @@ public:
   
    void add_deductions(const local_SSAt &SSA, const acdl_domaint::deductionst &m_ir);
    void add_decision(const acdl_domaint::meet_irreduciblet &m_ir);
+   void assign(acdl_domaint::meet_irreduciblet &exp);
    void to_value(acdl_domaint::valuet &value) const;
    void check_consistency();
    void init();

@@ -83,6 +83,7 @@ public:
        const meet_irreduciblet &b) const;
   
   bool check_val_consistency(valuet &val);
+  bool check_val_satisfaction(valuet &val);
   //print value
   inline std::ostream &output(
     std::ostream &out, const valuet &v)

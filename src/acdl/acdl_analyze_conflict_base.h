@@ -24,7 +24,7 @@ public:
   :
   domain(_domain),
   backtrack_level(0),
-  disable_backjumping(1),
+  disable_backjumping(0),
   conflicting_clause(-1)
   {}
 
@@ -43,11 +43,14 @@ public:
   void cancel_until(const local_SSAt &SSA, acdl_conflict_grapht &graph, int lvl); 
   void negate(exprt& exp, acdl_domaint::valuet &clause);
   void get_ai_reason(const local_SSAt &SSA, acdl_conflict_grapht &graph, acdl_domaint::valuet &reason);
-  void find_uip(const local_SSAt &SSA, acdl_conflict_grapht &graph, acdl_domaint::valuet &conf_clause, int blevel);
-
+  void find_uip(const local_SSAt &SSA, acdl_conflict_grapht &graph, acdl_domaint::valuet &conf_clause, unsigned dlevel);
+  
   unsigned get_earliest_contradiction(const local_SSAt &SSA, acdl_conflict_grapht &graph, acdl_domaint::meet_irreduciblet &exp);
+  int unit_rule(const local_SSAt &SSA, acdl_conflict_grapht &graph, acdl_domaint::valuet &clause);
   enum proof_typet { PROPOSITIONAL, ABSINT };
   proof_typet last_proof;    
+  enum clause_statet { CONFLICT = 0, UNKNOWN = 1, SATISFIED = 2, UNIT = 3};
+  clause_statet clause_state;
   std::vector<acdl_domaint::valuet> learned_clauses;
   
 protected: 

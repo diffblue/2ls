@@ -30,11 +30,7 @@ void acdl_conflict_grapht::add_deductions
     std::cout << "conflict graph: " << from_expr(SSA.ns, "", it->first) << std::endl;
     // note that consequents are unique 
     acdl_domaint::meet_irreduciblet exp = it->first; 
-    // number the meet_irreducible
-    unsigned sym_no = numbering.number(exp); 
-    // push it to prop_trail
-    prop_trail.push_back(exp);
-    val_trail.push_back(sym_no);
+    assign(exp);
   }
 }
 
@@ -55,12 +51,31 @@ void acdl_conflict_grapht::add_decision
   ++current_level;
   control_trail.push_back(prop_trail.size());
   acdl_domaint::meet_irreduciblet exp = m_ir; 
-  prop_trail.push_back(exp);
-  // number the meet_irreducible
-  unsigned sym_no = numbering.number(exp); 
-  val_trail.push_back(sym_no);
   dec_trail.push_back(exp);
+  assign(exp);
   //dlevels[sym_no].push_back(current_level);
+}
+
+
+/*******************************************************************\
+
+Function: acdl_conflict_grapht::assign
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+ \*******************************************************************/
+void acdl_conflict_grapht::assign
+    (acdl_domaint::meet_irreduciblet &exp)
+{
+    // number the meet_irreducible
+    unsigned sym_no = numbering.number(exp); 
+    // push it to prop_trail
+    prop_trail.push_back(exp);
+    val_trail.push_back(sym_no);
 }
 
 /*******************************************************************\
@@ -141,12 +156,14 @@ Function: acdl_conflict_grapht::check_consistency
 \*******************************************************************/
 void acdl_conflict_grapht::check_consistency()
 {
+  std::cout << "Checking consistency of conflict graph" << std::endl;
   acdl_domaint::valuet val;
   for(unsigned i=0;i<prop_trail.size();i++) {
     // if there is a BOTTOM or false_exprt in the trail,
     // it should have been popped during backtracking
     assert(prop_trail[i] != false_exprt());
   }
+  std::cout << "Conflict graph is consistent" << std::endl;
 }
 
 /*******************************************************************\
