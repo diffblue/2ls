@@ -661,9 +661,57 @@ Query for June 11, 2016
 -----------------------
 1> Unit rule implementation: 
   
-  a> Do we need to take the meet of the unit_literal(meet_irreducible) 
-  with the abstract value before adding to the graph or do we just 
-  add to the graph hoping that normalize would take care of that. 
+  a> Do we add the unit_literal(meet_irreducible) directly to the graph. 
+  If all meet irreducible but one is contradicting in a clause, we call the
+  clause to be unit. 
+    1> The one you mentioned.
+    Abstract value:  ($x \in [5,13]$, $y \in [-2,9]$)
+    Clause: (x<4 \vee y>10 \vee z<15)
 
-  b> Check if the implementation is correct ?
+    Deduction after application of unit rule: z<15
+    New abstract value: ($x \in [5,13]$,  $y \in [-2,9]$,  $z \in [-INF,14]$)
 
+    2> Abstract value: ($x \in [5,13]$,  $y \in [-2,9]$, $z \in [10,18]$).
+    Clause: $C=(x<4 \vee y>10 \vee z<15)$
+    Here, the literals x<4 and y>10 are contradicting. And z<15 is unit literal.
+
+    Deduction after application of unit rule: z<15
+    Abstract value: ($x \in [5,13]$, $y \in [-2,9]$, $z \in [10,14]$).
+
+    3> Abstract value (x > 5, y < 20, z > 5).
+    Clause: $C=(x<3 \vee y>50 \vee z<10)$
+    Here, the literals x<3 and y>50 are contradicting. And z<10 is UNKNOWN, so
+    the clause is UNIT. Unit literal is z<10.
+
+    Deduction after application of unit rule: meet(z>5, z<10) --> z:[5,10]
+    Abstract value: ($x \in [5,13]$,  $y \in [-2,9]$, $z \in [5,10]$).
+
+
+  b> [IMP] Check if the implementation is correct ? -- iterate over each expr in the 
+  clause and each value in abstract value -- any effecient way ?
+
+  c> Do we need to consider ordering while comparing meet irreduccibles.
+  How to find a meet irreducible is SATISFYING ?
+  that is how to compare (x<5 less than or equal to x<10) using SAT query.
+  How to compare an octagon is less than or equal to another octagon ? 
+
+
+  d> unit_rule is in acdl_domain. But each time we apply unit rule, it performs
+  some deductions for us. How to add those deductions directly to the conflict
+  graph since domain does not have access to conflict graph. 
+2> how to access the enum type of other class. 
+
+3> [IMP] Do we need to handle the conflict clauses explicitly for doing AI style
+propagation ? Shouldn't the propagation at clause level make
+deductions which already restricts the propagation at AI level ?
+
+4> loop handling in different cases:
+    a> widening
+    b> unwinding 
+    c> invariant  
+
+ 
+Query for June 14, 2016
+------------------------
+1> Generalisation in ACDL
+2> Formalize Algo for loops

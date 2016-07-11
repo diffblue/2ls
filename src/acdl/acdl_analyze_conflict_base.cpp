@@ -102,10 +102,24 @@ bool acdl_analyze_conflict_baset::operator() (const local_SSAt &SSA, acdl_confli
   
   backtracks++;
   
+  exprt unit_lit;
+  acdl_domaint::valuet v;
+  graph.to_value(v);
   // check that the clause is unit
-  int result = unit_rule(SSA, graph, conf_clause);
+  int result = domain.unit_rule(SSA, v, conf_clause, unit_lit);
+  
   // the learned clause must be asserting
-  assert(result == UNIT);
+  assert(result == domain.UNIT);
+  
+  // push the new deductions from unit_rule 
+  // to the conflict graph explicitly
+  // [NOTE] the conflict_analysis is followed
+  // by deductions on learned clause where same
+  // deduction may heppen, so do we not assign 
+  // the unit_lit to trail here but hope that the 
+  // following deduction step does that ?
+  graph.assign(unit_lit);
+
   // the prop_trail is never emptied because it always
   // contains elements from first deduction which is 
   // agnostic to any decisions, hence the elements of 
@@ -202,6 +216,7 @@ void acdl_analyze_conflict_baset::cancel_once(const local_SSAt &SSA, acdl_confli
   } 
   
   graph.control_trail.pop_back();
+  bcp_queue_top=graph.prop_trail.size();
   graph.current_level--;
 }
 
@@ -519,7 +534,7 @@ const local_SSAt &SSA, acdl_conflict_grapht &graph, acdl_domaint::meet_irreducib
    }
   }
 }
-
+#if 0
 /*******************************************************************\
 
 Function: acdl_analyze_conflict_baset::unit_rule
@@ -598,3 +613,4 @@ int acdl_analyze_conflict_baset::unit_rule(const local_SSAt &SSA, acdl_conflict_
    return UNIT; // UNIT clause
   }
 }
+#endif

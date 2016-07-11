@@ -64,7 +64,8 @@ protected:
   // propagation for chaotic iteration in Abstract interpretation proof
   property_checkert::resultt propagation(const local_SSAt &SSA, const exprt& assertion);
   // propagation for learned clauses only
-  bool deduce(const local_SSAt &SSA, const exprt &assertion);
+  bool deduce(const local_SSAt &SSA);
+  bool bcp(const local_SSAt &SSA, unsigned idx);
 
   bool decide(const local_SSAt &SSA, const exprt& assertion);
   acdl_domaint::varst value_to_vars(const acdl_domaint::valuet &value)
