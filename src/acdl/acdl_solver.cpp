@@ -442,6 +442,29 @@ bool acdl_solvert::analyze_conflict(const local_SSAt &SSA, const exprt& assertio
   }
 }
 
+/*******************************************************************
+
+ Function: acdl_solvert::generalize_proof()
+
+ Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+void acdl_solvert::generalize_proof(const local_SSAt &SSA, const exprt& assertion)
+{
+  if(disable_generalization) 
+    return;
+  
+  // generalize only when the conflict
+  // is due to AI proof
+  if(analyzes_conflict.last_proof == analyzes_conflict.ABSINT) {
+    assert(analyzes_conflict.conflicting_clause == -1);
+     
+  }      
+}
 
 /*******************************************************************
 
@@ -664,7 +687,7 @@ property_checkert::resultt acdl_solvert::operator()(
       do 
       {
         // call generalize_proof here
-        // generalize_proof();
+        generalize_proof(SSA, assertion);
 
         std::cout << "********************************" << std::endl;
         std::cout << "    CONFLICT ANALYSIS PHASE" << std::endl;

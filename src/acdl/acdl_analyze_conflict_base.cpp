@@ -115,9 +115,10 @@ bool acdl_analyze_conflict_baset::operator() (const local_SSAt &SSA, acdl_confli
   // to the conflict graph explicitly
   // [NOTE] the conflict_analysis is followed
   // by deductions on learned clause where same
-  // deduction may heppen, so do we not assign 
-  // the unit_lit to trail here but hope that the 
-  // following deduction step does that ?
+  // deduction may happen, but we push the deductions
+  // in the graph here because the following 
+  // deduction should return SATISFIABLE and 
+  // does not yield that the same deduction 
   graph.assign(unit_lit);
 
   // the prop_trail is never emptied because it always
@@ -271,32 +272,19 @@ void acdl_analyze_conflict_baset::get_ai_reason(const local_SSAt &SSA,
               acdl_conflict_grapht &graph, acdl_domaint::valuet &reason)
 {
   #if 0
-  std::vector<exprt> dec_symbols;
-  exprt exp;
-  for(unsigned i=0;i<graph.dec_trail.size();i++)
+  // collect all propagations in the reason 
+  // upto the point where first decision was made 
+  // iterate upto trail_size-2 since the last node 
+  // is a FALSE node 
+  int control_point = graph.control_trail[0];
+  for(unsigned i=control_point;i<graph.prop_trail.size()-2;i++)
   {
-    exprt dec_exp = graph.dec_trail[i];
-    if(dec_exp.id() == ID_not)
-      exp = dec_exp.op0();
-    else
-      exp = dec_exp;  
-    
-    // expressions of the form guard#0
-    if(exp.id() != ID_le && exp.id() != ID_ge) 
-    {
-      dec_symbols.push_back(exp); 
-    }
-    else if(exp.id() == ID_lt || exp.id() == ID_gt 
-          || exp.id() == ID_le || exp.id() == ID_ge) 
-    {
-       exprt lhs = to_binary_relation_expr(exp).lhs();
-       //std::vector<exprt>iterator it; 
-       //it = find(dec_symbols.begin(), dec_symbols.end(), lhs)
-       dec_symbols.push_back(lhs);  
-    }
+    exprt prop_exp = graph.prop_trail[i];
+    reason.push_back(prop_exp);
   }
   #endif
-
+  
+  // just take all decisions as reason
   for(unsigned i=0;i<graph.dec_trail.size();i++)
   {
     exprt dec_exp = graph.dec_trail[i];
@@ -304,7 +292,7 @@ void acdl_analyze_conflict_baset::get_ai_reason(const local_SSAt &SSA,
   }
   // now normalize the reason since there may be 
   // lot of redundant decisions 
-  domain.normalize(reason);
+  // domain.normalize(reason);
 
 #if 0
   // Step 1: collect all decision variables by traversing the decision trail
@@ -372,7 +360,7 @@ acdl_conflict_grapht &graph, acdl_domaint::valuet &result_clause, unsigned dleve
 
   if(dlevel == 0)
   { 
-    std::cout << "Trying to resolve a conflict a dlevel 0" << std::endl;
+    std::cout << "Trying to resolve a conflict at dlevel 0" << std::endl;
     backtrack_level = -1; //UNSAT
     return;
   }
@@ -428,6 +416,12 @@ acdl_conflict_grapht &graph, acdl_domaint::valuet &result_clause, unsigned dleve
     std::cout<< "UIP is" << target_level_lits.front() << std::endl;
 #endif    
    return;
+
+   // start actually searching for uip
+   
+   assert(dlevel>0);
+   // find the dlevel section of trail
+   
 }
    
 /*******************************************************************\
@@ -450,6 +444,8 @@ const local_SSAt &SSA, acdl_conflict_grapht &graph, acdl_domaint::meet_irreducib
   // get symbols from this meet irreducible
   find_symbols(exp, exp_symbols);
   
+  std::cout << "Searching for earliest contradiction of literal" << from_expr(SSA.ns, "", exp) << std::endl;
+
   std::cout << "searching for contradiction at the current level" << std::endl;
   acdl_domaint::valuet matched_expr;
   int control_point = graph.control_trail.back(); 
@@ -534,83 +530,3 @@ const local_SSAt &SSA, acdl_conflict_grapht &graph, acdl_domaint::meet_irreducib
    }
   }
 }
-#if 0
-/*******************************************************************\
-
-Function: acdl_analyze_conflict_baset::unit_rule
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-int acdl_analyze_conflict_baset::unit_rule(const local_SSAt &SSA, acdl_conflict_grapht &graph, acdl_domaint::valuet &clause)
-{
-  acdl_domaint::valuet v;
-  graph.to_value(v);
-  domain.normalize(v);
-  int unit_idx = -1;
-  int i=0;
-  /* for(acdl_domaint::valuet::iterator it = clause.begin(); 
-           it != clause.end(); ++it)*/
-  for(i=0;i<clause.size();i++)
-  {
-    exprt clause_exp = clause[i];
-    acdl_domaint::varst exp_symbols;
-    // get symbols from this meet irreducible
-    find_symbols(clause_exp, exp_symbols);
-    // check the relevant meet irreducibles in the abstract value 
-    for(acdl_domaint::valuet::iterator it1 = v.begin(); 
-           it1 != v.end(); ++it1)
-    {
-       acdl_domaint::varst val_symbol;
-       // get symbols from this meet irreducible
-       find_symbols(*it1, val_symbol);
-       for(acdl_domaint::varst::iterator it2 = val_symbol.begin(); it2 != val_symbol.end(); it2++) {
-         bool is_in = exp_symbols.find(*it2) != exp_symbols.end();
-         if(is_in) {
-           std::cout << "Comparing inside unit rule" << std::endl;
-           int status = domain.compare(clause_exp, *it1);
-           std::cout << from_expr(SSA.ns, "", clause_exp) << "<--->" << from_expr(SSA.ns, "", *it1) << std::endl;
-           if(status == 0)
-             return SATISFIED; // SATISFIED
-           if(status != 1) // not CONTRADICTED
-           {
-             //if its not contradicted
-             if(unit_idx != -1)
-              return UNKNOWN; // UNKNOWN; //we have more than one uncontradicted literals
-             unit_idx = i;
-           }
-         }   
-       }
-    }
-  }
-
-  if(unit_idx == -1)
-  {
-#ifdef VERBOSE
-    std::cout << "CLAUSE IS UNIT" << std::endl;
-#endif
-    conflicting_clause = learned_clauses.size() - 1;
-    return CONFLICT; // conflict
-  }
-
-  if(unit_idx != -1) {
-#ifdef DEBUG
-   std::cout << "CLAUSE IS UNIT" << std::endl;
-   std::cout << "The unit literal index is " << unit_idx << std::endl;
-#endif
-   //clause is unit
-   exprt unit_lit = clause[unit_idx];
-   std::cout << "The unit literal is " << from_expr(SSA.ns, "", unit_lit) << std::endl;
-   // Do we need to insert the meet result 
-   // or insert the unit_lit directly 
-   // Normalize would take the meet anyway 
-   //domain.meet(unit_lit, v);
-   graph.assign(unit_lit);
-   return UNIT; // UNIT clause
-  }
-}
-#endif

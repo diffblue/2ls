@@ -35,7 +35,8 @@ public:
     domain(_domain),
     decision_heuristics(_decision_heuristics),
     worklist(_worklist),
-    analyzes_conflict(_analyze_conflict)
+    analyzes_conflict(_analyze_conflict),
+    disable_generalization(0)
     {
     }  
 
@@ -86,6 +87,9 @@ protected:
   std::set<symbol_exprt> all_vars;
   void init();
   bool analyze_conflict(const local_SSAt &SSA, const exprt& assertion);
+  void generalize_proof(const local_SSAt &SSA, const exprt& assertion);
+
+  bool disable_generalization;
 
 };
 
