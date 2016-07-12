@@ -81,9 +81,16 @@ public:
 		   const std::set<symbol_exprt> &symbols) const;
   unsigned compare(const meet_irreduciblet &a, 
        const meet_irreduciblet &b) const;
+  unsigned compare_val_lit(const valuet &a, 
+			       const meet_irreduciblet &b) const;
   
   bool check_val_consistency(valuet &val);
   bool check_val_satisfaction(valuet &val);
+  int unit_rule(const local_SSAt &SSA, valuet &v, valuet &clause, exprt &unit_lit);
+  bool check_contradiction(valuet &val, exprt &expr);
+
+  enum clause_statet { CONFLICT = 0, UNKNOWN = 1, SATISFIED = 2, UNIT = 3};
+  clause_statet clause_state;
   //print value
   inline std::ostream &output(
     std::ostream &out, const valuet &v)

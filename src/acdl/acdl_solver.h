@@ -35,7 +35,8 @@ public:
     domain(_domain),
     decision_heuristics(_decision_heuristics),
     worklist(_worklist),
-    analyzes_conflict(_analyze_conflict)
+    analyzes_conflict(_analyze_conflict),
+    disable_generalization(0)
     {
     }  
 
@@ -64,7 +65,8 @@ protected:
   // propagation for chaotic iteration in Abstract interpretation proof
   property_checkert::resultt propagation(const local_SSAt &SSA, const exprt& assertion);
   // propagation for learned clauses only
-  bool deduce(const local_SSAt &SSA, const exprt &assertion);
+  bool deduce(const local_SSAt &SSA);
+  bool bcp(const local_SSAt &SSA, unsigned idx);
 
   bool decide(const local_SSAt &SSA, const exprt& assertion);
   acdl_domaint::varst value_to_vars(const acdl_domaint::valuet &value)
@@ -85,6 +87,9 @@ protected:
   std::set<symbol_exprt> all_vars;
   void init();
   bool analyze_conflict(const local_SSAt &SSA, const exprt& assertion);
+  void generalize_proof(const local_SSAt &SSA, const exprt& assertion);
+
+  bool disable_generalization;
 
 };
 

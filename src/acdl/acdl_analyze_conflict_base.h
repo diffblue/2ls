@@ -25,7 +25,8 @@ public:
   domain(_domain),
   backtrack_level(0),
   disable_backjumping(0),
-  conflicting_clause(-1)
+  conflicting_clause(-1),
+  bcp_queue_top(0)
   {}
 
   virtual ~acdl_analyze_conflict_baset()
@@ -37,6 +38,7 @@ public:
   unsigned int backtracks; 
   int backtrack_level;
   int conflicting_clause;
+  unsigned bcp_queue_top;
   bool just_backtracked;
   bool disable_backjumping;
   void cancel_once(const local_SSAt &SSA, acdl_conflict_grapht &graph);
@@ -46,11 +48,9 @@ public:
   void find_uip(const local_SSAt &SSA, acdl_conflict_grapht &graph, acdl_domaint::valuet &conf_clause, unsigned dlevel);
   
   unsigned get_earliest_contradiction(const local_SSAt &SSA, acdl_conflict_grapht &graph, acdl_domaint::meet_irreduciblet &exp);
-  int unit_rule(const local_SSAt &SSA, acdl_conflict_grapht &graph, acdl_domaint::valuet &clause);
+  //int unit_rule(const local_SSAt &SSA, acdl_conflict_grapht &graph, acdl_domaint::valuet &clause);
   enum proof_typet { PROPOSITIONAL, ABSINT };
   proof_typet last_proof;    
-  enum clause_statet { CONFLICT = 0, UNKNOWN = 1, SATISFIED = 2, UNIT = 3};
-  clause_statet clause_state;
   std::vector<acdl_domaint::valuet> learned_clauses;
   
 protected: 

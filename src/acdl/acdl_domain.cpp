@@ -1295,6 +1295,46 @@ unsigned acdl_domaint::compare(const meet_irreduciblet &a,
   }  
 }
 
+
+/*******************************************************************\
+
+Function: acdl_domaint::compare_val_lit()
+
+  Inputs: example: 1. val:x<=5 && y<=10 lit:x<=10
+                   2. val:x<=2 && y<=10 lit:x>2
+                   3. val:x>=3 && x<=8 && y<=10 lit:x<=5
+ Outputs: example  1: satisfiable 
+                   2. contradicting 
+                   3. unknown -- neither satisfiable nor contradicting
+\*******************************************************************/
+
+unsigned acdl_domaint::compare_val_lit(const valuet &a, 
+			       const meet_irreduciblet &b) const
+{
+  std::unique_ptr<incremental_solvert> solver(
+    incremental_solvert::allocate(SSA.ns,true));
+  unsigned int status;  
+  // to check satisfiable, check !(a & !b)
+  exprt f1 = not_exprt(and_exprt(conjunction(a),not_exprt(b)));
+  
+  *solver << f1;
+  if ((*solver)() == decision_proceduret::D_SATISFIABLE) {
+    return SATISFIED;
+  }
+  
+  // to check contradiction, check !(a & b)
+  exprt f2 = not_exprt(and_exprt(conjunction(a),b));
+  
+  *solver << f2;
+  if ((*solver)() == decision_proceduret::D_SATISFIABLE) {
+    return CONFLICT;
+  }
+  // unknown: neither contradicting nor satisfiable
+  else {
+    return UNKNOWN;
+  }  
+}
+
 /*******************************************************************\
 
 Function: acdl_domaint::check_abstract_value()
@@ -1341,4 +1381,161 @@ bool acdl_domaint::check_val_satisfaction(valuet &val)
     return true;
   else 
     return false;  
+}
+
+/*******************************************************************\
+
+Function: acdl_domaint::check_contradiction()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: if contradict, return true else return false
+
+\*******************************************************************/
+  
+bool acdl_domaint::check_contradiction(valuet &val, exprt &expr)
+{
+  std::unique_ptr<incremental_solvert> solver(
+    incremental_solvert::allocate(SSA.ns,true));
+  exprt result = and_exprt(conjunction(val),expr); 
+  *solver << result;
+  decision_proceduret::resultt res = (*solver)();
+  if(res==decision_proceduret::D_UNSATISFIABLE)
+    return true;
+  else 
+    return false;  
+}
+
+/*******************************************************************\
+
+Function: acdl_domaint::unit_rule
+
+ Case 1:
+ Abstract value: (x:[5,10] && y:[20:30] && z:[6,18])
+ Clause: (x<3 V y>50 V z<10) -- UNIT clause
+ Here, x<3, y>50 -- contradicted literal, z<10 -- unit literal 
+ Deductions made after unit rule: (x<=10) 
+ Abstract Value: (x:[5,10] && y:[20:30] && z:[6,9])
+ 
+ Case 2:
+ Abstract value:  ($x \in [5,13]$, $y \in [-2,9]$)
+ Clause: (x<4 \vee y>10 \vee z<15)
+ Deduction after application of unit rule: z<15
+ New abstract value: ($x \in [5,13]$,  $y \in [-2,9]$,  $z \in [-INF,14]$)
+ 
+ Case 3:
+ Abstract value (x > 5, y < 20, z > 5).
+ Clause: $C=(x<3 \vee y>50 \vee z<10)$
+ Here, the literals x<3 and y>50 are contradicting. And z<10 is UNKNOWN, so
+ the clause is UNIT. Unit literal is z<10.
+ Deduction after application of unit rule: meet(z>5, z<10) --> z:[5,10]
+ Abstract value: ($x \in [5,13]$,  $y \in [-2,9]$, $z \in [5,10]$).
+ 
+ Purpose:
+
+\*******************************************************************/
+int acdl_domaint::unit_rule(const local_SSAt &SSA, valuet &v, valuet &clause, exprt &unit_lit)
+{
+  assert(check_val_consistency(v));
+  // Do we normalize the value 
+  normalize(v);
+  int unit_idx = -1;
+  int i=0;
+  bool disjoint = false;
+  bool new_lit = false;
+  int status;
+  std::cout << "Checking unit rule for the clause " << from_expr(SSA.ns, "", conjunction(clause)) << std::endl;
+  
+  for(i=0;i<clause.size();i++)
+  {
+    acdl_domaint::valuet relevant_expr;
+    disjoint = false;
+    new_lit = false;
+    exprt clause_exp = clause[i];
+    std::cout << "comparing" << from_expr(SSA.ns, "", conjunction(v)) << "<--->" << from_expr(SSA.ns, "", clause_exp) << std::endl;
+    // check symbols in clause_exp with that of v
+    acdl_domaint::varst exp_symbols;
+    find_symbols(clause_exp, exp_symbols);
+    new_lit = true;
+    // check over all abstract value
+    for(acdl_domaint::valuet::iterator it = v.begin(); 
+           it != v.end(); ++it)
+    {
+      acdl_domaint::varst v_symbol;
+      find_symbols(*it, v_symbol);
+      for(acdl_domaint::varst::iterator it1 = v_symbol.begin(); it1 != v_symbol.end(); it1++) {
+        bool is_in = exp_symbols.find(*it1) != exp_symbols.end();
+        
+        if(is_in) {
+          // push relevant expr into container 
+          relevant_expr.push_back(*it);
+          new_lit = false;
+        }
+      }
+    }
+    // got new literal in clause 
+    // which is not present in abstract value
+    if(new_lit) {
+      unit_idx = i;
+      continue;
+    }
+
+    // now set up for actual comparisons
+    // since there are overlap of symbols 
+    // between the abstract value and clause
+    status = compare_val_lit(relevant_expr, clause_exp);
+    std::cout << "The status is " << status << std::endl;
+    if(status == SATISFIED)
+      return SATISFIED; 
+    if(status != CONFLICT) // not CONTRADICTED
+    {
+      //if its not contradicted
+      if(unit_idx != -1)
+        return UNKNOWN; // we have more than one uncontradicted literals
+      unit_idx = i;
+    }
+    else
+    {
+      disjoint=true;
+    }
+  }
+
+  // check for clause with size 1 which
+  // does not have a matching literal 
+  // in the abstract value, so they are unit by default
+  // *******************************************************************
+  // Example: Input: val:(x<10 V y>10) clause:cond21 
+  //         Output: deduction:(cond21), return that the clause is UNIT 
+  // *******************************************************************
+
+  if(!disjoint && new_lit)
+  {  
+#ifdef DEBUG
+    std::cout << "CLAUSE IS UNIT" << std::endl;
+#endif
+    //clause is unit
+    unit_lit = clause[unit_idx];
+    std::cout << "The unit literal is " << from_expr(SSA.ns, "", unit_lit) << std::endl;
+    return UNIT;
+  }  
+
+  if(unit_idx == -1)
+  {
+#ifdef DEBUG 
+    std::cout << "CLAUSE IS IN CONFLICT" << std::endl;
+#endif
+    //conflicting_clause = learned_clauses.size() - 1;
+    return CONFLICT; 
+  }
+
+#ifdef DEBUG
+    std::cout << "CLAUSE IS UNIT" << std::endl;
+    std::cout << "The unit literal index is " << unit_idx << std::endl;
+#endif
+    //clause is unit
+    unit_lit = clause[unit_idx];
+    std::cout << "The unit literal is " << from_expr(SSA.ns, "", unit_lit) << std::endl;
+    return UNIT; // UNIT clause
 }
