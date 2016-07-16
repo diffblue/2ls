@@ -48,6 +48,8 @@ public:
   void find_uip(const local_SSAt &SSA, acdl_conflict_grapht &graph, acdl_domaint::valuet &conf_clause, unsigned dlevel);
   
   unsigned get_earliest_contradiction(const local_SSAt &SSA, acdl_conflict_grapht &graph, acdl_domaint::meet_irreduciblet &exp);
+  unsigned get_latest_contradiction(const local_SSAt &SSA, acdl_conflict_grapht &graph, acdl_domaint::meet_irreduciblet &exp);
+  int first_contradiction_on_trail(const exprt& expr, acdl_conflict_grapht &graph, int start, int end);
   //int unit_rule(const local_SSAt &SSA, acdl_conflict_grapht &graph, acdl_domaint::valuet &clause);
   enum proof_typet { PROPOSITIONAL, ABSINT };
   proof_typet last_proof;    

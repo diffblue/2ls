@@ -1,5 +1,6 @@
 int main() {
- unsigned x=0, y=0;
+ unsigned x, y;
+ __CPROVER_assume(x==y);
  x++; y++;
  x++; y++;
  assert(x==y);

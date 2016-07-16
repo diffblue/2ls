@@ -22,6 +22,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_randt::operator()
     it = decision_variables.begin(); it != decision_variables.end(); ++it)
       std::cout << from_expr(SSA.ns, "", *it) << "  ," << std::endl;
 #endif
+  
   // collect the non-singleton variables
   std::vector<exprt> non_singletons;
   std::vector<exprt> singletons;
@@ -36,12 +37,15 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_randt::operator()
      singletons.push_back(*it);
   }
   
-  // pop the decision variables which 
-  // are already singletons
-  for(std::vector<exprt>::const_iterator 
+  // [TODO] Do not pop decision variables since it 
+  // is possible that a decision has to be made on 
+  // a singleton variable after backtracking when it 
+  // is no more a singleton variable.
+  /*for(std::vector<exprt>::const_iterator 
     it = singletons.begin(); it != singletons.end(); ++it) 
      decision_variables.erase(decision_variables.find(*it)); 
-  
+  */
+
    // no more decisions can be made
    if(non_singletons.size() == 0) {
 #ifdef DEBUG
@@ -83,6 +87,27 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_randt::operator()
   
   // Make a decision
   if(cond.size() == 0) {
+    #if 0
+    // choose non-cond decision variables that 
+    // are nondet-vars 
+    // choose input nondet variables
+    if(nondet_var.size()>0) {
+      const acdl_domaint::meet_irreduciblet dec_expr_nondet = 
+        nondet_var[rand() % nondet_var.size()];
+      // now search for nondet_vars that are not singletons
+      acdl_domaint::varst sym1;
+      find_symbols(dec_expr_nondet, sym1);
+      for(int i=0;i<non_cond.size();i++) {
+        acdl_domaint::varst sym2;
+        find_symbols(non_cond[i], sym2);
+        for(acdl_domaint::varst::iterator it1 = sym2.begin(); it1 != sym2.end(); it1++) {
+          bool is_in = sym1.find(*it1) != sym1.end();
+          if(is_in) 
+            return non_cond[i]; 
+        }
+      }
+    }
+    #endif
     // select non-cond decision variables
     const acdl_domaint::meet_irreduciblet dec_expr_rand = 
       non_cond[rand() % non_cond.size()];

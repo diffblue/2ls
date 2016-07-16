@@ -345,6 +345,10 @@ bool acdl_domaint::is_subsumed(const meet_irreduciblet &m,
   if(value.empty()) //assumes that m is never TOP
     return false;
 
+  // when the result of projection(m) is FALSE
+  if(m.is_false())
+    return false;
+
   if(m.id()==ID_symbol ||
      (m.id()==ID_not && m.op0().id()==ID_symbol))
   {
@@ -360,6 +364,11 @@ bool acdl_domaint::is_subsumed(const meet_irreduciblet &m,
     //maybe the simplifier does the job
 /*    exprt f = simplify_expr(and_exprt(conjunction(value), 
       not_exprt(and_exprt(conjunction(value),m))),SSA.ns);*/
+    
+    exprt f1=simplify_expr(conjunction(value), SSA.ns);
+    if(f1.is_false())
+      return false;
+    
     exprt f = simplify_expr(and_exprt(conjunction(value),not_exprt(m)),SSA.ns);
     if(f.is_false())
       return true;
@@ -848,6 +857,7 @@ exprt acdl_domaint::split(const valuet &value,
   std::cout << "original splitting expr is :: " << from_expr(SSA.ns, "", expr) << std::endl;
    
   // computer lower and upper bound
+  // handle the positive literals
   constant_exprt u;
   bool u_is_assigned = false;
   constant_exprt l;
@@ -865,12 +875,16 @@ exprt acdl_domaint::split(const valuet &value,
       if(e.id() == ID_le)
       {
         u = to_constant_expr(to_binary_relation_expr(e).rhs());
+        std::cout << "the expression is " << from_expr(SSA.ns, "", e) << "the upper value is " 
+        << from_expr(SSA.ns, "", u) << std::endl;
         u_is_assigned = true;
         break;
       }
       if(e.id() == ID_ge)
       {
         l = to_constant_expr(to_binary_relation_expr(e).rhs());
+        std::cout << "the expression is " << from_expr(SSA.ns, "", e) << "the lower value is " 
+        << from_expr(SSA.ns, "", l) << std::endl;
         l_is_assigned = true;
         break;
       }
@@ -889,11 +903,15 @@ exprt acdl_domaint::split(const valuet &value,
         to_integer(cexpr, val1);
         val2 = val1+1;
         l = from_integer(val2, expr.type());  
+        std::cout << "the expression is " << from_expr(SSA.ns, "", e) << "the lower value is " 
+        << from_expr(SSA.ns, "", l) << std::endl;
         l_is_assigned = true;
         break;
       }
     }
   }
+
+  // handle the negative literals
   mp_integer neg, cneg; 
   mp_integer negu, cnegu; 
   for(unsigned i=0; i<new_value.size(); i++)
@@ -1059,6 +1077,7 @@ Function: acdl_domaint::normalize_val()
 
 void acdl_domaint::normalize_val(valuet &value)
 {
+  std::cout << "I am inside normalize value" << std::endl;
   valuet val;
   if(value.empty()) 
     return;
@@ -1276,8 +1295,7 @@ unsigned acdl_domaint::compare(const meet_irreduciblet &a,
   
   *solver << f1;
   if ((*solver)() == decision_proceduret::D_SATISFIABLE) {
-    status = 0;
-    return status;
+    return SATISFIED;
   }
   
   // to check contradiction, check !(a & b)
@@ -1285,13 +1303,11 @@ unsigned acdl_domaint::compare(const meet_irreduciblet &a,
   
   *solver << f2;
   if ((*solver)() == decision_proceduret::D_SATISFIABLE) {
-    status = 1;
-    return status;
+    return CONFLICT;
   }
   // unknown: neither contradicting nor satisfiable
   else {
-    status = 2;
-    return status;
+    return UNKNOWN;
   }  
 }
 
@@ -1308,30 +1324,39 @@ Function: acdl_domaint::compare_val_lit()
                    3. unknown -- neither satisfiable nor contradicting
 \*******************************************************************/
 
-unsigned acdl_domaint::compare_val_lit(const valuet &a, 
-			       const meet_irreduciblet &b) const
+unsigned acdl_domaint::compare_val_lit(valuet &a, 
+			       meet_irreduciblet &b)
 {
-  std::unique_ptr<incremental_solvert> solver(
-    incremental_solvert::allocate(SSA.ns,true));
-  unsigned int status;  
-  // to check satisfiable, check !(a & !b)
-  exprt f1 = not_exprt(and_exprt(conjunction(a),not_exprt(b)));
+  unsigned int status;
   
-  *solver << f1;
-  if ((*solver)() == decision_proceduret::D_SATISFIABLE) {
-    return SATISFIED;
+  exprt f = simplify_expr(and_exprt(conjunction(a),(b)),SSA.ns);
+  if(f.is_false())  
+    return CONFLICT;
+  
+  std::unique_ptr<incremental_solvert> solver1(
+    incremental_solvert::allocate(SSA.ns,true));
+  // to check contradiction, check !(a & b)
+  *solver1 << and_exprt(conjunction(a),b);
+  if ((*solver1)()==decision_proceduret::D_UNSATISFIABLE) {
+    status = 0;
+    return status; //CONFLICT;
   }
   
-  // to check contradiction, check !(a & b)
-  exprt f2 = not_exprt(and_exprt(conjunction(a),b));
-  
-  *solver << f2;
-  if ((*solver)() == decision_proceduret::D_SATISFIABLE) {
-    return CONFLICT;
+  // to check satisfiable, 
+  // forall a,b, a=>b is SAT
+  // Exists a,b, !(a=>b) is UNSAT
+  // check (a && !b) is UNSAT
+  std::unique_ptr<incremental_solvert> solver(
+    incremental_solvert::allocate(SSA.ns,true));
+  *solver << and_exprt(conjunction(a),not_exprt(b));
+  if ((*solver)()==decision_proceduret::D_UNSATISFIABLE) {
+    status = 2;
+    return status; // SATISFIED;
   }
   // unknown: neither contradicting nor satisfiable
   else {
-    return UNKNOWN;
+    status = 1;
+    return status; // UNKNOWN;
   }  
 }
 
@@ -1439,14 +1464,13 @@ Function: acdl_domaint::unit_rule
 int acdl_domaint::unit_rule(const local_SSAt &SSA, valuet &v, valuet &clause, exprt &unit_lit)
 {
   assert(check_val_consistency(v));
-  // Do we normalize the value 
+  // Normalize the current partial assignment
   normalize(v);
   int unit_idx = -1;
   int i=0;
   bool disjoint = false;
   bool new_lit = false;
-  int status;
-  std::cout << "Checking unit rule for the clause " << from_expr(SSA.ns, "", conjunction(clause)) << std::endl;
+  std::cout << "Checking unit rule for the clause " << from_expr(SSA.ns, "", disjunction(clause)) << std::endl;
   
   for(i=0;i<clause.size();i++)
   {
@@ -1454,7 +1478,7 @@ int acdl_domaint::unit_rule(const local_SSAt &SSA, valuet &v, valuet &clause, ex
     disjoint = false;
     new_lit = false;
     exprt clause_exp = clause[i];
-    std::cout << "comparing" << from_expr(SSA.ns, "", conjunction(v)) << "<--->" << from_expr(SSA.ns, "", clause_exp) << std::endl;
+    std::cout << "comparing " << from_expr(SSA.ns, "", conjunction(v)) << " <---> " << from_expr(SSA.ns, "", clause_exp) << std::endl;
     // check symbols in clause_exp with that of v
     acdl_domaint::varst exp_symbols;
     find_symbols(clause_exp, exp_symbols);
@@ -1485,7 +1509,10 @@ int acdl_domaint::unit_rule(const local_SSAt &SSA, valuet &v, valuet &clause, ex
     // now set up for actual comparisons
     // since there are overlap of symbols 
     // between the abstract value and clause
-    status = compare_val_lit(relevant_expr, clause_exp);
+#ifdef DEBUG
+    std::cout << "Comparing relevant expressions " << from_expr(SSA.ns, "", conjunction(relevant_expr)) << " <---> " << from_expr(SSA.ns, "", clause_exp) << std::endl;
+#endif    
+    int status = compare_val_lit(relevant_expr, clause_exp);
     std::cout << "The status is " << status << std::endl;
     if(status == SATISFIED)
       return SATISFIED; 

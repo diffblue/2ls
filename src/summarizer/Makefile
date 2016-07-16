@@ -53,6 +53,7 @@ DELTA_OBJ+=\
       ../acdl/template_generator_acdl$(OBJEXT) \
       ../acdl/acdl_decision_heuristics_base$(OBJEXT) \
       ../acdl/acdl_decision_heuristics_rand$(OBJEXT) \
+      ../acdl/acdl_decision_heuristics_ordered$(OBJEXT) \
       ../functions/summary$(OBJEXT) \
       ../functions/get_function$(OBJEXT) \
       ../functions/path_util$(OBJEXT) \

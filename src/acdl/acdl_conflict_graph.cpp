@@ -200,8 +200,54 @@ Function: acdl_conflict_grapht::print_output
 void acdl_conflict_grapht::dump_trail(const local_SSAt &SSA)
 {
   std::cout << "Dump the trail" << std::endl;
-  for(unsigned i=0;i<prop_trail.size();i++) { 
-    std::cout << "Prop trail:" << from_expr(SSA.ns, "", prop_trail[i]) << std::endl;
-    std::cout << "Val trail:" << from_expr(SSA.ns, "", numbering[val_trail[i]]) << std::endl;
+  std::cout << "Decision Level: " << current_level << std::endl;
+  int control_point;
+  if(control_trail.size() == 0)
+   control_point=0;
+  else
+   control_point=control_trail.back(); 
+  std::cout << "Upper index: " << prop_trail.size()-1 << "lower index: " << control_point << std::endl;
+  for(unsigned i=prop_trail.size()-1;i>=control_point;i--) {
+   std::cout << from_expr(SSA.ns, "", prop_trail[i]) << std::endl;
+   if(i==0) break;
+  }
+   
+  int search_level = control_trail.size()-1;
+  while(search_level >= 0) {
+    int upper_index=0;
+    int lower_index=0;
+    std::cout << "Decision Level: " << search_level << std::endl;
+    upper_index = control_trail[search_level];
+    if(search_level-1 >= 0)
+      lower_index = control_trail[search_level-1];
+    else 
+      lower_index = 0; 
+    std::cout << "Upper index: " << upper_index << "lower index: " << lower_index << std::endl;
+    // now traverse the prop_trail  
+    for(unsigned k=upper_index-1;k>=lower_index;k--) {
+     std::cout << from_expr(SSA.ns, "", prop_trail[k]) << std::endl;
+     if(k==0) break;
+    }
+    search_level=search_level-1;
+  }
+}
+
+/*******************************************************************\
+
+Function: acdl_conflict_grapht::print_output
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+ \*******************************************************************/
+void acdl_conflict_grapht::dump_dec_trail(const local_SSAt &SSA)
+{
+  std::cout << "Dump the decision trail" << std::endl;
+  for(unsigned i=0;i<dec_trail.size();i++) { 
+    std::cout << "decision trail element:" << from_expr(SSA.ns, "", dec_trail[i]) << std::endl;
+    //std::cout << "Val trail:" << from_expr(SSA.ns, "", numbering[val_trail[i]]) << std::endl;
   }
 }

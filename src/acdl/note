@@ -715,3 +715,5 @@ Query for June 14, 2016
 ------------------------
 1> Generalisation in ACDL
 2> Formalize Algo for loops
+3> bottom9 example when run with no backjumping lead to storing inconsistent
+decision epxr of the form x>0,x<0 in the trail which lead to assertion failue. 

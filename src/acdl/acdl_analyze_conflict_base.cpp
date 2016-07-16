@@ -41,6 +41,10 @@ bool acdl_analyze_conflict_baset::chronological_backtrack(const local_SSAt &SSA,
   // check val_trail and prop_trail are of equal size
   assert(graph.prop_trail.size() == graph.val_trail.size());
    
+  std::cout << "The decision to be flipped is " << from_expr(SSA.ns, "", dec_exp);
+  std::cout << "The trail before  backtracking is" << std::endl;
+  graph.dump_trail(SSA);
+
   // backtrack one level
   cancel_once(SSA, graph);
   
@@ -48,6 +52,9 @@ bool acdl_analyze_conflict_baset::chronological_backtrack(const local_SSAt &SSA,
   exprt exp = flip(dec_exp);
 
   graph.assign_to_trail(exp);
+
+  std::cout << "The trail after backtracking and assigning negation of previous decision is" << std::endl;
+  graph.dump_trail(SSA);
   
   // check val_trail and prop_trail are of 
   // equal size after backtracking
@@ -88,8 +95,17 @@ bool acdl_analyze_conflict_baset::operator() (const local_SSAt &SSA, acdl_confli
     return false;
   }
   
-  // add the conflict clause to the learned clause database
-  learned_clauses.push_back(conf_clause);
+  std::cout << "Decision trail before backtracking" << std::endl;
+  graph.dump_dec_trail(SSA); 
+  
+  // print the conflict clause
+  std::cout << "conflict clause is" << from_expr(SSA.ns, "", disjunction(conf_clause)) << std::endl;
+
+  // [TEMPORARY USE] save the 
+  // present decision level before backtracking
+  int present_dl = graph.current_level;
+  // save the last decision before backtracking
+  exprt dec_expr = graph.dec_trail.back();
   
   // backtrack
   std::cout << "****************" << std::endl;
@@ -99,15 +115,53 @@ bool acdl_analyze_conflict_baset::operator() (const local_SSAt &SSA, acdl_confli
   std::cout << "backtrack to dlevel: " << backtrack_level << std::endl;
 #endif  
   cancel_until(SSA,graph,backtrack_level);
+  std::cout << "Trail after backtracking" << std::endl;
+  graph.dump_trail(SSA); 
+  
+  std::cout << "Decision trail after backtracking" << std::endl;
+  graph.dump_dec_trail(SSA); 
   
   backtracks++;
+  
+  /* 
+  Steps to follow for application of unit rule to learnt clause:
+  -- Step 1: Construct the learnt clause
+  -- Step 2: Normalize the learnt clause without UIP
+  -- Step 3: Normalize the current partial assignment
+  -- Step 4: The learnt clause should be UNIT !
+  */
+  // The above steps holds true for 
+  // monotonic and non-monotonic decision
+  // Note that the learnt clause can have redundant
+  // literals, so normalize the learnt clause without UIP
+  // The normalisation steps guarantee the following
+  //  -- leads to shorter clause
+  //  -- normalisation is equivalent transformation 
+  //  -- backtrack level is unaffected by normalisation
+  //  -- unit rule must hold after normalisation  
+  
+  
+  // -- Step 2: Normalize the learnt clause without UIP
+  // Note that the last element of the 
+  // learnt clause is the UIP
+  acdl_domaint::valuet norm_conf_clause;
+  for(unsigned i=0;i<conf_clause.size()-1;i++)
+     norm_conf_clause.push_back(conf_clause[i]);         
+  domain.normalize(norm_conf_clause);
+  // now push the uip into the learnt clause
+  norm_conf_clause.push_back(conf_clause.back());         
+
+  // add the conflict clause to the learned clause database
+  learned_clauses.push_back(norm_conf_clause);
   
   exprt unit_lit;
   acdl_domaint::valuet v;
   graph.to_value(v);
-  // check that the clause is unit
-  int result = domain.unit_rule(SSA, v, conf_clause, unit_lit);
-  
+  // check that the clause is unit,
+  // this causes one propagation because
+  // the clause is unit
+  int result = domain.unit_rule(SSA, v, norm_conf_clause, unit_lit);
+ 
   // the learned clause must be asserting
   assert(result == domain.UNIT);
   
@@ -163,6 +217,8 @@ void acdl_analyze_conflict_baset::get_conflict_clause
    else if(last_proof == ABSINT) {
      acdl_domaint::valuet reason;
      get_ai_reason(SSA, graph, reason);
+     // print the reason
+     std::cout << "Reason: " << from_expr(SSA.ns, "", disjunction(reason)) << std::endl;
 
      for(acdl_domaint::valuet::iterator it = reason.begin();
           it != reason.end(); it++)
@@ -176,6 +232,9 @@ void acdl_analyze_conflict_baset::get_conflict_clause
      backtrack_level = -1;
    else 
      find_uip(SSA, graph, conf_clause, graph.current_level);
+  
+  // print the conflict clause
+  std::cout << "learnt clause: " << from_expr(SSA.ns, "", disjunction(conf_clause)) << std::endl;
 }
 
 /*******************************************************************\
@@ -193,6 +252,10 @@ void acdl_analyze_conflict_baset::cancel_until
    (const local_SSAt &SSA, acdl_conflict_grapht &graph, int lvl) 
 {
   while(graph.current_level > lvl) {
+     // dl0 corresponds to deductions
+     // which are always consistent, so 
+     // do not cancel elements from dl0
+     //if(graph.current_level == 0) return;
      cancel_once(SSA,graph);
   }
 }
@@ -218,6 +281,7 @@ void acdl_analyze_conflict_baset::cancel_once(const local_SSAt &SSA, acdl_confli
   
   graph.control_trail.pop_back();
   bcp_queue_top=graph.prop_trail.size();
+  graph.dec_trail.pop_back();
   graph.current_level--;
 }
 
@@ -421,12 +485,90 @@ acdl_conflict_grapht &graph, acdl_domaint::valuet &result_clause, unsigned dleve
    
    assert(dlevel>0);
    // find the dlevel section of trail
+   int trail_start = graph.control_trail[dlevel-1];
+   int trail_end = 
+     dlevel < graph.control_trail.size() ? 
+     graph.control_trail[dlevel] - 1 : graph.prop_trail.size()-1;
+
+   unsigned trail_size = (trail_end+1) - trail_start;
+
+   std::vector<bool> marked;
+   marked.resize(trail_size, false);
+
+   unsigned open_paths = target_level_lits.size();
+
+   /* set initial marking for trail */
+   for(int ws_i = 0; unsigned(ws_i) < target_level_lits.size(); ws_i++)
+   {
+     const exprt& lit = target_level_lits[ws_i];
+     int index = first_contradiction_on_trail(lit, graph, trail_start, trail_end);
+     marked[index - trail_start] = true;
+   }
+
+   /* START OF UIP DETECTION */  
+   int uip = -1;
+
+   for(int i = trail_end; i >= trail_start; i--)
+   {
+     if(!marked[i-trail_start]) //skip unmarked ones
+       continue;
+
+     // ******** Marked portion of trail now ****** //
+     //found uip
+     if(open_paths == 1)
+     {
+       uip = i;
+       break;
+     }
    
+     // If a literal of the trail is in conflict, 
+     // then this literal must have participated in 
+     // any previous conflict clause to make it UNIT
+
+     //int r = reason_trail[i]; assert(r != -1);
+     //literalt l = lit_from_trail(i);  
+   }
 }
    
 /*******************************************************************\
 
-Function: acdl_analyze_conflict_baset::get_earliest_contradiction
+Function: acdl_analyze_conflict_baset::get_first_contradiction
+
+ Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+int acdl_analyze_conflict_baset::first_contradiction_on_trail(
+     const exprt& expr, acdl_conflict_grapht &graph, int trail_start, int trail_end)
+{
+  acdl_domaint::valuet relevant_expr;
+  acdl_domaint::varst exp_symbols;
+  find_symbols(expr, exp_symbols);
+
+  for(int i = trail_start; i <= trail_end; i++)
+  {
+    exprt& trail_exp = graph.prop_trail[i];
+    acdl_domaint::varst v_symbol;
+    find_symbols(trail_exp, v_symbol);
+    for(acdl_domaint::varst::iterator it1 = v_symbol.begin(); it1 != v_symbol.end(); it1++) {
+      bool is_in = exp_symbols.find(*it1) != exp_symbols.end();
+      if(is_in) {
+        bool status = domain.compare(expr, trail_exp);
+        if(status == domain.CONFLICT)
+          return i;
+      } 
+    }   
+  }
+  assert(0);
+}
+
+
+/*******************************************************************\
+
+Function: acdl_analyze_conflict_baset::get_latest_contradiction
 
   Inputs:
 
@@ -436,7 +578,7 @@ Function: acdl_analyze_conflict_baset::get_earliest_contradiction
 
 \*******************************************************************/
   
-unsigned acdl_analyze_conflict_baset::get_earliest_contradiction(
+unsigned acdl_analyze_conflict_baset::get_latest_contradiction(
 const local_SSAt &SSA, acdl_conflict_grapht &graph, acdl_domaint::meet_irreduciblet &exp) 
 {
   
@@ -444,7 +586,7 @@ const local_SSAt &SSA, acdl_conflict_grapht &graph, acdl_domaint::meet_irreducib
   // get symbols from this meet irreducible
   find_symbols(exp, exp_symbols);
   
-  std::cout << "Searching for earliest contradiction of literal" << from_expr(SSA.ns, "", exp) << std::endl;
+  std::cout << "Searching for latest contradiction of literal" << from_expr(SSA.ns, "", exp) << std::endl;
 
   std::cout << "searching for contradiction at the current level" << std::endl;
   acdl_domaint::valuet matched_expr;
@@ -528,5 +670,111 @@ const local_SSAt &SSA, acdl_conflict_grapht &graph, acdl_domaint::meet_irreducib
      }
      search_level=search_level-1;
    }
+  }
+}
+
+
+
+/*******************************************************************\
+
+Function: acdl_analyze_conflict_baset::get_earliest_contradiction
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+  
+unsigned acdl_analyze_conflict_baset::get_earliest_contradiction(
+const local_SSAt &SSA, acdl_conflict_grapht &graph, acdl_domaint::meet_irreduciblet &exp) 
+{
+  acdl_domaint::varst exp_symbols;
+  // get symbols from this meet irreducible
+  find_symbols(exp, exp_symbols);
+  
+  std::cout << "Searching for earliest contradiction of literal" << from_expr(SSA.ns, "", exp) << std::endl;
+  // search for contradiction from beginning
+ 
+   unsigned lower_index, upper_index;
+   unsigned control_trail_size = graph.control_trail.size();
+   int search_level = 0;
+   while(search_level <= control_trail_size-1) {
+     acdl_domaint::valuet val_perdecision;
+
+     std::cout << "searching for contradiction at level: " << search_level << std::endl;
+     upper_index = graph.control_trail[search_level];
+     if(search_level == 0)
+       lower_index = 0; 
+     else 
+       lower_index = graph.control_trail[search_level-1];
+     std::cout << "Upper index is " << upper_index << "lower index is " << lower_index << std::endl;
+     // now traverse the prop_trail  
+     for(unsigned k=lower_index;k<=upper_index-1;k++) {
+       std::cout << "The matched expression is: " << from_expr(SSA.ns, "", graph.prop_trail[k]) << std::endl;
+       assert(k >= 0);
+       exprt prop_exp = graph.prop_trail[k];
+       val_perdecision.push_back(prop_exp);
+       if(k==upper_index-1) break;
+     }
+     // assert that the deductions for this decision are consistent 
+     assert(domain.check_val_consistency(val_perdecision));
+     // push the contradicted literal
+     val_perdecision.push_back(exp);
+     bool status = domain.check_val_satisfaction(val_perdecision);
+     if(status == 0)
+     {
+       std::cout << "Found contradiction at decision level:" << search_level << "for " << from_expr(SSA.ns, "", exp) << std::endl;
+       return search_level;
+     }
+     search_level=search_level+1;
+   }
+  
+  std::cout << "searching for contradiction at the current level" << std::endl;
+  acdl_domaint::valuet matched_expr;
+  int control_point = graph.control_trail.back(); 
+  // traverse from the back of prop_trail, last element is false_exprt 
+  // since the deduction at the current level leads to conflict, 
+  // so the deduction are by construction UNSAT
+  // so, we need to iterate over all elements explicitly
+  // for this segment of propagation trail which corresponds to 
+  // the current decision level. For other decision levels, we do 
+  // not need to explicitly traverse the propagation trail segment 
+  for(unsigned j=control_point;j<=graph.prop_trail.size()-1;j++)
+  {
+    std::cout << "The matched expression is: " << from_expr(SSA.ns, "", graph.prop_trail[j]) << std::endl;
+    assert(graph.prop_trail[graph.prop_trail.size()-1] == false_exprt());
+    // find contradiction by traversing the prop_trail
+    // and finding the relevant meet irreducibles  
+    exprt prop_exp = graph.prop_trail[j];
+    acdl_domaint::varst prop_symbols;
+    // get symbols from this meet irreducible
+    find_symbols(prop_exp, prop_symbols);
+    // check if this symbol is in dec_symbols  
+    for(acdl_domaint::varst::iterator it = prop_symbols.begin(); it != prop_symbols.end(); it++)
+    {
+      bool is_in = exp_symbols.find(*it) != exp_symbols.end();
+      if(is_in) { 
+        std::cout << "Hey !!! found contradiction with " << from_expr(SSA.ns, "", prop_exp) << std::endl;
+        matched_expr.push_back(prop_exp);
+        break;
+      }
+    }
+    #if 0
+    exprt prop_exp = graph.prop_trail[j];
+    if(prop_exp != false_exprt()) {
+       std::cout << "The matched expression is: " << from_expr(SSA.ns, "", prop_exp) << std::endl;
+      matched_expr.push_back(prop_exp);
+    }
+    #endif
+  }
+  // push the contradicted literal
+  matched_expr.push_back(exp);
+  bool status = domain.check_val_satisfaction(matched_expr);
+  if(status == 0)
+  {
+    std::cout << "Found contradiction at current decision level for " << from_expr(SSA.ns, "", exp) << std::endl;
+    return graph.current_level;
   }
 }
