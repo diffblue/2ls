@@ -61,6 +61,7 @@ public:
    void init();
    void assign_to_trail(acdl_domaint::meet_irreduciblet &m_ir);
    void dump_trail(const local_SSAt &SSA);
+   void dump_dec_trail(const local_SSAt &SSA);
  protected:
 };
 #endif

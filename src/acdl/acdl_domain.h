@@ -81,8 +81,7 @@ public:
 		   const std::set<symbol_exprt> &symbols) const;
   unsigned compare(const meet_irreduciblet &a, 
        const meet_irreduciblet &b) const;
-  unsigned compare_val_lit(const valuet &a, 
-			       const meet_irreduciblet &b) const;
+  unsigned compare_val_lit(valuet &a, meet_irreduciblet &b);
   
   bool check_val_consistency(valuet &val);
   bool check_val_satisfaction(valuet &val);

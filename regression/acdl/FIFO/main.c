@@ -5,7 +5,7 @@ _Bool nondet_bool();
 unsigned char nondet_uchar();
 
 int MSBD = 3;
-int LAST = 15;
+int LAST = 1;
 int MSBA = 3;
 
 struct state_elements_srFIFO {
@@ -17,8 +17,8 @@ struct state_elements_srFIFO  ssrFIFO;
 
 void initial_srFIFO() {
   int i;
-  for(i = 0; i <= LAST; i = i + 1)
-    ssrFIFO.mem[i] = 0;
+  //for(i = 0; i <= LAST; i = i + 1)
+  ssrFIFO.mem[0] = 0;
   ssrFIFO.tail = 0;
   ssrFIFO.empty = 1;
 } 
@@ -30,8 +30,8 @@ void srFIFO(_Bool clock, unsigned char dataIn, _Bool push, _Bool pop, unsigned c
   // clocked block 
   if(push && !*full)
   {
-    for(i = LAST; i > 0; i = i - 1)
-      ssrFIFO.mem[i] = (ssrFIFO.mem[i - 1] & 0xF);
+    //for(i = LAST; i > 0; i = i - 1)
+    ssrFIFO.mem[0] = (ssrFIFO.mem[i - 1] & 0xF);
     ssrFIFO.mem[0] = dataIn & 0xF;
     
     if(!ssrFIFO.empty)
@@ -68,8 +68,8 @@ struct state_elements_rbFIFO  srbFIFO;
 void initial_rbFIFO()
 {
   int i;
-  for(i = 0;i <= LAST; i = i + 1)
-    srbFIFO.mem[i] = 0;
+  //for(i = 0;i <= LAST; i = i + 1)
+  srbFIFO.mem[0] = 0;
   srbFIFO.head = 0;
   srbFIFO.tail = 0;
   srbFIFO.empty = 1;

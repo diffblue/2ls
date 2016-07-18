@@ -715,3 +715,20 @@ Query for June 14, 2016
 ------------------------
 1> Generalisation in ACDL
 2> Formalize Algo for loops
+3> bottom9 example when run with no backjumping lead to storing inconsistent
+decision epxr of the form x>0,x<0 in the trail which lead to assertion failue.
+4> bottom9 example with clause learning leads to inconsistent decision
+(different phase)
+5> branch8: deduction cond#23 == (c#22==FALSE) is not done even though cond#23 
+is decided. Atually, c#22 is not bool nor ID_signed. It has 8 bits being a
+bool-- why is this ? 
+6> build_meet_irreducible_templates does not return template when passed
+non-boolean variables. It shows:
+Program received signal SIGFPE, Arithmetic exception.
+7> When the build_meet_irreducible_template returns x+y, x-y, -x+y, then 
+do we search for values of x and y in the abstract value such that 
+  x<=5, y<=3, then construct the following meet irreducibles like follows:
+  x+y<=8
+  x-y<=2
+  y-x<=-2-x-y<=-8
+8> When do we change the phase of a variable, that is pass split(lower). 

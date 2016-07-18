@@ -1,6 +1,8 @@
 #include "template_generator_acdl.h"
+#include <cstdlib>
 
 #define SHOW_TEMPLATE
+#define SHOW_TEMPLATE_VARIABLES
 
 /*******************************************************************\
 

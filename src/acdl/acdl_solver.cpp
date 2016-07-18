@@ -127,6 +127,7 @@ bool acdl_solvert::bcp(const local_SSAt &SSA, unsigned idx)
 #endif  
   
   int i=0;
+  std::cout << "The size of learned clauses is " << analyzes_conflict.learned_clauses.size() << std::endl;
   while(i < analyzes_conflict.learned_clauses.size()) {
     // note that each application of unit rule
     // may infer new deductions, so we compute 
@@ -183,6 +184,7 @@ Function: acdl_solvert::propagation
 
 property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, const exprt &assertion)
 {
+  unsigned init_size = conflict_graph.prop_trail.size();
   while (!worklist.empty())
   {
     const acdl_domaint::statementt statement = worklist.pop();
@@ -249,7 +251,7 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
     // graph gives the meet of new 
     // deductionst and old deductionst since
     // we are computing the gfp
-    //implication_graph.to_value(new_v);
+    // implication_graph.to_value(new_v);
     conflict_graph.to_value(new_v);
     
     // TEST: meet is computed because we are doing gfp
@@ -285,6 +287,19 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
       return property_checkert::PASS; //potential UNSAT (modulo decisions)
     }
   }
+  unsigned final_size = conflict_graph.prop_trail.size();
+  
+#if 0
+  // if there are no deductions, then
+  // remove the last decision from the 
+  // decision_trail as well decrease the 
+  // decision_level
+  if(final_size - init_size == 0) {
+    std::cout << "No propagations possible from this decision, so cancel the trail once !!" << std::endl;
+    dec_not_in_trail.push_back(conflict_graph.dec_trail.back());
+    analyzes_conflict.cancel_once(SSA, conflict_graph);
+  }
+#endif
 
 #ifdef DEBUG
   std::cout << "Propagation finished with UNKNOWN" << std::endl;
@@ -311,21 +326,21 @@ acdl_solvert::decide (const local_SSAt &SSA, const exprt& assertion)
   acdl_domaint::valuet v;
   //implication_graph.to_value(v);
   conflict_graph.to_value(v);
+  std::cout << "Checking consistency of trail before adding decision" << std::endl;
+  assert(domain.check_val_consistency(v));
+  std::cout << "Trail is consistent" << std::endl;
+ 
+#if 0  
+  // Add the decisions that did not contribute 
+  // to any deductions here since such 
+  // information is not in the trail
+  for(int i=0;i<dec_not_in_trail.size();i++)
+    v.push_back(dec_not_in_trail[i]);
+#endif    
     
+  // Normalizing here is absolute must
+  // Otherwise, unsafe cases does not terminate 
   domain.normalize_val(v);
-  // the decision must know about the learned clause as well
-  // so that it can not make wrong decisions on the variables which 
-  // is already singleton in the learned clause, for example 
-  // learned_clause=!cond21, new_decision=cond21 -- which contradicts
-  unsigned i = 0;
-  if(analyzes_conflict.learned_clauses.size() > 0) {
-    while(i < analyzes_conflict.learned_clauses.size()) {
-      acdl_domaint::valuet clause_val = analyzes_conflict.learned_clauses[i];
-      const exprt &clause_expr = conjunction(clause_val);
-      v.push_back(clause_expr);
-      i++;
-    } 
-  }
   acdl_domaint::meet_irreduciblet dec_expr=decision_heuristics(SSA, v);
   // no new decisions can be made
   if(dec_expr == false_exprt())
@@ -346,9 +361,7 @@ acdl_solvert::decide (const local_SSAt &SSA, const exprt& assertion)
   decision = domain.split(alist.front(),decision_expr);
   #endif
   
-  // update decision graph
-  // TODO
-  // implication_graph.add_decision(dec_expr);
+  // update conflict graph
   conflict_graph.add_decision(dec_expr);
 
   // check that the meet_ireducibles in the prop trail 
@@ -358,7 +371,9 @@ acdl_solvert::decide (const local_SSAt &SSA, const exprt& assertion)
   // at the same time in the trail)
   acdl_domaint::valuet new_value;
   conflict_graph.to_value(new_value);
+  std::cout << "Checking consistency of trail after adding decision" << std::endl;
   assert(domain.check_val_consistency(new_value));
+  std::cout << "Trail is consistent" << std::endl;
 
   // Take a meet of the decision expression (decision) with the current abstract state (v).
   // The new abstract state is now in v
@@ -543,6 +558,7 @@ property_checkert::resultt acdl_solvert::operator()(
   std::string str1("guard");
   std::string str2("#phi");
   std::string str3("#lb");
+  std::string str4("#return_value");
   std::string name;
   for(std::set<exprt>::const_iterator 
     it = decision_variable.begin(); 
@@ -553,11 +569,16 @@ property_checkert::resultt acdl_solvert::operator()(
     std::size_t found1 = name.find(str1);
     std::size_t found2 = name.find(str2);
     std::size_t found3 = name.find(str3);
-    if (found1==std::string::npos && found2==std::string::npos && found3==std::string::npos) {
+    std::size_t found4 = name.find(str4);
+    if (found1==std::string::npos && found2==std::string::npos && 
+      found3==std::string::npos && found4==std::string::npos) {
       decision_heuristics.initialize_dec_variables(*it);
     }
   } 
 
+  // order decision variables
+  decision_heuristics.order_decision_variables(SSA);
+  
 #ifdef DEBUG
   std::cout << "Printing all decision variables inside solver" << std::endl;
   for(std::set<exprt>::const_iterator 
@@ -639,10 +660,11 @@ property_checkert::resultt acdl_solvert::operator()(
         return result;
       std::cout << "Failed to verify program" << std::endl;
 #ifdef DEBUG
-      std::cout << "Minimal unsafe element is" << std::endl;
-      for(acdl_domaint::valuet::const_iterator it = v.begin();it != v.end(); ++it)
-        std::cout << from_expr(SSA.ns, "", *it) << std::endl;
+      acdl_domaint::valuet elm;
+      conflict_graph.to_value(elm);
+      std::cout << "Minimal unsafe element is" << from_expr(SSA.ns, "", conjunction(elm)) << std::endl;
 #endif    
+      result = property_checkert::UNKNOWN; 
       break;
     }
 
@@ -725,5 +747,4 @@ property_checkert::resultt acdl_solvert::operator()(
   } // end of while(true)
   END:
   std::cout << "Procedure terminated after iteration: "  << iteration  << std::endl;
-  // return result;
 }

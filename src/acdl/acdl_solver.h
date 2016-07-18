@@ -56,6 +56,7 @@ protected:
   acdl_worklist_baset &worklist; 
   //acdl_conflict_analysis_baset &conflict_analysis;
   acdl_analyze_conflict_baset &analyzes_conflict;
+  std::vector<exprt> dec_not_in_trail;
 
   acdl_conflict_grapht conflict_graph;
   unsigned ITERATION_LIMIT=999999; 
