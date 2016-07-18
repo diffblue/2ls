@@ -485,17 +485,9 @@ bool acdl_domaint::is_complete(const valuet &value,
   find_symbols (conjunction(value), symbols);
 #endif
 
-  std::set<symbol_exprt> sym;
-  find_symbols (conjunction(value), sym);
   for(std::set<symbol_exprt>::const_iterator it = symbols.begin();
       it != symbols.end(); ++it)
   {
-    // [note] check whether this symbol 
-    // appars in the abstract value, if not,
-    // then do not check for this symbol 
-    bool is_in = sym.find(*it) != sym.end();
-    if(!is_in) continue;
-     
     decision_proceduret::resultt res = (*solver)();
     assert(res==decision_proceduret::D_SATISFIABLE);
     // if value == (x=[2,2]) and (*it is x), then 'm' below contains the
@@ -731,7 +723,7 @@ exprt acdl_domaint::split(const valuet &value,
         std::cout << "the expression is " << from_expr(SSA.ns, "", e) << "the upper value is " 
         << from_expr(SSA.ns, "", u) << std::endl;
         u_is_assigned = true;
-        break;
+        //break;
       }
       if(e.id() == ID_ge)
       {
@@ -739,9 +731,10 @@ exprt acdl_domaint::split(const valuet &value,
         std::cout << "the expression is " << from_expr(SSA.ns, "", e) << "the lower value is " 
         << from_expr(SSA.ns, "", l) << std::endl;
         l_is_assigned = true;
-        break;
+        //break;
       }
       if(e.id() == ID_lt) {
+        std::cout << "computing upper value" << std::endl;
         constant_exprt cexpr = to_constant_expr(to_binary_relation_expr(e).rhs());
         to_integer(cexpr, val1);
         val2 = val1-1;
@@ -749,17 +742,18 @@ exprt acdl_domaint::split(const valuet &value,
         u_is_assigned = true;
         std::cout << "the expression is " << from_expr(SSA.ns, "", e) << "the upper value is " 
         << from_expr(SSA.ns, "", u) << std::endl;
-        break;
+        //break;
       }
       if(e.id() == ID_gt) {
+        std::cout << "computing lower value" << std::endl;
         constant_exprt cexpr = to_constant_expr(to_binary_relation_expr(e).rhs());
         to_integer(cexpr, val1);
         val2 = val1+1;
         l = from_integer(val2, expr.type());  
+        l_is_assigned = true;
         std::cout << "the expression is " << from_expr(SSA.ns, "", e) << "the lower value is " 
         << from_expr(SSA.ns, "", l) << std::endl;
-        l_is_assigned = true;
-        break;
+        //break;
       }
     }
   }
@@ -786,7 +780,7 @@ exprt acdl_domaint::split(const valuet &value,
         cneg = -neg;
         l = from_integer(cneg, expr.type());  
         l_is_assigned = true;
-        break;
+        //break;
       }
       // I/P: (-x >= 10) O/P: u = -10
       if(e.id() == ID_ge) {
@@ -796,7 +790,7 @@ exprt acdl_domaint::split(const valuet &value,
         cnegu = -negu;
         u = from_integer(cnegu, expr.type());  
         u_is_assigned = true;
-        break;
+        //break;
       }
       // I/P: (-x < 10) O/P: l = (-10+1) = -9
       if(e.id() == ID_lt) {
@@ -807,7 +801,7 @@ exprt acdl_domaint::split(const valuet &value,
         l_is_assigned = true;
         std::cout << "the expression is " << from_expr(SSA.ns, "", e) << "the lower value is " 
         << from_expr(SSA.ns, "", l) << std::endl;
-        break;
+        //break;
       }
       // I/P: (-x > 10) O/P: l = (-10-1) = -11
       if(e.id() == ID_gt) {
@@ -816,7 +810,7 @@ exprt acdl_domaint::split(const valuet &value,
         cnegu = (-negu)-1;
         u = from_integer(cnegu, expr.type());  
         u_is_assigned = true;
-        break;
+        //break;
       }
     }
   }
@@ -1237,6 +1231,8 @@ bool acdl_domaint::check_val_consistency(valuet &val)
 {
   std::unique_ptr<incremental_solvert> solver(
     incremental_solvert::allocate(SSA.ns,true));
+  std::cout << "Checking consistency for value " << 
+  from_expr(SSA.ns, "", conjunction(val)) << std::endl;
   *solver << conjunction(val);
   decision_proceduret::resultt res = (*solver)();
   if(res==decision_proceduret::D_UNSATISFIABLE)
