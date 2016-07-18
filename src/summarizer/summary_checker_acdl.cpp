@@ -17,6 +17,7 @@ Author: Peter Schrammel
 #include "../acdl/acdl_decision_heuristics_base.h"
 #include "../acdl/acdl_decision_heuristics_rand.h"
 #include "../acdl/acdl_decision_heuristics_ordered.h"
+#include "../acdl/acdl_decision_heuristics_octagon.h"
 #include "../acdl/acdl_worklist_base.h"
 #include "../acdl/acdl_worklist_ordered.h"
 #include "../acdl/acdl_analyze_conflict_base.h"
@@ -119,6 +120,8 @@ property_checkert::resultt summary_checker_acdlt::operator()(
           decision_heuristics = std::unique_ptr<acdl_decision_heuristics_baset>(new acdl_decision_heuristics_randt(domain));
         else if(options.get_option("acdl-decision") == "ordered")
           decision_heuristics = std::unique_ptr<acdl_decision_heuristics_baset>(new acdl_decision_heuristics_orderedt(domain));
+        else if(options.get_option("acdl-decision") == "octagon")
+          decision_heuristics = std::unique_ptr<acdl_decision_heuristics_baset>(new acdl_decision_heuristics_octagont(domain));
         // ....
 
         // worklist (currently there is only one)

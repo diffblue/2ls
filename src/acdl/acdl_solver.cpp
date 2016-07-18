@@ -660,11 +660,11 @@ property_checkert::resultt acdl_solvert::operator()(
         return result;
       std::cout << "Failed to verify program" << std::endl;
 #ifdef DEBUG
-      std::cout << "Minimal unsafe element is" << std::endl;
-      for(acdl_domaint::valuet::const_iterator it = v.begin();it != v.end(); ++it)
-        std::cout << from_expr(SSA.ns, "", *it) << std::endl;
-      result = property_checkert::UNKNOWN; 
+      acdl_domaint::valuet elm;
+      conflict_graph.to_value(elm);
+      std::cout << "Minimal unsafe element is" << from_expr(SSA.ns, "", conjunction(elm)) << std::endl;
 #endif    
+      result = property_checkert::UNKNOWN; 
       break;
     }
 
@@ -747,5 +747,4 @@ property_checkert::resultt acdl_solvert::operator()(
   } // end of while(true)
   END:
   std::cout << "Procedure terminated after iteration: "  << iteration  << std::endl;
-  // return result;
 }

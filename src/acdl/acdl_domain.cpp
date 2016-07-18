@@ -152,7 +152,7 @@ void acdl_domaint::operator()(const statementt &statement,
         break; //at this point we have a conflict, we return
       }
     }
-
+      
     // inference for numerical variables using templates
     else if (it->type().id() == ID_signedbv ||
         it->type().id() == ID_unsignedbv ||
@@ -230,10 +230,10 @@ void acdl_domaint::operator()(const statementt &statement,
     }
     else
     {
-      warning() << "WARNING: do not know how to propagate " 
+      std::cout << "WARNING: do not know how to propagate " 
         << it->get_identifier()
         << " of type " << from_type(SSA.ns, "", it->type()) 
-        << eom;
+        << std::endl;
     }
 
 
@@ -485,15 +485,23 @@ bool acdl_domaint::is_complete(const valuet &value,
   find_symbols (conjunction(value), symbols);
 #endif
 
+  std::set<symbol_exprt> sym;
+  find_symbols (conjunction(value), sym);
   for(std::set<symbol_exprt>::const_iterator it = symbols.begin();
       it != symbols.end(); ++it)
   {
+    // [note] check whether this symbol 
+    // appars in the abstract value, if not,
+    // then do not check for this symbol 
+    bool is_in = sym.find(*it) != sym.end();
+    if(!is_in) continue;
+     
     decision_proceduret::resultt res = (*solver)();
     assert(res==decision_proceduret::D_SATISFIABLE);
     // if value == (x=[2,2]) and (*it is x), then 'm' below contains the
     // value of x which is 2
     exprt m = (*solver).get(*it);
-
+    std::cout << "The value " << from_expr(SSA.ns, "", m) << std::endl;
     if(m.id()!=ID_constant) {
 #ifdef DEBUG
       std::cout << " is not complete" << std::endl;
@@ -522,7 +530,6 @@ bool acdl_domaint::is_complete(const valuet &value,
 
     solver->pop_context();
   }
-  
 #ifdef DEBUG
   std::cout << " is complete" << std::endl;
 #endif
@@ -575,6 +582,7 @@ void acdl_domaint::build_meet_irreducible_templates(
   const varst &vars,
   std::vector<exprt> &meet_irreducible_templates)
 {
+  std::cout << "Building templates" << std::endl;
   template_generator_acdlt template_generator(options,ssa_db,ssa_local_unwinder); 
   template_generator(SSA,vars);
   template_generator.positive_template(meet_irreducible_templates);
@@ -607,7 +615,7 @@ exprt acdl_domaint::split(const valuet &value,
   std::cout << "[ACDL-DOMAIN] Split(" 
 	    << from_expr(SSA.ns, "", meet_irreducible_template) << "): "; output(std::cout, value);
   std::cout << "" << std::endl;
-         
+  
   if(expr.type().id()==ID_bool)
   {
     exprt v_true = simplify_expr(and_exprt(conjunction(value),expr),SSA.ns);
@@ -637,10 +645,10 @@ exprt acdl_domaint::split(const valuet &value,
        expr.type().id() == ID_unsignedbv ||
        expr.type().id() == ID_floatbv))
   {
-    warning() << "WARNING: do not know how to split " 
+    std::cout << "WARNING: do not know how to split " 
 	      << from_expr(SSA.ns, "", expr)
 	      << " of type " << from_type(SSA.ns, "", expr.type()) 
-	      << eom;
+	      << std::endl;
     return false_exprt(); 
   }
 
@@ -696,161 +704,6 @@ exprt acdl_domaint::split(const valuet &value,
   }
   // check the size of new_value and value is same here
   assert(new_value.size() == value.size());
-
-#if 0
-  std::vector<meet_irreduciblet> new_value;
-  for(unsigned i=0; i<value.size(); i++)
-  {
-    const exprt &e = value[i];
-    // check for expression with negations (ex- !(x<=10) or !(x>=10)) 
-    if(e.id() == ID_not) {
-#ifdef DEBUG
-      std::cout << "The original not expression is " << e << std::endl;
-#endif
-      const exprt &expb = e.op0();
-    
-      // Handle the singleton case: example : !guard#0
-      if(expb.id() != ID_le && expb.id() != ID_ge) 
-      {
-          new_value.push_back(expb);
-          continue;
-      }
-      const exprt &lhs = to_binary_relation_expr(expb).lhs();
-      // For Inputs like (!(-((signed __CPROVER_bitvector[33])x#phi25) >= 1))
-      // --> (x#phi25 >= -1)
-      if(lhs.id()==ID_unary_minus && 
-        lhs.op0().id()==ID_typecast)
-      { 
-        const exprt &rhs = to_binary_relation_expr(expb).rhs();
-        const exprt &expminus = unary_minus_exprt(typecast_exprt(rhs,rhs.type()),rhs.type());
-        if(expb.id() == ID_le) {
-         exprt exp = binary_relation_exprt(lhs.op0().op0(),ID_le,expminus);
-#ifdef DEBUG
-         std::cout << "The new negated expression is " << exp  << std::endl;
-#endif
-         new_value.push_back(exp);
-        }
-        else if(expb.id() == ID_ge) {
-         exprt exp = binary_relation_exprt(lhs.op0().op0(),ID_ge,expminus);
-#ifdef DEBUG
-         std::cout << "The new negated expression is " << exp  << std::endl;
-#endif         
-         new_value.push_back(exp);
-        }
-      }
-      else {
-        const exprt &rhs = to_binary_relation_expr(expb).rhs();
-        if(expb.id() == ID_le) {
-         exprt exp = binary_relation_exprt(lhs,ID_ge,rhs);
-#ifdef DEBUG
-         std::cout << "The new non-negated expression is " << exp  << std::endl;
-#endif         
-         new_value.push_back(exp);
-        }
-        else if(expb.id() == ID_ge) {
-         exprt exp = binary_relation_exprt(lhs,ID_le,rhs);
-#ifdef DEBUG
-         std::cout << "The new non-negated expression is " << exp  << std::endl;
-#endif         
-         new_value.push_back(exp);
-        }
-      }
-     } // end not 
-    // simply copy the value[i] to new_value[i]
-    else {
-      new_value.push_back(value[i]);
-    }
-  }
-  // check the size of new_value and value is same here
-  assert(new_value.size() == value.size());
-#endif
-
-#if 0
-  // computer lower and upper bound
-  constant_exprt u;
-  bool u_is_assigned = false;
-  constant_exprt l;
-  bool l_is_assigned = false;
-  
-  for(unsigned i=0; i<new_value.size(); i++)
-  {
-    const exprt &e = new_value[i];
-    // Handle the singleton case: example : !guard#0
-    if(e.id() != ID_le && e.id() != ID_ge)
-      continue;
-    const exprt &lhs = to_binary_relation_expr(e).lhs();
-    const exprt &rhs = to_binary_relation_expr(e).rhs();
-    std::cout << "[ACDL DOMAIN] lhs type:" << lhs << "rhs type:" << rhs << std::endl;
-    if(to_binary_relation_expr(e).lhs() == expr)
-    {
-      if(e.id() == ID_le) {
-       u = to_constant_expr(to_binary_relation_expr(e).rhs());
-       u_is_assigned = true;
-      }
-      if(e.id() == ID_ge) {
-       l = to_constant_expr(to_binary_relation_expr(e).rhs());
-       l_is_assigned = true;
-      }
-      if(u_is_assigned && l_is_assigned)
-        break;
-    }
-  }
-  if(!u_is_assigned)
-  {
-    u = tpolyhedra_domaint::get_max_value(expr);
-  }
-  if(!l_is_assigned)
-  {
-    l = tpolyhedra_domaint::get_min_value(expr);
-  }
-#endif 
-
-#if 0
-  constant_exprt u;
-  bool u_is_assigned = false;
-  for(unsigned i=0; i<new_value.size(); i++)
-  {
-    const exprt &e = new_value[i];
-    if(e.id() != ID_le)
-      continue;
-    const exprt &lhs = to_binary_relation_expr(e).lhs();
-    const exprt &rhs = to_binary_relation_expr(e).rhs();
-    std::cout << "[ACDL DOMAIN] lhs type:" << lhs << "rhs type:" << rhs << std::endl;
-    if(to_binary_relation_expr(e).lhs() == expr)
-    {
-      u = to_constant_expr(to_binary_relation_expr(e).rhs());
-      u_is_assigned = true;
-      //std::cout << "ASSIGNING UPPER" << std::endl;
-      break;
-    }
-  }
-  if(!u_is_assigned)
-  {
-    u = tpolyhedra_domaint::get_max_value(expr);
-  }
-
-  constant_exprt l;
-  bool l_is_assigned = false;
-  for(unsigned i=0; i<new_value.size(); i++)
-  {
-    const exprt &e = new_value[i];
-    if(e.id() != ID_le)
-      continue;
-    const exprt &lhs = to_binary_relation_expr(e).lhs();
-    if(lhs.id()==ID_unary_minus && 
-       lhs.op0().id()==ID_typecast &&
-       lhs.op0().op0() == expr)
-    {
-      l = to_constant_expr(to_binary_relation_expr(e).rhs());
-      l_is_assigned = true;
-      break;
-    }
-  }
-  if(!l_is_assigned)
-  {
-    l = tpolyhedra_domaint::get_min_value(expr);
-  }
-#endif
   
   exprt vals = conjunction(new_value);
   std::cout << "conjuncted new value:: " << from_expr(SSA.ns, "", vals) << std::endl;
@@ -967,6 +820,13 @@ exprt acdl_domaint::split(const valuet &value,
       }
     }
   }
+
+  if(!u_is_assigned && !l_is_assigned) {
+#ifdef DEBUG
+    std::cout << "Decision variable not present in the abstract value" << std::endl;
+#endif
+  }
+    
   if(!u_is_assigned)
   {
     u = tpolyhedra_domaint::get_max_value(expr);
@@ -975,6 +835,7 @@ exprt acdl_domaint::split(const valuet &value,
   {
     l = tpolyhedra_domaint::get_min_value(expr);
   }
+
 
   //TODO: check whether we have a singleton, then we cannot split anymore
   if (l==u)
