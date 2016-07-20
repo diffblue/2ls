@@ -84,6 +84,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_octagont::operator()
   
   while(!decision) {
     // make decisions on non-cond variables
+    assert(templates.size() != 0);
     unsigned index = rand() % templates.size();
     const acdl_domaint::meet_irreduciblet cexp = 
       templates[index];

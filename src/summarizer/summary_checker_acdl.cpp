@@ -18,6 +18,7 @@ Author: Peter Schrammel
 #include "../acdl/acdl_decision_heuristics_rand.h"
 #include "../acdl/acdl_decision_heuristics_ordered.h"
 #include "../acdl/acdl_decision_heuristics_octagon.h"
+#include "../acdl/acdl_decision_heuristics_berkmin.h"
 #include "../acdl/acdl_worklist_base.h"
 #include "../acdl/acdl_worklist_ordered.h"
 #include "../acdl/acdl_analyze_conflict_base.h"
@@ -113,18 +114,7 @@ property_checkert::resultt summary_checker_acdlt::operator()(
         // configure components of acdl solver
         // domain
         acdl_domaint domain(options,SSA,ssa_db,ssa_local_unwinder);
-	domain.set_message_handler(get_message_handler());
-
-        // decision heuristics
-        std::unique_ptr<acdl_decision_heuristics_baset> decision_heuristics;
-        if(options.get_option("acdl-decision") == "random")
-          decision_heuristics = std::unique_ptr<acdl_decision_heuristics_baset>(new acdl_decision_heuristics_randt(domain));
-        else if(options.get_option("acdl-decision") == "ordered")
-          decision_heuristics = std::unique_ptr<acdl_decision_heuristics_baset>(new acdl_decision_heuristics_orderedt(domain));
-        else if(options.get_option("acdl-decision") == "octagon")
-          decision_heuristics = std::unique_ptr<acdl_decision_heuristics_baset>(new acdl_decision_heuristics_octagont(domain));
-        // ....
-
+        domain.set_message_handler(get_message_handler());
         // worklist (currently there is only one)
         std::unique_ptr<acdl_worklist_baset> worklist =
           std::unique_ptr<acdl_worklist_baset>(new acdl_worklist_orderedt());
@@ -136,6 +126,19 @@ property_checkert::resultt summary_checker_acdlt::operator()(
 // SHOULD BE:
 //            new acdl_conflict_analysis_firstuipt());
         //else if ...
+
+        // decision heuristics
+        std::unique_ptr<acdl_decision_heuristics_baset> decision_heuristics;
+        if(options.get_option("acdl-decision") == "random")
+          decision_heuristics = std::unique_ptr<acdl_decision_heuristics_baset>(new acdl_decision_heuristics_randt(domain));
+        else if(options.get_option("acdl-decision") == "ordered")
+          decision_heuristics = std::unique_ptr<acdl_decision_heuristics_baset>(new acdl_decision_heuristics_orderedt(domain));
+        else if(options.get_option("acdl-decision") == "octagon")
+          decision_heuristics = std::unique_ptr<acdl_decision_heuristics_baset>(new acdl_decision_heuristics_octagont(domain));
+        else if(options.get_option("acdl-decision") == "berkmin")
+          decision_heuristics = std::unique_ptr<acdl_decision_heuristics_baset>(new acdl_decision_heuristics_berkmint(domain,*conflict_analysis));
+        // ....
+
 
         // now instantiate solver
         acdl_solvert acdl_solver(options, domain, 
