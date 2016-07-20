@@ -5,7 +5,7 @@ CBMC ?= ../..
 SRC = acdl_solver.cpp acdl_domain.cpp template_generator_acdl.cpp \
       acdl_decision_heuristics_base.cpp acdl_decision_heuristics_rand.cpp \
 			acdl_decision_heuristics_ordered.cpp acdl_decision_heuristics_octagon.cpp \
-      acdl_worklist_base.cpp acdl_worklist_ordered.cpp \
+      acdl_decision_heuristics_berkmin.cpp acdl_worklist_base.cpp acdl_worklist_ordered.cpp \
       acdl_analyze_conflict_base.cpp \
 	    acdl_conflict_graph.cpp
 

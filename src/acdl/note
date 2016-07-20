@@ -731,4 +731,6 @@ do we search for values of x and y in the abstract value such that
   x+y<=8
   x-y<=2
   y-x<=-2-x-y<=-8
+  When we use --octagons, how do we guarantee that the deductions made are also
+  octagons.
 8> When do we change the phase of a variable, that is pass split(lower). 

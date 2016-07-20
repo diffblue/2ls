@@ -577,6 +577,7 @@ void acdl_domaint::build_meet_irreducible_templates(
   std::cout << "Building templates" << std::endl;
   template_generator_acdlt template_generator(options,ssa_db,ssa_local_unwinder); 
   template_generator(SSA,vars);
+  template_generator.set_message_handler(get_message_handler());
   template_generator.positive_template(meet_irreducible_templates);
 }
 

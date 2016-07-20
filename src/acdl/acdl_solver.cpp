@@ -664,8 +664,8 @@ property_checkert::resultt acdl_solvert::operator()(
       conflict_graph.to_value(elm);
       std::cout << "Minimal unsafe element is" << from_expr(SSA.ns, "", conjunction(elm)) << std::endl;
 #endif    
-      result = property_checkert::UNKNOWN; 
-      break;
+      return property_checkert::UNKNOWN; 
+      //break;
     }
 
     std::cout << "****************************************************" << std::endl;
