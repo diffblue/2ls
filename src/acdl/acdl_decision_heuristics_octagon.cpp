@@ -68,8 +68,9 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_octagont::operator()
   std::vector<exprt> templates;
   std::cout << "Printing the symbols before building template" << std::endl;
   for(std::set<symbol_exprt>::iterator it = non_cond_sym.begin(); it != non_cond_sym.end(); it++)
-    std::cout << from_expr(SSA.ns, "", *it) << std::endl; 
-  
+    //   std::cout << from_expr(SSA.ns, "", *it) << std::endl; 
+    std::cout << it->pretty() << std::endl;
+ 
   // call template generator
   domain.build_meet_irreducible_templates(non_cond_sym, templates); 
   std::vector<bool> non_cond_marked(templates.size(), true);

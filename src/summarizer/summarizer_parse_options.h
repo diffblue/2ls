@@ -147,11 +147,11 @@ protected:
   void propagate_constants(goto_modelt &goto_model);
   void nondet_locals(goto_modelt &goto_model);
   void goto_unwind(goto_modelt &goto_model, unsigned k);
-  void replace_types_rec(const replace_symbolt &replace_const, exprt &expr);
-  exprt evaluate_casts_in_constants(const exprt &expr, const typet& parent_type,
-				    bool &valid);
   void remove_multiple_dereferences(goto_modelt &goto_model);
   void remove_multiple_dereferences(goto_modelt &goto_model, goto_programt &body, goto_programt::targett t, exprt &expr, unsigned &var_counter, bool deref_seen);
+  void replace_c_bool_rec(exprt &expr);
+  void replace_c_bool_rec(typet &type);
+  void replace_c_bool(goto_modelt &goto_model);
 };
 
 #endif
