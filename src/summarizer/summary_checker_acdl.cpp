@@ -113,6 +113,7 @@ property_checkert::resultt summary_checker_acdlt::operator()(
         // configure components of acdl solver
         // domain
         acdl_domaint domain(options,SSA,ssa_db,ssa_local_unwinder);
+	domain.set_message_handler(get_message_handler());
 
         // decision heuristics
         std::unique_ptr<acdl_decision_heuristics_baset> decision_heuristics;
