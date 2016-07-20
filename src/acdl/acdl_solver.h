@@ -18,7 +18,6 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include "acdl_domain.h"
 #include "acdl_decision_heuristics_base.h"
 #include "acdl_worklist_base.h"
-//#include "acdl_conflict_analysis_base.h"
 #include "acdl_analyze_conflict_base.h"
 
 class acdl_solvert : public messaget
@@ -54,7 +53,6 @@ protected:
   acdl_domaint &domain;
   acdl_decision_heuristics_baset &decision_heuristics;
   acdl_worklist_baset &worklist; 
-  //acdl_conflict_analysis_baset &conflict_analysis;
   acdl_analyze_conflict_baset &analyzes_conflict;
   std::vector<exprt> dec_not_in_trail;
 

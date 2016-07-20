@@ -50,17 +50,16 @@ public:
   unsigned get_earliest_contradiction(const local_SSAt &SSA, acdl_conflict_grapht &graph, acdl_domaint::meet_irreduciblet &exp);
   unsigned get_latest_contradiction(const local_SSAt &SSA, acdl_conflict_grapht &graph, acdl_domaint::meet_irreduciblet &exp);
   int first_contradiction_on_trail(const exprt& expr, acdl_conflict_grapht &graph, int start, int end);
-  //int unit_rule(const local_SSAt &SSA, acdl_conflict_grapht &graph, acdl_domaint::valuet &clause);
   enum proof_typet { PROPOSITIONAL, ABSINT };
   proof_typet last_proof;    
   std::vector<acdl_domaint::valuet> learned_clauses;
+  exprt flip(acdl_domaint::meet_irreduciblet &m); 
   
 protected: 
   acdl_domaint &domain;
   virtual void generalize_conflict(acdl_conflict_grapht &graph) { assert(false); }
 
   void get_conflict_clause(const local_SSAt &SSA, acdl_conflict_grapht &graph, acdl_domaint::valuet &clause);
-  exprt flip(acdl_domaint::meet_irreduciblet &m); 
   bool chronological_backtrack(const local_SSAt &SSA, acdl_conflict_grapht &graph);
   typedef acdl_domaint::valuet conflict_clauset;
   typedef std::vector<unsigned> clause_indicest;
