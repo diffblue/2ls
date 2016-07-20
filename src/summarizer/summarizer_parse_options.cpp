@@ -320,6 +320,12 @@ void summarizer_parse_optionst::get_command_line_options(optionst &options)
   else
     options.set_option("all-properties", true);
 
+  // no all functions (default)
+  if(cmdline.isset("all-functions"))
+    options.set_option("all-functions", true);
+  else
+    options.set_option("all-functions", false);
+
   // competition mode
   if(cmdline.isset("competition-mode"))
   {
@@ -1519,12 +1525,14 @@ void summarizer_parse_optionst::help()
     " --inline-partial nr          inline functions smaller than the given nr of instructions\n"
     "\n"
     "Backend options:\n"
+    " --all-functions              check each function as entry point\n"
+    " --no-all-properties          stop on first failing assertion\n"
+    " --context-sensitive          context-sensitive analysis from entry point\n"
     " --termination                compute ranking functions to prove termination\n"
     " --k-induction                use k-induction\n"
     " --incremental-bmc            use incremental-bmc\n"
     " --preconditions              compute preconditions\n"
     " --sufficient                 sufficient preconditions (default: necessary)\n"
-    " --context-sensitive          context-sensitive analysis from entry point\n"
     " --havoc                      havoc loops and function calls\n"
     " --intervals                  use interval domain\n"
     " --equalities                 use equalities and disequalities domain\n"

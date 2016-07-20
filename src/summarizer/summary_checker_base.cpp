@@ -120,7 +120,8 @@ void summary_checker_baset::summarize(const goto_modelt &goto_model,
 
   summarizer->set_message_handler(get_message_handler());
 
-  if(!options.get_bool_option("context-sensitive"))
+  if(!options.get_bool_option("context-sensitive") &&
+     options.get_bool_option("all-functions"))
     summarizer->summarize();
   else
     summarizer->summarize(goto_model.goto_functions.entry_point());
