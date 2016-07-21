@@ -1,4 +1,5 @@
 #include <util/replace_expr.h>
+#include <util/replace_symbol.h>
 #include <util/find_symbols.h>
 #include <util/arith_tools.h>
 #include <goto-instrument/unwind.h>
@@ -263,3 +264,63 @@ void summarizer_parse_optionst::remove_multiple_dereferences(goto_modelt &goto_m
     }
   }
 }
+
+/*******************************************************************\
+
+Function: summarizer_parse_optionst::replace_c_bool
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: replaces _Bool by actual boolean type
+          That's a special replace not supported by the existing
+          util/replace_* 
+
+\*******************************************************************/
+
+void summarizer_parse_optionst::replace_c_bool_rec(exprt &expr)
+{
+  replace_c_bool_rec(expr.type());
+  Forall_operands(it, expr)
+    replace_c_bool_rec(*it);
+}
+
+void summarizer_parse_optionst::replace_c_bool_rec(typet &type)
+{
+  if(type.id()==ID_c_bool)
+  {
+    type=bool_typet();
+    return;
+  }
+  if(type.id()==ID_struct ||
+     type.id()==ID_union)
+  {
+    struct_union_typet &struct_union_type=to_struct_union_type(type);    
+    struct_union_typet::componentst &components=
+      struct_union_type.components();
+
+    for(struct_union_typet::componentst::iterator
+        it=components.begin();
+        it!=components.end();
+        it++)
+      replace_c_bool_rec(*it);
+    return;
+  }
+  //TODO: other relevant cases
+}
+
+void summarizer_parse_optionst::replace_c_bool(goto_modelt &goto_model)
+{
+  Forall_goto_functions(f_it, goto_model.goto_functions)
+  {
+    Forall_goto_program_instructions(i_it, f_it->second.body)
+    {
+      replace_c_bool_rec(i_it->code);
+      replace_c_bool_rec(i_it->guard);
+    }
+  }
+  Forall_symbols(it, goto_model.symbol_table.symbols)
+    replace_c_bool_rec(it->second.type);
+}
+

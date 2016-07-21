@@ -57,6 +57,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #define UNWIND_GOTO_INTO_LOOP 1
 #define REMOVE_MULTIPLE_DEREFERENCES 1
+#define REPLACE_C_BOOL 1
 
 /*******************************************************************\
 
@@ -1088,6 +1089,10 @@ bool summarizer_parse_optionst::process_goto_program(
 
 #if REMOVE_MULTIPLE_DEREFERENCES
     remove_multiple_dereferences(goto_model);
+#endif
+
+#if REPLACE_C_BOOL
+    replace_c_bool(goto_model);
 #endif
 
     // recalculate numbers, etc.
