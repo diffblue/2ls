@@ -1,9 +1,0 @@
-file=`date "+%Y-%m-%d"`
-
-strip deltacheck/deltacheck
-
-rm -f binaries/*.gz
-
-gzip -9 < deltacheck/deltacheck > binaries/deltacheck-$file-linux32.gz
-
-scp binaries/*.gz kroening@dkr-srv.cs.ox.ac.uk:/srv/www/cprover.org/tmp/binaries/

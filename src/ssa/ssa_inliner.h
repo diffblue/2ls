@@ -11,9 +11,9 @@ Author: Peter Schrammel
 
 #include <util/message.h>
 
-#include "../summarizer/summary_db.h"
-#include "../summarizer/ssa_db.h"
-#include "../ssa/local_ssa.h"
+#include "../solver/summary_db.h"
+#include "ssa_db.h"
+#include "local_ssa.h"
 
 class summary_dbt;
 
