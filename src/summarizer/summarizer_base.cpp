@@ -400,7 +400,7 @@ bool summarizer_baset::check_end_reachable(
   exprt::operandst assertions;
   assertions.push_back(
     not_exprt(SSA.guard_symbol(--SSA.goto_function.body.instructions.end())));
-  get_assertions(SSA,assertions);
+//  get_assertions(SSA,assertions); //a failing assertion does not prove termination, let's ignore them
   solver << not_exprt(conjunction(assertions)); //we want to reach any of them
 
   bool result = (solver()==decision_proceduret::D_SATISFIABLE);
