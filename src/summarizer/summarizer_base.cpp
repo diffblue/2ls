@@ -286,12 +286,13 @@ bool summarizer_baset::check_precondition(
   if(summary_db.exists(fname)) 
   {
     summaryt summary = summary_db.get(fname);
-    if(summary.mark_recompute) return false;
+    if(summary.mark_recompute) 
+      return false;
     if(!context_sensitive ||
        summary.fw_precondition.is_true())  //precondition trivially holds
     {
       status() << "Precondition trivially holds, replacing by summary." 
-                   << eom;
+               << eom;
       summaries_used++;
       precondition_holds = true;
     }
@@ -306,8 +307,8 @@ bool summarizer_baset::check_precondition(
       ssa_inliner.rename_to_caller(f_it,summary.params,
 			       cs_globals_in,summary.globals_in,assertion);
 
-      debug() << "precondition assertion: " << 
-	from_expr(SSA.ns,"",assertion) << eom;
+      debug() << "precondition assertion: " 
+              << from_expr(SSA.ns,"",assertion) << eom;
 
       precondition_holds = false;
     }

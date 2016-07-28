@@ -515,8 +515,8 @@ int summarizer_parse_optionst::doit()
       std::cout << "VERIFICATION CONDITIONS:\n\n";
       summary_checker->show_vcc=true;
       (*summary_checker)(goto_model);
-      retval = 0;
-      goto clean_up;
+      delete summary_checker;
+      return 0;
     }
 
     if(cmdline.isset("horn-encoding"))
@@ -542,35 +542,41 @@ int summarizer_parse_optionst::doit()
         {
           error() << "Failed to open output file "
                   << out_file << eom;
+          delete summary_checker;
           return 1;
         }
         
         horn_encoding(goto_model, out);
       }
         
-      return 7;
+      delete summary_checker;
+      return 0;
     }
     
+    bool report_assertions = 
+      !options.get_bool_option("preconditions") &&
+      !options.get_bool_option("termination");
     // do actual analysis
     switch((*summary_checker)(goto_model))
     {
     case property_checkert::PASS:
-      report_properties(options,goto_model, summary_checker->property_map);
+      if(report_assertions) 
+        report_properties(options,goto_model, summary_checker->property_map);
       report_success();
       retval = 0;
       break;
     
     case property_checkert::FAIL:
-      report_properties(options,goto_model, summary_checker->property_map);
+      if(report_assertions) 
+        report_properties(options,goto_model, summary_checker->property_map);
       report_failure();
       retval = 10;
       break;
 
     case property_checkert::UNKNOWN:
+      if(report_assertions) 
+        report_properties(options,goto_model, summary_checker->property_map);
       retval = 5;
-      if(options.get_bool_option("preconditions")) 
-	goto clean_up;
-      report_properties(options,goto_model, summary_checker->property_map);
       report_unknown();
       break;
     
@@ -583,7 +589,6 @@ int summarizer_parse_optionst::doit()
       summary_checker->instrument_and_output(goto_model);
     }
 
-  clean_up:
     delete summary_checker;
     return retval;
   }

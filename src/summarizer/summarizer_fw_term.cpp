@@ -179,7 +179,8 @@ void summarizer_fw_termt::inline_summaries(const function_namet &function_name,
       get_assertions(SSA,c); //assertions as assumptions
       precondition = conjunction(c);
 
-      if(!check_call_reachable(function_name,SSA,n_it,f_it,precondition,true)) 
+      if(!options.get_bool_option("competition-mode") &&
+         !check_call_reachable(function_name,SSA,n_it,f_it,precondition,true)) 
         continue;
 
       has_function_calls = true;
@@ -233,14 +234,10 @@ void summarizer_fw_termt::do_nontermination(
 
   if(!check_end_reachable(function_name,SSA,conjunction(cond)))
   {
-    status() << "Function never terminates" << eom;
+    status() << "Function never terminates normally" << eom;
     if(summary.fw_precondition.is_true()) summary.fw_transformer = false_exprt();
     else summary.fw_transformer = implies_exprt(summary.fw_precondition,false_exprt());
     summary.terminates = NO;
-  }
-  else
-  {
-    status() << "Function may terminate" << eom;
   }
 }
 
