@@ -1,6 +1,6 @@
 default: tests.log
 
-FLAGS = --verbosity 10 --acdl --acdl-decision range --acdl-conflict first-uip
+FLAGS = --verbosity 10 --acdl --acdl-decision octagon --acdl-conflict first-uip --octagons
 
 test:
 	@../test.pl -c "../../../src/summarizer/2ls $(FLAGS)"

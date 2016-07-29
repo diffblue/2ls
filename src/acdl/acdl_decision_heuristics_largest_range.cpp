@@ -30,7 +30,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_ranget::operator()
 #ifdef DEBUG
   std::cout << "Printing all decision variables" << std::endl;
   for(std::set<exprt>::const_iterator 
-    it = decision_variables.begin(); it != decision_variables.end(); ++it) 
+    it = decision_variables.begin(); it != decision_variables.end(); it++) 
       std::cout << from_expr(SSA.ns, "", *it) << "  ," << std::endl;
   std::cout << "Printing initial values of decision variables" << std::endl;
   for(std::vector<std::pair<mp_integer, mp_integer> >::iterator i=decvar_val.begin(); 

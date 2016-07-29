@@ -26,7 +26,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 
  \*******************************************************************/
 
-void acdl_decision_heuristics_baset::initialize_dec_variables(const exprt &exp)
+void acdl_decision_heuristics_baset::get_dec_variables(const exprt &exp)
 {
   decision_variables.insert(exp);
 }
@@ -47,8 +47,8 @@ void acdl_decision_heuristics_baset::initialize_decvar_val(std::pair<mp_integer,
 {
   // this is a vector not a set
   // because we always want value 
-  // pair to be inserted at the end
-  // the set uses comparison operator 
+  // pair to be inserted at the end.
+  // Set uses comparison operator 
   // to sort the val_pair which we do 
   // not want. 
   

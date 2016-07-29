@@ -594,12 +594,12 @@ property_checkert::resultt acdl_solvert::operator()(
     std::size_t found4 = name.find(str4);
     if (found1==std::string::npos && found2==std::string::npos && 
       found3==std::string::npos && found4==std::string::npos) {
-      decision_heuristics.initialize_dec_variables(*it);
+      decision_heuristics.get_dec_variables(*it);
     }
   } 
 
   // [TODO] order decision variables
-  // decision_heuristics.order_decision_variables(SSA);
+  decision_heuristics.order_decision_variables(SSA);
   
 #ifdef DEBUG
   std::cout << "Printing all decision variables inside solver" << std::endl;
