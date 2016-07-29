@@ -56,6 +56,7 @@ DELTA_OBJ+=\
       ../acdl/acdl_decision_heuristics_ordered$(OBJEXT) \
       ../acdl/acdl_decision_heuristics_octagon$(OBJEXT) \
       ../acdl/acdl_decision_heuristics_berkmin$(OBJEXT) \
+      ../acdl/acdl_decision_heuristics_largest_range$(OBJEXT) \
       ../functions/summary$(OBJEXT) \
       ../functions/get_function$(OBJEXT) \
       ../functions/path_util$(OBJEXT) \

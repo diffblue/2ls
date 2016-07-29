@@ -39,10 +39,12 @@ public:
   
   acdl_domaint::statementt dec_statement;
   std::set<exprt> decision_variables;
+  std::vector<std::pair<mp_integer, mp_integer> > decvar_val;
   std::vector<exprt> nondet_var;
   
   void initialize_dec_variables(const exprt &exp);
   void order_decision_variables(const local_SSAt &SSA);
+  void initialize_decvar_val(std::pair<mp_integer, mp_integer> dec_val);
    
   protected:
   acdl_domaint &domain;

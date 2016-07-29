@@ -734,3 +734,19 @@ do we search for values of x and y in the abstract value such that
   When we use --octagons, how do we guarantee that the deductions made are also
   octagons.
 8> When do we change the phase of a variable, that is pass split(lower). 
+
+
+Query for June 27, 2016
+------------------------
+0> Decision infeasibility -- determined inside decision heuristics 
+1> when to change the phase of decision dynamically ?
+2> What decision we need for solving bottom9 with octagons ? Don't we need
+equality domain to solve this ? 
+int main() {
+ unsigned x, y;
+ __CPROVER_assume(x==y);
+ x++; y++;
+ x++; y++;
+ assert(x==y);
+}
+

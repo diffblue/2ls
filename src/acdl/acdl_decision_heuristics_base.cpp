@@ -28,7 +28,37 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 
 void acdl_decision_heuristics_baset::initialize_dec_variables(const exprt &exp)
 {
-  decision_variables.insert(exp); 
+  decision_variables.insert(exp);
+}
+
+/*******************************************************************
+
+ Function: acdl_solvert::initial_val_range()
+
+ Inputs:
+
+ Outputs:
+
+ Purpose: Initialize values for decision variables
+
+ \*******************************************************************/
+
+void acdl_decision_heuristics_baset::initialize_decvar_val(std::pair<mp_integer, mp_integer> val_pair)
+{
+  // this is a vector not a set
+  // because we always want value 
+  // pair to be inserted at the end
+  // the set uses comparison operator 
+  // to sort the val_pair which we do 
+  // not want. 
+  
+  // Note: The index of decision_variables set
+  // and the decvar_val vector 
+  // are the same -- that is an entry in 
+  // decvar_val corresponds to the intial 
+  // value of the corresponding decision 
+  // variable at that index in decision_variables set
+  decvar_val.push_back(val_pair);
 }
 
 /*******************************************************************

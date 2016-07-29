@@ -75,25 +75,38 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_berkmint::operator()
     if(unsat_lits.size() > 0);
     break;
   }
+  bool decision=false;
+  while(!decision) {
+    if(unsat_lits.size() != 0) {
+      std::cout << "Berkmin heuristics: Choosing unsat literal from clause" 
+        << i << "of" << num_clauses << std::endl;
 
-  if(unsat_lits.size() != 0) {
-    std::cout << "Berkmin heuristics: Choosing unsat literal from clause" 
-    << i << "of" << num_clauses << std::endl;
+      exprt chosen_lit = unsat_lits[rand() % unsat_lits.size()];
 
-    exprt chosen_lit = unsat_lits[rand() % unsat_lits.size()];
-    
-    exprt flipped_literal;
-    // invert it randomly
-    if(rand() & 1)
-    {
-      flipped_literal = conflict_analysis.flip(chosen_lit);
+      exprt flipped_literal;
+      // invert it randomly
+      if(rand() & 1)
+      {
+        flipped_literal = conflict_analysis.flip(chosen_lit);
+      }
+      // check the consistency 
+      // of the decision 
+      //not sure if v has to be unnormalized  
+      unsigned status = domain.compare_val_lit(v, flipped_literal); 
+      if(status != 0) { // not conflicting
+        decision=true;
+        return flipped_literal;
+      }
+      else {
+        continue;
+        //bad_decision.push_back(flipped_literal);   
+      }
     }
-    return flipped_literal;
-  }
-  else
-  {
-    std::cout << "No clause with unsat lits found. Choosing randomly" << std::endl;
-    return(random_dec_heuristics(SSA, value));
+    else
+    {
+      std::cout << "No clause with unsat lits found. Choosing randomly" << std::endl;
+      return(random_dec_heuristics(SSA, value));
+    }
   }
 }    
     

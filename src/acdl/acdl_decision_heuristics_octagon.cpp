@@ -31,6 +31,12 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_octagont::operator()
   std::vector<exprt> non_cond;
   std::set<symbol_exprt> non_cond_sym;
 
+  
+  // copy the value to non-constant value
+  acdl_domaint::valuet v;
+  for(int k=0;k<value.size();k++)
+    v.push_back(value[k]);
+  
   // copy the decision_variables in separate vector
   for(std::set<exprt>::const_iterator 
     it = decision_variables.begin(); it != decision_variables.end(); ++it) 
@@ -92,8 +98,13 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_octagont::operator()
     if(non_cond_marked[index]==false) continue; 
     val = domain.split(value, cexp);
     if(!val.is_false()) {
-      decision=true; 
-      return val; 
+      unsigned status = domain.compare_val_lit(v, val);
+      if(status != 0) {
+        decision=true; 
+        return val; 
+      }
+      else 
+        continue;
     }
     else { 
       non_cond_marked[index]=false;
