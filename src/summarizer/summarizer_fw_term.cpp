@@ -127,7 +127,7 @@ void summarizer_fw_termt::compute_summary_rec(
     }   
     else if(has_function_calls && calls_terminate!=YES) 
     {
-      summary.terminates = UNKNOWN;
+      summary.terminates = calls_terminate;
     }
     else if(has_loops && 
             (!has_function_calls || 

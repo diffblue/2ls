@@ -266,6 +266,7 @@ void summarizer_parse_optionst::get_command_line_options(optionst &options)
   {
     options.set_option("termination", true);
     options.set_option("sufficient", true);
+    options.set_option("std-invariants", true);
   }
 
   if(cmdline.isset("monolithic-ranking-function"))
