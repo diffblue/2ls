@@ -19,9 +19,13 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_orderedt::operator()
 #ifdef DEBUG
   std::cout << "Printing all decision variables" << std::endl;
   for(std::set<exprt>::const_iterator 
-    it = decision_variables.begin(); it != decision_variables.end(); ++it)
+    it = decision_variables.begin(); it != decision_variables.end(); it++)
       std::cout << from_expr(SSA.ns, "", *it) << "  ," << std::endl;
 #endif
+  // copy the value to non-constant value
+  acdl_domaint::valuet v;
+  for(int k=0;k<value.size();k++)
+    v.push_back(value[k]);
   
   bool decision=false;    
   std::string strc("cond");
@@ -79,9 +83,14 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_orderedt::operator()
            exp = conds[i];
       val = domain.split(value, exp);
       if(!val.is_false()) {
-       decision=true;
-       cond=true; 
-       return val; 
+       unsigned status = domain.compare_val_lit(v, val);
+       if(status != 0) {
+         decision=true;
+         cond=true; 
+         return val; 
+       }
+       else 
+         continue; 
      }
      else {
        // mark the cond that is already singleton
@@ -99,8 +108,13 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_orderedt::operator()
     if(non_cond_marked[index]==false) continue; 
     val = domain.split(value, cexp);
     if(!val.is_false()) {
-      decision=true; 
-      return val; 
+      unsigned status = domain.compare_val_lit(v, val);
+      if(status != 0) {
+       decision=true; 
+       return val; 
+      }
+      else
+       continue;
     }
     else { 
       // mark the non_cond that is already singleton

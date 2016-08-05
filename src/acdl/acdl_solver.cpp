@@ -91,7 +91,7 @@ bool acdl_solvert::bcp(const local_SSAt &SSA, unsigned idx)
   
   // **********************************************
      Finding phase of a meet irreducible:
-     Leo's implementation apply unit rule to clauses whose meet
+     cdfpl implementation apply unit rule to clauses whose meet
      irreducibles are of same phase as that of the meet
      irreducible in the propagation trail.
      Example: Meet irreducibles in the trail: x>5, y<20, z>5
@@ -491,7 +491,7 @@ void acdl_solvert::generalize_proof(const local_SSAt &SSA, const exprt& assertio
 
  Purpose:
 
- \*******************************************************************/
+\*******************************************************************/
 void acdl_solvert::init()
 {
   // initialize bcp_queue_top
@@ -511,6 +511,28 @@ void acdl_solvert::init()
   }
 }
 
+/*******************************************************************
+
+ Function: acdl_solvert::initialize_decision_variable()
+
+ Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+void acdl_solvert::initialize_decision_variables(acdl_domaint::valuet &value)
+{
+  for(std::set<exprt>::const_iterator 
+    it = decision_heuristics.decision_variables.begin(); 
+    it != decision_heuristics.decision_variables.end(); ++it)
+  {
+    std::pair<mp_integer, mp_integer> val_itv;
+    val_itv = domain.get_var_bound(value, *it);
+    decision_heuristics.initialize_decvar_val(val_itv);
+  }
+}
 
 /*******************************************************************
  Function: acdl_solvert::operator()
@@ -572,11 +594,11 @@ property_checkert::resultt acdl_solvert::operator()(
     std::size_t found4 = name.find(str4);
     if (found1==std::string::npos && found2==std::string::npos && 
       found3==std::string::npos && found4==std::string::npos) {
-      decision_heuristics.initialize_dec_variables(*it);
+      decision_heuristics.get_dec_variables(*it);
     }
   } 
 
-  // order decision variables
+  // [TODO] order decision variables
   decision_heuristics.order_decision_variables(SSA);
   
 #ifdef DEBUG
@@ -616,6 +638,7 @@ property_checkert::resultt acdl_solvert::operator()(
   conflict_graph.dump_trail(SSA);
   
   bool complete=false;
+  acdl_domaint::valuet res_val;
   // if result = UNSAT, then the proof is complete 
   if(result == property_checkert::PASS)
     return result; 
@@ -623,16 +646,20 @@ property_checkert::resultt acdl_solvert::operator()(
   // then check for completeness
   else {
     // check for satisfying assignment
-    acdl_domaint::valuet val;
-    //implication_graph.to_value(val);
-    conflict_graph.to_value(val);
-    domain.normalize_val(val);
-    if(domain.is_complete(val, all_vars)) {
+    conflict_graph.to_value(res_val);
+    domain.normalize_val(res_val);
+    if(domain.is_complete(res_val, all_vars)) {
       complete = true;
       return property_checkert::FAIL;
     }
   }
-     
+
+  // store the initial values 
+  // of the decision varaibles 
+  // after first propagation, 
+  // needed for largest range heuristics
+  initialize_decision_variables(res_val);
+  
   while(true)
   {
     // check the iteration bound

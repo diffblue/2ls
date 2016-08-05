@@ -67,6 +67,7 @@ public:
     const exprt &meet_irreducible_template,
     bool upper=false);
   
+  std::pair<mp_integer, mp_integer> get_var_bound(const valuet &value, const exprt &expr);
   void normalize(valuet &value);
   void normalize_val(valuet &value);
   void expr_to_value(const exprt &expr, valuet &value);

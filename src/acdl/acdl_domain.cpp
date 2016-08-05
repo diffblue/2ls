@@ -12,6 +12,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 
 #ifdef DEBUG
 #include <iostream>
+#include <utility>
 #endif
 
 #include <util/simplify_expr.h>
@@ -1144,23 +1145,24 @@ Function: acdl_domaint::compare()
 unsigned acdl_domaint::compare(const meet_irreduciblet &a, 
 			       const meet_irreduciblet &b) const
 {
-  std::unique_ptr<incremental_solvert> solver(
-    incremental_solvert::allocate(SSA.ns,true));
-  unsigned int status;  
-  // to check satisfiable, check !(a & !b)
-  exprt f1 = not_exprt(and_exprt(a,not_exprt(b)));
+  exprt f = simplify_expr(and_exprt(a,b),SSA.ns);
+  if(f.is_false())  
+    return CONFLICT;
   
-  *solver << f1;
-  if ((*solver)() == decision_proceduret::D_SATISFIABLE) {
-    return SATISFIED;
+  std::unique_ptr<incremental_solvert> solver1(
+    incremental_solvert::allocate(SSA.ns,true));
+  // to check contradiction, check (a & b) is UNSAT
+  *solver1 << and_exprt(a,b);
+  if ((*solver1)() == decision_proceduret::D_UNSATISFIABLE) {
+    return CONFLICT;
   }
   
-  // to check contradiction, check !(a & b)
-  exprt f2 = not_exprt(and_exprt(a,b));
-  
-  *solver << f2;
-  if ((*solver)() == decision_proceduret::D_SATISFIABLE) {
-    return CONFLICT;
+  std::unique_ptr<incremental_solvert> solver(
+    incremental_solvert::allocate(SSA.ns,true));
+  // to check satisfiable, check !(a & !b)
+  *solver << not_exprt(and_exprt(a,not_exprt(b)));
+  if ((*solver)() == decision_proceduret::D_UNSATISFIABLE) {
+    return SATISFIED;
   }
   // unknown: neither contradicting nor satisfiable
   else {
@@ -1192,7 +1194,7 @@ unsigned acdl_domaint::compare_val_lit(valuet &a,
   
   std::unique_ptr<incremental_solvert> solver1(
     incremental_solvert::allocate(SSA.ns,true));
-  // to check contradiction, check !(a & b)
+  // to check contradiction, check (a & b) is UNSAT
   *solver1 << and_exprt(conjunction(a),b);
   if ((*solver1)()==decision_proceduret::D_UNSATISFIABLE) {
     status = 0;
@@ -1257,6 +1259,7 @@ Function: acdl_domaint::check_abstract_value()
   
 bool acdl_domaint::check_val_satisfaction(valuet &val)
 {
+  std::cout << "Checking satisfaction for value " << from_expr(SSA.ns, "", conjunction(val)) << std::endl;
   std::unique_ptr<incremental_solvert> solver(
     incremental_solvert::allocate(SSA.ns,true));
   *solver << conjunction(val);
@@ -1425,3 +1428,246 @@ int acdl_domaint::unit_rule(const local_SSAt &SSA, valuet &v, valuet &clause, ex
     std::cout << "The unit literal is " << from_expr(SSA.ns, "", unit_lit) << std::endl;
     return UNIT; // UNIT clause
 }
+
+/*******************************************************************\
+
+Function: acdl_domaint::get_var_bound()
+
+  Inputs: 
+  
+  Outputs: 
+  
+  Purpose: 
+
+\*******************************************************************/
+
+std::pair<mp_integer, mp_integer> acdl_domaint::get_var_bound(const valuet &value,
+			  const exprt &expr)
+{
+  //const exprt &expr = meet_irreducible_template;
+  std::cout << "[ACDL-DOMAIN] Get var bound(" 
+	    << from_expr(SSA.ns, "", expr) << "): "; output(std::cout, value);
+  std::cout << "" << std::endl;
+  
+  typedef std::pair<mp_integer, mp_integer> val_pairt;
+  val_pairt val_pair;
+
+  if(expr.type().id()==ID_bool)
+  {
+    // variable bound not needed 
+    // for boolean variables 
+    mp_integer l = -1;
+    mp_integer u = -1;
+    val_pair.first = l; 
+    val_pair.second = u;
+    std::cout <<  "The val pair for " << from_expr(SSA.ns, "", expr) <<  "is" << "lower" << l << "upper" << u << std::endl;
+    return val_pair;
+  }
+
+  if(!(expr.type().id() == ID_signedbv ||
+       expr.type().id() == ID_unsignedbv ||
+       expr.type().id() == ID_floatbv))
+  {
+    std::cout << "WARNING: do not know how to split " 
+	      << from_expr(SSA.ns, "", expr)
+	      << " of type " << from_type(SSA.ns, "", expr.type()) 
+	      << std::endl;
+    return val_pair;
+  }
+
+  //match template expression
+ 
+  // preprocess the elements in v to remove negation
+  // Example: I/P: !(x<=10) --> O/P: (x>=10)
+  std::vector<meet_irreduciblet> new_value;
+  for(unsigned i=0; i<value.size(); i++)
+  {
+    const exprt &e = value[i];
+    // check for expression with negations (ex- !(x<=10) or !(x>=10)) 
+    if(e.id() == ID_not) {
+#ifdef DEBUG
+      std::cout << "The original not expression is " << e << std::endl;
+#endif
+      const exprt &expb = e.op0();
+
+      // Handle the singleton case: example : !guard#0
+      if(expb.id() != ID_le && expb.id() != ID_ge) 
+      {
+        new_value.push_back(expb);
+        continue;
+      }
+      const exprt &lhs = to_binary_relation_expr(expb).lhs();
+      const exprt &rhs = to_binary_relation_expr(expb).rhs();
+      if(expb.id() == ID_le) {
+        // !(ID_le) --> ID_gt
+        exprt exp = binary_relation_exprt(lhs,ID_gt,rhs);
+#ifdef DEBUG
+        std::cout << "The new non-negated expression is " << exp  << std::endl;
+#endif         
+        new_value.push_back(exp);
+      }
+      // !(ID_ge) --> ID_lt
+      else if(expb.id() == ID_ge) {
+        exprt exp = binary_relation_exprt(lhs,ID_lt,rhs);
+#ifdef DEBUG
+        std::cout << "The new non-negated expression is " << exp  << std::endl;
+#endif         
+        new_value.push_back(exp);
+      }
+      else if(expb.id() == ID_lt || expb.id() == ID_gt) {
+        // this must not happen because 
+        // the expressions are now generated as <= or >=
+        assert(false);
+      }  
+    } // end not 
+    // simply copy the value[i] to new_value[i]
+    else {
+      new_value.push_back(value[i]);
+    }
+  }
+  // check the size of new_value and value is same here
+  assert(new_value.size() == value.size());
+  
+  exprt vals = conjunction(new_value);
+  std::cout << "conjuncted new value:: " << from_expr(SSA.ns, "", vals) << std::endl;
+  std::cout << "original splitting expr is :: " << from_expr(SSA.ns, "", expr) << std::endl;
+   
+  // computer lower and upper bound
+  // handle the positive literals
+  constant_exprt u;
+  bool u_is_assigned = false;
+  constant_exprt l;
+  bool l_is_assigned = false;
+  mp_integer val1, val2;
+  // I/P: (x>=0 && x<=10) O/P: l = 0, u = 10 
+  for(unsigned i=0; i<new_value.size(); i++)
+  {
+    const exprt &e = new_value[i];
+    // Handle the singleton case: example : !guard#0
+    if(e.id() != ID_le && e.id() != ID_ge && e.id() != ID_lt && e.id() != ID_gt)
+      continue;
+    if(to_binary_relation_expr(e).lhs() == expr)
+    {
+      if(e.id() == ID_le)
+      {
+        u = to_constant_expr(to_binary_relation_expr(e).rhs());
+        std::cout << "the expression is " << from_expr(SSA.ns, "", e) << "the upper value is " 
+        << from_expr(SSA.ns, "", u) << std::endl;
+        u_is_assigned = true;
+        //break;
+      }
+      if(e.id() == ID_ge)
+      {
+        l = to_constant_expr(to_binary_relation_expr(e).rhs());
+        std::cout << "the expression is " << from_expr(SSA.ns, "", e) << "the lower value is " 
+        << from_expr(SSA.ns, "", l) << std::endl;
+        l_is_assigned = true;
+        //break;
+      }
+      if(e.id() == ID_lt) {
+        std::cout << "computing upper value" << std::endl;
+        constant_exprt cexpr = to_constant_expr(to_binary_relation_expr(e).rhs());
+        to_integer(cexpr, val1);
+        val2 = val1-1;
+        u = from_integer(val2, expr.type());  
+        u_is_assigned = true;
+        std::cout << "the expression is " << from_expr(SSA.ns, "", e) << "the upper value is " 
+        << from_expr(SSA.ns, "", u) << std::endl;
+        //break;
+      }
+      if(e.id() == ID_gt) {
+        std::cout << "computing lower value" << std::endl;
+        constant_exprt cexpr = to_constant_expr(to_binary_relation_expr(e).rhs());
+        to_integer(cexpr, val1);
+        val2 = val1+1;
+        l = from_integer(val2, expr.type());  
+        l_is_assigned = true;
+        std::cout << "the expression is " << from_expr(SSA.ns, "", e) << "the lower value is " 
+        << from_expr(SSA.ns, "", l) << std::endl;
+        //break;
+      }
+    }
+  }
+
+  // handle the negative literals
+  mp_integer neg, cneg; 
+  mp_integer negu, cnegu; 
+  for(unsigned i=0; i<new_value.size(); i++)
+  {
+    const exprt &e = new_value[i];
+    // Handle the singleton case: example : !guard#0
+    if(e.id() != ID_le && e.id() != ID_ge && e.id() != ID_lt && e.id() != ID_gt)
+      continue;
+    const exprt &lhs = to_binary_relation_expr(e).lhs();
+    if(lhs.id()==ID_unary_minus && 
+        lhs.op0().id()==ID_typecast &&
+        lhs.op0().op0() == expr)
+    {
+      // I/P: (-x <= 10) O/P: l = -10
+      if(e.id() == ID_le) {
+        const exprt &rhs = to_binary_relation_expr(e).rhs();
+        constant_exprt cexpr = to_constant_expr(rhs);
+        to_integer(cexpr, neg);
+        cneg = -neg;
+        l = from_integer(cneg, expr.type());  
+        l_is_assigned = true;
+        //break;
+      }
+      // I/P: (-x >= 10) O/P: u = -10
+      if(e.id() == ID_ge) {
+        const exprt &rhs = to_binary_relation_expr(e).rhs();
+        constant_exprt cexpru = to_constant_expr(rhs);
+        to_integer(cexpru, negu);
+        cnegu = -negu;
+        u = from_integer(cnegu, expr.type());  
+        u_is_assigned = true;
+        //break;
+      }
+      // I/P: (-x < 10) O/P: l = (-10+1) = -9
+      if(e.id() == ID_lt) {
+        constant_exprt cexpr = to_constant_expr(to_binary_relation_expr(e).rhs());
+        to_integer(cexpr, neg);
+        cneg = (-neg)+1;
+        l = from_integer(cneg, expr.type());  
+        l_is_assigned = true;
+        std::cout << "the expression is " << from_expr(SSA.ns, "", e) << "the lower value is " 
+        << from_expr(SSA.ns, "", l) << std::endl;
+        //break;
+      }
+      // I/P: (-x > 10) O/P: l = (-10-1) = -11
+      if(e.id() == ID_gt) {
+        constant_exprt cexpru = to_constant_expr(to_binary_relation_expr(e).rhs());
+        to_integer(cexpru, negu);
+        cnegu = (-negu)-1;
+        u = from_integer(cnegu, expr.type());  
+        u_is_assigned = true;
+        //break;
+      }
+    }
+  }
+
+  if(!u_is_assigned && !l_is_assigned) {
+#ifdef DEBUG
+    std::cout << "Decision variable not present in the abstract value" << std::endl;
+#endif
+  }
+    
+  if(!u_is_assigned)
+  {
+    u = tpolyhedra_domaint::get_max_value(expr);
+  }
+  if(!l_is_assigned)
+  {
+    l = tpolyhedra_domaint::get_min_value(expr);
+  }
+  
+  mp_integer upper, lower; 
+  to_integer(to_constant_expr(u), upper);
+  to_integer(to_constant_expr(l), lower);
+
+  val_pair.first = lower;
+  val_pair.second = upper;
+  std::cout <<  "The val pair for " << from_expr(SSA.ns, "", expr) <<  "is" << "lower" << lower << "upper" << upper << std::endl;
+  return val_pair;
+}
+

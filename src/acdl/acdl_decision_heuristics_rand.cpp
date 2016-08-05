@@ -19,9 +19,14 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_randt::operator()
 #ifdef DEBUG
   std::cout << "Printing all decision variables" << std::endl;
   for(std::set<exprt>::const_iterator 
-    it = decision_variables.begin(); it != decision_variables.end(); ++it)
+    it = decision_variables.begin(); it != decision_variables.end(); it++)
       std::cout << from_expr(SSA.ns, "", *it) << "  ," << std::endl;
 #endif
+  
+  // copy the value to non-constant value
+  acdl_domaint::valuet v;
+  for(int k=0;k<value.size();k++)
+    v.push_back(value[k]);
   
   // collect the non-singleton variables
   std::vector<exprt> non_singletons;
@@ -85,44 +90,59 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_randt::operator()
       non_cond.push_back(*it);
   }
   
+  bool decision=false; 
   // Make a decision
-  if(cond.size() == 0) {
-    #if 0
-    // choose non-cond decision variables that 
-    // are nondet-vars 
-    // choose input nondet variables
-    if(nondet_var.size()>0) {
-      const acdl_domaint::meet_irreduciblet dec_expr_nondet = 
-        nondet_var[rand() % nondet_var.size()];
-      // now search for nondet_vars that are not singletons
-      acdl_domaint::varst sym1;
-      find_symbols(dec_expr_nondet, sym1);
-      for(int i=0;i<non_cond.size();i++) {
-        acdl_domaint::varst sym2;
-        find_symbols(non_cond[i], sym2);
-        for(acdl_domaint::varst::iterator it1 = sym2.begin(); it1 != sym2.end(); it1++) {
-          bool is_in = sym1.find(*it1) != sym1.end();
-          if(is_in) 
-            return non_cond[i]; 
+  while(!decision) {
+    if(cond.size() == 0) {
+#if 0
+      // choose non-cond decision variables that 
+      // are nondet-vars 
+      // choose input nondet variables
+      if(nondet_var.size()>0) {
+        const acdl_domaint::meet_irreduciblet dec_expr_nondet = 
+          nondet_var[rand() % nondet_var.size()];
+        // now search for nondet_vars that are not singletons
+        acdl_domaint::varst sym1;
+        find_symbols(dec_expr_nondet, sym1);
+        for(int i=0;i<non_cond.size();i++) {
+          acdl_domaint::varst sym2;
+          find_symbols(non_cond[i], sym2);
+          for(acdl_domaint::varst::iterator it1 = sym2.begin(); it1 != sym2.end(); it1++) {
+            bool is_in = sym1.find(*it1) != sym1.end();
+            if(is_in) 
+              return non_cond[i]; 
+          }
         }
       }
+#endif
+      // select non-cond decision variables
+      acdl_domaint::meet_irreduciblet dec_expr_rand = 
+        non_cond[rand() % non_cond.size()];
+#ifdef DEBUG
+      std::cout << "[NON-COND DECISION] " << dec_expr_rand << std::endl;
+#endif
+      unsigned status = domain.compare_val_lit(v, dec_expr_rand); 
+      if(status != 0) { // not conflicting
+        decision=true;
+        return dec_expr_rand;
+      }
+      else 
+        continue;
     }
-    #endif
-    // select non-cond decision variables
-    const acdl_domaint::meet_irreduciblet dec_expr_rand = 
-      non_cond[rand() % non_cond.size()];
+    else {
+      // select cond decision variables
+      acdl_domaint::meet_irreduciblet dec_expr_rand = 
+        cond[rand() % cond.size()];
 #ifdef DEBUG
-    std::cout << "[NON-COND DECISION] " << dec_expr_rand << std::endl;
+      std::cout << "[COND DECISION] " << dec_expr_rand << std::endl;
 #endif
-    return dec_expr_rand;
-  }
-  else {
-    // select cond decision variables
-    const acdl_domaint::meet_irreduciblet dec_expr_rand = 
-      cond[rand() % cond.size()];
-#ifdef DEBUG
-    std::cout << "[COND DECISION] " << dec_expr_rand << std::endl;
-#endif
-    return dec_expr_rand;
+      unsigned status = domain.compare_val_lit(v, dec_expr_rand); 
+      if(status != 0) { // not conflicting
+        decision=true;
+        return dec_expr_rand;
+      }
+      else 
+        continue;
+    }
   }
 }

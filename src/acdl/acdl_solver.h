@@ -89,6 +89,7 @@ protected:
   void generalize_proof(const local_SSAt &SSA, const exprt& assertion);
 
   bool disable_generalization;
+  void initialize_decision_variables(acdl_domaint::valuet &val);
 
 };
 

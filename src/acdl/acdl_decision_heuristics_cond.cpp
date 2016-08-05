@@ -19,7 +19,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_condt::operator()
 #ifdef DEBUG
   std::cout << "Printing all decision variables" << std::endl;
   for(std::set<exprt>::const_iterator 
-    it = decision_variables.begin(); it != decision_variables.end(); ++it)
+    it = decision_variables.begin(); it != decision_variables.end(); it++)
       std::cout << *it << "," << std::endl;
 #endif
   // collect the non-singleton variables
