@@ -749,4 +749,7 @@ int main() {
  x++; y++;
  assert(x==y);
 }
+3> git query for bottom9 -- Deduction generated for octagon not proper ?
+4> DATE bounded acdl experiments -- decisions and learning heuristics --
+deadline 18th Sept. 
 

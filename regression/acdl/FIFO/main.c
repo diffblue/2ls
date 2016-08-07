@@ -129,7 +129,7 @@ _Bool design(_Bool clock, unsigned char dataIn, _Bool push, _Bool pop, _Bool *eq
   //assert(srEmpty == rbEmpty);
   //assert(srDataOut == rbDataOut);
   
-  assert(*equal == 1);
+  assert(*equal != 1);
 }
 
 

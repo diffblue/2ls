@@ -486,9 +486,22 @@ bool acdl_domaint::is_complete(const valuet &value,
   find_symbols (conjunction(value), symbols);
 #endif
 
+  std::string str("#lb");
+  std::string name;
   for(std::set<symbol_exprt>::const_iterator it = symbols.begin();
       it != symbols.end(); ++it)
   {
+    // ignore the symbols whose name is of 
+    // type "lb", for example guard#lb3
+    // Ignoring such variables does not
+    // affect completeness if guard#ls=false
+    // Remember, for real counterexample guard#ls has to be FALSE
+    const irep_idt &identifier = it->get(ID_identifier);
+    name = id2string(identifier);
+    std::size_t found = name.find(str);
+    if (found!=std::string::npos)
+      continue;
+    
     decision_proceduret::resultt res = (*solver)();
     assert(res==decision_proceduret::D_SATISFIABLE);
     // if value == (x=[2,2]) and (*it is x), then 'm' below contains the
