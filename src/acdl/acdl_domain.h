@@ -34,7 +34,8 @@ public:
       SSA.mark_nodes();
     }  
 
-  void operator()(const statementt &statement,
+  void operator()(
+      const statementt &statement,
 		  const varst &vars,
 		  const valuet &old_value,
 		  valuet &new_value,
@@ -96,10 +97,10 @@ public:
     std::ostream &out, const valuet &v)
   {
     for(valuet::const_iterator it = v.begin();
-	it != v.end(); ++it)
+        it != v.end(); ++it)
     {
       if(it != v.begin())
-	out << " && ";
+        out << " && ";
       out << from_expr(SSA.ns, "", *it);
     }
     return out;
@@ -110,10 +111,10 @@ public:
     std::ostream &out, const deductionst &d)
   {
     for(deductionst::const_iterator it = d.begin();
-	it != d.end(); ++it)
+        it != d.end(); ++it)
     {
       out << from_expr(SSA.ns, "", it->first) << " <== ";
-      output(out,it->second) << std::endl;
+      output(out, it->second) << std::endl;
     }
     return out;
   }
@@ -124,9 +125,23 @@ protected:
   ssa_dbt &ssa_db;
   ssa_local_unwindert &ssa_local_unwinder;
 
-  void remove_var(const valuet &_old_value, 
-		  const symbol_exprt &var,
-		  valuet &new_value);
+  void bool_inference(
+      const statementt &statement,
+		  const varst &vars,
+		  const valuet &old_value,
+		  valuet &new_value,
+		  deductionst &deductions);
+
+  void numerical_inference(
+      const statementt &statement,
+		  const varst &vars,
+		  const valuet &old_value,
+		  valuet &new_value,
+		  deductionst &deductions);
+
+  void remove_vars(const valuet &_old_value, 
+                   const varst &var,
+                   valuet &new_value);
  
   void remove_expr(valuet &old_value, 
 			             exprt &expr,
@@ -138,6 +153,17 @@ protected:
 		       antecedentst &antecedents);
 
   bool expr_is_true(const exprt &expr);
+
+  //print varst
+  inline std::ostream &output(
+    std::ostream &out, const varst &v)
+  {
+    for(varst::const_iterator it = v.begin();
+        it != v.end(); ++it)
+      out << it->get_identifier() << " ";
+    return out;
+  }
+
 };
 
 #endif
