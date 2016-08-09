@@ -125,26 +125,33 @@ protected:
   ssa_dbt &ssa_db;
   ssa_local_unwindert &ssa_local_unwinder;
 
+  void maps_to_bottom(
+    const statementt &statement,
+    const varst &vars,
+    const valuet &old_value,
+    valuet &new_value,
+    deductionst &deductions);
+
   void bool_inference(
-      const statementt &statement,
-		  const varst &vars,
-		  const valuet &old_value,
-		  valuet &new_value,
-		  deductionst &deductions);
+    const statementt &statement,
+    const varst &vars,
+    const valuet &old_value,
+    valuet &new_value,
+    deductionst &deductions);
 
   void numerical_inference(
-      const statementt &statement,
-		  const varst &vars,
-		  const valuet &old_value,
-		  valuet &new_value,
-		  deductionst &deductions);
+    const statementt &statement,
+    const varst &vars,
+    const valuet &old_value,
+    valuet &new_value,
+    deductionst &deductions);
 
   void remove_vars(const valuet &_old_value, 
                    const varst &var,
                    valuet &new_value);
  
   void remove_expr(valuet &old_value, 
-			             exprt &expr,
+		   exprt &expr,
                    valuet &new_value);
 
   void get_antecedents(incremental_solvert &solver,

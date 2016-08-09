@@ -45,6 +45,19 @@ void acdl_domaint::operator()(
   valuet &new_value,
   deductionst &deductions)
 {
+#ifdef DEBUG
+  std::cout << "[ACDL-DOMAIN] old value: ";
+  output(std::cout, old_value) << std::endl;
+#endif
+
+#ifdef DEBUG
+  std::cout << "DOMAIN projected live variables are: ";
+  for(acdl_domaint::varst::const_iterator 
+        it = vars.begin();it != vars.end(); ++it)
+    std::cout << from_expr(SSA.ns, "", *it) << " ";
+  std::cout << std::endl;
+#endif
+
   // partition variables
   varst bool_vars, num_vars;
   for(varst::const_iterator it = vars.begin();
@@ -71,15 +84,79 @@ void acdl_domaint::operator()(
   deductionst num_deductions;
   valuet num_new_value;
   // infer
-  bool_inference(statement, bool_vars, old_value, 
+  maps_to_bottom(statement, bool_vars, old_value, 
                  new_value, deductions);
-  numerical_inference(statement, num_vars, old_value, 
-                      num_new_value, num_deductions);
-  // collect results
-  new_value.insert(new_value.end(), num_new_value.begin(), 
-                   num_new_value.end());
-  deductions.insert(deductions.end(), num_deductions.begin(), 
-                    num_deductions.end());
+  if(deductions.empty())
+  {
+    bool_inference(statement, bool_vars, old_value, 
+		   new_value, deductions);
+    numerical_inference(statement, num_vars, old_value, 
+			num_new_value, num_deductions);
+    // collect results
+    new_value.insert(new_value.end(), num_new_value.begin(), 
+		     num_new_value.end());
+    deductions.insert(deductions.end(), num_deductions.begin(), 
+		      num_deductions.end());
+  }
+#ifdef DEBUG
+  std::cout << "[ACDL-DOMAIN] deductions: ";
+  output(std::cout, deductions) << std::endl;
+#endif
+}
+
+/*******************************************************************\
+
+Function: acdl_domaint::maps_to_bottom()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: 
+
+\*******************************************************************/
+
+void acdl_domaint::maps_to_bottom(
+  const statementt &statement,
+  const varst &vars,
+  const valuet &old_value,
+  valuet &new_value,
+  deductionst &deductions)
+{
+  std::cout << "checking whether statement maps to BOTTOM: ";
+  std::unique_ptr<incremental_solvert> solver(
+    incremental_solvert::allocate(SSA.ns,true));
+
+  //get handles on meet irreducibles to check them later
+  bvt value_literals;
+  std::vector<int> value_literal_map;
+  value_literals.reserve(old_value.size());
+  *solver << statement;
+  for(unsigned i=0; i<old_value.size(); i++)
+  {
+    literalt l = solver->convert(old_value[i]);
+    if(l.is_constant())
+    {
+      *solver << literal_exprt(l);
+      continue;
+    }
+    value_literal_map.push_back(i);
+    value_literals.push_back(l);
+    solver->solver->set_frozen(l);
+  }
+  solver->set_assumptions(value_literals);
+
+  if((*solver)() == decision_proceduret::D_UNSATISFIABLE)
+  {
+    std::cout << "yes, deducing BOTTOM" << std::endl;
+    new_value.push_back(false_exprt());
+    deductions.push_back(deductiont());
+    deductions.back().first = false_exprt();
+    get_antecedents(*solver,old_value,value_literals,
+		    deductions.back().second);
+  }
+  else
+    std::cout << "no" << std::endl;
 }
 
 /*******************************************************************\
@@ -101,19 +178,6 @@ void acdl_domaint::bool_inference(
   valuet &new_value,
   deductionst &deductions)
 {
-#ifdef DEBUG
-  std::cout << "[ACDL-DOMAIN] old value: ";
-  output(std::cout, _old_value) << std::endl;
-#endif
-
-#ifdef DEBUG
-  std::cout << "DOMAIN projected live variables are: ";
-  for(acdl_domaint::varst::const_iterator 
-        it = vars.begin();it != vars.end(); ++it)
-    std::cout << from_expr(SSA.ns, "", *it);
-  std::cout << "" << std::endl;
-#endif      
-
   deductions.reserve(vars.size());
   for(varst::const_iterator it = vars.begin();
       it != vars.end(); ++it)
@@ -341,7 +405,7 @@ void acdl_domaint::numerical_inference(
     }	
  
 #ifdef DEBUG
-    std::cout << "[ACDL-DOMAIN] deductions(";
+    std::cout << "[ACDL-DOMAIN] numerical deductions(";
     output(std::cout, *it) << "): ";
     output(std::cout, deductions) << std::endl;
 #endif
@@ -672,7 +736,7 @@ void acdl_domaint::remove_vars(const valuet &old_value,
     for(varst::const_iterator v_it = vars.begin();
         v_it != vars.end(); ++v_it)
     {
-      if(symbols.find(v_it->get_identifier()) == symbols.end())
+      if(symbols.find(v_it->get_identifier()) != symbols.end())
       {
         found = true;
         break;
