@@ -332,6 +332,12 @@ exprt dereference_rec(
       result=if_exprt(guard, value, result);
     }
 
+    if (values.empty()) {
+      // We use the identifier of pointed object
+      irep_idt identifier = id2string(to_symbol_expr(pointer).get_identifier())+"'obj";
+      result=symbol_exprt(identifier, src.type());
+    }
+
     return result;
   }
   else if(src.id()==ID_member)
@@ -355,7 +361,7 @@ exprt dereference_rec(
 
     if(tmp.object().is_nil())
       return nil_exprt();
-    
+
     return lift_if(tmp);
   }
   else
