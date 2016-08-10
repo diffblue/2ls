@@ -282,6 +282,7 @@ void ssa_objectst::categorize_objects(
     {
       if(is_ptr_object(root_object))
       {
+        globals.insert(*o_it);
       }
       else
       {
