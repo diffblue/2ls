@@ -125,14 +125,18 @@ protected:
     const local_SSAt::var_sett &cs_globals_out);
 
   exprt get_replace_globals_in(
-    const local_SSAt::var_sett &globals_in,
+    const local_SSAt::var_sett &globals_in, 
     const local_SSAt::var_sett &globals);
   exprt get_replace_params(
     const local_SSAt::var_listt &params,
-    const function_application_exprt &funapp_expr);
+    const function_application_exprt &funapp_expr,
+    const local_SSAt::var_sett &globals_in,
+    const local_SSAt::var_sett &globals_out,
+    const local_SSAt &SSA,
+    const local_SSAt::locationt &loc);
   exprt get_replace_globals_out(
     const local_SSAt::var_sett &globals_out,
-    const local_SSAt::var_sett &cs_globals_in,
+    const local_SSAt::var_sett &cs_globals_in,  
     const local_SSAt::var_sett &cs_globals_out);
 
   void rename(exprt &expr);

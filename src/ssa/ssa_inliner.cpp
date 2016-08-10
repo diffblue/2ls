@@ -10,6 +10,7 @@ Author: Peter Schrammel
 #include <util/replace_expr.h>
 
 #include "ssa_inliner.h"
+#include "ssa_dereference.h"
 
 /*******************************************************************\
 
@@ -63,7 +64,13 @@ void ssa_inlinert::get_summary(
 #endif
 
   // equalities for arguments
-  bindings.push_back(get_replace_params(summary.params, *f_it));
+  bindings.push_back(get_replace_params(
+    summary.params,
+    *f_it,
+    summary.globals_in,
+    summary.globals_out,
+    SSA,
+    loc));
 
   // equalities for globals_in
   if(forward)
@@ -489,7 +496,11 @@ Function: ssa_inlinert::get_replace_params
 
 exprt ssa_inlinert::get_replace_params(
   const local_SSAt::var_listt &params,
-  const function_application_exprt &funapp_expr)
+  const function_application_exprt &funapp_expr,
+  const local_SSAt::var_sett &globals_in,
+  const local_SSAt::var_sett &globals_out,
+  const local_SSAt &SSA,
+  const local_SSAt::locationt &loc)
 {
   // equalities for arguments
   exprt::operandst c;
@@ -508,6 +519,49 @@ exprt ssa_inlinert::get_replace_params(
     exprt lhs=*p_it; // copy
     rename(lhs);
     c.push_back(equal_exprt(lhs, *it));
+
+    // For pointer parameters create equalities between pointed object passed as global and
+    // corresponding object in caller
+    if (p_it->type().id() == ID_pointer) {
+      // Find corresponding objects in caller's objects (separately for entry and exit)
+      exprt pointed_ssa_sym_in;
+      exprt pointed_ssa_sym_out;
+      for (equal_exprt equal : SSA.find_node(loc)->equalities)
+      { // search through equalities with argument value
+        if (equal.rhs().id() == ID_symbol &&
+            to_symbol_expr(equal.rhs()).get_identifier() == to_symbol_expr(*it).get_identifier())
+        {
+          exprt arg_pointed = dereference(equal.lhs(), SSA.ssa_value_ai[loc], "", SSA.ns);
+          if (arg_pointed.id() == ID_address_of)
+          {
+            arg_pointed = to_address_of_expr(arg_pointed).object();
+          }
+          ssa_objectt pointed_ssa_obj(arg_pointed, SSA.ns);
+          // get correct SSA symbol for function call entry
+          pointed_ssa_sym_in = SSA.name(pointed_ssa_obj, local_SSAt::OUT,
+                                        SSA.get_def_loc(to_symbol_expr(arg_pointed), loc));
+          // get correct SSA symbol for function call exit
+          pointed_ssa_sym_out = SSA.name(pointed_ssa_obj, local_SSAt::OUT, loc);
+        }
+      }
+
+      // Find globals containing pointed object and create equalities
+      irep_idt global_id = id2string(to_symbol_expr(*p_it).get_identifier())+"'obj";
+      symbol_exprt expr_to_find(global_id, p_it->type().subtype());
+
+      // Entry global
+      symbol_exprt global_in;
+      if(find_corresponding_symbol(expr_to_find,globals_in,global_in)) {
+        rename(global_in);
+        c.push_back(equal_exprt(global_in,pointed_ssa_sym_in));
+      }
+      // Exit global
+      symbol_exprt global_out;
+      if(find_corresponding_symbol(expr_to_find,globals_out,global_out)) {
+        rename(global_out);
+        c.push_back(equal_exprt(global_out, pointed_ssa_sym_out));
+      }
+    }
   }
   return conjunction(c);
 }
