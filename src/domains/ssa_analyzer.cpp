@@ -31,6 +31,7 @@ Author: Peter Schrammel
 #include "template_generator_ranking.h"
 #include "strategy_solver_predabs.h"
 #include "ssa_analyzer.h"
+#include "strategy_solver_heap.h"
 
 #define BINSEARCH_SOLVER strategy_solver_binsearcht(\
   *static_cast<tpolyhedra_domaint *>(domain), solver, SSA.ns)
@@ -102,6 +103,12 @@ void ssa_analyzert::operator()(
     strategy_solver=new strategy_solver_equalityt(
       *static_cast<equality_domaint *>(domain), solver, SSA.ns);
     result=new equality_domaint::equ_valuet();
+  }
+  else if(template_generator.options.get_bool_option("heap"))
+  {
+    strategy_solver=new strategy_solver_heapt(
+        *static_cast<heap_domaint *>(domain), solver, SSA.ns);
+    result=new heap_domaint::heap_valuet();
   }
   else
   {
