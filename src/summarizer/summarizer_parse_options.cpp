@@ -230,6 +230,10 @@ void summarizer_parse_optionst::get_command_line_options(optionst &options)
     options.set_option("equalities", true);
     options.set_option("std-invariants", true);
   }
+  else if (cmdline.isset("heap"))
+  {
+    options.set_option("heap", true);
+  }
   else 
   {
     if(cmdline.isset("zones"))
@@ -475,6 +479,8 @@ int summarizer_parse_optionst::doit()
     status() << "Havocking loops and function calls" << eom;
   else if(options.get_bool_option("equalities"))
     status() << "Using (dis)equalities domain" << eom;
+  else if (options.get_bool_option("heap"))
+    status() << "Using heap domain" << eom;
   else
   {
     if(options.get_bool_option("intervals"))
@@ -1541,6 +1547,7 @@ void summarizer_parse_optionst::help()
     " --havoc                      havoc loops and function calls\n"
     " --intervals                  use interval domain\n"
     " --equalities                 use equalities and disequalities domain\n"
+    " --heap                       use heap domain\n"
     " --zones                      use zone domain\n"
     " --octagons                   use octagon domain\n"
     " --enum-solver                use solver based on model enumeration\n"

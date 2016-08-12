@@ -25,6 +25,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "template_generator_ranking.h"
 #include "strategy_solver_predabs.h"
 #include "ssa_analyzer.h"
+#include "strategy_solver_heap.h"
 
 
 #include <solvers/sat/satcheck.h>
@@ -56,7 +57,7 @@ Function: ssa_analyzert::operator()
 \*******************************************************************/
 
 void ssa_analyzert::operator()(incremental_solvert &solver,
-			       local_SSAt &SSA, 
+			       local_SSAt &SSA,
                                const exprt &precondition,
                                template_generator_baset &template_generator)
 {
@@ -71,7 +72,7 @@ void ssa_analyzert::operator()(incremental_solvert &solver,
 
   // add precondition (or conjunction of asssertion in backward analysis)
   solver << precondition;
-  
+
   domain = template_generator.domain();
 
   // get strategy solver from options
@@ -84,7 +85,7 @@ void ssa_analyzert::operator()(incremental_solvert &solver,
       strategy_solver = new ranking_solver_enumerationt(
         *static_cast<linrank_domaint *>(domain), solver, SSA.ns,
 	template_generator.options.get_unsigned_int_option(
-          "max-inner-ranking-iterations"));    
+          "max-inner-ranking-iterations"));
       result = new linrank_domaint::templ_valuet();
     }
     else
@@ -97,12 +98,18 @@ void ssa_analyzert::operator()(incremental_solvert &solver,
           "max-inner-ranking-iterations"));
       result = new lexlinrank_domaint::templ_valuet();
     }
-  }  
+  }
   else if(template_generator.options.get_bool_option("equalities"))
   {
     strategy_solver = new strategy_solver_equalityt(
-        *static_cast<equality_domaint *>(domain), solver, SSA.ns);    
+        *static_cast<equality_domaint *>(domain), solver, SSA.ns);
     result = new equality_domaint::equ_valuet();
+  }
+  else if(template_generator.options.get_bool_option("heap"))
+  {
+    strategy_solver = new strategy_solver_heapt(
+        *static_cast<heap_domaint *>(domain), solver, SSA.ns);
+    result = new heap_domaint::heap_valuet();
   }
   else
   {
@@ -138,16 +145,16 @@ void ssa_analyzert::operator()(incremental_solvert &solver,
   do
   {
     iteration_number++;
-    
+
     #ifdef DEBUG
     std::cout << "\n"
               << "******** Forward least fixed-point iteration #"
               << iteration_number << "\n";
     #endif
-   
+
     change = strategy_solver->iterate(*result);
 
-    if(change) 
+    if(change)
     {
 
       #ifdef DEBUG

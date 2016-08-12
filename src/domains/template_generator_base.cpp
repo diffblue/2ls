@@ -10,6 +10,8 @@ Author: Peter Schrammel
 #include "equality_domain.h"
 #include "tpolyhedra_domain.h"
 #include "predabs_domain.h"
+#include "heap_domain.h"
+#include "domain.h"
 
 #include <util/find_symbols.h>
 #include <util/arith_tools.h>
@@ -261,6 +263,17 @@ void template_generator_baset::filter_equality_domain()
   }
 }
 
+void template_generator_baset::filter_heap_domain()
+{
+  domaint::var_specst new_var_specs(var_specs);
+  var_specs.clear();
+  for (auto var = new_var_specs.begin(); var != new_var_specs.end(); ++var)
+  {
+    if (var->var.type().id() == ID_pointer)
+      var_specs.push_back(*var);
+  }
+}
+
 /*******************************************************************\
 
 Function: template_generator_baset::add_vars
@@ -273,8 +286,8 @@ Function: template_generator_baset::add_vars
 
 \*******************************************************************/
 
-void template_generator_baset::add_var(const domaint::vart &var, 
-			    const domaint::guardt &pre_guard, 
+void template_generator_baset::add_var(const domaint::vart &var,
+			    const domaint::guardt &pre_guard,
 			    domaint::guardt post_guard,
 			    const domaint::kindt &kind,
 			    domaint::var_specst &var_specs)
@@ -308,7 +321,7 @@ void template_generator_baset::add_var(const domaint::vart &var,
     const array_typet &array_type = to_array_type(var.type());
     mp_integer size;
     to_integer(array_type.size(), size);
-    for(mp_integer i=0; i<size; i=i+1) 
+    for(mp_integer i=0; i<size; i=i+1)
     {
       var_specs.push_back(domaint::var_spect());
       domaint::var_spect &var_spec = var_specs.back();
@@ -322,19 +335,19 @@ void template_generator_baset::add_var(const domaint::vart &var,
   }
 }
 
-void template_generator_baset::add_vars(const local_SSAt::var_listt &vars_to_add, 
-			     const domaint::guardt &pre_guard, 
+void template_generator_baset::add_vars(const local_SSAt::var_listt &vars_to_add,
+			     const domaint::guardt &pre_guard,
 			     const domaint::guardt &post_guard,
 			     const domaint::kindt &kind,
 			     domaint::var_specst &var_specs)
 {
   for(local_SSAt::var_listt::const_iterator it = vars_to_add.begin();
-      it != vars_to_add.end(); it++) 
+      it != vars_to_add.end(); it++)
     add_var(*it,pre_guard,post_guard,kind,var_specs);
 }
 
-void template_generator_baset::add_vars(const local_SSAt::var_sett &vars_to_add, 
-			     const domaint::guardt &pre_guard, 
+void template_generator_baset::add_vars(const local_SSAt::var_sett &vars_to_add,
+			     const domaint::guardt &pre_guard,
 			     const domaint::guardt &post_guard,
 			     const domaint::kindt &kind,
 			     domaint::var_specst &var_specs)
@@ -344,8 +357,8 @@ void template_generator_baset::add_vars(const local_SSAt::var_sett &vars_to_add,
     add_var(*it,pre_guard,post_guard,kind,var_specs);
 }
 
-void template_generator_baset::add_vars(const var_listt &vars_to_add, 
-			     const domaint::guardt &pre_guard, 
+void template_generator_baset::add_vars(const var_listt &vars_to_add,
+			     const domaint::guardt &pre_guard,
 			     const domaint::guardt &post_guard,
 			     const domaint::kindt &kind,
 			     domaint::var_specst &var_specs)
@@ -398,7 +411,7 @@ bool template_generator_baset::replace_post(replace_mapt replace_map, exprt &exp
     if(f.function().get(ID_identifier) == TEMPLATE_NEWVAR)
     {
       assert(f.arguments().size()==1);
-      if(f.arguments()[0].id()==ID_typecast) 
+      if(f.arguments()[0].id()==ID_typecast)
         expr = replace_map[f.arguments()[0].op0()];
       else
         expr = replace_map[f.arguments()[0]];
@@ -419,9 +432,9 @@ bool template_generator_baset::build_custom_expr(const local_SSAt &SSA,
 {
   replace_mapt replace_map, replace_post_map;
 
-  const ssa_domaint::phi_nodest &phi_nodes = 
+  const ssa_domaint::phi_nodest &phi_nodes =
     SSA.ssa_analysis[n_it->loophead->location].phi_nodes;
-      
+
   for(local_SSAt::objectst::const_iterator
           o_it=SSA.ssa_objects.objects.begin();
           o_it!=SSA.ssa_objects.objects.end();
@@ -433,18 +446,18 @@ bool template_generator_baset::build_custom_expr(const local_SSAt &SSA,
     if(p_it!=phi_nodes.end()) //modified in loop
     {
       //rename to pre
-      replace_map[o_it->get_expr()] = 
+      replace_map[o_it->get_expr()] =
         SSA.name(*o_it, local_SSAt::LOOP_BACK, n_it->location);
 
       //rename to post
-      replace_post_map[o_it->get_expr()] = 
+      replace_post_map[o_it->get_expr()] =
         SSA.read_rhs(*o_it, n_it->location);
       //TODO: unwinding
     }
     else //not modified in loop
     {
       //rename to id valid at loop head
-      replace_map[o_it->get_expr()] = 
+      replace_map[o_it->get_expr()] =
         SSA.read_rhs(*o_it,n_it->loophead->location);
       //TODO: unwinding
     }
@@ -478,7 +491,7 @@ bool template_generator_baset::instantiate_custom_templates(
   var_listt pre_state_vars, post_state_vars;
 
   bool found_poly = false, found_predabs = false;
-  for(local_SSAt::nodest::const_iterator n_it=SSA.nodes.begin(); 
+  for(local_SSAt::nodest::const_iterator n_it=SSA.nodes.begin();
       n_it!=SSA.nodes.end(); n_it++)
   {
     if(n_it->loophead != SSA.nodes.end()) //we've found a loop
@@ -489,16 +502,16 @@ bool template_generator_baset::instantiate_custom_templates(
       bool add_post_vars = false;
 
       //search for templates in the loop
-      for(local_SSAt::nodest::const_iterator nn_it=n_it->loophead; 
+      for(local_SSAt::nodest::const_iterator nn_it=n_it->loophead;
 	  nn_it!=n_it; nn_it++)
       {
 	if(nn_it->templates.empty()) continue;
 	if(nn_it->templates.size()>1000) continue; //TODO: there is an unwinder-related bug
-	for(local_SSAt::nodet::templatest::const_iterator 
-	      t_it=nn_it->templates.begin(); 
+	for(local_SSAt::nodet::templatest::const_iterator
+	      t_it=nn_it->templates.begin();
 	    t_it!=nn_it->templates.end(); t_it++)
 	{
-	  debug() << "Template expression: " 
+	  debug() << "Template expression: "
 		  << from_expr(SSA.ns,"",*t_it) << eom;
 
 	  // check whether it is a template polyhedra or a pred abs
@@ -509,10 +522,10 @@ bool template_generator_baset::instantiate_custom_templates(
 	  for(std::set<symbol_exprt>::iterator it = symbols.begin();
 	      it != symbols.end(); it++)
 	  {
-	    std::size_t found_param = 
+	    std::size_t found_param =
 	      id2string(it->get_identifier()).find(TEMPLATE_PARAM_PREFIX);
 	    if (found_param != std::string::npos)
-	    {              
+	    {
 	      predabs = false;
 	      break;
 	    }
@@ -538,7 +551,7 @@ bool template_generator_baset::instantiate_custom_templates(
 		contains_new_var ? domaint::OUT : domaint::LOOP);
 	  }
 	  // pred abs domain
-	  else if (predabs) 
+	  else if (predabs)
 	  {
 	    options.set_option("predabs-solver",true);
 
@@ -557,17 +570,17 @@ bool template_generator_baset::instantiate_custom_templates(
 		contains_new_var ? and_exprt(pre_guard,post_guard) : post_guard,
 		aux_expr,
 		contains_new_var ? domaint::OUT : domaint::LOOP);
-		  
+
 	  }
 	  else // neither pred abs, nor polyhedra
-	    warning() << "ignoring unsupported template " 
+	    warning() << "ignoring unsupported template "
 		      << from_expr(SSA.ns,"",*t_it) << eom;
 	}
 	if(add_post_vars) //for result retrieval via all_vars() only
 	{
 	  domaint::var_specst new_var_specs(var_specs);
 	  var_specs.clear();
-	  for(domaint::var_specst::const_iterator v = new_var_specs.begin(); 
+	  for(domaint::var_specst::const_iterator v = new_var_specs.begin();
 	      v!=new_var_specs.end(); v++)
 	  {
 	    var_specs.push_back(*v);
@@ -602,13 +615,18 @@ void template_generator_baset::instantiate_standard_domains(const local_SSAt &SS
 {
   replace_mapt &renaming_map =
     std_invariants ? aux_renaming_map : post_renaming_map;
-  
+
   //get domain from command line options
   if(options.get_bool_option("equalities"))
   {
     filter_equality_domain();
     domain_ptr = new equality_domaint(domain_number,
 				      renaming_map, var_specs, SSA.ns);
+  }
+  else if(options.get_bool_option("heap"))
+  {
+    filter_heap_domain();
+    domain_ptr = new heap_domaint(domain_number, renaming_map, var_specs, SSA.ns);
   }
   else if(options.get_bool_option("intervals"))
   {

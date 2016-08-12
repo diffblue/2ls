@@ -37,7 +37,7 @@ class optionst;
   "(version)" \
   "(i386-linux)(i386-macos)(i386-win32)(win32)(winx64)(gcc)" \
   "(ppc-macos)(unsigned-char)" \
-  "(havoc)(intervals)(zones)(octagons)(equalities)"\
+  "(havoc)(intervals)(zones)(octagons)(equalities)(heap)"\
   "(enum-solver)(binsearch-solver)(arrays)"\
   "(string-abstraction)(no-arch)(arch):(floatbv)(fixedbv)" \
   "(round-to-nearest)(round-to-plus-inf)(round-to-minus-inf)(round-to-zero)" \
