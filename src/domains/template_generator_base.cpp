@@ -16,6 +16,7 @@ Author: Peter Schrammel
 #include "equality_domain.h"
 #include "tpolyhedra_domain.h"
 #include "predabs_domain.h"
+#include "heap_domain.h"
 
 #ifdef DEBUG
 #include <iostream>
@@ -260,6 +261,17 @@ void template_generator_baset::filter_equality_domain()
   for(const auto &v : new_var_specs)
   {
     var_specs.push_back(v);
+  }
+}
+
+void template_generator_baset::filter_heap_domain()
+{
+  domaint::var_specst new_var_specs(var_specs);
+  var_specs.clear();
+  for (auto var=new_var_specs.begin(); var!=new_var_specs.end(); ++var)
+  {
+    if (var->var.type().id()==ID_pointer)
+      var_specs.push_back(*var);
   }
 }
 
@@ -677,6 +689,11 @@ void template_generator_baset::instantiate_standard_domains(
     filter_equality_domain();
     domain_ptr=
       new equality_domaint(domain_number, renaming_map, var_specs, SSA.ns);
+  }
+  else if(options.get_bool_option("heap"))
+  {
+    filter_heap_domain();
+    domain_ptr = new heap_domaint(domain_number, renaming_map, var_specs, SSA.ns);
   }
   else if(options.get_bool_option("intervals"))
   {
