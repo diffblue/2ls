@@ -1,4 +1,4 @@
-CORE
+FUTURE
 main.c
 --context-sensitive
 ^EXIT=0$

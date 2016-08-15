@@ -52,7 +52,7 @@ void createBack(struct SDL_Surface back_surface)
       pos.w = (unsigned short int)img.w;
       pos.h = (unsigned short int)img.h;
       //      assert(-x>-(x+img.w));
-            assert(img.w!=0);
+      assert(img.w!=0);
       //      assert(-x+(x+img.w)>0);
 //      pos.w = (unsigned short int)img->w;
 //      pos.h = (unsigned short int)img->h;
@@ -60,6 +60,7 @@ void createBack(struct SDL_Surface back_surface)
     }
     //assert(-y>-(y+img.h));
     //    assert(-y+(y+img.h)>0); 
+    assert(img.h!=0);
   }
 }
 

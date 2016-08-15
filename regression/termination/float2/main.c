@@ -1,4 +1,6 @@
-void main()
+#include <assert.h>
+
+int main(int argc, char** argv)
 {
   float x = 10.0;  
 
@@ -7,4 +9,5 @@ void main()
     x *= 0.1;
   }
   assert(x>=0.0);
+  return 0;
 }
