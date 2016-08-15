@@ -7,6 +7,7 @@
 #include <util/i2string.h>
 #include <util/simplify_expr.h>
 #include <langapi/languages.h>
+#include <goto-symex/adjust_float_expressions.h>
 
 #define SYMB_COEFF_VAR "symb_coeff#"
 
@@ -103,7 +104,7 @@ exprt lexlinrank_domaint::get_not_constraints(const lexlinrank_domaint::templ_va
 	extend_expr_types(sum);
 #endif
 	exprt decreasing = binary_relation_exprt(sum, ID_gt,
-						 from_integer(mp_integer(0),sum.type()));
+						 make_zero(sum.type()));
 #else
 #ifdef EXTEND_TYPES
 	extend_expr_types(sum_pre);
@@ -141,7 +142,7 @@ exprt lexlinrank_domaint::get_not_constraints(const lexlinrank_domaint::templ_va
           extend_expr_types(sum2);
 #endif
           exprt non_inc = binary_relation_exprt(sum2, ID_ge,
-						from_integer(mp_integer(0),sum2.type()));
+						make_zero(sum2.type()));
 #else
 #ifdef EXTEND_TYPES
           extend_expr_types(sum_pre2);
@@ -165,8 +166,9 @@ exprt lexlinrank_domaint::get_not_constraints(const lexlinrank_domaint::templ_va
     }
   }
 
-  // should this be conjunction?
-  return disjunction(cond_exprs);
+  exprt cond = disjunction(cond_exprs);
+  adjust_float_expressions(cond, ns);
+  return cond;
 }
 
 exprt lexlinrank_domaint::get_row_symb_constraint(row_valuet &symb_values, // contains vars c and d
@@ -208,7 +210,7 @@ exprt lexlinrank_domaint::get_row_symb_constraint(row_valuet &symb_values, // co
     for(unsigned i = 1; i < values.size(); ++i)
     {
       symb_values[elm].c[i] = 
-       symbol_exprt(SYMB_COEFF_VAR+std::string("c!")+i2string(row)+"$"+i2string(elm)+"$"+i2string(i),
+        symbol_exprt(SYMB_COEFF_VAR+std::string("c!")+i2string(row)+"$"+i2string(elm)+"$"+i2string(i),
 		     signedbv_typet(COEFF_C_SIZE));
 #ifdef DIFFERENCE_ENCODING
       sum = plus_exprt(sum, mult_exprt(symb_values[elm].c[i],
@@ -226,7 +228,7 @@ exprt lexlinrank_domaint::get_row_symb_constraint(row_valuet &symb_values, // co
     extend_expr_types(sum);
 #endif
     exprt decreasing = binary_relation_exprt(sum, ID_gt,
-        from_integer(mp_integer(0),sum.type()));
+					     make_zero(sum.type()));
 #else
 #ifdef EXTEND_TYPES
     extend_expr_types(sum_pre);
@@ -269,7 +271,7 @@ exprt lexlinrank_domaint::get_row_symb_constraint(row_valuet &symb_values, // co
       extend_expr_types(sum2);
 #endif
       exprt non_inc = binary_relation_exprt(sum2, ID_ge,
-          from_integer(mp_integer(0),sum.type()));
+					    make_zero(sum.type()));
 #else
 #ifdef EXTEND_TYPES
       extend_expr_types(sum_pre2);
@@ -294,10 +296,10 @@ exprt lexlinrank_domaint::get_row_symb_constraint(row_valuet &symb_values, // co
       {
         ref_constraints.push_back(
           binary_relation_exprt(symb_values[elm].c[i],ID_ge,
-      from_integer(mp_integer(-1),symb_values[elm].c[i].type())));
+				make_minusone(symb_values[elm].c[i].type())));
         ref_constraints.push_back(
           binary_relation_exprt(symb_values[elm].c[i],ID_le,
-      from_integer(mp_integer(1),symb_values[elm].c[i].type())));
+				make_one(symb_values[elm].c[i].type())));
       }
     }
   }
@@ -320,7 +322,9 @@ exprt lexlinrank_domaint::get_row_symb_constraint(row_valuet &symb_values, // co
 
   refinement_constraint = conjunction(ref_constraints);
 
-  return disjunction(d);
+  exprt dd = disjunction(d);
+  adjust_float_expressions(dd, ns);
+  return dd;
 }
 
 lexlinrank_domaint::row_valuet lexlinrank_domaint::get_row_value(const rowt &row, const templ_valuet &value)
@@ -453,7 +457,7 @@ void lexlinrank_domaint::project_on_vars(valuet &value, const var_sett &vars, ex
         extend_expr_types(sum);
 #endif
         exprt decreasing = binary_relation_exprt(sum, ID_gt,
-            from_integer(mp_integer(0),sum.type()));
+						 make_zero(sum.type()));
         con.push_back(decreasing);
 
         for(unsigned elm2=elm+1; elm2<v[row].size(); ++elm2)
@@ -473,7 +477,7 @@ void lexlinrank_domaint::project_on_vars(valuet &value, const var_sett &vars, ex
           extend_expr_types(sum2);
 #endif
           exprt non_inc = binary_relation_exprt(sum2, ID_ge,
-	              from_integer(mp_integer(0),sum.type()));
+						make_zero(sum.type()));
           con.push_back(non_inc);
         }
 
@@ -487,6 +491,7 @@ void lexlinrank_domaint::project_on_vars(valuet &value, const var_sett &vars, ex
     }
   }
   result = conjunction(c);
+  adjust_float_expressions(result, ns);
 }
 
 /*******************************************************************\

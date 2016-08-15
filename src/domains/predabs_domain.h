@@ -31,8 +31,10 @@ public:
 
   typedef std::vector<template_rowt> templatet;
 
-  predabs_domaint(unsigned _domain_number, replace_mapt &_renaming_map) :
-  domaint(_domain_number, _renaming_map)
+  predabs_domaint(unsigned _domain_number, 
+		  replace_mapt &_renaming_map,
+		  const namespacet _ns) :
+  domaint(_domain_number, _renaming_map, _ns)
   {}
 
   // initialize value

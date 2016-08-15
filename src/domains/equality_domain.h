@@ -18,7 +18,7 @@ class equality_domaint : public domaint
   equality_domaint(unsigned _domain_number, replace_mapt &_renaming_map, 
     const var_specst &var_specs,
     const namespacet &ns) 
-    : domaint(_domain_number,_renaming_map)
+    : domaint(_domain_number,_renaming_map, ns)
   {
     make_template(var_specs,ns);
   }

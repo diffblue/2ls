@@ -457,3 +457,82 @@ void merge_and(exprt & result, const exprt &expr1, const exprt &expr2,
   if(expr1!=expr2) result = and_exprt(expr1,expr2);
   simplify(result,ns);
 }
+
+/*******************************************************************\
+
+Function: make_zero
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+constant_exprt make_zero(const typet &type)
+{
+  if(type.id()==ID_unsignedbv || type.id()==ID_signedbv)
+    return from_integer(mp_integer(0),type);
+  
+  if(type.id()==ID_floatbv)
+  {
+    ieee_floatt cst(to_floatbv_type(type));
+    cst.make_zero();
+    return cst.to_expr();
+  }
+  assert(false);
+}
+
+/*******************************************************************\
+
+Function: make_one
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+constant_exprt make_one(const typet &type)
+{
+  if(type.id()==ID_unsignedbv || type.id()==ID_signedbv)
+    return from_integer(mp_integer(1),type);
+  
+  if(type.id()==ID_floatbv)
+  {
+    ieee_floatt cst(to_floatbv_type(type));
+    cst.from_integer(mp_integer(1));
+    return cst.to_expr();
+  }
+  assert(false);
+}
+
+/*******************************************************************\
+
+Function: make_minusone
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+constant_exprt make_minusone(const typet &type)
+{
+  if(type.id()==ID_unsignedbv || type.id()==ID_signedbv)
+    return from_integer(mp_integer(-1),type);
+  
+  if(type.id()==ID_floatbv)
+  {
+    ieee_floatt cst(to_floatbv_type(type));
+    cst.from_integer(mp_integer(1));
+    cst.negate();
+    return cst.to_expr();
+  }
+  assert(false);
+}
