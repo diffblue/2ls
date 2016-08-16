@@ -24,7 +24,7 @@ Author: Peter Schrammel
 #include "../ssa/local_ssa.h"
 #include "../ssa/simplify_ssa.h"
 
-#define MAX_PRECONDITION_DISJUNCTS 2
+#define MAX_PRECONDITION_DISJUNCTS 5
 #define MAX_BOOTSTRAP_ATTEMPTS 20
 
 /*******************************************************************\

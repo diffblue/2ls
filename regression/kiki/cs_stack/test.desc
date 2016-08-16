@@ -1,4 +1,4 @@
-CORE
+KNOWNBUG
 main.c
 --havoc --inline
 ^EXIT=0$
