@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include <util/simplify_expr.h>
+#include <util/cprover_prefix.h>
 #include "lexlinrank_solver_enumeration.h"
 #include "util.h"
 
@@ -19,6 +20,12 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
   debug() << "(RANK) no rows = " << rank.size() << eom;
 
   solver.new_context();
+
+
+  //choose round to even rounding mode for template computations
+  //  not clear what its implications on soundness and termination of the synthesis are
+  exprt rounding_mode = symbol_exprt(CPROVER_PREFIX "rounding_mode",signedbv_typet(32));
+  solver << equal_exprt(rounding_mode,from_integer(mp_integer(0),signedbv_typet(32)));
 
   //handles on values to retrieve from model
   std::vector<lexlinrank_domaint::pre_post_valuest> rank_value_exprs;
@@ -99,6 +106,10 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
 	debug() << eom;
 
 	*inner_solver << constraint;
+
+        //set rounding mode
+        *inner_solver << equal_exprt(rounding_mode,
+				     from_integer(mp_integer(0),signedbv_typet(32)));
 
         //refinement
         if(!refinement_constraint.is_true()) 
