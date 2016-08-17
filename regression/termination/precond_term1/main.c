@@ -11,7 +11,6 @@ int foo(int y)
     //assert(-(x-(x+y))>0);
     //assert(!( (signed __CPROVER_bitvector[65])-1 * (signed __CPROVER_bitvector[65])x_lb <=  (signed __CPROVER_bitvector[65])-1 *  (signed __CPROVER_bitvector[65])x));
   }
-//  if(0) assert(0);
   return x;
 }
 

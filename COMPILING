@@ -2,5 +2,5 @@
 
 ./install.sh
 
-The executable is in src/summarizer/2ls
+The executable is src/summarizer/2ls
 
