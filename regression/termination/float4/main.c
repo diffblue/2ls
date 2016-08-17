@@ -4,7 +4,7 @@ void main()
 
   while(x>0.0) // does not terminate
   {
-    x = x*0.8;
+    x = x*0.9;
     //assert(x!=0.0);
   }
   assert(x>=0.0);
