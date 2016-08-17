@@ -15,6 +15,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/pointer_offset_size.h>
 
 #include <ansi-c/c_types.h>
+#include <goto-programs/goto_inline.h>
+#include <util/ui_message.h>
 
 #include "malloc_ssa.h"
 
@@ -222,7 +224,7 @@ void replace_malloc(
     exprt malloc_size=nil_exprt();
     Forall_goto_program_instructions(i_it, f_it->second.body)
     {
-      if(i_it->is_assign())
+      if (i_it->is_assign())
       {
         code_assignt &code_assign=to_code_assign(i_it->code);
         if(code_assign.lhs().id()==ID_symbol)

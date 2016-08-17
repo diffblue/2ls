@@ -1112,8 +1112,25 @@ bool twols_parse_optionst::process_goto_program(
 #endif
 
 #if 1
-    // TODO: find a better place for that
-    replace_malloc(goto_model, "");
+    // Find, inline and remove malloc function
+    //TODO: find a better place for that
+    Forall_goto_functions(it, goto_model.goto_functions)
+    {
+      if (it->first == "malloc" || it->first == "free")
+        it->second.type.set(ID_C_inlined, true);
+    }
+    goto_partial_inline(goto_model, ui_message_handler, 0);
+    Forall_goto_functions(it, goto_model.goto_functions)
+    {
+      if (it->first == "malloc" || it->first == "free")
+        it->second.body.clear();
+    }
+    // Replace malloc
+    replace_malloc(goto_model,"");
+#endif
+
+#if REMOVE_MULTIPLE_DEREFERENCES
+    remove_multiple_dereferences(goto_model);
 #endif
 
     // recalculate numbers, etc.
