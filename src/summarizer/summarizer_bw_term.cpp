@@ -367,6 +367,7 @@ exprt summarizer_bw_termt::compute_termination_argument(
   //statistics
   solver_instances += analyzer.get_number_of_solver_instances();
   solver_calls += analyzer.get_number_of_solver_calls();
+  termargs_computed++;
 
   return termination_argument;
 }
