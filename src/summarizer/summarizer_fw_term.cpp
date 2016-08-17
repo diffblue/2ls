@@ -100,9 +100,10 @@ void summarizer_fw_termt::compute_summary_rec(
   //compute summary
   if(!options.get_bool_option("havoc"))
   {
-    exprt::operandst c;
-    get_assertions(SSA,c); //assertions as assumptions
-    do_summary(function_name,SSA,summary,conjunction(c),context_sensitive);
+    //We are not allowed to assume the assertions here, 
+    //  otherwise we might cut off all terminating executions
+    //  and classify the program as non-terminating.
+    do_summary(function_name,SSA,summary,true_exprt(),context_sensitive);
   }
 
   //check termination
@@ -263,16 +264,6 @@ void summarizer_fw_termt::do_termination(const function_namet &function_name,
   if(!summary.fw_precondition.is_nil()) cond.push_back(summary.fw_precondition);
   cond.push_back(ssa_inliner.get_summaries(SSA));
 
-  // do non-termination check
-  if(!check_end_reachable(function_name,SSA,conjunction(cond)))
-  {
-    status() << "Function never terminates" << eom;
-    if(summary.fw_precondition.is_true()) summary.fw_transformer = false_exprt();
-    else summary.fw_transformer = implies_exprt(summary.fw_precondition,false_exprt());
-    summary.terminates = NO;
-    return;
-  }
-
   status() << "Synthesizing ranking function to prove termination" << eom;
   // solver
   incremental_solvert &solver = ssa_db.get_solver(function_name);
@@ -303,6 +294,7 @@ void summarizer_fw_termt::do_termination(const function_namet &function_name,
   //statistics
   solver_instances += analyzer1.get_number_of_solver_instances();
   solver_calls += analyzer1.get_number_of_solver_calls();
+  termargs_computed++;
 }
 
 /*******************************************************************\
