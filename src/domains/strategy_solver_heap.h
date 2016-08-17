@@ -1,4 +1,5 @@
 /**
+ * Strategy solver for heap verification.
  *  Viktor Malik, 12.8.2016 (c).
  */
 #ifndef CPROVER_STRATEGY_SOLVER_HEAP_H
@@ -14,16 +15,12 @@ class strategy_solver_heapt : public strategy_solver_baset
                                  const namespacet &_ns)
       : strategy_solver_baset(_solver, _ns), heap_domain(_heap_domain)
   {
-    heap_domain.get_index_set(todo_nulls);
   }
 
   virtual bool iterate(invariantt &_inv) override;
 
  protected:
   heap_domaint &heap_domain;
-
-  typedef std::set<unsigned> worklistt;
-  worklistt todo_nulls;
 };
 
 
