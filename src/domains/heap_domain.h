@@ -109,6 +109,8 @@ class heap_domaint : public domaint
   namespacet ns;
 
   void make_template(const var_specst &var_specs, const namespacet &ns);
+
+  friend class strategy_solver_heapt;
 };
 
 
