@@ -4,10 +4,12 @@
 
 #include "heap_domain.h"
 #include "util.h"
+#include <algorithm>
+#include <util/symbol.h>
 
 /**
  * Initialize value.
- * Clears each pointer destinations.
+ * Clears each pointer paths and points_to predicates.
  * @param value
  */
 void heap_domaint::initialize(domaint::valuet &value)
@@ -15,7 +17,10 @@ void heap_domaint::initialize(domaint::valuet &value)
   heap_valuet &val = static_cast<heap_valuet &>(value);
   val.resize(templ.size());
   for (unsigned row = 0; row < templ.size(); ++row)
-    val[row].dests.clear();
+  {
+    val[row].paths.clear();
+    val[row].points_to.clear();
+  }
 }
 
 /**
@@ -57,6 +62,9 @@ void heap_domaint::make_template(const domaint::var_specst &var_specs, const nam
       templ_row.post_guard = v1->post_guard;
       templ_row.aux_expr = v1->post_guard;
       templ_row.kind = v1->kind;
+      // Check if the pointer itself is field of a dynamic object
+      const std::string identifier = id2string(to_symbol_expr(v1->var).get_identifier());
+      templ_row.dynamic = identifier.find("dynamic_object$") != std::string::npos;
     }
   }
 }
@@ -81,11 +89,10 @@ exprt heap_domaint::to_pre_constraints(const heap_domaint::heap_valuet &value) c
  * Create exit constraint expression for each row.
  * Each expression is negation of row expression (for solving exists forall problem).
  * @param value Value
- * @param cond_exprs Constraint expressions
- * @param value_exprs Template expressions (variables)
+ * @param cond_exprs Output - constraint expressions
+ * @param value_exprs Output - template expressions (row variables)
  */
-void heap_domaint::make_not_post_constraints(const heap_domaint::heap_valuet &value,
-                                             exprt::operandst &cond_exprs,
+void heap_domaint::make_not_post_constraints(const heap_valuet &value, exprt::operandst &cond_exprs,
                                              exprt::operandst &value_exprs)
 {
   assert(value.size() == templ.size());
@@ -114,10 +121,8 @@ exprt heap_domaint::get_row_pre_constraint(const rowt &row, const row_valuet &ro
   kindt k = templ_row.kind;
   // For exit variables the result is true
   if (k == OUT || k == OUTL) return true_exprt();
-  if (row_value.dests.empty())
-    // Bottom is false
-    return implies_exprt(templ_row.pre_guard, false_exprt());
-  return implies_exprt(templ_row.pre_guard, row_value.get_row_expr(templ_row.expr, ns));
+
+  return implies_exprt(templ_row.pre_guard, row_value.get_row_expr(templ_row.expr));
 }
 
 /**
@@ -132,10 +137,8 @@ exprt heap_domaint::get_row_post_constraint(const rowt &row, const row_valuet &r
   const template_rowt &templ_row = templ[row];
   // For entry variables the result is true
   if (templ_row.kind == IN) return true_exprt();
-  if (row_value.dests.empty())
-    // Bottom is false
-    return implies_exprt(templ_row.post_guard, false_exprt());
-  exprt c = implies_exprt(templ_row.post_guard, row_value.get_row_expr(templ_row.expr, ns));
+
+  exprt c = implies_exprt(templ_row.post_guard, row_value.get_row_expr(templ_row.expr));
   if (templ_row.kind == LOOP) rename(c);
   return c;
 }
@@ -145,16 +148,78 @@ exprt heap_domaint::get_row_post_constraint(const rowt &row, const row_valuet &r
  * @param row Row number
  * @param value Value
  * @param dest New destination to add
+ * @param dyn_obj Dynamic object for that the path passes through (is nil if path can have zero
+ *        length).
  * @return True if insertion took place (dest did not exist in the row value)
  */
-bool heap_domaint::add_row_dest(const heap_domaint::rowt &row,
-                                heap_domaint::heap_valuet &value,
-                                const exprt &dest)
+bool heap_domaint::add_row_path(const rowt &row, heap_valuet &value, const exprt &dest,
+                                const dyn_objt &dyn_obj)
 {
   assert(row < value.size());
   assert(value.size() == templ.size());
-  auto new_dest = value[row].dests.insert(dest);
-  return new_dest.second;
+
+  auto &path_set = value[row].paths;
+
+  if (path_set.find(dest) == path_set.end())
+  {
+    // Path does not exist yet
+    std::set<dyn_objt> dyn_obj_set;
+    bool zero_path = true;
+    if (dyn_obj.first.id() != ID_nil)
+    { // Path doesn't have zero length
+      dyn_obj_set.insert(dyn_obj);
+      zero_path = false;
+    }
+    path_set.emplace(dest, dyn_obj_set, zero_path);
+    return true;
+  }
+  else
+  {
+    // Path exists already
+    if (dyn_obj.first.id() == ID_nil) return false;
+    // Try to insert new dynamic object belonging to the path
+    return path_set.find(dest)->dyn_objects.insert(dyn_obj).second;
+  }
+}
+
+/**
+ * Add all paths of one pointer as the destinations of another pointer.
+ * @param to Row to add new paths to
+ * @param from Row to add paths from
+ * @param value Heap value
+ * @param dyn_obj Dynamic object that all the paths pass through (it belongs to path segment from
+ *                one pointer to another.
+ * @return True if any path was added or changed, otherwise false.
+ */
+bool heap_domaint::add_all_paths(const rowt &to, const rowt &from, heap_valuet &value,
+                                 const dyn_objt &dyn_obj)
+{
+  bool result = false;
+  for (auto &path : value[from].paths)
+  {
+    // Add the path with new dynamic object
+    if (add_row_path(to, value, path.destination, dyn_obj))
+      result = true;
+    for (auto &o : path.dyn_objects)
+    { // Add all dynamic objects of the original path
+      if (add_row_path(to, value, path.destination, o))
+        result = true;
+    }
+  }
+  return result;
+}
+
+/**
+ * Add new points to address to a row.
+ * @param row Value row
+ * @param value Heap value
+ * @param dyn_obj New dynamic object that the row variable can point to.
+ * @return True if the object was really added.
+ */
+bool heap_domaint::add_points_to(const rowt &row, heap_valuet &value, const dyn_objt &dyn_obj)
+{
+  auto new_pt = value[row].points_to.insert(dyn_obj);
+  return new_pt.second;
 }
 
 void heap_domaint::output_value(std::ostream &out, const domaint::valuet &value,
@@ -182,7 +247,8 @@ void heap_domaint::output_value(std::ostream &out, const domaint::valuet &value,
         assert(false);
     }
     out << "( " << from_expr(ns, "", templ_row.expr) << " == "
-        << from_expr(ns, "", val[row].get_row_expr(templ_row.expr, ns)) << " )" << std::endl;
+        << from_expr(ns, "", val[row].get_row_expr(templ_row.expr)) << " )"
+        << std::endl;
   }
 }
 
@@ -234,17 +300,18 @@ void heap_domaint::project_on_vars(domaint::valuet &value,
     const row_valuet &row_val = val[row];
     if (templ_row.kind == LOOP)
     {
-      if (row_val.dests.empty())
+      if (row_val.paths.empty())
         c.push_back(implies_exprt(templ_row.pre_guard, false_exprt()));
       else
-        c.push_back(implies_exprt(templ_row.pre_guard, row_val.get_row_expr(templ_row.expr, ns)));
+        c.push_back(implies_exprt(templ_row.pre_guard,
+                                  row_val.get_row_expr(templ_row.expr)));
     }
     else
     {
-      if (row_val.dests.empty())
+      if (row_val.paths.empty())
         c.push_back(false_exprt());
       else
-        c.push_back(row_val.get_row_expr(templ_row.expr, ns));
+        c.push_back(row_val.get_row_expr(templ_row.expr));
     }
   }
   result = conjunction(c);
@@ -261,4 +328,37 @@ exprt heap_domaint::value_to_ptr_exprt(const exprt &expr)
     return expr.op0();
 
   return expr;
+}
+
+/**
+ * Join two abstract heap values. Join of each row is union of the two corresponding sets.
+ * @param value1 First value and result of join
+ * @param value2 Second value
+ */
+void heap_domaint::join(domaint::valuet &value1, const domaint::valuet &value2)
+{
+  heap_valuet &val1 = static_cast<heap_valuet &>(value1);
+  const heap_valuet &val2 = static_cast<const heap_valuet &>(value2);
+  assert(val1.size() == templ.size());
+  assert(val2.size() == val1.size());
+  for (rowt row = 0; row < templ.size(); ++row)
+  { // Insert all elements of second set to first
+    val1[row].paths.insert(val2[row].paths.begin(), val2[row].paths.end());
+  }
+}
+
+/**
+ * Check whether expression is NULL pointer.
+ * @param expr Expression to check
+ * @return True if expr is NULL pointer
+ */
+bool heap_domaint::is_null_ptr(const exprt &expr)
+{
+  if (expr.id() == ID_constant && to_constant_expr(expr).get_value() == ID_NULL)
+    return true;
+  if (expr.id() == ID_plus)
+    return is_null_ptr(expr.op0()) || is_null_ptr(expr.op1());
+  if (expr.id() == ID_typecast)
+    return is_null_ptr(to_typecast_expr(expr).op());
+  return false;
 }
