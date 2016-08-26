@@ -21,6 +21,8 @@ class strategy_solver_heapt : public strategy_solver_baset
 
  protected:
   heap_domaint &heap_domain;
+
+  int next_field_row(const exprt &obj) const;
 };
 
 
