@@ -59,10 +59,13 @@ class heap_domaint : public domaint
     };
 
     std::set<patht> paths;         /**< Set of paths leading from the row variable */
-    std::set<dyn_objt> points_to;  /**< Set of objects the row variable can point to */
+    std::set<dyn_objt> points_to;  /**< Set of objects (or NULL) the row variable can point to */
 
     /**
-     * Get expression for the row value. It is a conjunction of path expressions.
+     * Get expression for the row value. It is a conjunction of points to expression and path
+     * expressions.
+     * Points to expression is disjunction of equalities:
+     * p = &o (NULL)   for each object 'o' (or NULL) from points_to set
      * Expression of path leading from variable 'p' to destination 'd' via set of objects 'O'
      * has form:
      * p = d ||                                     if path can have zero length
@@ -72,8 +75,20 @@ class heap_domaint : public domaint
      */
     exprt get_row_expr(const vart &templ_expr) const
     {
-      if (paths.empty()) return false_exprt();
+      if (paths.empty() && points_to.empty()) return false_exprt();
       exprt::operandst result;
+
+      if (!points_to.empty())
+      { // Points to expression
+        exprt::operandst pt_expr;
+        for (auto &pt : points_to)
+        {
+          pt_expr.push_back(equal_exprt(templ_expr,
+                                        is_null_ptr(pt.first) ?
+                                        pt.first : address_of_exprt(pt.first)));
+        }
+        result.push_back(disjunction(pt_expr));
+      }
 
       for (auto &path : paths)
       { // path(p, d)[O]

@@ -92,11 +92,15 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
 
         if (heap_domain.is_null_ptr(ptr_value))
         {
-          if (heap_domain.add_row_path(row, inv,
-                                       null_pointer_exprt(to_pointer_type(ptr_value.type())),
+          exprt null_expr = null_pointer_exprt(to_pointer_type(ptr_value.type()));
+          if (heap_domain.add_row_path(row, inv, null_expr,
                                        std::make_pair(nil_exprt(), nil_exprt())))
             improved = true;
           debug() << "add destination: " << from_expr(ns, "", ptr_value) << eom;
+
+          if (heap_domain.add_points_to(row, inv, std::make_pair(null_expr, nil_exprt())))
+            improved = true;
+          debug() << "add points to: " << from_expr(ns, "", ptr_value) << eom;
         }
         else
         {
