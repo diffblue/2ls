@@ -1,0 +1,8 @@
+CORE
+main.c
+--inline --proof-search --dec-heur-rand
+^EXIT=0$
+^SIGNAL=0$
+^\(VERIFICATION SUCCESSFUL\|\*\*\*\* Verification successful \)$
+--
+^warning: ignoring
