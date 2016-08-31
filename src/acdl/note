@@ -753,3 +753,74 @@ int main() {
 4> DATE bounded acdl experiments -- decisions and learning heuristics --
 deadline 18th Sept. 
 
+
+Query for August 8, 2016
+------------------------
+1> purpose of enabling_expr -- check implementations of get_enabling_exprs() ?
+2> ignore lb variables for completeness check -- git issue (does all "ls" variable need to be false)
+3> loop1-safe and loop1-unsafe example.  
+4> how to split on array variable ?
+5> Can we make decisions on variables which fails in completeness check ?
+
+Query for August 8, 2016
+------------------------
+1> We need different propagation heuristics :
+   a> forward analysis with strongest post-condition
+   b> backward analysis with weakest pre-condition
+   c> Chaotic iteration
+Does the forward and chaotic iteration generate the same deductions always ?
+Does chaotic iteration generate stronger deductions than forward or backward ?
+For forward analysis, how do we get statement ordering of SSA ?
+3> Is there any code in 2ls for forward analysis using strongest post on SSA ?
+2> For running acdl with loops, do we need to specify "no unwinding assertions"
+with --unwind option ? 
+4> Make ACDL work by unwinding loops -- DATE benchmarks.
+5> How to add acdl options for help function (2ls --acdl --help) ?
+6> Can we make decisions on "lb" variables when handling loops with unwinding ?
+8> Should the decision heuristics make decision on loop index variable (i#20%0,
+i#20%1) ?
+7> Can we decide on "%" variables that gets generated for every loop iterations. 
+7> The following loop assertion shows "VERIFICATION INCONCLUSIVE" with --acdl --unwind 2. 
+int main() {
+  int x=0,i;
+  for(i=0;i<=1;i++)  
+    x = x+i;
+  assert(x>20);
+}
+Whereas, with the assert(x<2) or assert(x==20), it fails. 
+
+Query for August 30, 2016
+--------------------------
+0> for bug0, the loop problem is fixed. But since the assertion is inside the
+loop, acdl does not stop when the assertion fails after unwind 3 in the first 
+deduction step. 
+3> bottom9 must terminate after first propagation stage -- not happening now. 
+4> how to normalize on octagon meet irreducibles. 
+1> Can we make decisions on function return_value ?
+2> relation3 -- does not terminate with intervals as well as octagons ? 2ls
+terminate very quickly.
+When run with cbmc, the SAT statistics shows the below:
+SAT checker: instance is UNSATISFIABLE
+restarts              : 4
+conflicts             : 410
+decisions             : 2597        (0.00 % random)
+propagations          : 17095
+conflict literals     : 2552    
+4> bug3 is incorrect.
+search for "FALSE <==", how can the following deduce to FALSE.
+[ACDL-DOMAIN] deductions: FALSE <== !(y#phi64%2 >= 10) && !(-((signed
+__CPROVER_bitvector[33])y#phi64%2) >= -4) && !(-((signed
+__CPROVER_bitvector[33])y#phi46%1) >= -4) && !(-((signed
+__CPROVER_bitvector[33])y#phi46%1) >= -8) && !(y#phi64%2 >= 9)
+5> Bottom 9 example:When pop:y18=y16+1, then no deduction is present combining
+x,y but deductions are only made on y. Though assumption statement is
+represented correctly.
+[ACDL-DOMAIN] deductions: !((unsigned __CPROVER_bitvector[33])y#18 +
+(unsigned __CPROVER_bitvector[33])y#21 >= 8589934590) <==
+!((signed __CPROVER_bitvector[33])y#21 + -((signed __CPROVER_bitvector[33])y#18)
+>= 2) <==
+!((signed __CPROVER_bitvector[34])-((signed __CPROVER_bitvector[33])y#18) +
+-((signed __CPROVER_bitvector[34])y#21) >= 0) <==
+
+
+

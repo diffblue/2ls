@@ -94,7 +94,7 @@ property_checkert::resultt summary_checker_acdlt::operator()(
     // iterate over assertions
     std::list<local_SSAt::nodest::const_iterator> assertion_nodes;
     SSA.find_nodes(i_it,assertion_nodes);
-
+    std::cout << "The number of assertions are: " << assertion_nodes.size() << std::endl;
     for(std::list<local_SSAt::nodest::const_iterator>::const_iterator
         n_it=assertion_nodes.begin();
         n_it!=assertion_nodes.end();
