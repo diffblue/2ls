@@ -95,6 +95,7 @@ property_checkert::resultt summary_checker_acdlt::operator()(
     std::list<local_SSAt::nodest::const_iterator> assertion_nodes;
     SSA.find_nodes(i_it,assertion_nodes);
 
+    exprt::operandst assertions;
     for(std::list<local_SSAt::nodest::const_iterator>::const_iterator
         n_it=assertion_nodes.begin();
         n_it!=assertion_nodes.end();
@@ -105,57 +106,56 @@ property_checkert::resultt summary_checker_acdlt::operator()(
           a_it!=(*n_it)->assertions.end();
           a_it++)
       {
-        exprt property=*a_it;
-        
-        if(simplify) property=simplify_expr(property, SSA.ns);
-        property_map[property_id].location = i_it;
-
-        //TODO: make the solver incremental
-
-        // configure components of acdl solver
-        // domain
-        acdl_domaint domain(options,SSA,ssa_db,ssa_local_unwinder);
-        domain.set_message_handler(get_message_handler());
-        // worklist (currently there is only one)
-        std::unique_ptr<acdl_worklist_baset> worklist =
-          std::unique_ptr<acdl_worklist_baset>(new acdl_worklist_orderedt());
-
-        // conflict analysis heuristics
-        std::unique_ptr<acdl_analyze_conflict_baset> conflict_analysis;
-        if(options.get_option("acdl-conflict") == "first-uip")
-          conflict_analysis = std::unique_ptr<acdl_analyze_conflict_baset>(new acdl_analyze_conflict_baset(domain)); //no 'new' with base class!
-// SHOULD BE:
-//            new acdl_conflict_analysis_firstuipt());
-        //else if ...
-
-        // decision heuristics
-        std::unique_ptr<acdl_decision_heuristics_baset> decision_heuristics;
-        if(options.get_option("acdl-decision") == "random")
-          decision_heuristics = std::unique_ptr<acdl_decision_heuristics_baset>(new acdl_decision_heuristics_randt(domain));
-        else if(options.get_option("acdl-decision") == "ordered")
-          decision_heuristics = std::unique_ptr<acdl_decision_heuristics_baset>(new acdl_decision_heuristics_orderedt(domain));
-        else if(options.get_option("acdl-decision") == "octagon")
-          decision_heuristics = std::unique_ptr<acdl_decision_heuristics_baset>(new acdl_decision_heuristics_octagont(domain));
-        else if(options.get_option("acdl-decision") == "berkmin")
-          decision_heuristics = std::unique_ptr<acdl_decision_heuristics_baset>(new acdl_decision_heuristics_berkmint(domain,*conflict_analysis));
-        else if(options.get_option("acdl-decision") == "range")
-          decision_heuristics = std::unique_ptr<acdl_decision_heuristics_baset>(new acdl_decision_heuristics_ranget(domain));
-        // ....
-
-
-        // now instantiate solver
-        acdl_solvert acdl_solver(options, domain, 
-                                 *decision_heuristics,
-                                 *worklist, 
-                                 *conflict_analysis);
-        acdl_solver.set_message_handler(get_message_handler());
-        property_map[property_id].result =
-        acdl_solver(ssa_db.get(goto_model.goto_functions.entry_point()),
-                    property, conjunction(loophead_selects));
-        /*acdl_solver(ssa_db.get(goto_model.goto_functions.entry_point()),
-                    property, true_exprt());*/
+        assertions.push_back(*a_it);
       }
     }
+    //   if(simplify) property=simplify_expr(property, SSA.ns);
+    property_map[property_id].location = i_it;
+
+    //TODO: make the solver incremental
+
+    // configure components of acdl solver
+    // domain
+    acdl_domaint domain(options,SSA,ssa_db,ssa_local_unwinder);
+    domain.set_message_handler(get_message_handler());
+    // worklist (currently there is only one)
+    std::unique_ptr<acdl_worklist_baset> worklist =
+      std::unique_ptr<acdl_worklist_baset>(new acdl_worklist_orderedt());
+
+    // conflict analysis heuristics
+    std::unique_ptr<acdl_analyze_conflict_baset> conflict_analysis;
+    if(options.get_option("acdl-conflict") == "first-uip")
+      conflict_analysis = std::unique_ptr<acdl_analyze_conflict_baset>(new acdl_analyze_conflict_baset(domain)); //no 'new' with base class!
+// SHOULD BE:
+//            new acdl_conflict_analysis_firstuipt());
+    //else if ...
+
+    // decision heuristics
+    std::unique_ptr<acdl_decision_heuristics_baset> decision_heuristics;
+    if(options.get_option("acdl-decision") == "random")
+      decision_heuristics = std::unique_ptr<acdl_decision_heuristics_baset>(new acdl_decision_heuristics_randt(domain));
+    else if(options.get_option("acdl-decision") == "ordered")
+      decision_heuristics = std::unique_ptr<acdl_decision_heuristics_baset>(new acdl_decision_heuristics_orderedt(domain));
+    else if(options.get_option("acdl-decision") == "octagon")
+      decision_heuristics = std::unique_ptr<acdl_decision_heuristics_baset>(new acdl_decision_heuristics_octagont(domain));
+    else if(options.get_option("acdl-decision") == "berkmin")
+      decision_heuristics = std::unique_ptr<acdl_decision_heuristics_baset>(new acdl_decision_heuristics_berkmint(domain,*conflict_analysis));
+    else if(options.get_option("acdl-decision") == "range")
+      decision_heuristics = std::unique_ptr<acdl_decision_heuristics_baset>(new acdl_decision_heuristics_ranget(domain));
+    // ....
+
+
+    // now instantiate solver
+    acdl_solvert acdl_solver(options, domain, 
+			     *decision_heuristics,
+			     *worklist, 
+			     *conflict_analysis);
+    acdl_solver.set_message_handler(get_message_handler());
+    property_map[property_id].result =
+      acdl_solver(ssa_db.get(goto_model.goto_functions.entry_point()),
+		  conjunction(assertions), conjunction(loophead_selects));
+    /*acdl_solver(ssa_db.get(goto_model.goto_functions.entry_point()),
+      property, true_exprt());*/
   }
 
   summary_checker_baset::resultt result = property_checkert::PASS;
