@@ -565,7 +565,7 @@ property_checkert::resultt acdl_solvert::operator()(
 {
   // pass additional constraint and the assertions to the worklist
   worklist.initialize(SSA, assertion, additional_constraint);
-  
+  std::cout << "The assertion checked now is: " << from_expr(SSA.ns, "", assertion) << std::endl;  
   // call initialize live variables
   worklist.initialize_live_variables();
   std::set<exprt> decision_variable;
@@ -580,7 +580,7 @@ property_checkert::resultt acdl_solvert::operator()(
   std::string str1("guard");
   std::string str2("#phi");
   std::string str3("#lb");
-  std::string str4("#return_value");
+  std::string str4("return_value");
   std::string name;
   for(std::set<exprt>::const_iterator 
     it = decision_variable.begin(); 
@@ -631,7 +631,7 @@ property_checkert::resultt acdl_solvert::operator()(
   // the result is already decided for programs
   // which can be solved only using deductions  
   result = propagate(SSA, assertion);
-  
+  std::cout << "The result after first propagation phase is " << result << std::endl; 
   std::cout << "****************************************************" << std::endl;
   std::cout << " IMPLICATION GRAPH AFTER DEDUCTION PHASE" << std::endl;
   std::cout << "****************************************************" << std::endl;
@@ -640,8 +640,10 @@ property_checkert::resultt acdl_solvert::operator()(
   bool complete=false;
   acdl_domaint::valuet res_val;
   // if result = UNSAT, then the proof is complete 
-  if(result == property_checkert::PASS)
-    return result; 
+  if(result == property_checkert::PASS) {
+    std::cout << "The program is SAFE" << std::endl;
+    return property_checkert::PASS; 
+  }
   // if result = UNKNOWN or FAIL, 
   // then check for completeness
   else {
@@ -650,6 +652,7 @@ property_checkert::resultt acdl_solvert::operator()(
     domain.normalize_val(res_val);
     if(domain.is_complete(res_val, all_vars)) {
       complete = true;
+      std::cout << "The program in UNSAFE" << std::endl;
       return property_checkert::FAIL;
     }
   }
@@ -683,8 +686,10 @@ property_checkert::resultt acdl_solvert::operator()(
       // if the abstract value is complete and 
       // no more decisions can be made, then 
       // there is a counterexample. Return result=FAILED. 
-      if (complete) 
+      if (complete) {
+        std::cout << "No further decisions can be made and the program in UNSAFE" << std::endl;
         return result;
+      }
       std::cout << "Failed to verify program" << std::endl;
 #ifdef DEBUG
       acdl_domaint::valuet elm;
@@ -719,7 +724,9 @@ property_checkert::resultt acdl_solvert::operator()(
       conflict_graph.to_value(v);
       // Do we call normalize_val here ? !!
       domain.normalize_val(v);
-     
+#ifdef DEBUG
+      std::cout << "checking the propagation result UNKNOWN for completeness" << std::endl;
+#endif          
       // successful execution of is_complete check 
       // ensures that all variables are singletons
       // But we invoke another decision phase
@@ -727,6 +734,7 @@ property_checkert::resultt acdl_solvert::operator()(
       if(domain.is_complete(v, all_vars)) {
         // set complete flag to TRUE
         complete = true;
+        std::cout << "The program in UNSAFE" << std::endl;
         result = property_checkert::FAIL;
       }
     }

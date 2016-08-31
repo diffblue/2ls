@@ -238,6 +238,13 @@ acdl_worklist_baset::update (const local_SSAt &SSA,
   for (local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin ();
       n_it != SSA.nodes.end (); n_it++)
   {
+    /*if(n_it->enabling_expr != SSA.get_enabling_exprs())
+    {  
+#ifdef DEBUG
+      std::cout << "The enabling expression for node is " << from_expr(SSA.ns, "", n_it->enabling_expr) << std::endl;
+#endif
+      continue;
+    }*/
     for (local_SSAt::nodet::equalitiest::const_iterator e_it =
         n_it->equalities.begin (); e_it != n_it->equalities.end (); e_it++)
     {
@@ -248,7 +255,9 @@ acdl_worklist_baset::update (const local_SSAt &SSA,
        std::size_t found = rhs_str.find(str); 
        // push the nondet statement in rhs
        if(found != std::string::npos) {
-        std::cout << "Not inserting nondet elements " << std::endl; 
+        #ifdef DEBUG
+        //std::cout << "Not inserting nondet elements " << std::endl; 
+        #endif
         continue; 
        }
       // the statement has already been processed, so no action needed

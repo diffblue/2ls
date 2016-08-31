@@ -9,11 +9,10 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 
 #define DEBUG
 
-
 #ifdef DEBUG
 #include <iostream>
-#include <utility>
 #endif
+#include <utility>
 
 #include <util/simplify_expr.h>
 #include <util/find_symbols.h>
@@ -123,7 +122,9 @@ void acdl_domaint::maps_to_bottom(
   valuet &new_value,
   deductionst &deductions)
 {
+#ifdef DEBUG
   std::cout << "checking whether statement maps to BOTTOM: ";
+#endif  
   std::unique_ptr<incremental_solvert> solver(
     incremental_solvert::allocate(SSA.ns,true));
 
@@ -148,15 +149,20 @@ void acdl_domaint::maps_to_bottom(
 
   if((*solver)() == decision_proceduret::D_UNSATISFIABLE)
   {
+#ifdef DEBUG
     std::cout << "yes, deducing BOTTOM" << std::endl;
+#endif    
     new_value.push_back(false_exprt());
     deductions.push_back(deductiont());
     deductions.back().first = false_exprt();
     get_antecedents(*solver,old_value,value_literals,
 		    deductions.back().second);
   }
-  else
+  else {
+#ifdef DEBUG
     std::cout << "no" << std::endl;
+#endif  
+  }    
 }
 
 /*******************************************************************\
@@ -240,17 +246,23 @@ void acdl_domaint::bool_inference(
       solver->new_context();
       solver->set_assumptions(value_literals);
       *solver << not_exprt(deduced);
+#ifdef DEBUG
       std::cout << "deducing in SAT" << std::endl;
+#endif      
       if((*solver)() == decision_proceduret::D_SATISFIABLE)
       { 
+#ifdef DEBUG
         std::cout << "not deducing" << std::endl;
+#endif        
         //"don't know"
         //pop_context not needed
         continue;
       }
       else
       {
+#ifdef DEBUG
         std::cout << "actually deducing" << std::endl;
+#endif        
         if(!is_subsumed(deduced,_old_value))
         {
           new_value.push_back(deduced);
@@ -265,7 +277,9 @@ void acdl_domaint::bool_inference(
     }
     else //bottom
     {
+#ifdef DEBUG
       std::cout << "deducing in BOTTOM" << std::endl;
+#endif      
       deductions.push_back(deductiont());
       deductions.back().first = false_exprt();
       get_antecedents(*solver,_old_value,value_literals,
@@ -389,12 +403,16 @@ void acdl_domaint::numerical_inference(
       decision_proceduret::resultt result = (*solver)();
       assert(result == decision_proceduret::D_UNSATISFIABLE);
 
+#ifdef DEBUG
       std::cout << "IS_SUBSUMED: " << std::endl;
       std::cout << "  " << from_expr(SSA.ns, "", var_values[i]) << std::endl; 
       std::cout << "  "; output(std::cout, _old_value); std::cout << std::endl;
+#endif      
       if(!is_subsumed(var_values[i],_old_value))
       {
+#ifdef DEBUG
         std::cout << "adding new value " << from_expr(SSA.ns, "", var_values[i]) << std::endl;
+#endif      
         new_value.push_back(var_values[i]);
         deductions.push_back(deductiont());
         deductions.back().first = var_values[i];
@@ -653,15 +671,30 @@ bool acdl_domaint::is_complete(const valuet &value,
   find_symbols (conjunction(value), symbols);
 #endif
 
+  std::string str("#lb");
+  std::string name;
   for(std::set<symbol_exprt>::const_iterator it = symbols.begin();
       it != symbols.end(); ++it)
   {
+    // ignore the symbols whose name is of 
+    // type "lb", for example guard#lb3
+    // Ignoring such variables does not
+    // affect completeness if guard#ls=false
+    // Remember, for real counterexample guard#ls has to be FALSE
+    const irep_idt &identifier = it->get(ID_identifier);
+    name = id2string(identifier);
+    std::size_t found = name.find(str);
+    if (found!=std::string::npos)
+      continue;
+    
     decision_proceduret::resultt res = (*solver)();
     assert(res==decision_proceduret::D_SATISFIABLE);
     // if value == (x=[2,2]) and (*it is x), then 'm' below contains the
     // value of x which is 2
     exprt m = (*solver).get(*it);
+#ifdef DEBUG
     std::cout << "The value " << from_expr(SSA.ns, "", m) << std::endl;
+#endif    
     if(m.id()!=ID_constant) {
 #ifdef DEBUG
       std::cout << " is not complete" << std::endl;
@@ -752,7 +785,9 @@ void acdl_domaint::build_meet_irreducible_templates(
   const varst &vars,
   std::vector<exprt> &meet_irreducible_templates)
 {
+#ifdef DEBUG
   std::cout << "Building templates" << std::endl;
+#endif  
   template_generator_acdlt template_generator(options,ssa_db,ssa_local_unwinder); 
   template_generator.set_message_handler(get_message_handler());
   template_generator(SSA,vars);
@@ -783,9 +818,12 @@ exprt acdl_domaint::split(const valuet &value,
                           bool upper)
 {
   const exprt &expr = meet_irreducible_template;
+
+#ifdef DEBUG
   std::cout << "[ACDL-DOMAIN] Split(" 
             << from_expr(SSA.ns, "", meet_irreducible_template) << "): "; output(std::cout, value);
   std::cout << "" << std::endl;
+#endif  
   
   if(expr.type().id()==ID_bool)
   {
@@ -877,8 +915,10 @@ exprt acdl_domaint::split(const valuet &value,
   assert(new_value.size() == value.size());
   
   exprt vals = conjunction(new_value);
+#ifdef DEBUG
   std::cout << "conjuncted new value:: " << from_expr(SSA.ns, "", vals) << std::endl;
   std::cout << "original splitting expr is :: " << from_expr(SSA.ns, "", expr) << std::endl;
+#endif  
    
   // computer lower and upper bound
   // handle the positive literals
@@ -899,39 +939,51 @@ exprt acdl_domaint::split(const valuet &value,
       if(e.id() == ID_le)
       {
         u = to_constant_expr(to_binary_relation_expr(e).rhs());
+#ifdef DEBUG
         std::cout << "the expression is " << from_expr(SSA.ns, "", e) << "the upper value is " 
                   << from_expr(SSA.ns, "", u) << std::endl;
+#endif                  
         u_is_assigned = true;
         //break;
       }
       if(e.id() == ID_ge)
       {
         l = to_constant_expr(to_binary_relation_expr(e).rhs());
+#ifdef DEBUG
         std::cout << "the expression is " << from_expr(SSA.ns, "", e) << "the lower value is " 
                   << from_expr(SSA.ns, "", l) << std::endl;
+#endif                  
         l_is_assigned = true;
         //break;
       }
       if(e.id() == ID_lt) {
+#ifdef DEBUG
         std::cout << "computing upper value" << std::endl;
+#endif        
         constant_exprt cexpr = to_constant_expr(to_binary_relation_expr(e).rhs());
         to_integer(cexpr, val1);
         val2 = val1-1;
         u = from_integer(val2, expr.type());  
         u_is_assigned = true;
+#ifdef DEBUG
         std::cout << "the expression is " << from_expr(SSA.ns, "", e) << "the upper value is " 
                   << from_expr(SSA.ns, "", u) << std::endl;
+#endif                  
         //break;
       }
       if(e.id() == ID_gt) {
+#ifdef DEBUG
         std::cout << "computing lower value" << std::endl;
+#endif        
         constant_exprt cexpr = to_constant_expr(to_binary_relation_expr(e).rhs());
         to_integer(cexpr, val1);
         val2 = val1+1;
         l = from_integer(val2, expr.type());  
         l_is_assigned = true;
+#ifdef DEBUG
         std::cout << "the expression is " << from_expr(SSA.ns, "", e) << "the lower value is " 
                   << from_expr(SSA.ns, "", l) << std::endl;
+#endif                  
         //break;
       }
     }
@@ -978,8 +1030,10 @@ exprt acdl_domaint::split(const valuet &value,
         cneg = (-neg)+1;
         l = from_integer(cneg, expr.type());  
         l_is_assigned = true;
+#ifdef DEBUG
         std::cout << "the expression is " << from_expr(SSA.ns, "", e) << "the lower value is " 
                   << from_expr(SSA.ns, "", l) << std::endl;
+#endif                  
         //break;
       }
       // I/P: (-x > 10) O/P: l = (-10-1) = -11
@@ -1016,6 +1070,7 @@ exprt acdl_domaint::split(const valuet &value,
 
   exprt m = tpolyhedra_domaint::between(l,u);
   
+#ifdef DEBUG
   std::cout << "[ACDL DOMAIN] expr: " << from_expr(SSA.ns, "", expr)
             << "[ACDL DOMAIN] min: "
             << from_expr(SSA.ns, "", l)
@@ -1023,7 +1078,7 @@ exprt acdl_domaint::split(const valuet &value,
             << from_expr(SSA.ns, "", u)
             << "[ACDL DOMAIN] mid: " 
             << from_expr(SSA.ns, "", m) << std::endl;
-
+#endif
   if(upper) 
   {
 #ifdef DEBUG
@@ -1111,7 +1166,6 @@ Function: acdl_domaint::normalize_val()
 
 void acdl_domaint::normalize_val(valuet &value)
 {
-  std::cout << "I am inside normalize value" << std::endl;
   valuet val;
   if(value.empty()) 
     return;
@@ -1258,13 +1312,19 @@ bool acdl_domaint::check_val(const exprt &expr)
 #endif
   *solver << expr;
   decision_proceduret::resultt result = (*solver)();
+#ifdef DEBUG
   std::cout << "original SAT result: " << result << std::endl;
+#endif  
   if(result == decision_proceduret::D_UNSATISFIABLE) {
+#ifdef DEBUG
     std::cout<< "UNSAT" << std::endl;
+#endif    
     return true;
   }
   else {
+#ifdef DEBUG
     std::cout<< "SAT" << std::endl;
+#endif    
     return false;
   }
 }
@@ -1435,7 +1495,9 @@ Function: acdl_domaint::check_abstract_value()
   
 bool acdl_domaint::check_val_satisfaction(valuet &val)
 {
+#ifdef DEBUG
   std::cout << "Checking satisfaction for value " << from_expr(SSA.ns, "", conjunction(val)) << std::endl;
+#endif  
   std::unique_ptr<incremental_solvert> solver(
     incremental_solvert::allocate(SSA.ns,true));
   *solver << conjunction(val);
@@ -1508,7 +1570,9 @@ int acdl_domaint::unit_rule(const local_SSAt &SSA, valuet &v, valuet &clause, ex
   int i=0;
   bool disjoint = false;
   bool new_lit = false;
+#ifdef DEBUG
   std::cout << "Checking unit rule for the clause " << from_expr(SSA.ns, "", disjunction(clause)) << std::endl;
+#endif  
   
   for(i=0;i<clause.size();i++)
   {
@@ -1516,7 +1580,9 @@ int acdl_domaint::unit_rule(const local_SSAt &SSA, valuet &v, valuet &clause, ex
     disjoint = false;
     new_lit = false;
     exprt clause_exp = clause[i];
+#ifdef DEBUG
     std::cout << "comparing " << from_expr(SSA.ns, "", conjunction(v)) << " <---> " << from_expr(SSA.ns, "", clause_exp) << std::endl;
+#endif    
     // check symbols in clause_exp with that of v
     acdl_domaint::varst exp_symbols;
     find_symbols(clause_exp, exp_symbols);
@@ -1551,7 +1617,9 @@ int acdl_domaint::unit_rule(const local_SSAt &SSA, valuet &v, valuet &clause, ex
     std::cout << "Comparing relevant expressions " << from_expr(SSA.ns, "", conjunction(relevant_expr)) << " <---> " << from_expr(SSA.ns, "", clause_exp) << std::endl;
 #endif    
     int status = compare_val_lit(relevant_expr, clause_exp);
+#ifdef DEBUG
     std::cout << "The status is " << status << std::endl;
+#endif    
     if(status == SATISFIED)
       return SATISFIED; 
     if(status != CONFLICT) // not CONTRADICTED
@@ -1582,7 +1650,10 @@ int acdl_domaint::unit_rule(const local_SSAt &SSA, valuet &v, valuet &clause, ex
 #endif
     //clause is unit
     unit_lit = clause[unit_idx];
+    
+#ifdef DEBUG
     std::cout << "The unit literal is " << from_expr(SSA.ns, "", unit_lit) << std::endl;
+#endif
     return UNIT;
   }  
 
@@ -1601,7 +1672,9 @@ int acdl_domaint::unit_rule(const local_SSAt &SSA, valuet &v, valuet &clause, ex
 #endif
   //clause is unit
   unit_lit = clause[unit_idx];
+#ifdef DEBUG
   std::cout << "The unit literal is " << from_expr(SSA.ns, "", unit_lit) << std::endl;
+#endif
   return UNIT; // UNIT clause
 }
 
@@ -1621,9 +1694,11 @@ std::pair<mp_integer, mp_integer> acdl_domaint::get_var_bound(const valuet &valu
                                                               const exprt &expr)
 {
   //const exprt &expr = meet_irreducible_template;
+#ifdef DEBUG
   std::cout << "[ACDL-DOMAIN] Get var bound(" 
             << from_expr(SSA.ns, "", expr) << "): "; output(std::cout, value);
   std::cout << "" << std::endl;
+#endif  
   
   typedef std::pair<mp_integer, mp_integer> val_pairt;
   val_pairt val_pair;
@@ -1636,7 +1711,9 @@ std::pair<mp_integer, mp_integer> acdl_domaint::get_var_bound(const valuet &valu
     mp_integer u = -1;
     val_pair.first = l; 
     val_pair.second = u;
+#ifdef DEBUG
     std::cout <<  "The val pair for " << from_expr(SSA.ns, "", expr) <<  "is" << "lower" << l << "upper" << u << std::endl;
+#endif    
     return val_pair;
   }
 
@@ -1705,8 +1782,10 @@ std::pair<mp_integer, mp_integer> acdl_domaint::get_var_bound(const valuet &valu
   assert(new_value.size() == value.size());
   
   exprt vals = conjunction(new_value);
+#ifdef DEBUG
   std::cout << "conjuncted new value:: " << from_expr(SSA.ns, "", vals) << std::endl;
   std::cout << "original splitting expr is :: " << from_expr(SSA.ns, "", expr) << std::endl;
+#endif  
    
   // computer lower and upper bound
   // handle the positive literals
@@ -1727,39 +1806,51 @@ std::pair<mp_integer, mp_integer> acdl_domaint::get_var_bound(const valuet &valu
       if(e.id() == ID_le)
       {
         u = to_constant_expr(to_binary_relation_expr(e).rhs());
+#ifdef DEBUG
         std::cout << "the expression is " << from_expr(SSA.ns, "", e) << "the upper value is " 
                   << from_expr(SSA.ns, "", u) << std::endl;
+#endif                  
         u_is_assigned = true;
         //break;
       }
       if(e.id() == ID_ge)
       {
         l = to_constant_expr(to_binary_relation_expr(e).rhs());
+#ifdef DEBUG
         std::cout << "the expression is " << from_expr(SSA.ns, "", e) << "the lower value is " 
                   << from_expr(SSA.ns, "", l) << std::endl;
+#endif                  
         l_is_assigned = true;
         //break;
       }
       if(e.id() == ID_lt) {
+#ifdef DEBUG
         std::cout << "computing upper value" << std::endl;
+#endif        
         constant_exprt cexpr = to_constant_expr(to_binary_relation_expr(e).rhs());
         to_integer(cexpr, val1);
         val2 = val1-1;
         u = from_integer(val2, expr.type());  
         u_is_assigned = true;
+#ifdef DEBUG
         std::cout << "the expression is " << from_expr(SSA.ns, "", e) << "the upper value is " 
                   << from_expr(SSA.ns, "", u) << std::endl;
+#endif                  
         //break;
       }
       if(e.id() == ID_gt) {
+#ifdef DEBUG
         std::cout << "computing lower value" << std::endl;
+#endif        
         constant_exprt cexpr = to_constant_expr(to_binary_relation_expr(e).rhs());
         to_integer(cexpr, val1);
         val2 = val1+1;
         l = from_integer(val2, expr.type());  
         l_is_assigned = true;
+#ifdef DEBUG
         std::cout << "the expression is " << from_expr(SSA.ns, "", e) << "the lower value is " 
                   << from_expr(SSA.ns, "", l) << std::endl;
+#endif                  
         //break;
       }
     }
@@ -1806,8 +1897,10 @@ std::pair<mp_integer, mp_integer> acdl_domaint::get_var_bound(const valuet &valu
         cneg = (-neg)+1;
         l = from_integer(cneg, expr.type());  
         l_is_assigned = true;
+#ifdef DEBUG
         std::cout << "the expression is " << from_expr(SSA.ns, "", e) << "the lower value is " 
                   << from_expr(SSA.ns, "", l) << std::endl;
+#endif                  
         //break;
       }
       // I/P: (-x > 10) O/P: l = (-10-1) = -11
@@ -1843,7 +1936,9 @@ std::pair<mp_integer, mp_integer> acdl_domaint::get_var_bound(const valuet &valu
 
   val_pair.first = lower;
   val_pair.second = upper;
+#ifdef DEBUG
   std::cout <<  "The val pair for " << from_expr(SSA.ns, "", expr) <<  "is" << "lower" << lower << "upper" << upper << std::endl;
+#endif  
   return val_pair;
 }
 

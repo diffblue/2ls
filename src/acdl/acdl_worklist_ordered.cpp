@@ -596,7 +596,9 @@ acdl_worklist_orderedt::update (const local_SSAt &SSA,
       std::size_t found = rhs_str.find(str); 
       // push the nondet statement in rhs
       if(found != std::string::npos) {
-        std::cout << "Not inserting nondet elements " << std::endl; 
+      #ifdef DEBUG
+        //std::cout << "Not inserting nondet elements " << std::endl; 
+      #endif  
        continue; 
       }
       // the statement has already been processed, so no action needed
