@@ -1,6 +1,6 @@
 CORE
 main.c
---inline
+--octagons
 ^EXIT=0$
 ^SIGNAL=0$
 ^VERIFICATION SUCCESSFUL$

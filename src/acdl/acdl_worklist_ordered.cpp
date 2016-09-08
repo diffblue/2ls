@@ -13,15 +13,15 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 
 /*******************************************************************\
 
-Function: acdl_worklist_orderedt::initialize()
+  Function: acdl_worklist_orderedt::initialize()
 
   Inputs:
 
- Outputs:
+  Outputs:
 
- Purpose: Initialize the worklist
+  Purpose: Initialize the worklist
 
- \*******************************************************************/
+\*******************************************************************/
 
 void
 acdl_worklist_orderedt::initialize (const local_SSAt &SSA, const exprt &assertion, const exprt& additional_constraint)
@@ -210,7 +210,8 @@ acdl_worklist_orderedt::initialize (const local_SSAt &SSA, const exprt &assertio
   // push the assertion and additional constriant
   // in to the worklist
   worklist.push_back(not_exprt(assertion));
-  worklist.push_back(additional_constraint);
+  if(additional_constraint != true_exprt())
+   worklist.push_back(additional_constraint);
   
   acdl_domaint::varst var_leaf;
   // insert leaf nodes
@@ -368,6 +369,9 @@ acdl_worklist_orderedt::dec_update (const local_SSAt &SSA, const acdl_domaint::s
         // never seen this statement before
         push(*it);
         push_into_assertion_list(assert_worklist, *it);
+        // push into map
+        live_var_list.clear();
+        push_into_map(*it, live_var_list);
       }
     }
   }
@@ -490,8 +494,13 @@ acdl_worklist_orderedt::dec_update (const local_SSAt &SSA, const acdl_domaint::s
     // find all symbols in the leaf expression
     find_symbols(statement, leaf_vars);
     live_variables.insert(leaf_vars.begin(),leaf_vars.end());
+    // push into map
+    // Note: The whole live variable set is pushed into map
+    // for initialization since we do not know the exact live
+    // variable set for dec_update
+    push_into_map(statement, live_variables);
   
-    find_symbols(statement, lvars);
+    //find_symbols(statement, lvars);
   }
     
   // insert intermediate nodes
@@ -499,9 +508,14 @@ acdl_worklist_orderedt::dec_update (const local_SSAt &SSA, const acdl_domaint::s
     const acdl_domaint::statementt statement = pop_from_list(inter_worklist);
     push_into_list (worklist, statement);
     acdl_domaint::varst inter_vars;
-    // find all symbols in the leaf expression
+    // find all symbols in the intermediate expression
     find_symbols(statement, inter_vars);
     live_variables.insert(inter_vars.begin(),inter_vars.end());
+    // push into map
+    // Note: The whole live variable set is pushed into map
+    // for initialization since we do not know the exact live
+    // variable set for dec_update
+    push_into_map(statement, live_variables);
   }
   
 #ifdef DEBUG    
@@ -666,7 +680,34 @@ Function: acdl_worklist_orderedt::initialize()
 void
 acdl_worklist_orderedt::initialize_live_variables ()
 {
-//#if 0  
+  //Strategy 0: initialize live variables for each 
+  //statement by adding all live variables
+  for(std::list<acdl_domaint::statementt>::const_iterator 
+      it = worklist.begin(); it != worklist.end(); ++it) {
+    acdl_domaint::varst insert_vars;
+    select_vars(*it, insert_vars);
+    for(acdl_domaint::varst::const_iterator it1 = 
+        insert_vars.begin(); it1 != insert_vars.end(); ++it1)
+      live_variables.insert(*it1);   
+  }
+  // insert all live variables for each statement
+  for(std::list<acdl_domaint::statementt>::const_iterator 
+    it = worklist.begin(); it != worklist.end(); ++it)
+  {
+    svpair.insert(make_pair(*it, live_variables)); 
+  }
+  std::cout << "Printing the initialized map" << std::endl; 
+  for(std::map<acdl_domaint::statementt, acdl_domaint::varst>::iterator
+    it=svpair.begin(); it!=svpair.end(); ++it) {
+    
+    std::cout << "Statement is " << from_expr(it->first) << "==>"; 
+    acdl_domaint::varst live_vars = it->second;
+    for(acdl_domaint::varst::const_iterator it1 = 
+        live_vars.begin(); it1 != live_vars.end(); ++it1)
+      std::cout << from_expr(*it1) << ", "; 
+      std::cout << std::endl;
+  }
+#if 0  
   //Strategy 1: initialize live variables by adding all vars
   for(std::list<acdl_domaint::statementt>::const_iterator 
       it = worklist.begin(); it != worklist.end(); ++it) {
@@ -676,7 +717,7 @@ acdl_worklist_orderedt::initialize_live_variables ()
         insert_vars.begin(); it1 != insert_vars.end(); ++it1)
       live_variables.insert(*it1);   
   }
-//#endif
+#endif
 /* 
   // Strategy 2: initialize live variables by inserting only lhs vars 
   // from ID_equal statements for forward analysis 
@@ -700,8 +741,8 @@ acdl_worklist_orderedt::initialize_live_variables ()
   }
 #endif
 */
-
-#ifdef DEBUG
+ 
+#if 0
   std::cout << "Printing all live variables" << std::endl;
   for(acdl_domaint::varst::const_iterator 
     it = live_variables.begin(); it != live_variables.end(); ++it)

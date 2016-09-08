@@ -793,8 +793,8 @@ Query for August 30, 2016
 --------------------------
 0> for bug0, the loop problem is fixed. But since the assertion is inside the
 loop, acdl does not stop when the assertion fails after unwind 3 in the first 
-deduction step. 
-3> bottom9 must terminate after first propagation stage -- not happening now. 
+deduction step. (DONE) 
+3> bottom9 must terminate after first propagation stage -- not happening now. (TBD)
 4> how to normalize on octagon meet irreducibles. 
 1> Can we make decisions on function return_value ?
 2> relation3 -- does not terminate with intervals as well as octagons ? 2ls
@@ -823,4 +823,19 @@ represented correctly.
 -((signed __CPROVER_bitvector[34])y#21) >= 0) <==
 
 
-
+Query for 5th Sept., 2016
+--------------------------
+1> For the new live variable approach, when a statement is popped, does the
+projected live variables for that statement only used for making deductions. 
+2> For forward analysis, do we only make projections on lhs live varaibles of a statement. 
+2'> IMPLEMENTATION -- separate worklist for statement and worklist for live
+varaibles.
+3> relation3 -- does not terminate with intervals as well as octagons ? 2ls
+terminate very quickly.
+4> unit-ness guarantee in octagon domain:
+   y23-y21 < 2
+   y23+y21 > 0
+   y21 < 1
+   y23 > 1 -- deduction from unit rule
+   Value inconsistent !!
+5> how to normalize octagon meet irreducibles. 
