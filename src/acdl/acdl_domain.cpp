@@ -25,6 +25,8 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include "acdl_domain.h"
 #include "template_generator_acdl.h"
 
+#define NO_PROJECTION
+
 /*******************************************************************\
 
 Function: acdl_domaint::operator()
@@ -308,30 +310,31 @@ Function: acdl_domaint::numerical_inference()
 
 void acdl_domaint::numerical_inference(
   const statementt &statement,
-  const varst &_vars,
+  const varst &vars,
   const valuet &_old_value,
   valuet &new_value,
   deductionst &deductions)
 {
-  // partition variables according to domain
-  // TODO: this is super inefficient
-  std::vector<exprt> meet_irreducible_templates;
-  template_generator_acdlt _template_generator(options,ssa_db,ssa_local_unwinder); 
-  _template_generator.set_message_handler(get_message_handler());
-  _template_generator(SSA,_vars);
-  _template_generator.positive_template(meet_irreducible_templates);
-  std::set<varst> vars;
-  for(std::vector<exprt>::const_iterator it=meet_irreducible_templates.begin();
-      it!=meet_irreducible_templates.end(); ++it)
+  // add variables in old value
+  varst tvars=vars;
+  for(valuet::const_iterator it=_old_value.begin();
+      it!=_old_value.end(); ++it)
   {
     varst symbols;
     find_symbols(*it, symbols);
-    vars.insert(symbols);
+    tvars.insert(symbols.begin(), symbols.end());
   }
+  template_generator_acdlt template_generator(options,ssa_db,ssa_local_unwinder); 
+  template_generator.set_message_handler(get_message_handler());
+  template_generator(SSA,tvars);
 
+#ifdef NO_PROJECTION
+  deductions.reserve(1);
+#else 
   deductions.reserve(vars.size());
-  for(std::set<varst>::const_iterator it = vars.begin();
+  for(varst::const_iterator it = vars.begin();
       it != vars.end(); ++it)
+#endif
   {
     ssa_analyzert ssa_analyzer;
     std::unique_ptr<incremental_solvert> solver(
@@ -339,19 +342,18 @@ void acdl_domaint::numerical_inference(
 
     // project _old_value on everything in statement but *it
     valuet old_value;
-    remove_vars(_old_value,*it,old_value);
-
-#ifdef DEBUG
-    std::cout << "[ACDL-DOMAIN] projected(";
-    output(std::cout, *it) << "): ";
+#ifdef NO_PROJECTION
+    old_value=_old_value;
+#else
+    remove_var(_old_value,*it,old_value);
+#if def DEBUG
+    std::cout << "[ACDL-DOMAIN] projected("
+              << from_expr(SSA.ns, "", *it) << "): ";
     output(std::cout, old_value) << std::endl;
+#endif
 #endif
 
     meet_irreduciblet deduced;
-    template_generator_acdlt template_generator(
-      options,ssa_db,ssa_local_unwinder); 
-    template_generator(SSA,*it);
-
     ssa_analyzer(*solver, SSA, and_exprt(conjunction(old_value),statement),
                  template_generator);
     exprt var_value;
@@ -366,7 +368,11 @@ void acdl_domaint::numerical_inference(
     std::cout << "RESULT: "; output(std::cout, var_values) << std::endl;
 #endif
     if(var_values.empty())
+#ifdef NO_PROJECTION
+      return;
+#else
       continue;
+#endif
 
     //get deductions
     //ENHANCE: make assumptions persistent in incremental_solver
@@ -389,13 +395,6 @@ void acdl_domaint::numerical_inference(
     }
     for(unsigned i=0; i<var_values.size(); ++i)
     {
-      /*        literalt l = solver->convert(var_values[i]);
-                if(l.is_constant())
-                {
-                *solver << literal_exprt(l);
-                continue; //in this case we don't have information on deductions
-                }
-      */
       solver->new_context();
       *solver << not_exprt(var_values[i]);
       solver->set_assumptions(value_literals);
@@ -423,9 +422,14 @@ void acdl_domaint::numerical_inference(
     }	
  
 #ifdef DEBUG
-    std::cout << "[ACDL-DOMAIN] numerical deductions(";
-    output(std::cout, *it) << "): ";
+#ifdef NO_PROJECTION
+    std::cout << "[ACDL-DOMAIN] numerical deductions: ";
     output(std::cout, deductions) << std::endl;
+#else
+    std::cout << "[ACDL-DOMAIN] numerical deductions("
+              << from_expr(SSA.ns, "", *it) << "): ";
+    output(std::cout, deductions) << std::endl;
+#endif
 #endif
   }
 }
@@ -763,6 +767,34 @@ void acdl_domaint::remove_vars(const valuet &old_value,
       }
     }
     if(!found)
+      new_value.push_back(*it);
+  }
+}
+
+/*******************************************************************\
+
+Function: acdl_domaint::remove_var()
+
+  Inputs: example:
+          Old_value = (1 <= x && x <= 5) && (0 <= y && y <= 10) vars = x
+
+ Outputs: example:
+          (0 <= y && y <= 10)
+
+ Purpose: TODO: this projection is quite imprecise for relational domains.
+
+\*******************************************************************/
+
+void acdl_domaint::remove_var(const valuet &old_value, 
+                              const symbol_exprt &var,
+                              valuet &new_value)
+{
+  for(valuet::const_iterator it = old_value.begin();
+      it != old_value.end(); ++it)
+  {
+    find_symbols_sett symbols;
+    find_symbols(*it,symbols);
+    if(symbols.find(var.get_identifier()) == symbols.end())
       new_value.push_back(*it);
   }
 }
