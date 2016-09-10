@@ -15,7 +15,6 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 
 #define DEBUG
 
-
 #ifdef DEBUG
 #include <iostream>
 #endif
@@ -266,10 +265,6 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
     // implication_graph.to_value(new_v);
     conflict_graph.to_value(new_v);
     
-    // TEST: meet is computed because we are doing gfp
-    //domain.meet (new_v, v);
-    //domain.normalize(v,projected_live_vars);
-
 #ifdef DEBUG
     std::cout << "Computing new abstract value of implication graph: " << std::endl;
     for(acdl_domaint::valuet::const_iterator it = new_v.begin();it != new_v.end(); ++it)
@@ -302,9 +297,13 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
     }
   }
   unsigned final_size = conflict_graph.prop_trail.size();
+  
   // explicitly empty the map here since we 
   // do not delete map elements for 
-  // statements with null deductions  
+  // statements with empty deductions 
+  // Only activate when missing some deductions, also
+  // do not delete map elements for empty deduction in 
+  // update function in worklist_base (comment out top check)
   worklist.delete_map();
   
 #if 0
