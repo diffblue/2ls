@@ -15,7 +15,6 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 
 #define DEBUG
 
-
 #ifdef DEBUG
 #include <iostream>
 #endif
@@ -188,10 +187,16 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
   while (!worklist.empty())
   {
     const acdl_domaint::statementt statement = worklist.pop();
-    
+    acdl_domaint::varst lvar = worklist.pop_from_map(statement); 
 #ifdef DEBUG
     std::cout << "Pop: " << from_expr (SSA.ns, "", statement)
         << std::endl;
+    
+    std::cout << "Live variables for " << from_expr(statement) << " are: ";
+    for(acdl_domaint::varst::const_iterator it1 = 
+        lvar.begin(); it1 != lvar.end(); ++it1)
+      std::cout << from_expr(*it1) << ", "; 
+      std::cout << std::endl;
 #endif
 
     // compute update of abstract value
@@ -219,12 +224,18 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
 #endif
 
     // select vars for projection
+    acdl_domaint::valuet new_v;
+#ifdef LIVE_VAR_OLD_APPROACH
     acdl_domaint::varst project_vars;
-    find_symbols(statement,project_vars);
+    find_symbols(statement, project_vars);
     acdl_domaint::varst projected_live_vars;
     projected_live_vars = worklist.check_var_liveness(project_vars); 
-    acdl_domaint::valuet new_v;
     domain(statement, projected_live_vars, v, new_v, deductions);
+#endif    
+    // [QUERY] find intersection of project_vars and lvar 
+    // for per-statement based live variable approach
+    // set_intersection(lvar.begin(),lvar.end(),project_vars.begin(),project_vars.end(),std::inserter(projected_live_vars,projected_live_vars.begin()));
+    domain(statement, lvar, v, new_v, deductions);
     
     // update implication graph
     //implication_graph.add_deductions(SSA, deductions);
@@ -240,7 +251,7 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
       
       // - call worklist update
       worklist.update(SSA, new_variables, statement, assertion); 
-    
+        
 #ifdef DEBUG
     std::cout << "New: ";
     domain.output(std::cout, new_v) << std::endl;
@@ -254,10 +265,6 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
     // implication_graph.to_value(new_v);
     conflict_graph.to_value(new_v);
     
-    // TEST: meet is computed because we are doing gfp
-    //domain.meet (new_v, v);
-    //domain.normalize(v,projected_live_vars);
-
 #ifdef DEBUG
     std::cout << "Computing new abstract value of implication graph: " << std::endl;
     for(acdl_domaint::valuet::const_iterator it = new_v.begin();it != new_v.end(); ++it)
@@ -272,7 +279,9 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
 #ifdef DEBUG
       std::cout << "Propagation finished with BOTTOM" << std::endl;
 #endif
-      // empty the worklist because the present decision 
+      // empty the map 
+      worklist.delete_map();
+      // empty the worklist because the present deduction 
       // lead to bottom, so all information in the 
       // worklist is irrelevant
       while(!worklist.empty()) 
@@ -288,6 +297,14 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
     }
   }
   unsigned final_size = conflict_graph.prop_trail.size();
+  
+  // explicitly empty the map here since we 
+  // do not delete map elements for 
+  // statements with empty deductions 
+  // Only activate when missing some deductions, also
+  // do not delete map elements for empty deduction in 
+  // update function in worklist_base (comment out top check)
+  worklist.delete_map();
   
 #if 0
   // if there are no deductions, then

@@ -793,8 +793,8 @@ Query for August 30, 2016
 --------------------------
 0> for bug0, the loop problem is fixed. But since the assertion is inside the
 loop, acdl does not stop when the assertion fails after unwind 3 in the first 
-deduction step. 
-3> bottom9 must terminate after first propagation stage -- not happening now. 
+deduction step. (DONE) 
+3> bottom9 must terminate after first propagation stage -- not happening now. (TBD)
 4> how to normalize on octagon meet irreducibles. 
 1> Can we make decisions on function return_value ?
 2> relation3 -- does not terminate with intervals as well as octagons ? 2ls
@@ -823,4 +823,28 @@ represented correctly.
 -((signed __CPROVER_bitvector[34])y#21) >= 0) <==
 
 
+Query for 5th Sept., 2016
+--------------------------
+0> show difference between temp and trace in bottom13 -- we need to be
+conservative and do not delete map elements when no deduction is made, otherwise
+we will miss some deductions. 
+1> deductions on boolean projections are extremely slow for octagon domain. 
+2> relational2 -- pass successfully (but slow), relational3 -- did not teminate
+3> Github issue: For forward iteration strategy, SSA representation has limitations. 
+4> GIT issue: 
+   unit-ness guarantee in octagon domain:
+   checking unit rule for octagonal deductions:
+   Abstract value: 
+   (x+y > 0 && x-y < 2 && y-z <= 0 && z-y <= 0), where 
+   x+y > 0 && x-y < 2 --> x=y+1
+   y-z <=0 && z-y <=0 --> y==z
+   Learnt clause: (L1 || L2 || L3) = (x > 10 || z > 3 || y+z < 5), obtained by negating 
+   decisions {D1, D2, D3} as (L1 = !D1, L2 = !D2, L3 = !D3)
+    *> x>10(L1) --> y>9
+    *> y>9 --> !(y+z < 5), which violates L3 since z>3      
+     
+   Satiafiable literal: 
+   Contradicting literal: y+z < 5
+   Unknown literal: x>10, z>3
 
+5> how to normalize octagon meet irreducibles. 

@@ -18,6 +18,8 @@ class acdl_worklist_baset : public messaget
 {
 public:
   typedef std::list<acdl_domaint::statementt> worklistt;
+  typedef std::map<acdl_domaint::statementt, acdl_domaint::varst> stmt_var_pairt;
+  //typedef std::list<std::pair<acdl_domaint::statementt, acdl_domaint::varst>> worklistt;
 
   explicit acdl_worklist_baset()
   {
@@ -27,6 +29,11 @@ public:
   {
   }
 
+  // this is temporary container which is used
+  // to update the live varaible list for each 
+  // statement. When the update is complete, this 
+  // list must be flushed.
+  acdl_domaint::varst live_var_list;
   typedef std::list<acdl_domaint::statementt> assert_listt;
   assert_listt alist;
   virtual void initialize(const local_SSAt &, const exprt &, const exprt&) 
@@ -55,8 +62,13 @@ public:
   acdl_domaint::varst live_variables;
   acdl_domaint::varst worklist_vars;
   void push (const acdl_domaint::statementt &statement);
+  void push_into_map (const acdl_domaint::statementt &statement, const acdl_domaint::varst &lvars);
+ acdl_domaint::varst pop_from_map (const acdl_domaint::statementt &statement);
+ void delete_from_map (const acdl_domaint::statementt &statement);
+  void delete_map();
 protected:
   worklistt worklist;
+  stmt_var_pairt svpair;
 
   void remove_live_variables (const local_SSAt &SSA, 
          const acdl_domaint::statementt & statement);

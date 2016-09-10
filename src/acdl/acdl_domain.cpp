@@ -1573,7 +1573,7 @@ Function: acdl_domaint::unit_rule
  Abstract value: (x:[5,10] && y:[20:30] && z:[6,18])
  Clause: (x<3 V y>50 V z<10) -- UNIT clause
  Here, x<3, y>50 -- contradicted literal, z<10 -- unit literal 
- Deductions made after unit rule: (x<=10) 
+ Deductions made after unit rule: (z<10) 
  Abstract Value: (x:[5,10] && y:[20:30] && z:[6,9])
  
  Case 2:
@@ -1587,8 +1587,8 @@ Function: acdl_domaint::unit_rule
  Clause: $C=(x<3 \vee y>50 \vee z<10)$
  Here, the literals x<3 and y>50 are contradicting. And z<10 is UNKNOWN, so
  the clause is UNIT. Unit literal is z<10.
- Deduction after application of unit rule: meet(z>5, z<10) --> z:[5,10]
- Abstract value: ($x \in [5,13]$,  $y \in [-2,9]$, $z \in [5,10]$).
+ Deduction after application of unit rule: meet(z>5, z<10) --> z:[6,9]
+ Abstract value: ($x \in [5,13]$,  $y \in [-2,9]$, $z \in [6,9]$).
  
  Purpose:
 
