@@ -270,7 +270,7 @@ void template_generator_baset::filter_heap_domain()
   var_specs.clear();
   for (auto var=new_var_specs.begin(); var!=new_var_specs.end(); ++var)
   {
-    if (var->var.type().id()==ID_pointer)
+    if (var->var.type().id()==ID_pointer || var->var.type().get_bool("#dynamic"))
       var_specs.push_back(*var);
   }
 }

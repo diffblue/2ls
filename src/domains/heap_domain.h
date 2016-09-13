@@ -13,8 +13,8 @@ class heap_domaint : public domaint
 {
  public:
   typedef unsigned rowt;
-  typedef vart next_fieldt;
-  typedef std::pair<exprt, next_fieldt> dyn_objt;
+  typedef vart member_fieldt;
+  typedef std::pair<exprt, member_fieldt> dyn_objt;
 
   heap_domaint(unsigned int _domain_number, replace_mapt &_renaming_map,
                const var_specst &var_specs,
@@ -66,10 +66,10 @@ class heap_domaint : public domaint
      * expressions.
      * Points to expression is disjunction of equalities:
      * p = &o (NULL)   for each object 'o' (or NULL) from points_to set
-     * Expression of path leading from variable 'p' to destination 'd' via set of objects 'O'
-     * has form:
-     * p = d ||                                     if path can have zero length
-     * p = &o && (o.next = d || o.next = o')        where o,o' belong to O and p can point to &o
+     * Expression of path leading from variable 'p' to destination 'd' via field 'm' and
+     * passing through set of objects 'O' has form:
+     * p = d ||                            if path can have zero length
+     * p = &o && (o.m = d || o.m = o')     where o,o' belong to O and p can point to &o
      * @param templ_expr Pointer variable of the template row
      * @return Row value expression in the described form
      */
@@ -83,6 +83,7 @@ class heap_domaint : public domaint
         exprt::operandst pt_expr;
         for (auto &pt : points_to)
         {
+          exprt lhs = templ_expr;
           pt_expr.push_back(equal_exprt(templ_expr,
                                         is_null_ptr(pt.first) ?
                                         pt.first : address_of_exprt(pt.first)));
@@ -91,7 +92,7 @@ class heap_domaint : public domaint
       }
 
       for (auto &path : paths)
-      { // path(p, d)[O]
+      { // path(p, m, d)[O]
         const exprt &dest = path.destination;
         exprt::operandst path_expr;
 
@@ -102,29 +103,31 @@ class heap_domaint : public domaint
         }
         for (const dyn_objt &obj1 : path.dyn_objects)
         {
-          if (points_to.find(obj1) != points_to.end())
-          {
             // p = &o
             exprt equ_exprt = equal_exprt(templ_expr, address_of_exprt(obj1.first));
 
             exprt::operandst step_expr;
-            exprt next_expr = obj1.second;
-            // o.next = d
-            step_expr.push_back(equal_exprt(next_expr, dest));
+            exprt member_expr = obj1.second;
+            // o.m = d
+            step_expr.push_back(equal_exprt(member_expr, dest));
 
             for (auto &obj2 : path.dyn_objects)
-            { // o.next = o'
-              step_expr.push_back(equal_exprt(next_expr, address_of_exprt(obj2.first)));
+            { // o.m = o'
+              step_expr.push_back(equal_exprt(member_expr, address_of_exprt(obj2.first)));
             }
 
             path_expr.push_back(and_exprt(equ_exprt, disjunction(step_expr)));
-          }
         }
 
         result.push_back(disjunction(path_expr));
       }
 
       return conjunction(result);
+    }
+
+    inline bool empty() const
+    {
+      return paths.empty() && points_to.empty();
     }
   };
 
@@ -137,8 +140,10 @@ class heap_domaint : public domaint
     guardt pre_guard;
     guardt post_guard;
     vart expr;
+    irep_idt member;
     exprt aux_expr;
     kindt kind;
+    exprt dyn_obj;
     bool dynamic;
   };
   typedef std::vector<template_rowt> templatet;
@@ -187,6 +192,11 @@ class heap_domaint : public domaint
   namespacet ns;
 
   void make_template(const var_specst &var_specs, const namespacet &ns);
+
+  // Utility functions
+  static int get_symbol_loc(const exprt &expr);
+
+  static std::string get_base_name(const exprt &expr);
 
   friend class strategy_solver_heapt;
 };
