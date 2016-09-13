@@ -25,7 +25,8 @@ void heap_domaint::initialize(domaint::valuet &value)
 
 /**
  * Create domain template for given set of variables.
- * Template contains only pointers to structures containing field 'next'.
+ * Template contains row for each member of each variable being pointer to struct,
+ * and a row for each flattened member of a struct.
  * @param var_specs Set of program variables.
  * @param ns Namespace
  */
@@ -37,34 +38,45 @@ void heap_domaint::make_template(const domaint::var_specst &var_specs, const nam
 
   for (auto v1 = var_specs.begin(); v1 != var_specs.end(); ++v1)
   {
-    // Check if v1 is struct and has 'next' field
-    bool has_next = false;
+    // Create template for each pointer to struct
     const vart &var1 = v1->var;
     if (var1.type().id() == ID_pointer)
     {
       const typet &pointed_type = ns.follow(var1.type().subtype());
       if (pointed_type.id() == ID_struct)
       {
+        // Check if var1 is member field of dynamic object
+        const std::string identifier = id2string(to_symbol_expr(v1->var).get_identifier());
+        bool dynamic = identifier.find("dynamic_object$") != std::string::npos;
+
         for (auto &component : to_struct_type(pointed_type).components())
         {
-          if (component.get_name() == "next")
-            has_next = true;
+          if (!dynamic ||
+              identifier.find("." + id2string(component.get_name())) != std::string::npos)
+          {
+            templ.push_back(template_rowt());
+            template_rowt &templ_row = templ.back();
+            templ_row.expr = v1->var;
+            templ_row.member = component.get_name();
+            templ_row.pre_guard = v1->pre_guard;
+            templ_row.post_guard = v1->post_guard;
+            templ_row.aux_expr = v1->post_guard;
+            templ_row.kind = v1->kind;
+            templ_row.dynamic = dynamic;
+            if (dynamic)
+            {
+              int loc_num = get_symbol_loc(var1);
+              std::string var1_id = id2string(to_symbol_expr(var1).get_identifier());
+              std::string do_base_id = var1_id.substr(0, var1_id.find_last_of('.'));
+              // TODO just add the whole suffix
+              irep_idt do_id = do_base_id + "#lb" + std::to_string(loc_num);
+              templ_row.dyn_obj = symbol_exprt(do_id, var1.type().subtype());
+            }
+            else
+              templ_row.dyn_obj = nil_exprt();
+          }
         }
       }
-    }
-
-    if (has_next)
-    { // Create template
-      templ.push_back(template_rowt());
-      template_rowt &templ_row = templ.back();
-      templ_row.expr = v1->var;
-      templ_row.pre_guard = v1->pre_guard;
-      templ_row.post_guard = v1->post_guard;
-      templ_row.aux_expr = v1->post_guard;
-      templ_row.kind = v1->kind;
-      // Check if the pointer itself is field of a dynamic object
-      const std::string identifier = id2string(to_symbol_expr(v1->var).get_identifier());
-      templ_row.dynamic = identifier.find("dynamic_object$") != std::string::npos;
     }
   }
 }
@@ -176,7 +188,12 @@ bool heap_domaint::add_row_path(const rowt &row, heap_valuet &value, const exprt
   else
   {
     // Path exists already
-    if (dyn_obj.first.id() == ID_nil) return false;
+    if (dyn_obj.first.id() == ID_nil)
+    {
+      bool result = path_set.find(dest)->zero_length;
+      path_set.find(dest)->zero_length = true;
+      return !result;
+    }
     // Try to insert new dynamic object belonging to the path
     return path_set.find(dest)->dyn_objects.insert(dyn_obj).second;
   }
@@ -280,7 +297,9 @@ void heap_domaint::output_domain(std::ostream &out, const namespacet &ns) const
         assert(false);
     }
     const vart &var = templ_row.expr;
-    out << "?path(" << from_expr(ns, "", var) << ", DESTINATIONS)" << std::endl;
+    const irep_idt &member = templ_row.member;
+    out << i << ": ?path(" << from_expr(ns, "", var) << ", " << member << ", DESTINATIONS)"
+        << std::endl;
   }
 }
 
@@ -300,18 +319,12 @@ void heap_domaint::project_on_vars(domaint::valuet &value,
     const row_valuet &row_val = val[row];
     if (templ_row.kind == LOOP)
     {
-      if (row_val.paths.empty())
-        c.push_back(implies_exprt(templ_row.pre_guard, false_exprt()));
-      else
-        c.push_back(implies_exprt(templ_row.pre_guard,
-                                  row_val.get_row_expr(templ_row.expr)));
+      c.push_back(implies_exprt(templ_row.pre_guard,
+                                row_val.get_row_expr(templ_row.expr)));
     }
     else
     {
-      if (row_val.paths.empty())
-        c.push_back(false_exprt());
-      else
-        c.push_back(row_val.get_row_expr(templ_row.expr));
+      c.push_back(row_val.get_row_expr(templ_row.expr));
     }
   }
   result = conjunction(c);
@@ -361,4 +374,32 @@ bool heap_domaint::is_null_ptr(const exprt &expr)
   if (expr.id() == ID_typecast)
     return is_null_ptr(to_typecast_expr(expr).op());
   return false;
+}
+
+/**
+ * Get location number of a given symbol.
+ * @param expr Symbol expression.
+ * @return Number of location, or -1 if symbol is input.
+ */
+int heap_domaint::get_symbol_loc(const exprt &expr)
+{
+  assert(expr.id() == ID_symbol);
+  std::string expr_id = id2string(to_symbol_expr(expr).get_identifier());
+  if (expr_id.find('#') == std::string::npos) return -1;
+  std::string loc_str = expr_id.substr(expr_id.find_last_not_of("0123456789") + 1);
+  assert(!loc_str.empty());
+  return std::stoi(loc_str);
+}
+
+/**
+ * Get base name of a symbol.
+ * @param expr Symbol expression.
+ * @return Base name of a symbol (without suffix with location number).
+ */
+std::string heap_domaint::get_base_name(const exprt &expr)
+{
+  assert(expr.id() == ID_symbol);
+  std::string result = id2string(to_symbol_expr(expr).get_identifier());
+  result = result.substr(0, result.find_last_of('#'));
+  return result;
 }
