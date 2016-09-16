@@ -14,6 +14,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include <string>
 
 #define DEBUG
+#define LIVE_VAR_OLD_APPROACH
 
 #ifdef DEBUG
 #include <iostream>
@@ -187,16 +188,18 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
   while (!worklist.empty())
   {
     const acdl_domaint::statementt statement = worklist.pop();
-    acdl_domaint::varst lvar = worklist.pop_from_map(statement); 
+    // ++ acdl_domaint::varst lvar = worklist.pop_from_map(statement); 
 #ifdef DEBUG
     std::cout << "Pop: " << from_expr (SSA.ns, "", statement)
         << std::endl;
     
+#ifdef PER_STATEMENT_LIVE_VAR
     std::cout << "Live variables for " << from_expr(statement) << " are: ";
     for(acdl_domaint::varst::const_iterator it1 = 
         lvar.begin(); it1 != lvar.end(); ++it1)
       std::cout << from_expr(*it1) << ", "; 
       std::cout << std::endl;
+#endif    
 #endif
 
     // compute update of abstract value
@@ -235,10 +238,12 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
     // [QUERY] find intersection of project_vars and lvar 
     // for per-statement based live variable approach
     // set_intersection(lvar.begin(),lvar.end(),project_vars.begin(),project_vars.end(),std::inserter(projected_live_vars,projected_live_vars.begin()));
+  
+#ifdef PER_STATEMENT_LIVE_VAR
     domain(statement, lvar, v, new_v, deductions);
+#endif 
     
     // update implication graph
-    //implication_graph.add_deductions(SSA, deductions);
     conflict_graph.add_deductions(SSA, deductions);
     
     // update worklist based on variables in the consequent (new_v)
@@ -279,8 +284,10 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
 #ifdef DEBUG
       std::cout << "Propagation finished with BOTTOM" << std::endl;
 #endif
+#ifdef PER_STATEMENT_LIVE_VAR
       // empty the map 
       worklist.delete_map();
+#endif      
       // empty the worklist because the present deduction 
       // lead to bottom, so all information in the 
       // worklist is irrelevant
@@ -298,14 +305,15 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
   }
   unsigned final_size = conflict_graph.prop_trail.size();
   
-  // explicitly empty the map here since we 
+  // [SPECIAL CHECK] explicitly empty the map here when we 
   // do not delete map elements for 
   // statements with empty deductions 
-  // Only activate when missing some deductions, also
+  // Only activate the check -- when missing some deductions,
   // do not delete map elements for empty deduction in 
   // update function in worklist_base (comment out top check)
-  worklist.delete_map();
-  
+  //#if 0
+  // worklist.delete_map();
+  //#endif
 #if 0
   // if there are no deductions, then
   // remove the last decision from the 

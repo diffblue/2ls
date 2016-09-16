@@ -1645,10 +1645,20 @@ int acdl_domaint::unit_rule(const local_SSAt &SSA, valuet &v, valuet &clause, ex
     // now set up for actual comparisons
     // since there are overlap of symbols 
     // between the abstract value and clause
+#ifdef OCTAGONS
+    // for octagons, compare with the whole abstract
+    // value since there can be transitive dependencies
+    // between the octagonal constraints
+    int status = compare_val_lit(v, clause_exp);
+#else
 #ifdef DEBUG
     std::cout << "Comparing relevant expressions " << from_expr(SSA.ns, "", conjunction(relevant_expr)) << " <---> " << from_expr(SSA.ns, "", clause_exp) << std::endl;
 #endif    
+    // for intervals, we can select relevant 
+    // variables in the abstract value
     int status = compare_val_lit(relevant_expr, clause_exp);
+#endif    
+
 #ifdef DEBUG
     std::cout << "The status is " << status << std::endl;
 #endif    
@@ -1718,7 +1728,9 @@ Function: acdl_domaint::get_var_bound()
   
   Outputs: 
   
-  Purpose: 
+  Purpose: works for intervals and octagons
+           (x>=10 && x<=15) --> l=10, u = 20
+           (x+y >= 10 && x+y <= 15) --> l=10, u = 20 
 
 \*******************************************************************/
 

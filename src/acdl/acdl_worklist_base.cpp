@@ -385,17 +385,18 @@ acdl_worklist_baset::update (const local_SSAt &SSA,
   live_variables.insert(vars.begin(),vars.end());
   // [NORMAL CASE] Delete map element since corresponding worklist 
   // element is also deleted.
-  //delete_from_map(current_statement);
+  delete_from_map(current_statement);
  
-  // for empty deductions, 
+  // [SPECIAL CASE] for empty deductions, 
   // do not delete map elements for the current_statement
-  // very conservative approach -- no chance of any missing deduction
-  //#if 0
+  // very conservative approach -- no chance of any 
+  // missing deduction, can lead to non-termination
+  #if 0
   if(!vars.empty())
    delete_from_map(current_statement);
   else
    {}
-  //#endif
+  #endif
 
   // dependency analysis loop for equalities
   for (local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin ();
@@ -425,7 +426,7 @@ acdl_worklist_baset::update (const local_SSAt &SSA,
        }
       // the statement has already been processed, so no action needed
       // [CHECK if NEEDED, sometimes some deduction may miss due to this]
-      //if(*e_it == current_statement) continue;
+      if(*e_it == current_statement) continue;
 
       if (check_statement (*e_it, vars)) {
         push(*e_it);
@@ -443,7 +444,7 @@ acdl_worklist_baset::update (const local_SSAt &SSA,
         n_it->constraints.begin (); c_it != n_it->constraints.end (); c_it++)
     {
       // [CHECK if NEEDED]
-      //if(*c_it == current_statement) continue;
+      if(*c_it == current_statement) continue;
       if (check_statement (*c_it, vars)) {
         push(*c_it);
         // push into map

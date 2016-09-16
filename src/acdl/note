@@ -825,11 +825,19 @@ represented correctly.
 
 Query for 5th Sept., 2016
 --------------------------
+-1> What is the point of considering varaibles of old abstract values for
+"Template variables" in octagon domain.
 0> show difference between temp and trace in bottom13 -- we need to be
 conservative and do not delete map elements when no deduction is made, otherwise
-we will miss some deductions. 
+we will miss some deductions -- branch1, branch4 gives erroneous result if this
+conservative approach is not followed. 
+1> When using octagon domain for programs which can be solved using only
+intervals, there are large number of deductions made for octagon domain compared
+to the interval domain -- example: branch2 shows deductions=80 using octagons
+versus deductions=13 using interval domain --- can we make deductions using both
+intervals and octagons using --octagons and --intervals.
 1> deductions on boolean projections are extremely slow for octagon domain. 
-2> relational2 -- pass successfully (but slow), relational3 -- did not teminate
+2> relational3 -- pass successfully (but slow), relational4 -- did not teminate
 3> Github issue: For forward iteration strategy, SSA representation has limitations. 
 4> GIT issue: 
    unit-ness guarantee in octagon domain:
@@ -847,4 +855,11 @@ we will miss some deductions.
    Contradicting literal: y+z < 5
    Unknown literal: x>10, z>3
 
-5> how to normalize octagon meet irreducibles. 
+
+
+Query for 15th Sept., 2016
+--------------------------
+1> links for sv-comp benchmarks.
+2> for octagonal unit_rule, do we separate the implementation from interval
+unit_rule implementation ?
+3> how to normalize octagon meet irreducibles. 
