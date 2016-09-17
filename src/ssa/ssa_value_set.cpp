@@ -251,7 +251,7 @@ void ssa_value_domaint::assign_rhs_rec(
       {
         mp_integer pointer_offset=pointer_offset_size(it->type().subtype(), ns);
         if(pointer_offset<1) pointer_offset=1;
-        unsigned a=merge_alignment(integer2long(pointer_offset), alignment);
+        unsigned a=merge_alignment(integer2ulong(pointer_offset), alignment);
         assign_rhs_rec(dest, *it, ns, true, a);
       }
     }
@@ -263,7 +263,7 @@ void ssa_value_domaint::assign_rhs_rec(
     {
       mp_integer pointer_offset=pointer_offset_size(rhs.type().subtype(), ns);
       if(pointer_offset<1) pointer_offset=1;
-      unsigned a=merge_alignment(integer2long(pointer_offset), alignment);
+      unsigned a=merge_alignment(integer2ulong(pointer_offset), alignment);
       assign_rhs_rec(dest, rhs.op0(), ns, true, a);
     }
   }
@@ -351,7 +351,7 @@ void ssa_value_domaint::assign_rhs_rec_address_of(
       offset=true;
       mp_integer pointer_offset=pointer_offset_size(rhs.type(), ns);
       if(pointer_offset<1) pointer_offset=1;
-      a=merge_alignment(a, integer2long(pointer_offset));
+      a=merge_alignment(a, integer2ulong(pointer_offset));
     }
 
     assign_rhs_rec_address_of(dest, to_index_expr(rhs).array(), ns, offset, a);
