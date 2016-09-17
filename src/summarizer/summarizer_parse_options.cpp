@@ -1050,7 +1050,7 @@ bool summarizer_parse_optionst::process_goto_program(
    
  
 #if UNWIND_GOTO_INTO_LOOP
-    unwind(goto_model,2);
+    unwind_goto_into_loop(goto_model,2);
 #endif
 
     remove_skip(goto_model.goto_functions);
