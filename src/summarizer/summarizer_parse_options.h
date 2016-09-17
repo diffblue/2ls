@@ -74,6 +74,9 @@ public:
     const std::string &extra_options);
 
 protected:
+  ui_message_handlert ui_message_handler;
+  virtual void register_languages(); 
+
   void get_command_line_options(optionst &options);
 
   bool get_goto_program(
@@ -151,7 +154,7 @@ protected:
   void inline_main(goto_modelt &goto_model);
   void propagate_constants(goto_modelt &goto_model);
   void nondet_locals(goto_modelt &goto_model);
-  void goto_unwind(goto_modelt &goto_model, unsigned k);
+  void unwind(goto_modelt &goto_model, unsigned k);
   void replace_types_rec(const replace_symbolt &replace_const, exprt &expr);
   exprt evaluate_casts_in_constants(const exprt &expr, const typet& parent_type,
 				    bool &valid);

@@ -1,6 +1,7 @@
 include config.inc
 
-SUBDIRS = summarizer ssa solver domains functions 
+SUBDIRS = summarizer ssa domains 
+#solver functions 
 
 all: summarizer 
 #deltagit
@@ -13,10 +14,9 @@ $(SUBDIRS):
 
 # Dependencies
 
-summarizer: domains ssa solver 
-deltacheck: ssa solver functions html
-deltagit: html
-summarizer: ssa solver functions domains
+summarizer: domains ssa
+#deltacheck: ssa solver functions html
+#deltagit: html
 
 
 clean: $(patsubst %, %_clean, $(SUBDIRS))
