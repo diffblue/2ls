@@ -157,7 +157,7 @@ void extend_expr_types(exprt &expr)
     }
     else assert(false);
   }
-  std::cerr << "failed expr: " << expr << std::endl;
+  std::cerr << "failed expr: " << expr.pretty() << std::endl;
   assert(false);
 }
 
