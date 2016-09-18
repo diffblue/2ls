@@ -55,7 +55,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "show.h"
 #include "horn_encoding.h"
 
-#define UNWIND_GOTO_INTO_LOOP 1
+#define UNWIND_GOTO_INTO_LOOP 0
 #define REMOVE_MULTIPLE_DEREFERENCES 1
 #define REPLACE_C_BOOL 1
 

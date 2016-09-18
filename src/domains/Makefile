@@ -11,7 +11,8 @@ SRC = predicate.cpp fixed_point.cpp ssa_fixed_point.cpp \
   template_generator_base.cpp template_generator_summary.cpp \
   template_generator_callingcontext.cpp template_generator_ranking.cpp \
   strategy_solver_binsearch2.cpp strategy_solver_binsearch3.cpp \
-  strategy_solver_predabs.cpp
+  strategy_solver_predabs.cpp \
+  simplify_transformer.cpp simplify_bounds.cpp
 #solver_enumeration.cpp
 
 include $(CBMC)/src/config.inc
