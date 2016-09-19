@@ -11,6 +11,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include <util/find_symbols.h>
 #include "acdl_solver.h"
 #include "acdl_domain.h"
+#include "../domains/simplify_transformer.h"
 #include <string>
 
 #define DEBUG
@@ -560,6 +561,135 @@ void acdl_solvert::initialize_decision_variables(acdl_domaint::valuet &value)
 }
 
 /*******************************************************************
+
+ Function: acdl_solvert::pre_process()
+
+ Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+void acdl_solvert::pre_process (const local_SSAt &SSA, const exprt &assertion)
+{
+  /*std::cout << "Before processing SSA" << std::endl;
+  for (local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin ();
+      n_it != SSA.nodes.end (); n_it++)
+  {
+    for (local_SSAt::nodet::equalitiest::const_iterator e_it =
+        n_it->equalities.begin (); e_it != n_it->equalities.end (); e_it++)
+    {
+      std::cout << "BP: " << *e_it << std::endl;  
+    }
+    for (local_SSAt::nodet::constraintst::const_iterator c_it =
+        n_it->constraints.begin (); c_it != n_it->constraints.end (); c_it++)
+    {
+      std::cout << "BP: " << *c_it << std::endl;  
+    }
+    for (local_SSAt::nodet::assertionst::const_iterator a_it =
+        n_it->assertions.begin (); a_it != n_it->assertions.end (); a_it++)
+    {
+      std::cout << "BP: " << *a_it << std::endl;      
+    }
+  }
+  */
+  
+  std::cout << "Pre-processing SSA" << std::endl;
+  
+  //Step 1: e = conjunction of all statements;
+  typedef std::set<irep_idt> var_stringt;
+  var_stringt var_string;
+  acdl_domaint::varst lvars;
+  typedef std::vector<acdl_domaint::statementt> conjunct_listt;
+  conjunct_listt clist; 
+  std::string str("nondet");
+  if (SSA.nodes.empty ())
+    return;
+  for (local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin ();
+      n_it != SSA.nodes.end (); n_it++)
+  {
+    for (local_SSAt::nodet::equalitiest::const_iterator e_it =
+        n_it->equalities.begin (); e_it != n_it->equalities.end (); e_it++)
+    {
+      clist.push_back(*e_it); 
+      // find all leaf variables
+      acdl_domaint::varst leaf_vars;
+      if(e_it->id() == ID_equal) {
+        exprt expr_rhs = to_equal_expr(*e_it).rhs();
+        if(expr_rhs.id() == ID_constant || expr_rhs.is_true() || expr_rhs.is_false()) { 
+          find_symbols(*e_it, leaf_vars);
+        }
+        else {
+          std::string str("nondet");
+          std::string rhs_str=id2string(expr_rhs.get(ID_identifier));
+          std::size_t found = rhs_str.find(str); 
+          if(found != std::string::npos) {
+            find_symbols(*e_it, leaf_vars);
+          } 
+        }
+        for(acdl_domaint::varst::const_iterator it1 = 
+            leaf_vars.begin(); it1 != leaf_vars.end(); ++it1)
+          lvars.insert(*it1);   
+      } 
+    }
+
+
+    for (local_SSAt::nodet::constraintst::const_iterator c_it =
+        n_it->constraints.begin (); c_it != n_it->constraints.end (); c_it++)
+    {
+      clist.push_back(*c_it); 
+    }  
+    for (local_SSAt::nodet::assertionst::const_iterator a_it =
+        n_it->assertions.begin (); a_it != n_it->assertions.end (); a_it++)
+    {
+      clist.push_back(*a_it); 
+    }
+  }
+  // find conjunction of all statements 
+  exprt e = conjunction(clist);  
+
+  //Step 2: vars = "leaf" variables and variables in assertions
+  acdl_domaint::varst avars;
+  find_symbols(assertion, avars);
+  acdl_domaint::varst vars;
+  // insert the leaf vars
+  std::cout << "The variables are: " << std::endl;
+  for(acdl_domaint::varst::const_iterator v_it = 
+      lvars.begin(); v_it != lvars.end(); ++v_it)
+  {
+    symbol_exprt sym = *v_it;
+    const irep_idt &name = sym.get_identifier();
+    std::cout << name << "," << std::endl;
+    var_string.insert(name);
+    vars.insert(*v_it);   
+  }
+  // insert the assert vars
+  for(acdl_domaint::varst::const_iterator av_it = 
+      avars.begin(); av_it != avars.end(); ++av_it) {
+    symbol_exprt sym = *av_it;
+    const irep_idt &name = sym.get_identifier();
+    std::cout << name << "," << std::endl;
+    var_string.insert(name);
+    vars.insert(*av_it);   
+  }
+
+  // Step 3
+  simplify_transformer(e, var_string, SSA.ns);
+
+  // Step 4
+  statements = e.operands();
+
+#ifdef DEBUG  
+  std::cout << "The simplified SSA statements after pre-processing are" << std::endl;
+  for(std::vector<exprt>::iterator it = 
+      statements.begin(); it != statements.end(); ++it)
+    std::cout << "Statement: " << from_expr(SSA.ns, "", *it) << std::endl;
+#endif    
+  
+}
+
+/*******************************************************************
  Function: acdl_solvert::operator()
 
  Inputs:
@@ -588,6 +718,9 @@ property_checkert::resultt acdl_solvert::operator()(
   const exprt &assertion,
   const exprt &additional_constraint)
 {
+  // pre-process SSA 
+  pre_process(SSA, assertion);
+  
   // pass additional constraint and the assertions to the worklist
   worklist.initialize(SSA, assertion, additional_constraint);
   std::cout << "The assertion checked now is: " << from_expr(SSA.ns, "", assertion) << std::endl;  

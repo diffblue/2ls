@@ -87,7 +87,8 @@ DELTA_OBJ+=\
       ../domains/linrank_domain$(OBJEXT) \
       ../domains/lexlinrank_solver_enumeration$(OBJEXT) \
       ../domains/lexlinrank_domain$(OBJEXT) \
-      ../domains/simplify_bounds$(OBJEXT)
+      ../domains/simplify_bounds$(OBJEXT) \
+			../domains/simplify_transformer$(OBJEXT)
 #      ../domains/solver_enumeration$(OBJEXT) 
 #      ../domains/strategy_solver_binsearch2$(OBJEXT) 
 

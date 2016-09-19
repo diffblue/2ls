@@ -595,7 +595,8 @@ void tpolyhedra_domaint::project_on_vars(valuet &value,
     }
   }
   result = conjunction(c);
-  simplify_bounds(result, ns);
+  // [TODO] Commented for compilation
+  //simplify_bounds(result, ns);
 }
 
 /*******************************************************************\

@@ -55,6 +55,8 @@ protected:
   acdl_worklist_baset &worklist; 
   acdl_analyze_conflict_baset &analyzes_conflict;
   std::vector<exprt> dec_not_in_trail;
+  typedef std::vector<exprt> statement_listt;
+  statement_listt statements;
 
   acdl_conflict_grapht conflict_graph;
   unsigned ITERATION_LIMIT=999999; 
@@ -90,6 +92,7 @@ protected:
 
   bool disable_generalization;
   void initialize_decision_variables(acdl_domaint::valuet &val);
+  void pre_process(const local_SSAt &SSA, const exprt &assertion);
 
 };
 

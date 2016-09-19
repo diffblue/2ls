@@ -121,6 +121,12 @@ property_checkert::resultt summary_checker_acdlt::operator()(
     // worklist (currently there is only one)
     std::unique_ptr<acdl_worklist_baset> worklist =
       std::unique_ptr<acdl_worklist_baset>(new acdl_worklist_orderedt());
+    // [TODO]
+    // std::unique_ptr<acdl_worklist_baset> worklist;
+    //if(options.get_option("acdl-propagate") == "forward")
+    //    std::unique_ptr<acdl_worklist_baset>(new acdl_worklist_forward());
+    //if(options.get_option("acdl-propagate") == "backward")
+    //    std::unique_ptr<acdl_worklist_baset>(new acdl_worklist_backward());
 
     // conflict analysis heuristics
     std::unique_ptr<acdl_analyze_conflict_baset> conflict_analysis;

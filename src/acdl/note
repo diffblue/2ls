@@ -855,11 +855,13 @@ intervals and octagons using --octagons and --intervals.
    Contradicting literal: y+z < 5
    Unknown literal: x>10, z>3
 
-
-
 Query for 15th Sept., 2016
 --------------------------
-1> links for sv-comp benchmarks.
+0> links for sv-comp benchmarks.
+1> for octagons, how do we compute the interval decisions -- x-y <= 0, y-x<=0 --
+how to compute the lower and upper bounds of intervals here. 
 2> for octagonal unit_rule, do we separate the implementation from interval
 unit_rule implementation ?
-3> how to normalize octagon meet irreducibles. 
+3> how to normalize octagon meet irreducibles -- not needed for unit rule but
+needed for normalizing the trail
+4> TACAS paper 
