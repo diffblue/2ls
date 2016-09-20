@@ -8,6 +8,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 
 
 #include <langapi/language_util.h>
+#include <util/simplify_expr.h>
 #include <util/find_symbols.h>
 #include "acdl_solver.h"
 #include "acdl_domain.h"
@@ -629,25 +630,31 @@ void acdl_solvert::pre_process (const local_SSAt &SSA, const exprt &assertion)
   //Step 2: vars = "leaf" variables and variables in assertions
   find_symbols(assertion, var_set);
   
-  std::cout << "The final variables are: " << std::endl;
   for(find_symbols_sett::iterator it = 
-      var_set.begin(); it != var_set.end(); ++it) {
+      var_set.begin(); it != var_set.end(); ++it) 
     var_string.insert(*it);
+  
 #ifdef DEBUG  
+  std::cout << "The final variables are: " << std::endl;
+  for(std::set<irep_idt>::iterator it = 
+      var_string.begin(); it != var_string.end(); ++it) {
     std::cout << *it << "," << std::endl;
-#endif
   }
+#endif
 
   // Step 3
   simplify_transformer(e, var_string, SSA.ns);
 
-  // Step 4
-  statements = e.operands();
+  // step 4 
+  exprt s = simplify_expr(e, SSA.ns);
+
+  // Step 5
+  statements = s.operands();
 
 #ifdef DEBUG  
   std::cout << "The simplified SSA statements after pre-processing are" << std::endl;
   for(std::vector<exprt>::iterator it = 
-      statements.begin(); it != statements.end(); ++it)
+      statements.begin(); it != statements.end(); ++it) 
     std::cout << "Statement: " << from_expr(SSA.ns, "", *it) << std::endl;
 #endif    
   
