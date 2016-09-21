@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 main.c
 --heap --inline --no-propagation
 ^EXIT=0$
