@@ -101,8 +101,10 @@ class heap_domaint : public domaint
           // p = d
           path_expr.push_back(equal_exprt(templ_expr, dest));
         }
-        for (const dyn_objt &obj1 : path.dyn_objects)
+        for (const dyn_objt &obj1 : points_to)
         {
+          if (path.dyn_objects.find(obj1) != path.dyn_objects.end())
+          {
             // p = &o
             exprt equ_exprt = equal_exprt(templ_expr, address_of_exprt(obj1.first));
 
@@ -117,6 +119,13 @@ class heap_domaint : public domaint
             }
 
             path_expr.push_back(and_exprt(equ_exprt, disjunction(step_expr)));
+          }
+          else
+          {
+            path_expr.push_back(equal_exprt(templ_expr,
+                                            is_null_ptr(obj1.first) ?
+                                            obj1.first : address_of_exprt(obj1.first)));
+          }
         }
 
         result.push_back(disjunction(path_expr));
@@ -127,7 +136,7 @@ class heap_domaint : public domaint
 
     inline bool empty() const
     {
-      return paths.empty() && points_to.empty();
+      return paths.empty();
     }
   };
 

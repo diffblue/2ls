@@ -1,3 +1,5 @@
+extern void __VERIFIER_error() __attribute__ ((__noreturn__));
+
 #include <stdlib.h>
 
 extern int __VERIFIER_nondet_int(void);
@@ -10,8 +12,8 @@ struct node {
 static struct node* alloc_node(void)
 {
     struct node *ptr = malloc(sizeof *ptr);
-    if (!ptr)
-        abort();
+    // if (!ptr)
+    //     abort();
 
     ptr->next = NULL;
     ptr->prev = NULL;
@@ -35,8 +37,9 @@ static struct node* create_sll(const struct node **pp1, const struct node **pp2)
 
     *pp1 = *pp2;
 
-    while (__VERIFIER_nondet_int())
+    do
       chain_node(pp1);
+    while (__VERIFIER_nondet_int());
 
     struct node *list = *pp1;
 
@@ -48,10 +51,10 @@ static struct node* create_sll(const struct node **pp1, const struct node **pp2)
 }
 
 void init_back_link(struct node *list) {
-    for (;;) {
+    while (list) {
         struct node *next = list->next;
-        if (!next)
-            return;
+        // if (!next)
+        //     return;
 
         next->prev = list;
         list = next;
@@ -96,19 +99,19 @@ void main()
   const struct node *p1, *p2;
 
   struct node *list = create_sll(&p1, &p2);
-  check_seq_next(p1, p2);
   assert(p1->prev == NULL);
   assert(p2->prev == NULL);
+  check_seq_next(p1, p2);
 
   init_back_link(list);
   check_seq_next(p1, p2);
   check_seq_prev(p2, p1);
 
-  reverse_dll(list);
-  check_seq_prev(p1, p2);
-  check_seq_next(p2, p1);
+  // reverse_dll(list);
+  // check_seq_prev(p1, p2);
+  // check_seq_next(p2, p1);
 
   remove_fw_link(list);
-  check_seq_prev(p1, p2);
+  check_seq_prev(p2, p1);
 }
 

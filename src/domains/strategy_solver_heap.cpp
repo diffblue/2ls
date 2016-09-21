@@ -69,6 +69,10 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
       exprt c = heap_domain.get_row_pre_constraint(i, inv[i]).op1();
       debug() << "cond: " << from_expr(ns, "", c) << " " <<
               from_expr(ns, "", solver.get(c)) << eom;
+      forall_operands(it, c)
+        {
+          debug() << from_expr(ns, "", *it) << " " << from_expr(ns, "", solver.get(*it)) << eom;
+        }
       debug() << "guards: " << from_expr(ns, "", heap_domain.templ[i].pre_guard) <<
               " " << from_expr(ns, "", solver.get(heap_domain.templ[i].pre_guard)) << eom;
       debug() << "guards: " << from_expr(ns, "", heap_domain.templ[i].post_guard) << " "
@@ -76,6 +80,10 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
       exprt post = heap_domain.get_row_post_constraint(i, inv[i]).op1();
       debug() << "post-cond: " << from_expr(ns, "", post) << " "
               << from_expr(ns, "", solver.get(post)) << eom;
+      forall_operands(it, post)
+        {
+          debug() << from_expr(ns, "", *it) << " " << from_expr(ns, "", solver.get(*it)) << eom;
+        }
     }
 #endif
 
@@ -104,7 +112,7 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
             improved = true;
           debug() << "add points to: " << from_expr(ns, "", ptr_value) << eom;
         }
-        else
+        else if (ptr_value.id() == ID_address_of)
         {
           // pointer points to the heap (p = &obj)
           debug() << from_expr(ns, "", ptr_value) << eom;
@@ -115,14 +123,20 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
           if (obj.type().get_bool("#dynamic"))
           {
             // Find row with corresponding member field of pointed object (obj.member)
+            int member_val_index;
             if (inv[row].empty() && heap_domain.templ[row].dyn_obj.id() != ID_nil &&
                 heap_domain.get_base_name(obj) ==
                 heap_domain.get_base_name(heap_domain.templ[row].dyn_obj))
             {
-              --actual_loc;
+              member_val_index = find_member_row(obj, heap_domain.templ[row].member, --actual_loc);
+              if (member_val_index < 0)
+                member_val_index = find_member_row(obj, heap_domain.templ[row].member,
+                                                   ++actual_loc);
             }
-            int member_val_index = find_member_row(obj, heap_domain.templ[row].member,
-                                                   actual_loc);
+            else
+            {
+              member_val_index = find_member_row(obj, heap_domain.templ[row].member, actual_loc);
+            }
             assert(member_val_index >= 0);
             exprt member_expr = heap_domain.templ[member_val_index].expr;
             exprt do_expr = heap_domain.templ[member_val_index].dyn_obj;

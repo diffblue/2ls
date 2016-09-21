@@ -4,6 +4,7 @@
 
 #include "heap_domain.h"
 #include "util.h"
+#include "domain.h"
 #include <algorithm>
 #include <util/symbol.h>
 
@@ -60,7 +61,7 @@ void heap_domaint::make_template(const domaint::var_specst &var_specs, const nam
             templ_row.member = component.get_name();
             templ_row.pre_guard = v1->pre_guard;
             templ_row.post_guard = v1->post_guard;
-            templ_row.aux_expr = v1->post_guard;
+            templ_row.aux_expr = v1->aux_expr;
             templ_row.kind = v1->kind;
             templ_row.dynamic = dynamic;
             if (dynamic)
