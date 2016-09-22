@@ -69,10 +69,6 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
       exprt c = heap_domain.get_row_pre_constraint(i, inv[i]).op1();
       debug() << "cond: " << from_expr(ns, "", c) << " " <<
               from_expr(ns, "", solver.get(c)) << eom;
-      forall_operands(it, c)
-        {
-          debug() << from_expr(ns, "", *it) << " " << from_expr(ns, "", solver.get(*it)) << eom;
-        }
       debug() << "guards: " << from_expr(ns, "", heap_domain.templ[i].pre_guard) <<
               " " << from_expr(ns, "", solver.get(heap_domain.templ[i].pre_guard)) << eom;
       debug() << "guards: " << from_expr(ns, "", heap_domain.templ[i].post_guard) << " "
@@ -80,10 +76,6 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
       exprt post = heap_domain.get_row_post_constraint(i, inv[i]).op1();
       debug() << "post-cond: " << from_expr(ns, "", post) << " "
               << from_expr(ns, "", solver.get(post)) << eom;
-      forall_operands(it, post)
-        {
-          debug() << from_expr(ns, "", *it) << " " << from_expr(ns, "", solver.get(*it)) << eom;
-        }
     }
 #endif
 
@@ -154,30 +146,15 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
             if (heap_domain.add_points_to(row, inv, std::make_pair(obj, member_expr)))
               improved = true;
             debug() << "add points to: " << from_expr(ns, "", obj) << eom;
+
+            heap_domain.add_pointed_by_row((unsigned) member_val_index, row, inv);
           }
         }
 
         if (heap_domain.templ[row].dynamic)
-        { // Recursively check all expressions and update those that point to the dynamic object
-          // that this row variable belongs to.
-          for (unsigned j = 0; j < heap_domain.templ.size(); ++j)
-          {
-            if (heap_domain.templ[row].member == heap_domain.templ[j].member)
-            {
-              for (auto &pt : inv[j].points_to)
-              {
-                exprt pre_pointer = heap_domain.templ[row].expr;
-                if (pre_pointer == pt.second)
-                {
-                  if (heap_domain.add_all_paths(j, row, inv, pt))
-                    improved = true;
-                  debug() << "recursively updating row: " << j << eom;
-                  debug() << "add all paths: " << from_expr(ns, "", pre_pointer) << ", through: "
-                          << from_expr(ns, "", pt.first) << eom;
-                }
-              }
-            }
-          }
+        { // Recursively update all rows that are dependent on this row
+          updated_rows.clear();
+          update_rows_rec(row, inv);
         }
       }
     }
@@ -224,7 +201,7 @@ int strategy_solver_heapt::find_member_row(const exprt &obj, const irep_idt &mem
   for (unsigned i = 0; i < heap_domain.templ.size(); ++i)
   {
     heap_domaint::template_rowt &templ_row = heap_domain.templ[i];
-    if (templ_row.member == member && templ_row.dyn_obj.id() != ID_nil)
+    if (templ_row.member == member && templ_row.dynamic)
     {
       std::string id = id2string(to_symbol_expr(templ_row.expr).get_identifier());
       if (id.find(obj_id) != std::string::npos)
@@ -237,6 +214,33 @@ int strategy_solver_heapt::find_member_row(const exprt &obj, const irep_idt &mem
         }
       }
     }
+  }
+  return result;
+}
+
+/**
+ * Recursively update rows that point to given row.
+ * @param row Pointed row
+ * @param value Heap value
+ * @return True if any change occured
+ */
+bool strategy_solver_heapt::update_rows_rec(const heap_domaint::rowt &row,
+                                            heap_domaint::heap_valuet &value)
+{
+  updated_rows.insert(row);
+  bool result = false;
+  heap_domaint::template_rowt &templ_row = heap_domain.templ[row];
+  for (auto &ptr : value[row].pointed_by)
+  {
+    if (heap_domain.add_all_paths(ptr, row, value,
+                                  std::make_pair(templ_row.dyn_obj, templ_row.expr)))
+      result = true;
+    debug() << "recursively updating row: " << ptr << eom;
+    debug() << "add all paths: " << from_expr(ns, "", templ_row.expr) << ", through: "
+            << from_expr(ns, "", templ_row.dyn_obj) << eom;
+    // Recursive update is called for each row only once
+    if (updated_rows.find(ptr) == updated_rows.end())
+      result = update_rows_rec(ptr, value) || result;
   }
   return result;
 }
