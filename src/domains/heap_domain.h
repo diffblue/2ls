@@ -58,8 +58,9 @@ class heap_domaint : public domaint
       }
     };
 
-    std::set<patht> paths;         /**< Set of paths leading from the row variable */
-    std::set<dyn_objt> points_to;  /**< Set of objects (or NULL) the row variable can point to */
+    std::set<patht> paths;          /**< Set of paths leading from the row variable */
+    std::set<dyn_objt> points_to;   /**< Set of objects (or NULL) the row variable can point to */
+    std::set<unsigned> pointed_by;  /**< Set of rows whose variables point to this row */
 
     /**
      * Get expression for the row value. It is a conjunction of points to expression and path
@@ -178,6 +179,8 @@ class heap_domaint : public domaint
   bool add_all_paths(const rowt &to, const rowt &from, heap_valuet &value, const dyn_objt &dyn_obj);
 
   bool add_points_to(const rowt &row, heap_valuet &value, const dyn_objt &dyn_obj);
+
+  void add_pointed_by_row(const rowt &row, const rowt &pb_row, heap_valuet &value);
 
   // Printing
   virtual void output_value(std::ostream &out, const valuet &value,

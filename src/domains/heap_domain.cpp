@@ -21,6 +21,7 @@ void heap_domaint::initialize(domaint::valuet &value)
   {
     val[row].paths.clear();
     val[row].points_to.clear();
+    val[row].pointed_by.clear();
   }
 }
 
@@ -66,11 +67,8 @@ void heap_domaint::make_template(const domaint::var_specst &var_specs, const nam
             templ_row.dynamic = dynamic;
             if (dynamic)
             {
-              int loc_num = get_symbol_loc(var1);
               std::string var1_id = id2string(to_symbol_expr(var1).get_identifier());
-              std::string do_base_id = var1_id.substr(0, var1_id.find_last_of('.'));
-              // TODO just add the whole suffix
-              irep_idt do_id = do_base_id + "#lb" + std::to_string(loc_num);
+              std::string do_id = var1_id.substr(0, var1_id.find_last_of('.'));
               templ_row.dyn_obj = symbol_exprt(do_id, var1.type().subtype());
             }
             else
@@ -238,6 +236,17 @@ bool heap_domaint::add_points_to(const rowt &row, heap_valuet &value, const dyn_
 {
   auto new_pt = value[row].points_to.insert(dyn_obj);
   return new_pt.second;
+}
+
+/**
+ * Add new dependent row (pb_row points to row)
+ * @param row Pointed row
+ * @param pb_row Pointer row
+ * @param value Hepa value
+ */
+void heap_domaint::add_pointed_by_row(const rowt &row, const rowt &pb_row, heap_valuet &value)
+{
+  value[row].pointed_by.insert(pb_row);
 }
 
 void heap_domaint::output_value(std::ostream &out, const domaint::valuet &value,
