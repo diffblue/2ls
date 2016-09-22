@@ -21,8 +21,11 @@ class strategy_solver_heapt : public strategy_solver_baset
 
  protected:
   heap_domaint &heap_domain;
+  std::set<unsigned> updated_rows;
 
   int find_member_row(const exprt &obj, const irep_idt &member, int actual_loc);
+
+  bool update_rows_rec(const heap_domaint::rowt &row, heap_domaint::heap_valuet &value);
 };
 
 
