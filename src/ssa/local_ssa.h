@@ -13,7 +13,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <goto-programs/goto_functions.h>
 
-#include "../domains/incremental_solver.h"
+#include <domains/incremental_solver.h>
+
 #include "ssa_domain.h"
 #include "guard_map.h"
 #include "ssa_object.h"
@@ -123,8 +124,11 @@ public:
   // function entry and exit variables
   typedef std::list<symbol_exprt> var_listt;
   typedef std::set<symbol_exprt> var_sett;
-  var_listt params;
+  var_listt params;  
   var_sett globals_in, globals_out;
+
+  // unknown heap objects
+  var_sett unknown_objs;
 
   bool has_function_calls() const;
 
@@ -161,6 +165,8 @@ public:
   exprt read_node_in(const ssa_objectt &, locationt loc) const;
   void assign_rec(
     const exprt &lhs, const exprt &rhs, const exprt &guard, locationt loc);
+
+  exprt unknown_obj_eq(const symbol_exprt &obj, const struct_typet::componentt &component) const;
 
   void get_entry_exit_vars();
 
@@ -212,6 +218,7 @@ protected:
   void build_guard(locationt loc);
   void build_function_call(locationt loc);
   void build_assertions(locationt loc);
+  void build_unknown_objs(locationt loc);
 
   // custom templates
   void collect_custom_templates();

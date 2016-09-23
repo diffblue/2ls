@@ -84,6 +84,12 @@ public:
     return get_root_object_rec(expr);
   }
 
+  inline bool is_unknown_obj()
+  {
+    std::string id_str = id2string(identifier);
+    return id_str.find("$unknown") != std::string::npos;
+  }
+
 protected:
   exprt expr;
   identifiert identifier;
