@@ -114,40 +114,50 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
 
           if (obj.type().get_bool("#dynamic"))
           {
-            // Find row with corresponding member field of pointed object (obj.member)
-            int member_val_index;
-            if (inv[row].empty() && heap_domain.templ[row].dyn_obj.id() != ID_nil &&
-                heap_domain.get_base_name(obj) ==
-                heap_domain.get_base_name(heap_domain.templ[row].dyn_obj))
+            if (id2string(obj.get_identifier()).find("$unknown") != std::string::npos)
             {
-              member_val_index = find_member_row(obj, heap_domain.templ[row].member, --actual_loc);
-              if (member_val_index < 0)
-                member_val_index = find_member_row(obj, heap_domain.templ[row].member,
-                                                   ++actual_loc);
+              if (heap_domain.add_points_to(row, inv, std::make_pair(obj, nil_exprt())))
+                improved = true;
+              debug() << "add points to: " << from_expr(ns, "", obj) << eom;
             }
             else
             {
-              member_val_index = find_member_row(obj, heap_domain.templ[row].member, actual_loc);
+              // Find row with corresponding member field of pointed object (obj.member)
+              int member_val_index;
+              if (inv[row].empty() && heap_domain.templ[row].dyn_obj.id() != ID_nil &&
+                  heap_domain.get_base_name(obj) ==
+                  heap_domain.get_base_name(heap_domain.templ[row].dyn_obj))
+              {
+                member_val_index = find_member_row(obj, heap_domain.templ[row].member,
+                                                   --actual_loc);
+                if (member_val_index < 0)
+                  member_val_index = find_member_row(obj, heap_domain.templ[row].member,
+                                                     ++actual_loc);
+              }
+              else
+              {
+                member_val_index = find_member_row(obj, heap_domain.templ[row].member, actual_loc);
+              }
+              assert(member_val_index >= 0);
+              exprt member_expr = heap_domain.templ[member_val_index].expr;
+              exprt do_expr = heap_domain.templ[member_val_index].dyn_obj;
+
+              // Add all paths from obj.next to p
+              if (heap_domain.add_all_paths(row, (unsigned) member_val_index, inv,
+                                            std::make_pair(obj, member_expr)))
+                improved = true;
+              debug() << "add all paths: " << from_expr(ns, "", member_expr) << ", through: "
+                      << from_expr(ns, "", obj) << eom;
+
+              assert(do_expr.id() != ID_nil);
+              // Add points to information
+              assert(do_expr.id() == ID_symbol);
+              if (heap_domain.add_points_to(row, inv, std::make_pair(obj, member_expr)))
+                improved = true;
+              debug() << "add points to: " << from_expr(ns, "", obj) << eom;
+
+              heap_domain.add_pointed_by_row((unsigned) member_val_index, row, inv);
             }
-            assert(member_val_index >= 0);
-            exprt member_expr = heap_domain.templ[member_val_index].expr;
-            exprt do_expr = heap_domain.templ[member_val_index].dyn_obj;
-
-            // Add all paths from obj.next to p
-            if (heap_domain.add_all_paths(row, (unsigned) member_val_index, inv,
-                                          std::make_pair(obj, member_expr)))
-              improved = true;
-            debug() << "add all paths: " << from_expr(ns, "", member_expr) << ", through: "
-                    << from_expr(ns, "", obj) << eom;
-
-            assert(do_expr.id() != ID_nil);
-            // Add points to information
-            assert(do_expr.id() == ID_symbol);
-            if (heap_domain.add_points_to(row, inv, std::make_pair(obj, member_expr)))
-              improved = true;
-            debug() << "add points to: " << from_expr(ns, "", obj) << eom;
-
-            heap_domain.add_pointed_by_row((unsigned) member_val_index, row, inv);
           }
         }
 

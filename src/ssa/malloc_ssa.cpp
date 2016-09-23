@@ -162,6 +162,8 @@ exprt malloc_ssa(
   if(result.type()!=code.type())
     result=typecast_exprt(result, code.type());
 
+  result.set("#malloc_result", true);
+
   return result;
 }
 

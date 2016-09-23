@@ -60,6 +60,7 @@ void local_SSAt::build_SSA()
     build_guard(i_it);
     build_assertions(i_it);
     build_function_call(i_it);
+    build_unknown_objs(i_it);
   }
 
   // collect custom templates in loop heads
@@ -1334,7 +1335,10 @@ void local_SSAt::assign_rec(
   else if(lhs.id()==ID_if)
   {
     const if_exprt &if_expr=to_if_expr(lhs);
-    assign_rec(if_expr.true_case(), rhs, and_exprt(guard, if_expr.cond()), loc);
+
+    exprt new_rhs = if_exprt(if_expr.cond(), rhs, if_expr.true_case());
+    assign_rec(if_expr.true_case(), new_rhs, and_exprt(guard, if_expr.cond()), loc);
+
     assign_rec(if_expr.false_case(), rhs, and_exprt(guard, not_exprt(if_expr.cond())), loc);
   }
   else if(lhs.id()==ID_byte_extract_little_endian ||
@@ -1541,6 +1545,18 @@ std::list<exprt> & operator << (
     {
       dest.push_back(*c_it);
     }
+
+    for (auto &obj : src.unknown_objs)
+    {
+      const typet &obj_type = src.ns.follow(obj.type());
+      if (obj_type.id() == ID_struct)
+      {
+        for (auto &component : to_struct_type(obj_type).components())
+        {
+          dest.push_back(src.unknown_obj_eq(obj, component));
+        }
+      }
+    }
   }
 #endif
   
@@ -1588,6 +1604,18 @@ decision_proceduret & operator << (
         c_it++)
     {
       dest << *c_it;
+    }
+  }
+
+  for (auto &obj : src.unknown_objs)
+  {
+    const typet &obj_type = src.ns.follow(obj.type());
+    if (obj_type.id() == ID_struct)
+    {
+      for (auto &component : to_struct_type(obj_type).components())
+      {
+        dest << src.unknown_obj_eq(obj, component);
+      }
     }
   }
 #endif  
@@ -1641,6 +1669,18 @@ incremental_solvert & operator << (
 	dest << implies_exprt(n_it->enabling_expr,*c_it);
       else
         dest << *c_it;
+    }
+  }
+
+  for (auto &obj : src.unknown_objs)
+  {
+    const typet &obj_type = src.ns.follow(obj.type());
+    if (obj_type.id() == ID_struct)
+    {
+      for (auto &component : to_struct_type(obj_type).components())
+      {
+        dest << src.unknown_obj_eq(obj, component);
+      }
     }
   }
 #endif  
@@ -1700,3 +1740,45 @@ bool local_SSAt::has_function_calls() const
   return found;
 }
 
+/**
+ * If a location is malloc call, create "unknown object" for return type. This is later used
+ * as a placeholder for invalid of unknown dereference of an object of that type.
+ * @param loc Location
+ */
+void local_SSAt::build_unknown_objs(locationt loc)
+{
+  if (loc->is_assign())
+  {
+    const code_assignt &code_assign = to_code_assign(loc->code);
+    const exprt &rhs = code_assign.rhs();
+    if (rhs.get_bool("#malloc_result"))
+    {
+      const exprt &addr_of_do = rhs.id() == ID_typecast ? to_typecast_expr(rhs).op() : rhs;
+      const exprt &dyn_obj = to_address_of_expr(addr_of_do).object();
+      const typet &dyn_type = ns.follow(dyn_obj.type());
+
+      std::string dyn_type_name = dyn_type.id_string();
+      if (dyn_type.id() == ID_struct)
+        dyn_type_name += "_" + id2string(to_struct_type(dyn_type).get_tag());
+      irep_idt identifier = "ssa::" + dyn_type_name + "_obj$unknown";
+
+      symbol_exprt unknown_obj(identifier, dyn_obj.type());
+      unknown_objs.insert(unknown_obj);
+    }
+  }
+}
+
+/**
+ * Create equality obj.component = &obj, which creates self-loop on "unknown" objects.
+ * @param obj "Unknown" object
+ * @param component Object's component
+ * @return Equality obj.component = &obj
+ */
+exprt local_SSAt::unknown_obj_eq(const symbol_exprt &obj,
+                                 const struct_typet::componentt &component) const
+{
+  const irep_idt identifier =
+      id2string(obj.get_identifier()) + "." + id2string(component.get_name());
+  const symbol_exprt member(identifier, component.type());
+  return equal_exprt(member, address_of_exprt(obj));
+}
