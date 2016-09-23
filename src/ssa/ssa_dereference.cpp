@@ -325,7 +325,21 @@ exprt dereference_rec(
 
     // We use the identifier produced by
     // local_SSAt::replace_side_effects_rec
-    exprt result=symbol_exprt(nondet_prefix, src.type());
+    exprt result;
+    const typet &pointed_type = pointer.type().subtype();
+    if (pointed_type.id() == ID_pointer)
+      result = symbol_exprt(nondet_prefix, src.type());
+    else
+    {
+      const typet &obj_type = ns.follow(pointed_type);
+      std::string dyn_type_name = obj_type.id_string();
+      if (obj_type.id() == ID_struct)
+        dyn_type_name += "_" + id2string(to_struct_type(obj_type).get_tag());
+      irep_idt identifier = "ssa::" + dyn_type_name + "_obj$unknown";
+
+      result = symbol_exprt(identifier, src.type());
+    }
+
 
     // query the value sets
     const ssa_value_domaint::valuest values=
