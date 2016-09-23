@@ -16,6 +16,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include <string>
 
 #define DEBUG
+//#define PER_STATEMENT_LIVE_VAR
 #define LIVE_VAR_OLD_APPROACH
 
 #ifdef DEBUG
@@ -190,7 +191,11 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
   while (!worklist.empty())
   {
     const acdl_domaint::statementt statement = worklist.pop();
-    // ++ acdl_domaint::varst lvar = worklist.pop_from_map(statement); 
+    
+#ifdef PER_STATEMENT_LIVE_VAR
+    acdl_domaint::varst lvar = worklist.pop_from_map(statement);
+#endif     
+
 #ifdef DEBUG
     std::cout << "Pop: " << from_expr (SSA.ns, "", statement)
         << std::endl;
@@ -252,12 +257,11 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
     // - collect variables in new_v
     acdl_domaint::varst new_variables;
     for(acdl_domaint::valuet::const_iterator 
-          it1 = new_v.begin(); it1 != new_v.end(); ++it1)
-       find_symbols(*it1, new_variables);
+        it1 = new_v.begin(); it1 != new_v.end(); ++it1)
+      find_symbols(*it1, new_variables);
 
-      
-      // - call worklist update
-      worklist.update(SSA, new_variables, statement, assertion); 
+    // - call worklist update
+    worklist.update(SSA, new_variables, statement, assertion); 
         
 #ifdef DEBUG
     std::cout << "New: ";
@@ -350,8 +354,13 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
 bool
 acdl_solvert::decide (const local_SSAt &SSA, const exprt& assertion)
 {
+  // When a new decision is made, the 
+  // live variable set must be flushed
+  worklist.delete_map();
+  worklist.live_variables.erase
+    (worklist.live_variables.begin(), worklist.live_variables.end()); 
+  
   acdl_domaint::valuet v;
-  //implication_graph.to_value(v);
   conflict_graph.to_value(v);
   std::cout << "Checking consistency of trail before adding decision" << std::endl;
   assert(domain.check_val_consistency(v));
@@ -402,19 +411,31 @@ acdl_solvert::decide (const local_SSAt &SSA, const exprt& assertion)
   assert(domain.check_val_consistency(new_value));
   std::cout << "Trail is consistent" << std::endl;
 
-  // Take a meet of the decision expression (decision) with the current abstract state (v).
-  // The new abstract state is now in v
 #ifdef DEBUG
-    std::cout << "FINAL DECISION: " << from_expr (SSA.ns, "", dec_expr) << std::endl;
-    domain.meet(dec_expr,v);
-    std::cout << "Before normalize: " << std::endl;
-    domain.output(std::cout, v) << std::endl;
-    domain.normalize_val(v);
-    std::cout << "New: ";
-    domain.output(std::cout, v) << std::endl;
+  std::cout << "FINAL DECISION: " << from_expr (SSA.ns, "", dec_expr) << std::endl;
+#endif
+
+  // Take meet of the decision expression (decision) 
+  // with the current abstract state (v).
+  // The new abstract state is now in v
+  domain.meet(dec_expr,v);
+
+#ifdef DEBUG
+  std::cout << "Before normalize: " << std::endl;
+  domain.output(std::cout, v) << std::endl;
+#endif
+
+  // normalize v
+  domain.normalize_val(v);
+
+#ifdef DEBUG
+  std::cout << "New: ";
+  domain.output(std::cout, v) << std::endl;
 #endif
   
-  // access the decision statement associated with the chosen cond variables
+#if 0  
+  // access the decision statement associated 
+  // with the chosen decision variables
   acdl_domaint::statementt dec_stmt = decision_heuristics.dec_statement;
   
   acdl_domaint::varst dec_vars;
@@ -424,7 +445,8 @@ acdl_solvert::decide (const local_SSAt &SSA, const exprt& assertion)
   // initialize the worklist here with all 
   // transitive dependencies of the decision
   //worklist.dec_update(SSA, dec_stmt);
-  
+#endif 
+    
   worklist.dec_update(SSA, dec_expr, assertion);
 
   return true;
@@ -642,21 +664,25 @@ void acdl_solvert::pre_process (const local_SSAt &SSA, const exprt &assertion)
   }
 #endif
 
-  // Step 3
+  // Step 3 [TODO] Turned OFF until fixed
+#if 0 
   simplify_transformer(e, var_string, SSA.ns);
+#endif  
 
-  // step 4 
-  exprt s = simplify_expr(e, SSA.ns);
+  // step 4 [TODO] Turned OFF until the simplify_transformer is fixed 
+  //exprt s = simplify_expr(e, SSA.ns);
+  //std::cout << "The simplified expression is " << from_expr(SSA.ns, "", s) << std::endl;
 
   // Step 5
-  statements = s.operands();
+  worklist.statements = e.operands();
 
 #ifdef DEBUG  
   std::cout << "The simplified SSA statements after pre-processing are" << std::endl;
   for(std::vector<exprt>::iterator it = 
-      statements.begin(); it != statements.end(); ++it) 
+      worklist.statements.begin(); it != worklist.statements.end(); it++) 
     std::cout << "Statement: " << from_expr(SSA.ns, "", *it) << std::endl;
 #endif    
+
   
 }
 
@@ -689,15 +715,21 @@ property_checkert::resultt acdl_solvert::operator()(
   const exprt &assertion,
   const exprt &additional_constraint)
 {
-  // pre-process SSA 
+  // [TODO] pre-process SSA 
   pre_process(SSA, assertion);
-  
+ 
+  // [TODO]
+  worklist.slicing(SSA, assertion, additional_constraint);  
+
   // pass additional constraint and the assertions to the worklist
   worklist.initialize(SSA, assertion, additional_constraint);
+   
   std::cout << "The assertion checked now is: " << from_expr(SSA.ns, "", assertion) << std::endl;  
+  
   // call initialize live variables
   worklist.initialize_live_variables();
   std::set<exprt> decision_variable;
+  
   // initialize the decision variables
   // Note that the decision variable contains
   // variables only in the slicing, that is, 

@@ -72,6 +72,9 @@ acdl_worklist_orderedt::initialize (const local_SSAt &SSA, const exprt &assertio
   // Now compute the transitive dependencies
   //compute fixpoint mu X. assert_nodes u predecessor(X)
   while(!assert_worklist.empty() > 0) {
+#ifdef DEBUG    
+    std::cout << "Populating the worklist" << std::endl;
+#endif    
     // collect all the leaf nodes
     const acdl_domaint::statementt statement = pop_from_list(assert_worklist);
 
@@ -319,7 +322,7 @@ Function: acdl_worklist_orderedt::dec_update()
  \*******************************************************************/
 
 void
-acdl_worklist_orderedt::dec_update (const local_SSAt &SSA, const acdl_domaint::statementt &stmt, const exprt& assertion)
+acdl_worklist_orderedt::dec_update (const local_SSAt &SSA, const acdl_domaint::meet_irreduciblet &stmt, const exprt& assertion)
 {
   // **********************************************************************
   // Initialization Strategy: Guarantees top-down and bottom-up propagation 
@@ -527,52 +530,6 @@ acdl_worklist_orderedt::dec_update (const local_SSAt &SSA, const acdl_domaint::s
   
 }
 
-
-
-/*******************************************************************\
-
-Function: acdl_worklist_baset::push_into_list()
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
- \*******************************************************************/
-
-void
-acdl_worklist_orderedt::push_into_list (listt &lexpr,
-				  const acdl_domaint::statementt &statement)
-{
-  for(listt::const_iterator it = lexpr.begin();
-      it != lexpr.end(); ++it)
-    if(statement == *it)
-      return;
-  lexpr.push_back(statement);
-}
-
-/*******************************************************************\
-
-Function: acdl_worklist_baset::pop_from_list()
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
- \*******************************************************************/
-
-const acdl_domaint::statementt
-acdl_worklist_orderedt::pop_from_list (listt &lexpr)
-{
-  const acdl_domaint::statementt statement = lexpr.front();
-  lexpr.pop_front();
-  return statement;
-}
-
-
 /*******************************************************************\
 
 Function: acdl_worklist_orderedt::update()
@@ -667,86 +624,226 @@ acdl_worklist_orderedt::update (const local_SSAt &SSA,
 
 /*******************************************************************\
 
-Function: acdl_worklist_orderedt::initialize()
+Function: acdl_worklist_orderedt::push_into_list()
 
   Inputs:
 
  Outputs:
 
- Purpose: Initialize the worklist
+ Purpose:
 
  \*******************************************************************/
 
 void
-acdl_worklist_orderedt::initialize_live_variables ()
+acdl_worklist_orderedt::push_into_list(listt &lexpr,
+				  const acdl_domaint::statementt &statement)
 {
-  //Strategy 0: initialize live variables for each 
-  //statement by adding all live variables
-  for(std::list<acdl_domaint::statementt>::const_iterator 
-      it = worklist.begin(); it != worklist.end(); ++it) {
-    acdl_domaint::varst insert_vars;
-    select_vars(*it, insert_vars);
-    for(acdl_domaint::varst::const_iterator it1 = 
-        insert_vars.begin(); it1 != insert_vars.end(); ++it1)
-      live_variables.insert(*it1);   
-  }
-  // insert all live variables for each statement
-  for(std::list<acdl_domaint::statementt>::const_iterator 
-    it = worklist.begin(); it != worklist.end(); ++it)
-  {
-    svpair.insert(make_pair(*it, live_variables)); 
-  }
-  std::cout << "Printing the initialized map" << std::endl; 
-  for(std::map<acdl_domaint::statementt, acdl_domaint::varst>::iterator
-    it=svpair.begin(); it!=svpair.end(); ++it) {
-    
-    std::cout << "Statement is " << from_expr(it->first) << "==>"; 
-    acdl_domaint::varst live_vars = it->second;
-    for(acdl_domaint::varst::const_iterator it1 = 
-        live_vars.begin(); it1 != live_vars.end(); ++it1)
-      std::cout << from_expr(*it1) << ", "; 
-      std::cout << std::endl;
-  }
-#if 0  
-  //Strategy 1: initialize live variables by adding all vars
-  for(std::list<acdl_domaint::statementt>::const_iterator 
-      it = worklist.begin(); it != worklist.end(); ++it) {
-    acdl_domaint::varst insert_vars;
-    select_vars(*it, insert_vars);
-    for(acdl_domaint::varst::const_iterator it1 = 
-        insert_vars.begin(); it1 != insert_vars.end(); ++it1)
-      live_variables.insert(*it1);   
-  }
-#endif
-/* 
-  // Strategy 2: initialize live variables by inserting only lhs vars 
-  // from ID_equal statements for forward analysis 
-  for(std::list<acdl_domaint::statementt>::const_iterator 
-      it = worklist.begin(); it != worklist.end(); ++it) {
-    if(it->id() == ID_equal) {
-      exprt expr_lhs = to_equal_expr(*it).lhs();
-      find_symbols(expr_lhs, live_variables);
-    }
-  }
+  for(listt::const_iterator it = lexpr.begin();
+      it != lexpr.end(); ++it)
+    if(statement == *it)
+      return;
+  lexpr.push_back(statement);
+}
 
-#if 0
-  // Strategy 3: initialize live variables by inserting only rhs vars 
-  // from ID_equal statements for backward analysis 
-  for(std::list<acdl_domaint::statementt>::const_iterator 
-      it = worklist.begin(); it != worklist.end(); ++it) {
-    if(it->id() == ID_equal) {
-      exprt expr_rhs = to_equal_expr(*it).rhs();
-      find_symbols(expr_rhs, live_variables);
-    }
-  }
-#endif
-*/
+/*******************************************************************\
+
+Function: acdl_worklist_orderedt::pop_from_list()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+ \*******************************************************************/
+
+const acdl_domaint::statementt
+acdl_worklist_orderedt::pop_from_list(listt &lexpr)
+{
+  const acdl_domaint::statementt statement = lexpr.front();
+  lexpr.pop_front();
+  return statement;
+}
+
+/*******************************************************************\
+
+  Function: acdl_worklist_orderedt::pop_from_worklist()
+
+  Inputs:
+
+  Outputs:
+
+  Purpose:
+
+\*******************************************************************/
+
+acdl_domaint::varst acdl_worklist_orderedt::pop_from_map (const acdl_domaint::statementt &statement)
+{
+  std::map<acdl_domaint::statementt,acdl_domaint::varst>::iterator itf; 
+  itf = svpair.find(statement);
+  acdl_domaint::varst lvars = itf->second;
+  //svpair.erase(itf);
+  return lvars;
+}
+
+/*******************************************************************\
+
+Function: acdl_worklist_baset::update_worklist()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+ \*******************************************************************/
+
+
+void acdl_worklist_orderedt::update (const local_SSAt &SSA,
+                               const acdl_domaint::varst &vars,
+                               const acdl_domaint::statementt &current_statement, 
+                               const exprt& assertion)
+{
+  live_variables.insert(vars.begin(),vars.end());
+  // [NORMAL CASE] Delete map element since corresponding worklist 
+  // element is also deleted.
+  delete_from_map(current_statement);
  
-#if 0
-  std::cout << "Printing all live variables" << std::endl;
-  for(acdl_domaint::varst::const_iterator 
-    it = live_variables.begin(); it != live_variables.end(); ++it)
-      std::cout << it->get_identifier() << "," << std::endl;
-#endif
-}   
+  // [SPECIAL CASE] for empty deductions, 
+  // do not delete map elements for the current_statement
+  // very conservative approach -- no chance of any 
+  // missing deduction, can lead to non-termination
+  #if 0
+  if(!vars.empty())
+   delete_from_map(current_statement);
+  else
+   {}
+  #endif
 
+  // dependency analysis loop for equalities
+  for (local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin ();
+      n_it != SSA.nodes.end (); n_it++)
+  {
+    /*if(n_it->enabling_expr != SSA.get_enabling_exprs())
+    {  
+#ifdef DEBUG
+      std::cout << "The enabling expression for node is " << from_expr(SSA.ns, "", n_it->enabling_expr) << std::endl;
+#endif
+      continue;
+    }*/
+    for (local_SSAt::nodet::equalitiest::const_iterator e_it =
+        n_it->equalities.begin (); e_it != n_it->equalities.end (); e_it++)
+    {
+      exprt expr_rhs = to_equal_expr(*e_it).rhs();
+      //if(expr_rhs.id() == ID_constant) {
+       std::string str("nondet");
+       std::string rhs_str=id2string(expr_rhs.get(ID_identifier));
+       std::size_t found = rhs_str.find(str); 
+       // push the nondet statement in rhs
+       if(found != std::string::npos) {
+        #ifdef DEBUG
+        //std::cout << "Not inserting nondet elements " << std::endl; 
+        #endif
+        continue; 
+       }
+      // the statement has already been processed, so no action needed
+      // [CHECK if NEEDED, sometimes some deduction may miss due to this]
+      if(*e_it == current_statement) continue;
+
+      if (check_statement (*e_it, vars)) {
+        push(*e_it);
+        // push into map
+        push_into_map(*e_it, vars);
+        acdl_domaint::varst equal_vars;
+        find_symbols(*e_it, equal_vars);
+        live_variables.insert(equal_vars.begin(), equal_vars.end());    
+        #ifdef DEBUG
+        std::cout << "Push: " << from_expr (SSA.ns, "", *e_it) << std::endl;
+        #endif
+      }
+    }
+    for (local_SSAt::nodet::constraintst::const_iterator c_it =
+        n_it->constraints.begin (); c_it != n_it->constraints.end (); c_it++)
+    {
+      // [CHECK if NEEDED]
+      if(*c_it == current_statement) continue;
+      if (check_statement (*c_it, vars)) {
+        push(*c_it);
+        // push into map
+        push_into_map(*c_it, vars);
+        acdl_domaint::varst constraint_vars;
+        find_symbols(*c_it, constraint_vars);
+        live_variables.insert(constraint_vars.begin(), constraint_vars.end());    
+        
+        #ifdef DEBUG
+        std::cout << "Push: " << from_expr (SSA.ns, "", *c_it) << std::endl;
+        #endif
+      }
+    }
+    
+#if 0     
+    for (local_SSAt::nodet::assertionst::const_iterator a_it =
+        n_it->assertions.begin (); a_it != n_it->assertions.end (); a_it++)
+    {
+      // for now, store the decision variable as variables 
+      // that appear only in properties
+      // find all variables in an assert statement
+      //assert_listt alist;
+      push_into_assertion_list(alist, *a_it);
+           
+      if(*a_it == current_statement) continue;
+      if (check_statement (*a_it, vars)) {
+        push(not_exprt (*a_it));
+        acdl_domaint::varst assert_vars;
+        find_symbols(*a_it, assert_vars);
+        live_variables.insert(assert_vars.begin(), assert_vars.end());    
+        
+        #ifdef DEBUG
+        std::cout << "Push: " << from_expr (SSA.ns, "", not_exprt(*a_it)) << std::endl;
+        #endif
+      }
+    }
+#endif    
+    // Push the assertion that is passed to the solver
+    push_into_assertion_list(alist, assertion);
+    if(assertion == current_statement) continue;
+    if (check_statement (assertion, vars)) {
+      push(not_exprt (assertion));
+      // push into map
+      push_into_map(not_exprt(assertion), vars);
+      acdl_domaint::varst assert_vars;
+      find_symbols(assertion, assert_vars);
+#ifdef DEBUG
+      std::cout << "Push: " << from_expr (SSA.ns, "", not_exprt(assertion)) << std::endl;
+#endif
+    }
+  }
+ 
+ // remove variables of popped statement from live variables
+ remove_live_variables(SSA, current_statement); 
+
+#ifdef DEBUG   
+ std::cout << "The content of the updated worklist is as follows: " << std::endl;
+ for(std::list<acdl_domaint::statementt>::const_iterator 
+     it = worklist.begin(); it != worklist.end(); ++it) {
+   std::cout << "Updated Worklist Element::" << from_expr(SSA.ns, "", *it) << "===>";
+   std::map<acdl_domaint::statementt,acdl_domaint::varst>::iterator itf; 
+   itf = svpair.find(*it);
+   acdl_domaint::varst lvar = itf->second;
+   for(acdl_domaint::varst::const_iterator it1 = 
+       lvar.begin(); it1 != lvar.end(); ++it1)
+     std::cout << from_expr(*it1) << ", "; 
+   std::cout << std::endl;
+ }
+#endif    
+
+
+#ifdef DEBUG   
+  std::cout << "The updated live variables after removal are as follows: ";
+  for(acdl_domaint::varst::const_iterator it = 
+    live_variables.begin(); it != live_variables.end(); ++it)
+   std::cout << from_expr(SSA.ns, "", *it); 
+   std::cout << " " << std::endl;
+#endif
+
+}

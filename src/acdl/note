@@ -865,3 +865,33 @@ unit_rule implementation ?
 3> how to normalize octagon meet irreducibles -- not needed for unit rule but
 needed for normalizing the trail
 4> TACAS paper 
+
+Qeury for next meeting
+----------------------
+0> pre-process SSA -- heavy-weight implementation, does not terminate for
+relational2 even after 40 mins
+1> pre-process -- change the following statement to a new form for which it
+is hard to identify non-leaf variable 
+(E) x#phi27 == ($guard#26 ? x#26 : x#24) changed to 
+$guard#26 ? x#26 == x#phi27 : x#24 == x#phi27 
+For the initial statement, it is easy to identify x#phi27 as left hand side
+varaible needed for initializing worklist with leaf varaible, whereas it is 
+not possible for the simplified statement to identify x#phi27 as lhs varaible.
+
+4> Passing live variable for forware propagation:
+You remember, we pass "vars" to domain for new deductions as below:
+domain(statement, vars, old_v, new_v, deductions);
+The question really is, for the Forward iteration strategy, do we follow a> or b> ?
+a> vars = pass all live variables of a popped statement to the domain
+b> vars = Only pass the lhs variable of a popped statement to the domain
+
+1> decompose octagons into half spaces for negation during clause learning. Show
+example of octagons when complementing half spaces.
+2> for relational8 (proved successfully), but no decision is made. assume(x==y || x==-y)
+3> domain refinement in ACDL
+
+Observation:
+------------
+With forward iteration strategy and per statement based live variable where only
+lhs variable is passed to the domain using octagons caused relational4 to make
+12 decisions -- but still did not terminate. 

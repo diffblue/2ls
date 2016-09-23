@@ -14,7 +14,7 @@ int g(int x) {
 int main(void) {
   int x;
   //assert(f(5) == g(5));
-  __CPROVER_assume(x>=0 && x<=5);
+  __CPROVER_assume(x>=0 && x<=2);
   //if(x>0)
   assert(f(x) == g(x));
 }

@@ -36,20 +36,30 @@ public:
   acdl_domaint::varst live_var_list;
   typedef std::list<acdl_domaint::statementt> assert_listt;
   assert_listt alist;
+  
+  
   virtual void initialize(const local_SSAt &, const exprt &, const exprt&) 
     { assert(false); }
+  
+  // [TODO] Will go away - temporary for forward strategy  
+  /*virtual void initialize_forward(const local_SSAt &, const exprt &, const exprt&) 
+    { assert(false); }
+  */
 
-  virtual void dec_update(const local_SSAt &SSA, const acdl_domaint::statementt &stmt, 
+  virtual void dec_update(const local_SSAt &SSA, const acdl_domaint::meet_irreduciblet &stmt, 
   const exprt& assertion) { assert(false); }
 
+  virtual void slicing (const local_SSAt &SSA, 
+        const exprt &assertion, const exprt& additional_constraint) { assert(false); }
   
-  virtual void initialize_live_variables()
-  { assert(false); }
+  void initialize_live_variables();
+  //  { assert(false); }
   virtual void select_vars(const exprt &statement, acdl_domaint::varst &vars);
+  
   virtual void update(const local_SSAt &SSA,
 		      const acdl_domaint::varst &new_vars,
-		      const acdl_domaint::statementt &statement=nil_exprt(), const exprt& assertion=true_exprt());
-    //{ assert(false); }
+		      const acdl_domaint::statementt &statement=nil_exprt(), const exprt& assertion=true_exprt())
+  { assert(false); }
 
   const acdl_domaint::statementt pop ();
 
@@ -61,11 +71,18 @@ public:
   acdl_domaint::varst check_var_liveness (acdl_domaint::varst &vars);
   acdl_domaint::varst live_variables;
   acdl_domaint::varst worklist_vars;
-  void push (const acdl_domaint::statementt &statement);
-  void push_into_map (const acdl_domaint::statementt &statement, const acdl_domaint::varst &lvars);
- acdl_domaint::varst pop_from_map (const acdl_domaint::statementt &statement);
- void delete_from_map (const acdl_domaint::statementt &statement);
+  acdl_domaint::varst leaf_vars;
+  
+  typedef std::vector<exprt> statement_listt;
+  statement_listt statements;
+  
+
+ void push (const acdl_domaint::statementt &statement);
+ void push_into_map (const acdl_domaint::statementt &statement, const acdl_domaint::varst &lvars);
+ virtual acdl_domaint::varst pop_from_map (const acdl_domaint::statementt &statement) { assert(false); }
+  void delete_from_map (const acdl_domaint::statementt &statement);
   void delete_map();
+  void print_worklist();
 protected:
   worklistt worklist;
   stmt_var_pairt svpair;
