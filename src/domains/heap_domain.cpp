@@ -175,24 +175,18 @@ bool heap_domaint::add_row_path(const rowt &row, heap_valuet &value, const exprt
   {
     // Path does not exist yet
     std::set<dyn_objt> dyn_obj_set;
-    bool zero_path = true;
     if (dyn_obj.first.id() != ID_nil)
     { // Path doesn't have zero length
       dyn_obj_set.insert(dyn_obj);
-      zero_path = false;
     }
-    path_set.emplace(dest, dyn_obj_set, zero_path);
+    path_set.emplace(dest, dyn_obj_set);
     return true;
   }
   else
   {
     // Path exists already
-    if (dyn_obj.first.id() == ID_nil)
-    {
-      bool result = path_set.find(dest)->zero_length;
-      path_set.find(dest)->zero_length = true;
-      return !result;
-    }
+    if (dyn_obj.first.id() == ID_nil) return false;
+
     // Try to insert new dynamic object belonging to the path
     return path_set.find(dest)->dyn_objects.insert(dyn_obj).second;
   }
@@ -242,7 +236,7 @@ bool heap_domaint::add_points_to(const rowt &row, heap_valuet &value, const dyn_
  * Add new dependent row (pb_row points to row)
  * @param row Pointed row
  * @param pb_row Pointer row
- * @param value Hepa value
+ * @param value Heap value
  */
 void heap_domaint::add_pointed_by_row(const rowt &row, const rowt &pb_row, heap_valuet &value)
 {
