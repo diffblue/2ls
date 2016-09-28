@@ -25,23 +25,23 @@ class acdl_solvert : public messaget
 public:
   
   explicit acdl_solvert(const optionst &_options,
-			acdl_domaint &_domain,
-			acdl_decision_heuristics_baset &_decision_heuristics,
-                        acdl_worklist_baset &_worklist,
-                        acdl_analyze_conflict_baset &_analyze_conflict)
+      acdl_domaint &_domain,
+      acdl_decision_heuristics_baset &_decision_heuristics,
+      acdl_worklist_baset &_worklist,
+      acdl_analyze_conflict_baset &_analyze_conflict)
     : 
-    options(_options),
-    domain(_domain),
-    decision_heuristics(_decision_heuristics),
-    worklist(_worklist),
-    analyzes_conflict(_analyze_conflict),
-    disable_generalization(0)
-    {
-    }  
+      options(_options),
+      domain(_domain),
+      decision_heuristics(_decision_heuristics),
+      worklist(_worklist),
+      analyzes_conflict(_analyze_conflict),
+      disable_generalization(0)
+  {
+  }  
 
   ~acdl_solvert() 
-    {
-    }
+  {
+  }
 
   property_checkert::resultt operator()(const local_SSAt &SSA,
 					const exprt &assertion, const exprt &additional_constraint);
@@ -90,6 +90,7 @@ protected:
 
   bool disable_generalization;
   void initialize_decision_variables(acdl_domaint::valuet &val);
+  void pre_process(const local_SSAt &SSA, const exprt &assertion);
 
 };
 

@@ -48,6 +48,7 @@ DELTA_OBJ+=\
       ../acdl/acdl_domain$(OBJEXT) \
       ../acdl/acdl_worklist_base$(OBJEXT) \
       ../acdl/acdl_worklist_ordered$(OBJEXT) \
+      ../acdl/acdl_worklist_forward_strategy$(OBJEXT) \
       ../acdl/acdl_analyze_conflict_base$(OBJEXT) \
       ../acdl/acdl_conflict_graph$(OBJEXT) \
       ../acdl/template_generator_acdl$(OBJEXT) \
@@ -87,7 +88,8 @@ DELTA_OBJ+=\
       ../domains/linrank_domain$(OBJEXT) \
       ../domains/lexlinrank_solver_enumeration$(OBJEXT) \
       ../domains/lexlinrank_domain$(OBJEXT) \
-      ../domains/simplify_bounds$(OBJEXT)
+      ../domains/simplify_bounds$(OBJEXT) \
+			../domains/simplify_transformer$(OBJEXT)
 #      ../domains/solver_enumeration$(OBJEXT) 
 #      ../domains/strategy_solver_binsearch2$(OBJEXT) 
 

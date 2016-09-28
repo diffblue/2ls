@@ -1,6 +1,6 @@
 CORE
 main.c
---octagons --unwind 5
+--octagons --unwind 2 
 ^EXIT=0$
 ^SIGNAL=0$
 ^VERIFICATION SUCCESSFUL$

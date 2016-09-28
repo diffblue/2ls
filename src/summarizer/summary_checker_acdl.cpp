@@ -22,6 +22,7 @@ Author: Peter Schrammel
 #include "../acdl/acdl_decision_heuristics_largest_range.h"
 #include "../acdl/acdl_worklist_base.h"
 #include "../acdl/acdl_worklist_ordered.h"
+#include "../acdl/acdl_worklist_forward_strategy.h"
 #include "../acdl/acdl_analyze_conflict_base.h"
 //#include "../acdl/acdl_conflict_analysis_firstuip.h"
 
@@ -119,9 +120,19 @@ property_checkert::resultt summary_checker_acdlt::operator()(
     acdl_domaint domain(options,SSA,ssa_db,ssa_local_unwinder);
     domain.set_message_handler(get_message_handler());
     // worklist (currently there is only one)
+    /*std::unique_ptr<acdl_worklist_baset> worklist =
+      std::unique_ptr<acdl_worklist_baset>(new acdl_worklist_orderedt()); */
     std::unique_ptr<acdl_worklist_baset> worklist =
+      std::unique_ptr<acdl_worklist_baset>(new acdl_worklist_forwardt());
+    // [TODO]
+#if 0
+    if(options.get_option("acdl-propagate") == "forward")
+       std::unique_ptr<acdl_worklist_baset>(new acdl_worklist_forwardt());
+    if(options.get_option("acdl-propagate") == "backward")
+      std::unique_ptr<acdl_worklist_baset>(new acdl_worklist_backward());
+    if(options.get_option("acdl-propagate") == "chaotic")
       std::unique_ptr<acdl_worklist_baset>(new acdl_worklist_orderedt());
-
+#endif   
     // conflict analysis heuristics
     std::unique_ptr<acdl_analyze_conflict_baset> conflict_analysis;
     if(options.get_option("acdl-conflict") == "first-uip")
