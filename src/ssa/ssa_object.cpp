@@ -233,9 +233,7 @@ void ssa_objectst::add_ptr_objects(
     {
       if(o_it->type().id()==ID_pointer)
       {
-        const symbolt &symbol=ns.lookup(root_object);
-        if(symbol.is_parameter)
-          tmp.insert(*o_it);
+        tmp.insert(*o_it);
       }
     }
   }
@@ -282,7 +280,7 @@ void ssa_objectst::categorize_objects(
 
     if(root_object.id()==ID_symbol)
     {
-      if(is_ptr_object(root_object))
+      if(is_ptr_object(root_object) || root_object.type().get_bool("#dynamic"))
       {
         globals.insert(*o_it);
       }

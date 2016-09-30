@@ -121,40 +121,55 @@ Function: local_SSAt::get_globals
 
 \*******************************************************************/
 
-void local_SSAt::get_globals(locationt loc, std::set<symbol_exprt> &globals, 
-			     bool rhs_value, bool with_returns, 
-			     const irep_idt &returns_for_function) const
+void local_SSAt::get_globals(locationt loc, std::set<symbol_exprt> &globals,
+                             bool rhs_value, bool with_returns,
+                             const irep_idt &returns_for_function) const
 {
   {
     const std::set<ssa_objectt> &ssa_globals = assignments.ssa_objects.globals;
-    for(std::set<ssa_objectt>::const_iterator it = ssa_globals.begin();
-      it != ssa_globals.end(); it++)
+    for (std::set<ssa_objectt>::const_iterator it = ssa_globals.begin();
+         it != ssa_globals.end(); it++)
     {
 #if 0
-      std::cout << "global: " 
+      std::cout << "global: "
                 << from_expr(ns, "", read_lhs(it->get_expr(),loc)) << std::endl;
 #endif
-      if(!with_returns &&  
-	 id2string(it->get_identifier()).find(
-           "#return_value") != std::string::npos) 
-	continue;
+      if (!with_returns &&
+          id2string(it->get_identifier()).find(
+              "#return_value") != std::string::npos)
+        continue;
 
       //filter out return values of other functions
-      if(with_returns && returns_for_function!="" &&
-         id2string(it->get_identifier()).find(
-           "#return_value") != std::string::npos &&
-         id2string(it->get_identifier()).find(
-           id2string(returns_for_function)+"#return_value")==std::string::npos)
-	 continue;
+      if (with_returns && returns_for_function != "" &&
+          id2string(it->get_identifier()).find(
+              "#return_value") != std::string::npos &&
+          id2string(it->get_identifier()).find(
+              id2string(returns_for_function) + "#return_value") == std::string::npos)
+        continue;
 
-      if(rhs_value)
+      const exprt &root_obj = it->get_root_object();
+      if (is_ptr_object(root_obj))
       {
-	const exprt &expr = read_rhs(it->get_expr(),loc);
+        const symbolt *symbol;
+        if (ns.lookup(root_obj.get(ID_ptr_object), symbol)) continue;
+        if (!symbol->is_parameter)
+        {
+          const ssa_domaint &ssa_domain = ssa_analysis[loc];
+          // Filter out non-assigned symbols
+          const auto &def = ssa_domain.def_map.find(it->get_identifier());
+          if (def->second.def.is_input())
+            continue;
+        }
+      }
+
+      if (rhs_value)
+      {
+        const exprt &expr = read_rhs(it->get_expr(), loc);
         globals.insert(to_symbol_expr(expr));
       }
       else
       {
-	const exprt &expr = read_lhs(it->get_expr(),loc);
+        const exprt &expr = read_lhs(it->get_expr(), loc);
         globals.insert(to_symbol_expr(expr));
       }
     }
