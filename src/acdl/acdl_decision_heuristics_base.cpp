@@ -12,7 +12,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include "acdl_solver.h"
 #include "acdl_decision_heuristics_base.h"
 
-#define DEBUG 1
+//#define DEBUG 
 
 /*******************************************************************
 

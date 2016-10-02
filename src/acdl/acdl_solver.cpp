@@ -15,9 +15,9 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include "../domains/simplify_transformer.h"
 #include <string>
 
-#define DEBUG
-//#define PER_STATEMENT_LIVE_VAR
-#define LIVE_VAR_OLD_APPROACH
+//#define DEBUG
+#define PER_STATEMENT_LIVE_VAR
+//#define LIVE_VAR_OLD_APPROACH
 
 #ifdef DEBUG
 #include <iostream>
@@ -196,10 +196,10 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
     acdl_domaint::varst lvar = worklist.pop_from_map(statement);
 #endif     
 
-#ifdef DEBUG
     std::cout << "Pop: " << from_expr (SSA.ns, "", statement)
         << std::endl;
     
+#ifdef DEBUG
 #ifdef PER_STATEMENT_LIVE_VAR
     std::cout << "Live variables for " << from_expr(statement) << " are: ";
     for(acdl_domaint::varst::const_iterator it1 = 
@@ -228,10 +228,10 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
         std::cout << from_expr(SSA.ns, "", *it) << std::endl;
 #endif    
 
-#ifdef DEBUG
+//#ifdef DEBUG
     std::cout << "Old: ";
     domain.output(std::cout, v) << std::endl;
-#endif
+//#endif
 
     // select vars for projection
     acdl_domaint::valuet new_v;
@@ -263,10 +263,10 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
     // - call worklist update
     worklist.update(SSA, new_variables, statement, assertion); 
         
-#ifdef DEBUG
+//#ifdef DEBUG
     std::cout << "New: ";
     domain.output(std::cout, new_v) << std::endl;
-#endif
+//#endif
 
     // abstract value after meet is computed here
     // The abstract value of the implication 
@@ -596,7 +596,9 @@ void acdl_solvert::initialize_decision_variables(acdl_domaint::valuet &value)
 \*******************************************************************/
 void acdl_solvert::pre_process (const local_SSAt &SSA, const exprt &assertion)
 {
+  std::cout << "********************************" << std::endl;
   std::cout << "Pre-processing SSA" << std::endl;
+  std::cout << "********************************" << std::endl;
   
   find_symbols_sett var_set;
   typedef std::set<irep_idt> var_stringt;
@@ -646,8 +648,10 @@ void acdl_solvert::pre_process (const local_SSAt &SSA, const exprt &assertion)
   }
   
   //Step 1: e = conjunction of all statements;
-  exprt e = conjunction(clist);  
+  exprt e = conjunction(clist); 
+#ifdef DEBUG
   std::cout << "The conjuncted expression is " << from_expr(SSA.ns, "", e) << std::endl;
+#endif  
 
   //Step 2: vars = "leaf" variables and variables in assertions
   find_symbols(assertion, var_set);
@@ -682,8 +686,6 @@ void acdl_solvert::pre_process (const local_SSAt &SSA, const exprt &assertion)
       worklist.statements.begin(); it != worklist.statements.end(); it++) 
     std::cout << "Statement: " << from_expr(SSA.ns, "", *it) << std::endl;
 #endif    
-
-  
 }
 
 /*******************************************************************
@@ -726,6 +728,7 @@ property_checkert::resultt acdl_solvert::operator()(
    
   std::cout << "The assertion checked now is: " << from_expr(SSA.ns, "", assertion) << std::endl;  
   
+  std::cout << "HERE " << std::endl;
   // call initialize live variables
   worklist.initialize_live_variables();
   std::set<exprt> decision_variable;
@@ -791,6 +794,9 @@ property_checkert::resultt acdl_solvert::operator()(
   property_checkert::resultt result = property_checkert::UNKNOWN;
   // the result is already decided for programs
   // which can be solved only using deductions  
+  std::cout << "********************************" << std::endl;
+  std::cout << "        DEDUCTION PHASE " << std::endl;
+  std::cout << "********************************" << std::endl;
   result = propagate(SSA, assertion);
   std::cout << "The result after first propagation phase is " << result << std::endl; 
   std::cout << "****************************************************" << std::endl;

@@ -7,7 +7,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 \*******************************************************************/
 
 
-#define DEBUG
+//#define DEBUG
 
 #ifdef DEBUG
 #include <iostream>
@@ -289,10 +289,10 @@ void acdl_domaint::bool_inference(
       break; //at this point we have a conflict, we return
     }
 
-#ifdef DEBUG
+//#ifdef DEBUG
     std::cout << "[ACDL-DOMAIN] boolean deductions(" << it->get_identifier() << "): ";
     output(std::cout, deductions) << std::endl;
-#endif
+//#endif
   }
 }
 
@@ -388,7 +388,9 @@ void acdl_domaint::numerical_inference(
         *solver << literal_exprt(l);
         continue;
       }
+#ifdef DEBUG
       std::cout << "track old_value: " << from_expr(SSA.ns, "", old_value[i]) << std::endl;
+#endif      
       value_literal_map.push_back(i);
       value_literals.push_back(l);
       solver->solver->set_frozen(l);
@@ -421,7 +423,7 @@ void acdl_domaint::numerical_inference(
       solver->pop_context();
     }	
  
-#ifdef DEBUG
+//#ifdef DEBUG
 #ifdef NO_PROJECTION
     std::cout << "[ACDL-DOMAIN] numerical deductions: ";
     output(std::cout, deductions) << std::endl;
@@ -430,7 +432,7 @@ void acdl_domaint::numerical_inference(
               << from_expr(SSA.ns, "", *it) << "): ";
     output(std::cout, deductions) << std::endl;
 #endif
-#endif
+//#endif
   }
 }
 

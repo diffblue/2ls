@@ -8,7 +8,7 @@ Author: Rajdeep Mukherjee
 
 #include <util/find_symbols.h>
 #include "acdl_worklist_forward_strategy.h"
-#define DEBUG
+//#define DEBUG
 
 /*******************************************************************\
 
@@ -162,7 +162,9 @@ acdl_worklist_forwardt::initialize(const local_SSAt &SSA,
       set_intersection(sym.begin(),sym.end(),sym_rhs.begin(),sym_rhs.end(),
                          std::inserter(derived_set,derived_set.begin()));
       if(derived_set.empty()) {
+#ifdef DEBUG
         std::cout << "Forward Push: " << from_expr(*it) << std::endl;
+#endif        
         push(*it); 
         // collect the leaf variables in the rhs
         // Though these are leaf variables, but we 
@@ -170,7 +172,6 @@ acdl_worklist_forwardt::initialize(const local_SSAt &SSA,
         // since decision variables are computed from it next
         // Example: y = x+1, where x=nondet() is a leaf variable
         temp_leaf_var.insert(sym_rhs.begin(), sym_rhs.end());
-        std::cout << "DEBUG" << std::endl;
       }
       // Now prepare the decision variables
       if(expr_rhs.id() == ID_constant || expr_rhs.is_true() || expr_rhs.is_false()) { 
@@ -191,8 +192,8 @@ acdl_worklist_forwardt::initialize(const local_SSAt &SSA,
   // Now update the leaf_var
   leaf_vars.insert(temp_leaf_var.begin(), temp_leaf_var.end());
 
-  std::cout << "The worklist content after initialisation is: " << std::endl;  
 #ifdef DEBUG
+  std::cout << "The worklist content after initialisation is: " << std::endl;  
   for(std::list<acdl_domaint::statementt>::const_iterator 
      it = worklist.begin(); it != worklist.end(); ++it) 
    std::cout << from_expr(SSA.ns, "", *it) << ",";
