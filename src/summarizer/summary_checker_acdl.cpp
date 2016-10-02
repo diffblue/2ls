@@ -122,8 +122,8 @@ property_checkert::resultt summary_checker_acdlt::operator()(
     /*std::unique_ptr<acdl_worklist_baset> worklist =
       std::unique_ptr<acdl_worklist_baset>(new acdl_worklist_orderedt()); 
     std::unique_ptr<acdl_worklist_baset> worklist =
-      std::unique_ptr<acdl_worklist_baset>(new acdl_worklist_forwardt());*/
-    // [TODO]
+      std::unique_ptr<acdl_worklist_baset>(new acdl_worklist_forwardt()); */
+    
     // worklist heuristics 
     std::unique_ptr<acdl_worklist_baset> worklist;
     if(options.get_option("acdl-propagate") == "forward")

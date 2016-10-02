@@ -632,18 +632,27 @@ void acdl_solvert::pre_process (const local_SSAt &SSA, const exprt &assertion)
           } 
         }
       } 
+#ifdef DEBUG      
+      std::cout << "Original statement: " << from_expr(SSA.ns, "", *e_it) << std::endl;
+#endif      
     }
-
 
     for (local_SSAt::nodet::constraintst::const_iterator c_it =
         n_it->constraints.begin (); c_it != n_it->constraints.end (); c_it++)
     {
       clist.push_back(*c_it); 
+#ifdef DEBUG      
+      std::cout << "Original statement: " << from_expr(SSA.ns, "", *c_it) << std::endl;
+#endif      
     }  
+    
     for (local_SSAt::nodet::assertionst::const_iterator a_it =
         n_it->assertions.begin (); a_it != n_it->assertions.end (); a_it++)
     {
       clist.push_back(*a_it); 
+#ifdef DEBUG      
+      std::cout << "Original statement: " << from_expr(SSA.ns, "", *a_it) << std::endl;
+#endif      
     }
   }
   
@@ -672,7 +681,7 @@ void acdl_solvert::pre_process (const local_SSAt &SSA, const exprt &assertion)
 #if 0 
   simplify_transformer(e, var_string, SSA.ns);
 #endif  
-
+  
   // step 4 [TODO] Turned OFF until the simplify_transformer is fixed 
   //exprt s = simplify_expr(e, SSA.ns);
   //std::cout << "The simplified expression is " << from_expr(SSA.ns, "", s) << std::endl;
