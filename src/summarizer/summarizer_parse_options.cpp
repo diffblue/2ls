@@ -150,11 +150,16 @@ void summarizer_parse_optionst::get_command_line_options(optionst &options)
     options.set_option("inline", true);
   }
 
+  if(cmdline.isset("acdl-propagate"))
+    options.set_option("acdl-propagate", cmdline.get_value("acdl-propagate"));
+  else 
+    options.set_option("acdl-propagate", "chaotic"); //default
+  
   if(cmdline.isset("acdl-decision"))
     options.set_option("acdl-decision", cmdline.get_value("acdl-decision"));
   else 
     options.set_option("acdl-decision", "random"); //default
-
+  
   if(cmdline.isset("acdl-conflict"))
     options.set_option("acdl-conflict", cmdline.get_value("acdl-conflict"));
   else 
@@ -1551,6 +1556,7 @@ void summarizer_parse_optionst::help()
     "\n"
     "Backend options:\n"
     " --acdl                       use ACDL solver\n"
+    " --acdl-propagate P           use propagation heuristics P\n"
     " --acdl-decision D            use decision heuristics D\n"
     " --acdl-conflict C            use conflict analysis heuristics C\n"
     " --termination                compute ranking functions to prove termination\n"
