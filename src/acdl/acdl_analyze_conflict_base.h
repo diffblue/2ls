@@ -2,7 +2,7 @@
 
 Module: Conflict Analysis
 
-Author: Rajdeep Mukherjee, Peter Schrammel
+Author: Rajdeep Mukherjee
 
 \*******************************************************************/
 

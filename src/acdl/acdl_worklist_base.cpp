@@ -9,7 +9,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include <util/find_symbols.h>
 #include "acdl_worklist_base.h"
 
-#define DEBUG
+//#define DEBUG
 
 
 #ifdef DEBUG
@@ -88,7 +88,9 @@ Function: acdl_worklist_baset::push_into_worklist()
 void
 acdl_worklist_baset::push (const acdl_domaint::statementt &statement)
 {
+#ifdef DEBUG  
   std::cout << "Pushing into worklist " << from_expr(statement) << std::endl;
+#endif  
   for(worklistt::const_iterator it = worklist.begin();
       it != worklist.end(); ++it) {
     if(statement == *it)
@@ -161,10 +163,14 @@ acdl_worklist_baset::push_into_map (const acdl_domaint::statementt &statement, c
      for(acdl_domaint::varst::const_iterator it1 = 
          lvars.begin(); it1 != lvars.end(); ++it1)
      {
+#ifdef DEBUG          
        std::cout << "Checking deduction vars" << from_expr(*it1) << " ,";
+#endif       
        acdl_domaint::varst::iterator lit = live_vars.find(*it1); 
        if(lit == live_vars.end()) {
+#ifdef DEBUG          
          std::cout << "insert in to live vars" << std::endl;
+#endif         
          it->second.insert(*it1);
        }
        else continue;
@@ -411,17 +417,20 @@ acdl_worklist_baset::initialize_live_variables ()
   {
     svpair.insert(make_pair(*it, live_variables)); 
   }
-  std::cout << "Printing the initialized map" << std::endl; 
+#ifdef DEBUG          
+  std::cout << "Printing the initialized map" << std::endl;
+#endif   
+#ifdef DEBUG          
   for(std::map<acdl_domaint::statementt, acdl_domaint::varst>::iterator
     it=svpair.begin(); it!=svpair.end(); ++it) {
-    
-    std::cout << "Statement is " << from_expr(it->first) << "==>"; 
+    std::cout << "Statement is " << from_expr(it->first) << "==>";
     acdl_domaint::varst live_vars = it->second;
     for(acdl_domaint::varst::const_iterator it1 = 
         live_vars.begin(); it1 != live_vars.end(); ++it1)
       std::cout << from_expr(*it1) << ", "; 
       std::cout << std::endl;
   }
+#endif     
 #if 0  
   //Strategy 1: initialize live variables by adding all vars
   for(std::list<acdl_domaint::statementt>::const_iterator 
@@ -479,7 +488,9 @@ Function: acdl_worklist_orderedt::print()
 
 void acdl_worklist_baset::print_worklist() 
 {
+#ifdef DEBUG  
   std::cout << "Printing the worklist" << std::endl; 
+#endif  
   for(std::list<acdl_domaint::statementt>::const_iterator 
       it = worklist.begin(); it != worklist.end(); ++it)
     std::cout << from_expr(*it) <<  "," << std::endl;
