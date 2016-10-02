@@ -2,7 +2,7 @@
 
 Module: ACDL Decision Heuristics
 
-Author: Rajdeep Mukherjee
+Author: Rajdeep Mukherjee, Peter Schrammel
 
 \*******************************************************************/
 #include <limits.h>

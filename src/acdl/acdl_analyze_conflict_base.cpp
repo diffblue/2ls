@@ -2,7 +2,7 @@
 
 Module: ACDL Clause Learning Base
 
-Author: Rajdeep Mukherjee
+Author: Rajdeep Mukherjee, Peter Schrammel
 
 \*******************************************************************/
 
