@@ -119,20 +119,20 @@ property_checkert::resultt summary_checker_acdlt::operator()(
     // domain
     acdl_domaint domain(options,SSA,ssa_db,ssa_local_unwinder);
     domain.set_message_handler(get_message_handler());
-    // worklist (currently there is only one)
     /*std::unique_ptr<acdl_worklist_baset> worklist =
-      std::unique_ptr<acdl_worklist_baset>(new acdl_worklist_orderedt()); */
+      std::unique_ptr<acdl_worklist_baset>(new acdl_worklist_orderedt()); 
     std::unique_ptr<acdl_worklist_baset> worklist =
-      std::unique_ptr<acdl_worklist_baset>(new acdl_worklist_forwardt());
-    // [TODO]
-#if 0
+      std::unique_ptr<acdl_worklist_baset>(new acdl_worklist_forwardt()); */
+    
+    // worklist heuristics 
+    std::unique_ptr<acdl_worklist_baset> worklist;
     if(options.get_option("acdl-propagate") == "forward")
-       std::unique_ptr<acdl_worklist_baset>(new acdl_worklist_forwardt());
-    if(options.get_option("acdl-propagate") == "backward")
-      std::unique_ptr<acdl_worklist_baset>(new acdl_worklist_backward());
-    if(options.get_option("acdl-propagate") == "chaotic")
-      std::unique_ptr<acdl_worklist_baset>(new acdl_worklist_orderedt());
-#endif   
+      worklist = std::unique_ptr<acdl_worklist_baset>(new acdl_worklist_forwardt());
+    /*if(options.get_option("acdl-propagate") == "backward")
+      worklist = std::unique_ptr<acdl_worklist_baset>(new acdl_worklist_backward());*/
+    else if(options.get_option("acdl-propagate") == "chaotic")
+      worklist = std::unique_ptr<acdl_worklist_baset>(new acdl_worklist_orderedt());
+    
     // conflict analysis heuristics
     std::unique_ptr<acdl_analyze_conflict_baset> conflict_analysis;
     if(options.get_option("acdl-conflict") == "first-uip")
