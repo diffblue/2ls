@@ -16,5 +16,8 @@ void pretty_print_termination_argument(std::ostream &out,
 				       const namespacet &ns, const exprt &expr);
 void merge_and(exprt & result, const exprt &expr1, const exprt &expr2, 
 	       const namespacet &ns);
+constant_exprt make_zero(const typet &type);
+constant_exprt make_one(const typet &type);
+constant_exprt make_minusone(const typet &type);
 
 #endif

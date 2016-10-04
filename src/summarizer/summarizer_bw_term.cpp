@@ -24,7 +24,7 @@ Author: Peter Schrammel
 #include "../ssa/local_ssa.h"
 #include "../ssa/simplify_ssa.h"
 
-#define MAX_PRECONDITION_DISJUNCTS 2
+#define MAX_PRECONDITION_DISJUNCTS 5
 #define MAX_BOOTSTRAP_ATTEMPTS 20
 
 /*******************************************************************\
@@ -367,6 +367,7 @@ exprt summarizer_bw_termt::compute_termination_argument(
   //statistics
   solver_instances += analyzer.get_number_of_solver_instances();
   solver_calls += analyzer.get_number_of_solver_calls();
+  termargs_computed++;
 
   return termination_argument;
 }

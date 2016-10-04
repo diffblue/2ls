@@ -72,7 +72,8 @@ void summarizer_baset::summarize(const function_namet &function_name)
   if(!summary_db.exists(function_name) || 
      summary_db.get(function_name).mark_recompute) 
   {
-    compute_summary_rec(function_name,precondition,true);
+    compute_summary_rec(function_name,precondition,
+                        options.get_bool_option("context-sensitive"));
   }
   else status() << "Summary for function " << function_name << 
 	 " exists already" << eom;
@@ -119,6 +120,13 @@ bool summarizer_baset::check_call_reachable(
   symbol_exprt guard = SSA.guard_symbol(n_it->location);
   ssa_unwinder.get(function_name).unwinder_rename(guard,*n_it,false);
   solver << guard;
+
+#if 0
+  std::cout << "guard: " << from_expr(SSA.ns, "", guard) << std::endl;
+  std::cout << "enable: " << from_expr(SSA.ns, "", SSA.get_enabling_exprs()) << std::endl;
+  std::cout << "precondition: " << from_expr(SSA.ns, "", precondition) << std::endl;
+  std::cout << "summaries: " << from_expr(SSA.ns, "", ssa_inliner.get_summaries(SSA)) << std::endl;
+#endif
 
   if(!forward) 
     solver << SSA.guard_symbol(--SSA.goto_function.body.instructions.end());
@@ -278,12 +286,13 @@ bool summarizer_baset::check_precondition(
   if(summary_db.exists(fname)) 
   {
     summaryt summary = summary_db.get(fname);
-    if(summary.mark_recompute) return false;
+    if(summary.mark_recompute) 
+      return false;
     if(!context_sensitive ||
        summary.fw_precondition.is_true())  //precondition trivially holds
     {
       status() << "Precondition trivially holds, replacing by summary." 
-                   << eom;
+               << eom;
       summaries_used++;
       precondition_holds = true;
     }
@@ -298,8 +307,8 @@ bool summarizer_baset::check_precondition(
       ssa_inliner.rename_to_caller(f_it,summary.params,
 			       cs_globals_in,summary.globals_in,assertion);
 
-      debug() << "precondition assertion: " << 
-	from_expr(SSA.ns,"",assertion) << eom;
+      debug() << "precondition assertion: " 
+              << from_expr(SSA.ns,"",assertion) << eom;
 
       precondition_holds = false;
     }
@@ -391,9 +400,9 @@ bool summarizer_baset::check_end_reachable(
   solver << cond;
   exprt::operandst assertions;
   assertions.push_back(
-    SSA.guard_symbol(--SSA.goto_function.body.instructions.end()));
-  get_assertions(SSA,assertions);
-  solver << disjunction(assertions); //we want to reach any of them
+    not_exprt(SSA.guard_symbol(--SSA.goto_function.body.instructions.end())));
+//  get_assertions(SSA,assertions); //a failing assertion does not prove termination, let's ignore them
+  solver << not_exprt(conjunction(assertions)); //we want to reach any of them
 
   bool result = (solver()==decision_proceduret::D_SATISFIABLE);
 

@@ -8,12 +8,18 @@
 #include <util/i2string.h>
 #include <langapi/language_util.h>
 #include <util/replace_expr.h>
+#include <util/namespace.h>
 
 class domaint
 {
 public:
- domaint(unsigned _domain_number, replace_mapt &_renaming_map) : 
-  domain_number(_domain_number), renaming_map(_renaming_map) {}
+  domaint(unsigned _domain_number, 
+	 replace_mapt &_renaming_map, 
+	 const namespacet &_ns) : 
+    domain_number(_domain_number), 
+    renaming_map(_renaming_map),
+    ns(_ns)
+  {}
   virtual ~domaint() {}
 
   typedef exprt vart;
@@ -85,6 +91,7 @@ public:
  protected:
   unsigned domain_number; //serves as id for variables names
   replace_mapt &renaming_map;
+  const namespacet &ns;
   
   inline void rename(exprt &expr) 
   { 

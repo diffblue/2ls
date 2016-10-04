@@ -1,23 +1,6 @@
-2LS 0.3
+2LS 0.4
 
-1) Get the CBMC source, via
+./install.sh
 
-   svn co -r6327 http://www.cprover.org/svn/cbmc/branches/peter-incremental-unwinding my-cbmc
+The executable is src/summarizer/2ls
 
-   Follow the compilation instructions that come with CBMC, and make sure
-   that CBMC compiles.
-
-2) Do
-
-   cp src/config.inc.template src/config.inc
-
-3) Edit src/config.inc to point to the location of my-cbmc produced
-   in step 1.
-
-4) Do
-
-   cd src; make
-
-5) Run
-  
-   summarizer/2ls

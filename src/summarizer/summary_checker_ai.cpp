@@ -44,12 +44,13 @@ property_checkert::resultt summary_checker_ait::operator()(
 
   bool preconditions = options.get_bool_option("preconditions");
   bool termination = options.get_bool_option("termination");
-  if(!options.get_bool_option("havoc")) 
+  bool trivial_domain = options.get_bool_option("havoc");
+  if(!trivial_domain || termination)
   {
     //forward analysis
     summarize(goto_model,true,termination);
   }
-  if(!options.get_bool_option("havoc") && preconditions)
+  if(!trivial_domain && preconditions)
   {
     //backward analysis
     summarize(goto_model,false,termination);
@@ -127,6 +128,7 @@ property_checkert::resultt summary_checker_ait::report_termination()
 {
   result() << eom;
   result() << "** Termination: " << eom;
+  bool not_computed = true; 
   bool all_terminate = true; 
   bool one_nonterminate = false; 
   ssa_dbt::functionst &functions = ssa_db.functions();
@@ -135,12 +137,17 @@ property_checkert::resultt summary_checker_ait::report_termination()
   {
     threevalt terminates = YES;
     bool computed = summary_db.exists(it->first);
-    if(computed) terminates = summary_db.get(it->first).terminates;
+    if(computed) 
+    {
+      terminates = summary_db.get(it->first).terminates;
+      not_computed = false;
+    }
     all_terminate = all_terminate && (terminates==YES);
     one_nonterminate = one_nonterminate || (terminates==NO);
     result() << "[" << it->first << "]: " 
 	     << (!computed ? "not computed" : threeval2string(terminates)) << eom;
   }
+  if(not_computed) return property_checkert::UNKNOWN;
   if(all_terminate) return property_checkert::PASS;
   if(one_nonterminate) return property_checkert::FAIL;
   return property_checkert::UNKNOWN;

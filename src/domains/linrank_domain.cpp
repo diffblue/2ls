@@ -7,11 +7,12 @@
 #include <util/i2string.h>
 #include <util/simplify_expr.h>
 #include <langapi/languages.h>
+#include <goto-symex/adjust_float_expressions.h>
 
 #define SYMB_COEFF_VAR "symb_coeff#"
 
 #define EXTEND_TYPES
-//#define DIFFERENCE_ENCODING
+#define DIFFERENCE_ENCODING
 
 #define COEFF_C_SIZE 10
 #define MAX_REFINEMENT 2
@@ -93,7 +94,7 @@ exprt linrank_domaint::get_not_constraints(
       extend_expr_types(sum);
 #endif
       exprt decreasing = binary_relation_exprt(sum, ID_gt, 
-	from_integer(mp_integer(0),sum.type()));
+					       make_zero(sum.type()));
 #else
 #ifdef EXTEND_TYPES
       extend_expr_types(sum_pre);
@@ -105,6 +106,7 @@ exprt linrank_domaint::get_not_constraints(
 			  and_exprt(templ[row].pre_guard, 
 				    templ[row].post_guard),
                           decreasing));
+      adjust_float_expressions(cond_exprs[row], ns);
     }
   }
 
@@ -157,17 +159,7 @@ exprt linrank_domaint::get_row_symb_constraint(
 #ifdef EXTEND_TYPES
       extend_expr_types(sum);
 #endif
-      constant_exprt cst;
-      if(sum.type().id()==ID_unsignedbv || sum.type().id()==ID_signedbv)
-        cst = from_integer(mp_integer(0),sum.type());
-      else if(sum.type().id()==ID_floatbv)
-      {
-	ieee_floatt zero(to_floatbv_type(sum.type()));
-	zero.make_zero();
-        cst = zero.to_expr();
-      }
-      else assert(false);
-      exprt decreasing = binary_relation_exprt(sum, ID_gt,cst);
+      exprt decreasing = binary_relation_exprt(sum, ID_gt,make_zero(sum.type()));
 #else
 #ifdef EXTEND_TYPES
       extend_expr_types(sum_pre);
@@ -185,25 +177,12 @@ exprt linrank_domaint::get_row_symb_constraint(
     for(unsigned i = 0; i < values.size(); ++i)
     {
       typet type = symb_values.c[i].type();
-      if(type.id()==ID_signedbv || type.id()==ID_unsignedbv)
-      {
-	ref_constraints.push_back(
+      ref_constraints.push_back(
 	  binary_relation_exprt(symb_values.c[i],ID_ge,
-				from_integer(mp_integer(-1),type)));
-	ref_constraints.push_back(
+			        make_minusone(type))); 
+      ref_constraints.push_back(
 	  binary_relation_exprt(symb_values.c[i],ID_le,
-				from_integer(mp_integer(1),type)));
-      }
-      else if(type.id()==ID_floatbv)
-      {
-	ieee_floatt zero; zero.make_zero();
-	ieee_floatt one; one.from_integer(mp_integer(1));
-	ieee_floatt minusone = one; one.negate();
-	ref_constraints.push_back(or_exprt(or_exprt(
-		     equal_exprt(symb_values.c[i],one.to_expr()),
-      		     equal_exprt(symb_values.c[i],zero.to_expr())),
-		   equal_exprt(symb_values.c[i],minusone.to_expr())));
-      }
+			        make_one(type)));
     }
   }
   else if(refinement_level==1)
@@ -225,7 +204,9 @@ exprt linrank_domaint::get_row_symb_constraint(
 #endif
 
   refinement_constraint = conjunction(ref_constraints);
-  return conjunction(constraints);
+  exprt cond = conjunction(constraints);
+  adjust_float_expressions(cond, ns);
+  return cond;
 }
 
 linrank_domaint::row_valuet linrank_domaint::get_row_value(const rowt &row, const templ_valuet &value)
@@ -356,7 +337,7 @@ void linrank_domaint::project_on_vars(valuet &value, const var_sett &vars, exprt
       extend_expr_types(sum);
 #endif
       exprt decreasing = binary_relation_exprt(sum, ID_gt, 
-	from_integer(mp_integer(0),sum.type()));
+					       make_zero(sum.type()));
 #else
 #ifdef EXTEND_TYPES
       extend_expr_types(sum_pre);
@@ -371,6 +352,7 @@ void linrank_domaint::project_on_vars(valuet &value, const var_sett &vars, exprt
     }
   }
   result = conjunction(c);
+  adjust_float_expressions(result, ns);
 }
 
 /*******************************************************************\

@@ -40,11 +40,11 @@ void template_generator_rankingt::operator()(unsigned _domain_number,
 
   if(options.get_bool_option("monolithic-ranking-function"))
   {
-    domain_ptr = new linrank_domaint(domain_number,post_renaming_map);
+    domain_ptr = new linrank_domaint(domain_number,post_renaming_map, SSA.ns);
   }
   else
   {
-    domain_ptr = new lexlinrank_domaint(domain_number,post_renaming_map);
+    domain_ptr = new lexlinrank_domaint(domain_number,post_renaming_map, SSA.ns);
   }
  collect_variables_ranking(SSA,forward);
 
