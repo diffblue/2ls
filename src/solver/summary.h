@@ -2,17 +2,19 @@
 
 Module: Summary
 
-Author: Daniel Kroening, kroening@kroening.com
+Author: Peter Schrammel
 
 \*******************************************************************/
 
-#ifndef CPROVER_DELTACHECK_SUMMARY_H
-#define CPROVER_DELTACHECK_SUMMARY_H
+#ifndef CPROVER_2LS_SUMMARY_H
+#define CPROVER_2LS_SUMMARY_H
 
 #include <iostream>
 #include <set>
 
 #include <util/std_expr.h>
+
+#include <ssa/local_ssa.h>
 
 typedef enum{YES, NO, UNKNOWN} threevalt;
 
@@ -21,8 +23,8 @@ class summaryt
  public:
   typedef exprt predicatet;
 
-  typedef std::list<symbol_exprt> var_listt;
-  typedef std::set<symbol_exprt> var_sett;
+  typedef local_SSAt::var_listt var_listt;
+  typedef local_SSAt::var_sett var_sett;
 
   summaryt() : 
     fw_precondition(nil_exprt()), 

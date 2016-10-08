@@ -2,18 +2,18 @@
 
 Module: Data Flow Analysis
 
-Author: Daniel Kroening, kroening@kroening.com
+Author: Peter Schrammel
 
 \*******************************************************************/
 
-#ifndef DELTACHECK_SSA_ANALYZER_H
-#define DELTACHECK_SSA_ANALYZER_H
+#ifndef CPROVER_2LS_SSA_ANALYZER_H
+#define CPROVER_2LS_SSA_ANALYZER_H
 
 #include <util/replace_expr.h>
 
 #include "../ssa/local_ssa.h"
 #include "strategy_solver_base.h"
-#include "template_generator_base.h"
+#include "template_generator.h"
 
 class ssa_analyzert : public messaget
 {
@@ -35,9 +35,9 @@ public:
     }
 
   void operator()(incremental_solvert &solver,
-		  local_SSAt &SSA, 
+                  local_SSAt &SSA, 
                   const exprt &precondition,
-                  template_generator_baset &template_generator);
+                  template_generatort &template_generator);
 
   void get_result(exprt &result, const domaint::var_sett &vars);
 

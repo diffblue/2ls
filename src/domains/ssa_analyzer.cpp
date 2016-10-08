@@ -58,7 +58,7 @@ Function: ssa_analyzert::operator()
 void ssa_analyzert::operator()(incremental_solvert &solver,
 			       local_SSAt &SSA, 
                                const exprt &precondition,
-                               template_generator_baset &template_generator)
+                               template_generatort &template_generator)
 {
   if(SSA.goto_function.body.instructions.empty())
     return;

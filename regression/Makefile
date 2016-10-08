@@ -1,4 +1,4 @@
-DIRS = termination kiki preconditions interprocedural invariants
+DIRS = recursion termination kiki preconditions interprocedural invariants
 
 test:
 	$(foreach var,$(DIRS), make -C $(var) test;)

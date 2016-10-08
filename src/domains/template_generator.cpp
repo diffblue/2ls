@@ -6,7 +6,7 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
-#include "template_generator_base.h"
+#include "template_generator.h"
 #include "equality_domain.h"
 #include "tpolyhedra_domain.h"
 #include "predabs_domain.h"
@@ -17,13 +17,15 @@ Author: Peter Schrammel
 #include <util/prefix.h>
 #include <util/mp_arith.h>
 
+#include <ssa/ssa_inliner.h>
+
 #ifdef DEBUG
 #include <iostream>
 #endif
 
 /*******************************************************************\
 
-Function: template_generator_baset::get_pre_post_guards
+Function: template_generatort::get_pre_post_guards
 
   Inputs:
 
@@ -33,7 +35,7 @@ Function: template_generator_baset::get_pre_post_guards
 
 \*******************************************************************/
 
-void template_generator_baset::get_pre_post_guards(const local_SSAt &SSA,
+void template_generatort::get_pre_post_guards(const local_SSAt &SSA,
 			 local_SSAt::nodest::const_iterator n_it,
 			 exprt &pre_guard, exprt &post_guard)
 {
@@ -60,7 +62,7 @@ void template_generator_baset::get_pre_post_guards(const local_SSAt &SSA,
 
 /*******************************************************************\
 
-Function: template_generator_baset::get_pre_var
+Function: template_generatort::get_pre_var
 
   Inputs:
 
@@ -70,7 +72,7 @@ Function: template_generator_baset::get_pre_var
 
 \*******************************************************************/
 
-void template_generator_baset::get_pre_var(const local_SSAt &SSA,
+void template_generatort::get_pre_var(const local_SSAt &SSA,
   		         local_SSAt::objectst::const_iterator o_it,
    		         local_SSAt::nodest::const_iterator n_it,
 			 symbol_exprt &pre_var)
@@ -88,7 +90,7 @@ void template_generator_baset::get_pre_var(const local_SSAt &SSA,
 
 /*******************************************************************\
 
-Function: template_generator_baset::get_init_expr
+Function: template_generatort::get_init_expr
 
   Inputs:
 
@@ -99,7 +101,7 @@ Function: template_generator_baset::get_init_expr
 
 \*******************************************************************/
 
-void template_generator_baset::get_init_expr(const local_SSAt &SSA,
+void template_generatort::get_init_expr(const local_SSAt &SSA,
   		         local_SSAt::objectst::const_iterator o_it,
    		         local_SSAt::nodest::const_iterator n_it,
 			 exprt &init_expr)
@@ -128,7 +130,7 @@ void template_generator_baset::get_init_expr(const local_SSAt &SSA,
 
 /*******************************************************************\
 
-Function: template_generator_baset::collect_variables_loop
+Function: template_generatort::collect_variables_in
 
   Inputs:
 
@@ -138,7 +140,62 @@ Function: template_generator_baset::collect_variables_loop
 
 \*******************************************************************/
 
-void template_generator_baset::collect_variables_loop(const local_SSAt &SSA,bool forward)
+void template_generatort::collect_variables_in(
+  domaint::var_specst &var_specs,
+  const local_SSAt &SSA,
+  bool forward)
+{
+  // add params and globals_in
+  exprt first_guard = SSA.guard_symbol(SSA.goto_function.body.instructions.begin());
+  add_vars(SSA.params,first_guard,first_guard,
+           forward ? domaint::IN : domaint::OUT,
+           var_specs);
+  add_vars(SSA.globals_in,first_guard,first_guard,
+           forward ? domaint::IN : domaint::OUT,
+           var_specs);
+}
+
+/*******************************************************************\
+
+Function: template_generatort::collect_variables_out
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void template_generatort::collect_variables_out(
+  domaint::var_specst &var_specs,
+  const local_SSAt &SSA,
+  bool forward)
+{
+  // add globals_out (includes return values)
+  exprt last_guard = 
+    SSA.guard_symbol(--SSA.goto_function.body.instructions.end());
+  add_vars(SSA.globals_out,last_guard,last_guard,
+	   forward ? domaint::OUT : domaint::IN,
+	   var_specs);
+}
+
+/*******************************************************************\
+
+Function: template_generatort::collect_variables_loop
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void template_generatort::collect_variables_loop(
+  domaint::var_specst &var_specs,
+  const local_SSAt &SSA,
+  bool forward)
 {
   // used for renaming map
   var_listt pre_state_vars, post_state_vars;
@@ -158,33 +215,33 @@ void template_generator_baset::collect_variables_loop(const local_SSAt &SSA,bool
       // Record the objects modified by the loop to get
       // 'primed' (post-state) and 'unprimed' (pre-state) variables.
       for(local_SSAt::objectst::const_iterator
-          o_it=SSA.ssa_objects.objects.begin();
+            o_it=SSA.ssa_objects.objects.begin();
           o_it!=SSA.ssa_objects.objects.end();
           o_it++)
       {
         ssa_domaint::phi_nodest::const_iterator p_it=
-        phi_nodes.find(o_it->get_identifier());
+          phi_nodes.find(o_it->get_identifier());
 
-	if(p_it==phi_nodes.end()) continue; // object not modified in this loop
+        if(p_it==phi_nodes.end()) continue; // object not modified in this loop
 
         symbol_exprt pre_var;
-	get_pre_var(SSA,o_it,n_it,pre_var);
+        get_pre_var(SSA,o_it,n_it,pre_var);
         exprt init_expr;
-	get_init_expr(SSA,o_it,n_it,init_expr);
+        get_init_expr(SSA,o_it,n_it,init_expr);
         add_var(pre_var,pre_guard,post_guard,domaint::LOOP,var_specs);
 
-  #ifdef DEBUG
+#ifdef DEBUG
         std::cout << "Adding " << from_expr(ns, "", in) << " " << 
           from_expr(ns, "", out) << std::endl;        
-  #endif
-     }
+#endif
+      }
     } 
   }
 }
 
 /*******************************************************************\
 
-Function: template_generator_baset::all_vars
+Function: template_generatort::collect_input_variables_callingcontext
 
   Inputs:
 
@@ -194,20 +251,48 @@ Function: template_generator_baset::all_vars
 
 \*******************************************************************/
 
-domaint::var_sett template_generator_baset::all_vars()
+void template_generatort::collect_input_variables_callingcontext(
+  domaint::var_specst &var_specs,
+  const local_SSAt &SSA,    
+  local_SSAt::nodest::const_iterator n_it,
+  local_SSAt::nodet::function_callst::const_iterator f_it)
 {
-  domaint::var_sett vars;
-  for(domaint::var_specst::const_iterator v = var_specs.begin(); 
-      v!=var_specs.end(); v++)
+  exprt guard = SSA.guard_symbol(n_it->location);
+
+  assert(f_it->function().id()==ID_symbol); //no function pointers
+  irep_idt fname = to_symbol_expr(f_it->function()).get_identifier();
+  const local_SSAt &fSSA = ssa_db.get(fname);
+
+  //getting globals at call site
+  local_SSAt::var_sett cs_globals_in, globals_in;
+  SSA.get_globals(n_it->location,cs_globals_in,true,false); 
+  //filter out return values
+  globals_in = fSSA.globals_in;
+
+  for(local_SSAt::var_sett::iterator v_it = cs_globals_in.begin();
+      v_it != cs_globals_in.end(); v_it++)
   {
-    vars.insert(v->var);
+    symbol_exprt dummy;
+    if(ssa_inlinert::find_corresponding_symbol(*v_it,globals_in,dummy))
+      add_var(*v_it,guard,guard,
+	      domaint::OUT, //the same for both forward and backward
+	      var_specs);
   }
-  return vars;
+
+  //add function arguments
+  for(exprt::operandst::const_iterator a_it =  f_it->arguments().begin();
+      a_it !=  f_it->arguments().end(); a_it++)
+  {
+    std::set<symbol_exprt> args;
+    find_symbols(*a_it,args); 
+    add_vars(args,guard,guard,domaint::OUT,var_specs);
+  }
+
 }
 
 /*******************************************************************\
 
-Function: template_generator_baset::filter_template_domain
+Function: template_generatort::collect_output_variables_callingcontext
 
   Inputs:
 
@@ -217,7 +302,48 @@ Function: template_generator_baset::filter_template_domain
 
 \*******************************************************************/
 
-void template_generator_baset::filter_template_domain()
+void template_generatort::collect_output_variables_callingcontext(
+  domaint::var_specst &var_specs,
+  const local_SSAt &SSA,    
+  local_SSAt::nodest::const_iterator n_it,
+  local_SSAt::nodet::function_callst::const_iterator f_it)
+{
+  exprt guard = SSA.guard_symbol(n_it->location);
+
+  assert(f_it->function().id()==ID_symbol); //no function pointers
+  irep_idt fname = to_symbol_expr(f_it->function()).get_identifier();
+  const local_SSAt &fSSA = ssa_db.get(fname);
+
+  //getting globals at call site
+  local_SSAt::var_sett cs_globals_in, globals_in;
+  SSA.get_globals(n_it->location,cs_globals_in,false,true,fname); 
+  //with return values for function call
+  globals_in = fSSA.globals_out;
+
+  for(local_SSAt::var_sett::iterator v_it = cs_globals_in.begin();
+      v_it != cs_globals_in.end(); v_it++)
+  {
+    symbol_exprt dummy;
+    if(ssa_inlinert::find_corresponding_symbol(*v_it,globals_in,dummy))
+      add_var(*v_it,guard,guard,
+	      domaint::OUT, //the same for both forward and backward
+	      var_specs);
+  }
+}
+
+/*******************************************************************\
+
+Function: template_generatort::filter_template_domain
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void template_generatort::filter_template_domain(domaint::var_specst &var_specs)
 {
   domaint::var_specst new_var_specs(var_specs);
   var_specs.clear();
@@ -240,7 +366,7 @@ void template_generator_baset::filter_template_domain()
 
 /*******************************************************************\
 
-Function: template_generator_baset::filter_equality_domain
+Function: template_generatort::filter_equality_domain
 
   Inputs:
 
@@ -250,7 +376,7 @@ Function: template_generator_baset::filter_equality_domain
 
 \*******************************************************************/
 
-void template_generator_baset::filter_equality_domain()
+void template_generatort::filter_equality_domain(domaint::var_specst &var_specs)
 {
   domaint::var_specst new_var_specs(var_specs);
   var_specs.clear();
@@ -263,7 +389,7 @@ void template_generator_baset::filter_equality_domain()
 
 /*******************************************************************\
 
-Function: template_generator_baset::add_vars
+Function: template_generatort::add_vars
 
   Inputs:
 
@@ -273,7 +399,7 @@ Function: template_generator_baset::add_vars
 
 \*******************************************************************/
 
-void template_generator_baset::add_var(const domaint::vart &var, 
+void template_generatort::add_var(const domaint::vart &var, 
 			    const domaint::guardt &pre_guard, 
 			    domaint::guardt post_guard,
 			    const domaint::kindt &kind,
@@ -322,7 +448,8 @@ void template_generator_baset::add_var(const domaint::vart &var,
   }
 }
 
-void template_generator_baset::add_vars(const local_SSAt::var_listt &vars_to_add, 
+#if 0
+void template_generatort::add_vars(const local_SSAt::var_listt &vars_to_add, 
 			     const domaint::guardt &pre_guard, 
 			     const domaint::guardt &post_guard,
 			     const domaint::kindt &kind,
@@ -332,8 +459,9 @@ void template_generator_baset::add_vars(const local_SSAt::var_listt &vars_to_add
       it != vars_to_add.end(); it++) 
     add_var(*it,pre_guard,post_guard,kind,var_specs);
 }
+#endif
 
-void template_generator_baset::add_vars(const local_SSAt::var_sett &vars_to_add, 
+void template_generatort::add_vars(const local_SSAt::var_sett &vars_to_add, 
 			     const domaint::guardt &pre_guard, 
 			     const domaint::guardt &post_guard,
 			     const domaint::kindt &kind,
@@ -344,7 +472,7 @@ void template_generator_baset::add_vars(const local_SSAt::var_sett &vars_to_add,
     add_var(*it,pre_guard,post_guard,kind,var_specs);
 }
 
-void template_generator_baset::add_vars(const var_listt &vars_to_add, 
+void template_generatort::add_vars(const var_listt &vars_to_add, 
 			     const domaint::guardt &pre_guard, 
 			     const domaint::guardt &post_guard,
 			     const domaint::kindt &kind,
@@ -357,7 +485,7 @@ void template_generator_baset::add_vars(const var_listt &vars_to_add,
 
 /*******************************************************************\
 
-Function: template_generator_baset::handle_special_functions
+Function: template_generatort::handle_special_functions
 
   Inputs:
 
@@ -367,7 +495,7 @@ Function: template_generator_baset::handle_special_functions
 
 \*******************************************************************/
 
-void template_generator_baset::handle_special_functions(const local_SSAt &SSA)
+void template_generatort::handle_special_functions(const local_SSAt &SSA)
 {
   const irep_idt &function_id = SSA.goto_function.body.instructions.front().function;
   if(id2string(function_id) == "__CPROVER_initialize")
@@ -379,7 +507,7 @@ void template_generator_baset::handle_special_functions(const local_SSAt &SSA)
 
 /*******************************************************************\
 
-Function: template_generator_baset::build_custom_expr
+Function: template_generatort::build_custom_expr
 
   Inputs:
 
@@ -389,7 +517,7 @@ Function: template_generator_baset::build_custom_expr
 
 \*******************************************************************/
 
-bool template_generator_baset::replace_post(replace_mapt replace_map, exprt &expr)
+bool template_generatort::replace_post(replace_mapt replace_map, exprt &expr)
 {
   bool replaced = false;
   if(expr.id()==ID_function_application)
@@ -413,7 +541,7 @@ bool template_generator_baset::replace_post(replace_mapt replace_map, exprt &exp
   return replaced;
 }
 
-bool template_generator_baset::build_custom_expr(const local_SSAt &SSA,
+bool template_generatort::build_custom_expr(const local_SSAt &SSA,
 			 local_SSAt::nodest::const_iterator n_it,
 			 exprt &expr)
 {
@@ -457,7 +585,7 @@ bool template_generator_baset::build_custom_expr(const local_SSAt &SSA,
 
 /*******************************************************************\
 
-Function: template_generator_baset::instantiate_custom_templates
+Function: template_generatort::instantiate_custom_templates
 
   Inputs:
 
@@ -467,13 +595,15 @@ Function: template_generator_baset::instantiate_custom_templates
 
 \*******************************************************************/
 
-bool template_generator_baset::instantiate_custom_templates(
-                               const local_SSAt &SSA)
+bool template_generatort::instantiate_custom_templates(
+  domaint::var_specst &var_specs,
+  const local_SSAt &SSA)
 {
   //TODO: the code below cannot work for unwound SSA
   //  we deactivate it for now
   return false;
 
+#if 0
   // used for renaming map
   var_listt pre_state_vars, post_state_vars;
 
@@ -584,11 +714,12 @@ bool template_generator_baset::instantiate_custom_templates(
   }
 
   return (found_poly || found_predabs);
+#endif
 }
 
 /*******************************************************************\
 
-Function: template_generator_baset::instantiate_standard_domains
+Function: template_generatort::instantiate_standard_domains
 
   Inputs:
 
@@ -598,7 +729,9 @@ Function: template_generator_baset::instantiate_standard_domains
 
 \*******************************************************************/
 
-void template_generator_baset::instantiate_standard_domains(const local_SSAt &SSA)
+void template_generatort::instantiate_standard_domains(
+  domaint::var_specst &var_specs,
+  const local_SSAt &SSA)
 {
   replace_mapt &renaming_map =
     std_invariants ? aux_renaming_map : post_renaming_map;
@@ -606,7 +739,7 @@ void template_generator_baset::instantiate_standard_domains(const local_SSAt &SS
   //get domain from command line options
   if(options.get_bool_option("equalities"))
   {
-    filter_equality_domain();
+    filter_equality_domain(var_specs);
     domain_ptr = new equality_domaint(domain_number,
 				      renaming_map, var_specs, SSA.ns);
   }
@@ -614,7 +747,7 @@ void template_generator_baset::instantiate_standard_domains(const local_SSAt &SS
   {
     domain_ptr = new tpolyhedra_domaint(domain_number,
 					renaming_map);
-    filter_template_domain();
+    filter_template_domain(var_specs);
     static_cast<tpolyhedra_domaint *>(domain_ptr)->add_interval_template(
       var_specs, SSA.ns);
   }
@@ -622,7 +755,7 @@ void template_generator_baset::instantiate_standard_domains(const local_SSAt &SS
   {
     domain_ptr = new tpolyhedra_domaint(domain_number,
 					renaming_map);
-    filter_template_domain();
+    filter_template_domain(var_specs);
     static_cast<tpolyhedra_domaint *>(domain_ptr)->add_difference_template(
       var_specs, SSA.ns);
     static_cast<tpolyhedra_domaint *>(domain_ptr)->add_interval_template(
@@ -632,7 +765,7 @@ void template_generator_baset::instantiate_standard_domains(const local_SSAt &SS
   {
     domain_ptr = new tpolyhedra_domaint(domain_number,
 					renaming_map);
-    filter_template_domain();
+    filter_template_domain(var_specs);
     static_cast<tpolyhedra_domaint *>(domain_ptr)->add_sum_template(
       var_specs, SSA.ns);
     static_cast<tpolyhedra_domaint *>(domain_ptr)->add_difference_template(
@@ -644,7 +777,7 @@ void template_generator_baset::instantiate_standard_domains(const local_SSAt &SS
   {
     domain_ptr = new tpolyhedra_domaint(domain_number,
 					renaming_map);
-    filter_template_domain();
+    filter_template_domain(var_specs);
     static_cast<tpolyhedra_domaint *>(domain_ptr)->add_difference_template(
       var_specs, SSA.ns);
     static_cast<tpolyhedra_domaint *>(domain_ptr)->add_quadratic_template(

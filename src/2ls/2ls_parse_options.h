@@ -152,7 +152,7 @@ protected:
   void remove_multiple_dereferences(goto_modelt &goto_model);
   void remove_multiple_dereferences(goto_modelt &goto_model, goto_programt &body, goto_programt::targett t, exprt &expr, unsigned &var_counter, bool deref_seen);
   void split_loopheads(goto_modelt &goto_model);
-
+  void loops_to_recursion(goto_modelt &goto_model);
 };
 
 #endif

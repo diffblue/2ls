@@ -121,7 +121,7 @@ public:
   exprt get_enabling_exprs() const;
 
   // function entry and exit variables
-  typedef std::list<symbol_exprt> var_listt;
+  typedef std::vector<symbol_exprt> var_listt;
   typedef std::set<symbol_exprt> var_sett;
   var_listt params;  
   var_sett globals_in, globals_out;  

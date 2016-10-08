@@ -46,9 +46,9 @@ void template_generator_rankingt::operator()(unsigned _domain_number,
   {
     domain_ptr = new lexlinrank_domaint(domain_number,post_renaming_map);
   }
- collect_variables_ranking(SSA,forward);
+  collect_variables_ranking(var_specs, SSA,forward);
 
- options.set_option("compute-ranking-functions",true);
+  options.set_option("compute-ranking-functions",true);
 
 #if 1
   debug() << "Template variables: " << eom;
@@ -56,6 +56,30 @@ void template_generator_rankingt::operator()(unsigned _domain_number,
   debug() << "Template: " << eom;
   domain_ptr->output_domain(debug(), SSA.ns); debug() << eom;
 #endif  
+}
+
+
+/*******************************************************************\
+
+Function: template_generator_rankingt::all_vars
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+domaint::var_sett template_generator_rankingt::all_vars()
+{
+  domaint::var_sett vars;
+  for(domaint::var_specst::const_iterator v = var_specs.begin(); 
+      v!=var_specs.end(); v++)
+  {
+    vars.insert(v->var);
+  }
+  return vars;
 }
 
 /*******************************************************************\
@@ -70,7 +94,10 @@ Function: template_generator_rankingt::collect_variables_ranking
 
 \*******************************************************************/
 
-void template_generator_rankingt::collect_variables_ranking(const local_SSAt &SSA,bool forward)
+void template_generator_rankingt::collect_variables_ranking(
+  domaint::var_specst &var_specs,
+  const local_SSAt &SSA,
+  bool forward)
 {
   // used for renaming map
   var_listt pre_state_vars, post_state_vars;
