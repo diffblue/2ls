@@ -34,6 +34,8 @@ Author: Peter Schrammel
 #include <solver/summarizer_fw_contexts.h>
 #endif
 
+#include <solver/summarizer_fw_rec.h>
+
 #include "show.h"
 #include "instrument_goto.h"
 
@@ -95,6 +97,12 @@ void summary_checker_baset::summarize(const goto_modelt &goto_model,
 {    
   summarizer_baset *summarizer = NULL;
 
+  if(options.get_bool_option("recursion"))
+  {
+    summarizer = new summarizer_fw_rect(
+      options,summary_db,ssa_db,ssa_unwinder,ssa_inliner);
+  }
+  else
 #ifdef SHOW_CALLING_CONTEXTS
   if(options.get_bool_option("show-calling-contexts"))
     summarizer = new summarizer_fw_contextst(

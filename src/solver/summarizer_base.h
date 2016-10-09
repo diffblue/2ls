@@ -91,6 +91,11 @@ class summarizer_baset : public messaget
 			   local_SSAt &SSA, 
 			   const exprt &cond);
 
+  bool is_contained(
+    const exprt &e1,
+    const exprt &e2,
+    const namespacet &ns);
+
   //statistics
   unsigned solver_instances;
   unsigned solver_calls;

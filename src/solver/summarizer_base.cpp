@@ -7,6 +7,7 @@ Author: Peter Schrammel
 \*******************************************************************/
 
 #include <iostream>
+#include <memory>
 
 #include <util/simplify_expr.h>
 #include <solvers/sat/satcheck.h>
@@ -407,5 +408,31 @@ bool summarizer_baset::check_end_reachable(
 
   solver.pop_context();
 
+  return result;
+}
+
+/*******************************************************************\
+
+Function: summarizer_baset::is_contained()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: checks whether two values are contained in each other
+
+\******************************************************************/
+
+bool summarizer_baset::is_contained(
+  const exprt &e1,
+  const exprt &e2,
+  const namespacet &ns)
+{
+  incremental_solvert *solver= 
+    incremental_solvert::allocate(ns, options.get_bool_option("refine"));
+  solver->set_message_handler(get_message_handler());
+  (*solver) << and_exprt(e1,not_exprt(e2));
+  bool result=((*solver)()==decision_proceduret::D_UNSATISFIABLE);
+  delete solver;
   return result;
 }

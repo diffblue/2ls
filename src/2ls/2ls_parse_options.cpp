@@ -2,7 +2,8 @@
 
 Module: 2LS Command Line Options Processing
 
-Author: Daniel Kroening, Peter Schrammel
+Author: Peter Schrammel
+        Daniel Kroening
 
 \*******************************************************************/
 
@@ -306,6 +307,12 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
     options.set_option("havoc", true);
     if(!cmdline.isset("unwind"))
       options.set_option("unwind",UINT_MAX);
+  }
+
+ // analysis for recursion (experimental)
+  if(cmdline.isset("recursion"))
+  {
+    options.set_option("recursion", true);
   }
 
   // check for spuriousness of assertion failures
