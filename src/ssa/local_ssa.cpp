@@ -175,18 +175,11 @@ void local_SSAt::get_globals(
       if(is_ptr_object(root_obj))
       {
         const symbolt *symbol;
-        if(ns.lookup(root_obj.get(ID_ptr_object), symbol)) continue;
-        if(!symbol->is_parameter)
-        {
-          if(!with_returns ||
-             id2string(it->get_identifier()).find("'obj")==std::string::npos)
-            continue;
-          const ssa_domaint &ssa_domain=ssa_analysis[loc];
-          // Filter out non-assigned symbols
-          const auto &def=ssa_domain.def_map.find(it->get_identifier());
-          if(def->second.def.is_input())
-            continue;
-        }
+        irep_idt ptr_obj_id=root_obj.get(ID_ptr_object);
+        if(ns.lookup(ptr_obj_id, symbol))
+          continue;
+        if(!symbol->is_parameter && !with_returns)
+          continue;
       }
 
       if(rhs_value)

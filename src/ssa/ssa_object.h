@@ -114,7 +114,6 @@ public:
     const namespacet &ns)
   {
     collect_objects(goto_function, ns);
-    add_ptr_objects(ns);
     categorize_objects(goto_function, ns);
   }
 
@@ -128,7 +127,8 @@ protected:
     const namespacet &);
 
   void add_ptr_objects(
-    const namespacet &);
+      const goto_functionst::goto_functiont &,
+      const namespacet &);
 };
 
 bool is_ptr_object(const exprt &);
