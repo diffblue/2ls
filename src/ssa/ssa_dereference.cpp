@@ -358,7 +358,7 @@ exprt dereference_rec(
     if (values.empty()) {
       // We use the identifier of pointed object
       irep_idt identifier = id2string(to_symbol_expr(pointer).get_identifier())+"'obj";
-      result=symbol_exprt(identifier, src.type());
+      result = symbol_exprt(identifier, ns.follow(pointed_type));
     }
 
     return result;
