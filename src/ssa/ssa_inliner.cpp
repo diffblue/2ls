@@ -94,12 +94,12 @@ void ssa_inlinert::get_summary(
 				    transformer));
   
   //equalities for globals out (including unmodified globals)
-  if(forward)
-    bindings.push_back(get_replace_globals_out(summary.globals_out,
-				      cs_globals_in,cs_globals_out));
+  if (forward)
+    bindings.push_back(
+        get_replace_globals_out(cs_globals_in, cs_globals_out, summary, SSA.ns));
   else
-    bindings.push_back(get_replace_globals_out(summary.globals_in,
-				      cs_globals_out,cs_globals_in));
+    bindings.push_back(
+        get_replace_globals_out(cs_globals_out, cs_globals_in, summary, SSA.ns));
 }
 
 /*******************************************************************\
@@ -554,22 +554,73 @@ Function: ssa_inlinert::replace_globals_out()
 
 \*******************************************************************/
 
-exprt ssa_inlinert::get_replace_globals_out(
-  const local_SSAt::var_sett &globals_out, 
-  const local_SSAt::var_sett &cs_globals_in,  
-  const local_SSAt::var_sett &cs_globals_out)
+exprt ssa_inlinert::get_replace_globals_out(const local_SSAt::var_sett &cs_globals_in,
+                                            const local_SSAt::var_sett &cs_globals_out,
+                                            const summaryt &summary,
+                                            const namespacet &ns)
 {
   //equalities for globals_out
   exprt::operandst c;
   for(summaryt::var_sett::const_iterator it = cs_globals_out.begin();
       it != cs_globals_out.end(); it++)
   {
-    symbol_exprt rhs = *it; //copy
     symbol_exprt lhs;
-    if(find_corresponding_symbol(*it,globals_out,lhs))
-      rename(lhs);
+    exprt rhs;
+
+    if (id2string(it->get_identifier()).find("'obj") != std::string::npos &&
+        it->get_identifier() != get_original_identifier(*it))
+    { // variable is heap object (contains 'obj) and is assigned by the call
+      const irep_idt &id = get_original_identifier(*it);
+      if (is_struct_member(id))
+      { // variable is member of dynamic struct
+        const std::string member = id2string(id).substr(id2string(id).find_last_of("."));
+        const irep_idt &root_id = id2string(id).substr(0, id2string(id).find_last_of("."));
+        // find root object (must be in global variables)
+        symbol_exprt root_object;
+        for (auto &global : cs_globals_out)
+        {
+          if (get_original_identifier(global) == root_id)
+            root_object = global;
+        }
+
+        // find corresponding dynamic object in called function
+        symbol_exprt dynamic_object;
+        assert(find_corresponding_dyn_obj(root_object, summary, ns, dynamic_object));
+
+        // restore member expression
+        dynamic_object.set_identifier(id2string(dynamic_object.get_identifier()) + member);
+        dynamic_object.type() = it->type();
+
+        assert(find_corresponding_symbol(dynamic_object, summary.globals_out, lhs));
+        rename(lhs);
+
+        rhs = *it; // copy
+      }
+      else
+      { // variable is dynamic object
+        // find corresponding dynamic object in called function
+        symbol_exprt dynamic_object;
+        assert(find_corresponding_dyn_obj(*it, summary, ns, dynamic_object));
+
+        // equality is between addresses of corresponding dynamic objects
+        exprt addr = address_of_exprt(dynamic_object);
+        rename(addr);
+        assert(addr.id() == ID_symbol);
+
+        lhs = to_symbol_expr(addr);
+
+        symbol_exprt orig_obj(id, dynamic_object.type());
+        rhs = address_of_exprt(orig_obj);
+      }
+    }
     else
-      assert(find_corresponding_symbol(*it,cs_globals_in,lhs));
+    {
+      rhs = *it; // copy
+      if (find_corresponding_symbol(*it, summary.globals_out, lhs))
+        rename(lhs);
+      else
+        assert(find_corresponding_symbol(*it, cs_globals_in, lhs));
+    }
     c.push_back(equal_exprt(lhs,rhs));
   }
   return conjunction (c);
@@ -632,6 +683,17 @@ void ssa_inlinert::rename(exprt &expr)
     symbol_exprt &sexpr = to_symbol_expr(expr);
     irep_idt id = id2string(sexpr.get_identifier())+"@"+i2string(counter);
     sexpr.set_identifier(id);
+  }
+  else if (expr.id() == ID_address_of)
+  {
+    irep_idt id;
+    const exprt &obj = to_address_of_expr(expr).object();
+    if (obj.id() == ID_symbol)
+    {
+      id = id2string(to_symbol_expr(obj).get_identifier()) + "'addr" + "@" + i2string(counter);
+    }
+    symbol_exprt addr_symbol(id, expr.type());
+    expr = addr_symbol;
   }
   for(exprt::operandst::iterator it = expr.operands().begin();
       it != expr.operands().end(); it++)
@@ -910,11 +972,53 @@ irep_idt ssa_inlinert::get_original_identifier(const symbol_exprt &s)
     {
       if(!(c=='#' || c=='@' || c=='%' || c=='!' || c=='$') &&
          !(c=='p' || c=='h' || c=='i') &&
+         !(c=='l' || c=='b') &&
          !('0'<=c && c<='9'))
         pos = std::string::npos;
     }
   }
   if(pos!=std::string::npos) id = id.substr(0,pos);
   return id;
+}
+
+/**
+ * Test if variable is member of struct.
+ * @param identifier Id of variable
+ * @return
+ */
+bool ssa_inlinert::is_struct_member(const irep_idt &identifier)
+{
+  const std::string id = id2string(identifier);
+  return id.find(".") != std::string::npos &&
+         id.find_first_of("#$@'%!", id.find_last_of(".")) == std::string::npos;
+}
+
+/**
+ * Find corresponding dynamic object in called function.
+ * Takes pointer to s (by stripping away 'obj suffix) and querys called function value set (stored
+ * in summary of that function).
+ * @param s Call site dynamic object
+ * @param summary Called function summary
+ * @param ns Namespace
+ * @param found Found symbol
+ * @return True if an object was found, otherwise false.
+ */
+bool ssa_inlinert::find_corresponding_dyn_obj(const symbol_exprt &s,
+                                              const summaryt &summary,
+                                              const namespacet &ns,
+                                              symbol_exprt &found)
+{
+  irep_idt id = get_original_identifier(s);
+  const std::string &id_str = id2string(s.get_identifier());
+  id = id_str.substr(0, id_str.rfind("'obj"));
+
+  auto &values = summary.value_domain(symbol_exprt(id, pointer_typet(s.type())), ns);
+  if (values.value_set.size() == 1)
+  {
+    found = values.value_set.begin()->symbol_expr();
+    return true;
+  }
+
+  return false;
 }
 

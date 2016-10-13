@@ -139,6 +139,16 @@ void summaryt::join(const summaryt &new_summary)
   }
 }
 
+/**
+ * Get value domain for last location from SSA.
+ * @param SSA
+ */
+void summaryt::set_value_domain(const local_SSAt &SSA)
+{
+  const local_SSAt::locationt &last_loc = (--SSA.nodes.end())->location;
+  value_domain = SSA.ssa_value_ai[last_loc];
+}
+
 /*******************************************************************\
 
 Function: threeval2string
