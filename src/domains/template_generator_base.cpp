@@ -17,6 +17,7 @@ Author: Peter Schrammel
 #include "tpolyhedra_domain.h"
 #include "predabs_domain.h"
 #include "heap_domain.h"
+#include <ssa/ssa_inliner.h>
 
 #ifdef DEBUG
 #include <iostream>
@@ -268,10 +269,15 @@ void template_generator_baset::filter_heap_domain()
 {
   domaint::var_specst new_var_specs(var_specs);
   var_specs.clear();
-  for (auto var=new_var_specs.begin(); var!=new_var_specs.end(); ++var)
+  for(auto var=new_var_specs.begin(); var!=new_var_specs.end(); ++var)
   {
-    if (var->var.type().id()==ID_pointer || var->var.type().get_bool("#dynamic"))
-      var_specs.push_back(*var);
+    if(var->var.id()==ID_symbol && var->var.type().id()==ID_pointer)
+    {
+      // Filter out non-assigned variables
+      if(ssa_inlinert::get_original_identifier(to_symbol_expr(var->var)) !=
+         to_symbol_expr(var->var).get_identifier())
+        var_specs.push_back(*var);
+    }
   }
 }
 

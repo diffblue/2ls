@@ -5,6 +5,7 @@
 //#define DEBUG_OUTPUT
 
 #include "strategy_solver_heap.h"
+#include "../ssa/address_canonizer.h"
 
 bool strategy_solver_heapt::iterate(invariantt &_inv)
 {
@@ -66,14 +67,14 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
     }
     for (unsigned i = 0; i < heap_domain.templ.size(); i++)
     {
-      exprt c = heap_domain.get_row_pre_constraint(i, inv[i]).op1();
+      exprt c = heap_domain.get_row_pre_constraint(i, inv[i]);
       debug() << "cond: " << from_expr(ns, "", c) << " " <<
               from_expr(ns, "", solver.get(c)) << eom;
       debug() << "guards: " << from_expr(ns, "", heap_domain.templ[i].pre_guard) <<
               " " << from_expr(ns, "", solver.get(heap_domain.templ[i].pre_guard)) << eom;
       debug() << "guards: " << from_expr(ns, "", heap_domain.templ[i].post_guard) << " "
               << from_expr(ns, "", solver.get(heap_domain.templ[i].post_guard)) << eom;
-      exprt post = heap_domain.get_row_post_constraint(i, inv[i]).op1();
+      exprt post = heap_domain.get_row_post_constraint(i, inv[i]);
       debug() << "post-cond: " << from_expr(ns, "", post) << " "
               << from_expr(ns, "", solver.get(post)) << eom;
     }
@@ -95,11 +96,14 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
         if (heap_domain.is_null_ptr(ptr_value))
         {
           exprt null_expr = null_pointer_exprt(to_pointer_type(ptr_value.type()));
+
+          // Add path to NULL
           if (heap_domain.add_row_path(row, inv, null_expr,
                                        std::make_pair(nil_exprt(), nil_exprt())))
             improved = true;
           debug() << "add destination: " << from_expr(ns, "", ptr_value) << eom;
 
+          // Add points to information
           if (heap_domain.add_points_to(row, inv, std::make_pair(null_expr, nil_exprt())))
             improved = true;
           debug() << "add points to: " << from_expr(ns, "", ptr_value) << eom;
@@ -109,13 +113,18 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
           // pointer points to the heap (p = &obj)
           debug() << from_expr(ns, "", ptr_value) << eom;
           assert(ptr_value.id() == ID_address_of);
-          assert(to_address_of_expr(ptr_value).object().id() == ID_symbol);
-          symbol_exprt obj = to_symbol_expr(to_address_of_expr(ptr_value).object());
+          // Canonize address
+          const exprt address = address_canonizer(ptr_value, ns);
+          assert(to_address_of_expr(address).object().id() == ID_symbol);
+
+          symbol_exprt obj = to_symbol_expr(to_address_of_expr(address).object());
 
           if (obj.type().get_bool("#dynamic"))
           {
+            // obj is dynamic object accessed inside the function
+
             if (id2string(obj.get_identifier()).find("$unknown") != std::string::npos)
-            {
+            { // handle unknown object
               if (heap_domain.add_points_to(row, inv, std::make_pair(obj, nil_exprt())))
                 improved = true;
               debug() << "add points to: " << from_expr(ns, "", obj) << eom;
@@ -127,7 +136,8 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
               if (inv[row].empty() && heap_domain.templ[row].dyn_obj.id() != ID_nil &&
                   heap_domain.get_base_name(obj) ==
                   heap_domain.get_base_name(heap_domain.templ[row].dyn_obj))
-              {
+              { // for the same object find previous instance
+                // (used for multiple loops in one function)
                 member_val_index = find_member_row(obj, heap_domain.templ[row].member,
                                                    --actual_loc);
                 if (member_val_index < 0)
@@ -140,7 +150,6 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
               }
               assert(member_val_index >= 0);
               exprt member_expr = heap_domain.templ[member_val_index].expr;
-              exprt do_expr = heap_domain.templ[member_val_index].dyn_obj;
 
               // Add all paths from obj.next to p
               if (heap_domain.add_all_paths(row, (unsigned) member_val_index, inv,
@@ -149,15 +158,26 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
               debug() << "add all paths: " << from_expr(ns, "", member_expr) << ", through: "
                       << from_expr(ns, "", obj) << eom;
 
-              assert(do_expr.id() != ID_nil);
               // Add points to information
-              assert(do_expr.id() == ID_symbol);
               if (heap_domain.add_points_to(row, inv, std::make_pair(obj, member_expr)))
                 improved = true;
               debug() << "add points to: " << from_expr(ns, "", obj) << eom;
 
               heap_domain.add_pointed_by_row((unsigned) member_val_index, row, inv);
             }
+          }
+          else
+          {
+            // Add points to information
+            if (heap_domain.add_points_to(row, inv, std::make_pair(obj, nil_exprt())))
+              improved = true;
+            debug() << "add points to: " << from_expr(ns, "", obj) << eom;
+
+            // Add path to &(obj)
+            if (heap_domain.add_row_path(row, inv, address_of_exprt(obj),
+                                         std::make_pair(nil_exprt(), nil_exprt())))
+              improved = true;
+            debug() << "add destination: " << from_expr(ns, "", ptr_value) << eom;
           }
         }
 
