@@ -96,12 +96,31 @@ void local_SSAt::get_entry_exit_vars()
     const symbolt *symbol;
     if(ns.lookup(identifier,symbol)) continue;         
 
-    params.push_back(symbol->symbol_expr());
+    const symbol_exprt &param = symbol->symbol_expr();
+    params.push_back(param);
+
+    if (param.type().id() == ID_pointer)
+    {
+      const typet &pointed_type = ns.follow(param.type().subtype());
+      const symbol_exprt pointed_obj(id2string(param.get_identifier()) + "'obj", pointed_type);
+      nodes.begin()->equalities.push_back(equal_exprt(param, address_of_exprt(pointed_obj)));
+    }
   }
 
   //get globals in 
   goto_programt::const_targett first = goto_function.body.instructions.begin();
   get_globals(first,globals_in,true,false); //filters out #return_value
+
+  for (auto &global_in : globals_in)
+  {
+    if (global_in.type().id() == ID_pointer &&
+        id2string(global_in.get_identifier()).find('.') == std::string::npos)
+    {
+      const typet &pointed_type = ns.follow(global_in.type().subtype());
+      const symbol_exprt pointed_obj(id2string(global_in.get_identifier()) + "'obj", pointed_type);
+      nodes.begin()->equalities.push_back(equal_exprt(global_in, address_of_exprt(pointed_obj)));
+    }
+  }
 
   //get globals out (includes return value)
   goto_programt::const_targett 
@@ -141,23 +160,22 @@ void local_SSAt::get_globals(locationt loc, std::set<symbol_exprt> &globals,
 
       //filter out return values of other functions
       if (with_returns && returns_for_function != "" &&
-          id2string(it->get_identifier()).find(
-              "#return_value") != std::string::npos &&
+          id2string(it->get_identifier()).find("#return_value") ==
+              id2string(it->get_identifier()).size() - std::string("#return_value").size() &&
           id2string(it->get_identifier()).find(
               id2string(returns_for_function) + "#return_value") == std::string::npos)
         continue;
 
       const exprt &root_obj = it->get_root_object();
+      if (root_obj.type().get_bool("#dynamic") && !with_returns) continue;
       if (is_ptr_object(root_obj))
       {
         const symbolt *symbol;
         if (ns.lookup(root_obj.get(ID_ptr_object), symbol)) continue;
         if (!symbol->is_parameter)
         {
-          const ssa_domaint &ssa_domain = ssa_analysis[loc];
-          // Filter out non-assigned symbols
-          const auto &def = ssa_domain.def_map.find(it->get_identifier());
-          if (def->second.def.is_input())
+          if (!with_returns ||
+              id2string(it->get_identifier()).find("'obj") == std::string::npos)
             continue;
         }
       }
@@ -1351,8 +1369,13 @@ void local_SSAt::assign_rec(
   {
     const if_exprt &if_expr=to_if_expr(lhs);
 
-    exprt new_rhs = if_exprt(if_expr.cond(), rhs, if_expr.true_case());
-    assign_rec(if_expr.true_case(), new_rhs, and_exprt(guard, if_expr.cond()), loc);
+    if (if_expr.false_case().id() == ID_if)
+    {
+      exprt new_rhs = if_exprt(if_expr.cond(), rhs, if_expr.true_case());
+      assign_rec(if_expr.true_case(), new_rhs, and_exprt(guard, if_expr.cond()), loc);
+    }
+    else
+      assign_rec(if_expr.true_case(), rhs, and_exprt(guard, if_expr.cond()), loc);
 
     assign_rec(if_expr.false_case(), rhs, and_exprt(guard, not_exprt(if_expr.cond())), loc);
   }
@@ -1561,20 +1584,21 @@ std::list<exprt> & operator << (
       dest.push_back(*c_it);
     }
 
-    for (auto &obj : src.unknown_objs)
+  }
+
+  for (auto &obj : src.unknown_objs)
+  {
+    const typet &obj_type = src.ns.follow(obj.type());
+    if (obj_type.id() == ID_struct)
     {
-      const typet &obj_type = src.ns.follow(obj.type());
-      if (obj_type.id() == ID_struct)
+      for (auto &component : to_struct_type(obj_type).components())
       {
-        for (auto &component : to_struct_type(obj_type).components())
-        {
-          dest.push_back(src.unknown_obj_eq(obj, component));
-        }
+        dest.push_back(src.unknown_obj_eq(obj, component));
       }
     }
   }
 #endif
-  
+
   return dest;
 }
 

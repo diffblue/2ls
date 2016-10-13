@@ -283,14 +283,24 @@ void ssa_value_domaint::assign_rhs_rec(
     
     if(ssa_object)
     {
-      value_mapt::const_iterator m_it=value_map.find(ssa_object);
+      value_mapt::const_iterator m_it = value_map.find(ssa_object);
 
-      if(m_it!=value_map.end())
+      if (m_it != value_map.end())
       {
-        valuest tmp_values=m_it->second;
-        if(offset) tmp_values.offset=true;
-        tmp_values.alignment=merge_alignment(tmp_values.alignment, alignment);
+        valuest tmp_values = m_it->second;
+        if (offset) tmp_values.offset = true;
+        tmp_values.alignment = merge_alignment(tmp_values.alignment, alignment);
         dest.merge(tmp_values);
+      }
+      else if (ssa_object.type().id() == ID_pointer &&
+               id2string(ssa_object.get_identifier()).find("#return_value") != std::string::npos &&
+               id2string(ssa_object.get_identifier()) != "malloc#return_value")
+      { // Pointer typed return value of some function points to some dynamic object
+        const typet &pointed_type = ns.follow(ssa_object.type().subtype());
+        const symbol_exprt &pointed_obj = symbol_exprt(
+            id2string(ssa_object.get_identifier()) + "'obj", pointed_type);
+        dest.value_set.insert(ssa_objectt(pointed_obj, ns));
+        if (offset) dest.offset = true;
       }
     }
     else
