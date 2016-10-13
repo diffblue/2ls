@@ -41,11 +41,12 @@ class heap_domaint:public domaint
     {
       exprt destination;
       mutable std::set<dyn_objt> dyn_objects;
+      mutable bool zero_length;
 
       patht(const exprt &dest_) : destination(dest_) {}
 
-      patht(const exprt &dest_, const std::set<dyn_objt> &dyn_objs_)
-          : destination(dest_), dyn_objects(dyn_objs_) {}
+      patht(const exprt &dest_, const std::set<dyn_objt> &dyn_objs_, const bool zero_l_)
+          : destination(dest_), dyn_objects(dyn_objs_), zero_length(zero_l_) {}
 
       bool operator<(const patht &rhs) const
       {
