@@ -229,7 +229,9 @@ void ssa_objectst::add_ptr_objects(
     exprt root_object=o_it->get_root_object();
     if(root_object.id()==ID_symbol)
     {
-      if(o_it->type().id()==ID_pointer)
+      const symbolt &symbol = ns.lookup(root_object);
+      if(o_it->type().id()==ID_pointer &&
+          (symbol.is_parameter || !symbol.is_procedure_local()))
       {
         tmp.insert(*o_it);
       }
@@ -240,11 +242,16 @@ void ssa_objectst::add_ptr_objects(
       o_it!=tmp.end();
       o_it++)
   {
-    typet type=o_it->type().subtype();
-    irep_idt identifier=id2string(o_it->get_identifier())+"'obj";
-    symbol_exprt ptr_object(identifier, type);
-    ptr_object.set(ID_ptr_object, o_it->get_identifier());
-    collect_objects_rec(ptr_object, ns, objects, literals);
+    typet type = o_it->type();
+    irep_idt identifier = o_it->get_identifier();
+    do
+    {
+      type = type.subtype();
+      identifier = id2string(identifier) + "'obj";
+      symbol_exprt ptr_object(identifier, type);
+      ptr_object.set(ID_ptr_object, o_it->get_identifier());
+      collect_objects_rec(ptr_object, ns, objects, literals);
+    } while (ns.follow(type).id() == ID_pointer);
   }
 }
 

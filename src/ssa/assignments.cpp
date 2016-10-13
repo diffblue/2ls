@@ -61,7 +61,13 @@ void assignmentst::build_assignment_map(
       for(objectst::const_iterator
           o_it=ssa_objects.globals.begin();
           o_it!=ssa_objects.globals.end(); o_it++)
-        assign(*o_it, it, ns);
+      {
+        const exprt &function = code_function_call.function();
+        if (function.id() == ID_symbol &&
+            id2string(o_it->get_identifier()).find(
+                id2string(to_symbol_expr(function).get_identifier())) != std::string::npos)
+          assign(*o_it, it, ns);
+      }
 
       // the call might come with an assignment
       if(code_function_call.lhs().is_not_nil())
