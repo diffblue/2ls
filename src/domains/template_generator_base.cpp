@@ -18,6 +18,7 @@ Author: Peter Schrammel
 #include <util/simplify_expr.h>
 #include <util/prefix.h>
 #include <util/mp_arith.h>
+#include "../ssa/ssa_inliner.h"
 
 #ifdef DEBUG
 #include <iostream>
@@ -269,8 +270,13 @@ void template_generator_baset::filter_heap_domain()
   var_specs.clear();
   for (auto var = new_var_specs.begin(); var != new_var_specs.end(); ++var)
   {
-    if (var->var.type().id() == ID_pointer || var->var.type().get_bool("#dynamic"))
-      var_specs.push_back(*var);
+    if (var->var.id() == ID_symbol && var->var.type().id() == ID_pointer)
+    {
+      // Filter out non-assigned variables
+      if (ssa_inlinert::get_original_identifier(to_symbol_expr(var->var)) !=
+          to_symbol_expr(var->var).get_identifier())
+        var_specs.push_back(*var);
+    }
   }
 }
 

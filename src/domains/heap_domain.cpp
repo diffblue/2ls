@@ -40,6 +40,8 @@ void heap_domaint::make_template(const domaint::var_specst &var_specs, const nam
 
   for (auto v1 = var_specs.begin(); v1 != var_specs.end(); ++v1)
   {
+    if (v1->kind == IN) continue;
+
     // Create template for each pointer to struct
     const vart &var1 = v1->var;
     if (var1.type().id() == ID_pointer)
@@ -49,7 +51,12 @@ void heap_domaint::make_template(const domaint::var_specst &var_specs, const nam
       {
         // Check if var1 is member field of dynamic object
         const std::string identifier = id2string(to_symbol_expr(v1->var).get_identifier());
-        bool dynamic = identifier.find("dynamic_object$") != std::string::npos;
+        bool dynamic = false;
+        for (auto &component : to_struct_type(pointed_type).components())
+        {
+          if (identifier.find("." + id2string(component.get_name())) != std::string::npos)
+            dynamic = true;
+        }
 
         for (auto &component : to_struct_type(pointed_type).components())
         {
@@ -175,18 +182,24 @@ bool heap_domaint::add_row_path(const rowt &row, heap_valuet &value, const exprt
   {
     // Path does not exist yet
     std::set<dyn_objt> dyn_obj_set;
+    bool zero_path = true;
     if (dyn_obj.first.id() != ID_nil)
     { // Path doesn't have zero length
       dyn_obj_set.insert(dyn_obj);
+      zero_path = false;
     }
-    path_set.emplace(dest, dyn_obj_set);
+    path_set.emplace(dest, dyn_obj_set, zero_path);
     return true;
   }
   else
   {
     // Path exists already
-    if (dyn_obj.first.id() == ID_nil) return false;
-
+    if (dyn_obj.first.id() == ID_nil)
+    {
+      bool result = path_set.find(dest)->zero_length;
+      path_set.find(dest)->zero_length = true;
+      return !result;
+    }
     // Try to insert new dynamic object belonging to the path
     return path_set.find(dest)->dyn_objects.insert(dyn_obj).second;
   }
