@@ -55,6 +55,37 @@ void collect_objects_rec(
   std::set<ssa_objectt> &objects,
   std::set<exprt> &literals);
 
+void collect_ptr_objects(const exprt &expr,
+                         const namespacet &ns,
+                         std::set<ssa_objectt> &objects,
+                         std::set<exprt> &literals)
+{
+  if (expr.id() == ID_symbol)
+  {
+    const symbol_exprt &src = to_symbol_expr(expr);
+    const typet &type = ns.follow(src.type());
+    if (type.id() == ID_pointer)
+    {
+      const irep_idt &identifier = id2string(src.get_identifier()) + "'obj";
+      const typet &pointed_type = src.type().subtype();
+      symbol_exprt ptr_object(identifier, pointed_type);
+
+      if (is_ptr_object(src))
+        ptr_object.set(ID_ptr_object, src.get(ID_ptr_object));
+      else
+        ptr_object.set(ID_ptr_object, src.get_identifier());
+
+      collect_objects_rec(ptr_object, ns, objects, literals);
+      collect_ptr_objects(ptr_object, ns, objects, literals);
+    }
+  }
+  else
+  {
+    forall_operands(it, expr)
+      collect_ptr_objects(*it, ns, objects, literals);
+  }
+}
+
 void collect_objects_address_of_rec(
   const exprt &src,
   const namespacet &ns,
@@ -121,6 +152,15 @@ void collect_objects_rec(
   {
     forall_operands(it, src)
       collect_objects_rec(*it, ns, objects, literals);
+
+    const codet &code = to_code(src);
+    if (code.get_statement() == ID_function_call)
+    {
+      const code_function_callt &function_call = to_code_function_call(code);
+      for (auto &arg : function_call.arguments())
+        collect_ptr_objects(arg, ns, objects, literals);
+    }
+
     return;
   }
   else if(src.id()==ID_address_of)
@@ -142,6 +182,10 @@ void collect_objects_rec(
   {
     if(type.id()==ID_struct)
     {
+      std::string id = id2string(ssa_object.get_identifier());
+      if (src.type().get_bool("#dynamic") || id.find("'obj") == id.size() - 4)
+        objects.insert(ssa_object);
+
       // need to split up
 
       const struct_typet &struct_type=to_struct_type(type);
@@ -164,6 +208,14 @@ void collect_objects_rec(
  #endif
 
       objects.insert(ssa_object);
+
+      const exprt &root_object = ssa_object.get_root_object();
+      const symbolt *symbol;
+      if (ssa_object.type().get_bool("#dynamic") ||
+          (root_object.id() == ID_symbol &&
+           !ns.lookup(to_symbol_expr(root_object).get_identifier(), symbol) &&
+           (symbol->is_parameter || !symbol->is_procedure_local())))
+        collect_ptr_objects(ssa_object.symbol_expr(), ns, objects, literals);
     }
   }
   else
@@ -197,6 +249,7 @@ void ssa_objectst::collect_objects(
   {
     symbol_exprt symbol=ns.lookup(*it).symbol_expr();
     collect_objects_rec(symbol, ns, objects, literals);
+    collect_ptr_objects(symbol, ns, objects, literals);
   }
 
   // Rummage through body.
@@ -219,8 +272,8 @@ Function: ssa_objectst::add_ptr_objects
 
 \*******************************************************************/
 
-void ssa_objectst::add_ptr_objects(
-  const namespacet &ns)
+void ssa_objectst::add_ptr_objects(const goto_functionst::goto_functiont &goto_function,
+                                   const namespacet &ns)
 {
   objectst tmp;
 
@@ -232,8 +285,9 @@ void ssa_objectst::add_ptr_objects(
     if(root_object.id()==ID_symbol)
     {
       const symbolt &symbol = ns.lookup(root_object);
+      dirtyt dirty(goto_function);
       if(o_it->type().id()==ID_pointer &&
-          (symbol.is_parameter || !symbol.is_procedure_local()))
+          (symbol.is_parameter || !symbol.is_procedure_local() || dirty(symbol.name)))
       {
         tmp.insert(*o_it);
       }
@@ -385,10 +439,6 @@ ssa_objectt::identifiert ssa_objectt::object_id_rec(
   else if(src.id()==ID_dereference)
   {
     return identifiert();
-  }
-  else if(src.id()==ID_ptr_object)
-  {
-    return identifiert(id2string(src.get(ID_identifier))+"'obj");
   }
   else
     return identifiert();

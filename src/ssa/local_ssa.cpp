@@ -171,13 +171,9 @@ void local_SSAt::get_globals(locationt loc, std::set<symbol_exprt> &globals,
       if (is_ptr_object(root_obj))
       {
         const symbolt *symbol;
-        if (ns.lookup(root_obj.get(ID_ptr_object), symbol)) continue;
-        if (!symbol->is_parameter)
-        {
-          if (!with_returns ||
-              id2string(it->get_identifier()).find("'obj") == std::string::npos)
-            continue;
-        }
+        irep_idt ptr_obj_id = root_obj.get(ID_ptr_object);
+        if (ns.lookup(ptr_obj_id, symbol)) continue;
+        if (!symbol->is_parameter && !with_returns) continue;
       }
 
       if (rhs_value)
@@ -1063,31 +1059,31 @@ exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
     return tmp;
   }
   
-  // Argument is a struct-typed ssa object?
-  // May need to split up into members.
-  const typet &type=ns.follow(expr.type());
-
-  if(type.id()==ID_struct)
-  {
-    // build struct constructor
-    struct_exprt result(expr.type());
-  
-    const struct_typet &struct_type=to_struct_type(type);
-    const struct_typet::componentst &components=struct_type.components();
-  
-    result.operands().resize(components.size());
-  
-    for(struct_typet::componentst::const_iterator
-        it=components.begin();
-        it!=components.end();
-        it++)
-    {
-      result.operands()[it-components.begin()]=
-        read_rhs(member_exprt(expr, it->get_name(), it->type()), loc);
-    }
-  
-    return result;
-  }
+//  // Argument is a struct-typed ssa object?
+//  // May need to split up into members.
+//  const typet &type=ns.follow(expr.type());
+//
+//  if(type.id()==ID_struct)
+//  {
+//    // build struct constructor
+//    struct_exprt result(expr.type());
+//
+//    const struct_typet &struct_type=to_struct_type(type);
+//    const struct_typet::componentst &components=struct_type.components();
+//
+//    result.operands().resize(components.size());
+//
+//    for(struct_typet::componentst::const_iterator
+//        it=components.begin();
+//        it!=components.end();
+//        it++)
+//    {
+//      result.operands()[it-components.begin()]=
+//        read_rhs(member_exprt(expr, it->get_name(), it->type()), loc);
+//    }
+//
+//    return result;
+//  }
 
   // is this an object we track?
   if(ssa_objects.objects.find(object)!=
