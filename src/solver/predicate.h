@@ -9,16 +9,18 @@ Author: Peter Schrammel
 #ifndef CPROVER_2LS_PREDICATE_H
 #define CPROVER_2LS_PREDICATE_H
 
+#include <set>
+
 #include <util/std_expr.h>
-#include <util/std_expr.h>
+#include <util/std_types.h>
 
 class predicate_typet : public code_typet 
 {
 public:
   explicit predicate_typet()
-    : code_exprt()
+    : code_typet()
   {
-    return_type()=bool_type();
+    return_type()=bool_typet();
   }
 };
 
@@ -33,6 +35,21 @@ public:
   {
   }
 };
+
+typedef std::set<predicate_symbol_exprt> predicate_symbol_sett;
+
+
+extern inline const predicate_symbol_exprt &to_predicate_symbol_expr(const exprt &expr)
+{
+  assert(expr.id()==ID_symbol && expr.operands().size()==1);
+  return static_cast<const predicate_symbol_exprt &>(expr);
+}
+
+extern inline predicate_symbol_exprt &to_predicate_symbol_expr(exprt &expr)
+{
+  assert(expr.id()==ID_symbol && expr.operands().size()==1);
+  return static_cast<predicate_symbol_exprt &>(expr);
+}
 
 class predicate_application_exprt : public exprt 
 {
@@ -56,14 +73,14 @@ public:
     guard()=_guard;
   }
 
-  exprt &predicate()
+  predicate_symbol_exprt &predicate()
   {
-    return op0();
+    return to_predicate_symbol_expr(op0());
   }
 
-  const exprt &predicate() const
+  const predicate_symbol_exprt &predicate() const
   {
-    return op0();
+    return to_predicate_symbol_expr(op0());
   }
 
   typedef exprt::operandst argumentst;
@@ -97,7 +114,7 @@ extern inline const predicate_application_exprt &to_predicate_application_expr(c
 
 extern inline predicate_application_exprt &to_predicate_application_expr(exprt &expr)
 {
-  assert(expr.id()==ID_predicate_application && expr.operands().size()==2);
+  assert(expr.id()==ID_function_application && expr.operands().size()==2);
   return static_cast<predicate_application_exprt &>(expr);
 }
 

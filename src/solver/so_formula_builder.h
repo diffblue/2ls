@@ -20,6 +20,11 @@ public:
   {
   }
 
+  irep_idt predicate_identifier(
+    const irep_idt &kind,
+    const irep_idt &name,
+    const irep_idt &instance);
+
   exprt summary(const block_ssat &ssa);
   exprt invariants(const block_ssat &ssa);
   exprt calling_contexts(const block_ssat &ssa);

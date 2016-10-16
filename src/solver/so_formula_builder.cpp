@@ -8,6 +8,27 @@ Author: Peter Schrammel
 
 #include "so_formula_builder.h"
 
+
+/*******************************************************************\
+
+Function: so_formula_buildert::predicate_identifier()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+irep_idt so_formula_buildert::predicate_identifier(
+    const irep_idt &kind,
+    const irep_idt &name,
+    const irep_idt &instance)
+{
+  return id2string(kind)+"#"+id2string(name)+"#"+id2string(instance);
+}
+
 /*******************************************************************\
 
 Function: so_formula_buildert::summary()
