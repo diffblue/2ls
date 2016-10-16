@@ -23,22 +23,28 @@ public:
 
   typedef std::vector<symbol_exprt> varst;
 
-  varst inputs;
-  varst outputs;
-  exprt body;
-
-  struct function_call_infot 
+  struct block_call_infot 
   {
-    irep_idt name;
+    irep_idt identifier;
     locationt location;
     unsigned unwind;
-    varst inputs;
-    varst outputs;
+    varst arguments;
+    exprt guard_call;
+    varst returns;
+    exprt cond_return;
   };
-  typedef std::vector<function_call_infot> function_callst;  
-  function_callst function_calls;
- 
+  typedef std::vector<block_call_infot> block_callst;  
   typedef std::vector<exprt> assertionst;  
+
+  //block interface
+  irep_idt identifier;
+  varst inputs;
+  exprt guard_in;
+  varst outputs;
+  exprt guard_out;
+  exprt term_cond;
+  exprt body;
+  block_callst block_calls;
   assertionst assertions;
 
 protected:

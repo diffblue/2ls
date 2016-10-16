@@ -97,7 +97,9 @@ void template_generator_recsumt::collect_variables_rec(
         continue;
 
       //get guard of call site
-      exprt guard_cs = SSA.guard_symbol(n_it->location);
+      //TODO: these are not the same for backward analysis
+      exprt guard_cs_in = SSA.guard_symbol(n_it->location);
+      exprt guard_cs_out = SSA.cond_symbol(n_it->location);
 
       //add function arguments
       assert(f_it->arguments().size()==SSA.params.size());
@@ -105,7 +107,7 @@ void template_generator_recsumt::collect_variables_rec(
       {
         symbol_exprt arg=to_symbol_expr(f_it->arguments()[i]);
         post_renaming_map[SSA.params[i]]=arg;
-        add_var(SSA.params[i],guard_in,guard_cs,domaint::LOOP,var_specs);
+        add_var(SSA.params[i],guard_in,guard_cs_in,domaint::LOOP,var_specs);
       }
 
       //get input globals at call site
@@ -118,7 +120,7 @@ void template_generator_recsumt::collect_variables_rec(
         if(ssa_inlinert::find_corresponding_symbol(*v_it,SSA.globals_in,symbol))
         {
           post_renaming_map[symbol]=*v_it;
-          add_var(symbol,guard_in,guard_cs,
+          add_var(symbol,guard_in,guard_cs_in,
                   domaint::LOOP,
                   var_specs);
         }
@@ -134,7 +136,7 @@ void template_generator_recsumt::collect_variables_rec(
         if(ssa_inlinert::find_corresponding_symbol(*v_it,SSA.globals_out,symbol))
         {
           post_renaming_map[*v_it]=symbol;
-          add_var(*v_it,guard_cs,guard_out,
+          add_var(*v_it,guard_cs_out,guard_out,
                   domaint::LOOP,
                   var_specs);
         }
