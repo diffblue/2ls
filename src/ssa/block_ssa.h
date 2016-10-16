@@ -31,7 +31,8 @@ public:
     varst arguments;
     exprt guard_call;
     varst returns;
-    exprt cond_return;
+    exprt guard_return;
+    exprt cond_term;
   };
   typedef std::vector<block_call_infot> block_callst;  
   typedef std::vector<exprt> assertionst;  
@@ -42,7 +43,6 @@ public:
   exprt guard_in;
   varst outputs;
   exprt guard_out;
-  exprt term_cond;
   exprt body;
   block_callst block_calls;
   assertionst assertions;

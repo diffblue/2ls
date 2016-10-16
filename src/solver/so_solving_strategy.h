@@ -25,7 +25,7 @@ public:
   {
   }
 
-  typedef std::map<predicate_symbol_exprt, exprt> resultt;
+  typedef std::map<predicate_symbol_exprt, exprt> predicate_bindingst;
 
   const so_formulat &sof;
   const ssa_dbt &ssa_db;

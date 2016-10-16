@@ -20,10 +20,11 @@ Function: so_solvert::operator()
 
 \*******************************************************************/
 
-so_solving_strategyt::resultt so_solvert::operator()(
-  const so_solving_strategyt &sos)
+so_solvert::predicate_bindingst so_solvert::operator()(
+  const so_solving_strategyt &sos,
+  const predicate_bindingst &free_predicate_bindings)
 {
-  so_solving_strategyt::resultt result;
+  predicate_bindingst result;
   //TODO
   return result;
 }

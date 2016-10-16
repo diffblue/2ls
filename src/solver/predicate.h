@@ -60,7 +60,7 @@ public:
   {
     operands().resize(3);
     predicate()=_predicate;
-    guard()=true_exprt();
+    set(ID_guard,true_exprt());
   }
 
   explicit predicate_application_exprt(
@@ -70,7 +70,7 @@ public:
   {
     operands().resize(3);
     predicate()=_predicate;
-    guard()=_guard;
+    set(ID_guard,_guard);
   }
 
   predicate_symbol_exprt &predicate()
@@ -95,20 +95,15 @@ public:
     return op1().operands();
   }
 
-  exprt &guard()
-  {
-    return op2();
-  }
-
   const exprt &guard() const
   {
-    return op2();
+    return static_cast<const exprt &>(find(ID_guard));
   }
 };
 
 extern inline const predicate_application_exprt &to_predicate_application_expr(const exprt &expr)
 {
-  assert(expr.id()==ID_function_application && expr.operands().size()==3);
+  assert(expr.id()==ID_function_application && expr.operands().size()==2);
   return static_cast<const predicate_application_exprt &>(expr);
 }
 
