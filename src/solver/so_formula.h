@@ -15,6 +15,9 @@ Author: Peter Schrammel
 class so_formulat : public exprt 
 {
 public:
+  so_formulat() {}
+  explicit so_formulat(exprt &expr) : exprt(expr) {}
+
   bool is_well_formed();
   predicate_symbol_sett bound_predicates();
   predicate_symbol_sett free_predicates(

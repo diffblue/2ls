@@ -43,9 +43,9 @@ public:
   exprt guard_in;
   varst outputs;
   exprt guard_out;
-  exprt body;
+//  exprt body;
   block_callst block_calls;
-  assertionst assertions;
+//  assertionst assertions;
 
 protected:
 };

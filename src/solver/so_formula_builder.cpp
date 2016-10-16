@@ -6,8 +6,14 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
-#include "so_formula_builder.h"
+#define DEBUG
 
+#ifdef DEBUG
+#include <iostream>
+#include <langapi/language_util.h>
+#endif
+
+#include "so_formula_builder.h"
 
 /*******************************************************************\
 
@@ -26,7 +32,7 @@ irep_idt so_formula_buildert::predicate_identifier(
   irep_idt name,
   std::string instance)
 {
-  if(instance!="")
+  if(instance=="")
     return kind+"#"+id2string(name);
   else
     return kind+"#"+id2string(name)+"#"+instance;
@@ -103,16 +109,14 @@ Function: so_formula_buildert::recsum()
 
 so_formulat so_formula_buildert::recsum(const block_ssat &block)
 {
-  predicate_symbol_exprt pre0=make_pre(block);
-  predicate_symbol_exprt pre=make_pre(block);
-  predicate_symbol_exprt post=make_post(block);
-  predicate_symbol_exprt sum=make_sum(block);
+  predicate_symbol_exprt pre0=make_pre("PRE0",block);
+  predicate_symbol_exprt pre=make_pre("PRE",block);
+  predicate_symbol_exprt post=make_post("POST",block);
+  predicate_symbol_exprt sum=make_sum("SUM",block);
   predicate_symbol_sett preds;
   preds.insert(pre);
   preds.insert(post);
   preds.insert(sum);
-  so_formulat so;
-  exprt &body=make_preamble(preds, so);
   implies_exprt base(apply(pre0,block.inputs),
                      apply(pre,block.inputs));
   exprt::operandst lhs, rhs;
@@ -128,8 +132,14 @@ so_formulat so_formula_buildert::recsum(const block_ssat &block)
                                   apply(pre,bc.arguments)));
     }
     else
-      assert(false);
-    //TODO: handle everything else
+    {
+      predicate_symbol_exprt sumc=make_sum("SUM0",bc);
+      exprt::operandst sumvars;
+      add_vars(sumvars, bc.arguments);
+      add_vars(sumvars, bc.returns);
+      lhs.push_back(implies_exprt(and_exprt(bc.guard_call,bc.cond_term),
+                                  apply(sumc,sumvars)));
+    }
   }
   lhs.push_back(make_block(block));
   rhs.push_back(implies_exprt(block.guard_out,
@@ -138,11 +148,11 @@ so_formulat so_formula_buildert::recsum(const block_ssat &block)
   add_vars(sum_vars,block.inputs);
   add_vars(sum_vars,block.outputs);
   rhs.push_back(implies_exprt(and_exprt(block.guard_in,block.guard_out),
-                              apply(sum,sum_vars)));
+                                apply(sum,sum_vars)));
   implies_exprt step(conjunction(lhs),conjunction(rhs));
   and_exprt cases(base,step);
-  body.swap(cases);
-  return so;
+  exprt sof=add_preamble(preds, cases);
+  return so_formulat(sof);
 } 
 
 /*******************************************************************\
@@ -173,28 +183,27 @@ Function: so_formula_buildert::make_preamble()
 
  Outputs:
 
- Purpose: returns a reference to the innermost expression
+ Purpose: 
 
 \*******************************************************************/
 
-exprt &so_formula_buildert::make_preamble(
-  const predicate_symbol_sett &symbols, so_formulat &expr)
+exprt so_formula_buildert::add_preamble(
+  predicate_symbol_sett &symbols, const exprt &expr)
 {
-  //quantified predicates
-  exprt &inner_expr=expr;
-  for(const auto &p : symbols)
+  if(symbols.empty())
   {
-    exists_exprt e;
-    inner_expr.swap(e);
-    e.symbol()=p;
-    inner_expr=e.where();
+    forall_exprt forall;
+    //TODO: currently we assume all variables are universally quantified
+    forall.where()=expr;
+    return forall;
   }
-  //quantified vars
-  forall_exprt forall;
-  inner_expr.swap(forall);
-  //TODO: currently don't care about variables
-  inner_expr=forall.where();
-  return inner_expr;
+
+  predicate_symbol_sett::iterator p_it=symbols.begin();
+  exists_exprt e;
+  e.symbol()=*p_it;
+  symbols.erase(p_it);
+  e.where()=add_preamble(symbols, expr);
+  return e;
 } 
 
 /*******************************************************************\
@@ -209,11 +218,11 @@ Function: so_formula_buildert::make_pre()
 
 \*******************************************************************/
 
-predicate_symbol_exprt so_formula_buildert::make_pre(const block_ssat &block)
+predicate_symbol_exprt so_formula_buildert::make_pre(std::string prefix, const block_ssat &block)
 {
   predicate_typet t;
   //TODO
-  predicate_symbol_exprt p(predicate_identifier("PRE",block.identifier), t);
+  predicate_symbol_exprt p(predicate_identifier(prefix,block.identifier), t);
   return p;
 } 
 
@@ -229,11 +238,11 @@ Function: so_formula_buildert::post()
 
 \*******************************************************************/
 
-predicate_symbol_exprt so_formula_buildert::make_post(const block_ssat &block)
+predicate_symbol_exprt so_formula_buildert::make_post(std::string prefix, const block_ssat &block)
 {
   predicate_typet t;
   //TODO
-  predicate_symbol_exprt p(predicate_identifier("POST",block.identifier), t);
+  predicate_symbol_exprt p(predicate_identifier(prefix,block.identifier), t);
   return p;
 } 
 
@@ -249,13 +258,21 @@ Function: so_formula_buildert::sum()
 
 \*******************************************************************/
 
-predicate_symbol_exprt so_formula_buildert::make_sum(const block_ssat &block)
+predicate_symbol_exprt so_formula_buildert::make_sum(std::string prefix, const block_ssat &block)
 {
   predicate_typet t;
   //TODO
-  predicate_symbol_exprt p(predicate_identifier("SUM",block.identifier), t);
+  predicate_symbol_exprt p(predicate_identifier(prefix,block.identifier), t);
   return p;
 } 
+
+predicate_symbol_exprt so_formula_buildert::make_sum(std::string prefix, const block_ssat::block_call_infot &block_call)
+{
+  predicate_typet t;
+  //TODO
+  predicate_symbol_exprt p(predicate_identifier(prefix,block_call.identifier), t);
+  return p;
+}
 
 /*******************************************************************\
 

@@ -41,13 +41,13 @@ typedef std::set<predicate_symbol_exprt> predicate_symbol_sett;
 
 extern inline const predicate_symbol_exprt &to_predicate_symbol_expr(const exprt &expr)
 {
-  assert(expr.id()==ID_symbol && expr.operands().size()==1);
+  assert(expr.id()==ID_symbol && !expr.has_operands());
   return static_cast<const predicate_symbol_exprt &>(expr);
 }
 
 extern inline predicate_symbol_exprt &to_predicate_symbol_expr(exprt &expr)
 {
-  assert(expr.id()==ID_symbol && expr.operands().size()==1);
+  assert(expr.id()==ID_symbol && !expr.has_operands());
   return static_cast<predicate_symbol_exprt &>(expr);
 }
 
@@ -58,8 +58,8 @@ public:
     const predicate_symbol_exprt &_predicate)
     : exprt(ID_function_application)
   {
-    operands().resize(3);
-    predicate()=_predicate;
+    operands().resize(2);
+    op0()=_predicate;
     set(ID_guard,true_exprt());
   }
 
@@ -68,8 +68,8 @@ public:
     const exprt &_guard)
     : exprt(ID_function_application)
   {
-    operands().resize(3);
-    predicate()=_predicate;
+    operands().resize(2);
+    op0()=_predicate;
     set(ID_guard,_guard);
   }
 

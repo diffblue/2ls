@@ -11,16 +11,16 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/options.h>
 
-#include "../ssa/local_ssa.h"
-#include "../ssa/unwindable_local_ssa.h"
-#include "../domains/incremental_solver.h"
+#include "local_ssa.h"
+#include "block_ssa.h"
+#include <domains/incremental_solver.h>
 #include <goto-programs/goto_functions.h>
 
 class ssa_dbt
 {
 public:
   typedef irep_idt function_namet;
-  typedef std::map<function_namet, unwindable_local_SSAt*> functionst;
+  typedef std::map<function_namet, block_ssat*> functionst;
   typedef std::map<function_namet, incremental_solvert*> solverst;
 
   explicit ssa_dbt(const optionst &_options) 
@@ -37,7 +37,7 @@ public:
       delete it->second;
   }
 
-  local_SSAt &get(const function_namet &function_name) const 
+  block_ssat &get(const function_namet &function_name) const 
     { return *store.at(function_name); }
 
   incremental_solvert &get_solver(const function_namet &function_name)
@@ -60,7 +60,7 @@ public:
               const goto_functionst::goto_functiont &goto_function,
               const namespacet &ns) 
   { 
-    store[function_name] = new unwindable_local_SSAt(goto_function,ns);
+    store[function_name] = new block_ssat(goto_function,ns);
   }
 
  protected:

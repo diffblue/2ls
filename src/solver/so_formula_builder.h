@@ -23,12 +23,13 @@ public:
   {
   }
 
-  predicate_symbol_exprt make_pre(const block_ssat &block);
-  predicate_symbol_exprt make_post(const block_ssat &block);
-  predicate_symbol_exprt make_sum(const block_ssat &block);
-//  predicate_symbolst make_invs(const block_ssat &block);
+  predicate_symbol_exprt make_pre(std::string prefix, const block_ssat &block);
+  predicate_symbol_exprt make_post(std::string prefix, const block_ssat &block);
+  predicate_symbol_exprt make_sum(std::string prefix, const block_ssat &block);
+  predicate_symbol_exprt make_sum(std::string prefix, const block_ssat::block_call_infot &block_call);
+//  predicate_symbolst make_invs(std::string prefix, const block_ssat &block);
 
-  exprt &make_preamble(const predicate_symbol_sett &symbols, so_formulat &expr);
+  exprt add_preamble(predicate_symbol_sett &symbols, const exprt &expr);
 
   function_application_exprt make_block(const block_ssat &block);
   predicate_application_exprt apply(

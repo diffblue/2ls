@@ -179,6 +179,10 @@ public:
 		   bool rhs_value=true, 
 		   bool with_returns=true, 
 		   const irep_idt &returns_for_function="") const;
+  void get_cs_globals(locationt loc, 
+                      const irep_idt &function_name, 
+                      std::set<symbol_exprt> &globals_in, 
+                      std::set<symbol_exprt> &globals_out);
 
   nodest::iterator find_node(locationt loc);
   nodest::const_iterator find_node(locationt loc) const;

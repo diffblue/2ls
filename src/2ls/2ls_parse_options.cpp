@@ -289,7 +289,7 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
   }
   else options.set_option("max-inner-ranking-iterations",20);
 
- // do k-induction refinement
+  // do k-induction refinement
   if(cmdline.isset("k-induction"))
   {
     options.set_option("std-invariants", true);
@@ -299,7 +299,7 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
       options.set_option("unwind",UINT_MAX);
   }
 
- // do incremental bmc
+  // do incremental bmc
   if(cmdline.isset("incremental-bmc"))
   {
     options.set_option("incremental-bmc", true);
@@ -309,10 +309,16 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
       options.set_option("unwind",UINT_MAX);
   }
 
- // analysis for recursion (experimental)
+  // analysis for recursion (experimental)
   if(cmdline.isset("recursion"))
   {
     options.set_option("recursion", true);
+  }
+
+  // new second-order solver (experimental)
+  if(cmdline.isset("so-test"))
+  {
+    options.set_option("so-test", true);
   }
 
   // check for spuriousness of assertion failures

@@ -41,6 +41,12 @@ Author: Peter Schrammel
 
 #include "summary_checker_base.h"
 
+#if 1
+#include <solver/so_formula_builder.h>
+#include <solver/so_formula.h>
+#include <ssa/block_ssa.h>
+#endif
+
 /*******************************************************************\
 
 Function: summary_checker_baset::SSA_functions
@@ -97,6 +103,17 @@ void summary_checker_baset::summarize(const goto_modelt &goto_model,
 {    
   summarizer_baset *summarizer = NULL;
 
+#if 1
+  if(options.get_bool_option("so-test"))
+  {
+    block_ssat &block=ssa_db.get("inc");
+    so_formula_buildert so_formula_builder(block.ns);
+    so_formulat sof=so_formula_builder.recsum(block);
+    debug() << from_expr(block.ns,"",sof) << eom;
+    return;
+  }
+  else
+#endif
   if(options.get_bool_option("recursion"))
   {
     summarizer = new summarizer_fw_rect(
