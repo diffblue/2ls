@@ -556,11 +556,13 @@ void local_SSAt::build_cond(locationt loc)
     equal_exprt equality(cond_symbol(loc), read_rhs(loc->guard, loc));
     (--nodes.end())->equalities.push_back(equality);
   }
+#if 0 // keep the function call return conditiion nondeterministic
   else if(loc->is_function_call())
   {
     equal_exprt equality(cond_symbol(loc), true_exprt());
     (--nodes.end())->equalities.push_back(equality);
   }
+#endif
 }
 
 /*******************************************************************\
@@ -584,10 +586,12 @@ void local_SSAt::build_guard(locationt loc)
   
   exprt::operandst sources;
 
+#if 0 //keep entry guard nondeterministic
   // the very first 'loc' trivially gets 'true' as source
   if(loc==goto_function.body.instructions.begin())
     sources.push_back(true_exprt());
-    
+#endif    
+
   for(guard_mapt::incomingt::const_iterator
       i_it=entry.incoming.begin();
       i_it!=entry.incoming.end();
