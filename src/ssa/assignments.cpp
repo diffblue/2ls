@@ -61,10 +61,34 @@ void assignmentst::build_assignment_map(
           o_it=ssa_objects.globals.begin();
           o_it!=ssa_objects.globals.end(); o_it++)
       {
-        const exprt &function = code_function_call.function();
-        if (function.id() == ID_symbol &&
-            id2string(o_it->get_identifier()).find(
-                id2string(to_symbol_expr(function).get_identifier())) != std::string::npos)
+        bool assigned = false;
+        const exprt &root_obj = o_it->get_root_object();
+        if (is_ptr_object(root_obj))
+        { // assign objects pointed by arguments and return value of the function
+          const exprt &function = code_function_call.function();
+          if (function.id() == ID_symbol &&
+              id2string(o_it->get_identifier()).find(
+                  id2string(to_symbol_expr(function).get_identifier())) !=
+              std::string::npos)
+            assigned = true;
+
+          for (auto &arg : code_function_call.arguments())
+          {
+            exprt arg_symbol = arg;
+            if (arg.id() == ID_address_of)
+              arg_symbol = to_address_of_expr(arg_symbol).object();
+            if (arg_symbol.id() == ID_symbol && id2string(o_it->get_identifier()).find(
+                id2string(to_symbol_expr(arg_symbol).get_identifier())) != std::string::npos)
+              assigned = true;
+          }
+        }
+        else
+        { // assign return value of the function
+          if (id2string(o_it->get_identifier()).find("#return_value") == std::string::npos)
+            assigned = true;
+        }
+
+        if (assigned)
           assign(*o_it, it, ns);
       }
 
