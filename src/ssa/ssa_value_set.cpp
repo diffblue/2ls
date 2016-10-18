@@ -74,6 +74,30 @@ void ssa_value_domaint::transform(
       assign(*o_it, it, ns);
 #endif
 
+    for (auto &argument : code_function_call.arguments())
+    {
+      exprt arg = argument;
+      while (arg.type().id() == ID_pointer)
+      {
+        if (arg.id() == ID_symbol)
+        {
+          const typet &pointed_type = ns.follow(arg.type().subtype());
+          symbol_exprt pointed_obj = symbol_exprt(
+              id2string(to_symbol_expr(arg).get_identifier()) + "'obj",
+              pointed_type);
+          pointed_obj.type().set("#dynamic", true);
+
+          assign_lhs_rec(arg, address_of_exprt(pointed_obj), ns);
+
+          arg = pointed_obj;
+        }
+        else if (arg.id() == ID_address_of)
+        {
+          arg = to_address_of_expr(arg).object();
+        }
+      }
+    }
+
     // the call might come with an assignment
     if(code_function_call.lhs().is_not_nil())
     {
@@ -135,6 +159,23 @@ void ssa_value_domaint::assign_lhs_rec(
       }
 
       return; // done
+    }
+
+    // if rhs is a return value of pointer type, it points to a dynamic object
+    if(rhs.id()==ID_symbol &&
+       rhs.type().id()==ID_pointer &&
+       id2string(to_symbol_expr(rhs).get_identifier()).find("#return_value")!=
+       std::string::npos &&
+       id2string(to_symbol_expr(rhs).get_identifier())!="malloc#return_value")
+    {
+      // Pointer typed return value of some function points to some dynamic object
+      const typet &pointed_type=ns.follow(rhs.type().subtype());
+      symbol_exprt pointed_obj=symbol_exprt(
+        id2string(to_symbol_expr(rhs).get_identifier())+"'obj",
+        pointed_type);
+      pointed_obj.type().set("#dynamic", true);
+
+      assign_lhs_rec(rhs, address_of_exprt(pointed_obj), ns);
     }
 
     // object?
@@ -293,19 +334,6 @@ void ssa_value_domaint::assign_rhs_rec(
           tmp_values.offset=true;
         tmp_values.alignment=merge_alignment(tmp_values.alignment, alignment);
         dest.merge(tmp_values);
-      }
-      else if(ssa_object.type().id()==ID_pointer &&
-              id2string(ssa_object.get_identifier())
-                .find("#return_value")!=std::string::npos &&
-              id2string(ssa_object.get_identifier())!="malloc#return_value")
-      { 
-        // Pointer typed return value of some function points to some dynamic object
-        const typet &pointed_type=ns.follow(ssa_object.type().subtype());
-        const symbol_exprt &pointed_obj=symbol_exprt(
-            id2string(ssa_object.get_identifier())+"'obj", pointed_type);
-        dest.value_set.insert(ssa_objectt(pointed_obj, ns));
-        if(offset)
-          dest.offset=true;
       }
     }
     else
