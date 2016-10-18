@@ -96,10 +96,10 @@ void ssa_inlinert::get_summary(
   //equalities for globals out (including unmodified globals)
   if (forward)
     bindings.push_back(
-        get_replace_globals_out(cs_globals_in, cs_globals_out, summary, SSA.ns));
+        get_replace_globals_out(cs_globals_in, cs_globals_out, summary, *f_it, *n_it, SSA.ns));
   else
     bindings.push_back(
-        get_replace_globals_out(cs_globals_out, cs_globals_in, summary, SSA.ns));
+        get_replace_globals_out(cs_globals_out, cs_globals_in, summary, *f_it, *n_it, SSA.ns));
 }
 
 /*******************************************************************\
@@ -492,8 +492,7 @@ exprt ssa_inlinert::get_replace_params(const local_SSAt::var_listt &params,
           }
           ssa_objectt pointed_ssa_obj(arg_pointed, SSA.ns);
           // get correct SSA symbol for function call entry
-          pointed_ssa_sym_in = SSA.name(pointed_ssa_obj, local_SSAt::OUT,
-                                        SSA.get_def_loc(to_symbol_expr(arg_pointed), loc));
+          pointed_ssa_sym_in = SSA.read_rhs(pointed_ssa_obj, loc);
           // get correct SSA symbol for function call exit
           pointed_ssa_sym_out = SSA.name(pointed_ssa_obj, local_SSAt::OUT, loc);
         }
@@ -557,6 +556,8 @@ Function: ssa_inlinert::replace_globals_out()
 exprt ssa_inlinert::get_replace_globals_out(const local_SSAt::var_sett &cs_globals_in,
                                             const local_SSAt::var_sett &cs_globals_out,
                                             const summaryt &summary,
+                                            const function_application_exprt &funapp_expr,
+                                            const local_SSAt::nodet &ssa_node,
                                             const namespacet &ns)
 {
   //equalities for globals_out
@@ -585,7 +586,14 @@ exprt ssa_inlinert::get_replace_globals_out(const local_SSAt::var_sett &cs_globa
 
         // find corresponding dynamic object in called function
         symbol_exprt dynamic_object;
-        assert(find_corresponding_dyn_obj(root_object, summary, ns, dynamic_object));
+        if (!find_corresponding_dyn_obj(root_object, summary, funapp_expr, ssa_node, ns,
+                                        dynamic_object))
+        { // if corresponding dynamic object does not exist, the global is not changed
+          rhs = *it; // copy
+          assert(find_corresponding_symbol(*it, cs_globals_in, lhs));
+          c.push_back(equal_exprt(lhs, rhs));
+          continue;
+        }
 
         // restore member expression
         dynamic_object.set_identifier(id2string(dynamic_object.get_identifier()) + member);
@@ -600,7 +608,13 @@ exprt ssa_inlinert::get_replace_globals_out(const local_SSAt::var_sett &cs_globa
       { // variable is dynamic object
         // find corresponding dynamic object in called function
         symbol_exprt dynamic_object;
-        assert(find_corresponding_dyn_obj(*it, summary, ns, dynamic_object));
+        if (!find_corresponding_dyn_obj(*it, summary, funapp_expr, ssa_node, ns, dynamic_object))
+        { // if corresponding dynamic object does not exist, the global is not changed
+          rhs = *it; // copy
+          assert(find_corresponding_symbol(*it, cs_globals_in, lhs));
+          c.push_back(equal_exprt(lhs, rhs));
+          continue;
+        }
 
         // equality is between addresses of corresponding dynamic objects
         exprt addr = address_of_exprt(dynamic_object);
@@ -609,7 +623,9 @@ exprt ssa_inlinert::get_replace_globals_out(const local_SSAt::var_sett &cs_globa
 
         lhs = to_symbol_expr(addr);
 
-        symbol_exprt orig_obj(id, dynamic_object.type());
+        typet orig_type = it->type();
+        orig_type.set("#dynamic", dynamic_object.type().get_bool("#dynamic"));
+        symbol_exprt orig_obj(id, orig_type);
         rhs = address_of_exprt(orig_obj);
       }
     }
@@ -690,7 +706,13 @@ void ssa_inlinert::rename(exprt &expr)
     const exprt &obj = to_address_of_expr(expr).object();
     if (obj.id() == ID_symbol)
     {
-      id = id2string(to_symbol_expr(obj).get_identifier()) + "'addr" + "@" + i2string(counter);
+      const std::string &obj_id = id2string(to_symbol_expr(obj).get_identifier());
+      if (obj_id.compare(obj_id.length() - 4, 4, "'obj") == 0)
+        id = obj_id.substr(0, obj_id.find_last_of("'"));
+      else
+        id = id2string(obj_id) + "'addr";
+
+      id = id2string(id) + "@" + i2string(counter);
     }
     symbol_exprt addr_symbol(id, expr.type());
     expr = addr_symbol;
@@ -1000,22 +1022,80 @@ bool ssa_inlinert::is_struct_member(const irep_idt &identifier)
  * @param s Call site dynamic object
  * @param summary Called function summary
  * @param ns Namespace
- * @param found Found symbol
+ * @param found_sym Found symbol
  * @return True if an object was found, otherwise false.
  */
 bool ssa_inlinert::find_corresponding_dyn_obj(const symbol_exprt &s,
                                               const summaryt &summary,
+                                              const function_application_exprt &funapp_expr,
+                                              const local_SSAt::nodet &ssa_node,
                                               const namespacet &ns,
-                                              symbol_exprt &found)
+                                              symbol_exprt &found_sym)
 {
   irep_idt id = get_original_identifier(s);
   const std::string &id_str = id2string(s.get_identifier());
   id = id_str.substr(0, id_str.rfind("'obj"));
 
+  if (id2string(id).find("#return_value") == std::string::npos)
+  {
+    auto p_it = summary.params.begin();
+    bool found = false;
+    for (auto arg_it = funapp_expr.arguments().begin(); arg_it != funapp_expr.arguments().end();
+         ++arg_it, ++p_it)
+    {
+      exprt arg = nil_exprt();
+      for (auto &eq : ssa_node.equalities)
+      {
+        if (eq.rhs() == *arg_it)
+          arg = eq.lhs();
+      }
+      assert(arg.is_not_nil());
+
+      symbol_exprt param = *p_it;
+      while (arg.type().id() == ID_pointer)
+      {
+        if (arg.id() == ID_symbol)
+        {
+          if (to_symbol_expr(arg).get_identifier() == id)
+          {
+            found = true;
+            break;
+          }
+          else
+          {
+            // arg --> arg'obj
+            symbol_exprt &arg_sym = to_symbol_expr(arg);
+            arg_sym.set_identifier(id2string(arg_sym.get_identifier()) + "'obj");
+            arg_sym.type() = arg_sym.type().subtype();
+
+            // param --> param'obj
+            assert(param.type().id() == ID_pointer);
+            param.set_identifier(id2string(param.get_identifier()) + "'obj");
+            param.type() = param.type().subtype();
+
+          }
+        }
+        else if (arg.id() == ID_address_of)
+        {
+          // &arg --> arg
+          arg = to_address_of_expr(arg).object();
+
+          // param --> param'obj
+          assert(param.type().id() == ID_pointer);
+          param.set_identifier(id2string(param.get_identifier()) + "'obj");
+          param.type() = param.type().subtype();
+        }
+      }
+      if (found)
+        id = param.get_identifier();
+    }
+    assert(found);
+  }
+
   auto &values = summary.value_domain(symbol_exprt(id, pointer_typet(s.type())), ns);
   if (values.value_set.size() == 1)
   {
-    found = values.value_set.begin()->symbol_expr();
+    found_sym = values.value_set.begin()->symbol_expr();
     return true;
   }
 

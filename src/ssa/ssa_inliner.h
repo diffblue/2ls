@@ -91,10 +91,12 @@ class ssa_inlinert : public messaget
 				 const local_SSAt::var_sett &globals,
                                  symbol_exprt &s_found);
 
-	static bool find_corresponding_dyn_obj(const symbol_exprt &s,
-																				 const summaryt &summary,
-																				 const namespacet &ns,
-																				 symbol_exprt &found);
+  static bool find_corresponding_dyn_obj(const symbol_exprt &s,
+                                         const summaryt &summary,
+                                         const function_application_exprt &funapp_expr,
+                                         const local_SSAt::nodet &ssa_node,
+                                         const namespacet &ns,
+                                         symbol_exprt &found_sym);
 
   static irep_idt get_original_identifier(const symbol_exprt &s);
 
@@ -125,10 +127,12 @@ class ssa_inlinert : public messaget
                            const local_SSAt &SSA,
                            const local_SSAt::locationt &loc);
 
-	exprt get_replace_globals_out(const local_SSAt::var_sett &cs_globals_in,
-																const local_SSAt::var_sett &cs_globals_out,
-																const summaryt &summary,
-																const namespacet &ns);
+  exprt get_replace_globals_out(const local_SSAt::var_sett &cs_globals_in,
+                                const local_SSAt::var_sett &cs_globals_out,
+                                const summaryt &summary,
+                                const function_application_exprt &funapp_expr,
+                                const local_SSAt::nodet &ssa_node,
+                                const namespacet &ns);
 
   void rename(exprt &expr);
   void rename(local_SSAt::nodet &node);
