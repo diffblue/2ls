@@ -323,42 +323,40 @@ exprt dereference_rec(
     exprt pointer_deref=
       dereference(pointer, ssa_value_domain, nondet_prefix, ns);
 
-    // We use the identifier produced by
-    // local_SSAt::replace_side_effects_rec
+    const typet &pointed_type=ns.follow(pointer.type().subtype());
+
+    const ssa_value_domaint::valuest values=ssa_value_domain(pointer, ns);
+
     exprt result;
-    const typet &pointed_type = pointer.type().subtype();
-    if (pointed_type.id() == ID_pointer)
-      result = symbol_exprt(nondet_prefix, src.type());
+    if (values.value_set.empty())
+    {
+      irep_idt identifier=id2string(to_symbol_expr(pointer).get_identifier())+"'obj";
+      result=symbol_exprt(identifier, pointed_type);
+    }
     else
     {
-      const typet &obj_type = ns.follow(pointed_type);
-      std::string dyn_type_name = obj_type.id_string();
-      if (obj_type.id() == ID_struct)
-        dyn_type_name += "_" + id2string(to_struct_type(obj_type).get_tag());
-      irep_idt identifier = "ssa::" + dyn_type_name + "_obj$unknown";
+      auto it=values.value_set.begin();
 
-      result = symbol_exprt(identifier, src.type());
-    }
+      if(values.null || values.unknown)
+      {
+        std::string dyn_type_name=pointed_type.id_string();
+        if(pointed_type.id()==ID_struct)
+          dyn_type_name+= "_"+id2string(to_struct_type(pointed_type).get_tag());
+        irep_idt identifier="ssa::"+dyn_type_name+"_obj$unknown";
 
+        result=symbol_exprt(identifier, src.type());
+      }
+      else
+      {
+        result=ssa_alias_value(src, (it++)->get_expr(), ns);
+      }
 
-    // query the value sets
-    const ssa_value_domaint::valuest values=
-      ssa_value_domain(pointer, ns);
-
-    for(ssa_value_domaint::valuest::value_sett::const_iterator
-        it=values.value_set.begin();
-        it!=values.value_set.end();
-        it++)
-    {
-      exprt guard=ssa_alias_guard(src, it->get_expr(), ns);
-      exprt value=ssa_alias_value(src, it->get_expr(), ns);
-      result=if_exprt(guard, value, result);
-    }
-
-    if (values.empty()) {
-      // We use the identifier of pointed object
-      irep_idt identifier = id2string(to_symbol_expr(pointer).get_identifier())+"'obj";
-      result = symbol_exprt(identifier, ns.follow(pointed_type));
+      for (; it!=values.value_set.end(); ++it)
+      {
+        exprt guard=ssa_alias_guard(src, it->get_expr(), ns);
+        exprt value=ssa_alias_value(src, it->get_expr(), ns);
+        result=if_exprt(guard, value, result);
+      }
     }
 
     return result;
