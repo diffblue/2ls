@@ -1365,13 +1365,8 @@ void local_SSAt::assign_rec(
   {
     const if_exprt &if_expr=to_if_expr(lhs);
 
-    if (if_expr.false_case().id() == ID_if)
-    {
-      exprt new_rhs = if_exprt(if_expr.cond(), rhs, if_expr.true_case());
-      assign_rec(if_expr.true_case(), new_rhs, and_exprt(guard, if_expr.cond()), loc);
-    }
-    else
-      assign_rec(if_expr.true_case(), rhs, and_exprt(guard, if_expr.cond()), loc);
+    exprt new_rhs = if_exprt(if_expr.cond(), rhs, if_expr.true_case());
+    assign_rec(if_expr.true_case(), new_rhs, and_exprt(guard, if_expr.cond()), loc);
 
     assign_rec(if_expr.false_case(), rhs, and_exprt(guard, not_exprt(if_expr.cond())), loc);
   }
