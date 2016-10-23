@@ -82,7 +82,7 @@ protected:
     return vars;
   }
 
-  
+  unsigned decisions=0, learning=0, propagations=0, learned_literals=0; 
   std::set<symbol_exprt> all_vars;
   void init();
   bool analyze_conflict(const local_SSAt &SSA, const exprt& assertion);
@@ -91,7 +91,7 @@ protected:
   bool disable_generalization;
   void initialize_decision_variables(acdl_domaint::valuet &val);
   void pre_process(const local_SSAt &SSA, const exprt &assertion);
-
+  void print_solver_statistics();
 };
 
 

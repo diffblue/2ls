@@ -1,9 +1,9 @@
 default: tests.log
 
-FLAGS = --verbosity 10 --acdl --acdl-decision ordered --acdl-conflict first-uip --acdl-propagate forward --inline
+FLAGS = --verbosity 10 --acdl --decision ordered --learning first-uip --propagate chaotic --inline
 
 test:
-	@../test.pl -c "../../../src/summarizer/2ls $(FLAGS)"
+	@../test.pl -c "/usr/bin/time ../../../src/summarizer/2ls $(FLAGS)"
 
 tests.log: ../test.pl
 	@../test.pl -c "../../../src/summarizer/2ls $(FLAGS)"

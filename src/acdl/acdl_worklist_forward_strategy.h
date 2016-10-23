@@ -23,8 +23,8 @@ public:
   virtual void initialize(const local_SSAt &SSA, 
      const exprt &assertion, const exprt& additional_constraint);
 
-  virtual void slicing (const local_SSAt &SSA, 
-        const exprt &assertion, const exprt& additional_constraint);
+  /*virtual void slicing (const local_SSAt &SSA, 
+        const exprt &assertion, const exprt& additional_constraint);*/
 
   virtual acdl_domaint::varst pop_from_map (const acdl_domaint::statementt &statement);
   
@@ -38,12 +38,7 @@ public:
 
   /*virtual void initialize_live_variables();*/
 protected:
-  typedef std::list<acdl_domaint::statementt> listt;
-
-  void push_into_list (listt &lexpr,
-				 const acdl_domaint::statementt &statement);
-
-  const acdl_domaint::statementt pop_from_list (listt &lexpr);
+  // typedef std::list<acdl_domaint::statementt> listt;
 
   void update (const local_SSAt &SSA,
 	       const acdl_domaint::varst &vars,

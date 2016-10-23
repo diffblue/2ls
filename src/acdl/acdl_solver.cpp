@@ -16,8 +16,8 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include <string>
 
 //#define DEBUG
-#define PER_STATEMENT_LIVE_VAR
-//#define LIVE_VAR_OLD_APPROACH
+//#define PER_STATEMENT_LIVE_VAR
+#define LIVE_VAR_OLD_APPROACH
 
 #ifdef DEBUG
 #include <iostream>
@@ -130,7 +130,9 @@ bool acdl_solvert::bcp(const local_SSAt &SSA, unsigned idx)
 #endif  
   
   int i=0;
+#ifdef DEBUG  
   std::cout << "The size of learned clauses is " << analyzes_conflict.learned_clauses.size() << std::endl;
+#endif  
   while(i < analyzes_conflict.learned_clauses.size()) {
     // note that each application of unit rule
     // may infer new deductions, so we compute 
@@ -140,7 +142,9 @@ bool acdl_solvert::bcp(const local_SSAt &SSA, unsigned idx)
     conflict_graph.to_value(v);
     acdl_domaint::valuet clause_val = analyzes_conflict.learned_clauses[i];
     int result = domain.unit_rule(SSA, v, clause_val, unit_lit);
+#ifdef DEBUG    
     std::cout << "The propagation from unit rule inside bcp is " << from_expr(SSA.ns, "", unit_lit) << std::endl;
+#endif    
     if(result == domain.CONFLICT) {
       analyzes_conflict.conflicting_clause = i;
       analyzes_conflict.last_proof = analyzes_conflict.PROPOSITIONAL;
@@ -188,6 +192,7 @@ Function: acdl_solvert::propagation
 property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, const exprt &assertion)
 {
   unsigned init_size = conflict_graph.prop_trail.size();
+  acdl_domaint::valuet final_val;
   while (!worklist.empty())
   {
     const acdl_domaint::statementt statement = worklist.pop();
@@ -196,8 +201,10 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
     acdl_domaint::varst lvar = worklist.pop_from_map(statement);
 #endif     
 
+#ifdef DEBUG
     std::cout << "Pop: " << from_expr (SSA.ns, "", statement)
         << std::endl;
+#endif        
     
 #ifdef DEBUG
 #ifdef PER_STATEMENT_LIVE_VAR
@@ -228,10 +235,10 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
         std::cout << from_expr(SSA.ns, "", *it) << std::endl;
 #endif    
 
-//#ifdef DEBUG
+#ifdef DEBUG
     std::cout << "Old: ";
     domain.output(std::cout, v) << std::endl;
-//#endif
+#endif
 
     // select vars for projection
     acdl_domaint::valuet new_v;
@@ -252,7 +259,7 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
     
     // update implication graph
     conflict_graph.add_deductions(SSA, deductions);
-    
+    propagations++; 
     // update worklist based on variables in the consequent (new_v)
     // - collect variables in new_v
     acdl_domaint::varst new_variables;
@@ -263,10 +270,10 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
     // - call worklist update
     worklist.update(SSA, new_variables, statement, assertion); 
         
-//#ifdef DEBUG
+#ifdef DEBUG
     std::cout << "New: ";
     domain.output(std::cout, new_v) << std::endl;
-//#endif
+#endif
 
     // abstract value after meet is computed here
     // The abstract value of the implication 
@@ -275,7 +282,7 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
     // we are computing the gfp
     // implication_graph.to_value(new_v);
     conflict_graph.to_value(new_v);
-    
+    final_val = new_v;
 #ifdef DEBUG
     std::cout << "Computing new abstract value of implication graph: " << std::endl;
     for(acdl_domaint::valuet::const_iterator it = new_v.begin();it != new_v.end(); ++it)
@@ -309,7 +316,29 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
       return property_checkert::PASS; //potential UNSAT (modulo decisions)
     }
   }
+
+  // [TODO] check if new_v is EMPTY, 
+  // that is no propagation has been made, 
+  // this can only happen in first deduction phase
+  // because in subsequent deduction levels new_v
+  // will atleast contain old_v and is not EMPTY
+  if(final_val.empty()) {
+#ifdef DEBUG    
+    std::cout << "Empty deduction, so inserting TRUE-> TRUE" << std::endl;
+#endif    
+    std::vector<acdl_domaint::deductiont> ded;
+    typedef std::vector<exprt> ant;
+    ant a;
+    a.push_back(true_exprt());
+    typedef std::pair<exprt, ant> p;
+    p d;
+    exprt e = true_exprt(); 
+    d = std::make_pair(e, a);
+    ded.push_back(d); 
+    conflict_graph.add_deductions(SSA, ded);
+  }
   unsigned final_size = conflict_graph.prop_trail.size();
+  //propagations = propagations + (final_size - init_size);
   
   // [SPECIAL CHECK] explicitly empty the map here when we 
   // do not delete map elements for 
@@ -354,6 +383,7 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
 bool
 acdl_solvert::decide (const local_SSAt &SSA, const exprt& assertion)
 {
+  decisions++;
   // When a new decision is made, the 
   // live variable set must be flushed
   worklist.delete_map();
@@ -362,9 +392,13 @@ acdl_solvert::decide (const local_SSAt &SSA, const exprt& assertion)
   
   acdl_domaint::valuet v;
   conflict_graph.to_value(v);
+#ifdef DEBUG  
   std::cout << "Checking consistency of trail before adding decision" << std::endl;
+#endif   
   assert(domain.check_val_consistency(v));
+#ifdef DEBUG  
   std::cout << "Trail is consistent" << std::endl;
+#endif  
  
 #if 0  
   // Add the decisions that did not contribute 
@@ -382,7 +416,9 @@ acdl_solvert::decide (const local_SSAt &SSA, const exprt& assertion)
   if(dec_expr == false_exprt())
     return false; 
 
+#ifdef DEBUG  
   std::cout << "DECISION SPLITTING EXPR: " << from_expr (SSA.ns, "", dec_expr) << std::endl;
+#endif  
   // *****************************************************************
   // 1.b. e.g. we have x!=2 in an assertion or cond node, then we have 
   // meet irreducibles x<=1, x>=3 as potential decisions
@@ -407,6 +443,7 @@ acdl_solvert::decide (const local_SSAt &SSA, const exprt& assertion)
   // at the same time in the trail)
   acdl_domaint::valuet new_value;
   conflict_graph.to_value(new_value);
+  
   std::cout << "Checking consistency of trail after adding decision" << std::endl;
   assert(domain.check_val_consistency(new_value));
   std::cout << "Trail is consistent" << std::endl;
@@ -465,6 +502,7 @@ acdl_solvert::decide (const local_SSAt &SSA, const exprt& assertion)
  \*******************************************************************/
 bool acdl_solvert::analyze_conflict(const local_SSAt &SSA, const exprt& assertion) 
 {
+ learning++;
  if(!analyzes_conflict(SSA, conflict_graph)) {
    return false;
  }
@@ -585,6 +623,29 @@ void acdl_solvert::initialize_decision_variables(acdl_domaint::valuet &value)
 
 /*******************************************************************
 
+ Function: acdl_solvert::print_solver_statistics()
+
+ Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+void acdl_solvert::print_solver_statistics() 
+{
+  std::cout << "********************************" << std::endl;
+  std::cout << "Printing ACDL Solver Statistics" << std::endl; 
+  std::cout << "********************************" << std::endl;
+  std::cout << "Decisions:: " << decisions << std::endl;
+  std::cout << "Learning Iterations:: " << learning << std::endl;
+  std::cout << "Learnt clauses:: " << analyzes_conflict.learned_clauses.size() << std::endl;
+  std::cout << "Learnt literals:: " << learned_literals << std::endl;
+  std::cout << "Propagation::" << propagations << std::endl;
+}
+  
+/*******************************************************************
+
  Function: acdl_solvert::pre_process()
 
  Inputs:
@@ -621,7 +682,9 @@ void acdl_solvert::pre_process (const local_SSAt &SSA, const exprt &assertion)
       if(e_it->id() == ID_equal) {
         exprt expr_rhs = to_equal_expr(*e_it).rhs();
         if(expr_rhs.id() == ID_constant || expr_rhs.is_true() || expr_rhs.is_false()) { 
-          find_symbols(*e_it, var_set);
+          // DONOT pass variables with constants
+          // in rhs to simplify_transformer
+          // find_symbols(*e_it, var_set);
         }
         else {
           std::string str("nondet");
@@ -629,6 +692,14 @@ void acdl_solvert::pre_process (const local_SSAt &SSA, const exprt &assertion)
           std::size_t found = rhs_str.find(str); 
           if(found != std::string::npos) {
             find_symbols(*e_it, var_set);
+          } 
+          // pass cond variables
+          exprt expr_lhs = to_equal_expr(*e_it).lhs();
+          std::string strl("cond#");
+          std::string lhs_str=id2string(expr_lhs.get(ID_identifier));
+          std::size_t f = lhs_str.find(strl); 
+          if(f != std::string::npos) {
+            find_symbols(expr_lhs, var_set);
           } 
         }
       } 
@@ -676,17 +747,19 @@ void acdl_solvert::pre_process (const local_SSAt &SSA, const exprt &assertion)
     std::cout << *it << "," << std::endl;
   }
 #endif
-
+#if 0
   // Step 3 [TODO] Turned OFF until fixed
-#if 0 
-  simplify_transformer(e, var_string, SSA.ns);
-#endif  
+  exprt _s = simplify_transformer(e, var_string, SSA.ns);
+  std::cout << "After pre-processing " << std::endl;
+  std::cout << from_expr(SSA.ns, "", _s) << std::endl;
   
   // step 4 [TODO] Turned OFF until the simplify_transformer is fixed 
-  //exprt s = simplify_expr(e, SSA.ns);
+  exprt s = simplify_expr(_s, SSA.ns);
   //std::cout << "The simplified expression is " << from_expr(SSA.ns, "", s) << std::endl;
-
+#endif  
+  
   // Step 5
+  // worklist.statements = s.operands();
   worklist.statements = e.operands();
 
 #ifdef DEBUG  
@@ -726,18 +799,31 @@ property_checkert::resultt acdl_solvert::operator()(
   const exprt &assertion,
   const exprt &additional_constraint)
 {
-  // [TODO] pre-process SSA 
+  // pre-process SSA 
   pre_process(SSA, assertion);
  
-  // [TODO]
+  // property-driven slicing
   worklist.slicing(SSA, assertion, additional_constraint);  
+  
+  // collect all symbols for completeness check
+  for(std::vector<exprt>::iterator it = worklist.statements.begin(); it != worklist.statements.end(); it++) {
+    acdl_domaint::varst sym; 
+    find_symbols(*it, sym);
+    all_vars.insert(sym.begin(), sym.end());
+  }
+  
+#ifdef DEBUG  
+  std::cout << "Printing all vars" << std::endl;
+  for(std::set<symbol_exprt>::iterator it = all_vars.begin();
+    it!=all_vars.end();it++) {
+    std::cout << from_expr(SSA.ns, "", *it) << std::endl;
+  }
+  std::cout << "The assertion checked now is: " << from_expr(SSA.ns, "", assertion) << std::endl;  
+#endif
 
   // pass additional constraint and the assertions to the worklist
   worklist.initialize(SSA, assertion, additional_constraint);
    
-  std::cout << "The assertion checked now is: " << from_expr(SSA.ns, "", assertion) << std::endl;  
-  
-  std::cout << "HERE " << std::endl;
   // call initialize live variables
   worklist.initialize_live_variables();
   std::set<exprt> decision_variable;
@@ -783,8 +869,11 @@ property_checkert::resultt acdl_solvert::operator()(
 
   std::cout << "The additional constraint for the loop is: " << from_expr(SSA.ns, "", additional_constraint) << std::endl;
 #endif
+ 
+#if 0  
   // collect variables for completeness check
-  all_vars = worklist.live_variables; 
+  // all_vars = worklist.live_variables; 
+#endif 
   
   // initialize values trail
   init();
@@ -818,6 +907,7 @@ property_checkert::resultt acdl_solvert::operator()(
   // if result = UNSAT, then the proof is complete 
   if(result == property_checkert::PASS) {
     std::cout << "The program is SAFE" << std::endl;
+    print_solver_statistics();
     return property_checkert::PASS; 
   }
   // if result = UNKNOWN or FAIL, 
@@ -829,6 +919,7 @@ property_checkert::resultt acdl_solvert::operator()(
     if(domain.is_complete(res_val, all_vars)) {
       complete = true;
       std::cout << "The program in UNSAFE" << std::endl;
+      print_solver_statistics();
       return property_checkert::FAIL;
     }
   }
@@ -864,6 +955,7 @@ property_checkert::resultt acdl_solvert::operator()(
       // there is a counterexample. Return result=FAILED. 
       if (complete) {
         std::cout << "No further decisions can be made and the program in UNSAFE" << std::endl;
+        print_solver_statistics();
         return result;
       }
       std::cout << "Failed to verify program" << std::endl;
@@ -872,6 +964,7 @@ property_checkert::resultt acdl_solvert::operator()(
       conflict_graph.to_value(elm);
       std::cout << "Minimal unsafe element is" << from_expr(SSA.ns, "", conjunction(elm)) << std::endl;
 #endif    
+      print_solver_statistics();
       return property_checkert::UNKNOWN; 
       //break;
     }
@@ -928,18 +1021,19 @@ property_checkert::resultt acdl_solvert::operator()(
         // analyze conflict ...
         if(!analyze_conflict(SSA, assertion)) {
           std::cout << "No further backtrack possible " << std::endl;
-#ifdef DEBUG
+//#ifdef DEBUG
           unsigned i=0;
           if(analyzes_conflict.learned_clauses.size() > 0) {
             std::cout << "The final set of learned clauses are:" << std::endl;
             while(i < analyzes_conflict.learned_clauses.size()) {
               acdl_domaint::valuet clause_val = analyzes_conflict.learned_clauses[i];
               const exprt &clause_expr = conjunction(clause_val);
-              std::cout << "clause " << i << "is: " << from_expr(SSA.ns, "", clause_expr) << std::endl;
+              std::cout << "Learned clause " << i << " is:: " << from_expr(SSA.ns, "", clause_expr) << std::endl;
               i++;
+              learned_literals=learned_literals+clause_expr.operands().size();
             }
           }
-#endif
+//#endif
           goto END; // result = PASS when it breaks for here
         }
         // deduction phase in acdl
@@ -958,4 +1052,5 @@ property_checkert::resultt acdl_solvert::operator()(
   } // end of while(true)
   END:
   std::cout << "Procedure terminated after iteration: "  << iteration  << std::endl;
+  print_solver_statistics();
 }

@@ -126,16 +126,16 @@ property_checkert::resultt summary_checker_acdlt::operator()(
     
     // worklist heuristics 
     std::unique_ptr<acdl_worklist_baset> worklist;
-    if(options.get_option("acdl-propagate") == "forward")
+    if(options.get_option("propagate") == "forward")
       worklist = std::unique_ptr<acdl_worklist_baset>(new acdl_worklist_forwardt());
     /*if(options.get_option("acdl-propagate") == "backward")
       worklist = std::unique_ptr<acdl_worklist_baset>(new acdl_worklist_backward());*/
-    else if(options.get_option("acdl-propagate") == "chaotic")
+    else if(options.get_option("propagate") == "chaotic")
       worklist = std::unique_ptr<acdl_worklist_baset>(new acdl_worklist_orderedt());
     
     // conflict analysis heuristics
     std::unique_ptr<acdl_analyze_conflict_baset> conflict_analysis;
-    if(options.get_option("acdl-conflict") == "first-uip")
+    if(options.get_option("learning") == "first-uip")
       conflict_analysis = std::unique_ptr<acdl_analyze_conflict_baset>(new acdl_analyze_conflict_baset(domain)); //no 'new' with base class!
 // SHOULD BE:
 //            new acdl_conflict_analysis_firstuipt());
@@ -143,15 +143,15 @@ property_checkert::resultt summary_checker_acdlt::operator()(
 
     // decision heuristics
     std::unique_ptr<acdl_decision_heuristics_baset> decision_heuristics;
-    if(options.get_option("acdl-decision") == "random")
+    if(options.get_option("decision") == "random")
       decision_heuristics = std::unique_ptr<acdl_decision_heuristics_baset>(new acdl_decision_heuristics_randt(domain));
-    else if(options.get_option("acdl-decision") == "ordered")
+    else if(options.get_option("decision") == "ordered")
       decision_heuristics = std::unique_ptr<acdl_decision_heuristics_baset>(new acdl_decision_heuristics_orderedt(domain));
-    else if(options.get_option("acdl-decision") == "octagon")
+    else if(options.get_option("decision") == "octagon")
       decision_heuristics = std::unique_ptr<acdl_decision_heuristics_baset>(new acdl_decision_heuristics_octagont(domain));
-    else if(options.get_option("acdl-decision") == "berkmin")
+    else if(options.get_option("decision") == "berkmin")
       decision_heuristics = std::unique_ptr<acdl_decision_heuristics_baset>(new acdl_decision_heuristics_berkmint(domain,*conflict_analysis));
-    else if(options.get_option("acdl-decision") == "range")
+    else if(options.get_option("decision") == "range")
       decision_heuristics = std::unique_ptr<acdl_decision_heuristics_baset>(new acdl_decision_heuristics_ranget(domain));
     // ....
 

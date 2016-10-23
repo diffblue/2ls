@@ -496,3 +496,228 @@ void acdl_worklist_baset::print_worklist()
     std::cout << from_expr(*it) <<  "," << std::endl;
   std::cout << std::endl; 
 }
+
+
+/*******************************************************************\
+
+  Function: acdl_worklist_baset::slicing()
+
+  Inputs:
+
+  Outputs:
+
+  Purpose: Slice with respect to assertion
+
+\*******************************************************************/
+
+void
+acdl_worklist_baset::slicing (const local_SSAt &SSA, 
+        const exprt &assertion, const exprt& additional_constraint)
+{
+  typedef std::list<acdl_domaint::statementt> initial_worklistt;
+  initial_worklistt initial_worklist; 
+  typedef std::list<acdl_domaint::statementt> predecs_worklistt;
+  predecs_worklistt predecs_worklist; 
+  typedef std::list<acdl_domaint::statementt> final_worklistt;
+  final_worklistt final_worklist; 
+#ifdef DEBUG
+  std::cout << "Performing Slicing w.r.t. assertion" << std::endl;
+#endif    
+  // push the assertion in to the intial worklist
+  push_into_list(initial_worklist, assertion);
+  // Now compute the transitive dependencies
+  //compute fixpoint mu X. assert_nodes u predecessor(X)
+  while(!initial_worklist.empty() > 0) {
+    // collect all the leaf nodes
+    const acdl_domaint::statementt statement = pop_from_list(initial_worklist);
+
+    // select vars in the present statement
+    acdl_domaint::varst vars;
+    select_vars (statement, vars);
+    // compute the predecessors
+#ifdef DEBUG 
+    std::cout << "Computing predecessors of statement " << 
+               from_expr(statement) << std::endl;
+#endif        
+    update(SSA, vars, predecs_worklist, statement, assertion);
+    
+    for(std::list<acdl_domaint::statementt>::const_iterator 
+      it = predecs_worklist.begin(); it != predecs_worklist.end(); ++it) {
+      std::list<acdl_domaint::statementt>::iterator finditer = 
+                  std::find(final_worklist.begin(), final_worklist.end(), *it); 
+    
+      if(finditer == final_worklist.end() && *it != statement)
+      {
+        // push the sliced statements 
+        // into final worklist for later processing
+        push_into_list(final_worklist, *it);
+        // never seen this statement before
+        push_into_list(initial_worklist, *it);
+      }
+    }
+  }
+  
+#ifdef DEBUG    
+   std::cout << "The content of the sliced worklist is as follows: " << std::endl;
+   for(std::list<acdl_domaint::statementt>::const_iterator 
+         it = final_worklist.begin(); it != final_worklist.end(); ++it) {
+	    std::cout << from_expr(SSA.ns, "", *it) << std::endl;
+   }
+#endif    
+
+  // flush out the content in statements
+  statements.clear();
+  
+  // now collect all sliced statements
+  for(std::list<acdl_domaint::statementt>::const_iterator 
+        it = final_worklist.begin(); it != final_worklist.end(); ++it) {
+    if(*it == assertion)
+      statements.push_back(not_exprt(*it)); 
+    else 
+      statements.push_back(*it); 
+  }
+}
+
+/*******************************************************************\
+
+Function: acdl_worklist_baset::push_into_list()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+ \*******************************************************************/
+
+void
+acdl_worklist_baset::push_into_list(listt &lexpr,
+				  const acdl_domaint::statementt &statement)
+{
+  for(listt::const_iterator it = lexpr.begin();
+      it != lexpr.end(); ++it)
+    if(statement == *it)
+      return;
+  lexpr.push_back(statement);
+}
+
+/*******************************************************************\
+
+Function: acdl_worklist_baset::pop_from_list()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+ \*******************************************************************/
+
+const acdl_domaint::statementt
+acdl_worklist_baset::pop_from_list(listt &lexpr)
+{
+  const acdl_domaint::statementt statement = lexpr.front();
+  lexpr.pop_front();
+  return statement;
+}
+
+/*******************************************************************\
+
+ Function: acdl_worklist_baset::update()
+
+ Inputs:
+
+ Outputs:
+
+ Purpose:
+
+ \*******************************************************************/
+
+void
+acdl_worklist_baset::update (const local_SSAt &SSA,
+                               const acdl_domaint::varst &vars,
+                               
+                               listt &lexpr, 
+                               const acdl_domaint::statementt &current_statement, 
+                               const exprt& assertion)
+{
+   
+  // dependency analysis loop for equalities
+  /*for (local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin ();
+      n_it != SSA.nodes.end (); n_it++)*/
+  bool flag = false;
+  for(statement_listt::iterator it = statements.begin(); it != statements.end(); it++) 
+  {
+    if(*it == current_statement) continue;
+
+    /*for (local_SSAt::nodet::equalitiest::const_iterator e_it =
+        n_it->equalities.begin (); e_it != n_it->equalities.end (); e_it++)*/
+    if(it->id() == ID_equal)    
+    {
+      exprt expr_rhs = to_equal_expr(*it).rhs();
+      std::string str("nondet");
+      std::string rhs_str=id2string(expr_rhs.get(ID_identifier));
+      std::size_t found = rhs_str.find(str); 
+      // push the nondet statement in rhs
+      if(found != std::string::npos) {
+      #ifdef DEBUG
+        //std::cout << "Not inserting nondet elements " << std::endl; 
+      #endif  
+       continue; 
+      }
+      // the statement has already been processed, so no action needed
+      if(*it == current_statement) continue;
+
+      if (check_statement (*it, vars)) {
+        push_into_list (lexpr, *it);
+        #ifdef DEBUG
+        std::cout << "Push: " << from_expr (SSA.ns, "", *it) << std::endl;
+        #endif
+      }
+    }
+    
+    /*for (local_SSAt::nodet::constraintst::const_iterator c_it =
+        n_it->constraints.begin (); c_it != n_it->constraints.end (); c_it++) */
+    else     
+    {
+      if(it->id() == ID_assert) 
+        std::cout << "Processing assert " << from_expr(SSA.ns, "", *it) << std::endl;
+      // handle the assertion first
+      if(assertion != current_statement && flag==false) {
+        if (check_statement (assertion, vars)) {
+          push_into_list (lexpr, not_exprt (assertion));
+#ifdef DEBUG
+          std::cout << "Push: " << from_expr (SSA.ns, "", not_exprt(assertion)) << std::endl;
+#endif
+         flag = true; 
+         continue;
+        }
+      }
+      // handle constraints
+      else if(check_statement (*it, vars)) {
+        push_into_list (lexpr, *it);
+        #ifdef DEBUG
+        std::cout << "Push: " << from_expr (SSA.ns, "", *it) << std::endl;
+        #endif
+      }
+    }
+  #if 0  
+    for (local_SSAt::nodet::assertionst::const_iterator a_it =
+        n_it->assertions.begin (); a_it != n_it->assertions.end (); a_it++)
+    {
+      // for now, store the decision variable as variables 
+      // that appear only in properties
+      // find all variables in an assert statement
+      //assert_listt alist;
+      //push_into_assertion_list(alist, *a_it);
+      if(*a_it == current_statement) continue;
+      if (check_statement (*a_it, vars)) {
+        push_into_list (lexpr, not_exprt (*a_it));
+        #ifdef DEBUG
+        std::cout << "Push: " << from_expr (SSA.ns, "", not_exprt(*a_it)) << std::endl;
+        #endif
+      }
+    }
+  #endif  
+  }
+}
