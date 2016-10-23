@@ -12,87 +12,6 @@ Author: Rajdeep Mukherjee
 
 /*******************************************************************\
 
-  Function: acdl_worklist_orderedt::slicing()
-
-  Inputs:
-
-  Outputs:
-
-  Purpose: Slice with respect to assertion
-
-\*******************************************************************/
-
-void
-acdl_worklist_forwardt::slicing (const local_SSAt &SSA, 
-        const exprt &assertion, const exprt& additional_constraint)
-{
-  typedef std::list<acdl_domaint::statementt> initial_worklistt;
-  initial_worklistt initial_worklist; 
-  typedef std::list<acdl_domaint::statementt> predecs_worklistt;
-  predecs_worklistt predecs_worklist; 
-  typedef std::list<acdl_domaint::statementt> final_worklistt;
-  final_worklistt final_worklist; 
-#ifdef DEBUG
-  std::cout << "Performing Slicing w.r.t. assertion" << std::endl;
-#endif    
-  // push the assertion in to the intial worklist
-  push_into_list(initial_worklist, assertion);
-  // Now compute the transitive dependencies
-  //compute fixpoint mu X. assert_nodes u predecessor(X)
-  while(!initial_worklist.empty() > 0) {
-    // collect all the leaf nodes
-    const acdl_domaint::statementt statement = pop_from_list(initial_worklist);
-
-    // select vars in the present statement
-    acdl_domaint::varst vars;
-    select_vars (statement, vars);
-    // compute the predecessors
-#ifdef DEBUG 
-    std::cout << "Computing predecessors of statement " << 
-               from_expr(statement) << std::endl;
-#endif        
-    update(SSA, vars, predecs_worklist, statement, assertion);
-    
-    for(std::list<acdl_domaint::statementt>::const_iterator 
-      it = predecs_worklist.begin(); it != predecs_worklist.end(); ++it) {
-      std::list<acdl_domaint::statementt>::iterator finditer = 
-                  std::find(final_worklist.begin(), final_worklist.end(), *it); 
-    
-      if(finditer == final_worklist.end() && *it != statement)
-      {
-        // push the sliced statements 
-        // into final worklist for later processing
-        push_into_list(final_worklist, *it);
-        // never seen this statement before
-        push_into_list(initial_worklist, *it);
-      }
-    }
-  }
-  
-#ifdef DEBUG    
-   std::cout << "The content of the sliced worklist is as follows: " << std::endl;
-   for(std::list<acdl_domaint::statementt>::const_iterator 
-         it = final_worklist.begin(); it != final_worklist.end(); ++it) {
-	    std::cout << from_expr(SSA.ns, "", *it) << std::endl;
-   }
-#endif    
-
-  // flush out the content in statements
-  statements.clear();
-  
-  // now collect all sliced statements
-  for(std::list<acdl_domaint::statementt>::const_iterator 
-        it = final_worklist.begin(); it != final_worklist.end(); ++it) {
-    if(*it == assertion)
-      statements.push_back(not_exprt(*it)); 
-    else 
-      statements.push_back(*it); 
-  }
-}
-
-
-/*******************************************************************\
-
   Function: acdl_worklist_orderedt::initialize()
 
   Inputs:
@@ -188,6 +107,13 @@ acdl_worklist_forwardt::initialize(const local_SSAt &SSA,
         }
       }
     }
+    // [TODO] special case for ternary statement 
+    // generated after simplifications
+    else {
+      acdl_domaint::varst avars;
+      find_symbols(*it, avars);
+      worklist_vars.insert(avars.begin(), avars.end());
+    }
   }
   // Now update the leaf_var
   leaf_vars.insert(temp_leaf_var.begin(), temp_leaf_var.end());
@@ -268,6 +194,7 @@ void acdl_worklist_forwardt::update
   }
 }
 
+#if 0
 /*******************************************************************\
 
 Function: acdl_worklist_orderedt::push_into_list()
@@ -290,26 +217,7 @@ acdl_worklist_forwardt::push_into_list(listt &lexpr,
       return;
   lexpr.push_back(statement);
 }
-
-/*******************************************************************\
-
-Function: acdl_worklist_orderedt::pop_from_list()
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
- \*******************************************************************/
-
-const acdl_domaint::statementt
-acdl_worklist_forwardt::pop_from_list(listt &lexpr)
-{
-  const acdl_domaint::statementt statement = lexpr.front();
-  lexpr.pop_front();
-  return statement;
-}
+#endif 
 
 /*******************************************************************\
 

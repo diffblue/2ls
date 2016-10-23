@@ -1,6 +1,6 @@
 CORE
 main.c
---inline
+--inline --unwind 2
 ^EXIT=0$
 ^SIGNAL=0$
 ^VERIFICATION SUCCESSFUL$

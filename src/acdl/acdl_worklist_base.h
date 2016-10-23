@@ -49,8 +49,8 @@ public:
   virtual void dec_update(const local_SSAt &SSA, const acdl_domaint::meet_irreduciblet &stmt, 
   const exprt& assertion) { assert(false); }
 
-  virtual void slicing (const local_SSAt &SSA, 
-        const exprt &assertion, const exprt& additional_constraint) { assert(false); }
+  void slicing (const local_SSAt &SSA, 
+        const exprt &assertion, const exprt& additional_constraint);
   
   void initialize_live_variables();
   //  { assert(false); }
@@ -60,6 +60,7 @@ public:
 		      const acdl_domaint::varst &new_vars,
 		      const acdl_domaint::statementt &statement=nil_exprt(), const exprt& assertion=true_exprt())
   { assert(false); }
+
 
   const acdl_domaint::statementt pop ();
 
@@ -75,7 +76,13 @@ public:
   
   typedef std::vector<exprt> statement_listt;
   statement_listt statements;
+  typedef std::list<acdl_domaint::statementt> listt;
   
+  void update (const local_SSAt &SSA,
+	       const acdl_domaint::varst &vars,
+	       listt &lexpr, 
+	       const acdl_domaint::statementt &current_statement,
+         const exprt& assertion);
 
  void push (const acdl_domaint::statementt &statement);
  void push_into_map (const acdl_domaint::statementt &statement, const acdl_domaint::varst &lvars);
@@ -83,6 +90,11 @@ public:
   void delete_from_map (const acdl_domaint::statementt &statement);
   void delete_map();
   void print_worklist();
+  void push_into_list (listt &lexpr,
+				 const acdl_domaint::statementt &statement);
+
+  const acdl_domaint::statementt pop_from_list (listt &lexpr);
+
 protected:
   worklistt worklist;
   stmt_var_pairt svpair;

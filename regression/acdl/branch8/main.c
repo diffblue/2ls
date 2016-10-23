@@ -12,5 +12,5 @@ void main() {
    x = 2;
  int k = id(x);
  z = x * k;
- assert((z==-2));
+ assert((z!=-2));
 }

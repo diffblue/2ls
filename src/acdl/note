@@ -895,3 +895,81 @@ Observation:
 With forward iteration strategy and per statement based live variable where only
 lhs variable is passed to the domain using octagons caused relational4 to make
 12 decisions -- but still did not terminate. 
+
+Status of Running relational examples with octagon domain:
+----------------------------------------------------------
+Running relational1  [OK]
+Running relational2^CKilled by signal 2  [FAILED]
+Running relational3  [OK]
+Running relational4sh: line 1: 34261 Aborted                 (core
+    dumped) ../../../src/summarizer/2ls --verbosity 10 --acdl --acdl-decision
+ordered --acdl-conflict first-uip --acdl-propagate forward --inline
+--octagons main.c > main.out 2>&1 [FAILED]
+Running relational5  [FAILED]
+Running relational6  [OK]
+Running relational7  [OK]
+
+Meeting on 4th october, 2016
+-----------------------------
+0> pre-process SSA -- heavy-weight implementation, does not terminate for
+relational2 even after 40 mins -- does not change the SSA for relational3.
+1> pre-process -- change the following statement to a new form for which it
+is hard to identify non-leaf variable 
+(E) x#phi27 == ($guard#26 ? x#26 : x#24) changed to 
+$guard#26 ? x#26 == x#phi27 : x#24 == x#phi27 
+For the initial statement, it is easy to identify x#phi27 as left hand side
+varaible needed for initializing worklist with leaf varaible, whereas it is 
+not possible for the simplified statement to identify x#phi27 as lhs varaible.
+
+2> relational4 functions explicitly inlined by changing code -- octagon domain
+terminated -- too many deductions
+3> octagon complement operation not implemented in Apron 
+4> Future work -- domain refinement, incremental solving, handling loops using
+invariant synthesis.
+5> With pre-processing, relational3 and relatioanl4 became faster whereas
+bottom9 became extremely slower. 
+
+Important issue
+----------------
+The following program in Interproc took less than second and only 50 approx
+deductions with octagon domain. ACDL took more than 7 hrs to finish with close
+to 2000 octagonal deductions using chaotic iteration strategy.
+
+var x : int, res1 : int, res2 : int, y : int, state : int;
+begin
+assume x>=1 and x<=10;
+res1 = 2 * x;
+y = x;
+y = y + 1;
+x = x - 1;
+if x != 0 then 
+while(x != 0) do
+y = y + 1;
+x = x - 1;
+done;
+endif;
+res2 = y; 
+end
+The final list of deductions are as follow:
+|res1-2>=0; -res1+20>=0; -res1+res2+9>=0; res1+res2-4>=0;
+res2-2>=0; -res1-res2+40>=0; res1-res2+18>=0; -res2+20>=0;
+-res1+x+20>=0; res1+x-2>=0; -res2+x+20>=0;
+res2+x-2>=0;
+x>=0; -res1-x+20>=0;
+res1-x-2>=0; -res2-x+20>=0;
+res2-x-2>=0;
+-x>=0;
+-res1+y+9>=0;
+res1+y-4>=0;
+-res2+y>=0;
+res2+y-4>=0;
+-x+y-2>=0;
+x+y-2>=0;
+y-2>=0;
+-res1-y+40>=0;
+res1-y+18>=0;
+-res2-y+40>=0;
+res2-y>=0;
+-x-y+20>=0;
+x-y+20>=0;
+-y+20>=0|]

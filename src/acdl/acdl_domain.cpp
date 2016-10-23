@@ -289,10 +289,10 @@ void acdl_domaint::bool_inference(
       break; //at this point we have a conflict, we return
     }
 
-//#ifdef DEBUG
+#ifdef DEBUG
     std::cout << "[ACDL-DOMAIN] boolean deductions(" << it->get_identifier() << "): ";
     output(std::cout, deductions) << std::endl;
-//#endif
+#endif
   }
 }
 
@@ -364,7 +364,7 @@ void acdl_domaint::numerical_inference(
     valuet var_values;
     expr_to_value(simplify_expr(var_value, SSA.ns), var_values);
 
-#if 1
+#ifdef DEBUG
     std::cout << "RESULT: "; output(std::cout, var_values) << std::endl;
 #endif
     if(var_values.empty())
@@ -423,7 +423,7 @@ void acdl_domaint::numerical_inference(
       solver->pop_context();
     }	
  
-//#ifdef DEBUG
+#ifdef DEBUG
 #ifdef NO_PROJECTION
     std::cout << "[ACDL-DOMAIN] numerical deductions: ";
     output(std::cout, deductions) << std::endl;
@@ -432,7 +432,7 @@ void acdl_domaint::numerical_inference(
               << from_expr(SSA.ns, "", *it) << "): ";
     output(std::cout, deductions) << std::endl;
 #endif
-//#endif
+#endif
   }
 }
 
@@ -1505,8 +1505,10 @@ bool acdl_domaint::check_val_consistency(valuet &val)
 {
   std::unique_ptr<incremental_solvert> solver(
     incremental_solvert::allocate(SSA.ns,true));
+#ifdef DEBUG
   std::cout << "Checking consistency for value " << 
     from_expr(SSA.ns, "", conjunction(val)) << std::endl;
+#endif    
   *solver << conjunction(val);
   decision_proceduret::resultt res = (*solver)();
   if(res==decision_proceduret::D_UNSATISFIABLE)

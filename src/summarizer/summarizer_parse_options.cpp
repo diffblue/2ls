@@ -150,20 +150,20 @@ void summarizer_parse_optionst::get_command_line_options(optionst &options)
     options.set_option("inline", true);
   }
 
-  if(cmdline.isset("acdl-propagate"))
-    options.set_option("acdl-propagate", cmdline.get_value("acdl-propagate"));
+  if(cmdline.isset("propagate"))
+    options.set_option("propagate", cmdline.get_value("propagate"));
   else 
-    options.set_option("acdl-propagate", "chaotic"); //default
+    options.set_option("propagate", "chaotic"); //default
   
-  if(cmdline.isset("acdl-decision"))
-    options.set_option("acdl-decision", cmdline.get_value("acdl-decision"));
+  if(cmdline.isset("decision"))
+    options.set_option("decision", cmdline.get_value("decision"));
   else 
-    options.set_option("acdl-decision", "random"); //default
+    options.set_option("decision", "random"); //default
   
-  if(cmdline.isset("acdl-conflict"))
-    options.set_option("acdl-conflict", cmdline.get_value("acdl-conflict"));
+  if(cmdline.isset("learning"))
+    options.set_option("learning", cmdline.get_value("learning"));
   else 
-    options.set_option("acdl-conflict", "first-uip"); //default
+    options.set_option("learning", "first-uip"); //default
 
   if(cmdline.isset("slice") && cmdline.isset("inline"))
     options.set_option("slice", true);
@@ -1568,9 +1568,9 @@ void summarizer_parse_optionst::help()
     "\n"
     "Backend options:\n"
     " --acdl                       use ACDL solver\n"
-    " --acdl-propagate P           use propagation heuristics P\n"
-    " --acdl-decision D            use decision heuristics D\n"
-    " --acdl-conflict C            use conflict analysis heuristics C\n"
+    " --propagate P                use propagation heuristics P\n"
+    " --decision D                 use decision heuristics D\n"
+    " --learning L                 use learning heuristics L\n"
     " --all-functions              check each function as entry point\n"
     " --no-all-properties          stop on first failing assertion\n"
     " --context-sensitive          context-sensitive analysis from entry point\n"

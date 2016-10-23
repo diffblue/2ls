@@ -9,7 +9,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include <util/find_symbols.h>
 #include "acdl_analyze_conflict_base.h"
 
-#define DEBUG
+//#define DEBUG
 
 /*******************************************************************\
 
@@ -24,7 +24,9 @@ Function: abstr_dpll_searcht::chronological_backtrack
 \*******************************************************************/
 bool acdl_analyze_conflict_baset::chronological_backtrack(const local_SSAt &SSA, acdl_conflict_grapht &graph)
 {
+#ifdef DEBUG
   std::cout << "inside backtrack" << std::endl;
+#endif  
   if(graph.current_level == 0) {
     backtrack_level = -1; // no further backtrack possible
     return false;
@@ -795,6 +797,11 @@ const local_SSAt &SSA, acdl_conflict_grapht &graph, acdl_domaint::meet_irreducib
 #ifdef DEBUG  
      std::cout << "Upper index is " << upper_index << "lower index is " << lower_index << std::endl;
 #endif     
+     // [TODO] check for empty propagation trail
+     if(upper_index == lower_index) { 
+       search_level=search_level+1;
+       continue;
+     }
      // now traverse the prop_trail  
      for(unsigned k=lower_index;k<=upper_index-1;k++) {
        //std::cout << "The matched expression is: " << from_expr(SSA.ns, "", graph.prop_trail[k]) << std::endl;

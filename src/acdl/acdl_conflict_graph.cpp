@@ -7,7 +7,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 \*******************************************************************/
 
 #include "acdl_conflict_graph.h"
-#define DEBUG
+//#define DEBUG
 
 /*******************************************************************\
 
@@ -27,7 +27,9 @@ void acdl_conflict_grapht::add_deductions
   for(std::vector<acdl_domaint::deductiont>::const_iterator it 
 	= m_ir.begin(); it != m_ir.end(); it++)
   {
+#ifdef DEBUG    
     std::cout << "conflict graph: " << from_expr(SSA.ns, "", it->first) << std::endl;
+#endif    
     // note that consequents are unique 
     acdl_domaint::meet_irreduciblet exp = it->first; 
     assign(exp);
@@ -95,12 +97,14 @@ void acdl_conflict_grapht::to_value(acdl_domaint::valuet &value) const
   for(unsigned i=0;i<prop_trail.size();i++) {
     value.push_back(prop_trail[i]);
   }
-
+#ifdef DEBUG
   std::cout << "prop_trail size is: " << prop_trail.size() << std::endl;
   if(control_trail.size() != 0)
     std::cout << "control_trail.back is: " << control_trail.back() << std::endl;
   else  
     std::cout << "control_trail is empty" << std::endl;
+#endif
+        
 #if 0  
   // this happens only for the first deduction phase
   if(control_trail.size() == 0) {
@@ -156,14 +160,18 @@ Function: acdl_conflict_grapht::check_consistency
 \*******************************************************************/
 void acdl_conflict_grapht::check_consistency()
 {
+#ifdef DEBUG  
   std::cout << "Checking consistency of conflict graph" << std::endl;
+#endif  
   acdl_domaint::valuet val;
   for(unsigned i=0;i<prop_trail.size();i++) {
     // if there is a BOTTOM or false_exprt in the trail,
     // it should have been popped during backtracking
     assert(prop_trail[i] != false_exprt());
   }
+#ifdef DEBUG  
   std::cout << "Conflict graph is consistent" << std::endl;
+#endif  
 }
 
 /*******************************************************************\
@@ -199,13 +207,23 @@ Function: acdl_conflict_grapht::print_output
  \*******************************************************************/
 void acdl_conflict_grapht::dump_trail(const local_SSAt &SSA)
 {
+#ifdef DEBUG 
   std::cout << "Dump the trail" << std::endl;
+  std::cout << "****************" << std::endl;
   std::cout << "Decision Level: " << current_level << std::endl;
+#endif  
   int control_point;
   if(control_trail.size() == 0)
    control_point=0;
   else
-   control_point=control_trail.back(); 
+   control_point=control_trail.back();
+   
+  // check if propagation trail is zero
+  if(prop_trail.size() == 0) {
+    std::cout << "The propagation trail is empty" << std::endl;
+    return;
+  }
+   
   std::cout << "Upper index: " << prop_trail.size()-1 << "lower index: " << control_point << std::endl;
   for(unsigned i=prop_trail.size()-1;i>=control_point;i--) {
    std::cout << from_expr(SSA.ns, "", prop_trail[i]) << std::endl;
@@ -222,7 +240,11 @@ void acdl_conflict_grapht::dump_trail(const local_SSAt &SSA)
       lower_index = control_trail[search_level-1];
     else 
       lower_index = 0; 
+
     std::cout << "Upper index: " << upper_index << "lower index: " << lower_index << std::endl;
+    // Done for empty propagation trail 
+    // at a particular search level
+    if(upper_index==0) return;
     // now traverse the prop_trail  
     for(unsigned k=upper_index-1;k>=lower_index;k--) {
      std::cout << from_expr(SSA.ns, "", prop_trail[k]) << std::endl;
