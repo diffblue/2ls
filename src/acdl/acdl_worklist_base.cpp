@@ -557,13 +557,13 @@ acdl_worklist_baset::slicing (const local_SSAt &SSA,
     }
   }
   
-#ifdef DEBUG    
+//#ifdef DEBUG    
    std::cout << "The content of the sliced worklist is as follows: " << std::endl;
    for(std::list<acdl_domaint::statementt>::const_iterator 
          it = final_worklist.begin(); it != final_worklist.end(); ++it) {
 	    std::cout << from_expr(SSA.ns, "", *it) << std::endl;
    }
-#endif    
+//#endif    
 
   // flush out the content in statements
   statements.clear();

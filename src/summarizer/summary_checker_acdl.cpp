@@ -23,6 +23,7 @@ Author: Peter Schrammel
 #include "../acdl/acdl_worklist_base.h"
 #include "../acdl/acdl_worklist_ordered.h"
 #include "../acdl/acdl_worklist_forward_strategy.h"
+#include "../acdl/acdl_worklist_backward_strategy.h"
 #include "../acdl/acdl_analyze_conflict_base.h"
 //#include "../acdl/acdl_conflict_analysis_firstuip.h"
 
@@ -128,8 +129,8 @@ property_checkert::resultt summary_checker_acdlt::operator()(
     std::unique_ptr<acdl_worklist_baset> worklist;
     if(options.get_option("propagate") == "forward")
       worklist = std::unique_ptr<acdl_worklist_baset>(new acdl_worklist_forwardt());
-    /*if(options.get_option("acdl-propagate") == "backward")
-      worklist = std::unique_ptr<acdl_worklist_baset>(new acdl_worklist_backward());*/
+    if(options.get_option("propagate") == "backward")
+      worklist = std::unique_ptr<acdl_worklist_baset>(new acdl_worklist_backwardt());
     else if(options.get_option("propagate") == "chaotic")
       worklist = std::unique_ptr<acdl_worklist_baset>(new acdl_worklist_orderedt());
     

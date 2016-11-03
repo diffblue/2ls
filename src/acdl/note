@@ -950,6 +950,8 @@ done;
 endif;
 res2 = y; 
 end
+
+
 The final list of deductions are as follow:
 |res1-2>=0; -res1+20>=0; -res1+res2+9>=0; res1+res2-4>=0;
 res2-2>=0; -res1-res2+40>=0; res1-res2+18>=0; -res2+20>=0;

@@ -49,6 +49,7 @@ DELTA_OBJ+=\
       ../acdl/acdl_worklist_base$(OBJEXT) \
       ../acdl/acdl_worklist_ordered$(OBJEXT) \
       ../acdl/acdl_worklist_forward_strategy$(OBJEXT) \
+      ../acdl/acdl_worklist_backward_strategy$(OBJEXT) \
       ../acdl/acdl_analyze_conflict_base$(OBJEXT) \
       ../acdl/acdl_conflict_graph$(OBJEXT) \
       ../acdl/template_generator_acdl$(OBJEXT) \

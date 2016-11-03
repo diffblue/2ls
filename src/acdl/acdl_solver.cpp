@@ -747,6 +747,7 @@ void acdl_solvert::pre_process (const local_SSAt &SSA, const exprt &assertion)
     std::cout << *it << "," << std::endl;
   }
 #endif
+
 #if 0
   // Step 3 [TODO] Turned OFF until fixed
   exprt _s = simplify_transformer(e, var_string, SSA.ns);
@@ -804,7 +805,7 @@ property_checkert::resultt acdl_solvert::operator()(
  
   // property-driven slicing
   worklist.slicing(SSA, assertion, additional_constraint);  
-  
+ 
   // collect all symbols for completeness check
   for(std::vector<exprt>::iterator it = worklist.statements.begin(); it != worklist.statements.end(); it++) {
     acdl_domaint::varst sym; 
@@ -985,6 +986,7 @@ property_checkert::resultt acdl_solvert::operator()(
     conflict_graph.dump_trail(SSA);
     // completeness check is done when 
     // result=UNKNOWN or result=FAIL
+    std::cout << "complete ? " << std::endl;
     if (result == property_checkert::UNKNOWN || 
         result == property_checkert::FAIL) 
     {
@@ -1048,6 +1050,30 @@ property_checkert::resultt acdl_solvert::operator()(
         conflict_graph.dump_trail(SSA);
 
       } while(result == property_checkert::PASS); //UNSAT
+
+      // [TODO] -- Is this check needed ?
+      // check if the result is UNKNOWN 
+      if (result == property_checkert::UNKNOWN) 
+      {
+        // check for satisfying assignment
+        acdl_domaint::valuet v;
+        conflict_graph.to_value(v);
+        // Do we call normalize_val here ? !!
+        domain.normalize_val(v);
+#ifdef DEBUG
+        std::cout << "checking the propagation result UNKNOWN for completeness" << std::endl;
+#endif          
+        // successful execution of is_complete check 
+        // ensures that all variables are singletons
+        // But we invoke another decision phase
+        // to infer that "no more decisions can be made"
+        if(domain.is_complete(v, all_vars)) {
+          // set complete flag to TRUE
+          complete = true;
+          std::cout << "The program in UNSAFE" << std::endl;
+          result = property_checkert::FAIL;
+        }
+      }
     }
   } // end of while(true)
   END:
