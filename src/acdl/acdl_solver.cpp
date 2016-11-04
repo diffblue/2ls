@@ -15,7 +15,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include "../domains/simplify_transformer.h"
 #include <string>
 
-//#define DEBUG
+#define DEBUG
 //#define PER_STATEMENT_LIVE_VAR
 #define LIVE_VAR_OLD_APPROACH
 
@@ -668,11 +668,42 @@ void acdl_solvert::pre_process (const local_SSAt &SSA, const exprt &assertion)
   conjunct_listt clist; 
   std::string str("nondet");
   
+  typedef std::vector<exprt> enable_exprt;
+  enable_exprt enable_expr;
+#ifdef DEBUG    
+  std::cout << "Printing the SSA enabling expression:: " << SSA.get_enabling_exprs() << std::endl;
+#endif  
+  // collect the enabling expressions of SSA 
+  enable_expr = SSA.get_enabling_exprs().operands();
+   
   if (SSA.nodes.empty ())
     return;
   for (local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin ();
       n_it != SSA.nodes.end (); n_it++)
   {
+    // Process nodes with valid SSA expressions
+    // For example, if SSA enabling_expr = !enable0 && enable1, 
+    // then all nodes with enabling expression as enable0 is invalid 
+    // and only nodes with enabling expression as enable1 is valid 
+    // Nodes with enabling expression as true is always valid
+    // n_it->enabling_expr == true_exprt() -- valid node
+#ifdef DEBUG    
+    std::cout << "The enabling expr of node is " << n_it->enabling_expr << std::endl;
+#endif    
+    exprt exp_en = n_it->enabling_expr;
+    // check if negation of exp_en matches with 
+    // any of the entries in the vector enable_expr
+    exprt search_expr = not_exprt(exp_en);
+    std::vector<exprt>::iterator it_en;
+    it_en = find(enable_expr.begin(), enable_expr.end(), search_expr);  
+    if(exp_en != true_exprt()) {
+     if(it_en != enable_expr.end())
+      continue;
+    }
+    
+#ifdef DEBUG
+    std::cout << "The enabling expr of valid node is " << n_it->enabling_expr << std::endl;
+#endif    
     for (local_SSAt::nodet::equalitiest::const_iterator e_it =
         n_it->equalities.begin (); e_it != n_it->equalities.end (); e_it++)
     {
@@ -763,12 +794,12 @@ void acdl_solvert::pre_process (const local_SSAt &SSA, const exprt &assertion)
   // worklist.statements = s.operands();
   worklist.statements = e.operands();
 
-#ifdef DEBUG  
+//#ifdef DEBUG  
   std::cout << "The simplified SSA statements after pre-processing are" << std::endl;
   for(std::vector<exprt>::iterator it = 
       worklist.statements.begin(); it != worklist.statements.end(); it++) 
     std::cout << "Statement: " << from_expr(SSA.ns, "", *it) << std::endl;
-#endif    
+//#endif    
 }
 
 /*******************************************************************
@@ -812,6 +843,7 @@ property_checkert::resultt acdl_solvert::operator()(
     find_symbols(*it, sym);
     all_vars.insert(sym.begin(), sym.end());
   }
+  std::cout << "The assertion checked now is: " << from_expr(SSA.ns, "", assertion) << std::endl;  
   
 #ifdef DEBUG  
   std::cout << "Printing all vars" << std::endl;
