@@ -539,25 +539,6 @@ acdl_worklist_baset::slicing (const local_SSAt &SSA,
     // select vars in the present statement
     acdl_domaint::varst vars;
     select_vars (statement, vars);
-#if 0   
-    if(statement != assertion) {
-      typedef std::vector<exprt> assert_exprt;
-      assert_exprt aexpr;
-      aexpr = assertion.operands();
-      std::cout << "The size of operands in assertions is " << aexpr.size() << std::endl;
-      // do only if there are multiple assertions
-      if(aexpr.size() > 1) {
-        std::vector<exprt>::iterator it_en;
-        it_en = find(aexpr.begin(), aexpr.end(), statement);      
-        // skip if the individual assertion 
-        // is part of the conjuncted assertion
-        if(it_en != aexpr.end()) {
-          std::cout << "FOUND !! The assertion statement is " << from_expr(statement) << "The container entry is " << from_expr(*it_en) << std::endl; 
-          continue;
-        }
-      }
-    }
-#endif
 
     // compute the predecessors
 #ifdef DEBUG 
