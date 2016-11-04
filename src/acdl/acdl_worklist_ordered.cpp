@@ -324,7 +324,7 @@ Function: acdl_worklist_orderedt::dec_update()
 
  Purpose: Initialize the worklist after a decision is made
 
- \*******************************************************************/
+\*************************************************************/
 
 void
 acdl_worklist_orderedt::dec_update (const local_SSAt &SSA, const acdl_domaint::meet_irreduciblet &stmt, const exprt& assertion)
