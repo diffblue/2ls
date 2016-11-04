@@ -11,7 +11,6 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 
 //#define DEBUG
 
-
 #ifdef DEBUG
 #include <iostream>
 #endif
@@ -525,6 +524,12 @@ acdl_worklist_baset::slicing (const local_SSAt &SSA,
 #endif    
   // push the assertion in to the intial worklist
   push_into_list(initial_worklist, assertion);
+  
+  typedef std::vector<exprt> assert_exprt;
+  assert_exprt aexpr;
+  aexpr = assertion.operands();
+  std::cout << "The size of operands in assertions is " << aexpr.size() << std::endl;
+  
   // Now compute the transitive dependencies
   //compute fixpoint mu X. assert_nodes u predecessor(X)
   while(!initial_worklist.empty() > 0) {
@@ -534,6 +539,7 @@ acdl_worklist_baset::slicing (const local_SSAt &SSA,
     // select vars in the present statement
     acdl_domaint::varst vars;
     select_vars (statement, vars);
+
     // compute the predecessors
 #ifdef DEBUG 
     std::cout << "Computing predecessors of statement " << 
@@ -543,6 +549,33 @@ acdl_worklist_baset::slicing (const local_SSAt &SSA,
     
     for(std::list<acdl_domaint::statementt>::const_iterator 
       it = predecs_worklist.begin(); it != predecs_worklist.end(); ++it) {
+      // check if current statement is part 
+      // of the assertion, this check is needed
+      // to ensure that we do not push individual 
+      // assertions that are obtained by unrolling 
+      // the loop for programs with assert statements 
+      // inside the loop, but just push the global conjunction
+      // of all assertions.  
+
+      // do only if there are multiple assertions and 
+      // the id type is ID_and (conjunction). Note that 
+      // even a single assertion has two operands 
+      // (eg. !(x==0) || !guard0), so we require the 
+      // second condition to check that the logic below 
+      // only works for multiple assertions
+      if(aexpr.size() > 1 && assertion.id() != ID_or) {
+        std::vector<exprt>::iterator it_en;
+          it_en = find(aexpr.begin(), aexpr.end(), *it);      
+          // skip if the individual assertion 
+          // is part of the conjuncted assertion
+          if(it_en != aexpr.end()) {
+#ifdef DEBUG            
+            std::cout << "The assertion statement is " << from_expr(*it) << "The container entry is " << from_expr(*it_en) << std::endl; 
+#endif            
+            continue;
+          }
+      }
+      
       std::list<acdl_domaint::statementt>::iterator finditer = 
                   std::find(final_worklist.begin(), final_worklist.end(), *it); 
     
@@ -557,13 +590,13 @@ acdl_worklist_baset::slicing (const local_SSAt &SSA,
     }
   }
   
-//#ifdef DEBUG    
+#ifdef DEBUG    
    std::cout << "The content of the sliced worklist is as follows: " << std::endl;
    for(std::list<acdl_domaint::statementt>::const_iterator 
          it = final_worklist.begin(); it != final_worklist.end(); ++it) {
 	    std::cout << from_expr(SSA.ns, "", *it) << std::endl;
    }
-//#endif    
+#endif    
 
   // flush out the content in statements
   statements.clear();
