@@ -8,6 +8,8 @@ Author: Daniel Kroening, Peter Schrammel
 
 #include <util/simplify_expr.h>
 #include <util/std_expr.h>
+#include <util/cprover_prefix.h>
+#include <util/prefix.h>
 
 #include "ssa_build_goto_trace.h"
 
@@ -159,20 +161,28 @@ bool ssa_build_goto_tracet::record_step(
       exprt lhs_ssa=finalize_lhs(code_assign.lhs());
       exprt lhs_simplified=simplify_expr(lhs_ssa, unwindable_local_SSA.ns);
 
+#if 1
+      std::cout << "ASSIGN " << from_expr(unwindable_local_SSA.ns, "", code_assign)
+		<< ": " << from_expr(unwindable_local_SSA.ns, "", lhs_simplified)
+		<< " == " << from_expr(unwindable_local_SSA.ns, 
+				       "", rhs_simplified) << std::endl;
+#endif
       step.type=goto_trace_stept::ASSIGNMENT;
       step.full_lhs=lhs_simplified;
       step.full_lhs_value=rhs_simplified;
       if(lhs_simplified.id()==ID_symbol) 
       {
-	step.lhs_object = to_ssa_expr(lhs_simplified);
-        step.lhs_object_value=rhs_simplified;
         //filter out internal stuff
-	if(id2string(step.lhs_object.get_identifier()).find("#")
+	if(id2string(lhs_simplified.get(ID_identifier)).find("#")
             != std::string::npos)
 	  break;
+	if(has_prefix(CPROVER_PREFIX, id2string(lhs_simplified.get(ID_identifier))))
+	  break;
 	//filter out undetermined values
-	if(step.lhs_object_value.id()!=ID_constant)
+	if(rhs_simplified.id()!=ID_constant)
   	  break;
+	step.lhs_object = ssa_exprt(lhs_simplified);
+        step.lhs_object_value=rhs_simplified;
       }
       if(step.lhs_object.is_nil())
 	break;
