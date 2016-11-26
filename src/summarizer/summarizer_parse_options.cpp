@@ -56,6 +56,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #define UNWIND_GOTO_INTO_LOOP 1
 #define REMOVE_MULTIPLE_DEREFERENCES 1
+#define IGNORE_RECURSION 1
+#define IGNORE_THREADS 1
 
 /*******************************************************************\
 
@@ -69,8 +71,11 @@ Function: summarizer_parse_optionst::summarizer_parse_optionst
 
 \*******************************************************************/
 
-summarizer_parse_optionst::summarizer_parse_optionst(int argc, const char **argv):
-parse_options_baset(SUMMARIZER_OPTIONS, argc, argv),
+summarizer_parse_optionst::summarizer_parse_optionst(
+  int argc,
+  const char **argv)
+  :
+  parse_options_baset(SUMMARIZER_OPTIONS, argc, argv),
   language_uit(cmdline, ui_message_handler),
   ui_message_handler(cmdline, "2LS " SUMMARIZER_VERSION)
 {
@@ -1170,12 +1175,24 @@ bool summarizer_parse_optionst::process_goto_program(
     if(options.get_bool_option("inline"))
     {
       status() << "Performing full inlining" << eom;
+#if IGNORE_RECURSION
       if(goto_inline(goto_model, ui_message_handler))
       {
+        status() << "Recursion not supported" << eom;
         report_unknown();
         return 5;
       }
+#endif
     }
+
+#if IGNORE_THREADS
+    if(has_threads(goto_model))
+    {
+      status() << "Threads not supported" << eom;
+      report_unknown();
+      return 5;
+    }
+#endif
 
     //preprocessing to improve the structure of the SSA for the unwinder
     split_loopheads(goto_model);

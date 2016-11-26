@@ -263,3 +263,43 @@ void summarizer_parse_optionst::remove_multiple_dereferences(goto_modelt &goto_m
     }
   }
 }
+
+/*******************************************************************\
+
+Function: summarizer_parse_optionst::has_threads
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: checks whether the program has threads
+
+\*******************************************************************/
+
+bool summarizer_parse_optionst::has_threads(const goto_modelt &goto_model)
+{
+  namespacet ns(goto_model.symbol_table);
+  forall_goto_functions(f_it, goto_model.goto_functions)
+  {
+    const goto_programt& program=f_it->second.body;
+
+    forall_goto_program_instructions(i_it, program)
+    {
+      const goto_programt::instructiont &instruction=*i_it;
+
+      if(instruction.is_function_call())
+      {
+        const code_function_callt &fct=to_code_function_call(instruction.code);
+        if(fct.function().id() == ID_symbol)
+        {
+          const symbol_exprt &fsym=to_symbol_expr(fct.function());
+
+          if(ns.lookup(fsym.get_identifier()).base_name == "pthread_create")
+            return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
