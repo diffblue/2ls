@@ -52,7 +52,7 @@ class optionst;
   "(property):(all-properties)(k-induction)(incremental-bmc)" \
   "(no-spurious-check)(all-functions)" \
   "(no-simplify)(no-fixed-point)" \
-  "(graphml-cex):(json-cex):" \
+  "(graphml-witness):(json-cex):" \
   "(no-spurious-check)(no-all-properties)" \
   "(competition-mode)(slice)(no-propagation)" \
   "(property-file):" \
@@ -109,7 +109,12 @@ protected:
   void output_graphml_cex(
     const optionst &options,
     const goto_modelt &,
-    const class goto_tracet &);
+    const summary_checker_baset &summary_checker);
+
+  void output_graphml_proof(
+    const optionst &options,
+    const goto_modelt &goto_model,
+    const summary_checker_baset &summary_checker);
 
   void output_json_cex(
     const optionst &options,

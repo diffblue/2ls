@@ -359,8 +359,8 @@ void summarizer_parse_optionst::get_command_line_options(optionst &options)
 
   if(cmdline.isset("show-trace"))
     options.set_option("show-trace", true);
-  if(cmdline.isset("graphml-cex"))
-    options.set_option("graphml-cex", cmdline.get_value("graphml-cex"));
+  if(cmdline.isset("graphml-witness"))
+    options.set_option("graphml-witness", cmdline.get_value("graphml-witness"));
   if(cmdline.isset("json-cex"))
     options.set_option("json-cex", cmdline.get_value("json-cex"));
 
@@ -625,21 +625,25 @@ int summarizer_parse_optionst::doit()
     {
     case property_checkert::PASS:
       if(report_assertions) 
-        report_properties(options,goto_model, summary_checker->property_map);
+        report_properties(options, goto_model, summary_checker->property_map);
       report_success();
+      if(cmdline.isset("graphml-witness"))
+        output_graphml_proof(options, goto_model, *summary_checker);
       retval = get_return_value(0, options, summary_checker->property_map);
       break;
     
     case property_checkert::FAIL:
       if(report_assertions) 
-        report_properties(options,goto_model, summary_checker->property_map);
+        report_properties(options, goto_model, summary_checker->property_map);
       report_failure();
+      if(cmdline.isset("graphml-witness"))
+        output_graphml_cex(options, goto_model, *summary_checker);
       retval = get_return_value(10, options, summary_checker->property_map);
       break;
 
     case property_checkert::UNKNOWN:
       if(report_assertions) 
-        report_properties(options,goto_model, summary_checker->property_map);
+        report_properties(options, goto_model, summary_checker->property_map);
       retval = get_return_value(5, options, summary_checker->property_map);
       report_unknown();
       break;
@@ -1337,9 +1341,6 @@ void summarizer_parse_optionst::report_properties(
     if(cmdline.isset("show-trace") &&
        it->second.result==property_checkert::FAIL)
       show_counterexample(goto_model, it->second.error_trace);
-    if(cmdline.isset("graphml-cex") &&
-       it->second.result==property_checkert::FAIL)
-      output_graphml_cex(options,goto_model, it->second.error_trace);
     if(cmdline.isset("json-cex") &&
        it->second.result==property_checkert::FAIL)
       output_json_cex(options,
@@ -1462,14 +1463,56 @@ Function: summarizer_parse_optionst::output_graphml_cex
 void summarizer_parse_optionst::output_graphml_cex(
   const optionst &options,
   const goto_modelt &goto_model,
-  const goto_tracet &error_trace)
+  const summary_checker_baset &summary_checker)
+{
+  for(const auto &p : summary_checker.property_map)
+  {
+    if(p.second.result!=property_checkert::FAIL)
+      continue;
+
+    const namespacet ns(goto_model.symbol_table);
+    const std::string graphml=options.get_option("graphml-witness");
+    if(!graphml.empty())
+    {
+      graphmlt cex_graph;
+      convert(ns, p.second.error_trace, cex_graph);
+
+      if(graphml=="-")
+        write_graphml(cex_graph, std::cout);
+      else
+      {
+        std::ofstream out(graphml.c_str());
+        write_graphml(cex_graph, out);
+      }
+    }
+    break;
+  }
+}
+
+/*******************************************************************\
+
+Function: summarizer_parse_optionst::output_graphml_cex
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void summarizer_parse_optionst::output_graphml_proof(
+  const optionst &options,
+  const goto_modelt &goto_model,
+  const summary_checker_baset &summary_checker)
 {
   const namespacet ns(goto_model.symbol_table);
-  const std::string graphml=options.get_option("graphml-cex");
+  const std::string graphml=options.get_option("graphml-witness");
   if(!graphml.empty())
   {
     graphmlt cex_graph;
-    convert(ns, error_trace, cex_graph);
+// TODO: create proof
+//    convert(ns, error_trace, cex_graph);
 
     if(graphml=="-")
       write_graphml(cex_graph, std::cout);
@@ -1480,7 +1523,6 @@ void summarizer_parse_optionst::output_graphml_cex(
     }
   }
 }
-
 /*******************************************************************\
 
 Function: summarizer_parse_optionst::output_json_cex
