@@ -1,6 +1,6 @@
 default: tests.log
 
-FLAGS = --verbosity 10 --acdl --decision ordered --learning first-uip --propagate chaotic --inline --no-propagation
+FLAGS = --verbosity 10 --acdl --decision ordered --learning first-uip --propagate chaotic --inline
 
 test:
 	@../test.pl -c "/usr/bin/time ../../../src/summarizer/2ls $(FLAGS)"

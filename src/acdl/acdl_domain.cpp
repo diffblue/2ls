@@ -7,7 +7,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 \*******************************************************************/
 
 
-#define DEBUG
+//#define DEBUG
 
 #ifdef DEBUG
 #include <iostream>
@@ -155,10 +155,13 @@ void acdl_domaint::maps_to_bottom(
     std::cout << "yes, deducing BOTTOM" << std::endl;
 #endif    
     new_value.push_back(false_exprt());
+    deductions.push_back(false_exprt());
+    /*
     deductions.push_back(deductiont());
     deductions.back().first = false_exprt();
     get_antecedents(*solver,old_value,value_literals,
 		    deductions.back().second);
+    */
   }
   else {
 #ifdef DEBUG
@@ -268,10 +271,13 @@ void acdl_domaint::bool_inference(
         if(!is_subsumed(deduced,_old_value))
         {
           new_value.push_back(deduced);
+          deductions.push_back(deduced);
+          /*
           deductions.push_back(deductiont());
           deductions.back().first = deduced;
           get_antecedents(*solver,_old_value,value_literals,
                           deductions.back().second);
+          */
         }
       }
 
@@ -282,10 +288,14 @@ void acdl_domaint::bool_inference(
 #ifdef DEBUG
       std::cout << "deducing in BOTTOM" << std::endl;
 #endif      
+      deductions.push_back(false_exprt());
+
+      /*
       deductions.push_back(deductiont());
       deductions.back().first = false_exprt();
       get_antecedents(*solver,_old_value,value_literals,
                       deductions.back().second);
+      */
       break; //at this point we have a conflict, we return
     }
 
@@ -415,10 +425,14 @@ void acdl_domaint::numerical_inference(
         std::cout << "adding new value " << from_expr(SSA.ns, "", var_values[i]) << std::endl;
 #endif      
         new_value.push_back(var_values[i]);
+        deductions.push_back(var_values[i]);
+        
+        /*
         deductions.push_back(deductiont());
         deductions.back().first = var_values[i];
         get_antecedents(*solver,_old_value,value_literals,
                         deductions.back().second);
+        */
       }
       solver->pop_context();
     }	
@@ -436,7 +450,7 @@ void acdl_domaint::numerical_inference(
   }
 }
 
-
+#if 0
 /*******************************************************************\
 
 Function: acdl_domaint::get_antecedents()
@@ -460,6 +474,7 @@ void acdl_domaint::get_antecedents(incremental_solvert &solver,
       antecedents.push_back(value[i]);
   }
 }
+#endif
 
 /*******************************************************************\
 

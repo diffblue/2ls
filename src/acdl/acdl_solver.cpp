@@ -15,7 +15,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include "../domains/simplify_transformer.h"
 #include <string>
 
-#define DEBUG
+//#define DEBUG
 //#define PER_STATEMENT_LIVE_VAR
 #define LIVE_VAR_OLD_APPROACH
 
@@ -324,8 +324,10 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
   // will atleast contain old_v and is not EMPTY
   if(final_val.empty()) {
 #ifdef DEBUG    
-    std::cout << "Empty deduction, so inserting TRUE-> TRUE" << std::endl;
+    std::cout << "Empty deduction, so inserting TRUE" << std::endl;
 #endif    
+   #if 0
+    std::cout << "Empty deduction, so inserting TRUE-> TRUE" << std::endl;
     std::vector<acdl_domaint::deductiont> ded;
     typedef std::vector<exprt> ant;
     ant a;
@@ -335,6 +337,11 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
     exprt e = true_exprt(); 
     d = std::make_pair(e, a);
     ded.push_back(d); 
+    conflict_graph.add_deductions(SSA, ded);
+   #endif
+    std::vector<acdl_domaint::meet_irreduciblet> ded;
+    exprt e = true_exprt(); 
+    ded.push_back(e);
     conflict_graph.add_deductions(SSA, ded);
   }
   unsigned final_size = conflict_graph.prop_trail.size();
