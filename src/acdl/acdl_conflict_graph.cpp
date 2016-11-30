@@ -24,6 +24,7 @@ void acdl_conflict_grapht::add_deductions
   (const local_SSAt &SSA, const acdl_domaint::deductionst &m_ir)
 {
   // iterate over the deductions
+  #if 0
   for(std::vector<acdl_domaint::deductiont>::const_iterator it 
 	= m_ir.begin(); it != m_ir.end(); it++)
   {
@@ -32,6 +33,18 @@ void acdl_conflict_grapht::add_deductions
 #endif    
     // note that consequents are unique 
     acdl_domaint::meet_irreduciblet exp = it->first; 
+    assign(exp);
+  }
+  #endif 
+
+  for(std::vector<acdl_domaint::meet_irreduciblet>::const_iterator it 
+	= m_ir.begin(); it != m_ir.end(); it++)
+  {
+#ifdef DEBUG    
+    std::cout << "conflict graph: " << from_expr(SSA.ns, "", *it) << std::endl;
+#endif    
+    // note that consequents are unique 
+    acdl_domaint::meet_irreduciblet exp = *it; 
     assign(exp);
   }
 }
