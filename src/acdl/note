@@ -975,3 +975,11 @@ res2-y>=0;
 -x-y+20>=0;
 x-y+20>=0;
 -y+20>=0|]
+
+Meeting with Peter on 1st December, 2016
+-----------------------------------------
+1> We should not use the domain interface since it contains also the live vars
+interface. Also, we cannot completely replace deductions but just remove the
+antecedents.
+2> Add the statement transformer to the conflict_graph.add_deductions
+ 
