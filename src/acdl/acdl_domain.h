@@ -142,7 +142,6 @@ protected:
   void remove_expr(valuet &old_value, 
                    exprt &expr,
                    valuet &new_value);
-  
   bool expr_is_true(const exprt &expr);
 
   //print varst
