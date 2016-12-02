@@ -982,4 +982,13 @@ Meeting with Peter on 1st December, 2016
 interface. Also, we cannot completely replace deductions but just remove the
 antecedents.
 2> Add the statement transformer to the conflict_graph.add_deductions
- 
+
+Two ways of optimizing::-
+======================== 
+a> Not generating octagon constraint that relates two variables with different
+index (x13, x11) -- implementation is in template_generator_acdl.cpp ?
+b> One step closure -- template_generator_acdl.cpp is the right place to
+implement this. 
+override "instantiate_standard_domain" that is in template_generator_baset 
+into template_generator_acdl (mainly the functions add_difference_template 
+and add_sum_template)

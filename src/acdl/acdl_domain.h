@@ -18,9 +18,6 @@ class acdl_domaint : public messaget
 public:
   typedef exprt meet_irreduciblet;
   typedef std::vector<meet_irreduciblet> valuet; 
-  //typedef std::vector<meet_irreduciblet> antecedentst;
-  //typedef std::pair<meet_irreduciblet, antecedentst> deductiont;
-  //typedef std::vector<deductiont> deductionst;
   typedef std::vector<meet_irreduciblet> deductionst;
   typedef exprt statementt;
   typedef std::set<symbol_exprt> varst;
@@ -43,12 +40,6 @@ public:
 		  deductionst &deductions);
 
   //project deductions to value
-  /*void to_value(const deductionst &deductions, valuet& value)
-  {
-    for(deductionst::const_iterator it = deductions.begin();
-	it != deductions.end(); ++it)
-      value.push_back(it->first);
-  }*/
   void to_value(const deductionst &deductions, valuet& value)
   {
     for(deductionst::const_iterator it = deductions.begin();
@@ -113,32 +104,6 @@ public:
     return out;
   }
 
-  //print deductions
-  #if 0
-  inline std::ostream &output(
-    std::ostream &out, const deductionst &d)
-  {
-    for(deductionst::const_iterator it = d.begin();
-        it != d.end(); ++it)
-    {
-      out << from_expr(SSA.ns, "", it->first) << " <== ";
-      output(out, it->second) << std::endl;
-    }
-    return out;
-  }
-  #endif
-  /*
-  inline std::ostream &output(
-    std::ostream &out, const deductionst &d)
-  {
-    for(deductionst::const_iterator it = d.begin();
-        it != d.end(); ++it)
-    {
-      out << from_expr(SSA.ns, "", *it) << std::endl;
-    }
-    return out;
-  }
- */
 protected:
   optionst &options;
   local_SSAt &SSA;
@@ -177,13 +142,7 @@ protected:
   void remove_expr(valuet &old_value, 
                    exprt &expr,
                    valuet &new_value);
-  #if 0
-  void get_antecedents(incremental_solvert &solver,
-		       const valuet &value,
-		       const bvt &value_literals,
-  	       antecedentst &antecedents);
-  #endif
-
+  
   bool expr_is_true(const exprt &expr);
 
   //print varst

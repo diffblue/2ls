@@ -156,12 +156,6 @@ void acdl_domaint::maps_to_bottom(
 #endif    
     new_value.push_back(false_exprt());
     deductions.push_back(false_exprt());
-    /*
-    deductions.push_back(deductiont());
-    deductions.back().first = false_exprt();
-    get_antecedents(*solver,old_value,value_literals,
-		    deductions.back().second);
-    */
   }
   else {
 #ifdef DEBUG
@@ -272,12 +266,6 @@ void acdl_domaint::bool_inference(
         {
           new_value.push_back(deduced);
           deductions.push_back(deduced);
-          /*
-          deductions.push_back(deductiont());
-          deductions.back().first = deduced;
-          get_antecedents(*solver,_old_value,value_literals,
-                          deductions.back().second);
-          */
         }
       }
 
@@ -289,13 +277,6 @@ void acdl_domaint::bool_inference(
       std::cout << "deducing in BOTTOM" << std::endl;
 #endif      
       deductions.push_back(false_exprt());
-
-      /*
-      deductions.push_back(deductiont());
-      deductions.back().first = false_exprt();
-      get_antecedents(*solver,_old_value,value_literals,
-                      deductions.back().second);
-      */
       break; //at this point we have a conflict, we return
     }
 
@@ -334,6 +315,7 @@ void acdl_domaint::numerical_inference(
     find_symbols(*it, symbols);
     tvars.insert(symbols.begin(), symbols.end());
   }
+  std::cout << "Printing the number of variables passed to the template generator" << std::endl;
   template_generator_acdlt template_generator(options,ssa_db,ssa_local_unwinder); 
   template_generator.set_message_handler(get_message_handler());
   template_generator(SSA,tvars);
@@ -426,13 +408,6 @@ void acdl_domaint::numerical_inference(
 #endif      
         new_value.push_back(var_values[i]);
         deductions.push_back(var_values[i]);
-        
-        /*
-        deductions.push_back(deductiont());
-        deductions.back().first = var_values[i];
-        get_antecedents(*solver,_old_value,value_literals,
-                        deductions.back().second);
-        */
       }
       solver->pop_context();
     }	
@@ -449,32 +424,6 @@ void acdl_domaint::numerical_inference(
 #endif
   }
 }
-
-#if 0
-/*******************************************************************\
-
-Function: acdl_domaint::get_antecedents()
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void acdl_domaint::get_antecedents(incremental_solvert &solver,
-                                   const valuet &value,
-                                   const bvt &value_literals,
-                                   antecedentst &antecedents)
-{
-  for(unsigned i=0; i<value_literals.size(); ++i)
-  {
-    if(solver.is_in_conflict(value_literals[i]))
-      antecedents.push_back(value[i]);
-  }
-}
-#endif
 
 /*******************************************************************\
 

@@ -326,19 +326,6 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
 #ifdef DEBUG    
     std::cout << "Empty deduction, so inserting TRUE" << std::endl;
 #endif    
-   #if 0
-    std::cout << "Empty deduction, so inserting TRUE-> TRUE" << std::endl;
-    std::vector<acdl_domaint::deductiont> ded;
-    typedef std::vector<exprt> ant;
-    ant a;
-    a.push_back(true_exprt());
-    typedef std::pair<exprt, ant> p;
-    p d;
-    exprt e = true_exprt(); 
-    d = std::make_pair(e, a);
-    ded.push_back(d); 
-    conflict_graph.add_deductions(SSA, ded);
-   #endif
     std::vector<acdl_domaint::meet_irreduciblet> ded;
     exprt e = true_exprt(); 
     ded.push_back(e);
@@ -568,7 +555,7 @@ void acdl_solvert::generalize_proof(const local_SSAt &SSA, const exprt& assertio
     return;
 #ifdef DEBUG
     std::cout << "Generalizing proof !" << std::endl; 
-  
+#endif  
   // generalize only when the conflict is due to AI proof
   if(analyzes_conflict.last_proof == analyzes_conflict.ABSINT)  {
     assert(analyzes_conflict.conflicting_clause == -1);
@@ -583,8 +570,6 @@ void acdl_solvert::generalize_proof(const local_SSAt &SSA, const exprt& assertio
   
   
   }      
-   
-
 }
 
 /*******************************************************************
