@@ -105,45 +105,45 @@ bool ssa_build_goto_tracet::record_step(
     break;
   
   case GOTO:
-    {
-      exprt cond=current_pc->guard;
-      exprt cond_read = unwindable_local_SSA.read_rhs(cond,current_pc);
-      exprt cond_value=simplify_expr(prop_conv.get(cond_read), unwindable_local_SSA.ns);
-      step.type=goto_trace_stept::GOTO;
-      step.cond_expr = cond_value; //cond
-      step.cond_value = cond_value.is_true();
+  {
+    exprt cond=current_pc->guard;
+    exprt cond_read = unwindable_local_SSA.read_rhs(cond,current_pc);
+    exprt cond_value=simplify_expr(prop_conv.get(cond_read), unwindable_local_SSA.ns);
+    step.type=goto_trace_stept::GOTO;
+    step.cond_expr = cond_value; //cond
+    step.cond_value = cond_value.is_true();
 #if 0
-      std::cout << "COND " << from_expr(unwindable_local_SSA.ns, "", cond)
-		<< ": " << from_expr(unwindable_local_SSA.ns, "", cond_read)
-		<< " == " << cond_value.is_true() << std::endl;
+    std::cout << "COND " << from_expr(unwindable_local_SSA.ns, "", cond)
+              << ": " << from_expr(unwindable_local_SSA.ns, "", cond_read)
+              << " == " << cond_value.is_true() << std::endl;
 #endif
-      if(step.cond_value)
-      {
-        goto_trace.add_step(step);
-        step_nr++;
-      }
-      else
-	taken = false;
+    if(step.cond_value)
+    {
+      goto_trace.add_step(step);
+      step_nr++;
     }
-    break;
+    else
+      taken = false;
+  }
+  break;
 
   case ASSERT:
+  {
+    // failed or not?
+    exprt cond=current_pc->guard;
+    exprt cond_read=unwindable_local_SSA.read_rhs(cond,current_pc);
+    exprt cond_value=simplify_expr(prop_conv.get(cond_read), unwindable_local_SSA.ns);
+    if(cond_value.is_false())
     {
-      // failed or not?
-      exprt cond=current_pc->guard;
-      exprt cond_read=unwindable_local_SSA.read_rhs(cond,current_pc);
-      exprt cond_value=simplify_expr(prop_conv.get(cond_read), unwindable_local_SSA.ns);
-      if(cond_value.is_false())
-      {
-        step.type=goto_trace_stept::ASSERT;
-        step.comment=id2string(current_pc->source_location.get_comment());
-        step.cond_expr=cond;
-        step.cond_value=false;
-        goto_trace.add_step(step);
-        step_nr++;
-      }
+      step.type=goto_trace_stept::ASSERT;
+      step.comment=id2string(current_pc->source_location.get_comment());
+      step.cond_expr=cond;
+      step.cond_value=false;
+      goto_trace.add_step(step);
+      step_nr++;
     }
-    break;
+  }
+  break;
 
   case ATOMIC_BEGIN:
   case ATOMIC_END:
@@ -152,50 +152,50 @@ bool ssa_build_goto_tracet::record_step(
     break; // ignore
   
   case ASSIGN:
-    {
-      const code_assignt &code_assign=
-        to_code_assign(current_pc->code);
-      exprt rhs_ssa=unwindable_local_SSA.read_rhs(code_assign.rhs(),current_pc);
-      exprt rhs_value=prop_conv.get(rhs_ssa);
-      exprt rhs_simplified=simplify_expr(rhs_value, unwindable_local_SSA.ns);
-      exprt lhs_ssa=finalize_lhs(code_assign.lhs());
-      exprt lhs_simplified=simplify_expr(lhs_ssa, unwindable_local_SSA.ns);
+  {
+    const code_assignt &code_assign=
+      to_code_assign(current_pc->code);
+    exprt rhs_ssa=unwindable_local_SSA.read_rhs(code_assign.rhs(),current_pc);
+    exprt rhs_value=prop_conv.get(rhs_ssa);
+    exprt rhs_simplified=simplify_expr(rhs_value, unwindable_local_SSA.ns);
+    exprt lhs_ssa=finalize_lhs(code_assign.lhs());
+    exprt lhs_simplified=simplify_expr(lhs_ssa, unwindable_local_SSA.ns);
 
-#if 1
-      std::cout << "ASSIGN " << from_expr(unwindable_local_SSA.ns, "", code_assign)
-		<< ": " << from_expr(unwindable_local_SSA.ns, "", lhs_simplified)
-		<< " == " << from_expr(unwindable_local_SSA.ns, 
-				       "", rhs_simplified) << std::endl;
-#endif
-      step.type=goto_trace_stept::ASSIGNMENT;
-      step.full_lhs=lhs_simplified;
-      step.full_lhs_value=rhs_simplified;
-      if(lhs_simplified.id()==ID_symbol) 
-      {
-        //filter out internal stuff
-	if(id2string(lhs_simplified.get(ID_identifier)).find("#")
-            != std::string::npos)
-	  break;
-	if(has_prefix(CPROVER_PREFIX, id2string(lhs_simplified.get(ID_identifier))))
-	  break;
-	//filter out undetermined values
-	if(rhs_simplified.id()!=ID_constant)
-  	  break;
-	step.lhs_object = ssa_exprt(lhs_simplified);
-        step.lhs_object_value=rhs_simplified;
-      }
-      if(step.lhs_object.is_nil())
-	break;
 #if 0
-      std::cout << "ASSIGN " << from_expr(unwindable_local_SSA.ns, "", code_assign)
-		<< ": " << from_expr(unwindable_local_SSA.ns, "", rhs_ssa)
-		<< " == " << from_expr(unwindable_local_SSA.ns, 
-				       "", step.full_lhs_value) << std::endl;
+    std::cout << "ASSIGN " << from_expr(unwindable_local_SSA.ns, "", code_assign)
+              << ": " << from_expr(unwindable_local_SSA.ns, "", lhs_simplified)
+              << " == " << from_expr(unwindable_local_SSA.ns,
+                                     "", rhs_simplified) << std::endl;
 #endif
-      goto_trace.add_step(step);
-      step_nr++;
+    step.type=goto_trace_stept::ASSIGNMENT;
+    step.full_lhs=lhs_simplified;
+    step.full_lhs_value=rhs_simplified;
+    if(lhs_simplified.id()==ID_symbol)
+    {
+      //filter out internal stuff
+      if(id2string(lhs_simplified.get(ID_identifier)).find("#")
+         != std::string::npos)
+        break;
+      if(has_prefix(CPROVER_PREFIX, id2string(lhs_simplified.get(ID_identifier))))
+        break;
+      //filter out undetermined values
+      if(rhs_simplified.id()!=ID_constant)
+        break;
+      step.lhs_object = ssa_exprt(lhs_simplified);
+      step.lhs_object_value=rhs_simplified;
     }
-    break;
+    if(step.lhs_object.is_nil())
+      break;
+#if 0
+    std::cout << "ASSIGN " << from_expr(unwindable_local_SSA.ns, "", code_assign)
+              << ": " << from_expr(unwindable_local_SSA.ns, "", rhs_ssa)
+              << " == " << from_expr(unwindable_local_SSA.ns,
+                                     "", step.full_lhs_value) << std::endl;
+#endif
+    goto_trace.add_step(step);
+    step_nr++;
+  }
+  break;
 
   case OTHER:
     step.type=goto_trace_stept::LOCATION;
@@ -240,10 +240,10 @@ void ssa_build_goto_tracet::operator()(
     {
       const code_assignt &code_assign = to_code_assign(current_pc->code);
       if(code_assign.rhs().id()==ID_side_effect &&
-	 to_side_effect_expr(code_assign.rhs()).get_statement()==ID_nondet)
+         to_side_effect_expr(code_assign.rhs()).get_statement()==ID_nondet)
       {
-	current_pc++;
-	continue;
+        current_pc++;
+        continue;
       }
     }
 #endif
@@ -257,7 +257,7 @@ void ssa_build_goto_tracet::operator()(
     std::cout << "location: " << current_pc->location_number << std::endl;
     std::cout << "level_diff: " << level_diff << std::endl;
     std::cout << "unwindings: " 
-	      << unwindable_local_SSA.odometer_to_string(unwindable_local_SSA.current_unwindings,100) << std::endl;
+              << unwindable_local_SSA.odometer_to_string(unwindable_local_SSA.current_unwindings,100) << std::endl;
 #endif
 
     bool taken = record_step(goto_trace, step_nr);
@@ -271,7 +271,7 @@ void ssa_build_goto_tracet::operator()(
     {
       if(current_pc->is_backwards_goto())
       {
-	unwindable_local_SSA.decrement_unwindings(0);
+        unwindable_local_SSA.decrement_unwindings(0);
       }
       current_pc=current_pc->get_target();
     }
