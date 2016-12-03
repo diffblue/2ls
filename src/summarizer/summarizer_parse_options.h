@@ -55,7 +55,6 @@ class optionst;
   "(graphml-witness):(json-cex):" \
   "(no-spurious-check)(no-all-properties)" \
   "(competition-mode)(slice)(no-propagation)" \
-  "(property-file):" \
   "(no-unwinding-assertions)"
   // the last line is for CBMC-regression testing only
 
@@ -91,11 +90,6 @@ protected:
 
   void report_success();
   void report_failure();
-
-  int get_return_value(
-    int return_value,
-    const optionst &,
-    const summary_checker_baset::property_mapt &);
 
   void report_properties(
     const optionst &options,

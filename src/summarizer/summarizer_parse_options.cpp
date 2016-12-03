@@ -363,64 +363,6 @@ void summarizer_parse_optionst::get_command_line_options(optionst &options)
     options.set_option("graphml-witness", cmdline.get_value("graphml-witness"));
   if(cmdline.isset("json-cex"))
     options.set_option("json-cex", cmdline.get_value("json-cex"));
-
-  //for SV-COMP
-  if(cmdline.isset("property-file"))
-  {
-    options.set_option("sv-comp", true);
-    options.set_option("competition-mode", true);
-    options.set_option("all-properties", false);
-    std::ifstream file(cmdline.get_value("property-file"));
-    std::string ltl_property;
-    std::getline(file, ltl_property);
-    file.close();
-    
-    if(ltl_property.find("__VERIFIER_error")!=std::string::npos)
-    {
-      options.set_option("std-invariants", true);
-      options.set_option("k-induction", true);
-      options.set_option("inline", true);
-      if(!cmdline.isset("unwind"))
-        options.set_option("unwind",UINT_MAX);
-      options.set_option("termination", false);
-    }
-    else if(ltl_property.find("F end")!=std::string::npos)
-    {
-      options.set_option("termination", true);
-      options.set_option("sufficient", true);
-      options.set_option("std-invariants", true);
-      options.set_option("inline", true);
-      options.set_option("lexicographic-ranking-function", true);
-      options.set_option("k-induction", false);
-    }
-    else if(ltl_property.find("overflow")!=std::string::npos)
-    {
-      options.set_option("std-invariants", true);
-      options.set_option("k-induction", true);
-      options.set_option("inline", true);
-      if(!cmdline.isset("unwind"))
-        options.set_option("unwind",UINT_MAX);
-      options.set_option("signed-overflow-check", true);
-      options.set_option("termination", false);
-    }
-    else if(ltl_property.find("valid")!=std::string::npos)
-    {
-      options.set_option("std-invariants", true);
-      options.set_option("k-induction", true);
-      options.set_option("inline", true);
-      if(!cmdline.isset("unwind"))
-        options.set_option("unwind",UINT_MAX);
-      options.set_option("pointer-check", true);
-      options.set_option("bounds-check", true);
-      options.set_option("memory-leak-check", true);
-      options.set_option("termination", false);
-    }
-    else
-      assert(false);
-  }
-  else 
-    options.set_option("sv-comp", false);
-
 }
 
 /*******************************************************************\
@@ -629,7 +571,7 @@ int summarizer_parse_optionst::doit()
       report_success();
       if(cmdline.isset("graphml-witness"))
         output_graphml_proof(options, goto_model, *summary_checker);
-      retval = get_return_value(0, options, summary_checker->property_map);
+      retval = 0;
       break;
     
     case property_checkert::FAIL:
@@ -638,13 +580,13 @@ int summarizer_parse_optionst::doit()
       report_failure();
       if(cmdline.isset("graphml-witness"))
         output_graphml_cex(options, goto_model, *summary_checker);
-      retval = get_return_value(10, options, summary_checker->property_map);
+      retval = 10;
       break;
 
     case property_checkert::UNKNOWN:
       if(report_assertions) 
         report_properties(options, goto_model, summary_checker->property_map);
-      retval = get_return_value(5, options, summary_checker->property_map);
+      retval = 5;
       report_unknown();
       break;
     
@@ -681,67 +623,7 @@ int summarizer_parse_optionst::doit()
 #endif
 }
 
-/*******************************************************************\
 
-Function: summarizer_parse_optionst::get_return_value
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-int summarizer_parse_optionst::get_return_value(
-  int return_value,
-  const optionst &options,
-  const summary_checker_baset::property_mapt &property_map)
-{
-  if(!options.get_bool_option("sv-comp"))
-    return return_value;
-
-  switch(return_value)
-  {
-  case 10:
-    if(options.get_bool_option("termination"))
-      return 11;
-    for(property_checkert::property_mapt::const_iterator
-        it=property_map.begin();
-        it!=property_map.end();
-        it++)
-    {
-      std::string property_class=
-        id2string(it->second.location->source_location.get_property_class());
-      std::string comment=
-        id2string(it->second.location->source_location.get_comment());
-      if(property_class=="overflow")
-        return 12;
-      else if(property_class=="memory-leak")
-        return 13;
-      else if(property_class=="pointer dereference")
-        return 14;
-      else if(comment=="double free" || 
-              comment=="free argument has offset zero")
-        return 15;
-    }
-    return return_value;
-  default:
-    return return_value;
-  }
-}
-
-/*******************************************************************\
-
-Function: summarizer_parse_optionst::type_stats_rec
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void summarizer_parse_optionst::type_stats_rec(
   const typet &type,
