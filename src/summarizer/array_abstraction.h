@@ -24,7 +24,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-class array_abstractiont:public message_streamt
+class array_abstractiont:public messaget
 {
 public:
   array_abstractiont(

@@ -11,7 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/std_expr.h>
 #include <util/std_code.h>
 #include <util/expr_util.h>
-#include <util/message_stream.h>
+#include <util/message.h>
 #include <util/arith_tools.h>
 #include <util/i2string.h>
 #include <util/prefix.h>
@@ -23,7 +23,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/pointer_arithmetic.h>
 #include "array_abstraction.h"
 
-#define DEBUG
+//#define DEBUG
 
 #ifdef DEBUG
 #include <iostream>
@@ -130,7 +130,7 @@ Function: array_abstractiont::array_abstractiont
 array_abstractiont::array_abstractiont(
   symbol_tablet &_symbol_table,
   message_handlert &_message_handler):
-  message_streamt(_message_handler),
+  messaget(_message_handler),
   arg_suffix("#strarg"),
   sym_suffix("#str$fcn"),
   symbol_table(_symbol_table),
@@ -763,7 +763,7 @@ void array_abstractiont::abstract_function_call(
 
     if(it1==arguments.end())
     {
-      err_location(target->source_location);
+      error() << target->source_location << eom;
       throw "function call: not enough arguments " + id2string(call.function().get(ID_identifier)) + " "
                                                    + from_expr(ns, "", *it2);
     }

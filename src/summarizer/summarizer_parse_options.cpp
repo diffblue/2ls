@@ -28,9 +28,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/loop_ids.h>
 #include <goto-programs/link_to_library.h>
 #include <goto-programs/goto_inline.h>
+#include <goto-programs/goto_inline_class.h>
 #include <goto-programs/goto_functions.h>
 #include <goto-programs/xml_goto_trace.h>
-#include <goto-programs/graphml_goto_trace.h>
+#include <goto-programs/graphml_witness.h>
 #include <goto-programs/json_goto_trace.h>
 #include <goto-programs/remove_returns.h>
 #include <goto-programs/remove_skip.h>
@@ -153,53 +154,8 @@ void summarizer_parse_optionst::get_command_line_options(optionst &options)
   else
     options.set_option("slice", false);
 
-  // check array bounds
-  if(cmdline.isset("bounds-check"))
-    options.set_option("bounds-check", true);
-  else
-    options.set_option("bounds-check", false);
-
-  // check division by zero
-  if(cmdline.isset("div-by-zero-check"))
-    options.set_option("div-by-zero-check", true);
-  else
-    options.set_option("div-by-zero-check", false);
-
-  // check overflow/underflow
-  if(cmdline.isset("signed-overflow-check"))
-    options.set_option("signed-overflow-check", true);
-  else
-    options.set_option("signed-overflow-check", false);
-
-  // check overflow/underflow
-  if(cmdline.isset("unsigned-overflow-check"))
-    options.set_option("unsigned-overflow-check", true);
-  else
-    options.set_option("unsigned-overflow-check", false);
-
-  // check overflow on floats
-  if(cmdline.isset("float-overflow-check"))
-    options.set_option("float-overflow-check", true);
-  else
-    options.set_option("float-overflow-check", false);
-
-  // check for NaN (not a number)
-  if(cmdline.isset("nan-check"))
-    options.set_option("nan-check", true);
-  else
-    options.set_option("nan-check", false);
-
-  // check pointers
-  if(cmdline.isset("pointer-check"))
-    options.set_option("pointer-check", true);
-  else
-    options.set_option("pointer-check", false);
-
-  // check for memory leaks
-  if(cmdline.isset("memory-leak-check"))
-    options.set_option("memory-leak-check", true);
-  else
-    options.set_option("memory-leak-check", false);
+  // all checks supported by goto_check
+  GOTO_CHECK_PARSE_OPTIONS(cmdline, options);
 
   // check assertions
   if(cmdline.isset("no-assertions"))
@@ -1062,7 +1018,11 @@ bool summarizer_parse_optionst::process_goto_program(
     {
       status() << "Performing full inlining" << eom;
 #if IGNORE_RECURSION
-      if(goto_inline(goto_model, ui_message_handler))
+      const namespacet ns(goto_model.symbol_table);
+      goto_inlinet goto_inline(
+        goto_model.goto_functions, ns, ui_message_handler);
+      goto_inline();
+      if(goto_inline.recursion_detected())
       {
         status() << "Recursion not supported" << eom;
         report_unknown();
@@ -1356,15 +1316,15 @@ void summarizer_parse_optionst::output_graphml_cex(
     const std::string graphml=options.get_option("graphml-witness");
     if(!graphml.empty())
     {
-      graphmlt cex_graph;
-      convert(ns, p.second.error_trace, cex_graph);
+      graphml_witnesst graphml_witness(ns);
+      graphml_witness(p.second.error_trace);
 
       if(graphml=="-")
-        write_graphml(cex_graph, std::cout);
+        write_graphml(graphml_witness.graph(), std::cout);
       else
       {
         std::ofstream out(graphml.c_str());
-        write_graphml(cex_graph, out);
+        write_graphml(graphml_witness.graph(), out);
       }
     }
     break;
@@ -1392,17 +1352,18 @@ void summarizer_parse_optionst::output_graphml_proof(
   const std::string graphml=options.get_option("graphml-witness");
   if(!graphml.empty())
   {
-    graphmlt cex_graph;
-// TODO: create proof
-//    convert(ns, error_trace, cex_graph);
+#if 0
+    graphml_witness_extt graphml_witness(ns);
+    graphml_witness(summary_checker);
 
     if(graphml=="-")
-      write_graphml(cex_graph, std::cout);
+      write_graphml(graphml_witness.graph(), std::cout);
     else
     {
       std::ofstream out(graphml.c_str());
-      write_graphml(cex_graph, out);
+      write_graphml(graphml_witness.graph(), out);
     }
+#endif
   }
 }
 /*******************************************************************\
@@ -1572,14 +1533,7 @@ void summarizer_parse_optionst::help()
     " --round-to-zero              IEEE floating point rounding mode\n"
     "\n"
     "Program instrumentation options:\n"
-    " --bounds-check               enable array bounds checks\n"
-    " --pointer-check              enable pointer checks\n"
-    " --array-abstraction          use array and string abstraction for bounds checks\n"
-    " --div-by-zero-check          enable division by zero checks\n"
-    " --memory-leak-check          enable memory leak checks\n"
-    " --signed-overflow-check      enable arithmetic over- and underflow checks\n"
-    " --unsigned-overflow-check    enable arithmetic over- and underflow checks\n"
-    " --nan-check                  check floating-point for NaN\n"
+    GOTO_CHECK_HELP
     " --error-label label          check that label is unreachable\n"
     " --show-properties            show the properties\n"
     " --no-assertions              ignore user assertions\n"

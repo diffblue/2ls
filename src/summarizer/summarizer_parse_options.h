@@ -15,6 +15,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <langapi/language_ui.h>
 
+#include <analyses/goto_check.h>
+
 class goto_modelt;
 class optionst;
 
@@ -25,9 +27,7 @@ class optionst;
   "(function):" \
   "D:I:" \
   "(depth):(context-bound):(unwind):" \
-  "(bounds-check)(pointer-check)(div-by-zero-check)(memory-leak-check)" \
-  "(signed-overflow-check)(unsigned-overflow-check)" \
-  "(float-overflow-check)(nan-check)" \
+  GOTO_CHECK_OPTIONS \
   "(array-abstraction)" \
   "(non-incremental)" \
   "(no-assertions)(no-assumptions)" \
