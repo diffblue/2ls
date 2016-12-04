@@ -278,7 +278,7 @@ void summarizer_parse_optionst::get_command_line_options(optionst &options)
     options.set_option("spurious-check", true);
 
   // all properties (default)
-  if(cmdline.isset("no-all-properties"))
+  if(cmdline.isset("stop-on-fail"))
     options.set_option("all-properties", false);
   else
     options.set_option("all-properties", true);
@@ -1164,6 +1164,10 @@ void summarizer_parse_optionst::report_properties(
     if(it->first=="") //TODO: some properties do not show up in initialize_property_map
       continue;     
 
+    if(!options.get_bool_option("all-properties") &&
+       it->second.result!=property_checkert::FAIL)
+      continue;
+
     if(get_ui()==ui_message_handlert::XML_UI)
     {
       xmlt xml_result("result");
@@ -1543,7 +1547,7 @@ void summarizer_parse_optionst::help()
     "\n"
     "Backend options:\n"
     " --all-functions              check each function as entry point\n"
-    " --no-all-properties          stop on first failing assertion\n"
+    " --stop-on-fail               stop on first failing assertion\n"
     " --context-sensitive          context-sensitive analysis from entry point\n"
     " --termination                compute ranking functions to prove termination\n"
     " --k-induction                use k-induction\n"
