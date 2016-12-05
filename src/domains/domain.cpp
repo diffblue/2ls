@@ -34,3 +34,30 @@ void domaint::output_var_specs(std::ostream &out, const var_specst &var_specs,
       out << from_expr(ns,"",v->var) << std::endl;
     }
 }
+
+std::ostream &domaint::output_var_specs_info(std::ostream &out, const var_specst &var_specs,
+		      const namespacet &ns)
+{ 
+  for(var_specst::const_iterator v = var_specs.begin(); 
+      v!=var_specs.end(); v++)
+    {
+      switch(v->kind)
+	{
+	case LOOP:
+	  out << "(LOOP) [ " << from_expr(ns,"",v->pre_guard) << " | ";
+	  out << from_expr(ns,"",v->post_guard) << " ]: ";
+	  break;
+        case IN: 
+          out << "(IN)   ";
+          out << from_expr(ns,"",v->pre_guard) << ": ";
+          break;
+	case OUT: case OUTL:
+	  out << "(OUT)  "; 
+	  out << from_expr(ns,"",v->post_guard) << ": ";
+	  break;
+	default: assert(false);
+	}
+      out << from_expr(ns,"",v->var) << std::endl;
+    }
+  return out;
+}

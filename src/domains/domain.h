@@ -69,6 +69,9 @@ public:
   virtual void output_domain(std::ostream &out, 
     const namespacet &ns) const { assert(false); }
 
+  virtual std::ostream &output_domain_info(std::ostream &out, 
+    const namespacet &ns) const { assert(false); }
+
   virtual void project_on_vars(valuet &value, const var_sett &vars, 
 			       exprt &result) 
     //(not useful to make value const (e.g. union-find))
@@ -81,6 +84,9 @@ public:
 
   static void output_var_specs(std::ostream &out, const var_specst &var_specs,
 			       const namespacet &ns);
+
+   std::ostream &output_var_specs_info(std::ostream &out, const var_specst &var_specs,
+		      const namespacet &ns);
 
   //get positive template rows,
   //  i.e. those such that the remaining template rows

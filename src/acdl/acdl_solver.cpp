@@ -16,8 +16,8 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include <string>
 
 //#define DEBUG
-//#define PER_STATEMENT_LIVE_VAR
-#define LIVE_VAR_OLD_APPROACH
+#define PER_STATEMENT_LIVE_VAR
+//#define LIVE_VAR_OLD_APPROACH
 
 #ifdef DEBUG
 #include <iostream>
@@ -557,7 +557,7 @@ void acdl_solvert::generalize_proof(const local_SSAt &SSA, const exprt& assertio
     std::cout << "Generalizing proof !" << std::endl; 
 #endif  
   // generalize only when the conflict is due to AI proof
-  if(analyzes_conflict.last_proof == analyzes_conflict.ABSINT)  {
+  if(analyzes_conflict.last_proof == analyzes_conflict.ABSINT) {
     assert(analyzes_conflict.conflicting_clause == -1);
     // traverse the implication graph from 
     // conflict node, and compute the generalization 
@@ -566,7 +566,7 @@ void acdl_solvert::generalize_proof(const local_SSAt &SSA, const exprt& assertio
     // goal is to compute a weakest initial element that 
     // still satisfies the target after the application of 
     // the abstract transformer
-     
+       
   
   
   }      

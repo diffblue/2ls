@@ -105,6 +105,31 @@ void acdl_domaint::operator()(
 #endif
 }
 
+
+/*******************************************************************\
+
+Function: acdl_domaint::operator()
+
+ Inputs:
+
+ Outputs:
+
+ Purpose: [TODO] operator() used for underapproximation 
+
+\*******************************************************************/
+void acdl_domaint::operator()(
+  const statementt &statement,
+	const valuet &initial_value,
+	valuet &final_value,
+	valuet &new_value)
+{
+    
+  // assert that new_value subsumes final_value 
+  assert(0);
+}
+
+
+
 /*******************************************************************\
 
 Function: acdl_domaint::maps_to_bottom()
@@ -219,6 +244,7 @@ void acdl_domaint::bool_inference(
     std::vector<int> value_literal_map;
     value_literals.reserve(old_value.size());
     *solver << statement;
+    
     for(unsigned i=0; i<old_value.size(); i++)
     {
       literalt l = solver->convert(old_value[i]);
@@ -315,7 +341,15 @@ void acdl_domaint::numerical_inference(
     find_symbols(*it, symbols);
     tvars.insert(symbols.begin(), symbols.end());
   }
-  std::cout << "Printing the number of variables passed to the template generator" << std::endl;
+
+#ifdef DEBUG  
+  std::cout << "The total number of variables passed to the template generator is " << tvars.size() << std::endl;
+  std::cout << "The variables are " << std::endl; 
+  for(varst::const_iterator it = tvars.begin();
+      it != tvars.end(); ++it)
+    std::cout << from_expr(*it) << "," << std::endl;
+#endif
+        
   template_generator_acdlt template_generator(options,ssa_db,ssa_local_unwinder); 
   template_generator.set_message_handler(get_message_handler());
   template_generator(SSA,tvars);

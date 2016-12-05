@@ -39,6 +39,12 @@ public:
 		  valuet &new_value,
 		  deductionst &deductions);
 
+  void operator()(
+      const statementt &statement,
+		  const valuet &initial_value,
+		  valuet &final_value,
+		  valuet &new_value);
+  
   //project deductions to value
   void to_value(const deductionst &deductions, valuet& value)
   {

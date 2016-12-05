@@ -1,7 +1,11 @@
 #include "tpolyhedra_domain.h"
 #include "util.h"
 
+#define DEBUG
+
+#ifdef DEBUG
 #include <iostream>
+#endif
 
 #include <util/find_symbols.h>
 #include <util/i2string.h>
@@ -18,7 +22,7 @@
 
 Function: tpolyhedra_domaint::initialize
 
-  Inputs:
+ Inputs:
 
  Outputs:
 
@@ -750,9 +754,6 @@ Function: tpolyhedra_domaint::output_domain
 
 void tpolyhedra_domaint::output_domain(std::ostream &out, const namespacet &ns) const
 {
-  /* [TODO] Printing the template size 
-   * (number of rows is quadratic 
-   * in the number of variables) */
   for(unsigned row = 0; row<templ.size(); row++)
   {
     const template_rowt &templ_row = templ[row];
@@ -776,6 +777,51 @@ void tpolyhedra_domaint::output_domain(std::ostream &out, const namespacet &ns) 
     out << "( " << 
         from_expr(ns,"",templ_row.expr) << " <= CONST )" << std::endl;
   }
+}
+/*******************************************************************\
+
+Function: tpolyhedra_domaint::output_domain
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::ostream &tpolyhedra_domaint::output_domain_info(std::ostream &out, const namespacet &ns) const
+{
+  /* [TODO] Printing the template size 
+   * (number of rows is quadratic 
+   * in the number of variables) */
+#ifdef DEBUG   
+  std::cout << "The template size is " << templ.size() << std::endl;
+#endif  
+  for(unsigned row = 0; row<templ.size(); row++)
+  {
+    const template_rowt &templ_row = templ[row];
+    switch(templ_row.kind)
+    {
+    case LOOP:
+      out << "(LOOP) [ " << from_expr(ns,"",templ_row.pre_guard) << " | ";
+      out << from_expr(ns,"",templ_row.post_guard) << " | ";
+      out << from_expr(ns,"",templ_row.aux_expr) << " ] ===> " << std::endl << "      ";
+      break;
+    case IN: 
+      out << "(IN)   ";
+      out << from_expr(ns,"",templ_row.pre_guard) << " ===> " << std::endl << "      ";
+      break;
+    case OUT: case OUTL:
+      out << "(OUT)  "; 
+      out << from_expr(ns,"",templ_row.post_guard) << " ===> " << std::endl << "      ";
+      break;
+    default: assert(false);
+    }
+    out << "( " << 
+        from_expr(ns,"",templ_row.expr) << " <= CONST )" << std::endl;
+  }
+  return out;
 }
 
 /*******************************************************************\

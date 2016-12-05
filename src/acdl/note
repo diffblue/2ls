@@ -992,3 +992,17 @@ implement this.
 override "instantiate_standard_domain" that is in template_generator_baset 
 into template_generator_acdl (mainly the functions add_difference_template 
 and add_sum_template)
+
+Daniel meeting on 2nd December, 2016
+====================================
+Use cheap syntactic transformers -- produces spurious counterexample, 
+less precise -- can ACDL recover from precision loss due to cheap transformer. 
+Research Question:: Can ACDL recover from cheapsyntactic transformers -- 
+in essence, can ACDL do transformer refinement ?
+
+Queries Meeting with Peter on 6th Dec, 2016
+===========================================
+1> How to remove bvt value_literals; in acdl_domaint ?
+2>  
+
+
