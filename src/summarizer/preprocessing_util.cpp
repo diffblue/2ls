@@ -2,9 +2,9 @@
 #include <util/replace_symbol.h>
 #include <util/find_symbols.h>
 #include <util/arith_tools.h>
-#include <goto-instrument/unwind.h>
 
 #include <analyses/constant_propagator.h>
+#include <goto-instrument/unwind.h>
 
 #include "summarizer_parse_options.h"
 
@@ -96,13 +96,13 @@ void summarizer_parse_optionst::nondet_locals(goto_modelt &goto_model)
     {
       if(i_it->is_decl())
       {
-	const code_declt& decl = to_code_decl(i_it->code);
+        const code_declt& decl = to_code_decl(i_it->code);
         side_effect_expr_nondett nondet(decl.symbol().type());
-	goto_programt::targett t = f_it->second.body.insert_after(i_it);
-	t->make_assignment();
-	code_assignt c(decl.symbol(),nondet);
-	t->code.swap(c);
-	t->source_location = i_it->source_location;
+        goto_programt::targett t = f_it->second.body.insert_after(i_it);
+        t->make_assignment();
+        code_assignt c(decl.symbol(),nondet);
+        t->code.swap(c);
+        t->source_location = i_it->source_location;
       }
     }
   }
@@ -121,9 +121,8 @@ Function: goto_unwind
 
 \*******************************************************************/
 
-void summarizer_parse_optionst::goto_unwind(goto_modelt &goto_model, unsigned k)
+void summarizer_parse_optionst::unwind_goto_into_loop(goto_modelt &goto_model, unsigned k)
 {
-  
   typedef std::vector<std::pair<goto_programt::targett,goto_programt::targett> > loopst;
 
   Forall_goto_functions(f_it, goto_model.goto_functions)
@@ -137,30 +136,30 @@ void summarizer_parse_optionst::goto_unwind(goto_modelt &goto_model, unsigned k)
       {
         goto_programt::targett loop_head = i_it->get_target();
         goto_programt::targett loop_exit = i_it;
-	bool has_goto_into_loop = false;
+        bool has_goto_into_loop = false;
 	 
-	goto_programt::targett it = loop_head;
-	if(it!=loop_exit) it++;
-	for(; it!=loop_exit; it++)
-	{
-	  for( std::set<goto_programt::targett>::iterator 
-		 s_it = it->incoming_edges.begin(); 
-	       s_it!=it->incoming_edges.end(); ++s_it)
-	  {
-	    if((*s_it)->is_goto() &&
-	       (*s_it)->location_number < loop_head->location_number)
-	    {
-	      has_goto_into_loop = true;
-	      break;
-	    }
-	  }
-	  if(has_goto_into_loop) break;
-	}
-	if(has_goto_into_loop) 
-	{
-	  status() << "Unwinding jump into loop" << eom;
-	  loops.push_back(loopst::value_type(++loop_exit,loop_head)); 
-	}    
+        goto_programt::targett it = loop_head;
+        if(it!=loop_exit) it++;
+        for(; it!=loop_exit; it++)
+        {
+          for( std::set<goto_programt::targett>::iterator 
+                 s_it = it->incoming_edges.begin(); 
+               s_it!=it->incoming_edges.end(); ++s_it)
+          {
+            if((*s_it)->is_goto() &&
+               (*s_it)->location_number < loop_head->location_number)
+            {
+              has_goto_into_loop = true;
+              break;
+            }
+          }
+          if(has_goto_into_loop) break;
+        }
+        if(has_goto_into_loop) 
+        {
+          status() << "Unwinding jump into loop" << eom;
+          loops.push_back(loopst::value_type(++loop_exit,loop_head)); 
+        }    
       }
     }
 
@@ -201,31 +200,31 @@ void summarizer_parse_optionst::remove_multiple_dereferences(goto_modelt &goto_m
       remove_multiple_dereferences(goto_model,body,t,deref_expr.pointer(),var_counter,true);
       if(deref_seen)
       {
-	symbolt new_symbol;
-	new_symbol.type=member_expr.type();
-	new_symbol.name="$deref"+i2string(var_counter++);
-	new_symbol.base_name=new_symbol.name;
-	new_symbol.pretty_name=new_symbol.name;
-	goto_model.symbol_table.add(new_symbol);
-	goto_programt::targett t_new = body.insert_before(t);
-	t_new->make_assignment();
-	t_new->code = code_assignt(new_symbol.symbol_expr(),member_expr);
-	expr = new_symbol.symbol_expr();
+        symbolt new_symbol;
+        new_symbol.type=member_expr.type();
+        new_symbol.name="$deref"+i2string(var_counter++);
+        new_symbol.base_name=new_symbol.name;
+        new_symbol.pretty_name=new_symbol.name;
+        goto_model.symbol_table.add(new_symbol);
+        goto_programt::targett t_new = body.insert_before(t);
+        t_new->make_assignment();
+        t_new->code = code_assignt(new_symbol.symbol_expr(),member_expr);
+        expr = new_symbol.symbol_expr();
         for(std::set<goto_programt::targett>::iterator t_it = 
-	      t->incoming_edges.begin();
-	    t_it != t->incoming_edges.end(); ++t_it)
-	{
-	  (*t_it)->targets.clear();
-	  (*t_it)->targets.push_back(t_new);
-	}
-	body.compute_location_numbers();
-	body.compute_target_numbers();
-	body.compute_incoming_edges();
+              t->incoming_edges.begin();
+            t_it != t->incoming_edges.end(); ++t_it)
+        {
+          (*t_it)->targets.clear();
+          (*t_it)->targets.push_back(t_new);
+        }
+        body.compute_location_numbers();
+        body.compute_target_numbers();
+        body.compute_incoming_edges();
       }
     }
     else
       Forall_operands(o_it,expr)
-	remove_multiple_dereferences(goto_model,body,t,*o_it,var_counter,deref_seen);
+        remove_multiple_dereferences(goto_model,body,t,*o_it,var_counter,deref_seen);
   }
   else
     Forall_operands(o_it,expr)
@@ -242,24 +241,24 @@ void summarizer_parse_optionst::remove_multiple_dereferences(goto_modelt &goto_m
     {
       if(i_it->is_goto())
       {
-	remove_multiple_dereferences(goto_model,
-	  f_it->second.body,
-	  i_it,
-	  i_it->guard,
-	  var_counter, false);
+        remove_multiple_dereferences(goto_model,
+                                     f_it->second.body,
+                                     i_it,
+                                     i_it->guard,
+                                     var_counter, false);
       }
       else if(i_it->is_assign())
       {
-	remove_multiple_dereferences(goto_model,
-	  f_it->second.body,
-	  i_it,
-	  to_code_assign(i_it->code).lhs(),
-	  var_counter, false);
-	remove_multiple_dereferences(goto_model,
-	  f_it->second.body,
-	  i_it,
-	  to_code_assign(i_it->code).rhs(),
-	  var_counter, false);
+        remove_multiple_dereferences(goto_model,
+                                     f_it->second.body,
+                                     i_it,
+                                     to_code_assign(i_it->code).lhs(),
+                                     var_counter, false);
+        remove_multiple_dereferences(goto_model,
+                                     f_it->second.body,
+                                     i_it,
+                                     to_code_assign(i_it->code).rhs(),
+                                     var_counter, false);
       }      
     }
   }
@@ -323,4 +322,44 @@ void summarizer_parse_optionst::replace_c_bool(goto_modelt &goto_model)
   Forall_symbols(it, goto_model.symbol_table.symbols)
     replace_c_bool_rec(it->second.type);
 }
+
+/*******************************************************************\
+
+Function: summarizer_parse_optionst::has_threads
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: checks whether the program has threads
+
+\*******************************************************************/
+
+bool summarizer_parse_optionst::has_threads(const goto_modelt &goto_model)
+{
+  namespacet ns(goto_model.symbol_table);
+  forall_goto_functions(f_it, goto_model.goto_functions)
+  {
+    const goto_programt& program=f_it->second.body;
+
+    forall_goto_program_instructions(i_it, program)
+    {
+      const goto_programt::instructiont &instruction=*i_it;
+
+      if(instruction.is_function_call())
+      {
+        const code_function_callt &fct=to_code_function_call(instruction.code);
+        if(fct.function().id() == ID_symbol)
+        {
+          const symbol_exprt &fsym=to_symbol_expr(fct.function());
+
+          if(ns.lookup(fsym.get_identifier()).base_name == "pthread_create")
+            return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
 

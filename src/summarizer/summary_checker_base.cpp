@@ -244,7 +244,7 @@ void summary_checker_baset::check_properties(
     !fully_unwound && options.get_bool_option("spurious-check"),
     all_properties,
     options.get_bool_option("show-trace") ||
-    options.get_option("graphml-cex")!="" ||
+    options.get_option("graphml-witness")!="" ||
     options.get_option("json-cex")!="");
 
 #if 0   

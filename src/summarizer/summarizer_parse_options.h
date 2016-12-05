@@ -15,6 +15,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <langapi/language_ui.h>
 
+#include <analyses/goto_check.h>
+
 class goto_modelt;
 class optionst;
 
@@ -25,9 +27,7 @@ class optionst;
   "(function):" \
   "D:I:" \
   "(depth):(context-bound):(unwind):" \
-  "(bounds-check)(pointer-check)(div-by-zero-check)(memory-leak-check)" \
-  "(signed-overflow-check)(unsigned-overflow-check)" \
-  "(float-overflow-check)(nan-check)" \
+  GOTO_CHECK_OPTIONS \
   "(array-abstraction)" \
   "(non-incremental)" \
   "(no-assertions)(no-assumptions)" \
@@ -52,8 +52,8 @@ class optionst;
   "(property):(all-properties)(k-induction)(incremental-bmc)" \
   "(no-spurious-check)(all-functions)" \
   "(no-simplify)(no-fixed-point)" \
-  "(graphml-cex):(json-cex):" \
-  "(no-spurious-check)(no-all-properties)" \
+  "(graphml-witness):(json-cex):" \
+  "(no-spurious-check)(stop-on-fail)" \
   "(acdl)(propagate):(decision):(learning):" \
   "(competition-mode)(slice)(no-propagation)" \
   "(no-unwinding-assertions)"
@@ -74,6 +74,9 @@ public:
     const std::string &extra_options);
 
 protected:
+  ui_message_handlert ui_message_handler;
+  virtual void register_languages(); 
+
   void get_command_line_options(optionst &options);
 
   bool get_goto_program(
@@ -101,7 +104,12 @@ protected:
   void output_graphml_cex(
     const optionst &options,
     const goto_modelt &,
-    const class goto_tracet &);
+    const summary_checker_baset &summary_checker);
+
+  void output_graphml_proof(
+    const optionst &options,
+    const goto_modelt &goto_model,
+    const summary_checker_baset &summary_checker);
 
   void output_json_cex(
     const optionst &options,
@@ -139,16 +147,28 @@ protected:
   void eval_verbosity();
   void report_unknown();
 
-  void require_entry(
-    const goto_modelt &goto_model);
+  void require_entry(const goto_modelt &goto_model);
+
+  bool has_threads(const goto_modelt &goto_model);
 
   // diverse preprocessing
   void inline_main(goto_modelt &goto_model);
   void propagate_constants(goto_modelt &goto_model);
   void nondet_locals(goto_modelt &goto_model);
-  void goto_unwind(goto_modelt &goto_model, unsigned k);
+  void unwind_goto_into_loop(goto_modelt &goto_model, unsigned k);
+  void replace_types_rec(const replace_symbolt &replace_const, exprt &expr);
+  exprt evaluate_casts_in_constants(
+    const exprt &expr,
+    const typet& parent_type,
+		bool &valid);
   void remove_multiple_dereferences(goto_modelt &goto_model);
-  void remove_multiple_dereferences(goto_modelt &goto_model, goto_programt &body, goto_programt::targett t, exprt &expr, unsigned &var_counter, bool deref_seen);
+  void remove_multiple_dereferences(
+    goto_modelt &goto_model,
+    goto_programt &body,
+    goto_programt::targett t,
+    exprt &expr,
+    unsigned &var_counter,
+    bool deref_seen);
   void replace_c_bool_rec(exprt &expr);
   void replace_c_bool_rec(typet &type);
   void replace_c_bool(goto_modelt &goto_model);
