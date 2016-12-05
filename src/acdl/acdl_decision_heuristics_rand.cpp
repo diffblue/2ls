@@ -11,7 +11,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include "acdl_solver.h"
 #include "acdl_decision_heuristics_rand.h"
 
-#define DEBUG 1
+//#define DEBUG 1
 
 acdl_domaint::meet_irreduciblet acdl_decision_heuristics_randt::operator()
 (const local_SSAt &SSA, const acdl_domaint::valuet &value)

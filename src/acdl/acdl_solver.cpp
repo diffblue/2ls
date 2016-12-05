@@ -15,7 +15,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include "../domains/simplify_transformer.h"
 #include <string>
 
-#define DEBUG
+//#define DEBUG
 //#define PER_STATEMENT_LIVE_VAR
 #define LIVE_VAR_OLD_APPROACH
 

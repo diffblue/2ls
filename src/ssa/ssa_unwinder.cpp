@@ -67,8 +67,9 @@ void ssa_local_unwindert::build_loop_tree()
       }
       else 
       {
-	loops[loopheads.back()->location->location_number].loop_nodes.push_back(
-	  n_it->loophead->location->location_number);
+	loops[loopheads.back()->location->location_number].
+          loop_nodes.push_back(
+	    n_it->loophead->location->location_number);
       }
       loopheads.push_back(n_it->loophead);
       loop.body_nodes.push_front(*n_it);
@@ -83,7 +84,7 @@ void ssa_local_unwindert::build_loop_tree()
       SSA.nodes.erase(n_it--);
     }
     //beginning of loop found
-    else if (n_it == loopheads.back())
+    else if (!loopheads.empty() && n_it==loopheads.back())
     {
 #ifdef DEBUG
     std::cout << "push " << n_it->location->location_number << std::endl;
