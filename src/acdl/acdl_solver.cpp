@@ -324,17 +324,11 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
   // will atleast contain old_v and is not EMPTY
   if(final_val.empty()) {
 #ifdef DEBUG    
-    std::cout << "Empty deduction, so inserting TRUE-> TRUE" << std::endl;
+    std::cout << "Empty deduction, so inserting TRUE" << std::endl;
 #endif    
-    std::vector<acdl_domaint::deductiont> ded;
-    typedef std::vector<exprt> ant;
-    ant a;
-    a.push_back(true_exprt());
-    typedef std::pair<exprt, ant> p;
-    p d;
+    std::vector<acdl_domaint::meet_irreduciblet> ded;
     exprt e = true_exprt(); 
-    d = std::make_pair(e, a);
-    ded.push_back(d); 
+    ded.push_back(e);
     conflict_graph.add_deductions(SSA, ded);
   }
   unsigned final_size = conflict_graph.prop_trail.size();
@@ -555,16 +549,26 @@ bool acdl_solvert::analyze_conflict(const local_SSAt &SSA, const exprt& assertio
  Purpose:
 
 \*******************************************************************/
-void acdl_solvert::generalize_proof(const local_SSAt &SSA, const exprt& assertion)
+void acdl_solvert::generalize_proof(const local_SSAt &SSA, const exprt& assertion, acdl_domaint::valuet& val)
 {
-  if(disable_generalization) 
+  if(disable_generalization || analyzes_conflict.disable_backjumping)
     return;
-  
-  // generalize only when the conflict
-  // is due to AI proof
+#ifdef DEBUG
+    std::cout << "Generalizing proof !" << std::endl; 
+#endif  
+  // generalize only when the conflict is due to AI proof
   if(analyzes_conflict.last_proof == analyzes_conflict.ABSINT) {
     assert(analyzes_conflict.conflicting_clause == -1);
-     
+    // traverse the implication graph from 
+    // conflict node, and compute the generalization 
+    // Compute underapproximation by passing target 
+    // element, transformer, and initial element -- the 
+    // goal is to compute a weakest initial element that 
+    // still satisfies the target after the application of 
+    // the abstract transformer
+       
+  
+  
   }      
 }
 
@@ -1047,7 +1051,7 @@ property_checkert::resultt acdl_solvert::operator()(
       do 
       {
         // call generalize_proof here
-        generalize_proof(SSA, assertion);
+        generalize_proof(SSA, assertion, v);
 
         std::cout << "********************************" << std::endl;
         std::cout << "    CONFLICT ANALYSIS PHASE" << std::endl;

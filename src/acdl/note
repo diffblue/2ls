@@ -975,3 +975,34 @@ res2-y>=0;
 -x-y+20>=0;
 x-y+20>=0;
 -y+20>=0|]
+
+Meeting with Peter on 1st December, 2016
+-----------------------------------------
+1> We should not use the domain interface since it contains also the live vars
+interface. Also, we cannot completely replace deductions but just remove the
+antecedents.
+2> Add the statement transformer to the conflict_graph.add_deductions
+
+Two ways of optimizing::-
+======================== 
+a> Not generating octagon constraint that relates two variables with different
+index (x13, x11) -- implementation is in template_generator_acdl.cpp ?
+b> One step closure -- template_generator_acdl.cpp is the right place to
+implement this. 
+override "instantiate_standard_domain" that is in template_generator_baset 
+into template_generator_acdl (mainly the functions add_difference_template 
+and add_sum_template)
+
+Daniel meeting on 2nd December, 2016
+====================================
+Use cheap syntactic transformers -- produces spurious counterexample, 
+less precise -- can ACDL recover from precision loss due to cheap transformer. 
+Research Question:: Can ACDL recover from cheapsyntactic transformers -- 
+in essence, can ACDL do transformer refinement ?
+
+Queries Meeting with Peter on 6th Dec, 2016
+===========================================
+1> How to remove bvt value_literals; in acdl_domaint ?
+2>  
+
+

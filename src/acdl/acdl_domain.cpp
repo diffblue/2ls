@@ -105,6 +105,31 @@ void acdl_domaint::operator()(
 #endif
 }
 
+
+/*******************************************************************\
+
+Function: acdl_domaint::operator()
+
+ Inputs:
+
+ Outputs:
+
+ Purpose: [TODO] operator() used for underapproximation 
+
+\*******************************************************************/
+void acdl_domaint::operator()(
+  const statementt &statement,
+	const valuet &initial_value,
+	valuet &final_value,
+	valuet &new_value)
+{
+    
+  // assert that new_value subsumes final_value 
+  assert(0);
+}
+
+
+
 /*******************************************************************\
 
 Function: acdl_domaint::maps_to_bottom()
@@ -155,10 +180,7 @@ void acdl_domaint::maps_to_bottom(
     std::cout << "yes, deducing BOTTOM" << std::endl;
 #endif    
     new_value.push_back(false_exprt());
-    deductions.push_back(deductiont());
-    deductions.back().first = false_exprt();
-    get_antecedents(*solver,old_value,value_literals,
-		    deductions.back().second);
+    deductions.push_back(false_exprt());
   }
   else {
 #ifdef DEBUG
@@ -217,25 +239,9 @@ void acdl_domaint::bool_inference(
     }
     solver->solver->set_frozen(l);
 
-    //get handles on meet irreducibles to check them later
-    bvt value_literals;
-    std::vector<int> value_literal_map;
-    value_literals.reserve(old_value.size());
     *solver << statement;
-    for(unsigned i=0; i<old_value.size(); i++)
-    {
-      literalt l = solver->convert(old_value[i]);
-      if(l.is_constant())
-      {
-        *solver << literal_exprt(l);
-        continue;
-      }
-      value_literal_map.push_back(i);
-      value_literals.push_back(l);
-      solver->solver->set_frozen(l);
-    }
-    solver->set_assumptions(value_literals);
-
+    *solver << conjunction(old_value);
+    
     if((*solver)() == decision_proceduret::D_SATISFIABLE)
     {
       exprt m = solver->get(*it);
@@ -246,7 +252,6 @@ void acdl_domaint::bool_inference(
 
       //test the complement
       solver->new_context();
-      solver->set_assumptions(value_literals);
       *solver << not_exprt(deduced);
 #ifdef DEBUG
       std::cout << "deducing in SAT" << std::endl;
@@ -268,10 +273,7 @@ void acdl_domaint::bool_inference(
         if(!is_subsumed(deduced,_old_value))
         {
           new_value.push_back(deduced);
-          deductions.push_back(deductiont());
-          deductions.back().first = deduced;
-          get_antecedents(*solver,_old_value,value_literals,
-                          deductions.back().second);
+          deductions.push_back(deduced);
         }
       }
 
@@ -282,10 +284,7 @@ void acdl_domaint::bool_inference(
 #ifdef DEBUG
       std::cout << "deducing in BOTTOM" << std::endl;
 #endif      
-      deductions.push_back(deductiont());
-      deductions.back().first = false_exprt();
-      get_antecedents(*solver,_old_value,value_literals,
-                      deductions.back().second);
+      deductions.push_back(false_exprt());
       break; //at this point we have a conflict, we return
     }
 
@@ -324,6 +323,15 @@ void acdl_domaint::numerical_inference(
     find_symbols(*it, symbols);
     tvars.insert(symbols.begin(), symbols.end());
   }
+
+#ifdef DEBUG  
+  std::cout << "The total number of variables passed to the template generator is " << tvars.size() << std::endl;
+  std::cout << "The variables are " << std::endl; 
+  for(varst::const_iterator it = tvars.begin();
+      it != tvars.end(); ++it)
+    std::cout << from_expr(*it) << "," << std::endl;
+#endif
+        
   template_generator_acdlt template_generator(options,ssa_db,ssa_local_unwinder); 
   template_generator.set_message_handler(get_message_handler());
   template_generator(SSA,tvars);
@@ -377,30 +385,14 @@ void acdl_domaint::numerical_inference(
     //get deductions
     //ENHANCE: make assumptions persistent in incremental_solver
     // so that we can reuse value+statement from above
-    bvt value_literals;
-    std::vector<int> value_literal_map;
     *solver << statement;
-    for(unsigned i=0; i<old_value.size(); i++)
-    {
-      literalt l = solver->convert(old_value[i]);
-      if(l.is_constant())
-      {
-        *solver << literal_exprt(l);
-        continue;
-      }
-#ifdef DEBUG
-      std::cout << "track old_value: " << from_expr(SSA.ns, "", old_value[i]) << std::endl;
-#endif      
-      value_literal_map.push_back(i);
-      value_literals.push_back(l);
-      solver->solver->set_frozen(l);
-    }
+    *solver << conjunction(old_value);
+    
     for(unsigned i=0; i<var_values.size(); ++i)
     {
       solver->new_context();
       *solver << not_exprt(var_values[i]);
-      solver->set_assumptions(value_literals);
-
+       
       decision_proceduret::resultt result = (*solver)();
       assert(result == decision_proceduret::D_UNSATISFIABLE);
 
@@ -415,10 +407,7 @@ void acdl_domaint::numerical_inference(
         std::cout << "adding new value " << from_expr(SSA.ns, "", var_values[i]) << std::endl;
 #endif      
         new_value.push_back(var_values[i]);
-        deductions.push_back(deductiont());
-        deductions.back().first = var_values[i];
-        get_antecedents(*solver,_old_value,value_literals,
-                        deductions.back().second);
+        deductions.push_back(var_values[i]);
       }
       solver->pop_context();
     }	
@@ -433,31 +422,6 @@ void acdl_domaint::numerical_inference(
     output(std::cout, deductions) << std::endl;
 #endif
 #endif
-  }
-}
-
-
-/*******************************************************************\
-
-Function: acdl_domaint::get_antecedents()
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void acdl_domaint::get_antecedents(incremental_solvert &solver,
-                                   const valuet &value,
-                                   const bvt &value_literals,
-                                   antecedentst &antecedents)
-{
-  for(unsigned i=0; i<value_literals.size(); ++i)
-  {
-    if(solver.is_in_conflict(value_literals[i]))
-      antecedents.push_back(value[i]);
   }
 }
 

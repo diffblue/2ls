@@ -1,7 +1,11 @@
 #include "tpolyhedra_domain.h"
 #include "util.h"
 
+#define DEBUG
+
+#ifdef DEBUG
 #include <iostream>
+#endif
 
 #include <util/find_symbols.h>
 #include <util/i2string.h>
@@ -18,7 +22,7 @@
 
 Function: tpolyhedra_domaint::initialize
 
-  Inputs:
+ Inputs:
 
  Outputs:
 
@@ -774,6 +778,51 @@ void tpolyhedra_domaint::output_domain(std::ostream &out, const namespacet &ns) 
         from_expr(ns,"",templ_row.expr) << " <= CONST )" << std::endl;
   }
 }
+/*******************************************************************\
+
+Function: tpolyhedra_domaint::output_domain
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+std::ostream &tpolyhedra_domaint::output_domain_info(std::ostream &out, const namespacet &ns) const
+{
+  /* [TODO] Printing the template size 
+   * (number of rows is quadratic 
+   * in the number of variables) */
+#ifdef DEBUG   
+  std::cout << "The template size is " << templ.size() << std::endl;
+#endif  
+  for(unsigned row = 0; row<templ.size(); row++)
+  {
+    const template_rowt &templ_row = templ[row];
+    switch(templ_row.kind)
+    {
+    case LOOP:
+      out << "(LOOP) [ " << from_expr(ns,"",templ_row.pre_guard) << " | ";
+      out << from_expr(ns,"",templ_row.post_guard) << " | ";
+      out << from_expr(ns,"",templ_row.aux_expr) << " ] ===> " << std::endl << "      ";
+      break;
+    case IN: 
+      out << "(IN)   ";
+      out << from_expr(ns,"",templ_row.pre_guard) << " ===> " << std::endl << "      ";
+      break;
+    case OUT: case OUTL:
+      out << "(OUT)  "; 
+      out << from_expr(ns,"",templ_row.post_guard) << " ===> " << std::endl << "      ";
+      break;
+    default: assert(false);
+    }
+    out << "( " << 
+        from_expr(ns,"",templ_row.expr) << " <= CONST )" << std::endl;
+  }
+  return out;
+}
 
 /*******************************************************************\
 
@@ -952,7 +1001,9 @@ void tpolyhedra_domaint::add_difference_template(const var_specst &var_specs,
       merge_and(pre_g, v1->pre_guard, v2->pre_guard, ns);
       merge_and(post_g, v1->post_guard, v2->post_guard, ns);
       merge_and(aux_expr, v1->aux_expr, v2->aux_expr, ns);
-
+      /* [TODO] If v1 and v2 have the same base name, then do not generate 
+       * template rows for them (remove everything from first # and 
+       * check the strings for matching base name) */
       // x1 - x2
       add_template_row(minus_exprt(v1->var,v2->var),pre_g,post_g,aux_expr,k);
 
@@ -1012,6 +1063,9 @@ void tpolyhedra_domaint::add_sum_template(const var_specst &var_specs,
   unsigned size = var_specs.size()*(var_specs.size()-1);
   templ.reserve(templ.size()+size);
   
+  /* [TODO] If v1 and v2 have the same base name, then do not generate 
+   * template rows for them (remove everything from first # and 
+   * check the strings for matching base name) */
   for(var_specst::const_iterator v1 = var_specs.begin(); 
       v1!=var_specs.end(); v1++)
   {
@@ -1036,7 +1090,6 @@ void tpolyhedra_domaint::add_sum_template(const var_specst &var_specs,
 		       pre_g,post_g,aux_expr,k);
     }
   }
-
 }
 
 /*******************************************************************\

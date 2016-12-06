@@ -86,7 +86,7 @@ protected:
   std::set<symbol_exprt> all_vars;
   void init();
   bool analyze_conflict(const local_SSAt &SSA, const exprt& assertion);
-  void generalize_proof(const local_SSAt &SSA, const exprt& assertion);
+  void generalize_proof(const local_SSAt &SSA, const exprt& assertion, acdl_domaint::valuet& val);
 
   bool disable_generalization;
   void initialize_decision_variables(acdl_domaint::valuet &val);
