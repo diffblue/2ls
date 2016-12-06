@@ -239,26 +239,9 @@ void acdl_domaint::bool_inference(
     }
     solver->solver->set_frozen(l);
 
-    //get handles on meet irreducibles to check them later
-    bvt value_literals;
-    std::vector<int> value_literal_map;
-    value_literals.reserve(old_value.size());
     *solver << statement;
+    *solver << conjunction(old_value);
     
-    for(unsigned i=0; i<old_value.size(); i++)
-    {
-      literalt l = solver->convert(old_value[i]);
-      if(l.is_constant())
-      {
-        *solver << literal_exprt(l);
-        continue;
-      }
-      value_literal_map.push_back(i);
-      value_literals.push_back(l);
-      solver->solver->set_frozen(l);
-    }
-    solver->set_assumptions(value_literals);
-
     if((*solver)() == decision_proceduret::D_SATISFIABLE)
     {
       exprt m = solver->get(*it);
@@ -269,7 +252,6 @@ void acdl_domaint::bool_inference(
 
       //test the complement
       solver->new_context();
-      solver->set_assumptions(value_literals);
       *solver << not_exprt(deduced);
 #ifdef DEBUG
       std::cout << "deducing in SAT" << std::endl;
@@ -403,30 +385,14 @@ void acdl_domaint::numerical_inference(
     //get deductions
     //ENHANCE: make assumptions persistent in incremental_solver
     // so that we can reuse value+statement from above
-    bvt value_literals;
-    std::vector<int> value_literal_map;
     *solver << statement;
-    for(unsigned i=0; i<old_value.size(); i++)
-    {
-      literalt l = solver->convert(old_value[i]);
-      if(l.is_constant())
-      {
-        *solver << literal_exprt(l);
-        continue;
-      }
-#ifdef DEBUG
-      std::cout << "track old_value: " << from_expr(SSA.ns, "", old_value[i]) << std::endl;
-#endif      
-      value_literal_map.push_back(i);
-      value_literals.push_back(l);
-      solver->solver->set_frozen(l);
-    }
+    *solver << conjunction(old_value);
+    
     for(unsigned i=0; i<var_values.size(); ++i)
     {
       solver->new_context();
       *solver << not_exprt(var_values[i]);
-      solver->set_assumptions(value_literals);
-
+       
       decision_proceduret::resultt result = (*solver)();
       assert(result == decision_proceduret::D_UNSATISFIABLE);
 
