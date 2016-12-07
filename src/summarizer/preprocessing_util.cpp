@@ -5,13 +5,8 @@
 
 #include <analyses/constant_propagator.h>
 #include <goto-instrument/unwind.h>
-#include <langapi/language_util.h>
-#include "summarizer_parse_options.h"
 
-//#define DEBUG
-#ifdef DEBUG
-#include <iostream>
-#endif
+#include "summarizer_parse_options.h"
 
 /*******************************************************************\
 
@@ -38,6 +33,7 @@ void summarizer_parse_optionst::inline_main(goto_modelt &goto_model)
       irep_idt fname = code_function_call.function().get(ID_identifier); 
 
       debug() << "Inlining " << fname << eom;
+
       goto_programt tmp;
       tmp.copy_from(goto_model.goto_functions.function_map[fname].body);
       (--tmp.instructions.end())->make_skip();
@@ -284,12 +280,20 @@ Function: summarizer_parse_optionst::replace_c_bool
 
 void summarizer_parse_optionst::replace_c_bool_rec(exprt &expr)
 {
-  replace_c_bool_rec(expr.type());
-  Forall_operands(it, expr) {
-#ifdef DEBUG    
-    std::cout << "Replacing booleans " << it->pretty() << std::endl;
-#endif    
+  Forall_operands(it, expr)
     replace_c_bool_rec(*it);
+  if(expr.type().id()==ID_c_bool && expr.id()==ID_constant)
+  {
+    mp_integer c;
+    to_integer(to_constant_expr(expr), c);
+    if(c==mp_integer(0))
+      expr=false_exprt();
+    else
+      expr=true_exprt();
+  }
+  else
+  {
+    replace_c_bool_rec(expr.type());
   }
 }
 
