@@ -174,6 +174,9 @@ protected:
   void add_assumptions_after_assertions(goto_modelt &goto_model);
   void filter_assertions(goto_modelt &goto_model);
   void split_loopheads(goto_modelt &goto_model);
+  void remove_loops_in_entry(goto_modelt &goto_model);
+  void create_dynamic_objects(goto_modelt &goto_model);
+  void add_dynamic_object_rec(exprt &expr, symbol_tablet &symbol_table);
 };
 
 #endif
