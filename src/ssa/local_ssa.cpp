@@ -97,34 +97,16 @@ void local_SSAt::get_entry_exit_vars()
 
     const symbol_exprt &param=symbol->symbol_expr();
     params.push_back(param);
-
-    if(param.type().id()==ID_pointer)
-    {
-      const typet &pointed_type=ns.follow(param.type().subtype());
-      const symbol_exprt pointed_obj(id2string(param.get_identifier()) + "'obj", pointed_type);
-      nodes.begin()->equalities.push_back(equal_exprt(param, address_of_exprt(pointed_obj)));
-    }
   }
 
   // get globals in
   goto_programt::const_targett first=goto_function.body.instructions.begin();
   get_globals(first, globals_in, true, false); // filters out #return_value
 
-  for(auto &global_in : globals_in)
-  {
-    if(global_in.type().id()==ID_pointer &&
-       id2string(global_in.get_identifier()).find('.') == std::string::npos)
-    {
-      const typet &pointed_type=ns.follow(global_in.type().subtype());
-      const symbol_exprt pointed_obj(id2string(global_in.get_identifier()) + "'obj", pointed_type);
-      nodes.begin()->equalities.push_back(equal_exprt(global_in, address_of_exprt(pointed_obj)));
-    }
-  }
-
-  // get globals out (includes return value)
-  goto_programt::const_targett
+  //get globals out (includes return value)
+  goto_programt::const_targett 
     last=goto_function.body.instructions.end(); last--;
-  get_globals(last, globals_out, true, true, last->function);
+  get_globals(last,globals_out,true,true,last->function);
 }
 
 /*******************************************************************\
@@ -561,20 +543,9 @@ void local_SSAt::build_function_call(locationt loc)
       return;
     }
 
-    f=to_function_application_expr(read_rhs(f, loc));
-    assert(f.function().id()==ID_symbol); // no function pointers
-    irep_idt fname=to_symbol_expr(f.function()).get_identifier();
-    // add equalities for arguments
-    unsigned i=0;
-    for(exprt::operandst::iterator it=f.arguments().begin();
-        it!=f.arguments().end(); ++it, ++i)
-    {
-      symbol_exprt arg(id2string(fname)+"#"+i2string(loc->location_number)+
-                       "#arg"+i2string(i), it->type());
-      n_it->equalities.push_back(equal_exprt(*it, arg));
-      *it=arg;
-    }
+    assert(f.function().id()==ID_symbol); //no function pointers
 
+    f = to_function_application_expr(read_rhs(f, loc));
     n_it->function_calls.push_back(
       to_function_application_expr(f));
   }
@@ -1417,6 +1388,27 @@ Function: local_SSAt::output
 
 void local_SSAt::output(std::ostream &out) const
 {
+  out << "params:";
+  for (auto &param : params)
+  {
+    out << " " << from_expr(param);
+  }
+  out << '\n';
+
+  out << "globals in:";
+  for (auto &glob : globals_in)
+  {
+    out << " " << from_expr(glob);
+  }
+  out << '\n';
+
+  out << "globals out:";
+  for (auto &glob : globals_out)
+  {
+    out << " " << from_expr(glob);
+  }
+  out << "\n\n";
+
   for(nodest::const_iterator
         n_it=nodes.begin();
       n_it!=nodes.end(); n_it++)
