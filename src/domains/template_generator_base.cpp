@@ -272,8 +272,9 @@ void template_generator_baset::filter_heap_domain()
   {
     if (var->var.id() == ID_symbol && var->var.type().id() == ID_pointer)
     {
-      // Filter out non-assigned variables
-      if (ssa_inlinert::get_original_identifier(to_symbol_expr(var->var)) !=
+      // Filter out non-assigned OUT variables
+      if (var->kind != domaint::OUT ||
+          ssa_inlinert::get_original_identifier(to_symbol_expr(var->var)) !=
           to_symbol_expr(var->var).get_identifier())
         var_specs.push_back(*var);
     }

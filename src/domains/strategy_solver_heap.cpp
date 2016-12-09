@@ -77,6 +77,8 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
       exprt post = heap_domain.get_row_post_constraint(i, inv[i]);
       debug() << "post-cond: " << from_expr(ns, "", post) << " "
               << from_expr(ns, "", solver.get(post)) << eom;
+      print_solver_expr(c);
+      print_solver_expr(post);
     }
 #endif
 
@@ -86,25 +88,25 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
       {
         debug() << "updating row: " << row << eom;
 
-        int actual_loc = heap_domain.get_symbol_loc(heap_domain.templ[row].expr);
+        const heap_domaint::template_rowt &templ_row = heap_domain.templ[row];
+
+        int actual_loc = heap_domain.get_symbol_loc(templ_row.expr);
 
         exprt pointer = strategy_value_exprs[row];
         exprt value = solver.get(pointer);
         // Value from solver must be converted into expression
         exprt ptr_value = heap_domain.value_to_ptr_exprt(value);
 
-        if (heap_domain.is_null_ptr(ptr_value))
+        if (ptr_value.id() == ID_constant && to_constant_expr(ptr_value).get_value() == ID_NULL)
         {
-          exprt null_expr = null_pointer_exprt(to_pointer_type(ptr_value.type()));
-
-          // Add path to NULL
-          if (heap_domain.add_row_path(row, inv, null_expr,
+          // Add path to constant
+          if (heap_domain.add_row_path(row, inv, ptr_value,
                                        std::make_pair(nil_exprt(), nil_exprt())))
             improved = true;
           debug() << "add destination: " << from_expr(ns, "", ptr_value) << eom;
 
           // Add points to information
-          if (heap_domain.add_points_to(row, inv, std::make_pair(null_expr, nil_exprt())))
+          if (heap_domain.add_points_to(row, inv, std::make_pair(ptr_value, nil_exprt())))
             improved = true;
           debug() << "add points to: " << from_expr(ns, "", ptr_value) << eom;
         }
@@ -119,69 +121,100 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
 
           symbol_exprt obj = to_symbol_expr(to_address_of_expr(address).object());
 
-          if (obj.type().get_bool("#dynamic"))
+          if (obj.type() == pointer.type())
           {
-            // obj is dynamic object accessed inside the function
-
-            if (id2string(obj.get_identifier()).find("$unknown") != std::string::npos)
-            { // handle unknown object
-              if (heap_domain.add_points_to(row, inv, std::make_pair(obj, nil_exprt())))
-                improved = true;
-              debug() << "add points to: " << from_expr(ns, "", obj) << eom;
-            }
-            else
-            {
-              // Find row with corresponding member field of pointed object (obj.member)
-              int member_val_index;
-              if (inv[row].empty() && heap_domain.templ[row].dyn_obj.id() != ID_nil &&
-                  heap_domain.get_base_name(obj) ==
-                  heap_domain.get_base_name(heap_domain.templ[row].dyn_obj))
-              { // for the same object find previous instance
-                // (used for multiple loops in one function)
-                member_val_index = find_member_row(obj, heap_domain.templ[row].member,
-                                                   --actual_loc);
-                if (member_val_index < 0)
-                  member_val_index = find_member_row(obj, heap_domain.templ[row].member,
-                                                     ++actual_loc);
-              }
-              else
-              {
-                member_val_index = find_member_row(obj, heap_domain.templ[row].member, actual_loc);
-              }
-              assert(member_val_index >= 0);
-              exprt member_expr = heap_domain.templ[member_val_index].expr;
-
-              // Add all paths from obj.next to p
-              if (heap_domain.add_all_paths(row, (unsigned) member_val_index, inv,
-                                            std::make_pair(obj, member_expr)))
-                improved = true;
-              debug() << "add all paths: " << from_expr(ns, "", member_expr) << ", through: "
-                      << from_expr(ns, "", obj) << eom;
-
-              // Add points to information
-              if (heap_domain.add_points_to(row, inv, std::make_pair(obj, member_expr)))
-                improved = true;
-              debug() << "add points to: " << from_expr(ns, "", obj) << eom;
-
-              heap_domain.add_pointed_by_row((unsigned) member_val_index, row, inv);
-            }
-          }
-          else
-          {
-            // Add points to information
             if (heap_domain.add_points_to(row, inv, std::make_pair(obj, nil_exprt())))
               improved = true;
             debug() << "add points to: " << from_expr(ns, "", obj) << eom;
 
-            // Add path to &(obj)
-            if (heap_domain.add_row_path(row, inv, address_of_exprt(obj),
-                                         std::make_pair(nil_exprt(), nil_exprt())))
-              improved = true;
-            debug() << "add destination: " << from_expr(ns, "", ptr_value) << eom;
+            if (heap_domain.add_row_path(row, inv, obj,
+                                         std::make_pair(nil_exprt(), nil_exprt())));
+          }
+          else
+          {
+
+            if (obj.type().get_bool("#dynamic"))
+            {
+              // obj is dynamic object accessed inside the function
+
+              if (id2string(obj.get_identifier()).find("$unknown") != std::string::npos)
+              { // handle unknown object
+                if (heap_domain.add_points_to(row, inv, std::make_pair(obj, nil_exprt())))
+                  improved = true;
+                debug() << "add points to: " << from_expr(ns, "", obj) << eom;
+              }
+              else
+              {
+                // Find row with corresponding member field of pointed object (obj.member)
+                int member_val_index;
+                if (inv[row].empty() && templ_row.dyn_obj.id() != ID_nil &&
+                    heap_domain.get_base_name(obj) ==
+                    heap_domain.get_base_name(templ_row.dyn_obj))
+                { // for the same object find previous instance
+                  // (used for multiple loops in one function)
+                  member_val_index = find_member_row(obj, templ_row.member, --actual_loc,
+                                                     templ_row.kind);
+                  if (member_val_index < 0)
+                    member_val_index = find_member_row(obj, templ_row.member, ++actual_loc,
+                                                       templ_row.kind);
+                }
+                else
+                {
+                  member_val_index = find_member_row(obj, templ_row.member, actual_loc,
+                                                     templ_row.kind);
+                }
+                assert(member_val_index >= 0);
+                exprt member_expr = heap_domain.templ[member_val_index].expr;
+
+                // Add all paths from obj.next to p
+                if (heap_domain.add_all_paths(row, (unsigned) member_val_index, inv,
+                                              std::make_pair(obj, member_expr)))
+                  improved = true;
+                debug() << "add all paths: " << from_expr(ns, "", member_expr) << ", through: "
+                        << from_expr(ns, "", obj) << eom;
+
+                // Add points to information
+                if (heap_domain.add_points_to(row, inv, std::make_pair(obj, member_expr)))
+                  improved = true;
+                debug() << "add points to: " << from_expr(ns, "", obj) << eom;
+
+                heap_domain.add_pointed_by_row((unsigned) member_val_index, row, inv);
+              }
+            }
+            else
+            {
+              // Add points to information
+              if (heap_domain.add_points_to(row, inv, std::make_pair(obj, nil_exprt())))
+                improved = true;
+              debug() << "add points to: " << from_expr(ns, "", obj) << eom;
+
+              // Add path to &(obj)
+              if (heap_domain.add_row_path(row, inv, address_of_exprt(obj),
+                                           std::make_pair(nil_exprt(), nil_exprt())))
+                improved = true;
+              debug() << "add destination: " << from_expr(ns, "", ptr_value) << eom;
+            }
           }
         }
+        else if (ptr_value.id() == ID_symbol)
+        {
+          if (heap_domain.add_points_to(row, inv, std::make_pair(ptr_value, nil_exprt())))
+            improved = true;
+          debug() << "add points to: " << from_expr(ns, "", ptr_value) << eom;
 
-        if (heap_domain.templ[row].dynamic)
+          if (heap_domain.add_row_path(row, inv, ptr_value,
+                                       std::make_pair(nil_exprt(), nil_exprt())))
+            improved = true;
+          debug() << "add destination: " << from_expr(ns, "", ptr_value) << eom;
+        }
+        else
+        {
+          improved = !inv[row].nondet;
+          inv[row].nondet = true;
+          debug() << "set nondet" << eom;
+        }
+
+        if (templ_row.dynamic)
         { // Recursively update all rows that are dependent on this row
           updated_rows.clear();
           update_rows_rec(row, inv);
@@ -192,11 +225,7 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
 
   else
   {
-#define DEBUG_OUTPUT
-#ifdef DEBUG_OUTPUT
     debug() << "UNSAT" << eom;
-#endif
-#undef DEBUG_OUTPUT
 
 #ifdef DEBUG_OUTPUT
     for (unsigned i = 0; i < solver.formula.size(); i++)
@@ -205,6 +234,20 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
         debug() << "is_in_conflict: " << solver.formula[i] << eom;
       else
         debug() << "not_in_conflict: " << solver.formula[i] << eom;
+    }
+
+    for (unsigned i = 0; i < heap_domain.templ.size(); i++)
+    {
+      exprt c = heap_domain.get_row_pre_constraint(i, inv[i]);
+      debug() << "cond: " << from_expr(ns, "", c) << " " <<
+              from_expr(ns, "", solver.get(c)) << eom;
+      debug() << "guards: " << from_expr(ns, "", heap_domain.templ[i].pre_guard) <<
+              " " << from_expr(ns, "", solver.get(heap_domain.templ[i].pre_guard)) << eom;
+      debug() << "guards: " << from_expr(ns, "", heap_domain.templ[i].post_guard) << " "
+              << from_expr(ns, "", solver.get(heap_domain.templ[i].post_guard)) << eom;
+      exprt post = heap_domain.get_row_post_constraint(i, inv[i]);
+      debug() << "post-cond: " << from_expr(ns, "", post) << " "
+              << from_expr(ns, "", solver.get(post)) << eom;
     }
 #endif
   }
@@ -221,7 +264,8 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
  * @param actual_loc Actual location number
  * @return Template row of obj.member
  */
-int strategy_solver_heapt::find_member_row(const exprt &obj, const irep_idt &member, int actual_loc)
+int strategy_solver_heapt::find_member_row(const exprt &obj, const irep_idt &member, int actual_loc,
+                                           const domaint::kindt &kind)
 {
   assert(obj.id() == ID_symbol);
   std::string obj_id = heap_domain.get_base_name(obj);
@@ -231,7 +275,7 @@ int strategy_solver_heapt::find_member_row(const exprt &obj, const irep_idt &mem
   for (unsigned i = 0; i < heap_domain.templ.size(); ++i)
   {
     heap_domaint::template_rowt &templ_row = heap_domain.templ[i];
-    if (templ_row.member == member && templ_row.dynamic)
+    if (templ_row.kind == kind && templ_row.member == member && templ_row.dynamic)
     {
       std::string id = id2string(to_symbol_expr(templ_row.expr).get_identifier());
       if (id.find(obj_id) != std::string::npos)
@@ -273,4 +317,68 @@ bool strategy_solver_heapt::update_rows_rec(const heap_domaint::rowt &row,
       result = update_rows_rec(ptr, value) || result;
   }
   return result;
+}
+
+void strategy_solver_heapt::print_solver_expr(const exprt &expr)
+{
+  debug() << from_expr(ns, "", expr) << ": " << from_expr(ns, "", solver.get(expr)) << eom;
+  forall_operands(it, expr)
+      print_solver_expr(*it);
+}
+
+void strategy_solver_heapt::initialize(const local_SSAt &SSA, const exprt &precondition)
+{
+  exprt::operandst equs;
+  for (auto &param : SSA.params)
+  {
+    if (param.type().id() == ID_pointer &&
+        id2string(param.get_identifier()).find('.') == std::string::npos)
+    {
+      if (!has_precondition_rec(param, precondition))
+      {
+        debug() << "Creating precondition for pointer parameters" << eom;
+        const symbolt *symbol;
+        if (ns.lookup(id2string(param.get_identifier()), symbol)) continue;
+
+        address_of_exprt init_value(symbol->symbol_expr());
+        init_value.type() = symbol->type;
+        equs.push_back(equal_exprt(param, init_value));
+      }
+    }
+  }
+  for (auto &global_in : SSA.globals_in)
+  {
+    if (global_in.type().id() == ID_pointer &&
+        id2string(global_in.get_identifier()).find('.') == std::string::npos)
+    {
+      if (!has_precondition_rec(global_in, precondition))
+      {
+        debug() << "Creating precondition for pointer parameters" << eom;
+        const symbolt *symbol;
+        if (ns.lookup(id2string(global_in.get_identifier()), symbol)) continue;
+
+        address_of_exprt init_value(symbol->symbol_expr());
+        init_value.type() = symbol->type;
+        equs.push_back(equal_exprt(global_in, init_value));
+      }
+    }
+  }
+
+  solver << conjunction(equs);
+}
+
+bool strategy_solver_heapt::has_precondition_rec(const exprt &expr, const exprt &precondition)
+{
+  if (precondition.id() == ID_equal)
+  {
+    const equal_exprt &eq = to_equal_expr(precondition);
+    return (eq.lhs() == expr && eq.rhs() != expr);
+  }
+  else
+  {
+    bool result = false;
+    forall_operands(it, precondition)
+      result = result || has_precondition_rec(expr, *it);
+    return result;
+  }
 }
