@@ -49,7 +49,7 @@ exprt address_canonizer(
 
       if (offset.id()==ID_constant && to_constant_expr(offset).is_zero())
       {
-        return address_of_exprt(to_member_expr(object).struct_op());
+        return address_of_exprt(to_member_expr(object).compound());
       }
       else
       {
