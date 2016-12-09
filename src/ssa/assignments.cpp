@@ -65,23 +65,13 @@ void assignmentst::build_assignment_map(
         bool assigned = false;
         const exprt &root_obj = o_it->get_root_object();
         if (is_ptr_object(root_obj))
-        { // assign objects pointed by arguments and return value of the function
+        { // assign objects pointed by return value of the function
           const exprt &function = code_function_call.function();
           if (function.id() == ID_symbol &&
               id2string(o_it->get_identifier()).find(
                   id2string(to_symbol_expr(function).get_identifier())) !=
               std::string::npos)
             assigned = true;
-
-          for (auto &arg : code_function_call.arguments())
-          {
-            exprt arg_symbol = arg;
-            if (arg.id() == ID_address_of)
-              arg_symbol = to_address_of_expr(arg_symbol).object();
-            if (arg_symbol.id() == ID_symbol && id2string(o_it->get_identifier()).find(
-                id2string(to_symbol_expr(arg_symbol).get_identifier())) != std::string::npos)
-              assigned = true;
-          }
         }
         else
         { // assign return value of the function
@@ -91,6 +81,22 @@ void assignmentst::build_assignment_map(
 
         if (assigned)
           assign(*o_it, it, ns);
+      }
+
+      // assign objects pointed by arguments of the function
+      for (auto &arg : code_function_call.arguments())
+      {
+        if (arg.type().id() == ID_pointer)
+        {
+          exprt arg_ptr = arg;
+          do
+          {
+            arg_ptr = dereference(dereference_exprt(arg_ptr, arg_ptr.type().subtype()),
+                                  ssa_value_ai[it], "", ns);
+            assign(arg_ptr, it, ns);
+          }
+          while (arg_ptr.type().id() == ID_pointer);
+        }
       }
 
       // the call might come with an assignment
