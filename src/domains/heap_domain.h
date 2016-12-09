@@ -62,74 +62,9 @@ class heap_domaint:public domaint
     std::set<patht> paths;          /**< Set of paths leading from the row variable */
     std::set<dyn_objt> points_to;   /**< Set of objects (or NULL) the row variable can point to */
     std::set<unsigned> pointed_by;  /**< Set of rows whose variables point to this row */
+    bool nondet = false;            /**< Row is nondeterministic - expression is TRUE */
 
-    /**
-     * Get expression for the row value. It is a conjunction of points to expression and path
-     * expressions.
-     * Points to expression is disjunction of equalities:
-     * p = &o (NULL)   for each object 'o' (or NULL) from points_to set
-     * Expression of path leading from variable 'p' to destination 'd' via field 'm' and
-     * passing through set of objects 'O' has form:
-     * p = d ||                            if path can have zero length
-     * p = &o && (o.m = d || o.m = o')     where o,o' belong to O and p can point to &o
-     * @param templ_expr Pointer variable of the template row
-     * @return Row value expression in the described form
-     */
-    exprt get_row_expr(const vart &templ_expr) const
-    {
-      if (paths.empty() && points_to.empty()) return false_exprt();
-      exprt::operandst result;
-
-      if (!points_to.empty())
-      { // Points to expression
-        exprt::operandst pt_expr;
-        for (auto &pt : points_to)
-        {
-          exprt lhs = templ_expr;
-          pt_expr.push_back(equal_exprt(templ_expr,
-                                        is_null_ptr(pt.first) ?
-                                        pt.first : address_of_exprt(pt.first)));
-        }
-        result.push_back(disjunction(pt_expr));
-      }
-
-      for (auto &path : paths)
-      { // path(p, m, d)[O]
-        const exprt &dest = path.destination;
-        exprt::operandst path_expr;
-
-        for (const dyn_objt &obj1 : points_to)
-        {
-          if (path.dyn_objects.find(obj1) != path.dyn_objects.end())
-          {
-            // p = &o
-            exprt equ_exprt = equal_exprt(templ_expr, address_of_exprt(obj1.first));
-
-            exprt::operandst step_expr;
-            exprt member_expr = obj1.second;
-            // o.m = d
-            step_expr.push_back(equal_exprt(member_expr, dest));
-
-            for (auto &obj2 : path.dyn_objects)
-            { // o.m = o'
-              step_expr.push_back(equal_exprt(member_expr, address_of_exprt(obj2.first)));
-            }
-
-            path_expr.push_back(and_exprt(equ_exprt, disjunction(step_expr)));
-          }
-          else
-          {
-            path_expr.push_back(equal_exprt(templ_expr,
-                                            is_null_ptr(obj1.first) ?
-                                            obj1.first : address_of_exprt(obj1.first)));
-          }
-        }
-
-        result.push_back(disjunction(path_expr));
-      }
-
-      return conjunction(result);
-    }
+    exprt get_row_expr(const vart &templ_expr) const;
 
     inline bool empty() const
     {

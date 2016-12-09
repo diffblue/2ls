@@ -27,7 +27,7 @@ void heap_domaint::initialize(domaint::valuet &value)
 
 /**
  * Create domain template for given set of variables.
- * Template contains row for each member of each variable being pointer to struct,
+ * Template contains a row for each member of each variable being pointer to struct,
  * and a row for each flattened member of a struct.
  * @param var_specs Set of program variables.
  * @param ns Namespace
@@ -419,4 +419,79 @@ std::string heap_domaint::get_base_name(const exprt &expr)
   std::string result = id2string(to_symbol_expr(expr).get_identifier());
   result = result.substr(0, result.find_last_of('#'));
   return result;
+}
+
+/**
+ * Get expression for the row value. It is a conjunction of points to expression and path
+ * expressions.
+ * Points to expression is disjunction of equalities:
+ * p = &o (NULL)   for each object 'o' (or NULL) from points_to set
+ * Expression of path leading from variable 'p' to destination 'd' via field 'm' and
+ * passing through set of objects 'O' has form:
+ * p = d ||                            if path can have zero length
+ * p = &o && (o.m = d || o.m = o')     where o,o' belong to O and p can point to &o
+ * @param templ_expr Pointer variable of the template row
+ * @return Row value expression in the described form
+ */
+exprt heap_domaint::row_valuet::get_row_expr(const vart &templ_expr) const
+{
+  if (nondet) return true_exprt();
+
+  if (paths.empty() && points_to.empty()) return false_exprt();
+
+  exprt::operandst result;
+
+  exprt::operandst pt_expr;
+  if (!points_to.empty())
+  { // Points to expression
+    for (auto &pt : points_to)
+    {
+      pt_expr.push_back(equal_exprt(templ_expr,
+                                    templ_expr.type() == pt.first.type() ?
+                                    pt.first : address_of_exprt(pt.first)));
+    }
+    result.push_back(disjunction(pt_expr));
+  }
+
+  exprt::operandst paths_expr;
+  if (!paths.empty())
+  {
+    for (auto &path : paths)
+    { // path(p, m, d)[O]
+      const exprt &dest = path.destination;
+      exprt::operandst path_expr;
+
+      for (const dyn_objt &obj1 : points_to)
+      {
+        if (path.dyn_objects.find(obj1) != path.dyn_objects.end())
+        {
+          // p = &o
+          exprt equ_exprt = equal_exprt(templ_expr, address_of_exprt(obj1.first));
+
+          exprt::operandst step_expr;
+          exprt member_expr = obj1.second;
+          // o.m = d
+          step_expr.push_back(equal_exprt(member_expr, dest));
+
+          for (auto &obj2 : path.dyn_objects)
+          { // o.m = o'
+            step_expr.push_back(equal_exprt(member_expr, address_of_exprt(obj2.first)));
+          }
+
+          path_expr.push_back(and_exprt(equ_exprt, disjunction(step_expr)));
+        }
+        else
+        {
+          path_expr.push_back(equal_exprt(templ_expr,
+                                          templ_expr.type() == obj1.first.type() ?
+                                          obj1.first : address_of_exprt(obj1.first)));
+        }
+      }
+
+      paths_expr.push_back(disjunction(path_expr));
+    }
+    result.push_back(disjunction(paths_expr));
+  }
+
+  return conjunction(result);
 }
