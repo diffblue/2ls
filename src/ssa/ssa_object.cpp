@@ -183,7 +183,7 @@ void collect_objects_rec(
     if(type.id()==ID_struct)
     {
       std::string id=id2string(ssa_object.get_identifier());
-      if (src.type().get_bool("#dynamic") || id.find("'obj")==id.size()-4)
+      if (src.type().get_bool("#dynamic") || id.rfind("'obj")==id.size()-4)
         objects.insert(ssa_object);
 
       // need to split up
