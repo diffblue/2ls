@@ -1129,6 +1129,9 @@ bool twols_parse_optionst::process_goto_program(
     replace_malloc(goto_model,"");
 #endif
 
+    // create symbols for objects pointed by parameters
+    create_dynamic_objects(goto_model);
+
 #if REMOVE_MULTIPLE_DEREFERENCES
     remove_multiple_dereferences(goto_model);
 #endif
@@ -1138,6 +1141,9 @@ bool twols_parse_optionst::process_goto_program(
 
     // add loop ids
     goto_model.goto_functions.compute_loop_numbers();
+
+    // remove loop heads from function entries
+    remove_loops_in_entry(goto_model);
 
     // inline __CPROVER_initialize and main
     if(cmdline.isset("inline-main"))
