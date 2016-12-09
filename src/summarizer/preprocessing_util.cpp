@@ -166,7 +166,9 @@ void summarizer_parse_optionst::unwind_goto_into_loop(goto_modelt &goto_model, u
     for(loopst::iterator l_it = loops.begin(); l_it != loops.end(); ++l_it)
     {
       std::vector<goto_programt::targett> iteration_points;
-      unwind(body,l_it->second,l_it->first,k,iteration_points);
+      goto_unwindt goto_unwind;
+      goto_unwind.unwind(body,l_it->second,l_it->first,k,
+             goto_unwindt::PARTIAL,iteration_points);
       assert(iteration_points.size()==2);
       goto_programt::targett t=body.insert_before(l_it->first);
       t->make_goto();
