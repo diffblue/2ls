@@ -151,6 +151,9 @@ protected:
 				    bool &valid);
   void remove_multiple_dereferences(goto_modelt &goto_model);
   void remove_multiple_dereferences(goto_modelt &goto_model, goto_programt &body, goto_programt::targett t, exprt &expr, unsigned &var_counter, bool deref_seen);
+  void remove_loops_in_entry(goto_modelt &goto_model);
+  void create_dynamic_objects(goto_modelt &goto_model);
+  void add_dynamic_object_rec(exprt &expr, symbol_tablet &symbol_table);
 };
 
 #endif

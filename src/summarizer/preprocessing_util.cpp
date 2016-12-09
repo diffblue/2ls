@@ -263,3 +263,80 @@ void summarizer_parse_optionst::remove_multiple_dereferences(goto_modelt &goto_m
     }
   }
 }
+
+/**
+ * Remove loop head from entry instruction of a function - causes problems with input variables
+ * naming. If first instruction is target of back-jump, insert SKIP instruction before.
+ * @param goto_model
+ */
+void summarizer_parse_optionst::remove_loops_in_entry(goto_modelt &goto_model)
+{
+  Forall_goto_functions(f_it, goto_model.goto_functions)
+  {
+    if (f_it->second.body_available() && f_it->second.body.instructions.begin()->is_target())
+    {
+      auto new_entry = f_it->second.body.insert_before(f_it->second.body.instructions.begin());
+      new_entry->make_skip();
+    }
+  }
+}
+
+/**
+ * Create symbols for objects pointed by parameters of a function.
+ * @param goto_model GOTO model of the program.
+ */
+void summarizer_parse_optionst::create_dynamic_objects(goto_modelt &goto_model)
+{
+  Forall_goto_functions(f_it, goto_model.goto_functions)
+  {
+    Forall_goto_program_instructions(i_it, f_it->second.body)
+    {
+      if (i_it->is_assign())
+      {
+        code_assignt &code_assign = to_code_assign(i_it->code);
+        add_dynamic_object_rec(code_assign.lhs(), goto_model.symbol_table);
+        add_dynamic_object_rec(code_assign.rhs(), goto_model.symbol_table);
+      }
+    }
+  }
+}
+
+/**
+ * For each pointer-typed symbol in an expression which is a parameter, create symbol for pointed
+ * objectin the symbol table.
+ * @param expr Expression to check.
+ * @param symbol_table Symbol table
+ */
+void summarizer_parse_optionst::add_dynamic_object_rec(exprt &expr, symbol_tablet &symbol_table)
+{
+  if (expr.id() == ID_symbol)
+  {
+    const symbolt &symbol = symbol_table.lookup(to_symbol_expr(expr).get_identifier());
+    if (symbol.is_parameter && symbol.type.id() == ID_pointer)
+    {
+      // New symbol
+      symbolt object_symbol;
+
+      object_symbol.base_name = id2string(symbol.base_name) + "'obj";
+      object_symbol.name = id2string(symbol.name) + "'obj";
+      const typet &pointed_type = symbol.type.subtype();
+      // Follow pointed type
+      if (pointed_type.id() == ID_symbol)
+      {
+        const symbolt type_symbol = symbol_table.lookup(
+            to_symbol_type(pointed_type).get_identifier());
+        object_symbol.type = type_symbol.type;
+      }
+      else
+        object_symbol.type = pointed_type;
+      object_symbol.mode = ID_C;
+
+      symbol_table.add(object_symbol);
+    }
+  }
+  else
+  {
+    Forall_operands(it, expr)
+        add_dynamic_object_rec(*it, symbol_table);
+  }
+}
