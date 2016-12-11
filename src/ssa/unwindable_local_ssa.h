@@ -61,8 +61,14 @@ public:
     loop_hierarchy_levelt;
   loop_hierarchy_levelt loop_hierarchy_level;
 
+  irep_idt get_full_ssa_name(
+    const symbol_exprt &symbol_expr,
+    locationt &loc,
+    odometert &odometer) const;
+
 protected:
-  irep_idt get_ssa_name(const symbol_exprt &, locationt &loc);
+  irep_idt get_ssa_name(const symbol_exprt &, locationt &loc) const;
+
   unsigned get_def_level(locationt def_loc, locationt current_loc) const;
   void compute_loop_hierarchy();
 

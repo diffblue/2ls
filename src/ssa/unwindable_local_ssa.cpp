@@ -279,7 +279,7 @@ Function: unwindable_local_SSAt::get_ssa_name
 \*******************************************************************/
 
 irep_idt unwindable_local_SSAt::get_ssa_name(
-  const symbol_exprt &symbol_expr, locationt &loc)
+  const symbol_exprt &symbol_expr, locationt &loc) const
 {
   std::string s =  id2string(symbol_expr.get_identifier()); 
 #if 0
@@ -304,6 +304,40 @@ irep_idt unwindable_local_SSAt::get_ssa_name(
   return irep_idt(s.substr(0,pos2));
 }
 
+/*******************************************************************\
+
+Function: unwindable_local_SSAt::get_full_ssa_name
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: retrieve ssa name, location, and odometer
+
+\*******************************************************************/
+
+irep_idt unwindable_local_SSAt::get_full_ssa_name(
+  const symbol_exprt &symbol_expr,
+  locationt &loc,
+  odometert &odometer) const
+{
+  const std::string s=id2string(symbol_expr.get_identifier());
+  std::size_t pos1=s.find("%");
+  if(pos1!=std::string::npos)
+  {
+    std::size_t pos2=0;
+    do
+    {
+      pos2=s.find("%", pos1+1);
+      if(pos2==std::string::npos)
+        pos2=s.size();
+      odometer.push_back(safe_string2unsigned(s.substr(pos1+1, pos2-pos1-1)));
+      pos1=pos2;
+    }
+    while(pos2!=s.size());
+  }
+  return get_ssa_name(symbol_expr, loc);
+}
 
 /*******************************************************************\
 
