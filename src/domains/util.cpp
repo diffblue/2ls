@@ -2,7 +2,6 @@
 
 #include "util.h"
 
-
 /*******************************************************************\
 
 Function: extend_expr_types
@@ -535,4 +534,70 @@ constant_exprt make_minusone(const typet &type)
     return cst.to_expr();
   }
   assert(false);
+}
+
+/*******************************************************************\
+
+Function: get_original_name
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: retrieve original variable name from ssa variable
+
+\*******************************************************************/
+
+irep_idt get_original_name(
+  const symbol_exprt &symbol_expr)
+{
+  std::string s=id2string(symbol_expr.get_identifier());
+  std::size_t pos1=s.find_last_of("#");
+  if(pos1==std::string::npos || (s.substr(pos1+1, 12)=="return_value"))
+    return irep_idt(s);
+  return s.substr(0, pos1);
+}
+
+/*******************************************************************\
+
+Function: clean_expr
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void clean_expr(exprt &expr)
+{
+  if(expr.id()==ID_symbol)
+  {
+    symbol_exprt &symbol_expr=to_symbol_expr(expr);
+    symbol_expr.set_identifier(get_original_name(symbol_expr));
+  }
+  else if(expr.id()==ID_and)
+  {
+    Forall_operands(it, expr)
+      clean_expr(*it);
+  }
+  else if(expr.id()==ID_le)
+  {
+    if(expr.op0().id()==ID_unary_minus &&
+       expr.op0().op0().id()==ID_typecast &&
+       expr.op1().id()==ID_constant)
+    {
+      exprt lhs=expr.op0().op0().op0();
+      clean_expr(lhs);
+      constant_exprt rhs=to_constant_expr(expr.op1());
+      mp_integer c;
+      to_integer(rhs, c);
+      expr=binary_relation_exprt(lhs, ID_ge, from_integer(-c, lhs.type()));
+    }
+    else
+    {
+      clean_expr(expr.op0());
+    }
+  }
 }
