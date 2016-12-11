@@ -31,7 +31,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/goto_inline_class.h>
 #include <goto-programs/goto_functions.h>
 #include <goto-programs/xml_goto_trace.h>
-#include <goto-programs/graphml_witness.h>
 #include <goto-programs/json_goto_trace.h>
 #include <goto-programs/remove_returns.h>
 #include <goto-programs/remove_skip.h>
@@ -46,6 +45,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "../ssa/malloc_ssa.h"
 
+#include "graphml_witness_ext.h"
 #include "summarizer_parse_options.h"
 #include "summary_db.h"
 #include "summary_checker_ai.h"
@@ -1356,7 +1356,6 @@ void summarizer_parse_optionst::output_graphml_proof(
   const std::string graphml=options.get_option("graphml-witness");
   if(!graphml.empty())
   {
-#if 0
     graphml_witness_extt graphml_witness(ns);
     graphml_witness(summary_checker);
 
@@ -1367,7 +1366,6 @@ void summarizer_parse_optionst::output_graphml_proof(
       std::ofstream out(graphml.c_str());
       write_graphml(graphml_witness.graph(), out);
     }
-#endif
   }
 }
 /*******************************************************************\
