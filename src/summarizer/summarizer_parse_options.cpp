@@ -997,6 +997,11 @@ bool summarizer_parse_optionst::process_goto_program(
 {
   try
   {
+
+    status() << "Function Pointer Removal" << eom;
+    remove_function_pointers(
+      goto_model, cmdline.isset("pointer-check"));
+
     // do partial inlining
     if(options.get_bool_option("inline-partial"))
     {
@@ -1013,25 +1018,6 @@ bool summarizer_parse_optionst::process_goto_program(
           f_it->second.body.clear();
         }
     }
-    
-    // add generic checks
-    status() << "Generic Property Instrumentation" << eom;
-    goto_check(options, goto_model);
-
-    status() << "Function Pointer Removal" << eom;
-    remove_function_pointers(
-      goto_model, cmdline.isset("pointer-check"));
-
-    // remove returns (must be done after function pointer removal)
-    remove_returns(goto_model);
-   
- 
-#if UNWIND_GOTO_INTO_LOOP
-    unwind_goto_into_loop(goto_model,2);
-#endif
-
-    remove_skip(goto_model.goto_functions);
-    goto_model.goto_functions.update();
 
 #if IGNORE_THREADS
     threads_detected=has_threads(goto_model);
@@ -1049,6 +1035,20 @@ bool summarizer_parse_optionst::process_goto_program(
       recursion_detected=goto_inline.recursion_detected();
 #endif
     }
+
+    // remove returns (must be done after function pointer removal)
+    remove_returns(goto_model);
+
+    // add generic checks
+    status() << "Generic Property Instrumentation" << eom;
+    goto_check(options, goto_model);
+
+#if UNWIND_GOTO_INTO_LOOP
+    unwind_goto_into_loop(goto_model,2);
+#endif
+
+    remove_skip(goto_model.goto_functions);
+    goto_model.goto_functions.update();
 
     //preprocessing to improve the structure of the SSA for the unwinder
     split_loopheads(goto_model);
