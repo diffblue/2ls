@@ -97,6 +97,14 @@ void summarizer_parse_optionst::nondet_locals(goto_modelt &goto_model)
       if(i_it->is_decl())
       {
         const code_declt& decl = to_code_decl(i_it->code);
+
+        goto_programt::const_targett next=i_it; ++next;
+        if(next!=f_it->second.body.instructions.end() &&
+           next->is_assign() &&
+           to_code_assign(next->code).lhs().id()==ID_symbol &&
+           to_symbol_expr(to_code_assign(next->code).lhs())==decl.symbol())
+          continue;
+
         side_effect_expr_nondett nondet(decl.symbol().type());
         goto_programt::targett t = f_it->second.body.insert_after(i_it);
         t->make_assignment();
