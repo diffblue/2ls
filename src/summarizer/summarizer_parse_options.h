@@ -74,6 +74,8 @@ public:
 
 protected:
   ui_message_handlert ui_message_handler;
+  bool recursion_detected;
+  bool threads_detected;
   virtual void register_languages(); 
 
   void get_command_line_options(optionst &options);

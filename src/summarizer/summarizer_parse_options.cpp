@@ -78,7 +78,9 @@ summarizer_parse_optionst::summarizer_parse_optionst(
   :
   parse_options_baset(SUMMARIZER_OPTIONS, argc, argv),
   language_uit(cmdline, ui_message_handler),
-  ui_message_handler(cmdline, "2LS " SUMMARIZER_VERSION)
+  ui_message_handler(cmdline, "2LS " SUMMARIZER_VERSION),
+  recursion_detected(false),
+  threads_detected(false)
 {
 }
   
@@ -418,6 +420,24 @@ int summarizer_parse_optionst::doit()
   {
     options.set_option("show-invariants", true);
   }
+
+#if IGNORE_RECURSION
+  if(recursion_detected)
+  {
+    status() << "Recursion not supported" << eom;
+    report_unknown();
+    return 5;
+  }
+#endif
+
+#if IGNORE_THREADS
+  if(threads_detected)
+  {
+    status() << "Threads not supported" << eom;
+    report_unknown();
+    return 5;
+  }
+#endif
 
   if(cmdline.isset("context-sensitive"))
   {
@@ -1013,32 +1033,22 @@ bool summarizer_parse_optionst::process_goto_program(
     remove_skip(goto_model.goto_functions);
     goto_model.goto_functions.update();
 
+#if IGNORE_THREADS
+    threads_detected=has_threads(goto_model);
+#endif
+
     // now do full inlining, if requested
     if(options.get_bool_option("inline"))
     {
       status() << "Performing full inlining" << eom;
-#if IGNORE_RECURSION
       const namespacet ns(goto_model.symbol_table);
       goto_inlinet goto_inline(
         goto_model.goto_functions, ns, ui_message_handler);
       goto_inline();
-      if(goto_inline.recursion_detected())
-      {
-        status() << "Recursion not supported" << eom;
-        report_unknown();
-        return 5;
-      }
+#if IGNORE_RECURSION
+      recursion_detected=goto_inline.recursion_detected();
 #endif
     }
-
-#if IGNORE_THREADS
-    if(has_threads(goto_model))
-    {
-      status() << "Threads not supported" << eom;
-      report_unknown();
-      return 5;
-    }
-#endif
 
     //preprocessing to improve the structure of the SSA for the unwinder
     split_loopheads(goto_model);
