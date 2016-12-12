@@ -93,8 +93,23 @@ void dynamic_cfgt::build_cfg(
     nodes[node].assumption=nil_exprt();
 
     // this is the end of a loop
-    if(it->is_backwards_goto())
+    //   (sink self-loops are translated into assume false in the SSA)
+    if(it->is_backwards_goto() &&
+       it->get_target()!=it)
     {
+#if 0
+      // Sanity checks
+      const ssa_local_unwindert::loopt *loop=nullptr;
+      if(!ssa_unwinder.find_loop(it->get_target()->location_number, loop))
+      {
+        std::cout << "NON-LOOP BACKEDGE? " << it->location_number
+                  << " --> " << it->get_target()->location_number << std::endl;
+        assert(false);
+      }
+      assert(!iteration_stack.empty());
+      assert(!max_iteration_stack.empty());
+#endif
+
       // max_unwind reached
       if(iteration_stack.back()==max_iteration_stack.back())
       {
@@ -137,6 +152,14 @@ void dynamic_cfgt::build_cfg(
 
         continue;
       }
+    }
+    // reconstruct sink self-loops
+    else if(it->is_backwards_goto() &&
+            it->get_target()==it)
+    {
+      nodes[node].is_loop_head=true;
+      add_edge(node, node);
+      continue;
     }
 
     // remember forward gotos
