@@ -66,8 +66,9 @@ property_checkert::resultt summary_checker_acdlt::operator()(
       i_it!=goto_program.instructions.end();
       i_it++)
   {
-    if(!i_it->is_assert())
+    /*if(!i_it->is_assert() || !i_it->is_assume())
       continue;
+    */
 
     const source_locationt &location=i_it->source_location;
     irep_idt property_id = location.get_property_id();
@@ -93,6 +94,19 @@ property_checkert::resultt summary_checker_acdlt::operator()(
       loophead_selects.push_back(not_exprt(lsguard));
     }
 
+    // iterate over assumptions
+    exprt::operandst assumptions;
+    for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
+	            n_it != SSA.nodes.end(); n_it++)
+    {
+      for(local_SSAt::nodet::assumptionst::const_iterator 
+          a_it = n_it->assumptions.begin();
+          a_it != n_it->assumptions.end(); a_it++)
+      {
+        std::cout << "Assumption:: " << from_expr(*a_it) << std::endl;
+        assumptions.push_back(*a_it);
+      }
+    }
     // iterate over assertions
     std::list<local_SSAt::nodest::const_iterator> assertion_nodes;
     SSA.find_nodes(i_it,assertion_nodes);
@@ -111,7 +125,8 @@ property_checkert::resultt summary_checker_acdlt::operator()(
         assertions.push_back(*a_it);
       }
     }
-    //   if(simplify) property=simplify_expr(property, SSA.ns);
+
+    // if(simplify) property=simplify_expr(property, SSA.ns);
     property_map[property_id].location = i_it;
 
     //TODO: make the solver incremental
@@ -165,7 +180,7 @@ property_checkert::resultt summary_checker_acdlt::operator()(
     acdl_solver.set_message_handler(get_message_handler());
     property_map[property_id].result =
       acdl_solver(ssa_db.get(goto_model.goto_functions.entry_point()),
-		  conjunction(assertions), conjunction(loophead_selects));
+		  conjunction(assertions), conjunction(loophead_selects), conjunction(assumptions));
     /*acdl_solver(ssa_db.get(goto_model.goto_functions.entry_point()),
       property, true_exprt());*/
   }

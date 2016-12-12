@@ -1000,9 +1000,32 @@ less precise -- can ACDL recover from precision loss due to cheap transformer.
 Research Question:: Can ACDL recover from cheapsyntactic transformers -- 
 in essence, can ACDL do transformer refinement ?
 
-Queries Meeting with Peter on 6th Dec, 2016
+Queries Meeting with Peter on 13th Dec, 2016
 ===========================================
-1> How to remove bvt value_literals; in acdl_domaint ?
-2>  
+1> Do we flush out the non-gamma complete variables after every gamma-complete check?
+2> do we need the !(x=m) check in gamma-completeness check -- for
+complete-check3, the following scenario arise:
+Val=x:[1,3]
+decision=(x<=2)
+check: (x>2) is still satisfied
+
+3> How do we use the constant propagator in gamma-complete check. This is 
+used at the level of goto_function
+
+4> So, far we have built control path guided decisions by evaluating "potential"
+gamma-complete variables. Can we extend this to property guided decision ? For
+this we need one example where one path fails and the other passes. The decision
+should be made on path that fails. That is efficient gamma-complete check.
+
+5> Caching of templates for the same variables is absolute must. How to do it ?
+Do we create a map of <variable set, template set> so that evertime numerical
+inference is called with the same variable, we loop up the map and generate
+the templates. Is it possible to make a set of symbols as key in a map in c++. 
+
+6> Do we add the decisions and deductions made during the gamma-complete phase 
+to the abstract conflict graph -- for the case, where the result of propagation 
+is UNSAT.
+
+
 
 
