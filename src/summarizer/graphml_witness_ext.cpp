@@ -28,8 +28,9 @@ void graphml_witness_extt::operator()(
   const unwindable_local_SSAt &ssa=
     static_cast<const unwindable_local_SSAt &>(
       summary_checker.ssa_db.get(function_name));
-  const summaryt &summary=
-    summary_checker.summary_db.get(function_name);
+  summaryt summary;
+  if(summary_checker.summary_db.exists(function_name))
+    summary=summary_checker.summary_db.get(function_name);
   const ssa_local_unwindert &ssa_unwinder=
   summary_checker.ssa_unwinder.get(function_name);
 
