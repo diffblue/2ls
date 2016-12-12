@@ -22,15 +22,15 @@ Function: summarizer_parse_optionst::inline_main
 
 void summarizer_parse_optionst::inline_main(goto_modelt &goto_model)
 {
-  goto_programt &main = goto_model.goto_functions.function_map[ID__start].body;
-  goto_programt::targett target = main.instructions.begin();
+  goto_programt &main=goto_model.goto_functions.function_map[ID__start].body;
+  goto_programt::targett target=main.instructions.begin();
   while(target!=main.instructions.end())
   {
     if(target->is_function_call())
     {
       const code_function_callt &code_function_call=
         to_code_function_call(target->code);
-      irep_idt fname = code_function_call.function().get(ID_identifier); 
+      irep_idt fname=code_function_call.function().get(ID_identifier);
 
       debug() << "Inlining " << fname << eom;
 
@@ -96,7 +96,7 @@ void summarizer_parse_optionst::nondet_locals(goto_modelt &goto_model)
     {
       if(i_it->is_decl())
       {
-        const code_declt& decl = to_code_decl(i_it->code);
+        const code_declt& decl=to_code_decl(i_it->code);
 
         goto_programt::const_targett next=i_it; ++next;
         if(next!=f_it->second.body.instructions.end() &&
@@ -106,11 +106,11 @@ void summarizer_parse_optionst::nondet_locals(goto_modelt &goto_model)
           continue;
 
         side_effect_expr_nondett nondet(decl.symbol().type());
-        goto_programt::targett t = f_it->second.body.insert_after(i_it);
+        goto_programt::targett t=f_it->second.body.insert_after(i_it);
         t->make_assignment();
         code_assignt c(decl.symbol(),nondet);
         t->code.swap(c);
-        t->source_location = i_it->source_location;
+        t->source_location=i_it->source_location;
       }
     }
   }
@@ -142,22 +142,22 @@ void summarizer_parse_optionst::unwind_goto_into_loop(goto_modelt &goto_model, u
     {
       if(i_it->is_backwards_goto())
       {
-        goto_programt::targett loop_head = i_it->get_target();
-        goto_programt::targett loop_exit = i_it;
-        bool has_goto_into_loop = false;
+        goto_programt::targett loop_head=i_it->get_target();
+        goto_programt::targett loop_exit=i_it;
+        bool has_goto_into_loop=false;
 	 
-        goto_programt::targett it = loop_head;
+        goto_programt::targett it=loop_head;
         if(it!=loop_exit) it++;
         for(; it!=loop_exit; it++)
         {
           for( std::set<goto_programt::targett>::iterator 
-                 s_it = it->incoming_edges.begin(); 
+                 s_it=it->incoming_edges.begin();
                s_it!=it->incoming_edges.end(); ++s_it)
           {
             if((*s_it)->is_goto() &&
                (*s_it)->location_number < loop_head->location_number)
             {
-              has_goto_into_loop = true;
+              has_goto_into_loop=true;
               break;
             }
           }
@@ -171,7 +171,7 @@ void summarizer_parse_optionst::unwind_goto_into_loop(goto_modelt &goto_model, u
       }
     }
 
-    for(loopst::iterator l_it = loops.begin(); l_it != loops.end(); ++l_it)
+    for(loopst::iterator l_it=loops.begin(); l_it!=loops.end(); ++l_it)
     {
       std::vector<goto_programt::targett> iteration_points;
       goto_unwindt goto_unwind;
@@ -203,10 +203,10 @@ void summarizer_parse_optionst::remove_multiple_dereferences(goto_modelt &goto_m
 {
   if(expr.id()==ID_member)
   {
-    member_exprt &member_expr = to_member_expr(expr);
+    member_exprt &member_expr=to_member_expr(expr);
     if(member_expr.compound().id()==ID_dereference)
     {
-      dereference_exprt &deref_expr = to_dereference_expr(member_expr.compound());
+      dereference_exprt &deref_expr=to_dereference_expr(member_expr.compound());
       remove_multiple_dereferences(goto_model,body,t,deref_expr.pointer(),var_counter,true);
       if(deref_seen)
       {
@@ -216,17 +216,19 @@ void summarizer_parse_optionst::remove_multiple_dereferences(goto_modelt &goto_m
         new_symbol.base_name=new_symbol.name;
         new_symbol.pretty_name=new_symbol.name;
         goto_model.symbol_table.add(new_symbol);
-        goto_programt::targett t_new = body.insert_before(t);
+        goto_programt::targett t_new=body.insert_before(t);
         t_new->make_assignment();
-        t_new->code = code_assignt(new_symbol.symbol_expr(),member_expr);
-        expr = new_symbol.symbol_expr();
-        body.compute_incoming_edges();
-        for(std::set<goto_programt::targett>::iterator t_it = 
+        t_new->code=code_assignt(new_symbol.symbol_expr(),member_expr);
+        expr=new_symbol.symbol_expr();
+        for(std::set<goto_programt::targett>::iterator t_it=
               t->incoming_edges.begin();
-            t_it != t->incoming_edges.end(); ++t_it)
+            t_it!=t->incoming_edges.end(); ++t_it)
         {
-          (*t_it)->targets.clear();
-          (*t_it)->targets.push_back(t_new);
+          if((*t_it)->is_goto() && (*t_it)->get_target()==t)
+          {
+            (*t_it)->targets.clear();
+            (*t_it)->targets.push_back(t_new);
+          }
         }
         body.compute_location_numbers();
         body.compute_target_numbers();
@@ -244,7 +246,7 @@ void summarizer_parse_optionst::remove_multiple_dereferences(goto_modelt &goto_m
 
 void summarizer_parse_optionst::remove_multiple_dereferences(goto_modelt &goto_model)
 {
-  unsigned var_counter = 0;
+  unsigned var_counter=0;
   namespacet ns(goto_model.symbol_table);
   Forall_goto_functions(f_it, goto_model.goto_functions)
   {
@@ -340,11 +342,11 @@ bool summarizer_parse_optionst::has_threads(const goto_modelt &goto_model)
       if(instruction.is_function_call())
       {
         const code_function_callt &fct=to_code_function_call(instruction.code);
-        if(fct.function().id() == ID_symbol)
+        if(fct.function().id()==ID_symbol)
         {
           const symbol_exprt &fsym=to_symbol_expr(fct.function());
 
-          if(ns.lookup(fsym.get_identifier()).base_name == "pthread_create")
+          if(ns.lookup(fsym.get_identifier()).base_name=="pthread_create")
             return true;
         }
       }
