@@ -1077,6 +1077,11 @@ bool summarizer_parse_optionst::process_goto_program(
       inline_main(goto_model); 
     }
 
+    if(!cmdline.isset("independent-properties"))
+    {
+      add_assumptions_after_assertions(goto_model);
+    }
+
     if(!cmdline.isset("no-propagation"))
     {
       status() << "Constant Propagation" << eom;

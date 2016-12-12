@@ -274,6 +274,45 @@ void summarizer_parse_optionst::remove_multiple_dereferences(goto_modelt &goto_m
   }
 }
 
+
+/*******************************************************************\
+
+Function: summarizer_parse_optionst::add_assumptions_after_assertions
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: assumes assertions after checking them
+
+\*******************************************************************/
+
+void summarizer_parse_optionst::add_assumptions_after_assertions(
+  goto_modelt &goto_model)
+{
+  Forall_goto_functions(f_it, goto_model.goto_functions)
+  {
+    Forall_goto_program_instructions(i_it, f_it->second.body)
+    {
+      if(i_it->is_assert() && !i_it->guard.is_true())
+      {
+        goto_programt::targett t_new=f_it->second.body.insert_after(i_it);
+        t_new->make_assumption(i_it->guard);
+        for(std::set<goto_programt::targett>::iterator t_it=
+              i_it->incoming_edges.begin();
+            t_it!=i_it->incoming_edges.end(); ++t_it)
+        {
+          (*t_it)->targets.clear();
+          (*t_it)->targets.push_back(t_new);
+        }
+        f_it->second.body.compute_location_numbers();
+        f_it->second.body.compute_target_numbers();
+        f_it->second.body.compute_incoming_edges();
+      }
+    }
+  }
+}
+
 /*******************************************************************\
 
 Function: summarizer_parse_optionst::has_threads

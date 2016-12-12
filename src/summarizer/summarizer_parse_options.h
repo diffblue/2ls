@@ -54,7 +54,7 @@ class optionst;
   "(no-simplify)(no-fixed-point)" \
   "(graphml-witness):(json-cex):" \
   "(no-spurious-check)(stop-on-fail)" \
-  "(competition-mode)(slice)(no-propagation)" \
+  "(competition-mode)(slice)(no-propagation)(independent-properties)" \
   "(no-unwinding-assertions)"
   // the last line is for CBMC-regression testing only
 
@@ -170,6 +170,7 @@ protected:
     exprt &expr,
     unsigned &var_counter,
     bool deref_seen);
+  void add_assumptions_after_assertions(goto_modelt &goto_model);
 };
 
 #endif
