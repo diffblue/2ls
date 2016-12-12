@@ -220,6 +220,7 @@ void summarizer_parse_optionst::remove_multiple_dereferences(goto_modelt &goto_m
         t_new->make_assignment();
         t_new->code = code_assignt(new_symbol.symbol_expr(),member_expr);
         expr = new_symbol.symbol_expr();
+        body.compute_incoming_edges();
         for(std::set<goto_programt::targett>::iterator t_it = 
               t->incoming_edges.begin();
             t_it != t->incoming_edges.end(); ++t_it)
