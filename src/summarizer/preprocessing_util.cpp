@@ -301,13 +301,6 @@ void summarizer_parse_optionst::add_assumptions_after_assertions(
       {
         goto_programt::targett t_new=f_it->second.body.insert_after(i_it);
         t_new->make_assumption(i_it->guard);
-        for(std::set<goto_programt::targett>::iterator t_it=
-              i_it->incoming_edges.begin();
-            t_it!=i_it->incoming_edges.end(); ++t_it)
-        {
-          (*t_it)->targets.clear();
-          (*t_it)->targets.push_back(t_new);
-        }
         f_it->second.body.compute_location_numbers();
         f_it->second.body.compute_target_numbers();
         f_it->second.body.compute_incoming_edges();
