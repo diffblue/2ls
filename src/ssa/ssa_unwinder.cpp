@@ -279,7 +279,7 @@ void ssa_local_unwindert::build_exit_conditions()
 
 void ssa_local_unwindert::unwind(unsigned k)
 {
-  if(SSA.current_unwinding >= k)
+  if(SSA.current_unwinding >= (long)k)
     return;
 
   current_enabling_expr = 
@@ -326,7 +326,7 @@ void ssa_local_unwindert::unwind(loopt &loop, unsigned k, bool is_new_parent)
             << std::endl;
 #endif
   SSA.increment_unwindings(1);
-  for(unsigned i = 0; i<=k; ++i)
+  for(long i = 0; i<=k; ++i)
   {
     //add new unwindings of this loop
     if(i>loop.current_unwinding || is_new_parent)
@@ -620,7 +620,7 @@ equal_exprt ssa_local_unwindert::build_exit_merge(
   exprt re = e;
   SSA.increment_unwindings(1);
   SSA.rename(re, loc); //%0
-  for (unsigned i = 1; i <= k; i++)
+  for (long i = 1; i <= k; i++)
   {
     SSA.increment_unwindings(0);
     exprt cond_expr = exits;
@@ -735,7 +735,7 @@ void ssa_local_unwindert::loop_continuation_conditions(
 {
   SSA.increment_unwindings(1);
   loop_cont.push_back(get_continuation_condition(loop)); //%0
-  for(unsigned i=0; i<=loop.current_unwinding; ++i)
+  for(long i=0; i<=loop.current_unwinding; ++i)
   {
     //recurse into child loops
     for(const auto &l : loop.loop_nodes)
