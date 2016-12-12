@@ -296,6 +296,7 @@ void summarizer_parse_optionst::get_command_line_options(optionst &options)
   {
     options.set_option("competition-mode", true);
     options.set_option("all-properties", false);
+    options.set_option("inline", true);
   }
 
   // instrumentation / output
@@ -545,7 +546,8 @@ int summarizer_parse_optionst::doit()
       if(report_assertions) 
         report_properties(options, goto_model, summary_checker->property_map);
       report_success();
-      if(cmdline.isset("graphml-witness"))
+      if(cmdline.isset("graphml-witness") &&
+         !options.get_bool_option("termination"))
         output_graphml_proof(options, goto_model, *summary_checker);
       retval = 0;
       break;
@@ -555,7 +557,15 @@ int summarizer_parse_optionst::doit()
         report_properties(options, goto_model, summary_checker->property_map);
       report_failure();
       if(cmdline.isset("graphml-witness"))
-        output_graphml_cex(options, goto_model, *summary_checker);
+      {
+        if(!options.get_bool_option("termination"))
+          output_graphml_cex(options, goto_model, *summary_checker);
+#if 0
+        // TODO: handle initialized unwinders
+        else
+          output_graphml_proof(options, goto_model, *summary_checker);
+#endif
+      }
       retval = 10;
       break;
 
