@@ -1026,6 +1026,14 @@ the templates. Is it possible to make a set of symbols as key in a map in c++.
 to the abstract conflict graph -- for the case, where the result of propagation 
 is UNSAT.
 
+7> We use SAT to detemine conjunction(SSA,val) where val is obtained after 
+making concrete deductions in the gamma-complete check phase. If
+conjunction(SSA,val) is SAT, then there is a counterexample. However, if it is 
+UNSAT, can we feedback that information to the conflict graph. Presently, the 
+decision and deductions in gamma-complete phase are not incorporated with the 
+conflict graph. 
 
+8> domain.normalize should handle ID_equality constraints as well, that is 
+(x<=10) and (x==5), it should normalize that to (x<=5) ?
 
 

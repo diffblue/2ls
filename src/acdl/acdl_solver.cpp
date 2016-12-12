@@ -1203,6 +1203,7 @@ property_checkert::resultt acdl_solvert::operator()(
         // in gamma-complete phase
         decisions+=gamma_decvar.size();
         gamma_decvar.clear();
+        print_solver_statistics();
         return property_checkert::FAIL;
         // [TODO] Check if we can exit here
         //result = property_checkert::FAIL;
