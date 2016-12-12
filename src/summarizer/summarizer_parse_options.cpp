@@ -1039,6 +1039,10 @@ bool summarizer_parse_optionst::process_goto_program(
     // remove returns (must be done after function pointer removal)
     remove_returns(goto_model);
 
+#if REMOVE_MULTIPLE_DEREFERENCES
+    remove_multiple_dereferences(goto_model);
+#endif
+
     // add generic checks
     status() << "Generic Property Instrumentation" << eom;
     goto_check(options, goto_model);
@@ -1059,10 +1063,6 @@ bool summarizer_parse_optionst::process_goto_program(
 #if 1
     //TODO: find a better place for that
     replace_malloc(goto_model,"");
-#endif
-
-#if REMOVE_MULTIPLE_DEREFERENCES
-    remove_multiple_dereferences(goto_model);
 #endif
 
     // recalculate numbers, etc.
