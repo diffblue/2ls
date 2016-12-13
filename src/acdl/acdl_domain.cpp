@@ -607,97 +607,6 @@ bool acdl_domaint::is_bottom(const valuet &value) const
   return value.size()==1 && value[0].is_false();
 }
 
-/*******************************************************************\
-
-Function: acdl_domaint::is_complete()
-
-  Inputs:
-
- Outputs:
-
- Purpose: This is a very stupid and restrictive gamma-completeness check
-
-\*******************************************************************/
-
-bool acdl_domaint::is_complete(const valuet &value, 
-                               const std::set<symbol_exprt> &symbols) const
-{
-#ifdef DEBUG
-  std::cout << "[ACDL-DOMAIN] is_complete? "
-            << from_expr(SSA.ns, "", conjunction(value))
-            << std::endl;
-#endif
-
-    
-  std::unique_ptr<incremental_solvert> solver(
-    incremental_solvert::allocate(SSA.ns,true));
-  *solver << conjunction(value);
-
-#if 0   
-  // COMMENT: we cannot take the variables from the value 
-  //          because it might not contain all variables
-  // find symbols in value
-  std::set<symbol_exprt> symbols;
-  find_symbols (conjunction(value), symbols);
-#endif
-
-  std::string str("#lb");
-  std::string name;
-  for(std::set<symbol_exprt>::const_iterator it = symbols.begin();
-      it != symbols.end(); ++it)
-  {
-    // ignore the symbols whose name is of 
-    // type "lb", for example guard#lb3
-    // Ignoring such variables does not
-    // affect completeness if guard#ls=false
-    // Remember, for real counterexample guard#ls has to be FALSE
-    const irep_idt &identifier = it->get(ID_identifier);
-    name = id2string(identifier);
-    std::size_t found = name.find(str);
-    if (found!=std::string::npos)
-      continue;
-    
-    decision_proceduret::resultt res = (*solver)();
-    assert(res==decision_proceduret::D_SATISFIABLE);
-    // if value == (x=[2,2]) and (*it is x), then 'm' below contains the
-    // value of x which is 2
-    exprt m = (*solver).get(*it);
-#ifdef DEBUG
-    std::cout << "The value " << from_expr(SSA.ns, "", m) << std::endl;
-#endif    
-    if(m.id()!=ID_constant) {
-#ifdef DEBUG
-      std::cout << " is not complete" << std::endl;
-#endif
-      return false;
-    }
-
-    solver->new_context();
-
-#ifdef DEBUG
-    std::cout << "  check "
-              << from_expr(SSA.ns, "", not_exprt(equal_exprt(*it,m)))
-              << std::endl;
-#endif
-  
-    // and push !(x=m) into the solver
-    *solver << not_exprt(equal_exprt(*it,m));
-  
-    if((*solver)()!=decision_proceduret::D_UNSATISFIABLE)
-    {
-#ifdef DEBUG
-      std::cout << " is not complete" << std::endl;
-#endif
-      return false;
-    }
-
-    solver->pop_context();
-  }
-#ifdef DEBUG
-  std::cout << " is complete" << std::endl;
-#endif
-  return true;
-}
 
 /*******************************************************************\
 
@@ -813,7 +722,7 @@ Function: acdl_domaint::split()
 
 exprt acdl_domaint::split(const valuet &value,
                           const exprt &meet_irreducible_template, 
-                          bool upper)
+                          bool upper) const
 {
   const exprt &expr = meet_irreducible_template;
 
@@ -1954,3 +1863,281 @@ std::pair<mp_integer, mp_integer> acdl_domaint::get_var_bound(const valuet &valu
   return val_pair;
 }
 
+/*******************************************************************\
+
+Function: acdl_domaint::is_complete()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: This is a very stupid and restrictive gamma-completeness check
+
+\*******************************************************************/
+
+bool acdl_domaint::is_complete(const valuet &value, 
+                               const std::set<symbol_exprt> &symbols, 
+                               const std::set<symbol_exprt> &ngc,
+                               const exprt &ssa_conjunction,
+                               valuet &gamma_decvar) const
+{
+//#ifdef DEBUG
+  std::cout << "[ACDL-DOMAIN] is_complete? "
+            << from_expr(SSA.ns, "", conjunction(value))
+            << std::endl;
+//#endif
+//#ifdef DEBUG
+    std::cout << "The list of all variables are " << std::endl;
+    for(acdl_domaint::varst::const_iterator i = symbols.begin();i != symbols.end(); ++i)
+        std::cout << from_expr(SSA.ns, "", *i) << std::endl;
+    std::cout << "The list of non-gamma-complete variables are " << std::endl;
+    for(acdl_domaint::varst::const_iterator j = ngc.begin();j != ngc.end(); ++j)
+        std::cout << from_expr(SSA.ns, "", *j) << std::endl;
+//#endif
+    
+  std::unique_ptr<incremental_solvert> solver(
+    incremental_solvert::allocate(SSA.ns,true));
+  *solver << conjunction(value);
+
+ // [TODO] remove "guard#" variables from ngc
+ // check gamma_decvar is empty
+ assert(gamma_decvar.size() == 0);
+#if 0   
+  // COMMENT: we cannot take the variables from the value 
+  //          because it might not contain all variables
+  // find symbols in value
+  std::set<symbol_exprt> symbols;
+  find_symbols (conjunction(value), symbols);
+#endif
+  
+  // copy the value 
+  valuet val_check = value;
+
+  std::string str0("#lb");
+  std::string str1("#phi");
+  std::string name;
+  // when there is atleast one potential 
+  // non-gamma complete variable
+  if(ngc.size() > 0) {
+    for(std::set<symbol_exprt>::const_iterator it = symbols.begin();
+        it != symbols.end(); ++it)
+    {
+      // ignore the symbols whose name is of 
+      // type "lb", for example guard#lb3
+      // Ignoring such variables does not
+      // affect completeness if guard#ls=false
+      // Remember, for real counterexample guard#ls has to be FALSE
+      const irep_idt &identifier = it->get(ID_identifier);
+      name = id2string(identifier);
+      std::size_t found0 = name.find(str0);
+      std::size_t found1 = name.find(str1);
+
+      if (found0!=std::string::npos || found1!=std::string::npos)
+        continue;
+      // ignore checking of non-gamma-complete symbols
+      acdl_domaint::varst::const_iterator i_op;
+      i_op = find(ngc.begin(), ngc.end(), *it);
+      std::cout << "Comparing " << from_expr(*it) << "with ";
+      for(acdl_domaint::varst::const_iterator it1 = ngc.begin();it1 != ngc.end(); ++it1) {
+        std::cout << from_expr(SSA.ns, "", *it1) << ",";
+        std::cout << std::endl;
+      }
+      if(i_op != ngc.end()) {
+        std::cout << "Ignoring non-gamma complete variable: " << from_expr(*i_op) << std::endl;
+        continue;
+      }
+
+      decision_proceduret::resultt res = (*solver)();
+      assert(res==decision_proceduret::D_SATISFIABLE);
+
+      // decide for non-singletons that 
+      // are potential gamma-complete candidates
+      acdl_domaint::meet_irreduciblet val;
+      val = split(value, *it);
+
+      if(!val.is_false()) {
+        unsigned iter=0; 
+        std::cout << "Checking gamma-completeness for " << from_expr(*it) << std::endl;
+        std::cout << "The new split returns " << from_expr(val) << std::endl;
+
+#if 0
+        // Following checks whether !(x=val) 
+        // is satisfiable. 
+        solver->new_context();
+#ifdef DEBUG
+        std::cout << "check "
+          << from_expr(SSA.ns, "", not_exprt(val));
+        << std::endl;
+#endif
+        // and push !(val) into the solver
+        *solver << not_exprt(val);
+        if((*solver)()!=decision_proceduret::D_UNSATISFIABLE)
+        {
+          //#ifdef DEBUG
+          std::cout << "is not complete since the negation of " << from_expr(*it) << 
+            " is SAT " << std::endl;
+          //#endif
+          return false;
+        }
+        solver->pop_context();
+#endif
+
+        // randomly decide for non-singletons    
+        // [TODO] Check if "phi" variables can be 
+        // avoided from making decisions
+        if(val.id() != ID_le && val.id() != ID_ge) 
+        {
+          continue;
+        }
+        assert(val.id() != ID_not);
+        // convert x<=10 to x==10
+        const exprt &lhs = to_binary_relation_expr(val).lhs();
+        const exprt &rhs = to_binary_relation_expr(val).rhs();
+        std::cout << "lhs is " << from_expr(lhs) << std::endl;
+        std::cout << "rhs is " << from_expr(rhs) << std::endl;
+        // exprt new_exp = binary_relation_exprt(lhs,ID_equal,rhs);
+        exprt new_exp = equal_exprt(lhs, rhs);
+        std::cout << "The new decision is " << from_expr(new_exp) << std::endl;
+        // insert new decision to the temporary value
+        val_check.push_back(new_exp);
+        // assign the decision
+        gamma_decvar.push_back(new_exp);
+      }
+      else continue;
+    } //end for all symbols
+
+    // At this point, all potential gamma-complete 
+    // variables have singletons values
+    // check if these decisions leads to UNSAFE
+    std::cout << "Decisions made in gamma-complete phase are " << std::endl;
+    for(acdl_domaint::valuet::iterator g = gamma_decvar.begin();g != gamma_decvar.end(); ++g)
+        std::cout << from_expr(SSA.ns, "", *g) << ",";
+    std::cout << std::endl;
+    return(gamma_complete_deduction(ssa_conjunction, val_check));
+  } // case for at least one non-gamma-complete variable
+  // Old gamma-completeness check 
+  else {
+    for(std::set<symbol_exprt>::const_iterator it = symbols.begin();
+        it != symbols.end(); ++it)
+    {
+      // ignore the symbols whose name is of 
+      // type "lb", for example guard#lb3
+      // Ignoring such variables does not
+      // affect completeness if guard#ls=false
+      // Remember, for real counterexample guard#ls has to be FALSE
+      const irep_idt &identifier = it->get(ID_identifier);
+      name = id2string(identifier);
+      std::size_t found0 = name.find(str0);
+      if (found0!=std::string::npos)
+        continue;
+
+      decision_proceduret::resultt res = (*solver)();
+      assert(res==decision_proceduret::D_SATISFIABLE);
+      // if value == (x=[2,2]) and (*it is x), then 'm' below contains the
+      // value of x which is 2
+      exprt m = (*solver).get(*it);
+#ifdef DEBUG
+      std::cout << "The value " << from_expr(SSA.ns, "", m) << std::endl;
+#endif    
+      if(m.id()!=ID_constant) {
+#ifdef DEBUG
+        std::cout << " is not complete" << std::endl;
+#endif
+        return false;
+      }
+      solver->new_context();
+
+#ifdef DEBUG
+      std::cout << "  check "
+        << from_expr(SSA.ns, "", not_exprt(equal_exprt(*it,m)))
+        << std::endl;
+#endif
+
+      // and push !(x=m) into the solver
+      *solver << not_exprt(equal_exprt(*it,m));
+
+      if((*solver)()!=decision_proceduret::D_UNSATISFIABLE)
+      {
+#ifdef DEBUG
+        std::cout << " is not complete" << std::endl;
+#endif
+        return false;
+      }
+
+      solver->pop_context();
+    }
+#ifdef DEBUG
+    std::cout << " is complete" << std::endl;
+    return true;
+#endif  
+  } // normal case
+}
+
+
+/*******************************************************************\
+
+  Function: acdl_domaint::gamma_complete_deduction()
+
+  Inputs:
+
+  Outputs:
+
+  Purpose: gamma-completeness deduction
+
+\*******************************************************************/
+
+bool acdl_domaint::gamma_complete_deduction(const exprt &ssa_conjunction, 
+                               const valuet &value) const
+{
+  
+  if(ssa_conjunction.id()==ID_and)
+  {
+    forall_operands(it,ssa_conjunction) {
+      statementt statement = *it;
+      std::cout << "SSA Statements: " << from_expr(*it) << std::endl;
+    }
+  }
+  
+  std::cout << "The abstract value is " << from_expr(conjunction(value)) << std::endl;
+
+  std::unique_ptr<incremental_solvert> solver(
+    incremental_solvert::allocate(SSA.ns,true));
+  *solver << and_exprt(ssa_conjunction,conjunction(value));
+  if((*solver)()==decision_proceduret::D_SATISFIABLE)
+  {
+    std::cout << "is complete " << std::endl;
+    return true;
+  }
+  else {
+    std::cout << "is not complete" << std::endl;
+    return false;
+  }
+  
+  // Note that before declaring true or false, 
+  // we must do two things. We must normalize 
+  // the value (with equality ID_equal) since 
+  // some variables are made equal. We must also
+  // do the check that !(x=val) holds for all variables.
+
+#if 0
+  // Following checks whether !(x=val) 
+  // is satisfiable. 
+  solver->new_context();
+#ifdef DEBUG
+  std::cout << "check "
+    << from_expr(SSA.ns, "", not_exprt(val));
+  << std::endl;
+#endif
+  // and push !(val) into the solver
+  *solver << not_exprt(val);
+  if((*solver)()!=decision_proceduret::D_UNSATISFIABLE)
+  {
+    //#ifdef DEBUG
+    std::cout << "is not complete since the negation of " << from_expr(*it) << 
+      " is SAT " << std::endl;
+    //#endif
+    return false;
+  }
+  solver->pop_context();
+#endif
+}

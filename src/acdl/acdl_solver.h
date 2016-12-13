@@ -44,7 +44,7 @@ public:
   }
 
   property_checkert::resultt operator()(const local_SSAt &SSA,
-					const exprt &assertion, const exprt &additional_constraint);
+					const exprt &assertion, const exprt &additional_constraint, const exprt &assumption);
 
   std::set<exprt> decision_variables;
 
@@ -55,7 +55,12 @@ protected:
   acdl_worklist_baset &worklist; 
   acdl_analyze_conflict_baset &analyzes_conflict;
   std::vector<exprt> dec_not_in_trail;
-
+  // collect all lhs cond variables from assumptions 
+  // statements so that we do not make decisions on those
+  std::string assume_lhs;
+  // collect non-gamma-complete variables
+  acdl_domaint::varst non_gamma_complete_var;
+  std::set<acdl_domaint::statementt> gamma_check_processed; 
   acdl_conflict_grapht conflict_graph;
   unsigned ITERATION_LIMIT=999999; 
   
@@ -90,7 +95,7 @@ protected:
 
   bool disable_generalization;
   void initialize_decision_variables(acdl_domaint::valuet &val);
-  void pre_process(const local_SSAt &SSA, const exprt &assertion);
+  void pre_process(const local_SSAt &SSA, const exprt &assertion, const exprt &assumption);
   void print_solver_statistics();
 };
 

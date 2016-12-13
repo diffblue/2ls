@@ -7,6 +7,7 @@
 #include <iostream>
 #endif
 
+#include <cstring>
 #include <util/find_symbols.h>
 #include <util/i2string.h>
 #include <util/simplify_expr.h>
@@ -990,9 +991,44 @@ void tpolyhedra_domaint::add_difference_template(const var_specst &var_specs,
   for(var_specst::const_iterator v1 = var_specs.begin(); 
       v1!=var_specs.end(); v1++)
   {
+    exprt exp1 = v1->var;
+    const irep_idt &identifier1 = exp1.get(ID_identifier);
+    std::string name1 = id2string(identifier1);
+    size_t found1, f;
+    std::string id1, p1;
+    if ((found1 = name1.find("#")) != std::string::npos)
+      id1 = name1.substr(0, found1);
+    if ((f = name1.find_first_of("::#")) != std::string::npos)
+      p1 = name1.substr(0, f);
     var_specst::const_iterator v2 = v1; v2++;
     for(; v2!=var_specs.end(); v2++)
     {
+#ifdef DEBUG      
+      std::cout << "MATCH VARIABLES: " << from_expr(v1->var) << ", " << from_expr(v2->var) << std::endl; 
+#endif      
+      exprt exp2 = v2->var;
+      const irep_idt &identifier2 = exp2.get(ID_identifier);
+      std::string name2 = id2string(identifier2);
+#ifdef DEBUG      
+      std::cout << "MATCH VAR NAMES: " << identifier1 << ", " << identifier2 << std::endl; 
+#endif      
+      size_t found2, g;
+      std::string id2, p2;
+      if ((found2 = name2.find("#")) != std::string::npos)
+        id2 = name2.substr(0, found2);
+      if ((g = name2.find_first_of("::#")) != std::string::npos) 
+        p2 = name2.substr(0, g);
+      std::cout << "prefix 1: " << p1 << "prefix 2: " << p2 << std::endl;
+      // If v1 and v2 have the same base name, then 
+      // do not generate template rows for them
+      if(id1 == id2) continue;
+      // check if variables are from different function (eg. main::x#2, g::x#16)
+      /*if(p1 != p2) {
+#ifdef DEBUG      
+      std::cout << "DISCARDING VARIABLES: " << identifier1 << ", " << identifier2 << std::endl; 
+#endif      
+        continue;
+      }*/
       kindt k = domaint::merge_kinds(v1->kind,v2->kind);
       if(k==IN) continue; 
       if(k==LOOP && v1->pre_guard!=v2->pre_guard) continue; //TEST: we need better heuristics
@@ -1001,9 +1037,6 @@ void tpolyhedra_domaint::add_difference_template(const var_specst &var_specs,
       merge_and(pre_g, v1->pre_guard, v2->pre_guard, ns);
       merge_and(post_g, v1->post_guard, v2->post_guard, ns);
       merge_and(aux_expr, v1->aux_expr, v2->aux_expr, ns);
-      /* [TODO] If v1 and v2 have the same base name, then do not generate 
-       * template rows for them (remove everything from first # and 
-       * check the strings for matching base name) */
       // x1 - x2
       add_template_row(minus_exprt(v1->var,v2->var),pre_g,post_g,aux_expr,k);
 
@@ -1063,15 +1096,57 @@ void tpolyhedra_domaint::add_sum_template(const var_specst &var_specs,
   unsigned size = var_specs.size()*(var_specs.size()-1);
   templ.reserve(templ.size()+size);
   
-  /* [TODO] If v1 and v2 have the same base name, then do not generate 
-   * template rows for them (remove everything from first # and 
-   * check the strings for matching base name) */
   for(var_specst::const_iterator v1 = var_specs.begin(); 
       v1!=var_specs.end(); v1++)
   {
+    exprt exp1 = v1->var;
+    const irep_idt &identifier1 = exp1.get(ID_identifier);
+    std::string name1 = id2string(identifier1);
+    size_t found1, f;
+    std::string id1, p1;
+    if ((found1 = name1.find("#")) != std::string::npos)
+      id1 = name1.substr(0, found1);
+    // We need to check first of "::" or "#", since some variables 
+    // like return_values are f#return_value#32 and there is another 
+    // variable f::x#24 in the same function "f", so we want to add 
+    // constraint between these variables
+    if ((f = name1.find_first_of("::#")) != std::string::npos) {
+      p1 = name1.substr(0, f);
+      /*if (p1 == "") {
+        if ((f = name1.find_first_of("#")) != std::string::npos) {
+
+      }*/
+    }
     var_specst::const_iterator v2 = v1; v2++;
     for(; v2!=var_specs.end(); v2++)
     {
+#ifdef DEBUG      
+      std::cout << "MATCH VARIABLES: " << from_expr(v1->var) << ", " << from_expr(v2->var) << std::endl; 
+#endif      
+      exprt exp2 = v2->var;
+      const irep_idt &identifier2 = exp2.get(ID_identifier);
+      std::string name2 = id2string(identifier2);
+#ifdef DEBUG      
+      std::cout << "MATCH VAR NAMES: " << identifier1 << ", " << identifier2 << std::endl; 
+#endif      
+      size_t found2, g;
+      std::string id2, p2;
+      if ((found2 = name2.find("#")) != std::string::npos)
+        id2 = name2.substr(0, found2);
+      if ((g = name2.find_first_of("::#")) != std::string::npos) 
+        p2 = name2.substr(0, g);
+      std::cout << "prefix 1: " << p1 << "prefix 2: " << p2 << std::endl;
+      // If v1 and v2 have the same base name, then 
+      // do not generate template rows for them (main::x#20, main::x#21)
+      if(id1 == id2) continue;
+      // check if variables are from different function (eg. main::x#2, g::x#16)
+      /*if(p1 != p2) {
+#ifdef DEBUG      
+      std::cout << "DISCARDING VARIABLES: " << identifier1 << ", " << identifier2 << std::endl; 
+#endif      
+        continue;
+      }*/
+      
       kindt k = domaint::merge_kinds(v1->kind,v2->kind);
       if(k==IN) continue; 
       if(k==LOOP && v1->pre_guard!=v2->pre_guard) continue; //TEST: we need better heuristics
