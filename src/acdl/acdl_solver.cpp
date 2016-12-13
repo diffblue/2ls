@@ -987,6 +987,9 @@ property_checkert::resultt acdl_solvert::operator()(
 #endif
   }
   
+  // [TODO] Explicitly make on all assumptions TRUE
+  // for example, cond21=(x>0 && X<3), force cond21==TRUE 
+
   // pass additional constraint and the assertions to the worklist
   worklist.initialize(SSA, assertion, additional_constraint);
    
@@ -1104,6 +1107,7 @@ property_checkert::resultt acdl_solvert::operator()(
       // decisions made in gamma-complete phase
       decisions+=gamma_decvar.size();
       print_solver_statistics();
+      gamma_decvar.clear();
       return property_checkert::FAIL;
     }
   }
@@ -1262,6 +1266,7 @@ property_checkert::resultt acdl_solvert::operator()(
 
       } while(result == property_checkert::PASS); //UNSAT
 
+#if 0
       // [TODO] -- Is this check needed ?
       // check if the result is UNKNOWN 
       if (result == property_checkert::UNKNOWN) 
@@ -1286,10 +1291,12 @@ property_checkert::resultt acdl_solvert::operator()(
           // non_gamma_complete_var container
           gamma_check_processed.clear(); 
           non_gamma_complete_var.clear();
+          gamma_decvar.clear();
           std::cout << "The program in UNSAFE" << std::endl;
           result = property_checkert::FAIL;
         }
       }
+#endif
     }
   } // end of while(true)
   END:

@@ -28,6 +28,8 @@ public:
    int current_level;
    typedef std::vector<acdl_domaint::meet_irreduciblet> propagation_trail;
    propagation_trail prop_trail;
+   typedef std::vector<acdl_domaint::meet_irreduciblet> reason_trailt;
+   reason_trailt reason_trail;
    typedef std::vector<acdl_domaint::meet_irreduciblet> decision_trail;
    // indexed by decision level
    typedef std::vector<std::vector<acdl_domaint::meet_irreduciblet> > declevel_prop_trail;
