@@ -34,6 +34,8 @@ void acdl_conflict_grapht::add_deductions
     acdl_domaint::meet_irreduciblet exp = *it; 
     assign(exp);
   }
+  // [TODO] Make it a map of <stmt, prop_trail_index>
+  // reason_trail
 }
 
 /*******************************************************************\

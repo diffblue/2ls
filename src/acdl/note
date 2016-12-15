@@ -1036,4 +1036,31 @@ conflict graph.
 8> domain.normalize should handle ID_equality constraints as well, that is 
 (x<=10) and (x==5), it should normalize that to (x<=5) ?
 
+9> Compilation error: when compiled through install.sh
+In file included from goto_instrument_parse_options.cpp:85:0:
+unwind.h: In member function ‘goto_program_templatet<codet, exprt>::targett
+goto_unwindt::get_mutable(goto_programt&, goto_program_templatet<codet,
+exprt>::const_targett) const’:
+unwind.h:125:48: error: no matching function for call to
+‘std::list<goto_program_templatet<codet, exprt>::instructiont,
+std::allocator<goto_program_templatet<codet, exprt>::instructiont>
+>::erase(const const_targett&, const const_targett&)’
+     return goto_program.instructions.erase(t, t);
+
+summarizer_parse_options.cpp:1056:7: error: type 'goto_inlinet' does not provide
+a call operator
+goto_inline();
+^~~~~~~~~~~
+summarizer_parse_options.cpp:1057:22: error: no member named
+  'recursion_detected' in 'goto_inlinet'
+if(goto_inline.recursion_detected())
+  ~~~~~~~~~~~ ^
+  2 errors generated.
+  make[1]: ***
+  [summarizer_parse_options.o] Error 1
+  make: *** [summarizer] Error 2
+
+10>  We updated commit number in install.sh 
+Old commit : git checkout f24b105d00acb63f3cbe6a13623307258b08a812
+New commit : git checkout f8c51ebc26be795046f9311217ef1a2809306330 
 
