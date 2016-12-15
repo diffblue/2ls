@@ -841,10 +841,14 @@ void acdl_solvert::pre_process (const local_SSAt &SSA, const exprt &assertion, c
           std::size_t found = rhs_str.find(str); 
           if(found != std::string::npos) {
             find_symbols(*e_it, var_set);
+            // collect all rhs symbols of equality
+            find_symbols(*e_it, var_rhs);
           }
 
           // pass cond variables
           exprt expr_lhs = to_equal_expr(*e_it).lhs();
+          // collect all lhs symbols of equality
+          find_symbols(expr_lhs, var_lhs);
           std::string strl("cond#");
           std::string lhs_str=id2string(expr_lhs.get(ID_identifier));
           std::size_t f = lhs_str.find(strl); 
@@ -1034,7 +1038,10 @@ property_checkert::resultt acdl_solvert::operator()(
 
   // [TODO] order decision variables
   decision_heuristics.order_decision_variables(SSA);
-  
+ 
+  // find all read-only decision variables
+  std::set_difference(var_rhs.begin(), var_rhs.end(), var_lhs.begin(), var_lhs.end(),
+       std::inserter(read_only_vars, read_only_vars.end()));
 #ifdef DEBUG
   std::cout << "Printing all decision variables inside solver" << std::endl;
   for(std::set<exprt>::const_iterator 
