@@ -726,7 +726,8 @@ exprt acdl_domaint::split(const valuet &value,
 {
   const exprt &expr = meet_irreducible_template;
 
-#ifdef DEBUG
+#if 0
+//#ifdef DEBUG
   std::cout << "[ACDL-DOMAIN] Split(" 
             << from_expr(SSA.ns, "", meet_irreducible_template) << "): "; output(std::cout, value);
   std::cout << "" << std::endl;
@@ -779,7 +780,7 @@ exprt acdl_domaint::split(const valuet &value,
     // check for expression with negations (ex- !(x<=10) or !(x>=10)) 
     if(e.id() == ID_not) {
 #ifdef DEBUG
-      std::cout << "The original not expression is " << e << std::endl;
+      std::cout << "The original not expression is " << from_expr(e) << std::endl;
 #endif
       const exprt &expb = e.op0();
 
@@ -795,7 +796,7 @@ exprt acdl_domaint::split(const valuet &value,
         // !(ID_le) --> ID_gt
         exprt exp = binary_relation_exprt(lhs,ID_gt,rhs);
 #ifdef DEBUG
-        std::cout << "The new non-negated expression is " << exp  << std::endl;
+        std::cout << "The new non-negated expression is " << from_expr(exp)  << std::endl;
 #endif         
         new_value.push_back(exp);
       }
@@ -803,7 +804,7 @@ exprt acdl_domaint::split(const valuet &value,
       else if(expb.id() == ID_ge) {
         exprt exp = binary_relation_exprt(lhs,ID_lt,rhs);
 #ifdef DEBUG
-        std::cout << "The new non-negated expression is " << exp  << std::endl;
+        std::cout << "The new non-negated expression is " << from_expr(exp)  << std::endl;
 #endif         
         new_value.push_back(exp);
       }
@@ -1660,7 +1661,7 @@ std::pair<mp_integer, mp_integer> acdl_domaint::get_var_bound(const valuet &valu
     // check for expression with negations (ex- !(x<=10) or !(x>=10)) 
     if(e.id() == ID_not) {
 #ifdef DEBUG
-      std::cout << "The original not expression is " << e << std::endl;
+      std::cout << "The original not expression is " << from_expr(e) << std::endl;
 #endif
       const exprt &expb = e.op0();
 
@@ -1676,7 +1677,7 @@ std::pair<mp_integer, mp_integer> acdl_domaint::get_var_bound(const valuet &valu
         // !(ID_le) --> ID_gt
         exprt exp = binary_relation_exprt(lhs,ID_gt,rhs);
 #ifdef DEBUG
-        std::cout << "The new non-negated expression is " << exp  << std::endl;
+        std::cout << "The new non-negated expression is " << from_expr(exp)  << std::endl;
 #endif         
         new_value.push_back(exp);
       }
@@ -1684,7 +1685,7 @@ std::pair<mp_integer, mp_integer> acdl_domaint::get_var_bound(const valuet &valu
       else if(expb.id() == ID_ge) {
         exprt exp = binary_relation_exprt(lhs,ID_lt,rhs);
 #ifdef DEBUG
-        std::cout << "The new non-negated expression is " << exp  << std::endl;
+        std::cout << "The new non-negated expression is " << from_expr(exp)  << std::endl;
 #endif         
         new_value.push_back(exp);
       }
@@ -1879,21 +1880,19 @@ bool acdl_domaint::is_complete(const valuet &value,
                                const std::set<symbol_exprt> &symbols, 
                                const std::set<symbol_exprt> &ngc,
                                const exprt &ssa_conjunction,
-                               valuet &gamma_decvar) const
+                               valuet &gamma_decvar,
+                               const varst &read_only_vars) const
 {
-//#ifdef DEBUG
+#ifdef DEBUG
   std::cout << "[ACDL-DOMAIN] is_complete? "
             << from_expr(SSA.ns, "", conjunction(value))
             << std::endl;
-//#endif
-//#ifdef DEBUG
+#endif
+#ifdef DEBUG
     std::cout << "The list of all variables are " << std::endl;
     for(acdl_domaint::varst::const_iterator i = symbols.begin();i != symbols.end(); ++i)
         std::cout << from_expr(SSA.ns, "", *i) << std::endl;
-    std::cout << "The list of non-gamma-complete variables are " << std::endl;
-    for(acdl_domaint::varst::const_iterator j = ngc.begin();j != ngc.end(); ++j)
-        std::cout << from_expr(SSA.ns, "", *j) << std::endl;
-//#endif
+#endif
     
   std::unique_ptr<incremental_solvert> solver(
     incremental_solvert::allocate(SSA.ns,true));
@@ -1916,9 +1915,16 @@ bool acdl_domaint::is_complete(const valuet &value,
   std::string str0("#lb");
   std::string str1("#phi");
   std::string name;
+  
+
   // when there is atleast one potential 
   // non-gamma complete variable
   if(ngc.size() > 0) {
+#ifdef DEBUG    
+    std::cout << "The list of non-gamma-complete variables are " << std::endl;
+    for(acdl_domaint::varst::const_iterator j = ngc.begin();j != ngc.end(); ++j)
+        std::cout << from_expr(SSA.ns, "", *j) << std::endl;
+#endif    
     for(std::set<symbol_exprt>::const_iterator it = symbols.begin();
         it != symbols.end(); ++it)
     {
@@ -1937,14 +1943,31 @@ bool acdl_domaint::is_complete(const valuet &value,
       // ignore checking of non-gamma-complete symbols
       acdl_domaint::varst::const_iterator i_op;
       i_op = find(ngc.begin(), ngc.end(), *it);
+#ifdef DEBUG      
       std::cout << "Comparing " << from_expr(*it) << "with ";
       for(acdl_domaint::varst::const_iterator it1 = ngc.begin();it1 != ngc.end(); ++it1) {
         std::cout << from_expr(SSA.ns, "", *it1) << ",";
         std::cout << std::endl;
       }
+#endif
       if(i_op != ngc.end()) {
         std::cout << "Ignoring non-gamma complete variable: " << from_expr(*i_op) << std::endl;
         continue;
+      }
+      if(read_only_vars.size() > 0) {
+#ifdef DEBUG     
+	std::cout << "Printing read-only variables" << std::endl; 
+	for(acdl_domaint::varst::const_iterator it2 = read_only_vars.begin();it2 != read_only_vars.end(); ++it2)
+          std::cout << from_expr(SSA.ns, "", *it2) << ",";
+	  std::cout << std::endl;
+#endif
+
+        // only make decisions on read_only_variables
+	acdl_domaint::varst::const_iterator r_op;
+	r_op = find(read_only_vars.begin(), read_only_vars.end(), *it);
+	if(r_op == read_only_vars.end()) {
+          continue;
+	}
       }
 
       decision_proceduret::resultt res = (*solver)();
@@ -2016,7 +2039,10 @@ bool acdl_domaint::is_complete(const valuet &value,
     return(gamma_complete_deduction(ssa_conjunction, val_check));
   } // case for at least one non-gamma-complete variable
   // Old gamma-completeness check 
-  else {
+  else { 
+#ifdef DEBUG
+      std::cout << "Normal gamma-complete check" << std::endl;
+#endif
     for(std::set<symbol_exprt>::const_iterator it = symbols.begin();
         it != symbols.end(); ++it)
     {
@@ -2063,13 +2089,12 @@ bool acdl_domaint::is_complete(const valuet &value,
 #endif
         return false;
       }
-
       solver->pop_context();
     }
 #ifdef DEBUG
     std::cout << " is complete" << std::endl;
-    return true;
 #endif  
+    return true;
   } // normal case
 }
 

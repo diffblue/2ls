@@ -527,7 +527,7 @@ acdl_conflict_grapht &graph, acdl_domaint::valuet &result_clause, unsigned dleve
   if(target_level_lits.size() == 1) {
     result_clause.push_back(target_level_lits.front()); 
 #ifdef DEBUG
-    std::cout<< "UIP is" << target_level_lits.front() << std::endl;
+    std::cout<< "UIP is" << from_expr(target_level_lits.front()) << std::endl;
 #endif    
     return;
   }
@@ -592,7 +592,7 @@ acdl_conflict_grapht &graph, acdl_domaint::valuet &result_clause, unsigned dleve
   }
   assert(uip != -1);
 #ifdef DEBUG  
-  std::cout << "UIP is " << graph.prop_trail[uip] << std::endl;
+  std::cout << "UIP is " << from_expr(graph.prop_trail[uip]) << std::endl;
 #endif
   negate(graph.prop_trail[uip], result_clause);
 }
