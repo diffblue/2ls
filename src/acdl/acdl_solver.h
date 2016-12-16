@@ -60,6 +60,8 @@ protected:
   std::string assume_lhs;
   // collect non-gamma-complete variables
   acdl_domaint::varst non_gamma_complete_var;
+  // read-only-vars that appers in rhs of equalities
+  acdl_domaint::varst read_only_vars;
   std::set<acdl_domaint::statementt> gamma_check_processed; 
   acdl_conflict_grapht conflict_graph;
   unsigned ITERATION_LIMIT=999999; 

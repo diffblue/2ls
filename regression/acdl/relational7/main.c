@@ -6,8 +6,7 @@ int abs(int x) {
 
 int main()
 {
-  signed x,y;
-  int z,d,g;
+  signed x,y,z;
   
   __CPROVER_assume(x==y || x==-y);
   z = abs(x) - abs(y);

@@ -84,7 +84,7 @@ public:
   bool is_bottom(const valuet &value) const;
   bool is_top(const valuet &value) const { return value.empty(); }
   bool is_complete(const valuet &value, 
-		   const std::set<symbol_exprt> &symbols, const std::set<symbol_exprt> &ngc, const exprt &exp, valuet &gamma_decvar) const;
+		   const std::set<symbol_exprt> &symbols, const std::set<symbol_exprt> &ngc, const exprt &exp, valuet &gamma_decvar, const varst &read_only_vars) const;
   bool gamma_complete_deduction(const exprt &ssa_conjunction, 
                                const valuet &value) const;
   unsigned compare(const meet_irreduciblet &a, 

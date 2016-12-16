@@ -14,15 +14,11 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include "acdl_domain.h"
 #include "../domains/simplify_transformer.h"
 #include <string>
+#include <iostream>
 
-#define DEBUG
+//#define DEBUG
 //#define PER_STATEMENT_LIVE_VAR
 #define LIVE_VAR_OLD_APPROACH
-
-#ifdef DEBUG
-#include <iostream>
-#endif
-
 
 /*******************************************************************
 
@@ -325,12 +321,16 @@ DEDUCE:
     std::cout << "The list of live variables are " << std::endl;
     for(acdl_domaint::varst::const_iterator it = projected_live_vars.begin();it != projected_live_vars.end(); ++it)
         std::cout << from_expr(SSA.ns, "", *it) << std::endl;
-    std::cout << "The list of variables in simplified statement are " << std::endl;
-    for(acdl_domaint::varst::const_iterator it = gvar.begin();it != gvar.end(); ++it)
-        std::cout << from_expr(SSA.ns, "", *it) << std::endl;
-    std::cout << "The list of non-gamma complete variables are " << std::endl;
-    for(acdl_domaint::varst::const_iterator it = non_gamma_complete_var.begin();it != non_gamma_complete_var.end(); ++it)
-        std::cout << from_expr(SSA.ns, "", *it) << std::endl;
+    if(gvar.size() > 0) {
+      std::cout << "The list of variables in simplified statement are " << std::endl;
+      for(acdl_domaint::varst::const_iterator t = gvar.begin(); t != gvar.end(); ++t)
+        std::cout << from_expr(SSA.ns, "", *t) << std::endl;
+    }
+    if(non_gamma_complete_var.size() > 0) {
+      std::cout << "The list of non-gamma complete variables are " << std::endl;
+      for(acdl_domaint::varst::const_iterator ng = non_gamma_complete_var.begin();ng != non_gamma_complete_var.end(); ++ng)
+        std::cout << from_expr(SSA.ns, "", *ng) << std::endl;
+    }
 #endif
 #endif
     
@@ -679,9 +679,6 @@ void acdl_solvert::generalize_proof(const local_SSAt &SSA, const exprt& assertio
     // goal is to compute a weakest initial element that 
     // still satisfies the target after the application of 
     // the abstract transformer
-       
-  
-  
   }      
 }
 
@@ -783,6 +780,7 @@ void acdl_solvert::pre_process (const local_SSAt &SSA, const exprt &assertion, c
   var_stringt var_string;
   typedef std::vector<acdl_domaint::statementt> conjunct_listt;
   conjunct_listt clist; 
+  acdl_domaint::varst var_lhs;
   std::string str("nondet");
     
   typedef std::vector<exprt> enable_exprt;
@@ -841,8 +839,11 @@ void acdl_solvert::pre_process (const local_SSAt &SSA, const exprt &assertion, c
           std::size_t found = rhs_str.find(str); 
           if(found != std::string::npos) {
             find_symbols(*e_it, var_set);
+            // collect all read-only symbols of equality
+            exprt exprl = to_equal_expr(*e_it).lhs();
+            find_symbols(exprl, var_lhs);
+            read_only_vars.insert(var_lhs.begin(), var_lhs.end()); 
           }
-
           // pass cond variables
           exprt expr_lhs = to_equal_expr(*e_it).lhs();
           std::string strl("cond#");
@@ -984,9 +985,12 @@ property_checkert::resultt acdl_solvert::operator()(
   for(exprt::operandst::const_iterator it = assumption.operands().begin(); 
       it != assumption.operands().end(); it++) {
     std::cout << "The assumption operand is " << from_expr(*it) << std::endl;
-#endif
   }
+#endif
   
+  // [TODO] Explicitly make on all assumptions TRUE
+  // for example, cond21=(x>0 && X<3), force cond21==TRUE 
+
   // pass additional constraint and the assertions to the worklist
   worklist.initialize(SSA, assertion, additional_constraint);
    
@@ -1034,7 +1038,7 @@ property_checkert::resultt acdl_solvert::operator()(
 
   // [TODO] order decision variables
   decision_heuristics.order_decision_variables(SSA);
-  
+ 
 #ifdef DEBUG
   std::cout << "Printing all decision variables inside solver" << std::endl;
   for(std::set<exprt>::const_iterator 
@@ -1097,13 +1101,14 @@ property_checkert::resultt acdl_solvert::operator()(
     // check for satisfying assignment
     conflict_graph.to_value(res_val);
     domain.normalize_val(res_val);
-    if(domain.is_complete(res_val, all_vars, non_gamma_complete_var, ssa_conjunction, gamma_decvar)) {
+    if(domain.is_complete(res_val, all_vars, non_gamma_complete_var, ssa_conjunction, gamma_decvar, read_only_vars)) {
       complete = true;
       std::cout << "The program in UNSAFE" << std::endl;
       // increase decision count by the 
       // decisions made in gamma-complete phase
       decisions+=gamma_decvar.size();
       print_solver_statistics();
+      gamma_decvar.clear();
       return property_checkert::FAIL;
     }
   }
@@ -1191,7 +1196,7 @@ property_checkert::resultt acdl_solvert::operator()(
       // ensures that all variables are singletons
       // But we invoke another decision phase
       // to infer that "no more decisions can be made"
-      if(domain.is_complete(v, all_vars, non_gamma_complete_var, ssa_conjunction,gamma_decvar)) {
+      if(domain.is_complete(v, all_vars, non_gamma_complete_var, ssa_conjunction,gamma_decvar, read_only_vars)) {
         // set complete flag to TRUE
         complete = true;
         if(gamma_decvar.size() != 0)
@@ -1205,8 +1210,6 @@ property_checkert::resultt acdl_solvert::operator()(
         gamma_decvar.clear();
         print_solver_statistics();
         return property_checkert::FAIL;
-        // [TODO] Check if we can exit here
-        //result = property_checkert::FAIL;
       }
       // empty the gamma-complete check_processed 
       // statement container and the 
@@ -1220,13 +1223,15 @@ property_checkert::resultt acdl_solvert::operator()(
       // empty the gamma-complete check_processed 
       // statement container and the 
       // non_gamma_complete_var container
-      gamma_check_processed.clear(); 
-      non_gamma_complete_var.clear();
+      if(gamma_check_processed.size() > 0) 
+        gamma_check_processed.clear(); 
+      if(non_gamma_complete_var.size() > 0) 
+        non_gamma_complete_var.clear();
       // check for conflict
       do 
       {
         // call generalize_proof here
-        generalize_proof(SSA, assertion, v);
+        // generalize_proof(SSA, assertion, v);
 
         std::cout << "********************************" << std::endl;
         std::cout << "    CONFLICT ANALYSIS PHASE" << std::endl;
@@ -1234,7 +1239,8 @@ property_checkert::resultt acdl_solvert::operator()(
         // analyze conflict ...
         if(!analyze_conflict(SSA, assertion)) {
           std::cout << "No further backtrack possible " << std::endl;
-//#ifdef DEBUG
+
+#ifdef DEBUG
           unsigned i=0;
           if(analyzes_conflict.learned_clauses.size() > 0) {
             std::cout << "The final set of learned clauses are:" << std::endl;
@@ -1246,15 +1252,21 @@ property_checkert::resultt acdl_solvert::operator()(
               learned_literals=learned_literals+clause_expr.operands().size();
             }
           }
-//#endif
-          goto END; // result = PASS when it breaks for here
+#endif
+          //goto END;
+          if (result==property_checkert::PASS) {
+            print_solver_statistics();
+            return property_checkert::PASS;
+          }
+          else {
+            goto END; // result = UNKNOWN when it breaks for here
+          }
         }
         // deduction phase in acdl
         std::cout << "********************************" << std::endl;
         std::cout << "        DEDUCTION PHASE " << std::endl;
         std::cout << "********************************" << std::endl;
         result = propagate(SSA, assertion);
-
         std::cout << "****************************************************" << std::endl;
         std::cout << " IMPLICATION GRAPH AFTER DEDUCTION PHASE" << std::endl;
         std::cout << "****************************************************" << std::endl;
@@ -1262,6 +1274,7 @@ property_checkert::resultt acdl_solvert::operator()(
 
       } while(result == property_checkert::PASS); //UNSAT
 
+#if 0
       // [TODO] -- Is this check needed ?
       // check if the result is UNKNOWN 
       if (result == property_checkert::UNKNOWN) 
@@ -1278,7 +1291,7 @@ property_checkert::resultt acdl_solvert::operator()(
         // ensures that all variables are singletons
         // But we invoke another decision phase
         // to infer that "no more decisions can be made"
-        if(domain.is_complete(v, all_vars, non_gamma_complete_var, ssa_conjunction,gamma_decvar)) {
+        if(domain.is_complete(v, all_vars, non_gamma_complete_var, ssa_conjunction,gamma_decvar, read_only_vars)) {
           // set complete flag to TRUE
           complete = true;
           // empty the gamma-complete check_processed 
@@ -1286,10 +1299,12 @@ property_checkert::resultt acdl_solvert::operator()(
           // non_gamma_complete_var container
           gamma_check_processed.clear(); 
           non_gamma_complete_var.clear();
+          gamma_decvar.clear();
           std::cout << "The program in UNSAFE" << std::endl;
           result = property_checkert::FAIL;
         }
       }
+#endif
     }
   } // end of while(true)
   END:
