@@ -112,10 +112,10 @@ bool ssa_build_goto_tracet::record_step(
     step.type=goto_trace_stept::GOTO;
     step.cond_expr = cond_value; //cond
     step.cond_value = cond_value.is_true();
-#if 0
+#if 1
     std::cout << "COND " << from_expr(unwindable_local_SSA.ns, "", cond)
-              << ": " << from_expr(unwindable_local_SSA.ns, "", cond_read)
-              << " == " << cond_value.is_true() << std::endl;
+              << ": (" << from_expr(unwindable_local_SSA.ns, "", cond_read)
+              << ") == " << cond_value.is_true() << std::endl;
 #endif
     if(step.cond_value)
     {
@@ -161,7 +161,7 @@ bool ssa_build_goto_tracet::record_step(
     exprt lhs_ssa=finalize_lhs(code_assign.lhs());
     exprt lhs_simplified=simplify_expr(lhs_ssa, unwindable_local_SSA.ns);
 
-#if 0
+#if 1
     std::cout << "ASSIGN " << from_expr(unwindable_local_SSA.ns, "", code_assign)
               << ": " << from_expr(unwindable_local_SSA.ns, "", lhs_simplified)
               << " == " << from_expr(unwindable_local_SSA.ns,
@@ -170,10 +170,10 @@ bool ssa_build_goto_tracet::record_step(
     step.type=goto_trace_stept::ASSIGNMENT;
     step.full_lhs=lhs_simplified;
     step.full_lhs_value=rhs_simplified;
-    if(lhs_simplified.id()==ID_symbol)
-    {
+
       //filter out internal stuff
-      if(id2string(lhs_simplified.get(ID_identifier)).find("#")
+      if(lhs_simplified.id()==ID_symbol && 
+         id2string(lhs_simplified.get(ID_identifier)).find("#")
          != std::string::npos)
         break;
       if(has_prefix(CPROVER_PREFIX, id2string(lhs_simplified.get(ID_identifier))))
@@ -183,10 +183,10 @@ bool ssa_build_goto_tracet::record_step(
         break;
       step.lhs_object = ssa_exprt(lhs_simplified);
       step.lhs_object_value=rhs_simplified;
-    }
+
     if(step.lhs_object.is_nil())
       break;
-#if 0
+#if 1
     std::cout << "ASSIGN " << from_expr(unwindable_local_SSA.ns, "", code_assign)
               << ": " << from_expr(unwindable_local_SSA.ns, "", rhs_ssa)
               << " == " << from_expr(unwindable_local_SSA.ns,
@@ -249,13 +249,17 @@ void ssa_build_goto_tracet::operator()(
 #endif
     unsigned current_level = 
       unwindable_local_SSA.loop_hierarchy_level[current_pc].level;
-    int level_diff = current_level - last_level;
-    last_level = current_level;
-    if(level_diff!=0)
-      unwindable_local_SSA.decrement_unwindings(level_diff);
-#if 0
+    long level_diff = (long)current_level-(long)last_level;
+#if 1
     std::cout << "location: " << current_pc->location_number << std::endl;
+    std::cout << "current_level: " << current_level << std::endl;
+    std::cout << "last_level: " << last_level << std::endl;
     std::cout << "level_diff: " << level_diff << std::endl;
+#endif
+    last_level = current_level;
+    if(level_diff!=0l)
+      unwindable_local_SSA.decrement_unwindings(level_diff);
+#if 1
     std::cout << "unwindings: " 
               << unwindable_local_SSA.odometer_to_string(unwindable_local_SSA.current_unwindings,100) << std::endl;
 #endif
@@ -265,7 +269,60 @@ void ssa_build_goto_tracet::operator()(
     if(!goto_trace.steps.empty() &&
        goto_trace.steps.back().is_assert())
       break; // done
-    
+
+#if 0
+    std::cout << "is_goto: " << current_pc->is_goto() << std::endl;
+    std::cout << "is_backwards_goto: " << current_pc->is_backwards_goto() << std::endl;
+    std::cout << "taken: " << taken << std::endl;
+#endif
+
+#if 0
+    // do we exit the loop?
+    if(current_pc->is_goto())
+    {
+      if(current_pc->is_backwards_goto() && !taken)
+      {
+        std::cout << "exit do while loop" << std::endl;
+        unwindable_local_SSA.decrement_unwindings(0);
+      }
+      else if(!current_pc->is_backwards_goto() && taken)
+      {
+        bool found=false;
+        for(auto const &t : current_pc->incoming_edges)
+        {
+          if(t->is_backwards_goto())
+          {
+            found=true;
+            break;
+          }
+        }
+        // this handles one case of exiting a loop via a goto
+        // TODO: handle irregular control flow
+        goto_programt::const_targett next=current_pc;
+        while(next!=unwindable_local_SSA.goto_function.body.instructions.end())
+        {
+          if(next->is_backwards_goto() &&
+             next->location_number<current_pc->location_number)
+          {
+            found=true;
+            break;
+          }
+          ++next;
+        }
+        if(found)
+        {
+          std::cout << "exit while loop" << std::endl;
+          unwindable_local_SSA.decrement_unwindings(0);
+        }
+      }
+    }
+
+    // get successor
+    if(current_pc->is_goto() && taken)
+      current_pc=current_pc->get_target();
+    else
+      current_pc++;
+#else    
     // get successor
     if(current_pc->is_goto() && taken)
     {
@@ -277,5 +334,6 @@ void ssa_build_goto_tracet::operator()(
     }
     else
       current_pc++;
+#endif
   }
 }
