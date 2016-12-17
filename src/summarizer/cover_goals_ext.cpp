@@ -231,7 +231,7 @@ void cover_goals_extt::assignment()
 	  build_goto_trace(property_map[it->first].error_trace);
 
 #if 0
-          show_raw_countermodel(it->first,SSA,solver,debug(),get_message_handler());
+          show_raw_countermodel(it->first,SSA,*solver.solver,debug(),get_message_handler());
 #endif
 	  if(!all_properties) 
 	    break;
