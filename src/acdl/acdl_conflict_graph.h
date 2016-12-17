@@ -28,7 +28,8 @@ public:
    int current_level;
    typedef std::vector<acdl_domaint::meet_irreduciblet> propagation_trail;
    propagation_trail prop_trail;
-   typedef std::vector<acdl_domaint::meet_irreduciblet> reason_trailt;
+   typedef std::pair<acdl_domaint::meet_irreduciblet, unsigned> prop_infot;
+   typedef std::vector<prop_infot> reason_trailt;
    reason_trailt reason_trail;
    typedef std::vector<acdl_domaint::meet_irreduciblet> decision_trail;
    // indexed by decision level
@@ -55,7 +56,7 @@ public:
    typedef hash_numbering<symbol_exprt, irep_hash> sym_numberingt;
    sym_numberingt numbering_symbol;
   
-   void add_deductions(const local_SSAt &SSA, const acdl_domaint::deductionst &m_ir);
+   void add_deductions(const local_SSAt &SSA, const acdl_domaint::deductionst &m_ir, const acdl_domaint::meet_irreduciblet &stmt);
    void add_decision(const acdl_domaint::meet_irreduciblet &m_ir);
    void assign(acdl_domaint::meet_irreduciblet &exp);
    void to_value(acdl_domaint::valuet &value) const;

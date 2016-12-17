@@ -21,8 +21,13 @@ Function: acdl_conflict_grapht::add_deductions
 
  \*******************************************************************/
 void acdl_conflict_grapht::add_deductions
-  (const local_SSAt &SSA, const acdl_domaint::deductionst &m_ir)
+  (const local_SSAt &SSA, const acdl_domaint::deductionst &m_ir, 
+   const acdl_domaint::meet_irreduciblet &stmt)
 {
+  // Add <stmt, prop_trail_index> to reason trail 
+  prop_infot prop_info;
+  prop_info = std::make_pair(stmt, prop_trail.size());
+  reason_trail.push_back(prop_info);
   // iterate over the deductions
   for(std::vector<acdl_domaint::meet_irreduciblet>::const_iterator it 
 	= m_ir.begin(); it != m_ir.end(); it++)
@@ -34,8 +39,6 @@ void acdl_conflict_grapht::add_deductions
     acdl_domaint::meet_irreduciblet exp = *it; 
     assign(exp);
   }
-  // [TODO] Make it a map of <stmt, prop_trail_index>
-  // reason_trail
 }
 
 /*******************************************************************\

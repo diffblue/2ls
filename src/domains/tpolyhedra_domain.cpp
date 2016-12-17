@@ -1022,7 +1022,7 @@ void tpolyhedra_domaint::add_difference_template(const var_specst &var_specs,
       // If v1 and v2 have the same base name, then 
       // do not generate template rows for them
       // [TODO] Temporary
-      //if(id1 == id2) continue;
+      if(id1 == id2) continue;
       // check if variables are from different function (eg. main::x#2, g::x#16)
       /*if(p1 != p2) {
 #ifdef DEBUG      
@@ -1140,7 +1140,7 @@ void tpolyhedra_domaint::add_sum_template(const var_specst &var_specs,
       // If v1 and v2 have the same base name, then 
       // do not generate template rows for them (main::x#20, main::x#21)
       // [TODO] Temporary
-      // if(id1 == id2) continue;
+      if(id1 == id2) continue;
       // check if variables are from different function (eg. main::x#2, g::x#16)
       /*if(p1 != p2) {
 #ifdef DEBUG      

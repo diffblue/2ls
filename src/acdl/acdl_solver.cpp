@@ -347,7 +347,7 @@ DEDUCE:
 #endif 
     
     // update implication graph
-    conflict_graph.add_deductions(SSA, deductions);
+    conflict_graph.add_deductions(SSA, deductions, statement);
     propagations++; 
     // update worklist based on variables in the consequent (new_v)
     // - collect variables in new_v
@@ -418,7 +418,7 @@ DEDUCE:
     std::vector<acdl_domaint::meet_irreduciblet> ded;
     exprt e = true_exprt(); 
     ded.push_back(e);
-    conflict_graph.add_deductions(SSA, ded);
+    conflict_graph.add_deductions(SSA, ded, false_exprt());
   }
   unsigned final_size = conflict_graph.prop_trail.size();
   //propagations = propagations + (final_size - init_size);
