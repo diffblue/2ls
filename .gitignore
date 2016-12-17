@@ -1,0 +1,21 @@
+# compilation files
+*.lo
+*.od
+*.d
+*.o
+*.obj
+*.a
+*.lib
+
+cbmc/
+src/config.inc
+
+# regression/test files
+*.out
+tests.log
+
+# files stored by editors
+*~
+
+# binaries
+src/summarizer/2ls
