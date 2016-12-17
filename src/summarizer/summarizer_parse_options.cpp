@@ -59,6 +59,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #define REMOVE_MULTIPLE_DEREFERENCES 1
 #define IGNORE_RECURSION 1
 #define IGNORE_THREADS 1
+#define EXPLICIT_NONDET_LOCALS 0
 
 /*******************************************************************\
 
@@ -1067,8 +1068,10 @@ bool summarizer_parse_optionst::process_goto_program(
     //preprocessing to improve the structure of the SSA for the unwinder
     split_loopheads(goto_model);
 
+#if EXPLICIT_NONDET_LOCALS
     //explicitly initialize all local variables
     nondet_locals(goto_model);
+#endif
 
 #if 1
     //TODO: find a better place for that
