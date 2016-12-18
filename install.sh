@@ -1,7 +1,7 @@
 git clone https://github.com/peterschrammel/cbmc
 cd cbmc
 CBMC=`pwd`
-git checkout f8c51ebc26be795046f9311217ef1a2809306330
+git checkout 1391879125f528ced5fe7e7ad1fd81afefb7bce2
 cd src
 make minisat2-download
 make
