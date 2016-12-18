@@ -202,6 +202,10 @@ bool ssa_build_goto_tracet::record_step(
     if(step.lhs_object.is_nil())
       break;
 
+    // skip strings (for SV-COMP)
+    if(step.lhs_object.type().id()==ID_pointer &&
+       to_pointer_type(step.lhs_object.type()).subtype().id()==ID_signedbv)
+      break;
 
     // skip undetermined rhs
     find_symbols_sett rhs_symbols;
