@@ -55,6 +55,7 @@ public:
   typedef struct {
     unsigned level;
     unsigned loop_number;
+    local_SSAt::locationt parent_loc;
   } loop_hierarchy_infot;
 
   typedef std::map<local_SSAt::locationt,loop_hierarchy_infot>
