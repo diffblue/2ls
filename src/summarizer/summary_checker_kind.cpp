@@ -8,7 +8,7 @@ Author: Peter Schrammel
 
 #include "summary_checker_kind.h"
 
-#define GIVE_UP_INVARIANTS 7
+#define GIVE_UP_INVARIANTS 4
 
 /*******************************************************************\
 
