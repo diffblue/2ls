@@ -64,6 +64,14 @@ void acdl_conflict_grapht::add_decision
   dec_trail.push_back(exp);
   assign(exp);
   //dlevels[sym_no].push_back(current_level);
+  // this just serves as marker in the reason trail
+  // to annotate the segments in reason trail with 
+  // special decision entries, helper for generalization 
+  indext index;
+  index = std::make_pair(0, 0);
+  prop_infot prop_info;
+  prop_info = std::make_pair(nil_exprt(), index);
+  reason_trail.push_back(prop_info);
 }
 
 /*******************************************************************\
@@ -272,7 +280,8 @@ void acdl_conflict_grapht::dump_trail(const local_SSAt &SSA)
       std::cout << "empty " << std::endl;
     else {
      for(unsigned p=prop_level_begin;p<=prop_level_end-1;p++)
-       std::cout << from_expr(SSA.ns, "", prop_trail[p]) << std::endl; 
+       std::cout << from_expr(SSA.ns, "", prop_trail[p]) << " ,"; 
+     std::cout << std::endl; 
     }
   }
 }

@@ -65,7 +65,7 @@ protected:
   std::set<acdl_domaint::statementt> gamma_check_processed; 
   acdl_conflict_grapht conflict_graph;
   unsigned ITERATION_LIMIT=999999; 
-  
+  unsigned last_decision_index;  
   // global propagation module
   property_checkert::resultt propagate(const local_SSAt &SSA, const exprt& assertion);
   // propagation for chaotic iteration in Abstract interpretation proof
@@ -93,7 +93,7 @@ protected:
   std::set<symbol_exprt> all_vars;
   void init();
   bool analyze_conflict(const local_SSAt &SSA, const exprt& assertion);
-  void generalize_proof(const local_SSAt &SSA, const exprt& assertion, acdl_domaint::valuet& val);
+  void generalize_proof(const local_SSAt &SSA, const exprt& assertion, acdl_domaint::valuet& val) const;
 
   bool disable_generalization;
   void initialize_decision_variables(acdl_domaint::valuet &val);
