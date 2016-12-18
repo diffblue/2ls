@@ -245,14 +245,14 @@ void summarizer_parse_optionst::get_command_line_options(optionst &options)
     options.set_option("lexicographic-ranking-function", 
                        cmdline.get_value("lexicographic-ranking-function"));
   }
-  else options.set_option("lexicographic-ranking-function",3);
+  else options.set_option("lexicographic-ranking-function",5);
 
   if(cmdline.isset("max-inner-ranking-iterations"))
   {
     options.set_option("max-inner-ranking-iterations", 
                        cmdline.get_value("max-inner-ranking-iterations"));
   }
-  else options.set_option("max-inner-ranking-iterations",20);
+  else options.set_option("max-inner-ranking-iterations",50);
 
   // do k-induction refinement
   if(cmdline.isset("k-induction"))
