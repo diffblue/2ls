@@ -132,7 +132,7 @@ symbol_exprt unwindable_local_SSAt::name(
     odometer_to_string(current_unwindings, def_level);
   s.set_identifier(id2string(s.get_identifier())+unwind_suffix+suffix);
 
-#if 1
+#if 0
   std::cout << "CURRENT_LOC: " << current_loc->location_number << std::endl;
   std::cout << "DEF_LOC: " << def_loc->location_number << std::endl;
   std::cout << "DEF_LEVEL: " << def_level << std::endl;
