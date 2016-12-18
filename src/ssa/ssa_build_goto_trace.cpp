@@ -173,7 +173,7 @@ bool ssa_build_goto_tracet::record_step(
 
 #if 0
     std::cout << "ASSIGN " << from_expr(unwindable_local_SSA.ns, "", code_assign)
-              << ": " << from_expr(unwindable_local_SSA.ns, "", lhs_simplified)
+              << ": " << from_expr(unwindable_local_SSA.ns, "", rhs_ssa)
               << " == " << from_expr(unwindable_local_SSA.ns,
                                      "", rhs_simplified) << std::endl;
 #endif
@@ -201,6 +201,7 @@ bool ssa_build_goto_tracet::record_step(
     // skip unresolved lhs
     if(step.lhs_object.is_nil())
       break;
+
 
     // skip undetermined rhs
     find_symbols_sett rhs_symbols;

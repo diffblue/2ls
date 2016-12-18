@@ -308,9 +308,13 @@ void unwindable_local_SSAt::rename(exprt &expr, locationt current_loc)
   {
     std::string unwind_suffix=
       odometer_to_string(current_unwindings, current_unwindings.size());
+    std::string identifier=id2string(expr.get(ID_identifier));
+    std::size_t pos=identifier.find("%");
+    if(pos!=std::string::npos)
+      identifier=identifier.substr(0, pos);
     expr.set(
       ID_identifier,
-      id2string(expr.get(ID_identifier))+unwind_suffix+suffix);
+      identifier+unwind_suffix+suffix);
   }
   Forall_operands(it,expr)
     rename(*it, current_loc);
