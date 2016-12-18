@@ -1034,6 +1034,9 @@ bool summarizer_parse_optionst::process_goto_program(
     threads_detected=has_threads(goto_model);
 #endif
 
+    // remove returns (must be done after function pointer removal)
+    remove_returns(goto_model);
+
     // now do full inlining, if requested
     if(options.get_bool_option("inline"))
     {
@@ -1046,9 +1049,6 @@ bool summarizer_parse_optionst::process_goto_program(
       recursion_detected=goto_inline.recursion_detected();
 #endif
     }
-
-    // remove returns (must be done after function pointer removal)
-    remove_returns(goto_model);
 
 #if REMOVE_MULTIPLE_DEREFERENCES
     remove_multiple_dereferences(goto_model);
