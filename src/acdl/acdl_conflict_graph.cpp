@@ -7,7 +7,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 \*******************************************************************/
 
 #include "acdl_conflict_graph.h"
-//#define DEBUG
+#define DEBUG
 
 /*******************************************************************\
 
@@ -19,15 +19,15 @@ Function: acdl_conflict_grapht::add_deductions
 
  Purpose:
 
- \*******************************************************************/
+\*******************************************************************/
 void acdl_conflict_grapht::add_deductions
   (const local_SSAt &SSA, const acdl_domaint::deductionst &m_ir, 
    const acdl_domaint::meet_irreduciblet &stmt)
 {
   // Add <stmt, prop_trail_index> to reason trail 
+  indext index;
   prop_infot prop_info;
-  prop_info = std::make_pair(stmt, prop_trail.size());
-  reason_trail.push_back(prop_info);
+  unsigned begin = prop_trail.size();
   // iterate over the deductions
   for(std::vector<acdl_domaint::meet_irreduciblet>::const_iterator it 
 	= m_ir.begin(); it != m_ir.end(); it++)
@@ -39,6 +39,9 @@ void acdl_conflict_grapht::add_deductions
     acdl_domaint::meet_irreduciblet exp = *it; 
     assign(exp);
   }
+  index = std::make_pair(begin, prop_trail.size());
+  prop_info = std::make_pair(stmt, index);
+  reason_trail.push_back(prop_info);
 }
 
 /*******************************************************************\
@@ -62,7 +65,6 @@ void acdl_conflict_grapht::add_decision
   assign(exp);
   //dlevels[sym_no].push_back(current_level);
 }
-
 
 /*******************************************************************\
 
@@ -257,6 +259,22 @@ void acdl_conflict_grapht::dump_trail(const local_SSAt &SSA)
     }
     search_level=search_level-1;
   }
+  unsigned prop_level_end=0, prop_level_begin=0; 
+  std::cout << "The content of reason trail is " << std::endl;
+  for(int i=0;i<reason_trail.size();i++) {
+    indext ind = reason_trail[i].second;
+    unsigned prop_level_begin = ind.first;
+    unsigned prop_level_end = ind.second;
+     
+    std::cout << "The transformer is " << from_expr(reason_trail[i].first) << std::endl;
+    std::cout << "The deductions are ";
+    if(prop_level_begin == prop_level_end) 
+      std::cout << "empty " << std::endl;
+    else {
+     for(unsigned p=prop_level_begin;p<=prop_level_end-1;p++)
+       std::cout << from_expr(SSA.ns, "", prop_trail[p]) << std::endl; 
+    }
+  }
 }
 
 /*******************************************************************\
@@ -269,7 +287,7 @@ Function: acdl_conflict_grapht::print_output
 
  Purpose:
 
- \*******************************************************************/
+\*******************************************************************/
 void acdl_conflict_grapht::dump_dec_trail(const local_SSAt &SSA)
 {
   std::cout << "Dump the decision trail" << std::endl;

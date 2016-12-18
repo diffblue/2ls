@@ -16,7 +16,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include <string>
 #include <iostream>
 
-//#define DEBUG
+#define DEBUG
 //#define PER_STATEMENT_LIVE_VAR
 #define LIVE_VAR_OLD_APPROACH
 
