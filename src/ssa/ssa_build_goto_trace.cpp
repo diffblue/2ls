@@ -10,6 +10,7 @@ Author: Daniel Kroening, Peter Schrammel
 #include <util/std_expr.h>
 #include <util/cprover_prefix.h>
 #include <util/prefix.h>
+#include <util/find_symbols.h>
 
 #include "ssa_build_goto_trace.h"
 
@@ -192,8 +193,16 @@ bool ssa_build_goto_tracet::record_step(
     step.lhs_object=ssa_exprt(lhs_simplified);
     step.lhs_object_value=rhs_simplified;
 
+    // skip unresolved lhs
     if(step.lhs_object.is_nil())
       break;
+
+    // skip undetermined rhs
+    find_symbols_sett rhs_symbols;
+    find_symbols(rhs_simplified, rhs_symbols);
+    if(!rhs_symbols.empty() || rhs_simplified.id()==ID_nondet_symbol)
+      break;
+
 #if 0
     std::cout << "ASSIGNMENT ADDED: " << from_expr(unwindable_local_SSA.ns, "", code_assign)
               << ": " << from_expr(unwindable_local_SSA.ns, "", rhs_ssa)
