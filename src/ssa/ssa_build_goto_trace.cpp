@@ -123,8 +123,11 @@ bool ssa_build_goto_tracet::record_step(
 
     taken=step.cond_value;
 
-    goto_trace.add_step(step);
-    step_nr++;
+    if(taken)
+    {
+      goto_trace.add_step(step);
+      step_nr++;
+    }
   }
   break;
 
@@ -186,7 +189,9 @@ bool ssa_build_goto_tracet::record_step(
         break;
       if(identifier.find("#")!=std::string::npos)
         break;
-      if(identifier=="return'")
+      if(identifier.find("$")!=std::string::npos)
+        break;
+      if(identifier.find("'")!=std::string::npos)
         break;
     }
 
