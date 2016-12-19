@@ -559,13 +559,7 @@ int summarizer_parse_optionst::doit()
       report_failure();
       if(cmdline.isset("graphml-witness"))
       {
-        if(!options.get_bool_option("termination"))
-          output_graphml_cex(options, goto_model, *summary_checker);
-#if 0
-        // TODO: handle initialized unwinders
-        else
-          output_graphml_proof(options, goto_model, *summary_checker);
-#endif
+        output_graphml_cex(options, goto_model, *summary_checker);
       }
       retval = 10;
       break;

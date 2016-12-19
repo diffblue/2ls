@@ -19,10 +19,12 @@ class ssa_build_goto_tracet {
 public:
   ssa_build_goto_tracet(
     unwindable_local_SSAt &_unwindable_local_SSA,
-    const prop_convt &_prop_conv) 
+    const prop_convt &_prop_conv,
+    bool _termination=false)
   : 
   unwindable_local_SSA(_unwindable_local_SSA),  
-  prop_conv(_prop_conv)
+  prop_conv(_prop_conv),
+  termination(_termination)
   {}
 
   void operator()(goto_tracet &);
@@ -31,6 +33,7 @@ protected:
   unwindable_local_SSAt &unwindable_local_SSA;
   const prop_convt &prop_conv;
   goto_programt::const_targett current_pc;
+  bool termination;
 
   exprt finalize_lhs(const exprt &src);
 
