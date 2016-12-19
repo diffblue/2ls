@@ -60,6 +60,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #define IGNORE_RECURSION 1
 #define IGNORE_THREADS 1
 #define EXPLICIT_NONDET_LOCALS 0
+#define FILTER_ASSERTIONS 1
 
 /*******************************************************************\
 
@@ -1088,6 +1089,10 @@ bool summarizer_parse_optionst::process_goto_program(
     {
       add_assumptions_after_assertions(goto_model);
     }
+
+#ifdef FILTER_ASSERTIONS
+    filter_assertions(goto_model);
+#endif
 
     if(!cmdline.isset("no-propagation"))
     {

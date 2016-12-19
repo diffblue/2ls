@@ -171,6 +171,7 @@ protected:
     unsigned &var_counter,
     bool deref_seen);
   void add_assumptions_after_assertions(goto_modelt &goto_model);
+  void filter_assertions(goto_modelt &goto_model);
 };
 
 #endif

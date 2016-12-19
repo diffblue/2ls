@@ -348,3 +348,31 @@ bool summarizer_parse_optionst::has_threads(const goto_modelt &goto_model)
   return false;
 }
 
+/*******************************************************************\
+
+Function: summarizer_parse_optionst::filter_assertions
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: filter certain assertions for SV-COMP
+
+\*******************************************************************/
+
+void summarizer_parse_optionst::filter_assertions(goto_modelt &goto_model)
+{
+  Forall_goto_functions(f_it, goto_model.goto_functions)
+  {
+    goto_programt& program=f_it->second.body;
+
+    Forall_goto_program_instructions(i_it, program)
+    {
+      if(!i_it->is_assert())
+        continue;
+
+      if(i_it->source_location.get_comment()=="free argument is dynamic object")
+        i_it->make_skip();
+    }
+  }
+}
