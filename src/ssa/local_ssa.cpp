@@ -1630,6 +1630,20 @@ incremental_solvert & operator << (
 	dest << implies_exprt(n_it->enabling_expr,*e_it);
       else
         dest << *e_it;
+
+#if 0
+      // freeze cond variables
+      if(e_it->op0().id()==ID_symbol &&
+         e_it->op0().type().id()==ID_bool)
+      {
+        const symbol_exprt &symbol=to_symbol_expr(e_it->op0());
+        if(id2string(symbol.get_identifier()).find("ssa::$cond")!=
+           std::string::npos)
+        {
+          dest.solver->set_frozen(dest.solver->convert(symbol));
+        }
+      }
+#endif
     }
 
     for(local_SSAt::nodet::constraintst::const_iterator
