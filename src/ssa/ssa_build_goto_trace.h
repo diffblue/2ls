@@ -36,6 +36,7 @@ protected:
   bool termination;
 
   exprt finalize_lhs(const exprt &src);
+  bool can_convert_ssa_expr(const exprt &expr);
 
   bool record_step(
     goto_tracet &goto_trace,

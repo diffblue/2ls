@@ -62,6 +62,32 @@ exprt ssa_build_goto_tracet::finalize_lhs(const exprt &src)
     return src;
 }
 
+bool ssa_build_goto_tracet::can_convert_ssa_expr(const exprt &expr)
+{
+  if(expr.id()==ID_member)
+  {
+    const member_exprt &member=to_member_expr(expr);
+    can_convert_ssa_expr(member.struct_op());
+    return true;
+  }
+  else if(expr.id()==ID_index)
+  {
+    const index_exprt &index=to_index_expr(expr);
+    can_convert_ssa_expr(index.array());
+
+    mp_integer idx;
+    if(to_integer(to_constant_expr(index.index()), idx))
+      return false;
+    return true;
+  }
+  else if(expr.id()==ID_symbol)
+  {
+    return true;
+  }
+
+  return false;
+}
+
 /*******************************************************************\
 
 Function: ssa_build_goto_tracet::record_step
@@ -115,7 +141,9 @@ bool ssa_build_goto_tracet::record_step(
     exprt cond_value=simplify_expr(prop_conv.get(cond_read), unwindable_local_SSA.ns);
     step.type=goto_trace_stept::GOTO;
     step.cond_expr = cond_value; //cond
+#if 0
     assert(cond_value.is_true() || cond_value.is_false());
+#endif
     step.cond_value = cond_value.is_true();
 #if 0
     std::cout << "COND " << from_expr(unwindable_local_SSA.ns, "", cond)
@@ -196,6 +224,9 @@ bool ssa_build_goto_tracet::record_step(
       if(identifier.find("'")!=std::string::npos)
         break;
     }
+
+    if(!can_convert_ssa_expr(lhs_simplified))
+      break;
 
     step.lhs_object=ssa_exprt(lhs_simplified);
     step.lhs_object_value=rhs_simplified;
