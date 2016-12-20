@@ -42,11 +42,6 @@ public:
   //TODO: this must go away, should use SSA.rename instead
   void unwinder_rename(symbol_exprt &var,
 		       const local_SSAt::nodet &node, bool pre) const;
-protected:
-  const irep_idt fname;
-  unwindable_local_SSAt& SSA;
-  bool is_kinduction,is_bmc;
-  symbol_exprt current_enabling_expr; //TODO must become loop-specific
 
   class loopt //loop tree
   {
@@ -77,8 +72,15 @@ protected:
     } assertions_after_loopt;
     typedef std::map<locationt,assertions_after_loopt> assertion_hoisting_mapt;
     assertion_hoisting_mapt assertion_hoisting_map;
-
   };
+
+  bool find_loop(unsigned location_number, const loopt *&loop) const;
+
+protected:
+  const irep_idt fname;
+  unwindable_local_SSAt& SSA;
+  bool is_kinduction,is_bmc;
+  symbol_exprt current_enabling_expr; //TODO must become loop-specific
 
   //use location numbers as indices, as target addresses make 
   //  things non-deterministic
@@ -124,6 +126,9 @@ public:
   void unwind_all(unsigned k);
 
   ssa_local_unwindert &get(const irep_idt& fname)
+    { return unwinder_map.at(fname); }
+
+  const ssa_local_unwindert &get(const irep_idt& fname) const
     { return unwinder_map.at(fname); }
 
 protected:

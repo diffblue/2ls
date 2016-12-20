@@ -31,7 +31,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/goto_inline_class.h>
 #include <goto-programs/goto_functions.h>
 #include <goto-programs/xml_goto_trace.h>
-#include <goto-programs/graphml_witness.h>
 #include <goto-programs/json_goto_trace.h>
 #include <goto-programs/remove_returns.h>
 #include <goto-programs/remove_skip.h>
@@ -46,6 +45,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "../ssa/malloc_ssa.h"
 
+#include "graphml_witness_ext.h"
 #include "summarizer_parse_options.h"
 #include "summary_db.h"
 #include "summary_checker_ai.h"
@@ -59,6 +59,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #define REMOVE_MULTIPLE_DEREFERENCES 1
 #define IGNORE_RECURSION 1
 #define IGNORE_THREADS 1
+#define EXPLICIT_NONDET_LOCALS 0
+#define FILTER_ASSERTIONS 1
 
 /*******************************************************************\
 
@@ -78,7 +80,9 @@ summarizer_parse_optionst::summarizer_parse_optionst(
   :
   parse_options_baset(SUMMARIZER_OPTIONS, argc, argv),
   language_uit(cmdline, ui_message_handler),
-  ui_message_handler(cmdline, "2LS " SUMMARIZER_VERSION)
+  ui_message_handler(cmdline, "2LS " SUMMARIZER_VERSION),
+  recursion_detected(false),
+  threads_detected(false)
 {
 }
   
@@ -242,14 +246,14 @@ void summarizer_parse_optionst::get_command_line_options(optionst &options)
     options.set_option("lexicographic-ranking-function", 
                        cmdline.get_value("lexicographic-ranking-function"));
   }
-  else options.set_option("lexicographic-ranking-function",3);
+  else options.set_option("lexicographic-ranking-function",5);
 
   if(cmdline.isset("max-inner-ranking-iterations"))
   {
     options.set_option("max-inner-ranking-iterations", 
                        cmdline.get_value("max-inner-ranking-iterations"));
   }
-  else options.set_option("max-inner-ranking-iterations",20);
+  else options.set_option("max-inner-ranking-iterations",50);
 
   // do k-induction refinement
   if(cmdline.isset("k-induction"))
@@ -294,6 +298,7 @@ void summarizer_parse_optionst::get_command_line_options(optionst &options)
   {
     options.set_option("competition-mode", true);
     options.set_option("all-properties", false);
+    options.set_option("inline", true);
   }
 
   // instrumentation / output
@@ -419,6 +424,24 @@ int summarizer_parse_optionst::doit()
     options.set_option("show-invariants", true);
   }
 
+#if IGNORE_RECURSION
+  if(recursion_detected)
+  {
+    status() << "Recursion not supported" << eom;
+    report_unknown();
+    return 5;
+  }
+#endif
+
+#if IGNORE_THREADS
+  if(threads_detected)
+  {
+    status() << "Threads not supported" << eom;
+    report_unknown();
+    return 5;
+  }
+#endif
+
   if(cmdline.isset("context-sensitive"))
   {
     options.set_option("context-sensitive", true);
@@ -525,7 +548,8 @@ int summarizer_parse_optionst::doit()
       if(report_assertions) 
         report_properties(options, goto_model, summary_checker->property_map);
       report_success();
-      if(cmdline.isset("graphml-witness"))
+      if(cmdline.isset("graphml-witness") &&
+         !options.get_bool_option("termination"))
         output_graphml_proof(options, goto_model, *summary_checker);
       retval = 0;
       break;
@@ -535,7 +559,9 @@ int summarizer_parse_optionst::doit()
         report_properties(options, goto_model, summary_checker->property_map);
       report_failure();
       if(cmdline.isset("graphml-witness"))
+      {
         output_graphml_cex(options, goto_model, *summary_checker);
+      }
       retval = 10;
       break;
 
@@ -977,6 +1003,11 @@ bool summarizer_parse_optionst::process_goto_program(
 {
   try
   {
+
+    status() << "Function Pointer Removal" << eom;
+    remove_function_pointers(
+      goto_model, cmdline.isset("pointer-check"));
+
     // do partial inlining
     if(options.get_bool_option("inline-partial"))
     {
@@ -993,19 +1024,35 @@ bool summarizer_parse_optionst::process_goto_program(
           f_it->second.body.clear();
         }
     }
-    
+
+#if IGNORE_THREADS
+    threads_detected=has_threads(goto_model);
+#endif
+
+    // remove returns (must be done after function pointer removal)
+    remove_returns(goto_model);
+
+    // now do full inlining, if requested
+    if(options.get_bool_option("inline"))
+    {
+      status() << "Performing full inlining" << eom;
+      const namespacet ns(goto_model.symbol_table);
+      goto_inlinet goto_inline(
+        goto_model.goto_functions, ns, ui_message_handler);
+      goto_inline();
+#if IGNORE_RECURSION
+      recursion_detected=goto_inline.recursion_detected();
+#endif
+    }
+
+#if REMOVE_MULTIPLE_DEREFERENCES
+    remove_multiple_dereferences(goto_model);
+#endif
+
     // add generic checks
     status() << "Generic Property Instrumentation" << eom;
     goto_check(options, goto_model);
 
-    status() << "Function Pointer Removal" << eom;
-    remove_function_pointers(
-      goto_model, cmdline.isset("pointer-check"));
-
-    // remove returns (must be done after function pointer removal)
-    remove_returns(goto_model);
-   
- 
 #if UNWIND_GOTO_INTO_LOOP
     unwind_goto_into_loop(goto_model,2);
 #endif
@@ -1013,46 +1060,17 @@ bool summarizer_parse_optionst::process_goto_program(
     remove_skip(goto_model.goto_functions);
     goto_model.goto_functions.update();
 
-    // now do full inlining, if requested
-    if(options.get_bool_option("inline"))
-    {
-      status() << "Performing full inlining" << eom;
-#if IGNORE_RECURSION
-      const namespacet ns(goto_model.symbol_table);
-      goto_inlinet goto_inline(
-        goto_model.goto_functions, ns, ui_message_handler);
-      goto_inline();
-      if(goto_inline.recursion_detected())
-      {
-        status() << "Recursion not supported" << eom;
-        report_unknown();
-        return 5;
-      }
-#endif
-    }
-
-#if IGNORE_THREADS
-    if(has_threads(goto_model))
-    {
-      status() << "Threads not supported" << eom;
-      report_unknown();
-      return 5;
-    }
-#endif
-
     //preprocessing to improve the structure of the SSA for the unwinder
     split_loopheads(goto_model);
 
+#if EXPLICIT_NONDET_LOCALS
     //explicitly initialize all local variables
     nondet_locals(goto_model);
+#endif
 
 #if 1
     //TODO: find a better place for that
     replace_malloc(goto_model,"");
-#endif
-
-#if REMOVE_MULTIPLE_DEREFERENCES
-    remove_multiple_dereferences(goto_model);
 #endif
 
     // recalculate numbers, etc.
@@ -1066,6 +1084,15 @@ bool summarizer_parse_optionst::process_goto_program(
     {
       inline_main(goto_model); 
     }
+
+    if(!cmdline.isset("independent-properties"))
+    {
+      add_assumptions_after_assertions(goto_model);
+    }
+
+#ifdef FILTER_ASSERTIONS
+    filter_assertions(goto_model);
+#endif
 
     if(!cmdline.isset("no-propagation"))
     {
@@ -1356,7 +1383,6 @@ void summarizer_parse_optionst::output_graphml_proof(
   const std::string graphml=options.get_option("graphml-witness");
   if(!graphml.empty())
   {
-#if 0
     graphml_witness_extt graphml_witness(ns);
     graphml_witness(summary_checker);
 
@@ -1367,7 +1393,6 @@ void summarizer_parse_optionst::output_graphml_proof(
       std::ofstream out(graphml.c_str());
       write_graphml(graphml_witness.graph(), out);
     }
-#endif
   }
 }
 /*******************************************************************\

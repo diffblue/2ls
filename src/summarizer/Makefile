@@ -11,8 +11,7 @@ SRC = summarizer_base.cpp summarizer_languages.cpp  \
       cover_goals_ext.cpp horn_encoding.cpp \
       summary_db.cpp summary.cpp ssa_db.cpp \
       array_abstraction.cpp preprocessing_util.cpp \
-      instrument_goto.cpp 
-#function_signature.cpp
+      instrument_goto.cpp dynamic_cfg.cpp graphml_witness_ext.cpp
 
 OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       $(CBMC)/src/linking/linking$(LIBEXT) \

@@ -22,6 +22,8 @@ Author: Peter Schrammel
 #include "ssa_db.h"
 #include "summary_db.h"
 
+class graphml_witness_extt;
+
 class summary_checker_baset:public property_checkert
 {
 public:
@@ -90,6 +92,8 @@ protected:
     const exprt::operandst& loop_continues,
     const exprt::operandst& loophead_selects, 
     incremental_solvert&);
+
+  friend graphml_witness_extt;
 };
 
 #endif

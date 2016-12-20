@@ -85,8 +85,8 @@ exprt malloc_ssa(
         size.op1());      
     }
     else if(size.id()==ID_mult &&
-       size.operands().size()==2 &&
-       size.op1().find(ID_C_c_sizeof_type).is_not_nil())
+            size.operands().size()==2 &&
+            size.op1().find(ID_C_c_sizeof_type).is_not_nil())
     {
       object_type=array_typet(
         c_sizeof_type_rec(size.op1()),
@@ -113,7 +113,8 @@ exprt malloc_ssa(
             mp_integer elements=alloc_size/elem_size;
             
             if(elements*elem_size==alloc_size)
-              object_type=array_typet(tmp_type, from_integer(elements, size.type()));
+              object_type=array_typet(tmp_type,
+                from_integer(elements, size.type()));
           }
         }
       }
@@ -165,48 +166,53 @@ exprt malloc_ssa(
 
 
 static void replace_malloc_rec(exprt &expr,
-         		const std::string &suffix,
-			symbol_tablet &symbol_table,
-                        const exprt &malloc_size,
-                        unsigned &counter)
+                               const std::string &suffix,
+                               symbol_tablet &symbol_table,
+                               const exprt &malloc_size,
+                               unsigned &counter)
 {
   if(expr.id()==ID_side_effect &&
      to_side_effect_expr(expr).get_statement()==ID_malloc)
   {
     assert(!malloc_size.is_nil());
-    expr.op0() = malloc_size;
+    expr.op0()=malloc_size;
  
-    expr = malloc_ssa(to_side_effect_expr(expr),"$"+i2string(counter++)+suffix,symbol_table);
+    expr=malloc_ssa(to_side_effect_expr(expr),
+      "$"+i2string(counter++)+suffix, symbol_table);
   }
   else
-    Forall_operands(it,expr)
-      replace_malloc_rec(*it,suffix,symbol_table,malloc_size,counter);
+    Forall_operands(it, expr)
+      replace_malloc_rec(*it, suffix, symbol_table, malloc_size, counter);
 }
 
+#include <iostream>
+
 void replace_malloc(goto_modelt &goto_model,
-		    const std::string &suffix)
+                    const std::string &suffix)
 {
-  unsigned counter = 0;
+  unsigned counter=0;
   Forall_goto_functions(f_it, goto_model.goto_functions)
   {
-    exprt malloc_size = nil_exprt();
+    exprt malloc_size=nil_exprt();
     Forall_goto_program_instructions(i_it, f_it->second.body)
     {
       if(i_it->is_assign())
       {
-        code_assignt &code_assign = to_code_assign(i_it->code);
-	if(code_assign.lhs().id()==ID_symbol)
-	{
+        code_assignt &code_assign=to_code_assign(i_it->code);
+        if(code_assign.lhs().id()==ID_symbol)
+        {
           // we have to propagate the malloc size 
           //   in order to get the object type
-	  // TODO: this only works with inlining
-	  const irep_idt &lhs_id = 
-	    to_symbol_expr(code_assign.lhs()).get_identifier();
-	  if(lhs_id == "malloc::malloc_size")
-	    malloc_size = code_assign.rhs();
-	}
-        replace_malloc_rec(code_assign.rhs(),suffix,
-			   goto_model.symbol_table,malloc_size,counter);
+          // TODO: this only works with inlining,
+          //       and btw, this is an ugly hack
+          std::string lhs_id=
+            id2string(to_symbol_expr(code_assign.lhs()).get_identifier());
+          if(lhs_id=="malloc::malloc_size" ||
+             lhs_id=="__builtin_alloca::alloca_size")
+            malloc_size=code_assign.rhs();
+        }
+        replace_malloc_rec(code_assign.rhs(), suffix,
+          goto_model.symbol_table, malloc_size, counter);
       }
     }
   }

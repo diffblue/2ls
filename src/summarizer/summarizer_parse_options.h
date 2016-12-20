@@ -54,7 +54,7 @@ class optionst;
   "(no-simplify)(no-fixed-point)" \
   "(graphml-witness):(json-cex):" \
   "(no-spurious-check)(stop-on-fail)" \
-  "(competition-mode)(slice)(no-propagation)" \
+  "(competition-mode)(slice)(no-propagation)(independent-properties)" \
   "(no-unwinding-assertions)"
   // the last line is for CBMC-regression testing only
 
@@ -74,6 +74,8 @@ public:
 
 protected:
   ui_message_handlert ui_message_handler;
+  bool recursion_detected;
+  bool threads_detected;
   virtual void register_languages(); 
 
   void get_command_line_options(optionst &options);
@@ -168,6 +170,8 @@ protected:
     exprt &expr,
     unsigned &var_counter,
     bool deref_seen);
+  void add_assumptions_after_assertions(goto_modelt &goto_model);
+  void filter_assertions(goto_modelt &goto_model);
 };
 
 #endif
