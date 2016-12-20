@@ -7,7 +7,4 @@ CBMC = ~/my-cbmc
 #LINKFLAGS += -static-libgcc -static-libstdc++
 
 #2LS switches
-SUMMARIZER_FLAGS = 
-#-DREUSE_INVARIANTS
-
-CBMC_PATCH =
+TWOLS_FLAGS = 

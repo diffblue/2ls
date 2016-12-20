@@ -1,10 +1,6 @@
-include ../config.inc
-CBMC ?= ../..
-
-SRC = predicate.cpp fixed_point.cpp ssa_fixed_point.cpp \
-  tpolyhedra_domain.cpp equality_domain.cpp domain.cpp predabs_domain.cpp\
+SRC = tpolyhedra_domain.cpp equality_domain.cpp domain.cpp predabs_domain.cpp\
   ssa_analyzer.cpp util.cpp incremental_solver.cpp \
-  strategy_solver_base.cpp  \
+  strategy_solver_base.cpp strategy_solver_equality.cpp \
   linrank_domain.cpp lexlinrank_domain.cpp\
   ranking_solver_enumeration.cpp lexlinrank_solver_enumeration.cpp \
   strategy_solver_enumeration.cpp strategy_solver_binsearch.cpp \
@@ -14,16 +10,20 @@ SRC = predicate.cpp fixed_point.cpp ssa_fixed_point.cpp \
   strategy_solver_predabs.cpp
 #solver_enumeration.cpp
 
+include ../config.inc
 include $(CBMC)/src/config.inc
 include $(CBMC)/src/common
+CBMC ?= ../..
 
-CP_CXXFLAGS += $(SUMMARIZERFLAGS)
+CP_CXXFLAGS += $(TWOLSFLAGS)
 
-INCLUDES= -I $(CBMC)/src
+INCLUDES= -I $(CBMC)/src -I ..
 
-CLEANFILES = 
+CLEANFILES = domains$(LIBEXT)
 
-all: $(OBJ)
+all: domains$(LIBEXT)
 
 ###############################################################################
 
+domains$(LIBEXT): $(OBJ)
+	$(LINKLIB)

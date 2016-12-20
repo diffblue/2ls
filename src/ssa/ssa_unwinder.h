@@ -10,7 +10,7 @@ Author: Peter Schrammel, Saurabh Joshi
 #define CPROVER_DELTACHECK_SSA_UNWINDER_H
 
 #include "unwindable_local_ssa.h"
-#include "../summarizer/ssa_db.h"
+#include "ssa_db.h"
 
 class ssa_local_unwindert
 {

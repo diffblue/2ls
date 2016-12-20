@@ -1,18 +1,22 @@
+SRC = summarizer_base.cpp  summarizer_bw.cpp	\
+      summarizer_bw_term.cpp	summarizer_fw_contexts.cpp \
+      summarizer_fw.cpp  summarizer_fw_term.cpp  \
+      summary.cpp  summary_db.cpp
+
 include ../config.inc
-CBMC ?= ../..
-
-SRC = solver.cpp predicate.cpp fixed_point.cpp
-
 include $(CBMC)/src/config.inc
 include $(CBMC)/src/common
+CBMC ?= ../..
 
-CP_CXXFLAGS += $(SUMMARIZERFLAGS)
+CP_CXXFLAGS += $(TWOLSFLAGS)
 
-INCLUDES= -I $(CBMC)/src
+INCLUDES= -I $(CBMC)/src -I ..
 
-CLEANFILES = 
+CLEANFILES = solver$(LIBEXT)
 
-all: $(OBJ)
+all: solver$(LIBEXT)
 
 ###############################################################################
 
+solver$(LIBEXT): $(OBJ)
+	$(LINKLIB)
