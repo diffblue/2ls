@@ -34,7 +34,7 @@ class ranking_solver_enumerationt : public strategy_solver_baset
   // the "inner" solver
   const unsigned max_inner_iterations;
   incremental_solvert inner_solver;
-  int number_inner_iterations;
+  unsigned number_inner_iterations;
 };
 
 #endif
