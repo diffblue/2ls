@@ -6,8 +6,8 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
-#ifndef CPROVER_INSTRUMENT_GOTO_H
-#define CPROVER_INSTRUMENT_GOTO_H
+#ifndef CPROVER_2LS_2LS_INSTRUMENT_GOTO_H
+#define CPROVER_2LS_2LS_INSTRUMENT_GOTO_H
 
 #include <goto-programs/goto_model.h>
 #include <util/options.h>
@@ -21,10 +21,10 @@ class instrument_gotot:public messaget
 {
 public:
   inline instrument_gotot(optionst &_options,
-			  ssa_dbt &_ssa_db,
-			  summary_dbt &_summary_db):
+        ssa_dbt &_ssa_db,
+        summary_dbt &_summary_db):
     options(_options),
-    ssa_db(_ssa_db),summary_db(_summary_db)
+    ssa_db(_ssa_db), summary_db(_summary_db)
   {
   }
 
@@ -35,7 +35,7 @@ public:
 
   ssa_dbt &ssa_db;
   summary_dbt &summary_db;
-  
+
   void instrument_function(
     const irep_idt &function_name,
     goto_functionst::goto_functiont &function);

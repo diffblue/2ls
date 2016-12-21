@@ -38,7 +38,7 @@ void twols_parse_optionst::inline_main(goto_modelt &goto_model)
       tmp.copy_from(goto_model.goto_functions.function_map[fname].body);
       (--tmp.instructions.end())->make_skip();
       goto_model.goto_functions.function_map.erase(fname);
-    
+
       goto_programt::targett next_target(target);
       target->make_skip();
       next_target++;
@@ -60,7 +60,7 @@ Function: twols_parse_optionst::propagate_constants
 
  Outputs:
 
- Purpose: 
+ Purpose:
 
 \*******************************************************************/
 
@@ -69,7 +69,7 @@ void twols_parse_optionst::propagate_constants(goto_modelt &goto_model)
   namespacet ns(goto_model.symbol_table);
   Forall_goto_functions(f_it, goto_model.goto_functions)
   {
-    constant_propagator_ait(f_it->second,ns);
+    constant_propagator_ait(f_it->second, ns);
   }
 }
 
@@ -108,7 +108,7 @@ void twols_parse_optionst::nondet_locals(goto_modelt &goto_model)
         side_effect_expr_nondett nondet(decl.symbol().type());
         goto_programt::targett t=f_it->second.body.insert_after(i_it);
         t->make_assignment();
-        code_assignt c(decl.symbol(),nondet);
+        code_assignt c(decl.symbol(), nondet);
         t->code.swap(c);
         t->source_location=i_it->source_location;
       }
@@ -131,12 +131,12 @@ Function: goto_unwind
 
 void twols_parse_optionst::unwind_goto_into_loop(goto_modelt &goto_model, unsigned k)
 {
-  typedef std::vector<std::pair<goto_programt::targett,goto_programt::targett> > loopst;
+  typedef std::vector<std::pair<goto_programt::targett, goto_programt::targett> > loopst;
 
   Forall_goto_functions(f_it, goto_model.goto_functions)
   {
     goto_programt &body=f_it->second.body;
-    
+
     loopst loops;
     Forall_goto_program_instructions(i_it, body)
     {
@@ -145,17 +145,17 @@ void twols_parse_optionst::unwind_goto_into_loop(goto_modelt &goto_model, unsign
         goto_programt::targett loop_head=i_it->get_target();
         goto_programt::targett loop_exit=i_it;
         bool has_goto_into_loop=false;
-	 
+
         goto_programt::targett it=loop_head;
         if(it!=loop_exit) it++;
         for(; it!=loop_exit; it++)
         {
-          for( std::set<goto_programt::targett>::iterator 
+          for( std::set<goto_programt::targett>::iterator
                  s_it=it->incoming_edges.begin();
                s_it!=it->incoming_edges.end(); ++s_it)
           {
             if((*s_it)->is_goto() &&
-               (*s_it)->location_number < loop_head->location_number)
+               (*s_it)->location_number<loop_head->location_number)
             {
               has_goto_into_loop=true;
               break;
@@ -163,11 +163,11 @@ void twols_parse_optionst::unwind_goto_into_loop(goto_modelt &goto_model, unsign
           }
           if(has_goto_into_loop) break;
         }
-        if(has_goto_into_loop) 
+        if(has_goto_into_loop)
         {
           status() << "Unwinding jump into loop" << eom;
-          loops.push_back(loopst::value_type(++loop_exit,loop_head)); 
-        }    
+          loops.push_back(loopst::value_type(++loop_exit, loop_head));
+        }
       }
     }
 
@@ -175,8 +175,8 @@ void twols_parse_optionst::unwind_goto_into_loop(goto_modelt &goto_model, unsign
     {
       std::vector<goto_programt::targett> iteration_points;
       goto_unwindt goto_unwind;
-      goto_unwind.unwind(body,l_it->second,l_it->first,k,
-             goto_unwindt::PARTIAL,iteration_points);
+      goto_unwind.unwind(body, l_it->second, l_it->first, k,
+             goto_unwindt::PARTIAL, iteration_points);
       assert(iteration_points.size()==2);
       goto_programt::targett t=body.insert_before(l_it->first);
       t->make_goto();
@@ -207,7 +207,7 @@ void twols_parse_optionst::remove_multiple_dereferences(goto_modelt &goto_model,
     if(member_expr.compound().id()==ID_dereference)
     {
       dereference_exprt &deref_expr=to_dereference_expr(member_expr.compound());
-      remove_multiple_dereferences(goto_model,body,t,deref_expr.pointer(),var_counter,true);
+      remove_multiple_dereferences(goto_model, body, t, deref_expr.pointer(), var_counter, true);
       if(deref_seen)
       {
         symbolt new_symbol;
@@ -218,7 +218,7 @@ void twols_parse_optionst::remove_multiple_dereferences(goto_modelt &goto_model,
         goto_model.symbol_table.add(new_symbol);
         goto_programt::targett t_new=body.insert_before(t);
         t_new->make_assignment();
-        t_new->code=code_assignt(new_symbol.symbol_expr(),member_expr);
+        t_new->code=code_assignt(new_symbol.symbol_expr(), member_expr);
         expr=new_symbol.symbol_expr();
         for(std::set<goto_programt::targett>::iterator t_it=
               t->incoming_edges.begin();
@@ -236,12 +236,12 @@ void twols_parse_optionst::remove_multiple_dereferences(goto_modelt &goto_model,
       }
     }
     else
-      Forall_operands(o_it,expr)
-        remove_multiple_dereferences(goto_model,body,t,*o_it,var_counter,deref_seen);
+      Forall_operands(o_it, expr)
+        remove_multiple_dereferences(goto_model, body, t, *o_it, var_counter, deref_seen);
   }
   else
-    Forall_operands(o_it,expr)
-      remove_multiple_dereferences(goto_model,body,t,*o_it,var_counter,deref_seen);
+    Forall_operands(o_it, expr)
+      remove_multiple_dereferences(goto_model, body, t, *o_it, var_counter, deref_seen);
 }
 
 void twols_parse_optionst::remove_multiple_dereferences(goto_modelt &goto_model)
@@ -272,7 +272,7 @@ void twols_parse_optionst::remove_multiple_dereferences(goto_modelt &goto_model)
                                      i_it,
                                      to_code_assign(i_it->code).rhs(),
                                      var_counter, false);
-      }      
+      }
     }
   }
 }
@@ -385,7 +385,7 @@ Inputs:
 
 Outputs:
 
-Purpose: insert skip at jump targets if they are goto, 
+Purpose: insert skip at jump targets if they are goto,
          assume or assert instructions
 
 \*******************************************************************/
@@ -397,11 +397,11 @@ void twols_parse_optionst::split_loopheads(goto_modelt &goto_model)
     Forall_goto_program_instructions(i_it, f_it->second.body)
     {
       if(!i_it->is_backwards_goto()) continue;
-      goto_programt::targett loophead = i_it->get_target();
+      goto_programt::targett loophead=i_it->get_target();
       if(i_it->guard.is_true() && !loophead->is_assert()) continue;
-      
+
       // inserts the skip
-      goto_programt::targett new_loophead = 
+      goto_programt::targett new_loophead=
         f_it->second.body.insert_before(loophead);
       new_loophead->make_skip();
       new_loophead->source_location=loophead->source_location;
@@ -410,7 +410,7 @@ void twols_parse_optionst::split_loopheads(goto_modelt &goto_model)
       // update jumps to loophead
       for(std::set<goto_programt::targett>::iterator j_it=
             loophead->incoming_edges.begin();
-          j_it != loophead->incoming_edges.end(); j_it++)
+          j_it!=loophead->incoming_edges.end(); j_it++)
       {
         if(!(*j_it)->is_goto() || (*j_it)->get_target()!=loophead) continue;
         (*j_it)->targets.clear();

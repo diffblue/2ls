@@ -53,7 +53,7 @@ void cover_goals_extt::mark()
       _number_covered++;
     }
 }
-  
+
 /*******************************************************************\
 
 Function: cover_goals_extt::constaint
@@ -118,21 +118,21 @@ Function: cover_goals_extt::operator()
 void cover_goals_extt::operator()()
 {
   _iterations=_number_covered=0;
-  
+
   decision_proceduret::resultt dec_result;
-  
+
   // We use incremental solving, so need to freeze some variables
-  // to prevent them from being eliminated.      
+  // to prevent them from being eliminated.
   freeze_goal_variables();
 
   do
   {
     // We want (at least) one of the remaining goals, please!
     _iterations++;
-    
+
     constraint();
-    
-    dec_result = solver();
+
+    dec_result=solver();
 
     switch(dec_result)
     {
@@ -141,12 +141,12 @@ void cover_goals_extt::operator()()
 
     case decision_proceduret::D_SATISFIABLE:
       // mark the goals we got
-      mark(); 
-      
+      mark();
+
       // notify
       assignment();
 
-      if(!all_properties) return; //exit on first failure if requested
+      if(!all_properties) return; // exit on first failure if requested
       break;
 
     default:
@@ -172,37 +172,37 @@ Function: cover_goals_extt::assignment
 
 void cover_goals_extt::assignment()
 {
-  //check loop head choices in model
-  bool invariants_involved = false;
+  // check loop head choices in model
+  bool invariants_involved=false;
   if(spurious_check)
   {
-    for(exprt::operandst::const_iterator l_it = loophead_selects.begin();
-        l_it != loophead_selects.end(); l_it++)
+    for(exprt::operandst::const_iterator l_it=loophead_selects.begin();
+        l_it!=loophead_selects.end(); l_it++)
     {
-      if(solver.get(l_it->op0()).is_true()) 
+      if(solver.get(l_it->op0()).is_true())
       {
-	invariants_involved = true; 
-	break;
+  invariants_involved=true;
+  break;
       }
     }
   }
-  if(!invariants_involved || !spurious_check) 
+  if(!invariants_involved || !spurious_check)
   {
     std::list<cover_goals_extt::cover_goalt>::const_iterator g_it=goals.begin();
     for(goal_mapt::const_iterator it=goal_map.begin();
-	it!=goal_map.end(); it++, g_it++)
+  it!=goal_map.end(); it++, g_it++)
     {
       if(property_map[it->first].result==property_checkert::UNKNOWN &&
-	 solver.l_get(g_it->condition).is_true())
+   solver.l_get(g_it->condition).is_true())
       {
-	property_map[it->first].result = property_checkert::FAIL;
-	if(build_error_trace)
-	{
-	  ssa_build_goto_tracet build_goto_trace(SSA,solver.get_solver());
-	  build_goto_trace(property_map[it->first].error_trace);
-	  if(!all_properties) 
-	    break;
-	}
+  property_map[it->first].result=property_checkert::FAIL;
+  if(build_error_trace)
+  {
+    ssa_build_goto_tracet build_goto_trace(SSA, solver.get_solver());
+    build_goto_trace(property_map[it->first].error_trace);
+    if(!all_properties)
+      break;
+  }
       }
     }
     return;
@@ -219,36 +219,36 @@ void cover_goals_extt::assignment()
   {
     std::list<cover_goals_extt::cover_goalt>::const_iterator g_it=goals.begin();
     for(goal_mapt::const_iterator it=goal_map.begin();
-	it!=goal_map.end(); it++, g_it++)
+  it!=goal_map.end(); it++, g_it++)
     {
       if(property_map[it->first].result==property_checkert::UNKNOWN &&
-	 solver.l_get(g_it->condition).is_true())
+   solver.l_get(g_it->condition).is_true())
       {
-	property_map[it->first].result = property_checkert::FAIL;
-	if(build_error_trace)
-	{
-	  ssa_build_goto_tracet build_goto_trace(SSA,solver.get_solver());
-	  build_goto_trace(property_map[it->first].error_trace);
+  property_map[it->first].result=property_checkert::FAIL;
+  if(build_error_trace)
+  {
+    ssa_build_goto_tracet build_goto_trace(SSA, solver.get_solver());
+    build_goto_trace(property_map[it->first].error_trace);
 
 #if 0
-          show_raw_countermodel(it->first,SSA,*solver.solver,debug(),get_message_handler());
+          show_raw_countermodel(it->first, SSA, *solver.solver, debug(), get_message_handler());
 #endif
-	  if(!all_properties) 
-	    break;
-	}
+    if(!all_properties)
+      break;
+  }
       }
     }
     break;
-  } 
+  }
   case decision_proceduret::D_UNSATISFIABLE:
     break;
 
-  case decision_proceduret::D_ERROR:    
+  case decision_proceduret::D_ERROR:
   default:
     throw "error from decision procedure";
   }
 
-  solver.pop_context();  
+  solver.pop_context();
 
-  _iterations++; //statistics
+  _iterations++; // statistics
 }

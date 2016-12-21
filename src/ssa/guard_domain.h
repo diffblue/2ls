@@ -8,8 +8,8 @@ SEEMS OBSOLETE
 
 \*******************************************************************/
 
-#ifndef CPROVER_GUARD_DOMAIN_H
-#define CPROVER_GUARD_DOMAIN_H
+#ifndef CPROVER_2LS_SSA_GUARD_DOMAIN_H
+#define CPROVER_2LS_SSA_GUARD_DOMAIN_H
 
 #include <analyses/ai.h>
 
@@ -28,13 +28,13 @@ public:
   {
   public:
     locationt loc;
-    
+
     enum { NONE, BRANCH_TAKEN, BRANCH_NOT_TAKEN, MERGED } kind;
-    
+
     guardt():kind(NONE)
     {
     }
-    
+
     explicit guardt(locationt _loc):loc(_loc), kind(MERGED)
     {
     }
@@ -43,34 +43,34 @@ public:
       loc(branch), kind(truth?BRANCH_TAKEN:BRANCH_NOT_TAKEN)
     {
     }
-    
+
     inline bool is_branch() const
     {
       return kind==BRANCH_TAKEN || kind==BRANCH_NOT_TAKEN;
     }
   };
-  
+
   inline friend bool operator==(const guardt &a, const guardt &b)
   {
     return a.kind==b.kind &&
            a.loc->location_number==b.loc->location_number;
   }
-  
+
   inline friend bool operator!=(const guardt &a, const guardt &b)
   {
     return !(a==b);
   }
-  
+
   // We may be under some set of guards.
   typedef std::vector<guardt> guardst;
   guardst guards;
-  
+
   bool unreachable;
-  
+
   // Keep the guards for all incoming edges.
   typedef std::map<unsigned, guardst> incomingt;
   incomingt incoming;
-  
+
   // returns true iff 'a' and 'b' match in all but the last place
   static bool prefix_match(const guardst &a, const guardst &b)
   {
@@ -85,7 +85,7 @@ public:
     locationt to,
     ai_baset &,
     const namespacet &ns);
-              
+
   virtual void output(
     std::ostream &out,
     const ai_baset &,

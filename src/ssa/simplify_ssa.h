@@ -6,8 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef CPROVER_SIMPLIFY_SSA_H
-#define CPROVER_SIMPLIFY_SSA_H
+#ifndef CPROVER_2LS_SSA_SIMPLIFY_SSA_H
+#define CPROVER_2LS_SSA_SIMPLIFY_SSA_H
 
 #include <util/namespace.h>
 

@@ -6,8 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef CPROVER_SUMMARIZER_SHOW_H
-#define CPROVER_SUMMARIZER_SHOW_H
+#ifndef CPROVER_2LS_2LS_SHOW_H
+#define CPROVER_2LS_2LS_SHOW_H
 
 #include <string>
 #include <ostream>
@@ -51,21 +51,21 @@ void show_guards(
   std::ostream &,
   message_handlert &);
 
-//shows raw error trace
+// shows raw error trace
 void show_raw_countermodel(
   const irep_idt &property_id,
-  const local_SSAt &SSA, 
+  const local_SSAt &SSA,
   prop_convt &solver,
   std::ostream &,
   message_handlert &);
 
 void show_invariants(
-  const local_SSAt &SSA, 
+  const local_SSAt &SSA,
   const summaryt &summary,
   std::ostream &out);
 
 void show_ssa_symbols(
-  const local_SSAt &SSA, 
+  const local_SSAt &SSA,
   std::ostream &out);
 
 #endif

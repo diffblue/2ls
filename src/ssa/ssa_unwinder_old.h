@@ -6,8 +6,8 @@ Author: Saurabh Joshi
 
 \*******************************************************************/
 
-#ifndef CPROVER_DELTACHECK_SSA_UNWINDER_H
-#define CPROVER_DELTACHECK_SSA_UNWINDER_H
+#ifndef CPROVER_2LS_SSA_SSA_UNWINDER_OLD_H
+#define CPROVER_2LS_SSA_SSA_UNWINDER_OLD_H
 
 #include <util/message.h>
 
@@ -33,14 +33,14 @@ class ssa_local_unwindert : public messaget
   unsigned int prev_unwinding;
   class tree_loopnodet;
   typedef std::list<tree_loopnodet> loop_nodest;
-  typedef std::map<irep_idt,local_SSAt::nodest::iterator> loopends_mapt;
-  typedef std::map<irep_idt,int> modvar_levelt;
+  typedef std::map<irep_idt, local_SSAt::nodest::iterator> loopends_mapt;
+  typedef std::map<irep_idt, int> modvar_levelt;
   typedef std::set<exprt> exprst;
   typedef exprt cond_et;
   typedef exprt guard_et;
   typedef std::map<exprt, exprt> expr_break_mapt;
-  typedef std::pair<exprt,exprt> exp_guard_cond_pairt;
-  typedef std::set<local_SSAt::nodest::const_iterator,compare_node_iteratorst> return_nodest;
+  typedef std::pair<exprt, exprt> exp_guard_cond_pairt;
+  typedef std::set<local_SSAt::nodest::const_iterator, compare_node_iteratorst> return_nodest;
   typedef local_SSAt::nodest body_nodest;
   bool loopless;
 
@@ -48,14 +48,14 @@ class ssa_local_unwindert : public messaget
   {
   public:
     return_nodest return_nodes;
-    //exprst connectors;
+    // exprst connectors;
     exprt::operandst assertions_after_loop;
     exprt::operandst loop_continuation_exprs;
     exprt exit_condition;
     expr_break_mapt connectors;
     tree_loopnodet* parent;
     local_SSAt::nodest body_nodes;
-    std::map<exprt,exprt> pre_post_exprs;
+    std::map<exprt, exprt> pre_post_exprs;
     modvar_levelt modvar_level;
     std::set<irep_idt> vars_modified;
 #if 0
@@ -69,21 +69,21 @@ class ssa_local_unwindert : public messaget
 
     tree_loopnodet(){parent=NULL;is_dowhile=false;}
 
-    void output(std::ostream& out,const namespacet& ns)
+    void output(std::ostream& out, const namespacet& ns)
     {
 
 
       out << "Body nodes" << std::endl;
       for(local_SSAt::nodest::iterator it=body_nodes.begin();
-	  it!=body_nodes.end();it++)
+    it!=body_nodes.end();it++)
       {
-	it->output(out,ns);
+  it->output(out, ns);
       }
       out << "Nested loop nodes" << std::endl;
       for(loop_nodest::iterator it=loop_nodes.begin();
-	  it!=loop_nodes.end();it++)
+    it!=loop_nodes.end();it++)
       {
-	it->output(out,ns);
+  it->output(out, ns);
 
       }
 
@@ -104,20 +104,20 @@ class ssa_local_unwindert : public messaget
 
   void populate_connectors(tree_loopnodet& current_loop);
   void unwind(tree_loopnodet& current_loop,
-	      std::string suffix,bool full,
-	      const unsigned int unwind_depth,symbol_exprt& new_sym,
-	      local_SSAt::nodest& new_nodes);
-  void rename(local_SSAt::nodet& node,std::string suffix,
-      const int iteration,tree_loopnodet& current_loop);
+        std::string suffix, bool full,
+        const unsigned int unwind_depth, symbol_exprt& new_sym,
+        local_SSAt::nodest& new_nodes);
+  void rename(local_SSAt::nodet& node, std::string suffix,
+      const int iteration, tree_loopnodet& current_loop);
   void rename(exprt &expr, std::string suffix,
-      const int iteration,tree_loopnodet& current_loop);
+      const int iteration, tree_loopnodet& current_loop);
   int need_renaming(tree_loopnodet& current_loop,
       const irep_idt& id);
   unsigned int get_last_iteration(std::string& suffix, bool& result);
   irep_idt get_base_name(const irep_idt& id);
   unsigned rename_required(const exprt& e,
       const unsigned prev_unwinding) const;
-  void rename_invariant(exprt& e,const irep_idt& suffix) const;
+  void rename_invariant(exprt& e, const irep_idt& suffix) const;
   void add_connector_node(tree_loopnodet& current_loop,
           std::string suffix,
           const unsigned int unwind_depth,
@@ -137,7 +137,7 @@ public :
       irep_idt& before_suffix,
       std::list<unsigned>& iterations, bool baseonly) const;
   void rename_invariant(const std::vector<exprt>& inv_in,
-      std::vector<exprt>& inv_out,const unsigned prev_unwinding) const;
+      std::vector<exprt>& inv_out, const unsigned prev_unwinding) const;
   exprt rename_invariant(const exprt& inv_in) const;
   void loop_continuation_conditions(exprt::operandst& loop_cont_e) const;
   bool odometer_increment(std::vector<unsigned>& odometer,
@@ -150,17 +150,17 @@ public :
     SSA.output(out);
   }
 ssa_local_unwindert(local_SSAt& _SSA, bool k_induct, bool _ibmc);
-  void unwind(const irep_idt& fname,unsigned int k);
+  void unwind(const irep_idt& fname, unsigned int k);
 
-  void unwinder_rename(symbol_exprt &var,const local_SSAt::nodet &node, bool pre) const;
+  void unwinder_rename(symbol_exprt &var, const local_SSAt::nodet &node, bool pre) const;
 };
 
-class ssa_unwindert	: public messaget
+class ssa_unwindert  : public messaget
 {
 
 public:
-  typedef std::map<irep_idt,ssa_local_unwindert> unwinder_mapt;
-  typedef std::pair<irep_idt,ssa_local_unwindert> unwinder_pairt;
+  typedef std::map<irep_idt, ssa_local_unwindert> unwinder_mapt;
+  typedef std::pair<irep_idt, ssa_local_unwindert> unwinder_pairt;
 
   ssa_unwindert(ssa_dbt& _db);
 
@@ -168,7 +168,7 @@ public:
 
   void init_localunwinders();
 
-  void unwind(const irep_idt id,unsigned int k);
+  void unwind(const irep_idt id, unsigned int k);
 
   void unwind_all(unsigned int k);
 

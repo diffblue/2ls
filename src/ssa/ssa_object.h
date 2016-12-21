@@ -6,8 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef CPROVER_SSA_OBJECTS_H
-#define CPROVER_SSA_OBJECTS_H
+#ifndef CPROVER_2LS_SSA_SSA_OBJECT_H
+#define CPROVER_2LS_SSA_SSA_OBJECT_H
 
 #include <goto-programs/goto_functions.h>
 
@@ -21,7 +21,7 @@ public:
     inline explicit identifiert(const irep_idt &_src):irep_idt(_src)
     {
     }
-    
+
     inline identifiert()
     {
     }
@@ -32,27 +32,27 @@ public:
     identifier(object_id_rec(expr, _ns))
   {
   }
-  
+
   inline const typet &type() const
   {
     return expr.type();
   }
-  
+
   inline const exprt &get_expr() const
   {
     return expr;
   }
-  
+
   inline identifiert get_identifier() const
   {
     return identifier;
   }
-  
+
   inline const symbol_exprt symbol_expr() const
   {
     return symbol_exprt(identifier, type());
   }
-  
+
   // The identifier is unique, so ordering and comparison
   // can be done on the identifier, which in turn is
   // an integer.
@@ -65,12 +65,12 @@ public:
   {
     return identifier==other.identifier;
   }
-  
+
   inline bool operator!=(const ssa_objectt &other) const
   {
     return identifier!=other.identifier;
   }
-  
+
   // This is for use in if(...) tests, and
   // implements the 'safe bool' idiom. Shall be replaced
   // by C++11 explict conversion to bool one day.
@@ -78,7 +78,7 @@ public:
   {
     return identifier.empty()?0:(void *)&identifier;
   }
-  
+
   exprt get_root_object() const
   {
     return get_root_object_rec(expr);
@@ -98,7 +98,7 @@ public:
   // objects, plus categorization
   typedef std::set<ssa_objectt> objectst;
   objectst objects, dirty_locals, clean_locals, globals, ptr_objects;
-  
+
   // literals whose address is taken
   typedef std::set<exprt> literalst;
   literalst literals;
@@ -111,7 +111,7 @@ public:
     add_ptr_objects(ns);
     categorize_objects(goto_function, ns);
   }
-  
+
 protected:
   void collect_objects(
     const goto_functionst::goto_functiont &,
@@ -120,7 +120,7 @@ protected:
   void categorize_objects(
     const goto_functionst::goto_functiont &,
     const namespacet &);
-    
+
   void add_ptr_objects(
     const namespacet &);
 };

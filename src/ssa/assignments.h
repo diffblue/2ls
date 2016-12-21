@@ -6,8 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef CPROVER_ASSIGNMENTS_H
-#define CPROVER_ASSIGNMENTS_H
+#ifndef CPROVER_2LS_SSA_ASSIGNMENTS_H
+#define CPROVER_2LS_SSA_ASSIGNMENTS_H
 
 #include <goto-programs/goto_functions.h>
 
@@ -26,14 +26,14 @@ public:
 
   typedef std::map<locationt, objectst> assignment_mapt;
   assignment_mapt assignment_map;
-  
+
   bool assigns(locationt loc, const ssa_objectt &object) const
   {
     assignment_mapt::const_iterator it=assignment_map.find(loc);
     if(it==assignment_map.end()) return false;
     return it->second.find(object)!=it->second.end();
   }
-  
+
   inline const objectst &get(locationt loc) const
   {
     assignment_mapt::const_iterator it=assignment_map.find(loc);
@@ -51,22 +51,22 @@ public:
   {
     build_assignment_map(_goto_program, _ns);
   }
-  
+
   void output(
     const namespacet &ns,
     const goto_programt &_goto_program,
     std::ostream &);
-  
+
 protected:
   void build_assignment_map(const goto_programt &, const namespacet &);
 
   void assign(
     const exprt &lhs, locationt,
     const namespacet &ns);
-    
+
   void assign(
     const ssa_objectt &lhs, locationt,
-    const namespacet &ns);    
+    const namespacet &ns);
 };
 
 #endif

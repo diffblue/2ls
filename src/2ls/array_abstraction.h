@@ -6,8 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef CPROVER_GOTO_PROGRAMS_array_abstraction_H
-#define CPROVER_GOTO_PROGRAMS_array_abstraction_H
+#ifndef CPROVER_2LS_2LS_ARRAY_ABSTRACTION_H
+#define CPROVER_2LS_2LS_ARRAY_ABSTRACTION_H
 
 #include <util/symbol_table.h>
 #include <util/message_stream.h>
@@ -66,7 +66,7 @@ protected:
       return false;
 
     return to_bitvector_type(type).get_width()==config.ansi_c.char_width;
-  
+
     */
     return to_bitvector_type(type).get_width()==config.ansi_c.char_width
         || to_bitvector_type(type).get_width()==config.ansi_c.int_width;
@@ -175,19 +175,19 @@ protected:
     const typet &source_type);
 
   void declare_define_locals(goto_programt &dest);
-  
+
   // BW
   goto_programt::targett read_rec(
     const exprt &src,
     goto_programt &dest,
     goto_programt::targett target);
-    
+
   // BW
   goto_programt::targett bounds_check(
     goto_programt &dest,
     goto_programt::targett target,
     const exprt &new_lhs,
-    const exprt &index);  
+    const exprt &index);
 };
 
 // keep track of length of strings

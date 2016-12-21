@@ -38,7 +38,7 @@ void guard_mapt::output(
         in_it++)
       out << " " << in_it->guard_source->location_number
           << " (" << in_it->kind << ")";
-        
+
     out << "\n";
   }
 }
@@ -63,11 +63,11 @@ void guard_mapt::build(const goto_programt &src)
   {
     locationt next=it;
     next++;
-  
+
     if(it->is_goto())
     {
       map[it->get_target()->location_number].add_in(it, TAKEN);
-      
+
       if(!it->guard.is_true())
         map[next->location_number].add_in(it, NOT_TAKEN);
       else
@@ -88,7 +88,7 @@ void guard_mapt::build(const goto_programt &src)
   // Also make the function entry location have a guard
   if(!src.instructions.empty())
     map[src.instructions.begin()->location_number].has_guard=true;
-  
+
   // now assign the guard sources accordingly
 
   locationt g;
@@ -96,7 +96,7 @@ void guard_mapt::build(const goto_programt &src)
   forall_goto_program_instructions(it, src)
   {
     entryt &entry=map[it->location_number];
-    
+
     if(entry.has_guard)
     {
       entry.guard_source=it; // self-pointer
@@ -105,19 +105,19 @@ void guard_mapt::build(const goto_programt &src)
     else
       entry.guard_source=g; // previous
   }
-  
+
   // Locations with guards get the successor edge
   // in the CFG.
 
   locationt previous;
-  
+
   forall_goto_program_instructions(it, src)
   {
     // skip first, which has no predecessor
     if(it!=src.instructions.begin())
     {
       entryt &entry=map[it->location_number];
-    
+
       // no need if previous is a goto
       if(entry.has_guard &&
          !previous->is_goto() &&
@@ -125,10 +125,10 @@ void guard_mapt::build(const goto_programt &src)
          !previous->is_function_call())
         entry.add_in(previous, SUCCESSOR);
     }
-    
+
     previous=it;
   }
-  
+
   // now do guard sources of edges
 
   for(mapt::iterator m_it=map.begin(); m_it!=map.end(); m_it++)

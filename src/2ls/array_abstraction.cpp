@@ -23,7 +23,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/pointer_arithmetic.h>
 #include "array_abstraction.h"
 
-//#define DEBUG
+// #define DEBUG
 
 #ifdef DEBUG
 #include <iostream>
@@ -391,7 +391,7 @@ void array_abstractiont::declare_define_locals(goto_programt &dest)
 
   Forall_goto_program_instructions(it, dest)
     if(it->is_decl())
-    {    		
+    {
       // same name may exist several times due to inlining, make sure the first
       // declaration is used
       available_decls.insert(std::make_pair(
@@ -488,11 +488,11 @@ exprt array_abstractiont::make_val_or_dummy_rec(goto_programt &dest,
   const typet &eff_type=ns.follow(symbol.type);
 
   if(type_eq(eff_type, string_struct, ns))
-  { 
+  {
     symbol_exprt sym_expr=add_dummy_symbol_and_value(
         dest, ref_instr, symbol, irep_idt(),
         eff_type, source_type);
-  
+
       return sym_expr;
   }
   else if(eff_type.id()==ID_union ||
@@ -516,10 +516,10 @@ exprt array_abstractiont::make_val_or_dummy_rec(goto_programt &dest,
         continue;
 
       const typet &eff_sub_type=ns.follow(it2->type());
-      if(eff_sub_type.id() == ID_pointer ||
-          eff_sub_type.id() == ID_array ||
-          eff_sub_type.id() == ID_struct ||
-          eff_sub_type.id() == ID_union)
+      if(eff_sub_type.id()==ID_pointer ||
+          eff_sub_type.id()==ID_array ||
+          eff_sub_type.id()==ID_struct ||
+          eff_sub_type.id()==ID_union)
       {
         symbol_exprt sym_expr=add_dummy_symbol_and_value(
             dest, ref_instr, symbol, it2->get_name(),
@@ -597,7 +597,7 @@ symbol_exprt array_abstractiont::add_dummy_symbol_and_value(
   decl->code=code_declt(sym_expr);
   decl->code.add_source_location()=ref_instr->source_location;
 
-  // set the value - may be nil
+  // set the value-may be nil
   if(source_type.id()==ID_array &&
       type_eq(type, string_struct, ns))
   {
@@ -609,7 +609,7 @@ symbol_exprt array_abstractiont::add_dummy_symbol_and_value(
       build_unknown(SIZE, false):to_array_type(source_type).size();
     make_type(new_symbol.value.op2(), build_type(SIZE));
   }
- 
+
   if(new_symbol.value.is_not_nil())
   {
     goto_programt::targett assignment1=dest.add_instruction();
@@ -764,8 +764,8 @@ void array_abstractiont::abstract_function_call(
     if(it1==arguments.end())
     {
       error() << target->source_location << eom;
-      throw "function call: not enough arguments " + id2string(call.function().get(ID_identifier)) + " "
-                                                   + from_expr(ns, "", *it2);
+      throw "function call: not enough arguments "+id2string(call.function().get(ID_identifier))+" "
+                                                  +from_expr(ns, "", *it2);
     }
 
     str_args.push_back(exprt());
@@ -786,7 +786,7 @@ void array_abstractiont::abstract_function_call(
 
       str_args.back()=idx;
     }
-    
+
 
     if(!is_ptr_argument(abstract_type))
       str_args.back()=str_args.back();
@@ -796,7 +796,7 @@ void array_abstractiont::abstract_function_call(
       to_code_type(fct_symbol.type).return_type());
   if(!abstract_ret_type.is_nil())
   {
-    const exprt &lhs = call.lhs();
+    const exprt &lhs=call.lhs();
     exprt new_lhs;
 
     if(lhs.is_nil() ||
@@ -810,9 +810,9 @@ void array_abstractiont::abstract_function_call(
       assert(type_eq(new_lhs.type(),
             abstract_ret_type, ns));
 
-      //if(is_ptr_argument(abstract_ret_type))
+      // if(is_ptr_argument(abstract_ret_type))
         str_args.push_back(new_lhs);
-      //else
+      // else
       //  str_args.push_back(address_of_exprt(new_lhs));
     }
   }
@@ -1030,7 +1030,7 @@ const typet& array_abstractiont::build_abstraction_type(const typet &type)
   const typet &eff_type=ns.follow(type);
   abstraction_types_mapt::const_iterator map_entry=
     abstraction_types_map.find(eff_type);
-  if(map_entry!=abstraction_types_map.end()) 
+  if(map_entry!=abstraction_types_map.end())
     return map_entry->second;
 
   abstraction_types_mapt tmp;
@@ -1067,7 +1067,7 @@ const typet& array_abstractiont::build_abstraction_type_rec(const typet &type,
   ::std::pair< abstraction_types_mapt::iterator, bool > map_entry(
       abstraction_types_map.insert(::std::make_pair(
           eff_type, nil_typet())));
-  if(!map_entry.second) 
+  if(!map_entry.second)
     return map_entry.first->second;
 
   if(eff_type.id()==ID_array || eff_type.id()==ID_pointer)
@@ -1077,7 +1077,7 @@ const typet& array_abstractiont::build_abstraction_type_rec(const typet &type,
     /*
     // char* or void* or char[]
     if(is_char_type(eff_type.subtype()) ||
-        eff_type.subtype().id() == ID_empty)
+        eff_type.subtype().id()==ID_empty)
       map_entry.first->second=string_struct;
     else
     {
@@ -1200,7 +1200,7 @@ bool array_abstractiont::build(const exprt &object, exprt &dest, bool write)
 
   // handle pointer stuff
   if(object.type().id()==ID_pointer)
-  {  
+  {
     return build_pointer(object, dest, write);
   }
 
@@ -1309,7 +1309,7 @@ bool array_abstractiont::build_pointer(const exprt &object,
     if(write) return true;
 
     if(build_wrap(a.object(), dest, write)) return true;
-    //dest=address_of_exprt(dest);
+    // dest=address_of_exprt(dest);
     return false;
   }
   else if(ptr.pointer.id()==ID_symbol &&
@@ -1638,7 +1638,7 @@ goto_programt::targett array_abstractiont::bounds_check(
 
   goto_programt::targett assertion1=tmp.add_instruction();
   exprt lower_bound(binary_relation_exprt(typecast_exprt(index, size.type()), ID_ge, gen_zero(build_type(SIZE))));
-  
+
   assertion1->make_assertion(lower_bound);
   assertion1->source_location=target->source_location;
   assertion1->source_location.set("property", "array");
@@ -1647,7 +1647,7 @@ goto_programt::targett array_abstractiont::bounds_check(
   dest.insert_before_swap(target, tmp);
   ++target;
   ++target;
-  
+
   return target;
 }
 
@@ -1659,40 +1659,40 @@ goto_programt::targett array_abstractiont::read_rec(
 {
   if(src.id()==ID_symbol)
   {
-  } 
+  }
   else if(src.id()==ID_index)
   {
     assert(src.operands().size()==2);
     const index_exprt index_expr=to_index_expr(src);
     target=read_rec(src.op0(), dest, target);
     target=read_rec(src.op1(), dest, target);
-   
+
     exprt tmp;
-   
+
     if(!build_wrap(index_expr.array(), tmp, false))
-    {    
+    {
       target=bounds_check(dest, target, tmp, src.op1());
     }
   }
   else if(src.id()==ID_dereference)
   {
     pointer_arithmetict ptr(to_dereference_expr(src).pointer());
-  
+
     exprt tmp;
-  
+
     if(!build_wrap(ptr.pointer, tmp, false))
     {
       exprt size=member(tmp, SIZE);
       assert(size.is_not_nil());
-   
+
       exprt object=to_dereference_expr(src).pointer();
-    
+
       if(object.id()==ID_plus)
       {
         exprt index=object.op1();
 
         target=bounds_check(dest, target, tmp, index);
-      }    
+      }
     }
   }
   else if(src.id()==ID_member)
@@ -1724,7 +1724,7 @@ goto_programt::targett array_abstractiont::read_rec(
   else if(src.id()==ID_typecast)
   {
     target=read_rec(src.op0(), dest, target);
-  } 
+  }
   else {
 
     forall_operands(it, src)
@@ -1763,12 +1763,12 @@ goto_programt::targett array_abstractiont::abstract_char_assign(
   // BW
   if(lhs.id()==ID_index)
   {
- 
+
     const index_exprt &i_lhs=to_index_expr(lhs);
 
     exprt new_lhs;
     if(!build_wrap(i_lhs.array(), new_lhs, true))
-    {    
+    {
       exprt size=member(new_lhs, SIZE);
       assert(size.is_not_nil());
 
@@ -1786,18 +1786,18 @@ goto_programt::targett array_abstractiont::abstract_char_assign(
     {
       exprt size=member(new_lhs, SIZE);
       assert(size.is_not_nil());
-    
+
       exprt object=to_dereference_expr(lhs).pointer();
-    
+
       if(object.id()==ID_plus)
       {
         exprt index=object.op1();
 
         target=bounds_check(dest, target, new_lhs, index);
-      }    
+      }
     }
   }
- 
+
   return target;
 }
 

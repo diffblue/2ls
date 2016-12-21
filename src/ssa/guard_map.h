@@ -6,8 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef CPROVER_GUARD_MAP_H
-#define CPROVER_GUARD_MAP_H
+#ifndef CPROVER_2LS_SSA_GUARD_MAP_H
+#define CPROVER_2LS_SSA_GUARD_MAP_H
 
 #include <ostream>
 #include <cassert>
@@ -22,11 +22,11 @@ public:
   {
     build(src);
   }
-  
-  typedef goto_programt::const_targett locationt;    
+
+  typedef goto_programt::const_targett locationt;
 
   enum kindt { SUCCESSOR, TAKEN, NOT_TAKEN, ASSUME, FUNCTION_CALL } kind;
-  
+
   friend std::ostream & operator << (std::ostream &out, kindt kind)
   {
     switch(kind)
@@ -44,7 +44,7 @@ public:
   {
     locationt from, guard_source;
     kindt kind;
-    
+
     bool is_branch_not_taken() const
     {
       return kind==NOT_TAKEN;
@@ -82,10 +82,10 @@ public:
   public:
     inline entryt():has_guard(false) { }
     bool has_guard;
-    
+
     // if location has a guard of its own this is a self-pointer
     locationt guard_source;
-    
+
     // if it has a guard of its own:
     incomingt incoming;
 
@@ -95,7 +95,7 @@ public:
       incoming.push_back(edget(l, k));
     }
   };
-  
+
   // Query me! I return the entry for any program location.
   inline const entryt &operator[](const locationt location) const
   {
@@ -103,15 +103,15 @@ public:
     assert(it!=map.end());
     return it->second;
   }
-  
+
   void output(
     const goto_programt &goto_program,
     std::ostream &) const;
-  
+
 protected:
   void build(const goto_programt &src);
-  
-  //use location number as key to make iteration deterministic
+
+  // use location number as key to make iteration deterministic
   typedef std::map<unsigned, entryt> mapt;
   mapt map;
 };

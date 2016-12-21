@@ -6,7 +6,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-//#define DEBUG
+// #define DEBUG
 
 #ifdef DEBUG
 #include <iostream>
@@ -99,7 +99,7 @@ void guard_domaint::transform(
   {
     // Functions might not return, but we will assume that
     // for now.
-    //guards.push_back(guardt(from));
+    // guards.push_back(guardt(from));
   }
 }
 
@@ -133,9 +133,9 @@ bool guard_domaint::merge(
     guards=b.guards;
     return true;
   }
-  
+
   guardst new_guards;
-  
+
   // Just one incoming edge?
   if(incoming.size()==1)
   {
@@ -147,7 +147,7 @@ bool guard_domaint::merge(
     // If this is something simple, we use it.
     const guardst &g1=incoming.begin()->second;
     const guardst &g2=incoming.rbegin()->second;
-  
+
     if(prefix_match(g1, g2) &&
        g1.back().is_branch() && g2.back().is_branch() &&
        g1.back().loc==g2.back().loc)
@@ -168,11 +168,11 @@ bool guard_domaint::merge(
     // Otherwise, we introduce a brand-new merge guard.
     new_guards.push_back(guardt(to));
   }
-  
+
   if(new_guards==guards)
     return false;
 
   guards.swap(new_guards);
-  
+
   return true;
 }

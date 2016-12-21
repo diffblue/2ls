@@ -6,8 +6,8 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
-#ifndef CPROVER_2LS_SUMMARIZER_DYNAMIC_CFG_H
-#define CPROVER_2LS_SUMMARIZER_DYNAMIC_CFG_H
+#ifndef CPROVER_2LS_2LS_DYNAMIC_CFG_H
+#define CPROVER_2LS_2LS_DYNAMIC_CFG_H
 
 #include <util/std_expr.h>
 #include <util/graph.h>
@@ -34,7 +34,7 @@ struct dynamic_cfg_idt
 {
   goto_programt::const_targett pc;
   std::vector<unsigned> iteration_stack;
-  //TODO: thread id
+  // TODO: thread id
 
   std::string to_string() const
   {
@@ -83,7 +83,7 @@ public:
     const unwindable_local_SSAt &ssa,
     const summaryt &summary);
 
-  
+
 protected:
   typedef std::pair<dynamic_cfg_idt, exprt> assumptiont;
   typedef std::vector<assumptiont> assumptionst;

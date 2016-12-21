@@ -6,8 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef CPROVER_DELTACHECK_SUMMARY_H
-#define CPROVER_DELTACHECK_SUMMARY_H
+#ifndef CPROVER_2LS_SOLVER_SUMMARY_H
+#define CPROVER_2LS_SOLVER_SUMMARY_H
 
 #include <iostream>
 #include <set>
@@ -24,22 +24,22 @@ class summaryt
   typedef std::list<symbol_exprt> var_listt;
   typedef std::set<symbol_exprt> var_sett;
 
-  summaryt() : 
-    fw_precondition(nil_exprt()), 
-    fw_transformer(nil_exprt()), 
-    fw_invariant(nil_exprt()), 
-    bw_precondition(nil_exprt()), 
-    bw_postcondition(nil_exprt()), 
-    bw_transformer(nil_exprt()), 
+  summaryt() :
+    fw_precondition(nil_exprt()),
+    fw_transformer(nil_exprt()),
+    fw_invariant(nil_exprt()),
+    bw_precondition(nil_exprt()),
+    bw_postcondition(nil_exprt()),
+    bw_transformer(nil_exprt()),
     bw_invariant(nil_exprt()),
-    termination_argument(nil_exprt()), 
+    termination_argument(nil_exprt()),
     terminates(UNKNOWN),
     mark_recompute(false) {}
 
   var_listt params;
   var_sett globals_in, globals_out;
 
- 
+
   predicatet fw_precondition; // accumulated calling contexts (over-approx)
   //  predicatet fw_postcondition; // we are not projecting that out currently
   predicatet fw_transformer; // forward summary (over-approx)
@@ -52,7 +52,7 @@ class summaryt
   predicatet termination_argument;
   threevalt terminates;
 
-  bool mark_recompute; //to force recomputation of the summary
+  bool mark_recompute; // to force recomputation of the summary
                        // (used for invariant reuse in k-induction)
 
   void output(std::ostream &out, const namespacet &ns) const;

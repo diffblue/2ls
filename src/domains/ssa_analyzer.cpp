@@ -6,14 +6,14 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-//#define DEBUG
+// #define DEBUG
 
 #include <util/options.h>
 
 
 #include "strategy_solver_base.h"
 #include "strategy_solver_enumeration.h"
-//#include "solver_enumeration.h"
+// #include "solver_enumeration.h"
 #include "strategy_solver_binsearch.h"
 #include "strategy_solver_binsearch2.h"
 #include "strategy_solver_binsearch3.h"
@@ -36,8 +36,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/mp_arith.h>
 
 #define BINSEARCH_SOLVER strategy_solver_binsearcht(*static_cast<tpolyhedra_domaint *>(domain), solver, SSA.ns)
-//#define BINSEARCH_SOLVER strategy_solver_binsearch2t(*static_cast<tpolyhedra_domaint *>(domain), solver, SSA.ns)
-//#define BINSEARCH_SOLVER strategy_solver_binsearch3t(*static_cast<tpolyhedra_domaint *>(domain), solver, SSA, SSA.ns)
+// #define BINSEARCH_SOLVER strategy_solver_binsearch2t(*static_cast<tpolyhedra_domaint *>(domain), solver, SSA.ns)
+// #define BINSEARCH_SOLVER strategy_solver_binsearch3t(*static_cast<tpolyhedra_domaint *>(domain), solver, SSA, SSA.ns)
 
 #ifdef DEBUG
 #include <iostream>
@@ -56,7 +56,7 @@ Function: ssa_analyzert::operator()
 \*******************************************************************/
 
 void ssa_analyzert::operator()(incremental_solvert &solver,
-			       local_SSAt &SSA, 
+             local_SSAt &SSA,
                                const exprt &precondition,
                                template_generator_baset &template_generator)
 {
@@ -71,8 +71,8 @@ void ssa_analyzert::operator()(incremental_solvert &solver,
 
   // add precondition (or conjunction of asssertion in backward analysis)
   solver << precondition;
-  
-  domain = template_generator.domain();
+
+  domain=template_generator.domain();
 
   // get strategy solver from options
   strategy_solver_baset *strategy_solver;
@@ -81,47 +81,47 @@ void ssa_analyzert::operator()(incremental_solvert &solver,
     if(template_generator.options.get_bool_option(
       "monolithic-ranking-function"))
     {
-      strategy_solver = new ranking_solver_enumerationt(
+      strategy_solver=new ranking_solver_enumerationt(
         *static_cast<linrank_domaint *>(domain), solver, SSA.ns,
-	template_generator.options.get_unsigned_int_option(
-          "max-inner-ranking-iterations"));    
-      result = new linrank_domaint::templ_valuet();
+  template_generator.options.get_unsigned_int_option(
+          "max-inner-ranking-iterations"));
+      result=new linrank_domaint::templ_valuet();
     }
     else
     {
-      strategy_solver = new lexlinrank_solver_enumerationt(
+      strategy_solver=new lexlinrank_solver_enumerationt(
         *static_cast<lexlinrank_domaint *>(domain), solver, SSA.ns,
         template_generator.options.get_unsigned_int_option(
-	  "lexicographic-ranking-function"),
-	template_generator.options.get_unsigned_int_option(
+    "lexicographic-ranking-function"),
+  template_generator.options.get_unsigned_int_option(
           "max-inner-ranking-iterations"));
-      result = new lexlinrank_domaint::templ_valuet();
+      result=new lexlinrank_domaint::templ_valuet();
     }
-  }  
+  }
   else if(template_generator.options.get_bool_option("equalities"))
   {
-    strategy_solver = new strategy_solver_equalityt(
-        *static_cast<equality_domaint *>(domain), solver, SSA.ns);    
-    result = new equality_domaint::equ_valuet();
+    strategy_solver=new strategy_solver_equalityt(
+        *static_cast<equality_domaint *>(domain), solver, SSA.ns);
+    result=new equality_domaint::equ_valuet();
   }
   else
   {
     if(template_generator.options.get_bool_option("enum-solver"))
     {
-      result = new tpolyhedra_domaint::templ_valuet();
-      strategy_solver = new strategy_solver_enumerationt(
+      result=new tpolyhedra_domaint::templ_valuet();
+      strategy_solver=new strategy_solver_enumerationt(
         *static_cast<tpolyhedra_domaint *>(domain), solver, SSA.ns);
     }
     else if(template_generator.options.get_bool_option("predabs-solver"))
     {
-      result = new predabs_domaint::templ_valuet();
-      strategy_solver = new strategy_solver_predabst(
+      result=new predabs_domaint::templ_valuet();
+      strategy_solver=new strategy_solver_predabst(
         *static_cast<predabs_domaint *>(domain), solver, SSA.ns);
     }
     else if(template_generator.options.get_bool_option("binsearch-solver"))
     {
-      result = new tpolyhedra_domaint::templ_valuet();
-      strategy_solver = new BINSEARCH_SOLVER;
+      result=new tpolyhedra_domaint::templ_valuet();
+      strategy_solver=new BINSEARCH_SOLVER;
     }
     else assert(false);
   }
@@ -138,22 +138,22 @@ void ssa_analyzert::operator()(incremental_solvert &solver,
   do
   {
     iteration_number++;
-    
+
     #ifdef DEBUG
     std::cout << "\n"
               << "******** Forward least fixed-point iteration #"
               << iteration_number << "\n";
     #endif
-   
-    change = strategy_solver->iterate(*result);
 
-    if(change) 
+    change=strategy_solver->iterate(*result);
+
+    if(change)
     {
 
       #ifdef DEBUG
       std::cout << "Value after " << iteration_number
             << " iteration(s):\n";
-      domain->output_value(std::cout,*result,SSA.ns);
+      domain->output_value(std::cout, *result, SSA.ns);
       #endif
     }
   }
@@ -162,15 +162,15 @@ void ssa_analyzert::operator()(incremental_solvert &solver,
   #ifdef DEBUG
   std::cout << "Fixed-point after " << iteration_number
             << " iteration(s)\n";
-  domain->output_value(std::cout,*result,SSA.ns);
+  domain->output_value(std::cout, *result, SSA.ns);
   #endif
 
   solver.pop_context();
 
-  //statistics
-  solver_instances += strategy_solver->get_number_of_solver_instances();
-  solver_calls += strategy_solver->get_number_of_solver_calls();
-  solver_instances += strategy_solver->get_number_of_solver_instances();
+  // statistics
+  solver_instances+=strategy_solver->get_number_of_solver_instances();
+  solver_calls+=strategy_solver->get_number_of_solver_calls();
+  solver_instances+=strategy_solver->get_number_of_solver_instances();
 
   delete strategy_solver;
 }
@@ -189,5 +189,5 @@ Function: ssa_analyzert::get_result
 
 void ssa_analyzert::get_result(exprt &_result, const domaint::var_sett &vars)
 {
-  domain->project_on_vars(*result,vars,_result);
+  domain->project_on_vars(*result, vars, _result);
 }

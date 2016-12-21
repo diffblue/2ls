@@ -6,8 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef CPROVER_ADDRESS_CANONIZER_H
-#define CPROVER_ADDRESS_CANONIZER_H
+#ifndef CPROVER_2LS_SSA_ADDRESS_CANONIZER_H
+#define CPROVER_2LS_SSA_ADDRESS_CANONIZER_H
 
 #include <util/namespace.h>
 #include <util/expr.h>

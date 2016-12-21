@@ -20,7 +20,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
-Function: 
+Function:
 
   Inputs:
 
@@ -46,7 +46,7 @@ inline static typet c_sizeof_type_rec(const exprt &expr)
       if(t.is_not_nil()) return t;
     }
   }
-  
+
   return nil_typet();
 }
 
@@ -73,7 +73,7 @@ exprt malloc_ssa(
   namespacet ns(symbol_table);
   exprt size=code.op0();
   typet object_type=nil_typet();
-  
+
   {
     // special treatment for sizeof(T)*x
     if(size.id()==ID_mult &&
@@ -82,7 +82,7 @@ exprt malloc_ssa(
     {
       object_type=array_typet(
         c_sizeof_type_rec(size.op0()),
-        size.op1());      
+        size.op1());
     }
     else if(size.id()==ID_mult &&
             size.operands().size()==2 &&
@@ -90,12 +90,12 @@ exprt malloc_ssa(
     {
       object_type=array_typet(
         c_sizeof_type_rec(size.op1()),
-        size.op0());      
+        size.op0());
     }
     else
     {
       typet tmp_type=c_sizeof_type_rec(size);
-      
+
       if(tmp_type.is_not_nil())
       {
         // Did the size get multiplied?
@@ -111,7 +111,7 @@ exprt malloc_ssa(
           else
           {
             mp_integer elements=alloc_size/elem_size;
-            
+
             if(elements*elem_size==alloc_size)
               object_type=array_typet(tmp_type,
                 from_integer(elements, size.type()));
@@ -120,7 +120,7 @@ exprt malloc_ssa(
       }
     }
 
-    // the fall-back is to produce a byte-array    
+    // the fall-back is to produce a byte-array
     if(object_type.is_nil())
       object_type=array_typet(unsigned_char_type(), size);
   }
@@ -128,10 +128,10 @@ exprt malloc_ssa(
 #ifdef DEBUG
   std::cout << "OBJECT_TYPE: " << from_type(ns, "", object_type) << std::endl;
 #endif
-  
+
   // value
   symbolt value_symbol;
-  
+
   value_symbol.base_name="dynamic_object"+suffix;
   value_symbol.name="ssa::"+id2string(value_symbol.base_name);
   value_symbol.is_lvalue=true;
@@ -141,7 +141,7 @@ exprt malloc_ssa(
   symbol_table.add(value_symbol);
 
   address_of_exprt address_of;
-  
+
   if(object_type.id()==ID_array)
   {
     address_of.type()=pointer_typet(value_symbol.type.subtype());
@@ -155,9 +155,9 @@ exprt malloc_ssa(
     address_of.op0()=value_symbol.symbol_expr();
     address_of.type()=pointer_typet(value_symbol.type);
   }
-  
+
   exprt result=address_of;
-  
+
   if(result.type()!=code.type())
     result=typecast_exprt(result, code.type());
 
@@ -176,7 +176,7 @@ static void replace_malloc_rec(exprt &expr,
   {
     assert(!malloc_size.is_nil());
     expr.op0()=malloc_size;
- 
+
     expr=malloc_ssa(to_side_effect_expr(expr),
       "$"+i2string(counter++)+suffix, symbol_table);
   }
@@ -201,7 +201,7 @@ void replace_malloc(goto_modelt &goto_model,
         code_assignt &code_assign=to_code_assign(i_it->code);
         if(code_assign.lhs().id()==ID_symbol)
         {
-          // we have to propagate the malloc size 
+          // we have to propagate the malloc size
           //   in order to get the object type
           // TODO: this only works with inlining,
           //       and btw, this is an ugly hack

@@ -6,8 +6,8 @@ Author:
 
 \*******************************************************************/
 
-#ifndef CPROVER_HORN_ENCODING_H
-#define CPROVER_HORN_ENCODING_H
+#ifndef CPROVER_2LS_2LS_HORN_ENCODING_H
+#define CPROVER_2LS_2LS_HORN_ENCODING_H
 
 #include <iosfwd>
 

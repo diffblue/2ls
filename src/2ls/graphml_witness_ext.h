@@ -6,8 +6,8 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
-#ifndef CPROVER_2LS_SUMMARIZER_GRAPHML_WITNESS_EXT_H
-#define CPROVER_2LS_SUMMARIZER_GRAPHML_WITNESS_EXT_H
+#ifndef CPROVER_2LS_2LS_GRAPHML_WITNESS_EXT_H
+#define CPROVER_2LS_2LS_GRAPHML_WITNESS_EXT_H
 
 #include <util/std_expr.h>
 
@@ -25,7 +25,7 @@ public:
 
   // correctness witness
   void operator()(const summary_checker_baset &summary_checker);
-  
+
 protected:
 
   graphmlt::node_indext add_node(

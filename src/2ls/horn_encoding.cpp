@@ -36,16 +36,16 @@ public:
     smt2_conv(ns, "", "Horn-clause encoding", "", smt2_convt::Z3, _out)
   {
   }
-  
+
   void operator()();
 
 protected:
   const goto_functionst &goto_functions;
   const namespacet ns;
   std::ostream &out;
-  
+
   smt2_convt smt2_conv;
-  
+
   void translate(const goto_functionst::function_mapt::const_iterator);
 };
 
@@ -94,7 +94,7 @@ void horn_encodingt::translate(
   local_SSAt local_SSA(f_it->second, ns, "");
 
   const goto_programt &body=f_it->second.body;
-  
+
   // first generate the predicates for all locations
   for(goto_programt::instructionst::const_iterator
       loc=body.instructions.begin();
@@ -119,10 +119,10 @@ void horn_encodingt::translate(
 
     out << ") Bool)\n";
   }
-  
+
   out << '\n';
 
-  // now encode transitions  
+  // now encode transitions
   for(goto_programt::instructionst::const_iterator
       loc=body.instructions.begin();
       loc!=body.instructions.end();
@@ -150,9 +150,9 @@ void horn_encodingt::translate(
     }
 
     out << ")\n";
-    out << "  (=> (h-" << f_it->first << '-' 
+    out << "  (=> (h-" << f_it->first << '-'
         << loc->location_number;
-    
+
     for(ssa_objectst::objectst::const_iterator
         o_it=local_SSA.ssa_objects.objects.begin();
         o_it!=local_SSA.ssa_objects.objects.end();
@@ -161,7 +161,7 @@ void horn_encodingt::translate(
       out << ' ';
       smt2_conv.convert_expr(o_it->symbol_expr());
     }
-    
+
     out << ")\n      ";
 
     if(loc->is_goto())
@@ -229,7 +229,7 @@ void horn_encodingt::translate(
       }
       #endif
     }
-    
+
     out << ")))"; // =>, forall, assert
 
     out << '\n';

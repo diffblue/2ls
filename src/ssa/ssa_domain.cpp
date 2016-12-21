@@ -6,7 +6,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-//#define DEBUG
+// #define DEBUG
 
 #ifdef DEBUG
 #include <iostream>
@@ -54,7 +54,7 @@ void ssa_domaint::output(
       // this maps source -> def
       out << "PHI " << p_it->first << ": "
           << (*n_it).second
-          << " from " 
+          << " from "
           << (*n_it).first << "\n";
     }
   }
@@ -102,7 +102,7 @@ void ssa_domaint::transform(
     const irep_idt &id=code_dead.get_identifier();
     def_map.erase(id);
   }
-  
+
   // update source in all defs
   for(def_mapt::iterator
       d_it=def_map.begin(); d_it!=def_map.end(); d_it++)
@@ -127,7 +127,7 @@ bool ssa_domaint::merge(
   locationt to)
 {
   bool result=false;
-  
+
   // should traverse both maps simultaneously
   for(def_mapt::const_iterator
       d_it_b=b.def_map.begin();
@@ -135,15 +135,15 @@ bool ssa_domaint::merge(
       d_it_b++)
   {
     const irep_idt &id=d_it_b->first;
- 
+
     // check if we have a phi node for 'id'
-  
+
     phi_nodest::iterator p_it=phi_nodes.find(id);
     if(p_it!=phi_nodes.end())
     {
       // yes, simply add to existing phi node
       loc_def_mapt &phi_node=p_it->second;
-      phi_node[d_it_b->second.source->location_number]=d_it_b->second.def;      
+      phi_node[d_it_b->second.source->location_number]=d_it_b->second.def;
       // doesn't get propagated, don't set result to 'true'
       continue;
     }
@@ -190,7 +190,7 @@ bool ssa_domaint::merge(
 
       phi_node[d_it_a->second.source->location_number]=d_it_a->second.def;
       phi_node[d_it_b->second.source->location_number]=d_it_b->second.def;
-      
+
       // This phi node is now the new source.
       d_it_a->second.def.loc=to;
       d_it_a->second.def.kind=deft::PHI;
@@ -203,7 +203,7 @@ bool ssa_domaint::merge(
       #endif
     }
   }
-  
+
   return result;
 }
 
@@ -229,7 +229,7 @@ void ssa_ait::initialize(const goto_functionst::goto_functiont &goto_function)
   {
     locationt e=goto_function.body.instructions.begin();
     ssa_domaint &entry=operator[](e);
-    
+
     #if 0
     // parameters
     const code_typet::parameterst &parameters=goto_function.type.parameters();
@@ -243,7 +243,7 @@ void ssa_ait::initialize(const goto_functionst::goto_functiont &goto_function)
       entry.def_map[id].def.kind=ssa_domaint::deft::INPUT;
     }
     #endif
-    
+
     for(ssa_objectst::objectst::const_iterator
         o_it=assignments.ssa_objects.objects.begin();
         o_it!=assignments.ssa_objects.objects.end();

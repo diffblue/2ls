@@ -30,7 +30,7 @@ void simplify(local_SSAt &ssa, const namespacet &ns)
       n_it++)
   {
     local_SSAt::nodet &node=*n_it;
-    
+
     for(local_SSAt::nodet::equalitiest::iterator
         e_it=node.equalities.begin();
         e_it!=node.equalities.end();
@@ -47,7 +47,7 @@ void simplify(local_SSAt &ssa, const namespacet &ns)
     {
       *c_it=simplify_expr(*c_it, ns);
     }
-    
+
     for(local_SSAt::nodet::assertionst::iterator
         a_it=node.assertions.begin();
         a_it!=node.assertions.end();

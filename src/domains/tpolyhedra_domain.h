@@ -1,5 +1,5 @@
-#ifndef CPROVER_TEMPLATE_DOMAIN_H
-#define CPROVER_TEMPLATE_DOMAIN_H
+#ifndef CPROVER_2LS_DOMAINS_TPOLYHEDRA_DOMAIN_H
+#define CPROVER_2LS_DOMAINS_TPOLYHEDRA_DOMAIN_H
 
 #include "domain.h"
 
@@ -12,14 +12,14 @@ class tpolyhedra_domaint : public domaint
 {
 public:
   typedef unsigned rowt;
-  typedef exprt row_exprt; 
+  typedef exprt row_exprt;
   typedef constant_exprt row_valuet; // "bound"
 
-  class templ_valuet : public domaint::valuet, public std::vector<row_valuet> 
+  class templ_valuet : public domaint::valuet, public std::vector<row_valuet>
   {
   };
 
-  typedef struct 
+  typedef struct
   {
     guardt pre_guard;
     guardt post_guard;
@@ -30,10 +30,10 @@ public:
 
   typedef std::vector<template_rowt> templatet;
 
-  tpolyhedra_domaint(unsigned _domain_number, 
-		     replace_mapt &_renaming_map,
-		     const namespacet &_ns) :
-  domaint(_domain_number,_renaming_map, _ns)
+  tpolyhedra_domaint(unsigned _domain_number,
+         replace_mapt &_renaming_map,
+         const namespacet &_ns) :
+  domaint(_domain_number, _renaming_map, _ns)
   {}
 
   // initialize value
@@ -50,18 +50,18 @@ public:
 
   exprt to_pre_constraints(const templ_valuet &value);
   void make_not_post_constraints(const templ_valuet &value,
-			   exprt::operandst &cond_exprs, 
-			   exprt::operandst &value_exprs);
+         exprt::operandst &cond_exprs,
+         exprt::operandst &value_exprs);
 
   // value -> symbolic bound constraints (for optimization)
   exprt to_symb_pre_constraints(const templ_valuet &value);
   exprt to_symb_pre_constraints(const templ_valuet &value,
-				const std::set<rowt> &symb_rows);
+        const std::set<rowt> &symb_rows);
   exprt to_symb_post_constraints(const std::set<rowt> &symb_rows);
-  exprt get_row_symb_value_constraint(const rowt &row, 
-				      const row_valuet &row_value, bool geq=false);
-  exprt get_row_symb_pre_constraint(const rowt &row, 
-				    const row_valuet &row_value);
+  exprt get_row_symb_value_constraint(const rowt &row,
+              const row_valuet &row_value, bool geq=false);
+  exprt get_row_symb_pre_constraint(const rowt &row,
+            const row_valuet &row_value);
   exprt get_row_symb_post_constraint(const rowt &row);
 
 
@@ -81,7 +81,7 @@ public:
   virtual void output_value(std::ostream &out, const valuet &value, const namespacet &ns) const;
   virtual void output_domain(std::ostream &out, const namespacet &ns) const;
 
-  // projection  
+  // projection
   virtual void project_on_vars(valuet &value, const var_sett &vars, exprt &result);
 
   unsigned template_size();
@@ -96,13 +96,13 @@ public:
     );
 
   void add_interval_template(const var_specst &var_specs,
-			      const namespacet &ns);
+            const namespacet &ns);
   void add_difference_template(const var_specst &var_specs,
-				 const namespacet &ns);
+         const namespacet &ns);
   void add_sum_template(const var_specst &var_specs,
-				    const namespacet &ns);
+            const namespacet &ns);
   void add_quadratic_template(const var_specst &var_specs,
-				    const namespacet &ns);
+            const namespacet &ns);
 
   symbol_exprt get_row_symb_value(const rowt &row);
 
@@ -113,7 +113,7 @@ protected:
   friend class strategy_solver_enumerationt;
 
   templatet templ;
-  
+
 };
 
 #endif

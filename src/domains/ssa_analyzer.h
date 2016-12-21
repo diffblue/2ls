@@ -6,8 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef DELTACHECK_SSA_ANALYZER_H
-#define DELTACHECK_SSA_ANALYZER_H
+#ifndef CPROVER_2LS_DOMAINS_SSA_ANALYZER_H
+#define CPROVER_2LS_DOMAINS_SSA_ANALYZER_H
 
 #include <util/replace_expr.h>
 
@@ -22,20 +22,20 @@ public:
   typedef strategy_solver_baset::var_listt var_listt;
 
   explicit ssa_analyzert()
-    : 
+    :
     result(NULL),
     solver_instances(0),
     solver_calls(0)
     {
-    }  
+    }
 
-    ~ssa_analyzert() 
+    ~ssa_analyzert()
     {
       if(result!=NULL) delete result;
     }
 
   void operator()(incremental_solvert &solver,
-		  local_SSAt &SSA, 
+      local_SSAt &SSA,
                   const exprt &precondition,
                   template_generator_baset &template_generator);
 
@@ -45,14 +45,14 @@ public:
   unsigned get_number_of_solver_calls() { return solver_calls; }
 
 protected:
-  domaint *domain; //template generator is responsable for the domain object
+  domaint *domain; // template generator is responsable for the domain object
   domaint::valuet *result;
 
-  //statistics
+  // statistics
   unsigned solver_instances;
   unsigned solver_calls;
 };
 
 
 #endif
- 
+

@@ -268,7 +268,7 @@ void dynamic_cfgt::build_from_invariants(
      summary.fw_invariant.is_true())
     return;
 
-  //expected format /\_i g_i => inv_i
+  // expected format /\_i g_i=> inv_i
   if(summary.fw_invariant.id()==ID_implies)
   {
     build_from_invariant(

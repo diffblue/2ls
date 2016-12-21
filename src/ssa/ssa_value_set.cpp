@@ -6,7 +6,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-//#define DEBUG
+// #define DEBUG
 
 #ifdef DEBUG
 #include <iostream>
@@ -46,7 +46,7 @@ void ssa_value_domaint::transform(
   {
     // Perhaps look at condition, for stuff like
     // p!=0 or the like.
-    //exprt cond_deref=dereference(from->guard, *this, "", ns);
+    // exprt cond_deref=dereference(from->guard, *this, "", ns);
   }
   else if(from->is_decl())
   {
@@ -61,7 +61,7 @@ void ssa_value_domaint::transform(
     // functions may alter state almost arbitrarily:
     // * any global-scoped variables
     // * any dirty locals
-    
+
     #if 0
     for(objectst::const_iterator
         o_it=ssa_objects.dirty_locals.begin();
@@ -110,20 +110,20 @@ void ssa_value_domaint::assign_lhs_rec(
   std::cout << "assign_lhs_rec lhs: " << from_expr(ns, "", lhs) << '\n';
   std::cout << "assign_lhs_rec rhs: " << from_expr(ns, "", rhs) << '\n';
   #endif
-  
+
   // is the lhs an object?
   if(is_symbol_struct_member(lhs, ns))
   {
     const typet &lhs_type=ns.follow(lhs.type());
-    
+
     if(lhs_type.id()==ID_struct)
     {
       // Are we assigning an entire struct?
       // If so, need to split into pieces, recursively.
-    
+
       const struct_typet &struct_type=to_struct_type(lhs_type);
       const struct_typet::componentst &components=struct_type.components();
-      
+
       for(struct_typet::componentst::const_iterator
           it=components.begin();
           it!=components.end();
@@ -133,13 +133,13 @@ void ssa_value_domaint::assign_lhs_rec(
         member_exprt new_rhs(rhs, it->get_name(), it->type());
         assign_lhs_rec(new_lhs, new_rhs, ns, add); // recursive call
       }
-      
+
       return; // done
     }
 
     // object?
     ssa_objectt ssa_object(lhs, ns);
-    
+
     if(ssa_object)
     {
       valuest tmp_values;
@@ -153,9 +153,9 @@ void ssa_value_domaint::assign_lhs_rec(
         lhs_values=tmp_values;
 
 #if 0
-      std::cout << "value_set: "; lhs_values.output(std::cout,ns); std::cout << std::endl;
+      std::cout << "value_set: "; lhs_values.output(std::cout, ns); std::cout << std::endl;
 #endif
-  
+
       if(lhs_values.empty())
         value_map.erase(ssa_object);
     }
@@ -179,7 +179,7 @@ void ssa_value_domaint::assign_lhs_rec(
   {
 //  assert(false); // should have been removed
 
-    //not yet removed if there is an array inside a struct referenced by pointer
+    // not yet removed if there is an array inside a struct referenced by pointer
     assign_lhs_rec(to_dereference_expr(lhs).pointer(), rhs, ns, true);
   }
   else if(lhs.id()==ID_member)
@@ -221,7 +221,7 @@ void ssa_value_domaint::assign_rhs_rec(
 #ifdef DEBUG
   std::cout << "assign_rhs_rec: " << from_expr(ns, "", rhs) << '\n';
 #endif
-  
+
   if(rhs.id()==ID_address_of)
   {
     const exprt &op=to_address_of_expr(rhs).object();
@@ -272,15 +272,15 @@ void ssa_value_domaint::assign_rhs_rec(
   //   std::cout << rhs.pretty() << std::endl;
   //   assert(false); // should have been removed
 
-    //not yet removed if there is an array inside a struct referenced by pointer
+    // not yet removed if there is an array inside a struct referenced by pointer
     assign_rhs_rec(dest, rhs.op0(), ns, true, 1);
   }
   else
   {
     // object?
-  
+
     ssa_objectt ssa_object(rhs, ns);
-    
+
     if(ssa_object)
     {
       value_mapt::const_iterator m_it=value_map.find(ssa_object);
@@ -434,11 +434,11 @@ bool ssa_value_domaint::valuest::merge(const valuest &src)
   unsigned old_size=value_set.size();
   value_set.insert(src.value_set.begin(), src.value_set.end());
   if(old_size!=value_set.size()) result=true;
-  
+
   // alignment
   alignment=merge_alignment(alignment, src.alignment);
 
-  return result;  
+  return result;
 }
 
 /*******************************************************************\
@@ -461,7 +461,7 @@ bool ssa_value_domaint::merge(
   value_mapt::iterator v_it=value_map.begin();
   const value_mapt &new_value_map=other.value_map;
   bool result=false;
-  
+
   for(value_mapt::const_iterator
       it=new_value_map.begin();
       it!=new_value_map.end();
@@ -479,15 +479,15 @@ bool ssa_value_domaint::merge(
       v_it++;
       continue;
     }
-    
+
     assert(v_it->first==it->first);
-      
+
     if(v_it->second.merge(it->second))
       result=true;
 
     v_it++;
     it++;
   }
-  
+
   return result;
 }

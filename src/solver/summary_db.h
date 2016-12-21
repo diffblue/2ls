@@ -6,8 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef CPROVER_SUMMARIZER_SUMMARY_DB_H
-#define CPROVER_SUMMARIZER_SUMMARY_DB_H
+#ifndef CPROVER_2LS_SOLVER_SUMMARY_DB_H
+#define CPROVER_2LS_SOLVER_SUMMARY_DB_H
 
 #include "summary.h"
 #include <util/message.h>
@@ -23,9 +23,9 @@ public:
   void write();
   void clear() { store.clear(); }
 
-  summaryt get(const function_namet &function_name) const 
+  summaryt get(const function_namet &function_name) const
     { return store.at(function_name); }
-  bool exists(const function_namet &function_name) const  
+  bool exists(const function_namet &function_name) const
     { return store.find(function_name)!=store.end(); }
   void put(const function_namet &function_name, const summaryt &summary);
 

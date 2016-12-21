@@ -6,8 +6,8 @@ Author: Daniel Kroening, Peter Schrammel
 
 \*******************************************************************/
 
-#ifndef CPROVER_2LS_PARSE_OPTIONS_H
-#define CPROVER_2LS_PARSE_OPTIONS_H
+#ifndef CPROVER_2LS_2LS_2LS_PARSE_OPTIONS_H
+#define CPROVER_2LS_2LS_2LS_PARSE_OPTIONS_H
 
 #include <util/ui_message.h>
 #include <util/parse_options.h>
@@ -76,7 +76,7 @@ protected:
   ui_message_handlert ui_message_handler;
   bool recursion_detected;
   bool threads_detected;
-  virtual void register_languages(); 
+  virtual void register_languages();
 
   void get_command_line_options(optionst &options);
 
@@ -87,7 +87,7 @@ protected:
   bool process_goto_program(
     const optionst &options,
     goto_modelt &goto_model);
-    
+
   bool set_properties(goto_modelt &);
 
   void report_success();
@@ -96,7 +96,7 @@ protected:
   void report_properties(
     const optionst &options,
     const goto_modelt &,
-    const summary_checker_baset::property_mapt &);  
+    const summary_checker_baset::property_mapt &);
 
   void show_counterexample(
     const goto_modelt &,
@@ -117,34 +117,34 @@ protected:
     const goto_modelt &goto_model,
     const goto_tracet &error_trace,
     const std::string &property_id);
-    
+
   struct expr_statst {
     bool has_malloc;
     bool has_string;
     bool has_array;
     bool has_pointer;
-    
+
     expr_statst()
     : has_malloc(false)
     , has_string(false)
     , has_array(false)
     , has_pointer(false)
     {}
-  };    
-   
+  };
+
   void type_stats_rec(
     const typet &type,
     expr_statst &stats,
     const namespacet &ns);
-   
+
   void expr_stats_rec(
     const exprt &expr,
-    expr_statst &stats);  
-      
+    expr_statst &stats);
+
   void show_stats(
     const goto_modelt &,
-    std::ostream &);    
-            
+    std::ostream &);
+
   void eval_verbosity();
   void report_unknown();
 
@@ -161,7 +161,7 @@ protected:
   exprt evaluate_casts_in_constants(
     const exprt &expr,
     const typet& parent_type,
-		bool &valid);
+    bool &valid);
   void remove_multiple_dereferences(goto_modelt &goto_model);
   void remove_multiple_dereferences(
     goto_modelt &goto_model,

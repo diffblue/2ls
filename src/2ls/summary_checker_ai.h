@@ -6,8 +6,8 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
-#ifndef CPROVER_2LS_SUMMARY_CHECKER_AI_H
-#define CPROVER_2LS_SUMMARY_CHECKER_AI_H
+#ifndef CPROVER_2LS_2LS_SUMMARY_CHECKER_AI_H
+#define CPROVER_2LS_2LS_SUMMARY_CHECKER_AI_H
 
 #include "summary_checker_base.h"
 
@@ -18,7 +18,7 @@ public:
     summary_checker_baset(_options)
   {
   }
-  
+
   virtual resultt operator()(const goto_modelt &);
 
 protected:

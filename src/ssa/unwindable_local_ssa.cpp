@@ -31,7 +31,7 @@ Function: unwindable_local_SSAt::increment_unwindings
 
 void unwindable_local_SSAt::increment_unwindings(int mode)
 {
-  if(mode==0) 
+  if(mode==0)
   {
     assert(current_unwindings.size()>=1);
     unsigned index=current_unwindings.size()-1;
@@ -43,7 +43,7 @@ void unwindable_local_SSAt::increment_unwindings(int mode)
     assert(mode==1);
     current_unwindings.push_back(0);
   }
-  else //mode <=-1
+  else // mode <=-1
   {
     for(int i=0;i>mode;i--)
       current_unwindings.pop_back();
@@ -64,7 +64,7 @@ Function: unwindable_local_SSAt::decrement_unwindings
 
 void unwindable_local_SSAt::decrement_unwindings(int mode)
 {
-  if(mode==0) 
+  if(mode==0)
   {
     assert(current_unwindings.size()>=1);
     unsigned index=current_unwindings.size()-1;
@@ -76,7 +76,7 @@ void unwindable_local_SSAt::decrement_unwindings(int mode)
     assert(mode==1);
     current_unwindings.push_back(current_unwinding);
   }
-  else //mode <=-1
+  else // mode <=-1
   {
     for(int i=0;i>mode;i--)
       current_unwindings.pop_back();
@@ -98,13 +98,13 @@ Function: unwindable_local_SSAt::odometer_to_string
 std::string unwindable_local_SSAt::odometer_to_string(
   const odometert &odometer, unsigned level) const
 {
-  if(current_unwinding<0) //not yet unwind=0
+  if(current_unwinding<0) // not yet unwind=0
     return "";
   if(level>odometer.size())
     level=odometer.size();
   std::string unwind_suffix="";
   for(unsigned i=0;i<level;i++)
-    unwind_suffix += "%" + std::to_string(odometer[i]);
+    unwind_suffix+="%"+std::to_string(odometer[i]);
   return unwind_suffix;
 }
 
@@ -126,7 +126,7 @@ symbol_exprt unwindable_local_SSAt::name(
   locationt def_loc,
   locationt current_loc) const
 {
-  symbol_exprt s=local_SSAt::name(object,kind,def_loc);
+  symbol_exprt s=local_SSAt::name(object, kind, def_loc);
   unsigned def_level=get_def_level(def_loc, current_loc);
   std::string unwind_suffix=
     odometer_to_string(current_unwindings, def_level);
@@ -152,7 +152,7 @@ Function: unwindable_local_SSAt::get_def_level
 
  Outputs:
 
- Purpose: returns the definition level of a variable in the loop 
+ Purpose: returns the definition level of a variable in the loop
           hierarchy
 
 \*******************************************************************/
@@ -160,7 +160,7 @@ Function: unwindable_local_SSAt::get_def_level
 unsigned unwindable_local_SSAt::get_def_level(
   locationt def_loc, locationt current_loc) const
 {
-  loop_hierarchy_levelt::const_iterator lhl_it =
+  loop_hierarchy_levelt::const_iterator lhl_it=
     loop_hierarchy_level.find(def_loc);
   unsigned def_level=0;
   if(lhl_it!=loop_hierarchy_level.end())
@@ -168,10 +168,10 @@ unsigned unwindable_local_SSAt::get_def_level(
     def_level=lhl_it->second.level;
     // If a variable is defined in an other loop
     // that is defined on the same or a higher level
-    // then we have to take the "merged version" 
+    // then we have to take the "merged version"
     // The reason for this is that the "exit mergers" actually
     // introduce a new SSA variable version on the context level of a loop.
-    loop_hierarchy_levelt::const_iterator current_lhl =
+    loop_hierarchy_levelt::const_iterator current_lhl=
       loop_hierarchy_level.find(current_loc);
 
 #if 0
@@ -284,10 +284,10 @@ void unwindable_local_SSAt::rename(exprt &expr, locationt current_loc)
   {
     symbol_exprt &s=to_symbol_expr(expr);
     locationt def_loc;
-    //we could reuse name(), but then we would have to search in the ssa_objects
-    //ENHANCEMENT: maybe better to attach base name, ssa name,
+    // we could reuse name(), but then we would have to search in the ssa_objects
+    // ENHANCEMENT: maybe better to attach base name, ssa name,
     //      and def_loc to the symbol_expr itself
-    irep_idt id=get_ssa_name(s,def_loc);
+    irep_idt id=get_ssa_name(s, def_loc);
     unsigned def_level=get_def_level(def_loc, current_loc);
     std::string unwind_suffix=odometer_to_string(current_unwindings,
                                                    def_level);
@@ -316,7 +316,7 @@ void unwindable_local_SSAt::rename(exprt &expr, locationt current_loc)
       ID_identifier,
       identifier+unwind_suffix+suffix);
   }
-  Forall_operands(it,expr)
+  Forall_operands(it, expr)
     rename(*it, current_loc);
 }
 
@@ -345,18 +345,18 @@ irep_idt unwindable_local_SSAt::get_ssa_name(
     return irep_idt(s);
   if(pos2==std::string::npos)
     pos2=s.size();
-  if(s.substr(pos1+1,2)=="lb") pos1 += 2;
-  else if(s.substr(pos1+1,2)=="ls") pos1 += 2;
-  else if(s.substr(pos1+1,3)=="phi") pos1 += 3;
-  else if((pos2==pos1+13) && (s.substr(pos1+1,12)=="return_value")) 
+  if(s.substr(pos1+1, 2)=="lb") pos1+=2;
+  else if(s.substr(pos1+1, 2)=="ls") pos1+=2;
+  else if(s.substr(pos1+1, 3)=="phi") pos1+=3;
+  else if((pos2==pos1+13) && (s.substr(pos1+1, 12)=="return_value"))
     return irep_idt(s);
 #if 0
-  std::cout << s << ", " << s.substr(pos1+1,pos2-pos1-1)
-            << ", " << s.substr(0,pos2) << std::endl;
+  std::cout << s << ", " << s.substr(pos1+1, pos2-pos1-1)
+            << ", " << s.substr(0, pos2) << std::endl;
 #endif
   loc=get_location(
-    safe_string2unsigned(s.substr(pos1+1,pos2-pos1-1)));
-  return irep_idt(s.substr(0,pos2));
+    safe_string2unsigned(s.substr(pos1+1, pos2-pos1-1)));
+  return irep_idt(s.substr(0, pos2));
 }
 
 /*******************************************************************\
@@ -442,10 +442,10 @@ void unwindable_local_SSAt::compute_loop_hierarchy()
         loop_hierarchy_level[loopheads.back()].parent_loc;
 
 #if 0
-      std::cout << "- current: " << 
+      std::cout << "- current: " <<
         loopheads.back()->location_number  << std::endl;
 #endif
-	
+
       if(i_it==loopheads.back())
       {
 #if 0

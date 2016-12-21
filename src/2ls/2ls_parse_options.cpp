@@ -82,7 +82,7 @@ twols_parse_optionst::twols_parse_optionst(int argc, const char **argv):
   threads_detected(false)
 {
 }
-  
+
 /*******************************************************************\
 
 Function: twols_parse_optionst::eval_verbosity
@@ -99,7 +99,7 @@ void twols_parse_optionst::eval_verbosity()
 {
   // this is our default verbosity
   int v=messaget::M_STATISTICS;
-  
+
   if(cmdline.isset("verbosity"))
   {
     v=unsafe_string2int(cmdline.get_value("verbosity"));
@@ -108,7 +108,7 @@ void twols_parse_optionst::eval_verbosity()
     else if(v>10)
       v=10;
   }
-  
+
   ui_message_handler.set_verbosity(v);
 }
 
@@ -193,7 +193,7 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
     options.set_option("equalities", true);
     options.set_option("std-invariants", true);
   }
-  else 
+  else
   {
     if(cmdline.isset("zones"))
       options.set_option("zones", true);
@@ -201,12 +201,12 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
       options.set_option("qzones", true);
     else if(cmdline.isset("octagons"))
       options.set_option("octagons", true);
-    else //if(cmdline.isset("intervals")) //default
+    else // if(cmdline.isset("intervals")) // default
       options.set_option("intervals", true);
 
-    if(cmdline.isset("enum-solver")) 
+    if(cmdline.isset("enum-solver"))
       options.set_option("enum-solver", true);
-    else //if(cmdline.isset("binsearch-solver")) //default
+    else // if(cmdline.isset("binsearch-solver")) // default
       options.set_option("binsearch-solver", true);
   }
 
@@ -240,17 +240,17 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
 
   if(cmdline.isset("lexicographic-ranking-function"))
   {
-    options.set_option("lexicographic-ranking-function", 
+    options.set_option("lexicographic-ranking-function",
                        cmdline.get_value("lexicographic-ranking-function"));
   }
-  else options.set_option("lexicographic-ranking-function",5);
+  else options.set_option("lexicographic-ranking-function", 5);
 
   if(cmdline.isset("max-inner-ranking-iterations"))
   {
-    options.set_option("max-inner-ranking-iterations", 
+    options.set_option("max-inner-ranking-iterations",
                        cmdline.get_value("max-inner-ranking-iterations"));
   }
-  else options.set_option("max-inner-ranking-iterations",50);
+  else options.set_option("max-inner-ranking-iterations", 50);
 
   // do k-induction refinement
   if(cmdline.isset("k-induction"))
@@ -259,7 +259,7 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
     options.set_option("k-induction", true);
     options.set_option("inline", true);
     if(!cmdline.isset("unwind"))
-      options.set_option("unwind",UINT_MAX);
+      options.set_option("unwind", UINT_MAX);
   }
 
   // do incremental bmc
@@ -269,7 +269,7 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
     options.set_option("inline", true);
     options.set_option("havoc", true);
     if(!cmdline.isset("unwind"))
-      options.set_option("unwind",UINT_MAX);
+      options.set_option("unwind", UINT_MAX);
   }
 
   // check for spuriousness of assertion failures
@@ -300,9 +300,9 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
 
   // instrumentation / output
   if(cmdline.isset("instrument-output"))
-    options.set_option("instrument-output", 
+    options.set_option("instrument-output",
                        cmdline.get_value("instrument-output"));
-  
+
 
 #ifdef SHOW_CALLING_CONTEXTS
   if(cmdline.isset("show-calling-contexts"))
@@ -310,7 +310,7 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
     if(!options.get_bool_option("intervals"))
       throw "--show-calling-contexts only possible with --intervals";
     options.set_option("show-calling-contexts", true);
-    options.set_option("do-not-analyze-functions", 
+    options.set_option("do-not-analyze-functions",
                        cmdline.get_value("show-calling-contexts"));
   }
 #endif
@@ -342,7 +342,7 @@ int twols_parse_optionst::doit()
     std::cout << TWOLS_VERSION << std::endl;
     return 0;
   }
-    
+
   //
   // command line options
   //
@@ -351,7 +351,7 @@ int twols_parse_optionst::doit()
   get_command_line_options(options);
 
   eval_verbosity();
-  
+
   //
   // Print a banner
   //
@@ -371,7 +371,7 @@ int twols_parse_optionst::doit()
   }
 
   // options for various debug outputs
-    
+
   if(cmdline.isset("show-ssa"))
   {
     bool simplify=!cmdline.isset("no-simplify");
@@ -400,7 +400,7 @@ int twols_parse_optionst::doit()
     show_guards(goto_model, function, std::cout, ui_message_handler);
     return 7;
   }
-    
+
   if(cmdline.isset("show-value-sets"))
   {
     irep_idt function=cmdline.get_value("function");
@@ -408,7 +408,7 @@ int twols_parse_optionst::doit()
     return 7;
   }
 
-  if(cmdline.isset("show-invariants")) 
+  if(cmdline.isset("show-invariants"))
   {
     options.set_option("show-invariants", true);
   }
@@ -434,7 +434,7 @@ int twols_parse_optionst::doit()
   if(cmdline.isset("context-sensitive"))
   {
     options.set_option("context-sensitive", true);
-    status() << "Context-sensitive analysis from " << 
+    status() << "Context-sensitive analysis from " <<
       goto_model.goto_functions.entry_point() << eom;
   }
 
@@ -444,7 +444,7 @@ int twols_parse_optionst::doit()
     status() << "Do not ignore array contents" << eom;
   }
 
-  //TODO: check option inconsistencies, ignored options etc
+  // TODO: check option inconsistencies, ignored options etc
   if(options.get_bool_option("havoc"))
     status() << "Havocking loops and function calls" << eom;
   else if(options.get_bool_option("equalities"))
@@ -465,23 +465,23 @@ int twols_parse_optionst::doit()
     else assert(false);
     status() << eom;
   }
-  
+
   try
   {
     std::unique_ptr<summary_checker_baset> checker;
-    if(!options.get_bool_option("k-induction") && 
+    if(!options.get_bool_option("k-induction") &&
        !options.get_bool_option("incremental-bmc"))
       checker=std::unique_ptr<summary_checker_baset>(
         new summary_checker_ait(options));
-    if(options.get_bool_option("k-induction") && 
-       !options.get_bool_option("incremental-bmc")) 
+    if(options.get_bool_option("k-induction") &&
+       !options.get_bool_option("incremental-bmc"))
       checker=std::unique_ptr<summary_checker_baset>(
         new summary_checker_kindt(options));
-    if(!options.get_bool_option("k-induction") && 
-       options.get_bool_option("incremental-bmc")) 
+    if(!options.get_bool_option("k-induction") &&
+       options.get_bool_option("incremental-bmc"))
       checker=std::unique_ptr<summary_checker_baset>(
         new summary_checker_bmct(options));
-    
+
     checker->set_message_handler(get_message_handler());
     checker->simplify=!cmdline.isset("no-simplify");
     checker->fixed_point=!cmdline.isset("no-fixed-point");
@@ -499,9 +499,9 @@ int twols_parse_optionst::doit()
     {
       status() << "Horn-clause encoding" << eom;
       namespacet ns(symbol_table);
-      
+
       std::string out_file=cmdline.get_value("horn-encoding");
-      
+
       if(out_file=="-")
       {
         horn_encoding(goto_model, std::cout);
@@ -513,54 +513,54 @@ int twols_parse_optionst::doit()
 #else
         std::ofstream out(out_file.c_str());
 #endif
-        
+
         if(!out)
         {
           error() << "Failed to open output file "
                   << out_file << eom;
           return 1;
         }
-        
+
         horn_encoding(goto_model, out);
       }
-        
+
       return 0;
     }
-    
-    bool report_assertions = 
+
+    bool report_assertions=
       !options.get_bool_option("preconditions") &&
       !options.get_bool_option("termination");
     // do actual analysis
     switch((*checker)(goto_model))
     {
     case property_checkert::PASS:
-      if(report_assertions) 
+      if(report_assertions)
         report_properties(options, goto_model, checker->property_map);
       report_success();
       if(cmdline.isset("graphml-witness") &&
          !options.get_bool_option("termination"))
         output_graphml_proof(options, goto_model, *checker);
-      retval = 0;
+      retval=0;
       break;
-    
+
     case property_checkert::FAIL:
-      if(report_assertions) 
+      if(report_assertions)
         report_properties(options, goto_model, checker->property_map);
       report_failure();
       if(cmdline.isset("graphml-witness"))
       {
         output_graphml_cex(options, goto_model, *checker);
       }
-      retval = 10;
+      retval=10;
       break;
 
     case property_checkert::UNKNOWN:
-      if(report_assertions) 
+      if(report_assertions)
         report_properties(options, goto_model, checker->property_map);
-      retval = 5;
+      retval=5;
       report_unknown();
       break;
-    
+
     default:
       assert(false);
     }
@@ -572,7 +572,7 @@ int twols_parse_optionst::doit()
 
     return retval;
   }
-  
+
   catch(const std::string error_msg)
   {
     error() << error_msg << messaget::eom;
@@ -585,7 +585,7 @@ int twols_parse_optionst::doit()
     return 8;
   }
 
-#if 0                                         
+#if 0
   // let's log some more statistics
   debug() << "Memory consumption:" << messaget::endl;
   memory_info(debug());
@@ -603,27 +603,27 @@ void twols_parse_optionst::type_stats_rec(
 
   if(type.id()==ID_symbol)
     type_stats_rec(ns.follow(type), stats, ns);
-	
-	if(type.id()==ID_pointer || type.id()==ID_array)
-	{
-		stats.has_array=true;
-				
-		const typet &subtype=ns.follow(type.subtype());
-		
-		if(subtype.id()==ID_signedbv ||
+
+  if(type.id()==ID_pointer || type.id()==ID_array)
+  {
+    stats.has_array=true;
+
+    const typet &subtype=ns.follow(type.subtype());
+
+    if(subtype.id()==ID_signedbv ||
        subtype.id()==ID_unsignedbv)
     {
-  		stats.has_string=(to_bitvector_type(subtype).get_width()==config.ansi_c.char_width);
-		}
-	}
-	
+      stats.has_string=(to_bitvector_type(subtype).get_width()==config.ansi_c.char_width);
+    }
+  }
+
   if(type.has_subtypes())
   {
-  	forall_subtypes(it, type)
-  	{
-  		type_stats_rec(*it, stats, ns);
-  	}
-  } 
+    forall_subtypes(it, type)
+    {
+      type_stats_rec(*it, stats, ns);
+    }
+  }
 }
 
 /*******************************************************************\
@@ -642,7 +642,7 @@ void twols_parse_optionst::expr_stats_rec(
   const exprt &expr,
   expr_statst &stats)
 {
-  
+
   if(expr.id()==ID_side_effect)
   {
     const side_effect_exprt &side_effect_expr=to_side_effect_expr(expr);
@@ -660,18 +660,18 @@ void twols_parse_optionst::expr_stats_rec(
 
   if(expr.id()==ID_symbol )
   {
-  	
+
   }
-  
+
   if(expr.has_operands())
   {
     forall_operands(it, expr)
     {
-      expr_stats_rec(*it, stats);    
+      expr_stats_rec(*it, stats);
     }
   }
 }
-      
+
 
 /*******************************************************************\
 
@@ -707,7 +707,7 @@ void twols_parse_optionst::show_stats(const goto_modelt &goto_model,
     const goto_programt &goto_program=f_it->second.body;
 
 #if 0
-    statistics() << "function size of " << f_it->first << ": " 
+    statistics() << "function size of " << f_it->first << ": "
                  << goto_program.instructions.size() << eom;
 #endif
 
@@ -726,8 +726,8 @@ void twols_parse_optionst::show_stats(const goto_modelt &goto_model,
       case ASSIGN:
       {
         const code_assignt &assign=to_code_assign(instruction.code);
-        expr_stats_rec(assign.lhs(), stats);          
-        expr_stats_rec(assign.rhs(), stats);          
+        expr_stats_rec(assign.lhs(), stats);
+        expr_stats_rec(assign.rhs(), stats);
       }
       break;
       case ASSUME:
@@ -739,13 +739,13 @@ void twols_parse_optionst::show_stats(const goto_modelt &goto_model,
       case GOTO:
         expr_stats_rec(instruction.guard, stats);
         break;
-          
+
       case DECL:
         // someone declaring an array
         type_stats_rec(to_code_decl(instruction.code).symbol().type(), stats, ns);
-        
-        break;  
-          
+
+        break;
+
       default:
         // skip
         break;
@@ -753,10 +753,10 @@ void twols_parse_optionst::show_stats(const goto_modelt &goto_model,
     } // forall instructions
   } // forall functions
 
-  out << " =============== STATS  =============== " << std::endl;
-  out << "  nr of instructions: " << nr_instructions << std::endl; 
-  out << "  nr of functions: " << nr_functions << std::endl; 
-  out << "  nr of loops: " << nr_loops << std::endl; 
+  out << "=============== STATS=============== " << std::endl;
+  out << "  nr of instructions: " << nr_instructions << std::endl;
+  out << "  nr of functions: " << nr_functions << std::endl;
+  out << "  nr of loops: " << nr_loops << std::endl;
   out << "  malloc: " << (stats.has_malloc ? "YES" : "NO") << std::endl;
   out << "  arrays: " << (stats.has_array ? "YES" : "NO") << std::endl;
   out << "  strings: " << (stats.has_string ? "YES" : "NO") << std::endl;
@@ -794,12 +794,12 @@ bool twols_parse_optionst::set_properties(goto_modelt &goto_model)
     error() << e << eom;
     return true;
   }
-  
+
   catch(int)
   {
     return true;
   }
-  
+
   return false;
 }
 
@@ -814,12 +814,12 @@ Function: twols_parse_optionst::require_entry
  Purpose:
 
 \*******************************************************************/
-  
+
 void twols_parse_optionst::require_entry(
   const goto_modelt &goto_model)
 {
   irep_idt entry_point=goto_model.goto_functions.entry_point();
-      
+
   if(goto_model.symbol_table.symbols.find(entry_point)==symbol_table.symbols.end())
     throw "The program has no entry point; please complete linking";
 }
@@ -835,7 +835,7 @@ Function: twols_parse_optionst::get_goto_program
  Purpose:
 
 \*******************************************************************/
-  
+
 bool twols_parse_optionst::get_goto_program(
   const optionst &options,
   goto_modelt &goto_model)
@@ -856,7 +856,7 @@ bool twols_parse_optionst::get_goto_program(
       if(read_goto_binary(cmdline.args[0],
                           goto_model, get_message_handler()))
         return true;
-        
+
       config.set_from_symbol_table(goto_model.symbol_table);
 
       if(cmdline.isset("show-symbol-table"))
@@ -872,45 +872,45 @@ bool twols_parse_optionst::get_goto_program(
         error() << "Please give one source file only" << eom;
         return true;
       }
-      
+
       std::string filename=cmdline.args[0];
-      
+
 #ifdef _MSC_VER
       std::ifstream infile(widen(filename).c_str());
 #else
       std::ifstream infile(filename.c_str());
 #endif
-                
+
       if(!infile)
       {
         error() << "failed to open input file `" << filename << "'" << eom;
         return true;
       }
-                              
+
       languaget *language=get_language_from_filename(filename);
-                                                
+
       if(language==NULL)
       {
         error() << "failed to figure out type of file `" <<  filename << "'" << eom;
         return true;
       }
-      
+
       language->set_message_handler(get_message_handler());
-                                                                
+
       status("Parsing", filename);
-  
+
       if(language->parse(infile, filename))
       {
         error() << "PARSING ERROR" << eom;
         return true;
       }
-      
+
       language->show_parse(std::cout);
       return true;
     }
     else
     {
-    
+
       if(parse()) return true;
       if(typecheck()) return true;
       if(final()) return true;
@@ -926,14 +926,14 @@ bool twols_parse_optionst::get_goto_program(
 
 #if 0
       irep_idt entry_point=goto_model.goto_functions.entry_point();
-      
+
       if(symbol_table.symbols.find(entry_point)==symbol_table.symbols.end())
       {
         error() << "No entry point; please provide a main function" << eom;
         return true;
       }
 #endif
-      
+
       status() << "Generating GOTO Program" << eom;
 
       goto_convert(symbol_table, goto_model, ui_message_handler);
@@ -958,18 +958,18 @@ bool twols_parse_optionst::get_goto_program(
     error() << e << eom;
     return true;
   }
-  
+
   catch(int)
   {
     return true;
   }
-  
+
   catch(std::bad_alloc)
   {
     error() << "Out of memory" << eom;
     return true;
   }
-  
+
   return false;
 }
 
@@ -984,7 +984,7 @@ Function: twols_parse_optionst::process_goto_program
  Purpose:
 
 \*******************************************************************/
-  
+
 bool twols_parse_optionst::process_goto_program(
   const optionst &options,
   goto_modelt &goto_model)
@@ -999,12 +999,12 @@ bool twols_parse_optionst::process_goto_program(
     // do partial inlining
     if(options.get_bool_option("inline-partial"))
     {
-      unsigned limit = options.get_unsigned_int_option("inline-partial");
+      unsigned limit=options.get_unsigned_int_option("inline-partial");
       status() << "Performing partial inlining (" << limit << ")" << eom;
       goto_partial_inline(goto_model, ui_message_handler, limit/2);
-      //TODO: where is limit multiplied by 2???
+      // TODO: where is limit multiplied by 2???
 
-      //remove inlined functions
+      // remove inlined functions
       Forall_goto_functions(f_it, goto_model.goto_functions)
         if(f_it->first!=ID__start &&
            f_it->second.body.instructions.size()<=2*(limit/2))
@@ -1042,23 +1042,23 @@ bool twols_parse_optionst::process_goto_program(
     goto_check(options, goto_model);
 
 #if UNWIND_GOTO_INTO_LOOP
-    unwind_goto_into_loop(goto_model,2);
+    unwind_goto_into_loop(goto_model, 2);
 #endif
 
     remove_skip(goto_model.goto_functions);
     goto_model.goto_functions.update();
 
-    //preprocessing to improve the structure of the SSA for the unwinder
+    // preprocessing to improve the structure of the SSA for the unwinder
     split_loopheads(goto_model);
 
 #if EXPLICIT_NONDET_LOCALS
-    //explicitly initialize all local variables
+    // explicitly initialize all local variables
     nondet_locals(goto_model);
 #endif
 
 #if 1
-    //TODO: find a better place for that
-    replace_malloc(goto_model,"");
+    // TODO: find a better place for that
+    replace_malloc(goto_model, "");
 #endif
 
     // recalculate numbers, etc.
@@ -1067,10 +1067,10 @@ bool twols_parse_optionst::process_goto_program(
     // add loop ids
     goto_model.goto_functions.compute_loop_numbers();
 
-    //inline __CPROVER_initialize and main
+    // inline __CPROVER_initialize and main
     if(cmdline.isset("inline-main"))
     {
-      inline_main(goto_model); 
+      inline_main(goto_model);
     }
 
     if(!cmdline.isset("independent-properties"))
@@ -1139,18 +1139,18 @@ bool twols_parse_optionst::process_goto_program(
     error() << e << eom;
     return true;
   }
-  
+
   catch(int)
   {
     return true;
   }
-  
+
   catch(std::bad_alloc)
   {
     error() << "Out of memory" << eom;
     return true;
   }
-  
+
   return false;
 }
 
@@ -1176,8 +1176,8 @@ void twols_parse_optionst::report_properties(
       it!=property_map.end();
       it++)
   {
-    if(it->first=="") //TODO: some properties do not show up in initialize_property_map
-      continue;     
+    if(it->first=="") // TODO: some properties do not show up in initialize_property_map
+      continue;
 
     if(!options.get_bool_option("all-properties") &&
        it->second.result!=property_checkert::FAIL)
@@ -1226,13 +1226,13 @@ void twols_parse_optionst::report_properties(
       if(it->second.result==property_checkert::FAIL)
         failed++;
     }
-    
+
     status() << "** " << unknown
              << " of " << property_map.size() << " unknown"
-             << eom;  
+             << eom;
     status() << "** " << failed
              << " of " << property_map.size() << " failed"
-             << eom;  
+             << eom;
   }
 }
 
@@ -1256,7 +1256,7 @@ void twols_parse_optionst::report_success()
   {
   case ui_message_handlert::PLAIN:
     break;
-    
+
   case ui_message_handlert::XML_UI:
   {
     xmlt xml("cprover-status");
@@ -1265,7 +1265,7 @@ void twols_parse_optionst::report_success()
     std::cout << std::endl;
   }
   break;
-    
+
   default:
     assert(false);
   }
@@ -1295,7 +1295,7 @@ void twols_parse_optionst::show_counterexample(
     std::cout << std::endl << "Counterexample:" << std::endl;
     show_goto_trace(std::cout, ns, error_trace);
     break;
-  
+
   case ui_message_handlert::XML_UI:
   {
     xmlt xml;
@@ -1303,7 +1303,7 @@ void twols_parse_optionst::show_counterexample(
     std::cout << xml << std::endl;
   }
   break;
-  
+
   default:
     assert(false);
   }
@@ -1406,7 +1406,7 @@ void twols_parse_optionst::output_json_cex(
     const namespacet ns(goto_model.symbol_table);
     jsont json_trace;
     convert(ns, error_trace, json_trace);
-  
+
     if(options.get_option("json-cex")=="-")
     {
       std::cout << json_trace;
@@ -1416,7 +1416,7 @@ void twols_parse_optionst::output_json_cex(
       std::ofstream out((options.get_option("json-cex")+"-"+property_id+".json").c_str());
       out << json_trace << '\n';
     }
-  }  
+  }
 }
 
 /*******************************************************************\
@@ -1439,7 +1439,7 @@ void twols_parse_optionst::report_failure()
   {
   case ui_message_handlert::PLAIN:
     break;
-    
+
   case ui_message_handlert::XML_UI:
   {
     xmlt xml("cprover-status");
@@ -1448,7 +1448,7 @@ void twols_parse_optionst::report_failure()
     std::cout << std::endl;
   }
   break;
-    
+
   default:
     assert(false);
   }
@@ -1474,7 +1474,7 @@ void twols_parse_optionst::report_unknown()
   {
   case ui_message_handlert::PLAIN:
     break;
-    
+
   case ui_message_handlert::XML_UI:
   {
     xmlt xml("cprover-status");
@@ -1483,7 +1483,7 @@ void twols_parse_optionst::report_unknown()
     std::cout << std::endl;
   }
   break;
-    
+
   default:
     assert(false);
   }
@@ -1505,12 +1505,12 @@ void twols_parse_optionst::help()
 {
   std::cout <<
     "\n"
-    "* *  2LS " TWOLS_VERSION " - Copyright (C) 2015-2016                    * *\n"
+    "* *  2LS " TWOLS_VERSION "-Copyright (C) 2015-2016                    * *\n"
     "* *  (based on CBMC " CBMC_VERSION " ";
   std::cout << "(" << (sizeof(void *)*8) << "-bit version))";
-    
+
   std::cout << "                   * *\n";
-    
+
   std::cout <<
     "* *           Daniel Kroening, Peter Schrammel              * *\n"
     "* *                 University of Oxford                    * *\n"
@@ -1526,7 +1526,7 @@ void twols_parse_optionst::help()
     " -D macro                     define preprocessor macro (C/C++)\n"
     " --preprocess                 stop after preprocessing\n"
     " --16, --32, --64             set width of int\n"
-    " --LP64, --ILP64, --LLP64,\n"
+    " --LP64, --ILP64, --LLP64, \n"
     "   --ILP32, --LP32            set width of int, long and pointers\n"
     " --little-endian              allow little-endian word-byte conversions\n"
     " --big-endian                 allow big-endian word-byte conversions\n"

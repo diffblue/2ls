@@ -6,8 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef CPROVER_LOCAL_SSA_H
-#define CPROVER_LOCAL_SSA_H
+#ifndef CPROVER_2LS_SSA_LOCAL_SSA_H
+#define CPROVER_2LS_SSA_LOCAL_SSA_H
 
 #include <util/std_expr.h>
 
@@ -33,21 +33,21 @@ public:
     const goto_functiont &_goto_function,
     const namespacet &_ns,
     const std::string &_suffix=""):
-    ns(_ns), goto_function(_goto_function), 
+    ns(_ns), goto_function(_goto_function),
     ssa_objects(_goto_function, ns),
     ssa_value_ai(_goto_function, ns),
     assignments(_goto_function.body, ns, ssa_objects, ssa_value_ai),
     guard_map(_goto_function.body),
     ssa_analysis(assignments),
-    suffix(_suffix) 
+    suffix(_suffix)
   {
-    //ENHANCE: in future locst will be used (currently in path-symex/locs.h)
-    forall_goto_program_instructions(it,_goto_function.body)
-      location_map[it->location_number] = it;
+    // ENHANCE: in future locst will be used (currently in path-symex/locs.h)
+    forall_goto_program_instructions(it, _goto_function.body)
+      location_map[it->location_number]=it;
 
     build_SSA();
   }
-  
+
   void output(std::ostream &) const;
   void output_verbose(std::ostream &) const;
 
@@ -57,13 +57,13 @@ public:
   public:
     inline nodet(
       locationt _location,
-      std::list<nodet>::iterator _loophead) 
-      : 
+      std::list<nodet>::iterator _loophead)
+      :
         enabling_expr(true_exprt()),
-	marked(false),
-        location(_location), 
+  marked(false),
+        location(_location),
         loophead(_loophead)
-      { 
+      {
       }
 
     typedef std::vector<equal_exprt> equalitiest;
@@ -74,46 +74,46 @@ public:
 
     typedef std::vector<exprt> assertionst;
     assertionst assertions;
-    
+
     typedef std::vector<function_application_exprt> function_callst;
     function_callst function_calls;
 
-    exprt enabling_expr; //for incremental unwinding
-    bool marked; //for incremental unwinding
+    exprt enabling_expr; // for incremental unwinding
+    bool marked; // for incremental unwinding
 
-    //custom invariant templates
+    // custom invariant templates
     typedef std::vector<exprt> templatest;
     templatest templates;
 
-    locationt location; //link to goto instruction
-    std::list<nodet>::iterator loophead; //link to loop head node
-       // otherwise points to nodes.end() 
+    locationt location; // link to goto instruction
+    std::list<nodet>::iterator loophead; // link to loop head node
+       // otherwise points to nodes.end()
 
     void output(std::ostream &, const namespacet &) const;
 
     inline bool empty() const
     {
-      return equalities.empty() && constraints.empty() && 
-	    assertions.empty() && function_calls.empty();
+      return equalities.empty() && constraints.empty() &&
+      assertions.empty() && function_calls.empty();
     }
   };
-  
+
   // turns the assertions in the function into constraints
   void assertions_to_constraints();
 
-  // all the SSA nodes  
+  // all the SSA nodes
   typedef std::list<nodet> nodest;
   nodest nodes;
 
   void mark_nodes()
   {
     for(nodest::iterator n_it=nodes.begin();
-	n_it!=nodes.end(); n_it++) n_it->marked = true;
+  n_it!=nodes.end(); n_it++) n_it->marked=true;
   }
   void unmark_nodes()
   {
       for(nodest::iterator n_it=nodes.begin();
-	        n_it!=nodes.end(); n_it++) n_it->marked = false;
+          n_it!=nodes.end(); n_it++) n_it->marked=false;
   }
 
   // for incremental unwinding
@@ -123,14 +123,14 @@ public:
   // function entry and exit variables
   typedef std::list<symbol_exprt> var_listt;
   typedef std::set<symbol_exprt> var_sett;
-  var_listt params;  
-  var_sett globals_in, globals_out;  
+  var_listt params;
+  var_sett globals_in, globals_out;
 
   bool has_function_calls() const;
 
   const namespacet &ns;
   const goto_functiont &goto_function;
-  
+
   // guards
   ssa_objectt cond_symbol() const;
   symbol_exprt cond_symbol(locationt loc) const
@@ -139,14 +139,14 @@ public:
   symbol_exprt guard_symbol(locationt loc) const
   { return name(guard_symbol(), OUT, guard_map[loc].guard_source); }
   exprt edge_guard(locationt from, locationt to) const;
-  
+
   // auxiliary functions
   enum kindt { PHI, OUT, LOOP_BACK, LOOP_SELECT };
   virtual symbol_exprt name(const ssa_objectt &, kindt kind, locationt loc) const;
   symbol_exprt name(const ssa_objectt &, const ssa_domaint::deft &) const;
   symbol_exprt name_input(const ssa_objectt &) const;
-  virtual exprt nondet_symbol(std::string prefix, const typet &type, 
-			      locationt loc, unsigned counter) const;
+  virtual exprt nondet_symbol(std::string prefix, const typet &type,
+            locationt loc, unsigned counter) const;
   locationt get_def_loc(const symbol_exprt &, locationt loc) const;
   void replace_side_effects_rec(exprt &, locationt, unsigned &) const;
   exprt read_lhs(const exprt &, locationt loc) const;
@@ -158,27 +158,27 @@ public:
   void assign_rec(const exprt &lhs, const exprt &rhs, const exprt &guard, locationt loc);
 
   void get_entry_exit_vars();
-  
+
   bool has_static_lifetime(const ssa_objectt &) const;
   bool has_static_lifetime(const exprt &) const;
-  
+
   exprt dereference(const exprt &expr, locationt loc) const;
 
   ssa_objectst ssa_objects;
   typedef ssa_objectst::objectst objectst;
   ssa_value_ait ssa_value_ai;
   assignmentst assignments;
-  
-//protected:
+
+// protected:
   guard_mapt guard_map;
 
   ssa_ait ssa_analysis;
   std::string suffix; // an extra suffix
 
-  void get_globals(locationt loc, std::set<symbol_exprt> &globals, 
-		   bool rhs_value=true, 
-		   bool with_returns=true, 
-		   const irep_idt &returns_for_function="") const;
+  void get_globals(locationt loc, std::set<symbol_exprt> &globals,
+       bool rhs_value=true,
+       bool with_returns=true,
+       const irep_idt &returns_for_function="") const;
 
   nodest::iterator find_node(locationt loc);
   nodest::const_iterator find_node(locationt loc) const;

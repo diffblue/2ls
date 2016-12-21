@@ -6,8 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef CPROVER_TRANSLATE_UNION_MEMBER_H
-#define CPROVER_TRANSLATE_UNION_MEMBER_H
+#ifndef CPROVER_2LS_SSA_TRANSLATE_UNION_MEMBER_H
+#define CPROVER_2LS_SSA_TRANSLATE_UNION_MEMBER_H
 
 #include <util/std_expr.h>
 #include <util/namespace.h>

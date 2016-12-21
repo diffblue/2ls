@@ -6,8 +6,8 @@ Author: Daniel Kroening, Peter Schrammel
 
 \*******************************************************************/
 
-#ifndef CPROVER_SSA_BUILD_GOTO_TRACE_H
-#define CPROVER_SSA_BUILD_GOTO_TRACE_H
+#ifndef CPROVER_2LS_SSA_SSA_BUILD_GOTO_TRACE_H
+#define CPROVER_2LS_SSA_SSA_BUILD_GOTO_TRACE_H
 
 #include <goto-programs/goto_trace.h>
 #include <solvers/prop/prop_conv.h>
@@ -21,8 +21,8 @@ public:
     unwindable_local_SSAt &_unwindable_local_SSA,
     const prop_convt &_prop_conv,
     bool _termination=false)
-  : 
-  unwindable_local_SSA(_unwindable_local_SSA),  
+  :
+  unwindable_local_SSA(_unwindable_local_SSA),
   prop_conv(_prop_conv),
   termination(_termination)
   {}

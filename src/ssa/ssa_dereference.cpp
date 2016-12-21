@@ -6,7 +6,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-//#define DEBUG
+// #define DEBUG
 
 #ifdef DEBUG
 #include <iostream>
@@ -56,7 +56,7 @@ exprt lift_if(const exprt &src)
       if_expr.true_case()=src;
       if_expr.true_case().op0()=previous;
     }
-      
+
     if(if_expr.false_case().is_not_nil())
     {
       exprt previous=if_expr.false_case();
@@ -103,7 +103,7 @@ bool ssa_may_alias(
     return to_symbol_expr(e1).get_identifier()==
            to_symbol_expr(e2).get_identifier();
   }
-    
+
   // __CPROVER symbols
   if(e1.id()==ID_symbol &&
      has_prefix(id2string(to_symbol_expr(e1).get_identifier()), CPROVER_PREFIX))
@@ -127,11 +127,11 @@ bool ssa_may_alias(
   {
     const member_exprt &m1=to_member_expr(e1);
     const member_exprt &m2=to_member_expr(e2);
-    
+
     // same component?
     if(m1.get_component_name()!=m2.get_component_name())
       return false;
-    
+
     return ssa_may_alias(m1.struct_op(), m2.struct_op(), ns);
   }
 
@@ -147,33 +147,33 @@ bool ssa_may_alias(
 
   const typet &t1=ns.follow(e1.type());
   const typet &t2=ns.follow(e2.type());
-  
+
   // If one is an array and the other not, consider the elements
   if(t1.id()==ID_array && t2.id()!=ID_array)
     if(ssa_may_alias(index_exprt(e1, gen_zero(index_type()), t1.subtype()), e2, ns))
       return true;
-  
+
   if(t2.id()==ID_array && t2.id()!=ID_array)
     if(ssa_may_alias(e1, index_exprt(e2, gen_zero(index_type()), t2.subtype()), ns))
       return true;
-  
+
   // Pointers only alias with other pointers,
   // which is a restriction.
   if(t1.id()==ID_pointer)
     return t2.id()==ID_pointer;
-  
+
   if(t2.id()==ID_pointer)
     return t1.id()==ID_pointer;
-  
+
   // Is one a scalar pointer?
   if(e1.id()==ID_dereference &&
      (t1.id()==ID_signedbv || t1.id()==ID_unsignedbv || t1.id()==ID_floatbv))
     return true;
-  
+
   if(e2.id()==ID_dereference &&
      (t2.id()==ID_signedbv || t2.id()==ID_unsignedbv || t1.id()==ID_floatbv))
     return true;
-  
+
   // Is one a pointer?
   if(e1.id()==ID_dereference ||
      e2.id()==ID_dereference)
@@ -185,8 +185,8 @@ bool ssa_may_alias(
     {
       return true;
     }
-    
-    // should consider further options, e.g., struct prefixes      
+
+    // should consider further options, e.g., struct prefixes
     return false;
   }
 
@@ -211,30 +211,30 @@ exprt ssa_alias_guard(
   const namespacet &ns)
 {
   exprt a1=address_canonizer(address_of_exprt(e1), ns);
-  //TODO: We should compare 'base' pointers here because
+  // TODO: We should compare 'base' pointers here because
   // we have a higher chance that there was no pointer arithmetic
   // on the base pointer than that the result of the pointer
   // arithmetic points to a base pointer.
   // The following hack does that:
-  if(a1.id()==ID_plus) a1 = a1.op0();
-  
+  if(a1.id()==ID_plus) a1=a1.op0();
+
   exprt a2=address_canonizer(address_of_exprt(e2), ns);
-  
+
   // in some cases, we can use plain address equality,
   // as we assume well-aligned-ness
   mp_integer size1=pointer_offset_size(e1.type(), ns);
   mp_integer size2=pointer_offset_size(e2.type(), ns);
-  
+
   if(size1>=size2)
   {
     exprt lhs=a1;
     exprt rhs=a2;
     if(ns.follow(rhs.type())!=ns.follow(lhs.type()))
       rhs=typecast_exprt(rhs, lhs.type());
-  
+
     return equal_exprt(lhs, rhs);
   }
-  
+
   return same_object(a1, a2);
 }
 
@@ -264,7 +264,7 @@ exprt ssa_alias_value(
 
   exprt a1=address_canonizer(address_of_exprt(e1), ns);
   exprt a2=address_canonizer(address_of_exprt(e2), ns);
-  
+
   exprt offset1=pointer_offset(a1);
 
   // array index possible?
@@ -287,8 +287,8 @@ exprt ssa_alias_value(
   byte_extract_exprt byte_extract(byte_extract_id(), e1.type());
   byte_extract.op()=e2;
   byte_extract.offset()=offset1;
-  
-  return byte_extract; 
+
+  return byte_extract;
 }
 
 /*******************************************************************\
@@ -305,7 +305,7 @@ Function: dereference_rec
 
 exprt dereference_rec(
  const exprt &src,
- const ssa_value_domaint &ssa_value_domain, 
+ const ssa_value_domaint &ssa_value_domain,
  const std::string &nondet_prefix,
  const namespacet &ns)
 {
@@ -338,14 +338,14 @@ exprt dereference_rec(
   {
     member_exprt tmp=to_member_expr(src);
     tmp.struct_op()=dereference_rec(tmp.struct_op(), ssa_value_domain, nondet_prefix, ns);
-    
+
     #ifdef DEBUG
     std::cout << "dereference_rec tmp: " << from_expr(ns, "", tmp) << '\n';
     #endif
 
     if(tmp.struct_op().is_nil())
       return nil_exprt();
-      
+
     return lift_if(tmp);
   }
   else if(src.id()==ID_address_of)
@@ -355,7 +355,7 @@ exprt dereference_rec(
 
     if(tmp.object().is_nil())
       return nil_exprt();
-    
+
     return lift_if(tmp);
   }
   else
@@ -381,7 +381,7 @@ Function: dereference
 
 exprt dereference(
  const exprt &src,
- const ssa_value_domaint &ssa_value_domain, 
+ const ssa_value_domaint &ssa_value_domain,
  const std::string &nondet_prefix,
  const namespacet &ns)
 {

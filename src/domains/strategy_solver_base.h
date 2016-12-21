@@ -1,5 +1,5 @@
-#ifndef CPROVER_STRATEGY_SOLVER_BASE_H
-#define CPROVER_STRATEGY_SOLVER_BASE_H 
+#ifndef CPROVER_2LS_DOMAINS_STRATEGY_SOLVER_BASE_H
+#define CPROVER_2LS_DOMAINS_STRATEGY_SOLVER_BASE_H
 
 #include <map>
 #include <iostream>
@@ -19,9 +19,9 @@ class strategy_solver_baset : public messaget
   typedef domaint::valuet invariantt;
 
   explicit strategy_solver_baset(
-    incremental_solvert &_solver, 
+    incremental_solvert &_solver,
     const namespacet &_ns) :
-    solver(_solver), 
+    solver(_solver),
     ns(_ns),
     solver_instances(0),
     solver_calls(0)
@@ -32,16 +32,16 @@ class strategy_solver_baset : public messaget
   unsigned get_number_of_solver_calls() { return solver_calls; }
   unsigned get_number_of_solver_instances() { return solver_instances; }
 
- protected: 
+ protected:
   incremental_solvert &solver;
 
   const namespacet &ns;
 
-  //handles on values to retrieve from model
+  // handles on values to retrieve from model
   bvt strategy_cond_literals;
   exprt::operandst strategy_value_exprs;
 
-  //statistics for additional solvers
+  // statistics for additional solvers
   unsigned solver_instances;
   unsigned solver_calls;
 };

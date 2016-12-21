@@ -1,6 +1,6 @@
 /*******************************************************************\
 
-Module: 2LS Main Module 
+Module: 2LS Main Module
 
 Author: Daniel Kroening, Peter Schrammel
 
