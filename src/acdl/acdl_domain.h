@@ -45,6 +45,13 @@ public:
 		  valuet &final_value,
 		  valuet &new_value);
   
+  void operator()(
+		  const statementt &statement,
+		  const varst &vars,
+		  const valuet &init_value,
+		  const valuet &final_value,
+		  valuet &generalized_value);
+  
   //project deductions to value
   void to_value(const deductionst &deductions, valuet& value)
   {

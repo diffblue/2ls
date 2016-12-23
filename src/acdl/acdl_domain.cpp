@@ -7,7 +7,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 \*******************************************************************/
 
 
-//#define DEBUG
+#define DEBUG
 
 #ifdef DEBUG
 #include <iostream>
@@ -125,7 +125,7 @@ void acdl_domaint::operator()(
 {
     
   // assert that new_value subsumes final_value 
-  assert(0);
+  // assert(0);
 }
 
 
@@ -2165,4 +2165,26 @@ bool acdl_domaint::gamma_complete_deduction(const exprt &ssa_conjunction,
   }
   solver->pop_context();
 #endif
+}
+
+/*******************************************************************\
+
+Function: acdl_domaint::operator()
+
+ Inputs:
+
+ Outputs:
+
+ Purpose: operator()
+
+\*******************************************************************/
+
+void acdl_domaint::operator()(
+  const statementt &statement,
+  const varst &vars,
+  const valuet &init_value,
+  const valuet &final_value,
+  valuet &generalized_value)
+{
+  // assert(false);
 }
