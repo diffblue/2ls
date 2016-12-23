@@ -10,10 +10,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/find_symbols.h>
 #include <util/i2string.h>
 #include <util/string2int.h>
-#include <solvers/prop/prop_conv.h>
-#include <util/find_symbols.h>
-#include <util/i2string.h>
-#include <util/string2int.h>
 
 #include <goto-programs/read_goto_binary.h>
 #include <goto-programs/goto_model.h>
@@ -27,6 +23,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <ssa/ssa_value_set.h>
 
 #include <solver/summary.h>
+
+#include "show.h"
 
 /*******************************************************************\
 
@@ -242,7 +240,8 @@ void show_ssa(
   std::ostream &out)
 {
   local_SSAt local_SSA(goto_function, ns);
-  if(simplify) ::simplify(local_SSA, ns);
+  if(simplify)
+    ::simplify(local_SSA, ns);
   local_SSA.output_verbose(out);
 }
 
@@ -281,8 +280,10 @@ void show_ssa(
   {
     forall_goto_functions(f_it, goto_model.goto_functions)
     {
-      if(f_it->first=="assert") continue;
-      if(f_it->first=="__CPROVER_assume") continue;
+      if(f_it->first=="assert")
+        continue;
+      if(f_it->first=="__CPROVER_assume")
+        continue;
 
       out << ">>>> Function " << f_it->first << "\n";
 
@@ -295,7 +296,7 @@ void show_ssa(
 
 /*******************************************************************\
 
-Function: show_error_trace
+Function: print_symbol_values
 
   Inputs:
 
@@ -305,16 +306,17 @@ Function: show_error_trace
 
 \*******************************************************************/
 
-void print_symbol_values(const local_SSAt &SSA,
-    prop_convt &solver,
-    std::ostream &out,
-          const exprt &expr)
+void print_symbol_values(
+  const local_SSAt &SSA,
+  prop_convt &solver,
+  std::ostream &out,
+  const exprt &expr)
 {
-//  if(expr.id()==ID_symbol)
+  if(expr.id()==ID_symbol)
   {
-    out << from_expr(SSA.ns, "", expr) << "==" <<
-      from_expr(SSA.ns, "", solver.get(expr)) << "\n";
-    //  return;
+    out << from_expr(SSA.ns, "", expr) << "=="
+        << from_expr(SSA.ns, "", solver.get(expr)) << "\n";
+    return;
   }
   for(exprt::operandst::const_iterator it=expr.operands().begin();
       it!=expr.operands().end(); it++)
@@ -323,31 +325,43 @@ void print_symbol_values(const local_SSAt &SSA,
   }
 }
 
-void show_raw_countermodel(const irep_idt &property_id,
-    const local_SSAt &SSA,
-    prop_convt &solver,
-    std::ostream &out,
-    message_handlert &message_handler)
+/*******************************************************************\
 
+Function: show_raw_countermodel
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void show_raw_countermodel(
+  const irep_idt &property_id,
+  const local_SSAt &SSA,
+  prop_convt &solver,
+  std::ostream &out,
+  message_handlert &message_handler)
 {
   out << "\n*** Error trace for property " << property_id << "\n";
-  for (local_SSAt::nodest::const_iterator n_it=
-     SSA.nodes.begin(); n_it!=SSA.nodes.end(); n_it++)
+  for(local_SSAt::nodest::const_iterator n_it=
+        SSA.nodes.begin(); n_it!=SSA.nodes.end(); n_it++)
   {
-    for (local_SSAt::nodet::equalitiest::const_iterator e_it=
-     n_it->equalities.begin(); e_it!=n_it->equalities.end(); e_it++)
+    for(local_SSAt::nodet::equalitiest::const_iterator e_it=
+          n_it->equalities.begin(); e_it!=n_it->equalities.end(); e_it++)
     {
       print_symbol_values(SSA, solver, out, *e_it);
       // out << from_expr(SSA.ns, "", e_it->op0()) << "==" <<
       //    from_expr(SSA.ns, "", solver.get(e_it->op0())) << "\n";
     }
-    for (local_SSAt::nodet::constraintst::const_iterator c_it=
-     n_it->constraints.begin(); c_it!=n_it->constraints.end(); c_it++)
+    for(local_SSAt::nodet::constraintst::const_iterator c_it=
+          n_it->constraints.begin(); c_it!=n_it->constraints.end(); c_it++)
     {
       print_symbol_values(SSA, solver, out, *c_it);
     }
-    for (local_SSAt::nodet::assertionst::const_iterator a_it=
-     n_it->assertions.begin(); a_it!=n_it->assertions.end(); a_it++)
+    for(local_SSAt::nodet::assertionst::const_iterator a_it=
+          n_it->assertions.begin(); a_it!=n_it->assertions.end(); a_it++)
     {
       print_symbol_values(SSA, solver, out, *a_it);
     }
@@ -357,7 +371,7 @@ void show_raw_countermodel(const irep_idt &property_id,
 
 /*******************************************************************\
 
-Function: show_invariants
+Function: find_loc_by_guard
 
   Inputs:
 
@@ -367,8 +381,9 @@ Function: show_invariants
 
 \*******************************************************************/
 
-local_SSAt::locationt find_loc_by_guard(const local_SSAt &SSA,
-          const symbol_exprt &guard)
+local_SSAt::locationt find_loc_by_guard(
+  const local_SSAt &SSA,
+  const symbol_exprt &guard)
 {
   std::string gstr=id2string(guard.get_identifier());
   unsigned pos1=gstr.find("#")+1;
@@ -376,6 +391,18 @@ local_SSAt::locationt find_loc_by_guard(const local_SSAt &SSA,
   unsigned n=safe_string2unsigned(gstr.substr(pos1, pos2));
   return SSA.get_location(n);
 }
+
+/*******************************************************************\
+
+Function: purify_identifiers
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 
 void purify_identifiers(exprt &expr)
 {
@@ -390,9 +417,22 @@ void purify_identifiers(exprt &expr)
   }
 }
 
-void show_invariant(const local_SSAt &SSA,
-    const exprt &expr,
-    std::ostream &out)
+/*******************************************************************\
+
+Function: show_invariant
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void show_invariant(
+  const local_SSAt &SSA,
+  const exprt &expr,
+  std::ostream &out)
 {
   // expected format (/\_j g_j)=> inv
   const exprt &impl=expr.op0();
@@ -407,19 +447,35 @@ void show_invariant(const local_SSAt &SSA,
     assert(impl.op0().id()==ID_symbol);
     loc=find_loc_by_guard(SSA, to_symbol_expr(impl.op0()));
   }
-  else assert(false);
+  else
+    assert(false);
 
   out << "\n** invariant: " << loc->source_location << "\n";
   purify_identifiers(inv);
   out << "  " << from_expr(SSA.ns, "", inv) << "\n";
 }
 
-void show_invariants(const local_SSAt &SSA,
-    const summaryt &summary,
-    std::ostream &out)
+/*******************************************************************\
+
+Function: show_invariants
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void show_invariants(
+  const local_SSAt &SSA,
+  const summaryt &summary,
+  std::ostream &out)
 {
-  if(summary.fw_invariant.is_nil()) return;
-  if(summary.fw_invariant.is_true()) return;
+  if(summary.fw_invariant.is_nil())
+    return;
+  if(summary.fw_invariant.is_true())
+    return;
 
   // expected format /\_i g_i=> inv_i
   if(summary.fw_invariant.id()==ID_implies)
@@ -434,7 +490,8 @@ void show_invariants(const local_SSAt &SSA,
       show_invariant(SSA, summary.fw_invariant.operands()[i], out);
     }
   }
-  else assert(false);
+  else
+    assert(false);
 }
 
 
@@ -456,21 +513,21 @@ void show_ssa_symbols(
 {
   std::set<symbol_exprt> symbols;
   out << "\n*** SSA Symbols " << "\n";
-  for (local_SSAt::nodest::const_iterator n_it=
-     SSA.nodes.begin(); n_it!=SSA.nodes.end(); n_it++)
+  for(local_SSAt::nodest::const_iterator n_it=
+        SSA.nodes.begin(); n_it!=SSA.nodes.end(); n_it++)
   {
-    for (local_SSAt::nodet::equalitiest::const_iterator e_it=
-     n_it->equalities.begin(); e_it!=n_it->equalities.end(); e_it++)
+    for(local_SSAt::nodet::equalitiest::const_iterator e_it=
+          n_it->equalities.begin(); e_it!=n_it->equalities.end(); e_it++)
     {
       find_symbols(*e_it, symbols);
     }
-    for (local_SSAt::nodet::constraintst::const_iterator c_it=
-     n_it->constraints.begin(); c_it!=n_it->constraints.end(); c_it++)
+    for(local_SSAt::nodet::constraintst::const_iterator c_it=
+          n_it->constraints.begin(); c_it!=n_it->constraints.end(); c_it++)
     {
       find_symbols(*c_it, symbols);
     }
-    for (local_SSAt::nodet::assertionst::const_iterator a_it=
-     n_it->assertions.begin(); a_it!=n_it->assertions.end(); a_it++)
+    for(local_SSAt::nodet::assertionst::const_iterator a_it=
+          n_it->assertions.begin(); a_it!=n_it->assertions.end(); a_it++)
     {
       find_symbols(*a_it, symbols);
     }

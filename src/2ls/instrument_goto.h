@@ -2,7 +2,7 @@
 
 Module: Instrument Goto Program with Inferred Information
 
-Author: Peter Schrammel
+Author: Peter Schrammel, Björn Wachter
 
 \*******************************************************************/
 
@@ -20,9 +20,10 @@ Author: Peter Schrammel
 class instrument_gotot:public messaget
 {
 public:
-  inline instrument_gotot(optionst &_options,
-        ssa_dbt &_ssa_db,
-        summary_dbt &_summary_db):
+  inline instrument_gotot(
+    optionst &_options,
+    ssa_dbt &_ssa_db,
+    summary_dbt &_summary_db):
     options(_options),
     ssa_db(_ssa_db), summary_db(_summary_db)
   {
@@ -49,7 +50,6 @@ public:
     const exprt &expr,
     goto_programt &dest,
     goto_programt::targett &target);
-
 };
 
 #endif

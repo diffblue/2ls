@@ -1,3 +1,11 @@
+/*******************************************************************\
+
+Module: 2LS Command Line Options Processing
+
+Author: Peter Schrammel
+
+\*******************************************************************/
+
 #include <util/replace_expr.h>
 #include <util/find_symbols.h>
 #include <util/arith_tools.h>
@@ -45,7 +53,8 @@ void twols_parse_optionst::inline_main(goto_modelt &goto_model)
       main.instructions.splice(next_target, tmp.instructions);
       target=next_target;
     }
-    else target++;
+    else
+      target++;
   }
 
   goto_model.goto_functions.update();
@@ -119,7 +128,7 @@ void twols_parse_optionst::nondet_locals(goto_modelt &goto_model)
 
 /*******************************************************************\
 
-Function: goto_unwind
+Function: twols_parse_optionst::unwind_goto_into_loop
 
   Inputs:
 
@@ -129,9 +138,12 @@ Function: goto_unwind
 
 \*******************************************************************/
 
-void twols_parse_optionst::unwind_goto_into_loop(goto_modelt &goto_model, unsigned k)
+void twols_parse_optionst::unwind_goto_into_loop(
+  goto_modelt &goto_model,
+  unsigned k)
 {
-  typedef std::vector<std::pair<goto_programt::targett, goto_programt::targett> > loopst;
+  typedef std::vector<std::pair<goto_programt::targett,
+                                goto_programt::targett> > loopst;
 
   Forall_goto_functions(f_it, goto_model.goto_functions)
   {
@@ -147,7 +159,8 @@ void twols_parse_optionst::unwind_goto_into_loop(goto_modelt &goto_model, unsign
         bool has_goto_into_loop=false;
 
         goto_programt::targett it=loop_head;
-        if(it!=loop_exit) it++;
+        if(it!=loop_exit)
+          it++;
         for(; it!=loop_exit; it++)
         {
           for( std::set<goto_programt::targett>::iterator
@@ -161,7 +174,8 @@ void twols_parse_optionst::unwind_goto_into_loop(goto_modelt &goto_model, unsign
               break;
             }
           }
-          if(has_goto_into_loop) break;
+          if(has_goto_into_loop)
+            break;
         }
         if(has_goto_into_loop)
         {
@@ -174,9 +188,15 @@ void twols_parse_optionst::unwind_goto_into_loop(goto_modelt &goto_model, unsign
     for(loopst::iterator l_it=loops.begin(); l_it!=loops.end(); ++l_it)
     {
       std::vector<goto_programt::targett> iteration_points;
+
       goto_unwindt goto_unwind;
-      goto_unwind.unwind(body, l_it->second, l_it->first, k,
-             goto_unwindt::PARTIAL, iteration_points);
+      goto_unwind.unwind(
+        body,
+        l_it->second,
+        l_it->first,
+        k,
+        goto_unwindt::PARTIAL, iteration_points);
+
       assert(iteration_points.size()==2);
       goto_programt::targett t=body.insert_before(l_it->first);
       t->make_goto();
@@ -189,7 +209,7 @@ void twols_parse_optionst::unwind_goto_into_loop(goto_modelt &goto_model, unsign
 
 /*******************************************************************\
 
-Function: remove_multiple_dereferences
+Function: twols_parse_optionst::remove_multiple_dereferences
 
   Inputs:
 
@@ -199,7 +219,13 @@ Function: remove_multiple_dereferences
 
 \*******************************************************************/
 
-void twols_parse_optionst::remove_multiple_dereferences(goto_modelt &goto_model, goto_programt &body, goto_programt::targett t, exprt &expr, unsigned &var_counter, bool deref_seen)
+void twols_parse_optionst::remove_multiple_dereferences(
+  goto_modelt &goto_model,
+  goto_programt &body,
+  goto_programt::targett t,
+  exprt &expr,
+  unsigned &var_counter,
+  bool deref_seen)
 {
   if(expr.id()==ID_member)
   {
@@ -207,7 +233,8 @@ void twols_parse_optionst::remove_multiple_dereferences(goto_modelt &goto_model,
     if(member_expr.compound().id()==ID_dereference)
     {
       dereference_exprt &deref_expr=to_dereference_expr(member_expr.compound());
-      remove_multiple_dereferences(goto_model, body, t, deref_expr.pointer(), var_counter, true);
+      remove_multiple_dereferences(
+        goto_model, body, t, deref_expr.pointer(), var_counter, true);
       if(deref_seen)
       {
         symbolt new_symbol;
@@ -237,12 +264,26 @@ void twols_parse_optionst::remove_multiple_dereferences(goto_modelt &goto_model,
     }
     else
       Forall_operands(o_it, expr)
-        remove_multiple_dereferences(goto_model, body, t, *o_it, var_counter, deref_seen);
+        remove_multiple_dereferences(
+          goto_model, body, t, *o_it, var_counter, deref_seen);
   }
   else
     Forall_operands(o_it, expr)
-      remove_multiple_dereferences(goto_model, body, t, *o_it, var_counter, deref_seen);
+      remove_multiple_dereferences(
+        goto_model, body, t, *o_it, var_counter, deref_seen);
 }
+
+/*******************************************************************\
+
+Function: twols_parse_optionst::remove_multiple_dereferences
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: temporary fix to circumvent ssa_dereference problem
+
+\*******************************************************************/
 
 void twols_parse_optionst::remove_multiple_dereferences(goto_modelt &goto_model)
 {
@@ -254,29 +295,32 @@ void twols_parse_optionst::remove_multiple_dereferences(goto_modelt &goto_model)
     {
       if(i_it->is_goto())
       {
-        remove_multiple_dereferences(goto_model,
-                                     f_it->second.body,
-                                     i_it,
-                                     i_it->guard,
-                                     var_counter, false);
+        remove_multiple_dereferences(
+          goto_model,
+          f_it->second.body,
+          i_it,
+          i_it->guard,
+          var_counter,
+          false);
       }
       else if(i_it->is_assign())
       {
-        remove_multiple_dereferences(goto_model,
-                                     f_it->second.body,
-                                     i_it,
-                                     to_code_assign(i_it->code).lhs(),
-                                     var_counter, false);
-        remove_multiple_dereferences(goto_model,
-                                     f_it->second.body,
-                                     i_it,
-                                     to_code_assign(i_it->code).rhs(),
-                                     var_counter, false);
+        remove_multiple_dereferences(
+          goto_model,
+          f_it->second.body,
+          i_it,
+          to_code_assign(i_it->code).lhs(),
+          var_counter, false);
+        remove_multiple_dereferences(
+          goto_model,
+          f_it->second.body,
+          i_it,
+          to_code_assign(i_it->code).rhs(),
+          var_counter, false);
       }
     }
   }
 }
-
 
 /*******************************************************************\
 
@@ -364,7 +408,7 @@ void twols_parse_optionst::filter_assertions(goto_modelt &goto_model)
 {
   Forall_goto_functions(f_it, goto_model.goto_functions)
   {
-    goto_programt& program=f_it->second.body;
+    goto_programt &program=f_it->second.body;
 
     Forall_goto_program_instructions(i_it, program)
     {
@@ -396,9 +440,11 @@ void twols_parse_optionst::split_loopheads(goto_modelt &goto_model)
   {
     Forall_goto_program_instructions(i_it, f_it->second.body)
     {
-      if(!i_it->is_backwards_goto()) continue;
+      if(!i_it->is_backwards_goto())
+        continue;
       goto_programt::targett loophead=i_it->get_target();
-      if(i_it->guard.is_true() && !loophead->is_assert()) continue;
+      if(i_it->guard.is_true() && !loophead->is_assert())
+        continue;
 
       // inserts the skip
       goto_programt::targett new_loophead=
@@ -412,7 +458,8 @@ void twols_parse_optionst::split_loopheads(goto_modelt &goto_model)
             loophead->incoming_edges.begin();
           j_it!=loophead->incoming_edges.end(); j_it++)
       {
-        if(!(*j_it)->is_goto() || (*j_it)->get_target()!=loophead) continue;
+        if(!(*j_it)->is_goto() || (*j_it)->get_target()!=loophead)
+          continue;
         (*j_it)->targets.clear();
         (*j_it)->targets.push_back(new_loophead);
       }

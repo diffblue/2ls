@@ -14,7 +14,7 @@ Author: Peter Schrammel
 class summary_checker_ait:public summary_checker_baset
 {
 public:
-  inline summary_checker_ait(optionst &_options):
+  explicit summary_checker_ait(optionst &_options):
     summary_checker_baset(_options)
   {
   }
@@ -24,7 +24,6 @@ public:
 protected:
   void report_preconditions();
   property_checkert::resultt report_termination();
-
 };
 
 #endif

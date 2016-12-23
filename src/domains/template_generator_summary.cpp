@@ -33,8 +33,10 @@ Function: template_generator_summaryt::operator()
 
 \*******************************************************************/
 
-void template_generator_summaryt::operator()(unsigned _domain_number,
-        const local_SSAt &SSA,  bool forward)
+void template_generator_summaryt::operator()(
+  unsigned _domain_number,
+  const local_SSAt &SSA,
+  bool forward)
 {
   domain_number=_domain_number;
   handle_special_functions(SSA); // we have to call that to prevent trouble!
@@ -72,23 +74,35 @@ Function: template_generator_summaryt::collect_variables_inout
 
 \*******************************************************************/
 
-void template_generator_summaryt::collect_variables_inout(const local_SSAt &SSA, bool forward)
+void template_generator_summaryt::collect_variables_inout(
+  const local_SSAt &SSA,
+  bool forward)
 {
   // add params and globals_in
-  exprt first_guard=SSA.guard_symbol(SSA.goto_function.body.instructions.begin());
-  add_vars(SSA.params, first_guard, first_guard,
-           forward ? domaint::IN : domaint::OUT,
-           var_specs);
-  add_vars(SSA.globals_in, first_guard, first_guard,
-           forward ? domaint::IN : domaint::OUT,
-           var_specs);
+  exprt first_guard=
+    SSA.guard_symbol(SSA.goto_function.body.instructions.begin());
+  add_vars(
+    SSA.params,
+    first_guard,
+    first_guard,
+    forward ? domaint::IN : domaint::OUT,
+    var_specs);
+  add_vars(
+    SSA.globals_in,
+    first_guard,
+    first_guard,
+    forward ? domaint::IN : domaint::OUT,
+    var_specs);
 
   // add globals_out (includes return values)
   exprt last_guard=
     SSA.guard_symbol(--SSA.goto_function.body.instructions.end());
-  add_vars(SSA.globals_out, last_guard, last_guard,
-     forward ? domaint::OUT : domaint::IN,
-     var_specs);
+  add_vars(
+    SSA.globals_out,
+    last_guard,
+    last_guard,
+    forward ? domaint::OUT : domaint::IN,
+    var_specs);
 }
 
 /*******************************************************************\
@@ -109,7 +123,8 @@ domaint::var_sett template_generator_summaryt::inout_vars()
   for(domaint::var_specst::const_iterator v=var_specs.begin();
       v!=var_specs.end(); v++)
   {
-    if(v->kind==domaint::IN || v->kind==domaint::OUT) vars.insert(v->var);
+    if(v->kind==domaint::IN || v->kind==domaint::OUT)
+      vars.insert(v->var);
   }
   return vars;
 }
@@ -132,7 +147,8 @@ domaint::var_sett template_generator_summaryt::out_vars()
   for(domaint::var_specst::const_iterator v=var_specs.begin();
       v!=var_specs.end(); v++)
   {
-    if(v->kind==domaint::OUT) vars.insert(v->var);
+    if(v->kind==domaint::OUT)
+      vars.insert(v->var);
   }
   return vars;
 }

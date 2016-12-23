@@ -1,6 +1,7 @@
 /*******************************************************************\
 
-Module: Abstract domain base class
+Module: Enumeration-based solver for lexicographic linear ranking 
+        functions
 
 Author: Peter Schrammel
 
@@ -194,7 +195,8 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
           // update the current template
           lexlinrank_domain.set_row_value(row, new_row_values, rank);
 
-          if(!refinement_constraint.is_true()) inner_solver->pop_context();
+          if(!refinement_constraint.is_true())
+            inner_solver->pop_context();
         }
         else
         {
@@ -221,7 +223,8 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
             debug() << "refining..." << eom;
             improved=true; // refinement possible
 
-            if(!refinement_constraint.is_true()) inner_solver->pop_context();
+            if(!refinement_constraint.is_true())
+              inner_solver->pop_context();
           }
           else
           {

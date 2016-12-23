@@ -142,11 +142,15 @@ public:
 
   // auxiliary functions
   enum kindt { PHI, OUT, LOOP_BACK, LOOP_SELECT };
-  virtual symbol_exprt name(const ssa_objectt &, kindt kind, locationt loc) const;
+  virtual symbol_exprt name(
+    const ssa_objectt &, kindt kind, locationt loc) const;
   symbol_exprt name(const ssa_objectt &, const ssa_domaint::deft &) const;
   symbol_exprt name_input(const ssa_objectt &) const;
-  virtual exprt nondet_symbol(std::string prefix, const typet &type,
-            locationt loc, unsigned counter) const;
+  virtual exprt nondet_symbol(
+    std::string prefix,
+    const typet &type,
+    locationt loc,
+    unsigned counter) const;
   locationt get_def_loc(const symbol_exprt &, locationt loc) const;
   void replace_side_effects_rec(exprt &, locationt, unsigned &) const;
   exprt read_lhs(const exprt &, locationt loc) const;
@@ -155,7 +159,8 @@ public:
   exprt read_rhs_rec(const exprt &, locationt loc) const;
   symbol_exprt read_rhs(const ssa_objectt &, locationt loc) const;
   exprt read_node_in(const ssa_objectt &, locationt loc) const;
-  void assign_rec(const exprt &lhs, const exprt &rhs, const exprt &guard, locationt loc);
+  void assign_rec(
+    const exprt &lhs, const exprt &rhs, const exprt &guard, locationt loc);
 
   void get_entry_exit_vars();
 
@@ -175,14 +180,17 @@ public:
   ssa_ait ssa_analysis;
   std::string suffix; // an extra suffix
 
-  void get_globals(locationt loc, std::set<symbol_exprt> &globals,
-       bool rhs_value=true,
-       bool with_returns=true,
-       const irep_idt &returns_for_function="") const;
+  void get_globals(
+    locationt loc,
+    std::set<symbol_exprt> &globals,
+    bool rhs_value=true,
+    bool with_returns=true,
+    const irep_idt &returns_for_function="") const;
 
   nodest::iterator find_node(locationt loc);
   nodest::const_iterator find_node(locationt loc) const;
-  void find_nodes(locationt loc, std::list<nodest::const_iterator> &_nodes) const;
+  void find_nodes(
+    locationt loc, std::list<nodest::const_iterator> &_nodes) const;
 
   inline locationt get_location(unsigned location_number) const
   {

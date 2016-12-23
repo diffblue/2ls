@@ -34,7 +34,6 @@ Author: Daniel Kroening, Peter Schrammel
 #include <goto-programs/json_goto_trace.h>
 #include <goto-programs/remove_returns.h>
 #include <goto-programs/remove_skip.h>
-#include "array_abstraction.h"
 
 #include <analyses/goto_check.h>
 
@@ -75,8 +74,8 @@ Function: twols_parse_optionst::twols_parse_optionst
 \*******************************************************************/
 
 twols_parse_optionst::twols_parse_optionst(int argc, const char **argv):
-  parse_options_baset(TWOLS_OPTIONS, argc, argv),
-  language_uit(cmdline, ui_message_handler),
+parse_options_baset(TWOLS_OPTIONS, argc, argv),
+language_uit(cmdline, ui_message_handler),
   ui_message_handler(cmdline, "2LS " TWOLS_VERSION),
   recursion_detected(false),
   threads_detected(false)
@@ -236,21 +235,26 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
   {
     options.set_option("monolithic-ranking-function", true);
   }
-  else options.set_option("monolithic-ranking-function", false);
+  else
+    options.set_option("monolithic-ranking-function", false);
 
   if(cmdline.isset("lexicographic-ranking-function"))
   {
-    options.set_option("lexicographic-ranking-function",
-                       cmdline.get_value("lexicographic-ranking-function"));
+    options.set_option(
+      "lexicographic-ranking-function",
+      cmdline.get_value("lexicographic-ranking-function"));
   }
-  else options.set_option("lexicographic-ranking-function", 5);
+  else
+    options.set_option("lexicographic-ranking-function", 5);
 
   if(cmdline.isset("max-inner-ranking-iterations"))
   {
-    options.set_option("max-inner-ranking-iterations",
-                       cmdline.get_value("max-inner-ranking-iterations"));
+    options.set_option(
+      "max-inner-ranking-iterations",
+      cmdline.get_value("max-inner-ranking-iterations"));
   }
-  else options.set_option("max-inner-ranking-iterations", 50);
+  else
+    options.set_option("max-inner-ranking-iterations", 50);
 
   // do k-induction refinement
   if(cmdline.isset("k-induction"))
@@ -300,8 +304,9 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
 
   // instrumentation / output
   if(cmdline.isset("instrument-output"))
-    options.set_option("instrument-output",
-                       cmdline.get_value("instrument-output"));
+    options.set_option(
+      "instrument-output",
+      cmdline.get_value("instrument-output"));
 
 
 #ifdef SHOW_CALLING_CONTEXTS
@@ -310,8 +315,9 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
     if(!options.get_bool_option("intervals"))
       throw "--show-calling-contexts only possible with --intervals";
     options.set_option("show-calling-contexts", true);
-    options.set_option("do-not-analyze-functions",
-                       cmdline.get_value("show-calling-contexts"));
+    options.set_option(
+      "do-not-analyze-functions",
+      cmdline.get_value("show-calling-contexts"));
   }
 #endif
 
@@ -355,7 +361,8 @@ int twols_parse_optionst::doit()
   //
   // Print a banner
   //
-  status() << "2LS version " TWOLS_VERSION " (based on CBMC " CBMC_VERSION ")" << eom;
+  status() << "2LS version " TWOLS_VERSION " (based on CBMC " CBMC_VERSION ")"
+           << eom;
 
   goto_modelt goto_model;
 
@@ -457,12 +464,16 @@ int twols_parse_optionst::doit()
       status() << "Using zones domain";
     else if(options.get_bool_option("octagons"))
       status() << "Using octagons domain";
-    else assert(false);
+    else
+      assert(false);
+
     if(options.get_bool_option("enum-solver"))
       status() << " with enumeration solver";
     else if(options.get_bool_option("binsearch-solver"))
       status() << " with binary search solver";
-    else assert(false);
+    else
+      assert(false);
+
     status() << eom;
   }
 
@@ -593,14 +604,23 @@ int twols_parse_optionst::doit()
 #endif
 }
 
+/*******************************************************************\
 
+Function: twols_parse_optionst::type_stats_rec
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 
 void twols_parse_optionst::type_stats_rec(
   const typet &type,
   expr_statst &stats,
   const namespacet &ns)
 {
-
   if(type.id()==ID_symbol)
     type_stats_rec(ns.follow(type), stats, ns);
 
@@ -613,7 +633,8 @@ void twols_parse_optionst::type_stats_rec(
     if(subtype.id()==ID_signedbv ||
        subtype.id()==ID_unsignedbv)
     {
-      stats.has_string=(to_bitvector_type(subtype).get_width()==config.ansi_c.char_width);
+      stats.has_string=
+        (to_bitvector_type(subtype).get_width()==config.ansi_c.char_width);
     }
   }
 
@@ -642,7 +663,6 @@ void twols_parse_optionst::expr_stats_rec(
   const exprt &expr,
   expr_statst &stats)
 {
-
   if(expr.id()==ID_side_effect)
   {
     const side_effect_exprt &side_effect_expr=to_side_effect_expr(expr);
@@ -656,11 +676,6 @@ void twols_parse_optionst::expr_stats_rec(
     {
       // done in statet:instantiate_rec
     }
-  }
-
-  if(expr.id()==ID_symbol )
-  {
-
   }
 
   if(expr.has_operands())
@@ -685,10 +700,10 @@ Function: twols_parse_optionst::show_stats
 
 \*******************************************************************/
 
-void twols_parse_optionst::show_stats(const goto_modelt &goto_model,
-                                           std::ostream &out)
+void twols_parse_optionst::show_stats(
+  const goto_modelt &goto_model,
+  std::ostream &out)
 {
-
   const namespacet ns(goto_model.symbol_table);
 
   expr_statst stats;
@@ -700,7 +715,8 @@ void twols_parse_optionst::show_stats(const goto_modelt &goto_model,
   // analyze all the functions
   forall_goto_functions(f_it, goto_model.goto_functions)
   {
-    if(!f_it->second.body_available()) continue;
+    if(!f_it->second.body_available())
+      continue;
 
     ++nr_functions;
 
@@ -719,7 +735,8 @@ void twols_parse_optionst::show_stats(const goto_modelt &goto_model,
       nr_instructions++;
       const goto_programt::instructiont &instruction=*i_it;
 
-      if(i_it->is_backwards_goto()) nr_loops++;
+      if(i_it->is_backwards_goto())
+        nr_loops++;
 
       switch(instruction.type)
       {
@@ -742,7 +759,8 @@ void twols_parse_optionst::show_stats(const goto_modelt &goto_model,
 
       case DECL:
         // someone declaring an array
-        type_stats_rec(to_code_decl(instruction.code).symbol().type(), stats, ns);
+        type_stats_rec(
+          to_code_decl(instruction.code).symbol().type(), stats, ns);
 
         break;
 
@@ -820,7 +838,8 @@ void twols_parse_optionst::require_entry(
 {
   irep_idt entry_point=goto_model.goto_functions.entry_point();
 
-  if(goto_model.symbol_table.symbols.find(entry_point)==symbol_table.symbols.end())
+  if(goto_model.symbol_table.symbols.find(entry_point)==
+     symbol_table.symbols.end())
     throw "The program has no entry point; please complete linking";
 }
 
@@ -853,8 +872,8 @@ bool twols_parse_optionst::get_goto_program(
     {
       status() << "Reading GOTO program from file" << eom;
 
-      if(read_goto_binary(cmdline.args[0],
-                          goto_model, get_message_handler()))
+      if(read_goto_binary(
+           cmdline.args[0], goto_model, get_message_handler()))
         return true;
 
       config.set_from_symbol_table(goto_model.symbol_table);
@@ -891,7 +910,8 @@ bool twols_parse_optionst::get_goto_program(
 
       if(language==NULL)
       {
-        error() << "failed to figure out type of file `" <<  filename << "'" << eom;
+        error() << "failed to figure out type of file `" << filename << "'"
+                << eom;
         return true;
       }
 
@@ -910,10 +930,12 @@ bool twols_parse_optionst::get_goto_program(
     }
     else
     {
-
-      if(parse()) return true;
-      if(typecheck()) return true;
-      if(final()) return true;
+      if(parse())
+        return true;
+      if(typecheck())
+        return true;
+      if(final())
+        return true;
 
       // we no longer need any parse trees or language files
       clear_parse();
@@ -991,7 +1013,6 @@ bool twols_parse_optionst::process_goto_program(
 {
   try
   {
-
     status() << "Function Pointer Removal" << eom;
     remove_function_pointers(
       goto_model, cmdline.isset("pointer-check"));
@@ -1100,14 +1121,6 @@ bool twols_parse_optionst::process_goto_program(
       return true;
     }
 
-    // do array abstraction
-    if(cmdline.isset("array-abstraction"))
-    {
-      status() << "Performing array abstraction" << eom;
-      array_abstraction(goto_model.symbol_table, ui_message_handler,
-                        goto_model.goto_functions);
-    }
-
     label_properties(goto_model);
 
     if(cmdline.isset("show-properties"))
@@ -1176,8 +1189,11 @@ void twols_parse_optionst::report_properties(
       it!=property_map.end();
       it++)
   {
-    if(it->first=="") // TODO: some properties do not show up in initialize_property_map
+#if 1
+    // TODO: some properties do not show up in initialize_property_map
+    if(it->first=="")
       continue;
+#endif
 
     if(!options.get_bool_option("all-properties") &&
        it->second.result!=property_checkert::FAIL)
@@ -1187,7 +1203,8 @@ void twols_parse_optionst::report_properties(
     {
       xmlt xml_result("result");
       xml_result.set_attribute("property", id2string(it->first));
-      xml_result.set_attribute("status", property_checkert::as_string(it->second.result));
+      xml_result.set_attribute(
+        "status", property_checkert::as_string(it->second.result));
       std::cout << xml_result << "\n";
     }
     else
@@ -1204,9 +1221,11 @@ void twols_parse_optionst::report_properties(
       show_counterexample(goto_model, it->second.error_trace);
     if(cmdline.isset("json-cex") &&
        it->second.result==property_checkert::FAIL)
-      output_json_cex(options,
-                      goto_model, it->second.error_trace,
-                      id2string(it->first));
+      output_json_cex(
+        options,
+        goto_model,
+        it->second.error_trace,
+        id2string(it->first));
   }
 
   if(!cmdline.isset("property"))
@@ -1352,7 +1371,7 @@ void twols_parse_optionst::output_graphml_cex(
 
 /*******************************************************************\
 
-Function: twols_parse_optionst::output_graphml_cex
+Function: twols_parse_optionst::output_graphml_proof
 
   Inputs:
 
@@ -1413,7 +1432,8 @@ void twols_parse_optionst::output_json_cex(
     }
     else
     {
-      std::ofstream out((options.get_option("json-cex")+"-"+property_id+".json").c_str());
+      std::ofstream out(
+        (options.get_option("json-cex")+"-"+property_id+".json").c_str());
       out << json_trace << '\n';
     }
   }
@@ -1505,7 +1525,7 @@ void twols_parse_optionst::help()
 {
   std::cout <<
     "\n"
-    "* *  2LS " TWOLS_VERSION "-Copyright (C) 2015-2016                    * *\n"
+    "* *  2LS " TWOLS_VERSION "-Copyright (C) 2014-2017                    * *\n" // NOLINT(*)
     "* *  (based on CBMC " CBMC_VERSION " ";
   std::cout << "(" << (sizeof(void *)*8) << "-bit version))";
 
@@ -1535,16 +1555,14 @@ void twols_parse_optionst::help()
     " --show-parse-tree            show parse tree\n"
     " --show-symbol-table          show symbol table\n"
     " --show-goto-functions        show goto program\n"
-    " --arch                       set architecture (default: "
-            << configt::this_architecture() << ")\n"
-    " --os                         set operating system (default: "
-            << configt::this_operating_system() << ")\n"
+    " --arch                       set architecture (default: " << configt::this_architecture() << ")\n" // NOLINT(*)
+    " --os                         set operating system (default: " << configt::this_operating_system() << ")\n" // NOLINT(*)
 #ifdef _WIN32
     " --gcc                        use GCC as preprocessor\n"
 #endif
     " --no-arch                    don't set up an architecture\n"
     " --no-library                 disable built-in abstract C library\n"
-    " --round-to-nearest           IEEE floating point rounding mode (default)\n"
+    " --round-to-nearest           IEEE floating point rounding mode (default)\n" // NOLINT(*)
     " --round-to-plus-inf          IEEE floating point rounding mode\n"
     " --round-to-minus-inf         IEEE floating point rounding mode\n"
     " --round-to-zero              IEEE floating point rounding mode\n"
@@ -1556,17 +1574,17 @@ void twols_parse_optionst::help()
     " --no-assertions              ignore user assertions\n"
     " --no-assumptions             ignore user assumptions\n"
     " --inline                     inline all functions into main\n"
-    " --inline-partial nr          inline functions smaller than the given nr of instructions\n"
+    " --inline-partial nr          inline functions smaller than the given nr of instructions\n" // NOLINT(*)
     "\n"
     "Backend options:\n"
     " --all-functions              check each function as entry point\n"
     " --stop-on-fail               stop on first failing assertion\n"
-    " --context-sensitive          context-sensitive analysis from entry point\n"
-    " --termination                compute ranking functions to prove termination\n"
+    " --context-sensitive          context-sensitive analysis from entry point\n" // NOLINT(*)
+    " --termination                compute ranking functions to prove termination\n" // NOLINT(*)
     " --k-induction                use k-induction\n"
     " --incremental-bmc            use incremental-bmc\n"
     " --preconditions              compute preconditions\n"
-    " --sufficient                 sufficient preconditions (default: necessary)\n"
+    " --sufficient                 sufficient preconditions (default: necessary)\n" // NOLINT(*)
     " --havoc                      havoc loops and function calls\n"
     " --intervals                  use interval domain\n"
     " --equalities                 use equalities and disequalities domain\n"

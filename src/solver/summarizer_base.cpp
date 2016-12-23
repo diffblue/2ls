@@ -17,17 +17,17 @@ Author: Peter Schrammel
 #include "summarizer_base.h"
 #include "summary_db.h"
 
-#include "../domains/ssa_analyzer.h"
-#include "../domains/template_generator_summary.h"
-#include "../domains/template_generator_callingcontext.h"
+#include <domains/ssa_analyzer.h>
+#include <domains/template_generator_summary.h>
+#include <domains/template_generator_callingcontext.h>
 
-#include "../ssa/local_ssa.h"
-#include "../ssa/simplify_ssa.h"
+#include <ssa/local_ssa.h>
+#include <ssa/simplify_ssa.h>
 
 
 /*******************************************************************\
 
-Function: summarizer_baset::summarize()
+Function: summarizer_baset::summarize
 
   Inputs:
 
@@ -45,16 +45,17 @@ void summarizer_baset::summarize()
   {
     status() << "\nSummarizing function " << it->first << eom;
     if(!summary_db.exists(it->first) ||
-     summary_db.get(it->first).mark_recompute)
+       summary_db.get(it->first).mark_recompute)
       compute_summary_rec(it->first, precondition, false);
-    else status() << "Summary for function " << it->first <<
-           " exists already" << eom;
+    else
+      status() << "Summary for function " << it->first
+               << " exists already" << eom;
   }
 }
 
 /*******************************************************************\
 
-Function: summarizer_baset::summarize()
+Function: summarizer_baset::summarize
 
   Inputs:
 
@@ -72,16 +73,19 @@ void summarizer_baset::summarize(const function_namet &function_name)
   if(!summary_db.exists(function_name) ||
      summary_db.get(function_name).mark_recompute)
   {
-    compute_summary_rec(function_name, precondition,
-                        options.get_bool_option("context-sensitive"));
+    compute_summary_rec(
+      function_name,
+      precondition,
+      options.get_bool_option("context-sensitive"));
   }
-  else status() << "Summary for function " << function_name <<
-   " exists already" << eom;
+  else
+    status() << "Summary for function " << function_name
+             << " exists already" << eom;
 }
 
 /*******************************************************************\
 
-Function: summarizer_baset::check_call_reachable()
+Function: summarizer_baset::check_call_reachable
 
   Inputs:
 
@@ -89,7 +93,7 @@ Function: summarizer_baset::check_call_reachable()
 
  Purpose: returns false if function call is not reachable
 
-\******************************************************************/
+\*******************************************************************/
 
 bool summarizer_baset::check_call_reachable(
   const function_namet &function_name,
@@ -123,9 +127,13 @@ bool summarizer_baset::check_call_reachable(
 
 #if 0
   std::cout << "guard: " << from_expr(SSA.ns, "", guard) << std::endl;
-  std::cout << "enable: " << from_expr(SSA.ns, "", SSA.get_enabling_exprs()) << std::endl;
-  std::cout << "precondition: " << from_expr(SSA.ns, "", precondition) << std::endl;
-  std::cout << "summaries: " << from_expr(SSA.ns, "", ssa_inliner.get_summaries(SSA)) << std::endl;
+  std::cout << "enable: " << from_expr(SSA.ns, "", SSA.get_enabling_exprs())
+            << std::endl;
+  std::cout << "precondition: " << from_expr(SSA.ns, "", precondition)
+            << std::endl;
+  std::cout << "summaries: "
+            << from_expr(SSA.ns, "", ssa_inliner.get_summaries(SSA))
+            << std::endl;
 #endif
 
   if(!forward)
@@ -133,13 +141,17 @@ bool summarizer_baset::check_call_reachable(
 
   switch(solver())
   {
-  case decision_proceduret::D_SATISFIABLE: {
+  case decision_proceduret::D_SATISFIABLE:
+  {
     reachable=true;
     debug() << "Call is reachable" << eom;
-    break; }
-  case decision_proceduret::D_UNSATISFIABLE: {
+    break;
+  }
+  case decision_proceduret::D_UNSATISFIABLE:
+  {
     debug() << "Call is not reachable" << eom;
-    break; }
+    break;
+  }
   default: assert(false); break;
   }
 
@@ -150,7 +162,7 @@ bool summarizer_baset::check_call_reachable(
 
 /*******************************************************************\
 
-Function: summarizer_baset::compute_calling_context ()
+Function: summarizer_baset::compute_calling_context
 
   Inputs:
 
@@ -159,7 +171,7 @@ Function: summarizer_baset::compute_calling_context ()
  Purpose: computes callee preconditions from the calling context
           for a single function call
 
-\******************************************************************/
+\*******************************************************************/
 
 exprt summarizer_baset::compute_calling_context(
   const function_namet &function_name,
@@ -193,14 +205,18 @@ exprt summarizer_baset::compute_calling_context(
   template_generator(solver.next_domain_number(), SSA, n_it, f_it, forward);
 
   // collect globals at call site
-  std::map<local_SSAt::nodet::function_callst::const_iterator, local_SSAt::var_sett>
+  std::map<local_SSAt::nodet::function_callst::const_iterator,
+           local_SSAt::var_sett>
     cs_globals_in;
-  if(forward) SSA.get_globals(n_it->location, cs_globals_in[f_it]);
-  else SSA.get_globals(n_it->location, cs_globals_in[f_it], false);
+  if(forward)
+    SSA.get_globals(n_it->location, cs_globals_in[f_it]);
+  else
+    SSA.get_globals(n_it->location, cs_globals_in[f_it], false);
 
   exprt cond=precondition;
-  if(!forward) cond=and_exprt(cond,
-    SSA.guard_symbol(--SSA.goto_function.body.instructions.end()));
+  if(!forward)
+    cond=and_exprt(
+      cond, SSA.guard_symbol(--SSA.goto_function.body.instructions.end()));
 
   // analyze
   analyzer(solver, SSA, cond, template_generator);
@@ -209,15 +225,15 @@ exprt summarizer_baset::compute_calling_context(
   local_SSAt &fSSA=ssa_db.get(fname);
 
   preconditiont precondition_call;
-  analyzer.get_result(precondition_call,
-          template_generator.callingcontext_vars());
-  ssa_inliner.rename_to_callee(f_it, fSSA.params,
-           cs_globals_in[f_it], fSSA.globals_in,
-           precondition_call);
+  analyzer.get_result(
+    precondition_call,
+    template_generator.callingcontext_vars());
+  ssa_inliner.rename_to_callee(
+    f_it, fSSA.params, cs_globals_in[f_it], fSSA.globals_in, precondition_call);
 
-  debug() << (forward ? "Forward " : "Backward ") << "calling context for " <<
-    from_expr(SSA.ns, "", *f_it) << ": "
-    << from_expr(SSA.ns, "", precondition_call) << eom;
+  debug() << (forward ? "Forward " : "Backward ") << "calling context for "
+          << from_expr(SSA.ns, "", *f_it) << ": "
+          << from_expr(SSA.ns, "", precondition_call) << eom;
 
   // statistics
   solver_instances+=analyzer.get_number_of_solver_instances();
@@ -230,7 +246,7 @@ exprt summarizer_baset::compute_calling_context(
 
 /*******************************************************************\
 
-Function: summarizer_baset::get_assertions()
+Function: summarizer_baset::get_assertions
 
   Inputs:
 
@@ -238,26 +254,20 @@ Function: summarizer_baset::get_assertions()
 
  Purpose:
 
-\******************************************************************/
+\*******************************************************************/
 
-void summarizer_baset::get_assertions(const local_SSAt &SSA,
-              exprt::operandst &assertions)
+void summarizer_baset::get_assertions(
+  const local_SSAt &SSA,
+  exprt::operandst &assertions)
 {
-  for(local_SSAt::nodest::const_iterator n_it=SSA.nodes.begin();
-      n_it!=SSA.nodes.end(); n_it++)
-  {
-    for(local_SSAt::nodet::assertionst::const_iterator
-    a_it=n_it->assertions.begin();
-  a_it!=n_it->assertions.end(); a_it++)
-    {
-      assertions.push_back(*a_it);
-    }
-  }
+  for(const auto &node : SSA.nodes)
+    for(const auto &a : node.assertions)
+      assertions.push_back(a);
 }
 
 /*******************************************************************\
 
-Function: summarizer_baset::check_precondition()
+Function: summarizer_baset::check_precondition
 
   Inputs:
 
@@ -265,7 +275,7 @@ Function: summarizer_baset::check_precondition()
 
  Purpose: returns false if the summary needs to be recomputed
 
-\******************************************************************/
+\*******************************************************************/
 
 bool summarizer_baset::check_precondition(
   const function_namet &function_name,
@@ -304,8 +314,8 @@ bool summarizer_baset::check_precondition(
       local_SSAt::var_sett cs_globals_in;
       SSA.get_globals(n_it->location, cs_globals_in);
 
-      ssa_inliner.rename_to_caller(f_it, summary.params,
-             cs_globals_in, summary.globals_in, assertion);
+      ssa_inliner.rename_to_caller(
+        f_it, summary.params, cs_globals_in, summary.globals_in, assertion);
 
       debug() << "precondition assertion: "
               << from_expr(SSA.ns, "", assertion) << eom;
@@ -329,7 +339,8 @@ bool summarizer_baset::check_precondition(
     return false; // function not seen yet
   }
 
-  if(precondition_holds) return true;
+  if(precondition_holds)
+    return true;
 
   assert(!assertion.is_nil());
 
@@ -351,18 +362,22 @@ bool summarizer_baset::check_precondition(
 
   switch(solver())
   {
-  case decision_proceduret::D_SATISFIABLE: {
+  case decision_proceduret::D_SATISFIABLE:
+  {
     precondition_holds=false;
 
     status() << "Precondition does not hold, need to recompute summary." << eom;
-    break; }
-  case decision_proceduret::D_UNSATISFIABLE: {
+    break;
+  }
+  case decision_proceduret::D_UNSATISFIABLE:
+  {
     precondition_holds=true;
 
     status() << "Precondition holds, replacing by summary." << eom;
     summaries_used++;
 
-    break; }
+    break;
+  }
   default: assert(false); break;
   }
 
@@ -373,7 +388,7 @@ bool summarizer_baset::check_precondition(
 
 /*******************************************************************\
 
-Function: summarizer_baset::check_end_reachable()
+Function: summarizer_baset::check_end_reachable
 
   Inputs:
 
@@ -381,12 +396,12 @@ Function: summarizer_baset::check_end_reachable()
 
  Purpose: returns false if the end of the function is not reachable
 
-\******************************************************************/
+\*******************************************************************/
 
 bool summarizer_baset::check_end_reachable(
-   const function_namet &function_name,
-   local_SSAt &SSA,
-   const exprt &cond)
+  const function_namet &function_name,
+  local_SSAt &SSA,
+  const exprt &cond)
 {
   incremental_solvert &solver=ssa_db.get_solver(function_name);
   solver.set_message_handler(get_message_handler());
@@ -398,10 +413,13 @@ bool summarizer_baset::check_end_reachable(
   solver << ssa_inliner.get_summaries(SSA);
 
   solver << cond;
+
   exprt::operandst assertions;
+  // do not add assertions
+  //  because a failing assertion does not prove termination
   assertions.push_back(
     not_exprt(SSA.guard_symbol(--SSA.goto_function.body.instructions.end())));
-//  get_assertions(SSA, assertions); // a failing assertion does not prove termination, let's ignore them
+
   solver << not_exprt(conjunction(assertions)); // we want to reach any of them
 
   bool result=(solver()==decision_proceduret::D_SATISFIABLE);

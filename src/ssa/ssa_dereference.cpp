@@ -106,19 +106,23 @@ bool ssa_may_alias(
 
   // __CPROVER symbols
   if(e1.id()==ID_symbol &&
-     has_prefix(id2string(to_symbol_expr(e1).get_identifier()), CPROVER_PREFIX))
+     has_prefix(
+       id2string(to_symbol_expr(e1).get_identifier()), CPROVER_PREFIX))
     return false;
 
   if(e2.id()==ID_symbol &&
-     has_prefix(id2string(to_symbol_expr(e2).get_identifier()), CPROVER_PREFIX))
+     has_prefix(
+       id2string(to_symbol_expr(e2).get_identifier()), CPROVER_PREFIX))
     return false;
 
   if(e1.id()==ID_symbol &&
-     has_suffix(id2string(to_symbol_expr(e1).get_identifier()), "#return_value"))
+     has_suffix(
+       id2string(to_symbol_expr(e1).get_identifier()), "#return_value"))
     return false;
 
   if(e2.id()==ID_symbol &&
-     has_suffix(id2string(to_symbol_expr(e2).get_identifier()), "#return_value"))
+     has_suffix(
+       id2string(to_symbol_expr(e2).get_identifier()), "#return_value"))
     return false;
 
   // Both member?
@@ -150,11 +154,13 @@ bool ssa_may_alias(
 
   // If one is an array and the other not, consider the elements
   if(t1.id()==ID_array && t2.id()!=ID_array)
-    if(ssa_may_alias(index_exprt(e1, gen_zero(index_type()), t1.subtype()), e2, ns))
+    if(ssa_may_alias(
+         index_exprt(e1, gen_zero(index_type()), t1.subtype()), e2, ns))
       return true;
 
   if(t2.id()==ID_array && t2.id()!=ID_array)
-    if(ssa_may_alias(e1, index_exprt(e2, gen_zero(index_type()), t2.subtype()), ns))
+    if(ssa_may_alias(
+         e1, index_exprt(e2, gen_zero(index_type()), t2.subtype()), ns))
       return true;
 
   // Pointers only alias with other pointers,
@@ -216,7 +222,8 @@ exprt ssa_alias_guard(
   // on the base pointer than that the result of the pointer
   // arithmetic points to a base pointer.
   // The following hack does that:
-  if(a1.id()==ID_plus) a1=a1.op0();
+  if(a1.id()==ID_plus)
+    a1=a1.op0();
 
   exprt a2=address_canonizer(address_of_exprt(e2), ns);
 
@@ -279,7 +286,8 @@ exprt ssa_alias_value(
       return index_exprt(e2, offset1, e1.type());
     else if(element_size>1)
     {
-      exprt index=div_exprt(offset1, from_integer(element_size, offset1.type()));
+      exprt index=
+        div_exprt(offset1, from_integer(element_size, offset1.type()));
       return index_exprt(e2, index, e1.type());
     }
   }
@@ -304,15 +312,16 @@ Function: dereference_rec
 \*******************************************************************/
 
 exprt dereference_rec(
- const exprt &src,
- const ssa_value_domaint &ssa_value_domain,
- const std::string &nondet_prefix,
- const namespacet &ns)
+  const exprt &src,
+  const ssa_value_domaint &ssa_value_domain,
+  const std::string &nondet_prefix,
+  const namespacet &ns)
 {
   if(src.id()==ID_dereference)
   {
     const exprt &pointer=to_dereference_expr(src).pointer();
-    exprt pointer_deref=dereference(pointer, ssa_value_domain, nondet_prefix, ns);
+    exprt pointer_deref=
+      dereference(pointer, ssa_value_domain, nondet_prefix, ns);
 
     // We use the identifier produced by
     // local_SSAt::replace_side_effects_rec
@@ -337,7 +346,8 @@ exprt dereference_rec(
   else if(src.id()==ID_member)
   {
     member_exprt tmp=to_member_expr(src);
-    tmp.struct_op()=dereference_rec(tmp.struct_op(), ssa_value_domain, nondet_prefix, ns);
+    tmp.struct_op()=
+      dereference_rec(tmp.struct_op(), ssa_value_domain, nondet_prefix, ns);
 
     #ifdef DEBUG
     std::cout << "dereference_rec tmp: " << from_expr(ns, "", tmp) << '\n';
@@ -351,7 +361,8 @@ exprt dereference_rec(
   else if(src.id()==ID_address_of)
   {
     address_of_exprt tmp=to_address_of_expr(src);
-    tmp.object()=dereference_rec(tmp.object(), ssa_value_domain, nondet_prefix, ns);
+    tmp.object()=
+      dereference_rec(tmp.object(), ssa_value_domain, nondet_prefix, ns);
 
     if(tmp.object().is_nil())
       return nil_exprt();
@@ -380,10 +391,10 @@ Function: dereference
 \*******************************************************************/
 
 exprt dereference(
- const exprt &src,
- const ssa_value_domaint &ssa_value_domain,
- const std::string &nondet_prefix,
- const namespacet &ns)
+  const exprt &src,
+  const ssa_value_domaint &ssa_value_domain,
+  const std::string &nondet_prefix,
+  const namespacet &ns)
 {
   #ifdef DEBUG
   std::cout << "dereference src: " << from_expr(ns, "", src) << '\n';

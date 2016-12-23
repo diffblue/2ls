@@ -27,7 +27,7 @@ class graphml_witness_extt;
 class summary_checker_baset:public property_checkert
 {
 public:
-  inline summary_checker_baset(optionst &_options):
+  explicit summary_checker_baset(optionst &_options):
     show_vcc(false),
     simplify(false),
     fixed_point(false),
@@ -75,17 +75,20 @@ protected:
 
   void SSA_functions(const goto_modelt &, const namespacet &ns);
 
-  void summarize(const goto_modelt &,
-     bool forward=true, bool termination=false);
+  void summarize(
+    const goto_modelt &,
+    bool forward=true,
+    bool termination=false);
 
   property_checkert::resultt check_properties();
   void check_properties(
-      const ssa_dbt::functionst::const_iterator f_it);
+    const ssa_dbt::functionst::const_iterator f_it);
 
   exprt::operandst get_loophead_selects(
     const irep_idt &function_name, const local_SSAt &, prop_convt &);
-  bool is_spurious(const exprt::operandst& loophead_selects,
-       incremental_solvert&);
+  bool is_spurious(
+    const exprt::operandst& loophead_selects,
+    incremental_solvert&);
   exprt::operandst get_loop_continues(
     const irep_idt &function_name, const local_SSAt &, prop_convt &);
   bool is_fully_unwound(

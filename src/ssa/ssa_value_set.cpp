@@ -19,7 +19,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
-Function: ssa_value_domaint::output
+Function: ssa_value_domaint::transform
 
   Inputs:
 
@@ -62,17 +62,17 @@ void ssa_value_domaint::transform(
     // * any global-scoped variables
     // * any dirty locals
 
-    #if 0
+#if 0
     for(objectst::const_iterator
-        o_it=ssa_objects.dirty_locals.begin();
+          o_it=ssa_objects.dirty_locals.begin();
         o_it!=ssa_objects.dirty_locals.end(); o_it++)
       assign(*o_it, it, ns);
 
     for(objectst::const_iterator
-        o_it=ssa_objects.globals.begin();
+          o_it=ssa_objects.globals.begin();
         o_it!=ssa_objects.globals.end(); o_it++)
       assign(*o_it, it, ns);
-    #endif
+#endif
 
     // the call might come with an assignment
     if(code_function_call.lhs().is_not_nil())
@@ -106,10 +106,10 @@ void ssa_value_domaint::assign_lhs_rec(
   const namespacet &ns,
   bool add)
 {
-  #ifdef DEBUG
+#ifdef DEBUG
   std::cout << "assign_lhs_rec lhs: " << from_expr(ns, "", lhs) << '\n';
   std::cout << "assign_lhs_rec rhs: " << from_expr(ns, "", rhs) << '\n';
-  #endif
+#endif
 
   // is the lhs an object?
   if(is_symbol_struct_member(lhs, ns))
@@ -125,7 +125,7 @@ void ssa_value_domaint::assign_lhs_rec(
       const struct_typet::componentst &components=struct_type.components();
 
       for(struct_typet::componentst::const_iterator
-          it=components.begin();
+            it=components.begin();
           it!=components.end();
           it++)
       {
@@ -153,7 +153,9 @@ void ssa_value_domaint::assign_lhs_rec(
         lhs_values=tmp_values;
 
 #if 0
-      std::cout << "value_set: "; lhs_values.output(std::cout, ns); std::cout << std::endl;
+      std::cout << "value_set: ";
+      lhs_values.output(std::cout, ns);
+      std::cout << std::endl;
 #endif
 
       if(lhs_values.empty())
@@ -177,25 +179,24 @@ void ssa_value_domaint::assign_lhs_rec(
   }
   else if(lhs.id()==ID_dereference)
   {
-//  assert(false); // should have been removed
-
-    // not yet removed if there is an array inside a struct referenced by pointer
+    // not yet removed
+    // if there is an array inside a struct referenced by pointer
     assign_lhs_rec(to_dereference_expr(lhs).pointer(), rhs, ns, true);
   }
   else if(lhs.id()==ID_member)
   {
-    #if 0
+#if 0
     // non-flattened struct or union member
     const member_exprt &member_expr=to_member_expr(lhs);
     assign(member_expr.struct_op(), loc, ns);
-    #endif
+#endif
   }
   else if(lhs.id()==ID_complex_real || lhs.id()==ID_complex_imag)
   {
-    #if 0
+#if 0
     assert(lhs.operands().size()==1);
     assign(lhs.op0(), loc, ns);
-    #endif
+#endif
   }
 }
 
@@ -250,7 +251,8 @@ void ssa_value_domaint::assign_rhs_rec(
       if(it->type().id()==ID_pointer)
       {
         mp_integer pointer_offset=pointer_offset_size(it->type().subtype(), ns);
-        if(pointer_offset<1) pointer_offset=1;
+        if(pointer_offset<1)
+          pointer_offset=1;
         unsigned a=merge_alignment(integer2ulong(pointer_offset), alignment);
         assign_rhs_rec(dest, *it, ns, true, a);
       }
@@ -262,17 +264,16 @@ void ssa_value_domaint::assign_rhs_rec(
     if(rhs.type().id()==ID_pointer)
     {
       mp_integer pointer_offset=pointer_offset_size(rhs.type().subtype(), ns);
-      if(pointer_offset<1) pointer_offset=1;
+      if(pointer_offset<1)
+        pointer_offset=1;
       unsigned a=merge_alignment(integer2ulong(pointer_offset), alignment);
       assign_rhs_rec(dest, rhs.op0(), ns, true, a);
     }
   }
   else if(rhs.id()==ID_dereference)
   {
-  //   std::cout << rhs.pretty() << std::endl;
-  //   assert(false); // should have been removed
-
-    // not yet removed if there is an array inside a struct referenced by pointer
+    // not yet removed
+    // if there is an array inside a struct referenced by pointer
     assign_rhs_rec(dest, rhs.op0(), ns, true, 1);
   }
   else
@@ -288,7 +289,8 @@ void ssa_value_domaint::assign_rhs_rec(
       if(m_it!=value_map.end())
       {
         valuest tmp_values=m_it->second;
-        if(offset) tmp_values.offset=true;
+        if(offset)
+          tmp_values.offset=true;
         tmp_values.alignment=merge_alignment(tmp_values.alignment, alignment);
         dest.merge(tmp_values);
       }
@@ -325,12 +327,15 @@ void ssa_value_domaint::assign_rhs_rec_address_of(
   if(ssa_object)
   {
     dest.value_set.insert(ssa_object);
-    if(offset) dest.offset=true;
+    if(offset)
+      dest.offset=true;
   }
   else if(rhs.id()==ID_if)
   {
-    assign_rhs_rec_address_of(dest, to_if_expr(rhs).true_case(), ns, offset, alignment);
-    assign_rhs_rec_address_of(dest, to_if_expr(rhs).false_case(), ns, offset, alignment);
+    assign_rhs_rec_address_of(
+      dest, to_if_expr(rhs).true_case(), ns, offset, alignment);
+    assign_rhs_rec_address_of(
+      dest, to_if_expr(rhs).false_case(), ns, offset, alignment);
   }
   else if(rhs.id()==ID_index)
   {
@@ -340,7 +345,8 @@ void ssa_value_domaint::assign_rhs_rec_address_of(
     {
       offset=true;
       mp_integer pointer_offset=pointer_offset_size(rhs.type(), ns);
-      if(pointer_offset<1) pointer_offset=1;
+      if(pointer_offset<1)
+        pointer_offset=1;
       a=merge_alignment(a, integer2ulong(pointer_offset));
     }
 
@@ -367,12 +373,16 @@ void ssa_value_domaint::valuest::output(
   if(offset)
   {
     out << " offset";
-    if(alignment!=0) out << "*" << alignment;
+    if(alignment!=0)
+      out << "*" << alignment;
   }
 
-  if(null) out << " null";
-  if(unknown) out << " unknown";
-  if(integer_address) out << " integer_address";
+  if(null)
+    out << " null";
+  if(unknown)
+    out << " unknown";
+  if(integer_address)
+    out << " integer_address";
 
   for(value_sett::const_iterator it=value_set.begin();
       it!=value_set.end();
@@ -398,7 +408,7 @@ void ssa_value_domaint::output(
   const namespacet &ns) const
 {
   for(value_mapt::const_iterator
-      v_it=value_map.begin();
+        v_it=value_map.begin();
       v_it!=value_map.end();
       v_it++)
   {
@@ -425,15 +435,32 @@ bool ssa_value_domaint::valuest::merge(const valuest &src)
   bool result=false;
 
   // bits
-  if(src.offset && !offset) { offset=true; result=true; }
-  if(src.null && !null) { null=true; result=true; }
-  if(src.unknown && !unknown) { unknown=true; result=true; }
-  if(src.integer_address && !integer_address) { integer_address=true; result=true; }
+  if(src.offset && !offset)
+  {
+    offset=true;
+    result=true;
+  }
+  if(src.null && !null)
+  {
+    null=true;
+    result=true;
+  }
+  if(src.unknown && !unknown)
+  {
+    unknown=true;
+    result=true;
+  }
+  if(src.integer_address && !integer_address)
+  {
+    integer_address=true;
+    result=true;
+  }
 
   // value set
   unsigned old_size=value_set.size();
   value_set.insert(src.value_set.begin(), src.value_set.end());
-  if(old_size!=value_set.size()) result=true;
+  if(old_size!=value_set.size())
+    result=true;
 
   // alignment
   alignment=merge_alignment(alignment, src.alignment);
@@ -463,9 +490,9 @@ bool ssa_value_domaint::merge(
   bool result=false;
 
   for(value_mapt::const_iterator
-      it=new_value_map.begin();
+        it=new_value_map.begin();
       it!=new_value_map.end();
-      ) // no it++
+    ) // no it++
   {
     if(v_it==value_map.end() || it->first<v_it->first)
     {

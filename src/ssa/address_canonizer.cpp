@@ -55,7 +55,8 @@ exprt address_canonizer(
       pointer_typet byte_pointer(unsigned_char_type());
       typecast_exprt typecast_expr(rec_result, byte_pointer);
       plus_exprt sum(typecast_expr, offset);
-      if(sum.type()!=address.type()) sum.make_typecast(address.type());
+      if(sum.type()!=address.type())
+        sum.make_typecast(address.type());
 
       return sum;
     }
@@ -69,7 +70,8 @@ exprt address_canonizer(
       pointer_type.subtype()=object.type();
       typecast_exprt typecast_expr(rec_result, pointer_type);
       plus_exprt sum(typecast_expr, to_index_expr(object).index());
-      if(sum.type()!=address.type()) sum.make_typecast(address.type());
+      if(sum.type()!=address.type())
+        sum.make_typecast(address.type());
 
       return sum;
     }

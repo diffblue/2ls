@@ -22,14 +22,15 @@ Author: Peter Schrammel
 #include "summarizer_fw.h"
 
 
-class summarizer_fw_contextst : public summarizer_fwt
+class summarizer_fw_contextst:public summarizer_fwt
 {
- public:
- explicit summarizer_fw_contextst(optionst &_options,
-       summary_dbt &_summary_db,
-             ssa_dbt &_ssa_db,
-       ssa_unwindert &_ssa_unwinder,
-       ssa_inlinert &_ssa_inliner) :
+public:
+  explicit summarizer_fw_contextst(
+    optionst &_options,
+    summary_dbt &_summary_db,
+    ssa_dbt &_ssa_db,
+    ssa_unwindert &_ssa_unwinder,
+    ssa_inlinert &_ssa_inliner):
     summarizer_fwt(_options, _summary_db, _ssa_db, _ssa_unwinder, _ssa_inliner),
     ui(ui_message_handlert::PLAIN)
   {
@@ -38,9 +39,8 @@ class summarizer_fw_contextst : public summarizer_fwt
 
     optionst::value_listt _excluded_functions=
       _options.get_list_option("do-not-analyze-functions");
-    excluded_functions.insert(_excluded_functions.begin(),
-            _excluded_functions.end());
-
+    excluded_functions.insert(
+      _excluded_functions.begin(), _excluded_functions.end());
   }
 
   virtual void summarize();
@@ -49,11 +49,11 @@ class summarizer_fw_contextst : public summarizer_fwt
   language_uit::uit ui; // use gui format
   std::set<irep_idt> excluded_functions;
 
-  virtual void inline_summaries(const function_namet &function_name,
-      local_SSAt &SSA,
-                const exprt &precondition,
-                        bool context_sensitive);
+  virtual void inline_summaries(
+    const function_namet &function_name,
+    local_SSAt &SSA,
+    const exprt &precondition,
+    bool context_sensitive);
 };
-
 
 #endif

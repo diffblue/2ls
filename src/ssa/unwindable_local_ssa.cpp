@@ -45,7 +45,7 @@ void unwindable_local_SSAt::increment_unwindings(int mode)
   }
   else // mode <=-1
   {
-    for(int i=0;i>mode;i--)
+    for(int i=0; i>mode; --i)
       current_unwindings.pop_back();
   }
 }
@@ -78,7 +78,7 @@ void unwindable_local_SSAt::decrement_unwindings(int mode)
   }
   else // mode <=-1
   {
-    for(int i=0;i>mode;i--)
+    for(int i=0; i>mode; --i)
       current_unwindings.pop_back();
   }
 }
@@ -103,7 +103,7 @@ std::string unwindable_local_SSAt::odometer_to_string(
   if(level>odometer.size())
     level=odometer.size();
   std::string unwind_suffix="";
-  for(unsigned i=0;i<level;i++)
+  for(unsigned i=0; i<level; ++i)
     unwind_suffix+="%"+std::to_string(odometer[i]);
   return unwind_suffix;
 }
@@ -178,9 +178,9 @@ unsigned unwindable_local_SSAt::get_def_level(
     std::cout << "current_location: "
               << current_loc->location_number << std::endl;
     std::cout << "parent_location: "
-              << (current_lhl->second.parent_loc!=
-                  goto_function.body.instructions.end()?
-                  current_lhl->second.parent_loc->location_number:-1)
+              <<
+      (current_lhl->second.parent_loc!=goto_function.body.instructions.end()?
+       current_lhl->second.parent_loc->location_number:-1)
               << std::endl;
     std::cout << "loop_number: " << lhl_it->second.loop_number << std::endl;
     std::cout << "current_number: "
@@ -200,7 +200,6 @@ unsigned unwindable_local_SSAt::get_def_level(
       while(current_lhl->second.parent_loc!=
             goto_function.body.instructions.end())
       {
-
 #if 0
         std::cout << "current-loc: "
                   << current_lhl->first->location_number << std::endl;
@@ -247,8 +246,8 @@ exprt unwindable_local_SSAt::nondet_symbol(
   locationt loc,
   unsigned counter) const
 {
-  std::string unwind_suffix=odometer_to_string(current_unwindings,
-                                                 current_unwindings.size());
+  std::string unwind_suffix=
+    odometer_to_string(current_unwindings, current_unwindings.size());
   exprt s(ID_nondet_symbol, type);
   const irep_idt identifier=
     prefix+
@@ -284,13 +283,14 @@ void unwindable_local_SSAt::rename(exprt &expr, locationt current_loc)
   {
     symbol_exprt &s=to_symbol_expr(expr);
     locationt def_loc;
-    // we could reuse name(), but then we would have to search in the ssa_objects
+    // we could reuse name(),
+    // but then we would have to search in the ssa_objects
     // ENHANCEMENT: maybe better to attach base name, ssa name,
     //      and def_loc to the symbol_expr itself
     irep_idt id=get_ssa_name(s, def_loc);
     unsigned def_level=get_def_level(def_loc, current_loc);
-    std::string unwind_suffix=odometer_to_string(current_unwindings,
-                                                   def_level);
+    std::string unwind_suffix=
+      odometer_to_string(current_unwindings, def_level);
     s.set_identifier(id2string(id)+unwind_suffix);
 
 #if 0
@@ -302,7 +302,6 @@ void unwindable_local_SSAt::rename(exprt &expr, locationt current_loc)
               << id << " --> "
               << s.get_identifier() << std::endl;
 #endif
-
   }
   if(expr.id()==ID_nondet_symbol)
   {
@@ -345,9 +344,12 @@ irep_idt unwindable_local_SSAt::get_ssa_name(
     return irep_idt(s);
   if(pos2==std::string::npos)
     pos2=s.size();
-  if(s.substr(pos1+1, 2)=="lb") pos1+=2;
-  else if(s.substr(pos1+1, 2)=="ls") pos1+=2;
-  else if(s.substr(pos1+1, 3)=="phi") pos1+=3;
+  if(s.substr(pos1+1, 2)=="lb")
+    pos1+=2;
+  else if(s.substr(pos1+1, 2)=="ls")
+    pos1+=2;
+  else if(s.substr(pos1+1, 3)=="phi")
+    pos1+=3;
   else if((pos2==pos1+13) && (s.substr(pos1+1, 12)=="return_value"))
     return irep_idt(s);
 #if 0

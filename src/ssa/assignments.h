@@ -30,7 +30,8 @@ public:
   bool assigns(locationt loc, const ssa_objectt &object) const
   {
     assignment_mapt::const_iterator it=assignment_map.find(loc);
-    if(it==assignment_map.end()) return false;
+    if(it==assignment_map.end())
+      return false;
     return it->second.find(object)!=it->second.end();
   }
 

@@ -46,7 +46,8 @@ void assignmentst::build_assignment_map(
     }
     else if(it->is_function_call())
     {
-      const code_function_callt &code_function_call=to_code_function_call(it->code);
+      const code_function_callt &code_function_call=
+        to_code_function_call(it->code);
 
       // functions may alter state almost arbitrarily:
       // * any global-scoped variables
@@ -65,7 +66,8 @@ void assignmentst::build_assignment_map(
       // the call might come with an assignment
       if(code_function_call.lhs().is_not_nil())
       {
-        exprt lhs_deref=dereference(code_function_call.lhs(), ssa_value_ai[it], "", ns);
+        exprt lhs_deref=
+          dereference(code_function_call.lhs(), ssa_value_ai[it], "", ns);
         assign(lhs_deref, it, ns);
       }
     }
@@ -203,7 +205,8 @@ void assignmentst::output(
         << i_it->source_location << "\n";
 
     assignment_mapt::const_iterator m_it=assignment_map.find(i_it);
-    if(m_it==assignment_map.end()) throw "location not found";
+    if(m_it==assignment_map.end())
+      throw "location not found";
 
     const objectst &objects=m_it->second;
 

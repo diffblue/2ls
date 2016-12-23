@@ -1,10 +1,32 @@
+/*******************************************************************\
+
+Module: Synthesis by enumeration of counterexamples
+
+Author: Peter Schrammel
+
+\*******************************************************************/
+
+#ifdef DEBUG
 #include <iostream>
+#endif
 
 #include <util/simplify_expr.h>
 #include <util/find_symbols.h>
 
 #include "strategy_solver_enumeration.h"
 #include "util.h"
+
+/*******************************************************************\
+
+Function: strategy_solver_enumerationt::iterate
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 
 bool strategy_solver_enumerationt::iterate(invariantt &_inv)
 {
@@ -23,8 +45,8 @@ bool strategy_solver_enumerationt::iterate(invariantt &_inv)
   solver << preinv_expr;
 
   exprt::operandst strategy_cond_exprs;
-  tpolyhedra_domain.make_not_post_constraints(inv,
-    strategy_cond_exprs, strategy_value_exprs);
+  tpolyhedra_domain.make_not_post_constraints(
+    inv, strategy_cond_exprs, strategy_value_exprs);
 
   strategy_cond_literals.resize(strategy_cond_exprs.size());
 
@@ -33,14 +55,13 @@ bool strategy_solver_enumerationt::iterate(invariantt &_inv)
 #ifdef DEBUG_OUTPUT
   debug() << "post-inv: ";
 #endif
-  for(unsigned i=0; i<strategy_cond_exprs.size(); i++)
+  for(std::size_t i=0; i<strategy_cond_exprs.size(); ++i)
   {
 #ifdef DEBUG_OUTPUT
-    debug() << (i>0 ? " || " : "") << from_expr(ns, "", strategy_cond_exprs[i]) ;
+    debug() << (i>0 ? " || " : "") << from_expr(ns, "", strategy_cond_exprs[i]);
 #endif
 
     strategy_cond_literals[i]=solver.convert(strategy_cond_exprs[i]);
-    // solver.set_frozen(strategy_cond_literals[i]);
     strategy_cond_exprs[i]=literal_exprt(strategy_cond_literals[i]);
   }
 #ifdef DEBUG_OUTPUT
@@ -60,57 +81,57 @@ bool strategy_solver_enumerationt::iterate(invariantt &_inv)
 #endif
 
 #ifdef DEBUG_OUTPUT
-    for(unsigned i=0; i<solver.activation_literals.size(); i++)
+    for(std::size_t i=0; i<solver.activation_literals.size(); ++i)
     {
-      debug() << "literal: " << solver.activation_literals[i] << " " <<
-        solver.l_get(solver.activation_literals[i]) << eom;
+      debug() << "literal: " << solver.activation_literals[i] << " "
+              << solver.l_get(solver.activation_literals[i]) << eom;
     }
-    for(unsigned i=0; i<solver.formula.size(); i++)
+    for(std::size_t i=0; i<solver.formula.size(); ++i)
     {
-      debug() << "literal: " << solver.formula[i] << " " <<
-        solver.l_get(solver.formula[i]) << eom;
+      debug() << "literal: " << solver.formula[i] << " "
+              << solver.l_get(solver.formula[i]) << eom;
     }
-    for(unsigned i=0; i<tpolyhedra_domain.template_size(); i++)
+    for(std::size_t i=0; i<tpolyhedra_domain.template_size(); ++i)
     {
       exprt c=tpolyhedra_domain.get_row_constraint(i, inv[i]);
-      debug() << "cond: " << from_expr(ns, "", c) << " " <<
-          from_expr(ns, "", solver.get(c)) << eom;
-      debug() << "guards: " << from_expr(ns, "", tpolyhedra_domain.templ[i].pre_guard) <<
-          " " << from_expr(ns, "", solver.get(tpolyhedra_domain.templ[i].pre_guard)) << eom;
-      debug() << "guards: " << from_expr(ns, "", tpolyhedra_domain.templ[i].post_guard) << " "
-          << from_expr(ns, "", solver.get(tpolyhedra_domain.templ[i].post_guard)) << eom;
+      debug() << "cond: " << from_expr(ns, "", c) << " "
+              << from_expr(ns, "", solver.get(c)) << eom;
+      debug() << "guards: "
+              << from_expr(ns, "", tpolyhedra_domain.templ[i].pre_guard)
+              << " " << from_expr(
+                ns, "", solver.get(tpolyhedra_domain.templ[i].pre_guard))
+              << eom;
+      debug() << "guards: "
+              << from_expr(ns, "", tpolyhedra_domain.templ[i].post_guard) << " "
+              << from_expr(
+                ns, "", solver.get(tpolyhedra_domain.templ[i].post_guard))
+              << eom;
     }
 
     {
       std::set<symbol_exprt> vars;
       find_symbols(preinv_expr, vars);
 
-      for(std::set<symbol_exprt>::const_iterator
-      it=vars.begin();
-          it!=vars.end();
-          ++it)
+      for(const auto &var : vars)
       {
-  debug() << "var: " << from_expr(ns, "", *it) << "=" <<
-          from_expr(ns, "", solver.get(*it)) << eom;
+        debug() << "var: " << from_expr(ns, "", var) << "="
+                << from_expr(ns, "", solver.get(var)) << eom;
       }
     }
-    for(unsigned i=0; i<tpolyhedra_domain.template_size(); i++)
+    for(std::size_t i=0; i<tpolyhedra_domain.template_size(); ++i)
     {
       std::set<symbol_exprt> vars;
       find_symbols(strategy_value_exprs[i], vars);
 
-      for(std::set<symbol_exprt>::const_iterator
-      it=vars.begin();
-          it!=vars.end();
-          ++it)
+      for(const auto &var : vars)
       {
-  debug() << "var: " << from_expr(ns, "", *it) << "=" <<
-          from_expr(ns, "", solver.get(*it)) << eom;
+        debug() << "var: " << from_expr(ns, "", var) << "="
+                << from_expr(ns, "", solver.get(var)) << eom;
       }
     }
 #endif
 
-    for(unsigned row=0;row<strategy_cond_literals.size(); row++)
+    for(std::size_t row=0; row<strategy_cond_literals.size(); ++row)
     {
       if(solver.l_get(strategy_cond_literals[row]).is_true())
       {
@@ -119,8 +140,8 @@ bool strategy_solver_enumerationt::iterate(invariantt &_inv)
         exprt value=solver.get(strategy_value_exprs[row]);
         tpolyhedra_domaint::row_valuet v=simplify_const(value);
 
-        debug() << "raw value; " << from_expr(ns, "", value) <<
-          ", simplified value: " << from_expr(ns, "", v) << eom;
+        debug() << "raw value; " << from_expr(ns, "", value)
+                << ", simplified value: " << from_expr(ns, "", v) << eom;
 
         tpolyhedra_domain.set_row_value(row, v, inv);
       }
@@ -134,13 +155,13 @@ bool strategy_solver_enumerationt::iterate(invariantt &_inv)
 #endif
 
 #ifdef DEBUG_OUTPUT
-    for(unsigned i=0; i<solver.formula.size(); i++)
+    for(std::size_t i=0; i<solver.formula.size(); ++i)
     {
       if(solver.solver->is_in_conflict(solver.formula[i]))
         debug() << "is_in_conflict: " << solver.formula[i] << eom;
       else
         debug() << "not_in_conflict: " << solver.formula[i] << eom;
-     }
+    }
 #endif
   }
   solver.pop_context();

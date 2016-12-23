@@ -62,6 +62,18 @@ exprt ssa_build_goto_tracet::finalize_lhs(const exprt &src)
     return src;
 }
 
+/*******************************************************************\
+
+Function: ssa_build_goto_tracet::can_convert_ssa_expr
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
 bool ssa_build_goto_tracet::can_convert_ssa_expr(const exprt &expr)
 {
   if(expr.id()==ID_member)
@@ -138,7 +150,8 @@ bool ssa_build_goto_tracet::record_step(
     exprt cond=current_pc->guard;
     exprt cond_read=unwindable_local_SSA.read_rhs(cond, current_pc);
     unwindable_local_SSA.rename(cond_read, current_pc);
-    exprt cond_value=simplify_expr(prop_conv.get(cond_read), unwindable_local_SSA.ns);
+    exprt cond_value=
+      simplify_expr(prop_conv.get(cond_read), unwindable_local_SSA.ns);
     step.type=goto_trace_stept::GOTO;
     step.cond_expr=cond_value; // cond
 #if 0
@@ -167,7 +180,8 @@ bool ssa_build_goto_tracet::record_step(
     exprt cond=current_pc->guard;
     exprt cond_read=unwindable_local_SSA.read_rhs(cond, current_pc);
     unwindable_local_SSA.rename(cond_read, current_pc);
-    exprt cond_value=simplify_expr(prop_conv.get(cond_read), unwindable_local_SSA.ns);
+    exprt cond_value=
+      simplify_expr(prop_conv.get(cond_read), unwindable_local_SSA.ns);
     if(cond_value.is_false())
     {
       step.type=goto_trace_stept::ASSERT;
@@ -202,10 +216,11 @@ bool ssa_build_goto_tracet::record_step(
     exprt lhs_simplified=simplify_expr(lhs_ssa, unwindable_local_SSA.ns);
 
 #if 0
-    std::cout << "ASSIGN " << from_expr(unwindable_local_SSA.ns, "", code_assign)
+    std::cout << "ASSIGN "
+              << from_expr(unwindable_local_SSA.ns, "", code_assign)
               << ": " << from_expr(unwindable_local_SSA.ns, "", rhs_ssa)
-              << "==" << from_expr(unwindable_local_SSA.ns,
-                                     "", rhs_simplified) << std::endl;
+              << "==" << from_expr(unwindable_local_SSA.ns, "", rhs_simplified)
+              << std::endl;
 #endif
     step.type=goto_trace_stept::ASSIGNMENT;
     step.full_lhs=lhs_simplified;
@@ -247,10 +262,12 @@ bool ssa_build_goto_tracet::record_step(
       break;
 
 #if 0
-    std::cout << "ASSIGNMENT ADDED: " << from_expr(unwindable_local_SSA.ns, "", code_assign)
+    std::cout << "ASSIGNMENT ADDED: "
+              << from_expr(unwindable_local_SSA.ns, "", code_assign)
               << ": " << from_expr(unwindable_local_SSA.ns, "", rhs_ssa)
-              << "==" << from_expr(unwindable_local_SSA.ns,
-                                     "", step.full_lhs_value) << std::endl;
+              << "=="
+              << from_expr(unwindable_local_SSA.ns, "", step.full_lhs_value)
+              << std::endl;
 #endif
     goto_trace.add_step(step);
     step_nr++;
@@ -318,9 +335,10 @@ void ssa_build_goto_tracet::operator()(
 #if 0
       std::cout << "loop-head : " << current_pc->location_number << std::endl;
       std::cout << "unwindings: "
-                << unwindable_local_SSA.odometer_to_string(unwindable_local_SSA.current_unwindings, 100) << std::endl;
+                << unwindable_local_SSA.odometer_to_string(
+                  unwindable_local_SSA.current_unwindings, 100)
+                << std::endl;
 #endif
-
     }
 
     bool taken=record_step(goto_trace, step_nr);
@@ -331,7 +349,8 @@ void ssa_build_goto_tracet::operator()(
 
 #if 0
     std::cout << "is_goto: " << current_pc->is_goto() << std::endl;
-    std::cout << "is_backwards_goto: " << current_pc->is_backwards_goto() << std::endl;
+    std::cout << "is_backwards_goto: " << current_pc->is_backwards_goto()
+              << std::endl;
     std::cout << "taken: " << taken << std::endl;
 #endif
 
@@ -351,7 +370,9 @@ void ssa_build_goto_tracet::operator()(
 #if 0
         std::cout << "loop-end  : " << current_pc->location_number << std::endl;
         std::cout << "unwindings: "
-                  << unwindable_local_SSA.odometer_to_string(unwindable_local_SSA.current_unwindings, 100) << std::endl;
+                  << unwindable_local_SSA.odometer_to_string(
+                    unwindable_local_SSA.current_unwindings, 100)
+                  << std::endl;
 #endif
 #if TERM_CEX
         stop_next=true;

@@ -1,18 +1,20 @@
+/*******************************************************************\
+
+Module: Strategy iteration solver base class
+
+Author: Peter Schrammel
+
+\*******************************************************************/
+
 #ifndef CPROVER_2LS_DOMAINS_STRATEGY_SOLVER_BASE_H
 #define CPROVER_2LS_DOMAINS_STRATEGY_SOLVER_BASE_H
 
-#include <map>
-#include <iostream>
-
-#include <solvers/flattening/bv_pointers.h>
-
 #include "domain.h"
+#include "incremental_solver.h"
 #include "util.h"
-#include "../domains/incremental_solver.h"
 
-class strategy_solver_baset : public messaget
+class strategy_solver_baset:public messaget
 {
-
  public:
   typedef std::list<exprt> constraintst;
   typedef std::vector<symbol_exprt> var_listt;
@@ -20,7 +22,7 @@ class strategy_solver_baset : public messaget
 
   explicit strategy_solver_baset(
     incremental_solvert &_solver,
-    const namespacet &_ns) :
+    const namespacet &_ns):
     solver(_solver),
     ns(_ns),
     solver_instances(0),
@@ -29,12 +31,11 @@ class strategy_solver_baset : public messaget
 
   virtual bool iterate(invariantt &inv) { assert(false); }
 
-  unsigned get_number_of_solver_calls() { return solver_calls; }
-  unsigned get_number_of_solver_instances() { return solver_instances; }
+  inline unsigned get_number_of_solver_calls() { return solver_calls; }
+  inline unsigned get_number_of_solver_instances() { return solver_instances; }
 
  protected:
   incremental_solvert &solver;
-
   const namespacet &ns;
 
   // handles on values to retrieve from model

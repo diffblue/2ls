@@ -65,7 +65,8 @@ Function: lexlinrank_domaint::refine
 
 bool lexlinrank_domaint::refine()
 {
-  if(refinement_level>=MAX_REFINEMENT) return false;
+  if(refinement_level>=MAX_REFINEMENT)
+    return false;
   refinement_level++;
   return true;
 }
@@ -249,7 +250,7 @@ for(std::size_t row=0; row<templ.size(); row++)
 
 /*******************************************************************\
 
-Function: lexlinrank_domaint::get_row_symb_constraints
+Function: lexlinrank_domaint::get_row_symb_constraint
 
   Inputs:
 
@@ -453,7 +454,7 @@ lexlinrank_domaint::row_valuet lexlinrank_domaint::get_row_value(
 
 /*******************************************************************\
 
-Function: lexlinrank_domaint::get_row_value
+Function: lexlinrank_domaint::set_row_value
 
   Inputs:
 
@@ -475,7 +476,7 @@ void lexlinrank_domaint::set_row_value(
 
 /*******************************************************************\
 
-Function: lexlinrank_domaint::get_row_value_to_true
+Function: lexlinrank_domaint::set_row_value_to_true
 
   Inputs:
 
@@ -531,7 +532,8 @@ void lexlinrank_domaint::output_value(
       out << "       ";
       for(std::size_t i=0; i<templ_row.expr.size(); ++i)
       {
-        if(i>0) out << "+";
+        if(i>0)
+          out << "+";
         out << from_expr(ns, "", v[row][elm].c[i]) << " * "
             << from_expr(ns, "", templ_row.expr[i].first);
       }
@@ -571,7 +573,8 @@ void lexlinrank_domaint::output_domain(
 
     for(std::size_t i=0; i<templ_row.expr.size(); ++i)
     {
-      if(i>0) out << "+";
+      if(i>0)
+        out << "+";
       out << "c!" << row << "$" << i << " * "
           << from_expr(ns, "", templ_row.expr[i].first);
     }
@@ -721,7 +724,8 @@ void lexlinrank_domaint::add_template(
       break;
     }
   }
-  if(!has_loop) return;
+  if(!has_loop)
+    return;
 
   templ.reserve(templ.size()+1);
   templ.push_back(template_rowt());
@@ -733,7 +737,8 @@ void lexlinrank_domaint::add_template(
 
   for(const auto &v : var_specs)
   {
-    if(v.kind!=LOOP) continue;
+    if(v.kind!=LOOP)
+      continue;
     preg.push_back(v.pre_guard);
     postg.push_back(v.post_guard);
     exprt vpost=v.var; // copy

@@ -14,7 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/std_expr.h>
 
-typedef enum{YES, NO, UNKNOWN} threevalt;
+typedef enum {YES, NO, UNKNOWN} threevalt;
 
 class summaryt
 {
@@ -39,13 +39,12 @@ class summaryt
   var_listt params;
   var_sett globals_in, globals_out;
 
-
   predicatet fw_precondition; // accumulated calling contexts (over-approx)
   //  predicatet fw_postcondition; // we are not projecting that out currently
   predicatet fw_transformer; // forward summary (over-approx)
   predicatet fw_invariant; // forward invariant (over-approx)
-  predicatet bw_precondition; // accumulated preconditions (over- or under-approx)
-  predicatet bw_postcondition; // accumulated postconditions (over- or under-approx)
+  predicatet bw_precondition; // accumulated preconditions (over/under-approx)
+  predicatet bw_postcondition; // accumulated postconditions (over/under-approx)
   predicatet bw_transformer; // backward summary (over- or under-approx)
   predicatet bw_invariant; // backward invariant (over- or under-approx)
 
@@ -60,13 +59,10 @@ class summaryt
   void join(const summaryt &new_summary);
 
  protected:
-
   void combine_or(exprt &olde, const exprt &newe);
   void combine_and(exprt &olde, const exprt &newe);
-
 };
 
 std::string threeval2string(threevalt v);
-
 
 #endif

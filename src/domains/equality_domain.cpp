@@ -154,7 +154,7 @@ exprt equality_domaint::get_post_not_disequ_constraint(unsigned index)
 
 /*******************************************************************\
 
-Function: template_domaint::project_on_vars
+Function: equality_domaint::project_on_vars
 
   Inputs:
 
@@ -246,7 +246,7 @@ void equality_domaint::set_equal(
 
 /*******************************************************************\
 
-Function: equality_domaint::set_unequal
+Function: equality_domaint::set_disequal
 
   Inputs:
 
@@ -368,7 +368,7 @@ void equality_domaint::output_domain(
 
 /*******************************************************************\
 
-Function: equality_domaint::make_template
+Function: equality_domaint::adapt_types
 
   Inputs:
 
@@ -378,7 +378,7 @@ Function: equality_domaint::make_template
 
 \*******************************************************************/
 
-bool adapt_types(exprt &v1, exprt &v2)
+bool equality_domaint::adapt_types(exprt &v1, exprt &v2)
 {
   // signed, unsigned integers
   if((v1.type().id()==ID_signedbv || v1.type().id()==ID_unsignedbv) &&
@@ -396,7 +396,8 @@ bool adapt_types(exprt &v1, exprt &v2)
 
     if(v1.type().id()==v2.type().id())
     {
-      if(size1==size2) return true;
+      if(size1==size2)
+        return true;
 
       typet new_type=v1.type();
       if(new_type.id()==ID_signedbv)
@@ -440,6 +441,18 @@ bool adapt_types(exprt &v1, exprt &v2)
   return false; // types incompatible
 }
 
+/*******************************************************************\
+
+Function: equality_domaint::make_template
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
 void equality_domaint::make_template(
   const var_specst &var_specs,
   const namespacet &ns)
@@ -471,7 +484,8 @@ void equality_domaint::make_template(
 
 #if 0
       // TODO: must be done in caller (for preconditions, e.g.)
-      if(k==IN) continue;
+      if(k==IN)
+        continue;
 #endif
 
       exprt pre_g, post_g, aux_expr;
@@ -481,7 +495,8 @@ void equality_domaint::make_template(
 
       exprt vv1=v1->var;
       exprt vv2=v2->var;
-      if(!adapt_types(vv1, vv2)) continue;
+      if(!adapt_types(vv1, vv2))
+        continue;
 
       templ.push_back(template_rowt());
       template_rowt &templ_row=templ.back();
@@ -496,7 +511,7 @@ void equality_domaint::make_template(
 
 /*******************************************************************\
 
-Function: equality_domaint::get_var_pairs
+Function: equality_domaint::get_index_set
 
   Inputs:
 

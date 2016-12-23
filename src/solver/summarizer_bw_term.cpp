@@ -6,7 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+#ifdef DEBUG
 #include <iostream>
+#endif
 
 #include <util/simplify_expr.h>
 #include <solvers/sat/satcheck.h>
@@ -14,22 +16,22 @@ Author: Peter Schrammel
 #include <solvers/smt2/smt2_dec.h>
 #include <util/find_symbols.h>
 
+#include <domains/ssa_analyzer.h>
+#include <domains/template_generator_callingcontext.h>
+
+#include <ssa/local_ssa.h>
+#include <ssa/simplify_ssa.h>
+
 #include "summarizer_bw_term.h"
 #include "summarizer_fw_term.h"
 #include "summary_db.h"
-
-#include "../domains/ssa_analyzer.h"
-#include "../domains/template_generator_callingcontext.h"
-
-#include "../ssa/local_ssa.h"
-#include "../ssa/simplify_ssa.h"
 
 #define MAX_PRECONDITION_DISJUNCTS 5
 #define MAX_BOOTSTRAP_ATTEMPTS 20
 
 /*******************************************************************\
 
-Function: summarizer_bw_termt::compute_summary_rec()
+Function: summarizer_bw_termt::compute_summary_rec
 
   Inputs:
 
@@ -40,26 +42,29 @@ Function: summarizer_bw_termt::compute_summary_rec()
 \*******************************************************************/
 
 void summarizer_bw_termt::compute_summary_rec(
-              const function_namet &function_name,
-              const exprt &postcondition,
-              bool context_sensitive)
+  const function_namet &function_name,
+  const exprt &postcondition,
+  bool context_sensitive)
 {
   local_SSAt &SSA=ssa_db.get(function_name);
 
   const summaryt &old_summary=summary_db.get(function_name);
 
   // recursively compute summaries for function calls
-  inline_summaries(function_name, SSA, old_summary,
-       postcondition, context_sensitive,
-       false);
+  inline_summaries(
+    function_name, SSA, old_summary, postcondition, context_sensitive, false);
 
   status() << "Analyzing function "  << function_name << eom;
 
   bool has_loops=false;
   for(local_SSAt::nodest::iterator n_it=SSA.nodes.begin();
-        n_it!=SSA.nodes.end(); n_it++)
+      n_it!=SSA.nodes.end(); n_it++)
   {
-    if(n_it->loophead!=SSA.nodes.end()) { has_loops=true; break; }
+    if(n_it->loophead!=SSA.nodes.end())
+    {
+      has_loops=true;
+      break;
+    }
   }
 
   debug() << "function " <<
@@ -82,7 +87,8 @@ void summarizer_bw_termt::compute_summary_rec(
     }
     else
     {
-      do_summary_term(function_name, SSA, old_summary, summary, context_sensitive);
+      do_summary_term(
+        function_name, SSA, old_summary, summary, context_sensitive);
     }
   }
 
@@ -99,7 +105,7 @@ void summarizer_bw_termt::compute_summary_rec(
 
 /*******************************************************************\
 
-Function: summarizer_bw_termt::do_nontermination()
+Function: summarizer_bw_termt::do_nontermination
 
   Inputs:
 
@@ -110,10 +116,10 @@ Function: summarizer_bw_termt::do_nontermination()
 \*******************************************************************/
 
 void summarizer_bw_termt::do_nontermination(
-                                      const function_namet &function_name,
-              local_SSAt &SSA,
-              const summaryt &old_summary,
-              summaryt &summary)
+  const function_namet &function_name,
+  local_SSAt &SSA,
+  const summaryt &old_summary,
+  summaryt &summary)
 {
   // calling context, invariant, function call summaries
   exprt::operandst cond;
@@ -133,7 +139,7 @@ void summarizer_bw_termt::do_nontermination(
 
 /*******************************************************************\
 
-Function: summarizer_bw_termt::do_summary_term()
+Function: summarizer_bw_termt::do_summary_term
 
   Inputs:
 
@@ -143,11 +149,12 @@ Function: summarizer_bw_termt::do_summary_term()
 
 \*******************************************************************/
 
-void summarizer_bw_termt::do_summary_term(const function_namet &function_name,
-        local_SSAt &SSA,
-        const summaryt &old_summary,
-        summaryt &summary,
-        bool context_sensitive)
+void summarizer_bw_termt::do_summary_term(
+  const function_namet &function_name,
+  local_SSAt &SSA,
+  const summaryt &old_summary,
+  summaryt &summary,
+  bool context_sensitive)
 {
   status() << "Computing preconditions for termination" << eom;
 
@@ -157,7 +164,7 @@ void summarizer_bw_termt::do_summary_term(const function_namet &function_name,
 
   // templates for ranking functions
   template_generator_rankingt template_generator1(
-     options, ssa_db, ssa_unwinder.get(function_name));
+    options, ssa_db, ssa_unwinder.get(function_name));
   template_generator1.set_message_handler(get_message_handler());
   template_generator1(solver.next_domain_number(), SSA, true);
 
@@ -169,7 +176,8 @@ void summarizer_bw_termt::do_summary_term(const function_namet &function_name,
 
   exprt::operandst bindings;
   exprt::operandst postcond;
-  ssa_inliner.get_summaries(SSA, false, postcond, bindings); // backward summaries
+  // backward summaries
+  ssa_inliner.get_summaries(SSA, false, postcond, bindings);
   collect_postconditions(function_name, SSA, summary, postcond, true);
 
   // prepare solver
@@ -182,20 +190,22 @@ void summarizer_bw_termt::do_summary_term(const function_namet &function_name,
   solver << conjunction(bindings); // bindings for backward summaries
 
 #if 0
-  for(unsigned i=0; i<postcond.size(); i++) // compute preconditions individually, TODO: this should be done more transparently
+  // compute preconditions individually
+  // TODO: this should be done more transparently
+  for(unsigned i=0; i<postcond.size(); i++)
   {
     exprt::operandst postcond2;
     postcond2.push_back(postcond[i]);
-    compute_precondition(SSA, summary, postcond2, solver, template_generator2,
-                context_sensitive);
+    compute_precondition(
+      SSA, summary, postcond2, solver, template_generator2, context_sensitive);
   }
   postcond.clear();
 #endif
 
   if(template_generator1.all_vars().empty())
   {
-    compute_precondition(SSA, summary, postcond, solver, template_generator2,
-                context_sensitive);
+    compute_precondition(
+      SSA, summary, postcond, solver, template_generator2, context_sensitive);
     solver.pop_context();
     return;
   }
@@ -206,58 +216,85 @@ void summarizer_bw_termt::do_summary_term(const function_namet &function_name,
   {
     // bootstrap preconditions
     exprt termination_argument;
-    if(!bootstrap_preconditions(SSA, summary,
-       solver, template_generator1, template_generator2, termination_argument))
+    if(!bootstrap_preconditions(
+         SSA,
+         summary,
+         solver,
+         template_generator1,
+         template_generator2,
+         termination_argument))
     {
       break;
     }
 
     // compute precondition
-    if(termination_argument.id()==ID_and)  // compute for individual termination arguments separately, TODO: this should be done more transparently
+    // compute for individual termination arguments separately
+    // TODO: this should be done more transparently
+    if(termination_argument.id()==ID_and)
     {
       for(unsigned i=0; i<termination_argument.operands().size(); i++)
       {
-  postcond.push_back(termination_argument.operands()[i]);
+        postcond.push_back(termination_argument.operands()[i]);
 
-  exprt precondition=compute_precondition(SSA, summary, postcond,
-              solver, template_generator2,
-              context_sensitive);
+        exprt precondition=
+          compute_precondition(
+            SSA,
+            summary,
+            postcond,
+            solver,
+            template_generator2,
+            context_sensitive);
 
-  // join results
-  if(summary.termination_argument.is_nil())
-  {
-    summary.termination_argument=
-      implies_exprt(precondition, termination_argument);
-  }
-  else
-  {
-    summary.termination_argument=and_exprt(summary.termination_argument,
-            implies_exprt(precondition, termination_argument));
-  }
+        // join results
+        if(summary.termination_argument.is_nil())
+        {
+          summary.termination_argument=
+            implies_exprt(precondition, termination_argument);
+        }
+        else
+        {
+          summary.termination_argument=
+            and_exprt(
+              summary.termination_argument,
+              implies_exprt(precondition, termination_argument));
+        }
 
-        postcond.clear(); // TODO: this is a bit asymmetric: the first precondition is joined with all other sources of non-termination (calls, bw calling context)
+        // TODO: this is a bit asymmetric:
+        //  the first precondition is joined with all other sources
+        //  of non-termination (calls, bw calling context)
+        postcond.clear();
       }
     }
     else // do not split termination arguments
     {
       postcond.push_back(termination_argument);
-      exprt precondition=compute_precondition(SSA, summary, postcond,
-            solver, template_generator2,
-            context_sensitive);
+      exprt precondition=
+        compute_precondition(
+          SSA,
+          summary,
+          postcond,
+          solver,
+          template_generator2,
+          context_sensitive);
 
       // join results
       if(summary.termination_argument.is_nil())
       {
-  summary.termination_argument=
-    implies_exprt(precondition, termination_argument);
+        summary.termination_argument=
+          implies_exprt(precondition, termination_argument);
       }
       else
       {
-  summary.termination_argument=and_exprt(summary.termination_argument,
-             implies_exprt(precondition, termination_argument));
+        summary.termination_argument=
+          and_exprt(
+            summary.termination_argument,
+            implies_exprt(precondition, termination_argument));
       }
 
-      postcond.clear(); // TODO: this is a bit asymmetric: the first precondition is joined with all other sources of non-termination (calls, bw calling context)
+      // TODO: this is a bit asymmetric:
+      //  the first precondition is joined with all other sources
+      //  of non-termination (calls, bw calling context)
+      postcond.clear();
     }
   }
 
@@ -266,7 +303,7 @@ void summarizer_bw_termt::do_summary_term(const function_namet &function_name,
 
 /*******************************************************************\
 
-Function: summarizer_bw_termt:::bootstrap_preconditions()
+Function: summarizer_bw_termt::bootstrap_preconditions
 
   Inputs:
 
@@ -277,12 +314,12 @@ Function: summarizer_bw_termt:::bootstrap_preconditions()
 \*******************************************************************/
 
 bool summarizer_bw_termt::bootstrap_preconditions(
-           local_SSAt &SSA,
-           summaryt &summary,
-                             incremental_solvert &solver,
-           template_generator_rankingt &template_generator1,
-           template_generator_summaryt &template_generator2,
-                             exprt &termination_argument)
+  local_SSAt &SSA,
+  summaryt &summary,
+  incremental_solvert &solver,
+  template_generator_rankingt &template_generator1,
+  template_generator_summaryt &template_generator2,
+  exprt &termination_argument)
 {
   // bootstrap with a concrete model for input variables
   const domaint::var_sett &invars=template_generator2.out_vars();
@@ -293,8 +330,10 @@ bool summarizer_bw_termt::bootstrap_preconditions(
   exprt::operandst checked_candidates;
   while(number_bootstraps++<MAX_BOOTSTRAP_ATTEMPTS)
   {
-    solver << not_exprt(summary.bw_precondition); // find new ones
-    solver << SSA.guard_symbol(--SSA.goto_function.body.instructions.end()); // last node should be reachable
+    // find new ones
+    solver << not_exprt(summary.bw_precondition);
+    // last node should be reachable
+    solver << SSA.guard_symbol(--SSA.goto_function.body.instructions.end());
 
     // statistics
     solver_calls++;
@@ -305,13 +344,13 @@ bool summarizer_bw_termt::bootstrap_preconditions(
     {
       exprt::operandst c;
       for(domaint::var_sett::const_iterator it=invars.begin();
-    it!=invars.end(); it++)
+          it!=invars.end(); it++)
       {
-  c.push_back(equal_exprt(*it, solver.solver->get(*it)));
+        c.push_back(equal_exprt(*it, solver.solver->get(*it)));
       }
       precondition=conjunction(c);
       debug() << "bootstrap model for precondition: "
-        << from_expr(SSA.ns, "", precondition) << eom;
+              << from_expr(SSA.ns, "", precondition) << eom;
       solver.pop_context();
     }
     else // whole precondition space covered
@@ -321,8 +360,8 @@ bool summarizer_bw_termt::bootstrap_preconditions(
     }
 
     termination_argument=
-      compute_termination_argument(SSA, precondition,
-           solver, template_generator1);
+      compute_termination_argument(
+        SSA, precondition, solver, template_generator1);
 
     if(summarizer_fw_termt::check_termination_argument(
          termination_argument)==YES)
@@ -340,7 +379,7 @@ bool summarizer_bw_termt::bootstrap_preconditions(
 
 /*******************************************************************\
 
-Function: summarizer_bw_termt:::compute_termination_argument()
+Function: summarizer_bw_termt::compute_termination_argument
 
   Inputs:
 
@@ -351,18 +390,17 @@ Function: summarizer_bw_termt:::compute_termination_argument()
 \*******************************************************************/
 
 exprt summarizer_bw_termt::compute_termination_argument(
-           local_SSAt &SSA,
-           const exprt &precondition,
-                             incremental_solvert &solver,
-           template_generator_rankingt &template_generator)
+  local_SSAt &SSA,
+  const exprt &precondition,
+  incremental_solvert &solver,
+  template_generator_rankingt &template_generator)
 {
   // compute ranking functions
   ssa_analyzert analyzer;
   analyzer.set_message_handler(get_message_handler());
   analyzer(solver, SSA, precondition, template_generator);
   exprt termination_argument;
-  analyzer.get_result(termination_argument,
-          template_generator.all_vars());
+  analyzer.get_result(termination_argument, template_generator.all_vars());
 
   // statistics
   solver_instances+=analyzer.get_number_of_solver_instances();
@@ -374,7 +412,7 @@ exprt summarizer_bw_termt::compute_termination_argument(
 
 /*******************************************************************\
 
-Function: summarizer_bw_termt:::compute_precondition()
+Function: summarizer_bw_termt::compute_precondition
 
   Inputs:
 
@@ -384,12 +422,13 @@ Function: summarizer_bw_termt:::compute_precondition()
 
 \*******************************************************************/
 
-exprt summarizer_bw_termt::compute_precondition(local_SSAt &SSA,
-        summaryt &summary,
-                 const exprt::operandst &postconditions,
-        incremental_solvert &solver,
-        template_generator_summaryt &template_generator,
-        bool context_sensitive)
+exprt summarizer_bw_termt::compute_precondition(
+  local_SSAt &SSA,
+  summaryt &summary,
+  const exprt::operandst &postconditions,
+  incremental_solvert &solver,
+  template_generator_summaryt &template_generator,
+  bool context_sensitive)
 {
   exprt postcond=not_exprt(conjunction(postconditions));
 
@@ -408,19 +447,24 @@ exprt summarizer_bw_termt::compute_precondition(local_SSAt &SSA,
     solver_instances+=analyzer.get_number_of_solver_instances();
     solver_calls+=analyzer.get_number_of_solver_calls();
   }
-  else // TODO: yet another workaround for ssa_analyzer not being able to handle empty templates properly
+#if 1
+  // TODO: yet another workaround for ssa_analyzer
+  //  not being able to handle empty templates properly
+  else
   {
     solver << SSA;
     solver.new_context();
     solver << SSA.get_enabling_exprs();
     solver << postcond;
     exprt result=true_exprt();
-    if(solver()==decision_proceduret::D_UNSATISFIABLE) result=false_exprt();
+    if(solver()==decision_proceduret::D_UNSATISFIABLE)
+      result=false_exprt();
     solver.pop_context();
     bw_transformer=result;
     bw_invariant=result;
     bw_precondition=result;
   }
+#endif
 
   bw_transformer=not_exprt(bw_transformer);
   bw_invariant=not_exprt(bw_invariant);

@@ -28,7 +28,6 @@ class optionst;
   "D:I:" \
   "(depth):(context-bound):(unwind):" \
   GOTO_CHECK_OPTIONS \
-  "(array-abstraction)" \
   "(non-incremental)" \
   "(no-assertions)(no-assumptions)" \
   "(16)(32)(64)(LP64)(ILP64)(LLP64)(ILP32)(LP32)" \
@@ -46,7 +45,7 @@ class optionst;
   "(lexicographic-ranking-function):(monolithic-ranking-function)" \
   "(max-inner-ranking-iterations):" \
   "(preconditions)(sufficient)" \
-  "(show-locs)(show-vcc)(show-properties)(show-trace)(show-fixed-points)(show-stats)" \
+  "(show-locs)(show-vcc)(show-properties)(show-trace)(show-stats)" \
   "(show-goto-functions)(show-guards)(show-defs)(show-ssa)(show-assignments)" \
   "(show-invariants)(std-invariants)" \
   "(property):(all-properties)(k-induction)(incremental-bmc)" \
@@ -118,18 +117,20 @@ protected:
     const goto_tracet &error_trace,
     const std::string &property_id);
 
-  struct expr_statst {
+  struct expr_statst
+  {
     bool has_malloc;
     bool has_string;
     bool has_array;
     bool has_pointer;
 
-    expr_statst()
-    : has_malloc(false)
-    , has_string(false)
-    , has_array(false)
-    , has_pointer(false)
-    {}
+    expr_statst():
+      has_malloc(false),
+      has_string(false),
+      has_array(false),
+      has_pointer(false)
+    {
+    }
   };
 
   void type_stats_rec(
@@ -173,7 +174,6 @@ protected:
   void add_assumptions_after_assertions(goto_modelt &goto_model);
   void filter_assertions(goto_modelt &goto_model);
   void split_loopheads(goto_modelt &goto_model);
-
 };
 
 #endif

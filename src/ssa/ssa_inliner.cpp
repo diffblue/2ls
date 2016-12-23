@@ -67,11 +67,11 @@ void ssa_inlinert::get_summary(
 
   // equalities for globals_in
   if(forward)
-    bindings.push_back(get_replace_globals_in(summary.globals_in,
-                cs_globals_in));
+    bindings.push_back(
+      get_replace_globals_in(summary.globals_in, cs_globals_in));
   else
-    bindings.push_back(get_replace_globals_in(summary.globals_out,
-                cs_globals_out));
+    bindings.push_back(
+      get_replace_globals_in(summary.globals_out, cs_globals_out));
 
   // constraints for transformer
   exprt transformer;
@@ -84,16 +84,22 @@ void ssa_inlinert::get_summary(
       summary.bw_transformer;
   }
   rename(transformer);
-  summaries.push_back(implies_exprt(SSA.guard_symbol(n_it->location),
-            transformer));
+  summaries.push_back(
+    implies_exprt(SSA.guard_symbol(n_it->location), transformer));
 
   // equalities for globals out (including unmodified globals)
   if(forward)
-    bindings.push_back(get_replace_globals_out(summary.globals_out,
-              cs_globals_in, cs_globals_out));
+    bindings.push_back(
+      get_replace_globals_out(
+        summary.globals_out,
+        cs_globals_in,
+        cs_globals_out));
   else
-    bindings.push_back(get_replace_globals_out(summary.globals_in,
-              cs_globals_out, cs_globals_in));
+    bindings.push_back(
+      get_replace_globals_out(
+        summary.globals_in,
+        cs_globals_out,
+        cs_globals_in));
 }
 
 /*******************************************************************\
@@ -115,16 +121,29 @@ exprt ssa_inlinert::get_summaries(const local_SSAt &SSA)
   return and_exprt(conjunction(bindings), conjunction(summaries));
 }
 
-void ssa_inlinert::get_summaries(const local_SSAt &SSA,
-          bool forward,
-                                  exprt::operandst &summaries,
-          exprt::operandst &bindings)
+/*******************************************************************\
+
+Function: ssa_inlinert::get_summaries
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: get summary for all function calls
+
+\*******************************************************************/
+
+void ssa_inlinert::get_summaries(
+  const local_SSAt &SSA,
+  bool forward,
+  exprt::operandst &summaries,
+  exprt::operandst &bindings)
 {
   for(local_SSAt::nodest::const_iterator n_it=SSA.nodes.begin();
       n_it!=SSA.nodes.end(); n_it++)
   {
     for(local_SSAt::nodet::function_callst::const_iterator f_it=
-    n_it->function_calls.begin();
+          n_it->function_calls.begin();
         f_it!=n_it->function_calls.end(); f_it++)
     {
       assert(f_it->function().id()==ID_symbol); // no function pointers
@@ -133,7 +152,7 @@ void ssa_inlinert::get_summaries(const local_SSAt &SSA,
       if(summary_db.exists(fname))
       {
         get_summary(SSA, n_it, f_it, summary_db.get(fname),
-           forward, summaries, bindings);
+                    forward, summaries, bindings);
       }
     }
   }
@@ -153,15 +172,16 @@ Function: ssa_inlinert::replace
 
 \*******************************************************************/
 
-void ssa_inlinert::replace(local_SSAt &SSA,
-         bool forward,
-         bool preconditions_as_assertions)
+void ssa_inlinert::replace(
+  local_SSAt &SSA,
+  bool forward,
+  bool preconditions_as_assertions)
 {
   for(local_SSAt::nodest::iterator n_it=SSA.nodes.begin();
       n_it!=SSA.nodes.end(); n_it++)
   {
     for(local_SSAt::nodet::function_callst::iterator
-        f_it=n_it->function_calls.begin();
+          f_it=n_it->function_calls.begin();
         f_it!=n_it->function_calls.end(); f_it++)
     {
       assert(f_it->function().id()==ID_symbol); // no function pointers
@@ -173,20 +193,22 @@ void ssa_inlinert::replace(local_SSAt &SSA,
 
         status() << "Replacing function " << fname << " by summary" << eom;
 
-  // getting globals at call site
-  local_SSAt::var_sett cs_globals_in, cs_globals_out;
-  goto_programt::const_targett loc=n_it->location;
-  SSA.get_globals(loc, cs_globals_in);
-  SSA.get_globals(loc, cs_globals_out, false);
+        // getting globals at call site
+        local_SSAt::var_sett cs_globals_in, cs_globals_out;
+        goto_programt::const_targett loc=n_it->location;
+        SSA.get_globals(loc, cs_globals_in);
+        SSA.get_globals(loc, cs_globals_out, false);
 
         // replace
-        replace(SSA, n_it, f_it, cs_globals_in, cs_globals_out, summary,
-    forward, preconditions_as_assertions);
+        replace(
+          SSA, n_it, f_it, cs_globals_in, cs_globals_out, summary,
+          forward, preconditions_as_assertions);
 
         // remove function_call
         rm_function_calls.insert(f_it);
       }
-      else debug() << "No summary available for function " << fname << eom;
+      else
+        debug() << "No summary available for function " << fname << eom;
       commit_node(n_it);
     }
     commit_nodes(SSA.nodes, n_it);
@@ -207,15 +229,16 @@ Function: ssa_inlinert::replace
 
 \*******************************************************************/
 
-void ssa_inlinert::replace(local_SSAt &SSA,
-               const ssa_dbt &ssa_db,
-         bool recursive, bool rename)
+void ssa_inlinert::replace(
+  local_SSAt &SSA,
+  const ssa_dbt &ssa_db,
+  bool recursive, bool rename)
 {
   for(local_SSAt::nodest::iterator n_it=SSA.nodes.begin();
       n_it!=SSA.nodes.end(); n_it++)
   {
     for(local_SSAt::nodet::function_callst::iterator
-        f_it=n_it->function_calls.begin();
+          f_it=n_it->function_calls.begin();
         f_it!=n_it->function_calls.end(); f_it++)
     {
       assert(f_it->function().id()==ID_symbol); // no function pointers
@@ -228,33 +251,34 @@ void ssa_inlinert::replace(local_SSAt &SSA,
 
         if(rename)
         {
-    // getting globals at call site
-    local_SSAt::var_sett cs_globals_in, cs_globals_out;
-    goto_programt::const_targett loc=n_it->location;
-    SSA.get_globals(loc, cs_globals_in);
-    SSA.get_globals(loc, cs_globals_out, false);
+          // getting globals at call site
+          local_SSAt::var_sett cs_globals_in, cs_globals_out;
+          goto_programt::const_targett loc=n_it->location;
+          SSA.get_globals(loc, cs_globals_in);
+          SSA.get_globals(loc, cs_globals_out, false);
 
-    if(recursive)
-    {
-      replace(fSSA, ssa_db, true);
-    }
+          if(recursive)
+          {
+            replace(fSSA, ssa_db, true);
+          }
 
-    // replace
-    replace(SSA.nodes, n_it, f_it, cs_globals_in, cs_globals_out, fSSA);
+          // replace
+          replace(SSA.nodes, n_it, f_it, cs_globals_in, cs_globals_out, fSSA);
         }
         else // just add to nodes
-  {
+        {
           for(local_SSAt::nodest::const_iterator fn_it=fSSA.nodes.begin();
-        fn_it!=fSSA.nodes.end(); fn_it++)
-    {
+              fn_it!=fSSA.nodes.end(); fn_it++)
+          {
             debug() << "new node: "; fn_it->output(debug(), fSSA.ns);
             debug() << eom;
 
             new_nodes.push_back(*fn_it);
-    }
-  }
+          }
+        }
       }
-      else debug() << "No body available for function " << fname << eom;
+      else
+        debug() << "No body available for function " << fname << eom;
       commit_node(n_it);
     }
     commit_nodes(SSA.nodes, n_it);
@@ -263,7 +287,7 @@ void ssa_inlinert::replace(local_SSAt &SSA,
 
 /*******************************************************************\
 
-Function: ssa_inlinert::replace()
+Function: ssa_inlinert::replace
 
   Inputs:
 
@@ -273,14 +297,15 @@ Function: ssa_inlinert::replace()
 
 \*******************************************************************/
 
-void ssa_inlinert::replace(local_SSAt &SSA,
-                       local_SSAt::nodest::iterator node,
-                       local_SSAt::nodet::function_callst::iterator f_it,
-           const local_SSAt::var_sett &cs_globals_in,
-           const local_SSAt::var_sett &cs_globals_out,
-                       const summaryt &summary,
-           bool forward,
-           bool preconditions_as_assertions)
+void ssa_inlinert::replace(
+  local_SSAt &SSA,
+  local_SSAt::nodest::iterator node,
+  local_SSAt::nodet::function_callst::iterator f_it,
+  const local_SSAt::var_sett &cs_globals_in,
+  const local_SSAt::var_sett &cs_globals_out,
+  const summaryt &summary,
+  bool forward,
+  bool preconditions_as_assertions)
 {
   counter++;
 
@@ -292,25 +317,29 @@ void ssa_inlinert::replace(local_SSAt &SSA,
 
   // constraints for precondition and transformer
   exprt precondition;
-  if(forward) precondition=summary.fw_precondition;
-  else precondition=summary.bw_precondition;
+  if(forward)
+    precondition=summary.fw_precondition;
+  else
+    precondition=summary.bw_precondition;
   if(!preconditions_as_assertions)
   {
     rename(precondition);
     node->constraints.push_back(
-    implies_exprt(SSA.guard_symbol(node->location),
-            precondition));
+      implies_exprt(SSA.guard_symbol(node->location),
+                    precondition));
   }
   else
   {
     rename(precondition);
     node->assertions.push_back(
-    implies_exprt(SSA.guard_symbol(node->location),
-        precondition));
+      implies_exprt(SSA.guard_symbol(node->location),
+                    precondition));
   }
   exprt transformer;
-  if(forward) transformer=summary.fw_transformer;
-  else transformer=summary.bw_transformer;
+  if(forward)
+    transformer=summary.fw_transformer;
+  else
+    transformer=summary.bw_transformer;
   node->constraints.push_back(transformer);  // copy
   exprt &_transformer=node->constraints.back();
   rename(_transformer);
@@ -324,7 +353,7 @@ void ssa_inlinert::replace(local_SSAt &SSA,
 
 /*******************************************************************\
 
- Function: ssa_inlinert::replace()
+ Function: ssa_inlinert::replace
 
  Inputs:
 
@@ -338,12 +367,13 @@ void ssa_inlinert::replace(local_SSAt &SSA,
 
 \*******************************************************************/
 
-void ssa_inlinert::replace(local_SSAt::nodest &nodes,
-                       local_SSAt::nodest::iterator node,
-                       local_SSAt::nodet::function_callst::iterator f_it,
-           const local_SSAt::var_sett &cs_globals_in,
-           const local_SSAt::var_sett &cs_globals_out,
-                       const local_SSAt &function)
+void ssa_inlinert::replace(
+  local_SSAt::nodest &nodes,
+  local_SSAt::nodest::iterator node,
+  local_SSAt::nodet::function_callst::iterator f_it,
+  const local_SSAt::var_sett &cs_globals_in,
+  const local_SSAt::var_sett &cs_globals_out,
+  const local_SSAt &function)
 {
   counter++;
 
@@ -371,7 +401,7 @@ void ssa_inlinert::replace(local_SSAt::nodest &nodes,
 
 /*******************************************************************\
 
-Function: ssa_inlinert::replace_globals_in()
+Function: ssa_inlinert::get_replace_globals_in
 
   Inputs:
 
@@ -381,7 +411,8 @@ Function: ssa_inlinert::replace_globals_in()
 
 \*******************************************************************/
 
-exprt ssa_inlinert::get_replace_globals_in(const local_SSAt::var_sett &globals_in,
+exprt ssa_inlinert::get_replace_globals_in(
+  const local_SSAt::var_sett &globals_in,
   const local_SSAt::var_sett &globals)
 {
   // equalities for globals_in
@@ -407,7 +438,20 @@ exprt ssa_inlinert::get_replace_globals_in(const local_SSAt::var_sett &globals_i
   return conjunction(c);
 }
 
-void ssa_inlinert::replace_globals_in(const local_SSAt::var_sett &globals_in,
+/*******************************************************************\
+
+Function: ssa_inlinert::replace_globals_in
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void ssa_inlinert::replace_globals_in(
+  const local_SSAt::var_sett &globals_in,
   const local_SSAt::var_sett &globals)
 {
   // equalities for globals_in
@@ -433,7 +477,7 @@ void ssa_inlinert::replace_globals_in(const local_SSAt::var_sett &globals_in,
 
 /*******************************************************************\
 
-Function: ssa_inlinert::replace_params()
+Function: ssa_inlinert::get_replace_params
 
   Inputs:
 
@@ -443,7 +487,8 @@ Function: ssa_inlinert::replace_params()
 
 \*******************************************************************/
 
-exprt ssa_inlinert::get_replace_params(const local_SSAt::var_listt &params,
+exprt ssa_inlinert::get_replace_params(
+  const local_SSAt::var_listt &params,
   const function_application_exprt &funapp_expr)
 {
   // equalities for arguments
@@ -467,7 +512,20 @@ exprt ssa_inlinert::get_replace_params(const local_SSAt::var_listt &params,
   return conjunction(c);
 }
 
-void ssa_inlinert::replace_params(const local_SSAt::var_listt &params,
+/*******************************************************************\
+
+Function: ssa_inlinert::replace_params
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void ssa_inlinert::replace_params(
+  const local_SSAt::var_listt &params,
   const function_application_exprt &funapp_expr)
 {
   // equalities for arguments
@@ -491,7 +549,7 @@ void ssa_inlinert::replace_params(const local_SSAt::var_listt &params,
 
 /*******************************************************************\
 
-Function: ssa_inlinert::replace_globals_out()
+Function: ssa_inlinert::get_replace_globals_out
 
   Inputs:
 
@@ -522,6 +580,18 @@ exprt ssa_inlinert::get_replace_globals_out(
   return conjunction (c);
 }
 
+/*******************************************************************\
+
+Function: ssa_inlinert::replace_globals_out
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: equalities for globals out (including unmodified globals)
+
+\*******************************************************************/
+
 void ssa_inlinert::replace_globals_out(
   const local_SSAt::var_sett &globals_out,
   const local_SSAt::var_sett &cs_globals_in,
@@ -543,7 +613,7 @@ void ssa_inlinert::replace_globals_out(
 
 /*******************************************************************\
 
-Function: ssa_inlinert::havoc()
+Function: ssa_inlinert::havoc
 
   Inputs:
 
@@ -553,8 +623,9 @@ Function: ssa_inlinert::havoc()
 
 \*******************************************************************/
 
-void ssa_inlinert::havoc(local_SSAt::nodet &node,
-       local_SSAt::nodet::function_callst::iterator f_it)
+void ssa_inlinert::havoc(
+  local_SSAt::nodet &node,
+  local_SSAt::nodet::function_callst::iterator f_it)
 {
   // remove function call
   rm_function_calls.insert(f_it);
@@ -562,7 +633,7 @@ void ssa_inlinert::havoc(local_SSAt::nodet &node,
 
 /*******************************************************************\
 
-Function: ssa_inlinert::rename()
+Function: ssa_inlinert::rename
 
   Inputs:
 
@@ -580,16 +651,13 @@ void ssa_inlinert::rename(exprt &expr)
     irep_idt id=id2string(sexpr.get_identifier())+"@"+i2string(counter);
     sexpr.set_identifier(id);
   }
-  for(exprt::operandst::iterator it=expr.operands().begin();
-      it!=expr.operands().end(); it++)
-  {
-    rename(*it);
-  }
+  Forall_operands(op, expr)
+    rename(*op);
 }
 
 /*******************************************************************\
 
-Function: ssa_inlinert::rename()
+Function: ssa_inlinert::rename
 
   Inputs:
 
@@ -601,27 +669,14 @@ Function: ssa_inlinert::rename()
 
 void ssa_inlinert::rename(local_SSAt::nodet &node)
 {
-  for(local_SSAt::nodet::equalitiest::iterator e_it=node.equalities.begin();
-      e_it!=node.equalities.end(); e_it++)
-  {
-    rename(*e_it);
-  }
-  for(local_SSAt::nodet::constraintst::iterator c_it=node.constraints.begin();
-      c_it!=node.constraints.end(); c_it++)
-  {
-    rename(*c_it);
-  }
-  for(local_SSAt::nodet::assertionst::iterator a_it=node.assertions.begin();
-      a_it!=node.assertions.end(); a_it++)
-  {
-    rename(*a_it);
-  }
-  for(local_SSAt::nodet::function_callst::iterator
-      f_it=node.function_calls.begin();
-      f_it!=node.function_calls.end(); f_it++)
-  {
-    rename(*f_it);
-  }
+  for(auto &e : node.equalities)
+    rename(e);
+  for(auto &c : node.constraints)
+    rename(c);
+  for(auto &a : node.assertions)
+    rename(a);
+  for(auto &f : node.function_calls)
+    rename(f);
 }
 
 /*******************************************************************\
@@ -649,7 +704,7 @@ void ssa_inlinert::rename_to_caller(
 
   local_SSAt::var_listt::const_iterator p_it=params.begin();
   for(exprt::operandst::const_iterator it=f_it->arguments().begin();
-      it!= f_it->arguments().end(); it++, p_it++)
+      it!=f_it->arguments().end(); ++it, ++p_it)
   {
     local_SSAt::var_listt::const_iterator next_p_it=p_it;
     if(f_it->arguments().size()!=params.size() &&
@@ -674,8 +729,8 @@ void ssa_inlinert::rename_to_caller(
                 << "' not bound in caller" << eom;
 #endif
       replace_map[*it]=
-        symbol_exprt(id2string(it->get_identifier())+
-        "@"+i2string(++counter), it->type());
+        symbol_exprt(
+          id2string(it->get_identifier())+"@"+i2string(++counter), it->type());
     }
   }
 
@@ -704,8 +759,8 @@ void ssa_inlinert::rename_to_callee(
   replace_mapt replace_map;
 
   local_SSAt::var_listt::const_iterator p_it=params.begin();
-  for(exprt::operandst::const_iterator it= f_it->arguments().begin();
-      it!= f_it->arguments().end(); it++, p_it++)
+  for(exprt::operandst::const_iterator it=f_it->arguments().begin();
+      it!=f_it->arguments().end(); ++it, ++p_it)
   {
     local_SSAt::var_listt::const_iterator next_p_it=p_it;
     if(f_it->arguments().size()!=params.size() &&
@@ -717,11 +772,6 @@ void ssa_inlinert::rename_to_callee(
     replace_map[*it]=*p_it;
   }
 
-/*  replace_expr(replace_map, expr);
-
-  replace_map.clear(); // arguments might contain globals,
-                       // thus, we have to replace them separately
-           */
   for(summaryt::var_sett::const_iterator it=cs_globals_in.begin();
       it!=cs_globals_in.end(); it++)
   {
@@ -735,8 +785,8 @@ void ssa_inlinert::rename_to_callee(
                 << "' not bound in caller" << eom;
 #endif
       replace_map[*it]=
-        symbol_exprt(id2string(it->get_identifier())+
-        "@"+i2string(++counter), it->type());
+        symbol_exprt(
+          id2string(it->get_identifier())+"@"+i2string(++counter), it->type());
     }
   }
 
@@ -745,7 +795,7 @@ void ssa_inlinert::rename_to_callee(
 
 /*******************************************************************\
 
-Function: ssa_inlinert::commit_node()
+Function: ssa_inlinert::commit_node
 
   Inputs:
 
@@ -762,7 +812,7 @@ void ssa_inlinert::commit_node(local_SSAt::nodest::iterator node)
 {
   // remove obsolete function calls
   for(std::set<local_SSAt::nodet::function_callst::iterator>::iterator
-      it=rm_function_calls.begin();
+        it=rm_function_calls.begin();
       it!=rm_function_calls.end(); it++)
   {
     node->function_calls.erase(*it);
@@ -770,14 +820,14 @@ void ssa_inlinert::commit_node(local_SSAt::nodest::iterator node)
   rm_function_calls.clear();
 
   // insert new equalities
-  node->equalities.insert(node->equalities.end(),
-    new_equs.begin(), new_equs.end());
+  node->equalities.insert(
+    node->equalities.end(), new_equs.begin(), new_equs.end());
   new_equs.clear();
 }
 
 /*******************************************************************\
 
-Function: ssa_inlinert::commit_nodes()
+Function: ssa_inlinert::commit_nodes
 
   Inputs:
 
@@ -787,10 +837,12 @@ Function: ssa_inlinert::commit_nodes()
 
 \*******************************************************************/
 
-bool ssa_inlinert::commit_nodes(local_SSAt::nodest &nodes,
-                                 local_SSAt::nodest::iterator n_pos)
+bool ssa_inlinert::commit_nodes(
+  local_SSAt::nodest &nodes,
+  local_SSAt::nodest::iterator n_pos)
 {
-  if(new_nodes.empty()) return true;
+  if(new_nodes.empty())
+    return true;
   nodes.splice(n_pos, new_nodes, new_nodes.begin(), new_nodes.end());
   return false;
 }
@@ -807,16 +859,18 @@ Function: ssa_inlinert::find_corresponding_symbol
 
 \*******************************************************************/
 
-bool ssa_inlinert::find_corresponding_symbol(const symbol_exprt &s,
-           const local_SSAt::var_sett &globals,
-                                         symbol_exprt &s_found)
+bool ssa_inlinert::find_corresponding_symbol(
+  const symbol_exprt &s,
+  const local_SSAt::var_sett &globals,
+  symbol_exprt &s_found)
 {
   const irep_idt &s_orig_id=get_original_identifier(s);
   for(local_SSAt::var_sett::const_iterator it=globals.begin();
       it!=globals.end(); it++)
   {
 #if 0
-    std::cout << s_orig_id << "=?= " << get_original_identifier(*it) << std::endl;
+    std::cout << s_orig_id << "=?= "
+              << get_original_identifier(*it) << std::endl;
 #endif
     if(s_orig_id==get_original_identifier(*it))
     {
@@ -845,7 +899,7 @@ irep_idt ssa_inlinert::get_original_identifier(const symbol_exprt &s)
 
   // find first #@%!$ where afterwards there are no letters
   size_t pos=std::string::npos;
-  for(size_t i=0;i<id.size();i++)
+  for(size_t i=0; i<id.size(); ++i)
   {
     char c=id.at(i);
     if(pos==std::string::npos)
@@ -861,7 +915,8 @@ irep_idt ssa_inlinert::get_original_identifier(const symbol_exprt &s)
         pos=std::string::npos;
     }
   }
-  if(pos!=std::string::npos) id=id.substr(0, pos);
+  if(pos!=std::string::npos)
+    id=id.substr(0, pos);
   return id;
 }
 

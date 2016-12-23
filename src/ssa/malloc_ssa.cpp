@@ -20,7 +20,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
-Function:
+Function: c_sizeof_type_rec
 
   Inputs:
 
@@ -43,7 +43,8 @@ inline static typet c_sizeof_type_rec(const exprt &expr)
     forall_operands(it, expr)
     {
       typet t=c_sizeof_type_rec(*it);
-      if(t.is_not_nil()) return t;
+      if(t.is_not_nil())
+        return t;
     }
   }
 
@@ -113,7 +114,8 @@ exprt malloc_ssa(
             mp_integer elements=alloc_size/elem_size;
 
             if(elements*elem_size==alloc_size)
-              object_type=array_typet(tmp_type,
+              object_type=array_typet(
+                tmp_type,
                 from_integer(elements, size.type()));
           }
         }
@@ -165,11 +167,24 @@ exprt malloc_ssa(
 }
 
 
-static void replace_malloc_rec(exprt &expr,
-                               const std::string &suffix,
-                               symbol_tablet &symbol_table,
-                               const exprt &malloc_size,
-                               unsigned &counter)
+/*******************************************************************\
+
+Function: replace_malloc_rec
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+static void replace_malloc_rec(
+  exprt &expr,
+  const std::string &suffix,
+  symbol_tablet &symbol_table,
+  const exprt &malloc_size,
+  unsigned &counter)
 {
   if(expr.id()==ID_side_effect &&
      to_side_effect_expr(expr).get_statement()==ID_malloc)
@@ -185,10 +200,21 @@ static void replace_malloc_rec(exprt &expr,
       replace_malloc_rec(*it, suffix, symbol_table, malloc_size, counter);
 }
 
-#include <iostream>
+/*******************************************************************\
 
-void replace_malloc(goto_modelt &goto_model,
-                    const std::string &suffix)
+Function: replace_malloc
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void replace_malloc(
+  goto_modelt &goto_model,
+  const std::string &suffix)
 {
   unsigned counter=0;
   Forall_goto_functions(f_it, goto_model.goto_functions)

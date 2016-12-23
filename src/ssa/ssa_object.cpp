@@ -37,9 +37,15 @@ bool is_ptr_object(const exprt &src)
          src.get(ID_ptr_object)!=irep_idt();
 }
 
+void collect_objects_rec(
+  const exprt &src,
+  const namespacet &ns,
+  std::set<ssa_objectt> &objects,
+  std::set<exprt> &literals);
+
 /*******************************************************************\
 
-Function: collect_objects_rec
+Function: collect_objects_address_of_rec
 
   Inputs:
 
@@ -48,12 +54,6 @@ Function: collect_objects_rec
  Purpose:
 
 \*******************************************************************/
-
-void collect_objects_rec(
-  const exprt &src,
-  const namespacet &ns,
-  std::set<ssa_objectt> &objects,
-  std::set<exprt> &literals);
 
 void collect_objects_address_of_rec(
   const exprt &src,
@@ -112,10 +112,9 @@ void collect_objects_rec(
   std::set<ssa_objectt> &objects,
   std::set<exprt> &literals)
 {
-
- #ifdef DEBUG
+#ifdef DEBUG
   std::cout << "COLLECT " << from_expr(ns, "", src) << "\n";
- #endif
+#endif
 
   if(src.id()==ID_code)
   {
@@ -158,10 +157,9 @@ void collect_objects_rec(
     }
     else
     {
-
- #ifdef DEBUG
+#ifdef DEBUG
       std::cout << "OBJECT " << ssa_object.get_identifier() << "\n";
- #endif
+#endif
 
       objects.insert(ssa_object);
     }
@@ -363,7 +361,8 @@ ssa_objectt::identifiert ssa_objectt::object_id_rec(
     if(is_struct_member(member_expr, ns))
     {
       irep_idt compound_object=object_id_rec(compound_op, ns);
-      if(compound_object==irep_idt()) return identifiert();
+      if(compound_object==irep_idt())
+        return identifiert();
 
       return identifiert(
         id2string(compound_object)+
@@ -445,14 +444,13 @@ Function: is_symbol_struct_member
 
   Inputs:
 
- Outputs:
+ Outputs: returns true for symbol(.member)*, where
+          all members are struct members.
 
  Purpose:
 
 \*******************************************************************/
 
-// Returns true for symbol(.member)*, where
-// all members are struct members.
 bool is_symbol_struct_member(const exprt &src, const namespacet &ns)
 {
   return get_struct_rec(src, ns).id()==ID_symbol;
@@ -466,12 +464,11 @@ Function: is_symbol_or_deref_struct_member
 
  Outputs:
 
- Purpose:
+ Purpose: returns true for ((*ptr)|symbol)(.member)*, where
+          all members are struct members.
 
 \*******************************************************************/
 
-// Returns true for ((*ptr)|symbol)(.member)*, where
-// all members are struct members.
 bool is_symbol_or_deref_struct_member(const exprt &src, const namespacet &ns)
 {
   exprt struct_op=get_struct_rec(src, ns);
@@ -484,14 +481,13 @@ Function: is_deref_struct_member
 
   Inputs:
 
- Outputs:
+ Outputs: returns true for (*ptr)(.member)*, where
+          all members are struct members.
 
  Purpose:
 
 \*******************************************************************/
 
-// Returns true for (*ptr)(.member)*, where
-// all members are struct members.
 bool is_deref_struct_member(const exprt &src, const namespacet &ns)
 {
   return get_struct_rec(src, ns).id()==ID_dereference;

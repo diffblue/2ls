@@ -6,16 +6,19 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
-#include "summary.h"
-#include "../domains/util.h"
-
+#ifdef DEBUG
 #include <langapi/language_util.h>
+#endif
+
+#include <domains/util.h>
+
+#include "summary.h"
 
 // #define PRETTY_PRINT
 
 /*******************************************************************\
 
-Function: summaryt::output()
+Function: summaryt::output
 
   Inputs:
 
@@ -64,7 +67,8 @@ void summaryt::output(std::ostream &out, const namespacet &ns) const
       << (bw_invariant.is_nil() ? "not computed" :
     from_expr(ns, "", bw_invariant)) << std::endl;
   out << "termination argument: ";
-  if(termination_argument.is_nil()) out << "not computed";
+  if(termination_argument.is_nil())
+    out << "not computed";
   else
 #if PRETTY_PRINT
     pretty_print_termination_argument(out, ns, termination_argument);
@@ -77,7 +81,7 @@ void summaryt::output(std::ostream &out, const namespacet &ns) const
 
 /*******************************************************************\
 
-Function: summaryt::join()
+Function: summaryt::combine_and
 
   Inputs:
 
@@ -95,10 +99,24 @@ void summaryt::combine_and(exprt &olde, const exprt &newe)
   }
   else
   {
-    if(newe.is_nil()) return;
+    if(newe.is_nil())
+      return;
+
     olde=and_exprt(olde, newe);
   }
 }
+
+/*******************************************************************\
+
+Function: summaryt::combine_or
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 
 void summaryt::combine_or(exprt &olde, const exprt &newe)
 {
@@ -108,10 +126,23 @@ void summaryt::combine_or(exprt &olde, const exprt &newe)
   }
   else
   {
-    if(newe.is_nil()) return;
+    if(newe.is_nil())
+      return;
     olde=or_exprt(olde, newe);
   }
 }
+
+/*******************************************************************\
+
+Function: summaryt::join
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 
 void summaryt::join(const summaryt &new_summary)
 {
@@ -133,7 +164,8 @@ void summaryt::join(const summaryt &new_summary)
   case NO: terminates=NO;
     break;
   case UNKNOWN:
-    if(terminates!=NO) terminates=UNKNOWN;
+    if(terminates!=NO)
+      terminates=UNKNOWN;
     break;
   default: assert(false);
   }

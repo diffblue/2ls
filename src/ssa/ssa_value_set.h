@@ -17,7 +17,8 @@ class ssa_value_domaint:public ai_domain_baset
 {
 public:
   virtual void transform(locationt, locationt, ai_baset &, const namespacet &);
-  virtual void output(std::ostream &, const ai_baset &, const namespacet &) const;
+  virtual void output(
+    std::ostream &, const ai_baset &, const namespacet &) const;
   bool merge(const ssa_value_domaint &, locationt, locationt);
 
   struct valuest
@@ -29,7 +30,10 @@ public:
     unsigned alignment;
 
     inline valuest():
-      offset(false), null(false), unknown(false), integer_address(false),
+      offset(false),
+      null(false),
+      unknown(false),
+      integer_address(false),
       alignment(0)
     {
     }
@@ -43,7 +47,7 @@ public:
       *this=valuest();
     }
 
-    bool empty() const
+    inline bool empty() const
     {
       return value_set.empty() && !null && !unknown && !integer_address;
     }
@@ -81,9 +85,12 @@ protected:
   static unsigned merge_alignment(unsigned a, unsigned b)
   {
     // could use lcm here
-    if(a==b) return a;
-    if(a==0) return b;
-    if(b==0) return a;
+    if(a==b)
+      return a;
+    if(a==0)
+      return b;
+    if(b==0)
+      return a;
     return 1;
   }
 };

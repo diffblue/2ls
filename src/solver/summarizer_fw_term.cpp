@@ -14,21 +14,20 @@ Author: Peter Schrammel
 #include <solvers/smt2/smt2_dec.h>
 #include <util/find_symbols.h>
 
+#include <domains/ssa_analyzer.h>
+#include <domains/template_generator_summary.h>
+#include <domains/template_generator_callingcontext.h>
+#include <domains/template_generator_ranking.h>
+
+#include <ssa/local_ssa.h>
+#include <ssa/simplify_ssa.h>
+
 #include "summarizer_fw_term.h"
 #include "summary_db.h"
 
-#include "../domains/ssa_analyzer.h"
-#include "../domains/template_generator_summary.h"
-#include "../domains/template_generator_callingcontext.h"
-#include "../domains/template_generator_ranking.h"
-
-#include "../ssa/local_ssa.h"
-#include "../ssa/simplify_ssa.h"
-
-
 /*******************************************************************\
 
-Function: summarizert::compute_summary_rec()
+Function: summarizer_fw_termt::compute_summary_rec
 
   Inputs:
 
@@ -55,8 +54,13 @@ void summarizer_fw_termt::compute_summary_rec(
   // recursively compute summaries for function calls
   threevalt calls_terminate=YES;
   bool has_function_calls=false;
-  inline_summaries(function_name, SSA, precondition, context_sensitive,
-                   calls_terminate, has_function_calls);
+  inline_summaries(
+    function_name,
+    SSA,
+    precondition,
+    context_sensitive,
+    calls_terminate,
+    has_function_calls);
 
   status() << "Analyzing function "  << function_name << eom;
 
@@ -67,7 +71,8 @@ void summarizer_fw_termt::compute_summary_rec(
     for(local_SSAt::nodest::iterator n=SSA.nodes.begin();
         n!=SSA.nodes.end(); n++)
     {
-      if(!n->empty()) n->output(out, SSA.ns);
+      if(!n->empty())
+        n->output(out, SSA.ns);
     }
     out << "(enable) " << from_expr(SSA.ns, "", SSA.get_enabling_exprs())
         << "\n";
@@ -78,16 +83,20 @@ void summarizer_fw_termt::compute_summary_rec(
   for(local_SSAt::nodest::iterator n_it=SSA.nodes.begin();
       n_it!=SSA.nodes.end(); n_it++)
   {
-    if(n_it->loophead!=SSA.nodes.end()) { has_loops=true; break; }
+    if(n_it->loophead!=SSA.nodes.end())
+    {
+      has_loops=true;
+      break;
+    }
   }
 
-  debug() << "function " <<
-    (has_function_calls ? "has function calls" :
-     "does not have function calls") << eom;
-  debug() << "function calls terminate: " <<
-    threeval2string(calls_terminate) << eom;
-  debug() << "function " <<
-    (has_loops ? "has loops" : "does not have loops") << eom;
+  debug() << "function "
+          << (has_function_calls ? "has" : "does not have") << " function calls"
+          << eom;
+  debug() << "function calls terminate: "
+          << threeval2string(calls_terminate) << eom;
+  debug() << "function "
+          << (has_loops ? "has loops" : "does not have loops") << eom;
 
   // create summary
   summaryt summary;
@@ -116,6 +125,9 @@ void summarizer_fw_termt::compute_summary_rec(
   }
   if(summary.terminates==UNKNOWN)
   {
+    bool has_terminating_function_calls=
+      has_function_calls && calls_terminate==YES;
+
     if(!has_loops && !has_function_calls)
     {
       status() << "Function trivially terminates" << eom;
@@ -131,8 +143,7 @@ void summarizer_fw_termt::compute_summary_rec(
       summary.terminates=calls_terminate;
     }
     else if(has_loops &&
-            (!has_function_calls ||
-             (has_function_calls && calls_terminate==YES)))
+            (!has_function_calls || has_terminating_function_calls))
     {
       do_termination(function_name, SSA, summary);
     }
@@ -150,7 +161,7 @@ void summarizer_fw_termt::compute_summary_rec(
 
 /*******************************************************************\
 
-Function: summarizer_fw_termt::inline_summaries()
+Function: summarizer_fw_termt::inline_summaries
 
   Inputs:
 
@@ -160,11 +171,12 @@ Function: summarizer_fw_termt::inline_summaries()
 
 \*******************************************************************/
 
-void summarizer_fw_termt::inline_summaries(const function_namet &function_name,
-                                           local_SSAt &SSA, exprt precondition,
-                                           bool context_sensitive,
-                                           threevalt &calls_terminate,
-                                           bool &has_function_calls)
+void summarizer_fw_termt::inline_summaries(
+  const function_namet &function_name,
+  local_SSAt &SSA, exprt precondition,
+  bool context_sensitive,
+  threevalt &calls_terminate,
+  bool &has_function_calls)
 {
   for(local_SSAt::nodest::iterator n_it=SSA.nodes.begin();
       n_it!=SSA.nodes.end(); n_it++)
@@ -181,14 +193,15 @@ void summarizer_fw_termt::inline_summaries(const function_namet &function_name,
       precondition=conjunction(c);
 
       if(!options.get_bool_option("competition-mode") &&
-         !check_call_reachable(function_name, SSA, n_it, f_it, precondition, true))
+         !check_call_reachable(
+           function_name, SSA, n_it, f_it, precondition, true))
         continue;
 
       has_function_calls=true;
       irep_idt fname=to_symbol_expr(f_it->function()).get_identifier();
 
-      if(!check_precondition(function_name, SSA, n_it, f_it,
-                             precondition, context_sensitive))
+      if(!check_precondition(
+           function_name, SSA, n_it, f_it, precondition, context_sensitive))
       {
         exprt precondition_call=true_exprt();
         if(context_sensitive)
@@ -203,7 +216,9 @@ void summarizer_fw_termt::inline_summaries(const function_namet &function_name,
       // get information about callee termination
       if(summary_db.exists(fname) && summary_db.get(fname).terminates!=YES)
       {
-        calls_terminate=UNKNOWN; // cannot propagate NO because call reachability might be over-approximating
+        // cannot propagate NO
+        // because call reachability might be over-approximating
+        calls_terminate=UNKNOWN;
         break;
       }
     }
@@ -212,7 +227,7 @@ void summarizer_fw_termt::inline_summaries(const function_namet &function_name,
 
 /*******************************************************************\
 
-Function: summarizer_baset::do_nontermination()
+Function: summarizer_fw_termt::do_nontermination
 
   Inputs:
 
@@ -229,22 +244,29 @@ void summarizer_fw_termt::do_nontermination(
 {
   // calling context, invariant, function call summaries
   exprt::operandst cond;
-  if(!summary.fw_invariant.is_nil()) cond.push_back(summary.fw_invariant);
-  if(!summary.fw_precondition.is_nil()) cond.push_back(summary.fw_precondition);
+  if(!summary.fw_invariant.is_nil())
+    cond.push_back(summary.fw_invariant);
+  if(!summary.fw_precondition.is_nil())
+    cond.push_back(summary.fw_precondition);
   cond.push_back(ssa_inliner.get_summaries(SSA));
 
   if(!check_end_reachable(function_name, SSA, conjunction(cond)))
   {
     status() << "Function never terminates normally" << eom;
-    if(summary.fw_precondition.is_true()) summary.fw_transformer=false_exprt();
-    else summary.fw_transformer=implies_exprt(summary.fw_precondition, false_exprt());
+
+    if(summary.fw_precondition.is_true())
+      summary.fw_transformer=false_exprt();
+    else
+      summary.fw_transformer=
+        implies_exprt(summary.fw_precondition, false_exprt());
+
     summary.terminates=NO;
   }
 }
 
 /*******************************************************************\
 
-Function: summarizer_fw_termt::do_termination()
+Function: summarizer_fw_termt::do_termination
 
   Inputs:
 
@@ -254,14 +276,17 @@ Function: summarizer_fw_termt::do_termination()
 
 \*******************************************************************/
 
-void summarizer_fw_termt::do_termination(const function_namet &function_name,
-                                         local_SSAt &SSA,
-                                         summaryt &summary)
+void summarizer_fw_termt::do_termination(
+  const function_namet &function_name,
+  local_SSAt &SSA,
+  summaryt &summary)
 {
   // calling context, invariant, function call summaries
   exprt::operandst cond;
-  if(!summary.fw_invariant.is_nil()) cond.push_back(summary.fw_invariant);
-  if(!summary.fw_precondition.is_nil()) cond.push_back(summary.fw_precondition);
+  if(!summary.fw_invariant.is_nil())
+    cond.push_back(summary.fw_invariant);
+  if(!summary.fw_precondition.is_nil())
+    cond.push_back(summary.fw_precondition);
   cond.push_back(ssa_inliner.get_summaries(SSA));
 
   status() << "Synthesizing ranking function to prove termination" << eom;
@@ -274,7 +299,8 @@ void summarizer_fw_termt::do_termination(const function_namet &function_name,
   template_generator1.set_message_handler(get_message_handler());
   template_generator1(solver.next_domain_number(), SSA, true);
 
-  if(template_generator1.all_vars().empty()) return; // nothing to do
+  if(template_generator1.all_vars().empty())
+    return; // nothing to do
 
   get_assertions(SSA, cond); // add assertions as assumptions
 
@@ -282,14 +308,14 @@ void summarizer_fw_termt::do_termination(const function_namet &function_name,
   ssa_analyzert analyzer1;
   analyzer1.set_message_handler(get_message_handler());
   analyzer1(solver, SSA, conjunction(cond), template_generator1);
-  analyzer1.get_result(summary.termination_argument,
-                       template_generator1.all_vars());
+  analyzer1.get_result(
+    summary.termination_argument, template_generator1.all_vars());
 
   // extract information whether a ranking function was found for all loops
   summary.terminates=check_termination_argument(summary.termination_argument);
   if(!summary.fw_precondition.is_true())
-    summary.termination_argument=implies_exprt(summary.fw_precondition,
-                                                 summary.termination_argument);
+    summary.termination_argument=
+      implies_exprt(summary.fw_precondition, summary.termination_argument);
 
   // statistics
   solver_instances+=analyzer1.get_number_of_solver_instances();
@@ -299,7 +325,7 @@ void summarizer_fw_termt::do_termination(const function_namet &function_name,
 
 /*******************************************************************\
 
-Function: summarizer_fw_termt::check_termination_argument()
+Function: summarizer_fw_termt::check_termination_argument
 
   Inputs:
 
@@ -307,11 +333,13 @@ Function: summarizer_fw_termt::check_termination_argument()
 
  Purpose: checks whether a termination argument implies termination
 
-\******************************************************************/
+\*******************************************************************/
 
 threevalt summarizer_fw_termt::check_termination_argument(exprt expr)
 {
-  if(expr.is_false()) return YES;
+  if(expr.is_false())
+    return YES;
+
   // should be of the form /\_i g_i=> R_i
   if(expr.id()==ID_and)
   {
@@ -319,10 +347,12 @@ threevalt summarizer_fw_termt::check_termination_argument(exprt expr)
     for(exprt::operandst::iterator it=expr.operands().begin();
         it!=expr.operands().end(); it++)
     {
-      if(it->is_true()) result=UNKNOWN;
+      if(it->is_true())
+        result=UNKNOWN;
       if(it->id()==ID_implies)
       {
-        if(it->op1().is_true()) result=UNKNOWN;
+        if(it->op1().is_true())
+          result=UNKNOWN;
       }
     }
     return result;
@@ -331,9 +361,11 @@ threevalt summarizer_fw_termt::check_termination_argument(exprt expr)
   {
     if(expr.id()==ID_implies)
     {
-      if(expr.op1().is_true()) return UNKNOWN;
+      if(expr.op1().is_true())
+        return UNKNOWN;
     }
-    else return !expr.is_true() ? YES : UNKNOWN;
+    else
+      return !expr.is_true() ? YES : UNKNOWN;
   }
   return YES;
 }

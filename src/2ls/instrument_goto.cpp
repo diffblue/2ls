@@ -2,13 +2,13 @@
 
 Module: Instrument Goto Program with Inferred Information
 
-Author: Peter Schrammel
+Author: Peter Schrammel, Björn Wachter
 
 \*******************************************************************/
 
 #include <util/string2int.h>
 
-#define DEBUG
+// #define DEBUG
 
 #ifdef DEBUG
 #include <iostream>
@@ -16,10 +16,21 @@ Author: Peter Schrammel
 
 #include  "instrument_goto.h"
 
+/*******************************************************************\
 
+Function: find_loop_by_guard
 
-local_SSAt::locationt find_loop_by_guard(const local_SSAt &SSA,
-          const symbol_exprt &guard)
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+local_SSAt::locationt find_loop_by_guard(
+  const local_SSAt &SSA,
+  const symbol_exprt &guard)
 {
   std::string gstr=id2string(guard.get_identifier());
   unsigned pos1=gstr.find("#")+1;
@@ -30,7 +41,8 @@ local_SSAt::locationt find_loop_by_guard(const local_SSAt &SSA,
 
   for(; n_it!=SSA.nodes.end(); n_it++)
   {
-    if(n_it->location->location_number==n) {
+    if(n_it->location->location_number==n)
+    {
       // find end of loop
       break;
     }
@@ -42,23 +54,35 @@ local_SSAt::locationt find_loop_by_guard(const local_SSAt &SSA,
     return n_it->loophead->location;
 }
 
+/*******************************************************************\
+
+Function: instrument_gotot::instrument_instruction
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 
 void instrument_gotot::instrument_instruction(
   const exprt &expr,
   goto_programt &dest,
   goto_programt::targett &target)
 {
-
   goto_programt::targett where=target;
 
-  std::cout << "target " << target->type << " : " << target->source_location << std::endl;
+#ifdef DEBUG
+  std::cout << "target " << target->type << " : "
+            << target->source_location << std::endl;
+#endif
 
-  for(;;++where)
+  for(; ; ++where)
   {
     if(where->is_goto() && where->get_target()==target)
       break;
   }
-
 
   goto_programt tmp;
 
@@ -69,17 +93,24 @@ void instrument_gotot::instrument_instruction(
 
   dest.insert_before_swap(where, tmp);
 
-  #ifdef DEBUG
+#ifdef DEBUG
   std::cout << "instrumenting instruction " << std::endl;
-  #endif
-
-
-  // dest.update();
+#endif
 }
 
-extern
-void purify_identifiers(exprt &expr);
+extern void purify_identifiers(exprt &expr);
 
+/*******************************************************************\
+
+Function: instrument_gotot::instrument_body
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 
 void instrument_gotot::instrument_body(
   const local_SSAt &SSA,
@@ -104,21 +135,31 @@ void instrument_gotot::instrument_body(
   {
     assert(impl.op0().id()==ID_symbol);
     loc=find_loop_by_guard(SSA, to_symbol_expr(impl.op0()));
-
   }
-  else assert(false);
-
+  else
+    assert(false);
 
   Forall_goto_program_instructions(it, function.body)
+  {
     if(it==loc)
     {
-
       instrument_instruction(inv, function.body, it);
       break;
     }
+  }
 }
 
+/*******************************************************************\
 
+Function: instrument_gotot::instrument_function
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 
 void instrument_gotot::instrument_function(
   const irep_idt &function_name,
@@ -138,8 +179,10 @@ void instrument_gotot::instrument_function(
 
   const local_SSAt &SSA=ssa_db.get(function_name);
 
-  if(summary.fw_invariant.is_nil()) return;
-  if(summary.fw_invariant.is_true()) return;
+  if(summary.fw_invariant.is_nil())
+    return;
+  if(summary.fw_invariant.is_true())
+    return;
 
   // expected format /\_i g_i=> inv_i
   if(summary.fw_invariant.id()==ID_implies)
@@ -154,19 +197,30 @@ void instrument_gotot::instrument_function(
       instrument_body(SSA, summary.fw_invariant.operands()[i], function);
     }
   }
-  else assert(false);
+  else
+    assert(false);
 }
+
+/*******************************************************************\
+
+Function: instrument_gotot::operator()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 
 void instrument_gotot::operator()(goto_modelt &goto_model)
 {
-  goto_functionst
-    &goto_functions=goto_model.goto_functions;
+  goto_functionst &goto_functions=goto_model.goto_functions;
 
   typedef goto_functions_templatet<goto_programt>::function_mapt
     function_mapt;
 
-  function_mapt
-    &function_map=goto_functions.function_map;
+  function_mapt &function_map=goto_functions.function_map;
 
   for(function_mapt::iterator
       fit=function_map.begin();

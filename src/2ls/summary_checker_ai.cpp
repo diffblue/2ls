@@ -7,7 +7,7 @@ Author: Peter Schrammel
 \*******************************************************************/
 
 #include "summary_checker_ai.h"
-#include "../ssa/ssa_build_goto_trace.h"
+#include <ssa/ssa_build_goto_trace.h>
 
 #define TERM_CEX 1
 
@@ -77,7 +77,7 @@ property_checkert::resultt summary_checker_ait::operator()(
     return property_checkert::UNKNOWN;
 #endif
 
-  property_checkert::resultt result= check_properties();
+  property_checkert::resultt result=check_properties();
   report_statistics();
   return result;
 }
@@ -107,11 +107,13 @@ void summary_checker_ait::report_preconditions()
   {
     exprt precondition;
     bool computed=summary_db.exists(it->first);
-    if(computed) precondition=summary_db.get(it->first).bw_precondition;
-    if(precondition.is_nil()) computed=false;
-    result() << eom << "[" << it->first << "]: "
-       << (!computed ? "not computed" :
-     from_expr(it->second->ns, "", precondition)) << eom;
+    if(computed)
+      precondition=summary_db.get(it->first).bw_precondition;
+    if(precondition.is_nil())
+      computed=false;
+    result() << eom << "[" << it->first << "]: " <<
+      (!computed?"not computed":from_expr(it->second->ns, "", precondition))
+             << eom;
   }
 }
 
@@ -150,8 +152,10 @@ property_checkert::resultt summary_checker_ait::report_termination()
     result() << "[" << it->first << "]: "
        << (!computed ? "not computed" : threeval2string(terminates)) << eom;
   }
-  if(not_computed) return property_checkert::UNKNOWN;
-  if(all_terminate) return property_checkert::PASS;
+  if(not_computed)
+    return property_checkert::UNKNOWN;
+  if(all_terminate)
+    return property_checkert::PASS;
   if(one_nonterminate)
   {
 #if TERM_CEX

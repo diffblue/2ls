@@ -115,8 +115,8 @@ class incremental_solvert:public messaget
 
   inline prop_convt & get_solver() { return *solver; }
 
-  propt* sat_check;
-  prop_convt* solver;
+  propt *sat_check;
+  prop_convt *solver;
   const namespacet &ns;
 
   void new_context();
@@ -160,12 +160,26 @@ class incremental_solvert:public messaget
 
   void deallocate_solvers()
   {
-    if(solver!=NULL) delete solver;
-    if(sat_check!=NULL) delete sat_check;
+    if(solver!=NULL)
+      delete solver;
+    if(sat_check!=NULL)
+      delete sat_check;
   }
 };
 
-static inline incremental_solvert & operator << (
+/*******************************************************************\
+
+Function: incremental_solvert::operator<<
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+static inline incremental_solvert &operator<<(
   incremental_solvert &dest,
   const exprt &src)
 {
@@ -198,7 +212,19 @@ static inline incremental_solvert & operator << (
   return dest;
 }
 
-static inline incremental_solvert& operator << (
+/*******************************************************************\
+
+Function: incremental_solvert::operator<<
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+static inline incremental_solvert &operator<<(
   incremental_solvert &dest,
   const incremental_solvert::constraintst &src)
 {

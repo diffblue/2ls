@@ -47,20 +47,22 @@ struct goalt
 class cover_goals_extt:public messaget
 {
 public:
-  explicit inline cover_goals_extt(unwindable_local_SSAt &_SSA,
-           incremental_solvert &_solver,
-           const exprt::operandst& _loophead_selects,
-           property_checkert::property_mapt &_property_map,
-           bool _spurious_check, bool _all_properties,
-                                   bool _build_error_trace):
-          SSA(_SSA),
-          solver(_solver),
-          property_map(_property_map),
+  explicit inline cover_goals_extt(
+    unwindable_local_SSAt &_SSA,
+    incremental_solvert &_solver,
+    const exprt::operandst& _loophead_selects,
+    property_checkert::property_mapt &_property_map,
+    bool _spurious_check, bool _all_properties,
+    bool _build_error_trace):
+    SSA(_SSA),
+    solver(_solver),
+    property_map(_property_map),
     spurious_check(_spurious_check),
     all_properties(_all_properties),
     build_error_trace(_build_error_trace),
-          loophead_selects(_loophead_selects)
-          {}
+    loophead_selects(_loophead_selects)
+  {
+  }
 
   virtual ~cover_goals_extt();
 

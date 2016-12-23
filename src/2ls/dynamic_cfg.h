@@ -58,8 +58,7 @@ struct dynamic_cfg_nodet:public graph_nodet<dynamic_cfg_edget>
 class dynamic_cfgt:public graph<dynamic_cfg_nodet>
 {
 public:
-
-  dynamic_cfg_nodet& operator[](const dynamic_cfg_idt &id)
+  inline dynamic_cfg_nodet& operator[](const dynamic_cfg_idt &id)
   {
     for(auto &n : nodes)
     {
@@ -83,7 +82,6 @@ public:
     const unwindable_local_SSAt &ssa,
     const summaryt &summary);
 
-
 protected:
   typedef std::pair<dynamic_cfg_idt, exprt> assumptiont;
   typedef std::vector<assumptiont> assumptionst;
@@ -101,11 +99,7 @@ protected:
     const exprt &invariant,
     assumptionst &assumptions);
 
-
-//  void build_from_assumptions(assumptionst &assumptions);
-
   void add_assumptions(const assumptionst &assumptions);
-
 };
 
 #endif // CPROVER_2LS_SUMMARIZER_DYNAMIC_CFG_H

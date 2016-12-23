@@ -6,12 +6,13 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+#include <util/find_symbols.h>
+
+#include <ssa/ssa_inliner.h>
+
 #include "template_generator_callingcontext.h"
 #include "equality_domain.h"
 #include "tpolyhedra_domain.h"
-#include "../ssa/ssa_inliner.h"
-
-#include <util/find_symbols.h>
 
 /*******************************************************************\
 
@@ -25,11 +26,12 @@ Function: template_generator_callingcontextt::operator()
 
 \*******************************************************************/
 
-void template_generator_callingcontextt::operator()(unsigned _domain_number,
-        const local_SSAt &SSA,
-      local_SSAt::nodest::const_iterator n_it,
-      local_SSAt::nodet::function_callst::const_iterator f_it,
-        bool forward)
+void template_generator_callingcontextt::operator()(
+  unsigned _domain_number,
+  const local_SSAt &SSA,
+  local_SSAt::nodest::const_iterator n_it,
+  local_SSAt::nodet::function_callst::const_iterator f_it,
+  bool forward)
 {
   domain_number=_domain_number;
   handle_special_functions(SSA); // we have to call that to prevent trouble!
@@ -92,22 +94,27 @@ void template_generator_callingcontextt::collect_variables_callingcontext(
   {
     symbol_exprt dummy;
     if(ssa_inlinert::find_corresponding_symbol(*v_it, globals_in, dummy))
-      add_var(*v_it, guard, guard,
+      add_var(
+        *v_it,
+        guard,
+        guard,
         domaint::OUT, // the same for both forward and backward
         var_specs);
   }
 
-  if(!forward) return; // TODO: actually, the context should contain both, arguments and return values
+  // TODO: actually, the context should contain both,
+  //       arguments and return values
+  if(!forward)
+    return;
 
   // add function arguments
-  for(exprt::operandst::const_iterator a_it= f_it->arguments().begin();
-      a_it!= f_it->arguments().end(); a_it++)
+  for(exprt::operandst::const_iterator a_it=f_it->arguments().begin();
+      a_it!=f_it->arguments().end(); a_it++)
   {
     std::set<symbol_exprt> args;
     find_symbols(*a_it, args);
     add_vars(args, guard, guard, domaint::OUT, var_specs);
   }
-
 }
 
 /*******************************************************************\
@@ -125,10 +132,10 @@ Function: template_generator_callingcontextt::callingcontext_vars
 domaint::var_sett template_generator_callingcontextt::callingcontext_vars()
 {
   domaint::var_sett vars;
-  for(domaint::var_specst::const_iterator v=var_specs.begin();
-      v!=var_specs.end(); v++)
+  for(const auto &v : var_specs)
   {
-    if(v->kind==domaint::OUT) vars.insert(v->var);
+    if(v.kind==domaint::OUT)
+      vars.insert(v.var);
   }
   return vars;
 }

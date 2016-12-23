@@ -82,6 +82,8 @@ protected:
   void make_template(
     const var_specst &var_specs,
     const namespacet &ns);
+
+  bool adapt_types(exprt &v1, exprt &v2);
 };
 
 #endif // CPROVER_2LS_DOMAINS_EQUALITY_DOMAIN_H

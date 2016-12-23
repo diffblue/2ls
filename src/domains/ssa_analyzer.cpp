@@ -1,19 +1,25 @@
 /*******************************************************************\
 
-Module: Data Flow Analysis
+Module: SSA Analyzer
 
-Author: Daniel Kroening, kroening@kroening.com
+Author: Peter Schrammel
 
 \*******************************************************************/
 
-// #define DEBUG
+#ifdef DEBUG
+#include <iostream>
+#endif
 
+#include <solvers/sat/satcheck.h>
+#include <solvers/flattening/bv_pointers.h>
+#include <util/find_symbols.h>
+#include <util/arith_tools.h>
+#include <util/simplify_expr.h>
+#include <util/mp_arith.h>
 #include <util/options.h>
-
 
 #include "strategy_solver_base.h"
 #include "strategy_solver_enumeration.h"
-// #include "solver_enumeration.h"
 #include "strategy_solver_binsearch.h"
 #include "strategy_solver_binsearch2.h"
 #include "strategy_solver_binsearch3.h"
@@ -26,21 +32,13 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "strategy_solver_predabs.h"
 #include "ssa_analyzer.h"
 
-
-#include <solvers/sat/satcheck.h>
-#include <solvers/flattening/bv_pointers.h>
-
-#include <util/find_symbols.h>
-#include <util/arith_tools.h>
-#include <util/simplify_expr.h>
-#include <util/mp_arith.h>
-
-#define BINSEARCH_SOLVER strategy_solver_binsearcht(*static_cast<tpolyhedra_domaint *>(domain), solver, SSA.ns)
-// #define BINSEARCH_SOLVER strategy_solver_binsearch2t(*static_cast<tpolyhedra_domaint *>(domain), solver, SSA.ns)
-// #define BINSEARCH_SOLVER strategy_solver_binsearch3t(*static_cast<tpolyhedra_domaint *>(domain), solver, SSA, SSA.ns)
-
-#ifdef DEBUG
-#include <iostream>
+#define BINSEARCH_SOLVER strategy_solver_binsearcht(\
+  *static_cast<tpolyhedra_domaint *>(domain), solver, SSA.ns)
+#if 0
+#define BINSEARCH_SOLVER strategy_solver_binsearch2t(\
+  *static_cast<tpolyhedra_domaint *>(domain), solver, SSA.ns)
+#define BINSEARCH_SOLVER strategy_solver_binsearch3t(\
+  *static_cast<tpolyhedra_domaint *>(domain), solver, SSA, SSA.ns)
 #endif
 
 /*******************************************************************\
@@ -55,10 +53,11 @@ Function: ssa_analyzert::operator()
 
 \*******************************************************************/
 
-void ssa_analyzert::operator()(incremental_solvert &solver,
-             local_SSAt &SSA,
-                               const exprt &precondition,
-                               template_generator_baset &template_generator)
+void ssa_analyzert::operator()(
+  incremental_solvert &solver,
+  local_SSAt &SSA,
+  const exprt &precondition,
+  template_generator_baset &template_generator)
 {
   if(SSA.goto_function.body.instructions.empty())
     return;
@@ -79,11 +78,11 @@ void ssa_analyzert::operator()(incremental_solvert &solver,
   if(template_generator.options.get_bool_option("compute-ranking-functions"))
   {
     if(template_generator.options.get_bool_option(
-      "monolithic-ranking-function"))
+         "monolithic-ranking-function"))
     {
       strategy_solver=new ranking_solver_enumerationt(
         *static_cast<linrank_domaint *>(domain), solver, SSA.ns,
-  template_generator.options.get_unsigned_int_option(
+        template_generator.options.get_unsigned_int_option(
           "max-inner-ranking-iterations"));
       result=new linrank_domaint::templ_valuet();
     }
@@ -92,8 +91,8 @@ void ssa_analyzert::operator()(incremental_solvert &solver,
       strategy_solver=new lexlinrank_solver_enumerationt(
         *static_cast<lexlinrank_domaint *>(domain), solver, SSA.ns,
         template_generator.options.get_unsigned_int_option(
-    "lexicographic-ranking-function"),
-  template_generator.options.get_unsigned_int_option(
+          "lexicographic-ranking-function"),
+        template_generator.options.get_unsigned_int_option(
           "max-inner-ranking-iterations"));
       result=new lexlinrank_domaint::templ_valuet();
     }
@@ -101,7 +100,7 @@ void ssa_analyzert::operator()(incremental_solvert &solver,
   else if(template_generator.options.get_bool_option("equalities"))
   {
     strategy_solver=new strategy_solver_equalityt(
-        *static_cast<equality_domaint *>(domain), solver, SSA.ns);
+      *static_cast<equality_domaint *>(domain), solver, SSA.ns);
     result=new equality_domaint::equ_valuet();
   }
   else
@@ -123,47 +122,17 @@ void ssa_analyzert::operator()(incremental_solvert &solver,
       result=new tpolyhedra_domaint::templ_valuet();
       strategy_solver=new BINSEARCH_SOLVER;
     }
-    else assert(false);
+    else
+      assert(false);
   }
 
   strategy_solver->set_message_handler(get_message_handler());
 
-  unsigned iteration_number=0;
-
   // initialize inv
   domain->initialize(*result);
 
-  bool change;
-
-  do
-  {
-    iteration_number++;
-
-    #ifdef DEBUG
-    std::cout << "\n"
-              << "******** Forward least fixed-point iteration #"
-              << iteration_number << "\n";
-    #endif
-
-    change=strategy_solver->iterate(*result);
-
-    if(change)
-    {
-
-      #ifdef DEBUG
-      std::cout << "Value after " << iteration_number
-            << " iteration(s):\n";
-      domain->output_value(std::cout, *result, SSA.ns);
-      #endif
-    }
-  }
-  while(change);
-
-  #ifdef DEBUG
-  std::cout << "Fixed-point after " << iteration_number
-            << " iteration(s)\n";
-  domain->output_value(std::cout, *result, SSA.ns);
-  #endif
+  // iterate
+  while(strategy_solver->iterate(*result)) {}
 
   solver.pop_context();
 

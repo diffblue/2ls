@@ -4,25 +4,15 @@ Module: Horn-clause Encoding
 
 Author: Daniel Kroening
 
-Date: June 2015
-
 \*******************************************************************/
 
 #include <ostream>
 
 #include <solvers/smt2/smt2_conv.h>
 
-#include "../ssa/local_ssa.h"
+#include <ssa/local_ssa.h>
 
 #include "horn_encoding.h"
-
-/*******************************************************************\
-
-   Class: horn_encodingt
-
- Purpose:
-
-\*******************************************************************/
 
 class horn_encodingt
 {
@@ -109,7 +99,8 @@ void horn_encodingt::translate(
         o_it!=local_SSA.ssa_objects.objects.end();
         o_it++)
     {
-      if(o_it!=local_SSA.ssa_objects.objects.begin()) out << ' ';
+      if(o_it!=local_SSA.ssa_objects.objects.begin())
+        out << ' ';
       out << '(';
       smt2_conv.convert_expr(o_it->symbol_expr());
       out << ' ';
@@ -141,7 +132,8 @@ void horn_encodingt::translate(
         o_it!=local_SSA.ssa_objects.objects.end();
         o_it++)
     {
-      if(o_it!=local_SSA.ssa_objects.objects.begin()) out << ' ';
+      if(o_it!=local_SSA.ssa_objects.objects.begin())
+        out << ' ';
       out << '(';
       smt2_conv.convert_expr(o_it->symbol_expr());
       out << ' ';
@@ -208,7 +200,6 @@ void horn_encodingt::translate(
     }
     else
     {
-
       #if 0
       for(local_SSAt::nodet::constraintst::const_iterator
           it=node.constraints.begin();

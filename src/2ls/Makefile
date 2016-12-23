@@ -8,7 +8,7 @@ SRC = 2ls_main.cpp 2ls_parse_options.cpp \
       summary_checker_ai.cpp summary_checker_bmc.cpp \
       summary_checker_kind.cpp \
       cover_goals_ext.cpp horn_encoding.cpp \
-      array_abstraction.cpp preprocessing_util.cpp \
+      preprocessing_util.cpp \
       instrument_goto.cpp dynamic_cfg.cpp \
       graphml_witness_ext.cpp
 

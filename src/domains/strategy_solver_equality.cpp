@@ -1,7 +1,29 @@
+/*******************************************************************\
+
+Module: Solver for equalities/disequalities domain
+
+Author: Peter Schrammel
+
+\*******************************************************************/
+
+#ifdef DEBUG
 #include <iostream>
+#endif
 
 #include <util/simplify_expr.h>
 #include "strategy_solver_equality.h"
+
+/*******************************************************************\
+
+Function: strategy_solver_equalityt::iterate
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 
 bool strategy_solver_equalityt::iterate(invariantt &_inv)
 {
@@ -49,32 +71,19 @@ bool strategy_solver_equalityt::iterate(invariantt &_inv)
 
       solver << pre_expr; // make permanent
 
-      // due to transitivity, we would like to recheck equalities that did not hold
+      // due to transitivity, we have to recheck equalities
+      //   that did not hold
       todo_equs.insert(todo_disequs.begin(), todo_disequs.end());
       todo_disequs.clear();
     }
 
-
     todo_equs.erase(e_it);
-
-    // check status of remaining equalities
-    /*   worklistt rm_equs;
-    for(e_it=todo_equs.begin(); e_it!=todo_equs.end(); e_it++)
-    {
-      equality_domaint::var_pairt vv=equality_domain.get_var_pair(*e_it);
-      if(solver.get(vv.first)!=solver.get(vv.second))
-        rm_equs.insert(*e_it);
-    }
-    for(e_it=rm_equs.begin(); e_it!=rm_equs.end(); e_it++)
-    {
-      todo_disequs.insert(*e_it);
-      todo_equs.erase(*e_it);
-      } */
   }
   else // check disequalities
   {
     e_it=todo_disequs.begin();
-    if(e_it==todo_disequs.end()) return false; // done
+    if(e_it==todo_disequs.end())
+      return false; // done
 
     solver.new_context();
 

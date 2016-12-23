@@ -12,8 +12,21 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "summary_db.h"
 
-void summary_dbt::put(const function_namet &function_name,
-          const summaryt &summary)
+/*******************************************************************\
+
+Function: summary_dbt::put
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void summary_dbt::put(
+  const function_namet &function_name,
+  const summaryt &summary)
 {
   if(store.find(function_name)==store.end() ||
      store[function_name].mark_recompute)
@@ -21,6 +34,18 @@ void summary_dbt::put(const function_namet &function_name,
   else
     store[function_name].join(summary);
 }
+
+/*******************************************************************\
+
+Function: summary_dbt::mark_recompute_all
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 
 void summary_dbt::mark_recompute_all()
 {

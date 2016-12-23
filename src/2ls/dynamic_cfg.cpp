@@ -14,7 +14,7 @@ Author: Peter Schrammel
 
 /*******************************************************************\
 
-Function: dynamic_cfgt::operator
+Function: dynamic_cfgt::operator()
 
   Inputs:
 
@@ -36,6 +36,18 @@ void dynamic_cfgt::operator()(
   build_from_invariants(ssa, summary, assumptions);
   add_assumptions(assumptions);
 }
+
+/*******************************************************************\
+
+Function: operator==
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 
 bool operator==(const dynamic_cfg_idt &a, const dynamic_cfg_idt &b)
 {
@@ -64,7 +76,7 @@ void dynamic_cfgt::add_assumptions(const assumptionst &assumptions)
 
 /*******************************************************************\
 
-Function: dynamic_cfgt::build_from_invariants
+Function: dynamic_cfgt::build_cfg
 
   Inputs:
 

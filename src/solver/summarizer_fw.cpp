@@ -17,18 +17,18 @@ Author: Peter Schrammel
 #include "summarizer_fw.h"
 #include "summary_db.h"
 
-#include "../domains/ssa_analyzer.h"
-#include "../domains/template_generator_summary.h"
-#include "../domains/template_generator_callingcontext.h"
+#include <domains/ssa_analyzer.h>
+#include <domains/template_generator_summary.h>
+#include <domains/template_generator_callingcontext.h>
 
-#include "../ssa/local_ssa.h"
-#include "../ssa/simplify_ssa.h"
+#include <ssa/local_ssa.h>
+#include <ssa/simplify_ssa.h>
 
 // #define SHOW_WHOLE_RESULT
 
 /*******************************************************************\
 
-Function: summarizert::compute_summary_rec()
+Function: summarizer_fwt::compute_summary_rec
 
   Inputs:
 
@@ -38,9 +38,10 @@ Function: summarizert::compute_summary_rec()
 
 \*******************************************************************/
 
-void summarizer_fwt::compute_summary_rec(const function_namet &function_name,
-              const exprt &precondition,
-              bool context_sensitive)
+void summarizer_fwt::compute_summary_rec(
+  const function_namet &function_name,
+  const exprt &precondition,
+  bool context_sensitive)
 {
   local_SSAt &SSA=ssa_db.get(function_name); // TODO: make const
 
@@ -52,15 +53,15 @@ void summarizer_fwt::compute_summary_rec(const function_namet &function_name,
 #if 0
   {
     std::ostringstream out;
-    out << "Function body for " << function_name <<
-      " to be analyzed: " << std::endl;
-    for(local_SSAt::nodest::iterator n=SSA.nodes.begin();
-        n!=SSA.nodes.end(); n++)
+    out << "Function body for " << function_name
+        << " to be analyzed: " << std::endl;
+    for(const auto &node : SSA.nodes)
     {
-      if(!n->empty()) n->output(out, SSA.ns);
+      if(!node.empty())
+        node.output(out, SSA.ns);
     }
     out << "(enable) " << from_expr(SSA.ns, "", SSA.get_enabling_exprs())
-  << "\n";
+        << "\n";
     debug() << out.str() << eom;
   }
 #endif
@@ -102,7 +103,7 @@ void summarizer_fwt::compute_summary_rec(const function_namet &function_name,
 
 /*******************************************************************\
 
-Function: summarizer_fwt::do_summary()
+Function: summarizer_fwt::do_summary
 
   Inputs:
 
@@ -112,11 +113,12 @@ Function: summarizer_fwt::do_summary()
 
 \*******************************************************************/
 
-void summarizer_fwt::do_summary(const function_namet &function_name,
-        local_SSAt &SSA,
-        summaryt &summary,
-        exprt cond,
-        bool context_sensitive)
+void summarizer_fwt::do_summary(
+  const function_namet &function_name,
+  local_SSAt &SSA,
+  summaryt &summary,
+  exprt cond,
+  bool context_sensitive)
 {
   status() << "Computing summary" << eom;
 
@@ -150,7 +152,7 @@ void summarizer_fwt::do_summary(const function_namet &function_name,
     std::ostringstream out;
     out << "(original inv)" << from_expr(SSA.ns, "", old_inv) << "\n";
     debug() << out.str() << eom;
-    out << "(renamed inv)" << from_expr(SSA.ns, "", inv)<<"\n";
+    out << "(renamed inv)" << from_expr(SSA.ns, "", inv) << "\n";
     debug() << out.str() << eom;
 #endif
   }
@@ -183,7 +185,7 @@ void summarizer_fwt::do_summary(const function_namet &function_name,
 
 /*******************************************************************\
 
-Function: summarizer_fwt::inline_summaries()
+Function: summarizer_fwt::inline_summaries
 
   Inputs:
 
@@ -193,35 +195,37 @@ Function: summarizer_fwt::inline_summaries()
 
 \*******************************************************************/
 
-void summarizer_fwt::inline_summaries(const function_namet &function_name,
-           local_SSAt &SSA, const exprt &precondition,
-           bool context_sensitive)
+void summarizer_fwt::inline_summaries(
+  const function_namet &function_name,
+  local_SSAt &SSA, const exprt &precondition,
+  bool context_sensitive)
 {
   for(local_SSAt::nodest::const_iterator n_it=SSA.nodes.begin();
       n_it!=SSA.nodes.end(); n_it++)
   {
     for(local_SSAt::nodet::function_callst::const_iterator f_it=
-    n_it->function_calls.begin();
+          n_it->function_calls.begin();
         f_it!=n_it->function_calls.end(); f_it++)
     {
       assert(f_it->function().id()==ID_symbol); // no function pointers
-      if(!check_call_reachable(function_name, SSA, n_it, f_it, precondition, true))
+      if(!check_call_reachable(
+           function_name, SSA, n_it, f_it, precondition, true))
       {
-  continue;
+        continue;
       }
 
-      if(!check_precondition(function_name, SSA, n_it, f_it,
-           precondition, context_sensitive))
+      if(!check_precondition(
+           function_name, SSA, n_it, f_it, precondition, context_sensitive))
       {
-  exprt precondition_call=true_exprt();
-  if(context_sensitive)
-    precondition_call=compute_calling_context(
-      function_name, SSA, n_it, f_it, precondition, true);
+        exprt precondition_call=true_exprt();
+        if(context_sensitive)
+          precondition_call=compute_calling_context(
+            function_name, SSA, n_it, f_it, precondition, true);
 
-  irep_idt fname=to_symbol_expr(f_it->function()).get_identifier();
-  status() << "Recursively summarizing function " << fname << eom;
-  compute_summary_rec(fname, precondition_call, context_sensitive);
-  summaries_used++;
+        irep_idt fname=to_symbol_expr(f_it->function()).get_identifier();
+        status() << "Recursively summarizing function " << fname << eom;
+        compute_summary_rec(fname, precondition_call, context_sensitive);
+        summaries_used++;
       }
     }
   }

@@ -38,7 +38,7 @@ void predabs_domaint::initialize(valuet &value)
 {
   templ_valuet &v=static_cast<templ_valuet&>(value);
   v.resize(templ.size());
-  for(unsigned row=0; row<templ.size(); row++)
+  for(std::size_t row=0; row<templ.size(); ++row)
   {
     // start from top (we can only use a gfp solver for this domain)
     v[row]=false_exprt();
@@ -47,7 +47,7 @@ void predabs_domaint::initialize(valuet &value)
 
 /*******************************************************************\
 
-Function: predabs_domaint::get_row_pre_constraint
+Function: predabs_domaint::get_row_constraint
 
   Inputs:
 
@@ -63,9 +63,22 @@ exprt predabs_domaint::get_row_constraint(
 {
   assert(row<templ.size());
   kindt k=templ[row].kind;
-  if(k==OUT || k==OUTL) return true_exprt();
+  if(k==OUT || k==OUTL)
+    return true_exprt();
   return implies_exprt(row_value, templ[row].expr);
 }
+
+/*******************************************************************\
+
+Function: predabs_domaint::get_row_pre_constraint
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: pre_guard==> (row_value=> row_expr)
+
+\*******************************************************************/
 
 exprt predabs_domaint::get_row_pre_constraint(
   const rowt &row,
@@ -74,10 +87,22 @@ exprt predabs_domaint::get_row_pre_constraint(
   assert(row<templ.size());
   const template_rowt &templ_row=templ[row];
   kindt k=templ_row.kind;
-  if(k==OUT || k==OUTL) return true_exprt();
+  if(k==OUT || k==OUTL)
+    return true_exprt();
   return implies_exprt(row_value, templ[row].expr);
 }
 
+/*******************************************************************\
+
+Function: predabs_domaint::get_row_pre_constraint
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: pre_guard==> (row_value=> row_expr)
+
+\*******************************************************************/
 
 exprt predabs_domaint::get_row_pre_constraint(
   const rowt &row,
@@ -105,11 +130,13 @@ exprt predabs_domaint::get_row_post_constraint(
 {
   assert(row<templ.size());
   const template_rowt &templ_row=templ[row];
-  if(templ_row.kind==IN) return true_exprt();
+  if(templ_row.kind==IN)
+    return true_exprt();
   exprt c=implies_exprt(
     templ_row.post_guard,
     implies_exprt(row_value, templ[row].expr));
-  if(templ_row.kind==LOOP) rename(c);
+  if(templ_row.kind==LOOP)
+    rename(c);
   return c;
 }
 
@@ -149,7 +176,7 @@ exprt predabs_domaint::to_pre_constraints(const templ_valuet &value)
 {
   assert(value.size()==templ.size());
   exprt::operandst c;
-  for(unsigned row=0; row<templ.size(); row++)
+  for(std::size_t row=0; row<templ.size(); ++row)
   {
     c.push_back(get_row_pre_constraint(row, value[row]));
   }
@@ -177,7 +204,7 @@ void predabs_domaint::make_not_post_constraints(
   cond_exprs.resize(templ.size());
 
   exprt::operandst c;
-  for(unsigned row=0; row<templ.size(); row++)
+  for(std::size_t row=0; row<templ.size(); row++)
   {
     cond_exprs[row]=and_exprt(
       templ[row].aux_expr,
@@ -227,7 +254,7 @@ void predabs_domaint::project_on_vars(
 
   assert(v.size()==templ.size());
   exprt::operandst c;
-  for(unsigned row=0; row<templ.size(); row++)
+  for(std::size_t row=0; row<templ.size(); row++)
   {
     const template_rowt &templ_row=templ[row];
 
@@ -235,16 +262,16 @@ void predabs_domaint::project_on_vars(
     find_symbols(templ_row.expr, symbols);
 
     bool pure=true;
-    for(std::set<symbol_exprt>::iterator it=symbols.begin();
-  it!=symbols.end(); it++)
+    for(const auto &symbol : symbols)
     {
-      if(vars.find(*it)==vars.end())
+      if(vars.find(symbol)==vars.end())
       {
         pure=false;
         break;
       }
     }
-    if(!pure) continue;
+    if(!pure)
+      continue;
 
     const row_valuet &row_v=v[row];
     if(templ_row.kind==LOOP)
@@ -301,7 +328,7 @@ void predabs_domaint::output_value(
   const namespacet &ns) const
 {
   const templ_valuet &v=static_cast<const templ_valuet &>(value);
-  for(unsigned row=0; row<templ.size(); row++)
+  for(std::size_t row=0; row<templ.size(); ++row)
   {
     const template_rowt &templ_row=templ[row];
     switch(templ_row.kind)
@@ -337,7 +364,7 @@ void predabs_domaint::output_domain(
   std::ostream &out,
   const namespacet &ns) const
 {
-  for(unsigned row=0; row<templ.size(); row++)
+  for(std::size_t row=0; row<templ.size(); ++row)
   {
     const template_rowt &templ_row=templ[row];
     switch(templ_row.kind)
@@ -383,7 +410,7 @@ unsigned predabs_domaint::template_size()
 
 /*******************************************************************\
 
-Function: add_template_row
+Function: predabs_domaint::add_template_row
 
   Inputs:
 
@@ -414,7 +441,7 @@ predabs_domaint::template_rowt &predabs_domaint::add_template_row(
 
 /*******************************************************************\
 
-Function: equality_domaint::get_var_pairs
+Function: predabs_domaint::get_row_set
 
   Inputs:
 
@@ -426,6 +453,6 @@ Function: equality_domaint::get_var_pairs
 
 void predabs_domaint::get_row_set(std::set<rowt> &rows)
 {
-  for(unsigned i=0; i<templ.size(); i++)
+  for(std::size_t i=0; i<templ.size(); ++i)
     rows.insert(i);
 }

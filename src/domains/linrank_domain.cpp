@@ -64,7 +64,8 @@ Function: linrank_domaint::refine
 
 bool linrank_domaint::refine()
 {
-  if(refinement_level>=MAX_REFINEMENT) return false;
+  if(refinement_level>=MAX_REFINEMENT)
+    return false;
   refinement_level++;
   return true;
 }
@@ -373,7 +374,8 @@ void linrank_domaint::output_value(
 
     for(unsigned i=0; i<templ_row.expr.size(); ++i)
     {
-      if(i>0) out << "+";
+      if(i>0)
+        out << "+";
       out << from_expr(ns, "", v[row].c[i]) << " * "
           << from_expr(ns, "", templ_row.expr[i].first);
     }
@@ -412,7 +414,8 @@ void linrank_domaint::output_domain(
 
     for(unsigned i=0; i<templ_row.expr.size(); ++i)
     {
-      if(i>0) out << "+";
+      if(i>0)
+        out << "+";
       out << "c!" << row << "$" << i << " * "
           << from_expr(ns, "", templ_row.expr[i].first);
     }
@@ -536,7 +539,8 @@ void linrank_domaint::add_template(
       break;
     }
   }
-  if(!has_loop) return;
+  if(!has_loop)
+    return;
 
   templ.reserve(templ.size()+1);
   templ.push_back(template_rowt());
@@ -549,7 +553,8 @@ void linrank_domaint::add_template(
   for(var_specst::const_iterator v=var_specs.begin();
       v!=var_specs.end(); v++)
   {
-    if(v->kind!=LOOP) continue;
+    if(v->kind!=LOOP)
+      continue;
     preg.push_back(v->pre_guard);
     postg.push_back(v->post_guard);
     exprt vpost=v->var; // copy

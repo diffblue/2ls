@@ -9,7 +9,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/threeval.h>
 #include <solvers/prop/literal_expr.h>
 
-#include "../ssa/ssa_build_goto_trace.h"
+#include <ssa/ssa_build_goto_trace.h>
+
 #include "cover_goals_ext.h"
 
 /*******************************************************************\
@@ -43,7 +44,7 @@ Function: cover_goals_extt::mark
 void cover_goals_extt::mark()
 {
   for(std::list<cover_goalt>::iterator
-      g_it=goals.begin();
+        g_it=goals.begin();
       g_it!=goals.end();
       g_it++)
     if(!g_it->covered &&
@@ -56,7 +57,7 @@ void cover_goals_extt::mark()
 
 /*******************************************************************\
 
-Function: cover_goals_extt::constaint
+Function: cover_goals_extt::constraint
 
   Inputs:
 
@@ -71,7 +72,7 @@ void cover_goals_extt::constraint()
   exprt::operandst disjuncts;
 
   for(std::list<cover_goalt>::const_iterator
-      g_it=goals.begin();
+        g_it=goals.begin();
       g_it!=goals.end();
       g_it++)
     if(!g_it->covered && !g_it->condition.is_false())
@@ -96,7 +97,7 @@ Function: cover_goals_extt::freeze_goal_variables
 void cover_goals_extt::freeze_goal_variables()
 {
   for(std::list<cover_goalt>::const_iterator
-      g_it=goals.begin();
+        g_it=goals.begin();
       g_it!=goals.end();
       g_it++)
     if(!g_it->condition.is_constant())
@@ -146,7 +147,8 @@ void cover_goals_extt::operator()()
       // notify
       assignment();
 
-      if(!all_properties) return; // exit on first failure if requested
+      if(!all_properties)
+        return; // exit on first failure if requested
       break;
 
     default:
@@ -181,8 +183,8 @@ void cover_goals_extt::assignment()
     {
       if(solver.get(l_it->op0()).is_true())
       {
-  invariants_involved=true;
-  break;
+        invariants_involved=true;
+        break;
       }
     }
   }
@@ -190,19 +192,19 @@ void cover_goals_extt::assignment()
   {
     std::list<cover_goals_extt::cover_goalt>::const_iterator g_it=goals.begin();
     for(goal_mapt::const_iterator it=goal_map.begin();
-  it!=goal_map.end(); it++, g_it++)
+        it!=goal_map.end(); it++, g_it++)
     {
       if(property_map[it->first].result==property_checkert::UNKNOWN &&
-   solver.l_get(g_it->condition).is_true())
+         solver.l_get(g_it->condition).is_true())
       {
-  property_map[it->first].result=property_checkert::FAIL;
-  if(build_error_trace)
-  {
-    ssa_build_goto_tracet build_goto_trace(SSA, solver.get_solver());
-    build_goto_trace(property_map[it->first].error_trace);
-    if(!all_properties)
-      break;
-  }
+        property_map[it->first].result=property_checkert::FAIL;
+        if(build_error_trace)
+        {
+          ssa_build_goto_tracet build_goto_trace(SSA, solver.get_solver());
+          build_goto_trace(property_map[it->first].error_trace);
+          if(!all_properties)
+            break;
+        }
       }
     }
     return;
@@ -219,23 +221,24 @@ void cover_goals_extt::assignment()
   {
     std::list<cover_goals_extt::cover_goalt>::const_iterator g_it=goals.begin();
     for(goal_mapt::const_iterator it=goal_map.begin();
-  it!=goal_map.end(); it++, g_it++)
+        it!=goal_map.end(); it++, g_it++)
     {
       if(property_map[it->first].result==property_checkert::UNKNOWN &&
-   solver.l_get(g_it->condition).is_true())
+         solver.l_get(g_it->condition).is_true())
       {
-  property_map[it->first].result=property_checkert::FAIL;
-  if(build_error_trace)
-  {
-    ssa_build_goto_tracet build_goto_trace(SSA, solver.get_solver());
-    build_goto_trace(property_map[it->first].error_trace);
+        property_map[it->first].result=property_checkert::FAIL;
+        if(build_error_trace)
+        {
+          ssa_build_goto_tracet build_goto_trace(SSA, solver.get_solver());
+          build_goto_trace(property_map[it->first].error_trace);
 
 #if 0
-          show_raw_countermodel(it->first, SSA, *solver.solver, debug(), get_message_handler());
+          show_raw_countermodel(
+            it->first, SSA, *solver.solver, debug(), get_message_handler());
 #endif
-    if(!all_properties)
-      break;
-  }
+          if(!all_properties)
+            break;
+        }
       }
     }
     break;

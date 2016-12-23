@@ -15,7 +15,8 @@ Author: Daniel Kroening, Peter Schrammel
 #include "local_ssa.h"
 #include "unwindable_local_ssa.h"
 
-class ssa_build_goto_tracet {
+class ssa_build_goto_tracet
+{
 public:
   ssa_build_goto_tracet(
     unwindable_local_SSAt &_unwindable_local_SSA,

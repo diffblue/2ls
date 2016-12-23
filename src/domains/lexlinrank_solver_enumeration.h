@@ -1,6 +1,7 @@
 /*******************************************************************\
 
-Module: Abstract domain base class
+Module: Enumeration-based solver for lexicographic linear ranking 
+        functions
 
 Author: Peter Schrammel
 

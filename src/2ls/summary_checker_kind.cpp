@@ -39,17 +39,22 @@ property_checkert::resultt summary_checker_kindt::operator()(
   for(unsigned unwind=0; unwind<=max_unwind; unwind++)
   {
     status() << "Unwinding (k=" << unwind << ")" << eom;
-    summary_db.mark_recompute_all(); // TODO: recompute only functions with loops
+
+    // TODO: recompute only functions with loops
+    summary_db.mark_recompute_all();
+
     ssa_unwinder.unwind_all(unwind);
 
-    result= check_properties();
+    result=check_properties();
+    bool magic_limit_not_reached=
+      unwind<GIVE_UP_INVARIANTS || // magic constant
+      !options.get_bool_option("competition-mode");
     if(result==property_checkert::UNKNOWN &&
        !options.get_bool_option("havoc") &&
-       (unwind<GIVE_UP_INVARIANTS ||
-        !options.get_bool_option("competition-mode"))) // magic constant
+       magic_limit_not_reached)
     {
       summarize(goto_model);
-      result= check_properties();
+      result=check_properties();
     }
 
     if(result==property_checkert::PASS)

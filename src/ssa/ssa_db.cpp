@@ -2,7 +2,7 @@
 
 Module: Storage for Function SSAs
 
-Author: Daniel Kroening, kroening@kroening.com
+Author: Peter Schrammel
 
 \*******************************************************************/
 

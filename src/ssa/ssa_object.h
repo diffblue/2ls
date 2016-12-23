@@ -76,7 +76,7 @@ public:
   // by C++11 explict conversion to bool one day.
   operator void *() const
   {
-    return identifier.empty()?0:(void *)&identifier;
+    return identifier.empty()?0:(void *)&identifier; // NOLINT(*)
   }
 
   exprt get_root_object() const

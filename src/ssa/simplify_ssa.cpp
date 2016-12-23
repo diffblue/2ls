@@ -12,7 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
-Function: simplify_ssa
+Function: simplify
 
   Inputs:
 
