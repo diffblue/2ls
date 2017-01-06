@@ -1,9 +1,11 @@
+#!/bin/bash
+
 CBMC_REPO=https://github.com/peterschrammel/cbmc
 CBMC_VERSION=d95e7da28018fd315b04a1201d5b7cfe8195cbc6
 
 if [ "$1" != "" ]
 then
-  COMPILER=$1
+  COMPILER="$1"
 fi
 
 git clone $CBMC_REPO
