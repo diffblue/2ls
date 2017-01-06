@@ -39,4 +39,4 @@ matrix:
       script: DIFF=`git diff --name-only master HEAD` && if [ "$DIFF" != "" ]; then python scripts/cpplint.py $DIFF; fi
 
 script:
-  - ./install.sh && cd regression && make test
+  - ./install.sh $COMPILER && cd regression && make test
