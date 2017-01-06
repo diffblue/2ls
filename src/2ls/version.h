@@ -9,6 +9,6 @@ Author: Peter Schrammel
 #ifndef CPROVER_2LS_2LS_VERSION_H
 #define CPROVER_2LS_2LS_VERSION_H
 
-#define TWOLS_VERSION "0.5.0"
+#define TWOLS_VERSION "0.5.1"
 
 #endif
