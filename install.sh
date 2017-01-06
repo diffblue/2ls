@@ -13,7 +13,7 @@ cd cbmc
 CBMC=`pwd`
 git checkout $CBMC_VERSION
 make -C src minisat2-download
-if [ "$COMPILER" != ""]
+if [ "$COMPILER" != "" ]
 then
   make -C src CXX=$COMPILER
 else
@@ -23,7 +23,7 @@ fi
 cd ../src
 cp config.inc.template config.inc
 sed -i.bak "s#CBMC = ~/my-cbmc#CBMC = $CBMC#g" config.inc
-if [ "$COMPILER" != ""]
+if [ "$COMPILER" != "" ]
 then
   make CXX=$COMPILER
 else
