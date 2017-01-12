@@ -6,6 +6,8 @@ Author: Rajdeep Mukherjee
 
 \*******************************************************************/
 
+#include <algorithm>
+
 #include <util/find_symbols.h>
 #include "acdl_worklist_backward_strategy.h"
 #define DEBUG

@@ -85,7 +85,7 @@ void template_generator_acdlt::operator()(const local_SSAt &SSA,
 
 #ifdef SHOW_TEMPLATE_VARIABLES
   std::cout << "Template variables: " << std::endl;
-  domain_ptr->output_var_specs_info(std::cout, var_specs, SSA.ns) << std::endl;
+  domaint::output_var_specs(std::cout, var_specs, SSA.ns) << std::endl;
 #endif  
 #ifdef SHOW_TEMPLATE
   std::cout << "Template: " << std::endl;

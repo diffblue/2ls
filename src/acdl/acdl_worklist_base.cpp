@@ -6,6 +6,8 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 
  \*******************************************************************/
 
+#include <algorithm>
+
 #include <util/find_symbols.h>
 #include "acdl_worklist_base.h"
 

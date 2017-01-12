@@ -12,7 +12,9 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #ifdef DEBUG
 #include <iostream>
 #endif
+
 #include <utility>
+#include <algorithm>
 
 #include <util/simplify_expr.h>
 #include <util/find_symbols.h>
