@@ -1,0 +1,430 @@
+1> When we make a random decision, some decision does not give any new
+deductions (deductions = 0). So, we should avoid such decisions. Decisions
+should always be guided by the learned clause. 
+
+2> ACDL can simulate CEGAR if we implement simulation based strategy for 
+completeness check. When we get a counterexample in ACDL, we can replay that 
+counterexample on the program to see if it is a true counterexample. If it is,
+we terminate instantly. Else, we make a decision to refine our abstraction. 
+A CEGAR technique would do either transformer refinement or domain refinement to 
+refine the abstraction. Thus, ACDL can simulate the CEGAR like approach.
+
+However, if we make the completeness check implementation simple and do not do 
+expensive counterexample simulation like CEGAR, we will simple work like a SAT 
+solver. A SAT solver never simulates a counterexample, rather it assigns 
+values to all the variables. With simple completeness check implementation, 
+we need to improve our learning heuristics and BCP so that ACDL does not 
+fall in to the enumeration behavior. 
+
+3> ACDL can simulate property driven slicing because it follows automated
+property driven approach.    
+
+4> When a decision lead to an abstract value that is not gamma complete, 
+then changing the decision variable itself or the polarity of the current 
+decision variable is not known. A SAT solver does not have such a problem 
+because a SAT solver only works on booleans.
+
+5> Decision variables and their polarity matters.
+Consider the example below:
+int main() {
+  int x, y, c;
+  x = 1;
+  if(c) 
+    y=2;
+  else
+    y=3;     
+    
+  assert(x==0);
+}
+First of all, decision on variable y is unnecessary since it is assigned.
+Secondly, decision on conditional variable here, cond#22 == (c#20 == 0), here
+cond#22, lead to a deduction like below: 
+
+[ADD DEDUCTIONS] $cond#22@level :1#decision: 1 -> !(c#20 >= 1)@level: 1#decision: 0
+[ADD DEDUCTIONS] $cond#22@level :1#decision: 1 -> !(-((signed __CPROVER_bitvector[33])c#20) >= 1)@level: 1#decision: 0
+
+The polarity of cond#22 is UPPER, meaning it is cond#22 and not !cond#22. Since
+the polarity is cond#22, so the deductions immediately infers that (c#20 == 0),
+which leads to the singletons for all variables and hence the counterexample.
+
+However, if the polarity is lower, that is, if !cond#22 is chosen, then c#20
+being an integer would have to be splitted for all values except 0, that is,
+(c#20 != 0). The deductions now does not generate deductions of type (!cond#22
+-> (c#20 != 0)).
+
+6> A source of error in the present implementation could be calling of
+normalize_val after a value is inferred from the implication graph. There is 
+a difference between normalize and normalize_val. So, we must really check 
+which one to call where. Like inside deductions, we must never call
+normalize_val.
+
+7> For programs with loops, there is a statement like:
+x#phi2 = guard#ls3 ? x#lb3 : x#0;
+When guard#ls3 (loop select) is set to FALSE, then the value of x is taken  
+to enter the loop from above. When guard#ls3 is set to TRUE, the value of x
+is taken from end of the loop, abstracted by invariant. 
+Essentially the above statement merges the incoming and the looping value 
+at the loop head. 
+
+When guard#ls3 (loop select) is set to FALSE, then the loop can only be handled 
+by unrolling. We force the acdl_solver by passing an additional constraint 
+which set guard#ls3 to FALSE, which means loop can be handled only by unrolling. 
+In future, we will use x#lb3 to enter the loop from above. When guard#ls3 is set to TRUE, 
+we will use x#lb3 to guess and propagate invariants. 
+
+7> Generalize only when there is no conflict clause.
+
+8> The function comparable(a,b) where a and b are two meet irreducibles gives three output: 
+a> satisfiable, b> unknown c> contradicting
+a> Satisfiable : a is satisfiable with respect to b if !(a & !b) or (a -> b) 
+b> Contradicting : a and b is contradicting if !(a & b) returns TRUE
+c> Unknown : a and b is unknown if it is neither satisfiable nor contradicting
+
+In abstract interpretation terms, 
+a> Satisfiable : a is satisfiable with respect to b if a is comparable to b.
+By comparable, we mean that there exists a path from bottom to TOP where a and b 
+lies in the same path. 
+b> contradicting : a and b is incomparable and meet(a,b) = BOTTOM
+c> Unknown: a and b is incomparable and meet(a,b) != BOTTOM
+
+9> I made push method in the worklist base class public in order to access it 
+from acdl_solver to push the conflict clauses learnt from a conflict as a
+statement into the worklist
+
+10> The UIP is computed on the partial assignments graph where nodes may 
+be present from previous decision level as well. The dominator ensures that
+the uip is computed only for non-deleted nodes in the implication graph.
+
+11> Correct: The following program is unsafe. This is proved 
+correctly by acdl with following configuration: 
+a> no additional constraint (set as true_exprt), 
+b> --unwind 8
+
+int main() {
+  int x=0,i;
+  for(i=0;i<=6;i++) {
+    x = x+i;
+    assert(x<=10);
+  }
+}
+
+2> Correct: The following program is unsafe. 
+Proved with following configuration.
+
+a> no additional constraint (set as true_exprt), 
+b> --unwind 8
+
+int main() {
+  int x=0,i;
+  for(i=0;i<=6;i++) 
+    x = x+i;
+  assert(x<=10);
+}
+
+12> For loop cases:
+[16/06/2016, 17:23:44] Peter Schrammel: without additional constraint: SUCCESS =
+property holds, FAILED = don't know
+[16/06/2016, 17:24:29] Peter Schrammel: with additional constriant: SUCCESS =
+don't know, FAILED = property failed
+with additional constraint: --unwind k (default: 0) checks assertion for up to k
+unwindings
+
+13> Generating loop invariants in ACDL:
+[16/06/2016, 15:38:37] Peter Schrammel: exists Inv, for all x, x':
+[16/06/2016, 15:38:44] Peter Schrammel: Init(x) => Inv(x)
+[16/06/2016, 15:38:45] Peter Schrammel: &&
+[16/06/2016, 15:38:56] Peter Schrammel: Inv(x) && Trans(x,x') => Inv(x')
+[16/06/2016, 15:39:13] Peter Schrammel: && Inv(x) => -Err(x)
+[16/06/2016, 15:46:21] Peter Schrammel: Init(x) => -Err(x)
+[16/06/2016, 15:46:45] Peter Schrammel: Init(x) && Trans(x,x') => -Err(x')
+[16/06/2016, 15:54:05] Peter Schrammel: Init(x#17) => Inv(x#phi21)
+[16/06/2016, 15:54:49] Peter Schrammel: Inv(x#phi21) && Trans(x#phi21,x#22) =>
+Inv(x#22)
+
+[16/06/2016, 16:06:21] Peter Schrammel: x#phi21 = x
+[16/06/2016, 16:07:28] Peter Schrammel: x#22 = x'
+[16/06/2016, 16:07:41] Peter Schrammel: x<=5 --Decision
+[16/06/2016, 16:08:20] Peter Schrammel: x'>5 -- Decision
+[16/06/2016, 16:08:47] Peter Schrammel: forall x,x': Inv(x) & Trans(x,x') =>
+Inv(x')
+[16/06/2016, 16:09:15] Peter Schrammel: exists x,x': Inv(x) & Trans(x,x') &
+-Inv(x')
+[16/06/2016, 16:09:48] Peter Schrammel: Dec(x) & FormulaDB(x,x') &  -Dec(x')
+[16/06/2016, 16:26:59] Peter Schrammel: 1. decision on loop variables x<=10,
+x'>10
+[16/06/2016, 16:27:09] Peter Schrammel: 2. proof that dec is invariant =
+conflict
+[16/06/2016, 16:27:23] Peter Schrammel: 3. conflict => backtrack to remove
+x'>10; keep x<=10
+[16/06/2016, 16:29:31] Peter Schrammel: x<=10
+[16/06/2016, 16:29:49] Rajdeep Mukherjee: !(x<=10 & x'>10)
+[16/06/2016, 16:30:01] Peter Schrammel: x>10 | x'<=10
+[16/06/2016, 16:30:09] Rajdeep Mukherjee: x<=10
+[16/06/2016, 16:39:51] Rajdeep Mukherjee: (x<=10)
+[16/06/2016, 16:40:04] Rajdeep Mukherjee: !(x<=10 & x'>10)
+
+14> The decision now knows about the clause learned. This helps in selecting decision variable since if a variable is already a singleton in learned
+clause, then the decision heuristics must avoid these variables from potential
+candidates for future decision.
+
+15> If uip is not found, then the entry node (present decision node) for which the dominator is asked to calculate the uip simply was a bad decision. However, the interesting case is that even though the entry node and the BOTTOM node is disconnected, there are valid deductions that are made which cannot be thrown away. These deductions are the result of the new learnt clause. 
+
+16> With additional constraint -- We are underapproximating -- similar to CBMC
+(--unwind 0, --unwind 1) -- Here, FAIL means actually getting a
+counterexample and PASS means DON'T KNOW (may be not enough unwinding).
+
+17> Unwinding is similar to refinement algorithm in ACDL
+
+18> Due to faster splitting convergence by the decision heuristics, the enabled
+heuristics inside the template generator is invoked
+
+19> The learned clause are normalized before pushing into the worklist. This is
+because there are several reduadant clause expressions which are pushed into the
+worklist. Example: CL1: (x<=10 && y>=2) CL2: (x<=5) && y>=2) 
+Normalized CL: (x<=5 && y>=2)
+
+20> [TODO] A decision heuristics must be aware of the assertion: example if a
+decision is returned as (x<=23) and assertion is (x<23),then we get a
+counterexample from the decision -- which is wrong.
+
+21> A decision node must be added to the Implication graph only if atleast one deduction is made using that node.  
+
+22> The conflict analysis is agnostic to domain. Here, we do not store intervals
+for each variable but store all meet irreducibles in a trail. Hence, to find
+  earliest contradiction for each variable in uip computation, we do not search
+  for each variable in the trail individually. Rather, we make it more general. 
+  Consider the situation below:
+
+  Suppose the abstract values obtained from the trail is shown below:
+  x>=0 && x<=255 && 
+  y<60 && x+y<=100
+
+  And we want to find a contradiction with the variable: (x>60)
+
+23> Just like a SAT solver would apply BCP after every decision phase. Where a 
+BCP would apply unit rule repeatedly. Now, when a set of clause is learned from 
+conflicts, it is expected that these learned clause would contribute to future
+propagations, which may either lead to valid propagations or conflict. In ACDL,
+an important difference in considering the propagation for learned clause and
+propagation using forward AI is that we need to distinguish between conflicts 
+due to Learned clause and conflicts due to forward analysis using AI --  the
+reason for conflict is constructed differently if the conflict is derived 
+from learned clause compared to conflict derived from forward analysis using AI. 
+
+24> The information passed from propagation in learned clause to the propagation 
+in AI is the fact that the UNIT learned clause leads to new deductions. We add
+this deduction to the trail checking checking for unitness of learnt clause. In
+the subsequent propositional deduction phase, this must not be inserted anymore 
+because the application of unit rule against the abstract value would lead to 
+SATISFIED as the abstract value already have the deduction in it. 
+
+25> Algorithm for bcp --
+  Step 1: pick the variable (say x) in bcp_queue_top
+  Step 2: Let val1 = value(x)
+  Step 3: pick the previous value of x from the trail, let val2=previous_value(x)
+  Step 4: check the phase of the variable, that is it can be either > or <
+  Step 5: Find clauses that contains variable "x" with same phase, let C be the
+  set of such clauses that has same phase  
+  Step 6: Apply unit to each element of C. 
+
+  Algorithm for unit_rule(C) --
+  Stpe 1: for each literal l and its value v1 in clause C
+  Step 2: compare v1 with the latest value of literal l in the trail, let the
+  latest value be v2 
+  Step 3: if v1 <= v2, C is SATISFIED. 
+  Step 4: if more than one literal is neither contradicting nor satisfying, then
+  C is UNKNOWN.
+  Step 5: if all literals are contradicting, then C is in CONFLICT.  
+
+25> We explicitly force the learnt clause to be UNIT by retaining the value of
+ UIP (first or last) in the abstract value even though the solver might have 
+ backtracked to lower level than the UIP. This is what forces the solver to 
+ make the learnt clause UNIT. Follow Rel_Sat CDCL tutorial.
+
+26> Notes from Eugene about clause learning after backtracking:
+There is no magic here. Recall what you do when exploring a search tree. Suppose
+you get a conflict after assigning x3=1. At this point, you would flip the
+assignment to x3 to explore branch x3=0. With clause learning you don't flip the
+conflict branch but just derive the alternative value (i.e. x3=0) from the most
+recent conflict clause (i.e. ~x1 or ~x2 or ~x3) that becomes unit after erasing
+the conflict level.
+
+After a conflict clause C is added and the SAT-solver backtracks from
+the conflict level, C can be treated in the same manner as an original clause.
+That is C can be in the following three states:
+a) Satisfied. A literal of C is satisfied.
+b) Unsatisfied. Every literal of C is either falsified or unassigned and
+the number of free (i.e.) unassigned literals > 0. Note that the 
+number of free literals does not have to be equal to 1 i.e. a conflict 
+clause may be unsatisfied and have, say, 2 free literals.
+c) Falsified. In this case, a conflict occurred.
+
+27> Steps to follow for application of unit rule to learnt clause:
+Step 1: Construct the learnt clause
+Step 2: Normalize the learnt clause without UIP
+Step 3: Normalize the current partial assignment
+Step 4: The learnt clause should not be UNIT !
+
+28> [IMPORTANT] If a decision does not lead to new deductions, then 
+also these decisions must be inserted into the trail. 
+If this is not done, then some completeness check may not terminate.  
+
+29> The completeness check must be done on all symbols in the program
+and not on all variables in the abstract value. 
+
+30> When we run acdl with --octagons, the deduction must make deductions 
+like x+y<=N, x-y<=M etc. The decision splitting then just splits on the 
+these meet irreducibles, 
+for example, split(x+y>=10,x+y<=15)-->decision(x+y<=13)
+
+31> unlike Leo implementation where the most recent value of every 
+variable is strored in a container "value", we cannot do it. Because 
+for octagons and other relational domain, the value of a variable is 
+not possible to retrieve.  
+
+32> backtracking with octagon domain. What is the unit rule for 
+octagon domains ?
+****************
+BACKTRACK PHASE
+****************
+backtrack to dlevel: 3
+Trail after backtracking
+Dump the trail
+Decision Level: 3
+Upper index: 13lower index: 8
+!((unsigned __CPROVER_bitvector[33])x#22 + (unsigned __CPROVER_bitvector[33])y#21 <= 1)
+!((unsigned __CPROVER_bitvector[33])x#20 + (unsigned __CPROVER_bitvector[33])y#21 <= 0)
+!((unsigned __CPROVER_bitvector[33])x#20 + (unsigned __CPROVER_bitvector[33])x#22 <= 1)
+!(-((signed __CPROVER_bitvector[33])x#22) >= 0)
+!(x#22 >= 3u)
+(unsigned __CPROVER_bitvector[33])x#20 + (unsigned __CPROVER_bitvector[33])y#21 <= 1
+Decision Level: 2
+Upper index: 8lower index: 4
+!((unsigned __CPROVER_bitvector[33])x#22 + (unsigned __CPROVER_bitvector[33])y#18 <= 1)
+!(-((signed __CPROVER_bitvector[33])y#23) >= 0)
+!(y#23 >= 3u)
+y#21 <= 1u
+Decision Level: 1
+Upper index: 4lower index: 3
+(signed __CPROVER_bitvector[33])x#16 - (signed __CPROVER_bitvector[33])y#23 <= 4294967294
+Decision Level: 0
+Upper index: 3lower index: 0
+$cond#19
+$guard#0
+$guard#20
+Decision trail after backtracking
+Dump the decision trail
+decision trail element:(signed __CPROVER_bitvector[33])x#16 - (signed __CPROVER_bitvector[33])y#23 <= 4294967294
+decision trail element:y#21 <= 1u
+decision trail element:(unsigned __CPROVER_bitvector[33])x#20 + (unsigned __CPROVER_bitvector[33])y#21 <= 1
+prop_trail size is: 14
+control_trail.back is: 8
+Checking consistency for value $guard#20 && $guard#0 && $cond#19 && (signed __CPROVER_bitvector[33])x#16 - (signed __CPROVER_bitvector[33])y#23 <= 4294967294 && y#21 <= 1u && !(y#23 >= 3u) && !(-((signed __CPROVER_bitvector[33])y#23) >= 0) && !((unsigned __CPROVER_bitvector[33])x#22 + (unsigned __CPROVER_bitvector[33])y#18 <= 1) && (unsigned __CPROVER_bitvector[33])x#20 + (unsigned __CPROVER_bitvector[33])y#21 <= 1 && !(x#22 >= 3u) && !(-((signed __CPROVER_bitvector[33])x#22) >= 0) && !((unsigned __CPROVER_bitvector[33])x#20 + (unsigned __CPROVER_bitvector[33])x#22 <= 1) && !((unsigned __CPROVER_bitvector[33])x#20 + (unsigned __CPROVER_bitvector[33])y#21 <= 0) && !((unsigned __CPROVER_bitvector[33])x#22 + (unsigned __CPROVER_bitvector[33])y#21 <= 1)
+Checking unit rule for the clause !((signed __CPROVER_bitvector[33])x#16 - (signed __CPROVER_bitvector[33])y#23 <= 4294967294) || !(y#21 <= 1u) || !((unsigned __CPROVER_bitvector[33])x#20 + (unsigned __CPROVER_bitvector[33])y#21 <= 1)
+comparing $guard#20 && $guard#0 && $cond#19 && (signed __CPROVER_bitvector[33])x#16 - (signed __CPROVER_bitvector[33])y#23 <= 4294967294 && y#21 <= 1u && !(y#23 >= 3u) && !(-((signed __CPROVER_bitvector[33])y#23) >= 0) && !((unsigned __CPROVER_bitvector[33])x#22 + (unsigned __CPROVER_bitvector[33])y#18 <= 1) && (unsigned __CPROVER_bitvector[33])x#20 + (unsigned __CPROVER_bitvector[33])y#21 <= 1 && !(x#22 >= 3u) && !(-((signed __CPROVER_bitvector[33])x#22) >= 0) && !((unsigned __CPROVER_bitvector[33])x#20 + (unsigned __CPROVER_bitvector[33])x#22 <= 1) && !((unsigned __CPROVER_bitvector[33])x#20 + (unsigned __CPROVER_bitvector[33])y#21 <= 0) && !((unsigned __CPROVER_bitvector[33])x#22 + (unsigned __CPROVER_bitvector[33])y#21 <= 1) <---> !((signed __CPROVER_bitvector[33])x#16 - (signed __CPROVER_bitvector[33])y#23 <= 4294967294)
+Comparing relevant expressions (signed __CPROVER_bitvector[33])x#16 - (signed __CPROVER_bitvector[33])y#23 <= 4294967294 && (signed __CPROVER_bitvector[33])x#16 - (signed __CPROVER_bitvector[33])y#23 <= 4294967294 && !(y#23 >= 3u) && !(-((signed __CPROVER_bitvector[33])y#23) >= 0) <---> !((signed __CPROVER_bitvector[33])x#16 - (signed __CPROVER_bitvector[33])y#23 <= 4294967294)
+The status is 0
+comparing $guard#20 && $guard#0 && $cond#19 && (signed __CPROVER_bitvector[33])x#16 - (signed __CPROVER_bitvector[33])y#23 <= 4294967294 && y#21 <= 1u && !(y#23 >= 3u) && !(-((signed __CPROVER_bitvector[33])y#23) >= 0) && !((unsigned __CPROVER_bitvector[33])x#22 + (unsigned __CPROVER_bitvector[33])y#18 <= 1) && (unsigned __CPROVER_bitvector[33])x#20 + (unsigned __CPROVER_bitvector[33])y#21 <= 1 && !(x#22 >= 3u) && !(-((signed __CPROVER_bitvector[33])x#22) >= 0) && !((unsigned __CPROVER_bitvector[33])x#20 + (unsigned __CPROVER_bitvector[33])x#22 <= 1) && !((unsigned __CPROVER_bitvector[33])x#20 + (unsigned __CPROVER_bitvector[33])y#21 <= 0) && !((unsigned __CPROVER_bitvector[33])x#22 + (unsigned __CPROVER_bitvector[33])y#21 <= 1) <---> !(y#21 <= 1u)
+Comparing relevant expressions y#21 <= 1u && (unsigned __CPROVER_bitvector[33])x#20 + (unsigned __CPROVER_bitvector[33])y#21 <= 1 && !((unsigned __CPROVER_bitvector[33])x#20 + (unsigned __CPROVER_bitvector[33])y#21 <= 0) && !((unsigned __CPROVER_bitvector[33])x#22 + (unsigned __CPROVER_bitvector[33])y#21 <= 1) <---> !(y#21 <= 1u)
+The status is 0
+comparing $guard#20 && $guard#0 && $cond#19 && (signed __CPROVER_bitvector[33])x#16 - (signed __CPROVER_bitvector[33])y#23 <= 4294967294 && y#21 <= 1u && !(y#23 >= 3u) && !(-((signed __CPROVER_bitvector[33])y#23) >= 0) && !((unsigned __CPROVER_bitvector[33])x#22 + (unsigned __CPROVER_bitvector[33])y#18 <= 1) && (unsigned __CPROVER_bitvector[33])x#20 + (unsigned __CPROVER_bitvector[33])y#21 <= 1 && !(x#22 >= 3u) && !(-((signed __CPROVER_bitvector[33])x#22) >= 0) && !((unsigned __CPROVER_bitvector[33])x#20 + (unsigned __CPROVER_bitvector[33])x#22 <= 1) && !((unsigned __CPROVER_bitvector[33])x#20 + (unsigned __CPROVER_bitvector[33])y#21 <= 0) && !((unsigned __CPROVER_bitvector[33])x#22 + (unsigned __CPROVER_bitvector[33])y#21 <= 1) <---> !((unsigned __CPROVER_bitvector[33])x#20 + (unsigned __CPROVER_bitvector[33])y#21 <= 1)
+Comparing relevant expressions y#21 <= 1u && (unsigned __CPROVER_bitvector[33])x#20 + (unsigned __CPROVER_bitvector[33])y#21 <= 1 && (unsigned __CPROVER_bitvector[33])x#20 + (unsigned __CPROVER_bitvector[33])y#21 <= 1 && !((unsigned __CPROVER_bitvector[33])x#20 + (unsigned __CPROVER_bitvector[33])x#22 <= 1) && !((unsigned __CPROVER_bitvector[33])x#20 + (unsigned __CPROVER_bitvector[33])y#21 <= 0) && !((unsigned __CPROVER_bitvector[33])x#20 + (unsigned __CPROVER_bitvector[33])y#21 <= 0) && !((unsigned __CPROVER_bitvector[33])x#22 + (unsigned __CPROVER_bitvector[33])y#21 <= 1) <---> !((unsigned __CPROVER_bitvector[33])x#20 + (unsigned __CPROVER_bitvector[33])y#21 <= 1)
+The status is 0
+CLAUSE IS IN CONFLICT
+
+33> For contradiction checking, we need to do the following:
+(a & b) is UNSAT
+Ideally: 
+for all a,b: check (a & b) is UNSAT
+There exist a,b: check !(a & b) is SAT
+
+34> For per-statement based live varaible:
+conservative approach may lead to non-termination: 
+we do not empty live_varaible map for statements that lead to 
+empty deductions hoping that these statements would lead to 
+future deductions with the live variable set
+
+The octagonal TEMPLATE VARIABLE now considers live variables
+for a statement as well as variables in the old abstract value 
+to construct the templates. 
+
+35> When a new decision is made, the worklist must be empty. The live variable
+list must also be flushed out. 
+
+36> COMPILATION: Surprisingly, the seg fault is caused. It is resolved by adding 
+a print statement in worklist base class push operator.
+
+37> The forward iteration strategy with the per-statement live variable approac:h  
+The live variable is computed now as follows -- for some example, this may be
+too restricted.
+  Purpose: Variables that are passed to domain is computed as follows: 
+           1> leaf_rhs_vars = (rhs_vars intersect leaf_vars) 
+           2> lr_vars = (stmt_vars intersect leaf_rhs_vars)
+           3> final_vars = (lhs_vars union lr_vars)
+           The condition 2 is a tighter constraint which may lead to 
+           EMPTY variables, but to obey per-statement based live variable,
+           we follow condition 2.
+           
+           Alternative approach (If the above is too restrictive):
+           1> leaf_rhs_vars = (rhs_vars intersect leaf_vars) 
+           2> final_vars = (lhs_vars union leaf_rhs_vars)
+
+Note that for the forward iteration strategy, whatever be the live variable 
+for that statement, we must always pass the lhs variable to the domain.           
+
+38> When the simplifiert is called inside pre-processor, it 
+simplifies the following statement:
+x#phi31 == ($guard#30 ? x#30 : x#28) ===> simplified to $guard#30 ? (x#phi31 == x#30) : (x#phi31 == x#28).
+So, the above statement loses structure from being an Equality statement 
+to a general constraint statement. This causes difficulty in deriving the 
+varaibles that need to be passed to the domain for deduction during forward
+iteration strategy. In the origin statement, it is easy to determine x#phi31 is
+a lhs variable, hence it must be passed to the domain for deductions in forward 
+strategy. However, it is hard to determine x#phi31 as lhs variable for the
+simplified statement, hence some deductions are missed in forward strategy due
+to this. 
+
+39> Configurations of acdl:
+Chaotic iteration -- works on SSA -- turn OFF pre-process and worklist slicing 
+Forward iteration -- works on statements -- turn ON pre-processing and worklist
+slicing
+
+40> When passing worklist iteration strategy from forward to chaotic and back -- 
+all regression fails -- this can be fixed by temporarily adding a print
+statement in worklist base class push operation or in the worklist ordered
+initialisation operation respectively.
+
+// Changes done on 5th October, 2016
+-------------------------------------
+0> Changes in acdl solver need to be done for adjusting simplified SSA produced
+from pre-processing stage.
+1> When the deduction from first propagation phase is empty (can only happen
+with pre-processing), we are now explicitly adding a new deduction (true ->
+true) to the trail so that the assertion in analyze conflict pass.   
+  assert(graph.prop_trail.size() - graph.control_trail.size() >= 2);
+
+2> Few more case has been added to analyze_conflict in dump_trail and 
+get_earliest_contradiction to handle the case when lower_index and upper_index
+of the trail are the same, meaning no deduction has been done in that decision
+level.
+
+3> With pre-processing, relational3 and relatioanl4 became faster whereas
+bottom9 became extremely slower. 
+
+4> We need to pass assertion variables and lhs variables which has nondet
+in rhs as well as cond varaibles to the simplify_transformer for pre-processing. 
+
+Observations in October, 2016
+------------------------------
+1> The abstract value needs to be checked for completeness in acdl_solver 
+after performing the generalization of conflict analysis, since there is a chance 
+that when the control comes out of the do-while() loop with result of
+propagation being UNKNOWN, then the abstract value may be complete. So, its 
+safe to check for completeness right after the conflict analysis phase is over.    
+This observation is made for "bit-wise" regression when propagation is backward. 
+
+2> Always run "propagate = backward" heuristic with --no-propagation flag. Since 
+backward heuristic start from assertions, so without --no-propagation, the
+assertion could be completely simplified leading to no valid push and pop of
+worklist for backward propagation strategy.
+  

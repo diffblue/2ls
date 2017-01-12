@@ -9,7 +9,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include <util/find_symbols.h>
 #include "acdl_analyze_conflict_base.h"
 
-//#define DEBUG
+#define DEBUG
 
 /*******************************************************************\
 

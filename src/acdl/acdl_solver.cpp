@@ -687,6 +687,8 @@ void acdl_solvert::generalize_proof(const local_SSAt &SSA, const exprt& assertio
     acdl_domaint::valuet generalized_value;
     // generlize up to a UIP (decision level)
     // For now, we generalize up to last decision level
+    // Input::  init_value ----statement ----> final_value
+    // Output:: init_value ----statement ----> generalized_value
     for(unsigned i = conflict_graph.reason_trail.size(); i < last_decision_index; i--)
     {
       exprt statement = conflict_graph.reason_trail[i].first;
@@ -1266,7 +1268,7 @@ property_checkert::resultt acdl_solvert::operator()(
       do 
       {
         // call generalize_proof here
-        generalize_proof(SSA, assertion, v);
+        //generalize_proof(SSA, assertion, v);
 
         std::cout << "********************************" << std::endl;
         std::cout << "    CONFLICT ANALYSIS PHASE" << std::endl;
