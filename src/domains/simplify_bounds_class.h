@@ -31,7 +31,7 @@ public:
   // If false is returned, the expression has changed.
 
   virtual bool operator()(exprt &expr);
- 
+
   inline static bool is_bitvector_type(const typet &type)
   {
     return type.id()==ID_unsignedbv ||

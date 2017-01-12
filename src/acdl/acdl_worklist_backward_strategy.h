@@ -15,33 +15,33 @@ class acdl_worklist_backwardt : public acdl_worklist_baset
 {
 public:
   explicit acdl_worklist_backwardt()
-    : 
+    :
   acdl_worklist_baset()
   {
   }
-    
-  virtual void initialize(const local_SSAt &SSA, 
-     const exprt &assertion, const exprt& additional_constraint);
 
-  /*virtual void slicing (const local_SSAt &SSA, 
-        const exprt &assertion, const exprt& additional_constraint);*/
+  virtual void initialize(const local_SSAt &SSA,
+                          const exprt &assertion, const exprt& additional_constraint);
+
+  /*virtual void slicing (const local_SSAt &SSA,
+    const exprt &assertion, const exprt& additional_constraint);*/
 
   virtual acdl_domaint::varst pop_from_map (const acdl_domaint::statementt &statement);
-  
-  virtual void update(const local_SSAt &SSA,
-		      const acdl_domaint::varst &new_vars,
-		      const acdl_domaint::statementt &statement=nil_exprt(), const exprt& assertion=true_exprt());
 
-  virtual void dec_update(const local_SSAt &SSA, 
-    const acdl_domaint::meet_irreduciblet &expr, const exprt& assertion);
+  virtual void update(const local_SSAt &SSA,
+                      const acdl_domaint::varst &new_vars,
+                      const acdl_domaint::statementt &statement=nil_exprt(), const exprt& assertion=true_exprt());
+
+  virtual void dec_update(const local_SSAt &SSA,
+                          const acdl_domaint::meet_irreduciblet &expr, const exprt& assertion);
 
 protected:
 
   void update (const local_SSAt &SSA,
-	       const acdl_domaint::varst &vars,
-	       listt &lexpr, 
-	       const acdl_domaint::statementt &current_statement,
-         const exprt& assertion);
+               const acdl_domaint::varst &vars,
+               listt &lexpr,
+               const acdl_domaint::statementt &current_statement,
+               const exprt& assertion);
 };
 
 #endif

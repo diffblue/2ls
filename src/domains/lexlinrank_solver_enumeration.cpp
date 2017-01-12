@@ -1,6 +1,6 @@
 /*******************************************************************\
 
-Module: Enumeration-based solver for lexicographic linear ranking 
+Module: Enumeration-based solver for lexicographic linear ranking
         functions
 
 Author: Peter Schrammel

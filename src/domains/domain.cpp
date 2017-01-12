@@ -64,6 +64,6 @@ std::ostream &domaint::output_var_specs(
     }
     out << from_expr(ns, "", v.var) << std::endl;
   }
-  
+
   return out;
 }

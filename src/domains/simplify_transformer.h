@@ -24,12 +24,12 @@ class namespacet;
 
 bool simplify(
   exprt &expr,
-  const std::set<irep_idt> &frozen_vars, //do not eliminate these
+  const std::set<irep_idt> &frozen_vars, // do not eliminate these
   const namespacet &ns);
 
 exprt simplify_transformer(
   const exprt &src,
-  const std::set<irep_idt> &frozen_vars, //do not eliminate these
+  const std::set<irep_idt> &frozen_vars, // do not eliminate these
   const namespacet &ns);
 
 #endif

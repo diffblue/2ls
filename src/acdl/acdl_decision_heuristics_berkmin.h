@@ -18,17 +18,17 @@ public:
   explicit acdl_decision_heuristics_berkmint(
     acdl_domaint &_domain,
     acdl_analyze_conflict_baset &_conflict_analysis)
-    : 
+    :
   acdl_decision_heuristics_baset(_domain),
-  conflict_analysis(_conflict_analysis)
-  {
-  }
-  
+    conflict_analysis(_conflict_analysis)
+    {
+    }
+
   virtual acdl_domaint::meet_irreduciblet operator()(
-  const local_SSAt &SSA,
-  const acdl_domaint::valuet &value);
-  
-protected:  
+    const local_SSAt &SSA,
+    const acdl_domaint::valuet &value);
+
+protected:
   acdl_analyze_conflict_baset &conflict_analysis;
   acdl_domaint::meet_irreduciblet random_dec_heuristics(const local_SSAt &SSA, const acdl_domaint::valuet &value);
 };

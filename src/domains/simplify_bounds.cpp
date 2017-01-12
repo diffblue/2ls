@@ -25,7 +25,7 @@ Function: simplify_boundst::get_min_bound
 
   Inputs:
 
- Outputs: 
+ Outputs:
 
  Purpose:
 
@@ -88,7 +88,7 @@ Function: simplify_boundst::get_max_bound
 
   Inputs:
 
- Outputs: 
+ Outputs:
 
  Purpose:
 
@@ -167,7 +167,7 @@ bool simplify_boundst::simplify_rec(exprt &expr)
   bool result=true;
   if(expr.id()==ID_le)
   {
-    binary_relation_exprt &e = to_binary_relation_expr(expr);
+    binary_relation_exprt &e=to_binary_relation_expr(expr);
     if(is_bitvector_type(e.rhs().type()) && e.rhs().id()==ID_constant &&
        e.lhs().id()!=ID_symbol)
     {
@@ -181,7 +181,7 @@ bool simplify_boundst::simplify_rec(exprt &expr)
           result=false;
         }
         else
-          result=clean_up_typecast(expr,rhs_value);
+          result=clean_up_typecast(expr, rhs_value);
       }
       else if(get_min_bound(e.lhs(), lhs_min))
       {
@@ -195,7 +195,7 @@ bool simplify_boundst::simplify_rec(exprt &expr)
   }
   else if(expr.id()==ID_ge)
   {
-    binary_relation_exprt &e = to_binary_relation_expr(expr);
+    binary_relation_exprt &e=to_binary_relation_expr(expr);
     if(is_bitvector_type(e.rhs().type()) && e.rhs().id()==ID_constant &&
        e.lhs().id()!=ID_symbol)
     {
@@ -221,7 +221,7 @@ bool simplify_boundst::simplify_rec(exprt &expr)
   }
   else if(expr.id()==ID_lt)
   {
-    binary_relation_exprt &e = to_binary_relation_expr(expr);
+    binary_relation_exprt &e=to_binary_relation_expr(expr);
     if(is_bitvector_type(e.rhs().type()) && e.rhs().id()==ID_constant &&
        e.lhs().id()!=ID_symbol)
     {
@@ -247,7 +247,7 @@ bool simplify_boundst::simplify_rec(exprt &expr)
   }
   else if(expr.id()==ID_gt)
   {
-    binary_relation_exprt &e = to_binary_relation_expr(expr);
+    binary_relation_exprt &e=to_binary_relation_expr(expr);
     if(is_bitvector_type(e.rhs().type()) && e.rhs().id()==ID_constant &&
        e.lhs().id()!=ID_symbol)
     {
@@ -271,7 +271,7 @@ bool simplify_boundst::simplify_rec(exprt &expr)
       }
     }
   }
-  else 
+  else
   {
     Forall_operands(it, expr)
       if(!simplify_rec(*it))
@@ -282,7 +282,7 @@ bool simplify_boundst::simplify_rec(exprt &expr)
             << "\n ---> " << from_expr(ns, "", expr)
             << "\n";
 #endif
-    
+
   return result;
 }
 
@@ -292,13 +292,13 @@ Function: simplify_boundst::clean_up_typecast
 
   Inputs:
 
- Outputs: 
+ Outputs:
 
  Purpose:
 
 \*******************************************************************/
 
-bool simplify_boundst::clean_up_typecast(exprt &expr, 
+bool simplify_boundst::clean_up_typecast(exprt &expr,
                                          const mp_integer &rhs_value)
 {
   if(expr.id()==ID_le && expr.op0().id()==ID_unary_minus &&
@@ -308,7 +308,7 @@ bool simplify_boundst::clean_up_typecast(exprt &expr,
     if(-rhs_value>get_smallest(inner_type))
     {
       expr=binary_relation_exprt(expr.op0().op0().op0(), ID_ge,
-                                 from_integer(-rhs_value,inner_type));
+                                 from_integer(-rhs_value, inner_type));
       return true;
     }
   }
@@ -321,7 +321,7 @@ Function: simplify_boundst::clean_up_implications
 
   Inputs:
 
- Outputs: 
+ Outputs:
 
  Purpose:
 
@@ -340,14 +340,14 @@ bool simplify_boundst::clean_up_implications(exprt &expr)
     {
       if(it->is_true())
         it=expr.operands().erase(it);
-      else 
+      else
         ++it;
     }
     if(expr.operands().empty())
       expr=true_exprt();
     else if(expr.operands().size()==1)
       expr=expr.op0();
-  }  
+  }
   else if(expr.id()==ID_implies)
   {
     if(expr.op1().is_true())
@@ -365,7 +365,7 @@ Function: simplify_boundst::clean_up_implications
 
   Inputs:
 
- Outputs: 
+ Outputs:
 
  Purpose:
 
@@ -380,7 +380,7 @@ bool simplify_boundst::regroup_implications(exprt &expr)
     Forall_operands(it, expr)
       if(it->id()==ID_implies)
         implication_map[it->op0()].push_back(it->op1());
-      else 
+      else
         r.push_back(*it);
   }
   else
@@ -425,7 +425,7 @@ Function: simplify
 
 \*******************************************************************/
 
-bool simplify_bounds(exprt &expr, 
+bool simplify_bounds(exprt &expr,
               const namespacet &ns)
 {
   return simplify_boundst(ns)(expr);
@@ -443,7 +443,7 @@ Function: simplify_bounds
 
 \*******************************************************************/
 
-exprt simplify_bounds(const exprt &src, 
+exprt simplify_bounds(const exprt &src,
                       const namespacet &ns)
 {
   exprt tmp=src;

@@ -733,7 +733,7 @@ void tpolyhedra_domaint::set_row_value(
 tpolyhedra_domaint::row_valuet tpolyhedra_domaint::get_max_row_value(
   const tpolyhedra_domaint::rowt &row)
 {
-  const template_rowt &templ_row = templ[row];
+  const template_rowt &templ_row=templ[row];
   return get_max_value(templ_row.expr);
 }
 
@@ -766,7 +766,7 @@ tpolyhedra_domaint::row_valuet tpolyhedra_domaint::get_max_value(
     max.make_fltmax();
     return max.to_expr();
   }
-  assert(false); //type not supported
+  assert(false); // type not supported
 }
 
 /*******************************************************************\
@@ -784,7 +784,7 @@ tpolyhedra_domaint::row_valuet tpolyhedra_domaint::get_max_value(
 tpolyhedra_domaint::row_valuet tpolyhedra_domaint::get_min_row_value(
   const tpolyhedra_domaint::rowt &row)
 {
-  const template_rowt &templ_row = templ[row];
+  const template_rowt &templ_row=templ[row];
   return get_min_value(templ_row.expr);
 }
 
@@ -817,7 +817,7 @@ tpolyhedra_domaint::row_valuet tpolyhedra_domaint::get_min_value(
     min.make_fltmin();
     return min.to_expr();
   }
-  assert(false); //type not supported
+  assert(false); // type not supported
 }
 
 /*******************************************************************\
@@ -1223,5 +1223,5 @@ void tpolyhedra_domaint::positive_template(std::vector<exprt> &templates)
    for(size_t i=0; i<templates.size(); ++i)
    {
      templates[i]=templ[2*i].expr;
-   } 
+   }
 }

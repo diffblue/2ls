@@ -17,36 +17,36 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 class acdl_decision_heuristics_baset : public messaget
 {
 public:
-  
+
   explicit acdl_decision_heuristics_baset(
     acdl_domaint &_domain)
-    : 
+    :
   domain(_domain)
   {
-  }  
+  }
 
-  virtual ~acdl_decision_heuristics_baset() 
+  virtual ~acdl_decision_heuristics_baset()
   {
   }
-  
-  //override this
+
+  // override this
   virtual acdl_domaint::meet_irreduciblet operator()(
     const local_SSAt &SSA,
     const acdl_domaint::valuet &value)
   {
     assert(false);
   }
-  
+
   acdl_domaint::statementt dec_statement;
   std::set<exprt> decision_variables;
   std::vector<std::pair<mp_integer, mp_integer> > decvar_val;
   std::vector<exprt> nondet_var;
-  
+
   void get_dec_variables(const exprt &exp);
   void order_decision_variables(const local_SSAt &SSA);
   void initialize_decvar_val(std::pair<mp_integer, mp_integer> dec_val);
-   
-  protected:
+
+protected:
   acdl_domaint &domain;
   bool phase;
 };

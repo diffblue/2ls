@@ -21,26 +21,26 @@ Function: acdl_conflict_grapht::add_deductions
 
 \*******************************************************************/
 void acdl_conflict_grapht::add_deductions
-  (const local_SSAt &SSA, const acdl_domaint::deductionst &m_ir, 
-   const acdl_domaint::meet_irreduciblet &stmt)
+(const local_SSAt &SSA, const acdl_domaint::deductionst &m_ir,
+ const acdl_domaint::meet_irreduciblet &stmt)
 {
-  // Add <stmt, prop_trail_index> to reason trail 
+  // Add <stmt, prop_trail_index> to reason trail
   indext index;
   prop_infot prop_info;
-  unsigned begin = prop_trail.size();
+  unsigned begin=prop_trail.size();
   // iterate over the deductions
-  for(std::vector<acdl_domaint::meet_irreduciblet>::const_iterator it 
-	= m_ir.begin(); it != m_ir.end(); it++)
+  for(std::vector<acdl_domaint::meet_irreduciblet>::const_iterator it
+        =m_ir.begin(); it!=m_ir.end(); it++)
   {
-#ifdef DEBUG    
+#ifdef DEBUG
     std::cout << "conflict graph: " << from_expr(SSA.ns, "", *it) << std::endl;
-#endif    
-    // note that consequents are unique 
-    acdl_domaint::meet_irreduciblet exp = *it; 
+#endif
+    // note that consequents are unique
+    acdl_domaint::meet_irreduciblet exp=*it;
     assign(exp);
   }
-  index = std::make_pair(begin, prop_trail.size());
-  prop_info = std::make_pair(stmt, index);
+  index=std::make_pair(begin, prop_trail.size());
+  prop_info=std::make_pair(stmt, index);
   reason_trail.push_back(prop_info);
 }
 
@@ -56,21 +56,21 @@ Function: acdl_conflict_grapht::add_decision
 
  \*******************************************************************/
 void acdl_conflict_grapht::add_decision
-    (const acdl_domaint::meet_irreduciblet &m_ir)
+(const acdl_domaint::meet_irreduciblet &m_ir)
 {
   ++current_level;
   control_trail.push_back(prop_trail.size());
-  acdl_domaint::meet_irreduciblet exp = m_ir; 
+  acdl_domaint::meet_irreduciblet exp=m_ir;
   dec_trail.push_back(exp);
   assign(exp);
-  //dlevels[sym_no].push_back(current_level);
+  // dlevels[sym_no].push_back(current_level);
   // this just serves as marker in the reason trail
-  // to annotate the segments in reason trail with 
-  // special decision entries, helper for generalization 
+  // to annotate the segments in reason trail with
+  // special decision entries, helper for generalization
   indext index;
-  index = std::make_pair(0, 0);
+  index=std::make_pair(0, 0);
   prop_infot prop_info;
-  prop_info = std::make_pair(nil_exprt(), index);
+  prop_info=std::make_pair(nil_exprt(), index);
   reason_trail.push_back(prop_info);
 }
 
@@ -86,13 +86,13 @@ Function: acdl_conflict_grapht::assign
 
  \*******************************************************************/
 void acdl_conflict_grapht::assign
-    (acdl_domaint::meet_irreduciblet &exp)
+(acdl_domaint::meet_irreduciblet &exp)
 {
-    // number the meet_irreducible
-    unsigned sym_no = numbering.number(exp); 
-    // push it to prop_trail
-    prop_trail.push_back(exp);
-    val_trail.push_back(sym_no);
+  // number the meet_irreducible
+  unsigned sym_no=numbering.number(exp);
+  // push it to prop_trail
+  prop_trail.push_back(exp);
+  val_trail.push_back(sym_no);
 }
 
 /*******************************************************************\
@@ -108,39 +108,39 @@ Function: acdl_conflict_grapht::to_value
  \*******************************************************************/
 void acdl_conflict_grapht::to_value(acdl_domaint::valuet &value) const
 {
-  
+
   for(unsigned i=0;i<prop_trail.size();i++) {
     value.push_back(prop_trail[i]);
   }
 #ifdef DEBUG
   std::cout << "prop_trail size is: " << prop_trail.size() << std::endl;
-  if(control_trail.size() != 0)
+  if(control_trail.size()!=0)
     std::cout << "control_trail.back is: " << control_trail.back() << std::endl;
-  else  
+  else
     std::cout << "control_trail is empty" << std::endl;
 #endif
-        
-#if 0  
+
+#if 0
   // this happens only for the first deduction phase
-  if(control_trail.size() == 0) {
-   for(unsigned i=0;i<prop_trail.size();i++) {
-     // if there is a BOTTOM or false_exprt in the trail,
-     // it should have been popped during backtracking
-     //if(prop_trail[i] != false_exprt());
+  if(control_trail.size()==0) {
+    for(unsigned i=0;i<prop_trail.size();i++) {
+      // if there is a BOTTOM or false_exprt in the trail,
+      // it should have been popped during backtracking
+      // if(prop_trail[i]!=false_exprt());
       value.push_back(prop_trail[i]);
-   }
+    }
   }
-  // this is normal case 
+  // this is normal case
   else {
-    unsigned trail_size = control_trail.back();
+    unsigned trail_size=control_trail.back();
     for(unsigned i=0;i<trail_size;i++) {
       // if there is a BOTTOM or false_exprt in the trail,
       // it should have been popped during backtracking
-      //if(prop_trail[i] != false_exprt());
-       value.push_back(prop_trail[i]);
+      // if(prop_trail[i]!=false_exprt());
+      value.push_back(prop_trail[i]);
     }
   }
-#endif  
+#endif
 }
 
 /*******************************************************************\
@@ -156,10 +156,10 @@ Function: acdl_conflict_grapht::init
  \*******************************************************************/
 void acdl_conflict_grapht::init()
 {
-  assert(prop_trail.size() == 0);
-  assert(val_trail.size() == 0);
-  assert(dec_trail.size() == 0);
-  assert(control_trail.size() == 0);
+  assert(prop_trail.size()==0);
+  assert(val_trail.size()==0);
+  assert(dec_trail.size()==0);
+  assert(control_trail.size()==0);
 }
 
 /*******************************************************************\
@@ -175,18 +175,18 @@ Function: acdl_conflict_grapht::check_consistency
 \*******************************************************************/
 void acdl_conflict_grapht::check_consistency()
 {
-#ifdef DEBUG  
+#ifdef DEBUG
   std::cout << "Checking consistency of conflict graph" << std::endl;
-#endif  
+#endif
   acdl_domaint::valuet val;
   for(unsigned i=0;i<prop_trail.size();i++) {
     // if there is a BOTTOM or false_exprt in the trail,
     // it should have been popped during backtracking
-    assert(prop_trail[i] != false_exprt());
+    assert(prop_trail[i]!=false_exprt());
   }
-#ifdef DEBUG  
+#ifdef DEBUG
   std::cout << "Conflict graph is consistent" << std::endl;
-#endif  
+#endif
 }
 
 /*******************************************************************\
@@ -201,11 +201,11 @@ Function: acdl_conflict_grapht::assign_to_trail
 
  \*******************************************************************/
 void acdl_conflict_grapht::assign_to_trail
-    (acdl_domaint::meet_irreduciblet &m_ir)
+(acdl_domaint::meet_irreduciblet &m_ir)
 {
   prop_trail.push_back(m_ir);
   // number the meet_irreducible
-  unsigned sym_no = numbering.number(m_ir); 
+  unsigned sym_no=numbering.number(m_ir);
   val_trail.push_back(sym_no);
 }
 
@@ -222,66 +222,66 @@ Function: acdl_conflict_grapht::print_output
  \*******************************************************************/
 void acdl_conflict_grapht::dump_trail(const local_SSAt &SSA)
 {
-#ifdef DEBUG 
+#ifdef DEBUG
   std::cout << "Dump the trail" << std::endl;
   std::cout << "****************" << std::endl;
   std::cout << "Decision Level: " << current_level << std::endl;
-#endif  
+#endif
   int control_point;
-  if(control_trail.size() == 0)
-   control_point=0;
+  if(control_trail.size()==0)
+    control_point=0;
   else
-   control_point=control_trail.back();
-   
+    control_point=control_trail.back();
+
   // check if propagation trail is zero
-  if(prop_trail.size() == 0) {
+  if(prop_trail.size()==0) {
     std::cout << "The propagation trail is empty" << std::endl;
     return;
   }
-   
+
   std::cout << "Upper index: " << prop_trail.size()-1 << "lower index: " << control_point << std::endl;
   for(unsigned i=prop_trail.size()-1;i>=control_point;i--) {
-   std::cout << from_expr(SSA.ns, "", prop_trail[i]) << std::endl;
-   if(i==0) break;
+    std::cout << from_expr(SSA.ns, "", prop_trail[i]) << std::endl;
+    if(i==0) break;
   }
-   
-  int search_level = control_trail.size()-1;
+
+  int search_level=control_trail.size()-1;
   while(search_level >= 0) {
     int upper_index=0;
     int lower_index=0;
     std::cout << "Decision Level: " << search_level << std::endl;
-    upper_index = control_trail[search_level];
+    upper_index=control_trail[search_level];
     if(search_level-1 >= 0)
-      lower_index = control_trail[search_level-1];
-    else 
-      lower_index = 0; 
+      lower_index=control_trail[search_level-1];
+    else
+      lower_index=0;
 
     std::cout << "Upper index: " << upper_index << "lower index: " << lower_index << std::endl;
-    // Done for empty propagation trail 
+    // Done for empty propagation trail
     // at a particular search level
     if(upper_index==0) return;
-    // now traverse the prop_trail  
+    // now traverse the prop_trail
     for(unsigned k=upper_index-1;k>=lower_index;k--) {
-     std::cout << from_expr(SSA.ns, "", prop_trail[k]) << std::endl;
-     if(k==0) break;
+      std::cout << from_expr(SSA.ns, "", prop_trail[k]) << std::endl;
+      if(k==0) break;
     }
     search_level=search_level-1;
   }
-  unsigned prop_level_end=0, prop_level_begin=0; 
+  unsigned prop_level_end=0, prop_level_begin=0;
   std::cout << "The content of reason trail is " << std::endl;
   for(int i=0;i<reason_trail.size();i++) {
-    indext ind = reason_trail[i].second;
-    unsigned prop_level_begin = ind.first;
-    unsigned prop_level_end = ind.second;
-     
+    indext ind=reason_trail[i].second;
+    unsigned prop_level_begin=ind.first;
+    unsigned prop_level_end=ind.second;
+
     std::cout << "The transformer is " << from_expr(reason_trail[i].first) << std::endl;
     std::cout << "The deductions are ";
-    if(prop_level_begin == prop_level_end) 
+    if(prop_level_begin==prop_level_end)
       std::cout << "empty " << std::endl;
     else {
-     for(unsigned p=prop_level_begin;p<=prop_level_end-1;p++)
-       std::cout << from_expr(SSA.ns, "", prop_trail[p]) << " ,"; 
-     std::cout << std::endl; 
+      for(unsigned p=prop_level_begin;p<=prop_level_end-1;p++)
+        std::cout << from_expr(SSA.ns, "", prop_trail[p]) << " , ";
+      std::cout << std::endl;
     }
   }
 }
@@ -300,8 +300,8 @@ Function: acdl_conflict_grapht::print_output
 void acdl_conflict_grapht::dump_dec_trail(const local_SSAt &SSA)
 {
   std::cout << "Dump the decision trail" << std::endl;
-  for(unsigned i=0;i<dec_trail.size();i++) { 
+  for(unsigned i=0;i<dec_trail.size();i++) {
     std::cout << "decision trail element:" << from_expr(SSA.ns, "", dec_trail[i]) << std::endl;
-    //std::cout << "Val trail:" << from_expr(SSA.ns, "", numbering[val_trail[i]]) << std::endl;
+    // std::cout << "Val trail:" << from_expr(SSA.ns, "", numbering[val_trail[i]]) << std::endl;
   }
 }

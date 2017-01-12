@@ -38,30 +38,30 @@ void simplify_transformert::collect_node(const exprt &expr,
 {
   if(expr.id()==ID_equal)
   {
-    const equal_exprt &e = to_equal_expr(expr);
-    
+    const equal_exprt &e=to_equal_expr(expr);
+
     bool rhs_is_constant=e.rhs().id()==ID_constant;
-    bool rhs_is_symbol=e.rhs().id()==ID_symbol || 
+    bool rhs_is_symbol=e.rhs().id()==ID_symbol ||
                        e.rhs().id()==ID_nondet_symbol;
     bool rhs_is_frozen=rhs_is_symbol &&
       frozen_symbols.find(e.rhs().get(ID_identifier))!=frozen_symbols.end();
     bool lhs_is_constant=e.lhs().id()==ID_constant;
-    bool lhs_is_symbol=e.lhs().id()==ID_symbol || 
+    bool lhs_is_symbol=e.lhs().id()==ID_symbol ||
                        e.lhs().id()==ID_nondet_symbol;
     bool lhs_is_frozen=lhs_is_symbol &&
       frozen_symbols.find(e.lhs().get(ID_identifier))!=frozen_symbols.end();
 
     exprt lhs, rhs;
-    lhs.make_nil(); 
+    lhs.make_nil();
     rhs.make_nil();
-    //stupid matching
-    if((rhs_is_frozen || rhs_is_constant || !frozen_only) && 
+    // stupid matching
+    if((rhs_is_frozen || rhs_is_constant || !frozen_only) &&
        lhs_is_symbol && !lhs_is_frozen)
     {
       lhs=e.lhs();
       rhs=e.rhs();
     }
-    if((lhs_is_frozen || lhs_is_constant || !frozen_only) && 
+    if((lhs_is_frozen || lhs_is_constant || !frozen_only) &&
        rhs_is_symbol && !rhs_is_frozen)
     {
       rhs=e.lhs();
@@ -69,10 +69,10 @@ void simplify_transformert::collect_node(const exprt &expr,
     }
     if(rhs.is_not_nil() && lhs.is_not_nil())
     {
-      if(make_copy) //make lazy copy
+      if(make_copy) // make lazy copy
       {
-        replace_mapt _subst = substitutions;
-        substitutions = _subst;
+        replace_mapt _subst=substitutions;
+        substitutions=_subst;
       }
       substitutions[lhs]=rhs;
     }
@@ -128,7 +128,7 @@ bool simplify_transformert::simplify_rec(exprt &expr,
   bool result=true;
   if(expr.id()==ID_and)
   {
-    //first propagate from frozen symbols
+    // first propagate from frozen symbols
     bool res=false;
     do
     {
@@ -138,13 +138,13 @@ bool simplify_transformert::simplify_rec(exprt &expr,
       Forall_operands(it, expr)
         if(!simplify_rec(*it, substitutions))
           result=false;
-    
+
       res=simplify_node(expr, substitutions);
       if(!res) result=false;
     }
     while(!res);
 
-    //simplify remaining equalities
+    // simplify remaining equalities
     Forall_operands(it, expr)
       collect_node(*it, substitutions, false, false);
 
@@ -155,10 +155,10 @@ bool simplify_transformert::simplify_rec(exprt &expr,
       if(!res) result=false;
     }
     while(!res);
-  }  
+  }
 
-#if 0 //for later extension to disjunctions
-  //TODO: handle negation, too
+#if 0 // for later extension to disjunctions
+  // TODO: handle negation, too
   else if(expr.id()==ID_or || expr.id()==ID_implies)
   {
     Forall_operands(it, expr)
@@ -166,7 +166,7 @@ bool simplify_transformert::simplify_rec(exprt &expr,
       collect_node(*it, substitutions, true);
       if(!simplify_rec(*it, substitutions))
         result=false;
-      
+
       bool res=false;
       do
       {
@@ -177,13 +177,13 @@ bool simplify_transformert::simplify_rec(exprt &expr,
     }
   }
 #endif
-   
+
 #ifdef DEBUGX
   std::cout << "===== " << from_expr(ns, "", old)
             << "\n ---> " << from_expr(ns, "", expr)
             << "\n";
 #endif
-    
+
   return result;
 }
 
@@ -217,8 +217,8 @@ Function: simplify
 
 \*******************************************************************/
 
-bool simplify(exprt &expr, 
-              const std::set<irep_idt> &frozen_vars, 
+bool simplify(exprt &expr,
+              const std::set<irep_idt> &frozen_vars,
               const namespacet &ns)
 {
   return simplify_transformert(ns, frozen_vars)(expr);
@@ -236,7 +236,7 @@ Function: simplify_transformer
 
 \*******************************************************************/
 
-exprt simplify_transformer(const exprt &src, 
+exprt simplify_transformer(const exprt &src,
                           const std::set<irep_idt> &frozen_vars,
                           const namespacet &ns)
 {

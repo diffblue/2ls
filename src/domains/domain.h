@@ -116,7 +116,7 @@ public:
     const var_specst &var_specs,
     const namespacet &ns);
 
-  //get positive template rows,
+  // get positive template rows,
   //  i.e. those such that the remaining template rows
   //       can be reconstructed by negating these
   virtual void positive_template(std::vector<exprt> &templates)

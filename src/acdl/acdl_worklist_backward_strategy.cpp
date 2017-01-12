@@ -25,58 +25,58 @@ Author: Rajdeep Mukherjee
 \*******************************************************************/
 
 void
-acdl_worklist_backwardt::initialize(const local_SSAt &SSA, 
-        const exprt &assertion, const exprt& additional_constraint)
+acdl_worklist_backwardt::initialize(const local_SSAt &SSA,
+                                    const exprt &assertion, const exprt& additional_constraint)
 {
-  acdl_domaint::varst sym; 
+  acdl_domaint::varst sym;
   acdl_domaint::varst temp_leaf_var;
   // collect all leaf variables
-  for(statement_listt::iterator it = statements.begin(); it != statements.end(); it++) {
-    if(it->id() == ID_equal) {
-      exprt expr_lhs = to_equal_expr(*it).lhs();
-      acdl_domaint::varst lsym; 
+  for(statement_listt::iterator it=statements.begin(); it!=statements.end(); it++) {
+    if(it->id()==ID_equal) {
+      exprt expr_lhs=to_equal_expr(*it).lhs();
+      acdl_domaint::varst lsym;
       find_symbols(expr_lhs, lsym);
-      sym.insert(lsym.begin(), lsym.end()); 
-      exprt expr_rhs = to_equal_expr(*it).rhs();
-      if(expr_rhs.id() == ID_constant || expr_rhs.is_true() || expr_rhs.is_false()) { 
+      sym.insert(lsym.begin(), lsym.end());
+      exprt expr_rhs=to_equal_expr(*it).rhs();
+      if(expr_rhs.id()==ID_constant || expr_rhs.is_true() || expr_rhs.is_false()) {
         // collect leaf variables
         leaf_vars.insert(lsym.begin(), lsym.end());
       }
-    } 
+    }
   }
- 
+
   // collect all decision variables
-  for(statement_listt::iterator it = statements.begin(); it != statements.end(); it++) {
-    acdl_domaint::varst sym_rhs; 
-    acdl_domaint::varst derived_set; 
-    if(it->id() == ID_equal) {
-      exprt expr_rhs = to_equal_expr(*it).rhs();
+  for(statement_listt::iterator it=statements.begin(); it!=statements.end(); it++) {
+    acdl_domaint::varst sym_rhs;
+    acdl_domaint::varst derived_set;
+    if(it->id()==ID_equal) {
+      exprt expr_rhs=to_equal_expr(*it).rhs();
       find_symbols(expr_rhs, sym_rhs);
-      set_intersection(sym.begin(),sym.end(),sym_rhs.begin(),sym_rhs.end(),
-                         std::inserter(derived_set,derived_set.begin()));
+      set_intersection(sym.begin(), sym.end(), sym_rhs.begin(), sym_rhs.end(),
+                       std::inserter(derived_set, derived_set.begin()));
       if(derived_set.empty()) {
         // collect the leaf variables in the rhs
-        // Though these are leaf variables, but we 
+        // Though these are leaf variables, but we
         // MUST not insert these in to the leaf_vars now
         // since decision variables are computed from leaf_vars next
-        // Example: y = x+1, where x=nondet() is a leaf variable
+        // Example: y=x+1, where x=nondet() is a leaf variable
         temp_leaf_var.insert(sym_rhs.begin(), sym_rhs.end());
       }
-      if(expr_rhs.id() == ID_constant || expr_rhs.is_true() || expr_rhs.is_false()) { 
-       // not inserted into decision variables
+      if(expr_rhs.id()==ID_constant || expr_rhs.is_true() || expr_rhs.is_false()) {
+        // not inserted into decision variables
       }
-      else 
+      else
       {
         acdl_domaint::varst avars;
         find_symbols(*it, avars);
         // do not insert any leaf variables
-        for(acdl_domaint::varst::const_iterator it1 = avars.begin(); it1 != avars.end(); ++it1)       {
-          if(leaf_vars.find(*it1) == leaf_vars.end())
+        for(acdl_domaint::varst::const_iterator it1=avars.begin(); it1!=avars.end(); ++it1)       {
+          if(leaf_vars.find(*it1)==leaf_vars.end())
             worklist_vars.insert(*it1);
         }
       }
     }
-    // [TODO] special case for ternary statement 
+    // [TODO] special case for ternary statement
     // generated after simplifications
     else {
       acdl_domaint::varst avars;
@@ -91,12 +91,12 @@ acdl_worklist_backwardt::initialize(const local_SSAt &SSA,
   push(assertion);
 
 #ifdef DEBUG
-  std::cout << "The worklist content after initialisation is: " << std::endl;  
-  for(std::list<acdl_domaint::statementt>::const_iterator 
-     it = worklist.begin(); it != worklist.end(); ++it) 
-   std::cout << from_expr(SSA.ns, "", *it) << ",";
-   std::cout << std::endl; 
-#endif     
+  std::cout << "The worklist content after initialisation is: " << std::endl;
+  for(std::list<acdl_domaint::statementt>::const_iterator
+        it=worklist.begin(); it!=worklist.end(); ++it)
+    std::cout << from_expr(SSA.ns, "", *it) << ", ";
+  std::cout << std::endl;
+#endif
 }
 
 /******************************************************************\
@@ -110,30 +110,30 @@ acdl_worklist_backwardt::initialize(const local_SSAt &SSA,
  Purpose:
 
 \*****************************************************************/
-void acdl_worklist_backwardt::update 
+void acdl_worklist_backwardt::update
 ( const local_SSAt &SSA,
   const acdl_domaint::varst &vars,
-  listt &lexpr, 
-  const acdl_domaint::statementt &current_statement, 
+  listt &lexpr,
+  const acdl_domaint::statementt &current_statement,
   const exprt& assertion
-)
+  )
 {
-  //std::cout << "Inside backward update" << std::endl;
-  // dependency analysis loop for 
+  // std::cout << "Inside backward update" << std::endl;
+  // dependency analysis loop for
   // equalities, constraints, assertions
-  for(statement_listt::iterator e_it = statements.begin(); e_it != statements.end(); e_it++) 
+  for(statement_listt::iterator e_it=statements.begin(); e_it!=statements.end(); e_it++)
   {
     // the statement has already been processed, so no action needed
-    if(*e_it == current_statement) continue;
+    if(*e_it==current_statement) continue;
 
-    if(e_it->id() == ID_equal) {
-      exprt expr_rhs = to_equal_expr(*e_it).rhs();
+    if(e_it->id()==ID_equal) {
+      exprt expr_rhs=to_equal_expr(*e_it).rhs();
       std::string str("nondet");
       std::string rhs_str=id2string(expr_rhs.get(ID_identifier));
-      std::size_t found = rhs_str.find(str); 
+      std::size_t found=rhs_str.find(str);
       // push the nondet statement in rhs
-      if(found != std::string::npos) {
-        continue; 
+      if(found!=std::string::npos) {
+        continue;
       }
 
       if (check_statement (*e_it, vars)) {
@@ -145,7 +145,7 @@ void acdl_worklist_backwardt::update
     }
 #if 0
     // prevents inserting assertion twice
-    else if(assertion != current_statement) {
+    else if(assertion!=current_statement) {
       if (check_statement (assertion, vars)) {
         push_into_list (lexpr, assertion);
 #ifdef DEBUG
@@ -153,8 +153,8 @@ void acdl_worklist_backwardt::update
 #endif
       }
     }
-#endif    
-    // for constraints and other 
+#endif
+    // for constraints and other
     // non-assertion, non-equality statements
     else {
       if (check_statement (*e_it, vars)) {
@@ -179,62 +179,62 @@ void acdl_worklist_backwardt::update
  Purpose:
 
 \******************************************************************/
-void acdl_worklist_backwardt::update 
+void acdl_worklist_backwardt::update
 ( const local_SSAt &SSA,
   const acdl_domaint::varst &vars,
-  const acdl_domaint::statementt &current_statement, 
+  const acdl_domaint::statementt &current_statement,
   const exprt& assertion
-)
+  )
 {
-  live_variables.insert(vars.begin(),vars.end());
-  // [NORMAL CASE] Delete map element since 
+  live_variables.insert(vars.begin(), vars.end());
+  // [NORMAL CASE] Delete map element since
   // corresponding worklist element is also deleted.
   delete_from_map(current_statement);
-  // dependency analysis loop for 
+  // dependency analysis loop for
   // equalities, constraints, assertions
-  for(statement_listt::iterator e_it = statements.begin(); e_it != statements.end(); e_it++) 
+  for(statement_listt::iterator e_it=statements.begin(); e_it!=statements.end(); e_it++)
   {
-    // the statement has already been 
+    // the statement has already been
     // processed, so no action needed
-    if(*e_it == current_statement) continue;
+    if(*e_it==current_statement) continue;
 
     // push into map
     push_into_map(*e_it, vars);
     acdl_domaint::varst c_vars;
     find_symbols(*e_it, c_vars);
     // this is maintained for old live varaible approach
-    live_variables.insert(c_vars.begin(), c_vars.end());    
+    live_variables.insert(c_vars.begin(), c_vars.end());
 
-    if(e_it->id() == ID_equal) {
-      exprt expr_lhs = to_equal_expr(*e_it).lhs();
+    if(e_it->id()==ID_equal) {
+      exprt expr_lhs=to_equal_expr(*e_it).lhs();
       // check only the lhs
-      if(check_statement(expr_lhs, vars))      
+      if(check_statement(expr_lhs, vars))
         push(*e_it);
     }
-    // for constraints and other 
-    // non-equality statements, 
-    // check intersection of all symbols 
+    // for constraints and other
+    // non-equality statements,
+    // check intersection of all symbols
     else {
-      if (check_statement (*e_it, vars)) 
+      if (check_statement (*e_it, vars))
         push(*e_it);
     }
   }
   // remove variables of popped statement from live variables
-  remove_live_variables(SSA, current_statement); 
-#ifdef DEBUG   
- std::cout << "The content of the updated worklist is as follows: " << std::endl;
- for(std::list<acdl_domaint::statementt>::const_iterator 
-     it = worklist.begin(); it != worklist.end(); ++it) {
-   std::cout << "Updated Worklist Element::" << from_expr(SSA.ns, "", *it) << "===>";
-   std::map<acdl_domaint::statementt,acdl_domaint::varst>::iterator itf; 
-   itf = svpair.find(*it);
-   acdl_domaint::varst lvar = itf->second;
-   for(acdl_domaint::varst::const_iterator it1 = 
-       lvar.begin(); it1 != lvar.end(); ++it1)
-     std::cout << from_expr(*it1) << ", "; 
-   std::cout << std::endl;
- }
-#endif    
+  remove_live_variables(SSA, current_statement);
+#ifdef DEBUG
+  std::cout << "The content of the updated worklist is as follows: " << std::endl;
+  for(std::list<acdl_domaint::statementt>::const_iterator
+        it=worklist.begin(); it!=worklist.end(); ++it) {
+    std::cout << "Updated Worklist Element::" << from_expr(SSA.ns, "", *it) << "===>";
+    std::map<acdl_domaint::statementt, acdl_domaint::varst>::iterator itf;
+    itf=svpair.find(*it);
+    acdl_domaint::varst lvar=itf->second;
+    for(acdl_domaint::varst::const_iterator it1=
+          lvar.begin(); it1!=lvar.end(); ++it1)
+      std::cout << from_expr(*it1) << ", ";
+    std::cout << std::endl;
+  }
+#endif
 }
 
 /*******************************************************************\
@@ -245,69 +245,69 @@ void acdl_worklist_backwardt::update
 
   Outputs:
 
-  Purpose: Variables that are passed to domain are computed as follows: 
-           1> leaf_rhs_vars = (rhs_vars intersect leaf_vars) 
-           2> lr_vars = (stmt_vars intersect leaf_rhs_vars)
-           3> final_vars = (lhs_vars union lr_vars)
-           The condition 2 is a tighter constraint which may lead to 
+  Purpose: Variables that are passed to domain are computed as follows:
+           1> leaf_rhs_vars=(rhs_vars intersect leaf_vars)
+           2> lr_vars=(stmt_vars intersect leaf_rhs_vars)
+           3> final_vars=(lhs_vars union lr_vars)
+           The condition 2 is a tighter constraint which may lead to
            EMPTY variables, but to obey per-statement based live variable,
            we follow condition 2.
-           
+
            Alternative approach:
-           1> leaf_rhs_vars = (rhs_vars intersect leaf_vars) 
-           2> final_vars = (lhs_vars union leaf_rhs_vars)
+           1> leaf_rhs_vars=(rhs_vars intersect leaf_vars)
+           2> final_vars=(lhs_vars union leaf_rhs_vars)
 
 \*******************************************************************/
 acdl_domaint::varst acdl_worklist_backwardt::pop_from_map (const acdl_domaint::statementt &statement)
 {
-  std::map<acdl_domaint::statementt,acdl_domaint::varst>::iterator itf; 
-  itf = svpair.find(statement);
-  acdl_domaint::varst stmt_vars = itf->second;
-  // for equalities 
-  if(itf->first.id() == ID_equal) {
+  std::map<acdl_domaint::statementt, acdl_domaint::varst>::iterator itf;
+  itf=svpair.find(statement);
+  acdl_domaint::varst stmt_vars=itf->second;
+  // for equalities
+  if(itf->first.id()==ID_equal) {
     // find rhs vars
-    exprt expr_rhs = to_equal_expr(itf->first).rhs();
+    exprt expr_rhs=to_equal_expr(itf->first).rhs();
     acdl_domaint::varst rhs_vars;
     find_symbols(expr_rhs, rhs_vars);
     // find lhs vars
-    exprt expr_lhs = to_equal_expr(itf->first).lhs();
+    exprt expr_lhs=to_equal_expr(itf->first).lhs();
     acdl_domaint::varst lhs_vars;
     find_symbols(expr_lhs, lhs_vars);
-    
-    // 1> leaf_lhs_vars = (lhs_vars intersect leaf_vars) 
+
+    // 1> leaf_lhs_vars=(lhs_vars intersect leaf_vars)
     acdl_domaint::varst leaf_lhs_vars;
-    set_intersection(lhs_vars.begin(),lhs_vars.end(),leaf_vars.begin(),leaf_vars.end(),
-               std::inserter(leaf_lhs_vars,leaf_lhs_vars.begin()));
-    
-    // 2> lr_vars = (stmt_vars intersect intersect leaf_rhs_vars)
+    set_intersection(lhs_vars.begin(), lhs_vars.end(), leaf_vars.begin(), leaf_vars.end(),
+                     std::inserter(leaf_lhs_vars, leaf_lhs_vars.begin()));
+
+    // 2> lr_vars=(stmt_vars intersect intersect leaf_rhs_vars)
 #if 0
     acdl_domaint::varst lr_vars;
     // check if lhs is in map
-    set_intersection(stmt_vars.begin(),stmt_vars.end(),leaf_lhs_vars.begin(),leaf_lhs_vars.end(),
-               std::inserter(lr_vars,lr_vars.begin()));
-    
+    set_intersection(stmt_vars.begin(), stmt_vars.end(), leaf_lhs_vars.begin(), leaf_lhs_vars.end(),
+                     std::inserter(lr_vars, lr_vars.begin()));
+
 #endif
 
-    // 3> final_vars = (lhs_vars union lr_vars)
-    acdl_domaint::varst final_vars; 
+    // 3> final_vars=(lhs_vars union lr_vars)
+    acdl_domaint::varst final_vars;
     final_vars.insert(rhs_vars.begin(), rhs_vars.end());
-    // relaxed 
+    // relaxed
     final_vars.insert(leaf_lhs_vars.begin(), leaf_lhs_vars.end());
     // constrained
-    //final_vars.insert(lr_vars.begin(), lr_vars.end());
-    
-    if(final_vars.empty()) 
+    // final_vars.insert(lr_vars.begin(), lr_vars.end());
+
+    if(final_vars.empty())
     {
-      // [TODO] : Do we return empty vars    
+      // [TODO] : Do we return empty vars
       return rhs_vars;
     }
     return final_vars;
   }
   // for constraints and assertions
-  // pass all the variables in 
+  // pass all the variables in
   // statements to the domain
   else {
-   return stmt_vars; 
+    return stmt_vars;
   }
 }
 
@@ -323,46 +323,46 @@ acdl_domaint::varst acdl_worklist_backwardt::pop_from_map (const acdl_domaint::s
 
 \*******************************************************************/
 
-void acdl_worklist_backwardt::dec_update(const local_SSAt &SSA, 
-  const acdl_domaint::meet_irreduciblet &expr, const exprt& assertion)
+void acdl_worklist_backwardt::dec_update(const local_SSAt &SSA,
+                                         const acdl_domaint::meet_irreduciblet &expr, const exprt& assertion)
 {
   acdl_domaint::varst new_live_variables;
   acdl_domaint::varst vars;
   find_symbols(expr, vars);
-   
-  // dependency analysis loop for 
+
+  // dependency analysis loop for
   // equalities, constraints, assertions
-  for(statement_listt::iterator e_it = statements.begin(); 
-                           e_it != statements.end(); e_it++) 
+  for(statement_listt::iterator e_it=statements.begin();
+      e_it!=statements.end(); e_it++)
   {
     acdl_domaint::varst c_vars;
     find_symbols(*e_it, c_vars);
-    if(e_it->id() == ID_equal) {
-      exprt expr_lhs = to_equal_expr(*e_it).lhs();
+    if(e_it->id()==ID_equal) {
+      exprt expr_lhs=to_equal_expr(*e_it).lhs();
       // check only the lhs for backward strategy
-      if(check_statement(expr_lhs, vars)) { 
+      if(check_statement(expr_lhs, vars)) {
         push(*e_it);
-        new_live_variables.insert(c_vars.begin(), c_vars.end());    
+        new_live_variables.insert(c_vars.begin(), c_vars.end());
       }
-      // special case for left 
+      // special case for left
       // to right deductions in forward strategy
-      // example: cond21 = (x==y), decision is made
+      // example: cond21=(x==y), decision is made
       // on cond21, so we need to also insert this statement
       // since this would allow the deduction (x==y)
-      exprt expr_lhsp = to_equal_expr(*e_it).lhs();
+      exprt expr_lhsp=to_equal_expr(*e_it).lhs();
       // check only the lhs
-      if(check_statement(expr_lhsp, vars)) { 
+      if(check_statement(expr_lhsp, vars)) {
         push(*e_it);
-        new_live_variables.insert(c_vars.begin(), c_vars.end());    
+        new_live_variables.insert(c_vars.begin(), c_vars.end());
       }
     }
-    // for constraints and other 
-    // non-equality statements, 
-    // check intersection of all symbols 
+    // for constraints and other
+    // non-equality statements,
+    // check intersection of all symbols
     else {
-      if (check_statement (*e_it, vars)) { 
+      if (check_statement (*e_it, vars)) {
         push(*e_it);
-        new_live_variables.insert(c_vars.begin(), c_vars.end());    
+        new_live_variables.insert(c_vars.begin(), c_vars.end());
       }
     }
   }

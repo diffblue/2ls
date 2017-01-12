@@ -158,18 +158,18 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
 
   if(cmdline.isset("propagate"))
     options.set_option("propagate", cmdline.get_value("propagate"));
-  else 
-    options.set_option("propagate", "chaotic"); //default
-  
+  else
+    options.set_option("propagate", "chaotic"); // default
+
   if(cmdline.isset("decision"))
     options.set_option("decision", cmdline.get_value("decision"));
-  else 
-    options.set_option("decision", "random"); //default
-  
+  else
+    options.set_option("decision", "random"); // default
+
   if(cmdline.isset("learning"))
     options.set_option("learning", cmdline.get_value("learning"));
-  else 
-    options.set_option("learning", "first-uip"); //default
+  else
+    options.set_option("learning", "first-uip"); // default
 
   if(cmdline.isset("slice") && cmdline.isset("inline"))
     options.set_option("slice", true);
