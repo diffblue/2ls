@@ -12,7 +12,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include <util/find_symbols.h>
 #include "acdl_solver.h"
 #include "acdl_domain.h"
-#include "../domains/simplify_transformer.h"
+#include <domains/simplify_transformer.h>
 #include <string>
 #include <iostream>
 

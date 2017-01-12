@@ -9,9 +9,9 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #ifndef CPROVER_ACDL_DOMAIN_H
 #define CPROVER_ACDL_DOMAIN_H
 
-#include "../ssa/local_ssa.h"
-#include "../ssa/ssa_unwinder.h"
-#include "../summarizer/ssa_db.h"
+#include <ssa/local_ssa.h>
+#include <ssa/ssa_unwinder.h>
+#include <ssa/ssa_db.h>
 
 class acdl_domaint : public messaget
 {
