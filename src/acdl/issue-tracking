@@ -1,0 +1,571 @@
+1> acdl_domain: is_complete check for bottom8 example is not working correctly. 
+
+Old: $guard#0 && x#20 <= 4 && -((signed __CPROVER_bitvector[33])x#20) <= -4 && x#19 <= 3 && -((signed __CPROVER_bitvector[33])x#19) <= -3
+[ACDL-DOMAIN] old value: $guard#0 && x#20 <= 4 && -((signed __CPROVER_bitvector[33])x#20) <= -4 && x#19 <= 3 && -((signed __CPROVER_bitvector[33])x#19) <= -3
+DOMAIN projected live variables are: x#19y#18
+[ACDL-DOMAIN] projected(main::1::x#19): $guard#0 && x#20 <= 4 && -((signed __CPROVER_bitvector[33])x#20) <= -4
+[ACDL-DOMAIN] deductions(main::1::x#19): x#19 <= 2147483646 <== 
+
+[ACDL-DOMAIN] projected(main::1::y#18): $guard#0 && x#20 <= 4 && -((signed __CPROVER_bitvector[33])x#20) <= -4 && x#19 <= 3 && -((signed __CPROVER_bitvector[33])x#19) <= -3
+[ACDL-DOMAIN] deductions(main::1::y#18): x#19 <= 2147483646 <== 
+
+** SAME deductions for different projection over x#19 and y#18
+
+2> acdl_domain: split must return with symbol_exprt as well. Needed for decision
+variables to be split where decision variables are set of symbol_exprts. (DONE)
+
+3> acdl_domain: domain.split does not check for the constant value for the
+booleans properly. 
+eg. (E) guard#22 == TRUE 
+guard#22 is also kept as part of the non-singletons variables.
+
+4> Verification status check.
+
+5> Decision heuristics -- do not insert variables from the statements such as
+(guard#0==TRUE).  
+
+6> Domain split function operates on x#22 and returns x#22 <= 2147483646 when x#22 is already a constant (0) in the abstract state.
+[ACDL-DOMAIN] Split(x#22): $guard#25 && !(x#phi25 >= 1) && !(-((signed __CPROVER_bitvector[33])x#phi25) >= 1) && !(x#22 >= 1) && !(-((signed __CPROVER_bitvector[33])x#22) >= 1) && !(x#24 >= 1) && !(-((signed __CPROVER_bitvector[33])x#24) >= 1) && $cond#23 && $guard#0
+[ACDL-DOMAIN] decision: x#22 <= 2147483646
+
+7> The benchmark "if-else" computes worng deductions (or wrong subsumption) after
+making a deductions. Search for PROBLEM keyword in main1.out file
+
+8> Do we need to make decisions on guard variables. Because these are always
+deduced from conds and other guards. So, it is better to not insert guard
+variables when creating the decision variables set in the initialisation
+function.
+
+9> Subsumption check in complete_check3 is not correct. Follow the deductions
+after second decision below. How can (x#phi26 < 3) and (x#phi26 < 5) co-exist.
+ 
+$guard#26
+!(-((signed __CPROVER_bitvector[33])x#phi26) >= 1)
+$cond#24
+$guard#0
+$cond#21
+!(x#16 >= 4)
+!(-((signed __CPROVER_bitvector[33])x#16) >= 0)
+$guard#22
+!(x#23 >= 5)
+!(-((signed __CPROVER_bitvector[33])x#23) >= -1)
+!(x#25 >= 3)
+!(-((signed __CPROVER_bitvector[33])x#25) >= 1)
+!(x#phi26 >= 5)
+$cond#22
+!(c#20 >= 1)
+!(-((signed __CPROVER_bitvector[33])c#20) >= 1)
+!$guard#23
+$guard#25
+!(x#phi26 >= 3)
+
+10> Algorithm to find the first-UIP using the dominator algorithm ?
+  Step A> Construct a sub-graph with the decision node leading to the conflict
+  node: Make a forward traversal and annotate the nodes in the graph that are in
+  the same level as the decision node.
+  
+  Step B> Run dominator on the subgraph to find the first UIP.
+  
+  Step C> The graph cut can be determined easily. Find all successor nodes to
+  the first-UIP point and then find all nodes that lead to these successors of 
+  first UIP. Conjunct the negation of all these nodes which forms the conflict
+  clause. 
+
+11> Filter all decision variables which already have constant values (eg. guard
+== TRUE, x == 5) [DONE]
+
+12> Making completeness check effecient: 
+
+Option 1: After we get the abstract counterexample, we can 
+replay the abstract values on the program to see if it is a real
+counterexample. For this, we can treat the non-singleton abstract value of a
+variable to be non-deterministic and see if it still produces a counterexample.
+If that is the case, we terminate and say that the abstract state is complete. 
+Else we test for each non-singleton abstract value. If none of the abstract
+value lead to a counterexample, we conclude that the abstract state is not complete.
+
+Option 2: We annotate the abstract values computed from each transformer with a
+flag called overapproximated. There are three cases here :
+ a> For statements like (x_2 = x_1 + 1) 
+    If x_1 is not over-approximating and the add operation 
+    does not overflow, then x_2 is not over-approximating. Else
+    x_2 is overapproximating. For any other operation than "+", we 
+    need to exactly determine that the operation does not cause 
+    over-approximation which is difficult to check using SAT solver. 
+    
+ b> For statements like (x_3 = guard ? x_1 : x_2)
+    If guard is not decided, then x_3 is over-approximating. Else,
+    x_3 is not over-approximating if either x_1 and x_2 is not over-approximating. 
+    
+ c> For statements like (guard_2 == cond && guard_1),
+    guard_2 is approximating if cond and guard_1 is not decided. 
+    Else, if both cond and guard_1 is not over-approximating, then 
+    guard_2 is also not over-approximating. 
+
+13> Implication graph construction : We do not add cyclic nodes in the 
+implication graph now (eg. Dec-->1, Dec-->2-->3-->1). Let us consider that the first 
+occurance of "node 1" is at decision level 2 (Dec is a decision node with level
+2). Now, let us consider that the second occurance of "node 1" is at decision level 4. 
+Though we do not add the second occurance of "node 1" to the graph, but we must update 
+the decision level of "node 1" to 4 and put an edge (3-->1) along with the old
+edge (Dec-->1). Note that the old edge (Dec-->1) should not be deleted.   
+
+14> The domain.split function returns the same splitting value for
+non-conditionals. Follow the splitting sequence.
+x#16 <= 2147483646  ,
+x#phi25 <= 2147483646  ,
+DECISION SPLITTING EXPR: x#16 <= 2147483646
+
+x#16 <= 255  ,
+x#phi25 <= 2147483646  ,
+
+x#16 <= 255  ,
+x#phi25 <= 255  ,
+
+x#16 <= 255  ,
+x#phi25 <= 255  ,
+
+x#16 <= 255  ,
+x#phi25 <= 255  ,
+
+x#16 <= 255  ,  ---- REPEATED FOREVER
+x#phi25 <= 255, ---- REPEATED FOREVER
+DECISION SPLITTING EXPR: x#16 <= 255
+
+The above problem occurs due to the following (branch3 example):
+If you look at the way we now calculate 'l' and 'u', we iterate over the
+abstract value 'v' and pick up the lhs in 'v' which matches "expr" 
+when split is called with the arguments split(v, expr);
+
+For example, expr = x#phi25 and v = (!(x#phi25 <= -1073741824) && (x#phi25 <= 0))
+When we call domain split(v, expr), it does not ever match !(x#phi25 <= -1073741824) and always
+matches (x#phi25 <= 0). So, the corresponding value of 'u' calculated does not
+ever receive the value (u = -1073741824), but it always receives the value 
+(u = 0). Hence, between(l, u) always gets fixed value as its argument. 
+Solution: make a pass over all elements in v and change the negation to positive. 
+This will change those expressions to ID_ge. Now add a case for ID_ge to
+obtain the lower bound. 
+
+14> domain.split on conditional variable (cond#21) return false before a
+decision is made on cond#21. So, cond#21 is not considered as part of the 
+decision variables. (follow example branch4)
+
+15> Fork -- clone from the fork -- push changes to the fork -- pull request to
+acdl branch (not master)
+
+16> branch3 leads to segfault in the function
+acdl_implication_grapht::remove_in_edges(unsigned int) ()
+
+17> remove_out_edges() in implication graph implementation is not 
+correct. It checks for nodes.out.begin() when node.out().size() ==0, 
+which is wrong.
+
+18> Implement decision heuristics: 
+     a> don't make decisions on guards (example guard2 = cond && guard0)
+     b> don't make decision on variables that has constants on rhs. 
+     c> don't make decision on additional SSA variables that are not part of
+     original program variables. 
+
+19> Since we are splitting on a decision variable (say x), then a decision such 
+as (x <= 10) leads to a Implication graph which does not lead to conflict. 
+For another subsequent decision (x <= 5), do we need to create a separate
+decision node or update the decision node (x<=10) to (x<=5) ?
+
+20> the mid value computed by tpolyhedra is wrong. Look below for the branch3
+example.
+[ACDL DOMAIN] expr: x#16[ACDL DOMAIN] min: -2147483648[ACDL DOMAIN] max: 2147483646[ACDL DOMAIN] mid: 255
+[ACDL-DOMAIN] decision: x#16 <= 255
+
+21> Subsumption check is wrong. Look at the value of (x#16) in the branch3 example below. 
+[ACDL-DOMAIN] Split(x#16): $guard#25 && !(x#phi25 >= 1) && !(-((signed __CPROVER_bitvector[33])x#phi25) >= 1) && !(x#22 >= 1) && !(-((signed __CPROVER_bitvector[33])x#22) >= 1) && !(x#24 >= 1) && !(-((signed __CPROVER_bitvector[33])x#24) >= 1) && $cond#23 && $guard#0 && x#16 <= 2147483646 && x#16 <= 255
+
+22> conflict clause construction from UIP
+
+23> (DONE) The decision heuristic based on splitting non-boolean variables
+does not handle the following case below: 
+
+Old value : x>=0 && x<=10
+Decision: x<=5
+New value: x>=0 && x<=10 && x<=5
+
+We compute the meet of the old value with the current decision to get the new
+value. But the correct new value in this case should be
+New value: x>=0 && x<=5 
+ 
+24> completeness_check2 has problems with splitting when the decision variable
+polarity is "lower" (set via split). follow the min and max values of the
+variable c#20.
+
+25> compleness_check3 has empty cond_heuristic despite having !cond#22 as
+non-singleton. the problem is because of the "!" sign, the positive polarity
+cond#22 is inside cond container without any problem. check for substring. 
+
+26> The problem in normalize_val is as follows:
+The deductions (y#20==15) is represented using two different constraints in our
+case:
+!(-((signed __CPROVER_bitvector[33])y#20) >= -15)
+!(y#20 >= 15)
+
+So, in the implementation of normalize_val() when I search for the expression
+!(y#20 >= 15) in abstract value, I only remove this expression from current
+abstract value to create a new_value removing this expression which is then
+conjuncted with the negation of !(!(y#20 >= 15)) to determine satisfiability.
+Here, I miss the other expression !(-((signed __CPROVER_bitvector[33])y#20) >=
+-15)  since this does not match with !(y#20 >= 15). This problem happens 
+only when something is singleton (like y#20 above) in the abstract value 
+which is represented using two different meet irreducible. 
+The problem can be seen for bottom6 when normalize_val is called inside the
+propagation after the abstract value from the implication graph is computed. 
+
+27> Implement the following in acdl_domain:
+The function comparable(a,b) where a and b are two meet irreducibles gives three output: 
+a> satisfiable, b> unknown c> contradicting
+a> Satisfiable : a is satisfiable with respect to b if !(a & !b) or (a -> b) 
+b> Contradicting : a and b is contradicting if !(a & b) returns TRUE
+c> Unknown : a and b is unknown if it is neither satisfiable nor contradicting
+
+28> Ensure that the marking of IG is correct, it should only mark nodes at
+current decision level starting from decision node and ending with conflict
+level. Otherwise, the following error should not happen. 
+2ls: acdl_implication_graph.cpp:224: graph<acdl_implication_graph_nodet>::node_indext acdl_implication_grapht::first_uip(): Assertion `uip_node.level==current_level' failed.
+
+29> conflict clause must be UNIT -- check this
+
+30> Print the final implication graph (only valid nodes) 
+    Print the deleted nodes
+    Check the erase function (outgoing, incoming)
+    Print the outdegree and indegrees of nodes
+    Print the dominator (must be consistent with the out and in degrees of
+    nodes)
+
+31> loop1 example when run with havoc cause seg fault in acdl domain template
+generator
+
+32> divider example: uip is not computed beause dominator returned the 
+target set for just the decision node(entry node). This could happen 
+because of two reasons: 
+
+a> May be there are decision taken on variables that should not be taken
+because some variables are restricted, like guard#ls, x#lb. 
+b> The decision node (entry node for dominator computation) and the 
+BOTTOM nodes are disconnected because this decision does not lead to the 
+BOTTOM node directly. This can be due to the quality of deductions made. 
+
+32> Delete all nodes(decision+deduction) in graph that lead to UNKNOWN and the subseseqent 
+decision (on same variable) lead to conflict.
+
+33> construct the conflict clause -- how to choose literals other than uip ?
+
+34> implement the first_uip based cut. Make sure that all nodes from the
+decision node passed through this point. 
+
+35> compare the difference between first_uip and last_uip after the conflict
+clause is properly built. 
+
+36> compare the difference between chronological and non-chronological
+backtracking. 
+
+37> feed information from the learning to the decision heuristics -- trace 
+variable activity
+
+38> If uip is not found, then the entry node (present decision node) for which the dominator is asked to
+calculate the uip simply was a bad decision. However, the interesting case is
+that even though the entry node and the BOTTOM node is disconnected, there are
+valid deductions that are made which cannot be thrown away. These deductions are
+the result of the new learnt clause. 
+However, the uip has to be recomputed from a lower
+decision level. This can be done by taking all decision nodes in to
+consideration for constructing the conflict clause. If the current decision
+node is not contradicted with the present literal, then 
+we have chosen a wrong decision level. Follow Leo's code first_uip function. 
+
+39> pass domain object to the conflict_analysis to use normalize_val method call
+
+40> template_generator git update fetch
+41> Peter TODO -- command line switch for learning and decision heuristics.
+
+42> How to set this "conflicting_clause = learned_clauses.size() - 1;$ from
+acdl_domain inside unit rule.
+
+43> How to set the new deductions from unit rule to the conflict graph
+
+44> For octagons, the uip (negation of last decision) may not be 
+violated at current level.
+Upper index: 21lower index: 17                                                
+FALSE                                                                         
+FALSE                                                                         
+!(-((signed __CPROVER_bitvector[33])y#21) >= 0)                               
+!(-((signed __CPROVER_bitvector[33])y#18) >= -4294967294)                     
+y#18 <= 1u                                                                    
+Decision Level: 4                                                             
+Upper index: 17lower index: 14                                                
+!(-((signed __CPROVER_bitvector[33])x#20) >= 0)                               
+!(x#16 >= 2u)                                                                 
+(unsigned __CPROVER_bitvector[33])y#18 + (unsigned __CPROVER_bitvector[33])y#21
+<= 1
+Decision Level: 3                                                             
+Upper index: 14lower index: 8                                                 
+!((unsigned __CPROVER_bitvector[33])x#22 + (unsigned
+__CPROVER_bitvector[33])y#21 <= 1)
+!((unsigned __CPROVER_bitvector[33])x#20 + (unsigned
+__CPROVER_bitvector[33])y#21 <= 0)
+!((unsigned __CPROVER_bitvector[33])x#20 + (unsigned
+__CPROVER_bitvector[33])x#22 <= 1) 
+!(-((signed __CPROVER_bitvector[33])x#22) >= 0)
+!(x#22 >= 3u)                                                                 
+(unsigned __CPROVER_bitvector[33])x#20 + (unsigned __CPROVER_bitvector[33])y#21
+<= 1
+Decision Level: 2                                                             
+Upper index: 8lower index: 4
+!((unsigned __CPROVER_bitvector[33])x#22 + (unsigned
+__CPROVER_bitvector[33])y#18 <= 1)
+!(-((signed __CPROVER_bitvector[33])y#23) >= 0)
+!(y#23 >= 3u)                                                                 
+y#21 <= 1u
+Decision Level: 1
+Upper index: 4lower index: 3
+(signed __CPROVER_bitvector[33])x#16 - (signed __CPROVER_bitvector[33])y#23 <=
+4294967294
+Decision Level: 0
+Upper index: 3lower index: 0                                                  
+$cond#19
+$guard#0 
+$guard#20
+
+45> A new decision added to the trail can lead to inconsistent trail (Abstract
+    value is UNSAT). 
+Consider the following decision in octagon domain:
+NEW DECISION: 
+(unsigned __CPROVER_bitvector[33])x#16 + (unsigned __CPROVER_bitvector[33])x#22
+<= 1
+
+Checking consistency of trail after adding decision:
+----------------------------------------------------------------
+$guard#20 && $guard#0 && $cond#19 && (signed __CPROVER_bitvector[33])x#16 -
+(signed __CPROVER_bitvector[33])y#23 <= 4294967294 && y#21 <= 1u && !(y#23 >=
+ 3u) && !(-((signed __CPROVER_bitvector[33])y#23) >= 0) && !((unsigned
+__CPROVER_bitvector[33])x#22 + (unsigned __CPROVER_bitvector[33])y#18 <= 1) &&
+(unsigned __CPROVER_bitvector[33])x#20 + (unsigned __CPROVER_bitvector[33])y#21
+ <= 1 && !(x#22 >= 3u) && !(-((signed __CPROVER_bitvector[33])x#22) >= 0) &&
+!((unsigned __CPROVER_bitvector[33])x#20 + (unsigned
+      __CPROVER_bitvector[33])x#22 <= 1) && !((unsigned __CPROVER_bitvector[33])x#20 +
+      (unsigned __CPROVER_bitvector[33])y#21 <= 0) && !((unsigned
+          __CPROVER_bitvector[33])x#22 + (unsigned __CPROVER_bitvector[33])y#21 <= 1) &&
+      !((unsigned __CPROVER_bitvector[33])y#18 + (unsigned
+            __CPROVER_bitvector[33])y#21 <= 1) && !(-((signed __CPROVER_bitvector[33])x#16)
+            >= 0) && **(unsigned __CPROVER_bitvector[33])x#16 + (unsigned
+              >__CPROVER_bitvector[33])x#22 <= 1**
+
+            The trail is inconsistent after addition
+            of the last decision. This is because
+            x#16>0 and x#22>0, so the last decision
+            (x#16+x#22<=1) is clearly UNSAT, thus
+            leading to inconsistent state of the
+            trail. 
+
+            Presently, the consistency check is
+            insider the acdl solver when a decision
+            heuristics returns a decision. But should
+            it be part of the decision heuristics to
+            abandon such decisions when it leads to
+            inconsistent trail ?
+
+46> The resolution proof in CDCL helps to find the uip. The resolution 
+proof works on the contradicted segment of trail to find the reason (clause) 
+for such assignments from the reason_trail. It then iterates over this clause
+to find if the literal of this clause contradicts at lower decision level in 
+which it inserts the literal into the result clause and updates the backtrack 
+level and if the literal contradicts in the present level, then the
+result_clause is not updated but the open path is increased and the marking is
+done.
+
+Issues in August:
+-----------------
+1. There shouldn't be a statement TRUE in the worklist
+2. Multiple output Push: !(x#19 == 2 || !$guard#0)
+3> Extend largest range heuristics to work for template instead of variable.
+4> Make acdl_invariant subclass of acdl_solver.
+6> The following loop assertion (loop1-unsafe-problem) shows 
+"VERIFICATION INCONCLUSIVE" with --acdl --unwind 2. 
+int main() {
+  int x=0,i;
+  for(i=0;i<=1;i++)  
+    x = x+i;
+  assert(x>20);
+}
+Whereas, with the assert(x<2) or assert(x==20), it fails.
+7> For octagons, the consistency check fails at two places:
+  a> after adding decision to the trail
+  b> after adding propagation using unit rule to the trail
+
+8> bug3 deduces FALSE incorrectly. The result#phi values are
+computed correctly, but the deductions for FALSE is incorrect.
+
+Implementation of live variables algorithm
+--------------------------------------------
+1> Pass to domain: intersection of variables in popped statement and live
+variables of the statement 
+2> Maintain map<statement --> live variables>
+3> Pop algo:
+    a> return stmt;
+    b> Pass to domain: intersection of variables in popped statement and live
+variables of the statement 
+    c> remove stmt;
+    d> remove live variables;
+4> Algo for forward iteration strategy:
+    a> same as chaotic but for assignments, make projection on lhs live
+    variables only. For equalities and assertions, make projection on all live
+    variables that are in the popped statement.
+   
+Changes done to implement live variables:
+-----------------------------------------
+Too conservative:
+=================
+1> If a statement is popped out from worklist, it can also 
+be pushed in again if the deductions made involve the variables of the
+statement.
+
+2> Making deductions on all live variables, not the intersection of 
+live varaible with the variables in the popped statement. 
+
+3> do not delete map elements for empty deductions. Worklist element
+is deleted as usual.   
+
+4> for dec_update, initialize the statement by inserting all live_variables.  
+
+Now implemented :
+=================
+1> If a statement is popped out from worklist, it can also 
+be pushed in again if the deductions made involve the variables of the
+statement -- needed for correctness, although slows down deduction sometime.
+
+2> Making deductions on all live variables, not the intersection of 
+live varaible with the variables in the popped statement. 
+
+3> for dec_update, initialize the statement by inserting all live_variables.  
+
+Issues in September:
+====================
+1> Do away with live variables set since it does not contribute to 
+per statement based live variable. for this, also think about how to 
+initialize the live varaible set for statements inserted from a decision 
+dec_update in worklist_ordered class.
+
+2> deductions using new template_generation_acdl slows down 
+performance quite a bit. 
+
+Example of Forward Iteration Strategy:
+=======================================
+Forward strategy:
+N1: x#20 != 1u + y#18 && $guard#20
+N2: $guard#0 == TRUE
+N3: $cond#19 == (x#16 == y#18)
+N4: x#20 == 1u + x#16
+N5: $guard#20 == ($cond#19 && $guard#0)
+
+N2: g0=T -> N5
+N3: Top 
+N4: x20-x16=1 -> N3, N1
+N5: Top
+N3: Top
+N1: Top
+---
+Decision: cond19=T -> push N5(live variable:g20), N3(live varaible: x16,y18)
+N3: x16=y18 -> N1, N4
+N5: g20=T -> N1
+N1: Top
+N4: x20-y18=1 -> N1
+N1: Bottom
+---
+Learn: !cond19 --> N5(g20), N3(x16,y18)
+N3: TOP (can not represent x16 != y18)
+N5: !g20 --> N1
+N1: BOTTOM
+
+3> When the simplifiert is called inside pre-processor, it 
+simplifies the following statement:
+x#phi31 == ($guard#30 ? x#30 : x#28) ===> simplified to $guard#30 ? (x#phi31 == x#30) : (x#phi31 == x#28).
+So, the above statement loses structure from being an Equality statement 
+to a general constraint statement. This causes difficulty in deriving the 
+varaibles that need to be passed to the domain for deduction during forward
+iteration strategy. In the origin statement, it is easy to determine x#phi31 is
+a lhs variable, hence it must be passed to the domain for deductions in forward 
+strategy. However, it is hard to determine x#phi31 as lhs variable for the
+simplified statement, hence some deductions are missed in forward strategy due
+to this. 
+
+Issues on Sept.5, 2016
+-----------------------
+1> When using pre-processor with perstatement based live variable, bottom9 did
+not terminate. sv-comp benchmark bitvector/2ls jain_1_true-unreach-call.c got
+stuck in pre-processing. 
+
+Issues on 4th November, 2016
+----------------------------
+1> bv6-9 does not work with --no-propagation
+
+Issues on 6th December, 2016
+============================
+1> Avoid building template on same variables with different index. With this
+optimization try complete-check3 with octagons which does not terminate now. 
+The number of template build now is 32 for 4 variables, but it should come down
+to only 6, only the interval constraints should remain since all transformers are 
+related to 'x'. 
+
+2> Try caching template generation for the same variables so that we donot build 
+templates for the same variables every time.
+
+3> Perform partial evaluation of transformers at deduction phase. This simulates 
+path-sensitive analysis. Refer Issue#52 to check this.
+
+4> Implement Generalization step
+
+5> Why is acdl_template_generator called so many times -- relational4? 
+Cache templates on same variables
+
+6> What are the octagons generated for relational4 in Interproc ?
+
+7> domain.normalize_val(v); is needed in decide() in acdl_solver.cpp before
+calling decision heuristics for intervals, however this leads to inconsistent
+result in case of octagons.
+
+8> With restricted octagon constraint generation, namely discarding same
+variable with different indexes and variables in different functions, the 
+following run of relational4 got error. Note that the domain.normalize is 
+commented out for this run in decide procedure in acdl_solver.cpp.
+[rajdeep@dkr10 relational4]$ ./run > correct 
+file main.c line 23 function main: function `assert' is not declared
+2ls: ../acdl/acdl_domain.cpp:1566: int acdl_domaint::unit_rule(const
+local_SSAt&, acdl_domaint::valuet&, acdl_domaint::valuet&, exprt&): Assertion
+`check_val_consistency(v)' failed.
+./run: line 1:  5193 Aborted                 (core dumped) 2ls --acdl main.c
+--decision ordered --propagate chaotic --learning first-uip --inline --octagons
+
+10> remove guard# variables from non-gamma-complete variable passed to the
+acdl_domain since they are by default concrete.
+
+7> We use SAT to detemine conjunction(SSA,val) where val is obtained after 
+making concrete deductions in the gamma-complete check phase. If
+conjunction(SSA,val) is SAT, then there is a counterexample. However, if it is 
+UNSAT, can we feedback that information to the conflict graph. Presently, the 
+decision and deductions in gamma-complete phase are not incorporated with the 
+conflict graph.
+
+8> domain.normalize should handle ID_equality constraints as well, that is 
+(x<=10) and (x==5), it should normalize that to (x<=5) ?
+
+9> [rajdeep@dkr11 DAIO]$ time 2ls main.c --acdl --decision ordered --propagate
+chaotic --learning first-uip --inline > main.out 
+2ls: ../acdl/acdl_domain.cpp:1904: bool acdl_domaint::is_complete(const valuet&,
+const std::set<symbol_exprt>&, const std::set<symbol_exprt>&, const exprt&,
+acdl_domaint::valuet&) const: Assertion `gamma_decvar.size() == 0' failed.
+Aborted (core dumped)
+
+10> // [TODO] Explicitly make on all assumptions TRUE
+  // for example, cond21=(x>0 && X<3), force cond21==TRUE 
+
+11> Use ACDL deductions instead of SAT solvers for decisions in gamma-complete check   
+
+12> Implement second domain operator for generalization interface
+
+13> Use map <stmt, index of propagation trail> to implement trail.

@@ -1,0 +1,34 @@
+August
+--------
+1> domain deductions seperately handled: boolean_inference, numerical_inference
+2> guardlb variable not checked in is_complete procedure 
+3> ssa_enabling_expr checked for worklist update
+4> remove_var procedure -- logic negated 
+
+September
+---------
+
+October
+------
+1> update function in acdl_worklist_ordered.cpp now handles assertion outside
+loop. This change has to be done since we do not have SSA nodes any more, so 
+we can not identify is a statement is of type ID_assert
+
+December
+--------
+1> Octagon constraint generation -- no sum and difference constraint 
+generated for variables with same name but different indexes, no constraint
+generated for variables in different procedures. 
+
+2> No decision on "cond" variables in assumption statements 
+like (cond21 == (x>2 && x<10));
+
+3> Determining the non-gamma-complete variables based on live variable. 
+Follow github issue #52.
+
+4> We use SAT to detemine conjunction(SSA,val) where val is obtained after 
+making concrete decisions in the gamma-complete check phase. If
+conjunction(SSA,val) is SAT, then there is a counterexample. However, if it is 
+UNSAT, can we feedback that information to the conflict graph. Presently, the 
+decision and deductions in gamma-complete phase are not incorporated with the 
+conflict graph. 
