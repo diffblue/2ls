@@ -1266,7 +1266,7 @@ property_checkert::resultt acdl_solvert::operator()(
       do 
       {
         // call generalize_proof here
-        generalize_proof(SSA, assertion, v);
+        //generalize_proof(SSA, assertion, v);
 
         std::cout << "********************************" << std::endl;
         std::cout << "    CONFLICT ANALYSIS PHASE" << std::endl;
