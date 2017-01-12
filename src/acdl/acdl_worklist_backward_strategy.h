@@ -6,8 +6,8 @@ Author: Rajdeep Mukherjee
 
 \*******************************************************************/
 
-#ifndef CPROVER_ACDL_WORKLIST_BACKWARD_H
-#define CPROVER_ACDL_WORKLIST_BACKWARD_H
+#ifndef CPROVER_2LS_ACDL_ACDL_WORKLIST_BACKWARD_STRATEGY_H
+#define CPROVER_2LS_ACDL_ACDL_WORKLIST_BACKWARD_STRATEGY_H
 
 #include "acdl_worklist_base.h"
 

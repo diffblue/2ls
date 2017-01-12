@@ -6,8 +6,8 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 
 \*******************************************************************/
 
-#ifndef CPROVER_ACDL_SOLVER_H
-#define CPROVER_ACDL_SOLVER_H
+#ifndef CPROVER_2LS_ACDL_ACDL_SOLVER_H
+#define CPROVER_2LS_ACDL_ACDL_SOLVER_H
 
 #include <util/options.h>
 #include <util/find_symbols.h>

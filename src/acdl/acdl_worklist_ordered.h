@@ -6,8 +6,8 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 
 \*******************************************************************/
 
-#ifndef CPROVER_ACDL_WORKLIST_ORDERED_H
-#define CPROVER_ACDL_WORKLIST_ORDERED_H
+#ifndef CPROVER_2LS_ACDL_ACDL_WORKLIST_ORDERED_H
+#define CPROVER_2LS_ACDL_ACDL_WORKLIST_ORDERED_H
 
 #include "acdl_worklist_base.h"
 

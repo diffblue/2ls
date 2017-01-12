@@ -6,8 +6,8 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
-#ifndef DELTACHECK_TEMPLATE_GENERATOR_ACDL_H
-#define DELTACHECK_TEMPLATE_GENERATOR_ACDL_H
+#ifndef CPROVER_2LS_ACDL_TEMPLATE_GENERATOR_ACDL_H
+#define CPROVER_2LS_ACDL_TEMPLATE_GENERATOR_ACDL_H
 
 #include "../domains/template_generator_base.h"
 

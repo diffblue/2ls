@@ -6,8 +6,8 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 
 \*******************************************************************/
 
-#ifndef CPROVER_ACDL_DOMAIN_H
-#define CPROVER_ACDL_DOMAIN_H
+#ifndef CPROVER_2LS_ACDL_ACDL_DOMAIN_H
+#define CPROVER_2LS_ACDL_ACDL_DOMAIN_H
 
 #include <ssa/local_ssa.h>
 #include <ssa/ssa_unwinder.h>

@@ -6,8 +6,8 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 
 \*******************************************************************/
 
-#ifndef CPROVER_ACDL_CONFLICT_GRAPH_H
-#define CPROVER_ACDL_CONFLICT_GRAPH_H
+#ifndef CPROVER_2LS_ACDL_ACDL_CONFLICT_GRAPH_H
+#define CPROVER_2LS_ACDL_ACDL_CONFLICT_GRAPH_H
 
 #include <goto-programs/property_checker.h>
 #include "acdl_domain.h"

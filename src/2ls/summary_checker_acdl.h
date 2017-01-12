@@ -6,8 +6,8 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
-#ifndef CPROVER_SUMMARY_CHECKER_ACDL_H
-#define CPROVER_SUMMARY_CHECKER_ACDL_H
+#ifndef CPROVER_2LS_2LS_SUMMARY_CHECKER_ACDL_H
+#define CPROVER_2LS_2LS_SUMMARY_CHECKER_ACDL_H
 
 #include "summary_checker_base.h"
 

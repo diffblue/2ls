@@ -6,8 +6,8 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
-#ifndef CPROVER_SIMPLIFY_BOUNDS_H
-#define CPROVER_SIMPLIFY_BOUNDS_H
+#ifndef CPROVER_2LS_DOMAINS_SIMPLIFY_BOUNDS_H
+#define CPROVER_2LS_DOMAINS_SIMPLIFY_BOUNDS_H
 
 #include <set>
 

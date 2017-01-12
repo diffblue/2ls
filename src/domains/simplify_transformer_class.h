@@ -6,8 +6,8 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
-#ifndef CPROVER_SIMPLIFY_TRANSFORMER_CLASS_H
-#define CPROVER_SIMPLIFY_TRANSFORMER_CLASS_H
+#ifndef CPROVER_2LS_DOMAINS_SIMPLIFY_TRANSFORMER_CLASS_H
+#define CPROVER_2LS_DOMAINS_SIMPLIFY_TRANSFORMER_CLASS_H
 
 #include <util/type.h>
 #include <util/replace_expr.h>
