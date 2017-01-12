@@ -75,6 +75,9 @@ public:
     typedef std::vector<exprt> assertionst;
     assertionst assertions;
 
+    typedef std::vector<exprt> assumptionst;
+    assumptionst assumptions;
+
     typedef std::vector<function_application_exprt> function_callst;
     function_callst function_calls;
 
@@ -212,6 +215,7 @@ protected:
   void build_guard(locationt loc);
   void build_function_call(locationt loc);
   void build_assertions(locationt loc);
+  void build_assumptions(locationt loc);
 
   // custom templates
   void collect_custom_templates();

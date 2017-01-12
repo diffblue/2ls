@@ -7,6 +7,7 @@ SRC = 2ls_main.cpp 2ls_parse_options.cpp \
       show.cpp summary_checker_base.cpp \
       summary_checker_ai.cpp summary_checker_bmc.cpp \
       summary_checker_kind.cpp \
+      summary_checker_acdl.cpp \
       cover_goals_ext.cpp horn_encoding.cpp \
       preprocessing_util.cpp \
       instrument_goto.cpp dynamic_cfg.cpp \
@@ -28,6 +29,7 @@ OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       $(CBMC)/src/goto-instrument/unwind$(OBJEXT) \
       ../domains/domains$(LIBEXT) \
       ../ssa/ssa$(LIBEXT) \
+      ../acdl/acdl$(LIBEXT) \
       ../solver/solver$(LIBEXT) \
 
 CP_CXXFLAGS+= $(TWOLSFLAGS)

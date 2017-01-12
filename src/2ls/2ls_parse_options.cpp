@@ -51,6 +51,7 @@ Author: Daniel Kroening, Peter Schrammel
 #include "summary_checker_ai.h"
 #include "summary_checker_bmc.h"
 #include "summary_checker_kind.h"
+#include "summary_checker_acdl.h"
 #include "show.h"
 #include "horn_encoding.h"
 
@@ -148,6 +149,27 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
 
   if(cmdline.isset("inline"))
     options.set_option("inline", true);
+
+  if(cmdline.isset("acdl"))
+  {
+    options.set_option("acdl", true);
+    options.set_option("inline", true);
+  }
+
+  if(cmdline.isset("propagate"))
+    options.set_option("propagate", cmdline.get_value("propagate"));
+  else 
+    options.set_option("propagate", "chaotic"); //default
+  
+  if(cmdline.isset("decision"))
+    options.set_option("decision", cmdline.get_value("decision"));
+  else 
+    options.set_option("decision", "random"); //default
+  
+  if(cmdline.isset("learning"))
+    options.set_option("learning", cmdline.get_value("learning"));
+  else 
+    options.set_option("learning", "first-uip"); //default
 
   if(cmdline.isset("slice") && cmdline.isset("inline"))
     options.set_option("slice", true);
@@ -480,7 +502,10 @@ int twols_parse_optionst::doit()
   try
   {
     std::unique_ptr<summary_checker_baset> checker;
-    if(!options.get_bool_option("k-induction") &&
+    if(options.get_bool_option("acdl"))
+      checker=std::unique_ptr<summary_checker_acdlt>(
+        new summary_checker_acdlt(options));
+    else if(!options.get_bool_option("k-induction") &&
        !options.get_bool_option("incremental-bmc"))
       checker=std::unique_ptr<summary_checker_baset>(
         new summary_checker_ait(options));

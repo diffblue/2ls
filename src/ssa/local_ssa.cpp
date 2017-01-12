@@ -57,6 +57,7 @@ void local_SSAt::build_SSA()
     build_cond(i_it);
     build_guard(i_it);
     build_assertions(i_it);
+    build_assumptions(i_it);
     build_function_call(i_it);
   }
 
@@ -674,6 +675,28 @@ void local_SSAt::build_assertions(locationt loc)
     exprt c=read_rhs(loc->guard, loc);
     exprt g=guard_symbol(loc);
     (--nodes.end())->assertions.push_back(implies_exprt(g, c));
+  }
+}
+
+
+/*******************************************************************\
+
+ Function: local_SSAt::build_assumptions
+
+   Inputs:
+
+  Outputs:
+
+  Purpose: collect assumptions (required for backwards analysis)
+
+\*******************************************************************/
+
+void local_SSAt::build_assumptions(locationt loc)
+{
+  if(loc->is_assume())
+  {
+    exprt c=read_rhs(loc->guard, loc);
+    (--nodes.end())->assumptions.push_back(c);
   }
 }
 
