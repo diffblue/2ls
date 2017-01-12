@@ -733,22 +733,40 @@ void tpolyhedra_domaint::set_row_value(
 tpolyhedra_domaint::row_valuet tpolyhedra_domaint::get_max_row_value(
   const tpolyhedra_domaint::rowt &row)
 {
-  const template_rowt &templ_row=templ[row];
-  if(templ_row.expr.type().id()==ID_signedbv)
+  const template_rowt &templ_row = templ[row];
+  return get_max_value(templ_row.expr);
+}
+
+/*******************************************************************\
+
+ Function: tpolyhedra_domaint::get_max_value
+
+   Inputs:
+
+  Outputs:
+
+  Purpose:
+
+\*******************************************************************/
+
+tpolyhedra_domaint::row_valuet tpolyhedra_domaint::get_max_value(
+  const row_exprt &expr)
+{
+  if(expr.type().id()==ID_signedbv)
   {
-    return to_signedbv_type(templ_row.expr.type()).largest_expr();
+    return to_signedbv_type(expr.type()).largest_expr();
   }
-  if(templ_row.expr.type().id()==ID_unsignedbv)
+  if(expr.type().id()==ID_unsignedbv)
   {
-    return to_unsignedbv_type(templ_row.expr.type()).largest_expr();
+    return to_unsignedbv_type(expr.type()).largest_expr();
   }
-  if(templ_row.expr.type().id()==ID_floatbv)
+  if(expr.type().id()==ID_floatbv)
   {
-    ieee_floatt max(to_floatbv_type(templ_row.expr.type()));
+    ieee_floatt max(to_floatbv_type(expr.type()));
     max.make_fltmax();
     return max.to_expr();
   }
-  assert(false); // type not supported
+  assert(false); //type not supported
 }
 
 /*******************************************************************\
@@ -766,22 +784,40 @@ tpolyhedra_domaint::row_valuet tpolyhedra_domaint::get_max_row_value(
 tpolyhedra_domaint::row_valuet tpolyhedra_domaint::get_min_row_value(
   const tpolyhedra_domaint::rowt &row)
 {
-  const template_rowt &templ_row=templ[row];
-  if(templ_row.expr.type().id()==ID_signedbv)
+  const template_rowt &templ_row = templ[row];
+  return get_min_value(templ_row.expr);
+}
+
+/*******************************************************************\
+
+ Function: tpolyhedra_domaint::get_min_value
+
+   Inputs:
+
+  Outputs:
+
+  Purpose:
+
+\*******************************************************************/
+
+tpolyhedra_domaint::row_valuet tpolyhedra_domaint::get_min_value(
+  const row_exprt &expr)
+{
+  if(expr.type().id()==ID_signedbv)
   {
-    return to_signedbv_type(templ_row.expr.type()).smallest_expr();
+    return to_signedbv_type(expr.type()).smallest_expr();
   }
-  if(templ_row.expr.type().id()==ID_unsignedbv)
+  if(expr.type().id()==ID_unsignedbv)
   {
-    return to_unsignedbv_type(templ_row.expr.type()).smallest_expr();
+    return to_unsignedbv_type(expr.type()).smallest_expr();
   }
-  if(templ_row.expr.type().id()==ID_floatbv)
+  if(expr.type().id()==ID_floatbv)
   {
-    ieee_floatt min(to_floatbv_type(templ_row.expr.type()));
+    ieee_floatt min(to_floatbv_type(expr.type()));
     min.make_fltmin();
     return min.to_expr();
   }
-  assert(false); // type not supported
+  assert(false); //type not supported
 }
 
 /*******************************************************************\
