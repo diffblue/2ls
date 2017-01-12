@@ -1,8 +1,8 @@
 include config.inc
 
-DIRS = 2ls ssa domains solver
+DIRS = 2ls ssa domains solver acdl
 
-all: 2ls.dir ssa.dir domains.dir solver.dir
+all: 2ls.dir ssa.dir domains.dir solver.dir acdl.dir
 
 ###############################################################################
 
@@ -10,8 +10,9 @@ all: 2ls.dir ssa.dir domains.dir solver.dir
 
 ssa.dir: 
 domains.dir: ssa.dir
+acdl.dir: ssa.dir domains.dir
 solver.dir: ssa.dir domains.dir
-2ls.dir: ssa.dir domains.dir solver.dir
+2ls.dir: ssa.dir domains.dir solver.dir acdl.dir
 
 # building for a particular directory
 
