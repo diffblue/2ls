@@ -97,13 +97,6 @@ public:
     assert(false);
   }
 
-  virtual std::ostream &output_domain_info(
-    std::ostream &out,
-    const namespacet &ns) const
-  {
-    assert(false);
-  }
-
   // (not useful to make value const (e.g. union-find))
   virtual void project_on_vars(
     valuet &value,

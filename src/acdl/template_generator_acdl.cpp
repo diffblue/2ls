@@ -89,7 +89,8 @@ void template_generator_acdlt::operator()(const local_SSAt &SSA,
 #endif  
 #ifdef SHOW_TEMPLATE
   std::cout << "Template: " << std::endl;
-  domain_ptr->output_domain_info(std::cout, SSA.ns) << std::endl;
+  domain_ptr->output_domain(std::cout, SSA.ns);
+  std::cout << std::endl;
 #endif
 }
 
