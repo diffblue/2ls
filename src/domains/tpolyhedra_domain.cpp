@@ -1202,3 +1202,26 @@ void tpolyhedra_domaint::add_sum_template(
     }
   }
 }
+
+
+/*******************************************************************\
+
+Function: tpolyhedra_domaint::positive_template()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: assumes that positive and negative phases are
+          odd and even indices
+
+\*******************************************************************/
+
+void tpolyhedra_domaint::positive_template(std::vector<exprt> &templates)
+{
+   templates.resize(templ.size()/2);
+   for(size_t i=0; i<templates.size(); ++i)
+   {
+     templates[i]=templ[2*i].expr;
+   } 
+}

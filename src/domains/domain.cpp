@@ -39,7 +39,7 @@ Function: domaint::output_var_specs
 
 \*******************************************************************/
 
-void domaint::output_var_specs(
+std::ostream &domaint::output_var_specs(
   std::ostream &out,
   const var_specst &var_specs,
   const namespacet &ns)
@@ -64,4 +64,6 @@ void domaint::output_var_specs(
     }
     out << from_expr(ns, "", v.var) << std::endl;
   }
+  
+  return out;
 }

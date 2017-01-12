@@ -97,6 +97,13 @@ public:
     assert(false);
   }
 
+  virtual std::ostream &output_domain_info(
+    std::ostream &out,
+    const namespacet &ns) const
+  {
+    assert(false);
+  }
+
   // (not useful to make value const (e.g. union-find))
   virtual void project_on_vars(
     valuet &value,
@@ -111,10 +118,18 @@ public:
 
   static kindt merge_kinds(kindt k1, kindt k2);
 
-  static void output_var_specs(
+  static std::ostream &output_var_specs(
     std::ostream &out,
     const var_specst &var_specs,
     const namespacet &ns);
+
+  //get positive template rows,
+  //  i.e. those such that the remaining template rows
+  //       can be reconstructed by negating these
+  virtual void positive_template(std::vector<exprt> &templates)
+  {
+    assert(false);
+  }
 
 protected:
   unsigned domain_number; // serves as id for variables names
