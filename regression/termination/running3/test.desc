@@ -1,4 +1,4 @@
-CORE
+KNOWNBUG
 main.c
 --context-sensitive --preconditions
 ^EXIT=5$
