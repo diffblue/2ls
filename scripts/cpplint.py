@@ -1930,7 +1930,7 @@ def GetHeaderGuardCPPVariable(filename):
 
   fileinfo = FileInfo(filename)
   file_path_from_root = fileinfo.RepositoryName()
-  file_path_from_root = 'CPROVER_' + file_path_from_root[4:]
+  file_path_from_root = 'CPROVER_2LS_' + file_path_from_root[4:]
   if _root:
     suffix = os.sep
     # On Windows using directory separator will leave us with
