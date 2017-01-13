@@ -463,8 +463,7 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
 
  \*******************************************************************/
 
-bool
-acdl_solvert::decide (const local_SSAt &SSA, const exprt& assertion)
+bool acdl_solvert::decide (const local_SSAt &SSA, const exprt& assertion)
 {
   decisions++;
   // When a new decision is made, the
