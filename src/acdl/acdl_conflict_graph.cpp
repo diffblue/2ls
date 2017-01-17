@@ -276,12 +276,16 @@ void acdl_conflict_grapht::dump_trail(const local_SSAt &SSA)
 
     std::cout << "The transformer is " << from_expr(reason_trail[i].first) << std::endl;
     std::cout << "The deductions are ";
+    //std::cout << "prop_level_begin = " << prop_level_begin << " prop_level_end = " << prop_level_end << std::endl;
+    //std::cout << "prop_trail_size" << prop_trail.size() << std::endl;
     if(prop_level_begin==prop_level_end)
       std::cout << "empty " << std::endl;
     else {
-      for(unsigned p=prop_level_begin;p<=prop_level_end-1;p++)
+      // The print is Buggy -- relational5 , relational7 segfault 
+      /*for(unsigned p=prop_level_begin;p<=prop_level_end-1;p++)
         std::cout << from_expr(SSA.ns, "", prop_trail[p]) << " , ";
       std::cout << std::endl;
+      */
     }
   }
 }
