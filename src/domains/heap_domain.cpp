@@ -16,12 +16,15 @@
 void heap_domaint::initialize(domaint::valuet &value)
 {
   heap_valuet &val = static_cast<heap_valuet &>(value);
-  val.resize(templ.size());
-  for (unsigned row = 0; row < templ.size(); ++row)
+
+  for (auto &templ_row : templ)
   {
-    val[row].paths.clear();
-    val[row].points_to.clear();
-    val[row].pointed_by.clear();
+    if (templ_row.mem_kind == STACK)
+      val.emplace_back(new stack_row_valuet());
+    else if (templ_row.mem_kind == HEAP)
+      val.emplace_back(new heap_row_valuet());
+    else
+      assert(false);
   }
 }
 
@@ -38,51 +41,48 @@ void heap_domaint::make_template(const domaint::var_specst &var_specs, const nam
   templ.clear();
   templ.reserve(size);
 
-  for (auto v1 = var_specs.begin(); v1 != var_specs.end(); ++v1)
+  for (auto v = var_specs.begin(); v != var_specs.end(); ++v)
   {
-    if (v1->kind == IN) continue;
+    if (v->kind == IN) continue;
 
     // Create template for each pointer to struct
-    const vart &var1 = v1->var;
-    if (var1.type().id() == ID_pointer)
+    const vart &var = v->var;
+    if (var.type().id() == ID_pointer)
     {
-      const typet &pointed_type = ns.follow(var1.type().subtype());
+      const typet &pointed_type = ns.follow(var.type().subtype());
       if (pointed_type.id() == ID_struct)
       {
-        // Check if var1 is member field of dynamic object
-        const std::string identifier = id2string(to_symbol_expr(v1->var).get_identifier());
-        bool dynamic = false;
-        for (auto &component : to_struct_type(pointed_type).components())
-        {
-          if (identifier.find("." + id2string(component.get_name())) != std::string::npos)
-            dynamic = true;
-        }
-
-        for (auto &component : to_struct_type(pointed_type).components())
-        {
-          if (!dynamic ||
-              identifier.find("." + id2string(component.get_name())) != std::string::npos)
-          {
-            templ.push_back(template_rowt());
-            template_rowt &templ_row = templ.back();
-            templ_row.expr = v1->var;
-            templ_row.member = component.get_name();
-            templ_row.pre_guard = v1->pre_guard;
-            templ_row.post_guard = v1->post_guard;
-            templ_row.aux_expr = v1->aux_expr;
-            templ_row.kind = v1->kind;
-            templ_row.dynamic = dynamic;
-            if (dynamic)
-            {
-              std::string var1_id = id2string(to_symbol_expr(var1).get_identifier());
-              std::string do_id = var1_id.substr(0, var1_id.find_last_of('.'));
-              templ_row.dyn_obj = symbol_exprt(do_id, var1.type().subtype());
-            }
-            else
-              templ_row.dyn_obj = nil_exprt();
-          }
-        }
+        add_template_row(*v, pointed_type);
       }
+    }
+  }
+}
+
+void heap_domaint::add_template_row(const var_spect &var_spec, const typet &pointed_type)
+{
+  const vart &var = var_spec.var;
+
+  templ.push_back(template_rowt());
+  template_rowt &templ_row = templ.back();
+  templ_row.expr = var;
+  templ_row.pre_guard = var_spec.pre_guard;
+  templ_row.post_guard = var_spec.post_guard;
+  templ_row.aux_expr = var_spec.aux_expr;
+  templ_row.kind = var_spec.kind;
+
+  templ_row.mem_kind = STACK;
+  // Check if var is member field of heap object
+  const std::string identifier = id2string(to_symbol_expr(var_spec.var).get_identifier());
+  for (auto &component : to_struct_type(pointed_type).components())
+  {
+    if (identifier.find("." + id2string(component.get_name())) != std::string::npos)
+    {
+      templ_row.mem_kind = HEAP;
+      templ_row.member = component.get_name();
+
+      std::string var_id = id2string(to_symbol_expr(var).get_identifier());
+      std::string do_id = var_id.substr(0, var_id.find_last_of('.'));
+      templ_row.dyn_obj = symbol_exprt(do_id, var.type().subtype());
     }
   }
 }
@@ -162,50 +162,6 @@ exprt heap_domaint::get_row_post_constraint(const rowt &row, const row_valuet &r
 }
 
 /**
- * Add new destination for a row
- * @param row Row number
- * @param value Value
- * @param dest New destination to add
- * @param dyn_obj Dynamic object for that the path passes through (is nil if path can have zero
- *        length).
- * @return True if insertion took place (dest did not exist in the row value)
- */
-bool heap_domaint::add_row_path(const rowt &row, heap_valuet &value, const exprt &dest,
-                                const dyn_objt &dyn_obj)
-{
-  assert(row < value.size());
-  assert(value.size() == templ.size());
-
-  auto &path_set = value[row].paths;
-
-  if (path_set.find(dest) == path_set.end())
-  {
-    // Path does not exist yet
-    std::set<dyn_objt> dyn_obj_set;
-    bool zero_path = true;
-    if (dyn_obj.first.id() != ID_nil)
-    { // Path doesn't have zero length
-      dyn_obj_set.insert(dyn_obj);
-      zero_path = false;
-    }
-    path_set.emplace(dest, dyn_obj_set, zero_path);
-    return true;
-  }
-  else
-  {
-    // Path exists already
-    if (dyn_obj.first.id() == ID_nil)
-    {
-      bool result = path_set.find(dest)->zero_length;
-      path_set.find(dest)->zero_length = true;
-      return !result;
-    }
-    // Try to insert new dynamic object belonging to the path
-    return path_set.find(dest)->dyn_objects.insert(dyn_obj).second;
-  }
-}
-
-/**
  * Add all paths of one pointer as the destinations of another pointer.
  * @param to Row to add new paths to
  * @param from Row to add paths from
@@ -214,46 +170,43 @@ bool heap_domaint::add_row_path(const rowt &row, heap_valuet &value, const exprt
  *                one pointer to another.
  * @return True if any path was added or changed, otherwise false.
  */
-bool heap_domaint::add_all_paths(const rowt &to, const rowt &from, heap_valuet &value,
-                                 const dyn_objt &dyn_obj)
+bool heap_domaint::add_transitivity(const rowt &from, const rowt &to, heap_valuet &value)
 {
+  assert(from < value.size() && to < value.size());
+  assert(templ[to].mem_kind == HEAP && templ[from].mem_kind == HEAP);
+
+  heap_row_valuet &heap_val_from = static_cast<heap_row_valuet &>(value[from]);
+  heap_row_valuet &heap_val_to = static_cast<heap_row_valuet &>(value[to]);
+
   bool result = false;
-  for (auto &path : value[from].paths)
+  if (heap_val_from.add_all_paths(heap_val_to, std::make_pair(templ[to].dyn_obj, templ[to].expr)))
+    result = true;
+  if (from != to)
   {
-    // Add the path with new dynamic object
-    if (add_row_path(to, value, path.destination, dyn_obj))
+    if (heap_val_to.add_pointed_by(from))
       result = true;
-    for (auto &o : path.dyn_objects)
-    { // Add all dynamic objects of the original path
-      if (add_row_path(to, value, path.destination, o))
-        result = true;
-    }
   }
+
   return result;
 }
 
-/**
- * Add new points to address to a row.
- * @param row Value row
- * @param value Heap value
- * @param dyn_obj New dynamic object that the row variable can point to.
- * @return True if the object was really added.
- */
-bool heap_domaint::add_points_to(const rowt &row, heap_valuet &value, const dyn_objt &dyn_obj)
+bool heap_domaint::add_points_to(const heap_domaint::rowt &row, heap_domaint::heap_valuet &value,
+                                 const exprt &dest)
 {
-  auto new_pt = value[row].points_to.insert(dyn_obj);
-  return new_pt.second;
+  assert(row < value.size());
+
+  if (templ[row].dyn_obj == dest) return false;
+
+  return value[row].add_points_to(dest);
 }
 
-/**
- * Add new dependent row (pb_row points to row)
- * @param row Pointed row
- * @param pb_row Pointer row
- * @param value Heap value
- */
-void heap_domaint::add_pointed_by_row(const rowt &row, const rowt &pb_row, heap_valuet &value)
+bool heap_domaint::set_nondet(const rowt &row, heap_valuet &value)
 {
-  value[row].pointed_by.insert(pb_row);
+  assert(row < value.size());
+
+  bool result = !value[row].nondet;
+  value[row].nondet = true;
+  return result;
 }
 
 void heap_domaint::output_value(std::ostream &out, const domaint::valuet &value,
@@ -314,8 +267,10 @@ void heap_domaint::output_domain(std::ostream &out, const namespacet &ns) const
         assert(false);
     }
     const vart &var = templ_row.expr;
-    const irep_idt &member = templ_row.member;
-    out << i << ": ?path(" << from_expr(ns, "", var) << ", " << member << ", DESTINATIONS)"
+
+    out << i << ": " << from_expr(ns, "", var)
+        << (templ_row.mem_kind == STACK ? " --points_to--> Locations"
+                                        : " --paths--> Destinations")
         << std::endl;
   }
 }
@@ -371,26 +326,6 @@ void heap_domaint::join(domaint::valuet &value1, const domaint::valuet &value2)
   const heap_valuet &val2 = static_cast<const heap_valuet &>(value2);
   assert(val1.size() == templ.size());
   assert(val2.size() == val1.size());
-  for (rowt row = 0; row < templ.size(); ++row)
-  { // Insert all elements of second set to first
-    val1[row].paths.insert(val2[row].paths.begin(), val2[row].paths.end());
-  }
-}
-
-/**
- * Check whether expression is NULL pointer.
- * @param expr Expression to check
- * @return True if expr is NULL pointer
- */
-bool heap_domaint::is_null_ptr(const exprt &expr)
-{
-  if (expr.id() == ID_constant && to_constant_expr(expr).get_value() == ID_NULL)
-    return true;
-  if (expr.id() == ID_plus)
-    return is_null_ptr(expr.op0()) || is_null_ptr(expr.op1());
-  if (expr.id() == ID_typecast)
-    return is_null_ptr(to_typecast_expr(expr).op());
-  return false;
 }
 
 /**
@@ -421,77 +356,122 @@ std::string heap_domaint::get_base_name(const exprt &expr)
   return result;
 }
 
-/**
- * Get expression for the row value. It is a conjunction of points to expression and path
- * expressions.
- * Points to expression is disjunction of equalities:
- * p = &o (NULL)   for each object 'o' (or NULL) from points_to set
- * Expression of path leading from variable 'p' to destination 'd' via field 'm' and
- * passing through set of objects 'O' has form:
- * p = d ||                            if path can have zero length
- * p = &o && (o.m = d || o.m = o')     where o,o' belong to O and p can point to &o
- * @param templ_expr Pointer variable of the template row
- * @return Row value expression in the described form
- */
-exprt heap_domaint::row_valuet::get_row_expr(const vart &templ_expr) const
+exprt heap_domaint::stack_row_valuet::get_row_expr(const domaint::vart &templ_expr) const
 {
   if (nondet) return true_exprt();
 
-  if (paths.empty() && points_to.empty()) return false_exprt();
-
-  exprt::operandst result;
-
-  exprt::operandst pt_expr;
-  if (!points_to.empty())
+  if (empty())
+    return false_exprt();
+  else
   { // Points to expression
+    exprt::operandst result;
     for (auto &pt : points_to)
     {
-      pt_expr.push_back(equal_exprt(templ_expr,
-                                    templ_expr.type() == pt.first.type() ?
-                                    pt.first : address_of_exprt(pt.first)));
+      result.push_back(equal_exprt(templ_expr, templ_expr.type() == pt.type() ?
+                                               pt : address_of_exprt(pt)));
     }
-    result.push_back(disjunction(pt_expr));
+    return disjunction(result);
   }
+}
 
-  exprt::operandst paths_expr;
-  if (!paths.empty())
+bool heap_domaint::stack_row_valuet::add_points_to(const exprt &expr)
+{
+  auto new_pt = points_to.insert(expr);
+  return new_pt.second;
+}
+
+exprt heap_domaint::heap_row_valuet::get_row_expr(const domaint::vart &templ_expr) const
+{
+  if (nondet) return true_exprt();
+
+  if (empty())
+    return false_exprt();
+  else
   {
+    exprt::operandst result;
     for (auto &path : paths)
-    { // path(p, m, d)[O]
-      const exprt &dest = path.destination;
+    { // path(o.m, d)[O]
+      const exprt &dest = templ_expr.type() == path.destination.type() ?
+                          path.destination : address_of_exprt(path.destination);
       exprt::operandst path_expr;
 
-      for (const dyn_objt &obj1 : points_to)
+      // o.m = d
+      path_expr.push_back(equal_exprt(templ_expr, dest));
+
+      for (const dyn_objt &obj1 : path.dyn_objects)
       {
-        if (path.dyn_objects.find(obj1) != path.dyn_objects.end())
-        {
-          // p = &o
-          exprt equ_exprt = equal_exprt(templ_expr, address_of_exprt(obj1.first));
+        // o.m = &o'
+        exprt equ_exprt = equal_exprt(templ_expr, address_of_exprt(obj1.first));
 
-          exprt::operandst step_expr;
-          exprt member_expr = obj1.second;
-          // o.m = d
-          step_expr.push_back(equal_exprt(member_expr, dest));
+        exprt::operandst steps_expr;
+        exprt member_expr = obj1.second;
+        // o'.m = d
+        steps_expr.push_back(equal_exprt(member_expr, dest));
 
-          for (auto &obj2 : path.dyn_objects)
-          { // o.m = o'
-            step_expr.push_back(equal_exprt(member_expr, address_of_exprt(obj2.first)));
-          }
-
-          path_expr.push_back(and_exprt(equ_exprt, disjunction(step_expr)));
+        for (auto &obj2 : path.dyn_objects)
+        { // o'.m = o''
+          steps_expr.push_back(equal_exprt(member_expr, address_of_exprt(obj2.first)));
         }
-        else
-        {
-          path_expr.push_back(equal_exprt(templ_expr,
-                                          templ_expr.type() == obj1.first.type() ?
-                                          obj1.first : address_of_exprt(obj1.first)));
-        }
+
+        path_expr.push_back(and_exprt(equ_exprt, disjunction(steps_expr)));
       }
 
-      paths_expr.push_back(disjunction(path_expr));
+      result.push_back(disjunction(path_expr));
     }
-    result.push_back(disjunction(paths_expr));
+    return conjunction(result);
   }
+}
 
-  return conjunction(result);
+bool heap_domaint::heap_row_valuet::add_points_to(const exprt &dest)
+{
+  return add_path(dest, std::make_pair(nil_exprt(), nil_exprt()));
+}
+
+bool heap_domaint::heap_row_valuet::add_path(const exprt &dest,
+                                             const heap_domaint::dyn_objt &dyn_obj)
+{
+  if (paths.find(dest) == paths.end())
+  {
+    // Path does not exist yet
+    std::set<dyn_objt> dyn_obj_set;
+    if (dyn_obj.first.id() != ID_nil)
+    { // Path doesn't have zero length
+      dyn_obj_set.insert(dyn_obj);
+    }
+    paths.emplace(dest, dyn_obj_set);
+    return true;
+  }
+  else
+  {
+    // Path exists already
+    if (dyn_obj.first.id() != ID_nil)
+      // Try to insert new dynamic object on the path
+      return paths.find(dest)->dyn_objects.insert(dyn_obj).second;
+    else
+      return false;
+  }
+}
+
+bool heap_domaint::heap_row_valuet::add_all_paths(const heap_domaint::heap_row_valuet &other_val,
+                                                  const heap_domaint::dyn_objt &dyn_obj)
+{
+  bool result = false;
+  for (auto &path : other_val.paths)
+  {
+    // Add the path with new dynamic object
+    if (add_path(path.destination, dyn_obj))
+      result = true;
+    for (auto &o : path.dyn_objects)
+    { // Add all dynamic objects of the original path
+      if (add_path(path.destination, o))
+        result = true;
+    }
+  }
+  return result;
+}
+
+bool heap_domaint::heap_row_valuet::add_pointed_by(const rowt &row)
+{
+  auto new_pb = pointed_by.insert(row);
+  return new_pb.second;
 }
