@@ -328,41 +328,12 @@ void strategy_solver_heapt::print_solver_expr(const exprt &expr)
 
 void strategy_solver_heapt::initialize(const local_SSAt &SSA, const exprt &precondition)
 {
+  // Create preconditions for input variables if not exist
   exprt::operandst equs;
   for (auto &param : SSA.params)
-  {
-    if (param.type().id() == ID_pointer &&
-        id2string(param.get_identifier()).find('.') == std::string::npos)
-    {
-      if (!has_precondition_rec(param, precondition))
-      {
-        debug() << "Creating precondition for pointer parameters" << eom;
-        const symbolt *symbol;
-        if (ns.lookup(id2string(param.get_identifier()), symbol)) continue;
-
-        address_of_exprt init_value(symbol->symbol_expr());
-        init_value.type() = symbol->type;
-        equs.push_back(equal_exprt(param, init_value));
-      }
-    }
-  }
+    create_precondition(param, precondition, equs);
   for (auto &global_in : SSA.globals_in)
-  {
-    if (global_in.type().id() == ID_pointer &&
-        id2string(global_in.get_identifier()).find('.') == std::string::npos)
-    {
-      if (!has_precondition_rec(global_in, precondition))
-      {
-        debug() << "Creating precondition for pointer parameters" << eom;
-        const symbolt *symbol;
-        if (ns.lookup(id2string(global_in.get_identifier()), symbol)) continue;
-
-        address_of_exprt init_value(symbol->symbol_expr());
-        init_value.type() = symbol->type;
-        equs.push_back(equal_exprt(global_in, init_value));
-      }
-    }
-  }
+    create_precondition(global_in, precondition, equs);
 
   solver << conjunction(equs);
 }
@@ -378,7 +349,26 @@ bool strategy_solver_heapt::has_precondition_rec(const exprt &expr, const exprt 
   {
     bool result = false;
     forall_operands(it, precondition)
-      result = result || has_precondition_rec(expr, *it);
+        result = result || has_precondition_rec(expr, *it);
     return result;
+  }
+}
+
+void strategy_solver_heapt::create_precondition(const symbol_exprt &var, const exprt &precondition,
+                                                exprt::operandst &equs)
+{
+  if (var.type().id() == ID_pointer &&
+      id2string(var.get_identifier()).find('.') == std::string::npos)
+  {
+    if (!has_precondition_rec(var, precondition))
+    {
+      debug() << "Creating precondition for pointer parameters" << eom;
+      const symbolt *symbol;
+      if (ns.lookup(id2string(var.get_identifier()), symbol)) return;
+
+      address_of_exprt init_value(symbol->symbol_expr());
+      init_value.type() = symbol->type;
+      equs.push_back(equal_exprt(var, init_value));
+    }
   }
 }
