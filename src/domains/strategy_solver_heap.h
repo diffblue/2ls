@@ -34,6 +34,9 @@ class strategy_solver_heapt : public strategy_solver_baset
 
   void print_solver_expr(const exprt &expr);
 
+  void create_precondition(const symbol_exprt &var, const exprt &precondition,
+                           exprt::operandst &equs);
+
   bool has_precondition_rec(const exprt &expr, const exprt &precondition);
 };
 
