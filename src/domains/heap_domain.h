@@ -6,6 +6,8 @@
 #ifndef CPROVER_2LS_DOMAINS_HEAP_DOMAIN_H
 #define CPROVER_2LS_DOMAINS_HEAP_DOMAIN_H
 
+#include <util/message.h>
+#include <memory>
 #include "domain.h"
 
 class heap_domaint:public domaint
@@ -14,6 +16,8 @@ class heap_domaint:public domaint
   typedef unsigned rowt;
   typedef vart member_fieldt;
   typedef std::pair<exprt, member_fieldt> dyn_objt;
+
+  typedef enum { STACK, HEAP } mem_kindt;
 
   heap_domaint(
     unsigned int _domain_number,
@@ -30,6 +34,31 @@ class heap_domaint:public domaint
    */
   struct row_valuet
   {
+    bool nondet = false;            /**< Row is nondeterministic - expression is TRUE */
+
+    virtual exprt get_row_expr(const vart &templ_expr) const = 0;
+
+    virtual bool empty() const = 0;
+
+    virtual bool add_points_to(const exprt &dest) = 0;
+  };
+
+  struct stack_row_valuet : public row_valuet
+  {
+    std::set<exprt> points_to;   /**< Set of objects (or NULL) the row variable can point to */
+
+    virtual exprt get_row_expr(const vart &templ_expr) const override;
+
+    virtual bool add_points_to(const exprt &expr) override;
+
+    virtual bool empty() const override
+    {
+      return points_to.empty();
+    }
+  };
+
+  struct heap_row_valuet : public row_valuet
+  {
     /**
      * Path in a heap. Contains:
      *   - destination object
@@ -41,12 +70,11 @@ class heap_domaint:public domaint
     {
       exprt destination;
       mutable std::set<dyn_objt> dyn_objects;
-      mutable bool zero_length;
 
       patht(const exprt &dest_) : destination(dest_) {}
 
-      patht(const exprt &dest_, const std::set<dyn_objt> &dyn_objs_, const bool zero_l_)
-          : destination(dest_), dyn_objects(dyn_objs_), zero_length(zero_l_) {}
+      patht(const exprt &dest_, const std::set<dyn_objt> &dyn_objs_)
+          : destination(dest_), dyn_objects(dyn_objs_) {}
 
       bool operator<(const patht &rhs) const
       {
@@ -59,33 +87,44 @@ class heap_domaint:public domaint
       }
     };
 
-    std::set<patht> paths;          /**< Set of paths leading from the row variable */
-    std::set<dyn_objt> points_to;   /**< Set of objects (or NULL) the row variable can point to */
-    std::set<unsigned> pointed_by;  /**< Set of rows whose variables point to this row */
-    bool nondet = false;            /**< Row is nondeterministic - expression is TRUE */
+    std::set<patht> paths;          /**< Set o paths leading from the row variable */
+    std::set<rowt> pointed_by;      /**< Set of rows whose variables point to this row */
 
-    exprt get_row_expr(const vart &templ_expr) const;
+    virtual exprt get_row_expr(const vart &templ_expr) const override;
 
-    inline bool empty() const
+    virtual bool add_points_to(const exprt &dest) override;
+
+    virtual bool empty() const override
     {
       return paths.empty();
     }
+
+    bool add_path(const exprt &dest, const dyn_objt &dyn_obj);
+
+    bool add_all_paths(const heap_row_valuet &other_val, const dyn_objt &dyn_obj);
+
+    bool add_pointed_by(const rowt &row);
   };
 
-  class heap_valuet : public valuet, public std::vector<row_valuet>
+  class heap_valuet : public valuet, public std::vector<std::unique_ptr<row_valuet>>
   {
+   public:
+    row_valuet &operator[](const rowt &row) const
+    {
+      return *(this->at(row).get());
+    }
   };
 
   struct template_rowt
   {
+    vart expr;
     guardt pre_guard;
     guardt post_guard;
-    vart expr;
-    irep_idt member;
     exprt aux_expr;
     kindt kind;
+    mem_kindt mem_kind;
     exprt dyn_obj;
-    bool dynamic;
+    irep_idt member;
   };
   typedef std::vector<template_rowt> templatet;
 
@@ -103,15 +142,11 @@ class heap_domaint:public domaint
 
   exprt get_row_post_constraint(const rowt &row, const row_valuet &row_value);
 
-  // Add new predicates to a row value (path, or points_to)
-  bool add_row_path(const rowt &row, heap_valuet &value, const exprt &dest,
-                    const dyn_objt &dyn_obj);
+  bool add_transitivity(const rowt &from, const rowt &to, heap_valuet &value);
 
-  bool add_all_paths(const rowt &to, const rowt &from, heap_valuet &value, const dyn_objt &dyn_obj);
+  bool add_points_to(const rowt &row, heap_valuet &value, const exprt &dest);
 
-  bool add_points_to(const rowt &row, heap_valuet &value, const dyn_objt &dyn_obj);
-
-  void add_pointed_by_row(const rowt &row, const rowt &pb_row, heap_valuet &value);
+  bool set_nondet(const rowt &row, heap_valuet &value);
 
   // Printing
   virtual void output_value(std::ostream &out, const valuet &value,
@@ -128,12 +163,12 @@ class heap_domaint:public domaint
   // Join of values
   virtual void join(valuet &value1, const valuet &value2) override;
 
-  static bool is_null_ptr(const exprt &expr);
-
  protected:
   templatet templ;
 
   void make_template(const var_specst &var_specs, const namespacet &ns);
+
+  void add_template_row(const var_spect &var_spec, const typet &pointed_type);
 
   // Utility functions
   static int get_symbol_loc(const exprt &expr);
