@@ -7,12 +7,12 @@ int abs(int x) {
 int main()
 {
   signed x,y,z;
-  
+  int d, g;
   __CPROVER_assume(x==y || x==-y);
-  z = abs(x) - abs(y);
+  //z = abs(x) - abs(y);
   
   //z = (x<0?-x:x) - (y<0?-y:y);
-  /*if(x<0)
+  if(x<0)
     d=-x;
   else 
     d=x;  
@@ -21,7 +21,7 @@ int main()
   else 
     g=y;
   z = d-g;    
-  */
+  
   assert(z==0);
 }
 
