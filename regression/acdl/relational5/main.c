@@ -13,7 +13,8 @@ int g(int x) {
 
 void main() {
   int x;
-  if(0<=x && x<=10)
+  __CPROVER_assume(x>=0);
+  //if(0<=x && x<=10)
     assert(f(x) == g(x));
 }
 
