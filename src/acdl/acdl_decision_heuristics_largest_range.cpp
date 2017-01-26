@@ -38,7 +38,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_ranget::operator()
     std::cout << "lower " << i->first << "upper" << i->second << std::endl;
 #endif
 
-  bool decision=false;
+  //bool decision=false;
   std::string strc("cond");
   exprt val;
   std::string name;
@@ -49,7 +49,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_ranget::operator()
 
   // copy the value to non-constant value
   acdl_domaint::valuet v;
-  for(int k=0;k<value.size();k++)
+  for(unsigned k=0;k<value.size();k++)
     v.push_back(value[k]);
 
   // copy the decision_variables in separate vector
@@ -73,7 +73,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_ranget::operator()
   // 2> check if it is singleton
   // 3> If not singleton, return it.
   bool cond=false;
-  for(int i=0;i<conds.size();i++) {
+  for(unsigned i=0;i<conds.size();i++) {
     const acdl_domaint::meet_irreduciblet
       exp=conds[i];
     val=domain.split(value, exp);

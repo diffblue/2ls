@@ -25,7 +25,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_randt::operator()
 
   // copy the value to non-constant value
   acdl_domaint::valuet v;
-  for(int k=0;k<value.size();k++)
+  for(unsigned k=0;k<value.size();k++)
     v.push_back(value[k]);
 
   // collect the non-singleton variables
@@ -145,4 +145,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_randt::operator()
         continue;
     }
   }
+  // returns false if no decision in made
+  // and the control reaches here
+  return false_exprt();
 }

@@ -1479,7 +1479,7 @@ int acdl_domaint::unit_rule(const local_SSAt &SSA, valuet &v, valuet &clause, ex
   // Normalize the current partial assignment
   normalize(v);
   int unit_idx=-1;
-  int i=0;
+  unsigned i=0;
   bool disjoint=false;
   bool new_lit=false;
 #ifdef DEBUG
@@ -1981,7 +1981,7 @@ bool acdl_domaint::is_complete(const valuet &value,
       val=split(value, *it);
 
       if(!val.is_false()) {
-        unsigned iter=0;
+        //unsigned iter=0;
         std::cout << "Checking gamma-completeness for " << from_expr(*it) << std::endl;
         std::cout << "The new split returns " << from_expr(val) << std::endl;
 

@@ -113,7 +113,7 @@ bool acdl_analyze_conflict_baset::operator() (const local_SSAt &SSA, acdl_confli
 
   // [TEMPORARY USE] save the
   // present decision level before backtracking
-  int present_dl=graph.current_level;
+  //int present_dl=graph.current_level;
   // save the last decision before backtracking
   exprt dec_expr=graph.dec_trail.back();
 
@@ -463,7 +463,7 @@ void acdl_analyze_conflict_baset::find_uip(const local_SSAt &SSA,
   int max_reason_dl=-1;
   acdl_domaint::valuet new_result_clause;
 
-  int clause_size=result_clause.size();
+  //int clause_size=result_clause.size();
 
   unsigned contr_dl=0;
   for(acdl_domaint::valuet::iterator it=result_clause.begin();
@@ -661,7 +661,7 @@ unsigned acdl_analyze_conflict_baset::get_latest_contradiction(
   std::cout << "searching for contradiction at the current level" << std::endl;
 #endif
   acdl_domaint::valuet matched_expr;
-  int control_point=graph.control_trail.back();
+  unsigned control_point=graph.control_trail.back();
   // traverse from the back of prop_trail, last element is false_exprt
   // since the deduction at the current level leads to conflict,
   // so the deduction are by construction UNSAT
@@ -752,6 +752,10 @@ unsigned acdl_analyze_conflict_baset::get_latest_contradiction(
       search_level=search_level-1;
     }
   }
+  // if the control reaches here, 
+  // that means no contradiction 
+  // has been found at previous levels
+  return 0;
 }
 
 
@@ -782,7 +786,7 @@ unsigned acdl_analyze_conflict_baset::get_earliest_contradiction(
 
   unsigned lower_index, upper_index;
   unsigned control_trail_size=graph.control_trail.size();
-  int search_level=0;
+  unsigned search_level=0;
   while(search_level<=control_trail_size-1) {
     acdl_domaint::valuet val_perdecision;
 
@@ -875,4 +879,8 @@ unsigned acdl_analyze_conflict_baset::get_earliest_contradiction(
 #endif
     return graph.current_level;
   }
+  // if the control reaches here, 
+  // that means no contradiction 
+  // has been found at previous levels
+  return 0;
 }
