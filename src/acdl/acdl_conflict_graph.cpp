@@ -227,7 +227,7 @@ void acdl_conflict_grapht::dump_trail(const local_SSAt &SSA)
   std::cout << "****************" << std::endl;
   std::cout << "Decision Level: " << current_level << std::endl;
 #endif
-  int control_point;
+  unsigned control_point;
   if(control_trail.size()==0)
     control_point=0;
   else
@@ -247,8 +247,8 @@ void acdl_conflict_grapht::dump_trail(const local_SSAt &SSA)
 
   int search_level=control_trail.size()-1;
   while(search_level >= 0) {
-    int upper_index=0;
-    int lower_index=0;
+    unsigned upper_index=0;
+    unsigned lower_index=0;
     std::cout << "Decision Level: " << search_level << std::endl;
     upper_index=control_trail[search_level];
     if(search_level-1 >= 0)
@@ -267,9 +267,9 @@ void acdl_conflict_grapht::dump_trail(const local_SSAt &SSA)
     }
     search_level=search_level-1;
   }
-  unsigned prop_level_end=0, prop_level_begin=0;
+  //unsigned prop_level_end=0, prop_level_begin=0;
   std::cout << "The content of reason trail is " << std::endl;
-  for(int i=0;i<reason_trail.size();i++) {
+  for(unsigned i=0;i<reason_trail.size();i++) {
     indext ind=reason_trail[i].second;
     unsigned prop_level_begin=ind.first;
     unsigned prop_level_end=ind.second;

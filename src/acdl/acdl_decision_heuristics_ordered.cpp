@@ -24,7 +24,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_orderedt::operator()
 #endif
   // copy the value to non-constant value
   acdl_domaint::valuet v;
-  for(int k=0;k<value.size();k++)
+  for(unsigned k=0;k<value.size();k++)
     v.push_back(value[k]);
 
   bool decision=false;
@@ -55,12 +55,12 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_orderedt::operator()
     bool non_cond_dec_left=false;
     // make decisions only if
     // there are non-singletons
-    for(int j=0;j<conds.size();j++) {
+    for(unsigned j=0;j<conds.size();j++) {
       if(conds_marked[j]!=false) {
         cond_dec_left=true;
       }
     }
-    for(int k=0;k<non_cond.size();k++) {
+    for(unsigned k=0;k<non_cond.size();k++) {
       if(non_cond_marked[k]!=false) {
         non_cond_dec_left=true;
       }
@@ -78,7 +78,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_orderedt::operator()
     // 2> check if it is a cond variable and singleton
     // 3> If not singleton, return it.
     bool cond=false;
-    for(int i=0;i<conds.size();i++) {
+    for(unsigned i=0;i<conds.size();i++) {
       const acdl_domaint::meet_irreduciblet
         exp=conds[i];
       val=domain.split(value, exp);
@@ -122,4 +122,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_orderedt::operator()
       continue;
     }
   }
+  // if the control reaches here, 
+  // then return false_exprt
+  return false_exprt();
 }

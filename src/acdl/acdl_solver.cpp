@@ -43,6 +43,7 @@ property_checkert::resultt acdl_solvert::propagate
     std::cout << "Starting propagation using AI: forward and backward iteration" << std::endl;
     return propagation(SSA, assertion);
   }
+  return property_checkert::UNKNOWN;
 }
 
 /*******************************************************************
@@ -125,7 +126,7 @@ bool acdl_solvert::bcp(const local_SSAt &SSA, unsigned idx)
 
 #endif
 
-  int i=0;
+  unsigned i=0;
 #ifdef DEBUG
   std::cout << "The size of learned clauses is " << analyzes_conflict.learned_clauses.size() << std::endl;
 #endif
@@ -187,7 +188,7 @@ Function: acdl_solvert::propagation
 
 property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, const exprt &assertion)
 {
-  unsigned init_size=conflict_graph.prop_trail.size();
+  //unsigned init_size=conflict_graph.prop_trail.size();
   acdl_domaint::valuet final_val;
   while (!worklist.empty())
   {
@@ -420,7 +421,7 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
     ded.push_back(e);
     conflict_graph.add_deductions(SSA, ded, false_exprt());
   }
-  unsigned final_size=conflict_graph.prop_trail.size();
+  //unsigned final_size=conflict_graph.prop_trail.size();
   // propagations=propagations+(final_size-init_size);
 
   // [SPECIAL CHECK] explicitly empty the map here when we
@@ -1347,4 +1348,5 @@ property_checkert::resultt acdl_solvert::operator()(
 END:
   std::cout << "Procedure terminated after iteration: "  << iteration  << std::endl;
   print_solver_statistics();
+  return property_checkert::UNKNOWN;
 }

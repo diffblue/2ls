@@ -41,7 +41,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_berkmint::operator()
 
   // copy the value to non-constant value
   acdl_domaint::valuet v;
-  for(int k=0;k<value.size();k++)
+  for(unsigned k=0;k<value.size();k++)
     v.push_back(value[k]);
   domain.normalize(v);
 
@@ -54,7 +54,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_berkmint::operator()
     std::cout << "checking clause" << from_expr(SSA.ns, "", disjunction(clause)) << std::endl;
 #endif
     assert(clause.size()!=0);
-    for(int j=0;j<clause.size();j++)
+    for(unsigned j=0;j<clause.size();j++)
     {
       exprt clause_exp=clause[j];
 #ifdef DEBUG
@@ -108,6 +108,9 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_berkmint::operator()
       return(random_dec_heuristics(SSA, value));
     }
   }
+  // if the control reaches here, 
+  // then return false_exprt
+  return false_exprt();
 }
 
 
@@ -153,12 +156,12 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_berkmint::random_dec_he
     bool non_cond_dec_left=false;
     // make decisions only if
     // there are non-singletons
-    for(int j=0;j<conds.size();j++) {
+    for(unsigned j=0;j<conds.size();j++) {
       if(conds_marked[j]!=false) {
         cond_dec_left=true;
       }
     }
-    for(int k=0;k<non_cond.size();k++) {
+    for(unsigned k=0;k<non_cond.size();k++) {
       if(non_cond_marked[k]!=false) {
         non_cond_dec_left=true;
       }
@@ -176,7 +179,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_berkmint::random_dec_he
     // 2> check if it is a cond variable and singleton
     // 3> If not singleton, return it.
     bool cond=false;
-    for(int i=0;i<conds.size();i++) {
+    for(unsigned i=0;i<conds.size();i++) {
       const acdl_domaint::meet_irreduciblet
         exp=conds[i];
       val=domain.split(value, exp);
@@ -210,4 +213,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_berkmint::random_dec_he
       continue;
     }
   }
+  // if the control reaches here, 
+  // then return false_exprt
+  return false_exprt();
 }
