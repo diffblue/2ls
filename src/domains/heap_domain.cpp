@@ -22,7 +22,7 @@ void heap_domaint::initialize(domaint::valuet &value)
     if (templ_row.mem_kind == STACK)
       val.emplace_back(new stack_row_valuet());
     else if (templ_row.mem_kind == HEAP)
-      val.emplace_back(new heap_row_valuet());
+      val.emplace_back(new heap_row_valuet(std::make_pair(templ_row.dyn_obj, templ_row.expr)));
     else
       assert(false);
   }
@@ -194,9 +194,6 @@ bool heap_domaint::add_points_to(const heap_domaint::rowt &row, heap_domaint::he
                                  const exprt &dest)
 {
   assert(row < value.size());
-
-  if (templ[row].dyn_obj == dest) return false;
-
   return value[row].add_points_to(dest);
 }
 
@@ -385,7 +382,14 @@ exprt heap_domaint::heap_row_valuet::get_row_expr(const domaint::vart &templ_exp
   if (nondet) return true_exprt();
 
   if (empty())
-    return false_exprt();
+  {
+    if (self_linkage)
+    {
+      return equal_exprt(templ_expr, address_of_exprt(dyn_obj.first));
+    }
+    else
+      return false_exprt();
+  }
   else
   {
     exprt::operandst result;
@@ -424,7 +428,17 @@ exprt heap_domaint::heap_row_valuet::get_row_expr(const domaint::vart &templ_exp
 
 bool heap_domaint::heap_row_valuet::add_points_to(const exprt &dest)
 {
-  return add_path(dest, std::make_pair(nil_exprt(), nil_exprt()));
+  if (dest == dyn_obj.first)
+  {
+    bool changed = !self_linkage;
+    self_linkage = true;
+    return changed;
+  }
+  else
+  {
+    const dyn_objt through = self_linkage ? dyn_obj : std::make_pair(nil_exprt(), nil_exprt());
+    return add_path(dest, through);
+  }
 }
 
 bool heap_domaint::heap_row_valuet::add_path(const exprt &dest,
