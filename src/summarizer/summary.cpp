@@ -143,10 +143,12 @@ void summaryt::join(const summaryt &new_summary)
  * Get value domain for last location from SSA.
  * @param SSA
  */
-void summaryt::set_value_domain(const local_SSAt &SSA)
+void summaryt::set_value_domains(const local_SSAt &SSA)
 {
-  const local_SSAt::locationt &last_loc = (--SSA.nodes.end())->location;
-  value_domain = SSA.ssa_value_ai[last_loc];
+  const local_SSAt::locationt &entry_loc = SSA.nodes.begin()->location;
+  const local_SSAt::locationt &exit_loc = (--SSA.nodes.end())->location;
+  value_domain_in = SSA.ssa_value_ai[entry_loc];
+  value_domain_out = SSA.ssa_value_ai[exit_loc];
 }
 
 /*******************************************************************\

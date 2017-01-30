@@ -91,16 +91,11 @@ class ssa_inlinert : public messaget
 				 const local_SSAt::var_sett &globals,
                                  symbol_exprt &s_found);
 
-  static bool find_corresponding_dyn_obj(const symbol_exprt &s,
-                                         const summaryt &summary,
-                                         const function_application_exprt &funapp_expr,
-                                         const local_SSAt::nodet &ssa_node,
-                                         const namespacet &ns,
-                                         symbol_exprt &found_sym);
-
   static irep_idt get_original_identifier(const symbol_exprt &s);
 
-	static bool is_struct_member(const irep_idt &identifier);
+  static std::list<exprt> apply_dereference(const std::list<exprt> &exprs,
+                                            const ssa_value_domaint &value_domain,
+                                            const namespacet &ns);
 
  protected:
   unsigned counter;
@@ -120,23 +115,59 @@ class ssa_inlinert : public messaget
 
   exprt get_replace_globals_in(const local_SSAt::var_sett &globals_in, 
                           const local_SSAt::var_sett &globals);
-  exprt get_replace_params(const local_SSAt::var_listt &params,
-						   const function_application_exprt &funapp_expr,
-						   const local_SSAt::var_sett &globals_in,
-                           const local_SSAt::var_sett &globals_out,
-                           const local_SSAt &SSA,
-                           const local_SSAt::locationt &loc);
+
+	exprt get_replace_params(const local_SSAt::var_listt &params,
+                             const function_application_exprt &funapp_expr,
+                             const local_SSAt::var_sett &cs_globals_in,
+                             const local_SSAt::var_sett &cs_globals_out, const local_SSAt &SSA,
+                             const summaryt &summary, const local_SSAt::locationt &loc);
 
   exprt get_replace_globals_out(const local_SSAt::var_sett &cs_globals_in,
                                 const local_SSAt::var_sett &cs_globals_out,
                                 const summaryt &summary,
                                 const function_application_exprt &funapp_expr,
-                                const local_SSAt::nodet &ssa_node,
-                                const namespacet &ns);
+                                const local_SSAt &SSA,
+                                local_SSAt::locationt loc);
 
   void rename(exprt &expr);
   void rename(local_SSAt::nodet &node);
 
+  static void bind(const std::list<exprt> &lhs,
+                   const std::list<exprt> &rhs,
+                   exprt::operandst &bindings);
+
+	// Transformation functions for lists of input/output arguments/pointers (or their members)
+	// for binding purposes
+
+  std::list<exprt> transform_pointed_params_in(const std::list<exprt> &params_in);
+  std::list<exprt> transform_pointed_args_in(const std::list<exprt> &args_in,
+                                             const local_SSAt &SSA,
+                                             local_SSAt::locationt loc);
+
+  std::list<exprt> transform_pointed_member_params_in(const std::list<exprt> &params_in,
+                                                      const struct_union_typet::componentt &component);
+
+  std::list<exprt> transform_pointed_member_args_in(const std::list<exprt> &args_in,
+                                                    const struct_union_typet::componentt &component,
+                                                    const local_SSAt &SSA,
+                                                    local_SSAt::locationt loc);
+  std::list<exprt> transform_pointed_params_out(const std::list<exprt> &params_out,
+                                                const local_SSAt::var_sett &globals_out,
+                                                const typet &param_type);
+  std::list<exprt> transform_pointed_args_out(const std::list<exprt> &args_out,
+                                              const typet &arg_symbol_type,
+                                              const typet &param_type,
+                                              const local_SSAt &SSA,
+                                              local_SSAt::locationt loc);
+  std::list<exprt> transform_pointed_member_params_out(const std::list<exprt> &params_out,
+                                                       const struct_union_typet::componentt &component,
+                                                       const local_SSAt::var_sett &globals_out);
+  std::list<exprt> transform_pointed_member_args_out(const std::list<exprt> &args_out,
+                                                     const struct_union_typet::componentt &component,
+                                                     const local_SSAt &SSA,
+                                                     local_SSAt::locationt loc);
+
+  static bool contains_advancer(const std::list<exprt> &params);
 };
 
 
