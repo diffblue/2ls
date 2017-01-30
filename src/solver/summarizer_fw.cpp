@@ -71,6 +71,7 @@ void summarizer_fwt::compute_summary_rec(
   summary.params=SSA.params;
   summary.globals_in=SSA.globals_in;
   summary.globals_out=SSA.globals_out;
+  summary.set_value_domains(SSA);
   summary.fw_precondition=precondition;
 
   if(!options.get_bool_option("havoc"))
