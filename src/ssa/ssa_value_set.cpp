@@ -87,7 +87,7 @@ void ssa_value_domaint::transform(
               pointed_type);
           pointed_obj.type().set("#dynamic", true);
 
-          assign_lhs_rec(arg, address_of_exprt(pointed_obj), ns);
+          assign_lhs_rec(arg, address_of_exprt(pointed_obj), ns, true);
 
           arg = pointed_obj;
         }
@@ -103,6 +103,25 @@ void ssa_value_domaint::transform(
     {
       exprt lhs_deref=dereference(code_function_call.lhs(), *this, "", ns);
       assign_lhs_rec(lhs_deref, nil_exprt(), ns);
+    }
+
+    // the assignment of return value might be in next instruction
+    if (to->is_assign() && to_code_assign(to->code).rhs().id() == ID_symbol)
+    {
+      const symbol_exprt &return_value = to_symbol_expr(to_code_assign(to->code).rhs());
+      if (return_value.type().id() == ID_pointer &&
+          return_value.get_identifier() ==
+          id2string(to_symbol_expr(code_function_call.function()).get_identifier()) +
+          "#return_value")
+      {
+        const typet &pointed_type = ns.follow(return_value.type().subtype());
+        symbol_exprt pointed_obj = symbol_exprt(
+            id2string(return_value.get_identifier()) + "'obj",
+            pointed_type);
+        pointed_obj.type().set("#dynamic", true);
+
+        assign_lhs_rec(return_value, address_of_exprt(pointed_obj), ns);
+      }
     }
   }
   else if(from->is_dead())
@@ -159,23 +178,6 @@ void ssa_value_domaint::assign_lhs_rec(
       }
 
       return; // done
-    }
-
-    // if rhs is a return value of pointer type, it points to a dynamic object
-    if(rhs.id()==ID_symbol &&
-       rhs.type().id()==ID_pointer &&
-       id2string(to_symbol_expr(rhs).get_identifier()).find("#return_value")!=
-       std::string::npos &&
-       id2string(to_symbol_expr(rhs).get_identifier())!="malloc#return_value")
-    {
-      // Pointer typed return value of some function points to some dynamic object
-      const typet &pointed_type=ns.follow(rhs.type().subtype());
-      symbol_exprt pointed_obj=symbol_exprt(
-        id2string(to_symbol_expr(rhs).get_identifier())+"'obj",
-        pointed_type);
-      pointed_obj.type().set("#dynamic", true);
-
-      assign_lhs_rec(rhs, address_of_exprt(pointed_obj), ns);
     }
 
     // object?
