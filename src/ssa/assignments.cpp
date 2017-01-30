@@ -91,8 +91,11 @@ void assignmentst::build_assignment_map(
           exprt arg_ptr = arg;
           do
           {
+            // Dereference argument in next location (to include potential new objects after
+            // the function call)
+            auto n_it = it; ++n_it;
             arg_ptr = dereference(dereference_exprt(arg_ptr, arg_ptr.type().subtype()),
-                                  ssa_value_ai[it], "", ns);
+                                  ssa_value_ai[n_it], "", ns);
             assign(arg_ptr, it, ns);
           }
           while (arg_ptr.type().id() == ID_pointer);
