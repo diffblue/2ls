@@ -105,7 +105,48 @@ void template_generator_callingcontextt::collect_variables_callingcontext(
   {
     std::set<symbol_exprt> args;
     find_symbols(*a_it,args); 
-    add_vars(args,guard,guard,domaint::OUT,var_specs);
+
+    exprt arg = *a_it;
+
+    // add objects pointed by arguments
+    while (arg.type().id() == ID_pointer)
+    {
+      if (arg.id() == ID_symbol)
+      { // remove SSA suffix (for querying value analysis)
+        const std::string id = id2string(to_symbol_expr(arg).get_identifier());
+        to_symbol_expr(arg).set_identifier(id.substr(0, id.find_last_of('#')));
+      }
+      // query value analysis
+      exprt deref_arg = SSA.dereference(dereference_exprt(arg, arg.type().subtype()),
+                                        n_it->location);
+      debug() << "Argument " << from_expr(SSA.ns, "", arg) << " deref: "
+              << from_expr(SSA.ns, "", deref_arg) << eom;
+
+      // Find all symbols in dereferenced expression and add them to var_specs
+      std::set<symbol_exprt> vars;
+      find_symbols(deref_arg, vars);
+
+      for (auto &var : vars)
+      {
+        if (var.type().id() == ID_struct)
+        { // need to split the struct into members
+          for (auto &component : to_struct_type(var.type()).components())
+          {
+            const symbol_exprt member(
+                id2string(var.get_identifier()) + "." + id2string(component.get_name()),
+                component.type());
+
+            args.insert(to_symbol_expr(SSA.read_rhs(member, n_it->location)));
+          }
+        }
+        else
+          args.insert(to_symbol_expr(SSA.read_rhs(var, n_it->location)));
+      }
+
+      arg = deref_arg;
+    }
+
+    add_vars(args, guard, guard, domaint::OUT, var_specs);
   }
 
 }
