@@ -18,6 +18,9 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 
 class acdl_analyze_conflict_baset : public messaget
 {
+protected:
+  acdl_domaint &domain;
+
 public:
 
   explicit acdl_analyze_conflict_baset(acdl_domaint &_domain)
@@ -37,10 +40,10 @@ public:
   // Remark: all this stuff should go into a separate class derived from this base class
   unsigned int backtracks;
   int backtrack_level;
-  int conflicting_clause;
-  unsigned bcp_queue_top;
   bool just_backtracked;
   bool disable_backjumping;
+  int conflicting_clause;
+  unsigned bcp_queue_top;
   void cancel_once(const local_SSAt &SSA, acdl_conflict_grapht &graph);
   void cancel_until(const local_SSAt &SSA, acdl_conflict_grapht &graph, int lvl);
   void negate(exprt& exp, acdl_domaint::valuet &clause);
@@ -55,8 +58,7 @@ public:
   std::vector<acdl_domaint::valuet> learned_clauses;
   exprt flip(acdl_domaint::meet_irreduciblet &m);
 
-protected:
-  acdl_domaint &domain;
+protected:  
   virtual void generalize_conflict(acdl_conflict_grapht &graph) { assert(false); }
 
   void get_conflict_clause(const local_SSAt &SSA, acdl_conflict_grapht &graph, acdl_domaint::valuet &clause);
