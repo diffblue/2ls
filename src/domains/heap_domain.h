@@ -167,8 +167,12 @@ class heap_domaint:public domaint
   // Join of values
   virtual void join(valuet &value1, const valuet &value2) override;
 
+  const std::list<symbol_exprt> &get_new_heap_vars() const;
+
  protected:
   templatet templ;
+
+  std::list<symbol_exprt> new_heap_row_vars;
 
   void make_template(const var_specst &var_specs, const namespacet &ns);
 

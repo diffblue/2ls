@@ -489,3 +489,8 @@ bool heap_domaint::heap_row_valuet::add_pointed_by(const rowt &row)
   auto new_pb = pointed_by.insert(row);
   return new_pb.second;
 }
+
+const std::list<symbol_exprt> &heap_domaint::get_new_heap_vars() const
+{
+  return new_heap_row_vars;
+}

@@ -166,6 +166,8 @@ public:
   void assign_rec(
     const exprt &lhs, const exprt &rhs, const exprt &guard, locationt loc);
 
+  std::list<unsigned> all_assignment_locs(const ssa_objectt &object) const;
+
   exprt unknown_obj_eq(const symbol_exprt &obj, const struct_typet::componentt &component) const;
 
   void get_entry_exit_vars();
