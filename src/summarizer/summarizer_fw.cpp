@@ -178,6 +178,11 @@ void summarizer_fwt::do_summary(const function_namet &function_name,
       implies_exprt(summary.fw_precondition,summary.fw_invariant);
   }
 
+  if (options.get_bool_option("heap"))
+  {
+    analyzer.update_heap_out(summary.globals_out);
+  }
+
   solver_instances += analyzer.get_number_of_solver_instances();
   solver_calls += analyzer.get_number_of_solver_calls();
 }

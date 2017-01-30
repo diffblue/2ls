@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/replace_expr.h>
 
+#include "../summarizer/summary.h"
 #include "../ssa/local_ssa.h"
 #include "strategy_solver_base.h"
 #include "template_generator_base.h"
@@ -40,6 +41,8 @@ public:
                   template_generator_baset &template_generator);
 
   void get_result(exprt &result, const domaint::var_sett &vars);
+
+  void update_heap_out(summaryt::var_sett &out);
 
   unsigned get_number_of_solver_instances() { return solver_instances; }
   unsigned get_number_of_solver_calls() { return solver_calls; }
