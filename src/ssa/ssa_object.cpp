@@ -70,6 +70,10 @@ void collect_ptr_objects(const exprt &expr,
       const typet &pointed_type = src.type().subtype();
       symbol_exprt ptr_object(identifier, pointed_type);
 
+      const symbolt *symbol;
+      if (!ns.lookup(src.get_identifier(), symbol) && !symbol->is_procedure_local())
+        ptr_object.type().set("#dynamic", true);
+
       if (is_ptr_object(src))
         ptr_object.set(ID_ptr_object, src.get(ID_ptr_object));
       else
@@ -183,7 +187,7 @@ void collect_objects_rec(
     if(type.id()==ID_struct)
     {
       std::string id = id2string(ssa_object.get_identifier());
-      if (src.type().get_bool("#dynamic") || id.rfind("'obj") == id.length() - 4)
+      if (src.type().get_bool("#dynamic") || is_ptr_object(src))
         objects.insert(ssa_object);
 
       // need to split up

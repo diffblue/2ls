@@ -1272,6 +1272,21 @@ void local_SSAt::assign_rec(
       return;
     }
 
+    if (lhs.id() == ID_member && to_member_expr(lhs).compound().get_bool("#advancer") &&
+        to_member_expr(lhs).compound().get_bool("#except_first"))
+    { // if an advancer instance is assigned and it does not cover first element, create
+      // non-deterministic case split since not all list elements are assigned here
+      exprt lhs_copy = lhs;
+      to_member_expr(lhs_copy).compound().set("#except_first", false);
+      if_exprt advancer_split(name(guard_symbol(), LOOP_SELECT, loc), lhs_copy,
+                                              symbol_exprt("", lhs_copy.type())
+
+      );
+      assign_rec(advancer_split, rhs, guard, loc);
+
+      return;
+    }
+
     ssa_objectt lhs_object(lhs, ns);
     
     const std::set<ssa_objectt> &assigned=
