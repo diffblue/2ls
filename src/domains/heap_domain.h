@@ -89,6 +89,10 @@ class heap_domaint:public domaint
 
     std::set<patht> paths;          /**< Set o paths leading from the row variable */
     std::set<rowt> pointed_by;      /**< Set of rows whose variables point to this row */
+    dyn_objt dyn_obj;
+    bool self_linkage = false;
+
+    heap_row_valuet(const dyn_objt &dyn_obj_) : dyn_obj(dyn_obj_) {}
 
     virtual exprt get_row_expr(const vart &templ_expr) const override;
 
