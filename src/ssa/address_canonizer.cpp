@@ -81,6 +81,15 @@ exprt address_canonizer(
 
       return sum;
     }
+    else if (object.id() == ID_symbol &&
+             id2string(to_symbol_expr(object).get_identifier()).find("'adv") != std::string::npos)
+    {
+      // address of advancer is dereferenced to a corresponding symbol - will be bound to real
+      // address during analysis
+      symbol_exprt advancer_addr(id2string(to_symbol_expr(object).get_identifier()) + "'addr",
+                                 address.type());
+      return advancer_addr;
+    }
     else
       return address;
   }

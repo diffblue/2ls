@@ -90,6 +90,11 @@ public:
     return id_str.find("$unknown") != std::string::npos;
   }
 
+  inline void set_flag(const irep_idt flag, bool value)
+  {
+    expr.set(flag, value);
+  }
+
 protected:
   exprt expr;
   identifiert identifier;

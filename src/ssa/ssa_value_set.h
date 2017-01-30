@@ -42,6 +42,8 @@ public:
 
     bool merge(const valuest &src);
 
+    bool add_to_value_set(ssa_objectt object);
+    
     inline void clear()
     {
       *this=valuest();
@@ -100,12 +102,20 @@ class ssa_value_ait:public ait<ssa_value_domaint>
 public:
   ssa_value_ait(
     const goto_functionst::goto_functiont &goto_function,
-    const namespacet &ns)
+    const namespacet &ns_) : ns(ns_)
   {
-    operator()(goto_function, ns);
+    operator()(goto_function, ns_);
   }
 
 protected:
+  virtual void initialize(const goto_functionst::goto_functiont &goto_function) override;
+
+  void assign_ptr_param_rec(const exprt &expr, ssa_value_domaint &entry);
+
+  void assign(const exprt &src, const exprt &dest, ssa_value_domaint &entry);
+
+  const namespacet &ns;
+
   friend class ssa_value_domaint;
 };
 

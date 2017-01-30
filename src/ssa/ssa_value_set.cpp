@@ -13,6 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #endif
 
 #include <util/pointer_offset_size.h>
+#include <algorithm>
 
 #include "ssa_value_set.h"
 #include "ssa_dereference.h"
@@ -183,7 +184,8 @@ void ssa_value_domaint::assign_lhs_rec(
     // object?
     ssa_objectt ssa_object(lhs, ns);
 
-    if(ssa_object)
+    if(ssa_object &&
+       !(lhs.id()==ID_member && to_member_expr(lhs).compound().get_bool("#advancer")))
     {
       valuest tmp_values;
       assign_rhs_rec(tmp_values, rhs, ns, false, 0);
@@ -369,7 +371,7 @@ void ssa_value_domaint::assign_rhs_rec_address_of(
 
   if(ssa_object)
   {
-    dest.value_set.insert(ssa_object);
+    dest.add_to_value_set(ssa_object);
     if(offset)
       dest.offset=true;
   }
@@ -500,10 +502,10 @@ bool ssa_value_domaint::valuest::merge(const valuest &src)
   }
 
   // value set
-  unsigned old_size=value_set.size();
-  value_set.insert(src.value_set.begin(), src.value_set.end());
-  if(old_size!=value_set.size())
-    result=true;
+  for (const ssa_objectt &v : src.value_set)
+  {
+    result = add_to_value_set(v) || result;
+  }
 
   // alignment
   alignment=merge_alignment(alignment, src.alignment);
@@ -560,4 +562,179 @@ bool ssa_value_domaint::merge(
   }
 
   return result;
+}
+
+/*******************************************************************\
+
+Function: ssa_value_domaint::valuest::add_to_value_set
+
+  Inputs: SSA object to be added
+
+ Outputs: True if 'this' has changed
+
+ Purpose: Add given object to value set of this.
+          If value set contains both advancer (abstracts all elements
+          of the list except the first one) and object pointed by
+          advancer pointer (abstracts the first element of the list),
+          only advancer is preserved and #except_first is set to false.
+
+\*******************************************************************/
+
+bool ssa_value_domaint::valuest::add_to_value_set(ssa_objectt object)
+{
+  if (value_set.find(object) == value_set.end())
+  {
+    bool result = false;
+    if (object.get_expr().get_bool("#advancer"))
+    { // advancer is to be inserted - check if set already contains first object of corresponding
+      // list
+      const irep_idt corresp_object_id = object.get_expr().get("#object_id");
+
+      auto it = std::find_if(value_set.begin(), value_set.end(),
+                             [&corresp_object_id](const ssa_objectt &o)
+                             {
+                               return o.get_identifier() == corresp_object_id;
+                             });
+
+      if (it != value_set.end())
+      {
+        value_set.erase(it);
+        object.set_flag("#except_first", false);
+        result = true;
+      }
+    }
+    else if (id2string(object.get_identifier()).find("'obj") != std::string::npos)
+    { // pointed object is to be inserted - check if set already contains corresponding advancer
+      const irep_idt object_id = object.get_identifier();
+
+      auto it = std::find_if(value_set.begin(), value_set.end(),
+                             [&object_id](const ssa_objectt &o)
+                             {
+                               return id2string(o.get_identifier()).find(id2string(object_id)) !=
+                                      std::string::npos &&
+                                      id2string(o.get_identifier()).find("'adv") !=
+                                      std::string::npos;
+                             });
+
+      if (it != value_set.end())
+      {
+        ssa_objectt new_advancer(*it);
+        new_advancer.set_flag("#except_first", false);
+        value_set.erase(it);
+        value_set.insert(new_advancer);
+        return false;
+      }
+    }
+
+    auto inserted = value_set.insert(object);
+    return result || inserted.second;
+  }
+  return false;
+}
+
+/*******************************************************************\
+
+Function: ssa_value_ait::initialize
+
+  Inputs: GOTO function
+
+ Outputs:
+
+ Purpose: Initialize value sets for pointer parameters and pointer-typed
+          fields of objects pointed by parameters.
+
+\*******************************************************************/
+
+void ssa_value_ait::initialize(const goto_functionst::goto_functiont &goto_function)
+{
+  ait<ssa_value_domaint>::initialize(goto_function);
+
+  // Initialize value sets for pointer parameters
+
+  if (!goto_function.type.parameters().empty())
+  {
+    locationt e = goto_function.body.instructions.begin();
+    ssa_value_domaint &entry = operator[](e);
+
+    for (auto &param : goto_function.type.parameters())
+    {
+      const symbol_exprt param_expr(param.get_identifier(), param.type());
+      assign_ptr_param_rec(param_expr, entry);
+    }
+
+  }
+}
+
+/*******************************************************************\
+
+Function: ssa_value_ait::assign_ptr_param_rec
+
+  Inputs: Expression to be initialized and entry record of value set analysis
+
+ Outputs:
+
+ Purpose: Initialize value set for the given expression and recursively for all
+          structure members and all pointed objects.
+          Pointer-typed variable p initially points to abstract object p'obj.
+          Pointer-typed field of structure initially points to advancer.
+
+\*******************************************************************/
+
+void ssa_value_ait::assign_ptr_param_rec(const exprt &expr, ssa_value_domaint &entry)
+{
+  const typet &type = ns.follow(expr.type());
+  if (type.id() == ID_pointer)
+  {
+    if (expr.id() == ID_symbol)
+    { // pointer variable
+      const symbol_exprt pointed_expr(id2string(to_symbol_expr(expr).get_identifier()) + "'obj",
+                                      type.subtype());
+      assign(expr, pointed_expr, entry);
+      assign_ptr_param_rec(pointed_expr, entry);
+    }
+    else if (expr.id() == ID_member)
+    { // pointer member of a structure
+      const member_exprt &member = to_member_expr(expr);
+      ssa_objectt member_obj(member, ns);
+      symbol_exprt member_dest(id2string(member_obj.get_identifier()) + "'adv",
+                               type.subtype());
+      member_dest.set("#advancer", true);
+      // intially advancer abstracts all list members except first
+      member_dest.set("#except_first", true);
+      assert(member.compound().id() == ID_symbol);
+      // set advancer object
+      member_dest.set("#object_id", to_symbol_expr(member.compound()).get_identifier());
+      assign(expr, member_dest, entry);
+    }
+  }
+  else if (type.id() == ID_struct)
+  { // split structure into fields
+    for (auto &component : to_struct_type(type).components())
+    {
+      const member_exprt member(expr, component.get_name(), component.type());
+      assign_ptr_param_rec(member, entry);
+    }
+  }
+}
+
+/*******************************************************************\
+
+Function: ssa_value_ait::assign
+
+  Inputs: Pointer variable src, pointed object dest and analysis entry.
+
+ Outputs:
+
+ Purpose: Insert object to value set of another object in the given entry.
+
+\*******************************************************************/
+
+void ssa_value_ait::assign(const exprt &src, const exprt &dest, ssa_value_domaint &entry)
+{
+  ssa_objectt src_obj(src, ns);
+  ssa_objectt dest_obj(dest, ns);
+  if (src_obj && dest_obj)
+  {
+    entry.value_map[src_obj].value_set.insert(dest_obj);
+  }
 }
