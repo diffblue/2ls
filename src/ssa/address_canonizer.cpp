@@ -47,24 +47,17 @@ exprt address_canonizer(
       // get offset
       exprt offset=member_offset_expr(to_member_expr(object), ns);
 
-      if (offset.id() == ID_constant && to_constant_expr(offset).is_zero())
-      {
-        return address_of_exprt(to_member_expr(object).compound());
-      }
-      else
-      {
-        // &x.m  ---> (&x)+offset
+      // &x.m  ---> (&x)+offset
 
-        address_of_exprt address_of_expr(to_member_expr(object).struct_op());
-        exprt rec_result = address_canonizer(address_of_expr, ns); // rec. call
+      address_of_exprt address_of_expr(to_member_expr(object).struct_op());
+      exprt rec_result = address_canonizer(address_of_expr, ns); // rec. call
 
-        pointer_typet byte_pointer(unsigned_char_type());
-        typecast_exprt typecast_expr(rec_result, byte_pointer);
-        plus_exprt sum(typecast_expr, offset);
-        if (sum.type() != address.type()) sum.make_typecast(address.type());
+      pointer_typet byte_pointer(unsigned_char_type());
+      typecast_exprt typecast_expr(rec_result, byte_pointer);
+      plus_exprt sum(typecast_expr, offset);
+      if (sum.type() != address.type()) sum.make_typecast(address.type());
 
         return sum;
-      }
     }
     else if(object.id()==ID_index)
     {
