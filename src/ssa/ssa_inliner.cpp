@@ -919,9 +919,11 @@ void ssa_inlinert::rename_to_callee(
       warning() << "'" << it->get_identifier()
                 << "' not bound in caller" << eom;
 #endif
-      replace_map[*it]=
-        symbol_exprt(
-          id2string(it->get_identifier())+"@"+i2string(++counter), it->type());
+      // rename objects not present in globals in to non-suffix version
+      symbol_exprt to_replace(get_original_identifier(*it), it->type());
+      replace_map[*it]=to_replace;
+      // to propagate #dynamic flag on type
+      replace_map[to_replace]=to_replace;
     }
   }
 
