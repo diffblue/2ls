@@ -1844,3 +1844,18 @@ exprt local_SSAt::unknown_obj_eq(const symbol_exprt &obj,
   const symbol_exprt member(identifier, component.type());
   return equal_exprt(member, address_of_exprt(obj));
 }
+
+std::list<unsigned> local_SSAt::all_assignment_locs(const ssa_objectt &object) const
+{
+  std::list<unsigned> result;
+
+  forall_goto_program_instructions(it, goto_function.body)
+  {
+    if (assignments.assigns(it, object))
+    {
+      result.push_back(it->location_number);
+    }
+  }
+
+  return result;
+}

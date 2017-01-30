@@ -107,7 +107,8 @@ void ssa_analyzert::operator()(
   else if(template_generator.options.get_bool_option("heap"))
   {
     strategy_solver=new strategy_solver_heapt(
-      *static_cast<heap_domaint *>(domain), solver, SSA, precondition);
+      *static_cast<heap_domaint *>(domain),
+      solver, SSA, precondition, get_message_handler(), template_generator);
     result=new heap_domaint::heap_valuet();
   }
   else
