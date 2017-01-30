@@ -179,6 +179,11 @@ void summarizer_fwt::do_summary(
       implies_exprt(summary.fw_precondition, summary.fw_invariant);
   }
 
+  if (options.get_bool_option("heap"))
+  {
+    analyzer.update_heap_out(summary.globals_out);
+  }
+
   solver_instances+=analyzer.get_number_of_solver_instances();
   solver_calls+=analyzer.get_number_of_solver_calls();
 }
