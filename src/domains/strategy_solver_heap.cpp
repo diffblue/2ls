@@ -5,7 +5,6 @@
 //#define DEBUG_OUTPUT
 
 #include "strategy_solver_heap.h"
-#include "../ssa/address_canonizer.h"
 
 bool strategy_solver_heapt::iterate(invariantt &_inv)
 {
@@ -125,10 +124,9 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
           debug() << from_expr(ns, "", ptr_value) << eom;
           assert(ptr_value.id() == ID_address_of);
           // Canonize address
-          const exprt address = address_canonizer(ptr_value, ns);
-          assert(to_address_of_expr(address).object().id() == ID_symbol);
+          assert(to_address_of_expr(ptr_value).object().id() == ID_symbol);
 
-          symbol_exprt obj=to_symbol_expr(to_address_of_expr(address).object());
+          symbol_exprt obj=to_symbol_expr(to_address_of_expr(ptr_value).object());
 
           // Add equality p == &obj
           if (heap_domain.add_points_to(row, inv, obj))
