@@ -55,7 +55,16 @@ void assignmentst::build_assignment_map(
       for(objectst::const_iterator
           o_it=ssa_objects.dirty_locals.begin();
           o_it!=ssa_objects.dirty_locals.end(); o_it++)
-        assign(*o_it, it, ns);
+      {
+        bool declared = false;
+        forall_goto_program_instructions(other_it, goto_program)
+        {
+          if (it == other_it) break;
+          if (assigns(other_it, *o_it)) declared = true;
+        }
+        if (declared)
+          assign(*o_it, it, ns);
+      }
 
       for(objectst::const_iterator
           o_it=ssa_objects.globals.begin();
