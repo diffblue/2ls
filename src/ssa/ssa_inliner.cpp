@@ -573,23 +573,6 @@ exprt ssa_inlinert::get_replace_params(
             rename(member_lhs_in);
 
             c.push_back(equal_exprt(member_lhs_in, SSA.read_rhs(arg_member, loc)));
-
-            // Bind argument members at the output
-            symbol_exprt member_lhs_out;
-            if(find_corresponding_symbol(arg_member, summary.globals_out, member_lhs_out))
-            {
-              rename(member_lhs_out);
-            }
-            else
-            { 
-              // If the argument member is not in globals out, it was not assigned by the function
-              // and is not changed by the call
-              assert(find_corresponding_symbol(arg_member, cs_globals_in, member_lhs_out));
-            }
-
-            c.push_back(equal_exprt(
-              member_lhs_out,
-              SSA.name(ssa_objectt(arg_member, SSA.ns), local_SSAt::OUT, loc)));
           }
         }
 
