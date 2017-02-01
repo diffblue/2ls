@@ -6,7 +6,7 @@ test:
 	@../test.pl -c "/usr/bin/time ../../../src/2ls/2ls $(FLAGS)"
 
 tests.log: ../test.pl
-	@../test.pl -c "../../../src/2ls/2ls $(FLAGS)"
+	@../test.pl -c "../../../src/summarizer/2ls $(FLAGS)"
 
 show:
 	@for dir in *; do \
