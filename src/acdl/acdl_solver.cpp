@@ -1166,7 +1166,7 @@ property_checkert::resultt acdl_solvert::operator()(
   while(true)
   {
     // check the iteration bound
-    if(ITERATION_LIMIT >= 0 && iteration > ITERATION_LIMIT) {
+    if(iteration > ITERATION_LIMIT) {
 #ifdef DEBUG
       std::cout << "Iteration limit reached" << std::endl;
 #endif
