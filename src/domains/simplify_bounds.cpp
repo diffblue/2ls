@@ -378,10 +378,12 @@ bool simplify_boundst::regroup_implications(exprt &expr)
   if(expr.id()==ID_and)
   {
     Forall_operands(it, expr)
-      if(it->id()==ID_implies)
+      if(it->id()==ID_implies) {
         implication_map[it->op0()].push_back(it->op1());
-      else
+      }
+      else {
         r.push_back(*it);
+      }
   }
   else
     return true;

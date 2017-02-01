@@ -71,8 +71,8 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_berkmint::operator()
     }
 
     assert(contradicted<clause.size()); // otherwise we'd have a contradicted clause
-
-    if(unsat_lits.size() > 0);
+    
+    // if(unsat_lits.size() > 0);
     break;
   }
   bool decision=false;
