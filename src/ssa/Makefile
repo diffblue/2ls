@@ -1,4 +1,7 @@
-SRC = local_ssa.cpp \
+include ../config.inc
+CBMC ?= ../..
+
+SRC = local_ssa.cpp ssa_var_collector.cpp \
       ssa_domain.cpp translate_union_member.cpp malloc_ssa.cpp \
       guard_map.cpp ssa_object.cpp assignments.cpp ssa_dereference.cpp \
       ssa_value_set.cpp address_canonizer.cpp simplify_ssa.cpp \
