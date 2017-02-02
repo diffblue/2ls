@@ -1,4 +1,5 @@
 
+
 # compilation files
 cbmc/
 src/config.inc
@@ -60,3 +61,4 @@ CMakeLists.txt
 *.inc
 *.bak
 nbproject
+
