@@ -54,7 +54,7 @@ Author: Daniel Kroening, Peter Schrammel
 #include "show.h"
 #include "horn_encoding.h"
 
-#include "summarizer_nonterm.h"
+#include "../summarizer/summarizer_nonterm.h"
 
 #define UNWIND_GOTO_INTO_LOOP 1
 #define REMOVE_MULTIPLE_DEREFERENCES 1
@@ -484,7 +484,6 @@ int twols_parse_optionst::doit()
     std::unique_ptr<summary_checker_baset> checker;
     if(!options.get_bool_option("k-induction") &&
        !options.get_bool_option("incremental-bmc"))
-<<<<<<< HEAD:src/2ls/2ls_parse_options.cpp
       checker=std::unique_ptr<summary_checker_baset>(
         new summary_checker_ait(options));
     if(options.get_bool_option("k-induction") &&
@@ -499,24 +498,6 @@ int twols_parse_optionst::doit()
     checker->set_message_handler(get_message_handler());
     checker->simplify=!cmdline.isset("no-simplify");
     checker->fixed_point=!cmdline.isset("no-fixed-point");
-=======
-      summary_checker = new summary_checker_ait(options);
-    if(options.get_bool_option("k-induction") && 
-       !options.get_bool_option("incremental-bmc")) 
-      summary_checker = new summary_checker_kindt(options);
-    if(!options.get_bool_option("k-induction") && 
-       options.get_bool_option("incremental-bmc")) 
-      summary_checker = new summary_checker_bmct(options);
-    
-    /** TEST */
-    summarizer_nonterm test = summarizer_nonterm(options);
-    test.check_nontermination(goto_model);
-    /** TEST */
-    
-    summary_checker->set_message_handler(get_message_handler());
-    summary_checker->simplify=!cmdline.isset("no-simplify");
-    summary_checker->fixed_point=!cmdline.isset("no-fixed-point");
->>>>>>> 6ce892721a81017f2f89ea9beef201922bb9dc64:src/summarizer/summarizer_parse_options.cpp
 
     int retval;
     if(cmdline.isset("show-vcc"))
