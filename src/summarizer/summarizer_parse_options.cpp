@@ -55,6 +55,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "show.h"
 #include "horn_encoding.h"
 
+#include "summarizer_nonterm.h"
+
 #define UNWIND_GOTO_INTO_LOOP 1
 #define REMOVE_MULTIPLE_DEREFERENCES 1
 #define IGNORE_RECURSION 1
@@ -466,6 +468,11 @@ int summarizer_parse_optionst::doit()
     if(!options.get_bool_option("k-induction") && 
        options.get_bool_option("incremental-bmc")) 
       summary_checker = new summary_checker_bmct(options);
+    
+    /** TEST */
+    summarizer_nonterm test = summarizer_nonterm(options);
+    test.check_nontermination(goto_model);
+    /** TEST */
     
     summary_checker->set_message_handler(get_message_handler());
     summary_checker->simplify=!cmdline.isset("no-simplify");

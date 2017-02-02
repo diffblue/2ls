@@ -4,6 +4,7 @@ SRC = summarizer_base.cpp summarizer_languages.cpp  \
       summarizer_fw.cpp summarizer_bw.cpp \
       summarizer_fw_term.cpp summarizer_bw_term.cpp \
       summarizer_fw_contexts.cpp \
+      summarizer_nonterm.cpp \
       summarizer_main.cpp summarizer_parse_options.cpp \
       show.cpp summary_checker_base.cpp \
       summary_checker_ai.cpp summary_checker_bmc.cpp \
@@ -46,6 +47,7 @@ DELTA_OBJ+=\
       ../ssa/ssa_unwinder$(OBJEXT)\
       ../ssa/unwindable_local_ssa$(OBJEXT)\
       ../ssa/ssa_value_set$(OBJEXT) \
+      ../ssa/ssa_var_collector$(OBJEXT) \
       ../domains/fixed_point$(OBJEXT) \
       ../domains/ssa_fixed_point$(OBJEXT) \
       ../domains/tpolyhedra_domain$(OBJEXT) \
