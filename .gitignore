@@ -1,12 +1,5 @@
-# compilation files
-*.lo
-*.od
-*.d
-*.o
-*.obj
-*.a
-*.lib
 
+# compilation files
 cbmc/
 src/config.inc
 
@@ -19,3 +12,51 @@ tests.log
 
 # binaries
 src/summarizer/2ls
+
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# CBMC
+cbmc
+
+# Regression tests
+*.log
+
+# IntelliJ CLion
+.idea/
+CMakeLists.txt
+
+# Netbeans
+*.inc
+*.bak
+nbproject
