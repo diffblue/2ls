@@ -432,6 +432,11 @@ bool heap_domaint::heap_row_valuet::add_points_to(const exprt &dest)
   {
     bool changed = !self_linkage;
     self_linkage = true;
+    for (auto &path : paths)
+    {
+      if (add_path(path.destination, dyn_obj))
+        changed = true;
+    }
     return changed;
   }
   else
@@ -451,6 +456,10 @@ bool heap_domaint::heap_row_valuet::add_path(const exprt &dest,
     if (dyn_obj.first.id() != ID_nil)
     { // Path doesn't have zero length
       dyn_obj_set.insert(dyn_obj);
+    }
+    if (self_linkage)
+    {
+      dyn_obj_set.insert(this->dyn_obj);
     }
     paths.emplace(dest, dyn_obj_set);
     return true;
