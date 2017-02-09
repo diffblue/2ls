@@ -393,36 +393,41 @@ exprt heap_domaint::heap_row_valuet::get_row_expr(const domaint::vart &templ_exp
   else
   {
     exprt::operandst result;
-    for (auto &path : paths)
-    { // path(o.m, d)[O]
-      const exprt &dest = templ_expr.type() == path.destination.type() ?
-                          path.destination : address_of_exprt(path.destination);
-      exprt::operandst path_expr;
+    for (auto &path_set : paths)
+    {
+      exprt::operandst path_set_expr;
+      for (auto &path : path_set)
+      { // path(o.m, d)[O]
+        const exprt &dest = templ_expr.type() == path.destination.type() ?
+                            path.destination : address_of_exprt(path.destination);
+        exprt::operandst path_expr;
 
-      // o.m = d
-      path_expr.push_back(equal_exprt(templ_expr, dest));
+        // o.m = d
+        path_expr.push_back(equal_exprt(templ_expr, dest));
 
-      for (const dyn_objt &obj1 : path.dyn_objects)
-      {
-        // o.m = &o'
-        exprt equ_exprt = equal_exprt(templ_expr, address_of_exprt(obj1.first));
+        for (const dyn_objt &obj1 : path.dyn_objects)
+        {
+          // o.m = &o'
+          exprt equ_exprt = equal_exprt(templ_expr, address_of_exprt(obj1.first));
 
-        exprt::operandst steps_expr;
-        exprt member_expr = obj1.second;
-        // o'.m = d
-        steps_expr.push_back(equal_exprt(member_expr, dest));
+          exprt::operandst steps_expr;
+          exprt member_expr = obj1.second;
+          // o'.m = d
+          steps_expr.push_back(equal_exprt(member_expr, dest));
 
-        for (auto &obj2 : path.dyn_objects)
-        { // o'.m = o''
-          steps_expr.push_back(equal_exprt(member_expr, address_of_exprt(obj2.first)));
+          for (auto &obj2 : path.dyn_objects)
+          { // o'.m = o''
+            steps_expr.push_back(equal_exprt(member_expr, address_of_exprt(obj2.first)));
+          }
+
+          path_expr.push_back(and_exprt(equ_exprt, disjunction(steps_expr)));
         }
 
-        path_expr.push_back(and_exprt(equ_exprt, disjunction(steps_expr)));
+        path_set_expr.push_back(disjunction(path_expr));
       }
-
-      result.push_back(disjunction(path_expr));
+      result.push_back(conjunction(path_set_expr));
     }
-    return conjunction(result);
+    return disjunction(result);
   }
 }
 
@@ -430,14 +435,7 @@ bool heap_domaint::heap_row_valuet::add_points_to(const exprt &dest)
 {
   if (dest == dyn_obj.first)
   {
-    bool changed = !self_linkage;
-    self_linkage = true;
-    for (auto &path : paths)
-    {
-      if (add_path(path.destination, dyn_obj))
-        changed = true;
-    }
-    return changed;
+    return add_self_linkage();
   }
   else
   {
@@ -446,10 +444,28 @@ bool heap_domaint::heap_row_valuet::add_points_to(const exprt &dest)
   }
 }
 
-bool heap_domaint::heap_row_valuet::add_path(const exprt &dest,
-                                             const heap_domaint::dyn_objt &dyn_obj)
+bool heap_domaint::heap_row_valuet::add_path(const exprt &dest, const dyn_objt &dyn_obj)
 {
-  if (paths.find(dest) == paths.end())
+  pathsett new_path_set;
+  std::set<dyn_objt> dyn_obj_set;
+  if (dyn_obj.first.id() != ID_nil)
+  {
+    dyn_obj_set.insert(dyn_obj);
+  }
+  if (self_linkage)
+  {
+    dyn_obj_set.insert(this->dyn_obj);
+  }
+  new_path_set.emplace(dest, dyn_obj_set);
+  paths.push_back(new_path_set);
+  return true;
+}
+
+bool
+heap_domaint::heap_row_valuet::add_path(const exprt &dest, const heap_domaint::dyn_objt &dyn_obj,
+                                        pathsett &path_set)
+{
+  if (path_set.find(dest) == path_set.end())
   {
     // Path does not exist yet
     std::set<dyn_objt> dyn_obj_set;
@@ -461,7 +477,7 @@ bool heap_domaint::heap_row_valuet::add_path(const exprt &dest,
     {
       dyn_obj_set.insert(this->dyn_obj);
     }
-    paths.emplace(dest, dyn_obj_set);
+    path_set.emplace(dest, dyn_obj_set);
     return true;
   }
   else
@@ -469,26 +485,61 @@ bool heap_domaint::heap_row_valuet::add_path(const exprt &dest,
     // Path exists already
     if (dyn_obj.first.id() != ID_nil)
       // Try to insert new dynamic object on the path
-      return paths.find(dest)->dyn_objects.insert(dyn_obj).second;
+      return path_set.find(dest)->dyn_objects.insert(dyn_obj).second;
     else
       return false;
   }
+}
+
+bool heap_domaint::heap_row_valuet::join_path_sets(heap_domaint::heap_row_valuet::pathsett &dest,
+                                                   const heap_domaint::heap_row_valuet::pathsett &src,
+                                                   const dyn_objt &through)
+{
+  bool result = false;
+  for (auto &path : src)
+  {
+    if (add_path(path.destination, through, dest))
+      result = true;
+    for (auto &o : path.dyn_objects)
+    { // Add all dynamic objects of the original path
+      if (add_path(path.destination, o, dest))
+        result = true;
+    }
+  }
+  return result;
 }
 
 bool heap_domaint::heap_row_valuet::add_all_paths(const heap_domaint::heap_row_valuet &other_val,
                                                   const heap_domaint::dyn_objt &dyn_obj)
 {
   bool result = false;
-  for (auto &path : other_val.paths)
+
+  auto other_it = other_val.paths.begin();
+  if (other_it != other_val.paths.end())
   {
-    // Add the path with new dynamic object
-    if (add_path(path.destination, dyn_obj))
-      result = true;
-    for (auto &o : path.dyn_objects)
-    { // Add all dynamic objects of the original path
-      if (add_path(path.destination, o))
-        result = true;
+    for (auto it = paths.begin(); it != paths.end(); ++it)
+    {
+      if (it->find(other_val.dyn_obj.first) != it->end())
+      {
+        auto next_it = other_it;
+        ++next_it;
+        if (next_it != other_val.paths.end())
+        { // Duplicate element pointed by it
+          ++it;
+          it = paths.insert(it, *it);
+          --it;
+        }
+
+        // Add all paths to *it
+
+        if (join_path_sets(*it, *other_it, dyn_obj))
+          result = true;
+
+        // Move other_it to next, or to first if next doesn't exist
+        other_it = next_it == other_val.paths.end() ? other_val.paths.begin() : next_it;
+      }
     }
+//    join_all_path_sets();
   }
   return result;
 }
@@ -497,6 +548,24 @@ bool heap_domaint::heap_row_valuet::add_pointed_by(const rowt &row)
 {
   auto new_pb = pointed_by.insert(row);
   return new_pb.second;
+}
+
+bool heap_domaint::heap_row_valuet::add_self_linkage()
+{
+  bool result;
+  result = !self_linkage;
+  self_linkage = true;
+  if (result)
+  {
+    for (auto &path_set : paths)
+    {
+      for (auto &path : path_set)
+      {
+        path.dyn_objects.insert(dyn_obj);
+      }
+    }
+  }
+  return result;
 }
 
 const std::list<symbol_exprt> &heap_domaint::get_new_heap_vars() const
