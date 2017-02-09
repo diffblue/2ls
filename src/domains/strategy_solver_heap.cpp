@@ -146,23 +146,9 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
             // Find row with corresponding member field
             // of pointed object (obj.member)
             int member_val_index;
-            if (inv[row].empty() && templ_row.dyn_obj.id() != ID_nil &&
-                heap_domain.get_base_name(obj) ==
-                heap_domain.get_base_name(templ_row.dyn_obj))
-            { // for the same object find previous instance
-              // (used for multiple loops in one function)
-              member_val_index=find_member_row(
-                obj, templ_row.member, --actual_loc, templ_row.kind);
-              if (member_val_index < 0)
-                member_val_index = find_member_row(
-                  obj, templ_row.member, ++actual_loc, templ_row.kind);
-            }
-            else
-            {
-              member_val_index=find_member_row(
-                obj, templ_row.member, actual_loc, templ_row.kind);
-            }
-            assert(member_val_index >= 0);
+            member_val_index=find_member_row(
+              obj, templ_row.member, actual_loc, templ_row.kind);
+            assert(member_val_index>=0);
 
             // Add all paths from obj.next to p
             if(heap_domain.add_transitivity(
@@ -262,7 +248,7 @@ int strategy_solver_heapt::find_member_row(
       if (id.find(obj_id) != std::string::npos)
       {
         int loc = heap_domain.get_symbol_loc(templ_row.expr);
-        if (loc <= actual_loc && loc > max_loc)
+        if (loc > max_loc && (kind == domaint::OUT || loc <= actual_loc))
         {
           max_loc = loc;
           result = i;
