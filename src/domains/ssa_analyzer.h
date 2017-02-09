@@ -43,6 +43,7 @@ public:
   void get_result(exprt &result, const domaint::var_sett &vars);
 
   void update_heap_out(summaryt::var_sett &out);
+  const exprt input_heap_bindings();
 
   unsigned get_number_of_solver_instances() { return solver_instances; }
   unsigned get_number_of_solver_calls() { return solver_calls; }

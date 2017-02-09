@@ -206,3 +206,8 @@ void ssa_analyzert::update_heap_out(summaryt::var_sett &out)
 
   out.insert(heap_domain.get_new_heap_vars().begin(), heap_domain.get_new_heap_vars().end());
 }
+
+const exprt ssa_analyzert::input_heap_bindings()
+{
+  return static_cast<heap_domaint &>(*domain).get_advancer_bindings();
+}

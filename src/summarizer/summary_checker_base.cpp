@@ -222,6 +222,12 @@ void summary_checker_baset::check_properties(
   {
     solver << summary_db.get(f_it->first).fw_invariant;
     solver << summary_db.get(f_it->first).fw_precondition;
+
+    if (options.get_bool_option("heap") &&
+        summary_db.get(f_it->first).aux_precondition.is_not_nil())
+    {
+      solver << summary_db.get(f_it->first).aux_precondition;
+    }
   }
 
   //callee summaries
