@@ -704,6 +704,7 @@ void ssa_value_ait::assign_ptr_param_rec(const exprt &expr, ssa_value_domaint &e
       assert(member.compound().id() == ID_symbol);
       // set advancer object
       member_dest.set("#object_id", to_symbol_expr(member.compound()).get_identifier());
+      member_dest.set("#member", member.get_component_name());
       assign(expr, member_dest, entry);
     }
   }
