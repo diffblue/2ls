@@ -185,9 +185,9 @@ Function: ssa_var_collectort::collect_variables_loop
 
 \*******************************************************************/
 
-#include "ssa_var_collector.h"
+//#include <iostream>
 
-void ssa_var_collectort::collect_variables_loop(const local_SSAt &SSA,bool forward)
+void ssa_var_collectort::collect_variables_loop(const local_SSAt &SSA,bool forward, const namespacet &ns)
 {
   // used for renaming map
   var_listt pre_state_vars, post_state_vars;
@@ -221,11 +221,14 @@ void ssa_var_collectort::collect_variables_loop(const local_SSAt &SSA,bool forwa
         exprt init_expr;
 	get_init_expr(SSA,o_it,n_it,init_expr);
         add_var(pre_var,pre_guard,post_guard,domaint::LOOP,var_specs);
+        
 
+#define DEBUG
   #ifdef DEBUG
-        std::cout << "Adding " << from_expr(ns, "", in) << " " << 
-          from_expr(ns, "", out) << std::endl;        
+        std::cout << "Adding " << from_expr(ns, "", (exprt) pre_var) << " --- " << 
+          from_expr(ns, "", init_expr) << std::endl;        
   #endif
+#undef DEBUG
      }
     } 
   }

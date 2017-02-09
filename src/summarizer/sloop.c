@@ -1,7 +1,9 @@
 int main()
 {
-	int i = 1;
-	while (i > 0)
-		i--;
-	return 0;
+	int i;
+        int a;
+	while (i > 1 || a > 1)
+		i--; a--;
+        a++;
+	return a;
 }

@@ -18,6 +18,11 @@ Author: Peter Schrammel, Stefan Marticek
 
 class ssa_var_collectort
 {
+public:
+    
+    virtual void collect_variables_loop(const local_SSAt &SSA,
+                         bool forward, const namespacet &ns);
+    
     typedef strategy_solver_baset::var_listt var_listt;
     
     explicit ssa_var_collectort(optionst &_options,
@@ -28,6 +33,8 @@ class ssa_var_collectort
     {
       std_invariants = options.get_bool_option("std-invariants");
     }  
+    
+protected:
 
     domaint::var_specst var_specs;
     replace_mapt post_renaming_map;
@@ -60,13 +67,7 @@ class ssa_var_collectort
     { 
       expr.set_identifier(id2string(expr.get_identifier())+"'");
     }
-
-public:
     
-    virtual void collect_variables_loop(const local_SSAt &SSA,
-                         bool forward);
-    
-protected:
     bool std_invariants; //include value at loop entry
     const ssa_local_unwindert &ssa_local_unwinder;
 };

@@ -7,6 +7,7 @@ SRC = 2ls_main.cpp 2ls_parse_options.cpp \
       show.cpp summary_checker_base.cpp \
       summary_checker_ai.cpp summary_checker_bmc.cpp \
       summary_checker_kind.cpp \
+      summarizer_nonterm.cpp \
       cover_goals_ext.cpp horn_encoding.cpp \
       preprocessing_util.cpp \
       instrument_goto.cpp dynamic_cfg.cpp \

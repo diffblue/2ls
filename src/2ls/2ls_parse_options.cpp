@@ -54,7 +54,7 @@ Author: Daniel Kroening, Peter Schrammel
 #include "show.h"
 #include "horn_encoding.h"
 
-#include "../summarizer/summarizer_nonterm.h"
+#include "summarizer_nonterm.h"
 
 #define UNWIND_GOTO_INTO_LOOP 1
 #define REMOVE_MULTIPLE_DEREFERENCES 1
@@ -494,6 +494,11 @@ int twols_parse_optionst::doit()
        options.get_bool_option("incremental-bmc"))
       checker=std::unique_ptr<summary_checker_baset>(
         new summary_checker_bmct(options));
+    
+    /** TEST */
+     summarizer_nonterm test = summarizer_nonterm(options);
+     test.check_nontermination(goto_model);
+    /** TEST */
 
     checker->set_message_handler(get_message_handler());
     checker->simplify=!cmdline.isset("no-simplify");
