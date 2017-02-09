@@ -86,7 +86,9 @@ class heap_domaint : public domaint
       }
     };
 
-    std::set<patht> paths;          /**< Set o paths leading from the row variable */
+    typedef std::set<patht> pathsett;
+
+    std::list<pathsett> paths;
     std::set<rowt> pointed_by;      /**< Set of rows whose variables point to this row */
     dyn_objt dyn_obj;
     bool self_linkage = false;
@@ -104,9 +106,17 @@ class heap_domaint : public domaint
 
     bool add_path(const exprt &dest, const dyn_objt &dyn_obj);
 
+    bool add_path(const exprt &dest, const heap_domaint::dyn_objt &dyn_obj, pathsett &path_set);
+
+    bool join_path_sets(heap_domaint::heap_row_valuet::pathsett &dest,
+                            const heap_domaint::heap_row_valuet::pathsett &src,
+                            const dyn_objt &through);
+
     bool add_all_paths(const heap_row_valuet &other_val, const dyn_objt &dyn_obj);
 
     bool add_pointed_by(const rowt &row);
+
+    bool add_self_linkage();
   };
 
   class heap_valuet : public valuet, public std::vector<std::unique_ptr<row_valuet>>
