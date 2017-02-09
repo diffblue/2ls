@@ -51,6 +51,7 @@ DELTA_OBJ+=\
       ../functions/index$(OBJEXT) \
       ../domains/fixed_point$(OBJEXT) \
       ../domains/ssa_fixed_point$(OBJEXT) \
+      ../domains/advancer$(OBJEXT) \
       ../domains/tpolyhedra_domain$(OBJEXT) \
       ../domains/predabs_domain$(OBJEXT) \
       ../domains/equality_domain$(OBJEXT) \

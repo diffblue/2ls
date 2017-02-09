@@ -13,6 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <goto-programs/goto_functions.h>
 
+#include "../domains/advancer.h"
 #include "../domains/incremental_solver.h"
 #include "ssa_domain.h"
 #include "guard_map.h"
@@ -126,6 +127,8 @@ public:
   var_listt params;  
   var_sett globals_in, globals_out;
 
+  std::set<advancert> advancers;
+
   // unknown heap objects
   var_sett unknown_objs;
 
@@ -160,7 +163,9 @@ public:
   exprt read_node_in(const ssa_objectt &, locationt loc) const;
   void assign_rec(const exprt &lhs, const exprt &rhs, const exprt &guard, locationt loc);
 
-  std::list<unsigned> all_assignment_locs(const ssa_objectt &object) const;
+  void collect_advancers_rhs(const exprt &expr, locationt loc);
+  void collect_advancers_lhs(const ssa_objectt &object, locationt loc);
+  void new_advancer_instance(const member_exprt &expr, locationt loc, int inst_loc_number);
 
   exprt unknown_obj_eq(const symbol_exprt &obj, const struct_typet::componentt &component) const;
 
