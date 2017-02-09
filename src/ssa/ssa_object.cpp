@@ -73,7 +73,9 @@ void collect_ptr_objects(
       symbol_exprt ptr_object(identifier, pointed_type);
 
       const symbolt *symbol;
-      if (dynamic || !ns.lookup(src.get_identifier(), symbol) && !symbol->is_procedure_local())
+      if(dynamic ||
+         (!ns.lookup(src.get_identifier(), symbol) &&
+          !symbol->is_procedure_local()))
         ptr_object.type().set("#dynamic", true);
 
       if(is_ptr_object(src))

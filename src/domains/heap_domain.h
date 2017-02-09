@@ -8,7 +8,9 @@
 
 #include <util/message.h>
 #include <memory>
+#include "../ssa/local_ssa.h"
 #include "domain.h"
+#include "template_generator_base.h"
 
 class heap_domaint:public domaint
 {
@@ -145,6 +147,9 @@ class heap_domaint:public domaint
   // Initialize value
   virtual void initialize(valuet &value) override;
 
+  void initialize_domain(const local_SSAt &SSA, const exprt &precondition,
+                         template_generator_baset &template_generator);
+
   // Value -> constraints
   exprt to_pre_constraints(const heap_valuet &value) const;
 
@@ -179,14 +184,34 @@ class heap_domaint:public domaint
 
   const std::list<symbol_exprt> &get_new_heap_vars() const;
 
+  const exprt get_advancer_bindings() const;
+  const exprt get_aux_bindings() const;
+  const exprt get_input_bindings() const;
+
  protected:
   templatet templ;
 
+  exprt::operandst advancer_bindings;
+  exprt::operandst aux_bindings;
   std::list<symbol_exprt> new_heap_row_vars;
 
   void make_template(const var_specst &var_specs, const namespacet &ns);
 
   void add_template_row(const var_spect &var_spec, const typet &pointed_type);
+
+  // Initializing functions
+  void bind_advancers(const local_SSAt &SSA, const exprt &precondition,
+                      template_generator_baset &template_generator);
+
+  void create_precondition(const symbol_exprt &var, const exprt &precondition);
+
+  void new_output_template_row(const local_SSAt &SSA, const symbol_exprt &var,
+                               template_generator_baset &template_generator);
+
+  static std::set<symbol_exprt> reachable_objects(const advancert &advancer,
+                                                  const exprt &precondition);
+
+  static std::set<exprt> collect_preconditions_rec(const exprt &expr, const exprt &precondition);
 
   // Utility functions
   static int get_symbol_loc(const exprt &expr);

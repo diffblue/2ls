@@ -1306,6 +1306,9 @@ void local_SSAt::assign_rec(
 
     if(assigned.find(lhs_object)!=assigned.end())
     {
+      collect_advancers_lhs(lhs_object, loc);
+      collect_advancers_rhs(rhs, loc);
+
       exprt ssa_rhs=read_rhs(rhs, loc);
 
       const symbol_exprt ssa_symbol=name(lhs_object, OUT, loc);
@@ -1845,17 +1848,44 @@ exprt local_SSAt::unknown_obj_eq(const symbol_exprt &obj,
   return equal_exprt(member, address_of_exprt(obj));
 }
 
-std::list<unsigned> local_SSAt::all_assignment_locs(const ssa_objectt &object) const
+void local_SSAt::collect_advancers_rhs(const exprt &expr, locationt loc)
 {
-  std::list<unsigned> result;
-
-  forall_goto_program_instructions(it, goto_function.body)
+  if (expr.id() == ID_member)
   {
-    if (assignments.assigns(it, object))
+    const member_exprt &advancer_ins = to_member_expr(expr);
+    if (advancer_ins.compound().get_bool("#advancer") && advancer_ins.compound().id() == ID_symbol)
     {
-      result.push_back(it->location_number);
+      new_advancer_instance(to_member_expr(expr), loc, advancert::IN_LOC);
     }
   }
+  else
+  {
+    forall_operands(it, expr)
+      collect_advancers_rhs(*it, loc);
+  }
+}
 
-  return result;
+void local_SSAt::collect_advancers_lhs(const ssa_objectt &object, local_SSAt::locationt loc)
+{
+  if (object.get_root_object().get_bool("#advancer") && object.get_root_object().id() == ID_symbol)
+  {
+    assert(object.get_expr().id() == ID_member);
+    new_advancer_instance(to_member_expr(object.get_expr()), loc, loc->location_number);
+  }
+}
+
+void local_SSAt::new_advancer_instance(const member_exprt &expr, local_SSAt::locationt loc,
+                                       int inst_loc_number)
+{
+  assert(expr.compound().id() == ID_symbol);
+  const symbol_exprt &advancer_sym = to_symbol_expr(expr.compound());
+  const irep_idt &object_id = advancer_sym.get("#object_id");
+  const irep_idt pointer_id = id2string(object_id).substr(0, object_id.size() - 4);
+
+  exprt pointer = read_rhs(symbol_exprt(pointer_id, expr.type()), loc);
+  assert(pointer.id() == ID_symbol);
+  advancert advancer(to_symbol_expr(pointer), advancer_sym.get("#member"));
+
+  auto adv_it = advancers.insert(advancer);
+  adv_it.first->add_instance(expr.get_component_name(), inst_loc_number);
 }
