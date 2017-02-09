@@ -33,6 +33,7 @@ class summaryt
     bw_postcondition(nil_exprt()),
     bw_transformer(nil_exprt()),
     bw_invariant(nil_exprt()),
+    aux_precondition(nil_exprt()),
     termination_argument(nil_exprt()),
     terminates(UNKNOWN),
     mark_recompute(false) {}
@@ -48,6 +49,8 @@ class summaryt
   predicatet bw_postcondition; // accumulated postconditions (over/under-approx)
   predicatet bw_transformer; // backward summary (over- or under-approx)
   predicatet bw_invariant; // backward invariant (over- or under-approx)
+
+  predicatet aux_precondition;
 
   predicatet termination_argument;
   threevalt terminates;
