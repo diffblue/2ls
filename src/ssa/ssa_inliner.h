@@ -132,40 +132,37 @@ class ssa_inlinert : public messaget
   void rename(exprt &expr);
   void rename(local_SSAt::nodet &node);
 
-  static void bind(const std::list<exprt> &lhs,
-                   const std::list<exprt> &rhs,
-                   exprt::operandst &bindings);
-
 	// Transformation functions for lists of input/output arguments/pointers (or their members)
 	// for binding purposes
 
-  std::list<exprt> transform_pointed_params_in(const std::list<exprt> &params_in);
-  std::list<exprt> transform_pointed_args_in(const std::list<exprt> &args_in,
-                                             const local_SSAt &SSA,
-                                             local_SSAt::locationt loc);
+  exprt param_in_transformer(const exprt &param);
+  exprt arg_in_transformer(const exprt &arg, const local_SSAt &SSA, local_SSAt::locationt loc);
+  exprt param_in_member_transformer(const exprt &param,
+                                    const struct_union_typet::componentt &component);
+  exprt arg_in_member_transformer(const exprt &arg,
+                                  const struct_union_typet::componentt &component,
+                                  const local_SSAt &SSA,
+                                  local_SSAt::locationt loc);
 
-  std::list<exprt> transform_pointed_member_params_in(const std::list<exprt> &params_in,
-                                                      const struct_union_typet::componentt &component);
+  exprt param_out_transformer(const exprt &param,
+                              const typet &type,
+                              const local_SSAt::var_sett &globals_out);
 
-  std::list<exprt> transform_pointed_member_args_in(const std::list<exprt> &args_in,
-                                                    const struct_union_typet::componentt &component,
-                                                    const local_SSAt &SSA,
-                                                    local_SSAt::locationt loc);
-  std::list<exprt> transform_pointed_params_out(const std::list<exprt> &params_out,
-                                                const local_SSAt::var_sett &globals_out,
-                                                const typet &param_type);
-  std::list<exprt> transform_pointed_args_out(const std::list<exprt> &args_out,
-                                              const typet &arg_symbol_type,
-                                              const typet &param_type,
-                                              const local_SSAt &SSA,
-                                              local_SSAt::locationt loc);
-  std::list<exprt> transform_pointed_member_params_out(const std::list<exprt> &params_out,
-                                                       const struct_union_typet::componentt &component,
-                                                       const local_SSAt::var_sett &globals_out);
-  std::list<exprt> transform_pointed_member_args_out(const std::list<exprt> &args_out,
-                                                     const struct_union_typet::componentt &component,
-                                                     const local_SSAt &SSA,
-                                                     local_SSAt::locationt loc);
+  exprt arg_out_transformer(const exprt &arg,
+                            const typet &arg_symbol_type,
+                            const typet &param_type,
+                            const local_SSAt &SSA,
+                            local_SSAt::locationt loc);
+  exprt param_out_member_transformer(const exprt &param,
+                                     const struct_union_typet::componentt &component,
+                                     const local_SSAt::var_sett &globals_out);
+  exprt arg_out_member_transformer(const exprt &arg,
+                                   const struct_union_typet::componentt &component,
+                                   const local_SSAt &SSA,
+                                   local_SSAt::locationt loc);
+
+	const exprt new_pointed_arg(const exprt &arg, const typet &pointed_type,
+                                const std::list<exprt> &args_out);
 
   static bool contains_advancer(const std::list<exprt> &params);
 };
