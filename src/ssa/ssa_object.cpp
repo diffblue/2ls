@@ -55,10 +55,8 @@ void collect_objects_rec(
   std::set<ssa_objectt> &objects,
   std::set<exprt> &literals);
 
-void collect_ptr_objects(const exprt &expr,
-                         const namespacet &ns,
-                         std::set<ssa_objectt> &objects,
-                         std::set<exprt> &literals)
+void collect_ptr_objects(const exprt &expr, const namespacet &ns, std::set<ssa_objectt> &objects,
+                         std::set<exprt> &literals, bool dynamic)
 {
   if (expr.id() == ID_symbol)
   {
@@ -71,7 +69,7 @@ void collect_ptr_objects(const exprt &expr,
       symbol_exprt ptr_object(identifier, pointed_type);
 
       const symbolt *symbol;
-      if (!ns.lookup(src.get_identifier(), symbol) && !symbol->is_procedure_local())
+      if (dynamic || !ns.lookup(src.get_identifier(), symbol) && !symbol->is_procedure_local())
         ptr_object.type().set("#dynamic", true);
 
       if (is_ptr_object(src))
@@ -80,13 +78,13 @@ void collect_ptr_objects(const exprt &expr,
         ptr_object.set(ID_ptr_object, src.get_identifier());
 
       collect_objects_rec(ptr_object, ns, objects, literals);
-      collect_ptr_objects(ptr_object, ns, objects, literals);
+      collect_ptr_objects(ptr_object, ns, objects, literals, dynamic);
     }
   }
   else
   {
     forall_operands(it, expr)
-      collect_ptr_objects(*it, ns, objects, literals);
+        collect_ptr_objects(*it, ns, objects, literals, dynamic);
   }
 }
 
@@ -162,7 +160,7 @@ void collect_objects_rec(
     {
       const code_function_callt &function_call = to_code_function_call(code);
       for (auto &arg : function_call.arguments())
-        collect_ptr_objects(arg, ns, objects, literals);
+        collect_ptr_objects(arg, ns, objects, literals, true);
     }
 
     return;
@@ -219,7 +217,7 @@ void collect_objects_rec(
           (root_object.id() == ID_symbol &&
            !ns.lookup(to_symbol_expr(root_object).get_identifier(), symbol) &&
            (symbol->is_parameter || !symbol->is_procedure_local())))
-        collect_ptr_objects(ssa_object.symbol_expr(), ns, objects, literals);
+        collect_ptr_objects(ssa_object.symbol_expr(), ns, objects, literals, false);
     }
   }
   else
@@ -253,7 +251,7 @@ void ssa_objectst::collect_objects(
   {
     symbol_exprt symbol=ns.lookup(*it).symbol_expr();
     collect_objects_rec(symbol, ns, objects, literals);
-    collect_ptr_objects(symbol, ns, objects, literals);
+    collect_ptr_objects(symbol, ns, objects, literals, false);
   }
 
   // Rummage through body.
