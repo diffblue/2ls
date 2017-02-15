@@ -57,6 +57,7 @@ public:
   proof_typet last_proof;
   std::vector<acdl_domaint::valuet> learned_clauses;
   exprt flip(acdl_domaint::meet_irreduciblet &m);
+  void preprocess_val(acdl_domaint::valuet& val);
 
 protected:  
   virtual void generalize_conflict(acdl_conflict_grapht &graph) { assert(false); }

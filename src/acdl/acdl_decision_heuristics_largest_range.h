@@ -24,6 +24,7 @@ public:
   virtual acdl_domaint::meet_irreduciblet operator()(
     const local_SSAt &SSA,
     const acdl_domaint::valuet &value);
+
   void get_scores(const acdl_domaint::valuet &value,
                   std::vector<double>& scores, bool relative);
   double get_ratio(std::pair<mp_integer, mp_integer> i1,

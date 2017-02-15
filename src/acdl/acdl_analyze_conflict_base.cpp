@@ -174,6 +174,18 @@ bool acdl_analyze_conflict_baset::operator() (const local_SSAt &SSA, acdl_confli
   exprt unit_lit;
   acdl_domaint::valuet v;
   graph.to_value(v);
+
+  // preprocess abstract value: 
+  // transform constraints like 
+  // (x==n) to (x<=n) and (x>=n)
+  preprocess_val(v);
+#ifdef debug
+  std::cout << "preprocessed abstract value of implication graph: " << std::endl;
+  for(acdl_domaint::valuet::const_iterator it=v.begin();it!=v.end(); ++it)
+    std::cout << from_expr(ssa.ns, "", *it) << std::endl;
+#endif
+
+
   // check that the clause is unit,
   // this causes one propagation because
   // the clause is unit
@@ -883,4 +895,54 @@ unsigned acdl_analyze_conflict_baset::get_earliest_contradiction(
   // that means no contradiction 
   // has been found at previous levels
   return 0;
+}
+
+/*******************************************************************
+
+ Function: acdl_analyze_conflict_baset::preprocess_val()
+
+ Inputs:
+
+ Outputs:
+
+ Purpose: Pre-process abstract value to remove (x==N) constraints 
+          by (x<=N) and (x>=N). The trail is not effected by this. 
+
+\*******************************************************************/
+void acdl_analyze_conflict_baset::preprocess_val(acdl_domaint::valuet& val)
+{
+  acdl_domaint::valuet val_temp;
+  exprt save_exp;
+  for(acdl_domaint::valuet::iterator it=val.begin();it!=val.end(); ++it)
+  {
+    exprt m=*it;
+    if(it->id() == ID_equal)
+    {
+      save_exp = m;
+      std::cout << "Preprocessing value " << from_expr(m) << std::endl;
+      exprt &lhs=to_binary_relation_expr(m).lhs();
+      exprt &rhs=to_binary_relation_expr(m).rhs();
+      // construct x<=N
+      exprt expl=binary_relation_exprt(lhs, ID_le, rhs);
+      // construct x>=N
+      exprt expg=binary_relation_exprt(lhs, ID_ge, rhs);
+      // [TODO] erasing causes problem 
+      // val.erase(it);
+      // val.insert(it, true_exprt());
+      val_temp.push_back(expl);
+      val_temp.push_back(expg);
+      std::cout << "Preprocessing inserted value " << from_expr(expl) << std::endl;
+      std::cout << "Preprocessing inserted value " << from_expr(expg) << std::endl;
+    }
+    else {
+      std::cout << "Donot Preprocess value " << from_expr(m) << std::endl;
+      continue;
+    }
+  }
+  
+  // [TODO] handle if there are multiple equality constraints in val
+  val.erase(std::remove(val.begin(), val.end(), save_exp), val.end());
+  std::cout << "Now push all collected constraints" << std::endl;
+  if(val_temp.size() > 0) 
+    val.insert(val.end(), val_temp.begin(), val_temp.end());
 }

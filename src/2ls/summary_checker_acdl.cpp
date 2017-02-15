@@ -19,6 +19,7 @@ Author: Peter Schrammel
 #include <acdl/acdl_decision_heuristics_ordered.h>
 #include <acdl/acdl_decision_heuristics_octagon.h>
 #include <acdl/acdl_decision_heuristics_berkmin.h>
+#include <acdl/acdl_decision_heuristics_equality.h>
 #include <acdl/acdl_decision_heuristics_largest_range.h>
 #include <acdl/acdl_worklist_base.h>
 #include <acdl/acdl_worklist_ordered.h>
@@ -172,6 +173,9 @@ property_checkert::resultt summary_checker_acdlt::operator()(
     else if(options.get_option("decision")=="range")
       decision_heuristics=std::unique_ptr<acdl_decision_heuristics_baset>(
         new acdl_decision_heuristics_ranget(domain));
+    else if(options.get_option("decision")=="equality")
+      decision_heuristics=std::unique_ptr<acdl_decision_heuristics_baset>(
+        new acdl_decision_heuristics_equalityt(domain));
 
     // now instantiate solver
     acdl_solvert acdl_solver(

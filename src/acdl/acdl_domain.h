@@ -68,6 +68,8 @@ public:
 
   bool is_subsumed(const meet_irreduciblet &m,
                    const valuet &value) const;
+  bool is_subsumed_syntactic(const meet_irreduciblet &m,
+                               const valuet &value) const;
   bool is_contained(const meet_irreduciblet &m,
                     const valuet &value) const;
 
@@ -102,7 +104,9 @@ public:
   bool check_val_satisfaction(valuet &val);
   int unit_rule(const local_SSAt &SSA, valuet &v, valuet &clause, exprt &unit_lit);
   bool check_contradiction(valuet &val, exprt &expr);
-
+  void normalize_meetirrd(const meet_irreduciblet &m, meet_irreduciblet &mout) const;
+  bool semantic_subsumption(const meet_irreduciblet &m) const;
+  
   enum clause_statet { CONFLICT=0, UNKNOWN=1, SATISFIED=2, UNIT=3};
   clause_statet clause_state;
   // print value
