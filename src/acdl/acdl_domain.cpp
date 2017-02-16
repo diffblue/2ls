@@ -570,7 +570,8 @@ bool acdl_domaint::is_subsumed_syntactic(const meet_irreduciblet &m,
     return false;
 
   if(m.id()==ID_symbol ||
-     (m.id()==ID_not && m.op0().id()==ID_symbol))
+     (m.id()==ID_not && m.op0().id()==ID_symbol) ||
+     (m.id()==ID_not && m.op0().id()==ID_not && m.op0().op0().id()==ID_symbol)) // for (!(!(cond)))
   {
     for(unsigned i=0; i<value.size(); i++)
     {
