@@ -400,12 +400,84 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_equalityt::operator()
  }
  assert(decision != true);
 
-  // clear the read_only variables
-  read_vars.clear();
-  // clear the conditional variables
-  conditional_vars.clear();
 
-  // if the control reaches here, 
-  // then return false_exprt
-  return false_exprt();
+ // ************************************
+ // make decision on rest variables
+ // *************************************
+ 
+ // non-singletons - conditional_vars
+ non_singletons.erase(conditional_vars.begin(), conditional_vars.end());
+ // non-singletons - assumption_vars
+ non_singletons.erase(assumption_vars.begin(), assumption_vars.end());
+ // non-singletons - read_vars
+ non_singletons.erase(read_vars.begin(), read_vars.end());
+ 
+ // now clear the read_only variables
+ read_vars.clear();
+ // now clear the conditional variables
+ conditional_vars.clear();
+ 
+ std::set<exprt> rest_ns;
+ rest_ns.insert(non_singletons.begin(), non_singletons.end());
+ if(rest_ns.size()) {
+   // initialize the vectors with true
+   std::vector<bool> rest_ns_mark(rest_ns.size(), true);
+   while(!decision) {
+     bool non_cond_dec_left=false;
+     // make decisions only if
+     // there are non-singletons
+     for(unsigned k=0;k<rest_ns.size();k++) {
+       if(rest_ns_mark[k]!=false) {
+         non_cond_dec_left=true;
+       }
+     }
+     if(!non_cond_dec_left) {
+#ifdef DEBUG
+       std::cout << "NO DECISIONS CAN BE MADE " << std::endl;
+#endif
+       return false_exprt();
+     }
+
+     // assert there are some non-singletons
+     assert(non_cond_dec_left);
+
+     // make decisions on non-cond variables
+     unsigned index=rand() % rest_ns.size();
+     assert(rest_ns.size()>0);
+     const acdl_domaint::meet_irreduciblet
+       cexp = *std::next(rest_ns.begin(), index);
+     // this variable is already singleton
+     if(rest_ns_mark[index]==false) continue;
+     val=domain.split(value, cexp);
+     std::cout << "Decisions on rest variable " << from_expr(cexp) << std::endl;
+     if(!val.is_false()) {
+       unsigned status=domain.compare_val_lit(v, val);
+       if(status!=0) {
+         if(!domain.is_subsumed(val, value)) {
+           decision=true;
+           decision_container.push_back(val);
+           return val;
+         }
+         else { 
+           decision=false;
+           bad_decisions.push_back(val);
+         }
+       }
+       else
+         continue;
+     }
+     else {
+       // mark the non_cond that is already singleton
+       rest_ns_mark[index]=false;
+       continue;
+     }
+   }  // end of while
+ }
+
+ if(bad_decisions.size()>1) 
+   std::cout << "The decision can not infer new element, change the phase !!"  << std::endl;
+
+ // if the control reaches here, 
+ // then return false_exprt
+ return false_exprt();
 }
