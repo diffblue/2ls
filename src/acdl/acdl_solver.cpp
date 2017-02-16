@@ -249,7 +249,7 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
     // still stored in the implication graph. These
     // old decisions can still contribute towards the
     // future deductions called in domain operator() below
-    // domain.normalize_val(v);
+    // domain.normalize_val_syntactic(v);
 
     // preprocess abstract value 
     // transform constraints like (x==N) to (x<=N) and (x>=N)
@@ -608,7 +608,7 @@ bool acdl_solvert::is_closed(const local_SSAt &SSA, acdl_domaint::valuet& val)
       it!=new_val.end();++it)
   {
     acdl_domaint::valuet::iterator it1=find(val.begin(), val.end(), *it);
-    if(!(domain.is_subsumed(*it, val))) {
+    if(!(domain.is_subsumed_syntactic(*it, val))) {
         //return false;
        if(it1 == val.end()) {
          std::cout << "The meet irreducible " << from_expr(*it1) << 
@@ -694,7 +694,7 @@ bool acdl_solvert::decide (const local_SSAt &SSA, const exprt& assertion)
 
   // Normalizing here is absolute must
   // Otherwise, unsafe cases does not terminate
-  domain.normalize_val(v);
+  domain.normalize_val_syntactic(v);
   acdl_domaint::meet_irreduciblet dec_expr=decision_heuristics(SSA, v);
   if(dec_expr==false_exprt())
     return false;
@@ -733,25 +733,13 @@ bool acdl_solvert::decide (const local_SSAt &SSA, const exprt& assertion)
       }
     }*/
   }
-
-  // *****************************************************************
-  // 1.b. e.g. we have x!=2 in an assertion or cond node, then we have
-  // meet irreducibles x<=1, x>=3 as potential decisions
-  // ****************************************************************
-
-
-  // ****************************
-  // 2. call acdl_domaint::split
-  // ****************************
-#if 0
-  std::cout << "DECISION PHASE: " << from_expr (SSA.ns, "", alist.front()) << std::endl;
-  decision=domain.split(alist.front(), decision_expr);
-#endif
-
+  
+  
   // update conflict graph
   conflict_graph.add_decision(dec_expr);
   // save the last decision index
   last_decision_index=conflict_graph.prop_trail.size();
+  
   // check that the meet_ireducibles in the prop trail
   // is consistent after adding every decision. The value
   // should not lead to UNSAT
@@ -789,7 +777,7 @@ bool acdl_solvert::decide (const local_SSAt &SSA, const exprt& assertion)
 #endif
 
   // normalize v
-  domain.normalize_val(v);
+  domain.normalize_val_syntactic(v);
 
 #ifdef DEBUG
   std::cout << "New: ";
@@ -847,8 +835,8 @@ bool acdl_solvert::analyze_conflict(const local_SSAt &SSA, const exprt& assertio
         std::cout << from_expr(ssa.ns, "", *it) << std::endl;
 #endif
 
-      // call normalize or normalize_val ?
-      domain.normalize_val(v);
+      // call normalize or normalize_val_syntactic ?
+      domain.normalize_val_syntactic(v);
       exprt dec_expr=conflict_graph.prop_trail.back();
       domain.meet(dec_expr, v);
 #ifdef DEBUG
@@ -1367,7 +1355,7 @@ property_checkert::resultt acdl_solvert::operator()(
     std::cout << from_expr(ssa.ns, "", *it) << std::endl;
 #endif
 
-  domain.normalize_val(v);
+  domain.normalize_val_syntactic(v);
   // check if abstract value v of the
   // implication graph is top for the first time
   // because ACDL starts with TOP
@@ -1457,7 +1445,7 @@ property_checkert::resultt acdl_solvert::operator()(
       std::cout << from_expr(ssa.ns, "", *it) << std::endl;
 #endif
 
-    domain.normalize_val(res_val);
+    domain.normalize_val_syntactic(res_val);
     if(domain.is_complete(res_val, all_vars, 
           non_gamma_complete_var, ssa_conjunction, gamma_decvar, read_only_symbols)) {
       complete=true;
@@ -1567,8 +1555,8 @@ property_checkert::resultt acdl_solvert::operator()(
         std::cout << from_expr(ssa.ns, "", *it) << std::endl;
 #endif
 
-      // Do we call normalize_val here ? !!
-      domain.normalize_val(v);
+      // Do we call normalize_val_syntactic here ? !!
+      domain.normalize_val_syntactic(v);
 #ifdef DEBUG
       std::cout << "checking the propagation result UNKNOWN for completeness" << std::endl;
 #endif
@@ -1662,8 +1650,8 @@ property_checkert::resultt acdl_solvert::operator()(
         // check for satisfying assignment
         acdl_domaint::valuet v;
         conflict_graph.to_value(v);
-        // Do we call normalize_val here ? !!
-        domain.normalize_val(v);
+        // Do we call normalize_val_syntactic here ? !!
+        domain.normalize_val_syntactic(v);
 #ifdef DEBUG
         std::cout << "checking the propagation result UNKNOWN for completeness" << std::endl;
 #endif

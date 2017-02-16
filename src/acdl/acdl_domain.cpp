@@ -272,7 +272,7 @@ void acdl_domaint::bool_inference(
 #ifdef DEBUG
         std::cout << "actually deducing" << std::endl;
 #endif
-        if(!is_subsumed(deduced, _old_value))
+        if(!is_subsumed_syntactic(deduced, _old_value))
         {
           new_value.push_back(deduced);
           deductions.push_back(deduced);
@@ -403,7 +403,7 @@ void acdl_domaint::numerical_inference(
       std::cout << "  " << from_expr(SSA.ns, "", var_values[i]) << std::endl;
       std::cout << "  "; output(std::cout, _old_value); std::cout << std::endl;
 #endif
-      if(!is_subsumed(var_values[i], _old_value))
+      if(!is_subsumed_syntactic(var_values[i], _old_value))
       {
 #ifdef DEBUG
         std::cout << "adding new value " << from_expr(SSA.ns, "", var_values[i]) << std::endl;
@@ -558,7 +558,9 @@ Function: acdl_domaint::is_subsumed_syntactic()
 bool acdl_domaint::is_subsumed_syntactic(const meet_irreduciblet &m,
                                const valuet &value) const
 {
-  std::cout << "iterating inside syntactic subsumption" << std::endl; 
+#ifdef DEBUG
+  std::cout << "Subsumption test of meet irreducible " << from_expr(m) << std::endl;
+#endif
   bool subsumed_check=false;
   if(value.empty()) // assumes that m is never TOP
     return false;
@@ -570,9 +572,6 @@ bool acdl_domaint::is_subsumed_syntactic(const meet_irreduciblet &m,
   if(m.id()==ID_symbol ||
      (m.id()==ID_not && m.op0().id()==ID_symbol))
   {
-#ifdef DEBUG
-    std::cout << "Symbol check" << std::endl; 
-#endif
     for(unsigned i=0; i<value.size(); i++)
     {
       if(m==value[i]) {
@@ -587,9 +586,6 @@ bool acdl_domaint::is_subsumed_syntactic(const meet_irreduciblet &m,
   }
   else
   { 
-#ifdef DEBUG
-    std::cout << "Inside non-symbol check" << std::endl;
-#endif
     // here, m must be of type ID_le or ID_ge or ID_lt or ID_gt 
     meet_irreduciblet mout, val;
     normalize_meetirrd(m, mout);
@@ -604,7 +600,8 @@ bool acdl_domaint::is_subsumed_syntactic(const meet_irreduciblet &m,
       if(v.id()==ID_symbol ||
           (v.id()==ID_not && v.op0().id()==ID_symbol))
         continue;
-      std::cout << "Real check here" << std::endl;
+      
+      //std::cout << "Real check here" << std::endl;
       // normalize must return expression 
       // of the form x<N or x>N
       normalize_meetirrd(v, val);
@@ -619,20 +616,21 @@ bool acdl_domaint::is_subsumed_syntactic(const meet_irreduciblet &m,
 #endif
       }
       else { 
-#ifdef DEBUG
+
+/*#ifdef DEBUG
         std::cout << "Checking subsumption of meet irreducible " << from_expr(mout) 
           << " versus the value object " << from_expr(val) << std::endl;
-        std::cout << "val: " << val.pretty() << "mout: " << mout.pretty() << std::endl;
-#endif
+        //std::cout << "val: " << val.pretty() << "mout: " << mout.pretty() << std::endl;
+#endif*/
         assert(val.id() == ID_lt || val.id() == ID_gt || val.id() == ID_ge || val.id() == ID_le);
         const exprt &lhsv=to_binary_relation_expr(val).lhs();
         //const exprt &rhsv=to_binary_relation_expr(val).rhs();
-#ifdef DEBUG
+/*#ifdef DEBUG
         std::cout << "Checking lhs of meet irreducible " << from_expr(lhs) 
           << " versus the value object " << from_expr(lhsv) << std::endl;
         std::cout << "Checking id of meet irreducible " << val.id()  
           << " versus the value object id" << mout.id() << std::endl;
-#endif
+#endif*/
         exprt lhsv_op, lhs_op;
         // Check for I/P: (-x<=10)
         // Check for val
@@ -666,7 +664,7 @@ bool acdl_domaint::is_subsumed_syntactic(const meet_irreduciblet &m,
         if(lhs_op == lhsv_op) 
         {
 #ifdef DEBUG
-          std::cout << "lhs matches " << std::endl;
+          std::cout << "lhs matches, push into lhs container " << from_expr(val) << std::endl;
 #endif
           // collect all statements with matching lhs
           lhs_container.push_back(val);
@@ -821,16 +819,36 @@ bool acdl_domaint::is_subsumed_syntactic(const meet_irreduciblet &m,
   } // end for loop checking all values
 
   // Do semantic subsumption check here
-  exprt f=simplify_expr(and_exprt(conjunction(lhs_container), not_exprt(mout)), SSA.ns);
+  exprt f;
+  if(lhs_container.size()==0) {
+#ifdef DEBUG
+    std::cout << "No matching lhs found, so checking against whole value " << std::endl;
+#endif
+    f=simplify_expr(and_exprt(conjunction(value), not_exprt(mout)), SSA.ns);
+  }
+  else {
+#ifdef DEBUG
+   std::cout << "Actual subsumption test of meet irreducible " << from_expr(mout) 
+     << " versus the value object " << from_expr(conjunction(lhs_container)) << std::endl;
+#endif
+   f=simplify_expr(and_exprt(conjunction(lhs_container), not_exprt(mout)), SSA.ns);
+  }
+
   if(f.is_false())
     return true;
 
   bool status = semantic_subsumption(f);
   if(status) { 
+#ifdef DEBUG
+    std::cout << "SUBSUMPTION RESULT:: subsumed" << std::endl;
+#endif
     subsumed_check=true;
     return true;
   }
   else {
+#ifdef DEBUG
+    std::cout << "SUBSUMPTION RESULT:: not subsumed" << std::endl;
+#endif
     subsumed_check=true;
     return false;
   }
@@ -1134,6 +1152,8 @@ exprt acdl_domaint::split(const valuet &value,
   const exprt &expr=meet_irreducible_template;
 
   std::cout << "conjuncted value received inside split :: " << from_expr(SSA.ns, "", conjunction(value)) << std::endl;
+  for(unsigned i=0;i<value.size();i++)
+    std::cout << "value :: " << from_expr(SSA.ns, "", value[i]) << std::endl;
 #if 0
 // #ifdef DEBUG
   std::cout << "[ACDL-DOMAIN] Split("
@@ -1234,9 +1254,12 @@ exprt acdl_domaint::split(const valuet &value,
 #ifdef DEBUG
   std::cout << "conjuncted new value:: " << from_expr(SSA.ns, "", vals) << std::endl;
   std::cout << "original splitting expr is :: " << from_expr(SSA.ns, "", expr) << std::endl;
-#endif
 
-  std::cout << "conjuncted new value computed inside split:: " << from_expr(SSA.ns, "", conjunction(new_value)) << std::endl;
+  //std::cout << "conjuncted new value computed inside split:: " << from_expr(SSA.ns, "", conjunction(new_value)) << std::endl;
+  for(unsigned i=0;i<value.size();i++)
+    std::cout << "value :: " << from_expr(SSA.ns, "", value[i]) << std::endl;
+#endif
+  
   // computer lower and upper bound
   // handle the positive literals
   constant_exprt u;
@@ -1492,6 +1515,82 @@ void acdl_domaint::remove_expr(valuet &old_value,
 
 /*******************************************************************\
 
+ Function: acdl_domaint::normalize_val_syntactic()
+
+ Inputs: (x<=5) && (x<=10) && (y<=3)
+
+ Outputs: (x<=5) && (y<=3)
+
+ Purpose: Normalization is value-preserving operation.
+
+\*******************************************************************/
+void acdl_domaint::normalize_val_syntactic(valuet &value)
+{
+#ifdef DEBUG
+  std::cout << "Inside Normalize Value" << std::endl;
+  std::cout << "The trail before syntactic normalizing is " << std::endl;  
+  std::cout << "Printing the value inside normalization" << std::endl;
+  for(unsigned i=0;i<value.size();i++)
+    std::cout << from_expr(value[i]) << ", " << std::endl;
+#endif
+  valuet val;
+  if(value.empty())
+    return;
+  for(unsigned i=0; i<value.size(); i++)
+  {
+    exprt m=value[i];
+    // for expressions like !guard22
+    if(m.id()==ID_symbol ||
+        (m.id()==ID_not && m.op0().id()==ID_symbol))
+    {
+      val.push_back(m);
+      continue;
+    }
+    else
+    {
+      // identify the octagonal constraints
+      // do not normalize the octagonal constraints 
+      exprt op;
+      if(m.id()==ID_not) 
+        op = m.op0();
+      else 
+        op = m;
+      if(op.op0().id()==ID_plus || op.op0().id()==ID_minus) {
+        //std::cout << "Constraint is: " << m.pretty() << std::endl;
+        // push octagonal constraints 
+        val.push_back(m);
+        std::cout << "--> Octagon constraint, added" << std::endl;
+        continue;
+      }
+      // normalize for interval constraints 
+      else { 
+        valuet new_val;
+        remove_expr(value, m, new_val);
+#ifdef DEBUG
+        std::cout << "[ACDL-DOMAIN] remove_expr: " << from_expr(SSA.ns, "", m) << std::endl;
+#endif
+        if(!is_subsumed_syntactic(m, new_val))
+          val.push_back(m);
+      }
+    }
+  }
+  // delete old elements in value
+  for(unsigned i=0; i<value.size(); i++)
+    value.erase(value.begin(), value.end());
+  // load val in to value
+  for(unsigned i=0; i<val.size(); i++)
+    value.push_back(val[i]);
+  
+#ifdef DEBUG
+  std::cout << "The trail after syntactic normalizing is " << std::endl;  
+  std::cout << "Printing the normalized value inside normalization" << std::endl;
+  for(unsigned i=0;i<value.size();i++)
+    std::cout << from_expr(value[i]) << ", " << std::endl;
+#endif  
+}
+
+/*******************************************************************\
+
  Function: acdl_domaint::normalize_val()
 
  Inputs: (x<=5) && (x<=10) && (y<=3)
@@ -1506,7 +1605,12 @@ void acdl_domaint::normalize_val(valuet &value)
 {
 #ifdef DEBUG
   std::cout << "Inside Normalize Value" << std::endl;
-  std::cout << "The trail before normalizing is " << from_expr(conjunction(value)) << std::endl;  
+  std::cout << "The trail before normalizing is " << std::endl;  
+  std::cout << "Printing the value inside normalization" << std::endl;
+  for(unsigned i=0;i<value.size();i++) {
+    std::cout << from_expr(value[i]) << ", " << std::endl;
+    std::cout << value[i].pretty() << ", " << std::endl;
+  }
 #endif
   valuet val;
   if(value.empty())
@@ -1545,7 +1649,7 @@ void acdl_domaint::normalize_val(valuet &value)
       else 
         op = m;
       if(op.op0().id()==ID_plus || op.op0().id()==ID_minus) {
-        std::cout << "Constraint is: " << m.pretty() << std::endl;
+        //std::cout << "Constraint is: " << m.pretty() << std::endl;
         // push octagonal constraints 
         val.push_back(m);
         std::cout << "--> Octagon constraint, added" << std::endl;
@@ -1596,7 +1700,10 @@ void acdl_domaint::normalize_val(valuet &value)
     value.push_back(val[i]);
   
 #ifdef DEBUG
-  std::cout << "The trail after normalizing is " << from_expr(conjunction(value)) << std::endl;  
+  std::cout << "The trail after normalizing is " << std::endl;  
+  std::cout << "Printing the normalized value inside normalization" << std::endl;
+  for(unsigned i=0;i<value.size();i++)
+    std::cout << from_expr(value[i]) << ", " << std::endl;
 #endif  
 }
 

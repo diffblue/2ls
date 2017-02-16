@@ -27,6 +27,7 @@ public:
 
 protected:
   std::vector<exprt> equality_decision_container;
+  std::vector<exprt> bad_decisions;
   
 };
 

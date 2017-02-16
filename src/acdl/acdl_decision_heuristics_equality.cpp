@@ -17,6 +17,10 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_equalityt::operator()
     (const local_SSAt &SSA, const acdl_domaint::valuet &value)
 {
 #ifdef DEBUG
+  std::cout << "Printing the value inside decision" << std::endl;
+  for(unsigned i=0;i<value.size();i++)
+    std::cout << from_expr(value[i]) << ", " << std::endl;
+
   std::cout << "Printing all decision variables" << std::endl;
   for(std::set<exprt>::const_iterator
         it=decision_variables.begin(); it!=decision_variables.end(); it++)
@@ -115,7 +119,10 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_equalityt::operator()
  std::vector<bool> non_cond_marked(non_conds_ns.size(), true);
  
  if(conds_ns.size() > 0 || non_conds_ns.size() > 0) {
-   while(!decision) {
+   assert(bad_decisions.size() == 0);
+   // bad decisions can either be repeatative 
+   // decisions or decision which are subsumed
+   while(!decision && bad_decisions.size()<1) {
      bool cond_dec_left=false;
      bool non_cond_dec_left=false;
      // make decisions only if
@@ -151,10 +158,19 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_equalityt::operator()
        if(!val.is_false()) {
          unsigned status=domain.compare_val_lit(v, val);
          if(status!=0) {
-           decision=true;
-           cond=true;
-           decision_container.push_back(val);
-           return val;
+           // check that the decision is not 
+           // subsumed by value. This also checks
+           // for repeated decision from generating
+           if(!domain.is_subsumed(val, value)) {
+             decision=true;
+             cond=true;
+             decision_container.push_back(val);
+             return val;
+           }
+           else { 
+             decision=false;
+             bad_decisions.push_back(val);
+           }
          }
          else
            continue;
@@ -254,7 +270,17 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_equalityt::operator()
          std::cout << "Size after deletion: "  << equality_decision_container.size() << std::endl;
 #endif
          assert(size == (equality_decision_container.size()+1));
-         return dec_val; 
+
+         if(!domain.is_subsumed(dec_val, value)) {
+           decision=true;
+           cond=true;
+           decision_container.push_back(dec_val);
+           return dec_val;
+         }
+         else { 
+           decision=false;
+           bad_decisions.push_back(val);
+         }
        }
 
        // **************************************
@@ -277,9 +303,16 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_equalityt::operator()
          if(!val.is_false()) {
            unsigned status=domain.compare_val_lit(v, val);
            if(status!=0) {
-             decision=true;
-             decision_container.push_back(val);
-             return val;
+             if(!domain.is_subsumed(val, value)) {
+               decision=true;
+               cond=true;
+               decision_container.push_back(val);
+               return val;
+             }
+             else { 
+               decision=false;
+               bad_decisions.push_back(val);
+             }
            }
            else
              continue;
@@ -345,9 +378,15 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_equalityt::operator()
      if(!val.is_false()) {
        unsigned status=domain.compare_val_lit(v, val);
        if(status!=0) {
-         decision=true;
-         decision_container.push_back(val);
-         return val;
+         if(!domain.is_subsumed(val, value)) {
+           decision=true;
+           decision_container.push_back(val);
+           return val;
+         }
+         else { 
+           decision=false;
+           bad_decisions.push_back(val);
+         }
        }
        else
          continue;
