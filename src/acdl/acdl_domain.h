@@ -107,6 +107,7 @@ public:
   void normalize_meetirrd(const meet_irreduciblet &m, meet_irreduciblet &mout) const;
   bool semantic_subsumption(const meet_irreduciblet &m) const;
   void normalize_val_syntactic(valuet &value);
+  void preprocess_val(valuet& val);
   
   enum clause_statet { CONFLICT=0, UNKNOWN=1, SATISFIED=2, UNIT=3};
   clause_statet clause_state;

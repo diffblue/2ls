@@ -141,7 +141,7 @@ bool acdl_solvert::bcp(const local_SSAt &SSA, unsigned idx)
     // preprocess abstract value: 
     // transform constraints like 
     // (x==n) to (x<=n) and (x>=n)
-    preprocess_val(v);
+    domain.preprocess_val(v);
 #ifdef debug
     std::cout << "preprocessed abstract value of implication graph: " << std::endl;
     for(acdl_domaint::valuet::const_iterator it=v.begin();it!=v.end(); ++it)
@@ -253,7 +253,7 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
 
     // preprocess abstract value 
     // transform constraints like (x==N) to (x<=N) and (x>=N)
-    preprocess_val(v);
+    domain.preprocess_val(v);
 #ifdef DEBUG
     std::cout << "Computing preprocessed abstract value of implication graph: " << std::endl;
     for(acdl_domaint::valuet::const_iterator it=v.begin();it!=v.end(); ++it)
@@ -411,7 +411,7 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
     // preprocess abstract value: 
     // transform constraints like 
     // (x==n) to (x<=n) and (x>=n)
-    preprocess_val(new_v);
+    domain.preprocess_val(new_v);
 #ifdef debug
     std::cout << "preprocessed abstract value of implication graph: " << std::endl;
     for(acdl_domaint::valuet::const_iterator it=new_v.begin();it!=new_v.end(); ++it)
@@ -507,57 +507,6 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
   return property_checkert::UNKNOWN;
 }
 
-/*******************************************************************
-
- Function: acdl_solvert::preprocess_val()
-
- Inputs:
-
- Outputs:
-
- Purpose: Pre-process abstract value to remove (x==N) constraints 
-          by (x<=N) and (x>=N). The trail is not effected by this. 
-
-\*******************************************************************/
-void acdl_solvert::preprocess_val(acdl_domaint::valuet& val)
-{
-  acdl_domaint::valuet val_temp;
-  std::vector<exprt> save_exp;
-  for(acdl_domaint::valuet::iterator it=val.begin();it!=val.end(); ++it)
-  {
-    exprt m=*it;
-    if(it->id() == ID_equal)
-    {
-      save_exp.push_back(m);
-      std::cout << "Preprocessing value " << from_expr(m) << std::endl;
-      exprt &lhs=to_binary_relation_expr(m).lhs();
-      exprt &rhs=to_binary_relation_expr(m).rhs();
-      // construct x<=N
-      exprt expl=binary_relation_exprt(lhs, ID_le, rhs);
-      // construct x>=N
-      exprt expg=binary_relation_exprt(lhs, ID_ge, rhs);
-      // [TODO] erasing causes problem 
-      // val.erase(it);
-      // val.insert(it, true_exprt());
-      val_temp.push_back(expl);
-      val_temp.push_back(expg);
-      std::cout << "Preprocessing inserted value " << from_expr(expl) << std::endl;
-      std::cout << "Preprocessing inserted value " << from_expr(expg) << std::endl;
-    }
-    else {
-      std::cout << "Donot Preprocess value " << from_expr(m) << std::endl;
-      continue;
-    }
-  }
- 
-  // [TODO] handle if there are multiple equality constraints in val
-  for(std::vector<exprt>::iterator it=save_exp.begin(); it!=save_exp.end(); it++)
-    val.erase(std::remove(val.begin(), val.end(), *it), val.end());
-    //val.erase(std::remove(val.begin(), val.end(), save_exp), val.end());
-  std::cout << "Now push all collected constraints" << std::endl;
-  if(val_temp.size() > 0) 
-    val.insert(val.end(), val_temp.begin(), val_temp.end());
-}
 
 /*******************************************************************
 
@@ -656,7 +605,7 @@ bool acdl_solvert::decide (const local_SSAt &SSA, const exprt& assertion)
   // preprocess abstract value: 
   // transform constraints like 
   // (x==n) to (x<=n) and (x>=n)
-  preprocess_val(v);
+  domain.preprocess_val(v);
 #ifdef debug
   std::cout << "preprocessed abstract value of implication graph: " << std::endl;
   for(acdl_domaint::valuet::const_iterator it=v.begin();it!=v.end(); ++it)
@@ -669,7 +618,7 @@ bool acdl_solvert::decide (const local_SSAt &SSA, const exprt& assertion)
   // preprocess abstract value: 
   // transform constraints like 
   // (x==n) to (x<=n) and (x>=n)
-  preprocess_val(old_v);
+  domain.preprocess_val(old_v);
 #ifdef debug
   std::cout << "preprocessed abstract value of implication graph: " << std::endl;
   for(acdl_domaint::valuet::const_iterator it=old_v.begin();it!=old_v.end(); ++it)
@@ -702,7 +651,7 @@ bool acdl_solvert::decide (const local_SSAt &SSA, const exprt& assertion)
   // test to check if a decision is valid
   // wrt. the current value, this check happens
   // inside decision_heuristic, so redundant here
-  bool valid_decision=true;
+  //bool valid_decision=true;
   old_v.push_back(dec_expr);
   if(!domain.check_val_consistency(old_v)) {
     std::cout << "The trail is inconsistent after adding decision, so get new decision" << std::endl;
@@ -751,7 +700,7 @@ bool acdl_solvert::decide (const local_SSAt &SSA, const exprt& assertion)
   // preprocess abstract value: 
   // transform constraints like 
   // (x==n) to (x<=n) and (x>=n)
-  preprocess_val(new_value);
+  domain.preprocess_val(new_value);
 #ifdef debug
   std::cout << "preprocessed abstract value of implication graph: " << std::endl;
   for(acdl_domaint::valuet::const_iterator it=new_value.begin();it!=new_value.end(); ++it)
@@ -828,7 +777,7 @@ bool acdl_solvert::analyze_conflict(const local_SSAt &SSA, const exprt& assertio
       // preprocess abstract value: 
       // transform constraints like 
       // (x==n) to (x<=n) and (x>=n)
-      preprocess_val(v);
+      domain.preprocess_val(v);
 #ifdef debug
       std::cout << "preprocessed abstract value of implication graph: " << std::endl;
       for(acdl_domaint::valuet::const_iterator it=v.begin();it!=v.end(); ++it)
@@ -1348,7 +1297,7 @@ property_checkert::resultt acdl_solvert::operator()(
   // preprocess abstract value: 
   // transform constraints like 
   // (x==n) to (x<=n) and (x>=n)
-  preprocess_val(v);
+  domain.preprocess_val(v);
 #ifdef debug
   std::cout << "preprocessed abstract value of implication graph: " << std::endl;
   for(acdl_domaint::valuet::const_iterator it=v.begin();it!=v.end(); ++it)
@@ -1438,7 +1387,7 @@ property_checkert::resultt acdl_solvert::operator()(
     // preprocess abstract value: 
     // transform constraints like 
     // (x==n) to (x<=n) and (x>=n)
-    preprocess_val(res_val);
+    domain.preprocess_val(res_val);
 #ifdef debug
     std::cout << "preprocessed abstract value of implication graph: " << std::endl;
     for(acdl_domaint::valuet::const_iterator it=res_val.begin();it!=res_val.end(); ++it)
@@ -1507,7 +1456,7 @@ property_checkert::resultt acdl_solvert::operator()(
       // preprocess abstract value: 
       // transform constraints like 
       // (x==n) to (x<=n) and (x>=n)
-      preprocess_val(elm);
+      domain.preprocess_val(elm);
 #ifdef debug
       std::cout << "preprocessed abstract value of implication graph: " << std::endl;
       for(acdl_domaint::valuet::const_iterator it=elm.begin();it!=elm.end(); ++it)
@@ -1548,7 +1497,7 @@ property_checkert::resultt acdl_solvert::operator()(
       // preprocess abstract value: 
       // transform constraints like 
       // (x==n) to (x<=n) and (x>=n)
-      preprocess_val(v);
+      domain.preprocess_val(v);
 #ifdef debug
       std::cout << "preprocessed abstract value of implication graph: " << std::endl;
       for(acdl_domaint::valuet::const_iterator it=v.begin();it!=v.end(); ++it)

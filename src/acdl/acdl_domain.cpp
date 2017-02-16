@@ -592,7 +592,7 @@ bool acdl_domaint::is_subsumed_syntactic(const meet_irreduciblet &m,
     const exprt &lhs=to_binary_relation_expr(mout).lhs();
     //const exprt &rhs=to_binary_relation_expr(mout).rhs();
     mp_integer val1, val2;
-    bool minus_val=false, minus_m=false; 
+    //bool minus_val=false, minus_m=false; 
     std::vector<exprt> lhs_container;
     for(unsigned i=0; i<value.size(); i++) {
       exprt v = value[i];
@@ -639,11 +639,11 @@ bool acdl_domaint::is_subsumed_syntactic(const meet_irreduciblet &m,
         {
           lhsv_op = lhsv.op0().op0();
           // Identify negative value object
-          minus_val=true;
+          //minus_val=true;
         }
         else
         {
-          minus_val=false;
+          //minus_val=false;
           lhsv_op = lhsv;
         }
 
@@ -652,12 +652,12 @@ bool acdl_domaint::is_subsumed_syntactic(const meet_irreduciblet &m,
             lhs.op0().id()==ID_typecast)
         {
           // Identify negative meet_irreducible
-          minus_m=true;
+          //minus_m=true;
           lhs_op = lhs.op0().op0();
         }
         else
         {
-          minus_m=false;
+          //minus_m=false;
           lhs_op = lhs;
         }
 
@@ -1569,6 +1569,10 @@ void acdl_domaint::normalize_val_syntactic(valuet &value)
 #ifdef DEBUG
         std::cout << "[ACDL-DOMAIN] remove_expr: " << from_expr(SSA.ns, "", m) << std::endl;
 #endif
+        // preprocess val in case it contains
+        // ID_equality. Subsumption only allows 
+        // ID_lt, ID_gt, ID_le,  ID_ge constraints
+        preprocess_val(new_val);
         if(!is_subsumed_syntactic(m, new_val))
           val.push_back(m);
       }
@@ -2669,6 +2673,57 @@ bool acdl_domaint::is_complete(const valuet &value,
   } // normal case
 }
 
+/*******************************************************************
+
+ Function: acdl_solvert::preprocess_val()
+
+ Inputs:
+
+ Outputs:
+
+ Purpose: Pre-process abstract value to remove (x==N) constraints 
+          by (x<=N) and (x>=N). The trail is not effected by this. 
+
+\*******************************************************************/
+void acdl_domaint::preprocess_val(valuet& val)
+{
+  valuet val_temp;
+  std::vector<exprt> save_exp;
+  for(valuet::iterator it=val.begin();it!=val.end(); ++it)
+  {
+    exprt m=*it;
+    if(it->id() == ID_equal)
+    {
+      save_exp.push_back(m);
+      std::cout << "Preprocessing value " << from_expr(m) << std::endl;
+      exprt &lhs=to_binary_relation_expr(m).lhs();
+      exprt &rhs=to_binary_relation_expr(m).rhs();
+      // construct x<=N
+      exprt expl=binary_relation_exprt(lhs, ID_le, rhs);
+      // construct x>=N
+      exprt expg=binary_relation_exprt(lhs, ID_ge, rhs);
+      // [TODO] erasing causes problem 
+      // val.erase(it);
+      // val.insert(it, true_exprt());
+      val_temp.push_back(expl);
+      val_temp.push_back(expg);
+      std::cout << "Preprocessing inserted value " << from_expr(expl) << std::endl;
+      std::cout << "Preprocessing inserted value " << from_expr(expg) << std::endl;
+    }
+    else {
+      std::cout << "Donot Preprocess value " << from_expr(m) << std::endl;
+      continue;
+    }
+  }
+ 
+  // [TODO] handle if there are multiple equality constraints in val
+  for(std::vector<exprt>::iterator it=save_exp.begin(); it!=save_exp.end(); it++)
+    val.erase(std::remove(val.begin(), val.end(), *it), val.end());
+    //val.erase(std::remove(val.begin(), val.end(), save_exp), val.end());
+  std::cout << "Now push all collected constraints" << std::endl;
+  if(val_temp.size() > 0) 
+    val.insert(val.end(), val_temp.begin(), val_temp.end());
+}
 
 /*******************************************************************\
 

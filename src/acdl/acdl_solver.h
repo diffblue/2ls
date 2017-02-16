@@ -106,7 +106,6 @@ protected:
   void initialize_decision_variables(acdl_domaint::valuet &val);
   void pre_process(const local_SSAt &SSA, const exprt &assertion, const exprt &assumption);
   bool is_closed(const local_SSAt &SSA, acdl_domaint::valuet& val);
-  void preprocess_val(acdl_domaint::valuet& val);
   void print_solver_statistics();
 };
 
