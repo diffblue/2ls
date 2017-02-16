@@ -1,0 +1,6 @@
+CORE
+main.c
+--octagons
+^EXIT=10$
+^SIGNAL=0$
+^VERIFICATION FAILED$
