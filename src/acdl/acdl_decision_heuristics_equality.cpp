@@ -419,14 +419,15 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_equalityt::operator()
  
  std::set<exprt> rest_ns;
  rest_ns.insert(non_singletons.begin(), non_singletons.end());
- if(rest_ns.size()) {
+ if(rest_ns.size()) 
+ {
    // initialize the vectors with true
    std::vector<bool> rest_ns_mark(rest_ns.size(), true);
    while(!decision) {
      bool non_cond_dec_left=false;
      // make decisions only if
      // there are non-singletons
-     for(unsigned k=0;k<rest_ns.size();k++) {
+     for(unsigned k=0; k<rest_ns.size(); k++) {
        if(rest_ns_mark[k]!=false) {
          non_cond_dec_left=true;
        }
@@ -443,7 +444,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_equalityt::operator()
 
      // make decisions on non-cond variables
      unsigned index=rand() % rest_ns.size();
-     assert(rest_ns.size()>0);
+     assert(!rest_ns.empty());
      const acdl_domaint::meet_irreduciblet
        cexp = *std::next(rest_ns.begin(), index);
      // this variable is already singleton

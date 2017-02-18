@@ -569,10 +569,19 @@ bool acdl_domaint::is_subsumed_syntactic(const meet_irreduciblet &m,
   if(m.is_false())
     return false;
 
+  // call simplifier_exprt() to simplify expressions, 
+  // o/p is always of the shape !(x<=N)
+  // example: !(!(cond)) -> !(cond), (-x-y>=-N) --> !(x+y>N)
+  simplify_expr(m, SSA.ns);
+
+  // assert that simplifier removes all expressions
+  // of the type (!(!cond)) to !(cond)
+  assert(!(m.id()==ID_not && m.op0().id()==ID_not && m.op0().op0().id()==ID_symbol)); 
   if(m.id()==ID_symbol ||
-     (m.id()==ID_not && m.op0().id()==ID_symbol) ||
-     (m.id()==ID_not && m.op0().id()==ID_not && m.op0().op0().id()==ID_symbol)) // for (!(!(cond)))
+     (m.id()==ID_not && m.op0().id()==ID_symbol))
+    /* || (m.id()==ID_not && m.op0().id()==ID_not && m.op0().op0().id()==ID_symbol)) // for (!(!(cond)))*/
   {
+    
     for(unsigned i=0; i<value.size(); i++)
     {
       if(m==value[i]) {
@@ -1540,6 +1549,12 @@ void acdl_domaint::normalize_val_syntactic(valuet &value)
   for(unsigned i=0; i<value.size(); i++)
   {
     exprt m=value[i];
+    simplify_expr(m, SSA.ns);
+    
+    // assert that simplifier removes all expressions
+    // of the type (!(!cond)) to !(cond)
+    assert(!(m.id()==ID_not && m.op0().id()==ID_not && m.op0().op0().id()==ID_symbol)); 
+
     // for expressions like !guard22
     if(m.id()==ID_symbol ||
         (m.id()==ID_not && m.op0().id()==ID_symbol))
@@ -1549,6 +1564,7 @@ void acdl_domaint::normalize_val_syntactic(valuet &value)
     }
     else
     {
+#if 0
       // identify the octagonal constraints
       // do not normalize the octagonal constraints 
       exprt op;
@@ -1560,11 +1576,15 @@ void acdl_domaint::normalize_val_syntactic(valuet &value)
         //std::cout << "Constraint is: " << m.pretty() << std::endl;
         // push octagonal constraints 
         val.push_back(m);
+#ifdef DEBUG
         std::cout << "--> Octagon constraint, added" << std::endl;
+#endif
         continue;
       }
       // normalize for interval constraints 
-      else { 
+      else 
+      { 
+#endif
         valuet new_val;
         remove_expr(value, m, new_val);
 #ifdef DEBUG
@@ -1576,11 +1596,11 @@ void acdl_domaint::normalize_val_syntactic(valuet &value)
         preprocess_val(new_val);
         if(!is_subsumed_syntactic(m, new_val))
           val.push_back(m);
-      }
+      //}
     }
   }
   // delete old elements in value
-  for(unsigned i=0; i<value.size(); i++)
+  for(std::size_t i=0; i<value.size(); i++)
     value.erase(value.begin(), value.end());
   // load val in to value
   for(unsigned i=0; i<val.size(); i++)
@@ -2690,13 +2710,16 @@ void acdl_domaint::preprocess_val(valuet& val)
 {
   valuet val_temp;
   std::vector<exprt> save_exp;
-  for(valuet::iterator it=val.begin();it!=val.end(); ++it)
+  //for(valuet::iterator it=val.begin();it!=val.end(); ++it)
+  for(exprt it : val)
   {
-    exprt m=*it;
-    if(it->id() == ID_equal)
+    exprt m=it;
+    if(it.id()==ID_equal)
     {
       save_exp.push_back(m);
+#ifdef DEBUG
       std::cout << "Preprocessing value " << from_expr(m) << std::endl;
+#endif
       exprt &lhs=to_binary_relation_expr(m).lhs();
       exprt &rhs=to_binary_relation_expr(m).rhs();
       // construct x<=N
@@ -2708,11 +2731,15 @@ void acdl_domaint::preprocess_val(valuet& val)
       // val.insert(it, true_exprt());
       val_temp.push_back(expl);
       val_temp.push_back(expg);
+#ifdef DEBUG
       std::cout << "Preprocessing inserted value " << from_expr(expl) << std::endl;
       std::cout << "Preprocessing inserted value " << from_expr(expg) << std::endl;
+#endif
     }
     else {
+#ifdef DEBUG
       std::cout << "Donot Preprocess value " << from_expr(m) << std::endl;
+#endif
       continue;
     }
   }
@@ -2721,7 +2748,9 @@ void acdl_domaint::preprocess_val(valuet& val)
   for(std::vector<exprt>::iterator it=save_exp.begin(); it!=save_exp.end(); it++)
     val.erase(std::remove(val.begin(), val.end(), *it), val.end());
     //val.erase(std::remove(val.begin(), val.end(), save_exp), val.end());
+#ifdef DEBUG
   std::cout << "Now push all collected constraints" << std::endl;
+#endif
   if(val_temp.size() > 0) 
     val.insert(val.end(), val_temp.begin(), val_temp.end());
 }
