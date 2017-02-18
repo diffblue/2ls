@@ -571,15 +571,15 @@ bool acdl_domaint::is_subsumed_syntactic(const meet_irreduciblet &m,
 
   // call simplifier_exprt() to simplify expressions, 
   // o/p is always of the shape !(x<=N)
-  // example: !(!(cond)) -> !(cond), (-x-y>=-N) --> !(x+y>N)
+  // example: (-x-y>=-N) --> !(x+y>N)
   simplify_expr(m, SSA.ns);
+#ifdef DEBUG
+  std::cout << "Simplified expression is " << from_expr(m) << std::endl;
+#endif
 
-  // assert that simplifier removes all expressions
-  // of the type (!(!cond)) to !(cond)
-  assert(!(m.id()==ID_not && m.op0().id()==ID_not && m.op0().op0().id()==ID_symbol)); 
   if(m.id()==ID_symbol ||
-     (m.id()==ID_not && m.op0().id()==ID_symbol))
-    /* || (m.id()==ID_not && m.op0().id()==ID_not && m.op0().op0().id()==ID_symbol)) // for (!(!(cond)))*/
+     (m.id()==ID_not && m.op0().id()==ID_symbol)
+     || (m.id()==ID_not && m.op0().id()==ID_not && m.op0().op0().id()==ID_symbol)) // for (!(!(cond)))*/
   {
     
     for(unsigned i=0; i<value.size(); i++)
@@ -602,18 +602,20 @@ bool acdl_domaint::is_subsumed_syntactic(const meet_irreduciblet &m,
     const exprt &lhs=to_binary_relation_expr(mout).lhs();
     //const exprt &rhs=to_binary_relation_expr(mout).rhs();
     mp_integer val1, val2;
-    //bool minus_val=false, minus_m=false; 
+#if 0
+    bool minus_val=false, minus_m=false; 
+#endif
     std::vector<exprt> lhs_container;
     for(unsigned i=0; i<value.size(); i++) {
       exprt v = value[i];
       // handled these before reaching here
       if(v.id()==ID_symbol ||
-          (v.id()==ID_not && v.op0().id()==ID_symbol))
+        (v.id()==ID_not && v.op0().id()==ID_symbol)
+        || (v.id()==ID_not && v.op0().id()==ID_not && v.op0().op0().id()==ID_symbol)) // for (!(!(cond)))*/
         continue;
-      
-      //std::cout << "Real check here" << std::endl;
+     
       // normalize must return expression 
-      // of the form x<N or x>N
+      // of the form x<N or x>N 
       normalize_meetirrd(v, val);
 
       // [CHECK] The constraints (x==N) must not be encountered here
@@ -627,20 +629,10 @@ bool acdl_domaint::is_subsumed_syntactic(const meet_irreduciblet &m,
       }
       else { 
 
-/*#ifdef DEBUG
-        std::cout << "Checking subsumption of meet irreducible " << from_expr(mout) 
-          << " versus the value object " << from_expr(val) << std::endl;
-        //std::cout << "val: " << val.pretty() << "mout: " << mout.pretty() << std::endl;
-#endif*/
         assert(val.id() == ID_lt || val.id() == ID_gt || val.id() == ID_ge || val.id() == ID_le);
         const exprt &lhsv=to_binary_relation_expr(val).lhs();
         //const exprt &rhsv=to_binary_relation_expr(val).rhs();
-/*#ifdef DEBUG
-        std::cout << "Checking lhs of meet irreducible " << from_expr(lhs) 
-          << " versus the value object " << from_expr(lhsv) << std::endl;
-        std::cout << "Checking id of meet irreducible " << val.id()  
-          << " versus the value object id" << mout.id() << std::endl;
-#endif*/
+        
         exprt lhsv_op, lhs_op;
         // Check for I/P: (-x<=10)
         // Check for val
@@ -1551,13 +1543,10 @@ void acdl_domaint::normalize_val_syntactic(valuet &value)
     exprt m=value[i];
     simplify_expr(m, SSA.ns);
     
-    // assert that simplifier removes all expressions
-    // of the type (!(!cond)) to !(cond)
-    assert(!(m.id()==ID_not && m.op0().id()==ID_not && m.op0().op0().id()==ID_symbol)); 
-
     // for expressions like !guard22
     if(m.id()==ID_symbol ||
-        (m.id()==ID_not && m.op0().id()==ID_symbol))
+        (m.id()==ID_not && m.op0().id()==ID_symbol) ||
+        (m.id()==ID_not && m.op0().id()==ID_not && m.op0().op0().id()==ID_symbol)) // for (!(!(cond)))*/
     {
       val.push_back(m);
       continue;
