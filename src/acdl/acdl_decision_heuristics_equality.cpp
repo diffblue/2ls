@@ -156,7 +156,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_equalityt::operator()
        std::cout << "Checking cond variable " << from_expr(exp) << std::endl;
        val=domain.split(value, exp);
        if(!val.is_false()) {
-         unsigned status=domain.compare_val_lit(v, val);
+         acdl_domaint::clause_state status=domain.compare_val_lit(v, val);
          if(status!=0) {
            // check that the decision is not 
            // subsumed by value. This also checks
@@ -203,7 +203,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_equalityt::operator()
            //if(non_cond_marked[index]==false) continue;
            val=domain.split(value, cexp);
            if(!val.is_false()) {
-             unsigned status=domain.compare_val_lit(v, val);
+             acdl_domaint::clause_state status=domain.compare_val_lit(v, val);
              if(status!=0) {
                //decision=true;
                // convert x<=10 to x==10
@@ -301,7 +301,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_equalityt::operator()
          if(non_cond_marked[index]==false) continue;
          val=domain.split(value, cexp);
          if(!val.is_false()) {
-           unsigned status=domain.compare_val_lit(v, val);
+           acdl_domaint::clause_state status=domain.compare_val_lit(v, val);
            if(status!=0) {
              if(!domain.is_subsumed(val, value)) {
                decision=true;
@@ -376,7 +376,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_equalityt::operator()
      val=domain.split(value, cexp);
      std::cout << "Decisions on read only variable " << from_expr(cexp) << std::endl;
      if(!val.is_false()) {
-       unsigned status=domain.compare_val_lit(v, val);
+       acdl_domaint::clause_state status=domain.compare_val_lit(v, val);
        if(status!=0) {
          if(!domain.is_subsumed(val, value)) {
            decision=true;
@@ -452,7 +452,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_equalityt::operator()
      val=domain.split(value, cexp);
      std::cout << "Decisions on rest variable " << from_expr(cexp) << std::endl;
      if(!val.is_false()) {
-       unsigned status=domain.compare_val_lit(v, val);
+       acdl_domaint::clause_state status=domain.compare_val_lit(v, val);
        if(status!=0) {
          if(!domain.is_subsumed(val, value)) {
            decision=true;

@@ -21,6 +21,7 @@ public:
   typedef std::vector<meet_irreduciblet> deductionst;
   typedef exprt statementt;
   typedef std::set<symbol_exprt> varst;
+  typedef enum clause_statet { CONFLICT=0, UNKNOWN=1, SATISFIED=2, UNIT=3} clause_state;
 
   explicit acdl_domaint(optionst &_options,
                         local_SSAt &_SSA,
@@ -98,19 +99,17 @@ public:
                                 const valuet &value) const;
   unsigned compare(const meet_irreduciblet &a,
                    const meet_irreduciblet &b) const;
-  unsigned compare_val_lit(valuet &a, meet_irreduciblet &b);
+  clause_state compare_val_lit(valuet &a, meet_irreduciblet &b);
 
   bool check_val_consistency(valuet &val);
   bool check_val_satisfaction(valuet &val);
-  int unit_rule(const local_SSAt &SSA, valuet &v, valuet &clause, exprt &unit_lit);
+  clause_state unit_rule(const local_SSAt &SSA, valuet &v, valuet &clause, exprt &unit_lit);
   bool check_contradiction(valuet &val, exprt &expr);
   void normalize_meetirrd(const meet_irreduciblet &m, meet_irreduciblet &mout) const;
   bool semantic_subsumption(const meet_irreduciblet &m) const;
   void normalize_val_syntactic(valuet &value);
   void preprocess_val(valuet& val);
   
-  enum clause_statet { CONFLICT=0, UNKNOWN=1, SATISFIED=2, UNIT=3};
-  clause_statet clause_state;
   // print value
   inline std::ostream &output(
     std::ostream &out, const valuet &v)

@@ -1912,10 +1912,10 @@ Function: acdl_domaint::compare_val_lit()
                    3. unknown -- neither satisfiable nor contradicting
 \*******************************************************************/
 
-unsigned acdl_domaint::compare_val_lit(valuet &a,
+acdl_domaint::clause_state acdl_domaint::compare_val_lit(valuet &a,
                                        meet_irreduciblet &b)
 {
-  unsigned int status;
+  //unsigned int status;
 
   exprt f=simplify_expr(and_exprt(conjunction(a), (b)), SSA.ns);
   if(f.is_false())
@@ -1926,8 +1926,8 @@ unsigned acdl_domaint::compare_val_lit(valuet &a,
   // to check contradiction, check (a & b) is UNSAT
   *solver1 << and_exprt(conjunction(a), b);
   if ((*solver1)()==decision_proceduret::D_UNSATISFIABLE) {
-    status=0;
-    return status; // CONFLICT;
+    //status=0;
+    return CONFLICT; // CONFLICT;
   }
 
   // to check satisfiable,
@@ -1938,13 +1938,13 @@ unsigned acdl_domaint::compare_val_lit(valuet &a,
     incremental_solvert::allocate(SSA.ns, true));
   *solver << and_exprt(conjunction(a), not_exprt(b));
   if ((*solver)()==decision_proceduret::D_UNSATISFIABLE) {
-    status=2;
-    return status; // SATISFIED;
+    //status=2;
+    return SATISFIED; // SATISFIED;
   }
   // unknown: neither contradicting nor satisfiable
   else {
-    status=1;
-    return status; // UNKNOWN;
+    //status=1;
+    return UNKNOWN; // UNKNOWN;
   }
 }
 
@@ -2056,7 +2056,7 @@ Function: acdl_domaint::unit_rule
  Purpose:
 
 \*******************************************************************/
-int acdl_domaint::unit_rule(const local_SSAt &SSA, valuet &v, valuet &clause, exprt &unit_lit)
+acdl_domaint::clause_state acdl_domaint::unit_rule(const local_SSAt &SSA, valuet &v, valuet &clause, exprt &unit_lit)
 {
   assert(check_val_consistency(v));
   // Normalize the current partial assignment
@@ -2112,14 +2112,14 @@ int acdl_domaint::unit_rule(const local_SSAt &SSA, valuet &v, valuet &clause, ex
     // for octagons, compare with the whole abstract
     // value since there can be transitive dependencies
     // between the octagonal constraints
-    int status=compare_val_lit(v, clause_exp);
+    clause_statet status=compare_val_lit(v, clause_exp);
 #else
 #ifdef DEBUG
     std::cout << "Comparing relevant expressions " << from_expr(SSA.ns, "", conjunction(relevant_expr)) << " <---> " << from_expr(SSA.ns, "", clause_exp) << std::endl;
 #endif
     // for intervals, we can select relevant
     // variables in the abstract value
-    int status=compare_val_lit(relevant_expr, clause_exp);
+    clause_statet status=compare_val_lit(relevant_expr, clause_exp);
 #endif
 
 #ifdef DEBUG

@@ -48,7 +48,6 @@ public:
   std::set<exprt> assumption_vars;
   std::set<exprt> conditional_vars;
   exprt ssa_conjuncted;
-
   void get_dec_variables(const exprt &exp);
   void order_decision_variables(const local_SSAt &SSA);
   void initialize_decvar_val(std::pair<mp_integer, mp_integer> dec_val);

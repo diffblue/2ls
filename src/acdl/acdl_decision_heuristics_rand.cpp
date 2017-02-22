@@ -121,7 +121,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_randt::operator()
 #ifdef DEBUG
       std::cout << "[NON-COND DECISION] " << dec_expr_rand << std::endl;
 #endif
-      unsigned status=domain.compare_val_lit(v, dec_expr_rand);
+      acdl_domaint::clause_state status=domain.compare_val_lit(v, dec_expr_rand);
       if(status!=0) { // not conflicting
         decision=true;
         return dec_expr_rand;
@@ -136,7 +136,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_randt::operator()
 #ifdef DEBUG
       std::cout << "[COND DECISION] " << dec_expr_rand << std::endl;
 #endif
-      unsigned status=domain.compare_val_lit(v, dec_expr_rand);
+      acdl_domaint::clause_state status=domain.compare_val_lit(v, dec_expr_rand);
       if(status!=0) { // not conflicting
         decision=true;
         return dec_expr_rand;

@@ -98,7 +98,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_octagont::operator()
     if(non_cond_marked[index]==false) continue;
     val=domain.split(value, cexp);
     if(!val.is_false()) {
-      unsigned status=domain.compare_val_lit(v, val);
+      acdl_domaint::clause_state status=domain.compare_val_lit(v, val);
       if(status!=0) {
         decision=true;
         return val;

@@ -149,17 +149,19 @@ bool acdl_solvert::bcp(const local_SSAt &SSA, unsigned idx)
 #endif
 
     acdl_domaint::valuet clause_val=analyzes_conflict.learned_clauses[i];
-    int result=domain.unit_rule(SSA, v, clause_val, unit_lit);
+    acdl_domaint::clause_state result=domain.unit_rule(SSA, v, clause_val, unit_lit);
 #ifdef DEBUG
     std::cout << "The propagation from unit rule inside bcp is " << from_expr(SSA.ns, "", unit_lit) << std::endl;
 #endif
-    if(result==domain.CONFLICT) {
+    // conflicting clause
+    if(result==0) {
       analyzes_conflict.conflicting_clause=i;
       analyzes_conflict.last_proof=analyzes_conflict.PROPOSITIONAL;
       std::cout << "Propagation in Propositional clauses lead to conflict" << std::endl;
       return false; // if conflict, return false
     }
-    else if(result==domain.UNIT) {
+    // unit clause
+    else if(result==3) { 
       // we need to take a meet of the
       // unit literal and the abstract value
       // the effect of taking meet can also be

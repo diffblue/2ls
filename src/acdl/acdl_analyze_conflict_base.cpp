@@ -189,10 +189,10 @@ bool acdl_analyze_conflict_baset::operator() (const local_SSAt &SSA, acdl_confli
   // check that the clause is unit,
   // this causes one propagation because
   // the clause is unit
-  int result=domain.unit_rule(SSA, v, norm_conf_clause, unit_lit);
+  acdl_domaint::clause_state result=domain.unit_rule(SSA, v, norm_conf_clause, unit_lit);
 
   // the learned clause must be asserting
-  assert(result==domain.UNIT);
+  assert(result==3); //(result==UNIT)
 
   // push the new deductions from unit_rule
   // to the conflict graph explicitly

@@ -60,7 +60,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_berkmint::operator()
 #ifdef DEBUG
       std::cout << "checking literal" << clause_exp << std::endl;
 #endif
-      unsigned status=domain.compare_val_lit(v, clause_exp);
+      acdl_domaint::clause_state status=domain.compare_val_lit(v, clause_exp);
       if(status!=2) // not SATISFIED
       {
         if(status!=0) // not contradicted
@@ -92,7 +92,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_berkmint::operator()
       // check the consistency
       // of the decision
       // not sure if v has to be unnormalized
-      unsigned status=domain.compare_val_lit(v, flipped_literal);
+      acdl_domaint::clause_state status=domain.compare_val_lit(v, flipped_literal);
       if(status!=0) { // not conflicting
         decision=true;
         return flipped_literal;
