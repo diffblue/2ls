@@ -43,7 +43,8 @@ void acdl_decision_heuristics_baset::get_dec_variables(const exprt &exp)
 
  \*******************************************************************/
 
-void acdl_decision_heuristics_baset::initialize_decvar_val(std::pair<mp_integer, mp_integer> val_pair)
+void acdl_decision_heuristics_baset::initialize_decvar_val
+  (std::pair<mp_integer, mp_integer> val_pair)
 {
   // this is a vector not a set
   // because we always want value
@@ -61,6 +62,44 @@ void acdl_decision_heuristics_baset::initialize_decvar_val(std::pair<mp_integer,
   decvar_val.push_back(val_pair);
 }
 
+
+/******************************************
+
+ Function: acdl_solvert::initial_val_range()
+
+ Inputs:
+
+ Outputs:
+
+ Purpose: Initialize Conjunction of SSA
+
+ \*******************************************************************/
+
+void acdl_decision_heuristics_baset::initialize_ssa(const exprt &ssa_conjunction)
+{
+  ssa_conjuncted = ssa_conjunction;
+}
+
+/******************************************
+
+ Function: acdl_solvert::initial_val_range()
+
+ Inputs:
+
+ Outputs:
+
+ Purpose: Initialize values for decision variables
+
+ \*******************************************************************/
+
+void acdl_decision_heuristics_baset::initialize_var_set(const std::set<exprt> &read_only_vars, const std::set<exprt> &assume_vars, const std::set<exprt> &cond_vars)
+{
+  read_vars.insert(read_only_vars.begin(), read_only_vars.end());
+  assumption_vars.insert(assume_vars.begin(), assume_vars.end());
+  conditional_vars.insert(cond_vars.begin(), cond_vars.end());
+
+
+}
 /*******************************************************************
 
  Function: acdl_solvert::order_decision_variables()

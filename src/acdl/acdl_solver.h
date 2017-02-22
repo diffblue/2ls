@@ -57,15 +57,22 @@ protected:
   std::vector<exprt> dec_not_in_trail;
   // collect all lhs cond variables from assumptions
   // statements so that we do not make decisions on those
-  std::string assume_lhs;
+  std::vector<std::string> assume_lhs;
   // collect non-gamma-complete variables
   acdl_domaint::varst non_gamma_complete_var;
   // read-only-vars that appers in rhs of equalities
-  acdl_domaint::varst read_only_vars;
+  std::set<exprt> read_only_vars;
+  acdl_domaint::varst read_only_symbols;
   std::set<acdl_domaint::statementt> gamma_check_processed;
+  std::set<exprt> assume_vars;
+  std::vector<acdl_domaint::statementt> assume_statements;
+  // conds used by decision heuristics  
+  std::set<exprt> cond_vars;
   acdl_conflict_grapht conflict_graph;
   unsigned ITERATION_LIMIT=999999;
   unsigned last_decision_index;
+  
+  
   // global propagation module
   property_checkert::resultt propagate(const local_SSAt &SSA, const exprt& assertion);
   // propagation for chaotic iteration in Abstract interpretation proof
@@ -98,6 +105,7 @@ protected:
   bool disable_generalization;
   void initialize_decision_variables(acdl_domaint::valuet &val);
   void pre_process(const local_SSAt &SSA, const exprt &assertion, const exprt &assumption);
+  bool is_closed(const local_SSAt &SSA, acdl_domaint::valuet& val);
   void print_solver_statistics();
 };
 

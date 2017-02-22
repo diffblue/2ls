@@ -5,6 +5,7 @@ SRC = acdl_solver.cpp acdl_domain.cpp template_generator_acdl.cpp \
       acdl_decision_heuristics_octagon.cpp \
       acdl_decision_heuristics_berkmin.cpp \
       acdl_decision_heuristics_largest_range.cpp \
+      acdl_decision_heuristics_equality.cpp \
       acdl_worklist_base.cpp \
       acdl_worklist_ordered.cpp \
       acdl_worklist_forward_strategy.cpp \

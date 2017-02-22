@@ -11,7 +11,7 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include "acdl_solver.h"
 #include "acdl_decision_heuristics_ordered.h"
 
-// #define DEBUG
+#define DEBUG
 
 acdl_domaint::meet_irreduciblet acdl_decision_heuristics_orderedt::operator()
   (const local_SSAt &SSA, const acdl_domaint::valuet &value)
@@ -21,7 +21,26 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_orderedt::operator()
   for(std::set<exprt>::const_iterator
         it=decision_variables.begin(); it!=decision_variables.end(); it++)
     std::cout << from_expr(SSA.ns, "", *it) << "  , " << std::endl;
+  
+  std::cout << "Printing all read only variables" << std::endl;
+  for(std::set<exprt>::const_iterator
+        it=read_vars.begin(); it!=read_vars.end(); it++)
+    std::cout << from_expr(SSA.ns, "", *it) << "  , " << std::endl;
+  
+  std::cout << "Printing all assumption variables" << std::endl;
+  for(std::set<exprt>::const_iterator
+        it=assumption_vars.begin(); it!=assumption_vars.end(); it++)
+    std::cout << from_expr(SSA.ns, "", *it) << "  , " << std::endl;
+  
+  std::cout << "Printing all conditional variables" << std::endl;
+  for(std::set<exprt>::const_iterator
+        it=conditional_vars.begin(); it!=conditional_vars.end(); it++)
+    std::cout << from_expr(SSA.ns, "", *it) << "  , " << std::endl;
 #endif
+
+  std::cout << "The normalized value passed to the decision heuristics is " 
+    << from_expr(conjunction(value)) << std::endl;
+
   // copy the value to non-constant value
   acdl_domaint::valuet v;
   for(unsigned k=0;k<value.size();k++)
@@ -83,7 +102,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_orderedt::operator()
         exp=conds[i];
       val=domain.split(value, exp);
       if(!val.is_false()) {
-        unsigned status=domain.compare_val_lit(v, val);
+        acdl_domaint::clause_state status=domain.compare_val_lit(v, val);
         if(status!=0) {
           decision=true;
           cond=true;
@@ -108,7 +127,7 @@ acdl_domaint::meet_irreduciblet acdl_decision_heuristics_orderedt::operator()
     if(non_cond_marked[index]==false) continue;
     val=domain.split(value, cexp);
     if(!val.is_false()) {
-      unsigned status=domain.compare_val_lit(v, val);
+      acdl_domaint::clause_state status=domain.compare_val_lit(v, val);
       if(status!=0) {
         decision=true;
         return val;

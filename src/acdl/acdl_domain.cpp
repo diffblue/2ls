@@ -272,7 +272,7 @@ void acdl_domaint::bool_inference(
 #ifdef DEBUG
         std::cout << "actually deducing" << std::endl;
 #endif
-        if(!is_subsumed(deduced, _old_value))
+        if(!is_subsumed_syntactic(deduced, _old_value))
         {
           new_value.push_back(deduced);
           deductions.push_back(deduced);
@@ -403,7 +403,7 @@ void acdl_domaint::numerical_inference(
       std::cout << "  " << from_expr(SSA.ns, "", var_values[i]) << std::endl;
       std::cout << "  "; output(std::cout, _old_value); std::cout << std::endl;
 #endif
-      if(!is_subsumed(var_values[i], _old_value))
+      if(!is_subsumed_syntactic(var_values[i], _old_value))
       {
 #ifdef DEBUG
         std::cout << "adding new value " << from_expr(SSA.ns, "", var_values[i]) << std::endl;
@@ -483,6 +483,414 @@ void acdl_domaint::join(const std::vector<valuet> &old_values,
 
 /*******************************************************************\
 
+Function: acdl_domaint::normalize_meetirrd()
+
+  Inputs:  example: 1. !x<=3
+                    2. !(x+y<=5)
+  Outputs: example  1: x>3
+                    2. (x+y>5)
+\*******************************************************************/
+void acdl_domaint::normalize_meetirrd(const meet_irreduciblet &m, meet_irreduciblet &mout) const 
+{
+    if(m.id()==ID_not) {
+#ifdef DEBUG
+      std::cout << "The original not expression is " << from_expr(m) << std::endl;
+#endif
+      const exprt &expb=m.op0();
+
+      // Handle the singleton case: example : !guard#0
+      if(expb.id()!=ID_le && expb.id()!=ID_ge)
+      { }
+      
+      else 
+      {
+        const exprt &lhs=to_binary_relation_expr(expb).lhs();
+        const exprt &rhs=to_binary_relation_expr(expb).rhs();
+
+        // !(ID_le) --> ID_gt
+        if(expb.id()==ID_le) {
+          exprt exp=binary_relation_exprt(lhs, ID_gt, rhs);
+#ifdef DEBUG
+          std::cout << "The new non-negated expression is " << from_expr(exp)  << std::endl;
+#endif
+          mout=exp;
+        }
+
+        // !(ID_ge) --> ID_lt
+        else if(expb.id()==ID_ge) {
+          exprt exp=binary_relation_exprt(lhs, ID_lt, rhs);
+#ifdef DEBUG
+          std::cout << "The new non-negated expression is " << from_expr(exp)  << std::endl;
+#endif
+          mout=exp;
+        }
+
+        else if(expb.id()==ID_lt || expb.id()==ID_gt) {
+          // this must not happen because
+          // the expressions are now generated as <= or >=
+          assert(false);
+        }
+      }
+   } // end not
+   // do not normalize if the expression is not ID_not
+   else {
+    assert(m.id() != ID_not);
+    mout=m;
+   }
+}
+
+/*******************************************************************\
+
+Function: acdl_domaint::is_subsumed_syntactic()
+
+  Inputs: example: 1. x<=3, 0<=x && x<=3
+                   2. x<=2, 0<=x && x<=3
+                   3. x<=5, 3<=x && x<=3
+ Outputs: example  1: true
+                   2. false
+                   3. false
+ Purpose: is_subsumed(a, b)==not is_strictly_contained(a, b)
+
+          contains(a, b)==(b<=a)==((-a && b)==0)
+
+\*******************************************************************/
+
+bool acdl_domaint::is_subsumed_syntactic(const meet_irreduciblet &m,
+                               const valuet &value) const
+{
+#ifdef DEBUG
+  std::cout << "Subsumption test of meet irreducible " << from_expr(m) << std::endl;
+#endif
+  bool subsumed_check=false;
+  if(value.empty()) // assumes that m is never TOP
+    return false;
+
+  // when the result of projection(m) is FALSE
+  if(m.is_false())
+    return false;
+
+  // call simplifier_exprt() to simplify expressions, 
+  // o/p is always of the shape !(x<=N)
+  // example: (-x-y>=-N) --> !(x+y>N)
+  simplify_expr(m, SSA.ns);
+#ifdef DEBUG
+  std::cout << "Simplified expression is " << from_expr(m) << std::endl;
+#endif
+
+  if(m.id()==ID_symbol ||
+     (m.id()==ID_not && m.op0().id()==ID_symbol)
+     || (m.id()==ID_not && m.op0().id()==ID_not && m.op0().op0().id()==ID_symbol)) // for (!(!(cond)))*/
+  {
+    
+    for(unsigned i=0; i<value.size(); i++)
+    {
+      if(m==value[i]) {
+#ifdef DEBUG
+         std::cout << from_expr(m) << 
+           " is subsumed by" << from_expr(value[i]) << std::endl;
+#endif         
+        return true;
+      }
+    }
+    return false;
+  }
+  else
+  { 
+    // here, m must be of type ID_le or ID_ge or ID_lt or ID_gt 
+    meet_irreduciblet mout, val;
+    normalize_meetirrd(m, mout);
+    const exprt &lhs=to_binary_relation_expr(mout).lhs();
+    //const exprt &rhs=to_binary_relation_expr(mout).rhs();
+    mp_integer val1, val2;
+#if 0
+    bool minus_val=false, minus_m=false; 
+#endif
+    std::vector<exprt> lhs_container;
+    for(unsigned i=0; i<value.size(); i++) {
+      exprt v = value[i];
+      // handled these before reaching here
+      if(v.id()==ID_symbol ||
+        (v.id()==ID_not && v.op0().id()==ID_symbol)
+        || (v.id()==ID_not && v.op0().id()==ID_not && v.op0().op0().id()==ID_symbol)) // for (!(!(cond)))*/
+        continue;
+     
+      // normalize must return expression 
+      // of the form x<N or x>N 
+      normalize_meetirrd(v, val);
+
+      // [CHECK] The constraints (x==N) must not be encountered here
+
+      if(val == mout) {
+#ifdef DEBUG
+        std::cout << from_expr(mout) << 
+          " is subsumed by" << from_expr(val) << std::endl;
+        return true;
+#endif
+      }
+      else { 
+
+        assert(val.id() == ID_lt || val.id() == ID_gt || val.id() == ID_ge || val.id() == ID_le);
+        const exprt &lhsv=to_binary_relation_expr(val).lhs();
+        //const exprt &rhsv=to_binary_relation_expr(val).rhs();
+        
+        exprt lhsv_op, lhs_op;
+        // Check for I/P: (-x<=10)
+        // Check for val
+        if(lhsv.id()==ID_unary_minus &&
+            lhsv.op0().id()==ID_typecast)
+        {
+          lhsv_op = lhsv.op0().op0();
+          // Identify negative value object
+          //minus_val=true;
+        }
+        else
+        {
+          //minus_val=false;
+          lhsv_op = lhsv;
+        }
+
+        // Check for m
+        if(lhs.id()==ID_unary_minus &&
+            lhs.op0().id()==ID_typecast)
+        {
+          // Identify negative meet_irreducible
+          //minus_m=true;
+          lhs_op = lhs.op0().op0();
+        }
+        else
+        {
+          //minus_m=false;
+          lhs_op = lhs;
+        }
+
+        if(lhs_op == lhsv_op) 
+        {
+#ifdef DEBUG
+          std::cout << "lhs matches, push into lhs container " << from_expr(val) << std::endl;
+#endif
+          // collect all statements with matching lhs
+          lhs_container.push_back(val);
+
+
+          // [IMPORTANT] Following comparison are relevant
+          // Case1: val=(x<=10), m=(-x>9)
+          // Case2: val=(x<=10), m=(x<=5)
+          // Case3: val=(x<=10), m=(x<5)
+          // Case4: val=(x>=10), m=(x>=5)
+          // Case5: val=(x>=10), m=(x>5)
+          // Case6: val=(x>=10), m=(-x<5)
+#if 0           
+          // check the subsumption for ID_gt
+          if((mout.id()==ID_gt && val.id()==ID_ge) || 
+              (mout.id()==ID_ge && val.id()==ID_ge) ||
+              (mout.id()==ID_ge && val.id()==ID_lt && (minus_m==true))
+
+            )
+
+          {}
+#ifdef DEBUG
+          std::cout << "computing lower value" << std::endl;
+#endif
+          // lower bound for val
+          constant_exprt cexprv=to_constant_expr(to_binary_relation_expr(val).rhs());
+          to_integer(cexprv, val1);
+
+          // lower bound for m
+          constant_exprt cexprm=to_constant_expr(to_binary_relation_expr(mout).rhs());
+          to_integer(cexprm, val2);
+
+          // compare the bounds
+          if(val1<val2) {
+            subsumed_check = true;
+#ifdef DEBUG
+            std::cout << from_expr(mout) << 
+              "is not subsumed by" << from_expr(val) << std::endl;
+#endif
+            return false;
+          }
+          else {
+            subsumed_check = true;
+#ifdef DEBUG
+            std::cout << from_expr(mout) << 
+              "is subsumed by" << from_expr(val) << std::endl;
+#endif
+            return true;
+          }
+        }
+
+        // check the subsumption for ID_lt
+        if(val.id()==ID_lt) {
+#ifdef DEBUG
+          std::cout << "computing upper value" << std::endl;
+#endif
+          // lower bound for val
+          constant_exprt cexprv=to_constant_expr(to_binary_relation_expr(val).rhs());
+          to_integer(cexprv, val1);
+
+          // lower bound for m
+          constant_exprt cexprm=to_constant_expr(to_binary_relation_expr(mout).rhs());
+          to_integer(cexprm, val2);
+
+          // compare the bounds
+          if(val1<val2) {
+            subsumed_check = true;
+#ifdef DEBUG
+            std::cout << from_expr(mout) << 
+              "is subsumed by" << from_expr(val) << std::endl;
+#endif
+            return true;
+          }
+          else {
+            subsumed_check = true;
+#ifdef DEBUG
+            std::cout << from_expr(mout) << 
+              "is not subsumed by" << from_expr(val) << std::endl;
+#endif
+            return false;
+          }
+        }
+
+        // check the subsumption for ID_le
+        if(val.id()==ID_le) {
+#ifdef DEBUG
+          std::cout << "computing upper value" << std::endl;
+#endif
+          // lower bound for val
+          constant_exprt cexprv=to_constant_expr(to_binary_relation_expr(val).rhs());
+          to_integer(cexprv, val1);
+
+          // lower bound for m
+          constant_exprt cexprm=to_constant_expr(to_binary_relation_expr(mout).rhs());
+          to_integer(cexprm, val2);
+
+          // compare the bounds
+          if(val1<val2) {
+            subsumed_check = true;
+#ifdef DEBUG
+            std::cout << from_expr(mout) << 
+              "is subsumed by" << from_expr(val) << std::endl;
+#endif
+            return true;
+          }
+          else {
+            subsumed_check = true;
+#ifdef DEBUG
+            std::cout << from_expr(mout) << 
+              "is not subsumed by" << from_expr(val) << std::endl;
+#endif
+            return false;
+          }
+        }
+
+        // check the subsumption for ID_ge
+        if(val.id()==ID_ge) {
+#ifdef DEBUG
+          std::cout << "computing lower value" << std::endl;
+#endif
+          // lower bound for val
+          constant_exprt cexprv=to_constant_expr(to_binary_relation_expr(val).rhs());
+          to_integer(cexprv, val1);
+
+          // lower bound for m
+          constant_exprt cexprm=to_constant_expr(to_binary_relation_expr(mout).rhs());
+          to_integer(cexprm, val2);
+
+          // compare the bounds
+          if(val1<val2) {
+            subsumed_check = true;
+#ifdef DEBUG
+            std::cout << from_expr(mout) << 
+              "is not subsumed by" << from_expr(val) << std::endl;
+#endif
+            return false;
+          }
+          else {
+            subsumed_check = true;
+#ifdef DEBUG
+            std::cout << from_expr(mout) << 
+              "is subsumed by" << from_expr(val) << std::endl;
+#endif
+            return true;
+          }
+        }
+#endif
+      } // end matching lhs templates
+      else 
+        continue;
+    } // handle meet_irreducibles which are not just symbols
+  } // end for loop checking all values
+
+  // Do semantic subsumption check here
+  exprt f;
+  if(lhs_container.size()==0) {
+#ifdef DEBUG
+    std::cout << "No matching lhs found, so checking against whole value " << std::endl;
+#endif
+    f=simplify_expr(and_exprt(conjunction(value), not_exprt(mout)), SSA.ns);
+  }
+  else {
+#ifdef DEBUG
+   std::cout << "Actual subsumption test of meet irreducible " << from_expr(mout) 
+     << " versus the value object " << from_expr(conjunction(lhs_container)) << std::endl;
+#endif
+   f=simplify_expr(and_exprt(conjunction(lhs_container), not_exprt(mout)), SSA.ns);
+  }
+
+  if(f.is_false())
+    return true;
+
+  bool status = semantic_subsumption(f);
+  if(status) { 
+#ifdef DEBUG
+    std::cout << "SUBSUMPTION RESULT:: subsumed" << std::endl;
+#endif
+    subsumed_check=true;
+    return true;
+  }
+  else {
+#ifdef DEBUG
+    std::cout << "SUBSUMPTION RESULT:: not subsumed" << std::endl;
+#endif
+    subsumed_check=true;
+    return false;
+  }
+} // handle meet_irreducible m which are not just symbols
+if(subsumed_check==false) {
+  std::cout << "No subsumption check occured, hence return false conservatively !! " << std::endl;
+  return false;
+}
+
+assert(false);
+}
+
+/*******************************************************************\
+
+Function: acdl_domaint::semantic_subsumption()
+
+  Inputs: example: 1. x<=3, 0<=x && x<=3
+                   2. x<=2, 0<=x && x<=3
+                   3. x<=5, 3<=x && x<=3
+ Outputs: example  1: true
+                   2. false
+                   3. false
+ Purpose: is_subsumed(a, b)==not is_strictly_contained(a, b)
+
+          contains(a, b)==(b<=a)==((-a && b)==0)
+
+\*******************************************************************/
+bool acdl_domaint::semantic_subsumption(const meet_irreduciblet &m) const
+{
+  std::unique_ptr<incremental_solvert> solver(
+      incremental_solvert::allocate(SSA.ns, true));
+  *solver << m;
+  if((*solver)()==decision_proceduret::D_UNSATISFIABLE)
+    return true;
+  else 
+    return false;
+}
+
+/*******************************************************************\
+
 Function: acdl_domaint::is_subsumed()
 
   Inputs: example: 1. x<=3, 0<=x && x<=3
@@ -519,6 +927,23 @@ bool acdl_domaint::is_subsumed(const meet_irreduciblet &m,
   }
   else
   {
+#if 0
+    // [NOTE] the following optimization 
+    // leads to non-termination
+    // identify the octagonal constraints
+    // do not perform subsumption check 
+    // for the octagonal constraints 
+    exprt op;
+    if(m.id()==ID_not) 
+      op = m.op0();
+    else 
+      op = m;
+    if(op.op0().id()==ID_plus || op.op0().id()==ID_minus) {
+      std::cout << "Constraint is: " << m.pretty() << std::endl;
+      std::cout << "Ignore Octagon constraint from Subsumption Check" << std::endl;
+      return false;
+    }
+#endif
     // maybe the simplifier does the job
 /*    exprt f=simplify_expr(and_exprt(conjunction(value),
       not_exprt(and_exprt(conjunction(value), m))), SSA.ns);*/
@@ -728,6 +1153,9 @@ exprt acdl_domaint::split(const valuet &value,
 {
   const exprt &expr=meet_irreducible_template;
 
+  std::cout << "conjuncted value received inside split :: " << from_expr(SSA.ns, "", conjunction(value)) << std::endl;
+  for(unsigned i=0;i<value.size();i++)
+    std::cout << "value :: " << from_expr(SSA.ns, "", value[i]) << std::endl;
 #if 0
 // #ifdef DEBUG
   std::cout << "[ACDL-DOMAIN] Split("
@@ -828,8 +1256,12 @@ exprt acdl_domaint::split(const valuet &value,
 #ifdef DEBUG
   std::cout << "conjuncted new value:: " << from_expr(SSA.ns, "", vals) << std::endl;
   std::cout << "original splitting expr is :: " << from_expr(SSA.ns, "", expr) << std::endl;
-#endif
 
+  //std::cout << "conjuncted new value computed inside split:: " << from_expr(SSA.ns, "", conjunction(new_value)) << std::endl;
+  for(unsigned i=0;i<value.size();i++)
+    std::cout << "value :: " << from_expr(SSA.ns, "", value[i]) << std::endl;
+#endif
+  
   // computer lower and upper bound
   // handle the positive literals
   constant_exprt u;
@@ -896,6 +1328,27 @@ exprt acdl_domaint::split(const valuet &value,
 #endif
         // break;
       }
+#if 0
+      // handle ID_equality
+      if(e.id()==ID_eq) {
+#ifdef DEBUG
+        std::cout << "computing lower value" << std::endl;
+#endif
+        constant_exprt cexpr=to_constant_expr(to_binary_relation_expr(e).rhs());
+        to_integer(cexpr, val1);
+        val2=val1;
+        l=from_integer(val2, expr.type());
+        u=from_integer(val2, expr.type());
+        l_is_assigned=true;
+        u_is_assigned=true;
+
+#ifdef DEBUG
+        std::cout << "the expression is " << from_expr(SSA.ns, "", e) << "the lower value is "
+                  << from_expr(SSA.ns, "", l) << std::endl;
+#endif
+        // break;
+      }
+#endif
     }
   }
 
@@ -1064,6 +1517,94 @@ void acdl_domaint::remove_expr(valuet &old_value,
 
 /*******************************************************************\
 
+ Function: acdl_domaint::normalize_val_syntactic()
+
+ Inputs: (x<=5) && (x<=10) && (y<=3)
+
+ Outputs: (x<=5) && (y<=3)
+
+ Purpose: Normalization is value-preserving operation.
+
+\*******************************************************************/
+void acdl_domaint::normalize_val_syntactic(valuet &value)
+{
+#ifdef DEBUG
+  std::cout << "Inside Normalize Value" << std::endl;
+  std::cout << "The trail before syntactic normalizing is " << std::endl;  
+  std::cout << "Printing the value inside normalization" << std::endl;
+  for(unsigned i=0;i<value.size();i++)
+    std::cout << from_expr(value[i]) << ", " << std::endl;
+#endif
+  valuet val;
+  if(value.empty())
+    return;
+  for(unsigned i=0; i<value.size(); i++)
+  {
+    exprt m=value[i];
+    simplify_expr(m, SSA.ns);
+    
+    // for expressions like !guard22
+    if(m.id()==ID_symbol ||
+        (m.id()==ID_not && m.op0().id()==ID_symbol) ||
+        (m.id()==ID_not && m.op0().id()==ID_not && m.op0().op0().id()==ID_symbol)) // for (!(!(cond)))*/
+    {
+      val.push_back(m);
+      continue;
+    }
+    else
+    {
+#if 0
+      // identify the octagonal constraints
+      // do not normalize the octagonal constraints 
+      exprt op;
+      if(m.id()==ID_not) 
+        op = m.op0();
+      else 
+        op = m;
+      if(op.op0().id()==ID_plus || op.op0().id()==ID_minus) {
+        //std::cout << "Constraint is: " << m.pretty() << std::endl;
+        // push octagonal constraints 
+        val.push_back(m);
+#ifdef DEBUG
+        std::cout << "--> Octagon constraint, added" << std::endl;
+#endif
+        continue;
+      }
+      // normalize for interval constraints 
+      else 
+      { 
+#endif
+        valuet new_val;
+        remove_expr(value, m, new_val);
+#ifdef DEBUG
+        std::cout << "[ACDL-DOMAIN] remove_expr: " << from_expr(SSA.ns, "", m) << std::endl;
+#endif
+        // preprocess val in case it contains
+        // ID_equality. Subsumption only allows 
+        // ID_lt, ID_gt, ID_le,  ID_ge constraints
+        preprocess_val(new_val);
+        if(!is_subsumed_syntactic(m, new_val))
+          val.push_back(m);
+      //}
+    }
+  }
+  // delete old elements in value
+  for(std::size_t i=0; i<value.size(); i++)
+    value.erase(value.begin(), value.end());
+  // load val in to value
+  for(unsigned i=0; i<val.size(); i++)
+    value.push_back(val[i]);
+  
+#ifdef DEBUG
+  std::cout << "The trail after syntactic normalizing is " << std::endl;  
+  std::cout << "Printing the normalized value inside normalization" << std::endl;
+  for(unsigned i=0;i<value.size();i++)
+    std::cout << from_expr(value[i]) << ", " << std::endl;
+#endif  
+}
+
+/*******************************************************************\
+
  Function: acdl_domaint::normalize_val()
 
  Inputs: (x<=5) && (x<=10) && (y<=3)
@@ -1076,12 +1617,24 @@ void acdl_domaint::remove_expr(valuet &old_value,
 
 void acdl_domaint::normalize_val(valuet &value)
 {
+#ifdef DEBUG
+  std::cout << "Inside Normalize Value" << std::endl;
+  std::cout << "The trail before normalizing is " << std::endl;  
+  std::cout << "Printing the value inside normalization" << std::endl;
+  for(unsigned i=0;i<value.size();i++) {
+    std::cout << from_expr(value[i]) << ", " << std::endl;
+    std::cout << value[i].pretty() << ", " << std::endl;
+  }
+#endif
   valuet val;
   if(value.empty())
     return;
   for(unsigned i=0; i<value.size(); i++)
   {
     exprt m=value[i];
+#ifdef DEBUG
+    //std::cout << "Checking " << from_expr(SSA.ns, "", m);
+#endif
     // for expressions like !guard22
     if(m.id()==ID_symbol ||
        (m.id()==ID_not && m.op0().id()==ID_symbol))
@@ -1095,10 +1648,27 @@ void acdl_domaint::normalize_val(valuet &value)
       }
 #endif
       val.push_back(m);
+#ifdef DEBUG
+      std::cout << "--> Normal symbol, added" << std::endl;
+#endif      
       continue;
     }
     else
     {
+      // identify the octagonal constraints
+      // do not normalize the octagonal constraints 
+      exprt op;
+      if(m.id()==ID_not) 
+        op = m.op0();
+      else 
+        op = m;
+      if(op.op0().id()==ID_plus || op.op0().id()==ID_minus) {
+        //std::cout << "Constraint is: " << m.pretty() << std::endl;
+        // push octagonal constraints 
+        val.push_back(m);
+        std::cout << "--> Octagon constraint, added" << std::endl;
+        continue;
+      }
       valuet new_val;
       remove_expr(value, m, new_val);
       // maybe the simplifier does the job
@@ -1108,8 +1678,12 @@ void acdl_domaint::normalize_val(valuet &value)
       std::cout << "[ACDL-DOMAIN] remove_expr: " << from_expr(SSA.ns, "", m) << "SAT query without simplifiert: "
                 << from_expr(SSA.ns, "", f1) << std::endl;
 #endif
-      if(f.is_false())
+      if(f.is_false()) {
+#ifdef DEBUG
+        std::cout << "--> negation is false, ignored" << std::endl;
+#endif
         continue;
+      }
       bool result=check_val(f);
 #ifdef DEBUG
       std::cout << "[ACDL-DOMAIN] SAT result: ";
@@ -1118,6 +1692,7 @@ void acdl_domaint::normalize_val(valuet &value)
       if(result) {
 #ifdef DEBUG
         std::cout << "UNSAT " << std::endl;
+        std::cout << "--> UNSAT, ignored" << std::endl;
 #endif
         continue;
       }
@@ -1125,6 +1700,7 @@ void acdl_domaint::normalize_val(valuet &value)
       else {
 #ifdef DEBUG
         std::cout << "SAT " << std::endl;
+        std::cout << "--> SAT, added" << std::endl;
 #endif
         val.push_back(m);
       }
@@ -1136,6 +1712,13 @@ void acdl_domaint::normalize_val(valuet &value)
   // load val in to value
   for(unsigned i=0; i<val.size(); i++)
     value.push_back(val[i]);
+  
+#ifdef DEBUG
+  std::cout << "The trail after normalizing is " << std::endl;  
+  std::cout << "Printing the normalized value inside normalization" << std::endl;
+  for(unsigned i=0;i<value.size();i++)
+    std::cout << from_expr(value[i]) << ", " << std::endl;
+#endif  
 }
 
 /*******************************************************************\
@@ -1329,10 +1912,10 @@ Function: acdl_domaint::compare_val_lit()
                    3. unknown -- neither satisfiable nor contradicting
 \*******************************************************************/
 
-unsigned acdl_domaint::compare_val_lit(valuet &a,
+acdl_domaint::clause_state acdl_domaint::compare_val_lit(valuet &a,
                                        meet_irreduciblet &b)
 {
-  unsigned int status;
+  //unsigned int status;
 
   exprt f=simplify_expr(and_exprt(conjunction(a), (b)), SSA.ns);
   if(f.is_false())
@@ -1343,8 +1926,8 @@ unsigned acdl_domaint::compare_val_lit(valuet &a,
   // to check contradiction, check (a & b) is UNSAT
   *solver1 << and_exprt(conjunction(a), b);
   if ((*solver1)()==decision_proceduret::D_UNSATISFIABLE) {
-    status=0;
-    return status; // CONFLICT;
+    //status=0;
+    return CONFLICT; // CONFLICT;
   }
 
   // to check satisfiable,
@@ -1355,13 +1938,13 @@ unsigned acdl_domaint::compare_val_lit(valuet &a,
     incremental_solvert::allocate(SSA.ns, true));
   *solver << and_exprt(conjunction(a), not_exprt(b));
   if ((*solver)()==decision_proceduret::D_UNSATISFIABLE) {
-    status=2;
-    return status; // SATISFIED;
+    //status=2;
+    return SATISFIED; // SATISFIED;
   }
   // unknown: neither contradicting nor satisfiable
   else {
-    status=1;
-    return status; // UNKNOWN;
+    //status=1;
+    return UNKNOWN; // UNKNOWN;
   }
 }
 
@@ -1473,7 +2056,7 @@ Function: acdl_domaint::unit_rule
  Purpose:
 
 \*******************************************************************/
-int acdl_domaint::unit_rule(const local_SSAt &SSA, valuet &v, valuet &clause, exprt &unit_lit)
+acdl_domaint::clause_state acdl_domaint::unit_rule(const local_SSAt &SSA, valuet &v, valuet &clause, exprt &unit_lit)
 {
   assert(check_val_consistency(v));
   // Normalize the current partial assignment
@@ -1529,14 +2112,14 @@ int acdl_domaint::unit_rule(const local_SSAt &SSA, valuet &v, valuet &clause, ex
     // for octagons, compare with the whole abstract
     // value since there can be transitive dependencies
     // between the octagonal constraints
-    int status=compare_val_lit(v, clause_exp);
+    clause_statet status=compare_val_lit(v, clause_exp);
 #else
 #ifdef DEBUG
     std::cout << "Comparing relevant expressions " << from_expr(SSA.ns, "", conjunction(relevant_expr)) << " <---> " << from_expr(SSA.ns, "", clause_exp) << std::endl;
 #endif
     // for intervals, we can select relevant
     // variables in the abstract value
-    int status=compare_val_lit(relevant_expr, clause_exp);
+    clause_statet status=compare_val_lit(relevant_expr, clause_exp);
 #endif
 
 #ifdef DEBUG
@@ -2100,6 +2683,66 @@ bool acdl_domaint::is_complete(const valuet &value,
   } // normal case
 }
 
+/*******************************************************************
+
+ Function: acdl_solvert::preprocess_val()
+
+ Inputs:
+
+ Outputs:
+
+ Purpose: Pre-process abstract value to remove (x==N) constraints 
+          by (x<=N) and (x>=N). The trail is not effected by this. 
+
+\*******************************************************************/
+void acdl_domaint::preprocess_val(valuet& val)
+{
+  valuet val_temp;
+  std::vector<exprt> save_exp;
+  //for(valuet::iterator it=val.begin();it!=val.end(); ++it)
+  for(exprt it : val)
+  {
+    exprt m=it;
+    if(it.id()==ID_equal)
+    {
+      save_exp.push_back(m);
+#ifdef DEBUG
+      std::cout << "Preprocessing value " << from_expr(m) << std::endl;
+#endif
+      exprt &lhs=to_binary_relation_expr(m).lhs();
+      exprt &rhs=to_binary_relation_expr(m).rhs();
+      // construct x<=N
+      exprt expl=binary_relation_exprt(lhs, ID_le, rhs);
+      // construct x>=N
+      exprt expg=binary_relation_exprt(lhs, ID_ge, rhs);
+      // [TODO] erasing causes problem 
+      // val.erase(it);
+      // val.insert(it, true_exprt());
+      val_temp.push_back(expl);
+      val_temp.push_back(expg);
+#ifdef DEBUG
+      std::cout << "Preprocessing inserted value " << from_expr(expl) << std::endl;
+      std::cout << "Preprocessing inserted value " << from_expr(expg) << std::endl;
+#endif
+    }
+    else {
+#ifdef DEBUG
+      std::cout << "Donot Preprocess value " << from_expr(m) << std::endl;
+#endif
+      continue;
+    }
+  }
+ 
+  // [TODO] handle if there are multiple equality constraints in val
+  for(std::vector<exprt>::iterator it=save_exp.begin(); it!=save_exp.end(); it++)
+    val.erase(std::remove(val.begin(), val.end(), *it), val.end());
+    //val.erase(std::remove(val.begin(), val.end(), save_exp), val.end());
+#ifdef DEBUG
+  std::cout << "Now push all collected constraints" << std::endl;
+#endif
+  if(val_temp.size() > 0) 
+    val.insert(val.end(), val_temp.begin(), val_temp.end());
+}
 
 /*******************************************************************\
 

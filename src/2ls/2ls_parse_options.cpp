@@ -59,7 +59,10 @@ Author: Daniel Kroening, Peter Schrammel
 #define REMOVE_MULTIPLE_DEREFERENCES 1
 #define IGNORE_RECURSION 1
 #define IGNORE_THREADS 1
-#define EXPLICIT_NONDET_LOCALS 0
+// Required for ACDL since we 
+// create read_only variables 
+// from these nondet statements
+#define EXPLICIT_NONDET_LOCALS 1
 #define FILTER_ASSERTIONS 1
 
 /*******************************************************************\
@@ -1119,10 +1122,13 @@ bool twols_parse_optionst::process_goto_program(
       inline_main(goto_model);
     }
 
+#if 0
+    // This option is not compatible with acdl 
     if(!cmdline.isset("independent-properties"))
     {
       add_assumptions_after_assertions(goto_model);
     }
+#endif
 
 #ifdef FILTER_ASSERTIONS
     filter_assertions(goto_model);
