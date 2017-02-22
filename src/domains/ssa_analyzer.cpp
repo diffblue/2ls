@@ -24,6 +24,7 @@ Author: Peter Schrammel
 #include "strategy_solver_binsearch2.h"
 #include "strategy_solver_binsearch3.h"
 #include "strategy_solver_equality.h"
+#include "max_solver_binsearch.h"
 #include "linrank_domain.h"
 #include "lexlinrank_domain.h"
 #include "ranking_solver_enumeration.h"
@@ -121,6 +122,12 @@ void ssa_analyzert::operator()(
     {
       result=new tpolyhedra_domaint::templ_valuet();
       strategy_solver=new BINSEARCH_SOLVER;
+    }
+    else if(template_generator.options.get_bool_option("max-solver"))
+    {
+      result=new predabs_domaint::templ_valuet();
+      strategy_solver=new max_solver_binsearcht(
+        *static_cast<tpolyhedra_domaint *>(domain), solver, SSA.ns);
     }
     else
       assert(false);
