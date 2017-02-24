@@ -497,7 +497,7 @@ int twols_parse_optionst::doit()
     
     /** TEST */
      summarizer_nonterm test = summarizer_nonterm(options);
-     test.check_nontermination(goto_model);
+     test.check_nontermination_refactor(goto_model);
     /** TEST */
 
     checker->set_message_handler(get_message_handler());

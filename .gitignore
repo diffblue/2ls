@@ -64,3 +64,8 @@ CMakeLists.txt
 *.bak
 nbproject
 
+# QtCreator
+2ls-nonterm.config
+2ls-nonterm.creator*
+2ls-nonterm.files
+2ls-nonterm.includes

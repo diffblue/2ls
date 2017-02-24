@@ -19,7 +19,7 @@ public:
     }
     void check_nontermination(const goto_modelt &);
     
-    void abc(void);
+    void check_nontermination_refactor(const goto_modelt &goto_model);
 private:
 
 };
