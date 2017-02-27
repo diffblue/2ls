@@ -2820,7 +2820,7 @@ Function: acdl_domaint::operator()
 
  Outputs:
 
- Purpose: operator()
+ Purpose: abductive generalization transformer 
 
 \*******************************************************************/
 
@@ -2831,5 +2831,29 @@ void acdl_domaint::operator()(
   const valuet &final_value,
   valuet &generalized_value)
 {
+  //code to construct subdomain for vars
+  template_generator_acdlt template_generator(options, ssa_db, ssa_local_unwinder);
+  template_generator.set_message_handler(get_message_handler());
+  template_generator(SSA, vars);
+  
+  ssa_analyzert ssa_analyzer;
+  std::unique_ptr<incremental_solvert> solver(
+      incremental_solvert::allocate(SSA.ns, true));
+
+  // ... run solver
+  options.set_option("max-solver", true);
+  options.set_option("binsearch-solver", false);
+  ssa_analyzer(*solver, SSA, implies_exprt(conjunction(final_value), statement),
+      template_generator);
+  /*ssa_analyzer(*solver, SSA, implies_exprt(conjunction(final_value), and_exprt(statement,conjunction(init_value))),
+      template_generator);*/
+  options.set_option("max-solver", false);
+  options.set_option("binsearch-solver", true);
+  exprt generalized_val;
+  ssa_analyzer.get_result(generalized_val, template_generator.all_vars());
+  
+  // decompose generalized_value and 
+  // push to generalized_value
+  
   // assert(false);
 }
