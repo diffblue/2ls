@@ -391,6 +391,7 @@ void acdl_analyze_conflict_baset::get_ai_reason(const local_SSAt &SSA,
     reason.push_back(prop_exp);
   }
 #endif
+#if 0
   // **********************************
   // Strategy 1: Collect all decisions
   // **********************************
@@ -404,8 +405,8 @@ void acdl_analyze_conflict_baset::get_ai_reason(const local_SSAt &SSA,
   // now normalize the reason since there may be
   // lot of redundant decisions
   // domain.normalize(reason);
+#endif
 
-#if 0 
   // *******************************************************************
   // Strategy 2: Collect all decisions 
   // upto "dl-1" and for "dl" level, do the following:
@@ -536,7 +537,6 @@ void acdl_analyze_conflict_baset::get_ai_reason(const local_SSAt &SSA,
   std::cout << "The initial reason " 
     << from_expr(conjunction(reason)) << " leads to conflict with the transformer " 
     << from_expr(stmt) << std::endl;
-#endif
 #endif
 
 #if 0
@@ -803,6 +803,8 @@ void acdl_analyze_conflict_baset::find_uip(const local_SSAt &SSA,
 
 #ifdef DEBUG
     std::cout << "Perfoming Abduction" << std::endl;
+    acdl_domaint::valuet reason;
+    get_reason(SSA, stmt, init_value, final_value, reason);
 #endif
 
 #ifdef DEBUG
@@ -1454,4 +1456,84 @@ void acdl_analyze_conflict_baset::dump_section(int begin, int end, acdl_conflict
       d=d+(end_index-begin_index);
     }
   }
+}
+
+/*******************************************************************
+
+ Function: acdl_analyze_conflict_baset::get_reason()
+
+ Inputs:
+
+ Outputs:
+
+ Purpose: 
+
+\*******************************************************************/
+void acdl_analyze_conflict_baset::get_reason(
+    const local_SSAt &SSA,
+    const acdl_domaint::statementt &statement, 
+    const acdl_domaint::valuet &init_value,
+    const acdl_domaint::valuet &final_value,
+    acdl_domaint::valuet &reason)
+{
+  acdl_domaint::valuet v;
+  acdl_domaint::varst stmt_symbols;
+  // get symbols from this meet irreducible
+  find_symbols(statement, stmt_symbols);
+  // Collect the meet irreducibles
+  // in init_value that has same symbols as the 
+  // statement that lead to final_value
+/*  for(acdl_domaint::valuet::const_iterator it=init_value.end();
+      it!=init_value.begin();it--) */
+  for(unsigned i=init_value.size()-1;i>=0;i--)
+  {
+    exprt trail_exp=init_value[i];
+#ifdef DEBUG
+    std::cout << "The meet irreducible checked is " 
+      << from_expr(trail_exp) << std::endl;
+#endif
+    assert(trail_exp != false_exprt());
+    acdl_domaint::varst prop_symbols;
+    // get symbols from this meet irreducible
+    find_symbols(trail_exp, prop_symbols);
+    // check if this symbol is in stmt_symbols
+    for(acdl_domaint::varst::iterator it=prop_symbols.begin(); it!=prop_symbols.end(); it++)
+    {
+      bool is_in=stmt_symbols.find(*it)!=stmt_symbols.end();
+      if(is_in) {
+#ifdef DEBUG
+        std::cout << "Found matching symbols, put " 
+          << from_expr(trail_exp) << " into array" << std::endl;
+#endif
+        // [TODO] Do we normalize the expression before inserting ?
+        v.push_back(trail_exp);
+      }
+    }
+    if(i==0) break;
+  }
+  
+  assert(v.size() > 0);
+  std::cout << "HERE" << std::endl;
+/*#ifdef DEBUG
+  std::cout << "Checking that the relevant value " 
+    << from_expr(conjunction(v)) << "is the reason for the final value when the transformer "
+    << from_expr(statement) << "is applied" << std::endl;
+#endif*/
+
+  std::unique_ptr<incremental_solvert> solver(
+      incremental_solvert::allocate(SSA.ns, true));
+  *solver << implies_exprt(conjunction(final_value), and_exprt(statement,conjunction(v)));
+  decision_proceduret::resultt result=(*solver)();
+  if(result==decision_proceduret::D_SATISFIABLE) {
+#ifdef DEBUG
+    std::cout << "The value " << from_expr(conjunction(v))
+      << "is the reason for deriving " 
+      << from_expr(conjunction(final_value)) << std::endl;
+#endif
+  }
+#ifdef DEBUG
+  std::cout << "The initial reason is " << std::endl;
+  for(unsigned j=0;j<v.size();j++)
+    std::cout << "Reason element:: " << from_expr(v[j]) << std::endl;
+#endif
 }

@@ -61,6 +61,11 @@ public:
   void preprocess_val(acdl_domaint::valuet& val);
   void generalize(acdl_domaint::valuet& val);
   void dump_section(int begin, int end, acdl_conflict_grapht &graph);
+  void get_reason(const local_SSAt &SSA, 
+      const acdl_domaint::statementt &statement, 
+      const acdl_domaint::valuet &init_value,
+      const acdl_domaint::valuet &final_value,
+      acdl_domaint::valuet &reason);
 
 protected:  
   virtual void generalize_conflict(acdl_conflict_grapht &graph) { assert(false); }
