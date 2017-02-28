@@ -41,7 +41,7 @@ class optionst;
   "(string-abstraction)(no-arch)(arch):(floatbv)(fixedbv)" \
   "(round-to-nearest)(round-to-plus-inf)(round-to-minus-inf)(round-to-zero)" \
   "(inline)(inline-main)(inline-partial):" \
-  "(context-sensitive)(termination)" \
+  "(context-sensitive)(termination)(nontermination)" \
   "(lexicographic-ranking-function):(monolithic-ranking-function)" \
   "(max-inner-ranking-iterations):" \
   "(preconditions)(sufficient)" \

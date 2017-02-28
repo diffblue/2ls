@@ -225,8 +225,11 @@ void ssa_var_collectort::collect_variables_loop(const local_SSAt &SSA,bool forwa
 
 #define DEBUG
   #ifdef DEBUG
+        exprt ex = exprt();
+        ex.copy_to_operands(init_expr, init_expr);
         std::cout << "Adding " << from_expr(ns, "", (exprt) pre_var) << " --- " << 
-          from_expr(ns, "", init_expr) << std::endl;        
+          from_expr(ns, "", init_expr) << " --- " << 
+          from_expr(ns, "", ex) << std::endl;        
   #endif
 #undef DEBUG
      }

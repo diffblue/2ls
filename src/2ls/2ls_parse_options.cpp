@@ -51,10 +51,9 @@ Author: Daniel Kroening, Peter Schrammel
 #include "summary_checker_ai.h"
 #include "summary_checker_bmc.h"
 #include "summary_checker_kind.h"
+#include "summary_checker_nonterm.h"
 #include "show.h"
 #include "horn_encoding.h"
-
-#include "summarizer_nonterm.h"
 
 #define UNWIND_GOTO_INTO_LOOP 1
 #define REMOVE_MULTIPLE_DEREFERENCES 1
@@ -266,6 +265,13 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
     options.set_option("inline", true);
     if(!cmdline.isset("unwind"))
       options.set_option("unwind", UINT_MAX);
+  }
+
+  // compute singleton recurrence set - simple nontermination
+  if(cmdline.isset("nontermination"))
+  {
+    options.set_option("nontermination", true);
+    options.set_option("std-invariants", true); //?
   }
 
   // do incremental bmc
@@ -494,11 +500,9 @@ int twols_parse_optionst::doit()
        options.get_bool_option("incremental-bmc"))
       checker=std::unique_ptr<summary_checker_baset>(
         new summary_checker_bmct(options));
-    
-    /** TEST */
-     summarizer_nonterm test = summarizer_nonterm(options);
-     test.check_nontermination_refactor(goto_model);
-    /** TEST */
+    if(options.get_bool_option("nontermination"))
+      checker=std::unique_ptr<summary_checker_baset>(
+        new summary_checker_nontermt(options));
 
     checker->set_message_handler(get_message_handler());
     checker->simplify=!cmdline.isset("no-simplify");

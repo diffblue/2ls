@@ -9,17 +9,16 @@ Author: Stefan Marticek
 #ifndef SUMMARIZER_NONTERM_H
 #define SUMMARIZER_NONTERM_H
 
-#include "../2ls/summary_checker_base.h"
+#include "summary_checker_base.h"
 
-class summarizer_nonterm : public summary_checker_baset {
+class summary_checker_nontermt : public summary_checker_baset {
 public:
-    inline summarizer_nonterm(optionst &_options):
+    inline summary_checker_nontermt(optionst &_options):
         summary_checker_baset(_options)
     {
     }
-    void check_nontermination(const goto_modelt &);
-    
-    void check_nontermination_refactor(const goto_modelt &goto_model);
+    virtual resultt operator()(const goto_modelt &);
+
 private:
 
 };
