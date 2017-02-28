@@ -187,17 +187,19 @@ Function: ssa_var_collectort::collect_variables_loop
 
 //#include <iostream>
 
-void ssa_var_collectort::collect_variables_loop(const local_SSAt &SSA,bool forward, const namespacet &ns)
+ssa_var_collectort::func_loop_varst ssa_var_collectort::collect_variables_loop(
+    const local_SSAt &SSA,bool forward, const namespacet &ns)
 {
   // used for renaming map
   var_listt pre_state_vars, post_state_vars;
-
+  func_loop_varst all_loops_vars;
   // add loop variables
   for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin(); 
       n_it != SSA.nodes.end(); n_it++)
   {
     if(n_it->loophead != SSA.nodes.end()) //we've found a loop
     {
+      loop_varst loop_vars;
       exprt pre_guard, post_guard;
       get_pre_post_guards(SSA,n_it,pre_guard, post_guard);
 
@@ -214,26 +216,33 @@ void ssa_var_collectort::collect_variables_loop(const local_SSAt &SSA,bool forwa
         ssa_domaint::phi_nodest::const_iterator p_it=
         phi_nodes.find(o_it->get_identifier());
 
-	if(p_it==phi_nodes.end()) continue; // object not modified in this loop
+        if(p_it==phi_nodes.end()) continue; // object not modified in this loop
 
         symbol_exprt pre_var;
-	get_pre_var(SSA,o_it,n_it,pre_var);
+        get_pre_var(SSA,o_it,n_it,pre_var);
+
         exprt init_expr;
-	get_init_expr(SSA,o_it,n_it,init_expr);
+        get_init_expr(SSA,o_it,n_it,init_expr);
         add_var(pre_var,pre_guard,post_guard,domaint::LOOP,var_specs);
-        
+
+        exprt phi_var;
+        phi_var=SSA.name(*o_it, local_SSAt::PHI, n_it->loophead->location);
+
+        loop_vars.push_back(loop_vart(
+                              init_expr, phi_var, n_it->loophead->location));
 
 #define DEBUG
   #ifdef DEBUG
-        exprt ex = exprt();
-        ex.copy_to_operands(init_expr, init_expr);
-        std::cout << "Adding " << from_expr(ns, "", (exprt) pre_var) << " --- " << 
-          from_expr(ns, "", init_expr) << " --- " << 
-          from_expr(ns, "", ex) << std::endl;        
+        std::cout << "Adding " << from_expr(ns, "", (exprt) pre_var) << " --- " <<
+        from_expr(ns, "", init_expr) << " --- " <<
+        from_expr(ns, "", phi_var) << std::endl;
   #endif
 #undef DEBUG
-     }
+      }
+
+      all_loops_vars.push_back(loop_vars);
     } 
   }
+  return all_loops_vars;
 }
 
