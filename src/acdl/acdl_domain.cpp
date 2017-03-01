@@ -2843,10 +2843,10 @@ void acdl_domaint::operator()(
   // ... run solver
   options.set_option("max-solver", true);
   options.set_option("binsearch-solver", false);
-  ssa_analyzer(*solver, SSA, implies_exprt(conjunction(final_value), statement),
-      template_generator);
-  /*ssa_analyzer(*solver, SSA, implies_exprt(conjunction(final_value), and_exprt(statement,conjunction(init_value))),
+  /*ssa_analyzer(*solver, SSA, implies_exprt(conjunction(final_value), statement),
       template_generator);*/
+  ssa_analyzer(*solver, SSA, and_exprt(not_exprt(conjunction(final_value)), statement),
+      template_generator);
   options.set_option("max-solver", false);
   options.set_option("binsearch-solver", true);
   exprt generalized_val;
