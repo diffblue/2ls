@@ -317,6 +317,7 @@ void acdl_analyze_conflict_baset::cancel_once(const local_SSAt &SSA, acdl_confli
   {
     graph.val_trail.pop_back();
     graph.prop_trail.pop_back();
+    graph.reason_trail.pop_back();
   }
 
   graph.control_trail.pop_back();
@@ -1545,6 +1546,7 @@ void acdl_analyze_conflict_baset::get_reason(
     << from_expr(statement) << "is applied" << std::endl;
 #endif
 
+#if 0
   std::unique_ptr<incremental_solvert> solver(
       incremental_solvert::allocate(SSA.ns, true));
   *solver << implies_exprt(and_exprt(statement,conjunction(v)), conjunction(final_value));
@@ -1556,7 +1558,17 @@ void acdl_analyze_conflict_baset::get_reason(
       << from_expr(conjunction(final_value)) << std::endl;
 #endif
   }
+#endif 
 
+   exprt exp=implies_exprt(and_exprt(statement,conjunction(v)), conjunction(final_value));
+   bool state=domain.check_val(exp);
+   // state must be SAT
+   assert(state==false);
+#ifdef DEBUG
+    std::cout << "The value " << from_expr(conjunction(v))
+      << "is the reason for deriving " 
+      << from_expr(conjunction(final_value)) << std::endl;
+#endif
 /*
 #ifdef DEBUG
   std::cout << "Choose minimal subset in relevant value as reason" << std::endl;
@@ -1567,7 +1579,7 @@ void acdl_analyze_conflict_baset::get_reason(
   reason.swap(v);
 
 #ifdef DEBUG
-  std::cout << "The initial reason is " << std::endl;
+  std::cout << "The conflict reason is " << std::endl;
   for(unsigned j=0;j<reason.size();j++)
     std::cout << "Reason element:: " << from_expr(reason[j]) << std::endl;
 #endif
