@@ -15,7 +15,7 @@ Author: Stefan Marticek
 #include <util/prefix.h>
 
 #include <ssa/simplify_ssa.h>
-#include <ssa/ssa_var_collector.h>
+#include <2ls/show.h>
 
 property_checkert::resultt summary_checker_nontermt::operator()(
   const goto_modelt &goto_model)
@@ -30,7 +30,7 @@ property_checkert::resultt summary_checker_nontermt::operator()(
   ssa_unwinder.init(false, false);  //is_kinduction, is_bmc - HOW TO SET IT?
   //--k-induction, --incremental-bmc, unwinding?
   ssa_unwinder.init_localunwinders();
-  ssa_unwinder.unwind_all(0);
+  ssa_unwinder.unwind_all(10);
 
   //unsigned max_unwind = 10;
   for (auto f_ssa_it=funcs.begin(); f_ssa_it!=funcs.end(); ++f_ssa_it)
@@ -47,6 +47,7 @@ property_checkert::resultt summary_checker_nontermt::operator()(
 
     std::cout << "\n\n**********>> " << id2string(f_ssa_it->first) << " <<**************\n\n";
 
+    //std::cout << SSA;
     SSA.output(std::cout);
   }
 
@@ -55,6 +56,19 @@ property_checkert::resultt summary_checker_nontermt::operator()(
   const namespacet ns(goto_model.symbol_table);
 
   SSA_functions(goto_model, ns);
+
+  // loop_map needs to be initialized somewhere
+  // works only with inline argument which is automatically set with nontermination
+  unwindable_local_SSAt &SSA=*(ssa_db.functions().begin()->second);
+  for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
+    n_it != SSA.nodes.end(); n_it++)
+  {
+    if(n_it->loophead != SSA.nodes.end())
+    {
+      loop_map[n_it->loophead->location->location_number]=
+          var_collectort();
+    }
+  }
 
   ssa_unwinder.init(false, true);
 
@@ -66,18 +80,18 @@ property_checkert::resultt summary_checker_nontermt::operator()(
   for(unsigned unwind=0; unwind<=max_unwind; unwind++)
   {
     status() << "Unwinding (k=" << unwind << ")" << messaget::eom;
-    summary_db.mark_recompute_all();
     ssa_unwinder.unwind_all(unwind);
     result=summary_checker_baset::check_properties();
+    //this is turned - look at it later after getting better result form cover goals
     if(result==property_checkert::PASS)
     {
-      status() << "incremental BMC proof found after "
+      status() << "Unable to proof nontermination after "
          << unwind << " unwinding(s)" << messaget::eom;
       break;
     }
     else if(result==property_checkert::FAIL)
     {
-      status() << "incremental BMC counterexample found after "
+      status() << "Nonterminating program execution proved after "
          << unwind << " unwinding(s)" << messaget::eom;
       break;
     }
@@ -86,27 +100,17 @@ property_checkert::resultt summary_checker_nontermt::operator()(
   return result;
 }
 
-
-/*******************************************************************\
-
-Function: summary_checker_baset::check_properties
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void summary_checker_nontermt::check_properties(
   const ssa_dbt::functionst::const_iterator f_it)
 {
   unwindable_local_SSAt &SSA=*f_it->second;
 
+  ssa_local_unwindert &ssa_local_unwinder=ssa_unwinder.get(f_it->first);
+
   bool all_properties=options.get_bool_option("all-properties");
 
   SSA.output_verbose(debug()); debug() << eom;
+  SSA.output_verbose(std::cout);
 
   // incremental version
 
@@ -120,23 +124,16 @@ void summary_checker_nontermt::check_properties(
 
   solver.new_context();
 
-  exprt enabling_expr=SSA.get_enabling_exprs();
-  solver << enabling_expr;
-
   // freeze loop head selects
   exprt::operandst loophead_selects=
     get_loophead_selects(f_it->first, SSA, *solver.solver);
-  // check whether loops have been fully unwound
-  exprt::operandst loop_continues=
-    get_loop_continues(f_it->first, SSA, *solver.solver);
-  bool fully_unwound=
-    is_fully_unwound(loop_continues, loophead_selects, solver);
-  status() << "Loops " << (fully_unwound ? "" : "not ")
-           << "fully unwound" << eom;
+
+  exprt enabling_expr=SSA.get_enabling_exprs();
+  solver << enabling_expr;
 
   cover_goals_extt cover_goals(
     SSA, solver, loophead_selects, property_map,
-    !fully_unwound && options.get_bool_option("spurious-check"),
+    false,
     all_properties,
     options.get_bool_option("show-trace") ||
     options.get_option("graphml-witness")!="" ||
@@ -146,31 +143,81 @@ void summary_checker_nontermt::check_properties(
   debug() << "(C) " << from_expr(SSA.ns, "", enabling_expr) << eom;
 #endif
 
-  const goto_programt &goto_program=SSA.goto_function.body;
+  property_map.clear();
 
-  for(goto_programt::instructionst::const_iterator
-        i_it=goto_program.instructions.begin();
-      i_it!=goto_program.instructions.end();
-      i_it++)
+  exprt::operandst ls_guards;
+
+  ssa_local_unwinder.compute_loop_continuation_conditions();
+
+  for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
+        n_it != SSA.nodes.end(); n_it++)
   {
-    if(!i_it->is_assert())
-      continue;
+    if(n_it->loophead != SSA.nodes.end()) //we've found a loop
+    {
+      //const source_locationt &location=n_it->loophead->location->source_location;
+      irep_idt property_id=irep_idt(n_it->loophead->location->location_number,
+                                    0);
+
+      exprt lhguard = SSA.guard_symbol(n_it->loophead->location);
+      ssa_local_unwinder.unwinder_rename(to_symbol_expr(lhguard),*n_it,true);
+      exprt lsguard = SSA.name(SSA.guard_symbol(),
+             local_SSAt::LOOP_SELECT, n_it->location);
+      ssa_local_unwinder.unwinder_rename(to_symbol_expr(lsguard),*n_it,true);
+
+      const ssa_domaint::phi_nodest &phi_nodes=
+        SSA.ssa_analysis[n_it->loophead->location].phi_nodes;
+
+      loop_varst loop_vars(lhguard);
+
+      for(local_SSAt::objectst::const_iterator
+          o_it=SSA.ssa_objects.objects.begin();
+          o_it!=SSA.ssa_objects.objects.end();
+          o_it++)
+      {
+        ssa_domaint::phi_nodest::const_iterator p_it=
+        phi_nodes.find(o_it->get_identifier());
+        if(p_it==phi_nodes.end()) continue; // object not modified in this loop
+
+        symbol_exprt post_var=SSA.read_rhs(*o_it, n_it->location);
+        ssa_local_unwinder.unwinder_rename(post_var,*n_it,false);
+
+        symbol_exprt phi_var;
+        phi_var=SSA.name(*o_it, local_SSAt::PHI, n_it->loophead->location);
+        ssa_local_unwinder.unwinder_rename(phi_var,*n_it->loophead,true);
+
+        loop_vars.loop_vars_eq.push_back(equal_exprt(post_var, phi_var));
+      }
+
+      unsigned loop_idx=
+          n_it->loophead->location->location_number;
+      loop_map[loop_idx].push_back(loop_vars);
+
+      exprt::operandst loop_check_operands;
+
+      for (var_collectort::iterator it=loop_map[loop_idx].begin();
+           it != loop_map[loop_idx].end();
+           ++it)
+      {
+        loop_check_operands.push_back(and_exprt(and_exprt(it->loop_guard,
+                                             conjunction(it->loop_vars_eq),
+              ssa_local_unwinder.get_loop_countinuation_conditions(loop_idx))));
+        std::cout << "Loop id: " << loop_idx << std::endl;
+        std::cout << "gueard: " << from_expr(SSA.ns, "", it->loop_guard) << std::endl;
+        std::cout << "vars: " << from_expr(SSA.ns, "", ssa_local_unwinder.get_loop_countinuation_conditions(loop_idx)) << std::endl;
+      }
+
+      property_map[property_id].location=n_it->loophead->location;
+      property_map[property_id].result=UNKNOWN;
+      cover_goals.goal_map[property_id].conjuncts.push_back(
+            disjunction(loop_check_operands));
+      ls_guards.push_back(not_exprt(lsguard));
+    }
   }
 
-  ssa_local_unwindert &ssa_lu=ssa_unwinder.get(f_it->first);
-  ssa_var_collectort ssa_vc=ssa_var_collectort(options, ssa_lu);
-
-  std::cout << "\n\n**********>> " << id2string(f_it->first) << " <<**************\n\n";
-
-  ssa_vc.collect_variables_loop(SSA, true, SSA.ns);
-
-//  std::cout << "\n\n**********>> " << id2string(f_it->first) << " <<**************\n\n";
-
-
-#if 0
-        std::cout << "property: " << from_expr(SSA.ns, "", property)
-                  << std::endl;
-#endif
+  /*exprt::operandst in_loop_conds;
+  ssa_local_unwinder.loop_continuation_conditions(in_loop_conds);
+  solver << conjunction(in_loop_conds);*/
+  solver << conjunction(ls_guards);
 
   for(cover_goals_extt::goal_mapt::const_iterator
         it=cover_goals.goal_map.begin();
@@ -179,7 +226,23 @@ void summary_checker_nontermt::check_properties(
   {
     // Our goal is to falsify a property.
     // The following is TRUE if the conjunction is empty.
-    literalt p=!solver.convert(conjunction(it->second.conjuncts));
+    /*solver << conjunction(it->second.conjuncts);
+    switch(solver())
+    {
+    case decision_proceduret::D_UNSATISFIABLE: //
+        std::cout << "Unsat++++++++++++++++" << std::endl;
+      break;
+
+    case decision_proceduret::D_SATISFIABLE:
+      std::cout << "Sat++++++++++++++++" << std::endl;
+      break;
+
+    default:
+      error() << "decision procedure has failed" << eom;
+      return;
+    }*/
+
+    literalt p=solver.convert(conjunction(it->second.conjuncts));
     cover_goals.add(p);
   }
 
@@ -198,14 +261,14 @@ void summary_checker_nontermt::check_properties(
         it!=cover_goals.goal_map.end();
         it++, g_it++)
     {
-      if(!g_it->covered)
-        property_map[it->first].result=PASS;
+      //if(!g_it->covered)
+        //property_map[it->first].result=PASS;
     }
   }
 
   solver.pop_context();
 
-  debug() << "** " << cover_goals.number_covered()
+  std::cout << "** " << cover_goals.number_covered()
           << " of " << cover_goals.size() << " failed ("
           << cover_goals.iterations() << " iterations)" << eom;
 }

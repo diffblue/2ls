@@ -689,14 +689,38 @@ Function: ssa_local_unwindert::loop_continuation_conditions
 \*******************************************************************/
 
 void ssa_local_unwindert::loop_continuation_conditions(
-  exprt::operandst& loop_cont) const
+  exprt::operandst& loop_cont)
 {
   SSA.current_unwindings.clear();
   for(loop_mapt::const_iterator it=loops.begin(); it!=loops.end(); ++it)
   {
     if(!it->second.is_root)
       continue;
-    loop_continuation_conditions(it->second, loop_cont); // recursive
+    loop_continuation_conditions(it, loop_cont); // recursive
+    assert(SSA.current_unwindings.empty());
+  }
+}
+
+/*******************************************************************\
+
+Function: ssa_local_unwindert::loop_continuation_conditions
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: computes loop continuation conditions for all loops in this function
+
+\*******************************************************************/
+
+void ssa_local_unwindert::compute_loop_continuation_conditions(void)
+{
+  SSA.current_unwindings.clear();
+  for(loop_mapt::const_iterator it=loops.begin(); it!=loops.end(); ++it)
+  {
+    if(!it->second.is_root)
+      continue;
+    loop_continuation_conditions(it, loop_expr_map[it->first]); // recursive
     assert(SSA.current_unwindings.empty());
   }
 }
@@ -733,19 +757,26 @@ Function: ssa_local_unwindert::loop_continuation_conditions
 \*******************************************************************/
 
 void ssa_local_unwindert::loop_continuation_conditions(
-  const loopt& loop, exprt::operandst& loop_cont) const
+  const loop_mapt::const_iterator it, exprt::operandst& loop_cont)
 {
   SSA.increment_unwindings(1);
-  loop_cont.push_back(get_continuation_condition(loop)); // %0
-  for(long i=0; i<=loop.current_unwinding; ++i)
+  
+  loop_expr_map[it->first].push_back(get_continuation_condition(it->second));
+  for(long i=0; i<=it->second.current_unwinding; ++i)
   {
     // recurse into child loops
-    for(const auto &l : loop.loop_nodes)
+    
+    for(const auto &l : it->second.loop_nodes)
     {
-      loop_continuation_conditions(loops.at(l), loop_cont);
+      loop_continuation_conditions(loops.find(l), loop_expr_map[it->first]);
     }
     SSA.increment_unwindings(0);
   }
+  //loop_cont.push_back(loop_expr_map[it->first]); // %0
+  if (loop_expr_map[it->first] != loop_cont)
+    loop_cont.insert(loop_cont.end(),
+          loop_expr_map[it->first].begin(),
+          loop_expr_map[it->first].end());
   SSA.increment_unwindings(-1);
 }
 

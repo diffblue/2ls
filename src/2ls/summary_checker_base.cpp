@@ -346,7 +346,7 @@ void summary_checker_baset::check_properties(
 
   solver.pop_context();
 
-  debug() << "** " << cover_goals.number_covered()
+  std::cout << "** " << cover_goals.number_covered()
           << " of " << cover_goals.size() << " failed ("
           << cover_goals.iterations() << " iterations)" << eom;
 }
@@ -499,7 +499,7 @@ exprt::operandst summary_checker_baset::get_loop_continues(
     }
   }
 
-#if 0
+#if 1
   std::cout << "loophead_continues: "
             << from_expr(SSA.ns, "", disjunction(loop_continues)) << std::endl;
 #endif

@@ -35,7 +35,7 @@ void ssa_var_collectort::add_var(const domaint::vart &var,
     aux_expr = and_exprt(
       implies_exprt(and_exprt(post_guard, not_exprt(init_guard)),
 			      equal_exprt(aux_var,post_var)),
-      implies_exprt(init_guard,equal_exprt(aux_var,init_renaming_map[var])));
+			implies_exprt(init_guard,equal_exprt(aux_var,init_renaming_map[var])));
     post_guard = or_exprt(post_guard,init_guard);
   }
   if(var.type().id()!=ID_array)
@@ -71,43 +71,6 @@ void ssa_var_collectort::add_var(const domaint::vart &var,
 
 /*******************************************************************\
 
-Function: template_generator_baset::get_pre_post_guards
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void ssa_var_collectort::get_pre_post_guards(const local_SSAt &SSA,
-			 local_SSAt::nodest::const_iterator n_it,
-			 exprt &pre_guard, exprt &post_guard)
-{
-#if 0
-  std::cout << "post-location: " 
-	    << n_it->location->location_number << std::endl;
-  assert(n_it->loophead != SSA.nodes.end());
-  std::cout << "pre-location: " 
-	    << n_it->loophead->location->location_number << std::endl;
-#endif
-  exprt lhguard = SSA.guard_symbol(n_it->loophead->location);
-  ssa_local_unwinder.unwinder_rename(to_symbol_expr(lhguard),*n_it,true);
-  exprt lsguard = SSA.name(SSA.guard_symbol(), 
-			   local_SSAt::LOOP_SELECT, n_it->location);
-  ssa_local_unwinder.unwinder_rename(to_symbol_expr(lsguard),*n_it,true);
-  pre_guard = and_exprt(lhguard,lsguard);
-
-  exprt pguard = SSA.guard_symbol(n_it->location);
-  ssa_local_unwinder.unwinder_rename(to_symbol_expr(pguard),*n_it,false);
-  exprt pcond = SSA.cond_symbol(n_it->location);
-  ssa_local_unwinder.unwinder_rename(to_symbol_expr(pcond),*n_it,false);
-  post_guard = and_exprt(pguard,pcond);
-}
-
-/*******************************************************************\
-
 Function: template_generator_baset::get_pre_var
 
   Inputs:
@@ -121,17 +84,18 @@ Function: template_generator_baset::get_pre_var
 void ssa_var_collectort::get_pre_var(const local_SSAt &SSA,
   		         local_SSAt::objectst::const_iterator o_it,
    		         local_SSAt::nodest::const_iterator n_it,
-			 symbol_exprt &pre_var)
+       symbol_exprt &pre_var)
 {
   pre_var = SSA.name(*o_it, local_SSAt::LOOP_BACK, n_it->location);
   ssa_local_unwinder.unwinder_rename(pre_var,*n_it,true);
 
   symbol_exprt post_var = SSA.read_rhs(*o_it, n_it->location);
   ssa_local_unwinder.unwinder_rename(post_var,*n_it,false);
+
   post_renaming_map[pre_var] = post_var;
 
   rename_aux_post(post_var);
-  aux_renaming_map[pre_var]=post_var;    
+  aux_renaming_map[pre_var]=post_var;
 }
 
 /*******************************************************************\
@@ -150,11 +114,11 @@ Function: template_generator_baset::get_init_expr
 void ssa_var_collectort::get_init_expr(const local_SSAt &SSA,
   		         local_SSAt::objectst::const_iterator o_it,
    		         local_SSAt::nodest::const_iterator n_it,
-			 exprt &init_expr)
+       exprt &init_expr)
 {
   symbol_exprt phi_var = SSA.name(*o_it, local_SSAt::PHI, 
 				  n_it->loophead->location);
-  ssa_local_unwinder.unwinder_rename(phi_var,*n_it->loophead,true);
+	ssa_local_unwinder.unwinder_rename(phi_var,*n_it->loophead,true);
   for (local_SSAt::nodet::equalitiest::const_iterator e_it =
 	 n_it->loophead->equalities.begin(); 
        e_it != n_it->loophead->equalities.end(); e_it++) 
@@ -187,22 +151,26 @@ Function: ssa_var_collectort::collect_variables_loop
 
 //#include <iostream>
 
-ssa_var_collectort::func_loop_varst ssa_var_collectort::collect_variables_loop(
-    const local_SSAt &SSA,bool forward, const namespacet &ns)
+void ssa_var_collectort::collect_variables_loop(
+    const local_SSAt &SSA,
+    bool forward
+    )
 {
   // used for renaming map
   var_listt pre_state_vars, post_state_vars;
-  func_loop_varst all_loops_vars;
   // add loop variables
   for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin(); 
       n_it != SSA.nodes.end(); n_it++)
   {
     if(n_it->loophead != SSA.nodes.end()) //we've found a loop
     {
-      loop_varst loop_vars;
-      exprt pre_guard, post_guard;
-      get_pre_post_guards(SSA,n_it,pre_guard, post_guard);
-
+      exprt lhguard = SSA.guard_symbol(n_it->loophead->location);
+      ssa_local_unwinder.unwinder_rename(to_symbol_expr(lhguard),*n_it,true);
+      exprt lsguard = SSA.name(SSA.guard_symbol(),
+             local_SSAt::LOOP_SELECT, n_it->location);
+      ssa_local_unwinder.unwinder_rename(to_symbol_expr(lsguard),*n_it,true);
+      //pre_guard = and_exprt(lhguard,not_exprt(lsguard));
+      //const source_locationt &location=n_it->loophead->location->source_location;
       const ssa_domaint::phi_nodest &phi_nodes = 
         SSA.ssa_analysis[n_it->loophead->location].phi_nodes;
       
@@ -215,7 +183,6 @@ ssa_var_collectort::func_loop_varst ssa_var_collectort::collect_variables_loop(
       {
         ssa_domaint::phi_nodest::const_iterator p_it=
         phi_nodes.find(o_it->get_identifier());
-
         if(p_it==phi_nodes.end()) continue; // object not modified in this loop
 
         symbol_exprt pre_var;
@@ -223,26 +190,39 @@ ssa_var_collectort::func_loop_varst ssa_var_collectort::collect_variables_loop(
 
         exprt init_expr;
         get_init_expr(SSA,o_it,n_it,init_expr);
-        add_var(pre_var,pre_guard,post_guard,domaint::LOOP,var_specs);
+        //add_var(pre_var,pre_guard,post_guard,domaint::LOOP,var_specs);
 
-        exprt phi_var;
+        symbol_exprt phi_var;
         phi_var=SSA.name(*o_it, local_SSAt::PHI, n_it->loophead->location);
-
-        loop_vars.push_back(loop_vart(
-                              init_expr, phi_var, n_it->loophead->location));
+        ssa_local_unwinder.unwinder_rename(phi_var,*n_it->loophead,true);
 
 #define DEBUG
   #ifdef DEBUG
-        std::cout << "Adding " << from_expr(ns, "", (exprt) pre_var) << " --- " <<
-        from_expr(ns, "", init_expr) << " --- " <<
-        from_expr(ns, "", phi_var) << std::endl;
+
+        std::cout << "To solver "
+                  << std::endl;
+
+        std::cout << "Adding " << from_expr(SSA.ns, "", (exprt) pre_var) << " --- "
+                  << from_expr(SSA.ns, "", phi_var) << " --- "
+                  << from_expr(SSA.ns, "", post_renaming_map[pre_var]) << " --- "
+                  << std::endl;
   #endif
 #undef DEBUG
+
+        exprt ex;
+        ex = not_exprt(equal_exprt(post_renaming_map[pre_var], phi_var));
+        //solver << or_exprt(not_exprt(pre_guard),
+        //                   not_exprt(equal_exprt(post_renaming_map[pre_var], phi_var)));
+        //solver << pre_guard;
+        //solver << and_exprt(pre_guard, not_exprt(pre_guard));
+        //solver << pre_guard;
+        //solver << not_exprt(equal_exprt(post_renaming_map[pre_var], phi_var));
+        //solver();
+        //std::cout << "solver get: " << solver.l_get(lit).is_true();
       }
 
-      all_loops_vars.push_back(loop_vars);
     } 
   }
-  return all_loops_vars;
+  return;
 }
 

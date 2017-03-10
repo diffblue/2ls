@@ -1646,6 +1646,14 @@ incremental_solvert &operator<<(
         e_it!=n_it->equalities.end();
         e_it++)
     {
+    //std::cerr << "\n\n+++++++++++>> " << "Enabling" << " <<+++++++++++++++\n\n";
+    /*#define DEBUG
+  #ifdef DEBUG
+        std::cout << n_it->enabling_expr.is_true() <<" " << from_expr(src.ns, "", n_it->enabling_expr) << " => "
+                  << from_expr(src.ns, "", *e_it) << std::endl;
+  #endif
+#undef DEBUG*/
+    //std::cerr << "\n\n+++++++++++>> " << "Enabling" << " <<+++++++++++++++\n\n";
       if(!n_it->enabling_expr.is_true())
         dest << implies_exprt(n_it->enabling_expr, *e_it);
       else

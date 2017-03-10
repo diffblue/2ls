@@ -271,7 +271,10 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
   if(cmdline.isset("nontermination"))
   {
     options.set_option("nontermination", true);
-    options.set_option("std-invariants", true); //?
+    //options.set_option("std-invariants", true); - no invariants used
+    options.set_option("inline", true);
+    if(!cmdline.isset("unwind"))
+      options.set_option("unwind", UINT_MAX);
   }
 
   // do incremental bmc

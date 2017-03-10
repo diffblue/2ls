@@ -44,7 +44,12 @@ public:
 
   // TODO: this should be loop specific in future,
   // maybe move to unwindable_local_ssa as it is not really unwinder related
-  void loop_continuation_conditions(exprt::operandst& loop_cont) const;
+  void loop_continuation_conditions(exprt::operandst& loop_cont);
+  void compute_loop_continuation_conditions(void);
+  exprt get_loop_countinuation_conditions(unsigned location_number)
+  {
+      return conjunction(loop_expr_map[location_number]);
+  }
 
 #if 0
   // TODO: these two should be possible with unwindable_local_ssa facilities
@@ -100,7 +105,9 @@ protected:
   // use location numbers as indices, as target addresses make
   //  things non-deterministic
   typedef std::map<unsigned, loopt> loop_mapt;
+  typedef std::map<unsigned, exprt::operandst> loop_cont_expr_mapt;
   loop_mapt loops;
+  loop_cont_expr_mapt loop_expr_map;
 
   void build_loop_tree();
   void build_pre_post_map();
@@ -109,8 +116,8 @@ protected:
   void unwind(loopt &loop, unsigned k, bool is_new_parent);
 
   exprt get_continuation_condition(const loopt& loop) const;
-  void loop_continuation_conditions(
-    const loopt& loop, exprt::operandst &loop_cont) const;
+  void loop_continuation_conditions(const loop_mapt::const_iterator it,
+    exprt::operandst& loop_cont);
 
   void add_loop_body(loopt &loop);
   void add_assertions(loopt &loop, bool is_last);

@@ -19,7 +19,7 @@ Author: Peter Schrammel
 #include "domain.h"
 #include "util.h"
 
-// #define DISPLAY_FORMULA
+ #define DISPLAY_FORMULA
 // #define NO_ARITH_REFINEMENT
 // #define NON_INCREMENTAL // (experimental)
 

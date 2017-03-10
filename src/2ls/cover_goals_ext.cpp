@@ -79,6 +79,7 @@ void cover_goals_extt::constraint()
       disjuncts.push_back(literal_exprt(g_it->condition));
 
   // this is 'false' if there are no disjuncts
+
   solver << disjunction(disjuncts);
 }
 
@@ -137,11 +138,13 @@ void cover_goals_extt::operator()()
 
     switch(dec_result)
     {
-    case decision_proceduret::D_UNSATISFIABLE: // DONE
+    case decision_proceduret::D_UNSATISFIABLE: // 
+        std::cout << "Unsat++++++++++++++++" << std::endl;
       break;
 
     case decision_proceduret::D_SATISFIABLE:
       // mark the goals we got
+        std::cout << "Sat++++++++++++++++" << std::endl;
       mark();
 
       // notify
@@ -149,6 +152,7 @@ void cover_goals_extt::operator()()
 
       if(!all_properties)
         return; // exit on first failure if requested
+      return; //nontermination
       break;
 
     default:

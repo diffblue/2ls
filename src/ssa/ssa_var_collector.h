@@ -10,6 +10,7 @@ Author: Peter Schrammel, Stefan Marticek
 #define CPROVER_SSA_VAR_COLLECTOR_H
 
 #include <util/options.h>
+#include <util/source_location.h>
 
 #include "local_ssa.h"
 #include "ssa_unwinder.h"
@@ -21,23 +22,9 @@ class ssa_var_collectort
 public:
 
   typedef goto_programt::const_targett locationt;
-
-  typedef struct loop_vart
-  {
-    loop_vart(exprt _init_expr, exprt _phi_expr, locationt _location)
-      : init_expr(_init_expr), phi_expr(_phi_expr), location(_location)
-    {
-    }
-    exprt init_expr;
-    exprt phi_expr;
-    locationt location;
-  } loop_vart;
-
-  typedef std::vector<loop_vart> loop_varst;
-  typedef std::vector<loop_varst> func_loop_varst;
     
-  virtual func_loop_varst collect_variables_loop(const local_SSAt &SSA,
-                       bool forward, const namespacet &ns);
+  void collect_variables_loop(const local_SSAt &SSA,
+                       bool forward);
 
   typedef strategy_solver_baset::var_listt var_listt;
 
