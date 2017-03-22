@@ -139,12 +139,12 @@ void cover_goals_extt::operator()()
     switch(dec_result)
     {
     case decision_proceduret::D_UNSATISFIABLE: // 
-        std::cout << "Unsat++++++++++++++++" << std::endl;
+        //std::cout << "Unsat++++++++++++++++" << std::endl;
       break;
 
     case decision_proceduret::D_SATISFIABLE:
       // mark the goals we got
-        std::cout << "Sat++++++++++++++++" << std::endl;
+       // std::cout << "Sat++++++++++++++++" << std::endl;
       mark();
 
       // notify
@@ -152,7 +152,6 @@ void cover_goals_extt::operator()()
 
       if(!all_properties)
         return; // exit on first failure if requested
-      return; //nontermination
       break;
 
     default:

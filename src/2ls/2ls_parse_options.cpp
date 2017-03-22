@@ -1029,7 +1029,7 @@ bool twols_parse_optionst::process_goto_program(
   {
     status() << "Function Pointer Removal" << eom;
     remove_function_pointers(
-      goto_model, cmdline.isset("pointer-check"));
+      goto_model, cmdline.isset("pointer-checkbash at least one process returns"));
 
     // do partial inlining
     if(options.get_bool_option("inline-partial"))
@@ -1366,8 +1366,10 @@ void twols_parse_optionst::output_graphml_cex(
 
     const namespacet ns(goto_model.symbol_table);
     const std::string graphml=options.get_option("graphml-witness");
+    
     if(!graphml.empty())
     {
+        
       graphml_witnesst graphml_witness(ns);
       graphml_witness(p.second.error_trace);
 

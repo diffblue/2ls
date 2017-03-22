@@ -29,16 +29,13 @@ public:
 protected:
   typedef struct loop_varst
   {
-    loop_varst(exprt _loop_guard)
-      : loop_guard(_loop_guard)
-    {
-    }
-    exprt loop_guard;
-    exprt::operandst loop_vars_eq;
+    source_locationt source_location;
+    exprt::operandst guards;
+    exprt::operandst vars;
+    exprt::operandst loop_exits;
   } loop_varst;
 
-  typedef std::vector<loop_varst> var_collectort;
-  typedef std::map<unsigned, var_collectort> loops_collectort;
+  typedef std::map<unsigned, loop_varst> loops_collectort;
 
   loops_collectort loop_map;
 };

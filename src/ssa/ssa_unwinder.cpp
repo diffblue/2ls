@@ -1,9 +1,6 @@
 /*******************************************************************\
-
 Module: SSA Unwinder
-
 Author: Peter Schrammel, Saurabh Joshi
-
 \*******************************************************************/
 
 // #define DEBUG
@@ -13,15 +10,10 @@ Author: Peter Schrammel, Saurabh Joshi
 #include "ssa_unwinder.h"
 
 /*******************************************************************\
-
 Function: ssa_local_unwindert::init
-
   Inputs:
-
  Outputs:
-
  Purpose: builds data structures for unwinder and transforms SSA (rename to %0)
-
 \*******************************************************************/
 
 void ssa_local_unwindert::init()
@@ -36,15 +28,10 @@ void ssa_local_unwindert::init()
 }
 
 /*******************************************************************\
-
 Function: ssa_local_unwindert::build_loop_tree
-
   Inputs:
-
  Outputs:
-
  Purpose:
-
 \*******************************************************************/
 
 void ssa_local_unwindert::build_loop_tree()
@@ -113,15 +100,10 @@ void ssa_local_unwindert::build_loop_tree()
 }
 
 /*******************************************************************\
-
 Function: ssa_local_unwindert::build_pre_post_map
-
   Inputs:
-
  Outputs:
-
  Purpose: find variables at loop head and backedge
-
 \*******************************************************************/
 
 void ssa_local_unwindert::build_pre_post_map()
@@ -154,15 +136,10 @@ void ssa_local_unwindert::build_pre_post_map()
 }
 
 /*******************************************************************\
-
 Function: ssa_local_unwindert::build_exit_conditions
-
   Inputs:
-
  Outputs:
-
  Purpose:
-
 \*******************************************************************/
 
 void ssa_local_unwindert::build_exit_conditions()
@@ -202,6 +179,8 @@ void ssa_local_unwindert::build_exit_conditions()
           it->second.assertion_hoisting_map[n_it->location->get_target()]
             .exit_conditions.push_back(and_exprt(g, c));
         }
+        it->second.exit_conditions.push_back(SSA.guard_symbol(n_it->location));
+        it->second.exit_conditions.push_back(SSA.cond_symbol(n_it->location));
       }
       else if(next==it->second.body_nodes.end() &&
               !n_it->location->guard.is_true())
@@ -225,6 +204,10 @@ void ssa_local_unwindert::build_exit_conditions()
           it->second.assertion_hoisting_map[n_it->location->get_target()]
             .exit_conditions.push_back(and_exprt(g, not_exprt(c)));
         }
+        it->second.exit_conditions_neg
+                .push_back(SSA.guard_symbol(n_it->location));
+        it->second.exit_conditions_neg
+                .push_back(SSA.cond_symbol(n_it->location));
       }
     }
   }
@@ -263,15 +246,10 @@ void ssa_local_unwindert::build_exit_conditions()
 }
 
 /*******************************************************************\
-
 Function: ssa_local_unwindert::unwind
-
   Inputs:
-
  Outputs:
-
  Purpose: unwind all loops up to k starting from previous unwindings
-
 \*******************************************************************/
 
 void ssa_local_unwindert::unwind(unsigned k)
@@ -304,16 +282,11 @@ void ssa_local_unwindert::unwind(unsigned k)
 }
 
 /*******************************************************************\
-
 Function: ssa_local_unwindert::unwind
-
   Inputs:
-
  Outputs:
-
  Purpose: unwind all instances of given loop up to k
           starting from previous unwindings, and recur
-
 \*******************************************************************/
 
 void ssa_local_unwindert::unwind(loopt &loop, unsigned k, bool is_new_parent)
@@ -388,15 +361,10 @@ void ssa_local_unwindert::unwind(loopt &loop, unsigned k, bool is_new_parent)
 }
 
 /*******************************************************************\
-
 Function: ssa_local_unwindert::add_loop_body
-
   Inputs:
-
  Outputs:
-
  Purpose: duplicates the loop body for the current instance
-
 \*******************************************************************/
 
 void ssa_local_unwindert::add_loop_body(loopt &loop)
@@ -440,15 +408,10 @@ void ssa_local_unwindert::add_loop_body(loopt &loop)
 }
 
 /*******************************************************************\
-
 Function: ssa_local_unwindert::add_assertions
-
   Inputs:
-
  Outputs:
-
  Purpose: adds the assertions and assumptions
-
 \*******************************************************************/
 
 void ssa_local_unwindert::add_assertions(loopt &loop, bool is_last)
@@ -492,15 +455,10 @@ void ssa_local_unwindert::add_assertions(loopt &loop, bool is_last)
 }
 
 /*******************************************************************\
-
 Function: ssa_local_unwindert::add_loop_head
-
   Inputs:
-
  Outputs:
-
  Purpose: adds the new loop head
-
 \*******************************************************************/
 
 void ssa_local_unwindert::add_loop_head(loopt &loop)
@@ -525,15 +483,10 @@ void ssa_local_unwindert::add_loop_head(loopt &loop)
 }
 
 /*******************************************************************\
-
 Function: ssa_local_unwindert::add_loop_connector
-
   Inputs:
-
  Outputs:
-
  Purpose: adds a connector to the previous iteration
-
 \*******************************************************************/
 
 void ssa_local_unwindert::add_loop_connector(loopt &loop)
@@ -578,15 +531,10 @@ void ssa_local_unwindert::add_loop_connector(loopt &loop)
 }
 
 /*******************************************************************\
-
 Function: ssa_local_unwindert::add_exit_merges
-
   Inputs:
-
  Outputs:
-
  Purpose: adds the merge connector for the loop exits for the current instance
-
 \*******************************************************************/
 
 void ssa_local_unwindert::add_exit_merges(loopt &loop, unsigned k)
@@ -606,15 +554,10 @@ void ssa_local_unwindert::add_exit_merges(loopt &loop, unsigned k)
 }
 
 /*******************************************************************\
-
 Function: ssa_local_unwindert::build_exit_merge
-
   Inputs:
-
  Outputs:
-
  Purpose: generates exit merge expression for a given expression
-
 \*******************************************************************/
 
 equal_exprt ssa_local_unwindert::build_exit_merge(
@@ -639,16 +582,11 @@ equal_exprt ssa_local_unwindert::build_exit_merge(
 }
 
 /*******************************************************************\
-
 Function: ssa_local_unwindert::add_hoisted_assertions
-
   Inputs:
-
  Outputs:
-
  Purpose: adds the assumptions for hoisted assertions
           for the current instance
-
 \*******************************************************************/
 
 void ssa_local_unwindert::add_hoisted_assertions(loopt &loop, bool is_last)
@@ -677,64 +615,30 @@ void ssa_local_unwindert::add_hoisted_assertions(loopt &loop, bool is_last)
 }
 
 /*******************************************************************\
-
 Function: ssa_local_unwindert::loop_continuation_conditions
-
   Inputs:
-
  Outputs:
-
  Purpose: return loop continuation conditions for all loops in this function
-
 \*******************************************************************/
 
 void ssa_local_unwindert::loop_continuation_conditions(
-  exprt::operandst& loop_cont)
+  exprt::operandst& loop_cont) const
 {
   SSA.current_unwindings.clear();
   for(loop_mapt::const_iterator it=loops.begin(); it!=loops.end(); ++it)
   {
     if(!it->second.is_root)
       continue;
-    loop_continuation_conditions(it, loop_cont); // recursive
+    loop_continuation_conditions(it->second, loop_cont); // recursive
     assert(SSA.current_unwindings.empty());
   }
 }
 
 /*******************************************************************\
-
-Function: ssa_local_unwindert::loop_continuation_conditions
-
-  Inputs:
-
- Outputs:
-
- Purpose: computes loop continuation conditions for all loops in this function
-
-\*******************************************************************/
-
-void ssa_local_unwindert::compute_loop_continuation_conditions(void)
-{
-  SSA.current_unwindings.clear();
-  for(loop_mapt::const_iterator it=loops.begin(); it!=loops.end(); ++it)
-  {
-    if(!it->second.is_root)
-      continue;
-    loop_continuation_conditions(it, loop_expr_map[it->first]); // recursive
-    assert(SSA.current_unwindings.empty());
-  }
-}
-
-/*******************************************************************\
-
 Function: ssa_local_unwindert::get_continuation_condition
-
   Inputs:
-
  Outputs:
-
  Purpose:
-
 \*******************************************************************/
 
 exprt ssa_local_unwindert::get_continuation_condition(const loopt& loop) const
@@ -745,59 +649,74 @@ exprt ssa_local_unwindert::get_continuation_condition(const loopt& loop) const
 }
 
 /*******************************************************************\
-
 Function: ssa_local_unwindert::loop_continuation_conditions
-
   Inputs:
-
  Outputs:
-
  Purpose: recursively construct loop continuation conditions
-
 \*******************************************************************/
 
 void ssa_local_unwindert::loop_continuation_conditions(
-  const loop_mapt::const_iterator it, exprt::operandst& loop_cont)
+  const loopt& loop, exprt::operandst& loop_cont) const
 {
   SSA.increment_unwindings(1);
-  
-  loop_expr_map[it->first].push_back(get_continuation_condition(it->second));
-  for(long i=0; i<=it->second.current_unwinding; ++i)
+  loop_cont.push_back(get_continuation_condition(loop)); // %0
+  for(long i=0; i<=loop.current_unwinding; ++i)
   {
     // recurse into child loops
-    
-    for(const auto &l : it->second.loop_nodes)
+    for(const auto &l : loop.loop_nodes)
     {
-      loop_continuation_conditions(loops.find(l), loop_expr_map[it->first]);
+      loop_continuation_conditions(loops.at(l), loop_cont);
     }
     SSA.increment_unwindings(0);
   }
-  //loop_cont.push_back(loop_expr_map[it->first]); // %0
-  if (loop_expr_map[it->first] != loop_cont)
-    loop_cont.insert(loop_cont.end(),
-          loop_expr_map[it->first].begin(),
-          loop_expr_map[it->first].end());
   SSA.increment_unwindings(-1);
 }
 
+exprt ssa_local_unwindert::get_loop_exit_conditions(
+            unsigned location_number,
+            const local_SSAt::nodet& node)
+{
+    exprt::operandst loop_exit_cond;
+    std::vector<symbol_exprt>::iterator 
+            it2=++loops[location_number].exit_conditions.begin();
+    for (std::vector<symbol_exprt>::iterator 
+            it=loops[location_number].exit_conditions.begin();
+            it!=loops[location_number].exit_conditions.end();
+            it+=2,it2+=2)
+    {
+        symbol_exprt se1 = *it;
+        symbol_exprt se2 = *it2;
+        unwinder_rename(se1, node, false);
+        unwinder_rename(se2, node, false);
+        loop_exit_cond.push_back(and_exprt(se1, se2));
+    }
+    it2=++loops[location_number].exit_conditions_neg.begin();
+    for (std::vector<symbol_exprt>::iterator 
+            it=loops[location_number].exit_conditions_neg.begin();
+            it!=loops[location_number].exit_conditions_neg.end();
+            ++++it,++++it2)
+    {
+        symbol_exprt se1 = *it;
+        symbol_exprt se2 = *it2;
+        unwinder_rename(se1, node, false);
+        unwinder_rename(se2, node, false);
+        loop_exit_cond.push_back(and_exprt(se1, not_exprt(se2)));
+    }
+    return not_exprt(disjunction(loop_exit_cond));
+}
+
 /*******************************************************************\
-
 Function: ssa_local_unwindert::unwinder_rename
-
   Inputs: var, node
-
  Outputs: var is returned with a suffix that reflects the current unwinding
           with the context taken from the node
-
  Purpose: E.g. node must look like
             cond"somesuffix"==TRUE, e.g. cond%1%2%5%0==TRUE
           and variable might be guard#ls25
           if the current_unwinding is 6
           the variable should be converted to guard#ls25%1%2%5%5
-
           Note that if current_unwinding is X then suffixes can have at most
           X-1 in its parts
-
 \*******************************************************************/
 
 void ssa_local_unwindert::unwinder_rename(
@@ -841,15 +760,10 @@ void ssa_local_unwindert::unwinder_rename(
 
 
 /*******************************************************************\
-
 Function: ssa_local_unwindert::find_loop
-
   Inputs:
-
  Outputs:
-
  Purpose:
-
 \*******************************************************************/
 
 bool ssa_local_unwindert::find_loop(
@@ -865,17 +779,12 @@ bool ssa_local_unwindert::find_loop(
 }
 
 /*******************************************************************\
-
 Function: ssa_unwindert::unwind
-
   Inputs: fname-name of the goto-function to be unwound, k-unwinding depth
-
  Outputs: false-if id does not correspond to any goto-function in the
           unwinder_map
-
  Purpose: incrementally unwind a function 'id' up to depth k. Initializer
           must have been invoked before calling this function
-
 \*******************************************************************/
 
 void ssa_unwindert::unwind(const irep_idt fname, unsigned int k)
@@ -887,15 +796,10 @@ void ssa_unwindert::unwind(const irep_idt fname, unsigned int k)
 }
 
 /*******************************************************************\
-
 Function: ssa_unwindert::unwind_all
-
   Inputs:
-
  Outputs:
-
  Purpose:
-
 \*******************************************************************/
 
 void ssa_unwindert::unwind_all(unsigned int k)
@@ -907,18 +811,13 @@ void ssa_unwindert::unwind_all(unsigned int k)
 }
 
 /*******************************************************************\
-
 Function: ssa_unwindert::init
-
   Inputs:
-
  Outputs:
-
  Purpose: Initialize unwinder_map by computing hierarchical tree_loopnodet
           for every goto-function
           Set is_initialized to true. Initializer must be called before
           unwind funcitions are called.
-
 \*******************************************************************/
 
 void ssa_unwindert::init(bool is_kinduction, bool is_bmc)
@@ -933,15 +832,10 @@ void ssa_unwindert::init(bool is_kinduction, bool is_bmc)
 }
 
 /*******************************************************************\
-
 Function: ssa_unwindert::init_localunwinders
-
   Inputs:
-
  Outputs:
-
  Purpose:
-
 \*******************************************************************/
 
 void ssa_unwindert::init_localunwinders()

@@ -57,19 +57,6 @@ property_checkert::resultt summary_checker_nontermt::operator()(
 
   SSA_functions(goto_model, ns);
 
-  // loop_map needs to be initialized somewhere
-  // works only with inline argument which is automatically set with nontermination
-  unwindable_local_SSAt &SSA=*(ssa_db.functions().begin()->second);
-  for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
-    n_it != SSA.nodes.end(); n_it++)
-  {
-    if(n_it->loophead != SSA.nodes.end())
-    {
-      loop_map[n_it->loophead->location->location_number]=
-          var_collectort();
-    }
-  }
-
   ssa_unwinder.init(false, true);
 
   property_checkert::resultt result=property_checkert::UNKNOWN;
@@ -77,7 +64,7 @@ property_checkert::resultt summary_checker_nontermt::operator()(
   status() << "Max-unwind is " << max_unwind << eom;
   ssa_unwinder.init_localunwinders();
 
-  for(unsigned unwind=0; unwind<=max_unwind; unwind++)
+  for(unsigned unwind=1; unwind<=max_unwind; unwind++)
   {
     status() << "Unwinding (k=" << unwind << ")" << messaget::eom;
     ssa_unwinder.unwind_all(unwind);
@@ -107,12 +94,7 @@ void summary_checker_nontermt::check_properties(
 
   ssa_local_unwindert &ssa_local_unwinder=ssa_unwinder.get(f_it->first);
 
-  bool all_properties=options.get_bool_option("all-properties");
-
-  SSA.output_verbose(debug()); debug() << eom;
-  SSA.output_verbose(std::cout);
-
-  // incremental version
+  //SSA.output_verbose(std::cout);
 
   // solver
   incremental_solvert &solver=ssa_db.get_solver(f_it->first);
@@ -134,20 +116,16 @@ void summary_checker_nontermt::check_properties(
   cover_goals_extt cover_goals(
     SSA, solver, loophead_selects, property_map,
     false,
-    all_properties,
+    false,
     options.get_bool_option("show-trace") ||
     options.get_option("graphml-witness")!="" ||
     options.get_option("json-cex")!="");
-
-#if 0
-  debug() << "(C) " << from_expr(SSA.ns, "", enabling_expr) << eom;
-#endif
 
   property_map.clear();
 
   exprt::operandst ls_guards;
 
-  ssa_local_unwinder.compute_loop_continuation_conditions();
+  loop_map.clear();
 
   for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
         n_it != SSA.nodes.end(); n_it++)
@@ -158,8 +136,6 @@ void summary_checker_nontermt::check_properties(
       irep_idt property_id=irep_idt(n_it->loophead->location->location_number,
                                     0);
 
-      exprt lhguard = SSA.guard_symbol(n_it->loophead->location);
-      ssa_local_unwinder.unwinder_rename(to_symbol_expr(lhguard),*n_it,true);
       exprt lsguard = SSA.name(SSA.guard_symbol(),
              local_SSAt::LOOP_SELECT, n_it->location);
       ssa_local_unwinder.unwinder_rename(to_symbol_expr(lsguard),*n_it,true);
@@ -167,44 +143,68 @@ void summary_checker_nontermt::check_properties(
       const ssa_domaint::phi_nodest &phi_nodes=
         SSA.ssa_analysis[n_it->loophead->location].phi_nodes;
 
-      loop_varst loop_vars(lhguard);
-
-      for(local_SSAt::objectst::const_iterator
-          o_it=SSA.ssa_objects.objects.begin();
-          o_it!=SSA.ssa_objects.objects.end();
-          o_it++)
-      {
-        ssa_domaint::phi_nodest::const_iterator p_it=
-        phi_nodes.find(o_it->get_identifier());
-        if(p_it==phi_nodes.end()) continue; // object not modified in this loop
-
-        symbol_exprt post_var=SSA.read_rhs(*o_it, n_it->location);
-        ssa_local_unwinder.unwinder_rename(post_var,*n_it,false);
-
-        symbol_exprt phi_var;
-        phi_var=SSA.name(*o_it, local_SSAt::PHI, n_it->loophead->location);
-        ssa_local_unwinder.unwinder_rename(phi_var,*n_it->loophead,true);
-
-        loop_vars.loop_vars_eq.push_back(equal_exprt(post_var, phi_var));
-      }
-
       unsigned loop_idx=
           n_it->loophead->location->location_number;
-      loop_map[loop_idx].push_back(loop_vars);
 
+      if (!loop_map.count(loop_idx)) loop_map[loop_idx]=loop_varst();
+      loop_map[loop_idx].source_location=
+          n_it->loophead->location->source_location;
+
+      long store_unwinding=SSA.current_unwinding;
       exprt::operandst loop_check_operands;
 
-      for (var_collectort::iterator it=loop_map[loop_idx].begin();
-           it != loop_map[loop_idx].end();
-           ++it)
+      symbol_exprt lhguard = SSA.guard_symbol(n_it->loophead->location);
+      ssa_local_unwinder.unwinder_rename(lhguard,*n_it,false);
+
+      for (SSA.current_unwinding=1;
+           SSA.current_unwinding<=store_unwinding;
+           SSA.current_unwinding++)
       {
-        loop_check_operands.push_back(and_exprt(and_exprt(it->loop_guard,
-                                             conjunction(it->loop_vars_eq),
-              ssa_local_unwinder.get_loop_countinuation_conditions(loop_idx))));
-        std::cout << "Loop id: " << loop_idx << std::endl;
-        std::cout << "gueard: " << from_expr(SSA.ns, "", it->loop_guard) << std::endl;
-        std::cout << "vars: " << from_expr(SSA.ns, "", ssa_local_unwinder.get_loop_countinuation_conditions(loop_idx)) << std::endl;
+
+        exprt::operandst loop_vars;
+        loop_vars.push_back(lhguard);
+
+        loop_map[loop_idx].guards.push_back(lhguard);
+
+        for(local_SSAt::objectst::const_iterator
+            o_it=SSA.ssa_objects.objects.begin();
+            o_it!=SSA.ssa_objects.objects.end();
+            o_it++)
+        {
+          ssa_domaint::phi_nodest::const_iterator p_it=
+          phi_nodes.find(o_it->get_identifier());
+          if(p_it==phi_nodes.end()) continue; // object not modified in this loop
+
+          symbol_exprt post_var=SSA.name(*o_it, local_SSAt::PHI, n_it->loophead->location);
+          ssa_local_unwinder.unwinder_rename(post_var,*n_it->loophead,false);
+
+          symbol_exprt phi_var;
+            phi_var=SSA.name(*o_it, local_SSAt::PHI, n_it->loophead->location);
+            ssa_local_unwinder.unwinder_rename(phi_var,*n_it->loophead,true);
+            loop_vars.push_back(equal_exprt(post_var, phi_var));
+
+            loop_map[loop_idx].vars.push_back(phi_var);
+            loop_map[loop_idx].vars.push_back(post_var);
+        }
+
+        loop_vars.push_back(ssa_local_unwinder.get_loop_exit_conditions(
+                              loop_idx,
+                               *n_it->loophead));
+        loop_map[loop_idx].loop_exits.push_back(loop_vars.back());
+
+        loop_check_operands.push_back(conjunction(loop_vars));
+
+        /*std::cout << "Loop id: " << loop_idx << std::endl;
+        std::cout << "guard & vars: " << from_expr(SSA.ns, "",
+                                                   conjunction(loop_vars))
+                  << std::endl;
+        std::cout << "loop. exit cond.: "
+                  << from_expr(SSA.ns, "",ssa_local_unwinder
+                               .get_loop_exit_conditions(loop_idx,
+                                                         *n_it->loophead))
+                  << std::endl;*/
       }
+      SSA.current_unwinding=store_unwinding;
 
       property_map[property_id].location=n_it->loophead->location;
       property_map[property_id].result=UNKNOWN;
@@ -214,11 +214,8 @@ void summary_checker_nontermt::check_properties(
     }
   }
 
-  /*exprt::operandst in_loop_conds;
-  ssa_local_unwinder.loop_continuation_conditions(in_loop_conds);
-  solver << conjunction(in_loop_conds);*/
   solver << conjunction(ls_guards);
-
+  //std::cout << "Formula disjuncts: " << std::endl;
   for(cover_goals_extt::goal_mapt::const_iterator
         it=cover_goals.goal_map.begin();
       it!=cover_goals.goal_map.end();
@@ -226,23 +223,10 @@ void summary_checker_nontermt::check_properties(
   {
     // Our goal is to falsify a property.
     // The following is TRUE if the conjunction is empty.
-    /*solver << conjunction(it->second.conjuncts);
-    switch(solver())
-    {
-    case decision_proceduret::D_UNSATISFIABLE: //
-        std::cout << "Unsat++++++++++++++++" << std::endl;
-      break;
+    //if (it==cover_goals.goal_map.begin()) continue;
+    //std::cout << from_expr(SSA.ns, "", disjunction(it->second.conjuncts)) << std::endl;
 
-    case decision_proceduret::D_SATISFIABLE:
-      std::cout << "Sat++++++++++++++++" << std::endl;
-      break;
-
-    default:
-      error() << "decision procedure has failed" << eom;
-      return;
-    }*/
-
-    literalt p=solver.convert(conjunction(it->second.conjuncts));
+    literalt p=solver.convert(disjunction(it->second.conjuncts));
     cover_goals.add(p);
   }
 
@@ -252,7 +236,7 @@ void summary_checker_nontermt::check_properties(
 
   // set all non-covered goals to PASS except if we do not try
   //  to cover all goals and we have found a FAIL
-  if(all_properties || cover_goals.number_covered()==0)
+  /*if(all_properties || cover_goals.number_covered()==0)
   {
     std::list<cover_goals_extt::cover_goalt>::const_iterator g_it=
       cover_goals.goals.begin();
@@ -264,11 +248,34 @@ void summary_checker_nontermt::check_properties(
       //if(!g_it->covered)
         //property_map[it->first].result=PASS;
     }
+  }*/
+
+  for (auto & loop : loop_map)
+  {
+    std::cout << loop.second.source_location << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
+    for (auto guard : loop.second.guards)
+    {
+      exprt ex = solver.solver->get(guard);
+      std::cout << "Solver result for " << from_expr(SSA.ns, "", guard) << " is: ";
+      std::cout << from_expr(SSA.ns, "", ex) << std::endl;
+    }
+    for (auto var : loop.second.vars)
+    {
+      exprt ex = solver.solver->get(var);
+      std::cout << "Solver result for " << from_expr(SSA.ns, "", var) << " is: ";
+      std::cout << from_expr(SSA.ns, "", ex) << std::endl;
+    }
+    for (auto expr : loop.second.loop_exits)
+    {
+      exprt ex = solver.solver->get(expr);
+      std::cout << "Solver result for " << from_expr(SSA.ns, "", expr) << " is: ";
+      std::cout << from_expr(SSA.ns, "", ex) << std::endl;
+    }
   }
 
   solver.pop_context();
 
-  std::cout << "** " << cover_goals.number_covered()
+  /*std::cout << "** " << cover_goals.number_covered()
           << " of " << cover_goals.size() << " failed ("
-          << cover_goals.iterations() << " iterations)" << eom;
+          << cover_goals.iterations() << " iterations)" << eom;*/
 }
