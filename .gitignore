@@ -18,4 +18,4 @@ tests.log
 *~
 
 # binaries
-src/summarizer/2ls
+src/2ls/2ls
