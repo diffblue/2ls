@@ -1,5 +1,4 @@
 THOROUGH
-CORE
 main.c
 --inline
 ^EXIT=10$
