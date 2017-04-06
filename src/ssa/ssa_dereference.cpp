@@ -345,6 +345,7 @@ exprt dereference_rec(
         irep_idt identifier="ssa::"+dyn_type_name+"_obj$unknown";
 
         result=symbol_exprt(identifier, src.type());
+        result.set("#unknown_obj", true);
       }
       else
       {

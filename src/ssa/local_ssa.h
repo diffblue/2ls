@@ -13,7 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <goto-programs/goto_functions.h>
 
-#include <domains/advancer.h>
+#include <domains/list_iterator.h>
 #include <domains/incremental_solver.h>
 
 #include "ssa_domain.h"
@@ -128,7 +128,7 @@ public:
   var_listt params;  
   var_sett globals_in, globals_out;
 
-  std::set<advancert> advancers;
+  std::set<list_iteratort> iterators;
 
   // unknown heap objects
   var_sett unknown_objs;
@@ -169,9 +169,9 @@ public:
   void assign_rec(
     const exprt &lhs, const exprt &rhs, const exprt &guard, locationt loc);
 
-  void collect_advancers_rhs(const exprt &expr, locationt loc);
-  void collect_advancers_lhs(const ssa_objectt &object, locationt loc);
-  void new_advancer_instance(const member_exprt &expr, locationt loc, int inst_loc_number);
+  void collect_iterators_rhs(const exprt &expr, locationt loc);
+  void collect_iterators_lhs(const ssa_objectt &object, locationt loc);
+  void new_iterator_access(const member_exprt &expr, locationt loc, int inst_loc_number);
 
   exprt unknown_obj_eq(const symbol_exprt &obj, const struct_typet::componentt &component) const;
 

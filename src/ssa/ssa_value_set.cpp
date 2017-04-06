@@ -12,11 +12,13 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <iostream>
 #endif
 
-#include <util/pointer_offset_size.h>
 #include <algorithm>
+
+#include <util/pointer_offset_size.h>
 
 #include "ssa_value_set.h"
 #include "ssa_dereference.h"
+#include "ssa_pointed_objects.h"
 
 /*******************************************************************\
 
@@ -184,9 +186,9 @@ void ssa_value_domaint::assign_lhs_rec(
     // object?
     ssa_objectt ssa_object(lhs, ns);
 
-    if(ssa_object &&
-       !(lhs.id()==ID_member && to_member_expr(lhs).compound().get_bool("#advancer")))
+    if (ssa_object)
     {
+      assign_pointed_rhs_rec(rhs, ns);
       valuest tmp_values;
       assign_rhs_rec(tmp_values, rhs, ns, false, 0);
 
@@ -371,7 +373,7 @@ void ssa_value_domaint::assign_rhs_rec_address_of(
 
   if(ssa_object)
   {
-    dest.add_to_value_set(ssa_object);
+    dest.value_set.insert(ssa_object);
     if(offset)
       dest.offset=true;
   }
@@ -475,7 +477,8 @@ Function: ssa_value_domaint::valuest::merge
 
 \*******************************************************************/
 
-bool ssa_value_domaint::valuest::merge(const valuest &src)
+bool ssa_value_domaint::valuest::merge(const valuest &src, bool is_loop_back,
+                                       const irep_idt &object_id)
 {
   bool result=false;
 
@@ -502,10 +505,74 @@ bool ssa_value_domaint::valuest::merge(const valuest &src)
   }
 
   // value set
-  for (const ssa_objectt &v : src.value_set)
+  unsigned long old_size = value_set.size();
+  for (auto &v : src.value_set)
   {
-    result = add_to_value_set(v) || result;
+    if (is_loop_back)
+    {
+      if (is_pointed(v.get_expr()))
+      {
+        unsigned level = pointed_level(v.get_expr()) - 1;
+        exprt expr = v.get_expr();
+
+        auto it = value_set.end();
+
+        while (level > 0)
+        {
+          const irep_idt ptr_root_id = pointer_root_id(expr);
+          it = std::find_if(value_set.begin(), value_set.end(),
+                            [&ptr_root_id](const ssa_objectt &o)
+                            {
+                              return o.get_identifier() == ptr_root_id;
+                            });
+          if (it != value_set.end())
+            break;
+          else
+          {
+            expr = get_pointer_root(expr, level--);
+          }
+        }
+
+        if (it != value_set.end())
+        {
+          if (!it->get_expr().get_bool(ID_iterator))
+          {
+            assert(it->get_expr().get_bool(ID_pointed));
+            ssa_objectt object_copy(*it);
+            object_copy.set_iterator(object_id, pointer_fields(v.get_expr(), level));
+            value_set.erase(it);
+            value_set.insert(object_copy);
+            result = true;
+          }
+          continue;
+        }
+      }
+      if (is_iterator(v.get_expr())) continue;
+    }
+    else
+    {
+      if (v.get_expr().get_bool(ID_iterator))
+      {
+        const irep_idt &corresponding_id = iterator_to_initial_id(v.get_expr(), v.get_identifier());
+
+        auto it = std::find_if(value_set.begin(), value_set.end(),
+                               [&corresponding_id](const ssa_objectt &o)
+                               {
+                                 return o.get_expr().get_bool(ID_pointed) &&
+                                        (o.get_identifier() == corresponding_id);
+                               });
+        if (it != value_set.end())
+        {
+          if (v != *it)
+            result = true;
+          value_set.erase(it);
+        }
+      }
+    }
+    value_set.insert(v);
   }
+  if (value_set.size() != old_size)
+    result = true;
 
   // alignment
   alignment=merge_alignment(alignment, src.alignment);
@@ -541,7 +608,8 @@ bool ssa_value_domaint::merge(
   {
     if(v_it==value_map.end() || it->first<v_it->first)
     {
-      value_map.insert(v_it, *it);
+      if (!from->is_backwards_goto() || !is_iterator(it->first.get_root_object()))
+        value_map.insert(v_it, *it);
       result=true;
       it++;
       continue;
@@ -554,7 +622,7 @@ bool ssa_value_domaint::merge(
 
     assert(v_it->first==it->first);
 
-    if(v_it->second.merge(it->second))
+    if(v_it->second.merge(it->second, from->is_backwards_goto(), it->first.get_identifier()))
       result=true;
 
     v_it++;
@@ -564,72 +632,29 @@ bool ssa_value_domaint::merge(
   return result;
 }
 
-/*******************************************************************\
-
-Function: ssa_value_domaint::valuest::add_to_value_set
-
-  Inputs: SSA object to be added
-
- Outputs: True if 'this' has changed
-
- Purpose: Add given object to value set of this.
-          If value set contains both advancer (abstracts all elements
-          of the list except the first one) and object pointed by
-          advancer pointer (abstracts the first element of the list),
-          only advancer is preserved and #except_first is set to false.
-
-\*******************************************************************/
-
-bool ssa_value_domaint::valuest::add_to_value_set(ssa_objectt object)
+void ssa_value_domaint::assign_pointed_rhs_rec(const exprt &rhs, const namespacet &ns)
 {
-  if (value_set.find(object) == value_set.end())
+  ssa_objectt ssa_object(rhs, ns);
+
+  if(ssa_object && ssa_object.type().id()==ID_pointer)
   {
-    bool result = false;
-    if (object.get_expr().get_bool("#advancer"))
-    { // advancer is to be inserted - check if set already contains first object of corresponding
-      // list
-      const irep_idt corresp_object_id = object.get_expr().get("#object_id");
+    if(ssa_object.get_root_object().get_bool("#unknown_obj"))
+      return;
 
-      auto it = std::find_if(value_set.begin(), value_set.end(),
-                             [&corresp_object_id](const ssa_objectt &o)
-                             {
-                               return o.get_identifier() == corresp_object_id;
-                             });
+    value_mapt::const_iterator m_it=value_map.find(ssa_object);
 
-      if (it != value_set.end())
-      {
-        value_set.erase(it);
-        object.set_flag("#except_first", false);
-        result = true;
-      }
+    if(m_it==value_map.end())
+    {
+      const symbol_exprt pointed = pointed_object(rhs, ns);
+      ssa_objectt pointed_obj(pointed, ns);
+      value_map[ssa_object].value_set.insert(pointed_obj);
     }
-    else if (id2string(object.get_identifier()).find("'obj") != std::string::npos)
-    { // pointed object is to be inserted - check if set already contains corresponding advancer
-      const irep_idt object_id = object.get_identifier();
-
-      auto it = std::find_if(value_set.begin(), value_set.end(),
-                             [&object_id](const ssa_objectt &o)
-                             {
-                               return id2string(o.get_identifier()).find(id2string(object_id)) !=
-                                      std::string::npos &&
-                                      id2string(o.get_identifier()).find("'adv") !=
-                                      std::string::npos;
-                             });
-
-      if (it != value_set.end())
-      {
-        ssa_objectt new_advancer(*it);
-        new_advancer.set_flag("#except_first", false);
-        value_set.erase(it);
-        value_set.insert(new_advancer);
-        return false;
-      }
-    }
-
-    auto inserted = value_set.insert(object);
-    return result || inserted.second;
   }
-  return false;
+  else
+  {
+    forall_operands(it, rhs)
+      assign_pointed_rhs_rec(*it, ns);
+  }
 }
 
 /*******************************************************************\
@@ -659,7 +684,7 @@ void ssa_value_ait::initialize(const goto_functionst::goto_functiont &goto_funct
     for (auto &param : goto_function.type.parameters())
     {
       const symbol_exprt param_expr(param.get_identifier(), param.type());
-      assign_ptr_param_rec(param_expr, entry);
+      assign_ptr_param(param_expr, entry);
     }
 
   }
@@ -680,40 +705,25 @@ Function: ssa_value_ait::assign_ptr_param_rec
 
 \*******************************************************************/
 
-void ssa_value_ait::assign_ptr_param_rec(const exprt &expr, ssa_value_domaint &entry)
+void ssa_value_ait::assign_ptr_param(const exprt &expr, ssa_value_domaint &entry)
 {
-  const typet &type = ns.follow(expr.type());
-  if (type.id() == ID_pointer)
+  const typet &type=ns.follow(expr.type());
+  if(type.id()==ID_pointer)
   {
-    if (expr.id() == ID_symbol)
+    if(expr.id()==ID_symbol)
     { // pointer variable
-      const symbol_exprt pointed_expr(id2string(to_symbol_expr(expr).get_identifier()) + "'obj",
-                                      type.subtype());
+      symbol_exprt pointed_expr=pointed_object(expr, ns);
       assign(expr, pointed_expr, entry);
-      assign_ptr_param_rec(pointed_expr, entry);
-    }
-    else if (expr.id() == ID_member)
-    { // pointer member of a structure
-      const member_exprt &member = to_member_expr(expr);
-      ssa_objectt member_obj(member, ns);
-      symbol_exprt member_dest(id2string(member_obj.get_identifier()) + "'adv",
-                               type.subtype());
-      member_dest.set("#advancer", true);
-      // intially advancer abstracts all list members except first
-      member_dest.set("#except_first", true);
-      assert(member.compound().id() == ID_symbol);
-      // set advancer object
-      member_dest.set("#object_id", to_symbol_expr(member.compound()).get_identifier());
-      member_dest.set("#member", member.get_component_name());
-      assign(expr, member_dest, entry);
+      assign_ptr_param(pointed_expr, entry);
     }
   }
-  else if (type.id() == ID_struct)
-  { // split structure into fields
-    for (auto &component : to_struct_type(type).components())
+  else if(type.id()==ID_struct)
+  { 
+    // split structure into fields
+    for(auto &component : to_struct_type(type).components())
     {
       const member_exprt member(expr, component.get_name(), component.type());
-      assign_ptr_param_rec(member, entry);
+      assign_ptr_param(member, entry);
     }
   }
 }
@@ -734,7 +744,7 @@ void ssa_value_ait::assign(const exprt &src, const exprt &dest, ssa_value_domain
 {
   ssa_objectt src_obj(src, ns);
   ssa_objectt dest_obj(dest, ns);
-  if (src_obj && dest_obj)
+  if(src_obj && dest_obj)
   {
     entry.value_map[src_obj].value_set.insert(dest_obj);
   }

@@ -190,7 +190,7 @@ protected:
     const typet &pointed_type,
     const std::list<exprt> &args_out);
 
-  static bool contains_advancer(const std::list<exprt> &params);
+  static bool contains_iterator(const std::list<exprt> &params);
 };
 
 #endif
