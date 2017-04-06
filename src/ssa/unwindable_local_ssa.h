@@ -12,17 +12,15 @@ Author: Peter Schrammel, Saurabh Joshi
 #include <util/message.h>
 
 #include "local_ssa.h"
+#include "ssa_heap_domain.h"
 
 class unwindable_local_SSAt : public local_SSAt
 {
 public:
-  unwindable_local_SSAt(
-    const goto_functiont &_goto_function,
-    const namespacet &_ns,
-    const std::string &_suffix="")
-    :
-    local_SSAt(_goto_function,_ns,_suffix),
-    current_unwinding(-1)
+  unwindable_local_SSAt(const goto_functiont &_goto_function, const namespacet &_ns,
+                          const ssa_heap_analysist &heap_analysis, const std::string &_suffix="") :
+      local_SSAt(_goto_function, _ns, heap_analysis, _suffix),
+      current_unwinding(-1)
   {
     compute_loop_hierarchy();
   }

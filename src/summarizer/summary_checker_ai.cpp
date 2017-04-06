@@ -6,6 +6,7 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+#include "../ssa/ssa_heap_domain.h"
 #include "summary_checker_ai.h"
 
 /*******************************************************************\
@@ -25,7 +26,7 @@ property_checkert::resultt summary_checker_ait::operator()(
 {
   const namespacet ns(goto_model.symbol_table);
 
-  SSA_functions(goto_model,ns);
+  SSA_functions(goto_model, ns, heap_analysis);
 
   ssa_unwinder.init(false,false);
 

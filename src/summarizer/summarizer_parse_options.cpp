@@ -497,19 +497,26 @@ int summarizer_parse_optionst::doit()
     else assert(false);
     status() << eom;
   }
+
+  const namespacet ns(goto_model.symbol_table);
+  ssa_heap_analysist heap_analysis(ns);
+  if (!options.get_bool_option("inline"))
+  {
+    heap_analysis(goto_model.goto_functions);
+  }
   
   try
   {
     summary_checker_baset *summary_checker = NULL;
     if(!options.get_bool_option("k-induction") && 
        !options.get_bool_option("incremental-bmc"))
-       summary_checker = new summary_checker_ait(options);
+       summary_checker = new summary_checker_ait(options, heap_analysis);
     if(options.get_bool_option("k-induction") && 
        !options.get_bool_option("incremental-bmc")) 
-       summary_checker = new summary_checker_kindt(options);
+       summary_checker = new summary_checker_kindt(options, heap_analysis);
     if(!options.get_bool_option("k-induction") && 
        options.get_bool_option("incremental-bmc")) 
-       summary_checker = new summary_checker_bmct(options);
+       summary_checker = new summary_checker_bmct(options, heap_analysis);
     
     summary_checker->set_message_handler(get_message_handler());
     summary_checker->simplify=!cmdline.isset("no-simplify");
@@ -1086,8 +1093,6 @@ bool summarizer_parse_optionst::process_goto_program(
       if (it->first == "malloc" || it->first == "free")
         it->second.body.clear();
     }
-    // Replace malloc
-    replace_malloc(goto_model,"");
 #endif
 
     // create symbols for objects pointed by parameters
@@ -1102,6 +1107,9 @@ bool summarizer_parse_optionst::process_goto_program(
 
     // add loop ids
     goto_model.goto_functions.compute_loop_numbers();
+
+    // Replace malloc
+    replace_malloc(goto_model,"");
 
     // remove loop heads from function entries
     remove_loops_in_entry(goto_model);

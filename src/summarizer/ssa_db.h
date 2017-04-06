@@ -15,6 +15,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "../ssa/unwindable_local_ssa.h"
 #include "../domains/incremental_solver.h"
 #include <goto-programs/goto_functions.h>
+#include "../ssa/ssa_heap_domain.h"
 
 class ssa_dbt
 {
@@ -56,11 +57,12 @@ public:
   bool exists(const function_namet &function_name) const  
     { return store.find(function_name)!=store.end(); }
 
-  void create(const function_namet &function_name, 
+  void create(const function_namet &function_name,
               const goto_functionst::goto_functiont &goto_function,
-              const namespacet &ns) 
+              const namespacet &ns,
+              const ssa_heap_analysist &heap_analysis)
   { 
-    store[function_name] = new unwindable_local_SSAt(goto_function,ns);
+    store[function_name] = new unwindable_local_SSAt(goto_function, ns, heap_analysis);
   }
 
  protected:

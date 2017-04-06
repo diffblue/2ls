@@ -91,7 +91,8 @@ void horn_encodingt::translate(
          ";\n";
 
   // compute SSA
-  local_SSAt local_SSA(f_it->second, ns, "");
+  ssa_heap_analysist heap_analysis(ns);
+  local_SSAt local_SSA(f_it->second, ns, heap_analysis, "");
 
   const goto_programt &body=f_it->second.body;
   

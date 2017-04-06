@@ -93,7 +93,8 @@ void summary_checkert::check_properties(
   status() << "Analyzing " << f_it->first << messaget::eom;
   
   // build SSA
-  local_SSAt SSA(f_it->second, ns);
+  ssa_heap_analysist heap_analysis(ns);
+  local_SSAt SSA(f_it->second, ns, heap_analysis);
   
   // simplify, if requested
   if(simplify)

@@ -13,6 +13,7 @@ Author: Peter Schrammel
 
 #include <goto-programs/property_checker.h>
 #include <solvers/prop/prop_conv.h>
+#include "../ssa/ssa_heap_domain.h"
 
 #include "cover_goals_ext.h"
 #include "../ssa/local_ssa.h"
@@ -25,7 +26,7 @@ Author: Peter Schrammel
 class summary_checker_baset:public property_checkert
 {
 public:
-  inline summary_checker_baset(optionst &_options):
+  inline summary_checker_baset(optionst &_options, const ssa_heap_analysist &_heap_analysis) :
     show_vcc(false),
     simplify(false),
     fixed_point(false),
@@ -33,6 +34,7 @@ public:
     ssa_db(_options),summary_db(),
     ssa_unwinder(ssa_db),
     ssa_inliner(summary_db),
+    heap_analysis(_heap_analysis),
     solver_instances(0),
     solver_calls(0),
     summaries_used(0)
@@ -59,6 +61,8 @@ protected:
   ssa_unwindert ssa_unwinder;
   ssa_inlinert ssa_inliner;
 
+  const ssa_heap_analysist &heap_analysis;
+
   unsigned solver_instances;
   unsigned solver_calls;
   unsigned summaries_used;
@@ -69,7 +73,8 @@ protected:
     const goto_programt::const_targett,
     const local_SSAt::nodet::assertionst::const_iterator &);
 
-  void SSA_functions(const goto_modelt &, const namespacet &ns);
+  void SSA_functions(const goto_modelt &, const namespacet &ns,
+                       const ssa_heap_analysist &heap_analysis);
 
   void summarize(const goto_modelt &, 
 		 bool forward=true, bool termination=false);

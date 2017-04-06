@@ -27,7 +27,7 @@ property_checkert::resultt summary_checker_kindt::operator()(
 {
   const namespacet ns(goto_model.symbol_table);
 
-  SSA_functions(goto_model,ns);
+  SSA_functions(goto_model, ns, heap_analysis);
 
   ssa_unwinder.init(true,false);
 
