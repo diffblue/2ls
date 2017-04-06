@@ -83,10 +83,7 @@ void ssa_value_domaint::transform(
       {
         if (arg.id() == ID_symbol)
         {
-          const typet &pointed_type = ns.follow(arg.type().subtype());
-          symbol_exprt pointed_obj = symbol_exprt(
-              id2string(to_symbol_expr(arg).get_identifier()) + "'obj",
-              pointed_type);
+          symbol_exprt pointed_obj = pointed_object(arg, ns);
           pointed_obj.type().set("#dynamic", true);
 
           assign_lhs_rec(arg, address_of_exprt(pointed_obj), ns, true);

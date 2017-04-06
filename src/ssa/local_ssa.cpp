@@ -1157,6 +1157,8 @@ symbol_exprt local_SSAt::name(
   
   if(object.get_expr().source_location().is_not_nil())
     new_symbol_expr.add_source_location()=object.get_expr().source_location();
+
+  copy_pointed_info(new_symbol_expr, object.get_expr());
   
   return new_symbol_expr;
 }
@@ -1206,6 +1208,8 @@ symbol_exprt local_SSAt::name_input(const ssa_objectt &object) const
 
   if(object.get_expr().source_location().is_not_nil())
     new_symbol_expr.add_source_location()=object.get_expr().source_location();
+
+  copy_pointed_info(new_symbol_expr, object.get_expr());
 
   return new_symbol_expr;
 }

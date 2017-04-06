@@ -321,8 +321,7 @@ exprt dereference_rec(
     exprt result;
     if (values.value_set.empty())
     {
-      irep_idt identifier = id2string(to_symbol_expr(pointer).get_identifier())+"'obj";
-      result = symbol_exprt(identifier, pointed_type);
+      result = pointed_object(pointer, ns);
     }
     else
     {
