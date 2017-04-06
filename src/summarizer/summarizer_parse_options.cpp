@@ -503,6 +503,7 @@ int summarizer_parse_optionst::doit()
   if (!options.get_bool_option("inline"))
   {
     heap_analysis(goto_model.goto_functions);
+    add_dynamic_object_symbols(heap_analysis, goto_model);
   }
   
   try
