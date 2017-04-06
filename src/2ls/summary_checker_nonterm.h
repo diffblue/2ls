@@ -14,8 +14,9 @@ Author: Stefan Marticek
 class summary_checker_nontermt:public summary_checker_baset
 {
 public:
-  explicit summary_checker_nontermt(optionst &_options):
-    summary_checker_baset(_options)
+  explicit summary_checker_nontermt(
+    optionst &_options, const ssa_heap_analysist &heap_analysis):
+    summary_checker_baset(_options, heap_analysis)
   {
   }
 

@@ -38,14 +38,14 @@ Function: show_assignments
 
 \*******************************************************************/
 
-void show_assignments(
-  const goto_functionst::goto_functiont &goto_function,
-  const namespacet &ns,
-  std::ostream &out)
+void show_assignments(const goto_functionst::goto_functiont &goto_function,
+                      const namespacet &ns,
+                      std::ostream &out,
+                      const ssa_heap_analysist &heap_analysis)
 {
-  ssa_objectst ssa_objects(goto_function, ns);
-  ssa_value_ait ssa_value_ai(goto_function, ns);
-  assignmentst assignments(goto_function.body, ns, ssa_objects, ssa_value_ai);
+  ssa_objectst ssa_objects(goto_function, ns, heap_analysis);
+  ssa_value_ait ssa_value_ai(goto_function, ns, heap_analysis);
+  assignmentst assignments(goto_function.body, ns, ssa_objects, ssa_value_ai, heap_analysis);
   assignments.output(ns, goto_function.body, out);
 }
 
@@ -69,6 +69,8 @@ void show_assignments(
 {
   const namespacet ns(goto_model.symbol_table);
 
+  ssa_heap_analysist heap_analysis(ns);
+
   if(!function.empty())
   {
     goto_functionst::function_mapt::const_iterator
@@ -76,7 +78,7 @@ void show_assignments(
     if(f_it==goto_model.goto_functions.function_map.end())
       out << "function " << function << " not found\n";
     else
-      show_assignments(f_it->second, ns, out);
+      show_assignments(f_it->second, ns, out, heap_analysis);
   }
   else
   {
@@ -84,8 +86,8 @@ void show_assignments(
     {
       out << ">>>> Function " << f_it->first << "\n";
 
-      show_assignments(f_it->second, ns, out);
-
+      show_assignments(f_it->second, ns, out, heap_analysis);
+        
       out << "\n";
     }
   }
@@ -103,14 +105,14 @@ Function: show_defs
 
 \*******************************************************************/
 
-void show_defs(
-  const goto_functionst::goto_functiont &goto_function,
-  const namespacet &ns,
-  std::ostream &out)
+void show_defs(const goto_functionst::goto_functiont &goto_function,
+               const namespacet &ns,
+               std::ostream &out,
+               const ssa_heap_analysist &heap_analysis)
 {
-  ssa_objectst ssa_objects(goto_function, ns);
-  ssa_value_ait ssa_value_ai(goto_function, ns);
-  assignmentst assignments(goto_function.body, ns, ssa_objects, ssa_value_ai);
+  ssa_objectst ssa_objects(goto_function, ns, heap_analysis);
+  ssa_value_ait ssa_value_ai(goto_function, ns, heap_analysis);
+  assignmentst assignments(goto_function.body, ns, ssa_objects, ssa_value_ai, heap_analysis);
   ssa_ait ssa_analysis(assignments);
   ssa_analysis(goto_function, ns);
   ssa_analysis.output(ns, goto_function.body, out);
@@ -136,6 +138,8 @@ void show_defs(
 {
   const namespacet ns(goto_model.symbol_table);
 
+  ssa_heap_analysist heap_analysis(ns);
+  
   if(!function.empty())
   {
     goto_functionst::function_mapt::const_iterator
@@ -143,7 +147,7 @@ void show_defs(
     if(f_it==goto_model.goto_functions.function_map.end())
       out << "function " << function << " not found\n";
     else
-      show_defs(f_it->second, ns, out);
+      show_defs(f_it->second, ns, out, heap_analysis);
   }
   else
   {
@@ -151,8 +155,8 @@ void show_defs(
     {
       out << ">>>> Function " << f_it->first << "\n";
 
-      show_defs(f_it->second, ns, out);
-
+      show_defs(f_it->second, ns, out, heap_analysis);
+      
       out << "\n";
     }
   }
@@ -239,7 +243,8 @@ void show_ssa(
   const namespacet &ns,
   std::ostream &out)
 {
-  local_SSAt local_SSA(goto_function, ns);
+  ssa_heap_analysist heap_analysis(ns);
+  local_SSAt local_SSA(goto_function, ns, heap_analysis);
   if(simplify)
     ::simplify(local_SSA, ns);
   local_SSA.output_verbose(out);
@@ -555,13 +560,13 @@ Function: show_value_set
 
 \*******************************************************************/
 
-void show_value_set(
-  const goto_functionst::goto_functiont &goto_function,
-  const namespacet &ns,
-  std::ostream &out)
+void show_value_set(const goto_functionst::goto_functiont &goto_function,
+                    const namespacet &ns,
+                    std::ostream &out,
+                    const ssa_heap_analysist &heap_analysis)
 {
-  ssa_objectst ssa_objects(goto_function, ns);
-  ssa_value_ait ssa_value_ai(goto_function, ns);
+  ssa_objectst ssa_objects(goto_function, ns, heap_analysis);
+  ssa_value_ait ssa_value_ai(goto_function, ns, heap_analysis);
   ssa_value_ai.output(ns, goto_function, out);
 }
 
@@ -585,6 +590,8 @@ void show_value_sets(
 {
   const namespacet ns(goto_model.symbol_table);
 
+  ssa_heap_analysist heap_analysis(ns);
+
   if(!function.empty())
   {
     goto_functionst::function_mapt::const_iterator
@@ -592,7 +599,7 @@ void show_value_sets(
     if(f_it==goto_model.goto_functions.function_map.end())
       out << "function " << function << " not found\n";
     else
-      show_value_set(f_it->second, ns, out);
+      show_value_set(f_it->second, ns, out, heap_analysis);
   }
   else
   {
@@ -600,8 +607,8 @@ void show_value_sets(
     {
       out << ">>>> Function " << f_it->first << "\n";
 
-      show_value_set(f_it->second, ns, out);
-
+      show_value_set(f_it->second, ns, out, heap_analysis);
+      
       out << "\n";
     }
   }

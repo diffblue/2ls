@@ -60,6 +60,9 @@ void ssa_value_domaint::transform(
   {
     const code_function_callt &code_function_call=
       to_code_function_call(from->code);
+    const irep_idt &fname = to_symbol_expr(code_function_call.function()).get_identifier();
+
+    const ssa_heap_domaint &heap_domain = static_cast<ssa_value_ait &>(ai).heap_analysis[to];
 
     // functions may alter state almost arbitrarily:
     // * any global-scoped variables
@@ -77,9 +80,12 @@ void ssa_value_domaint::transform(
       assign(*o_it, it, ns);
 #endif
 
+    std::list<symbol_exprt> objects;
+
     for (auto &argument : code_function_call.arguments())
     {
       exprt arg = argument;
+      exprt arg_expr = argument;
       while (arg.type().id() == ID_pointer)
       {
         if (arg.id() == ID_symbol)
@@ -87,13 +93,33 @@ void ssa_value_domaint::transform(
           symbol_exprt pointed_obj = pointed_object(arg, ns);
           pointed_obj.type().set("#dynamic", true);
 
-          assign_lhs_rec(arg, address_of_exprt(pointed_obj), ns, true);
+          std::set<symbol_exprt> new_objects = heap_domain.value(arg_expr);
+          if (new_objects.empty())
+          {
+            new_objects.insert(pointed_obj);
+          }
 
+          auto it = new_objects.begin();
+          assign_lhs_rec(arg, address_of_exprt(*it), ns);
+          objects.push_back(*it);
+
+          for (++it; it != new_objects.end(); ++it)
+          {
+            assign_lhs_rec(arg, address_of_exprt(*it), ns, true);
+            objects.push_back(*it);
+          }
+
+          arg_expr = dereference_exprt(arg_expr, arg.type().subtype());
           arg = pointed_obj;
         }
         else if (arg.id() == ID_address_of)
         {
-          arg = to_address_of_expr(arg).object();
+          arg = arg_expr = to_address_of_expr(arg).object();
+        }
+        else if (arg.id() == ID_typecast)
+        {
+          assert(arg_expr.id() == ID_typecast);
+          arg = arg_expr = to_typecast_expr(arg).op();
         }
       }
     }
@@ -110,17 +136,39 @@ void ssa_value_domaint::transform(
     {
       const symbol_exprt &return_value = to_symbol_expr(to_code_assign(to->code).rhs());
       if (return_value.type().id() == ID_pointer &&
-          return_value.get_identifier() ==
-          id2string(to_symbol_expr(code_function_call.function()).get_identifier()) +
-          "#return_value")
+          return_value.get_identifier() == id2string(fname) + "#return_value")
       {
-        const typet &pointed_type = ns.follow(return_value.type().subtype());
-        symbol_exprt pointed_obj = symbol_exprt(
-            id2string(return_value.get_identifier()) + "'obj",
-            pointed_type);
-        pointed_obj.type().set("#dynamic", true);
+        std::set<symbol_exprt> new_objects = heap_domain.value(return_value);
+        if (new_objects.empty())
+        {
+          symbol_exprt pointed_obj = pointed_object(return_value, ns);
+          pointed_obj.type().set("#dynamic", true);
+          new_objects.insert(pointed_obj);
+        }
 
-        assign_lhs_rec(return_value, address_of_exprt(pointed_obj), ns);
+        auto it = new_objects.begin();
+        assign_lhs_rec(return_value, address_of_exprt(*it), ns);
+        objects.push_back(*it);
+
+        for (++it; it != new_objects.end(); ++it)
+        {
+          assign_lhs_rec(return_value, address_of_exprt(*it), ns, true);
+          objects.push_back(*it);
+        }
+
+        for (auto &new_o : heap_domain.new_caller_objects(fname, from))
+        {
+          objects.push_back(new_o);
+        }
+      }
+    }
+
+    for (const symbol_exprt &o1 : objects)
+    {
+      for (const symbol_exprt &o2 : objects)
+      {
+        if (o1 != o2 && o1.type() == o2.type())
+          value_map[ssa_objectt(o1, ns)].value_set.insert(ssa_objectt(o2, ns));
       }
     }
   }
@@ -167,13 +215,20 @@ void ssa_value_domaint::assign_lhs_rec(
       const struct_typet &struct_type=to_struct_type(lhs_type);
       const struct_typet::componentst &components=struct_type.components();
 
+      auto rhs_it=
+        rhs.id()==ID_struct ? rhs.operands().begin() : rhs.operands().end();
+      
       for(struct_typet::componentst::const_iterator
             it=components.begin();
           it!=components.end();
           it++)
       {
         member_exprt new_lhs(lhs, it->get_name(), it->type());
-        member_exprt new_rhs(rhs, it->get_name(), it->type());
+        exprt new_rhs;
+        if (rhs_it != rhs.operands().end())
+          new_rhs = *(rhs_it++);
+        else
+          new_rhs = member_exprt(rhs, it->get_name(), it->type());
         assign_lhs_rec(new_lhs, new_rhs, ns, add); // recursive call
       }
 

@@ -4,6 +4,7 @@
 #ifndef INC_2LS_SSA_HEAP_DOMAIN_H
 #define INC_2LS_SSA_HEAP_DOMAIN_H
 
+#define USE_DEPRECATED_STATIC_ANALYSIS_H
 
 #include <analyses/static_analysis.h>
 

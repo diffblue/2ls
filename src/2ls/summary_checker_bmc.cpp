@@ -26,7 +26,7 @@ property_checkert::resultt summary_checker_bmct::operator()(
 {
   const namespacet ns(goto_model.symbol_table);
 
-  SSA_functions(goto_model, ns);
+  SSA_functions(goto_model, ns, heap_analysis);
 
   ssa_unwinder.init(false, true);
 
