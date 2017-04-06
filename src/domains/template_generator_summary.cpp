@@ -11,6 +11,7 @@ Author: Peter Schrammel
 #include "template_generator_summary.h"
 #include "equality_domain.h"
 #include "tpolyhedra_domain.h"
+#include "domain.h"
 
 #include <util/find_symbols.h>
 #include <util/arith_tools.h>
@@ -109,7 +110,8 @@ domaint::var_sett template_generator_summaryt::inout_vars()
   for(domaint::var_specst::const_iterator v = var_specs.begin(); 
       v!=var_specs.end(); v++)
   {
-    if(v->kind==domaint::IN || v->kind==domaint::OUT) vars.insert(v->var);
+    if (v->kind == domaint::IN || v->kind == domaint::OUT || v->kind == domaint::OUTHEAP)
+      vars.insert(v->var);
   }
   return vars;
 }

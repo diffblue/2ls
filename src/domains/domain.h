@@ -20,7 +20,7 @@ public:
   typedef std::vector<vart> var_listt;
   typedef std::set<vart> var_sett;
 
-  typedef enum {LOOP, IN, OUT, OUTL} kindt;
+  typedef enum {LOOP, IN, OUT, OUTL, OUTHEAP} kindt;
 
   typedef exprt guardt; 
 

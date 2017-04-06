@@ -37,7 +37,7 @@ class heap_domaint : public domaint
   {
     bool nondet = false;            /**< Row is nondeterministic - expression is TRUE */
 
-    virtual exprt get_row_expr(const vart &templ_expr) const = 0;
+    virtual exprt get_row_expr(const vart &templ_expr, bool rename_templ_expr) const = 0;
 
     virtual bool empty() const = 0;
 
@@ -48,7 +48,7 @@ class heap_domaint : public domaint
   {
     std::set<exprt> points_to;   /**< Set of objects (or NULL) the row variable can point to */
 
-    virtual exprt get_row_expr(const vart &templ_expr) const override;
+    virtual exprt get_row_expr(const vart &templ_expr, bool rename_templ_expr) const override;
 
     virtual bool add_points_to(const exprt &expr) override;
 
@@ -97,7 +97,7 @@ class heap_domaint : public domaint
 
     heap_row_valuet(const dyn_objt &dyn_obj_) : dyn_obj(dyn_obj_) {}
 
-    virtual exprt get_row_expr(const vart &templ_expr) const override;
+    virtual exprt get_row_expr(const vart &templ_expr_, bool rename_templ_expr) const override;
 
     virtual bool add_points_to(const exprt &dest) override;
 
@@ -119,6 +119,9 @@ class heap_domaint : public domaint
     bool add_pointed_by(const rowt &row);
 
     bool add_self_linkage();
+
+   protected:
+    static exprt rename_outheap(const symbol_exprt &expr);
   };
 
   class heap_valuet : public valuet, public std::vector<std::unique_ptr<row_valuet>>
