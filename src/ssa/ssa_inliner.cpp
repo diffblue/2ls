@@ -425,7 +425,7 @@ exprt ssa_inlinert::get_replace_globals_in(
       it!=globals_in.end(); it++)
   {
     // bind only real globals - filter out heap objects
-    if(id2string(it->get_identifier()).find("'obj")==std::string::npos)
+    if(!is_pointed(*it))
     {
       symbol_exprt lhs=*it; // copy
       rename(lhs);

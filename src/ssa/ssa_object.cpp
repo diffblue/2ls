@@ -68,9 +68,7 @@ void collect_ptr_objects(
     const typet &type=ns.follow(src.type());
     if(type.id()==ID_pointer)
     {
-      const irep_idt &identifier=id2string(src.get_identifier()) + "'obj";
-      const typet &pointed_type=src.type().subtype();
-      symbol_exprt ptr_object(identifier, pointed_type);
+      symbol_exprt ptr_object=pointed_object(src, ns);
 
       const symbolt *symbol;
       if(dynamic ||
@@ -190,7 +188,7 @@ void collect_objects_rec(
     if(type.id()==ID_struct)
     {
       std::string id=id2string(ssa_object.get_identifier());
-      if (src.type().get_bool("#dynamic") || is_ptr_object(src))
+      if (src.type().get_bool("#dynamic") || is_pointed(src))
         objects.insert(ssa_object);
 
       // need to split up
@@ -204,6 +202,8 @@ void collect_objects_rec(
           it++)
       {
         member_exprt new_src(src, it->get_name(), it->type());
+        copy_pointed_info(new_src, src);
+
         collect_objects_rec(new_src, ns, objects, literals); // recursive call
       }
     }
