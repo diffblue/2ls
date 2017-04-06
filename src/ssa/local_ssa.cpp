@@ -21,6 +21,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <goto-symex/adjust_float_expressions.h>
 
+#include <langapi/language_util.h>
+#include <util/simplify_expr.h>
+
 #include "local_ssa.h"
 #include "malloc_ssa.h"
 #include "ssa_dereference.h"
@@ -675,6 +678,9 @@ void local_SSAt::build_assertions(locationt loc)
 {
   if(loc->is_assert())
   {
+    const exprt deref_rhs = dereference(loc->guard, loc);
+    collect_iterators_rhs(deref_rhs, loc);
+
     exprt c=read_rhs(loc->guard, loc);
     exprt g=guard_symbol(loc);
     (--nodes.end())->assertions.push_back(implies_exprt(g, c));
@@ -1284,21 +1290,6 @@ void local_SSAt::assign_rec(
       return;
     }
 
-    if (lhs.id() == ID_member && to_member_expr(lhs).compound().get_bool("#advancer") &&
-        to_member_expr(lhs).compound().get_bool("#except_first"))
-    { // if an advancer instance is assigned and it does not cover first element, create
-      // non-deterministic case split since not all list elements are assigned here
-      exprt lhs_copy = lhs;
-      to_member_expr(lhs_copy).compound().set("#except_first", false);
-      if_exprt advancer_split(name(guard_symbol(), LOOP_SELECT, loc), lhs_copy,
-                                              symbol_exprt("", lhs_copy.type())
-
-      );
-      assign_rec(advancer_split, rhs, guard, loc);
-
-      return;
-    }
-
     ssa_objectt lhs_object(lhs, ns);
 
     const std::set<ssa_objectt> &assigned=
@@ -1306,8 +1297,8 @@ void local_SSAt::assign_rec(
 
     if(assigned.find(lhs_object)!=assigned.end())
     {
-      collect_advancers_lhs(lhs_object, loc);
-      collect_advancers_rhs(rhs, loc);
+      collect_iterators_lhs(lhs_object, loc);
+      collect_iterators_rhs(rhs, loc);
 
       exprt ssa_rhs=read_rhs(rhs, loc);
 
@@ -1848,44 +1839,49 @@ exprt local_SSAt::unknown_obj_eq(const symbol_exprt &obj,
   return equal_exprt(member, address_of_exprt(obj));
 }
 
-void local_SSAt::collect_advancers_rhs(const exprt &expr, locationt loc)
+void local_SSAt::collect_iterators_rhs(const exprt &expr, locationt loc)
 {
   if (expr.id() == ID_member)
   {
-    const member_exprt &advancer_ins = to_member_expr(expr);
-    if (advancer_ins.compound().get_bool("#advancer") && advancer_ins.compound().id() == ID_symbol)
+    const member_exprt &member = to_member_expr(expr);
+    if (member.compound().get_bool(ID_iterator) && member.compound().id() == ID_symbol)
     {
-      new_advancer_instance(to_member_expr(expr), loc, advancert::IN_LOC);
+      new_iterator_access(to_member_expr(expr), loc, list_iteratort::IN_LOC);
     }
   }
   else
   {
     forall_operands(it, expr)
-      collect_advancers_rhs(*it, loc);
+        collect_iterators_rhs(*it, loc);
   }
 }
 
-void local_SSAt::collect_advancers_lhs(const ssa_objectt &object, local_SSAt::locationt loc)
+void local_SSAt::collect_iterators_lhs(const ssa_objectt &object, local_SSAt::locationt loc)
 {
-  if (object.get_root_object().get_bool("#advancer") && object.get_root_object().id() == ID_symbol)
+  if (is_iterator(object.get_root_object()) && object.get_root_object().id() == ID_symbol)
   {
     assert(object.get_expr().id() == ID_member);
-    new_advancer_instance(to_member_expr(object.get_expr()), loc, loc->location_number);
+    new_iterator_access(to_member_expr(object.get_expr()), loc, loc->location_number);
   }
 }
 
-void local_SSAt::new_advancer_instance(const member_exprt &expr, local_SSAt::locationt loc,
-                                       int inst_loc_number)
+void local_SSAt::new_iterator_access(const member_exprt &expr, local_SSAt::locationt loc,
+                                     int inst_loc_number)
 {
-  assert(expr.compound().id() == ID_symbol);
-  const symbol_exprt &advancer_sym = to_symbol_expr(expr.compound());
-  const irep_idt &object_id = advancer_sym.get("#object_id");
-  const irep_idt pointer_id = id2string(object_id).substr(0, object_id.size() - 4);
+  assert(is_iterator(expr.compound()));
 
-  exprt pointer = read_rhs(symbol_exprt(pointer_id, expr.type()), loc);
-  assert(pointer.id() == ID_symbol);
-  advancert advancer(to_symbol_expr(pointer), advancer_sym.get("#member"));
+  const irep_idt pointer_id = expr.compound().get(ID_it_pointer);
+  const symbolt &pointer_symbol = ns.lookup(pointer_id);
+  exprt pointer_rhs = read_rhs(pointer_symbol.symbol_expr(), loc);
+  assert(pointer_rhs.id() == ID_symbol);
 
-  auto adv_it = advancers.insert(advancer);
-  adv_it.first->add_instance(expr.get_component_name(), inst_loc_number);
+  unsigned init_value_level = expr.compound().get_unsigned_int(ID_it_init_value_level);
+  const exprt init_pointer = get_pointer(expr.compound(), init_value_level - 1);
+
+  list_iteratort iterator(to_symbol_expr(pointer_rhs), init_pointer,
+                          get_iterator_fields(expr.compound()));
+
+  auto it = iterators.insert(iterator);
+  it.first->add_access(expr, inst_loc_number);
 }
+

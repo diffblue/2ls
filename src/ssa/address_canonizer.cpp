@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/pointer_offset_size.h>
 
 #include "address_canonizer.h"
+#include "ssa_pointed_objects.h"
 
 /*******************************************************************\
 
@@ -75,14 +76,13 @@ exprt address_canonizer(
 
       return sum;
     }
-    else if (object.id() == ID_symbol &&
-             id2string(to_symbol_expr(object).get_identifier()).find("'adv") != std::string::npos)
+    else if (object.id() == ID_symbol && is_iterator(object))
     {
-      // address of advancer is dereferenced to a corresponding symbol - will be bound to real
+      // address of iterator is dereferenced to a corresponding symbol - will be bound to real
       // address during analysis
-      symbol_exprt advancer_addr(id2string(to_symbol_expr(object).get_identifier()) + "'addr",
+      symbol_exprt iterator_addr(id2string(to_symbol_expr(object).get_identifier()) + "'addr",
                                  address.type());
-      return advancer_addr;
+      return iterator_addr;
     }
     else
       return address;

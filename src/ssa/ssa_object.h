@@ -9,6 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_2LS_SSA_SSA_OBJECT_H
 #define CPROVER_2LS_SSA_SSA_OBJECT_H
 
+#include "ssa_pointed_objects.h"
 #include <goto-programs/goto_functions.h>
 
 class ssa_objectt
@@ -93,6 +94,19 @@ public:
   inline void set_flag(const irep_idt flag, bool value)
   {
     expr.set(flag, value);
+  }
+
+  inline void set_iterator(const irep_idt &pointer_id, const std::vector<irep_idt> &fields)
+  {
+    assert(expr.id() == ID_symbol && expr.get_bool(ID_pointed));
+    expr.set(ID_iterator, true);
+    expr.set(ID_it_pointer, pointer_id);
+    set_iterator_fields(expr, fields);
+    expr.set(ID_it_init_value, to_symbol_expr(expr).get_identifier());
+    expr.set(ID_it_init_value_level, expr.get(ID_pointed_level));
+    const irep_idt new_id = id2string(pointer_id) + id2string("'it");
+    to_symbol_expr(expr).set_identifier(new_id);
+    identifier = identifiert(new_id);
   }
 
 protected:

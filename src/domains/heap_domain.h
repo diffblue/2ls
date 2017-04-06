@@ -188,14 +188,14 @@ class heap_domaint:public domaint
   // Getters for protected fields
   const std::list<symbol_exprt> get_new_heap_vars();
 
-  const exprt get_advancer_bindings() const;
+  const exprt get_iterator_bindings() const;
   const exprt get_aux_bindings() const;
   const exprt get_input_bindings() const;
 
  protected:
   templatet templ;
 
-  exprt::operandst advancer_bindings;
+  exprt::operandst iterator_bindings;
   exprt::operandst aux_bindings;
 
   /**
@@ -231,7 +231,7 @@ class heap_domaint:public domaint
   void add_template_row(const var_spect &var_spec, const typet &pointed_type);
 
   // Initializing functions
-  void bind_advancers(const local_SSAt &SSA, const exprt &precondition,
+  void bind_iterators(const local_SSAt &SSA, const exprt &precondition,
                       template_generator_baset &template_generator);
 
   void create_precondition(const symbol_exprt &var, const exprt &precondition);
@@ -240,10 +240,20 @@ class heap_domaint:public domaint
                                const exprt &post_guard, const local_SSAt &SSA,
                                template_generator_baset &template_generator);
 
-  static std::set<symbol_exprt> reachable_objects(const advancert &advancer,
-                                                  const exprt &precondition);
+  const exprt iterator_access_bindings(const symbol_exprt &src, const exprt &init_pointer,
+                                       const symbol_exprt &iterator_sym,
+                                       const std::vector<irep_idt> &fields,
+                                       const list_iteratort::accesst &access, const unsigned level,
+                                       exprt::operandst guards, const exprt &precondition,
+                                       const local_SSAt &SSA);
 
-  static std::set<exprt> collect_preconditions_rec(const exprt &expr, const exprt &precondition);
+  const std::set<symbol_exprt> reachable_objects(const exprt &src,
+                                                 const std::vector<irep_idt> &fields,
+                                                 const exprt &precondition) const;
+
+  static const std::set<exprt> collect_preconditions_rec(const exprt &expr,
+                                                         const exprt &precondition);
+
 
   void add_new_heap_row_spec(const symbol_exprt &expr, const unsigned location_number,
                              const exprt &post_guard);

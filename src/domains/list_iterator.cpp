@@ -1,0 +1,78 @@
+/**
+ *  Viktor Malik, 2/6/17 (c).
+ */
+
+#include <algorithm>
+#include "../ssa/ssa_pointed_objects.h"
+#include "../ssa/address_canonizer.h"
+#include "list_iterator.h"
+
+void list_iteratort::add_access(const member_exprt &expr, int location_number) const
+{
+  assert(expr.compound().get_bool(ID_iterator) && expr.compound().get_bool(ID_pointed));
+
+  accesst access;
+  access.location = location_number;
+
+  unsigned level = pointed_level(expr.compound());
+  unsigned iterator_level = it_value_level(expr.compound());
+  for (unsigned l = iterator_level; l < level; ++l)
+  {
+    access.fields.push_back(pointer_level_field(expr.compound(), l));
+  }
+  access.fields.push_back(expr.get_component_name());
+
+  accesses.push_back(access);
+}
+
+const symbol_exprt list_iteratort::access_symbol_expr(const accesst &access, unsigned level, const namespacet &ns) const
+{
+  int location = level == access.fields.size() - 1 ? access.location : IN_LOC;
+  if (level == 0)
+  {
+    return recursive_member_symbol(iterator_symbol(), access.fields.at(level), location, ns);
+  }
+  else
+  {
+    return recursive_member_symbol(access_symbol_expr(access, level - 1, ns),
+                                   access.fields.at(level), location, ns);
+  }
+}
+
+const symbol_exprt list_iteratort::iterator_symbol() const
+{
+  symbol_exprt iterator(id2string(pointer.get_identifier()).substr(0, id2string(
+      pointer.get_identifier()).find_last_of('#')) + "'it", pointer.type().subtype());
+  iterator.set(ID_iterator, true);
+
+  return iterator;
+}
+
+const symbol_exprt recursive_member_symbol(const symbol_exprt &object, const irep_idt &member,
+                                           const int loc_num, const namespacet &ns)
+{
+  typet type = nil_typet();
+  const typet &object_type = ns.follow(object.type());
+  assert(object_type.id() == ID_struct);
+  for (auto &component : to_struct_type(object_type).components())
+  {
+    if (component.get_name() == member)
+      type = component.type();
+  }
+  assert(type.is_not_nil());
+
+  std::string suffix = loc_num != list_iteratort::IN_LOC ? ("#" + std::to_string(loc_num)) : "";
+  symbol_exprt symbol(id2string(object.get_identifier()) + "." + id2string(member) + suffix, type);
+  copy_pointed_info(symbol, object);
+  copy_iterator(symbol, object);
+
+  return symbol;
+}
+
+equal_exprt list_iteratort::accesst::binding(const symbol_exprt &lhs, const symbol_exprt &rhs,
+                                             const unsigned level, const namespacet &ns) const
+{
+  int loc = level == fields.size() - 1 ? location : IN_LOC;
+  return equal_exprt(recursive_member_symbol(lhs, fields.at(level), loc, ns),
+                     recursive_member_symbol(rhs, fields.at(level), loc, ns));
+}
