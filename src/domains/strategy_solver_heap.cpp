@@ -248,7 +248,8 @@ int strategy_solver_heapt::find_member_row(
       if (id.find(obj_id) != std::string::npos)
       {
         int loc = heap_domain.get_symbol_loc(templ_row.expr);
-        if (loc > max_loc && (kind == domaint::OUT || loc <= actual_loc))
+        if (loc > max_loc &&
+            (kind == domaint::OUT || kind == domaint::OUTHEAP || loc <= actual_loc))
         {
           max_loc = loc;
           result = i;
@@ -311,5 +312,11 @@ void strategy_solver_heapt::initialize(
     solver << input_bindings;
     debug() << "Input bindings:" << eom;
     debug() << from_expr(ns, "", input_bindings) << eom;
+  }
+
+  if (!heap_domain.new_heap_row_specs.empty())
+  {
+    debug() << "New template:" << eom;
+    heap_domain.output_domain(debug(), ns);
   }
 }

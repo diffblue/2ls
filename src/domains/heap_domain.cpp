@@ -140,7 +140,9 @@ exprt heap_domaint::get_row_pre_constraint(const rowt &row, const row_valuet &ro
   // For exit variables the result is true
   if (k == OUT || k == OUTL) return true_exprt();
 
-  return implies_exprt(templ_row.pre_guard, row_value.get_row_expr(templ_row.expr));
+  if (k == OUTHEAP && row_value.empty()) return true_exprt();
+
+  return implies_exprt(templ_row.pre_guard, row_value.get_row_expr(templ_row.expr, false));
 }
 
 /**
@@ -156,7 +158,8 @@ exprt heap_domaint::get_row_post_constraint(const rowt &row, const row_valuet &r
   // For entry variables the result is true
   if (templ_row.kind == IN) return true_exprt();
 
-  exprt c = implies_exprt(templ_row.post_guard, row_value.get_row_expr(templ_row.expr));
+  exprt c = implies_exprt(templ_row.post_guard,
+                          row_value.get_row_expr(templ_row.expr, templ_row.kind == OUTHEAP));
   if (templ_row.kind == LOOP) rename(c);
   return c;
 }
@@ -227,11 +230,14 @@ void heap_domaint::output_value(std::ostream &out, const domaint::valuet &value,
       case OUTL:
         out << "(OUT)  ";
         break;
+      case OUTHEAP:
+        out << "(HEAP)  ";
+        break;
       default:
         assert(false);
     }
     out << "( " << from_expr(ns, "", templ_row.expr) << " == "
-        << from_expr(ns, "", val[row].get_row_expr(templ_row.expr)) << " )"
+        << from_expr(ns, "", val[row].get_row_expr(templ_row.expr, false)) << " )"
         << std::endl;
   }
 }
@@ -259,6 +265,11 @@ void heap_domaint::output_domain(std::ostream &out, const namespacet &ns) const
         out << "(OUT)  ";
         out << from_expr(ns, "", templ_row.post_guard) << " ===> "
             << std::endl << "      ";
+        break;
+      case OUTHEAP:
+        out << "(HEAP) [ " << from_expr(ns, "", templ_row.pre_guard) << " | ";
+        out << from_expr(ns, "", templ_row.post_guard)
+            << " ] ===> " << std::endl << "      ";
         break;
       default:
         assert(false);
@@ -288,12 +299,14 @@ void heap_domaint::project_on_vars(domaint::valuet &value,
     const row_valuet &row_val = val[row];
     if (templ_row.kind == LOOP)
     {
-      c.push_back(implies_exprt(templ_row.pre_guard,
-                                row_val.get_row_expr(templ_row.expr)));
+      c.push_back(implies_exprt(templ_row.pre_guard, row_val.get_row_expr(templ_row.expr, false)));
     }
     else
     {
-      c.push_back(row_val.get_row_expr(templ_row.expr));
+      exprt row_expr = row_val.get_row_expr(templ_row.expr, false);
+      if (templ_row.kind == OUTHEAP)
+        rename(row_expr);
+      c.push_back(row_expr);
     }
   }
   result = conjunction(c);
@@ -353,7 +366,20 @@ std::string heap_domaint::get_base_name(const exprt &expr)
   return result;
 }
 
-exprt heap_domaint::stack_row_valuet::get_row_expr(const domaint::vart &templ_expr) const
+/*******************************************************************\
+
+Function: heap_domaint::stack_row_valuet::get_row_expr
+
+  Inputs: templ_expr Template expression
+
+ Outputs: Formula corresponding to the template row
+
+ Purpose: Stack row is a disjuction of equalities between templ_expr and addresses of
+          dynamic objects from points_to set.
+
+\*******************************************************************/
+exprt heap_domaint::stack_row_valuet::get_row_expr(const vart &templ_expr,
+                                                   bool rename_templ_expr) const
 {
   if (nondet) return true_exprt();
 
@@ -377,11 +403,31 @@ bool heap_domaint::stack_row_valuet::add_points_to(const exprt &expr)
   return new_pt.second;
 }
 
-exprt heap_domaint::heap_row_valuet::get_row_expr(const domaint::vart &templ_expr) const
+/*******************************************************************\
+
+Function: heap_domaint::heap_row_valuet::get_row_expr
+
+  Inputs: templ_expr Template expression
+          rename_templ_expr True if templ_expr should be renamed (the corresponding template row
+                            is of outheap type)
+
+ Outputs: Formula corresponding to the template row
+
+ Purpose: Heap row is disjunction of path sets, where each path set is a conjunction of paths.
+          nondet is TRUE
+          empty is FALSE
+
+\*******************************************************************/
+exprt heap_domaint::heap_row_valuet::get_row_expr(const vart &templ_expr_,
+                                                  bool rename_templ_expr) const
 {
   if (nondet) return true_exprt();
 
-  if (empty())
+  exprt templ_expr = templ_expr_;
+  if (rename_templ_expr)
+    templ_expr = rename_outheap(to_symbol_expr(templ_expr_));
+
+  if (paths.empty())
   {
     if (self_linkage)
     {
