@@ -19,6 +19,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "ssa_domain.h"
 #include "guard_map.h"
 #include "ssa_object.h"
+#include "ssa_heap_domain.h"
 
 #define TEMPLATE_PREFIX "__CPROVER_template"
 #define TEMPLATE_DECL TEMPLATE_PREFIX
@@ -34,11 +35,13 @@ public:
   inline local_SSAt(
     const goto_functiont &_goto_function,
     const namespacet &_ns,
-    const std::string &_suffix=""):
+    const ssa_heap_analysist &_heap_analysis,
+    const std::string &_suffix = "") :
     ns(_ns), goto_function(_goto_function),
-    ssa_objects(_goto_function, ns),
-    ssa_value_ai(_goto_function, ns),
-    assignments(_goto_function.body, ns, ssa_objects, ssa_value_ai),
+    heap_analysis(_heap_analysis),
+    ssa_objects(_goto_function, ns, _heap_analysis),
+    ssa_value_ai(_goto_function, ns, _heap_analysis),
+    assignments(_goto_function.body, ns, ssa_objects, ssa_value_ai, heap_analysis),
     guard_map(_goto_function.body),
     ssa_analysis(assignments),
     suffix(_suffix)
@@ -181,6 +184,8 @@ public:
   bool has_static_lifetime(const exprt &) const;
 
   exprt dereference(const exprt &expr, locationt loc) const;
+
+  const ssa_heap_analysist &heap_analysis;
 
   ssa_objectst ssa_objects;
   typedef ssa_objectst::objectst objectst;

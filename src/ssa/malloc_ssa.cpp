@@ -188,20 +188,19 @@ static void replace_malloc_rec(
   const std::string &suffix,
   symbol_tablet &symbol_table,
   const exprt &malloc_size,
-  unsigned &counter)
+  unsigned loc_number)
 {
   if(expr.id()==ID_side_effect &&
      to_side_effect_expr(expr).get_statement()==ID_malloc)
   {
     assert(!malloc_size.is_nil());
     expr.op0()=malloc_size;
-
-    expr=malloc_ssa(to_side_effect_expr(expr),
-      "$"+i2string(counter++)+suffix, symbol_table);
+ 
+    expr=malloc_ssa(to_side_effect_expr(expr),"$"+std::to_string(loc_number)+suffix,symbol_table);
   }
   else
-    Forall_operands(it, expr)
-      replace_malloc_rec(*it, suffix, symbol_table, malloc_size, counter);
+    Forall_operands(it,expr)
+      replace_malloc_rec(*it,suffix,symbol_table,malloc_size,loc_number);
 }
 
 /*******************************************************************\
@@ -220,7 +219,6 @@ void replace_malloc(
   goto_modelt &goto_model,
   const std::string &suffix)
 {
-  unsigned counter=0;
   Forall_goto_functions(f_it, goto_model.goto_functions)
   {
     exprt malloc_size=nil_exprt();
@@ -242,7 +240,7 @@ void replace_malloc(
             malloc_size=code_assign.rhs();
         }
         replace_malloc_rec(code_assign.rhs(), suffix,
-          goto_model.symbol_table, malloc_size, counter);
+          goto_model.symbol_table, malloc_size, i_it->location_number);
       }
     }
   }

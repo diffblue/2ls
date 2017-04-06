@@ -210,8 +210,8 @@ bool ssa_heap_domaint::is_function_output(const exprt &expr, const irep_idt &fun
     }
 
     const symbolt *symbol;
-    if (!ns.lookup(symbol_expr.get_identifier(), symbol) &&
-        (in_deref && symbol->is_parameter || !symbol->is_procedure_local()))
+    if(!ns.lookup(symbol_expr.get_identifier(), symbol) &&
+       ((in_deref && symbol->is_parameter) || !symbol->is_procedure_local()))
       return true;
   }
   return false;

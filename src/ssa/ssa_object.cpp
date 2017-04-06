@@ -18,6 +18,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <analyses/dirty.h>
 
 #include "ssa_object.h"
+#include "local_ssa.h"
 
 /*******************************************************************\
 
@@ -157,15 +158,6 @@ void collect_objects_rec(
   {
     forall_operands(it, src)
       collect_objects_rec(*it, ns, objects, literals);
-
-    const codet &code=to_code(src);
-    if (code.get_statement()==ID_function_call)
-    {
-      const code_function_callt &function_call=to_code_function_call(code);
-      for (auto &arg : function_call.arguments())
-        collect_ptr_objects(arg, ns, objects, literals, true);
-    }
-
     return;
   }
   else if(src.id()==ID_address_of)
@@ -219,9 +211,13 @@ void collect_objects_rec(
       const symbolt *symbol;
       if(ssa_object.type().get_bool("#dynamic") ||
          (root_object.id()==ID_symbol &&
+          id2string(to_symbol_expr(root_object).get_identifier()).find("#return_value") ==
+          std::string::npos &&
           !ns.lookup(to_symbol_expr(root_object).get_identifier(), symbol) &&
           (symbol->is_parameter || !symbol->is_procedure_local())))
+      {
         collect_ptr_objects(ssa_object.symbol_expr(), ns, objects, literals, false);
+      }
     }
   }
   else
@@ -243,9 +239,7 @@ Function: ssa_objectst::collect_objects
 
 \*******************************************************************/
 
-void ssa_objectst::collect_objects(
-  const goto_functionst::goto_functiont &src,
-  const namespacet &ns)
+void ssa_objectst::collect_objects(const goto_functionst::goto_functiont &src, const namespacet &ns)
 {
   // Add objects for parameters.
   for(goto_functionst::goto_functiont::parameter_identifierst::
@@ -264,58 +258,18 @@ void ssa_objectst::collect_objects(
     collect_objects_rec(it->guard, ns, objects, literals);
     collect_objects_rec(it->code, ns, objects, literals);
   }
-}
 
-/*******************************************************************\
-
-Function: ssa_objectst::add_ptr_objects
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void ssa_objectst::add_ptr_objects(
-  const goto_functionst::goto_functiont &goto_function,
-  const namespacet &ns)
-{
-  objectst tmp;
-
-  for(objectst::const_iterator o_it=objects.begin();
-      o_it!=objects.end();
-      o_it++)
+  // Add new objects created within the function
+  local_SSAt::locationt exit=--(src.body.instructions.end());
+  if (heap_analysis.has_location(exit))
   {
-    exprt root_object=o_it->get_root_object();
-    if(root_object.id()==ID_symbol)
+    const std::list<symbol_exprt> &new_objects=heap_analysis[exit].new_objects();
+    for(const symbol_exprt &o : new_objects)
     {
-      const symbolt &symbol = ns.lookup(root_object);
-      dirtyt dirty(goto_function);
-      if(o_it->type().id()==ID_pointer &&
-         (symbol.is_parameter || !symbol.is_procedure_local() || dirty(symbol.name)))
-      {
-        tmp.insert(*o_it);
-      }
+      collect_objects_rec(o, ns, objects, literals);
     }
   }
 
-  for(objectst::const_iterator o_it=tmp.begin();
-      o_it!=tmp.end();
-      o_it++)
-  {
-    typet type = o_it->type();
-    irep_idt identifier = o_it->get_identifier();
-    do
-    {
-      type = type.subtype();
-      identifier = id2string(identifier) + "'obj";
-      symbol_exprt ptr_object(identifier, type);
-      ptr_object.set(ID_ptr_object, o_it->get_identifier());
-      collect_objects_rec(ptr_object, ns, objects, literals);
-    } while (ns.follow(type).id() == ID_pointer);
-  }
 }
 
 /*******************************************************************\

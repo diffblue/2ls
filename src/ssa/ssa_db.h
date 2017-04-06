@@ -12,6 +12,7 @@ Author: Peter Schrammel
 #include <util/options.h>
 
 #include <ssa/unwindable_local_ssa.h>
+#include <ssa/ssa_heap_domain.h>
 #include <domains/incremental_solver.h>
 #include <goto-programs/goto_functions.h>
 
@@ -64,9 +65,11 @@ public:
   inline void create(
     const function_namet &function_name,
     const goto_functionst::goto_functiont &goto_function,
-    const namespacet &ns)
+    const namespacet &ns,
+    const ssa_heap_analysist &heap_analysis)
   {
-    store[function_name]=new unwindable_local_SSAt(goto_function, ns);
+    store[function_name]=
+      new unwindable_local_SSAt(goto_function, ns, heap_analysis);
   }
 
 protected:

@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <analyses/ai.h>
 
 #include "ssa_object.h"
+#include "ssa_heap_domain.h"
 
 class ssa_value_domaint:public ai_domain_baset
 {
@@ -102,9 +103,10 @@ protected:
 class ssa_value_ait:public ait<ssa_value_domaint>
 {
 public:
-  ssa_value_ait(
-    const goto_functionst::goto_functiont &goto_function,
-    const namespacet &ns_) : ns(ns_)
+  ssa_value_ait(const goto_functionst::goto_functiont &goto_function,
+                const namespacet &ns_,
+                const ssa_heap_analysist &_heap_analysis)
+      : ns(ns_), heap_analysis(_heap_analysis)
   {
     operator()(goto_function, ns_);
   }
@@ -117,6 +119,8 @@ protected:
   void assign(const exprt &src, const exprt &dest, ssa_value_domaint &entry);
 
   const namespacet &ns;
+
+  const ssa_heap_analysist &heap_analysis;
 
   friend class ssa_value_domaint;
 };

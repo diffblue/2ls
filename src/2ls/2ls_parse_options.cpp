@@ -507,24 +507,31 @@ int twols_parse_optionst::doit()
     status() << eom;
   }
 
+  const namespacet ns(goto_model.symbol_table);
+  ssa_heap_analysist heap_analysis(ns);
+  if(!options.get_bool_option("inline"))
+  {
+    heap_analysis(goto_model.goto_functions);
+  }
+  
   try
   {
     std::unique_ptr<summary_checker_baset> checker;
     if(!options.get_bool_option("k-induction") &&
        !options.get_bool_option("incremental-bmc"))
       checker=std::unique_ptr<summary_checker_baset>(
-        new summary_checker_ait(options));
+        new summary_checker_ait(options, heap_analysis));
     if(options.get_bool_option("k-induction") &&
        !options.get_bool_option("incremental-bmc"))
       checker=std::unique_ptr<summary_checker_baset>(
-        new summary_checker_kindt(options));
+        new summary_checker_kindt(options, heap_analysis));
     if(!options.get_bool_option("k-induction") &&
        options.get_bool_option("incremental-bmc"))
       checker=std::unique_ptr<summary_checker_baset>(
-        new summary_checker_bmct(options));
+        new summary_checker_bmct(options, heap_analysis));
     if(options.get_bool_option("nontermination"))
      checker=std::unique_ptr<summary_checker_baset>(
-       new summary_checker_nontermt(options));
+       new summary_checker_nontermt(options, heap_analysis));
 
     checker->set_message_handler(get_message_handler());
     checker->simplify=!cmdline.isset("no-simplify");
@@ -1125,8 +1132,6 @@ bool twols_parse_optionst::process_goto_program(
       if (it->first == "malloc" || it->first == "free")
         it->second.body.clear();
     }
-    // Replace malloc
-    replace_malloc(goto_model,"");
 #endif
 
     // create symbols for objects pointed by parameters
@@ -1141,6 +1146,9 @@ bool twols_parse_optionst::process_goto_program(
 
     // add loop ids
     goto_model.goto_functions.compute_loop_numbers();
+
+    // Replace malloc
+    replace_malloc(goto_model,"");
 
     // remove loop heads from function entries
     remove_loops_in_entry(goto_model);
