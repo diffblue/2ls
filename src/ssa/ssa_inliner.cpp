@@ -508,7 +508,7 @@ exprt ssa_inlinert::get_replace_params(const local_SSAt::var_listt &params,
 
       new_arg_out = new_pointed_arg(new_arg_out, arg_type, args_deref_out);
 
-      if (contains_advancer(params_deref_out))
+      if (contains_iterator(params_deref_out))
       { // If the caller contains advancers, bindings are different since objects from caller will
         // appear in the callee summary
         assert(!args_deref_in.empty() && !args_deref_out.empty());
@@ -1176,17 +1176,11 @@ Function: ssa_inlinert::contains_advancer
  Purpose:
 
 \*******************************************************************/
-bool ssa_inlinert::contains_advancer(const std::list<exprt> &params)
+bool ssa_inlinert::contains_iterator(const std::list<exprt> &params)
 {
-  for (const exprt &p : params)
-  {
-    if (p.id() == ID_symbol &&
-        id2string(to_symbol_expr(p).get_identifier()).find("'adv") != std::string::npos)
-    {
-      return true;
-    }
-  }
-  return false;
+  auto it = std::find_if(params.begin(), params.end(),
+                         [](const exprt &p) { return is_iterator(p); });
+  return (it != params.end());
 }
 
 exprt ssa_inlinert::param_in_transformer(const exprt &param)
@@ -1307,5 +1301,3 @@ const exprt ssa_inlinert::new_pointed_arg(const exprt &arg, const typet &pointed
 
   return nil_exprt();
 }
-
-

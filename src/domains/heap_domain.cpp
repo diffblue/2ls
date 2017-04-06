@@ -7,6 +7,8 @@
 #include "domain.h"
 #include <algorithm>
 #include <util/symbol.h>
+#include "../ssa/ssa_inliner.h"
+#include "../ssa/address_canonizer.h"
 
 /**
  * Initialize value.
@@ -661,8 +663,8 @@ const std::list<symbol_exprt> heap_domaint::get_new_heap_vars()
 void heap_domaint::initialize_domain(const local_SSAt &SSA, const exprt &precondition,
                                      template_generator_baset &template_generator)
 {
-  // Bind list advancers
-  bind_advancers(SSA, precondition, template_generator);
+  // Bind list iterators
+  bind_iterators(SSA, precondition, template_generator);
 
   // Create preconditions for input variables if not exist
   exprt::operandst equs;
@@ -674,71 +676,63 @@ void heap_domaint::initialize_domain(const local_SSAt &SSA, const exprt &precond
 
 /*******************************************************************\
 
-Function: strategy_solver_heapt::bind_advancers
+Function: heap_domaint::bind_iterators
 
   Inputs: SSA, calling context represented by precondition and reference
           to template generator
 
  Outputs:
 
- Purpose: Bind advancers from SSA to actual heap objects from the
+ Purpose: Bind iterators from SSA to actual heap objects from the
           calling context.
 
 \*******************************************************************/
-void heap_domaint::bind_advancers(const local_SSAt &SSA, const exprt &precondition,
+void heap_domaint::bind_iterators(const local_SSAt &SSA, const exprt &precondition,
                                   template_generator_baset &template_generator)
 {
-  for (const advancert &advancer : SSA.advancers)
+  new_heap_row_specs.clear();
+  for (const list_iteratort &iterator : SSA.iterators)
   {
-    exprt::operandst read_bindings;
-    exprt::operandst write_bindings;
-
-    std::set<symbol_exprt> reachable_objs = reachable_objects(advancer, precondition);
-
-    for (const symbol_exprt &reachable : reachable_objs)
+    for (const list_iteratort::accesst &access : iterator.accesses)
     {
-      exprt::operandst reachable_read_binding;
-      exprt::operandst reachable_write_binding;
+      exprt access_binding = iterator_access_bindings(iterator.pointer, iterator.init_pointer,
+                                                      iterator.iterator_symbol(), iterator.fields,
+                                                      access, 0, exprt::operandst(), precondition,
+                                                      SSA);
 
-      if (reachable_objs.size() > 1)
-        reachable_read_binding.push_back(
-            equal_exprt(advancer.pointer, address_of_exprt(reachable)));
-
-      // Bind reachable.m with advancer instance
-      for (auto &instance: advancer.instances)
+      // Special treatment for first element in the list
+      // @TODO this should be handled better
+      if (access.fields.size() > 1 && access.location != list_iteratort::IN_LOC)
       {
-        for (const int &instance_loc : instance.second)
+        const std::set<exprt> first = collect_preconditions_rec(iterator.init_pointer,
+                                                                precondition);
+        for (const exprt &value : first)
         {
-          const equal_exprt instance_eq(
-              advancer.instance_symbol_expr(instance.first, instance_loc),
-              recursive_member_symbol(reachable, instance.first, instance_loc)
-          );
-          if (instance_loc == advancert::IN_LOC)
-            reachable_read_binding.push_back(instance_eq);
-          else
-            reachable_write_binding.push_back(instance_eq);
+          if (value.id() == ID_address_of)
+          {
+            assert(to_address_of_expr(value).object().id() == ID_symbol);
+            const symbol_exprt &first_obj = to_symbol_expr(to_address_of_expr(value).object());
+            const symbol_exprt new_value = recursive_member_symbol(first_obj, access.fields.back(),
+                                                                   access.location, ns);
+            const symbol_exprt old_value = recursive_member_symbol(first_obj, access.fields.back(),
+                                                                   list_iteratort::IN_LOC, ns);
+            const exprt binding = equal_exprt(new_value, old_value);
+            access_binding = or_exprt(access_binding, binding);
+
+            add_new_heap_row_spec(old_value, (unsigned) access.location, binding);
+          }
         }
       }
-      read_bindings.push_back(conjunction(reachable_read_binding));
-      write_bindings.push_back(conjunction(reachable_write_binding));
 
-      // Create new template rows for output write instances
-      for (const std::pair<irep_idt, int> &instance : advancer.output_instances())
-      {
-        new_output_template_row(SSA,
-                                recursive_member_symbol(reachable, instance.first, instance.second),
-                                template_generator);
-      }
+      iterator_bindings.push_back(access_binding);
     }
+  }
 
-    if (!read_bindings.empty())
-    {
-      advancer_bindings.push_back(disjunction(read_bindings));
-    }
-    if (!write_bindings.empty())
-    {
-      advancer_bindings.push_back(disjunction(write_bindings));
-    }
+  // Add template rows for bound heap objects
+  for (auto &row_spec : new_heap_row_specs)
+  {
+    new_output_template_row(row_spec.expr, row_spec.location_number, row_spec.post_guard, SSA,
+                            template_generator);
   }
 }
 
@@ -782,36 +776,220 @@ void heap_domaint::new_output_template_row(const symbol_exprt &var, const unsign
 
 /*******************************************************************\
 
-Function: strategy_solver_heapt::reachable_objects
+Function: heap_domaint::create_precondition
 
-  Inputs: List advancer, function call calling context represented by
-          precondition.
+  Inputs: Variable and a calling context (precondition)
+
+ Outputs:
+
+ Purpose: Create precondition for given variable at the input of the
+          function if it does not exist in given calling context.
+
+\*******************************************************************/
+void heap_domaint::create_precondition(const symbol_exprt &var, const exprt &precondition)
+{
+  if (var.type().id() == ID_pointer)
+  {
+    auto pre = collect_preconditions_rec(var, precondition);
+    if (pre.empty() || pre.size() == 1 && *(pre.begin()) == var)
+    {
+      if (id2string(var.get_identifier()).find('.') == std::string::npos)
+      {
+        // For variables, create abstract address
+        const symbolt *symbol;
+        if (ns.lookup(id2string(var.get_identifier()), symbol)) return;
+
+        address_of_exprt init_value(symbol->symbol_expr());
+        init_value.type() = symbol->type;
+        aux_bindings.push_back(equal_exprt(var, init_value));
+      }
+      else
+      {
+        // For members of structs, find corresponding object in calling context and return
+        // its member
+        std::string var_id_str = id2string(var.get_identifier());
+        const symbol_exprt pointer(var_id_str.substr(0, var_id_str.rfind("'obj")), var.type());
+        const irep_idt member = var_id_str.substr(var_id_str.rfind("."));
+
+        exprt::operandst d;
+        std::set<exprt> pointed_objs = collect_preconditions_rec(pointer, precondition);
+        for (auto pointed : pointed_objs)
+        {
+          if (pointed.id() == ID_address_of)
+          {
+            const exprt pointed_object = to_address_of_expr(pointed).object();
+            if (pointed_object.id() == ID_symbol)
+            {
+              symbol_exprt pointed_member(
+                  id2string(to_symbol_expr(pointed_object).get_identifier()) + id2string(member),
+                  var.type());
+              d.push_back(equal_exprt(var, pointed_member));
+            }
+          }
+        }
+        if (!d.empty())
+        {
+          iterator_bindings.push_back(disjunction(d));
+        }
+      }
+    }
+  }
+}
+
+const exprt heap_domaint::get_iterator_bindings() const
+{
+  return conjunction(iterator_bindings);
+}
+
+const exprt heap_domaint::get_aux_bindings() const
+{
+  return conjunction(aux_bindings);
+}
+
+const exprt heap_domaint::get_input_bindings() const
+{
+  return and_exprt(get_iterator_bindings(), get_aux_bindings());
+}
+
+/*******************************************************************\
+
+Function: heap_domaint::iterator_access_bindings
+
+  Inputs: src Source pointer (symbolic value)
+          init_pointed Actual value of the source pointer
+          iterator_sym Corresponding iterator symbol
+          fields Set of fields to follow
+          access Iterator access to be bound
+          level Current access level
+          guards
+          precondition Calling context
+          SSA
+
+ Outputs: Formula corresponding to bindings
+
+ Purpose: Create bindings of iterator with corresponding dynamic objects. Function is called
+          recursively, if there is access with multiple fields.
+
+\*******************************************************************/
+const exprt heap_domaint::iterator_access_bindings(const symbol_exprt &src,
+                                                   const exprt &init_pointer,
+                                                   const symbol_exprt &iterator_sym,
+                                                   const std::vector<irep_idt> &fields,
+                                                   const list_iteratort::accesst &access,
+                                                   const unsigned level,
+                                                   exprt::operandst guards,
+                                                   const exprt &precondition,
+                                                   const local_SSAt &SSA)
+{
+  const std::set<symbol_exprt> reachable = reachable_objects(init_pointer, fields, precondition);
+
+  exprt::operandst d;
+  for (auto &r : reachable)
+  {
+    exprt::operandst c;
+
+    equal_exprt points_to_eq(src, address_of_exprt(r));
+    c.push_back(points_to_eq);
+
+    if (level == 0)
+    {
+      equal_exprt address_eq(address_canonizer(address_of_exprt(iterator_sym), ns),
+                             address_of_exprt(r));
+      c.push_back(address_eq);
+    }
+
+    equal_exprt access_eq = access.binding(iterator_sym, r, level, ns);
+    c.push_back(access_eq);
+
+    guards.push_back(conjunction(c));
+
+    if (level < access.fields.size() - 1)
+    {
+      assert(access_eq.lhs().id() == ID_symbol);
+      assert(access_eq.rhs().id() == ID_symbol);
+      const symbol_exprt new_src = to_symbol_expr(access_eq.rhs());
+      const symbol_exprt new_iterator_sym = pointed_object(to_symbol_expr(access_eq.lhs()), ns);
+      c.push_back(
+          iterator_access_bindings(new_src, r, new_iterator_sym, {access.fields.at(level)},
+                                   access, level + 1, guards, precondition, SSA));
+    }
+    else if (access.location != list_iteratort::IN_LOC)
+    {
+      add_new_heap_row_spec(
+          recursive_member_symbol(r, access.fields.back(), list_iteratort::IN_LOC, ns),
+          (unsigned) access.location, conjunction(guards));
+    }
+
+    guards.pop_back();
+
+    d.push_back(conjunction(c));
+  }
+
+  if (!d.empty())
+    return disjunction(d);
+  else
+    return true_exprt();
+}
+
+/*******************************************************************\
+
+Function: heap_domaint::reachable_objects
+
+  Inputs: src Source expression
+          fields Set of fields to follow
+          precondition Calling context
 
  Outputs: Set of reachable objects
 
- Purpose: Find all objects reachable from advancer pointer via advancer
-          field in the given precondition.
+ Purpose: Find all objects reachable from source via the vector of fields
 
 \*******************************************************************/
-std::set<symbol_exprt> heap_domaint::reachable_objects(const advancert &advancer,
-                                                       const exprt &precondition)
+const std::set<symbol_exprt> heap_domaint::reachable_objects(const exprt &src,
+                                                             const std::vector<irep_idt> &fields,
+                                                             const exprt &precondition) const
 {
   std::set<symbol_exprt> result;
 
-  // Collect all addresses pointed by advancer pointer (from stack template rows of the
-  // calling context)
-  std::set<exprt> pointed_objs = collect_preconditions_rec(advancer.input_pointer(), precondition);
-  for (const exprt &pointed : pointed_objs)
-  {
-    if (pointed.id() == ID_address_of)
-    {
-      const exprt &pointed_obj = to_address_of_expr(pointed).object();
-      assert(pointed_obj.id() == ID_symbol);
+  if (!(src.id() == ID_symbol || src.id() == ID_member)) return result;
 
+  std::set<symbol_exprt> pointed_objs;
+  if (src.id() == ID_member && to_member_expr(src).compound().get_bool(ID_pointed))
+  {
+    const member_exprt &member = to_member_expr(src);
+    const exprt pointer = get_pointer(member.compound(), pointed_level(member.compound()) - 1);
+
+    std::set<symbol_exprt> r = reachable_objects(pointer, {member.get_component_name()},
+                                                 precondition);
+    pointed_objs.insert(r.begin(), r.end());
+  }
+  else
+  {
+    if (src.type().id() == ID_pointer)
+    {
+      std::set<exprt> values = collect_preconditions_rec(src, precondition);
+      for (auto &v : values)
+      {
+        if (v.id() == ID_address_of)
+        {
+          assert(to_address_of_expr(v).object().id() == ID_symbol);
+          pointed_objs.insert(to_symbol_expr(to_address_of_expr(v).object()));
+        }
+      }
+    }
+    else
+    {
+      assert(src.type().get_bool("#dynamic"));
+      pointed_objs.insert(to_symbol_expr(src));
+    }
+  }
+
+  for (unsigned i = 0; i < fields.size(); ++i)
+  {
+    for (const symbol_exprt &pointed_obj : pointed_objs)
+    {
       // Create obj.member
-      symbol_exprt obj_member = recursive_member_symbol(to_symbol_expr(pointed_obj),
-                                                        advancer.member, advancert::IN_LOC);
-      obj_member.type() = advancer.pointer.type();
+      symbol_exprt obj_member = recursive_member_symbol(pointed_obj, fields.at(i),
+                                                        list_iteratort::IN_LOC, ns);
 
       // Collect all reachable objects (from heap rows of the calling context)
       std::set<exprt> reachable_objs = collect_preconditions_rec(obj_member, precondition);
@@ -826,14 +1004,27 @@ std::set<symbol_exprt> heap_domaint::reachable_objects(const advancert &advancer
         }
       }
     }
+    if (i != fields.size() - 1)
+      pointed_objs = result;
   }
 
   return result;
 }
 
+void heap_domaint::add_new_heap_row_spec(const symbol_exprt &expr, const unsigned location_number,
+                                         const exprt &post_guard)
+{
+  auto it = new_heap_row_specs.emplace(expr, location_number, post_guard);
+  if (!it.second)
+  {
+    if (it.first->post_guard != post_guard)
+      it.first->post_guard = or_exprt(it.first->post_guard, post_guard);
+  }
+}
+
 /*******************************************************************\
 
-Function: strategy_solver_heapt::collect_preconditions_rec
+Function: heap_domaint::collect_preconditions_rec
 
   Inputs: Expression and calling context (precondition)
 
@@ -845,14 +1036,16 @@ Function: strategy_solver_heapt::collect_preconditions_rec
           side.
 
 \*******************************************************************/
-std::set<exprt> heap_domaint::collect_preconditions_rec(const exprt &expr,
-                                                        const exprt &precondition)
+const std::set<exprt> heap_domaint::collect_preconditions_rec(const exprt &expr,
+                                                              const exprt &precondition)
 {
   std::set<exprt> result;
   if (precondition.id() == ID_equal)
   {
     const equal_exprt &eq = to_equal_expr(precondition);
-    if (eq.lhs() == expr && eq.rhs() != expr)
+    if (eq.lhs() == expr && eq.rhs() != expr ||
+        eq.lhs().id() == ID_symbol && expr.id() == ID_symbol &&
+        to_symbol_expr(eq.lhs()).get_identifier() == to_symbol_expr(expr).get_identifier())
     {
       result.insert(eq.rhs());
     }
@@ -866,82 +1059,4 @@ std::set<exprt> heap_domaint::collect_preconditions_rec(const exprt &expr,
       }
   }
   return result;
-}
-
-/*******************************************************************\
-
-Function: strategy_solver_heapt::create_precondition
-
-  Inputs: Variable, calling context (precondition) and reference to
-          bindings list.
-
- Outputs:
-
- Purpose: Create precondition for given variable at the input of the
-          function if it does not exist in given calling context.
-
-\*******************************************************************/
-void heap_domaint::create_precondition(const symbol_exprt &var, const exprt &precondition)
-{
-  if (var.type().id() == ID_pointer)
-  {
-    auto pre = collect_preconditions_rec(var, precondition);
-    if (pre.empty())
-    {
-      if (id2string(var.get_identifier()).find('.') == std::string::npos)
-      {
-        const symbolt *symbol;
-        if (ns.lookup(id2string(var.get_identifier()), symbol)) return;
-
-        address_of_exprt init_value(symbol->symbol_expr());
-        init_value.type() = symbol->type;
-        aux_bindings.push_back(equal_exprt(var, init_value));
-      }
-      else
-      {
-        if (ns.follow(var.type().subtype()).id() == ID_struct)
-        {
-          std::string var_id_str = id2string(var.get_identifier());
-          const symbol_exprt pointer(var_id_str.substr(0, var_id_str.rfind("'obj")), var.type());
-          const irep_idt member = var_id_str.substr(var_id_str.rfind("."));
-
-          exprt::operandst d;
-          std::set<exprt> pointed_objs = collect_preconditions_rec(pointer, precondition);
-          for (auto pointed : pointed_objs)
-          {
-            if (pointed.id() == ID_address_of)
-            {
-              const exprt pointed_object = to_address_of_expr(pointed).object();
-              if (pointed_object.id() == ID_symbol)
-              {
-                symbol_exprt pointed_member(
-                    id2string(to_symbol_expr(pointed_object).get_identifier()) + id2string(member),
-                    var.type());
-                d.push_back(equal_exprt(var, pointed_member));
-              }
-            }
-          }
-          if (!d.empty())
-          {
-            advancer_bindings.push_back(disjunction(d));
-          }
-        }
-      }
-    }
-  }
-}
-
-const exprt heap_domaint::get_advancer_bindings() const
-{
-  return conjunction(advancer_bindings);
-}
-
-const exprt heap_domaint::get_aux_bindings() const
-{
-  return conjunction(aux_bindings);
-}
-
-const exprt heap_domaint::get_input_bindings() const
-{
-  return and_exprt(get_advancer_bindings(), get_aux_bindings());
 }

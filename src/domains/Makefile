@@ -1,7 +1,7 @@
 include ../config.inc
 CBMC ?= ../..
 
-SRC = predicate.cpp fixed_point.cpp ssa_fixed_point.cpp advancer.cpp \
+SRC = predicate.cpp fixed_point.cpp ssa_fixed_point.cpp list_iterator.cpp \
   tpolyhedra_domain.cpp equality_domain.cpp heap_domain.cpp domain.cpp predabs_domain.cpp\
   ssa_analyzer.cpp util.cpp incremental_solver.cpp \
   strategy_solver_base.cpp  \

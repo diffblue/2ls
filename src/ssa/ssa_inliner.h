@@ -161,10 +161,10 @@ class ssa_inlinert : public messaget
                                    const local_SSAt &SSA,
                                    local_SSAt::locationt loc);
 
-	const exprt new_pointed_arg(const exprt &arg, const typet &pointed_type,
-                                const std::list<exprt> &args_out);
+  const exprt new_pointed_arg(const exprt &arg, const typet &pointed_type,
+                              const std::list<exprt> &args_out);
 
-  static bool contains_advancer(const std::list<exprt> &params);
+  static bool contains_iterator(const std::list<exprt> &params);
 };
 
 

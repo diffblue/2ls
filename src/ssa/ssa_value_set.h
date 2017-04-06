@@ -35,11 +35,11 @@ public:
     }
     
     void output(std::ostream &, const namespacet &) const;
-    
-    bool merge(const valuest &src);
 
-    bool add_to_value_set(ssa_objectt object);
-    
+    bool merge(const valuest &src,
+               bool is_loop_back = false,
+               const irep_idt &object_id = irep_idt());
+
     inline void clear()
     {
       *this=valuest();
@@ -80,6 +80,8 @@ protected:
     bool offset,
     unsigned alignment) const;
 
+  void assign_pointed_rhs_rec(const exprt &rhs, const namespacet &ns);
+
   static unsigned merge_alignment(unsigned a, unsigned b)
   {
     // could use lcm here
@@ -103,7 +105,7 @@ public:
 protected:
   virtual void initialize(const goto_functionst::goto_functiont &goto_function) override;
 
-  void assign_ptr_param_rec(const exprt &expr, ssa_value_domaint &entry);
+  void assign_ptr_param(const exprt &expr, ssa_value_domaint &entry);
 
   void assign(const exprt &src, const exprt &dest, ssa_value_domaint &entry);
 
