@@ -185,7 +185,8 @@ class heap_domaint:public domaint
   // Join of values
   virtual void join(valuet &value1, const valuet &value2) override;
 
-  const std::list<symbol_exprt> &get_new_heap_vars() const;
+  // Getters for protected fields
+  const std::list<symbol_exprt> get_new_heap_vars();
 
   const exprt get_advancer_bindings() const;
   const exprt get_aux_bindings() const;
@@ -196,7 +197,34 @@ class heap_domaint:public domaint
 
   exprt::operandst advancer_bindings;
   exprt::operandst aux_bindings;
-  std::list<symbol_exprt> new_heap_row_vars;
+
+  /**
+   * Specification of a new heap row. The row is added dynamically at the beginning of the analysis
+   * after binding of iterators to actual dynamic objects from calling context.
+   */
+  class heap_row_spect
+  {
+   public:
+    symbol_exprt expr;        /**< Row expression */
+    unsigned location_number; /**< Location where the corresponding iterator occured */
+
+    mutable exprt post_guard;
+
+    heap_row_spect(const symbol_exprt &expr, unsigned int location_number, const exprt &post_guard)
+        : expr(expr), location_number(location_number), post_guard(post_guard) {}
+
+    bool operator<(const heap_row_spect &rhs) const
+    {
+      return std::tie(expr, location_number) < std::tie(rhs.expr, rhs.location_number);
+    }
+
+    bool operator==(const heap_row_spect &rhs) const
+    {
+      return std::tie(expr, location_number) == std::tie(rhs.expr, rhs.location_number);
+    }
+  };
+
+  std::set<heap_row_spect> new_heap_row_specs;
 
   void make_template(const var_specst &var_specs, const namespacet &ns);
 
@@ -208,7 +236,8 @@ class heap_domaint:public domaint
 
   void create_precondition(const symbol_exprt &var, const exprt &precondition);
 
-  void new_output_template_row(const local_SSAt &SSA, const symbol_exprt &var,
+  void new_output_template_row(const symbol_exprt &var, const unsigned location_number,
+                               const exprt &post_guard, const local_SSAt &SSA,
                                template_generator_baset &template_generator);
 
   static std::set<symbol_exprt> reachable_objects(const advancert &advancer,
@@ -216,6 +245,8 @@ class heap_domaint:public domaint
 
   static std::set<exprt> collect_preconditions_rec(const exprt &expr, const exprt &precondition);
 
+  void add_new_heap_row_spec(const symbol_exprt &expr, const unsigned location_number,
+                             const exprt &post_guard);
   // Utility functions
   static int get_symbol_loc(const exprt &expr);
 

@@ -614,9 +614,48 @@ bool heap_domaint::heap_row_valuet::add_self_linkage()
   return result;
 }
 
-const std::list<symbol_exprt> &heap_domaint::get_new_heap_vars() const
+/*******************************************************************\
+
+Function: heap_domaint::heap_row_valuet::rename_outheap
+
+  Inputs: expr Expression to be renamed
+
+ Outputs: Renamed expression
+
+ Purpose: Rename OUTHEAP row expression (used for post-expr). Simply remove 'lb' from suffix.
+
+\*******************************************************************/
+exprt heap_domaint::heap_row_valuet::rename_outheap(const symbol_exprt &expr)
 {
-  return new_heap_row_vars;
+  const std::string id = id2string(expr.get_identifier());
+  return symbol_exprt(id.substr(0, id.rfind("lb")) + id.substr(id.rfind("lb") + 2), expr.type());
+}
+
+/*******************************************************************\
+
+Function: heap_domaint::get_new_heap_vars
+
+  Inputs:
+
+ Outputs: List of variables (symbols) that were added to template during analysis
+
+ Purpose:
+
+\*******************************************************************/
+const std::list<symbol_exprt> heap_domaint::get_new_heap_vars()
+{
+  std::list<symbol_exprt> result;
+  for (auto &row : templ)
+  {
+    if (row.kind == OUTHEAP)
+    {
+      assert(row.expr.id() == ID_symbol);
+      symbol_exprt expr = to_symbol_expr(row.expr);
+      rename(expr);
+      result.push_back(expr);
+    }
+  }
+  return result;
 }
 
 void heap_domaint::initialize_domain(const local_SSAt &SSA, const exprt &precondition,
@@ -705,33 +744,40 @@ void heap_domaint::bind_advancers(const local_SSAt &SSA, const exprt &preconditi
 
 /*******************************************************************\
 
-Function: strategy_solver_heapt::new_output_template_row
+Function: heap_domaint::new_output_template_row
 
-  Inputs: SSA, new row variable and the template generator
+  Inputs:
 
  Outputs:
 
  Purpose: Insert new output template row into the template.
 
 \*******************************************************************/
-void heap_domaint::new_output_template_row(const local_SSAt &SSA, const symbol_exprt &var,
+void heap_domaint::new_output_template_row(const symbol_exprt &var, const unsigned location_number,
+                                           const exprt &post_guard, const local_SSAt &SSA,
                                            template_generator_baset &template_generator)
 {
-  exprt guard = SSA.guard_symbol(--SSA.goto_function.body.instructions.end());
-
   template_generator.var_specs.push_back(domaint::var_spect());
   domaint::var_spect &var_spec = template_generator.var_specs.back();
 
-  var_spec.var = var;
-  var_spec.pre_guard = guard;
-  var_spec.post_guard = guard;
+  local_SSAt::locationt loc = SSA.get_location(location_number);
+
+  const exprt pre_guard = SSA.guard_symbol(loc);
+
+  const symbol_exprt pre_var = SSA.name(ssa_objectt(var, SSA.ns), local_SSAt::LOOP_BACK, loc);
+  const symbol_exprt post_var = SSA.name(ssa_objectt(var, SSA.ns), local_SSAt::OUT, loc);
+
+  var_spec.var = pre_var;
+  var_spec.pre_guard = pre_guard;
+  var_spec.post_guard = post_guard;
   var_spec.aux_expr = true_exprt();
-  var_spec.kind = domaint::OUT;
+  var_spec.kind = OUTHEAP;
+
+  renaming_map[pre_var] = post_var;
 
   assert(var.type().id() == ID_pointer);
   const typet &pointed_type = ns.follow(var.type().subtype());
   add_template_row(var_spec, pointed_type);
-  new_heap_row_vars.push_back(var);
 }
 
 /*******************************************************************\
