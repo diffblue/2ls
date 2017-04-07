@@ -35,8 +35,11 @@ class ssa_inlinert : public messaget
   void get_summaries(const local_SSAt &SSA,
 		     bool forward,
 		     exprt::operandst &summaries,
-		     exprt::operandst &bindings);
+		     exprt::operandst &bindings,
+				local_SSAt::locationt loc = local_SSAt::locationt());
   exprt get_summaries(const local_SSAt &SSA);
+
+	exprt get_summaries_to_loc(const local_SSAt &SSA, local_SSAt::locationt loc);
 
   void replace(local_SSAt &SSA,
 	       local_SSAt::nodest::iterator node,

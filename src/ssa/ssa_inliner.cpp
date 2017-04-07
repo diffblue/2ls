@@ -127,14 +127,25 @@ exprt ssa_inlinert::get_summaries(const local_SSAt &SSA)
   return and_exprt(conjunction(bindings),conjunction(summaries));
 }
 
+exprt ssa_inlinert::get_summaries_to_loc(const local_SSAt &SSA, local_SSAt::locationt loc)
+{
+  exprt::operandst summaries,bindings;
+  get_summaries(SSA,true,summaries,bindings, loc);
+  return and_exprt(conjunction(bindings),conjunction(summaries));
+}
+
 void ssa_inlinert::get_summaries(const local_SSAt &SSA,
 				  bool forward,
                                   exprt::operandst &summaries,
-				  exprt::operandst &bindings)
+				  exprt::operandst &bindings,
+        local_SSAt::locationt loc)
 {
   for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
       n_it != SSA.nodes.end(); n_it++)
   {
+    if (loc != local_SSAt::locationt() &&
+        n_it->location->location_number >= loc->location_number)
+      return;
     for(local_SSAt::nodet::function_callst::const_iterator f_it = 
 	  n_it->function_calls.begin();
         f_it != n_it->function_calls.end(); f_it++)
