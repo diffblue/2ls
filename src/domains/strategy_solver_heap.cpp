@@ -159,33 +159,33 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
             int member_val_index;
             member_val_index=find_member_row(
               obj, templ_row.member, actual_loc, templ_row.kind);
-            assert(member_val_index>=0);
-
-            // Add all paths from obj.next to p
-            if(heap_domain.add_transitivity(
-                 row, (unsigned) member_val_index, inv))
+            if (member_val_index>=0 && !inv[member_val_index].nondet)
             {
-              improved = true;
-              debug()
-                << "Add all paths: "
-                << from_expr(ns, "", heap_domain.templ[member_val_index].expr)
-                << ", through: " << from_expr(ns, "", obj) << eom;
+              // Add all paths from obj.next to p
+              if(heap_domain.add_transitivity(row, (unsigned) member_val_index, inv))
+              {
+                improved=true;
+                debug() << "Add all paths: "
+                        << from_expr(ns, "", heap_domain.templ[member_val_index].expr)
+                        << ", through: " << from_expr(ns, "", obj) << eom;
+              }
             }
           }
         }
         else
         {
-          if (heap_domain.set_nondet(row, inv))
+          if(heap_domain.set_nondet(row, inv))
           {
             improved = true;
             debug() << "Set nondet" << eom;
           }
         }
 
-        if (templ_row.mem_kind == heap_domaint::HEAP)
+        if (templ_row.mem_kind==heap_domaint::HEAP)
         { // Recursively update all rows that are dependent on this row
           updated_rows.clear();
-          update_rows_rec(row, inv);
+          if(!inv[row].nondet)
+            update_rows_rec(row, inv);
         }
       }
     }
@@ -196,17 +196,17 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
     debug() << "UNSAT" << eom;
 
 #ifdef DEBUG_OUTPUT
-    for (unsigned i = 0; i < solver.formula.size(); i++)
+    for(unsigned i=0; i<solver.formula.size(); i++)
     {
-      if (solver.solver->is_in_conflict(solver.formula[i]))
+      if(solver.solver->is_in_conflict(solver.formula[i]))
         debug() << "is_in_conflict: " << solver.formula[i] << eom;
       else
         debug() << "not_in_conflict: " << solver.formula[i] << eom;
     }
 
-    for (unsigned i = 0; i < heap_domain.templ.size(); i++)
+    for(unsigned i=0; i<heap_domain.templ.size(); i++)
     {
-      exprt c = heap_domain.get_row_pre_constraint(i, inv[i]);
+      exprt c=heap_domain.get_row_pre_constraint(i, inv[i]);
       debug() << "cond: " << from_expr(ns, "", c) << " " <<
               from_expr(ns, "", solver.get(c)) << eom;
       debug() << "guards: "
@@ -218,7 +218,7 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
               << from_expr(ns, "", heap_domain.templ[i].post_guard) << " "
               << from_expr(ns, "", solver.get(heap_domain.templ[i].post_guard))
               << eom;
-      exprt post = heap_domain.get_row_post_constraint(i, inv[i]);
+      exprt post=heap_domain.get_row_post_constraint(i, inv[i]);
       debug() << "post-cond: " << from_expr(ns, "", post) << " "
               << from_expr(ns, "", solver.get(post)) << eom;
     }
@@ -289,15 +289,19 @@ bool strategy_solver_heapt::update_rows_rec(
   bool result = false;
   for (auto &ptr : row_value.pointed_by)
   {
-    if (heap_domain.add_transitivity(ptr, row, value))
-      result = true;
-    debug() << "recursively updating row: " << ptr << eom;
-    debug() << "add all paths: " << from_expr(ns, "", templ_row.expr)
-            << ", through: "
-            << from_expr(ns, "", templ_row.dyn_obj) << eom;
-    // Recursive update is called for each row only once
-    if (updated_rows.find(ptr) == updated_rows.end())
-      result = update_rows_rec(ptr, value) || result;
+    if(heap_domain.templ[ptr].mem_kind==heap_domaint::HEAP &&
+       heap_domain.templ[ptr].member==templ_row.member)
+    {
+      if(heap_domain.add_transitivity(ptr, row, value))
+        result=true;
+
+      debug() << "recursively updating row: " << ptr << eom;
+      debug() << "add all paths: " << from_expr(ns, "", templ_row.expr) << ", through: "
+              << from_expr(ns, "", templ_row.dyn_obj) << eom;
+      // Recursive update is called for each row only once
+      if(updated_rows.find(ptr)==updated_rows.end())
+        result=update_rows_rec(ptr, value) || result;
+    }
   }
   return result;
 }
