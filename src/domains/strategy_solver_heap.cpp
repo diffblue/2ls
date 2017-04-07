@@ -145,15 +145,16 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
             int member_val_index;
             member_val_index = find_member_row(obj, templ_row.member, actual_loc,
                                                templ_row.kind);
-            assert(member_val_index >= 0);
-
-            // Add all paths from obj.next to p
-            if (heap_domain.add_transitivity(row, (unsigned) member_val_index, inv))
+            if (member_val_index >= 0 && !inv[member_val_index].nondet)
             {
-              improved = true;
-              debug() << "Add all paths: "
-                      << from_expr(ns, "", heap_domain.templ[member_val_index].expr)
-                      << ", through: " << from_expr(ns, "", obj) << eom;
+              // Add all paths from obj.next to p
+              if (heap_domain.add_transitivity(row, (unsigned) member_val_index, inv))
+              {
+                improved = true;
+                debug() << "Add all paths: "
+                        << from_expr(ns, "", heap_domain.templ[member_val_index].expr)
+                        << ", through: " << from_expr(ns, "", obj) << eom;
+              }
             }
           }
         }
@@ -169,7 +170,8 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
         if (templ_row.mem_kind == heap_domaint::HEAP)
         { // Recursively update all rows that are dependent on this row
           updated_rows.clear();
-          update_rows_rec(row, inv);
+          if (!inv[row].nondet)
+            update_rows_rec(row, inv);
         }
       }
     }
@@ -263,14 +265,19 @@ bool strategy_solver_heapt::update_rows_rec(const heap_domaint::rowt &row,
   bool result = false;
   for (auto &ptr : row_value.pointed_by)
   {
-    if (heap_domain.add_transitivity(ptr, row, value))
-      result = true;
-    debug() << "recursively updating row: " << ptr << eom;
-    debug() << "add all paths: " << from_expr(ns, "", templ_row.expr) << ", through: "
-            << from_expr(ns, "", templ_row.dyn_obj) << eom;
-    // Recursive update is called for each row only once
-    if (updated_rows.find(ptr) == updated_rows.end())
-      result = update_rows_rec(ptr, value) || result;
+    if (heap_domain.templ[ptr].mem_kind == heap_domaint::HEAP &&
+        heap_domain.templ[ptr].member == templ_row.member)
+    {
+      if (heap_domain.add_transitivity(ptr, row, value))
+        result = true;
+
+      debug() << "recursively updating row: " << ptr << eom;
+      debug() << "add all paths: " << from_expr(ns, "", templ_row.expr) << ", through: "
+              << from_expr(ns, "", templ_row.dyn_obj) << eom;
+      // Recursive update is called for each row only once
+      if (updated_rows.find(ptr) == updated_rows.end())
+        result = update_rows_rec(ptr, value) || result;
+    }
   }
   return result;
 }
