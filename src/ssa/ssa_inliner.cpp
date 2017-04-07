@@ -538,7 +538,6 @@ exprt ssa_inlinert::get_replace_params(
     std::list<exprt> params_in={param};
     std::list<exprt> params_out={param};
 
-    exprt new_arg_out=arg;
     while(arg_type.id()==ID_pointer)
     {
       std::list<exprt> args_deref_in=apply_dereference(args_in, SSA.ssa_value_ai[loc], SSA.ns);
@@ -550,8 +549,6 @@ exprt ssa_inlinert::get_replace_params(
 
       const typet arg_symbol_type = arg_type.subtype();
       arg_type = SSA.ns.follow(arg_symbol_type);
-
-      new_arg_out = new_pointed_arg(new_arg_out, arg_type, args_deref_out);
 
       if(contains_iterator(params_deref_out))
       { 
@@ -1365,30 +1362,6 @@ bool ssa_inlinert::cs_heap_covered(const exprt &expr)
 {
   return expr.id() == ID_symbol &&
          covered_cs_heap_out.find(to_symbol_expr(expr)) != covered_cs_heap_out.end();
-}
-
-const exprt ssa_inlinert::new_pointed_arg(const exprt &arg, const typet &pointed_type,
-                                          const std::list<exprt> &args_out)
-{
-  symbol_exprt to_find;
-  if (arg.id() == ID_symbol)
-  {
-    to_find = symbol_exprt(id2string(to_symbol_expr(arg).get_identifier()) + "'obj", pointed_type);
-  }
-  else if (arg.id() == ID_address_of && to_address_of_expr(arg).object().id() == ID_symbol)
-  {
-    to_find = to_symbol_expr(to_address_of_expr(arg).object());
-  }
-  else
-    return nil_exprt();
-
-  for (const exprt &a : args_out)
-  {
-    if (a == to_find)
-      return a;
-  }
-
-  return nil_exprt();
 }
 
 exprt ssa_inlinert::get_replace_new_objects(
