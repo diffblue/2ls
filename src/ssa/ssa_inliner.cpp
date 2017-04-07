@@ -1185,12 +1185,12 @@ irep_idt ssa_inlinert::get_original_identifier(const symbol_exprt &s)
     char c=id.at(i);
     if(pos==std::string::npos)
     {
-      if(c=='#' || c=='@' || c=='%' || c=='!' || c=='$')
+      if(c=='#' || c=='@' || c=='%' || c=='!')
         pos=i;
     }
     else
     {
-      if(!(c=='#' || c=='@' || c=='%' || c=='!' || c=='$') &&
+      if(!(c=='#' || c=='@' || c=='%' || c=='!') &&
          !(c=='p' || c=='h' || c=='i') &&
          !(c=='l' || c=='b') &&
          !('0'<=c && c<='9'))
@@ -1233,10 +1233,17 @@ std::list<exprt> ssa_inlinert::apply_dereference(
       ssa_value_domaint::valuest values=value_domain(to_query, ns);
       for(auto &v : values.value_set)
       {
-        result.push_back(v.symbol_expr());
+        assert(v.get_expr().id() == ID_symbol);
+        result.push_back(v.get_expr());
       }
     }
-    else
+    else if (expr.id() == ID_typecast)
+    {
+      std::list<exprt> tmp = apply_dereference({to_typecast_expr(expr).op()}, value_domain, ns);
+      for (auto &e : tmp)
+        result.push_back(e);
+    }
+    else if (expr.id() != ID_constant)
     {
       assert(false);
     }
