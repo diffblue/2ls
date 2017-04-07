@@ -529,6 +529,22 @@ void local_SSAt::build_function_call(locationt loc)
     assert(f.function().id()==ID_symbol); //no function pointers
 
     f = to_function_application_expr(read_rhs(f, loc));
+
+    irep_idt fname = to_symbol_expr(f.function()).get_identifier();
+    //add equalities for arguments
+    unsigned i = 0;
+    for (auto &a : f.arguments())
+    {
+      if (a.is_constant() || a.id() == ID_typecast && to_typecast_expr(a).op().is_constant())
+      {
+        symbol_exprt arg(id2string(fname) + "#arg" + i2string(i) +
+                             "#" + i2string(loc->location_number) , a.type());
+        n_it->equalities.push_back(equal_exprt(a, arg));
+        a = arg;
+      }
+      ++i;
+    }
+
     n_it->function_calls.push_back(
       to_function_application_expr(f));
   }
