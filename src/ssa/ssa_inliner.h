@@ -105,6 +105,8 @@ class ssa_inlinert : public messaget
   local_SSAt::nodet::equalitiest new_equs;
   std::set<local_SSAt::nodet::function_callst::iterator> rm_function_calls;
 
+	std::set<symbol_exprt> covered_cs_heap_out;
+
   void replace_globals_in(const local_SSAt::var_sett &globals_in, 
                           const local_SSAt::var_sett &globals);
   void replace_params(const local_SSAt::var_listt &params,
@@ -131,6 +133,8 @@ class ssa_inlinert : public messaget
 
   void rename(exprt &expr);
   void rename(local_SSAt::nodet &node);
+
+  bool cs_heap_covered(const exprt &expr);
 
 	// Transformation functions for lists of input/output arguments/pointers (or their members)
 	// for binding purposes
