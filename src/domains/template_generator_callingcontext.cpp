@@ -91,7 +91,8 @@ void template_generator_callingcontextt::collect_variables_callingcontext(
       v_it != cs_globals_in.end(); v_it++)
   {
     symbol_exprt dummy;
-    if(ssa_inlinert::find_corresponding_symbol(*v_it,globals_in,dummy))
+    if (ssa_inlinert::find_corresponding_symbol(*v_it, globals_in, dummy) ||
+        id2string(v_it->get_identifier()).find("dynamic_object$") != std::string::npos)
       add_var(*v_it,guard,guard,
 	      domaint::OUT, //the same for both forward and backward
 	      var_specs);
@@ -99,55 +100,63 @@ void template_generator_callingcontextt::collect_variables_callingcontext(
 
   if(!forward) return; //TODO: actually, the context should contain both, arguments and return values 
 
+  std::set<symbol_exprt> args;
   //add function arguments
   for(exprt::operandst::const_iterator a_it =  f_it->arguments().begin();
       a_it !=  f_it->arguments().end(); a_it++)
   {
-    std::set<symbol_exprt> args;
     find_symbols(*a_it,args); 
 
     exprt arg = *a_it;
 
-    // add objects pointed by arguments
-    while (arg.type().id() == ID_pointer)
-    {
-      if (arg.id() == ID_symbol)
-      { // remove SSA suffix (for querying value analysis)
-        const std::string id = id2string(to_symbol_expr(arg).get_identifier());
-        to_symbol_expr(arg).set_identifier(id.substr(0, id.find_last_of('#')));
-      }
-      // query value analysis
-      exprt deref_arg = SSA.dereference(dereference_exprt(arg, arg.type().subtype()),
-                                        n_it->location);
-      debug() << "Argument " << from_expr(SSA.ns, "", arg) << " deref: "
-              << from_expr(SSA.ns, "", deref_arg) << eom;
+//    // add objects pointed by arguments
+//    while (arg.type().id() == ID_pointer)
+//    {
+//      if (arg.id() == ID_symbol)
+//      { // remove SSA suffix (for querying value analysis)
+//        const std::string id = id2string(to_symbol_expr(arg).get_identifier());
+//        to_symbol_expr(arg).set_identifier(id.substr(0, id.find_last_of('#')));
+//      }
+//      const typet &pointed_type = SSA.ns.follow(arg.type().subtype());
+//      // query value analysis
+//      exprt deref_arg = SSA.dereference(dereference_exprt(arg, arg.type().subtype()),
+//                                        n_it->location);
+//
+//      // Find all symbols in dereferenced expression and add them to var_specs
+//      std::set<symbol_exprt> vars;
+//      find_symbols(deref_arg, vars);
+//
+//      for (auto &var : vars)
+//      {
+//        if (SSA.ns.follow(var.type()) == pointed_type)
+//        {
+//          if (pointed_type.id() == ID_struct)
+//          { // need to split the struct into members
+//            std::list<exprt> aliases =
+//                ssa_inlinert::apply_dereference({var}, SSA.ssa_value_ai[n_it->location], SSA.ns);
+//            aliases.push_front(var);
+//            for (auto &alias : aliases)
+//            {
+//              for (auto &component : to_struct_type(pointed_type).components())
+//              {
+//                const symbol_exprt member(id2string(to_symbol_expr(alias).get_identifier()) + "." +
+//                                          id2string(component.get_name()),
+//                                          component.type());
+//
+//                args.insert(to_symbol_expr(SSA.read_rhs(member, n_it->location)));
+//              }
+//            }
+//          }
+//          else
+//            args.insert(to_symbol_expr(SSA.read_rhs(var, n_it->location)));
+//        }
+//      }
+//
+//      arg = deref_arg;
+//    }
 
-      // Find all symbols in dereferenced expression and add them to var_specs
-      std::set<symbol_exprt> vars;
-      find_symbols(deref_arg, vars);
-
-      for (auto &var : vars)
-      {
-        if (var.type().id() == ID_struct)
-        { // need to split the struct into members
-          for (auto &component : to_struct_type(var.type()).components())
-          {
-            const symbol_exprt member(
-                id2string(var.get_identifier()) + "." + id2string(component.get_name()),
-                component.type());
-
-            args.insert(to_symbol_expr(SSA.read_rhs(member, n_it->location)));
-          }
-        }
-        else
-          args.insert(to_symbol_expr(SSA.read_rhs(var, n_it->location)));
-      }
-
-      arg = deref_arg;
-    }
-
-    add_vars(args, guard, guard, domaint::OUT, var_specs);
   }
+  add_vars(args, guard, guard, domaint::OUT, var_specs);
 
 }
 
