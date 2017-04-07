@@ -136,9 +136,8 @@ void local_SSAt::get_globals(locationt loc, std::set<symbol_exprt> &globals,
       std::cout << "global: "
                 << from_expr(ns, "", read_lhs(it->get_expr(),loc)) << std::endl;
 #endif
-      if (!with_returns &&
-          id2string(it->get_identifier()).find(
-              "#return_value") != std::string::npos)
+      if (!with_returns && !is_pointed(it->get_expr()) &&
+          id2string(it->get_identifier()).find("#return_value") != std::string::npos)
         continue;
 
       //filter out return values of other functions
@@ -150,13 +149,11 @@ void local_SSAt::get_globals(locationt loc, std::set<symbol_exprt> &globals,
         continue;
 
       const exprt &root_obj = it->get_root_object();
-      if (root_obj.type().get_bool("#dynamic") && !with_returns) continue;
       if (is_ptr_object(root_obj))
       {
         const symbolt *symbol;
         irep_idt ptr_obj_id = root_obj.get(ID_ptr_object);
         if (ns.lookup(ptr_obj_id, symbol)) continue;
-        if (!symbol->is_parameter && !with_returns) continue;
       }
 
       if (rhs_value)
