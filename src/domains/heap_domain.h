@@ -30,6 +30,19 @@ class heap_domaint : public domaint
     make_template(var_specs, ns);
   }
 
+  struct template_rowt
+  {
+    vart expr;
+    guardt pre_guard;
+    guardt post_guard;
+    exprt aux_expr;
+    kindt kind;
+    mem_kindt mem_kind;
+    exprt dyn_obj;
+    irep_idt member;
+  };
+  typedef std::vector<template_rowt> templatet;
+
   /**
    * Value of a row is set of paths in the heap leading from row variable
    */
@@ -103,7 +116,7 @@ class heap_domaint : public domaint
 
     virtual bool empty() const override
     {
-      return paths.empty();
+      return paths.empty() && !self_linkage;
     }
 
     bool add_path(const exprt &dest, const dyn_objt &dyn_obj);
@@ -133,19 +146,6 @@ class heap_domaint : public domaint
     }
   };
 
-  struct template_rowt
-  {
-    vart expr;
-    guardt pre_guard;
-    guardt post_guard;
-    exprt aux_expr;
-    kindt kind;
-    mem_kindt mem_kind;
-    exprt dyn_obj;
-    irep_idt member;
-  };
-  typedef std::vector<template_rowt> templatet;
-
   // Initialize value
   virtual void initialize(valuet &value) override;
 
@@ -163,6 +163,7 @@ class heap_domaint : public domaint
 
   exprt get_row_post_constraint(const rowt &row, const row_valuet &row_value);
 
+  // Row modifications
   bool add_transitivity(const rowt &from, const rowt &to, heap_valuet &value);
 
   bool add_points_to(const rowt &row, heap_valuet &value, const exprt &dest);
