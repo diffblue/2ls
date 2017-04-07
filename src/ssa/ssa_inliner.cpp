@@ -558,48 +558,57 @@ exprt ssa_inlinert::get_replace_params(
         // If the caller contains iterators, bindings are different since objects from caller will
         // appear in the callee summary
         assert(!args_deref_in.empty() && !args_deref_out.empty());
-        arg_type=SSA.ns.follow(args_deref_in.begin()->type());
 
+        arg_type=SSA.ns.follow(args_deref_in.begin()->type());
         assert(arg_type.id()==ID_struct);
 
         for (const exprt &a : args_deref_in)
         {
-          // Bind argument address
-          c.push_back(equal_exprt(
-              param_out_transformer(a, arg_type, summary.globals_out),
-              arg_out_transformer(a, arg_symbol_type, params_deref_out.begin()->type(), SSA, loc)));
+          std::list<exprt> aliases = apply_dereference({a}, SSA.ssa_value_ai[next_loc], SSA.ns);
+          aliases.push_front(a);
 
-          for (auto &component : to_struct_type(arg_type).components())
+          for (auto &alias : aliases)
           {
-            // Bind argument members at the input
+            // Bind argument address
             c.push_back(equal_exprt(
-              param_in_member_transformer(a, component),
-              arg_in_member_transformer(a, component, SSA, loc)
-            ));
+                param_out_transformer(alias, arg_type, summary.globals_out),
+                arg_out_transformer(alias, arg_symbol_type, params_deref_out.begin()->type(), SSA,
+                                    loc)));
+
+            for (auto &component : to_struct_type(arg_type).components())
+            {
+              // Bind argument members at the input
+              c.push_back(equal_exprt(
+                  param_in_member_transformer(alias, component),
+                  arg_in_member_transformer(alias, component, SSA, loc)
+              ));
+            }
           }
         }
 
         for (const exprt &a : args_deref_out)
         {
-          for (auto &component : to_struct_type(arg_type).components())
+          std::list<exprt> aliases = apply_dereference({a}, SSA.ssa_value_ai[next_loc], SSA.ns);
+          aliases.push_front(a);
+          for (auto &alias : aliases)
           {
-            // Bind argument members at the output (args_deref_out might contain different objects
-            // than args_deref_in since function call may create new objects).
-            symbol_exprt arg_member(id2string(to_symbol_expr(a).get_identifier()) + "." +
-                                    id2string(component.get_name()), component.type());
-
-            symbol_exprt member_lhs_out;
-            if (find_corresponding_symbol(arg_member, summary.globals_out, member_lhs_out))
+            const typet &alias_type = SSA.ns.follow(alias.type());
+            assert(alias_type.id() == ID_struct);
+            for (auto &component : to_struct_type(alias_type).components())
             {
-              rename(member_lhs_out);
-            }
-            else
-            {
-              assert(find_corresponding_symbol(arg_member, cs_globals_in, member_lhs_out));
-            }
+              // Bind argument members at the output (args_deref_out might contain different objects
+              // than args_deref_in since function call may create new objects).
+              symbol_exprt arg_member(id2string(to_symbol_expr(alias).get_identifier()) + "." +
+                                      id2string(component.get_name()), component.type());
 
-            c.push_back(equal_exprt(member_lhs_out,
-                                    arg_out_member_transformer(a, component, SSA, loc)));
+              symbol_exprt member_lhs_out;
+              if (find_corresponding_symbol(arg_member, summary.globals_out, member_lhs_out))
+              {
+                rename(member_lhs_out);
+                c.push_back(equal_exprt(member_lhs_out,
+                                        arg_out_member_transformer(alias, component, SSA, loc)));
+              }
+            }
           }
         }
       }
