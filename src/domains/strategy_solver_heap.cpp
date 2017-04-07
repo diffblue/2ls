@@ -128,6 +128,17 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
 
           symbol_exprt obj=to_symbol_expr(to_address_of_expr(ptr_value).object());
 
+          if (obj.type() != templ_row.expr.type() &&
+              ns.follow(templ_row.expr.type().subtype()) != ns.follow(obj.type()))
+          {
+            if (heap_domain.set_nondet(row, inv))
+            {
+              improved = true;
+              debug() << "Set nondet" << eom;
+            }
+            continue;
+          }
+
           // Add equality p == &obj
           if (heap_domain.add_points_to(row, inv, obj))
           {
