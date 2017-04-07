@@ -37,6 +37,8 @@ void ssa_inlinert::get_summary(
 {
   counter++;
 
+  covered_cs_heap_out.clear();
+
   // getting globals at call site
   local_SSAt::var_sett cs_globals_in, cs_globals_out;
   goto_programt::const_targett loc=n_it->location;
@@ -1302,15 +1304,24 @@ exprt ssa_inlinert::arg_out_transformer(const exprt &arg, const typet &arg_symbo
   const typet &arg_type = SSA.ns.follow(arg_symbol_type);
   if (arg_type.id() == ID_struct)
   {
-    address_of_exprt arg_addr = address_of_exprt(arg);
-    typet object_type = arg_symbol_type;
-    object_type.set("#dynamic", param_type.get_bool("#dynamic"));
-    arg_addr.object().type() = object_type;
+    assert(arg.id() == ID_symbol);
+    symbol_exprt arg_symbol = to_symbol_expr(arg);
+    address_of_exprt arg_addr = address_of_exprt(arg_symbol);
+
+    const symbolt *symbol;
+    if (!SSA.ns.lookup(arg_symbol.get_identifier(), symbol))
+    {
+      arg_addr = address_of_exprt(symbol->symbol_expr());
+    }
+
+    covered_cs_heap_out.insert(arg_symbol);
     return arg_addr;
   }
   else
   {
-    return SSA.name(ssa_objectt(arg, SSA.ns), local_SSAt::OUT, loc);
+    const symbol_exprt &arg_out = SSA.name(ssa_objectt(arg, SSA.ns), local_SSAt::OUT, loc);
+    covered_cs_heap_out.insert(arg_out);
+    return arg_out;
   }
 }
 
@@ -1334,7 +1345,16 @@ exprt ssa_inlinert::arg_out_member_transformer(const exprt &arg,
 {
   symbol_exprt arg_member(id2string(to_symbol_expr(arg).get_identifier()) + "." +
                           id2string(component.get_name()), component.type());
-  return SSA.name(ssa_objectt(arg_member, SSA.ns), local_SSAt::OUT, loc);
+  const symbol_exprt &arg_member_out = SSA.name(ssa_objectt(arg_member, SSA.ns), local_SSAt::OUT,
+                                                loc);
+  covered_cs_heap_out.insert(arg_member_out);
+  return arg_member_out;
+}
+
+bool ssa_inlinert::cs_heap_covered(const exprt &expr)
+{
+  return expr.id() == ID_symbol &&
+         covered_cs_heap_out.find(to_symbol_expr(expr)) != covered_cs_heap_out.end();
 }
 
 const exprt ssa_inlinert::new_pointed_arg(const exprt &arg, const typet &pointed_type,
