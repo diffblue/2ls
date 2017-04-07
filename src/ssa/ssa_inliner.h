@@ -133,6 +133,11 @@ protected:
   exprt get_replace_globals_in(
     const local_SSAt::var_sett &globals_in, 
     const local_SSAt::var_sett &globals);
+  exprt get_replace_new_objects(
+    const local_SSAt &SSA,
+    const function_application_exprt funapp_expr,
+    local_SSAt::locationt loc,
+    const summaryt &summary);
   exprt get_replace_params(
     const local_SSAt::var_listt &params,
     const function_application_exprt &funapp_expr,
