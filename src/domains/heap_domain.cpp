@@ -492,25 +492,51 @@ bool heap_domaint::heap_row_valuet::add_points_to(const exprt &dest)
   }
 }
 
+/*******************************************************************\
+
+Function: heap_domaint::heap_row_valuet::add_path
+
+  Inputs: dest Path destination
+          dyn_obj Dynamic object that the path goes through
+
+ Outputs: True if the value was changed (a path was added)
+
+ Purpose: Add new path set if any path set does not contain the given destination.
+          If any path set already contains dest, do nothing since the pathset will be updated from
+          other rows.
+
+\*******************************************************************/
 bool heap_domaint::heap_row_valuet::add_path(const exprt &dest, const dyn_objt &dyn_obj)
 {
-  pathsett new_path_set;
-  std::set<dyn_objt> dyn_obj_set;
-  if (dyn_obj.first.id() != ID_nil)
+  bool new_path = true;
+  for (auto &path_set : paths)
   {
-    dyn_obj_set.insert(dyn_obj);
+    auto p_it = path_set.find(dest);
+    if (p_it != path_set.end() && p_it->dyn_objects.empty())
+    {
+      new_path = false;
+      break;
+    }
   }
-  if (self_linkage)
+  if (new_path)
   {
-    dyn_obj_set.insert(this->dyn_obj);
+    pathsett new_path_set;
+    std::set<dyn_objt> dyn_obj_set;
+    if (dyn_obj.first.id() != ID_nil)
+    {
+      dyn_obj_set.insert(dyn_obj);
+    }
+    if (self_linkage)
+    {
+      dyn_obj_set.insert(this->dyn_obj);
+    }
+    new_path_set.emplace(dest, dyn_obj_set);
+    paths.push_back(new_path_set);
   }
-  new_path_set.emplace(dest, dyn_obj_set);
-  paths.push_back(new_path_set);
-  return true;
+  return new_path;
 }
 
-bool
-heap_domaint::heap_row_valuet::add_path(const exprt &dest, const heap_domaint::dyn_objt &dyn_obj,
+bool heap_domaint::heap_row_valuet::add_path(const exprt &dest, const heap_domaint::dyn_objt &dyn_obj,
                                         pathsett &path_set)
 {
   if (path_set.find(dest) == path_set.end())
@@ -573,9 +599,9 @@ bool heap_domaint::heap_row_valuet::add_all_paths(const heap_domaint::heap_row_v
         ++next_it;
         if (next_it != other_val.paths.end())
         { // Duplicate element pointed by it
-          ++it;
-          it = paths.insert(it, *it);
-          --it;
+          auto n_it = it;
+          ++n_it;
+          paths.insert(n_it, *it);
         }
 
         // Add all paths to *it
@@ -587,7 +613,6 @@ bool heap_domaint::heap_row_valuet::add_all_paths(const heap_domaint::heap_row_v
         other_it = next_it == other_val.paths.end() ? other_val.paths.begin() : next_it;
       }
     }
-//    join_all_path_sets();
   }
   return result;
 }
