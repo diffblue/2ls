@@ -831,7 +831,8 @@ bool acdl_solvert::analyze_conflict(const local_SSAt &SSA, const exprt& assertio
  Purpose:
 
 \*******************************************************************/
-void acdl_solvert::generalize_proof(const local_SSAt &SSA, const exprt& assertion, acdl_domaint::valuet& val) const
+void acdl_solvert::generalize_proof(const local_SSAt &SSA, 
+    const exprt& assertion, acdl_domaint::valuet& val) const
 {
   if(disable_generalization || analyzes_conflict.disable_backjumping)
     return;
@@ -841,49 +842,8 @@ void acdl_solvert::generalize_proof(const local_SSAt &SSA, const exprt& assertio
   // generalize only when the conflict is due to AI proof
   if(analyzes_conflict.last_proof==analyzes_conflict.ABSINT) {
     assert(analyzes_conflict.conflicting_clause==-1);
-    // traverse the implication graph from
-    // conflict node, and compute the generalization
-    // Compute underapproximation by passing target
-    // element, transformer, and initial element -- the
-    // goal is to compute a weakest initial element that
-    // still satisfies the target after the application of
-    // the abstract transformer
-    acdl_domaint::meet_irreduciblet statement;
-    acdl_domaint::varst vars;
-    acdl_domaint::valuet init_value;
-    acdl_domaint::valuet final_value;
-    acdl_domaint::valuet generalized_value;
-    // generlize up to a UIP (decision level)
-    // For now, we generalize up to last decision level
-    // Input::  init_value ----statement ----> final_value
-    // Output:: init_value ----statement ----> generalized_value
-    for(unsigned i=conflict_graph.reason_trail.size(); i<last_decision_index; i--)
-    {
-      exprt statement=conflict_graph.reason_trail[i].first;
-      if(statement!=nil_exprt()) {
-        std::pair<unsigned, unsigned> index;
-        // construct the abstract initial value
-        index=conflict_graph.reason_trail[i].second;
-        unsigned begin=index.first;
-        unsigned end=index.second;
-        acdl_domaint::valuet val;
-        for(unsigned id=begin; id<=end; id++)
-          init_value.push_back(conflict_graph.prop_trail[id]);
-        // construct the abstract final value
-        exprt stmt=conflict_graph.reason_trail[i-1].first;
-        if(stmt!=nil_exprt()) {
-          index=conflict_graph.reason_trail[i-1].second;
-          begin=index.first;
-          end=index.second;
-          for(unsigned id=begin; id<=end; id++)
-            final_value.push_back(conflict_graph.prop_trail[id]);
-          domain(statement, vars, init_value, final_value, generalized_value);
-          // store the value directly
-          // in the propagation trail
-        }
-      }
-      else break;
-    }
+    
+    analyzes_conflict.generalize(val);
   }
 }
 

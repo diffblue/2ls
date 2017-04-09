@@ -317,6 +317,7 @@ void acdl_analyze_conflict_baset::cancel_once(const local_SSAt &SSA, acdl_confli
   {
     graph.val_trail.pop_back();
     graph.prop_trail.pop_back();
+    graph.reason_trail.pop_back();
   }
 
   graph.control_trail.pop_back();
@@ -368,7 +369,11 @@ Function: acdl_analyze_conflict_baset::get_ai_reason()
 
  Outputs:
 
- Purpose: Get the recent value of decision variables from the prop trail
+ Purpose: Make sure that the value returned from here contains 
+ elements from different decision levels. And there are more than 
+ one elements in the current decision level. If there are only one
+ element in the current decision level, then finding UIP becomes
+ trivial.
 
 \*******************************************************************/
 
@@ -387,7 +392,9 @@ void acdl_analyze_conflict_baset::get_ai_reason(const local_SSAt &SSA,
     reason.push_back(prop_exp);
   }
 #endif
-
+  // **********************************
+  // Strategy 1: Collect all decisions
+  // **********************************
   // just take all decisions as reason
   for(unsigned i=0;i<graph.dec_trail.size();i++)
   {
@@ -397,6 +404,151 @@ void acdl_analyze_conflict_baset::get_ai_reason(const local_SSAt &SSA,
   // now normalize the reason since there may be
   // lot of redundant decisions
   // domain.normalize(reason);
+
+#if 0
+  // *******************************************************************
+  // Strategy 2: Collect all decisions 
+  // upto "dl-1" and for "dl" level, do the following:
+  // Step 1: Collect the meet irreducible
+  // in trail that directly contradict with the final transformer
+  // Step 2: If the above set in empty, then collect all meet irreducibles
+  // that has same symbols as the last transformer that lead to conflict
+  //
+  // In both the cases, assert that the conjunction of the collected 
+  // elements contradict with the final transformer.
+  // *********************************************************************
+
+  // collect all decisions up to dl-1 into reason array
+#ifdef DEBUG  
+  std::cout << "Heuristic for choosing Initial conflict reason" << std::endl;
+#endif
+  if(graph.current_level > 0) {
+    for(unsigned t=0;t<graph.dec_trail.size()-1;t++)
+    {
+      exprt dec_exp=graph.dec_trail[t];
+#ifdef DEBUG
+      std::cout << "The decision expression is " << from_expr(dec_exp) << std::endl;
+#endif
+      reason.push_back(dec_exp);
+    }
+    unsigned dlevel=graph.current_level;
+    assert(dlevel>0);
+    std::cout << "HERE control trail size" << graph.control_trail.size() << std::endl;
+
+    // find the dlevel section of trail
+    int trail_start=graph.control_trail[dlevel-1];
+    int trail_end=
+      dlevel<graph.control_trail.size() ?
+      graph.control_trail[dlevel]-1 : graph.prop_trail.size()-1;
+    std::cout << "HERE" << std::endl;
+
+#ifdef DEBUG
+    std::cout << "The DL section trail start is " << trail_start << "trail end is " << trail_end << std::endl;
+
+    for(int d=trail_end;d>=trail_start;d--)
+      std::cout << "Trail element is " << from_expr(graph.prop_trail[d]) << std::endl;
+#endif
+
+    // collect the last transformer 
+    // that leads to conflict
+    const acdl_domaint::statementt stmt = graph.reason_trail[trail_end].first;
+
+    acdl_domaint::varst stmt_symbols;
+    // get symbols from this meet irreducible
+    find_symbols(stmt, stmt_symbols);
+
+#ifdef DEBUG
+    std::cout << "The current transformer is " << from_expr(stmt) << std::endl;
+#endif
+
+    for(int i=trail_end; i>=trail_start; i--)
+    {
+      exprt trail_exp=graph.prop_trail[i];
+#ifdef DEBUG
+      std::cout << "The meet irreducible checked for contradiction at current decision level is " 
+        << from_expr(trail_exp) << std::endl;
+#endif
+      if(trail_exp == false_exprt()) continue;
+      else {
+
+        // Step 1: Collect the meet irreducible
+        // in trail that directly contradict with the final transformer
+#ifdef DEBUG
+        std::cout << "Checking whether the meet irreducible " 
+          << from_expr(trail_exp) << "contradict with the transformer " 
+          << from_expr(stmt) << std::endl;
+#endif
+        std::unique_ptr<incremental_solvert> solver(
+            incremental_solvert::allocate(SSA.ns, true));
+        *solver << and_exprt(trail_exp, stmt);
+        decision_proceduret::resultt result=(*solver)();
+        if(result==decision_proceduret::D_UNSATISFIABLE) {
+#ifdef DEBUG
+          std::cout << "The meet irreducible " << from_expr(trail_exp) 
+            << "directly contradict with the transformer " 
+            << from_expr(stmt) << std::endl;
+#endif
+          reason.push_back(trail_exp);
+          // only collect the first contradiction
+          // and break from the for loop
+          break;
+        }
+        // Step 2: If the above set in empty, then collect 
+        // all meet irreducibles that has same symbols as the 
+        // last transformer that lead to conflict
+#ifdef DEBUG
+        std::cout << "The meet irreducible " 
+          << from_expr(trail_exp) << "did not contradict with the transformer " 
+          << from_expr(stmt) << std::endl;
+        std::cout << "Checking for matching symbols" << std::endl;
+#endif
+        acdl_domaint::varst prop_symbols;
+        // get symbols from this meet irreducible
+        find_symbols(trail_exp, prop_symbols);
+        // check if this symbol is in dec_symbols
+        for(acdl_domaint::varst::iterator it=prop_symbols.begin(); it!=prop_symbols.end(); it++)
+        {
+          bool is_in=stmt_symbols.find(*it)!=stmt_symbols.end();
+          if(is_in) {
+#ifdef DEBUG
+            std::cout << "Found matching symbols, put " 
+              << from_expr(SSA.ns, "", trail_exp) 
+              << " into reason array" << std::endl;
+#endif
+            reason.push_back(trail_exp);
+          }
+        }
+      }
+    }
+#ifdef DEBUG
+    std::cout << "The initial reason is " << std::endl;
+    for(unsigned j=0;j<reason.size();j++)
+      std::cout << "Reason element:: " << from_expr(reason[j]) << std::endl;
+#endif
+#if 0
+    // assert that the entries in reason trail 
+    // leads to conflict when conjoined with the transformers
+    acdl_domaint::valuet stmt_val;
+    for(unsigned k=0;k<graph.reason_trail.size();k++)
+      stmt_val.push_back(graph.reason_trail[k].first);
+#endif
+
+#ifdef DEBUG
+    std::cout << "Checking that the initial reason leads to conflict " << std::endl;
+#endif
+
+    std::unique_ptr<incremental_solvert> solver(
+        incremental_solvert::allocate(SSA.ns, true));
+    *solver << and_exprt(stmt, conjunction(reason));
+    decision_proceduret::resultt result=(*solver)();
+    assert(result==decision_proceduret::D_UNSATISFIABLE);
+#ifdef DEBUG
+    std::cout << "The initial reason " 
+      << from_expr(conjunction(reason)) << " leads to conflict with the transformer " 
+      << from_expr(stmt) << std::endl;
+  }
+#endif
+#endif
 
 #if 0
   // Step 1: collect all decision variables by traversing the decision trail
@@ -559,6 +711,7 @@ void acdl_analyze_conflict_baset::find_uip(const local_SSAt &SSA,
 
 #ifdef DEBUG
   std::cout << "The DL section trail start is " << trail_start << "trail end is " << trail_end << std::endl;
+  dump_section(trail_start, trail_end, graph);
 #endif
 
   std::vector<bool> marked;
@@ -593,13 +746,152 @@ void acdl_analyze_conflict_baset::find_uip(const local_SSAt &SSA,
       break;
     }
 
-    uip=i;
-    // If a literal of the trail is in conflict,
-    // then this literal must have participated in
-    // any previous conflict clause to make it UNIT
+    // find corresponding reason from reason trail
+    const acdl_domaint::statementt stmt = graph.reason_trail[i].first;
+    
+    // [CHECK ??] antecedent clause must be non-unit
+    // assert(stmt.size()>1);
+    
+    // bool asserting_lit = false;
 
-    // int r=reason_trail[i]; assert(r!=-1);
-    // literalt l=lit_from_trail(i);
+
+#ifdef DEBUG
+    std::cout << "Stepping through antecedent clause " << std::endl;
+#endif
+    // construct init_value from elements in 
+    // the beginning of trail to (i-1)th element
+    acdl_conflict_grapht::indext ind=graph.reason_trail[i].second;
+    unsigned end_index=ind.first;
+    // find initial_value
+    acdl_domaint::valuet init_value;
+    for(unsigned k=0;k<=end_index-1;k++)
+      init_value.push_back(graph.prop_trail[k]);
+
+    acdl_domaint::valuet final_value;
+    // get the final value as the ith element in trail
+    // which corresponds to [i-trail_start] index of array m
+    final_value.push_back(graph.prop_trail[i]);
+
+#if 0
+    // compute the final value
+    unsigned a=ind.first;
+    unsigned b=ind.second;
+    // [TODO] check the index a and b 
+#ifdef DEBUG
+    std::cout << "The deductions corresponding to the transformer " << from_expr(stmt) << "are " << std::endl;
+#endif
+    for(unsigned t=a;t<=b;t++) {
+      std::cout << "Deduction:: " << from_expr(graph.prop_trail[t]) << std::endl;
+      final_value.push_back(graph.prop_trail[t]);
+    }
+#endif
+
+#ifdef DEBUG
+    std::cout << "Perfoming Abduction" << std::endl;
+    acdl_domaint::valuet reason;
+    get_reason(SSA, stmt, init_value, final_value, reason);
+#endif
+    
+    // collect all symbols from 
+    // transformer and initial value
+    acdl_domaint::varst tvars;
+    // [TODO: Check if this is needed] find_symbols(stmt, tvars);
+    for(acdl_domaint::valuet::iterator iti=reason.begin();
+        iti!=reason.end(); iti++) 
+    {
+      acdl_domaint::varst symbols;
+      find_symbols(*iti, symbols);
+      tvars.insert(symbols.begin(), symbols.end());
+    }
+    acdl_domaint::valuet generalized_value;
+    unsigned dec_level=0;
+    // call the abductive generalization transformer
+#ifdef DEBUG
+    std::cout << "Applying abductive underapproximate transformer " << std::endl;
+    std::cout << "Input: Initial value:: " 
+      << from_expr(conjunction(init_value)) << std::endl;
+    std::cout << "Input: Antecedent clause:: " 
+      << from_expr(stmt) << std::endl;
+    std::cout << "Input: Final value:: " 
+      << from_expr(conjunction(final_value)) << std::endl;
+    std::cout << "Input: Variable set:: ";
+    for(acdl_domaint::varst::iterator
+        it1=tvars.begin();it1!=tvars.end(); it1++)
+      std::cout << from_expr(SSA.ns, "", *it1) << " ";
+    std::cout << std::endl;
+#endif
+
+
+#ifdef DEBUG
+    std::cout << "Perfoming Generalization" << std::endl;
+#endif
+    domain(stmt,tvars,init_value,final_value,generalized_value);
+    
+#ifdef DEBUG
+    std::cout << "Output: Generalization of Initial value:: " 
+      << from_expr(conjunction(generalized_value)) << std::endl;
+#endif
+
+#ifdef DEBUG
+    std::cout << "checking whether Generalization subsumes the reason" << std::endl;
+    for(acdl_domaint::valuet::iterator itg=generalized_value.begin();
+        itg!=generalized_value.end(); itg++) 
+    {
+      assert(!domain.is_subsumed_syntactic(*itg, reason));  
+    }
+#endif
+
+    // iterate over generalized_value and 
+    // find comparable elements of the 
+    // generalized value in the trail 
+    for(acdl_domaint::valuet::iterator it=generalized_value.begin();
+        it!=generalized_value.end(); it++) 
+    {
+      dec_level = find_generalization_on_trail(SSA, graph, *it);
+ 
+      // [TODO] What happens when we find a comparable trail element for 
+      // a generalization at decision level 0 
+#if 0
+      if(dec_level==0) {
+        std::cout << "No generalizations found !! " << std::endl;
+        // [TODO] Check for decision level 0
+        assert(0);
+      }
+#endif
+
+      if(dec_level < dlevel)
+      {
+        // generalization on earlier decision level
+        // add to the result clause
+        result_clause.push_back(*it);
+        int l=dec_level;
+        if(l > backtrack_level)
+          backtrack_level = l;
+      }
+      else
+      {
+        // contradiction at current decision level
+        // so, mark the trail
+#ifdef DEBUG
+        std::cout << "Found matching generalized comparable element at current decision level " << std::endl;
+#endif
+        int ind_gen = first_generalization_on_trail(*it, graph, trail_start, trail_end);
+        // assert that there are comparable elements 
+        // in the trail 
+        assert(ind_gen!=-1);
+#ifdef DEBUG
+        std::cout << "The first generalization of" << from_expr(SSA.ns, "", *it) << "is at " << ind_gen << std::endl;
+#endif
+        // update the prop_trail with the generalized element
+        graph.prop_trail[ind_gen]=*it;
+
+        // update the marked data structure
+        if(!marked[ind_gen-trail_start]) 
+          open_paths++;
+        
+        marked[ind_gen-trail_start]=true;
+      }
+    } 
     open_paths--;
   }
   assert(uip!=-1);
@@ -607,6 +899,158 @@ void acdl_analyze_conflict_baset::find_uip(const local_SSAt &SSA,
   std::cout << "UIP is " << from_expr(graph.prop_trail[uip]) << std::endl;
 #endif
   negate(graph.prop_trail[uip], result_clause);
+}
+
+/*******************************************************************\
+
+Function: acdl_analyze_conflict_baset::find_generalization_on_trail
+
+ Inputs:
+
+ Outputs:
+
+ Purpose: returns a decision level where it finds a generalization 
+ of an element in the trail
+
+\*******************************************************************/
+unsigned acdl_analyze_conflict_baset::find_generalization_on_trail(const local_SSAt &SSA, acdl_conflict_grapht &graph, exprt &exp)
+{
+
+#ifdef DEBUG
+  std::cout << "Searching for earliest generalization of literal " << from_expr(SSA.ns, "", exp) << std::endl;
+#endif
+  // search for contradiction from beginning
+
+  unsigned lower_index, upper_index;
+  unsigned control_trail_size=graph.control_trail.size();
+  unsigned search_level=0;
+  while(search_level<=control_trail_size-1) {
+    acdl_domaint::valuet val_perdecision;
+
+#ifdef DEBUG
+    std::cout << "searching for contradiction at level " << search_level << std::endl;
+#endif
+    upper_index=graph.control_trail[search_level];
+    if(search_level==0)
+      lower_index=0;
+    else
+      lower_index=graph.control_trail[search_level-1];
+#ifdef DEBUG
+    std::cout << "Upper index is " << upper_index << "lower index is " << lower_index << std::endl;
+#endif
+    // [TODO] check for empty propagation trail
+    if(upper_index==lower_index) {
+      search_level=search_level+1;
+      continue;
+    }
+    // now traverse the prop_trail
+    unsigned index_level=first_generalization_on_trail(exp,graph,lower_index,upper_index-1);
+    if(index_level>=0) {
+#ifdef DEBUG
+    std::cout << "Found generalization at decision level " << search_level << "for " << from_expr(SSA.ns, "", exp) << std::endl;
+#endif
+      return search_level;
+    }
+
+    search_level=search_level+1;
+  }
+
+#ifdef DEBUG
+  std::cout << "searching for contradiction at the current level" << std::endl;
+#endif
+  acdl_domaint::valuet matched_expr;
+  int control_point=graph.control_trail.back();
+  assert(graph.prop_trail[graph.prop_trail.size()-1]==false_exprt());
+  unsigned gen_level=first_generalization_on_trail(exp,graph,control_point,graph.prop_trail.size()-1);
+  if(gen_level>=0) {
+#ifdef DEBUG
+    std::cout << "Found generalization at current decision level for " << from_expr(SSA.ns, "", exp) << std::endl;
+#endif
+    return graph.current_level;
+  }
+  
+  // if the control reaches here, 
+  // that means no contradiction 
+  // has been found at previous levels
+  return 0;
+}
+
+/*******************************************************************\
+
+Function: acdl_analyze_conflict_baset::first_generalization_on_trail
+
+ Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+unsigned acdl_analyze_conflict_baset::first_generalization_on_trail(
+  exprt &expr, acdl_conflict_grapht &graph, int trail_start, int trail_end)
+{
+  exprt expr_norm, trail_exp_norm;
+  domain.normalize_meetirrd(expr, expr_norm);
+  mp_integer val1, val2;
+  if(expr_norm.id()!=ID_le && expr_norm.id()!=ID_ge)
+  { 
+    for(int i=trail_start; i<=trail_end; i++)
+    {
+      exprt& trail_exp=graph.prop_trail[i];
+      domain.normalize_meetirrd(trail_exp, trail_exp_norm);
+      if(expr_norm==trail_exp)
+        return i;
+      else 
+        continue;
+    }
+  }
+  else 
+  {
+    const exprt &lhs=to_binary_relation_expr(expr_norm).lhs();
+    const exprt &rhs=to_binary_relation_expr(expr_norm).rhs();
+    for(int i=trail_start; i<=trail_end; i++)
+    {
+      exprt& trail_exp=graph.prop_trail[i];
+      domain.normalize_meetirrd(trail_exp, trail_exp_norm);
+      const exprt &lhst=to_binary_relation_expr(trail_exp_norm).lhs();
+      const exprt &rhst=to_binary_relation_expr(trail_exp_norm).rhs();
+      // match the lhs
+      if(lhst == lhs) {
+        // check if the types are equal
+        if(trail_exp_norm.id() == expr_norm.id())
+        {
+          // check that new value trail_exp_norm is 
+          // a generalization of old value expr_norm
+          constant_exprt cexp1=to_constant_expr(rhs);
+          constant_exprt cexp2=to_constant_expr(rhst);
+          to_integer(cexp1, val1);
+          to_integer(cexp2, val2);
+          if(expr_norm.id() == ID_ge)
+          {
+            if(val2<=val1)
+              return i;
+            else {
+              // new value not generalized
+              return -1;
+            }
+          }
+          else if(expr_norm.id() == ID_le)
+          {
+            if(val2>=val1)
+              return i;
+            else {
+              // new value not generalized
+              return -1;
+            }
+          }
+        }
+      }
+      else
+        continue;
+    }
+  }
+  // return -1 on failure
+  return -1;
 }
 
 /*******************************************************************\
@@ -945,4 +1389,198 @@ void acdl_analyze_conflict_baset::preprocess_val(acdl_domaint::valuet& val)
   std::cout << "Now push all collected constraints" << std::endl;
   if(val_temp.size() > 0) 
     val.insert(val.end(), val_temp.begin(), val_temp.end());
+}
+    
+/*******************************************************************
+
+ Function: acdl_analyze_conflict_baset::generalize()
+
+ Inputs:
+
+ Outputs:
+
+ Purpose: Pre-process abstract value to remove (x==N) constraints 
+          by (x<=N) and (x>=N). The trail is not effected by this. 
+
+\*******************************************************************/
+void acdl_analyze_conflict_baset::generalize(acdl_domaint::valuet& val)
+{
+#if 0
+  // traverse the implication graph from
+  // conflict node, and compute the generalization
+  // Compute underapproximation by passing target
+  // element, transformer, and initial element -- the
+  // goal is to compute a weakest initial element that
+  // still satisfies the target after the application of
+  // the abstract transformer
+  acdl_domaint::meet_irreduciblet statement;
+  acdl_domaint::varst vars;
+  acdl_domaint::valuet init_value;
+  acdl_domaint::valuet final_value;
+  acdl_domaint::valuet generalized_value;
+  // generlize up to a UIP (decision level)
+  // For now, we generalize elements in the deepest decision level
+  // Input::  init_value ----statement ----> final_value
+  // Output:: init_value ----statement ----> generalized_value
+  for(unsigned i=reason_trail.size(); i<last_decision_index; i--)
+  {
+    exprt statement=reason_trail[i].first;
+    if(statement!=nil_exprt()) {
+      std::pair<unsigned, unsigned> index;
+      // construct the abstract final value
+      index=reason_trail[i].second;
+      unsigned begin=index.first;
+      unsigned end=index.second;
+      acdl_domaint::valuet val;
+      for(unsigned id=begin; id<=end; id++)
+        init_value.push_back(conflict_graph.prop_trail[id]);
+      // construct the abstract final value
+      exprt stmt=conflict_graph.reason_trail[i-1].first;
+      if(stmt!=nil_exprt()) {
+        index=conflict_graph.reason_trail[i-1].second;
+        begin=index.first;
+        end=index.second;
+        for(unsigned id=begin; id<=end; id++)
+          final_value.push_back(conflict_graph.prop_trail[id]);
+        domain(statement, vars, init_value, final_value, generalized_value);
+        // store the value directly
+        // in the propagation trail
+      }
+    }
+    else break;
+  }
+#endif
+}
+
+/*******************************************************************
+
+ Function: acdl_analyze_conflict_baset::dump_section()
+
+ Inputs:
+
+ Outputs:
+
+ Purpose: 
+
+\*******************************************************************/
+void acdl_analyze_conflict_baset::dump_section(int begin, int end, acdl_conflict_grapht &graph)
+{
+  for(int d=begin;d<=end;d++) {
+    std::cout << "Trail element is " << from_expr(graph.prop_trail[d]) << std::endl;
+  }
+  for(int d=begin;d<=end;d++) {
+    std::cout << "Reason " << from_expr(graph.reason_trail[d].first) << std::endl;
+    std::cout << "Printing propagations through Reason trail index " << std::endl;
+    acdl_conflict_grapht::indext index=graph.reason_trail[d].second;
+    unsigned begin_index=index.first;
+    unsigned end_index=index.second;
+    if(begin_index>end_index) 
+    {
+      std::cout << "Deductions are empty" << std::endl; 
+      continue;
+    }
+    else {
+      for(unsigned i=begin_index;i<=end_index;i++) 
+        std::cout << "deduction " << from_expr(graph.prop_trail[i]) << std::endl;
+      d=d+(end_index-begin_index);
+    }
+  }
+}
+
+/*******************************************************************
+
+ Function: acdl_analyze_conflict_baset::get_reason()
+
+ Inputs:
+
+ Outputs:
+
+ Purpose: Choose meet irreducibles in initial value that contains 
+ symbols in the transformer as the reason set.
+
+\*******************************************************************/
+void acdl_analyze_conflict_baset::get_reason(
+    const local_SSAt &SSA,
+    const acdl_domaint::statementt &statement, 
+    const acdl_domaint::valuet &init_value,
+    const acdl_domaint::valuet &final_value,
+    acdl_domaint::valuet &reason)
+{
+  acdl_domaint::valuet v;
+  acdl_domaint::varst stmt_symbols;
+  // get symbols from this meet irreducible
+  find_symbols(statement, stmt_symbols);
+  // Collect the meet irreducibles
+  // in init_value that has same symbols as the 
+  // statement that lead to final_value
+  for(unsigned i=init_value.size()-1;i>0;i--)
+  {
+    exprt trail_exp=init_value[i];
+#ifdef DEBUG
+    std::cout << "The meet irreducible checked is " 
+      << from_expr(trail_exp) << std::endl;
+#endif
+    assert(trail_exp != false_exprt());
+    acdl_domaint::varst prop_symbols;
+    // get symbols from this meet irreducible
+    find_symbols(trail_exp, prop_symbols);
+    // check if this symbol is in stmt_symbols
+    for(acdl_domaint::varst::iterator it=prop_symbols.begin(); it!=prop_symbols.end(); it++)
+    {
+      bool is_in=stmt_symbols.find(*it)!=stmt_symbols.end();
+      if(is_in) {
+#ifdef DEBUG
+        std::cout << "Found matching symbols, put " 
+          << from_expr(trail_exp) << " into array" << std::endl;
+#endif
+        // [TODO] Do we normalize the expression before inserting ?
+        v.push_back(trail_exp);
+      }
+    }
+  }
+  
+  assert(v.size() > 0);
+#ifdef DEBUG
+  std::cout << "Checking that the relevant value " 
+    << from_expr(conjunction(v)) << "is the reason for the final value when the transformer "
+    << from_expr(statement) << "is applied" << std::endl;
+#endif
+
+#if 0
+  std::unique_ptr<incremental_solvert> solver(
+      incremental_solvert::allocate(SSA.ns, true));
+  *solver << implies_exprt(and_exprt(statement,conjunction(v)), conjunction(final_value));
+  decision_proceduret::resultt result=(*solver)();
+  if(result==decision_proceduret::D_SATISFIABLE) {
+#ifdef DEBUG
+    std::cout << "The value " << from_expr(conjunction(v))
+      << "is the reason for deriving " 
+      << from_expr(conjunction(final_value)) << std::endl;
+#endif
+  }
+#endif 
+
+   exprt exp=implies_exprt(and_exprt(statement,conjunction(v)), conjunction(final_value));
+   bool state=domain.check_val(exp);
+   // state must be SAT
+   assert(state==false);
+#ifdef DEBUG
+    std::cout << "The value " << from_expr(conjunction(v))
+      << "is the reason for deriving " 
+      << from_expr(conjunction(final_value)) << std::endl;
+#endif
+/*
+#ifdef DEBUG
+  std::cout << "Choose minimal subset in relevant value as reason" << std::endl;
+#endif
+*/   
+ 
+  // copy v into reason
+  reason.swap(v);
+
+#ifdef DEBUG
+  std::cout << "The conflict reason is " << std::endl;
+  for(unsigned j=0;j<reason.size();j++)
+    std::cout << "Reason element:: " << from_expr(reason[j]) << std::endl;
+#endif
 }

@@ -39,9 +39,25 @@ void acdl_conflict_grapht::add_deductions
     acdl_domaint::meet_irreduciblet exp=*it;
     assign(exp);
   }
-  index=std::make_pair(begin, prop_trail.size());
-  prop_info=std::make_pair(stmt, index);
-  reason_trail.push_back(prop_info);
+  // insert into reason_trail
+  // update the index entry
+  // for reason_trail 
+  for(std::vector<acdl_domaint::meet_irreduciblet>::const_iterator it
+        =m_ir.begin(); it!=m_ir.end(); it++)
+  {
+#ifdef DEBUG
+    std::cout << "Pushed into reason trail" << std::endl;
+#endif
+    if(begin<prop_trail.size()) 
+     index=std::make_pair(begin, prop_trail.size()-1);
+    else {
+      // this detects that no deductions has been made
+      index=std::make_pair(begin, prop_trail.size()-2);
+    }
+    prop_info=std::make_pair(stmt, index);
+    reason_trail.push_back(prop_info);
+    std::cout << "The reason element pushed is:: " << from_expr(reason_trail[reason_trail.size()-1].first) << "Index:: Begin " << (begin-1) << "End " << prop_trail.size()-1 << std::endl;
+  }
 }
 
 /*******************************************************************\
@@ -58,6 +74,7 @@ Function: acdl_conflict_grapht::add_decision
 void acdl_conflict_grapht::add_decision
 (const acdl_domaint::meet_irreduciblet &m_ir)
 {
+  unsigned begin=prop_trail.size();
   ++current_level;
   control_trail.push_back(prop_trail.size());
   acdl_domaint::meet_irreduciblet exp=m_ir;
@@ -68,9 +85,9 @@ void acdl_conflict_grapht::add_decision
   // to annotate the segments in reason trail with
   // special decision entries, helper for generalization
   indext index;
-  index=std::make_pair(0, 0);
+  index=std::make_pair(begin, prop_trail.size()-1);
   prop_infot prop_info;
-  prop_info=std::make_pair(nil_exprt(), index);
+  prop_info=std::make_pair(true_exprt(), index);
   reason_trail.push_back(prop_info);
 }
 

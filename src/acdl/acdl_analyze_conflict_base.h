@@ -49,7 +49,8 @@ public:
   void negate(exprt& exp, acdl_domaint::valuet &clause);
   void get_ai_reason(const local_SSAt &SSA, acdl_conflict_grapht &graph, acdl_domaint::valuet &reason);
   void find_uip(const local_SSAt &SSA, acdl_conflict_grapht &graph, acdl_domaint::valuet &conf_clause, unsigned dlevel);
-
+  unsigned find_generalization_on_trail(const local_SSAt &SSA, acdl_conflict_grapht &graph, exprt &exp);
+  unsigned first_generalization_on_trail(exprt &expr, acdl_conflict_grapht &graph, int trail_start, int trail_end);
   unsigned get_earliest_contradiction(const local_SSAt &SSA, acdl_conflict_grapht &graph, acdl_domaint::meet_irreduciblet &exp);
   unsigned get_latest_contradiction(const local_SSAt &SSA, acdl_conflict_grapht &graph, acdl_domaint::meet_irreduciblet &exp);
   int first_contradiction_on_trail(const exprt& expr, acdl_conflict_grapht &graph, int start, int end);
@@ -58,6 +59,13 @@ public:
   std::vector<acdl_domaint::valuet> learned_clauses;
   exprt flip(acdl_domaint::meet_irreduciblet &m);
   void preprocess_val(acdl_domaint::valuet& val);
+  void generalize(acdl_domaint::valuet& val);
+  void dump_section(int begin, int end, acdl_conflict_grapht &graph);
+  void get_reason(const local_SSAt &SSA, 
+      const acdl_domaint::statementt &statement, 
+      const acdl_domaint::valuet &init_value,
+      const acdl_domaint::valuet &final_value,
+      acdl_domaint::valuet &reason);
 
 protected:  
   virtual void generalize_conflict(acdl_conflict_grapht &graph) { assert(false); }
