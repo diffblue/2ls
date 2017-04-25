@@ -377,7 +377,7 @@ void ssa_local_unwindert::add_loop_body(loopt &loop)
        it->constraints.empty() &&
        it->function_calls.empty())
       continue;
-
+    
 #ifdef DEBUG
     std::cout << "add body node: "
               << it->location->location_number << std::endl;
@@ -674,7 +674,8 @@ void ssa_local_unwindert::loop_continuation_conditions(
 
 exprt ssa_local_unwindert::get_loop_exit_conditions(
             unsigned location_number,
-            const local_SSAt::nodet& node)
+            const local_SSAt::nodet& node,
+            bool first_loop_iteration)
 {
     exprt::operandst loop_exit_cond;
     std::vector<symbol_exprt>::iterator 
@@ -684,10 +685,10 @@ exprt ssa_local_unwindert::get_loop_exit_conditions(
             it!=loops[location_number].exit_conditions.end();
             it+=2,it2+=2)
     {
-        symbol_exprt se1 = *it;
-        symbol_exprt se2 = *it2;
-        unwinder_rename(se1, node, false);
-        unwinder_rename(se2, node, false);
+        symbol_exprt se1=*it;
+        symbol_exprt se2=*it2;
+        unwinder_rename(se1, node, first_loop_iteration);
+        unwinder_rename(se2, node, first_loop_iteration);
         loop_exit_cond.push_back(and_exprt(se1, se2));
     }
     it2=++loops[location_number].exit_conditions_neg.begin();
@@ -696,14 +697,16 @@ exprt ssa_local_unwindert::get_loop_exit_conditions(
             it!=loops[location_number].exit_conditions_neg.end();
             ++++it,++++it2)
     {
-        symbol_exprt se1 = *it;
-        symbol_exprt se2 = *it2;
-        unwinder_rename(se1, node, false);
-        unwinder_rename(se2, node, false);
+        symbol_exprt se1=*it;
+        symbol_exprt se2=*it2;
+        unwinder_rename(se1, node, first_loop_iteration);
+        unwinder_rename(se2, node, first_loop_iteration);
         loop_exit_cond.push_back(and_exprt(se1, not_exprt(se2)));
     }
     return not_exprt(disjunction(loop_exit_cond));
 }
+
+
 
 /*******************************************************************\
 Function: ssa_local_unwindert::unwinder_rename

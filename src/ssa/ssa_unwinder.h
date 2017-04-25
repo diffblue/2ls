@@ -43,8 +43,10 @@ public:
   // maybe move to unwindable_local_ssa as it is not really unwinder related
   void loop_continuation_conditions(exprt::operandst& loop_cont) const;
   
-  exprt get_loop_exit_conditions(unsigned location_number,
-                                 const local_SSAt::nodet &node);
+  exprt get_loop_exit_conditions(
+            unsigned location_number,
+            const local_SSAt::nodet& node,
+            bool first_loop_iteration);
 
 #if 0
   // TODO: these two should be possible with unwindable_local_ssa facilities

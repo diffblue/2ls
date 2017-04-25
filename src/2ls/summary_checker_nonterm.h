@@ -25,6 +25,9 @@ public:
 
   void check_properties(
     const ssa_dbt::functionst::const_iterator f_it);
+
+  void check_properties_linear(
+    const ssa_dbt::functionst::const_iterator f_it);
   
 protected:
   typedef struct loop_varst
@@ -38,6 +41,9 @@ protected:
   typedef std::map<unsigned, loop_varst> loops_collectort;
 
   loops_collectort loop_map;
+  bool second_check_finished;
+
+  summary_checker_baset::resultt check_nonterm_linear();
 };
 
 #endif /* SUMMARIZER_NONTERM_H */

@@ -431,6 +431,20 @@ int twols_parse_optionst::doit()
     options.set_option("show-invariants", true);
   }
 
+  if(cmdline.isset("nontermination"))
+  {
+    // turn assertions (from generic checks) into assumptions
+    Forall_goto_functions(f_it, goto_model.goto_functions)
+    {
+      goto_programt &body=f_it->second.body;
+      Forall_goto_program_instructions(i_it, body)
+      {
+        if(i_it->is_assert())
+        i_it->type=goto_program_instruction_typet::ASSUME;
+      }
+    }
+  }
+
 #if IGNORE_RECURSION
   if(recursion_detected)
   {

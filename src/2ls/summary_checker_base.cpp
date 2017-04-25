@@ -306,13 +306,14 @@ void summary_checker_baset::check_properties(
         std::cout << "property: " << from_expr(SSA.ns, "", property)
                   << std::endl;
 #endif
-
+        std::cout << "++++++++++++" << from_expr(SSA.ns, "", property) << std::endl;
         property_map[property_id].location=i_it;
         cover_goals.goal_map[property_id].conjuncts.push_back(property);
       }
     }
   }
 
+  exprt::operandst ass;
   for(cover_goals_extt::goal_mapt::const_iterator
         it=cover_goals.goal_map.begin();
       it!=cover_goals.goal_map.end();
@@ -320,9 +321,12 @@ void summary_checker_baset::check_properties(
   {
     // Our goal is to falsify a property.
     // The following is TRUE if the conjunction is empty.
+    for (auto conj : it->second.conjuncts)
+      ass.push_back((conj));
     literalt p=!solver.convert(conjunction(it->second.conjuncts));
     cover_goals.add(p);
   }
+  solver<<conjunction(ass);
 
   status() << "Running " << solver.solver->decision_procedure_text() << eom;
 
@@ -341,6 +345,42 @@ void summary_checker_baset::check_properties(
     {
       if(!g_it->covered)
         property_map[it->first].result=PASS;
+    }
+  }
+
+  for(local_SSAt::nodest::const_iterator n_it=SSA.nodes.begin();
+        n_it!=SSA.nodes.end(); n_it++)
+  {
+    if(!n_it->enabling_expr.is_true())
+      continue;
+
+    if (!n_it->equalities.empty())
+    {
+      std::cout << "------------- EQUALITIES --------------" << std::endl;
+
+      for(local_SSAt::nodet::equalitiest::const_iterator
+            e_it=n_it->equalities.begin();
+          e_it!=n_it->equalities.end();
+          e_it++)
+      {
+        exprt ex = solver.solver->get(*e_it);
+        std::cout << "Solver result for " << from_expr(SSA.ns, "", *e_it) << " is: ";
+        std::cout << from_expr(SSA.ns, "", ex) << std::endl;
+      }
+    }
+
+    if (!n_it->constraints.empty())
+    {
+      std::cout << "------------- CONSTRAINTS --------------" << std::endl;
+      for(local_SSAt::nodet::constraintst::const_iterator
+            c_it=n_it->constraints.begin();
+          c_it!=n_it->constraints.end();
+          c_it++)
+      {
+        exprt ex = solver.solver->get(*c_it);
+        std::cout << "Solver result for " << from_expr(SSA.ns, "", *c_it) << " is: ";
+        std::cout << from_expr(SSA.ns, "", ex) << std::endl;
+      }
     }
   }
 
