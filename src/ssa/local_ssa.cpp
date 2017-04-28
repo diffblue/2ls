@@ -1593,17 +1593,17 @@ std::list<exprt> & operator << (
 
   }
 
-  for (auto &obj : src.unknown_objs)
-  {
-    const typet &obj_type = src.ns.follow(obj.type());
-    if (obj_type.id() == ID_struct)
-    {
-      for (auto &component : to_struct_type(obj_type).components())
-      {
-        dest.push_back(src.unknown_obj_eq(obj, component));
-      }
-    }
-  }
+//  for (auto &obj : src.unknown_objs)
+//  {
+//    const typet &obj_type = src.ns.follow(obj.type());
+//    if (obj_type.id() == ID_struct)
+//    {
+//      for (auto &component : to_struct_type(obj_type).components())
+//      {
+//        dest.push_back(src.unknown_obj_eq(obj, component));
+//      }
+//    }
+//  }
 #endif
 
   return dest;
@@ -1653,17 +1653,17 @@ decision_proceduret & operator << (
     }
   }
 
-  for (auto &obj : src.unknown_objs)
-  {
-    const typet &obj_type = src.ns.follow(obj.type());
-    if (obj_type.id() == ID_struct)
-    {
-      for (auto &component : to_struct_type(obj_type).components())
-      {
-        dest << src.unknown_obj_eq(obj, component);
-      }
-    }
-  }
+//  for (auto &obj : src.unknown_objs)
+//  {
+//    const typet &obj_type = src.ns.follow(obj.type());
+//    if (obj_type.id() == ID_struct)
+//    {
+//      for (auto &component : to_struct_type(obj_type).components())
+//      {
+//        dest << src.unknown_obj_eq(obj, component);
+//      }
+//    }
+//  }
 #endif  
   return dest;
 }
@@ -1718,17 +1718,17 @@ incremental_solvert & operator << (
     }
   }
 
-  for (auto &obj : src.unknown_objs)
-  {
-    const typet &obj_type = src.ns.follow(obj.type());
-    if (obj_type.id() == ID_struct)
-    {
-      for (auto &component : to_struct_type(obj_type).components())
-      {
-        dest << src.unknown_obj_eq(obj, component);
-      }
-    }
-  }
+//  for (auto &obj : src.unknown_objs)
+//  {
+//    const typet &obj_type = src.ns.follow(obj.type());
+//    if (obj_type.id() == ID_struct)
+//    {
+//      for (auto &component : to_struct_type(obj_type).components())
+//      {
+//        dest << src.unknown_obj_eq(obj, component);
+//      }
+//    }
+//  }
 #endif  
   return dest;
 }
