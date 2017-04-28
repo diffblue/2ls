@@ -197,6 +197,10 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
   {
     options.set_option("heap", true);
   }
+  else if (cmdline.isset("heap-interval"))
+  {
+    options.set_option("heap-interval", true);
+  }
   else
   {
     if(cmdline.isset("zones"))
@@ -486,6 +490,8 @@ int twols_parse_optionst::doit()
     status() << "Using (dis)equalities domain" << eom;
   else if (options.get_bool_option("heap"))
     status() << "Using heap domain" << eom;
+  else if (options.get_bool_option("heap-interval"))
+    status() << "Using heap domain with interval domain for values" << eom;
   else
   {
     if(options.get_bool_option("intervals"))
