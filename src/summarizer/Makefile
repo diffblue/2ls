@@ -58,6 +58,7 @@ DELTA_OBJ+=\
       ../domains/predabs_domain$(OBJEXT) \
       ../domains/equality_domain$(OBJEXT) \
       ../domains/heap_domain$(OBJEXT) \
+      ../domains/heap_interval_domain$(OBJEXT) \
       ../domains/domain$(OBJEXT) \
       ../domains/util$(OBJEXT) \
       ../domains/incremental_solver$(OBJEXT) \
@@ -69,6 +70,7 @@ DELTA_OBJ+=\
       ../domains/strategy_solver_binsearch$(OBJEXT) \
       ../domains/strategy_solver_binsearch2$(OBJEXT) \
       ../domains/strategy_solver_binsearch3$(OBJEXT) \
+      ../domains/strategy_solver_heap_interval$(OBJEXT) \
       ../domains/template_generator_base$(OBJEXT) \
       ../domains/template_generator_summary$(OBJEXT) \
       ../domains/template_generator_callingcontext$(OBJEXT) \

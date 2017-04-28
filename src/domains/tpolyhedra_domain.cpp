@@ -1,5 +1,6 @@
 #include "tpolyhedra_domain.h"
 #include "util.h"
+#include "domain.h"
 
 #include <iostream>
 
@@ -892,7 +893,8 @@ void tpolyhedra_domaint::add_interval_template(const var_specst &var_specs,
   for(var_specst::const_iterator v = var_specs.begin(); 
       v!=var_specs.end(); v++)
   {
-    if(v->kind==IN) continue; 
+    if(v->kind==IN) continue;
+    if (v->var.type().id() == ID_pointer) continue;
 
     // x
     add_template_row(v->var,v->pre_guard,v->post_guard,

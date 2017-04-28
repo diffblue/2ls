@@ -26,6 +26,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "strategy_solver_predabs.h"
 #include "ssa_analyzer.h"
 #include "strategy_solver_heap.h"
+#include "strategy_solver_heap_interval.h"
 
 
 #include <solvers/sat/satcheck.h>
@@ -111,6 +112,13 @@ void ssa_analyzert::operator()(incremental_solvert &solver,
                                                 precondition, get_message_handler(),
                                                 template_generator);
     result = new heap_domaint::heap_valuet();
+  }
+  else if (template_generator.options.get_bool_option("heap-interval"))
+  {
+    strategy_solver = new strategy_solver_heap_intervalt(
+        *static_cast<heap_interval_domaint *>(domain), solver, SSA, precondition,
+        get_message_handler(), template_generator);
+    result = new heap_interval_domaint::heap_interval_valuet();
   }
   else
   {
