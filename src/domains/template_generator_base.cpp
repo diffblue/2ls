@@ -12,12 +12,14 @@ Author: Peter Schrammel
 #include <util/prefix.h>
 #include <util/mp_arith.h>
 
+#include <ssa/ssa_inliner.h>
+
 #include "template_generator_base.h"
 #include "equality_domain.h"
 #include "tpolyhedra_domain.h"
 #include "predabs_domain.h"
 #include "heap_domain.h"
-#include <ssa/ssa_inliner.h>
+#include "heap_interval_domain.h"
 
 #ifdef DEBUG
 #include <iostream>
@@ -741,5 +743,42 @@ void template_generator_baset::instantiate_standard_domains(
       var_specs, SSA.ns);
     static_cast<tpolyhedra_domaint *>(domain_ptr)->add_quadratic_template(
       var_specs, SSA.ns);
+  }
+  else if (options.get_bool_option("heap-interval"))
+  {
+    filter_heap_interval_domain();
+    domain_ptr = new heap_interval_domaint(domain_number, renaming_map, var_specs, SSA.ns);
+  }
+}
+
+void template_generator_baset::filter_heap_interval_domain()
+{
+  domaint::var_specst new_var_specs(var_specs);
+  var_specs.clear();
+  for(domaint::var_specst::const_iterator v = new_var_specs.begin();
+      v!=new_var_specs.end(); v++)
+  {
+    const domaint::vart &s = v->var;
+
+    if (s.type().id()==ID_unsignedbv ||
+        s.type().id()==ID_signedbv ||
+        s.type().id()==ID_floatbv)
+    {
+      var_specs.push_back(*v);
+      continue;
+    }
+
+    if (s.id() == ID_symbol && s.type().id() == ID_pointer &&
+        id2string(to_symbol_expr(s).get_identifier()).find("__CPROVER") == std::string::npos)
+    {
+      // Filter out non-assigned OUT variables
+      if (v->kind != domaint::OUT ||
+          ssa_inlinert::get_original_identifier(to_symbol_expr(s)) !=
+          to_symbol_expr(s).get_identifier())
+      {
+        var_specs.push_back(*v);
+        continue;
+      }
+    }
   }
 }

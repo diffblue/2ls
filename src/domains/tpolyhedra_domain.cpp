@@ -1008,6 +1008,8 @@ void tpolyhedra_domaint::add_interval_template(
   {
     if(v.kind==IN)
       continue;
+    if(v.var.type().id()==ID_pointer)
+      continue;
 
     // x
     add_template_row(
