@@ -175,8 +175,7 @@ property_checkert::resultt summary_checker_ait::report_termination()
       }
     }
 #endif
-    //return property_checkert::FAIL;
-    return property_checkert::UNKNOWN;
+    return property_checkert::FAIL;
   }
   return property_checkert::UNKNOWN;
 }

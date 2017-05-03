@@ -9,8 +9,6 @@ Author: Stefan Marticek
 #ifndef SUMMARIZER_NONTERM_H
 #define SUMMARIZER_NONTERM_H
 
-#include <ssa/ssa_var_collector.h>
-
 #include "summary_checker_base.h"
 
 class summary_checker_nontermt : public summary_checker_baset
