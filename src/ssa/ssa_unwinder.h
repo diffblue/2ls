@@ -42,11 +42,6 @@ public:
   // TODO: this should be loop specific in future,
   // maybe move to unwindable_local_ssa as it is not really unwinder related
   void loop_continuation_conditions(exprt::operandst& loop_cont) const;
-  
-  exprt get_loop_exit_conditions(
-            unsigned location_number,
-            const local_SSAt::nodet& node,
-            bool first_loop_iteration);
 
 #if 0
   // TODO: these two should be possible with unwindable_local_ssa facilities
@@ -80,8 +75,7 @@ public:
     exit_mapt exit_map;
     std::map<symbol_exprt, symbol_exprt> pre_post_map;
     std::vector<exprt> modified_vars;
-    std::vector<symbol_exprt> exit_conditions;  //for nontermination analysis
-    std::vector<symbol_exprt> exit_conditions_neg;  //for nontermination analysis
+
     // for assertion hoisting
     typedef struct
     {

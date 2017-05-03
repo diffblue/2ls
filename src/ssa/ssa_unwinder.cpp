@@ -179,8 +179,6 @@ void ssa_local_unwindert::build_exit_conditions()
           it->second.assertion_hoisting_map[n_it->location->get_target()]
             .exit_conditions.push_back(and_exprt(g, c));
         }
-        it->second.exit_conditions.push_back(SSA.guard_symbol(n_it->location));
-        it->second.exit_conditions.push_back(SSA.cond_symbol(n_it->location));
       }
       else if(next==it->second.body_nodes.end() &&
               !n_it->location->guard.is_true())
@@ -204,10 +202,6 @@ void ssa_local_unwindert::build_exit_conditions()
           it->second.assertion_hoisting_map[n_it->location->get_target()]
             .exit_conditions.push_back(and_exprt(g, not_exprt(c)));
         }
-        it->second.exit_conditions_neg
-                .push_back(SSA.guard_symbol(n_it->location));
-        it->second.exit_conditions_neg
-                .push_back(SSA.cond_symbol(n_it->location));
       }
     }
   }
@@ -377,7 +371,7 @@ void ssa_local_unwindert::add_loop_body(loopt &loop)
        it->constraints.empty() &&
        it->function_calls.empty())
       continue;
-    
+
 #ifdef DEBUG
     std::cout << "add body node: "
               << it->location->location_number << std::endl;
@@ -671,42 +665,6 @@ void ssa_local_unwindert::loop_continuation_conditions(
   }
   SSA.increment_unwindings(-1);
 }
-
-exprt ssa_local_unwindert::get_loop_exit_conditions(
-            unsigned location_number,
-            const local_SSAt::nodet& node,
-            bool first_loop_iteration)
-{
-    exprt::operandst loop_exit_cond;
-    std::vector<symbol_exprt>::iterator 
-            it2=++loops[location_number].exit_conditions.begin();
-    for (std::vector<symbol_exprt>::iterator 
-            it=loops[location_number].exit_conditions.begin();
-            it!=loops[location_number].exit_conditions.end();
-            it+=2,it2+=2)
-    {
-        symbol_exprt se1=*it;
-        symbol_exprt se2=*it2;
-        unwinder_rename(se1, node, first_loop_iteration);
-        unwinder_rename(se2, node, first_loop_iteration);
-        loop_exit_cond.push_back(and_exprt(se1, se2));
-    }
-    it2=++loops[location_number].exit_conditions_neg.begin();
-    for (std::vector<symbol_exprt>::iterator 
-            it=loops[location_number].exit_conditions_neg.begin();
-            it!=loops[location_number].exit_conditions_neg.end();
-            ++++it,++++it2)
-    {
-        symbol_exprt se1=*it;
-        symbol_exprt se2=*it2;
-        unwinder_rename(se1, node, first_loop_iteration);
-        unwinder_rename(se2, node, first_loop_iteration);
-        loop_exit_cond.push_back(and_exprt(se1, not_exprt(se2)));
-    }
-    return not_exprt(disjunction(loop_exit_cond));
-}
-
-
 
 /*******************************************************************\
 Function: ssa_local_unwindert::unwinder_rename

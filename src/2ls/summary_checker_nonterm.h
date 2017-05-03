@@ -30,18 +30,6 @@ public:
     const ssa_dbt::functionst::const_iterator f_it);
   
 protected:
-  typedef struct loop_varst
-  {
-    source_locationt source_location;
-    exprt::operandst guards;
-    exprt::operandst vars;
-    exprt::operandst loop_exits;
-  } loop_varst;
-
-  typedef std::map<unsigned, loop_varst> loops_collectort;
-
-  loops_collectort loop_map;
-  bool second_check_finished;
 
   summary_checker_baset::resultt check_nonterm_linear();
 };
