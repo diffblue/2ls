@@ -17,6 +17,20 @@ Author: Stefan Marticek
 #include <ssa/simplify_ssa.h>
 #include <2ls/show.h>
 
+#include <limits>
+
+/*******************************************************************\
+
+Function: summary_checker_nontermt::operator()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
 property_checkert::resultt summary_checker_nontermt::operator()(
   const goto_modelt &goto_model)
 {
@@ -72,6 +86,18 @@ property_checkert::resultt summary_checker_nontermt::operator()(
   return result;
 }
 
+/*******************************************************************\
+
+Function: summary_checker_baset::check_properties
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: checks the property loop instead of assertion
+
+\*******************************************************************/
+
 void summary_checker_nontermt::check_properties(
   const ssa_dbt::functionst::const_iterator f_it)
 {
@@ -79,7 +105,9 @@ void summary_checker_nontermt::check_properties(
 
   ssa_local_unwindert &ssa_local_unwinder=ssa_unwinder.get(f_it->first);
 
-  //SSA.output_verbose(std::cout);
+#if 0
+  SSA.output_verbose(std::cout);
+#endif
 
   // solver
   incremental_solvert &solver=ssa_db.get_solver(f_it->first);
@@ -110,17 +138,17 @@ void summary_checker_nontermt::check_properties(
 
   exprt::operandst ls_guards;
 
-  for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
-        n_it != SSA.nodes.end(); n_it++)
+  for(local_SSAt::nodest::const_iterator n_it=SSA.nodes.begin();
+        n_it!=SSA.nodes.end(); n_it++)
   {
-    if(n_it->loophead != SSA.nodes.end()) //we've found a loop
+    if(n_it->loophead!=SSA.nodes.end()) //we've found a loop
     {
       irep_idt property_id=irep_idt(n_it->loophead->location->location_number,
                                     0);
 
       exprt lsguard = SSA.name(SSA.guard_symbol(),
              local_SSAt::LOOP_SELECT, n_it->location);
-      ssa_local_unwinder.unwinder_rename(to_symbol_expr(lsguard),*n_it,true);
+      ssa_local_unwinder.unwinder_rename(to_symbol_expr(lsguard), *n_it, true);
 
       const ssa_domaint::phi_nodest &phi_nodes=
         SSA.ssa_analysis[n_it->loophead->location].phi_nodes;
@@ -128,14 +156,13 @@ void summary_checker_nontermt::check_properties(
       long store_unwinding=SSA.current_unwinding;
       exprt::operandst loop_check_operands;
 
-      symbol_exprt lhguard = SSA.guard_symbol(n_it->loophead->location);
-      ssa_local_unwinder.unwinder_rename(lhguard,*n_it,false);
+      symbol_exprt lhguard=SSA.guard_symbol(n_it->loophead->location);
+      ssa_local_unwinder.unwinder_rename(lhguard, *n_it, false);
 
-      for (SSA.current_unwinding=1;
+      for(SSA.current_unwinding=1;
            SSA.current_unwinding<=store_unwinding;
            SSA.current_unwinding++)
       {
-
         exprt::operandst loop_vars;
         loop_vars.push_back(lhguard);
 
@@ -146,15 +173,17 @@ void summary_checker_nontermt::check_properties(
         {
           ssa_domaint::phi_nodest::const_iterator p_it=
           phi_nodes.find(o_it->get_identifier());
-          if(p_it==phi_nodes.end()) continue; // object not modified in this loop
+          if(p_it==phi_nodes.end())
+            continue;// object not modified in this loop
 
-          symbol_exprt post_var=SSA.name(*o_it, local_SSAt::PHI, n_it->loophead->location);
-          ssa_local_unwinder.unwinder_rename(post_var,*n_it->loophead,false);
+          symbol_exprt post_var=SSA.name(*o_it, local_SSAt::PHI,
+                                         n_it->loophead->location);
+          ssa_local_unwinder.unwinder_rename(post_var, *n_it->loophead, false);
 
           symbol_exprt phi_var;
-            phi_var=SSA.name(*o_it, local_SSAt::PHI, n_it->loophead->location);
-            ssa_local_unwinder.unwinder_rename(phi_var,*n_it->loophead,true);
-            loop_vars.push_back(equal_exprt(post_var, phi_var));
+          phi_var=SSA.name(*o_it, local_SSAt::PHI, n_it->loophead->location);
+          ssa_local_unwinder.unwinder_rename(phi_var, *n_it->loophead, true);
+          loop_vars.push_back(equal_exprt(post_var, phi_var));
         }
 
         loop_check_operands.push_back(conjunction(loop_vars));
@@ -164,7 +193,7 @@ void summary_checker_nontermt::check_properties(
       property_map[property_id].location=n_it->loophead->location;
       property_map[property_id].result=UNKNOWN;
       cover_goals.goal_map[property_id].conjuncts.push_back(
-            disjunction(loop_check_operands));
+        disjunction(loop_check_operands));
       ls_guards.push_back(not_exprt(lsguard));
     }
   }
@@ -190,6 +219,18 @@ void summary_checker_nontermt::check_properties(
           << " of " << cover_goals.size() << " failed ("
           << cover_goals.iterations() << " iterations)" << eom;
 }
+
+/*******************************************************************\
+
+Function: summary_checker_baset::check_properties_linear
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: searching for periodical recurrence set
+
+\*******************************************************************/
 
 void summary_checker_nontermt::check_properties_linear(
   const ssa_dbt::functionst::const_iterator f_it)
@@ -221,20 +262,20 @@ void summary_checker_nontermt::check_properties_linear(
   for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
         n_it != SSA.nodes.end(); n_it++)
   {
-    if(n_it->loophead != SSA.nodes.end()) //we've found a loop
+    if(n_it->loophead!=SSA.nodes.end()) //we've found a loop
     {
       exprt lsguard = SSA.name(SSA.guard_symbol(),
              local_SSAt::LOOP_SELECT, n_it->location);
-      ssa_local_unwinder.unwinder_rename(to_symbol_expr(lsguard),*n_it,true);
+      ssa_local_unwinder.unwinder_rename(to_symbol_expr(lsguard), *n_it,true);
       ls_guards.push_back(lsguard);
     }
   }
 
-  unsigned loop_counter=-1; //UINT_MAX
-  for(local_SSAt::nodest::const_iterator n_it = SSA.nodes.begin();
-        n_it != SSA.nodes.end(); n_it++)
+  unsigned loop_counter=std::numeric_limits<unsigned>::max(); //UINT_MAX
+  for(local_SSAt::nodest::const_iterator n_it=SSA.nodes.begin();
+        n_it!=SSA.nodes.end(); n_it++)
   {
-    if(n_it->loophead != SSA.nodes.end()) //we've found a loop
+    if(n_it->loophead!=SSA.nodes.end()) //we've found a loop
     {
       //we use continues further, therefore we put incrementation here
       loop_counter++;
@@ -247,11 +288,11 @@ void summary_checker_nontermt::check_properties_linear(
 
       SSA.current_unwinding-=1;
       symbol_exprt lhguard_second=SSA.guard_symbol(n_it->loophead->location);
-      ssa_local_unwinder.unwinder_rename(lhguard_second,*n_it,true);
+      ssa_local_unwinder.unwinder_rename(lhguard_second, *n_it, true);
       SSA.current_unwinding+=1;
 
       symbol_exprt lhguard = SSA.guard_symbol(n_it->loophead->location);
-      ssa_local_unwinder.unwinder_rename(lhguard,*n_it,true);
+      ssa_local_unwinder.unwinder_rename(lhguard, *n_it, true);
 
       exprt::operandst first_linearity_check;
       exprt::operandst second_linearity_check;
@@ -272,50 +313,52 @@ void summary_checker_nontermt::check_properties_linear(
       {
         ssa_domaint::phi_nodest::const_iterator p_it=
         phi_nodes.find(o_it->get_identifier());
-        if (p_it==phi_nodes.end()) continue; // object not modified in this loop
+        if (p_it==phi_nodes.end())
+          continue; // object not modified in this loop
 
         //  first linearity check data preparation
 
         SSA.current_unwinding-=1;
         symbol_exprt phi_var1;
         phi_var1=SSA.name(*o_it, local_SSAt::PHI, n_it->loophead->location);
-        ssa_local_unwinder.unwinder_rename(phi_var1,*n_it->loophead,true);
+        ssa_local_unwinder.unwinder_rename(phi_var1, *n_it->loophead, true);
         SSA.current_unwinding+=1;
         symbol_exprt phi_var2;
         phi_var2=SSA.name(*o_it, local_SSAt::PHI, n_it->loophead->location);
-        ssa_local_unwinder.unwinder_rename(phi_var2,*n_it->loophead,true);
+        ssa_local_unwinder.unwinder_rename(phi_var2, *n_it->loophead, true);
 
         //  works only for bitvectors
 
-        if ((phi_var2.type().id()!=ID_unsignedbv) &&
+        if((phi_var2.type().id()!=ID_unsignedbv) &&
             (phi_var2.type().id()!=ID_signedbv))
         {
           first_linearity_check.clear();
           break;
         }
 
+        //x_k = x_0 + C*k, const$k - k, const$i - C
         symbol_exprt constk("const$k", phi_var2.type());
         symbol_exprt const1("const$" + std::to_string(const_number++),
                             phi_var2.type());
 
         first_linearity_check.push_back(
-              equal_exprt(phi_var1, plus_exprt(phi_var2, const1)));
+          equal_exprt(phi_var1, plus_exprt(phi_var2, const1)));
 
         // get constants data preparation
 
         constants_computation.push_back(
-              equal_exprt(minus_exprt(phi_var1, phi_var2), const1));
+          equal_exprt(minus_exprt(phi_var1, phi_var2), const1));
         constants.push_back(const1);
 
         // loopback vars data preparation
 
         exprt init_expr;
         exprt lb_var;
-        for (local_SSAt::nodet::equalitiest::const_iterator e_it=
+        for(local_SSAt::nodet::equalitiest::const_iterator e_it=
           n_it->loophead->equalities.begin();
              e_it != n_it->loophead->equalities.end(); e_it++)
         {
-          if (e_it->rhs().id() == ID_if &&
+          if(e_it->rhs().id()==ID_if &&
               to_symbol_expr(e_it->lhs()).get_identifier()==
               phi_var2.get_identifier())
           {
@@ -332,7 +375,7 @@ void summary_checker_nontermt::check_properties_linear(
         loopback_vars.push_back(constk);
       }
 
-      if (first_linearity_check.empty())  //nothing to be checked
+      if(first_linearity_check.empty())  //nothing to be checked
         continue;
 
       neg_loop_exit_cond.push_back(lhguard);
@@ -344,20 +387,19 @@ void summary_checker_nontermt::check_properties_linear(
       switch(solver())
       {
       case decision_proceduret::D_UNSATISFIABLE: //
-          //std::cout << "£Unsat++++++++++++++++" << std::endl;
           solver.pop_context();
         continue;
 
       case decision_proceduret::D_SATISFIABLE:
-          //std::cout << "£Sat++++++++++++++++" << std::endl;
-          for (exprt::operandst::iterator it=first_linearity_check.begin();
+          for(exprt::operandst::iterator it=first_linearity_check.begin();
                it!=first_linearity_check.end();
                ++it)
           {
             exprt ex=solver.get(it->op1().op1());
             second_linearity_check.push_back(
-                  and_exprt(*it, not_exprt(equal_exprt(to_constant_expr(ex),
-                                                       it->op1().op1()))));
+              and_exprt(*it,
+                        not_exprt(equal_exprt(to_constant_expr(ex),
+                        it->op1().op1()))));
           }
 
           solver.pop_context();
@@ -375,12 +417,10 @@ void summary_checker_nontermt::check_properties_linear(
       switch(solver())
       {
       case decision_proceduret::D_UNSATISFIABLE:
-          //std::cout << "£Unsat++++++++++++++++" << std::endl;
           solver.pop_context();
         break;
 
       case decision_proceduret::D_SATISFIABLE:
-          //std::cout << "£Sat++++++++++++++++" << std::endl;
           solver.pop_context();
         continue;
 
@@ -399,25 +439,24 @@ void summary_checker_nontermt::check_properties_linear(
       switch(solver())
       {
       case decision_proceduret::D_UNSATISFIABLE: // should never happen
-          //std::cout << "£Unsat++++++++++++++++" << std::endl;
           solver.pop_context();
           solver.pop_context();
         return;
 
       case decision_proceduret::D_SATISFIABLE:
-          //std::cout << "£Sat++++++++++++++++" << std::endl;
-          for (auto constant : constants)
+          for(auto constant : constants)
           {
             exprt ex = solver.solver->get(constant);
-            if (ex.type().id()==ID_unsignedbv)
+            if(ex.type().id()==ID_unsignedbv)
             {
               // if (constant>UINT_MAX/2)?0-constant:constant
               constant_exprt cex=to_constant_expr(ex);
               constant_exprt zero=constant_exprt("0", ex.type());
               constant_exprt cex2=to_constant_expr(
-                    simplify_expr(minus_exprt(zero, cex), SSA.ns));
-              if_exprt ifex=if_exprt(binary_relation_exprt(
-                    cex, ID_gt, cex2), cex2, cex, ex.type());
+                simplify_expr(minus_exprt(zero, cex), SSA.ns));
+              if_exprt ifex=if_exprt(
+                binary_relation_exprt(cex, ID_gt, cex2),
+                cex2, cex, ex.type());
               ex=simplify_expr(ifex, SSA.ns);
             }
             solver_consts.push_back(to_constant_expr((ex)));
@@ -436,21 +475,22 @@ void summary_checker_nontermt::check_properties_linear(
 
       solver.new_context();
 
-      for (unsigned i = 0; i < ls_guards.size(); ++i)
+      for(unsigned i = 0; i < ls_guards.size(); ++i)
       {
-        if (i != loop_counter)
+        if(i != loop_counter)
           solver << not_exprt(ls_guards[i]);
       }
 
       exprt eq_exprt;
       exprt::operandst::iterator lbv_it=loopback_vars.begin();
       exprt::operandst::iterator slvc_it=solver_consts.begin();
-      while (slvc_it!=solver_consts.end())
+      while(slvc_it!=solver_consts.end())
       {
         //Exists k : xlb == xinit+const*k
-        eq_exprt=equal_exprt(*lbv_it, plus_exprt(*(lbv_it+1),
-                                mult_exprt(*slvc_it, *(lbv_it+2))));
-        solver << eq_exprt;
+        eq_exprt=equal_exprt(*lbv_it,
+                             plus_exprt(*(lbv_it+1),
+                             mult_exprt(*slvc_it, *(lbv_it+2))));
+        solver<<eq_exprt;
         ++slvc_it;
         lbv_it+=3;
       }
@@ -466,19 +506,17 @@ void summary_checker_nontermt::check_properties_linear(
         switch(result=solver())
         {
         case decision_proceduret::D_UNSATISFIABLE:
-            //std::cout << "£Unsat++++++++++++++++" << std::endl;
           break;
 
         case decision_proceduret::D_SATISFIABLE:
-            //std::cout << "£Sat++++++++++++++++" << std::endl;
             lbv_it=loopback_vars.begin();
             slvc_it=solver_consts.begin();
-            while (slvc_it!=solver_consts.end())
+            while(slvc_it!=solver_consts.end())
             {
               exprt old_xinit = solver.solver->get(*(lbv_it+1));
 
               //  TODO: make this in different way
-              if (!from_expr(SSA.ns, "", *slvc_it).compare("0"))
+              if(!from_expr(SSA.ns, "", *slvc_it).compare("0"))
                 eq_exprt=equal_exprt(*(lbv_it+1), to_constant_expr(
                                        simplify_expr(old_xinit, SSA.ns)));
               else
@@ -503,7 +541,7 @@ void summary_checker_nontermt::check_properties_linear(
           solver.pop_context();
           return;
         }
-      } while (result!=decision_proceduret::D_UNSATISFIABLE);
+      } while(result!=decision_proceduret::D_UNSATISFIABLE);
 
       solver.pop_context();
 
@@ -513,14 +551,12 @@ void summary_checker_nontermt::check_properties_linear(
       switch(solver())
       {
       case decision_proceduret::D_UNSATISFIABLE:
-          //std::cout << "£Unsat++++++++++++++++" << std::endl;
           solver.pop_context();
         break;
 
       case decision_proceduret::D_SATISFIABLE:
         // found nontermination
           property_map[property_id].result=FAIL;
-          //std::cout << "£Sat++++++++++++++++" << std::endl;
           solver.pop_context();
           solver.pop_context();
         return;
@@ -535,6 +571,18 @@ void summary_checker_nontermt::check_properties_linear(
   }
   solver.pop_context();
 }
+
+/*******************************************************************\
+
+Function: summary_checker_nontermt::check_nonterm_linear
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 
 summary_checker_baset::resultt summary_checker_nontermt::check_nonterm_linear()
 {

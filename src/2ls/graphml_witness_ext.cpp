@@ -63,7 +63,6 @@ void graphml_witness_extt::operator()(
 
     const graphmlt::node_indext node=add_node(cfg[i]);
     index_map[i]=node;
-
   }
   for(std::size_t i=0; i<cfg.size(); ++i)
   {
