@@ -14,18 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 class ssa_objectt
 {
 public:
-  // type specialisation for object identifiers
-  class identifiert:public irep_idt
-  {
-  public:
-    inline explicit identifiert(const irep_idt &_src):irep_idt(_src)
-    {
-    }
-
-    inline identifiert()
-    {
-    }
-  };
+  typedef irep_idt identifiert;
 
   inline explicit ssa_objectt(const exprt &_expr, const namespacet &_ns):
     expr(_expr),
