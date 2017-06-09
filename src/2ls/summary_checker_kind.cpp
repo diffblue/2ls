@@ -31,7 +31,7 @@ property_checkert::resultt summary_checker_kindt::operator()(
 
   ssa_unwinder.init(true, false);
 
-  property_checkert::resultt result=property_checkert::UNKNOWN;
+  property_checkert::resultt result=property_checkert::resultt::UNKNOWN;
   unsigned max_unwind=options.get_unsigned_int_option("unwind");
   status() << "Max-unwind is " << max_unwind << eom;
   ssa_unwinder.init_localunwinders();
@@ -49,7 +49,7 @@ property_checkert::resultt summary_checker_kindt::operator()(
     bool magic_limit_not_reached=
       unwind<GIVE_UP_INVARIANTS || // magic constant
       !options.get_bool_option("competition-mode");
-    if(result==property_checkert::UNKNOWN &&
+    if(result==property_checkert::resultt::UNKNOWN &&
        !options.get_bool_option("havoc") &&
        magic_limit_not_reached)
     {
@@ -57,13 +57,13 @@ property_checkert::resultt summary_checker_kindt::operator()(
       result=check_properties();
     }
 
-    if(result==property_checkert::PASS)
+    if(result==property_checkert::resultt::PASS)
     {
       status() << "k-induction proof found after "
          << unwind << " unwinding(s)" << eom;
       break;
     }
-    else if(result==property_checkert::FAIL)
+    else if(result==property_checkert::resultt::FAIL)
     {
       status() << "k-induction counterexample found after "
          << unwind << " unwinding(s)" << eom;

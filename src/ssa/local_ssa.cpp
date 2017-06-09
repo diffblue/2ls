@@ -1363,7 +1363,7 @@ void local_SSAt::assign_rec(
     assign_rec(new_lhs, new_rhs, guard, loc);
   }
   else
-    throw "UNKNOWN LHS: "+lhs.id_string();
+    throw "resultt::UNKNOWN LHS: "+lhs.id_string();
 }
 
 /*******************************************************************\

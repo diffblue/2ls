@@ -173,14 +173,14 @@ summary_checker_baset::resultt summary_checker_baset::check_properties()
     }
   }
 
-  summary_checker_baset::resultt result=property_checkert::PASS;
+  summary_checker_baset::resultt result=property_checkert::resultt::PASS;
   for(property_mapt::const_iterator
         p_it=property_map.begin(); p_it!=property_map.end(); p_it++)
   {
-    if(p_it->second.result==FAIL)
-      return property_checkert::FAIL;
-    if(p_it->second.result==UNKNOWN)
-      result=property_checkert::UNKNOWN;
+    if(p_it->second.result==resultt::FAIL)
+      return property_checkert::resultt::FAIL;
+    if(p_it->second.result==resultt::UNKNOWN)
+      result=property_checkert::resultt::UNKNOWN;
   }
 
   return result;
@@ -270,12 +270,12 @@ void summary_checker_baset::check_properties(
 
     if(i_it->guard.is_true())
     {
-      property_map[property_id].result=PASS;
+      property_map[property_id].result=resultt::PASS;
       continue;
     }
 
     // do not recheck properties that have already been decided
-    if(property_map[property_id].result!=UNKNOWN)
+    if(property_map[property_id].result!=resultt::UNKNOWN)
       continue;
 
     // TODO: some properties do not show up in initialize_property_map
@@ -327,8 +327,8 @@ void summary_checker_baset::check_properties(
 
   cover_goals();
 
-  // set all non-covered goals to PASS except if we do not try
-  //  to cover all goals and we have found a FAIL
+  // set all non-covered goals to resultt::PASS except if we do not try
+  //  to cover all goals and we have found a resultt::FAIL
   if(all_properties || cover_goals.number_covered()==0)
   {
     std::list<cover_goals_extt::cover_goalt>::const_iterator g_it=
@@ -339,7 +339,7 @@ void summary_checker_baset::check_properties(
         it++, g_it++)
     {
       if(!g_it->covered)
-        property_map[it->first].result=PASS;
+        property_map[it->first].result=resultt::PASS;
     }
   }
 
@@ -531,18 +531,18 @@ bool summary_checker_baset::is_fully_unwound(
 
   switch(solver())
   {
-  case decision_proceduret::D_SATISFIABLE:
+  case decision_proceduret::resultt::D_SATISFIABLE:
     solver.pop_context();
     return false;
     break;
 
-  case decision_proceduret::D_UNSATISFIABLE:
+  case decision_proceduret::resultt::D_UNSATISFIABLE:
     solver.pop_context();
     solver << conjunction(loophead_selects);
     return true;
     break;
 
-  case decision_proceduret::D_ERROR:
+  case decision_proceduret::resultt::D_ERROR:
   default:
     throw "error from decision procedure";
   }
@@ -585,15 +585,15 @@ bool summary_checker_baset::is_spurious(
 
   switch(solver())
   {
-  case decision_proceduret::D_SATISFIABLE:
+  case decision_proceduret::resultt::D_SATISFIABLE:
     return false;
     break;
 
-  case decision_proceduret::D_UNSATISFIABLE:
+  case decision_proceduret::resultt::D_UNSATISFIABLE:
     return true;
     break;
 
-  case decision_proceduret::D_ERROR:
+  case decision_proceduret::resultt::D_ERROR:
   default:
     throw "error from decision procedure";
   }

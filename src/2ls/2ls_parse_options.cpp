@@ -155,7 +155,7 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
     options.set_option("slice", false);
 
   // all checks supported by goto_check
-  GOTO_CHECK_PARSE_OPTIONS(cmdline, options);
+  PARSE_OPTIONS_GOTO_CHECK(cmdline, options);
 
   // check assertions
   if(cmdline.isset("no-assertions"))
@@ -544,7 +544,7 @@ int twols_parse_optionst::doit()
     // do actual analysis
     switch((*checker)(goto_model))
     {
-    case property_checkert::PASS:
+    case property_checkert::resultt::PASS:
       if(report_assertions)
         report_properties(options, goto_model, checker->property_map);
       report_success();
@@ -554,7 +554,7 @@ int twols_parse_optionst::doit()
       retval=0;
       break;
 
-    case property_checkert::FAIL:
+    case property_checkert::resultt::FAIL:
       if(report_assertions)
         report_properties(options, goto_model, checker->property_map);
       report_failure();
@@ -565,7 +565,7 @@ int twols_parse_optionst::doit()
       retval=10;
       break;
 
-    case property_checkert::UNKNOWN:
+    case property_checkert::resultt::UNKNOWN:
       if(report_assertions)
         report_properties(options, goto_model, checker->property_map);
       retval=5;
@@ -921,7 +921,7 @@ bool twols_parse_optionst::get_goto_program(
 
       if(language->parse(infile, filename))
       {
-        error() << "PARSING ERROR" << eom;
+        error() << "PARSING resultt::ERROR" << eom;
         return true;
       }
 
@@ -1196,10 +1196,10 @@ void twols_parse_optionst::report_properties(
 #endif
 
     if(!options.get_bool_option("all-properties") &&
-       it->second.result!=property_checkert::FAIL)
+       it->second.result!=property_checkert::resultt::FAIL)
       continue;
 
-    if(get_ui()==ui_message_handlert::XML_UI)
+    if(get_ui()==ui_message_handlert::uit::XML_UI)
     {
       xmlt xml_result("result");
       xml_result.set_attribute("property", id2string(it->first));
@@ -1217,10 +1217,10 @@ void twols_parse_optionst::report_properties(
     }
 
     if(cmdline.isset("show-trace") &&
-       it->second.result==property_checkert::FAIL)
+       it->second.result==property_checkert::resultt::FAIL)
       show_counterexample(goto_model, it->second.error_trace);
     if(cmdline.isset("json-cex") &&
-       it->second.result==property_checkert::FAIL)
+       it->second.result==property_checkert::resultt::FAIL)
       output_json_cex(
         options,
         goto_model,
@@ -1240,9 +1240,9 @@ void twols_parse_optionst::report_properties(
         it!=property_map.end();
         it++)
     {
-      if(it->second.result==property_checkert::UNKNOWN)
+      if(it->second.result==property_checkert::resultt::UNKNOWN)
         unknown++;
-      if(it->second.result==property_checkert::FAIL)
+      if(it->second.result==property_checkert::resultt::FAIL)
         failed++;
     }
 
@@ -1273,10 +1273,10 @@ void twols_parse_optionst::report_success()
 
   switch(get_ui())
   {
-  case ui_message_handlert::PLAIN:
+  case ui_message_handlert::uit::PLAIN:
     break;
 
-  case ui_message_handlert::XML_UI:
+  case ui_message_handlert::uit::XML_UI:
   {
     xmlt xml("cprover-status");
     xml.data="SUCCESS";
@@ -1310,12 +1310,12 @@ void twols_parse_optionst::show_counterexample(
 
   switch(get_ui())
   {
-  case ui_message_handlert::PLAIN:
+  case ui_message_handlert::uit::PLAIN:
     std::cout << std::endl << "Counterexample:" << std::endl;
     show_goto_trace(std::cout, ns, error_trace);
     break;
 
-  case ui_message_handlert::XML_UI:
+  case ui_message_handlert::uit::XML_UI:
   {
     xmlt xml;
     convert(ns, error_trace, xml);
@@ -1347,7 +1347,7 @@ void twols_parse_optionst::output_graphml_cex(
 {
   for(const auto &p : summary_checker.property_map)
   {
-    if(p.second.result!=property_checkert::FAIL)
+    if(p.second.result!=property_checkert::resultt::FAIL)
       continue;
 
     const namespacet ns(goto_model.symbol_table);
@@ -1453,17 +1453,17 @@ Function: twols_parse_optionst::report_failure
 
 void twols_parse_optionst::report_failure()
 {
-  result() << "VERIFICATION FAILED" << eom;
+  result() << "VERIFICATION resultt::FAILED" << eom;
 
   switch(get_ui())
   {
-  case ui_message_handlert::PLAIN:
+  case ui_message_handlert::uit::PLAIN:
     break;
 
-  case ui_message_handlert::XML_UI:
+  case ui_message_handlert::uit::XML_UI:
   {
     xmlt xml("cprover-status");
-    xml.data="FAILURE";
+    xml.data="resultt::FAILURE";
     std::cout << xml;
     std::cout << std::endl;
   }
@@ -1492,13 +1492,13 @@ void twols_parse_optionst::report_unknown()
 
   switch(get_ui())
   {
-  case ui_message_handlert::PLAIN:
+  case ui_message_handlert::uit::PLAIN:
     break;
 
-  case ui_message_handlert::XML_UI:
+  case ui_message_handlert::uit::XML_UI:
   {
     xmlt xml("cprover-status");
-    xml.data="UNKNOWN";
+    xml.data="resultt::UNKNOWN";
     std::cout << xml;
     std::cout << std::endl;
   }
@@ -1568,7 +1568,7 @@ void twols_parse_optionst::help()
     " --round-to-zero              IEEE floating point rounding mode\n"
     "\n"
     "Program instrumentation options:\n"
-    GOTO_CHECK_HELP
+    HELP_GOTO_CHECK
     " --error-label label          check that label is unreachable\n"
     " --show-properties            show the properties\n"
     " --no-assertions              ignore user assertions\n"

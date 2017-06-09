@@ -137,10 +137,10 @@ void cover_goals_extt::operator()()
 
     switch(dec_result)
     {
-    case decision_proceduret::D_UNSATISFIABLE: // DONE
+    case decision_proceduret::resultt::D_UNSATISFIABLE: // DONE
       break;
 
-    case decision_proceduret::D_SATISFIABLE:
+    case decision_proceduret::resultt::D_SATISFIABLE:
       // mark the goals we got
       mark();
 
@@ -156,7 +156,7 @@ void cover_goals_extt::operator()()
       return;
     }
   }
-  while(dec_result==decision_proceduret::D_SATISFIABLE &&
+  while(dec_result==decision_proceduret::resultt::D_SATISFIABLE &&
         number_covered()<size());
 }
 
@@ -194,10 +194,10 @@ void cover_goals_extt::assignment()
     for(goal_mapt::const_iterator it=goal_map.begin();
         it!=goal_map.end(); it++, g_it++)
     {
-      if(property_map[it->first].result==property_checkert::UNKNOWN &&
+      if(property_map[it->first].result==property_checkert::resultt::UNKNOWN &&
          solver.l_get(g_it->condition).is_true())
       {
-        property_map[it->first].result=property_checkert::FAIL;
+        property_map[it->first].result=property_checkert::resultt::FAIL;
         if(build_error_trace)
         {
           ssa_build_goto_tracet build_goto_trace(SSA, solver.get_solver());
@@ -217,16 +217,16 @@ void cover_goals_extt::assignment()
 
   switch(solver())
   {
-  case decision_proceduret::D_SATISFIABLE:
+  case decision_proceduret::resultt::D_SATISFIABLE:
   {
     std::list<cover_goals_extt::cover_goalt>::const_iterator g_it=goals.begin();
     for(goal_mapt::const_iterator it=goal_map.begin();
         it!=goal_map.end(); it++, g_it++)
     {
-      if(property_map[it->first].result==property_checkert::UNKNOWN &&
+      if(property_map[it->first].result==property_checkert::resultt::UNKNOWN &&
          solver.l_get(g_it->condition).is_true())
       {
-        property_map[it->first].result=property_checkert::FAIL;
+        property_map[it->first].result=property_checkert::resultt::FAIL;
         if(build_error_trace)
         {
           ssa_build_goto_tracet build_goto_trace(SSA, solver.get_solver());
@@ -243,10 +243,10 @@ void cover_goals_extt::assignment()
     }
     break;
   }
-  case decision_proceduret::D_UNSATISFIABLE:
+  case decision_proceduret::resultt::D_UNSATISFIABLE:
     break;
 
-  case decision_proceduret::D_ERROR:
+  case decision_proceduret::resultt::D_ERROR:
   default:
     throw "error from decision procedure";
   }

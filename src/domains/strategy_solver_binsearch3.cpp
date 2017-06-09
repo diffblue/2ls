@@ -77,7 +77,7 @@ bool strategy_solver_binsearch3t::iterate(invariantt &_inv)
   std::map<tpolyhedra_domaint::rowt, constant_exprt> lower_values;
   exprt::operandst blocking_constraint;
   bool improved_from_neginf=false;
-  while(solver()==decision_proceduret::D_SATISFIABLE) // improvement check
+  while(solver()==decision_proceduret::resultt::D_SATISFIABLE) // improvement check
   {
 #if 0
     debug() << "SAT" << eom;
@@ -203,7 +203,7 @@ bool strategy_solver_binsearch3t::iterate(invariantt &_inv)
 
     solver << c;
 
-    if(solver()==decision_proceduret::D_SATISFIABLE)
+    if(solver()==decision_proceduret::resultt::D_SATISFIABLE)
     {
 #if 0
       debug() << "SAT" << eom;

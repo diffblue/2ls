@@ -65,7 +65,7 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
   }
 
   debug() << "solve(): ";
-  if(solver()==decision_proceduret::D_SATISFIABLE)
+  if(solver()==decision_proceduret::resultt::D_SATISFIABLE)
   {
     debug() << "SAT" << eom;
 
@@ -117,7 +117,7 @@ bool ranking_solver_enumerationt::iterate(invariantt &_rank)
         // solve
         debug() << "inner solve()" << eom;
         solver_calls++;
-        if(inner_solver()==decision_proceduret::D_SATISFIABLE &&
+        if(inner_solver()==decision_proceduret::resultt::D_SATISFIABLE &&
            number_inner_iterations<max_inner_iterations)
         {
           debug() << "inner solver: SAT" << eom;

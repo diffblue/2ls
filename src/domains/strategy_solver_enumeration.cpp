@@ -74,7 +74,7 @@ bool strategy_solver_enumerationt::iterate(invariantt &_inv)
   debug() << "solve(): ";
 #endif
 
-  if(solver()==decision_proceduret::D_SATISFIABLE)
+  if(solver()==decision_proceduret::resultt::D_SATISFIABLE)
   {
 #ifdef DEBUG_OUTPUT
     debug() << "SAT" << eom;

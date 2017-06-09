@@ -57,7 +57,7 @@ bool strategy_solver_predabst::iterate(invariantt &_inv)
 #endif
 
 
-    if(solver()==decision_proceduret::D_SATISFIABLE)
+    if(solver()==decision_proceduret::resultt::D_SATISFIABLE)
     {
       debug() << "SAT" << eom;
 

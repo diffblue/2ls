@@ -50,7 +50,7 @@ bool strategy_solver_equalityt::iterate(invariantt &_inv)
     debug() << "Post: " << from_expr(ns, "", post_expr) << eom;
 #endif
 
-    if(solver()==decision_proceduret::D_SATISFIABLE)
+    if(solver()==decision_proceduret::resultt::D_SATISFIABLE)
     {
 #if 0
       debug() << "SAT" << eom;
@@ -102,7 +102,7 @@ bool strategy_solver_equalityt::iterate(invariantt &_inv)
     debug() << "Post: " << from_expr(ns, "", post_expr) << eom;
 #endif
 
-    if(solver()==decision_proceduret::D_SATISFIABLE)
+    if(solver()==decision_proceduret::resultt::D_SATISFIABLE)
     {
 #if 0
       debug() << "SAT" << eom;

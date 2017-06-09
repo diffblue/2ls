@@ -63,7 +63,7 @@ property_checkert::resultt summary_checker_ait::operator()(
   {
     report_statistics();
     report_preconditions();
-    return property_checkert::UNKNOWN;
+    return property_checkert::resultt::UNKNOWN;
   }
 
   if(termination)
@@ -74,7 +74,7 @@ property_checkert::resultt summary_checker_ait::operator()(
 
 #ifdef SHOW_CALLINGCONTEXTS
   if(options.get_bool_option("show-calling-contexts"))
-    return property_checkert::UNKNOWN;
+    return property_checkert::resultt::UNKNOWN;
 #endif
 
   property_checkert::resultt result=check_properties();
@@ -153,9 +153,9 @@ property_checkert::resultt summary_checker_ait::report_termination()
        << (!computed ? "not computed" : threeval2string(terminates)) << eom;
   }
   if(not_computed)
-    return property_checkert::UNKNOWN;
+    return property_checkert::resultt::UNKNOWN;
   if(all_terminate)
-    return property_checkert::PASS;
+    return property_checkert::resultt::PASS;
   if(one_nonterminate)
   {
 #if TERM_CEX
@@ -164,17 +164,17 @@ property_checkert::resultt summary_checker_ait::report_termination()
     {
       property_map.clear();
       incremental_solvert &solver=ssa_db.get_solver(functions.begin()->first);
-      if(solver()==decision_proceduret::D_SATISFIABLE)
+      if(solver()==decision_proceduret::resultt::D_SATISFIABLE)
       {
         irep_idt pid="non-termination";
-        property_map[pid].result=property_checkert::FAIL;
+        property_map[pid].result=property_checkert::resultt::FAIL;
         ssa_build_goto_tracet build_goto_trace(
           *functions.begin()->second, solver.get_solver(), true);
         build_goto_trace(property_map[pid].error_trace);
       }
     }
 #endif
-    return property_checkert::FAIL;
+    return property_checkert::resultt::FAIL;
   }
-  return property_checkert::UNKNOWN;
+  return property_checkert::resultt::UNKNOWN;
 }

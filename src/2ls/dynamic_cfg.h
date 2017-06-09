@@ -55,7 +55,7 @@ struct dynamic_cfg_nodet:public graph_nodet<dynamic_cfg_edget>
   exprt assumption;
 };
 
-class dynamic_cfgt:public graph<dynamic_cfg_nodet>
+class dynamic_cfgt:public grapht<dynamic_cfg_nodet>
 {
 public:
   inline dynamic_cfg_nodet& operator[](const dynamic_cfg_idt &id)

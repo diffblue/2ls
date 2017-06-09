@@ -82,13 +82,13 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
 
   test_solver << rank_expr;
 
-  if(test_solver()==decision_proceduret::D_SATISFIABLE)
+  if(test_solver()==decision_proceduret::resultt::D_SATISFIABLE)
     debug() << "test solver: SAT" << eom;
   else
     debug() << "test solver: UNSAT" << eom;
 #endif
 
-  if(solver()==decision_proceduret::D_SATISFIABLE)
+  if(solver()==decision_proceduret::resultt::D_SATISFIABLE)
   {
     debug() << "Outer solver: SAT" << eom;
 
@@ -151,8 +151,8 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
         debug() << "Inner solve()" << eom;
         // solve
         solver_calls++;
-        bool inner_solver_result=(*inner_solver)();
-        if(inner_solver_result==decision_proceduret::D_SATISFIABLE &&
+        decision_proceduret::resultt inner_solver_result=(*inner_solver)();
+        if(inner_solver_result==decision_proceduret::resultt::D_SATISFIABLE &&
            number_inner_iterations<max_inner_iterations)
         {
           number_inner_iterations++;
@@ -200,7 +200,7 @@ bool lexlinrank_solver_enumerationt::iterate(invariantt &_rank)
         }
         else
         {
-          if(inner_solver_result==decision_proceduret::D_UNSATISFIABLE)
+          if(inner_solver_result==decision_proceduret::resultt::D_UNSATISFIABLE)
             debug() << "Inner solver: UNSAT" << eom;
           else
             debug() << "Inner solver: reached max number of iterations" << eom;
