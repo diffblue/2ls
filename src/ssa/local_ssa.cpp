@@ -13,7 +13,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <langapi/language_util.h>
 #endif
 
-#include <util/i2string.h>
 #include <util/prefix.h>
 #include <util/expr_util.h>
 #include <util/decision_procedure.h>
@@ -408,7 +407,7 @@ Function: local_SSAt::dereference
 exprt local_SSAt::dereference(const exprt &src, locationt loc) const
 {
   const ssa_value_domaint &ssa_value_domain=ssa_value_ai[loc];
-  const std::string nondet_prefix="deref#"+i2string(loc->location_number);
+  const std::string nondet_prefix="deref#"+std::to_string(loc->location_number);
   return ::dereference(src, ssa_value_domain, nondet_prefix, ns);
 }
 
@@ -481,7 +480,7 @@ void local_SSAt::build_function_call(locationt loc)
       exprt deref_lhs=dereference(lhs, loc);
 
       // generate a symbol for rhs
-      irep_idt identifier="ssa::return_value"+i2string(loc->location_number);
+      irep_idt identifier="ssa::return_value"+std::to_string(loc->location_number);
       symbol_exprt rhs(identifier, code_function_call.lhs().type());
 
       assign_rec(deref_lhs, rhs, true_exprt(), loc);
@@ -536,8 +535,8 @@ void local_SSAt::build_function_call(locationt loc)
     for(exprt::operandst::iterator it=f.arguments().begin();
         it!=f.arguments().end(); ++it, ++i)
     {
-      symbol_exprt arg(id2string(fname)+"#"+i2string(loc->location_number)+
-                       "#arg"+i2string(i), it->type());
+      symbol_exprt arg(id2string(fname)+"#"+std::to_string(loc->location_number)+
+                       "#arg"+std::to_string(i), it->type());
       n_it->equalities.push_back(equal_exprt(*it, arg));
       *it=arg;
     }
@@ -1112,8 +1111,8 @@ void local_SSAt::replace_side_effects_rec(
       assert(false);
 /*      counter++;
         std::string tmp_suffix=
-        i2string(loc->location_number)+
-        "."+i2string(counter)+suffix;
+        std::to_string(loc->location_number)+
+        "."+std::to_string(counter)+suffix;
         expr=malloc_ssa(side_effect_expr, tmp_suffix, ns);*/
     }
     else
@@ -1147,7 +1146,7 @@ symbol_exprt local_SSAt::name(
 
   irep_idt new_id=id2string(id)+"#"+
     (kind==PHI?"phi":kind==LOOP_BACK?"lb":kind==LOOP_SELECT?"ls":"")+
-    i2string(cnt)+
+    std::to_string(cnt)+
     (kind==LOOP_SELECT?std::string(""):suffix);
 
 #ifdef DEBUG
@@ -1232,8 +1231,8 @@ exprt local_SSAt::nondet_symbol(
   exprt s(ID_nondet_symbol, type);
   const irep_idt identifier=
     prefix+
-    i2string(loc->location_number)+
-    "."+i2string(counter)+suffix;
+    std::to_string(loc->location_number)+
+    "."+std::to_string(counter)+suffix;
   s.set(ID_identifier, identifier);
   return s;
 }

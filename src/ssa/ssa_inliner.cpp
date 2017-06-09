@@ -6,7 +6,6 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
-#include <util/i2string.h>
 #include <util/replace_expr.h>
 
 #include "ssa_inliner.h"
@@ -648,7 +647,7 @@ void ssa_inlinert::rename(exprt &expr)
   if(expr.id()==ID_symbol)
   {
     symbol_exprt &sexpr=to_symbol_expr(expr);
-    irep_idt id=id2string(sexpr.get_identifier())+"@"+i2string(counter);
+    irep_idt id=id2string(sexpr.get_identifier())+"@"+std::to_string(counter);
     sexpr.set_identifier(id);
   }
   Forall_operands(op, expr)
@@ -730,7 +729,7 @@ void ssa_inlinert::rename_to_caller(
 #endif
       replace_map[*it]=
         symbol_exprt(
-          id2string(it->get_identifier())+"@"+i2string(++counter), it->type());
+          id2string(it->get_identifier())+"@"+std::to_string(++counter), it->type());
     }
   }
 
@@ -786,7 +785,8 @@ void ssa_inlinert::rename_to_callee(
 #endif
       replace_map[*it]=
         symbol_exprt(
-          id2string(it->get_identifier())+"@"+i2string(++counter), it->type());
+          id2string(it->get_identifier())+"@"+
+          std::to_string(++counter), it->type());
     }
   }
 

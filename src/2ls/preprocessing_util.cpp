@@ -239,7 +239,7 @@ void twols_parse_optionst::remove_multiple_dereferences(
       {
         symbolt new_symbol;
         new_symbol.type=member_expr.type();
-        new_symbol.name="$deref"+i2string(var_counter++);
+        new_symbol.name="$deref"+std::to_string(var_counter++);
         new_symbol.base_name=new_symbol.name;
         new_symbol.pretty_name=new_symbol.name;
         goto_model.symbol_table.add(new_symbol);

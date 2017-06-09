@@ -280,7 +280,7 @@ void ssa_local_unwindert::unwind(unsigned k)
     return;
 
   current_enabling_expr=
-    symbol_exprt("unwind::"+id2string(fname)+"::enable"+i2string(k),
+    symbol_exprt("unwind::"+id2string(fname)+"::enable"+std::to_string(k),
                  bool_typet());
   SSA.enabling_exprs.push_back(current_enabling_expr);
 
@@ -794,12 +794,12 @@ void ssa_local_unwindert::unwinder_rename(
   unsigned unwinding=pre ? SSA.current_unwinding : 0;
   if(pos==pos1)
   {
-    suffix="%"+i2string(unwinding);
+    suffix="%"+std::to_string(unwinding);
   }
   else
   {
     suffix=id.substr(pos, pos1-pos);
-    suffix+="%"+i2string(unwinding);
+    suffix+="%"+std::to_string(unwinding);
   }
 
   var.set_identifier(id2string(var.get_identifier())+suffix);

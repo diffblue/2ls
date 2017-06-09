@@ -12,7 +12,6 @@ Author: Peter Schrammel
 #endif
 
 #include <util/find_symbols.h>
-#include <util/i2string.h>
 #include <util/simplify_expr.h>
 
 #include "tpolyhedra_domain.h"
@@ -447,8 +446,8 @@ symbol_exprt tpolyhedra_domaint::get_row_symb_value(const rowt &row)
 {
   assert(row<templ.size());
   return symbol_exprt(
-    SYMB_BOUND_VAR+i2string(domain_number)+"$"+
-    i2string(row), templ[row].expr.type());
+    SYMB_BOUND_VAR+std::to_string(domain_number)+"$"+
+    std::to_string(row), templ[row].expr.type());
 }
 
 /*******************************************************************\
@@ -946,7 +945,7 @@ void tpolyhedra_domaint::rename_for_row(exprt &expr, const rowt &row)
     const std::string &old_id=expr.get_string(ID_identifier);
     if(old_id.find(SYMB_BOUND_VAR)==std::string::npos)
     {
-      irep_idt id=old_id+"_"+i2string(row);
+      irep_idt id=old_id+"_"+std::to_string(row);
       expr.set(ID_identifier, id);
     }
   }

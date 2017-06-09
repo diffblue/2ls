@@ -13,7 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <goto-programs/goto_functions.h>
 
-#include "../domains/incremental_solver.h"
+#include <domains/incremental_solver.h>
 #include "ssa_domain.h"
 #include "guard_map.h"
 #include "ssa_object.h"

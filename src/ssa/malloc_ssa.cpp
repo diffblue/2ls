@@ -11,7 +11,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/arith_tools.h>
 #include <util/expr_util.h>
 #include <util/symbol.h>
-#include <util/i2string.h>
 #include <util/pointer_offset_size.h>
 
 #include <ansi-c/c_types.h>
@@ -193,7 +192,7 @@ static void replace_malloc_rec(
     expr.op0()=malloc_size;
 
     expr=malloc_ssa(to_side_effect_expr(expr),
-      "$"+i2string(counter++)+suffix, symbol_table);
+      "$"+std::to_string(counter++)+suffix, symbol_table);
   }
   else
     Forall_operands(it, expr)
