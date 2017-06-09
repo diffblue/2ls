@@ -69,16 +69,20 @@ public:
   typedef std::map<irep_idt, loc_def_mapt> phi_nodest;
   phi_nodest phi_nodes;
 
-  virtual void transform(
+  void transform(
     locationt from,
     locationt to,
     ai_baset &ai,
-    const namespacet &ns);
+    const namespacet &ns) final override;
 
-  virtual void output(
+  void output(
     std::ostream &out,
     const ai_baset &ai,
-    const namespacet &ns) const;
+    const namespacet &ns) const final override;
+
+  void make_bottom() final override {}
+  void make_top() final override {}
+  void make_entry() final override {}
 
   bool merge(
     const ssa_domaint &b,

@@ -16,10 +16,18 @@ Author: Daniel Kroening, kroening@kroening.com
 class ssa_value_domaint:public ai_domain_baset
 {
 public:
-  virtual void transform(locationt, locationt, ai_baset &, const namespacet &);
-  virtual void output(
-    std::ostream &, const ai_baset &, const namespacet &) const;
+  void transform(
+    locationt,
+    locationt,
+    ai_baset &,
+    const namespacet &) final override;
+  void output(
+    std::ostream &, const ai_baset &, const namespacet &) const final override;
   bool merge(const ssa_value_domaint &, locationt, locationt);
+
+  void make_bottom() final override {}
+  void make_top() final override {}
+  void make_entry() final override {}
 
   struct valuest
   {
