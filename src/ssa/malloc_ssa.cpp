@@ -147,7 +147,7 @@ exprt malloc_ssa(
     address_of.type()=pointer_typet(value_symbol.type.subtype());
     index_exprt index_expr(value_symbol.type.subtype());
     index_expr.array()=value_symbol.symbol_expr();
-    index_expr.index()=gen_zero(index_type());
+    index_expr.index()=from_integer(0, index_type());
     address_of.op0()=index_expr;
   }
   else
