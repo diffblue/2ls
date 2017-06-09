@@ -7,13 +7,12 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 #include <util/std_types.h>
+#include <util/c_types.h>
 #include <util/std_expr.h>
 #include <util/arith_tools.h>
 #include <util/expr_util.h>
 #include <util/symbol.h>
 #include <util/pointer_offset_size.h>
-
-#include <ansi-c/c_types.h>
 
 #include "malloc_ssa.h"
 
