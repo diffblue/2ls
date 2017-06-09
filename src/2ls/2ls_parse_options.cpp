@@ -1027,7 +1027,7 @@ bool twols_parse_optionst::process_goto_program(
 
       // remove inlined functions
       Forall_goto_functions(f_it, goto_model.goto_functions)
-        if(f_it->first!=ID__start &&
+        if(f_it->first!=goto_functionst::entry_point() &&
            f_it->second.body.instructions.size()<=2*(limit/2))
         {
           f_it->second.body.clear();
