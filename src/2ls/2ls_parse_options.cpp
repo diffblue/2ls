@@ -1014,7 +1014,10 @@ bool twols_parse_optionst::process_goto_program(
   {
     status() << "Function Pointer Removal" << eom;
     remove_function_pointers(
-      goto_model, cmdline.isset("pointer-check"));
+      get_message_handler(),
+      symbol_table,
+      goto_model.goto_functions,
+      cmdline.isset("pointer-check"));
 
     // do partial inlining
     if(options.get_bool_option("inline-partial"))
