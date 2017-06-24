@@ -1,9 +1,7 @@
-#FLAGS = --k-induction --competition-mode --32
-FLAGS = --unwind 11 --no-unwinding-assertions
-#2LS = ../../../src/summarizer/2ls 
-2LS = $W/svncprover/branches/peter-incremental-unwinding/src/cbmc/cbmc
-CPACHECKER = $W/svncpachecker
-ULTIMATE = $W/UltimateAutomizer
+FLAGS = --k-induction --competition-mode --32
+2LS = ../../../src/2ls/2ls
+CPACHECKER = ../../../../cpachecker
+ULTIMATE = ../../../../UltimateAutomizer
 
 test: test-cpachecker
 
@@ -12,7 +10,7 @@ test-ultimate:
 	for dir in `find $$PWD/* -maxdepth 1 -type d`; do \
 	  cd $$dir; \
 	  rm cex.graphml; \
-	  $(2LS) main.c $(FLAGS) --graphml-cex cex.graphml > main.out; \
+	  $(2LS) main.c $(FLAGS) --graphml-witness cex.graphml > main.out; \
           cd $(ULTIMATE); \
           python3 ./UltimateWitnessChecker.py \
             $$dir/../PropertyERROR.prp \
@@ -34,7 +32,7 @@ test-cpachecker:
 	for dir in `find $$PWD/* -maxdepth 1 -type d`; do \
 	  cd $$dir; \
 	  rm cex.graphml; \
-	  $(2LS) main.c $(FLAGS) --graphml-cex cex.graphml > main.out; \
+	  $(2LS) main.c $(FLAGS) --graphml-witness cex.graphml > main.out; \
           cd $(CPACHECKER); \
           ./scripts/cpa.sh -witness-check \
             -spec $$dir/cex.graphml \
