@@ -28,7 +28,6 @@ Author: Daniel Kroening, Peter Schrammel
 #include <goto-programs/loop_ids.h>
 #include <goto-programs/link_to_library.h>
 #include <goto-programs/goto_inline.h>
-#include <goto-programs/goto_inline_class.h>
 #include <goto-programs/goto_functions.h>
 #include <goto-programs/xml_goto_trace.h>
 #include <goto-programs/json_goto_trace.h>
@@ -1045,13 +1044,7 @@ bool twols_parse_optionst::process_goto_program(
     if(options.get_bool_option("inline"))
     {
       status() << "Performing full inlining" << eom;
-      const namespacet ns(goto_model.symbol_table);
-      goto_inlinet goto_inline(
-        goto_model.goto_functions, ns, ui_message_handler);
-      goto_inline();
-#if IGNORE_RECURSION
-      recursion_detected=goto_inline.recursion_detected();
-#endif
+      recursion_detected=goto_inline(goto_model);
     }
 
 #if REMOVE_MULTIPLE_DEREFERENCES
