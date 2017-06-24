@@ -27,7 +27,9 @@ class graphml_witness_extt;
 class summary_checker_baset:public property_checkert
 {
 public:
-  explicit summary_checker_baset(optionst &_options):
+  explicit summary_checker_baset(
+    optionst &_options,
+    message_handlert &_message_handler):
     show_vcc(false),
     simplify(false),
     fixed_point(false),
@@ -40,6 +42,7 @@ public:
     summaries_used(0),
     termargs_computed(0)
   {
+    set_message_handler(_message_handler);
     ssa_inliner.set_message_handler(get_message_handler());
   }
 

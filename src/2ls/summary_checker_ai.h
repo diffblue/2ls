@@ -14,8 +14,10 @@ Author: Peter Schrammel
 class summary_checker_ait:public summary_checker_baset
 {
 public:
-  explicit summary_checker_ait(optionst &_options):
-    summary_checker_baset(_options)
+  summary_checker_ait(
+    optionst &_options,
+    message_handlert &_message_handler):
+    summary_checker_baset(_options, _message_handler)
   {
   }
 

@@ -482,17 +482,16 @@ int twols_parse_optionst::doit()
     if(!options.get_bool_option("k-induction") &&
        !options.get_bool_option("incremental-bmc"))
       checker=std::unique_ptr<summary_checker_baset>(
-        new summary_checker_ait(options));
+        new summary_checker_ait(options, get_message_handler()));
     if(options.get_bool_option("k-induction") &&
        !options.get_bool_option("incremental-bmc"))
       checker=std::unique_ptr<summary_checker_baset>(
-        new summary_checker_kindt(options));
+        new summary_checker_kindt(options, get_message_handler()));
     if(!options.get_bool_option("k-induction") &&
        options.get_bool_option("incremental-bmc"))
       checker=std::unique_ptr<summary_checker_baset>(
-        new summary_checker_bmct(options));
+        new summary_checker_bmct(options, get_message_handler()));
 
-    checker->set_message_handler(get_message_handler());
     checker->simplify=!cmdline.isset("no-simplify");
     checker->fixed_point=!cmdline.isset("no-fixed-point");
 
@@ -1024,7 +1023,7 @@ bool twols_parse_optionst::process_goto_program(
     {
       unsigned limit=options.get_unsigned_int_option("inline-partial");
       status() << "Performing partial inlining (" << limit << ")" << eom;
-      goto_partial_inline(goto_model, ui_message_handler, limit/2);
+      goto_partial_inline(goto_model, get_message_handler(), limit/2);
       // TODO: where is limit multiplied by 2???
 
       // remove inlined functions

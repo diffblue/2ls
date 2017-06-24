@@ -14,8 +14,10 @@ Author: Peter Schrammel
 class summary_checker_bmct:public summary_checker_baset
 {
 public:
-  explicit summary_checker_bmct(optionst &_options):
-    summary_checker_baset(_options)
+  summary_checker_bmct(
+    optionst &_options,
+    message_handlert &_message_handler):
+    summary_checker_baset(_options, _message_handler)
   {
   }
 
