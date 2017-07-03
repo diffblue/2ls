@@ -515,7 +515,9 @@ int twols_parse_optionst::doit()
 
   const namespacet ns(goto_model.symbol_table);
   ssa_heap_analysist heap_analysis(ns);
-  if(!options.get_bool_option("inline"))
+  if((options.get_bool_option("heap") ||
+      options.get_bool_option("heap-interval")) &&
+     !options.get_bool_option("inline"))
   {
     heap_analysis(goto_model.goto_functions);
     add_dynamic_object_symbols(heap_analysis, goto_model);

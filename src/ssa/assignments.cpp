@@ -56,8 +56,12 @@ void assignmentst::build_assignment_map(
       const irep_idt fname=to_symbol_expr(code_function_call.function()).get_identifier();
       std::list<symbol_exprt> new_objects;
       std::set<exprt> modified_objects;
-      new_objects=ssa_heap_analysis[n_it].new_caller_objects(fname, it);
-      modified_objects=ssa_heap_analysis[n_it].modified_objects(fname);
+
+      if(ssa_heap_analysis.has_location(n_it))
+      {
+        new_objects=ssa_heap_analysis[n_it].new_caller_objects(fname, it);
+        modified_objects=ssa_heap_analysis[n_it].modified_objects(fname);
+      }
 
       // Assign new objects
       for(auto &o : new_objects)

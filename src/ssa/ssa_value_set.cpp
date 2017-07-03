@@ -62,7 +62,12 @@ void ssa_value_domaint::transform(
       to_code_function_call(from->code);
     const irep_idt &fname = to_symbol_expr(code_function_call.function()).get_identifier();
 
-    const ssa_heap_domaint &heap_domain = static_cast<ssa_value_ait &>(ai).heap_analysis[to];
+    const ssa_value_ait & value_analysis = static_cast<ssa_value_ait &>(ai);
+
+    const ssa_heap_domaint *heap_domain = NULL;
+    if (value_analysis.heap_analysis.has_location(to))
+      heap_domain = &value_analysis.heap_analysis[to];
+
 
     // functions may alter state almost arbitrarily:
     // * any global-scoped variables
@@ -93,7 +98,9 @@ void ssa_value_domaint::transform(
           symbol_exprt pointed_obj = pointed_object(arg, ns);
           pointed_obj.type().set("#dynamic", true);
 
-          std::set<symbol_exprt> new_objects = heap_domain.value(arg_expr);
+          std::set<symbol_exprt> new_objects;
+          if (heap_domain)
+            new_objects = heap_domain->value(arg_expr);
           if (new_objects.empty())
           {
             new_objects.insert(pointed_obj);
@@ -121,6 +128,8 @@ void ssa_value_domaint::transform(
           assert(arg_expr.id() == ID_typecast);
           arg = arg_expr = to_typecast_expr(arg).op();
         }
+        else
+          break;
       }
     }
 
@@ -138,7 +147,9 @@ void ssa_value_domaint::transform(
       if (return_value.type().id() == ID_pointer &&
           return_value.get_identifier() == id2string(fname) + "#return_value")
       {
-        std::set<symbol_exprt> new_objects = heap_domain.value(return_value);
+        std::set<symbol_exprt> new_objects;
+        if (heap_domain)
+            new_objects = heap_domain->value(return_value);
         if (new_objects.empty())
         {
           symbol_exprt pointed_obj = pointed_object(return_value, ns);
@@ -156,9 +167,12 @@ void ssa_value_domaint::transform(
           objects.push_back(*it);
         }
 
-        for (auto &new_o : heap_domain.new_caller_objects(fname, from))
+        if (heap_domain)
         {
-          objects.push_back(new_o);
+          for (auto &new_o : heap_domain->new_caller_objects(fname, from))
+          {
+            objects.push_back(new_o);
+          }
         }
       }
     }
