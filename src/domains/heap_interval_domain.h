@@ -15,8 +15,6 @@ class heap_interval_domaint : public domaint
   heap_domaint heap_domain;
   tpolyhedra_domaint interval_domain;
 
-  heap_domaint::heap_valuet heap_value;
-
   heap_interval_domaint(unsigned int _domain_number, replace_mapt &_renaming_map,
                         const var_specst &var_specs, const namespacet &ns)
       : domaint(_domain_number, _renaming_map),
