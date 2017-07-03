@@ -622,60 +622,63 @@ exprt ssa_inlinert::get_replace_params(
         }
       }
       else
-      { // Bind objects pointed by argument and parameter when advancer is not present
-        assert(params_deref_in.size() == 1);
-        const exprt &p_in = params_deref_in.front();
-
-        exprt::operandst d;
-        for(const exprt &a_in : args_deref_in)
+      { 
+        // Bind objects pointed by argument and parameter when advancer is not present
+        if(params_deref_in.size()==1)
         {
-          exprt::operandst binding;
-          binding.push_back(equal_exprt(
-            param_in_transformer(p_in),
-            arg_in_transformer(a_in, SSA, loc)));
+          const exprt &p_in = params_deref_in.front();
 
-          if(arg_type.id()==ID_struct)
+          exprt::operandst d;
+          for(const exprt &a_in : args_deref_in)
           {
-            for(auto &component : to_struct_type(arg_type).components())
+            exprt::operandst binding;
+            binding.push_back(equal_exprt(
+              param_in_transformer(p_in),
+              arg_in_transformer(a_in, SSA, loc)));
+
+            if(arg_type.id() == ID_struct)
             {
-              binding.push_back(equal_exprt(
-                param_in_member_transformer(p_in, component),
-                arg_in_member_transformer(a_in, component, SSA, loc)));
-            }
-          }
-          d.push_back(conjunction(binding));
-        }
-        if (!d.empty())
-          c.push_back(disjunction(d));
-
-        d.clear();
-        for(const exprt &p_out : params_deref_out)
-        {
-          for(const exprt &a_out : args_deref_out)
-          {
-            if(!cs_heap_covered(a_out))
-            {
-              exprt::operandst binding;
-
-              binding.push_back(equal_exprt(
-                param_out_transformer(p_out, arg_type, summary.globals_out),
-                arg_out_transformer(a_out, arg_symbol_type, p_out.type(), SSA, loc)));
-
-              if(arg_type.id()==ID_struct)
+              for(auto &component : to_struct_type(arg_type).components())
               {
-                for(auto &component : to_struct_type(arg_type).components())
-                {
-                  binding.push_back(equal_exprt(
-                    param_out_member_transformer(p_out, component, summary.globals_out),
-                    arg_out_member_transformer(a_out, component, SSA, loc)));
-                }
+                binding.push_back(equal_exprt(
+                  param_in_member_transformer(p_in, component),
+                  arg_in_member_transformer(a_in, component, SSA, loc)));
               }
-              d.push_back(conjunction(binding));
+            }
+            d.push_back(conjunction(binding));
+          }
+          if(!d.empty())
+            c.push_back(disjunction(d));
+
+          d.clear();
+          for(const exprt &p_out : params_deref_out)
+          {
+            for(const exprt &a_out : args_deref_out)
+            {
+              if(!cs_heap_covered(a_out))
+              {
+                exprt::operandst binding;
+
+                binding.push_back(equal_exprt(
+                  param_out_transformer(p_out, arg_type, summary.globals_out),
+                  arg_out_transformer(a_out, arg_symbol_type, p_out.type(), SSA, loc)));
+
+                if(arg_type.id()==ID_struct)
+                {
+                  for (auto &component : to_struct_type(arg_type).components())
+                  {
+                    binding.push_back(equal_exprt(
+                      param_out_member_transformer(p_out, component, summary.globals_out),
+                      arg_out_member_transformer(a_out, component, SSA, loc)));
+                  }
+                }
+                d.push_back(conjunction(binding));
+              }
             }
           }
+          if(!d.empty())
+            c.push_back(disjunction(d));
         }
-        if(!d.empty())
-          c.push_back(disjunction(d));
       }
 
       args_in = args_deref_in;
@@ -1051,6 +1054,11 @@ void ssa_inlinert::rename_to_callee(
     replace_map[*it]=*p_it;
   }
 
+  replace_expr(replace_map,expr);
+
+  replace_map.clear(); //arguments might contain globals, 
+                       // thus, we have to replace them separately
+		       
   for(summaryt::var_sett::const_iterator it=cs_globals_in.begin();
       it!=cs_globals_in.end(); it++)
   {
@@ -1243,21 +1251,17 @@ std::list<exprt> ssa_inlinert::apply_dereference(
       for (auto &e : tmp)
         result.push_back(e);
     }
-    else if (expr.id() != ID_constant)
-    {
-      assert(false);
-    }
   }
   return result;
 }
 
 /*******************************************************************\
 
-Function: ssa_inlinert::contains_advancer
+Function: ssa_inlinert::contains_iterator
 
   Inputs: List of expressions
 
- Outputs: True if the list contains an advancer
+ Outputs: True if the list contains an iterator
 
  Purpose:
 
@@ -1395,7 +1399,8 @@ exprt ssa_inlinert::get_replace_new_objects(
   const ssa_heap_domaint &heap_domain=SSA.heap_analysis[next_loc];
 
   const std::list<symbol_exprt> callee_objects=heap_domain.new_objects(fname);
-  const std::list<symbol_exprt> caller_objects=heap_domain.new_caller_objects(fname, loc);
+  const std::list<symbol_exprt> caller_objects=
+    heap_domain.new_caller_objects(fname, loc);
 
   exprt::operandst binding;
   auto callee_it=callee_objects.begin();
@@ -1414,8 +1419,10 @@ exprt ssa_inlinert::get_replace_new_objects(
       for(auto &component : to_struct_type(type).components())
       {
         binding.push_back(equal_exprt(
-          param_out_member_transformer(*callee_it, component, summary.globals_out),
-          arg_out_member_transformer(*caller_it, component, SSA, loc)));
+          param_out_member_transformer(
+            *callee_it, component, summary.globals_out),
+          arg_out_member_transformer(
+            *caller_it, component, SSA, loc)));
       }
     }
   }
