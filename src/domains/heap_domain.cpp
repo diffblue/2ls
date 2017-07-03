@@ -47,15 +47,12 @@ void heap_domaint::make_template(const domaint::var_specst &var_specs, const nam
   {
     if (v->kind == IN) continue;
 
-    // Create template for each pointer to struct
+    // Create template for each pointer
     const vart &var = v->var;
     if (var.type().id() == ID_pointer)
     {
       const typet &pointed_type = ns.follow(var.type().subtype());
-      if (pointed_type.id() == ID_struct)
-      {
         add_template_row(*v, pointed_type);
-      }
     }
   }
 }
@@ -73,18 +70,21 @@ void heap_domaint::add_template_row(const var_spect &var_spec, const typet &poin
   templ_row.kind = var_spec.kind;
 
   templ_row.mem_kind = STACK;
-  // Check if var is member field of heap object
-  const std::string identifier = id2string(to_symbol_expr(var_spec.var).get_identifier());
-  for (auto &component : to_struct_type(pointed_type).components())
+  if (pointed_type.id() == ID_struct)
   {
-    if (identifier.find("." + id2string(component.get_name())) != std::string::npos)
+    // Check if var is member field of heap object
+    const std::string identifier = id2string(to_symbol_expr(var_spec.var).get_identifier());
+    for (auto &component : to_struct_type(pointed_type).components())
     {
-      templ_row.mem_kind = HEAP;
-      templ_row.member = component.get_name();
+      if (identifier.find("." + id2string(component.get_name())) != std::string::npos)
+      {
+        templ_row.mem_kind = HEAP;
+        templ_row.member = component.get_name();
 
-      std::string var_id = id2string(to_symbol_expr(var).get_identifier());
-      std::string do_id = var_id.substr(0, var_id.find_last_of('.'));
-      templ_row.dyn_obj = symbol_exprt(do_id, var.type().subtype());
+        std::string var_id = id2string(to_symbol_expr(var).get_identifier());
+        std::string do_id = var_id.substr(0, var_id.find_last_of('.'));
+        templ_row.dyn_obj = symbol_exprt(do_id, var.type().subtype());
+      }
     }
   }
 }
