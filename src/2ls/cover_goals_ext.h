@@ -52,7 +52,8 @@ public:
     incremental_solvert &_solver,
     const exprt::operandst& _loophead_selects,
     property_checkert::property_mapt &_property_map,
-    bool _spurious_check, bool _all_properties,
+    bool _spurious_check,
+    bool _all_properties,
     bool _build_error_trace):
     SSA(_SSA),
     solver(_solver),

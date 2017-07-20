@@ -141,7 +141,15 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
     options.set_option("unwindset", cmdline.get_value("unwindset"));
 
   if(cmdline.isset("unwind"))
+  {
     options.set_option("unwind", cmdline.get_value("unwind"));
+    options.set_option("unwind-min", cmdline.get_value("unwind"));
+  }
+  else
+  {
+    options.set_option("unwind", 0);
+    options.set_option("unwind-min", 0);
+  }
 
   if(cmdline.isset("inline-partial"))
     options.set_option("inline-partial", cmdline.get_value("inline-partial"));
@@ -263,7 +271,9 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
     options.set_option("k-induction", true);
     options.set_option("inline", true);
     if(!cmdline.isset("unwind"))
-      options.set_option("unwind", UINT_MAX);
+      options.set_option("unwind", std::numeric_limits<unsigned>::max());
+    else
+      options.set_option("unwind-min", 0);
   }
 
   // do incremental bmc
@@ -273,7 +283,19 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
     options.set_option("inline", true);
     options.set_option("havoc", true);
     if(!cmdline.isset("unwind"))
-      options.set_option("unwind", UINT_MAX);
+      options.set_option("unwind", std::numeric_limits<unsigned>::max());
+    else
+      options.set_option("unwind-min", 0);
+  }
+
+  // do bmc
+  if(cmdline.isset("bmc"))
+  {
+    options.set_option("bmc", true);
+    options.set_option("inline", true);
+    options.set_option("havoc", true);
+    if(!cmdline.isset("unwind"))
+      throw "--bmc only possible with --unwind";
   }
 
   // check for spuriousness of assertion failures
@@ -343,153 +365,156 @@ Function: twols_parse_optionst::doit
 
 int twols_parse_optionst::doit()
 {
-  if(cmdline.isset("version"))
+  try
   {
-    std::cout << TWOLS_VERSION << std::endl;
-    return 0;
-  }
+    if(cmdline.isset("version"))
+    {
+      std::cout << TWOLS_VERSION << std::endl;
+      return 0;
+    }
 
-  //
-  // command line options
-  //
+    //
+    // command line options
+    //
 
-  optionst options;
-  get_command_line_options(options);
+    optionst options;
+    get_command_line_options(options);
 
-  eval_verbosity();
+    eval_verbosity();
 
-  //
-  // Print a banner
-  //
-  status() << "2LS version " TWOLS_VERSION " (based on CBMC " CBMC_VERSION ")"
-           << eom;
+    //
+    // Print a banner
+    //
+    status() << "2LS version " TWOLS_VERSION " (based on CBMC " CBMC_VERSION ")"
+             << eom;
 
-  goto_modelt goto_model;
+    goto_modelt goto_model;
 
-  register_languages();
+    register_languages();
 
-  if(get_goto_program(options, goto_model))
-    return 6;
+    if(get_goto_program(options, goto_model))
+      return 6;
 
-  if(cmdline.isset("show-stats"))
-  {
-    show_stats(goto_model, std::cout);
-    return 7;
-  }
+    if(cmdline.isset("show-stats"))
+    {
+      show_stats(goto_model, std::cout);
+      return 7;
+    }
 
-  // options for various debug outputs
+    // options for various debug outputs
 
-  if(cmdline.isset("show-ssa"))
-  {
-    bool simplify=!cmdline.isset("no-simplify");
-    irep_idt function=cmdline.get_value("function");
-    show_ssa(goto_model, function, simplify, std::cout, ui_message_handler);
-    return 7;
-  }
+    if(cmdline.isset("show-ssa"))
+    {
+      bool simplify=!cmdline.isset("no-simplify");
+      irep_idt function=cmdline.get_value("function");
+      show_ssa(goto_model, function, simplify, std::cout, ui_message_handler);
+      return 7;
+    }
 
-  if(cmdline.isset("show-defs"))
-  {
-    irep_idt function=cmdline.get_value("function");
-    show_defs(goto_model, function, std::cout, ui_message_handler);
-    return 7;
-  }
+    if(cmdline.isset("show-defs"))
+    {
+      irep_idt function=cmdline.get_value("function");
+      show_defs(goto_model, function, std::cout, ui_message_handler);
+      return 7;
+    }
 
-  if(cmdline.isset("show-assignments"))
-  {
-    irep_idt function=cmdline.get_value("function");
-    show_assignments(goto_model, function, std::cout, ui_message_handler);
-    return 7;
-  }
+    if(cmdline.isset("show-assignments"))
+    {
+      irep_idt function=cmdline.get_value("function");
+      show_assignments(goto_model, function, std::cout, ui_message_handler);
+      return 7;
+    }
 
-  if(cmdline.isset("show-guards"))
-  {
-    irep_idt function=cmdline.get_value("function");
-    show_guards(goto_model, function, std::cout, ui_message_handler);
-    return 7;
-  }
+    if(cmdline.isset("show-guards"))
+    {
+      irep_idt function=cmdline.get_value("function");
+      show_guards(goto_model, function, std::cout, ui_message_handler);
+      return 7;
+    }
 
-  if(cmdline.isset("show-value-sets"))
-  {
-    irep_idt function=cmdline.get_value("function");
-    show_value_sets(goto_model, function, std::cout, ui_message_handler);
-    return 7;
-  }
+    if(cmdline.isset("show-value-sets"))
+    {
+      irep_idt function=cmdline.get_value("function");
+      show_value_sets(goto_model, function, std::cout, ui_message_handler);
+      return 7;
+    }
 
-  if(cmdline.isset("show-invariants"))
-  {
-    options.set_option("show-invariants", true);
-  }
+    if(cmdline.isset("show-invariants"))
+    {
+      options.set_option("show-invariants", true);
+    }
 
 #if IGNORE_RECURSION
-  if(recursion_detected)
-  {
-    status() << "Recursion not supported" << eom;
-    report_unknown();
-    return 5;
-  }
+    if(recursion_detected)
+    {
+      status() << "Recursion not supported" << eom;
+      report_unknown();
+      return 5;
+    }
 #endif
 
 #if IGNORE_THREADS
-  if(threads_detected)
-  {
-    status() << "Threads not supported" << eom;
-    report_unknown();
-    return 5;
-  }
+    if(threads_detected)
+    {
+      status() << "Threads not supported" << eom;
+      report_unknown();
+      return 5;
+    }
 #endif
 
-  if(cmdline.isset("context-sensitive"))
-  {
-    options.set_option("context-sensitive", true);
-    status() << "Context-sensitive analysis from " <<
-      goto_model.goto_functions.entry_point() << eom;
-  }
+    if(cmdline.isset("context-sensitive"))
+    {
+      options.set_option("context-sensitive", true);
+      status() << "Context-sensitive analysis from " <<
+        goto_model.goto_functions.entry_point() << eom;
+    }
 
-  if(cmdline.isset("arrays"))
-  {
-    options.set_option("arrays", true);
-    status() << "Do not ignore array contents" << eom;
-  }
+    if(cmdline.isset("arrays"))
+    {
+      options.set_option("arrays", true);
+      status() << "Do not ignore array contents" << eom;
+    }
 
-  // TODO: check option inconsistencies, ignored options etc
-  if(options.get_bool_option("havoc"))
-    status() << "Havocking loops and function calls" << eom;
-  else if(options.get_bool_option("equalities"))
-    status() << "Using (dis)equalities domain" << eom;
-  else
-  {
-    if(options.get_bool_option("intervals"))
-      status() << "Using intervals domain";
-    else if(options.get_bool_option("zones"))
-      status() << "Using zones domain";
-    else if(options.get_bool_option("octagons"))
-      status() << "Using octagons domain";
+    // TODO: check option inconsistencies, ignored options etc
+    if(options.get_bool_option("havoc"))
+      status() << "Havocking loops and function calls" << eom;
+    else if(options.get_bool_option("equalities"))
+      status() << "Using (dis)equalities domain" << eom;
     else
-      assert(false);
+    {
+      if(options.get_bool_option("intervals"))
+        status() << "Using intervals domain";
+      else if(options.get_bool_option("zones"))
+        status() << "Using zones domain";
+      else if(options.get_bool_option("octagons"))
+        status() << "Using octagons domain";
+      else
+        assert(false);
 
-    if(options.get_bool_option("enum-solver"))
-      status() << " with enumeration solver";
-    else if(options.get_bool_option("binsearch-solver"))
-      status() << " with binary search solver";
-    else
-      assert(false);
+      if(options.get_bool_option("enum-solver"))
+        status() << " with enumeration solver";
+      else if(options.get_bool_option("binsearch-solver"))
+        status() << " with binary search solver";
+      else
+        assert(false);
 
-    status() << eom;
-  }
+      status() << eom;
+    }
 
-  try
-  {
     std::unique_ptr<summary_checker_baset> checker;
     if(!options.get_bool_option("k-induction") &&
-       !options.get_bool_option("incremental-bmc"))
+       !options.get_bool_option("incremental-bmc") &&
+       !options.get_bool_option("bmc"))
       checker=std::unique_ptr<summary_checker_baset>(
         new summary_checker_ait(options));
     if(options.get_bool_option("k-induction") &&
-       !options.get_bool_option("incremental-bmc"))
+       !options.get_bool_option("incremental-bmc") &&
+       !options.get_bool_option("bmc"))
       checker=std::unique_ptr<summary_checker_baset>(
         new summary_checker_kindt(options));
     if(!options.get_bool_option("k-induction") &&
-       options.get_bool_option("incremental-bmc"))
+       (options.get_bool_option("incremental-bmc") ||
+        options.get_bool_option("bmc")))
       checker=std::unique_ptr<summary_checker_baset>(
         new summary_checker_bmct(options));
 

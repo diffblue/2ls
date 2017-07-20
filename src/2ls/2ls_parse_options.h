@@ -48,7 +48,7 @@ class optionst;
   "(show-locs)(show-vcc)(show-properties)(show-trace)(show-stats)" \
   "(show-goto-functions)(show-guards)(show-defs)(show-ssa)(show-assignments)" \
   "(show-invariants)(std-invariants)" \
-  "(property):(all-properties)(k-induction)(incremental-bmc)" \
+  "(property):(all-properties)(k-induction)(incremental-bmc)(bmc)" \
   "(no-spurious-check)(all-functions)" \
   "(no-simplify)(no-fixed-point)" \
   "(graphml-witness):(json-cex):" \
