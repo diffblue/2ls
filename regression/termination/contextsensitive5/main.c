@@ -1,7 +1,7 @@
 #include <stdlib.h>
 
-void foo(int* x) 
-{ 
+void foo(int* x)
+{
   assert(x!=NULL);
   *x = 0;
 }

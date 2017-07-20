@@ -7,6 +7,6 @@ int foo(int x)
 void main()
 {
   int x;
-  x = foo(x);  
+  x = foo(x);
   assert(x<=0);
 }

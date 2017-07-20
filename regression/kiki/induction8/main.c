@@ -1,5 +1,5 @@
 int main() {
-  int x,y,z;  
+  int x,y,z;
   __CPROVER_assume(x==y && y==z && -10<=x && x<0);
 
 //  while(1)

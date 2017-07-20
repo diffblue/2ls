@@ -20,11 +20,11 @@ void main() {
   /* __CPROVER_assume(y29 == 1 + yphi21); */
   /* __CPROVER_assume(uphi29 == (cond27 && guard27 ? uphi21 : u28)); */
   /* __CPROVER_assume(guard29 == (cond27 && guard27 || guard28)); */
-    
+
   //  assert(!(guard21 && guardls30 && guard29 && cond30 && (-(long)ylb30 <= -(long)y29 || -(long)ulb30 < -(long)uphi29) && -(long)ulb30 <= -(long)uphi29));
   //assert(!(guard21 && guardls30 && guard29 && cond30 && (-ylb30 <= -y29 || -ulb30 < -uphi29) && -ulb30 <= -uphi29));
 
-  __CPROVER_bitvector[32] c0$1$0, c0$1$1, c0$1$2, c0$0$0, c0$0$1, c0$0$2; 
+  __CPROVER_bitvector[32] c0$1$0, c0$1$1, c0$1$2, c0$0$0, c0$0$1, c0$0$2;
 
   /* assert(c0$1$0 * 4194304 + c0$1$1 * 2147483647 + c0$1$2 * -1656643584 > c0$1$0 * 4194303 + c0$1$1 * -2147483648 + c0$1$2 * -1656643583 || */
   /* 	 c0$0$0 * 4194304 + c0$0$1 * 2147483647 + c0$0$2 * -1656643584 > c0$0$0 * 4194303 + c0$0$1 * -2147483648 + c0$0$2 * -1656643583 && c0$1$0 * 4194304 + c0$1$1 * 2147483647 + c0$1$2 * -1656643584 >= c0$1$0 * 4194303 + c0$1$1 * -2147483648 + c0$1$2 * -1656643583); */

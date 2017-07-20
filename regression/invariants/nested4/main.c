@@ -5,10 +5,10 @@ void main()
 int n;
 __CPROVER_assume(0<=n && n<=N);
 int cost0 = 0;
-for(int i=0;i<n;i++) 
-{ 
+for(int i=0;i<n;i++)
+{
   int cost1 = 0;
-  for(int j=0;j<n;j++) 
+  for(int j=0;j<n;j++)
   {
     cost1++;
   }

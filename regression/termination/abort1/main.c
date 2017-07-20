@@ -8,7 +8,7 @@ int foo(int x)
 int main(int argc, char** argv)
 {
   int x = argc;
-  x = foo(x);  
+  x = foo(x);
   assert(x>=1);
   return x;
 }

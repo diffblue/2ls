@@ -1,5 +1,5 @@
-void foo(int x) 
-{ 
+void foo(int x)
+{
   int y = x;
   assert(y>=0);
 }

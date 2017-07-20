@@ -15,7 +15,7 @@ main()
   int z=__VERIFIER_nondet_int();
   __VERIFIER_assume(x<100);
   __VERIFIER_assume(z<100);
-  while(x<100 && 100<z) 
+  while(x<100 && 100<z)
   {
     _Bool tmp=__VERIFIER_nondet_bool();
     if (tmp)
@@ -27,8 +27,8 @@ main()
      x--;
      z--;
    }
-  }                       
-    
+  }
+
   __VERIFIER_assert(x>=100 || z<=100);
 }
 

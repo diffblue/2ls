@@ -1,5 +1,5 @@
-unsigned foo(unsigned x, unsigned y) 
-{ 
+unsigned foo(unsigned x, unsigned y)
+{
   __CPROVER_assume(x<10*y && y>10);
   return x/y;
 }

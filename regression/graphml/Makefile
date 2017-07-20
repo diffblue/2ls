@@ -1,6 +1,6 @@
 #FLAGS = --k-induction --competition-mode --32
 FLAGS = --unwind 11 --no-unwinding-assertions
-#2LS = ../../../src/summarizer/2ls 
+#2LS = ../../../src/summarizer/2ls
 2LS = $W/svncprover/branches/peter-incremental-unwinding/src/cbmc/cbmc
 CPACHECKER = $W/svncpachecker
 ULTIMATE = $W/UltimateAutomizer

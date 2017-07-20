@@ -1,5 +1,5 @@
-int foo(int len, int *a) 
-{ 
+int foo(int len, int *a)
+{
   if(len>=0)
   {
     assert(len>=3);

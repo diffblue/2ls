@@ -59,7 +59,7 @@ void createBack(struct SDL_Surface back_surface)
 //      SDL_UpperBlit(img, (struct SDL_Rect *)NULL, *back_surface, &pos);
     }
     //assert(-y>-(y+img.h));
-    //    assert(-y+(y+img.h)>0); 
+    //    assert(-y+(y+img.h)>0);
     assert(img.h!=0);
   }
 }

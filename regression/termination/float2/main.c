@@ -2,7 +2,7 @@
 
 int main(int argc, char** argv)
 {
-  float x = 10.0;  
+  float x = 10.0;
 
   while(x>0)
   {

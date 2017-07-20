@@ -1,5 +1,5 @@
-void foo(char* x) 
-{ 
+void foo(char* x)
+{
   assert(x!=0);
   *x = 0;
 }

@@ -1,5 +1,5 @@
-int foo(int x) 
-{ 
+int foo(int x)
+{
   __CPROVER_assume(x==0);
   return -x;
 }

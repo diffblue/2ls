@@ -1,7 +1,7 @@
 void main()
 {
-  int x = 10; 
-  int y = 0; 
+  int x = 10;
+  int y = 0;
 
   while(x>2*y)
   {

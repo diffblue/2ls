@@ -13,12 +13,12 @@ main()
 
   if (y>0)
   {
-    while(x<100) 
+    while(x<100)
     {
       x=x+y;
      }
-  }                           
-  __VERIFIER_assert(y<=0 || (y<0 && x>=100));     
+  }
+  __VERIFIER_assert(y<=0 || (y<0 && x>=100));
 }
 
 

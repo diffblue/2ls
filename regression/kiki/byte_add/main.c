@@ -15,7 +15,7 @@ unsigned int mp_add(unsigned int a, unsigned int b)
       i = i; r0 = r0; r1 = r1;
       }
 */
-    
+
     while (i < (unsigned char)2) {
       if (i == (unsigned char)0) { r0 = (unsigned char)0; }
       if (i == (unsigned char)1) { r1 = (unsigned char)0; }

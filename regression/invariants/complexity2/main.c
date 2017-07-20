@@ -13,6 +13,6 @@ void main()
   for (i = 0; i < n; ++i, ++cost, aux = cost / n) {
     assert(aux <= 1);
   }
-  
+
   assert(aux <= 1);
 }

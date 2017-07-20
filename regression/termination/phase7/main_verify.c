@@ -2,8 +2,8 @@
 
 void main()
 {
-  int x;// = 1;  
-  int y;// = 1;  
+  int x;// = 1;
+  int y;// = 1;
   int u;// = 0;
 
   assert(verify(x, y, u) != 0);
@@ -34,8 +34,8 @@ int verify(int x, int y, int u) {
     //if(-u0 <= -u && (-u0 != -u || -y0 <= -y))
     //if(-(long)u0+(long)x0 <= -(long)u+(long)x && (-(long)u0+(long)x0 != -(long)u+(long)x || ( -(long)u0-(long)x0 <= -(long)u-(long)x && (-(long)u0-(long)x0 != -(long)u-(long)x || (long)u0+(long)x0 <= (long)u+(long)x))))
     //if((long)x0 <= (long)x && ((long)x0 != (long)x || -(long)u0-(long)x0 <= -(long)u-(long)x))
-    // if(-(long)u0+(long)x0 <= -(long)u+(long)x && (-(long)u0+(long)x0 != -(long)u+(long)x || 
-    //						    (-(long)u0-(long)x0 <= -(long)u-(long)x && (-(long)u0-(long)x0 != -(long)u-(long)x || 
+    // if(-(long)u0+(long)x0 <= -(long)u+(long)x && (-(long)u0+(long)x0 != -(long)u+(long)x ||
+    //						    (-(long)u0-(long)x0 <= -(long)u-(long)x && (-(long)u0-(long)x0 != -(long)u-(long)x ||
     //												(long)u0+(long)x0 <= (long)u+(long)x))))
       return 0;
   }

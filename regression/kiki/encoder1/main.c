@@ -8,33 +8,33 @@ int main () {
   int outputBytes = 0;
   int encodedBytes = 0;
 
-  int last = EOF; 
+  int last = EOF;
   unsigned char count = 1;
   int current;
 
-  do 
+  do
   {
     current = getchar();
     inputBytes += (current == EOF) ? 0 : 1;
 
-    if ((current == last) && (count < 5 /*UCHAR_MAX - 1*/)) 
+    if ((current == last) && (count < 5 /*UCHAR_MAX - 1*/))
     {
       ++count;
-    } 
-    else 
+    }
+    else
     {
-      if (last != EOF)      
+      if (last != EOF)
       {
-	if (count > 1) 
+	if (count > 1)
         {
 	  putchar(UCHAR_MAX); ++outputBytes;
 	  putchar(count); ++outputBytes;
 	}
-	if (last == UCHAR_MAX) 
+	if (last == UCHAR_MAX)
         {
 	  putchar(UCHAR_MAX); ++outputBytes;
 	}
-	putchar(last); 
+	putchar(last);
 	++outputBytes;
 	encodedBytes += count;
       }
@@ -42,7 +42,7 @@ int main () {
       last = current;
       count = 1;
     }
-  } 
+  }
   while (last != EOF);
 
   assert(inputBytes != encodedBytes); //should fail

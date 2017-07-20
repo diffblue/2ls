@@ -1,12 +1,12 @@
 int g;
 
-void foo() 
-{ 
+void foo()
+{
   g=10;
 }
 
-int bar() 
-{ 
+int bar()
+{
   return 20;
 }
 

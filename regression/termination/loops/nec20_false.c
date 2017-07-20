@@ -10,7 +10,7 @@ int main(){
    _Bool k=__VERIFIER_nondet_bool();
    int i,n,j;
    int a[1025];
-   
+
    if (k){
       n=0;
    } else {
@@ -32,7 +32,7 @@ int main(){
       a[b]=1;
    else
       a[b%1023] =1;
-   
+
    return 1;
-  
+
 }

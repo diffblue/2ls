@@ -15,10 +15,10 @@ int main(){
 
 
    while(c){
-     
+
       if (len==4)
          len =0;
-      
+
       a[len]=0;
 
       len++;
@@ -26,5 +26,5 @@ int main(){
    __VERIFIER_assert(len==5);
    return 1;
 
-   
+
 }

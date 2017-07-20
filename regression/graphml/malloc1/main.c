@@ -1029,7 +1029,7 @@ int ssl3_connect(SSL *s )
 
   {
     blastFlag = 0;
-    s->state = 12292; 
+    s->state = 12292;
     while (1) {
       if (s->state == 12292) {
 	goto switch_1_12292;
@@ -1047,15 +1047,15 @@ int ssl3_connect(SSL *s )
 	      switch_1_4368: ;
 		if (blastFlag == 0) {
 		  blastFlag = 1;
-		} 
+		}
 		s->state = 4384;
 		goto switch_1_break;
 	      switch_1_4384: ;
 		if (blastFlag == 1) {
 		  blastFlag = 2;
 		  goto ERROR;
-		} 
-									
+		}
+
 		goto end;
 	      switch_1_default:
 		goto end;

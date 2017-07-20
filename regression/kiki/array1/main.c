@@ -8,7 +8,7 @@ int main(int argc, char** argv)
   {
     int y = 2;
     int x;
-    if(1 == x) 
+    if(1 == x)
       s[i] = x;
     else y = x;
   }

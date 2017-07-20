@@ -3,7 +3,7 @@ void main()
   int x,y;
   for(x=0;x<10;)
   {
-    for(y=0;y<x;y++); 
+    for(y=0;y<x;y++);
     //*
     if(x==0) x=5;
     else if(x==5) x=3;

@@ -2,7 +2,7 @@ extern int nondet();
 
 void main()
 {
-  int x;  
+  int x;
   __CPROVER_assume(x>=0);
   int y = 0;
 

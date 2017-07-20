@@ -10,7 +10,7 @@ void main()
       y++;
     }
     while(y<x);
-    assert(y>=x); 
+    assert(y>=x);
     x++;
   }
   assert(x==10);

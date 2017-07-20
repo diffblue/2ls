@@ -3,10 +3,10 @@ int foo(int x, int y)
   while(x<10)
   {
     y++;
-    x++; 
+    x++;
     y--;
   }
-  
+
   return y;
 }
 

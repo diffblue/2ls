@@ -1,9 +1,9 @@
-int FirstOccurrence(int len, int a[]) 
-{ 
+int FirstOccurrence(int len, int a[])
+{
   if(len<=0) return -1;
   int i = 0;
   assert(i<len);
-  while(a[i]!=3) 
+  while(a[i]!=3)
   {
     i++;
     assert(i<len);

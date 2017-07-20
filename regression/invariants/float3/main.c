@@ -1,6 +1,6 @@
 void main()
 {
-  float x = 10.0;  
+  float x = 10.0;
 
   while(x>0) // does not terminate
   {

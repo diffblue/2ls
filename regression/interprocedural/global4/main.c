@@ -1,6 +1,6 @@
 int g = 1;
 
-void modify_global() 
+void modify_global()
 {
   g = g;
 }
@@ -11,12 +11,12 @@ void main()
 
   //g = g;
 
-  if(x) 
+  if(x)
   {
-     modify_global(); 
+     modify_global();
   }
 
-  modify_global(); 
+  modify_global();
 
   assert(g==1);
 }

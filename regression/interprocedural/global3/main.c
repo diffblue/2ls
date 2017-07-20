@@ -1,8 +1,8 @@
 int x;
 int z;
 
-void foo() 
-{ 
+void foo()
+{
   for(x=0;x<10;x++);
 }
 

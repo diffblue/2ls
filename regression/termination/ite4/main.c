@@ -1,13 +1,13 @@
 
-int foo(int x) 
-{   
+int foo(int x)
+{
   int res;
   if(x) return 0;
   else return 1;
 }
 
-int bar(int x) 
-{   
+int bar(int x)
+{
   int res;
   if(x) res = 0;
   else res = 1;

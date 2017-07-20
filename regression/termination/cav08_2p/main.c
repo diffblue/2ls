@@ -1,4 +1,4 @@
-/* 
+/*
   Example from Cook et al, CAV 2008
 */
 
@@ -15,7 +15,7 @@ void f(int cbSrcLength, int cbHeader, int nBlockAlignment, DWORD *pbSrc, DWORD *
 {
 //  __CPROVER_assume(cbSrcLength < cbHeader || nBlockAlignment > 0 && cbHeader > 0); // precondition for termination
 
-  while (cbSrcLength >= cbHeader) 
+  while (cbSrcLength >= cbHeader)
   {
     DWORD dwHeader;
     UINT cbBlockLength;
@@ -28,7 +28,7 @@ void f(int cbSrcLength, int cbHeader, int nBlockAlignment, DWORD *pbSrc, DWORD *
     int nStepIndex = (int)(BYTE)HIWORD(dwHeader);
     if( !imaadpcmValidStepIndex(nStepIndex) ) return 0;
     *pbDst++ = (BYTE)((nPredSample >> 8) + 128); */
-    while (cbBlockLength--) 
+    while (cbBlockLength--)
     {
       /*     DWORD bSample = *pbSrc++;
       DWORD nEncSample = (bSample & (BYTE)0x0F);
@@ -56,7 +56,7 @@ int main()
   int nBlockAlignment = nondet_int();
   DWORD *pbSrc, *pbDst;
   int *step;
-  
+
   f(cbSrcLength, cbHeader, nBlockAlignment, pbSrc, pbSrc, step);
 
   return 0;

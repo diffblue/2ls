@@ -1,10 +1,10 @@
-int foo() 
-{ 
+int foo()
+{
   return 1;
 }
-int bar() 
-{   
-  return 2; 
+int bar()
+{
+  return 2;
 }
 
 void main()

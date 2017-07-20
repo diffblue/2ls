@@ -57,7 +57,7 @@ void __VERIFIER_assert(int cond) {
 
 /*
 ** Benchmark Suite for Real-Time Applications, by Sung-Soo Lim
-**     
+**
 **    III-4. ludcmp.c : Simultaneous Linear Equations by LU Decomposition
 **                 (from the book C Programming for EEs by Hyun Soon Ahn)
 */
@@ -96,7 +96,7 @@ void main()
 					w += a[i][j];
 			}
                         __VERIFIER_assert(i==2);
-			b[i] = w;	
+			b[i] = w;
 	}
 
 	chkerr = ludcmp(nmax, n, eps);
@@ -146,6 +146,6 @@ int ludcmp(int nmax, int n, double eps)
 	    x[i] = w / a[i][i] ;
 	  }
 	return(0);
-	
+
 }
 

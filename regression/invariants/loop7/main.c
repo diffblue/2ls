@@ -1,6 +1,6 @@
 void main()
 {
-  int x;  
+  int x;
   unsigned y;
   x = -10;
   y = 10;

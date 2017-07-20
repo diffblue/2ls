@@ -1,6 +1,6 @@
 void main()
 {
-  int x,y,z;  
+  int x,y,z;
   __CPROVER_assume(x>=0);
   __CPROVER_assume(x==y);
   __CPROVER_assume(-20<=z && z<=-1);

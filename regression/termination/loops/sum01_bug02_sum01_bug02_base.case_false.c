@@ -6,7 +6,7 @@ void __VERIFIER_assert(int cond) {
 }
 #define a (2)
 extern unsigned int __VERIFIER_nondet_uint();
-int main() { 
+int main() {
   int i, n=__VERIFIER_nondet_uint(), sn=0;
   for(i=1; i<=n; i++) {
     sn = sn + a;

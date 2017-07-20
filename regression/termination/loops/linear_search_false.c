@@ -15,7 +15,7 @@ int linear_search(int *a, int n, int q) {
   if (j<SIZE) return 1;
   else return 0;
 }
-int main() { 
+int main() {
   SIZE=(__VERIFIER_nondet_uint()/2)+1;
   int a[SIZE];
   a[SIZE/2]=3;

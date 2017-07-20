@@ -12,7 +12,7 @@ enum state_t arb_state_t() {
 	}// Returns a non-deterministic state value
 
 enum state_t s1ors2 (){ //Returns L or M non-deterministically
-	enum state_t some_state = arb_state_t(); 
+	enum state_t some_state = arb_state_t();
 	__CPROVER_assume ( (some_state == s1) || (some_state == s2) );
 	//assert(0);
 	return some_state;}
@@ -45,13 +45,13 @@ void main () {
 __CPROVER_assume(init(arb_state)); //arb_state_t();
 
   while (1) {
- 
+
 
 	  next_arb_state = trans(arb_state);
           arb_state = next_arb_state;
 
           assert(safety(arb_state));
 
-  } 
+  }
 }
 

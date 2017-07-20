@@ -1,5 +1,5 @@
-unsigned foo(unsigned x, unsigned y) 
-{ 
+unsigned foo(unsigned x, unsigned y)
+{
   if(x) return y+1;
   return y-1;
 }

@@ -23,7 +23,7 @@ int main(){
 
    for (i = 0; i < 1000; ++i)
       x[i]= __VERIFIER_nondet_int();
-   
+
    for (i= 0; i < 1000; ++i){
 
       ret = __VERIFIER_nondet_int();
@@ -32,50 +32,50 @@ int main(){
       tmp_cnt = __VERIFIER_nondet_int();
       if (tmp_cnt < 0)
          return -1;
-      
-      
+
+
       for ( offset = 0; offset < tmp_cnt; offset++ )
       {
          ret = foo(&tel_data ) ;
          if ( ( ret == 0 ) || ( ret == 1 ) )
             {
-      
+
                 return 1 ;
             }
          else if ( ret == -1 )
             {
-              
+
                continue ;
             }
 
-         
+
          for ( j = 0; x[j] != 0; j++ )
             {
-              
+
                if ( x[i] == 1)
                {
-              
+
                   memmove( &x[i], &x[i + 1], (1001) - ( i + 1 ) )  ;
                }
             }
 
-            
+
          ret = bar( x) ;
-         
+
          if ( ret != -1 )
          {
-         
+
             continue ;
          }
 
-         
+
          klen = strlen(x ) ;
-         
+
          if ( klen > 20 )
             {
-         
+
                x[i]=0;
-             
+
             }
             else if ( klen > 0 )
             {
