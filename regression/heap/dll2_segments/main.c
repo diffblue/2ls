@@ -4,6 +4,16 @@ extern void __VERIFIER_error() __attribute__ ((__noreturn__));
 
 extern int __VERIFIER_nondet_int(void);
 
+static void fail(void) {
+ERROR: __VERIFIER_error();
+}
+
+#define ___SL_ASSERT(cond) do {     \
+    if (!(cond))                    \
+        fail();                     \
+    assert(cond);                   \
+} while (0)
+
 struct node {
     struct node *next;
     struct node *prev;
@@ -12,8 +22,6 @@ struct node {
 static struct node* alloc_node(void)
 {
     struct node *ptr = malloc(sizeof *ptr);
-    // if (!ptr)
-    //     abort();
 
     ptr->next = NULL;
     ptr->prev = NULL;
@@ -51,24 +59,24 @@ static struct node* create_sll(const struct node **pp1, const struct node **pp2)
 }
 
 void init_back_link(struct node *list) {
-    while (list) {
+    for (;;) {
         struct node *next = list->next;
-        // if (!next)
-        //     return;
+        if (!next)
+            return;
 
         next->prev = list;
         list = next;
     }
 }
 
-void reverse_dll(struct node *list) {
-    while (list) {
-        struct node *next = list->next;
-        list->next = list->prev;
-        list->prev = next;
-        list = next;
-    }
-}
+// void reverse_dll(struct node *list) {
+//     while (list) {
+//         struct node *next = list->next;
+//         list->next = list->prev;
+//         list->prev = next;
+//         list = next;
+//     }
+// }
 
 void remove_fw_link(struct node *list) {
     while (list) {
@@ -99,19 +107,16 @@ void main()
   const struct node *p1, *p2;
 
   struct node *list = create_sll(&p1, &p2);
-  assert(p1->prev == NULL);
-  assert(p2->prev == NULL);
+
   check_seq_next(p1, p2);
 
   init_back_link(list);
+
   check_seq_next(p1, p2);
   check_seq_prev(p2, p1);
 
-  // reverse_dll(list);
-  // check_seq_prev(p1, p2);
-  // check_seq_next(p2, p1);
-
   remove_fw_link(list);
+
   check_seq_prev(p2, p1);
 }
 
