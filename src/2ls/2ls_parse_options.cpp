@@ -343,8 +343,8 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
   }
 #endif
 
-  if(cmdline.isset("show-trace"))
-    options.set_option("show-trace", true);
+  if(cmdline.isset("trace"))
+    options.set_option("trace", true);
   if(cmdline.isset("graphml-witness"))
     options.set_option("graphml-witness", cmdline.get_value("graphml-witness"));
   if(cmdline.isset("json-cex"))
@@ -1241,7 +1241,7 @@ void twols_parse_optionst::report_properties(
                << eom;
     }
 
-    if(cmdline.isset("show-trace") &&
+    if(cmdline.isset("trace") &&
        it->second.result==property_checkert::FAIL)
       show_counterexample(goto_model, it->second.error_trace);
     if(cmdline.isset("json-cex") &&
@@ -1604,6 +1604,7 @@ void twols_parse_optionst::help()
     "Backend options:\n"
     " --all-functions              check each function as entry point\n"
     " --stop-on-fail               stop on first failing assertion\n"
+    " --trace                      give a counterexample trace for failed properties\n" //NOLINT(*)
     " --context-sensitive          context-sensitive analysis from entry point\n" // NOLINT(*)
     " --termination                compute ranking functions to prove termination\n" // NOLINT(*)
     " --k-induction                use k-induction\n"

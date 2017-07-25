@@ -45,7 +45,7 @@ class optionst;
   "(lexicographic-ranking-function):(monolithic-ranking-function)" \
   "(max-inner-ranking-iterations):" \
   "(preconditions)(sufficient)" \
-  "(show-locs)(show-vcc)(show-properties)(show-trace)(show-stats)" \
+  "(show-locs)(show-vcc)(show-properties)(trace)(show-stats)" \
   "(show-goto-functions)(show-guards)(show-defs)(show-ssa)(show-assignments)" \
   "(show-invariants)(std-invariants)" \
   "(property):(all-properties)(k-induction)(incremental-bmc)(bmc)" \

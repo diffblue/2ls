@@ -251,7 +251,7 @@ void summary_checker_baset::check_properties(
     SSA, solver, loophead_selects, property_map,
     require_spurious_check,
     all_properties,
-    options.get_bool_option("show-trace") ||
+    options.get_bool_option("trace") ||
     options.get_option("graphml-witness")!="" ||
     options.get_option("json-cex")!="");
 
