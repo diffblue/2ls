@@ -13,9 +13,11 @@ Author: Daniel Kroening, kroening@kroening.com
 #endif
 
 #include <util/pointer_offset_size.h>
+#include <algorithm>
 
 #include "ssa_value_set.h"
 #include "ssa_dereference.h"
+#include "ssa_pointed_objects.h"
 
 /*******************************************************************\
 
@@ -57,6 +59,15 @@ void ssa_value_domaint::transform(
   {
     const code_function_callt &code_function_call=
       to_code_function_call(from->code);
+    const irep_idt &fname=to_symbol_expr(
+      code_function_call.function()).get_identifier();
+
+    const ssa_value_ait &value_analysis=static_cast<ssa_value_ait &>(ai);
+
+    const ssa_heap_domaint *heap_domain=NULL;
+    if(value_analysis.heap_analysis.has_location(to))
+      heap_domain=&value_analysis.heap_analysis[to];
+
 
     // functions may alter state almost arbitrarily:
     // * any global-scoped variables
@@ -74,11 +85,106 @@ void ssa_value_domaint::transform(
       assign(*o_it, it, ns);
 #endif
 
+    std::list<symbol_exprt> objects;
+
+    for(auto &argument : code_function_call.arguments())
+    {
+      exprt arg=argument;
+      exprt arg_expr=argument;
+      while(arg.type().id()==ID_pointer)
+      {
+        if(arg.id()==ID_symbol)
+        {
+          symbol_exprt pointed_obj=pointed_object(arg, ns);
+          pointed_obj.type().set("#dynamic", true);
+
+          std::set<symbol_exprt> new_objects;
+          if(heap_domain)
+            new_objects=heap_domain->value(arg_expr);
+          if(new_objects.empty())
+          {
+            new_objects.insert(pointed_obj);
+          }
+
+          auto it=new_objects.begin();
+          assign_lhs_rec(arg, address_of_exprt(*it), ns);
+          objects.push_back(*it);
+
+          for(++it; it!=new_objects.end(); ++it)
+          {
+            assign_lhs_rec(arg, address_of_exprt(*it), ns, true);
+            objects.push_back(*it);
+          }
+
+          arg_expr=dereference_exprt(arg_expr, arg.type().subtype());
+          arg=pointed_obj;
+        }
+        else if(arg.id()==ID_address_of)
+        {
+          arg=arg_expr=to_address_of_expr(arg).object();
+        }
+        else if(arg.id()==ID_typecast)
+        {
+          assert(arg_expr.id()==ID_typecast);
+          arg=arg_expr=to_typecast_expr(arg).op();
+        }
+        else
+          break;
+      }
+    }
+
     // the call might come with an assignment
     if(code_function_call.lhs().is_not_nil())
     {
       exprt lhs_deref=dereference(code_function_call.lhs(), *this, "", ns);
       assign_lhs_rec(lhs_deref, nil_exprt(), ns);
+    }
+
+    // the assignment of return value might be in next instruction
+    if(to->is_assign() && to_code_assign(to->code).rhs().id()==ID_symbol)
+    {
+      const symbol_exprt &return_value=to_symbol_expr(
+        to_code_assign(to->code).rhs());
+      if(return_value.type().id()==ID_pointer &&
+         return_value.get_identifier()==id2string(fname)+"#return_value")
+      {
+        std::set<symbol_exprt> new_objects;
+        if(heap_domain)
+          new_objects=heap_domain->value(return_value);
+        if(new_objects.empty())
+        {
+          symbol_exprt pointed_obj=pointed_object(return_value, ns);
+          pointed_obj.type().set("#dynamic", true);
+          new_objects.insert(pointed_obj);
+        }
+
+        auto it=new_objects.begin();
+        assign_lhs_rec(return_value, address_of_exprt(*it), ns);
+        objects.push_back(*it);
+
+        for(++it; it!=new_objects.end(); ++it)
+        {
+          assign_lhs_rec(return_value, address_of_exprt(*it), ns, true);
+          objects.push_back(*it);
+        }
+
+        if(heap_domain)
+        {
+          for(auto &new_o : heap_domain->new_caller_objects(fname, from))
+          {
+            objects.push_back(new_o);
+          }
+        }
+      }
+    }
+
+    for(const symbol_exprt &o1 : objects)
+    {
+      for(const symbol_exprt &o2 : objects)
+      {
+        if(o1!=o2 && o1.type()==o2.type())
+          value_map[ssa_objectt(o1, ns)].value_set.insert(ssa_objectt(o2, ns));
+      }
     }
   }
   else if(from->is_dead())
@@ -124,13 +230,20 @@ void ssa_value_domaint::assign_lhs_rec(
       const struct_typet &struct_type=to_struct_type(lhs_type);
       const struct_typet::componentst &components=struct_type.components();
 
+      auto rhs_it=
+        rhs.id()==ID_struct ? rhs.operands().begin() : rhs.operands().end();
+      
       for(struct_typet::componentst::const_iterator
             it=components.begin();
           it!=components.end();
           it++)
       {
         member_exprt new_lhs(lhs, it->get_name(), it->type());
-        member_exprt new_rhs(rhs, it->get_name(), it->type());
+        exprt new_rhs;
+        if(rhs_it!=rhs.operands().end())
+          new_rhs=*(rhs_it++);
+        else
+          new_rhs=member_exprt(rhs, it->get_name(), it->type());
         assign_lhs_rec(new_lhs, new_rhs, ns, add); // recursive call
       }
 
@@ -142,6 +255,7 @@ void ssa_value_domaint::assign_lhs_rec(
 
     if(ssa_object)
     {
+      assign_pointed_rhs_rec(rhs, ns);
       valuest tmp_values;
       assign_rhs_rec(tmp_values, rhs, ns, false, 0);
 
@@ -430,7 +544,9 @@ Function: ssa_value_domaint::valuest::merge
 
 \*******************************************************************/
 
-bool ssa_value_domaint::valuest::merge(const valuest &src)
+bool ssa_value_domaint::valuest::merge(
+  const valuest &src, bool is_loop_back,
+  const irep_idt &object_id)
 {
   bool result=false;
 
@@ -457,9 +573,75 @@ bool ssa_value_domaint::valuest::merge(const valuest &src)
   }
 
   // value set
-  unsigned old_size=value_set.size();
-  value_set.insert(src.value_set.begin(), src.value_set.end());
-  if(old_size!=value_set.size())
+  unsigned long old_size=value_set.size();
+  for(auto &v : src.value_set)
+  {
+    if(is_loop_back)
+    {
+      if(is_pointed(v.get_expr()))
+      {
+        unsigned level=pointed_level(v.get_expr())-1;
+        exprt expr=v.get_expr();
+
+        auto it=value_set.end();
+
+        while(level>0)
+        {
+          const irep_idt ptr_root_id=pointer_root_id(expr);
+          it=std::find_if(value_set.begin(), value_set.end(),
+                          [&ptr_root_id](const ssa_objectt &o)
+                          {
+                            return o.get_identifier()==ptr_root_id;
+                          });
+          if(it!=value_set.end())
+            break;
+          else
+          {
+            expr=get_pointer_root(expr, level--);
+          }
+        }
+
+        if(it!=value_set.end())
+        {
+          if(!it->get_expr().get_bool(ID_iterator))
+          {
+            assert(it->get_expr().get_bool(ID_pointed));
+            ssa_objectt object_copy(*it);
+            object_copy.set_iterator(object_id,
+                                     pointer_fields(v.get_expr(), level));
+            value_set.erase(it);
+            value_set.insert(object_copy);
+            result=true;
+          }
+          continue;
+        }
+      }
+      if(is_iterator(v.get_expr())) continue;
+    }
+    else
+    {
+      if(v.get_expr().get_bool(ID_iterator))
+      {
+        const irep_idt &corresponding_id=iterator_to_initial_id(v.get_expr(),
+                                                                v.get_identifier());
+
+        auto it=std::find_if(value_set.begin(), value_set.end(),
+                             [&corresponding_id](const ssa_objectt &o)
+                             {
+                               return o.get_expr().get_bool(ID_pointed) &&
+                                      (o.get_identifier()==corresponding_id);
+                             });
+        if(it!=value_set.end())
+        {
+          if(v!=*it)
+            result=true;
+          value_set.erase(it);
+        }
+      }
+    }
+    value_set.insert(v);
+  }
+  if(value_set.size()!=old_size)
     result=true;
 
   // alignment
@@ -496,7 +678,9 @@ bool ssa_value_domaint::merge(
   {
     if(v_it==value_map.end() || it->first<v_it->first)
     {
-      value_map.insert(v_it, *it);
+      if(!from->is_backwards_goto() ||
+         !is_iterator(it->first.get_root_object()))
+        value_map.insert(v_it, *it);
       result=true;
       it++;
       continue;
@@ -509,7 +693,8 @@ bool ssa_value_domaint::merge(
 
     assert(v_it->first==it->first);
 
-    if(v_it->second.merge(it->second))
+    if(v_it->second.merge(it->second, from->is_backwards_goto(),
+                          it->first.get_identifier()))
       result=true;
 
     v_it++;
@@ -517,4 +702,123 @@ bool ssa_value_domaint::merge(
   }
 
   return result;
+}
+
+void ssa_value_domaint::assign_pointed_rhs_rec(
+  const exprt &rhs,
+  const namespacet &ns)
+{
+  ssa_objectt ssa_object(rhs, ns);
+
+  if(ssa_object && ssa_object.type().id()==ID_pointer)
+  {
+    if(ssa_object.get_root_object().get_bool("#unknown_obj")) return;
+
+    value_mapt::const_iterator m_it=value_map.find(ssa_object);
+
+    if(m_it==value_map.end())
+    {
+      const symbol_exprt pointed=pointed_object(rhs, ns);
+      ssa_objectt pointed_obj(pointed, ns);
+      value_map[ssa_object].value_set.insert(pointed_obj);
+    }
+  }
+  else
+  {
+    forall_operands(it, rhs)assign_pointed_rhs_rec(*it, ns);
+  }
+}
+
+/*******************************************************************\
+
+Function: ssa_value_ait::initialize
+
+  Inputs: GOTO function
+
+ Outputs:
+
+ Purpose: Initialize value sets for pointer parameters and pointer-typed
+          fields of objects pointed by parameters.
+
+\*******************************************************************/
+void
+ssa_value_ait::initialize(const goto_functionst::goto_functiont &goto_function)
+{
+  ait<ssa_value_domaint>::initialize(goto_function);
+
+  // Initialize value sets for pointer parameters
+
+  if(!goto_function.type.parameters().empty())
+  {
+    locationt e=goto_function.body.instructions.begin();
+    ssa_value_domaint &entry=operator[](e);
+
+    for(auto &param : goto_function.type.parameters())
+    {
+      const symbol_exprt param_expr(param.get_identifier(), param.type());
+      assign_ptr_param(param_expr, entry);
+    }
+
+  }
+}
+
+/*******************************************************************\
+
+Function: ssa_value_ait::assign_ptr_param_rec
+
+  Inputs: Expression to be initialized and entry record of value set analysis
+
+ Outputs:
+
+ Purpose: Initialize value set for the given expression and recursively for all
+          structure members and all pointed objects.
+          Pointer-typed variable p initially points to abstract object p'obj.
+          Pointer-typed field of structure initially points to advancer.
+
+\*******************************************************************/
+void
+ssa_value_ait::assign_ptr_param(const exprt &expr, ssa_value_domaint &entry)
+{
+  const typet &type=ns.follow(expr.type());
+  if(type.id()==ID_pointer)
+  {
+    if(expr.id()==ID_symbol)
+    { // pointer variable
+      symbol_exprt pointed_expr=pointed_object(expr, ns);
+      assign(expr, pointed_expr, entry);
+      assign_ptr_param(pointed_expr, entry);
+    }
+  }
+  else if(type.id()==ID_struct)
+  { // split structure into fields
+    for(auto &component : to_struct_type(type).components())
+    {
+      const member_exprt member(expr, component.get_name(), component.type());
+      assign_ptr_param(member, entry);
+    }
+  }
+}
+
+/*******************************************************************\
+
+Function: ssa_value_ait::assign
+
+  Inputs: Pointer variable src, pointed object dest and analysis entry.
+
+ Outputs:
+
+ Purpose: Insert object to value set of another object in the given entry.
+
+\*******************************************************************/
+void ssa_value_ait::assign(
+  const exprt &src,
+  const exprt &dest,
+  ssa_value_domaint &entry)
+{
+  ssa_objectt src_obj(src, ns);
+  ssa_objectt dest_obj(dest, ns);
+  if(src_obj && dest_obj)
+  {
+    entry.value_map[src_obj].value_set.insert(dest_obj);
+  }
 }

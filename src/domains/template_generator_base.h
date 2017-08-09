@@ -73,6 +73,8 @@ protected:
 
   void filter_template_domain();
   void filter_equality_domain();
+	void filter_heap_domain();
+	void filter_heap_interval_domain();
 
   void add_var(
     const domaint::vart &var_to_add,

@@ -13,6 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <set>
 
 #include <util/std_expr.h>
+#include <ssa/local_ssa.h>
 
 typedef enum {YES, NO, UNKNOWN} threevalt;
 
@@ -32,12 +33,14 @@ class summaryt
     bw_postcondition(nil_exprt()),
     bw_transformer(nil_exprt()),
     bw_invariant(nil_exprt()),
+    aux_precondition(nil_exprt()),
     termination_argument(nil_exprt()),
     terminates(UNKNOWN),
     mark_recompute(false) {}
 
   var_listt params;
   var_sett globals_in, globals_out;
+  ssa_value_domaint value_domain_in, value_domain_out;
 
   predicatet fw_precondition; // accumulated calling contexts (over-approx)
   //  predicatet fw_postcondition; // we are not projecting that out currently
@@ -47,6 +50,7 @@ class summaryt
   predicatet bw_postcondition; // accumulated postconditions (over/under-approx)
   predicatet bw_transformer; // backward summary (over- or under-approx)
   predicatet bw_invariant; // backward invariant (over- or under-approx)
+  predicatet aux_precondition;
 
   predicatet termination_argument;
   threevalt terminates;
@@ -57,6 +61,8 @@ class summaryt
   void output(std::ostream &out, const namespacet &ns) const;
 
   void join(const summaryt &new_summary);
+
+  void set_value_domains(const local_SSAt &SSA);
 
  protected:
   void combine_or(exprt &olde, const exprt &newe);

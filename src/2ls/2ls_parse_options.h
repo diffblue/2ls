@@ -36,7 +36,7 @@ class optionst;
   "(version)" \
   "(i386-linux)(i386-macos)(i386-win32)(win32)(winx64)(gcc)" \
   "(ppc-macos)(unsigned-char)" \
-  "(havoc)(intervals)(zones)(octagons)(equalities)"\
+  "(havoc)(intervals)(zones)(octagons)(equalities)(heap)(heap-interval)"\
   "(enum-solver)(binsearch-solver)(arrays)"\
   "(string-abstraction)(no-arch)(arch):(floatbv)(fixedbv)" \
   "(round-to-nearest)(round-to-plus-inf)(round-to-minus-inf)(round-to-zero)" \
@@ -161,7 +161,7 @@ protected:
   void replace_types_rec(const replace_symbolt &replace_const, exprt &expr);
   exprt evaluate_casts_in_constants(
     const exprt &expr,
-    const typet& parent_type,
+    const typet &parent_type,
     bool &valid);
   void remove_multiple_dereferences(goto_modelt &goto_model);
   void remove_multiple_dereferences(
@@ -174,6 +174,12 @@ protected:
   void add_assumptions_after_assertions(goto_modelt &goto_model);
   void filter_assertions(goto_modelt &goto_model);
   void split_loopheads(goto_modelt &goto_model);
+  void remove_loops_in_entry(goto_modelt &goto_model);
+  void create_dynamic_objects(goto_modelt &goto_model);
+  void add_dynamic_object_rec(exprt &expr, symbol_tablet &symbol_table);
+  void add_dynamic_object_symbols(
+    const ssa_heap_analysist &heap_analysis,
+    goto_modelt &goto_model);
 };
 
 #endif

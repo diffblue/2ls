@@ -13,10 +13,12 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <goto-programs/goto_functions.h>
 
-#include "../domains/incremental_solver.h"
+#include <domains/list_iterator.h>
+#include <domains/incremental_solver.h>
 #include "ssa_domain.h"
 #include "guard_map.h"
 #include "ssa_object.h"
+#include "ssa_heap_domain.h"
 
 #define TEMPLATE_PREFIX "__CPROVER_template"
 #define TEMPLATE_DECL TEMPLATE_PREFIX
@@ -32,11 +34,14 @@ public:
   inline local_SSAt(
     const goto_functiont &_goto_function,
     const namespacet &_ns,
+    const ssa_heap_analysist &_heap_analysis,
     const std::string &_suffix=""):
     ns(_ns), goto_function(_goto_function),
-    ssa_objects(_goto_function, ns),
-    ssa_value_ai(_goto_function, ns),
-    assignments(_goto_function.body, ns, ssa_objects, ssa_value_ai),
+    heap_analysis(_heap_analysis),
+    ssa_objects(_goto_function, ns, _heap_analysis),
+    ssa_value_ai(_goto_function, ns, _heap_analysis),
+    assignments(_goto_function.body, ns, ssa_objects, ssa_value_ai,
+                heap_analysis),
     guard_map(_goto_function.body),
     ssa_analysis(assignments),
     suffix(_suffix)
@@ -126,6 +131,11 @@ public:
   var_listt params;
   var_sett globals_in, globals_out;
 
+  std::set<list_iteratort> iterators;
+
+  // unknown heap objects
+  var_sett unknown_objs;
+
   bool has_function_calls() const;
 
   const namespacet &ns;
@@ -162,12 +172,25 @@ public:
   void assign_rec(
     const exprt &lhs, const exprt &rhs, const exprt &guard, locationt loc);
 
-  void get_entry_exit_vars();
+  void collect_iterators_rhs(const exprt &expr, locationt loc);
+  void collect_iterators_lhs(const ssa_objectt &object, locationt loc);
+  void new_iterator_access(
+    const member_exprt &expr,
+    locationt loc,
+    int inst_loc_number);
 
+  exprt unknown_obj_eq(
+    const symbol_exprt &obj,
+    const struct_typet::componentt &component) const;
+
+  void get_entry_exit_vars();
+  
   bool has_static_lifetime(const ssa_objectt &) const;
   bool has_static_lifetime(const exprt &) const;
 
   exprt dereference(const exprt &expr, locationt loc) const;
+
+  const ssa_heap_analysist &heap_analysis;
 
   ssa_objectst ssa_objects;
   typedef ssa_objectst::objectst objectst;
@@ -212,6 +235,7 @@ protected:
   void build_guard(locationt loc);
   void build_function_call(locationt loc);
   void build_assertions(locationt loc);
+  void build_unknown_objs(locationt loc);
 
   // custom templates
   void collect_custom_templates();

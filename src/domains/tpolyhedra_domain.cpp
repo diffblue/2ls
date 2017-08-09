@@ -17,6 +17,7 @@ Author: Peter Schrammel
 
 #include "tpolyhedra_domain.h"
 #include "util.h"
+#include "domain.h"
 
 #define SYMB_BOUND_VAR "symb_bound#"
 
@@ -1007,6 +1008,8 @@ void tpolyhedra_domaint::add_interval_template(
   for(const auto v : var_specs)
   {
     if(v.kind==IN)
+      continue;
+    if(v.var.type().id()==ID_pointer)
       continue;
 
     // x

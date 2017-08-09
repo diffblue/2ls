@@ -14,8 +14,10 @@ Author: Peter Schrammel
 class summary_checker_kindt:public summary_checker_baset
 {
 public:
-  explicit summary_checker_kindt(optionst &_options):
-    summary_checker_baset(_options)
+  explicit summary_checker_kindt(
+    optionst &_options,
+    const ssa_heap_analysist &heap_analysis):
+    summary_checker_baset(_options, heap_analysis)
   {
   }
 

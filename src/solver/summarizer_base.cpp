@@ -194,7 +194,7 @@ exprt summarizer_baset::compute_calling_context(
 
   solver.new_context();
   solver << SSA.get_enabling_exprs();
-  solver << ssa_inliner.get_summaries(SSA);
+  solver << ssa_inliner.get_summaries_to_loc(SSA, n_it->location);
 
   ssa_analyzert analyzer;
   analyzer.set_message_handler(get_message_handler());
