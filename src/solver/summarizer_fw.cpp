@@ -180,7 +180,7 @@ void summarizer_fwt::do_summary(
     {
       summary.aux_precondition=advancer_bindings;
     }
-  }  
+  }
 
   if(context_sensitive && !summary.fw_precondition.is_true())
   {
