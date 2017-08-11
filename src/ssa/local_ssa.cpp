@@ -138,17 +138,18 @@ void local_SSAt::get_globals(
                 << from_expr(ns, "", read_lhs(it->get_expr(), loc))
                 << std::endl;
 #endif
-      if(!with_returns &&
-         id2string(it->get_identifier()).find(
-           "#return_value")!=std::string::npos)
+      if(!with_returns && !is_pointed(it->get_expr()) &&
+         id2string(it->get_identifier()).find("#return_value")!=
+         std::string::npos)
         continue;
 
       // filter out return values of other functions
       if(with_returns && returns_for_function!="" &&
-         id2string(it->get_identifier()).find(
-           "#return_value")!=std::string::npos &&
-         id2string(it->get_identifier()).find(
-           id2string(returns_for_function)+"#return_value")==std::string::npos)
+        id2string(it->get_identifier()).find("#return_value")==
+        id2string(it->get_identifier()).size()-
+        std::string("#return_value").size() &&
+        id2string(it->get_identifier()).find(
+          id2string(returns_for_function)+"#return_value")==std::string::npos)
         continue;
 
       const exprt &root_obj=it->get_root_object();
