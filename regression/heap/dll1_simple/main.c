@@ -35,7 +35,7 @@ static void chain_node(struct node **ppnode)
     *ppnode = node;
 }
 
-static struct node* create_sll(const struct node **pp1, const struct node **pp2)
+static struct node* create_sll()
 {
     struct node *list = NULL;
 
@@ -92,9 +92,7 @@ void check_seq_prev(const struct node *beg, const struct node *const end) {
 
 void main()
 {
-  const struct node *p1, *p2;
-
-  struct node *list = create_sll(&p1, &p2);
+  struct node *list = create_sll();
 
   init_back_link(list);
 
@@ -103,5 +101,7 @@ void main()
   // check_seq_next(p2, p1);
 
   remove_fw_link(list);
+
+  assert(list->next == NULL);
 }
 
