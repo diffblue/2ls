@@ -80,11 +80,11 @@ void assignmentst::build_assignment_map(
       }
 
       // Assign all modified objects
-      for(auto &modified : modified_objects)
+      for(const exprt &modified : modified_objects)
       {
-        const exprt arg=ssa_heap_analysis[n_it].function_map.at(
-          fname).corresponding_expr(
-          modified, code_function_call.arguments(), 0);
+        const exprt arg=
+          ssa_heap_analysis[n_it].function_map.at(fname).
+            corresponding_expr(modified, code_function_call.arguments(), 0);
 
         if(arg!=modified)
         {
@@ -93,7 +93,7 @@ void assignmentst::build_assignment_map(
 
           std::set<symbol_exprt> symbols;
           find_symbols(arg_deref, symbols);
-          for(auto &symbol : symbols)
+          for(const symbol_exprt &symbol : symbols)
           {
             if(symbol.type()==arg_deref.type())
             {

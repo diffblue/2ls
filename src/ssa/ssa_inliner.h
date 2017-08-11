@@ -159,8 +159,8 @@ protected:
 
   bool cs_heap_covered(const exprt &expr);
 
-  // Transformation functions for lists of input/output arguments/pointers (or their members)
-  // for binding purposes
+  // Transformation functions for lists of input/output arguments/pointers
+  // (or their members) for binding purposes
 
   exprt param_in_transformer(const exprt &param);
   exprt arg_in_transformer(

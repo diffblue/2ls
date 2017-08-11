@@ -268,19 +268,30 @@ void template_generator_baset::filter_equality_domain()
   }
 }
 
+/*******************************************************************\
+
+Function: template_generator_baset::filter_heap_domain
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 void template_generator_baset::filter_heap_domain()
 {
   domaint::var_specst new_var_specs(var_specs);
   var_specs.clear();
-  for(auto var=new_var_specs.begin(); var!=new_var_specs.end(); ++var)
+  for(auto &var : var_specs)
   {
-    if(var->var.id()==ID_symbol && var->var.type().id()==ID_pointer)
+    if(var.var.id()==ID_symbol && var.var.type().id()==ID_pointer)
     {
       // Filter out non-assigned OUT variables
-      if(var->kind!=domaint::OUT ||
-         ssa_inlinert::get_original_identifier(to_symbol_expr(var->var))!=
-         to_symbol_expr(var->var).get_identifier())
-        var_specs.push_back(*var);
+      if(var.kind!=domaint::OUT ||
+         ssa_inlinert::get_original_identifier(to_symbol_expr(var.var))!=
+         to_symbol_expr(var.var).get_identifier())
+        var_specs.push_back(var);
     }
   }
 }
@@ -703,7 +714,7 @@ void template_generator_baset::instantiate_standard_domains(
   else if(options.get_bool_option("heap"))
   {
     filter_heap_domain();
-    domain_ptr = new heap_domaint(domain_number, renaming_map, var_specs, SSA.ns);
+    domain_ptr=new heap_domaint(domain_number, renaming_map, var_specs, SSA.ns);
   }
   else if(options.get_bool_option("intervals"))
   {
@@ -745,10 +756,11 @@ void template_generator_baset::instantiate_standard_domains(
     static_cast<tpolyhedra_domaint *>(domain_ptr)->add_quadratic_template(
       var_specs, SSA.ns);
   }
-  else if (options.get_bool_option("heap-interval"))
+  else if(options.get_bool_option("heap-interval"))
   {
     filter_heap_interval_domain();
-    domain_ptr = new heap_interval_domaint(domain_number, renaming_map, var_specs, SSA.ns);
+    domain_ptr=new heap_interval_domaint(
+      domain_number, renaming_map, var_specs, SSA.ns);
   }
 }
 
@@ -756,26 +768,27 @@ void template_generator_baset::filter_heap_interval_domain()
 {
   domaint::var_specst new_var_specs(var_specs);
   var_specs.clear();
-  for(domaint::var_specst::const_iterator v = new_var_specs.begin();
+  for(domaint::var_specst::const_iterator v=new_var_specs.begin();
       v!=new_var_specs.end(); v++)
   {
-    const domaint::vart &s = v->var;
+    const domaint::vart &s=v->var;
 
-    if (s.type().id()==ID_unsignedbv ||
-        s.type().id()==ID_signedbv ||
-        s.type().id()==ID_floatbv)
+    if(s.type().id()==ID_unsignedbv ||
+       s.type().id()==ID_signedbv ||
+       s.type().id()==ID_floatbv)
     {
       var_specs.push_back(*v);
       continue;
     }
 
-    if (s.id() == ID_symbol && s.type().id() == ID_pointer &&
-        id2string(to_symbol_expr(s).get_identifier()).find("__CPROVER") == std::string::npos)
+    if(s.id()==ID_symbol && s.type().id()==ID_pointer &&
+       id2string(to_symbol_expr(s).get_identifier()).find("__CPROVER")==
+       std::string::npos)
     {
       // Filter out non-assigned OUT variables
-      if (v->kind != domaint::OUT ||
-          ssa_inlinert::get_original_identifier(to_symbol_expr(s)) !=
-          to_symbol_expr(s).get_identifier())
+      if(v->kind!=domaint::OUT ||
+         ssa_inlinert::get_original_identifier(to_symbol_expr(s))!=
+         to_symbol_expr(s).get_identifier())
       {
         var_specs.push_back(*v);
         continue;

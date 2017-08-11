@@ -1,20 +1,57 @@
-/**
- *  Viktor Malik, 2/15/17 (c).
- */
+/*******************************************************************\
+
+Module: Library of functions for working with pointed objects
+
+Author: Viktor Malik
+
+\*******************************************************************/
 
 #include "ssa_pointed_objects.h"
 #include "ssa_object.h"
 
+/*******************************************************************\
+
+Function: level_str
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 const irep_idt level_str(const unsigned level, const irep_idt &suffix)
 {
   return "#lvl_"+std::to_string(level)+"_"+id2string(suffix);
 }
 
+/*******************************************************************\
+
+Function: it_field_str
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 const irep_idt it_field_str(const unsigned level)
 {
   return id2string(ID_it_field)+"_"+std::to_string(level);
 }
 
+/*******************************************************************\
+
+Function: copy_iterator
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 void copy_iterator(exprt &dest, const exprt &src)
 {
   if(src.get_bool(ID_iterator))
@@ -26,7 +63,7 @@ void copy_iterator(exprt &dest, const exprt &src)
 
     unsigned field_cnt=src.get_unsigned_int(ID_it_field_cnt);
     dest.set(ID_it_field_cnt, field_cnt);
-    for(unsigned i=0; i<field_cnt;++i)
+    for(unsigned i=0; i<field_cnt; ++i)
     {
       const irep_idt field=src.get(it_field_str(i));
       dest.set(it_field_str(i), field);
@@ -34,6 +71,17 @@ void copy_iterator(exprt &dest, const exprt &src)
   }
 }
 
+/*******************************************************************\
+
+Function: copy_pointed_info
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 void copy_pointed_info(exprt &dest, const exprt &src, const unsigned max_level)
 {
   if(max_level<pointed_level(src))
@@ -44,24 +92,38 @@ void copy_pointed_info(exprt &dest, const exprt &src, const unsigned max_level)
     {
       const irep_idt lvl_pointed_id=src.get(level_str(l, ID_pointer_id));
       dest.set(level_str(l, ID_pointer_id), lvl_pointed_id);
-      dest.set(level_str(l, ID_pointer_subtype),
-               src.get(level_str(l, ID_pointer_subtype)));
+      dest.set(
+        level_str(l, ID_pointer_subtype),
+        src.get(level_str(l, ID_pointer_subtype)));
       if(lvl_pointed_id==ID_symbol)
       {
-        dest.set(level_str(l, ID_pointer_sym),
-                 src.get(level_str(l, ID_pointer_sym)));
+        dest.set(
+          level_str(l, ID_pointer_sym), src.get(level_str(l, ID_pointer_sym)));
       }
       else
       {
-        dest.set(level_str(l, ID_pointer_compound),
-                 src.get(level_str(l, ID_pointer_compound)));
-        dest.set(level_str(l, ID_pointer_field),
-                 src.get(level_str(l, ID_pointer_field)));
+        dest.set(
+          level_str(l, ID_pointer_compound),
+          src.get(level_str(l, ID_pointer_compound)));
+        dest.set(
+          level_str(l, ID_pointer_field),
+          src.get(level_str(l, ID_pointer_field)));
       }
     }
   }
 }
 
+/*******************************************************************\
+
+Function: pointed_object
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 symbol_exprt pointed_object(const exprt &expr, const namespacet &ns)
 {
   assert(expr.type().id()==ID_pointer);
@@ -70,8 +132,8 @@ symbol_exprt pointed_object(const exprt &expr, const namespacet &ns)
   if(ssa_object)
   {
     const typet &pointed_type=ssa_object.type().subtype();
-    symbol_exprt pointed(id2string(ssa_object.get_identifier())+"'obj",
-                         ns.follow(pointed_type));
+    symbol_exprt pointed(
+      id2string(ssa_object.get_identifier())+"'obj", ns.follow(pointed_type));
     pointed.set(ID_pointed, true);
 
     unsigned level=0;
@@ -89,24 +151,26 @@ symbol_exprt pointed_object(const exprt &expr, const namespacet &ns)
     pointed.set(level_str(level, ID_pointer_id), ssa_object.get_expr().id());
     if(ssa_object.get_expr().id()==ID_symbol)
     {
-      pointed.set(level_str(level, ID_pointer_sym),
-                  ssa_object.get_identifier());
+      pointed.set(
+        level_str(level, ID_pointer_sym), ssa_object.get_identifier());
     }
     else
     {
       assert(ssa_object.get_expr().id()==ID_member);
       const member_exprt member=to_member_expr(ssa_object.get_expr());
       assert(member.compound().id()==ID_symbol);
-      pointed.set(level_str(level, ID_pointer_compound),
-                  to_symbol_expr(member.compound()).get_identifier());
-      pointed.set(level_str(level, ID_pointer_field),
-                  member.get_component_name());
+      pointed.set(
+        level_str(level, ID_pointer_compound),
+        to_symbol_expr(member.compound()).get_identifier());
+      pointed.set(
+        level_str(level, ID_pointer_field), member.get_component_name());
     }
 
     if(pointed_type.id()==ID_symbol)
     {
-      pointed.set(level_str(level, ID_pointer_subtype),
-                  to_symbol_type(pointed_type).get_identifier());
+      pointed.set(
+        level_str(level, ID_pointer_subtype),
+        to_symbol_type(pointed_type).get_identifier());
     }
 
     copy_iterator(pointed, root_obj);
@@ -117,6 +181,17 @@ symbol_exprt pointed_object(const exprt &expr, const namespacet &ns)
     return symbol_exprt("");
 }
 
+/*******************************************************************\
+
+Function: pointer_root_id
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 const irep_idt pointer_root_id(const exprt &expr)
 {
   assert(expr.get_bool(ID_pointed));
@@ -127,6 +202,17 @@ const irep_idt pointer_root_id(const exprt &expr)
     return expr.get(level_str(max_level_index, ID_pointer_compound));
 }
 
+/*******************************************************************\
+
+Function: pointed_level
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 unsigned pointed_level(const exprt &expr)
 {
   if(is_pointed(expr))
@@ -135,12 +221,34 @@ unsigned pointed_level(const exprt &expr)
     return 0;
 }
 
+/*******************************************************************\
+
+Function: pointer_level_field
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 const irep_idt pointer_level_field(const exprt &expr, const unsigned level)
 {
   assert(expr.get(level_str(level, ID_pointer_id))==ID_member);
   return expr.get(level_str(level, ID_pointer_field));
 }
 
+/*******************************************************************\
+
+Function: get_pointer
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 const exprt get_pointer(const exprt &expr, unsigned level)
 {
   exprt pointer;
@@ -150,43 +258,98 @@ const exprt get_pointer(const exprt &expr, unsigned level)
 
   if(expr.get(level_str(level, ID_pointer_id))==ID_symbol)
   {
-    pointer=symbol_exprt(expr.get(level_str(level, ID_pointer_sym)),
-                         pointer_typet(pointed_type));
+    pointer=symbol_exprt(
+      expr.get(level_str(level, ID_pointer_sym)), pointer_typet(pointed_type));
     copy_pointed_info(pointer, expr, level-1);
   }
   else
   {
     assert(expr.get(level_str(level, ID_pointer_id))==ID_member);
-    symbol_exprt compound(expr.get(level_str(level, ID_pointer_compound)),
-                          expr.type());
+    symbol_exprt compound(
+      expr.get(level_str(level, ID_pointer_compound)), expr.type());
     copy_pointed_info(compound, expr, level-1);
-    pointer=member_exprt(compound, pointer_level_field(expr, level),
-                         pointer_typet(pointed_type));
+    pointer=member_exprt(
+      compound, pointer_level_field(expr, level), pointer_typet(pointed_type));
   }
   return pointer;
 }
 
+/*******************************************************************\
+
+Function: it_value_level
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 unsigned it_value_level(const exprt &expr)
 {
   assert(expr.get_bool(ID_pointed));
   return expr.get_unsigned_int(ID_it_init_value_level);
 }
 
+/*******************************************************************\
+
+Function: is_pointed
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 bool is_pointed(const exprt &expr)
 {
   return expr.get_bool(ID_pointed);
 }
 
+/*******************************************************************\
+
+Function: is_iterator
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 bool is_iterator(const exprt &expr)
 {
   return expr.get_bool(ID_iterator);
 }
 
+/*******************************************************************\
+
+Function: copy_pointed_info
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 void copy_pointed_info(exprt &dest, const exprt &src)
 {
   copy_pointed_info(dest, src, pointed_level(src)-1);
 }
 
+/*******************************************************************\
+
+Function: symbolic_dereference
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 const exprt symbolic_dereference(const exprt &expr, const namespacet &ns)
 {
   if(expr.id()==ID_dereference)
@@ -213,6 +376,17 @@ const exprt symbolic_dereference(const exprt &expr, const namespacet &ns)
   }
 }
 
+/*******************************************************************\
+
+Function: set_iterator_fields
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 void set_iterator_fields(exprt &dest, const std::vector<irep_idt> fields)
 {
   dest.set(ID_it_field_cnt, (unsigned) fields.size());
@@ -222,6 +396,17 @@ void set_iterator_fields(exprt &dest, const std::vector<irep_idt> fields)
   }
 }
 
+/*******************************************************************\
+
+Function: get_iterator_fields
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 const std::vector<irep_idt> get_iterator_fields(const exprt &expr)
 {
   assert(is_iterator(expr));
@@ -234,8 +419,20 @@ const std::vector<irep_idt> get_iterator_fields(const exprt &expr)
   return result;
 }
 
-const std::vector<irep_idt>
-pointer_fields(const exprt &expr, const unsigned from_level)
+/*******************************************************************\
+
+Function: pointer_fields
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+const std::vector<irep_idt> pointer_fields(
+  const exprt &expr,
+  const unsigned from_level)
 {
   std::vector<irep_idt> result;
   unsigned max_level=pointed_level(expr);
@@ -247,6 +444,17 @@ pointer_fields(const exprt &expr, const unsigned from_level)
   return result;
 }
 
+/*******************************************************************\
+
+Function: get_pointer_root
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 const exprt get_pointer_root(const exprt &expr, unsigned level)
 {
   exprt pointer=get_pointer(expr, level);
@@ -256,6 +464,17 @@ const exprt get_pointer_root(const exprt &expr, unsigned level)
   return pointer;
 }
 
+/*******************************************************************\
+
+Function: iterator_to_initial_id
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 const irep_idt iterator_to_initial_id(
   const exprt &expr,
   const irep_idt &expr_id)
@@ -266,7 +485,6 @@ const irep_idt iterator_to_initial_id(
   const std::string iterator_id_str=id2string(expr.get(ID_it_pointer))+"'it";
 
   assert(id_str.find(iterator_id_str)!=std::string::npos);
-  return id_str.replace(id_str.find(iterator_id_str),
-                        iterator_id_str.length(),
-                        init_value_id_str);
+  return id_str.replace(
+    id_str.find(iterator_id_str), iterator_id_str.length(), init_value_id_str);
 }

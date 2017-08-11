@@ -40,8 +40,8 @@ public:
     heap_analysis(_heap_analysis),
     ssa_objects(_goto_function, ns, _heap_analysis),
     ssa_value_ai(_goto_function, ns, _heap_analysis),
-    assignments(_goto_function.body, ns, ssa_objects, ssa_value_ai,
-                heap_analysis),
+    assignments(
+      _goto_function.body, ns, ssa_objects, ssa_value_ai, heap_analysis),
     guard_map(_goto_function.body),
     ssa_analysis(assignments),
     suffix(_suffix)
@@ -184,7 +184,7 @@ public:
     const struct_typet::componentt &component) const;
 
   void get_entry_exit_vars();
-  
+
   bool has_static_lifetime(const ssa_objectt &) const;
   bool has_static_lifetime(const exprt &) const;
 

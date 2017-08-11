@@ -1,8 +1,12 @@
-/**
- *  Viktor Malik, 2/15/17 (c).
- */
-#ifndef CPROVER_SSA_POINTED_OBJECTS_H
-#define CPROVER_SSA_POINTED_OBJECTS_H
+/*******************************************************************\
+
+Module: Library of functions for working with pointed objects
+
+Author: Viktor Malik
+
+\*******************************************************************/
+#ifndef CPROVER_2LS_SSA_SSA_POINTED_OBJECTS_H
+#define CPROVER_2LS_SSA_SSA_POINTED_OBJECTS_H
 
 #include <util/expr.h>
 #include <util/namespace.h>
@@ -52,4 +56,4 @@ const irep_idt iterator_to_initial_id(
   const exprt &expr,
   const irep_idt &expr_id);
 
-#endif //CPROVER_SSA_POINTED_OBJECTS_H
+#endif // CPROVER_2LS_SSA_SSA_POINTED_OBJECTS_H

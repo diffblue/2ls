@@ -1,8 +1,12 @@
-/**
- *  Viktor Malik, 3/30/17 (c).
- */
-#ifndef INC_2LS_HEAP_INTERVAL_DOMAINT_H
-#define INC_2LS_HEAP_INTERVAL_DOMAINT_H
+/*******************************************************************\
+
+Module: Combination of heap and interval abstract domains
+
+Author: Viktor Malik
+
+\*******************************************************************/
+#ifndef CPROVER_2LS_DOMAINS_HEAP_INTERVAL_DOMAIN_H
+#define CPROVER_2LS_DOMAINS_HEAP_INTERVAL_DOMAIN_H
 
 
 #include "domain.h"
@@ -16,8 +20,10 @@ public:
   tpolyhedra_domaint interval_domain;
 
   heap_interval_domaint(
-    unsigned int _domain_number, replace_mapt &_renaming_map,
-    const var_specst &var_specs, const namespacet &ns):
+    unsigned int _domain_number,
+    replace_mapt &_renaming_map,
+    const var_specst &var_specs,
+    const namespacet &ns):
     domaint(_domain_number, _renaming_map, ns),
     heap_domain(_domain_number, _renaming_map, var_specs, ns),
     interval_domain(_domain_number, _renaming_map, ns)
@@ -46,4 +52,4 @@ public:
 };
 
 
-#endif //INC_2LS_HEAP_INTERVAL_DOMAINT_H
+#endif // CPROVER_2LS_DOMAINS_HEAP_INTERVAL_DOMAIN_H

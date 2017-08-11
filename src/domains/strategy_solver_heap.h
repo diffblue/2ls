@@ -1,9 +1,12 @@
-/**
- * Strategy solver for heap verification.
- *  Viktor Malik, 12.8.2016 (c).
- */
-#ifndef CPROVER_STRATEGY_SOLVER_HEAP_H
-#define CPROVER_STRATEGY_SOLVER_HEAP_H
+/*******************************************************************\
+
+Module: Strategy solver for heap shape analysis
+
+Author: Viktor Malik
+
+\*******************************************************************/
+#ifndef CPROVER_2LS_DOMAINS_STRATEGY_SOLVER_HEAP_H
+#define CPROVER_2LS_DOMAINS_STRATEGY_SOLVER_HEAP_H
 
 #include "../ssa/local_ssa.h"
 #include "strategy_solver_base.h"
@@ -14,8 +17,10 @@ class strategy_solver_heapt:public strategy_solver_baset
 {
 public:
   explicit strategy_solver_heapt(
-    heap_domaint &_heap_domain, incremental_solvert &_solver,
-    const local_SSAt &SSA, const exprt &precondition,
+    heap_domaint &_heap_domain,
+    incremental_solvert &_solver,
+    const local_SSAt &SSA,
+    const exprt &precondition,
     message_handlert &message_handler,
     template_generator_baset &template_generator):
     strategy_solver_baset(_solver, SSA.ns), heap_domain(_heap_domain)
@@ -27,16 +32,18 @@ public:
   virtual bool iterate(invariantt &_inv) override;
 
   void initialize(
-    const local_SSAt &SSA, const exprt &precondition,
+    const local_SSAt &SSA,
+    const exprt &precondition,
     template_generator_baset &template_generator);
 
 protected:
-
   heap_domaint &heap_domain;
   std::set<unsigned> updated_rows;
 
   int find_member_row(
-    const exprt &obj, const irep_idt &member, int actual_loc,
+    const exprt &obj,
+    const irep_idt &member,
+    int actual_loc,
     const domaint::kindt &kind);
 
   bool update_rows_rec(
@@ -47,4 +54,4 @@ protected:
 };
 
 
-#endif //CPROVER_STRATEGY_SOLVER_HEAP_H
+#endif // CPROVER_2LS_DOMAINS_STRATEGY_SOLVER_HEAP_H

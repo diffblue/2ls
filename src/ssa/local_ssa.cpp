@@ -537,14 +537,14 @@ void local_SSAt::build_function_call(locationt loc)
       return;
     }
 
-    assert(f.function().id()==ID_symbol); //no function pointers
+    assert(f.function().id()==ID_symbol); // no function pointers
 
     f=to_function_application_expr(read_rhs(f, loc));
 
     irep_idt fname=to_symbol_expr(f.function()).get_identifier();
-    //add equalities for arguments
+    // add equalities for arguments
     unsigned i=0;
-    for(auto &a : f.arguments())
+    for(exprt &a : f.arguments())
     {
       if(a.is_constant() ||
          (a.id()==ID_typecast && to_typecast_expr(a).op().is_constant()))
@@ -1054,7 +1054,7 @@ exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
       *it=read_rhs(*it, loc);
     return tmp;
   }
-  
+
 //  // Argument is a struct-typed ssa object?
 //  // May need to split up into members.
 //  const typet &type=ns.follow(expr.type());
@@ -1177,7 +1177,7 @@ symbol_exprt local_SSAt::name(
     new_symbol_expr.add_source_location()=object.get_expr().source_location();
 
   copy_pointed_info(new_symbol_expr, object.get_expr());
-  
+
   return new_symbol_expr;
 }
 
@@ -1761,11 +1761,19 @@ bool local_SSAt::has_function_calls() const
   return found;
 }
 
-/**
- * If a location is malloc call, create "unknown object" for return type. This is later used
- * as a placeholder for invalid of unknown dereference of an object of that type.
- * @param loc Location
- */
+/*******************************************************************\
+
+Function: local_SSAt::build_unknown_objs
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: If a location is malloc call, create "unknown object" for
+          return type. This is later used as a placeholder for invalid
+          of unknown dereference of an object of that type.
+
+\*******************************************************************/
 void local_SSAt::build_unknown_objs(locationt loc)
 {
   if(loc->is_assign())
@@ -1790,12 +1798,18 @@ void local_SSAt::build_unknown_objs(locationt loc)
   }
 }
 
-/**
- * Create equality obj.component = &obj, which creates self-loop on "unknown" objects.
- * @param obj "Unknown" object
- * @param component Object's component
- * @return Equality obj.component = &obj
- */
+/*******************************************************************\
+
+Function: local_SSAt::unknown_obj_eq
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Create equality obj.component = &obj, which creates self-loop
+          on "unknown" objects.
+
+\*******************************************************************/
 exprt local_SSAt::unknown_obj_eq(
   const symbol_exprt &obj,
   const struct_typet::componentt &component) const
@@ -1806,6 +1820,17 @@ exprt local_SSAt::unknown_obj_eq(
   return equal_exprt(member, address_of_exprt(obj));
 }
 
+/*******************************************************************\
+
+Function: local_SSAt::collect_iterators_rhs
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 void local_SSAt::collect_iterators_rhs(const exprt &expr, locationt loc)
 {
   if(expr.id()==ID_member)
@@ -1819,10 +1844,22 @@ void local_SSAt::collect_iterators_rhs(const exprt &expr, locationt loc)
   }
   else
   {
-    forall_operands(it, expr)collect_iterators_rhs(*it, loc);
+    forall_operands(it, expr)
+      collect_iterators_rhs(*it, loc);
   }
 }
 
+/*******************************************************************\
+
+Function: local_SSAt::collect_iterators_lhs
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 void local_SSAt::collect_iterators_lhs(
   const ssa_objectt &object,
   local_SSAt::locationt loc)
@@ -1836,6 +1873,17 @@ void local_SSAt::collect_iterators_lhs(
   }
 }
 
+/*******************************************************************\
+
+Function: local_SSAt::new_iterator_access
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Create new iterator access
+
+\*******************************************************************/
 void local_SSAt::new_iterator_access(
   const member_exprt &expr, local_SSAt::locationt loc,
   int inst_loc_number)

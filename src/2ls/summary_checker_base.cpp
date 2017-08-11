@@ -230,8 +230,8 @@ void summary_checker_baset::check_properties(
     solver << summary_db.get(f_it->first).fw_invariant;
     solver << summary_db.get(f_it->first).fw_precondition;
 
-    if (options.get_bool_option("heap") &&
-        summary_db.get(f_it->first).aux_precondition.is_not_nil())
+    if(options.get_bool_option("heap") &&
+       summary_db.get(f_it->first).aux_precondition.is_not_nil())
     {
       solver << summary_db.get(f_it->first).aux_precondition;
     }
@@ -250,10 +250,10 @@ void summary_checker_baset::check_properties(
     is_fully_unwound(loop_continues, loophead_selects, solver);
   status() << "Loops " << (fully_unwound ? "" : "not ")
            << "fully unwound" << eom;
-  
+
   bool require_spurious_check=
     !fully_unwound && options.get_bool_option("spurious-check");
-  
+
   cover_goals_extt cover_goals(
     SSA, solver, loophead_selects, property_map,
     require_spurious_check,

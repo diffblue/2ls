@@ -467,11 +467,20 @@ void twols_parse_optionst::split_loopheads(goto_modelt &goto_model)
   }
 }
 
-/**
- * Remove loop head from entry instruction of a function - causes problems with input variables
- * naming. If first instruction is target of back-jump, insert SKIP instruction before.
- * @param goto_model
- */
+/*******************************************************************\
+
+Function: twols_parse_optionst::remove_loops_in_entry
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Remove loop head from entry instruction of a function -
+          causes problems with input variables naming. If first
+          instruction is target of back-jump, insert SKIP instruction
+          before.
+
+\*******************************************************************/
 void twols_parse_optionst::remove_loops_in_entry(goto_modelt &goto_model)
 {
   Forall_goto_functions(f_it, goto_model.goto_functions)
@@ -487,10 +496,17 @@ void twols_parse_optionst::remove_loops_in_entry(goto_modelt &goto_model)
   }
 }
 
-/**
- * Create symbols for objects pointed by parameters of a function.
- * @param goto_model GOTO model of the program.
- */
+/*******************************************************************\
+
+Function: twols_parse_optionst::create_dynamic_objects
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Create symbols for objects pointed by parameters of a function.
+
+\*******************************************************************/
 void twols_parse_optionst::create_dynamic_objects(goto_modelt &goto_model)
 {
   Forall_goto_functions(f_it, goto_model.goto_functions)
@@ -507,12 +523,18 @@ void twols_parse_optionst::create_dynamic_objects(goto_modelt &goto_model)
   }
 }
 
-/**
- * For each pointer-typed symbol in an expression which is a parameter, create symbol for pointed
- * objectin the symbol table.
- * @param expr Expression to check.
- * @param symbol_table Symbol table
- */
+/*******************************************************************\
+
+Function: twols_parse_optionst::add_dynamic_object_rec
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: For each pointer-typed symbol in an expression which is a parameter,
+          create symbol for pointed object in the symbol table.
+
+\*******************************************************************/
 void twols_parse_optionst::add_dynamic_object_rec(
   exprt &expr,
   symbol_tablet &symbol_table)
@@ -550,6 +572,18 @@ void twols_parse_optionst::add_dynamic_object_rec(
   }
 }
 
+/*******************************************************************\
+
+Function: twols_parse_optionst::add_dynamic_object_symbols
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Add symbols for all dynamic objects in the program into
+          the symbol table.
+
+\*******************************************************************/
 void twols_parse_optionst::add_dynamic_object_symbols(
   const ssa_heap_analysist &heap_analysis,
   goto_modelt &goto_model)
@@ -565,7 +599,8 @@ void twols_parse_optionst::add_dynamic_object_symbols(
           fun_call.function()).get_identifier();
         auto n_it=i_it;
         ++n_it;
-        for(auto &o : heap_analysis[n_it].new_caller_objects(fname, i_it))
+        for(const symbol_exprt&o :
+          heap_analysis[n_it].new_caller_objects(fname, i_it))
         {
           // New symbol
           symbolt object_symbol;

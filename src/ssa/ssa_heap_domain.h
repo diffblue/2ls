@@ -1,8 +1,12 @@
-/**
- *  Viktor Malik, 2/28/17 (c).
- */
-#ifndef INC_2LS_SSA_HEAP_DOMAIN_H
-#define INC_2LS_SSA_HEAP_DOMAIN_H
+/*******************************************************************\
+
+Module: Dynamic objects analysis
+
+Author: Viktor Malik
+
+\*******************************************************************/
+#ifndef CPROVER_2LS_SSA_SSA_HEAP_DOMAIN_H
+#define CPROVER_2LS_SSA_SSA_HEAP_DOMAIN_H
 
 #define USE_DEPRECATED_STATIC_ANALYSIS_H
 
@@ -11,8 +15,10 @@
 class ssa_heap_domaint:public domain_baset
 {
 public:
-  virtual void
-  transform(const namespacet &ns, locationt from, locationt to) override;
+  virtual void transform(
+    const namespacet &ns,
+    locationt from,
+    locationt to) override;
   bool merge(const ssa_heap_domaint &, locationt);
 
   irep_idt function;
@@ -34,7 +40,6 @@ public:
       const code_function_callt::argumentst &arguments,
       unsigned deref_level) const;
 
-
   protected:
     const exprt apply_deref(const exprt &expr, unsigned level) const;
   };
@@ -48,16 +53,19 @@ public:
 
   const std::set<exprt> modified_objects(const irep_idt &fname) const;
 protected:
-
   void assign_lhs_rec(const exprt &lhs, const exprt &rhs, const namespacet &ns);
 
   void assign_rhs(
-    const exprt &rhs, const irep_idt &function, objectst &objects,
+    const exprt &rhs,
+    const irep_idt &function,
+    objectst &objects,
     const namespacet &ns);
 
   bool is_function_output(
-    const exprt &expr, const irep_idt &function,
-    const namespacet &ns, bool in_deref);
+    const exprt &expr,
+    const irep_idt &function,
+    const namespacet &ns,
+    bool in_deref);
 
   void
   rename_to_caller(symbol_exprt &object, locationt loc, unsigned &index) const;
@@ -68,8 +76,8 @@ protected:
 class ssa_heap_analysist:public static_analysist<ssa_heap_domaint>
 {
 public:
-  explicit ssa_heap_analysist(const namespacet &_ns)
-    :static_analysist(_ns) {}
+  explicit ssa_heap_analysist(const namespacet &_ns):
+    static_analysist(_ns) {}
 
   virtual void initialize(const goto_functionst &goto_functions) override;
 
@@ -78,4 +86,4 @@ protected:
 };
 
 
-#endif //INC_2LS_SSA_HEAP_DOMAIN_H
+#endif // CPROVER_2LS_SSA_SSA_HEAP_DOMAIN_H

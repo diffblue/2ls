@@ -56,9 +56,23 @@ void collect_objects_rec(
   std::set<ssa_objectt> &objects,
   std::set<exprt> &literals);
 
+/*******************************************************************\
+
+Function: collect_ptr_objects
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 void collect_ptr_objects(
-  const exprt &expr, const namespacet &ns, std::set<ssa_objectt> &objects,
-  std::set<exprt> &literals, bool dynamic)
+  const exprt &expr,
+  const namespacet &ns,
+  std::set<ssa_objectt> &objects,
+  std::set<exprt> &literals,
+  bool dynamic)
 {
   if(expr.id()==ID_symbol)
   {
@@ -84,11 +98,22 @@ void collect_ptr_objects(
   }
   else
   {
-    forall_operands(it, expr)collect_ptr_objects(*it, ns, objects, literals,
-                                                 dynamic);
+    forall_operands(it, expr)
+      collect_ptr_objects(*it, ns, objects, literals, dynamic);
   }
 }
 
+/*******************************************************************\
+
+Function: collect_objects_address_of_rec
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 void collect_objects_address_of_rec(
   const exprt &src,
   const namespacet &ns,
@@ -263,13 +288,13 @@ void ssa_objectst::collect_objects(
   local_SSAt::locationt exit=--(src.body.instructions.end());
   if(heap_analysis.has_location(exit))
   {
-    const std::list<symbol_exprt> &new_objects=heap_analysis[exit].new_objects();
+    const std::list<symbol_exprt> &new_objects=
+      heap_analysis[exit].new_objects();
     for(const symbol_exprt &o : new_objects)
     {
       collect_objects_rec(o, ns, objects, literals);
     }
   }
-
 }
 
 /*******************************************************************\

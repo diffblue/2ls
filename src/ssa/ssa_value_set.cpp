@@ -232,7 +232,7 @@ void ssa_value_domaint::assign_lhs_rec(
 
       auto rhs_it=
         rhs.id()==ID_struct ? rhs.operands().begin() : rhs.operands().end();
-      
+
       for(struct_typet::componentst::const_iterator
             it=components.begin();
           it!=components.end();
@@ -574,7 +574,7 @@ bool ssa_value_domaint::valuest::merge(
 
   // value set
   unsigned long old_size=value_set.size();
-  for(auto &v : src.value_set)
+  for(const ssa_objectt &v : src.value_set)
   {
     if(is_loop_back)
     {
@@ -607,8 +607,8 @@ bool ssa_value_domaint::valuest::merge(
           {
             assert(it->get_expr().get_bool(ID_pointed));
             ssa_objectt object_copy(*it);
-            object_copy.set_iterator(object_id,
-                                     pointer_fields(v.get_expr(), level));
+            object_copy.set_iterator(
+              object_id, pointer_fields(v.get_expr(), level));
             value_set.erase(it);
             value_set.insert(object_copy);
             result=true;
@@ -622,8 +622,8 @@ bool ssa_value_domaint::valuest::merge(
     {
       if(v.get_expr().get_bool(ID_iterator))
       {
-        const irep_idt &corresponding_id=iterator_to_initial_id(v.get_expr(),
-                                                                v.get_identifier());
+        const irep_idt &corresponding_id=iterator_to_initial_id(
+          v.get_expr(), v.get_identifier());
 
         auto it=std::find_if(value_set.begin(), value_set.end(),
                              [&corresponding_id](const ssa_objectt &o)
@@ -704,6 +704,17 @@ bool ssa_value_domaint::merge(
   return result;
 }
 
+/*******************************************************************\
+
+Function: ssa_value_domaint::assign_pointed_rhs_rec
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Dynamically add p'obj to value set of p
+
+\*******************************************************************/
 void ssa_value_domaint::assign_pointed_rhs_rec(
   const exprt &rhs,
   const namespacet &ns)
@@ -741,8 +752,8 @@ Function: ssa_value_ait::initialize
           fields of objects pointed by parameters.
 
 \*******************************************************************/
-void
-ssa_value_ait::initialize(const goto_functionst::goto_functiont &goto_function)
+void ssa_value_ait::initialize(
+  const goto_functionst::goto_functiont &goto_function)
 {
   ait<ssa_value_domaint>::initialize(goto_function);
 
@@ -758,7 +769,6 @@ ssa_value_ait::initialize(const goto_functionst::goto_functiont &goto_function)
       const symbol_exprt param_expr(param.get_identifier(), param.type());
       assign_ptr_param(param_expr, entry);
     }
-
   }
 }
 
@@ -776,8 +786,8 @@ Function: ssa_value_ait::assign_ptr_param_rec
           Pointer-typed field of structure initially points to advancer.
 
 \*******************************************************************/
-void
-ssa_value_ait::assign_ptr_param(const exprt &expr, ssa_value_domaint &entry)
+void ssa_value_ait::assign_ptr_param(
+  const exprt &expr, ssa_value_domaint &entry)
 {
   const typet &type=ns.follow(expr.type());
   if(type.id()==ID_pointer)

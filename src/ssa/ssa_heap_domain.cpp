@@ -1,10 +1,25 @@
-/**
- *  Viktor Malik, 2/28/17 (c).
- */
+/*******************************************************************\
+
+Module: Dynamic objects analysis
+
+Author: Viktor Malik
+
+\*******************************************************************/
 
 #include <algorithm>
 #include "ssa_heap_domain.h"
 
+/*******************************************************************\
+
+Function: ssa_heap_domaint::transform
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 void ssa_heap_domaint::transform(
   const namespacet &ns, domain_baset::locationt from,
   domain_baset::locationt to)
@@ -73,6 +88,17 @@ void ssa_heap_domaint::transform(
   }
 }
 
+/*******************************************************************\
+
+Function: ssa_heap_domaint::merge
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 bool ssa_heap_domaint::merge(
   const ssa_heap_domaint &other,
   domain_baset::locationt to)
@@ -127,8 +153,8 @@ bool ssa_heap_domaint::merge(
                                 objects[other_object.first].end(),
                                 other_object.second.begin(),
                                 other_object.second.end(),
-                                std::inserter(intersection,
-                                              intersection.begin()));
+                                std::inserter(
+                                  intersection, intersection.begin()));
           if(!intersection.empty())
             objects[other_object.first]=intersection;
           else
@@ -163,8 +189,21 @@ bool ssa_heap_domaint::merge(
   return result;
 }
 
+/*******************************************************************\
+
+Function: ssa_heap_domaint::assign_rhs
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 void ssa_heap_domaint::assign_rhs(
-  const exprt &rhs, const irep_idt &function, objectst &objects,
+  const exprt &rhs,
+  const irep_idt &function,
+  objectst &objects,
   const namespacet &ns)
 {
   if(rhs.get_bool("#malloc_result"))
@@ -201,9 +240,22 @@ void ssa_heap_domaint::assign_rhs(
   }
 }
 
+/*******************************************************************\
+
+Function: ssa_heap_domaint::is_function_output
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 bool ssa_heap_domaint::is_function_output(
-  const exprt &expr, const irep_idt &function,
-  const namespacet &ns, bool in_deref)
+  const exprt &expr,
+  const irep_idt &function,
+  const namespacet &ns,
+  bool in_deref)
 {
   if(expr.id()==ID_dereference)
   {
@@ -232,6 +284,17 @@ bool ssa_heap_domaint::is_function_output(
   return false;
 }
 
+/*******************************************************************\
+
+Function: ssa_heap_domaint::value
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 const std::set<symbol_exprt> ssa_heap_domaint::value(const exprt &expr) const
 {
   std::set<symbol_exprt> result;
@@ -246,13 +309,35 @@ const std::set<symbol_exprt> ssa_heap_domaint::value(const exprt &expr) const
   return result;
 }
 
+/*******************************************************************\
+
+Function: ssa_heap_domaint::new_objects
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 const std::list<symbol_exprt> ssa_heap_domaint::new_objects() const
 {
   return new_objects(function);
 }
 
-const std::list<symbol_exprt>
-ssa_heap_domaint::new_objects(const irep_idt &fname) const
+/*******************************************************************\
+
+Function: ssa_heap_domaint::new_objects
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+const std::list<symbol_exprt> ssa_heap_domaint::new_objects(
+  const irep_idt &fname) const
 {
   std::list<symbol_exprt> result;
   if(function_map.find(fname)!=function_map.end())
@@ -263,6 +348,17 @@ ssa_heap_domaint::new_objects(const irep_idt &fname) const
   return result;
 }
 
+/*******************************************************************\
+
+Function: ssa_heap_domaint::rename_to_caller
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 void ssa_heap_domaint::rename_to_caller(
   symbol_exprt &object, domain_baset::locationt loc,
   unsigned &index) const
@@ -272,6 +368,17 @@ void ssa_heap_domaint::rename_to_caller(
     std::to_string(index++));
 }
 
+/*******************************************************************\
+
+Function: ssa_heap_domaint::new_caller_objects
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 const std::list<symbol_exprt> ssa_heap_domaint::new_caller_objects(
   const irep_idt &fname,
   domain_baset::locationt loc) const
@@ -285,8 +392,19 @@ const std::list<symbol_exprt> ssa_heap_domaint::new_caller_objects(
   return result;
 }
 
-const std::set<exprt>
-ssa_heap_domaint::modified_objects(const irep_idt &fname) const
+/*******************************************************************\
+
+Function: ssa_heap_domaint::modified_objects
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+const std::set<exprt> ssa_heap_domaint::modified_objects(
+  const irep_idt &fname) const
 {
   std::set<exprt> result;
   if(function_map.find(fname)!=function_map.end())
@@ -296,6 +414,17 @@ ssa_heap_domaint::modified_objects(const irep_idt &fname) const
   return result;
 }
 
+/*******************************************************************\
+
+Function: ssa_heap_domaint::assign_lhs_rec
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 void ssa_heap_domaint::assign_lhs_rec(
   const exprt &lhs,
   const exprt &rhs,
@@ -312,7 +441,7 @@ void ssa_heap_domaint::assign_lhs_rec(
   if(is_function_output(lhs, function, ns, false))
   {
     auto &objects=function_map[function].new_objects;
-    for(auto &o : rhs_objects)
+    for(const exprt &o : rhs_objects)
     {
       if(o.id()==ID_symbol && o.type().get_bool("#dynamic"))
       {
@@ -328,6 +457,17 @@ void ssa_heap_domaint::assign_lhs_rec(
   update_modified(lhs, ns);
 }
 
+/*******************************************************************\
+
+Function: ssa_heap_domaint::update_modified
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 void ssa_heap_domaint::update_modified(const exprt &expr, const namespacet &ns)
 {
   if(expr.id()==ID_member)
@@ -346,6 +486,17 @@ void ssa_heap_domaint::update_modified(const exprt &expr, const namespacet &ns)
     function_map[function].modified_objects.insert(expr);
 }
 
+/*******************************************************************\
+
+Function: ssa_heap_analysist::initialize
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 void ssa_heap_analysist::initialize(const goto_functionst &goto_functions)
 {
   static_analysis_baset::initialize(goto_functions);
@@ -376,6 +527,17 @@ void ssa_heap_analysist::initialize(const goto_functionst &goto_functions)
   }
 }
 
+/*******************************************************************\
+
+Function: ssa_heap_analysist::init_ptr_param
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 void ssa_heap_analysist::init_ptr_param(
   const exprt &expr,
   ssa_heap_domaint &f_entry)
@@ -402,6 +564,17 @@ void ssa_heap_analysist::init_ptr_param(
   }
 }
 
+/*******************************************************************\
+
+Function: ssa_heap_domaint::function_infot::corresponding_expr
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 const exprt ssa_heap_domaint::function_infot::corresponding_expr(
   const exprt &expr,
   const code_function_callt::argumentst &arguments,
@@ -436,6 +609,17 @@ const exprt ssa_heap_domaint::function_infot::corresponding_expr(
   return nil_exprt();
 }
 
+/*******************************************************************\
+
+Function: ssa_heap_domaint::function_infot::apply_deref
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 const exprt ssa_heap_domaint::function_infot::apply_deref(
   const exprt &expr,
   unsigned level) const

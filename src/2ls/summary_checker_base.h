@@ -80,7 +80,7 @@ protected:
     const local_SSAt::nodet::assertionst::const_iterator &);
 
   void SSA_functions(
-    const goto_modelt &, 
+    const goto_modelt &,
     const namespacet &ns,
     const ssa_heap_analysist &heap_analysis);
 

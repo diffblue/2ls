@@ -188,8 +188,7 @@ static void replace_malloc_rec(
   else
   {
     Forall_operands(it, expr)
-      replace_malloc_rec(*it, suffix, symbol_table,
-                         malloc_size, loc_number);
+      replace_malloc_rec(*it, suffix, symbol_table, malloc_size, loc_number);
   }
 }
 

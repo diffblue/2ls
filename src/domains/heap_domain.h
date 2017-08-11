@@ -5,8 +5,8 @@ Module: Abstract domain for representing heap
 Author: Viktor Malik
 
 \*******************************************************************/
-#ifndef CPROVER_HEAP_DOMAIN_H
-#define CPROVER_HEAP_DOMAIN_H
+#ifndef CPROVER_2LS_DOMAINS_HEAP_DOMAIN_H
+#define CPROVER_2LS_DOMAINS_HEAP_DOMAIN_H
 
 #include <util/namespace.h>
 #include <util/message.h>
@@ -18,14 +18,17 @@ Author: Viktor Malik
 class heap_domaint:public domaint
 {
 public:
-  typedef unsigned rowt; /**< Row number */
+  typedef unsigned rowt;
+  // Field of a dynamic object (a variable)
   typedef vart member_fieldt;
+  // We represent dynamic object by the object itself and its member field
   typedef std::pair<exprt, member_fieldt> dyn_objt;
 
   typedef enum { STACK, HEAP } mem_kindt;
 
   heap_domaint(
-    unsigned int _domain_number, replace_mapt &_renaming_map,
+    unsigned int _domain_number,
+    replace_mapt &_renaming_map,
     const var_specst &var_specs,
     const namespacet &_ns):
     domaint(_domain_number, _renaming_map, _ns)
@@ -51,7 +54,8 @@ public:
   \*******************************************************************/
   struct row_valuet
   {
-    bool nondet=false; /**< Row is nondeterministic - row expression is TRUE */
+    // Row is nondeterministic - row expression is TRUE
+    bool nondet=false;
 
     virtual exprt get_row_expr(
       const vart &templ_expr,
@@ -86,7 +90,7 @@ public:
   /*******************************************************************\
   Heap row - used for pointer-typed fields of dynamic objects.
 
-   Value is a disjunction of conjunctions of paths leading from the dynamic
+  Value is a disjunction of conjunctions of paths leading from the dynamic
   object via the field.
   \*******************************************************************/
   struct heap_row_valuet:public row_valuet
@@ -127,11 +131,12 @@ public:
     // Set of rows whose variables point to this row
     std::set<rowt> pointed_by;
 
-    // Dynamic obejct corresponding to the path
+    // Dynamic obejct corresponding to the row (contains both object and field)
     dyn_objt dyn_obj;
+    // Self link on an abstract dynamic object
     bool self_linkage=false;
 
-    heap_row_valuet(const dyn_objt &dyn_obj_):dyn_obj(dyn_obj_) {}
+    explicit heap_row_valuet(const dyn_objt &dyn_obj_):dyn_obj(dyn_obj_) {}
 
     virtual exprt get_row_expr(
       const vart &templ_expr_,
@@ -148,16 +153,17 @@ public:
 
     bool add_path(
       const exprt &dest,
-      const heap_domaint::dyn_objt &dyn_obj,
+      const dyn_objt &dyn_obj,
       pathsett &path_set);
 
     bool join_path_sets(
-      heap_domaint::heap_row_valuet::pathsett &dest,
-      const heap_domaint::heap_row_valuet::pathsett &src,
+      pathsett &dest,
+      const pathsett &src,
       const dyn_objt &through);
 
-    bool
-    add_all_paths(const heap_row_valuet &other_val, const dyn_objt &dyn_obj);
+    bool add_all_paths(
+      const heap_row_valuet &other_val,
+      const dyn_objt &dyn_obj);
 
     bool add_pointed_by(const rowt &row);
 
@@ -167,8 +173,9 @@ public:
     static exprt rename_outheap(const symbol_exprt &expr);
   };
 
-  class heap_valuet
-    :public valuet, public std::vector<std::unique_ptr<row_valuet>>
+  class heap_valuet:
+    public valuet,
+    public std::vector<std::unique_ptr<row_valuet>>
   {
   public:
     row_valuet &operator[](const rowt &row) const
@@ -177,7 +184,7 @@ public:
     }
   };
 
-  // Initialize value
+  // Initialize value and domain
   virtual void initialize(valuet &value) override;
 
   void initialize_domain(
@@ -188,7 +195,8 @@ public:
   exprt to_pre_constraints(const heap_valuet &value) const;
 
   void make_not_post_constraints(
-    const heap_valuet &value, exprt::operandst &cond_exprs,
+    const heap_valuet &value,
+    exprt::operandst &cond_exprs,
     exprt::operandst &value_exprs);
 
   // Row -> constraints
@@ -234,6 +242,7 @@ public:
 protected:
   templatet templ;
 
+  // Bindings computed during interprocedural analysis
   exprt::operandst iterator_bindings;
   exprt::operandst aux_bindings;
 
@@ -272,7 +281,7 @@ protected:
     }
   };
 
-  // Set of new heap rows adding during analysis
+  // Set of new heap rows added during analysis (used for interprocedural)
   std::set<heap_row_spect> new_heap_row_specs;
 
   void make_template(const var_specst &var_specs, const namespacet &ns);
@@ -281,22 +290,28 @@ protected:
 
   // Initializing functions
   void bind_iterators(
-    const local_SSAt &SSA, const exprt &precondition,
+    const local_SSAt &SSA,
+    const exprt &precondition,
     template_generator_baset &template_generator);
 
   void create_precondition(const symbol_exprt &var, const exprt &precondition);
 
   void new_output_template_row(
-    const symbol_exprt &var, const unsigned location_number,
-    const exprt &post_guard, const local_SSAt &SSA,
+    const symbol_exprt &var,
+    const unsigned location_number,
+    const exprt &post_guard,
+    const local_SSAt &SSA,
     template_generator_baset &template_generator);
 
   const exprt iterator_access_bindings(
-    const symbol_exprt &src, const exprt &init_pointer,
+    const symbol_exprt &src,
+    const exprt &init_pointer,
     const symbol_exprt &iterator_sym,
     const std::vector<irep_idt> &fields,
-    const list_iteratort::accesst &access, const unsigned level,
-    exprt::operandst guards, const exprt &precondition,
+    const list_iteratort::accesst &access,
+    const unsigned level,
+    exprt::operandst guards,
+    const exprt &precondition,
     const local_SSAt &SSA);
 
   const std::set<symbol_exprt> reachable_objects(
@@ -310,7 +325,8 @@ protected:
 
 
   void add_new_heap_row_spec(
-    const symbol_exprt &expr, const unsigned location_number,
+    const symbol_exprt &expr,
+    const unsigned location_number,
     const exprt &post_guard);
 
   // Utility functions
@@ -322,4 +338,4 @@ protected:
 };
 
 
-#endif //CPROVER_HEAP_DOMAIN_H
+#endif // CPROVER_2LS_DOMAINS_HEAP_DOMAIN_H
