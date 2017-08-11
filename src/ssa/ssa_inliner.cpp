@@ -709,7 +709,8 @@ exprt ssa_inlinert::get_replace_params(
       params_in=params_deref_in;
       params_out=params_deref_out;
 
-      if(args_in.empty() && args_out.empty()) break;
+      if(args_in.empty() && args_out.empty())
+        break;
     }
   }
   return conjunction(c);
@@ -855,7 +856,8 @@ exprt ssa_inlinert::get_replace_globals_out(
           callee_global=callee_deref;
           caller_global=caller_deref;
 
-          if(caller_global.empty()) break;
+          if(caller_global.empty())
+            break;
         }
       }
       else
@@ -1099,9 +1101,9 @@ void ssa_inlinert::rename_to_callee(
 #endif
       // rename objects not present in globals in to non-suffix version
       symbol_exprt to_replace(get_original_identifier(*it), it->type());
-      replace_map[*it] = to_replace;
+      replace_map[*it]=to_replace;
       // to propagate #dynamic flag on type
-      replace_map[to_replace] = to_replace;
+      replace_map[to_replace]=to_replace;
     }
   }
 

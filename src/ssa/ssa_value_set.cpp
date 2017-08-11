@@ -616,7 +616,8 @@ bool ssa_value_domaint::valuest::merge(
           continue;
         }
       }
-      if(is_iterator(v.get_expr())) continue;
+      if(is_iterator(v.get_expr()))
+        continue;
     }
     else
     {
@@ -723,7 +724,8 @@ void ssa_value_domaint::assign_pointed_rhs_rec(
 
   if(ssa_object && ssa_object.type().id()==ID_pointer)
   {
-    if(ssa_object.get_root_object().get_bool("#unknown_obj")) return;
+    if(ssa_object.get_root_object().get_bool("#unknown_obj"))
+      return;
 
     value_mapt::const_iterator m_it=value_map.find(ssa_object);
 

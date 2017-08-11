@@ -155,7 +155,8 @@ void local_SSAt::get_globals(
       {
         const symbolt *symbol;
         irep_idt ptr_obj_id=root_obj.get(ID_ptr_object);
-        if(ns.lookup(ptr_obj_id, symbol)) continue;
+        if(ns.lookup(ptr_obj_id, symbol))
+          continue;
       }
 
       if(rhs_value)

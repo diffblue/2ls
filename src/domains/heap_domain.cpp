@@ -67,7 +67,8 @@ void heap_domaint::make_template(
 
   for(const var_spect &v : var_specs)
   {
-    if(v.kind==IN) continue;
+    if(v.kind==IN)
+      continue;
 
     // Create template for each pointer
     const vart &var=v.var;
@@ -201,9 +202,11 @@ exprt heap_domaint::get_row_pre_constraint(
   const template_rowt &templ_row=templ[row];
   kindt k=templ_row.kind;
   // For exit variables the result is true
-  if(k==OUT || k==OUTL) return true_exprt();
+  if(k==OUT || k==OUTL)
+    return true_exprt();
 
-  if(k==OUTHEAP && row_value.empty()) return true_exprt();
+  if(k==OUTHEAP && row_value.empty())
+    return true_exprt();
 
   return implies_exprt(
     templ_row.pre_guard, row_value.get_row_expr(templ_row.expr, false));
@@ -227,12 +230,14 @@ exprt heap_domaint::get_row_post_constraint(
   assert(row<templ.size());
   const template_rowt &templ_row=templ[row];
   // For entry variables the result is true
-  if(templ_row.kind==IN) return true_exprt();
+  if(templ_row.kind==IN)
+    return true_exprt();
 
   exprt c=implies_exprt(
     templ_row.post_guard, row_value.get_row_expr(
       templ_row.expr, templ_row.kind==OUTHEAP));
-  if(templ_row.kind==LOOP) rename(c);
+  if(templ_row.kind==LOOP)
+    rename(c);
   return c;
 }
 
@@ -523,7 +528,8 @@ int heap_domaint::get_symbol_loc(const exprt &expr)
 {
   assert(expr.id()==ID_symbol);
   std::string expr_id=id2string(to_symbol_expr(expr).get_identifier());
-  if(expr_id.find('#')==std::string::npos) return -1;
+  if(expr_id.find('#')==std::string::npos)
+    return -1;
   std::string loc_str=expr_id.substr(expr_id.find_last_not_of("0123456789")+1);
   assert(!loc_str.empty());
   return std::stoi(loc_str);
@@ -564,7 +570,8 @@ exprt heap_domaint::stack_row_valuet::get_row_expr(
   const vart &templ_expr,
   bool rename_templ_expr) const
 {
-  if(nondet) return true_exprt();
+  if(nondet)
+    return true_exprt();
 
   if(empty())
     return false_exprt();
@@ -620,7 +627,8 @@ exprt heap_domaint::heap_row_valuet::get_row_expr(
   const vart &templ_expr_,
   bool rename_templ_expr) const
 {
-  if(nondet) return true_exprt();
+  if(nondet)
+    return true_exprt();
 
   exprt templ_expr=templ_expr_;
   if(rename_templ_expr)
@@ -1137,7 +1145,8 @@ void heap_domaint::create_precondition(
       {
         // For variables, create abstract address
         const symbolt *symbol;
-        if(ns.lookup(id2string(var.get_identifier()), symbol)) return;
+        if(ns.lookup(id2string(var.get_identifier()), symbol))
+          return;
 
         address_of_exprt init_value(symbol->symbol_expr());
         init_value.type()=symbol->type;
@@ -1334,7 +1343,8 @@ const std::set<symbol_exprt> heap_domaint::reachable_objects(
 {
   std::set<symbol_exprt> result;
 
-  if(!(src.id()==ID_symbol || src.id()==ID_member)) return result;
+  if(!(src.id()==ID_symbol || src.id()==ID_member))
+    return result;
 
   std::set<symbol_exprt> pointed_objs;
   if(src.id()==ID_member && to_member_expr(src).compound().get_bool(ID_pointed))
