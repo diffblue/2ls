@@ -1,8 +1,12 @@
-/**
- *  Viktor Malik, 3/30/17 (c).
- */
-#ifndef INC_2LS_HEAP_INTERVAL_DOMAINT_H
-#define INC_2LS_HEAP_INTERVAL_DOMAINT_H
+/*******************************************************************\
+
+Module: Combination of heap and interval abstract domains
+
+Author: Viktor Malik
+
+\*******************************************************************/
+#ifndef CPROVER_2LS_DOMAINS_HEAP_INTERVAL_DOMAIN_H
+#define CPROVER_2LS_DOMAINS_HEAP_INTERVAL_DOMAIN_H
 
 
 #include "domain.h"
@@ -48,4 +52,4 @@ class heap_interval_domaint : public domaint
 };
 
 
-#endif //INC_2LS_HEAP_INTERVAL_DOMAINT_H
+#endif // CPROVER_2LS_DOMAINS_HEAP_INTERVAL_DOMAIN_H

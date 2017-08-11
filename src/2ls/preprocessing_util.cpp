@@ -581,7 +581,8 @@ Function: twols_parse_optionst::add_dynamic_object_symbols
 
  Outputs:
 
- Purpose: 
+ Purpose: Add symbols for all dynamic objects in the program into
+          the symbol table.
 
 \*******************************************************************/
 
@@ -598,8 +599,10 @@ void twols_parse_optionst::add_dynamic_object_symbols(
         auto &fun_call=to_code_function_call(i_it->code);
         const irep_idt fname=
           to_symbol_expr(fun_call.function()).get_identifier();
-        auto n_it=i_it; ++n_it;
-        for(auto &o : heap_analysis[n_it].new_caller_objects(fname, i_it))
+        auto n_it=i_it;
+        ++n_it;
+        for(const symbol_exprt &o :
+          heap_analysis[n_it].new_caller_objects(fname, i_it))
         {
           // New symbol
           symbolt object_symbol;

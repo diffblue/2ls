@@ -60,13 +60,14 @@ void ssa_value_domaint::transform(
   {
     const code_function_callt &code_function_call=
       to_code_function_call(from->code);
-    const irep_idt &fname = to_symbol_expr(code_function_call.function()).get_identifier();
+    const irep_idt &fname=to_symbol_expr(
+      code_function_call.function()).get_identifier();
 
-    const ssa_value_ait & value_analysis = static_cast<ssa_value_ait &>(ai);
+    const ssa_value_ait &value_analysis=static_cast<ssa_value_ait &>(ai);
 
-    const ssa_heap_domaint *heap_domain = NULL;
-    if (value_analysis.heap_analysis.has_location(to))
-      heap_domain = &value_analysis.heap_analysis[to];
+    const ssa_heap_domaint *heap_domain=NULL;
+    if(value_analysis.heap_analysis.has_location(to))
+      heap_domain=&value_analysis.heap_analysis[to];
 
 
     // functions may alter state almost arbitrarily:
@@ -87,46 +88,46 @@ void ssa_value_domaint::transform(
 
     std::list<symbol_exprt> objects;
 
-    for (auto &argument : code_function_call.arguments())
+    for(auto &argument : code_function_call.arguments())
     {
-      exprt arg = argument;
-      exprt arg_expr = argument;
-      while (arg.type().id() == ID_pointer)
+      exprt arg=argument;
+      exprt arg_expr=argument;
+      while(arg.type().id()==ID_pointer)
       {
-        if (arg.id() == ID_symbol)
+        if(arg.id()==ID_symbol)
         {
-          symbol_exprt pointed_obj = pointed_object(arg, ns);
+          symbol_exprt pointed_obj=pointed_object(arg, ns);
           pointed_obj.type().set("#dynamic", true);
 
           std::set<symbol_exprt> new_objects;
-          if (heap_domain)
-            new_objects = heap_domain->value(arg_expr);
-          if (new_objects.empty())
+          if(heap_domain)
+            new_objects=heap_domain->value(arg_expr);
+          if(new_objects.empty())
           {
             new_objects.insert(pointed_obj);
           }
 
-          auto it = new_objects.begin();
+          auto it=new_objects.begin();
           assign_lhs_rec(arg, address_of_exprt(*it), ns);
           objects.push_back(*it);
 
-          for (++it; it != new_objects.end(); ++it)
+          for(++it; it!=new_objects.end(); ++it)
           {
             assign_lhs_rec(arg, address_of_exprt(*it), ns, true);
             objects.push_back(*it);
           }
 
-          arg_expr = dereference_exprt(arg_expr, arg.type().subtype());
-          arg = pointed_obj;
+          arg_expr=dereference_exprt(arg_expr, arg.type().subtype());
+          arg=pointed_obj;
         }
-        else if (arg.id() == ID_address_of)
+        else if(arg.id()==ID_address_of)
         {
-          arg = arg_expr = to_address_of_expr(arg).object();
+          arg=arg_expr=to_address_of_expr(arg).object();
         }
-        else if (arg.id() == ID_typecast)
+        else if(arg.id()==ID_typecast)
         {
-          assert(arg_expr.id() == ID_typecast);
-          arg = arg_expr = to_typecast_expr(arg).op();
+          assert(arg_expr.id()==ID_typecast);
+          arg=arg_expr=to_typecast_expr(arg).op();
         }
         else
           break;
@@ -141,35 +142,36 @@ void ssa_value_domaint::transform(
     }
 
     // the assignment of return value might be in next instruction
-    if (to->is_assign() && to_code_assign(to->code).rhs().id() == ID_symbol)
+    if(to->is_assign() && to_code_assign(to->code).rhs().id()==ID_symbol)
     {
-      const symbol_exprt &return_value = to_symbol_expr(to_code_assign(to->code).rhs());
-      if (return_value.type().id() == ID_pointer &&
-          return_value.get_identifier() == id2string(fname) + "#return_value")
+      const symbol_exprt &return_value=to_symbol_expr(
+        to_code_assign(to->code).rhs());
+      if(return_value.type().id()==ID_pointer &&
+         return_value.get_identifier()==id2string(fname)+"#return_value")
       {
         std::set<symbol_exprt> new_objects;
-        if (heap_domain)
-            new_objects = heap_domain->value(return_value);
-        if (new_objects.empty())
+        if(heap_domain)
+          new_objects=heap_domain->value(return_value);
+        if(new_objects.empty())
         {
-          symbol_exprt pointed_obj = pointed_object(return_value, ns);
+          symbol_exprt pointed_obj=pointed_object(return_value, ns);
           pointed_obj.type().set("#dynamic", true);
           new_objects.insert(pointed_obj);
         }
 
-        auto it = new_objects.begin();
+        auto it=new_objects.begin();
         assign_lhs_rec(return_value, address_of_exprt(*it), ns);
         objects.push_back(*it);
 
-        for (++it; it != new_objects.end(); ++it)
+        for(++it; it!=new_objects.end(); ++it)
         {
           assign_lhs_rec(return_value, address_of_exprt(*it), ns, true);
           objects.push_back(*it);
         }
 
-        if (heap_domain)
+        if(heap_domain)
         {
-          for (auto &new_o : heap_domain->new_caller_objects(fname, from))
+          for(auto &new_o : heap_domain->new_caller_objects(fname, from))
           {
             objects.push_back(new_o);
           }
@@ -177,11 +179,11 @@ void ssa_value_domaint::transform(
       }
     }
 
-    for (const symbol_exprt &o1 : objects)
+    for(const symbol_exprt &o1 : objects)
     {
-      for (const symbol_exprt &o2 : objects)
+      for(const symbol_exprt &o2 : objects)
       {
-        if (o1 != o2 && o1.type() == o2.type())
+        if(o1!=o2 && o1.type()==o2.type())
           value_map[ssa_objectt(o1, ns)].value_set.insert(ssa_objectt(o2, ns));
       }
     }
@@ -231,7 +233,7 @@ void ssa_value_domaint::assign_lhs_rec(
 
       auto rhs_it=
         rhs.id()==ID_struct ? rhs.operands().begin() : rhs.operands().end();
-      
+
       for(struct_typet::componentst::const_iterator
             it=components.begin();
           it!=components.end();
@@ -239,10 +241,10 @@ void ssa_value_domaint::assign_lhs_rec(
       {
         member_exprt new_lhs(lhs, it->get_name(), it->type());
         exprt new_rhs;
-        if (rhs_it != rhs.operands().end())
-          new_rhs = *(rhs_it++);
+        if(rhs_it!=rhs.operands().end())
+          new_rhs=*(rhs_it++);
         else
-          new_rhs = member_exprt(rhs, it->get_name(), it->type());
+          new_rhs=member_exprt(rhs, it->get_name(), it->type());
         assign_lhs_rec(new_lhs, new_rhs, ns, add); // recursive call
       }
 
@@ -252,7 +254,7 @@ void ssa_value_domaint::assign_lhs_rec(
     // object?
     ssa_objectt ssa_object(lhs, ns);
 
-    if (ssa_object)
+    if(ssa_object)
     {
       assign_pointed_rhs_rec(rhs, ns);
       valuest tmp_values;
@@ -543,8 +545,9 @@ Function: ssa_value_domaint::valuest::merge
 
 \*******************************************************************/
 
-bool ssa_value_domaint::valuest::merge(const valuest &src, bool is_loop_back,
-                                       const irep_idt &object_id)
+bool ssa_value_domaint::valuest::merge(
+  const valuest &src, bool is_loop_back,
+  const irep_idt &object_id)
 {
   bool result=false;
 
@@ -571,74 +574,76 @@ bool ssa_value_domaint::valuest::merge(const valuest &src, bool is_loop_back,
   }
 
   // value set
-  unsigned long old_size = value_set.size();
-  for (auto &v : src.value_set)
+  unsigned long old_size=value_set.size();
+  for(const ssa_objectt &v : src.value_set)
   {
-    if (is_loop_back)
+    if(is_loop_back)
     {
-      if (is_pointed(v.get_expr()))
+      if(is_pointed(v.get_expr()))
       {
-        unsigned level = pointed_level(v.get_expr()) - 1;
-        exprt expr = v.get_expr();
+        unsigned level=pointed_level(v.get_expr())-1;
+        exprt expr=v.get_expr();
 
-        auto it = value_set.end();
+        auto it=value_set.end();
 
-        while (level > 0)
+        while(level>0)
         {
-          const irep_idt ptr_root_id = pointer_root_id(expr);
-          it = std::find_if(value_set.begin(), value_set.end(),
-                            [&ptr_root_id](const ssa_objectt &o)
-                            {
-                              return o.get_identifier() == ptr_root_id;
-                            });
-          if (it != value_set.end())
+          const irep_idt ptr_root_id=pointer_root_id(expr);
+          it=std::find_if(value_set.begin(), value_set.end(),
+                          [&ptr_root_id](const ssa_objectt &o)
+                          {
+                            return o.get_identifier()==ptr_root_id;
+                          });
+          if(it!=value_set.end())
             break;
           else
           {
-            expr = get_pointer_root(expr, level--);
+            expr=get_pointer_root(expr, level--);
           }
         }
 
-        if (it != value_set.end())
+        if(it!=value_set.end())
         {
-          if (!it->get_expr().get_bool(ID_iterator))
+          if(!it->get_expr().get_bool(ID_iterator))
           {
             assert(it->get_expr().get_bool(ID_pointed));
             ssa_objectt object_copy(*it);
-            object_copy.set_iterator(object_id, pointer_fields(v.get_expr(), level));
+            object_copy.set_iterator(
+              object_id, pointer_fields(v.get_expr(), level));
             value_set.erase(it);
             value_set.insert(object_copy);
-            result = true;
+            result=true;
           }
           continue;
         }
       }
-      if (is_iterator(v.get_expr())) continue;
+      if(is_iterator(v.get_expr())) continue;
     }
     else
     {
-      if (v.get_expr().get_bool(ID_iterator))
+      if(v.get_expr().get_bool(ID_iterator))
       {
-        const irep_idt &corresponding_id = iterator_to_initial_id(v.get_expr(), v.get_identifier());
+        const irep_idt &corresponding_id=iterator_to_initial_id(
+          v.get_expr(), v.get_identifier());
 
-        auto it = std::find_if(value_set.begin(), value_set.end(),
-                               [&corresponding_id](const ssa_objectt &o)
-                               {
-                                 return o.get_expr().get_bool(ID_pointed) &&
-                                        (o.get_identifier() == corresponding_id);
-                               });
-        if (it != value_set.end())
+        auto it=std::find_if(value_set.begin(), value_set.end(),
+                             [&corresponding_id](const ssa_objectt &o)
+                             {
+                               return o.get_expr().get_bool(ID_pointed) &&
+                                      (o.get_identifier()==corresponding_id);
+                             });
+        if(it!=value_set.end())
         {
-          if (v != *it)
-            result = true;
+          if(v!=*it)
+            result=true;
           value_set.erase(it);
         }
       }
     }
     value_set.insert(v);
   }
-  if (value_set.size() != old_size)
-    result = true;
+  if(value_set.size()!=old_size)
+    result=true;
 
   // alignment
   alignment=merge_alignment(alignment, src.alignment);
@@ -674,7 +679,8 @@ bool ssa_value_domaint::merge(
   {
     if(v_it==value_map.end() || it->first<v_it->first)
     {
-      if (!from->is_backwards_goto() || !is_iterator(it->first.get_root_object()))
+      if(!from->is_backwards_goto() ||
+         !is_iterator(it->first.get_root_object()))
         value_map.insert(v_it, *it);
       result=true;
       it++;
@@ -688,7 +694,8 @@ bool ssa_value_domaint::merge(
 
     assert(v_it->first==it->first);
 
-    if(v_it->second.merge(it->second, from->is_backwards_goto(), it->first.get_identifier()))
+    if(v_it->second.merge(it->second, from->is_backwards_goto(),
+                          it->first.get_identifier()))
       result=true;
 
     v_it++;
@@ -698,7 +705,21 @@ bool ssa_value_domaint::merge(
   return result;
 }
 
-void ssa_value_domaint::assign_pointed_rhs_rec(const exprt &rhs, const namespacet &ns)
+/*******************************************************************\
+
+Function: ssa_value_domaint::assign_pointed_rhs_rec
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Dynamically add p'obj to value set of p
+
+\*******************************************************************/
+
+void ssa_value_domaint::assign_pointed_rhs_rec(
+  const exprt &rhs,
+  const namespacet &ns)
 {
   ssa_objectt ssa_object(rhs, ns);
 
@@ -711,7 +732,7 @@ void ssa_value_domaint::assign_pointed_rhs_rec(const exprt &rhs, const namespace
 
     if(m_it==value_map.end())
     {
-      const symbol_exprt pointed = pointed_object(rhs, ns);
+      const symbol_exprt pointed=pointed_object(rhs, ns);
       ssa_objectt pointed_obj(pointed, ns);
       value_map[ssa_object].value_set.insert(pointed_obj);
     }
@@ -736,23 +757,23 @@ Function: ssa_value_ait::initialize
 
 \*******************************************************************/
 
-void ssa_value_ait::initialize(const goto_functionst::goto_functiont &goto_function)
+void ssa_value_ait::initialize(
+  const goto_functionst::goto_functiont &goto_function)
 {
   ait<ssa_value_domaint>::initialize(goto_function);
 
   // Initialize value sets for pointer parameters
 
-  if (!goto_function.type.parameters().empty())
+  if(!goto_function.type.parameters().empty())
   {
-    locationt e = goto_function.body.instructions.begin();
-    ssa_value_domaint &entry = operator[](e);
+    locationt e=goto_function.body.instructions.begin();
+    ssa_value_domaint &entry=operator[](e);
 
-    for (auto &param : goto_function.type.parameters())
+    for(auto &param : goto_function.type.parameters())
     {
       const symbol_exprt param_expr(param.get_identifier(), param.type());
       assign_ptr_param(param_expr, entry);
     }
-
   }
 }
 
@@ -771,7 +792,8 @@ Function: ssa_value_ait::assign_ptr_param_rec
 
 \*******************************************************************/
 
-void ssa_value_ait::assign_ptr_param(const exprt &expr, ssa_value_domaint &entry)
+void ssa_value_ait::assign_ptr_param(
+  const exprt &expr, ssa_value_domaint &entry)
 {
   const typet &type=ns.follow(expr.type());
   if(type.id()==ID_pointer)
@@ -806,7 +828,10 @@ Function: ssa_value_ait::assign
 
 \*******************************************************************/
 
-void ssa_value_ait::assign(const exprt &src, const exprt &dest, ssa_value_domaint &entry)
+void ssa_value_ait::assign(
+  const exprt &src,
+  const exprt &dest,
+  ssa_value_domaint &entry)
 {
   ssa_objectt src_obj(src, ns);
   ssa_objectt dest_obj(dest, ns);

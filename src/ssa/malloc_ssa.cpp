@@ -195,12 +195,17 @@ static void replace_malloc_rec(
   {
     assert(!malloc_size.is_nil());
     expr.op0()=malloc_size;
- 
-    expr=malloc_ssa(to_side_effect_expr(expr),"$"+std::to_string(loc_number)+suffix,symbol_table);
+
+    expr=malloc_ssa(
+      to_side_effect_expr(expr),
+      "$"+i2string(loc_number)+suffix,
+      symbol_table);
   }
   else
-    Forall_operands(it,expr)
-      replace_malloc_rec(*it,suffix,symbol_table,malloc_size,loc_number);
+  {
+    Forall_operands(it, expr)
+      replace_malloc_rec(*it, suffix, symbol_table, malloc_size, loc_number);
+  }
 }
 
 /*******************************************************************\

@@ -28,7 +28,7 @@ class graphml_witness_extt;
 class summary_checker_baset:public property_checkert
 {
 public:
-  inline summary_checker_baset(optionst &_options, const ssa_heap_analysist &_heap_analysis) :
+  summary_checker_baset(optionst &_options, const ssa_heap_analysist &_heap_analysis) :
     show_vcc(false),
     simplify(false),
     fixed_point(false),
@@ -77,8 +77,10 @@ protected:
     const goto_programt::const_targett,
     const local_SSAt::nodet::assertionst::const_iterator &);
 
-  void SSA_functions(const goto_modelt &, const namespacet &ns,
-                       const ssa_heap_analysist &heap_analysis);
+  void SSA_functions(
+    const goto_modelt &,
+    const namespacet &ns,
+    const ssa_heap_analysist &heap_analysis);
 
   void summarize(
     const goto_modelt &,

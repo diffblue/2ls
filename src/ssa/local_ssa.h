@@ -36,12 +36,13 @@ public:
     const goto_functiont &_goto_function,
     const namespacet &_ns,
     const ssa_heap_analysist &_heap_analysis,
-    const std::string &_suffix = "") :
+    const std::string &_suffix=""):
     ns(_ns), goto_function(_goto_function),
     heap_analysis(_heap_analysis),
     ssa_objects(_goto_function, ns, _heap_analysis),
     ssa_value_ai(_goto_function, ns, _heap_analysis),
-    assignments(_goto_function.body, ns, ssa_objects, ssa_value_ai, heap_analysis),
+    assignments(
+      _goto_function.body, ns, ssa_objects, ssa_value_ai, heap_analysis),
     guard_map(_goto_function.body),
     ssa_analysis(assignments),
     suffix(_suffix)
@@ -62,14 +63,13 @@ public:
   public:
     inline nodet(
       locationt _location,
-      std::list<nodet>::iterator _loophead)
-      :
-        enabling_expr(true_exprt()),
-  marked(false),
-        location(_location),
-        loophead(_loophead)
-      {
-      }
+      std::list<nodet>::iterator _loophead):
+      enabling_expr(true_exprt()),
+      marked(false),
+      location(_location),
+      loophead(_loophead)
+    {
+    }
 
     typedef std::vector<equal_exprt> equalitiest;
     equalitiest equalities;
@@ -113,12 +113,14 @@ public:
   void mark_nodes()
   {
     for(nodest::iterator n_it=nodes.begin();
-  n_it!=nodes.end(); n_it++) n_it->marked=true;
+        n_it!=nodes.end(); n_it++)
+      n_it->marked=true;
   }
   void unmark_nodes()
   {
-      for(nodest::iterator n_it=nodes.begin();
-          n_it!=nodes.end(); n_it++) n_it->marked=false;
+    for(nodest::iterator n_it=nodes.begin();
+        n_it!=nodes.end(); n_it++)
+      n_it->marked=false;
   }
 
   // for incremental unwinding
@@ -128,7 +130,7 @@ public:
   // function entry and exit variables
   typedef std::list<symbol_exprt> var_listt;
   typedef std::set<symbol_exprt> var_sett;
-  var_listt params;  
+  var_listt params;
   var_sett globals_in, globals_out;
 
   std::set<list_iteratort> iterators;
@@ -174,9 +176,14 @@ public:
 
   void collect_iterators_rhs(const exprt &expr, locationt loc);
   void collect_iterators_lhs(const ssa_objectt &object, locationt loc);
-  void new_iterator_access(const member_exprt &expr, locationt loc, int inst_loc_number);
+  void new_iterator_access(
+    const member_exprt &expr,
+    locationt loc,
+    int inst_loc_number);
 
-  exprt unknown_obj_eq(const symbol_exprt &obj, const struct_typet::componentt &component) const;
+  exprt unknown_obj_eq(
+    const symbol_exprt &obj,
+    const struct_typet::componentt &component) const;
 
   void get_entry_exit_vars();
 
