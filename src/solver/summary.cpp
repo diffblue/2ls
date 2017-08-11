@@ -173,6 +173,25 @@ void summaryt::join(const summaryt &new_summary)
 
 /*******************************************************************\
 
+Function: summaryt::set_value_domains
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Get value domain for last location from SSA.
+
+\*******************************************************************/
+void summaryt::set_value_domains(const local_SSAt &SSA)
+{
+  const local_SSAt::locationt &entry_loc=SSA.nodes.begin()->location;
+  const local_SSAt::locationt &exit_loc=(--SSA.nodes.end())->location;
+  value_domain_in=SSA.ssa_value_ai[entry_loc];
+  value_domain_out=SSA.ssa_value_ai[exit_loc];
+}
+
+/*******************************************************************\
+
 Function: threeval2string
 
   Inputs:

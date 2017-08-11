@@ -283,7 +283,7 @@ void template_generator_baset::filter_heap_domain()
 {
   domaint::var_specst new_var_specs(var_specs);
   var_specs.clear();
-  for(auto &var : var_specs)
+  for(auto &var : new_var_specs)
   {
     if(var.var.id()==ID_symbol && var.var.type().id()==ID_pointer)
     {

@@ -448,7 +448,8 @@ void heap_domaint::project_on_vars(
   {
     const template_rowt &templ_row=templ[row];
 
-    if(vars.find(templ_row.expr)==vars.end()) continue;
+    if(vars.find(templ_row.expr)==vars.end())
+      continue;
 
     const row_valuet &row_val=val[row];
     if(templ_row.kind==LOOP)
