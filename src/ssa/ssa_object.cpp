@@ -56,6 +56,18 @@ void collect_objects_rec(
   std::set<ssa_objectt> &objects,
   std::set<exprt> &literals);
 
+/*******************************************************************\
+
+Function: collect_ptr_objects
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
 void collect_ptr_objects(
   const exprt &expr,
   const namespacet &ns,
@@ -89,9 +101,21 @@ void collect_ptr_objects(
   else
   {
     forall_operands(it, expr)
-        collect_ptr_objects(*it, ns, objects, literals, dynamic);
+      collect_ptr_objects(*it, ns, objects, literals, dynamic);
   }
 }
+
+/*******************************************************************\
+
+Function: collect_objects_address_of_rec
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 
 void collect_objects_address_of_rec(
   const exprt &src,
@@ -180,7 +204,7 @@ void collect_objects_rec(
     if(type.id()==ID_struct)
     {
       std::string id=id2string(ssa_object.get_identifier());
-      if (src.type().get_bool("#dynamic") || is_pointed(src))
+      if(src.type().get_bool("#dynamic") || is_pointed(src))
         objects.insert(ssa_object);
 
       // need to split up
@@ -211,12 +235,14 @@ void collect_objects_rec(
       const symbolt *symbol;
       if(ssa_object.type().get_bool("#dynamic") ||
          (root_object.id()==ID_symbol &&
-          id2string(to_symbol_expr(root_object).get_identifier()).find("#return_value") ==
+          id2string(to_symbol_expr(root_object).get_identifier()).find(
+            "#return_value")==
           std::string::npos &&
           !ns.lookup(to_symbol_expr(root_object).get_identifier(), symbol) &&
           (symbol->is_parameter || !symbol->is_procedure_local())))
       {
-        collect_ptr_objects(ssa_object.symbol_expr(), ns, objects, literals, false);
+        collect_ptr_objects(
+          ssa_object.symbol_expr(), ns, objects, literals, false);
       }
     }
   }
@@ -239,7 +265,9 @@ Function: ssa_objectst::collect_objects
 
 \*******************************************************************/
 
-void ssa_objectst::collect_objects(const goto_functionst::goto_functiont &src, const namespacet &ns)
+void ssa_objectst::collect_objects(
+  const goto_functionst::goto_functiont &src,
+  const namespacet &ns)
 {
   // Add objects for parameters.
   for(goto_functionst::goto_functiont::parameter_identifierst::
@@ -261,15 +289,15 @@ void ssa_objectst::collect_objects(const goto_functionst::goto_functiont &src, c
 
   // Add new objects created within the function
   local_SSAt::locationt exit=--(src.body.instructions.end());
-  if (heap_analysis.has_location(exit))
+  if(heap_analysis.has_location(exit))
   {
-    const std::list<symbol_exprt> &new_objects=heap_analysis[exit].new_objects();
+    const std::list<symbol_exprt> &new_objects=
+      heap_analysis[exit].new_objects();
     for(const symbol_exprt &o : new_objects)
     {
       collect_objects_rec(o, ns, objects, literals);
     }
   }
-
 }
 
 /*******************************************************************\

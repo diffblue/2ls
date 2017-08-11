@@ -52,8 +52,10 @@ void assignmentst::build_assignment_map(
         to_code_function_call(it->code);
 
       // Get information from ssa_heap_analysis
-      auto n_it=it; ++n_it;
-      const irep_idt fname=to_symbol_expr(code_function_call.function()).get_identifier();
+      auto n_it=it;
+      ++n_it;
+      const irep_idt fname=to_symbol_expr(
+        code_function_call.function()).get_identifier();
       std::list<symbol_exprt> new_objects;
       std::set<exprt> modified_objects;
 
@@ -70,32 +72,33 @@ void assignmentst::build_assignment_map(
       }
 
       for(objectst::const_iterator
-          o_it=ssa_objects.globals.begin();
+            o_it=ssa_objects.globals.begin();
           o_it!=ssa_objects.globals.end(); o_it++)
       {
-        if (id2string(o_it->get_identifier()) == id2string(fname) + "#return_value")
+        if(id2string(o_it->get_identifier())==id2string(fname)+"#return_value")
           assign(*o_it, it, ns);
       }
 
       // Assign all modified objects
-      for (auto &modified : modified_objects)
+      for(const exprt &modified : modified_objects)
       {
-        const exprt arg = ssa_heap_analysis[n_it].function_map.at(fname).corresponding_expr(
-            modified, code_function_call.arguments(), 0);
+        const exprt arg=
+          ssa_heap_analysis[n_it].function_map.at(fname).
+            corresponding_expr(modified, code_function_call.arguments(), 0);
 
-        if (arg != modified)
+        if(arg!=modified)
         {
-          const exprt arg_deref = dereference(arg, ssa_value_ai[it], "", ns);
+          const exprt arg_deref=dereference(arg, ssa_value_ai[it], "", ns);
           assign(arg_deref, it, ns);
 
           std::set<symbol_exprt> symbols;
           find_symbols(arg_deref, symbols);
-          for (auto &symbol : symbols)
+          for(const symbol_exprt &symbol : symbols)
           {
-            if (symbol.type() == arg_deref.type())
+            if(symbol.type()==arg_deref.type())
             {
-              auto &aliases = ssa_value_ai[n_it](symbol, ns).value_set;
-              for (auto &alias : aliases)
+              auto &aliases=ssa_value_ai[n_it](symbol, ns).value_set;
+              for(auto &alias : aliases)
               {
                 assign(alias.get_expr(), it, ns);
               }
@@ -162,7 +165,8 @@ void assignmentst::assign(
     // object?
     ssa_objectt ssa_object(lhs, ns);
 
-    if(ssa_object && !ssa_object.is_unknown_obj())  // unknown objects are just placeholders
+    if(ssa_object &&
+       !ssa_object.is_unknown_obj())  // unknown objects are just placeholders
     {
       assign(ssa_object, loc, ns);
     }
