@@ -11,7 +11,7 @@ Author: Viktor Malik
 #include <util/namespace.h>
 #include <util/message.h>
 #include <memory>
-#include "../ssa/local_ssa.h"
+#include <ssa/local_ssa.h>
 #include "domain.h"
 #include "template_generator_base.h"
 

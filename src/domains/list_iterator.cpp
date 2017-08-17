@@ -8,7 +8,7 @@ Author: Viktor Malik
 \*******************************************************************/
 
 #include <algorithm>
-#include "../ssa/ssa_pointed_objects.h"
+#include <ssa/ssa_pointed_objects.h>
 #include "list_iterator.h"
 
 /*******************************************************************\

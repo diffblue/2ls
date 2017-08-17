@@ -18,7 +18,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <analyses/dirty.h>
 
 #include "ssa_object.h"
-#include "local_ssa.h"
 
 /*******************************************************************\
 
@@ -285,7 +284,7 @@ void ssa_objectst::collect_objects(
   }
 
   // Add new objects created within the function
-  local_SSAt::locationt exit=--(src.body.instructions.end());
+  goto_programt::const_targett exit=--(src.body.instructions.end());
   if(heap_analysis.has_location(exit))
   {
     const std::list<symbol_exprt> &new_objects=

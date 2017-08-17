@@ -8,7 +8,7 @@ Author: Viktor Malik
 #ifndef CPROVER_2LS_DOMAINS_STRATEGY_SOLVER_HEAP_H
 #define CPROVER_2LS_DOMAINS_STRATEGY_SOLVER_HEAP_H
 
-#include "../ssa/local_ssa.h"
+#include <ssa/local_ssa.h>
 #include "strategy_solver_base.h"
 #include "heap_domain.h"
 #include "template_generator_base.h"

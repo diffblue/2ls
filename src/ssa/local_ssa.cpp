@@ -22,7 +22,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-symex/adjust_float_expressions.h>
 
 #include "local_ssa.h"
-#include "malloc_ssa.h"
 #include "ssa_dereference.h"
 #include "address_canonizer.h"
 
@@ -1057,31 +1056,33 @@ exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
     return tmp;
   }
 
-//  // Argument is a struct-typed ssa object?
-//  // May need to split up into members.
-//  const typet &type=ns.follow(expr.type());
-//
-//  if(type.id()==ID_struct)
-//  {
-//    // build struct constructor
-//    struct_exprt result(expr.type());
-//
-//    const struct_typet &struct_type=to_struct_type(type);
-//    const struct_typet::componentst &components=struct_type.components();
-//
-//    result.operands().resize(components.size());
-//
-//    for(struct_typet::componentst::const_iterator
-//          it=components.begin();
-//        it!=components.end();
-//        it++)
-//    {
-//      result.operands()[it-components.begin()]=
-//        read_rhs(member_exprt(expr, it->get_name(), it->type()), loc);
-//    }
-//
-//    return result;
-//  }
+#if 0
+  // Argument is a struct-typed ssa object?
+  // May need to split up into members.
+  const typet &type=ns.follow(expr.type());
+
+  if(type.id()==ID_struct)
+  {
+    // build struct constructor
+    struct_exprt result(expr.type());
+
+    const struct_typet &struct_type=to_struct_type(type);
+    const struct_typet::componentst &components=struct_type.components();
+
+    result.operands().resize(components.size());
+
+    for(struct_typet::componentst::const_iterator
+          it=components.begin();
+        it!=components.end();
+        it++)
+    {
+      result.operands()[it-components.begin()]=
+        read_rhs(member_exprt(expr, it->get_name(), it->type()), loc);
+    }
+
+    return result;
+  }
+#endif
 
   // is this an object we track?
   if(ssa_objects.objects.find(object)!=

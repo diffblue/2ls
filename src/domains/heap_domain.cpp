@@ -7,12 +7,8 @@ Author: Viktor Malik
 \*******************************************************************/
 
 #include "heap_domain.h"
-#include "util.h"
-#include "domain.h"
 #include <algorithm>
-#include <util/symbol.h>
-#include "../ssa/ssa_inliner.h"
-#include "../ssa/address_canonizer.h"
+#include <ssa/address_canonizer.h>
 
 /*******************************************************************\
 

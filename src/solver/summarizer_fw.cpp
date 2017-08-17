@@ -15,14 +15,9 @@ Author: Peter Schrammel
 #include <util/find_symbols.h>
 
 #include "summarizer_fw.h"
-#include "summary_db.h"
 
 #include <domains/ssa_analyzer.h>
 #include <domains/template_generator_summary.h>
-#include <domains/template_generator_callingcontext.h>
-
-#include <ssa/local_ssa.h>
-#include <ssa/simplify_ssa.h>
 
 // #define SHOW_WHOLE_RESULT
 
@@ -172,13 +167,13 @@ void summarizer_fwt::do_summary(
   debug() << "whole result: " << from_expr(SSA.ns, "", whole_result) << eom;
 #endif
 
-  if (options.get_bool_option("heap"))
+  if(options.get_bool_option("heap"))
   {
     analyzer.update_heap_out(summary.globals_out);
-    const exprt advancer_bindings = analyzer.input_heap_bindings();
-    if (!advancer_bindings.is_true())
+    const exprt advancer_bindings=analyzer.input_heap_bindings();
+    if(!advancer_bindings.is_true())
     {
-      summary.aux_precondition = advancer_bindings;
+      summary.aux_precondition=advancer_bindings;
     }
   }
 
