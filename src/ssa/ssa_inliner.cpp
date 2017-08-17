@@ -12,7 +12,6 @@ Author: Peter Schrammel
 #include <util/replace_expr.h>
 
 #include "ssa_inliner.h"
-#include "ssa_dereference.h"
 
 /*******************************************************************\
 
