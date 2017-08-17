@@ -36,7 +36,7 @@ public:
     const namespacet &_ns):
     domaint(_domain_number, _renaming_map, _ns)
   {
-    make_template(var_specs, _ns);
+    make_template(var_specs, ns);
   }
 
   struct template_rowt

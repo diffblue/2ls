@@ -15,14 +15,9 @@ Author: Peter Schrammel
 #include <util/find_symbols.h>
 
 #include "summarizer_fw.h"
-#include "summary_db.h"
 
 #include <domains/ssa_analyzer.h>
 #include <domains/template_generator_summary.h>
-#include <domains/template_generator_callingcontext.h>
-
-#include <ssa/local_ssa.h>
-#include <ssa/simplify_ssa.h>
 
 // #define SHOW_WHOLE_RESULT
 

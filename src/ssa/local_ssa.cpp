@@ -18,12 +18,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/expr_util.h>
 #include <util/decision_procedure.h>
 #include <util/byte_operators.h>
-#include <util/simplify_expr.h>
 
 #include <goto-symex/adjust_float_expressions.h>
 
 #include "local_ssa.h"
-#include "malloc_ssa.h"
 #include "ssa_dereference.h"
 #include "address_canonizer.h"
 
@@ -157,7 +155,8 @@ void local_SSAt::get_globals(
       {
         const symbolt *symbol;
         irep_idt ptr_obj_id=root_obj.get(ID_ptr_object);
-        if(ns.lookup(ptr_obj_id, symbol)) continue;
+        if(ns.lookup(ptr_obj_id, symbol))
+          continue;
       }
 
       if(rhs_value)
@@ -1057,6 +1056,34 @@ exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
     return tmp;
   }
 
+#if 0
+  // Argument is a struct-typed ssa object?
+  // May need to split up into members.
+  const typet &type=ns.follow(expr.type());
+
+  if(type.id()==ID_struct)
+  {
+    // build struct constructor
+    struct_exprt result(expr.type());
+
+    const struct_typet &struct_type=to_struct_type(type);
+    const struct_typet::componentst &components=struct_type.components();
+
+    result.operands().resize(components.size());
+
+    for(struct_typet::componentst::const_iterator
+          it=components.begin();
+        it!=components.end();
+        it++)
+    {
+      result.operands()[it-components.begin()]=
+        read_rhs(member_exprt(expr, it->get_name(), it->type()), loc);
+    }
+
+    return result;
+  }
+#endif
+
   // is this an object we track?
   if(ssa_objects.objects.find(object)!=
      ssa_objects.objects.end())
@@ -1382,27 +1409,6 @@ Function: local_SSAt::output
 
 void local_SSAt::output(std::ostream &out) const
 {
-  out << "params:";
-  for (auto &param : params)
-  {
-    out << " " << from_expr(param);
-  }
-  out << '\n';
-
-  out << "globals in:";
-  for (auto &glob : globals_in)
-  {
-    out << " " << from_expr(glob);
-  }
-  out << '\n';
-
-  out << "globals out:";
-  for (auto &glob : globals_out)
-  {
-    out << " " << from_expr(glob);
-  }
-  out << "\n\n";
-
   for(nodest::const_iterator
         n_it=nodes.begin();
       n_it!=nodes.end(); n_it++)
@@ -1631,18 +1637,6 @@ decision_proceduret &operator<<(
       dest << *c_it;
     }
   }
-
-//  for (auto &obj : src.unknown_objs)
-//  {
-//    const typet &obj_type = src.ns.follow(obj.type());
-//    if (obj_type.id() == ID_struct)
-//    {
-//      for (auto &component : to_struct_type(obj_type).components())
-//      {
-//        dest << src.unknown_obj_eq(obj, component);
-//      }
-//    }
-//  }
 #endif
   return dest;
 }
@@ -1684,6 +1678,20 @@ incremental_solvert &operator<<(
         dest << implies_exprt(n_it->enabling_expr, *e_it);
       else
         dest << *e_it;
+
+#if 0
+      // freeze cond variables
+      if(e_it->op0().id()==ID_symbol &&
+         e_it->op0().type().id()==ID_bool)
+      {
+        const symbol_exprt &symbol=to_symbol_expr(e_it->op0());
+        if(id2string(symbol.get_identifier()).find("ssa::$cond")!=
+           std::string::npos)
+        {
+          dest.solver->set_frozen(dest.solver->convert(symbol));
+        }
+      }
+#endif
     }
 
     for(local_SSAt::nodet::constraintst::const_iterator
@@ -1697,18 +1705,6 @@ incremental_solvert &operator<<(
         dest << *c_it;
     }
   }
-
-//  for (auto &obj : src.unknown_objs)
-//  {
-//    const typet &obj_type = src.ns.follow(obj.type());
-//    if (obj_type.id() == ID_struct)
-//    {
-//      for (auto &component : to_struct_type(obj_type).components())
-//      {
-//        dest << src.unknown_obj_eq(obj, component);
-//      }
-//    }
-//  }
 #endif
   return dest;
 }
@@ -1871,7 +1867,9 @@ Function: local_SSAt::collect_iterators_lhs
 
 \*******************************************************************/
 
-void local_SSAt::collect_iterators_lhs(const ssa_objectt &object, local_SSAt::locationt loc)
+void local_SSAt::collect_iterators_lhs(
+  const ssa_objectt &object,
+  local_SSAt::locationt loc)
 {
   if(is_iterator(object.get_root_object()) &&
      object.get_root_object().id()==ID_symbol)
@@ -1910,8 +1908,10 @@ void local_SSAt::new_iterator_access(
     ID_it_init_value_level);
   const exprt init_pointer=get_pointer(expr.compound(), init_value_level-1);
 
-  list_iteratort iterator(to_symbol_expr(pointer_rhs), init_pointer,
-                          get_iterator_fields(expr.compound()));
+  list_iteratort iterator(
+    to_symbol_expr(pointer_rhs),
+    init_pointer,
+    get_iterator_fields(expr.compound()));
 
   auto it=iterators.insert(iterator);
   it.first->add_access(expr, inst_loc_number);
