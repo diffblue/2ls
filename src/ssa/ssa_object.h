@@ -86,19 +86,20 @@ public:
     return get_root_object_rec(expr);
   }
 
-  inline bool is_unknown_obj()
+  bool is_unknown_obj()
   {
     std::string id_str=id2string(identifier);
     return id_str.find("$unknown")!=std::string::npos;
   }
 
-  inline void set_flag(const irep_idt flag, bool value)
+  void set_flag(const irep_idt flag, bool value)
   {
     expr.set(flag, value);
   }
 
-  inline void
-  set_iterator(const irep_idt &pointer_id, const std::vector<irep_idt> &fields)
+  void set_iterator(
+    const irep_idt &pointer_id,
+    const std::vector<irep_idt> &fields)
   {
     assert(expr.id()==ID_symbol && expr.get_bool(ID_pointed));
     expr.set(ID_iterator, true);

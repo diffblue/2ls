@@ -599,7 +599,7 @@ void twols_parse_optionst::add_dynamic_object_symbols(
           fun_call.function()).get_identifier();
         auto n_it=i_it;
         ++n_it;
-        for(const symbol_exprt&o :
+        for(const symbol_exprt &o :
           heap_analysis[n_it].new_caller_objects(fname, i_it))
         {
           // New symbol

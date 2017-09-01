@@ -237,8 +237,12 @@ void collect_objects_rec(
           !ns.lookup(to_symbol_expr(root_object).get_identifier(), symbol) &&
           (symbol->is_parameter || !symbol->is_procedure_local())))
       {
-        collect_ptr_objects(ssa_object.symbol_expr(), ns, objects, literals,
-                            false);
+        collect_ptr_objects(
+          ssa_object.symbol_expr(),
+          ns,
+          objects,
+          literals,
+          false);
       }
     }
   }

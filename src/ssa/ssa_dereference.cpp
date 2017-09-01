@@ -319,9 +319,11 @@ exprt dereference_rec(
 {
   if(src.id()==ID_dereference)
   {
-    const exprt &pointer=dereference_rec(to_dereference_expr(src).pointer(),
-                                         ssa_value_domain,
-                                         nondet_prefix, ns);
+    const exprt &pointer=dereference_rec(
+      to_dereference_expr(src).pointer(),
+      ssa_value_domain,
+      nondet_prefix,
+      ns);
 
     const typet &pointed_type=ns.follow(pointer.type().subtype());
 

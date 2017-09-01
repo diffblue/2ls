@@ -1551,9 +1551,10 @@ exprt ssa_inlinert::get_replace_new_objects(
   {
     const ssa_heap_domaint &heap_domain=SSA.heap_analysis[next_loc];
 
-    const std::list<symbol_exprt> callee_objects=heap_domain.new_objects(fname);
-    const std::list<symbol_exprt> caller_objects=heap_domain.new_caller_objects(
-      fname, loc);
+    const std::list<symbol_exprt> callee_objects=
+      heap_domain.new_objects(fname);
+    const std::list<symbol_exprt> caller_objects=
+      heap_domain.new_caller_objects(fname, loc);
 
     auto callee_it=callee_objects.begin();
     for(auto caller_it=caller_objects.begin(); caller_it!=caller_objects.end();

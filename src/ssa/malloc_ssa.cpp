@@ -182,8 +182,10 @@ static void replace_malloc_rec(
     assert(!malloc_size.is_nil());
     expr.op0()=malloc_size;
 
-    expr=malloc_ssa(to_side_effect_expr(expr),
-                    "$"+i2string(loc_number)+suffix, symbol_table);
+    expr=malloc_ssa(
+      to_side_effect_expr(expr),
+      "$"+i2string(loc_number)+suffix,
+      symbol_table);
   }
   else
   {
@@ -228,9 +230,12 @@ void replace_malloc(
              lhs_id=="__builtin_alloca::alloca_size")
             malloc_size=code_assign.rhs();
         }
-        replace_malloc_rec(code_assign.rhs(), suffix,
-                           goto_model.symbol_table, malloc_size,
-                           i_it->location_number);
+        replace_malloc_rec(
+          code_assign.rhs(),
+          suffix,
+          goto_model.symbol_table,
+          malloc_size,
+          i_it->location_number);
       }
     }
   }

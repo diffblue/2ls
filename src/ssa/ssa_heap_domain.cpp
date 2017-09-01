@@ -21,7 +21,8 @@ Function: ssa_heap_domaint::transform
 
 \*******************************************************************/
 void ssa_heap_domaint::transform(
-  const namespacet &ns, domain_baset::locationt from,
+  const namespacet &ns,
+  domain_baset::locationt from,
   domain_baset::locationt to)
 {
   if(from->is_assign())
@@ -120,8 +121,9 @@ bool ssa_heap_domaint::merge(
       else
       {
         unsigned long old_size=value_map[other_value.first].size();
-        value_map[other_value.first].insert(other_value.second.begin(),
-                                            other_value.second.end());
+        value_map[other_value.first].insert(
+          other_value.second.begin(),
+          other_value.second.end());
         result=old_size!=value_map[other_value.first].size();
       }
     }
@@ -149,12 +151,13 @@ bool ssa_heap_domaint::merge(
         {
           unsigned long old_size=objects[other_object.first].size();
           std::set<exprt> intersection;
-          std::set_intersection(objects[other_object.first].begin(),
-                                objects[other_object.first].end(),
-                                other_object.second.begin(),
-                                other_object.second.end(),
-                                std::inserter(
-                                  intersection, intersection.begin()));
+          std::set_intersection(
+            objects[other_object.first].begin(),
+            objects[other_object.first].end(),
+            other_object.second.begin(),
+            other_object.second.end(),
+            std::inserter(
+              intersection, intersection.begin()));
           if(!intersection.empty())
             objects[other_object.first]=intersection;
           else
@@ -169,7 +172,7 @@ bool ssa_heap_domaint::merge(
     {
       for(auto &o : other_objects)
       {
-        unsigned long old_size=objects[o.first].size();
+        std::size_t old_size=objects[o.first].size();
         objects[o.first]=o.second;
         if(old_size!=objects[o.first].size())
           result=true;
@@ -178,7 +181,7 @@ bool ssa_heap_domaint::merge(
 
     function_map[f.first].params=f.second.params;
 
-    unsigned long old_size=function_map[f.first].modified_objects.size();
+    std::size_t old_size=function_map[f.first].modified_objects.size();
     function_map[f.first].modified_objects.insert(
       f.second.modified_objects.begin(),
       f.second.modified_objects.end());
@@ -259,13 +262,19 @@ bool ssa_heap_domaint::is_function_output(
 {
   if(expr.id()==ID_dereference)
   {
-    return is_function_output(to_dereference_expr(expr).pointer(), function, ns,
-                              true);
+    return is_function_output(
+      to_dereference_expr(expr).pointer(),
+      function,
+      ns,
+      true);
   }
   else if(expr.id()==ID_member)
   {
-    return is_function_output(to_member_expr(expr).compound(), function, ns,
-                              in_deref);
+    return is_function_output(
+      to_member_expr(expr).compound(),
+      function,
+      ns,
+      in_deref);
   }
   else if(expr.id()==ID_symbol)
   {
@@ -584,7 +593,7 @@ const exprt ssa_heap_domaint::function_infot::corresponding_expr(
   {
     const irep_idt expr_id=to_symbol_expr(expr).get_identifier();
     exprt result=expr;
-    for(unsigned i=0; i<params.size(); ++i)
+    for(std::size_t i=0; i<params.size(); ++i)
     {
       if(expr_id==params.at(i))
       {
@@ -596,13 +605,17 @@ const exprt ssa_heap_domaint::function_infot::corresponding_expr(
   }
   else if(expr.id()==ID_dereference)
   {
-    return corresponding_expr(to_dereference_expr(expr).pointer(), arguments,
-                              deref_level+1);
+    return corresponding_expr(
+      to_dereference_expr(expr).pointer(),
+      arguments,
+      deref_level+1);
   }
   else if(expr.id()==ID_member)
   {
-    return corresponding_expr(to_member_expr(expr).compound(), arguments,
-                              deref_level);
+    return corresponding_expr(
+      to_member_expr(expr).compound(),
+      arguments,
+      deref_level);
   }
 
   assert(false);

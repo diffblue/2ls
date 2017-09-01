@@ -25,7 +25,7 @@ Function: list_iteratort::add_access
 \*******************************************************************/
 void list_iteratort::add_access(
   const member_exprt &expr,
-  int location_number) const
+  unsigned location_number) const
 {
   assert(expr.compound().get_bool(ID_iterator) &&
          expr.compound().get_bool(ID_pointed));
@@ -61,16 +61,22 @@ const symbol_exprt list_iteratort::access_symbol_expr(
   unsigned level,
   const namespacet &ns) const
 {
-  int location=level==access.fields.size()-1 ? access.location : IN_LOC;
+  unsigned location=level==access.fields.size()-1 ? access.location : IN_LOC;
   if(level==0)
   {
-    return recursive_member_symbol(iterator_symbol(), access.fields.at(level),
-                                   location, ns);
+    return recursive_member_symbol(
+      iterator_symbol(),
+      access.fields.at(level),
+      location,
+      ns);
   }
   else
   {
-    return recursive_member_symbol(access_symbol_expr(access, level-1, ns),
-                                   access.fields.at(level), location, ns);
+    return recursive_member_symbol(
+      access_symbol_expr(access, level-1, ns),
+      access.fields.at(level),
+      location,
+      ns);
   }
 }
 
@@ -111,7 +117,7 @@ Function: recursive_member_symbol
 const symbol_exprt recursive_member_symbol(
   const symbol_exprt &object,
   const irep_idt &field,
-  const int loc_num,
+  const unsigned loc_num,
   const namespacet &ns)
 {
   typet type=nil_typet();
@@ -152,7 +158,7 @@ equal_exprt list_iteratort::accesst::binding(
   const unsigned level,
   const namespacet &ns) const
 {
-  int loc=level==fields.size()-1 ? location : IN_LOC;
+  unsigned loc=level==fields.size()-1 ? location : IN_LOC;
   return equal_exprt(recursive_member_symbol(lhs, fields.at(level), loc, ns),
                      recursive_member_symbol(rhs, fields.at(level), loc, ns));
 }

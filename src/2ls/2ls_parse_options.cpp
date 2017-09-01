@@ -244,6 +244,7 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
   {
     options.set_option("termination", true);
     options.set_option("sufficient", true);
+    options.set_option("std-invariants", true);
   }
 
   if(cmdline.isset("monolithic-ranking-function"))
@@ -472,8 +473,8 @@ int twols_parse_optionst::doit()
     if(cmdline.isset("context-sensitive"))
     {
       options.set_option("context-sensitive", true);
-      status() << "Context-sensitive analysis from " <<
-               goto_model.goto_functions.entry_point() << eom;
+      status() << "Context-sensitive analysis from "
+               << goto_model.goto_functions.entry_point() << eom;
     }
 
     if(cmdline.isset("arrays"))
@@ -919,7 +920,7 @@ bool twols_parse_optionst::get_goto_program(
       status() << "Reading GOTO program from file" << eom;
 
       if(read_goto_binary(
-         cmdline.args[0], goto_model, get_message_handler()))
+           cmdline.args[0], goto_model, get_message_handler()))
         return true;
 
       config.set_from_symbol_table(goto_model.symbol_table);
@@ -1353,8 +1354,8 @@ void twols_parse_optionst::report_success()
     xml.data="SUCCESS";
     std::cout << xml;
     std::cout << std::endl;
+    break;
   }
-  break;
 
   default:
     assert(false);
@@ -1630,7 +1631,7 @@ void twols_parse_optionst::help()
     " --arch                       set architecture (default: " << configt::this_architecture() << ")\n" // NOLINT(*)
     " --os                         set operating system (default: " << configt::this_operating_system() << ")\n" // NOLINT(*)
 #ifdef _WIN32
-              " --gcc                        use GCC as preprocessor\n"
+    " --gcc                        use GCC as preprocessor\n"
 #endif
     " --no-arch                    don't set up an architecture\n"
     " --no-library                 disable built-in abstract C library\n"
@@ -1664,6 +1665,7 @@ void twols_parse_optionst::help()
     " --zones                      use zone domain\n"
     " --octagons                   use octagon domain\n"
     " --heap                       use heap domain\n"
+    " --heap-interval              use heap domain with interval domain for values\n"
     " --enum-solver                use solver based on model enumeration\n"
     " --binsearch-solver           use solver based on binary search\n"
     " --arrays                     do not ignore array contents\n"

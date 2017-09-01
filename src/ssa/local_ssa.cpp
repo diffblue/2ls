@@ -1888,8 +1888,9 @@ Function: local_SSAt::new_iterator_access
 
 \*******************************************************************/
 void local_SSAt::new_iterator_access(
-  const member_exprt &expr, local_SSAt::locationt loc,
-  int inst_loc_number)
+  const member_exprt &expr,
+  local_SSAt::locationt loc,
+  unsigned inst_loc_number)
 {
   assert(is_iterator(expr.compound()));
 

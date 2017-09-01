@@ -41,14 +41,18 @@ public:
   virtual void initialize(valuet &value) override;
 
   virtual void output_value(
-    std::ostream &out, const valuet &value,
+    std::ostream &out,
+    const valuet &value,
     const namespacet &ns) const override;
 
-  virtual void
-  output_domain(std::ostream &out, const namespacet &ns) const override;
+  virtual void output_domain(
+    std::ostream &out,
+    const namespacet &ns) const override;
 
-  virtual void
-  project_on_vars(valuet &value, const var_sett &vars, exprt &result) override;
+  virtual void project_on_vars(
+    valuet &value,
+    const var_sett &vars,
+    exprt &result) override;
 };
 
 
