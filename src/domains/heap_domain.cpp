@@ -537,30 +537,11 @@ int heap_domaint::get_symbol_loc(const exprt &expr)
 {
   assert(expr.id()==ID_symbol);
   std::string expr_id=id2string(to_symbol_expr(expr).get_identifier());
-  if(expr_id.find('#')==std::string::npos) return -1;
+  if(expr_id.find('#')==std::string::npos)
+    return -1;
   std::string loc_str=expr_id.substr(expr_id.find_last_not_of("0123456789")+1);
   assert(!loc_str.empty());
   return std::stoi(loc_str);
-}
-
-/*******************************************************************\
-
-Function: heap_domaint::get_base_name
-
-  Inputs: Symbol expression.
-
- Outputs: Base name of a symbol (without suffix with location number).
-
- Purpose: Get base name of a symbol.
-
-\*******************************************************************/
-
-std::string heap_domaint::get_base_name(const exprt &expr)
-{
-  assert(expr.id()==ID_symbol);
-  std::string result=id2string(to_symbol_expr(expr).get_identifier());
-  result=result.substr(0, result.find_last_of('#'));
-  return result;
 }
 
 /*******************************************************************\
@@ -590,8 +571,9 @@ exprt heap_domaint::stack_row_valuet::get_row_expr(const vart &templ_expr,
     exprt::operandst result;
     for(const exprt &pt : points_to)
     {
-      result.push_back(equal_exprt(templ_expr, templ_expr.type()==pt.type() ?
-                                               pt : address_of_exprt(pt)));
+      result.push_back(equal_exprt(
+        templ_expr,
+        templ_expr.type()==pt.type() ? pt : address_of_exprt(pt)));
     }
     return disjunction(result);
   }
@@ -634,10 +616,12 @@ Function: heap_domaint::heap_row_valuet::get_row_expr
 
 \*******************************************************************/
 
-exprt heap_domaint::heap_row_valuet::get_row_expr(const vart &templ_expr_,
-                                                  bool rename_templ_expr) const
+exprt heap_domaint::heap_row_valuet::get_row_expr(
+  const vart &templ_expr_,
+  bool rename_templ_expr) const
 {
-  if(nondet) return true_exprt();
+  if(nondet)
+    return true_exprt();
 
   exprt templ_expr=templ_expr_;
   if(rename_templ_expr)
@@ -680,7 +664,8 @@ exprt heap_domaint::heap_row_valuet::get_row_expr(const vart &templ_expr_,
           for(const dyn_objt &obj2 : path.dyn_objects)
           { 
             // o'.m = o''
-            steps_expr.push_back(equal_exprt(member_expr, address_of_exprt(obj2.first)));
+            steps_expr.push_back(
+              equal_exprt(member_expr, address_of_exprt(obj2.first)));
           }
 
           path_expr.push_back(and_exprt(equ_exprt, disjunction(steps_expr)));
@@ -716,8 +701,8 @@ bool heap_domaint::heap_row_valuet::add_points_to(const exprt &dest)
   }
   else
   {
-    const dyn_objt through=self_linkage ? dyn_obj : std::make_pair(nil_exprt(),
-                                                                   nil_exprt());
+    const dyn_objt through=
+      self_linkage ? dyn_obj : std::make_pair(nil_exprt(), nil_exprt());
     return add_path(dest, through);
   }
 }
@@ -960,8 +945,9 @@ Function: heap_domaint::heap_row_valuet::rename_outheap
 exprt heap_domaint::heap_row_valuet::rename_outheap(const symbol_exprt &expr)
 {
   const std::string id=id2string(expr.get_identifier());
-  return symbol_exprt(id.substr(0, id.rfind("lb"))+id.substr(id.rfind("lb")+2),
-                      expr.type());
+  return symbol_exprt(
+    id.substr(0, id.rfind("lb"))+id.substr(id.rfind("lb")+2),
+    expr.type());
 }
 
 /*******************************************************************\
@@ -1078,8 +1064,10 @@ void heap_domaint::bind_iterators(
             const exprt binding=equal_exprt(new_value, old_value);
             access_binding=or_exprt(access_binding, binding);
 
-            add_new_heap_row_spec(old_value, (unsigned) access.location,
-                                  binding);
+            add_new_heap_row_spec(
+              old_value,
+              static_cast<unsigned>(access.location),
+              binding);
           }
         }
       }
@@ -1222,7 +1210,7 @@ Function: heap_domaint::get_iterator_bindings
 
 \*******************************************************************/
 
-const exprt heap_domaint::get_iterator_bindings() const
+exprt heap_domaint::get_iterator_bindings() const
 {
   return conjunction(iterator_bindings);
 }
@@ -1239,7 +1227,7 @@ Function: heap_domaint::get_aux_bindings
 
 \*******************************************************************/
 
-const exprt heap_domaint::get_aux_bindings() const
+exprt heap_domaint::get_aux_bindings() const
 {
   return conjunction(aux_bindings);
 }
@@ -1256,7 +1244,7 @@ Function: heap_domaint::get_input_bindings
 
 \*******************************************************************/
 
-const exprt heap_domaint::get_input_bindings() const
+exprt heap_domaint::get_input_bindings() const
 {
   return and_exprt(get_iterator_bindings(), get_aux_bindings());
 }
@@ -1333,9 +1321,13 @@ const exprt heap_domaint::iterator_access_bindings(
     else if(access.location!=list_iteratort::IN_LOC)
     {
       add_new_heap_row_spec(
-        recursive_member_symbol(r, access.fields.back(), list_iteratort::IN_LOC,
-                                ns),
-        (unsigned) access.location, conjunction(guards));
+        recursive_member_symbol(
+          r,
+          access.fields.back(),
+          list_iteratort::IN_LOC,
+          ns),
+        static_cast<unsigned>(access.location),
+        conjunction(guards));
     }
 
     guards.pop_back();
@@ -1370,7 +1362,8 @@ const std::set<symbol_exprt> heap_domaint::reachable_objects(
 {
   std::set<symbol_exprt> result;
 
-  if(!(src.id()==ID_symbol || src.id()==ID_member)) return result;
+  if(!(src.id()==ID_symbol || src.id()==ID_member))
+    return result;
 
   std::set<symbol_exprt> pointed_objs;
   if(src.id()==ID_member && to_member_expr(src).compound().get_bool(ID_pointed))
@@ -1404,18 +1397,21 @@ const std::set<symbol_exprt> heap_domaint::reachable_objects(
     }
   }
 
-  for(unsigned i=0; i<fields.size(); ++i)
+  for(std::size_t i=0; i<fields.size(); ++i)
   {
     for(const symbol_exprt &pointed_obj : pointed_objs)
     {
       // Create obj.member
-      symbol_exprt obj_member=recursive_member_symbol(pointed_obj, fields.at(i),
-                                                      list_iteratort::IN_LOC,
-                                                      ns);
+      symbol_exprt obj_member=recursive_member_symbol(
+        pointed_obj,
+        fields.at(i),
+        list_iteratort::IN_LOC,
+        ns);
 
       // Collect all reachable objects (from heap rows of the calling context)
       std::set<exprt> reachable_objs=collect_preconditions_rec(
-        obj_member, precondition);
+        obj_member,
+        precondition);
       for(const exprt &reachable : reachable_objs)
       {
         if(reachable.id()==ID_address_of)

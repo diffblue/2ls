@@ -13,9 +13,9 @@ Author: Viktor Malik
 #include "tpolyhedra_domain.h"
 #include "heap_domain.h"
 
-class heap_interval_domaint : public domaint
+class heap_interval_domaint:public domaint
 {
- public:
+public:
   heap_domaint heap_domain;
   tpolyhedra_domaint interval_domain;
 
@@ -33,7 +33,7 @@ class heap_interval_domaint : public domaint
 
   class heap_interval_valuet:public valuet
   {
-   public:
+  public:
     heap_domaint::heap_valuet heap_value;
     tpolyhedra_domaint::templ_valuet interval_value;
   };
@@ -46,10 +46,13 @@ class heap_interval_domaint : public domaint
     const namespacet &ns) const override;
 
   virtual void output_domain(
-    std::ostream &out, const namespacet &ns) const override;
+    std::ostream &out,
+    const namespacet &ns) const override;
 
-  virtual void project_on_vars(valuet &value, const var_sett &vars, exprt &result) override;
+  virtual void project_on_vars(
+    valuet &value,
+    const var_sett &vars,
+    exprt &result) override;
 };
-
 
 #endif // CPROVER_2LS_DOMAINS_HEAP_INTERVAL_DOMAIN_H

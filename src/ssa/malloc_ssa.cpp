@@ -229,7 +229,7 @@ void replace_malloc(
     exprt malloc_size=nil_exprt();
     Forall_goto_program_instructions(i_it, f_it->second.body)
     {
-      if (i_it->is_assign())
+      if(i_it->is_assign())
       {
         code_assignt &code_assign=to_code_assign(i_it->code);
         if(code_assign.lhs().id()==ID_symbol)
@@ -244,10 +244,13 @@ void replace_malloc(
              lhs_id=="__builtin_alloca::alloca_size")
             malloc_size=code_assign.rhs();
         }
-        replace_malloc_rec(code_assign.rhs(), suffix,
-          goto_model.symbol_table, malloc_size, i_it->location_number);
+        replace_malloc_rec(
+          code_assign.rhs(),
+          suffix,
+          goto_model.symbol_table,
+          malloc_size,
+          i_it->location_number);
       }
     }
   }
 }
-

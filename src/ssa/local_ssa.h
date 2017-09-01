@@ -179,7 +179,7 @@ public:
   void new_iterator_access(
     const member_exprt &expr,
     locationt loc,
-    int inst_loc_number);
+    unsigned inst_loc_number);
 
   exprt unknown_obj_eq(
     const symbol_exprt &obj,

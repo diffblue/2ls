@@ -241,7 +241,11 @@ void collect_objects_rec(
           (symbol->is_parameter || !symbol->is_procedure_local())))
       {
         collect_ptr_objects(
-          ssa_object.symbol_expr(), ns, objects, literals, false);
+          ssa_object.symbol_expr(),
+          ns,
+          objects,
+          literals,
+          false);
       }
     }
   }
