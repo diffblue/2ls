@@ -86,28 +86,30 @@ public:
     return get_root_object_rec(expr);
   }
 
-  inline bool is_unknown_obj()
+  bool is_unknown_obj()
   {
-    std::string id_str = id2string(identifier);
-    return id_str.find("$unknown") != std::string::npos;
+    std::string id_str=id2string(identifier);
+    return id_str.find("$unknown")!=std::string::npos;
   }
 
-  inline void set_flag(const irep_idt flag, bool value)
+  void set_flag(const irep_idt flag, bool value)
   {
     expr.set(flag, value);
   }
 
-  inline void set_iterator(const irep_idt &pointer_id, const std::vector<irep_idt> &fields)
+  void set_iterator(
+    const irep_idt &pointer_id,
+    const std::vector<irep_idt> &fields)
   {
-    assert(expr.id() == ID_symbol && expr.get_bool(ID_pointed));
+    assert(expr.id()==ID_symbol && expr.get_bool(ID_pointed));
     expr.set(ID_iterator, true);
     expr.set(ID_it_pointer, pointer_id);
     set_iterator_fields(expr, fields);
     expr.set(ID_it_init_value, to_symbol_expr(expr).get_identifier());
     expr.set(ID_it_init_value_level, expr.get(ID_pointed_level));
-    const irep_idt new_id = id2string(pointer_id) + id2string("'it");
+    const irep_idt new_id=id2string(pointer_id)+id2string("'it");
     to_symbol_expr(expr).set_identifier(new_id);
-    identifier = identifiert(new_id);
+    identifier=identifiert(new_id);
   }
 
 protected:
@@ -131,10 +133,11 @@ public:
 
   const ssa_heap_analysist &heap_analysis;
 
-  ssa_objectst(const goto_functionst::goto_functiont &goto_function,
-               const namespacet &ns,
-               const ssa_heap_analysist &_heap_analysis)
-      : heap_analysis(_heap_analysis)
+  ssa_objectst(
+    const goto_functionst::goto_functiont &goto_function,
+    const namespacet &ns,
+    const ssa_heap_analysist &_heap_analysis):
+    heap_analysis(_heap_analysis)
   {
     collect_objects(goto_function, ns);
     categorize_objects(goto_function, ns);

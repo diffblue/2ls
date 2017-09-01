@@ -238,9 +238,9 @@ public:
   // Getters for protected fields
   const std::list<symbol_exprt> get_new_heap_vars();
 
-  const exprt get_iterator_bindings() const;
-  const exprt get_aux_bindings() const;
-  const exprt get_input_bindings() const;
+  exprt get_iterator_bindings() const;
+  exprt get_aux_bindings() const;
+  exprt get_input_bindings() const;
 
 protected:
   templatet templ;
@@ -267,7 +267,7 @@ protected:
 
     heap_row_spect(
       const symbol_exprt &expr,
-      unsigned int location_number,
+      unsigned location_number,
       const exprt &post_guard):
       expr(expr), location_number(location_number), post_guard(post_guard) {}
 
@@ -334,8 +334,6 @@ protected:
 
   // Utility functions
   static int get_symbol_loc(const exprt &expr);
-
-  static std::string get_base_name(const exprt &expr);
 
   friend class strategy_solver_heapt;
 };

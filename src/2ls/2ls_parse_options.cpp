@@ -75,8 +75,8 @@ Function: twols_parse_optionst::twols_parse_optionst
 \*******************************************************************/
 
 twols_parse_optionst::twols_parse_optionst(int argc, const char **argv):
-parse_options_baset(TWOLS_OPTIONS, argc, argv),
-language_uit(cmdline, ui_message_handler),
+  parse_options_baset(TWOLS_OPTIONS, argc, argv),
+  language_uit(cmdline, ui_message_handler),
   ui_message_handler(cmdline, "2LS " TWOLS_VERSION),
   recursion_detected(false),
   threads_detected(false)
@@ -193,11 +193,11 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
     options.set_option("equalities", true);
     options.set_option("std-invariants", true);
   }
-  else if (cmdline.isset("heap"))
+  else if(cmdline.isset("heap"))
   {
     options.set_option("heap", true);
   }
-  else if (cmdline.isset("heap-interval"))
+  else if(cmdline.isset("heap-interval"))
   {
     options.set_option("heap-interval", true);
   }
@@ -447,7 +447,7 @@ int twols_parse_optionst::doit()
       Forall_goto_program_instructions(i_it, body)
       {
         if(i_it->is_assert())
-        i_it->type=goto_program_instruction_typet::ASSUME;
+          i_it->type=goto_program_instruction_typet::ASSUME;
       }
     }
   }
@@ -794,8 +794,8 @@ void twols_parse_optionst::show_stats(
         const code_assignt &assign=to_code_assign(instruction.code);
         expr_stats_rec(assign.lhs(), stats);
         expr_stats_rec(assign.rhs(), stats);
+        break;
       }
-      break;
       case ASSUME:
         expr_stats_rec(instruction.guard, stats);
         break;
@@ -1129,16 +1129,16 @@ bool twols_parse_optionst::process_goto_program(
 
 #if 1
     // Find, inline and remove malloc function
-    //TODO: find a better place for that
+    // TODO: find a better place for that
     Forall_goto_functions(it, goto_model.goto_functions)
     {
-      if (it->first == "malloc" || it->first == "free")
+      if(it->first=="malloc" || it->first=="free")
         it->second.type.set(ID_C_inlined, true);
     }
     goto_partial_inline(goto_model, ui_message_handler, 0);
     Forall_goto_functions(it, goto_model.goto_functions)
     {
-      if (it->first == "malloc" || it->first == "free")
+      if(it->first=="malloc" || it->first=="free")
         it->second.body.clear();
     }
 #endif
@@ -1157,7 +1157,7 @@ bool twols_parse_optionst::process_goto_program(
     goto_model.goto_functions.compute_loop_numbers();
 
     // Replace malloc
-    replace_malloc(goto_model,"");
+    replace_malloc(goto_model, "");
 
     // remove loop heads from function entries
     remove_loops_in_entry(goto_model);
@@ -1357,8 +1357,8 @@ void twols_parse_optionst::report_success()
     xml.data="SUCCESS";
     std::cout << xml;
     std::cout << std::endl;
+    break;
   }
-  break;
 
   default:
     assert(false);
@@ -1667,6 +1667,7 @@ void twols_parse_optionst::help()
     " --heap                       use heap domain\n"
     " --zones                      use zone domain\n"
     " --octagons                   use octagon domain\n"
+    " --heap-interval              use heap domain with interval domain for values\n"
     " --enum-solver                use solver based on model enumeration\n"
     " --binsearch-solver           use solver based on binary search\n"
     " --arrays                     do not ignore array contents\n"

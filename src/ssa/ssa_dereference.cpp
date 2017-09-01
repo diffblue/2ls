@@ -319,16 +319,18 @@ exprt dereference_rec(
 {
   if(src.id()==ID_dereference)
   {
-    const exprt &pointer=to_dereference_expr(src).pointer();
-    exprt pointer_deref=
-      dereference(pointer, ssa_value_domain, nondet_prefix, ns);
+    const exprt &pointer=dereference_rec(
+      to_dereference_expr(src).pointer(),
+      ssa_value_domain,
+      nondet_prefix,
+      ns);
 
     const typet &pointed_type=ns.follow(pointer.type().subtype());
 
     const ssa_value_domaint::valuest values=ssa_value_domain(pointer, ns);
 
     exprt result;
-    if (values.value_set.empty())
+    if(values.value_set.empty())
     {
       result=pointed_object(pointer, ns);
     }
@@ -340,7 +342,7 @@ exprt dereference_rec(
       {
         std::string dyn_type_name=pointed_type.id_string();
         if(pointed_type.id()==ID_struct)
-          dyn_type_name+= "_"+id2string(to_struct_type(pointed_type).get_tag());
+          dyn_type_name+="_"+id2string(to_struct_type(pointed_type).get_tag());
         irep_idt identifier="ssa::"+dyn_type_name+"_obj$unknown";
 
         result=symbol_exprt(identifier, src.type());
@@ -351,7 +353,7 @@ exprt dereference_rec(
         result=ssa_alias_value(src, (it++)->get_expr(), ns);
       }
 
-      for (; it!=values.value_set.end(); ++it)
+      for(; it!=values.value_set.end(); ++it)
       {
         exprt guard=ssa_alias_guard(src, it->get_expr(), ns);
         exprt value=ssa_alias_value(src, it->get_expr(), ns);

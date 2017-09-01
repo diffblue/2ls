@@ -8,6 +8,7 @@ Author: Viktor Malik
 
 //#define DEBUG_OUTPUT
 
+#include <ssa/ssa_inliner.h>
 #include "strategy_solver_heap.h"
 
 /*******************************************************************\
@@ -272,7 +273,8 @@ int strategy_solver_heapt::find_member_row(
   const domaint::kindt &kind)
 {
   assert(obj.id()==ID_symbol);
-  std::string obj_id=heap_domain.get_base_name(obj);
+  std::string obj_id=id2string(
+    ssa_inlinert::get_original_identifier(to_symbol_expr(obj)));
 
   int result=-1;
   int max_loc=-1;

@@ -10,7 +10,7 @@ Author: Viktor Malik
 #ifndef CPROVER_2LS_DOMAINS_LIST_ITERATOR_H
 #define CPROVER_2LS_DOMAINS_LIST_ITERATOR_H
 
-
+#include <limits>
 #include <util/std_expr.h>
 #include <set>
 
@@ -18,7 +18,7 @@ class list_iteratort
 {
 public:
   // No location (used for input variables)
-  static const int IN_LOC=-1;
+  static const unsigned IN_LOC=std::numeric_limits<unsigned>::max();
 
   /*******************************************************************\
    Access to an object from a list iterator.
@@ -33,7 +33,7 @@ public:
   {
   public:
     std::vector<irep_idt> fields;
-    int location;
+    unsigned location;
 
     equal_exprt binding(
       const symbol_exprt &lhs, const symbol_exprt &rhs,
@@ -59,7 +59,7 @@ public:
     return std::tie(pointer, fields)<std::tie(rhs.pointer, rhs.fields);
   }
 
-  void add_access(const member_exprt &expr, int location_number) const;
+  void add_access(const member_exprt &expr, unsigned location_number) const;
 
   const symbol_exprt access_symbol_expr(
     const accesst &access,
@@ -72,7 +72,7 @@ public:
 const symbol_exprt recursive_member_symbol(
   const symbol_exprt &object,
   const irep_idt &field,
-  const int loc_num,
+  const unsigned loc_num,
   const namespacet &ns);
 
 #endif // CPROVER_2LS_DOMAINS_LIST_ITERATOR_H

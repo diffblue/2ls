@@ -546,7 +546,8 @@ Function: ssa_value_domaint::valuest::merge
 \*******************************************************************/
 
 bool ssa_value_domaint::valuest::merge(
-  const valuest &src, bool is_loop_back,
+  const valuest &src,
+  bool is_loop_back,
   const irep_idt &object_id)
 {
   bool result=false;
