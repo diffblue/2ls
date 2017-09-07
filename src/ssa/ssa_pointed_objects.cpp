@@ -482,6 +482,24 @@ const exprt get_pointer_root(const exprt &expr, unsigned level)
   return pointer;
 }
 
+const irep_idt get_pointer_id(const exprt &expr)
+{
+  exprt pointer=get_pointer(expr, pointed_level(expr)-1);
+  if(pointer.id()==ID_symbol)
+    return to_symbol_expr(pointer).get_identifier();
+  else if(pointer.id()==ID_member)
+  {
+    const member_exprt &member=to_member_expr(pointer);
+    if(member.compound().id()==ID_symbol)
+    {
+      return id2string(to_symbol_expr(member.compound()).get_identifier())+
+             "."+
+             id2string(member.get_component_name());
+    }
+  }
+  return irep_idt();
+}
+
 /*******************************************************************\
 
 Function: iterator_to_initial_id
