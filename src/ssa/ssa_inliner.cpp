@@ -950,8 +950,8 @@ void ssa_inlinert::rename(exprt &expr)
     if(obj.id()==ID_symbol)
     {
       const std::string &obj_id=id2string(to_symbol_expr(obj).get_identifier());
-      if(obj_id.compare(obj_id.length()-4, 4, "'obj")==0)
-        id=obj_id.substr(0, obj_id.find_last_of("'"));
+      if(is_pointed(obj))
+        id = get_pointer_id(obj);
       else
         id=id2string(obj_id)+"'addr";
 

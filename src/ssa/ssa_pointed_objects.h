@@ -42,6 +42,7 @@ const std::vector<irep_idt> pointer_fields(
 
 const exprt get_pointer(const exprt &expr, unsigned level);
 const exprt get_pointer_root(const exprt &expr, unsigned level);
+const irep_idt get_pointer_id(const exprt &expr);
 
 void copy_pointed_info(exprt &dest, const exprt &src, const unsigned max_level);
 void copy_pointed_info(exprt &dest, const exprt &src);
