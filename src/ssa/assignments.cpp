@@ -40,6 +40,8 @@ void assignmentst::build_assignment_map(
       const code_assignt &code_assign=to_code_assign(it->code);
       exprt lhs_deref=dereference(code_assign.lhs(), ssa_value_ai[it], "", ns);
       assign(lhs_deref, it, ns);
+      exprt lhs_symbolic_deref=symbolic_dereference(code_assign.lhs(), ns);
+      assign(lhs_symbolic_deref, it, ns);
     }
     else if(it->is_decl())
     {

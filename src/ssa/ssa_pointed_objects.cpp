@@ -377,19 +377,30 @@ const exprt symbolic_dereference(const exprt &expr, const namespacet &ns)
     const ssa_objectt pointer_object(pointer, ns);
     assert(pointer_object);
 
-    return pointed_object(pointer_object.symbol_expr(), ns);
+    symbol_exprt sym_deref=pointed_object(pointer_object.symbol_expr(), ns);
+    sym_deref.set("#has_symbolic_deref", true);
+    return sym_deref;
   }
   else if(expr.id()==ID_member)
   {
     member_exprt member=to_member_expr(expr);
     member.compound()=symbolic_dereference(member.compound(), ns);
 
+    member.set(
+      "#has_symbolic_deref",
+      has_symbolic_deref(member.compound()));
+
     return member;
   }
   else
   {
     exprt tmp=expr;
-    Forall_operands(it, tmp)*it=symbolic_dereference(*it, ns);
+    Forall_operands(it, tmp)
+    {
+      *it=symbolic_dereference(*it, ns);
+      if(has_symbolic_deref(*it))
+        tmp.set("#has_symbolic_deref", true);
+    }
     return tmp;
   }
 }
@@ -528,4 +539,9 @@ const irep_idt iterator_to_initial_id(
   assert(id_str.find(iterator_id_str)!=std::string::npos);
   return id_str.replace(
     id_str.find(iterator_id_str), iterator_id_str.length(), init_value_id_str);
+}
+
+bool has_symbolic_deref(const exprt &expr)
+{
+  return expr.get_bool("#has_symbolic_deref");
 }

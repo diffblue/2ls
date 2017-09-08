@@ -286,6 +286,10 @@ void template_generator_baset::filter_heap_domain()
   {
     if(var.var.id()==ID_symbol && var.var.type().id()==ID_pointer)
     {
+      if(is_pointed(var.var) &&
+         id2string(to_symbol_expr(var.var).get_identifier()).find(".")!=
+         std::string::npos)
+        continue;
       // Filter out non-assigned OUT variables
       if(var.kind!=domaint::OUT ||
          ssa_inlinert::get_original_identifier(to_symbol_expr(var.var))!=
