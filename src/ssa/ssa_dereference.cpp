@@ -351,6 +351,7 @@ exprt dereference_rec(
       else
       {
         result=ssa_alias_value(src, (it++)->get_expr(), ns);
+        result.set("#heap_access", result.get_bool("#dynamic"));
       }
 
       for(; it!=values.value_set.end(); ++it)
@@ -358,6 +359,10 @@ exprt dereference_rec(
         exprt guard=ssa_alias_guard(src, it->get_expr(), ns);
         exprt value=ssa_alias_value(src, it->get_expr(), ns);
         result=if_exprt(guard, value, result);
+        result.set(
+          "#heap_access",
+          result.get_bool("#heap_access") ||
+          value.type().get_bool("#dynamic"));
       }
     }
 
@@ -368,6 +373,7 @@ exprt dereference_rec(
     member_exprt tmp=to_member_expr(src);
     tmp.struct_op()=
       dereference_rec(tmp.struct_op(), ssa_value_domain, nondet_prefix, ns);
+    tmp.set("#heap_access", tmp.struct_op().get_bool("#heap_access"));
 
     #ifdef DEBUG
     std::cout << "dereference_rec tmp: " << from_expr(ns, "", tmp) << '\n';
@@ -383,6 +389,7 @@ exprt dereference_rec(
     address_of_exprt tmp=to_address_of_expr(src);
     tmp.object()=
       dereference_rec(tmp.object(), ssa_value_domain, nondet_prefix, ns);
+    tmp.set("#heap_access", tmp.object().get_bool("#heap_access"));
 
     if(tmp.object().is_nil())
       return nil_exprt();
@@ -395,6 +402,8 @@ exprt dereference_rec(
     Forall_operands(it, tmp)
     {
       *it=dereference_rec(*it, ssa_value_domain, nondet_prefix, ns);
+      if(it->get_bool("#heap_access"))
+        tmp.set("#heap_access", true);
     }
     return tmp;
   }
