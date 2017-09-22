@@ -1913,8 +1913,10 @@ void local_SSAt::new_iterator_access(
     ID_it_init_value_level);
   const exprt init_pointer=get_pointer(expr.compound(), init_value_level-1);
 
-  list_iteratort iterator(to_symbol_expr(pointer_rhs), init_pointer,
-                          get_iterator_fields(expr.compound()));
+  list_iteratort iterator(
+    to_symbol_expr(pointer_rhs),
+    init_pointer,
+    get_iterator_fields(expr.compound()));
 
   auto it=iterators.insert(iterator);
   it.first->add_access(expr, inst_loc_number);

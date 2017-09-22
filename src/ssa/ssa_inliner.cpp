@@ -875,7 +875,7 @@ exprt ssa_inlinert::get_replace_globals_out(
                       callee.type(),
                       SSA,
                       loc);
-                  binding.push_back(equal_exprt(lhs_expr,rhs_expr));
+                  binding.push_back(equal_exprt(lhs_expr, rhs_expr));
 
                   if(type.id()==ID_struct)
                   {
