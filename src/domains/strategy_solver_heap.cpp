@@ -140,7 +140,17 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
           // Template row pointer points to the heap (p = &obj)
           debug() << from_expr(ns, "", ptr_value) << eom;
           assert(ptr_value.id()==ID_address_of);
-          assert(to_address_of_expr(ptr_value).object().id()==ID_symbol);
+          if(to_address_of_expr(ptr_value).object().id()!=ID_symbol)
+          {
+            // If solver did not return address of a symbol, it is considered
+            // as nondet value.
+            if(heap_domain.set_nondet(row, inv))
+            {
+              improved=true;
+              debug() << "Set nondet" << eom;
+            }
+            continue;
+          }
 
           symbol_exprt obj=to_symbol_expr(
             to_address_of_expr(ptr_value).object());
