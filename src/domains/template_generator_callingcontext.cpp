@@ -93,14 +93,17 @@ void template_generator_callingcontextt::collect_variables_callingcontext(
       v_it!=cs_globals_in.end(); v_it++)
   {
     symbol_exprt dummy;
-    if (ssa_inlinert::find_corresponding_symbol(*v_it, globals_in, dummy) ||
-        id2string(v_it->get_identifier()).find("dynamic_object$") != std::string::npos)
+    if(ssa_inlinert::find_corresponding_symbol(*v_it, globals_in, dummy) ||
+       id2string(v_it->get_identifier()).find("dynamic_object$")!=
+       std::string::npos)
+    {
       add_var(
         *v_it,
         guard,
         guard,
         domaint::OUT, // the same for both forward and backward
         var_specs);
+    }
   }
 
   // TODO: actually, the context should contain both,
@@ -108,17 +111,15 @@ void template_generator_callingcontextt::collect_variables_callingcontext(
   if(!forward)
     return;
 
-  std::set<symbol_exprt> args;
   // add function arguments
   for(exprt::operandst::const_iterator a_it=f_it->arguments().begin();
       a_it!=f_it->arguments().end(); a_it++)
   {
-    find_symbols(*a_it,args); 
-
+    std::set<symbol_exprt> args;
+    find_symbols(*a_it,args);
     exprt arg=*a_it;
-
+    add_vars(args, guard, guard, domaint::OUT, var_specs);
   }
-  add_vars(args, guard, guard, domaint::OUT, var_specs);
 }
 
 /*******************************************************************\

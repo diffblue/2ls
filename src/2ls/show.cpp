@@ -47,7 +47,11 @@ void show_assignments(
   ssa_objectst ssa_objects(goto_function, ns, heap_analysis);
   ssa_value_ait ssa_value_ai(goto_function, ns, heap_analysis);
   assignmentst assignments(
-    goto_function.body, ns, ssa_objects, ssa_value_ai, heap_analysis);
+    goto_function.body,
+    ns,
+    ssa_objects,
+    ssa_value_ai,
+    heap_analysis);
   assignments.output(ns, goto_function.body, out);
 }
 
@@ -89,7 +93,7 @@ void show_assignments(
       out << ">>>> Function " << f_it->first << "\n";
 
       show_assignments(f_it->second, ns, out, heap_analysis);
-        
+
       out << "\n";
     }
   }
@@ -107,15 +111,20 @@ Function: show_defs
 
 \*******************************************************************/
 
-void show_defs(const goto_functionst::goto_functiont &goto_function,
-               const namespacet &ns,
-               std::ostream &out,
-               const ssa_heap_analysist &heap_analysis)
+void show_defs(
+  const goto_functionst::goto_functiont &goto_function,
+  const namespacet &ns,
+  std::ostream &out,
+  const ssa_heap_analysist &heap_analysis)
 {
   ssa_objectst ssa_objects(goto_function, ns, heap_analysis);
   ssa_value_ait ssa_value_ai(goto_function, ns, heap_analysis);
   assignmentst assignments(
-    goto_function.body, ns, ssa_objects, ssa_value_ai, heap_analysis);
+    goto_function.body,
+    ns,
+    ssa_objects,
+    ssa_value_ai,
+    heap_analysis);
   ssa_ait ssa_analysis(assignments);
   ssa_analysis(goto_function, ns);
   ssa_analysis.output(ns, goto_function.body, out);
@@ -159,7 +168,7 @@ void show_defs(
       out << ">>>> Function " << f_it->first << "\n";
 
       show_defs(f_it->second, ns, out, heap_analysis);
-      
+
       out << "\n";
     }
   }
@@ -612,9 +621,8 @@ void show_value_sets(
       out << ">>>> Function " << f_it->first << "\n";
 
       show_value_set(f_it->second, ns, out, heap_analysis);
-      
+
       out << "\n";
     }
   }
 }
-

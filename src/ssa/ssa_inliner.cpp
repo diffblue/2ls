@@ -71,7 +71,13 @@ void ssa_inlinert::get_summary(
   // equalities for arguments
   bindings.push_back(
     get_replace_params(
-      summary.params, *f_it, cs_globals_in, cs_globals_out, SSA, summary, loc));
+      summary.params,
+      *f_it,
+      cs_globals_in,
+      cs_globals_out,
+      SSA,
+      summary,
+      loc));
 
   // equalities for globals_in
   if(forward)
@@ -99,11 +105,21 @@ void ssa_inlinert::get_summary(
   if(forward)
     bindings.push_back(
       get_replace_globals_out(
-        cs_globals_in, cs_globals_out, summary, *f_it, SSA, loc));
+        cs_globals_in,
+        cs_globals_out,
+        summary,
+        *f_it,
+        SSA,
+        loc));
   else
     bindings.push_back(
       get_replace_globals_out(
-        cs_globals_out, cs_globals_in, summary, *f_it, SSA, loc));
+        cs_globals_out,
+        cs_globals_in,
+        summary,
+        *f_it,
+        SSA,
+        loc));
 }
 
 /*******************************************************************\
@@ -561,17 +577,17 @@ exprt ssa_inlinert::get_replace_params(
 
     while(arg_type.id()==ID_pointer)
     {
-      std::list<exprt> args_deref_in=apply_dereference(
-        args_in, SSA.ssa_value_ai[loc], SSA.ns);
-      std::list<exprt> params_deref_in=apply_dereference(
-        params_in, summary.value_domain_in, SSA.ns);
+      std::list<exprt> args_deref_in=
+        apply_dereference(args_in, SSA.ssa_value_ai[loc], SSA.ns);
+      std::list<exprt> params_deref_in=
+        apply_dereference(params_in, summary.value_domain_in, SSA.ns);
 
       local_SSAt::locationt next_loc=loc;
       ++next_loc;
-      std::list<exprt> args_deref_out=apply_dereference(
-        args_out, SSA.ssa_value_ai[next_loc], SSA.ns);
-      std::list<exprt> params_deref_out=apply_dereference(
-        params_out, summary.value_domain_out, SSA.ns);
+      std::list<exprt> args_deref_out=
+        apply_dereference(args_out, SSA.ssa_value_ai[next_loc], SSA.ns);
+      std::list<exprt> params_deref_out=
+        apply_dereference(params_out, summary.value_domain_out, SSA.ns);
 
       const typet arg_symbol_type=arg_type.subtype();
       arg_type=SSA.ns.follow(arg_symbol_type);
@@ -586,33 +602,40 @@ exprt ssa_inlinert::get_replace_params(
 
         for(const exprt &a : args_deref_in)
         {
-          std::list<exprt> aliases=apply_dereference(
-            {a}, SSA.ssa_value_ai[next_loc], SSA.ns);
+          std::list<exprt> aliases=
+            apply_dereference({a}, SSA.ssa_value_ai[next_loc], SSA.ns);
           aliases.push_front(a);
 
           for(auto &alias : aliases)
           {
-            // Bind argument address
-            c.push_back(equal_exprt(
-              param_out_transformer(alias, arg_type, summary.globals_out),
+            const exprt lhs_expr=
+              param_out_transformer(alias, arg_type, summary.globals_out);
+            const exprt rhs_expr=
               arg_out_transformer(
-                alias, arg_symbol_type, params_deref_out.begin()->type(), SSA,
-                loc)));
+                alias,
+                arg_symbol_type,
+                params_deref_out.begin()->type(),
+                SSA,
+                loc);
+            // Bind argument address
+            c.push_back(equal_exprt(lhs_expr, rhs_expr));
 
             for(auto &component : to_struct_type(arg_type).components())
             {
+              const exprt lhs_comp_expr=
+                param_in_member_transformer(alias, component);
+              const exprt rhs_comp_expr=
+                arg_in_member_transformer(alias, component, SSA, loc);
               // Bind argument members at the input
-              c.push_back(equal_exprt(
-                param_in_member_transformer(alias, component),
-                arg_in_member_transformer(alias, component, SSA, loc)));
+              c.push_back(equal_exprt(lhs_comp_expr, rhs_comp_expr));
             }
           }
         }
 
         for(const exprt &a : args_deref_out)
         {
-          std::list<exprt> aliases=apply_dereference(
-            {a}, SSA.ssa_value_ai[next_loc], SSA.ns);
+          std::list<exprt> aliases=
+            apply_dereference({a}, SSA.ssa_value_ai[next_loc], SSA.ns);
           aliases.push_front(a);
           for(auto &alias : aliases)
           {
@@ -632,10 +655,9 @@ exprt ssa_inlinert::get_replace_params(
                  arg_member, summary.globals_out, member_lhs_out))
               {
                 rename(member_lhs_out);
-                c.push_back(
-                  equal_exprt(
-                    member_lhs_out,
-                    arg_out_member_transformer(alias, component, SSA, loc)));
+                const exprt arg_out=
+                  arg_out_member_transformer(alias, component, SSA, loc);
+                c.push_back(equal_exprt(member_lhs_out, arg_out));
               }
             }
           }
@@ -653,17 +675,19 @@ exprt ssa_inlinert::get_replace_params(
           for(const exprt &a_in : args_deref_in)
           {
             exprt::operandst binding;
-            binding.push_back(equal_exprt(
-              param_in_transformer(p_in),
-              arg_in_transformer(a_in, SSA, loc)));
+            const exprt lhs_expr=param_in_transformer(p_in);
+            const exprt rhs_expr=arg_in_transformer(a_in, SSA, loc);
+            binding.push_back(equal_exprt(lhs_expr, rhs_expr));
 
             if(arg_type.id()==ID_struct)
             {
               for(auto &component : to_struct_type(arg_type).components())
               {
-                binding.push_back(equal_exprt(
-                  param_in_member_transformer(p_in, component),
-                  arg_in_member_transformer(a_in, component, SSA, loc)));
+                const exprt lhs_comp_expr=
+                  param_in_member_transformer(p_in, component);
+                const exprt rhs_comp_expr=
+                  arg_in_member_transformer(a_in, component, SSA, loc);
+                binding.push_back(equal_exprt(lhs_comp_expr, rhs_comp_expr));
               }
             }
             d.push_back(conjunction(binding));
@@ -680,19 +704,32 @@ exprt ssa_inlinert::get_replace_params(
               {
                 exprt::operandst binding;
 
-                binding.push_back(equal_exprt(
-                  param_out_transformer(p_out, arg_type, summary.globals_out),
+                const exprt lhs_expr=
+                  param_out_transformer(p_out, arg_type, summary.globals_out);
+                const exprt rhs_expr=
                   arg_out_transformer(
-                    a_out, arg_symbol_type, p_out.type(), SSA, loc)));
+                    a_out,
+                    arg_symbol_type,
+                    p_out.type(),
+                    SSA,
+                    loc);
+                binding.push_back(equal_exprt(lhs_expr, rhs_expr));
 
                 if(arg_type.id()==ID_struct)
                 {
                   for(auto &component : to_struct_type(arg_type).components())
                   {
-                    binding.push_back(equal_exprt(
+                    const exprt lhs_comp_expr=
                       param_out_member_transformer(
-                        p_out, component, summary.globals_out),
-                      arg_out_member_transformer(a_out, component, SSA, loc)));
+                        p_out,
+                        component,
+                        summary.globals_out);
+                    const exprt rhs_comp_expr=
+                      arg_out_member_transformer(a_out, component, SSA, loc);
+                    binding.push_back(
+                      equal_exprt(
+                        lhs_comp_expr,
+                        rhs_comp_expr));
                   }
                 }
                 d.push_back(conjunction(binding));
@@ -709,7 +746,8 @@ exprt ssa_inlinert::get_replace_params(
       params_in=params_deref_in;
       params_out=params_deref_out;
 
-      if(args_in.empty() && args_out.empty()) break;
+      if(args_in.empty() && args_out.empty())
+        break;
     }
   }
   return conjunction(c);
@@ -808,10 +846,13 @@ exprt ssa_inlinert::get_replace_globals_out(
         {
           local_SSAt::locationt next_loc=loc;
           ++next_loc;
-          std::list<exprt> caller_deref=apply_dereference(
-            caller_global, SSA.ssa_value_ai[next_loc], SSA.ns);
-          std::list<exprt> callee_deref=apply_dereference(
-            callee_global, summary.value_domain_out, SSA.ns);
+          std::list<exprt> caller_deref=
+            apply_dereference(
+              caller_global,
+              SSA.ssa_value_ai[next_loc],
+              SSA.ns);
+          std::list<exprt> callee_deref=
+            apply_dereference(callee_global, summary.value_domain_out, SSA.ns);
 
           if(!callee_deref.empty())
           {
@@ -826,20 +867,32 @@ exprt ssa_inlinert::get_replace_globals_out(
                 if(!cs_heap_covered(caller))
                 {
                   exprt::operandst binding;
-                  binding.push_back(equal_exprt(
-                    param_out_transformer(callee, type, summary.globals_out),
+                  const exprt lhs_expr=
+                    param_out_transformer(callee, type, summary.globals_out);
+                  const exprt rhs_expr=
                     arg_out_transformer(
-                      caller, symbol_type, callee.type(), SSA, loc)));
+                      caller,
+                      symbol_type,
+                      callee.type(),
+                      SSA,
+                      loc);
+                  binding.push_back(equal_exprt(lhs_expr, rhs_expr));
 
                   if(type.id()==ID_struct)
                   {
                     for(auto &component : to_struct_type(type).components())
                     {
-                      binding.push_back(equal_exprt(
+                      const exprt lhs_comp_expr=
                         param_out_member_transformer(
-                          callee, component, summary.globals_out),
-                        arg_out_member_transformer(
-                          caller, component, SSA, loc)));
+                          callee,
+                          component,
+                          summary.globals_out);
+                      const exprt rhs_comp_expr=
+                        arg_out_member_transformer(caller, component, SSA, loc);
+                      binding.push_back(
+                        equal_exprt(
+                          lhs_comp_expr,
+                          rhs_comp_expr));
                     }
                   }
 
@@ -855,7 +908,8 @@ exprt ssa_inlinert::get_replace_globals_out(
           callee_global=callee_deref;
           caller_global=caller_deref;
 
-          if(caller_global.empty()) break;
+          if(caller_global.empty())
+            break;
         }
       }
       else
@@ -950,7 +1004,7 @@ void ssa_inlinert::rename(exprt &expr)
     {
       const std::string &obj_id=id2string(to_symbol_expr(obj).get_identifier());
       if(is_pointed(obj))
-        id = get_pointer_id(obj);
+        id=get_pointer_id(obj);
       else
         id=id2string(obj_id)+"'addr";
 
@@ -1099,9 +1153,9 @@ void ssa_inlinert::rename_to_callee(
 #endif
       // rename objects not present in globals in to non-suffix version
       symbol_exprt to_replace(get_original_identifier(*it), it->type());
-      replace_map[*it] = to_replace;
+      replace_map[*it]=to_replace;
       // to propagate #dynamic flag on type
-      replace_map[to_replace] = to_replace;
+      replace_map[to_replace]=to_replace;
     }
   }
 
@@ -1297,8 +1351,10 @@ Function: ssa_inlinert::contains_iterator
 
 bool ssa_inlinert::contains_iterator(const std::list<exprt> &params)
 {
-  auto it=std::find_if(params.begin(), params.end(),
-                       [](const exprt &p) { return is_iterator(p); });
+  auto it=std::find_if(
+    params.begin(),
+    params.end(),
+    [](const exprt &p) { return is_iterator(p); });
   return (it!=params.end());
 }
 
@@ -1335,7 +1391,8 @@ Function: ssa_inlinert::arg_in_transformer
 \*******************************************************************/
 
 exprt ssa_inlinert::arg_in_transformer(
-  const exprt &arg, const local_SSAt &SSA,
+  const exprt &arg,
+  const local_SSAt &SSA,
   local_SSAt::locationt loc)
 {
   return SSA.read_rhs(arg, loc);
@@ -1380,10 +1437,13 @@ Function: ssa_inlinert::arg_in_member_transformer
 exprt ssa_inlinert::arg_in_member_transformer(
   const exprt &arg,
   const struct_union_typet::componentt &component,
-  const local_SSAt &SSA, local_SSAt::locationt loc)
+  const local_SSAt &SSA,
+  local_SSAt::locationt loc)
 {
-  symbol_exprt arg_member(id2string(to_symbol_expr(arg).get_identifier())+"."+
-                          id2string(component.get_name()), component.type());
+  symbol_exprt arg_member(
+    id2string(to_symbol_expr(arg).get_identifier())+"."+
+      id2string(component.get_name()),
+    component.type());
   return SSA.read_rhs(arg_member, loc);
 }
 
@@ -1400,7 +1460,8 @@ Function: ssa_inlinert::param_out_transformer
 \*******************************************************************/
 
 exprt ssa_inlinert::param_out_transformer(
-  const exprt &param, const typet &type,
+  const exprt &param,
+  const typet &type,
   const local_SSAt::var_sett &globals_out)
 {
   assert(param.id()==ID_symbol);
@@ -1433,8 +1494,10 @@ Function: ssa_inlinert::arg_out_transformer
 \*******************************************************************/
 
 exprt ssa_inlinert::arg_out_transformer(
-  const exprt &arg, const typet &arg_symbol_type,
-  const typet &param_type, const local_SSAt &SSA,
+  const exprt &arg,
+  const typet &arg_symbol_type,
+  const typet &param_type,
+  const local_SSAt &SSA,
   local_SSAt::locationt loc)
 {
   const typet &arg_type=SSA.ns.follow(arg_symbol_type);
@@ -1455,8 +1518,8 @@ exprt ssa_inlinert::arg_out_transformer(
   }
   else
   {
-    const symbol_exprt &arg_out=SSA.name(ssa_objectt(arg, SSA.ns),
-                                         local_SSAt::OUT, loc);
+    const symbol_exprt &arg_out=
+      SSA.name(ssa_objectt(arg, SSA.ns), local_SSAt::OUT, loc);
     covered_cs_heap_out.insert(arg_out);
     return arg_out;
   }
@@ -1505,13 +1568,14 @@ Function: ssa_inlinert::artg_out_transformer
 exprt ssa_inlinert::arg_out_member_transformer(
   const exprt &arg,
   const struct_union_typet::componentt &component,
-  const local_SSAt &SSA, local_SSAt::locationt loc)
+  const local_SSAt &SSA,
+  local_SSAt::locationt loc)
 {
-  symbol_exprt arg_member(id2string(to_symbol_expr(arg).get_identifier())+"."+
-                          id2string(component.get_name()), component.type());
-  const symbol_exprt &arg_member_out=SSA.name(ssa_objectt(arg_member, SSA.ns),
-                                              local_SSAt::OUT,
-                                              loc);
+  symbol_exprt arg_member(
+    id2string(to_symbol_expr(arg).get_identifier())+"."+
+    id2string(component.get_name()), component.type());
+  const symbol_exprt &arg_member_out=
+    SSA.name(ssa_objectt(arg_member, SSA.ns), local_SSAt::OUT, loc);
   covered_cs_heap_out.insert(arg_member_out);
   return arg_member_out;
 }
@@ -1550,7 +1614,8 @@ Function: ssa_inlinert::get_replace_new_objects
 exprt ssa_inlinert::get_replace_new_objects(
   const local_SSAt &SSA,
   const function_application_exprt funapp_expr,
-  local_SSAt::locationt loc, const summaryt &summary)
+  local_SSAt::locationt loc,
+  const summaryt &summary)
 {
   exprt::operandst binding;
 
@@ -1574,19 +1639,24 @@ exprt ssa_inlinert::get_replace_new_objects(
       const typet symbol_type=caller_it->type();
       const typet type=SSA.ns.follow(symbol_type);
 
-      binding.push_back(equal_exprt(
-        param_out_transformer(*callee_it, type, summary.globals_out),
-        arg_out_transformer(*caller_it, symbol_type, type, SSA, loc)));
+      const exprt lhs_expr=
+        param_out_transformer(*callee_it, type, summary.globals_out);
+      const exprt rhs_expr=
+        arg_out_transformer(*caller_it, symbol_type, type, SSA, loc);
+      binding.push_back(equal_exprt(lhs_expr, rhs_expr));
 
       if(type.id()==ID_struct)
       {
         for(auto &component : to_struct_type(type).components())
         {
-          binding.push_back(
-            equal_exprt(
-              param_out_member_transformer(
-                *callee_it, component, summary.globals_out),
-              arg_out_member_transformer(*caller_it, component, SSA, loc)));
+          const exprt lhs_comp_expr=
+            param_out_member_transformer(
+              *callee_it,
+              component,
+              summary.globals_out);
+          const exprt rhs_comp_expr=
+            arg_out_member_transformer(*caller_it, component, SSA, loc);
+          binding.push_back(equal_exprt(lhs_comp_expr, rhs_comp_expr));
         }
       }
     }

@@ -110,7 +110,7 @@ public:
       exprt destination;
       mutable std::set<dyn_objt> dyn_objects;
 
-      patht(const exprt &dest_):destination(dest_) {}
+      patht(const exprt &dest_):destination(dest_) {} // NOLINT(*)
 
       patht(const exprt &dest_, const std::set<dyn_objt> &dyn_objs_):
         destination(dest_), dyn_objects(dyn_objs_) {}
@@ -191,7 +191,8 @@ public:
   virtual void initialize(valuet &value) override;
 
   void initialize_domain(
-    const local_SSAt &SSA, const exprt &precondition,
+    const local_SSAt &SSA,
+    const exprt &precondition,
     template_generator_baset &template_generator);
 
   // Value -> constraints
@@ -218,7 +219,8 @@ public:
 
   // Printing
   virtual void output_value(
-    std::ostream &out, const valuet &value,
+    std::ostream &out,
+    const valuet &value,
     const namespacet &ns) const override;
 
   virtual void output_domain(

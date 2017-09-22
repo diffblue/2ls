@@ -36,8 +36,10 @@ public:
     unsigned location;
 
     equal_exprt binding(
-      const symbol_exprt &lhs, const symbol_exprt &rhs,
-      const unsigned level, const namespacet &ns) const;
+      const symbol_exprt &lhs,
+      const symbol_exprt &rhs,
+      const unsigned level,
+      const namespacet &ns) const;
   };
 
   // Pointer variable used to iterate the list (induction pointer)

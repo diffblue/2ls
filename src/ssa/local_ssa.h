@@ -42,7 +42,11 @@ public:
     ssa_objects(_goto_function, ns, _heap_analysis),
     ssa_value_ai(_goto_function, ns, _heap_analysis),
     assignments(
-      _goto_function.body, ns, ssa_objects, ssa_value_ai, heap_analysis),
+      _goto_function.body,
+      ns,
+      ssa_objects,
+      ssa_value_ai,
+      heap_analysis),
     guard_map(_goto_function.body),
     ssa_analysis(assignments),
     suffix(_suffix)
@@ -155,7 +159,9 @@ public:
   // auxiliary functions
   enum kindt { PHI, OUT, LOOP_BACK, LOOP_SELECT };
   virtual symbol_exprt name(
-    const ssa_objectt &, kindt kind, locationt loc) const;
+    const ssa_objectt &,
+    kindt kind,
+    locationt loc) const;
   symbol_exprt name(const ssa_objectt &, const ssa_domaint::deft &) const;
   symbol_exprt name_input(const ssa_objectt &) const;
   virtual exprt nondet_symbol(
@@ -172,7 +178,10 @@ public:
   symbol_exprt read_rhs(const ssa_objectt &, locationt loc) const;
   exprt read_node_in(const ssa_objectt &, locationt loc) const;
   void assign_rec(
-    const exprt &lhs, const exprt &rhs, const exprt &guard, locationt loc);
+    const exprt &lhs,
+    const exprt &rhs,
+    const exprt &guard,
+    locationt loc);
 
   void collect_iterators_rhs(const exprt &expr, locationt loc);
   void collect_iterators_lhs(const ssa_objectt &object, locationt loc);
@@ -215,7 +224,8 @@ public:
   nodest::iterator find_node(locationt loc);
   nodest::const_iterator find_node(locationt loc) const;
   void find_nodes(
-    locationt loc, std::list<nodest::const_iterator> &_nodes) const;
+    locationt loc,
+    std::list<nodest::const_iterator> &_nodes) const;
 
   inline locationt get_location(unsigned location_number) const
   {
