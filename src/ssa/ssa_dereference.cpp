@@ -393,7 +393,9 @@ exprt dereference_rec(
   {
     exprt tmp=src;
     Forall_operands(it, tmp)
+    {
       *it=dereference_rec(*it, ssa_value_domain, nondet_prefix, ns);
+    }
     return tmp;
   }
 }

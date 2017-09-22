@@ -41,9 +41,10 @@ public:
 
     void output(std::ostream &, const namespacet &) const;
 
-    bool merge(const valuest &src,
-               bool is_loop_back=false,
-               const irep_idt &object_id=irep_idt());
+    bool merge(
+      const valuest &src,
+      bool is_loop_back=false,
+      const irep_idt &object_id=irep_idt());
 
     inline void clear()
     {
@@ -103,16 +104,19 @@ protected:
 class ssa_value_ait:public ait<ssa_value_domaint>
 {
 public:
-  ssa_value_ait(const goto_functionst::goto_functiont &goto_function,
-                const namespacet &ns_,
-                const ssa_heap_analysist &_heap_analysis)
-      : ns(ns_), heap_analysis(_heap_analysis)
+  ssa_value_ait(
+    const goto_functionst::goto_functiont &goto_function,
+    const namespacet &ns_,
+    const ssa_heap_analysist &_heap_analysis):
+    ns(ns_),
+    heap_analysis(_heap_analysis)
   {
     operator()(goto_function, ns_);
   }
 
 protected:
-  virtual void initialize(const goto_functionst::goto_functiont &goto_function) override;
+  virtual void initialize(
+    const goto_functionst::goto_functiont &goto_function) override;
 
   void assign_ptr_param(const exprt &expr, ssa_value_domaint &entry);
 

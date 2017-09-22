@@ -161,7 +161,7 @@ protected:
   void replace_types_rec(const replace_symbolt &replace_const, exprt &expr);
   exprt evaluate_casts_in_constants(
     const exprt &expr,
-    const typet& parent_type,
+    const typet &parent_type,
     bool &valid);
   void remove_multiple_dereferences(goto_modelt &goto_model);
   void remove_multiple_dereferences(
@@ -177,7 +177,9 @@ protected:
   void remove_loops_in_entry(goto_modelt &goto_model);
   void create_dynamic_objects(goto_modelt &goto_model);
   void add_dynamic_object_rec(exprt &expr, symbol_tablet &symbol_table);
-  void add_dynamic_object_symbols(const ssa_heap_analysist &heap_analysis, goto_modelt &goto_model);
+  void add_dynamic_object_symbols(
+    const ssa_heap_analysist &heap_analysis,
+    goto_modelt &goto_model);
 };
 
 #endif

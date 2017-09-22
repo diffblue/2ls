@@ -109,15 +109,23 @@ void ssa_analyzert::operator()(
   {
     strategy_solver=new strategy_solver_heapt(
       *static_cast<heap_domaint *>(domain),
-      solver, SSA, precondition, get_message_handler(), template_generator);
+      solver,
+      SSA,
+      precondition,
+      get_message_handler(),
+      template_generator);
     result=new heap_domaint::heap_valuet();
   }
-  else if (template_generator.options.get_bool_option("heap-interval"))
+  else if(template_generator.options.get_bool_option("heap-interval"))
   {
-    strategy_solver = new strategy_solver_heap_intervalt(
-        *static_cast<heap_interval_domaint *>(domain), solver, SSA, precondition,
-        get_message_handler(), template_generator);
-    result = new heap_interval_domaint::heap_interval_valuet();
+    strategy_solver=new strategy_solver_heap_intervalt(
+      *static_cast<heap_interval_domaint *>(domain),
+      solver,
+      SSA,
+      precondition,
+      get_message_handler(),
+      template_generator);
+    result=new heap_interval_domaint::heap_interval_valuet();
   }
   else
   {
@@ -190,9 +198,9 @@ Function: ssa_analyzert::update_heap_out
 \*******************************************************************/
 void ssa_analyzert::update_heap_out(summaryt::var_sett &out)
 {
-  heap_domaint &heap_domain = static_cast<heap_domaint&>(*domain);
+  heap_domaint &heap_domain=static_cast<heap_domaint &>(*domain);
 
-  auto new_heap_vars = heap_domain.get_new_heap_vars();
+  auto new_heap_vars=heap_domain.get_new_heap_vars();
   out.insert(new_heap_vars.begin(), new_heap_vars.end());
 }
 

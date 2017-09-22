@@ -522,7 +522,7 @@ int twols_parse_optionst::doit()
     heap_analysis(goto_model.goto_functions);
     add_dynamic_object_symbols(heap_analysis, goto_model);
   }
-  
+
   try
   {
     std::unique_ptr<summary_checker_baset> checker;
@@ -1063,7 +1063,8 @@ bool twols_parse_optionst::process_goto_program(
   try
   {
     status() << "Function Pointer Removal" << eom;
-    remove_function_pointers(goto_model, cmdline.isset("pointer-check"));
+    remove_function_pointers(
+      goto_model, cmdline.isset("pointer-check"));
 
     // do partial inlining
     if(options.get_bool_option("inline-partial"))
@@ -1667,7 +1668,7 @@ void twols_parse_optionst::help()
     " --heap                       use heap domain\n"
     " --zones                      use zone domain\n"
     " --octagons                   use octagon domain\n"
-    " --heap-interval              use heap domain with interval domain for values\n"
+    " --heap-interval              use heap domain with interval domain for values\n" // NOLINT(*)
     " --enum-solver                use solver based on model enumeration\n"
     " --binsearch-solver           use solver based on binary search\n"
     " --arrays                     do not ignore array contents\n"

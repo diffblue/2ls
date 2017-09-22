@@ -67,7 +67,7 @@ void summary_checker_baset::SSA_functions(
 
     ssa_db.create(f_it->first, f_it->second, ns, heap_analysis);
     local_SSAt &SSA=ssa_db.get(f_it->first);
-    
+
     // simplify, if requested
     if(simplify)
     {

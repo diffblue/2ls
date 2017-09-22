@@ -758,8 +758,8 @@ void template_generator_baset::instantiate_standard_domains(
   else if(options.get_bool_option("heap-interval"))
   {
     filter_heap_interval_domain();
-    domain_ptr=new heap_interval_domaint(
-      domain_number, renaming_map, var_specs, SSA.ns);
+    domain_ptr=
+      new heap_interval_domaint(domain_number, renaming_map, var_specs, SSA.ns);
   }
 }
 

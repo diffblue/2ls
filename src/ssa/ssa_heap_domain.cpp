@@ -53,7 +53,9 @@ void ssa_heap_domaint::transform(
            function_map[function].new_objects.end())
         {
           function_map[function].new_objects.insert(
-            std::make_pair(new_obj, std::set<exprt>()));
+            std::make_pair(
+              new_obj,
+              std::set<exprt>()));
         }
 
         for(auto &expr : obj.second)
@@ -159,7 +161,8 @@ bool ssa_heap_domaint::merge(
             other_object.second.begin(),
             other_object.second.end(),
             std::inserter(
-              intersection, intersection.begin()));
+              intersection,
+              intersection.begin()));
           if(!intersection.empty())
             objects[other_object.first]=intersection;
           else
@@ -227,7 +230,9 @@ void ssa_heap_domaint::assign_rhs(
        function_info.new_objects.end())
     {
       function_info.new_objects.insert(
-        std::make_pair(new_object, std::set<exprt>()));
+        std::make_pair(
+          new_object,
+          std::set<exprt>()));
     }
 
     objects={new_object};
@@ -376,7 +381,8 @@ Function: ssa_heap_domaint::rename_to_caller
 
 \*******************************************************************/
 void ssa_heap_domaint::rename_to_caller(
-  symbol_exprt &object, domain_baset::locationt loc,
+  symbol_exprt &object,
+  domain_baset::locationt loc,
   unsigned &index) const
 {
   object.set_identifier(

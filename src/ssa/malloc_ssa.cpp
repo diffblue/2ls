@@ -15,8 +15,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/pointer_offset_size.h>
 
 #include <ansi-c/c_types.h>
-#include <goto-programs/goto_inline.h>
-#include <util/ui_message.h>
 
 #include "malloc_ssa.h"
 

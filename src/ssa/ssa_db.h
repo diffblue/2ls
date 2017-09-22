@@ -12,7 +12,6 @@ Author: Peter Schrammel
 #include <util/options.h>
 
 #include <ssa/unwindable_local_ssa.h>
-#include <ssa/ssa_heap_domain.h>
 #include <domains/incremental_solver.h>
 #include <goto-programs/goto_functions.h>
 

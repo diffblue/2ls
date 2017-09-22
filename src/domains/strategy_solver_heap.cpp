@@ -6,7 +6,7 @@ Author: Viktor Malik
 
 \*******************************************************************/
 
-//#define DEBUG_OUTPUT
+// #define DEBUG_OUTPUT
 
 #include <ssa/ssa_inliner.h>
 #include "strategy_solver_heap.h"
@@ -42,7 +42,9 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
   // Exit value constraints
   exprt::operandst strategy_cond_exprs;
   heap_domain.make_not_post_constraints(
-    inv, strategy_cond_exprs, strategy_value_exprs);
+    inv,
+    strategy_cond_exprs,
+    strategy_value_exprs);
 
   strategy_cond_literals.resize(strategy_cond_exprs.size());
 
@@ -128,10 +130,9 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
           if(heap_domain.add_points_to(row, inv, ptr_value))
           {
             improved=true;
-            debug() << "Add "
-                    << (templ_row.mem_kind==heap_domaint::STACK ? "points to "
-                                                                : "path to ")
-                    << from_expr(ns, "", ptr_value) << eom;
+            const std::string info=
+              templ_row.mem_kind==heap_domaint::STACK?"points to ":"path to ";
+            debug() << "Add " << info << from_expr(ns, "", ptr_value) << eom;
           }
         }
         else if(ptr_value.id()==ID_address_of)
@@ -160,10 +161,9 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
           if(heap_domain.add_points_to(row, inv, obj))
           {
             improved=true;
-            debug() << "Add "
-                    << (templ_row.mem_kind==heap_domaint::STACK ? "points to "
-                                                                : "path to ")
-                    << from_expr(ns, "", obj) << eom;
+            const std::string info=
+              templ_row.mem_kind==heap_domaint::STACK?"points to ":"path to ";
+            debug() << "Add " << info << from_expr(ns, "", obj) << eom;
           }
 
           // If the template row is of heap kind, we need to ensure the
@@ -176,18 +176,24 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
             // Find row with corresponding member field of the pointed object
             // (obj.member)
             int member_val_index;
-            member_val_index=find_member_row(
-              obj, templ_row.member, actual_loc, templ_row.kind);
+            member_val_index=
+              find_member_row(
+                obj,
+                templ_row.member,
+                actual_loc,
+                templ_row.kind);
             if(member_val_index>=0 && !inv[member_val_index].nondet)
             {
               // Add all paths from obj.next to p
               if(heap_domain.add_transitivity(
-                   row, (unsigned) member_val_index, inv))
+                row,
+                static_cast<unsigned>(member_val_index),
+                inv))
               {
                 improved=true;
-                debug() << "Add all paths: "
-                        << from_expr(
-                             ns, "", heap_domain.templ[member_val_index].expr)
+                const std::string expr_str=
+                  from_expr(ns, "", heap_domain.templ[member_val_index].expr);
+                debug() << "Add all paths: " << expr_str
                         << ", through: " << from_expr(ns, "", obj) << eom;
               }
             }

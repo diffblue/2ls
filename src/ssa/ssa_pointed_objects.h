@@ -36,7 +36,9 @@ unsigned it_value_level(const exprt &expr);
 
 const irep_idt pointer_root_id(const exprt &expr);
 const irep_idt pointer_level_field(const exprt &expr, const unsigned level);
-const std::vector<irep_idt> pointer_fields(const exprt &expr, const unsigned from_level);
+const std::vector<irep_idt> pointer_fields(
+  const exprt &expr,
+  const unsigned from_level);
 
 const exprt get_pointer(const exprt &expr, unsigned level);
 const exprt get_pointer_root(const exprt &expr, unsigned level);
@@ -51,6 +53,8 @@ const exprt symbolic_dereference(const exprt &expr, const namespacet &ns);
 void set_iterator_fields(exprt &dest, const std::vector<irep_idt> fields);
 const std::vector<irep_idt> get_iterator_fields(const exprt &expr);
 
-const irep_idt iterator_to_initial_id(const exprt &expr, const irep_idt &expr_id);
+const irep_idt iterator_to_initial_id(
+  const exprt &expr,
+  const irep_idt &expr_id);
 
 #endif // CPROVER_2LS_SSA_SSA_POINTED_OBJECTS_H

@@ -33,7 +33,10 @@ void heap_domaint::initialize(domaint::valuet &value)
       val.emplace_back(new stack_row_valuet());
     else if(templ_row.mem_kind==HEAP)
       val.emplace_back(
-        new heap_row_valuet(std::make_pair(templ_row.dyn_obj, templ_row.expr)));
+        new heap_row_valuet(
+          std::make_pair(
+            templ_row.dyn_obj,
+            templ_row.expr)));
     else
       assert(false);
   }
@@ -175,8 +178,8 @@ void heap_domaint::make_not_post_constraints(
   {
     value_exprs[row]=templ[row].expr;
     rename(value_exprs[row]);
-    cond_exprs[row]=and_exprt(templ[row].aux_expr, not_exprt(
-      get_row_post_constraint(row, value[row])));
+    const exprt row_expr=not_exprt(get_row_post_constraint(row, value[row]));
+    cond_exprs[row]=and_exprt(templ[row].aux_expr, row_expr);
   }
 }
 
@@ -206,8 +209,8 @@ exprt heap_domaint::get_row_pre_constraint(
   if(k==OUTHEAP && row_value.empty())
     return true_exprt();
 
-  return implies_exprt(
-    templ_row.pre_guard, row_value.get_row_expr(templ_row.expr, false));
+  const exprt row_expr=row_value.get_row_expr(templ_row.expr, false);
+  return implies_exprt(templ_row.pre_guard, row_expr);
 }
 
 /*******************************************************************\
@@ -232,9 +235,9 @@ exprt heap_domaint::get_row_post_constraint(
   if(templ_row.kind==IN)
     return true_exprt();
 
-  exprt c=implies_exprt(
-    templ_row.post_guard, row_value.get_row_expr(
-      templ_row.expr, templ_row.kind==OUTHEAP));
+  const exprt row_expr=
+    row_value.get_row_expr(templ_row.expr, templ_row.kind==OUTHEAP);
+  exprt c=implies_exprt(templ_row.post_guard, row_expr);
   if(templ_row.kind==LOOP)
     rename(c);
   return c;
@@ -268,9 +271,11 @@ bool heap_domaint::add_transitivity(
 
   bool result=false;
   if(heap_val_from.add_all_paths(
-    heap_val_to, std::make_pair(
-      templ[to].dyn_obj, templ[to].expr)))
+    heap_val_to,
+    std::make_pair(templ[to].dyn_obj, templ[to].expr)))
+  {
     result=true;
+  }
   if(from!=to)
   {
     if(heap_val_to.add_pointed_by(from))
@@ -421,10 +426,11 @@ void heap_domaint::output_domain(std::ostream &out, const namespacet &ns) const
     }
     const vart &var=templ_row.expr;
 
-    out << i << ": " << from_expr(ns, "", var)
-      << (templ_row.mem_kind==STACK ? " --points_to--> Locations"
-                                    : " --paths--> Destinations")
-        << std::endl;
+    const std::string info=
+      templ_row.mem_kind==STACK
+      ? " --points_to--> Locations"
+      : " --paths--> Destinations";
+    out << i << ": " << from_expr(ns, "", var) << info << std::endl;
   }
 }
 
@@ -459,9 +465,8 @@ void heap_domaint::project_on_vars(
     const row_valuet &row_val=val[row];
     if(templ_row.kind==LOOP)
     {
-      c.push_back(
-        implies_exprt(
-          templ_row.pre_guard, row_val.get_row_expr(templ_row.expr, false)));
+      const exprt row_expr=row_val.get_row_expr(templ_row.expr, false);
+      c.push_back(implies_exprt(templ_row.pre_guard, row_expr));
     }
     else
     {
@@ -557,8 +562,9 @@ Function: heap_domaint::stack_row_valuet::get_row_expr
 
 \*******************************************************************/
 
-exprt heap_domaint::stack_row_valuet::get_row_expr(const vart &templ_expr,
-                                                   bool rename_templ_expr) const
+exprt heap_domaint::stack_row_valuet::get_row_expr(
+  const vart &templ_expr,
+  bool rename_templ_expr) const
 {
   if(nondet)
     return true_exprt();
@@ -566,14 +572,15 @@ exprt heap_domaint::stack_row_valuet::get_row_expr(const vart &templ_expr,
   if(empty())
     return false_exprt();
   else
-  { 
+  {
     // Points to expression
     exprt::operandst result;
     for(const exprt &pt : points_to)
     {
-      result.push_back(equal_exprt(
-        templ_expr,
-        templ_expr.type()==pt.type() ? pt : address_of_exprt(pt)));
+      result.push_back(
+        equal_exprt(
+          templ_expr,
+          templ_expr.type()==pt.type() ? pt : address_of_exprt(pt)));
     }
     return disjunction(result);
   }
@@ -662,10 +669,12 @@ exprt heap_domaint::heap_row_valuet::get_row_expr(
           steps_expr.push_back(equal_exprt(member_expr, dest));
 
           for(const dyn_objt &obj2 : path.dyn_objects)
-          { 
+          {
             // o'.m = o''
             steps_expr.push_back(
-              equal_exprt(member_expr, address_of_exprt(obj2.first)));
+              equal_exprt(
+                member_expr,
+                address_of_exprt(obj2.first)));
           }
 
           path_expr.push_back(and_exprt(equ_exprt, disjunction(steps_expr)));
@@ -1055,12 +1064,20 @@ void heap_domaint::bind_iterators(
           if(value.id()==ID_address_of)
           {
             assert(to_address_of_expr(value).object().id()==ID_symbol);
-            const symbol_exprt &first_obj=to_symbol_expr(
-              to_address_of_expr(value).object());
-            const symbol_exprt new_value=recursive_member_symbol(
-              first_obj, access.fields.back(), access.location, ns);
-            const symbol_exprt old_value=recursive_member_symbol(
-              first_obj, access.fields.back(), list_iteratort::IN_LOC, ns);
+            const symbol_exprt &first_obj=
+              to_symbol_expr(to_address_of_expr(value).object());
+            const symbol_exprt new_value=
+              recursive_member_symbol(
+                first_obj,
+                access.fields.back(),
+                access.location,
+                ns);
+            const symbol_exprt old_value=
+              recursive_member_symbol(
+                first_obj,
+                access.fields.back(),
+                list_iteratort::IN_LOC,
+                ns);
             const exprt binding=equal_exprt(new_value, old_value);
             access_binding=or_exprt(access_binding, binding);
 
@@ -1080,7 +1097,10 @@ void heap_domaint::bind_iterators(
   for(const heap_row_spect &row_spec : new_heap_row_specs)
   {
     new_output_template_row(
-      row_spec.expr, row_spec.location_number, row_spec.post_guard, SSA,
+      row_spec.expr,
+      row_spec.location_number,
+      row_spec.post_guard,
+      SSA,
       template_generator);
   }
 }
@@ -1111,10 +1131,10 @@ void heap_domaint::new_output_template_row(
 
   const exprt pre_guard=SSA.guard_symbol(loc);
 
-  const symbol_exprt pre_var=SSA.name(
-    ssa_objectt(var, SSA.ns), local_SSAt::LOOP_BACK, loc);
-  const symbol_exprt post_var=SSA.name(
-    ssa_objectt(var, SSA.ns), local_SSAt::OUT, loc);
+  const symbol_exprt pre_var=
+    SSA.name(ssa_objectt(var, SSA.ns), local_SSAt::LOOP_BACK, loc);
+  const symbol_exprt post_var=
+    SSA.name(ssa_objectt(var, SSA.ns), local_SSAt::OUT, loc);
 
   var_spec.var=pre_var;
   var_spec.pre_guard=pre_guard;
@@ -1168,12 +1188,13 @@ void heap_domaint::create_precondition(
         // context and return its member
         std::string var_id_str=id2string(var.get_identifier());
         const symbol_exprt pointer(
-          var_id_str.substr(0, var_id_str.rfind("'obj")), var.type());
+          var_id_str.substr(0, var_id_str.rfind("'obj")),
+          var.type());
         const irep_idt member=var_id_str.substr(var_id_str.rfind("."));
 
         exprt::operandst d;
-        std::set<exprt> pointed_objs=collect_preconditions_rec(
-          pointer, precondition);
+        std::set<exprt> pointed_objs=
+          collect_preconditions_rec(pointer, precondition);
         for(exprt pointed : pointed_objs)
         {
           if(pointed.id()==ID_address_of)
@@ -1282,8 +1303,8 @@ const exprt heap_domaint::iterator_access_bindings(
   const exprt &precondition,
   const local_SSAt &SSA)
 {
-  const std::set<symbol_exprt> reachable=reachable_objects(
-    init_pointer, fields, precondition);
+  const std::set<symbol_exprt> reachable=
+    reachable_objects(init_pointer, fields, precondition);
 
   exprt::operandst d;
   for(const symbol_exprt &r : reachable)
@@ -1315,8 +1336,15 @@ const exprt heap_domaint::iterator_access_bindings(
         to_symbol_expr(access_eq.lhs()), ns);
       c.push_back(
         iterator_access_bindings(
-          new_src, r, new_iterator_sym, {access.fields.at(level)}, access,
-          level+1, guards, precondition, SSA));
+          new_src,
+          r,
+          new_iterator_sym,
+          {access.fields.at(level)},
+          access,
+          level+1,
+          guards,
+          precondition,
+          SSA));
     }
     else if(access.location!=list_iteratort::IN_LOC)
     {
@@ -1369,11 +1397,11 @@ const std::set<symbol_exprt> heap_domaint::reachable_objects(
   if(src.id()==ID_member && to_member_expr(src).compound().get_bool(ID_pointed))
   {
     const member_exprt &member=to_member_expr(src);
-    const exprt pointer=get_pointer(member.compound(),
-                                    pointed_level(member.compound())-1);
+    const exprt pointer=
+      get_pointer(member.compound(), pointed_level(member.compound())-1);
 
-    std::set<symbol_exprt> r=reachable_objects(
-      pointer, {member.get_component_name()}, precondition);
+    std::set<symbol_exprt> r=
+      reachable_objects(pointer, {member.get_component_name()}, precondition);
     pointed_objs.insert(r.begin(), r.end());
   }
   else
