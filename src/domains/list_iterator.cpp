@@ -27,8 +27,9 @@ void list_iteratort::add_access(
   const member_exprt &expr,
   unsigned location_number) const
 {
-  assert(expr.compound().get_bool(ID_iterator) &&
-         expr.compound().get_bool(ID_pointed));
+  assert(
+    expr.compound().get_bool(ID_iterator) &&
+    expr.compound().get_bool(ID_pointed));
 
   accesst access;
   access.location=location_number;
@@ -93,9 +94,10 @@ Function: list_iteratort::iterator_symbol
 \*******************************************************************/
 const symbol_exprt list_iteratort::iterator_symbol() const
 {
-  symbol_exprt iterator(id2string(pointer.get_identifier()).substr(0, id2string(
-    pointer.get_identifier()).find_last_of('#'))+"'it",
-                        pointer.type().subtype());
+  std::size_t pos=id2string(pointer.get_identifier()).find_last_of('#');
+  symbol_exprt iterator(
+    id2string(pointer.get_identifier()).substr(0, pos)+"'it",
+    pointer.type().subtype());
   iterator.set(ID_iterator, true);
 
   return iterator;
@@ -159,6 +161,9 @@ equal_exprt list_iteratort::accesst::binding(
   const namespacet &ns) const
 {
   unsigned loc=level==fields.size()-1 ? location : IN_LOC;
-  return equal_exprt(recursive_member_symbol(lhs, fields.at(level), loc, ns),
-                     recursive_member_symbol(rhs, fields.at(level), loc, ns));
+  const symbol_exprt lhs_sym=
+    recursive_member_symbol(lhs, fields.at(level), loc, ns);
+  const symbol_exprt rhs_sym=
+    recursive_member_symbol(rhs, fields.at(level), loc, ns);
+  return equal_exprt(lhs_sym, rhs_sym);
 }

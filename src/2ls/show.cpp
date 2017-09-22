@@ -47,7 +47,11 @@ void show_assignments(
   ssa_objectst ssa_objects(goto_function, ns, heap_analysis);
   ssa_value_ait ssa_value_ai(goto_function, ns, heap_analysis);
   assignmentst assignments(
-    goto_function.body, ns, ssa_objects, ssa_value_ai, heap_analysis);
+    goto_function.body,
+    ns,
+    ssa_objects,
+    ssa_value_ai,
+    heap_analysis);
   assignments.output(ns, goto_function.body, out);
 }
 
@@ -116,7 +120,11 @@ void show_defs(
   ssa_objectst ssa_objects(goto_function, ns, heap_analysis);
   ssa_value_ait ssa_value_ai(goto_function, ns, heap_analysis);
   assignmentst assignments(
-    goto_function.body, ns, ssa_objects, ssa_value_ai, heap_analysis);
+    goto_function.body,
+    ns,
+    ssa_objects,
+    ssa_value_ai,
+    heap_analysis);
   ssa_ait ssa_analysis(assignments);
   ssa_analysis(goto_function, ns);
   ssa_analysis.output(ns, goto_function.body, out);

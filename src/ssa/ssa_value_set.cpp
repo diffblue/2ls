@@ -589,11 +589,11 @@ bool ssa_value_domaint::valuest::merge(
         while(level>0)
         {
           const irep_idt ptr_root_id=pointer_root_id(expr);
-          it=std::find_if(value_set.begin(), value_set.end(),
-                          [&ptr_root_id](const ssa_objectt &o)
-                          {
-                            return o.get_identifier()==ptr_root_id;
-                          });
+          it=std::find_if(
+            value_set.begin(),
+            value_set.end(),
+            [&ptr_root_id](const ssa_objectt &o)
+            { return o.get_identifier()==ptr_root_id; });
           if(it!=value_set.end())
             break;
           else
@@ -609,7 +609,10 @@ bool ssa_value_domaint::valuest::merge(
             assert(it->get_expr().get_bool(ID_pointed));
             ssa_objectt object_copy(*it);
             object_copy.set_iterator(
-              object_id, pointer_fields(v.get_expr(), level));
+              object_id,
+              pointer_fields(
+                v.get_expr(),
+                level));
             value_set.erase(it);
             value_set.insert(object_copy);
             result=true;
@@ -627,12 +630,12 @@ bool ssa_value_domaint::valuest::merge(
         const irep_idt &corresponding_id=iterator_to_initial_id(
           v.get_expr(), v.get_identifier());
 
-        auto it=std::find_if(value_set.begin(), value_set.end(),
-                             [&corresponding_id](const ssa_objectt &o)
-                             {
-                               return o.get_expr().get_bool(ID_pointed) &&
-                                      (o.get_identifier()==corresponding_id);
-                             });
+        auto it=std::find_if(
+          value_set.begin(),
+          value_set.end(),
+          [&corresponding_id](const ssa_objectt &o)
+          { return o.get_expr().get_bool(ID_pointed) &&
+                   (o.get_identifier()==corresponding_id); });
         if(it!=value_set.end())
         {
           if(v!=*it)
@@ -790,7 +793,8 @@ Function: ssa_value_ait::assign_ptr_param_rec
 
 \*******************************************************************/
 void ssa_value_ait::assign_ptr_param(
-  const exprt &expr, ssa_value_domaint &entry)
+  const exprt &expr,
+  ssa_value_domaint &entry)
 {
   const typet &type=ns.follow(expr.type());
   if(type.id()==ID_pointer)

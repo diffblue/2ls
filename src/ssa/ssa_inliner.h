@@ -154,7 +154,8 @@ protected:
   exprt get_replace_new_objects(
     const local_SSAt &SSA,
     const function_application_exprt funapp_expr,
-    local_SSAt::locationt loc, const summaryt &summary);
+    local_SSAt::locationt loc,
+    const summaryt &summary);
 
   void rename(exprt &expr);
   void rename(local_SSAt::nodet &node);

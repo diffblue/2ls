@@ -92,22 +92,20 @@ void copy_pointed_info(exprt &dest, const exprt &src, const unsigned max_level)
     {
       const irep_idt lvl_pointed_id=src.get(level_str(l, ID_pointer_id));
       dest.set(level_str(l, ID_pointer_id), lvl_pointed_id);
-      dest.set(
-        level_str(l, ID_pointer_subtype),
-        src.get(level_str(l, ID_pointer_subtype)));
+      const irep_idt lvl_pointed_subtype=
+        src.get(level_str(l, ID_pointer_subtype));
+      dest.set(level_str(l, ID_pointer_subtype), lvl_pointed_subtype);
       if(lvl_pointed_id==ID_symbol)
       {
-        dest.set(
-          level_str(l, ID_pointer_sym), src.get(level_str(l, ID_pointer_sym)));
+        const irep_idt lvl_pointer_sym=src.get(level_str(l, ID_pointer_sym));
+        dest.set(level_str(l, ID_pointer_sym), lvl_pointer_sym);
       }
       else
       {
-        dest.set(
-          level_str(l, ID_pointer_compound),
-          src.get(level_str(l, ID_pointer_compound)));
-        dest.set(
-          level_str(l, ID_pointer_field),
-          src.get(level_str(l, ID_pointer_field)));
+        const irep_idt lvl_str=src.get(level_str(l, ID_pointer_compound));
+        dest.set(level_str(l, ID_pointer_compound), lvl_str);
+        const irep_idt lvl_ptr_field=src.get(level_str(l, ID_pointer_field));
+        dest.set(level_str(l, ID_pointer_field), lvl_ptr_field);
       }
     }
   }
@@ -152,7 +150,8 @@ symbol_exprt pointed_object(const exprt &expr, const namespacet &ns)
     if(ssa_object.get_expr().id()==ID_symbol)
     {
       pointed.set(
-        level_str(level, ID_pointer_sym), ssa_object.get_identifier());
+        level_str(level, ID_pointer_sym),
+        ssa_object.get_identifier());
     }
     else
     {
@@ -163,7 +162,8 @@ symbol_exprt pointed_object(const exprt &expr, const namespacet &ns)
         level_str(level, ID_pointer_compound),
         to_symbol_expr(member.compound()).get_identifier());
       pointed.set(
-        level_str(level, ID_pointer_field), member.get_component_name());
+        level_str(level, ID_pointer_field),
+        member.get_component_name());
     }
 
     if(pointed_type.id()==ID_symbol)
@@ -253,23 +253,27 @@ const exprt get_pointer(const exprt &expr, unsigned level)
 {
   exprt pointer;
 
-  const typet &pointed_type=symbol_typet(
-    expr.get(level_str(level, ID_pointer_subtype)));
+  const typet &pointed_type=
+    symbol_typet(expr.get(level_str(level, ID_pointer_subtype)));
 
   if(expr.get(level_str(level, ID_pointer_id))==ID_symbol)
   {
     pointer=symbol_exprt(
-      expr.get(level_str(level, ID_pointer_sym)), pointer_typet(pointed_type));
+      expr.get(level_str(level, ID_pointer_sym)),
+      pointer_typet(pointed_type));
     copy_pointed_info(pointer, expr, level-1);
   }
   else
   {
     assert(expr.get(level_str(level, ID_pointer_id))==ID_member);
     symbol_exprt compound(
-      expr.get(level_str(level, ID_pointer_compound)), expr.type());
+      expr.get(level_str(level, ID_pointer_compound)),
+      expr.type());
     copy_pointed_info(compound, expr, level-1);
     pointer=member_exprt(
-      compound, pointer_level_field(expr, level), pointer_typet(pointed_type));
+      compound,
+      pointer_level_field(expr, level),
+      pointer_typet(pointed_type));
   }
   return pointer;
 }

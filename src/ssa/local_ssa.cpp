@@ -550,8 +550,10 @@ void local_SSAt::build_function_call(locationt loc)
       if(a.is_constant() ||
          (a.id()==ID_typecast && to_typecast_expr(a).op().is_constant()))
       {
-        symbol_exprt arg(id2string(fname)+"#arg"+i2string(i)+
-                         "#"+i2string(loc->location_number), a.type());
+        const std::string arg_name=
+          id2string(fname)+"#arg"+i2string(i)+"#"+
+            i2string(loc->location_number);
+        symbol_exprt arg(arg_name, a.type());
         n_it->equalities.push_back(equal_exprt(a, arg));
         a=arg;
       }
@@ -1373,11 +1375,17 @@ void local_SSAt::assign_rec(
     const if_exprt &if_expr=to_if_expr(lhs);
 
     exprt new_rhs=if_exprt(if_expr.cond(), rhs, if_expr.true_case());
-    assign_rec(if_expr.true_case(), new_rhs, and_exprt(guard, if_expr.cond()),
-               loc);
+    assign_rec(
+      if_expr.true_case(),
+      new_rhs,
+      and_exprt(guard, if_expr.cond()),
+      loc);
 
-    assign_rec(if_expr.false_case(), rhs,
-               and_exprt(guard, not_exprt(if_expr.cond())), loc);
+    assign_rec(
+      if_expr.false_case(),
+      rhs,
+      and_exprt(guard, not_exprt(if_expr.cond())),
+      loc);
   }
   else if(lhs.id()==ID_byte_extract_little_endian ||
           lhs.id()==ID_byte_extract_big_endian)
@@ -1392,7 +1400,7 @@ void local_SSAt::assign_rec(
     assign_rec(new_lhs, new_rhs, guard, loc);
   }
   else
-    throw "UNKNOWN LHS: "+lhs.id_string();
+    throw "UNKNOWN LHS: "+lhs.id_string(); // NOLINT(*)
 }
 
 /*******************************************************************\
@@ -1871,8 +1879,10 @@ void local_SSAt::collect_iterators_lhs(
      object.get_root_object().id()==ID_symbol)
   {
     assert(object.get_expr().id()==ID_member);
-    new_iterator_access(to_member_expr(object.get_expr()), loc,
-                        loc->location_number);
+    new_iterator_access(
+      to_member_expr(object.get_expr()),
+      loc,
+      loc->location_number);
   }
 }
 

@@ -27,8 +27,12 @@ public:
     strategy_solver_baset(_solver, SSA.ns),
     heap_interval_domain(_heap_interval_domain),
     heap_solver(
-      heap_interval_domain.heap_domain, _solver, SSA, precondition,
-      message_handler, template_generator),
+      heap_interval_domain.heap_domain,
+      _solver,
+      SSA,
+      precondition,
+      message_handler,
+      template_generator),
     interval_solver(heap_interval_domain.interval_domain, _solver, SSA.ns) {}
 
   virtual bool iterate(invariantt &_inv) override;

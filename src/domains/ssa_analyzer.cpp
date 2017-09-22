@@ -108,16 +108,23 @@ void ssa_analyzert::operator()(
   else if(template_generator.options.get_bool_option("heap"))
   {
     strategy_solver=new strategy_solver_heapt(
-      *static_cast<heap_domaint *>(domain), solver, SSA,
-      precondition, get_message_handler(),
+      *static_cast<heap_domaint *>(domain),
+      solver,
+      SSA,
+      precondition,
+      get_message_handler(),
       template_generator);
     result=new heap_domaint::heap_valuet();
   }
   else if(template_generator.options.get_bool_option("heap-interval"))
   {
     strategy_solver=new strategy_solver_heap_intervalt(
-      *static_cast<heap_interval_domaint *>(domain), solver, SSA, precondition,
-      get_message_handler(), template_generator);
+      *static_cast<heap_interval_domaint *>(domain),
+      solver,
+      SSA,
+      precondition,
+      get_message_handler(),
+      template_generator);
     result=new heap_interval_domaint::heap_interval_valuet();
   }
   else

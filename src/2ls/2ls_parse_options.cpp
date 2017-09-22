@@ -1665,7 +1665,7 @@ void twols_parse_optionst::help()
     " --zones                      use zone domain\n"
     " --octagons                   use octagon domain\n"
     " --heap                       use heap domain\n"
-    " --heap-interval              use heap domain with interval domain for values\n"
+    " --heap-interval              use heap domain with interval domain for values\n" // NOLINT(*)
     " --enum-solver                use solver based on model enumeration\n"
     " --binsearch-solver           use solver based on binary search\n"
     " --arrays                     do not ignore array contents\n"
