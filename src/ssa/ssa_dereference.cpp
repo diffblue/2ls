@@ -351,7 +351,7 @@ exprt dereference_rec(
       else
       {
         result=ssa_alias_value(src, (it++)->get_expr(), ns);
-        result.set("#heap_access", result.get_bool("#dynamic"));
+        result.set("#heap_access", result.type().get_bool("#dynamic"));
       }
 
       for(; it!=values.value_set.end(); ++it)
