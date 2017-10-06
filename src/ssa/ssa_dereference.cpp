@@ -338,7 +338,8 @@ exprt dereference_rec(
     {
       auto it=values.value_set.begin();
 
-      if(values.null || values.unknown)
+      if(values.null || values.unknown ||
+         (values.value_set.size()>1 && it->type().get_bool("#dynamic")))
       {
         std::string dyn_type_name=pointed_type.id_string();
         if(pointed_type.id()==ID_struct)
