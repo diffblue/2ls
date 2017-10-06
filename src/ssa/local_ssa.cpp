@@ -467,7 +467,8 @@ void local_SSAt::build_transfer(locationt loc)
       exprt symbolic_deref_lhs=symbolic_dereference(code_assign.lhs(), ns);
       exprt symbolic_deref_rhs=symbolic_dereference(code_assign.rhs(), ns);
 
-      exprt rhs=all_symbolic_deref_defined(symbolic_deref_rhs, ns, loc)
+      exprt rhs=deref_rhs.get_bool("#heap_access") &&
+                all_symbolic_deref_defined(symbolic_deref_rhs, ns, loc)
                 ? symbolic_deref_rhs : deref_rhs;
 
       if(deref_lhs.get_bool("#heap_access") &&
