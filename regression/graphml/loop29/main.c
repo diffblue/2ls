@@ -7,6 +7,6 @@ void main() {                                                                   
     int y;
     if(-3>y || y>-1) return;
     x += y;
-  }        
-  __VERIFIER_assert(x==0 || x==-2);                           
-} 
+  }
+  __VERIFIER_assert(x==0 || x==-2);
+}

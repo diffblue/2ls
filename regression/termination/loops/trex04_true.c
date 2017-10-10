@@ -29,7 +29,7 @@ int main()
 
   if (c1) foo();
   if (c2) d = d - 1;
-  
+
   while(x>0)
   {
     x=x-d;

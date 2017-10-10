@@ -38,7 +38,7 @@ void main()
 	    goto _L___6;
 	  }
 	} else {
-	_L___6:  
+	_L___6:
 	  if (i___0 == 1) {
 	    if (floorButtons_1) {
 	      retValue_acc = 1;
@@ -47,7 +47,7 @@ void main()
 	      goto _L___5;
 	    }
 	  } else {
-	  _L___5: 
+	  _L___5:
 	    if (i___0 == 2) {
 	      if (floorButtons_2) {
 		retValue_acc = 1;
@@ -56,7 +56,7 @@ void main()
 		goto _L___4;
 	      }
 	    } else {
-	    _L___4: 
+	    _L___4:
 	      if (i___0 == 3) {
 		if (floorButtons_3) {
 		  retValue_acc = 1;
@@ -65,7 +65,7 @@ void main()
 		  goto _L___3;
 		}
 	      } else {
-	      _L___3: 
+	      _L___3:
 		if (i___0 == 4) {
 		  if (floorButtons_4) {
 		    retValue_acc = 1;

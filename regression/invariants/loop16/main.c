@@ -1,7 +1,7 @@
 
 void main()
 {
-  int x = 0;  
+  int x = 0;
   int y = 0;
 
   do
@@ -10,7 +10,7 @@ void main()
   }
   while(x<10);
 
-  do 
+  do
   {
     ++y;
   }

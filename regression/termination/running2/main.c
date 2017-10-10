@@ -1,12 +1,12 @@
-/* 
+/*
   C version of the lapack library
 
   http://www.netlib.org/clapack/cblas/sasum.c
-  
+
   run with
-  
+
   ../../../src/summarizer/summarizer main.c --termination --context-sensitive
-  
+
 */
 
 int nondet_int();
@@ -31,8 +31,8 @@ int g(int n, int incx)
 int main()
 {
   int n = nondet_int(), incx = nondet_int();
-  
+
   g(n,incx);
-  
+
   return 0;
 }

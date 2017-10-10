@@ -1,5 +1,5 @@
-int foo(int x) 
-{ 
+int foo(int x)
+{
   if(x) return 9;
   return 10;
 }

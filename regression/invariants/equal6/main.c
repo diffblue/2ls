@@ -4,7 +4,7 @@ void main()
 
   while(x<10)
   {
-    x++; 
+    x++;
     while(y<x) //equality does not hold at loop head
     {
       y++;

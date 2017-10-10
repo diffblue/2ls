@@ -10,7 +10,7 @@ int acquire_lock(char tid)
   return 0;
 }
 
-void release_lock() 
+void release_lock()
 {
   lock = 0;
 }
@@ -20,7 +20,7 @@ void thread1()
   if(acquire_lock(1))
   {
     //do_stuff1();
-    exit=1; 
+    exit=1;
     release_lock();
   }
 }

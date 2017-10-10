@@ -12,8 +12,8 @@ do
   do
     cd $d
     rm -f ../$d.$o.log
-    for f in *.c 
-    do 
+    for f in *.c
+    do
       echo $d/$f "using" $o
       echo "FILE:" $f >> ../$d.$o.log
       (time (perl -e 'alarm shift @ARGV; exec @ARGV' $TIMEOUT $SUMMARIZER $CHECKS $f --$o)) &>> ../$d.$o.log

@@ -4,6 +4,6 @@ void main() {                                                                   
   {
     x += 1;
     assert(x<5);
-  }        
-  while(x<10);                           
-} 
+  }
+  while(x<10);
+}

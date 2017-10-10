@@ -1,8 +1,7 @@
-
 int x = 1;
 
-int sign(int x) 
-{ 
+int sign(int x)
+{
   if(x>0) return 1;
   else if (x==0) return 0;
   return -1;
@@ -26,4 +25,3 @@ void main()
   int z = do2(x);
   assert(-1<=z && z<=1);
 }
-

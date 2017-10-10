@@ -1,14 +1,14 @@
-int foo(int x) 
-{ 
+int foo(int x)
+{
   int res = 0;
   if(x) res = 1;
   return res;
 }
-int bar(int x) 
-{   
+int bar(int x)
+{
   int res = 2;
   if(x) res = 1;
-  return res; 
+  return res;
 }
 
 void main()

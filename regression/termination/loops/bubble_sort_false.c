@@ -24,8 +24,8 @@ extern  __attribute__((__nothrow__, __noreturn__)) void abort(void) ;
 #line 5 "test-0180.c"
 extern int __VERIFIER_nondet_int(void);
 #line 7 "test-0180.c"
-static void fail(void) 
-{ 
+static void fail(void)
+{
 
   {
   ERROR: assert(0);
@@ -35,7 +35,7 @@ static void fail(void)
 #line 39 "test-0180.c"
 struct list_head gl_list  =    {& gl_list, & gl_list};
 #line 41 "test-0180.c"
-static void inspect(struct list_head  const  *head ) 
+static void inspect(struct list_head  const  *head )
 { struct node  const  *node ;
   unsigned int __cil_tmp3 ;
   struct list_head *__cil_tmp4 ;
@@ -744,7 +744,7 @@ static void inspect(struct list_head  const  *head )
 }
 }
 #line 74 "test-0180.c"
-__inline static void __list_add(struct list_head *new , struct list_head *prev , struct list_head *next ) 
+__inline static void __list_add(struct list_head *new , struct list_head *prev , struct list_head *next )
 { unsigned int __cil_tmp4 ;
   unsigned int __cil_tmp5 ;
   unsigned int __cil_tmp6 ;
@@ -772,7 +772,7 @@ __inline static void __list_add(struct list_head *new , struct list_head *prev ,
 }
 }
 #line 84 "test-0180.c"
-__inline static void __list_del(struct list_head *prev , struct list_head *next ) 
+__inline static void __list_del(struct list_head *prev , struct list_head *next )
 { unsigned int __cil_tmp3 ;
   unsigned int __cil_tmp4 ;
 
@@ -790,7 +790,7 @@ __inline static void __list_del(struct list_head *prev , struct list_head *next 
 }
 }
 #line 90 "test-0180.c"
-__inline static void list_add(struct list_head *new , struct list_head *head ) 
+__inline static void list_add(struct list_head *new , struct list_head *head )
 { struct list_head *__cil_tmp3 ;
 
   {
@@ -805,7 +805,7 @@ __inline static void list_add(struct list_head *new , struct list_head *head )
 }
 }
 #line 95 "test-0180.c"
-__inline static void list_move(struct list_head *list , struct list_head *head ) 
+__inline static void list_move(struct list_head *list , struct list_head *head )
 { unsigned int __cil_tmp3 ;
   unsigned int __cil_tmp4 ;
   struct list_head *__cil_tmp5 ;
@@ -831,7 +831,7 @@ __inline static void list_move(struct list_head *list , struct list_head *head )
 }
 }
 #line 101 "test-0180.c"
-static void gl_insert(int value ) 
+static void gl_insert(int value )
 { struct node *node ;
   void *tmp ;
   unsigned int __cil_tmp4 ;
@@ -910,7 +910,7 @@ static void gl_insert(int value )
 }
 }
 #line 112 "test-0180.c"
-static void gl_read(void) 
+static void gl_read(void)
 { int tmp ;
   int tmp___0 ;
 
@@ -941,7 +941,7 @@ static void gl_read(void)
 }
 }
 #line 120 "test-0180.c"
-static void gl_destroy(void) 
+static void gl_destroy(void)
 { struct list_head *next ;
   struct list_head *__cil_tmp2 ;
   unsigned int __cil_tmp3 ;
@@ -1012,7 +1012,7 @@ static void gl_destroy(void)
 }
 }
 #line 129 "test-0180.c"
-static int val_from_node(struct list_head *head ) 
+static int val_from_node(struct list_head *head )
 { struct node *entry ;
   struct node *__cil_tmp3 ;
   unsigned int __cil_tmp4 ;
@@ -1044,7 +1044,7 @@ static int val_from_node(struct list_head *head )
 }
 }
 #line 134 "test-0180.c"
-static _Bool gl_sort_pass(void) 
+static _Bool gl_sort_pass(void)
 { _Bool any_change ;
   struct list_head *pos0 ;
   struct list_head *pos1 ;
@@ -1113,7 +1113,7 @@ static _Bool gl_sort_pass(void)
 }
 }
 #line 156 "test-0180.c"
-static void gl_sort(void) 
+static void gl_sort(void)
 { _Bool tmp ;
 
   {
@@ -1139,7 +1139,7 @@ static void gl_sort(void)
 }
 }
 #line 162 "test-0180.c"
-int main(void) 
+int main(void)
 { struct list_head  const  *__cil_tmp1 ;
   struct list_head  const  *__cil_tmp2 ;
 

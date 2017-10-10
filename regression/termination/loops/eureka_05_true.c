@@ -16,7 +16,7 @@ void SelectionSort()
 
    for (lh = 0; lh < n; lh++) {
       rh = lh;
-      for (i = lh + 1; i < n; i++) 
+      for (i = lh + 1; i < n; i++)
          if (array[i] < array[rh]) rh = i;
       temp = array[lh];
       array[lh] = array[rh];

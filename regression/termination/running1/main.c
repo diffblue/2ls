@@ -1,12 +1,12 @@
-/* 
+/*
   C version of the lapack library
 
   http://www.netlib.org/clapack/cblas/sasum.c
-  
+
   run with
-  
+
   ../../../src/summarizer/summarizer main.c --termination --context-sensitive
-  
+
 */
 
 int nondet_int();
@@ -22,7 +22,7 @@ int main()
 {
 
   int n =nondet_int(), incx=nondet_int();
-  
+
   __CPROVER_assume(incx > 0 && incx < 1000);
   __CPROVER_assume(n < 1000 && n > 0);
 

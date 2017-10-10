@@ -18,7 +18,7 @@ int main() {
     str1[max-1]= '\0';
 
     j = 0;
-   
+
     for (i = max - 1; i >= 0; i--) {
         str2[j] = str1[i];
         j++;
@@ -28,6 +28,6 @@ int main() {
     for (i=0; i<max; i++) {
       __VERIFIER_assert(str1[i] == str2[j]);
       j--;
-    }   
+    }
 }
 

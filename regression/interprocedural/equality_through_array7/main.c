@@ -14,6 +14,6 @@ void main (void) {
   a[1] = 0;
 
   pass_through_array();
-  
+
   assert(a[0] == 0 && a[1] == 0);
 }

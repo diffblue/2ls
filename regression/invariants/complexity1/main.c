@@ -13,6 +13,6 @@ void main()
   for (i = 0; i < n; ++i, aux = i / n) {
     assert(aux <= 1);
   }
-  
+
   assert(aux <= 1);
 }

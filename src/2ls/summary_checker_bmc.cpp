@@ -31,11 +31,12 @@ property_checkert::resultt summary_checker_bmct::operator()(
   ssa_unwinder.init(false, true);
 
   property_checkert::resultt result=property_checkert::UNKNOWN;
+  unsigned min_unwind=options.get_unsigned_int_option("unwind-min");
   unsigned max_unwind=options.get_unsigned_int_option("unwind");
   status() << "Max-unwind is " << max_unwind << eom;
   ssa_unwinder.init_localunwinders();
 
-  for(unsigned unwind=0; unwind<=max_unwind; unwind++)
+  for(unsigned unwind=min_unwind; unwind<=max_unwind; unwind++)
   {
     status() << "Unwinding (k=" << unwind << ")" << messaget::eom;
     summary_db.mark_recompute_all();
@@ -43,13 +44,13 @@ property_checkert::resultt summary_checker_bmct::operator()(
     result=check_properties();
     if(result==property_checkert::PASS)
     {
-      status() << "incremental BMC proof found after "
+      status() << "BMC proof found after "
          << unwind << " unwinding(s)" << messaget::eom;
       break;
     }
     else if(result==property_checkert::FAIL)
     {
-      status() << "incremental BMC counterexample found after "
+      status() << "BMC counterexample found after "
          << unwind << " unwinding(s)" << messaget::eom;
       break;
     }

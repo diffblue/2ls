@@ -2,7 +2,7 @@
 
 extern int __VERIFIER_nondet_int();
 
-int ssl3_connect(void) 
+int ssl3_connect(void)
 {
   int s__state ;
   int blastFlag ;
@@ -25,7 +25,7 @@ int ssl3_connect(void)
 	  } else {
 	    return 0;
 	    if (0) {
-	    switch_1_12292: /* CIL Label */ 
+	    switch_1_12292: /* CIL Label */
 	      s__state = 4368;
 	      continue;
 	    switch_1_4368: /* CIL Label */ ;
@@ -41,7 +41,7 @@ int ssl3_connect(void)
 		break;
 	      }
 	      continue;
-	    } 
+	    }
 	  }
 	}
       }
@@ -50,7 +50,7 @@ int ssl3_connect(void)
   assert(0);
   return -1;
 }
-int main(void) 
+int main(void)
 {
   ssl3_connect();
   return 0;

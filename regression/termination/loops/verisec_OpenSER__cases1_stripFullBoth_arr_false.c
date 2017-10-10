@@ -133,11 +133,11 @@ struct sockaddr_un
 
 
 
-static int parse_expression_list(char *str) 
+static int parse_expression_list(char *str)
 {
   int start=0, i=-1, j=-1;
   char str2[EXPRESSION_LENGTH];
-	
+
   if (!str) return -1;
 
   do {
@@ -175,7 +175,7 @@ static int parse_expression_list(char *str)
       start = i+1;
     }
   } while (str[i] != EOS);
-	
+
   return 0;
 }
 

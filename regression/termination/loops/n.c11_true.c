@@ -15,10 +15,10 @@ int main(){
 
 
    while(__VERIFIER_nondet_bool()){
-     
+
       if (len==4)
          len =0;
-      
+
       a[len]=0;
 
       len++;
@@ -26,6 +26,6 @@ int main(){
    __VERIFIER_assert(len>=0 && len<5);
    return 1;
 
-   
+
 }
 

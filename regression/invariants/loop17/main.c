@@ -1,6 +1,6 @@
 void main()
 {
-  int x;  
+  int x;
   __CPROVER_assume(x>=0);
 
   do

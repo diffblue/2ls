@@ -1,6 +1,5 @@
-
-int sign(int x) 
-{ 
+int sign(int x)
+{
   if(x>0) return 1;
   else if (x==0) return 0;
   return -1;
@@ -14,4 +13,3 @@ void main()
   int z = sign(x);
   assert(-1<=y && y<=1 && -1<=z && z<=1);
 }
-

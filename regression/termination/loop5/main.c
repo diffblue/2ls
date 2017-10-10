@@ -1,6 +1,6 @@
 void main()
 {
-  unsigned x = 0;  
+  unsigned x = 0;
 
   while(x<10)
     ++x;

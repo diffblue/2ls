@@ -13,7 +13,7 @@ void main()
     w = x;
     }*/
   float *f;
-  
+
   for(int z=0;z<1;z++)
   {
     //assert(w==5);

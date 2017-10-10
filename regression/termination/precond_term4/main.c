@@ -16,9 +16,9 @@ signed long int full_write(signed int fd, const void *buf, unsigned long int len
 
 void main()
 {
-  signed int fd; 
+  signed int fd;
   char buf[256];
-  unsigned long int len; 
+  unsigned long int len;
   signed long int cc;
   full_write(fd,buf,len,cc);
 }

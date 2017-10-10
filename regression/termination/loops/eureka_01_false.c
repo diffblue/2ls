@@ -18,7 +18,7 @@ void main(){
   int distance[5];
   int x,y;
   int i,j;
-  
+
   for(i = 0; i < nodecount; i++){
     if(i == source){
       distance[i] = 0;
