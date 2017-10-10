@@ -42,6 +42,9 @@ void assignmentst::build_assignment_map(
       assign(lhs_deref, it, ns);
       exprt lhs_symbolic_deref=symbolic_dereference(code_assign.lhs(), ns);
       assign(lhs_symbolic_deref, it, ns);
+
+      exprt rhs_symbolic_deref=symbolic_dereference(code_assign.rhs(), ns);
+      assign(rhs_symbolic_deref, it, ns);
     }
     else if(it->is_decl())
     {
