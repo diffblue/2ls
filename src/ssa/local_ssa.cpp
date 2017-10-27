@@ -461,15 +461,32 @@ void local_SSAt::build_transfer(locationt loc)
 
     exprt deref_lhs=dereference(code_assign.lhs(), loc);
     exprt deref_rhs=dereference(code_assign.rhs(), loc);
+    exprt rhs = deref_rhs;
 
     if(deref_lhs.get_bool("#heap_access") || deref_rhs.get_bool("#heap_access"))
     {
       exprt symbolic_deref_lhs=symbolic_dereference(code_assign.lhs(), ns);
       exprt symbolic_deref_rhs=symbolic_dereference(code_assign.rhs(), ns);
 
-      exprt rhs=deref_rhs.get_bool("#heap_access") &&
-                all_symbolic_deref_defined(symbolic_deref_rhs, ns, loc)
-                ? symbolic_deref_rhs : deref_rhs;
+      if (deref_rhs.get_bool("#heap_access"))
+      {
+        const member_exprt &member=to_member_expr(symbolic_deref_rhs);
+        const exprt pointer=get_pointer(member.compound(), pointed_level(member.compound())-1);
+        const auto pointer_def = ssa_analysis[loc].def_map.find(ssa_objectt(pointer, ns).get_identifier())->second.def;
+        const auto symbolic_def = ssa_analysis[loc].def_map.find(
+            ssa_objectt(symbolic_deref_rhs, ns).get_identifier())->second.def;
+
+        if (!symbolic_def.is_assignment()
+            || (pointer_def.is_assignment() && pointer_def.loc->location_number > symbolic_def.loc->location_number))
+        {
+          assign_rec(symbolic_deref_rhs, deref_rhs, true_exprt(), loc);
+          rhs = name(ssa_objectt(symbolic_deref_rhs, ns), OUT, loc);
+        }
+        else
+        {
+          rhs = symbolic_deref_rhs;
+        }
+      }
 
       if(deref_lhs.get_bool("#heap_access") &&
          has_symbolic_deref(symbolic_deref_lhs))
@@ -482,12 +499,7 @@ void local_SSAt::build_transfer(locationt loc)
       }
       else
       {
-        assign_rec(symbolic_deref_rhs, deref_rhs, true_exprt(), loc);
-        assign_rec(
-          deref_lhs,
-          name(ssa_objectt(symbolic_deref_rhs, ns), OUT, loc),
-          true_exprt(),
-          loc);
+        assign_rec(deref_lhs, rhs, true_exprt(), loc);
       }
     }
     else
