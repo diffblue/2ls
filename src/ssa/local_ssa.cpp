@@ -468,10 +468,10 @@ void local_SSAt::build_transfer(locationt loc)
       exprt symbolic_deref_lhs=symbolic_dereference(code_assign.lhs(), ns);
       exprt symbolic_deref_rhs=symbolic_dereference(code_assign.rhs(), ns);
 
-      if (deref_rhs.get_bool("#heap_access"))
+      ssa_objectt rhs_object(symbolic_deref_rhs, ns);
+      if (deref_rhs.get_bool("#heap_access") && rhs_object)
       {
-        const member_exprt &member=to_member_expr(symbolic_deref_rhs);
-        const exprt pointer=get_pointer(member.compound(), pointed_level(member.compound())-1);
+        const exprt pointer=get_pointer(rhs_object.get_root_object(), pointed_level(rhs_object.get_root_object())-1);
         const auto pointer_def = ssa_analysis[loc].def_map.find(ssa_objectt(pointer, ns).get_identifier())->second.def;
         const auto symbolic_def = ssa_analysis[loc].def_map.find(
             ssa_objectt(symbolic_deref_rhs, ns).get_identifier())->second.def;
