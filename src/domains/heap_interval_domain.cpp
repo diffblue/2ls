@@ -92,5 +92,7 @@ void heap_interval_domaint::project_on_vars(
   exprt interval_result;
   interval_domain.project_on_vars(v.interval_value, vars, interval_result);
 
-  result=and_exprt(heap_result, interval_result);
+  result=heap_result;
+  if(interval_result!=true_exprt())
+    result=and_exprt(result, interval_result);
 }
