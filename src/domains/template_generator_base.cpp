@@ -772,6 +772,11 @@ void template_generator_baset::filter_heap_interval_domain()
   {
     const domaint::vart &s=v->var;
 
+    if(s.id()==ID_symbol && is_pointed(s) &&
+       id2string(to_symbol_expr(s).get_identifier()).find(".")!=
+       std::string::npos)
+      continue;
+
     if(s.type().id()==ID_unsignedbv ||
        s.type().id()==ID_signedbv ||
        s.type().id()==ID_floatbv)
@@ -780,9 +785,7 @@ void template_generator_baset::filter_heap_interval_domain()
       continue;
     }
 
-    if(s.id()==ID_symbol && s.type().id()==ID_pointer &&
-       id2string(to_symbol_expr(s).get_identifier()).find("__CPROVER")==
-       std::string::npos)
+    if(s.id()==ID_symbol && s.type().id()==ID_pointer)
     {
       // Filter out non-assigned OUT variables
       if(v->kind!=domaint::OUT ||
