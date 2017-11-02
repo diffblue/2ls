@@ -2034,16 +2034,19 @@ exprt local_SSAt::concretise_symbolic_deref_rhs(
   if(deref_rhs.get_bool("#heap_access") && rhs_object)
   {
     const exprt pointer=get_pointer(
-        rhs_object.get_root_object(),
-        pointed_level(rhs_object.get_root_object())-1);
+      rhs_object.get_root_object(),
+      pointed_level(rhs_object.get_root_object())-1);
+    const auto pointer_id=ssa_objectt(pointer, ns).get_identifier();
     const auto pointer_def=ssa_analysis[loc].def_map.find(
-        ssa_objectt(pointer, ns).get_identifier())->second.def;
+      pointer_id)->second.def;
+    const auto symbolic_id=ssa_objectt(symbolic_deref_rhs, ns).get_identifier();
     const auto symbolic_def=ssa_analysis[loc].def_map.find(
-        ssa_objectt(symbolic_deref_rhs, ns).get_identifier())->second.def;
+      symbolic_id)->second.def;
 
     if(!symbolic_def.is_assignment()
         || (pointer_def.is_assignment()
-            && pointer_def.loc->location_number > symbolic_def.loc->location_number))
+            && pointer_def.loc->location_number>
+               symbolic_def.loc->location_number))
     {
       assign_rec(symbolic_deref_rhs, deref_rhs, true_exprt(), loc);
       return name(ssa_objectt(symbolic_deref_rhs, ns), OUT, loc);
@@ -2055,8 +2058,12 @@ exprt local_SSAt::concretise_symbolic_deref_rhs(
   }
   else
   {
-    forall_operands(it, rhs)
-      concretise_symbolic_deref_rhs(*it, ns, loc);
+    exprt rhs_copy=rhs;
+    Forall_operands(it, rhs_copy)
+    {
+      *it=concretise_symbolic_deref_rhs(*it, ns, loc);
+    }
+    return rhs_copy;
   }
 
   return all_symbolic_deref_defined(symbolic_deref_rhs, ns, loc)
