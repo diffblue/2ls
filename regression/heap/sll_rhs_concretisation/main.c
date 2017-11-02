@@ -18,11 +18,15 @@ int main()
 	p = q;
 
 	while(__VERIFIER_nondet_int) {
+		assert(p->next != NULL);
 		q = p->next;
+		assert(q != NULL);
 		q->next = malloc(sizeof(struct list));
+		q->next->next = q;
 		assert(q->next != NULL);
 		p = q;
+		assert(p == q);
 	}
 
-	return 1;
+	return 0;
 }
