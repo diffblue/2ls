@@ -251,12 +251,9 @@ void summary_checker_baset::check_properties(
   status() << "Loops " << (fully_unwound ? "" : "not ")
            << "fully unwound" << eom;
 
-  bool require_spurious_check=
-    !fully_unwound && options.get_bool_option("spurious-check");
-
   cover_goals_extt cover_goals(
     SSA, solver, loophead_selects, property_map,
-    require_spurious_check,
+    !fully_unwound && options.get_bool_option("spurious-check"),
     all_properties,
     options.get_bool_option("trace") ||
     options.get_option("graphml-witness")!="" ||
@@ -340,10 +337,7 @@ void summary_checker_baset::check_properties(
 
   // set all non-covered goals to PASS except if we do not try
   //  to cover all goals and we have found a FAIL
-  if(all_properties &&
-     (fully_unwound ||
-      (!options.get_bool_option("bmc") &&
-       !options.get_bool_option("incremental-bmc"))))
+  if(all_properties || cover_goals.number_covered()==0)
   {
     std::list<cover_goals_extt::cover_goalt>::const_iterator g_it=
       cover_goals.goals.begin();
