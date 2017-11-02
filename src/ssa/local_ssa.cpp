@@ -733,7 +733,27 @@ void local_SSAt::build_assertions(locationt loc)
     const exprt deref_rhs=dereference(loc->guard, loc);
     collect_iterators_rhs(deref_rhs, loc);
 
-    exprt c=read_rhs(loc->guard, loc);
+    const exprt symbolic_deref_rhs=symbolic_dereference(loc->guard, ns);
+    exprt rhs=all_symbolic_deref_defined(symbolic_deref_rhs, ns, loc)
+              ? symbolic_deref_rhs : deref_rhs;
+
+    ssa_objectt rhs_object(symbolic_deref_rhs, ns);
+    if (symbolic_deref_rhs.get_bool("#heap_access") && rhs_object)
+    {
+      const exprt pointer=get_pointer(rhs_object.get_root_object(), pointed_level(rhs_object.get_root_object())-1);
+      const auto pointer_def = ssa_analysis[loc].def_map.find(ssa_objectt(pointer, ns).get_identifier())->second.def;
+      const auto symbolic_def = ssa_analysis[loc].def_map.find(
+          ssa_objectt(symbolic_deref_rhs, ns).get_identifier())->second.def;
+
+      if (!symbolic_def.is_assignment()
+          || (pointer_def.is_assignment() && pointer_def.loc->location_number > symbolic_def.loc->location_number))
+      {
+        assign_rec(symbolic_deref_rhs, deref_rhs, true_exprt(), loc);
+        rhs = name(ssa_objectt(symbolic_deref_rhs, ns), OUT, loc);
+      }
+    }
+
+    exprt c=read_rhs(rhs, loc);
     exprt g=guard_symbol(loc);
     (--nodes.end())->assertions.push_back(implies_exprt(g, c));
   }
