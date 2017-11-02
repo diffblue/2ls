@@ -74,8 +74,8 @@ Function: twols_parse_optionst::twols_parse_optionst
 \*******************************************************************/
 
 twols_parse_optionst::twols_parse_optionst(int argc, const char **argv):
-parse_options_baset(TWOLS_OPTIONS, argc, argv),
-language_uit(cmdline, ui_message_handler),
+  parse_options_baset(TWOLS_OPTIONS, argc, argv),
+  language_uit(cmdline, ui_message_handler),
   ui_message_handler(cmdline, "2LS " TWOLS_VERSION),
   recursion_detected(false),
   threads_detected(false)
@@ -191,6 +191,14 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
   {
     options.set_option("equalities", true);
     options.set_option("std-invariants", true);
+  }
+  else if(cmdline.isset("heap"))
+  {
+    options.set_option("heap", true);
+  }
+  else if(cmdline.isset("heap-interval"))
+  {
+    options.set_option("heap-interval", true);
   }
   else
   {
@@ -456,6 +464,10 @@ int twols_parse_optionst::doit()
     status() << "Havocking loops and function calls" << eom;
   else if(options.get_bool_option("equalities"))
     status() << "Using (dis)equalities domain" << eom;
+  else if(options.get_bool_option("heap"))
+    status() << "Using heap domain" << eom;
+  else if(options.get_bool_option("heap-interval"))
+    status() << "Using heap domain with interval domain for values" << eom;
   else
   {
     if(options.get_bool_option("intervals"))
@@ -477,21 +489,31 @@ int twols_parse_optionst::doit()
     status() << eom;
   }
 
+  const namespacet ns(goto_model.symbol_table);
+  ssa_heap_analysist heap_analysis(ns);
+  if((options.get_bool_option("heap") ||
+      options.get_bool_option("heap-interval")) &&
+     !options.get_bool_option("inline"))
+  {
+    heap_analysis(goto_model.goto_functions);
+    add_dynamic_object_symbols(heap_analysis, goto_model);
+  }
+
   try
   {
     std::unique_ptr<summary_checker_baset> checker;
     if(!options.get_bool_option("k-induction") &&
        !options.get_bool_option("incremental-bmc"))
       checker=std::unique_ptr<summary_checker_baset>(
-        new summary_checker_ait(options));
+        new summary_checker_ait(options, heap_analysis));
     if(options.get_bool_option("k-induction") &&
        !options.get_bool_option("incremental-bmc"))
       checker=std::unique_ptr<summary_checker_baset>(
-        new summary_checker_kindt(options));
+        new summary_checker_kindt(options, heap_analysis));
     if(!options.get_bool_option("k-induction") &&
        options.get_bool_option("incremental-bmc"))
       checker=std::unique_ptr<summary_checker_baset>(
-        new summary_checker_bmct(options));
+        new summary_checker_bmct(options, heap_analysis));
 
     checker->set_message_handler(get_message_handler());
     checker->simplify=!cmdline.isset("no-simplify");
@@ -1078,8 +1100,26 @@ bool twols_parse_optionst::process_goto_program(
 #endif
 
 #if 1
+    // Find, inline and remove malloc function
     // TODO: find a better place for that
-    replace_malloc(goto_model, "");
+    Forall_goto_functions(it, goto_model.goto_functions)
+    {
+      if(it->first=="malloc" || it->first=="free")
+        it->second.type.set(ID_C_inlined, true);
+    }
+    goto_partial_inline(goto_model, ui_message_handler, 0);
+    Forall_goto_functions(it, goto_model.goto_functions)
+    {
+      if(it->first=="malloc" || it->first=="free")
+        it->second.body.clear();
+    }
+#endif
+
+    // create symbols for objects pointed by parameters
+    create_dynamic_objects(goto_model);
+
+#if REMOVE_MULTIPLE_DEREFERENCES
+    remove_multiple_dereferences(goto_model);
 #endif
 
     // recalculate numbers, etc.
@@ -1087,6 +1127,12 @@ bool twols_parse_optionst::process_goto_program(
 
     // add loop ids
     goto_model.goto_functions.compute_loop_numbers();
+
+    // Replace malloc
+    replace_malloc(goto_model, "");
+
+    // remove loop heads from function entries
+    remove_loops_in_entry(goto_model);
 
     // inline __CPROVER_initialize and main
     if(cmdline.isset("inline-main"))
@@ -1402,6 +1448,7 @@ void twols_parse_optionst::output_graphml_proof(
     }
   }
 }
+
 /*******************************************************************\
 
 Function: twols_parse_optionst::output_json_cex
@@ -1591,6 +1638,8 @@ void twols_parse_optionst::help()
     " --equalities                 use equalities and disequalities domain\n"
     " --zones                      use zone domain\n"
     " --octagons                   use octagon domain\n"
+    " --heap                       use heap domain\n"
+    " --heap-interval              use heap domain with interval domain for values\n" // NOLINT(*)
     " --enum-solver                use solver based on model enumeration\n"
     " --binsearch-solver           use solver based on binary search\n"
     " --arrays                     do not ignore array contents\n"

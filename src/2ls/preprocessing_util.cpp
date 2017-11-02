@@ -466,3 +466,158 @@ void twols_parse_optionst::split_loopheads(goto_modelt &goto_model)
     }
   }
 }
+
+/*******************************************************************\
+
+Function: twols_parse_optionst::remove_loops_in_entry
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Remove loop head from entry instruction of a function -
+          causes problems with input variables naming. If first
+          instruction is target of back-jump, insert SKIP instruction
+          before.
+
+\*******************************************************************/
+void twols_parse_optionst::remove_loops_in_entry(goto_modelt &goto_model)
+{
+  Forall_goto_functions(f_it, goto_model.goto_functions)
+  {
+    if(f_it->second.body_available() &&
+       f_it->second.body.instructions.begin()->is_target())
+    {
+      auto new_entry=f_it->second.body.insert_before(
+        f_it->second.body.instructions.begin());
+      new_entry->function=f_it->first;
+      new_entry->make_skip();
+    }
+  }
+}
+
+/*******************************************************************\
+
+Function: twols_parse_optionst::create_dynamic_objects
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Create symbols for objects pointed by parameters of a function.
+
+\*******************************************************************/
+void twols_parse_optionst::create_dynamic_objects(goto_modelt &goto_model)
+{
+  Forall_goto_functions(f_it, goto_model.goto_functions)
+  {
+    Forall_goto_program_instructions(i_it, f_it->second.body)
+    {
+      if(i_it->is_assign())
+      {
+        code_assignt &code_assign=to_code_assign(i_it->code);
+        add_dynamic_object_rec(code_assign.lhs(), goto_model.symbol_table);
+        add_dynamic_object_rec(code_assign.rhs(), goto_model.symbol_table);
+      }
+    }
+  }
+}
+
+/*******************************************************************\
+
+Function: twols_parse_optionst::add_dynamic_object_rec
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: For each pointer-typed symbol in an expression which is a parameter,
+          create symbol for pointed object in the symbol table.
+
+\*******************************************************************/
+void twols_parse_optionst::add_dynamic_object_rec(
+  exprt &expr,
+  symbol_tablet &symbol_table)
+{
+  if(expr.id()==ID_symbol)
+  {
+    const symbolt &symbol=symbol_table.lookup(
+      to_symbol_expr(expr).get_identifier());
+    if(symbol.is_parameter && symbol.type.id()==ID_pointer)
+    {
+      // New symbol
+      symbolt object_symbol;
+
+      object_symbol.base_name=id2string(symbol.base_name)+"'obj";
+      object_symbol.name=id2string(symbol.name)+"'obj";
+      const typet &pointed_type=symbol.type.subtype();
+      // Follow pointed type
+      if(pointed_type.id()==ID_symbol)
+      {
+        const symbolt type_symbol=symbol_table.lookup(
+          to_symbol_type(pointed_type).get_identifier());
+        object_symbol.type=type_symbol.type;
+      }
+      else
+        object_symbol.type=pointed_type;
+      object_symbol.mode=ID_C;
+
+      symbol_table.add(object_symbol);
+    }
+  }
+  else
+  {
+    Forall_operands(it, expr)
+      add_dynamic_object_rec(*it, symbol_table);
+  }
+}
+
+/*******************************************************************\
+
+Function: twols_parse_optionst::add_dynamic_object_symbols
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Add symbols for all dynamic objects in the program into
+          the symbol table.
+
+\*******************************************************************/
+void twols_parse_optionst::add_dynamic_object_symbols(
+  const ssa_heap_analysist &heap_analysis,
+  goto_modelt &goto_model)
+{
+  forall_goto_functions(f_it, goto_model.goto_functions)
+  {
+    forall_goto_program_instructions(i_it, f_it->second.body)
+    {
+      if(i_it->is_function_call())
+      {
+        auto &fun_call=to_code_function_call(i_it->code);
+        const irep_idt fname=to_symbol_expr(
+          fun_call.function()).get_identifier();
+        auto n_it=i_it;
+        ++n_it;
+        for(const symbol_exprt &o :
+          heap_analysis[n_it].new_caller_objects(fname, i_it))
+        {
+          // New symbol
+          symbolt object_symbol;
+
+          object_symbol.name=o.get_identifier();
+          object_symbol.base_name=id2string(object_symbol.name).substr(5);
+          object_symbol.is_lvalue=true;
+
+          object_symbol.type=o.type();
+          object_symbol.type.set("#dynamic", true);
+
+          object_symbol.mode=ID_C;
+
+          goto_model.symbol_table.add(object_symbol);
+        }
+      }
+    }
+  }
+}
+

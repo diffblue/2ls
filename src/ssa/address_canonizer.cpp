@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/pointer_offset_size.h>
 
 #include "address_canonizer.h"
+#include "ssa_pointed_objects.h"
 
 /*******************************************************************\
 
@@ -74,6 +75,15 @@ exprt address_canonizer(
         sum.make_typecast(address.type());
 
       return sum;
+    }
+    else if(object.id()==ID_symbol && is_iterator(object))
+    {
+      // address of iterator is dereferenced to a corresponding symbol -
+      // will be bound to real address during analysis
+      symbol_exprt iterator_addr(
+        id2string(to_symbol_expr(object).get_identifier())+"'addr",
+        address.type());
+      return iterator_addr;
     }
     else
       return address;

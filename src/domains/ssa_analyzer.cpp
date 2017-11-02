@@ -31,6 +31,8 @@ Author: Peter Schrammel
 #include "template_generator_ranking.h"
 #include "strategy_solver_predabs.h"
 #include "ssa_analyzer.h"
+#include "strategy_solver_heap.h"
+#include "strategy_solver_heap_interval.h"
 
 #define BINSEARCH_SOLVER strategy_solver_binsearcht(\
   *static_cast<tpolyhedra_domaint *>(domain), solver, SSA.ns)
@@ -103,6 +105,28 @@ void ssa_analyzert::operator()(
       *static_cast<equality_domaint *>(domain), solver, SSA.ns);
     result=new equality_domaint::equ_valuet();
   }
+  else if(template_generator.options.get_bool_option("heap"))
+  {
+    strategy_solver=new strategy_solver_heapt(
+      *static_cast<heap_domaint *>(domain),
+      solver,
+      SSA,
+      precondition,
+      get_message_handler(),
+      template_generator);
+    result=new heap_domaint::heap_valuet();
+  }
+  else if(template_generator.options.get_bool_option("heap-interval"))
+  {
+    strategy_solver=new strategy_solver_heap_intervalt(
+      *static_cast<heap_interval_domaint *>(domain),
+      solver,
+      SSA,
+      precondition,
+      get_message_handler(),
+      template_generator);
+    result=new heap_interval_domaint::heap_interval_valuet();
+  }
   else
   {
     if(template_generator.options.get_bool_option("enum-solver"))
@@ -159,4 +183,39 @@ Function: ssa_analyzert::get_result
 void ssa_analyzert::get_result(exprt &_result, const domaint::var_sett &vars)
 {
   domain->project_on_vars(*result, vars, _result);
+}
+
+/*******************************************************************\
+
+Function: ssa_analyzert::update_heap_out
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+void ssa_analyzert::update_heap_out(summaryt::var_sett &out)
+{
+  heap_domaint &heap_domain=static_cast<heap_domaint &>(*domain);
+
+  auto new_heap_vars=heap_domain.get_new_heap_vars();
+  out.insert(new_heap_vars.begin(), new_heap_vars.end());
+}
+
+/*******************************************************************\
+
+Function: ssa_analyzert::input_heap_bindings
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+const exprt ssa_analyzert::input_heap_bindings()
+{
+  return static_cast<heap_domaint &>(*domain).get_iterator_bindings();
 }

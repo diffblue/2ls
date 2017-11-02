@@ -15,14 +15,9 @@ Author: Peter Schrammel
 #include <util/find_symbols.h>
 
 #include "summarizer_fw.h"
-#include "summary_db.h"
 
 #include <domains/ssa_analyzer.h>
 #include <domains/template_generator_summary.h>
-#include <domains/template_generator_callingcontext.h>
-
-#include <ssa/local_ssa.h>
-#include <ssa/simplify_ssa.h>
 
 // #define SHOW_WHOLE_RESULT
 
@@ -71,6 +66,7 @@ void summarizer_fwt::compute_summary_rec(
   summary.params=SSA.params;
   summary.globals_in=SSA.globals_in;
   summary.globals_out=SSA.globals_out;
+  summary.set_value_domains(SSA);
   summary.fw_precondition=precondition;
 
   if(!options.get_bool_option("havoc"))
@@ -170,6 +166,16 @@ void summarizer_fwt::do_summary(
   analyzer.get_result(whole_result, template_generator.all_vars());
   debug() << "whole result: " << from_expr(SSA.ns, "", whole_result) << eom;
 #endif
+
+  if(options.get_bool_option("heap"))
+  {
+    analyzer.update_heap_out(summary.globals_out);
+    const exprt advancer_bindings=analyzer.input_heap_bindings();
+    if(!advancer_bindings.is_true())
+    {
+      summary.aux_precondition=advancer_bindings;
+    }
+  }
 
   if(context_sensitive && !summary.fw_precondition.is_true())
   {

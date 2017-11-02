@@ -38,8 +38,10 @@ public:
     const local_SSAt &SSA,
     bool forward,
     exprt::operandst &summaries,
-    exprt::operandst &bindings);
+    exprt::operandst &bindings,
+    local_SSAt::locationt loc=local_SSAt::locationt());
   exprt get_summaries(const local_SSAt &SSA);
+  exprt get_summaries_to_loc(const local_SSAt &SSA, local_SSAt::locationt loc);
 
   void replace(
     local_SSAt &SSA,
@@ -105,6 +107,11 @@ public:
 
   static irep_idt get_original_identifier(const symbol_exprt &s);
 
+  static std::list<exprt> apply_dereference(
+    const std::list<exprt> &exprs,
+    const ssa_value_domaint &value_domain,
+    const namespacet &ns);
+
 protected:
   unsigned counter;
   summary_dbt &summary_db;
@@ -112,6 +119,8 @@ protected:
   local_SSAt::nodest new_nodes;
   local_SSAt::nodet::equalitiest new_equs;
   std::set<local_SSAt::nodet::function_callst::iterator> rm_function_calls;
+
+  std::set<symbol_exprt> covered_cs_heap_out;
 
   void replace_globals_in(
     const local_SSAt::var_sett &globals_in,
@@ -129,14 +138,69 @@ protected:
     const local_SSAt::var_sett &globals);
   exprt get_replace_params(
     const local_SSAt::var_listt &params,
-    const function_application_exprt &funapp_expr);
-  exprt get_replace_globals_out(
-    const local_SSAt::var_sett &globals_out,
+    const function_application_exprt &funapp_expr,
     const local_SSAt::var_sett &cs_globals_in,
-    const local_SSAt::var_sett &cs_globals_out);
+    const local_SSAt::var_sett &cs_globals_out,
+    const local_SSAt &SSA,
+    const summaryt &summary,
+    const local_SSAt::locationt &loc);
+  exprt get_replace_globals_out(
+    const local_SSAt::var_sett &cs_globals_in,
+    const local_SSAt::var_sett &cs_globals_out,
+    const summaryt &summary,
+    const function_application_exprt &funapp_expr,
+    const local_SSAt &SSA,
+    local_SSAt::locationt loc);
+  exprt get_replace_new_objects(
+    const local_SSAt &SSA,
+    const function_application_exprt funapp_expr,
+    local_SSAt::locationt loc,
+    const summaryt &summary);
 
   void rename(exprt &expr);
   void rename(local_SSAt::nodet &node);
+
+  bool cs_heap_covered(const exprt &expr);
+
+  // Transformation functions for lists of input/output arguments/pointers
+  // (or their members) for binding purposes
+
+  exprt param_in_transformer(const exprt &param);
+  exprt arg_in_transformer(
+    const exprt &arg,
+    const local_SSAt &SSA,
+    local_SSAt::locationt loc);
+  exprt param_in_member_transformer(
+    const exprt &param,
+    const struct_union_typet::componentt &component);
+  exprt arg_in_member_transformer(
+    const exprt &arg,
+    const struct_union_typet::componentt &component,
+    const local_SSAt &SSA,
+    local_SSAt::locationt loc);
+
+  exprt param_out_transformer(
+    const exprt &param,
+    const typet &type,
+    const local_SSAt::var_sett &globals_out);
+
+  exprt arg_out_transformer(
+    const exprt &arg,
+    const typet &arg_symbol_type,
+    const typet &param_type,
+    const local_SSAt &SSA,
+    local_SSAt::locationt loc);
+  exprt param_out_member_transformer(
+    const exprt &param,
+    const struct_union_typet::componentt &component,
+    const local_SSAt::var_sett &globals_out);
+  exprt arg_out_member_transformer(
+    const exprt &arg,
+    const struct_union_typet::componentt &component,
+    const local_SSAt &SSA,
+    local_SSAt::locationt loc);
+
+  static bool contains_iterator(const std::list<exprt> &params);
 };
 
 #endif

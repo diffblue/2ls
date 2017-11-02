@@ -93,7 +93,9 @@ void template_generator_callingcontextt::collect_variables_callingcontext(
       v_it!=cs_globals_in.end(); v_it++)
   {
     symbol_exprt dummy;
-    if(ssa_inlinert::find_corresponding_symbol(*v_it, globals_in, dummy))
+    if(ssa_inlinert::find_corresponding_symbol(*v_it, globals_in, dummy) ||
+       id2string(v_it->get_identifier()).find("dynamic_object$")!=
+       std::string::npos)
       add_var(
         *v_it,
         guard,
