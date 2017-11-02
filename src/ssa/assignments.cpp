@@ -50,7 +50,7 @@ void assignmentst::build_assignment_map(
         assign(rhs_symbolic_deref, it, ns);
       }
     }
-    else if (it->is_assert())
+    else if(it->is_assert())
     {
       build_assertion(it->guard, it, ns);
     }
@@ -253,19 +253,19 @@ Function: assignmentst::build_assertion
 \*******************************************************************/
 
 void assignmentst::build_assertion(
-    const exprt &expr,
-    const locationt& loc,
-    const namespacet &ns)
+  const exprt &expr,
+  const locationt& loc,
+  const namespacet &ns)
 {
   exprt rhs_symbolic_deref=symbolic_dereference(expr, ns);
   ssa_objectt rhs_object(rhs_symbolic_deref, ns);
 
-  if (has_symbolic_deref(rhs_symbolic_deref) && rhs_object)
+  if(has_symbolic_deref(rhs_symbolic_deref) && rhs_object)
   {
     rhs_symbolic_deref.set("#is_rhs_assign", true);
     assign(rhs_symbolic_deref, loc, ns);
   }
-  else if (has_symbolic_deref(rhs_symbolic_deref))
+  else if(has_symbolic_deref(rhs_symbolic_deref))
   {
     forall_operands(it, expr)
       build_assertion(*it, loc, ns);

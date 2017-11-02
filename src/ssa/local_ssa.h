@@ -219,9 +219,9 @@ public:
     locationt loc) const;
 
   exprt concretise_symbolic_deref_rhs(
-      const exprt &rhs,
-      const namespacet &ns,
-      const locationt loc);
+    const exprt &rhs,
+    const namespacet &ns,
+    const locationt loc);
 
   const ssa_heap_analysist &heap_analysis;
 

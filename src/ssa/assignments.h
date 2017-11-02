@@ -75,9 +75,9 @@ protected:
     const namespacet &ns);
 
   void build_assertion(
-      const exprt &expr,
-      const locationt& loc,
-      const namespacet &ns);
+    const exprt &expr,
+    const locationt& loc,
+    const namespacet &ns);
 };
 
 #endif
