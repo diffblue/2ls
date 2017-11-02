@@ -2055,8 +2055,12 @@ exprt local_SSAt::concretise_symbolic_deref_rhs(
   }
   else
   {
-    forall_operands(it, rhs)
-      concretise_symbolic_deref_rhs(*it, ns, loc);
+    exprt rhs_copy=rhs;
+    Forall_operands(it, rhs_copy)
+    {
+      *it=concretise_symbolic_deref_rhs(*it, ns, loc);
+    }
+    return rhs_copy;
   }
 
   return all_symbolic_deref_defined(symbolic_deref_rhs, ns, loc)
