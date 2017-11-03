@@ -366,6 +366,8 @@ void ssa_build_goto_tracet::operator()(
       if(current_pc->is_backwards_goto())
       {
         // we de-(!)-crement the unwinding counter
+        if (unwindable_local_SSA.current_unwindings.back()==0)
+          break;
         unwindable_local_SSA.decrement_unwindings(0);
 #if 0
         std::cout << "loop-end  : " << current_pc->location_number << std::endl;

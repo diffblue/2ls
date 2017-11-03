@@ -306,7 +306,6 @@ void summary_checker_baset::check_properties(
         std::cout << "property: " << from_expr(SSA.ns, "", property)
                   << std::endl;
 #endif
-
         property_map[property_id].location=i_it;
         cover_goals.goal_map[property_id].conjuncts.push_back(property);
       }

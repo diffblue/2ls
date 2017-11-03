@@ -81,7 +81,7 @@ protected:
     bool termination=false);
 
   property_checkert::resultt check_properties();
-  void check_properties(
+  virtual void check_properties(
     const ssa_dbt::functionst::const_iterator f_it);
 
   exprt::operandst get_loophead_selects(

@@ -51,6 +51,7 @@ Author: Daniel Kroening, Peter Schrammel
 #include "summary_checker_ai.h"
 #include "summary_checker_bmc.h"
 #include "summary_checker_kind.h"
+#include "summary_checker_nonterm.h"
 #include "show.h"
 #include "horn_encoding.h"
 
@@ -266,6 +267,15 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
       options.set_option("unwind", UINT_MAX);
   }
 
+  // compute singleton recurrence set - simple nontermination
+  if(cmdline.isset("nontermination"))
+  {
+    options.set_option("nontermination", true);
+    options.set_option("inline", true);
+    if(!cmdline.isset("unwind"))
+      options.set_option("unwind", UINT_MAX);
+  }
+
   // do incremental bmc
   if(cmdline.isset("incremental-bmc"))
   {
@@ -420,6 +430,20 @@ int twols_parse_optionst::doit()
     options.set_option("show-invariants", true);
   }
 
+  if(cmdline.isset("nontermination"))
+  {
+    // turn assertions (from generic checks) into assumptions
+    Forall_goto_functions(f_it, goto_model.goto_functions)
+    {
+      goto_programt &body=f_it->second.body;
+      Forall_goto_program_instructions(i_it, body)
+      {
+        if(i_it->is_assert())
+        i_it->type=goto_program_instruction_typet::ASSUME;
+      }
+    }
+  }
+
 #if IGNORE_RECURSION
   if(recursion_detected)
   {
@@ -492,6 +516,9 @@ int twols_parse_optionst::doit()
        options.get_bool_option("incremental-bmc"))
       checker=std::unique_ptr<summary_checker_baset>(
         new summary_checker_bmct(options));
+    if(options.get_bool_option("nontermination"))
+      checker=std::unique_ptr<summary_checker_baset>(
+        new summary_checker_nontermt(options));
 
     checker->set_message_handler(get_message_handler());
     checker->simplify=!cmdline.isset("no-simplify");
@@ -1352,8 +1379,9 @@ void twols_parse_optionst::output_graphml_cex(
 
     const namespacet ns(goto_model.symbol_table);
     const std::string graphml=options.get_option("graphml-witness");
+    
     if(!graphml.empty())
-    {
+    {    
       graphml_witnesst graphml_witness(ns);
       graphml_witness(p.second.error_trace);
 

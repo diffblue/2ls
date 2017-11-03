@@ -137,7 +137,7 @@ void cover_goals_extt::operator()()
 
     switch(dec_result)
     {
-    case decision_proceduret::D_UNSATISFIABLE: // DONE
+    case decision_proceduret::D_UNSATISFIABLE: //
       break;
 
     case decision_proceduret::D_SATISFIABLE:

@@ -33,6 +33,7 @@ property_checkert::resultt summary_checker_ait::operator()(
   ssa_unwinder.init(false, false);
 
   unsigned unwind=options.get_unsigned_int_option("unwind");
+
   if(unwind>0)
   {
     status() << "Unwinding" << messaget::eom;
@@ -174,7 +175,7 @@ property_checkert::resultt summary_checker_ait::report_termination()
       }
     }
 #endif
-    return property_checkert::FAIL;
+    return property_checkert::UNKNOWN;
   }
   return property_checkert::UNKNOWN;
 }

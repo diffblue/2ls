@@ -1,9 +1,6 @@
 /*******************************************************************\
-
 Module: SSA Unwinder
-
 Author: Peter Schrammel, Saurabh Joshi
-
 \*******************************************************************/
 
 #ifndef CPROVER_2LS_SSA_SSA_UNWINDER_H
