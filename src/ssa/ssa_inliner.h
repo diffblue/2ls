@@ -103,7 +103,14 @@ public:
     const local_SSAt::var_sett &globals,
     symbol_exprt &s_found);
 
+	static bool find_corresponding_dyn_obj(const symbol_exprt &s,
+																				 const summaryt &summary,
+																				 const namespacet &ns,
+																				 symbol_exprt &found);
+
   static irep_idt get_original_identifier(const symbol_exprt &s);
+
+	static bool is_struct_member(const irep_idt &identifier);
 
 protected:
   unsigned counter;
@@ -135,9 +142,10 @@ protected:
     const local_SSAt &SSA,
     const local_SSAt::locationt &loc);
   exprt get_replace_globals_out(
-    const local_SSAt::var_sett &globals_out,
-    const local_SSAt::var_sett &cs_globals_in,  
-    const local_SSAt::var_sett &cs_globals_out);
+    const local_SSAt::var_sett &cs_globals_in,
+    const local_SSAt::var_sett &cs_globals_out,
+    const summaryt &summary,
+    const namespacet &ns);
 
   void rename(exprt &expr);
   void rename(local_SSAt::nodet &node);
