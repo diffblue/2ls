@@ -3,25 +3,26 @@
  *
  *  Viktor Malik, 12.8.2016 (c).
  */
-#ifndef CPROVER_HEAP_DOMAIN_H
-#define CPROVER_HEAP_DOMAIN_H
+#ifndef CPROVER_2LS_DOMAINS_HEAP_DOMAIN_H
+#define CPROVER_2LS_DOMAINS_HEAP_DOMAIN_H
 
-#include <util/namespace.h>
 #include "domain.h"
 
-class heap_domaint : public domaint
+class heap_domaint:public domaint
 {
  public:
   typedef unsigned rowt;
   typedef vart member_fieldt;
   typedef std::pair<exprt, member_fieldt> dyn_objt;
 
-  heap_domaint(unsigned int _domain_number, replace_mapt &_renaming_map,
-               const var_specst &var_specs,
-               const namespacet &ns_)
-      : domaint(_domain_number, _renaming_map), ns(ns_)
+  heap_domaint(
+    unsigned int _domain_number,
+    replace_mapt &_renaming_map,
+    const var_specst &var_specs,
+    const namespacet &ns_):
+    domaint(_domain_number, _renaming_map, ns_)
   {
-    make_template(var_specs, ns);
+    make_template(var_specs, ns_);
   }
 
   /**
@@ -195,7 +196,6 @@ class heap_domaint : public domaint
 
  protected:
   templatet templ;
-  namespacet ns;
 
   void make_template(const var_specst &var_specs, const namespacet &ns);
 
@@ -208,4 +208,4 @@ class heap_domaint : public domaint
 };
 
 
-#endif //CPROVER_HEAP_DOMAIN_H
+#endif // CPROVER_2LS_DOMAINS_HEAP_DOMAIN_H
