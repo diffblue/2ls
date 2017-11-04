@@ -336,7 +336,8 @@ void ssa_build_goto_tracet::operator()(
       std::cout << "loop-head : " << current_pc->location_number << std::endl;
       std::cout << "unwindings: "
                 << unwindable_local_SSA.odometer_to_string(
-                  unwindable_local_SSA.current_unwindings, 100)
+                  unwindable_local_SSA.current_unwindings,
+                  100)
                 << std::endl;
 #endif
     }
@@ -365,13 +366,17 @@ void ssa_build_goto_tracet::operator()(
 #endif
       if(current_pc->is_backwards_goto())
       {
+        if(unwindable_local_SSA.current_unwindings.back()==0)
+          break;
+
         // we de-(!)-crement the unwinding counter
         unwindable_local_SSA.decrement_unwindings(0);
 #if 0
         std::cout << "loop-end  : " << current_pc->location_number << std::endl;
         std::cout << "unwindings: "
                   << unwindable_local_SSA.odometer_to_string(
-                    unwindable_local_SSA.current_unwindings, 100)
+                    unwindable_local_SSA.current_unwindings,
+                    100)
                   << std::endl;
 #endif
 #if TERM_CEX
