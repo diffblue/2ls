@@ -51,6 +51,7 @@ Author: Daniel Kroening, Peter Schrammel
 #include "summary_checker_ai.h"
 #include "summary_checker_bmc.h"
 #include "summary_checker_kind.h"
+#include "summary_checker_nonterm.h"
 #include "show.h"
 #include "horn_encoding.h"
 
@@ -263,7 +264,16 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
     options.set_option("k-induction", true);
     options.set_option("inline", true);
     if(!cmdline.isset("unwind"))
-      options.set_option("unwind", UINT_MAX);
+      options.set_option("unwind", std::numeric_limits<unsigned>::max());
+  }
+
+  // compute singleton recurrence set - simple nontermination
+  if(cmdline.isset("nontermination"))
+  {
+    options.set_option("nontermination", true);
+    options.set_option("inline", true);
+    if(!cmdline.isset("unwind"))
+      options.set_option("unwind", std::numeric_limits<unsigned>::max());
   }
 
   // do incremental bmc
@@ -273,7 +283,7 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
     options.set_option("inline", true);
     options.set_option("havoc", true);
     if(!cmdline.isset("unwind"))
-      options.set_option("unwind", UINT_MAX);
+      options.set_option("unwind", std::numeric_limits<unsigned>::max());
   }
 
   // check for spuriousness of assertion failures
@@ -420,6 +430,20 @@ int twols_parse_optionst::doit()
     options.set_option("show-invariants", true);
   }
 
+  if(cmdline.isset("nontermination"))
+  {
+    // turn assertions (from generic checks) into assumptions
+    Forall_goto_functions(f_it, goto_model.goto_functions)
+    {
+      goto_programt &body=f_it->second.body;
+      Forall_goto_program_instructions(i_it, body)
+      {
+        if(i_it->is_assert())
+        i_it->type=goto_program_instruction_typet::ASSUME;
+      }
+    }
+  }
+
 #if IGNORE_RECURSION
   if(recursion_detected)
   {
@@ -492,6 +516,9 @@ int twols_parse_optionst::doit()
        options.get_bool_option("incremental-bmc"))
       checker=std::unique_ptr<summary_checker_baset>(
         new summary_checker_bmct(options));
+    if(options.get_bool_option("nontermination"))
+     checker=std::unique_ptr<summary_checker_baset>(
+       new summary_checker_nontermt(options));
 
     checker->set_message_handler(get_message_handler());
     checker->simplify=!cmdline.isset("no-simplify");
@@ -840,7 +867,7 @@ void twols_parse_optionst::require_entry(
 
   if(goto_model.symbol_table.symbols.find(entry_point)==
      symbol_table.symbols.end())
-    throw "The program has no entry point; please complete linking";
+    throw "the program has no entry point; please complete linking";
 }
 
 /*******************************************************************\
@@ -1014,8 +1041,7 @@ bool twols_parse_optionst::process_goto_program(
   try
   {
     status() << "Function Pointer Removal" << eom;
-    remove_function_pointers(
-      goto_model, cmdline.isset("pointer-check"));
+    remove_function_pointers(goto_model, cmdline.isset("pointer-check"));
 
     // do partial inlining
     if(options.get_bool_option("inline-partial"))
@@ -1047,7 +1073,9 @@ bool twols_parse_optionst::process_goto_program(
       status() << "Performing full inlining" << eom;
       const namespacet ns(goto_model.symbol_table);
       goto_inlinet goto_inline(
-        goto_model.goto_functions, ns, ui_message_handler);
+        goto_model.goto_functions,
+        ns,
+        ui_message_handler);
       goto_inline();
 #if IGNORE_RECURSION
       recursion_detected=goto_inline.recursion_detected();
@@ -1204,7 +1232,8 @@ void twols_parse_optionst::report_properties(
       xmlt xml_result("result");
       xml_result.set_attribute("property", id2string(it->first));
       xml_result.set_attribute(
-        "status", property_checkert::as_string(it->second.result));
+        "status",
+        property_checkert::as_string(it->second.result));
       std::cout << xml_result << "\n";
     }
     else

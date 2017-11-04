@@ -9,7 +9,7 @@ Author: Peter Schrammel
 #include "summary_checker_ai.h"
 #include <ssa/ssa_build_goto_trace.h>
 
-#define TERM_CEX 1
+#define TERM_CEX 0
 
 /*******************************************************************\
 
@@ -174,7 +174,12 @@ property_checkert::resultt summary_checker_ait::report_termination()
       }
     }
 #endif
+#if 1
     return property_checkert::FAIL;
+#else
+    // rely on nontermination checker to find counterexample
+    return property_checkert::UNKNOWN;
+#endif
   }
   return property_checkert::UNKNOWN;
 }

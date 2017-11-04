@@ -81,16 +81,20 @@ protected:
     bool termination=false);
 
   property_checkert::resultt check_properties();
-  void check_properties(
+  virtual void check_properties(
     const ssa_dbt::functionst::const_iterator f_it);
 
   exprt::operandst get_loophead_selects(
-    const irep_idt &function_name, const local_SSAt &, prop_convt &);
+    const irep_idt &function_name,
+    const local_SSAt &,
+    prop_convt &);
   bool is_spurious(
     const exprt::operandst& loophead_selects,
     incremental_solvert&);
   exprt::operandst get_loop_continues(
-    const irep_idt &function_name, const local_SSAt &, prop_convt &);
+    const irep_idt &function_name,
+    const local_SSAt &,
+    prop_convt &);
   bool is_fully_unwound(
     const exprt::operandst& loop_continues,
     const exprt::operandst& loophead_selects,
