@@ -144,8 +144,9 @@ void summary_checker_nontermt::check_properties(
   {
     if(n_it->loophead!=SSA.nodes.end()) // we've found a loop
     {
-      irep_idt property_id=
-        irep_idt(n_it->loophead->location->location_number, 0);
+      irep_idt property_id(
+        id2string(n_it->location->function)+"."+
+        std::to_string(n_it->location->loop_number)+".term");
 
       exprt lsguard=
         SSA.name(SSA.guard_symbol(), local_SSAt::LOOP_SELECT, n_it->location);
@@ -283,8 +284,9 @@ void summary_checker_nontermt::check_properties_linear(
       // we use continues further, therefore we put incrementation here
       loop_counter++;
 
-      irep_idt property_id=
-        irep_idt(n_it->loophead->location->location_number, 0);
+      irep_idt property_id(
+        id2string(n_it->location->function)+"."+
+        std::to_string(n_it->location->loop_number)+".term");
 
       const ssa_domaint::phi_nodest &phi_nodes=
         SSA.ssa_analysis[n_it->loophead->location].phi_nodes;
