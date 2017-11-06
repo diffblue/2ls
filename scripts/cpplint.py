@@ -4738,27 +4738,8 @@ def CheckStyle(filename, clean_lines, linenum, file_extension, nesting_state,
                     'If parameters or arguments require a line break, each parameter should be put on its own line.')
             # Skip to the end of the bracket
             start_linenum = nested_close_linenum
-          else:
-            if(not Match('^\s*[^,]+,$', arg_line)):
-              error(filename, start_linenum, 'whitespace/indent', 4,
-                    'If parameters or arguments require a line break, each parameter should be put on its own line.')
 
           start_linenum+=1
-        # For the final line we also need to check one parameter on it
-        # e.g. we require bracket on same line as last parameter
-        # foo(
-        #   x);
-        if not Search(r'^\s*[^,]+\)', close_line):
-          # If this is true, the we failed because we just had the close bracket
-          if Search(r'[^,]*\)', close_line):
-            error(filename, close_linenum, 'whitespace/indent', 4,
-                  'If parameters or arguments require a line break, the closing bracket should be on the same line as the final parameter')
-          else:
-            # In this case the problem is we had a bracket
-            # i.e. more than one parameter on the last line
-            error(filename, close_linenum, 'whitespace/indent', 4,
-                  'If parameters or arguments require a line break, each parameter should be put on its own line.')
-
 
   if (Search(r'\([^\)]*$', elided_prev) and initial_spaces-2 != prev_initial_spaces) and not Search(r'for|while|if|;', elided_prev):
     error(filename, linenum, 'whitespace/indent', 4,

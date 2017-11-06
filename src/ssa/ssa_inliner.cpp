@@ -196,8 +196,8 @@ void ssa_inlinert::get_summaries(
 
       if(summary_db.exists(fname))
       {
-        get_summary(SSA, n_it, f_it, summary_db.get(fname),
-                    forward, summaries, bindings);
+        get_summary(
+          SSA, n_it, f_it, summary_db.get(fname), forward, summaries, bindings);
       }
     }
   }
@@ -370,15 +370,17 @@ void ssa_inlinert::replace(
   {
     rename(precondition);
     node->constraints.push_back(
-      implies_exprt(SSA.guard_symbol(node->location),
-                    precondition));
+      implies_exprt(
+        SSA.guard_symbol(node->location),
+        precondition));
   }
   else
   {
     rename(precondition);
     node->assertions.push_back(
-      implies_exprt(SSA.guard_symbol(node->location),
-                    precondition));
+      implies_exprt(
+        SSA.guard_symbol(node->location),
+        precondition));
   }
   exprt transformer;
   if(forward)

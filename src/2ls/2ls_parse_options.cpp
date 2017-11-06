@@ -488,9 +488,9 @@ int twols_parse_optionst::doit()
     status() << "Havocking loops and function calls" << eom;
   else if(options.get_bool_option("equalities"))
     status() << "Using (dis)equalities domain" << eom;
-  else if (options.get_bool_option("heap"))
+  else if(options.get_bool_option("heap"))
     status() << "Using heap domain" << eom;
-  else if (options.get_bool_option("heap-interval"))
+  else if(options.get_bool_option("heap-interval"))
     status() << "Using heap domain with interval domain for values" << eom;
   else
   {
@@ -1064,7 +1064,8 @@ bool twols_parse_optionst::process_goto_program(
   {
     status() << "Function Pointer Removal" << eom;
     remove_function_pointers(
-      goto_model, cmdline.isset("pointer-check"));
+      goto_model,
+      cmdline.isset("pointer-check"));
 
     // do partial inlining
     if(options.get_bool_option("inline-partial"))

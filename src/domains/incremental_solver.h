@@ -203,8 +203,10 @@ static inline incremental_solvert &operator<<(
     *dest.solver << src;
 #else
   if(!dest.activation_literals.empty())
-    dest.debug_add_to_formula(
-      or_exprt(src, literal_exprt(!dest.activation_literals.back())));
+  {
+    literal_exprt act_lit(!dest.activation_literals.back());
+    dest.debug_add_to_formula(or_exprt(src, act_lit));
+  }
   else
     dest.debug_add_to_formula(src);
 #endif

@@ -73,8 +73,8 @@ public:
   // printing
   virtual void output_value(
     std::ostream &out,
-    const valuet &value, const
-    namespacet &ns) const;
+    const valuet &value,
+    const namespacet &ns) const;
   virtual void output_domain(std::ostream &out, const namespacet &ns) const;
 
   // projection

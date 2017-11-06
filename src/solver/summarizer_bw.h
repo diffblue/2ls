@@ -23,14 +23,13 @@ Author: Peter Schrammel
 class summarizer_bwt:public summarizer_baset
 {
 public:
-  explicit summarizer_bwt(
-    optionst &_options,
-    summary_dbt &_summary_db,
-    ssa_dbt &_ssa_db,
-    ssa_unwindert &_ssa_unwinder,
-    ssa_inlinert &_ssa_inliner):
-    summarizer_baset(
-      _options, _summary_db, _ssa_db, _ssa_unwinder, _ssa_inliner)
+  summarizer_bwt(
+    optionst &options,
+    summary_dbt &summary_db,
+    ssa_dbt &ssa_db,
+    ssa_unwindert &ssa_unwinder,
+    ssa_inlinert &ssa_inliner):
+    summarizer_baset(options, summary_db, ssa_db, ssa_unwinder, ssa_inliner)
   {
   }
 

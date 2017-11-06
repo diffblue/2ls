@@ -133,11 +133,11 @@ void template_generator_rankingt::collect_variables_ranking(
       filter_ranking_domain(new_var_specs);
 
 #ifndef LEXICOGRAPHIC
-      static_cast<linrank_domaint *>(domain_ptr)->add_template(
-        new_var_specs, SSA.ns);
+      static_cast<linrank_domaint *>(domain_ptr)
+        ->add_template(new_var_specs, SSA.ns);
 #else
-      static_cast<lexlinrank_domaint *>(domain_ptr)->add_template(
-        new_var_specs, SSA.ns);
+      static_cast<lexlinrank_domaint *>(domain_ptr)
+        ->add_template(new_var_specs, SSA.ns);
 #endif
 
       var_specs.insert(

@@ -65,11 +65,13 @@ protected:
   void build_assignment_map(const goto_programt &, const namespacet &);
 
   void assign(
-    const exprt &lhs, locationt,
+    const exprt &lhs,
+    locationt,
     const namespacet &ns);
 
   void assign(
-    const ssa_objectt &lhs, locationt,
+    const ssa_objectt &lhs,
+    locationt,
     const namespacet &ns);
 };
 

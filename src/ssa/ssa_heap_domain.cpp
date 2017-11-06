@@ -658,7 +658,8 @@ const exprt ssa_heap_domaint::function_infot::apply_deref(
   const exprt &expr,
   unsigned level) const
 {
-  if(level==0) return expr;
+  if(level==0)
+    return expr;
 
   exprt deref;
   if(expr.id()==ID_address_of)
