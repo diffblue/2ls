@@ -293,7 +293,8 @@ void dynamic_cfgt::build_from_invariants(
     {
       assert(summary.fw_invariant.operands()[i].id()==ID_implies);
       build_from_invariant(
-        ssa, summary.fw_invariant.operands()[i],
+        ssa,
+        summary.fw_invariant.operands()[i],
         assumptions);
     }
   }

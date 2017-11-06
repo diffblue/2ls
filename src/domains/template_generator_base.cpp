@@ -321,8 +321,9 @@ void template_generator_baset::add_var(
     exprt post_var=post_renaming_map[var];
     exprt aux_var=aux_renaming_map[var];
     aux_expr=and_exprt(
-      implies_exprt(and_exprt(post_guard, not_exprt(init_guard)),
-                    equal_exprt(aux_var, post_var)),
+      implies_exprt(
+        and_exprt(post_guard, not_exprt(init_guard)),
+        equal_exprt(aux_var, post_var)),
       implies_exprt(init_guard, equal_exprt(aux_var, init_renaming_map[var])));
     post_guard=or_exprt(post_guard, init_guard);
   }
@@ -625,11 +626,14 @@ bool template_generator_baset::instantiate_custom_templates(
             if(contains_new_var)
               add_post_vars=true;
 
-            static_cast<tpolyhedra_domaint *>(domain_ptr)->add_template_row(
-              expr, pre_guard,
-              contains_new_var ? and_exprt(pre_guard, post_guard) : post_guard,
-              aux_expr,
-              contains_new_var ? domaint::OUT : domaint::LOOP);
+            static_cast<tpolyhedra_domaint *>(domain_ptr)
+              ->add_template_row(
+                expr,
+                pre_guard,
+                contains_new_var ?
+                  and_exprt(pre_guard, post_guard) : post_guard,
+                aux_expr,
+                contains_new_var ? domaint::OUT : domaint::LOOP);
           }
           // pred abs domain
           else if(predabs)
@@ -650,11 +654,14 @@ bool template_generator_baset::instantiate_custom_templates(
             if(contains_new_var)
               add_post_vars=true;
 
-            static_cast<predabs_domaint *>(domain_ptr)->add_template_row(
-              expr, pre_guard,
-              contains_new_var ? and_exprt(pre_guard, post_guard) : post_guard,
-              aux_expr,
-              contains_new_var ? domaint::OUT : domaint::LOOP);
+            static_cast<predabs_domaint *>(domain_ptr)
+              ->add_template_row(
+                expr,
+                pre_guard,
+                contains_new_var ?
+                  and_exprt(pre_guard, post_guard) : post_guard,
+                aux_expr,
+                contains_new_var ? domaint::OUT : domaint::LOOP);
           }
           else // neither pred abs, nor polyhedra
           {
@@ -720,40 +727,40 @@ void template_generator_baset::instantiate_standard_domains(
     domain_ptr=
       new tpolyhedra_domaint(domain_number, renaming_map, SSA.ns);
     filter_template_domain();
-    static_cast<tpolyhedra_domaint *>(domain_ptr)->add_interval_template(
-      var_specs, SSA.ns);
+    static_cast<tpolyhedra_domaint *>(domain_ptr)
+      ->add_interval_template(var_specs, SSA.ns);
   }
   else if(options.get_bool_option("zones"))
   {
     domain_ptr=
       new tpolyhedra_domaint(domain_number, renaming_map, SSA.ns);
     filter_template_domain();
-    static_cast<tpolyhedra_domaint *>(domain_ptr)->add_difference_template(
-      var_specs, SSA.ns);
-    static_cast<tpolyhedra_domaint *>(domain_ptr)->add_interval_template(
-      var_specs, SSA.ns);
+    static_cast<tpolyhedra_domaint *>(domain_ptr)
+      ->add_difference_template(var_specs, SSA.ns);
+    static_cast<tpolyhedra_domaint *>(domain_ptr)
+      ->add_interval_template(var_specs, SSA.ns);
   }
   else if(options.get_bool_option("octagons"))
   {
     domain_ptr=
       new tpolyhedra_domaint(domain_number, renaming_map, SSA.ns);
     filter_template_domain();
-    static_cast<tpolyhedra_domaint *>(domain_ptr)->add_sum_template(
-      var_specs, SSA.ns);
-    static_cast<tpolyhedra_domaint *>(domain_ptr)->add_difference_template(
-      var_specs, SSA.ns);
-    static_cast<tpolyhedra_domaint *>(domain_ptr)->add_interval_template(
-      var_specs, SSA.ns);
+    static_cast<tpolyhedra_domaint *>(domain_ptr)
+      ->add_sum_template(var_specs, SSA.ns);
+    static_cast<tpolyhedra_domaint *>(domain_ptr)
+      ->add_difference_template(var_specs, SSA.ns);
+    static_cast<tpolyhedra_domaint *>(domain_ptr)
+      ->add_interval_template(var_specs, SSA.ns);
   }
   else if(options.get_bool_option("qzones"))
   {
     domain_ptr=
       new tpolyhedra_domaint(domain_number, renaming_map, SSA.ns);
     filter_template_domain();
-    static_cast<tpolyhedra_domaint *>(domain_ptr)->add_difference_template(
-      var_specs, SSA.ns);
-    static_cast<tpolyhedra_domaint *>(domain_ptr)->add_quadratic_template(
-      var_specs, SSA.ns);
+    static_cast<tpolyhedra_domaint *>(domain_ptr)
+      ->add_difference_template(var_specs, SSA.ns);
+    static_cast<tpolyhedra_domaint *>(domain_ptr)
+      ->add_quadratic_template(var_specs, SSA.ns);
   }
   else if(options.get_bool_option("heap-interval"))
   {

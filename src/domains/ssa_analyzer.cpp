@@ -34,11 +34,14 @@ Author: Peter Schrammel
 #include "strategy_solver_heap.h"
 #include "strategy_solver_heap_interval.h"
 
+// NOLINTNEXTLINE(*)
 #define BINSEARCH_SOLVER strategy_solver_binsearcht(\
   *static_cast<tpolyhedra_domaint *>(domain), solver, SSA.ns)
 #if 0
+// NOLINTNEXTLINE(*)
 #define BINSEARCH_SOLVER strategy_solver_binsearch2t(\
   *static_cast<tpolyhedra_domaint *>(domain), solver, SSA.ns)
+// NOLINTNEXTLINE(*)
 #define BINSEARCH_SOLVER strategy_solver_binsearch3t(\
   *static_cast<tpolyhedra_domaint *>(domain), solver, SSA, SSA.ns)
 #endif

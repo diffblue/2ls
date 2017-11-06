@@ -116,7 +116,7 @@ void template_generator_callingcontextt::collect_variables_callingcontext(
       a_it!=f_it->arguments().end(); a_it++)
   {
     std::set<symbol_exprt> args;
-    find_symbols(*a_it,args);
+    find_symbols(*a_it, args);
     exprt arg=*a_it;
     add_vars(args, guard, guard, domaint::OUT, var_specs);
   }

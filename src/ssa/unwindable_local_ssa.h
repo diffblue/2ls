@@ -38,7 +38,10 @@ public:
     return name(obj, kind, loc, loc);
   }
   symbol_exprt name(
-    const ssa_objectt &, kindt, locationt def_loc, locationt current_loc) const;
+    const ssa_objectt &,
+    kindt,
+    locationt def_loc,
+    locationt current_loc) const;
   virtual exprt nondet_symbol(
     std::string prefix,
     const typet &type,

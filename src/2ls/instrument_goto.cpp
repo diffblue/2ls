@@ -115,8 +115,7 @@ Function: instrument_gotot::instrument_body
 void instrument_gotot::instrument_body(
   const local_SSAt &SSA,
   const exprt &expr,
-  goto_functionst::goto_functiont &function
-)
+  goto_functionst::goto_functiont &function)
 {
   // expected format (/\_j g_j)=> inv
   const exprt &impl=expr.op0();

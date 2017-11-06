@@ -200,9 +200,10 @@ void local_SSAt::collect_custom_templates()
         if(nn_it->templates.empty())
           continue;
 
-        n_it->loophead->templates.insert(n_it->loophead->templates.end(),
-                                         nn_it->templates.begin(),
-                                         nn_it->templates.end());
+        n_it->loophead->templates.insert(
+          n_it->loophead->templates.end(),
+          nn_it->templates.begin(),
+          nn_it->templates.end());
         nn_it->templates.clear();
       }
     }
@@ -716,8 +717,10 @@ void local_SSAt::assertions_to_constraints()
       n_it!=nodes.end();
       n_it++)
   {
-    n_it->constraints.insert(n_it->constraints.end(),
-                             n_it->assertions.begin(), n_it->assertions.end());
+    n_it->constraints.insert(
+      n_it->constraints.end(),
+      n_it->assertions.begin(),
+      n_it->assertions.end());
   }
 }
 
@@ -1041,9 +1044,10 @@ exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
   else if(expr.id()==ID_index)
   {
     const index_exprt &index_expr=to_index_expr(expr);
-    return index_exprt(read_rhs(index_expr.array(), loc),
-                       read_rhs(index_expr.index(), loc),
-                       expr.type());
+    return index_exprt(
+      read_rhs(index_expr.array(), loc),
+      read_rhs(index_expr.index(), loc),
+      expr.type());
   }
 
   ssa_objectt object(expr, ns);

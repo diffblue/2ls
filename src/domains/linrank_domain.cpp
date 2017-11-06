@@ -457,8 +457,10 @@ void linrank_domaint::project_on_vars(
     else if(is_row_value_false(v[row]))
     {
       // (g=> false)
-      c.push_back(implies_exprt(
-        and_exprt(templ[row].pre_guard, templ[row].post_guard), false_exprt()));
+      c.push_back(
+        implies_exprt(
+          and_exprt(templ[row].pre_guard, templ[row].post_guard),
+          false_exprt()));
     }
     else
     {
@@ -504,9 +506,10 @@ void linrank_domaint::project_on_vars(
 #endif
       exprt decreasing=binary_relation_exprt(sum_pre, ID_gt, sum_post);
 #endif
-      c.push_back(implies_exprt(
-        and_exprt(templ[row].pre_guard, templ[row].post_guard),
-        decreasing));
+      c.push_back(
+        implies_exprt(
+          and_exprt(templ[row].pre_guard, templ[row].post_guard),
+          decreasing));
     }
   }
   result=conjunction(c);

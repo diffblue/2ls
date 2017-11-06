@@ -50,12 +50,16 @@ public:
   // TODO: these two should be possible with unwindable_local_ssa facilities
   exprt rename_invariant(const exprt& inv_in) const;
   void unwinder_rename(
-    symbol_exprt &var, const local_SSAt::nodet &node, bool pre) const;
+    symbol_exprt &var,
+    const local_SSAt::nodet &node,
+    bool pre) const;
 #endif
 
   // TODO: this must go away, should use SSA.rename instead
   void unwinder_rename(
-    symbol_exprt &var, const local_SSAt::nodet &node, bool pre) const;
+    symbol_exprt &var,
+    const local_SSAt::nodet &node,
+    bool pre) const;
 
   class loopt // loop tree
   {
@@ -110,7 +114,8 @@ protected:
 
   exprt get_continuation_condition(const loopt& loop) const;
   void loop_continuation_conditions(
-    const loopt& loop, exprt::operandst &loop_cont) const;
+    const loopt& loop,
+    exprt::operandst &loop_cont) const;
 
   void add_loop_body(loopt &loop);
   void add_assertions(loopt &loop, bool is_last);
@@ -118,7 +123,10 @@ protected:
   void add_loop_connector(loopt &loop);
   void add_exit_merges(loopt &loop, unsigned k);
   equal_exprt build_exit_merge(
-    exprt e, const exprt &exits, unsigned k, locationt loc);
+    exprt e,
+    const exprt &exits,
+    unsigned k,
+    locationt loc);
   void add_hoisted_assertions(loopt &loop, bool is_last);
 };
 

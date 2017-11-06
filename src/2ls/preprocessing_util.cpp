@@ -540,7 +540,7 @@ Function: twols_parse_optionst::add_dynamic_object_rec
 void twols_parse_optionst::add_dynamic_object_rec(
   exprt &expr, symbol_tablet &symbol_table)
 {
-  if (expr.id()==ID_symbol)
+  if(expr.id()==ID_symbol)
   {
     const symbolt &symbol=
       symbol_table.lookup(to_symbol_expr(expr).get_identifier());

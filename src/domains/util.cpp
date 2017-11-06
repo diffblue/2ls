@@ -132,8 +132,9 @@ void extend_expr_types(exprt &expr)
         expr.op1().type().id()==ID_signedbv))
     {
       typet new_type=signedbv_typet(size0+size1+1);
-      expr=mult_exprt(typecast_exprt(expr.op0(), new_type),
-                      typecast_exprt(expr.op1(), new_type));
+      expr=mult_exprt(
+        typecast_exprt(expr.op0(), new_type),
+        typecast_exprt(expr.op1(), new_type));
       return;
     }
     else if(expr.op0().type().id()==ID_floatbv &&

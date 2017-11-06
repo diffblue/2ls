@@ -29,7 +29,8 @@ class summary_checker_baset:public property_checkert
 {
 public:
   summary_checker_baset(
-    optionst &_options, const ssa_heap_analysist &_heap_analysis):
+    optionst &_options,
+    const ssa_heap_analysist &_heap_analysis):
     show_vcc(false),
     simplify(false),
     fixed_point(false),

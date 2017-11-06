@@ -28,7 +28,8 @@ public:
 
 protected:
   graphmlt::node_indext add_node(
-    std::map<unsigned, unsigned> &loc_to_node,
+    std::map<unsigned,
+    unsigned> &loc_to_node,
     goto_programt::const_targett it);
 
   void add_edge(

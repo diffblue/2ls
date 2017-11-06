@@ -276,9 +276,10 @@ void predabs_domaint::project_on_vars(
     const row_valuet &row_v=v[row];
     if(templ_row.kind==LOOP)
     {
-      c.push_back(implies_exprt(
-        templ_row.pre_guard,
-        implies_exprt(row_v, templ_row.expr)));
+      c.push_back(
+        implies_exprt(
+          templ_row.pre_guard,
+          implies_exprt(row_v, templ_row.expr)));
     }
     else
     {

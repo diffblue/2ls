@@ -621,7 +621,8 @@ bool ssa_value_domaint::valuest::merge(
           continue;
         }
       }
-      if(is_iterator(v.get_expr())) continue;
+      if(is_iterator(v.get_expr()))
+        continue;
     }
     else
     {
