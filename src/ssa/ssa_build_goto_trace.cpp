@@ -14,7 +14,7 @@ Author: Daniel Kroening, Peter Schrammel
 
 #include "ssa_build_goto_trace.h"
 
-#define TERM_CEX 1
+#define TERM_CEX 0
 
 /*******************************************************************\
 

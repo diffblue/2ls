@@ -279,6 +279,7 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
   if(cmdline.isset("nontermination"))
   {
     options.set_option("nontermination", true);
+    options.set_option("all-properties", true);
     options.set_option("inline", true);
     if(!cmdline.isset("unwind"))
       options.set_option("unwind", std::numeric_limits<unsigned>::max());
@@ -598,7 +599,8 @@ int twols_parse_optionst::doit()
         report_properties(options, goto_model, checker->property_map);
       report_success();
       if(cmdline.isset("graphml-witness") &&
-         !options.get_bool_option("termination"))
+         !options.get_bool_option("termination") &&
+         !options.get_bool_option("nontermination"))
         output_graphml_proof(options, goto_model, *checker);
       retval=0;
       break;
