@@ -210,15 +210,17 @@ void summary_checker_nontermt::check_properties(
     cover_goals.add(p);
   }
 
-  status() << "Running " << solver.solver->decision_procedure_text() << eom;
+  status() << "Running " << solver.solver->decision_procedure_text()
+           << messaget::eom;
 
   cover_goals();
 
   solver.pop_context();
 
-  std::cout << "** " << cover_goals.number_covered()
-            << " of " << cover_goals.size() << " failed ("
-            << cover_goals.iterations() << " iterations)" << eom;
+  status() << "** " << cover_goals.number_covered()
+           << " of " << cover_goals.size() << " failed ("
+           << cover_goals.iterations() << " iterations)"
+           << messaget::eom;
 }
 
 /*******************************************************************\
