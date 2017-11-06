@@ -9,8 +9,6 @@ Author: Peter Schrammel
 #include "summary_checker_ai.h"
 #include <ssa/ssa_build_goto_trace.h>
 
-#define TERM_CEX 0
-
 /*******************************************************************\
 
 Function: summary_checker_ait::operator()
@@ -158,22 +156,6 @@ property_checkert::resultt summary_checker_ait::report_termination()
     return property_checkert::PASS;
   if(one_nonterminate)
   {
-#if TERM_CEX
-    if(options.get_option("graphml-witness")!="" &&
-       !functions.empty())
-    {
-      property_map.clear();
-      incremental_solvert &solver=ssa_db.get_solver(functions.begin()->first);
-      if(solver()==decision_proceduret::D_SATISFIABLE)
-      {
-        irep_idt pid="non-termination";
-        property_map[pid].result=property_checkert::FAIL;
-        ssa_build_goto_tracet build_goto_trace(
-          *functions.begin()->second, solver.get_solver(), true);
-        build_goto_trace(property_map[pid].error_trace);
-      }
-    }
-#endif
 #if 1
     return property_checkert::FAIL;
 #else
