@@ -182,6 +182,11 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
   else
     options.set_option("std-invariants", false);
 
+  if(cmdline.isset("no-propagation"))
+    options.set_option("constant-propagation", false);
+  else
+    options.set_option("constant-propagation", true);
+
   // magic error label
   if(cmdline.isset("error-label"))
     options.set_option("error-label", cmdline.get_value("error-label"));
@@ -319,7 +324,7 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
     options.set_option("competition-mode", true);
     options.set_option("all-properties", false);
     options.set_option("inline", true);
-    options.set_option("give-up-invariants", "1");
+    options.set_option("give-up-invariants", "2");
   }
 
   // instrumentation / output
@@ -529,6 +534,16 @@ int twols_parse_optionst::doit()
       assert(false);
 
     status() << eom;
+  }
+
+  // don't use k-induction with dynamic memory
+  if(options.get_bool_option("competition-mode") &&
+     dynamic_memory_detected)
+  {
+    options.set_option("k-induction", false);
+    options.set_option("std-invariants", false);
+    options.set_option("incremental-bmc", false);
+    options.set_option("unwind", 0);
   }
 
   try
@@ -1167,7 +1182,7 @@ bool twols_parse_optionst::process_goto_program(
     goto_model.goto_functions.compute_loop_numbers();
 
     // Replace malloc
-    replace_malloc(goto_model, "");
+    dynamic_memory_detected=replace_malloc(goto_model, "");
 
     // remove loop heads from function entries
     remove_loops_in_entry(goto_model);
@@ -1187,7 +1202,9 @@ bool twols_parse_optionst::process_goto_program(
     filter_assertions(goto_model);
 #endif
 
-    if(!cmdline.isset("no-propagation"))
+    if(options.get_bool_option("constant-propagation") &&
+       !(options.get_bool_option("competition-mode") &&
+         dynamic_memory_detected))
     {
       status() << "Constant Propagation" << eom;
       propagate_constants(goto_model);

@@ -6,6 +6,7 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+#include <domains/heap_interval_domain.h>
 #include "summary_checker_kind.h"
 
 /*******************************************************************\
