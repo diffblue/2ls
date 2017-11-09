@@ -6,6 +6,7 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+#include <domains/heap_interval_domain.h>
 #include "summary_checker_kind.h"
 
 /*******************************************************************\
@@ -38,6 +39,7 @@ property_checkert::resultt summary_checker_kindt::operator()(
 
   for(unsigned unwind=0; unwind<=max_unwind; unwind++)
   {
+
     status() << "Unwinding (k=" << unwind << ")" << eom;
 
     // TODO: recompute only functions with loops
@@ -69,6 +71,9 @@ property_checkert::resultt summary_checker_kindt::operator()(
          << unwind << " unwinding(s)" << eom;
       break;
     }
+
+    if(options.get_bool_option("has-dynamic-objects"))
+      break;
   }
   report_statistics();
   return result;

@@ -8,6 +8,8 @@ Author: Viktor Malik
 
 #include "strategy_solver_heap_interval.h"
 
+int strategy_solver_heap_intervalt::unwinding=-1;
+
 /*******************************************************************\
 
 Function: strategy_solver_heap_intervalt::iterate
@@ -28,7 +30,7 @@ bool strategy_solver_heap_intervalt::iterate(
   heap_interval_domaint::heap_interval_valuet &inv=
     static_cast<heap_interval_domaint::heap_interval_valuet &>(_inv);
 
-  bool heap_improved=heap_solver.iterate(inv.heap_value);
+  bool heap_improved=unwinding==0 ? heap_solver.iterate(inv.heap_value) : false;
   bool interval_improved=interval_solver.iterate(inv.interval_value);
 
   return heap_improved || interval_improved;

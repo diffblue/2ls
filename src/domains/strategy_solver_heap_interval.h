@@ -34,7 +34,10 @@ public:
       precondition,
       message_handler,
       template_generator),
-    interval_solver(heap_interval_domain.interval_domain, _solver, SSA.ns) {}
+    interval_solver(heap_interval_domain.interval_domain, _solver, SSA.ns)
+  {
+    unwinding++;
+  }
 
   virtual bool iterate(invariantt &_inv) override;
 
@@ -45,6 +48,8 @@ protected:
 
   strategy_solver_heapt heap_solver;
   strategy_solver_binsearcht interval_solver;
+
+  static int unwinding;
 };
 
 

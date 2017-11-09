@@ -181,7 +181,7 @@ Function: replace_malloc_rec
 
 \*******************************************************************/
 
-static void replace_malloc_rec(
+static bool replace_malloc_rec(
   exprt &expr,
   const std::string &suffix,
   symbol_tablet &symbol_table,
@@ -198,11 +198,17 @@ static void replace_malloc_rec(
       to_side_effect_expr(expr),
       "$"+i2string(loc_number)+suffix,
       symbol_table);
+    return true;
   }
   else
   {
+    bool result=false;
     Forall_operands(it, expr)
-      replace_malloc_rec(*it, suffix, symbol_table, malloc_size, loc_number);
+    {
+      if (replace_malloc_rec(*it, suffix, symbol_table, malloc_size, loc_number))
+        result=true;
+    }
+    return result;
   }
 }
 
@@ -218,10 +224,11 @@ Function: replace_malloc
 
 \*******************************************************************/
 
-void replace_malloc(
+bool replace_malloc(
   goto_modelt &goto_model,
   const std::string &suffix)
 {
+  bool result=false;
   Forall_goto_functions(f_it, goto_model.goto_functions)
   {
     exprt malloc_size=nil_exprt();
@@ -242,13 +249,17 @@ void replace_malloc(
              lhs_id=="__builtin_alloca::alloca_size")
             malloc_size=code_assign.rhs();
         }
-        replace_malloc_rec(
+        if(replace_malloc_rec(
           code_assign.rhs(),
           suffix,
           goto_model.symbol_table,
           malloc_size,
-          i_it->location_number);
+          i_it->location_number))
+        {
+          result=true;
+        }
       }
     }
   }
+  return result;
 }

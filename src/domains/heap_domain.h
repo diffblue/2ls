@@ -244,6 +244,11 @@ public:
   exprt get_aux_bindings() const;
   exprt get_input_bindings() const;
 
+  bool empty() const
+  {
+    return templ.empty();
+  }
+
 protected:
   templatet templ;
 
