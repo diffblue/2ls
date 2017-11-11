@@ -319,6 +319,7 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
     options.set_option("competition-mode", true);
     options.set_option("all-properties", false);
     options.set_option("inline", true);
+    options.set_option("give-up-invariants", "1");
   }
 
   // instrumentation / output
