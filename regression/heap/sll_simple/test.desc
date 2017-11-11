@@ -1,6 +1,6 @@
 CORE
 main.c
---heap --inline --no-propagation
+--heap --inline --no-propagation --heap-interval
 ^EXIT=0$
 ^SIGNAL=0$
 ^VERIFICATION SUCCESSFUL$
