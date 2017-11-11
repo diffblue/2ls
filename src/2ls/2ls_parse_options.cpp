@@ -391,6 +391,16 @@ int twols_parse_optionst::doit()
   if(get_goto_program(options, goto_model))
     return 6;
 
+  const namespacet ns(goto_model.symbol_table);
+  ssa_heap_analysist heap_analysis(ns);
+  if((options.get_bool_option("heap") ||
+      options.get_bool_option("heap-interval")) &&
+     !options.get_bool_option("inline"))
+  {
+    heap_analysis(goto_model.goto_functions);
+    add_dynamic_object_symbols(heap_analysis, goto_model);
+  }
+
   if(cmdline.isset("show-stats"))
   {
     show_stats(goto_model, std::cout);
@@ -403,7 +413,13 @@ int twols_parse_optionst::doit()
   {
     bool simplify=!cmdline.isset("no-simplify");
     irep_idt function=cmdline.get_value("function");
-    show_ssa(goto_model, function, simplify, std::cout, ui_message_handler);
+    show_ssa(
+      goto_model,
+      heap_analysis,
+      function,
+      simplify,
+      std::cout,
+      ui_message_handler);
     return 7;
   }
 
@@ -513,16 +529,6 @@ int twols_parse_optionst::doit()
       assert(false);
 
     status() << eom;
-  }
-
-  const namespacet ns(goto_model.symbol_table);
-  ssa_heap_analysist heap_analysis(ns);
-  if((options.get_bool_option("heap") ||
-      options.get_bool_option("heap-interval")) &&
-     !options.get_bool_option("inline"))
-  {
-    heap_analysis(goto_model.goto_functions);
-    add_dynamic_object_symbols(heap_analysis, goto_model);
   }
 
   try

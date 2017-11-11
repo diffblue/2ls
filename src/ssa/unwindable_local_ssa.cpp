@@ -461,3 +461,45 @@ void unwindable_local_SSAt::compute_loop_hierarchy()
   }
   while(i_it!=goto_function.body.instructions.begin());
 }
+
+/*******************************************************************\
+
+Function: unwindable_local_SSAt::output_verbose
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void unwindable_local_SSAt::output_verbose(std::ostream &out) const
+{
+  for(const auto &node : nodes)
+  {
+    if(node.empty())
+      continue;
+    out << "*** " << node.location->location_number
+        << " " << node.location->source_location << "\n";
+    node.output(out, ns);
+    for(const auto &e : node.equalities)
+    {
+      std::set<symbol_exprt> symbols;
+      find_symbols(e, symbols);
+      for(const auto &s : symbols)
+      {
+        if(s.type().get_bool("#dynamic"))
+          out << s.get_identifier() << "\n";
+      }
+    }
+    if(node.loophead!=nodes.end())
+      out << "loop back to location "
+          << node.loophead->location->location_number << "\n";
+    if(!node.enabling_expr.is_true())
+      out << "enabled if "
+          << from_expr(ns, "", node.enabling_expr) << "\n";
+    out << "\n";
+  }
+  out << "(enable) " << from_expr(ns, "", get_enabling_exprs()) << "\n\n";
+}

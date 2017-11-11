@@ -81,6 +81,8 @@ public:
     locationt &loc,
     odometert &odometer) const;
 
+  void output_verbose(std::ostream &) const override;
+
 protected:
   irep_idt get_ssa_name(const symbol_exprt &, locationt &loc) const;
 

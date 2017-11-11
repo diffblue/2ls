@@ -18,7 +18,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <ssa/ssa_domain.h>
 #include <ssa/guard_map.h>
-#include <ssa/local_ssa.h>
+#include <ssa/unwindable_local_ssa.h>
 #include <ssa/simplify_ssa.h>
 #include <ssa/ssa_value_set.h>
 
@@ -251,12 +251,15 @@ Function: show_ssa
 
 void show_ssa(
   const goto_functionst::goto_functiont &goto_function,
+  const ssa_heap_analysist &heap_analysis,
   bool simplify,
   const namespacet &ns,
   std::ostream &out)
 {
-  ssa_heap_analysist heap_analysis(ns);
-  local_SSAt local_SSA(goto_function, ns, heap_analysis);
+  if(!goto_function.body_available())
+    return;
+
+  unwindable_local_SSAt local_SSA(goto_function, ns, heap_analysis);
   if(simplify)
     ::simplify(local_SSA, ns);
   local_SSA.output_verbose(out);
@@ -276,6 +279,7 @@ Function: show_ssa
 
 void show_ssa(
   const goto_modelt &goto_model,
+  const ssa_heap_analysist &heap_analysis,
   const irep_idt &function,
   bool simplify,
   std::ostream &out,
@@ -291,7 +295,7 @@ void show_ssa(
     if(f_it==goto_model.goto_functions.function_map.end())
       out << "function " << function << " not found\n";
     else
-      show_ssa(f_it->second, simplify, ns, out);
+      show_ssa(f_it->second, heap_analysis, simplify, ns, out);
   }
   else
   {
@@ -304,7 +308,7 @@ void show_ssa(
 
       out << ">>>> Function " << f_it->first << "\n";
 
-      show_ssa(f_it->second, simplify, ns, out);
+      show_ssa(f_it->second, heap_analysis, simplify, ns, out);
 
       out << "\n";
     }

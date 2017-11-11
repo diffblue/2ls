@@ -59,7 +59,7 @@ public:
   }
 
   void output(std::ostream &) const;
-  void output_verbose(std::ostream &) const;
+  virtual void output_verbose(std::ostream &) const;
 
   // the SSA node for a location
   class nodet
