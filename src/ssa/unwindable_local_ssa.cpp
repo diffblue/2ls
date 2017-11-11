@@ -282,7 +282,7 @@ void unwindable_local_SSAt::rename(exprt &expr, locationt current_loc)
   if(expr.id()==ID_symbol)
   {
     symbol_exprt &s=to_symbol_expr(expr);
-    locationt def_loc;
+    locationt def_loc=goto_function.body.instructions.end();
     // we could reuse name(),
     // but then we would have to search in the ssa_objects
     // ENHANCEMENT: maybe better to attach base name, ssa name,
@@ -294,13 +294,15 @@ void unwindable_local_SSAt::rename(exprt &expr, locationt current_loc)
     s.set_identifier(id2string(id)+unwind_suffix);
 
 #if 0
-    std::cout << "DEF_LOC: " << def_loc->location_number << std::endl;
-    std::cout << "DEF_LEVEL: " << def_level << std::endl;
-    std::cout << "O.size: " << current_unwindings.size() << std::endl;
-    std::cout << "current: " << current_unwinding << std::endl;
     std::cout << "RENAME_SYMBOL: "
               << id << " --> "
               << s.get_identifier() << std::endl;
+    std::cout << "DEF_LOC: "
+              << (def_loc!=goto_function.body.instructions.end()
+                  ? def_loc->location_number : -1) << std::endl;
+    std::cout << "DEF_LEVEL: " << def_level << std::endl;
+    std::cout << "O.size: " << current_unwindings.size() << std::endl;
+    std::cout << "current: " << current_unwinding << std::endl << std::endl;
 #endif
   }
   if(expr.id()==ID_nondet_symbol)
