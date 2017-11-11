@@ -12,7 +12,16 @@ git clone $CBMC_REPO
 cd cbmc
 CBMC=`pwd`
 git checkout $CBMC_VERSION
-make -C src minisat2-download
+if grep '^MINISAT2' src/config.inc > /dev/null
+then
+  make -C src minisat2-download > /dev/null
+elif grep '^GLUCOSE' src/config.inc
+then
+  make -C src glucose-download
+else
+  echo "SAT solver not supported"
+  exit 1
+fi
 if [ "$COMPILER" != "" ]
 then
   make -C src CXX=$COMPILER
