@@ -156,7 +156,7 @@ property_checkert::resultt summary_checker_ait::report_termination()
     return property_checkert::PASS;
   if(one_nonterminate)
   {
-#if 1
+#if 0
     return property_checkert::FAIL;
 #else
     // rely on nontermination checker to find counterexample
