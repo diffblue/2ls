@@ -92,7 +92,7 @@ protected:
 
   void build_from_invariants(
     const unwindable_local_SSAt &ssa,
-    const summaryt &summary,
+    const exprt &invariants,
     assumptionst &assumptions);
   void build_from_invariant(
     const unwindable_local_SSAt &ssa,
