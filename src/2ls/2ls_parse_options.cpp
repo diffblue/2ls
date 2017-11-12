@@ -591,7 +591,8 @@ int twols_parse_optionst::doit()
 
     bool report_assertions=
       !options.get_bool_option("preconditions") &&
-      !options.get_bool_option("termination");
+      !options.get_bool_option("termination") &&
+      !options.get_bool_option("nontermination");
     // do actual analysis
     switch((*checker)(goto_model))
     {
