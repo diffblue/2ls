@@ -1,0 +1,9 @@
+KNOWNBUG
+main.c
+
+^EXIT=10$
+^SIGNAL=0$
+^VERIFICATION FAILED$
+--
+--
+this can be proved by the termination checker with octagon invariants

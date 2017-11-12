@@ -1,6 +1,9 @@
 CORE
 main.c
 
-^EXIT=10$
+^EXIT=5$
 ^SIGNAL=0$
-^VERIFICATION FAILED$
+^VERIFICATION INCONCLUSIVE$
+--
+--
+can be refuted with nontermination checker

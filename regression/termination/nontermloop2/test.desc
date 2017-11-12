@@ -4,3 +4,6 @@ main.c
 ^EXIT=5$
 ^SIGNAL=0$
 ^VERIFICATION INCONCLUSIVE$
+--
+--
+can be refuted with nontermination checker
