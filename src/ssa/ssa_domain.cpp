@@ -88,17 +88,27 @@ void ssa_domaint::transform(
         o_it!=assigns.end();
         o_it++)
     {
-      if (o_it->get_expr().get_bool("#is_rhs_assign") && is_pointed(o_it->get_root_object()))
-      { // the second part excluded cases when a result of malloc is at the right-handed side
-        const auto object_ai_it = static_cast<ssa_ait &>(ai)[from].def_map.find(o_it->get_identifier());
-        if (object_ai_it != static_cast<ssa_ait &>(ai)[from].def_map.end()
-            && object_ai_it->second.def.is_assignment())
+      if(o_it->get_expr().get_bool("#is_rhs_assign") &&
+         is_pointed(o_it->get_root_object()))
+      {
+        // the second part excluded cases
+        // when a result of malloc is at the right-handed side
+        const auto object_ai_it=
+          static_cast<ssa_ait &>(ai)[from].def_map.find(o_it->get_identifier());
+        if(object_ai_it!=static_cast<ssa_ait &>(ai)[from].def_map.end() &&
+           object_ai_it->second.def.is_assignment())
         {
-          const exprt pointer=get_pointer(o_it->get_root_object(), pointed_level(o_it->get_root_object())-1);
-          const auto def_pointer = static_cast<ssa_ait &>(ai)[from].def_map.find(
-              ssa_objectt(pointer, ns).get_identifier())->second.def;
-          if (!def_pointer.is_assignment()
-              || def_pointer.loc->location_number < object_ai_it->second.def.loc->location_number)
+          const exprt pointer=
+            get_pointer(
+              o_it->get_root_object(),
+              pointed_level(o_it->get_root_object())-1);
+          const auto def_pointer=
+            static_cast<ssa_ait &>(ai)[from]
+              .def_map.find(
+                ssa_objectt(pointer, ns).get_identifier())->second.def;
+          if(!def_pointer.is_assignment() ||
+             def_pointer.loc->location_number<
+               object_ai_it->second.def.loc->location_number)
           {
             continue;
           }

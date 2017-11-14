@@ -375,7 +375,7 @@ const exprt symbolic_dereference(const exprt &expr, const namespacet &ns)
     const exprt &pointer=symbolic_dereference(
       to_dereference_expr(expr).pointer(), ns);
     const ssa_objectt pointer_object(pointer, ns);
-    if (!pointer_object)
+    if(!pointer_object)
       return expr;
 
     symbol_exprt sym_deref=pointed_object(pointer_object.symbol_expr(), ns);

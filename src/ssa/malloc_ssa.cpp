@@ -205,7 +205,7 @@ static bool replace_malloc_rec(
     bool result=false;
     Forall_operands(it, expr)
     {
-      if (replace_malloc_rec(*it, suffix, symbol_table, malloc_size, loc_number))
+      if(replace_malloc_rec(*it, suffix, symbol_table, malloc_size, loc_number))
         result=true;
     }
     return result;

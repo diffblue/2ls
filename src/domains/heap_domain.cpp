@@ -601,8 +601,11 @@ Function: heap_domaint::stack_row_valuet::add_points_to
 
 bool heap_domaint::stack_row_valuet::add_points_to(const exprt &expr)
 {
-  auto new_pt=points_to.insert(expr);
-  return new_pt.second;
+  if(points_to.find(expr)==points_to.end())
+    points_to.insert(expr);
+  else
+    nondet=true;
+  return true;
 }
 
 /*******************************************************************\
@@ -706,14 +709,17 @@ bool heap_domaint::heap_row_valuet::add_points_to(const exprt &dest)
 {
   if(dest==dyn_obj.first)
   {
-    return add_self_linkage();
+    if(!add_self_linkage())
+      nondet=true;
   }
   else
   {
     const dyn_objt through=
       self_linkage ? dyn_obj : std::make_pair(nil_exprt(), nil_exprt());
-    return add_path(dest, through);
+    if(!add_path(dest, through))
+      nondet=true;
   }
+  return true;
 }
 
 /*******************************************************************\

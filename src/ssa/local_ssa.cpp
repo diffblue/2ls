@@ -472,7 +472,8 @@ void local_SSAt::build_transfer(locationt loc)
       {
         assign_rec(symbolic_deref_lhs, rhs, true_exprt(), loc);
         assign_rec(
-          deref_lhs, name(ssa_objectt(symbolic_deref_lhs, ns), OUT, loc),
+          deref_lhs,
+          name(ssa_objectt(symbolic_deref_lhs, ns), OUT, loc),
           true_exprt(),
           loc);
       }
@@ -1193,8 +1194,10 @@ symbol_exprt local_SSAt::name(
   unsigned cnt=loc->location_number;
 
   irep_idt new_id=id2string(id)+"#"+
-    (kind==PHI?"phi":kind==LOOP_BACK?"lb":kind==LOOP_SELECT?"ls":
-     kind==OBJECT_SELECT?"os":"")+
+    (kind==PHI?"phi":
+      kind==LOOP_BACK?"lb":
+      kind==LOOP_SELECT?"ls":
+      kind==OBJECT_SELECT?"os":"")+
     i2string(cnt)+
     (kind==LOOP_SELECT?std::string(""):suffix);
 
@@ -1433,11 +1436,17 @@ void local_SSAt::assign_rec(
       cond=and_exprt(cond, other_cond);
     }
     exprt new_rhs=if_exprt(cond, rhs, if_expr.true_case());
-    assign_rec(if_expr.true_case(), new_rhs, and_exprt(guard, if_expr.cond()),
-               loc);
+    assign_rec(
+      if_expr.true_case(),
+      new_rhs,
+      and_exprt(guard, if_expr.cond()),
+      loc);
 
-    assign_rec(if_expr.false_case(), rhs,
-               and_exprt(guard, not_exprt(if_expr.cond())), loc);
+    assign_rec(
+      if_expr.false_case(),
+      rhs,
+      and_exprt(guard, not_exprt(if_expr.cond())),
+      loc);
   }
   else if(lhs.id()==ID_byte_extract_little_endian ||
           lhs.id()==ID_byte_extract_big_endian)
@@ -2066,6 +2075,7 @@ exprt local_SSAt::concretise_symbolic_deref_rhs(
     return rhs_copy;
   }
 
-  return all_symbolic_deref_defined(symbolic_deref_rhs, ns, loc)
-        ? symbolic_deref_rhs : deref_rhs;
+  return
+    all_symbolic_deref_defined(symbolic_deref_rhs, ns, loc)?
+      symbolic_deref_rhs:deref_rhs;
 }
