@@ -193,6 +193,23 @@ void dynamic_cfgt::build_cfg(
       nodes[node].id.iteration_stack=iteration_stack;
       nodes[node].is_loop_head=true;
     }
+    else
+    {
+      // alternative loop head detection when unwinder was not used
+      for(const auto &incoming : it->incoming_edges)
+      {
+        if(incoming->is_backwards_goto() &&
+           incoming!=it)
+        {
+          iteration_stack.push_back(0);
+          loop_node_stack.push_back(node);
+          max_iteration_stack.push_back(0);
+          nodes[node].id.iteration_stack=iteration_stack;
+          nodes[node].is_loop_head=true;
+          break;
+        }
+      }
+    }
 
     const std::set<node_indext> &iedges=incoming_edges[it];
     for(const auto &from : iedges)

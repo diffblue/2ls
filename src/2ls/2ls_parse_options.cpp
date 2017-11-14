@@ -600,9 +600,7 @@ int twols_parse_optionst::doit()
       if(report_assertions)
         report_properties(options, goto_model, checker->property_map);
       report_success();
-      if(cmdline.isset("graphml-witness") &&
-         !options.get_bool_option("termination") &&
-         !options.get_bool_option("nontermination"))
+      if(cmdline.isset("graphml-witness"))
         output_graphml_proof(options, goto_model, *checker);
       retval=0;
       break;
