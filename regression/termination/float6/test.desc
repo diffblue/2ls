@@ -1,6 +1,9 @@
-CORE
+KNOWNBUG
 main.c
 
 ^EXIT=5$
 ^SIGNAL=0$
 ^VERIFICATION INCONCLUSIVE$
+--
+--
+result is brittle and depends on bounds on the search and the SAT solver used

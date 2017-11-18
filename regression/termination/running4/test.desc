@@ -1,6 +1,9 @@
-CORE
+KNOWNBUG
 main.c
 --context-sensitive --preconditions
 ^EXIT=5$
 ^SIGNAL=0$
 \[bar\]: !\(n <= 10000 && -\(\(signed __CPROVER_bitvector\[33\]\)n\) <= -100 && incx <= 0 && -\(\(signed __CPROVER_bitvector\[33\]\)incx\) <= 0\)
+--
+--
+result is brittle and depends on bounds on the search and the SAT solver used
