@@ -3,4 +3,4 @@ main.c
 --unwind 5
 ^EXIT=0$
 ^SIGNAL=0$
-^** 0 of 1 failed$
+^\*\* 0 of 1 failed$

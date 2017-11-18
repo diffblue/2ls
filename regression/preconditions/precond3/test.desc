@@ -3,4 +3,4 @@ main.c
 --preconditions --sufficient --equalities
 ^EXIT=5$
 ^SIGNAL=0$
-^\[foo\]: !(x == ((char \*)NULL))$
+^\[foo\]: !\(x == \(\(char \*\)NULL\)\)$

@@ -3,10 +3,10 @@ default: tests.log
 FLAGS = --verbosity 10 --termination
 
 test:
-	@../test.pl -c "../../../src/2ls/2ls $(FLAGS)"
+	@../test.pl -p -c "../../../src/2ls/2ls $(FLAGS)"
 
 tests.log: ../test.pl
-	@../test.pl -c "../../../src/2ls/2ls $(FLAGS)"
+	@../test.pl -p -c "../../../src/2ls/2ls $(FLAGS)"
 
 show:
 	@for dir in *; do \

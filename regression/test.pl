@@ -3,17 +3,29 @@
 use subs;
 use strict;
 use warnings;
+use File::Basename;
+
+use Cwd;
+
+my $has_thread_pool = eval
+{
+  # "http://www.cpan.org/authors/id/J/JW/JWU/Thread-Pool-Simple/Thread-Pool-Simple-0.25.tar.gz"
+  # Debian/Ubuntu: libthread-pool-simple-perl
+  require Thread::Pool::Simple;
+  Thread::Pool::Simple->import();
+  1;
+};
 
 # test.pl
 #
 # runs a test and check its output
 
-sub run($$$$) {
-  my ($input, $cmd, $options, $output) = @_;
-  my $cmdline = "$cmd $options $input >$output 2>&1";
+sub run($$$$$) {
+  my ($name, $input, $cmd, $options, $output) = @_;
+  my $cmdline = "$cmd $options '$input' >'$output' 2>&1";
 
   print LOG "Running $cmdline\n";
-  system $cmdline;
+  system("bash", "-c", "cd '$name' ; $cmdline");
   my $exit_value = $? >> 8;
   my $signal_num = $? & 127;
   my $dumped_core = $? & 128;
@@ -24,15 +36,21 @@ sub run($$$$) {
   print LOG "  Core: $dumped_core\n";
 
   if($signal_num != 0) {
-    $failed = 1;
     print "Killed by signal $signal_num";
     if($dumped_core) {
       print " (code dumped)";
     }
   }
 
-  system "echo EXIT=$exit_value >>$output";
-  system "echo SIGNAL=$signal_num >>$output";
+  open my $FH, ">>$name/$output";
+  print $FH "EXIT=$exit_value\n";
+  print $FH "SIGNAL=$signal_num\n";
+  close $FH;
+
+  if($signal_num == 2) {
+    print "\nProgram under test interrupted; stopping\n";
+    exit 1;
+  }
 
   return $failed;
 }
@@ -48,13 +66,34 @@ sub load($) {
   return @data;
 }
 
-sub test($$$$$) {
-  my ($name, $test, $t_level, $cmd, $ign) = @_;
-  my ($level, $input, $options, @results) = load($test);
+sub test($$$$$$$) {
+  my ($name, $test, $t_level, $cmd, $ign, $dry_run, $defines) = @_;
+  my ($level, $input, $options, $grep_options, @results) = load("$test");
+  my @keys = keys %{$defines};
+  foreach my $key (@keys) {
+    my $value = $defines->{$key};
+    $options =~ s/(\$$key$|\$$key )/$value /g;
+  }
+  if (scalar @keys) {
+    foreach my $word (split(/\s/, $options)) {
+      if ((substr($word, 0, 1) cmp '$') == 0) {
+        print "$name: variable \"$word\" not replaced; consider passing \"-D$word\"=...";
+      }
+    }
+  }
+
+  # If the 4th line is activate-multi-line-match we enable multi-line checks
+  if($grep_options ne "activate-multi-line-match") {
+    # No such flag, so we add it back in
+    unshift @results, $grep_options;
+    $grep_options = "";
+  }
+
   $options =~ s/$ign//g if(defined($ign));
 
-  my $output = $input;
-  $output =~ s/\.(c|o|gb|xml)$/.out/;
+  my $descriptor = basename($test);
+  my $output = $descriptor;
+  $output =~ s/\.[^.]*$/.out/;
 
   if($output eq $input) {
     print("Error in test file -- $test\n");
@@ -64,6 +103,7 @@ sub test($$$$$) {
   print LOG "Test '$name'\n";
   print LOG "  Level: $level\n";
   print LOG "  Input: $input\n";
+  print LOG "  Descriptor: $descriptor\n";
   print LOG "  Output: $output\n";
   print LOG "  Options: $options\n";
   print LOG "  Results:\n";
@@ -83,9 +123,14 @@ sub test($$$$$) {
     die "Level must be one of CORE, THOROUGH, FUTURE or KNOWNBUG\n";
   }
 
-  my $failed = -1;
+  my $failed = 2;
   if($level & $t_level) {
-    $failed = run($input, $cmd, $options, $output);
+
+    if ($dry_run) {
+      return 0;
+    }
+
+    $failed = run($name, $input, $cmd, $options, $output);
 
     if(!$failed) {
       print LOG "Execution [OK]\n";
@@ -96,8 +141,45 @@ sub test($$$$$) {
           $included--;
         } else {
           my $r;
-          system "grep \"$result\" '$output' >/dev/null";
-          $r = ($included ? $? != 0 : $? == 0);
+
+          my $dir = getcwd();
+          my $abs_path = "$dir/$name/$output";
+          open(my $fh => $abs_path) || die "Cannot open '$name/$output': $!";
+
+          # Multi line therefore we run each check across the whole output
+          if($grep_options eq "activate-multi-line-match") {
+            local $/ = undef;
+            binmode $fh;
+            my $whole_file = <$fh>;
+            $whole_file =~ s/\r\n/\n/g;
+            my $is_match = $whole_file =~ /$result/;
+            $r = ($included ? !$is_match : $is_match);
+          }
+          else
+          {
+            my $found_line = 0;
+            while(my $line = <$fh>) {
+              $line =~ s/\r$//;
+              if($line =~ /$result/) {
+                # We've found the line, therefore if it is included we set
+                # the result to 0 (OK) If it is excluded, we set the result
+                # to 1 (FAILED)
+                $r = !$included;
+                $found_line = 1;
+                last;
+              }
+            }
+
+            if($found_line == 0) {
+              # None of the lines matched, therefore the result is set to
+              # 0 (OK) if and only if the line was not meant to be included
+              $r = $included;
+            }
+
+          }
+          close($fh);
+
+
           if($r) {
             print LOG "$result [FAILED]\n";
             $failed = 1;
@@ -111,18 +193,22 @@ sub test($$$$$) {
     }
   } else {
     print LOG "Execution [SKIPPED]\n";
+    return 2;
   }
 
   print LOG "\n";
 
-  return $failed;
+  # if the test is a KNOWNBUG then the test should fail
+  my $should_fail = $level eq 8;
+
+  return ($should_fail != $failed);
 }
 
 sub dirs() {
   my @list;
 
   opendir CWD, ".";
-  @list = grep { !/^\./ && -d "$_" && !/CVS/ && -s "$_/test.desc" } readdir CWD;
+  @list = grep { !/^\./ && -d "$_" && !/CVS/ } readdir CWD;
   closedir CWD;
 
   @list = sort @list;
@@ -148,11 +234,16 @@ Usage: test.pl -c CMD [OPTIONS] [DIRECTORIES ...]
 
   -c CMD     run tests on CMD - required option
   -i <regex> options in test.desc matching the specified perl regex are ignored
+  -j <num>   run <num> tests in parallel (requires Thread::Pool::Simple)
+  -n         dry-run: print the tests that would be run, but don't actually run them
+  -p         print logs of each failed test (if any)
   -h         show this help and exit
   -C         core: run all essential tests (default if none of C/T/F/K are given)
   -T         thorough: run expensive tests
   -F         future: run checks for future features
   -K         known: run tests associated with known bugs
+  -D <key=value> Define - replace \$key string with "value" string in
+                 test descriptors
 
 
 test.pl expects a test.desc file in each subdirectory. The file test.desc
@@ -161,6 +252,7 @@ follows the format specified below. Any line starting with // will be ignored.
 <level>
 <main source>
 <options>
+<activate-multi-line-match>
 <required patterns>
 --
 <disallowed patterns>
@@ -168,61 +260,106 @@ follows the format specified below. Any line starting with // will be ignored.
 <comment text>
 
 where
-  <level>                is one of CORE, THOROUGH, FUTURE or KNOWNBUG
-  <main source>          is a file with extension .c/.i/.cpp/.ii/.xml/.class
-  <options>              additional options to be passed to CMD
-  <required patterns>    one or more lines of regualar expressions that must occur in the output
-  <disallowed patterns>  one or more lines of expressions that must not occur in output
-  <comment text>         free form text
+  <level>                         is one of CORE, THOROUGH, FUTURE or KNOWNBUG
+  <main source>                   is a file with extension .c/.i/.gb/.cpp/.ii/.xml/.class/.jar
+  <options>                       additional options to be passed to CMD
+  <activate-multi-line-match>     The fourth line can optionally be activate-multi-line-match, if this is the
+                                  case then each of the rules will be matched over multiple lines (so can contain)
+                                  the new line symbol (\\n) inside them.
+  <required patterns>             one or more lines of regualar expressions that must occur in the output
+  <disallowed patterns>           one or more lines of expressions that must not occur in output
+  <comment text>                  free form text
 
 EOF
   exit 1;
 }
 
 use Getopt::Std;
+use Getopt::Long qw(:config pass_through bundling);
 $main::VERSION = 0.1;
 $Getopt::Std::STANDARD_HELP_VERSION = 1;
-our ($opt_c, $opt_i, $opt_h, $opt_C, $opt_T, $opt_F, $opt_K); # the variables for getopt
-getopts('c:i:hCTFK') or &main::HELP_MESSAGE(\*STDOUT, "", $main::VERSION, "");
+our ($opt_c, $opt_i, $opt_j, $opt_n, $opt_p, $opt_h, $opt_C, $opt_T, $opt_F, $opt_K, %defines); # the variables for getopt
+$opt_j = 0;
+GetOptions("D=s", \%defines);
+getopts('c:i:j:nphCTFK') or &main::HELP_MESSAGE(\*STDOUT, "", $main::VERSION, "");
 $opt_c or &main::HELP_MESSAGE(\*STDOUT, "", $main::VERSION, "");
+(!$opt_j || $has_thread_pool) or &main::HELP_MESSAGE(\*STDOUT, "", $main::VERSION, "");
 $opt_h and &main::HELP_MESSAGE(\*STDOUT, "", $main::VERSION, "");
 my $t_level = 0;
 $t_level += 2 if($opt_T);
 $t_level += 4 if($opt_F);
 $t_level += 8 if($opt_K);
 $t_level += 1 if($opt_C || 0 == $t_level);
-
+my $dry_run = $opt_n;
 
 
 open LOG,">tests.log";
 
 print "Loading\n";
 my @tests = @ARGV != 0 ? @ARGV : dirs();
-my $count = @tests;
+my $count = 0;
+for (@tests){
+  my @testfiles = glob "$_/*desc";
+  $count += $#testfiles+1;
+}
 print "  $count " . (1==$count?"test":"tests") . " found\n\n";
 
 use Cwd qw(getcwd);
-my $failures = 0;
-my $skips = 0;
-print "Running tests\n";
-foreach my $test (@tests) {
-  print "  Running $test";
+my $cwd = getcwd;
+my $failures :shared = 0;
+my $skips :shared = 0;
+my $pool :shared = undef;
 
-  my $cwd = getcwd;
-  chdir $test;
-  my $failed_skipped = test($test, "test.desc", $t_level, $opt_c, $opt_i);
-  chdir $cwd;
+sub do_test($)
+{
+  my ($test) = @_;
+  my $failed_skipped = 0;
+  my @files = glob "$test/*.desc";
+  for (0..$#files){
+    defined($pool) or print "  Running $files[$_]";
+    my $start_time = time();
+    $failed_skipped = test(
+      $test, $files[$_], $t_level, $opt_c, $opt_i, $dry_run, \%defines);
+    my $runtime = time() - $start_time;
 
-  if($failed_skipped < 0) {
-    $skips++;
-    print "  [SKIPPED]\n";
-  } elsif(0 == $failed_skipped) {
-    print "  [OK]\n";
-  } else {
-    $failures++;
-    print "  [FAILED]\n";
+    lock($skips);
+    defined($pool) and print "  Running $test $files[$_]";
+    if(2 == $failed_skipped) {
+      $skips++;
+      print "  [SKIPPED]\n";
+    } elsif(0 == $failed_skipped) {
+      print "  [OK] in $runtime seconds\n";
+    } else {
+      $failures++;
+      print "  [FAILED]\n";
+    }
   }
 }
+
+if($opt_j>1 && $has_thread_pool && $count>1)
+{
+  $pool = Thread::Pool::Simple->new(
+    min => 2,
+    max => $opt_j,
+    load => 3,
+    do => [\&do_test]
+  );
+}
+
+print "Running tests\n";
+foreach my $test (@tests) {
+  if(defined($pool))
+  {
+    $pool->add($test);
+  }
+  else
+  {
+    do_test($test);
+  }
+}
+
+defined($pool) and $pool->join();
+
 print "\n";
 
 if($failures == 0) {
@@ -237,5 +374,41 @@ print "\n";
 
 close LOG;
 
-exit $failures;
+if($opt_p && $failures != 0) {
+  open LOG,"<tests.log" or die "Failed to open tests.log\n";
 
+  my $printed_this_test = 1;
+  my $current_test = "";
+  my $output_file = "";
+  my $descriptor_file = "";
+
+  while (my $line = <LOG>) {
+    chomp $line;
+    if ($line =~ /^Test '(.+)'/) {
+      $current_test = $1;
+      $printed_this_test = 0;
+    } elsif ($line =~ /Descriptor:\s+([^\s]+)/) {
+      $descriptor_file = $1;
+    } elsif ($line =~ /Output:\s+([^\s]+)/) {
+      $output_file = $1;
+    } elsif ($line =~ /\[FAILED\]\s*$/) {
+      # print a descriptive header before dumping the test.desc lines that
+      # actually weren't matched (and print this header just once)
+      if(0 == $printed_this_test) {
+        $printed_this_test = 1;
+        print "\n\n";
+        print "Failed test: $current_test\n";
+        open FH, "<$current_test/$output_file";
+        while (my $f = <FH>) {
+          print $f;
+        }
+        close FH;
+        print "\n\nFailed $descriptor_file lines:\n";
+      }
+
+      print "$line\n";
+    }
+  }
+}
+
+exit $failures;

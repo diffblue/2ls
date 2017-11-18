@@ -3,4 +3,4 @@ main.c
 
 ^EXIT=0$
 ^SIGNAL=0$
-^** 0 of 4 failed$
+^\*\* 0 of 4 failed$

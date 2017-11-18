@@ -3,5 +3,5 @@ main.c
 --inline-partial 7
 ^EXIT=10$
 ^SIGNAL=0$
-^** 1 of 2 failed$
+^\*\* 1 of 2 failed$
 
