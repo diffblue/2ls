@@ -17,7 +17,7 @@ exprt malloc_ssa(
   const std::string &suffix,
   symbol_tablet &);
 
-void replace_malloc(
+bool replace_malloc(
   goto_modelt &goto_model,
   const std::string &suffix);
 

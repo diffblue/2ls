@@ -462,7 +462,27 @@ void local_SSAt::build_transfer(locationt loc)
     exprt deref_lhs=dereference(code_assign.lhs(), loc);
     exprt deref_rhs=dereference(code_assign.rhs(), loc);
 
-    assign_rec(deref_lhs, deref_rhs, true_exprt(), loc);
+    if(deref_lhs.get_bool("#heap_access") || deref_rhs.get_bool("#heap_access"))
+    {
+      exprt symbolic_deref_lhs=symbolic_dereference(code_assign.lhs(), ns);
+      const exprt rhs=concretise_symbolic_deref_rhs(code_assign.rhs(), ns, loc);
+
+      if(deref_lhs.get_bool("#heap_access") &&
+         has_symbolic_deref(symbolic_deref_lhs))
+      {
+        assign_rec(symbolic_deref_lhs, rhs, true_exprt(), loc);
+        assign_rec(
+          deref_lhs, name(ssa_objectt(symbolic_deref_lhs, ns), OUT, loc),
+          true_exprt(),
+          loc);
+      }
+      else
+      {
+        assign_rec(deref_lhs, rhs, true_exprt(), loc);
+      }
+    }
+    else
+      assign_rec(deref_lhs, deref_rhs, true_exprt(), loc);
   }
 }
 
@@ -692,7 +712,8 @@ void local_SSAt::build_assertions(locationt loc)
     const exprt deref_rhs=dereference(loc->guard, loc);
     collect_iterators_rhs(deref_rhs, loc);
 
-    exprt c=read_rhs(loc->guard, loc);
+    const exprt rhs=concretise_symbolic_deref_rhs(loc->guard, ns, loc);
+    exprt c=read_rhs(rhs, loc);
     exprt g=guard_symbol(loc);
     (--nodes.end())->assertions.push_back(implies_exprt(g, c));
   }
@@ -1172,7 +1193,8 @@ symbol_exprt local_SSAt::name(
   unsigned cnt=loc->location_number;
 
   irep_idt new_id=id2string(id)+"#"+
-    (kind==PHI?"phi":kind==LOOP_BACK?"lb":kind==LOOP_SELECT?"ls":"")+
+    (kind==PHI?"phi":kind==LOOP_BACK?"lb":kind==LOOP_SELECT?"ls":
+     kind==OBJECT_SELECT?"os":"")+
     i2string(cnt)+
     (kind==LOOP_SELECT?std::string(""):suffix);
 
@@ -1378,18 +1400,44 @@ void local_SSAt::assign_rec(
   {
     const if_exprt &if_expr=to_if_expr(lhs);
 
-    exprt new_rhs=if_exprt(if_expr.cond(), rhs, if_expr.true_case());
-    assign_rec(
-      if_expr.true_case(),
-      new_rhs,
-      and_exprt(guard, if_expr.cond()),
-      loc);
+    exprt::operandst other_cond_conj;
+    if(if_expr.true_case().get_bool("#heap_access") &&
+       if_expr.cond().id()==ID_equal)
+    {
+      const exprt heap_object=if_expr.true_case();
+      const ssa_objectt ptr_object(to_equal_expr(if_expr.cond()).lhs(), ns);
+      if(ptr_object)
+      {
+        const irep_idt ptr_id=ptr_object.get_identifier();
+        const exprt cond=read_rhs(if_expr.cond(), loc);
 
-    assign_rec(
-      if_expr.false_case(),
-      rhs,
-      and_exprt(guard, not_exprt(if_expr.cond())),
-      loc);
+        for(const dyn_obj_assignt &do_assign : dyn_obj_assigns[heap_object])
+        {
+          if(!alias_analysis[loc].aliases.same_set(
+            ptr_id, do_assign.pointer_id))
+          {
+            other_cond_conj.push_back(do_assign.cond);
+          }
+        }
+
+        dyn_obj_assigns[heap_object].emplace_back(ptr_id, cond);
+      }
+    }
+
+    exprt cond=if_expr.cond();
+    if(!other_cond_conj.empty())
+    {
+      const exprt other_cond=or_exprt(
+        not_exprt(conjunction(other_cond_conj)),
+        name(guard_symbol(), OBJECT_SELECT, loc));
+      cond=and_exprt(cond, other_cond);
+    }
+    exprt new_rhs=if_exprt(cond, rhs, if_expr.true_case());
+    assign_rec(if_expr.true_case(), new_rhs, and_exprt(guard, if_expr.cond()),
+               loc);
+
+    assign_rec(if_expr.false_case(), rhs,
+               and_exprt(guard, not_exprt(if_expr.cond())), loc);
   }
   else if(lhs.id()==ID_byte_extract_little_endian ||
           lhs.id()==ID_byte_extract_big_endian)
@@ -1929,4 +1977,95 @@ void local_SSAt::new_iterator_access(
 
   auto it=iterators.insert(iterator);
   it.first->add_access(expr, inst_loc_number);
+}
+
+/*******************************************************************\
+
+Function: local_SSAt::all_symbolic_deref_defined
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Create new iterator access
+
+\*******************************************************************/
+bool local_SSAt::all_symbolic_deref_defined(
+  const exprt &expr,
+  const namespacet &ns,
+  locationt loc) const
+{
+  bool result=true;
+  ssa_objectt ssa_object(expr, ns);
+  if(ssa_object && has_symbolic_deref(ssa_object.get_expr()))
+  {
+    const ssa_domaint &ssa_domain=ssa_analysis[loc];
+    auto def_it=ssa_domain.def_map.find(ssa_object.get_identifier());
+    if(def_it==ssa_domain.def_map.end() || def_it->second.def.is_input())
+      result=false;
+  }
+  else forall_operands(it, expr)
+      result=result && all_symbolic_deref_defined(*it, ns, loc);
+  return result;
+}
+
+
+/********************************************************************\
+
+Function: local_SSAt::concretise_rhs
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Concretise symbolic rhs and return resulting expr
+
+\*******************************************************************/
+
+exprt local_SSAt::concretise_symbolic_deref_rhs(
+  const exprt &rhs,
+  const namespacet &ns,
+  const locationt loc)
+{
+  const exprt deref_rhs=dereference(rhs, loc);
+  const exprt symbolic_deref_rhs=symbolic_dereference(rhs, ns);
+  ssa_objectt rhs_object(symbolic_deref_rhs, ns);
+
+  if(deref_rhs.get_bool("#heap_access") && rhs_object)
+  {
+    const exprt pointer=get_pointer(
+      rhs_object.get_root_object(),
+      pointed_level(rhs_object.get_root_object())-1);
+    const auto pointer_id=ssa_objectt(pointer, ns).get_identifier();
+    const auto pointer_def=ssa_analysis[loc].def_map.find(
+      pointer_id)->second.def;
+    const auto symbolic_id=ssa_objectt(symbolic_deref_rhs, ns).get_identifier();
+    const auto symbolic_def=ssa_analysis[loc].def_map.find(
+      symbolic_id)->second.def;
+
+    if(!symbolic_def.is_assignment()
+        || (pointer_def.is_assignment()
+            && pointer_def.loc->location_number>
+               symbolic_def.loc->location_number))
+    {
+      assign_rec(symbolic_deref_rhs, deref_rhs, true_exprt(), loc);
+      return name(ssa_objectt(symbolic_deref_rhs, ns), OUT, loc);
+    }
+    else
+    {
+      return symbolic_deref_rhs;
+    }
+  }
+  else
+  {
+    exprt rhs_copy=rhs;
+    Forall_operands(it, rhs_copy)
+    {
+      *it=concretise_symbolic_deref_rhs(*it, ns, loc);
+    }
+    return rhs_copy;
+  }
+
+  return all_symbolic_deref_defined(symbolic_deref_rhs, ns, loc)
+        ? symbolic_deref_rhs : deref_rhs;
 }

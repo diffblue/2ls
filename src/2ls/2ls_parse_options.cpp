@@ -501,6 +501,9 @@ int twols_parse_optionst::doit()
     status() << "Do not ignore array contents" << eom;
   }
 
+  if(dynamic_memory_detected)
+    options.set_option("has-dynamic-objects", true);
+
   // TODO: check option inconsistencies, ignored options etc
   if(options.get_bool_option("havoc"))
     status() << "Havocking loops and function calls" << eom;
@@ -1167,7 +1170,7 @@ bool twols_parse_optionst::process_goto_program(
     goto_model.goto_functions.compute_loop_numbers();
 
     // Replace malloc
-    replace_malloc(goto_model, "");
+    dynamic_memory_detected = replace_malloc(goto_model, "");
 
     // remove loop heads from function entries
     remove_loops_in_entry(goto_model);

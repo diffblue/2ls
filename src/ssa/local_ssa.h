@@ -20,6 +20,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "guard_map.h"
 #include "ssa_object.h"
 #include "ssa_heap_domain.h"
+#include "may_alias_analysis.h"
 
 #define TEMPLATE_PREFIX "__CPROVER_template"
 #define TEMPLATE_DECL TEMPLATE_PREFIX
@@ -42,11 +43,8 @@ public:
     ssa_objects(_goto_function, ns, _heap_analysis),
     ssa_value_ai(_goto_function, ns, _heap_analysis),
     assignments(
-      _goto_function.body,
-      ns,
-      ssa_objects,
-      ssa_value_ai,
-      heap_analysis),
+      _goto_function.body, ns, ssa_objects, ssa_value_ai, heap_analysis),
+    alias_analysis(_goto_function, ns),
     guard_map(_goto_function.body),
     ssa_analysis(assignments),
     suffix(_suffix)
@@ -142,6 +140,20 @@ public:
   // unknown heap objects
   var_sett unknown_objs;
 
+  // Maps members of dynamic object to a set of pointers used to access those
+  // objects when assigning them
+  class dyn_obj_assignt
+  {
+  public:
+    const irep_idt pointer_id;
+    const exprt cond;
+
+    dyn_obj_assignt(const irep_idt &pointer_id, const exprt &cond):
+      pointer_id(pointer_id), cond(cond) {}
+  };
+  typedef std::list<dyn_obj_assignt> dyn_obj_assignst;
+  std::map<const exprt, dyn_obj_assignst> dyn_obj_assigns;
+
   bool has_function_calls() const;
 
   const namespacet &ns;
@@ -157,7 +169,7 @@ public:
   exprt edge_guard(locationt from, locationt to) const;
 
   // auxiliary functions
-  enum kindt { PHI, OUT, LOOP_BACK, LOOP_SELECT };
+  enum kindt { PHI, OUT, LOOP_BACK, LOOP_SELECT, OBJECT_SELECT };
   virtual symbol_exprt name(
     const ssa_objectt &,
     kindt kind,
@@ -201,12 +213,24 @@ public:
 
   exprt dereference(const exprt &expr, locationt loc) const;
 
+  bool all_symbolic_deref_defined(
+    const exprt &expr,
+    const namespacet &ns,
+    locationt loc) const;
+
+  exprt concretise_symbolic_deref_rhs(
+    const exprt &rhs,
+    const namespacet &ns,
+    const locationt loc);
+
   const ssa_heap_analysist &heap_analysis;
 
   ssa_objectst ssa_objects;
   typedef ssa_objectst::objectst objectst;
   ssa_value_ait ssa_value_ai;
   assignmentst assignments;
+
+  may_alias_analysist alias_analysis;
 
 // protected:
   guard_mapt guard_map;

@@ -231,13 +231,7 @@ void collect_objects_rec(
       objects.insert(ssa_object);
 
       const exprt &root_object=ssa_object.get_root_object();
-      const symbolt *symbol;
-      if(ssa_object.type().get_bool("#dynamic") ||
-         (root_object.id()==ID_symbol &&
-          id2string(to_symbol_expr(root_object).get_identifier()).find(
-            "#return_value")==std::string::npos &&
-          !ns.lookup(to_symbol_expr(root_object).get_identifier(), symbol) &&
-          (symbol->is_parameter || !symbol->is_procedure_local())))
+      if(ssa_object.type().get_bool("#dynamic") || !is_pointed(root_object))
       {
         collect_ptr_objects(
           ssa_object.symbol_expr(),

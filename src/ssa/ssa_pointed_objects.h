@@ -49,6 +49,7 @@ void copy_pointed_info(exprt &dest, const exprt &src);
 void copy_iterator(exprt &dest, const exprt &src);
 
 const exprt symbolic_dereference(const exprt &expr, const namespacet &ns);
+bool has_symbolic_deref(const exprt &expr);
 
 void set_iterator_fields(exprt &dest, const std::vector<irep_idt> fields);
 const std::vector<irep_idt> get_iterator_fields(const exprt &expr);

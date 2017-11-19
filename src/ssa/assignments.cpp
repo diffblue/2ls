@@ -40,6 +40,19 @@ void assignmentst::build_assignment_map(
       const code_assignt &code_assign=to_code_assign(it->code);
       exprt lhs_deref=dereference(code_assign.lhs(), ssa_value_ai[it], "", ns);
       assign(lhs_deref, it, ns);
+      exprt lhs_symbolic_deref=symbolic_dereference(code_assign.lhs(), ns);
+      assign(lhs_symbolic_deref, it, ns);
+
+      exprt rhs_symbolic_deref=symbolic_dereference(code_assign.rhs(), ns);
+      if (has_symbolic_deref(rhs_symbolic_deref))
+      {
+        rhs_symbolic_deref.set("#is_rhs_assign", true);
+        assign(rhs_symbolic_deref, it, ns);
+      }
+    }
+    else if(it->is_assert())
+    {
+      build_assertion(it->guard, it, ns);
     }
     else if(it->is_decl())
     {
@@ -225,6 +238,38 @@ void assignmentst::assign(
   const namespacet &)
 {
   assignment_map[loc].insert(lhs);
+}
+
+/*******************************************************************\
+
+Function: assignmentst::build_assertion
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Adds to assignments dereferences from assertion
+
+\*******************************************************************/
+
+void assignmentst::build_assertion(
+  const exprt &expr,
+  const locationt& loc,
+  const namespacet &ns)
+{
+  exprt rhs_symbolic_deref=symbolic_dereference(expr, ns);
+  ssa_objectt rhs_object(rhs_symbolic_deref, ns);
+
+  if(has_symbolic_deref(rhs_symbolic_deref) && rhs_object)
+  {
+    rhs_symbolic_deref.set("#is_rhs_assign", true);
+    assign(rhs_symbolic_deref, loc, ns);
+  }
+  else if(has_symbolic_deref(rhs_symbolic_deref))
+  {
+    forall_operands(it, expr)
+      build_assertion(*it, loc, ns);
+  }
 }
 
 /*******************************************************************\
