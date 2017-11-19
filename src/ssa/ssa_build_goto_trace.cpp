@@ -77,8 +77,7 @@ bool ssa_build_goto_tracet::can_convert_ssa_expr(const exprt &expr)
   if(expr.id()==ID_member)
   {
     const member_exprt &member=to_member_expr(expr);
-    can_convert_ssa_expr(member.struct_op());
-    return true;
+    return can_convert_ssa_expr(member.struct_op());
   }
   else if(expr.id()==ID_index)
   {
@@ -216,8 +215,9 @@ bool ssa_build_goto_tracet::record_step(
 #if 0
     std::cout << "ASSIGN "
               << from_expr(unwindable_local_SSA.ns, "", code_assign)
-              << ": " << from_expr(unwindable_local_SSA.ns, "", rhs_ssa)
-              << "==" << from_expr(unwindable_local_SSA.ns, "", rhs_simplified)
+              << ": " << from_expr(unwindable_local_SSA.ns, "", lhs_simplified)
+              << " := "
+              << from_expr(unwindable_local_SSA.ns, "", rhs_simplified)
               << std::endl;
 #endif
     step.type=goto_trace_stept::ASSIGNMENT;
