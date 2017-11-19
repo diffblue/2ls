@@ -158,7 +158,7 @@ protected:
   void inline_main(goto_modelt &goto_model);
   void propagate_constants(goto_modelt &goto_model);
   void nondet_locals(goto_modelt &goto_model);
-  void unwind_goto_into_loop(goto_modelt &goto_model, unsigned k);
+  bool unwind_goto_into_loop(goto_modelt &goto_model, unsigned k);
   void replace_types_rec(const replace_symbolt &replace_const, exprt &expr);
   exprt evaluate_casts_in_constants(
     const exprt &expr,

@@ -55,7 +55,7 @@ Author: Daniel Kroening, Peter Schrammel
 #include "show.h"
 #include "horn_encoding.h"
 
-#define UNWIND_GOTO_INTO_LOOP 1
+#define UNWIND_GOTO_INTO_LOOP 0
 #define REMOVE_MULTIPLE_DEREFERENCES 1
 #define IGNORE_RECURSION 1
 #define IGNORE_THREADS 1
@@ -1139,6 +1139,13 @@ bool twols_parse_optionst::process_goto_program(
 
 #if UNWIND_GOTO_INTO_LOOP
     unwind_goto_into_loop(goto_model, 2);
+#else
+    if(unwind_goto_into_loop(goto_model, 2))
+    {
+      status() << "Irreducible control flow not supported" << eom;
+      report_unknown();
+      return 5;
+    }
 #endif
 
     remove_skip(goto_model.goto_functions);

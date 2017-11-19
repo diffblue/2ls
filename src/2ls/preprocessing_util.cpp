@@ -137,10 +137,11 @@ Function: twols_parse_optionst::unwind_goto_into_loop
 
 \*******************************************************************/
 
-void twols_parse_optionst::unwind_goto_into_loop(
+bool twols_parse_optionst::unwind_goto_into_loop(
   goto_modelt &goto_model,
   unsigned k)
 {
+  bool result=false;
   typedef std::vector<std::pair<goto_programt::targett,
                                 goto_programt::targett> > loopst;
 
@@ -170,6 +171,7 @@ void twols_parse_optionst::unwind_goto_into_loop(
                (*s_it)->location_number<loop_head->location_number)
             {
               has_goto_into_loop=true;
+              result=true;
               break;
             }
           }
@@ -204,6 +206,8 @@ void twols_parse_optionst::unwind_goto_into_loop(
   }
   goto_model.goto_functions.update();
   goto_model.goto_functions.compute_loop_numbers();
+
+  return result;
 }
 
 /*******************************************************************\
