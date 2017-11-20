@@ -256,7 +256,12 @@ void ssa_value_domaint::assign_lhs_rec(
 
     if(ssa_object)
     {
+      // TODO: this is required for interprocedural analysis,
+      //       but interferes with intraprocedural analysis
+#if 0
       assign_pointed_rhs_rec(rhs, ns);
+#endif
+
       valuest tmp_values;
       assign_rhs_rec(tmp_values, rhs, ns, false, 0);
 

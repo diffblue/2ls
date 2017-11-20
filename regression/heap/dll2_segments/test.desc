@@ -1,4 +1,4 @@
-CORE
+KNOWNBUG
 main.c
 --heap --context-sensitive --no-propagation
 ^EXIT=0$
