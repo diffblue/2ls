@@ -629,11 +629,33 @@ int twols_parse_optionst::doit()
     case property_checkert::FAIL:
       if(report_assertions)
         report_properties(options, goto_model, checker->property_map);
-      report_failure();
       if(cmdline.isset("graphml-witness"))
       {
+#if 1
+        // validate witness
+        bool witness_valid=false;
+        for(const auto &p : checker->property_map)
+        {
+          if(p.second.result!=property_checkert::FAIL)
+            continue;
+
+          witness_valid=
+            !p.second.error_trace.steps.empty() &&
+            (options.get_bool_option("nontermination") ||
+             p.second.error_trace.steps.back().is_assert());
+          break;
+        }
+        if(!witness_valid)
+        {
+          retval=5;
+          error() << "Internal witness validation failed" << eom;
+          report_unknown();
+          break;
+        }
+#endif
         output_graphml_cex(options, goto_model, *checker);
       }
+      report_failure();
       retval=10;
       break;
 
