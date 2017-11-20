@@ -43,16 +43,11 @@ void assignmentst::build_assignment_map(
       exprt lhs_symbolic_deref=symbolic_dereference(code_assign.lhs(), ns);
       assign(lhs_symbolic_deref, it, ns);
 
-      exprt rhs_symbolic_deref=symbolic_dereference(code_assign.rhs(), ns);
-      if(has_symbolic_deref(rhs_symbolic_deref))
-      {
-        rhs_symbolic_deref.set("#is_rhs_assign", true);
-        assign(rhs_symbolic_deref, it, ns);
-      }
+      assign_symbolic_rhs(code_assign.rhs(), it, ns);
     }
     else if(it->is_assert())
     {
-      build_assertion(it->guard, it, ns);
+      assign_symbolic_rhs(it->guard, it, ns);
     }
     else if(it->is_decl())
     {
@@ -252,9 +247,9 @@ Function: assignmentst::build_assertion
 
 \*******************************************************************/
 
-void assignmentst::build_assertion(
+void assignmentst::assign_symbolic_rhs(
   const exprt &expr,
-  const locationt& loc,
+  const locationt &loc,
   const namespacet &ns)
 {
   exprt rhs_symbolic_deref=symbolic_dereference(expr, ns);
@@ -268,7 +263,7 @@ void assignmentst::build_assertion(
   else if(has_symbolic_deref(rhs_symbolic_deref))
   {
     forall_operands(it, expr)
-      build_assertion(*it, loc, ns);
+      assign_symbolic_rhs(*it, loc, ns);
   }
 }
 

@@ -74,9 +74,9 @@ protected:
     locationt,
     const namespacet &ns);
 
-  void build_assertion(
+  void assign_symbolic_rhs(
     const exprt &expr,
-    const locationt& loc,
+    const locationt &loc,
     const namespacet &ns);
 };
 
