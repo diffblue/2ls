@@ -79,7 +79,8 @@ twols_parse_optionst::twols_parse_optionst(int argc, const char **argv):
   language_uit(cmdline, ui_message_handler),
   ui_message_handler(cmdline, "2LS " TWOLS_VERSION),
   recursion_detected(false),
-  threads_detected(false)
+  threads_detected(false),
+  dynamic_memory_detected(false)
 {
 }
 
