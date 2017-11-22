@@ -231,9 +231,26 @@ bool replace_malloc(
   bool result=false;
   Forall_goto_functions(f_it, goto_model.goto_functions)
   {
+    goto_programt::const_targett loop_end=f_it->second.body.instructions.end();
     exprt malloc_size=nil_exprt();
     Forall_goto_program_instructions(i_it, f_it->second.body)
     {
+      if(loop_end==f_it->second.body.instructions.end())
+      {
+        for(const auto &incoming : i_it->incoming_edges)
+        {
+          if(incoming->is_backwards_goto() &&
+             incoming!=i_it)
+          {
+            loop_end=incoming;
+          }
+        }
+      }
+      else if(i_it==loop_end)
+      {
+        loop_end=f_it->second.body.instructions.end();
+      }
+
       if(i_it->is_assign())
       {
         code_assignt &code_assign=to_code_assign(i_it->code);
@@ -256,7 +273,7 @@ bool replace_malloc(
           malloc_size,
           i_it->location_number))
         {
-          result=true;
+          result=(loop_end!=f_it->second.body.instructions.end());
         }
       }
     }
