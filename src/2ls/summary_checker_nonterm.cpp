@@ -131,7 +131,7 @@ void summary_checker_nontermt::check_properties(
     property_map,
     false,
     false,
-    options.get_bool_option("show-trace") ||
+    options.get_bool_option("trace") ||
     options.get_option("graphml-witness")!="" ||
     options.get_option("json-cex")!="");
 
