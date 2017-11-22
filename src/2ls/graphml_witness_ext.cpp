@@ -42,7 +42,6 @@ void graphml_witness_extt::operator()(
   // CFG to CFA
   const graphmlt::node_indext sink=graphml.add_node();
   graphml[sink].node_name="sink";
-  graphml[sink].thread_nr=0;
   graphml[sink].is_violation=false;
   graphml[sink].has_invariant=false;
 
