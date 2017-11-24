@@ -7,6 +7,7 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 // #define DEBUG
+#define COMPETITION
 
 #ifdef DEBUG
 #include <iostream>
@@ -366,6 +367,11 @@ void ssa_value_domaint::assign_rhs_rec(
   }
   else if(rhs.id()==ID_plus)
   {
+#ifdef COMPETITION
+    bool pointer=false;
+    bool arithmetics=false;
+#endif
+
     forall_operands(it, rhs)
     {
       if(it->type().id()==ID_pointer)
@@ -375,8 +381,22 @@ void ssa_value_domaint::assign_rhs_rec(
           pointer_offset=1;
         unsigned a=merge_alignment(integer2ulong(pointer_offset), alignment);
         assign_rhs_rec(dest, *it, ns, true, a);
+
+#ifdef COMPETITION
+        pointer=true;
+#endif
+      }
+      else if(it->type().id()==ID_unsignedbv || it->type().id()==ID_signedbv)
+      {
+#ifdef COMPETITION
+        arithmetics=true;
+#endif
       }
     }
+
+#ifdef COMPETITION
+    assert(!(pointer && arithmetics));
+#endif
   }
   else if(rhs.id()==ID_minus)
   {
@@ -388,6 +408,12 @@ void ssa_value_domaint::assign_rhs_rec(
         pointer_offset=1;
       unsigned a=merge_alignment(integer2ulong(pointer_offset), alignment);
       assign_rhs_rec(dest, rhs.op0(), ns, true, a);
+
+#ifdef COMPETITION
+      assert(
+        !(rhs.op1().type().id()==ID_unsignedbv ||
+          rhs.op1().type().id()==ID_signedbv));
+#endif
     }
   }
   else if(rhs.id()==ID_dereference)
