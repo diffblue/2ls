@@ -15,6 +15,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/pointer_offset_size.h>
 
 #include <ansi-c/c_types.h>
+#include <analyses/constant_propagator.h>
 
 #include "malloc_ssa.h"
 
@@ -264,7 +265,19 @@ bool replace_malloc(
             id2string(to_symbol_expr(code_assign.lhs()).get_identifier());
           if(lhs_id=="malloc::malloc_size" ||
              lhs_id=="__builtin_alloca::alloca_size")
-            malloc_size=code_assign.rhs();
+          {
+            namespacet ns(goto_model.symbol_table);
+            goto_functionst::goto_functiont function_copy=f_it->second;
+            constant_propagator_ait const_propagator(function_copy, ns);
+            forall_goto_program_instructions(copy_i_it, function_copy.body)
+            {
+              if(copy_i_it->location_number==i_it->location_number)
+              {
+                assert(copy_i_it->is_assign());
+                malloc_size=to_code_assign(copy_i_it->code).rhs();
+              }
+            }
+          }
         }
         if(replace_malloc_rec(
           code_assign.rhs(),
