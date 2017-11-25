@@ -31,6 +31,7 @@ class optionst;
   "(non-incremental)" \
   "(no-assertions)(no-assumptions)" \
   "(16)(32)(64)(LP64)(ILP64)(LLP64)(ILP32)(LP32)" \
+  "(object-bits):" \
   "(little-endian)(big-endian)" \
   "(error-label):(verbosity):(no-library)" \
   "(version)" \
