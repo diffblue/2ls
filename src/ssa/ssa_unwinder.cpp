@@ -7,6 +7,7 @@ Author: Peter Schrammel, Saurabh Joshi
 \*******************************************************************/
 
 // #define DEBUG
+#define COMPETITION
 
 #include <util/prefix.h>
 
@@ -472,7 +473,9 @@ void ssa_local_unwindert::add_assertions(loopt &loop, bool is_last)
       if(!is_last) // only add assumptions if we are not in %0 iteration
       {
         if(is_kinduction)
+        {
           node.constraints.push_back(*a_it);
+        }
         else if(is_bmc)
         {
           // only add in base case
@@ -663,7 +666,11 @@ void ssa_local_unwindert::add_hoisted_assertions(loopt &loop, bool is_last)
       it!=loop.assertion_hoisting_map.end(); ++it)
   {
     if(!is_last // only add assumptions if we are not in %0 iteration
-       && is_kinduction && !it->second.assertions.empty())
+       && is_kinduction && !it->second.assertions.empty()
+#ifdef COMPETITION
+       && !(it->first->guard.id()==ID_not &&
+            it->first->guard.op0().id()==ID_overflow_shl))
+#endif
     {
       exprt e=disjunction(it->second.exit_conditions);
       SSA.rename(e, loop.body_nodes.begin()->location);
