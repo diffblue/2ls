@@ -1,6 +1,9 @@
-CORE
+KNOWNBUG
 main.c
 --inline --havoc --unwind 5
 ^EXIT=0$
 ^SIGNAL=0$
 ^VERIFICATION SUCCESSFUL$
+--
+--
+Needs fix for 6108ad3
