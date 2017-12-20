@@ -21,6 +21,19 @@ public:
   typedef std::vector<meet_irreduciblet> deductionst;
   typedef exprt statementt;
   typedef std::set<symbol_exprt> varst;
+  // Only for Interval domain 
+  //typedef std::map<exprt, std::pair<mp_integer, mp_integer>> var_boundt;
+  //var_boundt var_bound;
+  typedef std::vector<exprt> bound_var_namet;
+  bound_var_namet bound_var_name;
+  typedef std::vector<std::pair<mp_integer, mp_integer>> bound_var_valt;
+  bound_var_valt bound_var_val;
+  typedef std::vector<exprt> boolean_deductionst;
+  boolean_deductionst boolean_deductions;
+  typedef std::vector<exprt> c_bool_deductionst;
+  c_bool_deductionst c_bool_deductions;
+  typedef std::vector<exprt> array_deductionst;
+  array_deductionst array_deductions;
   typedef enum clause_statet { CONFLICT=0, UNKNOWN=1, SATISFIED=2, UNIT=3} clause_state;
 
   explicit acdl_domaint(optionst &_options,
@@ -109,6 +122,8 @@ public:
   bool semantic_subsumption(const meet_irreduciblet &m) const;
   void normalize_val_syntactic(valuet &value);
   void preprocess_val(valuet& val);
+  bool check_val_syntactic(const meet_irreduciblet &m,
+                                const valuet &value) const;
   
   // print value
   inline std::ostream &output(
@@ -123,6 +138,11 @@ public:
     }
     return out;
   }
+
+  void initialize_var_bound(const exprt& expr);
+  bool update_var_bound(const exprt& expr, const valuet& value);
+  void compute_normalized_val(valuet &val);
+  exprt get_expr_symbol(exprt& expr);
 
 protected:
   optionst &options;

@@ -69,7 +69,7 @@ protected:
   // conds used by decision heuristics  
   std::set<exprt> cond_vars;
   acdl_conflict_grapht conflict_graph;
-  unsigned ITERATION_LIMIT=999999;
+  unsigned ITERATION_LIMIT=4;
   unsigned last_decision_index;
   
   
@@ -106,6 +106,8 @@ protected:
   void initialize_decision_variables(acdl_domaint::valuet &val);
   void pre_process(const local_SSAt &SSA, const exprt &assertion, const exprt &assumption);
   bool is_closed(const local_SSAt &SSA, acdl_domaint::valuet& val);
+  property_checkert::resultt check_using_solver(const exprt &ssa_conjunction);
+  void make_deduction(const local_SSAt &SSA, const acdl_domaint::statementt &statement, const acdl_domaint::valuet &old_value, acdl_domaint::valuet &new_value);
   void print_solver_statistics();
 };
 

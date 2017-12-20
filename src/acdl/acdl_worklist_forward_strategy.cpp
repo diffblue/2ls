@@ -10,7 +10,7 @@ Author: Rajdeep Mukherjee
 
 #include <util/find_symbols.h>
 #include "acdl_worklist_forward_strategy.h"
-// #define DEBUG
+#define DEBUG
 
 /*******************************************************************\
 

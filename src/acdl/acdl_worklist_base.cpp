@@ -324,6 +324,22 @@ Function: acdl_worklist_baset::remove_live_variables()
     }
   }
 
+/*******************************************************************\
+
+Function: acdl_worklist_baset::size()
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+  unsigned acdl_worklist_baset::size()
+  {
+    return worklist.size();
+  }
 
 /*******************************************************************\
 

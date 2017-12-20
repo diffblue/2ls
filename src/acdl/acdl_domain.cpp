@@ -27,6 +27,8 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include "acdl_domain.h"
 #include "template_generator_acdl.h"
 
+#define BOX 1 
+#define OCTAGONS 0
 #define NO_PROJECTION
 
 /*******************************************************************\
@@ -91,9 +93,11 @@ void acdl_domaint::operator()(
                  new_value, deductions);
   if(deductions.empty())
   {
-    bool_inference(statement, bool_vars, old_value,
-                   new_value, deductions);
-    numerical_inference(statement, num_vars, old_value,
+    if(!bool_vars.empty())
+      bool_inference(statement, bool_vars, old_value,
+                     new_value, deductions);
+    if(!num_vars.empty())
+      numerical_inference(statement, num_vars, old_value,
                         num_new_value, num_deductions);
     // collect results
     new_value.insert(new_value.end(), num_new_value.begin(),
@@ -217,18 +221,21 @@ void acdl_domaint::bool_inference(
     ssa_analyzert ssa_analyzer;
     std::unique_ptr<incremental_solvert> solver(
       incremental_solvert::allocate(SSA.ns, true));
-    varst pvars;
-    pvars.insert(*it);
+    /*varst pvars;
+    pvars.insert(*it);*/
 
     // project _old_value on everything in statement but *it
     valuet old_value;
-    remove_vars(_old_value, pvars, old_value);
-
+    //remove_vars(_old_value, pvars, old_value);
+#ifdef NO_PROJECTION
+    old_value=_old_value;
+#else
+    remove_var(_old_value, *it, old_value);
 #ifdef DEBUG
     std::cout << "[ACDL-DOMAIN] projected(" << it->get_identifier() << "): ";
     output(std::cout, old_value) << std::endl;
 #endif
-
+#endif
     meet_irreduciblet deduced;
 
     // inference for booleans
@@ -276,9 +283,9 @@ void acdl_domaint::bool_inference(
         {
           new_value.push_back(deduced);
           deductions.push_back(deduced);
+          boolean_deductions.push_back(deduced);
         }
       }
-
       // pop_context not needed
     }
     else // bottom
@@ -287,6 +294,7 @@ void acdl_domaint::bool_inference(
       std::cout << "deducing in BOTTOM" << std::endl;
 #endif
       deductions.push_back(false_exprt());
+      boolean_deductions.push_back(false_exprt());
       break; // at this point we have a conflict, we return
     }
 
@@ -318,6 +326,11 @@ void acdl_domaint::numerical_inference(
 {
   // add variables in old value
   varst tvars=vars;
+  
+  // ONLY NEEDED for OCTAGON DOMAIN DEDUCTIONS 
+  // Witout this, bottom13 (octagon) does not terminate
+//#ifdef OCTAGONS
+#if 0
   for(valuet::const_iterator it=_old_value.begin();
       it!=_old_value.end(); ++it)
   {
@@ -325,6 +338,7 @@ void acdl_domaint::numerical_inference(
     find_symbols(*it, symbols);
     tvars.insert(symbols.begin(), symbols.end());
   }
+#endif
 
 #ifdef DEBUG
   std::cout << "The total number of variables passed to the template generator is " << tvars.size() << std::endl;
@@ -342,9 +356,9 @@ void acdl_domaint::numerical_inference(
   deductions.reserve(1);
 #else
   deductions.reserve(vars.size());
+#endif
   for(varst::const_iterator it=vars.begin();
       it!=vars.end(); ++it)
-#endif
   {
     ssa_analyzert ssa_analyzer;
     std::unique_ptr<incremental_solvert> solver(
@@ -356,7 +370,7 @@ void acdl_domaint::numerical_inference(
     old_value=_old_value;
 #else
     remove_var(_old_value, *it, old_value);
-#if def DEBUG
+#ifdef DEBUG
     std::cout << "[ACDL-DOMAIN] projected("
               << from_expr(SSA.ns, "", *it) << "): ";
     output(std::cout, old_value) << std::endl;
@@ -392,25 +406,52 @@ void acdl_domaint::numerical_inference(
 
     for(unsigned i=0; i<var_values.size(); ++i)
     {
+      std::cout << "Derived meet irreducible " << var_values[i].pretty() << std::endl;
       solver->new_context();
       *solver << not_exprt(var_values[i]);
 
       decision_proceduret::resultt result=(*solver)();
       assert(result==decision_proceduret::D_UNSATISFIABLE);
-
+#if 0      
+      new_value.push_back(var_values[i]);
+      deductions.push_back(var_values[i]);
+      solver->pop_context();
+#endif
+#ifdef BOX       
+      bool update = update_var_bound(var_values[i], _old_value);
+#endif
+     // We can avoid the syntactic check if update returns true,
+     // in which case we can safely insert the deduction. 
 #ifdef DEBUG
       std::cout << "IS_SUBSUMED: " << std::endl;
       std::cout << "  " << from_expr(SSA.ns, "", var_values[i]) << std::endl;
       std::cout << "  "; output(std::cout, _old_value); std::cout << std::endl;
 #endif
-      if(!is_subsumed_syntactic(var_values[i], _old_value))
+      // This is needed to keep the size of the 
+      // Implication graph under control. The following 
+      // scenario must be handled. 
+      // Case 1: lower bound: x>=0 -> x>=-50, so when x>=0 is present, do not insert x>=-50. Otherwise, insert
+      // Case 2: upper bound: x<=10->x<=20, if x<=10 is present, then do not insert x<=20. Otherwise insert. 
+
+#ifdef BOX
+      if(update)
       {
 #ifdef DEBUG
-        std::cout << "adding new value " << from_expr(SSA.ns, "", var_values[i]) << std::endl;
+        std::cout << "adding new value through Var bound update" << from_expr(SSA.ns, "", var_values[i]) << std::endl;
 #endif
         new_value.push_back(var_values[i]);
         deductions.push_back(var_values[i]);
       }
+#else 
+      if(!is_subsumed_syntactic(var_values[i], _old_value))
+      {
+#ifdef DEBUG
+        std::cout << "adding new value through syntactic check" << from_expr(SSA.ns, "", var_values[i]) << std::endl;
+#endif
+        new_value.push_back(var_values[i]);
+        deductions.push_back(var_values[i]);
+      }
+#endif   
       solver->pop_context();
     }
 
@@ -543,9 +584,13 @@ void acdl_domaint::normalize_meetirrd(const meet_irreduciblet &m, meet_irreducib
 
 Function: acdl_domaint::is_subsumed_syntactic()
 
-  Inputs: example: 1. x<=3, 0<=x && x<=3
-                   2. x<=2, 0<=x && x<=3
-                   3. x<=5, 3<=x && x<=3
+  Inputs: 
+  1. x<=3, 0<=x && x<=3
+  2. x<=5, 3<=x && x<=3
+  3. x<=2, 0<=x && x<=3 (updated upper bound=2)
+  4. x<=3, 0<=x && x<=2 (don't update, upper bound=2)
+  5. x>=7, x>=5 && x<=10 (lower bound  = 7)
+  6. x>=3, x>=5 && x<=10 (don't update, lower bound  = 5)
  Outputs: example  1: true
                    2. false
                    3. false
@@ -2772,6 +2817,7 @@ bool acdl_domaint::gamma_complete_deduction(const exprt &ssa_conjunction,
 
   std::unique_ptr<incremental_solvert> solver(
     incremental_solvert::allocate(SSA.ns, true));
+  std::cout << "SAT solver statistics" << std::endl;
   *solver << and_exprt(ssa_conjunction, conjunction(value));
   if((*solver)()==decision_proceduret::D_SATISFIABLE)
   {
@@ -2856,4 +2902,599 @@ void acdl_domaint::operator()(
   // push to generalized_value
   
   // assert(false);
+}
+
+/*******************************************************************\
+
+ Function: acdl_domaint::check_val_syntactic(m,val)
+
+ Inputs: 1) m:= (x>20), val:= (x>10 && y<20)
+         2) m:= (x>20), val:= (y<20)
+
+ Outputs: true
+          false
+ Purpose: Check whether variable in m is at all present in 
+ val, value of m does not matter, pure syntactic check
+
+\******************************************************************/
+bool acdl_domaint::check_val_syntactic(const meet_irreduciblet &m,
+                                const valuet &value) const
+{
+  if(value.empty())
+    return false;
+
+  std::cout << "Syntactic match -1 " << m.pretty() << std::endl;
+  exprt mt;
+  if(m.id()==ID_symbol ||
+     (m.id()==ID_not && m.op0().id()==ID_symbol))
+    mt = m;
+  else if(m.op0().id()==ID_typecast)
+  {
+    mt = m.op0().op0();
+  }
+  std::cout << "Syntactic match -1 " << mt.pretty() << std::endl;
+  if(mt.id()==ID_symbol ||
+     (mt.id()==ID_not && mt.op0().id()==ID_symbol))
+  {
+    for(unsigned i=0; i<value.size(); i++) 
+    {
+      exprt v = value[i];
+      // handled these before reaching here
+      if(v.id()==ID_symbol ||
+        (v.id()==ID_not && v.op0().id()==ID_symbol)
+        || (v.id()==ID_not && v.op0().id()==ID_not && v.op0().op0().id()==ID_symbol)) // for (!(!(cond)))*/
+        continue;
+      std::cout << "Syntactic match 0 check of meet irreducible " << from_expr(m) << "with final value "
+          << from_expr(v) << std::endl;
+     
+      // normalize must return expression 
+      // of the form x<N or x>N 
+      exprt val;
+      normalize_meetirrd(v, val);
+
+      assert(val.id() == ID_lt || val.id() == ID_gt || val.id() == ID_ge || val.id() == ID_le);
+      const exprt &lhsv=to_binary_relation_expr(val).lhs();
+
+      exprt lhsv_op, lhs_op;
+      // Check for I/P: (-x<=10)
+      // Check for val
+      if(lhsv.id()==ID_unary_minus &&
+          lhsv.op0().id()==ID_typecast)
+      {
+        lhsv_op = lhsv.op0().op0();
+      }
+      else
+      {
+        lhsv_op = lhsv;
+      }
+
+      std::cout << "Syntactic match check of meet irreducible " << from_expr(m) << "with final value symbol "
+          << from_expr(lhsv_op) << "derived from value component" << from_expr(val) << std::endl;
+
+      if(lhsv_op == mt) 
+      {
+#ifdef DEBUG
+        std::cout << "meet irreducible " << from_expr(m) << "matches with value "
+          << from_expr(v) << std::endl;
+#endif
+        return true;
+      }
+    }
+  }
+  return false;
+}
+  
+/*******************************************************************\
+
+  Function: acdl_domaint::initialize_var_bounds()
+  
+  Inputs: 
+
+ Purpose: Initialize Varible bounds with MinInt and MaxInt
+
+\*******************************************************************/
+
+void acdl_domaint::initialize_var_bound(const exprt& expr)
+{
+  constant_exprt l, u;
+  mp_integer lower, upper;
+  std::cout << "Computing the initialization value of numerical variables " << 
+    expr.pretty() << std::endl;
+  u=tpolyhedra_domaint::get_max_value(expr);
+  l=tpolyhedra_domaint::get_min_value(expr);
+
+  to_integer(to_constant_expr(u), upper);
+  to_integer(to_constant_expr(l), lower);
+
+  bound_var_name.push_back(expr);
+  bound_var_val.push_back(std::make_pair(lower, upper));
+}
+
+/*******************************************************************\
+
+  Function: acdl_domaint::update_var_bound()
+  
+  Inputs: 
+  1. x<=3, 0<=x && x<=3
+  2. x<=5, 3<=x && x<=3
+  3. x<=2, 0<=x && x<=3 (updated upper bound=2)
+  4. x<=3, 0<=x && x<=2 (don't update, upper bound=2)
+  5. x>=7, x>=5 && x<=10 (lower bound  = 7)
+  6. x>=3, x>=5 && x<=10 (don't update, lower bound  = 5)
+
+ Purpose: Update Varible bounds (lower, upper) for Intervals. Only called from numerical inference 
+
+\*******************************************************************/
+
+bool acdl_domaint::update_var_bound(const exprt& expr, const valuet& _value)
+{
+#ifdef DEBUG
+  std::cout << "[ACDL-DOMAIN] Update var bound("
+            << from_expr(SSA.ns, "", expr) << "): " << std::endl;
+#endif
+#if 0
+  // This case is not needed since it 
+  // is called only from numerical inference
+  if(expr.type().id()==ID_bool)
+  {
+    if(expr.id==ID_not) {
+      mp_integer l=0;
+      mp_integer u=0;
+    }
+    else {
+      mp_integer l=1;
+      mp_integer u=1;
+    }
+    val_pair.first=l;
+    val_pair.second=u;
+#ifdef DEBUG
+    std::cout <<  "The val pair for " << from_expr(SSA.ns, "", expr) <<  "is" << "lower" << l << "upper" << u << std::endl;
+#endif
+    return val_pair;
+  }
+#endif
+
+  /*if(!(expr.type().id()==ID_signedbv ||
+       expr.type().id()==ID_unsignedbv ||
+       expr.type().id()==ID_floatbv))
+  {
+    std::cout << "WARNING: do not know how to split "
+              << from_expr(SSA.ns, "", expr)
+              << " of type " << from_type(SSA.ns, "", expr.type())
+              << std::endl;
+    return;
+  }
+  */
+  // process the meet irreducible
+  exprt c;
+  mp_integer lb, ub;
+  bool ub_is_assigned=false;
+  bool lb_is_assigned=false;
+  mp_integer v1, v2;
+  mp_integer ng, cng;
+  mp_integer ngu, cngu;
+  
+  exprt lhs_c;
+  if(expr.id()==ID_not) {
+    c = expr.op0();
+#ifdef DEBUG
+    std::cout << "Bound calculation for  " << from_expr(c) << "derived from " <<
+      from_expr(expr) << std::endl;
+    std::cout << "Bound calculation for  " << c.pretty() << std::endl;
+#endif
+    // Handle the singleton case: example : guard#0
+    if(c.id()!=ID_le && c.id()!=ID_ge)
+    {
+      // don't know how to handle this
+      std::cout << "Dont know how to handle" << c.pretty() << std::endl;
+      return false;
+    }
+    const exprt &lhs=to_binary_relation_expr(c).lhs();
+    const exprt &rhs=to_binary_relation_expr(c).rhs();
+    // I/P: !(-x<=10) O/P: -x>10 --> x<(-10) --> ub=-11
+    if(c.id()==ID_le && c.op0().id()==ID_unary_minus &&
+       c.op0().op0().id()==ID_typecast)
+    {
+      lhs_c=c.op0().op0().op0();
+      constant_exprt cexpr=to_constant_expr(c.op0().op0().op1());
+      to_integer(cexpr, ng);
+      cng=-ng-1;
+      ub=cng;
+      ub_is_assigned=true;
+    }
+    // I/P: !(-x >= 10) O/P: -x<10 --> x>-10, lb=-9
+    if(c.id()==ID_ge && c.op0().id()==ID_unary_minus &&
+       c.op0().op0().id()==ID_typecast)
+    {
+      lhs_c=c.op0().op0().op0();
+      const exprt &rhs=to_binary_relation_expr(c).rhs();
+      constant_exprt cexpru=to_constant_expr(rhs);
+      to_integer(cexpru, ngu);
+      cngu=-ngu+1;
+      lb=cngu;
+      lb_is_assigned=true;
+    }
+    else if(c.id()==ID_le) {
+      lhs_c=lhs;
+      // !(ID_le) --> ID_gt
+      exprt t_exp=binary_relation_exprt(lhs, ID_gt, rhs);
+      constant_exprt cexpr=to_constant_expr(to_binary_relation_expr(t_exp).rhs());
+      to_integer(cexpr, v1);
+      v2=v1+1;
+      lb=v2; 
+      lb_is_assigned=true;
+    }
+    // !(ID_ge) --> ID_lt
+    else if(c.id()==ID_ge) {
+      lhs_c=lhs;
+      exprt t_exp=binary_relation_exprt(lhs, ID_lt, rhs);
+      constant_exprt cexpr=to_constant_expr(to_binary_relation_expr(t_exp).rhs());
+      to_integer(cexpr, v1);
+      v2=v1-1;
+      ub=v2; 
+      ub_is_assigned=true;
+    }
+    else if(c.id()==ID_lt || c.id()==ID_gt) {
+      // this must not happen because
+      // the expressions are now generated as<=or >=
+      assert(false);
+    }
+    else if(c.id()==ID_unary_minus &&
+       c.op0().id()==ID_typecast)
+    {
+      // I/P: !(-x<=10) O/P: -x>10 --> x<(-10) --> ub=-11
+      lhs_c=c.op0().op0();
+      if(c.id()==ID_le) {
+        const exprt &rhs=to_binary_relation_expr(c).rhs();
+        constant_exprt cexpr=to_constant_expr(rhs);
+        to_integer(cexpr, ng);
+        cng=-ng-1;
+        ub=cng;
+        ub_is_assigned=true;
+      }
+      // I/P: !(-x >= 10) O/P: -x<10 --> x>-10, lb=-9
+      if(c.id()==ID_ge) {
+        const exprt &rhs=to_binary_relation_expr(c).rhs();
+        constant_exprt cexpru=to_constant_expr(rhs);
+        to_integer(cexpru, ngu);
+        cngu=-ngu+1;
+        lb=cngu;
+        lb_is_assigned=true;
+      }
+    }
+    else 
+    {
+      // What else can be the type ?
+      // assert(false);
+    }
+  }  // end ID_not
+  else {
+    c = expr;
+    const exprt &lhs=to_binary_relation_expr(c).lhs();
+    if(c.id()==ID_le)
+    {
+      lhs_c=lhs;
+      to_integer(to_constant_expr(to_binary_relation_expr(c).rhs()), ub);
+      ub_is_assigned=true;
+    }
+    else if(c.id()==ID_ge)
+    {
+      lhs_c=lhs;
+      to_integer(to_constant_expr(to_binary_relation_expr(c).rhs()), lb);
+      lb_is_assigned=true;
+    }
+    else if(c.id()==ID_unary_minus &&
+       c.op0().id()==ID_typecast)
+    {
+      lhs_c=c.op0().op0();
+      // I/P: (-x<=10) O/P: x>=(-10) --> lb=-10
+      if(c.id()==ID_le) {
+        const exprt &rhs=to_binary_relation_expr(c).rhs();
+        constant_exprt cexpr=to_constant_expr(rhs);
+        to_integer(cexpr, ng);
+        cng=-ng;
+        lb=cng;
+        lb_is_assigned=true;
+      }
+      // I/P: (-x >= 10) O/P: x<=-10 --> ub=-10
+      if(c.id()==ID_ge) {
+        const exprt &rhs=to_binary_relation_expr(c).rhs();
+        constant_exprt cexpru=to_constant_expr(rhs);
+        to_integer(cexpru, ngu);
+        cngu=-ngu;
+        ub=cngu;
+        ub_is_assigned=true;
+      }
+    }
+    else {
+      // What else can be the type ?
+     // assert(false);
+    }
+  }
+ 
+
+  // we do not store id_c_bool in bound_var_val
+  // so, just check with is_subsumed_syntactic
+  if(lhs_c.type().id() == ID_c_bool) {
+    std::cout << "Not computing bound for ID_c_bool variable " << lhs_c.pretty() << std::endl;
+    c_bool_deductions.push_back(expr);
+    if(!is_subsumed_syntactic(expr, _value))
+      return true;
+  }
+  
+  // we do not store id_array in bound_var_val
+  // so, just check with is_subsumed_syntactic
+  if(lhs_c.type().id() == ID_array) {
+    std::cout << "Not computing bound for ID_array variable " << lhs_c.pretty() << std::endl;
+    array_deductions.push_back(expr);
+    if(!is_subsumed_syntactic(expr, _value))
+      return true;
+  }
+  mp_integer vall,valu;
+  // get the original bounds 
+  mp_integer orgl,orgu;
+  //orgl=var_bound.find(lhs_c)->second.first;
+  //orgu=var_bound.find(lhs_c)->second.second;
+  bool found=false;
+  for(int i=0;i<bound_var_name.size();++i)
+  {
+    if(bound_var_name[i] ==lhs_c) {
+      orgl = bound_var_val[i].first;
+      orgu = bound_var_val[i].second;
+      found = true;
+    }
+  }
+  if(!found) {
+    assert(false);
+    std::cout << "Variable " << from_expr(lhs_c) << " not found in bound vector" << std::endl;  }
+  
+  bool ubupdate=false, lbupdate=false;
+  if(!ub_is_assigned && !lb_is_assigned) {
+#ifdef DEBUG
+    std::cout << "No upper and lower bound computed" << std::endl;
+#endif
+    return false;
+  }
+  else { 
+    // 1. x<=3, 0<=x && x<=3
+    // 2. x<=5, 3<=x && x<=3
+    // 3. x<=2, 0<=x && x<=3 (updated upper bound=2)
+    // 4. x<=3, 0<=x && x<=2 (don't update, upper bound=2)
+    // 5. x>=7, x>=5 && x<=10 (lower bound  = 7)
+    // 6. x>=3, x>=5 && x<=10 (don't update, lower bound  = 5)
+    // both bounds can not be updated at the same time 
+    // since we are computing one meet irreducible at a time
+    assert(!(lb_is_assigned && ub_is_assigned));
+
+    if(ub_is_assigned) {
+      if(ub>orgu) {  // x<=3 -> x<=2
+        valu = orgu;
+        ubupdate = false; 
+      }
+      else if(ub<orgu) {
+        valu = ub;  // x<=2 Not(->) x<=3
+        ubupdate = true; 
+      }
+      else if(ub==orgu) {
+        valu = orgu;
+        ubupdate = false; 
+      }
+    }
+    else if(lb_is_assigned) {
+      if(lb>orgl) {
+        vall = lb;
+        lbupdate = true; 
+      }
+      else if(lb<orgl) {
+        vall = orgl;
+        lbupdate = false; 
+      }
+      else if(lb==orgl) {
+        vall = orgl;
+        lbupdate = false; 
+      }
+    }
+    
+    if(!ubupdate) valu=orgu;
+    if(!lbupdate) vall=orgl;
+
+    std::cout << "Original bound "
+      "[" << orgl << "," << orgu << "]" << 
+      "New bounds " << 
+      "[" << vall << "," << valu << "]" << std::endl;
+    
+     
+    for(int i=0;i<bound_var_name.size();++i)
+    {
+      if(bound_var_name[i] ==lhs_c)
+        bound_var_val[i]=(std::make_pair(vall,valu));
+    }
+    if(lbupdate || ubupdate) return true; 
+    else return false;
+  }
+}
+
+/*******************************************************************\
+
+ Function: acdl_domaint::equal_copy(statement, old_val, new_val)
+
+ Inputs: statement: x==y, old_val:= (x>10 && x<20)
+
+ Outputs: new_val:= (y>10 & y<20)   
+ 
+ Purpose: 
+
+\******************************************************************/
+/*bool acdl_domaint::equal_copy(const statementt &statement,
+                              const exprt& expr  
+                              const valuet &old_val,
+                              valuet &new_val) const
+{
+      
+}*/
+
+/*******************************************************************\
+
+ Function: acdl_domaint::compute_value(val)
+
+ Inputs:
+
+ Outputs: 
+ 
+ Purpose: 
+
+\******************************************************************/
+void acdl_domaint::compute_normalized_val(valuet &value)
+{
+  valuet val;
+  if(value.empty())
+    return;
+      
+  exprt m;
+  mp_integer l, u;
+  constant_exprt uexp, lexp;
+  for(unsigned i=0; i<value.size(); i++)
+  {
+    exprt m=value[i];
+    simplify_expr(m, SSA.ns);
+
+    // for expressions like !guard22
+    if(m.id()==ID_symbol ||
+        (m.id()==ID_not && m.op0().id()==ID_symbol) ||
+        (m.id()==ID_not && m.op0().id()==ID_not && m.op0().op0().id()==ID_symbol)) // for (!(!(cond)))*/
+    {
+      val.push_back(m);
+      continue;
+    }
+    else 
+    {
+      // search for id_c_bool
+      for(int j=0;j<c_bool_deductions.size();++j)
+      {
+        if(c_bool_deductions[j] == m)
+          val.push_back(m);
+      }
+      // search for id_array
+      for(int j=0;j<array_deductions.size();++j)
+      {
+        if(array_deductions[j] == m)
+          val.push_back(m);
+      }
+      // search for numerical variables 
+      exprt expr_name=get_expr_symbol(m);
+      // collect values from numerical variables       
+      for(int i=0;i<bound_var_name.size();++i)
+      {
+        m = bound_var_name[i];
+        if(m==expr_name) {
+          l = bound_var_val[i].first;
+          u = bound_var_val[i].second;
+          uexp=from_integer(u, m.type());
+          lexp=from_integer(l, m.type());
+          exprt expl = binary_relation_exprt(m, ID_ge, lexp);
+          exprt expu = binary_relation_exprt(m, ID_le, uexp);
+          val.push_back(expl);
+          val.push_back(expu);
+        }
+      }
+    }
+  }
+  // delete old elements in value
+  for(std::size_t i=0; i<value.size(); i++)
+    value.erase(value.begin(), value.end());
+  // load val in to value
+  for(unsigned i=0; i<val.size(); i++)
+    value.push_back(val[i]);
+  
+#ifdef DEBUG
+  std::cout << "Computing NEWLY value " << std::endl;
+  for(valuet::iterator it=value.begin();it!=value.end(); ++it)
+    std::cout << from_expr(SSA.ns, "", *it) << std::endl;
+#endif
+}
+
+
+/*******************************************************************\
+
+ Function: acdl_domaint::get_expr_symbol(expr)
+
+ Inputs:
+
+ Outputs: 
+ 
+ Purpose: 
+
+\******************************************************************/
+exprt acdl_domaint::get_expr_symbol(exprt& expr) 
+{
+  exprt lhs_c, c;
+  if(expr.id()==ID_not) {
+    c = expr.op0();
+    // Handle the singleton case: example : guard#0
+    if(c.id()!=ID_le && c.id()!=ID_ge)
+    {
+      // don't know how to handle this
+      std::cout << "Dont know how to handle" << c.pretty() << std::endl;
+      assert(false);
+    }
+    const exprt &lhs=to_binary_relation_expr(c).lhs();
+    const exprt &rhs=to_binary_relation_expr(c).rhs();
+    // I/P: !(-x<=10) O/P: -x>10 --> x<(-10) --> ub=-11
+    if(c.id()==ID_le && c.op0().id()==ID_unary_minus &&
+       c.op0().op0().id()==ID_typecast)
+    {
+      lhs_c=c.op0().op0().op0();
+    }
+    // I/P: !(-x >= 10) O/P: -x<10 --> x>-10, lb=-9
+    if(c.id()==ID_ge && c.op0().id()==ID_unary_minus &&
+       c.op0().op0().id()==ID_typecast)
+    {
+      lhs_c=c.op0().op0().op0();
+    }
+    else if(c.id()==ID_le) {
+      lhs_c=lhs;
+    }
+    // !(ID_ge) --> ID_lt
+    else if(c.id()==ID_ge) {
+      lhs_c=lhs;
+    }
+    else if(c.id()==ID_lt || c.id()==ID_gt) {
+      // this must not happen because
+      // the expressions are now generated as<=or >=
+      assert(false);
+    }
+    else if(c.id()==ID_unary_minus &&
+       c.op0().id()==ID_typecast)
+    {
+      // I/P: !(-x<=10) O/P: -x>10 --> x<(-10) --> ub=-11
+      lhs_c=c.op0().op0();
+    }
+    else 
+    {
+      // What else can be the type ?
+      // assert(false);
+    }
+  }  // end ID_not
+  else {
+    c = expr;
+    const exprt &lhs=to_binary_relation_expr(c).lhs();
+    if(c.id()==ID_le)
+    {
+      lhs_c=lhs;
+    }
+    else if(c.id()==ID_ge)
+    {
+      lhs_c=lhs;
+    }
+    else if(c.id()==ID_unary_minus &&
+       c.op0().id()==ID_typecast)
+    {
+      lhs_c=c.op0().op0();
+    }
+    else {
+      // What else can be the type ?
+      // assert(false);
+    }
+  }
+  return lhs_c;
 }

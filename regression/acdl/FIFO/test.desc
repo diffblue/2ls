@@ -1,6 +1,0 @@
-THOROUGH
-main.c
---inline 
-^EXIT=10$
-^SIGNAL=0$
-^VERIFICATION FAILED$

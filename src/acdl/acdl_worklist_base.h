@@ -94,6 +94,8 @@ public:
                        const acdl_domaint::statementt &statement);
 
   const acdl_domaint::statementt pop_from_list (listt &lexpr);
+  unsigned size();
+
 
 protected:
   worklistt worklist;
