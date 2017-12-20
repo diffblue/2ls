@@ -17,8 +17,12 @@ Author: Rajdeep Mukherjee, Peter Schrammel
 #include <iostream>
 
 #define DEBUG
-// #define PER_STATEMENT_LIVE_VAR
+//#define PER_STATEMENT_LIVE_VAR
 #define LIVE_VAR_OLD_APPROACH
+//#define INTERVALS
+//#define UNDERAPPROX_LIVE_VAR
+#define GAMMA_COMPLETE_CHECK 0 
+#define BOX 1
 
 /*******************************************************************
 
@@ -141,7 +145,7 @@ bool acdl_solvert::bcp(const local_SSAt &SSA, unsigned idx)
     // preprocess abstract value: 
     // transform constraints like 
     // (x==n) to (x<=n) and (x>=n)
-    domain.preprocess_val(v);
+    // domain.preprocess_val(v);
 #ifdef debug
     std::cout << "preprocessed abstract value of implication graph: " << std::endl;
     for(acdl_domaint::valuet::const_iterator it=v.begin();it!=v.end(); ++it)
@@ -203,10 +207,190 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
 {
   //unsigned init_size=conflict_graph.prop_trail.size();
   acdl_domaint::valuet final_val;
-  while (!worklist.empty())
+  
+  std::vector<acdl_domaint::statementt> arith_statement;
+  std::vector<acdl_domaint::statementt> equal_statement;
+  // Non fixed-point strategy for Propagation
+  unsigned wl_size=worklist.size(); 
+  std::cout << "Total statements in worklist are " << wl_size << std::endl;
+  
+  unsigned prop_iteration=0;
+
+  // must clean the deductions in these containers
+  // only when there is a conflict 
+#ifdef BOX
+  // domain.boolean_deductions.clear();
+  // domain.c_bool_deductions.clear();
+#endif
+
+  while (!worklist.empty()) // && wl_size>0)
   {
     const acdl_domaint::statementt statement=worklist.pop();
+    std::cout << "Remaining number of statements in worklist is " << worklist.size() << std::endl;
+    
+    // compute update of abstract value
+    acdl_domaint::valuet v;
+    conflict_graph.to_value(v);
 
+#ifdef DEBUG
+    std::cout << "Computing old abstract value of implication graph: " << std::endl;
+    for(acdl_domaint::valuet::const_iterator it=v.begin();it!=v.end(); ++it)
+      std::cout << from_expr(SSA.ns, "", *it) << std::endl;
+#endif
+
+    // preprocess abstract value 
+    // transform constraints like (x==N) to (x<=N) and (x>=N)
+    // domain.preprocess_val(v);
+#ifdef DEBUG
+    std::cout << "Computing preprocessed abstract value of implication graph: " << std::endl;
+    for(acdl_domaint::valuet::const_iterator it=v.begin();it!=v.end(); ++it)
+      std::cout << from_expr(SSA.ns, "", *it) << std::endl;
+#endif
+    
+    // Do we need to normalize value here since
+    // this will remove all old decisions that are
+    // still stored in the implication graph. These
+    // old decisions can still contribute towards the
+    // future deductions called in domain operator() below
+#ifdef INTERVALS
+#ifdef BOX
+   domain.compute_normalized_val(v);
+#else
+    domain.normalize_val_syntactic(v);
+#endif
+#endif
+    // Complex arithmetic statements are processed 
+    // only when both their operands are avaluated
+    // Example, z=x*y, process this only when both 
+    // x and y are available
+    acdl_domaint::varst arith_vars;
+    if(statement.id() == ID_equal) 
+    {
+      exprt expr_rhs=to_equal_expr(statement).rhs();
+      // for arithmetic statements like x=y*z 
+      if(expr_rhs.id() == ID_mult || expr_rhs.id() == ID_div) 
+      {
+        // check if the operands of the multiplier or divider operator
+        // are already evaluated. If so, they will appear in the abstract value
+        bool st1 = domain.check_val_syntactic(expr_rhs.op0(), v);
+        bool st2 = domain.check_val_syntactic(expr_rhs.op1(), v);
+#ifdef DEBUG
+        std::cout << "The syntactic expr-val check for expression " << from_expr(expr_rhs.op0()) << "against value " << from_expr(conjunction(v))
+          << "is " << st1 << std::endl; 
+        std::cout << "The syntactic expr-val check for expression " << from_expr(expr_rhs.op1()) << "against value " << from_expr(conjunction(v)) 
+          << "is " << st2 << std::endl; 
+#endif        
+        if(st1 && st2)
+        { 
+          // evaluate the statement since both operands 
+          // are available
+          arith_statement.erase(std::remove(arith_statement.begin(), arith_statement.end(), 
+                statement), arith_statement.end());
+          // erase the lhs vars from arith_vars
+          acdl_domaint::varst avars;
+          exprt lhs=to_equal_expr(statement).lhs();
+          find_symbols(lhs, avars);
+          for(acdl_domaint::varst::const_iterator it=avars.begin();it!=avars.end();++it)
+          {
+            if(arith_vars.find(*it) != arith_vars.end())
+              arith_vars.erase(it);
+          }
+          std::cout << "The arithmetic statement poped for evaluation is " 
+              << from_expr(SSA.ns, "", statement) << std::endl;
+        }
+        else 
+        {
+          std::vector<acdl_domaint::statementt>::iterator it;
+          it = find(arith_statement.begin(), arith_statement.end(), statement);
+          if(it == arith_statement.end()) 
+          {
+            acdl_domaint::varst avars;
+            exprt lhs=to_equal_expr(statement).lhs();
+            find_symbols(lhs, avars);
+            arith_vars.insert(avars.begin(), avars.end());
+            arith_statement.push_back(statement);
+            std::cout << "The statement pushed for later evaluation is " 
+              << from_expr(SSA.ns, "", statement) << std::endl;
+          }
+          continue;
+        }
+      }
+      // for statements like x=y, if neither x nor y is 
+      // evaluated (value present in abstract value), then 
+      // there is no point to process this statement now
+      // THIS OPTIMIZATION is specific to INTERVAL domain 
+      // Turn OFF if using Octagon domain
+#ifdef INTERVALS
+      std::cout << "Checking the equality statement " << from_expr(SSA.ns, "", statement) << 
+        std::endl;
+      std::cout << statement.pretty() << std::endl;
+      exprt elhs=to_equal_expr(statement).lhs();
+      exprt lhs, rhs;
+      if(expr_rhs.id() != ID_constant) {
+        if(elhs.id() == ID_symbol)
+        {
+          lhs = elhs;
+        }
+        else if(elhs.op0().id()==ID_typecast)
+        {
+          lhs = elhs.op0().op0();
+        }
+        if(expr_rhs.id() == ID_symbol) 
+        {
+          rhs = expr_rhs;
+        }
+        else if(expr_rhs.op0().id()==ID_typecast)
+        {
+          rhs = expr_rhs.op0().op0();
+        }
+        if(lhs.id() == ID_symbol && rhs.id() == ID_symbol)
+        {
+          // check if the operands are already evaluated. 
+          // If so, they will appear in the abstract value
+          bool st1 = domain.check_val_syntactic(rhs, v);
+          bool st2 = domain.check_val_syntactic(lhs, v);
+#ifdef DEBUG
+          std::cout << "The syntactic expr-val check for expression " << from_expr(lhs) << "against value " << from_expr(conjunction(v))
+            << "is " << st1 << std::endl; 
+          std::cout << "The syntactic expr-val check for expression " << from_expr(rhs) << "against value " << from_expr(conjunction(v)) 
+            << "is " << st2 << std::endl; 
+#endif        
+          if(!(st1 || st2))
+          { 
+            std::vector<acdl_domaint::statementt>::iterator it;
+            it = find(equal_statement.begin(), equal_statement.end(), statement);
+            if(it == equal_statement.end()) 
+            {
+              equal_statement.push_back(statement);
+              std::cout << "The equality statement pushed for later evaluation is " 
+                << from_expr(SSA.ns, "", statement) << std::endl;
+            }
+            continue;
+          }
+          else {
+            // evaluate the statement since at least one operand is available
+            equal_statement.erase(std::remove(equal_statement.begin(), equal_statement.end(), 
+                  statement), equal_statement.end());
+            std::cout << "The equality statement poped for evaluation is " 
+              << from_expr(SSA.ns, "", statement) << std::endl;
+            // if atleast one of the operands is evaluated, 
+            // then syntactically copy the value in other without SAT solver
+            /*if(!(st1 && st2)) 
+            {
+              if(st1)
+               domain.equal_copy(equal_statement, 2, rhs, value);
+              else if(st2)  
+               domain.equal_copy(equal_statement, 1, lhs, value);
+               // add the deduction to conflict graph
+             }*/
+          }
+        }
+      }
+#endif      
+    } // end of optimization for equality statements
+
+    //wl_size = wl_size-1;
+    prop_iteration=prop_iteration+1;
 #if 0  
     // MUST NOT DO THE OPTIMIZATION BELOW SINCE THIS CAN 
     // BLOCK SOME RELEVANT DEDUCTIONS. For example, if domain=octagon 
@@ -219,7 +403,32 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
     if (ita != assume_statements.end())
       continue;
 #endif
-
+    
+#ifdef UNDERAPPROX_LIVE_VAR
+    // Identify lhs_vars that belong to statements like z=x*x; 
+    // Computing templates bounds on z at every iteration of propagation is very expensive 
+    // Compute the bound on z only when x is fixed. Once the bound of z is
+    // computed, do not generate template any further. 
+    acdl_domaint::varst uvars;
+    if(statement.id()==ID_equal) {
+       // find lhs vars
+       exprt expr_lhs=to_equal_expr(statement).lhs();
+       find_symbols(expr_lhs, uvars);
+    }
+    else {
+      find_symbols(statement, uvars);
+    }
+    // remove all arith_vars from uvars
+    // since if z=x*x is not evaluated due to absence of values of x, 
+    // then there is no point on generating templates on z for subsequent deductions
+    for(it=arith_vars.begin();it!=arith_vars.end();++it)
+    {
+      if(uvars.find(*it) != uvars.end())
+        uvars.erase(it);
+    }
+#endif    
+    
+    
     acdl_domaint::varst lvar;
 #ifdef PER_STATEMENT_LIVE_VAR
     lvar=worklist.pop_from_map(statement);
@@ -228,6 +437,11 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
 #ifdef DEBUG
     std::cout << "Pop: " << from_expr (SSA.ns, "", statement)
               << std::endl;
+#endif
+
+#ifdef DEBUG
+    std::cout << "Old: ";
+    domain.output(std::cout, v) << std::endl;
 #endif
 
 #ifdef DEBUG
@@ -240,38 +454,9 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
 #endif
 #endif
 
-    // compute update of abstract value
-    acdl_domaint::valuet v;
     acdl_domaint::valuet v1;
     acdl_domaint::deductionst deductions;
 
-    conflict_graph.to_value(v);
-    // Do we need to normalize value here since
-    // this will remove all old decisions that are
-    // still stored in the implication graph. These
-    // old decisions can still contribute towards the
-    // future deductions called in domain operator() below
-    // domain.normalize_val_syntactic(v);
-
-    // preprocess abstract value 
-    // transform constraints like (x==N) to (x<=N) and (x>=N)
-    domain.preprocess_val(v);
-#ifdef DEBUG
-    std::cout << "Computing preprocessed abstract value of implication graph: " << std::endl;
-    for(acdl_domaint::valuet::const_iterator it=v.begin();it!=v.end(); ++it)
-      std::cout << from_expr(SSA.ns, "", *it) << std::endl;
-#endif
-
-#ifdef DEBUG
-    std::cout << "Computing old abstract value of implication graph: " << std::endl;
-    for(acdl_domaint::valuet::const_iterator it=v.begin();it!=v.end(); ++it)
-      std::cout << from_expr(SSA.ns, "", *it) << std::endl;
-#endif
-
-#ifdef DEBUG
-    std::cout << "Old: ";
-    domain.output(std::cout, v) << std::endl;
-#endif
 
     
     // select vars for projection
@@ -281,10 +466,18 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
 #ifdef LIVE_VAR_OLD_APPROACH
     find_symbols(statement, project_vars);
     projected_live_vars=worklist.check_var_liveness(project_vars);
+    // remove all arith_vars from project_live_vars
+    // since if z=x*x is not evaluated due to absence of values of x, 
+    // then there is no point on generating templates on z for subsequent deductions
+    for(acdl_domaint::varst::const_iterator it=arith_vars.begin();it!=arith_vars.end();++it)
+    {
+      if(projected_live_vars.find(*it) != projected_live_vars.end())
+        projected_live_vars.erase(it);
+    }
 #endif
 
-    // do path-sensitive analysis
-    // for efficient gamma-complete check
+#ifdef GAMMA_COMPLETE_CHECK
+    // gamma-complete check
     find_symbols(statement, project_vars);
     acdl_domaint::varst gvar;
     if(statement.id()==ID_equal) {
@@ -370,10 +563,20 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
     }
 #endif
 #endif
+#endif
+
+  clock_t total_time = 0.0;
+  const clock_t begin_time = clock();
+#ifdef UNDERAPPROX_LIVE_VAR
+    domain(statement, uvars, v, new_v, deductions);
+#endif
 
 #ifdef LIVE_VAR_OLD_APPROACH
     domain(statement, projected_live_vars, v, new_v, deductions);
 #endif
+  total_time = float(clock() - begin_time) / CLOCKS_PER_SEC;
+  std::cout << "Statement: " << from_expr(SSA.ns, "", statement) << 
+    "  Propagation Time: " << total_time << " seconds" << std::endl;
 
     // [QUERY] find intersection of project_vars and lvar
     // for per-statement based live variable approach
@@ -413,7 +616,7 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
     // preprocess abstract value: 
     // transform constraints like 
     // (x==n) to (x<=n) and (x>=n)
-    domain.preprocess_val(new_v);
+    // domain.preprocess_val(new_v);
 #ifdef debug
     std::cout << "preprocessed abstract value of implication graph: " << std::endl;
     for(acdl_domaint::valuet::const_iterator it=new_v.begin();it!=new_v.end(); ++it)
@@ -454,6 +657,156 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
       analyzes_conflict.last_proof=analyzes_conflict.ABSINT;
       return property_checkert::PASS; // potential UNSAT (modulo decisions)
     }
+  } // end of while loop
+  
+  // check whether we can infer something now 
+  // for the arithmetic statements
+  if(arith_statement.size() != 0) {
+    for(std::vector<acdl_domaint::statementt>::iterator it = arith_statement.begin();
+        it != arith_statement.end();++it) 
+    {
+      exprt expr_rhs=to_equal_expr(*it).rhs();
+      exprt expr_lhs=to_equal_expr(*it).lhs();
+      if(expr_rhs.id() == ID_mult || expr_rhs.id() == ID_div) 
+      {
+        acdl_domaint::valuet v;
+        conflict_graph.to_value(v);
+        // check if the operands of the multiplier or divider operator
+        // are already evaluated. If so, they will appear in the abstract value
+        bool st1 = domain.check_val_syntactic(expr_rhs.op0(), v);
+        bool st2 = domain.check_val_syntactic(expr_rhs.op1(), v);
+#ifdef DEBUG
+        std::cout << "The syntactic expr-val check for expression " << from_expr(expr_rhs.op0()) << "against value " << from_expr(conjunction(v))
+          << "is " << st1 << std::endl; 
+        std::cout << "The syntactic expr-val check for expression " << from_expr(expr_rhs.op1()) << "against value " << from_expr(conjunction(v)) 
+          << "is " << st2 << std::endl; 
+#endif        
+        if(st1 && st2)
+        { 
+          // evaluate the statement since both operands are available
+          std::cout << "Arithmetic statement evaluated after the propagation loop " << 
+            from_expr(SSA.ns, "", *it) << std::endl;
+          const acdl_domaint::statementt statement=*it;
+          acdl_domaint::varst vars;
+          acdl_domaint::valuet new_v;
+          acdl_domaint::deductionst deductions;
+          find_symbols(expr_lhs, vars);
+          clock_t total_time = 0.0;
+          const clock_t begin_time = clock();
+          domain(statement, vars, v, new_v, deductions);
+          total_time = float(clock() - begin_time) / CLOCKS_PER_SEC;
+          std::cout << "Statement: " << from_expr(SSA.ns, "", statement) << 
+            "  Propagation Time: " << total_time << " seconds" << std::endl;
+          // update implication graph
+          conflict_graph.add_deductions(SSA, deductions, statement);
+          propagations++;
+          conflict_graph.to_value(new_v);
+#ifdef DEBUG
+          std::cout << "New: ";
+          domain.output(std::cout, new_v) << std::endl;
+#endif
+          // domain.preprocess_val(new_v);
+          final_val=new_v;
+          // Cool! We got UNSAT
+          domain.normalize(new_v);
+          if(domain.is_bottom(new_v))
+          {
+            // Abstract Interpretation proof
+            analyzes_conflict.last_proof=analyzes_conflict.ABSINT;
+            return property_checkert::PASS; // potential UNSAT (modulo decisions)
+          }
+        }
+        else {
+          std::cout << "Arithmetic statement not evaluated in this propagation phase is " << 
+            from_expr(SSA.ns, "", *it) << std::endl;
+        }
+      }
+    }
+  }
+  //assert(arith_statement.size() == 0);
+  // check if we can process equality statements
+#ifdef INTERVALS
+  if(equal_statement.size() != 0) {
+    for(std::vector<acdl_domaint::statementt>::iterator it = equal_statement.begin();
+        it != equal_statement.end();++it) 
+    {
+      exprt expr_rhs=to_equal_expr(*it).rhs();
+      exprt expr_lhs=to_equal_expr(*it).lhs();
+      exprt lhs, rhs;
+      if(expr_lhs.id() == ID_symbol)
+      {
+        lhs = expr_lhs;
+      }
+      else if(expr_lhs.op0().id()==ID_typecast)
+      {
+         lhs = expr_lhs.op0().op0();
+      }
+      if(expr_rhs.id() == ID_symbol) 
+      {
+        rhs = expr_rhs;
+      }
+      else if(expr_rhs.op0().id()==ID_typecast)
+      {
+         rhs = expr_rhs.op0().op0();
+      }
+      if(lhs.id() == ID_symbol && rhs.id() == ID_symbol)
+      {
+        acdl_domaint::valuet v;
+        conflict_graph.to_value(v);
+        // check if the operands of the multiplier or divider operator
+        // are already evaluated. If so, they will appear in the abstract value
+        bool st1 = domain.check_val_syntactic(lhs, v);
+        bool st2 = domain.check_val_syntactic(rhs, v);
+#ifdef DEBUG
+        std::cout << "The syntactic expr-val check for expression " << from_expr(lhs) << "against value " << from_expr(conjunction(v))
+          << "is " << st1 << std::endl; 
+        std::cout << "The syntactic expr-val check for expression " << from_expr(rhs) << "against value " << from_expr(conjunction(v)) 
+          << "is " << st2 << std::endl; 
+#endif        
+        if(st1 || st2)
+        { 
+          // evaluate the statement since both operands are available
+          std::cout << "Equality statement evaluated after the propagation loop " << 
+            from_expr(SSA.ns, "", *it) << std::endl;
+          
+          acdl_domaint::valuet new_v;
+          clock_t total_time = 0.0;
+          const clock_t begin_time = clock();
+          make_deduction(SSA, *it, v, new_v);
+          total_time = float(clock() - begin_time) / CLOCKS_PER_SEC;
+          std::cout << "Statement: " << from_expr(SSA.ns, "", *it) << 
+            "  Propagation Time: " << total_time << " seconds" << std::endl;
+          // domain.preprocess_val(new_v);
+          final_val=new_v;
+          // Cool! We got UNSAT
+          domain.normalize(new_v);
+          if(domain.is_bottom(new_v))
+          {
+            // Abstract Interpretation proof
+            analyzes_conflict.last_proof=analyzes_conflict.ABSINT;
+            return property_checkert::PASS; // potential UNSAT (modulo decisions)
+          }
+        }
+        else 
+        {
+          std::cout << "Equality statement not evaluated in this propagation phase is " << 
+            from_expr(SSA.ns, "", *it) << std::endl;
+        }
+      }
+    }
+  }
+#endif  
+  std::cout << "Propagation Iteration is" << prop_iteration << std::endl;
+  // Empty the worklist for 
+  // non fixed-point strategy
+  if(wl_size <= 0) {    
+    while(!worklist.empty())
+      worklist.pop();
+    // empty the live variables because the worklist
+    // items are no more relevent, hence the live variables
+    // are no more relevant
+    worklist.live_variables.erase
+      (worklist.live_variables.begin(), worklist.live_variables.end());
   }
 
   // [TODO] check if new_v is EMPTY,
@@ -493,6 +846,8 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
     analyzes_conflict.cancel_once(SSA, conflict_graph);
   }
 #endif
+  
+#if 0  
   // check for closed abstract value
   std::cout<< "***** CLOSURE Check ******" << std::endl;
   bool status = is_closed(SSA, final_val);
@@ -502,6 +857,7 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
     std::cout << "The abstract value is not closed" << std::endl;
     assert(0);
   }
+#endif
 
 #ifdef DEBUG
   std::cout << "Propagation finished with UNKNOWN" << std::endl;
@@ -509,6 +865,41 @@ property_checkert::resultt acdl_solvert::propagation(const local_SSAt &SSA, cons
   return property_checkert::UNKNOWN;
 }
 
+/*******************************************************************
+
+ Function: acdl_solvert::make_deduction()
+
+ Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+void acdl_solvert::make_deduction(const local_SSAt &SSA,
+                                  const acdl_domaint::statementt &statement,
+                                  const acdl_domaint::valuet &old_value, 
+                                  acdl_domaint::valuet &new_value)
+{
+  acdl_domaint::varst vars;
+  acdl_domaint::deductionst deductions;
+  find_symbols(statement, vars);
+  clock_t total_time = 0.0;
+  const clock_t begin_time = clock();
+  domain(statement, vars, old_value, new_value, deductions);
+  total_time = float(clock() - begin_time) / CLOCKS_PER_SEC;
+  std::cout << "Statement: " << from_expr(SSA.ns, "", statement) << 
+    "  Propagation Time: " << total_time << " seconds" << std::endl;
+  // update implication graph
+  conflict_graph.add_deductions(SSA, deductions, statement);
+  propagations++;
+  conflict_graph.to_value(new_value);
+#ifdef DEBUG
+  std::cout << "New: ";
+  domain.output(std::cout, new_value) << std::endl;
+#endif
+  // domain.preprocess_val(new_value);
+}
 
 /*******************************************************************
 
@@ -607,7 +998,7 @@ bool acdl_solvert::decide (const local_SSAt &SSA, const exprt& assertion)
   // preprocess abstract value: 
   // transform constraints like 
   // (x==n) to (x<=n) and (x>=n)
-  domain.preprocess_val(v);
+  // domain.preprocess_val(v);
 #ifdef debug
   std::cout << "preprocessed abstract value of implication graph: " << std::endl;
   for(acdl_domaint::valuet::const_iterator it=v.begin();it!=v.end(); ++it)
@@ -620,7 +1011,7 @@ bool acdl_solvert::decide (const local_SSAt &SSA, const exprt& assertion)
   // preprocess abstract value: 
   // transform constraints like 
   // (x==n) to (x<=n) and (x>=n)
-  domain.preprocess_val(old_v);
+  // domain.preprocess_val(old_v);
 #ifdef debug
   std::cout << "preprocessed abstract value of implication graph: " << std::endl;
   for(acdl_domaint::valuet::const_iterator it=old_v.begin();it!=old_v.end(); ++it)
@@ -645,7 +1036,12 @@ bool acdl_solvert::decide (const local_SSAt &SSA, const exprt& assertion)
 
   // Normalizing here is absolute must
   // Otherwise, unsafe cases does not terminate
+#ifdef BOX
+  domain.compute_normalized_val(v);
+#else
   domain.normalize_val_syntactic(v);
+#endif
+
   acdl_domaint::meet_irreduciblet dec_expr=decision_heuristics(SSA, v);
   if(dec_expr==false_exprt())
     return false;
@@ -688,6 +1084,13 @@ bool acdl_solvert::decide (const local_SSAt &SSA, const exprt& assertion)
   
   // update conflict graph
   conflict_graph.add_decision(dec_expr);
+  
+#ifdef BOX
+  // update the numerical variable bound
+  // corresponding to the new decision
+  bool update = domain.update_var_bound(dec_expr, v);
+#endif
+  
   // save the last decision index
   last_decision_index=conflict_graph.prop_trail.size();
   
@@ -702,7 +1105,7 @@ bool acdl_solvert::decide (const local_SSAt &SSA, const exprt& assertion)
   // preprocess abstract value: 
   // transform constraints like 
   // (x==n) to (x<=n) and (x>=n)
-  domain.preprocess_val(new_value);
+  // domain.preprocess_val(new_value);
 #ifdef debug
   std::cout << "preprocessed abstract value of implication graph: " << std::endl;
   for(acdl_domaint::valuet::const_iterator it=new_value.begin();it!=new_value.end(); ++it)
@@ -728,7 +1131,11 @@ bool acdl_solvert::decide (const local_SSAt &SSA, const exprt& assertion)
 #endif
 
   // normalize v
+#ifdef BOX
+  domain.compute_normalized_val(v);
+#else
   domain.normalize_val_syntactic(v);
+#endif
 
 #ifdef DEBUG
   std::cout << "New: ";
@@ -779,7 +1186,7 @@ bool acdl_solvert::analyze_conflict(const local_SSAt &SSA, const exprt& assertio
       // preprocess abstract value: 
       // transform constraints like 
       // (x==n) to (x<=n) and (x>=n)
-      domain.preprocess_val(v);
+      // domain.preprocess_val(v);
 #ifdef debug
       std::cout << "preprocessed abstract value of implication graph: " << std::endl;
       for(acdl_domaint::valuet::const_iterator it=v.begin();it!=v.end(); ++it)
@@ -787,7 +1194,11 @@ bool acdl_solvert::analyze_conflict(const local_SSAt &SSA, const exprt& assertio
 #endif
 
       // call normalize or normalize_val_syntactic ?
+#ifdef BOX
+      domain.compute_normalized_val(v);
+#else
       domain.normalize_val_syntactic(v);
+#endif
       exprt dec_expr=conflict_graph.prop_trail.back();
       domain.meet(dec_expr, v);
 #ifdef DEBUG
@@ -913,14 +1324,25 @@ void acdl_solvert::initialize_decision_variables(acdl_domaint::valuet &value)
 \*******************************************************************/
 void acdl_solvert::print_solver_statistics()
 {
+#ifdef BOX
+  std::cout << "**************************" << std::endl;
+  std::cout << "Printing VARIABLE BOUNDS " << std::endl;
+  std::cout << "**************************" << std::endl;
+  for(int i=0;i<domain.bound_var_name.size();++i)
+  {
+    std::cout << "variable " << from_expr(domain.bound_var_name[i]) << 
+      "Interval [" << domain.bound_var_val[i].first << ","
+      << domain.bound_var_val[i].second << "]" << std::endl;
+  }
+#endif  
   std::cout << "********************************" << std::endl;
   std::cout << "Printing ACDL Solver Statistics" << std::endl;
   std::cout << "********************************" << std::endl;
   std::cout << "Decisions:: " << decisions << std::endl;
+  std::cout << "Propagation::" << propagations << std::endl;
   std::cout << "Learning Iterations:: " << learning << std::endl;
   std::cout << "Learnt clauses:: " << analyzes_conflict.learned_clauses.size() << std::endl;
   std::cout << "Learnt literals:: " << learned_literals << std::endl;
-  std::cout << "Propagation::" << propagations << std::endl;
 }
 
 /*******************************************************************
@@ -1112,7 +1534,35 @@ void acdl_solvert::pre_process (const local_SSAt &SSA, const exprt &assertion, c
   for(std::vector<exprt>::iterator it=
         worklist.statements.begin(); it!=worklist.statements.end(); it++)
     std::cout << "Statement: " << from_expr(SSA.ns, "", *it) << std::endl;
-// #endif
+}
+      
+/*******************************************************************
+ Function: acdl_solvert::check_using_solver()
+
+ Inputs:
+
+ Outputs:
+ 
+ Purpose: Resort to SAT solver to solve the SSA equations with 
+          the facts derived by ACDLP so far
+********************************************************************/
+property_checkert::resultt acdl_solvert::check_using_solver(
+                               const exprt &ssa_conjunction)
+{    
+  // solve the conjunction of SSA with current abstract value
+  acdl_domaint::valuet v;
+  conflict_graph.to_value(v); 
+  bool state = domain.gamma_complete_deduction(ssa_conjunction, v);
+  if(state==true) {
+    //print_solver_statistics();
+    //std::cout << "Solved by SAT solver" << std::endl;
+    return property_checkert::FAIL;
+  }
+  else {
+    //print_solver_statistics();
+    //std::cout << "Solved by SAT solver" << std::endl;
+    return property_checkert::PASS;
+  }
 }
 
 /*******************************************************************
@@ -1184,7 +1634,22 @@ property_checkert::resultt acdl_solvert::operator()(
 
   // call initialize live variables
   worklist.initialize_live_variables();
+  
+#ifdef BOX       
+  for(std::set<symbol_exprt>::iterator it=all_vars.begin();it!=all_vars.end(); it++)
+  {
+    // initialize the Intervals for numerical variables
+    if(it->type().id() != ID_bool && it->type().id()!=ID_c_bool && it->type().id() !=ID_array)
+    {
+      domain.initialize_var_bound(*it);            
+    }
+    else 
+      std::cout << "Not initializing bound for variable " << it->pretty() << std::endl;
+  } 
+#endif
+
   std::set<exprt> decision_variable;
+  bool unknown_result = false;
 
   // initialize the decision variables
   // Note that the decision variable contains
@@ -1223,10 +1688,8 @@ property_checkert::resultt acdl_solvert::operator()(
       else {
 #endif
        decision_heuristics.get_dec_variables(*it);
-      //}
     }
   }
-
    
   decision_heuristics.initialize_var_set(read_only_vars, assume_vars, cond_vars);
   // [TODO] order decision variables
@@ -1241,6 +1704,18 @@ property_checkert::resultt acdl_solvert::operator()(
 
   std::cout << "The additional constraint for the loop is: " << from_expr(SSA.ns, "", additional_constraint) << std::endl;
 #endif
+
+#ifdef BOX
+  std::cout << "************************************" << std::endl;
+  std::cout << "Printing INITIALIZED VARIABLE BOUNDS " << std::endl;
+  std::cout << "*************************************" << std::endl;
+  for(int i=0;i<domain.bound_var_name.size();++i)
+  {
+    std::cout << "variable " << from_expr(domain.bound_var_name[i]) << 
+      "Interval [" << domain.bound_var_val[i].first << ","
+      << domain.bound_var_val[i].second << "]" << std::endl;
+  }
+#endif  
 
 #if 0
   // collect variables for completeness check
@@ -1259,14 +1734,18 @@ property_checkert::resultt acdl_solvert::operator()(
   // preprocess abstract value: 
   // transform constraints like 
   // (x==n) to (x<=n) and (x>=n)
-  domain.preprocess_val(v);
+  // domain.preprocess_val(v);
 #ifdef debug
   std::cout << "preprocessed abstract value of implication graph: " << std::endl;
   for(acdl_domaint::valuet::const_iterator it=v.begin();it!=v.end(); ++it)
     std::cout << from_expr(ssa.ns, "", *it) << std::endl;
 #endif
 
+#ifdef BOX
+  domain.compute_normalized_val(v);
+#else
   domain.normalize_val_syntactic(v);
+#endif
   // check if abstract value v of the
   // implication graph is top for the first time
   // because ACDL starts with TOP
@@ -1295,6 +1774,10 @@ property_checkert::resultt acdl_solvert::operator()(
           std::vector<acdl_domaint::meet_irreduciblet> ded;
           ded.push_back(lhs);
           conflict_graph.add_deductions(SSA, ded, stmt);
+          // push into boolean deductions vector
+//#ifdef BOX
+//          domain.boolean_deductions.push_back(lhs);
+//#endif
           std::cout << "Pushing deduction from assumption into trail: " << from_expr(lhs) << std::endl;
           ded.clear();
           /*ded.push_back(assume_st);
@@ -1324,7 +1807,12 @@ property_checkert::resultt acdl_solvert::operator()(
   std::cout << "********************************" << std::endl;
   std::cout << "        DEDUCTION PHASE " << std::endl;
   std::cout << "********************************" << std::endl;
+  clock_t total_time = 0.0;
+  const clock_t begin_time = clock();
   result=propagate(SSA, assertion);
+  total_time = float(clock() - begin_time) / CLOCKS_PER_SEC;
+  std::cout << "Propagation Time in Iteration 0: " << total_time << "seconds" << std::endl;
+  
   std::cout << "The result after first propagation phase is " << result << std::endl;
   std::cout << "****************************************************" << std::endl;
   std::cout << " IMPLICATION GRAPH AFTER DEDUCTION PHASE" << std::endl;
@@ -1340,6 +1828,8 @@ property_checkert::resultt acdl_solvert::operator()(
     print_solver_statistics();
     return property_checkert::PASS;
   }
+  
+#ifdef GAMMA_COMPLETE_CHECK
   // if result=UNKNOWN or FAIL,
   // then check for completeness
   else {
@@ -1349,14 +1839,18 @@ property_checkert::resultt acdl_solvert::operator()(
     // preprocess abstract value: 
     // transform constraints like 
     // (x==n) to (x<=n) and (x>=n)
-    domain.preprocess_val(res_val);
+    // domain.preprocess_val(res_val);
 #ifdef debug
     std::cout << "preprocessed abstract value of implication graph: " << std::endl;
     for(acdl_domaint::valuet::const_iterator it=res_val.begin();it!=res_val.end(); ++it)
       std::cout << from_expr(ssa.ns, "", *it) << std::endl;
 #endif
 
+#ifdef BOX
+    domain.compute_normalized_val(res_val);
+#else
     domain.normalize_val_syntactic(res_val);
+#endif
     if(domain.is_complete(res_val, all_vars, 
           non_gamma_complete_var, ssa_conjunction, gamma_decvar, read_only_symbols)) {
       complete=true;
@@ -1375,6 +1869,7 @@ property_checkert::resultt acdl_solvert::operator()(
   gamma_check_processed.clear();
   non_gamma_complete_var.clear();
   gamma_decvar.clear();
+#endif
 
   // store the initial values
   // of the decision varaibles
@@ -1385,12 +1880,19 @@ property_checkert::resultt acdl_solvert::operator()(
   while(true)
   {
     // check the iteration bound
-    if(iteration > ITERATION_LIMIT) {
+    /*if(iteration > 4) {
 #ifdef DEBUG
       std::cout << "Iteration limit reached" << std::endl;
 #endif
+      print_solver_statistics();
+      property_checkert::resultt res=check_using_solver(ssa_conjunction);
+      //return property_checkert::UNKNOWN;
+      if (res==property_checkert::PASS)
+        return property_checkert::PASS;
+      else if(res==property_checkert::FAIL)
+        return property_checkert::FAIL;
       break;
-    }
+    }*/
 
     std::cout << std::endl
               << "  ITERATION (decision):: " << iteration++ << std::endl
@@ -1418,7 +1920,7 @@ property_checkert::resultt acdl_solvert::operator()(
       // preprocess abstract value: 
       // transform constraints like 
       // (x==n) to (x<=n) and (x>=n)
-      domain.preprocess_val(elm);
+      // domain.preprocess_val(elm);
 #ifdef debug
       std::cout << "preprocessed abstract value of implication graph: " << std::endl;
       for(acdl_domaint::valuet::const_iterator it=elm.begin();it!=elm.end(); ++it)
@@ -1428,8 +1930,14 @@ property_checkert::resultt acdl_solvert::operator()(
       std::cout << "Minimal unsafe element is" << from_expr(SSA.ns, "", conjunction(elm)) << std::endl;
 #endif
       print_solver_statistics();
-      return property_checkert::UNKNOWN;
-      // break;
+      // Checking Using Solver
+      property_checkert::resultt res=check_using_solver(ssa_conjunction);
+      //return property_checkert::UNKNOWN;
+      if (res==property_checkert::PASS)
+        return property_checkert::PASS;
+      else if(res==property_checkert::FAIL)
+        return property_checkert::FAIL;
+      break;
     }
 
     std::cout << "****************************************************" << std::endl;
@@ -1440,7 +1948,11 @@ property_checkert::resultt acdl_solvert::operator()(
     std::cout << "********************************" << std::endl;
     std::cout << "        DEDUCTION PHASE " << std::endl;
     std::cout << "********************************" << std::endl;
+    clock_t total_time = 0.0;
+    const clock_t begin_time = clock();
     result=propagate(SSA, assertion);
+    total_time = float(clock() - begin_time) / CLOCKS_PER_SEC;
+    std::cout << "Propagation Time in Iteration " << iteration << ": " << total_time << "seconds" << std::endl;
 
     std::cout << "****************************************************" << std::endl;
     std::cout << " IMPLICATION GRAPH AFTER DEDUCTION PHASE" << std::endl;
@@ -1459,7 +1971,7 @@ property_checkert::resultt acdl_solvert::operator()(
       // preprocess abstract value: 
       // transform constraints like 
       // (x==n) to (x<=n) and (x>=n)
-      domain.preprocess_val(v);
+      // domain.preprocess_val(v);
 #ifdef debug
       std::cout << "preprocessed abstract value of implication graph: " << std::endl;
       for(acdl_domaint::valuet::const_iterator it=v.begin();it!=v.end(); ++it)
@@ -1467,7 +1979,11 @@ property_checkert::resultt acdl_solvert::operator()(
 #endif
 
       // Do we call normalize_val_syntactic here ? !!
+#ifdef BOX
+      domain.compute_normalized_val(v);
+#else
       domain.normalize_val_syntactic(v);
+#endif
 #ifdef DEBUG
       std::cout << "checking the propagation result UNKNOWN for completeness" << std::endl;
 #endif
@@ -1475,6 +1991,7 @@ property_checkert::resultt acdl_solvert::operator()(
       // ensures that all variables are singletons
       // But we invoke another decision phase
       // to infer that "no more decisions can be made"
+#ifdef GAMMA_COMPLETE_CHECK
       if(domain.is_complete(v, all_vars, non_gamma_complete_var, ssa_conjunction, gamma_decvar, read_only_symbols)) {
         // set complete flag to TRUE
         complete=true;
@@ -1496,9 +2013,11 @@ property_checkert::resultt acdl_solvert::operator()(
       gamma_decvar.clear();
       gamma_check_processed.clear();
       non_gamma_complete_var.clear();
+#endif
     }
     else {
       std::cout << "SUCCESSFULLY PROVEN CASE" << std::endl;
+#ifdef GAMMA_COMPLETE_CHECK
       // empty the gamma-complete check_processed
       // statement container and the
       // non_gamma_complete_var container
@@ -1506,6 +2025,7 @@ property_checkert::resultt acdl_solvert::operator()(
         gamma_check_processed.clear();
       if(non_gamma_complete_var.size() > 0)
         non_gamma_complete_var.clear();
+#endif
       // check for conflict
       do
       {
@@ -1538,6 +2058,7 @@ property_checkert::resultt acdl_solvert::operator()(
             return property_checkert::PASS;
           }
           else {
+            unknown_result = true;
             goto END; // result=UNKNOWN when it breaks for here
           }
         }
@@ -1588,6 +2109,14 @@ property_checkert::resultt acdl_solvert::operator()(
   } // end of while(true)
 END:
   std::cout << "Procedure terminated after iteration: "  << iteration  << std::endl;
-  print_solver_statistics();
-  return property_checkert::UNKNOWN;
+  if(unknown_result == true) {
+    // Checking Using Solver
+    print_solver_statistics();
+    property_checkert::resultt res=check_using_solver(ssa_conjunction);
+    if (res==property_checkert::PASS)
+      return property_checkert::PASS;
+    else if(res==property_checkert::FAIL)
+      return property_checkert::FAIL;
+  }
+  //return property_checkert::UNKNOWN;
 }

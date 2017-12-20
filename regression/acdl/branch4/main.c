@@ -1,6 +1,5 @@
 int main() {
 int x, y;
-_Bool c;
 if(y<0)
   x=0;
 else

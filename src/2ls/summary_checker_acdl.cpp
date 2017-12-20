@@ -43,9 +43,11 @@ property_checkert::resultt summary_checker_acdlt::operator()(
   const goto_modelt &goto_model)
 {
   const namespacet ns(goto_model.symbol_table);
-
   SSA_functions(goto_model, ns);
   ssa_unwinder.init(false, false);
+  
+  irep_idt entry_point=goto_model.goto_functions.entry_point();
+  local_SSAt &SSA=ssa_db.get(entry_point);
 
   unsigned unwind=options.get_unsigned_int_option("unwind");
   if(unwind>0)
@@ -55,9 +57,8 @@ property_checkert::resultt summary_checker_acdlt::operator()(
     ssa_unwinder.unwind_all(unwind);
   }
 
-  irep_idt entry_point=goto_model.goto_functions.entry_point();
+  SSA.output_verbose(std::cout);
   std::cout << entry_point << std::endl;
-  local_SSAt &SSA=ssa_db.get(entry_point);
   ssa_local_unwindert &ssa_local_unwinder=ssa_unwinder.get(entry_point);
 
   const goto_programt &goto_program=SSA.goto_function.body;
