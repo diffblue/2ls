@@ -53,32 +53,34 @@ public:
   typedef std::vector<template_rowt> templatet;
 
   /*******************************************************************\
-  Base class for a value of a row
+  Base class for a value of a memory configuration
   \*******************************************************************/
-  struct row_valuet
+  struct row_configt
   {
     // Row is nondeterministic - row expression is TRUE
     bool nondet=false;
 
-    virtual exprt get_row_expr(
+    virtual exprt get_row_config_expr(
       const vart &templ_expr,
       bool rename_templ_expr) const=0;
 
     virtual bool empty() const=0;
 
     virtual bool add_points_to(const exprt &dest)=0;
+
+    virtual ~row_configt() {}
   };
 
   /*******************************************************************\
-  Stack row - used for pointer-typed stack objects (variables).
-  Value is a set of objects that the pointer can point to.
+  Stack row configuration - used for pointer-typed stack objects (variables).
+  Configuration is a set of objects that the pointer can point to.
   \*******************************************************************/
-  struct stack_row_valuet:public row_valuet
+  struct stack_row_configt:public row_configt
   {
     // Set of objects (or NULL) the row variable can point to
     std::set<exprt> points_to;
 
-    virtual exprt get_row_expr(
+    virtual exprt get_row_config_expr(
       const vart &templ_expr,
       bool rename_templ_expr) const override;
 
@@ -91,12 +93,12 @@ public:
   };
 
   /*******************************************************************\
-  Heap row - used for pointer-typed fields of dynamic objects.
+  Heap row configuration - used for pointer-typed fields of dynamic objects.
 
-  Value is a disjunction of conjunctions of paths leading from the dynamic
-  object via the field.
+  Configuration is a disjunction of conjunctions of paths leading from
+  the dynamic object via the field.
   \*******************************************************************/
-  struct heap_row_valuet:public row_valuet
+  struct heap_row_configt:public row_configt
   {
     /*******************************************************************\
     Path in a heap. Contains:
@@ -127,10 +129,8 @@ public:
     };
 
     // Set of paths interpreted as a conjunction of paths
-    typedef std::set<patht> pathsett;
+    std::set<patht> paths;
 
-    // Set of pathsets interpreted as a disjnuction of pathsets
-    std::list<pathsett> paths;
     // Set of rows whose variables point to this row
     std::set<rowt> pointed_by;
 
@@ -139,9 +139,9 @@ public:
     // Self link on an abstract dynamic object
     bool self_linkage=false;
 
-    explicit heap_row_valuet(const dyn_objt &dyn_obj_):dyn_obj(dyn_obj_) {}
+    explicit heap_row_configt(const dyn_objt &dyn_obj_):dyn_obj(dyn_obj_) {}
 
-    virtual exprt get_row_expr(
+    virtual exprt get_row_config_expr(
       const vart &templ_expr_,
       bool rename_templ_expr) const override;
 
@@ -154,18 +154,8 @@ public:
 
     bool add_path(const exprt &dest, const dyn_objt &dyn_obj);
 
-    bool add_path(
-      const exprt &dest,
-      const dyn_objt &dyn_obj,
-      pathsett &path_set);
-
-    bool join_path_sets(
-      pathsett &dest,
-      const pathsett &src,
-      const dyn_objt &through);
-
     bool add_all_paths(
-      const heap_row_valuet &other_val,
+      const heap_row_configt &other_config,
       const dyn_objt &dyn_obj);
 
     bool add_pointed_by(const rowt &row);
@@ -176,15 +166,46 @@ public:
     static exprt rename_outheap(const symbol_exprt &expr);
   };
 
+  /*******************************************************************\
+  Row value is a disjunction of configurations.
+  \*******************************************************************/
+  struct row_valuet
+  {
+    mem_kindt mem_kind;
+    dyn_objt dyn_obj;
+
+    // Each configuration belongs to a specific symbolic path in program whose
+    // execution lead to the given configuration.
+    // Path is a conjunction of guards - hence an expression
+    std::map<const exprt, std::unique_ptr<row_configt>> configurations;
+
+    row_valuet(const mem_kindt &mem_kind, const dyn_objt &dyn_obj):
+      mem_kind(mem_kind), dyn_obj(dyn_obj) {}
+
+    // Allow move constructor only
+    row_valuet(const row_valuet &)=delete;
+    row_valuet(row_valuet &&)=default;
+
+    row_configt &get_config(const exprt &sym_path);
+    stack_row_configt &get_stack_config(const exprt &sym_path);
+    heap_row_configt &get_heap_config(const exprt &sym_path);
+
+    // Row manipulation functions
+    bool add_points_to(const exprt &sym_path, const exprt &dest);
+    bool set_nondet(const exprt &sym_path);
+
+    // Row status functions
+    bool empty() const;
+    bool is_nondet(const exprt &sym_path);
+
+    exprt get_row_expr(const exprt &templ_expr, bool rename_templ_expr) const;
+  };
+
+  // Heap value is a conjunction of rows
   class heap_valuet:
     public valuet,
-    public std::vector<std::unique_ptr<row_valuet>>
+    public std::vector<row_valuet>
   {
-  public:
-    row_valuet &operator[](const rowt &row) const
-    {
-      return *(this->at(row).get());
-    }
   };
 
   // Initialize value and domain
@@ -211,11 +232,22 @@ public:
   exprt get_row_post_constraint(const rowt &row, const row_valuet &row_value);
 
   // Row modifications
-  bool add_transitivity(const rowt &from, const rowt &to, heap_valuet &value);
+  bool add_transitivity(
+    const exprt &sym_path,
+    const rowt &from,
+    const rowt &to,
+    heap_valuet &value);
 
-  bool add_points_to(const rowt &row, heap_valuet &value, const exprt &dest);
+  bool add_points_to(
+    const rowt &row,
+    heap_valuet &value,
+    const exprt &sym_path,
+    const exprt &dest);
 
-  bool set_nondet(const rowt &row, heap_valuet &value);
+  bool set_nondet(
+    const rowt &row,
+    heap_valuet &value,
+    const exprt &sym_path);
 
   // Printing
   virtual void output_value(

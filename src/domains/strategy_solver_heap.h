@@ -23,7 +23,9 @@ public:
     const exprt &precondition,
     message_handlert &message_handler,
     template_generator_baset &template_generator):
-    strategy_solver_baset(_solver, SSA.ns), heap_domain(_heap_domain)
+    strategy_solver_baset(_solver, SSA.ns),
+    heap_domain(_heap_domain),
+    loop_guards(SSA.loop_guards)
   {
     set_message_handler(message_handler);
     initialize(SSA, precondition, template_generator);
@@ -38,6 +40,7 @@ public:
 
 protected:
   heap_domaint &heap_domain;
+  std::set<symbol_exprt> loop_guards;
   std::set<unsigned> updated_rows;
 
   int find_member_row(
@@ -47,8 +50,11 @@ protected:
     const domaint::kindt &kind);
 
   bool update_rows_rec(
+    const exprt &sym_path,
     const heap_domaint::rowt &row,
     heap_domaint::heap_valuet &value);
+
+  const exprt get_symbolic_path(const heap_domaint::rowt &row);
 
   void print_solver_expr(const exprt &expr);
 };

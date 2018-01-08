@@ -29,16 +29,11 @@ void heap_domaint::initialize(domaint::valuet &value)
 
   for(const template_rowt &templ_row : templ)
   {
-    if(templ_row.mem_kind==STACK)
-      val.emplace_back(new stack_row_valuet());
-    else if(templ_row.mem_kind==HEAP)
-      val.emplace_back(
-        new heap_row_valuet(
-          std::make_pair(
-            templ_row.dyn_obj,
-            templ_row.expr)));
-    else
-      assert(false);
+    dyn_objt dyn_obj=
+      templ_row.mem_kind==HEAP
+      ? std::make_pair(templ_row.dyn_obj, templ_row.expr)
+      : std::make_pair(nil_exprt(), nil_exprt());
+    val.emplace_back(templ_row.mem_kind, dyn_obj);
   }
 }
 
@@ -247,18 +242,21 @@ exprt heap_domaint::get_row_post_constraint(
 
 Function: heap_domaint::add_transitivity
 
-  Inputs: to Row to add new paths to
+  Inputs: sym_path Symbolic path
+          to Row to add new paths to
           from Row to add paths from
           dyn_obj Dynamic object that all the paths pass through (it belongs to
                   path segment from one pointer to another).
 
  Outputs: True if any path was added or changed, otherwise false.
 
- Purpose: Add all paths of one pointer as the destinations of another pointer.
+ Purpose: Add all paths of one pointer as the destinations of another pointer
+          in the given symbolic path.
 
 \*******************************************************************/
 
 bool heap_domaint::add_transitivity(
+  const exprt &sym_path,
   const rowt &from,
   const rowt &to,
   heap_valuet &value)
@@ -266,8 +264,8 @@ bool heap_domaint::add_transitivity(
   assert(from<value.size() && to<value.size());
   assert(templ[to].mem_kind==HEAP && templ[from].mem_kind==HEAP);
 
-  heap_row_valuet &heap_val_from=static_cast<heap_row_valuet &>(value[from]);
-  heap_row_valuet &heap_val_to=static_cast<heap_row_valuet &>(value[to]);
+  heap_row_configt &heap_val_from=value[from].get_heap_config(sym_path);
+  heap_row_configt &heap_val_to=value[to].get_heap_config(sym_path);
 
   bool result=false;
   if(heap_val_from.add_all_paths(
@@ -293,10 +291,10 @@ Function: heap_domaint::add_points_to
 
  Outputs:
 
- Purpose: Add new object pointed by a row.
+ Purpose: Add new object pointed by a row in the given symbolic path.
           Calls add_points_to of the given row.
           For stack rows, the destination is simply added into pointed 
-          objects set.
+          objects set of the configuration corresponding to the symbolic path.
           For heap rows, a new path is added.
 
 \*******************************************************************/
@@ -304,10 +302,11 @@ Function: heap_domaint::add_points_to
 bool heap_domaint::add_points_to(
   const rowt &row,
   heap_valuet &value,
+  const exprt &sym_path,
   const exprt &dest)
 {
   assert(row<value.size());
-  return value[row].add_points_to(dest);
+  return value[row].add_points_to(sym_path, dest);
 }
 
 /*******************************************************************\
@@ -318,17 +317,17 @@ Function: heap_domaint::set_nondet
 
  Outputs:
 
- Purpose: Set row nondeterministic.
+ Purpose: Set row configuration nondeterministic.
 
 \*******************************************************************/
 
-bool heap_domaint::set_nondet(const rowt &row, heap_valuet &value)
+bool heap_domaint::set_nondet(
+  const rowt &row,
+  heap_valuet &value,
+  const exprt &sym_path)
 {
   assert(row<value.size());
-
-  bool result=!value[row].nondet;
-  value[row].nondet=true;
-  return result;
+  return value[row].set_nondet(sym_path);
 }
 
 /*******************************************************************\
@@ -551,18 +550,18 @@ int heap_domaint::get_symbol_loc(const exprt &expr)
 
 /*******************************************************************\
 
-Function: heap_domaint::stack_row_valuet::get_row_expr
+Function: heap_domaint::stack_row_configt::get_row_expr
 
   Inputs: templ_expr Template expression
 
- Outputs: Formula corresponding to the template row
+ Outputs: Formula corresponding to the memory configuration
 
- Purpose: Stack row is a disjuction of equalities between templ_expr
+ Purpose: Stack configuration is a disjuction of equalities between templ_expr
           and addresses of dynamic objects from points_to set.
 
 \*******************************************************************/
 
-exprt heap_domaint::stack_row_valuet::get_row_expr(
+exprt heap_domaint::stack_row_configt::get_row_config_expr(
   const vart &templ_expr,
   bool rename_templ_expr) const
 {
@@ -588,18 +587,18 @@ exprt heap_domaint::stack_row_valuet::get_row_expr(
 
 /*******************************************************************\
 
-Function: heap_domaint::stack_row_valuet::add_points_to
+Function: heap_domaint::stack_row_configt::add_points_to
 
   Inputs:
 
  Outputs:
 
- Purpose: Add new object to the value of a stack row. The object is
-          simply added to the set.
+ Purpose: Add new object to the stack configuration. The object is simply added
+          to the set.
 
 \*******************************************************************/
 
-bool heap_domaint::stack_row_valuet::add_points_to(const exprt &expr)
+bool heap_domaint::stack_row_configt::add_points_to(const exprt &expr)
 {
   if(points_to.find(expr)==points_to.end())
     points_to.insert(expr);
@@ -610,23 +609,23 @@ bool heap_domaint::stack_row_valuet::add_points_to(const exprt &expr)
 
 /*******************************************************************\
 
-Function: heap_domaint::heap_row_valuet::get_row_expr
+Function: heap_domaint::heap_row_configt::get_row_expr
 
   Inputs: templ_expr Template expression
           rename_templ_expr True if templ_expr should be renamed
                             (the corresponding template row is of
                             OUTHEAP type)
 
- Outputs: Formula corresponding to the template row
+ Outputs: Formula corresponding to the heap configuration
 
- Purpose: Heap row is disjunction of path sets, where each path set is a conjunction of paths.
+ Purpose: Heap configuration is a conjunction of paths.
 
           nondet is TRUE
           empty is FALSE
 
 \*******************************************************************/
 
-exprt heap_domaint::heap_row_valuet::get_row_expr(
+exprt heap_domaint::heap_row_configt::get_row_config_expr(
   const vart &templ_expr_,
   bool rename_templ_expr) const
 {
@@ -649,63 +648,58 @@ exprt heap_domaint::heap_row_valuet::get_row_expr(
   else
   {
     exprt::operandst result;
-    for(const pathsett &path_set : paths)
-    {
-      exprt::operandst path_set_expr;
-      for(const patht &path : path_set)
-      { // path(o.m, d)[O]
-        const exprt &dest=templ_expr.type()==path.destination.type() ?
-                          path.destination : address_of_exprt(path.destination);
-        exprt::operandst path_expr;
+    for(const patht &path : paths)
+    { // path(o.m, d)[O]
+      const exprt &dest=templ_expr.type()==path.destination.type() ?
+                        path.destination : address_of_exprt(path.destination);
+      exprt::operandst path_expr;
 
-        // o.m = d
-        path_expr.push_back(equal_exprt(templ_expr, dest));
+      // o.m = d
+      path_expr.push_back(equal_exprt(templ_expr, dest));
 
-        for(const dyn_objt &obj1 : path.dyn_objects)
+      for(const dyn_objt &obj1 : path.dyn_objects)
+      {
+        // o.m = &o'
+        exprt equ_exprt=equal_exprt(templ_expr, address_of_exprt(obj1.first));
+
+        exprt::operandst steps_expr;
+        exprt member_expr=obj1.second;
+        // o'.m = d
+        steps_expr.push_back(equal_exprt(member_expr, dest));
+
+        for(const dyn_objt &obj2 : path.dyn_objects)
         {
-          // o.m = &o'
-          exprt equ_exprt=equal_exprt(templ_expr, address_of_exprt(obj1.first));
-
-          exprt::operandst steps_expr;
-          exprt member_expr=obj1.second;
-          // o'.m = d
-          steps_expr.push_back(equal_exprt(member_expr, dest));
-
-          for(const dyn_objt &obj2 : path.dyn_objects)
-          {
-            // o'.m = o''
-            steps_expr.push_back(
-              equal_exprt(
-                member_expr,
-                address_of_exprt(obj2.first)));
-          }
-
-          path_expr.push_back(and_exprt(equ_exprt, disjunction(steps_expr)));
+          // o'.m = o''
+          steps_expr.push_back(
+            equal_exprt(
+              member_expr,
+              address_of_exprt(obj2.first)));
         }
 
-        path_set_expr.push_back(disjunction(path_expr));
+        path_expr.push_back(and_exprt(equ_exprt, disjunction(steps_expr)));
       }
-      result.push_back(conjunction(path_set_expr));
+
+      result.push_back(disjunction(path_expr));
     }
-    return disjunction(result);
+    return conjunction(result);
   }
 }
 
 /*******************************************************************\
 
-Function: heap_domaint::heap_row_valuet::add_points_to
+Function: heap_domaint::heap_row_configt::add_points_to
 
   Inputs:
 
  Outputs:
 
- Purpose: Add new object to heap row - create new path, or set
+ Purpose: Add new object to the heap configuration - create new path or set
           self_linkage flag in case the object is same as the row
           object.
 
 \*******************************************************************/
 
-bool heap_domaint::heap_row_valuet::add_points_to(const exprt &dest)
+bool heap_domaint::heap_row_configt::add_points_to(const exprt &dest)
 {
   if(dest==dyn_obj.first)
   {
@@ -724,73 +718,22 @@ bool heap_domaint::heap_row_valuet::add_points_to(const exprt &dest)
 
 /*******************************************************************\
 
-Function: heap_domaint::heap_row_valuet::add_path
+Function: heap_domaint::heap_row_configt::add_path
 
   Inputs: dest Path destination
           dyn_obj Dynamic object that the path goes through
 
  Outputs: True if the value was changed (a path was added)
 
- Purpose: Add new path set if any path set does not contain
-          the given destination.
-
-          If any path set already contains dest, do nothing since
-          the pathset will be updated from other rows.
+ Purpose: Add new path to the heap configuration
 
 \*******************************************************************/
 
-bool heap_domaint::heap_row_valuet::add_path(
+bool heap_domaint::heap_row_configt::add_path(
   const exprt &dest,
   const dyn_objt &dyn_obj)
 {
-  bool new_path=true;
-  for(const pathsett &path_set : paths)
-  {
-    auto p_it=path_set.find(dest);
-    if(p_it!=path_set.end() && p_it->dyn_objects.empty())
-    {
-      new_path=false;
-      break;
-    }
-  }
-  if(new_path)
-  {
-    pathsett new_path_set;
-    std::set<dyn_objt> dyn_obj_set;
-    if(dyn_obj.first.id()!=ID_nil)
-    {
-      dyn_obj_set.insert(dyn_obj);
-    }
-    if(self_linkage)
-    {
-      dyn_obj_set.insert(this->dyn_obj);
-    }
-    new_path_set.emplace(dest, dyn_obj_set);
-    paths.push_back(new_path_set);
-  }
-  return new_path;
-}
-
-/*******************************************************************\
-
-Function: heap_domaint::heap_row_valuet::add_path
-
-  Inputs: dest Path destination
-          dyn_obj Dynamic object that the path goes through
-          path_set Path set to add the path to
-
- Outputs: True if the value was changed (a path was added)
-
- Purpose: Add new path to a path set
-
-\*******************************************************************/
-
-bool heap_domaint::heap_row_valuet::add_path(
-  const exprt &dest,
-  const dyn_objt &dyn_obj,
-  pathsett &path_set)
-{
-  if(path_set.find(dest)==path_set.end())
+  if(paths.find(dest)==paths.end())
   {
     // Path does not exist yet
     std::set<dyn_objt> dyn_obj_set;
@@ -802,7 +745,7 @@ bool heap_domaint::heap_row_valuet::add_path(
     {
       dyn_obj_set.insert(this->dyn_obj);
     }
-    path_set.emplace(dest, dyn_obj_set);
+    paths.emplace(dest, dyn_obj_set);
     return true;
   }
   else
@@ -810,7 +753,7 @@ bool heap_domaint::heap_row_valuet::add_path(
     // Path exists already
     if(dyn_obj.first.id()!=ID_nil)
       // Try to insert new dynamic object on the path
-      return path_set.find(dest)->dyn_objects.insert(dyn_obj).second;
+      return paths.find(dest)->dyn_objects.insert(dyn_obj).second;
     else
       return false;
   }
@@ -818,78 +761,30 @@ bool heap_domaint::heap_row_valuet::add_path(
 
 /*******************************************************************\
 
-Function: heap_domaint::heap_row_valuet::join_path_sets
-
-  Inputs: src Source path set
-          dest Destination path set
-
- Outputs: True if the value was changed (dest was added)
-
- Purpose: Join two path sets. Add all paths from src to dest.
-
-\*******************************************************************/
-
-bool heap_domaint::heap_row_valuet::join_path_sets(
-  pathsett &dest,
-  const pathsett &src,
-  const dyn_objt &through)
-{
-  bool result=false;
-  for(const patht &path : src)
-  {
-    if(add_path(path.destination, through, dest))
-      result=true;
-    for(const dyn_objt &o : path.dyn_objects)
-    { // Add all dynamic objects of the original path
-      if(add_path(path.destination, o, dest))
-        result=true;
-    }
-  }
-  return result;
-}
-
-/*******************************************************************\
-
-Function: heap_domaint::heap_row_valuet::add_all_paths
+Function: heap_domaint::heap_row_configt::add_all_paths
 
   Inputs:
 
  Outputs: True if this has changed
 
- Purpose: Add all paths from other heap row.
+ Purpose: Add all paths from other heap configuration.
 
 \*******************************************************************/
 
-bool heap_domaint::heap_row_valuet::add_all_paths(
-  const heap_row_valuet &other_val,
+bool heap_domaint::heap_row_configt::add_all_paths(
+  const heap_row_configt &other_config,
   const dyn_objt &dyn_obj)
 {
   bool result=false;
-
-  auto other_it=other_val.paths.begin();
-  if(other_it!=other_val.paths.end())
+  for(auto &path : other_config.paths)
   {
-    for(auto it=paths.begin(); it!=paths.end(); ++it)
+    if(add_path(path.destination, dyn_obj))
     {
-      if(it->find(other_val.dyn_obj.first)!=it->end())
+      result=true;
+      for(auto &o : path.dyn_objects)
       {
-        auto next_it=other_it;
-        ++next_it;
-        if(next_it!=other_val.paths.end())
-        { // Duplicate element pointed by it
-          auto n_it=it;
-          ++n_it;
-          paths.insert(n_it, *it);
-        }
-
-        // Add all paths to *it
-
-        if(join_path_sets(*it, *other_it, dyn_obj))
+        if(add_path(path.destination, o))
           result=true;
-
-        // Move other_it to next, or to first if next doesn't exist
-        other_it=
-          next_it==other_val.paths.end() ? other_val.paths.begin() : next_it;
       }
     }
   }
@@ -898,7 +793,7 @@ bool heap_domaint::heap_row_valuet::add_all_paths(
 
 /*******************************************************************\
 
-Function: heap_domaint::heap_row_valuet::add_pointed_by
+Function: heap_domaint::heap_row_configt::add_pointed_by
 
   Inputs:
 
@@ -908,7 +803,7 @@ Function: heap_domaint::heap_row_valuet::add_pointed_by
 
 \*******************************************************************/
 
-bool heap_domaint::heap_row_valuet::add_pointed_by(const rowt &row)
+bool heap_domaint::heap_row_configt::add_pointed_by(const rowt &row)
 {
   auto new_pb=pointed_by.insert(row);
   return new_pb.second;
@@ -916,7 +811,7 @@ bool heap_domaint::heap_row_valuet::add_pointed_by(const rowt &row)
 
 /*******************************************************************\
 
-Function: heap_domaint::heap_row_valuet::add_self_linkage
+Function: heap_domaint::heap_row_configt::add_self_linkage
 
   Inputs:
 
@@ -926,19 +821,16 @@ Function: heap_domaint::heap_row_valuet::add_self_linkage
 
 \*******************************************************************/
 
-bool heap_domaint::heap_row_valuet::add_self_linkage()
+bool heap_domaint::heap_row_configt::add_self_linkage()
 {
   bool result;
   result=!self_linkage;
   self_linkage=true;
   if(result)
   {
-    for(const pathsett &path_set : paths)
+    for(const patht &path : paths)
     {
-      for(const patht &path : path_set)
-      {
-        path.dyn_objects.insert(dyn_obj);
-      }
+      path.dyn_objects.insert(dyn_obj);
     }
   }
   return result;
@@ -946,7 +838,7 @@ bool heap_domaint::heap_row_valuet::add_self_linkage()
 
 /*******************************************************************\
 
-Function: heap_domaint::heap_row_valuet::rename_outheap
+Function: heap_domaint::heap_row_configt::rename_outheap
 
   Inputs: expr Expression to be renamed
 
@@ -957,7 +849,7 @@ Function: heap_domaint::heap_row_valuet::rename_outheap
 
 \*******************************************************************/
 
-exprt heap_domaint::heap_row_valuet::rename_outheap(const symbol_exprt &expr)
+exprt heap_domaint::heap_row_configt::rename_outheap(const symbol_exprt &expr)
 {
   const std::string id=id2string(expr.get_identifier());
   return symbol_exprt(
@@ -1524,10 +1416,181 @@ const std::set<exprt> heap_domaint::collect_preconditions_rec(
   else
   {
     forall_operands(it, precondition)
-    {
-      std::set<exprt> op_result=collect_preconditions_rec(expr, *it);
-      result.insert(op_result.begin(), op_result.end());
-    }
+      {
+        std::set<exprt> op_result=collect_preconditions_rec(expr, *it);
+        result.insert(op_result.begin(), op_result.end());
+      }
   }
   return result;
 }
+
+/*******************************************************************\
+
+Function: heap_domaint::row_valuet::empty
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+bool heap_domaint::row_valuet::empty() const
+{
+  for(auto &config : configurations)
+  {
+    if(!config.second->empty())
+      return false;
+  }
+  return true;
+}
+
+/*******************************************************************\
+
+Function: heap_domaint::row_valuet::set_nondet
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+bool heap_domaint::row_valuet::set_nondet(const exprt &sym_path)
+{
+  bool result=!get_config(sym_path).nondet;
+  get_config(sym_path).nondet=true;
+  return result;
+}
+
+/*******************************************************************\
+
+Function: heap_domaint::row_valuet::add_points_to
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+bool heap_domaint::row_valuet::add_points_to(
+  const exprt &sym_path,
+  const exprt &dest)
+{
+  return get_config(sym_path).add_points_to(dest);
+}
+
+/*******************************************************************\
+
+Function: heap_domaint::row_valuet::get_row_expr
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Get expression corresponding to the template row. The expression is
+          a disjunction of configurations, where each configuration is
+          a conjunction of the guard and the configuration expression.
+
+\*******************************************************************/
+exprt heap_domaint::row_valuet::get_row_expr(
+  const exprt &templ_expr,
+  bool rename_templ_expr) const
+{
+  exprt::operandst result;
+  for(auto &config : configurations)
+  {
+    result.push_back(
+      and_exprt(
+        config.first,
+        config.second->get_row_config_expr(templ_expr, rename_templ_expr)));
+  }
+  return disjunction(result);
+}
+
+/*******************************************************************\
+
+Function: heap_domaint::row_valuet::is_nondet
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+bool heap_domaint::row_valuet::is_nondet(const exprt &sym_path)
+{
+  return get_config(sym_path).nondet;
+}
+
+/*******************************************************************\
+
+Function: heap_domaint::row_valuet::get_config
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Get configuration for the given symbolic path. If the configuration
+          does not exist, it is created. This (or one of the following two
+          functions shoulf be used for every access to a configuration).
+
+\*******************************************************************/
+heap_domaint::row_configt &heap_domaint::row_valuet::get_config(
+  const exprt &sym_path)
+{
+  if(configurations.find(sym_path)==configurations.end())
+  {
+    if(mem_kind==STACK)
+      configurations.emplace(std::make_pair(sym_path, new stack_row_configt()));
+    else if(mem_kind==HEAP)
+      configurations.emplace(
+        std::make_pair(
+          sym_path,
+          new heap_row_configt(dyn_obj)));
+    else
+      assert(false);
+  }
+  return *(configurations.at(sym_path).get());
+}
+
+/*******************************************************************\
+
+Function: heap_domaint::row_valuet::get_stack_config
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Get configuration for the given symbolic path interpreted as
+          a stack configuration.
+
+\*******************************************************************/
+heap_domaint::stack_row_configt &heap_domaint::row_valuet::get_stack_config(
+  const exprt &sym_path)
+{
+  assert(mem_kind==STACK);
+  return static_cast<stack_row_configt &>(get_config(sym_path));
+}
+
+/*******************************************************************\
+
+Function: heap_domaint::row_valuet::get_heap_config
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Get configuration for the given symbolic path interpreted as
+          a heap configuration.
+
+\*******************************************************************/
+heap_domaint::heap_row_configt &heap_domaint::row_valuet::get_heap_config(
+  const exprt &sym_path)
+{
+  assert(mem_kind==HEAP);
+  return static_cast<heap_row_configt &>(get_config(sym_path));
+}
+
