@@ -238,6 +238,10 @@ public:
   ssa_ait ssa_analysis;
   std::string suffix; // an extra suffix
 
+  // Collect all loop_guards that will represent symbolic paths used in heap
+  // domain
+  var_sett loop_guards;
+
   void get_globals(
     locationt loc,
     std::set<symbol_exprt> &globals,

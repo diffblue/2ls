@@ -390,6 +390,7 @@ void local_SSAt::build_phi_nodes(locationt loc)
         const locationt &iloc=get_location(incoming_it->first);
         exprt incoming_value=name(*o_it, LOOP_BACK, iloc);
         exprt incoming_select=name(guard_symbol(), LOOP_SELECT, iloc);
+        loop_guards.insert(to_symbol_expr(incoming_select));
 
         if(rhs.is_nil()) // first
           rhs=incoming_value;
