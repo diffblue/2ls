@@ -9,6 +9,7 @@ Author: Viktor Malik
 // #define DEBUG_OUTPUT
 
 #include <ssa/ssa_inliner.h>
+#include <algorithm>
 #include "strategy_solver_heap.h"
 
 /*******************************************************************\
@@ -122,15 +123,17 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
         // Value from the solver must be converted into an expression
         exprt ptr_value=heap_domain.value_to_ptr_exprt(value);
 
-        exprt sym_path=get_symbolic_path(row);
-        debug() << "Symbolic path: " << from_expr(ns, "", sym_path) << eom;
+        const exprt loop_guard=to_and_expr(
+          heap_domain.templ[row].pre_guard).op1();
+        find_symbolic_path(loop_guards, loop_guard);
+        debug() << "Symbolic path: " << from_expr(ns, "", symbolic_path) << eom;
 
         if((ptr_value.id()==ID_constant &&
             to_constant_expr(ptr_value).get_value()==ID_NULL) ||
            ptr_value.id()==ID_symbol)
         {
           // Add equality p == NULL or p == symbol
-          if(heap_domain.add_points_to(row, inv, sym_path, ptr_value))
+          if(heap_domain.add_points_to(row, inv, symbolic_path, ptr_value))
           {
             improved=true;
             const std::string info=
@@ -148,7 +151,7 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
           {
             // If solver did not return address of a symbol, it is considered
             // as nondet value.
-            if(heap_domain.set_nondet(row, inv, sym_path))
+            if(heap_domain.set_nondet(row, inv, symbolic_path))
             {
               improved=true;
               debug() << "Set nondet" << eom;
@@ -163,7 +166,7 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
              ns.follow(templ_row.expr.type().subtype())!=ns.follow(obj.type()))
           {
             // If types disagree, it's a nondet (solver assigned random value)
-            if(heap_domain.set_nondet(row, inv, sym_path))
+            if(heap_domain.set_nondet(row, inv, symbolic_path))
             {
               improved=true;
               debug() << "Set nondet" << eom;
@@ -172,7 +175,7 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
           }
 
           // Add equality p == &obj
-          if(heap_domain.add_points_to(row, inv, sym_path, obj))
+          if(heap_domain.add_points_to(row, inv, symbolic_path, obj))
           {
             improved=true;
             const std::string info=
@@ -198,11 +201,11 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
                 actual_loc,
                 templ_row.kind);
             if(member_val_index>=0 &&
-               !inv[member_val_index].is_nondet(sym_path))
+               !inv[member_val_index].is_nondet(symbolic_path))
             {
               // Add all paths from obj.next to p
               if(heap_domain.add_transitivity(
-                sym_path,
+                symbolic_path,
                 row,
                 static_cast<unsigned>(member_val_index),
                 inv))
@@ -218,7 +221,7 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
         }
         else
         {
-          if(heap_domain.set_nondet(row, inv, sym_path))
+          if(heap_domain.set_nondet(row, inv, symbolic_path))
           {
             improved=true;
             debug() << "Set nondet" << eom;
@@ -229,8 +232,8 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
         if(templ_row.mem_kind==heap_domaint::HEAP)
         {
           updated_rows.clear();
-          if(!inv[row].is_nondet(sym_path))
-            update_rows_rec(sym_path, row, inv);
+          if(!inv[row].is_nondet(symbolic_path))
+            update_rows_rec(row, inv);
         }
       }
     }
@@ -336,12 +339,11 @@ Function: strategy_solver_heapt::update_rows_rec
 \*******************************************************************/
 
 bool strategy_solver_heapt::update_rows_rec(
-  const exprt &sym_path,
   const heap_domaint::rowt &row,
   heap_domaint::heap_valuet &value)
 {
   heap_domaint::heap_row_configt &row_value=
-    value[row].get_heap_config(sym_path);
+    value[row].get_heap_config(symbolic_path);
   const heap_domaint::template_rowt &templ_row=heap_domain.templ[row];
 
   updated_rows.insert(row);
@@ -351,7 +353,7 @@ bool strategy_solver_heapt::update_rows_rec(
     if(heap_domain.templ[ptr].mem_kind==heap_domaint::HEAP &&
        heap_domain.templ[ptr].member==templ_row.member)
     {
-      if(heap_domain.add_transitivity(sym_path, ptr, row, value))
+      if(heap_domain.add_transitivity(symbolic_path, ptr, row, value))
         result=true;
 
       debug() << "recursively updating row: " << ptr << eom;
@@ -360,7 +362,7 @@ bool strategy_solver_heapt::update_rows_rec(
               << from_expr(ns, "", templ_row.dyn_obj) << eom;
       // Recursive update is called for each row only once
       if(updated_rows.find(ptr)==updated_rows.end())
-        result=update_rows_rec(sym_path, ptr, value) || result;
+        result=update_rows_rec(ptr, value) || result;
     }
   }
   return result;
@@ -417,41 +419,4 @@ void strategy_solver_heapt::initialize(
     debug() << "New template:" << eom;
     heap_domain.output_domain(debug(), ns);
   }
-}
-
-/*******************************************************************\
-
-Function: strategy_solver_heapt::get_symbolic_path
-
-  Inputs:
-
- Outputs:
-
- Purpose: Get symbolic path of a model returned by the solver. A symbolic path
-          is identified by evaluations of all loop guards, except the guard of
-          the loop correponding to the given template row.
-
-\*******************************************************************/
-const exprt strategy_solver_heapt::get_symbolic_path(
-  const heap_domaint::rowt &row)
-{
-  if(!heap_domain.templ[row].kind==domaint::LOOP)
-    return true_exprt();
-
-  exprt::operandst path;
-  const exprt &row_loop_guard=
-    to_and_expr(heap_domain.templ[row].pre_guard).op1();
-  for(const exprt &guard : loop_guards)
-  {
-    if(guard==row_loop_guard)
-      continue;
-
-    exprt guard_value=solver.get(guard);
-    assert(guard_value.is_true() || guard_value.is_false());
-    if(guard_value.is_true())
-      path.push_back(guard);
-    else
-      path.push_back(not_exprt(guard));
-  }
-  return conjunction(path);
 }

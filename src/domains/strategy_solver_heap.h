@@ -50,11 +50,8 @@ protected:
     const domaint::kindt &kind);
 
   bool update_rows_rec(
-    const exprt &sym_path,
     const heap_domaint::rowt &row,
     heap_domaint::heap_valuet &value);
-
-  const exprt get_symbolic_path(const heap_domaint::rowt &row);
 
   void print_solver_expr(const exprt &expr);
 };
