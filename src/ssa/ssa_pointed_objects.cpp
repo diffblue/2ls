@@ -183,7 +183,7 @@ symbol_exprt pointed_object(const exprt &expr, const namespacet &ns)
     return pointed;
   }
   else
-    return symbol_exprt("");
+    return symbol_exprt("ssa::nondet_symbol", expr.type().subtype());
 }
 
 /*******************************************************************\
