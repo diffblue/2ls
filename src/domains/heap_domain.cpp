@@ -1426,171 +1426,89 @@ const std::set<exprt> heap_domaint::collect_preconditions_rec(
 
 /*******************************************************************\
 
-Function: heap_domaint::row_valuet::empty
+Function: heap_domaint::restrict_to_sympath
 
-  Inputs:
+  Inputs: Symbolic path
 
  Outputs:
 
- Purpose:
+ Purpose: Restrict template to a given symbolic path.
+          For each template row, we add all other loop guards in their
+          positive or negative form (as specified by path) to aux_expr.
 
 \*******************************************************************/
-bool heap_domaint::row_valuet::empty() const
+void heap_domaint::restrict_to_sympath(const symbolic_patht &sympath)
 {
-  for(auto &config : configurations)
+  for(auto &row : templ)
   {
-    if(!config.second->empty())
-      return false;
+    const exprt c=sympath.get_expr(row.pre_guard.op1());
+    row.aux_expr=and_exprt(row.aux_expr, c);
   }
-  return true;
 }
 
 /*******************************************************************\
 
-Function: heap_domaint::row_valuet::set_nondet
+Function: heap_domaint::clear_aux_symbols
 
   Inputs:
 
  Outputs:
 
- Purpose:
+ Purpose: Reset aux symbols to true (remove all restricitions).
 
 \*******************************************************************/
-bool heap_domaint::row_valuet::set_nondet(const exprt &sym_path)
+void heap_domaint::clear_aux_symbols()
 {
-  bool result=!get_config(sym_path).nondet;
-  get_config(sym_path).nondet=true;
-  return result;
+  for(auto &row : templ)
+    row.aux_expr=true_exprt();
 }
 
 /*******************************************************************\
 
-Function: heap_domaint::row_valuet::add_points_to
+Function: heap_domaint::eliminate_sympaths
 
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-bool heap_domaint::row_valuet::add_points_to(
-  const exprt &sym_path,
-  const exprt &dest)
-{
-  return get_config(sym_path).add_points_to(dest);
-}
-
-/*******************************************************************\
-
-Function: heap_domaint::row_valuet::get_row_expr
-
-  Inputs:
+  Inputs: Vector of symbolic paths
 
  Outputs:
 
- Purpose: Get expression corresponding to the template row. The expression is
-          a disjunction of configurations, where each configuration is
-          a conjunction of the guard and the configuration expression.
+ Purpose: Restrict template to other paths than those specified.
 
 \*******************************************************************/
-exprt heap_domaint::row_valuet::get_row_expr(
-  const exprt &templ_expr,
-  bool rename_templ_expr) const
+void heap_domaint::eliminate_sympaths(
+  const std::vector<symbolic_patht> &sympaths)
 {
-  exprt::operandst result;
-  for(auto &config : configurations)
+  for(auto &row : templ)
   {
-    result.push_back(
-      and_exprt(
-        config.first,
-        config.second->get_row_config_expr(templ_expr, rename_templ_expr)));
+    exprt::operandst paths;
+    for(auto &sympath : sympaths)
+    {
+      const exprt path_expr=sympath.get_expr(row.pre_guard.op1());
+      paths.push_back(path_expr);
+    }
+    row.aux_expr=paths.empty()
+                 ? true_exprt()
+                 : static_cast<exprt>(not_exprt(disjunction(paths)));
   }
-  return disjunction(result);
 }
 
 /*******************************************************************\
 
-Function: heap_domaint::row_valuet::is_nondet
+Function: heap_domaint::undo_restriction
 
   Inputs:
 
  Outputs:
 
- Purpose:
+ Purpose: Undo last restriction (remove last conjunct from each aux_expr).
 
 \*******************************************************************/
-bool heap_domaint::row_valuet::is_nondet(const exprt &sym_path)
+void heap_domaint::undo_restriction()
 {
-  return get_config(sym_path).nondet;
-}
-
-/*******************************************************************\
-
-Function: heap_domaint::row_valuet::get_config
-
-  Inputs:
-
- Outputs:
-
- Purpose: Get configuration for the given symbolic path. If the configuration
-          does not exist, it is created. This (or one of the following two
-          functions shoulf be used for every access to a configuration).
-
-\*******************************************************************/
-heap_domaint::row_configt &heap_domaint::row_valuet::get_config(
-  const exprt &sym_path)
-{
-  if(configurations.find(sym_path)==configurations.end())
+  for(auto &row : templ)
   {
-    if(mem_kind==STACK)
-      configurations.emplace(std::make_pair(sym_path, new stack_row_configt()));
-    else if(mem_kind==HEAP)
-      configurations.emplace(
-        std::make_pair(
-          sym_path,
-          new heap_row_configt(dyn_obj)));
-    else
-      assert(false);
+    if(row.aux_expr.id()==ID_and)
+    {
+      row.aux_expr=to_and_expr(row.aux_expr).op0();
+    }
   }
-  return *(configurations.at(sym_path).get());
 }
-
-/*******************************************************************\
-
-Function: heap_domaint::row_valuet::get_stack_config
-
-  Inputs:
-
- Outputs:
-
- Purpose: Get configuration for the given symbolic path interpreted as
-          a stack configuration.
-
-\*******************************************************************/
-heap_domaint::stack_row_configt &heap_domaint::row_valuet::get_stack_config(
-  const exprt &sym_path)
-{
-  assert(mem_kind==STACK);
-  return static_cast<stack_row_configt &>(get_config(sym_path));
-}
-
-/*******************************************************************\
-
-Function: heap_domaint::row_valuet::get_heap_config
-
-  Inputs:
-
- Outputs:
-
- Purpose: Get configuration for the given symbolic path interpreted as
-          a heap configuration.
-
-\*******************************************************************/
-heap_domaint::heap_row_configt &heap_domaint::row_valuet::get_heap_config(
-  const exprt &sym_path)
-{
-  assert(mem_kind==HEAP);
-  return static_cast<heap_row_configt &>(get_config(sym_path));
-}
-

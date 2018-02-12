@@ -100,3 +100,73 @@ void heap_interval_domaint::project_on_vars(
   if(interval_result!=true_exprt())
     result=and_exprt(result, interval_result);
 }
+
+/*******************************************************************\
+
+Function: heap_interval_domaint::restrict_to_sympath
+
+  Inputs: Symbolic path
+
+ Outputs:
+
+ Purpose: Restrict template to a given symbolic path.
+
+\*******************************************************************/
+void heap_interval_domaint::restrict_to_sympath(
+  const symbolic_patht &sympath)
+{
+  heap_domain.restrict_to_sympath(sympath);
+  interval_domain.restrict_to_sympath(sympath);
+}
+
+/*******************************************************************\
+
+Function: heap_interval_domaint::clear_aux_symbols
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Reset aux symbols to true (remove all restricitions).
+
+\*******************************************************************/
+void heap_interval_domaint::clear_aux_symbols()
+{
+  heap_domain.clear_aux_symbols();
+  interval_domain.clear_aux_symbols();
+}
+
+/*******************************************************************\
+
+Function: heap_interval_domaint::eliminate_sympaths
+
+  Inputs: Vector of symbolic paths
+
+ Outputs:
+
+ Purpose: Restrict template to other paths than those specified.
+
+\*******************************************************************/
+void heap_interval_domaint::eliminate_sympaths(
+  const std::vector<symbolic_patht> &sympaths)
+{
+  heap_domain.eliminate_sympaths(sympaths);
+  interval_domain.eliminate_sympaths(sympaths);
+}
+
+/*******************************************************************\
+
+Function: heap_interval_domaint::undo_restriction
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Undo last restriction.
+
+\*******************************************************************/
+void heap_interval_domaint::undo_restriction()
+{
+  heap_domain.undo_restriction();
+  interval_domain.undo_restriction();
+}

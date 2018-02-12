@@ -12,6 +12,7 @@ Author: Peter Schrammel
 #include "domain.h"
 #include "incremental_solver.h"
 #include "util.h"
+#include "symbolic_path.h"
 
 class strategy_solver_baset:public messaget
 {
@@ -33,7 +34,8 @@ class strategy_solver_baset:public messaget
 
   inline unsigned get_number_of_solver_calls() { return solver_calls; }
   inline unsigned get_number_of_solver_instances() { return solver_instances; }
-  inline exprt &get_symbolic_path() { return symbolic_path; }
+
+  symbolic_patht symbolic_path;
 
  protected:
   incremental_solvert &solver;
@@ -43,15 +45,13 @@ class strategy_solver_baset:public messaget
   bvt strategy_cond_literals;
   exprt::operandst strategy_value_exprs;
 
-  exprt symbolic_path;
-
   // statistics for additional solvers
   unsigned solver_instances;
   unsigned solver_calls;
 
   void find_symbolic_path(
     std::set<symbol_exprt> &loop_guards,
-    const exprt &filter_guard = nil_exprt());
+    const exprt &current_guard=nil_exprt());
 };
 
 #endif

@@ -8,21 +8,34 @@ Author: Peter Schrammel
 
 #include "strategy_solver_base.h"
 
+/*******************************************************************\
+
+Function: strategy_solver_baset::find_symbolic_path
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Find symbolic path that is explored by the current solver
+          iteration. A path is specified by a conjunction of literals
+          containing loop-select guards of all loops in program.
+
+\*******************************************************************/
 void strategy_solver_baset::find_symbolic_path(
   std::set<symbol_exprt> &loop_guards,
-  const exprt &filter_guard)
+  const exprt &current_guard)
 {
-  exprt::operandst path;
-  for(const exprt &guard : loop_guards)
+  for(const symbol_exprt &guard : loop_guards)
   {
-    if(guard==filter_guard)
+    if(guard==current_guard)
+    {
+      symbolic_path[guard]=true;
       continue;
-
+    }
     exprt guard_value=solver.get(guard);
     if(guard_value.is_true())
-      path.push_back(guard);
+      symbolic_path[guard]=true;
     else if(guard_value.is_false())
-      path.push_back(not_exprt(guard));
+      symbolic_path[guard]=false;
   }
-  symbolic_path=conjunction(path);
 }
