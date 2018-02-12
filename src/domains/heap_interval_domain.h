@@ -53,6 +53,12 @@ public:
     valuet &value,
     const var_sett &vars,
     exprt &result) override;
+
+  // Restriction to symbolic paths
+  void restrict_to_sympath(const symbolic_patht &sympath);
+  void undo_restriction();
+  void eliminate_sympaths(const std::vector<symbolic_patht> &sympaths);
+  void clear_aux_symbols();
 };
 
 #endif // CPROVER_2LS_DOMAINS_HEAP_INTERVAL_DOMAIN_H

@@ -269,6 +269,12 @@ public:
   // Join of values
   virtual void join(valuet &value1, const valuet &value2) override;
 
+  // Restriction to symbolic paths
+  void restrict_to_sympath(const symbolic_patht &sympath);
+  void undo_restriction();
+  void eliminate_sympaths(const std::vector<symbolic_patht> &sympaths);
+  void clear_aux_symbols();
+
   // Getters for protected fields
   const std::list<symbol_exprt> get_new_heap_vars();
 

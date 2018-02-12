@@ -16,6 +16,7 @@ Author: Peter Schrammel
 #include <util/ieee_float.h>
 
 #include "domain.h"
+#include "symbolic_path.h"
 
 class tpolyhedra_domaint:public domaint
 {
@@ -133,6 +134,11 @@ public:
   void add_quadratic_template(
     const var_specst &var_specs,
     const namespacet &ns);
+
+  void restrict_to_sympath(const symbolic_patht &sympath);
+  void undo_restriction();
+  void eliminate_sympaths(const std::vector<symbolic_patht> &sympaths);
+  void clear_aux_symbols();
 
   symbol_exprt get_row_symb_value(const rowt &row);
 

@@ -1168,3 +1168,46 @@ void tpolyhedra_domaint::add_sum_template(
     }
   }
 }
+
+void tpolyhedra_domaint::restrict_to_sympath(const symbolic_patht &sympath)
+{
+  for(auto &row : templ)
+  {
+    const exprt c=sympath.get_expr(row.pre_guard.op1());
+    row.aux_expr=and_exprt(row.aux_expr, c);
+  }
+}
+
+void tpolyhedra_domaint::clear_aux_symbols()
+{
+  for(auto &row : templ)
+    row.aux_expr=true_exprt();
+}
+
+void tpolyhedra_domaint::undo_restriction()
+{
+  for(auto &row : templ)
+  {
+    if(row.aux_expr.id()==ID_and)
+    {
+      row.aux_expr=to_and_expr(row.aux_expr).op0();
+    }
+  }
+}
+
+void tpolyhedra_domaint::eliminate_sympaths(
+  const std::vector<symbolic_patht> &sympaths)
+{
+  for(auto &row : templ)
+  {
+    exprt::operandst paths;
+    for(const symbolic_patht &sympath : sympaths)
+    {
+      const exprt path_expr=sympath.get_expr(row.pre_guard.op1());
+      paths.push_back(path_expr);
+    }
+    row.aux_expr=paths.empty()
+                 ? true_exprt()
+                 : static_cast<exprt>(not_exprt(disjunction(paths)));
+  }
+}
