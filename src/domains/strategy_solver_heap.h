@@ -52,6 +52,9 @@ protected:
   bool update_rows_rec(
     const heap_domaint::rowt &row,
     heap_domaint::heap_valuet &value);
+  void clear_pointing_rows(
+    const heap_domaint::rowt &row,
+    heap_domaint::heap_valuet &value);
 
   void print_solver_expr(const exprt &expr);
 };

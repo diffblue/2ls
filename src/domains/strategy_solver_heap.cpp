@@ -231,6 +231,8 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
           updated_rows.clear();
           if(!inv[row].nondet)
             update_rows_rec(row, inv);
+          else
+            clear_pointing_rows(row, inv);
         }
       }
     }
@@ -415,5 +417,19 @@ void strategy_solver_heapt::initialize(
   {
     debug() << "New template:" << eom;
     heap_domain.output_domain(debug(), ns);
+  }
+}
+
+void strategy_solver_heapt::clear_pointing_rows(
+  const heap_domaint::rowt &row,
+  heap_domaint::heap_valuet &value)
+{
+  heap_domaint::heap_row_valuet &row_value=
+    static_cast<heap_domaint::heap_row_valuet &>(value[row]);
+
+  for(auto &ptr : row_value.pointed_by)
+  {
+    debug() << "Clearing row: " << ptr << eom;
+    value[ptr].clear();
   }
 }
