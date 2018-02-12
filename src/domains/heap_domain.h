@@ -68,6 +68,8 @@ public:
 
     virtual bool add_points_to(const exprt &dest)=0;
 
+    virtual void clear()=0;
+
     virtual ~row_valuet() {}
   };
 
@@ -90,6 +92,8 @@ public:
     {
       return points_to.empty();
     }
+
+    virtual void clear() override;
   };
 
   /*******************************************************************\
@@ -151,6 +155,8 @@ public:
     {
       return paths.empty() && !self_linkage;
     }
+
+    virtual void clear() override;
 
     bool add_path(const exprt &dest, const dyn_objt &dyn_obj);
 

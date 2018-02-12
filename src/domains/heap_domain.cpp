@@ -610,6 +610,23 @@ bool heap_domaint::stack_row_valuet::add_points_to(const exprt &expr)
 
 /*******************************************************************\
 
+Function: heap_domaint::stack_row_valuet::clear
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Clear stack row value
+
+\*******************************************************************/
+void heap_domaint::stack_row_valuet::clear()
+{
+  nondet=false;
+  points_to.clear();
+}
+
+/*******************************************************************\
+
 Function: heap_domaint::heap_row_valuet::get_row_expr
 
   Inputs: templ_expr Template expression
@@ -856,6 +873,23 @@ exprt heap_domaint::heap_row_valuet::rename_outheap(const symbol_exprt &expr)
   return symbol_exprt(
     id.substr(0, id.rfind("lb"))+id.substr(id.rfind("lb")+2),
     expr.type());
+}
+
+/*******************************************************************\
+
+Function: heap_domaint::heap_row_valuet::clear
+
+  Inputs:
+
+ Outputs: Clear heap row value
+
+ Purpose:
+
+\*******************************************************************/
+void heap_domaint::heap_row_valuet::clear()
+{
+  nondet=false;
+  paths.clear();
 }
 
 /*******************************************************************\
