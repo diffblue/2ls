@@ -62,9 +62,9 @@ public:
 
     virtual exprt get_row_expr(
       const vart &templ_expr,
-      bool rename_templ_expr) const =0;
+      bool rename_templ_expr) const=0;
 
-    virtual bool empty() const =0;
+    virtual bool empty() const=0;
 
     virtual bool add_points_to(const exprt &dest)=0;
 
