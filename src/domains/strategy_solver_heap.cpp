@@ -126,14 +126,13 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
         const exprt loop_guard=to_and_expr(
           heap_domain.templ[row].pre_guard).op1();
         find_symbolic_path(loop_guards, loop_guard);
-        debug() << "Symbolic path: " << from_expr(ns, "", symbolic_path) << eom;
 
         if((ptr_value.id()==ID_constant &&
             to_constant_expr(ptr_value).get_value()==ID_NULL) ||
            ptr_value.id()==ID_symbol)
         {
           // Add equality p == NULL or p == symbol
-          if(heap_domain.add_points_to(row, inv, symbolic_path, ptr_value))
+          if(heap_domain.add_points_to(row, inv, ptr_value))
           {
             improved=true;
             const std::string info=
@@ -151,7 +150,7 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
           {
             // If solver did not return address of a symbol, it is considered
             // as nondet value.
-            if(heap_domain.set_nondet(row, inv, symbolic_path))
+            if(heap_domain.set_nondet(row, inv))
             {
               improved=true;
               debug() << "Set nondet" << eom;
@@ -166,7 +165,7 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
              ns.follow(templ_row.expr.type().subtype())!=ns.follow(obj.type()))
           {
             // If types disagree, it's a nondet (solver assigned random value)
-            if(heap_domain.set_nondet(row, inv, symbolic_path))
+            if(heap_domain.set_nondet(row, inv))
             {
               improved=true;
               debug() << "Set nondet" << eom;
@@ -175,7 +174,7 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
           }
 
           // Add equality p == &obj
-          if(heap_domain.add_points_to(row, inv, symbolic_path, obj))
+          if(heap_domain.add_points_to(row, inv, obj))
           {
             improved=true;
             const std::string info=
@@ -200,12 +199,10 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
                 templ_row.member,
                 actual_loc,
                 templ_row.kind);
-            if(member_val_index>=0 &&
-               !inv[member_val_index].is_nondet(symbolic_path))
+            if(member_val_index>=0 && !inv[member_val_index].nondet)
             {
               // Add all paths from obj.next to p
               if(heap_domain.add_transitivity(
-                symbolic_path,
                 row,
                 static_cast<unsigned>(member_val_index),
                 inv))
@@ -221,7 +218,7 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
         }
         else
         {
-          if(heap_domain.set_nondet(row, inv, symbolic_path))
+          if(heap_domain.set_nondet(row, inv))
           {
             improved=true;
             debug() << "Set nondet" << eom;
@@ -232,7 +229,7 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
         if(templ_row.mem_kind==heap_domaint::HEAP)
         {
           updated_rows.clear();
-          if(!inv[row].is_nondet(symbolic_path))
+          if(!inv[row].nondet)
             update_rows_rec(row, inv);
         }
       }
@@ -342,8 +339,8 @@ bool strategy_solver_heapt::update_rows_rec(
   const heap_domaint::rowt &row,
   heap_domaint::heap_valuet &value)
 {
-  heap_domaint::heap_row_configt &row_value=
-    value[row].get_heap_config(symbolic_path);
+  heap_domaint::heap_row_valuet &row_value=
+    static_cast<heap_domaint::heap_row_valuet &>(value[row]);
   const heap_domaint::template_rowt &templ_row=heap_domain.templ[row];
 
   updated_rows.insert(row);
@@ -353,7 +350,7 @@ bool strategy_solver_heapt::update_rows_rec(
     if(heap_domain.templ[ptr].mem_kind==heap_domaint::HEAP &&
        heap_domain.templ[ptr].member==templ_row.member)
     {
-      if(heap_domain.add_transitivity(symbolic_path, ptr, row, value))
+      if(heap_domain.add_transitivity(ptr, row, value))
         result=true;
 
       debug() << "recursively updating row: " << ptr << eom;
