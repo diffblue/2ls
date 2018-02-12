@@ -37,7 +37,7 @@ public:
   // interval domain
   class heap_interval_sympath_valuet:
     public valuet,
-    public std::map<const exprt, heap_interval_domaint::heap_interval_valuet>
+    public std::map<exprt, heap_interval_domaint::heap_interval_valuet>
   {
   };
 

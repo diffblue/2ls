@@ -54,7 +54,7 @@ protected:
   // g#ls    ->    (g#lh   &&   g#le)
   // ^ loop select  ^ loop head ^ loop end
   // This is used to check feasibility of symbolic paths
-  std::map<const exprt, const exprt> loop_conds_map;
+  std::map<exprt, const exprt> loop_conds_map;
   void build_loop_conds_map(const local_SSAt &SSA);
 
   bool is_current_path_feasible(
