@@ -41,6 +41,7 @@ public:
   virtual bool iterate(invariantt &_inv) override;
 
   virtual void set_message_handler(message_handlert &_message_handler) override;
+  void clear_symbolic_path();
 
 protected:
   heap_interval_domaint &heap_interval_domain;

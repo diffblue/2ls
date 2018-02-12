@@ -206,6 +206,8 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
   else if(cmdline.isset("heap-interval"))
   {
     options.set_option("heap-interval", true);
+    if(cmdline.isset("sympath"))
+      options.set_option("sympath", true);
   }
   else
   {
@@ -1743,6 +1745,7 @@ void twols_parse_optionst::help()
     " --zones                      use zone domain\n"
     " --octagons                   use octagon domain\n"
     " --heap-interval              use heap domain with interval domain for values\n" // NOLINT(*)
+    " --sympath                    compute invariant for each symbolic path (only usable with --heap-interval switch)" // NOLINT(*)
     " --enum-solver                use solver based on model enumeration\n"
     " --binsearch-solver           use solver based on binary search\n"
     " --arrays                     do not ignore array contents\n"

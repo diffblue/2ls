@@ -33,6 +33,7 @@ Author: Peter Schrammel
 #include "ssa_analyzer.h"
 #include "strategy_solver_heap.h"
 #include "strategy_solver_heap_interval.h"
+#include "strategy_solver_heap_interval_sympath.h"
 
 // NOLINTNEXTLINE(*)
 #define BINSEARCH_SOLVER strategy_solver_binsearcht(\
@@ -121,14 +122,28 @@ void ssa_analyzert::operator()(
   }
   else if(template_generator.options.get_bool_option("heap-interval"))
   {
-    strategy_solver=new strategy_solver_heap_intervalt(
-      *static_cast<heap_interval_domaint *>(domain),
-      solver,
-      SSA,
-      precondition,
-      get_message_handler(),
-      template_generator);
-    result=new heap_interval_domaint::heap_interval_valuet();
+    if(template_generator.options.get_bool_option("sympath"))
+    {
+      strategy_solver=new strategy_solver_heap_interval_sympatht(
+        *static_cast<heap_interval_sympath_domaint *>(domain),
+        solver,
+        SSA,
+        precondition,
+        get_message_handler(),
+        template_generator);
+      result=new heap_interval_sympath_domaint::heap_interval_sympath_valuet();
+    }
+    else
+    {
+      strategy_solver=new strategy_solver_heap_intervalt(
+        *static_cast<heap_interval_domaint *>(domain),
+        solver,
+        SSA,
+        precondition,
+        get_message_handler(),
+        template_generator);
+      result=new heap_interval_domaint::heap_interval_valuet();
+    }
   }
   else
   {
