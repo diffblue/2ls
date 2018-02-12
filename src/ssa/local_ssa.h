@@ -152,7 +152,7 @@ public:
       pointer_id(pointer_id), cond(cond) {}
   };
   typedef std::list<dyn_obj_assignt> dyn_obj_assignst;
-  std::map<const exprt, dyn_obj_assignst> dyn_obj_assigns;
+  std::map<exprt, dyn_obj_assignst> dyn_obj_assigns;
 
   bool has_function_calls() const;
 

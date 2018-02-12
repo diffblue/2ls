@@ -15,7 +15,7 @@ Author: Viktor Malik
 class symbolic_patht
 {
 public:
-  std::map<const exprt, bool> path_map;
+  std::map<exprt, bool> path_map;
 
   const exprt get_expr(
     const exprt &except_guard=nil_exprt(),
