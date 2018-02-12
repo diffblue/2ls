@@ -20,6 +20,7 @@ Author: Peter Schrammel
 #include "predabs_domain.h"
 #include "heap_domain.h"
 #include "heap_interval_domain.h"
+#include "heap_interval_sympath_domain.h"
 
 #ifdef DEBUG
 #include <iostream>
@@ -769,8 +770,12 @@ void template_generator_baset::instantiate_standard_domains(
   else if(options.get_bool_option("heap-interval"))
   {
     filter_heap_interval_domain();
-    domain_ptr=
-      new heap_interval_domaint(domain_number, renaming_map, var_specs, SSA.ns);
+    if(options.get_bool_option("sympath"))
+      domain_ptr=new heap_interval_sympath_domaint(
+        domain_number, renaming_map, var_specs, SSA);
+    else
+      domain_ptr=new heap_interval_domaint(
+        domain_number, renaming_map, var_specs, SSA.ns);
   }
 }
 

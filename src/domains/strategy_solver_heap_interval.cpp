@@ -75,3 +75,9 @@ void strategy_solver_heap_intervalt::set_message_handler(
   heap_solver.set_message_handler(_message_handler);
   interval_solver.set_message_handler(_message_handler);
 }
+
+void strategy_solver_heap_intervalt::clear_symbolic_path()
+{
+  heap_solver.symbolic_path.clear();
+  interval_solver.symbolic_path.clear();
+}
