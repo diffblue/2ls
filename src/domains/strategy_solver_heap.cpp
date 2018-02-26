@@ -164,13 +164,16 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
           if(obj.type()!=templ_row.expr.type() &&
              ns.follow(templ_row.expr.type().subtype())!=ns.follow(obj.type()))
           {
-            // If types disagree, it's a nondet (solver assigned random value)
-            if(heap_domain.set_nondet(row, inv))
+            if(!is_cprover_symbol(templ_row.expr))
             {
-              improved=true;
-              debug() << "Set nondet" << eom;
+              // If types disagree, it's a nondet (solver assigned random value)
+              if(heap_domain.set_nondet(row, inv))
+              {
+                improved=true;
+                debug() << "Set nondet" << eom;
+              }
+              continue;
             }
-            continue;
           }
 
           // Add equality p == &obj
@@ -432,4 +435,10 @@ void strategy_solver_heapt::clear_pointing_rows(
     debug() << "Clearing row: " << ptr << eom;
     value[ptr].clear();
   }
+}
+
+bool strategy_solver_heapt::is_cprover_symbol(const exprt &expr)
+{
+  return expr.id()==ID_symbol &&
+         id2string(to_symbol_expr(expr).get_identifier()).find("__CPROVER_")==0;
 }

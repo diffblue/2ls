@@ -30,10 +30,11 @@ void heap_domaint::initialize(domaint::valuet &value)
   for(const template_rowt &templ_row : templ)
   {
     if(templ_row.mem_kind==STACK)
-      val.emplace_back(new stack_row_valuet());
+      val.emplace_back(new stack_row_valuet(ns));
     else if(templ_row.mem_kind==HEAP)
       val.emplace_back(
         new heap_row_valuet(
+          ns,
           std::make_pair(
             templ_row.dyn_obj,
             templ_row.expr)));
@@ -577,10 +578,15 @@ exprt heap_domaint::stack_row_valuet::get_row_expr(
     exprt::operandst result;
     for(const exprt &pt : points_to)
     {
-      result.push_back(
-        equal_exprt(
-          templ_expr,
-          templ_expr.type()==pt.type() ? pt : address_of_exprt(pt)));
+      exprt value;
+      if (templ_expr.type() == pt.type())
+        value = pt;
+      else if (ns.follow(templ_expr.type().subtype()) == ns.follow(pt.type()))
+        value = address_of_exprt(pt);
+      else
+        value=typecast_exprt(address_of_exprt(pt),
+                             ns.follow(templ_expr.type()));
+      result.push_back(equal_exprt(templ_expr, value));
     }
     return disjunction(result);
   }
