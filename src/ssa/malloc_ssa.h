@@ -21,4 +21,7 @@ bool replace_malloc(
   goto_modelt &goto_model,
   const std::string &suffix);
 
+void allow_record_malloc(goto_modelt &goto_model);
+void allow_record_memleak(goto_modelt &goto_model);
+
 #endif

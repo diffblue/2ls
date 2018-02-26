@@ -293,3 +293,52 @@ bool replace_malloc(
   }
   return result;
 }
+
+void set_var_always_to_true(goto_modelt &goto_model,
+                            bool (*name_cond)(std::string &))
+{
+  Forall_goto_functions(f_it, goto_model.goto_functions)
+  {
+    Forall_goto_program_instructions(i_it, f_it->second.body)
+    {
+      if(i_it->is_decl())
+      {
+        code_declt &code_decl=to_code_decl(i_it->code);
+        if(code_decl.symbol().id()==ID_symbol)
+        {
+          std::string decl_id=
+            id2string(to_symbol_expr(code_decl.symbol()).get_identifier());
+          if (name_cond(decl_id))
+          {
+            auto assign=f_it->second.body.insert_after(i_it);
+            assign->make_assignment();
+            assign->code=code_assignt(code_decl.symbol(), true_exprt());
+          }
+        }
+      }
+    }
+    f_it->second.body.compute_location_numbers();
+    f_it->second.body.compute_target_numbers();
+    f_it->second.body.compute_incoming_edges();
+  }
+}
+
+void allow_record_malloc(goto_modelt &goto_model)
+{
+  set_var_always_to_true(
+    goto_model, [](std::string &name)
+    {
+      return name.find("malloc::")!=std::string::npos &&
+             name.find("::record_malloc")!=std::string::npos;
+    });
+}
+
+void allow_record_memleak(goto_modelt &goto_model)
+{
+  set_var_always_to_true(
+    goto_model, [](std::string &name)
+    {
+      return name.find("malloc::")!=std::string::npos &&
+             name.find("::record_may_leak")!=std::string::npos;
+    });
+}
