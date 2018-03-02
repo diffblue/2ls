@@ -430,11 +430,18 @@ void strategy_solver_heapt::clear_pointing_rows(
   heap_domaint::heap_row_valuet &row_value=
     static_cast<heap_domaint::heap_row_valuet &>(value[row]);
 
+  std::vector<heap_domaint::rowt> to_remove;
   for(auto &ptr : row_value.pointed_by)
   {
-    debug() << "Clearing row: " << ptr << eom;
-    value[ptr].clear();
+    if (ptr != row)
+    {
+      debug() << "Clearing row: " << ptr << eom;
+      value[ptr].clear();
+      to_remove.push_back(ptr);
+    }
   }
+  for (auto &r : to_remove)
+    row_value.pointed_by.erase(r);
 }
 
 bool strategy_solver_heapt::is_cprover_symbol(const exprt &expr)

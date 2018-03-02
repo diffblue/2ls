@@ -802,8 +802,11 @@ bool heap_domaint::heap_row_valuet::add_all_paths(
   bool result=false;
   for(auto &path : other_val.paths)
   {
+    bool new_dest = (paths.find(path.destination) == paths.end());
     if(add_path(path.destination, dyn_obj))
     {
+      if (!new_dest)
+        paths.erase(dyn_obj.first);
       result=true;
       for(auto &o : path.dyn_objects)
       {
