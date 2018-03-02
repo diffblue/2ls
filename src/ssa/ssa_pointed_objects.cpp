@@ -386,6 +386,7 @@ const exprt symbolic_dereference(const exprt &expr, const namespacet &ns)
   {
     member_exprt member=to_member_expr(expr);
     member.compound()=symbolic_dereference(member.compound(), ns);
+    copy_pointed_info(member, member.compound());
 
     member.set(
       "#has_symbolic_deref",
