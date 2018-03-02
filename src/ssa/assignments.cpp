@@ -33,6 +33,7 @@ void assignmentst::build_assignment_map(
   {
     // make sure we have the location in the map
     assignment_map[it];
+    allocation_map[it];
 
     // now fill it
     if(it->is_assign())
@@ -44,6 +45,17 @@ void assignmentst::build_assignment_map(
       assign(lhs_symbolic_deref, it, ns);
 
       assign_symbolic_rhs(code_assign.rhs(), it, ns);
+
+      if (code_assign.rhs().get_bool("#malloc_result"))
+      {
+        exprt object = code_assign.rhs();
+        if (object.id() == ID_typecast)
+          object = to_typecast_expr(object).op();
+        if (object.id() == ID_address_of)
+          object = to_address_of_expr(object).object();
+
+        allocation_map[it].insert(ssa_objectt(object, ns));
+      }
     }
     else if(it->is_assert())
     {

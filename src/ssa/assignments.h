@@ -28,6 +28,8 @@ public:
   typedef std::map<locationt, objectst> assignment_mapt;
   assignment_mapt assignment_map;
 
+  assignment_mapt allocation_map;
+
   bool assigns(locationt loc, const ssa_objectt &object) const
   {
     assignment_mapt::const_iterator it=assignment_map.find(loc);
@@ -40,6 +42,13 @@ public:
   {
     assignment_mapt::const_iterator it=assignment_map.find(loc);
     assert(it!=assignment_map.end());
+    return it->second;
+  }
+
+  inline const objectst &get_allocations(locationt loc) const
+  {
+    auto it = allocation_map.find(loc);
+    assert(it!=allocation_map.end());
     return it->second;
   }
 
