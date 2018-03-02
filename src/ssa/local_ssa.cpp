@@ -474,9 +474,10 @@ void local_SSAt::build_transfer(locationt loc)
         assign_rec(symbolic_deref_lhs, rhs, true_exprt(), loc);
         assign_rec(
           deref_lhs,
-          name(ssa_objectt(symbolic_deref_lhs, ns), OUT, loc),
+          symbolic_deref_lhs,
           true_exprt(),
-          loc);
+          loc,
+          true);
       }
       else
       {
@@ -1310,7 +1311,8 @@ void local_SSAt::assign_rec(
   const exprt &lhs,
   const exprt &rhs,
   const exprt &guard,
-  locationt loc)
+  locationt loc,
+  bool fresh_rhs)
 {
   const typet &type=ns.follow(lhs.type());
 
@@ -1330,7 +1332,7 @@ void local_SSAt::assign_rec(
       {
         member_exprt new_lhs(lhs, it->get_name(), it->type());
         member_exprt new_rhs(rhs, it->get_name(), it->type());
-        assign_rec(new_lhs, new_rhs, guard, loc);
+        assign_rec(new_lhs, new_rhs, guard, loc, fresh_rhs);
       }
 
       return;
@@ -1346,7 +1348,8 @@ void local_SSAt::assign_rec(
       collect_iterators_lhs(lhs_object, loc);
       collect_iterators_rhs(rhs, loc);
 
-      exprt ssa_rhs=read_rhs(rhs, loc);
+      exprt ssa_rhs=fresh_rhs ? name(ssa_objectt(rhs, ns), OUT, loc)
+                              : read_rhs(rhs, loc);
 
       const symbol_exprt ssa_symbol=name(lhs_object, OUT, loc);
 
@@ -1359,7 +1362,7 @@ void local_SSAt::assign_rec(
     const index_exprt &index_expr=to_index_expr(lhs);
     exprt ssa_array=index_expr.array();
     exprt new_rhs=with_exprt(ssa_array, index_expr.index(), rhs);
-    assign_rec(index_expr.array(), new_rhs, guard, loc);
+    assign_rec(index_expr.array(), new_rhs, guard, loc, fresh_rhs);
   }
   else if(lhs.id()==ID_member)
   {
@@ -1372,14 +1375,14 @@ void local_SSAt::assign_rec(
     {
       union_exprt new_rhs(
         member_expr.get_component_name(), rhs, compound.type());
-      assign_rec(member_expr.struct_op(), new_rhs, guard, loc);
+      assign_rec(member_expr.struct_op(), new_rhs, guard, loc, fresh_rhs);
     }
     else if(compound_type.id()==ID_struct)
     {
       exprt member_name(ID_member_name);
       member_name.set(ID_component_name, member_expr.get_component_name());
       with_exprt new_rhs(compound, member_name, rhs);
-      assign_rec(compound, new_rhs, guard, loc);
+      assign_rec(compound, new_rhs, guard, loc, fresh_rhs);
     }
   }
   else if(lhs.id()==ID_complex_real)
@@ -1389,7 +1392,7 @@ void local_SSAt::assign_rec(
     const complex_typet &complex_type=to_complex_type(op.type());
     exprt imag_op=unary_exprt(ID_complex_imag, op, complex_type.subtype());
     complex_exprt new_rhs(rhs, imag_op, complex_type);
-    assign_rec(op, new_rhs, guard, loc);
+    assign_rec(op, new_rhs, guard, loc, fresh_rhs);
   }
   else if(lhs.id()==ID_complex_imag)
   {
@@ -1398,7 +1401,7 @@ void local_SSAt::assign_rec(
     const complex_typet &complex_type=to_complex_type(op.type());
     exprt real_op=unary_exprt(ID_complex_real, op, complex_type.subtype());
     complex_exprt new_rhs(real_op, rhs, complex_type);
-    assign_rec(op, new_rhs, guard, loc);
+    assign_rec(op, new_rhs, guard, loc, fresh_rhs);
   }
   else if(lhs.id()==ID_if)
   {
@@ -1436,7 +1439,8 @@ void local_SSAt::assign_rec(
         name(guard_symbol(), OBJECT_SELECT, loc));
       cond=and_exprt(cond, other_cond);
     }
-    exprt new_rhs=if_exprt(cond, rhs, if_expr.true_case());
+    exprt orig_rhs = fresh_rhs ? name(ssa_objectt(rhs, ns), OUT, loc) : rhs;
+    exprt new_rhs=if_exprt(cond, orig_rhs, if_expr.true_case());
     assign_rec(
       if_expr.true_case(),
       new_rhs,
@@ -1447,7 +1451,8 @@ void local_SSAt::assign_rec(
       if_expr.false_case(),
       rhs,
       and_exprt(guard, not_exprt(if_expr.cond())),
-      loc);
+      loc,
+      fresh_rhs);
   }
   else if(lhs.id()==ID_byte_extract_little_endian ||
           lhs.id()==ID_byte_extract_big_endian)
@@ -1459,7 +1464,7 @@ void local_SSAt::assign_rec(
     exprt new_rhs=byte_extract_exprt(
       byte_extract_expr.id(), rhs, byte_extract_expr.offset(), new_lhs.type());
 
-    assign_rec(new_lhs, new_rhs, guard, loc);
+    assign_rec(new_lhs, new_rhs, guard, loc, fresh_rhs);
   }
   else
     throw "UNKNOWN LHS: "+lhs.id_string(); // NOLINT(*)

@@ -193,7 +193,8 @@ public:
     const exprt &lhs,
     const exprt &rhs,
     const exprt &guard,
-    locationt loc);
+    locationt loc,
+    bool fresh_rhs=false);
 
   void collect_iterators_rhs(const exprt &expr, locationt loc);
   void collect_iterators_lhs(const ssa_objectt &object, locationt loc);
