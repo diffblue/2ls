@@ -15,11 +15,13 @@ Author: Daniel Kroening, kroening@kroening.com
 exprt malloc_ssa(
   const side_effect_exprt &,
   const std::string &suffix,
-  symbol_tablet &);
+  symbol_tablet &,
+  bool alloc_concrete);
 
 bool replace_malloc(
   goto_modelt &goto_model,
-  const std::string &suffix);
+  const std::string &suffix,
+  bool alloc_concrete);
 
 void allow_record_malloc(goto_modelt &goto_model);
 void allow_record_memleak(goto_modelt &goto_model);

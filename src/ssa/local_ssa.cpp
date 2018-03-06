@@ -1861,8 +1861,11 @@ void local_SSAt::build_unknown_objs(locationt loc)
     const exprt &rhs=code_assign.rhs();
     if(rhs.get_bool("#malloc_result"))
     {
-      const exprt &addr_of_do=
+      const exprt &malloc_res=
         rhs.id()==ID_typecast ? to_typecast_expr(rhs).op() : rhs;
+      const exprt &addr_of_do=
+        malloc_res.id()==ID_if ? to_if_expr(malloc_res).false_case()
+                               : malloc_res;
       const exprt &dyn_obj=to_address_of_expr(addr_of_do).object();
       const typet &dyn_type=ns.follow(dyn_obj.type());
 

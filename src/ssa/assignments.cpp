@@ -46,15 +46,32 @@ void assignmentst::build_assignment_map(
 
       assign_symbolic_rhs(code_assign.rhs(), it, ns);
 
+      // At allocations site, save newly allocated object(s)
       if (code_assign.rhs().get_bool("#malloc_result"))
       {
-        exprt object = code_assign.rhs();
-        if (object.id() == ID_typecast)
-          object = to_typecast_expr(object).op();
-        if (object.id() == ID_address_of)
-          object = to_address_of_expr(object).object();
+        exprt alloc_res=code_assign.rhs();
+        if(alloc_res.id()==ID_typecast)
+          alloc_res=to_typecast_expr(alloc_res).op();
+        if(alloc_res.id()==ID_if)
+        {
+          exprt object=to_if_expr(alloc_res).false_case();
+          if(object.id()==ID_address_of)
+            object=to_address_of_expr(object).object();
 
-        allocation_map[it].insert(ssa_objectt(object, ns));
+          exprt concrete_object=to_if_expr(alloc_res).true_case();
+          if(concrete_object.id()==ID_address_of)
+            concrete_object=to_address_of_expr(concrete_object).object();
+
+          allocation_map[it].insert(ssa_objectt(object, ns));
+          allocation_map[it].insert(ssa_objectt(concrete_object, ns));
+        }
+        else
+        {
+          exprt object=alloc_res;
+          if(object.id()==ID_address_of)
+            object=to_address_of_expr(object).object();
+          allocation_map[it].insert(ssa_objectt(object, ns));
+        }
       }
     }
     else if(it->is_assert())
