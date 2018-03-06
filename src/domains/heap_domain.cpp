@@ -136,7 +136,7 @@ void heap_domaint::add_template_row(
       if(identifier.find("."+id2string(component.get_name()))!=
          std::string::npos)
       {
-        templ_row.mem_kind=HEAP;
+//        templ_row.mem_kind=HEAP;
         templ_row.member=component.get_name();
 
         std::string var_id=id2string(to_symbol_expr(var).get_identifier());
