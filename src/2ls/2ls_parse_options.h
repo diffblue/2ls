@@ -183,6 +183,7 @@ protected:
   void add_dynamic_object_symbols(
     const ssa_heap_analysist &heap_analysis,
     goto_modelt &goto_model);
+  void split_same_symbolic_object_assignments(goto_modelt &goto_model);
 };
 
 #endif

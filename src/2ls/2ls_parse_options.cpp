@@ -1244,6 +1244,8 @@ bool twols_parse_optionst::process_goto_program(
     if(options.get_bool_option("memory-leak-check"))
       allow_record_memleak(goto_model);
 
+    split_same_symbolic_object_assignments(goto_model);
+
     // remove loop heads from function entries
     remove_loops_in_entry(goto_model);
 

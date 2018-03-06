@@ -626,3 +626,63 @@ void twols_parse_optionst::add_dynamic_object_symbols(
     }
   }
 }
+
+/*******************************************************************\
+
+Function: twols_parse_optionst::split_same_symbolic_object_assignments
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Split assignments that have same symbolic dereference object
+          on both sides into two separate assignments.
+
+\*******************************************************************/
+
+void twols_parse_optionst::split_same_symbolic_object_assignments(
+  goto_modelt &goto_model)
+{
+  const namespacet ns(goto_model.symbol_table);
+  unsigned counter=0;
+  Forall_goto_functions(f_it, goto_model.goto_functions)
+  {
+    Forall_goto_program_instructions(i_it, f_it->second.body)
+    {
+      if(i_it->is_assign())
+      {
+        code_assignt &assign=to_code_assign(i_it->code);
+        auto lhs_sym_deref=symbolic_dereference(assign.lhs(), ns);
+        if((lhs_sym_deref.id()==ID_symbol || lhs_sym_deref.id()==ID_member)
+           && has_symbolic_deref(lhs_sym_deref))
+        {
+          const exprt &lhs_symbol=lhs_sym_deref.id()==ID_member
+                                  ? to_member_expr(lhs_sym_deref).compound()
+                                  : lhs_sym_deref;
+          auto rhs_sym_deref=symbolic_dereference(assign.rhs(), ns);
+
+          std::set<symbol_exprt> rhs_symbols;
+          find_symbols(rhs_sym_deref, rhs_symbols);
+
+          if(rhs_symbols.find(to_symbol_expr(lhs_symbol))!=rhs_symbols.end())
+          {
+            symbolt tmp_symbol;
+            tmp_symbol.type=assign.lhs().type();
+            tmp_symbol.name="$symderef_tmp"+i2string(counter++);
+            tmp_symbol.base_name=tmp_symbol.name;
+            tmp_symbol.pretty_name=tmp_symbol.name;
+
+            goto_model.symbol_table.add(tmp_symbol);
+
+            auto new_assign=f_it->second.body.insert_after(i_it);
+            new_assign->make_assignment();
+            new_assign->code=code_assignt(
+              assign.lhs(), tmp_symbol.symbol_expr());
+
+            assign.lhs()=tmp_symbol.symbol_expr();
+          }
+        }
+      }
+    }
+  }
+}
