@@ -130,6 +130,36 @@ void heap_domaint::add_template_row(
 
 /*******************************************************************\
 
+Function: heap_domaint::add_template_row_pair
+
+  Inputs: var_spec Variable specification
+
+ Outputs:
+
+ Purpose: Add a template row with a pair of variables as expression.
+
+\*******************************************************************/
+
+void heap_domaint::add_template_row_pair(
+  const domaint::var_spect &var_spec1,
+  const domaint::var_spect &var_spec2,
+  const typet &pointed_type)
+{
+  const exprt var_pair=and_exprt(var_spec1.var, var_spec2.var);
+
+  templ.push_back(template_rowt());
+  template_rowt &templ_row=templ.back();
+  templ_row.expr=var_pair;
+  templ_row.pre_guard=var_spec1.pre_guard;
+  templ_row.post_guard=var_spec1.post_guard;
+  templ_row.aux_expr=var_spec1.aux_expr;
+  templ_row.kind=var_spec1.kind;
+
+  templ_row.mem_kind=STACK;
+}
+
+/*******************************************************************\
+
 Function: heap_domaint::to_pre_constraints
 
   Inputs:
@@ -460,8 +490,17 @@ void heap_domaint::project_on_vars(
   {
     const template_rowt &templ_row=templ[row];
 
-    if(!vars.empty() && vars.find(templ_row.expr)==vars.end())
-      continue;
+    if(!vars.empty())
+    {
+      if(templ_row.expr.id()==ID_and)
+      {
+        if(vars.find(templ_row.expr.op0())==vars.end() &&
+           vars.find(templ_row.expr.op1())==vars.end())
+          continue;
+      }
+      else if(vars.find(templ_row.expr)==vars.end())
+        continue;
+    }
 
     const row_valuet &row_val=val[row];
     if(templ_row.kind==LOOP)
@@ -552,6 +591,36 @@ int heap_domaint::get_symbol_loc(const exprt &expr)
 
 /*******************************************************************\
 
+Function: ptr_equality
+
+  Inputs: Pointer expression (variable)
+          Value (object or address) of the pointer
+
+ Outputs: Equality between pointer and its value with correct types
+
+ Purpose:
+
+\*******************************************************************/
+
+const exprt ptr_equality(
+  const exprt &ptr_expr,
+  const exprt &ptr_value,
+  const namespacet &ns)
+{
+  exprt value;
+  if(ptr_expr.type()==ptr_value.type())
+    value=ptr_value;
+  else if(ns.follow(ptr_expr.type().subtype())==ns.follow(ptr_value.type()))
+    value=address_of_exprt(ptr_value);
+  else
+    value=typecast_exprt(
+      address_of_exprt(ptr_value),
+      ns.follow(ptr_expr.type()));
+  return equal_exprt(ptr_expr, value);
+}
+
+/*******************************************************************\
+
 Function: heap_domaint::stack_row_valuet::get_row_expr
 
   Inputs: templ_expr Template expression
@@ -578,15 +647,15 @@ exprt heap_domaint::stack_row_valuet::get_row_expr(
     exprt::operandst result;
     for(const exprt &pt : points_to)
     {
-      exprt value;
-      if (templ_expr.type() == pt.type())
-        value = pt;
-      else if (ns.follow(templ_expr.type().subtype()) == ns.follow(pt.type()))
-        value = address_of_exprt(pt);
+      if(templ_expr.id()==ID_and)
+      {
+        result.push_back(
+          and_exprt(
+            ptr_equality(templ_expr.op0(), pt.op0(), ns),
+            ptr_equality(templ_expr.op1(), pt.op1(), ns)));
+      }
       else
-        value=typecast_exprt(address_of_exprt(pt),
-                             ns.follow(templ_expr.type()));
-      result.push_back(equal_exprt(templ_expr, value));
+        result.push_back(ptr_equality(templ_expr, pt, ns));
     }
     return disjunction(result);
   }

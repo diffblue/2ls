@@ -116,115 +116,101 @@ bool strategy_solver_heapt::iterate(invariantt &_inv)
 
         const heap_domaint::template_rowt &templ_row=heap_domain.templ[row];
 
-        int actual_loc=heap_domain.get_symbol_loc(templ_row.expr);
-
-        exprt pointer=strategy_value_exprs[row];
-        exprt value=solver.get(pointer);
-        // Value from the solver must be converted into an expression
-        exprt ptr_value=heap_domain.value_to_ptr_exprt(value);
-
         const exprt loop_guard=to_and_expr(
           heap_domain.templ[row].pre_guard).op1();
         find_symbolic_path(loop_guards, loop_guard);
 
-        if((ptr_value.id()==ID_constant &&
-            to_constant_expr(ptr_value).get_value()==ID_NULL) ||
-           ptr_value.id()==ID_symbol)
+        if(templ_row.expr.id()==ID_and)
         {
-          // Add equality p == NULL or p == symbol
-          if(heap_domain.add_points_to(row, inv, ptr_value))
+          // Handle template row with a pair of variables in the expression
+          exprt points_to1=get_points_to_dest(
+            strategy_value_exprs[row].op0(), templ_row.expr.op0());
+          exprt points_to2=get_points_to_dest(
+            strategy_value_exprs[row].op1(), templ_row.expr.op1());
+
+          if(points_to1.is_nil() || points_to2.is_nil())
           {
-            improved=true;
-            const std::string info=
-              templ_row.mem_kind==heap_domaint::STACK ? "points to "
-                                                      : "path to ";
-            debug() << "Add " << info << from_expr(ns, "", ptr_value) << eom;
-          }
-        }
-        else if(ptr_value.id()==ID_address_of)
-        {
-          // Template row pointer points to the heap (p = &obj)
-          debug() << from_expr(ns, "", ptr_value) << eom;
-          assert(ptr_value.id()==ID_address_of);
-          if(to_address_of_expr(ptr_value).object().id()!=ID_symbol)
-          {
-            // If solver did not return address of a symbol, it is considered
-            // as nondet value.
             if(heap_domain.set_nondet(row, inv))
             {
               improved=true;
               debug() << "Set nondet" << eom;
             }
-            continue;
           }
-
-          symbol_exprt obj=to_symbol_expr(
-            to_address_of_expr(ptr_value).object());
-
-          if(obj.type()!=templ_row.expr.type() &&
-             ns.follow(templ_row.expr.type().subtype())!=ns.follow(obj.type()))
+          else
           {
-            if(!is_cprover_symbol(templ_row.expr))
+            if(heap_domain.add_points_to(
+              row, inv, and_exprt(points_to1, points_to2)))
             {
-              // If types disagree, it's a nondet (solver assigned random value)
-              if(heap_domain.set_nondet(row, inv))
-              {
-                improved=true;
-                debug() << "Set nondet" << eom;
-              }
-              continue;
+              improved=true;
+              const std::string info=
+                templ_row.mem_kind==heap_domaint::STACK ? "points to "
+                                                        : "path to ";
+              debug() << "Add " << info
+                      << from_expr(ns, "", and_exprt(points_to1, points_to2))
+                      << eom;
             }
           }
-
-          // Add equality p == &obj
-          if(heap_domain.add_points_to(row, inv, obj))
-          {
-            improved=true;
-            const std::string info=
-              templ_row.mem_kind==heap_domaint::STACK ? "points to "
-                                                      : "path to ";
-            debug() << "Add " << info << from_expr(ns, "", obj) << eom;
-          }
-
-          // If the template row is of heap kind, we need to ensure the
-          // transitive closure over the set of all paths
-          if(templ_row.mem_kind==heap_domaint::HEAP &&
-             obj.type().get_bool("#dynamic") &&
-             id2string(obj.get_identifier()).find("$unknown")==
-             std::string::npos)
-          {
-            // Find row with corresponding member field of the pointed object
-            // (obj.member)
-            int member_val_index;
-            member_val_index=
-              find_member_row(
-                obj,
-                templ_row.member,
-                actual_loc,
-                templ_row.kind);
-            if(member_val_index>=0 && !inv[member_val_index].nondet)
-            {
-              // Add all paths from obj.next to p
-              if(heap_domain.add_transitivity(
-                row,
-                static_cast<unsigned>(member_val_index),
-                inv))
-              {
-                improved=true;
-                const std::string expr_str=
-                  from_expr(ns, "", heap_domain.templ[member_val_index].expr);
-                debug() << "Add all paths: " << expr_str
-                        << ", through: " << from_expr(ns, "", obj) << eom;
-              }
-            }
-          }
+          continue;
         }
-        else
+
+        int actual_loc=heap_domain.get_symbol_loc(templ_row.expr);
+
+        exprt points_to=get_points_to_dest(
+          strategy_value_exprs[row], templ_row.expr);
+
+        if(points_to.is_nil())
         {
           if(heap_domain.set_nondet(row, inv))
           {
             improved=true;
             debug() << "Set nondet" << eom;
+          }
+          continue;
+        }
+        else
+        {
+          if(heap_domain.add_points_to(row, inv, points_to))
+          {
+            improved=true;
+            const std::string info=
+              templ_row.mem_kind==heap_domaint::STACK ? "points to "
+                                                      : "path to ";
+            debug() << "Add " << info << from_expr(ns, "", points_to) << eom;
+          }
+        }
+
+        // If the template row is of heap kind, we need to ensure the
+        // transitive closure over the set of all paths
+        if(templ_row.mem_kind==heap_domaint::HEAP &&
+           points_to.type().get_bool("#dynamic") &&
+           points_to.id()==ID_symbol &&
+           id2string(to_symbol_expr(points_to).get_identifier()).find(
+             "$unknown")==
+           std::string::npos)
+        {
+          // Find row with corresponding member field of the pointed object
+          // (obj.member)
+          int member_val_index;
+          member_val_index=
+            find_member_row(
+              points_to,
+              templ_row.member,
+              actual_loc,
+              templ_row.kind);
+          if(member_val_index>=0 && !inv[member_val_index].nondet)
+          {
+            // Add all paths from obj.next to p
+            if(heap_domain.add_transitivity(
+              row,
+              static_cast<unsigned>(member_val_index),
+              inv))
+            {
+              improved=true;
+              const std::string expr_str=
+                from_expr(ns, "", heap_domain.templ[member_val_index].expr);
+              debug() << "Add all paths: " << expr_str
+                      << ", through: " << from_expr(ns, "", points_to) << eom;
+            }
           }
         }
 
@@ -313,7 +299,8 @@ int strategy_solver_heapt::find_member_row(
        templ_row.mem_kind==heap_domaint::HEAP)
     {
       std::string id=id2string(to_symbol_expr(templ_row.expr).get_identifier());
-      if(id.find(obj_id)!=std::string::npos)
+      if(id.find(obj_id)!=std::string::npos &&
+         id.find_first_of(".")==obj_id.length())
       {
         int loc=heap_domain.get_symbol_loc(templ_row.expr);
         if(loc>max_loc &&
@@ -423,6 +410,18 @@ void strategy_solver_heapt::initialize(
   }
 }
 
+/*******************************************************************\
+
+Function: strategy_solver_heapt::clear_pointing_rows
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
 void strategy_solver_heapt::clear_pointing_rows(
   const heap_domaint::rowt &row,
   heap_domaint::heap_valuet &value)
@@ -444,8 +443,81 @@ void strategy_solver_heapt::clear_pointing_rows(
     row_value.pointed_by.erase(r);
 }
 
+/*******************************************************************\
+
+Function: strategy_solver_heapt::is_cprover_symbol
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
 bool strategy_solver_heapt::is_cprover_symbol(const exprt &expr)
 {
   return expr.id()==ID_symbol &&
          id2string(to_symbol_expr(expr).get_identifier()).find("__CPROVER_")==0;
+}
+
+/*******************************************************************\
+
+Function: strategy_solver_heapt::get_points_to_dest
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Get an address where the given pointer points to in the current
+          solver iteration. Returns nil_exprt if the value of the pointer
+          is nondet.
+
+\*******************************************************************/
+
+const exprt strategy_solver_heapt::get_points_to_dest(
+  const exprt &pointer,
+  const exprt &templ_row_expr)
+{
+  exprt value=solver.get(pointer);
+  // Value from the solver must be converted into an expression
+  exprt ptr_value=heap_domain.value_to_ptr_exprt(value);
+
+  if((ptr_value.id()==ID_constant &&
+      to_constant_expr(ptr_value).get_value()==ID_NULL) ||
+     ptr_value.id()==ID_symbol)
+  {
+    // Add equality p == NULL or p == symbol
+    return ptr_value;
+  }
+  else if(ptr_value.id()==ID_address_of)
+  {
+    // Template row pointer points to the heap (p = &obj)
+    debug() << from_expr(ns, "", ptr_value) << eom;
+    assert(ptr_value.id()==ID_address_of);
+    if(to_address_of_expr(ptr_value).object().id()!=ID_symbol)
+    {
+      // If solver did not return address of a symbol, it is considered
+      // as nondet value.
+      return nil_exprt();
+    }
+
+    symbol_exprt obj=to_symbol_expr(
+      to_address_of_expr(ptr_value).object());
+
+    if(obj.type()!=templ_row_expr.type() &&
+       ns.follow(templ_row_expr.type().subtype())!=ns.follow(obj.type()))
+    {
+      if(!is_cprover_symbol(templ_row_expr))
+      {
+        // If types disagree, it's a nondet (solver assigned random value)
+        return nil_exprt();
+      }
+    }
+
+    // Add equality p == &obj
+    return obj;
+  }
+  else
+    return nil_exprt();
 }

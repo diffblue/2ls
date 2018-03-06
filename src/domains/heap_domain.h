@@ -307,6 +307,10 @@ protected:
   void make_template(const var_specst &var_specs, const namespacet &ns);
 
   void add_template_row(const var_spect &var_spec, const typet &pointed_type);
+  void add_template_row_pair(
+    const var_spect &var_spec1,
+    const var_spect &var_spec2,
+    const typet &pointed_type);
 
   // Initializing functions
   void bind_iterators(

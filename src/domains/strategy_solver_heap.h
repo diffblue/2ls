@@ -43,6 +43,10 @@ protected:
   std::set<symbol_exprt> loop_guards;
   std::set<unsigned> updated_rows;
 
+  const exprt get_points_to_dest(
+    const exprt &pointer,
+    const exprt &templ_row_expr);
+
   int find_member_row(
     const exprt &obj,
     const irep_idt &member,
