@@ -715,10 +715,36 @@ void local_SSAt::build_assertions(locationt loc)
 {
   if(loc->is_assert())
   {
-    const exprt deref_rhs=dereference(loc->guard, loc);
+    exprt assert=loc->guard;
+    if(assert.id()==ID_not && assert.op0().id()==ID_equal &&
+       assert.op0().op1().id()==ID_pointer_object &&
+       assert.op0().op1().op0().id()==ID_symbol)
+    {
+      std::string id=id2string(
+        to_symbol_expr(assert.op0().op1().op0()).get_identifier());
+      if(id.find("__CPROVER_deallocated")!=std::string::npos)
+      {
+        const exprt &dealloc_symbol=assert.op0().op1().op0();
+        exprt::operandst d;
+        for(auto &global : assignments.ssa_objects.globals)
+        {
+          if(global.get_expr().get_bool("#concrete"))
+          {
+            d.push_back(
+              equal_exprt(
+                dealloc_symbol, typecast_exprt(
+                  address_of_exprt(global.symbol_expr()),
+                  dealloc_symbol.type())));
+          }
+        }
+        assert=implies_exprt(disjunction(d), assert);
+      }
+    }
+
+    const exprt deref_rhs=dereference(assert, loc);
     collect_iterators_rhs(deref_rhs, loc);
 
-    const exprt rhs=concretise_symbolic_deref_rhs(loc->guard, ns, loc);
+    const exprt rhs=concretise_symbolic_deref_rhs(assert, ns, loc);
     exprt c=read_rhs(rhs, loc);
     exprt g=guard_symbol(loc);
     (--nodes.end())->assertions.push_back(implies_exprt(g, c));
