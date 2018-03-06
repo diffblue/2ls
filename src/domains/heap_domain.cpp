@@ -76,6 +76,25 @@ void heap_domaint::make_template(
     {
       const typet &pointed_type=ns.follow(var.type().subtype());
       add_template_row(v, pointed_type);
+
+      if(var.id()==ID_symbol &&
+         id2string(to_symbol_expr(var).get_identifier()).find(
+           "__CPROVER_deallocated")!=std::string::npos)
+      {
+        for(const var_spect &v_other : var_specs)
+        {
+          if(!(v_other.var.type().id()==ID_pointer && v_other.kind==LOOP &&
+               v_other.pre_guard==v.pre_guard))
+            continue;
+
+          if(v_other.var.id()==ID_symbol &&
+             id2string(to_symbol_expr(v_other.var).get_identifier()).find(
+               "__CPROVER_")!=std::string::npos)
+            continue;
+
+          add_template_row_pair(v, v_other, pointed_type);
+        }
+      }
     }
   }
 }
