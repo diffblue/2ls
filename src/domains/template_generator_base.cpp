@@ -189,6 +189,9 @@ void template_generator_baset::collect_variables_loop(
           {
             obj_post_guard=and_exprt(SSA.guard_symbol(obj_def->second.def.loc),
                                      post_guard);
+            auto alloc_guard=SSA.allocation_guards.find(obj_id);
+            if(alloc_guard!=SSA.allocation_guards.end())
+              obj_post_guard=and_exprt(obj_post_guard, alloc_guard->second);
           }
         }
 

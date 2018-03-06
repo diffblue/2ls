@@ -460,6 +460,9 @@ void local_SSAt::build_transfer(locationt loc)
        id2string(code_assign.rhs().get(ID_identifier)).
        find(TEMPLATE_PREFIX)!=std::string::npos) return;
 
+    // build allocation guards map
+    collect_allocation_guards(code_assign, loc);
+
     exprt deref_lhs=dereference(code_assign.lhs(), loc);
     exprt deref_rhs=dereference(code_assign.rhs(), loc);
 
@@ -2087,4 +2090,48 @@ exprt local_SSAt::concretise_symbolic_deref_rhs(
   return
     all_symbolic_deref_defined(symbolic_deref_rhs, ns, loc)?
       symbolic_deref_rhs:deref_rhs;
+}
+
+/********************************************************************\
+
+Function: local_SSAt::collect_allocation_guards
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Collect allocation guards for the given location
+
+\*******************************************************************/
+
+void local_SSAt::collect_allocation_guards(
+  const code_assignt &assign,
+  locationt loc)
+{
+  if(!assign.rhs().get_bool("#malloc_result"))
+    return;
+
+  exprt rhs=assign.rhs();
+  if(rhs.id()==ID_typecast)
+    rhs=to_typecast_expr(rhs).op();
+  if(rhs.id()==ID_if)
+  {
+    const if_exprt &malloc_res=to_if_expr(rhs);
+    assert(malloc_res.true_case().id()==ID_address_of);
+    assert(malloc_res.false_case().id()==ID_address_of);
+
+    const exprt &object=to_address_of_expr(malloc_res.false_case()).object();
+    const exprt &co_object=to_address_of_expr(malloc_res.true_case()).object();
+    assert(object.id()==ID_symbol && co_object.id()==ID_symbol);
+
+    std::string co_object_id=id2string(
+      to_symbol_expr(co_object).get_identifier());
+    std::string object_id=id2string(to_symbol_expr(object).get_identifier());
+    allocation_guards.emplace(
+      to_symbol_expr(co_object).get_identifier(),
+      read_rhs(malloc_res.cond(), loc));
+    allocation_guards.emplace(
+      to_symbol_expr(object).get_identifier(),
+      read_rhs(not_exprt(malloc_res.cond()), loc));
+  }
 }

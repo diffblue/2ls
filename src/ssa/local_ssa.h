@@ -154,6 +154,9 @@ public:
   typedef std::list<dyn_obj_assignt> dyn_obj_assignst;
   std::map<exprt, dyn_obj_assignst> dyn_obj_assigns;
 
+  // Map dynamic object names to guards of their allocation
+  std::map<irep_idt, exprt> allocation_guards;
+
   bool has_function_calls() const;
 
   const namespacet &ns;
@@ -277,6 +280,8 @@ protected:
   void build_function_call(locationt loc);
   void build_assertions(locationt loc);
   void build_unknown_objs(locationt loc);
+
+  void collect_allocation_guards(const code_assignt &assign, locationt loc);
 
   // custom templates
   void collect_custom_templates();
