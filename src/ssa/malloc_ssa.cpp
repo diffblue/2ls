@@ -398,6 +398,23 @@ bool replace_malloc(
   return result;
 }
 
+/*******************************************************************\
+
+Function: set_var_always_to_true
+
+  Inputs: goto_model
+          name_cond Function returning true for names of variables
+                    to be set.
+
+ Outputs:
+
+ Purpose: Set undefined boolean variable to true.
+          Finds declaration of a variable whose name matches the given
+          condition and adds an instruction var = TRUE after
+          the declaration.
+
+\*******************************************************************/
+
 void set_var_always_to_true(goto_modelt &goto_model,
                             bool (*name_cond)(std::string &))
 {
@@ -427,6 +444,18 @@ void set_var_always_to_true(goto_modelt &goto_model,
   }
 }
 
+/*******************************************************************\
+
+Function: allow_record_malloc
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
 void allow_record_malloc(goto_modelt &goto_model)
 {
   set_var_always_to_true(
@@ -437,6 +466,18 @@ void allow_record_malloc(goto_modelt &goto_model)
     });
 }
 
+/*******************************************************************\
+
+Function: allow_record_memleak
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
 void allow_record_memleak(goto_modelt &goto_model)
 {
   set_var_always_to_true(
@@ -444,5 +485,27 @@ void allow_record_memleak(goto_modelt &goto_model)
     {
       return name.find("malloc::")!=std::string::npos &&
              name.find("::record_may_leak")!=std::string::npos;
+    });
+}
+
+/*******************************************************************\
+
+Function: allow_record_free
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void allow_record_free(goto_modelt &goto_model)
+{
+  set_var_always_to_true(
+    goto_model, [](std::string &name)
+    {
+      return name.find("free::")!=std::string::npos &&
+             name.find("::record")!=std::string::npos;
     });
 }

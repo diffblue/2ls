@@ -1232,12 +1232,16 @@ bool twols_parse_optionst::process_goto_program(
     goto_model.goto_functions.compute_loop_numbers();
 
     // Replace malloc
-    dynamic_memory_detected=replace_malloc(goto_model, "");
+    dynamic_memory_detected=replace_malloc(
+      goto_model, "", options.get_bool_option("pointer-check"));
 
     // Allow recording of mallocs and memory leaks
-    if (options.get_bool_option("pointer-check"))
+    if(options.get_bool_option("pointer-check"))
+    {
       allow_record_malloc(goto_model);
-    if (options.get_bool_option("memory-leak-check"))
+      allow_record_free(goto_model);
+    }
+    if(options.get_bool_option("memory-leak-check"))
       allow_record_memleak(goto_model);
 
     // remove loop heads from function entries

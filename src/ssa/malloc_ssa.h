@@ -25,5 +25,6 @@ bool replace_malloc(
 
 void allow_record_malloc(goto_modelt &goto_model);
 void allow_record_memleak(goto_modelt &goto_model);
+void allow_record_free(goto_modelt &goto_model);
 
 #endif
