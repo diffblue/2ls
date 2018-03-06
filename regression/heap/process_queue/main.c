@@ -24,15 +24,14 @@ struct process_node *choose_next(struct process_node **q) {
     struct process_node *prev = NULL;
     struct process_node *result = NULL;
     while (node != NULL) {
-        int node_time = node->time_to_wait;
-        if (node_time == 1) {
+        if (node->time_to_wait == 1) {
             result = node;
             if (prev == NULL)
                 *q = node->next;
             else
                 prev->next = node->next;
         } else {
-            node->time_to_wait = node_time - 1;
+            node->time_to_wait--;
         }
         prev = node;
         node = node->next;
