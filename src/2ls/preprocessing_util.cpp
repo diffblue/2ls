@@ -656,15 +656,15 @@ void twols_parse_optionst::split_same_symbolic_object_assignments(
         if((lhs_sym_deref.id()==ID_symbol || lhs_sym_deref.id()==ID_member)
            && has_symbolic_deref(lhs_sym_deref))
         {
-          const exprt &lhs_symbol=lhs_sym_deref.id()==ID_member
-                                  ? to_member_expr(lhs_sym_deref).compound()
-                                  : lhs_sym_deref;
+          while(lhs_sym_deref.id()==ID_member)
+            lhs_sym_deref=to_member_expr(lhs_sym_deref).compound();
+
           auto rhs_sym_deref=symbolic_dereference(assign.rhs(), ns);
 
           std::set<symbol_exprt> rhs_symbols;
           find_symbols(rhs_sym_deref, rhs_symbols);
 
-          if(rhs_symbols.find(to_symbol_expr(lhs_symbol))!=rhs_symbols.end())
+          if(rhs_symbols.find(to_symbol_expr(lhs_sym_deref))!=rhs_symbols.end())
           {
             symbolt tmp_symbol;
             tmp_symbol.type=assign.lhs().type();
