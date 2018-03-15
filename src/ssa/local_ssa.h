@@ -244,7 +244,7 @@ public:
 
   // Collect all loop_guards that will represent symbolic paths used in heap
   // domain
-  var_sett loop_guards;
+  std::set<std::pair<symbol_exprt, symbol_exprt>> loop_guards;
 
   void get_globals(
     locationt loc,

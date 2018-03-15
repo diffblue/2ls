@@ -29,7 +29,7 @@ public:
   {
     exprt::operandst false_loop_guards;
     for(auto &g : SSA.loop_guards)
-      false_loop_guards.push_back(not_exprt(g));
+      false_loop_guards.push_back(not_exprt(g.first));
     no_loops_path=conjunction(false_loop_guards);
   }
 

@@ -40,7 +40,7 @@ public:
 
 protected:
   heap_domaint &heap_domain;
-  std::set<symbol_exprt> loop_guards;
+  std::set<std::pair<symbol_exprt, symbol_exprt>> loop_guards;
   std::set<unsigned> updated_rows;
 
   const exprt get_points_to_dest(
