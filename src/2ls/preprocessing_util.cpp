@@ -686,3 +686,18 @@ void twols_parse_optionst::split_same_symbolic_object_assignments(
     }
   }
 }
+
+void twols_parse_optionst::remove_dead_goto(goto_modelt &goto_model)
+{
+  Forall_goto_functions(f_it, goto_model.goto_functions)
+  {
+    Forall_goto_program_instructions(i_it, f_it->second.body)
+    {
+      if (i_it->is_goto())
+      {
+        if (i_it->guard.is_false())
+          i_it->make_skip();
+      }
+    }
+  }
+}

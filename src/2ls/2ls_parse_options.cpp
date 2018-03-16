@@ -1264,13 +1264,13 @@ bool twols_parse_optionst::process_goto_program(
     filter_assertions(goto_model);
 #endif
 
-    if(options.get_bool_option("constant-propagation") &&
-       !(options.get_bool_option("competition-mode") &&
-         dynamic_memory_detected))
+    if(options.get_bool_option("constant-propagation"))
     {
       status() << "Constant Propagation" << eom;
       propagate_constants(goto_model);
     }
+
+    remove_dead_goto(goto_model);
 
     // if we aim to cover, replace
     // all assertions by false to prevent simplification

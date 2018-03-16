@@ -184,6 +184,7 @@ protected:
     const ssa_heap_analysist &heap_analysis,
     goto_modelt &goto_model);
   void split_same_symbolic_object_assignments(goto_modelt &goto_model);
+  void remove_dead_goto(goto_modelt &goto_model);
 };
 
 #endif
