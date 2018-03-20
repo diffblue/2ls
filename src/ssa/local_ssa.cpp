@@ -58,6 +58,7 @@ void local_SSAt::build_SSA()
     build_assertions(i_it);
     build_function_call(i_it);
     build_unknown_objs(i_it);
+    collect_record_frees(i_it);
   }
 
   // collect custom templates in loop heads
@@ -2162,5 +2163,22 @@ void local_SSAt::collect_allocation_guards(
     allocation_guards.emplace(
       to_symbol_expr(object).get_identifier(),
       read_rhs(not_exprt(malloc_res.cond()), loc));
+  }
+}
+
+void local_SSAt::collect_record_frees(local_SSAt::locationt loc)
+{
+  if (loc->is_decl())
+  {
+    const exprt &symbol = to_code_decl(loc->code).symbol();
+    if (symbol.id() != ID_symbol)
+      return;
+
+    std::string id = id2string(to_symbol_expr(symbol).get_identifier());
+    if(id.find("free::")!=std::string::npos &&
+       id.find("::record")!=std::string::npos)
+    {
+      (--nodes.end())->record_free = symbol;
+    }
   }
 }

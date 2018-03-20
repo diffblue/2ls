@@ -195,6 +195,16 @@ void template_generator_baset::collect_variables_loop(
           }
         }
 
+        if (id.find("__CPROVER_deallocated") != std::string::npos)
+        {
+          auto record_frees = collect_record_frees(SSA, n_it->loophead, n_it);
+          exprt::operandst d;
+          for (auto &r : record_frees)
+            d.push_back(equal_exprt(r, true_exprt()));
+          if (!d.empty())
+            obj_post_guard = and_exprt(obj_post_guard, disjunction(d));
+        }
+
         symbol_exprt pre_var;
         get_pre_var(SSA, o_it, n_it, pre_var);
         exprt init_expr;
@@ -831,4 +841,22 @@ void template_generator_baset::filter_heap_interval_domain()
       }
     }
   }
+}
+
+std::vector<exprt> template_generator_baset::collect_record_frees(
+  const local_SSAt &SSA,
+  local_SSAt::nodest::const_iterator loop_begin,
+  local_SSAt::nodest::const_iterator loop_end)
+{
+  std::vector<exprt> result;
+  for (auto &node : SSA.nodes)
+  {
+    if(node.location->location_number>loop_begin->location->location_number &&
+       node.location->location_number<loop_end->location->location_number &&
+       node.record_free.is_not_nil())
+    {
+      result.push_back(SSA.read_lhs(node.record_free, node.location));
+    }
+  }
+  return result;
 }

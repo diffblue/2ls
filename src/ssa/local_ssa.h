@@ -96,6 +96,8 @@ public:
     std::list<nodet>::iterator loophead; // link to loop head node
        // otherwise points to nodes.end()
 
+    exprt record_free = nil_exprt();
+
     void output(std::ostream &, const namespacet &) const;
 
     inline bool empty() const
@@ -282,6 +284,7 @@ protected:
   void build_unknown_objs(locationt loc);
 
   void collect_allocation_guards(const code_assignt &assign, locationt loc);
+  void collect_record_frees(locationt loc);
 
   // custom templates
   void collect_custom_templates();

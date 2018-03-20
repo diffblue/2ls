@@ -1239,7 +1239,7 @@ bool twols_parse_optionst::process_goto_program(
     if(options.get_bool_option("pointer-check"))
     {
       allow_record_malloc(goto_model);
-      allow_record_free(goto_model);
+//      allow_record_free(goto_model);
     }
     if(options.get_bool_option("memory-leak-check"))
       allow_record_memleak(goto_model);
