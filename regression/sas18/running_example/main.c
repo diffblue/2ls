@@ -1,4 +1,5 @@
 extern int __VERIFIER_nondet_int();
+extern void __VERIFIER_error() __attribute__ ((__noreturn__));
 
 #include <stdlib.h>
 
@@ -23,7 +24,8 @@ int main() {
 
     while (1) {
         for (p = list; p!= NULL; p = p->next) {
-            assert(p->val <= 20 && p->val >= 10);
+            if (!(p->val <= 20 && p->val >= 10))
+                __VERIFIER_error();
             if (p->val < 20) p->val++;
             else p->val /= 2;
         }

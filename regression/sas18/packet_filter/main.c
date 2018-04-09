@@ -1,9 +1,9 @@
 extern unsigned __VERIFIER_nondet_uint();
 extern int __VERIFIER_nondet_int();
 extern char *__VERIFIER_nondet_charp();
+extern void __VERIFIER_error() __attribute__ ((__noreturn__));
 
 #include <stdlib.h>
-#include <assert.h>
 
 #define LOW 0
 #define HIGH 1
@@ -43,14 +43,16 @@ void append_to_queue(Packet p, Node *q) {
 
 void process_prio_queue(Node q) {
     for (Node node = q; node != NULL; node = node->next) {
-        assert(node->packet.prio == HIGH || node->packet.size < 500);
+        if (!(node->packet.prio == HIGH || node->packet.size < 500))
+            __VERIFIER_error();
         send(node->packet);
     }
 }
 
 void process_normal_queue(Node q) {
     for (Node node = q; node != NULL; node = node->next) {
-        assert(node->packet.prio == LOW && node->packet.size >= 500);
+        if (!(node->packet.prio == LOW && node->packet.size >= 500))
+            __VERIFIER_error();
         send(node->packet);
     }
 }

@@ -1,7 +1,6 @@
 extern int __VERIFIER_nondet_int();
 
 #include <stdlib.h>
-#include <assert.h>
 
 struct mem {
     int val;
@@ -41,5 +40,6 @@ int main() {
             list->mem->val += list->x;
         list = list->next;
     }
-    assert(m->val == 100);
+    if (!m->val == 100)
+        __VERIFIER_nondet_int();
 }

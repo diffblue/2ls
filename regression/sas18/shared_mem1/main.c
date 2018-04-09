@@ -1,7 +1,7 @@
 extern int __VERIFIER_nondet_int();
+extern void __VERIFIER_error() __attribute__ ((__noreturn__));
 
 #include <stdlib.h>
-#include <assert.h>
 
 struct mem {
     int val;
@@ -43,6 +43,7 @@ int main() {
             list->mem->val -= list->x;
         list = list->next;
 
-        assert(m->val > 90 && m->val < 110);
+        if (!(m->val > 90 && m->val < 110))
+            __VERIFIER_error();
     }
 }

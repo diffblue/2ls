@@ -1,7 +1,7 @@
 extern int __VERIFIER_nondet_int();
+extern void __VERIFIER_error() __attribute__ ((__noreturn__));
 
 #include <stdlib.h>
-#include <assert.h>
 
 #define LOW -1
 #define HIGH 1
@@ -50,11 +50,13 @@ int main() {
 
     // Check that low and high contain expected elements
     while (low) {
-        assert(low->expected_list == LOW);
+        if (!low->expected_list == LOW)
+            __VERIFIER_error();
         low = low->next;
     }
     while (high) {
-        assert(high->expected_list == HIGH);
+        if (!high->expected_list == HIGH)
+            __VERIFIER_error();
         high = high->next;
     }
 }

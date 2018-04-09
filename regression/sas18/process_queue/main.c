@@ -1,7 +1,7 @@
 extern int __VERIFIER_nondet_int();
+extern void __VERIFIER_error() __attribute__ ((__noreturn__));
 
 #include <stdlib.h>
-#include <assert.h>
 
 #define MAX_PROC 1000
 
@@ -41,7 +41,8 @@ struct process_node *choose_next(struct process_node **q) {
 
 void check_queue(struct process_node *q) {
     for (struct process_node *n = q; n != NULL; n = n->next)
-        assert(n->time_to_wait >= 1);
+        if (!n->time_to_wait >= 1)
+            __VERIFIER_error();
 }
 
 
