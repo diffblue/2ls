@@ -34,7 +34,7 @@ public:
       precondition,
       message_handler,
       template_generator),
-    interval_solver(heap_interval_domain.interval_domain, _solver, SSA.ns)
+    interval_solver(heap_interval_domain.polyhedra_domain, _solver, SSA.ns)
   {
   }
 

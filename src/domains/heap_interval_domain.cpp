@@ -25,7 +25,7 @@ void heap_interval_domaint::initialize(domaint::valuet &value)
   heap_interval_valuet &v=static_cast<heap_interval_valuet &>(value);
 
   heap_domain.initialize(v.heap_value);
-  interval_domain.initialize(v.interval_value);
+  polyhedra_domain.initialize(v.interval_value);
 }
 
 /*******************************************************************\
@@ -49,7 +49,7 @@ void heap_interval_domaint::output_value(
     static_cast<const heap_interval_valuet &>(value);
 
   heap_domain.output_value(out, v.heap_value, ns);
-  interval_domain.output_value(out, v.interval_value, ns);
+  polyhedra_domain.output_value(out, v.interval_value, ns);
 }
 
 /*******************************************************************\
@@ -69,7 +69,7 @@ void heap_interval_domaint::output_domain(
   const namespacet &ns) const
 {
   heap_domain.output_domain(out, ns);
-  interval_domain.output_domain(out, ns);
+  polyhedra_domain.output_domain(out, ns);
 }
 
 /*******************************************************************\
@@ -94,7 +94,7 @@ void heap_interval_domaint::project_on_vars(
   exprt heap_result;
   heap_domain.project_on_vars(v.heap_value, vars, heap_result);
   exprt interval_result;
-  interval_domain.project_on_vars(v.interval_value, vars, interval_result);
+  polyhedra_domain.project_on_vars(v.interval_value, vars, interval_result);
 
   result=heap_result;
   if(interval_result!=true_exprt())
@@ -116,7 +116,7 @@ void heap_interval_domaint::restrict_to_sympath(
   const symbolic_patht &sympath)
 {
   heap_domain.restrict_to_sympath(sympath);
-  interval_domain.restrict_to_sympath(sympath);
+  polyhedra_domain.restrict_to_sympath(sympath);
 }
 
 /*******************************************************************\
@@ -133,7 +133,7 @@ Function: heap_interval_domaint::clear_aux_symbols
 void heap_interval_domaint::clear_aux_symbols()
 {
   heap_domain.clear_aux_symbols();
-  interval_domain.clear_aux_symbols();
+  polyhedra_domain.clear_aux_symbols();
 }
 
 /*******************************************************************\
@@ -151,7 +151,7 @@ void heap_interval_domaint::eliminate_sympaths(
   const std::vector<symbolic_patht> &sympaths)
 {
   heap_domain.eliminate_sympaths(sympaths);
-  interval_domain.eliminate_sympaths(sympaths);
+  polyhedra_domain.eliminate_sympaths(sympaths);
 }
 
 /*******************************************************************\
@@ -168,5 +168,5 @@ Function: heap_interval_domaint::undo_restriction
 void heap_interval_domaint::undo_restriction()
 {
   heap_domain.undo_restriction();
-  interval_domain.undo_restriction();
+  polyhedra_domain.undo_restriction();
 }

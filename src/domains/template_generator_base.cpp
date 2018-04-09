@@ -795,15 +795,19 @@ void template_generator_baset::instantiate_standard_domains(
     static_cast<tpolyhedra_domaint *>(domain_ptr)
       ->add_quadratic_template(var_specs, SSA.ns);
   }
-  else if(options.get_bool_option("heap-interval"))
+  else if(options.get_bool_option("heap-interval") ||
+          options.get_bool_option("heap-zones"))
   {
     filter_heap_interval_domain();
+    auto polyhedra_kind=options.get_bool_option("heap-interval")
+                        ? heap_interval_domaint::INTERVAL
+                        : heap_interval_domaint::ZONES;
     if(options.get_bool_option("sympath"))
       domain_ptr=new heap_interval_sympath_domaint(
-        domain_number, renaming_map, var_specs, SSA);
+        domain_number, renaming_map, var_specs, SSA, polyhedra_kind);
     else
       domain_ptr=new heap_interval_domaint(
-        domain_number, renaming_map, var_specs, SSA.ns);
+        domain_number, renaming_map, var_specs, SSA.ns, polyhedra_kind);
   }
 }
 

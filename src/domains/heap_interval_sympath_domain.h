@@ -23,9 +23,11 @@ public:
     unsigned int _domain_number,
     replace_mapt &_renaming_map,
     const var_specst &var_specs,
-    const local_SSAt &SSA):
+    const local_SSAt &SSA,
+    const heap_interval_domaint::polyhedra_kindt polyhedra_kind):
     domaint(_domain_number, _renaming_map, SSA.ns),
-    heap_interval_domain(_domain_number, _renaming_map, var_specs, SSA.ns)
+    heap_interval_domain(
+      _domain_number, _renaming_map, var_specs, SSA.ns, polyhedra_kind)
   {
     exprt::operandst false_loop_guards;
     for(auto &g : SSA.loop_guards)

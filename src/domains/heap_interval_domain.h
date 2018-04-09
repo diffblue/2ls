@@ -16,19 +16,29 @@ Author: Viktor Malik
 class heap_interval_domaint:public domaint
 {
 public:
+  enum polyhedra_kindt {
+    INTERVAL, ZONES, OCTAGONS
+  };
+
   heap_domaint heap_domain;
-  tpolyhedra_domaint interval_domain;
+  tpolyhedra_domaint polyhedra_domain;
 
   heap_interval_domaint(
     unsigned int _domain_number,
     replace_mapt &_renaming_map,
     const var_specst &var_specs,
-    const namespacet &ns):
+    const namespacet &ns,
+    const polyhedra_kindt polyhedra_kind):
     domaint(_domain_number, _renaming_map, ns),
     heap_domain(_domain_number, _renaming_map, var_specs, ns),
-    interval_domain(_domain_number, _renaming_map, ns)
+    polyhedra_domain(_domain_number, _renaming_map, ns)
   {
-    interval_domain.add_interval_template(var_specs, ns);
+    if (polyhedra_kind == INTERVAL)
+      polyhedra_domain.add_interval_template(var_specs, ns);
+    else if (polyhedra_kind == ZONES) {
+      polyhedra_domain.add_difference_template(var_specs, ns);
+      polyhedra_domain.add_interval_template(var_specs, ns);
+    }
   }
 
   class heap_interval_valuet:public valuet

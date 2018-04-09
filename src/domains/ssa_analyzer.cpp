@@ -120,7 +120,8 @@ void ssa_analyzert::operator()(
       template_generator);
     result=new heap_domaint::heap_valuet();
   }
-  else if(template_generator.options.get_bool_option("heap-interval"))
+  else if(template_generator.options.get_bool_option("heap-interval")
+          || template_generator.options.get_bool_option("heap-zones"))
   {
     if(template_generator.options.get_bool_option("sympath"))
     {

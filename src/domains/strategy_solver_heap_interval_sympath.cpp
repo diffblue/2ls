@@ -6,7 +6,7 @@ Author: Viktor Malik
 
 \*******************************************************************/
 
-// #define DEBUG
+ #define DEBUG
 
 #include "strategy_solver_heap_interval_sympath.h"
 
@@ -53,7 +53,7 @@ bool strategy_solver_heap_interval_sympatht::iterate(
 #ifdef DEBUG
     std::cerr << "------------------------------------------\n";
     std::cerr << "Same path\n";
-    std::cerr << from_expr(ns, "", sympath) << "\n";
+    std::cerr << from_expr(ns, "", symbolic_path.get_expr()) << "\n";
 #endif
 
     const exprt sympath=symbolic_path.get_expr();
@@ -84,15 +84,14 @@ bool strategy_solver_heap_interval_sympatht::iterate(
     {
       // The path has been altered during computation (solver has found another
       // loop-select guard that can be true
-
-#ifdef DEBUG
-      std::cerr << "Path altered\n";
-#endif
-
       auto new_sympath=heap_interval_solver.symbolic_path.get_expr();
       inv.emplace(new_sympath, std::move(inv.at(sympath)));
       inv.erase(sympath);
       symbolic_path=heap_interval_solver.symbolic_path;
+#ifdef DEBUG
+      std::cerr << "Path altered\n";
+      std::cerr << from_expr(ns, "", symbolic_path.get_expr()) << "\n";
+#endif
     }
     domain.heap_interval_domain.undo_restriction();
   }
@@ -105,11 +104,11 @@ bool strategy_solver_heap_interval_sympatht::iterate(
 
     if(improved)
     {
+      symbolic_path=heap_interval_solver.symbolic_path;
 #ifdef DEBUG
       std::cerr << "Symbolic path:\n";
-      std::cerr << from_expr(ns, "", sympath) << "\n";
+      std::cerr << from_expr(ns, "", symbolic_path.get_expr()) << "\n";
 #endif
-      symbolic_path=heap_interval_solver.symbolic_path;
       const exprt sympath=heap_interval_solver.symbolic_path.get_expr();
       inv.emplace(sympath, std::move(new_value));
       new_path=false;

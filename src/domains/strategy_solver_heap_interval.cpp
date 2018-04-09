@@ -32,7 +32,7 @@ bool strategy_solver_heap_intervalt::iterate(
   // Run one iteration of heap solver in the context of invariant from
   // the interval solver
   solver.new_context();
-  solver << heap_interval_domain.interval_domain.to_pre_constraints(
+  solver << heap_interval_domain.polyhedra_domain.to_pre_constraints(
     inv.interval_value);
   bool heap_improved=heap_solver.iterate(inv.heap_value);
   solver.pop_context();
@@ -41,7 +41,7 @@ bool strategy_solver_heap_intervalt::iterate(
   {
     // If heap part was improved, restrict interval part to found symbolic path
     symbolic_path=heap_solver.symbolic_path;
-    heap_interval_domain.interval_domain.restrict_to_sympath(symbolic_path);
+    heap_interval_domain.polyhedra_domain.restrict_to_sympath(symbolic_path);
   }
 
   // Run one interation of interval solver in the context of invariant from
@@ -52,7 +52,7 @@ bool strategy_solver_heap_intervalt::iterate(
   solver.pop_context();
 
   if(heap_improved)
-    heap_interval_domain.interval_domain.undo_restriction();
+    heap_interval_domain.polyhedra_domain.undo_restriction();
 
   return heap_improved || interval_improved;
 }
