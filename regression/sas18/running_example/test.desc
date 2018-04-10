@@ -1,6 +1,6 @@
 CORE
 main.c
---heap-interval --sympath --inline --no-propagation
+--heap-values-incremental --sympath --inline
 ^EXIT=0$
 ^SIGNAL=0$
 ^VERIFICATION SUCCESSFUL$
