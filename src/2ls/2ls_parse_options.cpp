@@ -46,6 +46,7 @@ Author: Daniel Kroening, Peter Schrammel
 
 #include "graphml_witness_ext.h"
 #include <solver/summary_db.h>
+#include <ssa/dynobj_instance_analysis.h>
 
 #include "2ls_parse_options.h"
 #include "summary_checker_ai.h"
@@ -1283,6 +1284,17 @@ bool twols_parse_optionst::process_goto_program(
     if(cmdline.isset("inline-main"))
     {
       inline_main(goto_model);
+    }
+
+    forall_goto_functions(f_it, goto_model.goto_functions)
+    {
+      if (!f_it->second.body_available())
+        continue;
+      namespacet ns(goto_model.symbol_table);
+      ssa_value_ait value_analysis(f_it->second, ns, ssa_heap_analysist(ns));
+      value_analysis.output(ns, f_it->second, std::cerr);
+      dynobj_instance_analysist do_inst(f_it->second, ns, value_analysis);
+      do_inst.output(ns, f_it->second, std::cerr);
     }
 
     if(!cmdline.isset("independent-properties"))

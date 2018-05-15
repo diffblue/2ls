@@ -10,6 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #define CPROVER_2LS_SSA_SSA_VALUE_SET_H
 
 #include <analyses/ai.h>
+#include <iostream>
 
 #include "ssa_object.h"
 #include "ssa_heap_domain.h"
