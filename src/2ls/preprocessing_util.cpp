@@ -12,6 +12,7 @@ Author: Peter Schrammel
 
 #include <analyses/constant_propagator.h>
 #include <goto-instrument/unwind.h>
+#include <ssa/dynobj_instance_analysis.h>
 
 #include "2ls_parse_options.h"
 
@@ -697,6 +698,38 @@ void twols_parse_optionst::remove_dead_goto(goto_modelt &goto_model)
       {
         if (i_it->guard.is_false())
           i_it->make_skip();
+      }
+    }
+  }
+}
+
+void twols_parse_optionst::compute_dynobj_instances(
+  const goto_programt &goto_program,
+  const dynobj_instance_analysist &analysis,
+  std::map<symbol_exprt, size_t> &instance_counts,
+  const namespacet &ns)
+{
+  forall_goto_program_instructions(it, goto_program)
+  {
+    auto &analysis_value = analysis[it];
+    for (auto &obj : analysis_value.live_pointers)
+    {
+      auto must_alias = analysis_value.dynobj_instances.find(obj.first);
+      if (must_alias == analysis_value.dynobj_instances.end())
+        continue;
+
+      std::set<unsigned long> alias_classes;
+      for (auto &expr : obj.second)
+      {
+        unsigned long n;
+        must_alias->second.get_number(expr, n);
+        alias_classes.insert(must_alias->second.find_number(n));
+      }
+
+      if(instance_counts.find(obj.first)==instance_counts.end() ||
+         instance_counts.at(obj.first)<alias_classes.size())
+      {
+        instance_counts[obj.first]=alias_classes.size();
       }
     }
   }

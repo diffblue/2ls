@@ -98,7 +98,20 @@ void dynobj_instance_domaint::transform(
 
         remove_dereferences(assignment.lhs(), instances);
         add_aliased_dereferences(assignment.lhs(), instances);
+
+        live_pointers[v.symbol_expr()].insert(rhs);
       }
+    }
+  }
+  else if (from->is_dead())
+  {
+    const exprt &symbol = to_code_dead(from->code).symbol();
+    const auto &values=
+      static_cast<dynobj_instance_analysist &>(ai).value_analysis[from];
+    auto value_set = values(symbol, ns).value_set;
+    for (auto &v : value_set)
+    {
+      live_pointers[v.symbol_expr()].erase(symbol);
     }
   }
 }
@@ -121,6 +134,13 @@ bool dynobj_instance_domaint::merge(
       if (dynobj_instances.at(obj.first).join(obj.second))
         result = true;
     }
+
+    if (other.live_pointers.find(obj.first) != other.live_pointers.end())
+    {
+      auto &other_pointers = other.live_pointers.at(obj.first);
+      live_pointers[obj.first].insert(
+        other_pointers.begin(), other_pointers.end());
+    }
   }
   return result;
 }
@@ -139,5 +159,14 @@ void dynobj_instance_domaint::output(
       o.second.get_number(p, n);
       out << "    " << o.second.find_number(n) << ": " << from_expr(ns, "", p) << "\n";
     }
+
+    if (live_pointers.find(o.first) == live_pointers.end())
+      continue;
+    out << "Live: ";
+    for (const auto &v : live_pointers.at(o.first))
+    {
+      out << from_expr(ns, "", v) << " ";
+    }
+    out << "\n";
   }
 }

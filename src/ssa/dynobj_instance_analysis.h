@@ -117,9 +117,10 @@ public:
 
 class dynobj_instance_domaint:public ai_domain_baset
 {
-  std::map<symbol_exprt, must_alias_setst> dynobj_instances;
-
 public:
+  std::map<symbol_exprt, must_alias_setst> dynobj_instances;
+  std::map<symbol_exprt, std::set<exprt>> live_pointers;
+
   void transform(
     locationt from,
     locationt to,
