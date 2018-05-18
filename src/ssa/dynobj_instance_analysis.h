@@ -137,6 +137,12 @@ public:
 
 protected:
 
+private:
+    void rhs_concretisation(
+      const exprt &guard,
+      ai_domain_baset::locationt loc,
+      ai_baset &ai,
+      const namespacet &ns);
 };
 
 class dynobj_instance_analysist:public ait<dynobj_instance_domaint>
