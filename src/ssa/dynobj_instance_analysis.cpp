@@ -56,6 +56,44 @@ void add_aliased_dereferences(const exprt &pointer, must_alias_setst &instances)
   }
 }
 
+void dynobj_instance_domaint::rhs_concretisation(
+  const exprt &guard,
+  ai_domain_baset::locationt loc,
+  ai_baset &ai,
+  const namespacet &ns)
+{
+    forall_operands(it, guard)
+    {
+      if(it->id() == ID_symbol || it->id() == ID_member)
+      {
+        bool found=false;
+        for(const auto &i:dynobj_instances)
+        {
+          unsigned long n;
+          found |= !i.second.get_number(*it, n);
+        }
+        if (!found)
+        {
+            // 1) now make derefence
+            const auto &values=
+              static_cast<dynobj_instance_analysist &>(ai).value_analysis[loc];
+            const auto guard_deref = dereference(guard, values, "", ns);
+            auto value_set = values(guard_deref, ns).value_set;
+            // 2) then isolate for all values in vaulue set of dereferences
+            for (auto &v : value_set)
+            {
+              auto &instances = dynobj_instances[v.symbol_expr()];
+              instances.isolate(*it);
+            }
+        }
+      }
+      else
+      {
+        rhs_concretisation(*it, loc, ai, ns);
+      }
+    }
+}
+
 void dynobj_instance_domaint::transform(
   ai_domain_baset::locationt from,
   ai_domain_baset::locationt to,
@@ -103,6 +141,8 @@ void dynobj_instance_domaint::transform(
       }
     }
   }
+  else if (from->is_goto() || from->is_assume())
+    rhs_concretisation(from->guard, from, ai, ns);
   else if (from->is_dead())
   {
     const exprt &symbol = to_code_dead(from->code).symbol();
