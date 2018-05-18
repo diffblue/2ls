@@ -141,7 +141,7 @@ void dynobj_instance_domaint::transform(
       }
     }
   }
-  else if (from->is_goto() || from->is_assume())
+  else if (from->is_goto() || from->is_assume() || from->is_assert())
     rhs_concretisation(from->guard, from, ai, ns);
   else if (from->is_dead())
   {
