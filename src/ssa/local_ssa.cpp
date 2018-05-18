@@ -57,7 +57,7 @@ void local_SSAt::build_SSA()
     build_guard(i_it);
     build_assertions(i_it);
     build_function_call(i_it);
-    build_unknown_objs(i_it);
+//    build_unknown_objs(i_it);
     collect_record_frees(i_it);
   }
 
@@ -1897,7 +1897,7 @@ void local_SSAt::build_unknown_objs(locationt loc)
       const exprt &malloc_res=
         rhs.id()==ID_typecast ? to_typecast_expr(rhs).op() : rhs;
       const exprt &addr_of_do=
-        malloc_res.id()==ID_if ? to_if_expr(malloc_res).false_case()
+        malloc_res.id()==ID_if ? to_if_expr(malloc_res).true_case()
                                : malloc_res;
       const exprt &dyn_obj=to_address_of_expr(addr_of_do).object();
       const typet &dyn_type=ns.follow(dyn_obj.type());
@@ -2146,23 +2146,10 @@ void local_SSAt::collect_allocation_guards(
     rhs=to_typecast_expr(rhs).op();
   if(rhs.id()==ID_if)
   {
-    const if_exprt &malloc_res=to_if_expr(rhs);
-    assert(malloc_res.true_case().id()==ID_address_of);
-    assert(malloc_res.false_case().id()==ID_address_of);
-
-    const exprt &object=to_address_of_expr(malloc_res.false_case()).object();
-    const exprt &co_object=to_address_of_expr(malloc_res.true_case()).object();
-    assert(object.id()==ID_symbol && co_object.id()==ID_symbol);
-
-    std::string co_object_id=id2string(
-      to_symbol_expr(co_object).get_identifier());
-    std::string object_id=id2string(to_symbol_expr(object).get_identifier());
-    allocation_guards.emplace(
-      to_symbol_expr(co_object).get_identifier(),
-      read_rhs(malloc_res.cond(), loc));
-    allocation_guards.emplace(
-      to_symbol_expr(object).get_identifier(),
-      read_rhs(not_exprt(malloc_res.cond()), loc));
+    get_alloc_guard_rec(
+      to_if_expr(rhs).true_case(), to_if_expr(rhs).cond(), loc);
+    get_alloc_guard_rec(
+      to_if_expr(rhs).false_case(), not_exprt(to_if_expr(rhs).cond()), loc);
   }
 }
 
@@ -2181,4 +2168,30 @@ void local_SSAt::collect_record_frees(local_SSAt::locationt loc)
       (--nodes.end())->record_free = symbol;
     }
   }
+}
+
+void local_SSAt::get_alloc_guard_rec(
+  const exprt &expr,
+  exprt guard,
+  locationt loc)
+{
+  if (expr.id() == ID_symbol && expr.type().get_bool("#dynamic"))
+  {
+    allocation_guards.emplace(to_symbol_expr(expr).get_identifier(), guard);
+  }
+  else if(expr.id()==ID_if)
+  {
+    get_alloc_guard_rec(
+      to_if_expr(expr).true_case(),
+      and_exprt(guard, to_if_expr(expr).cond()),
+      loc);
+    get_alloc_guard_rec(
+      to_if_expr(expr).false_case(),
+      and_exprt(guard, not_exprt(to_if_expr(expr).cond())),
+      loc);
+  }
+  else if(expr.id()==ID_typecast)
+    get_alloc_guard_rec(to_typecast_expr(expr).op(), guard, loc);
+  else if (expr.id()==ID_address_of)
+    get_alloc_guard_rec(to_address_of_expr(expr).object(), guard, loc);
 }

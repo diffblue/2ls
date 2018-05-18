@@ -49,29 +49,7 @@ void assignmentst::build_assignment_map(
       // At allocations site, save newly allocated object(s)
       if (code_assign.rhs().get_bool("#malloc_result"))
       {
-        exprt alloc_res=code_assign.rhs();
-        if(alloc_res.id()==ID_typecast)
-          alloc_res=to_typecast_expr(alloc_res).op();
-        if(alloc_res.id()==ID_if)
-        {
-          exprt object=to_if_expr(alloc_res).false_case();
-          if(object.id()==ID_address_of)
-            object=to_address_of_expr(object).object();
-
-          exprt concrete_object=to_if_expr(alloc_res).true_case();
-          if(concrete_object.id()==ID_address_of)
-            concrete_object=to_address_of_expr(concrete_object).object();
-
-          allocation_map[it].insert(ssa_objectt(object, ns));
-          allocation_map[it].insert(ssa_objectt(concrete_object, ns));
-        }
-        else
-        {
-          exprt object=alloc_res;
-          if(object.id()==ID_address_of)
-            object=to_address_of_expr(object).object();
-          allocation_map[it].insert(ssa_objectt(object, ns));
-        }
+        allocate(code_assign.rhs(), it, ns);
       }
     }
     else if(it->is_assert())
@@ -334,4 +312,24 @@ void assignmentst::output(
 
     out << "\n";
   }
+}
+
+void assignmentst::allocate(
+  const exprt &expr,
+  const assignmentst::locationt loc,
+  const namespacet &ns)
+{
+  if(expr.id()==ID_symbol && expr.type().get_bool("#dynamic"))
+  {
+    allocation_map[loc].insert(ssa_objectt(expr, ns));
+  }
+  else if (expr.id() == ID_if)
+  {
+    allocate(to_if_expr(expr).true_case(), loc, ns);
+    allocate(to_if_expr(expr).false_case(), loc, ns);
+  }
+  else if (expr.id() == ID_address_of)
+    allocate(to_address_of_expr(expr).object(), loc, ns);
+  else if (expr.id() == ID_typecast)
+    allocate(to_typecast_expr(expr).op(), loc, ns);
 }

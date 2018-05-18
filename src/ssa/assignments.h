@@ -87,6 +87,12 @@ protected:
     const exprt &expr,
     const locationt &loc,
     const namespacet &ns);
+
+  void allocate(
+    const exprt &expr,
+    const locationt loc,
+    const namespacet &ns
+  );
 };
 
 #endif

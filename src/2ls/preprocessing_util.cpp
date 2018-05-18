@@ -734,3 +734,73 @@ void twols_parse_optionst::compute_dynobj_instances(
     }
   }
 }
+
+void twols_parse_optionst::create_dynobj_instances(
+  goto_programt &goto_program,
+  const std::map<symbol_exprt, size_t> &instance_counts,
+  symbol_tablet &symbol_table)
+{
+  Forall_goto_program_instructions(it, goto_program)
+  {
+    if (it->is_assign())
+    {
+      auto &assign = to_code_assign(it->code);
+      if (assign.rhs().get_bool("#malloc_result"))
+      {
+        exprt &rhs = assign.rhs();
+        exprt &address=rhs.id()==ID_typecast ? to_typecast_expr(rhs).op() : rhs;
+        assert(address.id() == ID_address_of);
+        exprt &obj = to_address_of_expr(address).object();
+        assert(obj.id() == ID_symbol);
+
+        if (instance_counts.find(to_symbol_expr(obj)) == instance_counts.end())
+          continue;
+
+        size_t count = instance_counts.at(to_symbol_expr(obj));
+        if (count <= 1)
+          continue;
+
+        symbolt obj_symbol=
+          symbol_table.lookup(to_symbol_expr(obj).get_identifier());
+
+        const std::string name = id2string(obj_symbol.name);
+        const std::string base_name = id2string(obj_symbol.base_name);
+        std::string suffix = "#" + std::to_string(0);
+
+        obj_symbol.name = name + suffix;
+        obj_symbol.base_name = base_name + suffix;
+        symbol_table.add(obj_symbol);
+
+        exprt new_rhs = address_of_exprt(obj_symbol.symbol_expr());
+        if (rhs.id() == ID_typecast)
+          new_rhs = typecast_exprt(new_rhs, rhs.type());
+        new_rhs.set("#malloc_result", true);
+
+        for (size_t i = 1; i < count; ++i)
+        {
+          symbolt nondet;
+          nondet.type = bool_typet();
+          nondet.name="$guard#os"+std::to_string(it->location_number)+"#"+
+                      std::to_string(i);
+          nondet.base_name = nondet.name;
+          nondet.pretty_name = nondet.name;
+          symbol_table.add(nondet);
+
+          suffix = "#" + std::to_string(i);
+          obj_symbol.name = name + suffix;
+          obj_symbol.base_name = base_name + suffix;
+
+          exprt new_obj = address_of_exprt(obj_symbol.symbol_expr());
+          if (rhs.id() == ID_typecast)
+            new_obj = typecast_exprt(new_obj, rhs.type());
+          new_rhs=if_exprt(
+            nondet.symbol_expr(), new_obj, new_rhs);
+          new_rhs.set("#malloc_result", true);
+        }
+
+        rhs = new_rhs;
+        rhs.set("#malloc_result", true);
+      }
+    }
+  }
+}

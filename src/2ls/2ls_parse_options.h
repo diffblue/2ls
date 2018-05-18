@@ -16,6 +16,7 @@ Author: Daniel Kroening, Peter Schrammel
 #include <langapi/language_ui.h>
 
 #include <analyses/goto_check.h>
+#include <ssa/dynobj_instance_analysis.h>
 
 class goto_modelt;
 class optionst;
@@ -191,6 +192,10 @@ protected:
     const dynobj_instance_analysist &analysis,
     std::map<symbol_exprt, size_t> &instance_counts,
     const namespacet &ns);
+  void create_dynobj_instances(
+    goto_programt &goto_program,
+    const std::map<symbol_exprt, size_t> &instance_counts,
+    symbol_tablet &symbol_table);
 };
 
 #endif

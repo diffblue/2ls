@@ -1287,7 +1287,7 @@ bool twols_parse_optionst::process_goto_program(
     }
 
     std::map<symbol_exprt, size_t> dynobj_instances;
-    forall_goto_functions(f_it, goto_model.goto_functions)
+    Forall_goto_functions(f_it, goto_model.goto_functions)
     {
       if (!f_it->second.body_available())
         continue;
@@ -1297,7 +1297,10 @@ bool twols_parse_optionst::process_goto_program(
       dynobj_instance_analysist do_inst(f_it->second, ns, value_analysis);
       do_inst.output(ns, f_it->second, std::cerr);
 
-      compute_dynobj_instances(f_it->second.body, do_inst, dynobj_instances, ns);
+      compute_dynobj_instances(
+        f_it->second.body, do_inst, dynobj_instances, ns);
+      create_dynobj_instances(
+        f_it->second.body, dynobj_instances, goto_model.symbol_table);
     }
 
     if(!cmdline.isset("independent-properties"))

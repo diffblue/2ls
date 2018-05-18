@@ -284,6 +284,7 @@ protected:
   void build_unknown_objs(locationt loc);
 
   void collect_allocation_guards(const code_assignt &assign, locationt loc);
+  void get_alloc_guard_rec(const exprt &expr, exprt old_guard, locationt loc);
   void collect_record_frees(locationt loc);
 
   // custom templates
