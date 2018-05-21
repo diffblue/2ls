@@ -1069,6 +1069,8 @@ void tpolyhedra_domaint::add_difference_template(
       merge_and(pre_g, v1->pre_guard, v2->pre_guard, ns);
       merge_and(post_g, v1->post_guard, v2->post_guard, ns);
       merge_and(aux_expr, v1->aux_expr, v2->aux_expr, ns);
+      if (post_g.is_false())
+        continue;
 
       // x1-x2
       add_template_row(
