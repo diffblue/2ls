@@ -10,16 +10,17 @@ typedef struct node {
 
 int main() {
     Node *p, *list = malloc(sizeof(*list));
+    Node *tail = list;
     list->next = NULL;
     list->val = 10;
     while (__VERIFIER_nondet_int()) {
         int x;
         __CPROVER_assume(x >= 10 && x <= 20);
         p = malloc(sizeof(*p));
-        list->next = p;
+        tail->next = p;
         p->next = NULL;
         p->val = x;
-        list = p;
+        tail = p;
     }
 
     while (1) {
