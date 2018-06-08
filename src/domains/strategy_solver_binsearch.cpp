@@ -44,10 +44,9 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
   solver << inv_expr;
 
   exprt::operandst strategy_cond_exprs;
-  tpolyhedra_domain.make_not_post_constraints(
-    inv, strategy_cond_exprs, strategy_value_exprs);
+  tpolyhedra_domain.make_not_post_constraints(inv, strategy_cond_exprs);
 
-  strategy_cond_literals.resize(strategy_cond_exprs.size());
+  tpolyhedra_domain.strategy_cond_literals.resize(strategy_cond_exprs.size());
 
 #if 0
   debug() << "post-inv: ";
@@ -57,9 +56,11 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 #if 0
     debug() << (i>0 ? " || " : "") << from_expr(ns, "", strategy_cond_exprs[i]);
 #endif
-    strategy_cond_literals[i]=solver.convert(strategy_cond_exprs[i]);
-    // solver.set_frozen(strategy_cond_literals[i]);
-    strategy_cond_exprs[i]=literal_exprt(strategy_cond_literals[i]);
+    tpolyhedra_domain.strategy_cond_literals[i]=
+      solver.convert(strategy_cond_exprs[i]);
+    // solver.set_frozen(tpolyhedra_domain.strategy_cond_literals[i]);
+    strategy_cond_exprs[i]=
+      literal_exprt(tpolyhedra_domain.strategy_cond_literals[i]);
   }
 #if 0
   debug() << eom;
@@ -89,9 +90,15 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
       exprt c=tpolyhedra_domain.get_row_post_constraint(i, inv[i]);
       debug() << "cond: " << from_expr(ns, "", c) << " "
               << from_expr(ns, "", solver.get(c)) << eom;
-      debug() << "expr: " << from_expr(ns, "", strategy_value_exprs[i]) << " "
+      debug() << "expr: " << from_expr(
+        ns,
+        "",
+        tpolyhedra_domain.strategy_value_exprs[i]) << " "
               << from_expr(
-                ns, "", simplify_const(solver.get(strategy_value_exprs[i])))
+                ns,
+                "",
+                simplify_const(
+                  solver.get(tpolyhedra_domain.strategy_value_exprs[i])))
               << eom;
       debug() << "guards: "
               << from_expr(ns, "", tpolyhedra_domain.templ[i].pre_guard) << " "
@@ -109,9 +116,9 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 
 
     std::size_t row=0;
-    for(; row<strategy_cond_literals.size(); row++)
+    for(; row<tpolyhedra_domain.strategy_cond_literals.size(); row++)
     {
-      if(solver.l_get(strategy_cond_literals[row]).is_true())
+      if(solver.l_get(tpolyhedra_domain.strategy_cond_literals[row]).is_true())
         break;  // we've found a row to improve
     }
 
@@ -122,7 +129,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
     tpolyhedra_domaint::row_valuet upper=
       tpolyhedra_domain.get_max_row_value(row);
     tpolyhedra_domaint::row_valuet lower=
-      simplify_const(solver.get(strategy_value_exprs[row]));
+      simplify_const(solver.get(tpolyhedra_domain.strategy_value_exprs[row]));
 
     solver.pop_context();  // improvement check
 

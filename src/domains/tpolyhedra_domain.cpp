@@ -53,6 +53,38 @@ void tpolyhedra_domaint::initialize(valuet &value)
   }
 }
 
+std::vector<exprt> tpolyhedra_domaint::get_required_values(size_t row)
+{
+  std::vector<exprt> r;
+  r.push_back(strategy_value_exprs[row]);
+  return r;
+}
+
+void tpolyhedra_domaint::set_values(std::vector<exprt> got_values)
+{
+  value=got_values[0];
+}
+
+/*******************************************************************\
+
+Function: tpolyhedra_domaint::edit_row
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool tpolyhedra_domaint::edit_row(const rowt &row, valuet &_inv, bool improved)
+{
+    tpolyhedra_domaint::templ_valuet &inv=
+        static_cast<tpolyhedra_domaint::templ_valuet &>(_inv);
+    set_row_value(row, simplify_const(value), inv);
+    return true;
+}
+
 /*******************************************************************\
 
 Function: tpolyhedra_domaint::join
@@ -373,8 +405,10 @@ exprt tpolyhedra_domaint::get_row_post_constraint(
 
 \*******************************************************************/
 
-exprt tpolyhedra_domaint::to_pre_constraints(const templ_valuet &value)
+exprt tpolyhedra_domaint::to_pre_constraints(valuet &_value)
 {
+  tpolyhedra_domaint::templ_valuet &value=
+    static_cast<tpolyhedra_domaint::templ_valuet &>(_value);
   assert(value.size()==templ.size());
   exprt::operandst c;
   for(std::size_t row=0; row<templ.size(); ++row)
@@ -398,19 +432,20 @@ exprt tpolyhedra_domaint::to_pre_constraints(const templ_valuet &value)
 \*******************************************************************/
 
 void tpolyhedra_domaint::make_not_post_constraints(
-  const templ_valuet &value,
-  exprt::operandst &cond_exprs,
-  exprt::operandst &value_exprs)
+  valuet &_value,
+  exprt::operandst &cond_exprs)
 {
+  tpolyhedra_domaint::templ_valuet &value=
+    static_cast<tpolyhedra_domaint::templ_valuet &>(_value);
   assert(value.size()==templ.size());
   cond_exprs.resize(templ.size());
-  value_exprs.resize(templ.size());
+  strategy_value_exprs.resize(templ.size());
 
   exprt::operandst c;
   for(std::size_t row=0; row<templ.size(); ++row)
   {
-    value_exprs[row]=templ[row].expr;
-    rename(value_exprs[row]);
+    strategy_value_exprs[row]=templ[row].expr;
+    rename(strategy_value_exprs[row]);
     cond_exprs[row]=
       and_exprt(
         templ[row].aux_expr,

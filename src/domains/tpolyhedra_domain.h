@@ -21,7 +21,6 @@ Author: Peter Schrammel
 class tpolyhedra_domaint:public domaint
 {
 public:
-  typedef unsigned rowt;
   typedef exprt row_exprt;
   typedef constant_exprt row_valuet; // "bound"
 
@@ -51,6 +50,17 @@ public:
   // initialize value
   virtual void initialize(valuet &value);
 
+  std::vector<exprt> get_required_values(size_t row);
+  void set_values(std::vector<exprt> got_values);
+
+  bool edit_row(const rowt &row, valuet &inv, bool improved);
+
+  exprt to_pre_constraints(valuet &_value);
+
+  void make_not_post_constraints(
+    valuet &_value,
+    exprt::operandst &cond_exprs);
+
   virtual void join(valuet &value1, const valuet &value2);
 
   // value -> constraints
@@ -59,12 +69,6 @@ public:
   exprt get_row_post_constraint(const rowt &row, const row_valuet &row_value);
   exprt get_row_pre_constraint(const rowt &row, const templ_valuet &value);
   exprt get_row_post_constraint(const rowt &row, const templ_valuet &value);
-
-  exprt to_pre_constraints(const templ_valuet &value);
-  void make_not_post_constraints(
-    const templ_valuet &value,
-    exprt::operandst &cond_exprs,
-    exprt::operandst &value_exprs);
 
   // value -> symbolic bound constraints (for optimization)
   exprt to_symb_pre_constraints(const templ_valuet &value);
@@ -146,9 +150,10 @@ public:
 
 protected:
   friend class strategy_solver_binsearcht;
-  friend class strategy_solver_enumerationt;
+  friend class strategy_solvert;
 
   templatet templ;
+  exprt value;
 };
 
 #endif

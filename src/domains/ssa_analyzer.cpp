@@ -19,7 +19,6 @@ Author: Peter Schrammel
 #include <util/options.h>
 
 #include "strategy_solver_base.h"
-#include "strategy_solver_enumeration.h"
 #include "strategy_solver_binsearch.h"
 #include "strategy_solver_binsearch2.h"
 #include "strategy_solver_binsearch3.h"
@@ -159,9 +158,14 @@ void ssa_analyzert::operator()(
   {
     if(template_generator.options.get_bool_option("enum-solver"))
     {
+      s_solver=new strategy_solvert(
+        *static_cast<tpolyhedra_domaint *>(domain),
+        solver,
+        SSA,
+        precondition,
+        get_message_handler(),
+        template_generator);
       result=new tpolyhedra_domaint::templ_valuet();
-      s_solver=new strategy_solver_enumerationt(
-        *static_cast<tpolyhedra_domaint *>(domain), solver, SSA.ns);
     }
     else if(template_generator.options.get_bool_option("predabs-solver"))
     {

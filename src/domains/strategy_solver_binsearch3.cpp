@@ -50,10 +50,9 @@ bool strategy_solver_binsearch3t::iterate(invariantt &_inv)
   solver << inv_expr;
 
   exprt::operandst strategy_cond_exprs;
-  tpolyhedra_domain.make_not_post_constraints(
-    inv, strategy_cond_exprs, strategy_value_exprs);
+  tpolyhedra_domain.make_not_post_constraints(inv, strategy_cond_exprs);
 
-  strategy_cond_literals.resize(strategy_cond_exprs.size());
+  tpolyhedra_domain.strategy_cond_literals.resize(strategy_cond_exprs.size());
 
 #if 0
   debug() << "post-inv: ";
@@ -63,8 +62,10 @@ bool strategy_solver_binsearch3t::iterate(invariantt &_inv)
 #if 0
     debug() << (i>0 ? " || " : "") << from_expr(ns, "", strategy_cond_exprs[i]);
 #endif
-    strategy_cond_literals[i]=solver.convert(strategy_cond_exprs[i]);
-    strategy_cond_exprs[i]=literal_exprt(strategy_cond_literals[i]);
+    tpolyhedra_domain.strategy_cond_literals[i]=
+        solver.convert(strategy_cond_exprs[i]);
+    strategy_cond_exprs[i]=
+        literal_exprt(tpolyhedra_domain.strategy_cond_literals[i]);
   }
   debug() << eom;
 
@@ -87,9 +88,9 @@ bool strategy_solver_binsearch3t::iterate(invariantt &_inv)
     improved=true;
 
     std::size_t row=0;
-    for(; row<strategy_cond_literals.size(); row++)
+    for(; row<tpolyhedra_domain.strategy_cond_literals.size(); row++)
     {
-      if(solver.l_get(strategy_cond_literals[row]).is_true())
+      if(solver.l_get(tpolyhedra_domain.strategy_cond_literals[row]).is_true())
       {
 #if 1
         debug() << "improve row " << row  << eom;
@@ -97,9 +98,10 @@ bool strategy_solver_binsearch3t::iterate(invariantt &_inv)
         improve_rows.insert(row);
         symb_values[row]=tpolyhedra_domain.get_row_symb_value(row);
         lower_values[row]=
-          simplify_const(solver.get(strategy_value_exprs[row]));
+          simplify_const(
+            solver.get(tpolyhedra_domain.strategy_value_exprs[row]));
         blocking_constraint.push_back(
-          literal_exprt(!strategy_cond_literals[row]));
+          literal_exprt(!tpolyhedra_domain.strategy_cond_literals[row]));
         if(tpolyhedra_domain.is_row_value_neginf(
              tpolyhedra_domain.get_row_value(row, inv)))
           improved_from_neginf=true;
