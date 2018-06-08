@@ -17,6 +17,11 @@ Author: Peter Schrammel
 #include <langapi/language_util.h>
 #include <util/replace_expr.h>
 #include <util/namespace.h>
+#include <solvers/refinement/bv_refinement.h>
+
+// Forward declaration - real is in template_generator_base.h
+class template_generator_baset;
+class local_SSAt;
 
 class domaint
 {
@@ -42,6 +47,7 @@ public:
   typedef enum {LOOP, IN, OUT, OUTL, OUTHEAP} kindt;
 
   typedef exprt guardt;
+  typedef unsigned rowt;
 
   typedef struct
   {
@@ -54,6 +60,11 @@ public:
 
   typedef std::vector<var_spect> var_specst;
 
+  // handles on values to retrieve from model
+  bvt strategy_cond_literals;
+  exprt::operandst strategy_value_exprs;
+
+
   class valuet
   {
   public:
@@ -65,6 +76,31 @@ public:
   };
 
   virtual void initialize(valuet &value) { value.basic_value=valuet::BOTTOM; }
+
+  virtual const exprt initialize_solver(
+    const local_SSAt &SSA,
+    const exprt &precondition,
+    template_generator_baset &template_generator);
+
+  virtual void pre_iterate_init(valuet &value);
+
+  virtual bool something_to_solve();
+
+  virtual bool edit_row(const rowt &row, valuet &inv, bool improved);
+
+  virtual exprt make_permanent(valuet &value);
+  virtual void post_edit();
+
+  virtual exprt to_pre_constraints(valuet &value);
+
+  virtual void make_not_post_constraints(
+    valuet &value,
+    exprt::operandst &cond_exprs);
+
+  virtual std::vector<exprt> get_required_values(size_t row);
+  virtual void set_values(std::vector<exprt> got_values);
+
+  virtual bool not_satisfiable(valuet &value, bool improved);
 
   // returns true as long as further refinements are possible
   virtual void reset_refinements() { }

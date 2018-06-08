@@ -65,3 +65,60 @@ void domaint::output_var_specs(
     out << from_expr(ns, "", v.var) << std::endl;
   }
 }
+
+const exprt domaint::initialize_solver(
+  const local_SSAt &SSA,
+  const exprt &precondition,
+  template_generator_baset &template_generator)
+{
+  return true_exprt();
+}
+
+void domaint::pre_iterate_init(valuet &value)
+{
+}
+
+bool domaint::edit_row(const rowt &row, valuet &inv, bool improved)
+{
+  return improved;
+}
+
+exprt domaint::to_pre_constraints(valuet &value)
+{
+  return true_exprt();
+}
+
+void domaint::make_not_post_constraints(
+  valuet &value,
+  exprt::operandst &cond_exprs)
+{
+}
+
+std::vector<exprt> domaint::get_required_values(size_t row)
+{
+  std::vector<exprt> r;
+  return r;
+}
+
+void domaint::set_values(std::vector<exprt> got_values)
+{
+}
+
+bool domaint::something_to_solve()
+{
+  return true;
+}
+
+bool domaint::not_satisfiable(valuet &value, bool improved)
+{
+  return improved;
+}
+
+void domaint::post_edit()
+{
+}
+
+exprt domaint::make_permanent(valuet &value)
+{
+  return true_exprt();
+}
