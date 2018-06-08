@@ -15,6 +15,7 @@ Author: Peter Schrammel
 
 #include <util/std_expr.h>
 #include <util/arith_tools.h>
+#include <domains/incremental_solver.h>
 #include <util/ieee_float.h>
 #include <set>
 #include <vector>
@@ -51,14 +52,39 @@ public:
   lexlinrank_domaint(
     unsigned _domain_number,
     replace_mapt &_renaming_map,
+    unsigned _max_elements, // lexicographic components
+    unsigned _max_inner_iterations,
     const namespacet &_ns):
     domaint(_domain_number,  _renaming_map, _ns),
-    refinement_level(0)
-  {
-  }
+    refinement_level(0),
+    max_elements(_max_elements),
+    max_inner_iterations(_max_inner_iterations),
+    number_inner_iterations(0)
+    {
+      inner_solver=incremental_solvert::allocate(_ns);
+    }
+
 
   // initialize value
   virtual void initialize(valuet &value);
+
+  const exprt initialize_solver(
+    const local_SSAt &SSA,
+    const exprt &precondition,
+    template_generator_baset &template_generator);
+
+  void pre_iterate_init(domaint::valuet &rank);
+
+  bool edit_row(const rowt &row, valuet &inv, bool improved);
+
+  exprt to_pre_constraints(valuet &_value);
+
+  void make_not_post_constraints(
+    valuet &_value,
+    exprt::operandst &cond_exprs);
+  std::vector<exprt> get_required_values(size_t row);
+  void set_values(std::vector<exprt> got_values);
+  virtual bool not_satisfiable(valuet &value, bool improved);
 
   virtual bool refine();
   virtual void reset_refinements();
@@ -71,7 +97,6 @@ public:
   exprt get_row_symb_constraint(
     row_valuet &symb_values, // contains vars c and d
     const rowt &row,
-    const pre_post_valuest &values,
     exprt &refinement_constraint);
 
   void add_element(const rowt &row, templ_valuet &value);
@@ -106,16 +131,26 @@ public:
     const var_specst &var_specs,
     const namespacet &ns);
 
-protected:
   templatet templ;
   unsigned refinement_level;
+  // the "inner" solver
+  const unsigned max_elements; // lexicographic components
+  const unsigned max_inner_iterations;
+  incremental_solvert *inner_solver;
+  unsigned number_inner_iterations;
 
+protected:
+  pre_post_valuest values;
   bool is_row_value_false(const row_valuet & row_value) const;
   bool is_row_value_true(const row_valuet & row_value) const;
   bool is_row_element_value_false(
     const row_value_elementt & row_value_element) const;
   bool is_row_element_value_true(
     const row_value_elementt & row_value_element) const;
+public:
+  // handles on values to retrieve from model
+  std::vector<lexlinrank_domaint::pre_post_valuest> strategy_value_exprs;
+  std::vector<unsigned> number_elements_per_row;
 };
 
 #endif // CPROVER_2LS_DOMAINS_LEXLINRANK_DOMAIN_H

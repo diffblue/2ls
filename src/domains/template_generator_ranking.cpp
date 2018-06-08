@@ -45,7 +45,14 @@ void template_generator_rankingt::operator()(
   }
   else
   {
-    domain_ptr=new lexlinrank_domaint(domain_number, post_renaming_map, SSA.ns);
+    domain_ptr=new lexlinrank_domaint(
+      domain_number,
+      post_renaming_map,
+      options.get_unsigned_int_option(
+        "lexicographic-ranking-function"),
+      options.get_unsigned_int_option(
+        "max-inner-ranking-iterations"),
+          SSA.ns);
   }
   collect_variables_ranking(SSA, forward);
 

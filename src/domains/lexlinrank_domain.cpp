@@ -16,6 +16,7 @@ Author: Peter Schrammel
 #include <langapi/languages.h>
 #include <goto-symex/adjust_float_expressions.h>
 
+#include <util/cprover_prefix.h>
 #include "lexlinrank_domain.h"
 #include "util.h"
 
@@ -49,6 +50,171 @@ void lexlinrank_domaint::initialize(valuet &value)
     row[0].c.resize(1);
     row[0].c[0]=false_exprt();
   }
+}
+
+const exprt lexlinrank_domaint::initialize_solver(
+  const local_SSAt &SSA,
+  const exprt &precondition,
+  template_generator_baset &template_generator)
+{
+  delete inner_solver;
+  inner_solver=incremental_solvert::allocate(ns);
+
+  return true_exprt();
+}
+
+bool lexlinrank_domaint::edit_row(const rowt &row, valuet &inv, bool improved)
+{
+  lexlinrank_domaint::templ_valuet &rank=
+    static_cast<lexlinrank_domaint::templ_valuet &>(inv);
+  lexlinrank_domaint::row_valuet symb_values;
+  symb_values.resize(rank[row].size());
+
+  exprt constraint;
+  exprt refinement_constraint;
+
+  // generate the new constraint
+  constraint=get_row_symb_constraint(
+    symb_values,
+    row,
+    refinement_constraint);
+
+  simplify_expr(constraint, ns);
+  *inner_solver << constraint;
+
+  exprt rounding_mode=symbol_exprt(
+    CPROVER_PREFIX "rounding_mode",
+    signedbv_typet(32));
+
+  // set rounding mode
+  *inner_solver << equal_exprt(
+    rounding_mode,
+    from_integer(mp_integer(0), signedbv_typet(32)));
+
+  // refinement
+  if(!refinement_constraint.is_true())
+  {
+    inner_solver->new_context();
+    *inner_solver << refinement_constraint;
+  }
+
+  // solve
+  bool inner_solver_result=(*inner_solver)();
+  if(inner_solver_result==decision_proceduret::D_SATISFIABLE &&
+     number_inner_iterations<max_inner_iterations)
+  {
+    number_inner_iterations++;
+
+    // new_row_values will contain the new values for c and d
+    lexlinrank_domaint::row_valuet new_row_values;
+    new_row_values.resize(rank[row].size());
+
+    for(std::size_t constraint_no=0;
+        constraint_no<symb_values.size(); ++constraint_no)
+    {
+      std::vector<exprt> c=symb_values[constraint_no].c;
+
+      // get the model for all c
+      for(auto &e : c)
+      {
+        exprt v=inner_solver->solver->get(e);
+        new_row_values[constraint_no].c.push_back(v);
+      }
+    }
+
+    improved=true;
+
+    // update the current template
+    set_row_value(row, new_row_values, rank);
+
+    if(!refinement_constraint.is_true())
+      inner_solver->pop_context();
+  }
+  else
+  {
+    if(refine())
+    {
+      improved=true; // refinement possible
+
+      if(!refinement_constraint.is_true())
+        inner_solver->pop_context();
+    }
+    else
+    {
+      if(number_elements_per_row[row]==max_elements-1)
+      {
+        // no ranking function for the current template
+        set_row_value_to_true(row, rank);
+        reset_refinements();
+      }
+      else
+      {
+        number_elements_per_row[row]++;
+        delete inner_solver;
+        inner_solver=incremental_solvert::allocate(ns);
+        reset_refinements();
+
+        add_element(row, rank);
+        number_inner_iterations=0;
+        improved=true;
+      }
+    }
+  }
+  return improved;
+}
+
+exprt lexlinrank_domaint::to_pre_constraints(valuet &_value)
+{
+  exprt rounding_mode=symbol_exprt(
+    CPROVER_PREFIX "rounding_mode",
+    signedbv_typet(32));
+
+  return equal_exprt(
+    rounding_mode,
+    from_integer(mp_integer(0), signedbv_typet(32)));
+}
+
+void lexlinrank_domaint::pre_iterate_init(domaint::valuet &_rank)
+{
+  lexlinrank_domaint::templ_valuet &rank=
+    static_cast<lexlinrank_domaint::templ_valuet &>(_rank);
+  number_elements_per_row.resize(rank.size());
+}
+
+std::vector<exprt> lexlinrank_domaint::get_required_values(size_t row)
+{
+  std::vector<exprt> r;
+  for(auto &row_expr : strategy_value_exprs[row])
+  {
+    r.push_back(row_expr.first);
+    r.push_back(row_expr.second);
+  }
+  return r;
+}
+
+void lexlinrank_domaint::set_values(std::vector<exprt> got_values)
+{
+  values.clear();
+  for(size_t i=0; i<got_values.size(); i+=2)
+    values.push_back(std::make_pair(got_values[i], got_values[i+1]));
+}
+
+/*******************************************************************\
+
+Function: lexlinrank_domaint::not_satisfiable
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool lexlinrank_domaint::not_satisfiable(valuet &value, bool improved)
+{
+  reset_refinements();
+  return improved;
 }
 
 /*******************************************************************\
@@ -90,7 +256,7 @@ void lexlinrank_domaint::reset_refinements()
 
 /*******************************************************************\
 
-Function: lexlinrank_domaint::get_not_constraints
+Function: lexlinrank_domaint::make_not_post_constraints
 
   Inputs:
 
@@ -100,17 +266,18 @@ Function: lexlinrank_domaint::get_not_constraints
 
 \*******************************************************************/
 
-exprt lexlinrank_domaint::get_not_constraints(
-  const lexlinrank_domaint::templ_valuet &value,
-  exprt::operandst &cond_exprs,
-  std::vector<pre_post_valuest> &value_exprs)
+void lexlinrank_domaint::make_not_post_constraints(
+  valuet &_value,
+  exprt::operandst &cond_exprs)
 {
+  lexlinrank_domaint::templ_valuet &value=
+    static_cast<lexlinrank_domaint::templ_valuet &>(_value);
   cond_exprs.resize(value.size());
-  value_exprs.resize(value.size());
+  strategy_value_exprs.resize(value.size());
 
 for(std::size_t row=0; row<templ.size(); row++)
   {
-    value_exprs[row]=templ[row].expr;
+    strategy_value_exprs[row]=templ[row].expr;
 
     if(is_row_value_true(value[row]))
     {
@@ -242,10 +409,6 @@ for(std::size_t row=0; row<templ.size(); row++)
           disjunction(elmts)));
     }
   }
-
-  exprt cond=disjunction(cond_exprs);
-  adjust_float_expressions(cond, ns);
-  return cond;
 }
 
 /*******************************************************************\
@@ -263,7 +426,6 @@ Function: lexlinrank_domaint::get_row_symb_constraint
 exprt lexlinrank_domaint::get_row_symb_constraint(
   row_valuet &symb_values, // contains vars c and d
   const rowt &row,
-  const pre_post_valuest &values,
   exprt &refinement_constraint)
 {
   // NOTE: I assume symb_values.size was set to the number of
