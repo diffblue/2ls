@@ -16,6 +16,7 @@ Author: Peter Schrammel
 #include <util/std_expr.h>
 #include <util/arith_tools.h>
 #include <util/ieee_float.h>
+#include <domains/incremental_solver.h>
 #include <set>
 #include <vector>
 
@@ -49,26 +50,38 @@ public:
   linrank_domaint(
     unsigned _domain_number,
     replace_mapt &_renaming_map,
+    unsigned _max_elements, // lexicographic components
+    unsigned _max_inner_iterations,
     const namespacet &_ns):
     domaint(_domain_number, _renaming_map, _ns),
-    refinement_level(0)
+    refinement_level(0),
+    max_elements(_max_elements),
+    max_inner_iterations(_max_inner_iterations),
+    number_inner_iterations(0)
   {
+    inner_solver=incremental_solvert::allocate(_ns);
   }
-
   // initialize value
   virtual void initialize(valuet &value);
 
+  std::vector<exprt> get_required_values(size_t row);
+  void set_values(std::vector<exprt> got_values);
+
+  bool edit_row(const rowt &row, valuet &inv, bool improved);
+
+  exprt to_pre_constraints(valuet &_value);
+
+  void make_not_post_constraints(
+    valuet &_value,
+    exprt::operandst &cond_exprs);
+
+  bool not_satisfiable(valuet &value, bool improved);
+
   virtual bool refine();
 
-  // value -> constraints
-  exprt get_not_constraints(
-    const templ_valuet &value,
-    exprt::operandst &cond_exprs, // identical to before
-    std::vector<pre_post_valuest> &value_exprs); // (x, x')
   exprt get_row_symb_constraint(
     row_valuet &symb_values, // contains vars c
     const rowt &row,
-    const pre_post_valuest &values,
     exprt &refinement_constraint);
 
   // set, get value
@@ -101,12 +114,23 @@ public:
     const var_specst &var_specs,
     const namespacet &ns);
 
-protected:
   templatet templ;
+  exprt value;
   unsigned refinement_level;
+  // the "inner" solver
+  const unsigned max_elements; // lexicographic components
+  const unsigned max_inner_iterations;
+  incremental_solvert *inner_solver;
+  unsigned number_inner_iterations;
+
+
+protected:
+  pre_post_valuest values;
 
   bool is_row_value_false(const row_valuet & row_value) const;
   bool is_row_value_true(const row_valuet & row_value) const;
+public:
+  std::vector<linrank_domaint::pre_post_valuest> strategy_value_exprs;
 };
 
 #endif // CPROVER_2LS_DOMAINS_LINRANK_DOMAIN_H

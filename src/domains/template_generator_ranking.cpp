@@ -41,7 +41,11 @@ void template_generator_rankingt::operator()(
 
   if(options.get_bool_option("monolithic-ranking-function"))
   {
-    domain_ptr=new linrank_domaint(domain_number, post_renaming_map, SSA.ns);
+    domain_ptr=new linrank_domaint(
+      domain_number,
+      post_renaming_map,
+      options.get_unsigned_int_option("lexicographic-ranking-function"),
+      options.get_unsigned_int_option("max-inner-ranking-iterations"), SSA.ns);
   }
   else
   {
