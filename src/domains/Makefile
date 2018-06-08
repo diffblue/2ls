@@ -13,6 +13,7 @@ SRC = tpolyhedra_domain.cpp equality_domain.cpp domain.cpp \
   strategy_solver_predabs.cpp strategy_solver_heap.cpp \
   strategy_solver_heap_tpolyhedra.cpp \
   strategy_solver_heap_tpolyhedra_sympath.cpp \
+  strategy_solver.cpp
 #solver_enumeration.cpp
 
 include ../config.inc

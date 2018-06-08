@@ -34,6 +34,7 @@ Author: Peter Schrammel
 #include "strategy_solver_heap.h"
 #include "strategy_solver_heap_tpolyhedra.h"
 #include "strategy_solver_heap_tpolyhedra_sympath.h"
+#include "strategy_solver.h"
 
 // NOLINTNEXTLINE(*)
 #define BINSEARCH_SOLVER strategy_solver_binsearcht(\
@@ -80,13 +81,13 @@ void ssa_analyzert::operator()(
   domain=template_generator.domain();
 
   // get strategy solver from options
-  strategy_solver_baset *strategy_solver;
+  strategy_solver_baset *s_solver;
   if(template_generator.options.get_bool_option("compute-ranking-functions"))
   {
     if(template_generator.options.get_bool_option(
          "monolithic-ranking-function"))
     {
-      strategy_solver=new ranking_solver_enumerationt(
+      s_solver=new ranking_solver_enumerationt(
         *static_cast<linrank_domaint *>(domain), solver, SSA.ns,
         template_generator.options.get_unsigned_int_option(
           "max-inner-ranking-iterations"));
@@ -94,7 +95,7 @@ void ssa_analyzert::operator()(
     }
     else
     {
-      strategy_solver=new lexlinrank_solver_enumerationt(
+      s_solver=new lexlinrank_solver_enumerationt(
         *static_cast<lexlinrank_domaint *>(domain), solver, SSA.ns,
         template_generator.options.get_unsigned_int_option(
           "lexicographic-ranking-function"),
@@ -105,13 +106,13 @@ void ssa_analyzert::operator()(
   }
   else if(template_generator.options.get_bool_option("equalities"))
   {
-    strategy_solver=new strategy_solver_equalityt(
+    s_solver=new strategy_solver_equalityt(
       *static_cast<equality_domaint *>(domain), solver, SSA.ns);
     result=new equality_domaint::equ_valuet();
   }
   else if(template_generator.options.get_bool_option("heap"))
   {
-    strategy_solver=new strategy_solver_heapt(
+    s_solver=new strategy_solver_heapt(
       *static_cast<heap_domaint *>(domain),
       solver,
       SSA,
@@ -125,7 +126,7 @@ void ssa_analyzert::operator()(
   {
     if(template_generator.options.get_bool_option("sympath"))
     {
-      strategy_solver=new strategy_solver_heap_tpolyhedra_sympatht(
+      s_solver=new strategy_solver_heap_tpolyhedra_sympatht(
         *static_cast<heap_tpolyhedra_sympath_domaint *>(domain),
         solver,
         SSA,
@@ -137,7 +138,7 @@ void ssa_analyzert::operator()(
     }
     else
     {
-      strategy_solver=new strategy_solver_heap_tpolyhedrat(
+      s_solver=new strategy_solver_heap_tpolyhedrat(
         *static_cast<heap_tpolyhedra_domaint *>(domain),
         solver,
         SSA,
@@ -152,40 +153,40 @@ void ssa_analyzert::operator()(
     if(template_generator.options.get_bool_option("enum-solver"))
     {
       result=new tpolyhedra_domaint::templ_valuet();
-      strategy_solver=new strategy_solver_enumerationt(
+      s_solver=new strategy_solver_enumerationt(
         *static_cast<tpolyhedra_domaint *>(domain), solver, SSA.ns);
     }
     else if(template_generator.options.get_bool_option("predabs-solver"))
     {
       result=new predabs_domaint::templ_valuet();
-      strategy_solver=new strategy_solver_predabst(
+      s_solver=new strategy_solver_predabst(
         *static_cast<predabs_domaint *>(domain), solver, SSA.ns);
     }
     else if(template_generator.options.get_bool_option("binsearch-solver"))
     {
       result=new tpolyhedra_domaint::templ_valuet();
-      strategy_solver=new BINSEARCH_SOLVER;
+      s_solver=new BINSEARCH_SOLVER;
     }
     else
       assert(false);
   }
 
-  strategy_solver->set_message_handler(get_message_handler());
+  s_solver->set_message_handler(get_message_handler());
 
   // initialize inv
   domain->initialize(*result);
 
   // iterate
-  while(strategy_solver->iterate(*result)) {}
+  while(s_solver->iterate(*result)) {}
 
   solver.pop_context();
 
   // statistics
-  solver_instances+=strategy_solver->get_number_of_solver_instances();
-  solver_calls+=strategy_solver->get_number_of_solver_calls();
-  solver_instances+=strategy_solver->get_number_of_solver_instances();
+  solver_instances+=s_solver->get_number_of_solver_instances();
+  solver_calls+=s_solver->get_number_of_solver_calls();
+  solver_instances+=s_solver->get_number_of_solver_instances();
 
-  delete strategy_solver;
+  delete s_solver;
 }
 
 /*******************************************************************\
