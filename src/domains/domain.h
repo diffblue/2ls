@@ -86,19 +86,19 @@ public:
 
   virtual bool something_to_solve();
 
-  virtual bool edit_row(const rowt &row, valuet &inv, bool improved);
+  virtual bool edit_row(const rowt &row, valuet &inv, bool improved)=0;
 
   virtual exprt make_permanent(valuet &value);
   virtual void post_edit();
 
-  virtual exprt to_pre_constraints(valuet &value);
+  virtual exprt to_pre_constraints(valuet &value)=0;
 
   virtual void make_not_post_constraints(
     valuet &value,
-    exprt::operandst &cond_exprs);
+    exprt::operandst &cond_exprs)=0;
 
-  virtual std::vector<exprt> get_required_values(size_t row);
-  virtual void set_values(std::vector<exprt> got_values);
+  virtual std::vector<exprt> get_required_values(size_t row)=0;
+  virtual void set_values(std::vector<exprt> got_values)=0;
 
   virtual bool not_satisfiable(valuet &value, bool improved);
 

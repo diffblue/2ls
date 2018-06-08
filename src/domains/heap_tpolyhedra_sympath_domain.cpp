@@ -81,3 +81,33 @@ void heap_tpolyhedra_sympath_domaint::project_on_vars(
 
   result=c.empty() ? true_exprt() : disjunction(c);
 }
+
+bool heap_tpolyhedra_sympath_domaint::edit_row(
+  const rowt &row,
+  valuet &inv,
+  bool improved)
+{
+  return improved;
+}
+
+exprt heap_tpolyhedra_sympath_domaint::to_pre_constraints(valuet &value)
+{
+  return true_exprt();
+}
+
+void heap_tpolyhedra_sympath_domaint::make_not_post_constraints(
+  valuet &value,
+  exprt::operandst &cond_exprs)
+{
+}
+
+std::vector<exprt> heap_tpolyhedra_sympath_domaint::get_required_values(
+  size_t row)
+{
+  std::vector<exprt> r;
+  return r;
+}
+
+void heap_tpolyhedra_sympath_domaint::set_values(std::vector<exprt> got_values)
+{
+}

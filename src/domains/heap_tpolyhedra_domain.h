@@ -71,6 +71,18 @@ public:
   void undo_restriction();
   void eliminate_sympaths(const std::vector<symbolic_patht> &sympaths);
   void clear_aux_symbols();
+
+  std::vector<exprt> get_required_values(size_t row);
+  void set_values(std::vector<exprt> got_values);
+
+  // Value -> constraints
+  exprt to_pre_constraints(valuet &_value);
+
+  void make_not_post_constraints(
+    valuet &_value,
+    exprt::operandst &cond_exprs);
+
+  bool edit_row(const rowt &row, valuet &inv, bool improved);
 };
 
 #endif // CPROVER_2LS_DOMAINS_HEAP_TPOLYHEDRA_DOMAIN_H

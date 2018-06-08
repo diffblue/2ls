@@ -170,3 +170,32 @@ void heap_tpolyhedra_domaint::undo_restriction()
   heap_domain.undo_restriction();
   polyhedra_domain.undo_restriction();
 }
+
+bool heap_tpolyhedra_domaint::edit_row(
+  const rowt &row,
+  valuet &inv,
+  bool improved)
+{
+  return improved;
+}
+
+exprt heap_tpolyhedra_domaint::to_pre_constraints(valuet &value)
+{
+  return true_exprt();
+}
+
+void heap_tpolyhedra_domaint::make_not_post_constraints(
+  valuet &value,
+  exprt::operandst &cond_exprs)
+{
+}
+
+std::vector<exprt> heap_tpolyhedra_domaint::get_required_values(size_t row)
+{
+  std::vector<exprt> r;
+  return r;
+}
+
+void heap_tpolyhedra_domaint::set_values(std::vector<exprt> got_values)
+{
+}

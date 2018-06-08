@@ -57,6 +57,18 @@ public:
     const var_sett &vars,
     exprt &result) override;
 
+  std::vector<exprt> get_required_values(size_t row);
+  void set_values(std::vector<exprt> got_values);
+
+  // Value -> constraints
+  exprt to_pre_constraints(valuet &_value);
+
+  void make_not_post_constraints(
+    valuet &_value,
+    exprt::operandst &cond_exprs);
+
+  bool edit_row(const rowt &row, valuet &inv, bool improved);
+
 protected:
   // Special path containing conjunction negations of all loop-select guards
   // This must be stored explicitly since the solver is not able to explore this

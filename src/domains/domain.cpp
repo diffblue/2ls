@@ -78,32 +78,6 @@ void domaint::pre_iterate_init(valuet &value)
 {
 }
 
-bool domaint::edit_row(const rowt &row, valuet &inv, bool improved)
-{
-  return improved;
-}
-
-exprt domaint::to_pre_constraints(valuet &value)
-{
-  return true_exprt();
-}
-
-void domaint::make_not_post_constraints(
-  valuet &value,
-  exprt::operandst &cond_exprs)
-{
-}
-
-std::vector<exprt> domaint::get_required_values(size_t row)
-{
-  std::vector<exprt> r;
-  return r;
-}
-
-void domaint::set_values(std::vector<exprt> got_values)
-{
-}
-
 bool domaint::something_to_solve()
 {
   return true;
