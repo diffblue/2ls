@@ -48,8 +48,34 @@ public:
   {
   }
 
+  const exprt initialize_solver(
+    const local_SSAt &SSA,
+    const exprt &precondition,
+    template_generator_baset &template_generator);
+
   // initialize value
   virtual void initialize(valuet &value);
+
+  virtual void pre_iterate_init(valuet &value);
+
+  virtual bool something_to_solve();
+
+  std::vector<exprt> get_required_values(size_t row);
+  void set_values(std::vector<exprt> got_values);
+
+  bool edit_row(const rowt &row, valuet &inv, bool improved);
+
+  void post_edit();
+
+  exprt to_pre_constraints(valuet &_value);
+
+  void make_not_post_constraints(
+    valuet &_value,
+    exprt::operandst &cond_exprs);
+
+  bool not_satisfiable(valuet &value, bool improved);
+
+  exprt make_permanent(valuet &value);
 
   // value -> constraints
   exprt get_row_constraint(const rowt &row, const row_valuet &row_value);
@@ -58,17 +84,12 @@ public:
   exprt get_row_pre_constraint(const rowt &row, const templ_valuet &value);
   exprt get_row_post_constraint(const rowt &row, const templ_valuet &value);
 
-  exprt to_pre_constraints(const templ_valuet &value);
-  void make_not_post_constraints(
-    const templ_valuet &value,
-    exprt::operandst &cond_exprs);
-
   // set, get value
   row_valuet get_row_value(const rowt &row, const templ_valuet &value);
   void set_row_value(
     const rowt &row,
     const row_valuet &row_value,
-    templ_valuet &value);
+    valuet &_value);
 
   // printing
   virtual void output_value(
@@ -97,6 +118,13 @@ public:
 
 protected:
   templatet templ;
+  exprt value;
+
+public:
+  typedef std::set<unsigned> worklistt;
+  worklistt::iterator e_it;
+  worklistt todo_preds;
+  worklistt todo_notpreds;
 };
 
 #endif

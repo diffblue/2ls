@@ -26,8 +26,8 @@ Author: Peter Schrammel
 #include "linrank_domain.h"
 #include "equality_domain.h"
 #include "lexlinrank_domain.h"
+#include "predabs_domain.h"
 #include "template_generator_ranking.h"
-#include "strategy_solver_predabs.h"
 #include "ssa_analyzer.h"
 #include "strategy_solver_heap.h"
 #include "strategy_solver_heap_tpolyhedra.h"
@@ -165,9 +165,14 @@ void ssa_analyzert::operator()(
     }
     else if(template_generator.options.get_bool_option("predabs-solver"))
     {
+      s_solver=new strategy_solvert(
+        *static_cast<predabs_domaint *>(domain),
+        solver,
+        SSA,
+        precondition,
+        get_message_handler(),
+        template_generator);
       result=new predabs_domaint::templ_valuet();
-      s_solver=new strategy_solver_predabst(
-        *static_cast<predabs_domaint *>(domain), solver, SSA.ns);
     }
     else if(template_generator.options.get_bool_option("binsearch-solver"))
     {

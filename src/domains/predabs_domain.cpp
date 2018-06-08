@@ -45,6 +45,85 @@ void predabs_domaint::initialize(valuet &value)
   }
 }
 
+const exprt predabs_domaint::initialize_solver(
+  const local_SSAt &SSA,
+  const exprt &precondition,
+  template_generator_baset &template_generator)
+{
+  get_row_set(todo_preds);
+  return true_exprt();
+}
+
+
+/*******************************************************************\
+
+Function: predabs_domaint::pre_iterate_init
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void predabs_domaint::pre_iterate_init(valuet &value)
+{
+  e_it=todo_preds.begin();
+}
+
+bool predabs_domaint::something_to_solve()
+{
+  return (e_it==todo_preds.end());
+}
+
+std::vector<exprt> predabs_domaint::get_required_values(size_t row)
+{
+  std::vector<exprt> r;
+  return r;
+}
+
+void predabs_domaint::set_values(std::vector<exprt> got_values)
+{
+}
+
+bool predabs_domaint::edit_row(const rowt &row, valuet &inv, bool improved)
+{
+  todo_notpreds.insert(*e_it);
+  return true;
+}
+
+void predabs_domaint::post_edit()
+{
+  todo_preds.erase(e_it);
+}
+
+/*******************************************************************\
+
+Function: predabs_domaint::not_satisfiable
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool predabs_domaint::not_satisfiable(valuet &value, bool improved)
+{
+  set_row_value(*e_it, true_exprt(), value);
+  return true;
+}
+
+exprt predabs_domaint::make_permanent(valuet &value)
+{
+  exprt to_r=to_pre_constraints(value);
+  todo_preds.insert(todo_notpreds.begin(), todo_notpreds.end());
+  todo_notpreds.clear();
+  return to_r;
+}
+
 /*******************************************************************\
 
 Function: predabs_domaint::get_row_constraint
@@ -172,15 +251,14 @@ Function: predabs_domaint::to_pre_constraints
 
 \*******************************************************************/
 
-exprt predabs_domaint::to_pre_constraints(const templ_valuet &value)
+exprt predabs_domaint::to_pre_constraints(valuet &_value)
 {
-  assert(value.size()==templ.size());
-  exprt::operandst c;
-  for(std::size_t row=0; row<templ.size(); ++row)
-  {
-    c.push_back(get_row_pre_constraint(row, value[row]));
-  }
-  return conjunction(c);
+  assert(*e_it<templ.size());
+  const template_rowt &templ_row=templ[*e_it];
+  kindt k=templ_row.kind;
+  if(k==OUT || k==OUTL)
+    return true_exprt();
+  return implies_exprt(true_exprt(), templ[*e_it].expr);
 }
 
 /*******************************************************************\
@@ -197,9 +275,11 @@ Function: predabs_domaint::make_not_post_constraints
 \*******************************************************************/
 
 void predabs_domaint::make_not_post_constraints(
-  const templ_valuet &value,
+  valuet &_value,
   exprt::operandst &cond_exprs)
 {
+  predabs_domaint::templ_valuet &value=
+    static_cast<predabs_domaint::templ_valuet &>(_value);
   assert(value.size()==templ.size());
   cond_exprs.resize(templ.size());
 
@@ -304,8 +384,10 @@ Function: predabs_domaint::set_row_value
 void predabs_domaint::set_row_value(
   const rowt &row,
   const predabs_domaint::row_valuet &row_value,
-  templ_valuet &value)
+  valuet &_value)
 {
+  predabs_domaint::templ_valuet &value=
+    static_cast<predabs_domaint::templ_valuet &>(_value);
   assert(row<value.size());
   assert(value.size()==templ.size());
   value[row]=row_value;
