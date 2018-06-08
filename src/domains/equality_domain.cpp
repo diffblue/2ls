@@ -19,25 +19,8 @@ Author: Peter Schrammel
 #include "equality_domain.h"
 #include "util.h"
 
-/*******************************************************************\
-
-Function: equality_domaint::initialize
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void equality_domaint::initialize(valuet &value)
 {
-#if 0
-  if(templ.size()==0)
-    return domaint::initialize(value);
-#endif
-
   equ_valuet &v=static_cast<equ_valuet &>(value);
   v.equs.clear();
   v.disequs.clear();
@@ -45,7 +28,7 @@ void equality_domaint::initialize(valuet &value)
 
 /*******************************************************************\
 
-Function: equality_domaint::get_pre_equ_constraint
+Function: equality_domaint::pre_iterate_init
 
   Inputs:
 
@@ -54,6 +37,97 @@ Function: equality_domaint::get_pre_equ_constraint
  Purpose:
 
 \*******************************************************************/
+
+void equality_domaint::pre_iterate_init(valuet &value)
+{
+  e_it=todo_equs.begin();
+  unsatisfiable=false;
+}
+
+bool equality_domaint::something_to_solve()
+{
+  if(e_it!=todo_equs.end())
+  {
+    check_dis=false;
+    return true;
+  }
+  if(todo_disequs.begin()!=todo_disequs.end())
+  {
+    e_it=todo_disequs.begin();
+    check_dis=true;
+    return true;
+  }
+  return false;
+}
+
+std::vector<exprt> equality_domaint::get_required_values(size_t row)
+{
+  std::vector<exprt> r;
+  return r;
+}
+
+void equality_domaint::set_values(std::vector<exprt> got_values)
+{
+  todo_disequs.insert(*e_it);
+}
+
+bool equality_domaint::edit_row(const rowt &row, valuet &inv, bool improved)
+{
+  if(!check_dis)
+    todo_disequs.insert(*e_it);
+  return true;
+}
+
+void equality_domaint::post_edit()
+{
+  if(check_dis)
+    todo_disequs.erase(e_it);
+  else
+    todo_equs.erase(e_it);
+}
+
+exprt equality_domaint::to_pre_constraints(valuet &_value)
+{
+  if(check_dis)
+    return get_pre_disequ_constraint(*e_it);
+  assert(*e_it<templ.size());
+  const template_rowt &templ_row=templ[*e_it];
+  if(templ_row.kind==OUT || templ_row.kind==OUTL)
+    return true_exprt();
+
+  const var_pairt &vv=templ_row.var_pair;
+  return implies_exprt(templ_row.pre_guard, equal_exprt(vv.first, vv.second));
+}
+
+void equality_domaint::make_not_post_constraints(
+  valuet &_value,
+  exprt::operandst &cond_exprs)
+{
+  assert(*e_it<templ.size());
+  cond_exprs.resize(1);
+  if(check_dis)
+  {
+    cond_exprs[0]=get_post_not_disequ_constraint(*e_it);
+    return;
+  }
+  const template_rowt &templ_row=templ[*e_it];
+  if(templ_row.kind==IN)
+  {
+    cond_exprs[0]=true_exprt();
+    return;
+  }
+
+  const var_pairt &vv=templ_row.var_pair;
+  exprt c=
+    and_exprt(
+      templ_row.aux_expr,
+      not_exprt(
+        implies_exprt(
+          templ_row.post_guard,
+          equal_exprt(vv.first, vv.second))));
+  rename(c);
+  cond_exprs[0]=c;
+}
 
 exprt equality_domaint::get_pre_equ_constraint(unsigned index)
 {
@@ -70,7 +144,7 @@ exprt equality_domaint::get_pre_equ_constraint(unsigned index)
 
 Function: equality_domaint::get_post_not_equ_constraint
 
-  Inputs:
+ Inputs:
 
  Outputs:
 
@@ -95,6 +169,48 @@ exprt equality_domaint::get_post_not_equ_constraint(unsigned index)
           equal_exprt(vv.first, vv.second))));
   rename(c);
   return c;
+}
+
+/*******************************************************************\
+
+Function: equality_domaint::not_satisfiable
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool equality_domaint::not_satisfiable(valuet &value, bool improved)
+{
+  equality_domaint::equ_valuet &inv=
+    static_cast<equality_domaint::equ_valuet &>(value);
+  if(check_dis)
+    set_disequal(*e_it, inv);
+  unsatisfiable=true;
+  return true;
+}
+
+exprt equality_domaint::make_permanent(valuet &value)
+{
+  equality_domaint::equ_valuet &inv=
+    static_cast<equality_domaint::equ_valuet &>(value);
+  if(unsatisfiable)
+  {
+    if(!check_dis)
+    {
+      set_equal(*e_it, inv);
+
+      // due to transitivity, we have to recheck equalities
+      //   that did not hold
+      todo_equs.insert(todo_disequs.begin(), todo_disequs.end());
+      todo_disequs.clear();
+    }
+    return to_pre_constraints(value);
+  }
+  return true_exprt();
 }
 
 /*******************************************************************\
@@ -507,6 +623,15 @@ void equality_domaint::make_template(
       templ_row.kind=k;
     }
   }
+}
+
+const exprt equality_domaint::initialize_solver(
+  const local_SSAt &SSA,
+  const exprt &precondition,
+  template_generator_baset &template_generator)
+{
+  get_index_set(todo_equs);
+  return true_exprt();
 }
 
 /*******************************************************************\

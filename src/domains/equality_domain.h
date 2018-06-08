@@ -51,7 +51,32 @@ equality_domaint(
 
   typedef std::vector<template_rowt> templatet;
 
+  const exprt initialize_solver(
+    const local_SSAt &SSA,
+    const exprt &precondition,
+    template_generator_baset &template_generator);
+
   virtual void initialize(valuet &value);
+
+  virtual void pre_iterate_init(valuet &value);
+
+  virtual bool something_to_solve();
+
+  bool edit_row(const rowt &row, valuet &inv, bool improved);
+
+  void post_edit();
+
+  std::vector<exprt> get_required_values(size_t row);
+  void set_values(std::vector<exprt> got_values);
+
+  exprt to_pre_constraints(valuet &_value);
+
+  void make_not_post_constraints(
+    valuet &_value,
+    exprt::operandst &cond_exprs);
+
+  bool not_satisfiable(valuet &value, bool improved);
+  exprt make_permanent(valuet &value);
 
   exprt get_pre_equ_constraint(unsigned index);
   exprt get_post_not_equ_constraint(unsigned index);
@@ -78,12 +103,20 @@ equality_domaint(
 
 protected:
   templatet templ;
+  exprt value;
 
   void make_template(
     const var_specst &var_specs,
     const namespacet &ns);
 
   bool adapt_types(exprt &v1, exprt &v2);
+public:
+  typedef std::set<unsigned> worklistt;
+  worklistt::iterator e_it;
+  worklistt todo_equs;
+  worklistt todo_disequs;
+  bool check_dis;
+  bool unsatisfiable;
 };
 
 #endif // CPROVER_2LS_DOMAINS_EQUALITY_DOMAIN_H

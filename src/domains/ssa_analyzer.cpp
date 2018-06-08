@@ -23,8 +23,8 @@ Author: Peter Schrammel
 #include "strategy_solver_binsearch.h"
 #include "strategy_solver_binsearch2.h"
 #include "strategy_solver_binsearch3.h"
-#include "strategy_solver_equality.h"
 #include "linrank_domain.h"
+#include "equality_domain.h"
 #include "lexlinrank_domain.h"
 #include "ranking_solver_enumeration.h"
 #include "lexlinrank_solver_enumeration.h"
@@ -106,9 +106,14 @@ void ssa_analyzert::operator()(
   }
   else if(template_generator.options.get_bool_option("equalities"))
   {
-    s_solver=new strategy_solver_equalityt(
-      *static_cast<equality_domaint *>(domain), solver, SSA.ns);
-    result=new equality_domaint::equ_valuet();
+    s_solver=new strategy_solvert(
+      *static_cast<equality_domaint *>(domain),
+      solver,
+      SSA,
+      precondition,
+      get_message_handler(),
+      template_generator);
+      result=new equality_domaint::equ_valuet();
   }
   else if(template_generator.options.get_bool_option("heap"))
   {

@@ -3,7 +3,7 @@ SRC = tpolyhedra_domain.cpp equality_domain.cpp domain.cpp \
   heap_tpolyhedra_domain.cpp heap_tpolyhedra_sympath_domain.cpp \
   symbolic_path.cpp\
   ssa_analyzer.cpp util.cpp incremental_solver.cpp \
-  strategy_solver_base.cpp strategy_solver_equality.cpp \
+  strategy_solver_base.cpp \
   linrank_domain.cpp lexlinrank_domain.cpp\
   ranking_solver_enumeration.cpp lexlinrank_solver_enumeration.cpp \
   strategy_solver_enumeration.cpp strategy_solver_binsearch.cpp \
