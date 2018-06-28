@@ -736,7 +736,8 @@ void local_SSAt::build_assertions(locationt loc)
           {
             d.push_back(
               equal_exprt(
-                dealloc_symbol, typecast_exprt(
+                dealloc_symbol,
+                typecast_exprt(
                   address_of_exprt(global.symbol_expr()),
                   dealloc_symbol.type())));
           }
@@ -1472,7 +1473,7 @@ void local_SSAt::assign_rec(
         name(guard_symbol(), OBJECT_SELECT, loc));
       cond=and_exprt(cond, other_cond);
     }
-    exprt orig_rhs = fresh_rhs ? name(ssa_objectt(rhs, ns), OUT, loc) : rhs;
+    exprt orig_rhs=fresh_rhs ? name(ssa_objectt(rhs, ns), OUT, loc) : rhs;
     exprt new_rhs=if_exprt(cond, orig_rhs, if_expr.true_case());
     assign_rec(
       if_expr.true_case(),
@@ -2166,17 +2167,17 @@ Function: local_SSAt::collect_record_frees
 \*******************************************************************/
 void local_SSAt::collect_record_frees(local_SSAt::locationt loc)
 {
-  if (loc->is_decl())
+  if(loc->is_decl())
   {
-    const exprt &symbol = to_code_decl(loc->code).symbol();
-    if (symbol.id() != ID_symbol)
+    const exprt &symbol=to_code_decl(loc->code).symbol();
+    if(symbol.id()!=ID_symbol)
       return;
 
-    std::string id = id2string(to_symbol_expr(symbol).get_identifier());
+    std::string id=id2string(to_symbol_expr(symbol).get_identifier());
     if(id.find("free::")!=std::string::npos &&
        id.find("::record")!=std::string::npos)
     {
-      (--nodes.end())->record_free = symbol;
+      (--nodes.end())->record_free=symbol;
     }
   }
 }
@@ -2197,7 +2198,7 @@ void local_SSAt::get_alloc_guard_rec(
   exprt guard,
   locationt loc)
 {
-  if (expr.id() == ID_symbol && expr.type().get_bool("#dynamic"))
+  if(expr.id()==ID_symbol && expr.type().get_bool("#dynamic"))
   {
     allocation_guards.emplace(to_symbol_expr(expr).get_identifier(), guard);
   }
@@ -2214,6 +2215,6 @@ void local_SSAt::get_alloc_guard_rec(
   }
   else if(expr.id()==ID_typecast)
     get_alloc_guard_rec(to_typecast_expr(expr).op(), guard, loc);
-  else if (expr.id()==ID_address_of)
+  else if(expr.id()==ID_address_of)
     get_alloc_guard_rec(to_address_of_expr(expr).object(), guard, loc);
 }

@@ -128,35 +128,35 @@ void dynobj_instance_domaint::rhs_concretisation(
   const namespacet &ns)
 {
   forall_operands(it, guard)
-  {
-    if(it->id()==ID_symbol || it->id()==ID_member)
     {
-      bool found=false;
-      for(const auto &i:must_alias_relations)
+      if(it->id()==ID_symbol || it->id()==ID_member)
       {
-        unsigned long n;
-        found|=!i.second.get_number(*it, n);
-      }
-      if(!found)
-      {
-        // 1) now make dereference
-        const auto &values=
-          static_cast<dynobj_instance_analysist &>(ai).value_analysis[loc];
-        const auto guard_deref=dereference(guard, values, "", ns);
-        auto value_set=values(guard_deref, ns).value_set;
-        // 2) then isolate for all values in value set of dereferences
-        for(auto &v : value_set)
+        bool found=false;
+        for(const auto &i : must_alias_relations)
         {
-          auto &instances=must_alias_relations[v.symbol_expr()];
-          instances.isolate(*it);
+          unsigned long n;
+          found|=!i.second.get_number(*it, n);
+        }
+        if(!found)
+        {
+          // 1) now make dereference
+          const auto &values=
+            static_cast<dynobj_instance_analysist &>(ai).value_analysis[loc];
+          const auto guard_deref=dereference(guard, values, "", ns);
+          auto value_set=values(guard_deref, ns).value_set;
+          // 2) then isolate for all values in value set of dereferences
+          for(auto &v : value_set)
+          {
+            auto &instances=must_alias_relations[v.symbol_expr()];
+            instances.isolate(*it);
+          }
         }
       }
+      else
+      {
+        rhs_concretisation(*it, loc, ai, ns);
+      }
     }
-    else
-    {
-      rhs_concretisation(*it, loc, ai, ns);
-    }
-  }
 }
 
 /*******************************************************************\

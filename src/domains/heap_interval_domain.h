@@ -16,7 +16,8 @@ Author: Viktor Malik
 class heap_interval_domaint:public domaint
 {
 public:
-  enum polyhedra_kindt {
+  enum polyhedra_kindt
+  {
     INTERVAL, ZONES, OCTAGONS
   };
 
@@ -33,9 +34,10 @@ public:
     heap_domain(_domain_number, _renaming_map, var_specs, ns),
     polyhedra_domain(_domain_number, _renaming_map, ns)
   {
-    if (polyhedra_kind == INTERVAL)
+    if(polyhedra_kind==INTERVAL)
       polyhedra_domain.add_interval_template(var_specs, ns);
-    else if (polyhedra_kind == ZONES) {
+    else if(polyhedra_kind==ZONES)
+    {
       polyhedra_domain.add_difference_template(var_specs, ns);
       polyhedra_domain.add_interval_template(var_specs, ns);
     }

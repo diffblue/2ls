@@ -432,14 +432,14 @@ void strategy_solver_heapt::clear_pointing_rows(
   std::vector<heap_domaint::rowt> to_remove;
   for(auto &ptr : row_value.pointed_by)
   {
-    if (ptr != row)
+    if(ptr!=row)
     {
       debug() << "Clearing row: " << ptr << eom;
       value[ptr].clear();
       to_remove.push_back(ptr);
     }
   }
-  for (auto &r : to_remove)
+  for(auto &r : to_remove)
     row_value.pointed_by.erase(r);
 }
 

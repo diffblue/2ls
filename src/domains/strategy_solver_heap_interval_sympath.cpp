@@ -6,7 +6,7 @@ Author: Viktor Malik
 
 \*******************************************************************/
 
- #define DEBUG
+// #define DEBUG
 
 #include "strategy_solver_heap_interval_sympath.h"
 

@@ -657,7 +657,7 @@ int twols_parse_optionst::doit()
         if(cmdline.isset("graphml-witness"))
           output_graphml_proof(options, goto_model, *checker);
         retval=0;
-        finished = true;
+        finished=true;
         break;
 
       case property_checkert::FAIL:
@@ -697,7 +697,7 @@ int twols_parse_optionst::doit()
         }
         report_failure();
         retval=10;
-        finished = true;
+        finished=true;
         break;
       }
       case property_checkert::UNKNOWN:
@@ -712,7 +712,7 @@ int twols_parse_optionst::doit()
           if(report_assertions)
             report_properties(options, goto_model, checker->property_map);
           retval=5;
-          finished = true;
+          finished=true;
           report_unknown();
         }
         break;
@@ -1289,7 +1289,7 @@ bool twols_parse_optionst::process_goto_program(
     std::map<symbol_exprt, size_t> dynobj_instances;
     Forall_goto_functions(f_it, goto_model.goto_functions)
     {
-      if (!f_it->second.body_available())
+      if(!f_it->second.body_available())
         continue;
       namespacet ns(goto_model.symbol_table);
       ssa_value_ait value_analysis(f_it->second, ns, ssa_heap_analysist(ns));

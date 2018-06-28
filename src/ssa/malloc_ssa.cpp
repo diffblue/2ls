@@ -415,8 +415,9 @@ Function: set_var_always_to_true
 
 \*******************************************************************/
 
-void set_var_always_to_true(goto_modelt &goto_model,
-                            bool (*name_cond)(std::string &))
+void set_var_always_to_true(
+  goto_modelt &goto_model,
+  bool (*name_cond)(std::string &))
 {
   Forall_goto_functions(f_it, goto_model.goto_functions)
   {
@@ -429,7 +430,7 @@ void set_var_always_to_true(goto_modelt &goto_model,
         {
           std::string decl_id=
             id2string(to_symbol_expr(code_decl.symbol()).get_identifier());
-          if (name_cond(decl_id))
+          if(name_cond(decl_id))
           {
             auto assign=f_it->second.body.insert_after(i_it);
             assign->make_assignment();
@@ -459,7 +460,8 @@ Function: allow_record_malloc
 void allow_record_malloc(goto_modelt &goto_model)
 {
   set_var_always_to_true(
-    goto_model, [](std::string &name)
+    goto_model,
+    [](std::string &name)
     {
       return name.find("malloc::")!=std::string::npos &&
              name.find("::record_malloc")!=std::string::npos;
@@ -481,7 +483,8 @@ Function: allow_record_memleak
 void allow_record_memleak(goto_modelt &goto_model)
 {
   set_var_always_to_true(
-    goto_model, [](std::string &name)
+    goto_model,
+    [](std::string &name)
     {
       return name.find("malloc::")!=std::string::npos &&
              name.find("::record_may_leak")!=std::string::npos;
@@ -503,7 +506,8 @@ Function: allow_record_free
 void allow_record_free(goto_modelt &goto_model)
 {
   set_var_always_to_true(
-    goto_model, [](std::string &name)
+    goto_model,
+    [](std::string &name)
     {
       return name.find("free::")!=std::string::npos &&
              name.find("::record")!=std::string::npos;

@@ -96,7 +96,7 @@ public:
     std::list<nodet>::iterator loophead; // link to loop head node
        // otherwise points to nodes.end()
 
-    exprt record_free = nil_exprt();
+    exprt record_free=nil_exprt();
 
     void output(std::ostream &, const namespacet &) const;
 

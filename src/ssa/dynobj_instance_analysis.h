@@ -1,16 +1,17 @@
 /*******************************************************************\
 
 Module: Analysis of a number of instances of abstract dynamic objects.
-        In some cases, multiple instances must be used so that the
-        analysis is sound.
-        The analysis computes for each allocation site 'a' and each
-        program location 'i' a set of pointer expressions that may
-        point to some object allocated at 'a' in the location 'i'.
-        Then, a must-alias relation is computed over these sets and
-        the maximum number of equivalence classes gives the number of
-        required objects for the given allocation site.
 
 Author: Viktor Malik, viktor.malik@gmail.com
+
+Description: In some cases, multiple instances must be used so that the
+             analysis is sound. The analysis computes for each allocation
+             site 'a' and each program location 'i' a set of pointer
+             expressions that may point to some object allocated at 'a'
+             in the location 'i'. Then, a must-alias relation is computed
+             over these sets and the maximum number of equivalence classes
+             gives the number of required objects for the given allocation
+             site.
 
 \*******************************************************************/
 
@@ -30,23 +31,23 @@ Author: Viktor Malik, viktor.malik@gmail.com
  a custom join and equality.
 
 \*******************************************************************/
-class must_alias_setst : public union_find<exprt>
+class must_alias_setst:public union_find<exprt>
 {
 protected:
   // Two partitionings are equal if they contain same elements partitioned
   // in same sets (not necessarily having same numbers).
   bool equal(const must_alias_setst &other)
   {
-    if (size() != other.size())
+    if(size()!=other.size())
       return false;
 
-    for (auto &e1 : *this)
+    for(auto &e1 : *this)
     {
       unsigned long n;
-      if (other.get_number(e1, n))
+      if(other.get_number(e1, n))
         return false;
-      for (auto &e2 : *this)
-        if (same_set(e1, e2) != other.same_set(e1, e2))
+      for(auto &e2 : *this)
+        if(same_set(e1, e2)!=other.same_set(e1, e2))
           return false;
     }
     return true;
@@ -57,11 +58,11 @@ protected:
   {
     std::set<exprt> result;
     unsigned long n;
-    for (auto &e : *this)
-      if (get_number(e, n))
+    for(auto &e : *this)
+      if(get_number(e, n))
         result.insert(e);
-    for (auto &e : other)
-      if (get_number(e, n))
+    for(auto &e : other)
+      if(get_number(e, n))
         result.insert(e);
     return result;
   }
@@ -69,50 +70,50 @@ protected:
 public:
   bool join(const must_alias_setst &other)
   {
-    if (!equal(other))
+    if(!equal(other))
     {
       // Find new elements (those that are unique to one of the sets)
-      auto new_elements = sym_diff_elements(other);
+      auto new_elements=sym_diff_elements(other);
       // Copy *this
-      auto original = *this;
+      auto original=*this;
 
       // Make intersection (into *this) which contains all common elements
       // (after retyping to vector)
       clear();
       std::set<exprt> common_elements;
-      for (auto &e1 : original)
+      for(auto &e1 : original)
       {
-        if (new_elements.find(e1) != new_elements.end())
+        if(new_elements.find(e1)!=new_elements.end())
           continue;
 
         isolate(e1);
-        for (auto &e2 : common_elements)
-          if (original.same_set(e1, e2) && other.same_set(e1, e2))
+        for(auto &e2 : common_elements)
+          if(original.same_set(e1, e2) && other.same_set(e1, e2))
             make_union(e1, e2);
         common_elements.insert(e1);
       }
 
-      for (auto &e_new : new_elements)
+      for(auto &e_new : new_elements)
       {
-        bool added = false;
+        bool added=false;
         // First, try to find some new element that is already in *this and that
         // is in the same class as e_new in one of the sets
-        for (auto &e : *this)
+        for(auto &e : *this)
         {
           if(new_elements.find(e)!=new_elements.end() &&
              (original.same_set(e, e_new) || other.same_set(e, e_new)))
           {
             make_union(e, e_new);
-            added = true;
+            added=true;
           }
         }
-        if (!added)
+        if(!added)
         {
           // Find all sets to which e_new should be added by comparing with
           // common elements
           // The map will contain: set_number(in *this) -> set_representative
           std::map<unsigned long, exprt> dest_sets;
-          for(auto &e: common_elements)
+          for(auto &e : common_elements)
           {
             if(original.same_set(e_new, e) || other.same_set(e_new, e))
             {
@@ -161,11 +162,11 @@ public:
     locationt to);
 
 private:
-    void rhs_concretisation(
-      const exprt &guard,
-      ai_domain_baset::locationt loc,
-      ai_baset &ai,
-      const namespacet &ns);
+  void rhs_concretisation(
+    const exprt &guard,
+    ai_domain_baset::locationt loc,
+    ai_baset &ai,
+    const namespacet &ns);
 };
 
 class dynobj_instance_analysist:public ait<dynobj_instance_domaint>

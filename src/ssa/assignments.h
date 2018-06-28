@@ -47,7 +47,7 @@ public:
 
   inline const objectst &get_allocations(locationt loc) const
   {
-    auto it = allocation_map.find(loc);
+    auto it=allocation_map.find(loc);
     assert(it!=allocation_map.end());
     return it->second;
   }
@@ -91,8 +91,7 @@ protected:
   void allocate(
     const exprt &expr,
     const locationt loc,
-    const namespacet &ns
-  );
+    const namespacet &ns);
 };
 
 #endif

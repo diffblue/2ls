@@ -13,7 +13,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #endif
 
 #include <util/std_expr.h>
-#include <iostream>
 
 #include "ssa_domain.h"
 
@@ -125,9 +124,9 @@ void ssa_domaint::transform(
 
     auto allocations=
       static_cast<ssa_ait &>(ai).assignments.get_allocations(from);
-    for (auto &alloc : allocations)
+    for(auto &alloc : allocations)
     {
-      irep_idt identifier = alloc.get_identifier();
+      irep_idt identifier=alloc.get_identifier();
       def_entryt &def_entry=def_map[identifier];
       def_entry.def.loc=from;
       def_entry.def.kind=deft::ALLOCATION;
@@ -228,12 +227,12 @@ bool ssa_domaint::merge(
         continue;
 
       // Do not create PHIs for join of PHI and allocation with assignment
-      auto alloc_def = get_object_allocation_def(id, def_map);
-      if(alloc_def != def_map.end())
+      auto alloc_def=get_object_allocation_def(id, def_map);
+      if(alloc_def!=def_map.end())
       {
-        if(d_it_b->second.def.kind!=deft::ASSIGNMENT&&
-          to->location_number>alloc_def->second.def.loc->location_number&&
-          to->location_number>d_it_a->second.def.loc->location_number)
+        if(d_it_b->second.def.kind!=deft::ASSIGNMENT &&
+           to->location_number>alloc_def->second.def.loc->location_number &&
+           to->location_number>d_it_a->second.def.loc->location_number)
         {
           def_map[id]=d_it_a->second;
           def_map[id2string(id).substr(0, id2string(id).find_first_of("."))]=
@@ -242,12 +241,12 @@ bool ssa_domaint::merge(
           continue;
         }
       }
-      alloc_def = get_object_allocation_def(id, b.def_map);
-      if(alloc_def != b.def_map.end())
+      alloc_def=get_object_allocation_def(id, b.def_map);
+      if(alloc_def!=b.def_map.end())
       {
-        if(d_it_a->second.def.kind!=deft::ASSIGNMENT&&
+        if(d_it_a->second.def.kind!=deft::ASSIGNMENT &&
            to->location_number>alloc_def->second.def.loc->location_number &&
-          to->location_number>d_it_b->second.def.loc->location_number)
+           to->location_number>d_it_b->second.def.loc->location_number)
         {
           def_map[id]=d_it_b->second;
           def_map[id2string(id).substr(0, id2string(id).find_first_of("."))]=
@@ -280,19 +279,30 @@ bool ssa_domaint::merge(
   return result;
 }
 
+/*******************************************************************\
+
+Function: ssa_domaint::get_object_allocation_def
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 ssa_domaint::def_mapt::const_iterator ssa_domaint::get_object_allocation_def(
   const irep_idt &id,
   const ssa_domaint::def_mapt &def_map)
 {
-  auto def = def_map.find(id);
-  std::string id_str = id2string(id);
+  auto def=def_map.find(id);
+  std::string id_str=id2string(id);
   if(def!=def_map.end() &&
-     def->second.def.kind == deft::ASSIGNMENT &&
+     def->second.def.kind==deft::ASSIGNMENT &&
      id_str.find("ssa::dynamic_object$")!=std::string::npos)
   {
     // Check if corresponding dynamic object has been allocated in that branch
-    std::string dyn_obj_id = id_str.substr(0, id_str.find_first_of("."));
-    auto dyn_obj_def = def_map.find(dyn_obj_id);
+    std::string dyn_obj_id=id_str.substr(0, id_str.find_first_of("."));
+    auto dyn_obj_def=def_map.find(dyn_obj_id);
     if(dyn_obj_def!=def_map.end() &&
        dyn_obj_def->second.def.kind==deft::ALLOCATION)
       return dyn_obj_def;

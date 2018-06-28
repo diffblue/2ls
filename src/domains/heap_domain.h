@@ -62,7 +62,7 @@ public:
 
     const namespacet &ns;
 
-    row_valuet(const namespacet &ns):ns(ns) {}
+    explicit row_valuet(const namespacet &ns):ns(ns) {}
 
     virtual exprt get_row_expr(
       const vart &templ_expr,
@@ -86,7 +86,7 @@ public:
     // Set of objects (or NULL) the row variable can point to
     std::set<exprt> points_to;
 
-    stack_row_valuet(const namespacet &ns):row_valuet(ns) {}
+    explicit stack_row_valuet(const namespacet &ns):row_valuet(ns) {}
 
     virtual exprt get_row_expr(
       const vart &templ_expr,

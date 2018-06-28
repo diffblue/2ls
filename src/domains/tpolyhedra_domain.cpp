@@ -1052,9 +1052,10 @@ void tpolyhedra_domaint::add_difference_template(
   for(var_specst::const_iterator v1=var_specs.begin();
       v1!=var_specs.end(); ++v1)
   {
-    if (v1->var.type().id() == ID_pointer)
+    if(v1->var.type().id()==ID_pointer)
       continue;
-    var_specst::const_iterator v2=v1; ++v2;
+    var_specst::const_iterator v2=v1;
+    ++v2;
     for(; v2!=var_specs.end(); ++v2)
     {
       kindt k=domaint::merge_kinds(v1->kind, v2->kind);
@@ -1062,14 +1063,14 @@ void tpolyhedra_domaint::add_difference_template(
         continue;
       if(k==LOOP && v1->pre_guard!=v2->pre_guard)
         continue; // TEST: we need better heuristics
-      if (v2->var.type().id() == ID_pointer)
+      if(v2->var.type().id()==ID_pointer)
         continue;
 
       exprt pre_g, post_g, aux_expr;
       merge_and(pre_g, v1->pre_guard, v2->pre_guard, ns);
       merge_and(post_g, v1->post_guard, v2->post_guard, ns);
       merge_and(aux_expr, v1->aux_expr, v2->aux_expr, ns);
-      if (post_g.is_false())
+      if(post_g.is_false())
         continue;
 
       // x1-x2
