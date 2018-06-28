@@ -688,6 +688,17 @@ void twols_parse_optionst::split_same_symbolic_object_assignments(
   }
 }
 
+/*******************************************************************\
+
+Function: twols_parse_optionst::remove_dead_goto
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Remove dead backwards GOTO instructions (having false as guard)
+
+\*******************************************************************/
 void twols_parse_optionst::remove_dead_goto(goto_modelt &goto_model)
 {
   Forall_goto_functions(f_it, goto_model.goto_functions)
@@ -703,6 +714,19 @@ void twols_parse_optionst::remove_dead_goto(goto_modelt &goto_model)
   }
 }
 
+/*******************************************************************\
+
+Function: twols_parse_optionst::compute_dynobj_instances
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: For each allocation site, compute the number of objects
+          that must be used to soundly represent all objects allocated
+          at the given site.
+
+\*******************************************************************/
 void twols_parse_optionst::compute_dynobj_instances(
   const goto_programt &goto_program,
   const dynobj_instance_analysist &analysis,
@@ -714,8 +738,8 @@ void twols_parse_optionst::compute_dynobj_instances(
     auto &analysis_value = analysis[it];
     for (auto &obj : analysis_value.live_pointers)
     {
-      auto must_alias = analysis_value.dynobj_instances.find(obj.first);
-      if (must_alias == analysis_value.dynobj_instances.end())
+      auto must_alias = analysis_value.must_alias_relations.find(obj.first);
+      if (must_alias == analysis_value.must_alias_relations.end())
         continue;
 
       std::set<unsigned long> alias_classes;
@@ -735,6 +759,19 @@ void twols_parse_optionst::compute_dynobj_instances(
   }
 }
 
+/*******************************************************************\
+
+Function: twols_parse_optionst::create_dynobj_instances
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: For each allocation site, split the allocated abstract
+          dynamic object into multiple in order to preserve soundness
+          of the analysis.
+
+\*******************************************************************/
 void twols_parse_optionst::create_dynobj_instances(
   goto_programt &goto_program,
   const std::map<symbol_exprt, size_t> &instance_counts,

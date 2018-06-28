@@ -1,9 +1,21 @@
-//
-// Created by vmalik on 5/14/18.
-//
+/*******************************************************************\
 
-#ifndef INC_2LS_DYNOBJ_INSTANCE_ANALYSIST_H
-#define INC_2LS_DYNOBJ_INSTANCE_ANALYSIST_H
+Module: Analysis of a number of instances of abstract dynamic objects.
+        In some cases, multiple instances must be used so that the
+        analysis is sound.
+        The analysis computes for each allocation site 'a' and each
+        program location 'i' a set of pointer expressions that may
+        point to some object allocated at 'a' in the location 'i'.
+        Then, a must-alias relation is computed over these sets and
+        the maximum number of equivalence classes gives the number of
+        required objects for the given allocation site.
+
+Author: Viktor Malik, viktor.malik@gmail.com
+
+\*******************************************************************/
+
+#ifndef CPROVER_2LS_SSA_DYNOBJ_INSTANCE_ANALYSIS_H
+#define CPROVER_2LS_SSA_DYNOBJ_INSTANCE_ANALYSIS_H
 
 
 #include <analyses/ai.h>
@@ -11,9 +23,18 @@
 #include "ssa_object.h"
 #include "ssa_value_set.h"
 
+/*******************************************************************\
+
+ Set partitioning by must-alias relation (it is an equivalence).
+ It extends the standard union find structure, particularly using
+ a custom join and equality.
+
+\*******************************************************************/
 class must_alias_setst : public union_find<exprt>
 {
 protected:
+  // Two partitionings are equal if they contain same elements partitioned
+  // in same sets (not necessarily having same numbers).
   bool equal(const must_alias_setst &other)
   {
     if (size() != other.size())
@@ -31,6 +52,7 @@ protected:
     return true;
   }
 
+  // Symmetric difference of elements
   std::set<exprt> sym_diff_elements(const must_alias_setst &other)
   {
     std::set<exprt> result;
@@ -49,7 +71,7 @@ public:
   {
     if (!equal(other))
     {
-      // Find new elements (those that are unique to one of the sets
+      // Find new elements (those that are unique to one of the sets)
       auto new_elements = sym_diff_elements(other);
       // Copy *this
       auto original = *this;
@@ -118,7 +140,10 @@ public:
 class dynobj_instance_domaint:public ai_domain_baset
 {
 public:
-  std::map<symbol_exprt, must_alias_setst> dynobj_instances;
+  // Must-alias relation for each dynamic object (corresponding to allocation
+  // site).
+  std::map<symbol_exprt, must_alias_setst> must_alias_relations;
+  // Set of live pointers pointing to dynamic object.
   std::map<symbol_exprt, std::set<exprt>> live_pointers;
 
   void transform(
@@ -134,8 +159,6 @@ public:
     const dynobj_instance_domaint &other,
     locationt from,
     locationt to);
-
-protected:
 
 private:
     void rhs_concretisation(
@@ -164,4 +187,4 @@ protected:
 };
 
 
-#endif //INC_2LS_DYNOBJ_INSTANCE_ANALYSIST_H
+#endif // CPROVER_2LS_SSA_DYNOBJ_INSTANCE_ANALYSIS_H
