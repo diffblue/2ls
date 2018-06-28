@@ -2153,6 +2153,17 @@ void local_SSAt::collect_allocation_guards(
   }
 }
 
+/********************************************************************\
+
+Function: local_SSAt::collect_record_frees
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 void local_SSAt::collect_record_frees(local_SSAt::locationt loc)
 {
   if (loc->is_decl())
@@ -2170,6 +2181,17 @@ void local_SSAt::collect_record_frees(local_SSAt::locationt loc)
   }
 }
 
+/********************************************************************\
+
+Function: local_SSAt::get_alloc_guard_rec
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
 void local_SSAt::get_alloc_guard_rec(
   const exprt &expr,
   exprt guard,

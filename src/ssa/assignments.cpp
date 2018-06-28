@@ -314,6 +314,17 @@ void assignmentst::output(
   }
 }
 
+/*******************************************************************\
+
+Function: assignmentst::allocate
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Record allocation
+
+\*******************************************************************/
 void assignmentst::allocate(
   const exprt &expr,
   const assignmentst::locationt loc,
