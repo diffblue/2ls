@@ -1295,7 +1295,6 @@ bool twols_parse_optionst::process_goto_program(
       ssa_value_ait value_analysis(f_it->second, ns, ssa_heap_analysist(ns));
       value_analysis.output(ns, f_it->second, std::cerr);
       dynobj_instance_analysist do_inst(f_it->second, ns, value_analysis);
-      do_inst.output(ns, f_it->second, std::cerr);
 
       compute_dynobj_instances(
         f_it->second.body, do_inst, dynobj_instances, ns);
