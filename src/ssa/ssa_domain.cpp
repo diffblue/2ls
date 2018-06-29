@@ -232,7 +232,8 @@ bool ssa_domaint::merge(
       {
         if(d_it_b->second.def.kind!=deft::ASSIGNMENT &&
            to->location_number>alloc_def->second.def.loc->location_number &&
-           to->location_number>d_it_a->second.def.loc->location_number)
+           to->location_number>d_it_a->second.def.loc->location_number &&
+           to->location_number>d_it_b->second.def.loc->location_number)
         {
           def_map[id]=d_it_a->second;
           def_map[id2string(id).substr(0, id2string(id).find_first_of("."))]=
@@ -246,7 +247,8 @@ bool ssa_domaint::merge(
       {
         if(d_it_a->second.def.kind!=deft::ASSIGNMENT &&
            to->location_number>alloc_def->second.def.loc->location_number &&
-           to->location_number>d_it_b->second.def.loc->location_number)
+           to->location_number>d_it_b->second.def.loc->location_number &&
+           to->location_number>d_it_a->second.def.loc->location_number)
         {
           def_map[id]=d_it_b->second;
           def_map[id2string(id).substr(0, id2string(id).find_first_of("."))]=
