@@ -1,4 +1,4 @@
-CORE
+KNOWNBUG
 main.c
 --heap-interval --inline --sympath --pointer-check --no-assertions
 ^EXIT=0$

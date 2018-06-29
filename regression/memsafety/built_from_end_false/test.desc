@@ -1,0 +1,7 @@
+CORE
+main.c
+--heap-interval --sympath --inline --pointer-check --no-assertions --k-induction
+^EXIT=10$
+^SIGNAL=0$
+^VERIFICATION FAILED$
+\[main.pointer_dereference.11\] dereference failure: deallocated dynamic object in \*p: FAILURE
