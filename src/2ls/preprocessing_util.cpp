@@ -789,9 +789,11 @@ void twols_parse_optionst::create_dynobj_instances(
                                             : rhs;
         exprt &address=abstract_obj.id()==ID_typecast ?
                        to_typecast_expr(abstract_obj).op() : abstract_obj;
-        assert(address.id()==ID_address_of);
+        if(address.id()!=ID_address_of)
+          continue;
         exprt &obj=to_address_of_expr(address).object();
-        assert(obj.id()==ID_symbol);
+        if(obj.id()!=ID_symbol)
+          continue;
 
         if(instance_counts.find(to_symbol_expr(obj))==instance_counts.end())
           continue;
