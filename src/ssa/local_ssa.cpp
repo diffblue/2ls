@@ -2148,9 +2148,10 @@ void local_SSAt::collect_allocation_guards(
   if(rhs.id()==ID_if)
   {
     get_alloc_guard_rec(
-      to_if_expr(rhs).true_case(), to_if_expr(rhs).cond(), loc);
+      to_if_expr(rhs).true_case(), read_rhs(to_if_expr(rhs).cond(), loc));
     get_alloc_guard_rec(
-      to_if_expr(rhs).false_case(), not_exprt(to_if_expr(rhs).cond()), loc);
+      to_if_expr(rhs).false_case(),
+      read_rhs(not_exprt(to_if_expr(rhs).cond()), loc));
   }
 }
 
@@ -2193,10 +2194,7 @@ Function: local_SSAt::get_alloc_guard_rec
  Purpose:
 
 \*******************************************************************/
-void local_SSAt::get_alloc_guard_rec(
-  const exprt &expr,
-  exprt guard,
-  locationt loc)
+void local_SSAt::get_alloc_guard_rec(const exprt &expr, exprt guard)
 {
   if(expr.id()==ID_symbol && expr.type().get_bool("#dynamic"))
   {
@@ -2205,16 +2203,13 @@ void local_SSAt::get_alloc_guard_rec(
   else if(expr.id()==ID_if)
   {
     get_alloc_guard_rec(
-      to_if_expr(expr).true_case(),
-      and_exprt(guard, to_if_expr(expr).cond()),
-      loc);
+      to_if_expr(expr).true_case(), and_exprt(guard, to_if_expr(expr).cond()));
     get_alloc_guard_rec(
       to_if_expr(expr).false_case(),
-      and_exprt(guard, not_exprt(to_if_expr(expr).cond())),
-      loc);
+      and_exprt(guard, not_exprt(to_if_expr(expr).cond())));
   }
   else if(expr.id()==ID_typecast)
-    get_alloc_guard_rec(to_typecast_expr(expr).op(), guard, loc);
+    get_alloc_guard_rec(to_typecast_expr(expr).op(), guard);
   else if(expr.id()==ID_address_of)
-    get_alloc_guard_rec(to_address_of_expr(expr).object(), guard, loc);
+    get_alloc_guard_rec(to_address_of_expr(expr).object(), guard);
 }

@@ -236,6 +236,8 @@ exprt malloc_ssa(
 
   exprt object=create_dynamic_object(
     suffix, object_type, symbol_table, !alloc_concrete);
+  if(object.type()!=code.type())
+    object=typecast_exprt(object, code.type());
   exprt result;
   if(alloc_concrete)
   {
@@ -260,13 +262,12 @@ exprt malloc_ssa(
       nondet_symbol.symbol_expr(),
       not_exprt(disjunction(pointer_equs)));
 
+    if(concrete_object.type()!=code.type())
+      concrete_object=typecast_exprt(concrete_object, code.type());
     result=if_exprt(cond, concrete_object, object);
   }
   else
     result=object;
-
-  if(result.type()!=code.type())
-    result=typecast_exprt(result, code.type());
 
   result.set("#malloc_result", true);
 

@@ -785,7 +785,10 @@ void twols_parse_optionst::create_dynobj_instances(
       if(assign.rhs().get_bool("#malloc_result"))
       {
         exprt &rhs=assign.rhs();
-        exprt &address=rhs.id()==ID_typecast ? to_typecast_expr(rhs).op() : rhs;
+        exprt &abstract_obj=rhs.id()==ID_if ? to_if_expr(rhs).false_case()
+                                            : rhs;
+        exprt &address=abstract_obj.id()==ID_typecast ?
+                       to_typecast_expr(abstract_obj).op() : abstract_obj;
         assert(address.id()==ID_address_of);
         exprt &obj=to_address_of_expr(address).object();
         assert(obj.id()==ID_symbol);
@@ -809,7 +812,7 @@ void twols_parse_optionst::create_dynobj_instances(
         symbol_table.add(obj_symbol);
 
         exprt new_rhs=address_of_exprt(obj_symbol.symbol_expr());
-        if(rhs.id()==ID_typecast)
+        if(abstract_obj.id()==ID_typecast)
           new_rhs=typecast_exprt(new_rhs, rhs.type());
         new_rhs.set("#malloc_result", true);
 
@@ -828,15 +831,15 @@ void twols_parse_optionst::create_dynobj_instances(
           obj_symbol.base_name=base_name+suffix;
 
           exprt new_obj=address_of_exprt(obj_symbol.symbol_expr());
-          if(rhs.id()==ID_typecast)
+          if(abstract_obj.id()==ID_typecast)
             new_obj=typecast_exprt(new_obj, rhs.type());
           new_rhs=if_exprt(
             nondet.symbol_expr(), new_obj, new_rhs);
           new_rhs.set("#malloc_result", true);
         }
 
-        rhs=new_rhs;
-        rhs.set("#malloc_result", true);
+        abstract_obj=new_rhs;
+        abstract_obj.set("#malloc_result", true);
       }
     }
   }
