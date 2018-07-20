@@ -92,7 +92,7 @@ Function: add_aliased_dereferences
 void add_aliased_dereferences(const exprt &pointer, must_alias_setst &instances)
 {
   // We must copy instances so that we can alter them while iterating
-  auto inst_copy = instances;
+  auto inst_copy=instances;
   for(auto &i : inst_copy)
   {
     if(i.id()==ID_symbol && pointer.id()==ID_symbol && i!=pointer &&
