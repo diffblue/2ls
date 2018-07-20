@@ -98,7 +98,8 @@ public:
         bool added=false;
         // First, try to find some new element that is already in *this and that
         // is in the same class as e_new in one of the sets
-        for(auto &e : *this)
+        auto this_copy(*this);
+        for(auto &e : this_copy)
         {
           if(new_elements.find(e)!=new_elements.end() &&
              (original.same_set(e, e_new) || other.same_set(e, e_new)))
