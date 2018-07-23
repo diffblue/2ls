@@ -31,5 +31,5 @@ int main() {
             else p->val /= 2;
         }
     }
-
 }
+
