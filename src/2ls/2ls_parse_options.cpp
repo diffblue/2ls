@@ -1805,7 +1805,7 @@ void twols_parse_optionst::help()
     " --octagons                   use octagon domain\n"
     " --heap-interval              use heap domain with interval domain for values\n" // NOLINT(*)
     " --heap-zones                 use heap domain with zones domain for values\n" // NOLINT(*)
-    " --heap-zones                 use heap domain with dynamically incrementing stregth of value domain\n" // NOLINT(*)
+    " --heap-incremental           use heap domain with dynamically incrementing strength of value domain\n" // NOLINT(*)
     " --sympath                    compute invariant for each symbolic path (only usable with --heap-interval switch)" // NOLINT(*)
     " --enum-solver                use solver based on model enumeration\n"
     " --binsearch-solver           use solver based on binary search\n"
