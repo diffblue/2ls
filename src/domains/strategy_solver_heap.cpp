@@ -10,6 +10,8 @@ Author: Viktor Malik
 
 #include <ssa/ssa_inliner.h>
 #include <algorithm>
+#include <util/prefix.h>
+#include <util/cprover_prefix.h>
 #include "strategy_solver_heap.h"
 
 /*******************************************************************\
@@ -458,7 +460,9 @@ Function: strategy_solver_heapt::is_cprover_symbol
 bool strategy_solver_heapt::is_cprover_symbol(const exprt &expr)
 {
   return expr.id()==ID_symbol &&
-         id2string(to_symbol_expr(expr).get_identifier()).find("__CPROVER_")==0;
+         has_prefix(
+           id2string(to_symbol_expr(expr).get_identifier()),
+           CPROVER_PREFIX);
 }
 
 /*******************************************************************\

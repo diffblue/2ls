@@ -1,6 +1,6 @@
 /*******************************************************************\
 
-Module: Analysis of a number of instances of abstract dynamic objects.
+Module: Analysis of the number of instances of abstract dynamic objects.
         In some cases, multiple instances must be used so that the
         analysis is sound.
 
@@ -9,6 +9,8 @@ Author: Viktor Malik, viktor.malik@gmail.com
 \*******************************************************************/
 
 #include <iostream>
+#include <util/prefix.h>
+#include <util/cprover_prefix.h>
 #include "dynobj_instance_analysis.h"
 #include "ssa_dereference.h"
 
@@ -185,8 +187,9 @@ void dynobj_instance_domaint::transform(
 
     // Do not include CPROVER symbols
     if(lhs.id()==ID_symbol &&
-       id2string(to_symbol_expr(lhs).get_identifier()).find("__CPROVER")!=
-       std::string::npos)
+       has_prefix(
+         id2string(to_symbol_expr(lhs).get_identifier()),
+         CPROVER_PREFIX))
       return;
 
     if(assignment.rhs().get_bool("#malloc_result"))

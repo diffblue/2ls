@@ -1,6 +1,6 @@
 /*******************************************************************\
 
-Module: Analysis of a number of instances of abstract dynamic objects.
+Module: Analysis of the number of instances of abstract dynamic objects.
 
 Author: Viktor Malik, viktor.malik@gmail.com
 
