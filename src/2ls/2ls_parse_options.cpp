@@ -1293,7 +1293,6 @@ bool twols_parse_optionst::process_goto_program(
         continue;
       namespacet ns(goto_model.symbol_table);
       ssa_value_ait value_analysis(f_it->second, ns, ssa_heap_analysist(ns));
-      value_analysis.output(ns, f_it->second, std::cerr);
       dynobj_instance_analysist do_inst(f_it->second, ns, value_analysis);
 
       compute_dynobj_instances(
