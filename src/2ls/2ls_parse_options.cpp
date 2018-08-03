@@ -216,8 +216,9 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
     if(cmdline.isset("sympath"))
       options.set_option("sympath", true);
   }
-  else if(cmdline.isset("heap-values-incremental"))
+  else if(cmdline.isset("heap-values-refine"))
   {
+    options.set_option("heap-values-refine", true);
     options.set_option("heap-interval", true);
     if(cmdline.isset("sympath"))
       options.set_option("sympath", true);
@@ -578,153 +579,137 @@ int twols_parse_optionst::doit()
 
   try
   {
-    bool finished=false;
+    std::unique_ptr<summary_checker_baset> checker;
+    if(!options.get_bool_option("k-induction") &&
+       !options.get_bool_option("incremental-bmc"))
+      checker=std::unique_ptr<summary_checker_baset>(
+        new summary_checker_ait(options, heap_analysis));
+    if(options.get_bool_option("k-induction") &&
+       !options.get_bool_option("incremental-bmc"))
+      checker=std::unique_ptr<summary_checker_baset>(
+        new summary_checker_kindt(options, heap_analysis));
+    if(!options.get_bool_option("k-induction") &&
+       options.get_bool_option("incremental-bmc"))
+      checker=std::unique_ptr<summary_checker_baset>(
+        new summary_checker_bmct(options, heap_analysis));
+    if(options.get_bool_option("nontermination"))
+      checker=std::unique_ptr<summary_checker_baset>(
+        new summary_checker_nontermt(options, heap_analysis));
+
+    checker->set_message_handler(get_message_handler());
+    checker->simplify=!cmdline.isset("no-simplify");
+    checker->fixed_point=!cmdline.isset("no-fixed-point");
+
     int retval;
-    while(!finished)
+    if(cmdline.isset("show-vcc"))
     {
-      std::unique_ptr<summary_checker_baset> checker;
-      if(!options.get_bool_option("k-induction") &&
-         !options.get_bool_option("incremental-bmc"))
-        checker=std::unique_ptr<summary_checker_baset>(
-          new summary_checker_ait(options, heap_analysis));
-      if(options.get_bool_option("k-induction") &&
-         !options.get_bool_option("incremental-bmc"))
-        checker=std::unique_ptr<summary_checker_baset>(
-          new summary_checker_kindt(options, heap_analysis));
-      if(!options.get_bool_option("k-induction") &&
-         options.get_bool_option("incremental-bmc"))
-        checker=std::unique_ptr<summary_checker_baset>(
-          new summary_checker_bmct(options, heap_analysis));
-      if(options.get_bool_option("nontermination"))
-        checker=std::unique_ptr<summary_checker_baset>(
-          new summary_checker_nontermt(options, heap_analysis));
+      std::cout << "VERIFICATION CONDITIONS:\n\n";
+      checker->show_vcc=true;
+      (*checker)(goto_model);
+      return 0;
+    }
 
-      checker->set_message_handler(get_message_handler());
-      checker->simplify=!cmdline.isset("no-simplify");
-      checker->fixed_point=!cmdline.isset("no-fixed-point");
+    if(cmdline.isset("horn-encoding"))
+    {
+      status() << "Horn-clause encoding" << eom;
+      namespacet ns(symbol_table);
 
-      if(cmdline.isset("show-vcc"))
+      std::string out_file=cmdline.get_value("horn-encoding");
+
+      if(out_file=="-")
       {
-        std::cout << "VERIFICATION CONDITIONS:\n\n";
-        checker->show_vcc=true;
-        (*checker)(goto_model);
-        return 0;
+        horn_encoding(goto_model, std::cout);
       }
-
-      if(cmdline.isset("horn-encoding"))
+      else
       {
-        status() << "Horn-clause encoding" << eom;
-        namespacet ns(symbol_table);
-
-        std::string out_file=cmdline.get_value("horn-encoding");
-
-        if(out_file=="-")
-        {
-          horn_encoding(goto_model, std::cout);
-        }
-        else
-        {
 #ifdef _MSC_VER
-          std::ofstream out(widen(out_file).c_str());
+        std::ofstream out(widen(out_file).c_str());
 #else
-          std::ofstream out(out_file.c_str());
+        std::ofstream out(out_file.c_str());
 #endif
 
-          if(!out)
-          {
-            error() << "Failed to open output file "
-                    << out_file << eom;
-            return 1;
-          }
-
-          horn_encoding(goto_model, out);
+        if(!out)
+        {
+          error() << "Failed to open output file "
+                  << out_file << eom;
+          return 1;
         }
 
-        return 0;
+        horn_encoding(goto_model, out);
       }
 
-      bool report_assertions=
-        !options.get_bool_option("preconditions") &&
-        !options.get_bool_option("termination") &&
-        !options.get_bool_option("nontermination");
-      // do actual analysis
-      switch((*checker)(goto_model))
+      return 0;
+    }
+
+    bool report_assertions=
+      !options.get_bool_option("preconditions") &&
+      !options.get_bool_option("termination") &&
+      !options.get_bool_option("nontermination");
+    // do actual analysis
+    switch((*checker)(goto_model))
+    {
+    case property_checkert::PASS:
+      if(report_assertions)
+        report_properties(options, goto_model, checker->property_map);
+      report_success();
+      if(cmdline.isset("graphml-witness"))
+        output_graphml_proof(options, goto_model, *checker);
+      retval=0;
+      break;
+
+    case property_checkert::FAIL:
+    {
+      if(report_assertions)
+        report_properties(options, goto_model, checker->property_map);
+
+      // validate trace
+      bool trace_valid=false;
+      for(const auto &p : checker->property_map)
       {
-      case property_checkert::PASS:
-        if(report_assertions)
-          report_properties(options, goto_model, checker->property_map);
-        report_success();
-        if(cmdline.isset("graphml-witness"))
-          output_graphml_proof(options, goto_model, *checker);
-        retval=0;
-        finished=true;
+        if(p.second.result!=property_checkert::FAIL)
+          continue;
+
+        if(options.get_bool_option("trace"))
+          show_counterexample(goto_model, p.second.error_trace);
+
+        trace_valid=
+          !p.second.error_trace.steps.empty() &&
+          (options.get_bool_option("nontermination") ||
+           p.second.error_trace.steps.back().is_assert());
         break;
+      }
 
-      case property_checkert::FAIL:
+      if(cmdline.isset("graphml-witness"))
       {
-        if(report_assertions)
-          report_properties(options, goto_model, checker->property_map);
-
-        // validate trace
-        bool trace_valid=false;
-        for(const auto &p : checker->property_map)
+#if 1
+        if(!trace_valid)
         {
-          if(p.second.result!=property_checkert::FAIL)
-            continue;
-
-          if(options.get_bool_option("trace"))
-            show_counterexample(goto_model, p.second.error_trace);
-
-          trace_valid=
-            !p.second.error_trace.steps.empty() &&
-            (options.get_bool_option("nontermination") ||
-             p.second.error_trace.steps.back().is_assert());
+          retval=5;
+          error() << "Internal witness validation failed" << eom;
+          report_unknown();
           break;
         }
-
-        if(cmdline.isset("graphml-witness"))
-        {
-#if 1
-          if(!trace_valid)
-          {
-            retval=5;
-            error() << "Internal witness validation failed" << eom;
-            report_unknown();
-            break;
-          }
 #endif
-          output_graphml_cex(options, goto_model, *checker);
-        }
-        report_failure();
-        retval=10;
-        finished=true;
-        break;
+        output_graphml_cex(options, goto_model, *checker);
       }
-      case property_checkert::UNKNOWN:
-        if(cmdline.isset("heap-values-incremental") &&
-           options.get_bool_option("heap-interval"))
-        {
-          options.set_option("heap-interval", false);
-          options.set_option("heap-zones", true);
-        }
-        else
-        {
-          if(report_assertions)
-            report_properties(options, goto_model, checker->property_map);
-          retval=5;
-          finished=true;
-          report_unknown();
-        }
-        break;
+      report_failure();
+      retval=10;
+      break;
+    }
+    case property_checkert::UNKNOWN:
+      if(report_assertions)
+        report_properties(options, goto_model, checker->property_map);
+      retval=5;
+      report_unknown();
+      break;
 
-      default:
-        assert(false);
-      }
+    default:
+      assert(false);
+    }
 
-      if(cmdline.isset("instrument-output"))
-      {
-        checker->instrument_and_output(goto_model);
-      }
+    if(cmdline.isset("instrument-output"))
+    {
+      checker->instrument_and_output(goto_model);
     }
 
     return retval;
@@ -1802,10 +1787,14 @@ void twols_parse_optionst::help()
     " --heap                       use heap domain\n"
     " --zones                      use zone domain\n"
     " --octagons                   use octagon domain\n"
-    " --heap-interval              use heap domain with interval domain for values\n" // NOLINT(*)
-    " --heap-zones                 use heap domain with zones domain for values\n" // NOLINT(*)
-    " --heap-incremental           use heap domain with dynamically incrementing strength of value domain\n" // NOLINT(*)
-    " --sympath                    compute invariant for each symbolic path (only usable with --heap-interval switch)" // NOLINT(*)
+    " --heap-interval              use heap domain with interval domain for"
+      "values\n"
+    " --heap-zones                 use heap domain with zones domain for values"
+      "\n"
+    " --heap-values-refine         use heap domain with a dynamically"
+      "refinement of the strength of the value domain\n"
+    " --sympath                    compute invariant for each symbolic path"
+      "(only usable with --heap-interval switch)"
     " --enum-solver                use solver based on model enumeration\n"
     " --binsearch-solver           use solver based on binary search\n"
     " --arrays                     do not ignore array contents\n"

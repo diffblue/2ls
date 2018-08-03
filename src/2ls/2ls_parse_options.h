@@ -46,7 +46,7 @@ class optionst;
   "(heap)" \
   "(heap-interval)" \
   "(heap-zones)" \
-  "(heap-values-incremental)" \
+  "(heap-values-refine)" \
   "(sympath)" \
   "(enum-solver)(binsearch-solver)(arrays)"\
   "(string-abstraction)(no-arch)(arch):(floatbv)(fixedbv)" \
