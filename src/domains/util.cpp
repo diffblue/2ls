@@ -7,6 +7,8 @@ Author: Peter Schrammel
 \*******************************************************************/
 
 #include <util/simplify_expr.h>
+#include <util/prefix.h>
+#include <util/cprover_prefix.h>
 
 #include "util.h"
 
@@ -687,4 +689,24 @@ void clean_expr(exprt &expr)
       clean_expr(expr.op0());
     }
   }
+}
+
+/*******************************************************************\
+
+Function: is_cprover_symbol
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool is_cprover_symbol(const exprt &expr)
+{
+  return expr.id()==ID_symbol &&
+         has_prefix(
+           id2string(to_symbol_expr(expr).get_identifier()),
+           CPROVER_PREFIX);
 }

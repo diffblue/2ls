@@ -138,7 +138,7 @@ void dynobj_instance_domaint::rhs_concretisation(
         bool found=false;
         for(const auto &i : must_alias_relations)
         {
-          unsigned long n;
+          size_t n;
           found|=!i.second.get_number(*it, n);
         }
         if(!found)
@@ -303,7 +303,7 @@ void dynobj_instance_domaint::output(
     out << o.first.get_identifier() << ":\n";
     for(const exprt &p : o.second)
     {
-      unsigned long n;
+      size_t n;
       o.second.get_number(p, n);
       out << "    " << o.second.find_number(n) << ": " << from_expr(ns, "", p)
           << "\n";

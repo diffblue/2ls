@@ -17,6 +17,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <ansi-c/c_types.h>
 #include <analyses/constant_propagator.h>
 
+#include <functional>
+
 #include "malloc_ssa.h"
 
 /*******************************************************************\
@@ -418,7 +420,7 @@ Function: set_var_always_to_true
 
 void set_var_always_to_true(
   goto_modelt &goto_model,
-  bool (*name_cond)(std::string &))
+  std::function<bool(std::string &)>name_cond)
 {
   Forall_goto_functions(f_it, goto_model.goto_functions)
   {
@@ -489,28 +491,5 @@ void allow_record_memleak(goto_modelt &goto_model)
     {
       return name.find("malloc::")!=std::string::npos &&
              name.find("::record_may_leak")!=std::string::npos;
-    });
-}
-
-/*******************************************************************\
-
-Function: allow_record_free
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void allow_record_free(goto_modelt &goto_model)
-{
-  set_var_always_to_true(
-    goto_model,
-    [](std::string &name)
-    {
-      return name.find("free::")!=std::string::npos &&
-             name.find("::record")!=std::string::npos;
     });
 }

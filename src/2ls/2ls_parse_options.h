@@ -203,6 +203,7 @@ protected:
     goto_programt &goto_program,
     const std::map<symbol_exprt, size_t> &instance_counts,
     symbol_tablet &symbol_table);
+  std::map<symbol_exprt, size_t> split_dynamic_objects(goto_modelt &goto_model);
 };
 
 #endif

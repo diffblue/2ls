@@ -85,12 +85,16 @@ void heap_domaint::make_template(
         {
           if(!(v_other.var.type().id()==ID_pointer && v_other.kind==LOOP &&
                v_other.pre_guard==v.pre_guard))
+          {
             continue;
+          }
 
           if(v_other.var.id()==ID_symbol &&
              id2string(to_symbol_expr(v_other.var).get_identifier()).find(
                "__CPROVER_")!=std::string::npos)
+          {
             continue;
+          }
 
           add_template_row_pair(v, v_other, pointed_type);
         }
@@ -136,7 +140,12 @@ void heap_domaint::add_template_row(
       if(identifier.find("."+id2string(component.get_name()))!=
          std::string::npos)
       {
-//        templ_row.mem_kind=HEAP;
+#if 0
+        // It has shown that using stack rows only is sufficient to prove all
+        // tested programs and it seems that pointer access paths are not
+        // necessary. Therefore, we currently disable this code.
+        templ_row.mem_kind=HEAP;
+#endif
         templ_row.member=component.get_name();
 
         std::string var_id=id2string(to_symbol_expr(var).get_identifier());
@@ -632,9 +641,11 @@ const exprt ptr_equality(
   else if(ns.follow(ptr_expr.type().subtype())==ns.follow(ptr_value.type()))
     value=address_of_exprt(ptr_value);
   else
+  {
     value=typecast_exprt(
       address_of_exprt(ptr_value),
       ns.follow(ptr_expr.type()));
+  }
   return equal_exprt(ptr_expr, value);
 }
 

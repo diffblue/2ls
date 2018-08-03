@@ -61,8 +61,6 @@ protected:
     heap_domaint::heap_valuet &value);
 
   void print_solver_expr(const exprt &expr);
-
-  bool is_cprover_symbol(const exprt &expr);
 };
 
 

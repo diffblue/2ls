@@ -33,40 +33,6 @@ Description: In some cases, multiple instances must be used so that the
 \*******************************************************************/
 class must_alias_setst:public union_find<exprt>
 {
-protected:
-  // Two partitionings are equal if they contain same elements partitioned
-  // in same sets (not necessarily having same numbers).
-  bool equal(const must_alias_setst &other)
-  {
-    if(size()!=other.size())
-      return false;
-
-    for(auto &e1 : *this)
-    {
-      unsigned long n;
-      if(other.get_number(e1, n))
-        return false;
-      for(auto &e2 : *this)
-        if(same_set(e1, e2)!=other.same_set(e1, e2))
-          return false;
-    }
-    return true;
-  }
-
-  // Symmetric difference of elements
-  std::set<exprt> sym_diff_elements(const must_alias_setst &other)
-  {
-    std::set<exprt> result;
-    unsigned long n;
-    for(auto &e : *this)
-      if(get_number(e, n))
-        result.insert(e);
-    for(auto &e : other)
-      if(get_number(e, n))
-        result.insert(e);
-    return result;
-  }
-
 public:
   bool join(const must_alias_setst &other)
   {
@@ -113,12 +79,12 @@ public:
           // Find all sets to which e_new should be added by comparing with
           // common elements
           // The map will contain: set_number(in *this) -> set_representative
-          std::map<unsigned long, exprt> dest_sets;
+          std::map<size_t, exprt> dest_sets;
           for(auto &e : common_elements)
           {
             if(original.same_set(e_new, e) || other.same_set(e_new, e))
             {
-              unsigned long n;
+              size_t n;
               get_number(e, n);
               if(dest_sets.find(n)==dest_sets.end())
                 dest_sets.emplace(n, e);
@@ -136,6 +102,40 @@ public:
       return true;
     }
     return false;
+  }
+
+protected:
+  // Two partitionings are equal if they contain same elements partitioned
+  // in same sets (not necessarily having same numbers).
+  bool equal(const must_alias_setst &other)
+  {
+    if(size()!=other.size())
+      return false;
+
+    for(auto &e1 : *this)
+    {
+      size_t n;
+      if(other.get_number(e1, n))
+        return false;
+      for(auto &e2 : *this)
+        if(same_set(e1, e2)!=other.same_set(e1, e2))
+          return false;
+    }
+    return true;
+  }
+
+  // Symmetric difference of elements
+  std::set<exprt> sym_diff_elements(const must_alias_setst &other)
+  {
+    std::set<exprt> result;
+    size_t n;
+    for(auto &e : *this)
+      if(get_number(e, n))
+        result.insert(e);
+    for(auto &e : other)
+      if(get_number(e, n))
+        result.insert(e);
+    return result;
   }
 };
 
@@ -187,6 +187,5 @@ protected:
 
   friend class dynobj_instance_domaint;
 };
-
 
 #endif // CPROVER_2LS_SSA_DYNOBJ_INSTANCE_ANALYSIS_H

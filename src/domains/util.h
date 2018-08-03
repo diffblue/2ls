@@ -36,4 +36,6 @@ constant_exprt make_minusone(const typet &type);
 irep_idt get_original_name(const symbol_exprt &);
 void clean_expr(exprt &expr);
 
+bool is_cprover_symbol(const exprt &expr);
+
 #endif

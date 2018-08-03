@@ -742,10 +742,10 @@ void twols_parse_optionst::compute_dynobj_instances(
       if(must_alias==analysis_value.must_alias_relations.end())
         continue;
 
-      std::set<unsigned long> alias_classes;
+      std::set<size_t> alias_classes;
       for(auto &expr : obj.second)
       {
-        unsigned long n;
+        size_t n;
         must_alias->second.get_number(expr, n);
         alias_classes.insert(must_alias->second.find_number(n));
       }
@@ -845,4 +845,24 @@ void twols_parse_optionst::create_dynobj_instances(
       }
     }
   }
+}
+
+std::map<symbol_exprt, size_t> twols_parse_optionst::split_dynamic_objects(
+  goto_modelt &goto_model)
+{
+  std::map<symbol_exprt, size_t> dynobj_instances;
+  Forall_goto_functions(f_it, goto_model.goto_functions)
+  {
+    if(!f_it->second.body_available())
+      continue;
+    namespacet ns(goto_model.symbol_table);
+    ssa_value_ait value_analysis(f_it->second, ns, ssa_heap_analysist(ns));
+    dynobj_instance_analysist do_inst(f_it->second, ns, value_analysis);
+
+    compute_dynobj_instances(
+      f_it->second.body, do_inst, dynobj_instances, ns);
+    create_dynobj_instances(
+      f_it->second.body, dynobj_instances, goto_model.symbol_table);
+  }
+  return dynobj_instances;
 }
