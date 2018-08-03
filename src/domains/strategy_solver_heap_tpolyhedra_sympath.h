@@ -1,24 +1,24 @@
 /*******************************************************************\
 
-Module: Strategy solver for heap-interval domain using symbolic paths
+Module: Strategy solver for heap-tpolyhedra domain using symbolic paths
 
 Author: Viktor Malik
 
 \*******************************************************************/
 
-#ifndef CPROVER_2LS_DOMAINS_STRATEGY_SOLVER_HEAP_INTERVAL_SYMPATH_H
-#define CPROVER_2LS_DOMAINS_STRATEGY_SOLVER_HEAP_INTERVAL_SYMPATH_H
+#ifndef CPROVER_2LS_DOMAINS_STRATEGY_SOLVER_HEAP_TPOLYHEDRA_SYMPATH_H
+#define CPROVER_2LS_DOMAINS_STRATEGY_SOLVER_HEAP_TPOLYHEDRA_SYMPATH_H
 
 
 #include "strategy_solver_base.h"
-#include "heap_interval_sympath_domain.h"
-#include "strategy_solver_heap_interval.h"
+#include "heap_tpolyhedra_sympath_domain.h"
+#include "strategy_solver_heap_tpolyhedra.h"
 
-class strategy_solver_heap_interval_sympatht:public strategy_solver_baset
+class strategy_solver_heap_tpolyhedra_sympatht:public strategy_solver_baset
 {
 public:
-  strategy_solver_heap_interval_sympatht(
-    heap_interval_sympath_domaint &_domain,
+  strategy_solver_heap_tpolyhedra_sympatht(
+    heap_tpolyhedra_sympath_domaint &_domain,
     incremental_solvert &_solver,
     const local_SSAt &SSA,
     const exprt &precondition,
@@ -26,8 +26,8 @@ public:
     template_generator_baset &template_generator):
     strategy_solver_baset(_solver, SSA.ns),
     domain(_domain),
-    heap_interval_solver(
-      domain.heap_interval_domain,
+    heap_tpolyhedra_solver(
+      domain.heap_tpolyhedra_domain,
       _solver,
       SSA,
       precondition,
@@ -44,8 +44,8 @@ public:
   void clear_symbolic_path();
 
 protected:
-  heap_interval_sympath_domaint &domain;
-  strategy_solver_heap_intervalt heap_interval_solver;
+  heap_tpolyhedra_sympath_domaint &domain;
+  strategy_solver_heap_tpolyhedrat heap_tpolyhedra_solver;
 
   std::vector<symbolic_patht> visited_paths;
   bool new_path=true;
@@ -58,8 +58,8 @@ protected:
   void build_loop_conds_map(const local_SSAt &SSA);
 
   bool is_current_path_feasible(
-    heap_interval_sympath_domaint::heap_interval_sympath_valuet &value);
+    heap_tpolyhedra_sympath_domaint::heap_tpolyhedra_sympath_valuet &value);
 };
 
 
-#endif // CPROVER_2LS_DOMAINS_STRATEGY_SOLVER_HEAP_INTERVAL_SYMPATH_
+#endif // CPROVER_2LS_DOMAINS_STRATEGY_SOLVER_HEAP_TPOLYHEDRA_SYMPATH_H

@@ -1,19 +1,19 @@
 /*******************************************************************\
 
-Module: Combination of heap and interval abstract domains
+Module: Combination of heap and template polyhedra abstract domains
 
 Author: Viktor Malik
 
 \*******************************************************************/
-#ifndef CPROVER_2LS_DOMAINS_HEAP_INTERVAL_DOMAIN_H
-#define CPROVER_2LS_DOMAINS_HEAP_INTERVAL_DOMAIN_H
+#ifndef CPROVER_2LS_DOMAINS_HEAP_TPOLYHEDRA_DOMAIN_H
+#define CPROVER_2LS_DOMAINS_HEAP_TPOLYHEDRA_DOMAIN_H
 
 
 #include "domain.h"
 #include "tpolyhedra_domain.h"
 #include "heap_domain.h"
 
-class heap_interval_domaint:public domaint
+class heap_tpolyhedra_domaint:public domaint
 {
 public:
   enum polyhedra_kindt
@@ -24,7 +24,7 @@ public:
   heap_domaint heap_domain;
   tpolyhedra_domaint polyhedra_domain;
 
-  heap_interval_domaint(
+  heap_tpolyhedra_domaint(
     unsigned int _domain_number,
     replace_mapt &_renaming_map,
     const var_specst &var_specs,
@@ -43,11 +43,11 @@ public:
     }
   }
 
-  class heap_interval_valuet:public valuet
+  class heap_tpolyhedra_valuet:public valuet
   {
   public:
     heap_domaint::heap_valuet heap_value;
-    tpolyhedra_domaint::templ_valuet interval_value;
+    tpolyhedra_domaint::templ_valuet tpolyhedra_value;
   };
 
   virtual void initialize(valuet &value) override;
@@ -73,4 +73,4 @@ public:
   void clear_aux_symbols();
 };
 
-#endif // CPROVER_2LS_DOMAINS_HEAP_INTERVAL_DOMAIN_H
+#endif // CPROVER_2LS_DOMAINS_HEAP_TPOLYHEDRA_DOMAIN_H

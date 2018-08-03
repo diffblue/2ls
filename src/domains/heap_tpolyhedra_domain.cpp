@@ -1,16 +1,16 @@
 /*******************************************************************\
 
-Module: Combination of heap and interval abstract domains
+Module: Combination of heap and template polyhedra abstract domains
 
 Author: Viktor Malik
 
 \*******************************************************************/
 
-#include "heap_interval_domain.h"
+#include "heap_tpolyhedra_domain.h"
 
 /*******************************************************************\
 
-Function: heap_interval_domaint::initialize
+Function: heap_tpolyhedra_domaint::initialize
 
   Inputs:
 
@@ -20,17 +20,17 @@ Function: heap_interval_domaint::initialize
 
 \*******************************************************************/
 
-void heap_interval_domaint::initialize(domaint::valuet &value)
+void heap_tpolyhedra_domaint::initialize(domaint::valuet &value)
 {
-  heap_interval_valuet &v=static_cast<heap_interval_valuet &>(value);
+  heap_tpolyhedra_valuet &v=static_cast<heap_tpolyhedra_valuet &>(value);
 
   heap_domain.initialize(v.heap_value);
-  polyhedra_domain.initialize(v.interval_value);
+  polyhedra_domain.initialize(v.tpolyhedra_value);
 }
 
 /*******************************************************************\
 
-Function: heap_interval_domaint::output_value
+Function: heap_tpolyhedra_domaint::output_value
 
   Inputs:
 
@@ -40,21 +40,21 @@ Function: heap_interval_domaint::output_value
 
 \*******************************************************************/
 
-void heap_interval_domaint::output_value(
+void heap_tpolyhedra_domaint::output_value(
   std::ostream &out,
   const domaint::valuet &value,
   const namespacet &ns) const
 {
-  const heap_interval_valuet &v=
-    static_cast<const heap_interval_valuet &>(value);
+  const heap_tpolyhedra_valuet &v=
+    static_cast<const heap_tpolyhedra_valuet &>(value);
 
   heap_domain.output_value(out, v.heap_value, ns);
-  polyhedra_domain.output_value(out, v.interval_value, ns);
+  polyhedra_domain.output_value(out, v.tpolyhedra_value, ns);
 }
 
 /*******************************************************************\
 
-Function: heap_interval_domaint::output_domain
+Function: heap_tpolyhedra_domaint::output_domain
 
   Inputs:
 
@@ -64,7 +64,7 @@ Function: heap_interval_domaint::output_domain
 
 \*******************************************************************/
 
-void heap_interval_domaint::output_domain(
+void heap_tpolyhedra_domaint::output_domain(
   std::ostream &out,
   const namespacet &ns) const
 {
@@ -74,7 +74,7 @@ void heap_interval_domaint::output_domain(
 
 /*******************************************************************\
 
-Function: heap_interval_domaint::project_on_vars
+Function: heap_tpolyhedra_domaint::project_on_vars
 
   Inputs:
 
@@ -84,26 +84,26 @@ Function: heap_interval_domaint::project_on_vars
 
 \*******************************************************************/
 
-void heap_interval_domaint::project_on_vars(
+void heap_tpolyhedra_domaint::project_on_vars(
   domaint::valuet &value,
   const domaint::var_sett &vars,
   exprt &result)
 {
-  heap_interval_valuet &v=static_cast<heap_interval_valuet &>(value);
+  heap_tpolyhedra_valuet &v=static_cast<heap_tpolyhedra_valuet &>(value);
 
   exprt heap_result;
   heap_domain.project_on_vars(v.heap_value, vars, heap_result);
-  exprt interval_result;
-  polyhedra_domain.project_on_vars(v.interval_value, vars, interval_result);
+  exprt tpolyhedra_result;
+  polyhedra_domain.project_on_vars(v.tpolyhedra_value, vars, tpolyhedra_result);
 
   result=heap_result;
-  if(interval_result!=true_exprt())
-    result=and_exprt(result, interval_result);
+  if(tpolyhedra_result!=true_exprt())
+    result=and_exprt(result, tpolyhedra_result);
 }
 
 /*******************************************************************\
 
-Function: heap_interval_domaint::restrict_to_sympath
+Function: heap_tpolyhedra_domaint::restrict_to_sympath
 
   Inputs: Symbolic path
 
@@ -112,7 +112,7 @@ Function: heap_interval_domaint::restrict_to_sympath
  Purpose: Restrict template to a given symbolic path.
 
 \*******************************************************************/
-void heap_interval_domaint::restrict_to_sympath(
+void heap_tpolyhedra_domaint::restrict_to_sympath(
   const symbolic_patht &sympath)
 {
   heap_domain.restrict_to_sympath(sympath);
@@ -121,7 +121,7 @@ void heap_interval_domaint::restrict_to_sympath(
 
 /*******************************************************************\
 
-Function: heap_interval_domaint::clear_aux_symbols
+Function: heap_tpolyhedra_domaint::clear_aux_symbols
 
   Inputs:
 
@@ -130,7 +130,7 @@ Function: heap_interval_domaint::clear_aux_symbols
  Purpose: Reset aux symbols to true (remove all restricitions).
 
 \*******************************************************************/
-void heap_interval_domaint::clear_aux_symbols()
+void heap_tpolyhedra_domaint::clear_aux_symbols()
 {
   heap_domain.clear_aux_symbols();
   polyhedra_domain.clear_aux_symbols();
@@ -138,7 +138,7 @@ void heap_interval_domaint::clear_aux_symbols()
 
 /*******************************************************************\
 
-Function: heap_interval_domaint::eliminate_sympaths
+Function: heap_tpolyhedra_domaint::eliminate_sympaths
 
   Inputs: Vector of symbolic paths
 
@@ -147,7 +147,7 @@ Function: heap_interval_domaint::eliminate_sympaths
  Purpose: Restrict template to other paths than those specified.
 
 \*******************************************************************/
-void heap_interval_domaint::eliminate_sympaths(
+void heap_tpolyhedra_domaint::eliminate_sympaths(
   const std::vector<symbolic_patht> &sympaths)
 {
   heap_domain.eliminate_sympaths(sympaths);
@@ -156,7 +156,7 @@ void heap_interval_domaint::eliminate_sympaths(
 
 /*******************************************************************\
 
-Function: heap_interval_domaint::undo_restriction
+Function: heap_tpolyhedra_domaint::undo_restriction
 
   Inputs:
 
@@ -165,7 +165,7 @@ Function: heap_interval_domaint::undo_restriction
  Purpose: Undo last restriction.
 
 \*******************************************************************/
-void heap_interval_domaint::undo_restriction()
+void heap_tpolyhedra_domaint::undo_restriction()
 {
   heap_domain.undo_restriction();
   polyhedra_domain.undo_restriction();
