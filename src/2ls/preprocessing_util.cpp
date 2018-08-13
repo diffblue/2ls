@@ -12,6 +12,7 @@ Author: Peter Schrammel
 
 #include <analyses/constant_propagator.h>
 #include <goto-instrument/unwind.h>
+#include <ssa/dynobj_instance_analysis.h>
 
 #include "2ls_parse_options.h"
 
@@ -625,4 +626,243 @@ void twols_parse_optionst::add_dynamic_object_symbols(
       }
     }
   }
+}
+
+/*******************************************************************\
+
+Function: twols_parse_optionst::split_same_symbolic_object_assignments
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Split assignments that have same symbolic dereference object
+          on both sides into two separate assignments.
+
+\*******************************************************************/
+
+void twols_parse_optionst::split_same_symbolic_object_assignments(
+  goto_modelt &goto_model)
+{
+  const namespacet ns(goto_model.symbol_table);
+  unsigned counter=0;
+  Forall_goto_functions(f_it, goto_model.goto_functions)
+  {
+    Forall_goto_program_instructions(i_it, f_it->second.body)
+    {
+      if(i_it->is_assign())
+      {
+        code_assignt &assign=to_code_assign(i_it->code);
+        auto lhs_sym_deref=symbolic_dereference(assign.lhs(), ns);
+        if((lhs_sym_deref.id()==ID_symbol || lhs_sym_deref.id()==ID_member)
+           && has_symbolic_deref(lhs_sym_deref))
+        {
+          while(lhs_sym_deref.id()==ID_member)
+            lhs_sym_deref=to_member_expr(lhs_sym_deref).compound();
+
+          auto rhs_sym_deref=symbolic_dereference(assign.rhs(), ns);
+
+          std::set<symbol_exprt> rhs_symbols;
+          find_symbols(rhs_sym_deref, rhs_symbols);
+
+          if(rhs_symbols.find(to_symbol_expr(lhs_sym_deref))!=rhs_symbols.end())
+          {
+            symbolt tmp_symbol;
+            tmp_symbol.type=assign.lhs().type();
+            tmp_symbol.name="$symderef_tmp"+i2string(counter++);
+            tmp_symbol.base_name=tmp_symbol.name;
+            tmp_symbol.pretty_name=tmp_symbol.name;
+
+            goto_model.symbol_table.add(tmp_symbol);
+
+            auto new_assign=f_it->second.body.insert_after(i_it);
+            new_assign->make_assignment();
+            new_assign->code=code_assignt(
+              assign.lhs(), tmp_symbol.symbol_expr());
+
+            assign.lhs()=tmp_symbol.symbol_expr();
+          }
+        }
+      }
+    }
+  }
+}
+
+/*******************************************************************\
+
+Function: twols_parse_optionst::remove_dead_goto
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Remove dead backwards GOTO instructions (having false as guard)
+
+\*******************************************************************/
+void twols_parse_optionst::remove_dead_goto(goto_modelt &goto_model)
+{
+  Forall_goto_functions(f_it, goto_model.goto_functions)
+  {
+    Forall_goto_program_instructions(i_it, f_it->second.body)
+    {
+      if(i_it->is_backwards_goto())
+      {
+        if(i_it->guard.is_false())
+          i_it->make_skip();
+      }
+    }
+  }
+}
+
+/*******************************************************************\
+
+Function: twols_parse_optionst::compute_dynobj_instances
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: For each allocation site, compute the number of objects
+          that must be used to soundly represent all objects allocated
+          at the given site.
+
+\*******************************************************************/
+void twols_parse_optionst::compute_dynobj_instances(
+  const goto_programt &goto_program,
+  const dynobj_instance_analysist &analysis,
+  std::map<symbol_exprt, size_t> &instance_counts,
+  const namespacet &ns)
+{
+  forall_goto_program_instructions(it, goto_program)
+  {
+    auto &analysis_value=analysis[it];
+    for(auto &obj : analysis_value.live_pointers)
+    {
+      auto must_alias=analysis_value.must_alias_relations.find(obj.first);
+      if(must_alias==analysis_value.must_alias_relations.end())
+        continue;
+
+      std::set<size_t> alias_classes;
+      for(auto &expr : obj.second)
+      {
+        size_t n;
+        must_alias->second.get_number(expr, n);
+        alias_classes.insert(must_alias->second.find_number(n));
+      }
+
+      if(instance_counts.find(obj.first)==instance_counts.end() ||
+         instance_counts.at(obj.first)<alias_classes.size())
+      {
+        instance_counts[obj.first]=alias_classes.size();
+      }
+    }
+  }
+}
+
+/*******************************************************************\
+
+Function: twols_parse_optionst::create_dynobj_instances
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: For each allocation site, split the allocated abstract
+          dynamic object into multiple in order to preserve soundness
+          of the analysis.
+
+\*******************************************************************/
+void twols_parse_optionst::create_dynobj_instances(
+  goto_programt &goto_program,
+  const std::map<symbol_exprt, size_t> &instance_counts,
+  symbol_tablet &symbol_table)
+{
+  Forall_goto_program_instructions(it, goto_program)
+  {
+    if(it->is_assign())
+    {
+      auto &assign=to_code_assign(it->code);
+      if(assign.rhs().get_bool("#malloc_result"))
+      {
+        exprt &rhs=assign.rhs();
+        exprt &abstract_obj=rhs.id()==ID_if ? to_if_expr(rhs).false_case()
+                                            : rhs;
+        exprt &address=abstract_obj.id()==ID_typecast ?
+                       to_typecast_expr(abstract_obj).op() : abstract_obj;
+        if(address.id()!=ID_address_of)
+          continue;
+        exprt &obj=to_address_of_expr(address).object();
+        if(obj.id()!=ID_symbol)
+          continue;
+
+        if(instance_counts.find(to_symbol_expr(obj))==instance_counts.end())
+          continue;
+
+        size_t count=instance_counts.at(to_symbol_expr(obj));
+        if(count<=1)
+          continue;
+
+        symbolt obj_symbol=
+          symbol_table.lookup(to_symbol_expr(obj).get_identifier());
+
+        const std::string name=id2string(obj_symbol.name);
+        const std::string base_name=id2string(obj_symbol.base_name);
+        std::string suffix="#"+std::to_string(0);
+
+        obj_symbol.name=name+suffix;
+        obj_symbol.base_name=base_name+suffix;
+        symbol_table.add(obj_symbol);
+
+        exprt new_rhs=address_of_exprt(obj_symbol.symbol_expr());
+        if(abstract_obj.id()==ID_typecast)
+          new_rhs=typecast_exprt(new_rhs, rhs.type());
+        new_rhs.set("#malloc_result", true);
+
+        for(size_t i=1; i<count; ++i)
+        {
+          symbolt nondet;
+          nondet.type=bool_typet();
+          nondet.name="$guard#os"+std::to_string(it->location_number)+"#"+
+                      std::to_string(i);
+          nondet.base_name=nondet.name;
+          nondet.pretty_name=nondet.name;
+          symbol_table.add(nondet);
+
+          suffix="#"+std::to_string(i);
+          obj_symbol.name=name+suffix;
+          obj_symbol.base_name=base_name+suffix;
+
+          exprt new_obj=address_of_exprt(obj_symbol.symbol_expr());
+          if(abstract_obj.id()==ID_typecast)
+            new_obj=typecast_exprt(new_obj, rhs.type());
+          new_rhs=if_exprt(
+            nondet.symbol_expr(), new_obj, new_rhs);
+          new_rhs.set("#malloc_result", true);
+        }
+
+        abstract_obj=new_rhs;
+        abstract_obj.set("#malloc_result", true);
+      }
+    }
+  }
+}
+
+std::map<symbol_exprt, size_t> twols_parse_optionst::split_dynamic_objects(
+  goto_modelt &goto_model)
+{
+  std::map<symbol_exprt, size_t> dynobj_instances;
+  Forall_goto_functions(f_it, goto_model.goto_functions)
+  {
+    if(!f_it->second.body_available())
+      continue;
+    namespacet ns(goto_model.symbol_table);
+    ssa_value_ait value_analysis(f_it->second, ns, ssa_heap_analysist(ns));
+    dynobj_instance_analysist do_inst(f_it->second, ns, value_analysis);
+
+    compute_dynobj_instances(
+      f_it->second.body, do_inst, dynobj_instances, ns);
+    create_dynobj_instances(
+      f_it->second.body, dynobj_instances, goto_model.symbol_table);
+  }
+  return dynobj_instances;
 }

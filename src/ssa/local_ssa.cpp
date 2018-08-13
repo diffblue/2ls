@@ -57,7 +57,8 @@ void local_SSAt::build_SSA()
     build_guard(i_it);
     build_assertions(i_it);
     build_function_call(i_it);
-    build_unknown_objs(i_it);
+//    build_unknown_objs(i_it);
+    collect_record_frees(i_it);
   }
 
   // collect custom templates in loop heads
@@ -390,7 +391,10 @@ void local_SSAt::build_phi_nodes(locationt loc)
         const locationt &iloc=get_location(incoming_it->first);
         exprt incoming_value=name(*o_it, LOOP_BACK, iloc);
         exprt incoming_select=name(guard_symbol(), LOOP_SELECT, iloc);
-        loop_guards.insert(to_symbol_expr(incoming_select));
+        loop_guards.insert(
+          std::make_pair(
+            to_symbol_expr(incoming_select),
+            to_symbol_expr(guard_symbol(loc))));
 
         if(rhs.is_nil()) // first
           rhs=incoming_value;
@@ -460,6 +464,9 @@ void local_SSAt::build_transfer(locationt loc)
        id2string(code_assign.rhs().get(ID_identifier)).
        find(TEMPLATE_PREFIX)!=std::string::npos) return;
 
+    // build allocation guards map
+    collect_allocation_guards(code_assign, loc);
+
     exprt deref_lhs=dereference(code_assign.lhs(), loc);
     exprt deref_rhs=dereference(code_assign.rhs(), loc);
 
@@ -474,9 +481,10 @@ void local_SSAt::build_transfer(locationt loc)
         assign_rec(symbolic_deref_lhs, rhs, true_exprt(), loc);
         assign_rec(
           deref_lhs,
-          name(ssa_objectt(symbolic_deref_lhs, ns), OUT, loc),
+          symbolic_deref_lhs,
           true_exprt(),
-          loc);
+          loc,
+          true);
       }
       else
       {
@@ -711,10 +719,37 @@ void local_SSAt::build_assertions(locationt loc)
 {
   if(loc->is_assert())
   {
-    const exprt deref_rhs=dereference(loc->guard, loc);
+    exprt assert=loc->guard;
+    if(assert.id()==ID_not && assert.op0().id()==ID_equal &&
+       assert.op0().op1().id()==ID_pointer_object &&
+       assert.op0().op1().op0().id()==ID_symbol)
+    {
+      std::string id=id2string(
+        to_symbol_expr(assert.op0().op1().op0()).get_identifier());
+      if(id.find("__CPROVER_deallocated")!=std::string::npos)
+      {
+        const exprt &dealloc_symbol=assert.op0().op1().op0();
+        exprt::operandst d;
+        for(auto &global : assignments.ssa_objects.globals)
+        {
+          if(global.get_expr().get_bool("#concrete"))
+          {
+            d.push_back(
+              equal_exprt(
+                dealloc_symbol,
+                typecast_exprt(
+                  address_of_exprt(global.symbol_expr()),
+                  dealloc_symbol.type())));
+          }
+        }
+        assert=implies_exprt(disjunction(d), assert);
+      }
+    }
+
+    const exprt deref_rhs=dereference(assert, loc);
     collect_iterators_rhs(deref_rhs, loc);
 
-    const exprt rhs=concretise_symbolic_deref_rhs(loc->guard, ns, loc);
+    const exprt rhs=concretise_symbolic_deref_rhs(assert, ns, loc);
     exprt c=read_rhs(rhs, loc);
     exprt g=guard_symbol(loc);
     (--nodes.end())->assertions.push_back(implies_exprt(g, c));
@@ -1310,7 +1345,8 @@ void local_SSAt::assign_rec(
   const exprt &lhs,
   const exprt &rhs,
   const exprt &guard,
-  locationt loc)
+  locationt loc,
+  bool fresh_rhs)
 {
   const typet &type=ns.follow(lhs.type());
 
@@ -1330,7 +1366,7 @@ void local_SSAt::assign_rec(
       {
         member_exprt new_lhs(lhs, it->get_name(), it->type());
         member_exprt new_rhs(rhs, it->get_name(), it->type());
-        assign_rec(new_lhs, new_rhs, guard, loc);
+        assign_rec(new_lhs, new_rhs, guard, loc, fresh_rhs);
       }
 
       return;
@@ -1346,7 +1382,8 @@ void local_SSAt::assign_rec(
       collect_iterators_lhs(lhs_object, loc);
       collect_iterators_rhs(rhs, loc);
 
-      exprt ssa_rhs=read_rhs(rhs, loc);
+      exprt ssa_rhs=fresh_rhs ? name(ssa_objectt(rhs, ns), OUT, loc)
+                              : read_rhs(rhs, loc);
 
       const symbol_exprt ssa_symbol=name(lhs_object, OUT, loc);
 
@@ -1359,7 +1396,7 @@ void local_SSAt::assign_rec(
     const index_exprt &index_expr=to_index_expr(lhs);
     exprt ssa_array=index_expr.array();
     exprt new_rhs=with_exprt(ssa_array, index_expr.index(), rhs);
-    assign_rec(index_expr.array(), new_rhs, guard, loc);
+    assign_rec(index_expr.array(), new_rhs, guard, loc, fresh_rhs);
   }
   else if(lhs.id()==ID_member)
   {
@@ -1372,14 +1409,14 @@ void local_SSAt::assign_rec(
     {
       union_exprt new_rhs(
         member_expr.get_component_name(), rhs, compound.type());
-      assign_rec(member_expr.struct_op(), new_rhs, guard, loc);
+      assign_rec(member_expr.struct_op(), new_rhs, guard, loc, fresh_rhs);
     }
     else if(compound_type.id()==ID_struct)
     {
       exprt member_name(ID_member_name);
       member_name.set(ID_component_name, member_expr.get_component_name());
       with_exprt new_rhs(compound, member_name, rhs);
-      assign_rec(compound, new_rhs, guard, loc);
+      assign_rec(compound, new_rhs, guard, loc, fresh_rhs);
     }
   }
   else if(lhs.id()==ID_complex_real)
@@ -1389,7 +1426,7 @@ void local_SSAt::assign_rec(
     const complex_typet &complex_type=to_complex_type(op.type());
     exprt imag_op=unary_exprt(ID_complex_imag, op, complex_type.subtype());
     complex_exprt new_rhs(rhs, imag_op, complex_type);
-    assign_rec(op, new_rhs, guard, loc);
+    assign_rec(op, new_rhs, guard, loc, fresh_rhs);
   }
   else if(lhs.id()==ID_complex_imag)
   {
@@ -1398,7 +1435,7 @@ void local_SSAt::assign_rec(
     const complex_typet &complex_type=to_complex_type(op.type());
     exprt real_op=unary_exprt(ID_complex_real, op, complex_type.subtype());
     complex_exprt new_rhs(real_op, rhs, complex_type);
-    assign_rec(op, new_rhs, guard, loc);
+    assign_rec(op, new_rhs, guard, loc, fresh_rhs);
   }
   else if(lhs.id()==ID_if)
   {
@@ -1436,7 +1473,8 @@ void local_SSAt::assign_rec(
         name(guard_symbol(), OBJECT_SELECT, loc));
       cond=and_exprt(cond, other_cond);
     }
-    exprt new_rhs=if_exprt(cond, rhs, if_expr.true_case());
+    exprt orig_rhs=fresh_rhs ? name(ssa_objectt(rhs, ns), OUT, loc) : rhs;
+    exprt new_rhs=if_exprt(cond, orig_rhs, if_expr.true_case());
     assign_rec(
       if_expr.true_case(),
       new_rhs,
@@ -1447,7 +1485,8 @@ void local_SSAt::assign_rec(
       if_expr.false_case(),
       rhs,
       and_exprt(guard, not_exprt(if_expr.cond())),
-      loc);
+      loc,
+      fresh_rhs);
   }
   else if(lhs.id()==ID_byte_extract_little_endian ||
           lhs.id()==ID_byte_extract_big_endian)
@@ -1459,7 +1498,7 @@ void local_SSAt::assign_rec(
     exprt new_rhs=byte_extract_exprt(
       byte_extract_expr.id(), rhs, byte_extract_expr.offset(), new_lhs.type());
 
-    assign_rec(new_lhs, new_rhs, guard, loc);
+    assign_rec(new_lhs, new_rhs, guard, loc, fresh_rhs);
   }
   else
     throw "UNKNOWN LHS: "+lhs.id_string(); // NOLINT(*)
@@ -1856,8 +1895,11 @@ void local_SSAt::build_unknown_objs(locationt loc)
     const exprt &rhs=code_assign.rhs();
     if(rhs.get_bool("#malloc_result"))
     {
-      const exprt &addr_of_do=
+      const exprt &malloc_res=
         rhs.id()==ID_typecast ? to_typecast_expr(rhs).op() : rhs;
+      const exprt &addr_of_do=
+        malloc_res.id()==ID_if ? to_if_expr(malloc_res).true_case()
+                               : malloc_res;
       const exprt &dyn_obj=to_address_of_expr(addr_of_do).object();
       const typet &dyn_type=ns.follow(dyn_obj.type());
 
@@ -2079,4 +2121,95 @@ exprt local_SSAt::concretise_symbolic_deref_rhs(
   return
     all_symbolic_deref_defined(symbolic_deref_rhs, ns, loc)?
       symbolic_deref_rhs:deref_rhs;
+}
+
+/********************************************************************\
+
+Function: local_SSAt::collect_allocation_guards
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Collect allocation guards for the given location
+
+\*******************************************************************/
+
+void local_SSAt::collect_allocation_guards(
+  const code_assignt &assign,
+  locationt loc)
+{
+  if(!assign.rhs().get_bool("#malloc_result"))
+    return;
+
+  exprt rhs=assign.rhs();
+  if(rhs.id()==ID_typecast)
+    rhs=to_typecast_expr(rhs).op();
+  if(rhs.id()==ID_if)
+  {
+    get_alloc_guard_rec(
+      to_if_expr(rhs).true_case(), read_rhs(to_if_expr(rhs).cond(), loc));
+    get_alloc_guard_rec(
+      to_if_expr(rhs).false_case(),
+      read_rhs(not_exprt(to_if_expr(rhs).cond()), loc));
+  }
+}
+
+/********************************************************************\
+
+Function: local_SSAt::collect_record_frees
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+void local_SSAt::collect_record_frees(local_SSAt::locationt loc)
+{
+  if(loc->is_decl())
+  {
+    const exprt &symbol=to_code_decl(loc->code).symbol();
+    if(symbol.id()!=ID_symbol)
+      return;
+
+    std::string id=id2string(to_symbol_expr(symbol).get_identifier());
+    if(id.find("free::")!=std::string::npos &&
+       id.find("::record")!=std::string::npos)
+    {
+      (--nodes.end())->record_free=symbol;
+    }
+  }
+}
+
+/********************************************************************\
+
+Function: local_SSAt::get_alloc_guard_rec
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+void local_SSAt::get_alloc_guard_rec(const exprt &expr, exprt guard)
+{
+  if(expr.id()==ID_symbol && expr.type().get_bool("#dynamic"))
+  {
+    allocation_guards.emplace(to_symbol_expr(expr).get_identifier(), guard);
+  }
+  else if(expr.id()==ID_if)
+  {
+    get_alloc_guard_rec(
+      to_if_expr(expr).true_case(), and_exprt(guard, to_if_expr(expr).cond()));
+    get_alloc_guard_rec(
+      to_if_expr(expr).false_case(),
+      and_exprt(guard, not_exprt(to_if_expr(expr).cond())));
+  }
+  else if(expr.id()==ID_typecast)
+    get_alloc_guard_rec(to_typecast_expr(expr).op(), guard);
+  else if(expr.id()==ID_address_of)
+    get_alloc_guard_rec(to_address_of_expr(expr).object(), guard);
 }

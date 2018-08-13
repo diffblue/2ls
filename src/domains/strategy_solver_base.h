@@ -50,7 +50,7 @@ class strategy_solver_baset:public messaget
   unsigned solver_calls;
 
   void find_symbolic_path(
-    std::set<symbol_exprt> &loop_guards,
+    std::set<std::pair<symbol_exprt, symbol_exprt>> &loop_guards,
     const exprt &current_guard=nil_exprt());
 };
 

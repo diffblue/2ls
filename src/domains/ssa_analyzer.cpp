@@ -32,8 +32,8 @@ Author: Peter Schrammel
 #include "strategy_solver_predabs.h"
 #include "ssa_analyzer.h"
 #include "strategy_solver_heap.h"
-#include "strategy_solver_heap_interval.h"
-#include "strategy_solver_heap_interval_sympath.h"
+#include "strategy_solver_heap_tpolyhedra.h"
+#include "strategy_solver_heap_tpolyhedra_sympath.h"
 
 // NOLINTNEXTLINE(*)
 #define BINSEARCH_SOLVER strategy_solver_binsearcht(\
@@ -120,29 +120,31 @@ void ssa_analyzert::operator()(
       template_generator);
     result=new heap_domaint::heap_valuet();
   }
-  else if(template_generator.options.get_bool_option("heap-interval"))
+  else if(template_generator.options.get_bool_option("heap-interval")
+          || template_generator.options.get_bool_option("heap-zones"))
   {
     if(template_generator.options.get_bool_option("sympath"))
     {
-      strategy_solver=new strategy_solver_heap_interval_sympatht(
-        *static_cast<heap_interval_sympath_domaint *>(domain),
+      strategy_solver=new strategy_solver_heap_tpolyhedra_sympatht(
+        *static_cast<heap_tpolyhedra_sympath_domaint *>(domain),
         solver,
         SSA,
         precondition,
         get_message_handler(),
         template_generator);
-      result=new heap_interval_sympath_domaint::heap_interval_sympath_valuet();
+      result=
+        new heap_tpolyhedra_sympath_domaint::heap_tpolyhedra_sympath_valuet();
     }
     else
     {
-      strategy_solver=new strategy_solver_heap_intervalt(
-        *static_cast<heap_interval_domaint *>(domain),
+      strategy_solver=new strategy_solver_heap_tpolyhedrat(
+        *static_cast<heap_tpolyhedra_domaint *>(domain),
         solver,
         SSA,
         precondition,
         get_message_handler(),
         template_generator);
-      result=new heap_interval_domaint::heap_interval_valuet();
+      result=new heap_tpolyhedra_domaint::heap_tpolyhedra_valuet();
     }
   }
   else

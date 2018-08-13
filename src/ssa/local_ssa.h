@@ -96,6 +96,8 @@ public:
     std::list<nodet>::iterator loophead; // link to loop head node
        // otherwise points to nodes.end()
 
+    exprt record_free=nil_exprt();
+
     void output(std::ostream &, const namespacet &) const;
 
     inline bool empty() const
@@ -154,6 +156,9 @@ public:
   typedef std::list<dyn_obj_assignt> dyn_obj_assignst;
   std::map<exprt, dyn_obj_assignst> dyn_obj_assigns;
 
+  // Map dynamic object names to guards of their allocation
+  std::map<irep_idt, exprt> allocation_guards;
+
   bool has_function_calls() const;
 
   const namespacet &ns;
@@ -193,7 +198,8 @@ public:
     const exprt &lhs,
     const exprt &rhs,
     const exprt &guard,
-    locationt loc);
+    locationt loc,
+    bool fresh_rhs=false);
 
   void collect_iterators_rhs(const exprt &expr, locationt loc);
   void collect_iterators_lhs(const ssa_objectt &object, locationt loc);
@@ -240,7 +246,7 @@ public:
 
   // Collect all loop_guards that will represent symbolic paths used in heap
   // domain
-  var_sett loop_guards;
+  std::set<std::pair<symbol_exprt, symbol_exprt>> loop_guards;
 
   void get_globals(
     locationt loc,
@@ -276,6 +282,10 @@ protected:
   void build_function_call(locationt loc);
   void build_assertions(locationt loc);
   void build_unknown_objs(locationt loc);
+
+  void collect_allocation_guards(const code_assignt &assign, locationt loc);
+  void get_alloc_guard_rec(const exprt &expr, exprt old_guard);
+  void collect_record_frees(locationt loc);
 
   // custom templates
   void collect_custom_templates();

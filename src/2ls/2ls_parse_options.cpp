@@ -46,6 +46,7 @@ Author: Daniel Kroening, Peter Schrammel
 
 #include "graphml_witness_ext.h"
 #include <solver/summary_db.h>
+#include <ssa/dynobj_instance_analysis.h>
 
 #include "2ls_parse_options.h"
 #include "summary_checker_ai.h"
@@ -205,6 +206,19 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
   }
   else if(cmdline.isset("heap-interval"))
   {
+    options.set_option("heap-interval", true);
+    if(cmdline.isset("sympath"))
+      options.set_option("sympath", true);
+  }
+  else if(cmdline.isset("heap-zones"))
+  {
+    options.set_option("heap-zones", true);
+    if(cmdline.isset("sympath"))
+      options.set_option("sympath", true);
+  }
+  else if(cmdline.isset("heap-values-refine"))
+  {
+    options.set_option("heap-values-refine", true);
     options.set_option("heap-interval", true);
     if(cmdline.isset("sympath"))
       options.set_option("sympath", true);
@@ -518,6 +532,8 @@ int twols_parse_optionst::doit()
     status() << "Using heap domain" << eom;
   else if(options.get_bool_option("heap-interval"))
     status() << "Using heap domain with interval domain for values" << eom;
+  else if(options.get_bool_option("heap-zones"))
+    status() << "Using heap domain with zones domain for values" << eom;
   else
   {
     if(options.get_bool_option("intervals"))
@@ -577,8 +593,8 @@ int twols_parse_optionst::doit()
       checker=std::unique_ptr<summary_checker_baset>(
         new summary_checker_bmct(options, heap_analysis));
     if(options.get_bool_option("nontermination"))
-     checker=std::unique_ptr<summary_checker_baset>(
-       new summary_checker_nontermt(options, heap_analysis));
+      checker=std::unique_ptr<summary_checker_baset>(
+        new summary_checker_nontermt(options, heap_analysis));
 
     checker->set_message_handler(get_message_handler());
     checker->simplify=!cmdline.isset("no-simplify");
@@ -1232,7 +1248,18 @@ bool twols_parse_optionst::process_goto_program(
     goto_model.goto_functions.compute_loop_numbers();
 
     // Replace malloc
-    dynamic_memory_detected=replace_malloc(goto_model, "");
+    dynamic_memory_detected=replace_malloc(
+      goto_model, "", options.get_bool_option("pointer-check"));
+
+    // Allow recording of mallocs and memory leaks
+    if(options.get_bool_option("pointer-check"))
+    {
+      allow_record_malloc(goto_model);
+    }
+    if(options.get_bool_option("memory-leak-check"))
+      allow_record_memleak(goto_model);
+
+    split_same_symbolic_object_assignments(goto_model);
 
     // remove loop heads from function entries
     remove_loops_in_entry(goto_model);
@@ -1243,6 +1270,8 @@ bool twols_parse_optionst::process_goto_program(
       inline_main(goto_model);
     }
 
+    auto dynobj_instances=split_dynamic_objects(goto_model);
+
     if(!cmdline.isset("independent-properties"))
     {
       add_assumptions_after_assertions(goto_model);
@@ -1252,13 +1281,13 @@ bool twols_parse_optionst::process_goto_program(
     filter_assertions(goto_model);
 #endif
 
-    if(options.get_bool_option("constant-propagation") &&
-       !(options.get_bool_option("competition-mode") &&
-         dynamic_memory_detected))
+    if(options.get_bool_option("constant-propagation"))
     {
       status() << "Constant Propagation" << eom;
       propagate_constants(goto_model);
     }
+
+    remove_dead_goto(goto_model);
 
     // if we aim to cover, replace
     // all assertions by false to prevent simplification
@@ -1744,8 +1773,13 @@ void twols_parse_optionst::help()
     " --heap                       use heap domain\n"
     " --zones                      use zone domain\n"
     " --octagons                   use octagon domain\n"
-    " --heap-interval              use heap domain with interval domain for values\n" // NOLINT(*)
-    " --sympath                    compute invariant for each symbolic path (only usable with --heap-interval switch)" // NOLINT(*)
+    " --heap-interval              use heap domain with interval domain for\n"
+    "                              values\n"
+    " --heap-zones                 use heap domain with zones domain for values\n" // NOLINT(*)
+    " --heap-values-refine         use heap domain with a dynamic refinement\n"
+    "                              of strength of the value domain\n"
+    " --sympath                    compute invariant for each symbolic path\n"
+    "                              (only usable with --heap-* switches)\n"
     " --enum-solver                use solver based on model enumeration\n"
     " --binsearch-solver           use solver based on binary search\n"
     " --arrays                     do not ignore array contents\n"

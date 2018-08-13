@@ -71,6 +71,11 @@ protected:
     const local_SSAt &SSA,
     bool forward);
 
+  std::vector<exprt> collect_record_frees(
+    const local_SSAt &SSA,
+    local_SSAt::nodest::const_iterator loop_begin,
+    local_SSAt::nodest::const_iterator loop_end);
+
   void filter_template_domain();
   void filter_equality_domain();
   void filter_heap_domain();

@@ -1,43 +1,45 @@
 /*******************************************************************\
 
-Module: Abstract domain for computing invariants in heap-interval
+Module: Abstract domain for computing invariants in heap-tpolyhedra
         domain for different symbolic paths in program.
 
 Author: Viktor Malik
 
 \*******************************************************************/
 
-#ifndef CPROVER_2LS_DOMAINS_HEAP_INTERVAL_SYMPATH_DOMAIN_H
-#define CPROVER_2LS_DOMAINS_HEAP_INTERVAL_SYMPATH_DOMAIN_H
+#ifndef CPROVER_2LS_DOMAINS_HEAP_TPOLYHEDRA_SYMPATH_DOMAIN_H
+#define CPROVER_2LS_DOMAINS_HEAP_TPOLYHEDRA_SYMPATH_DOMAIN_H
 
 
 #include "domain.h"
-#include "heap_interval_domain.h"
+#include "heap_tpolyhedra_domain.h"
 
-class heap_interval_sympath_domaint:public domaint
+class heap_tpolyhedra_sympath_domaint:public domaint
 {
 public:
-  heap_interval_domaint heap_interval_domain;
+  heap_tpolyhedra_domaint heap_tpolyhedra_domain;
 
-  heap_interval_sympath_domaint(
+  heap_tpolyhedra_sympath_domaint(
     unsigned int _domain_number,
     replace_mapt &_renaming_map,
     const var_specst &var_specs,
-    const local_SSAt &SSA):
+    const local_SSAt &SSA,
+    const heap_tpolyhedra_domaint::polyhedra_kindt polyhedra_kind):
     domaint(_domain_number, _renaming_map, SSA.ns),
-    heap_interval_domain(_domain_number, _renaming_map, var_specs, SSA.ns)
+    heap_tpolyhedra_domain(
+      _domain_number, _renaming_map, var_specs, SSA.ns, polyhedra_kind)
   {
     exprt::operandst false_loop_guards;
     for(auto &g : SSA.loop_guards)
-      false_loop_guards.push_back(not_exprt(g));
+      false_loop_guards.push_back(not_exprt(g.first));
     no_loops_path=conjunction(false_loop_guards);
   }
 
   // Value is a map from expression (symbolic path) to an invariant in heap
-  // interval domain
-  class heap_interval_sympath_valuet:
+  // tpolyhedra domain
+  class heap_tpolyhedra_sympath_valuet:
     public valuet,
-    public std::map<exprt, heap_interval_domaint::heap_interval_valuet>
+    public std::map<exprt, heap_tpolyhedra_domaint::heap_tpolyhedra_valuet>
   {
   };
 
@@ -61,8 +63,8 @@ protected:
   // path even though it can be feasible
   exprt no_loops_path;
 
-  friend class strategy_solver_heap_interval_sympatht;
+  friend class strategy_solver_heap_tpolyhedra_sympatht;
 };
 
 
-#endif // CPROVER_2LS_DOMAINS_HEAP_INTERVAL_SYMPATH_DOMAIN_H
+#endif // CPROVER_2LS_DOMAINS_HEAP_TPOLYHEDRA_SYMPATH_DOMAIN_H

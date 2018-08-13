@@ -1,41 +1,53 @@
 /*******************************************************************\
 
-Module: Combination of heap and interval abstract domains
+Module: Combination of heap and template polyhedra abstract domains
 
 Author: Viktor Malik
 
 \*******************************************************************/
-#ifndef CPROVER_2LS_DOMAINS_HEAP_INTERVAL_DOMAIN_H
-#define CPROVER_2LS_DOMAINS_HEAP_INTERVAL_DOMAIN_H
+#ifndef CPROVER_2LS_DOMAINS_HEAP_TPOLYHEDRA_DOMAIN_H
+#define CPROVER_2LS_DOMAINS_HEAP_TPOLYHEDRA_DOMAIN_H
 
 
 #include "domain.h"
 #include "tpolyhedra_domain.h"
 #include "heap_domain.h"
 
-class heap_interval_domaint:public domaint
+class heap_tpolyhedra_domaint:public domaint
 {
 public:
-  heap_domaint heap_domain;
-  tpolyhedra_domaint interval_domain;
+  enum polyhedra_kindt
+  {
+    INTERVAL, ZONES, OCTAGONS
+  };
 
-  heap_interval_domaint(
+  heap_domaint heap_domain;
+  tpolyhedra_domaint polyhedra_domain;
+
+  heap_tpolyhedra_domaint(
     unsigned int _domain_number,
     replace_mapt &_renaming_map,
     const var_specst &var_specs,
-    const namespacet &ns):
+    const namespacet &ns,
+    const polyhedra_kindt polyhedra_kind):
     domaint(_domain_number, _renaming_map, ns),
     heap_domain(_domain_number, _renaming_map, var_specs, ns),
-    interval_domain(_domain_number, _renaming_map, ns)
+    polyhedra_domain(_domain_number, _renaming_map, ns)
   {
-    interval_domain.add_interval_template(var_specs, ns);
+    if(polyhedra_kind==INTERVAL)
+      polyhedra_domain.add_interval_template(var_specs, ns);
+    else if(polyhedra_kind==ZONES)
+    {
+      polyhedra_domain.add_difference_template(var_specs, ns);
+      polyhedra_domain.add_interval_template(var_specs, ns);
+    }
   }
 
-  class heap_interval_valuet:public valuet
+  class heap_tpolyhedra_valuet:public valuet
   {
   public:
     heap_domaint::heap_valuet heap_value;
-    tpolyhedra_domaint::templ_valuet interval_value;
+    tpolyhedra_domaint::templ_valuet tpolyhedra_value;
   };
 
   virtual void initialize(valuet &value) override;
@@ -61,4 +73,4 @@ public:
   void clear_aux_symbols();
 };
 
-#endif // CPROVER_2LS_DOMAINS_HEAP_INTERVAL_DOMAIN_H
+#endif // CPROVER_2LS_DOMAINS_HEAP_TPOLYHEDRA_DOMAIN_H

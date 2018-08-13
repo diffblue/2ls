@@ -19,8 +19,8 @@ Author: Peter Schrammel
 #include "tpolyhedra_domain.h"
 #include "predabs_domain.h"
 #include "heap_domain.h"
-#include "heap_interval_domain.h"
-#include "heap_interval_sympath_domain.h"
+#include "heap_tpolyhedra_domain.h"
+#include "heap_tpolyhedra_sympath_domain.h"
 
 #ifdef DEBUG
 #include <iostream>
@@ -171,17 +171,46 @@ void template_generator_baset::collect_variables_loop(
           o_it!=SSA.ssa_objects.objects.end();
           o_it++)
       {
-        ssa_domaint::phi_nodest::const_iterator p_it=
-          phi_nodes.find(o_it->get_identifier());
+        const std::string id=id2string(o_it->get_identifier());
+        ssa_domaint::phi_nodest::const_iterator p_it=phi_nodes.find(id);
 
         if(p_it==phi_nodes.end()) // object not modified in this loop
           continue;
+
+        exprt obj_post_guard=post_guard;
+        // For dynamic objects allocated within the given loop, we need to add
+        // guard of their allocation
+        if(id.find("ssa::dynamic_object$")!=std::string::npos)
+        {
+          std::string obj_id=id.substr(0, id.find_first_of("."));
+          auto obj_def=SSA.ssa_analysis[n_it->location].def_map.find(obj_id);
+          if(obj_def!=SSA.ssa_analysis[n_it->location].def_map.end() &&
+             obj_def->second.def.kind==ssa_domaint::deft::ALLOCATION)
+          {
+            obj_post_guard=and_exprt(
+              SSA.guard_symbol(obj_def->second.def.loc),
+              post_guard);
+            auto alloc_guard=SSA.allocation_guards.find(obj_id);
+            if(alloc_guard!=SSA.allocation_guards.end())
+              obj_post_guard=and_exprt(obj_post_guard, alloc_guard->second);
+          }
+        }
+
+        if(id.find("__CPROVER_deallocated")!=std::string::npos)
+        {
+          auto record_frees=collect_record_frees(SSA, n_it->loophead, n_it);
+          exprt::operandst d;
+          for(auto &r : record_frees)
+            d.push_back(equal_exprt(r, true_exprt()));
+          if(!d.empty())
+            obj_post_guard=and_exprt(obj_post_guard, disjunction(d));
+        }
 
         symbol_exprt pre_var;
         get_pre_var(SSA, o_it, n_it, pre_var);
         exprt init_expr;
         get_init_expr(SSA, o_it, n_it, init_expr);
-        add_var(pre_var, pre_guard, post_guard, domaint::LOOP, var_specs);
+        add_var(pre_var, pre_guard, obj_post_guard, domaint::LOOP, var_specs);
 
 #ifdef DEBUG
         std::cout << "Adding " << from_expr(ns, "", in) << " " <<
@@ -767,15 +796,19 @@ void template_generator_baset::instantiate_standard_domains(
     static_cast<tpolyhedra_domaint *>(domain_ptr)
       ->add_quadratic_template(var_specs, SSA.ns);
   }
-  else if(options.get_bool_option("heap-interval"))
+  else if(options.get_bool_option("heap-interval") ||
+          options.get_bool_option("heap-zones"))
   {
     filter_heap_interval_domain();
+    auto polyhedra_kind=options.get_bool_option("heap-interval")
+                        ? heap_tpolyhedra_domaint::INTERVAL
+                        : heap_tpolyhedra_domaint::ZONES;
     if(options.get_bool_option("sympath"))
-      domain_ptr=new heap_interval_sympath_domaint(
-        domain_number, renaming_map, var_specs, SSA);
+      domain_ptr=new heap_tpolyhedra_sympath_domaint(
+        domain_number, renaming_map, var_specs, SSA, polyhedra_kind);
     else
-      domain_ptr=new heap_interval_domaint(
-        domain_number, renaming_map, var_specs, SSA.ns);
+      domain_ptr=new heap_tpolyhedra_domaint(
+        domain_number, renaming_map, var_specs, SSA.ns, polyhedra_kind);
   }
 }
 
@@ -813,4 +846,22 @@ void template_generator_baset::filter_heap_interval_domain()
       }
     }
   }
+}
+
+std::vector<exprt> template_generator_baset::collect_record_frees(
+  const local_SSAt &SSA,
+  local_SSAt::nodest::const_iterator loop_begin,
+  local_SSAt::nodest::const_iterator loop_end)
+{
+  std::vector<exprt> result;
+  for(auto &node : SSA.nodes)
+  {
+    if(node.location->location_number>loop_begin->location->location_number &&
+       node.location->location_number<loop_end->location->location_number &&
+       node.record_free.is_not_nil())
+    {
+      result.push_back(SSA.read_lhs(node.record_free, node.location));
+    }
+  }
+  return result;
 }

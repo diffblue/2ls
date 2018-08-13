@@ -60,6 +60,10 @@ public:
     // Row is nondeterministic - row expression is TRUE
     bool nondet=false;
 
+    const namespacet &ns;
+
+    explicit row_valuet(const namespacet &ns):ns(ns) {}
+
     virtual exprt get_row_expr(
       const vart &templ_expr,
       bool rename_templ_expr) const=0;
@@ -81,6 +85,8 @@ public:
   {
     // Set of objects (or NULL) the row variable can point to
     std::set<exprt> points_to;
+
+    explicit stack_row_valuet(const namespacet &ns):row_valuet(ns) {}
 
     virtual exprt get_row_expr(
       const vart &templ_expr,
@@ -143,7 +149,8 @@ public:
     // Self link on an abstract dynamic object
     bool self_linkage=false;
 
-    explicit heap_row_valuet(const dyn_objt &dyn_obj_):dyn_obj(dyn_obj_) {}
+    heap_row_valuet(const namespacet &ns, const dyn_objt &dyn_obj_):
+      row_valuet(ns), dyn_obj(dyn_obj_) {}
 
     virtual exprt get_row_expr(
       const vart &templ_expr_,
@@ -300,6 +307,10 @@ protected:
   void make_template(const var_specst &var_specs, const namespacet &ns);
 
   void add_template_row(const var_spect &var_spec, const typet &pointed_type);
+  void add_template_row_pair(
+    const var_spect &var_spec1,
+    const var_spect &var_spec2,
+    const typet &pointed_type);
 
   // Initializing functions
   void bind_iterators(

@@ -30,10 +30,11 @@ void heap_domaint::initialize(domaint::valuet &value)
   for(const template_rowt &templ_row : templ)
   {
     if(templ_row.mem_kind==STACK)
-      val.emplace_back(new stack_row_valuet());
+      val.emplace_back(new stack_row_valuet(ns));
     else if(templ_row.mem_kind==HEAP)
       val.emplace_back(
         new heap_row_valuet(
+          ns,
           std::make_pair(
             templ_row.dyn_obj,
             templ_row.expr)));
@@ -75,6 +76,29 @@ void heap_domaint::make_template(
     {
       const typet &pointed_type=ns.follow(var.type().subtype());
       add_template_row(v, pointed_type);
+
+      if(var.id()==ID_symbol &&
+         id2string(to_symbol_expr(var).get_identifier()).find(
+           "__CPROVER_deallocated")!=std::string::npos)
+      {
+        for(const var_spect &v_other : var_specs)
+        {
+          if(!(v_other.var.type().id()==ID_pointer && v_other.kind==LOOP &&
+               v_other.pre_guard==v.pre_guard))
+          {
+            continue;
+          }
+
+          if(v_other.var.id()==ID_symbol &&
+             id2string(to_symbol_expr(v_other.var).get_identifier()).find(
+               "__CPROVER_")!=std::string::npos)
+          {
+            continue;
+          }
+
+          add_template_row_pair(v, v_other, pointed_type);
+        }
+      }
     }
   }
 }
@@ -116,7 +140,12 @@ void heap_domaint::add_template_row(
       if(identifier.find("."+id2string(component.get_name()))!=
          std::string::npos)
       {
+#if 0
+        // It has shown that using stack rows only is sufficient to prove all
+        // tested programs and it seems that pointer access paths are not
+        // necessary. Therefore, we currently disable this code.
         templ_row.mem_kind=HEAP;
+#endif
         templ_row.member=component.get_name();
 
         std::string var_id=id2string(to_symbol_expr(var).get_identifier());
@@ -125,6 +154,36 @@ void heap_domaint::add_template_row(
       }
     }
   }
+}
+
+/*******************************************************************\
+
+Function: heap_domaint::add_template_row_pair
+
+  Inputs: var_spec Variable specification
+
+ Outputs:
+
+ Purpose: Add a template row with a pair of variables as expression.
+
+\*******************************************************************/
+
+void heap_domaint::add_template_row_pair(
+  const domaint::var_spect &var_spec1,
+  const domaint::var_spect &var_spec2,
+  const typet &pointed_type)
+{
+  const exprt var_pair=and_exprt(var_spec1.var, var_spec2.var);
+
+  templ.push_back(template_rowt());
+  template_rowt &templ_row=templ.back();
+  templ_row.expr=var_pair;
+  templ_row.pre_guard=var_spec1.pre_guard;
+  templ_row.post_guard=var_spec1.post_guard;
+  templ_row.aux_expr=var_spec1.aux_expr;
+  templ_row.kind=var_spec1.kind;
+
+  templ_row.mem_kind=STACK;
 }
 
 /*******************************************************************\
@@ -459,8 +518,17 @@ void heap_domaint::project_on_vars(
   {
     const template_rowt &templ_row=templ[row];
 
-    if(!vars.empty() && vars.find(templ_row.expr)==vars.end())
-      continue;
+    if(!vars.empty())
+    {
+      if(templ_row.expr.id()==ID_and)
+      {
+        if(vars.find(templ_row.expr.op0())==vars.end() &&
+           vars.find(templ_row.expr.op1())==vars.end())
+          continue;
+      }
+      else if(vars.find(templ_row.expr)==vars.end())
+        continue;
+    }
 
     const row_valuet &row_val=val[row];
     if(templ_row.kind==LOOP)
@@ -551,6 +619,38 @@ int heap_domaint::get_symbol_loc(const exprt &expr)
 
 /*******************************************************************\
 
+Function: ptr_equality
+
+  Inputs: Pointer expression (variable)
+          Value (object or address) of the pointer
+
+ Outputs: Equality between pointer and its value with correct types
+
+ Purpose:
+
+\*******************************************************************/
+
+const exprt ptr_equality(
+  const exprt &ptr_expr,
+  const exprt &ptr_value,
+  const namespacet &ns)
+{
+  exprt value;
+  if(ptr_expr.type()==ptr_value.type())
+    value=ptr_value;
+  else if(ns.follow(ptr_expr.type().subtype())==ns.follow(ptr_value.type()))
+    value=address_of_exprt(ptr_value);
+  else
+  {
+    value=typecast_exprt(
+      address_of_exprt(ptr_value),
+      ns.follow(ptr_expr.type()));
+  }
+  return equal_exprt(ptr_expr, value);
+}
+
+/*******************************************************************\
+
 Function: heap_domaint::stack_row_valuet::get_row_expr
 
   Inputs: templ_expr Template expression
@@ -577,10 +677,15 @@ exprt heap_domaint::stack_row_valuet::get_row_expr(
     exprt::operandst result;
     for(const exprt &pt : points_to)
     {
-      result.push_back(
-        equal_exprt(
-          templ_expr,
-          templ_expr.type()==pt.type() ? pt : address_of_exprt(pt)));
+      if(templ_expr.id()==ID_and)
+      {
+        result.push_back(
+          and_exprt(
+            ptr_equality(templ_expr.op0(), pt.op0(), ns),
+            ptr_equality(templ_expr.op1(), pt.op1(), ns)));
+      }
+      else
+        result.push_back(ptr_equality(templ_expr, pt, ns));
     }
     return disjunction(result);
   }
@@ -796,8 +901,11 @@ bool heap_domaint::heap_row_valuet::add_all_paths(
   bool result=false;
   for(auto &path : other_val.paths)
   {
+    bool new_dest=(paths.find(path.destination)==paths.end());
     if(add_path(path.destination, dyn_obj))
     {
+      if(!new_dest)
+        paths.erase(dyn_obj.first);
       result=true;
       for(auto &o : path.dyn_objects)
       {

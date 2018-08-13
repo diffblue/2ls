@@ -17,6 +17,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <ansi-c/c_types.h>
 #include <analyses/constant_propagator.h>
 
+#include <functional>
+
 #include "malloc_ssa.h"
 
 /*******************************************************************\
@@ -54,6 +56,105 @@ inline static typet c_sizeof_type_rec(const exprt &expr)
 
 /*******************************************************************\
 
+Function: create_dynamic_object
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Create new dynamic object, insert it into the symbol table
+          and return its address.
+
+\*******************************************************************/
+
+exprt create_dynamic_object(
+  const std::string &suffix,
+  const typet &type,
+  symbol_tablet &symbol_table,
+  bool concrete)
+{
+  symbolt value_symbol;
+
+  value_symbol.base_name="dynamic_object"+suffix;
+  value_symbol.name="ssa::"+id2string(value_symbol.base_name);
+  value_symbol.is_lvalue=true;
+  value_symbol.type=type;
+  value_symbol.type.set("#dynamic", true);
+  value_symbol.mode=ID_C;
+  symbol_table.add(value_symbol);
+
+  address_of_exprt address_of_object;
+
+  if(type.id()==ID_array)
+  {
+    address_of_object.type()=pointer_typet(value_symbol.type.subtype());
+    index_exprt index_expr(value_symbol.type.subtype());
+    index_expr.array()=value_symbol.symbol_expr();
+    index_expr.index()=gen_zero(index_type());
+    address_of_object.op0()=index_expr;
+  }
+  else
+  {
+    address_of_object.op0()=value_symbol.symbol_expr();
+    if(concrete)
+      address_of_object.op0().set("#concrete", true);
+    address_of_object.type()=pointer_typet(value_symbol.type);
+  }
+
+  return address_of_object;
+}
+
+/*******************************************************************\
+
+Function: collect_pointer_vars
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Collect all variables (symbols and their members) of pointer
+          type with given pointed type.
+
+\*******************************************************************/
+
+std::vector<exprt> collect_pointer_vars(
+  const symbol_tablet &symbol_table,
+  const typet &pointed_type)
+{
+  namespacet ns(symbol_table);
+  std::vector<exprt> pointers;
+  forall_symbols(it, symbol_table.symbols)
+  {
+    if(ns.follow(it->second.type).id()==ID_struct)
+    {
+      for(auto &component : to_struct_type(
+        ns.follow(it->second.type)).components())
+      {
+        if(component.type().id()==ID_pointer)
+        {
+          if(ns.follow(component.type().subtype())==ns.follow(pointed_type))
+          {
+            pointers.push_back(
+              member_exprt(
+                it->second.symbol_expr(), component.get_name(),
+                component.type()));
+          }
+        }
+      }
+    }
+    if(it->second.type.id()==ID_pointer)
+    {
+      if(ns.follow(it->second.type.subtype())==ns.follow(pointed_type))
+      {
+        pointers.push_back(it->second.symbol_expr());
+      }
+    }
+  }
+  return pointers;
+}
+
+/*******************************************************************\
+
 Function: malloc_ssa
 
   Inputs:
@@ -67,7 +168,8 @@ Function: malloc_ssa
 exprt malloc_ssa(
   const side_effect_exprt &code,
   const std::string &suffix,
-  symbol_tablet &symbol_table)
+  symbol_tablet &symbol_table,
+  bool alloc_concrete)
 {
   if(code.operands().size()!=1)
     throw "malloc expected to have one operand";
@@ -132,37 +234,42 @@ exprt malloc_ssa(
   std::cout << "OBJECT_TYPE: " << from_type(ns, "", object_type) << std::endl;
 #endif
 
-  // value
-  symbolt value_symbol;
+  auto pointers=collect_pointer_vars(symbol_table, object_type);
 
-  value_symbol.base_name="dynamic_object"+suffix;
-  value_symbol.name="ssa::"+id2string(value_symbol.base_name);
-  value_symbol.is_lvalue=true;
-  value_symbol.type=object_type;
-  value_symbol.type.set("#dynamic", true);
-  value_symbol.mode=ID_C;
-  symbol_table.add(value_symbol);
-
-  address_of_exprt address_of;
-
-  if(object_type.id()==ID_array)
+  exprt object=create_dynamic_object(
+    suffix, object_type, symbol_table, !alloc_concrete);
+  if(object.type()!=code.type())
+    object=typecast_exprt(object, code.type());
+  exprt result;
+  if(alloc_concrete)
   {
-    address_of.type()=pointer_typet(value_symbol.type.subtype());
-    index_exprt index_expr(value_symbol.type.subtype());
-    index_expr.array()=value_symbol.symbol_expr();
-    index_expr.index()=gen_zero(index_type());
-    address_of.op0()=index_expr;
+    exprt concrete_object=create_dynamic_object(
+      suffix+"$co", object_type, symbol_table, true);
+
+    // Create nondet symbol
+    symbolt nondet_symbol;
+    nondet_symbol.base_name="nondet"+suffix;
+    nondet_symbol.name="ssa::"+id2string(nondet_symbol.base_name);
+    nondet_symbol.is_lvalue=true;
+    nondet_symbol.type=bool_typet();
+    nondet_symbol.mode=ID_C;
+    symbol_table.add(nondet_symbol);
+
+    exprt::operandst pointer_equs;
+    for(auto &ptr : pointers)
+    {
+      pointer_equs.push_back(equal_exprt(ptr, concrete_object));
+    }
+    exprt cond=and_exprt(
+      nondet_symbol.symbol_expr(),
+      not_exprt(disjunction(pointer_equs)));
+
+    if(concrete_object.type()!=code.type())
+      concrete_object=typecast_exprt(concrete_object, code.type());
+    result=if_exprt(cond, concrete_object, object);
   }
   else
-  {
-    address_of.op0()=value_symbol.symbol_expr();
-    address_of.type()=pointer_typet(value_symbol.type);
-  }
-
-  exprt result=address_of;
-
-  if(result.type()!=code.type())
-    result=typecast_exprt(result, code.type());
+    result=object;
 
   result.set("#malloc_result", true);
 
@@ -187,7 +294,8 @@ static bool replace_malloc_rec(
   const std::string &suffix,
   symbol_tablet &symbol_table,
   const exprt &malloc_size,
-  unsigned loc_number)
+  unsigned loc_number,
+  bool alloc_concrete)
 {
   if(expr.id()==ID_side_effect &&
      to_side_effect_expr(expr).get_statement()==ID_malloc)
@@ -196,9 +304,8 @@ static bool replace_malloc_rec(
     expr.op0()=malloc_size;
 
     expr=malloc_ssa(
-      to_side_effect_expr(expr),
-      "$"+i2string(loc_number)+suffix,
-      symbol_table);
+      to_side_effect_expr(expr), "$"+i2string(loc_number)+suffix, symbol_table,
+      alloc_concrete);
     return true;
   }
   else
@@ -206,7 +313,8 @@ static bool replace_malloc_rec(
     bool result=false;
     Forall_operands(it, expr)
     {
-      if(replace_malloc_rec(*it, suffix, symbol_table, malloc_size, loc_number))
+      if(replace_malloc_rec(
+         *it, suffix, symbol_table, malloc_size, loc_number, alloc_concrete))
         result=true;
     }
     return result;
@@ -227,7 +335,8 @@ Function: replace_malloc
 
 bool replace_malloc(
   goto_modelt &goto_model,
-  const std::string &suffix)
+  const std::string &suffix,
+  bool alloc_concrete)
 {
   bool result=false;
   Forall_goto_functions(f_it, goto_model.goto_functions)
@@ -280,11 +389,9 @@ bool replace_malloc(
           }
         }
         if(replace_malloc_rec(
-          code_assign.rhs(),
-          suffix,
-          goto_model.symbol_table,
-          malloc_size,
-          i_it->location_number))
+          code_assign.rhs(), suffix, goto_model.symbol_table, malloc_size,
+          i_it->location_number,
+          alloc_concrete && loop_end!=f_it->second.body.instructions.end()))
         {
           result=(loop_end!=f_it->second.body.instructions.end());
         }
@@ -292,4 +399,97 @@ bool replace_malloc(
     }
   }
   return result;
+}
+
+/*******************************************************************\
+
+Function: set_var_always_to_true
+
+  Inputs: goto_model
+          name_cond Function returning true for names of variables
+                    to be set.
+
+ Outputs:
+
+ Purpose: Set undefined boolean variable to true.
+          Finds declaration of a variable whose name matches the given
+          condition and adds an instruction var = TRUE after
+          the declaration.
+
+\*******************************************************************/
+
+void set_var_always_to_true(
+  goto_modelt &goto_model,
+  std::function<bool(std::string &)>name_cond)
+{
+  Forall_goto_functions(f_it, goto_model.goto_functions)
+  {
+    Forall_goto_program_instructions(i_it, f_it->second.body)
+    {
+      if(i_it->is_decl())
+      {
+        code_declt &code_decl=to_code_decl(i_it->code);
+        if(code_decl.symbol().id()==ID_symbol)
+        {
+          std::string decl_id=
+            id2string(to_symbol_expr(code_decl.symbol()).get_identifier());
+          if(name_cond(decl_id))
+          {
+            auto assign=f_it->second.body.insert_after(i_it);
+            assign->make_assignment();
+            assign->code=code_assignt(code_decl.symbol(), true_exprt());
+          }
+        }
+      }
+    }
+    f_it->second.body.compute_location_numbers();
+    f_it->second.body.compute_target_numbers();
+    f_it->second.body.compute_incoming_edges();
+  }
+}
+
+/*******************************************************************\
+
+Function: allow_record_malloc
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void allow_record_malloc(goto_modelt &goto_model)
+{
+  set_var_always_to_true(
+    goto_model,
+    [](std::string &name)
+    {
+      return name.find("malloc::")!=std::string::npos &&
+             name.find("::record_malloc")!=std::string::npos;
+    });
+}
+
+/*******************************************************************\
+
+Function: allow_record_memleak
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void allow_record_memleak(goto_modelt &goto_model)
+{
+  set_var_always_to_true(
+    goto_model,
+    [](std::string &name)
+    {
+      return name.find("malloc::")!=std::string::npos &&
+             name.find("::record_may_leak")!=std::string::npos;
+    });
 }

@@ -22,20 +22,21 @@ Function: strategy_solver_baset::find_symbolic_path
 
 \*******************************************************************/
 void strategy_solver_baset::find_symbolic_path(
-  std::set<symbol_exprt> &loop_guards,
+  std::set<std::pair<symbol_exprt, symbol_exprt>> &loop_guards,
   const exprt &current_guard)
 {
-  for(const symbol_exprt &guard : loop_guards)
+  for(const auto &guard : loop_guards)
   {
-    if(guard==current_guard)
+    if(guard.first==current_guard)
     {
-      symbolic_path[guard]=true;
+      symbolic_path[guard.first]=true;
       continue;
     }
-    exprt guard_value=solver.get(guard);
-    if(guard_value.is_true())
-      symbolic_path[guard]=true;
-    else if(guard_value.is_false())
-      symbolic_path[guard]=false;
+    exprt ls_guard_value=solver.get(guard.first);
+    exprt lh_guard_value=solver.get(guard.second);
+    if(ls_guard_value.is_true() && lh_guard_value.is_true())
+      symbolic_path[guard.first]=true;
+    else if(ls_guard_value.is_false())
+      symbolic_path[guard.first]=false;
   }
 }

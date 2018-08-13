@@ -16,6 +16,7 @@ Author: Daniel Kroening, Peter Schrammel
 #include <langapi/language_ui.h>
 
 #include <analyses/goto_check.h>
+#include <ssa/dynobj_instance_analysis.h>
 
 class goto_modelt;
 class optionst;
@@ -37,7 +38,15 @@ class optionst;
   "(version)" \
   "(i386-linux)(i386-macos)(i386-win32)(win32)(winx64)(gcc)" \
   "(ppc-macos)(unsigned-char)" \
-  "(havoc)(intervals)(zones)(octagons)(equalities)(heap)(heap-interval)"\
+  "(havoc)" \
+  "(intervals)" \
+  "(zones)" \
+  "(octagons)" \
+  "(equalities)" \
+  "(heap)" \
+  "(heap-interval)" \
+  "(heap-zones)" \
+  "(heap-values-refine)" \
   "(sympath)" \
   "(enum-solver)(binsearch-solver)(arrays)"\
   "(string-abstraction)(no-arch)(arch):(floatbv)(fixedbv)" \
@@ -183,6 +192,18 @@ protected:
   void add_dynamic_object_symbols(
     const ssa_heap_analysist &heap_analysis,
     goto_modelt &goto_model);
+  void split_same_symbolic_object_assignments(goto_modelt &goto_model);
+  void remove_dead_goto(goto_modelt &goto_model);
+  void compute_dynobj_instances(
+    const goto_programt &goto_program,
+    const dynobj_instance_analysist &analysis,
+    std::map<symbol_exprt, size_t> &instance_counts,
+    const namespacet &ns);
+  void create_dynobj_instances(
+    goto_programt &goto_program,
+    const std::map<symbol_exprt, size_t> &instance_counts,
+    symbol_tablet &symbol_table);
+  std::map<symbol_exprt, size_t> split_dynamic_objects(goto_modelt &goto_model);
 };
 
 #endif

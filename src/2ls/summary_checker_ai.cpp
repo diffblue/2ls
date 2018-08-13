@@ -43,40 +43,58 @@ property_checkert::resultt summary_checker_ait::operator()(
   // properties
   initialize_property_map(goto_model.goto_functions);
 
-  bool preconditions=options.get_bool_option("preconditions");
-  bool termination=options.get_bool_option("termination");
-  bool trivial_domain=options.get_bool_option("havoc");
-  if(!trivial_domain || termination)
+  property_checkert::resultt result=property_checkert::UNKNOWN;
+  bool finished=false;
+  while(!finished)
   {
-    // forward analysis
-    summarize(goto_model, true, termination);
-  }
-  if(!trivial_domain && preconditions)
-  {
-    // backward analysis
-    summarize(goto_model, false, termination);
-  }
+    bool preconditions=options.get_bool_option("preconditions");
+    bool termination=options.get_bool_option("termination");
+    bool trivial_domain=options.get_bool_option("havoc");
+    if(!trivial_domain || termination)
+    {
+      // forward analysis
+      summarize(goto_model, true, termination);
+    }
+    if(!trivial_domain && preconditions)
+    {
+      // backward analysis
+      summarize(goto_model, false, termination);
+    }
 
-  if(preconditions)
-  {
-    report_statistics();
-    report_preconditions();
-    return property_checkert::UNKNOWN;
-  }
+    if(preconditions)
+    {
+      report_statistics();
+      report_preconditions();
+      return property_checkert::UNKNOWN;
+    }
 
-  if(termination)
-  {
-    report_statistics();
-    return report_termination();
-  }
+    if(termination)
+    {
+      report_statistics();
+      return report_termination();
+    }
 
 #ifdef SHOW_CALLINGCONTEXTS
-  if(options.get_bool_option("show-calling-contexts"))
-    return property_checkert::UNKNOWN;
+    if(options.get_bool_option("show-calling-contexts"))
+      return property_checkert::UNKNOWN;
 #endif
 
-  property_checkert::resultt result=check_properties();
-  report_statistics();
+    result=check_properties();
+    report_statistics();
+
+    if(result==property_checkert::UNKNOWN &&
+       options.get_bool_option("heap-values-refine") &&
+       options.get_bool_option("heap-interval"))
+    {
+      summary_db.clear();
+      options.set_option("heap-interval", false);
+      options.set_option("heap-zones", true);
+    }
+    else
+    {
+      finished=true;
+    }
+  }
   return result;
 }
 

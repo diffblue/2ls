@@ -1,4 +1,4 @@
-CORE
+KNOWNBUG
 main.c
 --heap-interval --inline --no-propagation --sympath
 ^EXIT=0$

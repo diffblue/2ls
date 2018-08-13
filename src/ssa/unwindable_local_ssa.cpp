@@ -350,6 +350,8 @@ irep_idt unwindable_local_SSAt::get_ssa_name(
     pos1+=2;
   else if(s.substr(pos1+1, 2)=="ls")
     pos1+=2;
+  else if(s.substr(pos1+1, 2)=="os")
+    pos1+=2;
   else if(s.substr(pos1+1, 3)=="phi")
     pos1+=3;
   else if((pos2==pos1+13) && (s.substr(pos1+1, 12)=="return_value"))

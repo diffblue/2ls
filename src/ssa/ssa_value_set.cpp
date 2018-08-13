@@ -7,7 +7,7 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 // #define DEBUG
-#define COMPETITION
+// #define COMPETITION
 
 #ifdef DEBUG
 #include <iostream>

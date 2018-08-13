@@ -20,7 +20,7 @@ public:
   struct deft
   {
     deft():kind(ASSIGNMENT) { }
-    typedef enum { INPUT, ASSIGNMENT, PHI } kindt;
+    typedef enum { INPUT, ASSIGNMENT, PHI, ALLOCATION } kindt;
     kindt kind;
     locationt loc;
 
@@ -42,6 +42,7 @@ public:
     case deft::INPUT: out << "INPUT"; break;
     case deft::ASSIGNMENT: out << d.loc->location_number; break;
     case deft::PHI: out << "PHI" << d.loc->location_number; break;
+    case deft::ALLOCATION: out << "ALLOC" << d.loc->location_number; break;
     }
     return out;
   }
@@ -84,6 +85,12 @@ public:
     const ssa_domaint &b,
     locationt from,
     locationt to);
+
+private:
+  static std::map<dstring, ssa_domaint::def_entryt>::const_iterator
+  get_object_allocation_def(
+    const irep_idt &id,
+    const def_mapt &def_map);
 };
 
 class ssa_ait:public ait<ssa_domaint>
