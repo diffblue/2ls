@@ -33,13 +33,17 @@ The current tool has following capabilities:
 * function-modular interprocedural analysis of C code based on summaries
 * summary and invariant inference using generic templates
 * combined k-induction and invariant inference
+* incremental bounded model checking
 * function-modular termination analysis
+* non-termination analysis
 
 Releases
 ========
 
 Download using `git clone http://github.com/diffblue/2ls; cd 2ls; git checkout 2ls-x.y`
 
+* [2LS 0.7](http://github.com/diffblue/2ls/releases/tag/2ls-0.7) (08/2018)
+* [2LS 0.6](http://github.com/diffblue/2ls/releases/tag/2ls-0.6) (12/2017)
 * [2LS 0.5](http://github.com/diffblue/2ls/releases/tag/2ls-0.5) (01/2017)
 * [2LS 0.4](http://github.com/diffblue/2ls/releases/tag/2ls-0.4) (08/2016)
 * [2LS 0.3](http://svn.cprover.org/svn/deltacheck/releases/2ls-0.3) (08/2015)
@@ -48,13 +52,14 @@ Download using `git clone http://github.com/diffblue/2ls; cd 2ls; git checkout 2
 
 Software Verification Competition Contributions
 
+* [SV-COMP 2018](http://github.com/diffblue/2ls/releases/tag/2ls-0.6) (12/2017)
 * [SV-COMP 2017](http://github.com/diffblue/2ls/releases/tag/2ls-0.5-sv-comp-2017) (01/2017)
 * [SV-COMP 2016](http://svn.cprover.org/svn/deltacheck/releases/2ls-0.3-sv-comp-2016) (11/2015) [Follow these instructions](http://www.cprover.org/2LS/2ls-sv-comp-2016.pdf)
 
 Installation
 ============
 
-`cd 2ls; ./install.h`
+`cd 2ls; ./install.sh`
 
  Run `src/2ls/2ls`
 
@@ -81,6 +86,15 @@ Currently the following abstract domains are available:
 * Equalities/disequalities: --equalities
 * The abstract domain consisting of the Top element: --havoc
 
+Since release 0.6:
+
+* Heap abstract domain: --heap
+
+Since release 0.7:
+
+* Heap abstract domain with intervals or zones: --heap-[intervals|zones]
+* Heap abstract domain with intervals or zones and loop paths: --heap-[intervals|zones] --sympath
+
 Interprocedural Termination Analysis
 ====================================
 
@@ -90,12 +104,16 @@ Is supported by release 0.1 and >=0.3.
 * Context-sensitive universal termination: --termination --context-sensitive
 * Sufficient preconditions for termination --termination --context-sensitive --preconditions
 
+Since release 0.6:
+
+* Nontermination analysis: --non-termination
+
 Features in development
 =======================
 
 * ACDL solver (ATVA'17 [Lifting CDCL to Template-Based Abstract Domains for Program Verification](https://doi.org/10.1007/978-3-319-68167-2_2))
-* abstract heap domain
-* nontermination analysis
+* array domain
+* disjunctive domains
 * custom template specifications
 * modular refinement
 * template refinement
@@ -104,6 +122,11 @@ Features in development
 Publications
 ============
 
+* FMCAD'18 Template-Based Verification of Heap-Manipulating Programs
+* TACAS'18 [2LS: Memory Safety and Non-Termination](https://link.springer.com/chapter/10.1007%2F978-3-319-89963-3_24)
+* TOPLAS 40(1) 2018 [Bit-Precise Procedure-Modular Termination Analysis](https://dl.acm.org/citation.cfm?doid=3121136)
+* ATVA'17 [Compositional Refutation Techniques](https://link.springer.com/chapter/10.1007%2F978-3-319-68167-2_12)
+* ATVA'17 [Lifting CDCL to Template-Based Abstract Domains for Program Verification](https://doi.org/10.1007/978-3-319-68167-2_2)
 * TACAS'16 [2LS for Program Analysis](http://dl.acm.org/citation.cfm?id=2945506)
 * SAS'15 [Safety Verification and Refutation by k-Invariants and k-Induction](http://link.springer.com/chapter/10.1007%2F978-3-662-48288-9_9)
 * ASE'15 [Synthesising Interprocedural Bit-Precise Termination Proofs](http://dl.acm.org/citation.cfm?id=2916211) [Experimental log](http://www.cs.ox.ac.uk/people/peter.schrammel/2ls/ase15-experimental_results_log.txt) [Additional material](http://www.cs.ox.ac.uk/people/peter.schrammel/2ls/ase15-additional-material.tgz) [Website](http://www.cprover.org/termination/modular)
@@ -117,6 +140,7 @@ Contributors
 * Hongyi Chen
 * Madhukar Kumar
 * Martin Brain
+* Martin Hruska
 * Peter Schrammel
 * Rajdeep Mukherjee
 * Samuel Bücheli
