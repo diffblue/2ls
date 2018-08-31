@@ -1,4 +1,4 @@
-KNOWNBUG
+CORE
 main.c
 --heap-interval --sympath --inline --pointer-check --k-induction
 ^EXIT=10$
