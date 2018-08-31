@@ -230,9 +230,6 @@ exprt tpolyhedra_domaint::get_row_constraint(
   const row_valuet &row_value)
 {
   assert(row<templ.size());
-  kindt k=templ[row].kind;
-  if(k==OUT || k==OUTL)
-    return true_exprt();
   if(is_row_value_neginf(row_value))
     return false_exprt();
   if(is_row_value_inf(row_value))
@@ -261,13 +258,7 @@ exprt tpolyhedra_domaint::get_row_pre_constraint(
   kindt k=templ_row.kind;
   if(k==OUT || k==OUTL)
     return true_exprt();
-  if(is_row_value_neginf(row_value))
-    return implies_exprt(templ_row.pre_guard, false_exprt());
-  if(is_row_value_inf(row_value))
-    return implies_exprt(templ_row.pre_guard, true_exprt());
-  return implies_exprt(
-    templ_row.pre_guard,
-    binary_relation_exprt(templ_row.expr, ID_le, row_value));
+  return implies_exprt(templ_row.pre_guard, get_row_constraint(row, row_value));
 }
 
 /*******************************************************************\
@@ -343,13 +334,8 @@ exprt tpolyhedra_domaint::get_row_post_constraint(
   }
 #endif
 
-  if(is_row_value_neginf(row_value))
-    return implies_exprt(templ_row.post_guard, false_exprt());
-  if(is_row_value_inf(row_value))
-    return implies_exprt(templ_row.post_guard, true_exprt());
-  exprt c=implies_exprt(
-    templ_row.post_guard,
-    binary_relation_exprt(templ_row.expr, ID_le, row_value));
+  exprt c=
+    implies_exprt(templ_row.post_guard, get_row_constraint(row, row_value));
   if(templ_row.kind==LOOP)
     rename(c);
   return c;
@@ -672,27 +658,11 @@ void tpolyhedra_domaint::project_on_vars(
       continue;
 
     const row_valuet &row_v=v[row];
+    const exprt row_constraint=get_row_constraint(row, row_v);
     if(templ_row.kind==LOOP)
-    {
-      if(is_row_value_neginf(row_v))
-        c.push_back(implies_exprt(templ_row.pre_guard, false_exprt()));
-      else if(is_row_value_inf(row_v))
-        c.push_back(implies_exprt(templ_row.pre_guard, true_exprt()));
-      else
-        c.push_back(
-          implies_exprt(
-            templ_row.pre_guard,
-            binary_relation_exprt(templ_row.expr, ID_le, row_v)));
-    }
+      c.push_back(implies_exprt(templ_row.pre_guard, row_constraint));
     else
-    {
-      if(is_row_value_neginf(row_v))
-        c.push_back(false_exprt());
-      else if(is_row_value_inf(row_v))
-        c.push_back(true_exprt());
-      else
-        c.push_back(binary_relation_exprt(templ_row.expr, ID_le, row_v));
-    }
+      c.push_back(row_constraint);
   }
   result=conjunction(c);
 }
