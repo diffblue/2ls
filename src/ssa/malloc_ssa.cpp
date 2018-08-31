@@ -71,7 +71,7 @@ exprt create_dynamic_object(
   const std::string &suffix,
   const typet &type,
   symbol_tablet &symbol_table,
-  bool concrete)
+  bool is_concrete)
 {
   symbolt value_symbol;
 
@@ -96,7 +96,7 @@ exprt create_dynamic_object(
   else
   {
     address_of_object.op0()=value_symbol.symbol_expr();
-    if(concrete)
+    if(is_concrete)
       address_of_object.op0().set("#concrete", true);
     address_of_object.type()=pointer_typet(value_symbol.type);
   }
@@ -169,6 +169,7 @@ exprt malloc_ssa(
   const side_effect_exprt &code,
   const std::string &suffix,
   symbol_tablet &symbol_table,
+  bool is_concrete,
   bool alloc_concrete)
 {
   if(code.operands().size()!=1)
@@ -237,11 +238,11 @@ exprt malloc_ssa(
   auto pointers=collect_pointer_vars(symbol_table, object_type);
 
   exprt object=create_dynamic_object(
-    suffix, object_type, symbol_table, !alloc_concrete);
+    suffix, object_type, symbol_table, is_concrete);
   if(object.type()!=code.type())
     object=typecast_exprt(object, code.type());
   exprt result;
-  if(alloc_concrete)
+  if(!is_concrete && alloc_concrete)
   {
     exprt concrete_object=create_dynamic_object(
       suffix+"$co", object_type, symbol_table, true);
@@ -295,6 +296,7 @@ static bool replace_malloc_rec(
   symbol_tablet &symbol_table,
   const exprt &malloc_size,
   unsigned loc_number,
+  bool is_concrete,
   bool alloc_concrete)
 {
   if(expr.id()==ID_side_effect &&
@@ -304,8 +306,12 @@ static bool replace_malloc_rec(
     expr.op0()=malloc_size;
 
     expr=malloc_ssa(
-      to_side_effect_expr(expr), "$"+i2string(loc_number)+suffix, symbol_table,
+      to_side_effect_expr(expr),
+      "$"+i2string(loc_number)+suffix,
+      symbol_table,
+      is_concrete,
       alloc_concrete);
+
     return true;
   }
   else
@@ -313,9 +319,16 @@ static bool replace_malloc_rec(
     bool result=false;
     Forall_operands(it, expr)
     {
-      if(replace_malloc_rec(
-         *it, suffix, symbol_table, malloc_size, loc_number, alloc_concrete))
+      if(replace_malloc_rec(*it,
+                            suffix,
+                            symbol_table,
+                            malloc_size,
+                            loc_number,
+                            is_concrete,
+                            alloc_concrete))
+      {
         result=true;
+      }
     }
     return result;
   }
@@ -388,10 +401,13 @@ bool replace_malloc(
             }
           }
         }
-        if(replace_malloc_rec(
-          code_assign.rhs(), suffix, goto_model.symbol_table, malloc_size,
-          i_it->location_number,
-          alloc_concrete && loop_end!=f_it->second.body.instructions.end()))
+        if(replace_malloc_rec(code_assign.rhs(),
+                              suffix,
+                              goto_model.symbol_table,
+                              malloc_size,
+                              i_it->location_number,
+                              loop_end==f_it->second.body.instructions.end(),
+                              alloc_concrete))
         {
           result=(loop_end!=f_it->second.body.instructions.end());
         }

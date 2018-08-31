@@ -16,6 +16,7 @@ exprt malloc_ssa(
   const side_effect_exprt &,
   const std::string &suffix,
   symbol_tablet &,
+  bool is_concrete,
   bool alloc_concrete);
 
 bool replace_malloc(
