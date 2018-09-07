@@ -33,7 +33,6 @@ void assignmentst::build_assignment_map(
   {
     // make sure we have the location in the map
     assignment_map[it];
-    allocation_map[it];
 
     // now fill it
     if(it->is_assign())
@@ -45,12 +44,6 @@ void assignmentst::build_assignment_map(
       assign(lhs_symbolic_deref, it, ns);
 
       assign_symbolic_rhs(code_assign.rhs(), it, ns);
-
-      // At allocations site, save newly allocated object(s)
-      if(code_assign.rhs().get_bool("#malloc_result"))
-      {
-        allocate(code_assign.rhs(), it, ns);
-      }
     }
     else if(it->is_assert())
     {
@@ -312,35 +305,4 @@ void assignmentst::output(
 
     out << "\n";
   }
-}
-
-/*******************************************************************\
-
-Function: assignmentst::allocate
-
-  Inputs:
-
- Outputs:
-
- Purpose: Record allocation
-
-\*******************************************************************/
-void assignmentst::allocate(
-  const exprt &expr,
-  const assignmentst::locationt loc,
-  const namespacet &ns)
-{
-  if(expr.id()==ID_symbol && expr.type().get_bool("#dynamic"))
-  {
-    allocation_map[loc].insert(ssa_objectt(expr, ns));
-  }
-  else if(expr.id()==ID_if)
-  {
-    allocate(to_if_expr(expr).true_case(), loc, ns);
-    allocate(to_if_expr(expr).false_case(), loc, ns);
-  }
-  else if(expr.id()==ID_address_of)
-    allocate(to_address_of_expr(expr).object(), loc, ns);
-  else if(expr.id()==ID_typecast)
-    allocate(to_typecast_expr(expr).op(), loc, ns);
 }

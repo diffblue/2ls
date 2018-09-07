@@ -178,23 +178,6 @@ void template_generator_baset::collect_variables_loop(
           continue;
 
         exprt obj_post_guard=post_guard;
-        // For dynamic objects allocated within the given loop, we need to add
-        // guard of their allocation
-        if(id.find("ssa::dynamic_object$")!=std::string::npos)
-        {
-          std::string obj_id=id.substr(0, id.find_first_of("."));
-          auto obj_def=SSA.ssa_analysis[n_it->location].def_map.find(obj_id);
-          if(obj_def!=SSA.ssa_analysis[n_it->location].def_map.end() &&
-             obj_def->second.def.kind==ssa_domaint::deft::ALLOCATION)
-          {
-            obj_post_guard=and_exprt(
-              SSA.guard_symbol(obj_def->second.def.loc),
-              post_guard);
-            auto alloc_guard=SSA.allocation_guards.find(obj_id);
-            if(alloc_guard!=SSA.allocation_guards.end())
-              obj_post_guard=and_exprt(obj_post_guard, alloc_guard->second);
-          }
-        }
 
         if(id.find("__CPROVER_deallocated")!=std::string::npos)
         {
@@ -208,6 +191,21 @@ void template_generator_baset::collect_variables_loop(
 
         symbol_exprt pre_var;
         get_pre_var(SSA, o_it, n_it, pre_var);
+
+        // For fields of dynamic objects, we add a guard that their value is not
+        // equal to the corresponding input SSA variable that represents a state
+        // when the object is not allocated.
+        // Example: dynamic_object$0.next#ls100 != dynamic_object$0.next
+        if(id.find("ssa::dynamic_object$")!=std::string::npos)
+        {
+          exprt &post_var=post_renaming_map[pre_var];
+          assert(post_var.id()==ID_symbol);
+          const irep_idt orig_id=get_original_name(to_symbol_expr(post_var));
+          symbol_exprt unallocated(orig_id, post_var.type());
+          exprt guard=not_exprt(equal_exprt(post_var, unallocated));
+          obj_post_guard=and_exprt(obj_post_guard, guard);
+        }
+
         exprt init_expr;
         get_init_expr(SSA, o_it, n_it, init_expr);
         add_var(pre_var, pre_guard, obj_post_guard, domaint::LOOP, var_specs);

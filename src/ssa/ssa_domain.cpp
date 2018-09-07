@@ -121,17 +121,6 @@ void ssa_domaint::transform(
       def_entry.def.kind=deft::ASSIGNMENT;
       def_entry.source=from;
     }
-
-    auto allocations=
-      static_cast<ssa_ait &>(ai).assignments.get_allocations(from);
-    for(auto &alloc : allocations)
-    {
-      irep_idt identifier=alloc.get_identifier();
-      def_entryt &def_entry=def_map[identifier];
-      def_entry.def.loc=from;
-      def_entry.def.kind=deft::ALLOCATION;
-      def_entry.source=from;
-    }
   }
   else if(from->is_dead())
   {
@@ -221,43 +210,6 @@ bool ssa_domaint::merge(
     }
     else
     {
-      // Do not create PHIs for allocations
-      if(d_it_a->second.def.kind==deft::ALLOCATION ||
-         d_it_b->second.def.kind==deft::ALLOCATION)
-        continue;
-
-      // Do not create PHIs for join of PHI and allocation with assignment
-      auto alloc_def=get_object_allocation_def(id, def_map);
-      if(alloc_def!=def_map.end())
-      {
-        if(d_it_b->second.def.kind!=deft::ASSIGNMENT &&
-           to->location_number>alloc_def->second.def.loc->location_number &&
-           to->location_number>d_it_a->second.def.loc->location_number &&
-           to->location_number>d_it_b->second.def.loc->location_number)
-        {
-          def_map[id]=d_it_a->second;
-          def_map[id2string(id).substr(0, id2string(id).find_first_of("."))]=
-            alloc_def->second;
-          result=true;
-          continue;
-        }
-      }
-      alloc_def=get_object_allocation_def(id, b.def_map);
-      if(alloc_def!=b.def_map.end())
-      {
-        if(d_it_a->second.def.kind!=deft::ASSIGNMENT &&
-           to->location_number>alloc_def->second.def.loc->location_number &&
-           to->location_number>d_it_b->second.def.loc->location_number &&
-           to->location_number>d_it_a->second.def.loc->location_number)
-        {
-          def_map[id]=d_it_b->second;
-          def_map[id2string(id).substr(0, id2string(id).find_first_of("."))]=
-            alloc_def->second;
-          result=true;
-          continue;
-        }
-      }
-
       // Arg! Data coming from two sources from two different definitions!
       // We produce a new phi node.
       loc_def_mapt &phi_node=phi_nodes[id];
