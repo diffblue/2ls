@@ -63,7 +63,10 @@ void ssa_analyzert::operator()(
   incremental_solvert &solver,
   local_SSAt &SSA,
   const exprt &precondition,
-  template_generator_baset &template_generator)
+  template_generator_baset &template_generator,
+  bool recursive,
+  std::map<exprt,constant_exprt> context_bounds,
+  tmpl_rename_mapt templ_maps)
 {
   if(SSA.goto_function.body.instructions.empty())
     return;
@@ -75,7 +78,10 @@ void ssa_analyzert::operator()(
   solver << SSA.get_enabling_exprs();
 
   // add precondition (or conjunction of asssertion in backward analysis)
-  solver << precondition;
+  if(!template_generator.options.get_bool_option("has-recursion") ||
+    !recursive ||
+    !template_generator.options.get_bool_option("context-sensitive"))
+    solver << precondition;
 
   domain=template_generator.domain();
 
@@ -174,9 +180,23 @@ void ssa_analyzert::operator()(
 
   // initialize inv
   domain->initialize(*result);
+  // initialize input arguments and input global variables with calling context
+  if(recursive &&
+    template_generator.options.get_bool_option("context-sensitive"))
+    domain->initialize_in_templates(*result, context_bounds);
 
   // iterate
   while(strategy_solver->iterate(*result)) {}
+
+  /*if(recursive)//iterate for recursive function
+  {
+    assert(template_generator.options.get_bool_option("binsearch-solver"));
+    //while(strategy_solver->iterate_for_recursive(*result,templ_maps,
+     //template_generator.options.get_bool_option("context-sensitive"))) {}
+    while(strategy_solver->iterate(*result)) {}//need to change
+  }
+  else//iterate for non-recursive function
+    while(strategy_solver->iterate(*result)) {}*/
 
   solver.pop_context();
 
