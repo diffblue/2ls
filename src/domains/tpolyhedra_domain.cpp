@@ -485,6 +485,8 @@ exprt tpolyhedra_domaint::get_row_symb_post_constraint(const rowt &row)
     templ_row.post_guard,
     binary_relation_exprt(templ_row.expr, ID_ge, get_row_symb_value(row)));
   rename(c);
+  c=and_exprt(
+    c, not_exprt(equal_exprt(get_row_symb_value(row), templ_row.expr)));
   return and_exprt(templ_row.aux_expr, c);
 }
 
