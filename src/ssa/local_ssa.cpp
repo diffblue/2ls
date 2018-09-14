@@ -162,7 +162,8 @@ void local_SSAt::get_globals(
 
       if(rhs_value)
       {
-        const exprt &expr=read_rhs(it->get_expr(), loc);
+        ssa_objectt object(it->get_expr(), ns);
+        const exprt &expr=read_rhs(object, loc);
         globals.insert(to_symbol_expr(expr));
       }
       else
@@ -1152,7 +1153,22 @@ exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
   if(ssa_objects.objects.find(object)!=
      ssa_objects.objects.end())
   {
-    return read_rhs(object, loc);
+    // If the last definition of an object is at its allocation, we can only use
+    // the corresponding symbol if the object has truly been allocated
+    // (allocation guard holds). Otherwise we need to use the last definition
+    // before the allocation.
+    auto def_it=ssa_analysis[loc].def_map.find(object.get_identifier());
+    if(def_it!=ssa_analysis[loc].def_map.end() &&
+       def_it->second.def.kind==ssa_domaint::deft::ALLOCATION)
+    {
+      locationt alloc_loc=def_it->second.def.loc;
+      return if_exprt(
+        read_rhs(def_it->second.def.guard, alloc_loc),
+        read_rhs(object, loc),
+        read_rhs(object, alloc_loc));
+    }
+    else
+      return read_rhs(object, loc);
   }
   else
   {

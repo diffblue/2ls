@@ -44,6 +44,13 @@ void assignmentst::build_assignment_map(
       assign(lhs_symbolic_deref, it, ns);
 
       assign_symbolic_rhs(code_assign.rhs(), it, ns);
+
+      if(code_assign.rhs().get_bool("#malloc_result"))
+      {
+        // Create empty assignment into the object (declaration) so that it
+        // gets non-deterministic value
+        create_alloc_decl(code_assign.rhs(), true_exprt(), it, ns);
+      }
     }
     else if(it->is_assert())
     {
@@ -305,4 +312,67 @@ void assignmentst::output(
 
     out << "\n";
   }
+}
+
+/*******************************************************************\
+
+Function: assignmentst::create_alloc_decl
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Create new fresh symbol for each object (and for each its field)
+ dynamically allocated at the given location.
+
+\*******************************************************************/
+void assignmentst::create_alloc_decl(
+  const exprt &expr,
+  const exprt &guard,
+  const locationt loc,
+  const namespacet &ns)
+{
+  if(expr.id()==ID_symbol || expr.id()==ID_member)
+  {
+    const typet &type=ns.follow(expr.type());
+    if(type.id()==ID_struct)
+    {
+      for(auto &c : to_struct_type(type).components())
+      {
+        create_alloc_decl(
+          member_exprt(expr, c.get_name(), c.type()), guard, loc, ns);
+      }
+    }
+    else
+    {
+      ssa_objectt ssa_object(expr, ns);
+      if(ssa_object)
+      {
+        // Create declaration
+        assign(ssa_object, loc, ns);
+        // Store allocation guard
+        alloc_guards_map.emplace(std::make_pair(loc, ssa_object), guard);
+      }
+    }
+  }
+  else if(expr.id()==ID_if)
+  {
+    const if_exprt &if_expr=to_if_expr(expr);
+    create_alloc_decl(
+      if_expr.true_case(),
+      and_exprt(guard, if_expr.cond()),
+      loc,
+      ns);
+    create_alloc_decl(
+      if_expr.false_case(),
+      and_exprt(guard, not_exprt(if_expr.cond())),
+      loc,
+      ns);
+  }
+  else if(expr.id()==ID_address_of)
+    create_alloc_decl(
+      to_address_of_expr(expr).object(), guard, loc, ns);
+  else if(expr.id()==ID_typecast)
+    create_alloc_decl(
+      to_typecast_expr(expr).op(), guard, loc, ns);
 }

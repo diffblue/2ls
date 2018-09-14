@@ -23,6 +23,7 @@ public:
     typedef enum { INPUT, ASSIGNMENT, PHI, ALLOCATION } kindt;
     kindt kind;
     locationt loc;
+    exprt guard=nil_exprt();
 
     inline bool is_input() const { return kind==INPUT; }
     inline bool is_assignment() const { return kind==ASSIGNMENT; }

@@ -80,8 +80,8 @@ void ssa_domaint::transform(
 {
   if(from->is_assign() || from->is_decl() || from->is_function_call())
   {
-    const std::set<ssa_objectt> &assigns=
-      static_cast<ssa_ait &>(ai).assignments.get(from);
+    const auto &assignments=static_cast<ssa_ait &>(ai).assignments;
+    const std::set<ssa_objectt> &assigns=assignments.get(from);
 
     for(std::set<ssa_objectt>::const_iterator
         o_it=assigns.begin();
@@ -118,8 +118,15 @@ void ssa_domaint::transform(
 
       def_entryt &def_entry=def_map[identifier];
       def_entry.def.loc=from;
-      def_entry.def.kind=deft::ASSIGNMENT;
       def_entry.source=from;
+      auto guard_it=assignments.alloc_guards_map.find({from, *o_it});
+      if(guard_it!=assignments.alloc_guards_map.end())
+      {
+        def_entry.def.kind=deft::ALLOCATION;
+        def_entry.def.guard=guard_it->second;
+      }
+      else
+        def_entry.def.kind=deft::ASSIGNMENT;
     }
   }
   else if(from->is_dead())

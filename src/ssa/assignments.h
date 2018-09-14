@@ -28,6 +28,9 @@ public:
   typedef std::map<locationt, objectst> assignment_mapt;
   assignment_mapt assignment_map;
 
+  typedef std::map<std::pair<locationt, ssa_objectt>, exprt> alloc_guards_mapt;
+  alloc_guards_mapt alloc_guards_map;
+
   bool assigns(locationt loc, const ssa_objectt &object) const
   {
     assignment_mapt::const_iterator it=assignment_map.find(loc);
@@ -77,6 +80,12 @@ protected:
   void assign_symbolic_rhs(
     const exprt &expr,
     const locationt &loc,
+    const namespacet &ns);
+
+  void create_alloc_decl(
+    const exprt &expr,
+    const exprt &guard,
+    const locationt loc,
     const namespacet &ns);
 };
 
