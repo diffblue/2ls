@@ -28,7 +28,7 @@ void summarizer_rec_fwt::compute_summary_rec(
     {
 	for(function_application_exprt f_call:node.function_calls)
 	    if(function_name==to_symbol_expr(f_call.function()).get_identifier())
-		recursive=true;//function is recursive
+		recursive=true;
     }
     if(recursive)//if this_function_is_recursive
     {
