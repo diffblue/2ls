@@ -214,8 +214,9 @@ void summarizer_fwt::inline_summaries(
         f_it!=n_it->function_calls.end(); f_it++)
     {
       assert(f_it->function().id()==ID_symbol); // no function pointers
-      if(!check_call_reachable(
-           function_name, SSA, n_it, f_it, precondition, true))
+      if(to_symbol_expr(f_it->function()).get_identifier()==function_name ||
+          !check_call_reachable(
+            function_name, SSA, n_it, f_it, precondition, true))
       {
         continue;
       }

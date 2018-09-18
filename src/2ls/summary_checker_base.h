@@ -84,7 +84,7 @@ protected:
     const namespacet &ns,
     const ssa_heap_analysist &heap_analysis);
 
-  void summarize(
+  virtual void summarize(
     const goto_modelt &,
     bool forward=true,
     bool termination=false);

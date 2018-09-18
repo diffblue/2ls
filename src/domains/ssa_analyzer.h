@@ -22,7 +22,8 @@ class ssa_analyzert:public messaget
 public:
   typedef strategy_solver_baset::constraintst constraintst;
   typedef strategy_solver_baset::var_listt var_listt;
-
+  typedef std::vector<std::pair<exprt,std::vector<exprt>>> tmpl_rename_mapt;
+  
   ssa_analyzert():
     result(NULL),
     solver_instances(0),
@@ -40,7 +41,11 @@ public:
     incremental_solvert &solver,
     local_SSAt &SSA,
     const exprt &precondition,
-    template_generator_baset &template_generator);
+    template_generator_baset &template_generator,
+    bool recursive=false,
+    std::map<exprt,constant_exprt> context_bounds=
+    std::map<exprt,constant_exprt>(),
+    tmpl_rename_mapt templ_maps=tmpl_rename_mapt());
 
   void get_result(exprt &result, const domaint::var_sett &vars);
 
