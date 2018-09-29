@@ -24,7 +24,7 @@ int main() {
     struct list_node *list = head;
 
     while (__VERIFIER_nondet_int()) {
-        int x;
+        int x = __VERIFIER_nondet_int();
         if (x > 0 && x < 10) {
             struct list_node *n = malloc(sizeof(*n));
             n->x = x;
@@ -40,6 +40,6 @@ int main() {
             list->mem->val += list->x;
         list = list->next;
     }
-    if (!m->val == 100)
+    if (!(m->val == 100))
         __VERIFIER_nondet_int();
 }

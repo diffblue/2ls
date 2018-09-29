@@ -25,7 +25,7 @@ int main() {
     struct list_node *list = head;
 
     while (__VERIFIER_nondet_int()) {
-        int x;
+        int x = __VERIFIER_nondet_int();
         if (x > 0 && x < 10) {
             struct list_node *n = malloc(sizeof(*n));
             n->x = x;
