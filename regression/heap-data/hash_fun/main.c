@@ -26,7 +26,7 @@ int main() {
 
     while (__VERIFIER_nondet_int()) {
         if (base >= 0 && base <= 1000000) {
-            base = base;
+            base = base + 0;
             int hash = hash_fun();
 
             if (hash > base && hash < base + INTERVAL_SIZE)

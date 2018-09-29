@@ -50,12 +50,12 @@ int main() {
 
     // Check that low and high contain expected elements
     while (low) {
-        if (!low->expected_list == LOW)
+        if (!(low->expected_list == LOW))
             __VERIFIER_error();
         low = low->next;
     }
     while (high) {
-        if (!high->expected_list == HIGH)
+        if (!(high->expected_list == HIGH))
             __VERIFIER_error();
         high = high->next;
     }
