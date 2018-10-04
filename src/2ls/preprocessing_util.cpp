@@ -795,6 +795,9 @@ void twols_parse_optionst::create_dynobj_instances(
         if(obj.id()!=ID_symbol)
           continue;
 
+        if(obj.get_bool("#concrete"))
+          continue;
+
         if(instance_counts.find(to_symbol_expr(obj))==instance_counts.end())
           continue;
 

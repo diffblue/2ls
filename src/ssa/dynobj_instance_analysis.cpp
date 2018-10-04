@@ -223,7 +223,18 @@ void dynobj_instance_domaint::transform(
         remove_dereferences(assignment.lhs(), instances);
         add_aliased_dereferences(assignment.lhs(), instances);
 
-        live_pointers[v.symbol_expr()].insert(rhs);
+        // Do not include CPROVER objects
+        // TODO: do it better than check for "malloc" substring
+        if(!(rhs.id()==ID_symbol &&
+          (id2string(to_symbol_expr(rhs).get_identifier()).find(
+               "malloc::")!=std::string::npos ||
+           id2string(to_symbol_expr(rhs).get_identifier()).find(
+             "malloc#")!=std::string::npos ||
+           id2string(to_symbol_expr(rhs).get_identifier()).find(
+             "malloc$")!=std::string::npos)))
+        {
+          live_pointers[v.symbol_expr()].insert(rhs);
+        }
       }
     }
   }

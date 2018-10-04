@@ -36,6 +36,7 @@ matrix:
       compiler: clang
       env: COMPILER=clang++
     - env: NAME="CPP-LINT"
+      before_script: git fetch origin master:master
       script: scripts/run_lint.sh master HEAD
 
 script:

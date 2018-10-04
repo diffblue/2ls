@@ -28,7 +28,8 @@ public:
   typedef std::map<locationt, objectst> assignment_mapt;
   assignment_mapt assignment_map;
 
-  assignment_mapt allocation_map;
+  typedef std::map<std::pair<locationt, ssa_objectt>, exprt> alloc_guards_mapt;
+  alloc_guards_mapt alloc_guards_map;
 
   bool assigns(locationt loc, const ssa_objectt &object) const
   {
@@ -42,13 +43,6 @@ public:
   {
     assignment_mapt::const_iterator it=assignment_map.find(loc);
     assert(it!=assignment_map.end());
-    return it->second;
-  }
-
-  inline const objectst &get_allocations(locationt loc) const
-  {
-    auto it=allocation_map.find(loc);
-    assert(it!=allocation_map.end());
     return it->second;
   }
 
@@ -88,8 +82,9 @@ protected:
     const locationt &loc,
     const namespacet &ns);
 
-  void allocate(
+  void create_alloc_decl(
     const exprt &expr,
+    const exprt &guard,
     const locationt loc,
     const namespacet &ns);
 };

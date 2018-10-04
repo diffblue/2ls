@@ -37,6 +37,7 @@ public:
       template_generator),
     tpolyhedra_solver(heap_tpolyhedra_domain.polyhedra_domain, _solver, SSA.ns)
   {
+    tpolyhedra_solver.set_message_handler(message_handler);
   }
 
   virtual bool iterate(invariantt &_inv) override;
