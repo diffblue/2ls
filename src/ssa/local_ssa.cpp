@@ -578,16 +578,12 @@ void local_SSAt::build_function_call(locationt loc)
     unsigned i=0;
     for(exprt &a : f.arguments())
     {
-      if(a.is_constant() ||
-         (a.id()==ID_typecast && to_typecast_expr(a).op().is_constant()))
-      {
-        const std::string arg_name=
-          id2string(fname)+"#arg"+i2string(i)+"#"+
-            i2string(loc->location_number);
-        symbol_exprt arg(arg_name, a.type());
-        n_it->equalities.push_back(equal_exprt(a, arg));
-        a=arg;
-      }
+      const std::string arg_name=
+        id2string(fname)+"#arg"+i2string(i)+"#"+
+          i2string(loc->location_number);
+      symbol_exprt arg(arg_name, a.type());
+      n_it->equalities.push_back(equal_exprt(a, arg));
+      a=arg;
       ++i;
     }
 
