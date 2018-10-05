@@ -2097,27 +2097,14 @@ exprt local_SSAt::concretise_symbolic_deref_rhs(
 
   if(deref_rhs.get_bool("#heap_access") && rhs_object)
   {
-    const exprt pointer=get_pointer(
-      rhs_object.get_root_object(),
-      pointed_level(rhs_object.get_root_object())-1);
-    const auto pointer_id=ssa_objectt(pointer, ns).get_identifier();
-    const auto pointer_def=ssa_analysis[loc].def_map.find(
-      pointer_id)->second.def;
-    const auto symbolic_id=ssa_objectt(symbolic_deref_rhs, ns).get_identifier();
-    const auto symbolic_def=ssa_analysis[loc].def_map.find(
-      symbolic_id)->second.def;
-
-    if(!symbolic_def.is_assignment()
-        || (pointer_def.is_assignment()
-            && pointer_def.loc->location_number>
-               symbolic_def.loc->location_number))
+    if(can_reuse_symderef(rhs_object, ns, loc))
     {
-      assign_rec(symbolic_deref_rhs, deref_rhs, true_exprt(), loc);
-      return name(ssa_objectt(symbolic_deref_rhs, ns), OUT, loc);
+      return symbolic_deref_rhs;
     }
     else
     {
-      return symbolic_deref_rhs;
+      assign_rec(symbolic_deref_rhs, deref_rhs, true_exprt(), loc);
+      return name(ssa_objectt(symbolic_deref_rhs, ns), OUT, loc);
     }
   }
   else
@@ -2224,4 +2211,80 @@ void local_SSAt::get_alloc_guard_rec(const exprt &expr, exprt guard)
     get_alloc_guard_rec(to_typecast_expr(expr).op(), guard);
   else if(expr.id()==ID_address_of)
     get_alloc_guard_rec(to_address_of_expr(expr).object(), guard);
+}
+
+/********************************************************************\
+
+Function: local_SSAt::can_reuse_symderef
+
+  Inputs: Symbolic deference object, namespace, current location.
+
+ Outputs: True if the symbolic dereference can be reused from the last location
+          that it was defined in (i.e. it does not have to be redefinef).
+          Otherwise false.
+
+ Purpose: The symbolic dereference object can be reused if and only if
+          the pointer it dereferences was not overwritten and any potentially
+          aliased object (or field) was not overwritten.
+
+\*******************************************************************/
+bool local_SSAt::can_reuse_symderef(
+  ssa_objectt &symderef,
+  const namespacet &ns,
+  const local_SSAt::locationt loc)
+{
+  // Get a pointer that is dereferenced in the symbolic deref
+  const exprt pointer=get_pointer(
+    symderef.get_root_object(),
+    pointed_level(symderef.get_root_object())-1);
+  // Get the last definition of the pointer
+  const auto pointer_id=ssa_objectt(pointer, ns).get_identifier();
+  const auto pointer_def=ssa_analysis[loc].def_map.find(
+    pointer_id)->second.def;
+  // Get the last definition of the symbolic dereference
+  const auto symbolic_id=symderef.get_identifier();
+  const auto symbolic_def=ssa_analysis[loc].def_map.find(
+    symbolic_id)->second.def;
+
+  // If symbolic deref was not created yet, it cannot be reused.
+  if(!symbolic_def.is_assignment())
+    return false;
+
+  // If the pointer that is dereferenced was overwritten, the symbolic deref
+  // is not valid.
+  if(pointer_def.is_assignment() && pointer_def.loc->location_number>
+                                    symbolic_def.loc->location_number)
+    return false;
+
+  // Search all aliasing objects (objects potentially pointed by the pointer)
+  const auto &values=ssa_value_ai[loc](pointer, ns);
+  for(auto &obj : values.value_set)
+  {
+    irep_idt deref_id;
+    if(symderef.get_expr().id()==ID_member)
+    {
+      auto member=member_exprt(
+        obj.symbol_expr(),
+        to_member_expr(symderef.get_expr()).get_component_name(),
+        symderef.type());
+      deref_id=ssa_objectt(member, ns).get_identifier();
+    }
+    else
+    {
+      deref_id=obj.get_identifier();
+    }
+    // If some potentially aliased object (or field) was overwritten,
+    // the symbolic dereference cannot be reused.
+    auto deref_def=ssa_analysis[loc].def_map.find(deref_id);
+    if(deref_def!=ssa_analysis[loc].def_map.end() &&
+       (deref_def->second.def.is_assignment() ||
+        deref_def->second.def.is_phi()) &&
+       deref_def->second.def.loc->location_number>
+       symbolic_def.loc->location_number)
+    {
+      return false;
+    }
+  }
+
+  return true;
 }
