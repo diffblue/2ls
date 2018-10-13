@@ -28,10 +28,10 @@ public:
     unsigned int _domain_number,
     replace_mapt &_renaming_map,
     const var_specst &var_specs,
-    const namespacet &ns,
+    const local_SSAt &SSA,
     const polyhedra_kindt polyhedra_kind):
-    domaint(_domain_number, _renaming_map, ns),
-    heap_domain(_domain_number, _renaming_map, var_specs, ns),
+    domaint(_domain_number, _renaming_map, SSA.ns),
+    heap_domain(_domain_number, _renaming_map, var_specs, SSA),
     polyhedra_domain(_domain_number, _renaming_map, ns)
   {
     if(polyhedra_kind==INTERVAL)

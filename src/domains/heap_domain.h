@@ -17,6 +17,7 @@ Author: Viktor Malik
 
 #include "domain.h"
 #include "template_generator_base.h"
+#include <ssa/ssa_inliner.h>
 
 class heap_domaint:public domaint
 {
@@ -33,8 +34,9 @@ public:
     unsigned int _domain_number,
     replace_mapt &_renaming_map,
     const var_specst &var_specs,
-    const namespacet &_ns):
-    domaint(_domain_number, _renaming_map, _ns)
+    const local_SSAt &SSA):
+    domaint(_domain_number, _renaming_map, SSA.ns),
+    loop_guards(SSA.loop_guards)
   {
     make_template(var_specs, ns);
   }
@@ -179,6 +181,7 @@ public:
     static exprt rename_outheap(const symbol_exprt &expr);
   };
 
+  std::set<std::pair<symbol_exprt, symbol_exprt>> loop_guards;
   // Heap value is a conjunction of rows
   class heap_valuet:
     public valuet,
@@ -199,13 +202,15 @@ public:
     const exprt &precondition,
     template_generator_baset &template_generator);
 
+  std::vector<exprt> get_required_values(size_t row);
+  void set_values(std::vector<exprt> got_values);
+
   // Value -> constraints
-  exprt to_pre_constraints(const heap_valuet &value) const;
+  exprt to_pre_constraints(valuet &_value);
 
   void make_not_post_constraints(
-    const heap_valuet &value,
-    exprt::operandst &cond_exprs,
-    exprt::operandst &value_exprs);
+    valuet &_value,
+    exprt::operandst &cond_exprs);
 
   // Row -> constraints
   exprt get_row_pre_constraint(
@@ -265,6 +270,11 @@ protected:
   // Bindings computed during interprocedural analysis
   exprt::operandst iterator_bindings;
   exprt::operandst aux_bindings;
+
+  std::set<unsigned> updated_rows;
+  exprt value;
+  exprt solver_value_op0;
+  exprt solver_value_op1;
 
   /*******************************************************************\
   Specification of a new heap row that is added dynamically
@@ -347,6 +357,7 @@ protected:
     const exprt &expr,
     const exprt &precondition);
 
+  bool edit_row(const rowt &row, valuet &inv, bool improved);
 
   void add_new_heap_row_spec(
     const symbol_exprt &expr,
@@ -355,8 +366,33 @@ protected:
 
   // Utility functions
   static int get_symbol_loc(const exprt &expr);
+  const exprt get_points_to_dest(
+    const exprt &solver_value,
+    const exprt &templ_row_expr);
 
+  int find_member_row(
+    const exprt &obj,
+    const irep_idt &member,
+    int actual_loc,
+    const domaint::kindt &kind);
+
+  bool update_rows_rec(
+    const heap_domaint::rowt &row,
+    heap_domaint::heap_valuet &value);
+  void clear_pointing_rows(
+    const heap_domaint::rowt &row,
+    heap_domaint::heap_valuet &value);
+  const exprt initialize_solver(
+    const local_SSAt &SSA,
+    const exprt &precondition,
+    template_generator_baset &template_generator);
+  void find_symbolic_path(
+    const exprt &current_guard=nil_exprt());
+
+  std::vector<exprt> solver_values_guards;
   friend class strategy_solver_heapt;
+public:
+  symbolic_patht symbolic_path;
 };
 
 #endif // CPROVER_2LS_DOMAINS_HEAP_DOMAIN_H

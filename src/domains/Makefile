@@ -9,7 +9,6 @@ SRC = tpolyhedra_domain.cpp equality_domain.cpp domain.cpp \
   template_generator_base.cpp template_generator_summary.cpp \
   template_generator_callingcontext.cpp template_generator_ranking.cpp \
   strategy_solver_binsearch2.cpp strategy_solver_binsearch3.cpp \
-  strategy_solver_heap.cpp \
   strategy_solver_heap_tpolyhedra.cpp \
   strategy_solver_heap_tpolyhedra_sympath.cpp \
   strategy_solver.cpp

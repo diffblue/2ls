@@ -103,6 +103,39 @@ void heap_domaint::make_template(
   }
 }
 
+std::vector<exprt> heap_domaint::get_required_values(size_t row)
+{
+  std::vector<exprt> r;
+  r.push_back(strategy_value_exprs[row]);
+  if(strategy_value_exprs[row].id()==ID_and)
+  {
+    r.push_back(strategy_value_exprs[row].op1());
+    r.push_back(strategy_value_exprs[row].op0());
+  }
+  else
+  {
+    r.push_back(strategy_value_exprs[row]);
+    r.push_back(strategy_value_exprs[row]);
+  }
+  for(const auto &guard : loop_guards)
+  {
+    r.push_back(guard.first);
+    r.push_back(guard.second);
+  }
+  return r;
+}
+
+void heap_domaint::set_values(std::vector<exprt> got_values)
+{
+  solver_values_guards.clear();
+  value=got_values[0];
+  solver_value_op1=got_values[1];
+  solver_value_op0=got_values[2];
+  for(unsigned i=3; i<got_values.size(); i++)
+    solver_values_guards.push_back(got_values[i]);
+}
+
+
 /*******************************************************************\
 
 Function: heap_domaint::add_template_row
@@ -199,8 +232,10 @@ Function: heap_domaint::to_pre_constraints
 
 \*******************************************************************/
 
-exprt heap_domaint::to_pre_constraints(const heap_valuet &value) const
+exprt heap_domaint::to_pre_constraints(valuet &_value)
 {
+  heap_domaint::heap_valuet &value=
+    static_cast<heap_domaint::heap_valuet &>(_value);
   assert(value.size()==templ.size());
   exprt::operandst c;
   for(rowt row=0; row<templ.size(); ++row)
@@ -225,18 +260,19 @@ Function: heap_domaint::make_not_post_constraints
 \*******************************************************************/
 
 void heap_domaint::make_not_post_constraints(
-  const heap_valuet &value,
-  exprt::operandst &cond_exprs,
-  exprt::operandst &value_exprs)
+  valuet &_value,
+  exprt::operandst &cond_exprs)
 {
+  heap_domaint::heap_valuet &value=
+    static_cast<heap_domaint::heap_valuet &>(_value);
   assert(value.size()==templ.size());
   cond_exprs.resize(templ.size());
-  value_exprs.resize(templ.size());
+  strategy_value_exprs.resize(templ.size());
 
   for(rowt row=0; row<templ.size(); ++row)
   {
-    value_exprs[row]=templ[row].expr;
-    rename(value_exprs[row]);
+    strategy_value_exprs[row]=templ[row].expr;
+    rename(strategy_value_exprs[row]);
     const exprt row_expr=not_exprt(get_row_post_constraint(row, value[row]));
     cond_exprs[row]=and_exprt(templ[row].aux_expr, row_expr);
   }
@@ -1653,5 +1689,356 @@ void heap_domaint::undo_restriction()
     {
       row.aux_expr=to_and_expr(row.aux_expr).op0();
     }
+  }
+}
+
+bool heap_domaint::edit_row(const rowt &row, valuet &_inv, bool improved)
+{
+  heap_domaint::heap_valuet &inv=
+    static_cast<heap_domaint::heap_valuet &>(_inv);
+  const heap_domaint::template_rowt &templ_row=templ[row];
+
+  const exprt loop_guard=to_and_expr(
+    templ[row].pre_guard).op1();
+  find_symbolic_path(loop_guard);
+
+  if(templ_row.expr.id()==ID_and)
+  {
+    // Handle template row with a pair of variables in the expression
+    exprt points_to1=get_points_to_dest(
+      solver_value_op0,
+      templ_row.expr.op0());
+    exprt points_to2=get_points_to_dest(
+      solver_value_op1,
+      templ_row.expr.op1());
+
+    if(points_to1.is_nil() || points_to2.is_nil())
+    {
+      if(set_nondet(row, inv))
+      {
+        improved=true;
+      }
+    }
+    else
+    {
+      if(add_points_to(
+        row, inv, and_exprt(points_to1, points_to2)))
+      {
+        improved=true;
+        const std::string info=
+          templ_row.mem_kind==heap_domaint::STACK ? "points to "
+                                                  : "path to ";
+      }
+    }
+    return improved;
+  }
+
+  int actual_loc=get_symbol_loc(templ_row.expr);
+
+  exprt points_to=get_points_to_dest(value, templ_row.expr);
+
+  if(points_to.is_nil())
+  {
+    if(set_nondet(row, inv))
+    {
+      improved=true;
+    }
+    return improved;
+  }
+  else
+  {
+    if(add_points_to(row, inv, points_to))
+    {
+      improved=true;
+      const std::string info=
+        templ_row.mem_kind==heap_domaint::STACK ? "points to "
+                                                : "path to ";
+    }
+  }
+
+  // If the template row is of heap kind, we need to ensure the
+  // transitive closure over the set of all paths
+  if(templ_row.mem_kind==heap_domaint::HEAP &&
+     points_to.type().get_bool("#dynamic") &&
+     points_to.id()==ID_symbol &&
+     id2string(to_symbol_expr(points_to).get_identifier()).find(
+       "$unknown")==
+     std::string::npos)
+  {
+    // Find row with corresponding member field of the pointed object
+    // (obj.member)
+    int member_val_index;
+    member_val_index=
+      find_member_row(
+        points_to,
+        templ_row.member,
+        actual_loc,
+        templ_row.kind);
+    if(member_val_index>=0 && !inv[member_val_index].nondet)
+    {
+      // Add all paths from obj.next to p
+      if(add_transitivity(
+        row,
+        static_cast<unsigned>(member_val_index),
+        inv))
+      {
+        improved=true;
+        const std::string expr_str=
+          from_expr(ns, "", templ[member_val_index].expr);
+      }
+    }
+  }
+
+  // Recursively update all rows that are dependent on this row
+  if(templ_row.mem_kind==heap_domaint::HEAP)
+  {
+    updated_rows.clear();
+    if(!inv[row].nondet)
+      update_rows_rec(row, inv);
+    else
+      clear_pointing_rows(row, inv);
+  }
+
+  return improved;
+}
+
+
+/*******************************************************************\
+
+Function: heap_domaint::find_member_row
+
+  Inputs: object
+          field
+          actual location
+
+ Outputs: Row number for obj.member#loc with maximal loc less than actual_loc
+          -1 if such template row does not exist
+
+ Purpose: Find the template row that contains specified member field
+          of a dynamic object at the given location.
+
+\*******************************************************************/
+
+int heap_domaint::find_member_row(
+  const exprt &obj,
+  const irep_idt &member,
+  int actual_loc,
+  const domaint::kindt &kind)
+{
+  assert(obj.id()==ID_symbol);
+  std::string obj_id=id2string(
+    ssa_inlinert::get_original_identifier(to_symbol_expr(obj)));
+
+  int result=-1;
+  int max_loc=-1;
+  for(unsigned i=0; i<templ.size(); ++i)
+  {
+    heap_domaint::template_rowt &templ_row=templ[i];
+    if(templ_row.kind==kind && templ_row.member==member &&
+       templ_row.mem_kind==heap_domaint::HEAP)
+    {
+      std::string id=id2string(to_symbol_expr(templ_row.expr).get_identifier());
+      if(id.find(obj_id)!=std::string::npos &&
+         id.find_first_of(".")==obj_id.length())
+      {
+        int loc=get_symbol_loc(templ_row.expr);
+        if(loc>max_loc &&
+           (kind==domaint::OUT || kind==domaint::OUTHEAP || loc<=actual_loc))
+        {
+          max_loc=loc;
+          result=i;
+        }
+      }
+    }
+  }
+  return result;
+}
+
+/*******************************************************************\
+
+Function: heap_domaint::update_rows_rec
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Recursively update rows that point to given row.
+
+\*******************************************************************/
+
+bool heap_domaint::update_rows_rec(
+  const heap_domaint::rowt &row,
+  heap_domaint::heap_valuet &value)
+{
+  heap_domaint::heap_row_valuet &row_value=
+    static_cast<heap_domaint::heap_row_valuet &>(value[row]);
+  const heap_domaint::template_rowt &templ_row=templ[row];
+
+  updated_rows.insert(row);
+  bool result=false;
+  for(const heap_domaint::rowt &ptr : row_value.pointed_by)
+  {
+    if(templ[ptr].mem_kind==heap_domaint::HEAP &&
+      templ[ptr].member==templ_row.member)
+    {
+      if(add_transitivity(ptr, row, value))
+        result=true;
+
+      // Recursive update is called for each row only once
+      if(updated_rows.find(ptr)==updated_rows.end())
+        result=update_rows_rec(ptr, value) || result;
+    }
+  }
+  return result;
+}
+
+/*******************************************************************\
+
+Function: heap_domaint::initialize_solver
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+const exprt heap_domaint::initialize_solver(
+  const local_SSAt &SSA,
+  const exprt &precondition,
+  template_generator_baset &template_generator)
+{
+  initialize_domain(SSA, precondition, template_generator);
+
+  const exprt input_bindings=get_input_bindings();
+  if(!input_bindings.is_true())
+  {
+    return input_bindings;
+  }
+  return true_exprt();
+}
+
+
+/*******************************************************************\
+
+Function: heap_domaint::clear_pointing_rows
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+void heap_domaint::clear_pointing_rows(
+  const heap_domaint::rowt &row,
+  heap_domaint::heap_valuet &value)
+{
+  heap_domaint::heap_row_valuet &row_value=
+    static_cast<heap_domaint::heap_row_valuet &>(value[row]);
+
+  std::vector<heap_domaint::rowt> to_remove;
+  for(auto &ptr : row_value.pointed_by)
+  {
+    if(ptr!=row)
+    {
+      value[ptr].clear();
+      to_remove.push_back(ptr);
+    }
+  }
+  for(auto &r : to_remove)
+    row_value.pointed_by.erase(r);
+}
+
+/*******************************************************************\
+
+Function: heap_domaint::get_points_to_dest
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Get an address where the given pointer points to in the current
+          solver iteration. Returns nil_exprt if the value of the pointer
+          is nondet.
+
+\*******************************************************************/
+const exprt heap_domaint::get_points_to_dest(
+  const exprt &solver_value,
+  const exprt &templ_row_expr)
+{
+  // Value from the solver must be converted into an expression
+  exprt ptr_value=value_to_ptr_exprt(solver_value);
+
+  if((ptr_value.id()==ID_constant &&
+      to_constant_expr(ptr_value).get_value()==ID_NULL) ||
+     ptr_value.id()==ID_symbol)
+  {
+    // Add equality p == NULL or p == symbol
+    return ptr_value;
+  }
+  else if(ptr_value.id()==ID_address_of)
+  {
+    // Template row pointer points to the heap (p = &obj)
+    assert(ptr_value.id()==ID_address_of);
+    if(to_address_of_expr(ptr_value).object().id()!=ID_symbol)
+    {
+      // If solver did not return address of a symbol, it is considered
+      // as nondet value.
+      return nil_exprt();
+    }
+
+    symbol_exprt obj=to_symbol_expr(
+      to_address_of_expr(ptr_value).object());
+
+    if(obj.type()!=templ_row_expr.type() &&
+       ns.follow(templ_row_expr.type().subtype())!=ns.follow(obj.type()))
+    {
+      if(!is_cprover_symbol(templ_row_expr))
+      {
+        // If types disagree, it's a nondet (solver assigned random value)
+        return nil_exprt();
+      }
+    }
+
+    // Add equality p == &obj
+    return obj;
+  }
+  else
+    return nil_exprt();
+}
+
+/*******************************************************************\
+
+Function: heap_domaint::find_symbolic_path
+
+  Inputs:
+
+ Outputs:
+
+ Purpose: Find symbolic path that is explored by the current solver
+          iteration. A path is specified by a conjunction of literals
+          containing loop-select guards of all loops in program.
+
+\*******************************************************************/
+void heap_domaint::find_symbolic_path(
+  const exprt &current_guard)
+{
+  int value_counter=0;
+  for(const auto &guard : loop_guards)
+  {
+    value_counter+=2;
+    if(guard.first==current_guard)
+    {
+      symbolic_path[guard.first]=true;
+      continue;
+    }
+    exprt ls_guard_value=solver_values_guards[value_counter-2];
+    exprt lh_guard_value=solver_values_guards[value_counter-1];
+    if(ls_guard_value.is_true() && lh_guard_value.is_true())
+      symbolic_path[guard.first]=true;
+    else if(ls_guard_value.is_false())
+      symbolic_path[guard.first]=false;
   }
 }

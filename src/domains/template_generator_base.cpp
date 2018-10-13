@@ -752,7 +752,7 @@ void template_generator_baset::instantiate_standard_domains(
   else if(options.get_bool_option("heap"))
   {
     filter_heap_domain();
-    domain_ptr=new heap_domaint(domain_number, renaming_map, var_specs, SSA.ns);
+    domain_ptr=new heap_domaint(domain_number, renaming_map, var_specs, SSA);
   }
   else if(options.get_bool_option("intervals"))
   {
@@ -806,7 +806,7 @@ void template_generator_baset::instantiate_standard_domains(
         domain_number, renaming_map, var_specs, SSA, polyhedra_kind);
     else
       domain_ptr=new heap_tpolyhedra_domaint(
-        domain_number, renaming_map, var_specs, SSA.ns, polyhedra_kind);
+        domain_number, renaming_map, var_specs, SSA, polyhedra_kind);
   }
 }
 

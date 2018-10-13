@@ -28,7 +28,6 @@ Author: Peter Schrammel
 #include "predabs_domain.h"
 #include "template_generator_ranking.h"
 #include "ssa_analyzer.h"
-#include "strategy_solver_heap.h"
 #include "strategy_solver_heap_tpolyhedra.h"
 #include "strategy_solver_heap_tpolyhedra_sympath.h"
 #include "strategy_solver.h"
@@ -118,7 +117,7 @@ void ssa_analyzert::operator()(
   }
   else if(template_generator.options.get_bool_option("heap"))
   {
-    s_solver=new strategy_solver_heapt(
+    s_solver=new strategy_solvert(
       *static_cast<heap_domaint *>(domain),
       solver,
       SSA,
