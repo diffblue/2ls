@@ -73,7 +73,7 @@ public:
     const exprt &precondition,
     template_generator_baset &template_generator);
 
-  void pre_iterate_init(domaint::valuet &rank);
+  void solver_iter_init(domaint::valuet &rank);
 
   bool edit_row(const rowt &row, valuet &inv, bool improved);
 
@@ -82,9 +82,9 @@ public:
   void make_not_post_constraints(
     valuet &_value,
     exprt::operandst &cond_exprs);
-  std::vector<exprt> get_required_values(size_t row);
-  void set_values(std::vector<exprt> got_values);
-  virtual bool not_satisfiable(valuet &value, bool improved);
+  std::vector<exprt> get_required_smt_values(size_t row);
+  void set_smt_values(std::vector<exprt> got_values);
+  virtual bool handle_unsat(valuet &value, bool improved);
 
   virtual bool refine();
   virtual void reset_refinements();

@@ -14,8 +14,8 @@ bool strategy_solvert::iterate(invariantt &inv)
 {
   bool improved=false;
 
-  domain.pre_iterate_init(inv);
-  if(domain.something_to_solve())
+  domain.solver_iter_init(inv);
+  if(domain.has_something_to_solve())
   {
     solver.new_context();
 
@@ -45,13 +45,14 @@ bool strategy_solvert::iterate(invariantt &inv)
         if(solver.l_get(domain.strategy_cond_literals[row]).is_true())
         {
           // Find what values from solver are needed
-          std::vector<exprt> required_values=domain.get_required_values(row);
+          std::vector<exprt> required_values=
+            domain.get_required_smt_values(row);
           std::vector<exprt> got_values;
           for(auto &c_exprt : required_values)
           {
             got_values.push_back(solver.solver->get(c_exprt));
           }
-          domain.set_values(got_values);
+          domain.set_smt_values(got_values);
 
           improved=domain.edit_row(row, inv, improved);
         }
@@ -60,7 +61,7 @@ bool strategy_solvert::iterate(invariantt &inv)
     else
     {
       debug() << "Outer solver: UNSAT!!" << eom;
-      improved=domain.not_satisfiable(inv, improved);
+      improved=domain.handle_unsat(inv, improved);
     }
     solver.pop_context();
     solver << domain.make_permanent(inv);

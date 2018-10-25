@@ -64,8 +64,8 @@ public:
   // initialize value
   virtual void initialize(valuet &value);
 
-  std::vector<exprt> get_required_values(size_t row);
-  void set_values(std::vector<exprt> got_values);
+  std::vector<exprt> get_required_smt_values(size_t row);
+  void set_smt_values(std::vector<exprt> got_values);
 
   bool edit_row(const rowt &row, valuet &inv, bool improved);
 
@@ -75,7 +75,7 @@ public:
     valuet &_value,
     exprt::operandst &cond_exprs);
 
-  bool not_satisfiable(valuet &value, bool improved);
+  bool handle_unsat(valuet &value, bool improved);
 
   virtual bool refine();
 

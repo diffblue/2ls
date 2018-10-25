@@ -57,7 +57,7 @@ const exprt predabs_domaint::initialize_solver(
 
 /*******************************************************************\
 
-Function: predabs_domaint::pre_iterate_init
+Function: predabs_domaint::solver_iter_init
 
   Inputs:
 
@@ -67,23 +67,23 @@ Function: predabs_domaint::pre_iterate_init
 
 \*******************************************************************/
 
-void predabs_domaint::pre_iterate_init(valuet &value)
+void predabs_domaint::solver_iter_init(valuet &value)
 {
   e_it=todo_preds.begin();
 }
 
-bool predabs_domaint::something_to_solve()
+bool predabs_domaint::has_something_to_solve()
 {
   return (e_it==todo_preds.end());
 }
 
-std::vector<exprt> predabs_domaint::get_required_values(size_t row)
+std::vector<exprt> predabs_domaint::get_required_smt_values(size_t row)
 {
   std::vector<exprt> r;
   return r;
 }
 
-void predabs_domaint::set_values(std::vector<exprt> got_values)
+void predabs_domaint::set_smt_values(std::vector<exprt> got_values)
 {
 }
 
@@ -100,7 +100,7 @@ void predabs_domaint::post_edit()
 
 /*******************************************************************\
 
-Function: predabs_domaint::not_satisfiable
+Function: predabs_domaint::handle_unsat
 
   Inputs:
 
@@ -110,7 +110,7 @@ Function: predabs_domaint::not_satisfiable
 
 \*******************************************************************/
 
-bool predabs_domaint::not_satisfiable(valuet &value, bool improved)
+bool predabs_domaint::handle_unsat(valuet &value, bool improved)
 {
   set_row_value(*e_it, true_exprt(), value);
   return true;

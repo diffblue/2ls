@@ -190,12 +190,12 @@ void heap_tpolyhedra_domaint::make_not_post_constraints(
 {
 }
 
-std::vector<exprt> heap_tpolyhedra_domaint::get_required_values(size_t row)
+std::vector<exprt> heap_tpolyhedra_domaint::get_required_smt_values(size_t row)
 {
   std::vector<exprt> r;
   return r;
 }
 
-void heap_tpolyhedra_domaint::set_values(std::vector<exprt> got_values)
+void heap_tpolyhedra_domaint::set_smt_values(std::vector<exprt> got_values)
 {
 }

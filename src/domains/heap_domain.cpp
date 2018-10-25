@@ -103,7 +103,7 @@ void heap_domaint::make_template(
   }
 }
 
-std::vector<exprt> heap_domaint::get_required_values(size_t row)
+std::vector<exprt> heap_domaint::get_required_smt_values(size_t row)
 {
   std::vector<exprt> r;
   r.push_back(strategy_value_exprs[row]);
@@ -125,7 +125,7 @@ std::vector<exprt> heap_domaint::get_required_values(size_t row)
   return r;
 }
 
-void heap_domaint::set_values(std::vector<exprt> got_values)
+void heap_domaint::set_smt_values(std::vector<exprt> got_values)
 {
   solver_values_guards.clear();
   value=got_values[0];

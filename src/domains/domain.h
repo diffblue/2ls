@@ -77,30 +77,163 @@ public:
 
   virtual void initialize(valuet &value) { value.basic_value=valuet::BOTTOM; }
 
+  /*******************************************************************\
+
+    Function: domaint::
+
+    Inputs:
+
+    Outputs:
+
+    Purpose: Initialize SMT solver when new strategy solver is created.
+             Returned value is written into SMT solver.
+
+  \*******************************************************************/
   virtual const exprt initialize_solver(
     const local_SSAt &SSA,
     const exprt &precondition,
     template_generator_baset &template_generator);
 
-  virtual void pre_iterate_init(valuet &value);
+  /*******************************************************************\
 
-  virtual bool something_to_solve();
+    Function: domaint::
 
+    Inputs:
+
+    Outputs:
+
+    Purpose: Initialize strategy solver at beginning of each iteration.
+
+  \*******************************************************************/
+  virtual void solver_iter_init(valuet &value);
+
+  /*******************************************************************\
+
+    Function: domaint::
+
+    Inputs:
+
+    Outputs:
+
+    Purpose: Domain should return true if wants to improve its invariants.
+             Otherwise no further improvements of invariants is done.
+
+  \*******************************************************************/
+  virtual bool has_something_to_solve();
+
+  /*******************************************************************\
+
+    Function: domaint::
+
+    Inputs:
+
+    Outputs:
+
+    Purpose: Edit invariant based on current model of satisfiability
+
+  \*******************************************************************/
   virtual bool edit_row(const rowt &row, valuet &inv, bool improved)=0;
 
+  /*******************************************************************\
+
+    Function: domaint::
+
+    Inputs:
+
+    Outputs:
+
+    Purpose: After each iteration of strategy solver it is possible to write
+             expression into SMT solver, which stay present in further
+             iterations.
+
+  \*******************************************************************/
   virtual exprt make_permanent(valuet &value);
+
+  /*******************************************************************\
+
+    Function: domaint::
+
+    Inputs:
+
+    Outputs:
+
+    Purpose: Finalize domain - last step of each iteration of strategy solver.
+
+  \*******************************************************************/
   virtual void post_edit();
 
+  /*******************************************************************\
+
+    Function: domaint::
+
+    Inputs:
+
+    Outputs:
+
+    Purpose: Create entry constraints as a conjuction of entry expressions
+             for each template row.
+
+  \*******************************************************************/
+  /*
+   */
   virtual exprt to_pre_constraints(valuet &value)=0;
 
+  /*******************************************************************\
+
+    Function: domaint::
+
+    Inputs:
+
+    Outputs:
+
+    Purpose: Create exit constraints for each value row. Each expression is
+             a negation of a row expression
+             (for solving the "exists forall" problem)
+
+  \*******************************************************************/
   virtual void make_not_post_constraints(
     valuet &value,
     exprt::operandst &cond_exprs)=0;
 
-  virtual std::vector<exprt> get_required_values(size_t row)=0;
-  virtual void set_values(std::vector<exprt> got_values)=0;
+  /*******************************************************************\
 
-  virtual bool not_satisfiable(valuet &value, bool improved);
+    Function: domaint::
+
+    Inputs:
+
+    Outputs:
+
+    Purpose: Required values from SMT solver
+
+  \*******************************************************************/
+  virtual std::vector<exprt> get_required_smt_values(size_t row)=0;
+
+  /*******************************************************************\
+
+    Function: domaint::
+
+    Inputs:
+
+    Outputs:
+
+    Purpose: Domain can save vales from SMT solver (required by
+             get_required_smt_values) into internal representation
+
+  \*******************************************************************/
+  virtual void set_smt_values(std::vector<exprt> got_values)=0;
+
+  /*******************************************************************\
+
+    Function: domaint::
+
+    Inputs:
+
+    Outputs:
+
+    Purpose: Method called when model is unsatisfiable
+
+  \*******************************************************************/
+  virtual bool handle_unsat(valuet &value, bool improved);
 
   // returns true as long as further refinements are possible
   virtual void reset_refinements() { }

@@ -74,16 +74,16 @@ const exprt domaint::initialize_solver(
   return true_exprt();
 }
 
-void domaint::pre_iterate_init(valuet &value)
+void domaint::solver_iter_init(valuet &value)
 {
 }
 
-bool domaint::something_to_solve()
+bool domaint::has_something_to_solve()
 {
   return true;
 }
 
-bool domaint::not_satisfiable(valuet &value, bool improved)
+bool domaint::handle_unsat(valuet &value, bool improved)
 {
   return improved;
 }

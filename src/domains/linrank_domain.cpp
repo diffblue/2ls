@@ -51,7 +51,7 @@ void linrank_domaint::initialize(valuet &value)
   }
 }
 
-std::vector<exprt> linrank_domaint::get_required_values(size_t row)
+std::vector<exprt> linrank_domaint::get_required_smt_values(size_t row)
 {
   std::vector<exprt> r;
   for(auto &row_expr : strategy_value_exprs[row])
@@ -62,7 +62,7 @@ std::vector<exprt> linrank_domaint::get_required_values(size_t row)
   return r;
 }
 
-void linrank_domaint::set_values(std::vector<exprt> got_values)
+void linrank_domaint::set_smt_values(std::vector<exprt> got_values)
 {
   values.clear();
   for(size_t i=0; i<got_values.size(); i+=2)
@@ -153,7 +153,7 @@ exprt linrank_domaint::to_pre_constraints(valuet &_value)
 
 /*******************************************************************\
 
-Function: linrank_domaint::not_satisfiable
+Function: linrank_domaint::handle_unsat
 
   Inputs:
 
@@ -163,7 +163,7 @@ Function: linrank_domaint::not_satisfiable
 
 \*******************************************************************/
 
-bool linrank_domaint::not_satisfiable(valuet &value, bool improved)
+bool linrank_domaint::handle_unsat(valuet &value, bool improved)
 {
   reset_refinements();
   return improved;

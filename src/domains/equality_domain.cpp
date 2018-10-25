@@ -28,7 +28,7 @@ void equality_domaint::initialize(valuet &value)
 
 /*******************************************************************\
 
-Function: equality_domaint::pre_iterate_init
+Function: equality_domaint::solver_iter_init
 
   Inputs:
 
@@ -38,13 +38,13 @@ Function: equality_domaint::pre_iterate_init
 
 \*******************************************************************/
 
-void equality_domaint::pre_iterate_init(valuet &value)
+void equality_domaint::solver_iter_init(valuet &value)
 {
   e_it=todo_equs.begin();
   unsatisfiable=false;
 }
 
-bool equality_domaint::something_to_solve()
+bool equality_domaint::has_something_to_solve()
 {
   if(e_it!=todo_equs.end())
   {
@@ -60,13 +60,13 @@ bool equality_domaint::something_to_solve()
   return false;
 }
 
-std::vector<exprt> equality_domaint::get_required_values(size_t row)
+std::vector<exprt> equality_domaint::get_required_smt_values(size_t row)
 {
   std::vector<exprt> r;
   return r;
 }
 
-void equality_domaint::set_values(std::vector<exprt> got_values)
+void equality_domaint::set_smt_values(std::vector<exprt> got_values)
 {
   todo_disequs.insert(*e_it);
 }
@@ -173,7 +173,7 @@ exprt equality_domaint::get_post_not_equ_constraint(unsigned index)
 
 /*******************************************************************\
 
-Function: equality_domaint::not_satisfiable
+Function: equality_domaint::handle_unsat
 
   Inputs:
 
@@ -183,7 +183,7 @@ Function: equality_domaint::not_satisfiable
 
 \*******************************************************************/
 
-bool equality_domaint::not_satisfiable(valuet &value, bool improved)
+bool equality_domaint::handle_unsat(valuet &value, bool improved)
 {
   equality_domaint::equ_valuet &inv=
     static_cast<equality_domaint::equ_valuet &>(value);

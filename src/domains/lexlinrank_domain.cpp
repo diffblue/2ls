@@ -174,14 +174,14 @@ exprt lexlinrank_domaint::to_pre_constraints(valuet &_value)
     from_integer(mp_integer(0), signedbv_typet(32)));
 }
 
-void lexlinrank_domaint::pre_iterate_init(domaint::valuet &_rank)
+void lexlinrank_domaint::solver_iter_init(domaint::valuet &_rank)
 {
   lexlinrank_domaint::templ_valuet &rank=
     static_cast<lexlinrank_domaint::templ_valuet &>(_rank);
   number_elements_per_row.resize(rank.size());
 }
 
-std::vector<exprt> lexlinrank_domaint::get_required_values(size_t row)
+std::vector<exprt> lexlinrank_domaint::get_required_smt_values(size_t row)
 {
   std::vector<exprt> r;
   for(auto &row_expr : strategy_value_exprs[row])
@@ -192,7 +192,7 @@ std::vector<exprt> lexlinrank_domaint::get_required_values(size_t row)
   return r;
 }
 
-void lexlinrank_domaint::set_values(std::vector<exprt> got_values)
+void lexlinrank_domaint::set_smt_values(std::vector<exprt> got_values)
 {
   values.clear();
   for(size_t i=0; i<got_values.size(); i+=2)
@@ -201,7 +201,7 @@ void lexlinrank_domaint::set_values(std::vector<exprt> got_values)
 
 /*******************************************************************\
 
-Function: lexlinrank_domaint::not_satisfiable
+Function: lexlinrank_domaint::handle_unsat
 
   Inputs:
 
@@ -211,7 +211,7 @@ Function: lexlinrank_domaint::not_satisfiable
 
 \*******************************************************************/
 
-bool lexlinrank_domaint::not_satisfiable(valuet &value, bool improved)
+bool lexlinrank_domaint::handle_unsat(valuet &value, bool improved)
 {
   reset_refinements();
   return improved;
