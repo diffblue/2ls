@@ -409,7 +409,7 @@ bool replace_malloc(
                               loop_end==f_it->second.body.instructions.end(),
                               alloc_concrete))
         {
-          result=(loop_end!=f_it->second.body.instructions.end());
+          result=result || (loop_end!=f_it->second.body.instructions.end());
         }
       }
     }
