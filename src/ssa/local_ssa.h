@@ -229,6 +229,11 @@ public:
     const namespacet &ns,
     const locationt loc);
 
+  bool can_reuse_symderef(
+    ssa_objectt &symderef,
+    const namespacet &ns,
+    const locationt loc);
+
   const ssa_heap_analysist &heap_analysis;
 
   ssa_objectst ssa_objects;
