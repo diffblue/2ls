@@ -65,7 +65,7 @@ class optionst;
   "(graphml-witness):(json-cex):" \
   "(no-spurious-check)(stop-on-fail)" \
   "(competition-mode)(slice)(no-propagation)(independent-properties)" \
-  "(no-unwinding-assertions)"
+  "(no-unwinding-assertions)(has-recursion)"
   // the last line is for CBMC-regression testing only
 
 class twols_parse_optionst:

@@ -7,6 +7,7 @@ Author: Peter Schrammel
 \*******************************************************************/
 
 #include <iostream>
+#include <fstream>
 
 #include <util/options.h>
 #include <util/i2string.h>
@@ -80,6 +81,7 @@ void summary_checker_baset::SSA_functions(
 
   // properties
   initialize_property_map(goto_model.goto_functions);
+  //CustomSSAOperation(SSA,ns,"");//execute ic3
 }
 
 /*******************************************************************\

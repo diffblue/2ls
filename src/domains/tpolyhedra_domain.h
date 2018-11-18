@@ -50,6 +50,9 @@ public:
 
   // initialize value
   virtual void initialize(valuet &value);
+  virtual void initialize_in_templates(valuet &value,
+    std::map<exprt,constant_exprt> context_bounds=
+    std::map<exprt,constant_exprt>());
 
   virtual void join(valuet &value1, const valuet &value2);
 
@@ -124,7 +127,8 @@ public:
 
   void add_interval_template(
     const var_specst &var_specs,
-    const namespacet &ns);
+    const namespacet &ns,
+    bool rec_cntx_sensitive=false);
   void add_difference_template(
     const var_specst &var_specs,
     const namespacet &ns);

@@ -737,7 +737,7 @@ Function: template_generator_baset::instantiate_standard_domains
 \*******************************************************************/
 
 void template_generator_baset::instantiate_standard_domains(
-  const local_SSAt &SSA)
+  const local_SSAt &SSA, bool recursive)
 {
   replace_mapt &renaming_map=
     std_invariants ? aux_renaming_map : post_renaming_map;
@@ -760,7 +760,9 @@ void template_generator_baset::instantiate_standard_domains(
       new tpolyhedra_domaint(domain_number, renaming_map, SSA.ns);
     filter_template_domain();
     static_cast<tpolyhedra_domaint *>(domain_ptr)
-      ->add_interval_template(var_specs, SSA.ns);
+      ->add_interval_template(var_specs, SSA.ns,
+        options.get_bool_option("context-sensitive") &&
+        recursive);
   }
   else if(options.get_bool_option("zones"))
   {

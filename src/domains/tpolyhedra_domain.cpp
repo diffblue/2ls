@@ -53,6 +53,31 @@ void tpolyhedra_domaint::initialize(valuet &value)
   }
 }
 
+void tpolyhedra_domaint::initialize_in_templates(valuet &value,
+  std::map<exprt,constant_exprt> context_bounds)
+{
+  templ_valuet &v=static_cast<templ_valuet&>(value);
+  v.resize(templ.size());
+  for(std::size_t row=0; row<templ.size(); row++)
+  {
+    if(templ[row].kind==IN)
+    {
+ //std::cout<<from_expr(templ[row].expr)<<"<=";
+        try
+        {
+          if(context_bounds.find(templ[row].expr)!=context_bounds.end())
+            v[row]=context_bounds.at(templ[row].expr);
+        }
+        catch(std::string exception)
+        {
+            std::cout<<"Got error when initializing input variables by context\n";
+            exit(0);
+        }
+        //std::cout<<from_expr(v[row]);
+    }
+  }
+}
+
 /*******************************************************************\
 
 Function: tpolyhedra_domaint::join
@@ -972,14 +997,15 @@ tpolyhedra_domaint::template_rowt &tpolyhedra_domaint::add_template_row(
 
 void tpolyhedra_domaint::add_interval_template(
   const var_specst &var_specs,
-  const namespacet &ns)
+  const namespacet &ns,
+  bool rec_cntx_sensitive)
 {
   unsigned size=2*var_specs.size();
   templ.reserve(templ.size()+size);
 
   for(const auto v : var_specs)
-  {
-    if(v.kind==IN)
+  {//for context sensitive analysis of recursive function
+    if(v.kind==IN && !rec_cntx_sensitive)
       continue;
     if(v.var.type().id()==ID_pointer)
       continue;
