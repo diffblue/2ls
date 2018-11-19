@@ -1032,7 +1032,7 @@ void tpolyhedra_domaint::add_difference_template(
     ++v2;
     for(; v2!=var_specs.end(); ++v2)
     {
-      if (v2->var.id()==ID_and)
+      if(v2->var.id()==ID_and)
         continue;
 
       // Check if both vars are dynamic objects allocated by the same malloc.
@@ -1043,7 +1043,23 @@ void tpolyhedra_domaint::add_difference_template(
         int v1_index=get_dynobj_line(to_symbol_expr(v1->var).get_identifier());
         int v2_index=get_dynobj_line(to_symbol_expr(v2->var).get_identifier());
         if(v1_index>=0 && v2_index>=0 && v1_index==v2_index)
-          continue;
+        {
+          const std::string v1_id=id2string(
+            to_symbol_expr(v1->var).get_identifier());
+          const std::string v2_id=id2string(
+            to_symbol_expr(v2->var).get_identifier());
+          // If the vars are fields of dynamic objects, do not add them if the
+          // fields are the same.
+          if(v1_id.find(".")!=std::string::npos &&
+             v2_id.find(".")!=std::string::npos)
+          {
+            if(v1_id.substr(v1_id.find_first_of("."))==
+               v2_id.substr(v2_id.find_first_of(".")))
+              continue;
+          }
+          else
+            continue;
+        }
       }
 
       kindt k=domaint::merge_kinds(v1->kind, v2->kind);
