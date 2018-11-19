@@ -710,3 +710,28 @@ bool is_cprover_symbol(const exprt &expr)
            id2string(to_symbol_expr(expr).get_identifier()),
            CPROVER_PREFIX);
 }
+
+/*******************************************************************\
+
+Function: get_dynobj_line
+
+  Inputs: Symbol identifier.
+
+ Outputs: If the symbol is a dynamic object, then the location number of the
+          malloc call where the object was allocated, otherwise -1.
+
+ Purpose:
+
+\*******************************************************************/
+int get_dynobj_line(const irep_idt &id)
+{
+  std::string name=id2string(id);
+  size_t pos=name.find("dynamic_object$");
+  if(pos==std::string::npos)
+    return -1;
+
+  size_t start=pos+15;
+  size_t end=name.find_first_not_of("0123456789", pos);
+  std::string number=name.substr(start, end-start);
+  return std::stoi(number);
+}
