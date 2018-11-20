@@ -39,5 +39,6 @@ void clean_expr(exprt &expr);
 bool is_cprover_symbol(const exprt &expr);
 
 int get_dynobj_line(const irep_idt &id);
+int get_dynobj_instance(const irep_idt &id);
 
 #endif
