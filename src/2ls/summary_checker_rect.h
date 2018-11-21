@@ -13,15 +13,15 @@
 class summary_checker_rect:public summary_checker_ait
 {
 public:
-    explicit summary_checker_rect(optionst &_options,
-    const ssa_heap_analysist &heap_analysis):
-    summary_checker_ait(_options, heap_analysis)
-    {
-    }
+  explicit summary_checker_rect(optionst &_options,
+  const ssa_heap_analysist &heap_analysis):
+  summary_checker_ait(_options, heap_analysis)
+  {
+  }
         
-    virtual resultt operator()(const goto_modelt &);
+  virtual resultt operator()(const goto_modelt &);
 protected:
-    void summarize(const goto_modelt &, bool, bool);
+  void summarize(const goto_modelt &, bool, bool);
 };
 
 #endif /* SUMMARY_CHECKER_RECT_H */

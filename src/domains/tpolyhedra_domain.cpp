@@ -46,35 +46,10 @@ void tpolyhedra_domaint::initialize(valuet &value)
   v.resize(templ.size());
   for(std::size_t row=0; row<templ.size(); row++)
   {
-    if(templ[row].kind==IN)
+    if(templ[row].kind==IN&&!recursive)
       v[row]=true_exprt(); // marker for oo
     else
       v[row]=false_exprt(); // marker for -oo
-  }
-}
-
-void tpolyhedra_domaint::initialize_in_templates(valuet &value,
-  std::map<exprt,constant_exprt> context_bounds)
-{
-  templ_valuet &v=static_cast<templ_valuet&>(value);
-  v.resize(templ.size());
-  for(std::size_t row=0; row<templ.size(); row++)
-  {
-    if(templ[row].kind==IN)
-    {
- //std::cout<<from_expr(templ[row].expr)<<"<=";
-        try
-        {
-          if(context_bounds.find(templ[row].expr)!=context_bounds.end())
-            v[row]=context_bounds.at(templ[row].expr);
-        }
-        catch(std::string exception)
-        {
-            std::cout<<"Got error when initializing input variables by context\n";
-            exit(0);
-        }
-        //std::cout<<from_expr(v[row]);
-    }
   }
 }
 
@@ -250,7 +225,7 @@ Function: tpolyhedra_domaint::get_row_constraint
 
 \*******************************************************************/
 
-exprt tpolyhedra_domaint::get_row_constraint(
+exprt tpolyhedra_domaint::get_row_constraint(//enum
   const rowt &row,
   const row_valuet &row_value)
 {
@@ -279,20 +254,25 @@ Function: tpolyhedra_domaint::get_row_pre_constraint
 
 exprt tpolyhedra_domaint::get_row_pre_constraint(
   const rowt &row,
-  const row_valuet &row_value)
+  const row_valuet &row_value,
+  bool no_out)
 {
   assert(row<templ.size());
   const template_rowt &templ_row=templ[row];
   kindt k=templ_row.kind;
-  if(k==OUT || k==OUTL)
+  if((k==OUT || k==OUTL) && (!recursive || no_out))
     return true_exprt();
   if(is_row_value_neginf(row_value))
+  {
     return implies_exprt(templ_row.pre_guard, false_exprt());
+  }
   if(is_row_value_inf(row_value))
     return implies_exprt(templ_row.pre_guard, true_exprt());
-  return implies_exprt(
+  exprt c=implies_exprt(
     templ_row.pre_guard,
     binary_relation_exprt(templ_row.expr, ID_le, row_value));
+  //if((k==OUT || k==OUTL) && recursive) rename(c);
+  return c;
 }
 
 /*******************************************************************\
@@ -307,13 +287,13 @@ Function: tpolyhedra_domaint::get_row_pre_constraint
 
 \*******************************************************************/
 
-exprt tpolyhedra_domaint::get_row_pre_constraint(
+/*exprt tpolyhedra_domaint::get_row_pre_constraint(
   const rowt &row,
   const templ_valuet &value)
 {
   assert(value.size()==templ.size());
   return get_row_pre_constraint(row, value[row]);
-}
+}*/
 
 /*******************************************************************\
 
@@ -329,11 +309,13 @@ Function: tpolyhedra_domaint::get_row_post_constraint
 
 exprt tpolyhedra_domaint::get_row_post_constraint(
   const rowt &row,
-  const row_valuet &row_value)
+  const row_valuet &row_value,
+  bool no_out)
 {
   assert(row<templ.size());
   const template_rowt &templ_row=templ[row];
-  if(templ_row.kind==IN)
+  if((templ_row.kind==IN && !recursive) ||
+     ((templ_row.kind==OUT || templ_row.kind==OUTL) && no_out))
     return true_exprt();
 
 #if 0 // TEST for disjunctive domains
@@ -375,7 +357,7 @@ exprt tpolyhedra_domaint::get_row_post_constraint(
   exprt c=implies_exprt(
     templ_row.post_guard,
     binary_relation_exprt(templ_row.expr, ID_le, row_value));
-  if(templ_row.kind==LOOP)
+  if(templ_row.kind==LOOP || recursive)//sarbojit
     rename(c);
   return c;
 }
@@ -394,10 +376,11 @@ exprt tpolyhedra_domaint::get_row_post_constraint(
 
 exprt tpolyhedra_domaint::get_row_post_constraint(
   const rowt &row,
-  const templ_valuet &value)
+  const templ_valuet &value,
+  bool no_out)
 {
   assert(value.size()==templ.size());
-  return get_row_post_constraint(row, value[row]);
+  return get_row_post_constraint(row, value[row],no_out);
 }
 
 /*******************************************************************\
@@ -412,13 +395,14 @@ exprt tpolyhedra_domaint::get_row_post_constraint(
 
 \*******************************************************************/
 
-exprt tpolyhedra_domaint::to_pre_constraints(const templ_valuet &value)
+exprt tpolyhedra_domaint::to_pre_constraints(const templ_valuet &value,
+  bool no_out)//sarbojit
 {
   assert(value.size()==templ.size());
   exprt::operandst c;
   for(std::size_t row=0; row<templ.size(); ++row)
   {
-    c.push_back(get_row_pre_constraint(row, value[row]));
+    c.push_back(get_row_pre_constraint(row, value[row],no_out));//sarbojit
   }
   return conjunction(c);
 }
@@ -436,10 +420,11 @@ exprt tpolyhedra_domaint::to_pre_constraints(const templ_valuet &value)
 
 \*******************************************************************/
 
-void tpolyhedra_domaint::make_not_post_constraints(
+void tpolyhedra_domaint::make_not_post_constraints(//
   const templ_valuet &value,
   exprt::operandst &cond_exprs,
-  exprt::operandst &value_exprs)
+  exprt::operandst &value_exprs,
+  bool no_out)
 {
   assert(value.size()==templ.size());
   cond_exprs.resize(templ.size());
@@ -453,7 +438,7 @@ void tpolyhedra_domaint::make_not_post_constraints(
     cond_exprs[row]=
       and_exprt(
         templ[row].aux_expr,
-        not_exprt(get_row_post_constraint(row, value)));
+        not_exprt(get_row_post_constraint(row, value, no_out)));
   }
 }
 
@@ -469,7 +454,7 @@ void tpolyhedra_domaint::make_not_post_constraints(
 
 \*******************************************************************/
 
-symbol_exprt tpolyhedra_domaint::get_row_symb_value(const rowt &row)
+symbol_exprt tpolyhedra_domaint::get_row_symb_value(const rowt &row)//
 {
   assert(row<templ.size());
   return symbol_exprt(
@@ -495,11 +480,14 @@ exprt tpolyhedra_domaint::get_row_symb_pre_constraint(
 {
   assert(row<templ.size());
   const template_rowt &templ_row=templ[row];
-  if(templ_row.kind==OUT || templ_row.kind==OUTL)
+  if((templ_row.kind==OUT || templ_row.kind==OUTL) && !recursive)
     return true_exprt();
-  return implies_exprt(
+  exprt c=implies_exprt(
     templ_row.pre_guard,  // REMARK: and_expr==> loop15 regression
     binary_relation_exprt(templ_row.expr, ID_le, get_row_symb_value(row)));
+  //if((templ_row.kind==OUT || templ_row.kind==OUTL) && recursive)
+  //  rename(c);
+  return c;
 }
 
 /*******************************************************************\
@@ -514,16 +502,17 @@ exprt tpolyhedra_domaint::get_row_symb_pre_constraint(
 
 \*******************************************************************/
 
-exprt tpolyhedra_domaint::get_row_symb_post_constraint(const rowt &row)
+exprt tpolyhedra_domaint::get_row_symb_post_constraint(const rowt &row)//
 {
   assert(row<templ.size());
   const template_rowt &templ_row=templ[row];
-  if(templ_row.kind==IN)
+  if(templ_row.kind==IN && !recursive)
     return true_exprt();
   exprt c=and_exprt(
     templ_row.post_guard,
     binary_relation_exprt(templ_row.expr, ID_ge, get_row_symb_value(row)));
-  rename(c);
+  //if(templ_row.kind!=OUT && templ_row.kind!=OUTL && recursive)
+    rename(c);
   return and_exprt(templ_row.aux_expr, c);
 }
 
@@ -539,7 +528,7 @@ exprt tpolyhedra_domaint::get_row_symb_post_constraint(const rowt &row)
 
 \*******************************************************************/
 
-exprt tpolyhedra_domaint::to_symb_pre_constraints(const templ_valuet &value)
+/*exprt tpolyhedra_domaint::to_symb_pre_constraints(const templ_valuet &value)
 {
   assert(value.size()==templ.size());
   exprt::operandst c;
@@ -548,7 +537,7 @@ exprt tpolyhedra_domaint::to_symb_pre_constraints(const templ_valuet &value)
     c.push_back(get_row_symb_pre_constraint(row, value[row]));
   }
   return conjunction(c);
-}
+}*/
 
 /*******************************************************************\
 
@@ -564,7 +553,8 @@ exprt tpolyhedra_domaint::to_symb_pre_constraints(const templ_valuet &value)
 
 exprt tpolyhedra_domaint::to_symb_pre_constraints(
   const templ_valuet &value,
-  const std::set<rowt> &symb_rows)
+  const std::set<rowt> &symb_rows,
+  bool no_out)
 {
   assert(value.size()==templ.size());
   exprt::operandst c;
@@ -573,7 +563,7 @@ exprt tpolyhedra_domaint::to_symb_pre_constraints(
     if(symb_rows.find(row)!=symb_rows.end())
       c.push_back(get_row_symb_pre_constraint(row, value[row]));
     else
-      c.push_back(get_row_pre_constraint(row, value[row]));
+      c.push_back(get_row_pre_constraint(row, value[row], no_out));
   }
   return conjunction(c);
 }
@@ -590,7 +580,7 @@ exprt tpolyhedra_domaint::to_symb_pre_constraints(
 
 \*******************************************************************/
 
-exprt tpolyhedra_domaint::to_symb_post_constraints(
+/*exprt tpolyhedra_domaint::to_symb_post_constraints(
   const std::set<rowt> &symb_rows)
 {
   exprt::operandst c;
@@ -599,7 +589,7 @@ exprt tpolyhedra_domaint::to_symb_post_constraints(
     c.push_back(get_row_symb_post_constraint(row));
   }
   return conjunction(c);
-}
+}*/
 
 /*******************************************************************\
 
@@ -613,7 +603,7 @@ exprt tpolyhedra_domaint::to_symb_post_constraints(
 
 \*******************************************************************/
 
-exprt tpolyhedra_domaint::get_row_symb_value_constraint(
+exprt tpolyhedra_domaint::get_row_symb_value_constraint(//
   const rowt &row,
   const row_valuet &row_value,
   bool geq)
@@ -709,7 +699,7 @@ void tpolyhedra_domaint::project_on_vars(
             templ_row.pre_guard,
             binary_relation_exprt(templ_row.expr, ID_le, row_v)));
     }
-    else
+    else if(templ_row.kind!=IN)//sarbojit
     {
       if(is_row_value_neginf(row_v))
         c.push_back(false_exprt());
@@ -873,25 +863,39 @@ void tpolyhedra_domaint::output_domain(
   for(std::size_t row=0; row<templ.size(); ++row)
   {
     const template_rowt &templ_row=templ[row];
-    switch(templ_row.kind)
+    //sarbojit---
+    if(recursive)
     {
-    case LOOP:
-      out << "(LOOP) [ " << from_expr(ns, "", templ_row.pre_guard) << " | ";
-      out << from_expr(ns, "", templ_row.post_guard) << " | ";
-      out << from_expr(ns, "", templ_row.aux_expr) << " ]===> "
-          << std::endl << "      ";
-      break;
-    case IN:
-      out << "(IN)   ";
-      out << from_expr(ns, "", templ_row.pre_guard) << "===> "
-          << std::endl << "      ";
-      break;
-    case OUT: case OUTL:
-      out << "(OUT)  ";
-      out << from_expr(ns, "", templ_row.post_guard) << "===> "
-          << std::endl << "      ";
-      break;
-    default: assert(false);
+      if(templ_row.kind==IN) out << "(IN";
+      if(templ_row.kind==OUT) out << "(OUT";
+      if(templ_row.kind==LOOP) out << "(LOOP";
+      out << ") [ " << from_expr(ns, "", templ_row.pre_guard) << " | ";
+      out << from_expr(ns, "", templ_row.post_guard) << " ]===> ";
+      out << std::endl << "      ";
+    }
+    //---sarbojit
+    else//sarbojit
+    {
+      switch(templ_row.kind)
+      {
+      case LOOP:
+        out << "(LOOP) [ " << from_expr(ns, "", templ_row.pre_guard) << " | ";
+        out << from_expr(ns, "", templ_row.post_guard) << " | ";
+        out << from_expr(ns, "", templ_row.aux_expr) << " ]===> "
+            << std::endl << "      ";
+        break;
+      case IN:
+        out << "(IN)   ";
+        out << from_expr(ns, "", templ_row.pre_guard) << "===> "
+            << std::endl << "      ";
+        break;
+      case OUT: case OUTL:
+        out << "(OUT)  ";
+        out << from_expr(ns, "", templ_row.post_guard) << "===> "
+            << std::endl << "      ";
+        break;
+      default: assert(false);
+      }
     }
     out << "( " <<
       from_expr(ns, "", templ_row.expr) << "<=CONST )" << std::endl;
@@ -1070,7 +1074,8 @@ void tpolyhedra_domaint::add_interval_template(
 
 void tpolyhedra_domaint::add_difference_template(
   const var_specst &var_specs,
-  const namespacet &ns)
+  const namespacet &ns,
+  bool no_in)
 {
   std::size_t size=var_specs.size()*(var_specs.size()-1);
   templ.reserve(templ.size()+size);
@@ -1085,7 +1090,7 @@ void tpolyhedra_domaint::add_difference_template(
     for(; v2!=var_specs.end(); ++v2)
     {
       kindt k=domaint::merge_kinds(v1->kind, v2->kind);
-      if(k==IN)
+      if(k==IN&&no_in)
         continue;
       if(k==LOOP && v1->pre_guard!=v2->pre_guard)
         continue; // TEST: we need better heuristics
@@ -1166,7 +1171,8 @@ Function: tpolyhedra_domaint::add_sum_template
 
 void tpolyhedra_domaint::add_sum_template(
   const var_specst &var_specs,
-  const namespacet &ns)
+  const namespacet &ns,
+  bool no_in)
 {
   unsigned size=var_specs.size()*(var_specs.size()-1);
   templ.reserve(templ.size()+size);
@@ -1178,7 +1184,7 @@ void tpolyhedra_domaint::add_sum_template(
     for(; v2!=var_specs.end(); ++v2)
     {
       kindt k=domaint::merge_kinds(v1->kind, v2->kind);
-      if(k==IN)
+      if(k==IN&&no_in)
         continue;
       if(k==LOOP && v1->pre_guard!=v2->pre_guard)
         continue; // TEST: we need better heuristics

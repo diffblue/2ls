@@ -43,9 +43,7 @@ public:
     const exprt &precondition,
     template_generator_baset &template_generator,
     bool recursive=false,
-    std::map<exprt,constant_exprt> context_bounds=
-    std::map<exprt,constant_exprt>(),
-    tmpl_rename_mapt templ_maps=tmpl_rename_mapt());
+    const exprt &merge_expr=true_exprt());
 
   void get_result(exprt &result, const domaint::var_sett &vars);
 

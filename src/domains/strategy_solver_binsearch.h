@@ -25,9 +25,7 @@ public:
   }
 
   virtual bool iterate(invariantt &inv);
-  /*virtual bool iterate_for_recursive(
-  invariantt &inv, tmpl_rename_mapt templ_maps,bool cntxt_sensitive);*/
-
+  virtual bool iterate_for_ins(invariantt &inv);
 protected:
   tpolyhedra_domaint &tpolyhedra_domain;
 };

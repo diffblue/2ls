@@ -31,8 +31,7 @@ class strategy_solver_baset:public messaget
   {}
 
   virtual bool iterate(invariantt &inv) { assert(false); }
-  /*virtual bool iterate_for_recursive(
-   invariantt &inv, tmpl_rename_mapt templ_maps,bool cntxt_sensitive) {assert(false);}*/
+  virtual bool iterate_for_ins(invariantt &inv) { assert(false); }
 
   inline unsigned get_number_of_solver_calls() { return solver_calls; }
   inline unsigned get_number_of_solver_instances() { return solver_instances; }

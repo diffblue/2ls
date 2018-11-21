@@ -24,11 +24,13 @@ public:
   domaint(
     unsigned _domain_number,
     replace_mapt &_renaming_map,
-    const namespacet &_ns):
+    const namespacet &_ns,
+    bool rec=false):
     domain_number(_domain_number),
     renaming_map(_renaming_map),
     ns(_ns)
   {
+    recursive=rec;
   }
 
   virtual ~domaint()
@@ -65,10 +67,6 @@ public:
   };
 
   virtual void initialize(valuet &value) { value.basic_value=valuet::BOTTOM; }
-  virtual void initialize_in_templates(valuet &value,
-    std::map<exprt,constant_exprt> context_bounds=
-    std::map<exprt,constant_exprt>()) {assert(false);}
-
 
   // returns true as long as further refinements are possible
   virtual void reset_refinements() { }
@@ -124,6 +122,8 @@ protected:
   unsigned domain_number; // serves as id for variables names
   replace_mapt &renaming_map;
   const namespacet &ns;
+  
+  bool recursive;//sarbojit
 
   inline void rename(exprt &expr)
   {

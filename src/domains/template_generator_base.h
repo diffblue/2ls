@@ -130,7 +130,7 @@ protected:
     exprt &expr);
 
   virtual void handle_special_functions(const local_SSAt &SSA);
-  void instantiate_standard_domains(const local_SSAt &SSA, bool recursive=false);
+  void instantiate_standard_domains(const local_SSAt &SSA);
   bool instantiate_custom_templates(const local_SSAt &SSA);
 
   void rename_aux_post(symbol_exprt &expr)

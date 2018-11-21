@@ -36,7 +36,6 @@ public:
       _options, _summary_db, _ssa_db, _ssa_unwinder, _ssa_inliner)
   {
   }
-  typedef std::vector<std::pair<exprt,std::vector<exprt>>> tmpl_rename_mapt;
 protected:
     virtual void compute_summary_rec(const function_namet &,
             const exprt &, bool);
@@ -44,7 +43,6 @@ protected:
     virtual void do_summary(const function_namet &,
      local_SSAt &SSA, summaryt &summary, exprt cond,
      bool context_sensitive, bool recursive);
-    std::map<exprt,constant_exprt> get_context_bounds(exprt);
 };
 
 #endif /* SUMMARIZER_REC_FWT_H */

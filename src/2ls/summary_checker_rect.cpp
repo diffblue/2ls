@@ -22,7 +22,7 @@
 property_checkert::resultt summary_checker_rect::operator()(
   const goto_modelt &goto_model)
 {
-    const namespacet ns(goto_model.symbol_table);
+  const namespacet ns(goto_model.symbol_table);
 
   SSA_functions(goto_model, ns, heap_analysis);
 
@@ -41,35 +41,56 @@ property_checkert::resultt summary_checker_rect::operator()(
   // properties
   initialize_property_map(goto_model.goto_functions);
 
-  bool preconditions=options.get_bool_option("preconditions");
-  bool termination=options.get_bool_option("termination");
-  bool trivial_domain=options.get_bool_option("havoc");
-  if(!trivial_domain || termination)
-  {
-    // forward analysis
-    summarize(goto_model, true, termination);
-  }
-  /*if(preconditions)
-  {
-    report_statistics();
-    report_preconditions();
-    return property_checkert::UNKNOWN;
-  }
+  /*property_checkert::resultt result=property_checkert::UNKNOWN;
+  bool finished=false;
+  while(!finished)
+  {*/
+    bool preconditions=options.get_bool_option("preconditions");
+    bool termination=options.get_bool_option("termination");
+    bool trivial_domain=options.get_bool_option("havoc");
+    if(!trivial_domain || termination)
+    {
+      // forward analysis
+      summarize(goto_model, true, termination);
+    }
+    if(!trivial_domain && preconditions)
+    {
+      status()<<"No backward analysis supported for recursive programs."<<eom;
+      exit(1);
+    }
 
-  if(termination)
-  {
-    report_statistics();
-    return report_termination();
-  }
+    /*if(preconditions)
+    {
+      report_statistics();
+      report_preconditions();
+      return property_checkert::UNKNOWN;
+    }
+
+    if(termination)
+    {
+      report_statistics();
+      return report_termination();
+    }
 
 #ifdef SHOW_CALLINGCONTEXTS
-  if(options.get_bool_option("show-calling-contexts"))
-    return property_checkert::UNKNOWN;
+    if(options.get_bool_option("show-calling-contexts"))
+      return property_checkert::UNKNOWN;
 #endif
 
-  property_checkert::resultt result=check_properties();
-  report_statistics();
-  return result;*/
+  if(result==property_checkert::UNKNOWN &&
+       options.get_bool_option("heap-values-refine") &&
+       options.get_bool_option("heap-interval"))
+    {
+      summary_db.clear();
+      options.set_option("heap-interval", false);
+      options.set_option("heap-zones", true);
+    }
+    else
+    {
+      finished=true;
+    }
+  }*/
+  //return result;
   return UNKNOWN;
 }
 
@@ -86,9 +107,12 @@ void summary_checker_rect::summarize(
   else // NOLINT(*)
 #endif
   {
-    if(forward && !termination)
+    if(!termination)
       summarizer=new summarizer_rec_fwt(
         options, summary_db, ssa_db, ssa_unwinder, ssa_inliner);
+    else
+      status()<<"No termination check supported for recursive programs."<<eom;
+      exit(1);
   }
   assert(summarizer!=NULL);
   summarizer->set_message_handler(get_message_handler());
@@ -99,10 +123,10 @@ void summary_checker_rect::summarize(
     summarizer->summarize(goto_model.goto_functions.entry_point());
 
   // statistics
-  /*solver_instances+=summarizer->get_number_of_solver_instances();
+  solver_instances+=summarizer->get_number_of_solver_instances();
   solver_calls+=summarizer->get_number_of_solver_calls();
   summaries_used+=summarizer->get_number_of_summaries_used();
-  termargs_computed+=summarizer->get_number_of_termargs_computed();*/
+  termargs_computed+=summarizer->get_number_of_termargs_computed();
 
   delete summarizer;
 }

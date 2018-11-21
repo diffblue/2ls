@@ -43,37 +43,40 @@ public:
   tpolyhedra_domaint(
     unsigned _domain_number,
     replace_mapt &_renaming_map,
-    const namespacet &_ns):
-    domaint(_domain_number, _renaming_map, _ns)
+    const namespacet &_ns,
+    bool rec=false):
+    domaint(_domain_number, _renaming_map, _ns, rec)
   {
   }
 
   // initialize value
   virtual void initialize(valuet &value);
-  virtual void initialize_in_templates(valuet &value,
-    std::map<exprt,constant_exprt> context_bounds=
-    std::map<exprt,constant_exprt>());
 
   virtual void join(valuet &value1, const valuet &value2);
 
   // value -> constraints
   exprt get_row_constraint(const rowt &row, const row_valuet &row_value);
-  exprt get_row_pre_constraint(const rowt &row, const row_valuet &row_value);
-  exprt get_row_post_constraint(const rowt &row, const row_valuet &row_value);
+  exprt get_row_pre_constraint(const rowt &row, const row_valuet &row_value,
+    bool no_out=false);
+  exprt get_row_post_constraint(const rowt &row, const row_valuet &row_value,
+    bool no_out=false);
   exprt get_row_pre_constraint(const rowt &row, const templ_valuet &value);
-  exprt get_row_post_constraint(const rowt &row, const templ_valuet &value);
+  exprt get_row_post_constraint(const rowt &row, const templ_valuet &value,
+    bool no_out=false);
 
-  exprt to_pre_constraints(const templ_valuet &value);
+  exprt to_pre_constraints(const templ_valuet &value,bool no_out=false);
   void make_not_post_constraints(
     const templ_valuet &value,
     exprt::operandst &cond_exprs,
-    exprt::operandst &value_exprs);
+    exprt::operandst &value_exprs,
+    bool no_out=false);
 
   // value -> symbolic bound constraints (for optimization)
   exprt to_symb_pre_constraints(const templ_valuet &value);
   exprt to_symb_pre_constraints(
     const templ_valuet &value,
-    const std::set<rowt> &symb_rows);
+    const std::set<rowt> &symb_rows,
+    bool no_out=false);
   exprt to_symb_post_constraints(const std::set<rowt> &symb_rows);
   exprt get_row_symb_value_constraint(
     const rowt &row,
@@ -131,10 +134,12 @@ public:
     bool rec_cntx_sensitive=false);
   void add_difference_template(
     const var_specst &var_specs,
-    const namespacet &ns);
+    const namespacet &ns,
+    bool no_in=true);
   void add_sum_template(
     const var_specst &var_specs,
-    const namespacet &ns);
+    const namespacet &ns,
+    bool no_in=true);
   void add_quadratic_template(
     const var_specst &var_specs,
     const namespacet &ns);

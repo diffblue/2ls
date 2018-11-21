@@ -21,75 +21,77 @@ void summarizer_rec_fwt::compute_summary_rec(
   const exprt &precondition,
   bool context_sensitive)
 {
-    local_SSAt &SSA=ssa_db.get(function_name);// TODO: make const
+  local_SSAt &SSA=ssa_db.get(function_name);// TODO: make const
     
-    bool recursive=false;
-    for(local_SSAt::nodet node:SSA.nodes)
-    {
-	for(function_application_exprt f_call:node.function_calls)
-	    if(function_name==to_symbol_expr(f_call.function()).get_identifier())
-		recursive=true;
-    }
-    if(recursive)//if this_function_is_recursive
-    {
-	//inline other non-recursive functions in the same SCC of the call graph
-	//this makes it self recursive
-    }
+  bool recursive=false;
+  for(local_SSAt::nodet node:SSA.nodes)
+  {
+    for(function_application_exprt f_call:node.function_calls)
+      if(function_name==to_symbol_expr(f_call.function()).get_identifier() &&
+         f_call.function().id()==ID_symbol)//No function pointer
+        recursive=true;
+  }
+  if(recursive)//if this_function_is_recursive
+  {
+    status()<<"Function "<<function_name.c_str()<<" is recursive"<<eom;
+    //inline other non-recursive functions in the same SCC of the call graph
+    //this makes it self recursive
+  }
     
-    // recursively compute summaries for non-recursive function calls
-    inline_summaries(function_name, SSA, precondition, context_sensitive);
-    
-    status() << "Analyzing function "  << function_name << eom;
-    #if 0
+  // recursively compute summaries for non-recursive function calls
+  inline_summaries(function_name, SSA, precondition, context_sensitive);
+  
+  status() << "Analyzing function "  << function_name << eom;
+  #if 0
+  {
+    std::ostringstream out;
+    out << "Function body for " << function_name
+        << " to be analyzed: " << std::endl;
+    for(const auto &node : SSA.nodes)
     {
-	std::ostringstream out;
-	out << "Function body for " << function_name
-	    << " to be analyzed: " << std::endl;
-	for(const auto &node : SSA.nodes)
-	{
-	    if(!node.empty())
-		node.output(out, SSA.ns);
-	}
-	out << "(enable) " << from_expr(SSA.ns, "", SSA.get_enabling_exprs())
-	    << "\n";
-	debug() << out.str() << eom;
+      if(!node.empty())
+      node.output(out, SSA.ns);
     }
-    #endif
+    out << "(enable) " << from_expr(SSA.ns, "", SSA.get_enabling_exprs())
+        << "\n";
+    debug() << out.str() << eom;
+  }
+  #endif
 
-    // create summary
-    summaryt summary;
-    summary.params=SSA.params;
-    summary.globals_in=SSA.globals_in;
-    summary.globals_out=SSA.globals_out;
-    //if(recursive) summary.fw_precondition=true;
-    summary.fw_precondition=precondition;
-    
+  // create summary
+  summaryt summary;
+  summary.params=SSA.params;
+  summary.globals_in=SSA.globals_in;
+  summary.globals_out=SSA.globals_out;
+  //if(recursive) summary.fw_precondition=true;
+  summary.fw_precondition=precondition;
+  
+  if(!options.get_bool_option("havoc"))
+  {
+    do_summary(function_name, SSA, summary,
+               true_exprt(),context_sensitive, recursive);
+  }
 
-    if(!options.get_bool_option("havoc"))
-    {
-      do_summary(function_name, SSA, summary, true_exprt(), context_sensitive,recursive);
-    }
+  #if 0
+  if(!options.get_bool_option("competition-mode"))
+  {
+    std::ostringstream out;
+    out << std::endl << "Summary for function " << function_name << std::endl;
+    summary.output(out, SSA.ns);
+    status() << out.str() << eom;
+  }
+  #endif
 
-    #if 0
-    if(!options.get_bool_option("competition-mode"))
-    {
-	std::ostringstream out;
-	out << std::endl << "Summary for function " << function_name << std::endl;
-	summary.output(out, SSA.ns);
-	status() << out.str() << eom;
-    }
-    #endif
+  // store summary in db
+  summary_db.put(function_name, summary);
 
-    // store summary in db
-    //summary_db.put(function_name, summary);
-
-    /*if(!options.get_bool_option("competition-mode"))
-    {
-	std::ostringstream out;
-	out << std::endl << "Summary for function " << function_name << std::endl;
-	summary_db.get(function_name).output(out, SSA.ns);
-	status() << out.str() << eom;
-    }*/
+  if(!options.get_bool_option("competition-mode"))
+  {
+    std::ostringstream out;
+    out << std::endl << "Summary for function " << function_name << std::endl;
+    summary_db.get(function_name).output(out, SSA.ns);
+    status() << out.str() << eom;
+  }
 }
 
 void summarizer_rec_fwt::do_summary(
@@ -97,7 +99,8 @@ void summarizer_rec_fwt::do_summary(
   local_SSAt &SSA,
   summaryt &summary,
   exprt cond,
-  bool context_sensitive,bool recursive)
+  bool context_sensitive,
+  bool recursive)
 {
   status() << "Computing summary" << eom;
   
@@ -109,19 +112,42 @@ void summarizer_rec_fwt::do_summary(
   ssa_analyzert analyzer;
   analyzer.set_message_handler(get_message_handler());
   
-  tmpl_rename_mapt templ_maps;
-  
-  template_gen_rec_summaryt template_generator(
+  if(recursive)
+  {
+    exprt merge_expr;
+    template_gen_rec_summaryt template_generator=template_gen_rec_summaryt(
     options, ssa_db, ssa_unwinder.get(function_name));
-  template_generator.set_message_handler(get_message_handler());
-  template_generator(
-   function_name,solver.next_domain_number(), SSA, templ_maps, true,recursive);
-
-  exprt::operandst conds;
-  conds.reserve(5);
-  conds.push_back(cond);
-  if(!(recursive && context_sensitive)) conds.push_back(summary.fw_precondition);
-  conds.push_back(ssa_inliner.get_summaries(SSA));
+    template_generator.set_message_handler(get_message_handler());
+    template_generator(function_name, solver.next_domain_number(),
+     SSA, merge_expr, true);
+    
+    exprt precond(summary.fw_precondition);
+    if(context_sensitive)
+      replace_expr(template_generator.init_vars_map,precond);
+    
+    exprt::operandst conds;
+    conds.reserve(5);
+    conds.push_back(cond);
+    conds.push_back(precond);
+    conds.push_back(ssa_inliner.get_summaries(SSA));
+    cond=conjunction(conds);
+    
+    analyzer(solver, SSA, cond, template_generator, true, merge_expr);
+    analyzer.get_result(summary.fw_transformer, template_generator.inout_vars());
+    analyzer.get_result(summary.fw_invariant, template_generator.loop_vars());
+  }
+  else
+  {
+    template_generator_summaryt template_generator=template_generator_summaryt(
+    options, ssa_db, ssa_unwinder.get(function_name));
+    template_generator.set_message_handler(get_message_handler());
+    template_generator(solver.next_domain_number(),
+     SSA, true);
+    exprt::operandst conds;
+    conds.reserve(5);
+    conds.push_back(cond);
+    conds.push_back(summary.fw_precondition);
+    conds.push_back(ssa_inliner.get_summaries(SSA));
   
 #ifdef REUSE_INVARIANTS
   if(summary_db.exists(function_name)) // reuse existing invariants
@@ -140,23 +166,12 @@ void summarizer_rec_fwt::do_summary(
   }
 #endif
   
-  cond=conjunction(conds);
+    cond=conjunction(conds);
 
-  std::map<exprt,constant_exprt> context_bounds;
-  if(recursive && context_sensitive) 
-  {
-    context_bounds = get_context_bounds(summary.fw_precondition);
-    
-    /*for(std::pair<symbol_exprt,constant_exprt> p : context_bounds)
-    {
-	debug()<<from_expr(p.first)<<"<="<<from_expr(p.second)<<eom;
-    }*/
+    analyzer(solver, SSA, cond, template_generator);
+    analyzer.get_result(summary.fw_transformer, template_generator.inout_vars());
+    analyzer.get_result(summary.fw_invariant, template_generator.loop_vars());
   }
-
-  analyzer(solver, SSA, cond, template_generator,
-    recursive && context_sensitive, context_bounds,templ_maps);
-  analyzer.get_result(summary.fw_transformer, template_generator.inout_vars());
-  analyzer.get_result(summary.fw_invariant, template_generator.loop_vars());
   
 #ifdef SHOW_WHOLE_RESULT
   // to see all the custom template values
@@ -186,17 +201,4 @@ void summarizer_rec_fwt::do_summary(
 
   solver_instances+=analyzer.get_number_of_solver_instances();
   solver_calls+=analyzer.get_number_of_solver_calls();
-}
-
-std::map<exprt,constant_exprt> summarizer_rec_fwt::get_context_bounds(
-    exprt con)
-{
-    std::map<exprt,constant_exprt> cntxt_bound;
-    for(exprt op:con.operands())
-    {
-	assert(op.id()==ID_le);
-	cntxt_bound.insert(std::pair<exprt,constant_exprt>
-	    (op.op0(),to_constant_expr(op.op1())));
-    }
-    return cntxt_bound;
 }
