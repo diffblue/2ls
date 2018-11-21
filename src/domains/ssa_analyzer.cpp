@@ -183,7 +183,7 @@ void ssa_analyzert::operator()(
   if(recursive &&
     template_generator.options.get_bool_option("context-sensitive"))
   {
-    //while(strategy_solver->iterate_for_ins(*result)) {}
+    while(strategy_solver->iterate_for_ins(*result)) {}
   }
 
   status()<<"------------------------------------------------------------------\n"///////////////////////////
