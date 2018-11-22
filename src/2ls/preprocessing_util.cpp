@@ -869,3 +869,27 @@ std::map<symbol_exprt, size_t> twols_parse_optionst::split_dynamic_objects(
   }
   return dynobj_instances;
 }
+
+void twols_parse_optionst::limit_array_bounds(goto_modelt &goto_model)
+{
+  Forall_goto_functions(f_it, goto_model.goto_functions)
+  {
+    Forall_goto_program_instructions(i_it, f_it->second.body)
+    {
+      if(i_it->is_decl())
+      {
+        const exprt &symbol=to_code_decl(i_it->code).symbol();
+        if(symbol.type().id()==ID_array)
+        {
+          auto &size_expr=to_array_type(symbol.type()).size();
+          if(size_expr.id()==ID_constant)
+          {
+            int size=std::stoi(
+              id2string(to_constant_expr(size_expr).get_value()), nullptr, 2);
+            assert(size<=50000);
+          }
+        }
+      }
+    }
+  }
+}

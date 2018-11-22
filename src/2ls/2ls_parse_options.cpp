@@ -1289,6 +1289,9 @@ bool twols_parse_optionst::process_goto_program(
 
     remove_dead_goto(goto_model);
 
+    if(cmdline.isset("competition-mode"))
+      limit_array_bounds(goto_model);
+
     // if we aim to cover, replace
     // all assertions by false to prevent simplification
     if(cmdline.isset("cover-assertions"))
