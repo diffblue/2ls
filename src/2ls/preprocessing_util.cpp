@@ -926,12 +926,13 @@ void twols_parse_optionst::memory_assert_info(goto_modelt &goto_model)
             if(i_it->is_assert())
             {
                 const auto& guard=i_it->guard;
-                if (guard.id() == ID_equal)
+                if(guard.id()==ID_equal)
                 {
-                    if(guard.op0().id()== ID_symbol)
+                    if(guard.op0().id()==ID_symbol)
                     {
-                        const auto& id=id2string(to_symbol_expr(guard.op0()).get_identifier());
-                        if(id.find("__CPROVER_memory_leak") != std::string::npos)
+                        const auto& id=id2string(
+                          to_symbol_expr(guard.op0()).get_identifier());
+                        if(id.find("__CPROVER_memory_leak")!=std::string::npos)
                         {
                             if(!file.empty())
                               i_it->source_location.set_file(file);
