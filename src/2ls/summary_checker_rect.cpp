@@ -111,8 +111,10 @@ void summary_checker_rect::summarize(
       summarizer=new summarizer_rec_fwt(
         options, summary_db, ssa_db, ssa_unwinder, ssa_inliner);
     else
+    {
       status()<<"No termination check supported for recursive programs."<<eom;
       exit(1);
+    }
   }
   assert(summarizer!=NULL);
   summarizer->set_message_handler(get_message_handler());
