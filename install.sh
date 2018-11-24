@@ -14,10 +14,10 @@ CBMC=`pwd`
 git checkout $CBMC_VERSION
 if grep '^MINISAT2' src/config.inc > /dev/null
 then
-  make -C src minisat2-download > /dev/null
+  make -C src minisat2-download > /dev/null -j4
 elif grep '^GLUCOSE' src/config.inc
 then
-  make -C src glucose-download
+  make -C src glucose-download -j4
 else
   echo "SAT solver not supported"
   exit 1
@@ -26,7 +26,7 @@ if [ "$COMPILER" != "" ]
 then
   make -C src CXX=$COMPILER
 else
-  make -C src
+  make -C src -j4
 fi
 
 cd ../src
@@ -36,7 +36,7 @@ if [ "$COMPILER" != "" ]
 then
   make CXX=$COMPILER
 else
-  make
+  make -j4
 fi
 cd ..
 echo "The executable is src/2ls/2ls"

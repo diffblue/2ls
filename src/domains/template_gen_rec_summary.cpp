@@ -69,8 +69,8 @@ void template_gen_rec_summaryt::merge_vars(const irep_idt &function_name,
   {
     std::string var_name=
        id2string(to_symbol_expr(var).get_identifier());
-    irep_idt nondet_name(var_name+"_nondet");
-    in_vars_vec.push_back(symbol_exprt(dstring(var_name+"_comb"),var.type()));
+    irep_idt nondet_name(var_name+"#nondet");
+    in_vars_vec.push_back(symbol_exprt(dstring(var_name+"#comb"),var.type()));
     expr_vec.push_back(symbol_exprt(nondet_name,var.type()));
     
   }
@@ -79,8 +79,8 @@ void template_gen_rec_summaryt::merge_vars(const irep_idt &function_name,
   {
     std::string var_name=
        id2string(to_symbol_expr(var).get_identifier());
-    irep_idt nondet_name(var_name+"_nondet");
-    in_vars_vec.push_back(symbol_exprt(dstring(var_name+"_comb"),var.type()));
+    irep_idt nondet_name(var_name+"#nondet");
+    in_vars_vec.push_back(symbol_exprt(dstring(var_name+"#comb"),var.type()));
     expr_vec.push_back(symbol_exprt(nondet_name,var.type()));
     
   }
@@ -89,8 +89,9 @@ void template_gen_rec_summaryt::merge_vars(const irep_idt &function_name,
   {
     std::string var_name=
        id2string(to_symbol_expr(var).get_identifier());
-    irep_idt nondet_name(var_name+"_nondet");
-    out_vars_vec.push_back(symbol_exprt(dstring(var_name+"_comb"),var.type()));
+    var_name=var_name.substr(0,var_name.find_last_of("#"));
+    irep_idt nondet_name(var_name+"#nondet");
+    out_vars_vec.push_back(symbol_exprt(dstring(var_name+"#comb"),var.type()));
     expr_vec.push_back(symbol_exprt(nondet_name,var.type()));
     
   }

@@ -699,7 +699,7 @@ void tpolyhedra_domaint::project_on_vars(
             templ_row.pre_guard,
             binary_relation_exprt(templ_row.expr, ID_le, row_v)));
     }
-    else if(templ_row.kind!=IN)//sarbojit
+    else //if(templ_row.kind!=IN)//sarbojit
     {
       if(is_row_value_neginf(row_v))
         c.push_back(false_exprt());

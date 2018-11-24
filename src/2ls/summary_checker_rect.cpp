@@ -41,10 +41,10 @@ property_checkert::resultt summary_checker_rect::operator()(
   // properties
   initialize_property_map(goto_model.goto_functions);
 
-  /*property_checkert::resultt result=property_checkert::UNKNOWN;
+  property_checkert::resultt result=property_checkert::UNKNOWN;
   bool finished=false;
   while(!finished)
-  {*/
+  {
     bool preconditions=options.get_bool_option("preconditions");
     bool termination=options.get_bool_option("termination");
     bool trivial_domain=options.get_bool_option("havoc");
@@ -59,7 +59,7 @@ property_checkert::resultt summary_checker_rect::operator()(
       exit(1);
     }
 
-    /*if(preconditions)
+    if(preconditions)
     {
       report_statistics();
       report_preconditions();
@@ -89,7 +89,7 @@ property_checkert::resultt summary_checker_rect::operator()(
     {
       finished=true;
     }
-  }*/
+  }
   //return result;
   return UNKNOWN;
 }
@@ -111,8 +111,10 @@ void summary_checker_rect::summarize(
       summarizer=new summarizer_rec_fwt(
         options, summary_db, ssa_db, ssa_unwinder, ssa_inliner);
     else
+    {
       status()<<"No termination check supported for recursive programs."<<eom;
       exit(1);
+    }
   }
   assert(summarizer!=NULL);
   summarizer->set_message_handler(get_message_handler());

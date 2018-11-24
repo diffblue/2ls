@@ -20,7 +20,6 @@ void main()
   int x = 1;
   int y = do1(x);
   assert(y==1);
-  x = -x;
-  int z = do2(x);
+  int z = do2(-x);
   assert(-1<=z && z<=1);
 }
