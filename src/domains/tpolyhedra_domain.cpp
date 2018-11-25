@@ -1044,20 +1044,11 @@ void tpolyhedra_domaint::add_difference_template(
         int v2_index=get_dynobj_line(to_symbol_expr(v2->var).get_identifier());
         if(v1_index>=0 && v2_index>=0 && v1_index==v2_index)
         {
-          const std::string v1_id=id2string(
+          int v1_inst=get_dynobj_instance(
             to_symbol_expr(v1->var).get_identifier());
-          const std::string v2_id=id2string(
+          int v2_inst=get_dynobj_instance(
             to_symbol_expr(v2->var).get_identifier());
-          // If the vars are fields of dynamic objects, do not add them if the
-          // fields are the same.
-          if(v1_id.find(".")!=std::string::npos &&
-             v2_id.find(".")!=std::string::npos)
-          {
-            if(v1_id.substr(v1_id.find_first_of("."))==
-               v2_id.substr(v2_id.find_first_of(".")))
-              continue;
-          }
-          else
+          if(v1_inst>=0 && v2_inst>=0 && v1_inst!=v2_inst)
             continue;
         }
       }
