@@ -1,7 +1,7 @@
 #!/bin/bash
 
 CBMC_REPO=https://github.com/peterschrammel/cbmc
-CBMC_VERSION=2ls-prerequisites-0.6
+CBMC_VERSION=2ls-prerequisites-0.7
 
 if [ "$1" != "" ]
 then
