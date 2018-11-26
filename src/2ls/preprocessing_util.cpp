@@ -870,6 +870,17 @@ std::map<symbol_exprt, size_t> twols_parse_optionst::split_dynamic_objects(
   return dynobj_instances;
 }
 
+/*******************************************************************\
+
+ Function: twols_parse_optionst::limit_array_bounds
+
+ Inputs:
+
+ Outputs:
+
+ Purpose: Assert size of static arrays to be max 50000.
+
+ \*******************************************************************/
 void twols_parse_optionst::limit_array_bounds(goto_modelt &goto_model)
 {
   Forall_goto_functions(f_it, goto_model.goto_functions)
@@ -886,6 +897,7 @@ void twols_parse_optionst::limit_array_bounds(goto_modelt &goto_model)
           {
             int size=std::stoi(
               id2string(to_constant_expr(size_expr).get_value()), nullptr, 2);
+            // @TODO temporary solution - there seems to be a bug in the solver
             assert(size<=50000);
           }
         }
@@ -907,41 +919,41 @@ void twols_parse_optionst::limit_array_bounds(goto_modelt &goto_model)
  \*******************************************************************/
 void twols_parse_optionst::memory_assert_info(goto_modelt &goto_model)
 {
-    irep_idt file;
-    irep_idt line;
+  irep_idt file;
+  irep_idt line;
 
-    Forall_goto_functions(f_it, goto_model.goto_functions)
+  Forall_goto_functions(f_it, goto_model.goto_functions)
+  {
+    Forall_goto_program_instructions(i_it, f_it->second.body)
     {
-        Forall_goto_program_instructions(i_it, f_it->second.body)
-        {
-            if(!i_it->source_location.get_file().empty())
-            {
-                file=i_it->source_location.get_file();
-            }
-            if(!i_it->source_location.get_line().empty())
-            {
-                line=i_it->source_location.get_line();
-            }
-
-            if(i_it->is_assert())
-            {
-                const auto& guard=i_it->guard;
-                if(guard.id()==ID_equal)
-                {
-                    if(guard.op0().id()==ID_symbol)
-                    {
-                        const auto& id=id2string(
-                          to_symbol_expr(guard.op0()).get_identifier());
-                        if(id.find("__CPROVER_memory_leak")!=std::string::npos)
-                        {
-                            if(!file.empty())
-                              i_it->source_location.set_file(file);
-                            if(!line.empty())
-                              i_it->source_location.set_line(line);
-                        }
-                    }
-                }
-            }
-         }
+      if(!i_it->source_location.get_file().empty())
+      {
+        file=i_it->source_location.get_file();
       }
+      if(!i_it->source_location.get_line().empty())
+      {
+        line=i_it->source_location.get_line();
+      }
+
+      if(i_it->is_assert())
+      {
+        const auto &guard=i_it->guard;
+        if(guard.id()==ID_equal)
+        {
+          if(guard.op0().id()==ID_symbol)
+          {
+            const auto &id=id2string(
+              to_symbol_expr(guard.op0()).get_identifier());
+            if(id.find("__CPROVER_memory_leak")!=std::string::npos)
+            {
+              if(!file.empty())
+                i_it->source_location.set_file(file);
+              if(!line.empty())
+                i_it->source_location.set_line(line);
+            }
+          }
+        }
+      }
+    }
+  }
 }
