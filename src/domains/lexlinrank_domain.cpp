@@ -192,7 +192,9 @@ std::vector<exprt> lexlinrank_domaint::get_required_smt_values(size_t row)
   return r;
 }
 
-void lexlinrank_domaint::set_smt_values(std::vector<exprt> got_values)
+void lexlinrank_domaint::set_smt_values(
+  std::vector<exprt> got_values,
+  size_t row)
 {
   values.clear();
   for(size_t i=0; i<got_values.size(); i+=2)

@@ -196,6 +196,8 @@ std::vector<exprt> heap_tpolyhedra_domaint::get_required_smt_values(size_t row)
   return r;
 }
 
-void heap_tpolyhedra_domaint::set_smt_values(std::vector<exprt> got_values)
+void heap_tpolyhedra_domaint::set_smt_values(
+  std::vector<exprt> got_values,
+  size_t row)
 {
 }

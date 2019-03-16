@@ -67,7 +67,7 @@ equality_domaint(
   void post_edit();
 
   std::vector<exprt> get_required_smt_values(size_t row);
-  void set_smt_values(std::vector<exprt> got_values);
+  void set_smt_values(std::vector<exprt> got_values, size_t row);
 
   exprt to_pre_constraints(valuet &_value);
 

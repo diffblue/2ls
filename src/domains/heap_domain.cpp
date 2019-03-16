@@ -106,15 +106,13 @@ void heap_domaint::make_template(
 std::vector<exprt> heap_domaint::get_required_smt_values(size_t row)
 {
   std::vector<exprt> r;
-  r.push_back(strategy_value_exprs[row]);
   if(strategy_value_exprs[row].id()==ID_and)
   {
-    r.push_back(strategy_value_exprs[row].op1());
     r.push_back(strategy_value_exprs[row].op0());
+    r.push_back(strategy_value_exprs[row].op1());
   }
   else
   {
-    r.push_back(strategy_value_exprs[row]);
     r.push_back(strategy_value_exprs[row]);
   }
   for(const auto &guard : loop_guards)
@@ -125,13 +123,17 @@ std::vector<exprt> heap_domaint::get_required_smt_values(size_t row)
   return r;
 }
 
-void heap_domaint::set_smt_values(std::vector<exprt> got_values)
+void heap_domaint::set_smt_values(std::vector<exprt> got_values, size_t row)
 {
   solver_values_guards.clear();
-  value=got_values[0];
-  solver_value_op1=got_values[1];
-  solver_value_op0=got_values[2];
-  for(unsigned i=3; i<got_values.size(); i++)
+  solver_value_op0=got_values[0];
+  int start_i = 1;
+  if (strategy_value_exprs[row].id()==ID_and)
+  {
+    solver_value_op1=got_values[1];
+    start_i++;
+  }
+  for(unsigned i=start_i; i<got_values.size(); i++)
     solver_values_guards.push_back(got_values[i]);
 }
 
@@ -1735,7 +1737,7 @@ bool heap_domaint::edit_row(const rowt &row, valuet &_inv, bool improved)
 
   int actual_loc=get_symbol_loc(templ_row.expr);
 
-  exprt points_to=get_points_to_dest(value, templ_row.expr);
+  exprt points_to=get_points_to_dest(solver_value_op0, templ_row.expr);
 
   if(points_to.is_nil())
   {

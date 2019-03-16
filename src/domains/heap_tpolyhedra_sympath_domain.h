@@ -58,7 +58,7 @@ public:
     exprt &result) override;
 
   std::vector<exprt> get_required_smt_values(size_t row);
-  void set_smt_values(std::vector<exprt> got_values);
+  void set_smt_values(std::vector<exprt> got_values, size_t row);
 
   // Value -> constraints
   exprt to_pre_constraints(valuet &_value);

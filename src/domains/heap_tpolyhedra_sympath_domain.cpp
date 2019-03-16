@@ -109,6 +109,7 @@ std::vector<exprt> heap_tpolyhedra_sympath_domaint::get_required_smt_values(
 }
 
 void heap_tpolyhedra_sympath_domaint::set_smt_values(
-  std::vector<exprt> got_values)
+  std::vector<exprt> got_values,
+  size_t row)
 {
 }

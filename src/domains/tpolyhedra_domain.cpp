@@ -60,7 +60,9 @@ std::vector<exprt> tpolyhedra_domaint::get_required_smt_values(size_t row)
   return r;
 }
 
-void tpolyhedra_domaint::set_smt_values(std::vector<exprt> got_values)
+void tpolyhedra_domaint::set_smt_values(
+  std::vector<exprt> got_values,
+  size_t row)
 {
   value=got_values[0];
 }

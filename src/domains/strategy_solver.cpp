@@ -52,7 +52,7 @@ bool strategy_solvert::iterate(invariantt &inv)
           {
             got_values.push_back(solver.solver->get(c_exprt));
           }
-          domain.set_smt_values(got_values);
+          domain.set_smt_values(got_values, row);
 
           improved=domain.edit_row(row, inv, improved);
         }

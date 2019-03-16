@@ -220,7 +220,7 @@ public:
              get_required_smt_values) into internal representation
 
   \*******************************************************************/
-  virtual void set_smt_values(std::vector<exprt> got_values)=0;
+  virtual void set_smt_values(std::vector<exprt> got_values, size_t row)=0;
 
   /*******************************************************************\
 

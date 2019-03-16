@@ -51,7 +51,7 @@ public:
   virtual void initialize(valuet &value);
 
   std::vector<exprt> get_required_smt_values(size_t row);
-  void set_smt_values(std::vector<exprt> got_values);
+  void set_smt_values(std::vector<exprt> got_values, size_t row);
 
   bool edit_row(const rowt &row, valuet &inv, bool improved);
 

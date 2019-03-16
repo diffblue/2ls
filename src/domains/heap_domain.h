@@ -203,7 +203,7 @@ public:
     template_generator_baset &template_generator);
 
   std::vector<exprt> get_required_smt_values(size_t row);
-  void set_smt_values(std::vector<exprt> got_values);
+  void set_smt_values(std::vector<exprt> got_values, size_t row);
 
   // Value -> constraints
   exprt to_pre_constraints(valuet &_value);
@@ -272,7 +272,6 @@ protected:
   exprt::operandst aux_bindings;
 
   std::set<unsigned> updated_rows;
-  exprt value;
   exprt solver_value_op0;
   exprt solver_value_op1;
 

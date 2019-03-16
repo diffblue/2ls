@@ -83,7 +83,7 @@ std::vector<exprt> predabs_domaint::get_required_smt_values(size_t row)
   return r;
 }
 
-void predabs_domaint::set_smt_values(std::vector<exprt> got_values)
+void predabs_domaint::set_smt_values(std::vector<exprt> got_values, size_t row)
 {
 }
 

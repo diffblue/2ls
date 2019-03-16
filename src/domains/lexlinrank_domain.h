@@ -83,7 +83,7 @@ public:
     valuet &_value,
     exprt::operandst &cond_exprs);
   std::vector<exprt> get_required_smt_values(size_t row);
-  void set_smt_values(std::vector<exprt> got_values);
+  void set_smt_values(std::vector<exprt> got_values, size_t row);
   virtual bool handle_unsat(valuet &value, bool improved);
 
   virtual bool refine();
