@@ -35,8 +35,7 @@ public:
     replace_mapt &_renaming_map,
     const var_specst &var_specs,
     const local_SSAt &SSA):
-    domaint(_domain_number, _renaming_map, SSA.ns),
-    loop_guards(SSA.loop_guards)
+    domaint(_domain_number, _renaming_map, SSA.ns)
   {
     make_template(var_specs, ns);
   }
@@ -181,7 +180,6 @@ public:
     static exprt rename_outheap(const symbol_exprt &expr);
   };
 
-  std::set<std::pair<symbol_exprt, symbol_exprt>> loop_guards;
   // Heap value is a conjunction of rows
   class heap_valuet:
     public valuet,
@@ -356,6 +354,8 @@ protected:
     const exprt &expr,
     const exprt &precondition);
 
+  virtual exprt get_current_loop_guard(size_t row) override;
+
   bool edit_row(const rowt &row, valuet &inv, bool improved);
 
   void add_new_heap_row_spec(
@@ -385,13 +385,8 @@ protected:
     const local_SSAt &SSA,
     const exprt &precondition,
     template_generator_baset &template_generator);
-  void find_symbolic_path(
-    const exprt &current_guard=nil_exprt());
 
-  std::vector<exprt> solver_values_guards;
   friend class strategy_solver_heapt;
-public:
-  symbolic_patht symbolic_path;
 };
 
 #endif // CPROVER_2LS_DOMAINS_HEAP_DOMAIN_H

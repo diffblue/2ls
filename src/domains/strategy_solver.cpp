@@ -54,6 +54,8 @@ bool strategy_solvert::iterate(invariantt &inv)
           }
           domain.set_smt_values(got_values, row);
 
+          find_symbolic_path(loop_guards, domain.get_current_loop_guard(row));
+
           improved=domain.edit_row(row, inv, improved);
         }
       }

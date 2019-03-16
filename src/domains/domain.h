@@ -123,6 +123,20 @@ public:
 
   /*******************************************************************\
 
+    Function: domaint::get_current_loop_guard
+
+    Inputs:
+
+    Outputs:
+
+    Purpose: Return current loop guard.
+
+  \*******************************************************************/
+
+  virtual exprt get_current_loop_guard(size_t row);
+
+  /*******************************************************************\
+
     Function: domaint::
 
     Inputs:
@@ -132,6 +146,7 @@ public:
     Purpose: Edit invariant based on current model of satisfiability
 
   \*******************************************************************/
+
   virtual bool edit_row(const rowt &row, valuet &inv, bool improved)=0;
 
   /*******************************************************************\

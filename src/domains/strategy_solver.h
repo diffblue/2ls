@@ -23,7 +23,8 @@ public:
     const exprt &precondition,
     message_handlert &message_handler,
     template_generator_baset &template_generator):
-    strategy_solver_baset(_solver, SSA.ns), domain(_domain)
+    strategy_solver_baset(_solver, SSA.ns), domain(_domain),
+    loop_guards(SSA.loop_guards)
   {
     set_message_handler(message_handler);
     solver << domain.initialize_solver(SSA, precondition, template_generator);
@@ -33,6 +34,7 @@ public:
 
 protected:
   domaint &domain;
+  std::set<std::pair<symbol_exprt, symbol_exprt>> loop_guards;
 };
 
 #endif // CPROVER_2LS_DOMAINS_STRATEGY_SOLVER_H

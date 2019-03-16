@@ -115,26 +115,16 @@ std::vector<exprt> heap_domaint::get_required_smt_values(size_t row)
   {
     r.push_back(strategy_value_exprs[row]);
   }
-  for(const auto &guard : loop_guards)
-  {
-    r.push_back(guard.first);
-    r.push_back(guard.second);
-  }
   return r;
 }
 
 void heap_domaint::set_smt_values(std::vector<exprt> got_values, size_t row)
 {
-  solver_values_guards.clear();
   solver_value_op0=got_values[0];
-  int start_i = 1;
-  if (strategy_value_exprs[row].id()==ID_and)
+  if(strategy_value_exprs[row].id()==ID_and)
   {
     solver_value_op1=got_values[1];
-    start_i++;
   }
-  for(unsigned i=start_i; i<got_values.size(); i++)
-    solver_values_guards.push_back(got_values[i]);
 }
 
 
@@ -1694,15 +1684,16 @@ void heap_domaint::undo_restriction()
   }
 }
 
+exprt heap_domaint::get_current_loop_guard(size_t row)
+{
+  return to_and_expr(templ[row].pre_guard).op1();
+}
+
 bool heap_domaint::edit_row(const rowt &row, valuet &_inv, bool improved)
 {
   heap_domaint::heap_valuet &inv=
     static_cast<heap_domaint::heap_valuet &>(_inv);
   const heap_domaint::template_rowt &templ_row=templ[row];
-
-  const exprt loop_guard=to_and_expr(
-    templ[row].pre_guard).op1();
-  find_symbolic_path(loop_guard);
 
   if(templ_row.expr.id()==ID_and)
   {
@@ -2009,38 +2000,4 @@ const exprt heap_domaint::get_points_to_dest(
   }
   else
     return nil_exprt();
-}
-
-/*******************************************************************\
-
-Function: heap_domaint::find_symbolic_path
-
-  Inputs:
-
- Outputs:
-
- Purpose: Find symbolic path that is explored by the current solver
-          iteration. A path is specified by a conjunction of literals
-          containing loop-select guards of all loops in program.
-
-\*******************************************************************/
-void heap_domaint::find_symbolic_path(
-  const exprt &current_guard)
-{
-  int value_counter=0;
-  for(const auto &guard : loop_guards)
-  {
-    value_counter+=2;
-    if(guard.first==current_guard)
-    {
-      symbolic_path[guard.first]=true;
-      continue;
-    }
-    exprt ls_guard_value=solver_values_guards[value_counter-2];
-    exprt lh_guard_value=solver_values_guards[value_counter-1];
-    if(ls_guard_value.is_true() && lh_guard_value.is_true())
-      symbolic_path[guard.first]=true;
-    else if(ls_guard_value.is_false())
-      symbolic_path[guard.first]=false;
-  }
 }

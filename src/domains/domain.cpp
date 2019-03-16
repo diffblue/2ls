@@ -83,6 +83,11 @@ bool domaint::has_something_to_solve()
   return true;
 }
 
+exprt domaint::get_current_loop_guard(size_t row)
+{
+  return true_exprt();
+}
+
 bool domaint::handle_unsat(valuet &value, bool improved)
 {
   return improved;
