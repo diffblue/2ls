@@ -28,10 +28,10 @@ public:
     unsigned int _domain_number,
     replace_mapt &_renaming_map,
     const var_specst &var_specs,
-    const namespacet &ns,
+    const local_SSAt &SSA,
     const polyhedra_kindt polyhedra_kind):
-    domaint(_domain_number, _renaming_map, ns),
-    heap_domain(_domain_number, _renaming_map, var_specs, ns),
+    domaint(_domain_number, _renaming_map, SSA.ns),
+    heap_domain(_domain_number, _renaming_map, var_specs, SSA),
     polyhedra_domain(_domain_number, _renaming_map, ns)
   {
     if(polyhedra_kind==INTERVAL)
@@ -71,6 +71,18 @@ public:
   void undo_restriction();
   void eliminate_sympaths(const std::vector<symbolic_patht> &sympaths);
   void clear_aux_symbols();
+
+  std::vector<exprt> get_required_smt_values(size_t row);
+  void set_smt_values(std::vector<exprt> got_values, size_t row);
+
+  // Value -> constraints
+  exprt to_pre_constraints(valuet &_value);
+
+  void make_not_post_constraints(
+    valuet &_value,
+    exprt::operandst &cond_exprs);
+
+  bool edit_row(const rowt &row, valuet &inv, bool improved);
 };
 
 #endif // CPROVER_2LS_DOMAINS_HEAP_TPOLYHEDRA_DOMAIN_H

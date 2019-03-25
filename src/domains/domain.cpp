@@ -65,3 +65,39 @@ void domaint::output_var_specs(
     out << from_expr(ns, "", v.var) << std::endl;
   }
 }
+
+const exprt domaint::initialize_solver(
+  const local_SSAt &SSA,
+  const exprt &precondition,
+  template_generator_baset &template_generator)
+{
+  return true_exprt();
+}
+
+void domaint::solver_iter_init(valuet &value)
+{
+}
+
+bool domaint::has_something_to_solve()
+{
+  return true;
+}
+
+exprt domaint::get_current_loop_guard(size_t row)
+{
+  return true_exprt();
+}
+
+bool domaint::handle_unsat(valuet &value, bool improved)
+{
+  return improved;
+}
+
+void domaint::post_edit()
+{
+}
+
+exprt domaint::make_permanent(valuet &value)
+{
+  return true_exprt();
+}

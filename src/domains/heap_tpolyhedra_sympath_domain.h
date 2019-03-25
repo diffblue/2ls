@@ -27,7 +27,7 @@ public:
     const heap_tpolyhedra_domaint::polyhedra_kindt polyhedra_kind):
     domaint(_domain_number, _renaming_map, SSA.ns),
     heap_tpolyhedra_domain(
-      _domain_number, _renaming_map, var_specs, SSA.ns, polyhedra_kind)
+      _domain_number, _renaming_map, var_specs, SSA, polyhedra_kind)
   {
     exprt::operandst false_loop_guards;
     for(auto &g : SSA.loop_guards)
@@ -56,6 +56,18 @@ public:
     valuet &value,
     const var_sett &vars,
     exprt &result) override;
+
+  std::vector<exprt> get_required_smt_values(size_t row);
+  void set_smt_values(std::vector<exprt> got_values, size_t row);
+
+  // Value -> constraints
+  exprt to_pre_constraints(valuet &_value);
+
+  void make_not_post_constraints(
+    valuet &_value,
+    exprt::operandst &cond_exprs);
+
+  bool edit_row(const rowt &row, valuet &inv, bool improved);
 
 protected:
   // Special path containing conjunction negations of all loop-select guards

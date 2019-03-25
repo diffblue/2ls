@@ -13,7 +13,7 @@ Author: Viktor Malik
 
 #include "strategy_solver_base.h"
 #include "heap_tpolyhedra_domain.h"
-#include "strategy_solver_heap.h"
+#include "strategy_solver.h"
 #include "strategy_solver_binsearch.h"
 
 class strategy_solver_heap_tpolyhedrat:public strategy_solver_baset
@@ -48,7 +48,7 @@ public:
 protected:
   heap_tpolyhedra_domaint &heap_tpolyhedra_domain;
 
-  strategy_solver_heapt heap_solver;
+  strategy_solvert heap_solver;
   strategy_solver_binsearcht tpolyhedra_solver;
 };
 
