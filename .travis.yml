@@ -40,4 +40,4 @@ matrix:
       script: scripts/run_lint.sh master HEAD
 
 script:
-  - ./install.sh $COMPILER && cd regression && make test
+  - ./build.sh $COMPILER -j4 && cd regression && make test

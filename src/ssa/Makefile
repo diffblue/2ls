@@ -9,13 +9,12 @@ SRC = local_ssa.cpp ssa_var_collector.cpp \
       dynobj_instance_analysis.cpp
 
 include ../config.inc
-include $(CBMC)/src/config.inc
-include $(CBMC)/src/common
-CBMC ?= ../..
+include $(CPROVER_DIR)/src/config.inc
+include $(CPROVER_DIR)/src/common
 
 CP_CXXFLAGS += $(TWOLSFLAGS)
 
-INCLUDES= -I $(CBMC)/src -I ..
+INCLUDES= -I $(CPROVER_DIR)/src -I ..
 
 CLEANFILES = ssa$(LIBEXT)
 

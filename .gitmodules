@@ -1,0 +1,3 @@
+[submodule "lib/cbmc"]
+  path = lib/cbmc
+  url = https://github.com/peterschrammel/cbmc.git

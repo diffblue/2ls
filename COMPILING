@@ -1,6 +1,5 @@
-2LS 0.5
+2LS 0.7
 
-./install.sh
+./build.sh
 
 The executable is src/2ls/2ls
-

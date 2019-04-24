@@ -1,4 +1,4 @@
-CBMC = ~/my-cbmc
+CPROVER_DIR = ../../lib/cbmc
 
 # Variables you may want to override
 #CXXFLAGS = -Wall -O0 -g -Werror -Wno-long-long -Wno-sign-compare -Wno-parentheses -Wno-strict-aliasing -pedantic
