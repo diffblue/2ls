@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Summarizer for Forward Analysis
+
 #ifndef CPROVER_2LS_SOLVER_SUMMARIZER_FW_H
 #define CPROVER_2LS_SOLVER_SUMMARIZER_FW_H
 

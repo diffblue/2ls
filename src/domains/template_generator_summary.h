@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Template Generator for Summaries
+
 #ifndef CPROVER_2LS_DOMAINS_TEMPLATE_GENERATOR_SUMMARY_H
 #define CPROVER_2LS_DOMAINS_TEMPLATE_GENERATOR_SUMMARY_H
 

@@ -6,24 +6,16 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Dynamic Control Flow Graph
+
 #include <iostream>
 
 #include "dynamic_cfg.h"
 
 #include <domains/util.h>
 
-/*******************************************************************\
-
-Function: dynamic_cfgt::operator()
-
-  Inputs:
-
- Outputs:
-
- Purpose: generates the dynamic CFG
-
-\*******************************************************************/
-
+/// generates the dynamic CFG
 void dynamic_cfgt::operator()(
   const ssa_local_unwindert &ssa_unwinder,
   const unwindable_local_SSAt &ssa,
@@ -37,35 +29,12 @@ void dynamic_cfgt::operator()(
   add_assumptions(assumptions);
 }
 
-/*******************************************************************\
-
-Function: operator==
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 bool operator==(const dynamic_cfg_idt &a, const dynamic_cfg_idt &b)
 {
   return a.pc==b.pc && a.iteration_stack==b.iteration_stack;
 }
 
-/*******************************************************************\
-
-Function: dynamic_cfgt::add_assumptions
-
-  Inputs:
-
- Outputs:
-
- Purpose: annotates the nodes with assumptions
-
-\*******************************************************************/
-
+/// annotates the nodes with assumptions
 void dynamic_cfgt::add_assumptions(const assumptionst &assumptions)
 {
   for(const auto &a : assumptions)
@@ -74,18 +43,7 @@ void dynamic_cfgt::add_assumptions(const assumptionst &assumptions)
   }
 }
 
-/*******************************************************************\
-
-Function: dynamic_cfgt::build_cfg
-
-  Inputs:
-
- Outputs:
-
- Purpose: extracts assumptions from invariants
-
-\*******************************************************************/
-
+/// extracts assumptions from invariants
 void dynamic_cfgt::build_cfg(
   const goto_programt &goto_program,
   const ssa_local_unwindert &ssa_unwinder)
@@ -218,18 +176,7 @@ void dynamic_cfgt::build_cfg(
   }
 }
 
-/*******************************************************************\
-
-Function: dynamic_cfgt::build_from_invariant
-
-  Inputs:
-
- Outputs:
-
- Purpose: extracts assumption from invariant
-
-\*******************************************************************/
-
+/// extracts assumption from invariant
 void dynamic_cfgt::build_from_invariant(
   const unwindable_local_SSAt &ssa,
   const exprt &invariant,
@@ -276,18 +223,7 @@ void dynamic_cfgt::build_from_invariant(
   clean_expr(assumptions.back().second);
 }
 
-/*******************************************************************\
-
-Function: dynamic_cfgt::build_from_invariants
-
-  Inputs:
-
- Outputs:
-
- Purpose: extracts assumptions from invariants
-
-\*******************************************************************/
-
+/// extracts assumptions from invariants
 void dynamic_cfgt::build_from_invariants(
   const unwindable_local_SSAt &ssa,
   const exprt &invariants,

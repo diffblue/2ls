@@ -6,6 +6,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+/// \file
+/// Storage for Function Summaries
+
 #ifndef CPROVER_2LS_SOLVER_SUMMARY_DB_H
 #define CPROVER_2LS_SOLVER_SUMMARY_DB_H
 

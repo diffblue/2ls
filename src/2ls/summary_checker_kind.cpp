@@ -6,20 +6,11 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Summary Checker for k-induction
+
 #include <domains/heap_tpolyhedra_domain.h>
 #include "summary_checker_kind.h"
-
-/*******************************************************************\
-
-Function: summary_checker_kindt::operator()
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 property_checkert::resultt summary_checker_kindt::operator()(
   const goto_modelt &goto_model)

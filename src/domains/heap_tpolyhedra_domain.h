@@ -5,6 +5,9 @@ Module: Combination of heap and template polyhedra abstract domains
 Author: Viktor Malik
 
 \*******************************************************************/
+/// \file
+/// Combination of heap and template polyhedra abstract domains
+
 #ifndef CPROVER_2LS_DOMAINS_HEAP_TPOLYHEDRA_DOMAIN_H
 #define CPROVER_2LS_DOMAINS_HEAP_TPOLYHEDRA_DOMAIN_H
 

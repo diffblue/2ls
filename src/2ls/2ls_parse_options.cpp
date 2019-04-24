@@ -6,6 +6,9 @@ Author: Daniel Kroening, Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// 2LS Command Line Options Processing
+
 #include <memory>
 #include <iostream>
 #include <fstream>
@@ -63,18 +66,6 @@ Author: Daniel Kroening, Peter Schrammel
 #define EXPLICIT_NONDET_LOCALS 0
 #define FILTER_ASSERTIONS 1
 
-/*******************************************************************\
-
-Function: twols_parse_optionst::twols_parse_optionst
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 twols_parse_optionst::twols_parse_optionst(int argc, const char **argv):
   parse_options_baset(TWOLS_OPTIONS, argc, argv),
   language_uit(cmdline, ui_message_handler),
@@ -84,18 +75,6 @@ twols_parse_optionst::twols_parse_optionst(int argc, const char **argv):
   dynamic_memory_detected(false)
 {
 }
-
-/*******************************************************************\
-
-Function: twols_parse_optionst::eval_verbosity
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void twols_parse_optionst::eval_verbosity()
 {
@@ -113,18 +92,6 @@ void twols_parse_optionst::eval_verbosity()
 
   ui_message_handler.set_verbosity(v);
 }
-
-/*******************************************************************\
-
-Function: twols_parse_optionst::get_command_line_options
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void twols_parse_optionst::get_command_line_options(optionst &options)
 {
@@ -371,18 +338,7 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
     options.set_option("json-cex", cmdline.get_value("json-cex"));
 }
 
-/*******************************************************************\
-
-Function: twols_parse_optionst::doit
-
-  Inputs:
-
- Outputs:
-
- Purpose: invoke main modules
-
-\*******************************************************************/
-
+/// invoke main modules
 int twols_parse_optionst::doit()
 {
   if(cmdline.isset("version"))
@@ -735,18 +691,6 @@ int twols_parse_optionst::doit()
 #endif
 }
 
-/*******************************************************************\
-
-Function: twols_parse_optionst::type_stats_rec
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void twols_parse_optionst::type_stats_rec(
   const typet &type,
   expr_statst &stats,
@@ -778,18 +722,6 @@ void twols_parse_optionst::type_stats_rec(
   }
 }
 
-/*******************************************************************\
-
-Function: twols_parse_optionst::expr_stats_rec
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void twols_parse_optionst::expr_stats_rec(
   const exprt &expr,
   expr_statst &stats)
@@ -818,18 +750,6 @@ void twols_parse_optionst::expr_stats_rec(
   }
 }
 
-
-/*******************************************************************\
-
-Function: twols_parse_optionst::show_stats
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void twols_parse_optionst::show_stats(
   const goto_modelt &goto_model,
@@ -912,18 +832,6 @@ void twols_parse_optionst::show_stats(
 }
 
 
-/*******************************************************************\
-
-Function: twols_parse_optionst::set_properties
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 bool twols_parse_optionst::set_properties(goto_modelt &goto_model)
 {
   try
@@ -952,18 +860,6 @@ bool twols_parse_optionst::set_properties(goto_modelt &goto_model)
   return false;
 }
 
-/*******************************************************************\
-
-Function: twols_parse_optionst::require_entry
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void twols_parse_optionst::require_entry(
   const goto_modelt &goto_model)
 {
@@ -973,18 +869,6 @@ void twols_parse_optionst::require_entry(
      symbol_table.symbols.end())
     throw "the program has no entry point; please complete linking";
 }
-
-/*******************************************************************\
-
-Function: twols_parse_optionst::get_goto_program
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 bool twols_parse_optionst::get_goto_program(
   const optionst &options,
@@ -1125,18 +1009,6 @@ bool twols_parse_optionst::get_goto_program(
 
   return false;
 }
-
-/*******************************************************************\
-
-Function: twols_parse_optionst::process_goto_program
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 bool twols_parse_optionst::process_goto_program(
   const optionst &options,
@@ -1354,18 +1226,6 @@ bool twols_parse_optionst::process_goto_program(
   return false;
 }
 
-/*******************************************************************\
-
-Function: twols_parse_optionst::report_properties
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void twols_parse_optionst::report_properties(
   const optionst &options,
   const goto_modelt &goto_model,
@@ -1443,18 +1303,6 @@ void twols_parse_optionst::report_properties(
   }
 }
 
-/*******************************************************************\
-
-Function: twols_parse_optionst::report_success
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void twols_parse_optionst::report_success()
 {
   result() << "VERIFICATION SUCCESSFUL" << eom;
@@ -1477,18 +1325,6 @@ void twols_parse_optionst::report_success()
     assert(false);
   }
 }
-
-/*******************************************************************\
-
-Function: twols_parse_optionst::show_counterexample
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void twols_parse_optionst::show_counterexample(
   const goto_modelt &goto_model,
@@ -1515,18 +1351,6 @@ void twols_parse_optionst::show_counterexample(
     assert(false);
   }
 }
-
-/*******************************************************************\
-
-Function: twols_parse_optionst::output_graphml_cex
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void twols_parse_optionst::output_graphml_cex(
   const optionst &options,
@@ -1557,18 +1381,6 @@ void twols_parse_optionst::output_graphml_cex(
   }
 }
 
-/*******************************************************************\
-
-Function: twols_parse_optionst::output_graphml_proof
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void twols_parse_optionst::output_graphml_proof(
   const optionst &options,
   const goto_modelt &goto_model,
@@ -1590,18 +1402,6 @@ void twols_parse_optionst::output_graphml_proof(
     }
   }
 }
-/*******************************************************************\
-
-Function: twols_parse_optionst::output_json_cex
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void twols_parse_optionst::output_json_cex(
   const optionst &options,
   const goto_modelt &goto_model,
@@ -1627,18 +1427,6 @@ void twols_parse_optionst::output_json_cex(
   }
 }
 
-/*******************************************************************\
-
-Function: twols_parse_optionst::report_failure
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void twols_parse_optionst::report_failure()
 {
   result() << "VERIFICATION FAILED" << eom;
@@ -1661,18 +1449,6 @@ void twols_parse_optionst::report_failure()
     assert(false);
   }
 }
-
-/*******************************************************************\
-
-Function: twols_parse_optionst::report_unknown
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void twols_parse_optionst::report_unknown()
 {
@@ -1697,18 +1473,7 @@ void twols_parse_optionst::report_unknown()
   }
 }
 
-/*******************************************************************\
-
-Function: twols_parse_optionst::help
-
-  Inputs:
-
- Outputs:
-
- Purpose: display command line help
-
-\*******************************************************************/
-
+/// display command line help
 void twols_parse_optionst::help()
 {
   std::cout <<

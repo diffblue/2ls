@@ -6,6 +6,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+/// \file
+/// Definition Analysis
+
 #ifndef CPROVER_2LS_SSA_SSA_DOMAIN_H
 #define CPROVER_2LS_SSA_SSA_DOMAIN_H
 

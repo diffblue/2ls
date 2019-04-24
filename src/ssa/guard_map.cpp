@@ -6,21 +6,12 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+/// \file
+/// Discover the Guards of Basic Blocks
+
 #include <util/expr_util.h>
 
 #include "guard_map.h"
-
-/*******************************************************************\
-
-Function: guard_mapt::output
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void guard_mapt::output(
   const goto_programt &src,
@@ -42,18 +33,6 @@ void guard_mapt::output(
     out << "\n";
   }
 }
-
-/*******************************************************************\
-
-Function: guard_mapt::build
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void guard_mapt::build(const goto_programt &src)
 {

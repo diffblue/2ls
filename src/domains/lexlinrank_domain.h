@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Lexicographic linear ranking function domain
+
 #ifndef CPROVER_2LS_DOMAINS_LEXLINRANK_DOMAIN_H
 #define CPROVER_2LS_DOMAINS_LEXLINRANK_DOMAIN_H
 

@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Linear ranking function domain
+
 #ifdef DEBUG
 #include <iostream>
 #endif
@@ -27,18 +30,6 @@ Author: Peter Schrammel
 
 #define COEFF_C_SIZE 10
 #define MAX_REFINEMENT 2
-
-/*******************************************************************\
-
-Function: linrank_domaint::initialize
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void linrank_domaint::initialize(valuet &value)
 {
@@ -151,35 +142,11 @@ exprt linrank_domaint::to_pre_constraints(valuet &_value)
 }
 
 
-/*******************************************************************\
-
-Function: linrank_domaint::handle_unsat
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 bool linrank_domaint::handle_unsat(valuet &value, bool improved)
 {
   reset_refinements();
   return improved;
 }
-
-/*******************************************************************\
-
-Function: linrank_domaint::refine
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 bool linrank_domaint::refine()
 {
@@ -188,18 +155,6 @@ bool linrank_domaint::refine()
   refinement_level++;
   return true;
 }
-
-/*******************************************************************\
-
-Function: linrank_domaint::get_not_constraints
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void linrank_domaint::make_not_post_constraints(
   valuet &_value,
@@ -280,18 +235,6 @@ void linrank_domaint::make_not_post_constraints(
     }
   }
 }
-
-/*******************************************************************\
-
-Function: linrank_domaint::get_row_symb_constraint
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 exprt linrank_domaint::get_row_symb_constraint(
   linrank_domaint::row_valuet &symb_values, // contains vars c
@@ -392,18 +335,6 @@ exprt linrank_domaint::get_row_symb_constraint(
   return cond;
 }
 
-/*******************************************************************\
-
-Function: linrank_domaint::get_row_value
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 linrank_domaint::row_valuet linrank_domaint::get_row_value(
   const rowt &row,
   const templ_valuet &value)
@@ -412,18 +343,6 @@ linrank_domaint::row_valuet linrank_domaint::get_row_value(
   assert(value.size()==templ.size());
   return value[row];
 }
-
-/*******************************************************************\
-
-Function: linrank_domaint::set_row_value
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void linrank_domaint::set_row_value(
   const rowt &row,
@@ -435,18 +354,6 @@ void linrank_domaint::set_row_value(
   value[row]=row_value;
 }
 
-/*******************************************************************\
-
-Function: linrank_domaint::set_row_value_to_true
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void linrank_domaint::set_row_value_to_true(
   const rowt &row,
   templ_valuet &value)
@@ -456,18 +363,6 @@ void linrank_domaint::set_row_value_to_true(
   value[row].c.resize(1);
   value[row].c[0]=true_exprt();
 }
-
-/*******************************************************************\
-
-Function: linrank_domaint::output_value
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void linrank_domaint::output_value(
   std::ostream &out,
@@ -499,18 +394,6 @@ void linrank_domaint::output_value(
   }
 }
 
-/*******************************************************************\
-
-Function: linrank_domaint::output_domain
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void linrank_domaint::output_domain(
   std::ostream &out,
   const namespacet &ns) const
@@ -538,18 +421,6 @@ void linrank_domaint::output_domain(
     out << std::endl;
   }
 }
-
-/*******************************************************************\
-
-Function: linrank_domaint::project_on_vars
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void linrank_domaint::project_on_vars(
   valuet &value,
@@ -632,18 +503,7 @@ void linrank_domaint::project_on_vars(
   adjust_float_expressions(result, ns);
 }
 
-/*******************************************************************\
-
-Function: linrank_domaint::add_template
-
-  Inputs:
-
- Outputs:
-
- Purpose: This is called for each loop.
-
-\*******************************************************************/
-
+/// This is called for each loop.
 void linrank_domaint::add_template(
   const var_specst &var_specs,
   const namespacet &ns)
@@ -685,35 +545,11 @@ void linrank_domaint::add_template(
   templ_row.post_guard=conjunction(postg);
 }
 
-/*******************************************************************\
-
-Function: linrank_domaint::is_row_value_false
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 bool linrank_domaint::is_row_value_false(const row_valuet & row_value) const
 {
   assert(row_value.c.size()>=1);
   return row_value.c[0].get(ID_value)==ID_false;
 }
-
-/*******************************************************************\
-
-Function: linrank_domaint::is_row_value_true
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 bool linrank_domaint::is_row_value_true(const row_valuet & row_value) const
 {

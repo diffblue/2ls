@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Incremental Solver Interface
+
 #ifndef CPROVER_2LS_DOMAINS_INCREMENTAL_SOLVER_H
 #define CPROVER_2LS_DOMAINS_INCREMENTAL_SOLVER_H
 
@@ -167,18 +170,6 @@ class incremental_solvert:public messaget
   }
 };
 
-/*******************************************************************\
-
-Function: incremental_solvert::operator<<
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 static inline incremental_solvert &operator<<(
   incremental_solvert &dest,
   const exprt &src)
@@ -213,18 +204,6 @@ static inline incremental_solvert &operator<<(
 #endif
   return dest;
 }
-
-/*******************************************************************\
-
-Function: incremental_solvert::operator<<
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 static inline incremental_solvert &operator<<(
   incremental_solvert &dest,

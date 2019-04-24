@@ -6,6 +6,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+/// \file
+/// Summary
+
 #ifndef CPROVER_2LS_SOLVER_SUMMARY_H
 #define CPROVER_2LS_SOLVER_SUMMARY_H
 

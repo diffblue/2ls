@@ -6,6 +6,9 @@ Author: Peter Schrammel, Björn Wachter
 
 \*******************************************************************/
 
+/// \file
+/// Instrument Goto Program with Inferred Information
+
 #include <util/string2int.h>
 
 // #define DEBUG
@@ -15,18 +18,6 @@ Author: Peter Schrammel, Björn Wachter
 #endif
 
 #include  "instrument_goto.h"
-
-/*******************************************************************\
-
-Function: find_loop_by_guard
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 local_SSAt::locationt find_loop_by_guard(
   const local_SSAt &SSA,
@@ -53,18 +44,6 @@ local_SSAt::locationt find_loop_by_guard(
   else
     return n_it->loophead->location;
 }
-
-/*******************************************************************\
-
-Function: instrument_gotot::instrument_instruction
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void instrument_gotot::instrument_instruction(
   const exprt &expr,
@@ -99,18 +78,6 @@ void instrument_gotot::instrument_instruction(
 }
 
 extern void purify_identifiers(exprt &expr);
-
-/*******************************************************************\
-
-Function: instrument_gotot::instrument_body
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void instrument_gotot::instrument_body(
   const local_SSAt &SSA,
@@ -147,18 +114,6 @@ void instrument_gotot::instrument_body(
     }
   }
 }
-
-/*******************************************************************\
-
-Function: instrument_gotot::instrument_function
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void instrument_gotot::instrument_function(
   const irep_idt &function_name,
@@ -199,18 +154,6 @@ void instrument_gotot::instrument_function(
   else
     assert(false);
 }
-
-/*******************************************************************\
-
-Function: instrument_gotot::operator()
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void instrument_gotot::operator()(goto_modelt &goto_model)
 {

@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Template Generator Base
+
 #include <util/find_symbols.h>
 #include <util/arith_tools.h>
 #include <util/simplify_expr.h>
@@ -25,18 +28,6 @@ Author: Peter Schrammel
 #ifdef DEBUG
 #include <iostream>
 #endif
-
-/*******************************************************************\
-
-Function: template_generator_baset::get_pre_post_guards
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void template_generator_baset::get_pre_post_guards(
   const local_SSAt &SSA,
@@ -65,18 +56,6 @@ void template_generator_baset::get_pre_post_guards(
   post_guard=and_exprt(pguard, pcond);
 }
 
-/*******************************************************************\
-
-Function: template_generator_baset::get_pre_var
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void template_generator_baset::get_pre_var(
   const local_SSAt &SSA,
   local_SSAt::objectst::const_iterator o_it,
@@ -94,19 +73,7 @@ void template_generator_baset::get_pre_var(
   aux_renaming_map[pre_var]=post_var;
 }
 
-/*******************************************************************\
-
-Function: template_generator_baset::get_init_expr
-
-  Inputs:
-
- Outputs:
-
- Purpose: supposes that loop head PHIs are of the form
-          xphi=gls?xlb:x0
-
-\*******************************************************************/
-
+/// supposes that loop head PHIs are of the form xphi=gls?xlb:x0
 void template_generator_baset::get_init_expr(
   const local_SSAt &SSA,
   local_SSAt::objectst::const_iterator o_it,
@@ -132,18 +99,6 @@ void template_generator_baset::get_init_expr(
   ssa_local_unwinder.unwinder_rename(pre_var, *n_it, true);
   init_renaming_map[pre_var]=init_expr;
 }
-
-/*******************************************************************\
-
-Function: template_generator_baset::collect_variables_loop
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void template_generator_baset::collect_variables_loop(
   const local_SSAt &SSA,
@@ -219,18 +174,6 @@ void template_generator_baset::collect_variables_loop(
   }
 }
 
-/*******************************************************************\
-
-Function: template_generator_baset::all_vars
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 domaint::var_sett template_generator_baset::all_vars()
 {
   domaint::var_sett vars;
@@ -240,18 +183,6 @@ domaint::var_sett template_generator_baset::all_vars()
   }
   return vars;
 }
-
-/*******************************************************************\
-
-Function: template_generator_baset::filter_template_domain
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void template_generator_baset::filter_template_domain()
 {
@@ -273,18 +204,6 @@ void template_generator_baset::filter_template_domain()
   }
 }
 
-/*******************************************************************\
-
-Function: template_generator_baset::filter_equality_domain
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void template_generator_baset::filter_equality_domain()
 {
   domaint::var_specst new_var_specs(var_specs);
@@ -295,17 +214,6 @@ void template_generator_baset::filter_equality_domain()
   }
 }
 
-/*******************************************************************\
-
-Function: template_generator_baset::filter_heap_domain
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 void template_generator_baset::filter_heap_domain()
 {
   domaint::var_specst new_var_specs(var_specs);
@@ -326,18 +234,6 @@ void template_generator_baset::filter_heap_domain()
     }
   }
 }
-
-/*******************************************************************\
-
-Function: template_generator_baset::add_var
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void template_generator_baset::add_var(
   const domaint::vart &var,
@@ -390,18 +286,6 @@ void template_generator_baset::add_var(
   }
 }
 
-/*******************************************************************\
-
-Function: template_generator_baset::add_vars
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void template_generator_baset::add_vars(
   const local_SSAt::var_listt &vars_to_add,
   const domaint::guardt &pre_guard,
@@ -412,18 +296,6 @@ void template_generator_baset::add_vars(
   for(const auto &v : vars_to_add)
     add_var(v, pre_guard, post_guard, kind, var_specs);
 }
-
-/*******************************************************************\
-
-Function: template_generator_baset::add_vars
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void template_generator_baset::add_vars(
   const local_SSAt::var_sett &vars_to_add,
@@ -436,18 +308,6 @@ void template_generator_baset::add_vars(
     add_var(v, pre_guard, post_guard, kind, var_specs);
 }
 
-/*******************************************************************\
-
-Function: template_generator_baset::add_vars
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void template_generator_baset::add_vars(
   const var_listt &vars_to_add,
   const domaint::guardt &pre_guard,
@@ -458,18 +318,6 @@ void template_generator_baset::add_vars(
   for(const auto &v : vars_to_add)
     add_var(v, pre_guard, post_guard, kind, var_specs);
 }
-
-/*******************************************************************\
-
-Function: template_generator_baset::handle_special_functions
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void template_generator_baset::handle_special_functions(const local_SSAt &SSA)
 {
@@ -482,18 +330,7 @@ void template_generator_baset::handle_special_functions(const local_SSAt &SSA)
   }
 }
 
-/*******************************************************************\
-
-Function: template_generator_baset::replace_post
-
-  Inputs:
-
- Outputs:
-
- Purpose: rename custom template to correct SSA identifiers
-
-\*******************************************************************/
-
+/// rename custom template to correct SSA identifiers
 bool template_generator_baset::replace_post(
   replace_mapt replace_map,
   exprt &expr)
@@ -519,18 +356,6 @@ bool template_generator_baset::replace_post(
   }
   return replaced;
 }
-
-/*******************************************************************\
-
-Function: template_generator_baset::build_custom_expr
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 bool template_generator_baset::build_custom_expr(
   const local_SSAt &SSA,
@@ -572,18 +397,7 @@ bool template_generator_baset::build_custom_expr(
   return contains_newvar;
 }
 
-/*******************************************************************\
-
-Function: template_generator_baset::instantiate_custom_templates
-
-  Inputs:
-
- Outputs:
-
- Purpose: [experimental]
-
-\*******************************************************************/
-
+/// [experimental]
 bool template_generator_baset::instantiate_custom_templates(
   const local_SSAt &SSA)
 {
@@ -723,18 +537,6 @@ bool template_generator_baset::instantiate_custom_templates(
 
   return (found_poly || found_predabs);
 }
-
-/*******************************************************************\
-
-Function: template_generator_baset::instantiate_standard_domains
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void template_generator_baset::instantiate_standard_domains(
   const local_SSAt &SSA)

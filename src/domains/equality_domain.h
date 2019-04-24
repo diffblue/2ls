@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Equalities/Disequalities domain
+
 #ifndef CPROVER_2LS_DOMAINS_EQUALITY_DOMAIN_H
 #define CPROVER_2LS_DOMAINS_EQUALITY_DOMAIN_H
 

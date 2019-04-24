@@ -6,6 +6,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+/// \file
+/// Cover a set of goals incrementally
+
 #ifndef CPROVER_2LS_2LS_COVER_GOALS_EXT_H
 #define CPROVER_2LS_2LS_COVER_GOALS_EXT_H
 
@@ -16,16 +19,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "../ssa/unwindable_local_ssa.h"
 #include "../domains/incremental_solver.h"
 
-/*******************************************************************\
-
-   Class: cover_gooalst
-
- Purpose: Try to cover some given set of goals incrementally.
-          This can be seen as a heuristic variant of
-          SAT-based set-cover. No minimality guarantee.
-
-\*******************************************************************/
-
+/// Try to cover some given set of goals incrementally. This can be seen as a
+/// heuristic variant of SAT-based set-cover. No minimality guarantee.
 // cover goals extended with spuriousness check
 
 struct goalt

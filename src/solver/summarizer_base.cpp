@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Summarizer Base
+
 #include <iostream>
 
 #include <util/simplify_expr.h>
@@ -25,18 +28,6 @@ Author: Peter Schrammel
 #include <ssa/simplify_ssa.h>
 
 
-/*******************************************************************\
-
-Function: summarizer_baset::summarize
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void summarizer_baset::summarize()
 {
   exprt precondition=true_exprt(); // initial calling context
@@ -53,18 +44,7 @@ void summarizer_baset::summarize()
   }
 }
 
-/*******************************************************************\
-
-Function: summarizer_baset::summarize
-
-  Inputs:
-
- Outputs:
-
- Purpose: summarize from given entry point
-
-\*******************************************************************/
-
+/// summarize from given entry point
 void summarizer_baset::summarize(const function_namet &function_name)
 {
   exprt precondition=true_exprt(); // initial calling context
@@ -83,18 +63,7 @@ void summarizer_baset::summarize(const function_namet &function_name)
              << " exists already" << eom;
 }
 
-/*******************************************************************\
-
-Function: summarizer_baset::check_call_reachable
-
-  Inputs:
-
- Outputs:
-
- Purpose: returns false if function call is not reachable
-
-\*******************************************************************/
-
+/// returns false if function call is not reachable
 bool summarizer_baset::check_call_reachable(
   const function_namet &function_name,
   local_SSAt &SSA,
@@ -160,19 +129,8 @@ bool summarizer_baset::check_call_reachable(
   return reachable;
 }
 
-/*******************************************************************\
-
-Function: summarizer_baset::compute_calling_context
-
-  Inputs:
-
- Outputs:
-
- Purpose: computes callee preconditions from the calling context
-          for a single function call
-
-\*******************************************************************/
-
+/// computes callee preconditions from the calling context for a single function
+/// call
 exprt summarizer_baset::compute_calling_context(
   const function_namet &function_name,
   local_SSAt &SSA,
@@ -244,18 +202,6 @@ exprt summarizer_baset::compute_calling_context(
   return precondition_call;
 }
 
-/*******************************************************************\
-
-Function: summarizer_baset::get_assertions
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void summarizer_baset::get_assertions(
   const local_SSAt &SSA,
   exprt::operandst &assertions)
@@ -265,18 +211,7 @@ void summarizer_baset::get_assertions(
       assertions.push_back(a);
 }
 
-/*******************************************************************\
-
-Function: summarizer_baset::check_precondition
-
-  Inputs:
-
- Outputs:
-
- Purpose: returns false if the summary needs to be recomputed
-
-\*******************************************************************/
-
+/// returns false if the summary needs to be recomputed
 bool summarizer_baset::check_precondition(
   const function_namet &function_name,
   local_SSAt &SSA,
@@ -386,18 +321,7 @@ bool summarizer_baset::check_precondition(
   return precondition_holds;
 }
 
-/*******************************************************************\
-
-Function: summarizer_baset::check_end_reachable
-
-  Inputs:
-
- Outputs:
-
- Purpose: returns false if the end of the function is not reachable
-
-\*******************************************************************/
-
+/// returns false if the end of the function is not reachable
 bool summarizer_baset::check_end_reachable(
   const function_namet &function_name,
   local_SSAt &SSA,

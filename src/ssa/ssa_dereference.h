@@ -6,6 +6,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+/// \file
+/// Aliasing Decision
+
 #ifndef CPROVER_2LS_SSA_SSA_DEREFERENCE_H
 #define CPROVER_2LS_SSA_SSA_DEREFERENCE_H
 

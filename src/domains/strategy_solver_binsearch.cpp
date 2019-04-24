@@ -6,24 +6,15 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Simplified strategy iteration solver by binary search
+
 #ifdef DEBUG
 #include <iostream>
 #endif
 
 #include "strategy_solver_binsearch.h"
 #include "util.h"
-
-/*******************************************************************\
-
-Function: strategy_solver_binsearcht::iterate
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 {

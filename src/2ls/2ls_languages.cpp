@@ -6,6 +6,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+/// \file
+/// Language Registration
+
 #include <langapi/mode.h>
 
 #include <ansi-c/ansi_c_language.h>
@@ -13,18 +16,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <java_bytecode/java_bytecode_language.h>
 
 #include "2ls_parse_options.h"
-
-/*******************************************************************\
-
-Function: twols_parse_optionst::register_languages
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void twols_parse_optionst::register_languages()
 {

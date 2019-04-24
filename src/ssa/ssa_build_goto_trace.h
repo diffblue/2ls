@@ -6,6 +6,9 @@ Author: Daniel Kroening, Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Traces of GOTO Programs for SSA Models
+
 #ifndef CPROVER_2LS_SSA_SSA_BUILD_GOTO_TRACE_H
 #define CPROVER_2LS_SSA_SSA_BUILD_GOTO_TRACE_H
 

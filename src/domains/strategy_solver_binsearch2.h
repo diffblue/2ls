@@ -7,6 +7,10 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Strategy iteration solver by binary search with optimisation of the
+///   parameter sum
+
 #ifndef CPROVER_2LS_DOMAINS_STRATEGY_SOLVER_BINSEARCH2_H
 #define CPROVER_2LS_DOMAINS_STRATEGY_SOLVER_BINSEARCH2_H
 

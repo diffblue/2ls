@@ -6,6 +6,9 @@ Author: Matej Marusak
 
 \*******************************************************************/
 
+/// \file
+/// Generic strategy solver
+
 #include <ssa/ssa_inliner.h>
 #include "strategy_solver.h"
 #include <goto-symex/adjust_float_expressions.h>

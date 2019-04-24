@@ -6,6 +6,9 @@ Author: Peter Schrammel, Saurabh Joshi
 
 \*******************************************************************/
 
+/// \file
+/// SSA Unwinder Infrastructure
+
 #include <iostream>
 
 #include <limits>
@@ -16,18 +19,6 @@ Author: Peter Schrammel, Saurabh Joshi
 #include <langapi/language_util.h>
 
 #include "unwindable_local_ssa.h"
-
-/*******************************************************************\
-
-Function: unwindable_local_SSAt::increment_unwindings
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void unwindable_local_SSAt::increment_unwindings(int mode)
 {
@@ -50,18 +41,6 @@ void unwindable_local_SSAt::increment_unwindings(int mode)
   }
 }
 
-/*******************************************************************\
-
-Function: unwindable_local_SSAt::decrement_unwindings
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void unwindable_local_SSAt::decrement_unwindings(int mode)
 {
   if(mode==0)
@@ -83,18 +62,6 @@ void unwindable_local_SSAt::decrement_unwindings(int mode)
   }
 }
 
-/*******************************************************************\
-
-Function: unwindable_local_SSAt::odometer_to_string
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 std::string unwindable_local_SSAt::odometer_to_string(
   const odometert &odometer, unsigned level) const
 {
@@ -108,18 +75,7 @@ std::string unwindable_local_SSAt::odometer_to_string(
   return unwind_suffix;
 }
 
-/*******************************************************************\
-
-Function: unwindable_local_SSAt::name
-
-  Inputs:
-
- Outputs:
-
- Purpose: overrides local_SSAt::name to add unwinder suffixes
-
-\*******************************************************************/
-
+/// overrides local_SSAt::name to add unwinder suffixes
 symbol_exprt unwindable_local_SSAt::name(
   const ssa_objectt &object,
   kindt kind,
@@ -144,19 +100,7 @@ symbol_exprt unwindable_local_SSAt::name(
   return s;
 }
 
-/*******************************************************************\
-
-Function: unwindable_local_SSAt::get_def_level
-
-  Inputs:
-
- Outputs:
-
- Purpose: returns the definition level of a variable in the loop
-          hierarchy
-
-\*******************************************************************/
-
+/// returns the definition level of a variable in the loop hierarchy
 unsigned unwindable_local_SSAt::get_def_level(
   locationt def_loc, locationt current_loc) const
 {
@@ -228,18 +172,7 @@ unsigned unwindable_local_SSAt::get_def_level(
   return def_level;
 }
 
-/*******************************************************************\
-
-Function: unwindable_local_SSAt::nondet_symbol
-
-  Inputs:
-
- Outputs:
-
- Purpose: overrides local_SSAt::nondet_symbol to add unwinder suffixes
-
-\*******************************************************************/
-
+/// overrides local_SSAt::nondet_symbol to add unwinder suffixes
 exprt unwindable_local_SSAt::nondet_symbol(
   std::string prefix,
   const typet &type,
@@ -265,18 +198,7 @@ exprt unwindable_local_SSAt::nondet_symbol(
   return s;
 }
 
-/*******************************************************************\
-
-Function: unwindable_local_SSAt::rename
-
-  Inputs:
-
- Outputs:
-
- Purpose: add unwinder suffixes
-
-\*******************************************************************/
-
+/// add unwinder suffixes
 void unwindable_local_SSAt::rename(exprt &expr, locationt current_loc)
 {
   if(expr.id()==ID_symbol)
@@ -321,18 +243,7 @@ void unwindable_local_SSAt::rename(exprt &expr, locationt current_loc)
     rename(*it, current_loc);
 }
 
-/*******************************************************************\
-
-Function: unwindable_local_SSAt::get_ssa_name
-
-  Inputs:
-
- Outputs:
-
- Purpose: retrieve ssa name and location
-
-\*******************************************************************/
-
+/// retrieve ssa name and location
 irep_idt unwindable_local_SSAt::get_ssa_name(
   const symbol_exprt &symbol_expr, locationt &loc) const
 {
@@ -365,18 +276,7 @@ irep_idt unwindable_local_SSAt::get_ssa_name(
   return irep_idt(s.substr(0, pos2));
 }
 
-/*******************************************************************\
-
-Function: unwindable_local_SSAt::get_full_ssa_name
-
-  Inputs:
-
- Outputs:
-
- Purpose: retrieve ssa name, location, and odometer
-
-\*******************************************************************/
-
+/// retrieve ssa name, location, and odometer
 irep_idt unwindable_local_SSAt::get_full_ssa_name(
   const symbol_exprt &symbol_expr,
   locationt &loc,
@@ -399,18 +299,6 @@ irep_idt unwindable_local_SSAt::get_full_ssa_name(
   }
   return get_ssa_name(symbol_expr, loc);
 }
-
-/*******************************************************************\
-
-Function: unwindable_local_SSAt::compute_loop_hierarchy
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void unwindable_local_SSAt::compute_loop_hierarchy()
 {
@@ -463,18 +351,6 @@ void unwindable_local_SSAt::compute_loop_hierarchy()
   }
   while(i_it!=goto_function.body.instructions.begin());
 }
-
-/*******************************************************************\
-
-Function: unwindable_local_SSAt::output_verbose
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void unwindable_local_SSAt::output_verbose(std::ostream &out) const
 {

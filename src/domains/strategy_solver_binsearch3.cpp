@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Full strategy iteration solver by binary search
+
 #ifdef DEBUG
 #include <iostream>
 #endif
@@ -18,18 +21,6 @@ Author: Peter Schrammel
 #include "util.h"
 
 #define SUM_BOUND_VAR "sum_bound#"
-
-/*******************************************************************\
-
-Function: strategy_solver_binsearch3t::iterate
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 bool strategy_solver_binsearch3t::iterate(invariantt &_inv)
 {

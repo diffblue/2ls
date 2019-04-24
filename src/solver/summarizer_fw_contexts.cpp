@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Summarizer for Forward Analysis with Calling Context output
+
 #include <iostream> // for xml output
 
 #include <util/simplify_expr.h>
@@ -28,18 +31,6 @@ Author: Peter Schrammel
 #include <ssa/local_ssa.h>
 #include <ssa/simplify_ssa.h>
 
-/*******************************************************************\
-
-Function: summarizer_fw_contextst::summarize
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void summarizer_fw_contextst::summarize()
 {
   exprt precondition=true_exprt(); // initial calling context
@@ -57,18 +48,6 @@ void summarizer_fw_contextst::summarize()
                << " exists already" << eom;
   }
 }
-
-/*******************************************************************\
-
-Function: summarizer_fw_contextst::inline_summaries
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void summarizer_fw_contextst::inline_summaries(
   const function_namet &function_name,

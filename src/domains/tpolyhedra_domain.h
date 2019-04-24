@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Template polyhedra domain
+
 #ifndef CPROVER_2LS_DOMAINS_TPOLYHEDRA_DOMAIN_H
 #define CPROVER_2LS_DOMAINS_TPOLYHEDRA_DOMAIN_H
 

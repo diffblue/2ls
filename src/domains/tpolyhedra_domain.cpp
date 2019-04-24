@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Template polyhedra domain
+
 #ifdef DEBUG
 #include <iostream>
 #include <langapi/languages.h>
@@ -22,18 +25,6 @@ Author: Peter Schrammel
 #define SYMB_BOUND_VAR "symb_bound#"
 
 #define ENABLE_HEURISTICS
-
-/*******************************************************************\
-
-Function: tpolyhedra_domaint::initialize
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void tpolyhedra_domaint::initialize(valuet &value)
 {
@@ -67,18 +58,6 @@ void tpolyhedra_domaint::set_smt_values(
   value=got_values[0];
 }
 
-/*******************************************************************\
-
-Function: tpolyhedra_domaint::edit_row
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 bool tpolyhedra_domaint::edit_row(const rowt &row, valuet &_inv, bool improved)
 {
     tpolyhedra_domaint::templ_valuet &inv=
@@ -86,18 +65,6 @@ bool tpolyhedra_domaint::edit_row(const rowt &row, valuet &_inv, bool improved)
     set_row_value(row, simplify_const(value), inv);
     return true;
 }
-
-/*******************************************************************\
-
-Function: tpolyhedra_domaint::join
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void tpolyhedra_domaint::join(valuet &value1, const valuet &value2)
 {
@@ -123,18 +90,6 @@ void tpolyhedra_domaint::join(valuet &value1, const valuet &value2)
     }
   }
 }
-
-/*******************************************************************\
-
-Function: tpolyhedra_domaint::between
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 tpolyhedra_domaint::row_valuet tpolyhedra_domaint::between(
   const row_valuet &lower, const row_valuet &upper)
@@ -216,18 +171,6 @@ tpolyhedra_domaint::row_valuet tpolyhedra_domaint::between(
   assert(false); // types do not match or are not supported
 }
 
-/*******************************************************************\
-
-Function: tpolyhedra_domaint::less_than
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 bool tpolyhedra_domaint::less_than(const row_valuet &v1, const row_valuet &v2)
 {
   if(v1.type()==v2.type() &&
@@ -247,18 +190,7 @@ bool tpolyhedra_domaint::less_than(const row_valuet &v1, const row_valuet &v2)
   assert(false); // types do not match or are not supported
 }
 
-/*******************************************************************\
-
-Function: tpolyhedra_domaint::get_row_constraint
-
-  Inputs:
-
- Outputs:
-
- Purpose: pre_guard==> row_expr<=row_value
-
-\*******************************************************************/
-
+/// pre_guard==> row_expr<=row_value
 exprt tpolyhedra_domaint::get_row_constraint(
   const rowt &row,
   const row_valuet &row_value)
@@ -271,18 +203,7 @@ exprt tpolyhedra_domaint::get_row_constraint(
   return binary_relation_exprt(templ[row].expr, ID_le, row_value);
 }
 
-/*******************************************************************\
-
-Function: tpolyhedra_domaint::get_row_pre_constraint
-
-  Inputs:
-
- Outputs:
-
- Purpose: pre_guard==> row_expr<=row_value
-
-\*******************************************************************/
-
+/// pre_guard==> row_expr<=row_value
 exprt tpolyhedra_domaint::get_row_pre_constraint(
   const rowt &row,
   const row_valuet &row_value)
@@ -295,18 +216,7 @@ exprt tpolyhedra_domaint::get_row_pre_constraint(
   return implies_exprt(templ_row.pre_guard, get_row_constraint(row, row_value));
 }
 
-/*******************************************************************\
-
-Function: tpolyhedra_domaint::get_row_pre_constraint
-
-  Inputs:
-
- Outputs:
-
- Purpose: pre_guard==> row_expr<=row_value
-
-\*******************************************************************/
-
+/// pre_guard==> row_expr<=row_value
 exprt tpolyhedra_domaint::get_row_pre_constraint(
   const rowt &row,
   const templ_valuet &value)
@@ -315,18 +225,7 @@ exprt tpolyhedra_domaint::get_row_pre_constraint(
   return get_row_pre_constraint(row, value[row]);
 }
 
-/*******************************************************************\
-
-Function: tpolyhedra_domaint::get_row_post_constraint
-
-  Inputs:
-
- Outputs:
-
- Purpose: row_expr<=row_value
-
-\*******************************************************************/
-
+/// row_expr<=row_value
 exprt tpolyhedra_domaint::get_row_post_constraint(
   const rowt &row,
   const row_valuet &row_value)
@@ -375,18 +274,7 @@ exprt tpolyhedra_domaint::get_row_post_constraint(
   return c;
 }
 
-/*******************************************************************\
-
- Function: tpolyhedra_domaint::get_row_post_constraint
-
-   Inputs:
-
-  Outputs:
-
-  Purpose: row_expr<=row_value
-
-\*******************************************************************/
-
+/// row_expr<=row_value
 exprt tpolyhedra_domaint::get_row_post_constraint(
   const rowt &row,
   const templ_valuet &value)
@@ -395,18 +283,7 @@ exprt tpolyhedra_domaint::get_row_post_constraint(
   return get_row_post_constraint(row, value[row]);
 }
 
-/*******************************************************************\
-
- Function: tpolyhedra_domaint::to_pre_constraints
-
-   Inputs:
-
-  Outputs:
-
-  Purpose: /\_all_rows ( pre_guard==> (row_expr<=row_value) )
-
-\*******************************************************************/
-
+/// /\_all_rows ( pre_guard==> (row_expr<=row_value) )
 exprt tpolyhedra_domaint::to_pre_constraints(valuet &_value)
 {
   tpolyhedra_domaint::templ_valuet &value=
@@ -420,19 +297,8 @@ exprt tpolyhedra_domaint::to_pre_constraints(valuet &_value)
   return conjunction(c);
 }
 
-/*******************************************************************\
-
- Function: tpolyhedra_domaint::make_not_post_constraints
-
-   Inputs:
-
-  Outputs:
-
-  Purpose: for all rows !(post_guard==> (row_expr<=row_value))
-           to be connected disjunctively
-
-\*******************************************************************/
-
+/// for all rows !(post_guard==> (row_expr<=row_value)) to be connected
+/// disjunctively
 void tpolyhedra_domaint::make_not_post_constraints(
   valuet &_value,
   exprt::operandst &cond_exprs)
@@ -455,18 +321,7 @@ void tpolyhedra_domaint::make_not_post_constraints(
   }
 }
 
-/*******************************************************************\
-
- Function: tpolyhedra_domaint::get_row_symb_value
-
-   Inputs:
-
-  Outputs:
-
-  Purpose: generates symbolic value symbol
-
-\*******************************************************************/
-
+/// generates symbolic value symbol
 symbol_exprt tpolyhedra_domaint::get_row_symb_value(const rowt &row)
 {
   assert(row<templ.size());
@@ -475,18 +330,7 @@ symbol_exprt tpolyhedra_domaint::get_row_symb_value(const rowt &row)
     i2string(row), templ[row].expr.type());
 }
 
-/*******************************************************************\
-
- Function: tpolyhedra_domaint::get_row_symb_pre_constraint
-
-   Inputs:
-
-  Outputs:
-
-  Purpose: pre_guard==> (row_expr<=symb_value)
-
-\*******************************************************************/
-
+/// pre_guard==> (row_expr<=symb_value)
 exprt tpolyhedra_domaint::get_row_symb_pre_constraint(
   const rowt &row,
   const row_valuet &row_value)
@@ -500,18 +344,7 @@ exprt tpolyhedra_domaint::get_row_symb_pre_constraint(
     binary_relation_exprt(templ_row.expr, ID_le, get_row_symb_value(row)));
 }
 
-/*******************************************************************\
-
- Function: tpolyhedra_domaint::get_row_symb_post_constraint
-
-   Inputs:
-
-  Outputs:
-
-  Purpose: post_guard && (row_expr >= row_symb_value)  (!!!)
-
-\*******************************************************************/
-
+/// post_guard && (row_expr >= row_symb_value)  (!!!)
 exprt tpolyhedra_domaint::get_row_symb_post_constraint(const rowt &row)
 {
   assert(row<templ.size());
@@ -527,18 +360,7 @@ exprt tpolyhedra_domaint::get_row_symb_post_constraint(const rowt &row)
   return and_exprt(templ_row.aux_expr, c);
 }
 
-/*******************************************************************\
-
- Function: tpolyhedra_domaint::to_symb_pre_constraints
-
-   Inputs:
-
-  Outputs:
-
-  Purpose: pre_guard==> (row_expr<=symb_row_value)
-
-\*******************************************************************/
-
+/// pre_guard==> (row_expr<=symb_row_value)
 exprt tpolyhedra_domaint::to_symb_pre_constraints(const templ_valuet &value)
 {
   assert(value.size()==templ.size());
@@ -550,18 +372,7 @@ exprt tpolyhedra_domaint::to_symb_pre_constraints(const templ_valuet &value)
   return conjunction(c);
 }
 
-/*******************************************************************\
-
- Function: tpolyhedra_domaint::to_symb_pre_constraints
-
-   Inputs:
-
-  Outputs:
-
-  Purpose: pre_guard==> (row_expr<=symb_row_value)
-
-\*******************************************************************/
-
+/// pre_guard==> (row_expr<=symb_row_value)
 exprt tpolyhedra_domaint::to_symb_pre_constraints(
   const templ_valuet &value,
   const std::set<rowt> &symb_rows)
@@ -578,18 +389,7 @@ exprt tpolyhedra_domaint::to_symb_pre_constraints(
   return conjunction(c);
 }
 
-/*******************************************************************\
-
- Function: tpolyhedra_domaint::to_symb_post_constraints
-
-   Inputs:
-
-  Outputs:
-
-  Purpose: /\_i post_guard==> (row_expr >= symb_row_value)
-
-\*******************************************************************/
-
+/// /\_i post_guard==> (row_expr >= symb_row_value)
 exprt tpolyhedra_domaint::to_symb_post_constraints(
   const std::set<rowt> &symb_rows)
 {
@@ -601,18 +401,7 @@ exprt tpolyhedra_domaint::to_symb_post_constraints(
   return conjunction(c);
 }
 
-/*******************************************************************\
-
- Function: tpolyhedra_domaint::get_row_symb_value_constraint
-
-   Inputs:
-
-  Outputs:
-
-  Purpose: row_value_value<=symb_row
-
-\*******************************************************************/
-
+/// row_value_value<=symb_row
 exprt tpolyhedra_domaint::get_row_symb_value_constraint(
   const rowt &row,
   const row_valuet &row_value,
@@ -630,18 +419,6 @@ exprt tpolyhedra_domaint::get_row_symb_value_constraint(
 }
 
 
-/*******************************************************************\
-
- Function: tpolyhedra_domaint::get_row_value
-
-   Inputs:
-
-  Outputs:
-
-  Purpose:
-
-\*******************************************************************/
-
 tpolyhedra_domaint::row_valuet tpolyhedra_domaint::get_row_value(
   const rowt &row,
   const templ_valuet &value)
@@ -650,18 +427,6 @@ tpolyhedra_domaint::row_valuet tpolyhedra_domaint::get_row_value(
   assert(value.size()==templ.size());
   return value[row];
 }
-
-/*******************************************************************\
-
- Function: tpolyhedra_domaint::project_on_vars
-
-   Inputs:
-
-  Outputs:
-
-  Purpose:
-
-\*******************************************************************/
 
 void tpolyhedra_domaint::project_on_vars(
   valuet &value,
@@ -706,18 +471,6 @@ void tpolyhedra_domaint::project_on_vars(
   result=conjunction(c);
 }
 
-/*******************************************************************\
-
- Function: tpolyhedra_domaint::set_row_value
-
-   Inputs:
-
-  Outputs:
-
-  Purpose:
-
-\*******************************************************************/
-
 void tpolyhedra_domaint::set_row_value(
   const rowt &row,
   const tpolyhedra_domaint::row_valuet &row_value,
@@ -727,18 +480,6 @@ void tpolyhedra_domaint::set_row_value(
   assert(value.size()==templ.size());
   value[row]=row_value;
 }
-
-/*******************************************************************\
-
- Function: tpolyhedra_domaint::get_max_row_value
-
-   Inputs:
-
-  Outputs:
-
-  Purpose:
-
-\*******************************************************************/
 
 tpolyhedra_domaint::row_valuet tpolyhedra_domaint::get_max_row_value(
   const tpolyhedra_domaint::rowt &row)
@@ -761,18 +502,6 @@ tpolyhedra_domaint::row_valuet tpolyhedra_domaint::get_max_row_value(
   assert(false); // type not supported
 }
 
-/*******************************************************************\
-
- Function: tpolyhedra_domaint::get_min_row_value
-
-   Inputs:
-
-  Outputs:
-
-  Purpose:
-
-\*******************************************************************/
-
 tpolyhedra_domaint::row_valuet tpolyhedra_domaint::get_min_row_value(
   const tpolyhedra_domaint::rowt &row)
 {
@@ -793,18 +522,6 @@ tpolyhedra_domaint::row_valuet tpolyhedra_domaint::get_min_row_value(
   }
   assert(false); // type not supported
 }
-
-/*******************************************************************\
-
- Function: tpolyhedra_domaint::output_value
-
-   Inputs:
-
-  Outputs:
-
-  Purpose:
-
-\*******************************************************************/
 
 void tpolyhedra_domaint::output_value(
   std::ostream &out,
@@ -838,18 +555,6 @@ void tpolyhedra_domaint::output_value(
   }
 }
 
-/*******************************************************************\
-
- Function: tpolyhedra_domaint::output_domain
-
-   Inputs:
-
-  Outputs:
-
-  Purpose:
-
-\*******************************************************************/
-
 void tpolyhedra_domaint::output_domain(
   std::ostream &out,
   const namespacet &ns) const
@@ -882,34 +587,10 @@ void tpolyhedra_domaint::output_domain(
   }
 }
 
-/*******************************************************************\
-
- Function: tpolyhedra_domaint::template_size
-
-   Inputs:
-
-  Outputs:
-
-  Purpose:
-
-\*******************************************************************/
-
 unsigned tpolyhedra_domaint::template_size()
 {
   return templ.size();
 }
-
-/*******************************************************************\
-
- Function: tpolyhedra_domaint::is_row_value_neginf
-
-   Inputs:
-
-  Outputs:
-
-  Purpose:
-
-\*******************************************************************/
 
 bool tpolyhedra_domaint::is_row_value_neginf(
   const row_valuet & row_value) const
@@ -917,36 +598,13 @@ bool tpolyhedra_domaint::is_row_value_neginf(
   return row_value.get(ID_value)==ID_false;
 }
 
-/*******************************************************************\
-
- Function: tpolyhedra_domaint::is_row_value_inf
-
-   Inputs:
-
-  Outputs:
-
-  Purpose:
-
-\*******************************************************************/
-
 bool tpolyhedra_domaint::is_row_value_inf(const row_valuet & row_value) const
 {
   return row_value.get(ID_value)==ID_true;
 }
 
-/*******************************************************************\
-
- Function: tpolyhedra_domaint::rename_for_row
-
-   Inputs:
-
-  Outputs:
-
-  Purpose: add row suffix to non-symbolic-bound variables in expression
-           (required for strategy iteration (binsearch3))
-
-\*******************************************************************/
-
+/// add row suffix to non-symbolic-bound variables in expression (required for
+/// strategy iteration (binsearch3))
 void tpolyhedra_domaint::rename_for_row(exprt &expr, const rowt &row)
 {
   if(row==0)
@@ -963,18 +621,6 @@ void tpolyhedra_domaint::rename_for_row(exprt &expr, const rowt &row)
   for(std::size_t i=0; i<expr.operands().size(); ++i)
     rename_for_row(expr.operands()[i], row);
 }
-
-/*******************************************************************\
-
- Function: tpolyhedra_domaint::add_template_row
-
-   Inputs:
-
-  Outputs:
-
-  Purpose:
-
-\*******************************************************************/
 
 tpolyhedra_domaint::template_rowt &tpolyhedra_domaint::add_template_row(
   const exprt& expr,
@@ -995,18 +641,7 @@ tpolyhedra_domaint::template_rowt &tpolyhedra_domaint::add_template_row(
   return templ_row;
 }
 
-/*******************************************************************\
-
- Function: tpolyhedra_domaint::add_interval_template
-
-   Inputs:
-
-  Outputs:
-
-  Purpose: +-x<=c
-
-\*******************************************************************/
-
+/// +-x<=c
 void tpolyhedra_domaint::add_interval_template(
   const var_specst &var_specs,
   const namespacet &ns)
@@ -1039,18 +674,7 @@ void tpolyhedra_domaint::add_interval_template(
   }
 }
 
-/*******************************************************************\
-
- Function: tpolyhedra_domaint::add_difference_template
-
-   Inputs:
-
-  Outputs:
-
-  Purpose: x+-y<=c
-
-\*******************************************************************/
-
+/// x+-y<=c
 void tpolyhedra_domaint::add_difference_template(
   const var_specst &var_specs,
   const namespacet &ns)
@@ -1116,18 +740,7 @@ void tpolyhedra_domaint::add_difference_template(
   }
 }
 
-/*******************************************************************\
-
- Function: tpolyhedra_domaint::add_quadratic_template
-
-   Inputs:
-
-  Outputs:
-
-  Purpose: +-x^2<=c
-
-\*******************************************************************/
-
+/// +-x^2<=c
 void tpolyhedra_domaint::add_quadratic_template(
   const var_specst &var_specs,
   const namespacet &ns)
@@ -1158,18 +771,7 @@ void tpolyhedra_domaint::add_quadratic_template(
   }
 }
 
-/*******************************************************************\
-
-Function: tpolyhedra_domaint::add_sum_template
-
-  Inputs:
-
- Outputs:
-
- Purpose: x+y<=c, -x-y<=c
-
-\*******************************************************************/
-
+/// x+y<=c, -x-y<=c
 void tpolyhedra_domaint::add_sum_template(
   const var_specst &var_specs,
   const namespacet &ns)

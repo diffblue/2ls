@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Summary Checker Base
+
 #include <iostream>
 
 #include <util/options.h>
@@ -39,18 +42,6 @@ Author: Peter Schrammel
 
 #include "summary_checker_base.h"
 
-/*******************************************************************\
-
-Function: summary_checker_baset::SSA_functions
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void summary_checker_baset::SSA_functions(
   const goto_modelt &goto_model,
   const namespacet &ns,
@@ -81,18 +72,6 @@ void summary_checker_baset::SSA_functions(
   // properties
   initialize_property_map(goto_model.goto_functions);
 }
-
-/*******************************************************************\
-
-Function: summary_checker_baset::summarize
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void summary_checker_baset::summarize(
   const goto_modelt &goto_model,
@@ -139,18 +118,6 @@ void summary_checker_baset::summarize(
 
   delete summarizer;
 }
-/*******************************************************************\
-
-Function: summary_checker_baset::check_properties
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 summary_checker_baset::resultt summary_checker_baset::check_properties()
 {
   // analyze all the functions
@@ -187,18 +154,6 @@ summary_checker_baset::resultt summary_checker_baset::check_properties()
 
   return result;
 }
-
-/*******************************************************************\
-
-Function: summary_checker_baset::check_properties
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void summary_checker_baset::check_properties(
   const ssa_dbt::functionst::const_iterator f_it)
@@ -358,18 +313,6 @@ void summary_checker_baset::check_properties(
           << cover_goals.iterations() << " iterations)" << eom;
 }
 
-/*******************************************************************\
-
-Function: summary_checker_baset::report_statistics
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void summary_checker_baset::report_statistics()
 {
   for(ssa_dbt::functionst::const_iterator f_it=ssa_db.functions().begin();
@@ -390,18 +333,6 @@ void summary_checker_baset::report_statistics()
                << termargs_computed << eom;
   statistics() << eom;
 }
-
-/*******************************************************************\
-
-Function: summary_checker_baset::do_show_vcc
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void summary_checker_baset::do_show_vcc(
   const local_SSAt &SSA,
@@ -427,19 +358,8 @@ void summary_checker_baset::do_show_vcc(
   std::cout << "\n";
 }
 
-/*******************************************************************\
-
-Function: summary_checker_baset::get_loophead_selects
-
-  Inputs:
-
- Outputs:
-
- Purpose: returns the select guards at the loop heads
-          in order to check whether a countermodel is spurious
-
-\*******************************************************************/
-
+/// returns the select guards at the loop heads in order to check whether a
+/// countermodel is spurious
 exprt::operandst summary_checker_baset::get_loophead_selects(
   const irep_idt &function_name,
   const local_SSAt &SSA, prop_convt &solver)
@@ -471,19 +391,8 @@ exprt::operandst summary_checker_baset::get_loophead_selects(
   return loophead_selects;
 }
 
-/*******************************************************************\
-
-Function: summary_checker_baset::get_loop_continues
-
-  Inputs:
-
- Outputs:
-
- Purpose: returns the loop continuation guards at the end of the
-          loops in order to check whether we can unroll further
-
-\*******************************************************************/
-
+/// returns the loop continuation guards at the end of the loops in order to
+/// check whether we can unroll further
 exprt::operandst summary_checker_baset::get_loop_continues(
   const irep_idt &function_name,
   const local_SSAt &SSA, prop_convt &solver)
@@ -514,18 +423,7 @@ exprt::operandst summary_checker_baset::get_loop_continues(
   return loop_continues;
 }
 
-/*******************************************************************\
-
-Function: summary_checker_baset::is_fully_unwound
-
-  Inputs:
-
- Outputs:
-
- Purpose: checks whether the loops have been fully unwound
-
-\*******************************************************************/
-
+/// checks whether the loops have been fully unwound
 bool summary_checker_baset::is_fully_unwound(
   const exprt::operandst &loop_continues,
   const exprt::operandst &loophead_selects,
@@ -556,18 +454,7 @@ bool summary_checker_baset::is_fully_unwound(
   }
 }
 
-/*******************************************************************\
-
-Function: summary_checker_baset::is_spurious
-
-  Inputs:
-
- Outputs:
-
- Purpose: checks whether a countermodel is spurious
-
-\*******************************************************************/
-
+/// checks whether a countermodel is spurious
 bool summary_checker_baset::is_spurious(
   const exprt::operandst &loophead_selects,
   incremental_solvert &solver)
@@ -607,19 +494,8 @@ bool summary_checker_baset::is_spurious(
   }
 }
 
-/*******************************************************************\
-
-Function: summary_checker_baset::instrument_and_output
-
-  Inputs:
-
- Outputs:
-
- Purpose: instruments the code with the inferred information
-          and outputs it to a goto-binary
-
-\*******************************************************************/
-
+/// instruments the code with the inferred information and outputs it to a goto-
+/// binary
 void summary_checker_baset::instrument_and_output(goto_modelt &goto_model)
 {
   instrument_gotot instrument_goto(options, ssa_db, summary_db);

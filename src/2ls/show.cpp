@@ -6,6 +6,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+/// \file
+/// Showing various debugging information
+
 #include <util/options.h>
 #include <util/find_symbols.h>
 #include <util/i2string.h>
@@ -26,18 +29,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "show.h"
 
-/*******************************************************************\
-
-Function: show_assignments
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void show_assignments(
   const goto_functionst::goto_functiont &goto_function,
   const namespacet &ns,
@@ -54,18 +45,6 @@ void show_assignments(
     heap_analysis);
   assignments.output(ns, goto_function.body, out);
 }
-
-/*******************************************************************\
-
-Function: show_assignments
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void show_assignments(
   const goto_modelt &goto_model,
@@ -98,18 +77,6 @@ void show_assignments(
     }
   }
 }
-
-/*******************************************************************\
-
-Function: show_defs
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void show_defs(
   const goto_functionst::goto_functiont &goto_function,
@@ -130,18 +97,6 @@ void show_defs(
   ssa_analysis.output(ns, goto_function.body, out);
 }
 
-/*******************************************************************\
-
-Function: show_defs
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void show_defs(
   const goto_modelt &goto_model,
   const irep_idt &function,
@@ -174,18 +129,6 @@ void show_defs(
   }
 }
 
-/*******************************************************************\
-
-Function: show_guards
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void show_guards(
   const goto_functionst::goto_functiont &goto_function,
   const namespacet &ns,
@@ -194,18 +137,6 @@ void show_guards(
   guard_mapt guard_map(goto_function.body);
   guard_map.output(goto_function.body, out);
 }
-
-/*******************************************************************\
-
-Function: show_guards
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void show_guards(
   const goto_modelt &goto_model,
@@ -237,18 +168,6 @@ void show_guards(
   }
 }
 
-/*******************************************************************\
-
-Function: show_ssa
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void show_ssa(
   const goto_functionst::goto_functiont &goto_function,
   const ssa_heap_analysist &heap_analysis,
@@ -264,18 +183,6 @@ void show_ssa(
     ::simplify(local_SSA, ns);
   local_SSA.output_verbose(out);
 }
-
-/*******************************************************************\
-
-Function: show_ssa
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void show_ssa(
   const goto_modelt &goto_model,
@@ -315,18 +222,6 @@ void show_ssa(
   }
 }
 
-/*******************************************************************\
-
-Function: print_symbol_values
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void print_symbol_values(
   const local_SSAt &SSA,
   prop_convt &solver,
@@ -345,18 +240,6 @@ void print_symbol_values(
     print_symbol_values(SSA, solver, out, *it);
   }
 }
-
-/*******************************************************************\
-
-Function: show_raw_countermodel
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void show_raw_countermodel(
   const irep_idt &property_id,
@@ -390,18 +273,6 @@ void show_raw_countermodel(
   out << "\n";
 }
 
-/*******************************************************************\
-
-Function: find_loc_by_guard
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 local_SSAt::locationt find_loc_by_guard(
   const local_SSAt &SSA,
   const symbol_exprt &guard)
@@ -412,18 +283,6 @@ local_SSAt::locationt find_loc_by_guard(
   unsigned n=safe_string2unsigned(gstr.substr(pos1, pos2));
   return SSA.get_location(n);
 }
-
-/*******************************************************************\
-
-Function: purify_identifiers
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void purify_identifiers(exprt &expr)
 {
@@ -437,18 +296,6 @@ void purify_identifiers(exprt &expr)
     purify_identifiers(expr.operands()[i]);
   }
 }
-
-/*******************************************************************\
-
-Function: show_invariant
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void show_invariant(
   const local_SSAt &SSA,
@@ -475,18 +322,6 @@ void show_invariant(
   purify_identifiers(inv);
   out << "  " << from_expr(SSA.ns, "", inv) << "\n";
 }
-
-/*******************************************************************\
-
-Function: show_invariants
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void show_invariants(
   const local_SSAt &SSA,
@@ -515,18 +350,6 @@ void show_invariants(
     assert(false);
 }
 
-
-/*******************************************************************\
-
-Function: show_ssa_symbols
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void show_ssa_symbols(
   const local_SSAt &SSA,
@@ -564,18 +387,6 @@ void show_ssa_symbols(
   out << "\n";
 }
 
-/*******************************************************************\
-
-Function: show_value_set
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void show_value_set(
   const goto_functionst::goto_functiont &goto_function,
   const namespacet &ns,
@@ -586,18 +397,6 @@ void show_value_set(
   ssa_value_ait ssa_value_ai(goto_function, ns, heap_analysis);
   ssa_value_ai.output(ns, goto_function, out);
 }
-
-/*******************************************************************\
-
-Function: show_value_sets
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void show_value_sets(
   const goto_modelt &goto_model,

@@ -7,6 +7,9 @@ Author: Viktor Malik
 
 \*******************************************************************/
 
+/// \file
+/// Strategy solver for combination of shape and template polyhedra domains.
+
 #ifndef CPROVER_2LS_DOMAINS_STRATEGY_SOLVER_HEAP_TPOLYHEDRA_H
 #define CPROVER_2LS_DOMAINS_STRATEGY_SOLVER_HEAP_TPOLYHEDRA_H
 

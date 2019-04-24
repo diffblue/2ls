@@ -5,6 +5,9 @@ Module: Library of functions for working with pointed objects
 Author: Viktor Malik
 
 \*******************************************************************/
+/// \file
+/// Library of functions for working with pointed objects
+
 #ifndef CPROVER_2LS_SSA_SSA_POINTED_OBJECTS_H
 #define CPROVER_2LS_SSA_SSA_POINTED_OBJECTS_H
 

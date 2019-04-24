@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// SSA Analyzer
+
 #ifdef DEBUG
 #include <iostream>
 #endif
@@ -43,18 +46,6 @@ Author: Peter Schrammel
 #define BINSEARCH_SOLVER strategy_solver_binsearch3t(\
   *static_cast<tpolyhedra_domaint *>(domain), solver, SSA, SSA.ns)
 #endif
-
-/*******************************************************************\
-
-Function: ssa_analyzert::operator()
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void ssa_analyzert::operator()(
   incremental_solvert &solver,
@@ -204,34 +195,11 @@ void ssa_analyzert::operator()(
   delete s_solver;
 }
 
-/*******************************************************************\
-
-Function: ssa_analyzert::get_result
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void ssa_analyzert::get_result(exprt &_result, const domaint::var_sett &vars)
 {
   domain->project_on_vars(*result, vars, _result);
 }
 
-/*******************************************************************\
-
-Function: ssa_analyzert::update_heap_out
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 void ssa_analyzert::update_heap_out(summaryt::var_sett &out)
 {
   heap_domaint &heap_domain=static_cast<heap_domaint &>(*domain);
@@ -240,17 +208,6 @@ void ssa_analyzert::update_heap_out(summaryt::var_sett &out)
   out.insert(new_heap_vars.begin(), new_heap_vars.end());
 }
 
-/*******************************************************************\
-
-Function: ssa_analyzert::input_heap_bindings
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 const exprt ssa_analyzert::input_heap_bindings()
 {
   return static_cast<heap_domaint &>(*domain).get_iterator_bindings();

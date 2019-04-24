@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Full strategy iteration solver by binary search
+
 #ifndef CPROVER_2LS_DOMAINS_STRATEGY_SOLVER_BINSEARCH3_H
 #define CPROVER_2LS_DOMAINS_STRATEGY_SOLVER_BINSEARCH3_H
 

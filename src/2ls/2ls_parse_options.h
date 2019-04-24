@@ -6,6 +6,9 @@ Author: Daniel Kroening, Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// 2LS Command Line Parsing
+
 #ifndef CPROVER_2LS_2LS_2LS_PARSE_OPTIONS_H
 #define CPROVER_2LS_2LS_2LS_PARSE_OPTIONS_H
 

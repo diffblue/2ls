@@ -6,6 +6,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+/// \file
+/// Discover the Guards of Basic Blocks
+
 #ifndef CPROVER_2LS_SSA_GUARD_MAP_H
 #define CPROVER_2LS_SSA_GUARD_MAP_H
 

@@ -6,6 +6,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+/// \file
+/// Canonize addresses of objects
+
 #include <ansi-c/c_types.h>
 
 #include <util/std_expr.h>
@@ -13,18 +16,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "address_canonizer.h"
 #include "ssa_pointed_objects.h"
-
-/*******************************************************************\
-
-Function: address_canonizer
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 exprt address_canonizer(
   const exprt &address,

@@ -6,6 +6,9 @@ Author: Viktor Malik, imalik@fit.vutbr.cz
 
 \*******************************************************************/
 
+/// \file
+/// May-alias analysis for a single function
+
 #ifndef CPROVER_2LS_SSA_MAY_ALIAS_ANALYSIS_H
 #define CPROVER_2LS_SSA_MAY_ALIAS_ANALYSIS_H
 

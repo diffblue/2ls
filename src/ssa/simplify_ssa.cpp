@@ -6,21 +6,12 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+/// \file
+/// SSA Simplification
+
 #include <util/simplify_expr.h>
 
 #include "simplify_ssa.h"
-
-/*******************************************************************\
-
-Function: simplify
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void simplify(local_SSAt &ssa, const namespacet &ns)
 {

@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Lexicographic linear ranking function domain
+
 #ifdef DEBUG
 #include <iostream>
 #endif
@@ -27,18 +30,6 @@ Author: Peter Schrammel
 
 #define COEFF_C_SIZE 10
 #define MAX_REFINEMENT 2
-
-/*******************************************************************\
-
-Function: lexlinrank_domaint::initialize
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void lexlinrank_domaint::initialize(valuet &value)
 {
@@ -201,35 +192,11 @@ void lexlinrank_domaint::set_smt_values(
     values.push_back(std::make_pair(got_values[i], got_values[i+1]));
 }
 
-/*******************************************************************\
-
-Function: lexlinrank_domaint::handle_unsat
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 bool lexlinrank_domaint::handle_unsat(valuet &value, bool improved)
 {
   reset_refinements();
   return improved;
 }
-
-/*******************************************************************\
-
-Function: lexlinrank_domaint::refine
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 bool lexlinrank_domaint::refine()
 {
@@ -239,34 +206,10 @@ bool lexlinrank_domaint::refine()
   return true;
 }
 
-/*******************************************************************\
-
-Function: lexlinrank_domaint::reset_refinements
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void lexlinrank_domaint::reset_refinements()
 {
   refinement_level=0;
 }
-
-/*******************************************************************\
-
-Function: lexlinrank_domaint::make_not_post_constraints
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void lexlinrank_domaint::make_not_post_constraints(
   valuet &_value,
@@ -412,18 +355,6 @@ for(std::size_t row=0; row<templ.size(); row++)
     }
   }
 }
-
-/*******************************************************************\
-
-Function: lexlinrank_domaint::get_row_symb_constraint
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 exprt lexlinrank_domaint::get_row_symb_constraint(
   row_valuet &symb_values, // contains vars c and d
@@ -595,18 +526,6 @@ exprt lexlinrank_domaint::get_row_symb_constraint(
   return dd;
 }
 
-/*******************************************************************\
-
-Function: lexlinrank_domaint::get_row_value
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 lexlinrank_domaint::row_valuet lexlinrank_domaint::get_row_value(
   const rowt &row,
   const templ_valuet &value)
@@ -615,18 +534,6 @@ lexlinrank_domaint::row_valuet lexlinrank_domaint::get_row_value(
   assert(value.size()==templ.size());
   return value[row];
 }
-
-/*******************************************************************\
-
-Function: lexlinrank_domaint::set_row_value
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void lexlinrank_domaint::set_row_value(
   const rowt &row,
@@ -638,18 +545,6 @@ void lexlinrank_domaint::set_row_value(
   value[row]=row_value;
 }
 
-/*******************************************************************\
-
-Function: lexlinrank_domaint::set_row_value_to_true
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void lexlinrank_domaint::set_row_value_to_true(
   const rowt &row,
   templ_valuet &value)
@@ -660,18 +555,6 @@ void lexlinrank_domaint::set_row_value_to_true(
   value[row][0].c.resize(1);
   value[row][0].c[0]=true_exprt();
 }
-
-/*******************************************************************\
-
-Function: lexlinrank_domaint::output_value
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void lexlinrank_domaint::output_value(
   std::ostream &out,
@@ -706,18 +589,6 @@ void lexlinrank_domaint::output_value(
   }
 }
 
-/*******************************************************************\
-
-Function: lexlinrank_domaint::output_domain
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void lexlinrank_domaint::output_domain(
   std::ostream &out,
   const namespacet &ns) const
@@ -745,18 +616,6 @@ void lexlinrank_domaint::output_domain(
     out << std::endl;
   }
 }
-
-/*******************************************************************\
-
-Function: lexlinrank_domaint::project_on_vars
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void lexlinrank_domaint::project_on_vars(
   valuet &value,
@@ -865,18 +724,7 @@ void lexlinrank_domaint::project_on_vars(
   adjust_float_expressions(result, ns);
 }
 
-/*******************************************************************\
-
-Function: lexlinrank_domaint::add_template
-
-  Inputs:
-
- Outputs:
-
- Purpose: This is called for each loop.
-
-\*******************************************************************/
-
+/// This is called for each loop.
 void lexlinrank_domaint::add_template(
   const var_specst &var_specs,
   const namespacet &ns)
@@ -916,18 +764,6 @@ void lexlinrank_domaint::add_template(
   templ_row.post_guard=conjunction(postg);
 }
 
-/*******************************************************************\
-
-Function: lexlinrank_domaint::is_row_value_false
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 bool lexlinrank_domaint::is_row_value_false(
   const row_valuet & row_value) const
 {
@@ -935,18 +771,6 @@ bool lexlinrank_domaint::is_row_value_false(
   assert(row_value[0].c.size()>=1);
   return row_value[0].c[0].get(ID_value)==ID_false;
 }
-
-/*******************************************************************\
-
-Function: lexlinrank_domaint::is_row_element_value_false
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 bool lexlinrank_domaint::is_row_element_value_false(
   const row_value_elementt & row_value_element) const
@@ -956,36 +780,12 @@ bool lexlinrank_domaint::is_row_element_value_false(
   return row_value_element.c[0].get(ID_value)==ID_false;
 }
 
-/*******************************************************************\
-
-Function: lexlinrank_domaint::is_row_value_true
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 bool lexlinrank_domaint::is_row_value_true(const row_valuet & row_value) const
 {
   assert(row_value.size()>=1);
   assert(row_value[0].c.size()>=1);
   return row_value[0].c[0].get(ID_value)==ID_true;
 }
-
-/*******************************************************************\
-
-Function: lexlinrank_domaint::is_row_element_value_true
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 bool lexlinrank_domaint::is_row_element_value_true(
   const row_value_elementt & row_value_element) const
@@ -994,18 +794,6 @@ bool lexlinrank_domaint::is_row_element_value_true(
   assert(row_value_element.c.size()>=1);
   return row_value_element.c[0].get(ID_value)==ID_true;
 }
-
-/*******************************************************************\
-
-Function: lexlinrank_domaint::add_element
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void lexlinrank_domaint::add_element(
   const rowt &row,

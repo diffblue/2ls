@@ -6,6 +6,9 @@ Author: Viktor Malik
 
 \*******************************************************************/
 
+/// \file
+/// Symbolic path in a program
+
 #ifndef CPROVER_2LS_DOMAINS_SYMBOLIC_PATH_H
 #define CPROVER_2LS_DOMAINS_SYMBOLIC_PATH_H
 

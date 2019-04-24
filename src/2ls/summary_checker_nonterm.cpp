@@ -6,6 +6,9 @@ Author: Stefan Marticek
 
 \*******************************************************************/
 
+/// \file
+/// Summarizer for Nontermination Bit-level analysis
+
 #include "summary_checker_nonterm.h"
 
 #include <util/i2string.h>
@@ -16,18 +19,6 @@ Author: Stefan Marticek
 #include <2ls/show.h>
 
 #include <limits>
-
-/*******************************************************************\
-
-Function: summary_checker_nontermt::operator()
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 property_checkert::resultt summary_checker_nontermt::operator()(
   const goto_modelt &goto_model)
@@ -84,18 +75,7 @@ property_checkert::resultt summary_checker_nontermt::operator()(
   return result;
 }
 
-/*******************************************************************\
-
-Function: summary_checker_baset::check_properties
-
-  Inputs:
-
- Outputs:
-
- Purpose: checks the property loop instead of assertion
-
-\*******************************************************************/
-
+/// checks the property loop instead of assertion
 void summary_checker_nontermt::check_properties(
   const ssa_dbt::functionst::const_iterator f_it)
 {
@@ -224,18 +204,7 @@ void summary_checker_nontermt::check_properties(
            << messaget::eom;
 }
 
-/*******************************************************************\
-
-Function: summary_checker_baset::check_properties_linear
-
-  Inputs:
-
- Outputs:
-
- Purpose: searching for periodical recurrence set
-
-\*******************************************************************/
-
+/// searching for periodical recurrence set
 void summary_checker_nontermt::check_properties_linear(
   const ssa_dbt::functionst::const_iterator f_it)
 {
@@ -594,18 +563,6 @@ void summary_checker_nontermt::check_properties_linear(
   }
   solver.pop_context();
 }
-
-/*******************************************************************\
-
-Function: summary_checker_nontermt::check_nonterm_linear
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 summary_checker_baset::resultt summary_checker_nontermt::check_nonterm_linear()
 {

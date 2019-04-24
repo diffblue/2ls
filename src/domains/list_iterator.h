@@ -7,6 +7,9 @@ Author: Viktor Malik
 
 \*******************************************************************/
 
+/// \file
+/// List iterator - abstraction for iterative access to a linked list.
+
 #ifndef CPROVER_2LS_DOMAINS_LIST_ITERATOR_H
 #define CPROVER_2LS_DOMAINS_LIST_ITERATOR_H
 

@@ -6,21 +6,12 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// SSA CFA extension for GraphML output
+
 #include "graphml_witness_ext.h"
 
-/*******************************************************************\
-
-Function: graphml_witness_extt::operator()
-
-  Inputs:
-
- Outputs:
-
- Purpose: proof witness
-          TODO: works only for inlined programs
-
-\*******************************************************************/
-
+/// proof witness TODO: works only for inlined programs
 void graphml_witness_extt::operator()(
   const summary_checker_baset &summary_checker)
 {
@@ -73,18 +64,6 @@ void graphml_witness_extt::operator()(
   }
 }
 
-/*******************************************************************\
-
-Function: graphml_witness_extt::add_node
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 graphmlt::node_indext graphml_witness_extt::add_node(
   const dynamic_cfg_nodet &cfg_node)
 {
@@ -100,18 +79,6 @@ graphmlt::node_indext graphml_witness_extt::add_node(
   }
   return node;
 }
-
-/*******************************************************************\
-
-Function: graphml_witness_extt::add_edge
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void graphml_witness_extt::add_edge(
   const graphmlt::node_indext &from,

@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// 2LS Command Line Options Processing
+
 #include <util/replace_expr.h>
 #include <util/find_symbols.h>
 #include <util/arith_tools.h>
@@ -15,18 +18,6 @@ Author: Peter Schrammel
 #include <ssa/dynobj_instance_analysis.h>
 
 #include "2ls_parse_options.h"
-
-/*******************************************************************\
-
-Function: twols_parse_optionst::inline_main
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void twols_parse_optionst::inline_main(goto_modelt &goto_model)
 {
@@ -61,18 +52,6 @@ void twols_parse_optionst::inline_main(goto_modelt &goto_model)
   goto_model.goto_functions.compute_loop_numbers();
 }
 
-/*******************************************************************\
-
-Function: twols_parse_optionst::propagate_constants
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void twols_parse_optionst::propagate_constants(goto_modelt &goto_model)
 {
   namespacet ns(goto_model.symbol_table);
@@ -82,20 +61,9 @@ void twols_parse_optionst::propagate_constants(goto_modelt &goto_model)
   }
 }
 
-/*******************************************************************\
-
-Function: twols_parse_optionst::nondet_locals
-
-  Inputs:
-
- Outputs:
-
- Purpose: explicitly assign a nondet_symbol to local variables
-          this is required by the unwinder, which would be unable
-          to recognise in which scope variables have been declared
-
-\*******************************************************************/
-
+/// explicitly assign a nondet_symbol to local variables this is required by the
+/// unwinder, which would be unable to recognise in which scope variables have
+/// been declared
 void twols_parse_optionst::nondet_locals(goto_modelt &goto_model)
 {
   namespacet ns(goto_model.symbol_table);
@@ -126,18 +94,7 @@ void twols_parse_optionst::nondet_locals(goto_modelt &goto_model)
   goto_model.goto_functions.update();
 }
 
-/*******************************************************************\
-
-Function: twols_parse_optionst::unwind_goto_into_loop
-
-  Inputs:
-
- Outputs:
-
- Purpose: unwind all loops
-
-\*******************************************************************/
-
+/// unwind all loops
 bool twols_parse_optionst::unwind_goto_into_loop(
   goto_modelt &goto_model,
   unsigned k)
@@ -211,18 +168,7 @@ bool twols_parse_optionst::unwind_goto_into_loop(
   return result;
 }
 
-/*******************************************************************\
-
-Function: twols_parse_optionst::remove_multiple_dereferences
-
-  Inputs:
-
- Outputs:
-
- Purpose: temporary fix to circumvent ssa_dereference problem
-
-\*******************************************************************/
-
+/// temporary fix to circumvent ssa_dereference problem
 void twols_parse_optionst::remove_multiple_dereferences(
   goto_modelt &goto_model,
   goto_programt &body,
@@ -277,18 +223,7 @@ void twols_parse_optionst::remove_multiple_dereferences(
         goto_model, body, t, *o_it, var_counter, deref_seen);
 }
 
-/*******************************************************************\
-
-Function: twols_parse_optionst::remove_multiple_dereferences
-
-  Inputs:
-
- Outputs:
-
- Purpose: temporary fix to circumvent ssa_dereference problem
-
-\*******************************************************************/
-
+/// temporary fix to circumvent ssa_dereference problem
 void twols_parse_optionst::remove_multiple_dereferences(goto_modelt &goto_model)
 {
   unsigned var_counter=0;
@@ -326,18 +261,7 @@ void twols_parse_optionst::remove_multiple_dereferences(goto_modelt &goto_model)
   }
 }
 
-/*******************************************************************\
-
-Function: twols_parse_optionst::add_assumptions_after_assertions
-
-  Inputs:
-
- Outputs:
-
- Purpose: assumes assertions after checking them
-
-\*******************************************************************/
-
+/// assumes assertions after checking them
 void twols_parse_optionst::add_assumptions_after_assertions(
   goto_modelt &goto_model)
 {
@@ -357,18 +281,7 @@ void twols_parse_optionst::add_assumptions_after_assertions(
   }
 }
 
-/*******************************************************************\
-
-Function: twols_parse_optionst::has_threads
-
-  Inputs:
-
- Outputs:
-
- Purpose: checks whether the program has threads
-
-\*******************************************************************/
-
+/// checks whether the program has threads
 bool twols_parse_optionst::has_threads(const goto_modelt &goto_model)
 {
   namespacet ns(goto_model.symbol_table);
@@ -396,18 +309,7 @@ bool twols_parse_optionst::has_threads(const goto_modelt &goto_model)
   return false;
 }
 
-/*******************************************************************\
-
-Function: twols_parse_optionst::filter_assertions
-
-  Inputs:
-
- Outputs:
-
- Purpose: filter certain assertions for SV-COMP
-
-\*******************************************************************/
-
+/// filter certain assertions for SV-COMP
 void twols_parse_optionst::filter_assertions(goto_modelt &goto_model)
 {
   Forall_goto_functions(f_it, goto_model.goto_functions)
@@ -425,19 +327,7 @@ void twols_parse_optionst::filter_assertions(goto_modelt &goto_model)
   }
 }
 
-/*******************************************************************\
-
-Function: twols_parse_optionst::split_loopheads
-
-Inputs:
-
-Outputs:
-
-Purpose: insert skip at jump targets if they are goto,
-         assume or assert instructions
-
-\*******************************************************************/
-
+/// insert skip at jump targets if they are goto, assume or assert instructions
 void twols_parse_optionst::split_loopheads(goto_modelt &goto_model)
 {
   Forall_goto_functions(f_it, goto_model.goto_functions)
@@ -471,21 +361,9 @@ void twols_parse_optionst::split_loopheads(goto_modelt &goto_model)
   }
 }
 
-/*******************************************************************\
-
-Function: twols_parse_optionst::remove_loops_in_entry
-
-  Inputs:
-
- Outputs:
-
- Purpose: Remove loop head from entry instruction of a function -
-          causes problems with input variables naming. If first
-          instruction is target of back-jump, insert SKIP instruction
-          before.
-
-\*******************************************************************/
-
+/// Remove loop head from entry instruction of a function - causes problems with
+/// input variables naming. If first instruction is target of back-jump, insert
+/// SKIP instruction before.
 void twols_parse_optionst::remove_loops_in_entry(goto_modelt &goto_model)
 {
   Forall_goto_functions(f_it, goto_model.goto_functions)
@@ -501,18 +379,7 @@ void twols_parse_optionst::remove_loops_in_entry(goto_modelt &goto_model)
   }
 }
 
-/*******************************************************************\
-
-Function: twols_parse_optionst::create_dynamic_objects
-
-  Inputs:
-
- Outputs:
-
- Purpose: Create symbols for objects pointed by parameters of a function.
-
-\*******************************************************************/
-
+/// Create symbols for objects pointed by parameters of a function.
 void twols_parse_optionst::create_dynamic_objects(goto_modelt &goto_model)
 {
   Forall_goto_functions(f_it, goto_model.goto_functions)
@@ -529,19 +396,8 @@ void twols_parse_optionst::create_dynamic_objects(goto_modelt &goto_model)
   }
 }
 
-/*******************************************************************\
-
-Function: twols_parse_optionst::add_dynamic_object_rec
-
-  Inputs:
-
- Outputs:
-
- Purpose: For each pointer-typed symbol in an expression which is a parameter,
-          create symbol for pointed object in the symbol table.
-
-\*******************************************************************/
-
+/// For each pointer-typed symbol in an expression which is a parameter, create
+/// symbol for pointed object in the symbol table.
 void twols_parse_optionst::add_dynamic_object_rec(
   exprt &expr, symbol_tablet &symbol_table)
 {
@@ -578,19 +434,7 @@ void twols_parse_optionst::add_dynamic_object_rec(
   }
 }
 
-/*******************************************************************\
-
-Function: twols_parse_optionst::add_dynamic_object_symbols
-
-  Inputs:
-
- Outputs:
-
- Purpose: Add symbols for all dynamic objects in the program into
-          the symbol table.
-
-\*******************************************************************/
-
+/// Add symbols for all dynamic objects in the program into the symbol table.
 void twols_parse_optionst::add_dynamic_object_symbols(
   const ssa_heap_analysist &heap_analysis,
   goto_modelt &goto_model)
@@ -628,19 +472,8 @@ void twols_parse_optionst::add_dynamic_object_symbols(
   }
 }
 
-/*******************************************************************\
-
-Function: twols_parse_optionst::split_same_symbolic_object_assignments
-
-  Inputs:
-
- Outputs:
-
- Purpose: Split assignments that have same symbolic dereference object
-          on both sides into two separate assignments.
-
-\*******************************************************************/
-
+/// Split assignments that have same symbolic dereference object on both sides
+/// into two separate assignments.
 void twols_parse_optionst::split_same_symbolic_object_assignments(
   goto_modelt &goto_model)
 {
@@ -688,17 +521,7 @@ void twols_parse_optionst::split_same_symbolic_object_assignments(
   }
 }
 
-/*******************************************************************\
-
-Function: twols_parse_optionst::remove_dead_goto
-
-  Inputs:
-
- Outputs:
-
- Purpose: Remove dead backwards GOTO instructions (having false as guard)
-
-\*******************************************************************/
+/// Remove dead backwards GOTO instructions (having false as guard)
 void twols_parse_optionst::remove_dead_goto(goto_modelt &goto_model)
 {
   Forall_goto_functions(f_it, goto_model.goto_functions)
@@ -714,19 +537,8 @@ void twols_parse_optionst::remove_dead_goto(goto_modelt &goto_model)
   }
 }
 
-/*******************************************************************\
-
-Function: twols_parse_optionst::compute_dynobj_instances
-
-  Inputs:
-
- Outputs:
-
- Purpose: For each allocation site, compute the number of objects
-          that must be used to soundly represent all objects allocated
-          at the given site.
-
-\*******************************************************************/
+/// For each allocation site, compute the number of objects that must be used to
+/// soundly represent all objects allocated at the given site.
 void twols_parse_optionst::compute_dynobj_instances(
   const goto_programt &goto_program,
   const dynobj_instance_analysist &analysis,
@@ -759,19 +571,8 @@ void twols_parse_optionst::compute_dynobj_instances(
   }
 }
 
-/*******************************************************************\
-
-Function: twols_parse_optionst::create_dynobj_instances
-
-  Inputs:
-
- Outputs:
-
- Purpose: For each allocation site, split the allocated abstract
-          dynamic object into multiple in order to preserve soundness
-          of the analysis.
-
-\*******************************************************************/
+/// For each allocation site, split the allocated abstract dynamic object into
+/// multiple in order to preserve soundness of the analysis.
 void twols_parse_optionst::create_dynobj_instances(
   goto_programt &goto_program,
   const std::map<symbol_exprt, size_t> &instance_counts,
@@ -870,17 +671,7 @@ std::map<symbol_exprt, size_t> twols_parse_optionst::split_dynamic_objects(
   return dynobj_instances;
 }
 
-/*******************************************************************\
-
- Function: twols_parse_optionst::limit_array_bounds
-
- Inputs:
-
- Outputs:
-
- Purpose: Assert size of static arrays to be max 50000.
-
- \*******************************************************************/
+/// Assert size of static arrays to be max 50000.
 void twols_parse_optionst::limit_array_bounds(goto_modelt &goto_model)
 {
   Forall_goto_functions(f_it, goto_model.goto_functions)
@@ -906,17 +697,6 @@ void twols_parse_optionst::limit_array_bounds(goto_modelt &goto_model)
   }
 }
 
-/*******************************************************************\
-
- Function: twols_parse_optionst::memory_assert_info
-
- Inputs:
-
- Outputs:
-
- Purpose:
-
- \*******************************************************************/
 void twols_parse_optionst::memory_assert_info(goto_modelt &goto_model)
 {
   irep_idt file;

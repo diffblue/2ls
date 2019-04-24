@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Strategy iteration solver base class
+
 #ifndef CPROVER_2LS_DOMAINS_STRATEGY_SOLVER_BASE_H
 #define CPROVER_2LS_DOMAINS_STRATEGY_SOLVER_BASE_H
 

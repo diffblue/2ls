@@ -6,23 +6,14 @@ Author: Daniel Kroening, Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// 2LS Main Module
+
 #include <util/unicode.h>
 
 #include "2ls_parse_options.h"
 
 #ifdef _MSC_VER
-
-/*******************************************************************\
-
-Function: wmain
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 int wmain(int argc, const wchar_t **argv_wide)
 {
@@ -32,18 +23,6 @@ int wmain(int argc, const wchar_t **argv_wide)
 }
 
 #else
-
-/*******************************************************************\
-
-Function: main
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 int main(int argc, const char **argv)
 {

@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Summarizer for Backward Analysis
+
 #ifndef CPROVER_2LS_SOLVER_SUMMARIZER_BW_H
 #define CPROVER_2LS_SOLVER_SUMMARIZER_BW_H
 

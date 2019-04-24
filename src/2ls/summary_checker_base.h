@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Summary Checker Base
+
 #ifndef CPROVER_2LS_2LS_SUMMARY_CHECKER_BASE_H
 #define CPROVER_2LS_2LS_SUMMARY_CHECKER_BASE_H
 

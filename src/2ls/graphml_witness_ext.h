@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// SSA CFA extension for GraphML output
+
 #ifndef CPROVER_2LS_2LS_GRAPHML_WITNESS_EXT_H
 #define CPROVER_2LS_2LS_GRAPHML_WITNESS_EXT_H
 

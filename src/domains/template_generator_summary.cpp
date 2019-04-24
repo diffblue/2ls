@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Template Generator for Summaries, Invariants and Preconditions
+
 #define SHOW_TEMPLATE
 
 #include "template_generator_summary.h"
@@ -21,18 +24,6 @@ Author: Peter Schrammel
 #ifdef DEBUG
 #include <iostream>
 #endif
-
-/*******************************************************************\
-
-Function: template_generator_summaryt::operator()
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void template_generator_summaryt::operator()(
   unsigned _domain_number,
@@ -62,18 +53,6 @@ void template_generator_summaryt::operator()(
   domain_ptr->output_domain(debug(), SSA.ns); debug() << eom;
 #endif
 }
-
-/*******************************************************************\
-
-Function: template_generator_summaryt::collect_variables_inout
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void template_generator_summaryt::collect_variables_inout(
   const local_SSAt &SSA,
@@ -106,18 +85,6 @@ void template_generator_summaryt::collect_variables_inout(
     var_specs);
 }
 
-/*******************************************************************\
-
-Function: template_generator_summaryt::inout_vars
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 domaint::var_sett template_generator_summaryt::inout_vars()
 {
   domaint::var_sett vars;
@@ -132,18 +99,6 @@ domaint::var_sett template_generator_summaryt::inout_vars()
   return vars;
 }
 
-/*******************************************************************\
-
-Function: template_generator_summaryt::out_vars
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 domaint::var_sett template_generator_summaryt::out_vars()
 {
   domaint::var_sett vars;
@@ -155,18 +110,6 @@ domaint::var_sett template_generator_summaryt::out_vars()
   }
   return vars;
 }
-
-/*******************************************************************\
-
-Function: template_generator_summaryt::loop_vars
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 domaint::var_sett template_generator_summaryt::loop_vars()
 {

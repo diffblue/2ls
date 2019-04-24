@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Summary
+
 #ifdef DEBUG
 #include <langapi/language_util.h>
 #endif
@@ -15,18 +18,6 @@ Author: Peter Schrammel
 #include "summary.h"
 
 // #define PRETTY_PRINT
-
-/*******************************************************************\
-
-Function: summaryt::output
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void summaryt::output(std::ostream &out, const namespacet &ns) const
 {
@@ -79,18 +70,6 @@ void summaryt::output(std::ostream &out, const namespacet &ns) const
   out << "terminates: " << threeval2string(terminates) << std::endl;
 }
 
-/*******************************************************************\
-
-Function: summaryt::combine_and
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void summaryt::combine_and(exprt &olde, const exprt &newe)
 {
   if(olde.is_nil())
@@ -106,18 +85,6 @@ void summaryt::combine_and(exprt &olde, const exprt &newe)
   }
 }
 
-/*******************************************************************\
-
-Function: summaryt::combine_or
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void summaryt::combine_or(exprt &olde, const exprt &newe)
 {
   if(olde.is_nil())
@@ -131,18 +98,6 @@ void summaryt::combine_or(exprt &olde, const exprt &newe)
     olde=or_exprt(olde, newe);
   }
 }
-
-/*******************************************************************\
-
-Function: summaryt::join
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void summaryt::join(const summaryt &new_summary)
 {
@@ -171,18 +126,7 @@ void summaryt::join(const summaryt &new_summary)
   }
 }
 
-/*******************************************************************\
-
-Function: summaryt::set_value_domains
-
-  Inputs:
-
- Outputs:
-
- Purpose: Get value domain for last location from SSA.
-
-\*******************************************************************/
-
+/// Get value domain for last location from SSA.
 void summaryt::set_value_domains(const local_SSAt &SSA)
 {
   const local_SSAt::locationt &entry_loc=SSA.nodes.begin()->location;
@@ -190,18 +134,6 @@ void summaryt::set_value_domains(const local_SSAt &SSA)
   value_domain_in=SSA.ssa_value_ai[entry_loc];
   value_domain_out=SSA.ssa_value_ai[exit_loc];
 }
-
-/*******************************************************************\
-
-Function: threeval2string
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 std::string threeval2string(threevalt v)
 {

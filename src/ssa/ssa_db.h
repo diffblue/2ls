@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Storage for Function SSAs
+
 #ifndef CPROVER_2LS_SSA_SSA_DB_H
 #define CPROVER_2LS_SSA_SSA_DB_H
 

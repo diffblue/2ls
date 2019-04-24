@@ -6,38 +6,19 @@ Author: Viktor Malik
 
 \*******************************************************************/
 
+/// \file
+/// Strategy solver for heap-tpolyhedra domain using symbolic paths
+
 // #define DEBUG
 
 #include "strategy_solver_heap_tpolyhedra_sympath.h"
 
-/*******************************************************************\
-
-Function: strategy_solver_heap_tpolyhedra_sympatht::set_message_handler
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 void strategy_solver_heap_tpolyhedra_sympatht::set_message_handler(
   message_handlert &_message_handler)
 {
   solver.set_message_handler(_message_handler);
 }
 
-/*******************************************************************\
-
-Function: strategy_solver_heap_tpolyhedra_sympatht::iterate
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 bool strategy_solver_heap_tpolyhedra_sympatht::iterate(
   strategy_solver_baset::invariantt &_inv)
 {
@@ -116,42 +97,18 @@ bool strategy_solver_heap_tpolyhedra_sympatht::iterate(
   return improved;
 }
 
-/*******************************************************************\
-
-Function: strategy_solver_heap_tpolyhedra_sympatht::clear_symbolic_path
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 void strategy_solver_heap_tpolyhedra_sympatht::clear_symbolic_path()
 {
   symbolic_path.clear();
   heap_tpolyhedra_solver.clear_symbolic_path();
 }
 
-/*******************************************************************\
-
-Function: strategy_solver_heap_tpolyhedra_sympatht::is_current_path_feasible
-
-  Inputs:
-
- Outputs:
-
- Purpose: Check if the current symbolic path is feasible while the computed
-          invariant holds.
-          A path is reachable iff:
-            - for each loop whose loop-select guard occurs in positive form,
-              if its loop head is reachable, then also loop end must be
-              reachable (g#lb => g#le must be SAT)
-            - for each loop whose loop-select guard occurs in negative form,
-              if its loop head is reachable, then its end is not reachable
-              (g#lb => !g#le must be SAT)
-
-\*******************************************************************/
+/// Check if the current symbolic path is feasible while the computed invariant
+/// holds. A path is reachable iff: - for each loop whose loop-select guard
+/// occurs in positive form, if its loop head is reachable, then also loop end
+/// must be reachable (g#lb => g#le must be SAT) - for each loop whose loop-
+/// select guard occurs in negative form, if its loop head is reachable, then
+/// its end is not reachable (g#lb => !g#le must be SAT)
 bool strategy_solver_heap_tpolyhedra_sympatht::is_current_path_feasible(
   heap_tpolyhedra_sympath_domaint::heap_tpolyhedra_sympath_valuet &value)
 {
@@ -192,17 +149,6 @@ bool strategy_solver_heap_tpolyhedra_sympatht::is_current_path_feasible(
   return result;
 }
 
-/*******************************************************************\
-
-Function: strategy_solver_heap_tpolyhedra_sympatht::build_loop_conds_map
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 void strategy_solver_heap_tpolyhedra_sympatht::build_loop_conds_map(
   const local_SSAt &SSA)
 {

@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Template Generator for Calling Contexts
+
 #include <util/find_symbols.h>
 
 #include <ssa/ssa_inliner.h>
@@ -13,18 +16,6 @@ Author: Peter Schrammel
 #include "template_generator_callingcontext.h"
 #include "equality_domain.h"
 #include "tpolyhedra_domain.h"
-
-/*******************************************************************\
-
-Function: template_generator_callingcontextt::operator()
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void template_generator_callingcontextt::operator()(
   unsigned _domain_number,
@@ -49,18 +40,6 @@ void template_generator_callingcontextt::operator()(
   domain_ptr->output_domain(debug(), SSA.ns); debug() << eom;
 #endif
 }
-
-/*******************************************************************\
-
-Function: template_generator_callingcontextt::collect_variables_callingcontext
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void template_generator_callingcontextt::collect_variables_callingcontext(
   const local_SSAt &SSA,
@@ -121,18 +100,6 @@ void template_generator_callingcontextt::collect_variables_callingcontext(
     add_vars(args, guard, guard, domaint::OUT, var_specs);
   }
 }
-
-/*******************************************************************\
-
-Function: template_generator_callingcontextt::callingcontext_vars
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 domaint::var_sett template_generator_callingcontextt::callingcontext_vars()
 {
