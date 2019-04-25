@@ -735,3 +735,18 @@ int get_dynobj_line(const irep_idt &id)
   std::string number=name.substr(start, end-start);
   return std::stoi(number);
 }
+
+int get_dynobj_instance(const irep_idt &id)
+{
+  std::string name=id2string(id);
+  size_t pos=name.find("dynamic_object$");
+  if(pos==std::string::npos)
+    return -1;
+  pos=name.find_first_of("#", pos);
+  if(pos==std::string::npos)
+    return -1;
+  size_t start=pos+1;
+  size_t end=name.find_first_not_of("0123456789", pos);
+  std::string number=name.substr(start, end-start);
+  return std::stoi(number);
+}
