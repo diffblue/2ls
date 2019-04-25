@@ -4,13 +4,12 @@ SRC = summarizer_base.cpp  summarizer_bw.cpp	\
       summary.cpp  summary_db.cpp
 
 include ../config.inc
-include $(CBMC)/src/config.inc
-include $(CBMC)/src/common
-CBMC ?= ../..
+include $(CPROVER_DIR)/src/config.inc
+include $(CPROVER_DIR)/src/common
 
 CP_CXXFLAGS += $(TWOLSFLAGS)
 
-INCLUDES= -I $(CBMC)/src -I ..
+INCLUDES= -I $(CPROVER_DIR)/src -I ..
 
 CLEANFILES = solver$(LIBEXT)
 

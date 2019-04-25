@@ -1,16 +1,12 @@
 #!/bin/bash
 
-CBMC_REPO=https://github.com/peterschrammel/cbmc
-CBMC_VERSION=2ls-prerequisites-0.7
-
 if [ "$1" != "" ]
 then
   COMPILER="$1"
 fi
 
-git clone $CBMC_REPO
-cd cbmc
-CBMC=`pwd`
+git submodule update --init --recursive
+cd lib/cbmc
 git checkout $CBMC_VERSION
 if grep '^MINISAT2' src/config.inc > /dev/null
 then
@@ -24,19 +20,17 @@ else
 fi
 if [ "$COMPILER" != "" ]
 then
-  make -C src CXX=$COMPILER
+  make -C src CXX=$COMPILER $2
 else
-  make -C src
+  make -C src $2
 fi
+cd ../..
 
-cd ../src
-cp config.inc.template config.inc
-sed -i.bak "s#CBMC = ~/my-cbmc#CBMC = $CBMC#g" config.inc
 if [ "$COMPILER" != "" ]
 then
-  make CXX=$COMPILER
+  make -C src CXX=$COMPILER $2
 else
-  make
+  make -C src $2
 fi
-cd ..
+
 echo "The executable is src/2ls/2ls"

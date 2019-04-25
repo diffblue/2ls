@@ -1,6 +1,6 @@
 include ../config.inc
-include $(CBMC)/src/config.inc
-include $(CBMC)/src/common
+include $(CPROVER_DIR)/src/config.inc
+include $(CPROVER_DIR)/src/common
 
 SRC = 2ls_main.cpp 2ls_parse_options.cpp \
       2ls_languages.cpp \
@@ -12,27 +12,27 @@ SRC = 2ls_main.cpp 2ls_parse_options.cpp \
       instrument_goto.cpp dynamic_cfg.cpp \
       graphml_witness_ext.cpp
 
-OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
-      $(CBMC)/src/linking/linking$(LIBEXT) \
-      $(CBMC)/src/assembler/assembler$(LIBEXT) \
-      $(CBMC)/src/big-int/big-int$(LIBEXT) \
-      $(CBMC)/src/goto-programs/goto-programs$(LIBEXT) \
-      $(CBMC)/src/goto-symex/goto-symex$(LIBEXT) \
-      $(CBMC)/src/analyses/analyses$(LIBEXT) \
-      $(CBMC)/src/pointer-analysis/pointer-analysis$(LIBEXT) \
-      $(CBMC)/src/langapi/langapi$(LIBEXT) \
-      $(CBMC)/src/xmllang/xmllang$(LIBEXT) \
-      $(CBMC)/src/json/json$(LIBEXT) \
-      $(CBMC)/src/solvers/solvers$(LIBEXT) \
-      $(CBMC)/src/util/util$(LIBEXT) \
-      $(CBMC)/src/goto-instrument/unwind$(OBJEXT) \
+OBJ+= $(CPROVER_DIR)/src/ansi-c/ansi-c$(LIBEXT) \
+      $(CPROVER_DIR)/src/linking/linking$(LIBEXT) \
+      $(CPROVER_DIR)/src/assembler/assembler$(LIBEXT) \
+      $(CPROVER_DIR)/src/big-int/big-int$(LIBEXT) \
+      $(CPROVER_DIR)/src/goto-programs/goto-programs$(LIBEXT) \
+      $(CPROVER_DIR)/src/goto-symex/goto-symex$(LIBEXT) \
+      $(CPROVER_DIR)/src/analyses/analyses$(LIBEXT) \
+      $(CPROVER_DIR)/src/pointer-analysis/pointer-analysis$(LIBEXT) \
+      $(CPROVER_DIR)/src/langapi/langapi$(LIBEXT) \
+      $(CPROVER_DIR)/src/xmllang/xmllang$(LIBEXT) \
+      $(CPROVER_DIR)/src/json/json$(LIBEXT) \
+      $(CPROVER_DIR)/src/solvers/solvers$(LIBEXT) \
+      $(CPROVER_DIR)/src/util/util$(LIBEXT) \
+      $(CPROVER_DIR)/src/goto-instrument/unwind$(OBJEXT) \
       ../domains/domains$(LIBEXT) \
       ../ssa/ssa$(LIBEXT) \
       ../solver/solver$(LIBEXT) \
 
 CP_CXXFLAGS+= $(TWOLSFLAGS)
 
-INCLUDES= -I $(CBMC)/src -I ..
+INCLUDES= -I $(CPROVER_DIR)/src -I ..
 
 LIBS = 
 
@@ -40,13 +40,13 @@ CLEANFILES = 2ls$(EXEEXT) $(DELTA_OBJ)
 
 all: 2ls$(EXEEXT)
 
-ifneq ($(wildcard $(CBMC)/src/cpp/Makefile),)
-  OBJ += $(CBMC)/src/cpp/cpp$(LIBEXT)
+ifneq ($(wildcard $(CPROVER_DIR)/src/cpp/Makefile),)
+  OBJ += $(CPROVER_DIR)/src/cpp/cpp$(LIBEXT)
   CP_CXXFLAGS += -DHAVE_CPP
 endif
 
-ifneq ($(wildcard $(CBMC)/src/java/Makefile),)
-  OBJ += $(CBMC)/src/java/java$(LIBEXT)
+ifneq ($(wildcard $(CPROVER_DIR)/src/java/Makefile),)
+  OBJ += $(CPROVER_DIR)/src/java/java$(LIBEXT)
   CXXFLAGS += -DHAVE_JAVA
 endif
 
