@@ -6,20 +6,12 @@ Author: Viktor Malik
 
 \*******************************************************************/
 
+/// \file
+/// Combination of heap and template polyhedra abstract domains
+
 #include "heap_tpolyhedra_domain.h"
 
-/*******************************************************************\
-
-Function: heap_tpolyhedra_domaint::initialize
-
-  Inputs:
-
- Outputs:
-
- Purpose: Initialize abstract value.
-
-\*******************************************************************/
-
+/// Initialize abstract value.
 void heap_tpolyhedra_domaint::initialize(domaint::valuet &value)
 {
   heap_tpolyhedra_valuet &v=static_cast<heap_tpolyhedra_valuet &>(value);
@@ -27,18 +19,6 @@ void heap_tpolyhedra_domaint::initialize(domaint::valuet &value)
   heap_domain.initialize(v.heap_value);
   polyhedra_domain.initialize(v.tpolyhedra_value);
 }
-
-/*******************************************************************\
-
-Function: heap_tpolyhedra_domaint::output_value
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void heap_tpolyhedra_domaint::output_value(
   std::ostream &out,
@@ -52,18 +32,6 @@ void heap_tpolyhedra_domaint::output_value(
   polyhedra_domain.output_value(out, v.tpolyhedra_value, ns);
 }
 
-/*******************************************************************\
-
-Function: heap_tpolyhedra_domaint::output_domain
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void heap_tpolyhedra_domaint::output_domain(
   std::ostream &out,
   const namespacet &ns) const
@@ -71,18 +39,6 @@ void heap_tpolyhedra_domaint::output_domain(
   heap_domain.output_domain(out, ns);
   polyhedra_domain.output_domain(out, ns);
 }
-
-/*******************************************************************\
-
-Function: heap_tpolyhedra_domaint::project_on_vars
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void heap_tpolyhedra_domaint::project_on_vars(
   domaint::valuet &value,
@@ -101,17 +57,8 @@ void heap_tpolyhedra_domaint::project_on_vars(
     result=and_exprt(result, tpolyhedra_result);
 }
 
-/*******************************************************************\
-
-Function: heap_tpolyhedra_domaint::restrict_to_sympath
-
-  Inputs: Symbolic path
-
- Outputs:
-
- Purpose: Restrict template to a given symbolic path.
-
-\*******************************************************************/
+/// Restrict template to a given symbolic path.
+/// \param sympath: Symbolic path
 void heap_tpolyhedra_domaint::restrict_to_sympath(
   const symbolic_patht &sympath)
 {
@@ -119,34 +66,15 @@ void heap_tpolyhedra_domaint::restrict_to_sympath(
   polyhedra_domain.restrict_to_sympath(sympath);
 }
 
-/*******************************************************************\
-
-Function: heap_tpolyhedra_domaint::clear_aux_symbols
-
-  Inputs:
-
- Outputs:
-
- Purpose: Reset aux symbols to true (remove all restricitions).
-
-\*******************************************************************/
+/// Reset aux symbols to true (remove all restricitions).
 void heap_tpolyhedra_domaint::clear_aux_symbols()
 {
   heap_domain.clear_aux_symbols();
   polyhedra_domain.clear_aux_symbols();
 }
 
-/*******************************************************************\
-
-Function: heap_tpolyhedra_domaint::eliminate_sympaths
-
-  Inputs: Vector of symbolic paths
-
- Outputs:
-
- Purpose: Restrict template to other paths than those specified.
-
-\*******************************************************************/
+/// Restrict template to other paths than those specified.
+/// \param sympaths: Vector of symbolic paths
 void heap_tpolyhedra_domaint::eliminate_sympaths(
   const std::vector<symbolic_patht> &sympaths)
 {
@@ -154,17 +82,7 @@ void heap_tpolyhedra_domaint::eliminate_sympaths(
   polyhedra_domain.eliminate_sympaths(sympaths);
 }
 
-/*******************************************************************\
-
-Function: heap_tpolyhedra_domaint::undo_restriction
-
-  Inputs:
-
- Outputs:
-
- Purpose: Undo last restriction.
-
-\*******************************************************************/
+/// Undo last restriction.
 void heap_tpolyhedra_domaint::undo_restriction()
 {
   heap_domain.undo_restriction();

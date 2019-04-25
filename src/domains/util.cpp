@@ -6,41 +6,22 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Domain utilities
+
 #include <util/simplify_expr.h>
 #include <util/prefix.h>
 #include <util/cprover_prefix.h>
 
 #include "util.h"
 
-/*******************************************************************\
-
-Function: get_bitvector_width
-
-  Inputs:
-
- Outputs:
-
- Purpose: increases bitvector sizes such that there are no overflows
-
-\*******************************************************************/
-
+/// increases bitvector sizes such that there are no overflows
 unsigned get_bitvector_width(const exprt &expr)
 {
   return to_bitvector_type(expr.type()).get_width();
 }
 
-/*******************************************************************\
-
-Function: extend_expr_types
-
-  Inputs:
-
- Outputs:
-
- Purpose: increases bitvector sizes such that there are no overflows
-
-\*******************************************************************/
-
+/// increases bitvector sizes such that there are no overflows
 void extend_expr_types(exprt &expr)
 {
 //  std::cerr << "expr: " << expr << std::endl;
@@ -204,18 +185,6 @@ void extend_expr_types(exprt &expr)
   assert(false);
 }
 
-/*******************************************************************\
-
-Function: simplify_const_int
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 mp_integer simplify_const_int(const exprt &expr)
 {
   if(expr.id()==ID_constant)
@@ -266,18 +235,6 @@ mp_integer simplify_const_int(const exprt &expr)
   }
   assert(false); // not implemented
 }
-
-/*******************************************************************\
-
-Function: simplify_const_float
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 ieee_floatt simplify_const_float(const exprt &expr)
 {
@@ -360,18 +317,6 @@ ieee_floatt simplify_const_float(const exprt &expr)
   assert(false); // not implemented
 }
 
-/*******************************************************************\
-
-Function: simplify_const
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 constant_exprt simplify_const(const exprt &expr)
 {
 //  std::cerr << "const: " << expr << std::endl;
@@ -426,18 +371,6 @@ constant_exprt simplify_const(const exprt &expr)
   assert(false); // type not supported
 }
 
-/*******************************************************************\
-
-Function: remove_typecast
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void remove_typecast(exprt& expr)
 {
   Forall_operands(it, expr)
@@ -447,18 +380,7 @@ void remove_typecast(exprt& expr)
     expr=expr.op0();
 }
 
-/*******************************************************************\
-
-Function: pretty_print_termination_argument
-
-  Inputs:
-
- Outputs:
-
- Purpose: print ranking argument expressions in a more readable format
-
-\*******************************************************************/
-
+/// print ranking argument expressions in a more readable format
 void pretty_print_termination_argument(
   std::ostream &out,
   const namespacet &ns,
@@ -525,18 +447,6 @@ void pretty_print_termination_argument(
   out << from_expr(ns, "", expr);
 }
 
-/*******************************************************************\
-
-Function: merge_and
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void merge_and(
   exprt & result, const exprt &expr1, const exprt &expr2, const namespacet &ns)
 {
@@ -545,18 +455,6 @@ void merge_and(
     result=and_exprt(expr1, expr2);
   simplify(result, ns);
 }
-
-/*******************************************************************\
-
-Function: make_zero
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 constant_exprt make_zero(const typet &type)
 {
@@ -572,18 +470,6 @@ constant_exprt make_zero(const typet &type)
   assert(false);
 }
 
-/*******************************************************************\
-
-Function: make_one
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 constant_exprt make_one(const typet &type)
 {
   if(type.id()==ID_unsignedbv || type.id()==ID_signedbv)
@@ -597,18 +483,6 @@ constant_exprt make_one(const typet &type)
   }
   assert(false);
 }
-
-/*******************************************************************\
-
-Function: make_minusone
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 constant_exprt make_minusone(const typet &type)
 {
@@ -625,18 +499,7 @@ constant_exprt make_minusone(const typet &type)
   assert(false);
 }
 
-/*******************************************************************\
-
-Function: get_original_name
-
-  Inputs:
-
- Outputs:
-
- Purpose: retrieve original variable name from ssa variable
-
-\*******************************************************************/
-
+/// retrieve original variable name from ssa variable
 irep_idt get_original_name(
   const symbol_exprt &symbol_expr)
 {
@@ -646,18 +509,6 @@ irep_idt get_original_name(
     return irep_idt(s);
   return s.substr(0, pos1);
 }
-
-/*******************************************************************\
-
-Function: clean_expr
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void clean_expr(exprt &expr)
 {
@@ -691,18 +542,6 @@ void clean_expr(exprt &expr)
   }
 }
 
-/*******************************************************************\
-
-Function: is_cprover_symbol
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 bool is_cprover_symbol(const exprt &expr)
 {
   return expr.id()==ID_symbol &&
@@ -711,18 +550,9 @@ bool is_cprover_symbol(const exprt &expr)
            CPROVER_PREFIX);
 }
 
-/*******************************************************************\
-
-Function: get_dynobj_line
-
-  Inputs: Symbol identifier.
-
- Outputs: If the symbol is a dynamic object, then the location number of the
-          malloc call where the object was allocated, otherwise -1.
-
- Purpose:
-
-\*******************************************************************/
+/// \param id: Symbol identifier.
+/// \return If the symbol is a dynamic object, then the location number of the
+///   malloc call where the object was allocated, otherwise -1.
 int get_dynobj_line(const irep_idt &id)
 {
   std::string name=id2string(id);

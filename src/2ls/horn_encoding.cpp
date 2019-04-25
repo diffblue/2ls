@@ -6,6 +6,9 @@ Author: Daniel Kroening
 
 \*******************************************************************/
 
+/// \file
+/// Horn-clause Encoding
+
 #include <ostream>
 
 #include <solvers/smt2/smt2_conv.h>
@@ -39,35 +42,11 @@ protected:
   void translate(const goto_functionst::function_mapt::const_iterator);
 };
 
-/*******************************************************************\
-
-Function: horn_encodingt::operator()
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void horn_encodingt::operator()()
 {
   forall_goto_functions(f_it, goto_functions)
     translate(f_it);
 }
-
-/*******************************************************************\
-
-Function: horn_encodingt::translate
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void horn_encodingt::translate(
   const goto_functionst::function_mapt::const_iterator f_it)
@@ -227,18 +206,6 @@ void horn_encodingt::translate(
     out << '\n';
   }
 }
-
-/*******************************************************************\
-
-Function: horn_encoding
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void horn_encoding(
   const goto_modelt &goto_model,

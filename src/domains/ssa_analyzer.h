@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// SSA Analyzer
+
 #ifndef CPROVER_2LS_DOMAINS_SSA_ANALYZER_H
 #define CPROVER_2LS_DOMAINS_SSA_ANALYZER_H
 

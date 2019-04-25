@@ -8,23 +8,16 @@ Author: Viktor Malik, viktor.malik@gmail.com
 
 \*******************************************************************/
 
+/// \file
+/// Analysis of the number of instances of abstract dynamic objects. In some
+///   cases, multiple instances must be used so that the analysis is sound.
+
 #include <iostream>
 #include <util/prefix.h>
 #include <util/cprover_prefix.h>
 #include "dynobj_instance_analysis.h"
 #include "ssa_dereference.h"
 
-/*******************************************************************\
-
-Function: has_deref_of
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 bool has_deref_of(const exprt &expr, const exprt &pointer)
 {
   if(expr.id()==ID_dereference && to_dereference_expr(expr).pointer()==pointer)
@@ -37,18 +30,7 @@ bool has_deref_of(const exprt &expr, const exprt &pointer)
   return false;
 }
 
-/*******************************************************************\
-
-Function: remove_dereferences
-
-  Inputs:
-
- Outputs:
-
- Purpose: Isolate all dereferences of some pointer in must-alias
-          paritioning.
-
-\*******************************************************************/
+/// Isolate all dereferences of some pointer in must-alias paritioning.
 void remove_dereferences(const exprt &pointer, must_alias_setst &instances)
 {
   for(auto &i : instances)
@@ -58,17 +40,7 @@ void remove_dereferences(const exprt &pointer, must_alias_setst &instances)
   }
 }
 
-/*******************************************************************\
-
-Function: replace_pointer_in_deref
-
-  Inputs:
-
- Outputs:
-
- Purpose: Replace pointer in derefence expression by another pointer.
-
-\*******************************************************************/
+/// Replace pointer in derefence expression by another pointer.
 void replace_pointer_in_deref(exprt &deref, const exprt &src, const exprt &dest)
 {
   if(deref.id()==ID_dereference && to_dereference_expr(deref).pointer()==src)
@@ -77,20 +49,9 @@ void replace_pointer_in_deref(exprt &deref, const exprt &src, const exprt &dest)
   Forall_operands(it, deref)replace_pointer_in_deref(*it, src, dest);
 }
 
-/*******************************************************************\
-
-Function: add_aliased_dereferences
-
-  Inputs:
-
- Outputs:
-
- Purpose: Add dereferences of all aliased pointers to instances.
-          When dereference of a pointer is put to some must-alias
-          equivalence class, dereferences of aliased pointers must
-          be added to the same class as well.
-
-\*******************************************************************/
+/// Add dereferences of all aliased pointers to instances. When dereference of a
+/// pointer is put to some must-alias equivalence class, dereferences of aliased
+/// pointers must be added to the same class as well.
 void add_aliased_dereferences(const exprt &pointer, must_alias_setst &instances)
 {
   // We must copy instances so that we can alter them while iterating
@@ -113,18 +74,8 @@ void add_aliased_dereferences(const exprt &pointer, must_alias_setst &instances)
   }
 }
 
-/*******************************************************************\
-
-Function: dynobj_instance_domaint::rhs_concretisation
-
-  Inputs:
-
- Outputs:
-
- Purpose: Concretise pointer expressions that occur at some RHS and
-          did not occur before (assume they do not alias with anything).
-
-\*******************************************************************/
+/// Concretise pointer expressions that occur at some RHS and did not occur
+/// before (assume they do not alias with anything).
 void dynobj_instance_domaint::rhs_concretisation(
   const exprt &guard,
   ai_domain_baset::locationt loc,
@@ -163,17 +114,6 @@ void dynobj_instance_domaint::rhs_concretisation(
     }
 }
 
-/*******************************************************************\
-
-Function: dynobj_instance_domaint::transform
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 void dynobj_instance_domaint::transform(
   ai_domain_baset::locationt from,
   ai_domain_baset::locationt to,
@@ -253,17 +193,6 @@ void dynobj_instance_domaint::transform(
   }
 }
 
-/*******************************************************************\
-
-Function: dynobj_instance_domaint::merge
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 bool dynobj_instance_domaint::merge(
   const dynobj_instance_domaint &other,
   ai_domain_baset::locationt from,
@@ -293,17 +222,6 @@ bool dynobj_instance_domaint::merge(
   return result;
 }
 
-/*******************************************************************\
-
-Function: dynobj_instance_domaint::output
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 void dynobj_instance_domaint::output(
   std::ostream &out,
   const ai_baset &ai,

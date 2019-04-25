@@ -7,23 +7,14 @@ Author: Viktor Malik
 
 \*******************************************************************/
 
+/// \file
+/// Strategy solver for combination of shape and template polyhedra domains.
+
 #include "strategy_solver_heap_tpolyhedra.h"
 
-/*******************************************************************\
-
-Function: strategy_solver_heap_tpolyhedrat::iterate
-
-  Inputs:
-
- Outputs:
-
- Purpose: Run iteration of each solver separately, but every time
-          in the context of the current invariant found by the other
-          solver. The template polyhedra solving is also restricted to
-          a symbolic path found by the heap solver.
-
-\*******************************************************************/
-
+/// Run iteration of each solver separately, but every time in the context of
+/// the current invariant found by the other solver. The template polyhedra
+/// solving is also restricted to a symbolic path found by the heap solver.
 bool strategy_solver_heap_tpolyhedrat::iterate(
   strategy_solver_baset::invariantt &_inv)
 {
@@ -59,18 +50,6 @@ bool strategy_solver_heap_tpolyhedrat::iterate(
 
   return heap_improved || tpolyhedra_improved;
 }
-
-/*******************************************************************\
-
-Function: strategy_solver_heap_tpolyhedrat::set_message_handler
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void strategy_solver_heap_tpolyhedrat::set_message_handler(
   message_handlert &_message_handler)

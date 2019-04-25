@@ -6,6 +6,9 @@ Author: Daniel Kroening, Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Traces of GOTO Programs for SSA Models
+
 #include <util/simplify_expr.h>
 #include <util/std_expr.h>
 #include <util/cprover_prefix.h>
@@ -13,18 +16,6 @@ Author: Daniel Kroening, Peter Schrammel
 #include <util/find_symbols.h>
 
 #include "ssa_build_goto_trace.h"
-
-/*******************************************************************\
-
-Function: ssa_build_goto_tracet::finalize_lhs
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 exprt ssa_build_goto_tracet::finalize_lhs(const exprt &src)
 {
@@ -60,18 +51,6 @@ exprt ssa_build_goto_tracet::finalize_lhs(const exprt &src)
     return src;
 }
 
-/*******************************************************************\
-
-Function: ssa_build_goto_tracet::can_convert_ssa_expr
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 bool ssa_build_goto_tracet::can_convert_ssa_expr(const exprt &expr)
 {
   if(expr.id()==ID_member)
@@ -96,18 +75,6 @@ bool ssa_build_goto_tracet::can_convert_ssa_expr(const exprt &expr)
 
   return false;
 }
-
-/*******************************************************************\
-
-Function: ssa_build_goto_tracet::record_step
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 bool ssa_build_goto_tracet::record_step(
   goto_tracet &goto_trace,
@@ -285,18 +252,7 @@ bool ssa_build_goto_tracet::record_step(
   return taken;
 }
 
-/*******************************************************************\
-
-Function: ssa_build_goto_tracet::operator()
-
-  Inputs:
-
- Outputs:
-
- Purpose: limitation: works only for a single function
-
-\*******************************************************************/
-
+/// limitation: works only for a single function
 void ssa_build_goto_tracet::operator()(
   goto_tracet &goto_trace)
 {

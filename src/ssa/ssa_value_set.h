@@ -6,6 +6,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+/// \file
+/// A flow-insensitive value set analysis
+
 #ifndef CPROVER_2LS_SSA_SSA_VALUE_SET_H
 #define CPROVER_2LS_SSA_SSA_VALUE_SET_H
 

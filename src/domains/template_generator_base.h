@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Template Generator Base Class
+
 #ifndef CPROVER_2LS_DOMAINS_TEMPLATE_GENERATOR_BASE_H
 #define CPROVER_2LS_DOMAINS_TEMPLATE_GENERATOR_BASE_H
 

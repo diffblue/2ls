@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Domain utilities
+
 #ifndef CPROVER_2LS_DOMAINS_UTIL_H
 #define CPROVER_2LS_DOMAINS_UTIL_H
 

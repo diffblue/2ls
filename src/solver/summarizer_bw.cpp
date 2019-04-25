@@ -7,6 +7,9 @@ Author: Peter Schrammel
 \*******************************************************************/
 
 
+/// \file
+/// Summarizer for Backward Analysis
+
 #ifdef DEBUG
 #include <iostream>
 #endif
@@ -28,18 +31,7 @@ Author: Peter Schrammel
 #include "summarizer_bw.h"
 #include "summary_db.h"
 
-/*******************************************************************\
-
-Function: summarizer_bwt::summarize
-
-  Inputs:
-
- Outputs:
-
- Purpose: analyze only functions reachable in a previous forward analysis
-
-\*******************************************************************/
-
+/// analyze only functions reachable in a previous forward analysis
 void summarizer_bwt::summarize()
 {
   status() << "\nBackward analysis..." << eom;
@@ -56,18 +48,7 @@ void summarizer_bwt::summarize()
   }
 }
 
-/*******************************************************************\
-
-Function: summarizer_bwt::summarize
-
-  Inputs:
-
- Outputs:
-
- Purpose: summarize from given entry point
-
-\*******************************************************************/
-
+/// summarize from given entry point
 void summarizer_bwt::summarize(const function_namet &function_name)
 {
   status() << "\nBackward analysis..." << eom;
@@ -83,18 +64,6 @@ void summarizer_bwt::summarize(const function_namet &function_name)
     status() << "Skipping function " << function_name << eom;
 }
 
-
-/*******************************************************************\
-
-Function: summarizer_bwt::compute_summary_rec
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void summarizer_bwt::compute_summary_rec(
   const function_namet &function_name,
@@ -138,18 +107,6 @@ void summarizer_bwt::compute_summary_rec(
     status() << out.str() << eom;
   }
 }
-
-/*******************************************************************\
-
-Function: summarizer_bwt::do_summary
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void summarizer_bwt::do_summary(
   const function_namet &function_name,
@@ -237,18 +194,6 @@ void summarizer_bwt::do_summary(
   }
 }
 
-/*******************************************************************\
-
-Function: summarizer_bwt::inline_summaries
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void summarizer_bwt::inline_summaries(
   const function_namet &function_name,
   local_SSAt &SSA,
@@ -298,18 +243,7 @@ void summarizer_bwt::inline_summaries(
   }
 }
 
-/*******************************************************************\
-
-Function: summarizer_bwt::collect_postconditions
-
-  Inputs:
-
- Outputs:
-
- Purpose: collects postconditions where precondition inference starts from
-
-\*******************************************************************/
-
+/// collects postconditions where precondition inference starts from
 void summarizer_bwt::collect_postconditions(
   const function_namet &function_name,
   const local_SSAt &SSA,
@@ -335,18 +269,7 @@ void summarizer_bwt::collect_postconditions(
     postconditions.push_back(implies_exprt(guard, summary.bw_postcondition));
 }
 
-/*******************************************************************\
-
-Function: summarizer_bwt::check_postcondition
-
-  Inputs:
-
- Outputs:
-
- Purpose: returns false if the summary needs to be recomputed
-
-\*******************************************************************/
-
+/// returns false if the summary needs to be recomputed
 bool summarizer_bwt::check_postcondition(
   const function_namet &function_name,
   const local_SSAt &SSA,
@@ -439,18 +362,6 @@ bool summarizer_bwt::check_postcondition(
 
   return precondition_holds;
 }
-
-/*******************************************************************\
-
-Function: summarizer_bwt::compute_calling_context2()
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 exprt summarizer_bwt::compute_calling_context2(
   const function_namet &function_name,

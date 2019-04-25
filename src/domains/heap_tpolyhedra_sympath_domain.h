@@ -7,6 +7,10 @@ Author: Viktor Malik
 
 \*******************************************************************/
 
+/// \file
+/// Abstract domain for computing invariants in heap-tpolyhedra domain for
+///   different symbolic paths in program.
+
 #ifndef CPROVER_2LS_DOMAINS_HEAP_TPOLYHEDRA_SYMPATH_DOMAIN_H
 #define CPROVER_2LS_DOMAINS_HEAP_TPOLYHEDRA_SYMPATH_DOMAIN_H
 

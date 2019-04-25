@@ -6,6 +6,9 @@ Author: Viktor Malik
 
 \*******************************************************************/
 
+/// \file
+/// Dynamic objects analysis
+
 #ifndef CPROVER_2LS_SSA_SSA_HEAP_DOMAIN_H
 #define CPROVER_2LS_SSA_SSA_HEAP_DOMAIN_H
 

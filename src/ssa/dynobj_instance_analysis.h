@@ -15,6 +15,9 @@ Description: In some cases, multiple instances must be used so that the
 
 \*******************************************************************/
 
+/// \file
+/// Analysis of the number of instances of abstract dynamic objects.
+
 #ifndef CPROVER_2LS_SSA_DYNOBJ_INSTANCE_ANALYSIS_H
 #define CPROVER_2LS_SSA_DYNOBJ_INSTANCE_ANALYSIS_H
 
@@ -24,13 +27,6 @@ Description: In some cases, multiple instances must be used so that the
 #include "ssa_object.h"
 #include "ssa_value_set.h"
 
-/*******************************************************************\
-
- Set partitioning by must-alias relation (it is an equivalence).
- It extends the standard union find structure, particularly using
- a custom join and equality.
-
-\*******************************************************************/
 class must_alias_setst:public union_find<exprt>
 {
 public:

@@ -6,6 +6,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+/// \file
+/// A flow-insensitive value set analysis
+
 // #define DEBUG
 // #define COMPETITION
 
@@ -20,18 +23,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "ssa_value_set.h"
 #include "ssa_dereference.h"
 #include "ssa_pointed_objects.h"
-
-/*******************************************************************\
-
-Function: ssa_value_domaint::transform
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void ssa_value_domaint::transform(
   locationt from,
@@ -196,18 +187,6 @@ void ssa_value_domaint::transform(
   }
 }
 
-/*******************************************************************\
-
-Function: ssa_value_domaint::assign_lhs_rec
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void ssa_value_domaint::assign_lhs_rec(
   const exprt &lhs,
   const exprt &rhs,
@@ -320,18 +299,6 @@ void ssa_value_domaint::assign_lhs_rec(
 #endif
   }
 }
-
-/*******************************************************************\
-
-Function: ssa_value_domaint::assign_rhs_rec
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void ssa_value_domaint::assign_rhs_rec(
   valuest &dest,
@@ -449,18 +416,6 @@ void ssa_value_domaint::assign_rhs_rec(
   }
 }
 
-/*******************************************************************\
-
-Function: ssa_value_domaint::assign_rhs_rec_address_of
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void ssa_value_domaint::assign_rhs_rec_address_of(
   valuest &dest,
   const exprt &rhs,
@@ -500,18 +455,6 @@ void ssa_value_domaint::assign_rhs_rec_address_of(
   }
 }
 
-/*******************************************************************\
-
-Function: ssa_value_domaint::valuest::output
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void ssa_value_domaint::valuest::output(
   std::ostream &out,
   const namespacet &ns) const
@@ -536,18 +479,6 @@ void ssa_value_domaint::valuest::output(
     out << ' ' << '&' << it->get_identifier();
 }
 
-/*******************************************************************\
-
-Function: ssa_value_domaint::output
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void ssa_value_domaint::output(
   std::ostream &out,
   const ai_baset &ai,
@@ -564,18 +495,7 @@ void ssa_value_domaint::output(
   }
 }
 
-/*******************************************************************\
-
-Function: ssa_value_domaint::valuest::merge
-
-  Inputs:
-
- Outputs: Return true if "this" has changed.
-
- Purpose:
-
-\*******************************************************************/
-
+/// \return Return true if "this" has changed.
 bool ssa_value_domaint::valuest::merge(
   const valuest &src,
   bool is_loop_back,
@@ -687,18 +607,7 @@ bool ssa_value_domaint::valuest::merge(
   return result;
 }
 
-/*******************************************************************\
-
-Function: ssa_value_domaint::merge
-
-  Inputs:
-
- Outputs: Return true if "this" has changed.
-
- Purpose:
-
-\*******************************************************************/
-
+/// \return Return true if "this" has changed.
 bool ssa_value_domaint::merge(
   const ssa_value_domaint &other,
   locationt from,
@@ -741,18 +650,7 @@ bool ssa_value_domaint::merge(
   return result;
 }
 
-/*******************************************************************\
-
-Function: ssa_value_domaint::assign_pointed_rhs_rec
-
-  Inputs:
-
- Outputs:
-
- Purpose: Dynamically add p'obj to value set of p
-
-\*******************************************************************/
-
+/// Dynamically add p'obj to value set of p
 void ssa_value_domaint::assign_pointed_rhs_rec(
   const exprt &rhs,
   const namespacet &ns)
@@ -780,19 +678,9 @@ void ssa_value_domaint::assign_pointed_rhs_rec(
   }
 }
 
-/*******************************************************************\
-
-Function: ssa_value_ait::initialize
-
-  Inputs: GOTO function
-
- Outputs:
-
- Purpose: Initialize value sets for pointer parameters and pointer-typed
-          fields of objects pointed by parameters.
-
-\*******************************************************************/
-
+/// Initialize value sets for pointer parameters and pointer-typed fields of
+/// objects pointed by parameters.
+/// \par parameters: GOTO function
 void ssa_value_ait::initialize(
   const goto_functionst::goto_functiont &goto_function)
 {
@@ -813,21 +701,12 @@ void ssa_value_ait::initialize(
   }
 }
 
-/*******************************************************************\
-
-Function: ssa_value_ait::assign_ptr_param_rec
-
-  Inputs: Expression to be initialized and entry record of value set analysis
-
- Outputs:
-
- Purpose: Initialize value set for the given expression and recursively for all
-          structure members and all pointed objects.
-          Pointer-typed variable p initially points to abstract object p'obj.
-          Pointer-typed field of structure initially points to advancer.
-
-\*******************************************************************/
-
+/// Initialize value set for the given expression and recursively for all
+/// structure members and all pointed objects. Pointer-typed variable p
+/// initially points to abstract object p'obj. Pointer-typed field of structure
+/// initially points to advancer.
+/// \par parameters: Expression to be initialized and entry record of value set
+///   analysis
 void ssa_value_ait::assign_ptr_param(
   const exprt &expr,
   ssa_value_domaint &entry)
@@ -854,18 +733,9 @@ void ssa_value_ait::assign_ptr_param(
   }
 }
 
-/*******************************************************************\
-
-Function: ssa_value_ait::assign
-
-  Inputs: Pointer variable src, pointed object dest and analysis entry.
-
- Outputs:
-
- Purpose: Insert object to value set of another object in the given entry.
-
-\*******************************************************************/
-
+/// Insert object to value set of another object in the given entry.
+/// \par parameters: Pointer variable src, pointed object dest and analysis
+///   entry.
 void ssa_value_ait::assign(
   const exprt &src,
   const exprt &dest,

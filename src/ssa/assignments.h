@@ -6,6 +6,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+/// \file
+/// A map of program locations to the assignments made there
+
 #ifndef CPROVER_2LS_SSA_ASSIGNMENTS_H
 #define CPROVER_2LS_SSA_ASSIGNMENTS_H
 

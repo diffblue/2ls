@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Equalities/Disequalities domain
+
 #ifdef DEBUG
 #include <iostream>
 #include <langapi/languages.h>
@@ -25,18 +28,6 @@ void equality_domaint::initialize(valuet &value)
   v.equs.clear();
   v.disequs.clear();
 }
-
-/*******************************************************************\
-
-Function: equality_domaint::solver_iter_init
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void equality_domaint::solver_iter_init(valuet &value)
 {
@@ -140,18 +131,6 @@ exprt equality_domaint::get_pre_equ_constraint(unsigned index)
   return implies_exprt(templ_row.pre_guard, equal_exprt(vv.first, vv.second));
 }
 
-/*******************************************************************\
-
-Function: equality_domaint::get_post_not_equ_constraint
-
- Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 exprt equality_domaint::get_post_not_equ_constraint(unsigned index)
 {
   assert(index<templ.size());
@@ -170,18 +149,6 @@ exprt equality_domaint::get_post_not_equ_constraint(unsigned index)
   rename(c);
   return c;
 }
-
-/*******************************************************************\
-
-Function: equality_domaint::handle_unsat
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 bool equality_domaint::handle_unsat(valuet &value, bool improved)
 {
@@ -213,18 +180,6 @@ exprt equality_domaint::make_permanent(valuet &value)
   return true_exprt();
 }
 
-/*******************************************************************\
-
-Function: equality_domaint::get_pre_disequ_constraint
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 exprt equality_domaint::get_pre_disequ_constraint(unsigned index)
 {
   assert(index<templ.size());
@@ -236,18 +191,6 @@ exprt equality_domaint::get_pre_disequ_constraint(unsigned index)
   return
     implies_exprt(templ_row.pre_guard, notequal_exprt(vv.first, vv.second));
 }
-
-/*******************************************************************\
-
-Function: equality_domaint::get_post_not_disequ_constraint
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 exprt equality_domaint::get_post_not_disequ_constraint(unsigned index)
 {
@@ -267,18 +210,6 @@ exprt equality_domaint::get_post_not_disequ_constraint(unsigned index)
   rename(c);
   return c;
 }
-
-/*******************************************************************\
-
-Function: equality_domaint::project_on_vars
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void equality_domaint::project_on_vars(
   valuet &value,
@@ -340,18 +271,6 @@ void equality_domaint::project_on_vars(
   result=conjunction(c);
 }
 
-/*******************************************************************\
-
-Function: equality_domaint::set_equal
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void equality_domaint::set_equal(
   unsigned index, equ_valuet &value)
 {
@@ -360,18 +279,6 @@ void equality_domaint::set_equal(
   value.equs.make_union(vv.first, vv.second);
 }
 
-/*******************************************************************\
-
-Function: equality_domaint::set_disequal
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void equality_domaint::set_disequal(
   unsigned index, equ_valuet &value)
 {
@@ -379,36 +286,12 @@ void equality_domaint::set_disequal(
   value.disequs.insert(index);
 }
 
-/*******************************************************************\
-
-Function: equality_domaint::get_var_pair
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 const equality_domaint::var_pairt &equality_domaint::get_var_pair(
   unsigned index)
 {
   assert(index<templ.size());
   return templ[index].var_pair;
 }
-
-/*******************************************************************\
-
-Function: equality_domaint::output_value
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void equality_domaint::output_value(
   std::ostream &out,
@@ -436,18 +319,6 @@ void equality_domaint::output_value(
         << from_expr(ns, "", vv.second) << std::endl;
   }
 }
-
-/*******************************************************************\
-
-Function: equality_domaint::output_domain
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void equality_domaint::output_domain(
   std::ostream &out,
@@ -481,18 +352,6 @@ void equality_domaint::output_domain(
         << from_expr(ns, "", vv.second) << std::endl;
   }
 }
-
-/*******************************************************************\
-
-Function: equality_domaint::adapt_types
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 bool equality_domaint::adapt_types(exprt &v1, exprt &v2)
 {
@@ -556,18 +415,6 @@ bool equality_domaint::adapt_types(exprt &v1, exprt &v2)
 
   return false; // types incompatible
 }
-
-/*******************************************************************\
-
-Function: equality_domaint::make_template
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void equality_domaint::make_template(
   const var_specst &var_specs,
@@ -633,18 +480,6 @@ const exprt equality_domaint::initialize_solver(
   get_index_set(todo_equs);
   return true_exprt();
 }
-
-/*******************************************************************\
-
-Function: equality_domaint::get_index_set
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void equality_domaint::get_index_set(std::set<unsigned> &indices)
 {

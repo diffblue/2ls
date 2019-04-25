@@ -6,19 +6,11 @@ Author: Viktor Malik, imalik@fit.vutbr.cz
 
 \*******************************************************************/
 
+/// \file
+/// May-alias analysis for a single function
+
 #include "may_alias_analysis.h"
 
-/*******************************************************************\
-
-Function: may_alias_domaint::transform
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 void may_alias_domaint::transform(
   ai_domain_baset::locationt from,
   ai_domain_baset::locationt to,
@@ -38,17 +30,6 @@ void may_alias_domaint::transform(
   }
 }
 
-/*******************************************************************\
-
-Function: may_alias_domaint::merge
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 bool may_alias_domaint::merge(
   const may_alias_domaint &other,
   ai_domain_baset::locationt from,
@@ -72,17 +53,6 @@ bool may_alias_domaint::merge(
   return changed;
 }
 
-/*******************************************************************\
-
-Function: may_alias_domaint::assign_lhs_aliases
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 void may_alias_domaint::assign_lhs_aliases(
   const exprt &lhs,
   const std::set<irep_idt> &alias_set)
@@ -103,17 +73,6 @@ void may_alias_domaint::assign_lhs_aliases(
   }
 }
 
-/*******************************************************************\
-
-Function: may_alias_domaint::get_rhs_aliases
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 void may_alias_domaint::get_rhs_aliases(
   const exprt &rhs,
   std::set<irep_idt> &alias_set)
@@ -142,17 +101,6 @@ void may_alias_domaint::get_rhs_aliases(
   }
 }
 
-/*******************************************************************\
-
-Function: may_alias_domaint::dereference
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 const exprt may_alias_domaint::dereference(
   const exprt &expr,
   const namespacet &ns)
@@ -162,17 +110,6 @@ const exprt may_alias_domaint::dereference(
   return deref;
 }
 
-/*******************************************************************\
-
-Function: may_alias_domaint::members_to_symbols
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 void may_alias_domaint::members_to_symbols(exprt &expr, const namespacet &ns)
 {
   ssa_objectt object(expr, ns);

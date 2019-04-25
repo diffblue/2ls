@@ -6,6 +6,9 @@ Author: Peter Schrammel, Saurabh Joshi
 
 \*******************************************************************/
 
+/// \file
+/// SSA Unwinder Infrastructure
+
 #ifndef CPROVER_2LS_SSA_UNWINDABLE_LOCAL_SSA_H
 #define CPROVER_2LS_SSA_UNWINDABLE_LOCAL_SSA_H
 

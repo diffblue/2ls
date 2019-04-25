@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Linear ranking function domain
+
 #ifndef CPROVER_2LS_DOMAINS_LINRANK_DOMAIN_H
 #define CPROVER_2LS_DOMAINS_LINRANK_DOMAIN_H
 

@@ -6,6 +6,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+/// \file
+/// Cover a set of goals incrementally
+
 #include <util/threeval.h>
 #include <solvers/prop/literal_expr.h>
 
@@ -13,34 +16,11 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "cover_goals_ext.h"
 
-/*******************************************************************\
-
-Function: cover_goals_extt::~cover_goals_extt
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 cover_goals_extt::~cover_goals_extt()
 {
 }
 
-/*******************************************************************\
-
-Function: cover_goals_extt::mark
-
-  Inputs:
-
- Outputs:
-
- Purpose: Mark goals that are covered
-
-\*******************************************************************/
-
+/// Mark goals that are covered
 void cover_goals_extt::mark()
 {
   for(std::list<cover_goalt>::iterator
@@ -55,18 +35,7 @@ void cover_goals_extt::mark()
     }
 }
 
-/*******************************************************************\
-
-Function: cover_goals_extt::constraint
-
-  Inputs:
-
- Outputs:
-
- Purpose: Build clause
-
-\*******************************************************************/
-
+/// Build clause
 void cover_goals_extt::constraint()
 {
   exprt::operandst disjuncts;
@@ -82,18 +51,7 @@ void cover_goals_extt::constraint()
   solver << disjunction(disjuncts);
 }
 
-/*******************************************************************\
-
-Function: cover_goals_extt::freeze_goal_variables
-
-  Inputs:
-
- Outputs:
-
- Purpose: Build clause
-
-\*******************************************************************/
-
+/// Build clause
 void cover_goals_extt::freeze_goal_variables()
 {
   for(std::list<cover_goalt>::const_iterator
@@ -104,18 +62,7 @@ void cover_goals_extt::freeze_goal_variables()
       solver.solver->set_frozen(g_it->condition);
 }
 
-/*******************************************************************\
-
-Function: cover_goals_extt::operator()
-
-  Inputs:
-
- Outputs:
-
- Purpose: Try to cover all goals
-
-\*******************************************************************/
-
+/// Try to cover all goals
 void cover_goals_extt::operator()()
 {
   _iterations=_number_covered=0;
@@ -160,18 +107,7 @@ void cover_goals_extt::operator()()
         number_covered()<size());
 }
 
-/*******************************************************************\
-
-Function: cover_goals_extt::assignment
-
-  Inputs:
-
- Outputs:
-
- Purpose: checks whether a countermodel is spurious
-
-\*******************************************************************/
-
+/// checks whether a countermodel is spurious
 void cover_goals_extt::assignment()
 {
   // check loop head choices in model

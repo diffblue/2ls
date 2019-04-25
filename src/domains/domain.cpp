@@ -6,19 +6,10 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Abstract domain base class
+
 #include "domain.h"
-
-/*******************************************************************\
-
-Function: domaint::merge_kinds
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 domaint::kindt domaint::merge_kinds(kindt k1, kindt k2)
 {
@@ -26,18 +17,6 @@ domaint::kindt domaint::merge_kinds(kindt k1, kindt k2)
     (k1==OUT || k2==OUT ?  (k1==LOOP || k2==LOOP ?  OUTL : OUT) :
       (k1==LOOP || k2==LOOP ? LOOP :  IN));
 }
-
-/*******************************************************************\
-
-Function: domaint::output_var_specs
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void domaint::output_var_specs(
   std::ostream &out,

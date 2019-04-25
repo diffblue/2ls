@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Incremental Solver Interface
+
 #ifdef DEBUG
 #include <iostream>
 #endif
@@ -16,18 +19,6 @@ Author: Peter Schrammel
 #include <util/i2string.h>
 
 #include "incremental_solver.h"
-
-/*******************************************************************\
-
-Function: incremental_solvert::new_context
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void incremental_solvert::new_context()
 {
@@ -59,18 +50,6 @@ void incremental_solvert::new_context()
 #endif
 }
 
-/*******************************************************************\
-
-Function: incremental_solvert::pop_context
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void incremental_solvert::pop_context()
 {
 #ifdef NON_INCREMENTAL
@@ -101,18 +80,6 @@ void incremental_solvert::pop_context()
 #endif
 }
 
-/*******************************************************************\
-
-Function: incremental_solvert::make_context_permanent
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void incremental_solvert::make_context_permanent()
 {
 #ifdef NON_INCREMENTAL
@@ -137,18 +104,6 @@ void incremental_solvert::make_context_permanent()
   solver->set_assumptions(activation_literals);
 #endif
 }
-
-/*******************************************************************\
-
-Function: incremental_solvert::debug_add_to_formula
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void incremental_solvert::debug_add_to_formula(const exprt &expr)
 {

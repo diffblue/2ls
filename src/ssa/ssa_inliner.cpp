@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// SSA Inliner
+
 #include <algorithm>
 
 #include <util/i2string.h>
@@ -13,18 +16,7 @@ Author: Peter Schrammel
 
 #include "ssa_inliner.h"
 
-/*******************************************************************\
-
-Function: ssa_inlinert::get_summary
-
-  Inputs:
-
- Outputs:
-
- Purpose: get summary for function call
-
-\*******************************************************************/
-
+/// get summary for function call
 void ssa_inlinert::get_summary(
   const local_SSAt &SSA,
   local_SSAt::nodest::const_iterator n_it,
@@ -122,18 +114,7 @@ void ssa_inlinert::get_summary(
         loc));
 }
 
-/*******************************************************************\
-
-Function: ssa_inlinert::get_summaries
-
-  Inputs:
-
- Outputs:
-
- Purpose: get summary for all function calls
-
-\*******************************************************************/
-
+/// get summary for all function calls
 exprt ssa_inlinert::get_summaries(const local_SSAt &SSA)
 {
   exprt::operandst summaries, bindings;
@@ -141,18 +122,7 @@ exprt ssa_inlinert::get_summaries(const local_SSAt &SSA)
   return and_exprt(conjunction(bindings), conjunction(summaries));
 }
 
-/*******************************************************************\
-
-Function: ssa_inlinert::get_summaries_to_loc
-
-  Inputs:
-
- Outputs:
-
- Purpose: get summary for all function calls up to a given location
-
-\*******************************************************************/
-
+/// get summary for all function calls up to a given location
 exprt ssa_inlinert::get_summaries_to_loc(
   const local_SSAt &SSA,
   local_SSAt::locationt loc)
@@ -162,18 +132,7 @@ exprt ssa_inlinert::get_summaries_to_loc(
   return and_exprt(conjunction(bindings), conjunction(summaries));
 }
 
-/*******************************************************************\
-
-Function: ssa_inlinert::get_summaries
-
-  Inputs:
-
- Outputs:
-
- Purpose: get summary for all function calls
-
-\*******************************************************************/
-
+/// get summary for all function calls
 void ssa_inlinert::get_summaries(
   const local_SSAt &SSA,
   bool forward,
@@ -203,20 +162,8 @@ void ssa_inlinert::get_summaries(
   }
 }
 
-/*******************************************************************\
-
-Function: ssa_inlinert::replace
-
-  Inputs:
-
- Outputs:
-
- Purpose: replaces function calls by summaries
-          if available in the summary store
-          and does nothing otherwise
-
-\*******************************************************************/
-
+/// replaces function calls by summaries if available in the summary store and
+/// does nothing otherwise
 void ssa_inlinert::replace(
   local_SSAt &SSA,
   bool forward,
@@ -260,20 +207,8 @@ void ssa_inlinert::replace(
   }
 }
 
-/*******************************************************************\
-
-Function: ssa_inlinert::replace
-
-  Inputs:
-
- Outputs:
-
- Purpose: replaces inlines functions
-          if SSA is available in functions
-          and does nothing otherwise
-
-\*******************************************************************/
-
+/// replaces inlines functions if SSA is available in functions and does nothing
+/// otherwise
 void ssa_inlinert::replace(
   local_SSAt &SSA,
   const ssa_dbt &ssa_db,
@@ -330,18 +265,7 @@ void ssa_inlinert::replace(
   }
 }
 
-/*******************************************************************\
-
-Function: ssa_inlinert::replace
-
-  Inputs:
-
- Outputs:
-
- Purpose: inline summary
-
-\*******************************************************************/
-
+/// inline summary
 void ssa_inlinert::replace(
   local_SSAt &SSA,
   local_SSAt::nodest::iterator node,
@@ -398,22 +322,11 @@ void ssa_inlinert::replace(
   replace_globals_out(summary.globals_out, cs_globals_in, cs_globals_out);
 }
 
-/*******************************************************************\
-
- Function: ssa_inlinert::replace
-
- Inputs:
-
- Outputs:
-
- Purpose: inline function
-
- Remark: local_SSAt::nodest maps a goto program target to a single SSA node,
-         when inlining several calls to the same function
-         instructions appear factorized by the goto program targets
-
-\*******************************************************************/
-
+/// inline function
+///
+/// Remark: local_SSAt::nodest maps a goto program target to a single SSA node,
+///         when inlining several calls to the same function
+///         instructions appear factorized by the goto program targets
 void ssa_inlinert::replace(
   local_SSAt::nodest &nodes,
   local_SSAt::nodest::iterator node,
@@ -446,18 +359,6 @@ void ssa_inlinert::replace(
   replace_globals_out(function.globals_out, cs_globals_in, cs_globals_out);
 }
 
-/*******************************************************************\
-
-Function: ssa_inlinert::get_replace_globals_in
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 exprt ssa_inlinert::get_replace_globals_in(
   const local_SSAt::var_sett &globals_in,
   const local_SSAt::var_sett &globals)
@@ -489,18 +390,6 @@ exprt ssa_inlinert::get_replace_globals_in(
   return conjunction(c);
 }
 
-/*******************************************************************\
-
-Function: ssa_inlinert::replace_globals_in
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void ssa_inlinert::replace_globals_in(
   const local_SSAt::var_sett &globals_in,
   const local_SSAt::var_sett &globals)
@@ -525,18 +414,6 @@ void ssa_inlinert::replace_globals_in(
 #endif
   }
 }
-
-/*******************************************************************\
-
-Function: ssa_inlinert::get_replace_params
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 exprt ssa_inlinert::get_replace_params(
   const local_SSAt::var_listt &params,
@@ -755,18 +632,6 @@ exprt ssa_inlinert::get_replace_params(
   return conjunction(c);
 }
 
-/*******************************************************************\
-
-Function: ssa_inlinert::replace_params
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void ssa_inlinert::replace_params(
   const local_SSAt::var_listt &params,
   const function_application_exprt &funapp_expr)
@@ -790,18 +655,7 @@ void ssa_inlinert::replace_params(
   }
 }
 
-/*******************************************************************\
-
-Function: ssa_inlinert::get_replace_globals_out
-
-  Inputs:
-
- Outputs:
-
- Purpose: equalities for globals out (including unmodified globals)
-
-\*******************************************************************/
-
+/// equalities for globals out (including unmodified globals)
 exprt ssa_inlinert::get_replace_globals_out(
   const local_SSAt::var_sett &cs_globals_in,
   const local_SSAt::var_sett &cs_globals_out,
@@ -927,18 +781,7 @@ exprt ssa_inlinert::get_replace_globals_out(
   return conjunction(c);
 }
 
-/*******************************************************************\
-
-Function: ssa_inlinert::replace_globals_out
-
-  Inputs:
-
- Outputs:
-
- Purpose: equalities for globals out (including unmodified globals)
-
-\*******************************************************************/
-
+/// equalities for globals out (including unmodified globals)
 void ssa_inlinert::replace_globals_out(
   const local_SSAt::var_sett &globals_out,
   const local_SSAt::var_sett &cs_globals_in,
@@ -958,18 +801,6 @@ void ssa_inlinert::replace_globals_out(
   }
 }
 
-/*******************************************************************\
-
-Function: ssa_inlinert::havoc
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void ssa_inlinert::havoc(
   local_SSAt::nodet &node,
   local_SSAt::nodet::function_callst::iterator f_it)
@@ -977,18 +808,6 @@ void ssa_inlinert::havoc(
   // remove function call
   rm_function_calls.insert(f_it);
 }
-
-/*******************************************************************\
-
-Function: ssa_inlinert::rename
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void ssa_inlinert::rename(exprt &expr)
 {
@@ -1019,18 +838,6 @@ void ssa_inlinert::rename(exprt &expr)
     rename(*op);
 }
 
-/*******************************************************************\
-
-Function: ssa_inlinert::rename
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void ssa_inlinert::rename(local_SSAt::nodet &node)
 {
   for(auto &e : node.equalities)
@@ -1042,18 +849,6 @@ void ssa_inlinert::rename(local_SSAt::nodet &node)
   for(auto &f : node.function_calls)
     rename(f);
 }
-
-/*******************************************************************\
-
-Function: ssa_inlinert::rename_to_caller
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void ssa_inlinert::rename_to_caller(
   local_SSAt::nodet::function_callst::const_iterator f_it,
@@ -1100,18 +895,6 @@ void ssa_inlinert::rename_to_caller(
 
   replace_expr(replace_map, expr);
 }
-
-/*******************************************************************\
-
-Function: ssa_inlinert::rename_to_callee
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void ssa_inlinert::rename_to_callee(
   local_SSAt::nodet::function_callst::const_iterator f_it,
@@ -1164,21 +947,9 @@ void ssa_inlinert::rename_to_callee(
   replace_expr(replace_map, expr);
 }
 
-/*******************************************************************\
-
-Function: ssa_inlinert::commit_node
-
-  Inputs:
-
- Outputs:
-
- Purpose: apply changes to node, must be called after replace and havoc
-          (needed because replace and havoc usually called while
-           iterating over equalities,
-           and hence we cannot modify them)
-
-\*******************************************************************/
-
+/// apply changes to node, must be called after replace and havoc (needed
+/// because replace and havoc usually called while iterating over equalities,
+/// and hence we cannot modify them)
 void ssa_inlinert::commit_node(local_SSAt::nodest::iterator node)
 {
   // remove obsolete function calls
@@ -1196,18 +967,7 @@ void ssa_inlinert::commit_node(local_SSAt::nodest::iterator node)
   new_equs.clear();
 }
 
-/*******************************************************************\
-
-Function: ssa_inlinert::commit_nodes
-
-  Inputs:
-
- Outputs:
-
- Purpose: returns true if no nodes were to be committed
-
-\*******************************************************************/
-
+/// returns true if no nodes were to be committed
 bool ssa_inlinert::commit_nodes(
   local_SSAt::nodest &nodes,
   local_SSAt::nodest::iterator n_pos)
@@ -1218,18 +978,7 @@ bool ssa_inlinert::commit_nodes(
   return false;
 }
 
-/*******************************************************************\
-
-Function: ssa_inlinert::find_corresponding_symbol
-
-  Inputs:
-
- Outputs: returns false if the symbol is not found
-
- Purpose:
-
-\*******************************************************************/
-
+/// \return returns false if the symbol is not found
 bool ssa_inlinert::find_corresponding_symbol(
   const symbol_exprt &s,
   const local_SSAt::var_sett &globals,
@@ -1252,18 +1001,7 @@ bool ssa_inlinert::find_corresponding_symbol(
   return false;
 }
 
-/*******************************************************************\
-
-Function: ssa_inlinert::get_original_identifier
-
-  Inputs:
-
- Outputs:
-
- Purpose: TODO: this is a potential source of bugs. Better way to do that?
-
-\*******************************************************************/
-
+/// TODO: this is a potential source of bugs. Better way to do that?
 irep_idt ssa_inlinert::get_original_identifier(const symbol_exprt &s)
 {
   std::string id=id2string(s.get_identifier());
@@ -1292,19 +1030,9 @@ irep_idt ssa_inlinert::get_original_identifier(const symbol_exprt &s)
   return id;
 }
 
-/*******************************************************************\
-
-Function: ssa_inlinert::apply_dereference
-
-  Inputs: Set of pointers and value analysis
-
- Outputs: Set of all objects that can be pointed by one of pointers
-          from the input set.
-
- Purpose:
-
-\*******************************************************************/
-
+/// \par parameters: Set of pointers and value analysis
+/// \return Set of all objects that can be pointed by one of pointers from the
+///   input set.
 std::list<exprt> ssa_inlinert::apply_dereference(
   const std::list<exprt> &exprs,
   const ssa_value_domaint &value_domain,
@@ -1339,18 +1067,8 @@ std::list<exprt> ssa_inlinert::apply_dereference(
   return result;
 }
 
-/*******************************************************************\
-
-Function: ssa_inlinert::contains_iterator
-
-  Inputs: List of expressions
-
- Outputs: True if the list contains an advancer
-
- Purpose:
-
-\*******************************************************************/
-
+/// \par parameters: List of expressions
+/// \return True if the list contains an advancer
 bool ssa_inlinert::contains_iterator(const std::list<exprt> &params)
 {
   auto it=std::find_if(
@@ -1360,18 +1078,6 @@ bool ssa_inlinert::contains_iterator(const std::list<exprt> &params)
   return (it!=params.end());
 }
 
-/*******************************************************************\
-
-Function: ssa_inlinert::param_in_transformer
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 exprt ssa_inlinert::param_in_transformer(const exprt &param)
 {
   assert(param.id()==ID_symbol);
@@ -1380,18 +1086,6 @@ exprt ssa_inlinert::param_in_transformer(const exprt &param)
   return param_in;
 }
 
-/*******************************************************************\
-
-Function: ssa_inlinert::arg_in_transformer
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 exprt ssa_inlinert::arg_in_transformer(
   const exprt &arg,
   const local_SSAt &SSA,
@@ -1399,18 +1093,6 @@ exprt ssa_inlinert::arg_in_transformer(
 {
   return SSA.read_rhs(arg, loc);
 }
-
-/*******************************************************************\
-
-Function: ssa_inlinert::param_in_member_transformer
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 exprt ssa_inlinert::param_in_member_transformer(
   const exprt &param,
@@ -1424,18 +1106,6 @@ exprt ssa_inlinert::param_in_member_transformer(
   return param_member;
 }
 
-/*******************************************************************\
-
-Function: ssa_inlinert::arg_in_member_transformer
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 exprt ssa_inlinert::arg_in_member_transformer(
   const exprt &arg,
   const struct_union_typet::componentt &component,
@@ -1448,18 +1118,6 @@ exprt ssa_inlinert::arg_in_member_transformer(
     component.type());
   return SSA.read_rhs(arg_member, loc);
 }
-
-/*******************************************************************\
-
-Function: ssa_inlinert::param_out_transformer
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 exprt ssa_inlinert::param_out_transformer(
   const exprt &param,
@@ -1482,18 +1140,6 @@ exprt ssa_inlinert::param_out_transformer(
     return param_out;
   }
 }
-
-/*******************************************************************\
-
-Function: ssa_inlinert::arg_out_transformer
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 exprt ssa_inlinert::arg_out_transformer(
   const exprt &arg,
@@ -1527,18 +1173,6 @@ exprt ssa_inlinert::arg_out_transformer(
   }
 }
 
-/*******************************************************************\
-
-Function: ssa_inlinert::param_out_member_transformer
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 exprt ssa_inlinert::param_out_member_transformer(
   const exprt &param,
   const struct_union_typet::componentt &component,
@@ -1555,18 +1189,6 @@ exprt ssa_inlinert::param_out_member_transformer(
   return param_out;
 }
 
-/*******************************************************************\
-
-Function: ssa_inlinert::artg_out_transformer
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 exprt ssa_inlinert::arg_out_member_transformer(
   const exprt &arg,
   const struct_union_typet::componentt &component,
@@ -1582,36 +1204,12 @@ exprt ssa_inlinert::arg_out_member_transformer(
   return arg_member_out;
 }
 
-/*******************************************************************\
-
-Function: ssa_inlinert::cs_heap_covered
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 bool ssa_inlinert::cs_heap_covered(const exprt &expr)
 {
   return expr.id()==ID_symbol &&
          covered_cs_heap_out.find(to_symbol_expr(expr))!=
          covered_cs_heap_out.end();
 }
-
-/*******************************************************************\
-
-Function: ssa_inlinert::get_replace_new_objects
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 exprt ssa_inlinert::get_replace_new_objects(
   const local_SSAt &SSA,

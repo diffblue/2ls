@@ -6,24 +6,15 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+/// \file
+/// A map of program locations to the assignments made there
+
 #include <util/byte_operators.h>
 #include <util/find_symbols.h>
 
 #include "assignments.h"
 #include "ssa_dereference.h"
 #include "local_ssa.h"
-
-/*******************************************************************\
-
-Function: assignmentst::build_assignment_map
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void assignmentst::build_assignment_map(
   const goto_programt &goto_program,
@@ -136,18 +127,6 @@ void assignmentst::build_assignment_map(
   }
 }
 
-/*******************************************************************\
-
-Function: assignmentst::assign
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void assignmentst::assign(
   const exprt &lhs,
   locationt loc,
@@ -222,18 +201,6 @@ void assignmentst::assign(
   }
 }
 
-/*******************************************************************\
-
-Function: assignmentst::assign
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void assignmentst::assign(
   const ssa_objectt &lhs,
   locationt loc,
@@ -242,18 +209,7 @@ void assignmentst::assign(
   assignment_map[loc].insert(lhs);
 }
 
-/*******************************************************************\
-
-Function: assignmentst::build_assertion
-
-  Inputs:
-
- Outputs:
-
- Purpose: Adds to assignments dereferences from assertion
-
-\*******************************************************************/
-
+/// Adds to assignments dereferences from assertion
 void assignmentst::assign_symbolic_rhs(
   const exprt &expr,
   const locationt &loc,
@@ -273,18 +229,6 @@ void assignmentst::assign_symbolic_rhs(
       assign_symbolic_rhs(*it, loc, ns);
   }
 }
-
-/*******************************************************************\
-
-Function: assignmentst::output
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void assignmentst::output(
   const namespacet &ns,
@@ -314,18 +258,8 @@ void assignmentst::output(
   }
 }
 
-/*******************************************************************\
-
-Function: assignmentst::create_alloc_decl
-
-  Inputs:
-
- Outputs:
-
- Purpose: Create new fresh symbol for each object (and for each its field)
- dynamically allocated at the given location.
-
-\*******************************************************************/
+/// Create new fresh symbol for each object (and for each its field) dynamically
+/// allocated at the given location.
 void assignmentst::create_alloc_decl(
   const exprt &expr,
   const exprt &guard,

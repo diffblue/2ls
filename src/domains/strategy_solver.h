@@ -5,6 +5,9 @@ Module: Generic strategy solver
 Author: Matej Marusak
 
 \*******************************************************************/
+/// \file
+/// Generic strategy solver
+
 #ifndef CPROVER_2LS_DOMAINS_STRATEGY_SOLVER_H
 #define CPROVER_2LS_DOMAINS_STRATEGY_SOLVER_H
 

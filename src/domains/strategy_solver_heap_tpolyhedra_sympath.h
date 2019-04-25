@@ -6,6 +6,9 @@ Author: Viktor Malik
 
 \*******************************************************************/
 
+/// \file
+/// Strategy solver for heap-tpolyhedra domain using symbolic paths
+
 #ifndef CPROVER_2LS_DOMAINS_STRATEGY_SOLVER_HEAP_TPOLYHEDRA_SYMPATH_H
 #define CPROVER_2LS_DOMAINS_STRATEGY_SOLVER_HEAP_TPOLYHEDRA_SYMPATH_H
 

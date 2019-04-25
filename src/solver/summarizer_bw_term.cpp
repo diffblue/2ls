@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Summarizer for Backward Analysis with Termination
+
 #ifdef DEBUG
 #include <iostream>
 #endif
@@ -28,18 +31,6 @@ Author: Peter Schrammel
 
 #define MAX_PRECONDITION_DISJUNCTS 5
 #define MAX_BOOTSTRAP_ATTEMPTS 20
-
-/*******************************************************************\
-
-Function: summarizer_bw_termt::compute_summary_rec
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void summarizer_bw_termt::compute_summary_rec(
   const function_namet &function_name,
@@ -103,18 +94,6 @@ void summarizer_bw_termt::compute_summary_rec(
   }
 }
 
-/*******************************************************************\
-
-Function: summarizer_bw_termt::do_nontermination
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void summarizer_bw_termt::do_nontermination(
   const function_namet &function_name,
   local_SSAt &SSA,
@@ -136,18 +115,6 @@ void summarizer_bw_termt::do_nontermination(
     summary.terminates=NO;
   }
 }
-
-/*******************************************************************\
-
-Function: summarizer_bw_termt::do_summary_term
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void summarizer_bw_termt::do_summary_term(
   const function_namet &function_name,
@@ -301,18 +268,6 @@ void summarizer_bw_termt::do_summary_term(
   solver.pop_context();
 }
 
-/*******************************************************************\
-
-Function: summarizer_bw_termt::bootstrap_preconditions
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 bool summarizer_bw_termt::bootstrap_preconditions(
   local_SSAt &SSA,
   summaryt &summary,
@@ -377,18 +332,6 @@ bool summarizer_bw_termt::bootstrap_preconditions(
   return false;
 }
 
-/*******************************************************************\
-
-Function: summarizer_bw_termt::compute_termination_argument
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 exprt summarizer_bw_termt::compute_termination_argument(
   local_SSAt &SSA,
   const exprt &precondition,
@@ -409,18 +352,6 @@ exprt summarizer_bw_termt::compute_termination_argument(
 
   return termination_argument;
 }
-
-/*******************************************************************\
-
-Function: summarizer_bw_termt::compute_precondition
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 exprt summarizer_bw_termt::compute_precondition(
   local_SSAt &SSA,

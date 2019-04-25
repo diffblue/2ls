@@ -6,19 +6,10 @@ Author: Peter Schrammel, Stefan Marticek
 
 \*******************************************************************/
 
+/// \file
+/// Template Generator for Summaries, Invariants and Preconditions
+
 #include "ssa_var_collector.h"
-
-/*******************************************************************\
-
-Function: template_generator_baset::add_var
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void ssa_var_collectort::add_var(
   const domaint::vart &var,
@@ -76,18 +67,6 @@ void ssa_var_collectort::add_var(
   }
 }
 
-/*******************************************************************\
-
-Function: template_generator_baset::get_pre_post_guards
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void ssa_var_collectort::get_pre_post_guards(
   const local_SSAt &SSA,
   local_SSAt::nodest::const_iterator n_it,
@@ -115,18 +94,6 @@ void ssa_var_collectort::get_pre_post_guards(
   post_guard=and_exprt(pguard, pcond);
 }
 
-/*******************************************************************\
-
-Function: template_generator_baset::get_pre_var
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void ssa_var_collectort::get_pre_var(
   const local_SSAt &SSA,
   local_SSAt::objectst::const_iterator o_it,
@@ -144,19 +111,7 @@ void ssa_var_collectort::get_pre_var(
   aux_renaming_map[pre_var]=post_var;
 }
 
-/*******************************************************************\
-
-Function: template_generator_baset::get_init_expr
-
-  Inputs:
-
- Outputs:
-
- Purpose: supposes that loop head PHIs are of the form
-          xphi=gls?xlb:x0
-
-\*******************************************************************/
-
+/// supposes that loop head PHIs are of the form xphi=gls?xlb:x0
 void ssa_var_collectort::get_init_expr(
   const local_SSAt &SSA,
   local_SSAt::objectst::const_iterator o_it,
@@ -184,18 +139,6 @@ void ssa_var_collectort::get_init_expr(
   ssa_local_unwinder.unwinder_rename(pre_var, *n_it, true);
   init_renaming_map[pre_var]=init_expr;
 }
-
-/*******************************************************************\
-
-Function: ssa_var_collectort::collect_variables_loop
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void ssa_var_collectort::collect_variables_loop(
   const local_SSAt &SSA,

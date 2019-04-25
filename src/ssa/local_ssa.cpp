@@ -6,6 +6,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+/// \file
+/// SSA
+
 // #define DEBUG
 
 #ifdef DEBUG
@@ -24,18 +27,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "local_ssa.h"
 #include "ssa_dereference.h"
 #include "address_canonizer.h"
-
-/*******************************************************************\
-
-Function: local_SSAt::build_SSA
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void local_SSAt::build_SSA()
 {
@@ -68,18 +59,6 @@ void local_SSAt::build_SSA()
   get_entry_exit_vars();
 }
 
-/*******************************************************************\
-
-Function: local_SSAt::get_entry_exit_vars
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void local_SSAt::get_entry_exit_vars()
 {
   // get parameters
@@ -107,18 +86,6 @@ void local_SSAt::get_entry_exit_vars()
     last=goto_function.body.instructions.end(); last--;
   get_globals(last, globals_out, true, true, last->function);
 }
-
-/*******************************************************************\
-
-Function: local_SSAt::get_globals
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void local_SSAt::get_globals(
   locationt loc,
@@ -176,18 +143,6 @@ void local_SSAt::get_globals(
 }
 
 
-/*******************************************************************\
-
-Function: local_SSAt::collect_custom_templates
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void local_SSAt::collect_custom_templates()
 {
   for(local_SSAt::nodest::iterator n_it=nodes.begin();
@@ -212,18 +167,6 @@ void local_SSAt::collect_custom_templates()
   }
 }
 
-/*******************************************************************\
-
-Function: local_SSAt::find_node
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 local_SSAt::nodest::iterator local_SSAt::find_node(locationt loc)
 {
   nodest::iterator n_it=nodes.begin();
@@ -234,18 +177,6 @@ local_SSAt::nodest::iterator local_SSAt::find_node(locationt loc)
   }
   return n_it;
 }
-
-/*******************************************************************\
-
-Function: local_SSAt::find_node
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 local_SSAt::nodest::const_iterator local_SSAt::find_node(locationt loc) const
 {
@@ -258,18 +189,6 @@ local_SSAt::nodest::const_iterator local_SSAt::find_node(locationt loc) const
   return n_it;
 }
 
-/*******************************************************************\
-
-Function: local_SSAt::find_nodes
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void local_SSAt::find_nodes(
   locationt loc,
   std::list<nodest::const_iterator> &_nodes) const
@@ -281,18 +200,6 @@ void local_SSAt::find_nodes(
       _nodes.push_back(n_it);
   }
 }
-
-/*******************************************************************\
-
-Function: local_SSAt::edge_guard
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 exprt local_SSAt::edge_guard(locationt from, locationt to) const
 {
@@ -311,18 +218,6 @@ exprt local_SSAt::edge_guard(locationt from, locationt to) const
   else
     return guard_symbol(from);
 }
-
-/*******************************************************************\
-
-Function: local_SSAt::build_phi_nodes
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void local_SSAt::build_phi_nodes(locationt loc)
 {
@@ -410,36 +305,12 @@ void local_SSAt::build_phi_nodes(locationt loc)
   }
 }
 
-/*******************************************************************\
-
-Function: local_SSAt::dereference
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 exprt local_SSAt::dereference(const exprt &src, locationt loc) const
 {
   const ssa_value_domaint &ssa_value_domain=ssa_value_ai[loc];
   const std::string nondet_prefix="deref#"+i2string(loc->location_number);
   return ::dereference(src, ssa_value_domain, nondet_prefix, ns);
 }
-
-/*******************************************************************\
-
-Function: local_SSAt::build_transfer
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void local_SSAt::build_transfer(locationt loc)
 {
@@ -496,18 +367,6 @@ void local_SSAt::build_transfer(locationt loc)
       assign_rec(deref_lhs, deref_rhs, true_exprt(), loc);
   }
 }
-
-/*******************************************************************\
-
-Function: local_SSAt::build_function_call
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void local_SSAt::build_function_call(locationt loc)
 {
@@ -592,18 +451,6 @@ void local_SSAt::build_function_call(locationt loc)
   }
 }
 
-/*******************************************************************\
-
-Function: local_SSAt::build_cond
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void local_SSAt::build_cond(locationt loc)
 {
   // anything to be built?
@@ -619,18 +466,6 @@ void local_SSAt::build_cond(locationt loc)
     (--nodes.end())->equalities.push_back(equality);
   }
 }
-
-/*******************************************************************\
-
-Function: local_SSAt::build_guard
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void local_SSAt::build_guard(locationt loc)
 {
@@ -700,18 +535,7 @@ void local_SSAt::build_guard(locationt loc)
   (--nodes.end())->equalities.push_back(equality);
 }
 
-/*******************************************************************\
-
-Function: local_SSAt::build_assertions
-
-  Inputs:
-
- Outputs:
-
- Purpose: turns assertions into constraints
-
-\*******************************************************************/
-
+/// turns assertions into constraints
 void local_SSAt::build_assertions(locationt loc)
 {
   if(loc->is_assert())
@@ -753,18 +577,7 @@ void local_SSAt::build_assertions(locationt loc)
   }
 }
 
-/*******************************************************************\
-
-Function: local_SSAt::assertions_to_constraints
-
-  Inputs:
-
- Outputs:
-
- Purpose: turns assertions into constraints
-
-\*******************************************************************/
-
+/// turns assertions into constraints
 void local_SSAt::assertions_to_constraints()
 {
   for(nodest::iterator
@@ -779,52 +592,16 @@ void local_SSAt::assertions_to_constraints()
   }
 }
 
-/*******************************************************************\
-
-Function: local_SSAt::cond_symbol
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 ssa_objectt local_SSAt::cond_symbol() const
 {
   return ssa_objectt(symbol_exprt("ssa::$cond", bool_typet()), ns);
 }
-
-/*******************************************************************\
-
-Function: local_SSAt::guard_symbol
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 ssa_objectt local_SSAt::guard_symbol() const
 {
   return ssa_objectt(symbol_exprt("ssa::$guard", bool_typet()), ns);
 }
 
-
-/*******************************************************************\
-
-Function: local_SSAt::read_rhs
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 symbol_exprt local_SSAt::read_rhs(
   const ssa_objectt &object,
@@ -845,18 +622,6 @@ symbol_exprt local_SSAt::read_rhs(
   else
     return name(object, d_it->second.def);
 }
-
-/*******************************************************************\
-
-Function: local_SSAt::read_lhs
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 exprt local_SSAt::read_lhs(
   const exprt &expr,
@@ -888,18 +653,6 @@ exprt local_SSAt::read_lhs(
   else
     return read_rhs(tmp1, loc);
 }
-
-/*******************************************************************\
-
-Function: local_SSAt::read_node_in
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 exprt local_SSAt::read_node_in(
   const ssa_objectt &object,
@@ -942,18 +695,6 @@ exprt local_SSAt::read_node_in(
     return read_rhs(object, loc);
 }
 
-/*******************************************************************\
-
-Function: local_SSAt::get_def_loc
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 local_SSAt::locationt local_SSAt::get_def_loc(
   const symbol_exprt &expr,
   locationt loc) const
@@ -978,18 +719,6 @@ local_SSAt::locationt local_SSAt::get_def_loc(
   else // input
     return goto_function.body.instructions.begin();
 }
-
-/*******************************************************************\
-
-Function: local_SSAt::read_rhs
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 exprt local_SSAt::read_rhs(const exprt &expr, locationt loc) const
 {
@@ -1017,18 +746,6 @@ exprt local_SSAt::read_rhs(const exprt &expr, locationt loc) const
 
   return result;
 }
-
-/*******************************************************************\
-
-Function: local_SSAt::read_rhs_address_of_rec
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 exprt local_SSAt::read_rhs_address_of_rec(
   const exprt &expr,
@@ -1065,18 +782,6 @@ exprt local_SSAt::read_rhs_address_of_rec(
   else
     return expr;
 }
-
-/*******************************************************************\
-
-Function: local_SSAt::read_rhs_rec
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
 {
@@ -1172,18 +877,6 @@ exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
   }
 }
 
-/*******************************************************************\
-
-Function: local_SSAt::replace_side_effects_rec
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void local_SSAt::replace_side_effects_rec(
   exprt &expr, locationt loc, unsigned &counter) const
 {
@@ -1220,18 +913,6 @@ void local_SSAt::replace_side_effects_rec(
   }
 }
 
-/*******************************************************************\
-
-Function: local_SSAt::name
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 symbol_exprt local_SSAt::name(
   const ssa_objectt &object,
   kindt kind,
@@ -1263,18 +944,6 @@ symbol_exprt local_SSAt::name(
   return new_symbol_expr;
 }
 
-/*******************************************************************\
-
-Function: local_SSAt::name
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 symbol_exprt local_SSAt::name(
   const ssa_objectt &object,
   const ssa_domaint::deft &def) const
@@ -1286,18 +955,6 @@ symbol_exprt local_SSAt::name(
   else
     return name(object, OUT, def.loc);
 }
-
-/*******************************************************************\
-
-Function: local_SSAt::name_input
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 symbol_exprt local_SSAt::name_input(const ssa_objectt &object) const
 {
@@ -1314,18 +971,6 @@ symbol_exprt local_SSAt::name_input(const ssa_objectt &object) const
   return new_symbol_expr;
 }
 
-/*******************************************************************\
-
-Function: local_SSAt::nondet_symbol
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 exprt local_SSAt::nondet_symbol(
   std::string prefix,
   const typet &type,
@@ -1340,18 +985,6 @@ exprt local_SSAt::nondet_symbol(
   s.set(ID_identifier, identifier);
   return s;
 }
-
-/*******************************************************************\
-
-Function: local_SSAt::assign_rec
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void local_SSAt::assign_rec(
   const exprt &lhs,
@@ -1516,18 +1149,6 @@ void local_SSAt::assign_rec(
     throw "UNKNOWN LHS: "+lhs.id_string(); // NOLINT(*)
 }
 
-/*******************************************************************\
-
-Function: local_SSAt::output
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void local_SSAt::output(std::ostream &out) const
 {
   for(nodest::const_iterator
@@ -1540,18 +1161,6 @@ void local_SSAt::output(std::ostream &out) const
     out << '\n';
   }
 }
-
-/*******************************************************************\
-
-Function: local_SSAt::output_verbose
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void local_SSAt::output_verbose(std::ostream &out) const
 {
@@ -1574,18 +1183,6 @@ void local_SSAt::output_verbose(std::ostream &out) const
   }
   out << "(enable) " << from_expr(ns, "", get_enabling_exprs()) << "\n\n";
 }
-
-/*******************************************************************\
-
-Function: local_SSAt::nodet::output
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void local_SSAt::nodet::output(
   std::ostream &out,
@@ -1620,34 +1217,10 @@ void local_SSAt::nodet::output(
     out << "(F) " << from_expr(ns, "", *f_it) << "\n";
 }
 
-/*******************************************************************\
-
-Function: local_SSAt::has_static_lifetime
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 bool local_SSAt::has_static_lifetime(const ssa_objectt &object) const
 {
   return has_static_lifetime(object.get_expr());
 }
-
-/*******************************************************************\
-
-Function: local_SSAt::has_static_lifetime
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 bool local_SSAt::has_static_lifetime(const exprt &src) const
 {
@@ -1667,18 +1240,6 @@ bool local_SSAt::has_static_lifetime(const exprt &src) const
   else
     return false;
 }
-
-/*******************************************************************\
-
-Function: local_SSAt::operator <<
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 std::list<exprt> &operator<<(
   std::list<exprt> &dest,
@@ -1713,18 +1274,6 @@ std::list<exprt> &operator<<(
 
   return dest;
 }
-
-/*******************************************************************\
-
-Function: local_SSAt::operator<<
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 decision_proceduret &operator<<(
   decision_proceduret &dest,
@@ -1761,18 +1310,6 @@ decision_proceduret &operator<<(
 #endif
   return dest;
 }
-
-/*******************************************************************\
-
-Function: local_SSAt::operator<<
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 incremental_solvert &operator<<(
   incremental_solvert &dest,
@@ -1830,18 +1367,6 @@ incremental_solvert &operator<<(
   return dest;
 }
 
-/*******************************************************************\
-
-Function: local_SSAt::get_enabling_exprs
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 exprt local_SSAt::get_enabling_exprs() const
 {
   exprt::operandst result;
@@ -1858,18 +1383,6 @@ exprt local_SSAt::get_enabling_exprs() const
   return conjunction(result);
 }
 
-/*******************************************************************\
-
-Function: local_SSAt::has_function_calls
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 bool local_SSAt::has_function_calls() const
 {
   bool found=false;
@@ -1885,20 +1398,9 @@ bool local_SSAt::has_function_calls() const
   return found;
 }
 
-/*******************************************************************\
-
-Function: local_SSAt::build_unknown_objs
-
-  Inputs:
-
- Outputs:
-
- Purpose: If a location is malloc call, create "unknown object" for
-          return type. This is later used as a placeholder for invalid
-          of unknown dereference of an object of that type.
-
-\*******************************************************************/
-
+/// If a location is malloc call, create "unknown object" for return type. This
+/// is later used as a placeholder for invalid of unknown dereference of an
+/// object of that type.
 void local_SSAt::build_unknown_objs(locationt loc)
 {
   if(loc->is_assign())
@@ -1926,19 +1428,8 @@ void local_SSAt::build_unknown_objs(locationt loc)
   }
 }
 
-/*******************************************************************\
-
-Function: local_SSAt::unknown_obj_eq
-
-  Inputs:
-
- Outputs:
-
- Purpose: Create equality obj.component = &obj, which creates self-loop
-          on "unknown" objects.
-
-\*******************************************************************/
-
+/// Create equality obj.component = &obj, which creates self-loop on "unknown"
+/// objects.
 exprt local_SSAt::unknown_obj_eq(
   const symbol_exprt &obj,
   const struct_typet::componentt &component) const
@@ -1948,18 +1439,6 @@ exprt local_SSAt::unknown_obj_eq(
   const symbol_exprt member(identifier, component.type());
   return equal_exprt(member, address_of_exprt(obj));
 }
-
-/*******************************************************************\
-
-Function: local_SSAt::collect_iterators_rhs
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void local_SSAt::collect_iterators_rhs(const exprt &expr, locationt loc)
 {
@@ -1979,18 +1458,6 @@ void local_SSAt::collect_iterators_rhs(const exprt &expr, locationt loc)
   }
 }
 
-/*******************************************************************\
-
-Function: local_SSAt::collect_iterators_lhs
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void local_SSAt::collect_iterators_lhs(
   const ssa_objectt &object,
   local_SSAt::locationt loc)
@@ -2006,18 +1473,7 @@ void local_SSAt::collect_iterators_lhs(
   }
 }
 
-/*******************************************************************\
-
-Function: local_SSAt::new_iterator_access
-
-  Inputs:
-
- Outputs:
-
- Purpose: Create new iterator access
-
-\*******************************************************************/
-
+/// Create new iterator access
 void local_SSAt::new_iterator_access(
   const member_exprt &expr,
   local_SSAt::locationt loc,
@@ -2043,17 +1499,7 @@ void local_SSAt::new_iterator_access(
   it.first->add_access(expr, inst_loc_number);
 }
 
-/*******************************************************************\
-
-Function: local_SSAt::all_symbolic_deref_defined
-
-  Inputs:
-
- Outputs:
-
- Purpose: Create new iterator access
-
-\*******************************************************************/
+/// Create new iterator access
 bool local_SSAt::all_symbolic_deref_defined(
   const exprt &expr,
   const namespacet &ns,
@@ -2074,18 +1520,7 @@ bool local_SSAt::all_symbolic_deref_defined(
 }
 
 
-/********************************************************************\
-
-Function: local_SSAt::concretise_rhs
-
-  Inputs:
-
- Outputs:
-
- Purpose: Concretise symbolic rhs and return resulting expr
-
-\*******************************************************************/
-
+/// Concretise symbolic rhs and return resulting expr
 exprt local_SSAt::concretise_symbolic_deref_rhs(
   const exprt &rhs,
   const namespacet &ns,
@@ -2122,18 +1557,7 @@ exprt local_SSAt::concretise_symbolic_deref_rhs(
       symbolic_deref_rhs:deref_rhs;
 }
 
-/********************************************************************\
-
-Function: local_SSAt::collect_allocation_guards
-
-  Inputs:
-
- Outputs:
-
- Purpose: Collect allocation guards for the given location
-
-\*******************************************************************/
-
+/// Collect allocation guards for the given location
 void local_SSAt::collect_allocation_guards(
   const code_assignt &assign,
   locationt loc)
@@ -2154,17 +1578,6 @@ void local_SSAt::collect_allocation_guards(
   }
 }
 
-/********************************************************************\
-
-Function: local_SSAt::collect_record_frees
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 void local_SSAt::collect_record_frees(local_SSAt::locationt loc)
 {
   if(loc->is_decl())
@@ -2182,17 +1595,6 @@ void local_SSAt::collect_record_frees(local_SSAt::locationt loc)
   }
 }
 
-/********************************************************************\
-
-Function: local_SSAt::get_alloc_guard_rec
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 void local_SSAt::get_alloc_guard_rec(const exprt &expr, exprt guard)
 {
   if(expr.id()==ID_symbol && expr.type().get_bool("#dynamic"))
@@ -2213,21 +1615,13 @@ void local_SSAt::get_alloc_guard_rec(const exprt &expr, exprt guard)
     get_alloc_guard_rec(to_address_of_expr(expr).object(), guard);
 }
 
-/********************************************************************\
-
-Function: local_SSAt::can_reuse_symderef
-
-  Inputs: Symbolic deference object, namespace, current location.
-
- Outputs: True if the symbolic dereference can be reused from the last location
-          that it was defined in (i.e. it does not have to be redefinef).
-          Otherwise false.
-
- Purpose: The symbolic dereference object can be reused if and only if
-          the pointer it dereferences was not overwritten and any potentially
-          aliased object (or field) was not overwritten.
-
-\*******************************************************************/
+/// The symbolic dereference object can be reused if and only if the pointer it
+/// dereferences was not overwritten and any potentially aliased object (or
+/// field) was not overwritten.
+/// \par parameters: Symbolic deference object, namespace, current location.
+/// \return True if the symbolic dereference can be reused from the last
+///   location that it was defined in (i.e. it does not have to be redefinef).
+///   Otherwise false.
 bool local_SSAt::can_reuse_symderef(
   ssa_objectt &symderef,
   const namespacet &ns,

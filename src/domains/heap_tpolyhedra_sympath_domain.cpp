@@ -7,19 +7,12 @@ Author: Viktor Malik
 
 \*******************************************************************/
 
+/// \file
+/// Abstract domain for computing invariants in heap-tpolyhedra domain for
+///   different symbolic paths in program.
+
 #include "heap_tpolyhedra_sympath_domain.h"
 
-/*******************************************************************\
-
-Function: heap_tpolyhedra_sympath_domaint::output_value
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 void heap_tpolyhedra_sympath_domaint::output_value(
   std::ostream &out,
   const domaint::valuet &value,
@@ -34,17 +27,6 @@ void heap_tpolyhedra_sympath_domaint::output_value(
   }
 }
 
-/*******************************************************************\
-
-Function: heap_tpolyhedra_sympath_domaint::output_domain
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 void heap_tpolyhedra_sympath_domaint::output_domain(
   std::ostream &out,
   const namespacet &ns) const
@@ -52,17 +34,6 @@ void heap_tpolyhedra_sympath_domaint::output_domain(
   heap_tpolyhedra_domain.output_domain(out, ns);
 }
 
-/*******************************************************************\
-
-Function: heap_tpolyhedra_sympath_domaint::project_on_vars
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 void heap_tpolyhedra_sympath_domaint::project_on_vars(
   domaint::valuet &value,
   const domaint::var_sett &vars,

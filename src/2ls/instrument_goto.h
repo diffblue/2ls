@@ -6,6 +6,9 @@ Author: Peter Schrammel, Björn Wachter
 
 \*******************************************************************/
 
+/// \file
+/// Instrument Goto Program with Inferred Information
+
 #ifndef CPROVER_2LS_2LS_INSTRUMENT_GOTO_H
 #define CPROVER_2LS_2LS_INSTRUMENT_GOTO_H
 

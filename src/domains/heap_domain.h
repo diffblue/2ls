@@ -5,6 +5,9 @@ Module: Abstract domain for representing heap
 Author: Viktor Malik
 
 \*******************************************************************/
+/// \file
+/// Abstract domain for representing heap
+
 #ifndef CPROVER_2LS_DOMAINS_HEAP_DOMAIN_H
 #define CPROVER_2LS_DOMAINS_HEAP_DOMAIN_H
 

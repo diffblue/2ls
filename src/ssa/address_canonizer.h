@@ -6,6 +6,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+/// \file
+/// Canonize addresses of objects
+
 #ifndef CPROVER_2LS_SSA_ADDRESS_CANONIZER_H
 #define CPROVER_2LS_SSA_ADDRESS_CANONIZER_H
 

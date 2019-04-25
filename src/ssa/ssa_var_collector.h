@@ -6,6 +6,9 @@ Author: Peter Schrammel, Stefan Marticek
 
 \*******************************************************************/
 
+/// \file
+/// SSA var collector class
+
 #ifndef CPROVER_2LS_SSA_SSA_VAR_COLLECTOR_H
 #define CPROVER_2LS_SSA_SSA_VAR_COLLECTOR_H
 

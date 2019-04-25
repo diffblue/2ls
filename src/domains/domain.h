@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Abstract domain base class
+
 #ifndef CPROVER_2LS_DOMAINS_DOMAIN_H
 #define CPROVER_2LS_DOMAINS_DOMAIN_H
 

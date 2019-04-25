@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Predicate abstraction domain
+
 #ifndef CPROVER_2LS_DOMAINS_PREDABS_DOMAIN_H
 #define CPROVER_2LS_DOMAINS_PREDABS_DOMAIN_H
 

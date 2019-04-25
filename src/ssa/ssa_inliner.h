@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// SSA Inliner
+
 #ifndef CPROVER_2LS_SSA_SSA_INLINER_H
 #define CPROVER_2LS_SSA_SSA_INLINER_H
 

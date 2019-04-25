@@ -6,23 +6,15 @@ Author: Viktor Malik
 
 \*******************************************************************/
 
+/// \file
+/// Abstract domain for representing heap
+
 #include "heap_domain.h"
 #include <algorithm>
 #include <ssa/address_canonizer.h>
 
-/*******************************************************************\
-
-Function: heap_domaint::initialize
-
-  Inputs:
-
- Outputs:
-
- Purpose: Initialize abstract value.
-          Clears value with empty value rows corresponding to template.
-
-\*******************************************************************/
-
+/// Initialize abstract value. Clears value with empty value rows corresponding
+/// to template.
 void heap_domaint::initialize(domaint::valuet &value)
 {
   heap_valuet &val=static_cast<heap_valuet &>(value);
@@ -43,20 +35,8 @@ void heap_domaint::initialize(domaint::valuet &value)
   }
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::make_template
-
-  Inputs:
-
- Outputs:
-
- Purpose: Create domain template for given set of variables.
-          Template contains a row for each pointer-typed variable and 
-          field of a dynamic object.
-
-\*******************************************************************/
-
+/// Create domain template for given set of variables. Template contains a row
+/// for each pointer-typed variable and  field of a dynamic object.
 void heap_domaint::make_template(
   const domaint::var_specst &var_specs,
   const namespacet &ns)
@@ -128,18 +108,9 @@ void heap_domaint::set_smt_values(std::vector<exprt> got_values, size_t row)
 }
 
 
-/*******************************************************************\
-
-Function: heap_domaint::add_template_row
-
-  Inputs: var_spec Variable specification
-
- Outputs:
-
- Purpose: Add a template row.
-
-\*******************************************************************/
-
+/// Add a template row.
+/// \param var_spec: Variable specification
+/// \param pointed_type: Pointed type
 void heap_domaint::add_template_row(
   const var_spect &var_spec,
   const typet &pointed_type)
@@ -181,18 +152,10 @@ void heap_domaint::add_template_row(
   }
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::add_template_row_pair
-
-  Inputs: var_spec Variable specification
-
- Outputs:
-
- Purpose: Add a template row with a pair of variables as expression.
-
-\*******************************************************************/
-
+/// Add a template row with a pair of variables as expression.
+/// \param var_spec1: First variable specification
+/// \param var_spec2: Second variable specification
+/// \param pointed_type: Pointed type
 void heap_domaint::add_template_row_pair(
   const domaint::var_spect &var_spec1,
   const domaint::var_spect &var_spec2,
@@ -211,19 +174,9 @@ void heap_domaint::add_template_row_pair(
   templ_row.mem_kind=STACK;
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::to_pre_constraints
-
-  Inputs:
-
- Outputs: Entry constraints expression for a value.
-
- Purpose: Create entry constraints as a conjuction of entry
- expressions for each template row.
-
-\*******************************************************************/
-
+/// Create entry constraints as a conjuction of entry expressions for each
+/// template row.
+/// \return Entry constraints expression for a value.
 exprt heap_domaint::to_pre_constraints(valuet &_value)
 {
   heap_domaint::heap_valuet &value=
@@ -237,20 +190,9 @@ exprt heap_domaint::to_pre_constraints(valuet &_value)
   return conjunction(c);
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::make_not_post_constraints
-
-  Inputs:
-
- Outputs: Exit constraint expression for each row.
-
- Purpose: Create exit constraints for each value row.
-          Each expression is a negation of a row expression
-          (for solving the "exists forall" problem).
-
-\*******************************************************************/
-
+/// Create exit constraints for each value row. Each expression is a negation of
+/// a row expression (for solving the "exists forall" problem).
+/// \return Exit constraint expression for each row.
 void heap_domaint::make_not_post_constraints(
   valuet &_value,
   exprt::operandst &cond_exprs)
@@ -270,18 +212,8 @@ void heap_domaint::make_not_post_constraints(
   }
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::get_row_pre_constraint
-
-  Inputs:
-
- Outputs: Exit constraint expression for each row.
-
- Purpose: Create entry constraint expression for a row.
-
-\*******************************************************************/
-
+/// Create entry constraint expression for a row.
+/// \return Exit constraint expression for each row.
 exprt heap_domaint::get_row_pre_constraint(
   const rowt &row,
   const row_valuet &row_value) const
@@ -300,18 +232,8 @@ exprt heap_domaint::get_row_pre_constraint(
   return implies_exprt(templ_row.pre_guard, row_expr);
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::get_row_post_constraint
-
-  Inputs:
-
- Outputs: Exit constraint expression for each row.
-
- Purpose: Create exit constraint expression for a row.
-
-\*******************************************************************/
-
+/// Create exit constraint expression for a row.
+/// \return Exit constraint expression for each row.
 exprt heap_domaint::get_row_post_constraint(
   const rowt &row,
   const row_valuet &row_value)
@@ -330,21 +252,12 @@ exprt heap_domaint::get_row_post_constraint(
   return c;
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::add_transitivity
-
-  Inputs: to Row to add new paths to
-          from Row to add paths from
-          dyn_obj Dynamic object that all the paths pass through (it belongs to
-                  path segment from one pointer to another).
-
- Outputs: True if any path was added or changed, otherwise false.
-
- Purpose: Add all paths of one pointer as the destinations of another pointer.
-
-\*******************************************************************/
-
+/// Add all paths of one pointer as the destinations of another pointer.
+/// \param from: Row to add paths from
+/// \param to: Row to add new paths to
+/// \param value: Dynamic object that all the paths pass through
+///   (it belongs to path segment from one pointer to another).
+/// \return True if any path was added or changed, otherwise false.
 bool heap_domaint::add_transitivity(
   const rowt &from,
   const rowt &to,
@@ -372,22 +285,9 @@ bool heap_domaint::add_transitivity(
   return result;
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::add_points_to
-
-  Inputs:
-
- Outputs:
-
- Purpose: Add new object pointed by a row.
-          Calls add_points_to of the given row.
-          For stack rows, the destination is simply added into pointed 
-          objects set.
-          For heap rows, a new path is added.
-
-\*******************************************************************/
-
+/// Add new object pointed by a row. Calls add_points_to of the given row. For
+/// stack rows, the destination is simply added into pointed  objects set. For
+/// heap rows, a new path is added.
 bool heap_domaint::add_points_to(
   const rowt &row,
   heap_valuet &value,
@@ -397,18 +297,7 @@ bool heap_domaint::add_points_to(
   return value[row].add_points_to(dest);
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::set_nondet
-
-  Inputs:
-
- Outputs:
-
- Purpose: Set row nondeterministic.
-
-\*******************************************************************/
-
+/// Set row nondeterministic.
 bool heap_domaint::set_nondet(const rowt &row, heap_valuet &value)
 {
   assert(row<value.size());
@@ -417,18 +306,6 @@ bool heap_domaint::set_nondet(const rowt &row, heap_valuet &value)
   value[row].nondet=true;
   return result;
 }
-
-/*******************************************************************\
-
-Function: heap_domaint::output_value
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void heap_domaint::output_value(
   std::ostream &out,
@@ -466,18 +343,6 @@ void heap_domaint::output_value(
         << std::endl;
   }
 }
-
-/*******************************************************************\
-
-Function: heap_domaint::output_domain
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void heap_domaint::output_domain(std::ostream &out, const namespacet &ns) const
 {
@@ -521,18 +386,6 @@ void heap_domaint::output_domain(std::ostream &out, const namespacet &ns) const
   }
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::project_on_vars
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void heap_domaint::project_on_vars(
   domaint::valuet &value,
   const domaint::var_sett &vars,
@@ -575,19 +428,8 @@ void heap_domaint::project_on_vars(
   result=conjunction(c);
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::value_to_ptr_exprt
-
-  Inputs:
-
- Outputs:
-
- Purpose: Converts a constant returned from the solver to
-          the corresponding expression.
-
-\*******************************************************************/
-
+/// Converts a constant returned from the solver to the corresponding
+/// expression.
 exprt heap_domaint::value_to_ptr_exprt(const exprt &expr)
 {
   if(expr.id()==ID_constant)
@@ -602,18 +444,7 @@ exprt heap_domaint::value_to_ptr_exprt(const exprt &expr)
   return expr;
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::join
-
-  Inputs:
-
- Outputs:
-
- Purpose: Not used.
-
-\*******************************************************************/
-
+/// Not used.
 void heap_domaint::join(domaint::valuet &value1, const domaint::valuet &value2)
 {
   heap_valuet &val1=static_cast<heap_valuet &>(value1);
@@ -622,18 +453,9 @@ void heap_domaint::join(domaint::valuet &value1, const domaint::valuet &value2)
   assert(val2.size()==val1.size());
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::get_symbol_loc
-
-  Inputs: Symbol expression.
-
- Outputs: Number of location, or -1 if symbol is input.
-
- Purpose: Get location number of a given symbol.
-
-\*******************************************************************/
-
+/// Get location number of a given symbol.
+/// \param expr: Symbol expression.
+/// \return Number of location, or -1 if symbol is input.
 int heap_domaint::get_symbol_loc(const exprt &expr)
 {
   assert(expr.id()==ID_symbol);
@@ -645,19 +467,9 @@ int heap_domaint::get_symbol_loc(const exprt &expr)
   return std::stoi(loc_str);
 }
 
-/*******************************************************************\
-
-Function: ptr_equality
-
-  Inputs: Pointer expression (variable)
-          Value (object or address) of the pointer
-
- Outputs: Equality between pointer and its value with correct types
-
- Purpose:
-
-\*******************************************************************/
-
+/// \param ptr_expr: Pointer expression (variable)
+/// \param ptr_value: Value (object or address) of the pointer
+/// \return Equality between pointer and its value with correct types
 const exprt ptr_equality(
   const exprt &ptr_expr,
   const exprt &ptr_value,
@@ -677,19 +489,11 @@ const exprt ptr_equality(
   return equal_exprt(ptr_expr, value);
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::stack_row_valuet::get_row_expr
-
-  Inputs: templ_expr Template expression
-
- Outputs: Formula corresponding to the template row
-
- Purpose: Stack row is a disjuction of equalities between templ_expr
-          and addresses of dynamic objects from points_to set.
-
-\*******************************************************************/
-
+/// Stack row is a disjuction of equalities between templ_expr and addresses of
+/// dynamic objects from points_to set.
+/// \param templ_expr: Template expression
+/// \param rename_templ_expr: Unused
+/// \return Formula corresponding to the template row
 exprt heap_domaint::stack_row_valuet::get_row_expr(
   const vart &templ_expr,
   bool rename_templ_expr) const
@@ -719,19 +523,7 @@ exprt heap_domaint::stack_row_valuet::get_row_expr(
   }
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::stack_row_valuet::add_points_to
-
-  Inputs:
-
- Outputs:
-
- Purpose: Add new object to the value of a row. The object is simply
-          added to the set.
-
-\*******************************************************************/
-
+/// Add new object to the value of a row. The object is simply added to the set.
 bool heap_domaint::stack_row_valuet::add_points_to(const exprt &expr)
 {
   if(points_to.find(expr)==points_to.end())
@@ -741,41 +533,20 @@ bool heap_domaint::stack_row_valuet::add_points_to(const exprt &expr)
   return true;
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::stack_row_valuet::clear
-
-  Inputs:
-
- Outputs:
-
- Purpose: Clear stack row value
-
-\*******************************************************************/
+/// Clear stack row value
 void heap_domaint::stack_row_valuet::clear()
 {
   nondet=false;
   points_to.clear();
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::heap_row_valuet::get_row_expr
-
-  Inputs: templ_expr Template expression
-          rename_templ_expr True if templ_expr should be renamed
-                            (the corresponding template row is of
-                            OUTHEAP type)
-
- Outputs: Formula corresponding to the template row
-
- Purpose: Heap row is a conjunction of paths.
-
-          nondet is TRUE
-          empty is FALSE
-
-\*******************************************************************/
-
+/// Heap row is a conjunction of paths:
+///   nondet is TRUE
+///   empty is FALSE
+/// \param templ_expr: Template expression
+/// \param rename_templ_expr: True if templ_expr should be renamed
+///   (the corresponding template row is of OUTHEAP type)
+/// \return Formula corresponding to the template row
 exprt heap_domaint::heap_row_valuet::get_row_expr(
   const vart &templ_expr_,
   bool rename_templ_expr) const
@@ -836,20 +607,8 @@ exprt heap_domaint::heap_row_valuet::get_row_expr(
   }
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::heap_row_valuet::add_points_to
-
-  Inputs:
-
- Outputs:
-
- Purpose: Add new object to the heap row - create new path or set
-          self_linkage flag in case the object is same as the row
-          object.
-
-\*******************************************************************/
-
+/// Add new object to the heap row - create new path or set self_linkage flag in
+/// case the object is same as the row object.
 bool heap_domaint::heap_row_valuet::add_points_to(const exprt &dest)
 {
   if(dest==dyn_obj.first)
@@ -867,19 +626,10 @@ bool heap_domaint::heap_row_valuet::add_points_to(const exprt &dest)
   return true;
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::heap_row_valuet::add_path
-
-  Inputs: dest Path destination
-          dyn_obj Dynamic object that the path goes through
-
- Outputs: True if the value was changed (a path was added)
-
- Purpose: Add new path to the heap row
-
-\*******************************************************************/
-
+/// Add new path to the heap row
+/// \param dest: Path destination
+/// \param dyn_obj: Dynamic object that the path goes through
+/// \return True if the value was changed (a path was added)
 bool heap_domaint::heap_row_valuet::add_path(
   const exprt &dest,
   const dyn_objt &dyn_obj)
@@ -910,18 +660,8 @@ bool heap_domaint::heap_row_valuet::add_path(
   }
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::heap_row_valuet::add_all_paths
-
-  Inputs:
-
- Outputs: True if this has changed
-
- Purpose: Add all paths from other heap row.
-
-\*******************************************************************/
-
+/// Add all paths from other heap row.
+/// \return True if this has changed
 bool heap_domaint::heap_row_valuet::add_all_paths(
   const heap_row_valuet &other_val,
   const dyn_objt &dyn_obj)
@@ -945,35 +685,11 @@ bool heap_domaint::heap_row_valuet::add_all_paths(
   return result;
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::heap_row_valuet::add_pointed_by
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 bool heap_domaint::heap_row_valuet::add_pointed_by(const rowt &row)
 {
   auto new_pb=pointed_by.insert(row);
   return new_pb.second;
 }
-
-/*******************************************************************\
-
-Function: heap_domaint::heap_row_valuet::add_self_linkage
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 bool heap_domaint::heap_row_valuet::add_self_linkage()
 {
@@ -990,19 +706,10 @@ bool heap_domaint::heap_row_valuet::add_self_linkage()
   return result;
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::heap_row_valuet::rename_outheap
-
-  Inputs: expr Expression to be renamed
-
- Outputs: Renamed expression
-
- Purpose: Rename OUTHEAP row expression (used for post-expr).
-          Simply remove 'lb' from suffix.
-
-\*******************************************************************/
-
+/// Rename OUTHEAP row expression (used for post-expr). Simply remove 'lb' from
+/// suffix.
+/// \param expr: Expression to be renamed
+/// \return Renamed expression
 exprt heap_domaint::heap_row_valuet::rename_outheap(const symbol_exprt &expr)
 {
   const std::string id=id2string(expr.get_identifier());
@@ -1011,36 +718,15 @@ exprt heap_domaint::heap_row_valuet::rename_outheap(const symbol_exprt &expr)
     expr.type());
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::heap_row_valuet::clear
-
-  Inputs:
-
- Outputs: Clear heap row value
-
- Purpose:
-
-\*******************************************************************/
+/// \return Clear heap row value
 void heap_domaint::heap_row_valuet::clear()
 {
   nondet=false;
   paths.clear();
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::get_new_heap_vars
-
-  Inputs:
-
- Outputs: List of variables (symbols) that were added to template
-          during analysis.
-
- Purpose:
-
-\*******************************************************************/
-
+/// \return List of variables (symbols) that were added to template during
+///   analysis.
 const std::list<symbol_exprt> heap_domaint::get_new_heap_vars()
 {
   std::list<symbol_exprt> result;
@@ -1056,18 +742,6 @@ const std::list<symbol_exprt> heap_domaint::get_new_heap_vars()
   }
   return result;
 }
-
-/*******************************************************************\
-
-Function: heap_domaint::initialize_domain
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void heap_domaint::initialize_domain(
   const local_SSAt &SSA,
@@ -1085,21 +759,8 @@ void heap_domaint::initialize_domain(
     create_precondition(global_in, precondition);
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::bind_iterators
-
-  Inputs: SSA
-          precondition Calling context
-          template_generator
-
- Outputs:
-
- Purpose: Bind iterators from SSA to actual heap objects from the
-          calling context.
-
-\*******************************************************************/
-
+/// Bind iterators in the \p template_generator from \p SSA to actual heap
+/// objects from the calling context given by \p precondition
 void heap_domaint::bind_iterators(
   const local_SSAt &SSA,
   const exprt &precondition,
@@ -1174,18 +835,7 @@ void heap_domaint::bind_iterators(
   }
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::new_output_template_row
-
-  Inputs:
-
- Outputs:
-
- Purpose: Insert new output template row into the template.
-
-\*******************************************************************/
-
+/// Insert new output template row into the template.
 void heap_domaint::new_output_template_row(
   const symbol_exprt &var,
   const unsigned location_number,
@@ -1218,19 +868,8 @@ void heap_domaint::new_output_template_row(
   add_template_row(var_spec, pointed_type);
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::create_precondition
-
-  Inputs: Variable and a calling context (precondition)
-
- Outputs:
-
- Purpose: Create precondition for given variable at the input of the
-          function if it does not exist in given calling context.
-
-\*******************************************************************/
-
+/// Create \p precondition for given \p var at the input of the function if it
+/// does not exist in given calling context.
 void heap_domaint::create_precondition(
   const symbol_exprt &var,
   const exprt &precondition)
@@ -1288,79 +927,33 @@ void heap_domaint::create_precondition(
   }
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::get_iterator_bindings
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 exprt heap_domaint::get_iterator_bindings() const
 {
   return conjunction(iterator_bindings);
 }
-
-/*******************************************************************\
-
-Function: heap_domaint::get_aux_bindings
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 exprt heap_domaint::get_aux_bindings() const
 {
   return conjunction(aux_bindings);
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::get_input_bindings
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 exprt heap_domaint::get_input_bindings() const
 {
   return and_exprt(get_iterator_bindings(), get_aux_bindings());
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::iterator_access_bindings
-
-  Inputs: src Source pointer (symbolic value)
-          init_pointed Actual value of the source pointer
-          iterator_sym Corresponding iterator symbol
-          fields Set of fields to follow
-          access Iterator access to be bound
-          level Current access level
-          guards
-          precondition Calling context
-          SSA
-
- Outputs: Formula corresponding to bindings
-
- Purpose: Create bindings of iterator with corresponding dynamic objects.
-          Function is called recursively, if there is access with multiple
-          fields.
-
-\*******************************************************************/
-
+/// Create bindings of iterator with corresponding dynamic objects. Function is
+/// called recursively, if there is access with multiple fields.
+/// \param src: Source pointer (symbolic value)
+/// \param init_pointed: Actual value of the source pointer
+/// \param iterator_sym: Corresponding iterator symbol
+/// \param fields: Set of fields to follow
+/// \param access: Iterator access to be bound
+/// \param level: Current access level
+/// \param guards: Guards
+/// \param precondition: Calling context
+/// \param SSA: SSA
+/// \return Formula corresponding to bindings
 const exprt heap_domaint::iterator_access_bindings(
   const symbol_exprt &src,
   const exprt &init_pointer,
@@ -1438,20 +1031,11 @@ const exprt heap_domaint::iterator_access_bindings(
     return true_exprt();
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::reachable_objects
-
-  Inputs: src Source expression
-          fields Set of fields to follow
-          precondition Calling context
-
- Outputs: Set of reachable objects
-
- Purpose: Find all objects reachable from source via the vector of fields
-
-\*******************************************************************/
-
+/// Find all objects reachable from source via the vector of fields
+/// \param src: Source expression
+/// \param fields: Set of fields to follow
+/// \param precondition: Calling context
+/// \return Set of reachable objects
 const std::set<symbol_exprt> heap_domaint::reachable_objects(
   const exprt &src,
   const std::vector<irep_idt> &fields,
@@ -1527,18 +1111,6 @@ const std::set<symbol_exprt> heap_domaint::reachable_objects(
   return result;
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::add_new_heap_row_spec
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void heap_domaint::add_new_heap_row_spec(
   const symbol_exprt &expr,
   const unsigned location_number,
@@ -1552,21 +1124,12 @@ void heap_domaint::add_new_heap_row_spec(
   }
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::collect_preconditions_rec
-
-  Inputs: Expression and calling context (precondition)
-
- Outputs: Set of preconditions corresponding to given expression.
-
- Purpose: Recursively find all preconditions for the given expression
-          in the calling context.
-          Returns right-hand sides of equalities where expr is left-hand
-          side.
-
-\*******************************************************************/
-
+/// Recursively find all preconditions for the given expression in the calling
+/// context. Returns right-hand sides of equalities where expr is left-hand
+/// side.
+/// \param expr: Expression
+/// \param precondition: calling context
+/// \return Set of preconditions corresponding to given expression.
 const std::set<exprt> heap_domaint::collect_preconditions_rec(
   const exprt &expr,
   const exprt &precondition)
@@ -1595,19 +1158,10 @@ const std::set<exprt> heap_domaint::collect_preconditions_rec(
   return result;
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::restrict_to_sympath
-
-  Inputs: Symbolic path
-
- Outputs:
-
- Purpose: Restrict template to a given symbolic path.
-          For each template row, we add all other loop guards in their
-          positive or negative form (as specified by path) to aux_expr.
-
-\*******************************************************************/
+/// Restrict template to a given symbolic path. For each template row, we add
+/// all other loop guards in their positive or negative form (as specified by
+/// path) to aux_expr.
+/// \param sympath: Symbolic path
 void heap_domaint::restrict_to_sympath(const symbolic_patht &sympath)
 {
   for(auto &row : templ)
@@ -1617,34 +1171,15 @@ void heap_domaint::restrict_to_sympath(const symbolic_patht &sympath)
   }
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::clear_aux_symbols
-
-  Inputs:
-
- Outputs:
-
- Purpose: Reset aux symbols to true (remove all restricitions).
-
-\*******************************************************************/
+/// Reset aux symbols to true (remove all restricitions).
 void heap_domaint::clear_aux_symbols()
 {
   for(auto &row : templ)
     row.aux_expr=true_exprt();
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::eliminate_sympaths
-
-  Inputs: Vector of symbolic paths
-
- Outputs:
-
- Purpose: Restrict template to other paths than those specified.
-
-\*******************************************************************/
+/// Restrict template to other paths than those specified.
+/// \param sympaths: Vector of symbolic paths
 void heap_domaint::eliminate_sympaths(
   const std::vector<symbolic_patht> &sympaths)
 {
@@ -1662,17 +1197,7 @@ void heap_domaint::eliminate_sympaths(
   }
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::undo_restriction
-
-  Inputs:
-
- Outputs:
-
- Purpose: Undo last restriction (remove last conjunct from each aux_expr).
-
-\*******************************************************************/
+/// Undo last restriction (remove last conjunct from each aux_expr).
 void heap_domaint::undo_restriction()
 {
   for(auto &row : templ)
@@ -1796,22 +1321,14 @@ bool heap_domaint::edit_row(const rowt &row, valuet &_inv, bool improved)
 }
 
 
-/*******************************************************************\
-
-Function: heap_domaint::find_member_row
-
-  Inputs: object
-          field
-          actual location
-
- Outputs: Row number for obj.member#loc with maximal loc less than actual_loc
-          -1 if such template row does not exist
-
- Purpose: Find the template row that contains specified member field
-          of a dynamic object at the given location.
-
-\*******************************************************************/
-
+/// Find the template row that contains specified member field of a dynamic
+/// object at the given location.
+/// \param obj: Object
+/// \param member: Object field
+/// \param actual_loc: Actual location
+/// \param kind: Kind
+/// \return Row number for obj.member#loc with maximal loc less than actual_loc
+///   -1 if such template row does not exist
 int heap_domaint::find_member_row(
   const exprt &obj,
   const irep_idt &member,
@@ -1847,18 +1364,7 @@ int heap_domaint::find_member_row(
   return result;
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::update_rows_rec
-
-  Inputs:
-
- Outputs:
-
- Purpose: Recursively update rows that point to given row.
-
-\*******************************************************************/
-
+/// Recursively update rows that point to given row.
 bool heap_domaint::update_rows_rec(
   const heap_domaint::rowt &row,
   heap_domaint::heap_valuet &value)
@@ -1885,18 +1391,6 @@ bool heap_domaint::update_rows_rec(
   return result;
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::initialize_solver
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 const exprt heap_domaint::initialize_solver(
   const local_SSAt &SSA,
   const exprt &precondition,
@@ -1913,17 +1407,6 @@ const exprt heap_domaint::initialize_solver(
 }
 
 
-/*******************************************************************\
-
-Function: heap_domaint::clear_pointing_rows
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 void heap_domaint::clear_pointing_rows(
   const heap_domaint::rowt &row,
   heap_domaint::heap_valuet &value)
@@ -1944,19 +1427,8 @@ void heap_domaint::clear_pointing_rows(
     row_value.pointed_by.erase(r);
 }
 
-/*******************************************************************\
-
-Function: heap_domaint::get_points_to_dest
-
-  Inputs:
-
- Outputs:
-
- Purpose: Get an address where the given pointer points to in the current
-          solver iteration. Returns nil_exprt if the value of the pointer
-          is nondet.
-
-\*******************************************************************/
+/// Get an address where the given pointer points to in the current solver
+/// iteration. Returns nil_exprt if the value of the pointer is nondet.
 const exprt heap_domaint::get_points_to_dest(
   const exprt &solver_value,
   const exprt &templ_row_expr)

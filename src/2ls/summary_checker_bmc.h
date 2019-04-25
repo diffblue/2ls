@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Summary Checker for BMC
+
 #ifndef CPROVER_2LS_2LS_SUMMARY_CHECKER_BMC_H
 #define CPROVER_2LS_2LS_SUMMARY_CHECKER_BMC_H
 

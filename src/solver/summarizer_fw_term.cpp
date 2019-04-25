@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Summarizer for Forward Analysis
+
 #include <iostream>
 
 #include <util/simplify_expr.h>
@@ -24,18 +27,6 @@ Author: Peter Schrammel
 
 #include "summarizer_fw_term.h"
 #include "summary_db.h"
-
-/*******************************************************************\
-
-Function: summarizer_fw_termt::compute_summary_rec
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void summarizer_fw_termt::compute_summary_rec(
   const function_namet &function_name,
@@ -159,18 +150,6 @@ void summarizer_fw_termt::compute_summary_rec(
   summary_db.put(function_name, summary);
 }
 
-/*******************************************************************\
-
-Function: summarizer_fw_termt::inline_summaries
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void summarizer_fw_termt::inline_summaries(
   const function_namet &function_name,
   local_SSAt &SSA, exprt precondition,
@@ -225,18 +204,6 @@ void summarizer_fw_termt::inline_summaries(
   }
 }
 
-/*******************************************************************\
-
-Function: summarizer_fw_termt::do_nontermination
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void summarizer_fw_termt::do_nontermination(
   const function_namet &function_name,
   local_SSAt &SSA,
@@ -263,18 +230,6 @@ void summarizer_fw_termt::do_nontermination(
     summary.terminates=NO;
   }
 }
-
-/*******************************************************************\
-
-Function: summarizer_fw_termt::do_termination
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void summarizer_fw_termt::do_termination(
   const function_namet &function_name,
@@ -323,18 +278,7 @@ void summarizer_fw_termt::do_termination(
   termargs_computed++;
 }
 
-/*******************************************************************\
-
-Function: summarizer_fw_termt::check_termination_argument
-
-  Inputs:
-
- Outputs:
-
- Purpose: checks whether a termination argument implies termination
-
-\*******************************************************************/
-
+/// checks whether a termination argument implies termination
 threevalt summarizer_fw_termt::check_termination_argument(exprt expr)
 {
   if(expr.is_false())

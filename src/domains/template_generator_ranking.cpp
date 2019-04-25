@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Template Generator for Ranking Functions
+
 #include "template_generator_ranking.h"
 #include "linrank_domain.h"
 #include "lexlinrank_domain.h"
@@ -18,18 +21,6 @@ Author: Peter Schrammel
 #ifdef DEBUG
 #include <iostream>
 #endif
-
-/*******************************************************************\
-
-Function: template_generator_rankingt::operator()
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void template_generator_rankingt::operator()(
   unsigned _domain_number,
@@ -69,18 +60,6 @@ void template_generator_rankingt::operator()(
   domain_ptr->output_domain(debug(), SSA.ns); debug() << eom;
 #endif
 }
-
-/*******************************************************************\
-
-Function: template_generator_rankingt::collect_variables_ranking
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void template_generator_rankingt::collect_variables_ranking(
   const local_SSAt &SSA,
@@ -156,18 +135,6 @@ void template_generator_rankingt::collect_variables_ranking(
     }
   }
 }
-
-/*******************************************************************\
-
-Function: template_generator_rankingt::filter_ranking_domain
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void template_generator_rankingt::filter_ranking_domain(
   domaint::var_specst &var_specs)

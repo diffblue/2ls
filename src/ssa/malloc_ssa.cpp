@@ -6,6 +6,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+/// \file
+/// SSA for malloc()
+
 #include <util/std_types.h>
 #include <util/std_expr.h>
 #include <util/arith_tools.h>
@@ -20,18 +23,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <functional>
 
 #include "malloc_ssa.h"
-
-/*******************************************************************\
-
-Function: c_sizeof_type_rec
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 inline static typet c_sizeof_type_rec(const exprt &expr)
 {
@@ -54,19 +45,8 @@ inline static typet c_sizeof_type_rec(const exprt &expr)
   return nil_typet();
 }
 
-/*******************************************************************\
-
-Function: create_dynamic_object
-
-  Inputs:
-
- Outputs:
-
- Purpose: Create new dynamic object, insert it into the symbol table
-          and return its address.
-
-\*******************************************************************/
-
+/// Create new dynamic object, insert it into the symbol table and return its
+/// address.
 exprt create_dynamic_object(
   const std::string &suffix,
   const typet &type,
@@ -104,19 +84,8 @@ exprt create_dynamic_object(
   return address_of_object;
 }
 
-/*******************************************************************\
-
-Function: collect_pointer_vars
-
-  Inputs:
-
- Outputs:
-
- Purpose: Collect all variables (symbols and their members) of pointer
-          type with given pointed type.
-
-\*******************************************************************/
-
+/// Collect all variables (symbols and their members) of pointer type with given
+/// pointed type.
 std::vector<exprt> collect_pointer_vars(
   const symbol_tablet &symbol_table,
   const typet &pointed_type)
@@ -152,18 +121,6 @@ std::vector<exprt> collect_pointer_vars(
   }
   return pointers;
 }
-
-/*******************************************************************\
-
-Function: malloc_ssa
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 exprt malloc_ssa(
   const side_effect_exprt &code,
@@ -278,18 +235,6 @@ exprt malloc_ssa(
 }
 
 
-/*******************************************************************\
-
-Function: replace_malloc_rec
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 static bool replace_malloc_rec(
   exprt &expr,
   const std::string &suffix,
@@ -333,18 +278,6 @@ static bool replace_malloc_rec(
     return result;
   }
 }
-
-/*******************************************************************\
-
-Function: replace_malloc
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 bool replace_malloc(
   goto_modelt &goto_model,
@@ -417,23 +350,11 @@ bool replace_malloc(
   return result;
 }
 
-/*******************************************************************\
-
-Function: set_var_always_to_true
-
-  Inputs: goto_model
-          name_cond Function returning true for names of variables
-                    to be set.
-
- Outputs:
-
- Purpose: Set undefined boolean variable to true.
-          Finds declaration of a variable whose name matches the given
-          condition and adds an instruction var = TRUE after
-          the declaration.
-
-\*******************************************************************/
-
+/// Set undefined boolean variable to true. Finds declaration of a variable
+/// whose name matches the given condition and adds an instruction var = TRUE
+/// after the declaration.
+/// \par parameters: goto_model
+/// name_cond Function returning true for names of variables to be set.
 void set_var_always_to_true(
   goto_modelt &goto_model,
   std::function<bool(std::string &)>name_cond)
@@ -464,18 +385,6 @@ void set_var_always_to_true(
   }
 }
 
-/*******************************************************************\
-
-Function: allow_record_malloc
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void allow_record_malloc(goto_modelt &goto_model)
 {
   set_var_always_to_true(
@@ -486,18 +395,6 @@ void allow_record_malloc(goto_modelt &goto_model)
              name.find("::record_malloc")!=std::string::npos;
     });
 }
-
-/*******************************************************************\
-
-Function: allow_record_memleak
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void allow_record_memleak(goto_modelt &goto_model)
 {

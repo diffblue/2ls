@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Dynamic Control Flow Graph
+
 #ifndef CPROVER_2LS_2LS_DYNAMIC_CFG_H
 #define CPROVER_2LS_2LS_DYNAMIC_CFG_H
 
@@ -17,14 +20,6 @@ Author: Peter Schrammel
 #include <ssa/unwindable_local_ssa.h>
 #include <solver/summary.h>
 
-
-/*******************************************************************\
-
-   Class: dynamic_cfgt
-
- Purpose:
-
-\*******************************************************************/
 
 struct dynamic_cfg_edget
 {

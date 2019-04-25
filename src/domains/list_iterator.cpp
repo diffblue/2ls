@@ -7,23 +7,14 @@ Author: Viktor Malik
 
 \*******************************************************************/
 
+/// \file
+/// List iterator - abstraction for iterative access to a linked list.
+
 #include <algorithm>
 #include <ssa/ssa_pointed_objects.h>
 #include "list_iterator.h"
 
-/*******************************************************************\
-
-Function: list_iteratort::add_access
-
-  Inputs:
-
- Outputs:
-
- Purpose: Add new access to the iterator corresponding to
-          an expression from SSA.
-
-\*******************************************************************/
-
+/// Add new access to the iterator corresponding to an expression from SSA.
 void list_iteratort::add_access(
   const member_exprt &expr,
   unsigned location_number) const
@@ -46,19 +37,11 @@ void list_iteratort::add_access(
   accesses.push_back(access);
 }
 
-/*******************************************************************\
-
-Function: list_iteratort::access_symbol_expr
-
-  Inputs: Iterator access
-          Level of access (number of fields from the access to be followed)
-
- Outputs: Corresponding SSA symbol.
-
- Purpose:
-
-\*******************************************************************/
-
+/// \param access: Iterator access
+/// \param level: Level of access (number of fields from the access to be
+///   followed)
+/// \param ns: Namespace
+/// \return Corresponding SSA symbol.
 const symbol_exprt list_iteratort::access_symbol_expr(
   const accesst &access,
   unsigned level,
@@ -83,18 +66,7 @@ const symbol_exprt list_iteratort::access_symbol_expr(
   }
 }
 
-/*******************************************************************\
-
-Function: list_iteratort::iterator_symbol
-
-  Inputs:
-
- Outputs: SSA symbol corresponding to the iterator.
-
- Purpose:
-
-\*******************************************************************/
-
+/// \return SSA symbol corresponding to the iterator.
 const symbol_exprt list_iteratort::iterator_symbol() const
 {
   std::size_t pos=id2string(pointer.get_identifier()).find_last_of('#');
@@ -106,20 +78,11 @@ const symbol_exprt list_iteratort::iterator_symbol() const
   return iterator;
 }
 
-/*******************************************************************\
-
-Function: recursive_member_symbol
-
-  Inputs: Dynamic object
-          Field (must be a pointer to the type of the object)
-          Location number
-
- Outputs: SSA symbol 'object.field#loc_num'
-
- Purpose:
-
-\*******************************************************************/
-
+/// \param object: Dynamic object
+/// \param field: Field (must be a pointer to the type of the object)
+/// \param loc_num: Location number
+/// \param ns: Namespace
+/// \return SSA symbol 'object.field#loc_num'
 const symbol_exprt recursive_member_symbol(
   const symbol_exprt &object,
   const irep_idt &field,
@@ -146,19 +109,8 @@ const symbol_exprt recursive_member_symbol(
   return symbol;
 }
 
-/*******************************************************************\
-
-Function: list_iteratort::accesst::binding
-
-  Inputs:
-
- Outputs: Binding between members of lhs and rhs given by field of
-          specified level.
-
- Purpose:
-
-\*******************************************************************/
-
+/// \return Binding between members of lhs and rhs given by field of specified
+///   level.
 equal_exprt list_iteratort::accesst::binding(
   const symbol_exprt &lhs,
   const symbol_exprt &rhs,

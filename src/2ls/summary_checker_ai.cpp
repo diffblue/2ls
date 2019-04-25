@@ -6,20 +6,11 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Summary Checker for AI
+
 #include "summary_checker_ai.h"
 #include <ssa/ssa_build_goto_trace.h>
-
-/*******************************************************************\
-
-Function: summary_checker_ait::operator()
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 property_checkert::resultt summary_checker_ait::operator()(
   const goto_modelt &goto_model)
@@ -99,18 +90,6 @@ property_checkert::resultt summary_checker_ait::operator()(
 }
 
 
-/*******************************************************************\
-
-Function: summary_checker_ait::report_preconditions
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void summary_checker_ait::report_preconditions()
 {
   result() << eom;
@@ -132,18 +111,6 @@ void summary_checker_ait::report_preconditions()
              << eom;
   }
 }
-
-/*******************************************************************\
-
-Function: summary_checker_ait::report_termination
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 property_checkert::resultt summary_checker_ait::report_termination()
 {

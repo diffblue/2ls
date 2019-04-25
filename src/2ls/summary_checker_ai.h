@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Summary Checker for AI
+
 #ifndef CPROVER_2LS_2LS_SUMMARY_CHECKER_AI_H
 #define CPROVER_2LS_2LS_SUMMARY_CHECKER_AI_H
 

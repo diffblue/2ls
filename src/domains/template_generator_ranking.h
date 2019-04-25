@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Template Generator for Ranking Functions
+
 #ifndef CPROVER_2LS_DOMAINS_TEMPLATE_GENERATOR_RANKING_H
 #define CPROVER_2LS_DOMAINS_TEMPLATE_GENERATOR_RANKING_H
 

@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Predicate abstraction domain
+
 #ifdef DEBUG
 #include <iostream>
 #endif
@@ -21,18 +24,6 @@ Author: Peter Schrammel
 
 #define SYMB_COEFF_VAR "symb_coeff#"
 #define COMPLEXITY_COUNTER_PREFIX "__CPROVER_CPLX_CNT_"
-
-/*******************************************************************\
-
-Function: predabs_domaint::initialize
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void predabs_domaint::initialize(valuet &value)
 {
@@ -54,18 +45,6 @@ const exprt predabs_domaint::initialize_solver(
   return true_exprt();
 }
 
-
-/*******************************************************************\
-
-Function: predabs_domaint::solver_iter_init
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void predabs_domaint::solver_iter_init(valuet &value)
 {
@@ -98,18 +77,6 @@ void predabs_domaint::post_edit()
   todo_preds.erase(e_it);
 }
 
-/*******************************************************************\
-
-Function: predabs_domaint::handle_unsat
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 bool predabs_domaint::handle_unsat(valuet &value, bool improved)
 {
   set_row_value(*e_it, true_exprt(), value);
@@ -124,18 +91,7 @@ exprt predabs_domaint::make_permanent(valuet &value)
   return to_r;
 }
 
-/*******************************************************************\
-
-Function: predabs_domaint::get_row_constraint
-
-  Inputs:
-
- Outputs:
-
- Purpose: pre_guard==> (row_value=> row_expr)
-
-\*******************************************************************/
-
+/// pre_guard==> (row_value=> row_expr)
 exprt predabs_domaint::get_row_constraint(
   const rowt &row,
   const row_valuet &row_value)
@@ -147,18 +103,7 @@ exprt predabs_domaint::get_row_constraint(
   return implies_exprt(row_value, templ[row].expr);
 }
 
-/*******************************************************************\
-
-Function: predabs_domaint::get_row_pre_constraint
-
-  Inputs:
-
- Outputs:
-
- Purpose: pre_guard==> (row_value=> row_expr)
-
-\*******************************************************************/
-
+/// pre_guard==> (row_value=> row_expr)
 exprt predabs_domaint::get_row_pre_constraint(
   const rowt &row,
   const row_valuet &row_value)
@@ -171,18 +116,7 @@ exprt predabs_domaint::get_row_pre_constraint(
   return implies_exprt(row_value, templ[row].expr);
 }
 
-/*******************************************************************\
-
-Function: predabs_domaint::get_row_pre_constraint
-
-  Inputs:
-
- Outputs:
-
- Purpose: pre_guard==> (row_value=> row_expr)
-
-\*******************************************************************/
-
+/// pre_guard==> (row_value=> row_expr)
 exprt predabs_domaint::get_row_pre_constraint(
   const rowt &row,
   const templ_valuet &value)
@@ -191,18 +125,7 @@ exprt predabs_domaint::get_row_pre_constraint(
   return get_row_pre_constraint(row, value[row]);
 }
 
-/*******************************************************************\
-
-Function: predabs_domaint::get_row_post_constraint
-
-  Inputs:
-
- Outputs:
-
- Purpose: post_guard=> (row_value=> row_expr)
-
-\*******************************************************************/
-
+/// post_guard=> (row_value=> row_expr)
 exprt predabs_domaint::get_row_post_constraint(
   const rowt &row,
   const row_valuet &row_value)
@@ -219,18 +142,7 @@ exprt predabs_domaint::get_row_post_constraint(
   return c;
 }
 
-/*******************************************************************\
-
-Function: predabs_domaint::get_row_post_constraint
-
-  Inputs:
-
- Outputs:
-
- Purpose: post_guard=> (row_value=> row_expr)
-
-\*******************************************************************/
-
+/// post_guard=> (row_value=> row_expr)
 exprt predabs_domaint::get_row_post_constraint(
   const rowt &row,
   const templ_valuet &value)
@@ -239,18 +151,7 @@ exprt predabs_domaint::get_row_post_constraint(
   return get_row_post_constraint(row, value[row]);
 }
 
-/*******************************************************************\
-
-Function: predabs_domaint::to_pre_constraints
-
-  Inputs:
-
- Outputs:
-
- Purpose: /\_all_rows ( pre_guard==> (row_value=> row_expr) )
-
-\*******************************************************************/
-
+/// /\_all_rows ( pre_guard==> (row_value=> row_expr) )
 exprt predabs_domaint::to_pre_constraints(valuet &_value)
 {
   assert(*e_it<templ.size());
@@ -261,19 +162,8 @@ exprt predabs_domaint::to_pre_constraints(valuet &_value)
   return implies_exprt(true_exprt(), templ[*e_it].expr);
 }
 
-/*******************************************************************\
-
-Function: predabs_domaint::make_not_post_constraints
-
-  Inputs:
-
- Outputs:
-
- Purpose: for all rows !(post_guard==> (row_value=> row_expr) )
-          to be connected disjunctively
-
-\*******************************************************************/
-
+/// for all rows !(post_guard==> (row_value=> row_expr) ) to be connected
+/// disjunctively
 void predabs_domaint::make_not_post_constraints(
   valuet &_value,
   exprt::operandst &cond_exprs)
@@ -292,18 +182,6 @@ void predabs_domaint::make_not_post_constraints(
   }
 }
 
-/*******************************************************************\
-
-Function: predabs_domaint::get_row_value
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 predabs_domaint::row_valuet predabs_domaint::get_row_value(
   const rowt &row,
   const templ_valuet &value)
@@ -312,18 +190,6 @@ predabs_domaint::row_valuet predabs_domaint::get_row_value(
   assert(value.size()==templ.size());
   return value[row];
 }
-
-/*******************************************************************\
-
-Function: predabs_domaint::project_on_vars
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void predabs_domaint::project_on_vars(
   valuet &value,
@@ -369,18 +235,6 @@ void predabs_domaint::project_on_vars(
   result=conjunction(c);
 }
 
-/*******************************************************************\
-
-Function: predabs_domaint::set_row_value
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 void predabs_domaint::set_row_value(
   const rowt &row,
   const predabs_domaint::row_valuet &row_value,
@@ -392,18 +246,6 @@ void predabs_domaint::set_row_value(
   assert(value.size()==templ.size());
   value[row]=row_value;
 }
-
-/*******************************************************************\
-
-Function: predabs_domaint::output_value
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void predabs_domaint::output_value(
   std::ostream &out,
@@ -430,18 +272,6 @@ void predabs_domaint::output_value(
        from_expr(ns, "", templ_row.expr) << " )" << std::endl;
   }
 }
-
-/*******************************************************************\
-
-Function: predabs_domaint::output_domain
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void predabs_domaint::output_domain(
   std::ostream &out,
@@ -474,34 +304,10 @@ void predabs_domaint::output_domain(
   }
 }
 
-/*******************************************************************\
-
-Function: predabs_domaint::template_size
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 unsigned predabs_domaint::template_size()
 {
   return templ.size();
 }
-
-/*******************************************************************\
-
-Function: predabs_domaint::add_template_row
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 predabs_domaint::template_rowt &predabs_domaint::add_template_row(
   const exprt& expr,
@@ -521,18 +327,6 @@ predabs_domaint::template_rowt &predabs_domaint::add_template_row(
   templ_row.kind=kind;
   return templ_row;
 }
-
-/*******************************************************************\
-
-Function: predabs_domaint::get_row_set
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void predabs_domaint::get_row_set(std::set<rowt> &rows)
 {

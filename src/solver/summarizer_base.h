@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Summarizer Base
+
 #ifndef CPROVER_2LS_SOLVER_SUMMARIZER_BASE_H
 #define CPROVER_2LS_SOLVER_SUMMARIZER_BASE_H
 

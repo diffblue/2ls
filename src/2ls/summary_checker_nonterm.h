@@ -6,6 +6,9 @@ Author: Stefan Marticek
 
 \*******************************************************************/
 
+/// \file
+/// Summarizer for Nontermination Bit-level analysis
+
 #ifndef CPROVER_2LS_2LS_SUMMARY_CHECKER_NONTERM_H
 #define CPROVER_2LS_2LS_SUMMARY_CHECKER_NONTERM_H
 

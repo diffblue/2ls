@@ -6,6 +6,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+/// \file
+/// Definition Domain
+
 // #define DEBUG
 
 #ifdef DEBUG
@@ -15,18 +18,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/std_expr.h>
 
 #include "ssa_domain.h"
-
-/*******************************************************************\
-
-Function: ssa_domaint::output
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void ssa_domaint::output(
   std::ostream &out,
@@ -59,18 +50,6 @@ void ssa_domaint::output(
     }
   }
 }
-
-/*******************************************************************\
-
-Function: ssa_domaint::transform
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void ssa_domaint::transform(
   locationt from,
@@ -141,18 +120,6 @@ void ssa_domaint::transform(
       d_it=def_map.begin(); d_it!=def_map.end(); d_it++)
     d_it->second.source=from;
 }
-
-/*******************************************************************\
-
-Function: ssa_domaint::merge
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 bool ssa_domaint::merge(
   const ssa_domaint &b,
@@ -240,17 +207,6 @@ bool ssa_domaint::merge(
   return result;
 }
 
-/*******************************************************************\
-
-Function: ssa_domaint::get_object_allocation_def
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 ssa_domaint::def_mapt::const_iterator ssa_domaint::get_object_allocation_def(
   const irep_idt &id,
   const ssa_domaint::def_mapt &def_map)
@@ -270,18 +226,6 @@ ssa_domaint::def_mapt::const_iterator ssa_domaint::get_object_allocation_def(
   }
   return def_map.end();
 }
-
-/*******************************************************************\
-
-Function: ssa_ait::initialize
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void ssa_ait::initialize(const goto_functionst::goto_functiont &goto_function)
 {

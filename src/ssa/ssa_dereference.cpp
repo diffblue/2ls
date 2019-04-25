@@ -6,6 +6,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+/// \file
+/// Aliasing Decision
+
 // #define DEBUG
 
 #ifdef DEBUG
@@ -29,18 +32,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "ssa_dereference.h"
 #include "address_canonizer.h"
-
-/*******************************************************************\
-
-Function: lift_if
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 exprt lift_if(const exprt &src)
 {
@@ -69,18 +60,6 @@ exprt lift_if(const exprt &src)
   else
     return src;
 }
-
-/*******************************************************************\
-
-Function: ssa_may_alias
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 bool ssa_may_alias(
   const exprt &e1,
@@ -199,18 +178,6 @@ bool ssa_may_alias(
   return false; // both different objects
 }
 
-/*******************************************************************\
-
-Function: ssa_alias_guard
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
 exprt ssa_alias_guard(
   const exprt &e1,
   const exprt &e2,
@@ -244,18 +211,6 @@ exprt ssa_alias_guard(
 
   return same_object(a1, a2);
 }
-
-/*******************************************************************\
-
-Function: ssa_alias_value
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 exprt ssa_alias_value(
   const exprt &e1,
@@ -298,18 +253,6 @@ exprt ssa_alias_value(
 
   return byte_extract;
 }
-
-/*******************************************************************\
-
-Function: dereference_rec
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 exprt dereference_rec(
   const exprt &src,
@@ -409,18 +352,6 @@ exprt dereference_rec(
     return tmp;
   }
 }
-
-/*******************************************************************\
-
-Function: dereference
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 exprt dereference(
   const exprt &src,

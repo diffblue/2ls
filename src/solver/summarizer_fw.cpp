@@ -6,6 +6,9 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Summarizer for Forward Analysis
+
 #include <iostream>
 
 #include <util/simplify_expr.h>
@@ -20,18 +23,6 @@ Author: Peter Schrammel
 #include <domains/template_generator_summary.h>
 
 // #define SHOW_WHOLE_RESULT
-
-/*******************************************************************\
-
-Function: summarizer_fwt::compute_summary_rec
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void summarizer_fwt::compute_summary_rec(
   const function_namet &function_name,
@@ -96,18 +87,6 @@ void summarizer_fwt::compute_summary_rec(
     status() << out.str() << eom;
   }
 }
-
-/*******************************************************************\
-
-Function: summarizer_fwt::do_summary
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void summarizer_fwt::do_summary(
   const function_namet &function_name,
@@ -188,18 +167,6 @@ void summarizer_fwt::do_summary(
   solver_instances+=analyzer.get_number_of_solver_instances();
   solver_calls+=analyzer.get_number_of_solver_calls();
 }
-
-/*******************************************************************\
-
-Function: summarizer_fwt::inline_summaries
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 void summarizer_fwt::inline_summaries(
   const function_namet &function_name,

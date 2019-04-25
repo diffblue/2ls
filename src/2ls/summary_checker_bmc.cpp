@@ -6,20 +6,11 @@ Author: Peter Schrammel
 
 \*******************************************************************/
 
+/// \file
+/// Summary Checker for BMC
+
 #include "summary_checker_bmc.h"
 
-
-/*******************************************************************\
-
-Function: summary_checker_bmct::operator()
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
 
 property_checkert::resultt summary_checker_bmct::operator()(
   const goto_modelt &goto_model)
