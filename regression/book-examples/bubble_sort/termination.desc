@@ -1,6 +1,6 @@
 CORE
-main.c
---function bubble_sort
+bubble_sort.c
+--function bubble_sort --termination
 ^EXIT=0$
 ^SIGNAL=0$
 ^VERIFICATION SUCCESSFUL$

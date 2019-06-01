@@ -1,0 +1,6 @@
+CORE
+bubble_sort.c
+--function bubble_sort --signed-overflow-check -DNO_PRECONDITION
+^EXIT=10$
+^SIGNAL=0$
+^VERIFICATION FAILED$

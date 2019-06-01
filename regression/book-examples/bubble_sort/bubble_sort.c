@@ -1,6 +1,8 @@
 void bubble_sort(int *array, int size)
 {
+#ifndef NO_PRECONDITION
   __CPROVER_assume(size >= 0);
+#endif
   int c, d, swap;
 
   for (c = 0; c < size - 1; c++)
