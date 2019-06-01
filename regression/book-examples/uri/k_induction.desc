@@ -1,0 +1,6 @@
+CORE
+uri.c
+--function extract_domain --havoc --k-induction
+^EXIT=0$
+^SIGNAL=0$
+^VERIFICATION SUCCESSFUL$

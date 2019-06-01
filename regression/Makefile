@@ -1,7 +1,9 @@
-DIRS = nontermination \
+DIRS = \
+     book-examples \
+     nontermination \
 	   termination \
 	   kiki \
-       preconditions \
+     preconditions \
 	   interprocedural \
 	   invariants \
 	   heap \
