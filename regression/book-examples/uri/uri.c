@@ -1,14 +1,20 @@
 #include <assert.h>
 
-void extract_domain(char *uri, int uri_length, int uri_start, char *domain) {
+void copy_authority(
+  char *uri,
+  int uri_length,
+  int authority_start,
+  char *authority)
+{
   __CPROVER_assume(0 < uri_length);
-  __CPROVER_assume(0 < uri_start && uri_start < uri_length);
-  int cp = uri_start;
-  while (cp != uri_length - 1) {
+  __CPROVER_assume(0 < authority_start && authority_start < uri_length);
+  int cp = authority_start;
+  while (cp != uri_length - 1)
+  {
     if (uri[cp] == '/')
       break;
     assert(cp < uri_length);
-    domain[cp] = uri[cp];
+    authority[cp - authority_start] = uri[cp];
     ++cp;
   }
 }

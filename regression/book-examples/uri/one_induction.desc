@@ -1,6 +1,6 @@
 CORE
 uri.c
---function extract_domain --havoc
+--function copy_authority --havoc
 ^EXIT=5$
 ^SIGNAL=0$
 ^VERIFICATION INCONCLUSIVE$
