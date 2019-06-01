@@ -1,0 +1,6 @@
+CORE
+sasum.c
+--function sasum --nontermination --trace
+^EXIT=10$
+^SIGNAL=0$
+^VERIFICATION FAILED$
