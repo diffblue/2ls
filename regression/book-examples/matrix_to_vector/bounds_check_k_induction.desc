@@ -1,0 +1,6 @@
+CORE
+matrix_to_vector.c
+--bounds-check --k-induction
+^EXIT=10$
+^SIGNAL=0$
+^VERIFICATION FAILED$

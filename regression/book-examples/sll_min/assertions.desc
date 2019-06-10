@@ -1,0 +1,6 @@
+CORE
+sll_min.c
+--heap-values-refine --sympath --inline
+^EXIT=0$
+^SIGNAL=0$
+^VERIFICATION SUCCESSFUL$
