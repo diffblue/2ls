@@ -1,6 +1,6 @@
 KNOWNBUG
 main.c
---heap-interval --sympath --inline --no-propagation
+--heap-interval --no-propagation
 ^EXIT=0$
 ^SIGNAL=0$
 ^VERIFICATION SUCCESSFUL$

@@ -1,6 +1,6 @@
 CORE
 main.c
---heap-interval --sympath --inline --no-propagation
+--heap-interval --no-propagation
 ^EXIT=5$
 ^SIGNAL=0$
 ^VERIFICATION INCONCLUSIVE$
