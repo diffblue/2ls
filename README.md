@@ -52,6 +52,7 @@ Download using `git clone http://github.com/diffblue/2ls; cd 2ls; git checkout 2
 
 Software Verification Competition Contributions
 
+* [SV-COMP 2019](http://github.com/diffblue/2ls/releases/tag/0.7.2-sv-comp19) (12/2018)
 * [SV-COMP 2018](http://github.com/diffblue/2ls/releases/tag/2ls-0.6) (12/2017)
 * [SV-COMP 2017](http://github.com/diffblue/2ls/releases/tag/2ls-0.5-sv-comp-2017) (01/2017)
 * [SV-COMP 2016](http://svn.cprover.org/svn/deltacheck/releases/2ls-0.3-sv-comp-2016) (11/2015) [Follow these instructions](http://www.cprover.org/2LS/2ls-sv-comp-2016.pdf)
@@ -122,7 +123,7 @@ Features in development
 Publications
 ============
 
-* FMCAD'18 Template-Based Verification of Heap-Manipulating Programs
+* FMCAD'18 [Template-Based Verification of Heap-Manipulating Programs](https://ieeexplore.ieee.org/document/8603009)
 * TACAS'18 [2LS: Memory Safety and Non-Termination](https://link.springer.com/chapter/10.1007%2F978-3-319-89963-3_24)
 * TOPLAS 40(1) 2018 [Bit-Precise Procedure-Modular Termination Analysis](https://dl.acm.org/citation.cfm?doid=3121136)
 * ATVA'17 [Compositional Refutation Techniques](https://link.springer.com/chapter/10.1007%2F978-3-319-68167-2_12)
