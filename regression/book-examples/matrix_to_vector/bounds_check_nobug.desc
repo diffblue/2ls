@@ -1,0 +1,6 @@
+CORE
+matrix_to_vector.c
+--bounds-check -DNOBUG
+^EXIT=0$
+^SIGNAL=0$
+^VERIFICATION SUCCESSFUL$

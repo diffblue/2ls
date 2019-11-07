@@ -1,0 +1,6 @@
+CORE
+matrix_to_vector.c
+--bounds-check
+^EXIT=5$
+^SIGNAL=0$
+^VERIFICATION INCONCLUSIVE$

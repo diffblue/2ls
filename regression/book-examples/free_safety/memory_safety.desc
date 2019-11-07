@@ -1,0 +1,6 @@
+CORE
+free_safety.c
+--pointer-check --heap --inline
+^EXIT=0$
+^SIGNAL=0$
+^VERIFICATION SUCCESSFUL$
