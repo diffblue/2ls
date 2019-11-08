@@ -15,6 +15,7 @@ Author: Peter Schrammel
 
 #include <analyses/constant_propagator.h>
 #include <goto-instrument/unwind.h>
+#include <goto-instrument/function.h>
 #include <ssa/dynobj_instance_analysis.h>
 
 #include "2ls_parse_options.h"
@@ -733,6 +734,69 @@ void twols_parse_optionst::memory_assert_info(goto_modelt &goto_model)
             }
           }
         }
+      }
+    }
+  }
+}
+
+/// Transform comparison of pointers to be non-deterministic if the pointers
+/// were freed.
+/// This is done by transforming (x op y) into:
+///     (x op y) XOR ((freed(x) || nondet) && (freed(y) && nondet))
+void make_freed_ptr_comparison_nondet(
+  goto_modelt &goto_model,
+  goto_functionst::goto_functiont &fun,
+  goto_programt::instructionst::iterator loc,
+  exprt &cond)
+{
+  if(cond.id()==ID_equal || cond.id()==ID_notequal || cond.id()==ID_le ||
+     cond.id()==ID_lt || cond.id()==ID_ge || cond.id()==ID_gt)
+  {
+    if(cond.op0().id()==ID_symbol && cond.op1().id()==ID_symbol &&
+       !is_cprover_symbol(cond.op0()) && !is_cprover_symbol(cond.op1()) &&
+       cond.op0().type().id()==ID_pointer && cond.op1().type().id()==ID_pointer)
+    {
+      const symbolt &freed=goto_model.symbol_table.lookup(
+        "__CPROVER_deallocated");
+
+      // LHS != __CPROVER_deallocated
+      auto lhs_not_freed_cond=notequal_exprt(
+        typecast_exprt(cond.op0(), freed.type), freed.symbol_expr());
+
+      // RHS != __CPROVER_deallocated
+      auto rhs_not_freed_cond=notequal_exprt(
+        typecast_exprt(cond.op1(), freed.type), freed.symbol_expr());
+
+      // XOR is implemented as ==
+      cond=equal_exprt(
+        cond,
+        and_exprt(
+          or_exprt(
+            lhs_not_freed_cond,
+            side_effect_expr_nondett(bool_typet())),
+          or_exprt(
+            rhs_not_freed_cond,
+            side_effect_expr_nondett(bool_typet()))));
+    }
+  }
+  else if(cond.id()==ID_not)
+    make_freed_ptr_comparison_nondet(
+      goto_model, fun, loc, to_not_expr(cond).op());
+}
+
+/// Transform each comparison of pointers so that it has a non-deterministic
+/// result if the pointers were freed, since comparison of freed pointers is
+/// an undefined behavior.
+void twols_parse_optionst::handle_freed_ptr_compare(goto_modelt &goto_model)
+{
+  Forall_goto_functions(f_it, goto_model.goto_functions)
+  {
+    Forall_goto_program_instructions(i_it, f_it->second.body)
+    {
+      if(i_it->is_goto())
+      {
+        auto &guard=i_it->guard;
+        make_freed_ptr_comparison_nondet(goto_model, f_it->second, i_it, guard);
       }
     }
   }
