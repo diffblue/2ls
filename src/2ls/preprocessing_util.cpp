@@ -611,7 +611,7 @@ void twols_parse_optionst::create_dynobj_instances(
 
         const std::string name=id2string(obj_symbol.name);
         const std::string base_name=id2string(obj_symbol.base_name);
-        std::string suffix="#"+std::to_string(0);
+        std::string suffix="$"+std::to_string(0);
 
         obj_symbol.name=name+suffix;
         obj_symbol.base_name=base_name+suffix;
@@ -632,7 +632,7 @@ void twols_parse_optionst::create_dynobj_instances(
           nondet.pretty_name=nondet.name;
           symbol_table.add(nondet);
 
-          suffix="#"+std::to_string(i);
+          suffix="$"+std::to_string(i);
           obj_symbol.name=name+suffix;
           obj_symbol.base_name=base_name+suffix;
 

@@ -572,7 +572,7 @@ int get_dynobj_instance(const irep_idt &id)
   size_t pos=name.find("dynamic_object$");
   if(pos==std::string::npos)
     return -1;
-  pos=name.find_first_of("#", pos);
+  pos=name.find('$', pos);
   if(pos==std::string::npos)
     return -1;
   size_t start=pos+1;
