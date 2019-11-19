@@ -827,3 +827,23 @@ void twols_parse_optionst::handle_freed_ptr_compare(goto_modelt &goto_model)
     }
   }
 }
+
+/// Add assertions preventing analysis of programs using GCC builtin functions
+/// that are not supported and can cause false results.
+void twols_parse_optionst::assert_no_builtin_functions(goto_modelt &goto_model)
+{
+  forall_goto_program_instructions(
+    i_it,
+    goto_model.goto_functions.function_map.find("_start")->second.body)
+  {
+    std::string name=id2string(i_it->source_location.get_function());
+    assert(
+      name.find("__builtin_")==std::string::npos &&
+      name.find("__CPROVER_overflow")==std::string::npos);
+
+    if(i_it->is_assign())
+    {
+      assert(i_it->code.op1().id()!=ID_popcount);
+    }
+  }
+}

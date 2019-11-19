@@ -210,6 +210,7 @@ protected:
   void limit_array_bounds(goto_modelt &goto_model);
   void memory_assert_info(goto_modelt &goto_model);
   void handle_freed_ptr_compare(goto_modelt &goto_model);
+  void assert_no_builtin_functions(goto_modelt &goto_model);
 };
 
 #endif
