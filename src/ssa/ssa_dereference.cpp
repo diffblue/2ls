@@ -248,6 +248,9 @@ exprt ssa_alias_value(
   }
 
   byte_extract_exprt byte_extract(byte_extract_id(), e1.type());
+#ifdef COMPETITION
+  assert(!e2_type.get_bool("#dynamic"));
+#endif
   byte_extract.op()=e2;
   byte_extract.offset()=offset1;
 
