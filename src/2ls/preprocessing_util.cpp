@@ -747,14 +747,21 @@ void make_freed_ptr_comparison_nondet(
   goto_modelt &goto_model,
   goto_functionst::goto_functiont &fun,
   goto_programt::instructionst::iterator loc,
-  exprt &cond)
+  exprt &cond,
+  const std::set<irep_idt> &typecasted_pointers)
 {
   if(cond.id()==ID_equal || cond.id()==ID_notequal || cond.id()==ID_le ||
      cond.id()==ID_lt || cond.id()==ID_ge || cond.id()==ID_gt)
   {
+    // Check if both operands are either pointers or type-casted pointers
     if(cond.op0().id()==ID_symbol && cond.op1().id()==ID_symbol &&
        !is_cprover_symbol(cond.op0()) && !is_cprover_symbol(cond.op1()) &&
-       cond.op0().type().id()==ID_pointer && cond.op1().type().id()==ID_pointer)
+       (cond.op0().type().id()==ID_pointer ||
+        typecasted_pointers.find(to_symbol_expr(cond.op0()).get_identifier())!=
+        typecasted_pointers.end()) &&
+       (cond.op1().type().id()==ID_pointer ||
+        typecasted_pointers.find(to_symbol_expr(cond.op1()).get_identifier())!=
+        typecasted_pointers.end()))
     {
       const symbolt &freed=goto_model.symbol_table.lookup(
         "__CPROVER_deallocated");
@@ -781,7 +788,7 @@ void make_freed_ptr_comparison_nondet(
   }
   else if(cond.id()==ID_not)
     make_freed_ptr_comparison_nondet(
-      goto_model, fun, loc, to_not_expr(cond).op());
+      goto_model, fun, loc, to_not_expr(cond).op(), typecasted_pointers);
 }
 
 /// Transform each comparison of pointers so that it has a non-deterministic
@@ -789,6 +796,7 @@ void make_freed_ptr_comparison_nondet(
 /// an undefined behavior.
 void twols_parse_optionst::handle_freed_ptr_compare(goto_modelt &goto_model)
 {
+  std::set<irep_idt> typecasted_pointers;
   Forall_goto_functions(f_it, goto_model.goto_functions)
   {
     Forall_goto_program_instructions(i_it, f_it->second.body)
@@ -796,7 +804,25 @@ void twols_parse_optionst::handle_freed_ptr_compare(goto_modelt &goto_model)
       if(i_it->is_goto())
       {
         auto &guard=i_it->guard;
-        make_freed_ptr_comparison_nondet(goto_model, f_it->second, i_it, guard);
+        make_freed_ptr_comparison_nondet(
+          goto_model, f_it->second, i_it, guard, typecasted_pointers);
+      }
+      else if(i_it->is_assign())
+      {
+        auto &assign=to_code_assign(i_it->code);
+        // If a pointer is casted to a non-pointer type (probably an integer),
+        // save the destination variable into typecasted_pointers
+        if(assign.lhs().id()==ID_symbol &&
+           ((assign.rhs().id()==ID_typecast &&
+             to_typecast_expr(assign.rhs()).op().type().id()==ID_pointer &&
+             assign.lhs().type().id()!=ID_pointer) ||
+            typecasted_pointers.find(
+              to_symbol_expr(assign.lhs()).get_identifier())!=
+            typecasted_pointers.end()))
+        {
+          typecasted_pointers.insert(
+            to_symbol_expr(assign.lhs()).get_identifier());
+        }
       }
     }
   }
