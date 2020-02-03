@@ -13,6 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #define CPROVER_2LS_SSA_ASSIGNMENTS_H
 
 #include <goto-programs/goto_functions.h>
+#include <util/options.h>
 
 #include "ssa_object.h"
 #include "ssa_value_set.h"
@@ -52,12 +53,14 @@ public:
   assignmentst(
     const goto_programt &_goto_program,
     const namespacet &_ns,
+    const optionst &_options,
     const ssa_objectst &_ssa_objects,
     const ssa_value_ait &_ssa_value_ai,
     const ssa_heap_analysist &_ssa_heap_analysis):
     ssa_objects(_ssa_objects),
     ssa_value_ai(_ssa_value_ai),
-    ssa_heap_analysis(_ssa_heap_analysis)
+    ssa_heap_analysis(_ssa_heap_analysis),
+    options(_options)
   {
     build_assignment_map(_goto_program, _ns);
   }
@@ -90,6 +93,8 @@ protected:
     const exprt &guard,
     const locationt loc,
     const namespacet &ns);
+
+  const optionst &options;
 };
 
 #endif

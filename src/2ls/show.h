@@ -26,6 +26,7 @@ class ssa_heap_analysist;
 
 void show_ssa(
   const goto_modelt &,
+  const optionst &,
   const ssa_heap_analysist &,
   const irep_idt &function,
   bool simplify,
@@ -35,18 +36,21 @@ void show_ssa(
 void show_defs(
   const goto_modelt &,
   const irep_idt &function,
+  const optionst &options,
   std::ostream &,
   message_handlert &);
 
 void show_value_sets(
   const goto_modelt &,
   const irep_idt &function,
+  const optionst &options,
   std::ostream &,
   message_handlert &);
 
 void show_assignments(
   const goto_modelt &,
   const irep_idt &function,
+  const optionst &options,
   std::ostream &,
   message_handlert &);
 

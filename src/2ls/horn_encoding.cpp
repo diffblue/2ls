@@ -22,9 +22,11 @@ class horn_encodingt
 public:
   horn_encodingt(
     const goto_modelt &_goto_model,
+    const optionst &_options,
     std::ostream &_out):
     goto_functions(_goto_model.goto_functions),
     ns(_goto_model.symbol_table),
+    options(_options),
     out(_out),
     smt2_conv(ns, "", "Horn-clause encoding", "", smt2_convt::Z3, _out)
   {
@@ -35,6 +37,7 @@ public:
 protected:
   const goto_functionst &goto_functions;
   const namespacet ns;
+  const optionst &options;
   std::ostream &out;
 
   smt2_convt smt2_conv;
@@ -61,7 +64,7 @@ void horn_encodingt::translate(
 
   // compute SSA
   ssa_heap_analysist heap_analysis(ns);
-  local_SSAt local_SSA(f_it->second, ns, heap_analysis, "");
+  local_SSAt local_SSA(f_it->second, ns, options, heap_analysis, "");
 
   const goto_programt &body=f_it->second.body;
 
@@ -209,7 +212,8 @@ void horn_encodingt::translate(
 
 void horn_encoding(
   const goto_modelt &goto_model,
+  const optionst &options,
   std::ostream &out)
 {
-  horn_encodingt(goto_model, out)();
+  horn_encodingt(goto_model, options, out)();
 }

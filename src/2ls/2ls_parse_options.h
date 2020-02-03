@@ -206,7 +206,9 @@ protected:
     goto_programt &goto_program,
     const std::map<symbol_exprt, size_t> &instance_counts,
     symbol_tablet &symbol_table);
-  std::map<symbol_exprt, size_t> split_dynamic_objects(goto_modelt &goto_model);
+  std::map<symbol_exprt, size_t> split_dynamic_objects(
+    goto_modelt &goto_model,
+    const optionst &options);
   void limit_array_bounds(goto_modelt &goto_model);
   void memory_assert_info(goto_modelt &goto_model);
   void handle_freed_ptr_compare(goto_modelt &goto_model);

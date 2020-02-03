@@ -97,7 +97,11 @@ void dynobj_instance_domaint::rhs_concretisation(
           // 1) now make dereference
           const auto &values=
             static_cast<dynobj_instance_analysist &>(ai).value_analysis[loc];
-          const auto guard_deref=dereference(guard, values, "", ns);
+          bool competition_mode=
+            static_cast<dynobj_instance_analysist &>(ai).options
+              .get_bool_option("competition-mode");
+          const auto guard_deref=dereference(
+            guard, values, "", ns, competition_mode);
           auto value_set=values(guard_deref, ns).value_set;
           // 2) then isolate for all values in value set of dereferences
           for(auto &v : value_set)
@@ -120,6 +124,9 @@ void dynobj_instance_domaint::transform(
   ai_baset &ai,
   const namespacet &ns)
 {
+  bool competition_mode=
+    static_cast<dynobj_instance_analysist &>(ai).options
+      .get_bool_option("competition-mode");
   if(from->is_assign())
   {
     const code_assignt &assignment=to_code_assign(from->code);
@@ -137,7 +144,8 @@ void dynobj_instance_domaint::transform(
       // For allocation site, the assigned pointer has no aliases
       const auto &values=
         static_cast<dynobj_instance_analysist &>(ai).value_analysis[to];
-      const auto lhs_deref=dereference(assignment.lhs(), values, "", ns);
+      const auto lhs_deref=dereference(
+        assignment.lhs(), values, "", ns, competition_mode);
       auto value_set=values(lhs_deref, ns).value_set;
       for(auto &v : value_set)
         must_alias_relations[v.symbol_expr()].isolate(lhs);
@@ -152,7 +160,7 @@ void dynobj_instance_domaint::transform(
 
       const auto &values=
         static_cast<dynobj_instance_analysist &>(ai).value_analysis[from];
-      const auto rhs_deref=dereference(rhs, values, "", ns);
+      const auto rhs_deref=dereference(rhs, values, "", ns, competition_mode);
       auto value_set=values(rhs_deref, ns).value_set;
       for(auto &v : value_set)
       {
