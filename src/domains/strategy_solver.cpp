@@ -43,6 +43,12 @@ bool strategy_solvert::iterate(invariantt &inv)
 
     if(solver()==decision_proceduret::D_SATISFIABLE)
     {
+#ifdef DEBUG
+      std::cerr << "Pre-condition:\n";
+      debug_smt_model(pre_expr, ns);
+      std::cerr << "Post-condition:\n";
+      debug_smt_model(cond, ns);
+#endif
       for(std::size_t row=0; row<domain.strategy_cond_literals.size(); ++row)
       {
         if(solver.l_get(domain.strategy_cond_literals[row]).is_true())

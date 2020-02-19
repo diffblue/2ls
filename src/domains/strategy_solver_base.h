@@ -55,6 +55,8 @@ class strategy_solver_baset:public messaget
   void find_symbolic_path(
     std::set<std::pair<symbol_exprt, symbol_exprt>> &loop_guards,
     const exprt &current_guard=nil_exprt());
+
+  void debug_smt_model(const exprt &expr, const namespacet &ns);
 };
 
 #endif
