@@ -26,11 +26,9 @@ Author: Peter Schrammel
 class template_generator_baset:public messaget
 {
 public:
-  typedef strategy_solver_baset::var_listt var_listt;
-
   explicit template_generator_baset(optionst &_options,
-                                    ssa_dbt &_ssa_db,
-                                    local_unwindert &_ssa_local_unwinder,
+                                    const ssa_dbt &_ssa_db,
+                                    const local_unwindert &_ssa_local_unwinder,
                                     incremental_solvert *solver = nullptr)
     : options(_options),
       ssa_db(_ssa_db),
@@ -38,6 +36,14 @@ public:
       solver(solver)
   {
     std_invariants=options.get_bool_option("std-invariants");
+  }
+
+  template_generator_baset(template_generator_baset &other)
+    : template_generator_baset(other.options,
+                               other.ssa_db,
+                               other.ssa_local_unwinder,
+                               other.solver)
+  {
   }
 
   virtual void operator()(
@@ -91,12 +97,12 @@ protected:
   static var_specst filter_heap_domain(const var_specst &var_specs);
   static var_specst filter_array_domain(const var_specst &var_specs);
 
-  void add_var(
-    const vart &var_to_add,
-    const guardst::guardt &pre_guard,
-    guardst::guardt post_guard,
-    const guardst::kindt &kind,
-    var_specst &var_specs);
+  void add_var(const vart &var_to_add,
+               const guardst::guardt &pre_guard,
+               guardst::guardt post_guard,
+               const guardst::kindt &kind,
+               const var_listt &related_vars,
+               var_specst &var_specs);
   void add_vars(
     const var_listt &vars_to_add,
     const guardst::guardt &pre_guard,
@@ -138,6 +144,11 @@ protected:
     local_SSAt::nodest::const_iterator n_it,
     exprt &expr);
 
+  void replace_array_index_loop(exprt &index,
+                                local_SSAt::nodest::const_iterator n_it,
+                                const local_SSAt &SSA,
+                                const ssa_domaint::phi_nodest &phi_nodes);
+
   virtual void handle_special_functions(const local_SSAt &SSA);
   std::unique_ptr<domaint>
   instantiate_standard_domains(const var_specst &var_specs_,
@@ -148,6 +159,8 @@ protected:
   {
     expr.set_identifier(id2string(expr.get_identifier())+"'");
   }
+
+  friend class array_domaint;
 };
 
 #endif // CROVER_2LS_DOMAINS_TEMPLATE_GENERATOR_BASE_H

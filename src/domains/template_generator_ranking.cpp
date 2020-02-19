@@ -113,7 +113,7 @@ void template_generator_rankingt::collect_variables_ranking(
         symbol_exprt out=SSA.read_rhs(object, node.location);
         ssa_local_unwinder.unwinder_rename(out, node, false);
 
-        add_var(in, pre_guard, post_guard, guardst::LOOP, new_var_specs);
+        add_var(in, pre_guard, post_guard, guardst::LOOP, {}, new_var_specs);
 
         // building map for renaming from pre into post-state
         post_renaming_map[in]=out;

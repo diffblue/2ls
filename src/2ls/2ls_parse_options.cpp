@@ -182,6 +182,11 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
       options.set_option("heap", true);
       simple_domains.push_back("heap");
     }
+    if(cmdline.isset("arrays"))
+    {
+      options.set_option("arrays", true);
+      simple_domains.push_back("arrays");
+    }
 
     // Choose only a single value domain
     if(cmdline.isset("values-refine"))
@@ -518,12 +523,6 @@ int twols_parse_optionst::doit()
       goto_model.goto_functions.entry_point() << eom;
   }
 
-  if(cmdline.isset("arrays"))
-  {
-    options.set_option("arrays", true);
-    status() << "Do not ignore array contents" << eom;
-  }
-
   // TODO: check option inconsistencies, ignored options etc
   if(options.get_bool_option("havoc"))
     status() << "Havocking loops and function calls" << eom;
@@ -535,6 +534,8 @@ int twols_parse_optionst::doit()
     status() << "Using heap domain with interval domain for values" << eom;
   else if(options.get_bool_option("heap-zones"))
     status() << "Using heap domain with zones domain for values" << eom;
+  else if(options.get_bool_option("arrays"))
+    status() << "Using arrays domain" << eom;
   else
   {
     if(options.get_bool_option("intervals"))
@@ -1557,7 +1558,7 @@ void twols_parse_optionst::help()
     "                              (only usable with --heap-* switches)\n"
     " --enum-solver                use solver based on model enumeration\n"
     " --binsearch-solver           use solver based on binary search\n"
-    " --arrays                     do not ignore array contents\n"
+    " --arrays                     use arrays domain\n"
     " --lexicographic-ranking-function n          (default n=3)\n"
     " --monolithic-ranking-function\n"
     " --max-inner-ranking-iterations n           (default n=20)\n"

@@ -12,18 +12,19 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_2LS_SSA_LOCAL_SSA_H
 #define CPROVER_2LS_SSA_LOCAL_SSA_H
 
+#include <util/options.h>
+#include <util/replace_expr.h>
 #include <util/std_expr.h>
 
 #include <goto-programs/goto_functions.h>
 
 #include <domains/incremental_solver.h>
-#include <util/options.h>
-#include <util/replace_expr.h>
 
-#include "ssa_domain.h"
+#include "array_index_analysis.h"
 #include "guard_map.h"
-#include "ssa_object.h"
 #include "may_alias_analysis.h"
+#include "ssa_domain.h"
+#include "ssa_object.h"
 
 #define TEMPLATE_PREFIX "__CPROVER_template"
 #define TEMPLATE_DECL TEMPLATE_PREFIX
@@ -38,28 +39,29 @@ public:
   typedef goto_functionst::goto_functiont goto_functiont;
   typedef goto_programt::const_targett locationt;
 
-  inline local_SSAt(
-    const irep_idt &_function_identifier,
-    const goto_functiont &_goto_function,
-    const symbol_tablet &_symbol_table,
-    dynamic_objectst &_dynamic_objects,
-    const optionst &_options,
-    const std::string &_suffix=""):
-    ns(_symbol_table), goto_function(_goto_function), options(_options),
-    dynamic_objects(_dynamic_objects),
-    ssa_objects(_goto_function, ns),
-    ssa_value_ai(_function_identifier, _goto_function, ns, options),
-    assignments(
-      _goto_function.body,
-      ns,
-      dynamic_objects,
-      options,
-      ssa_objects,
-      ssa_value_ai),
-    guard_map(_goto_function.body),
-    function_identifier(_function_identifier),
-    ssa_analysis(assignments),
-    suffix(_suffix)
+  inline local_SSAt(const irep_idt &_function_identifier,
+                    const goto_functiont &_goto_function,
+                    const symbol_tablet &_symbol_table,
+                    dynamic_objectst &_dynamic_objects,
+                    const optionst &_options,
+                    const std::string &_suffix = "")
+    : ns(_symbol_table),
+      goto_function(_goto_function),
+      options(_options),
+      dynamic_objects(_dynamic_objects),
+      ssa_objects(_goto_function, ns),
+      ssa_value_ai(_function_identifier, _goto_function, ns, options),
+      assignments(_goto_function.body,
+                  ns,
+                  dynamic_objects,
+                  options,
+                  ssa_objects,
+                  ssa_value_ai),
+      array_index_analysis(_function_identifier, _goto_function, ns),
+      guard_map(_goto_function.body),
+      function_identifier(_function_identifier),
+      ssa_analysis(assignments),
+      suffix(_suffix)
   {
     // ENHANCE: in future locst will be used (currently in path-symex/locs.h)
     forall_goto_program_instructions(it, _goto_function.body)
@@ -220,7 +222,9 @@ public:
   ssa_value_ait ssa_value_ai;
   assignmentst assignments;
 
-// protected:
+  array_index_analysist array_index_analysis;
+
+  // protected:
   guard_mapt guard_map;
 
   const irep_idt &function_identifier;

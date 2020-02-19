@@ -391,7 +391,7 @@ void tpolyhedra_domaint::add_interval_template(
   {
     if(v.guards.kind==guardst::IN)
       continue;
-    if(v.var.type().id()==ID_pointer)
+    if(v.var.type().id() == ID_pointer || v.var.type().id() == ID_array)
       continue;
 
     // x

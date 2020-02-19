@@ -35,6 +35,7 @@ void merge_and(
 constant_exprt make_zero(const typet &type);
 constant_exprt make_one(const typet &type);
 constant_exprt make_minusone(const typet &type);
+exprt expr_plus_one(const exprt &expr);
 
 irep_idt get_original_name(const symbol_exprt &);
 void clean_expr(exprt &expr);

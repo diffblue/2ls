@@ -9,22 +9,24 @@ Author: Peter Schrammel
 /// \file
 /// Template Generator Base
 
-#include <util/find_symbols.h>
-#include <util/arith_tools.h>
-#include <util/simplify_expr.h>
-#include <util/prefix.h>
-#include <util/mp_arith.h>
-
-#include <ssa/ssa_inliner.h>
-#include <ssa/dynamic_objects.h>
-
 #include "template_generator_base.h"
+
+#include <util/arith_tools.h>
+#include <util/find_symbols.h>
+#include <util/mp_arith.h>
+#include <util/prefix.h>
+#include <util/simplify_expr.h>
+
+#include <ssa/dynamic_objects.h>
+#include <ssa/ssa_inliner.h>
+
+#include "array_domain.h"
 #include "equality_domain.h"
-#include "tpolyhedra_domain.h"
-#include "predabs_domain.h"
 #include "heap_domain.h"
-#include "sympath_domain.h"
+#include "predabs_domain.h"
 #include "product_domain.h"
+#include "sympath_domain.h"
+#include "tpolyhedra_domain.h"
 
 #include <algorithm>
 
@@ -168,12 +170,59 @@ void template_generator_baset::collect_variables_loop(
           obj_post_guard=and_exprt(obj_post_guard, guard);
         }
 
+        var_listt related_vars;
+        // For arrays, we add all indices written in the same loop into
+        // related variables
+        if(o_it->type().id() == ID_array)
+        {
+          const irep_idt array_name = o_it->get_identifier();
+          auto &index_domain =
+            SSA.array_index_analysis[n_it->loophead->location];
+          auto indices = index_domain.written_indices.find(array_name);
+
+          if(indices != index_domain.written_indices.end())
+          {
+            for(auto &index_info : indices->second)
+            {
+              // Filter only indices written within the loop
+              if(index_info.loc->location_number >=
+                   n_it->loophead->location->location_number &&
+                 index_info.loc->location_number <
+                   n_it->location->location_number)
+              {
+                auto idx_id =
+                  index_info.index.id() == ID_symbol
+                    ? to_symbol_expr(index_info.index).get_identifier()
+                    : ID_empty;
+                if(idx_id != ID_empty &&
+                   phi_nodes.find(idx_id) != phi_nodes.end())
+                {
+                  // If the index is a symbol that is updated in the loop, we
+                  // have to use its loop-back variant
+                  symbol_exprt idx_pre_var =
+                    get_pre_var(SSA,
+                                SSA.ssa_objects.objects.find(
+                                  ssa_objectt(index_info.index, SSA.ns)),
+                                n_it);
+                  related_vars.push_back(idx_pre_var);
+                }
+                else
+                { // Otherwise, use the RHS variant of the symbol
+                  related_vars.push_back(
+                    SSA.read_rhs(index_info.index, n_it->loophead->location));
+                }
+              }
+            }
+          }
+        }
+
         exprt init_expr;
         get_init_expr(SSA, o_it, n_it, init_expr);
         add_var(pre_var,
                 pre_guard,
                 obj_post_guard,
                 guardst::kindt::LOOP,
+                related_vars,
                 all_var_specs);
 
 #ifdef DEBUG
@@ -251,12 +300,12 @@ template_generator_baset::filter_heap_domain(const var_specst &var_specs)
   return new_var_specs;
 }
 
-void template_generator_baset::add_var(
-  const vart &var,
-  const guardst::guardt &pre_guard,
-  guardst::guardt post_guard,
-  const guardst::kindt &kind,
-  var_specst &var_specs)
+void template_generator_baset::add_var(const vart &var,
+                                       const guardst::guardt &pre_guard,
+                                       guardst::guardt post_guard,
+                                       const guardst::kindt &kind,
+                                       const var_listt &related_vars,
+                                       var_specst &var_specs)
 {
   exprt aux_expr=true_exprt();
   if(std_invariants && pre_guard.id()==ID_and)
@@ -274,37 +323,15 @@ void template_generator_baset::add_var(
       implies_exprt(init_guard, equal_exprt(aux_var, init_renaming_map[var])));
     post_guard=or_exprt(post_guard, init_guard);
   }
-  if(var.type().id()!=ID_array)
-  {
-    var_specs.push_back(var_spect());
-    var_spect &var_spec=var_specs.back();
-    var_spec.guards.pre_guard=pre_guard;
-    var_spec.guards.post_guard=post_guard;
-    var_spec.guards.aux_expr=aux_expr;
-    var_spec.guards.kind=kind;
-    var_spec.var=var;
-  }
 
-  // arrays
-  if(var.type().id()==ID_array && options.get_bool_option("arrays"))
-  {
-    const array_typet &array_type=to_array_type(var.type());
-    if(!array_type.size().is_constant())
-      return;
-    mp_integer size;
-    to_integer(to_constant_expr(array_type.size()), size);
-    for(mp_integer i=0; i<size; i=i+1)
-    {
-      var_specs.push_back(var_spect());
-      var_spect &var_spec=var_specs.back();
-      constant_exprt index=from_integer(i, array_type.size().type());
-      var_spec.guards.pre_guard=pre_guard;
-      var_spec.guards.post_guard=post_guard;
-      var_spec.guards.aux_expr=aux_expr;
-      var_spec.guards.kind=kind;
-      var_spec.var=index_exprt(var, index);
-    }
-  }
+  var_specs.push_back(var_spect());
+  var_spect &var_spec = var_specs.back();
+  var_spec.guards.pre_guard = pre_guard;
+  var_spec.guards.post_guard = post_guard;
+  var_spec.guards.aux_expr = aux_expr;
+  var_spec.guards.kind = kind;
+  var_spec.var = var;
+  var_spec.related_vars = related_vars;
 }
 
 void template_generator_baset::add_vars(
@@ -315,7 +342,7 @@ void template_generator_baset::add_vars(
   var_specst &var_specs)
 {
   for(const auto &v : vars_to_add)
-    add_var(v, pre_guard, post_guard, kind, var_specs);
+    add_var(v, pre_guard, post_guard, kind, {}, var_specs);
 }
 
 void template_generator_baset::add_vars(
@@ -326,7 +353,7 @@ void template_generator_baset::add_vars(
   var_specst &var_specs)
 {
   for(const auto &v : vars_to_add)
-    add_var(v, pre_guard, post_guard, kind, var_specs);
+    add_var(v, pre_guard, post_guard, kind, {}, var_specs);
 }
 
 void template_generator_baset::add_vars(
@@ -337,7 +364,7 @@ void template_generator_baset::add_vars(
   var_specst &var_specs)
 {
   for(const auto &v : vars_to_add)
-    add_var(v, pre_guard, post_guard, kind, var_specs);
+    add_var(v, pre_guard, post_guard, kind, {}, var_specs);
 }
 
 void template_generator_baset::handle_special_functions(const local_SSAt &SSA)
@@ -586,6 +613,14 @@ std::unique_ptr<domaint> template_generator_baset::instantiate_standard_domains(
         new heap_domaint(domain_number++, renaming_map, heap_var_specs, SSA));
   }
 
+  if(options.get_bool_option("arrays"))
+  {
+    auto array_var_specs = filter_array_domain(var_specs);
+    if(!array_var_specs.empty())
+      domains.emplace_back(new array_domaint(
+        domain_number, renaming_map, array_var_specs, SSA, solver, *this));
+  }
+
   if(options.get_bool_option("intervals"))
   {
     auto templ_var_specs = filter_template_domain(var_specs);
@@ -667,4 +702,16 @@ std::vector<exprt> template_generator_baset::collect_record_frees(
     }
   }
   return result;
+}
+
+var_specst
+template_generator_baset::filter_array_domain(const var_specst &var_specs)
+{
+  var_specst new_var_specs;
+  for(const auto &v : var_specs)
+  {
+    if(v.var.type().id() == ID_array)
+      new_var_specs.push_back(v);
+  }
+  return new_var_specs;
 }

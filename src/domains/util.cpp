@@ -608,3 +608,19 @@ void replace_symbol(exprt &expr, const irep_idt &old, const irep_idt &updated)
     for(auto &op : expr.operands())
       replace_symbol(op, old, updated);
 }
+
+/// Add +1 to expression. If the expression is a typecast, add +1 to the inner
+/// expression.
+exprt expr_plus_one(const exprt &expr)
+{
+  exprt result = expr;
+  if(result.id() == ID_typecast)
+    result = to_typecast_expr(result).op();
+
+  result = plus_exprt(result, make_one(result.type()));
+
+  if(result.type() != expr.type())
+    result = typecast_exprt(result, expr.type());
+
+  return result;
+}
