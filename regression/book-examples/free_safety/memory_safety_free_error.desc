@@ -1,6 +1,6 @@
 CORE
 free_safety.c
---pointer-check --heap --inline -DINVALID_FREE
+--pointer-check --heap -DINVALID_FREE
 ^EXIT=10$
 ^SIGNAL=0$
 ^VERIFICATION FAILED$

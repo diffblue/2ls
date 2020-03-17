@@ -1,6 +1,6 @@
 KNOWNBUG
 main.c
---heap-values-refine --sympath --inline
+--heap-values-refine
 ^EXIT=0$
 ^SIGNAL=0$
 ^VERIFICATION SUCCESSFUL$

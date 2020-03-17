@@ -207,6 +207,15 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
       options.set_option("binsearch-solver", true);
   }
 
+  if(cmdline.isset("heap") ||
+     cmdline.isset("heap-interval") ||
+     cmdline.isset("heap-zones") ||
+     cmdline.isset("heap-values-refine"))
+  {
+    options.set_option("inline", true);
+    options.set_option("sympath", true);
+  }
+
   // use incremental assertion checks
   if(cmdline.isset("non-incremental"))
     options.set_option("incremental", false);

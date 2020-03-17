@@ -1,6 +1,6 @@
 KNOWNBUG
 main.c
---heap --inline --no-propagation
+--heap --no-propagation
 ^EXIT=0$
 ^SIGNAL=0$
 ^VERIFICATION SUCCESSFUL$

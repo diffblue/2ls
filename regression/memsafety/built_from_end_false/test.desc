@@ -1,6 +1,6 @@
 CORE
 main.c
---heap-interval --sympath --inline --pointer-check --no-assertions --k-induction
+--heap-interval --pointer-check --no-assertions --k-induction
 ^EXIT=10$
 ^SIGNAL=0$
 ^VERIFICATION FAILED$
