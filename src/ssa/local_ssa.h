@@ -18,6 +18,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <domains/list_iterator.h>
 #include <domains/incremental_solver.h>
+#include <util/options.h>
 
 #include "ssa_domain.h"
 #include "guard_map.h"
@@ -39,14 +40,20 @@ public:
   inline local_SSAt(
     const goto_functiont &_goto_function,
     const namespacet &_ns,
+    const optionst &_options,
     const ssa_heap_analysist &_heap_analysis,
     const std::string &_suffix=""):
-    ns(_ns), goto_function(_goto_function),
+    ns(_ns), goto_function(_goto_function), options(_options),
     heap_analysis(_heap_analysis),
     ssa_objects(_goto_function, ns, _heap_analysis),
-    ssa_value_ai(_goto_function, ns, _heap_analysis),
+    ssa_value_ai(_goto_function, ns, options, _heap_analysis),
     assignments(
-      _goto_function.body, ns, ssa_objects, ssa_value_ai, heap_analysis),
+      _goto_function.body,
+      ns,
+      options,
+      ssa_objects,
+      ssa_value_ai,
+      heap_analysis),
     alias_analysis(_goto_function, ns),
     guard_map(_goto_function.body),
     ssa_analysis(assignments),
@@ -166,6 +173,7 @@ public:
 
   const namespacet &ns;
   const goto_functiont &goto_function;
+  const optionst &options;
 
   // guards
   ssa_objectt cond_symbol() const;

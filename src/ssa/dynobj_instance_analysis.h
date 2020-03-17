@@ -24,6 +24,7 @@ Description: In some cases, multiple instances must be used so that the
 
 #include <analyses/ai.h>
 #include <util/union_find.h>
+#include <util/options.h>
 #include "ssa_object.h"
 #include "ssa_value_set.h"
 
@@ -172,13 +173,16 @@ public:
   dynobj_instance_analysist(
     const goto_functionst::goto_functiont &goto_function,
     const namespacet &ns,
+    const optionst &_options,
     ssa_value_ait &_value_ai):
+    options(_options),
     value_analysis(_value_ai)
   {
     operator()(goto_function, ns);
   }
 
 protected:
+  const optionst &options;
   ssa_value_ait &value_analysis;
 
   friend class dynobj_instance_domaint;

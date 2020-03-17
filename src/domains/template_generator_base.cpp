@@ -134,14 +134,17 @@ void template_generator_baset::collect_variables_loop(
 
         exprt obj_post_guard=post_guard;
 
-        if(id.find("__CPROVER_deallocated")!=std::string::npos)
+        if(!options.get_bool_option("competition-mode"))
         {
-          auto record_frees=collect_record_frees(SSA, n_it->loophead, n_it);
-          exprt::operandst d;
-          for(auto &r : record_frees)
-            d.push_back(equal_exprt(r, true_exprt()));
-          if(!d.empty())
-            obj_post_guard=and_exprt(obj_post_guard, disjunction(d));
+          if(id.find("__CPROVER_deallocated")!=std::string::npos)
+          {
+            auto record_frees=collect_record_frees(SSA, n_it->loophead, n_it);
+            exprt::operandst d;
+            for(auto &r : record_frees)
+              d.push_back(equal_exprt(r, true_exprt()));
+            if(!d.empty())
+              obj_post_guard=and_exprt(obj_post_guard, disjunction(d));
+          }
         }
 
         symbol_exprt pre_var;

@@ -705,11 +705,11 @@ void tpolyhedra_domaint::add_difference_template(
         int v2_index=get_dynobj_line(to_symbol_expr(v2->var).get_identifier());
         if(v1_index>=0 && v2_index>=0 && v1_index==v2_index)
         {
-          int v1_inst=get_dynobj_instance(
+          std::string v1_inst=get_dynobj_instance(
             to_symbol_expr(v1->var).get_identifier());
-          int v2_inst=get_dynobj_instance(
+          std::string v2_inst=get_dynobj_instance(
             to_symbol_expr(v2->var).get_identifier());
-          if(v1_inst>=0 && v2_inst>=0 && v1_inst!=v2_inst)
+          if(v1_inst!="" && v2_inst!="" && v1_inst!=v2_inst)
             continue;
         }
       }

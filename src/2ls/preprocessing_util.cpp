@@ -15,6 +15,7 @@ Author: Peter Schrammel
 
 #include <analyses/constant_propagator.h>
 #include <goto-instrument/unwind.h>
+#include <goto-instrument/function.h>
 #include <ssa/dynobj_instance_analysis.h>
 
 #include "2ls_parse_options.h"
@@ -611,7 +612,7 @@ void twols_parse_optionst::create_dynobj_instances(
 
         const std::string name=id2string(obj_symbol.name);
         const std::string base_name=id2string(obj_symbol.base_name);
-        std::string suffix="#"+std::to_string(0);
+        std::string suffix="$"+std::to_string(0);
 
         obj_symbol.name=name+suffix;
         obj_symbol.base_name=base_name+suffix;
@@ -632,7 +633,7 @@ void twols_parse_optionst::create_dynobj_instances(
           nondet.pretty_name=nondet.name;
           symbol_table.add(nondet);
 
-          suffix="#"+std::to_string(i);
+          suffix="$"+std::to_string(i);
           obj_symbol.name=name+suffix;
           obj_symbol.base_name=base_name+suffix;
 
@@ -652,7 +653,8 @@ void twols_parse_optionst::create_dynobj_instances(
 }
 
 std::map<symbol_exprt, size_t> twols_parse_optionst::split_dynamic_objects(
-  goto_modelt &goto_model)
+  goto_modelt &goto_model,
+  const optionst &options)
 {
   std::map<symbol_exprt, size_t> dynobj_instances;
   Forall_goto_functions(f_it, goto_model.goto_functions)
@@ -660,8 +662,10 @@ std::map<symbol_exprt, size_t> twols_parse_optionst::split_dynamic_objects(
     if(!f_it->second.body_available())
       continue;
     namespacet ns(goto_model.symbol_table);
-    ssa_value_ait value_analysis(f_it->second, ns, ssa_heap_analysist(ns));
-    dynobj_instance_analysist do_inst(f_it->second, ns, value_analysis);
+    ssa_value_ait value_analysis(
+      f_it->second, ns, options, ssa_heap_analysist(ns));
+    dynobj_instance_analysist do_inst(
+      f_it->second, ns, options, value_analysis);
 
     compute_dynobj_instances(
       f_it->second.body, do_inst, dynobj_instances, ns);
@@ -734,6 +738,115 @@ void twols_parse_optionst::memory_assert_info(goto_modelt &goto_model)
           }
         }
       }
+    }
+  }
+}
+
+/// Transform comparison of pointers to be non-deterministic if the pointers
+/// were freed.
+/// This is done by transforming (x op y) into:
+///     (x op y) XOR ((freed(x) || nondet) && (freed(y) && nondet))
+void make_freed_ptr_comparison_nondet(
+  goto_modelt &goto_model,
+  goto_functionst::goto_functiont &fun,
+  goto_programt::instructionst::iterator loc,
+  exprt &cond,
+  const std::set<irep_idt> &typecasted_pointers)
+{
+  if(cond.id()==ID_equal || cond.id()==ID_notequal || cond.id()==ID_le ||
+     cond.id()==ID_lt || cond.id()==ID_ge || cond.id()==ID_gt)
+  {
+    // Check if both operands are either pointers or type-casted pointers
+    if(cond.op0().id()==ID_symbol && cond.op1().id()==ID_symbol &&
+       !is_cprover_symbol(cond.op0()) && !is_cprover_symbol(cond.op1()) &&
+       (cond.op0().type().id()==ID_pointer ||
+        typecasted_pointers.find(to_symbol_expr(cond.op0()).get_identifier())!=
+        typecasted_pointers.end()) &&
+       (cond.op1().type().id()==ID_pointer ||
+        typecasted_pointers.find(to_symbol_expr(cond.op1()).get_identifier())!=
+        typecasted_pointers.end()))
+    {
+      const symbolt &freed=goto_model.symbol_table.lookup(
+        "__CPROVER_deallocated");
+
+      // LHS != __CPROVER_deallocated
+      auto lhs_not_freed_cond=notequal_exprt(
+        typecast_exprt(cond.op0(), freed.type), freed.symbol_expr());
+
+      // RHS != __CPROVER_deallocated
+      auto rhs_not_freed_cond=notequal_exprt(
+        typecast_exprt(cond.op1(), freed.type), freed.symbol_expr());
+
+      // XOR is implemented as ==
+      cond=equal_exprt(
+        cond,
+        and_exprt(
+          or_exprt(
+            lhs_not_freed_cond,
+            side_effect_expr_nondett(bool_typet())),
+          or_exprt(
+            rhs_not_freed_cond,
+            side_effect_expr_nondett(bool_typet()))));
+    }
+  }
+  else if(cond.id()==ID_not)
+    make_freed_ptr_comparison_nondet(
+      goto_model, fun, loc, to_not_expr(cond).op(), typecasted_pointers);
+}
+
+/// Transform each comparison of pointers so that it has a non-deterministic
+/// result if the pointers were freed, since comparison of freed pointers is
+/// an undefined behavior.
+void twols_parse_optionst::handle_freed_ptr_compare(goto_modelt &goto_model)
+{
+  std::set<irep_idt> typecasted_pointers;
+  Forall_goto_functions(f_it, goto_model.goto_functions)
+  {
+    Forall_goto_program_instructions(i_it, f_it->second.body)
+    {
+      if(i_it->is_goto())
+      {
+        auto &guard=i_it->guard;
+        make_freed_ptr_comparison_nondet(
+          goto_model, f_it->second, i_it, guard, typecasted_pointers);
+      }
+      else if(i_it->is_assign())
+      {
+        auto &assign=to_code_assign(i_it->code);
+        // If a pointer is casted to a non-pointer type (probably an integer),
+        // save the destination variable into typecasted_pointers
+        if(assign.lhs().id()==ID_symbol &&
+           ((assign.rhs().id()==ID_typecast &&
+             to_typecast_expr(assign.rhs()).op().type().id()==ID_pointer &&
+             assign.lhs().type().id()!=ID_pointer) ||
+            typecasted_pointers.find(
+              to_symbol_expr(assign.lhs()).get_identifier())!=
+            typecasted_pointers.end()))
+        {
+          typecasted_pointers.insert(
+            to_symbol_expr(assign.lhs()).get_identifier());
+        }
+      }
+    }
+  }
+}
+
+/// Add assertions preventing analysis of programs using GCC builtin functions
+/// that are not supported and can cause false results.
+void twols_parse_optionst::assert_no_builtin_functions(goto_modelt &goto_model)
+{
+  forall_goto_program_instructions(
+    i_it,
+    goto_model.goto_functions.function_map.find("_start")->second.body)
+  {
+    std::string name=id2string(i_it->source_location.get_function());
+    assert(
+      name.find("__builtin_")==std::string::npos &&
+      name.find("__CPROVER_overflow")==std::string::npos);
+
+    if(i_it->is_assign())
+    {
+      assert(i_it->code.op1().id()!=ID_popcount);
     }
   }
 }

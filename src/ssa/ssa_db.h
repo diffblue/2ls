@@ -71,7 +71,7 @@ public:
     const ssa_heap_analysist &heap_analysis)
   {
     store[function_name]=
-      new unwindable_local_SSAt(goto_function, ns, heap_analysis);
+      new unwindable_local_SSAt(goto_function, ns, options, heap_analysis);
   }
 
 protected:

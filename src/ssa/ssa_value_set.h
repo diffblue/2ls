@@ -13,6 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #define CPROVER_2LS_SSA_SSA_VALUE_SET_H
 
 #include <analyses/ai.h>
+#include <util/options.h>
 
 #include "ssa_object.h"
 #include "ssa_heap_domain.h"
@@ -66,7 +67,11 @@ public:
   typedef std::map<ssa_objectt, valuest> value_mapt;
   value_mapt value_map;
 
-  const valuest operator()(const exprt &src, const namespacet &ns) const
+  bool competition_mode;
+
+  const valuest operator()(
+    const exprt &src,
+    const namespacet &ns) const
   {
     valuest tmp;
     assign_rhs_rec(tmp, src, ns, false, 0);
@@ -115,8 +120,10 @@ public:
   ssa_value_ait(
     const goto_functionst::goto_functiont &goto_function,
     const namespacet &ns_,
+    const optionst &_options,
     const ssa_heap_analysist &_heap_analysis):
     ns(ns_),
+    options(_options),
     heap_analysis(_heap_analysis)
   {
     operator()(goto_function, ns_);
@@ -131,6 +138,7 @@ protected:
   void assign(const exprt &src, const exprt &dest, ssa_value_domaint &entry);
 
   const namespacet &ns;
+  const optionst &options;
 
   const ssa_heap_analysist &heap_analysis;
 

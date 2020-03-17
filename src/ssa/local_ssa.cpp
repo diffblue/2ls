@@ -309,7 +309,9 @@ exprt local_SSAt::dereference(const exprt &src, locationt loc) const
 {
   const ssa_value_domaint &ssa_value_domain=ssa_value_ai[loc];
   const std::string nondet_prefix="deref#"+i2string(loc->location_number);
-  return ::dereference(src, ssa_value_domain, nondet_prefix, ns);
+  return ::dereference(
+    src, ssa_value_domain, nondet_prefix, ns,
+    options.get_bool_option("competition-mode"));
 }
 
 void local_SSAt::build_transfer(locationt loc)

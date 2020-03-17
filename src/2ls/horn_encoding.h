@@ -18,6 +18,7 @@ Author:
 
 void horn_encoding(
   const goto_modelt &,
+  const optionst &options,
   std::ostream &out);
 
 #endif

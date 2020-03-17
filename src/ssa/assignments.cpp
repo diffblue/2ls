@@ -29,7 +29,9 @@ void assignmentst::build_assignment_map(
     if(it->is_assign())
     {
       const code_assignt &code_assign=to_code_assign(it->code);
-      exprt lhs_deref=dereference(code_assign.lhs(), ssa_value_ai[it], "", ns);
+      exprt lhs_deref=dereference(
+        code_assign.lhs(), ssa_value_ai[it], "", ns,
+        options.get_bool_option("competition-mode"));
       assign(lhs_deref, it, ns);
       exprt lhs_symbolic_deref=symbolic_dereference(code_assign.lhs(), ns);
       assign(lhs_symbolic_deref, it, ns);
@@ -94,7 +96,9 @@ void assignmentst::build_assignment_map(
 
         if(arg!=modified)
         {
-          const exprt arg_deref=dereference(arg, ssa_value_ai[it], "", ns);
+          bool comp=options.get_bool_option("competition-mode");
+          const exprt arg_deref=dereference(
+            arg, ssa_value_ai[it], "", ns, comp);
           assign(arg_deref, it, ns);
 
           std::set<symbol_exprt> symbols;
@@ -117,7 +121,9 @@ void assignmentst::build_assignment_map(
       if(code_function_call.lhs().is_not_nil())
       {
         exprt lhs_deref=
-          dereference(code_function_call.lhs(), ssa_value_ai[it], "", ns);
+          dereference(
+            code_function_call.lhs(), ssa_value_ai[it], "", ns,
+            options.get_bool_option("competition-mode"));
         assign(lhs_deref, it, ns);
       }
     }

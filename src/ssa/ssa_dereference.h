@@ -14,6 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/std_expr.h>
 #include <util/namespace.h>
+#include <util/options.h>
 
 #include "ssa_value_set.h"
 
@@ -21,6 +22,7 @@ exprt dereference(
   const exprt &,
   const ssa_value_domaint &,
   const std::string &nondet_prefix,
-  const namespacet &);
+  const namespacet &,
+  bool competition_mode);
 
 #endif

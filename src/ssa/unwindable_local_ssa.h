@@ -23,9 +23,10 @@ public:
   unwindable_local_SSAt(
     const goto_functiont &_goto_function,
     const namespacet &_ns,
+    const optionst &_options,
     const ssa_heap_analysist &heap_analysis,
     const std::string &_suffix=""):
-    local_SSAt(_goto_function, _ns, heap_analysis, _suffix),
+    local_SSAt(_goto_function, _ns, _options, heap_analysis, _suffix),
     current_unwinding(-1)
   {
     compute_loop_hierarchy();

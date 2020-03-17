@@ -393,6 +393,7 @@ int twols_parse_optionst::doit()
     irep_idt function=cmdline.get_value("function");
     show_ssa(
       goto_model,
+      options,
       heap_analysis,
       function,
       simplify,
@@ -404,14 +405,15 @@ int twols_parse_optionst::doit()
   if(cmdline.isset("show-defs"))
   {
     irep_idt function=cmdline.get_value("function");
-    show_defs(goto_model, function, std::cout, ui_message_handler);
+    show_defs(goto_model, function, options, std::cout, ui_message_handler);
     return 7;
   }
 
   if(cmdline.isset("show-assignments"))
   {
     irep_idt function=cmdline.get_value("function");
-    show_assignments(goto_model, function, std::cout, ui_message_handler);
+    show_assignments(
+      goto_model, function, options, std::cout, ui_message_handler);
     return 7;
   }
 
@@ -425,7 +427,8 @@ int twols_parse_optionst::doit()
   if(cmdline.isset("show-value-sets"))
   {
     irep_idt function=cmdline.get_value("function");
-    show_value_sets(goto_model, function, std::cout, ui_message_handler);
+    show_value_sets(
+      goto_model, function, options, std::cout, ui_message_handler);
     return 7;
   }
 
@@ -574,7 +577,7 @@ int twols_parse_optionst::doit()
 
       if(out_file=="-")
       {
-        horn_encoding(goto_model, std::cout);
+        horn_encoding(goto_model, options, std::cout);
       }
       else
       {
@@ -591,7 +594,7 @@ int twols_parse_optionst::doit()
           return 1;
         }
 
-        horn_encoding(goto_model, out);
+        horn_encoding(goto_model, options, out);
       }
 
       return 0;
@@ -1060,6 +1063,9 @@ bool twols_parse_optionst::process_goto_program(
 #endif
     }
 
+    if(options.get_bool_option("competition-mode"))
+      assert_no_builtin_functions(goto_model);
+
 #if REMOVE_MULTIPLE_DEREFERENCES
     remove_multiple_dereferences(goto_model);
 #endif
@@ -1127,6 +1133,7 @@ bool twols_parse_optionst::process_goto_program(
     if(options.get_bool_option("pointer-check"))
     {
       allow_record_malloc(goto_model);
+      handle_freed_ptr_compare(goto_model);
     }
     if(options.get_bool_option("memory-leak-check"))
       allow_record_memleak(goto_model);
@@ -1142,7 +1149,7 @@ bool twols_parse_optionst::process_goto_program(
       inline_main(goto_model);
     }
 
-    auto dynobj_instances=split_dynamic_objects(goto_model);
+    auto dynobj_instances=split_dynamic_objects(goto_model, options);
 
     if(!cmdline.isset("independent-properties"))
     {

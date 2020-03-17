@@ -215,7 +215,8 @@ exprt ssa_alias_guard(
 exprt ssa_alias_value(
   const exprt &e1,
   const exprt &e2,
-  const namespacet &ns)
+  const namespacet &ns,
+  bool competition_mode)
 {
   const typet &e1_type=ns.follow(e1.type());
   const typet &e2_type=ns.follow(e2.type());
@@ -248,6 +249,8 @@ exprt ssa_alias_value(
   }
 
   byte_extract_exprt byte_extract(byte_extract_id(), e1.type());
+  if(competition_mode)
+    assert(!e2_type.get_bool("#dynamic"));
   byte_extract.op()=e2;
   byte_extract.offset()=offset1;
 
@@ -258,7 +261,8 @@ exprt dereference_rec(
   const exprt &src,
   const ssa_value_domaint &ssa_value_domain,
   const std::string &nondet_prefix,
-  const namespacet &ns)
+  const namespacet &ns,
+  bool competition_mode)
 {
   if(src.id()==ID_dereference)
   {
@@ -266,7 +270,8 @@ exprt dereference_rec(
       to_dereference_expr(src).pointer(),
       ssa_value_domain,
       nondet_prefix,
-      ns);
+      ns,
+      competition_mode);
 
     const typet &pointed_type=ns.follow(pointer.type().subtype());
 
@@ -294,14 +299,14 @@ exprt dereference_rec(
       }
       else
       {
-        result=ssa_alias_value(src, (it++)->get_expr(), ns);
+        result=ssa_alias_value(src, (it++)->get_expr(), ns, competition_mode);
         result.set("#heap_access", result.type().get_bool("#dynamic"));
       }
 
       for(; it!=values.value_set.end(); ++it)
       {
         exprt guard=ssa_alias_guard(src, it->get_expr(), ns);
-        exprt value=ssa_alias_value(src, it->get_expr(), ns);
+        exprt value=ssa_alias_value(src, it->get_expr(), ns, competition_mode);
         result=if_exprt(guard, value, result);
         result.set(
           "#heap_access",
@@ -315,8 +320,8 @@ exprt dereference_rec(
   else if(src.id()==ID_member)
   {
     member_exprt tmp=to_member_expr(src);
-    tmp.struct_op()=
-      dereference_rec(tmp.struct_op(), ssa_value_domain, nondet_prefix, ns);
+    tmp.struct_op()=dereference_rec(
+      tmp.struct_op(), ssa_value_domain, nondet_prefix, ns, competition_mode);
     tmp.set("#heap_access", tmp.struct_op().get_bool("#heap_access"));
 
     #ifdef DEBUG
@@ -331,8 +336,8 @@ exprt dereference_rec(
   else if(src.id()==ID_address_of)
   {
     address_of_exprt tmp=to_address_of_expr(src);
-    tmp.object()=
-      dereference_rec(tmp.object(), ssa_value_domain, nondet_prefix, ns);
+    tmp.object()=dereference_rec(
+      tmp.object(), ssa_value_domain, nondet_prefix, ns, competition_mode);
     tmp.set("#heap_access", tmp.object().get_bool("#heap_access"));
 
     if(tmp.object().is_nil())
@@ -345,7 +350,8 @@ exprt dereference_rec(
     exprt tmp=src;
     Forall_operands(it, tmp)
     {
-      *it=dereference_rec(*it, ssa_value_domain, nondet_prefix, ns);
+      *it=dereference_rec(
+        *it, ssa_value_domain, nondet_prefix, ns, competition_mode);
       if(it->get_bool("#heap_access"))
         tmp.set("#heap_access", true);
     }
@@ -357,13 +363,15 @@ exprt dereference(
   const exprt &src,
   const ssa_value_domaint &ssa_value_domain,
   const std::string &nondet_prefix,
-  const namespacet &ns)
+  const namespacet &ns,
+  bool competition_mode)
 {
   #ifdef DEBUG
   std::cout << "dereference src: " << from_expr(ns, "", src) << '\n';
   #endif
 
-  exprt tmp1=dereference_rec(src, ssa_value_domain, nondet_prefix, ns);
+  exprt tmp1=dereference_rec(
+    src, ssa_value_domain, nondet_prefix, ns, competition_mode);
 
   #ifdef DEBUG
   std::cout << "dereference tmp1: " << from_expr(ns, "", tmp1) << '\n';

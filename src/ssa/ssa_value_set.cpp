@@ -10,7 +10,6 @@ Author: Daniel Kroening, kroening@kroening.com
 /// A flow-insensitive value set analysis
 
 // #define DEBUG
-// #define COMPETITION
 
 #ifdef DEBUG
 #include <iostream>
@@ -30,11 +29,15 @@ void ssa_value_domaint::transform(
   ai_baset &ai,
   const namespacet &ns)
 {
+  competition_mode=static_cast<ssa_value_ait &>(ai).options
+    .get_bool_option("competition-mode");
   if(from->is_assign())
   {
     const code_assignt &assignment=to_code_assign(from->code);
-    exprt lhs_deref=dereference(assignment.lhs(), *this, "", ns);
-    exprt rhs_deref=dereference(assignment.rhs(), *this, "", ns);
+    exprt lhs_deref=dereference(
+      assignment.lhs(), *this, "", ns, competition_mode);
+    exprt rhs_deref=dereference(
+      assignment.rhs(), *this, "", ns, competition_mode);
     assign_lhs_rec(lhs_deref, rhs_deref, ns);
   }
   else if(from->is_goto())
@@ -129,7 +132,8 @@ void ssa_value_domaint::transform(
     // the call might come with an assignment
     if(code_function_call.lhs().is_not_nil())
     {
-      exprt lhs_deref=dereference(code_function_call.lhs(), *this, "", ns);
+      exprt lhs_deref=dereference(
+        code_function_call.lhs(), *this, "", ns, competition_mode);
       assign_lhs_rec(lhs_deref, nil_exprt(), ns);
     }
 
@@ -334,10 +338,8 @@ void ssa_value_domaint::assign_rhs_rec(
   }
   else if(rhs.id()==ID_plus)
   {
-#ifdef COMPETITION
     bool pointer=false;
     bool arithmetics=false;
-#endif
 
     forall_operands(it, rhs)
     {
@@ -349,21 +351,16 @@ void ssa_value_domaint::assign_rhs_rec(
         unsigned a=merge_alignment(integer2ulong(pointer_offset), alignment);
         assign_rhs_rec(dest, *it, ns, true, a);
 
-#ifdef COMPETITION
         pointer=true;
-#endif
       }
       else if(it->type().id()==ID_unsignedbv || it->type().id()==ID_signedbv)
       {
-#ifdef COMPETITION
         arithmetics=true;
-#endif
       }
     }
 
-#ifdef COMPETITION
-    assert(!(pointer && arithmetics));
-#endif
+    if(competition_mode)
+      assert(!(pointer && arithmetics));
   }
   else if(rhs.id()==ID_minus)
   {
@@ -376,11 +373,10 @@ void ssa_value_domaint::assign_rhs_rec(
       unsigned a=merge_alignment(integer2ulong(pointer_offset), alignment);
       assign_rhs_rec(dest, rhs.op0(), ns, true, a);
 
-#ifdef COMPETITION
-      assert(
-        !(rhs.op1().type().id()==ID_unsignedbv ||
-          rhs.op1().type().id()==ID_signedbv));
-#endif
+      if(competition_mode)
+        assert(
+          !(rhs.op1().type().id()==ID_unsignedbv ||
+            rhs.op1().type().id()==ID_signedbv));
     }
   }
   else if(rhs.id()==ID_dereference)
@@ -646,6 +642,8 @@ bool ssa_value_domaint::merge(
     v_it++;
     it++;
   }
+
+  competition_mode=competition_mode || other.competition_mode;
 
   return result;
 }
