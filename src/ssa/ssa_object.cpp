@@ -213,18 +213,6 @@ void ssa_objectst::collect_objects(
     collect_objects_rec(it->guard, ns, objects, literals);
     collect_objects_rec(it->code, ns, objects, literals);
   }
-
-  // Add new objects created within the function
-  goto_programt::const_targett exit=--(src.body.instructions.end());
-  if(heap_analysis.has_location(exit))
-  {
-    const std::list<symbol_exprt> &new_objects=
-      heap_analysis[exit].new_objects();
-    for(const symbol_exprt &o : new_objects)
-    {
-      collect_objects_rec(o, ns, objects, literals);
-    }
-  }
 }
 
 void ssa_objectst::categorize_objects(

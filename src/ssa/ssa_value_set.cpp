@@ -60,11 +60,6 @@ void ssa_value_domaint::transform(
 
     const ssa_value_ait &value_analysis=static_cast<ssa_value_ait &>(ai);
 
-    const ssa_heap_domaint *heap_domain=NULL;
-    if(value_analysis.heap_analysis.has_location(to))
-      heap_domain=&value_analysis.heap_analysis[to];
-
-
     // functions may alter state almost arbitrarily:
     // * any global-scoped variables
     // * any dirty locals
@@ -93,24 +88,7 @@ void ssa_value_domaint::transform(
         {
           symbol_exprt pointed_obj=pointed_object(arg, ns);
           pointed_obj.type().set("#dynamic", true);
-
-          std::set<symbol_exprt> new_objects;
-          if(heap_domain)
-            new_objects=heap_domain->value(arg_expr);
-          if(new_objects.empty())
-          {
-            new_objects.insert(pointed_obj);
-          }
-
-          auto it=new_objects.begin();
-          assign_lhs_rec(arg, address_of_exprt(*it), ns);
-          objects.push_back(*it);
-
-          for(++it; it!=new_objects.end(); ++it)
-          {
-            assign_lhs_rec(arg, address_of_exprt(*it), ns, true);
-            objects.push_back(*it);
-          }
+          objects.push_back(pointed_obj);
 
           arg_expr=dereference_exprt(arg_expr, arg.type().subtype());
           arg=pointed_obj;
@@ -145,33 +123,9 @@ void ssa_value_domaint::transform(
       if(return_value.type().id()==ID_pointer &&
          return_value.get_identifier()==id2string(fname)+"#return_value")
       {
-        std::set<symbol_exprt> new_objects;
-        if(heap_domain)
-          new_objects=heap_domain->value(return_value);
-        if(new_objects.empty())
-        {
-          symbol_exprt pointed_obj=pointed_object(return_value, ns);
-          pointed_obj.type().set("#dynamic", true);
-          new_objects.insert(pointed_obj);
-        }
-
-        auto it=new_objects.begin();
-        assign_lhs_rec(return_value, address_of_exprt(*it), ns);
-        objects.push_back(*it);
-
-        for(++it; it!=new_objects.end(); ++it)
-        {
-          assign_lhs_rec(return_value, address_of_exprt(*it), ns, true);
-          objects.push_back(*it);
-        }
-
-        if(heap_domain)
-        {
-          for(auto &new_o : heap_domain->new_caller_objects(fname, from))
-          {
-            objects.push_back(new_o);
-          }
-        }
+        symbol_exprt pointed_obj=pointed_object(return_value, ns);
+        pointed_obj.type().set("#dynamic", true);
+        objects.push_back(pointed_obj);
       }
     }
 

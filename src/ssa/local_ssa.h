@@ -23,7 +23,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "ssa_domain.h"
 #include "guard_map.h"
 #include "ssa_object.h"
-#include "ssa_heap_domain.h"
 #include "may_alias_analysis.h"
 
 #define TEMPLATE_PREFIX "__CPROVER_template"
@@ -41,19 +40,16 @@ public:
     const goto_functiont &_goto_function,
     const namespacet &_ns,
     const optionst &_options,
-    const ssa_heap_analysist &_heap_analysis,
     const std::string &_suffix=""):
     ns(_ns), goto_function(_goto_function), options(_options),
-    heap_analysis(_heap_analysis),
-    ssa_objects(_goto_function, ns, _heap_analysis),
-    ssa_value_ai(_goto_function, ns, options, _heap_analysis),
+    ssa_objects(_goto_function, ns),
+    ssa_value_ai(_goto_function, ns, options),
     assignments(
       _goto_function.body,
       ns,
       options,
       ssa_objects,
-      ssa_value_ai,
-      heap_analysis),
+      ssa_value_ai),
     alias_analysis(_goto_function, ns),
     guard_map(_goto_function.body),
     ssa_analysis(assignments),
@@ -244,8 +240,6 @@ public:
     ssa_objectt &symderef,
     const namespacet &ns,
     const locationt loc);
-
-  const ssa_heap_analysist &heap_analysis;
 
   ssa_objectst ssa_objects;
   typedef ssa_objectst::objectst objectst;

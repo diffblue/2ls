@@ -379,14 +379,6 @@ int twols_parse_optionst::doit()
     return 6;
 
   const namespacet ns(goto_model.symbol_table);
-  ssa_heap_analysist heap_analysis(ns);
-  if((options.get_bool_option("heap") ||
-      options.get_bool_option("heap-interval")) &&
-     !options.get_bool_option("inline"))
-  {
-    heap_analysis(goto_model.goto_functions);
-    add_dynamic_object_symbols(heap_analysis, goto_model);
-  }
 
   if(cmdline.isset("show-stats"))
   {
@@ -403,7 +395,6 @@ int twols_parse_optionst::doit()
     show_ssa(
       goto_model,
       options,
-      heap_analysis,
       function,
       simplify,
       std::cout,
@@ -551,18 +542,18 @@ int twols_parse_optionst::doit()
     if(!options.get_bool_option("k-induction") &&
        !options.get_bool_option("incremental-bmc"))
       checker=std::unique_ptr<summary_checker_baset>(
-        new summary_checker_ait(options, heap_analysis));
+        new summary_checker_ait(options));
     if(options.get_bool_option("k-induction") &&
        !options.get_bool_option("incremental-bmc"))
       checker=std::unique_ptr<summary_checker_baset>(
-        new summary_checker_kindt(options, heap_analysis));
+        new summary_checker_kindt(options));
     if(!options.get_bool_option("k-induction") &&
        options.get_bool_option("incremental-bmc"))
       checker=std::unique_ptr<summary_checker_baset>(
-        new summary_checker_bmct(options, heap_analysis));
+        new summary_checker_bmct(options));
     if(options.get_bool_option("nontermination"))
       checker=std::unique_ptr<summary_checker_baset>(
-        new summary_checker_nontermt(options, heap_analysis));
+        new summary_checker_nontermt(options));
 
     checker->set_message_handler(get_message_handler());
     checker->simplify=!cmdline.isset("no-simplify");
