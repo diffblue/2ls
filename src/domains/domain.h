@@ -47,7 +47,7 @@ public:
   typedef std::vector<vart> var_listt;
   typedef std::set<vart> var_sett;
 
-  typedef enum {LOOP, IN, OUT, OUTL, OUTHEAP} kindt;
+  typedef enum {LOOP, IN, OUT, OUTL} kindt;
 
   typedef exprt guardt;
   typedef unsigned rowt;

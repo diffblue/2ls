@@ -199,16 +199,3 @@ void ssa_analyzert::get_result(exprt &_result, const domaint::var_sett &vars)
 {
   domain->project_on_vars(*result, vars, _result);
 }
-
-void ssa_analyzert::update_heap_out(summaryt::var_sett &out)
-{
-  heap_domaint &heap_domain=static_cast<heap_domaint &>(*domain);
-
-  auto new_heap_vars=heap_domain.get_new_heap_vars();
-  out.insert(new_heap_vars.begin(), new_heap_vars.end());
-}
-
-const exprt ssa_analyzert::input_heap_bindings()
-{
-  return static_cast<heap_domaint &>(*domain).get_iterator_bindings();
-}

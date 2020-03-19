@@ -92,8 +92,7 @@ domaint::var_sett template_generator_summaryt::inout_vars()
       v!=var_specs.end(); v++)
   {
     if(v->kind==domaint::IN ||
-       v->kind==domaint::OUT ||
-       v->kind==domaint::OUTHEAP)
+       v->kind==domaint::OUT)
       vars.insert(v->var);
   }
   return vars;

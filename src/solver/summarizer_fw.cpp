@@ -146,16 +146,6 @@ void summarizer_fwt::do_summary(
   debug() << "whole result: " << from_expr(SSA.ns, "", whole_result) << eom;
 #endif
 
-  if(options.get_bool_option("heap"))
-  {
-    analyzer.update_heap_out(summary.globals_out);
-    const exprt advancer_bindings=analyzer.input_heap_bindings();
-    if(!advancer_bindings.is_true())
-    {
-      summary.aux_precondition=advancer_bindings;
-    }
-  }
-
   if(context_sensitive && !summary.fw_precondition.is_true())
   {
     summary.fw_transformer=
