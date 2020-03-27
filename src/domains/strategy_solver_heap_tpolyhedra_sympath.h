@@ -15,7 +15,7 @@ Author: Viktor Malik
 
 #include "strategy_solver_base.h"
 #include "heap_tpolyhedra_sympath_domain.h"
-#include "strategy_solver_heap_tpolyhedra.h"
+#include "strategy_solver_product.h"
 
 class strategy_solver_heap_tpolyhedra_sympatht:public strategy_solver_baset
 {
@@ -24,18 +24,10 @@ public:
     heap_tpolyhedra_sympath_domaint &_domain,
     incremental_solvert &_solver,
     const local_SSAt &SSA,
-    const exprt &precondition,
-    message_handlert &message_handler,
-    template_generator_baset &template_generator):
+    strategy_solver_productt *heap_tpolyhedra_solver):
     strategy_solver_baset(_solver, SSA.ns),
     domain(_domain),
-    heap_tpolyhedra_solver(
-      domain.heap_tpolyhedra_domain,
-      _solver,
-      SSA,
-      precondition,
-      message_handler,
-      template_generator)
+    heap_tpolyhedra_solver(heap_tpolyhedra_solver)
   {
     build_loop_conds_map(SSA);
   }
@@ -48,7 +40,7 @@ public:
 
 protected:
   heap_tpolyhedra_sympath_domaint &domain;
-  strategy_solver_heap_tpolyhedrat heap_tpolyhedra_solver;
+  strategy_solver_productt *heap_tpolyhedra_solver;
 
   std::vector<symbolic_patht> visited_paths;
   bool new_path=true;
@@ -63,6 +55,5 @@ protected:
   bool is_current_path_feasible(
     heap_tpolyhedra_sympath_domaint::heap_tpolyhedra_sympath_valuet &value);
 };
-
 
 #endif // CPROVER_2LS_DOMAINS_STRATEGY_SOLVER_HEAP_TPOLYHEDRA_SYMPATH_H

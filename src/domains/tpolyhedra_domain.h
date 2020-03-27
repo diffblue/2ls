@@ -62,6 +62,8 @@ public:
       auto &templ_row_expr=dynamic_cast<template_row_exprt &>(*templ_row.expr);
       return (*this)[row].get_row_expr(templ_row_expr);
     }
+
+    templ_valuet *clone() override { return new templ_valuet(*this); }
   };
 
   tpolyhedra_domaint(

@@ -31,10 +31,10 @@ Author: Peter Schrammel
 #include "predabs_domain.h"
 #include "template_generator_ranking.h"
 #include "ssa_analyzer.h"
-#include "strategy_solver_heap_tpolyhedra.h"
 #include "strategy_solver_heap_tpolyhedra_sympath.h"
 #include "strategy_solver_simple.h"
 #include "heap_domain.h"
+#include "strategy_solver_product.h"
 
 // NOLINTNEXTLINE(*)
 #define BINSEARCH_SOLVER strategy_solver_binsearcht(\
@@ -121,28 +121,52 @@ void ssa_analyzert::operator()(
   else if(template_generator.options.get_bool_option("heap-interval")
           || template_generator.options.get_bool_option("heap-zones"))
   {
+    // Heap-tpolyhedra domain is represented as a product domain. If the sympath
+    // option is on, it is stored inside heap_tpolyhedra_sympath_domaint.
+    auto *product_domain=
+      dynamic_cast<product_domaint *>(
+        template_generator.options.get_bool_option("sympath")
+        ? dynamic_cast<heap_tpolyhedra_sympath_domaint *>(domain)
+          ->heap_tpolyhedra_domain
+        : domain);
+
+    // Initialize heap solver (heap domain is the first one in the product
+    // domain) and value.
+    auto heap_solver=new strategy_solver_simplet(
+      *dynamic_cast<heap_domaint *>(product_domain->domains.at(0)),
+      solver,
+      SSA,
+      precondition,
+      get_message_handler(),
+      template_generator);
+    auto heap_value=new heap_domaint::heap_valuet();
+    // Initialize tpolyhedra solver (tpolyhedra domain is the second one in the
+    // product domain) and value.
+    auto tpolyhedra_solver=new strategy_solver_binsearcht(
+      *dynamic_cast<tpolyhedra_domaint *>(product_domain->domains.at(1)),
+      solver,
+      SSA.ns);
+    auto tpolyhedra_value=new tpolyhedra_domaint::templ_valuet();
+
+    // Initialize product solver and value
+    s_solver=new strategy_solver_productt(
+      *product_domain,
+      solver,
+      SSA.ns,
+      {heap_solver, tpolyhedra_solver});
+    result=new product_domaint::valuet({heap_value, tpolyhedra_value});
+
     if(template_generator.options.get_bool_option("sympath"))
     {
+      // Initialize heap_tpolyhedra_sympath solver and value
       s_solver=new strategy_solver_heap_tpolyhedra_sympatht(
-        *static_cast<heap_tpolyhedra_sympath_domaint *>(domain),
+        *dynamic_cast<heap_tpolyhedra_sympath_domaint *>(domain),
         solver,
         SSA,
-        precondition,
-        get_message_handler(),
-        template_generator);
+        dynamic_cast<strategy_solver_productt *>(s_solver));
       result=
-        new heap_tpolyhedra_sympath_domaint::heap_tpolyhedra_sympath_valuet();
-    }
-    else
-    {
-      s_solver=new strategy_solver_heap_tpolyhedrat(
-        *static_cast<heap_tpolyhedra_domaint *>(domain),
-        solver,
-        SSA,
-        precondition,
-        get_message_handler(),
-        template_generator);
-      result=new heap_tpolyhedra_domaint::heap_tpolyhedra_valuet();
+        new heap_tpolyhedra_sympath_domaint::heap_tpolyhedra_sympath_valuet(
+          dynamic_cast<product_domaint::valuet *>(result));
     }
   }
   else

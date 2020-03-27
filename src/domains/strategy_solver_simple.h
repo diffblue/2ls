@@ -38,7 +38,6 @@ public:
 protected:
   simple_domaint &domain;
   std::set<std::pair<symbol_exprt, symbol_exprt>> loop_guards;
-
 };
 
 #endif // CPROVER_2LS_DOMAINS_STRATEGY_SOLVER_H

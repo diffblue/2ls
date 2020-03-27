@@ -88,6 +88,8 @@ public:
     {
       return true_exprt();
     }
+
+    templ_valuet *clone() override { return new templ_valuet(*this); }
   };
 
   lexlinrank_domaint(

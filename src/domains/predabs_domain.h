@@ -48,6 +48,8 @@ public:
       // row_value => row_expr
       return implies_exprt((*this)[row], templ_row_expr);
     }
+
+    templ_valuet *clone() override { return new templ_valuet(*this); }
   };
 
   predabs_domaint(

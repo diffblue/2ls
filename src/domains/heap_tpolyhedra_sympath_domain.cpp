@@ -23,7 +23,7 @@ void heap_tpolyhedra_sympath_domaint::output_value(
   for(auto &config : v)
   {
     out << from_expr(ns, "", config.first) << "==>\n";
-    heap_tpolyhedra_domain.output_value(out, config.second, ns);
+    heap_tpolyhedra_domain->output_value(out, *config.second, ns);
   }
 }
 
@@ -31,7 +31,7 @@ void heap_tpolyhedra_sympath_domaint::output_domain(
   std::ostream &out,
   const namespacet &ns) const
 {
-  heap_tpolyhedra_domain.output_domain(out, ns);
+  heap_tpolyhedra_domain->output_domain(out, ns);
 }
 
 void heap_tpolyhedra_sympath_domaint::project_on_vars(
@@ -45,7 +45,8 @@ void heap_tpolyhedra_sympath_domaint::project_on_vars(
   for(auto &config : v)
   {
     exprt config_result;
-    heap_tpolyhedra_domain.project_on_vars(config.second, vars, config_result);
+    heap_tpolyhedra_domain->project_on_vars(
+      *config.second, vars, config_result);
     c.push_back(and_exprt(config.first, config_result));
   }
   c.push_back(no_loops_path);

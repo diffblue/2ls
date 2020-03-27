@@ -40,6 +40,8 @@ class strategy_solver_baset:public messaget
 
   symbolic_patht symbolic_path;
 
+  virtual void clear_symbolic_path() {symbolic_path.clear(); }
+
  protected:
   incremental_solvert &solver;
   const namespacet &ns;

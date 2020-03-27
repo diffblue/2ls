@@ -59,6 +59,8 @@ public:
     }
 
     void set_disequal(unsigned index) { disequs.insert(index); }
+
+    equ_valuet *clone() override { return new equ_valuet(*this); }
   };
 
   void initialize() override;

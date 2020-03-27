@@ -94,6 +94,11 @@ public:
 
     virtual ~valuet() {}
 
+    /// Each abstract value needs to implement clone with covariant return type.
+    /// This is needed to properly clone abstract value when only a pointer to
+    /// valuet is available.
+    virtual valuet *clone()=0;
+
     basic_valuet basic_value;
   };
 

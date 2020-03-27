@@ -22,8 +22,8 @@ Author: Peter Schrammel
 #include "tpolyhedra_domain.h"
 #include "predabs_domain.h"
 #include "heap_domain.h"
-#include "heap_tpolyhedra_domain.h"
 #include "heap_tpolyhedra_sympath_domain.h"
+#include "product_domain.h"
 
 #ifdef DEBUG
 #include <iostream>
@@ -608,15 +608,26 @@ void template_generator_baset::instantiate_standard_domains(
           options.get_bool_option("heap-zones"))
   {
     filter_heap_interval_domain();
-    auto polyhedra_kind=options.get_bool_option("heap-interval")
-                        ? heap_tpolyhedra_domaint::INTERVAL
-                        : heap_tpolyhedra_domaint::ZONES;
+    // Create heap domain
+    auto *heap_domain=new heap_domaint(
+      domain_number, renaming_map, var_specs, SSA);
+    // Create template polyhedra domain
+    auto *tpolyhedra_domain=new tpolyhedra_domaint(
+      domain_number, renaming_map, SSA.ns);
+    if(options.get_bool_option("heap-zones"))
+      tpolyhedra_domain->add_difference_template(var_specs, SSA.ns);
+    tpolyhedra_domain->add_interval_template(var_specs, SSA.ns);
+
+    // Create product domain from heap and template polyhedra
+    domain_ptr=new product_domaint(
+      domain_number, renaming_map, SSA.ns, {heap_domain, tpolyhedra_domain});
+
     if(options.get_bool_option("sympath"))
       domain_ptr=new heap_tpolyhedra_sympath_domaint(
-        domain_number, renaming_map, var_specs, SSA, polyhedra_kind);
-    else
-      domain_ptr=new heap_tpolyhedra_domaint(
-        domain_number, renaming_map, var_specs, SSA, polyhedra_kind);
+        domain_number,
+        renaming_map,
+        SSA,
+        dynamic_cast<product_domaint *>(domain_ptr));
   }
 }
 

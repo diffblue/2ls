@@ -14,24 +14,21 @@ Author: Viktor Malik
 #ifndef CPROVER_2LS_DOMAINS_HEAP_TPOLYHEDRA_SYMPATH_DOMAIN_H
 #define CPROVER_2LS_DOMAINS_HEAP_TPOLYHEDRA_SYMPATH_DOMAIN_H
 
-
-#include "domain.h"
-#include "heap_tpolyhedra_domain.h"
+#include "product_domain.h"
+#include <ssa/local_ssa.h>
 
 class heap_tpolyhedra_sympath_domaint:public domaint
 {
 public:
-  heap_tpolyhedra_domaint heap_tpolyhedra_domain;
+  product_domaint *heap_tpolyhedra_domain;
 
   heap_tpolyhedra_sympath_domaint(
     unsigned int _domain_number,
     replace_mapt &_renaming_map,
-    const var_specst &var_specs,
     const local_SSAt &SSA,
-    const heap_tpolyhedra_domaint::polyhedra_kindt polyhedra_kind):
+    product_domaint *heap_tpolyhedra_domain):
     domaint(_domain_number, _renaming_map, SSA.ns),
-    heap_tpolyhedra_domain(
-      _domain_number, _renaming_map, var_specs, SSA, polyhedra_kind)
+    heap_tpolyhedra_domain(heap_tpolyhedra_domain)
   {
     exprt::operandst false_loop_guards;
     for(auto &g : SSA.loop_guards)
@@ -39,12 +36,37 @@ public:
     no_loops_path=conjunction(false_loop_guards);
   }
 
+  ~heap_tpolyhedra_sympath_domaint() override { delete heap_tpolyhedra_domain; }
+
   // Value is a map from expression (symbolic path) to an invariant in heap
   // tpolyhedra domain
   class heap_tpolyhedra_sympath_valuet:
     public valuet,
-    public std::map<exprt, heap_tpolyhedra_domaint::heap_tpolyhedra_valuet>
+    public std::map<exprt, product_domaint::valuet *>
   {
+  public:
+    explicit heap_tpolyhedra_sympath_valuet(
+      product_domaint::valuet *inner_value_template):
+      inner_value_template(inner_value_template) {}
+
+    ~heap_tpolyhedra_sympath_valuet() override
+    {
+      for(auto &val : *this)
+        delete val.second;
+      delete inner_value_template;
+    }
+
+    heap_tpolyhedra_sympath_valuet *clone() override
+    {
+      auto new_value=new heap_tpolyhedra_sympath_valuet(inner_value_template);
+      for(auto &val : *this)
+        new_value->emplace(val.first, val.second->clone());
+      return new_value;
+    }
+
+    // A template of the inner heap-tpolyhedra value that will be used to
+    // create new values.
+    product_domaint::valuet *inner_value_template;
   };
 
   void output_value(

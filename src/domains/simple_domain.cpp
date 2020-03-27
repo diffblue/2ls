@@ -153,8 +153,8 @@ void simple_domaint::project_on_vars(
       symbols.insert(row_expr_symbols.begin(), row_expr_symbols.end());
     }
 
-    // If any of the symbols is not in vars, continue
-    if(std::any_of(
+    // If any of the symbols is not in vars and vars is not empty, continue
+    if(!vars.empty() && std::any_of(
       symbols.begin(), symbols.end(),
       [&vars](const symbol_exprt &s)
       {
