@@ -65,13 +65,13 @@ void template_generator_summaryt::collect_variables_inout(
     SSA.params,
     first_guard,
     first_guard,
-    forward ? domaint::IN : domaint::OUT,
+    forward ? guardst::IN : guardst::OUT,
     var_specs);
   add_vars(
     SSA.globals_in,
     first_guard,
     first_guard,
-    forward ? domaint::IN : domaint::OUT,
+    forward ? guardst::IN : guardst::OUT,
     var_specs);
 
   // add globals_out (includes return values)
@@ -81,42 +81,42 @@ void template_generator_summaryt::collect_variables_inout(
     SSA.globals_out,
     last_guard,
     last_guard,
-    forward ? domaint::OUT : domaint::IN,
+    forward ? guardst::OUT : guardst::IN,
     var_specs);
 }
 
-domaint::var_sett template_generator_summaryt::inout_vars()
+var_sett template_generator_summaryt::inout_vars()
 {
-  domaint::var_sett vars;
-  for(domaint::var_specst::const_iterator v=var_specs.begin();
+  var_sett vars;
+  for(var_specst::const_iterator v=var_specs.begin();
       v!=var_specs.end(); v++)
   {
-    if(v->kind==domaint::IN ||
-       v->kind==domaint::OUT)
+    if(v->guards.kind==guardst::IN ||
+       v->guards.kind==guardst::OUT)
       vars.insert(v->var);
   }
   return vars;
 }
 
-domaint::var_sett template_generator_summaryt::out_vars()
+var_sett template_generator_summaryt::out_vars()
 {
-  domaint::var_sett vars;
-  for(domaint::var_specst::const_iterator v=var_specs.begin();
+  var_sett vars;
+  for(var_specst::const_iterator v=var_specs.begin();
       v!=var_specs.end(); v++)
   {
-    if(v->kind==domaint::OUT)
+    if(v->guards.kind==guardst::OUT)
       vars.insert(v->var);
   }
   return vars;
 }
 
-domaint::var_sett template_generator_summaryt::loop_vars()
+var_sett template_generator_summaryt::loop_vars()
 {
-  domaint::var_sett vars;
-  for(domaint::var_specst::const_iterator v=var_specs.begin();
+  var_sett vars;
+  for(var_specst::const_iterator v=var_specs.begin();
       v!=var_specs.end(); v++)
   {
-    if(v->kind==domaint::LOOP || v->kind==domaint::IN)
+    if(v->guards.kind==guardst::LOOP || v->guards.kind==guardst::IN)
       vars.insert(v->var);
   }
   return vars;

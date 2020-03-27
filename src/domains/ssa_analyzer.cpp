@@ -33,7 +33,8 @@ Author: Peter Schrammel
 #include "ssa_analyzer.h"
 #include "strategy_solver_heap_tpolyhedra.h"
 #include "strategy_solver_heap_tpolyhedra_sympath.h"
-#include "strategy_solver.h"
+#include "strategy_solver_simple.h"
+#include "heap_domain.h"
 
 // NOLINTNEXTLINE(*)
 #define BINSEARCH_SOLVER strategy_solver_binsearcht(\
@@ -72,43 +73,43 @@ void ssa_analyzert::operator()(
   if(template_generator.options.get_bool_option("compute-ranking-functions"))
   {
     if(template_generator.options.get_bool_option(
-         "monolithic-ranking-function"))
+      "monolithic-ranking-function"))
     {
-    s_solver=new strategy_solvert(
-      *static_cast<linrank_domaint *>(domain),
-      solver,
-      SSA,
-      precondition,
-      get_message_handler(),
-      template_generator);
+      s_solver=new strategy_solver_simplet(
+        *static_cast<linrank_domaint *>(domain),
+        solver,
+        SSA,
+        precondition,
+        get_message_handler(),
+        template_generator);
       result=new linrank_domaint::templ_valuet();
     }
     else
     {
-    s_solver=new strategy_solvert(
-      *static_cast<lexlinrank_domaint *>(domain),
-      solver,
-      SSA,
-      precondition,
-      get_message_handler(),
-      template_generator);
+      s_solver=new strategy_solver_simplet(
+        *static_cast<lexlinrank_domaint *>(domain),
+        solver,
+        SSA,
+        precondition,
+        get_message_handler(),
+        template_generator);
       result=new lexlinrank_domaint::templ_valuet();
     }
   }
   else if(template_generator.options.get_bool_option("equalities"))
   {
-    s_solver=new strategy_solvert(
+    s_solver=new strategy_solver_simplet(
       *static_cast<equality_domaint *>(domain),
       solver,
       SSA,
       precondition,
       get_message_handler(),
       template_generator);
-      result=new equality_domaint::equ_valuet();
+    result=new equality_domaint::equ_valuet();
   }
   else if(template_generator.options.get_bool_option("heap"))
   {
-    s_solver=new strategy_solvert(
+    s_solver=new strategy_solver_simplet(
       *static_cast<heap_domaint *>(domain),
       solver,
       SSA,
@@ -148,7 +149,7 @@ void ssa_analyzert::operator()(
   {
     if(template_generator.options.get_bool_option("enum-solver"))
     {
-      s_solver=new strategy_solvert(
+      s_solver=new strategy_solver_simplet(
         *static_cast<tpolyhedra_domaint *>(domain),
         solver,
         SSA,
@@ -159,7 +160,7 @@ void ssa_analyzert::operator()(
     }
     else if(template_generator.options.get_bool_option("predabs-solver"))
     {
-      s_solver=new strategy_solvert(
+      s_solver=new strategy_solver_simplet(
         *static_cast<predabs_domaint *>(domain),
         solver,
         SSA,
@@ -180,7 +181,7 @@ void ssa_analyzert::operator()(
   s_solver->set_message_handler(get_message_handler());
 
   // initialize inv
-  domain->initialize(*result);
+  domain->initialize_value(*result);
 
   // iterate
   while(s_solver->iterate(*result)) {}
@@ -195,7 +196,7 @@ void ssa_analyzert::operator()(
   delete s_solver;
 }
 
-void ssa_analyzert::get_result(exprt &_result, const domaint::var_sett &vars)
+void ssa_analyzert::get_result(exprt &_result, const var_sett &vars)
 {
   domain->project_on_vars(*result, vars, _result);
 }

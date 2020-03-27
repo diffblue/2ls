@@ -166,7 +166,12 @@ void template_generator_baset::collect_variables_loop(
 
         exprt init_expr;
         get_init_expr(SSA, o_it, n_it, init_expr);
-        add_var(pre_var, pre_guard, obj_post_guard, domaint::LOOP, var_specs);
+        add_var(
+          pre_var,
+          pre_guard,
+          obj_post_guard,
+          guardst::kindt::LOOP,
+          var_specs);
 
 #ifdef DEBUG
         std::cout << "Adding " << from_expr(ns, "", in) << " " <<
@@ -177,9 +182,9 @@ void template_generator_baset::collect_variables_loop(
   }
 }
 
-domaint::var_sett template_generator_baset::all_vars()
+var_sett template_generator_baset::all_vars()
 {
-  domaint::var_sett vars;
+  var_sett vars;
   for(const auto &v : var_specs)
   {
     vars.insert(v.var);
@@ -189,11 +194,11 @@ domaint::var_sett template_generator_baset::all_vars()
 
 void template_generator_baset::filter_template_domain()
 {
-  domaint::var_specst new_var_specs(var_specs);
+  var_specst new_var_specs(var_specs);
   var_specs.clear();
   for(const auto &v : new_var_specs)
   {
-    const domaint::vart &s=v.var;
+    const vart &s=v.var;
 
 #ifdef DEBUG
     std::cout << "var: " << s << std::endl;
@@ -209,7 +214,7 @@ void template_generator_baset::filter_template_domain()
 
 void template_generator_baset::filter_equality_domain()
 {
-  domaint::var_specst new_var_specs(var_specs);
+  var_specst new_var_specs(var_specs);
   var_specs.clear();
   for(const auto &v : new_var_specs)
   {
@@ -219,7 +224,7 @@ void template_generator_baset::filter_equality_domain()
 
 void template_generator_baset::filter_heap_domain()
 {
-  domaint::var_specst new_var_specs(var_specs);
+  var_specst new_var_specs(var_specs);
   var_specs.clear();
   for(auto &var : new_var_specs)
   {
@@ -230,7 +235,7 @@ void template_generator_baset::filter_heap_domain()
          std::string::npos)
         continue;
       // Filter out non-assigned OUT variables
-      if(var.kind!=domaint::OUT ||
+      if(var.guards.kind!=guardst::OUT ||
          ssa_inlinert::get_original_identifier(to_symbol_expr(var.var))!=
          to_symbol_expr(var.var).get_identifier())
         var_specs.push_back(var);
@@ -239,11 +244,11 @@ void template_generator_baset::filter_heap_domain()
 }
 
 void template_generator_baset::add_var(
-  const domaint::vart &var,
-  const domaint::guardt &pre_guard,
-  domaint::guardt post_guard,
-  const domaint::kindt &kind,
-  domaint::var_specst &var_specs)
+  const vart &var,
+  const guardst::guardt &pre_guard,
+  guardst::guardt post_guard,
+  const guardst::kindt &kind,
+  var_specst &var_specs)
 {
   exprt aux_expr=true_exprt();
   if(std_invariants && pre_guard.id()==ID_and)
@@ -260,12 +265,12 @@ void template_generator_baset::add_var(
   }
   if(var.type().id()!=ID_array)
   {
-    var_specs.push_back(domaint::var_spect());
-    domaint::var_spect &var_spec=var_specs.back();
-    var_spec.pre_guard=pre_guard;
-    var_spec.post_guard=post_guard;
-    var_spec.aux_expr=aux_expr;
-    var_spec.kind=kind;
+    var_specs.push_back(var_spect());
+    var_spect &var_spec=var_specs.back();
+    var_spec.guards.pre_guard=pre_guard;
+    var_spec.guards.post_guard=post_guard;
+    var_spec.guards.aux_expr=aux_expr;
+    var_spec.guards.kind=kind;
     var_spec.var=var;
   }
 
@@ -277,13 +282,13 @@ void template_generator_baset::add_var(
     to_integer(array_type.size(), size);
     for(mp_integer i=0; i<size; i=i+1)
     {
-      var_specs.push_back(domaint::var_spect());
-      domaint::var_spect &var_spec=var_specs.back();
+      var_specs.push_back(var_spect());
+      var_spect &var_spec=var_specs.back();
       constant_exprt index=from_integer(i, array_type.size().type());
-      var_spec.pre_guard=pre_guard;
-      var_spec.post_guard=post_guard;
-      var_spec.aux_expr=aux_expr;
-      var_spec.kind=kind;
+      var_spec.guards.pre_guard=pre_guard;
+      var_spec.guards.post_guard=post_guard;
+      var_spec.guards.aux_expr=aux_expr;
+      var_spec.guards.kind=kind;
       var_spec.var=index_exprt(var, index);
     }
   }
@@ -291,10 +296,10 @@ void template_generator_baset::add_var(
 
 void template_generator_baset::add_vars(
   const local_SSAt::var_listt &vars_to_add,
-  const domaint::guardt &pre_guard,
-  const domaint::guardt &post_guard,
-  const domaint::kindt &kind,
-  domaint::var_specst &var_specs)
+  const guardst::guardt &pre_guard,
+  const guardst::guardt &post_guard,
+  const guardst::kindt &kind,
+  var_specst &var_specs)
 {
   for(const auto &v : vars_to_add)
     add_var(v, pre_guard, post_guard, kind, var_specs);
@@ -302,10 +307,10 @@ void template_generator_baset::add_vars(
 
 void template_generator_baset::add_vars(
   const local_SSAt::var_sett &vars_to_add,
-  const domaint::guardt &pre_guard,
-  const domaint::guardt &post_guard,
-  const domaint::kindt &kind,
-  domaint::var_specst &var_specs)
+  const guardst::guardt &pre_guard,
+  const guardst::guardt &post_guard,
+  const guardst::kindt &kind,
+  var_specst &var_specs)
 {
   for(const auto &v : vars_to_add)
     add_var(v, pre_guard, post_guard, kind, var_specs);
@@ -313,10 +318,10 @@ void template_generator_baset::add_vars(
 
 void template_generator_baset::add_vars(
   const var_listt &vars_to_add,
-  const domaint::guardt &pre_guard,
-  const domaint::guardt &post_guard,
-  const domaint::kindt &kind,
-  domaint::var_specst &var_specs)
+  const guardst::guardt &pre_guard,
+  const guardst::guardt &post_guard,
+  const guardst::kindt &kind,
+  var_specst &var_specs)
 {
   for(const auto &v : vars_to_add)
     add_var(v, pre_guard, post_guard, kind, var_specs);
@@ -475,14 +480,14 @@ bool template_generator_baset::instantiate_custom_templates(
             if(contains_new_var)
               add_post_vars=true;
 
-            static_cast<tpolyhedra_domaint *>(domain_ptr)
-              ->add_template_row(
-                expr,
-                pre_guard,
-                contains_new_var ?
-                  and_exprt(pre_guard, post_guard) : post_guard,
-                aux_expr,
-                contains_new_var ? domaint::OUT : domaint::LOOP);
+            guardst guards;
+            guards.pre_guard=pre_guard;
+            guards.post_guard=contains_new_var ?
+                              and_exprt(pre_guard, post_guard) : post_guard;
+            guards.aux_expr=aux_expr;
+            guards.kind=contains_new_var ? guardst::OUT : guardst::LOOP;
+            dynamic_cast<tpolyhedra_domaint *>(domain_ptr)
+              ->add_template_row(expr, guards);
           }
           // pred abs domain
           else if(predabs)
@@ -503,14 +508,14 @@ bool template_generator_baset::instantiate_custom_templates(
             if(contains_new_var)
               add_post_vars=true;
 
-            static_cast<predabs_domaint *>(domain_ptr)
-              ->add_template_row(
-                expr,
-                pre_guard,
-                contains_new_var ?
-                  and_exprt(pre_guard, post_guard) : post_guard,
-                aux_expr,
-                contains_new_var ? domaint::OUT : domaint::LOOP);
+            guardst guards;
+            guards.pre_guard=pre_guard;
+            guards.post_guard=contains_new_var ?
+                              and_exprt(pre_guard, post_guard) : post_guard;
+            guards.aux_expr=aux_expr;
+            guards.kind=contains_new_var ? guardst::OUT : guardst::LOOP;
+            dynamic_cast<predabs_domaint *>(domain_ptr)
+              ->add_template_row(expr, guards);
           }
           else // neither pred abs, nor polyhedra
           {
@@ -520,16 +525,16 @@ bool template_generator_baset::instantiate_custom_templates(
         }
         if(add_post_vars) // for result retrieval via all_vars() only
         {
-          domaint::var_specst new_var_specs(var_specs);
+          var_specst new_var_specs(var_specs);
           var_specs.clear();
-          for(domaint::var_specst::const_iterator v=new_var_specs.begin();
+          for(var_specst::const_iterator v=new_var_specs.begin();
               v!=new_var_specs.end(); v++)
           {
             var_specs.push_back(*v);
-            if(v->kind==domaint::LOOP)
+            if(v->guards.kind==guardst::LOOP)
             {
               var_specs.push_back(*v);
-              var_specs.back().kind=domaint::OUTL;
+              var_specs.back().guards.kind=guardst::OUTL;
               replace_expr(aux_renaming_map, var_specs.back().var);
             }
           }
@@ -617,12 +622,12 @@ void template_generator_baset::instantiate_standard_domains(
 
 void template_generator_baset::filter_heap_interval_domain()
 {
-  domaint::var_specst new_var_specs(var_specs);
+  var_specst new_var_specs(var_specs);
   var_specs.clear();
-  for(domaint::var_specst::const_iterator v=new_var_specs.begin();
+  for(var_specst::const_iterator v=new_var_specs.begin();
       v!=new_var_specs.end(); v++)
   {
-    const domaint::vart &s=v->var;
+    const vart &s=v->var;
 
     if(s.id()==ID_symbol && is_pointed(s) &&
        id2string(to_symbol_expr(s).get_identifier()).find(".")!=
@@ -640,7 +645,7 @@ void template_generator_baset::filter_heap_interval_domain()
     if(s.id()==ID_symbol && s.type().id()==ID_pointer)
     {
       // Filter out non-assigned OUT variables
-      if(v->kind!=domaint::OUT ||
+      if(v->guards.kind!=guardst::OUT ||
          ssa_inlinert::get_original_identifier(to_symbol_expr(s))!=
          to_symbol_expr(s).get_identifier())
       {

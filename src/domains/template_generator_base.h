@@ -52,11 +52,11 @@ public:
     assert(false);
   }
 
-  virtual domaint::var_sett all_vars();
+  virtual var_sett all_vars();
 
   inline domaint *domain() { assert(domain_ptr!=NULL); return domain_ptr; }
 
-  domaint::var_specst var_specs;
+  var_specst var_specs;
   replace_mapt post_renaming_map;
   replace_mapt init_renaming_map;
   replace_mapt aux_renaming_map;
@@ -85,29 +85,29 @@ protected:
   void filter_heap_interval_domain();
 
   void add_var(
-    const domaint::vart &var_to_add,
-    const domaint::guardt &pre_guard,
-    domaint::guardt post_guard,
-    const domaint::kindt &kind,
-    domaint::var_specst &var_specs);
+    const vart &var_to_add,
+    const guardst::guardt &pre_guard,
+    guardst::guardt post_guard,
+    const guardst::kindt &kind,
+    var_specst &var_specs);
   void add_vars(
     const var_listt &vars_to_add,
-    const domaint::guardt &pre_guard,
-    const domaint::guardt &post_guard,
-    const domaint::kindt &kind,
-    domaint::var_specst &var_specs);
+    const guardst::guardt &pre_guard,
+    const guardst::guardt &post_guard,
+    const guardst::kindt &kind,
+    var_specst &var_specs);
   void add_vars(
     const local_SSAt::var_listt &vars_to_add,
-    const domaint::guardt &pre_guard,
-    const domaint::guardt &post_guard,
-    const domaint::kindt &kind,
-    domaint::var_specst &var_specs);
+    const guardst::guardt &pre_guard,
+    const guardst::guardt &post_guard,
+    const guardst::kindt &kind,
+    var_specst &var_specs);
   void add_vars(
     const local_SSAt::var_sett &vars_to_add,
-    const domaint::guardt &pre_guard,
-    const domaint::guardt &post_guard,
-    const domaint::kindt &kind,
-    domaint::var_specst &var_specs);
+    const guardst::guardt &pre_guard,
+    const guardst::guardt &post_guard,
+    const guardst::kindt &kind,
+    var_specst &var_specs);
 
   void get_pre_post_guards(
     const local_SSAt &SSA,

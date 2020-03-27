@@ -45,7 +45,7 @@ public:
     const exprt &precondition,
     template_generator_baset &template_generator);
 
-  void get_result(exprt &result, const domaint::var_sett &vars);
+  void get_result(exprt &result, const var_sett &vars);
 
   inline unsigned get_number_of_solver_instances() { return solver_instances; }
   inline unsigned get_number_of_solver_calls() { return solver_calls; }

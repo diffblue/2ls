@@ -44,10 +44,6 @@ class strategy_solver_baset:public messaget
   incremental_solvert &solver;
   const namespacet &ns;
 
-  // handles on values to retrieve from model
-  bvt strategy_cond_literals;
-  exprt::operandst strategy_value_exprs;
-
   // statistics for additional solvers
   unsigned solver_instances;
   unsigned solver_calls;

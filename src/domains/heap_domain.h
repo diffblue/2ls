@@ -18,127 +18,87 @@ Author: Viktor Malik
 
 #include <ssa/local_ssa.h>
 
-#include "domain.h"
+#include "simple_domain.h"
 #include "template_generator_base.h"
 #include <ssa/ssa_inliner.h>
 
-class heap_domaint:public domaint
+class heap_domaint:public simple_domaint
 {
 public:
-  typedef unsigned rowt;
-
   heap_domaint(
     unsigned int _domain_number,
     replace_mapt &_renaming_map,
     const var_specst &var_specs,
     const local_SSAt &SSA):
-    domaint(_domain_number, _renaming_map, SSA.ns)
+    simple_domaint(_domain_number, _renaming_map, SSA.ns)
   {
     make_template(var_specs, ns);
   }
 
-  struct template_rowt
+  /// Heap template row describes a set of pointer expressions
+  struct template_row_exprt:public simple_domaint::template_row_exprt
   {
-    vart expr;
-    guardt pre_guard;
-    guardt post_guard;
-    exprt aux_expr;
-    kindt kind;
-  };
-  typedef std::vector<template_rowt> templatet;
+    var_listt pointers;
 
-  /*******************************************************************\
-  Value of a template row
-  \*******************************************************************/
+    explicit template_row_exprt(var_listt pointers):
+      pointers(std::move(pointers)) {}
+
+    std::vector<exprt> get_row_exprs() override { return {pointers}; }
+
+    void output(std::ostream &out, const namespacet &ns) const override;
+  };
+
+  /// Value of a heap template row describes a may point-to relation for the row
+  /// pointers.
   struct row_valuet
   {
-    // Set of objects (or NULL) the row variable can point to
-    std::set<exprt> points_to;
+    // Single points-to relation for a vector of pointer expressions.
+    // For each pointer, it contains a single pointed object (or NULL).
+    // The order is important - it should match the order of pointers in
+    // the template row.
+    typedef std::vector<exprt> points_to_relt;
+
+    // May point-to relation: it is a set of possible points-to relations.
+    std::set<points_to_relt> may_point_to;
 
     // Row is nondeterministic - row expression is TRUE
     bool nondet=false;
 
-    const namespacet &ns;
-
     explicit row_valuet(const namespacet &ns):ns(ns) {}
 
-    exprt get_row_expr(const vart &templ_expr) const;
+    exprt get_row_expr(const template_row_exprt &templ_row_expr) const;
 
-    bool add_points_to(const exprt &dest);
+    bool add_points_to(const points_to_relt &destinations);
     bool set_nondet();
 
-    void clear();
+  protected:
+    const namespacet &ns;
   };
 
   // Heap value is a conjunction of rows
-  class heap_valuet:public valuet, public std::vector<row_valuet> {};
+  struct heap_valuet:simple_domaint::valuet, std::vector<row_valuet>
+  {
+    exprt get_row_expr(rowt row, const template_rowt &templ_row) const override
+    {
+      auto &templ_row_expr=dynamic_cast<template_row_exprt &>(*templ_row.expr);
+      return (*this)[row].get_row_expr(templ_row_expr);
+    }
+  };
 
   // Initialize value and domain
-  virtual void initialize(valuet &value) override;
+  void initialize_value(domaint::valuet &value) override;
 
-  std::vector<exprt> get_required_smt_values(size_t row);
-  void set_smt_values(std::vector<exprt> got_values, size_t row);
-
-  // Value -> constraints
-  exprt to_pre_constraints(valuet &_value);
-
-  void make_not_post_constraints(
-    valuet &_value,
-    exprt::operandst &cond_exprs);
-
-  // Row -> constraints
-  exprt get_row_pre_constraint(
-    const rowt &row,
-    const row_valuet &row_value) const;
-
-  exprt get_row_post_constraint(const rowt &row, const row_valuet &row_value);
-
-  // Printing
-  virtual void output_value(
-    std::ostream &out,
-    const valuet &value,
-    const namespacet &ns) const override;
-
-  virtual void output_domain(
-    std::ostream &out,
-    const namespacet &ns) const override;
-
-  // Projection
-  virtual void
-  project_on_vars(valuet &value, const var_sett &vars, exprt &result) override;
+  // Handle row edit - join the model obtained from SMT with inv
+  bool edit_row(const rowt &row, valuet &inv, bool improved) override;
 
   // Conversion of solver value to expression
   static exprt value_to_ptr_exprt(const exprt &expr);
 
-  // Join of values
-  virtual void join(valuet &value1, const valuet &value2) override;
-
-  // Restriction to symbolic paths
-  void restrict_to_sympath(const symbolic_patht &sympath);
-  void undo_restriction();
-  void eliminate_sympaths(const std::vector<symbolic_patht> &sympaths);
-  void clear_aux_symbols();
-
 protected:
-  templatet templ;
-
-  exprt solver_value_op0;
-  exprt solver_value_op1;
-
   void make_template(const var_specst &var_specs, const namespacet &ns);
-
-  void add_template_row(const var_spect &var_spec, const typet &pointed_type);
-  void add_template_row_pair(
-    const var_spect &var_spec1,
-    const var_spect &var_spec2,
-    const typet &pointed_type);
-
-  virtual exprt get_current_loop_guard(size_t row) override;
-
-  bool edit_row(const rowt &row, valuet &inv, bool improved);
+  void add_template_row(var_listt pointers, const guardst &guards);
 
   // Utility functions
-  static int get_symbol_loc(const exprt &expr);
   const exprt get_points_to_dest(
     const exprt &solver_value,
     const exprt &templ_row_expr);

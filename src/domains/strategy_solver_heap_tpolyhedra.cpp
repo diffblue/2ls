@@ -46,7 +46,7 @@ bool strategy_solver_heap_tpolyhedrat::iterate(
   solver.pop_context();
 
   if(heap_improved)
-    heap_tpolyhedra_domain.polyhedra_domain.undo_restriction();
+    heap_tpolyhedra_domain.polyhedra_domain.undo_sympath_restriction();
 
   return heap_improved || tpolyhedra_improved;
 }

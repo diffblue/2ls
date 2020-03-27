@@ -54,7 +54,7 @@ bool strategy_solver_heap_tpolyhedra_sympatht::iterate(
         inv.erase(sympath);
 
       visited_paths.push_back(symbolic_path);
-      domain.heap_tpolyhedra_domain.clear_aux_symbols();
+      domain.heap_tpolyhedra_domain.remove_all_sympath_restrictions();
       domain.heap_tpolyhedra_domain.eliminate_sympaths(visited_paths);
       clear_symbolic_path();
       improved=true;
@@ -73,13 +73,13 @@ bool strategy_solver_heap_tpolyhedra_sympatht::iterate(
       std::cerr << from_expr(ns, "", symbolic_path.get_expr()) << "\n";
 #endif
     }
-    domain.heap_tpolyhedra_domain.undo_restriction();
+    domain.heap_tpolyhedra_domain.undo_sympath_restriction();
   }
   else
   {
     // Computing invariant for a new path
     heap_tpolyhedra_domaint::heap_tpolyhedra_valuet new_value;
-    domain.heap_tpolyhedra_domain.initialize(new_value);
+    domain.heap_tpolyhedra_domain.initialize_value(new_value);
     improved=heap_tpolyhedra_solver.iterate(new_value);
 
     if(improved)

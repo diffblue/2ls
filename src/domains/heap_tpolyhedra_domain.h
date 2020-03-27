@@ -53,7 +53,7 @@ public:
     tpolyhedra_domaint::templ_valuet tpolyhedra_value;
   };
 
-  virtual void initialize(valuet &value) override;
+  virtual void initialize_value(valuet &value) override;
 
   virtual void output_value(
     std::ostream &out,
@@ -71,21 +71,9 @@ public:
 
   // Restriction to symbolic paths
   void restrict_to_sympath(const symbolic_patht &sympath);
-  void undo_restriction();
+  void undo_sympath_restriction();
   void eliminate_sympaths(const std::vector<symbolic_patht> &sympaths);
-  void clear_aux_symbols();
-
-  std::vector<exprt> get_required_smt_values(size_t row);
-  void set_smt_values(std::vector<exprt> got_values, size_t row);
-
-  // Value -> constraints
-  exprt to_pre_constraints(valuet &_value);
-
-  void make_not_post_constraints(
-    valuet &_value,
-    exprt::operandst &cond_exprs);
-
-  bool edit_row(const rowt &row, valuet &inv, bool improved);
+  void remove_all_sympath_restrictions();
 };
 
 #endif // CPROVER_2LS_DOMAINS_HEAP_TPOLYHEDRA_DOMAIN_H

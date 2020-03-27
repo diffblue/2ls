@@ -13,14 +13,14 @@ Author: Matej Marusak
 
 #include <ssa/local_ssa.h>
 #include "strategy_solver_base.h"
-#include "domain.h"
+#include "simple_domain.h"
 #include "template_generator_base.h"
 
-class strategy_solvert:public strategy_solver_baset
+class strategy_solver_simplet:public strategy_solver_baset
 {
 public:
-  strategy_solvert(
-    domaint &_domain,
+  strategy_solver_simplet(
+    simple_domaint &_domain,
     incremental_solvert &_solver,
     const local_SSAt &SSA,
     const exprt &precondition,
@@ -30,13 +30,13 @@ public:
     loop_guards(SSA.loop_guards)
   {
     set_message_handler(message_handler);
-    solver << domain.initialize_solver(SSA, precondition, template_generator);
+    domain.initialize();
   }
 
-  virtual bool iterate(invariantt &_inv) override;
+  bool iterate(invariantt &_inv) override;
 
 protected:
-  domaint &domain;
+  simple_domaint &domain;
   std::set<std::pair<symbol_exprt, symbol_exprt>> loop_guards;
 
 };

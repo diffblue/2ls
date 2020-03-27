@@ -30,9 +30,9 @@ public:
     const local_SSAt &SSA,
     bool forward=true);
 
-  virtual domaint::var_sett inout_vars();
-  virtual domaint::var_sett loop_vars();
-  virtual domaint::var_sett out_vars();
+  virtual var_sett inout_vars();
+  virtual var_sett loop_vars();
+  virtual var_sett out_vars();
 
 protected:
   virtual void collect_variables_inout(const local_SSAt &SSA, bool forward);

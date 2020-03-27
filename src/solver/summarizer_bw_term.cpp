@@ -277,7 +277,7 @@ bool summarizer_bw_termt::bootstrap_preconditions(
   exprt &termination_argument)
 {
   // bootstrap with a concrete model for input variables
-  const domaint::var_sett &invars=template_generator2.out_vars();
+  const var_sett &invars=template_generator2.out_vars();
   solver.new_context();
 
   unsigned number_bootstraps=0;
@@ -298,7 +298,7 @@ bool summarizer_bw_termt::bootstrap_preconditions(
     if(solver()==decision_proceduret::D_SATISFIABLE)
     {
       exprt::operandst c;
-      for(domaint::var_sett::const_iterator it=invars.begin();
+      for(var_sett::const_iterator it=invars.begin();
           it!=invars.end(); it++)
       {
         c.push_back(equal_exprt(*it, solver.solver->get(*it)));

@@ -61,17 +61,13 @@ public:
     const var_sett &vars,
     exprt &result) override;
 
-  std::vector<exprt> get_required_smt_values(size_t row);
-  void set_smt_values(std::vector<exprt> got_values, size_t row);
-
-  // Value -> constraints
-  exprt to_pre_constraints(valuet &_value);
-
-  void make_not_post_constraints(
-    valuet &_value,
-    exprt::operandst &cond_exprs);
-
-  bool edit_row(const rowt &row, valuet &inv, bool improved);
+  // These do not need to be implemented since there is no domain above this
+  // one that would use it.
+  void restrict_to_sympath(const symbolic_patht &sympath) override {}
+  void eliminate_sympaths(
+    const std::vector<symbolic_patht> &sympaths) override {}
+  void undo_sympath_restriction() override {}
+  void remove_all_sympath_restrictions() override {}
 
 protected:
   // Special path containing conjunction negations of all loop-select guards

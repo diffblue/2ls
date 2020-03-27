@@ -12,12 +12,12 @@ Author: Viktor Malik
 #include "heap_tpolyhedra_domain.h"
 
 /// Initialize abstract value.
-void heap_tpolyhedra_domaint::initialize(domaint::valuet &value)
+void heap_tpolyhedra_domaint::initialize_value(domaint::valuet &value)
 {
   heap_tpolyhedra_valuet &v=static_cast<heap_tpolyhedra_valuet &>(value);
 
-  heap_domain.initialize(v.heap_value);
-  polyhedra_domain.initialize(v.tpolyhedra_value);
+  heap_domain.initialize_value(v.heap_value);
+  polyhedra_domain.initialize_value(v.tpolyhedra_value);
 }
 
 void heap_tpolyhedra_domaint::output_value(
@@ -42,7 +42,7 @@ void heap_tpolyhedra_domaint::output_domain(
 
 void heap_tpolyhedra_domaint::project_on_vars(
   domaint::valuet &value,
-  const domaint::var_sett &vars,
+  const var_sett &vars,
   exprt &result)
 {
   heap_tpolyhedra_valuet &v=static_cast<heap_tpolyhedra_valuet &>(value);
@@ -67,10 +67,10 @@ void heap_tpolyhedra_domaint::restrict_to_sympath(
 }
 
 /// Reset aux symbols to true (remove all restricitions).
-void heap_tpolyhedra_domaint::clear_aux_symbols()
+void heap_tpolyhedra_domaint::remove_all_sympath_restrictions()
 {
-  heap_domain.clear_aux_symbols();
-  polyhedra_domain.clear_aux_symbols();
+  heap_domain.remove_all_sympath_restrictions();
+  polyhedra_domain.remove_all_sympath_restrictions();
 }
 
 /// Restrict template to other paths than those specified.
@@ -83,39 +83,8 @@ void heap_tpolyhedra_domaint::eliminate_sympaths(
 }
 
 /// Undo last restriction.
-void heap_tpolyhedra_domaint::undo_restriction()
+void heap_tpolyhedra_domaint::undo_sympath_restriction()
 {
-  heap_domain.undo_restriction();
-  polyhedra_domain.undo_restriction();
-}
-
-bool heap_tpolyhedra_domaint::edit_row(
-  const rowt &row,
-  valuet &inv,
-  bool improved)
-{
-  return improved;
-}
-
-exprt heap_tpolyhedra_domaint::to_pre_constraints(valuet &value)
-{
-  return true_exprt();
-}
-
-void heap_tpolyhedra_domaint::make_not_post_constraints(
-  valuet &value,
-  exprt::operandst &cond_exprs)
-{
-}
-
-std::vector<exprt> heap_tpolyhedra_domaint::get_required_smt_values(size_t row)
-{
-  std::vector<exprt> r;
-  return r;
-}
-
-void heap_tpolyhedra_domaint::set_smt_values(
-  std::vector<exprt> got_values,
-  size_t row)
-{
+  heap_domain.undo_sympath_restriction();
+  polyhedra_domain.undo_sympath_restriction();
 }

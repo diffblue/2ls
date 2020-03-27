@@ -10,17 +10,20 @@ Author: Matej Marusak
 /// Generic strategy solver
 
 #include <ssa/ssa_inliner.h>
-#include "strategy_solver.h"
+#include "strategy_solver_simple.h"
 #include <goto-symex/adjust_float_expressions.h>
 
-bool strategy_solvert::iterate(invariantt &inv)
+bool strategy_solver_simplet::iterate(invariantt &_inv)
 {
+  auto &inv=dynamic_cast<simple_domaint::valuet &>(_inv);
+
   bool improved=false;
 
-  domain.solver_iter_init(inv);
+  domain.init_value_solver_iteration(inv);
   if(domain.has_something_to_solve())
   {
     solver.new_context();
+    domain.strategy_value_exprs.clear();
 
     // Entry value constraints
     exprt pre_expr=domain.to_pre_constraints(inv);
@@ -53,15 +56,16 @@ bool strategy_solvert::iterate(invariantt &inv)
       {
         if(solver.l_get(domain.strategy_cond_literals[row]).is_true())
         {
-          // Find what values from solver are needed
-          std::vector<exprt> required_values=
-            domain.get_required_smt_values(row);
-          std::vector<exprt> got_values;
-          for(auto &c_exprt : required_values)
+          // Retrieve values of domain strategy expressions from the model
+          // and store them into smt_model_values.
+          if(domain.strategy_value_exprs.size()>row)
           {
-            got_values.push_back(solver.solver->get(c_exprt));
+            domain.smt_model_values.clear();
+            for(auto &c_exprt : domain.strategy_value_exprs[row])
+            {
+              domain.smt_model_values.push_back(solver.solver->get(c_exprt));
+            }
           }
-          domain.set_smt_values(got_values, row);
 
           find_symbolic_path(loop_guards, domain.get_current_loop_guard(row));
 
@@ -75,8 +79,8 @@ bool strategy_solvert::iterate(invariantt &inv)
       improved=domain.handle_unsat(inv, improved);
     }
     solver.pop_context();
-    solver << domain.make_permanent(inv);
-    domain.post_edit();
+    solver << domain.get_permanent_expr(inv);
+    domain.finalize_solver_iteration();
   }
   return improved;
 }

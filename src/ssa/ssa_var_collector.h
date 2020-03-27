@@ -33,7 +33,7 @@ public:
     std_invariants=options.get_bool_option("std-invariants");
   }
 
-  domaint::var_specst var_specs;
+  var_specst var_specs;
   replace_mapt post_renaming_map;
   replace_mapt init_renaming_map;
   replace_mapt aux_renaming_map;
@@ -41,11 +41,11 @@ public:
   optionst options; // copy: we may override options
 
   void add_var(
-    const domaint::vart &var_to_add,
-    const domaint::guardt &pre_guard,
-    domaint::guardt post_guard,
-    const domaint::kindt &kind,
-    domaint::var_specst &var_specs);
+    const vart &var_to_add,
+    const guardst::guardt &pre_guard,
+    guardst::guardt post_guard,
+    const guardst::kindt &kind,
+    var_specst &var_specs);
 
   void get_pre_post_guards(
     const local_SSAt &SSA,

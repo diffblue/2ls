@@ -11,7 +11,8 @@ SRC = tpolyhedra_domain.cpp equality_domain.cpp domain.cpp \
   strategy_solver_binsearch2.cpp strategy_solver_binsearch3.cpp \
   strategy_solver_heap_tpolyhedra.cpp \
   strategy_solver_heap_tpolyhedra_sympath.cpp \
-  strategy_solver.cpp
+  simple_domain.cpp \
+  strategy_solver_simple.cpp
 #solver_enumeration.cpp
 
 include ../config.inc

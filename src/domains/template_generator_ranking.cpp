@@ -55,7 +55,7 @@ void template_generator_rankingt::operator()(
 
 #if 1
   debug() << "Template variables: " << eom;
-  domaint::output_var_specs(debug(), var_specs, SSA.ns); debug() << eom;
+  var_specs.output(debug(), SSA.ns); debug() << eom;
   debug() << "Template: " << eom;
   domain_ptr->output_domain(debug(), SSA.ns); debug() << eom;
 #endif
@@ -74,7 +74,7 @@ void template_generator_rankingt::collect_variables_ranking(
     // we've found a loop
     if(node.loophead!=SSA.nodes.end())
     {
-      domaint::var_specst new_var_specs;
+      var_specst new_var_specs;
 
       exprt lhguard=SSA.guard_symbol(node.loophead->location);
       ssa_local_unwinder.unwinder_rename(to_symbol_expr(lhguard), node, true);
@@ -109,7 +109,7 @@ void template_generator_rankingt::collect_variables_ranking(
         symbol_exprt out=SSA.read_rhs(object, node.location);
         ssa_local_unwinder.unwinder_rename(out, node, false);
 
-        add_var(in, pre_guard, post_guard, domaint::LOOP, new_var_specs);
+        add_var(in, pre_guard, post_guard, guardst::LOOP, new_var_specs);
 
         // building map for renaming from pre into post-state
         post_renaming_map[in]=out;
@@ -122,13 +122,12 @@ void template_generator_rankingt::collect_variables_ranking(
 
       filter_ranking_domain(new_var_specs);
 
-#ifndef LEXICOGRAPHIC
-      static_cast<linrank_domaint *>(domain_ptr)
-        ->add_template(new_var_specs, SSA.ns);
-#else
-      static_cast<lexlinrank_domaint *>(domain_ptr)
-        ->add_template(new_var_specs, SSA.ns);
-#endif
+      if(options.get_bool_option("monolithic-ranking-function"))
+        dynamic_cast<linrank_domaint *>(domain_ptr)
+          ->add_template(new_var_specs, SSA.ns);
+      else
+        dynamic_cast<lexlinrank_domaint *>(domain_ptr)
+          ->add_template(new_var_specs, SSA.ns);
 
       var_specs.insert(
         var_specs.end(), new_var_specs.begin(), new_var_specs.end());
@@ -137,13 +136,13 @@ void template_generator_rankingt::collect_variables_ranking(
 }
 
 void template_generator_rankingt::filter_ranking_domain(
-  domaint::var_specst &var_specs)
+  var_specst &var_specs)
 {
-  domaint::var_specst new_var_specs(var_specs);
+  var_specst new_var_specs(var_specs);
   var_specs.clear();
   for(const auto &v : new_var_specs)
   {
-    const domaint::vart &s=v.var;
+    const vart &s=v.var;
     if(s.type().id()==ID_unsignedbv ||
        s.type().id()==ID_signedbv ||
        s.type().id()==ID_floatbv)
