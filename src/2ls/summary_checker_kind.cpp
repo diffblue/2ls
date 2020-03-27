@@ -9,7 +9,6 @@ Author: Peter Schrammel
 /// \file
 /// Summary Checker for k-induction
 
-#include <domains/heap_tpolyhedra_domain.h>
 #include "summary_checker_kind.h"
 
 property_checkert::resultt summary_checker_kindt::operator()(
