@@ -67,7 +67,8 @@ bool strategy_solver_simplet::iterate(invariantt &_inv)
             }
           }
 
-          find_symbolic_path(loop_guards, domain.get_current_loop_guard(row));
+          if(with_sympaths)
+            find_symbolic_path(loop_guards, domain.get_current_loop_guard(row));
 
           improved=domain.edit_row(row, inv, improved);
         }

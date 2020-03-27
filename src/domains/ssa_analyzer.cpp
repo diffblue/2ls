@@ -31,7 +31,7 @@ Author: Peter Schrammel
 #include "predabs_domain.h"
 #include "template_generator_ranking.h"
 #include "ssa_analyzer.h"
-#include "strategy_solver_heap_tpolyhedra_sympath.h"
+#include "strategy_solver_sympath.h"
 #include "strategy_solver_simple.h"
 #include "heap_domain.h"
 #include "strategy_solver_product.h"
@@ -126,8 +126,8 @@ void ssa_analyzert::operator()(
     auto *product_domain=
       dynamic_cast<product_domaint *>(
         template_generator.options.get_bool_option("sympath")
-        ? dynamic_cast<heap_tpolyhedra_sympath_domaint *>(domain)
-          ->heap_tpolyhedra_domain
+        ? dynamic_cast<sympath_domaint *>(domain)
+          ->inner_domain
         : domain);
 
     // Initialize heap solver (heap domain is the first one in the product
@@ -158,15 +158,10 @@ void ssa_analyzert::operator()(
 
     if(template_generator.options.get_bool_option("sympath"))
     {
-      // Initialize heap_tpolyhedra_sympath solver and value
-      s_solver=new strategy_solver_heap_tpolyhedra_sympatht(
-        *dynamic_cast<heap_tpolyhedra_sympath_domaint *>(domain),
-        solver,
-        SSA,
-        dynamic_cast<strategy_solver_productt *>(s_solver));
-      result=
-        new heap_tpolyhedra_sympath_domaint::heap_tpolyhedra_sympath_valuet(
-          dynamic_cast<product_domaint::valuet *>(result));
+      // Initialize sympath solver and value
+      s_solver=new strategy_solver_sympatht(
+        *dynamic_cast<sympath_domaint *>(domain), solver, SSA, s_solver);
+      result=new sympath_domaint::sympath_valuet(result);
     }
   }
   else

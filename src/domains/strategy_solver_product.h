@@ -30,6 +30,8 @@ public:
 
   bool iterate(invariantt &inv) override;
 
+  void use_sympaths() override;
+  void set_sympath(const symbolic_patht &sympath) override;
   void clear_symbolic_path() override;
 
 protected:

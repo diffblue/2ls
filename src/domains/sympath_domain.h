@@ -1,34 +1,34 @@
 /*******************************************************************\
 
-Module: Abstract domain for computing invariants in heap-tpolyhedra
-        domain for different symbolic paths in program.
+Module: Abstract domain for computing invariants for different
+        program symbolic paths
 
 Author: Viktor Malik
 
 \*******************************************************************/
 
 /// \file
-/// Abstract domain for computing invariants in heap-tpolyhedra domain for
-///   different symbolic paths in program.
+/// Abstract domain for computing invariants for different program symbolic
+/// paths. The invariants can be computed in arbitrary domain (called the inner
+/// domain).
+/// Designed to work with strategy_solver_sympatht.
 
-#ifndef CPROVER_2LS_DOMAINS_HEAP_TPOLYHEDRA_SYMPATH_DOMAIN_H
-#define CPROVER_2LS_DOMAINS_HEAP_TPOLYHEDRA_SYMPATH_DOMAIN_H
+#ifndef CPROVER_2LS_DOMAINS_SYMPATH_DOMAIN_H
+#define CPROVER_2LS_DOMAINS_SYMPATH_DOMAIN_H
 
-#include "product_domain.h"
+#include "domain.h"
 #include <ssa/local_ssa.h>
 
-class heap_tpolyhedra_sympath_domaint:public domaint
+class sympath_domaint:public domaint
 {
 public:
-  product_domaint *heap_tpolyhedra_domain;
-
-  heap_tpolyhedra_sympath_domaint(
+  sympath_domaint(
     unsigned int _domain_number,
     replace_mapt &_renaming_map,
     const local_SSAt &SSA,
-    product_domaint *heap_tpolyhedra_domain):
+    domaint *inner_domain):
     domaint(_domain_number, _renaming_map, SSA.ns),
-    heap_tpolyhedra_domain(heap_tpolyhedra_domain)
+    inner_domain(inner_domain)
   {
     exprt::operandst false_loop_guards;
     for(auto &g : SSA.loop_guards)
@@ -36,37 +36,41 @@ public:
     no_loops_path=conjunction(false_loop_guards);
   }
 
-  ~heap_tpolyhedra_sympath_domaint() override { delete heap_tpolyhedra_domain; }
+  ~sympath_domaint() override { delete inner_domain; }
 
-  // Value is a map from expression (symbolic path) to an invariant in heap
-  // tpolyhedra domain
-  class heap_tpolyhedra_sympath_valuet:
+  domaint *inner_domain;
+
+  // Value is a map from expression (symbolic path) to an invariant in the
+  // inner domain
+  class sympath_valuet:
     public valuet,
-    public std::map<exprt, product_domaint::valuet *>
+    public std::map<exprt, domaint::valuet *>
   {
   public:
-    explicit heap_tpolyhedra_sympath_valuet(
-      product_domaint::valuet *inner_value_template):
+    explicit sympath_valuet(
+      domaint::valuet *inner_value_template):
       inner_value_template(inner_value_template) {}
 
-    ~heap_tpolyhedra_sympath_valuet() override
+    // The value owns all values for individual symbolic paths and therefore
+    // it must delete them
+    ~sympath_valuet() override
     {
       for(auto &val : *this)
         delete val.second;
       delete inner_value_template;
     }
 
-    heap_tpolyhedra_sympath_valuet *clone() override
+    sympath_valuet *clone() override
     {
-      auto new_value=new heap_tpolyhedra_sympath_valuet(inner_value_template);
+      auto new_value=new sympath_valuet(inner_value_template);
       for(auto &val : *this)
         new_value->emplace(val.first, val.second->clone());
       return new_value;
     }
 
-    // A template of the inner heap-tpolyhedra value that will be used to
-    // create new values.
-    product_domaint::valuet *inner_value_template;
+    // A template of the inner value (corresponding to the inner domain) that
+    // will be used to create new values.
+    domaint::valuet *inner_value_template;
   };
 
   void output_value(
@@ -97,8 +101,8 @@ protected:
   // path even though it can be feasible
   exprt no_loops_path;
 
-  friend class strategy_solver_heap_tpolyhedra_sympatht;
+  friend class strategy_solver_sympatht;
 };
 
 
-#endif // CPROVER_2LS_DOMAINS_HEAP_TPOLYHEDRA_SYMPATH_DOMAIN_H
+#endif // CPROVER_2LS_DOMAINS_SYMPATH_DOMAIN_H

@@ -22,7 +22,7 @@ Author: Peter Schrammel
 #include "tpolyhedra_domain.h"
 #include "predabs_domain.h"
 #include "heap_domain.h"
-#include "heap_tpolyhedra_sympath_domain.h"
+#include "sympath_domain.h"
 #include "product_domain.h"
 
 #ifdef DEBUG
@@ -623,11 +623,8 @@ void template_generator_baset::instantiate_standard_domains(
       domain_number, renaming_map, SSA.ns, {heap_domain, tpolyhedra_domain});
 
     if(options.get_bool_option("sympath"))
-      domain_ptr=new heap_tpolyhedra_sympath_domaint(
-        domain_number,
-        renaming_map,
-        SSA,
-        dynamic_cast<product_domaint *>(domain_ptr));
+      domain_ptr=new sympath_domaint(
+        domain_number, renaming_map, SSA, domain_ptr);
   }
 }
 

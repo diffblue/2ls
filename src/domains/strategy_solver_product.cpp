@@ -19,11 +19,21 @@ bool strategy_solver_productt::iterate(
 {
   auto &inv=dynamic_cast<product_domaint::valuet &>(_inv);
 
-  int first_improved=-1;
-
   bool improved=false;
   for(unsigned i=0; i<domain.domains.size(); i++)
   {
+    // If the current inner solver symbolic path does not match the current
+    // symbolic path (i.e. the current symbolic path changed in this iteration),
+    // restrict the current inner domain to the new symbolic path.
+    bool new_sympath=false;
+    if(with_sympaths &&
+       solvers[i]->symbolic_path.get_expr()!=symbolic_path.get_expr())
+    {
+      new_sympath=true;
+      solvers[i]->symbolic_path=symbolic_path;
+      domain.domains[i]->restrict_to_sympath(symbolic_path);
+    }
+
     solver.new_context();
     // Get context from all domains except the current one
     for(unsigned j=0; j<domain.domains.size(); j++)
@@ -48,30 +58,39 @@ bool strategy_solver_productt::iterate(
       improved=true;
       // The symbolic path used in the first domain that was improved must be
       // used for the rest of the domains.
-      if(first_improved==-1 && i!=domain.domains.size()-1)
+      if(with_sympaths && !solvers[i]->symbolic_path.empty() &&
+         solvers[i]->symbolic_path!=symbolic_path)
       {
-        first_improved=i;
         symbolic_path=solvers[i]->symbolic_path;
-        for(unsigned j=i+1; j<domain.domains.size(); j++)
-        {
-          domain.domains[j]->restrict_to_sympath(symbolic_path);
-        }
       }
     }
-    solver.pop_context();
-  }
-  if(improved)
-  {
-    for(unsigned i=first_improved+1; i<domain.domains.size(); i++)
-      // Undo symbolic path restriction done above
+
+    // If a symbolic path restriction was done above for this domain, undo it.
+    if(new_sympath)
       domain.domains[i]->undo_sympath_restriction();
+    solver.pop_context();
   }
 
   return improved;
 }
 
+void strategy_solver_productt::use_sympaths()
+{
+  strategy_solver_baset::use_sympaths();
+  for(auto &solver : solvers)
+    solver->use_sympaths();
+}
+
+void strategy_solver_productt::set_sympath(const symbolic_patht &sympath)
+{
+  strategy_solver_baset::set_sympath(sympath);
+  for(auto &solver : solvers)
+    solver->set_sympath(sympath);
+}
+
 void strategy_solver_productt::clear_symbolic_path()
 {
+  strategy_solver_baset::clear_symbolic_path();
   for(auto &solver : solvers)
     solver->clear_symbolic_path();
 }
