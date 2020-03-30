@@ -79,10 +79,9 @@ protected:
     local_SSAt::nodest::const_iterator loop_begin,
     local_SSAt::nodest::const_iterator loop_end);
 
-  void filter_template_domain();
-  void filter_equality_domain();
-  void filter_heap_domain();
-  void filter_heap_interval_domain();
+  var_specst filter_template_domain();
+  var_specst filter_equality_domain();
+  var_specst filter_heap_domain();
 
   void add_var(
     const vart &var_to_add,

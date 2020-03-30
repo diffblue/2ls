@@ -39,7 +39,9 @@ public:
   /// The order has to match the order of domains.
   struct valuet:domaint::valuet, std::vector<domaint::valuet *>
   {
-    using std::vector<domaint::valuet *>::vector;
+    valuet()=default;
+    explicit valuet(const std::vector<domaint::valuet *> &values):
+      vector(values) {}
 
     valuet *clone() override
     {

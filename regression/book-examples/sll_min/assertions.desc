@@ -1,6 +1,6 @@
 CORE
 sll_min.c
---heap-values-refine
+--heap --values-refine
 ^EXIT=0$
 ^SIGNAL=0$
 ^VERIFICATION SUCCESSFUL$

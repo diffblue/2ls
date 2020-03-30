@@ -76,7 +76,9 @@ bool strategy_solver_simplet::iterate(invariantt &_inv)
     }
     else
     {
+#ifdef DEBUG
       debug() << "Outer solver: UNSAT!!" << eom;
+#endif
       improved=domain.handle_unsat(inv, improved);
     }
     solver.pop_context();

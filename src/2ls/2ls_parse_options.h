@@ -47,9 +47,7 @@ class optionst;
   "(octagons)" \
   "(equalities)" \
   "(heap)" \
-  "(heap-interval)" \
-  "(heap-zones)" \
-  "(heap-values-refine)" \
+  "(values-refine)" \
   "(sympath)" \
   "(enum-solver)(binsearch-solver)(arrays)"\
   "(string-abstraction)(no-arch)(arch):(floatbv)(fixedbv)" \
