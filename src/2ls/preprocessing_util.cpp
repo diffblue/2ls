@@ -804,7 +804,7 @@ void twols_parse_optionst::handle_freed_ptr_compare(goto_modelt &goto_model)
   {
     Forall_goto_program_instructions(i_it, f_it->second.body)
     {
-      if(i_it->is_goto())
+      if(i_it->is_goto() || i_it->is_assert())
       {
         auto &guard=i_it->guard;
         make_freed_ptr_comparison_nondet(
