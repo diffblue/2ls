@@ -23,10 +23,10 @@ public:
     sympath_domaint &_domain,
     incremental_solvert &_solver,
     const local_SSAt &SSA,
-    strategy_solver_baset *inner_solver):
+    std::unique_ptr<strategy_solver_baset> _inner_solver):
     strategy_solver_baset(_solver, SSA.ns),
     domain(_domain),
-    inner_solver(inner_solver)
+    inner_solver(std::move(_inner_solver))
   {
     build_loop_conds_map(SSA);
     inner_solver->use_sympaths();
@@ -40,7 +40,7 @@ protected:
   sympath_domaint &domain;
 
   // Strategy solver for the inner domain
-  strategy_solver_baset *inner_solver;
+  std::unique_ptr<strategy_solver_baset> inner_solver;
 
   std::vector<symbolic_patht> visited_paths;
   bool new_path=true;

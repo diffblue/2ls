@@ -17,6 +17,10 @@ Author: Viktor Malik
 
 #include "domain.h"
 #include "strategy_solver_base.h"
+#include <memory>
+
+typedef std::vector<std::unique_ptr<domaint>> domain_vect;
+typedef std::vector<std::unique_ptr<domaint::valuet>> value_vect;
 
 class product_domaint:public domaint
 {
@@ -25,38 +29,23 @@ public:
     unsigned int domainNumber,
     replace_mapt &renamingMap,
     const namespacet &ns,
-    const std::vector<domaint *> &domains):
-    domaint(domainNumber, renamingMap, ns), domains(domains) {}
-
-  // The domain owns the inner domains, therefore it must delete them properly
-  ~product_domaint() override
-  {
-    for(auto &domain : domains)
-      delete domain;
-  }
+    domain_vect domains):
+    domaint(domainNumber, renamingMap, ns), domains(std::move(domains)) {}
 
   /// Abstract value is a vector of abstract values of inner domains.
   /// The order has to match the order of domains.
-  struct valuet:domaint::valuet, std::vector<domaint::valuet *>
+  struct valuet:domaint::valuet, value_vect
   {
     valuet()=default;
-    explicit valuet(const std::vector<domaint::valuet *> &values):
-      vector(values) {}
+    explicit valuet(value_vect values):vector(std::move(values)) {}
 
     valuet *clone() override
     {
       auto new_value=new valuet();
       for(const auto &val : *this)
-        new_value->push_back(val->clone());
+        new_value->emplace_back(val->clone());
       return new_value;
     }
-
-    // The value owns the inner values and therefore has to delete them
-    ~valuet() override
-    {
-      for(auto &val : *this)
-        delete val;
-    };
   };
 
   // Most of the domain methods are implemented in such way that the
@@ -80,8 +69,17 @@ public:
   void undo_sympath_restriction() override;
   void remove_all_sympath_restrictions() override;
 
+  /// Get a vector of raw pointers to the inner domains
+  std::vector<domaint *> get_domains()
+  {
+    std::vector<domaint *> result;
+    for(auto &d : domains)
+      result.push_back(d.get());
+    return result;
+  }
+
   // Product domain contains a vector of domains
-  std::vector<domaint *> domains;
+  domain_vect domains;
 
   // Value is a vector of values in corresponding domains
   valuet value;

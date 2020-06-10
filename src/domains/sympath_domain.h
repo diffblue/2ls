@@ -26,9 +26,9 @@ public:
     unsigned int _domain_number,
     replace_mapt &_renaming_map,
     const local_SSAt &SSA,
-    domaint *inner_domain):
+    std::unique_ptr<domaint> inner_domain):
     domaint(_domain_number, _renaming_map, SSA.ns),
-    inner_domain(inner_domain)
+    inner_domain(std::move(inner_domain))
   {
     exprt::operandst false_loop_guards;
     for(auto &g : SSA.loop_guards)
@@ -36,41 +36,36 @@ public:
     no_loops_path=conjunction(false_loop_guards);
   }
 
-  ~sympath_domaint() override { delete inner_domain; }
-
-  domaint *inner_domain;
+  std::unique_ptr<domaint> inner_domain;
 
   // Value is a map from expression (symbolic path) to an invariant in the
   // inner domain
   class sympath_valuet:
     public valuet,
-    public std::map<exprt, domaint::valuet *>
+    public std::map<exprt, std::unique_ptr<domaint::valuet>>
   {
   public:
     explicit sympath_valuet(
-      domaint::valuet *inner_value_template):
-      inner_value_template(inner_value_template) {}
-
-    // The value owns all values for individual symbolic paths and therefore
-    // it must delete them
-    ~sympath_valuet() override
-    {
-      for(auto &val : *this)
-        delete val.second;
-      delete inner_value_template;
-    }
+      std::unique_ptr<domaint::valuet> inner_value_template):
+      inner_value_template(std::move(inner_value_template)) {}
 
     sympath_valuet *clone() override
     {
-      auto new_value=new sympath_valuet(inner_value_template);
+      // Clone the inner value template
+      auto new_inner_value=std::unique_ptr<domaint::valuet>(
+        inner_value_template->clone());
+      auto new_value=new sympath_valuet(std::move(new_inner_value));
+      // Clone the inner map
       for(auto &val : *this)
-        new_value->emplace(val.first, val.second->clone());
+        new_value->emplace(
+          val.first,
+          std::unique_ptr<domaint::valuet>(val.second->clone()));
       return new_value;
     }
 
     // A template of the inner value (corresponding to the inner domain) that
     // will be used to create new values.
-    domaint::valuet *inner_value_template;
+    std::unique_ptr<domaint::valuet> inner_value_template;
   };
 
   void output_value(

@@ -17,6 +17,9 @@ Author: Viktor Malik
 
 #include "strategy_solver_base.h"
 #include "product_domain.h"
+#include <memory>
+
+typedef std::vector<std::unique_ptr<strategy_solver_baset>> solver_vect;
 
 class strategy_solver_productt:public strategy_solver_baset
 {
@@ -25,8 +28,9 @@ public:
     product_domaint &domain,
     incremental_solvert &solver,
     const namespacet &ns,
-    const std::vector<strategy_solver_baset *> &solvers):
-    strategy_solver_baset(solver, ns), domain(domain), solvers(solvers) {}
+    solver_vect solvers):
+    strategy_solver_baset(solver, ns), domain(domain),
+    solvers(std::move(solvers)) {}
 
   bool iterate(invariantt &inv) override;
 
@@ -37,7 +41,7 @@ public:
 protected:
   product_domaint &domain;
   // The solver contains a list of inner solvers
-  std::vector<strategy_solver_baset *> solvers;
+  solver_vect solvers;
 };
 
 #endif // CPROVER_2LS_DOMAINS_STRATEGY_SOLVER_PRODUCT_H

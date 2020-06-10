@@ -26,19 +26,6 @@ public:
   typedef strategy_solver_baset::constraintst constraintst;
   typedef strategy_solver_baset::var_listt var_listt;
 
-  ssa_analyzert():
-    result(NULL),
-    solver_instances(0),
-    solver_calls(0)
-  {
-  }
-
-  ~ssa_analyzert()
-  {
-    if(result!=NULL)
-      delete result;
-  }
-
   void operator()(
     incremental_solvert &solver,
     local_SSAt &SSA,
@@ -51,8 +38,8 @@ public:
   inline unsigned get_number_of_solver_calls() { return solver_calls; }
 
 protected:
-  domaint *domain; // template generator is responsable for the domain object
-  domaint::valuet *result;
+  domaint *domain; // template generator is responsible for the domain object
+  std::unique_ptr<domaint::valuet> result;
 
   // statistics
   unsigned solver_instances;

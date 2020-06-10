@@ -32,22 +32,23 @@ void template_generator_rankingt::operator()(
 
   if(options.get_bool_option("monolithic-ranking-function"))
   {
-    domain_ptr=new linrank_domaint(
-      domain_number,
-      post_renaming_map,
-      options.get_unsigned_int_option("lexicographic-ranking-function"),
-      options.get_unsigned_int_option("max-inner-ranking-iterations"), SSA.ns);
+    domain_ptr=std::unique_ptr<domaint>(
+      new linrank_domaint(
+        domain_number,
+        post_renaming_map,
+        options.get_unsigned_int_option("lexicographic-ranking-function"),
+        options.get_unsigned_int_option("max-inner-ranking-iterations"),
+        SSA.ns));
   }
   else
   {
-    domain_ptr=new lexlinrank_domaint(
-      domain_number,
-      post_renaming_map,
-      options.get_unsigned_int_option(
-        "lexicographic-ranking-function"),
-      options.get_unsigned_int_option(
-        "max-inner-ranking-iterations"),
-          SSA.ns);
+    domain_ptr=std::unique_ptr<domaint>(
+      new lexlinrank_domaint(
+        domain_number,
+        post_renaming_map,
+        options.get_unsigned_int_option("lexicographic-ranking-function"),
+        options.get_unsigned_int_option("max-inner-ranking-iterations"),
+        SSA.ns));
   }
   collect_variables_ranking(SSA, forward);
 
@@ -123,10 +124,10 @@ void template_generator_rankingt::collect_variables_ranking(
       filter_ranking_domain(new_var_specs);
 
       if(options.get_bool_option("monolithic-ranking-function"))
-        dynamic_cast<linrank_domaint *>(domain_ptr)
+        dynamic_cast<linrank_domaint *>(domain_ptr.get())
           ->add_template(new_var_specs, SSA.ns);
       else
-        dynamic_cast<lexlinrank_domaint *>(domain_ptr)
+        dynamic_cast<lexlinrank_domaint *>(domain_ptr.get())
           ->add_template(new_var_specs, SSA.ns);
 
       var_specs.insert(

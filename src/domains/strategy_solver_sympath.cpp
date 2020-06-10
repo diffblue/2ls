@@ -57,7 +57,7 @@ bool strategy_solver_sympatht::iterate(
       // The path has been altered during computation (solver has found another
       // loop-select guard that can be true
       auto new_sympath=inner_solver->symbolic_path.get_expr();
-      inv.emplace(new_sympath, inv.at(sympath));
+      inv.emplace(new_sympath, std::move(inv.at(sympath)));
       inv.erase(sympath);
       symbolic_path=inner_solver->symbolic_path;
 #ifdef DEBUG
@@ -70,7 +70,8 @@ bool strategy_solver_sympatht::iterate(
   else
   {
     // Computing invariant for a new path
-    auto new_value=inv.inner_value_template->clone();
+    auto new_value=std::unique_ptr<domaint::valuet>(
+      inv.inner_value_template->clone());
     domain.inner_domain->initialize_value(*new_value);
     improved=inner_solver->iterate(*new_value);
 
@@ -82,7 +83,7 @@ bool strategy_solver_sympatht::iterate(
       std::cerr << from_expr(ns, "", symbolic_path.get_expr()) << "\n";
 #endif
       const exprt sympath=inner_solver->symbolic_path.get_expr();
-      inv.emplace(sympath, new_value);
+      inv.emplace(sympath, std::move(new_value));
       new_path=false;
     }
   }

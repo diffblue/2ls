@@ -37,12 +37,6 @@ public:
     std_invariants=options.get_bool_option("std-invariants");
   }
 
-  virtual ~template_generator_baset()
-  {
-    if(domain_ptr!=NULL)
-      delete domain_ptr;
-  }
-
   virtual void operator()(
     unsigned _domain_number,
     const local_SSAt &SSA,
@@ -54,7 +48,11 @@ public:
 
   virtual var_sett all_vars();
 
-  inline domaint *domain() { assert(domain_ptr!=NULL); return domain_ptr; }
+  inline domaint *domain()
+  {
+    assert(domain_ptr);
+    return domain_ptr.get();
+  }
 
   var_specst var_specs;
   replace_mapt post_renaming_map;
@@ -67,7 +65,7 @@ public:
 protected:
   const ssa_dbt &ssa_db;
   const ssa_local_unwindert &ssa_local_unwinder;
-  domaint *domain_ptr;
+  std::unique_ptr<domaint> domain_ptr;
   bool std_invariants; // include value at loop entry
 
   virtual void collect_variables_loop(

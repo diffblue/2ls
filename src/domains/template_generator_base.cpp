@@ -472,10 +472,11 @@ bool template_generator_baset::instantiate_custom_templates(
             debug() << "Custom template polyhedron found" << eom;
             if(!found_poly) // create domain
             {
-              domain_ptr=new tpolyhedra_domaint(
-                domain_number,
-                post_renaming_map,
-                SSA.ns); // TODO: aux_renaming_map
+              domain_ptr=std::unique_ptr<domaint>(
+                new tpolyhedra_domaint(
+                  domain_number,
+                  post_renaming_map,
+                  SSA.ns)); // TODO: aux_renaming_map
               found_poly=true;
             }
 
@@ -490,7 +491,7 @@ bool template_generator_baset::instantiate_custom_templates(
                               and_exprt(pre_guard, post_guard) : post_guard;
             guards.aux_expr=aux_expr;
             guards.kind=contains_new_var ? guardst::OUT : guardst::LOOP;
-            dynamic_cast<tpolyhedra_domaint *>(domain_ptr)
+            dynamic_cast<tpolyhedra_domaint *>(domain_ptr.get())
               ->add_template_row(expr, guards);
           }
             // pred abs domain
@@ -501,9 +502,10 @@ bool template_generator_baset::instantiate_custom_templates(
             debug() << "Custom predicate template found" << eom;
             if(!found_predabs) // create domain
             {
-              domain_ptr=new predabs_domaint(
-                domain_number,
-                post_renaming_map, SSA.ns); // TODO: aux_renaming_map
+              domain_ptr=std::unique_ptr<domaint>(
+                new predabs_domaint(
+                  domain_number,
+                  post_renaming_map, SSA.ns)); // TODO: aux_renaming_map
               found_predabs=true;
             }
 
@@ -518,7 +520,7 @@ bool template_generator_baset::instantiate_custom_templates(
                               and_exprt(pre_guard, post_guard) : post_guard;
             guards.aux_expr=aux_expr;
             guards.kind=contains_new_var ? guardst::OUT : guardst::LOOP;
-            dynamic_cast<predabs_domaint *>(domain_ptr)
+            dynamic_cast<predabs_domaint *>(domain_ptr.get())
               ->add_template_row(expr, guards);
           }
           else // neither pred abs, nor polyhedra
@@ -556,19 +558,19 @@ void template_generator_baset::instantiate_standard_domains(
   replace_mapt &renaming_map=
     std_invariants ? aux_renaming_map : post_renaming_map;
 
-  std::vector<domaint *> domains;
+  domain_vect domains;
   // get domains from command line options
   if(options.get_bool_option("equalities"))
   {
     auto eq_var_specs=filter_equality_domain();
-    domains.push_back(
+    domains.emplace_back(
       new equality_domaint(domain_number, renaming_map, eq_var_specs, SSA.ns));
   }
 
   if(options.get_bool_option("heap"))
   {
     auto heap_var_specs=filter_heap_domain();
-    domains.push_back(
+    domains.emplace_back(
       new heap_domaint(domain_number, renaming_map, heap_var_specs, SSA));
   }
 
@@ -577,7 +579,7 @@ void template_generator_baset::instantiate_standard_domains(
     auto new_domain=new tpolyhedra_domaint(domain_number, renaming_map, SSA.ns);
     auto templ_var_specs=filter_template_domain();
     new_domain->add_interval_template(templ_var_specs, SSA.ns);
-    domains.push_back(new_domain);
+    domains.emplace_back(new_domain);
   }
   else if(options.get_bool_option("zones"))
   {
@@ -585,7 +587,7 @@ void template_generator_baset::instantiate_standard_domains(
     auto templ_var_specs=filter_template_domain();
     new_domain->add_difference_template(templ_var_specs, SSA.ns);
     new_domain->add_interval_template(templ_var_specs, SSA.ns);
-    domains.push_back(new_domain);
+    domains.emplace_back(new_domain);
   }
   else if(options.get_bool_option("octagons"))
   {
@@ -594,7 +596,7 @@ void template_generator_baset::instantiate_standard_domains(
     new_domain->add_sum_template(templ_var_specs, SSA.ns);
     new_domain->add_difference_template(templ_var_specs, SSA.ns);
     new_domain->add_interval_template(templ_var_specs, SSA.ns);
-    domains.push_back(new_domain);
+    domains.emplace_back(new_domain);
   }
   else if(options.get_bool_option("qzones"))
   {
@@ -602,19 +604,21 @@ void template_generator_baset::instantiate_standard_domains(
     auto templ_var_specs=filter_template_domain();
     new_domain->add_difference_template(templ_var_specs, SSA.ns);
     new_domain->add_quadratic_template(templ_var_specs, SSA.ns);
-    domains.push_back(new_domain);
+    domains.emplace_back(new_domain);
   }
 
   // If multiple simple domains are used, use a product domain.
   if(domains.size()==1)
-    domain_ptr=domains[0];
+    domain_ptr=std::move(domains[0]);
   else
-    domain_ptr=new product_domaint(
-      domain_number, renaming_map, SSA.ns, domains);
+    domain_ptr=std::unique_ptr<domaint>(
+      new product_domaint(
+        domain_number, renaming_map, SSA.ns, std::move(domains)));
 
   if(options.get_bool_option("sympath"))
-    domain_ptr=new sympath_domaint(
-      domain_number, renaming_map, SSA, domain_ptr);
+    domain_ptr=std::unique_ptr<domaint>(
+      new sympath_domaint(
+        domain_number, renaming_map, SSA, std::move(domain_ptr)));
 }
 
 std::vector<exprt> template_generator_baset::collect_record_frees(

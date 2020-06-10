@@ -97,6 +97,8 @@ public:
     /// Each abstract value needs to implement clone with covariant return type.
     /// This is needed to properly clone abstract value when only a pointer to
     /// valuet is available.
+    /// Since the method returns a raw pointer, the caller is responsible for
+    /// taking ownership of the created object.
     virtual valuet *clone()=0;
 
     basic_valuet basic_value;
