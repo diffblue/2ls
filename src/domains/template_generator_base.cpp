@@ -190,27 +190,9 @@ void template_generator_baset::collect_variables_loop(
                  index_info.loc->location_number <
                    n_it->location->location_number)
               {
-                auto idx_id =
-                  index_info.index.id() == ID_symbol
-                    ? to_symbol_expr(index_info.index).get_identifier()
-                    : ID_empty;
-                if(idx_id != ID_empty &&
-                   phi_nodes.find(idx_id) != phi_nodes.end())
-                {
-                  // If the index is a symbol that is updated in the loop, we
-                  // have to use its loop-back variant
-                  symbol_exprt idx_pre_var =
-                    get_pre_var(SSA,
-                                SSA.ssa_objects.objects.find(
-                                  ssa_objectt(index_info.index, SSA.ns)),
-                                n_it);
-                  related_vars.push_back(idx_pre_var);
-                }
-                else
-                { // Otherwise, use the RHS variant of the symbol
-                  related_vars.push_back(
-                    SSA.read_rhs(index_info.index, n_it->loophead->location));
-                }
+                exprt index_expr = index_info.index;
+                replace_array_index_loop(index_expr, n_it, SSA, phi_nodes);
+                related_vars.push_back(index_expr);
               }
             }
           }
@@ -714,4 +696,41 @@ template_generator_baset::filter_array_domain(const var_specst &var_specs)
       new_var_specs.push_back(v);
   }
   return new_var_specs;
+}
+
+/// Replace all variables in the given index expressions by their loop-back
+/// variants if they are updated in the current loop or by their R-value variant
+/// if they are not.
+/// \param index Index expression
+/// \param n_it Current SSA node (loop end)
+/// \param SSA
+/// \param phi_nodes PHI nodes for the current loop (used to check if a variable
+///                  is updated within the loop)
+void template_generator_baset::replace_array_index_loop(
+  exprt &index,
+  local_SSAt::nodest::const_iterator n_it,
+  const local_SSAt &SSA,
+  const ssa_domaint::phi_nodest &phi_nodes)
+{
+  if(index.id() == ID_symbol)
+  {
+    auto idx_id = to_symbol_expr(index).get_identifier();
+    if(phi_nodes.find(idx_id) != phi_nodes.end())
+    {
+      // If the index is a symbol that is updated in the loop, we
+      // have to use its loop-back variant
+      symbol_exprt idx_pre_var = get_pre_var(
+        SSA, SSA.ssa_objects.objects.find(ssa_objectt(index, SSA.ns)), n_it);
+      index = idx_pre_var;
+    }
+    else
+    { // Otherwise, use the RHS variant of the symbol
+      index = SSA.read_rhs(index, n_it->loophead->location);
+    }
+  }
+  else
+  {
+    Forall_operands(o_it, index)
+      replace_array_index_loop(*o_it, n_it, SSA, phi_nodes);
+  }
 }
