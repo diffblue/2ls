@@ -106,7 +106,7 @@ void summarizer_fwt::do_summary(
   analyzer.set_message_handler(get_message_handler());
 
   template_generator_summaryt template_generator(
-    options, ssa_db, ssa_unwinder->get(function_name));
+    options, ssa_db, ssa_unwinder->get(function_name), &solver);
   template_generator.set_message_handler(get_message_handler());
   template_generator(solver.next_domain_number(), SSA, true);
 
