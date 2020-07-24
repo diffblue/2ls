@@ -14,6 +14,7 @@ Author: Peter Schrammel
 #endif
 
 #include "strategy_solver_binsearch.h"
+#include "ssa/local_ssa.h"
 #include "util.h"
 
 bool strategy_solver_binsearcht::iterate(invariantt &_inv)
@@ -221,7 +222,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
       solver.pop_context(); // binary search iteration
     }
 
-    debug() << "update value: " << from_expr(ns, "", lower) << eom;
+    debug() << "update value: " << from_expr(SSA.ns, "", lower) << eom;
 
     solver.pop_context();  // symbolic value system
 

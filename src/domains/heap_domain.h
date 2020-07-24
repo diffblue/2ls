@@ -87,6 +87,11 @@ public:
     heap_valuet *clone() override { return new heap_valuet(*this); }
   };
 
+  std::unique_ptr<domaint::valuet> new_value() override
+  {
+    return std::unique_ptr<domaint::valuet>(new heap_valuet());
+  }
+
   // Initialize value and domain
   void initialize_value(domaint::valuet &value) override;
 

@@ -476,7 +476,8 @@ bool template_generator_baset::instantiate_custom_templates(
                 new tpolyhedra_domaint(
                   domain_number,
                   post_renaming_map,
-                  SSA.ns)); // TODO: aux_renaming_map
+                  SSA.ns,
+                  options)); // TODO: aux_renaming_map
               found_poly=true;
             }
 
@@ -576,14 +577,16 @@ void template_generator_baset::instantiate_standard_domains(
 
   if(options.get_bool_option("intervals"))
   {
-    auto new_domain=new tpolyhedra_domaint(domain_number, renaming_map, SSA.ns);
+    auto new_domain=new tpolyhedra_domaint(
+      domain_number, renaming_map, SSA.ns, options);
     auto templ_var_specs=filter_template_domain();
     new_domain->add_interval_template(templ_var_specs, SSA.ns);
     domains.emplace_back(new_domain);
   }
   else if(options.get_bool_option("zones"))
   {
-    auto new_domain=new tpolyhedra_domaint(domain_number, renaming_map, SSA.ns);
+    auto new_domain=new tpolyhedra_domaint(
+      domain_number, renaming_map, SSA.ns, options);
     auto templ_var_specs=filter_template_domain();
     new_domain->add_difference_template(templ_var_specs, SSA.ns);
     new_domain->add_interval_template(templ_var_specs, SSA.ns);
@@ -591,7 +594,8 @@ void template_generator_baset::instantiate_standard_domains(
   }
   else if(options.get_bool_option("octagons"))
   {
-    auto new_domain=new tpolyhedra_domaint(domain_number, renaming_map, SSA.ns);
+    auto new_domain=new tpolyhedra_domaint(
+      domain_number, renaming_map, SSA.ns, options);
     auto templ_var_specs=filter_template_domain();
     new_domain->add_sum_template(templ_var_specs, SSA.ns);
     new_domain->add_difference_template(templ_var_specs, SSA.ns);
@@ -600,7 +604,8 @@ void template_generator_baset::instantiate_standard_domains(
   }
   else if(options.get_bool_option("qzones"))
   {
-    auto new_domain=new tpolyhedra_domaint(domain_number, renaming_map, SSA.ns);
+    auto new_domain=new tpolyhedra_domaint(
+      domain_number, renaming_map, SSA.ns, options);
     auto templ_var_specs=filter_template_domain();
     new_domain->add_difference_template(templ_var_specs, SSA.ns);
     new_domain->add_quadratic_template(templ_var_specs, SSA.ns);

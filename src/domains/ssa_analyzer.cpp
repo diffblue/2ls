@@ -41,13 +41,12 @@ Author: Peter Schrammel
   *dynamic_cast<domain_type *>(domain_ptr), \
   solver, \
   SSA, \
-  precondition, \
-  get_message_handler(), \
-  template_generator)
+  get_message_handler())
 #define BINSEARCH_SOLVER strategy_solver_binsearcht(\
   *dynamic_cast<tpolyhedra_domaint *>(simple_domains[next_domain++]), \
   solver, \
-  SSA.ns)
+  SSA, \
+  get_message_handler())
 #if 0
 // NOLINTNEXTLINE(*)
 #define BINSEARCH_SOLVER strategy_solver_binsearch2t(\
@@ -77,119 +76,9 @@ void ssa_analyzert::operator()(
 
   domain=template_generator.domain();
 
-  // get strategy solver from options
-  std::unique_ptr<strategy_solver_baset> s_solver;
-  if(template_generator.options.get_bool_option("compute-ranking-functions"))
-  {
-    if(template_generator.options.get_bool_option(
-      "monolithic-ranking-function"))
-    {
-      s_solver=std::unique_ptr<strategy_solver_baset>(
-        new SIMPLE_SOLVER(domain, linrank_domaint));
-      result=std::unique_ptr<domaint::valuet>(
-        new linrank_domaint::templ_valuet());
-    }
-    else
-    {
-      s_solver=std::unique_ptr<strategy_solver_baset>(
-        new SIMPLE_SOLVER(domain, lexlinrank_domaint));
-      result=std::unique_ptr<domaint::valuet>(
-        new lexlinrank_domaint::templ_valuet());
-    }
-  }
-  else
-  {
-    domaint *invariant_domain;
-    // Check if symbolic paths domain is used. If so, invariant_domain points to
-    // the inner domain of the symbolic paths domain.
-    if(template_generator.options.get_bool_option("sympath"))
-      invariant_domain=
-        dynamic_cast<sympath_domaint *>(domain)->inner_domain.get();
-    else
-      invariant_domain=domain;
-
-    // simple_domains contains a vector of pointers to simple domains used.
-    // This is either invariant_domain (if a single simple domain is used) or
-    // the vector of domains retrieved from the product domain.
-    std::vector<domaint *> simple_domains;
-    unsigned next_domain=0;
-    auto *product_domain=dynamic_cast<product_domaint *>(invariant_domain);
-    if(product_domain)
-      simple_domains=product_domain->get_domains();
-    else
-      simple_domains.push_back(invariant_domain);
-
-    // Create list of solvers and values.
-    // Important: these must follow the order of domains created in the
-    // template generator.
-    solver_vect solvers;
-    value_vect values;
-    if(template_generator.options.get_bool_option("equalities"))
-    {
-      solvers.emplace_back(
-        new SIMPLE_SOLVER(simple_domains[next_domain++], equality_domaint));
-      values.emplace_back(new equality_domaint::equ_valuet());
-    }
-    if(template_generator.options.get_bool_option("heap"))
-    {
-      solvers.emplace_back(
-        new SIMPLE_SOLVER(simple_domains[next_domain++], heap_domaint));
-      values.emplace_back(new heap_domaint::heap_valuet());
-    }
-    if(template_generator.options.get_bool_option("intervals") ||
-       template_generator.options.get_bool_option("zones") ||
-       template_generator.options.get_bool_option("octagons") ||
-       template_generator.options.get_bool_option("qzones"))
-    {
-      if(template_generator.options.get_bool_option("enum-solver"))
-      {
-        solvers.emplace_back(
-          new SIMPLE_SOLVER(simple_domains[next_domain++], tpolyhedra_domaint));
-        values.emplace_back(new tpolyhedra_domaint::templ_valuet());
-      }
-      else if(template_generator.options.get_bool_option("predabs-solver"))
-      {
-        solvers.emplace_back(
-          new SIMPLE_SOLVER(simple_domains[next_domain++], predabs_domaint));
-        values.emplace_back(new predabs_domaint::templ_valuet());
-      }
-      else if(template_generator.options.get_bool_option("binsearch-solver"))
-      {
-        solvers.emplace_back(new BINSEARCH_SOLVER);
-        values.emplace_back(new tpolyhedra_domaint::templ_valuet());
-      }
-      else
-        assert(false);
-    }
-
-    if(solvers.size()==1)
-    {
-      s_solver=std::move(solvers[0]);
-      result=std::move(values[0]);
-    }
-    else
-    {
-      s_solver=std::unique_ptr<strategy_solver_baset>(
-        new strategy_solver_productt(
-          *product_domain, solver, SSA.ns, std::move(solvers)));
-      result=std::unique_ptr<domaint::valuet>(
-        new product_domaint::valuet(std::move(values)));
-    }
-
-    if(template_generator.options.get_bool_option("sympath"))
-    {
-      s_solver=std::unique_ptr<strategy_solver_baset>(
-        new strategy_solver_sympatht(
-          *dynamic_cast<sympath_domaint *>(domain),
-          solver,
-          SSA,
-          std::move(s_solver)));
-      result=std::unique_ptr<domaint::valuet>(
-        new sympath_domaint::sympath_valuet(std::move(result)));
-    }
-  }
-
-  s_solver->set_message_handler(get_message_handler());
+  // Get a strategy solver and a new abstract value (invariant)
+  auto s_solver=domain->new_strategy_solver(solver, SSA, get_message_handler());
+  result=domain->new_value();
 
   // initialize inv
   domain->initialize_value(*result);

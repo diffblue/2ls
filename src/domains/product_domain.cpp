@@ -13,6 +13,7 @@ Author: Viktor Malik
 /// Designed to work with strategy_solver_productt.
 
 #include "product_domain.h"
+#include "strategy_solver_product.h"
 
 void product_domaint::initialize_value(domaint::valuet &_value)
 {
@@ -80,4 +81,18 @@ void product_domaint::remove_all_sympath_restrictions()
 {
   for(auto &domain : domains)
     domain->remove_all_sympath_restrictions();
+}
+
+std::unique_ptr<strategy_solver_baset> product_domaint::new_strategy_solver(
+  incremental_solvert &solver,
+  const local_SSAt &SSA,
+  message_handlert &message_handler)
+{
+  solver_vect solvers;
+  for(auto &d : domains)
+    solvers.push_back(
+      std::move(d->new_strategy_solver(solver, SSA, message_handler)));
+  return std::unique_ptr<strategy_solver_baset>(
+    new strategy_solver_productt(
+      *this, std::move(solvers), solver, SSA, message_handler));
 }

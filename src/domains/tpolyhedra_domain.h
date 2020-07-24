@@ -17,6 +17,7 @@ Author: Peter Schrammel
 #include <util/std_expr.h>
 #include <util/arith_tools.h>
 #include <util/ieee_float.h>
+#include <util/options.h>
 
 #include "simple_domain.h"
 #include "symbolic_path.h"
@@ -66,11 +67,27 @@ public:
     templ_valuet *clone() override { return new templ_valuet(*this); }
   };
 
+  std::unique_ptr<domaint::valuet> new_value() override
+  {
+    return std::unique_ptr<domaint::valuet>(new templ_valuet());
+  }
+
+  enum strategyt
+  {
+    ENUMERATION,
+    BINSEARCH,
+    BINSEARCH2,
+    BINSEARCH3
+  };
+  strategyt strategy;
+
   tpolyhedra_domaint(
     unsigned _domain_number,
     replace_mapt &_renaming_map,
-    const namespacet &_ns):
-    simple_domaint(_domain_number, _renaming_map, _ns)
+    const namespacet &_ns,
+    const optionst &options):
+    simple_domaint(_domain_number, _renaming_map, _ns),
+    strategy(options.get_bool_option("enum-solver") ? ENUMERATION : BINSEARCH)
     {}
 
   // initialize value
@@ -128,6 +145,11 @@ public:
   symbol_exprt get_row_symb_value(const rowt &row);
 
   void rename_for_row(exprt &expr, const rowt &row);
+
+  std::unique_ptr<strategy_solver_baset> new_strategy_solver(
+    incremental_solvert &solver,
+    const local_SSAt &SSA,
+    message_handlert &message_handler) override;
 
 protected:
   friend class strategy_solver_binsearcht;

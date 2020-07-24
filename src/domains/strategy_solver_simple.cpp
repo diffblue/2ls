@@ -41,7 +41,7 @@ bool strategy_solver_simplet::iterate(invariantt &_inv)
     }
 
     exprt cond=disjunction(strategy_cond_exprs);
-    adjust_float_expressions(cond, ns);
+    adjust_float_expressions(cond, SSA.ns);
     solver << cond;
 
     if(solver()==decision_proceduret::D_SATISFIABLE)

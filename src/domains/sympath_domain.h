@@ -68,6 +68,12 @@ public:
     std::unique_ptr<domaint::valuet> inner_value_template;
   };
 
+  std::unique_ptr<valuet> new_value() override
+  {
+    return std::unique_ptr<valuet>(
+      new sympath_valuet(inner_domain->new_value()));
+  }
+
   void output_value(
     std::ostream &out,
     const valuet &value,
@@ -89,6 +95,11 @@ public:
     const std::vector<symbolic_patht> &sympaths) override {}
   void undo_sympath_restriction() override {}
   void remove_all_sympath_restrictions() override {}
+
+  std::unique_ptr<strategy_solver_baset> new_strategy_solver(
+    incremental_solvert &solver,
+    const local_SSAt &SSA,
+    message_handlert &message_handler) override;
 
 protected:
   // Special path containing conjunction negations of all loop-select guards

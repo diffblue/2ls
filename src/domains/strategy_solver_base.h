@@ -26,12 +26,13 @@ class strategy_solver_baset:public messaget
 
   explicit strategy_solver_baset(
     incremental_solvert &_solver,
-    const namespacet &_ns):
+    const local_SSAt &SSA,
+    message_handlert &message_handler):
+    messaget(message_handler),
     solver(_solver),
-    ns(_ns),
+    SSA(SSA),
     solver_instances(0),
-    solver_calls(0)
-  {}
+    solver_calls(0) {}
 
   virtual bool iterate(invariantt &inv) { assert(false); }
 
@@ -52,7 +53,7 @@ class strategy_solver_baset:public messaget
 
  protected:
   incremental_solvert &solver;
-  const namespacet &ns;
+  const local_SSAt &SSA;
 
   // statistics for additional solvers
   unsigned solver_instances;

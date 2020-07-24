@@ -121,7 +121,7 @@ bool strategy_solver_binsearch3t::iterate(invariantt &_inv)
   exprt _lower=lower_values[it->first];
 #if 1
   debug() << "update row " << it->first << ": "
-          << from_expr(ns, "", lower_values[it->first]) << eom;
+          << from_expr(SSA.ns, "", lower_values[it->first]) << eom;
 #endif
   inv[it->first]=lower_values[it->first];
   exprt _upper=
@@ -135,7 +135,7 @@ bool strategy_solver_binsearch3t::iterate(invariantt &_inv)
 
 #if 1
     debug() << "update row " << it->first << ": "
-            << from_expr(ns, "", lower_values[it->first]) << eom;
+            << from_expr(SSA.ns, "", lower_values[it->first]) << eom;
 #endif
     inv[it->first]=lower_values[it->first];
   }
@@ -151,8 +151,8 @@ bool strategy_solver_binsearch3t::iterate(invariantt &_inv)
 
 #if 1
   debug() << "symbolic value system: " << eom;
-  debug() << "pre-inv: " << from_expr(ns, "", pre_inv_expr) << eom;
-  debug() << "post-inv: " << from_expr(ns, "", post_inv_expr) << eom;
+  debug() << "pre-inv: " << from_expr(SSA.ns, "", pre_inv_expr) << eom;
+  debug() << "post-inv: " << from_expr(SSA.ns, "", post_inv_expr) << eom;
 #endif
 
   extend_expr_types(sum);
@@ -169,7 +169,7 @@ bool strategy_solver_binsearch3t::iterate(invariantt &_inv)
   solver << equal_exprt(sum_bound, sum);
 
 #if 1
-  debug() << from_expr(ns, "", equal_exprt(sum_bound, sum)) << eom;
+  debug() << from_expr(SSA.ns, "", equal_exprt(sum_bound, sum)) << eom;
 #endif
 
   while(tpolyhedra_domain.less_than(lower, upper))
@@ -184,15 +184,15 @@ bool strategy_solver_binsearch3t::iterate(invariantt &_inv)
     exprt c=binary_relation_exprt(sum_bound, ID_ge, middle);
 
 #if 1
-    debug() << "upper: " << from_expr(ns, "", upper) << eom;
-    debug() << "middle: " << from_expr(ns, "", middle) << eom;
-    debug() << "lower: " << from_expr(ns, "", lower) << eom;
+    debug() << "upper: " << from_expr(SSA.ns, "", upper) << eom;
+    debug() << "middle: " << from_expr(SSA.ns, "", middle) << eom;
+    debug() << "lower: " << from_expr(SSA.ns, "", lower) << eom;
 #endif
 
     solver.new_context(); // binary search iteration
 
 #if 1
-    debug() << "constraint: " << from_expr(ns, "", c) << eom;
+    debug() << "constraint: " << from_expr(SSA.ns, "", c) << eom;
 #endif
 
     solver << c;
@@ -209,12 +209,12 @@ bool strategy_solver_binsearch3t::iterate(invariantt &_inv)
       {
 #if 1
         debug() << "update row " << sv.first << " "
-                << from_expr(ns, "", sv.second) << ": ";
+                << from_expr(SSA.ns, "", sv.second) << ": ";
 #endif
         constant_exprt lower_row=
           simplify_const(solver.get(sv.second));
 #if 1
-        debug() << from_expr(ns, "", lower_row) << eom;
+        debug() << from_expr(SSA.ns, "", lower_row) << eom;
 #endif
         inv[sv.first]=lower_row;
       }

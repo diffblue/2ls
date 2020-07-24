@@ -63,6 +63,11 @@ public:
     equ_valuet *clone() override { return new equ_valuet(*this); }
   };
 
+  std::unique_ptr<domaint::valuet> new_value() override
+  {
+    return std::unique_ptr<domaint::valuet>(new equ_valuet());
+  }
+
   void initialize() override;
 
   void initialize_value(domaint::valuet &value) override;

@@ -19,6 +19,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <domains/list_iterator.h>
 #include <domains/incremental_solver.h>
 #include <util/options.h>
+#include <util/replace_expr.h>
 
 #include "ssa_domain.h"
 #include "guard_map.h"

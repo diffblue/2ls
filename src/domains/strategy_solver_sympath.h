@@ -21,10 +21,11 @@ class strategy_solver_sympatht:public strategy_solver_baset
 public:
   strategy_solver_sympatht(
     sympath_domaint &_domain,
+    std::unique_ptr<strategy_solver_baset> _inner_solver,
     incremental_solvert &_solver,
     const local_SSAt &SSA,
-    std::unique_ptr<strategy_solver_baset> _inner_solver):
-    strategy_solver_baset(_solver, SSA.ns),
+    message_handlert &message_handler):
+    strategy_solver_baset(_solver, SSA, message_handler),
     domain(_domain),
     inner_solver(std::move(_inner_solver))
   {

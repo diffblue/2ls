@@ -14,6 +14,7 @@ Author: Peter Schrammel
 
 #include <util/std_expr.h>
 #include <util/graph.h>
+#include <util/i2string.h>
 #include <goto-programs/goto_program.h>
 
 #include <ssa/ssa_unwinder.h>

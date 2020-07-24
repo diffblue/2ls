@@ -160,6 +160,11 @@ public:
 
   virtual bool refine() { return false; }
 
+  std::unique_ptr<strategy_solver_baset> new_strategy_solver(
+    incremental_solvert &solver,
+    const local_SSAt &SSA,
+    message_handlert &message_handler) override;
+
 protected:
   // handles on values to retrieve from model
   // each row has a condition literal and a vector of value expressions

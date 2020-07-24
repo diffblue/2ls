@@ -19,6 +19,9 @@ Author: Peter Schrammel
 #include <util/simplify_expr.h>
 
 #include "tpolyhedra_domain.h"
+#include "strategy_solver_binsearch.h"
+#include "strategy_solver_binsearch2.h"
+#include "strategy_solver_binsearch3.h"
 #include "util.h"
 #include "domain.h"
 
@@ -510,6 +513,28 @@ void tpolyhedra_domaint::add_sum_template(
       // x1+x2
       add_template_row(plus_exprt(v1->var, v2->var), guards);
     }
+  }
+}
+
+/// Choose a correct solver based on the used strategy
+std::unique_ptr<strategy_solver_baset> tpolyhedra_domaint::new_strategy_solver(
+  incremental_solvert &solver,
+  const local_SSAt &SSA,
+  message_handlert &message_handler)
+{
+  switch(strategy)
+  {
+  case ENUMERATION:
+    return simple_domaint::new_strategy_solver(solver, SSA, message_handler);
+  case BINSEARCH:
+    return std::unique_ptr<strategy_solver_baset>(
+      new strategy_solver_binsearcht(*this, solver, SSA, message_handler));
+  case BINSEARCH2:
+    return std::unique_ptr<strategy_solver_baset>(
+      new strategy_solver_binsearch2t(*this, solver, SSA, message_handler));
+  case BINSEARCH3:
+    return std::unique_ptr<strategy_solver_baset>(
+      new strategy_solver_binsearch3t(*this, solver, SSA, message_handler));
   }
 }
 

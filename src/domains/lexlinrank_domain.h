@@ -92,6 +92,11 @@ public:
     templ_valuet *clone() override { return new templ_valuet(*this); }
   };
 
+  std::unique_ptr<domaint::valuet> new_value() override
+  {
+    return std::unique_ptr<domaint::valuet>(new templ_valuet());
+  }
+
   lexlinrank_domaint(
     unsigned _domain_number,
     replace_mapt &_renaming_map,

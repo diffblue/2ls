@@ -26,10 +26,12 @@ class strategy_solver_productt:public strategy_solver_baset
 public:
   strategy_solver_productt(
     product_domaint &domain,
+    solver_vect solvers,
     incremental_solvert &solver,
-    const namespacet &ns,
-    solver_vect solvers):
-    strategy_solver_baset(solver, ns), domain(domain),
+    const local_SSAt &SSA,
+    message_handlert &message_handler):
+    strategy_solver_baset(solver, SSA, message_handler),
+    domain(domain),
     solvers(std::move(solvers)) {}
 
   bool iterate(invariantt &inv) override;

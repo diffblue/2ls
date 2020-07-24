@@ -20,6 +20,7 @@ Author: Peter Schrammel
 #include <util/i2string.h>
 
 #include "strategy_solver_binsearch2.h"
+#include "ssa/local_ssa.h"
 #include "util.h"
 
 #define SUM_BOUND_VAR "sum_bound#"
@@ -125,7 +126,7 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
   exprt _lower=lower_values[it->first];
 #if 1
   debug() << "update row " << it->first << ": "
-          << from_expr(ns, "", lower_values[it->first]) << eom;
+          << from_expr(SSA.ns, "", lower_values[it->first]) << eom;
 #endif
   inv[it->first]=lower_values[it->first];
   exprt _upper=
@@ -139,7 +140,7 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
 
 #if 1
     debug() << "update row " << it->first << ": "
-            << from_expr(ns, "", lower_values[it->first]) << eom;
+            << from_expr(SSA.ns, "", lower_values[it->first]) << eom;
 #endif
     inv[it->first]=lower_values[it->first];
   }
@@ -207,12 +208,12 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
       {
 #if 1
         debug() << "update row " << sv.first << " "
-                << from_expr(ns, "", sv.second) << ": ";
+                << from_expr(SSA.ns, "", sv.second) << ": ";
 #endif
         constant_exprt lower_row=
           simplify_const(solver.get(sv.second));
 #if 1
-        debug() << from_expr(ns, "", lower_row) << eom;
+        debug() << from_expr(SSA.ns, "", lower_row) << eom;
 #endif
         inv[sv.first]=lower_row;
       }

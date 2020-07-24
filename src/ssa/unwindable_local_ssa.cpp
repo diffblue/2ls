@@ -13,6 +13,7 @@ Author: Peter Schrammel, Saurabh Joshi
 
 #include <limits>
 
+#include <util/i2string.h>
 #include <util/find_symbols.h>
 #include <util/rename_symbol.h>
 #include <util/string2int.h>

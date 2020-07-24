@@ -14,6 +14,7 @@ Author: Viktor Malik
 /// Designed to work with strategy_solver_sympatht.
 
 #include "sympath_domain.h"
+#include "strategy_solver_sympath.h"
 
 void sympath_domaint::output_value(
   std::ostream &out,
@@ -57,4 +58,16 @@ void sympath_domaint::project_on_vars(
   c.push_back(no_loops_path);
 
   result=c.empty() ? true_exprt() : disjunction(c);
+}
+
+std::unique_ptr<strategy_solver_baset> sympath_domaint::new_strategy_solver(
+  incremental_solvert &solver,
+  const local_SSAt &SSA,
+  message_handlert &message_handler)
+{
+  auto inner_solver=inner_domain->new_strategy_solver(
+    solver, SSA, message_handler);
+  return std::unique_ptr<strategy_solver_baset>(
+    new strategy_solver_sympatht(
+      *this, std::move(inner_solver), solver, SSA, message_handler));
 }

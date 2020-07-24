@@ -14,6 +14,7 @@ Author: Viktor Malik
 /// multiple simple abstract domains.
 
 #include "simple_domain.h"
+#include "strategy_solver_simple.h"
 #include "util.h"
 #include <util/find_symbols.h>
 #include <algorithm>
@@ -230,4 +231,13 @@ void simple_domaint::remove_all_sympath_restrictions()
 {
   for(auto &row : templ)
     row.guards.aux_expr=true_exprt();
+}
+
+std::unique_ptr<strategy_solver_baset> simple_domaint::new_strategy_solver(
+  incremental_solvert &solver,
+  const local_SSAt &SSA,
+  message_handlert &message_handler)
+{
+  return std::unique_ptr<strategy_solver_baset>(
+    new strategy_solver_simplet(*this, solver, SSA, message_handler));
 }

@@ -21,10 +21,13 @@ Author: Peter Schrammel
 #include <util/replace_expr.h>
 #include <util/namespace.h>
 #include <solvers/refinement/bv_refinement.h>
+#include <memory>
 #include "symbolic_path.h"
+#include "incremental_solver.h"
 
 // Forward declaration - real is in template_generator_base.h
 class template_generator_baset;
+class strategy_solver_baset;
 
 class local_SSAt;
 
@@ -103,6 +106,14 @@ public:
 
     basic_valuet basic_value;
   };
+
+  /// Create a new empty abstract value for the domain
+  virtual std::unique_ptr<valuet> new_value()=0;
+  /// Create a new strategy solver for the domain
+  virtual std::unique_ptr<strategy_solver_baset> new_strategy_solver(
+    incremental_solvert &solver,
+    const local_SSAt &SSA,
+    message_handlert &message_handler)=0;
 
   // General methods for the strategy solver
   // Each generic strategy solver should implement at least these.

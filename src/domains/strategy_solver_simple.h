@@ -23,13 +23,11 @@ public:
     simple_domaint &_domain,
     incremental_solvert &_solver,
     const local_SSAt &SSA,
-    const exprt &precondition,
-    message_handlert &message_handler,
-    template_generator_baset &template_generator):
-    strategy_solver_baset(_solver, SSA.ns), domain(_domain),
+    message_handlert &message_handler):
+    strategy_solver_baset(_solver, SSA, message_handler),
+    domain(_domain),
     loop_guards(SSA.loop_guards)
   {
-    set_message_handler(message_handler);
     domain.initialize();
   }
 
