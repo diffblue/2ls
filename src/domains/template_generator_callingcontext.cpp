@@ -32,11 +32,12 @@ void template_generator_callingcontextt::operator()(
   collect_variables_callingcontext(SSA, n_it, f_it, forward);
 
   // get domain from command line options
-  instantiate_standard_domains(SSA);
+  domain_ptr = instantiate_standard_domains(all_var_specs, SSA);
 
 #if 1
   debug() << "Template variables: " << eom;
-  var_specs.output(debug(), SSA.ns); debug() << eom;
+  all_var_specs.output(debug(), SSA.ns);
+  debug() << eom;
   debug() << "Template: " << eom;
   domain_ptr->output_domain(debug(), SSA.ns); debug() << eom;
 #endif
@@ -76,12 +77,11 @@ void template_generator_callingcontextt::collect_variables_callingcontext(
     if(dummy ||
        SSA.dynamic_objects.get_object_by_name(v_it->get_identifier()))
     {
-      add_var(
-        *v_it,
-        guard,
-        guard,
-        guardst::OUT, // the same for both forward and backward
-        var_specs);
+      add_var(*v_it,
+              guard,
+              guard,
+              guardst::OUT, // the same for both forward and backward
+              all_var_specs);
     }
   }
 
@@ -97,14 +97,14 @@ void template_generator_callingcontextt::collect_variables_callingcontext(
     std::set<symbol_exprt> args;
     find_symbols(*a_it, args);
     exprt arg=*a_it;
-    add_vars(args, guard, guard, guardst::OUT, var_specs);
+    add_vars(args, guard, guard, guardst::OUT, all_var_specs);
   }
 }
 
 var_sett template_generator_callingcontextt::callingcontext_vars()
 {
   var_sett vars;
-  for(const auto &v : var_specs)
+  for(const auto &v : all_var_specs)
   {
     if(v.guards.kind==guardst::OUT)
       vars.insert(v.var);

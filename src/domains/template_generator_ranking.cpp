@@ -58,7 +58,8 @@ void template_generator_rankingt::operator()(
 
 #if 1
   debug() << "Template variables: " << eom;
-  var_specs.output(debug(), SSA.ns); debug() << eom;
+  all_var_specs.output(debug(), SSA.ns);
+  debug() << eom;
   debug() << "Template: " << eom;
   domain_ptr->output_domain(debug(), SSA.ns); debug() << eom;
 #endif
@@ -132,8 +133,8 @@ void template_generator_rankingt::collect_variables_ranking(
         dynamic_cast<lexlinrank_domaint *>(domain_ptr.get())
           ->add_template(new_var_specs, SSA.ns);
 
-      var_specs.insert(
-        var_specs.end(), new_var_specs.begin(), new_var_specs.end());
+      all_var_specs.insert(
+        all_var_specs.end(), new_var_specs.begin(), new_var_specs.end());
     }
   }
 }

@@ -62,7 +62,7 @@ public:
     return std::move(domain_ptr);
   };
 
-  var_specst var_specs;
+  var_specst all_var_specs;
   replace_mapt post_renaming_map;
   replace_mapt init_renaming_map;
   replace_mapt aux_renaming_map;
@@ -86,9 +86,10 @@ protected:
     local_SSAt::nodest::const_iterator loop_begin,
     local_SSAt::nodest::const_iterator loop_end);
 
-  var_specst filter_template_domain();
-  var_specst filter_equality_domain();
-  var_specst filter_heap_domain();
+  static var_specst filter_template_domain(const var_specst &var_specs);
+  static var_specst filter_equality_domain(const var_specst &var_specs);
+  static var_specst filter_heap_domain(const var_specst &var_specs);
+  static var_specst filter_array_domain(const var_specst &var_specs);
 
   void add_var(
     const vart &var_to_add,
@@ -138,7 +139,9 @@ protected:
     exprt &expr);
 
   virtual void handle_special_functions(const local_SSAt &SSA);
-  void instantiate_standard_domains(const local_SSAt &SSA);
+  std::unique_ptr<domaint>
+  instantiate_standard_domains(const var_specst &var_specs_,
+                               const local_SSAt &SSA);
   bool instantiate_custom_templates(const local_SSAt &SSA);
 
   void rename_aux_post(symbol_exprt &expr)
