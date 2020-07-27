@@ -1,6 +1,6 @@
 CORE
 main.c
---heap-interval --pointer-check --no-assertions
+--heap --intervals --pointer-check --no-assertions
 ^EXIT=0$
 ^SIGNAL=0$
 ^VERIFICATION SUCCESSFUL$

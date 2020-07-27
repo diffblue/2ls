@@ -12,11 +12,11 @@ Author: Peter Schrammel, Stefan Marticek
 #include "ssa_var_collector.h"
 
 void ssa_var_collectort::add_var(
-  const domaint::vart &var,
-  const domaint::guardt &pre_guard,
-  domaint::guardt post_guard,
-  const domaint::kindt &kind,
-  domaint::var_specst &var_specs)
+  const vart &var,
+  const guardst::guardt &pre_guard,
+  guardst::guardt post_guard,
+  const guardst::kindt &kind,
+  var_specst &var_specs)
 {
   exprt aux_expr=true_exprt();
   if(std_invariants && pre_guard.id()==ID_and)
@@ -38,12 +38,12 @@ void ssa_var_collectort::add_var(
   }
   if(var.type().id()!=ID_array)
   {
-    var_specs.push_back(domaint::var_spect());
-    domaint::var_spect &var_spec=var_specs.back();
-    var_spec.pre_guard=pre_guard;
-    var_spec.post_guard=post_guard;
-    var_spec.aux_expr=aux_expr;
-    var_spec.kind=kind;
+    var_specs.push_back(var_spect());
+    var_spect &var_spec=var_specs.back();
+    var_spec.guards.pre_guard=pre_guard;
+    var_spec.guards.post_guard=post_guard;
+    var_spec.guards.aux_expr=aux_expr;
+    var_spec.guards.kind=kind;
     var_spec.var=var;
   }
 
@@ -55,13 +55,13 @@ void ssa_var_collectort::add_var(
     to_integer(array_type.size(), size);
     for(mp_integer i=0; i<size; i=i+1)
     {
-      var_specs.push_back(domaint::var_spect());
-      domaint::var_spect &var_spec=var_specs.back();
+      var_specs.push_back(var_spect());
+      var_spect &var_spec=var_specs.back();
       constant_exprt index=from_integer(i, array_type.size().type());
-      var_spec.pre_guard=pre_guard;
-      var_spec.post_guard=post_guard;
-      var_spec.aux_expr=aux_expr;
-      var_spec.kind=kind;
+      var_spec.guards.pre_guard=pre_guard;
+      var_spec.guards.post_guard=post_guard;
+      var_spec.guards.aux_expr=aux_expr;
+      var_spec.guards.kind=kind;
       var_spec.var=index_exprt(var, index);
     }
   }
@@ -176,7 +176,7 @@ void ssa_var_collectort::collect_variables_loop(
         get_pre_var(SSA, o_it, n_it, pre_var);
         exprt init_expr;
         get_init_expr(SSA, o_it, n_it, init_expr);
-        add_var(pre_var, pre_guard, post_guard, domaint::LOOP, var_specs);
+        add_var(pre_var, pre_guard, post_guard, guardst::LOOP, var_specs);
 
 #ifdef DEBUG
         std::cout << "Adding " << from_expr(ns, "", in) << " "

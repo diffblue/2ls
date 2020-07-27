@@ -47,9 +47,7 @@ class optionst;
   "(octagons)" \
   "(equalities)" \
   "(heap)" \
-  "(heap-interval)" \
-  "(heap-zones)" \
-  "(heap-values-refine)" \
+  "(values-refine)" \
   "(sympath)" \
   "(enum-solver)(binsearch-solver)(arrays)"\
   "(string-abstraction)(no-arch)(arch):(floatbv)(fixedbv)" \
@@ -192,9 +190,6 @@ protected:
   void remove_loops_in_entry(goto_modelt &goto_model);
   void create_dynamic_objects(goto_modelt &goto_model);
   void add_dynamic_object_rec(exprt &expr, symbol_tablet &symbol_table);
-  void add_dynamic_object_symbols(
-    const ssa_heap_analysist &heap_analysis,
-    goto_modelt &goto_model);
   void split_same_symbolic_object_assignments(goto_modelt &goto_model);
   void remove_dead_goto(goto_modelt &goto_model);
   void compute_dynobj_instances(

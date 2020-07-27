@@ -162,55 +162,78 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
 
   if(cmdline.isset("havoc"))
     options.set_option("havoc", true);
-  else if(cmdline.isset("equalities"))
-  {
-    options.set_option("equalities", true);
-    options.set_option("std-invariants", true);
-  }
-  else if(cmdline.isset("heap"))
-  {
-    options.set_option("heap", true);
-  }
-  else if(cmdline.isset("heap-interval"))
-  {
-    options.set_option("heap-interval", true);
-    if(cmdline.isset("sympath"))
-      options.set_option("sympath", true);
-  }
-  else if(cmdline.isset("heap-zones"))
-  {
-    options.set_option("heap-zones", true);
-    if(cmdline.isset("sympath"))
-      options.set_option("sympath", true);
-  }
-  else if(cmdline.isset("heap-values-refine"))
-  {
-    options.set_option("heap-values-refine", true);
-    options.set_option("heap-interval", true);
-    if(cmdline.isset("sympath"))
-      options.set_option("sympath", true);
-  }
   else
   {
-    if(cmdline.isset("zones"))
-      options.set_option("zones", true);
-    else if(cmdline.isset("qzones"))
-      options.set_option("qzones", true);
-    else if(cmdline.isset("octagons"))
-      options.set_option("octagons", true);
-    else // if(cmdline.isset("intervals")) // default
-      options.set_option("intervals", true);
+    // Options for using simple domains
+    optionst::value_listt simple_domains;
+    if(cmdline.isset("equalities"))
+    {
+      options.set_option("equalities", true);
+      options.set_option("std-invariants", true);
+      simple_domains.push_back("equalities");
+    }
+    if(cmdline.isset("heap"))
+    {
+      options.set_option("heap", true);
+      simple_domains.push_back("heap");
+    }
 
-    if(cmdline.isset("enum-solver"))
-      options.set_option("enum-solver", true);
-    else // if(cmdline.isset("binsearch-solver")) // default
-      options.set_option("binsearch-solver", true);
+    // Choose only a single value domain
+    if(cmdline.isset("values-refine"))
+    {
+      options.set_option("values-refine", true);
+      options.set_option("intervals", true);
+      simple_domains.push_back("intervals");
+    }
+    else if(cmdline.isset("zones"))
+    {
+      options.set_option("zones", true);
+      simple_domains.push_back("zones");
+    }
+    else if(cmdline.isset("qzones"))
+    {
+      options.set_option("qzones", true);
+      simple_domains.push_back("qzones");
+    }
+    else if(cmdline.isset("octagons"))
+    {
+      options.set_option("octagons", true);
+      simple_domains.push_back("octagons");
+    }
+    else if(cmdline.isset("intervals"))
+    {
+      options.set_option("intervals", true);
+      simple_domains.push_back("intervals");
+    }
+
+    // If no simple domains are specified, use intervals
+    if(simple_domains.empty())
+    {
+      options.set_option("intervals", true);
+      simple_domains.push_back("intervals");
+    }
+
+    // TODO: due to various modifications of options during verification
+    //  (e.g. in summary_checker_ait or in handle_special_functions), it is not
+    //  possible to rely on the content of this option.
+    options.set_option("simple-domains", simple_domains);
+
+    if(options.get_bool_option("values-refine") ||
+       options.get_bool_option("zones") ||
+       options.get_bool_option("qzones") ||
+       options.get_bool_option("octagons") ||
+       options.get_bool_option("intervals"))
+    {
+      // Choose solver for numerical domains
+      if(cmdline.isset("enum-solver"))
+        options.set_option("enum-solver", true);
+      else // if(cmdline.isset("binsearch-solver")) // default
+        options.set_option("binsearch-solver", true);
+    }
   }
 
-  if(cmdline.isset("heap") ||
-     cmdline.isset("heap-interval") ||
-     cmdline.isset("heap-zones") ||
-     cmdline.isset("heap-values-refine"))
+  // Heap domain requires full program inlining and usage of symbolic paths
+  if(cmdline.isset("heap"))
   {
     options.set_option("inline", true);
     options.set_option("sympath", true);
@@ -379,14 +402,6 @@ int twols_parse_optionst::doit()
     return 6;
 
   const namespacet ns(goto_model.symbol_table);
-  ssa_heap_analysist heap_analysis(ns);
-  if((options.get_bool_option("heap") ||
-      options.get_bool_option("heap-interval")) &&
-     !options.get_bool_option("inline"))
-  {
-    heap_analysis(goto_model.goto_functions);
-    add_dynamic_object_symbols(heap_analysis, goto_model);
-  }
 
   if(cmdline.isset("show-stats"))
   {
@@ -403,7 +418,6 @@ int twols_parse_optionst::doit()
     show_ssa(
       goto_model,
       options,
-      heap_analysis,
       function,
       simplify,
       std::cout,
@@ -551,18 +565,18 @@ int twols_parse_optionst::doit()
     if(!options.get_bool_option("k-induction") &&
        !options.get_bool_option("incremental-bmc"))
       checker=std::unique_ptr<summary_checker_baset>(
-        new summary_checker_ait(options, heap_analysis));
+        new summary_checker_ait(options));
     if(options.get_bool_option("k-induction") &&
        !options.get_bool_option("incremental-bmc"))
       checker=std::unique_ptr<summary_checker_baset>(
-        new summary_checker_kindt(options, heap_analysis));
+        new summary_checker_kindt(options));
     if(!options.get_bool_option("k-induction") &&
        options.get_bool_option("incremental-bmc"))
       checker=std::unique_ptr<summary_checker_baset>(
-        new summary_checker_bmct(options, heap_analysis));
+        new summary_checker_bmct(options));
     if(options.get_bool_option("nontermination"))
       checker=std::unique_ptr<summary_checker_baset>(
-        new summary_checker_nontermt(options, heap_analysis));
+        new summary_checker_nontermt(options));
 
     checker->set_message_handler(get_message_handler());
     checker->simplify=!cmdline.isset("no-simplify");
@@ -1561,11 +1575,7 @@ void twols_parse_optionst::help()
     " --heap                       use heap domain\n"
     " --zones                      use zone domain\n"
     " --octagons                   use octagon domain\n"
-    " --heap-interval              use heap domain with interval domain for\n"
-    "                              values\n"
-    " --heap-zones                 use heap domain with zones domain for values\n" // NOLINT(*)
-    " --heap-values-refine         use heap domain with a dynamic refinement\n"
-    "                              of strength of the value domain\n"
+    " --values-refine              use dynamic refinement of strength of the value domain\n" // NOLINT(*)
     " --sympath                    compute invariant for each symbolic path\n"
     "                              (only usable with --heap-* switches)\n"
     " --enum-solver                use solver based on model enumeration\n"

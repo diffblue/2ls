@@ -64,20 +64,6 @@ void assignmentst::build_assignment_map(
       ++n_it;
       const irep_idt fname=to_symbol_expr(
         code_function_call.function()).get_identifier();
-      std::list<symbol_exprt> new_objects;
-      std::set<exprt> modified_objects;
-
-      if(ssa_heap_analysis.has_location(n_it))
-      {
-        new_objects=ssa_heap_analysis[n_it].new_caller_objects(fname, it);
-        modified_objects=ssa_heap_analysis[n_it].modified_objects(fname);
-      }
-
-      // Assign new objects
-      for(auto &o : new_objects)
-      {
-        assign(o, it, ns);
-      }
 
       for(objectst::const_iterator
             o_it=ssa_objects.globals.begin();
@@ -85,36 +71,6 @@ void assignmentst::build_assignment_map(
       {
         if(id2string(o_it->get_identifier())==id2string(fname)+"#return_value")
           assign(*o_it, it, ns);
-      }
-
-      // Assign all modified objects
-      for(const exprt &modified : modified_objects)
-      {
-        const exprt arg=
-          ssa_heap_analysis[n_it].function_map.at(fname).
-            corresponding_expr(modified, code_function_call.arguments(), 0);
-
-        if(arg!=modified)
-        {
-          bool comp=options.get_bool_option("competition-mode");
-          const exprt arg_deref=dereference(
-            arg, ssa_value_ai[it], "", ns, comp);
-          assign(arg_deref, it, ns);
-
-          std::set<symbol_exprt> symbols;
-          find_symbols(arg_deref, symbols);
-          for(const symbol_exprt &symbol : symbols)
-          {
-            if(symbol.type()==arg_deref.type())
-            {
-              auto &aliases=ssa_value_ai[n_it](symbol, ns).value_set;
-              for(auto &alias : aliases)
-              {
-                assign(alias.get_expr(), it, ns);
-              }
-            }
-          }
-        }
       }
 
       // the call might come with an assignment

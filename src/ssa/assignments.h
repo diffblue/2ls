@@ -25,7 +25,6 @@ public:
 
   const ssa_objectst &ssa_objects;
   const ssa_value_ait &ssa_value_ai;
-  const ssa_heap_analysist &ssa_heap_analysis;
 
   typedef ssa_objectst::objectst objectst;
 
@@ -55,11 +54,9 @@ public:
     const namespacet &_ns,
     const optionst &_options,
     const ssa_objectst &_ssa_objects,
-    const ssa_value_ait &_ssa_value_ai,
-    const ssa_heap_analysist &_ssa_heap_analysis):
+    const ssa_value_ait &_ssa_value_ai):
     ssa_objects(_ssa_objects),
     ssa_value_ai(_ssa_value_ai),
-    ssa_heap_analysis(_ssa_heap_analysis),
     options(_options)
   {
     build_assignment_map(_goto_program, _ns);

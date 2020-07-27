@@ -19,7 +19,6 @@ Author: Peter Schrammel
 #include <solvers/refinement/bv_refinement.h>
 #include <solvers/sat/satcheck.h>
 
-#include "domain.h"
 #include "util.h"
 
 // #define DISPLAY_FORMULA

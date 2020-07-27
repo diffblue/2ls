@@ -1,11 +1,11 @@
 SRC = local_ssa.cpp ssa_var_collector.cpp \
       ssa_domain.cpp translate_union_member.cpp \
-      malloc_ssa.cpp ssa_pointed_objects.cpp ssa_heap_domain.cpp \
+      malloc_ssa.cpp ssa_pointed_objects.cpp \
       guard_map.cpp ssa_object.cpp assignments.cpp ssa_dereference.cpp \
       ssa_value_set.cpp address_canonizer.cpp simplify_ssa.cpp \
       ssa_build_goto_trace.cpp ssa_inliner.cpp ssa_unwinder.cpp \
       unwindable_local_ssa.cpp ssa_db.cpp \
-      ssa_pointed_objects.cpp ssa_heap_domain.cpp may_alias_analysis.cpp \
+      ssa_pointed_objects.cpp  may_alias_analysis.cpp \
       dynobj_instance_analysis.cpp
 
 include ../config.inc

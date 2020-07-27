@@ -21,11 +21,10 @@ public:
   strategy_solver_binsearcht(
     tpolyhedra_domaint &_tpolyhedra_domain,
     incremental_solvert &_solver,
-    const namespacet &_ns):
-    strategy_solver_baset(_solver, _ns),
-    tpolyhedra_domain(_tpolyhedra_domain)
-  {
-  }
+    const local_SSAt &SSA,
+    message_handlert &message_handler):
+    strategy_solver_baset(_solver, SSA, message_handler),
+    tpolyhedra_domain(_tpolyhedra_domain) {}
 
   virtual bool iterate(invariantt &inv);
 

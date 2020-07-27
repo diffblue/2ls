@@ -37,12 +37,6 @@ public:
     std_invariants=options.get_bool_option("std-invariants");
   }
 
-  virtual ~template_generator_baset()
-  {
-    if(domain_ptr!=NULL)
-      delete domain_ptr;
-  }
-
   virtual void operator()(
     unsigned _domain_number,
     const local_SSAt &SSA,
@@ -52,11 +46,15 @@ public:
     assert(false);
   }
 
-  virtual domaint::var_sett all_vars();
+  virtual var_sett all_vars();
 
-  inline domaint *domain() { assert(domain_ptr!=NULL); return domain_ptr; }
+  inline domaint *domain()
+  {
+    assert(domain_ptr);
+    return domain_ptr.get();
+  }
 
-  domaint::var_specst var_specs;
+  var_specst var_specs;
   replace_mapt post_renaming_map;
   replace_mapt init_renaming_map;
   replace_mapt aux_renaming_map;
@@ -67,7 +65,7 @@ public:
 protected:
   const ssa_dbt &ssa_db;
   const ssa_local_unwindert &ssa_local_unwinder;
-  domaint *domain_ptr;
+  std::unique_ptr<domaint> domain_ptr;
   bool std_invariants; // include value at loop entry
 
   virtual void collect_variables_loop(
@@ -79,35 +77,34 @@ protected:
     local_SSAt::nodest::const_iterator loop_begin,
     local_SSAt::nodest::const_iterator loop_end);
 
-  void filter_template_domain();
-  void filter_equality_domain();
-  void filter_heap_domain();
-  void filter_heap_interval_domain();
+  var_specst filter_template_domain();
+  var_specst filter_equality_domain();
+  var_specst filter_heap_domain();
 
   void add_var(
-    const domaint::vart &var_to_add,
-    const domaint::guardt &pre_guard,
-    domaint::guardt post_guard,
-    const domaint::kindt &kind,
-    domaint::var_specst &var_specs);
+    const vart &var_to_add,
+    const guardst::guardt &pre_guard,
+    guardst::guardt post_guard,
+    const guardst::kindt &kind,
+    var_specst &var_specs);
   void add_vars(
     const var_listt &vars_to_add,
-    const domaint::guardt &pre_guard,
-    const domaint::guardt &post_guard,
-    const domaint::kindt &kind,
-    domaint::var_specst &var_specs);
+    const guardst::guardt &pre_guard,
+    const guardst::guardt &post_guard,
+    const guardst::kindt &kind,
+    var_specst &var_specs);
   void add_vars(
     const local_SSAt::var_listt &vars_to_add,
-    const domaint::guardt &pre_guard,
-    const domaint::guardt &post_guard,
-    const domaint::kindt &kind,
-    domaint::var_specst &var_specs);
+    const guardst::guardt &pre_guard,
+    const guardst::guardt &post_guard,
+    const guardst::kindt &kind,
+    var_specst &var_specs);
   void add_vars(
     const local_SSAt::var_sett &vars_to_add,
-    const domaint::guardt &pre_guard,
-    const domaint::guardt &post_guard,
-    const domaint::kindt &kind,
-    domaint::var_specst &var_specs);
+    const guardst::guardt &pre_guard,
+    const guardst::guardt &post_guard,
+    const guardst::kindt &kind,
+    var_specst &var_specs);
 
   void get_pre_post_guards(
     const local_SSAt &SSA,

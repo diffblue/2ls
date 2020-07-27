@@ -90,11 +90,10 @@ bool strategy_solver_binsearch3t::iterate(invariantt &_inv)
         symb_values[row]=tpolyhedra_domain.get_row_symb_value(row);
         lower_values[row]=
           simplify_const(
-            solver.get(tpolyhedra_domain.strategy_value_exprs[row]));
+            solver.get(tpolyhedra_domain.strategy_value_exprs[row][0]));
         blocking_constraint.push_back(
           literal_exprt(!tpolyhedra_domain.strategy_cond_literals[row]));
-        if(tpolyhedra_domain.is_row_value_neginf(
-             tpolyhedra_domain.get_row_value(row, inv)))
+        if(inv[row].is_neg_inf())
           improved_from_neginf=true;
       }
     }
@@ -122,9 +121,9 @@ bool strategy_solver_binsearch3t::iterate(invariantt &_inv)
   exprt _lower=lower_values[it->first];
 #if 1
   debug() << "update row " << it->first << ": "
-          << from_expr(ns, "", lower_values[it->first]) << eom;
+          << from_expr(SSA.ns, "", lower_values[it->first]) << eom;
 #endif
-  tpolyhedra_domain.set_row_value(it->first, lower_values[it->first], inv);
+  inv[it->first]=lower_values[it->first];
   exprt _upper=
     tpolyhedra_domain.get_max_row_value(it->first);
   exprt sum=it->second;
@@ -136,9 +135,9 @@ bool strategy_solver_binsearch3t::iterate(invariantt &_inv)
 
 #if 1
     debug() << "update row " << it->first << ": "
-            << from_expr(ns, "", lower_values[it->first]) << eom;
+            << from_expr(SSA.ns, "", lower_values[it->first]) << eom;
 #endif
-    tpolyhedra_domain.set_row_value(it->first, lower_values[it->first], inv);
+    inv[it->first]=lower_values[it->first];
   }
 
   // do not solve system if we have just reached a new loop
@@ -152,15 +151,15 @@ bool strategy_solver_binsearch3t::iterate(invariantt &_inv)
 
 #if 1
   debug() << "symbolic value system: " << eom;
-  debug() << "pre-inv: " << from_expr(ns, "", pre_inv_expr) << eom;
-  debug() << "post-inv: " << from_expr(ns, "", post_inv_expr) << eom;
+  debug() << "pre-inv: " << from_expr(SSA.ns, "", pre_inv_expr) << eom;
+  debug() << "post-inv: " << from_expr(SSA.ns, "", post_inv_expr) << eom;
 #endif
 
   extend_expr_types(sum);
   extend_expr_types(_upper);
   extend_expr_types(_lower);
-  tpolyhedra_domaint::row_valuet upper=simplify_const(_upper);
-  tpolyhedra_domaint::row_valuet lower=simplify_const(_lower);
+  auto upper=tpolyhedra_domaint::row_valuet(simplify_const(_upper));
+  auto lower=tpolyhedra_domaint::row_valuet(simplify_const(_lower));
   assert(sum.type()==upper.type());
   assert(sum.type()==lower.type());
 
@@ -170,7 +169,7 @@ bool strategy_solver_binsearch3t::iterate(invariantt &_inv)
   solver << equal_exprt(sum_bound, sum);
 
 #if 1
-  debug() << from_expr(ns, "", equal_exprt(sum_bound, sum)) << eom;
+  debug() << from_expr(SSA.ns, "", equal_exprt(sum_bound, sum)) << eom;
 #endif
 
   while(tpolyhedra_domain.less_than(lower, upper))
@@ -185,15 +184,15 @@ bool strategy_solver_binsearch3t::iterate(invariantt &_inv)
     exprt c=binary_relation_exprt(sum_bound, ID_ge, middle);
 
 #if 1
-    debug() << "upper: " << from_expr(ns, "", upper) << eom;
-    debug() << "middle: " << from_expr(ns, "", middle) << eom;
-    debug() << "lower: " << from_expr(ns, "", lower) << eom;
+    debug() << "upper: " << from_expr(SSA.ns, "", upper) << eom;
+    debug() << "middle: " << from_expr(SSA.ns, "", middle) << eom;
+    debug() << "lower: " << from_expr(SSA.ns, "", lower) << eom;
 #endif
 
     solver.new_context(); // binary search iteration
 
 #if 1
-    debug() << "constraint: " << from_expr(ns, "", c) << eom;
+    debug() << "constraint: " << from_expr(SSA.ns, "", c) << eom;
 #endif
 
     solver << c;
@@ -210,14 +209,14 @@ bool strategy_solver_binsearch3t::iterate(invariantt &_inv)
       {
 #if 1
         debug() << "update row " << sv.first << " "
-                << from_expr(ns, "", sv.second) << ": ";
+                << from_expr(SSA.ns, "", sv.second) << ": ";
 #endif
         constant_exprt lower_row=
           simplify_const(solver.get(sv.second));
 #if 1
-        debug() << from_expr(ns, "", lower_row) << eom;
+        debug() << from_expr(SSA.ns, "", lower_row) << eom;
 #endif
-        tpolyhedra_domain.set_row_value(sv.first, lower_row, inv);
+        inv[sv.first]=lower_row;
       }
     }
     else

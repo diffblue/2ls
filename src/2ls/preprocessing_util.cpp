@@ -435,44 +435,6 @@ void twols_parse_optionst::add_dynamic_object_rec(
   }
 }
 
-/// Add symbols for all dynamic objects in the program into the symbol table.
-void twols_parse_optionst::add_dynamic_object_symbols(
-  const ssa_heap_analysist &heap_analysis,
-  goto_modelt &goto_model)
-{
-  forall_goto_functions(f_it, goto_model.goto_functions)
-  {
-    forall_goto_program_instructions(i_it, f_it->second.body)
-    {
-      if(i_it->is_function_call())
-      {
-        auto &fun_call=to_code_function_call(i_it->code);
-        const irep_idt fname=
-          to_symbol_expr(fun_call.function()).get_identifier();
-        auto n_it=i_it;
-        ++n_it;
-        for(const symbol_exprt &o :
-          heap_analysis[n_it].new_caller_objects(fname, i_it))
-        {
-          // New symbol
-          symbolt object_symbol;
-
-          object_symbol.name=o.get_identifier();
-          object_symbol.base_name=id2string(object_symbol.name).substr(5);
-          object_symbol.is_lvalue=true;
-
-          object_symbol.type=o.type();
-          object_symbol.type.set("#dynamic", true);
-
-          object_symbol.mode=ID_C;
-
-          goto_model.symbol_table.add(object_symbol);
-        }
-      }
-    }
-  }
-}
-
 /// Split assignments that have same symbolic dereference object on both sides
 /// into two separate assignments.
 void twols_parse_optionst::split_same_symbolic_object_assignments(
@@ -662,8 +624,7 @@ std::map<symbol_exprt, size_t> twols_parse_optionst::split_dynamic_objects(
     if(!f_it->second.body_available())
       continue;
     namespacet ns(goto_model.symbol_table);
-    ssa_value_ait value_analysis(
-      f_it->second, ns, options, ssa_heap_analysist(ns));
+    ssa_value_ait value_analysis(f_it->second, ns, options);
     dynobj_instance_analysist do_inst(
       f_it->second, ns, options, value_analysis);
 

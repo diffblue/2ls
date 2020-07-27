@@ -14,6 +14,7 @@ Author: Peter Schrammel
 #endif
 
 #include "strategy_solver_binsearch.h"
+#include "ssa/local_ssa.h"
 #include "util.h"
 
 bool strategy_solver_binsearcht::iterate(invariantt &_inv)
@@ -119,8 +120,9 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 
     tpolyhedra_domaint::row_valuet upper=
       tpolyhedra_domain.get_max_row_value(row);
-    tpolyhedra_domaint::row_valuet lower=
-      simplify_const(solver.get(tpolyhedra_domain.strategy_value_exprs[row]));
+    tpolyhedra_domaint::row_valuet lower=tpolyhedra_domaint::row_valuet(
+      simplify_const(
+        solver.get(tpolyhedra_domain.strategy_value_exprs[row][0])));
 
     solver.pop_context();  // improvement check
 
@@ -220,11 +222,11 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
       solver.pop_context(); // binary search iteration
     }
 
-    debug() << "update value: " << from_expr(ns, "", lower) << eom;
+    debug() << "update value: " << from_expr(SSA.ns, "", lower) << eom;
 
     solver.pop_context();  // symbolic value system
 
-    tpolyhedra_domain.set_row_value(row, lower, inv);
+    inv[row]=lower;
     improved=true;
   }
   else

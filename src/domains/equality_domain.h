@@ -17,97 +17,98 @@ Author: Peter Schrammel
 #include <util/std_expr.h>
 #include <util/union_find.h>
 
-#include "domain.h"
+#include "simple_domain.h"
 
-class equality_domaint:public domaint
+class equality_domaint:public simple_domaint
 {
 public:
-  typedef std::pair<vart, vart> var_pairt;
-  typedef std::set<var_pairt> var_pairst;
   typedef std::set<unsigned> index_sett;
 
-equality_domaint(
-  unsigned _domain_number,
-  replace_mapt &_renaming_map,
-  const var_specst &var_specs,
-  const namespacet &ns):
-  domaint(_domain_number, _renaming_map, ns)
+  equality_domaint(
+    unsigned _domain_number,
+    replace_mapt &_renaming_map,
+    const var_specst &var_specs,
+    const namespacet &ns):
+    simple_domaint(_domain_number, _renaming_map, ns)
   {
     make_template(var_specs, ns);
   }
 
-  class equ_valuet:public valuet
+  struct template_row_exprt:simple_domaint::template_row_exprt
   {
-  public:
-    union_find<vart> equs;
-    index_sett disequs;
+    vart first;
+    vart second;
+
+    template_row_exprt(const vart &first, const vart &second):
+      first(first), second(second) {}
+
+    std::vector<exprt> get_row_exprs() override { return {}; };
+    void output(std::ostream &out, const namespacet &ns) const override;
   };
 
-  typedef struct
+  struct equ_valuet:simple_domaint::valuet
   {
-    guardt pre_guard;
-    guardt post_guard;
-    equality_domaint::var_pairt var_pair;
-    exprt aux_expr;
-    kindt kind;
-  } template_rowt;
+    union_find<vart> equs;
+    index_sett disequs;
 
-  typedef std::vector<template_rowt> templatet;
+    exprt get_row_expr(rowt row, const template_rowt &templ_row) const override;
 
-  const exprt initialize_solver(
-    const local_SSAt &SSA,
-    const exprt &precondition,
-    template_generator_baset &template_generator);
+    void set_equal(const vart &first, const vart &second)
+    {
+      equs.make_union(first, second);
+    }
 
-  virtual void initialize(valuet &value);
+    void set_disequal(unsigned index) { disequs.insert(index); }
 
-  virtual void solver_iter_init(valuet &value);
+    equ_valuet *clone() override { return new equ_valuet(*this); }
+  };
 
-  virtual bool has_something_to_solve();
+  std::unique_ptr<domaint::valuet> new_value() override
+  {
+    return std::unique_ptr<domaint::valuet>(new equ_valuet());
+  }
 
-  bool edit_row(const rowt &row, valuet &inv, bool improved);
+  void initialize() override;
 
-  void post_edit();
+  void initialize_value(domaint::valuet &value) override;
 
-  std::vector<exprt> get_required_smt_values(size_t row);
-  void set_smt_values(std::vector<exprt> got_values, size_t row);
+  void init_value_solver_iteration(domaint::valuet &value) override;
 
-  exprt to_pre_constraints(valuet &_value);
+  bool has_something_to_solve() override;
+
+  bool edit_row(const rowt &row, valuet &inv, bool improved) override;
+
+  void finalize_solver_iteration() override;
+
+  exprt to_pre_constraints(const valuet &_value) override;
 
   void make_not_post_constraints(
-    valuet &_value,
-    exprt::operandst &cond_exprs);
+    const valuet &_value,
+    exprt::operandst &cond_exprs) override;
 
-  bool handle_unsat(valuet &value, bool improved);
-  exprt make_permanent(valuet &value);
+  exprt get_row_value_constraint(
+    rowt row,
+    const simple_domaint::valuet &value) override;
 
-  exprt get_pre_equ_constraint(unsigned index);
-  exprt get_post_not_equ_constraint(unsigned index);
-  exprt get_pre_disequ_constraint(unsigned index);
-  exprt get_post_not_disequ_constraint(unsigned index);
+  bool handle_unsat(valuet &value, bool improved) override;
+  exprt get_permanent_expr(valuet &value) override;
 
   void set_equal(unsigned index, equ_valuet &value);
   void set_disequal(unsigned index, equ_valuet &value);
 
-  virtual void output_value(
+  void output_value(
     std::ostream &out,
-    const valuet &value,
-    const namespacet &ns) const;
+    const domaint::valuet &value,
+    const namespacet &ns) const override;
 
-  virtual void output_domain(std::ostream &out, const namespacet &ns) const;
-
-  virtual void project_on_vars(
-    valuet &value,
+  void project_on_vars(
+    domaint::valuet &value,
     const var_sett &vars,
-    exprt &result);
+    exprt &result) override;
 
   void get_index_set(index_sett &indices);
-  const var_pairt &get_var_pair(unsigned index);
 
 protected:
-  templatet templ;
-  exprt value;
-
   void make_template(
     const var_specst &var_specs,
     const namespacet &ns);
@@ -118,8 +119,8 @@ public:
   worklistt::iterator e_it;
   worklistt todo_equs;
   worklistt todo_disequs;
-  bool check_dis;
-  bool unsatisfiable;
+  bool check_dis=false;
+  bool unsatisfiable=false;
 };
 
 #endif // CPROVER_2LS_DOMAINS_EQUALITY_DOMAIN_H

@@ -1,6 +1,6 @@
 CORE
 main.c
---heap-interval --no-propagation --k-induction
+--heap --intervals --no-propagation --k-induction
 ^EXIT=10$
 ^SIGNAL=0$
 ^VERIFICATION FAILED$

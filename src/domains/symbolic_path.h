@@ -26,6 +26,14 @@ public:
 
   bool &operator[](const exprt &expr) { return path_map[expr]; }
 
+  // Compare for equality by comparing expressions
+  bool operator==(const symbolic_patht &rhs) const
+  {
+    return get_expr()==rhs.get_expr();
+  }
+  bool operator!=(const symbolic_patht &rhs) const { return !(rhs==*this); }
+
+  bool empty() { return path_map.empty(); }
   void clear() { path_map.clear(); }
 };
 

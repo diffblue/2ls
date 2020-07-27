@@ -20,6 +20,7 @@ Author: Peter Schrammel
 #include <util/i2string.h>
 
 #include "strategy_solver_binsearch2.h"
+#include "ssa/local_ssa.h"
 #include "util.h"
 
 #define SUM_BOUND_VAR "sum_bound#"
@@ -94,11 +95,10 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
         symb_values[row]=tpolyhedra_domain.get_row_symb_value(row);
         lower_values[row]=
           simplify_const(
-            solver.get(tpolyhedra_domain.strategy_value_exprs[row]));
+            solver.get(tpolyhedra_domain.strategy_value_exprs[row][0]));
         blocking_constraint.push_back(
           literal_exprt(!tpolyhedra_domain.strategy_cond_literals[row]));
-        if(tpolyhedra_domain.is_row_value_neginf(
-             tpolyhedra_domain.get_row_value(row, inv)))
+        if(inv[row].is_neg_inf())
           improved_from_neginf=true;
       }
     }
@@ -126,9 +126,9 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
   exprt _lower=lower_values[it->first];
 #if 1
   debug() << "update row " << it->first << ": "
-          << from_expr(ns, "", lower_values[it->first]) << eom;
+          << from_expr(SSA.ns, "", lower_values[it->first]) << eom;
 #endif
-  tpolyhedra_domain.set_row_value(it->first, lower_values[it->first], inv);
+  inv[it->first]=lower_values[it->first];
   exprt _upper=
     tpolyhedra_domain.get_max_row_value(it->first);
   exprt sum=it->second;
@@ -140,9 +140,9 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
 
 #if 1
     debug() << "update row " << it->first << ": "
-            << from_expr(ns, "", lower_values[it->first]) << eom;
+            << from_expr(SSA.ns, "", lower_values[it->first]) << eom;
 #endif
-    tpolyhedra_domain.set_row_value(it->first, lower_values[it->first], inv);
+    inv[it->first]=lower_values[it->first];
   }
 
   // do not solve system if we have just reached a new loop
@@ -156,9 +156,9 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
   extend_expr_types(sum);
   extend_expr_types(_upper);
   extend_expr_types(_lower);
-  tpolyhedra_domaint::row_valuet upper=simplify_const(_upper);
+  auto upper=tpolyhedra_domaint::row_valuet(simplify_const(_upper));
   // from_integer(mp_integer(512), _upper.type());
-  tpolyhedra_domaint::row_valuet lower=simplify_const(_lower);
+  auto lower=tpolyhedra_domaint::row_valuet(simplify_const(_lower));
   assert(sum.type()==upper.type());
   assert(sum.type()==lower.type());
 
@@ -208,14 +208,14 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
       {
 #if 1
         debug() << "update row " << sv.first << " "
-                << from_expr(ns, "", sv.second) << ": ";
+                << from_expr(SSA.ns, "", sv.second) << ": ";
 #endif
         constant_exprt lower_row=
           simplify_const(solver.get(sv.second));
 #if 1
-        debug() << from_expr(ns, "", lower_row) << eom;
+        debug() << from_expr(SSA.ns, "", lower_row) << eom;
 #endif
-        tpolyhedra_domain.set_row_value(sv.first, lower_row, inv);
+        inv[sv.first]=lower_row;
       }
     }
     else

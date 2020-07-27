@@ -17,7 +17,7 @@ property_checkert::resultt summary_checker_ait::operator()(
 {
   const namespacet ns(goto_model.symbol_table);
 
-  SSA_functions(goto_model, ns, heap_analysis);
+  SSA_functions(goto_model, ns);
 
   ssa_unwinder.init(false, false);
 
@@ -74,12 +74,12 @@ property_checkert::resultt summary_checker_ait::operator()(
     report_statistics();
 
     if(result==property_checkert::UNKNOWN &&
-       options.get_bool_option("heap-values-refine") &&
-       options.get_bool_option("heap-interval"))
+       options.get_bool_option("values-refine") &&
+       options.get_bool_option("intervals"))
     {
       summary_db.clear();
-      options.set_option("heap-interval", false);
-      options.set_option("heap-zones", true);
+      options.set_option("intervals", false);
+      options.set_option("zones", true);
     }
     else
     {

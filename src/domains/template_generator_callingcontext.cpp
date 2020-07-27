@@ -35,7 +35,7 @@ void template_generator_callingcontextt::operator()(
 
 #if 1
   debug() << "Template variables: " << eom;
-  domaint::output_var_specs(debug(), var_specs, SSA.ns); debug() << eom;
+  var_specs.output(debug(), SSA.ns); debug() << eom;
   debug() << "Template: " << eom;
   domain_ptr->output_domain(debug(), SSA.ns); debug() << eom;
 #endif
@@ -80,7 +80,7 @@ void template_generator_callingcontextt::collect_variables_callingcontext(
         *v_it,
         guard,
         guard,
-        domaint::OUT, // the same for both forward and backward
+        guardst::OUT, // the same for both forward and backward
         var_specs);
     }
   }
@@ -97,16 +97,16 @@ void template_generator_callingcontextt::collect_variables_callingcontext(
     std::set<symbol_exprt> args;
     find_symbols(*a_it, args);
     exprt arg=*a_it;
-    add_vars(args, guard, guard, domaint::OUT, var_specs);
+    add_vars(args, guard, guard, guardst::OUT, var_specs);
   }
 }
 
-domaint::var_sett template_generator_callingcontextt::callingcontext_vars()
+var_sett template_generator_callingcontextt::callingcontext_vars()
 {
-  domaint::var_sett vars;
+  var_sett vars;
   for(const auto &v : var_specs)
   {
-    if(v.kind==domaint::OUT)
+    if(v.guards.kind==guardst::OUT)
       vars.insert(v.var);
   }
   return vars;

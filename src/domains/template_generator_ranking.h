@@ -35,7 +35,7 @@ protected:
     const local_SSAt &SSA,
     bool forward);
 
-  void filter_ranking_domain(domaint::var_specst &var_specs);
+  void filter_ranking_domain(var_specst &var_specs);
 };
 
 #endif // CPROVER_2LS_DOMAINS_TEMPLATE_GENERATOR_RANKING_H

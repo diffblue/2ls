@@ -1,6 +1,6 @@
 CORE
 main.c
---heap-interval --no-propagation
+--heap --intervals --no-propagation
 ^EXIT=5$
 ^SIGNAL=0$
 ^VERIFICATION INCONCLUSIVE$

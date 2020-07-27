@@ -58,8 +58,6 @@ void ssa_inlinert::get_summary(
   std::cout << std::endl;
 #endif
 
-  bindings.push_back(get_replace_new_objects(SSA, *f_it, loc, summary));
-
   // equalities for arguments
   bindings.push_back(
     get_replace_params(
@@ -1211,56 +1209,3 @@ bool ssa_inlinert::cs_heap_covered(const exprt &expr)
          covered_cs_heap_out.end();
 }
 
-exprt ssa_inlinert::get_replace_new_objects(
-  const local_SSAt &SSA,
-  const function_application_exprt funapp_expr,
-  local_SSAt::locationt loc,
-  const summaryt &summary)
-{
-  exprt::operandst binding;
-
-  const irep_idt &fname=to_symbol_expr(funapp_expr.function()).get_identifier();
-
-  auto next_loc=loc;
-  ++next_loc;
-  if(SSA.heap_analysis.has_location(next_loc))
-  {
-    const ssa_heap_domaint &heap_domain=SSA.heap_analysis[next_loc];
-
-    const std::list<symbol_exprt> callee_objects=
-      heap_domain.new_objects(fname);
-    const std::list<symbol_exprt> caller_objects=
-      heap_domain.new_caller_objects(fname, loc);
-
-    auto callee_it=callee_objects.begin();
-    for(auto caller_it=caller_objects.begin(); caller_it!=caller_objects.end();
-        ++caller_it, ++callee_it)
-    {
-      const typet symbol_type=caller_it->type();
-      const typet type=SSA.ns.follow(symbol_type);
-
-      const exprt lhs_expr=
-        param_out_transformer(*callee_it, type, summary.globals_out);
-      const exprt rhs_expr=
-        arg_out_transformer(*caller_it, symbol_type, type, SSA, loc);
-      binding.push_back(equal_exprt(lhs_expr, rhs_expr));
-
-      if(type.id()==ID_struct)
-      {
-        for(auto &component : to_struct_type(type).components())
-        {
-          const exprt lhs_comp_expr=
-            param_out_member_transformer(
-              *callee_it,
-              component,
-              summary.globals_out);
-          const exprt rhs_comp_expr=
-            arg_out_member_transformer(*caller_it, component, SSA, loc);
-          binding.push_back(equal_exprt(lhs_comp_expr, rhs_comp_expr));
-        }
-      }
-    }
-  }
-
-  return conjunction(binding);
-}

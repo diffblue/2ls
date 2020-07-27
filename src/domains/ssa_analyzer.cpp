@@ -31,13 +31,22 @@ Author: Peter Schrammel
 #include "predabs_domain.h"
 #include "template_generator_ranking.h"
 #include "ssa_analyzer.h"
-#include "strategy_solver_heap_tpolyhedra.h"
-#include "strategy_solver_heap_tpolyhedra_sympath.h"
-#include "strategy_solver.h"
+#include "strategy_solver_sympath.h"
+#include "strategy_solver_simple.h"
+#include "heap_domain.h"
+#include "strategy_solver_product.h"
 
 // NOLINTNEXTLINE(*)
+#define SIMPLE_SOLVER(domain_ptr, domain_type) strategy_solver_simplet(\
+  *dynamic_cast<domain_type *>(domain_ptr), \
+  solver, \
+  SSA, \
+  get_message_handler())
 #define BINSEARCH_SOLVER strategy_solver_binsearcht(\
-  *static_cast<tpolyhedra_domaint *>(domain), solver, SSA.ns)
+  *dynamic_cast<tpolyhedra_domaint *>(simple_domains[next_domain++]), \
+  solver, \
+  SSA, \
+  get_message_handler())
 #if 0
 // NOLINTNEXTLINE(*)
 #define BINSEARCH_SOLVER strategy_solver_binsearch2t(\
@@ -67,120 +76,12 @@ void ssa_analyzert::operator()(
 
   domain=template_generator.domain();
 
-  // get strategy solver from options
-  strategy_solver_baset *s_solver;
-  if(template_generator.options.get_bool_option("compute-ranking-functions"))
-  {
-    if(template_generator.options.get_bool_option(
-         "monolithic-ranking-function"))
-    {
-    s_solver=new strategy_solvert(
-      *static_cast<linrank_domaint *>(domain),
-      solver,
-      SSA,
-      precondition,
-      get_message_handler(),
-      template_generator);
-      result=new linrank_domaint::templ_valuet();
-    }
-    else
-    {
-    s_solver=new strategy_solvert(
-      *static_cast<lexlinrank_domaint *>(domain),
-      solver,
-      SSA,
-      precondition,
-      get_message_handler(),
-      template_generator);
-      result=new lexlinrank_domaint::templ_valuet();
-    }
-  }
-  else if(template_generator.options.get_bool_option("equalities"))
-  {
-    s_solver=new strategy_solvert(
-      *static_cast<equality_domaint *>(domain),
-      solver,
-      SSA,
-      precondition,
-      get_message_handler(),
-      template_generator);
-      result=new equality_domaint::equ_valuet();
-  }
-  else if(template_generator.options.get_bool_option("heap"))
-  {
-    s_solver=new strategy_solvert(
-      *static_cast<heap_domaint *>(domain),
-      solver,
-      SSA,
-      precondition,
-      get_message_handler(),
-      template_generator);
-    result=new heap_domaint::heap_valuet();
-  }
-  else if(template_generator.options.get_bool_option("heap-interval")
-          || template_generator.options.get_bool_option("heap-zones"))
-  {
-    if(template_generator.options.get_bool_option("sympath"))
-    {
-      s_solver=new strategy_solver_heap_tpolyhedra_sympatht(
-        *static_cast<heap_tpolyhedra_sympath_domaint *>(domain),
-        solver,
-        SSA,
-        precondition,
-        get_message_handler(),
-        template_generator);
-      result=
-        new heap_tpolyhedra_sympath_domaint::heap_tpolyhedra_sympath_valuet();
-    }
-    else
-    {
-      s_solver=new strategy_solver_heap_tpolyhedrat(
-        *static_cast<heap_tpolyhedra_domaint *>(domain),
-        solver,
-        SSA,
-        precondition,
-        get_message_handler(),
-        template_generator);
-      result=new heap_tpolyhedra_domaint::heap_tpolyhedra_valuet();
-    }
-  }
-  else
-  {
-    if(template_generator.options.get_bool_option("enum-solver"))
-    {
-      s_solver=new strategy_solvert(
-        *static_cast<tpolyhedra_domaint *>(domain),
-        solver,
-        SSA,
-        precondition,
-        get_message_handler(),
-        template_generator);
-      result=new tpolyhedra_domaint::templ_valuet();
-    }
-    else if(template_generator.options.get_bool_option("predabs-solver"))
-    {
-      s_solver=new strategy_solvert(
-        *static_cast<predabs_domaint *>(domain),
-        solver,
-        SSA,
-        precondition,
-        get_message_handler(),
-        template_generator);
-      result=new predabs_domaint::templ_valuet();
-    }
-    else if(template_generator.options.get_bool_option("binsearch-solver"))
-    {
-      result=new tpolyhedra_domaint::templ_valuet();
-      s_solver=new BINSEARCH_SOLVER;
-    }
-    else
-      assert(false);
-  }
-
-  s_solver->set_message_handler(get_message_handler());
+  // Get a strategy solver and a new abstract value (invariant)
+  auto s_solver=domain->new_strategy_solver(solver, SSA, get_message_handler());
+  result=domain->new_value();
 
   // initialize inv
-  domain->initialize(*result);
+  domain->initialize_value(*result);
 
   // iterate
   while(s_solver->iterate(*result)) {}
@@ -191,24 +92,9 @@ void ssa_analyzert::operator()(
   solver_instances+=s_solver->get_number_of_solver_instances();
   solver_calls+=s_solver->get_number_of_solver_calls();
   solver_instances+=s_solver->get_number_of_solver_instances();
-
-  delete s_solver;
 }
 
-void ssa_analyzert::get_result(exprt &_result, const domaint::var_sett &vars)
+void ssa_analyzert::get_result(exprt &_result, const var_sett &vars)
 {
   domain->project_on_vars(*result, vars, _result);
-}
-
-void ssa_analyzert::update_heap_out(summaryt::var_sett &out)
-{
-  heap_domaint &heap_domain=static_cast<heap_domaint &>(*domain);
-
-  auto new_heap_vars=heap_domain.get_new_heap_vars();
-  out.insert(new_heap_vars.begin(), new_heap_vars.end());
-}
-
-const exprt ssa_analyzert::input_heap_bindings()
-{
-  return static_cast<heap_domaint &>(*domain).get_iterator_bindings();
 }

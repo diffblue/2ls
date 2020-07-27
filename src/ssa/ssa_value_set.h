@@ -16,7 +16,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/options.h>
 
 #include "ssa_object.h"
-#include "ssa_heap_domain.h"
 
 class ssa_value_domaint:public ai_domain_baset
 {
@@ -120,11 +119,9 @@ public:
   ssa_value_ait(
     const goto_functionst::goto_functiont &goto_function,
     const namespacet &ns_,
-    const optionst &_options,
-    const ssa_heap_analysist &_heap_analysis):
+    const optionst &_options):
     ns(ns_),
-    options(_options),
-    heap_analysis(_heap_analysis)
+    options(_options)
   {
     operator()(goto_function, ns_);
   }
@@ -139,8 +136,6 @@ protected:
 
   const namespacet &ns;
   const optionst &options;
-
-  const ssa_heap_analysist &heap_analysis;
 
   friend class ssa_value_domaint;
 };

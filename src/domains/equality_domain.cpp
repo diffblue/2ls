@@ -22,14 +22,22 @@ Author: Peter Schrammel
 #include "equality_domain.h"
 #include "util.h"
 
-void equality_domaint::initialize(valuet &value)
+exprt equality_domaint::equ_valuet::get_row_expr(
+  rowt row,
+  const simple_domaint::template_rowt &templ_row) const
 {
-  equ_valuet &v=static_cast<equ_valuet &>(value);
+  auto &templ_row_expr=dynamic_cast<template_row_exprt &>(*templ_row.expr);
+  return equal_exprt(templ_row_expr.first, templ_row_expr.second);
+}
+
+void equality_domaint::initialize_value(domaint::valuet &value)
+{
+  auto &v=dynamic_cast<equ_valuet &>(value);
   v.equs.clear();
   v.disequs.clear();
 }
 
-void equality_domaint::solver_iter_init(valuet &value)
+void equality_domaint::init_value_solver_iteration(domaint::valuet &value)
 {
   e_it=todo_equs.begin();
   unsatisfiable=false;
@@ -51,17 +59,6 @@ bool equality_domaint::has_something_to_solve()
   return false;
 }
 
-std::vector<exprt> equality_domaint::get_required_smt_values(size_t row)
-{
-  std::vector<exprt> r;
-  return r;
-}
-
-void equality_domaint::set_smt_values(std::vector<exprt> got_values, size_t row)
-{
-  todo_disequs.insert(*e_it);
-}
-
 bool equality_domaint::edit_row(const rowt &row, valuet &inv, bool improved)
 {
   if(!check_dis)
@@ -69,7 +66,7 @@ bool equality_domaint::edit_row(const rowt &row, valuet &inv, bool improved)
   return true;
 }
 
-void equality_domaint::post_edit()
+void equality_domaint::finalize_solver_iteration()
 {
   if(check_dis)
     todo_disequs.erase(e_it);
@@ -77,93 +74,44 @@ void equality_domaint::post_edit()
     todo_equs.erase(e_it);
 }
 
-exprt equality_domaint::to_pre_constraints(valuet &_value)
+exprt equality_domaint::to_pre_constraints(const valuet &value)
 {
-  if(check_dis)
-    return get_pre_disequ_constraint(*e_it);
-  assert(*e_it<templ.size());
-  const template_rowt &templ_row=templ[*e_it];
-  if(templ_row.kind==OUT || templ_row.kind==OUTL)
-    return true_exprt();
-
-  const var_pairt &vv=templ_row.var_pair;
-  return implies_exprt(templ_row.pre_guard, equal_exprt(vv.first, vv.second));
+  return get_row_pre_constraint(*e_it, value);
 }
 
 void equality_domaint::make_not_post_constraints(
-  valuet &_value,
+  const valuet &value,
   exprt::operandst &cond_exprs)
 {
-  assert(*e_it<templ.size());
-  cond_exprs.resize(1);
+  cond_exprs.clear();
+  if(templ[*e_it].guards.kind==guardst::IN)
+    cond_exprs.push_back(true_exprt());
+  else
+    cond_exprs.push_back(get_row_post_constraint(*e_it, value));
+}
+
+exprt equality_domaint::get_row_value_constraint(
+  rowt row,
+  const simple_domaint::valuet &value)
+{
+  exprt row_value_expr=value.get_row_expr(row, templ[row]);
   if(check_dis)
-  {
-    cond_exprs[0]=get_post_not_disequ_constraint(*e_it);
-    return;
-  }
-  const template_rowt &templ_row=templ[*e_it];
-  if(templ_row.kind==IN)
-  {
-    cond_exprs[0]=true_exprt();
-    return;
-  }
-
-  const var_pairt &vv=templ_row.var_pair;
-  exprt c=
-    and_exprt(
-      templ_row.aux_expr,
-      not_exprt(
-        implies_exprt(
-          templ_row.post_guard,
-          equal_exprt(vv.first, vv.second))));
-  rename(c);
-  cond_exprs[0]=c;
-}
-
-exprt equality_domaint::get_pre_equ_constraint(unsigned index)
-{
-  assert(index<templ.size());
-  const template_rowt &templ_row=templ[index];
-  if(templ_row.kind==OUT || templ_row.kind==OUTL)
-    return true_exprt();
-
-  const var_pairt &vv=templ_row.var_pair;
-  return implies_exprt(templ_row.pre_guard, equal_exprt(vv.first, vv.second));
-}
-
-exprt equality_domaint::get_post_not_equ_constraint(unsigned index)
-{
-  assert(index<templ.size());
-  const template_rowt &templ_row=templ[index];
-  if(templ_row.kind==IN)
-    return true_exprt();
-
-  const var_pairt &vv=templ_row.var_pair;
-  exprt c=
-    and_exprt(
-      templ_row.aux_expr,
-      not_exprt(
-        implies_exprt(
-          templ_row.post_guard,
-          equal_exprt(vv.first, vv.second))));
-  rename(c);
-  return c;
+    row_value_expr=not_exprt(row_value_expr);
+  return row_value_expr;
 }
 
 bool equality_domaint::handle_unsat(valuet &value, bool improved)
 {
-  equality_domaint::equ_valuet &inv=
-    static_cast<equality_domaint::equ_valuet &>(value);
+  auto &inv=dynamic_cast<equality_domaint::equ_valuet &>(value);
   if(check_dis)
     set_disequal(*e_it, inv);
   unsatisfiable=true;
   return true;
 }
 
-exprt equality_domaint::make_permanent(valuet &value)
+exprt equality_domaint::get_permanent_expr(valuet &value)
 {
-  equality_domaint::equ_valuet &inv=
-    static_cast<equality_domaint::equ_valuet &>(value);
+  auto &inv=dynamic_cast<equality_domaint::equ_valuet &>(value);
   if(unsatisfiable)
   {
     if(!check_dis)
@@ -180,39 +128,8 @@ exprt equality_domaint::make_permanent(valuet &value)
   return true_exprt();
 }
 
-exprt equality_domaint::get_pre_disequ_constraint(unsigned index)
-{
-  assert(index<templ.size());
-  const template_rowt &templ_row=templ[index];
-  if(templ_row.kind==OUT || templ_row.kind==OUTL)
-    return true_exprt();
-
-  const var_pairt &vv=templ_row.var_pair;
-  return
-    implies_exprt(templ_row.pre_guard, notequal_exprt(vv.first, vv.second));
-}
-
-exprt equality_domaint::get_post_not_disequ_constraint(unsigned index)
-{
-  assert(index<templ.size());
-  const template_rowt &templ_row=templ[index];
-  if(templ_row.kind==IN)
-    return true_exprt();
-
-  const var_pairt &vv=templ_row.var_pair;
-  exprt c=
-    and_exprt(
-      templ_row.aux_expr,
-      not_exprt(
-        implies_exprt(
-          templ_row.post_guard,
-          notequal_exprt(vv.first, vv.second))));
-  rename(c);
-  return c;
-}
-
 void equality_domaint::project_on_vars(
-  valuet &value,
+  domaint::valuet &value,
   const var_sett &vars,
   exprt &result)
 {
@@ -221,52 +138,48 @@ void equality_domaint::project_on_vars(
     return domaint::project_on_vars(value, vars, result);
 #endif
 
-  equ_valuet &v=static_cast<equ_valuet &>(value);
+  auto &v=dynamic_cast<equ_valuet &>(value);
 
   exprt::operandst c;
-  for(unsigned index=0; index<templ.size(); index++)
+  for(rowt row=0; row<templ.size(); row++)
   {
-    const var_pairt &vv=templ[index].var_pair;
+    auto &templ_row_expr=dynamic_cast<template_row_exprt &>(*templ[row].expr);
 
 #if 0
     std::cout << vv.second << std::endl;
 #endif
-    if(vars.find(vv.first)==vars.end() ||
-       (vars.find(vv.second)==vars.end() &&
-        !(vv.second.id()==ID_constant &&
-          to_constant_expr(vv.second).get_value()=="NULL")))
+    if(vars.find(templ_row_expr.first)==vars.end() ||
+       (vars.find(templ_row_expr.second)==vars.end() &&
+        !(templ_row_expr.second.id()==ID_constant &&
+          to_constant_expr(templ_row_expr.second).get_value()=="NULL")))
       continue;
 
-    if(v.equs.same_set(vv.first, vv.second))
+    if(v.equs.same_set(templ_row_expr.first, templ_row_expr.second))
     {
-      if(templ[index].kind==LOOP)
-        c.push_back(
-          implies_exprt(
-            templ[index].pre_guard,
-            equal_exprt(vv.first, vv.second)));
+      check_dis=false;
+      if(templ[row].guards.kind==guardst::LOOP)
+        c.push_back(get_row_pre_constraint(row, v));
       else
-        c.push_back(equal_exprt(vv.first, vv.second));
+        c.push_back(get_row_value_constraint(row, v));
     }
   }
 
-  for(index_sett::const_iterator it=v.disequs.begin();
-      it!=v.disequs.end(); it++)
+  for(auto &disequ : v.disequs)
   {
-    const var_pairt &vv=templ[*it].var_pair;
+    auto &templ_row_expr=
+      dynamic_cast<template_row_exprt &>(*templ[disequ].expr);
 
-    if(vars.find(vv.first)==vars.end() ||
-       (vars.find(vv.second)==vars.end() &&
-        !(vv.second.id()==ID_constant &&
-          to_constant_expr(vv.second).get_value()=="NULL")))
+    if(vars.find(templ_row_expr.first)==vars.end() ||
+       (vars.find(templ_row_expr.second)==vars.end() &&
+        !(templ_row_expr.second.id()==ID_constant &&
+          to_constant_expr(templ_row_expr.second).get_value()=="NULL")))
       continue;
 
-    if(templ[*it].kind==LOOP)
-      c.push_back(
-        implies_exprt(
-          templ[*it].pre_guard,
-          notequal_exprt(vv.first, vv.second)));
+    check_dis=true;
+    if(templ[disequ].guards.kind==guardst::LOOP)
+      c.push_back(get_row_pre_constraint(disequ, v));
     else
-      c.push_back(notequal_exprt(vv.first, vv.second));
+      c.push_back(get_row_value_constraint(disequ, v));
   }
   result=conjunction(c);
 }
@@ -275,81 +188,41 @@ void equality_domaint::set_equal(
   unsigned index, equ_valuet &value)
 {
   assert(index<templ.size());
-  const var_pairt &vv=templ[index].var_pair;
-  value.equs.make_union(vv.first, vv.second);
+  auto &templ_row_expr=dynamic_cast<template_row_exprt &>(*templ[index].expr);
+  value.set_equal(templ_row_expr.first, templ_row_expr.second);
 }
 
 void equality_domaint::set_disequal(
   unsigned index, equ_valuet &value)
 {
   assert(index<templ.size());
-  value.disequs.insert(index);
-}
-
-const equality_domaint::var_pairt &equality_domaint::get_var_pair(
-  unsigned index)
-{
-  assert(index<templ.size());
-  return templ[index].var_pair;
+  value.set_disequal(index);
 }
 
 void equality_domaint::output_value(
   std::ostream &out,
-  const valuet &value,
+  const domaint::valuet &value,
   const namespacet &ns) const
 {
-  const equ_valuet &_v=static_cast<const equ_valuet &>(value);
+  auto &_v=dynamic_cast<const equ_valuet &>(value);
   equ_valuet v=_v;
 
   for(unsigned index=0; index<templ.size(); index++)
   {
-    const var_pairt &vv=templ[index].var_pair;
-    if(v.equs.same_set(vv.first, vv.second))
+    auto &templ_row_expr=dynamic_cast<template_row_exprt &>(*templ[index].expr);
+    if(v.equs.same_set(templ_row_expr.first, templ_row_expr.second))
     {
-      out << from_expr(ns, "", vv.first) << "=="
-          << from_expr(ns, "", vv.second) << std::endl;
+      out << from_expr(ns, "", templ_row_expr.first) << "=="
+          << from_expr(ns, "", templ_row_expr.second) << std::endl;
     }
   }
 
   for(index_sett::const_iterator it=v.disequs.begin();
       it!=v.disequs.end(); it++)
   {
-    const var_pairt &vv=templ[*it].var_pair;
-    out << from_expr(ns, "", vv.first) << "!="
-        << from_expr(ns, "", vv.second) << std::endl;
-  }
-}
-
-void equality_domaint::output_domain(
-  std::ostream &out,
-  const namespacet &ns) const
-{
-  for(unsigned index=0; index<templ.size(); index++)
-  {
-    const template_rowt &templ_row=templ[index];
-    switch(templ_row.kind)
-    {
-    case LOOP:
-      out << "(LOOP) [ " << from_expr(ns, "", templ_row.pre_guard) << " | ";
-      out << from_expr(ns, "", templ_row.post_guard) << " | ";
-      out << from_expr(ns, "", templ_row.aux_expr)
-          << " ]===> " << std::endl << "      ";
-      break;
-    case IN:
-      out << "(IN)   ";
-      out << from_expr(ns, "", templ_row.pre_guard) << "===> "
-          << std::endl << "      ";
-      break;
-    case OUT: case OUTL:
-      out << "(OUT)  ";
-      out << from_expr(ns, "", templ_row.post_guard) << "===> "
-          << std::endl << "      ";
-      break;
-    default: assert(false);
-    }
-    const var_pairt &vv=templ_row.var_pair;
-    out << from_expr(ns, "", vv.first) << "=!= "
-        << from_expr(ns, "", vv.second) << std::endl;
+    auto &templ_row_expr=dynamic_cast<template_row_exprt &>(*templ[*it].expr);
+    out << from_expr(ns, "", templ_row_expr.first) << "!="
+        << from_expr(ns, "", templ_row_expr.second) << std::endl;
   }
 }
 
@@ -432,29 +305,22 @@ void equality_domaint::make_template(
     {
       templ.push_back(template_rowt());
       template_rowt &templ_row=templ.back();
-      templ_row.var_pair=
-        var_pairt(v1->var, null_pointer_exprt(to_pointer_type(v1->var.type())));
-      templ_row.pre_guard=v1->pre_guard;
-      templ_row.post_guard=v1->post_guard;
-      templ_row.aux_expr=v1->aux_expr;
-      templ_row.kind=v1->kind;
+      templ_row.expr=std::unique_ptr<template_row_exprt>(
+        new template_row_exprt(
+          v1->var, null_pointer_exprt(to_pointer_type(v1->var.type()))));
+      templ_row.guards=v1->guards;
     }
 
     var_specst::const_iterator v2=v1; v2++;
     for(; v2!=var_specs.end(); v2++)
     {
-      kindt k=domaint::merge_kinds(v1->kind, v2->kind);
+      guardst guards=guardst::merge_and_guards(v1->guards, v2->guards, ns);
 
 #if 0
       // TODO: must be done in caller (for preconditions, e.g.)
       if(k==IN)
         continue;
 #endif
-
-      exprt pre_g, post_g, aux_expr;
-      merge_and(pre_g, v1->pre_guard, v2->pre_guard, ns);
-      merge_and(post_g, v1->post_guard, v2->post_guard, ns);
-      merge_and(aux_expr, v1->aux_expr, v2->aux_expr, ns);
 
       exprt vv1=v1->var;
       exprt vv2=v2->var;
@@ -463,26 +329,28 @@ void equality_domaint::make_template(
 
       templ.push_back(template_rowt());
       template_rowt &templ_row=templ.back();
-      templ_row.var_pair=var_pairt(vv1, vv2);
-      templ_row.pre_guard=pre_g;
-      templ_row.post_guard=post_g;
-      templ_row.aux_expr=aux_expr;
-      templ_row.kind=k;
+      templ_row.expr=std::unique_ptr<template_row_exprt>(
+        new template_row_exprt(vv1, vv2));
+      templ_row.guards=guards;
     }
   }
 }
 
-const exprt equality_domaint::initialize_solver(
-  const local_SSAt &SSA,
-  const exprt &precondition,
-  template_generator_baset &template_generator)
+void equality_domaint::initialize()
 {
   get_index_set(todo_equs);
-  return true_exprt();
 }
 
 void equality_domaint::get_index_set(std::set<unsigned> &indices)
 {
   for(unsigned i=0; i<templ.size(); i++)
     indices.insert(i);
+}
+
+void equality_domaint::template_row_exprt::output(
+  std::ostream &out,
+  const namespacet &ns) const
+{
+  out << from_expr(ns, "", first) << "=!= " << from_expr(ns, "", second)
+      << std::endl;
 }

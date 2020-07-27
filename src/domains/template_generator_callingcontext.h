@@ -32,7 +32,7 @@ public:
     local_SSAt::nodet::function_callst::const_iterator f_it,
     bool forward=true);
 
-  virtual domaint::var_sett callingcontext_vars();
+  virtual var_sett callingcontext_vars();
 
 protected:
   virtual void collect_variables_callingcontext(

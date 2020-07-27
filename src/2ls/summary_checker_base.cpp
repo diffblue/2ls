@@ -44,8 +44,7 @@ Author: Peter Schrammel
 
 void summary_checker_baset::SSA_functions(
   const goto_modelt &goto_model,
-  const namespacet &ns,
-  const ssa_heap_analysist &heap_analysis)
+  const namespacet &ns)
 {
   // compute SSA for all the functions
   forall_goto_functions(f_it, goto_model.goto_functions)
@@ -56,7 +55,7 @@ void summary_checker_baset::SSA_functions(
       continue;
     status() << "Computing SSA of " << f_it->first << messaget::eom;
 
-    ssa_db.create(f_it->first, f_it->second, ns, heap_analysis);
+    ssa_db.create(f_it->first, f_it->second, ns);
     local_SSAt &SSA=ssa_db.get(f_it->first);
 
     // simplify, if requested

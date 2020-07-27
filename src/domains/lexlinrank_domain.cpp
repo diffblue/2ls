@@ -31,33 +31,26 @@ Author: Peter Schrammel
 #define COEFF_C_SIZE 10
 #define MAX_REFINEMENT 2
 
-void lexlinrank_domaint::initialize(valuet &value)
+void lexlinrank_domaint::initialize_value(domaint::valuet &value)
 {
-  templ_valuet &v=static_cast<templ_valuet &>(value);
+  auto &v=dynamic_cast<templ_valuet &>(value);
   v.resize(templ.size());
   for(auto &row : v)
   {
-    row.resize(1);
-    row[0].c.resize(1);
-    row[0].c[0]=false_exprt();
+    row.clear();
+    row.add_element();
   }
 }
 
-const exprt lexlinrank_domaint::initialize_solver(
-  const local_SSAt &SSA,
-  const exprt &precondition,
-  template_generator_baset &template_generator)
+void lexlinrank_domaint::initialize()
 {
   delete inner_solver;
   inner_solver=incremental_solvert::allocate(ns);
-
-  return true_exprt();
 }
 
 bool lexlinrank_domaint::edit_row(const rowt &row, valuet &inv, bool improved)
 {
-  lexlinrank_domaint::templ_valuet &rank=
-    static_cast<lexlinrank_domaint::templ_valuet &>(inv);
+  auto &rank=dynamic_cast<lexlinrank_domaint::templ_valuet &>(inv);
   lexlinrank_domaint::row_valuet symb_values;
   symb_values.resize(rank[row].size());
 
@@ -116,7 +109,7 @@ bool lexlinrank_domaint::edit_row(const rowt &row, valuet &inv, bool improved)
     improved=true;
 
     // update the current template
-    set_row_value(row, new_row_values, rank);
+    rank[row]=new_row_values;
 
     if(!refinement_constraint.is_true())
       inner_solver->pop_context();
@@ -135,7 +128,7 @@ bool lexlinrank_domaint::edit_row(const rowt &row, valuet &inv, bool improved)
       if(number_elements_per_row[row]==max_elements-1)
       {
         // no ranking function for the current template
-        set_row_value_to_true(row, rank);
+        rank[row].set_to_true();
         reset_refinements();
       }
       else
@@ -145,7 +138,7 @@ bool lexlinrank_domaint::edit_row(const rowt &row, valuet &inv, bool improved)
         inner_solver=incremental_solvert::allocate(ns);
         reset_refinements();
 
-        add_element(row, rank);
+        rank[row].add_element();
         number_inner_iterations=0;
         improved=true;
       }
@@ -154,7 +147,7 @@ bool lexlinrank_domaint::edit_row(const rowt &row, valuet &inv, bool improved)
   return improved;
 }
 
-exprt lexlinrank_domaint::to_pre_constraints(valuet &_value)
+exprt lexlinrank_domaint::to_pre_constraints(const valuet &_value)
 {
   exprt rounding_mode=symbol_exprt(
     CPROVER_PREFIX "rounding_mode",
@@ -165,31 +158,10 @@ exprt lexlinrank_domaint::to_pre_constraints(valuet &_value)
     from_integer(mp_integer(0), signedbv_typet(32)));
 }
 
-void lexlinrank_domaint::solver_iter_init(domaint::valuet &_rank)
+void lexlinrank_domaint::init_value_solver_iteration(domaint::valuet &_rank)
 {
-  lexlinrank_domaint::templ_valuet &rank=
-    static_cast<lexlinrank_domaint::templ_valuet &>(_rank);
+  auto &rank=dynamic_cast<templ_valuet &>(_rank);
   number_elements_per_row.resize(rank.size());
-}
-
-std::vector<exprt> lexlinrank_domaint::get_required_smt_values(size_t row)
-{
-  std::vector<exprt> r;
-  for(auto &row_expr : strategy_value_exprs[row])
-  {
-    r.push_back(row_expr.first);
-    r.push_back(row_expr.second);
-  }
-  return r;
-}
-
-void lexlinrank_domaint::set_smt_values(
-  std::vector<exprt> got_values,
-  size_t row)
-{
-  values.clear();
-  for(size_t i=0; i<got_values.size(); i+=2)
-    values.push_back(std::make_pair(got_values[i], got_values[i+1]));
 }
 
 bool lexlinrank_domaint::handle_unsat(valuet &value, bool improved)
@@ -212,28 +184,31 @@ void lexlinrank_domaint::reset_refinements()
 }
 
 void lexlinrank_domaint::make_not_post_constraints(
-  valuet &_value,
+  const valuet &_value,
   exprt::operandst &cond_exprs)
 {
-  lexlinrank_domaint::templ_valuet &value=
-    static_cast<lexlinrank_domaint::templ_valuet &>(_value);
+  auto &value=dynamic_cast<const templ_valuet &>(_value);
   cond_exprs.resize(value.size());
   strategy_value_exprs.resize(value.size());
 
-for(std::size_t row=0; row<templ.size(); row++)
+  for(std::size_t row=0; row<templ.size(); row++)
   {
-    strategy_value_exprs[row]=templ[row].expr;
+    auto row_exprs=templ[row].expr->get_row_exprs();
+    strategy_value_exprs[row].insert(
+      strategy_value_exprs[row].end(),
+      row_exprs.begin(),
+      row_exprs.end());
 
-    if(is_row_value_true(value[row]))
+    if(value[row].is_true())
     {
       // !(g=> true)
       cond_exprs[row]=false_exprt();
     }
-    else if(is_row_value_false(value[row]))
+    else if(value[row].is_false())
     {
       // !(g=> false)
       cond_exprs[row]=
-        and_exprt(templ[row].pre_guard, templ[row].post_guard);
+        and_exprt(templ[row].guards.pre_guard, templ[row].guards.post_guard);
     }
     else
     {
@@ -241,7 +216,9 @@ for(std::size_t row=0; row<templ.size(); row++)
       elmts.reserve(value[row].size());
       for(std::size_t elm=0; elm<value[row].size(); ++elm)
       {
-        assert(value[row][elm].c.size()==templ[row].expr.size());
+        auto &templ_row_expr=
+          dynamic_cast<template_row_exprt &>(*templ[row].expr);
+        assert(value[row][elm].c.size()==templ_row_expr.pre_post_values.size());
         assert(value[row][elm].c.size()>=1);
 
         exprt::operandst c;
@@ -251,12 +228,16 @@ for(std::size_t row=0; row<templ.size(); row++)
         exprt sum=
           mult_exprt(
             value[row][elm].c[0],
-            minus_exprt(templ[row].expr[0].first, templ[row].expr[0].second));
+            minus_exprt(
+              templ_row_expr.pre_post_values[0].pre,
+              templ_row_expr.pre_post_values[0].post));
 #else
         exprt sum_pre=
-          mult_exprt(value[row][elm].c[0], templ[row].expr[0].first);
+          mult_exprt(
+            value[row][elm].c[0], templ_row_expr.pre_post_values[0].pre);
         exprt sum_post=
-          mult_exprt(value[row][elm].c[0], templ[row].expr[0].second);
+          mult_exprt(
+            value[row][elm].c[0], templ_row_expr.pre_post_values[0].post);
 #endif
         for(std::size_t i=1; i<value[row][elm].c.size(); ++i)
         {
@@ -266,32 +247,34 @@ for(std::size_t row=0; row<templ.size(); row++)
             mult_exprt(
               value[row][elm].c[i],
               minus_exprt(
-                templ[row].expr[i].first,
-                templ[row].expr[i].second)));
+                templ_row_expr.pre_post_values[i].pre,
+                templ_row_expr.pre_post_values[i].post)));
 #else
           sum_pre=plus_exprt(
             sum_pre,
             mult_exprt(
               value[row][elm].c[i],
-              templ[row].expr[i].first));
+              templ_row_expr.pre_post_values[i].pre));
           sum_post=plus_exprt(
             sum_post,
-            mult_exprt(value[row][elm].c[i], templ[row].expr[i].second));
+            mult_exprt(
+              value[row][elm].c[i],
+              templ_row_expr.pre_post_values[i].post));
 #endif
         }
         // extend types
 #ifdef DIFFERENCE_ENCODING
 #ifdef EXTEND_TYPES
-  extend_expr_types(sum);
+        extend_expr_types(sum);
 #endif
-  exprt decreasing=
-    binary_relation_exprt(sum, ID_gt, make_zero(sum.type()));
+        exprt decreasing=
+          binary_relation_exprt(sum, ID_gt, make_zero(sum.type()));
 #else
 #ifdef EXTEND_TYPES
-  extend_expr_types(sum_pre);
-  extend_expr_types(sum_post);
+        extend_expr_types(sum_pre);
+        extend_expr_types(sum_post);
 #endif
-  exprt decreasing=binary_relation_exprt(sum_pre, ID_gt, sum_post);
+        exprt decreasing=binary_relation_exprt(sum_pre, ID_gt, sum_post);
 #endif
 
         c.push_back(decreasing);
@@ -301,12 +284,16 @@ for(std::size_t row=0; row<templ.size(); row++)
 #ifdef DIFFERENCE_ENCODING
           exprt sum2=mult_exprt(
             value[row][elm2].c[0],
-            minus_exprt(templ[row].expr[0].first, templ[row].expr[0].second));
+            minus_exprt(
+              templ_row_expr.pre_post_values[0].pre,
+              templ_row_expr.pre_post_values[0].post));
 #else
           exprt sum_pre2=
-            mult_exprt(value[row][elm2].c[0], templ[row].expr[0].first);
+            mult_exprt(
+              value[row][elm2].c[0], templ_row_expr.pre_post_values[0].pre);
           exprt sum_post2=
-            mult_exprt(value[row][elm2].c[0], templ[row].expr[0].first);
+            mult_exprt(
+              value[row][elm2].c[0], templ_row_expr.pre_post_values[0].post);
 #endif
           for(std::size_t i=1; i<value[row][elm2].c.size(); ++i)
           {
@@ -316,15 +303,19 @@ for(std::size_t row=0; row<templ.size(); row++)
               mult_exprt(
                 value[row][elm2].c[i],
                 minus_exprt(
-                  templ[row].expr[i].first,
-                  templ[row].expr[i].second)));
+                  templ_row_expr.pre_post_values[i].pre,
+                  templ_row_expr.pre_post_values[i].post)));
 #else
             sum_pre2=plus_exprt(
               sum_pre2,
-              mult_exprt(value[row][elm2].c[i], templ[row].expr[i].first));
+              mult_exprt(
+                value[row][elm2].c[i],
+                templ_row_expr.pre_post_values[i].pre));
             sum_post2=plus_exprt(
               sum_post2,
-              mult_exprt(value[row][elm2].c[i], templ[row].expr[i].second));
+              mult_exprt(
+                value[row][elm2].c[i],
+                templ_row_expr.pre_post_values[i].pre));
 #endif
           }
 
@@ -350,7 +341,7 @@ for(std::size_t row=0; row<templ.size(); row++)
 
       cond_exprs[row]=not_exprt(
         implies_exprt(
-          and_exprt(templ[row].pre_guard, templ[row].post_guard),
+          and_exprt(templ[row].guards.pre_guard, templ[row].guards.post_guard),
           disjunction(elmts)));
     }
   }
@@ -370,8 +361,11 @@ exprt lexlinrank_domaint::get_row_symb_constraint(
   // we iterate in reverse as we init symbols the inner iteration uses
   for(int elm=symb_values.size()-1; elm>=0; --elm)
   {
-    symb_values[elm].c.resize(values.size());
-    assert(values.size()>=1);
+    // smt_model_values is a vector of values of pre- and post-values
+    // two successive elements of the vector correspond to a single symbolic
+    // value
+    symb_values[elm].c.resize(smt_model_values.size()/2);
+    assert(!symb_values[elm].c.empty());
 
     exprt::operandst c;
     c.reserve(1+symb_values.size()-(elm+1));
@@ -384,31 +378,31 @@ exprt lexlinrank_domaint::get_row_symb_constraint(
 #ifdef DIFFERENCE_ENCODING
     exprt sum=mult_exprt(
       symb_values[elm].c[0],
-      minus_exprt(values[0].first, values[0].second));
+      minus_exprt(smt_model_values[0], smt_model_values[1]));
 #else
-    exprt sum_pre=mult_exprt(symb_values[elm].c[0], values[0].first);
-    exprt sum_post=mult_exprt(symb_values[elm].c[0], values[0].second);
+    exprt sum_pre=mult_exprt(symb_values[elm].c[0], smt_model_values[0]);
+    exprt sum_post=mult_exprt(symb_values[elm].c[0], smt_model_values[0]);
 #endif
 
-    for(std::size_t i=1; i<values.size(); ++i)
+    for(std::size_t i=1, vals_i=2; i<symb_values[elm].c.size(); ++i, vals_i+=2)
     {
       symb_values[elm].c[i]=symbol_exprt(
         SYMB_COEFF_VAR+std::string("c!")+
-          i2string(row)+"$"+i2string(elm)+"$"+i2string(i),
+        i2string(row)+"$"+i2string(elm)+"$"+i2string(i),
         signedbv_typet(COEFF_C_SIZE));
 #ifdef DIFFERENCE_ENCODING
       sum=plus_exprt(
         sum,
         mult_exprt(
           symb_values[elm].c[i],
-          minus_exprt(values[i].first, values[i].second)));
+          minus_exprt(smt_model_values[vals_i], smt_model_values[vals_i+1])));
 #else
       sum_pre=plus_exprt(
         sum_pre,
-        mult_exprt(symb_values[elm].c[i], values[i].first));
+        mult_exprt(symb_values[elm].c[i], smt_model_values[vals_i]));
       sum_post=plus_exprt(
         sum_post,
-        mult_exprt(symb_values[elm].c[i], values[i].second));
+        mult_exprt(symb_values[elm].c[i], smt_model_values[vals_i+1]));
 #endif
     }
 
@@ -433,27 +427,28 @@ exprt lexlinrank_domaint::get_row_symb_constraint(
 #ifdef DIFFERENCE_ENCODING
       exprt sum2=mult_exprt(
         symb_values[elm2].c[0],
-        minus_exprt(values[0].first, values[0].second));
+        minus_exprt(smt_model_values[0], smt_model_values[1]));
 #else
-      exprt sum_pre2=mult_exprt(symb_values[elm2].c[0], values[0].first);
-      exprt sum_post2=mult_exprt(symb_values[elm2].c[0], values[0].second);
+      exprt sum_pre2=mult_exprt(symb_values[elm2].c[0], smt_model_values[0]);
+      exprt sum_post2=mult_exprt(symb_values[elm2].c[0], smt_model_values[1]);
 #endif
 
-      for(std::size_t i=1; i<values.size(); ++i)
+      for(std::size_t i=1, vals_i=2;
+          i<symb_values[elm2].c.size(); ++i, vals_i+=2)
       {
 #ifdef DIFFERENCE_ENCODING
         sum2=plus_exprt(
           sum2,
           mult_exprt(
             symb_values[elm2].c[i],
-            minus_exprt(values[i].first, values[i].second)));
+            minus_exprt(smt_model_values[vals_i], smt_model_values[vals_i+1])));
 #else
         sum_pre2=plus_exprt(
           sum_pre2,
-          mult_exprt(symb_values[elm2].c[i], values[i].first));
+          mult_exprt(symb_values[elm2].c[i], smt_model_values[vals_i]));
         sum_post2=plus_exprt(
           sum_post2,
-          mult_exprt(symb_values[elm2].c[i], values[i].second));
+          mult_exprt(symb_values[elm2].c[i], smt_model_values[vals_i+1]));
 #endif
       }
 
@@ -481,39 +476,39 @@ exprt lexlinrank_domaint::get_row_symb_constraint(
   // refinement
   if(refinement_level==0)
   {
-    for(std::size_t elm=0; elm<symb_values.size(); ++elm)
+    for(auto &elm : symb_values)
     {
-      for(std::size_t i=0; i<values.size(); ++i)
+      for(auto &symb_val : elm.c)
       {
         ref_constraints.push_back(
           binary_relation_exprt(
-            symb_values[elm].c[i],
+            symb_val,
             ID_ge,
-            make_minusone(symb_values[elm].c[i].type())));
+            make_minusone(symb_val.type())));
         ref_constraints.push_back(
           binary_relation_exprt(
-            symb_values[elm].c[i],
+            symb_val,
             ID_le,
-            make_one(symb_values[elm].c[i].type())));
+            make_one(symb_val.type())));
       }
     }
   }
   else if(refinement_level==1)
   {
-    for(std::size_t elm=0; elm<symb_values.size(); ++elm)
+    for(auto &elm : symb_values)
     {
-      for(std::size_t i=0; i<values.size(); ++i)
+      for(auto &symb_val : elm.c)
       {
         ref_constraints.push_back(
           binary_relation_exprt(
-            symb_values[elm].c[i],
+            symb_val,
             ID_ge,
-            from_integer(mp_integer(-10), symb_values[elm].c[i].type())));
+            from_integer(mp_integer(-10), symb_val.type())));
         ref_constraints.push_back(
           binary_relation_exprt(
-            symb_values[elm].c[i],
+            symb_val,
             ID_le,
-            from_integer(mp_integer(10), symb_values[elm].c[i].type())));
+            from_integer(mp_integer(10), symb_val.type())));
       }
     }
   }
@@ -526,134 +521,70 @@ exprt lexlinrank_domaint::get_row_symb_constraint(
   return dd;
 }
 
-lexlinrank_domaint::row_valuet lexlinrank_domaint::get_row_value(
-  const rowt &row,
-  const templ_valuet &value)
-{
-  assert(row<value.size());
-  assert(value.size()==templ.size());
-  return value[row];
-}
-
-void lexlinrank_domaint::set_row_value(
-  const rowt &row,
-  const row_valuet &row_value,
-  templ_valuet &value)
-{
-  assert(row<value.size());
-  assert(value.size()==templ.size());
-  value[row]=row_value;
-}
-
-void lexlinrank_domaint::set_row_value_to_true(
-  const rowt &row,
-  templ_valuet &value)
-{
-  assert(row<value.size());
-  assert(value.size()==templ.size());
-  value[row].resize(1);
-  value[row][0].c.resize(1);
-  value[row][0].c[0]=true_exprt();
-}
-
 void lexlinrank_domaint::output_value(
   std::ostream &out,
-  const valuet &value,
+  const domaint::valuet &value,
   const namespacet &ns) const
 {
-  const templ_valuet &v=static_cast<const templ_valuet &>(value);
+  auto &v=dynamic_cast<const templ_valuet &>(value);
   for(std::size_t row=0; row<templ.size(); row++)
   {
-    const template_rowt &templ_row=templ[row];
-    switch(templ_row.kind)
-    {
-    case LOOP:
-      out << "(RANK) [ " << from_expr(ns, "", templ_row.pre_guard) << " | ";
-      out << from_expr(ns, "", templ_row.post_guard) << " ]===> " << std::endl;
-      break;
-    default: assert(false);
-    }
+    auto &templ_row_expr=dynamic_cast<template_row_exprt &>(*templ[row].expr);
+    templ[row].guards.output(out, ns);
 
     for(std::size_t elm=0; elm<v[row].size(); ++elm)
     {
       out << "       ";
-      for(std::size_t i=0; i<templ_row.expr.size(); ++i)
+      for(std::size_t i=0; i<templ_row_expr.pre_post_values.size(); ++i)
       {
         if(i>0)
           out << "+";
         out << from_expr(ns, "", v[row][elm].c[i]) << " * "
-            << from_expr(ns, "", templ_row.expr[i].first);
+            << from_expr(ns, "", templ_row_expr.pre_post_values[i].pre);
       }
       out << std::endl;
     }
   }
 }
 
-void lexlinrank_domaint::output_domain(
-  std::ostream &out,
-  const namespacet &ns) const
-{
-  for(std::size_t row=0; row<templ.size(); row++)
-  {
-    const template_rowt &templ_row=templ[row];
-    switch(templ_row.kind)
-    {
-    case LOOP:
-      out << "(RANK) (" << from_expr(ns, "", templ_row.pre_guard)
-          << ") && (" << from_expr(ns, "", templ_row.post_guard) << ")===> "
-          << std::endl << "      ";
-      break;
-    default: assert(false);
-    }
-
-    for(std::size_t i=0; i<templ_row.expr.size(); ++i)
-    {
-      if(i>0)
-        out << "+";
-      out << "c!" << row << "$" << i << " * "
-          << from_expr(ns, "", templ_row.expr[i].first);
-    }
-    out << std::endl;
-  }
-}
-
 void lexlinrank_domaint::project_on_vars(
-  valuet &value,
+  domaint::valuet &value,
   const var_sett &vars,
   exprt &result)
 {
   // don't do any projection
-  const templ_valuet &v=static_cast<const templ_valuet &>(value);
+  auto &v=dynamic_cast<const templ_valuet &>(value);
   assert(v.size()==templ.size());
   exprt::operandst c; // c is the conjunction of all rows
   c.reserve(templ.size());
   for(std::size_t row=0; row<templ.size(); ++row)
   {
-    assert(templ[row].kind==LOOP);
+    assert(templ[row].guards.kind==guardst::LOOP);
 
-    if(is_row_value_false(v[row]))
+    if(v[row].is_false())
     {
       // (g=> false)
       c.push_back(
         implies_exprt(
-          and_exprt(templ[row].pre_guard, templ[row].post_guard),
+          and_exprt(templ[row].guards.pre_guard, templ[row].guards.post_guard),
           false_exprt()));
     }
-    else if(is_row_value_true(v[row]))
+    else if(v[row].is_true())
     {
       // (g=> true)
       c.push_back(
         implies_exprt(
-          and_exprt(templ[row].pre_guard, templ[row].post_guard),
+          and_exprt(templ[row].guards.pre_guard, templ[row].guards.post_guard),
           true_exprt()));
     }
     else
     {
       exprt::operandst d; // d is the disjunction of lexicographic elements
       d.reserve(v[row].size());
+      auto &templ_row_expr=dynamic_cast<template_row_exprt &>(*templ[row].expr);
       for(std::size_t elm=0; elm<v[row].size(); ++elm)
       {
-        assert(v[row][elm].c.size()==templ[row].expr.size());
+        assert(v[row][elm].c.size()==templ_row_expr.pre_post_values.size());
         assert(v[row][elm].c.size()>=1);
 
         // con is the constraints for a single element of the lexicography
@@ -663,8 +594,8 @@ void lexlinrank_domaint::project_on_vars(
         exprt sum=mult_exprt(
           v[row][elm].c[0],
           minus_exprt(
-            templ[row].expr[0].first,
-            templ[row].expr[0].second));
+            templ_row_expr.pre_post_values[0].pre,
+            templ_row_expr.pre_post_values[0].post));
 
         for(std::size_t i=1; i<v[row][elm].c.size(); ++i)
         {
@@ -673,10 +604,10 @@ void lexlinrank_domaint::project_on_vars(
             mult_exprt(
               v[row][elm].c[i],
               minus_exprt(
-                templ[row].expr[i].first,
-                templ[row].expr[i].second)));
+                templ_row_expr.pre_post_values[i].pre,
+                templ_row_expr.pre_post_values[i].post)));
         }
-  // extend types
+        // extend types
 #ifdef EXTEND_TYPES
         extend_expr_types(sum);
 #endif
@@ -689,8 +620,8 @@ void lexlinrank_domaint::project_on_vars(
           exprt sum2=mult_exprt(
             v[row][elm2].c[0],
             minus_exprt(
-              templ[row].expr[0].first,
-              templ[row].expr[0].second));
+              templ_row_expr.pre_post_values[0].pre,
+              templ_row_expr.pre_post_values[0].post));
 
           for(std::size_t i=1; i<v[row][elm2].c.size(); ++i)
           {
@@ -699,10 +630,10 @@ void lexlinrank_domaint::project_on_vars(
               mult_exprt(
                 v[row][elm2].c[i],
                 minus_exprt(
-                  templ[row].expr[i].first,
-                  templ[row].expr[i].second)));
+                  templ_row_expr.pre_post_values[i].pre,
+                  templ_row_expr.pre_post_values[i].post)));
           }
-    // extend types
+          // extend types
 #ifdef EXTEND_TYPES
           extend_expr_types(sum2);
 #endif
@@ -716,7 +647,7 @@ void lexlinrank_domaint::project_on_vars(
 
       c.push_back(
         implies_exprt(
-          and_exprt(templ[row].pre_guard, templ[row].post_guard),
+          and_exprt(templ[row].guards.pre_guard, templ[row].guards.post_guard),
           disjunction(d)));
     }
   }
@@ -732,7 +663,7 @@ void lexlinrank_domaint::add_template(
   bool has_loop=false;
   for(const auto &v : var_specs)
   {
-    if(v.kind==LOOP)
+    if(v.guards.kind==guardst::LOOP)
     {
       has_loop=true;
       break;
@@ -744,65 +675,48 @@ void lexlinrank_domaint::add_template(
   templ.reserve(templ.size()+1);
   templ.push_back(template_rowt());
   template_rowt &templ_row=templ.back();
-  templ_row.kind=LOOP;
+  templ_row.expr=std::unique_ptr<template_row_exprt>(new template_row_exprt());
+  auto &templ_row_expr=dynamic_cast<template_row_exprt &>(*templ_row.expr);
+  templ_row.guards.kind=guardst::LOOP;
 
   exprt::operandst preg;
   exprt::operandst postg;
 
   for(const auto &v : var_specs)
   {
-    if(v.kind!=LOOP)
+    if(v.guards.kind!=guardst::LOOP)
       continue;
-    preg.push_back(v.pre_guard);
-    postg.push_back(v.post_guard);
+    preg.push_back(v.guards.pre_guard);
+    postg.push_back(v.guards.post_guard);
     exprt vpost=v.var; // copy
     rename(vpost);
-    templ_row.expr.push_back(std::pair<exprt, exprt>(v.var, vpost));
+    templ_row_expr.pre_post_values.emplace_back(v.var, vpost);
   }
 
-  templ_row.pre_guard=conjunction(preg);
-  templ_row.post_guard=conjunction(postg);
+  templ_row.guards.pre_guard=conjunction(preg);
+  templ_row.guards.post_guard=conjunction(postg);
 }
 
-bool lexlinrank_domaint::is_row_value_false(
-  const row_valuet & row_value) const
+std::vector<exprt> lexlinrank_domaint::template_row_exprt::get_row_exprs()
 {
-  assert(row_value.size()>=1);
-  assert(row_value[0].c.size()>=1);
-  return row_value[0].c[0].get(ID_value)==ID_false;
-}
-
-bool lexlinrank_domaint::is_row_element_value_false(
-  const row_value_elementt & row_value_element) const
-{
-  assert(false);
-  assert(row_value_element.c.size()>=1);
-  return row_value_element.c[0].get(ID_value)==ID_false;
-}
-
-bool lexlinrank_domaint::is_row_value_true(const row_valuet & row_value) const
-{
-  assert(row_value.size()>=1);
-  assert(row_value[0].c.size()>=1);
-  return row_value[0].c[0].get(ID_value)==ID_true;
-}
-
-bool lexlinrank_domaint::is_row_element_value_true(
-  const row_value_elementt & row_value_element) const
-{
-  assert(false);
-  assert(row_value_element.c.size()>=1);
-  return row_value_element.c[0].get(ID_value)==ID_true;
-}
-
-void lexlinrank_domaint::add_element(
-  const rowt &row,
-  templ_valuet &value)
-{
-  value[row].push_back(row_value_elementt());
-  for(unsigned i=0; i<value[row].size(); i++)
+  std::vector<exprt> exprs;
+  for(auto &pre_post : pre_post_values)
   {
-    value[row][i].c.resize(1);
-    value[row][i].c[0]=false_exprt();
+    exprs.push_back(pre_post.pre);
+    exprs.push_back(pre_post.post);
+  }
+  return exprs;
+}
+
+void lexlinrank_domaint::template_row_exprt::output(
+  std::ostream &out,
+  const namespacet &ns) const
+{
+  for(std::size_t i=0; i<pre_post_values.size(); ++i)
+  {
+    if(i>0)
+      out << "+";
+    out << "c!" << row << "$" << i << " * "
+        << from_expr(ns, "", pre_post_values[i].pre);
   }
 }

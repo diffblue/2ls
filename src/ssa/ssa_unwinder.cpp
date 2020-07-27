@@ -13,6 +13,7 @@ Author: Peter Schrammel, Saurabh Joshi
 #define COMPETITION
 
 #include <util/prefix.h>
+#include <util/i2string.h>
 
 #include "ssa_unwinder.h"
 

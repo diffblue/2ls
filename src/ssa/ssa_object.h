@@ -14,7 +14,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "ssa_pointed_objects.h"
 #include <goto-programs/goto_functions.h>
-#include "ssa_heap_domain.h"
 
 class ssa_objectt
 {
@@ -134,13 +133,9 @@ public:
   typedef std::set<exprt> literalst;
   literalst literals;
 
-  const ssa_heap_analysist &heap_analysis;
-
   ssa_objectst(
     const goto_functionst::goto_functiont &goto_function,
-    const namespacet &ns,
-    const ssa_heap_analysist &_heap_analysis):
-    heap_analysis(_heap_analysis)
+    const namespacet &ns)
   {
     collect_objects(goto_function, ns);
     categorize_objects(goto_function, ns);

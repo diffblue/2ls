@@ -33,3 +33,17 @@ void strategy_solver_baset::find_symbolic_path(
       symbolic_path[guard.first]=false;
   }
 }
+
+/// Function for printing out the value assigned to an expression and to all its
+/// subexpressions by the SMT solver.
+void strategy_solver_baset::debug_smt_model(
+  const exprt &expr,
+  const namespacet &ns)
+{
+  std::cerr << from_expr(ns, "", expr) << ": "
+            << from_expr(ns, "", solver.solver->get(expr)) << "\n";
+  forall_operands(op, expr)
+  {
+    debug_smt_model(*op, ns);
+  }
+}

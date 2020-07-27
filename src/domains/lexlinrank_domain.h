@@ -23,34 +23,79 @@ Author: Peter Schrammel
 #include <set>
 #include <vector>
 
-#include "domain.h"
+#include "simple_domain.h"
 
-class lexlinrank_domaint:public domaint
+class lexlinrank_domaint:public simple_domaint
 {
 public:
-  typedef unsigned rowt;
-  typedef std::vector<std::pair<exprt, exprt> > pre_post_valuest;
-  typedef pre_post_valuest row_exprt;
-  typedef struct
+  struct template_row_exprt:simple_domaint::template_row_exprt
   {
-    std::vector<exprt> c;
-  } row_value_elementt;
+    struct pre_post_valuet
+    {
+      exprt pre;
+      exprt post;
 
-  typedef std::vector<row_value_elementt> row_valuet;
+      pre_post_valuet(const exprt &pre, const exprt &post):
+        pre(pre), post(post) {}
+    };
 
-  class templ_valuet:public domaint::valuet, public std::vector<row_valuet>
-  {
+    std::vector<pre_post_valuet> pre_post_values;
+    rowt row;
+
+    std::vector<exprt> get_row_exprs() override;
+    void output(std::ostream &out, const namespacet &ns) const override;
   };
 
-  typedef struct
+  struct row_value_elementt
   {
-    guardt pre_guard;
-    guardt post_guard;
-    row_exprt expr;
-    kindt kind;
-  } template_rowt;
+    std::vector<exprt> c;
 
-  typedef std::vector<template_rowt> templatet;
+    void set_to_true()
+    {
+      c.clear();
+      c.push_back(true_exprt());
+    }
+    void clear()
+    {
+      c.clear();
+      c.push_back(false_exprt());
+    }
+    bool is_true() const { return c[0].get(ID_value)==ID_true; }
+    bool is_false() const { return c[0].get(ID_value)==ID_false; }
+  };
+
+  struct row_valuet:std::vector<row_value_elementt>
+  {
+    void add_element()
+    {
+      push_back(row_value_elementt());
+      for(auto &elem : *this)
+        elem.clear();
+    }
+    void set_to_true()
+    {
+      clear();
+      push_back(row_value_elementt());
+      at(0).set_to_true();
+    }
+    bool is_true() const { return at(0).is_true(); }
+    bool is_false() const { return at(0).is_false(); }
+  };
+
+  struct templ_valuet:simple_domaint::valuet, std::vector<row_valuet>
+  {
+    exprt get_row_expr(rowt row, const template_rowt &templ_row) const override
+    {
+      return true_exprt();
+    }
+
+    templ_valuet *clone() override { return new templ_valuet(*this); }
+  };
+
+  std::unique_ptr<domaint::valuet> new_value() override
+  {
+    return std::unique_ptr<domaint::valuet>(new templ_valuet());
+  }
 
   lexlinrank_domaint(
     unsigned _domain_number,
@@ -58,83 +103,59 @@ public:
     unsigned _max_elements, // lexicographic components
     unsigned _max_inner_iterations,
     const namespacet &_ns):
-    domaint(_domain_number,  _renaming_map, _ns),
+    simple_domaint(_domain_number, _renaming_map, _ns),
     refinement_level(0),
     max_elements(_max_elements),
     max_inner_iterations(_max_inner_iterations),
     number_inner_iterations(0)
-    {
-      inner_solver=incremental_solvert::allocate(_ns);
-    }
+  {
+    inner_solver=incremental_solvert::allocate(_ns);
+  }
 
 
   // initialize value
-  virtual void initialize(valuet &value);
+  void initialize_value(domaint::valuet &value) override;
 
-  const exprt initialize_solver(
-    const local_SSAt &SSA,
-    const exprt &precondition,
-    template_generator_baset &template_generator);
+  void initialize() override;
 
-  void solver_iter_init(domaint::valuet &rank);
+  void init_value_solver_iteration(domaint::valuet &rank) override;
 
-  bool edit_row(const rowt &row, valuet &inv, bool improved);
+  bool edit_row(const rowt &row, valuet &inv, bool improved) override;
 
-  exprt to_pre_constraints(valuet &_value);
+  exprt to_pre_constraints(const valuet &_value) override;
 
   void make_not_post_constraints(
-    valuet &_value,
-    exprt::operandst &cond_exprs);
-  std::vector<exprt> get_required_smt_values(size_t row);
-  void set_smt_values(std::vector<exprt> got_values, size_t row);
-  virtual bool handle_unsat(valuet &value, bool improved);
+    const valuet &_value,
+    exprt::operandst &cond_exprs) override;
 
-  virtual bool refine();
-  virtual void reset_refinements();
+  bool handle_unsat(valuet &value, bool improved) override;
+
+  bool refine() override;
+  void reset_refinements() override;
 
   // value -> constraints
-  exprt get_not_constraints(
-    const templ_valuet &value,
-    exprt::operandst &cond_exprs, // identical to before
-    std::vector<pre_post_valuest> &value_exprs); // (x, x')
   exprt get_row_symb_constraint(
     row_valuet &symb_values, // contains vars c and d
     const rowt &row,
     exprt &refinement_constraint);
 
-  void add_element(const rowt &row, templ_valuet &value);
-
-  // set, get value
-  row_valuet get_row_value(const rowt &row, const templ_valuet &value);
-  void set_row_value(
-    const rowt &row,
-    const row_valuet &row_value,
-    templ_valuet &value);
-  void set_row_value_to_true(const rowt &row, templ_valuet &value);
-
   // printing
-  virtual void output_value(
+  void output_value(
     std::ostream &out,
-    const valuet &value,
-    const namespacet &ns) const;
-  virtual void output_domain(
-    std::ostream &out,
-    const namespacet &ns) const;
+    const domaint::valuet &value,
+    const namespacet &ns) const override;
 
   // projection
-  virtual void project_on_vars(
-    valuet &value,
+  void project_on_vars(
+    domaint::valuet &value,
     const var_sett &vars,
-    exprt &result);
-
-  unsigned template_size() {return templ.size();}
+    exprt &result) override;
 
   // generating templates
   void add_template(
     const var_specst &var_specs,
     const namespacet &ns);
 
-  templatet templ;
   unsigned refinement_level;
   // the "inner" solver
   const unsigned max_elements; // lexicographic components
@@ -142,17 +163,6 @@ public:
   incremental_solvert *inner_solver;
   unsigned number_inner_iterations;
 
-protected:
-  pre_post_valuest values;
-  bool is_row_value_false(const row_valuet & row_value) const;
-  bool is_row_value_true(const row_valuet & row_value) const;
-  bool is_row_element_value_false(
-    const row_value_elementt & row_value_element) const;
-  bool is_row_element_value_true(
-    const row_value_elementt & row_value_element) const;
-public:
-  // handles on values to retrieve from model
-  std::vector<lexlinrank_domaint::pre_post_valuest> strategy_value_exprs;
   std::vector<unsigned> number_elements_per_row;
 };
 

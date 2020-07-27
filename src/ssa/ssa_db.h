@@ -67,11 +67,9 @@ public:
   inline void create(
     const function_namet &function_name,
     const goto_functionst::goto_functiont &goto_function,
-    const namespacet &ns,
-    const ssa_heap_analysist &heap_analysis)
+    const namespacet &ns)
   {
-    store[function_name]=
-      new unwindable_local_SSAt(goto_function, ns, options, heap_analysis);
+    store[function_name]=new unwindable_local_SSAt(goto_function, ns, options);
   }
 
 protected:
