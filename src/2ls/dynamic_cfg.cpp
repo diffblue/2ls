@@ -165,7 +165,12 @@ void dynamic_cfgt::build_from_invariant(
     if(guard.id() == ID_and)
       guard = to_and_expr(guard).op0();
     else
-      assert(false);
+      // TODO: array invariants do not have the expected form (G => inv)
+      // since there are bindings between actual and symbolic array indices
+      // and elements.
+      // This should be solved in a better way so that the witness truly
+      // describes an array invariant
+      return;
   }
   ssa.get_full_ssa_name(to_symbol_expr(guard), id.pc, id.iteration_stack);
 
