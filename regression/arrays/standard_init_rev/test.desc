@@ -1,6 +1,6 @@
 CORE
 main.c
---arrays --intervals --inline
+--arrays --intervals --inline --no-propagation
 ^EXIT=0$
 ^SIGNAL=0$
 ^VERIFICATION SUCCESSFUL$

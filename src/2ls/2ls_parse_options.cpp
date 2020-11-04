@@ -1149,6 +1149,8 @@ bool twols_parse_optionst::process_goto_program(
     filter_assertions(goto_model);
 #endif
 
+    make_symbolic_array_indices(goto_model);
+
     if(options.get_bool_option("constant-propagation"))
     {
       status() << "Constant Propagation" << eom;

@@ -778,3 +778,101 @@ void twols_parse_optionst::make_assertions_false(goto_modelt &goto_model)
       if(i.is_assert())
         i.condition_nonconst()=false_exprt();
 }
+
+void set_array_size_rec(const exprt &old_size,
+                        const exprt &new_size,
+                        exprt &expr)
+{
+  if(expr.type().id() == ID_array)
+  {
+    auto &array_type = to_array_type(expr.type());
+    if(array_type.size() == old_size)
+      array_type.size() = new_size;
+  }
+  else
+  {
+    Forall_operands(o_it, expr)
+      set_array_size_rec(old_size, new_size, *o_it);
+  }
+}
+
+/// Find all arrays that have the size equal to old_size and replace their size
+/// by new_size.
+void set_array_size(goto_programt &goto_function,
+                    const exprt &old_size,
+                    const exprt &new_size)
+{
+  Forall_goto_program_instructions(it, goto_function)
+  {
+    if(it->has_condition())
+      set_array_size_rec(old_size, new_size, it->condition_nonconst());
+
+    if(it->is_decl())
+      set_array_size_rec(old_size, new_size, it->decl_symbol());
+    else if(it->is_assign())
+    {
+      if(it->assign_lhs() != new_size)
+      {
+        set_array_size_rec(old_size, new_size, it->assign_lhs_nonconst());
+        set_array_size_rec(old_size, new_size, it->assign_rhs_nonconst());
+      }
+    }
+  }
+}
+
+/// Transform array declarations of the form:
+///   DECL <array> : <type>[<const>]
+/// into:
+///   $array_size#i = <const>
+///   DECL <array> : <type>[$array_size#i]
+/// This way, the solver will handle the array quickly, even if the size is huge
+void twols_parse_optionst::make_symbolic_array_indices(goto_modelt &goto_model)
+{
+  int i = 0;
+  for(auto &f_it : goto_model.goto_functions.function_map)
+  {
+    Forall_goto_program_instructions(i_it, f_it.second.body)
+    {
+      if(i_it->is_decl())
+      {
+        auto &symbol = i_it->decl_symbol();
+        if(symbol.type().id() == ID_array)
+        {
+          auto &array_type = to_array_type(symbol.type());
+
+          if(!array_type.size().is_constant())
+            continue;
+
+          auto next = i_it;
+          next++;
+          if(next->is_assign() && next->assign_lhs() == symbol)
+            continue;
+
+          // New symbol $array_size
+          symbolt size;
+          size.type = array_type.size().type();
+          size.name = "$array_size" + std::to_string(i++);
+          size.base_name = size.name;
+          size.pretty_name = size.name;
+          goto_model.symbol_table.add(size);
+
+          // Declare $array_size
+          auto size_decl = goto_programt::make_decl(
+            code_declt(size.symbol_expr()), i_it->source_location());
+          f_it.second.body.insert_before(i_it, size_decl);
+
+          // $array_size = original size
+          auto size_assign = goto_programt::make_assignment(
+            code_assignt(size.symbol_expr(), array_type.size()),
+            i_it->source_location());
+          f_it.second.body.insert_before(i_it, size_assign);
+
+          // Propagate the new size into all usages of the array
+          exprt old_size = array_type.size(); // copy as it will change
+          set_array_size(f_it.second.body, old_size, size.symbol_expr());
+        }
+      }
+    }
+  }
+  goto_model.goto_functions.update();
+}

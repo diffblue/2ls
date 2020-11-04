@@ -21,7 +21,7 @@
 extern void __VERIFIER_error() __attribute__ ((__noreturn__));
 void __VERIFIER_assert(int cond) { if(!(cond)) { ERROR: __VERIFIER_error(); } }
 
-#define N 10
+#define N 1000000
 
 int main ( ) {
   int a[N];

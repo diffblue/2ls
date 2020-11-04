@@ -190,6 +190,7 @@ protected:
   void assert_no_atexit(goto_modelt &goto_model);
   void fix_goto_targets(goto_modelt &goto_model);
   void make_assertions_false(goto_modelt &goto_model);
+  void make_symbolic_array_indices(goto_modelt &goto_model);
 };
 
 #endif

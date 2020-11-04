@@ -84,17 +84,20 @@ public:
     vart index_var;    // index variable of this segment
     exprt lower_bound; // lower segment index
     exprt upper_bound; // upper segment index
+    exprt array_size;
 
     array_segmentt(const var_spect &array_spec,
                    const vart &elem_var,
                    const vart &index_var,
                    const exprt &lower_bound,
-                   const exprt &upper_bound)
+                   const exprt &upper_bound,
+                   const exprt &array_size)
       : array_spec(array_spec),
         elem_var(elem_var),
         index_var(index_var),
         lower_bound(lower_bound),
-        upper_bound(upper_bound)
+        upper_bound(upper_bound),
+        array_size(array_size)
     {
     }
 
@@ -163,6 +166,8 @@ protected:
   bool ordered_indices(const exprt &first,
                        const exprt &second,
                        const exprt &array_size);
+
+  exprt get_array_size(const var_spect &array_spec);
 
   const local_SSAt &SSA;
   incremental_solvert *solver;

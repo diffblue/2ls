@@ -57,11 +57,7 @@ void array_domaint::make_segments(const var_specst &var_specs,
 
     if(spec.var.type().id() == ID_array)
     {
-      // Get array size
-      auto &array_type = to_array_type(spec.var.type());
-      assert(array_type.is_complete());
-      auto &array_size = array_type.size();
-
+      auto array_size = get_array_size(spec);
       auto &index_type = array_size.type();
 
       auto written_indices = spec.related_vars;
@@ -123,7 +119,7 @@ void array_domaint::add_segment(const var_spect &var_spec,
     symbol_exprt("elem#" + std::to_string(segment_cnt++),
                  to_array_type(var_spec.var.type()).subtype());
   segmentation_map[var_spec.var].emplace_back(
-    var_spec, elem_var, index_var, lower, upper);
+    var_spec, elem_var, index_var, lower, upper, get_array_size(var_spec));
 }
 
 /// Projection of the computed invariant on variables.
@@ -312,6 +308,20 @@ array_domaint::new_strategy_solver(incremental_solvert &solver_,
     *this, std::move(inner_solver), solver_, SSA_, message_handler));
 }
 
+/// Get expression for size of an array
+/// Currently we support only static arrays
+exprt array_domaint::get_array_size(const var_spect &array_spec)
+{
+  auto &array_type = to_array_type(array_spec.var.type());
+  assert(array_type.is_complete());
+  exprt size = array_type.size();
+
+  if(array_spec.var.id() == ID_symbol)
+    size = SSA.read_rhs(size, array_spec.loc);
+
+  return size;
+}
+
 exprt array_domaint::array_segmentt::get_constraint()
 {
   const exprt interval_expr =
@@ -319,8 +329,7 @@ exprt array_domaint::array_segmentt::get_constraint()
               binary_relation_exprt(index_var, ID_lt, upper_bound));
   const exprt bounds_expr = and_exprt(
     binary_relation_exprt(index_var, ID_ge, make_zero(index_var.type())),
-    binary_relation_exprt(
-      index_var, ID_lt, to_array_type(array_spec.var.type()).size()));
+    binary_relation_exprt(index_var, ID_lt, array_size));
   const exprt elem_expr =
     equal_exprt(elem_var, index_exprt(array_spec.var, index_var));
   return conjunction(exprt::operandst({bounds_expr, interval_expr, elem_expr}));
