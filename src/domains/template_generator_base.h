@@ -97,30 +97,31 @@ protected:
   static var_specst filter_heap_domain(const var_specst &var_specs);
   static var_specst filter_array_domain(const var_specst &var_specs);
 
-  void add_var(const vart &var_to_add,
+  void add_var(const vart &var,
                const guardst::guardt &pre_guard,
                guardst::guardt post_guard,
                const guardst::kindt &kind,
                const var_listt &related_vars,
+               locationt loc,
                var_specst &var_specs);
-  void add_vars(
-    const var_listt &vars_to_add,
-    const guardst::guardt &pre_guard,
-    const guardst::guardt &post_guard,
-    const guardst::kindt &kind,
-    var_specst &var_specs);
-  void add_vars(
-    const local_SSAt::var_listt &vars_to_add,
-    const guardst::guardt &pre_guard,
-    const guardst::guardt &post_guard,
-    const guardst::kindt &kind,
-    var_specst &var_specs);
-  void add_vars(
-    const local_SSAt::var_sett &vars_to_add,
-    const guardst::guardt &pre_guard,
-    const guardst::guardt &post_guard,
-    const guardst::kindt &kind,
-    var_specst &var_specs);
+  void add_vars(const var_listt &vars_to_add,
+                const guardst::guardt &pre_guard,
+                const guardst::guardt &post_guard,
+                const guardst::kindt &kind,
+                locationt loc,
+                var_specst &var_specs);
+  void add_vars(const local_SSAt::var_listt &vars_to_add,
+                const guardst::guardt &pre_guard,
+                const guardst::guardt &post_guard,
+                const guardst::kindt &kind,
+                locationt loc,
+                var_specst &var_specs);
+  void add_vars(const local_SSAt::var_sett &vars_to_add,
+                const guardst::guardt &pre_guard,
+                const guardst::guardt &post_guard,
+                const guardst::kindt &kind,
+                locationt loc,
+                var_specst &var_specs);
 
   void get_pre_post_guards(
     const local_SSAt &SSA,

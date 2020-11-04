@@ -65,20 +65,23 @@ void template_generator_summaryt::collect_variables_inout(
            first_guard,
            first_guard,
            forward ? guardst::IN : guardst::OUT,
+           SSA.goto_function.body.instructions.begin(),
            all_var_specs);
   add_vars(SSA.globals_in,
            first_guard,
            first_guard,
            forward ? guardst::IN : guardst::OUT,
+           SSA.goto_function.body.instructions.begin(),
            all_var_specs);
 
   // add globals_out (includes return values)
-  exprt last_guard=
-    SSA.guard_symbol(--SSA.goto_function.body.instructions.end());
+  auto last_loc = --SSA.goto_function.body.instructions.end();
+  exprt last_guard = SSA.guard_symbol(last_loc);
   add_vars(SSA.globals_out,
            last_guard,
            last_guard,
            forward ? guardst::OUT : guardst::IN,
+           last_loc,
            all_var_specs);
 }
 

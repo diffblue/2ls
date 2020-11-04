@@ -82,6 +82,7 @@ void template_generator_callingcontextt::collect_variables_callingcontext(
               guard,
               guardst::OUT, // the same for both forward and backward
               {},
+              n_it->location,
               all_var_specs);
     }
   }
@@ -98,7 +99,7 @@ void template_generator_callingcontextt::collect_variables_callingcontext(
     std::set<symbol_exprt> args;
     find_symbols(*a_it, args);
     exprt arg=*a_it;
-    add_vars(args, guard, guard, guardst::OUT, all_var_specs);
+    add_vars(args, guard, guard, guardst::OUT, n_it->location, all_var_specs);
   }
 }
 

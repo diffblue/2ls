@@ -205,6 +205,7 @@ void template_generator_baset::collect_variables_loop(
                 obj_post_guard,
                 guardst::kindt::LOOP,
                 related_vars,
+                n_it->location,
                 all_var_specs);
 
 #ifdef DEBUG
@@ -287,6 +288,7 @@ void template_generator_baset::add_var(const vart &var,
                                        guardst::guardt post_guard,
                                        const guardst::kindt &kind,
                                        const var_listt &related_vars,
+                                       locationt loc,
                                        var_specst &var_specs)
 {
   exprt aux_expr=true_exprt();
@@ -314,6 +316,7 @@ void template_generator_baset::add_var(const vart &var,
   var_spec.guards.kind = kind;
   var_spec.var = var;
   var_spec.related_vars = related_vars;
+  var_spec.loc = loc;
 }
 
 void template_generator_baset::add_vars(
@@ -321,32 +324,33 @@ void template_generator_baset::add_vars(
   const guardst::guardt &pre_guard,
   const guardst::guardt &post_guard,
   const guardst::kindt &kind,
+  locationt loc,
   var_specst &var_specs)
 {
   for(const auto &v : vars_to_add)
-    add_var(v, pre_guard, post_guard, kind, {}, var_specs);
+    add_var(v, pre_guard, post_guard, kind, {}, loc, var_specs);
 }
 
-void template_generator_baset::add_vars(
-  const local_SSAt::var_sett &vars_to_add,
-  const guardst::guardt &pre_guard,
-  const guardst::guardt &post_guard,
-  const guardst::kindt &kind,
-  var_specst &var_specs)
+void template_generator_baset::add_vars(const local_SSAt::var_sett &vars_to_add,
+                                        const guardst::guardt &pre_guard,
+                                        const guardst::guardt &post_guard,
+                                        const guardst::kindt &kind,
+                                        locationt loc,
+                                        var_specst &var_specs)
 {
   for(const auto &v : vars_to_add)
-    add_var(v, pre_guard, post_guard, kind, {}, var_specs);
+    add_var(v, pre_guard, post_guard, kind, {}, loc, var_specs);
 }
 
-void template_generator_baset::add_vars(
-  const var_listt &vars_to_add,
-  const guardst::guardt &pre_guard,
-  const guardst::guardt &post_guard,
-  const guardst::kindt &kind,
-  var_specst &var_specs)
+void template_generator_baset::add_vars(const var_listt &vars_to_add,
+                                        const guardst::guardt &pre_guard,
+                                        const guardst::guardt &post_guard,
+                                        const guardst::kindt &kind,
+                                        locationt loc,
+                                        var_specst &var_specs)
 {
   for(const auto &v : vars_to_add)
-    add_var(v, pre_guard, post_guard, kind, {}, var_specs);
+    add_var(v, pre_guard, post_guard, kind, {}, loc, var_specs);
 }
 
 void template_generator_baset::handle_special_functions(const local_SSAt &SSA)
