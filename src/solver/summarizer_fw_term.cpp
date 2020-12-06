@@ -271,6 +271,8 @@ void summarizer_fw_termt::do_termination(
   if(!summary.fw_precondition.is_true())
     summary.termination_argument=
       implies_exprt(summary.fw_precondition, summary.termination_argument);
+  summary.fw_domain_ptr=template_generator1.get_domain();
+  summary.fw_value_ptr=analyzer1.get_abstract_value();
 
   // statistics
   solver_instances+=analyzer1.get_number_of_solver_instances();

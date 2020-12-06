@@ -17,6 +17,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/std_expr.h>
 #include <ssa/local_ssa.h>
+#include <domains/domain.h>
 
 typedef enum {YES, NO, UNKNOWN} threevalt;
 
@@ -52,6 +53,15 @@ class summaryt
   predicatet bw_postcondition; // accumulated postconditions (over/under-approx)
   predicatet bw_transformer; // backward summary (over- or under-approx)
   predicatet bw_invariant; // backward invariant (over- or under-approx)
+
+  // The following fields represent the used abstract domains (containing
+  // the template) and the corresponding computed abstract values.
+  // These can be useful to retrieve information that cannot be easily parsed
+  // from the invariant expression.
+  std::unique_ptr<domaint> fw_domain_ptr; // forward abstract domain
+  std::unique_ptr<domaint::valuet> fw_value_ptr; // forward abstract value
+  std::unique_ptr<domaint> bw_domain_ptr; // backward abstract domain
+  std::unique_ptr<domaint::valuet> bw_value_ptr; // backward abstract value
 
   predicatet aux_precondition;
 

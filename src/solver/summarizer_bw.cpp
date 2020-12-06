@@ -157,6 +157,8 @@ void summarizer_bwt::do_summary(
       summary.bw_transformer, template_generator.inout_vars());
     analyzer.get_result(summary.bw_invariant, template_generator.loop_vars());
     analyzer.get_result(summary.bw_precondition, template_generator.out_vars());
+    summary.bw_domain_ptr=template_generator.get_domain();
+    summary.bw_value_ptr=analyzer.get_abstract_value();
 
     // statistics
     solver_instances+=analyzer.get_number_of_solver_instances();

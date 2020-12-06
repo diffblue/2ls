@@ -269,7 +269,7 @@ void summarizer_bw_termt::do_summary_term(
       postcond.clear();
     }
   }
-
+  summary.bw_domain_ptr=template_generator2.get_domain();
   solver.pop_context();
 }
 
@@ -369,6 +369,7 @@ exprt summarizer_bw_termt::compute_precondition(
   exprt postcond=not_exprt(conjunction(postconditions));
 
   // compute backward summary
+  summaryt bw_summary;
   exprt bw_transformer, bw_invariant, bw_precondition;
   if(!template_generator.out_vars().empty())
   {
@@ -378,6 +379,7 @@ exprt summarizer_bw_termt::compute_precondition(
     analyzer.get_result(bw_transformer, template_generator.inout_vars());
     analyzer.get_result(bw_invariant, template_generator.loop_vars());
     analyzer.get_result(bw_precondition, template_generator.out_vars());
+    summary.bw_value_ptr=analyzer.get_abstract_value();
 
     // statistics
     solver_instances+=analyzer.get_number_of_solver_instances();
@@ -426,6 +428,7 @@ exprt summarizer_bw_termt::compute_precondition(
     summary.bw_invariant=or_exprt(summary.bw_invariant, bw_invariant);
     summary.bw_precondition=or_exprt(summary.bw_precondition, bw_precondition);
   }
+  summary.bw_value_ptr=std::move(bw_summary.bw_value_ptr);
 
   return bw_precondition;
 }

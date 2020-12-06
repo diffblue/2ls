@@ -138,6 +138,8 @@ void summarizer_fwt::do_summary(
   analyzer(solver, SSA, cond, template_generator);
   analyzer.get_result(summary.fw_transformer, template_generator.inout_vars());
   analyzer.get_result(summary.fw_invariant, template_generator.loop_vars());
+  summary.fw_domain_ptr=template_generator.get_domain();
+  summary.fw_value_ptr=analyzer.get_abstract_value();
 
 #ifdef SHOW_WHOLE_RESULT
   // to see all the custom template values
