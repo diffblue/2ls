@@ -230,7 +230,7 @@ bool summarizer_baset::check_precondition(
 
   if(summary_db.exists(fname))
   {
-    summaryt summary=summary_db.get(fname);
+    const summaryt &summary=summary_db.get(fname);
     if(summary.mark_recompute)
       return false;
     if(!context_sensitive ||

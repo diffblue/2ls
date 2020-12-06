@@ -147,7 +147,7 @@ void summarizer_fw_termt::compute_summary_rec(
   }
 
   // store summary in db
-  summary_db.put(function_name, summary);
+  summary_db.put(function_name, std::move(summary));
 }
 
 void summarizer_fw_termt::inline_summaries(

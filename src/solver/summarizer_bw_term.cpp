@@ -84,7 +84,7 @@ void summarizer_bw_termt::compute_summary_rec(
   }
 
   // store summary in db
-  summary_db.put(function_name, summary);
+  summary_db.put(function_name, std::move(summary));
 
   {
     std::ostringstream out;
@@ -145,7 +145,12 @@ void summarizer_bw_termt::do_summary_term(
   exprt::operandst postcond;
   // backward summaries
   ssa_inliner.get_summaries(SSA, false, postcond, bindings);
-  collect_postconditions(function_name, SSA, summary, postcond, true);
+  collect_postconditions(
+    function_name,
+    SSA,
+    summary.bw_postcondition,
+    postcond,
+    true);
 
   // prepare solver
   solver << SSA;

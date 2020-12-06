@@ -132,7 +132,7 @@ void summarizer_fw_contextst::inline_summaries(
         summary.fw_precondition=precondition_call;
         summary.fw_transformer=true_exprt();
 
-        summary_db.put(fname, summary);
+        summary_db.put(fname, std::move(summary));
         continue;
       }
 

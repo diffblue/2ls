@@ -98,7 +98,7 @@ void summarizer_bwt::compute_summary_rec(
   }
 
   // store summary in db
-  summary_db.put(function_name, summary);
+  summary_db.put(function_name, std::move(summary));
 
   {
     std::ostringstream out;
@@ -133,7 +133,12 @@ void summarizer_bwt::do_summary(
   c.push_back(ssa_inliner.get_summaries(SSA)); // forward summaries
   exprt::operandst postcond;
   ssa_inliner.get_summaries(SSA, false, postcond, c); // backward summaries
-  collect_postconditions(function_name, SSA, summary, postcond, sufficient);
+  collect_postconditions(
+    function_name,
+    SSA,
+    summary.bw_postcondition,
+    postcond,
+    sufficient);
   if(!sufficient)
   {
     c.push_back(conjunction(postcond));
@@ -247,7 +252,7 @@ void summarizer_bwt::inline_summaries(
 void summarizer_bwt::collect_postconditions(
   const function_namet &function_name,
   const local_SSAt &SSA,
-  const summaryt &summary,
+  const exprt &postcondition,
   exprt::operandst &postconditions,
   bool sufficient)
 {
@@ -264,9 +269,9 @@ void summarizer_bwt::collect_postconditions(
 
   exprt guard=SSA.guard_symbol(--SSA.goto_function.body.instructions.end());
   if(!sufficient)
-    postconditions.push_back(and_exprt(guard, summary.bw_postcondition));
+    postconditions.push_back(and_exprt(guard, postcondition));
   else
-    postconditions.push_back(implies_exprt(guard, summary.bw_postcondition));
+    postconditions.push_back(implies_exprt(guard, postcondition));
 }
 
 /// returns false if the summary needs to be recomputed
@@ -289,7 +294,7 @@ bool summarizer_bwt::check_postcondition(
   if(!summary_db.exists(fname))
     return true; // nothing to do
 
-  summaryt summary=summary_db.get(fname);
+  const summaryt &summary=summary_db.get(fname);
 
   if(summary.bw_precondition.is_nil())
     return false; // there is work to do
@@ -366,7 +371,7 @@ bool summarizer_bwt::check_postcondition(
 exprt summarizer_bwt::compute_calling_context2(
   const function_namet &function_name,
   local_SSAt &SSA,
-  summaryt old_summary,
+  const summaryt &old_summary,
   local_SSAt::nodest::const_iterator n_it,
   local_SSAt::nodet::function_callst::const_iterator f_it,
   const exprt &postcondition,
@@ -402,8 +407,12 @@ exprt summarizer_bwt::compute_calling_context2(
   c.push_back(ssa_inliner.get_summaries(SSA)); // forward summaries
   exprt::operandst postcond;
   ssa_inliner.get_summaries(SSA, false, postcond, c); // backward summaries
-  old_summary.bw_postcondition=postcondition; // that's a bit awkward
-  collect_postconditions(function_name, SSA, old_summary, postcond, sufficient);
+  collect_postconditions(
+    function_name,
+    SSA,
+    postcondition,
+    postcond,
+    sufficient);
   if(!sufficient)
   {
     c.push_back(conjunction(postcond));

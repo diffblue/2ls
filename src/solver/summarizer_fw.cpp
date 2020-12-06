@@ -77,7 +77,7 @@ void summarizer_fwt::compute_summary_rec(
 #endif
 
   // store summary in db
-  summary_db.put(function_name, summary);
+  summary_db.put(function_name, std::move(summary));
 
   if(!options.get_bool_option("competition-mode"))
   {

@@ -19,16 +19,22 @@ void graphml_witness_extt::operator()(
   const unwindable_local_SSAt &ssa=
     static_cast<const unwindable_local_SSAt &>(
       summary_checker.ssa_db.get(function_name));
-  summaryt summary;
-  if(summary_checker.summary_db.exists(function_name))
-    summary=summary_checker.summary_db.get(function_name);
   const ssa_local_unwindert &ssa_unwinder=
   summary_checker.ssa_unwinder.get(function_name);
 
   graphml.key_values["sourcecodelang"]="C";
 
   dynamic_cfgt cfg;
-  cfg(ssa_unwinder, ssa, summary);
+  if(summary_checker.summary_db.exists(function_name))
+  {
+    const summaryt &summary=summary_checker.summary_db.get(function_name);
+    cfg(ssa_unwinder, ssa, summary);
+  }
+  else
+  {
+    cfg(ssa_unwinder, ssa, summaryt());
+  }
+
 
   // CFG to CFA
   const graphmlt::node_indext sink=graphml.add_node();

@@ -26,11 +26,11 @@ public:
   void write();
   void clear() { store.clear(); }
 
-  summaryt get(const function_namet &function_name) const
+  const summaryt &get(const function_namet &function_name) const
     { return store.at(function_name); }
   bool exists(const function_namet &function_name) const
     { return store.find(function_name)!=store.end(); }
-  void put(const function_namet &function_name, const summaryt &summary);
+  void put(const function_namet &function_name, summaryt &&summary);
 
   void mark_recompute_all();
 
