@@ -106,6 +106,27 @@ void simple_domaint::templatet::output(
   }
 }
 
+/// Return guard-invariant pairs for invariants contained in the given value
+/// Default behaviour: for each template row, return one pair (loop select
+/// guard, row_expr) where loop select guard is expected to be the first
+/// operator of the row pre_guard.
+std::vector<domaint::guard_invariant> simple_domaint::get_guards_and_invariants(
+  const domaint::valuet &value) const
+{
+  auto &simple_value=dynamic_cast<const valuet &>(value);
+  std::vector<domaint::guard_invariant> invariants;
+  for(rowt row=0; row<templ.size(); row++)
+  {
+    domaint::guard_invariant pair;
+    auto row_exprt=simple_value.get_row_expr(row, templ[row]);
+    exprt guard=pair.first=templ[row].guards.pre_guard;
+    pair.first=guard.op0();
+    pair.second=row_exprt;
+    invariants.push_back(pair);
+  }
+  return invariants;
+}
+
 /// Output the domain (its template)
 /// Default behaviour: output template.
 void simple_domaint::output_domain(

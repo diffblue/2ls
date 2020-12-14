@@ -114,6 +114,9 @@ public:
   /// Default is the row expression of the value.
   virtual exprt get_row_value_constraint(rowt row, const valuet &value);
 
+  std::vector<guard_invariant> get_guards_and_invariants(
+    const domaint::valuet &value) const override;
+
   /// Output the domain (its template)
   /// Default behaviour: output template.
   void output_domain(std::ostream &out, const namespacet &ns) const override;

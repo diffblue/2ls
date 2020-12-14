@@ -81,29 +81,17 @@ extern void purify_identifiers(exprt &expr);
 
 void instrument_gotot::instrument_body(
   const local_SSAt &SSA,
+  const symbol_exprt &guard,
   const exprt &expr,
   goto_functionst::goto_functiont &function)
 {
-  // expected format (/\_j g_j)=> inv
-  const exprt &impl=expr.op0();
-  exprt inv=expr.op1(); // copy
-
+  // copy the invariant so that it isn't changed by purify_identifiers
+  exprt inv=expr;
   std::cout << "Invariant " << from_expr(inv) << std::endl;
 
   purify_identifiers(inv);
 
-  local_SSAt::locationt loc;
-  if(impl.id()==ID_symbol)
-  {
-    loc=find_loop_by_guard(SSA, to_symbol_expr(impl));
-  }
-  else if(impl.id()==ID_and)
-  {
-    assert(impl.op0().id()==ID_symbol);
-    loc=find_loop_by_guard(SSA, to_symbol_expr(impl.op0()));
-  }
-  else
-    assert(false);
+  auto loc=find_loop_by_guard(SSA, guard);
 
   Forall_goto_program_instructions(it, function.body)
   {
@@ -138,21 +126,14 @@ void instrument_gotot::instrument_function(
   if(summary.fw_invariant.is_true())
     return;
 
-  // expected format /\_i g_i=> inv_i
-  if(summary.fw_invariant.id()==ID_implies)
+  std::vector<domaint::guard_invariant> inv=
+    summary.fw_domain_ptr->get_guards_and_invariants(*summary.fw_value_ptr);
+  for(auto const &guard_invariant : inv)
   {
-    instrument_body(SSA, summary.fw_invariant, function);
+    const symbol_exprt &guard=to_symbol_expr(guard_invariant.first);
+    exprt invariant=guard_invariant.second;
+    instrument_body(SSA, guard, invariant, function);
   }
-  else if(summary.fw_invariant.id()==ID_and)
-  {
-    for(unsigned i=0; i<summary.fw_invariant.operands().size(); i++)
-    {
-      assert(summary.fw_invariant.operands()[i].id()==ID_implies);
-      instrument_body(SSA, summary.fw_invariant.operands()[i], function);
-    }
-  }
-  else
-    assert(false);
 }
 
 void instrument_gotot::operator()(goto_modelt &goto_model)

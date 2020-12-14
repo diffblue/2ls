@@ -139,6 +139,11 @@ public:
   /// in the strategy solver (see method edit_row).
   virtual void join(valuet &value1, const valuet &value2);
 
+  typedef std::pair<exprt, exprt> guard_invariant;
+  /// Return pairs of guard - invariant from the abstract value.
+  virtual std::vector<guard_invariant> get_guards_and_invariants(
+    const domaint::valuet &value) const { return {}; }
+
   /// Output the domain (its template)
   virtual void output_domain(std::ostream &out, const namespacet &ns) const=0;
 
