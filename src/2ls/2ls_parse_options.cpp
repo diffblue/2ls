@@ -1561,6 +1561,7 @@ void twols_parse_optionst::help()
     " --no-assumptions             ignore user assumptions\n"
     " --inline                     inline all functions into main\n"
     " --inline-partial nr          inline functions smaller than the given nr of instructions\n" // NOLINT(*)
+    " --instrument-output outfile  instrument GOTO code with invariants and export it to outfile\n" // NOLINT(*)
     "\n"
     "Backend options:\n"
     " --all-functions              check each function as entry point\n"
