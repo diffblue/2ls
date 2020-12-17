@@ -811,3 +811,23 @@ void twols_parse_optionst::assert_no_builtin_functions(goto_modelt &goto_model)
     }
   }
 }
+
+/// Prevents usage of atexit function which is not supported, yet
+/// Must be called before inlining since it will lose the calls
+void twols_parse_optionst::assert_no_atexit(goto_modelt &goto_model)
+{
+  forall_goto_functions(f_it, goto_model.goto_functions)
+  {
+    forall_goto_program_instructions(i_it, f_it->second.body)
+    {
+      if(i_it->is_function_call())
+      {
+        auto &call=to_code_function_call(i_it->code);
+        if(!(call.function().id()==ID_symbol))
+          continue;
+        auto &name=id2string(to_symbol_expr(call.function()).get_identifier());
+        assert(name!="atexit");
+      }
+    }
+  }
+}
