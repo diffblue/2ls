@@ -17,11 +17,11 @@ Author: Daniel Kroening, kroening@kroening.com
 
 void summary_dbt::put(
   const function_namet &function_name,
-  const summaryt &summary)
+  summaryt &&summary)
 {
   if(store.find(function_name)==store.end() ||
      store[function_name].mark_recompute)
-    store[function_name]=summary;
+    store[function_name]=std::move(summary);
   else
     store[function_name].join(summary);
 }

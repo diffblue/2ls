@@ -126,7 +126,7 @@ void instrument_gotot::instrument_function(
   if(!summary_db.exists(function_name))
     return;
 
-  const summaryt summary=summary_db.get(function_name);
+  const summaryt &summary=summary_db.get(function_name);
 
   if(!ssa_db.exists(function_name))
     return;

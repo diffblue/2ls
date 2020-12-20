@@ -71,14 +71,14 @@ protected:
   virtual void collect_postconditions(
     const function_namet &function_name,
     const local_SSAt &SSA,
-    const summaryt &summary,
+    const exprt &postcondition,
     exprt::operandst &postconditions,
     bool sufficient);
 
   virtual exprt compute_calling_context2(
     const function_namet &function_name,
     local_SSAt &SSA,
-    summaryt old_summary,
+    const summaryt &old_summary,
     local_SSAt::nodest::const_iterator n_it,
     local_SSAt::nodet::function_callst::const_iterator f_it,
     const exprt &postcondition,

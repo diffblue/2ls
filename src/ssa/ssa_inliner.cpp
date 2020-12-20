@@ -179,7 +179,7 @@ void ssa_inlinert::replace(
 
       if(summary_db.exists(fname))
       {
-        summaryt summary=summary_db.get(fname);
+        const summaryt &summary=summary_db.get(fname);
 
         status() << "Replacing function " << fname << " by summary" << eom;
 

@@ -54,6 +54,11 @@ public:
     return domain_ptr.get();
   }
 
+  std::unique_ptr<domaint> get_domain()
+  {
+    return std::move(domain_ptr);
+  };
+
   var_specst var_specs;
   replace_mapt post_renaming_map;
   replace_mapt init_renaming_map;
