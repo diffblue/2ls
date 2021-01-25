@@ -232,12 +232,9 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
     }
   }
 
-  // Heap domain requires full program inlining and usage of symbolic paths
+  // Heap domain requires full program inlining
   if(cmdline.isset("heap"))
-  {
     options.set_option("inline", true);
-    options.set_option("sympath", true);
-  }
 
   // use incremental assertion checks
   if(cmdline.isset("non-incremental"))
@@ -400,6 +397,12 @@ int twols_parse_optionst::doit()
 
   if(get_goto_program(options, goto_model))
     return 6;
+
+  if(cmdline.isset("heap") && dynamic_memory_detected)
+  {
+    // Only use sympath domain if dynamic memory is used
+    options.set_option("sympath", true);
+  }
 
   const namespacet ns(goto_model.symbol_table);
 
