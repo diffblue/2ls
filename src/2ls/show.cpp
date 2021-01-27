@@ -169,16 +169,16 @@ void show_guards(
 void show_ssa(
   const goto_functionst::goto_functiont &goto_function,
   bool simplify,
-  const namespacet &ns,
+  const symbol_tablet &symbol_table,
   const optionst &options,
   std::ostream &out)
 {
   if(!goto_function.body_available())
     return;
 
-  unwindable_local_SSAt local_SSA(goto_function, ns, options);
+  unwindable_local_SSAt local_SSA(goto_function, symbol_table, options);
   if(simplify)
-    ::simplify(local_SSA, ns);
+    ::simplify(local_SSA, local_SSA.ns);
   local_SSA.output_verbose(out);
 }
 
@@ -190,8 +190,6 @@ void show_ssa(
   std::ostream &out,
   message_handlert &message_handler)
 {
-  const namespacet ns(goto_model.symbol_table);
-
   if(!function.empty())
   {
     out << ">>>> Function " << function << "\n";
@@ -200,7 +198,7 @@ void show_ssa(
     if(f_it==goto_model.goto_functions.function_map.end())
       out << "function " << function << " not found\n";
     else
-      show_ssa(f_it->second, simplify, ns, options, out);
+      show_ssa(f_it->second, simplify, goto_model.symbol_table, options, out);
   }
   else
   {
@@ -213,7 +211,7 @@ void show_ssa(
 
       out << ">>>> Function " << f_it->first << "\n";
 
-      show_ssa(f_it->second, simplify, ns, options, out);
+      show_ssa(f_it->second, simplify, goto_model.symbol_table, options, out);
 
       out << "\n";
     }

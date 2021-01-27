@@ -87,7 +87,7 @@ void instrument_gotot::instrument_body(
 {
   // copy the invariant so that it isn't changed by purify_identifiers
   exprt inv=expr;
-  std::cout << "Invariant " << from_expr(inv) << std::endl;
+  std::cout << "Invariant " << from_expr(SSA.ns, "", inv) << std::endl;
 
   purify_identifiers(inv);
 

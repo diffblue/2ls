@@ -44,7 +44,7 @@ Author: Peter Schrammel
 
 void summary_checker_baset::SSA_functions(
   const goto_modelt &goto_model,
-  const namespacet &ns)
+  const symbol_tablet &symbol_table)
 {
   // compute SSA for all the functions
   forall_goto_functions(f_it, goto_model.goto_functions)
@@ -55,14 +55,14 @@ void summary_checker_baset::SSA_functions(
       continue;
     status() << "Computing SSA of " << f_it->first << messaget::eom;
 
-    ssa_db.create(f_it->first, f_it->second, ns);
+    ssa_db.create(f_it->first, f_it->second, symbol_table);
     local_SSAt &SSA=ssa_db.get(f_it->first);
 
     // simplify, if requested
     if(simplify)
     {
       status() << "Simplifying" << messaget::eom;
-      ::simplify(SSA, ns);
+      ::simplify(SSA, SSA.ns);
     }
 
     SSA.output(debug()); debug() << eom;

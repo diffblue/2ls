@@ -79,7 +79,7 @@ protected:
 
   void SSA_functions(
     const goto_modelt &,
-    const namespacet &ns);
+    const symbol_tablet &symbol_table);
 
   void summarize(
     const goto_modelt &,

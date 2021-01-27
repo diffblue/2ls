@@ -39,10 +39,10 @@ public:
 
   inline local_SSAt(
     const goto_functiont &_goto_function,
-    const namespacet &_ns,
+    const symbol_tablet &_symbol_table,
     const optionst &_options,
     const std::string &_suffix=""):
-    ns(_ns), goto_function(_goto_function), options(_options),
+    ns(_symbol_table), goto_function(_goto_function), options(_options),
     ssa_objects(_goto_function, ns),
     ssa_value_ai(_goto_function, ns, options),
     assignments(
@@ -168,7 +168,7 @@ public:
 
   bool has_function_calls() const;
 
-  const namespacet &ns;
+  const namespacet ns;
   const goto_functiont &goto_function;
   const optionst &options;
 
