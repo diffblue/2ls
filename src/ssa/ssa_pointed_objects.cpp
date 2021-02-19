@@ -17,30 +17,6 @@ const irep_idt level_str(const unsigned level, const irep_idt &suffix)
   return "#lvl_"+std::to_string(level)+"_"+id2string(suffix);
 }
 
-const irep_idt it_field_str(const unsigned level)
-{
-  return id2string(ID_it_field)+"_"+std::to_string(level);
-}
-
-void copy_iterator(exprt &dest, const exprt &src)
-{
-  if(src.get_bool(ID_iterator))
-  {
-    dest.set(ID_iterator, true);
-    dest.set(ID_it_pointer, src.get(ID_it_pointer));
-    dest.set(ID_it_init_value, src.get(ID_it_init_value));
-    dest.set(ID_it_init_value_level, src.get(ID_it_init_value_level));
-
-    unsigned field_cnt=src.get_unsigned_int(ID_it_field_cnt);
-    dest.set(ID_it_field_cnt, field_cnt);
-    for(unsigned i=0; i<field_cnt; ++i)
-    {
-      const irep_idt field=src.get(it_field_str(i));
-      dest.set(it_field_str(i), field);
-    }
-  }
-}
-
 void copy_pointed_info(exprt &dest, const exprt &src, const unsigned max_level)
 {
   if(max_level<pointed_level(src))
@@ -121,8 +97,6 @@ symbol_exprt pointed_object(const exprt &expr, const namespacet &ns)
         to_symbol_type(pointed_type).get_identifier());
     }
 
-    copy_iterator(pointed, root_obj);
-
     return pointed;
   }
   else
@@ -182,20 +156,9 @@ const exprt get_pointer(const exprt &expr, unsigned level)
   return pointer;
 }
 
-unsigned it_value_level(const exprt &expr)
-{
-  assert(expr.get_bool(ID_pointed));
-  return expr.get_unsigned_int(ID_it_init_value_level);
-}
-
 bool is_pointed(const exprt &expr)
 {
   return expr.get_bool(ID_pointed);
-}
-
-bool is_iterator(const exprt &expr)
-{
-  return expr.get_bool(ID_iterator);
 }
 
 void copy_pointed_info(exprt &dest, const exprt &src)
@@ -242,27 +205,6 @@ const exprt symbolic_dereference(const exprt &expr, const namespacet &ns)
   }
 }
 
-void set_iterator_fields(exprt &dest, const std::vector<irep_idt> fields)
-{
-  dest.set(ID_it_field_cnt, (unsigned) fields.size());
-  for(unsigned i=0; i<fields.size(); ++i)
-  {
-    dest.set(it_field_str(i), fields.at(i));
-  }
-}
-
-const std::vector<irep_idt> get_iterator_fields(const exprt &expr)
-{
-  assert(is_iterator(expr));
-  unsigned cnt=expr.get_unsigned_int(ID_it_field_cnt);
-  std::vector<irep_idt> result;
-  for(unsigned i=0; i<cnt; ++i)
-  {
-    result.push_back(expr.get(it_field_str(i)));
-  }
-  return result;
-}
-
 const std::vector<irep_idt> pointer_fields(
   const exprt &expr,
   const unsigned from_level)
@@ -302,20 +244,6 @@ const irep_idt get_pointer_id(const exprt &expr)
     }
   }
   return irep_idt();
-}
-
-const irep_idt iterator_to_initial_id(
-  const exprt &expr,
-  const irep_idt &expr_id)
-{
-  assert(is_iterator(expr));
-  std::string id_str=id2string(expr_id);
-  const std::string init_value_id_str=id2string(expr.get(ID_it_init_value));
-  const std::string iterator_id_str=id2string(expr.get(ID_it_pointer))+"'it";
-
-  assert(id_str.find(iterator_id_str)!=std::string::npos);
-  return id_str.replace(
-    id_str.find(iterator_id_str), iterator_id_str.length(), init_value_id_str);
 }
 
 bool has_symbolic_deref(const exprt &expr)
