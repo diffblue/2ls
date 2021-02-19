@@ -570,7 +570,6 @@ void local_SSAt::build_assertions(locationt loc)
     }
 
     const exprt deref_rhs=dereference(assert, loc);
-    collect_iterators_rhs(deref_rhs, loc);
 
     const exprt rhs=concretise_symbolic_deref_rhs(assert, ns, loc);
     exprt c=read_rhs(rhs, loc);
@@ -1026,9 +1025,6 @@ void local_SSAt::assign_rec(
 
     if(assigned.find(lhs_object)!=assigned.end())
     {
-      collect_iterators_lhs(lhs_object, loc);
-      collect_iterators_rhs(rhs, loc);
-
       exprt ssa_rhs=fresh_rhs ? name(ssa_objectt(rhs, ns), OUT, loc)
                               : read_rhs(rhs, loc);
 
@@ -1440,65 +1436,6 @@ exprt local_SSAt::unknown_obj_eq(
     id2string(obj.get_identifier())+"."+id2string(component.get_name());
   const symbol_exprt member(identifier, component.type());
   return equal_exprt(member, address_of_exprt(obj));
-}
-
-void local_SSAt::collect_iterators_rhs(const exprt &expr, locationt loc)
-{
-  if(expr.id()==ID_member)
-  {
-    const member_exprt &member=to_member_expr(expr);
-    if(member.compound().get_bool(ID_iterator) &&
-       member.compound().id()==ID_symbol)
-    {
-      new_iterator_access(to_member_expr(expr), loc, list_iteratort::IN_LOC);
-    }
-  }
-  else
-  {
-    forall_operands(it, expr)
-      collect_iterators_rhs(*it, loc);
-  }
-}
-
-void local_SSAt::collect_iterators_lhs(
-  const ssa_objectt &object,
-  local_SSAt::locationt loc)
-{
-  if(is_iterator(object.get_root_object()) &&
-     object.get_root_object().id()==ID_symbol)
-  {
-    assert(object.get_expr().id()==ID_member);
-    new_iterator_access(
-      to_member_expr(object.get_expr()),
-      loc,
-      loc->location_number);
-  }
-}
-
-/// Create new iterator access
-void local_SSAt::new_iterator_access(
-  const member_exprt &expr,
-  local_SSAt::locationt loc,
-  unsigned inst_loc_number)
-{
-  assert(is_iterator(expr.compound()));
-
-  const irep_idt pointer_id=expr.compound().get(ID_it_pointer);
-  const symbolt &pointer_symbol=ns.lookup(pointer_id);
-  exprt pointer_rhs=read_rhs(pointer_symbol.symbol_expr(), loc);
-  assert(pointer_rhs.id()==ID_symbol);
-
-  unsigned init_value_level=expr.compound().get_unsigned_int(
-    ID_it_init_value_level);
-  const exprt init_pointer=get_pointer(expr.compound(), init_value_level-1);
-
-  list_iteratort iterator(
-    to_symbol_expr(pointer_rhs),
-    init_pointer,
-    get_iterator_fields(expr.compound()));
-
-  auto it=iterators.insert(iterator);
-  it.first->add_access(expr, inst_loc_number);
 }
 
 /// Create new iterator access

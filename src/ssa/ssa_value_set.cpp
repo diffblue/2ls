@@ -505,45 +505,7 @@ bool ssa_value_domaint::valuest::merge(
         }
 
         if(it!=value_set.end())
-        {
-          if(!it->get_expr().get_bool(ID_iterator))
-          {
-            assert(it->get_expr().get_bool(ID_pointed));
-            ssa_objectt object_copy(*it);
-            object_copy.set_iterator(
-              object_id,
-              pointer_fields(
-                v.get_expr(),
-                level));
-            value_set.erase(it);
-            value_set.insert(object_copy);
-            result=true;
-          }
           continue;
-        }
-      }
-      if(is_iterator(v.get_expr()))
-        continue;
-    }
-    else
-    {
-      if(v.get_expr().get_bool(ID_iterator))
-      {
-        const irep_idt &corresponding_id=iterator_to_initial_id(
-          v.get_expr(), v.get_identifier());
-
-        auto it=std::find_if(
-          value_set.begin(),
-          value_set.end(),
-          [&corresponding_id](const ssa_objectt &o)
-          { return o.get_expr().get_bool(ID_pointed) &&
-                   (o.get_identifier()==corresponding_id); });
-        if(it!=value_set.end())
-        {
-          if(v!=*it)
-            result=true;
-          value_set.erase(it);
-        }
       }
     }
     value_set.insert(v);
@@ -574,9 +536,7 @@ bool ssa_value_domaint::merge(
   {
     if(v_it==value_map.end() || it->first<v_it->first)
     {
-      if(!from->is_backwards_goto() ||
-         !is_iterator(it->first.get_root_object()))
-        value_map.insert(v_it, *it);
+      value_map.insert(v_it, *it);
       result=true;
       it++;
       continue;

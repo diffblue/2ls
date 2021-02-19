@@ -193,8 +193,6 @@ protected:
     const struct_union_typet::componentt &component,
     const local_SSAt &SSA,
     local_SSAt::locationt loc);
-
-  static bool contains_iterator(const std::list<exprt> &params);
 };
 
 #endif

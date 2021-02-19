@@ -469,153 +469,77 @@ exprt ssa_inlinert::get_replace_params(
       const typet arg_symbol_type=arg_type.subtype();
       arg_type=SSA.ns.follow(arg_symbol_type);
 
-      if(contains_iterator(params_deref_out))
-      { // If the caller contains iterators, bindings are different since
-        // objects from caller will appear in the callee summary
-        assert(!args_deref_in.empty() && !args_deref_out.empty());
+      if(params_deref_in.size()==1)
+      {
+        const exprt &p_in=params_deref_in.front();
 
-        arg_type=SSA.ns.follow(args_deref_in.begin()->type());
-        assert(arg_type.id()==ID_struct);
-
-        for(const exprt &a : args_deref_in)
+        exprt::operandst d;
+        for(const exprt &a_in : args_deref_in)
         {
-          std::list<exprt> aliases=
-            apply_dereference({a}, SSA.ssa_value_ai[next_loc], SSA.ns);
-          aliases.push_front(a);
+          exprt::operandst binding;
+          const exprt lhs_expr=param_in_transformer(p_in);
+          const exprt rhs_expr=arg_in_transformer(a_in, SSA, loc);
+          binding.push_back(equal_exprt(lhs_expr, rhs_expr));
 
-          for(auto &alias : aliases)
+          if(arg_type.id()==ID_struct)
           {
-            const exprt lhs_expr=
-              param_out_transformer(alias, arg_type, summary.globals_out);
-            const exprt rhs_expr=
-              arg_out_transformer(
-                alias,
-                arg_symbol_type,
-                params_deref_out.begin()->type(),
-                SSA,
-                loc);
-            // Bind argument address
-            c.push_back(equal_exprt(lhs_expr, rhs_expr));
-
             for(auto &component : to_struct_type(arg_type).components())
             {
               const exprt lhs_comp_expr=
-                param_in_member_transformer(alias, component);
+                param_in_member_transformer(p_in, component);
               const exprt rhs_comp_expr=
-                arg_in_member_transformer(alias, component, SSA, loc);
-              // Bind argument members at the input
-              c.push_back(equal_exprt(lhs_comp_expr, rhs_comp_expr));
+                arg_in_member_transformer(a_in, component, SSA, loc);
+              binding.push_back(equal_exprt(lhs_comp_expr, rhs_comp_expr));
             }
           }
+          d.push_back(conjunction(binding));
         }
+        if(!d.empty())
+          c.push_back(disjunction(d));
 
-        for(const exprt &a : args_deref_out)
+        d.clear();
+        for(const exprt &p_out : params_deref_out)
         {
-          std::list<exprt> aliases=
-            apply_dereference({a}, SSA.ssa_value_ai[next_loc], SSA.ns);
-          aliases.push_front(a);
-          for(auto &alias : aliases)
+          for(const exprt &a_out : args_deref_out)
           {
-            const typet &alias_type=SSA.ns.follow(alias.type());
-            assert(alias_type.id()==ID_struct);
-            for(auto &component : to_struct_type(alias_type).components())
+            if(!cs_heap_covered(a_out))
             {
-              // Bind argument members at the output (args_deref_out might
-              // contain different objects than args_deref_in since function
-              // call may create new objects).
-              symbol_exprt arg_member(
-                id2string(to_symbol_expr(alias).get_identifier())+"."+
-                id2string(component.get_name()), component.type());
+              exprt::operandst binding;
 
-              symbol_exprt member_lhs_out;
-              if(find_corresponding_symbol(
-                 arg_member, summary.globals_out, member_lhs_out))
+              const exprt lhs_expr=
+                param_out_transformer(p_out, arg_type, summary.globals_out);
+              const exprt rhs_expr=
+                arg_out_transformer(
+                  a_out,
+                  arg_symbol_type,
+                  p_out.type(),
+                  SSA,
+                  loc);
+              binding.push_back(equal_exprt(lhs_expr, rhs_expr));
+
+              if(arg_type.id()==ID_struct)
               {
-                rename(member_lhs_out);
-                const exprt arg_out=
-                  arg_out_member_transformer(alias, component, SSA, loc);
-                c.push_back(equal_exprt(member_lhs_out, arg_out));
-              }
-            }
-          }
-        }
-      }
-      else
-      {
-        // Bind objects pointed by argument and parameter when iterator is
-        // not present
-        if(params_deref_in.size()==1)
-        {
-          const exprt &p_in=params_deref_in.front();
-
-          exprt::operandst d;
-          for(const exprt &a_in : args_deref_in)
-          {
-            exprt::operandst binding;
-            const exprt lhs_expr=param_in_transformer(p_in);
-            const exprt rhs_expr=arg_in_transformer(a_in, SSA, loc);
-            binding.push_back(equal_exprt(lhs_expr, rhs_expr));
-
-            if(arg_type.id()==ID_struct)
-            {
-              for(auto &component : to_struct_type(arg_type).components())
-              {
-                const exprt lhs_comp_expr=
-                  param_in_member_transformer(p_in, component);
-                const exprt rhs_comp_expr=
-                  arg_in_member_transformer(a_in, component, SSA, loc);
-                binding.push_back(equal_exprt(lhs_comp_expr, rhs_comp_expr));
-              }
-            }
-            d.push_back(conjunction(binding));
-          }
-          if(!d.empty())
-            c.push_back(disjunction(d));
-
-          d.clear();
-          for(const exprt &p_out : params_deref_out)
-          {
-            for(const exprt &a_out : args_deref_out)
-            {
-              if(!cs_heap_covered(a_out))
-              {
-                exprt::operandst binding;
-
-                const exprt lhs_expr=
-                  param_out_transformer(p_out, arg_type, summary.globals_out);
-                const exprt rhs_expr=
-                  arg_out_transformer(
-                    a_out,
-                    arg_symbol_type,
-                    p_out.type(),
-                    SSA,
-                    loc);
-                binding.push_back(equal_exprt(lhs_expr, rhs_expr));
-
-                if(arg_type.id()==ID_struct)
+                for(auto &component : to_struct_type(arg_type).components())
                 {
-                  for(auto &component : to_struct_type(arg_type).components())
-                  {
-                    const exprt lhs_comp_expr=
-                      param_out_member_transformer(
-                        p_out,
-                        component,
-                        summary.globals_out);
-                    const exprt rhs_comp_expr=
-                      arg_out_member_transformer(a_out, component, SSA, loc);
-                    binding.push_back(
-                      equal_exprt(
-                        lhs_comp_expr,
-                        rhs_comp_expr));
-                  }
+                  const exprt lhs_comp_expr=
+                    param_out_member_transformer(
+                      p_out,
+                      component,
+                      summary.globals_out);
+                  const exprt rhs_comp_expr=
+                    arg_out_member_transformer(a_out, component, SSA, loc);
+                  binding.push_back(
+                    equal_exprt(
+                      lhs_comp_expr,
+                      rhs_comp_expr));
                 }
-                d.push_back(conjunction(binding));
               }
+              d.push_back(conjunction(binding));
             }
           }
-          if(!d.empty())
-            c.push_back(disjunction(d));
         }
+        if(!d.empty())
+          c.push_back(disjunction(d));
       }
 
       args_in=args_deref_in;
@@ -1063,17 +987,6 @@ std::list<exprt> ssa_inlinert::apply_dereference(
     }
   }
   return result;
-}
-
-/// \par parameters: List of expressions
-/// \return True if the list contains an advancer
-bool ssa_inlinert::contains_iterator(const std::list<exprt> &params)
-{
-  auto it=std::find_if(
-    params.begin(),
-    params.end(),
-    [](const exprt &p) { return is_iterator(p); });
-  return (it!=params.end());
 }
 
 exprt ssa_inlinert::param_in_transformer(const exprt &param)
