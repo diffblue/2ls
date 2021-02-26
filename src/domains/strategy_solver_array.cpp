@@ -18,7 +18,7 @@ bool strategy_solver_arrayt::iterate(strategy_solver_baset::invariantt &_inv)
   solver.new_context();
   // Add bindings for symbolic segment index and element variables
   solver << domain.segment_elem_equality();
-  solver << domain.map_segments_to_read_indices();
+  solver << domain.map_value_to_read_indices(inv);
   // Run iteration in the inner solver
   bool res = inner_solver->iterate(*inv.inner_value);
   solver.pop_context();

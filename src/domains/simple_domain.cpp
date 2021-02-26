@@ -179,14 +179,14 @@ void simple_domaint::project_on_vars(domaint::valuet &value,
       symbols.insert(row_expr_symbols.begin(), row_expr_symbols.end());
     }
 
-    // If any of the symbols is not in vars and vars is not empty, continue
-    if(!vars.empty() && std::any_of(
-      symbols.begin(), symbols.end(),
-      [&vars](const symbol_exprt &s)
-      {
-        return vars.find(s)==vars.end();
-      }))
+    // If none of the symbols is in vars and vars is not empty, continue
+    // clang-format off
+    if(!vars.empty() && std::all_of(symbols.begin(),
+                                    symbols.end(),
+                                    [&vars](const symbol_exprt &s)
+                                    { return vars.find(s) == vars.end(); }))
       continue;
+    // clang-format on
 
     if(templ[row].guards.kind==guardst::LOOP)
       c.push_back(get_row_pre_constraint(row, simple_value));

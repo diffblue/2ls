@@ -134,7 +134,7 @@ void array_domaint::project_on_vars(domaint::valuet &value,
   auto &array_value = dynamic_cast<array_valuet &>(value);
   inner_domain->project_on_vars(*array_value.inner_value, {}, result, false);
   result = and_exprt(result, segment_elem_equality());
-  result = and_exprt(result, map_segments_to_read_indices());
+  result = and_exprt(result, map_value_to_read_indices(array_value));
 }
 
 /// Try to find ordering among given index expressions.
@@ -187,10 +187,48 @@ bool array_domaint::ordered_indices(const exprt &first,
   return res;
 }
 
+/// In the given expression, replace all occurrences of a segment index variable
+/// by a new index expression. Also, replace all occurrences of the segment
+/// element variable by a newly created symbol.
+void replace_segment_by_index(const array_domaint::array_segmentt &segment,
+                              const exprt &index,
+                              exprt &expr)
+{
+  static unsigned i = 0;
+  symbol_exprt new_elem_var("elem#tmp#" + std::to_string(i++),
+                            segment.elem_var.type());
+
+  replace_mapt replace_map;
+  replace_map[segment.index_var] = index;
+  replace_map[segment.elem_var] = new_elem_var;
+  replace_expr(replace_map, expr);
+
+  // Bind the new element symbol to array[index]
+  auto new_elem_eq =
+    equal_exprt(new_elem_var, index_exprt(segment.array_spec.var, index));
+
+  expr = and_exprt(expr, new_elem_eq);
+}
+
+/// Create equalities between index variables of the segments and the index
+/// expression.
+exprt map_segments_to_index(
+  const std::vector<array_domaint::array_segmentt> &segments,
+  const exprt &index)
+{
+  exprt::operandst result;
+  for(auto &segment : segments)
+    result.push_back(implies_exprt(
+      and_exprt(binary_relation_exprt(index, ID_ge, segment.lower_bound),
+                binary_relation_exprt(index, ID_lt, segment.upper_bound)),
+      equal_exprt(index, segment.index_var)));
+  return conjunction(result);
+}
+
 /// Map symbolic indices of segments onto actually read indices.
 /// For each segment of an array and for each index read from that array:
 ///   (idx#read >= lower && idx#read < upper) => idx#read == idx#segment
-exprt array_domaint::map_segments_to_read_indices()
+exprt array_domaint::map_value_to_read_indices(const array_valuet &value)
 {
   exprt::operandst result;
   for(auto &array : segmentation_map)
@@ -199,26 +237,41 @@ exprt array_domaint::map_segments_to_read_indices()
     auto index_type = array.second.at(0).index_var.type();
     auto &read_indices = SSA.array_index_analysis.read_indices.at(array_name);
 
-    exprt::operandst array_constraint;
-    for(auto &read_index_info : read_indices)
+    if(read_indices.size() == 1)
     {
+      // If there is a single read index, it is sufficient to bind the segment
+      // index variables to the read index.
+      auto &read_index_info = *read_indices.begin();
       exprt read_index =
         SSA.read_rhs(read_index_info.index, read_index_info.loc);
       if(read_index.type() != index_type)
         read_index = typecast_exprt(read_index, index_type);
 
-      exprt::operandst index_constraint;
-      for(auto &segment : array.second)
-      {
-        index_constraint.push_back(implies_exprt(
-          and_exprt(
-            binary_relation_exprt(read_index, ID_ge, segment.lower_bound),
-            binary_relation_exprt(read_index, ID_lt, segment.upper_bound)),
-          equal_exprt(read_index, segment.index_var)));
-      }
-      array_constraint.push_back(conjunction(index_constraint));
+      result.push_back(map_segments_to_index(array.second, read_index));
     }
-    result.push_back(conjunction(array_constraint));
+    else
+    {
+      // If there are multiple read indices, we have to project the current
+      // invariant onto the read indices by copying the invariant and replacing
+      // each segment index variable by each read index.
+      for(auto &read_index_info : read_indices)
+      {
+        exprt read_index =
+          SSA.read_rhs(read_index_info.index, read_index_info.loc);
+        if(read_index.type() != index_type)
+          read_index = typecast_exprt(read_index, index_type);
+
+        for(auto &segment : array.second)
+        {
+          exprt segment_value;
+          inner_domain->project_on_vars(
+            *value.inner_value, {segment.elem_var}, segment_value);
+
+          replace_segment_by_index(segment, read_index, segment_value);
+          result.push_back(segment_value);
+        }
+      }
+    }
   }
   return conjunction(result);
 }
