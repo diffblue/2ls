@@ -8,7 +8,8 @@ DIRS = \
 	   invariants \
 	   heap \
 	   heap-data \
-	   memsafety
+	   memsafety \
+	 instrumentation
 
 test:
 	$(foreach var,$(DIRS), make -C $(var) test || exit 1;)
