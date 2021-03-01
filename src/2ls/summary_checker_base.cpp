@@ -495,10 +495,14 @@ bool summary_checker_baset::is_spurious(
 
 /// instruments the code with the inferred information and outputs it to a goto-
 /// binary
-void summary_checker_baset::instrument_and_output(goto_modelt &goto_model)
+void summary_checker_baset::instrument_and_output(
+  goto_modelt &goto_model,
+  unsigned verbosity)
 {
   instrument_gotot instrument_goto(options, ssa_db, summary_db);
   instrument_goto(goto_model);
+  if(verbosity==10)
+    goto_model.output(std::cout);
   std::string filename=options.get_option("instrument-output");
   status() << "Writing instrumented goto-binary " << filename << eom;
   write_goto_binary(

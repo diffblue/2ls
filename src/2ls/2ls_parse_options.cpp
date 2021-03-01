@@ -694,7 +694,9 @@ int twols_parse_optionst::doit()
 
     if(cmdline.isset("instrument-output"))
     {
-      checker->instrument_and_output(goto_model);
+      checker->instrument_and_output(
+        goto_model,
+        ui_message_handler.get_verbosity());
     }
 
     return retval;
