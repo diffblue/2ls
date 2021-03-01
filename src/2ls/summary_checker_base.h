@@ -52,7 +52,7 @@ public:
 
   virtual resultt operator()(const goto_modelt &) { assert(false); }
 
-  void instrument_and_output(goto_modelt &goto_model);
+  void instrument_and_output(goto_modelt &goto_model, unsigned verbosity);
 
   // statistics
   absolute_timet start_time;
@@ -79,7 +79,7 @@ protected:
 
   void SSA_functions(
     const goto_modelt &,
-    const namespacet &ns);
+    const symbol_tablet &symbol_table);
 
   void summarize(
     const goto_modelt &,

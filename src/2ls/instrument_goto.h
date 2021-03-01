@@ -46,7 +46,8 @@ public:
 
   void instrument_body(
     const local_SSAt &SSA,
-    const exprt &expr,
+    const symbol_exprt &guard,
+    const exprt &inv,
     goto_functionst::goto_functiont &function);
 
   void instrument_instruction(

@@ -25,6 +25,7 @@ public:
     const optionst &_options,
     std::ostream &_out):
     goto_functions(_goto_model.goto_functions),
+    symbol_table(_goto_model.symbol_table),
     ns(_goto_model.symbol_table),
     options(_options),
     out(_out),
@@ -36,6 +37,7 @@ public:
 
 protected:
   const goto_functionst &goto_functions;
+  const symbol_tablet &symbol_table;
   const namespacet ns;
   const optionst &options;
   std::ostream &out;
@@ -63,7 +65,7 @@ void horn_encodingt::translate(
          ";\n";
 
   // compute SSA
-  local_SSAt local_SSA(f_it->second, ns, options, "");
+  local_SSAt local_SSA(f_it->second, symbol_table, options, "");
 
   const goto_programt &body=f_it->second.body;
 

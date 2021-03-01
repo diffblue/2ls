@@ -52,7 +52,7 @@ class optionst;
   "(enum-solver)(binsearch-solver)(arrays)"\
   "(string-abstraction)(no-arch)(arch):(floatbv)(fixedbv)" \
   "(round-to-nearest)(round-to-plus-inf)(round-to-minus-inf)(round-to-zero)" \
-  "(inline)(inline-main)(inline-partial):" \
+  "(inline)(inline-main)(inline-partial):(instrument-output):" \
   "(context-sensitive)(termination)(nontermination)" \
   "(lexicographic-ranking-function):(monolithic-ranking-function)" \
   "(max-inner-ranking-iterations):" \

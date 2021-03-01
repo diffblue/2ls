@@ -13,6 +13,7 @@ src/config.inc
 # regression/test files
 *.out
 tests.log
+instrumented.goto
 
 # files stored by editors
 *~
