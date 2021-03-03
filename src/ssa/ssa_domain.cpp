@@ -126,7 +126,7 @@ bool ssa_domaint::merge(
   locationt from,
   locationt to)
 {
-  bool result=false;
+  bool result=has_values.is_false() && !b.has_values.is_false();
 
   // should traverse both maps simultaneously
   for(def_mapt::const_iterator

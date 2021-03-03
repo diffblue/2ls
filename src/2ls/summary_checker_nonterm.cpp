@@ -11,7 +11,6 @@ Author: Stefan Marticek
 
 #include "summary_checker_nonterm.h"
 
-#include <util/i2string.h>
 #include <util/simplify_expr.h>
 #include <util/prefix.h>
 

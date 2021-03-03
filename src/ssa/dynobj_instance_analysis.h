@@ -25,6 +25,7 @@ Description: In some cases, multiple instances must be used so that the
 #include <analyses/ai.h>
 #include <util/union_find.h>
 #include <util/options.h>
+#include <util/threeval.h>
 #include "ssa_object.h"
 #include "ssa_value_set.h"
 
@@ -158,6 +159,28 @@ public:
     const dynobj_instance_domaint &other,
     locationt from,
     locationt to);
+
+  void make_bottom() override
+  {
+    must_alias_relations.clear();
+    live_pointers.clear();
+    has_values=tvt(false);
+  }
+
+  void make_top() override
+  {
+    must_alias_relations.clear();
+    live_pointers.clear();
+    has_values=tvt(true);
+  }
+
+  void make_entry() override
+  {
+    make_top();
+  }
+
+protected:
+  tvt has_values;
 
 private:
   void rhs_concretisation(

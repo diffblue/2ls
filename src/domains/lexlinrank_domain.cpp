@@ -14,7 +14,6 @@ Author: Peter Schrammel
 #endif
 
 #include <util/find_symbols.h>
-#include <util/i2string.h>
 #include <util/simplify_expr.h>
 #include <langapi/languages.h>
 #include <goto-symex/adjust_float_expressions.h>
@@ -372,7 +371,7 @@ exprt lexlinrank_domaint::get_row_symb_constraint(
 
     symb_values[elm].c[0]=symbol_exprt(
       SYMB_COEFF_VAR+std::string("c!")+
-      i2string(row)+"$"+i2string(elm)+"$0",
+      std::to_string(row)+"$"+std::to_string(elm)+"$0",
       signedbv_typet(COEFF_C_SIZE));  // coefficients are signed integers
 
 #ifdef DIFFERENCE_ENCODING
@@ -388,7 +387,7 @@ exprt lexlinrank_domaint::get_row_symb_constraint(
     {
       symb_values[elm].c[i]=symbol_exprt(
         SYMB_COEFF_VAR+std::string("c!")+
-        i2string(row)+"$"+i2string(elm)+"$"+i2string(i),
+        std::to_string(row)+"$"+std::to_string(elm)+"$"+std::to_string(i),
         signedbv_typet(COEFF_C_SIZE));
 #ifdef DIFFERENCE_ENCODING
       sum=plus_exprt(

@@ -14,7 +14,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/arith_tools.h>
 #include <util/expr_util.h>
 #include <util/symbol.h>
-#include <util/i2string.h>
 #include <util/pointer_offset_size.h>
 
 #include <ansi-c/c_types.h>
@@ -70,7 +69,7 @@ exprt create_dynamic_object(
     address_of_object.type()=pointer_typet(value_symbol.type.subtype());
     index_exprt index_expr(value_symbol.type.subtype());
     index_expr.array()=value_symbol.symbol_expr();
-    index_expr.index()=gen_zero(index_type());
+    index_expr.index()=from_integer(0, index_type());
     address_of_object.op0()=index_expr;
   }
   else
@@ -252,7 +251,7 @@ static bool replace_malloc_rec(
 
     expr=malloc_ssa(
       to_side_effect_expr(expr),
-      "$"+i2string(loc_number)+suffix,
+      "$"+std::to_string(loc_number)+suffix,
       symbol_table,
       is_concrete,
       alloc_concrete);

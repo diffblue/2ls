@@ -13,6 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #define CPROVER_2LS_SSA_SSA_DOMAIN_H
 
 #include <analyses/ai.h>
+#include <util/threeval.h>
 
 #include "assignments.h"
 
@@ -90,8 +91,28 @@ public:
     locationt from,
     locationt to);
 
+  void make_bottom() override
+  {
+    phi_nodes.clear();
+    def_map.clear();
+    has_values=tvt(false);
+  }
+  void make_top() override
+  {
+    phi_nodes.clear();
+    def_map.clear();
+    has_values=tvt(true);
+  }
+  void make_entry() override
+  {
+    has_values=tvt(true);
+  }
+
+protected:
+  tvt has_values;
+
 private:
-  static std::map<dstring, ssa_domaint::def_entryt>::const_iterator
+  static std::map<dstringt, ssa_domaint::def_entryt>::const_iterator
   get_object_allocation_def(
     const irep_idt &id,
     const def_mapt &def_map);

@@ -12,7 +12,6 @@ Author: Peter Schrammel
 #include <iostream>
 
 #include <util/options.h>
-#include <util/i2string.h>
 #include <util/simplify_expr.h>
 #include <langapi/language_util.h>
 #include <util/prefix.h>

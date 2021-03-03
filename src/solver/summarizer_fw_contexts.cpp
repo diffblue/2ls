@@ -19,7 +19,6 @@ Author: Peter Schrammel
 
 #include <util/xml.h>
 #include <util/xml_expr.h>
-#include <util/i2string.h>
 
 #include "summarizer_fw_contexts.h"
 #include "summary_db.h"
@@ -86,7 +85,7 @@ void summarizer_fw_contextst::inline_summaries(
           xmlt xml_cc("calling-context");
           xml_cc.set_attribute("function", id2string(fname));
           xml_cc.set_attribute(
-            "goto_location", i2string(n_it->location->location_number));
+            "goto_location", std::to_string(n_it->location->location_number));
 
           // location
           const source_locationt &source_location=

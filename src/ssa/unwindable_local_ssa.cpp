@@ -13,7 +13,6 @@ Author: Peter Schrammel, Saurabh Joshi
 
 #include <limits>
 
-#include <util/i2string.h>
 #include <util/find_symbols.h>
 #include <util/rename_symbol.h>
 #include <util/string2int.h>
@@ -185,8 +184,8 @@ exprt unwindable_local_SSAt::nondet_symbol(
   exprt s(ID_nondet_symbol, type);
   const irep_idt identifier=
     prefix+
-    i2string(loc->location_number)+
-    "."+i2string(counter)+unwind_suffix+suffix;
+    std::to_string(loc->location_number)+
+    "."+std::to_string(counter)+unwind_suffix+suffix;
   s.set(ID_identifier, identifier);
 
 #if 0

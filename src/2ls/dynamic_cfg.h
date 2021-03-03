@@ -14,7 +14,6 @@ Author: Peter Schrammel
 
 #include <util/std_expr.h>
 #include <util/graph.h>
-#include <util/i2string.h>
 #include <goto-programs/goto_program.h>
 
 #include <ssa/ssa_unwinder.h>
@@ -35,9 +34,9 @@ struct dynamic_cfg_idt
   std::string to_string() const
   {
     std::ostringstream sid;
-    sid << i2string(pc->location_number);
+    sid << std::to_string(pc->location_number);
     for(const auto &i : iteration_stack)
-      sid << "." <<i2string(i);
+      sid << "." <<std::to_string(i);
     return sid.str();
   }
 };
@@ -51,7 +50,7 @@ struct dynamic_cfg_nodet:public graph_nodet<dynamic_cfg_edget>
   exprt assumption;
 };
 
-class dynamic_cfgt:public graph<dynamic_cfg_nodet>
+class dynamic_cfgt:public grapht<dynamic_cfg_nodet>
 {
 public:
   inline dynamic_cfg_nodet& operator[](const dynamic_cfg_idt &id)

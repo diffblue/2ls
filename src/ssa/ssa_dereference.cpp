@@ -134,12 +134,12 @@ bool ssa_may_alias(
   // If one is an array and the other not, consider the elements
   if(t1.id()==ID_array && t2.id()!=ID_array)
     if(ssa_may_alias(
-         index_exprt(e1, gen_zero(index_type()), t1.subtype()), e2, ns))
+         index_exprt(e1, from_integer(0, index_type()), t1.subtype()), e2, ns))
       return true;
 
   if(t2.id()==ID_array && t2.id()!=ID_array)
     if(ssa_may_alias(
-         e1, index_exprt(e2, gen_zero(index_type()), t2.subtype()), ns))
+         e1, index_exprt(e2, from_integer(0, index_type()), t2.subtype()), ns))
       return true;
 
   // Pointers only alias with other pointers,

@@ -125,7 +125,7 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
     options.set_option("slice", false);
 
   // all checks supported by goto_check
-  GOTO_CHECK_PARSE_OPTIONS(cmdline, options);
+  PARSE_OPTIONS_GOTO_CHECK(cmdline, options);
 
   // check assertions
   if(cmdline.isset("no-assertions"))
@@ -1087,10 +1087,14 @@ bool twols_parse_optionst::process_goto_program(
       goto_inlinet goto_inline(
         goto_model.goto_functions,
         ns,
-        ui_message_handler);
+        ui_message_handler,
+        false);
       goto_inline();
 #if IGNORE_RECURSION
       recursion_detected=goto_inline.recursion_detected();
+      // since CBMC 5.7, inlining doesn't update location and loop numbers
+      goto_model.goto_functions.update();
+      goto_model.goto_functions.compute_loop_numbers();
 #endif
     }
 
@@ -1559,7 +1563,7 @@ void twols_parse_optionst::help()
     " --round-to-zero              IEEE floating point rounding mode\n"
     "\n"
     "Program instrumentation options:\n"
-    GOTO_CHECK_HELP
+    HELP_GOTO_CHECK
     " --error-label label          check that label is unreachable\n"
     " --show-properties            show the properties\n"
     " --no-assertions              ignore user assertions\n"
