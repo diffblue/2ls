@@ -24,11 +24,15 @@ unsigned array_domaint::segment_cnt = 0;
 
 array_domaint::array_domaint(unsigned int domain_number,
                              replace_mapt &renaming_map,
+                             replace_mapt &init_renaming_map,
                              const var_specst &var_specs,
                              const local_SSAt &SSA,
                              incremental_solvert *solver,
                              template_generator_baset &template_generator)
-  : domaint(domain_number, renaming_map, SSA.ns), SSA(SSA), solver(solver)
+  : domaint(domain_number, renaming_map, SSA.ns),
+    SSA(SSA),
+    solver(solver),
+    init_renaming_map(init_renaming_map)
 {
   // Split arrays to segments and create a new set of var specs, each
   // representing one segment.
@@ -61,26 +65,36 @@ void array_domaint::make_segments(const var_specst &var_specs,
       auto &index_type = array_size.type();
 
       auto written_indices = spec.related_vars;
+      extend_indices_by_loop_inits(written_indices);
+
       if(order_indices(written_indices, array_size))
       { // Indices can be ordered - create a single segmentation
         // The first index border is {0}
         exprt last_border = make_zero(index_type);
         for(exprt index_var : written_indices)
         {
+          bool is_init = loop_init_segment_borders.find(index_var) !=
+                         loop_init_segment_borders.end();
           index_var = simplify_expr(index_var, ns);
           // Ensure that all segment borders have the same type.
           if(index_var.type() != index_type)
             index_var = typecast_exprt(index_var, index_type);
 
-          // For each index i, add two segments:
-          // {last} ... {i}
+          // For each index i, add segment {last} ... {i}
           if(last_border != index_var)
+          {
             add_segment(spec, last_border, index_var);
-          // {i} ... {i + 1}
-          auto index_plus_one = simplify_expr(expr_plus_one(index_var), ns);
-          add_segment(spec, index_var, index_plus_one);
+            last_border = index_var;
+          }
 
-          last_border = index_plus_one;
+          if(!is_init)
+          {
+            // For indices that are not initial values of loop indices,
+            // add also the segment {i} ... {i + 1}
+            auto index_plus_one = simplify_expr(expr_plus_one(index_var), ns);
+            add_segment(spec, index_var, index_plus_one);
+            last_border = index_plus_one;
+          }
         }
 
         // The last segment is {last} ... {size}
@@ -90,6 +104,10 @@ void array_domaint::make_segments(const var_specst &var_specs,
       { // Indices cannot be ordered - create one segmentation for each index
         for(exprt index_var : written_indices)
         {
+          // Skip initial values of written indices
+          if(loop_init_segment_borders.find(index_var) !=
+             loop_init_segment_borders.end())
+            continue;
           // Ensure that all segment borders have the same type.
           if(index_var.type() != index_type)
             index_var = typecast_exprt(index_var, index_type);
@@ -105,6 +123,9 @@ void array_domaint::make_segments(const var_specst &var_specs,
       add_segment(spec, make_zero(index_type), array_size);
     }
   }
+  // renaming_map contains some extra mappings that we used to determine index
+  // ordering but now we have to remove them
+  clear_non_lb_renamings();
 }
 
 /// Add a single segment to the template.
@@ -138,10 +159,13 @@ void array_domaint::project_on_vars(domaint::valuet &value,
 }
 
 /// Try to find ordering among given index expressions.
+/// The ordering is searched for post variants of the variables.
 /// If a unique ordering can be found, orders indices in-situ and returns true,
 /// otherwise returns false.
 bool array_domaint::order_indices(var_listt &indices, const exprt &array_size)
 {
+  solver->new_context();
+  *solver << SSA;
   for(unsigned end = indices.size(); end > 0; --end)
   {
     for(unsigned i = 0; i < end - 1; ++i)
@@ -153,22 +177,33 @@ bool array_domaint::order_indices(var_listt &indices, const exprt &array_size)
         indices[i + 1] = temp;
       }
       else if(!ordered_indices(indices[i], indices[i + 1], array_size))
+      {
+        solver->pop_context();
         return false;
+      }
     }
   }
+  solver->pop_context();
   return true;
 }
 
 /// Check if there exists an ordering relation <= between two index expressions.
+/// The ordering is checked for post (renamed) variants of the expressions
+/// as those are expressions occurring in the loop of interest.
 /// Queries SMT solver for negation of the formula:
 ///   (i1 >= 0 && i1 < size && i2 >= 0 && i2 < size) => i1 <= i2
 ///
 /// If the negation is unsatisfiable, then the formula always holds and there
 /// exists an ordering.
-bool array_domaint::ordered_indices(const exprt &first,
-                                    const exprt &second,
+bool array_domaint::ordered_indices(const exprt &first_pre,
+                                    const exprt &second_pre,
                                     const exprt &array_size)
 {
+  exprt first = first_pre;
+  exprt second = second_pre;
+  rename(first);
+  rename(second);
+
   exprt::operandst bounds = {
     binary_relation_exprt(first, ID_ge, from_integer(0, first.type())),
     binary_relation_exprt(first, ID_lt, array_size),
@@ -387,4 +422,37 @@ exprt array_domaint::array_segmentt::get_constraint()
   const exprt elem_expr =
     equal_exprt(elem_var, index_exprt(array_spec.var, index_var));
   return conjunction(exprt::operandst({bounds_expr, interval_expr, elem_expr}));
+}
+
+/// For each loop-back index, add the pre-loop value of the index as a new
+/// segment border. This helps to cover situations when a loop does not start
+/// from index 0.
+void array_domaint::extend_indices_by_loop_inits(var_listt &indices)
+{
+  var_listt new_indices;
+  for(auto &index : indices)
+  {
+    exprt new_index = index;
+    replace_expr(init_renaming_map, new_index);
+    if(new_index != index)
+    {
+      new_indices.push_back(new_index);
+      loop_init_segment_borders.insert(new_index);
+    }
+  }
+  indices.insert(indices.end(), new_indices.begin(), new_indices.end());
+}
+
+/// Remove all renamings that do not rename loop-back variables
+/// These are necessary for array domain initialization but can spoil
+/// the invariant inference process.
+void array_domaint::clear_non_lb_renamings()
+{
+  for(auto it = renaming_map.begin(); it != renaming_map.end();)
+  {
+    if(it->first.get_bool("#no-loop-back"))
+      it = renaming_map.erase(it);
+    else
+      it++;
+  }
 }

@@ -105,6 +105,14 @@ void template_generator_baset::get_init_expr(
   symbol_exprt pre_var=SSA.name(*o_it, local_SSAt::LOOP_BACK, n_it->location);
   ssa_local_unwinder.unwinder_rename(pre_var, *n_it, true);
   init_renaming_map[pre_var]=init_expr;
+  if(options.get_bool_option("arrays"))
+  {
+    // We need some extra renamings for the array domain. Mark them with
+    // #no-loop-back so that we can later remove them from the map.
+    exprt new_init_expr = init_expr;
+    new_init_expr.set("#no-loop-back", true);
+    post_renaming_map[new_init_expr] = phi_var;
+  }
 }
 
 void template_generator_baset::collect_variables_loop(
@@ -603,8 +611,13 @@ std::unique_ptr<domaint> template_generator_baset::instantiate_standard_domains(
   {
     auto array_var_specs = filter_array_domain(var_specs);
     if(!array_var_specs.empty())
-      domains.emplace_back(new array_domaint(
-        domain_number, renaming_map, array_var_specs, SSA, solver, *this));
+      domains.emplace_back(new array_domaint(domain_number++,
+                                             renaming_map,
+                                             init_renaming_map,
+                                             array_var_specs,
+                                             SSA,
+                                             solver,
+                                             *this));
   }
 
   if(options.get_bool_option("intervals"))

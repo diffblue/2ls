@@ -72,6 +72,7 @@ class array_domaint : public domaint
 public:
   array_domaint(unsigned int domain_number,
                 replace_mapt &renaming_map,
+                replace_mapt &init_renaming_map,
                 const var_specst &var_specs,
                 const local_SSAt &SSA,
                 incremental_solvert *solver,
@@ -168,10 +169,19 @@ protected:
                        const exprt &second,
                        const exprt &array_size);
 
+  void extend_indices_by_loop_inits(var_listt &indices);
+  void clear_non_lb_renamings();
+
   exprt get_array_size(const var_spect &array_spec);
 
   const local_SSAt &SSA;
   incremental_solvert *solver;
+
+  // Renaming loop-back -> pre-loop
+  replace_mapt &init_renaming_map;
+  // A helper set to know which segment borders are pre-loop variants of
+  // loop-back borders.
+  std::set<exprt> loop_init_segment_borders;
 
   static unsigned segment_cnt;
 };
