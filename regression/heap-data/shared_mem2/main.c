@@ -1,4 +1,5 @@
 extern int __VERIFIER_nondet_int();
+extern void __VERIFIER_error() __attribute__ ((__noreturn__));
 
 #include <stdlib.h>
 
@@ -41,5 +42,5 @@ int main() {
         list = list->next;
     }
     if (!(m->val == 100))
-        __VERIFIER_nondet_int();
+        __VERIFIER_error();
 }
