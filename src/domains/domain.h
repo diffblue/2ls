@@ -16,7 +16,6 @@ Author: Peter Schrammel
 #include <set>
 
 #include <util/std_expr.h>
-#include <util/i2string.h>
 #include <langapi/language_util.h>
 #include <util/replace_expr.h>
 #include <util/namespace.h>

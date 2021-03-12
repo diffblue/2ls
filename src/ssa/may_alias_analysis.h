@@ -14,6 +14,7 @@ Author: Viktor Malik, imalik@fit.vutbr.cz
 
 #include <analyses/ai.h>
 #include <util/union_find.h>
+#include <util/threeval.h>
 #include "ssa_value_set.h"
 
 class may_alias_domaint:public ai_domain_baset
@@ -24,13 +25,31 @@ public:
     locationt to,
     ai_baset &ai,
     const namespacet &ns) override;
-
   bool merge(const may_alias_domaint &other, locationt from, locationt to);
+
+  void make_bottom() override
+  {
+    aliases.clear();
+    has_values=tvt(false);
+  }
+
+  void make_top() override
+  {
+    aliases.clear();
+    has_values=tvt(true);
+  }
+
+  void make_entry() override
+  {
+    make_top();
+  }
 
   typedef union_find<irep_idt> aliasest;
   aliasest aliases;
 
 protected:
+  tvt has_values;
+
   void assign_lhs_aliases(
     const exprt &lhs,
     const std::set<irep_idt> &rhs_alias_set);

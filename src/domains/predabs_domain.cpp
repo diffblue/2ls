@@ -15,7 +15,6 @@ Author: Peter Schrammel
 
 #include <util/find_symbols.h>
 #include <util/prefix.h>
-#include <util/i2string.h>
 #include <util/simplify_expr.h>
 #include <langapi/languages.h>
 

@@ -35,7 +35,7 @@ bool may_alias_domaint::merge(
   ai_domain_baset::locationt from,
   ai_domain_baset::locationt to)
 {
-  bool changed=false;
+  bool changed=has_values.is_false() && !other.has_values.is_false();
 
   // do union
   for(aliasest::const_iterator it=other.aliases.begin();

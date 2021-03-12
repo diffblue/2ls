@@ -29,6 +29,8 @@ void ssa_value_domaint::transform(
   ai_baset &ai,
   const namespacet &ns)
 {
+  if(has_values.is_false())
+    return;
   competition_mode=static_cast<ssa_value_ait &>(ai).options
     .get_bool_option("competition-mode");
   if(from->is_assign())
@@ -527,7 +529,8 @@ bool ssa_value_domaint::merge(
 {
   value_mapt::iterator v_it=value_map.begin();
   const value_mapt &new_value_map=other.value_map;
-  bool result=false;
+  bool result=has_values.is_false() && !other.has_values.is_false();
+  has_values=tvt::unknown();
 
   for(value_mapt::const_iterator
         it=new_value_map.begin();

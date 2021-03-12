@@ -11,7 +11,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/options.h>
 #include <util/find_symbols.h>
-#include <util/i2string.h>
 #include <util/string2int.h>
 
 #include <goto-programs/read_goto_binary.h>

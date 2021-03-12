@@ -16,7 +16,6 @@ Author: Peter Schrammel
 #include <set>
 
 #include <solvers/flattening/bv_pointers.h>
-#include <util/i2string.h>
 
 #include "incremental_solver.h"
 
@@ -35,7 +34,7 @@ void incremental_solvert::new_context()
     solver->convert(
       symbol_exprt(
         "goto_symex::\\act$"+
-        i2string(activation_literal_counter++), bool_typet()));
+        std::to_string(activation_literal_counter++), bool_typet()));
 
 #ifdef DEBUG_OUTPUT
     debug() << "new context: " << activation_literal<< eom;

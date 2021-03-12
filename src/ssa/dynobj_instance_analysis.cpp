@@ -206,7 +206,7 @@ bool dynobj_instance_domaint::merge(
   ai_domain_baset::locationt from,
   ai_domain_baset::locationt to)
 {
-  bool result=false;
+  bool result=has_values.is_false() && !other.has_values.is_false();
   for(auto &obj : other.must_alias_relations)
   {
     if(must_alias_relations.find(obj.first)==must_alias_relations.end())

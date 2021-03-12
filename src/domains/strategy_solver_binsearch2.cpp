@@ -17,8 +17,6 @@ Author: Peter Schrammel
 
 #include <cassert>
 
-#include <util/i2string.h>
-
 #include "strategy_solver_binsearch2.h"
 #include "ssa/local_ssa.h"
 #include "util.h"
@@ -163,7 +161,7 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
   assert(sum.type()==lower.type());
 
   symbol_exprt sum_bound(
-    SUM_BOUND_VAR+i2string(sum_bound_counter++),
+    SUM_BOUND_VAR+std::to_string(sum_bound_counter++),
     sum.type());
   solver << equal_exprt(sum_bound, sum);
 

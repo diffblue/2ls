@@ -14,6 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <analyses/ai.h>
 #include <util/options.h>
+#include <util/threeval.h>
 
 #include "ssa_object.h"
 
@@ -26,6 +27,23 @@ public:
     const ai_baset &,
     const namespacet &) const;
   bool merge(const ssa_value_domaint &, locationt, locationt);
+
+  void make_bottom() override
+  {
+    value_map.clear();
+    has_values=tvt(false);
+  }
+
+  void make_top() override
+  {
+    value_map.clear();
+    has_values=tvt(true);
+  }
+
+  void make_entry() override
+  {
+    make_top();
+  }
 
   struct valuest
   {
@@ -78,6 +96,8 @@ public:
   }
 
 protected:
+  tvt has_values;
+
   void assign_lhs_rec(
     const exprt &lhs,
     const exprt &rhs,

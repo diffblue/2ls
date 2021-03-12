@@ -190,7 +190,7 @@ void twols_parse_optionst::remove_multiple_dereferences(
       {
         symbolt new_symbol;
         new_symbol.type=member_expr.type();
-        new_symbol.name="$deref"+i2string(var_counter++);
+        new_symbol.name="$deref"+std::to_string(var_counter++);
         new_symbol.base_name=new_symbol.name;
         new_symbol.pretty_name=new_symbol.name;
         goto_model.symbol_table.add(new_symbol);
@@ -465,7 +465,7 @@ void twols_parse_optionst::split_same_symbolic_object_assignments(
           {
             symbolt tmp_symbol;
             tmp_symbol.type=assign.lhs().type();
-            tmp_symbol.name="$symderef_tmp"+i2string(counter++);
+            tmp_symbol.name="$symderef_tmp"+std::to_string(counter++);
             tmp_symbol.base_name=tmp_symbol.name;
             tmp_symbol.pretty_name=tmp_symbol.name;
 
