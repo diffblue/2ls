@@ -65,59 +65,62 @@ void array_domaint::make_segments(const var_specst &var_specs,
       auto &index_type = array_size.type();
 
       auto written_indices = spec.related_vars;
-      extend_indices_by_loop_inits(written_indices);
+      if(!written_indices.empty())
+      {
+        extend_indices_by_loop_inits(written_indices);
 
-      if(order_indices(written_indices, array_size))
-      { // Indices can be ordered - create a single segmentation
-        // The first index border is {0}
-        exprt last_border = make_zero(index_type);
-        for(exprt index_var : written_indices)
-        {
-          bool is_init = loop_init_segment_borders.find(index_var) !=
-                         loop_init_segment_borders.end();
-          index_var = simplify_expr(index_var, ns);
-          // Ensure that all segment borders have the same type.
-          if(index_var.type() != index_type)
-            index_var = typecast_exprt(index_var, index_type);
-
-          // For each index i, add segment {last} ... {i}
-          if(last_border != index_var)
+        if(order_indices(written_indices, array_size))
+        { // Indices can be ordered - create a single segmentation
+          // The first index border is {0}
+          exprt last_border = make_zero(index_type);
+          for(exprt index_var : written_indices)
           {
-            add_segment(spec, last_border, index_var);
-            last_border = index_var;
+            bool is_init = loop_init_segment_borders.find(index_var) !=
+                           loop_init_segment_borders.end();
+            index_var = simplify_expr(index_var, ns);
+            // Ensure that all segment borders have the same type.
+            if(index_var.type() != index_type)
+              index_var = typecast_exprt(index_var, index_type);
+
+            // For each index i, add segment {last} ... {i}
+            if(last_border != index_var)
+            {
+              add_segment(spec, last_border, index_var);
+              last_border = index_var;
+            }
+
+            if(!is_init)
+            {
+              // For indices that are not initial values of loop indices,
+              // add also the segment {i} ... {i + 1}
+              auto index_plus_one = simplify_expr(expr_plus_one(index_var), ns);
+              add_segment(spec, index_var, index_plus_one);
+              last_border = index_plus_one;
+            }
           }
 
-          if(!is_init)
-          {
-            // For indices that are not initial values of loop indices,
-            // add also the segment {i} ... {i + 1}
-            auto index_plus_one = simplify_expr(expr_plus_one(index_var), ns);
-            add_segment(spec, index_var, index_plus_one);
-            last_border = index_plus_one;
-          }
+          // The last segment is {last} ... {size}
+          add_segment(spec, last_border, array_size);
         }
+        else
+        { // Indices cannot be ordered - create one segmentation for each index
+          for(exprt index_var : written_indices)
+          {
+            // Skip initial values of written indices
+            if(loop_init_segment_borders.find(index_var) !=
+               loop_init_segment_borders.end())
+              continue;
+            // Ensure that all segment borders have the same type.
+            if(index_var.type() != index_type)
+              index_var = typecast_exprt(index_var, index_type);
 
-        // The last segment is {last} ... {size}
-        add_segment(spec, last_border, array_size);
-      }
-      else
-      { // Indices cannot be ordered - create one segmentation for each index
-        for(exprt index_var : written_indices)
-        {
-          // Skip initial values of written indices
-          if(loop_init_segment_borders.find(index_var) !=
-             loop_init_segment_borders.end())
-            continue;
-          // Ensure that all segment borders have the same type.
-          if(index_var.type() != index_type)
-            index_var = typecast_exprt(index_var, index_type);
-
-          exprt index_plus_one = expr_plus_one(index_var);
-          // For each written index i, create a segmentation:
-          //   {0} ... {i] ... {i + 1} ... {size}
-          add_segment(spec, make_zero(index_type), index_var);
-          add_segment(spec, index_var, index_plus_one);
-          add_segment(spec, index_plus_one, array_size);
+            exprt index_plus_one = expr_plus_one(index_var);
+            // For each written index i, create a segmentation:
+            //   {0} ... {i] ... {i + 1} ... {size}
+            add_segment(spec, make_zero(index_type), index_var);
+            add_segment(spec, index_var, index_plus_one);
+            add_segment(spec, index_plus_one, array_size);
+          }
         }
       }
       add_segment(spec, make_zero(index_type), array_size);
@@ -160,8 +163,8 @@ void array_domaint::project_on_vars(domaint::valuet &value,
 
 /// Try to find ordering among given index expressions.
 /// The ordering is searched for post variants of the variables.
-/// If a unique ordering can be found, orders indices in-situ and returns true,
-/// otherwise returns false.
+/// If a unique ordering can be found, orders indices in-situ, removes
+/// duplicates, and returns true. Otherwise returns false.
 bool array_domaint::order_indices(var_listt &indices, const exprt &array_size)
 {
   solver->new_context();
@@ -183,8 +186,30 @@ bool array_domaint::order_indices(var_listt &indices, const exprt &array_size)
       }
     }
   }
+  unique_indices(indices, array_size);
   solver->pop_context();
   return true;
+}
+
+/// Remove duplicate indices and indices equal to 0.
+/// Assumes that the indices are ordered.
+void array_domaint::unique_indices(var_listt &indices, const exprt &array_size)
+{
+  for(auto it = indices.begin(), next = std::next(it); next != indices.end();
+      next = std::next(it))
+  {
+    if(equal_indices(*it, make_zero(it->type()), array_size))
+      it = indices.erase(it);
+    else if(equal_indices(*it, *next, array_size))
+    {
+      if(it->is_constant())
+        it = indices.erase(it);
+      else
+        indices.erase(next);
+    }
+    else
+      it++;
+  }
 }
 
 /// Check if there exists an ordering relation <= between two index expressions.
@@ -218,6 +243,32 @@ bool array_domaint::ordered_indices(const exprt &first_pre,
   bool res = false;
   if((*solver)() == decision_proceduret::resultt::D_UNSATISFIABLE)
     res = true;
+  solver->pop_context();
+  return res;
+}
+
+/// Check if the two index expressions are always equal.
+/// Queries SMT solver for negation of the formula:
+///   (i1 >= 0 && i1 < size && i2 >= 0 && i2 < size) => i1 == i2
+///
+/// If the negation is unsatisfiable, then the formula always holds and the
+/// indices are equal.
+bool array_domaint::equal_indices(const exprt &first,
+                                  const exprt &second,
+                                  const exprt &array_size)
+{
+  exprt::operandst bounds = {
+    binary_relation_exprt(first, ID_ge, from_integer(0, first.type())),
+    binary_relation_exprt(first, ID_lt, array_size),
+    binary_relation_exprt(second, ID_ge, from_integer(0, second.type())),
+    binary_relation_exprt(second, ID_lt, array_size),
+  };
+  const exprt ordering_expr =
+    implies_exprt(conjunction(bounds), equal_exprt(first, second));
+
+  solver->new_context();
+  *solver << not_exprt(ordering_expr);
+  bool res = (*solver)() == decision_proceduret::resultt::D_UNSATISFIABLE;
   solver->pop_context();
   return res;
 }

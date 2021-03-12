@@ -199,8 +199,10 @@ void template_generator_baset::collect_variables_loop(
                    n_it->location->location_number)
               {
                 exprt index_expr = index_info.index;
-                replace_array_index_loop(index_expr, n_it, SSA, phi_nodes);
-                related_vars.push_back(index_expr);
+                exprt new_index_expr = index_expr;
+                replace_array_index_loop(new_index_expr, n_it, SSA, phi_nodes);
+                if(new_index_expr != index_expr)
+                  related_vars.push_back(new_index_expr);
               }
             }
           }
