@@ -467,6 +467,8 @@ constant_exprt make_zero(const typet &type)
     cst.make_zero();
     return cst.to_expr();
   }
+  if(type.id()==ID_integer)
+    return constant_exprt("0", type);
   assert(false);
 }
 

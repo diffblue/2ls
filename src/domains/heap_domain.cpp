@@ -98,7 +98,7 @@ exprt heap_domaint::value_to_ptr_exprt(const exprt &expr)
   {
     const std::string value=id2string(to_constant_expr(expr).get_value());
     if(value.substr(value.size()/2).find_first_not_of('0')!=std::string::npos)
-      return plus_exprt(expr.op0(), constant_exprt::integer_constant(0));
+      return plus_exprt(expr.op0(), make_zero(integer_typet()));
     else
       return expr.op0();
   }

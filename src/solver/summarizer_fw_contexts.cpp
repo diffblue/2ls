@@ -77,10 +77,10 @@ void summarizer_fw_contextst::inline_summaries(
         // output calling context
         switch(ui)
         {
-        case ui_message_handlert::PLAIN:
+        case ui_message_handlert::uit::PLAIN:
           break;
 
-        case ui_message_handlert::XML_UI:
+        case ui_message_handlert::uit::XML_UI:
         {
           xmlt xml_cc("calling-context");
           xml_cc.set_attribute("function", id2string(fname));

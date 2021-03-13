@@ -281,6 +281,7 @@ protected:
   void build_cond(locationt loc);
   void build_guard(locationt loc);
   void build_function_call(locationt loc);
+  bool get_deallocated_precondition(const exprt &expr, exprt &result);
   void build_assertions(locationt loc);
   void build_unknown_objs(locationt loc);
 

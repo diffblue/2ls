@@ -74,7 +74,8 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
 
   std::set<tpolyhedra_domaint::rowt> improve_rows;
   bool improved_from_neginf=false;
-  while(solver()==decision_proceduret::D_SATISFIABLE) // improvement check
+  // improvement check
+  while(solver()==decision_proceduret::resultt::D_SATISFIABLE)
   {
 #if 0
     debug() << "SAT" << eom;
@@ -194,7 +195,7 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
 
     solver << c;
 
-    if(solver()==decision_proceduret::D_SATISFIABLE)
+    if(solver()==decision_proceduret::resultt::D_SATISFIABLE)
     {
 #if 0
       debug() << "SAT" << eom;

@@ -29,7 +29,7 @@ public:
     ns(_goto_model.symbol_table),
     options(_options),
     out(_out),
-    smt2_conv(ns, "", "Horn-clause encoding", "", smt2_convt::Z3, _out)
+    smt2_conv(ns, "", "Horn-clause encoding", "", smt2_convt::solvert::Z3, _out)
   {
   }
 

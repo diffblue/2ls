@@ -1,13 +1,13 @@
-typedef struct data {
+struct data {
     struct data *next;
     int content;
-} Data;
+};
 
 void main() {
-    Data x1 = {0,};
-    Data x2 = {&x1,};
-    Data x3 = {&x2,};
-    Data *curr = &x3;
+    struct data x1 = {0,};
+    struct data x2 = {&x1,};
+    struct data x3 = {&x2,};
+    struct data *curr = &x3;
     while (curr) {
         assert(curr->content == 0);
         curr = curr->next;

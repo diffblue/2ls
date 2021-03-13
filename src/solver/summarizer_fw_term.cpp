@@ -34,8 +34,8 @@ void summarizer_fw_termt::compute_summary_rec(
   bool context_sensitive)
 {
   if(options.get_bool_option("competition-mode") &&
-     summary_db.exists(ID__start) &&
-     summary_db.get(ID__start).terminates==NO)
+     summary_db.exists(goto_functionst::entry_point()) &&
+     summary_db.get(goto_functionst::entry_point()).terminates==NO)
   {
     return;
   }

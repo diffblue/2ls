@@ -82,8 +82,8 @@ bool lexlinrank_domaint::edit_row(const rowt &row, valuet &inv, bool improved)
   }
 
   // solve
-  bool inner_solver_result=(*inner_solver)();
-  if(inner_solver_result==decision_proceduret::D_SATISFIABLE &&
+  decision_proceduret::resultt inner_solver_result=(*inner_solver)();
+  if(inner_solver_result==decision_proceduret::resultt::D_SATISFIABLE &&
      number_inner_iterations<max_inner_iterations)
   {
     number_inner_iterations++;

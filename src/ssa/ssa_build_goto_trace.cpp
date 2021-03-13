@@ -97,13 +97,13 @@ bool ssa_build_goto_tracet::record_step(
   case FUNCTION_CALL:
   case THROW:
   case CATCH:
-    step.type=goto_trace_stept::LOCATION;
+    step.type=goto_trace_stept::typet::LOCATION;
     goto_trace.add_step(step);
     step_nr++;
     break;
 
   case ASSUME:
-    step.type=goto_trace_stept::ASSUME;
+    step.type=goto_trace_stept::typet::ASSUME;
     step.cond_value=true;
     goto_trace.add_step(step);
     step_nr++;
@@ -116,7 +116,7 @@ bool ssa_build_goto_tracet::record_step(
     unwindable_local_SSA.rename(cond_read, current_pc);
     exprt cond_value=
       simplify_expr(prop_conv.get(cond_read), unwindable_local_SSA.ns);
-    step.type=goto_trace_stept::GOTO;
+    step.type=goto_trace_stept::typet::GOTO;
     step.cond_expr=cond_value; // cond
 #if 0
     assert(cond_value.is_true() || cond_value.is_false());
@@ -148,7 +148,7 @@ bool ssa_build_goto_tracet::record_step(
       simplify_expr(prop_conv.get(cond_read), unwindable_local_SSA.ns);
     if(cond_value.is_false())
     {
-      step.type=goto_trace_stept::ASSERT;
+      step.type=goto_trace_stept::typet::ASSERT;
       step.comment=id2string(current_pc->source_location.get_comment());
       step.cond_expr=cond;
       step.cond_value=false;
@@ -187,7 +187,7 @@ bool ssa_build_goto_tracet::record_step(
               << from_expr(unwindable_local_SSA.ns, "", rhs_simplified)
               << std::endl;
 #endif
-    step.type=goto_trace_stept::ASSIGNMENT;
+    step.type=goto_trace_stept::typet::ASSIGNMENT;
     step.full_lhs=lhs_simplified;
     step.full_lhs_value=rhs_simplified;
 
@@ -240,7 +240,7 @@ bool ssa_build_goto_tracet::record_step(
   break;
 
   case OTHER:
-    step.type=goto_trace_stept::LOCATION;
+    step.type=goto_trace_stept::typet::LOCATION;
     goto_trace.add_step(step);
     step_nr++;
     break;

@@ -35,10 +35,10 @@ public:
     ssa_unwindert &_ssa_unwinder,
     ssa_inlinert &_ssa_inliner):
     summarizer_fwt(_options, _summary_db, _ssa_db, _ssa_unwinder, _ssa_inliner),
-    ui(ui_message_handlert::PLAIN)
+    ui(ui_message_handlert::uit::PLAIN)
   {
     if(_options.get_bool_option("xml-ui"))
-      ui=ui_message_handlert::XML_UI;
+      ui=ui_message_handlert::uit::XML_UI;
 
     optionst::value_listt _excluded_functions=
       _options.get_list_option("do-not-analyze-functions");

@@ -26,7 +26,7 @@ property_checkert::resultt summary_checker_nontermt::operator()(
 
   ssa_unwinder.init(false, true);
 
-  property_checkert::resultt result=property_checkert::UNKNOWN;
+  property_checkert::resultt result=property_checkert::resultt::UNKNOWN;
   unsigned max_unwind=options.get_unsigned_int_option("unwind");
   status() << "Max-unwind is " << max_unwind << eom;
   ssa_unwinder.init_localunwinders();
@@ -38,14 +38,14 @@ property_checkert::resultt summary_checker_nontermt::operator()(
     if(unwind==51)  // use a different nontermination technique
     {
       result=check_nonterm_linear();
-      if(result==property_checkert::PASS)
+      if(result==property_checkert::resultt::PASS)
       {
         status() << "Termination proved after "
            << unwind << " unwinding(s)" << messaget::eom;
         report_statistics();
         return result;
       }
-      else if(result==property_checkert::FAIL)
+      else if(result==property_checkert::resultt::FAIL)
       {
         status() << "Nonterminating program execution proved after "
            << unwind << " unwinding(s)" << messaget::eom;
@@ -54,13 +54,13 @@ property_checkert::resultt summary_checker_nontermt::operator()(
       }
     }
     result=summary_checker_baset::check_properties();
-    if(result==property_checkert::PASS)
+    if(result==property_checkert::resultt::PASS)
     {
       status() << "Termination proved after "
          << unwind << " unwinding(s)" << messaget::eom;
       break;
     }
-    else if(result==property_checkert::FAIL)
+    else if(result==property_checkert::resultt::FAIL)
     {
       status() << "Nonterminating program execution proved after "
          << unwind << " unwinding(s)" << messaget::eom;
@@ -170,7 +170,7 @@ void summary_checker_nontermt::check_properties(
       SSA.current_unwinding=store_unwinding;
 
       property_map[property_id].location=n_it->loophead->location;
-      property_map[property_id].result=UNKNOWN;
+      property_map[property_id].result=property_checkert::resultt::UNKNOWN;
       cover_goals.goal_map[property_id].conjuncts.push_back(
         disjunction(loop_check_operands));
       ls_guards.push_back(not_exprt(lsguard));
@@ -274,7 +274,7 @@ void summary_checker_nontermt::check_properties_linear(
       exprt::operandst neg_loop_exit_cond;
 
       property_map[property_id].location=n_it->loophead->location;
-      property_map[property_id].result=UNKNOWN;
+      property_map[property_id].result=property_checkert::resultt::UNKNOWN;
 
       unsigned const_number=0;
       for(local_SSAt::objectst::const_iterator
@@ -363,11 +363,11 @@ void summary_checker_nontermt::check_properties_linear(
       solver << conjunction(first_linearity_check);
       switch(solver())
       {
-      case decision_proceduret::D_UNSATISFIABLE:
+      case decision_proceduret::resultt::D_UNSATISFIABLE:
           solver.pop_context();
         continue;
 
-      case decision_proceduret::D_SATISFIABLE:
+      case decision_proceduret::resultt::D_SATISFIABLE:
           for(exprt::operandst::iterator it=first_linearity_check.begin();
               it!=first_linearity_check.end();
               ++it)
@@ -393,11 +393,11 @@ void summary_checker_nontermt::check_properties_linear(
       solver << disjunction(second_linearity_check);
       switch(solver())
       {
-      case decision_proceduret::D_UNSATISFIABLE:
+      case decision_proceduret::resultt::D_UNSATISFIABLE:
           solver.pop_context();
         break;
 
-      case decision_proceduret::D_SATISFIABLE:
+      case decision_proceduret::resultt::D_SATISFIABLE:
           solver.pop_context();
         continue;
 
@@ -415,12 +415,12 @@ void summary_checker_nontermt::check_properties_linear(
       solver << conjunction(constants_computation);
       switch(solver())
       {
-      case decision_proceduret::D_UNSATISFIABLE: // should never happen
+      case decision_proceduret::resultt::D_UNSATISFIABLE: // should never happen
           solver.pop_context();
           solver.pop_context();
         return;
 
-      case decision_proceduret::D_SATISFIABLE:
+      case decision_proceduret::resultt::D_SATISFIABLE:
           for(auto constant : constants)
           {
             exprt ex=solver.solver->get(constant);
@@ -485,10 +485,10 @@ void summary_checker_nontermt::check_properties_linear(
         exprt::operandst local_constraints;
         switch(result=solver())
         {
-        case decision_proceduret::D_UNSATISFIABLE:
+        case decision_proceduret::resultt::D_UNSATISFIABLE:
           break;
 
-        case decision_proceduret::D_SATISFIABLE:
+        case decision_proceduret::resultt::D_SATISFIABLE:
             lbv_it=loopback_vars.begin();
             slvc_it=solver_consts.begin();
             while(slvc_it!=solver_consts.end())
@@ -530,7 +530,7 @@ void summary_checker_nontermt::check_properties_linear(
           return;
         }
       }
-      while(result!=decision_proceduret::D_UNSATISFIABLE);
+      while(result!=decision_proceduret::resultt::D_UNSATISFIABLE);
 
       solver.pop_context();
 
@@ -539,13 +539,13 @@ void summary_checker_nontermt::check_properties_linear(
 
       switch(solver())
       {
-      case decision_proceduret::D_UNSATISFIABLE:
+      case decision_proceduret::resultt::D_UNSATISFIABLE:
           solver.pop_context();
         break;
 
-      case decision_proceduret::D_SATISFIABLE:
+      case decision_proceduret::resultt::D_SATISFIABLE:
         // found nontermination
-          property_map[property_id].result=FAIL;
+          property_map[property_id].result=property_checkert::resultt::FAIL;
           solver.pop_context();
           solver.pop_context();
         return;
@@ -572,14 +572,14 @@ summary_checker_baset::resultt summary_checker_nontermt::check_nonterm_linear()
     check_properties_linear(f_it);
   }
 
-  summary_checker_baset::resultt result=property_checkert::PASS;
+  summary_checker_baset::resultt result=property_checkert::resultt::PASS;
   for(property_mapt::const_iterator
         p_it=property_map.begin(); p_it!=property_map.end(); p_it++)
   {
-    if(p_it->second.result==FAIL)
-      return property_checkert::FAIL;
-    if(p_it->second.result==UNKNOWN)
-      result=property_checkert::UNKNOWN;
+    if(p_it->second.result==property_checkert::resultt::FAIL)
+      return property_checkert::resultt::FAIL;
+    if(p_it->second.result==property_checkert::resultt::UNKNOWN)
+      result=property_checkert::resultt::UNKNOWN;
   }
 
   return result;

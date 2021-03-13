@@ -32,7 +32,7 @@ property_checkert::resultt summary_checker_ait::operator()(
   // properties
   initialize_property_map(goto_model.goto_functions);
 
-  property_checkert::resultt result=property_checkert::UNKNOWN;
+  property_checkert::resultt result=property_checkert::resultt::UNKNOWN;
   bool finished=false;
   while(!finished)
   {
@@ -54,7 +54,7 @@ property_checkert::resultt summary_checker_ait::operator()(
     {
       report_statistics();
       report_preconditions();
-      return property_checkert::UNKNOWN;
+      return property_checkert::resultt::UNKNOWN;
     }
 
     if(termination)
@@ -65,13 +65,13 @@ property_checkert::resultt summary_checker_ait::operator()(
 
 #ifdef SHOW_CALLINGCONTEXTS
     if(options.get_bool_option("show-calling-contexts"))
-      return property_checkert::UNKNOWN;
+      return property_checkert::resultt::UNKNOWN;
 #endif
 
     result=check_properties();
     report_statistics();
 
-    if(result==property_checkert::UNKNOWN &&
+    if(result==property_checkert::resultt::UNKNOWN &&
        options.get_bool_option("values-refine") &&
        options.get_bool_option("intervals"))
     {
@@ -134,17 +134,17 @@ property_checkert::resultt summary_checker_ait::report_termination()
        << (!computed ? "not computed" : threeval2string(terminates)) << eom;
   }
   if(not_computed)
-    return property_checkert::UNKNOWN;
+    return property_checkert::resultt::UNKNOWN;
   if(all_terminate)
-    return property_checkert::PASS;
+    return property_checkert::resultt::PASS;
   if(one_nonterminate)
   {
 #if 0
-    return property_checkert::FAIL;
+    return property_checkert::resultt::FAIL;
 #else
     // rely on nontermination checker to find counterexample
-    return property_checkert::UNKNOWN;
+    return property_checkert::resultt::UNKNOWN;
 #endif
   }
-  return property_checkert::UNKNOWN;
+  return property_checkert::resultt::UNKNOWN;
 }

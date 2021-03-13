@@ -64,7 +64,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
   debug() << "solve(): ";
 #endif
 
-  if(solver()==decision_proceduret::D_SATISFIABLE) // improvement check
+  if(solver()==decision_proceduret::resultt::D_SATISFIABLE) // improvement check
   {
 #if 0
     debug() << "SAT" << eom;
@@ -168,7 +168,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 
       solver << c;
 
-      if(solver()==decision_proceduret::D_SATISFIABLE)
+      if(solver()==decision_proceduret::resultt::D_SATISFIABLE)
       {
 #if 0
         debug() << "SAT" << eom;
