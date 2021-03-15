@@ -538,6 +538,13 @@ irep_idt get_original_name(
   return s.substr(0, pos1);
 }
 
+exprt get_original_expr(const exprt &expr)
+{
+  if(expr.id() == ID_symbol)
+    return symbol_exprt(get_original_name(to_symbol_expr(expr)), expr.type());
+  return expr;
+}
+
 void clean_expr(exprt &expr)
 {
   if(expr.id()==ID_symbol)

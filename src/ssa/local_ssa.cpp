@@ -1574,3 +1574,11 @@ void local_SSAt::disable_unsupported_instructions(locationt loc)
       assert(false);
   }
 }
+
+local_SSAt::locationt
+local_SSAt::get_loc_with_symbol_def(const symbol_exprt &symbol) const
+{
+  std::string id = id2string(symbol.get_identifier());
+  auto loc_suffix = id.substr(id.find_last_not_of("0123456789") + 1);
+  return get_location(std::stoi(loc_suffix));
+}

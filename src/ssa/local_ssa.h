@@ -254,6 +254,7 @@ public:
     assert(it!=location_map.end());
     return it->second;
   }
+  locationt get_loc_with_symbol_def(const symbol_exprt &symbol) const;
 
 protected:
   typedef std::map<unsigned, locationt> location_mapt;
