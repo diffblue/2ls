@@ -66,6 +66,7 @@ class optionst;
   "(graphml-witness):(json-cex):" \
   "(no-spurious-check)(stop-on-fail)" \
   "(competition-mode)(slice)(no-propagation)(independent-properties)" \
+  "(constant-propagation)" \
   "(no-unwinding-assertions)"
   // the last line is for CBMC-regression testing only
 

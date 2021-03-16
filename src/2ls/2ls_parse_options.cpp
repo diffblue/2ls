@@ -151,10 +151,10 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
   else
     options.set_option("std-invariants", false);
 
-  if(cmdline.isset("no-propagation"))
-    options.set_option("constant-propagation", false);
-  else
+  if(cmdline.isset("constant-propagation"))
     options.set_option("constant-propagation", true);
+  else
+    options.set_option("constant-propagation", false);
 
   // magic error label
   if(cmdline.isset("error-label"))
