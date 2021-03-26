@@ -22,7 +22,8 @@ Author: Peter Schrammel
 
 void twols_parse_optionst::inline_main(goto_modelt &goto_model)
 {
-  goto_programt &main=goto_model.goto_functions.function_map[ID__start].body;
+  irep_idt start=goto_functionst::entry_point();
+  goto_programt &main=goto_model.goto_functions.function_map[start].body;
   goto_programt::targett target=main.instructions.begin();
   while(target!=main.instructions.end())
   {
@@ -155,7 +156,7 @@ bool twols_parse_optionst::unwind_goto_into_loop(
         l_it->second,
         l_it->first,
         k,
-        goto_unwindt::PARTIAL, iteration_points);
+        goto_unwindt::unwind_strategyt::PARTIAL, iteration_points);
 
       assert(iteration_points.size()==2);
       goto_programt::targett t=body.insert_before(l_it->first);
@@ -798,7 +799,8 @@ void twols_parse_optionst::assert_no_builtin_functions(goto_modelt &goto_model)
 {
   forall_goto_program_instructions(
     i_it,
-    goto_model.goto_functions.function_map.find("_start")->second.body)
+    goto_model.goto_functions.function_map.find(
+      goto_model.goto_functions.entry_point())->second.body)
   {
     std::string name=id2string(i_it->source_location.get_function());
     assert(

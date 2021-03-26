@@ -44,7 +44,7 @@ bool strategy_solver_simplet::iterate(invariantt &_inv)
     adjust_float_expressions(cond, SSA.ns);
     solver << cond;
 
-    if(solver()==decision_proceduret::D_SATISFIABLE)
+    if(solver()==decision_proceduret::resultt::D_SATISFIABLE)
     {
 #ifdef DEBUG
       std::cerr << "Pre-condition:\n";

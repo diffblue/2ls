@@ -300,7 +300,7 @@ bool summarizer_bw_termt::bootstrap_preconditions(
 
     // solve
     exprt precondition;
-    if(solver()==decision_proceduret::D_SATISFIABLE)
+    if(solver()==decision_proceduret::resultt::D_SATISFIABLE)
     {
       exprt::operandst c;
       for(var_sett::const_iterator it=invars.begin();
@@ -395,7 +395,7 @@ exprt summarizer_bw_termt::compute_precondition(
     solver << SSA.get_enabling_exprs();
     solver << postcond;
     exprt result=true_exprt();
-    if(solver()==decision_proceduret::D_UNSATISFIABLE)
+    if(solver()==decision_proceduret::resultt::D_UNSATISFIABLE)
       result=false_exprt();
     solver.pop_context();
     bw_transformer=result;

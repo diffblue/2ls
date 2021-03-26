@@ -274,13 +274,13 @@ exprt ssa_objectt::get_root_object_rec(const exprt &src)
     return nil_exprt();
 }
 
-ssa_objectt::identifiert ssa_objectt::object_id_rec(
+irep_idt ssa_objectt::object_id_rec(
   const exprt &src,
   const namespacet &ns)
 {
   if(src.id()==ID_symbol)
   {
-    return identifiert(to_symbol_expr(src).get_identifier());
+    return irep_idt(to_symbol_expr(src).get_identifier());
   }
   else if(src.id()==ID_member)
   {
@@ -292,25 +292,25 @@ ssa_objectt::identifiert ssa_objectt::object_id_rec(
     {
       irep_idt compound_object=object_id_rec(compound_op, ns);
       if(compound_object==irep_idt())
-        return identifiert();
+        return irep_idt();
 
-      return identifiert(
+      return irep_idt(
         id2string(compound_object)+
         "."+id2string(member_expr.get_component_name()));
     }
     else
-      return identifiert();
+      return irep_idt();
   }
   else if(src.id()==ID_index)
   {
-    return identifiert();
+    return irep_idt();
   }
   else if(src.id()==ID_dereference)
   {
-    return identifiert();
+    return irep_idt();
   }
   else
-    return identifiert();
+    return irep_idt();
 }
 
 bool is_struct_member(const member_exprt &src, const namespacet &ns)

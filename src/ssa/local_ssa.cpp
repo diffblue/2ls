@@ -537,21 +537,21 @@ void local_SSAt::build_guard(locationt loc)
   (--nodes.end())->equalities.push_back(equality);
 }
 
-/// turns assertions into constraints
-void local_SSAt::build_assertions(locationt loc)
+/// Check if expr is an assertion containing a __CPROVER_deallocated symbol.
+/// If that is the case, make sure that it is bound to concrete dynamic objects
+/// only by creating an appropriate disjunction into precond.
+bool local_SSAt::get_deallocated_precondition(const exprt &expr, exprt &result)
 {
-  if(loc->is_assert())
+  if(expr.id()==ID_equal)
   {
-    exprt assert=loc->guard;
-    if(assert.id()==ID_not && assert.op0().id()==ID_equal &&
-       assert.op0().op1().id()==ID_pointer_object &&
-       assert.op0().op1().op0().id()==ID_symbol)
+    auto &rhs=to_equal_expr(expr).rhs();
+    if(rhs.id()==ID_pointer_object && rhs.op0().id()==ID_symbol)
     {
-      std::string id=id2string(
-        to_symbol_expr(assert.op0().op1().op0()).get_identifier());
+      const symbol_exprt &dealloc_symbol=to_symbol_expr(rhs.op0());
+      std::string id=id2string(dealloc_symbol.get_identifier());
       if(id.find("__CPROVER_deallocated")!=std::string::npos)
       {
-        const exprt &dealloc_symbol=assert.op0().op1().op0();
+        const exprt &dealloc_symbol=expr.op1().op0();
         exprt::operandst d;
         for(auto &global : assignments.ssa_objects.globals)
         {
@@ -565,9 +565,33 @@ void local_SSAt::build_assertions(locationt loc)
                   dealloc_symbol.type())));
           }
         }
-        assert=implies_exprt(disjunction(d), assert);
+        result=disjunction(d);
+        return true;
       }
     }
+  }
+  else
+  {
+    // Recursively go through the operands
+    if(!expr.has_operands())
+      return false;
+    else
+      forall_operands(o_it, expr)
+        if(get_deallocated_precondition(*o_it, result))
+          return true;
+  }
+  return false;
+}
+
+/// turns assertions into constraints
+void local_SSAt::build_assertions(locationt loc)
+{
+  if(loc->is_assert())
+  {
+    exprt assert=loc->guard;
+    exprt precondition;
+    if(get_deallocated_precondition(assert, precondition))
+      assert=implies_exprt(precondition, assert);
 
     const exprt deref_rhs=dereference(assert, loc);
 

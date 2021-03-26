@@ -151,10 +151,10 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
   else
     options.set_option("std-invariants", false);
 
-  if(cmdline.isset("no-propagation"))
-    options.set_option("constant-propagation", false);
-  else
+  if(cmdline.isset("constant-propagation"))
     options.set_option("constant-propagation", true);
+  else
+    options.set_option("constant-propagation", false);
 
   // magic error label
   if(cmdline.isset("error-label"))
@@ -633,7 +633,7 @@ int twols_parse_optionst::doit()
     // do actual analysis
     switch((*checker)(goto_model))
     {
-    case property_checkert::PASS:
+    case property_checkert::resultt::PASS:
       if(report_assertions)
         report_properties(options, goto_model, checker->property_map);
       report_success();
@@ -642,7 +642,7 @@ int twols_parse_optionst::doit()
       retval=0;
       break;
 
-    case property_checkert::FAIL:
+    case property_checkert::resultt::FAIL:
     {
       if(report_assertions)
         report_properties(options, goto_model, checker->property_map);
@@ -651,7 +651,7 @@ int twols_parse_optionst::doit()
       bool trace_valid=false;
       for(const auto &p : checker->property_map)
       {
-        if(p.second.result!=property_checkert::FAIL)
+        if(p.second.result!=property_checkert::resultt::FAIL)
           continue;
 
         if(options.get_bool_option("trace"))
@@ -681,7 +681,7 @@ int twols_parse_optionst::doit()
       retval=10;
       break;
     }
-    case property_checkert::UNKNOWN:
+    case property_checkert::resultt::UNKNOWN:
       if(report_assertions)
         report_properties(options, goto_model, checker->property_map);
       retval=5;
@@ -963,7 +963,7 @@ bool twols_parse_optionst::get_goto_program(
 
       language->set_message_handler(get_message_handler());
 
-      status("Parsing", filename);
+      status() << "Parsing" << filename << eom;
 
       if(language->parse(infile, filename))
       {
@@ -1049,6 +1049,7 @@ bool twols_parse_optionst::process_goto_program(
   {
     status() << "Function Pointer Removal" << eom;
     remove_function_pointers(
+      get_message_handler(),
       goto_model,
       cmdline.isset("pointer-check"));
 
@@ -1062,7 +1063,7 @@ bool twols_parse_optionst::process_goto_program(
 
       // remove inlined functions
       Forall_goto_functions(f_it, goto_model.goto_functions)
-        if(f_it->first!=ID__start &&
+        if(f_it->first!=goto_functionst::entry_point() &&
            f_it->second.body.instructions.size()<=2*(limit/2))
         {
           f_it->second.body.clear();
@@ -1285,10 +1286,10 @@ void twols_parse_optionst::report_properties(
 #endif
 
     if(!options.get_bool_option("all-properties") &&
-       it->second.result!=property_checkert::FAIL)
+       it->second.result!=property_checkert::resultt::FAIL)
       continue;
 
-    if(get_ui()==ui_message_handlert::XML_UI)
+    if(get_ui()==ui_message_handlert::uit::XML_UI)
     {
       xmlt xml_result("result");
       xml_result.set_attribute("property", id2string(it->first));
@@ -1307,10 +1308,10 @@ void twols_parse_optionst::report_properties(
     }
 
     if(options.get_bool_option("trace") &&
-       it->second.result==property_checkert::FAIL)
+       it->second.result==property_checkert::resultt::FAIL)
       show_counterexample(goto_model, it->second.error_trace);
     if(cmdline.isset("json-cex") &&
-       it->second.result==property_checkert::FAIL)
+       it->second.result==property_checkert::resultt::FAIL)
       output_json_cex(
         options,
         goto_model,
@@ -1330,9 +1331,9 @@ void twols_parse_optionst::report_properties(
         it!=property_map.end();
         it++)
     {
-      if(it->second.result==property_checkert::UNKNOWN)
+      if(it->second.result==property_checkert::resultt::UNKNOWN)
         unknown++;
-      if(it->second.result==property_checkert::FAIL)
+      if(it->second.result==property_checkert::resultt::FAIL)
         failed++;
     }
 
@@ -1351,10 +1352,10 @@ void twols_parse_optionst::report_success()
 
   switch(get_ui())
   {
-  case ui_message_handlert::PLAIN:
+  case ui_message_handlert::uit::PLAIN:
     break;
 
-  case ui_message_handlert::XML_UI:
+  case ui_message_handlert::uit::XML_UI:
   {
     xmlt xml("cprover-status");
     xml.data="SUCCESS";
@@ -1376,12 +1377,12 @@ void twols_parse_optionst::show_counterexample(
 
   switch(get_ui())
   {
-  case ui_message_handlert::PLAIN:
+  case ui_message_handlert::uit::PLAIN:
     std::cout << std::endl << "Counterexample:" << std::endl;
     show_goto_trace(std::cout, ns, error_trace);
     break;
 
-  case ui_message_handlert::XML_UI:
+  case ui_message_handlert::uit::XML_UI:
   {
     xmlt xml;
     convert(ns, error_trace, xml);
@@ -1401,7 +1402,7 @@ void twols_parse_optionst::output_graphml_cex(
 {
   for(const auto &p : summary_checker.property_map)
   {
-    if(p.second.result!=property_checkert::FAIL)
+    if(p.second.result!=property_checkert::resultt::FAIL)
       continue;
 
     const namespacet ns(goto_model.symbol_table);
@@ -1475,10 +1476,10 @@ void twols_parse_optionst::report_failure()
 
   switch(get_ui())
   {
-  case ui_message_handlert::PLAIN:
+  case ui_message_handlert::uit::PLAIN:
     break;
 
-  case ui_message_handlert::XML_UI:
+  case ui_message_handlert::uit::XML_UI:
   {
     xmlt xml("cprover-status");
     xml.data="FAILURE";
@@ -1498,10 +1499,10 @@ void twols_parse_optionst::report_unknown()
 
   switch(get_ui())
   {
-  case ui_message_handlert::PLAIN:
+  case ui_message_handlert::uit::PLAIN:
     break;
 
-  case ui_message_handlert::XML_UI:
+  case ui_message_handlert::uit::XML_UI:
   {
     xmlt xml("cprover-status");
     xml.data="UNKNOWN";

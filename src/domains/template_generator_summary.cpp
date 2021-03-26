@@ -36,7 +36,8 @@ void template_generator_summaryt::operator()(
   collect_variables_loop(SSA, forward);
 
   // do not compute summary for entry-point
-  if(SSA.goto_function.body.instructions.front().function!=ID__start ||
+  if(SSA.goto_function.body.instructions.front().function!=
+     goto_functionst::entry_point() ||
      options.get_bool_option("preconditions"))
     collect_variables_inout(SSA, forward);
 

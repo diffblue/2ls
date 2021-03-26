@@ -66,7 +66,7 @@ bool linrank_domaint::edit_row(const rowt &row, valuet &inv, bool improved)
   }
 
   // solve
-  if((*inner_solver)()==decision_proceduret::D_SATISFIABLE &&
+  if((*inner_solver)()==decision_proceduret::resultt::D_SATISFIABLE &&
      number_inner_iterations<max_inner_iterations)
   {
     std::vector<exprt> c=symb_values.c;

@@ -15,8 +15,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/expr_util.h>
 #include <util/symbol.h>
 #include <util/pointer_offset_size.h>
+#include <util/c_types.h>
 
-#include <ansi-c/c_types.h>
 #include <analyses/constant_propagator.h>
 
 #include <functional>
@@ -93,6 +93,8 @@ std::vector<exprt> collect_pointer_vars(
   std::vector<exprt> pointers;
   forall_symbols(it, symbol_table.symbols)
   {
+    if(it->second.is_type)
+      continue;
     if(ns.follow(it->second.type).id()==ID_struct)
     {
       for(auto &component : to_struct_type(
@@ -321,7 +323,8 @@ bool replace_malloc(
              lhs_id=="__builtin_alloca::alloca_size")
           {
             namespacet ns(goto_model.symbol_table);
-            goto_functionst::goto_functiont function_copy=f_it->second;
+            goto_functionst::goto_functiont function_copy;
+            function_copy.copy_from(f_it->second);
             constant_propagator_ait const_propagator(function_copy, ns);
             forall_goto_program_instructions(copy_i_it, function_copy.body)
             {

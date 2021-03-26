@@ -174,7 +174,7 @@ void summarizer_bwt::do_summary(
     solver << SSA.get_enabling_exprs();
     solver << conjunction(c);
     exprt result=true_exprt();
-    if(solver()==decision_proceduret::D_UNSATISFIABLE)
+    if(solver()==decision_proceduret::resultt::D_UNSATISFIABLE)
       result=false_exprt();
     solver.pop_context();
     summary.bw_transformer=result;
@@ -348,14 +348,14 @@ bool summarizer_bwt::check_postcondition(
 
   switch(solver())
   {
-  case decision_proceduret::D_SATISFIABLE:
+  case decision_proceduret::resultt::D_SATISFIABLE:
   {
     precondition_holds=false;
 
     status() << "Precondition does not hold, need to recompute summary." << eom;
     break;
   }
-  case decision_proceduret::D_UNSATISFIABLE:
+  case decision_proceduret::resultt::D_UNSATISFIABLE:
   {
     precondition_holds=true;
 

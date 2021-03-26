@@ -42,10 +42,7 @@ public:
     solver_instances(0),
     solver_calls(0),
     summaries_used(0),
-    termargs_computed(0)
-  {
-    ssa_inliner.set_message_handler(get_message_handler());
-  }
+    termargs_computed(0) {}
 
   bool show_vcc, simplify, fixed_point;
   irep_idt function_to_check;
@@ -53,6 +50,12 @@ public:
   virtual resultt operator()(const goto_modelt &) { assert(false); }
 
   void instrument_and_output(goto_modelt &goto_model, unsigned verbosity);
+
+  void set_message_handler(message_handlert &_message_handler) override
+  {
+    messaget::set_message_handler(_message_handler);
+    ssa_inliner.set_message_handler(_message_handler);
+  }
 
   // statistics
   absolute_timet start_time;

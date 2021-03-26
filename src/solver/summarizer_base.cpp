@@ -110,13 +110,13 @@ bool summarizer_baset::check_call_reachable(
 
   switch(solver())
   {
-  case decision_proceduret::D_SATISFIABLE:
+  case decision_proceduret::resultt::D_SATISFIABLE:
   {
     reachable=true;
     debug() << "Call is reachable" << eom;
     break;
   }
-  case decision_proceduret::D_UNSATISFIABLE:
+  case decision_proceduret::resultt::D_UNSATISFIABLE:
   {
     debug() << "Call is not reachable" << eom;
     break;
@@ -297,14 +297,14 @@ bool summarizer_baset::check_precondition(
 
   switch(solver())
   {
-  case decision_proceduret::D_SATISFIABLE:
+  case decision_proceduret::resultt::D_SATISFIABLE:
   {
     precondition_holds=false;
 
     status() << "Precondition does not hold, need to recompute summary." << eom;
     break;
   }
-  case decision_proceduret::D_UNSATISFIABLE:
+  case decision_proceduret::resultt::D_UNSATISFIABLE:
   {
     precondition_holds=true;
 
@@ -346,7 +346,7 @@ bool summarizer_baset::check_end_reachable(
 
   solver << not_exprt(conjunction(assertions)); // we want to reach any of them
 
-  bool result=(solver()==decision_proceduret::D_SATISFIABLE);
+  bool result=(solver()==decision_proceduret::resultt::D_SATISFIABLE);
 
   solver.pop_context();
 

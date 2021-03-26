@@ -132,7 +132,7 @@ bool strategy_solver_sympatht::is_current_path_feasible(
 
     // If loop is not reachable in the current context of computed summary,
     // the path is infeasible
-    if(solver()==decision_proceduret::D_UNSATISFIABLE)
+    if(solver()==decision_proceduret::resultt::D_UNSATISFIABLE)
       result=false;
 
     solver.pop_context();

@@ -27,8 +27,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/base_type.h>
 #include <util/expr_util.h>
 #include <util/simplify_expr.h>
-
-#include <ansi-c/c_types.h>
+#include <util/c_types.h>
 
 #include "ssa_dereference.h"
 #include "address_canonizer.h"

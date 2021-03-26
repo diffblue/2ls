@@ -15,7 +15,7 @@ Author: Peter Schrammel
 void graphml_witness_extt::operator()(
   const summary_checker_baset &summary_checker)
 {
-  irep_idt function_name=ID__start;
+  irep_idt function_name=goto_functionst::entry_point();
   const unwindable_local_SSAt &ssa=
     static_cast<const unwindable_local_SSAt &>(
       summary_checker.ssa_db.get(function_name));
