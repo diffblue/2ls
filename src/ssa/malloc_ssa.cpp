@@ -62,25 +62,26 @@ exprt create_dynamic_object(
   value_symbol.mode=ID_C;
   symbol_table.add(value_symbol);
 
-  address_of_exprt address_of_object;
+  typet object_type;
+  exprt object;
 
   if(type.id()==ID_array)
   {
-    address_of_object.type()=pointer_typet(value_symbol.type.subtype());
+    object_type=value_symbol.type.subtype();
     index_exprt index_expr(value_symbol.type.subtype());
     index_expr.array()=value_symbol.symbol_expr();
     index_expr.index()=from_integer(0, index_type());
-    address_of_object.op0()=index_expr;
+    object=index_expr;
   }
   else
   {
-    address_of_object.op0()=value_symbol.symbol_expr();
+    object=value_symbol.symbol_expr();
     if(is_concrete)
-      address_of_object.op0().set("#concrete", true);
-    address_of_object.type()=pointer_typet(value_symbol.type);
+      object.set("#concrete", true);
+    object_type=value_symbol.type;
   }
 
-  return address_of_object;
+  return address_of_exprt(object, pointer_type(object_type));
 }
 
 /// Collect all variables (symbols and their members) of pointer type with given
@@ -91,14 +92,14 @@ std::vector<exprt> collect_pointer_vars(
 {
   namespacet ns(symbol_table);
   std::vector<exprt> pointers;
-  forall_symbols(it, symbol_table.symbols)
+  for(const auto &it : symbol_table.symbols)
   {
-    if(it->second.is_type)
+    if(it.second.is_type)
       continue;
-    if(ns.follow(it->second.type).id()==ID_struct)
+    if(ns.follow(it.second.type).id()==ID_struct)
     {
       for(auto &component : to_struct_type(
-        ns.follow(it->second.type)).components())
+        ns.follow(it.second.type)).components())
       {
         if(component.type().id()==ID_pointer)
         {
@@ -106,17 +107,17 @@ std::vector<exprt> collect_pointer_vars(
           {
             pointers.push_back(
               member_exprt(
-                it->second.symbol_expr(), component.get_name(),
+                it.second.symbol_expr(), component.get_name(),
                 component.type()));
           }
         }
       }
     }
-    if(it->second.type.id()==ID_pointer)
+    if(it.second.type.id()==ID_pointer)
     {
-      if(ns.follow(it->second.type.subtype())==ns.follow(pointed_type))
+      if(ns.follow(it.second.type.subtype())==ns.follow(pointed_type))
       {
-        pointers.push_back(it->second.symbol_expr());
+        pointers.push_back(it.second.symbol_expr());
       }
     }
   }
@@ -130,8 +131,8 @@ exprt malloc_ssa(
   bool is_concrete,
   bool alloc_concrete)
 {
-  if(code.operands().size()!=1)
-    throw "malloc expected to have one operand";
+  if(code.operands().size()!=2)
+    throw "allocation expected to have two operands";
 
   namespacet ns(symbol_table);
   exprt size=code.op0();
@@ -246,7 +247,7 @@ static bool replace_malloc_rec(
   bool alloc_concrete)
 {
   if(expr.id()==ID_side_effect &&
-     to_side_effect_expr(expr).get_statement()==ID_malloc)
+     to_side_effect_expr(expr).get_statement()==ID_allocate)
   {
     assert(!malloc_size.is_nil());
     expr.op0()=malloc_size;
@@ -352,6 +353,52 @@ bool replace_malloc(
   return result;
 }
 
+/// Replaces the RHS of the following instruction if it is an assignemnt
+/// and its LHS is equal to name. Returns whether something was changed.
+bool set_following_assign_to_true(
+  std::list<goto_programt::instructiont>::iterator it,
+  std::list<goto_programt::instructiont>::iterator end,
+  const std::string &name)
+{
+  bool result=false;
+  for(; it!=end; it++)
+  {
+    if(it->is_assign())
+    {
+      code_assignt &code_assign=to_code_assign(it->code);
+      if(code_assign.lhs().id()==ID_symbol)
+      {
+        std::string lhs_id=
+          id2string(to_symbol_expr(code_assign.lhs()).get_identifier());
+        if(lhs_id==name)
+        {
+          code_assign.rhs()=true_exprt();
+          result=true;
+        }
+      }
+    }
+    if(it->is_dead())
+    {
+      // Stop if the variable is invalid
+      code_deadt &code_dead=to_code_dead(it->code);
+      if(code_dead.symbol().id()==ID_symbol)
+      {
+        std::string dead_id=
+          id2string(to_symbol_expr(code_dead.symbol()).get_identifier());
+        if(name==dead_id)
+          break;
+      }
+    }
+    if(it->is_goto())
+    {
+      // Break on branching, we may not be able to set the variable in all
+      // reachable branches, don't even try.
+      break;
+    }
+  }
+  return result;
+}
+
 /// Set undefined boolean variable to true. Finds declaration of a variable
 /// whose name matches the given condition and adds an instruction var = TRUE
 /// after the declaration.
@@ -374,6 +421,12 @@ void set_var_always_to_true(
             id2string(to_symbol_expr(code_decl.symbol()).get_identifier());
           if(name_cond(decl_id))
           {
+            if(set_following_assign_to_true(
+              i_it,
+              f_it->second.body.instructions.end(),
+              decl_id))
+              continue;
+            // No following assignment, add one
             auto assign=f_it->second.body.insert_after(i_it);
             assign->make_assignment();
             assign->code=code_assignt(code_decl.symbol(), true_exprt());

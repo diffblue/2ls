@@ -13,9 +13,12 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/std_expr.h>
 #include <util/pointer_offset_size.h>
+#include <util/config.h>
 
 #include "address_canonizer.h"
 #include "ssa_pointed_objects.h"
+
+extern configt config;
 
 exprt address_canonizer(
   const exprt &address,
@@ -44,7 +47,9 @@ exprt address_canonizer(
       address_of_exprt address_of_expr(to_member_expr(object).struct_op());
       exprt rec_result=address_canonizer(address_of_expr, ns); // rec. call
 
-      pointer_typet byte_pointer(unsigned_char_type());
+      pointer_typet byte_pointer(
+        unsigned_char_type(),
+        config.ansi_c.pointer_width);
       typecast_exprt typecast_expr(rec_result, byte_pointer);
       plus_exprt sum(typecast_expr, offset);
       if(sum.type()!=address.type())
@@ -58,8 +63,7 @@ exprt address_canonizer(
       address_of_exprt address_of_expr(to_index_expr(object).array());
       exprt rec_result=address_canonizer(address_of_expr, ns); // rec. call
 
-      pointer_typet pointer_type;
-      pointer_type.subtype()=object.type();
+      pointer_typet pointer_type(object.type(), config.ansi_c.pointer_width);
       typecast_exprt typecast_expr(rec_result, pointer_type);
       plus_exprt sum(typecast_expr, to_index_expr(object).index());
       if(sum.type()!=address.type())

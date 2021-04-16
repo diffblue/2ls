@@ -140,17 +140,11 @@ void instrument_gotot::operator()(goto_modelt &goto_model)
 {
   goto_functionst &goto_functions=goto_model.goto_functions;
 
-  typedef goto_functions_templatet<goto_programt>::function_mapt
-    function_mapt;
+  goto_functionst::function_mapt  &function_map=goto_functions.function_map;
 
-  function_mapt &function_map=goto_functions.function_map;
-
-  for(function_mapt::iterator
-      fit=function_map.begin();
-      fit!=function_map.end();
-      ++fit)
+  for(auto & fit : function_map)
   {
-    instrument_function(fit->first, fit->second);
+    instrument_function(fit.first, fit.second);
   }
 
   goto_model.goto_functions.update();

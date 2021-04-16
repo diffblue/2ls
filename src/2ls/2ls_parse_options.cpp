@@ -16,11 +16,11 @@ Author: Daniel Kroening, Peter Schrammel
 
 #include <util/string2int.h>
 #include <util/config.h>
-#include <util/language.h>
 #include <util/options.h>
 #include <util/memory_info.h>
 
 #include <ansi-c/ansi_c_language.h>
+#include <ansi-c/cprover_library.h>
 #include <cpp/cpp_language.h>
 
 #include <goto-programs/goto_convert_functions.h>
@@ -37,12 +37,13 @@ Author: Daniel Kroening, Peter Schrammel
 #include <goto-programs/json_goto_trace.h>
 #include <goto-programs/remove_returns.h>
 #include <goto-programs/remove_skip.h>
+#include <goto-programs/show_symbol_table.h>
+#include <goto-programs/initialize_goto_model.h>
 
 #include <analyses/goto_check.h>
 
 #include <langapi/mode.h>
 
-#include <cbmc/version.h>
 #include "version.h"
 
 #include <ssa/malloc_ssa.h>
@@ -68,7 +69,7 @@ Author: Daniel Kroening, Peter Schrammel
 
 twols_parse_optionst::twols_parse_optionst(int argc, const char **argv):
   parse_options_baset(TWOLS_OPTIONS, argc, argv),
-  language_uit(cmdline, ui_message_handler),
+  messaget(ui_message_handler),
   ui_message_handler(cmdline, "2LS " TWOLS_VERSION),
   recursion_detected(false),
   threads_detected(false),
@@ -151,10 +152,10 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
   else
     options.set_option("std-invariants", false);
 
-  if(cmdline.isset("constant-propagation"))
-    options.set_option("constant-propagation", true);
-  else
+  if(cmdline.isset("no-propagation"))
     options.set_option("constant-propagation", false);
+  else
+    options.set_option("constant-propagation", true);
 
   // magic error label
   if(cmdline.isset("error-label"))
@@ -388,14 +389,11 @@ int twols_parse_optionst::doit()
   //
   // Print a banner
   //
-  status() << "2LS version " TWOLS_VERSION " (based on CBMC " CBMC_VERSION ")"
-           << eom;
-
-  goto_modelt goto_model;
+  status() << "2LS version " TWOLS_VERSION << eom;
 
   register_languages();
 
-  if(get_goto_program(options, goto_model))
+  if(get_goto_program(options))
     return 6;
 
   if(cmdline.isset("heap") && dynamic_memory_detected)
@@ -597,8 +595,6 @@ int twols_parse_optionst::doit()
     if(cmdline.isset("horn-encoding"))
     {
       status() << "Horn-clause encoding" << eom;
-      namespacet ns(symbol_table);
-
       std::string out_file=cmdline.get_value("horn-encoding");
 
       if(out_file=="-")
@@ -762,7 +758,7 @@ void twols_parse_optionst::expr_stats_rec(
     const side_effect_exprt &side_effect_expr=to_side_effect_expr(expr);
     const irep_idt &statement=side_effect_expr.get_statement();
 
-    if(statement==ID_malloc)
+    if(statement==ID_allocate)
     {
       stats.has_malloc=true;
     }
@@ -891,19 +887,9 @@ bool twols_parse_optionst::set_properties(goto_modelt &goto_model)
   return false;
 }
 
-void twols_parse_optionst::require_entry(
-  const goto_modelt &goto_model)
-{
-  irep_idt entry_point=goto_model.goto_functions.entry_point();
-
-  if(goto_model.symbol_table.symbols.find(entry_point)==
-     symbol_table.symbols.end())
-    throw "the program has no entry point; please complete linking";
-}
 
 bool twols_parse_optionst::get_goto_program(
-  const optionst &options,
-  goto_modelt &goto_model)
+  const optionst &options)
 {
   if(cmdline.args.size()==0)
   {
@@ -913,103 +899,17 @@ bool twols_parse_optionst::get_goto_program(
 
   try
   {
-    if(cmdline.args.size()==1 &&
-       is_goto_binary(cmdline.args[0]))
+    goto_model=initialize_goto_model(cmdline, ui_message_handler);
+
+    if(cmdline.isset("show-symbol-table"))
     {
-      status() << "Reading GOTO program from file" << eom;
-
-      if(read_goto_binary(
-           cmdline.args[0], goto_model, get_message_handler()))
-        return true;
-
-      config.set_from_symbol_table(goto_model.symbol_table);
-
-      if(cmdline.isset("show-symbol-table"))
-      {
-        show_symbol_table();
-        return true;
-      }
-    }
-    else if(cmdline.isset("show-parse-tree"))
-    {
-      if(cmdline.args.size()!=1)
-      {
-        error() << "Please give one source file only" << eom;
-        return true;
-      }
-
-      std::string filename=cmdline.args[0];
-
-#ifdef _MSC_VER
-      std::ifstream infile(widen(filename).c_str());
-#else
-      std::ifstream infile(filename.c_str());
-#endif
-
-      if(!infile)
-      {
-        error() << "failed to open input file `" << filename << "'" << eom;
-        return true;
-      }
-
-      languaget *language=get_language_from_filename(filename);
-
-      if(language==NULL)
-      {
-        error() << "failed to figure out type of file `" << filename << "'"
-                << eom;
-        return true;
-      }
-
-      language->set_message_handler(get_message_handler());
-
-      status() << "Parsing" << filename << eom;
-
-      if(language->parse(infile, filename))
-      {
-        error() << "PARSING ERROR" << eom;
-        return true;
-      }
-
-      language->show_parse(std::cout);
+      show_symbol_table(goto_model, ui_message_handler.get_ui());
       return true;
-    }
-    else
-    {
-      if(parse())
-        return true;
-      if(typecheck())
-        return true;
-      if(final())
-        return true;
-
-      // we no longer need any parse trees or language files
-      clear_parse();
-
-      if(cmdline.isset("show-symbol-table"))
-      {
-        show_symbol_table();
-        return true;
-      }
-
-#if 0
-      irep_idt entry_point=goto_model.goto_functions.entry_point();
-
-      if(symbol_table.symbols.find(entry_point)==symbol_table.symbols.end())
-      {
-        error() << "No entry point; please provide a main function" << eom;
-        return true;
-      }
-#endif
-
-      status() << "Generating GOTO Program" << eom;
-
-      goto_convert(symbol_table, goto_model, ui_message_handler);
     }
 
     // finally add the library
     status() << "Adding CPROVER library" << eom;
-    link_to_library(goto_model, ui_message_handler);
+    link_to_library(goto_model, ui_message_handler, cprover_c_library_factory);
 
     if(process_goto_program(options, goto_model))
       return true;
@@ -1219,7 +1119,7 @@ bool twols_parse_optionst::process_goto_program(
     // show it?
     if(cmdline.isset("show-loops"))
     {
-      show_loop_ids(get_ui(), goto_model);
+      show_loop_ids(ui_message_handler.get_ui(), goto_model);
       return true;
     }
 
@@ -1227,7 +1127,10 @@ bool twols_parse_optionst::process_goto_program(
 
     if(cmdline.isset("show-properties"))
     {
-      show_properties(goto_model, get_ui());
+      show_properties(
+        goto_model,
+        get_message_handler(),
+        ui_message_handler.get_ui());
       return true;
     }
 
@@ -1289,7 +1192,7 @@ void twols_parse_optionst::report_properties(
        it->second.result!=property_checkert::resultt::FAIL)
       continue;
 
-    if(get_ui()==ui_message_handlert::uit::XML_UI)
+    if(ui_message_handler.get_ui()==ui_message_handlert::uit::XML_UI)
     {
       xmlt xml_result("result");
       xml_result.set_attribute("property", id2string(it->first));
@@ -1350,7 +1253,7 @@ void twols_parse_optionst::report_success()
 {
   result() << "VERIFICATION SUCCESSFUL" << eom;
 
-  switch(get_ui())
+  switch(ui_message_handler.get_ui())
   {
   case ui_message_handlert::uit::PLAIN:
     break;
@@ -1375,7 +1278,7 @@ void twols_parse_optionst::show_counterexample(
 {
   const namespacet ns(goto_model.symbol_table);
 
-  switch(get_ui())
+  switch(ui_message_handler.get_ui())
   {
   case ui_message_handlert::uit::PLAIN:
     std::cout << std::endl << "Counterexample:" << std::endl;
@@ -1454,8 +1357,8 @@ void twols_parse_optionst::output_json_cex(
   if(options.get_option("json-cex")!="")
   {
     const namespacet ns(goto_model.symbol_table);
-    jsont json_trace;
-    convert(ns, error_trace, json_trace);
+    json_arrayt json_trace;
+    convert<json_arrayt>(ns, error_trace, json_trace);
 
     if(options.get_option("json-cex")=="-")
     {
@@ -1474,7 +1377,7 @@ void twols_parse_optionst::report_failure()
 {
   result() << "VERIFICATION FAILED" << eom;
 
-  switch(get_ui())
+  switch(ui_message_handler.get_ui())
   {
   case ui_message_handlert::uit::PLAIN:
     break;
@@ -1497,7 +1400,7 @@ void twols_parse_optionst::report_unknown()
 {
   result() << "VERIFICATION INCONCLUSIVE" << eom;
 
-  switch(get_ui())
+  switch(ui_message_handler.get_ui())
   {
   case ui_message_handlert::uit::PLAIN:
     break;
@@ -1521,11 +1424,7 @@ void twols_parse_optionst::help()
 {
   std::cout <<
     "\n"
-    "* *  2LS " TWOLS_VERSION "-Copyright (C) 2014-2017                    * *\n" // NOLINT(*)
-    "* *  (based on CBMC " CBMC_VERSION " ";
-  std::cout << "(" << (sizeof(void *)*8) << "-bit version))";
-
-  std::cout << "                   * *\n";
+    "* *  2LS " TWOLS_VERSION "-Copyright (C) 2014-2021                    * *\n"; // NOLINT(*)
 
   std::cout <<
     "* *           Daniel Kroening, Peter Schrammel              * *\n"

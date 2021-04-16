@@ -9,6 +9,8 @@ Author: Viktor Malik
 /// \file
 /// Library of functions for working with pointed objects
 
+#include <util/c_types.h>
+
 #include "ssa_pointed_objects.h"
 #include "ssa_object.h"
 
@@ -138,7 +140,7 @@ const exprt get_pointer(const exprt &expr, unsigned level)
   {
     pointer=symbol_exprt(
       expr.get(level_str(level, ID_pointer_sym)),
-      pointer_typet(pointed_type));
+      pointer_type(pointed_type));
     copy_pointed_info(pointer, expr, level-1);
   }
   else
@@ -151,7 +153,7 @@ const exprt get_pointer(const exprt &expr, unsigned level)
     pointer=member_exprt(
       compound,
       pointer_level_field(expr, level),
-      pointer_typet(pointed_type));
+      pointer_type(pointed_type));
   }
   return pointer;
 }

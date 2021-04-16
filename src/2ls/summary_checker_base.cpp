@@ -506,7 +506,6 @@ void summary_checker_baset::instrument_and_output(
   status() << "Writing instrumented goto-binary " << filename << eom;
   write_goto_binary(
     filename,
-    goto_model.symbol_table,
-    goto_model.goto_functions,
+    goto_model,
     get_message_handler());
 }

@@ -15,8 +15,7 @@ Author: Peter Schrammel
 
 #include <util/find_symbols.h>
 #include <util/simplify_expr.h>
-#include <langapi/languages.h>
-#include <goto-symex/adjust_float_expressions.h>
+#include <goto-programs/adjust_float_expressions.h>
 
 #include <util/cprover_prefix.h>
 #include "lexlinrank_domain.h"

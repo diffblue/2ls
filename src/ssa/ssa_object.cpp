@@ -239,7 +239,7 @@ void ssa_objectst::categorize_objects(
       }
       else
       {
-        const symbolt &symbol=ns.lookup(root_object);
+        const symbolt &symbol=ns.lookup(to_symbol_expr(root_object));
         if(symbol.is_procedure_local())
         {
           if(dirty(symbol.name))

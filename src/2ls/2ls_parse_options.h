@@ -60,31 +60,28 @@ class optionst;
   "(show-locs)(show-vcc)(show-properties)(trace)(show-stats)" \
   "(show-goto-functions)(show-guards)(show-defs)(show-ssa)(show-assignments)" \
   "(show-invariants)(std-invariants)" \
+  "(show-symbol-table)" \
   "(property):(all-properties)(k-induction)(incremental-bmc)" \
   "(no-spurious-check)(all-functions)" \
   "(no-simplify)(no-fixed-point)" \
   "(graphml-witness):(json-cex):" \
   "(no-spurious-check)(stop-on-fail)" \
   "(competition-mode)(slice)(no-propagation)(independent-properties)" \
-  "(constant-propagation)" \
   "(no-unwinding-assertions)"
   // the last line is for CBMC-regression testing only
 
 class twols_parse_optionst:
   public parse_options_baset,
-  public language_uit
+  public messaget
 {
 public:
   virtual int doit();
   virtual void help();
 
   twols_parse_optionst(int argc, const char **argv);
-  twols_parse_optionst(
-    int argc,
-    const char **argv,
-    const std::string &extra_options);
 
 protected:
+  goto_modelt goto_model;
   ui_message_handlert ui_message_handler;
   bool recursion_detected;
   bool threads_detected;
@@ -93,9 +90,7 @@ protected:
 
   void get_command_line_options(optionst &options);
 
-  bool get_goto_program(
-    const optionst &options,
-    goto_modelt &goto_model);
+  bool get_goto_program(const optionst &options);
 
   bool process_goto_program(
     const optionst &options,
@@ -163,8 +158,6 @@ protected:
   void eval_verbosity();
   void report_unknown();
 
-  void require_entry(const goto_modelt &goto_model);
-
   bool has_threads(const goto_modelt &goto_model);
 
   // diverse preprocessing
@@ -172,11 +165,6 @@ protected:
   void propagate_constants(goto_modelt &goto_model);
   void nondet_locals(goto_modelt &goto_model);
   bool unwind_goto_into_loop(goto_modelt &goto_model, unsigned k);
-  void replace_types_rec(const replace_symbolt &replace_const, exprt &expr);
-  exprt evaluate_casts_in_constants(
-    const exprt &expr,
-    const typet &parent_type,
-    bool &valid);
   void remove_multiple_dereferences(goto_modelt &goto_model);
   void remove_multiple_dereferences(
     goto_modelt &goto_model,
