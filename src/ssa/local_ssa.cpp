@@ -21,7 +21,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/decision_procedure.h>
 #include <util/byte_operators.h>
 
-#include <goto-symex/adjust_float_expressions.h>
+#include <goto-programs/adjust_float_expressions.h>
 
 #include "local_ssa.h"
 #include "ssa_dereference.h"
@@ -415,7 +415,7 @@ void local_SSAt::build_function_call(locationt loc)
 
     // turn function call into expression
     function_application_exprt f;
-    f.function()=code_function_call.function();
+    f.function()=to_symbol_expr(code_function_call.function());
     f.type()=code_function_call.lhs().type();
     f.arguments()=code_function_call.arguments();
 
@@ -921,7 +921,7 @@ void local_SSAt::replace_side_effects_rec(
       exprt s=nondet_symbol("ssa::nondet", expr.type(), loc, counter);
       expr.swap(s);
     }
-    else if(statement==ID_malloc)
+    else if(statement==ID_allocate)
     {
       assert(false);
 /*      counter++;

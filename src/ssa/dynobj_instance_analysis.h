@@ -29,31 +29,33 @@ Description: In some cases, multiple instances must be used so that the
 #include "ssa_object.h"
 #include "ssa_value_set.h"
 
-class must_alias_setst:public union_find<exprt>
+class must_alias_setst
 {
 public:
+  union_find<exprt> data;
+
   bool join(const must_alias_setst &other)
   {
     if(!equal(other))
     {
       // Find new elements (those that are unique to one of the sets)
       auto new_elements=sym_diff_elements(other);
-      // Copy *this
-      auto original=*this;
+      // Copy the union find
+      auto original=data;
 
       // Make intersection (into *this) which contains all common elements
       // (after retyping to vector)
-      clear();
+      data.clear();
       std::set<exprt> common_elements;
       for(auto &e1 : original)
       {
         if(new_elements.find(e1)!=new_elements.end())
           continue;
 
-        isolate(e1);
+        data.isolate(e1);
         for(auto &e2 : common_elements)
-          if(original.same_set(e1, e2) && other.same_set(e1, e2))
-            make_union(e1, e2);
+          if(original.same_set(e1, e2) && other.data.same_set(e1, e2))
+            data.make_union(e1, e2);
         common_elements.insert(e1);
       }
 
@@ -62,13 +64,13 @@ public:
         bool added=false;
         // First, try to find some new element that is already in *this and that
         // is in the same class as e_new in one of the sets
-        auto this_copy(*this);
-        for(auto &e : this_copy)
+        auto union_find_copy(data);
+        for(auto &e : union_find_copy)
         {
           if(new_elements.find(e)!=new_elements.end() &&
-             (original.same_set(e, e_new) || other.same_set(e, e_new)))
+             (original.same_set(e, e_new) || other.data.same_set(e, e_new)))
           {
-            make_union(e, e_new);
+            data.make_union(e, e_new);
             added=true;
           }
         }
@@ -80,10 +82,14 @@ public:
           std::map<size_t, exprt> dest_sets;
           for(auto &e : common_elements)
           {
-            if(original.same_set(e_new, e) || other.same_set(e_new, e))
+            if(original.same_set(e_new, e) ||
+              other.data.same_set(e_new, e))
             {
               size_t n;
-              get_number(e, n);
+              const auto number=data.get_number(e);
+              if(!number)
+                continue;
+              n=*number;
               if(dest_sets.find(n)==dest_sets.end())
                 dest_sets.emplace(n, e);
             }
@@ -92,9 +98,9 @@ public:
           // If there is just one set to add e_new to, add it there, otherwise
           // isolate it
           if(dest_sets.size()==1)
-            make_union(e_new, dest_sets.begin()->second);
+            data.make_union(e_new, dest_sets.begin()->second);
           else
-            isolate(e_new);
+            data.isolate(e_new);
         }
       }
       return true;
@@ -107,16 +113,15 @@ protected:
   // in same sets (not necessarily having same numbers).
   bool equal(const must_alias_setst &other)
   {
-    if(size()!=other.size())
+    if(data.size()!=other.data.size())
       return false;
 
-    for(auto &e1 : *this)
+    for(auto &e1 : data)
     {
-      size_t n;
-      if(other.get_number(e1, n))
+      if(!other.data.get_number(e1))
         return false;
-      for(auto &e2 : *this)
-        if(same_set(e1, e2)!=other.same_set(e1, e2))
+      for(auto &e2 : data)
+        if(data.same_set(e1, e2)!=other.data.same_set(e1, e2))
           return false;
     }
     return true;
@@ -126,12 +131,11 @@ protected:
   std::set<exprt> sym_diff_elements(const must_alias_setst &other)
   {
     std::set<exprt> result;
-    size_t n;
-    for(auto &e : *this)
-      if(get_number(e, n))
+    for(auto &e : data)
+      if(!data.get_number(e))
         result.insert(e);
-    for(auto &e : other)
-      if(get_number(e, n))
+    for(auto &e : other.data)
+      if(!data.get_number(e))
         result.insert(e);
     return result;
   }
@@ -177,6 +181,16 @@ public:
   void make_entry() override
   {
     make_top();
+  }
+
+  bool is_bottom() const override
+  {
+    return has_values.is_false();
+  }
+
+  bool is_top() const override
+  {
+    return has_values.is_true();
   }
 
 protected:

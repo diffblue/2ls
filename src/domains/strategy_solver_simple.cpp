@@ -11,7 +11,7 @@ Author: Matej Marusak
 
 #include <ssa/ssa_inliner.h>
 #include "strategy_solver_simple.h"
-#include <goto-symex/adjust_float_expressions.h>
+#include <goto-programs/adjust_float_expressions.h>
 
 bool strategy_solver_simplet::iterate(invariantt &_inv)
 {

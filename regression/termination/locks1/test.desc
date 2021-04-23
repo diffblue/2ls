@@ -1,6 +1,10 @@
-CORE
+KNOWNBUG
 main.c
 --inline
 ^EXIT=0$
 ^SIGNAL=0$
 ^VERIFICATION SUCCESSFUL$
+--
+--
+This test is broken with CBMC 5.9 due to constant-propagation.
+Running it with --no-propagation works as expected

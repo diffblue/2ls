@@ -26,6 +26,7 @@ OBJ+= $(CPROVER_DIR)/src/ansi-c/ansi-c$(LIBEXT) \
       $(CPROVER_DIR)/src/solvers/solvers$(LIBEXT) \
       $(CPROVER_DIR)/src/util/util$(LIBEXT) \
       $(CPROVER_DIR)/src/goto-instrument/unwind$(OBJEXT) \
+      $(CPROVER_DIR)/src/goto-instrument/unwindset$(OBJEXT) \
       ../domains/domains$(LIBEXT) \
       ../ssa/ssa$(LIBEXT) \
       ../solver/solver$(LIBEXT) \

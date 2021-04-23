@@ -15,7 +15,6 @@ Author: Peter Schrammel
 #include <util/message.h>
 #include <util/options.h>
 #include <langapi/language_ui.h>
-#include <util/time_stopping.h>
 
 #include <ssa/ssa_inliner.h>
 #include <ssa/ssa_unwinder.h>

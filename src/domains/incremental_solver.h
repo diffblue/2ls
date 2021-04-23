@@ -152,11 +152,14 @@ class incremental_solvert:public messaget
 #ifdef NON_INCREMENTAL
     solver=new bv_pointerst(ns, *sat_check);
 #else
-    solver=new bv_refinementt(ns, *sat_check);
+    bv_refinementt::infot info;
+    info.ns=&ns;
+    info.prop=sat_check;
+    info.refine_arrays=false;
+    info.refine_arithmetic=arith_refinement;
+
+    solver=new bv_refinementt(info);
     solver->set_all_frozen();
-    static_cast<bv_refinementt *>(solver)->do_array_refinement=false;
-    static_cast<bv_refinementt *>(solver)->do_arithmetic_refinement=
-      arith_refinement;
 #endif
   }
 

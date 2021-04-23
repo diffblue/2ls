@@ -108,6 +108,16 @@ public:
     has_values=tvt(true);
   }
 
+  bool is_bottom() const override
+  {
+    return has_values.is_false();
+  }
+
+  bool is_top() const override
+  {
+    return has_values.is_true();
+  }
+
 protected:
   tvt has_values;
 

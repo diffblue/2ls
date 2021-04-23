@@ -15,6 +15,7 @@ Author: Viktor Malik, viktor.malik@gmail.com
 #include <iostream>
 #include <util/prefix.h>
 #include <util/cprover_prefix.h>
+#include <langapi/language_util.h>
 #include "dynobj_instance_analysis.h"
 #include "ssa_dereference.h"
 
@@ -33,10 +34,10 @@ bool has_deref_of(const exprt &expr, const exprt &pointer)
 /// Isolate all dereferences of some pointer in must-alias paritioning.
 void remove_dereferences(const exprt &pointer, must_alias_setst &instances)
 {
-  for(auto &i : instances)
+  for(auto &i : instances.data)
   {
     if(has_deref_of(i, pointer))
-      instances.isolate(i);
+      instances.data.isolate(i);
   }
 }
 
@@ -56,18 +57,18 @@ void add_aliased_dereferences(const exprt &pointer, must_alias_setst &instances)
 {
   // We must copy instances so that we can alter them while iterating
   auto inst_copy=instances;
-  for(auto &i : inst_copy)
+  for(auto &i : inst_copy.data)
   {
     if(i.id()==ID_symbol && pointer.id()==ID_symbol && i!=pointer &&
-       instances.same_set(i, pointer))
+       instances.data.same_set(i, pointer))
     {
-      for(auto &deref_i : inst_copy)
+      for(auto &deref_i : inst_copy.data)
       {
         if(has_deref_of(deref_i, i))
         {
           exprt deref_copy=deref_i;
           replace_pointer_in_deref(deref_copy, i, pointer);
-          instances.make_union(deref_i, deref_copy);
+          instances.data.make_union(deref_i, deref_copy);
         }
       }
     }
@@ -89,8 +90,7 @@ void dynobj_instance_domaint::rhs_concretisation(
         bool found=false;
         for(const auto &i : must_alias_relations)
         {
-          size_t n;
-          found|=!i.second.get_number(*it, n);
+          found|=!i.second.data.get_number(*it);
         }
         if(!found)
         {
@@ -107,7 +107,7 @@ void dynobj_instance_domaint::rhs_concretisation(
           for(auto &v : value_set)
           {
             auto &instances=must_alias_relations[v.symbol_expr()];
-            instances.isolate(*it);
+            instances.data.isolate(*it);
           }
         }
       }
@@ -148,7 +148,7 @@ void dynobj_instance_domaint::transform(
         assignment.lhs(), values, "", ns, competition_mode);
       auto value_set=values(lhs_deref, ns).value_set;
       for(auto &v : value_set)
-        must_alias_relations[v.symbol_expr()].isolate(lhs);
+        must_alias_relations[v.symbol_expr()].data.isolate(lhs);
     }
     else
     {
@@ -165,8 +165,8 @@ void dynobj_instance_domaint::transform(
       for(auto &v : value_set)
       {
         auto &instances=must_alias_relations[v.symbol_expr()];
-        instances.isolate(assignment.lhs());
-        instances.make_union(assignment.lhs(), rhs);
+        instances.data.isolate(assignment.lhs());
+        instances.data.make_union(assignment.lhs(), rhs);
 
         remove_dereferences(assignment.lhs(), instances);
         add_aliased_dereferences(assignment.lhs(), instances);
@@ -238,11 +238,15 @@ void dynobj_instance_domaint::output(
   for(const auto &o : must_alias_relations)
   {
     out << o.first.get_identifier() << ":\n";
-    for(const exprt &p : o.second)
+    for(const exprt &p : o.second.data)
     {
       size_t n;
-      o.second.get_number(p, n);
-      out << "    " << o.second.find_number(n) << ": " << from_expr(ns, "", p)
+      const auto number=o.second.data.get_number(p);
+      if(!number)
+        continue;
+      n=*number;
+      out << "    " << o.second.data.find_number(n)
+          << ": " << from_expr(ns, "", p)
           << "\n";
     }
 

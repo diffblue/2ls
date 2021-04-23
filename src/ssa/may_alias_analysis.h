@@ -44,6 +44,16 @@ public:
     make_top();
   }
 
+  bool is_bottom() const override
+  {
+    return has_values.is_false();
+  }
+
+  bool is_top() const override
+  {
+    return has_values.is_true();
+  }
+
   typedef union_find<irep_idt> aliasest;
   aliasest aliases;
 

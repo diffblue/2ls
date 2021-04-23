@@ -12,7 +12,6 @@ Author: Peter Schrammel
 #ifndef CPROVER_2LS_2LS_SUMMARY_CHECKER_BASE_H
 #define CPROVER_2LS_2LS_SUMMARY_CHECKER_BASE_H
 
-#include <util/time_stopping.h>
 #include <goto-programs/property_checker.h>
 #include <solvers/prop/prop_conv.h>
 
@@ -56,10 +55,6 @@ public:
     messaget::set_message_handler(_message_handler);
     ssa_inliner.set_message_handler(_message_handler);
   }
-
-  // statistics
-  absolute_timet start_time;
-  time_periodt sat_time;
 
 protected:
   optionst &options;

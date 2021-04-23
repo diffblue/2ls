@@ -13,7 +13,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <ansi-c/ansi_c_language.h>
 #include <cpp/cpp_language.h>
-#include <java_bytecode/java_bytecode_language.h>
 
 #include "2ls_parse_options.h"
 

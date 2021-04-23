@@ -160,8 +160,7 @@ bool twols_parse_optionst::unwind_goto_into_loop(
 
       assert(iteration_points.size()==2);
       goto_programt::targett t=body.insert_before(l_it->first);
-      t->make_goto();
-      t->targets.push_back(iteration_points.front());
+      t->make_goto(iteration_points.front());
     }
   }
   goto_model.goto_functions.update();
@@ -406,7 +405,7 @@ void twols_parse_optionst::add_dynamic_object_rec(
   if(expr.id()==ID_symbol)
   {
     const symbolt &symbol=
-      symbol_table.lookup(to_symbol_expr(expr).get_identifier());
+      symbol_table.lookup_ref(to_symbol_expr(expr).get_identifier());
     if(symbol.is_parameter && symbol.type.id()==ID_pointer)
     {
       // New symbol
@@ -418,7 +417,7 @@ void twols_parse_optionst::add_dynamic_object_rec(
       // Follow pointed type
       if(pointed_type.id()==ID_symbol)
       {
-        const symbolt type_symbol=symbol_table.lookup(
+        const symbolt type_symbol=symbol_table.lookup_ref(
           to_symbol_type(pointed_type).get_identifier());
         object_symbol.type=type_symbol.type;
       }
@@ -522,8 +521,11 @@ void twols_parse_optionst::compute_dynobj_instances(
       for(auto &expr : obj.second)
       {
         size_t n;
-        must_alias->second.get_number(expr, n);
-        alias_classes.insert(must_alias->second.find_number(n));
+        const auto number=must_alias->second.data.get_number(expr);
+        if(!number)
+          continue;
+        n=*number;
+        alias_classes.insert(must_alias->second.data.find_number(n));
       }
 
       if(instance_counts.find(obj.first)==instance_counts.end() ||
@@ -571,7 +573,7 @@ void twols_parse_optionst::create_dynobj_instances(
           continue;
 
         symbolt obj_symbol=
-          symbol_table.lookup(to_symbol_expr(obj).get_identifier());
+          symbol_table.get_writeable_ref(to_symbol_expr(obj).get_identifier());
 
         const std::string name=id2string(obj_symbol.name);
         const std::string base_name=id2string(obj_symbol.base_name);
@@ -728,7 +730,7 @@ void make_freed_ptr_comparison_nondet(
         typecasted_pointers.find(to_symbol_expr(cond.op1()).get_identifier())!=
         typecasted_pointers.end()))
     {
-      const symbolt &freed=goto_model.symbol_table.lookup(
+      const symbolt &freed=goto_model.symbol_table.lookup_ref(
         "__CPROVER_deallocated");
 
       // LHS != __CPROVER_deallocated
