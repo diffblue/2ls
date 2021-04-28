@@ -30,7 +30,7 @@ Author: Daniel Kroening, kroening@kroening.com
 void local_SSAt::build_SSA()
 {
   // perform SSA data-flow analysis
-  ssa_analysis(goto_function, ns);
+  ssa_analysis(function_identifier, goto_function, ns);
 
   forall_goto_program_instructions(i_it, goto_function.body)
   {
@@ -414,10 +414,10 @@ void local_SSAt::build_function_call(locationt loc)
     }
 
     // turn function call into expression
-    function_application_exprt f;
-    f.function()=to_symbol_expr(code_function_call.function());
-    f.type()=code_function_call.lhs().type();
-    f.arguments()=code_function_call.arguments();
+    function_application_exprt f(
+      to_symbol_expr(code_function_call.function()),
+      code_function_call.arguments(),
+      code_function_call.lhs().type());
 
     // access to "new" value in template declarations
     if(code_function_call.function().id()==ID_symbol &&

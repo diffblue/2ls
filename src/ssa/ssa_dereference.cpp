@@ -195,17 +195,22 @@ exprt ssa_alias_guard(
 
   // in some cases, we can use plain address equality,
   // as we assume well-aligned-ness
-  mp_integer size1=pointer_offset_size(e1.type(), ns);
-  mp_integer size2=pointer_offset_size(e2.type(), ns);
+  auto maybe_size1=pointer_offset_size(e1.type(), ns);
+  auto maybe_size2=pointer_offset_size(e2.type(), ns);
 
-  if(size1>=size2)
+  if(maybe_size1 && maybe_size2)
   {
-    exprt lhs=a1;
-    exprt rhs=a2;
-    if(ns.follow(rhs.type())!=ns.follow(lhs.type()))
-      rhs=typecast_exprt(rhs, lhs.type());
+    mp_integer size1=*maybe_size1;
+    mp_integer size2=*maybe_size2;
+    if(size1>=size2)
+    {
+      exprt lhs=a1;
+      exprt rhs=a2;
+      if(ns.follow(rhs.type())!=ns.follow(lhs.type()))
+        rhs=typecast_exprt(rhs, lhs.type());
 
-    return equal_exprt(lhs, rhs);
+      return equal_exprt(lhs, rhs);
+    }
   }
 
   return same_object(a1, a2);
@@ -235,15 +240,17 @@ exprt ssa_alias_value(
   {
     // this assumes well-alignedness
 
-    mp_integer element_size=pointer_offset_size(e2_type.subtype(), ns);
-
-    if(element_size==1)
-      return index_exprt(e2, offset1, e1.type());
-    else if(element_size>1)
+    if(auto maybe_element_size=pointer_offset_size(e2_type.subtype(), ns))
     {
-      exprt index=
-        div_exprt(offset1, from_integer(element_size, offset1.type()));
-      return index_exprt(e2, index, e1.type());
+      mp_integer element_size=*maybe_element_size;
+      if(element_size==1)
+        return index_exprt(e2, offset1, e1.type());
+      else if(element_size>1)
+      {
+        exprt index=
+          div_exprt(offset1, from_integer(element_size, offset1.type()));
+        return index_exprt(e2, index, e1.type());
+      }
     }
   }
 

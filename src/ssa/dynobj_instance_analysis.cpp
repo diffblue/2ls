@@ -119,7 +119,9 @@ void dynobj_instance_domaint::rhs_concretisation(
 }
 
 void dynobj_instance_domaint::transform(
+  const irep_idt &function_from,
   ai_domain_baset::locationt from,
+  const irep_idt &function_to,
   ai_domain_baset::locationt to,
   ai_baset &ai,
   const namespacet &ns)

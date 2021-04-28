@@ -59,7 +59,7 @@ void twols_parse_optionst::propagate_constants(goto_modelt &goto_model)
   namespacet ns(goto_model.symbol_table);
   Forall_goto_functions(f_it, goto_model.goto_functions)
   {
-    constant_propagator_ait(f_it->second, ns);
+    constant_propagator_ait(f_it->first, f_it->second, ns);
   }
 }
 
@@ -627,9 +627,9 @@ std::map<symbol_exprt, size_t> twols_parse_optionst::split_dynamic_objects(
     if(!f_it->second.body_available())
       continue;
     namespacet ns(goto_model.symbol_table);
-    ssa_value_ait value_analysis(f_it->second, ns, options);
+    ssa_value_ait value_analysis(f_it->first, f_it->second, ns, options);
     dynobj_instance_analysist do_inst(
-      f_it->second, ns, options, value_analysis);
+      f_it->first, f_it->second, ns, options, value_analysis);
 
     compute_dynobj_instances(
       f_it->second.body, do_inst, dynobj_instances, ns);

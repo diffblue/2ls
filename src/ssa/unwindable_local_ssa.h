@@ -20,11 +20,17 @@ class unwindable_local_SSAt:public local_SSAt
 {
 public:
   unwindable_local_SSAt(
+    const irep_idt &function_identifier,
     const goto_functiont &_goto_function,
     const symbol_tablet &_symbol_table,
     const optionst &_options,
     const std::string &_suffix=""):
-    local_SSAt(_goto_function, _symbol_table, _options, _suffix),
+    local_SSAt(
+      function_identifier,
+      _goto_function,
+      _symbol_table,
+      _options,
+      _suffix),
     current_unwinding(-1)
   {
     compute_loop_hierarchy();

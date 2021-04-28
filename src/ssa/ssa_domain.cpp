@@ -52,7 +52,9 @@ void ssa_domaint::output(
 }
 
 void ssa_domaint::transform(
+  const irep_idt &from_function,
   locationt from,
+  const irep_idt &to_function,
   locationt to,
   ai_baset &ai,
   const namespacet &ns)

@@ -151,7 +151,9 @@ public:
   std::map<symbol_exprt, std::set<exprt>> live_pointers;
 
   void transform(
+    const irep_idt &,
     locationt from,
+    const irep_idt &,
     locationt to,
     ai_baset &ai,
     const namespacet &ns) override;
@@ -208,6 +210,7 @@ class dynobj_instance_analysist:public ait<dynobj_instance_domaint>
 {
 public:
   dynobj_instance_analysist(
+    const irep_idt &function_identifier,
     const goto_functionst::goto_functiont &goto_function,
     const namespacet &ns,
     const optionst &_options,
@@ -215,7 +218,7 @@ public:
     options(_options),
     value_analysis(_value_ai)
   {
-    operator()(goto_function, ns);
+    operator()(function_identifier, goto_function, ns);
   }
 
 protected:

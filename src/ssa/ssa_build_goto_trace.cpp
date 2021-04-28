@@ -208,16 +208,16 @@ bool ssa_build_goto_tracet::record_step(
     if(!can_convert_ssa_expr(lhs_simplified))
       break;
 
-    step.lhs_object=ssa_exprt(lhs_simplified);
-    step.lhs_object_value=rhs_simplified;
+    step.full_lhs=ssa_exprt(lhs_simplified);
+    step.full_lhs_value=rhs_simplified;
 
     // skip unresolved lhs
-    if(step.lhs_object.is_nil())
+    if(step.full_lhs.is_nil())
       break;
 
     // skip strings (for SV-COMP)
-    if(step.lhs_object.type().id()==ID_pointer &&
-       to_pointer_type(step.lhs_object.type()).subtype().id()==ID_signedbv)
+    if(step.full_lhs.type().id()==ID_pointer &&
+       to_pointer_type(step.full_lhs.type()).subtype().id()==ID_signedbv)
       break;
 
     // skip undetermined rhs

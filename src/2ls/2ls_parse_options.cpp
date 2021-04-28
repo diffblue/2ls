@@ -39,6 +39,7 @@ Author: Daniel Kroening, Peter Schrammel
 #include <goto-programs/remove_skip.h>
 #include <goto-programs/show_symbol_table.h>
 #include <goto-programs/initialize_goto_model.h>
+#include <goto-programs/show_goto_functions.h>
 
 #include <analyses/goto_check.h>
 
@@ -899,11 +900,11 @@ bool twols_parse_optionst::get_goto_program(
 
   try
   {
-    goto_model=initialize_goto_model(cmdline, ui_message_handler);
+    goto_model=initialize_goto_model(cmdline.args, ui_message_handler, options);
 
     if(cmdline.isset("show-symbol-table"))
     {
-      show_symbol_table(goto_model, ui_message_handler.get_ui());
+      show_symbol_table(goto_model.symbol_table, ui_message_handler);
       return true;
     }
 
@@ -1140,8 +1141,11 @@ bool twols_parse_optionst::process_goto_program(
     // show it?
     if(cmdline.isset("show-goto-functions"))
     {
-      const namespacet ns(goto_model.symbol_table);
-      goto_model.goto_functions.output(ns, std::cout);
+      show_goto_functions(
+        goto_model,
+        get_message_handler(),
+        ui_message_handler.get_ui(),
+        false);
       return true;
     }
   }
@@ -1282,7 +1286,7 @@ void twols_parse_optionst::show_counterexample(
   {
   case ui_message_handlert::uit::PLAIN:
     std::cout << std::endl << "Counterexample:" << std::endl;
-    show_goto_trace(std::cout, ns, error_trace);
+    show_goto_trace(result(), ns, error_trace);
     break;
 
   case ui_message_handlert::uit::XML_UI:

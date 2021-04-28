@@ -76,7 +76,9 @@ public:
   phi_nodest phi_nodes;
 
   virtual void transform(
+    const irep_idt &,
     locationt from,
+    const irep_idt &,
     locationt to,
     ai_baset &ai,
     const namespacet &ns);
