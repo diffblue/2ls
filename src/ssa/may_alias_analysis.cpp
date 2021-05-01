@@ -12,7 +12,9 @@ Author: Viktor Malik, imalik@fit.vutbr.cz
 #include "may_alias_analysis.h"
 
 void may_alias_domaint::transform(
+  const irep_idt &from_function,
   ai_domain_baset::locationt from,
+  const irep_idt &to_function,
   ai_domain_baset::locationt to,
   ai_baset &ai,
   const namespacet &ns)

@@ -21,11 +21,17 @@ Author: Daniel Kroening, kroening@kroening.com
 class ssa_value_domaint:public ai_domain_baset
 {
 public:
-  virtual void transform(locationt, locationt, ai_baset &, const namespacet &);
-  virtual void output(
+  void transform(
+    const irep_idt &,
+    locationt,
+    const irep_idt &,
+    locationt,
+    ai_baset &,
+    const namespacet &) override;
+  void output(
     std::ostream &,
     const ai_baset &,
-    const namespacet &) const;
+    const namespacet &) const override;
   bool merge(const ssa_value_domaint &, locationt, locationt);
 
   void make_bottom() override
@@ -147,13 +153,14 @@ class ssa_value_ait:public ait<ssa_value_domaint>
 {
 public:
   ssa_value_ait(
+    const irep_idt &function_identifier,
     const goto_functionst::goto_functiont &goto_function,
     const namespacet &ns_,
     const optionst &_options):
     ns(ns_),
     options(_options)
   {
-    operator()(goto_function, ns_);
+    operator()(function_identifier, goto_function, ns_);
   }
 
 protected:

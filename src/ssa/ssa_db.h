@@ -70,7 +70,11 @@ public:
     const symbol_tablet &symbol_table)
   {
     store[function_name]=
-      new unwindable_local_SSAt(goto_function, symbol_table, options);
+      new unwindable_local_SSAt(
+        function_name,
+        goto_function,
+        symbol_table,
+        options);
   }
 
 protected:

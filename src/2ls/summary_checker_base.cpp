@@ -16,6 +16,7 @@ Author: Peter Schrammel
 #include <langapi/language_util.h>
 #include <util/prefix.h>
 #include <goto-programs/write_goto_binary.h>
+#include <goto-programs/show_goto_functions.h>
 
 #include <solvers/sat/satcheck.h>
 #include <solvers/flattening/bv_pointers.h>
@@ -501,7 +502,11 @@ void summary_checker_baset::instrument_and_output(
   instrument_gotot instrument_goto(options, ssa_db, summary_db);
   instrument_goto(goto_model);
   if(verbosity==10)
-    goto_model.output(std::cout);
+    show_goto_functions(
+      goto_model,
+      get_message_handler(),
+      ui_message_handlert::uit::PLAIN,
+      false);
   std::string filename=options.get_option("instrument-output");
   status() << "Writing instrumented goto-binary " << filename << eom;
   write_goto_binary(

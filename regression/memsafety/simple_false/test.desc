@@ -4,4 +4,4 @@ main.c
 ^EXIT=10$
 ^SIGNAL=0$
 ^VERIFICATION FAILED$
-\[main.pointer_dereference.33\] dereference failure: deallocated dynamic object in \*p: FAILURE
+\[main.pointer_dereference.38\] dereference failure: deallocated dynamic object in \*\(\(List\)\(char \*\)\(\(char \*\)p \+ \(signed long int\)8ul\)\): FAILURE

@@ -65,7 +65,7 @@ void horn_encodingt::translate(
          ";\n";
 
   // compute SSA
-  local_SSAt local_SSA(f_it->second, symbol_table, options, "");
+  local_SSAt local_SSA(f_it->first, f_it->second, symbol_table, options, "");
 
   const goto_programt &body=f_it->second.body;
 

@@ -24,7 +24,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "ssa_pointed_objects.h"
 
 void ssa_value_domaint::transform(
+  const irep_idt &function_from,
   locationt from,
+  const irep_idt &function_to,
   locationt to,
   ai_baset &ai,
   const namespacet &ns)
@@ -301,13 +303,18 @@ void ssa_value_domaint::assign_rhs_rec(
     {
       if(it->type().id()==ID_pointer)
       {
-        mp_integer pointer_offset=pointer_offset_size(it->type().subtype(), ns);
-        if(pointer_offset<1)
-          pointer_offset=1;
-        unsigned a=merge_alignment(integer2ulong(pointer_offset), alignment);
-        assign_rhs_rec(dest, *it, ns, true, a);
+        if(auto maybe_pointer_offset=pointer_offset_size(
+          it->type().subtype(),
+          ns))
+        {
+          mp_integer pointer_offset=*maybe_pointer_offset;
+          if(pointer_offset<1)
+            pointer_offset=1;
+          unsigned a=merge_alignment(integer2ulong(pointer_offset), alignment);
+          assign_rhs_rec(dest, *it, ns, true, a);
 
-        pointer=true;
+          pointer=true;
+        }
       }
       else if(it->type().id()==ID_unsignedbv || it->type().id()==ID_signedbv)
       {
@@ -323,16 +330,20 @@ void ssa_value_domaint::assign_rhs_rec(
     assert(rhs.operands().size()==2);
     if(rhs.type().id()==ID_pointer)
     {
-      mp_integer pointer_offset=pointer_offset_size(rhs.type().subtype(), ns);
-      if(pointer_offset<1)
-        pointer_offset=1;
-      unsigned a=merge_alignment(integer2ulong(pointer_offset), alignment);
-      assign_rhs_rec(dest, rhs.op0(), ns, true, a);
+      if(auto maybe_pointer_offset=
+        pointer_offset_size(rhs.type().subtype(), ns))
+      {
+        mp_integer pointer_offset=*maybe_pointer_offset;
+        if(pointer_offset<1)
+          pointer_offset=1;
+        unsigned a=merge_alignment(integer2ulong(pointer_offset), alignment);
+        assign_rhs_rec(dest, rhs.op0(), ns, true, a);
 
-      if(competition_mode)
-        assert(
-          !(rhs.op1().type().id()==ID_unsignedbv ||
-            rhs.op1().type().id()==ID_signedbv));
+        if(competition_mode)
+          assert(
+            !(rhs.op1().type().id()==ID_unsignedbv ||
+              rhs.op1().type().id()==ID_signedbv));
+      }
     }
   }
   else if(rhs.id()==ID_dereference)
@@ -397,10 +408,13 @@ void ssa_value_domaint::assign_rhs_rec_address_of(
     if(!to_index_expr(rhs).index().is_zero())
     {
       offset=true;
-      mp_integer pointer_offset=pointer_offset_size(rhs.type(), ns);
-      if(pointer_offset<1)
-        pointer_offset=1;
-      a=merge_alignment(a, integer2ulong(pointer_offset));
+      if(auto maybe_pointer_offset=pointer_offset_size(rhs.type(), ns))
+      {
+        mp_integer pointer_offset=*maybe_pointer_offset;
+        if(pointer_offset<1)
+          pointer_offset=1;
+        a=merge_alignment(a, integer2ulong(pointer_offset));
+      }
     }
 
     assign_rhs_rec_address_of(dest, to_index_expr(rhs).array(), ns, offset, a);

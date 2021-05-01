@@ -37,21 +37,23 @@ public:
   typedef goto_programt::const_targett locationt;
 
   inline local_SSAt(
+    const irep_idt &_function_identifier,
     const goto_functiont &_goto_function,
     const symbol_tablet &_symbol_table,
     const optionst &_options,
     const std::string &_suffix=""):
     ns(_symbol_table), goto_function(_goto_function), options(_options),
     ssa_objects(_goto_function, ns),
-    ssa_value_ai(_goto_function, ns, options),
+    ssa_value_ai(_function_identifier, _goto_function, ns, options),
     assignments(
       _goto_function.body,
       ns,
       options,
       ssa_objects,
       ssa_value_ai),
-    alias_analysis(_goto_function, ns),
+    alias_analysis(_function_identifier, _goto_function, ns),
     guard_map(_goto_function.body),
+    function_identifier(_function_identifier),
     ssa_analysis(assignments),
     suffix(_suffix)
   {
@@ -242,6 +244,7 @@ public:
 // protected:
   guard_mapt guard_map;
 
+  const irep_idt &function_identifier;
   ssa_ait ssa_analysis;
   std::string suffix; // an extra suffix
 

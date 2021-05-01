@@ -163,23 +163,26 @@ exprt malloc_ssa(
       if(tmp_type.is_not_nil())
       {
         // Did the size get multiplied?
-        mp_integer elem_size=pointer_offset_size(tmp_type, ns);
-        mp_integer alloc_size;
-        if(elem_size<0 || to_integer(size, alloc_size))
+        if(auto maybe_elem_size=pointer_offset_size(tmp_type, ns))
         {
-        }
-        else
-        {
-          if(alloc_size==elem_size)
-            object_type=tmp_type;
+          mp_integer alloc_size;
+          mp_integer elem_size=*maybe_elem_size;
+          if(elem_size<0 || to_integer(size, alloc_size))
+          {
+          }
           else
           {
-            mp_integer elements=alloc_size/elem_size;
+            if(alloc_size==elem_size)
+              object_type=tmp_type;
+            else
+            {
+              mp_integer elements=alloc_size/elem_size;
 
-            if(elements*elem_size==alloc_size)
-              object_type=array_typet(
-                tmp_type,
-                from_integer(elements, size.type()));
+              if(elements*elem_size==alloc_size)
+                object_type=array_typet(
+                  tmp_type,
+                  from_integer(elements, size.type()));
+            }
           }
         }
       }
@@ -326,7 +329,10 @@ bool replace_malloc(
             namespacet ns(goto_model.symbol_table);
             goto_functionst::goto_functiont function_copy;
             function_copy.copy_from(f_it->second);
-            constant_propagator_ait const_propagator(function_copy, ns);
+            constant_propagator_ait const_propagator(
+              f_it->first,
+              function_copy,
+              ns);
             forall_goto_program_instructions(copy_i_it, function_copy.body)
             {
               if(copy_i_it->location_number==i_it->location_number)

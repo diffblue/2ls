@@ -21,7 +21,9 @@ class may_alias_domaint:public ai_domain_baset
 {
 public:
   void transform(
+    const irep_idt &,
     locationt from,
+    const irep_idt &,
     locationt to,
     ai_baset &ai,
     const namespacet &ns) override;
@@ -73,10 +75,11 @@ class may_alias_analysist:public ait<may_alias_domaint>
 {
 public:
   may_alias_analysist(
+    const irep_idt &function_identifier,
     const goto_functionst::goto_functiont &goto_function,
     const namespacet &ns)
   {
-    operator()(goto_function, ns);
+    operator()(function_identifier, goto_function, ns);
   }
 };
 

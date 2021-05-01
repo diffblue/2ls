@@ -29,13 +29,14 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "show.h"
 
 void show_assignments(
+  const irep_idt &function_identifier,
   const goto_functionst::goto_functiont &goto_function,
   const namespacet &ns,
   const optionst &options,
   std::ostream &out)
 {
   ssa_objectst ssa_objects(goto_function, ns);
-  ssa_value_ait ssa_value_ai(goto_function, ns, options);
+  ssa_value_ait ssa_value_ai(function_identifier, goto_function, ns, options);
   assignmentst assignments(
     goto_function.body,
     ns,
@@ -61,7 +62,7 @@ void show_assignments(
     if(f_it==goto_model.goto_functions.function_map.end())
       out << "function " << function << " not found\n";
     else
-      show_assignments(f_it->second, ns, options, out);
+      show_assignments(f_it->first, f_it->second, ns, options, out);
   }
   else
   {
@@ -69,7 +70,7 @@ void show_assignments(
     {
       out << ">>>> Function " << f_it->first << "\n";
 
-      show_assignments(f_it->second, ns, options, out);
+      show_assignments(f_it->first, f_it->second, ns, options, out);
 
       out << "\n";
     }
@@ -77,13 +78,14 @@ void show_assignments(
 }
 
 void show_defs(
+  const irep_idt &function_identifier,
   const goto_functionst::goto_functiont &goto_function,
   const namespacet &ns,
   const optionst &options,
   std::ostream &out)
 {
   ssa_objectst ssa_objects(goto_function, ns);
-  ssa_value_ait ssa_value_ai(goto_function, ns, options);
+  ssa_value_ait ssa_value_ai(function_identifier, goto_function, ns, options);
   assignmentst assignments(
     goto_function.body,
     ns,
@@ -91,7 +93,7 @@ void show_defs(
     ssa_objects,
     ssa_value_ai);
   ssa_ait ssa_analysis(assignments);
-  ssa_analysis(goto_function, ns);
+  ssa_analysis(function_identifier, goto_function, ns);
   ssa_analysis.output(ns, goto_function.body, out);
 }
 
@@ -111,7 +113,7 @@ void show_defs(
     if(f_it==goto_model.goto_functions.function_map.end())
       out << "function " << function << " not found\n";
     else
-      show_defs(f_it->second, ns, options, out);
+      show_defs(f_it->first, f_it->second, ns, options, out);
   }
   else
   {
@@ -119,7 +121,7 @@ void show_defs(
     {
       out << ">>>> Function " << f_it->first << "\n";
 
-      show_defs(f_it->second, ns, options, out);
+      show_defs(f_it->first, f_it->second, ns, options, out);
 
       out << "\n";
     }
@@ -166,6 +168,7 @@ void show_guards(
 }
 
 void show_ssa(
+  const irep_idt &function_identifier,
   const goto_functionst::goto_functiont &goto_function,
   bool simplify,
   const symbol_tablet &symbol_table,
@@ -175,7 +178,11 @@ void show_ssa(
   if(!goto_function.body_available())
     return;
 
-  unwindable_local_SSAt local_SSA(goto_function, symbol_table, options);
+  unwindable_local_SSAt local_SSA(
+    function_identifier,
+    goto_function,
+    symbol_table,
+    options);
   if(simplify)
     ::simplify(local_SSA, local_SSA.ns);
   local_SSA.output_verbose(out);
@@ -197,7 +204,13 @@ void show_ssa(
     if(f_it==goto_model.goto_functions.function_map.end())
       out << "function " << function << " not found\n";
     else
-      show_ssa(f_it->second, simplify, goto_model.symbol_table, options, out);
+      show_ssa(
+        f_it->first,
+        f_it->second,
+        simplify,
+        goto_model.symbol_table,
+        options,
+        out);
   }
   else
   {
@@ -210,7 +223,13 @@ void show_ssa(
 
       out << ">>>> Function " << f_it->first << "\n";
 
-      show_ssa(f_it->second, simplify, goto_model.symbol_table, options, out);
+      show_ssa(
+        f_it->first,
+        f_it->second,
+        simplify,
+        goto_model.symbol_table,
+        options,
+        out);
 
       out << "\n";
     }
@@ -383,13 +402,14 @@ void show_ssa_symbols(
 }
 
 void show_value_set(
+  const irep_idt &function_identifier,
   const goto_functionst::goto_functiont &goto_function,
   const namespacet &ns,
   const optionst &options,
   std::ostream &out)
 {
   ssa_objectst ssa_objects(goto_function, ns);
-  ssa_value_ait ssa_value_ai(goto_function, ns, options);
+  ssa_value_ait ssa_value_ai(function_identifier, goto_function, ns, options);
   ssa_value_ai.output(ns, goto_function, out);
 }
 
@@ -409,7 +429,7 @@ void show_value_sets(
     if(f_it==goto_model.goto_functions.function_map.end())
       out << "function " << function << " not found\n";
     else
-      show_value_set(f_it->second, ns, options, out);
+      show_value_set(f_it->first, f_it->second, ns, options, out);
   }
   else
   {
@@ -417,7 +437,7 @@ void show_value_sets(
     {
       out << ">>>> Function " << f_it->first << "\n";
 
-      show_value_set(f_it->second, ns, options, out);
+      show_value_set(f_it->first, f_it->second, ns, options, out);
 
       out << "\n";
     }
