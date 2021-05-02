@@ -52,7 +52,7 @@ void collect_ptr_objects(
       const symbolt *symbol;
       if(dynamic ||
          (!ns.lookup(src.get_identifier(), symbol) &&
-          !symbol->is_procedure_local()))
+          symbol->is_static_lifetime))
         ptr_object.type().set("#dynamic", true);
 
       if(is_ptr_object(src))
@@ -240,7 +240,7 @@ void ssa_objectst::categorize_objects(
       else
       {
         const symbolt &symbol=ns.lookup(to_symbol_expr(root_object));
-        if(symbol.is_procedure_local())
+        if(!symbol.is_static_lifetime)
         {
           if(dirty(symbol.name))
             dirty_locals.insert(*o_it);

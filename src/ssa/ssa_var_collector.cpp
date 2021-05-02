@@ -52,7 +52,8 @@ void ssa_var_collectort::add_var(
   {
     const array_typet &array_type=to_array_type(var.type());
     mp_integer size;
-    to_integer(array_type.size(), size);
+    if(array_type.size().is_constant())
+      to_integer(to_constant_expr(array_type.size()), size);
     for(mp_integer i=0; i<size; i=i+1)
     {
       var_specs.push_back(var_spect());
@@ -94,13 +95,12 @@ void ssa_var_collectort::get_pre_post_guards(
   post_guard=and_exprt(pguard, pcond);
 }
 
-void ssa_var_collectort::get_pre_var(
+symbol_exprt ssa_var_collectort::get_pre_var(
   const local_SSAt &SSA,
   local_SSAt::objectst::const_iterator o_it,
-  local_SSAt::nodest::const_iterator n_it,
-  symbol_exprt &pre_var)
+  local_SSAt::nodest::const_iterator n_it)
 {
-  pre_var=SSA.name(*o_it, local_SSAt::LOOP_BACK, n_it->location);
+  symbol_exprt pre_var=SSA.name(*o_it, local_SSAt::LOOP_BACK, n_it->location);
   ssa_local_unwinder.unwinder_rename(pre_var, *n_it, true);
 
   symbol_exprt post_var=SSA.read_rhs(*o_it, n_it->location);
@@ -109,6 +109,7 @@ void ssa_var_collectort::get_pre_var(
 
   rename_aux_post(post_var);
   aux_renaming_map[pre_var]=post_var;
+  return pre_var;
 }
 
 /// supposes that loop head PHIs are of the form xphi=gls?xlb:x0
@@ -172,8 +173,7 @@ void ssa_var_collectort::collect_variables_loop(
         if(p_it==phi_nodes.end())
           continue; // object not modified in this loop
 
-        symbol_exprt pre_var;
-        get_pre_var(SSA, o_it, n_it, pre_var);
+        symbol_exprt pre_var=get_pre_var(SSA, o_it, n_it);
         exprt init_expr;
         get_init_expr(SSA, o_it, n_it, init_expr);
         add_var(pre_var, pre_guard, post_guard, guardst::LOOP, var_specs);

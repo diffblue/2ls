@@ -254,11 +254,9 @@ exprt ssa_alias_value(
     }
   }
 
-  byte_extract_exprt byte_extract(byte_extract_id(), e1.type());
   if(competition_mode)
     assert(!e2_type.get_bool("#dynamic"));
-  byte_extract.op()=e2;
-  byte_extract.offset()=offset1;
+  byte_extract_exprt byte_extract(byte_extract_id(), e2, offset1, e1.type());
 
   return byte_extract;
 }

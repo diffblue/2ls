@@ -190,7 +190,7 @@ mp_integer simplify_const_int(const exprt &expr)
   if(expr.id()==ID_constant)
   {
     mp_integer v;
-    to_integer(expr, v);
+    to_integer(to_constant_expr(expr), v);
     return v;
   }
   if(expr.id()==ID_typecast)
@@ -227,7 +227,7 @@ mp_integer simplify_const_int(const exprt &expr)
     if(array_type.id()==ID_signedbv || array_type.id()==ID_unsignedbv)
     {
       mp_integer mp_index=simplify_const_int(index_expr.index());
-      unsigned index=integer2unsigned(mp_index); // TODO: might overflow
+      auto index=numeric_cast_v<unsigned>(mp_index); // TODO: might overflow
       assert(index<(index_expr.array().operands().size()));
       return simplify_const_int(index_expr.array().operands()[index]);
     }
@@ -308,7 +308,7 @@ ieee_floatt simplify_const_float(const exprt &expr)
     if(array_type.id()==ID_float)
     {
       mp_integer mp_index=simplify_const_int(index_expr.index());
-      unsigned index=integer2unsigned(mp_index); // TODO: might overflow
+      auto index=numeric_cast_v<unsigned>(mp_index); // TODO: might overflow
       assert(index<(index_expr.array().operands().size()));
       return simplify_const_float(index_expr.array().operands()[index]);
     }

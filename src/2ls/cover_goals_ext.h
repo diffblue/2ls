@@ -13,11 +13,12 @@ Author: Daniel Kroening, kroening@kroening.com
 #define CPROVER_2LS_2LS_COVER_GOALS_EXT_H
 
 #include <util/message.h>
-#include <goto-programs/property_checker.h>
+#include <goto-checker/properties.h>
 
 #include "../ssa/local_ssa.h"
 #include "../ssa/unwindable_local_ssa.h"
 #include "../domains/incremental_solver.h"
+#include "traces.h"
 
 /// Try to cover some given set of goals incrementally. This can be seen as a
 /// heuristic variant of SAT-based set-cover. No minimality guarantee.
@@ -46,13 +47,15 @@ public:
     unwindable_local_SSAt &_SSA,
     incremental_solvert &_solver,
     const exprt::operandst& _loophead_selects,
-    property_checkert::property_mapt &_property_map,
+    propertiest &_property_map,
+    tracest &_traces,
     bool _spurious_check,
     bool _all_properties,
     bool _build_error_trace):
     SSA(_SSA),
     solver(_solver),
     property_map(_property_map),
+    traces(_traces),
     spurious_check(_spurious_check),
     all_properties(_all_properties),
     build_error_trace(_build_error_trace),
@@ -111,7 +114,8 @@ protected:
   unwindable_local_SSAt &SSA;
   unsigned _number_covered, _iterations;
   incremental_solvert &solver;
-  property_checkert::property_mapt &property_map;
+  propertiest &property_map;
+  tracest &traces;
   bool spurious_check, all_properties, build_error_trace;
   exprt::operandst loophead_selects;
 

@@ -71,8 +71,8 @@ void template_generator_callingcontextt::collect_variables_callingcontext(
   for(local_SSAt::var_sett::iterator v_it=cs_globals_in.begin();
       v_it!=cs_globals_in.end(); v_it++)
   {
-    symbol_exprt dummy;
-    if(ssa_inlinert::find_corresponding_symbol(*v_it, globals_in, dummy) ||
+    auto dummy=ssa_inlinert::find_corresponding_symbol(*v_it, globals_in);
+    if(dummy ||
        id2string(v_it->get_identifier()).find("dynamic_object$")!=
        std::string::npos)
     {

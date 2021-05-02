@@ -29,22 +29,9 @@ void incremental_solvert::new_context()
 #endif
 
 #else
-
-  literalt activation_literal=
-    solver->convert(
-      symbol_exprt(
-        "goto_symex::\\act$"+
-        std::to_string(activation_literal_counter++), bool_typet()));
-
+  solver->push();
 #ifdef DEBUG_OUTPUT
-    debug() << "new context: " << activation_literal<< eom;
-#endif
-
-  activation_literals.push_back(activation_literal);
-  solver->set_assumptions(activation_literals);
-
-#if 0
-  return !activation_literals.back(); // not to be used anymore
+    debug() << "new context" <<  eom;
 #endif
 #endif
 }
@@ -62,45 +49,10 @@ void incremental_solvert::pop_context()
 
 #else
 
-  assert(!activation_literals.empty());
-  literalt activation_literal=activation_literals.back();
-  activation_literals.pop_back();
-#ifndef DEBUG_FORMULA
-  solver->set_to_false(literal_exprt(activation_literal));
-#else
-  formula.push_back(!activation_literal);
-#endif
-
+  solver->pop();
 #ifdef DEBUG_OUTPUT
-    debug() << "pop context: " << activation_literal << eom;
+    debug() << "pop context" << eom;
 #endif
-
-  solver->set_assumptions(activation_literals);
-#endif
-}
-
-void incremental_solvert::make_context_permanent()
-{
-#ifdef NON_INCREMENTAL
-  assert(contexts.size()>=2);
-  contextst::iterator c_it=contexts.end(); c_it--; c_it--;
-  c_it->insert(c_it->end(), contexts.back().begin(), contexts.back().end());
-  contexts.pop_back();
-#else
-  assert(!activation_literals.empty());
-  literalt activation_literal=activation_literals.back();
-  activation_literals.pop_back();
-#ifndef DEBUG_FORMULA
-  solver->set_to_true(literal_exprt(activation_literal));
-#else
-  formula.push_back(activation_literal);
-#endif
-
-#ifdef DEBUG_OUTPUT
-    debug() << "make context permanent: " << activation_literal<< eom;
-#endif
-
-  solver->set_assumptions(activation_literals);
 #endif
 }
 

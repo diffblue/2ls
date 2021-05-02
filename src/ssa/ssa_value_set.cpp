@@ -18,6 +18,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <algorithm>
 
 #include <util/pointer_offset_size.h>
+#include <util/arith_tools.h>
 
 #include "ssa_value_set.h"
 #include "ssa_dereference.h"
@@ -310,7 +311,9 @@ void ssa_value_domaint::assign_rhs_rec(
           mp_integer pointer_offset=*maybe_pointer_offset;
           if(pointer_offset<1)
             pointer_offset=1;
-          unsigned a=merge_alignment(integer2ulong(pointer_offset), alignment);
+          unsigned a=merge_alignment(
+            numeric_cast_v<unsigned>(pointer_offset),
+            alignment);
           assign_rhs_rec(dest, *it, ns, true, a);
 
           pointer=true;
@@ -336,7 +339,9 @@ void ssa_value_domaint::assign_rhs_rec(
         mp_integer pointer_offset=*maybe_pointer_offset;
         if(pointer_offset<1)
           pointer_offset=1;
-        unsigned a=merge_alignment(integer2ulong(pointer_offset), alignment);
+        unsigned a=merge_alignment(
+          numeric_cast_v<unsigned>(pointer_offset),
+          alignment);
         assign_rhs_rec(dest, rhs.op0(), ns, true, a);
 
         if(competition_mode)
@@ -413,7 +418,9 @@ void ssa_value_domaint::assign_rhs_rec_address_of(
         mp_integer pointer_offset=*maybe_pointer_offset;
         if(pointer_offset<1)
           pointer_offset=1;
-        a=merge_alignment(a, integer2ulong(pointer_offset));
+        a=merge_alignment(
+          a,
+          numeric_cast_v<unsigned>(pointer_offset));
       }
     }
 
@@ -611,16 +618,20 @@ void ssa_value_domaint::assign_pointed_rhs_rec(
 /// objects pointed by parameters.
 /// \par parameters: GOTO function
 void ssa_value_ait::initialize(
+  const irep_idt &function_id,
   const goto_functionst::goto_functiont &goto_function)
 {
-  ait<ssa_value_domaint>::initialize(goto_function);
+  ait<ssa_value_domaint>::initialize(function_id, goto_function);
+  forall_goto_program_instructions(i_it, goto_function.body)
+    get_state(i_it).make_bottom();
 
   // Initialize value sets for pointer parameters
 
   if(!goto_function.type.parameters().empty())
   {
-    locationt e=goto_function.body.instructions.begin();
-    ssa_value_domaint &entry=operator[](e);
+    auto entry_s=entry_state(goto_function.body);
+    ssa_value_domaint &entry=dynamic_cast<ssa_value_domaint &>(
+      get_state(entry_s));
 
     for(auto &param : goto_function.type.parameters())
     {

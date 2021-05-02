@@ -38,7 +38,8 @@ void template_generator_rankingt::operator()(
         post_renaming_map,
         options.get_unsigned_int_option("lexicographic-ranking-function"),
         options.get_unsigned_int_option("max-inner-ranking-iterations"),
-        SSA.ns));
+        SSA.ns,
+        get_message_handler()));
   }
   else
   {
@@ -48,7 +49,8 @@ void template_generator_rankingt::operator()(
         post_renaming_map,
         options.get_unsigned_int_option("lexicographic-ranking-function"),
         options.get_unsigned_int_option("max-inner-ranking-iterations"),
-        SSA.ns));
+        SSA.ns,
+        get_message_handler()));
   }
   collect_variables_ranking(SSA, forward);
 

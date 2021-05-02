@@ -33,13 +33,18 @@ public:
     void output(std::ostream &out, const namespacet &ns) const override;
   };
 
-  typedef constant_exprt row_valuet;
+  struct row_valuet:constant_exprt
+  {
+    row_valuet() : constant_exprt(false_exprt()) {}
+
+    explicit row_valuet(const constant_exprt &value) : constant_exprt(value) {}
+  };
 
   struct templ_valuet:simple_domaint::valuet, std::vector<row_valuet>
   {
     void set_row_value(rowt row, const constant_exprt &value)
     {
-      (*this)[row]=value;
+      (*this)[row]=row_valuet(value);
     }
 
     exprt get_row_expr(rowt row, const template_rowt &templ_row) const override

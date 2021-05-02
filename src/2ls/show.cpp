@@ -94,7 +94,7 @@ void show_defs(
     ssa_value_ai);
   ssa_ait ssa_analysis(assignments);
   ssa_analysis(function_identifier, goto_function, ns);
-  ssa_analysis.output(ns, goto_function.body, out);
+  ssa_analysis.output(ns, goto_function, out);
 }
 
 void show_defs(

@@ -118,7 +118,7 @@ void ssa_local_unwindert::build_pre_post_map()
 
       it->second.modified_vars.push_back(o_it->get_expr());
       symbol_exprt pre=SSA.name(*o_it, local_SSAt::PHI, pre_loc);
-      it->second.pre_post_map[pre]=SSA.read_rhs(*o_it, post_loc);
+      it->second.pre_post_map.insert({pre, SSA.read_rhs(*o_it, post_loc)});
     }
   }
 }
@@ -447,7 +447,7 @@ void ssa_local_unwindert::add_loop_connector(loopt &loop)
     {
       node.equalities.push_back(*e_it);
       node.equalities.back().rhs()=
-        loop.pre_post_map[to_symbol_expr(e_it->lhs())];
+        loop.pre_post_map.at(to_symbol_expr(e_it->lhs()));
       SSA.rename(node.equalities.back().rhs(), node.location);
       SSA.decrement_unwindings(0);
       SSA.rename(node.equalities.back().lhs(), node.location);

@@ -102,14 +102,16 @@ public:
     replace_mapt &_renaming_map,
     unsigned _max_elements, // lexicographic components
     unsigned _max_inner_iterations,
-    const namespacet &_ns):
+    const namespacet &_ns,
+    message_handlert &_message_handler):
     simple_domaint(_domain_number, _renaming_map, _ns),
     refinement_level(0),
     max_elements(_max_elements),
     max_inner_iterations(_max_inner_iterations),
-    number_inner_iterations(0)
+    number_inner_iterations(0),
+    message_handler(_message_handler)
   {
-    inner_solver=incremental_solvert::allocate(_ns);
+    inner_solver=incremental_solvert::allocate(_ns, _message_handler);
   }
 
 
@@ -162,6 +164,7 @@ public:
   const unsigned max_inner_iterations;
   incremental_solvert *inner_solver;
   unsigned number_inner_iterations;
+  message_handlert &message_handler;
 
   std::vector<unsigned> number_elements_per_row;
 };

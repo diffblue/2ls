@@ -21,6 +21,8 @@ Author: Daniel Kroening, kroening@kroening.com
 class ssa_value_domaint:public ai_domain_baset
 {
 public:
+  ssa_value_domaint(): has_values(false) {}
+
   void transform(
     const irep_idt &,
     locationt,
@@ -100,7 +102,7 @@ public:
   typedef std::map<ssa_objectt, valuest> value_mapt;
   value_mapt value_map;
 
-  bool competition_mode;
+  bool competition_mode=false;
 
   const valuest operator()(
     const exprt &src,
@@ -164,7 +166,8 @@ public:
   }
 
 protected:
-  virtual void initialize(
+  void initialize(
+    const irep_idt &function_id,
     const goto_functionst::goto_functiont &goto_function) override;
 
   void assign_ptr_param(const exprt &expr, ssa_value_domaint &entry);

@@ -12,8 +12,10 @@ Author: Peter Schrammel
 #ifndef CPROVER_2LS_2LS_SUMMARY_CHECKER_BASE_H
 #define CPROVER_2LS_2LS_SUMMARY_CHECKER_BASE_H
 
-#include <goto-programs/property_checker.h>
 #include <solvers/prop/prop_conv.h>
+#include <goto-checker/properties.h>
+#include <goto-checker/goto_trace_storage.h>
+#include <util/ui_message.h>
 
 #include <ssa/local_ssa.h>
 #include <ssa/ssa_unwinder.h>
@@ -23,10 +25,12 @@ Author: Peter Schrammel
 #include <solver/summary_db.h>
 
 #include "cover_goals_ext.h"
+#include "traces.h"
 
 class graphml_witness_extt;
 
-class summary_checker_baset:public property_checkert
+
+class summary_checker_baset:public messaget
 {
 public:
   summary_checker_baset(
@@ -48,13 +52,21 @@ public:
 
   virtual resultt operator()(const goto_modelt &) { assert(false); }
 
-  void instrument_and_output(goto_modelt &goto_model, unsigned verbosity);
+  void instrument_and_output(
+    goto_modelt &goto_model,
+    ui_message_handlert &ui_message_handler,
+    unsigned verbosity);
 
   void set_message_handler(message_handlert &_message_handler) override
   {
     messaget::set_message_handler(_message_handler);
     ssa_inliner.set_message_handler(_message_handler);
+    ssa_db.set_message_handler(_message_handler);
   }
+
+  propertiest property_map;
+
+  tracest traces;
 
 protected:
   optionst &options;
@@ -84,14 +96,14 @@ protected:
     bool forward=true,
     bool termination=false);
 
-  property_checkert::resultt check_properties();
+  resultt check_properties();
   virtual void check_properties(
     const ssa_dbt::functionst::const_iterator f_it);
 
   exprt::operandst get_loophead_selects(
     const irep_idt &function_name,
     const local_SSAt &,
-    prop_convt &);
+    prop_conv_solvert &);
   bool is_spurious(
     const exprt::operandst& loophead_selects,
     incremental_solvert&);
@@ -103,6 +115,17 @@ protected:
     const exprt::operandst& loop_continues,
     const exprt::operandst& loophead_selects,
     incremental_solvert&);
+
+  // FIXME: This is a backwards-compatible hack. CPROVER introduced property
+  //        status NOT_CHECKED (previously there was only UNKNOWN). Adjust
+  //        2LS to also differentiate between unknown properties and properties
+  //        that were not checked at all.
+  inline void set_properties_unknown()
+  {
+    for(auto &property : property_map)
+      if(property.second.status==property_statust::NOT_CHECKED)
+        property.second.status=property_statust::UNKNOWN;
+  }
 
   friend graphml_witness_extt;
 };

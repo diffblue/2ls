@@ -69,12 +69,6 @@ public:
     const local_SSAt::var_sett &cs_globals_out, // outgoing globals at call site
     const local_SSAt &function);
 
-  void replace(
-    local_SSAt &SSA,
-    const ssa_dbt &ssa_db,
-    bool recursive=false,
-    bool rename=true);
-
   void havoc(
     local_SSAt::nodet &node,
     local_SSAt::nodet::function_callst::iterator f_it);
@@ -99,10 +93,9 @@ public:
     const local_SSAt::var_sett &globals_in,
     exprt &expr);
 
-  static bool find_corresponding_symbol(
+  static optionalt<symbol_exprt> find_corresponding_symbol(
     const symbol_exprt &s,
-    const local_SSAt::var_sett &globals,
-    symbol_exprt &s_found);
+    const local_SSAt::var_sett &globals);
 
   static irep_idt get_original_identifier(const symbol_exprt &s);
 

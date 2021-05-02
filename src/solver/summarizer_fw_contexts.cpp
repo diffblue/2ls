@@ -18,7 +18,8 @@ Author: Peter Schrammel
 #include <util/find_symbols.h>
 
 #include <util/xml.h>
-#include <util/xml_expr.h>
+#include <util/xml_irep.h>
+#include <goto-programs/xml_expr.h>
 
 #include "summarizer_fw_contexts.h"
 #include "summary_db.h"

@@ -20,6 +20,8 @@ Author: Daniel Kroening, kroening@kroening.com
 class ssa_domaint:public ai_domain_baset
 {
 public:
+  ssa_domaint(): has_values(false) {}
+
   // sources for identifiers
   struct deft
   {
@@ -145,7 +147,9 @@ protected:
 
   // The overload below is needed to make the entry point get a source
   // for all objects.
-  virtual void initialize(const goto_functionst::goto_functiont &goto_function);
+  void initialize(
+    const irep_idt &function_id,
+    const goto_functionst::goto_functiont &goto_function) override;
 };
 
 #endif

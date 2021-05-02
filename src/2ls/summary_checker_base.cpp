@@ -69,7 +69,8 @@ void summary_checker_baset::SSA_functions(
   }
 
   // properties
-  initialize_property_map(goto_model.goto_functions);
+  property_map=initialize_properties(goto_model);
+  set_properties_unknown();
 }
 
 void summary_checker_baset::summarize(
@@ -117,7 +118,8 @@ void summary_checker_baset::summarize(
 
   delete summarizer;
 }
-summary_checker_baset::resultt summary_checker_baset::check_properties()
+
+resultt summary_checker_baset::check_properties()
 {
   // analyze all the functions
   for(ssa_dbt::functionst::const_iterator f_it=ssa_db.functions().begin();
@@ -141,14 +143,15 @@ summary_checker_baset::resultt summary_checker_baset::check_properties()
     }
   }
 
-  summary_checker_baset::resultt result=property_checkert::resultt::PASS;
-  for(property_mapt::const_iterator
+  resultt result=resultt::PASS;
+  for(propertiest::const_iterator
         p_it=property_map.begin(); p_it!=property_map.end(); p_it++)
   {
-    if(p_it->second.result==property_checkert::resultt::FAIL)
-      return property_checkert::resultt::FAIL;
-    if(p_it->second.result==property_checkert::resultt::UNKNOWN)
-      result=property_checkert::resultt::UNKNOWN;
+    if(p_it->second.status==property_statust::FAIL)
+      return resultt::FAIL;
+    if(p_it->second.status==property_statust::UNKNOWN ||
+      p_it->second.status==property_statust::NOT_CHECKED)
+      result=resultt::UNKNOWN;
   }
 
   return result;
@@ -206,7 +209,7 @@ void summary_checker_baset::check_properties(
            << "fully unwound" << eom;
 
   cover_goals_extt cover_goals(
-    SSA, solver, loophead_selects, property_map,
+    SSA, solver, loophead_selects, property_map, traces,
     !fully_unwound && options.get_bool_option("spurious-check"),
     all_properties,
     options.get_bool_option("trace") ||
@@ -232,12 +235,12 @@ void summary_checker_baset::check_properties(
 
     if(i_it->guard.is_true())
     {
-      property_map[property_id].result=property_checkert::resultt::PASS;
+      property_map.at(property_id).status=property_statust::PASS;
       continue;
     }
 
     // do not recheck properties that have already been decided
-    if(property_map[property_id].result!=property_checkert::resultt::UNKNOWN)
+    if(property_map.at(property_id).status!=property_statust::UNKNOWN)
       continue;
 
     // TODO: some properties do not show up in initialize_property_map
@@ -268,7 +271,7 @@ void summary_checker_baset::check_properties(
                   << std::endl;
 #endif
 
-        property_map[property_id].location=i_it;
+        property_map.at(property_id).pc=i_it;
         cover_goals.goal_map[property_id].conjuncts.push_back(property);
       }
     }
@@ -301,7 +304,7 @@ void summary_checker_baset::check_properties(
         it++, g_it++)
     {
       if(!g_it->covered)
-        property_map[it->first].result=property_checkert::resultt::PASS;
+        property_map.at(it->first).status=property_statust::PASS;
     }
   }
 
@@ -361,7 +364,7 @@ void summary_checker_baset::do_show_vcc(
 /// countermodel is spurious
 exprt::operandst summary_checker_baset::get_loophead_selects(
   const irep_idt &function_name,
-  const local_SSAt &SSA, prop_convt &solver)
+  const local_SSAt &SSA, prop_conv_solvert &solver)
 {
   // TODO: this should be provided by unwindable_local_SSA
   exprt::operandst loophead_selects;
@@ -497,6 +500,7 @@ bool summary_checker_baset::is_spurious(
 /// binary
 void summary_checker_baset::instrument_and_output(
   goto_modelt &goto_model,
+  ui_message_handlert &ui_message_handler,
   unsigned verbosity)
 {
   instrument_gotot instrument_goto(options, ssa_db, summary_db);
@@ -504,8 +508,7 @@ void summary_checker_baset::instrument_and_output(
   if(verbosity==10)
     show_goto_functions(
       goto_model,
-      get_message_handler(),
-      ui_message_handlert::uit::PLAIN,
+      ui_message_handler,
       false);
   std::string filename=options.get_option("instrument-output");
   status() << "Writing instrumented goto-binary " << filename << eom;

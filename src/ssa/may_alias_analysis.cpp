@@ -119,3 +119,12 @@ void may_alias_domaint::members_to_symbols(exprt &expr, const namespacet &ns)
     expr=object.symbol_expr();
   Forall_operands(it, expr)members_to_symbols(*it, ns);
 }
+
+void may_alias_analysist::initialize(
+  const irep_idt &function_id,
+  const goto_functionst::goto_functiont &goto_function)
+{
+  ait<may_alias_domaint>::initialize(function_id, goto_function);
+  forall_goto_program_instructions(i_it, goto_function.body)
+    get_state(i_it).make_bottom();
+}
