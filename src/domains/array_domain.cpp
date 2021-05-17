@@ -142,8 +142,13 @@ void array_domaint::add_segment(const var_spect &var_spec,
   const symbol_exprt &elem_var =
     symbol_exprt("elem#" + std::to_string(segment_cnt++),
                  to_array_type(var_spec.var.type()).subtype());
-  segmentation_map[var_spec.var].emplace_back(
+  segments.emplace_back(
     var_spec, elem_var, index_var, lower, upper, get_array_size(var_spec));
+
+  // Create mappings to the segment
+  array_segmentt *new_seg = &segments.back();
+  elem_to_segment_map[elem_var] = new_seg;
+  array_segments[var_spec.var].push_back(new_seg);
 }
 
 /// Projection of the computed invariant on variables.
@@ -299,15 +304,15 @@ void replace_segment_by_index(const array_domaint::array_segmentt &segment,
 /// Create equalities between index variables of the segments and the index
 /// expression.
 exprt map_segments_to_index(
-  const std::vector<array_domaint::array_segmentt> &segments,
+  const std::vector<const array_domaint::array_segmentt *> &segments,
   const exprt &index)
 {
   exprt::operandst result;
   for(auto &segment : segments)
     result.push_back(implies_exprt(
-      and_exprt(binary_relation_exprt(index, ID_ge, segment.lower_bound),
-                binary_relation_exprt(index, ID_lt, segment.upper_bound)),
-      equal_exprt(index, segment.index_var)));
+      and_exprt(binary_relation_exprt(index, ID_ge, segment->lower_bound),
+                binary_relation_exprt(index, ID_lt, segment->upper_bound)),
+      equal_exprt(index, segment->index_var)));
   return conjunction(result);
 }
 
@@ -317,10 +322,10 @@ exprt map_segments_to_index(
 exprt array_domaint::map_value_to_read_indices(const array_valuet &value)
 {
   exprt::operandst result;
-  for(auto &array : segmentation_map)
+  for(auto &array : array_segments)
   {
     auto array_name = get_original_name(to_symbol_expr(array.first));
-    auto index_type = array.second.at(0).index_var.type();
+    auto index_type = array.second.at(0)->index_var.type();
     auto &read_indices = SSA.array_index_analysis.read_indices.at(array_name);
 
     if(read_indices.size() == 1)
@@ -347,13 +352,13 @@ exprt array_domaint::map_value_to_read_indices(const array_valuet &value)
         if(read_index.type() != index_type)
           read_index = typecast_exprt(read_index, index_type);
 
-        for(auto &segment : array.second)
+        for(auto *segment : array.second)
         {
           exprt segment_value;
           inner_domain->project_on_vars(
-            *value.inner_value, {segment.elem_var}, segment_value);
+            *value.inner_value, {segment->elem_var}, segment_value, true);
 
-          replace_segment_by_index(segment, read_index, segment_value);
+          replace_segment_by_index(*segment, read_index, segment_value);
           result.push_back(segment_value);
         }
       }
@@ -369,11 +374,8 @@ exprt array_domaint::segment_elem_equality()
   exprt::operandst result;
   // For each segment, add equality:
   //   elem#i = a[idx#i]
-  for(auto &array : segmentation_map)
-    for(auto &segment : array.second)
-      result.push_back(
-        equal_exprt(segment.elem_var,
-                    index_exprt(segment.array_spec.var, segment.index_var)));
+  for(const auto &segment : segments)
+    result.push_back(segment.elem_bound());
   return conjunction(result);
 }
 
@@ -383,21 +385,18 @@ var_specst array_domaint::var_specs_from_segments()
 {
   var_specst var_specs;
 
-  for(auto &array_segments : segmentation_map)
+  for(const auto &segment : segments)
   {
-    for(auto &segment : array_segments.second)
-    {
-      var_spect v;
-      v.var = segment.elem_var;
-      v.guards = segment.array_spec.guards;
-      v.guards.pre_guard =
-        and_exprt(v.guards.pre_guard, segment.get_constraint());
-      v.guards.post_guard =
-        and_exprt(v.guards.post_guard, segment.get_constraint());
-      rename(v.guards.post_guard);
-
-      var_specs.push_back(v);
-    }
+    var_spect v;
+    v.var = segment.elem_var;
+    v.guards = segment.array_spec.guards;
+    v.guards.pre_guard =
+      and_exprt(v.guards.pre_guard, segment.get_constraint());
+    v.guards.post_guard =
+      and_exprt(v.guards.post_guard, segment.get_constraint());
+    rename(v.guards.post_guard);
+    v.loc = segment.array_spec.loc;
+    var_specs.push_back(v);
   }
 
   return var_specs;
@@ -462,7 +461,7 @@ exprt array_domaint::get_array_size(const var_spect &array_spec)
   return size;
 }
 
-exprt array_domaint::array_segmentt::get_constraint()
+exprt array_domaint::array_segmentt::get_constraint() const
 {
   const exprt interval_expr =
     and_exprt(binary_relation_exprt(index_var, ID_ge, lower_bound),
@@ -470,9 +469,13 @@ exprt array_domaint::array_segmentt::get_constraint()
   const exprt bounds_expr = and_exprt(
     binary_relation_exprt(index_var, ID_ge, make_zero(index_var.type())),
     binary_relation_exprt(index_var, ID_lt, array_size));
-  const exprt elem_expr =
-    equal_exprt(elem_var, index_exprt(array_spec.var, index_var));
+  const exprt elem_expr = elem_bound();
   return conjunction(exprt::operandst({bounds_expr, interval_expr, elem_expr}));
+}
+
+exprt array_domaint::array_segmentt::elem_bound() const
+{
+  return equal_exprt(elem_var, index_exprt(array_spec.var, index_var));
 }
 
 /// For each loop-back index, add the pre-loop value of the index as a new

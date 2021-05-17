@@ -102,9 +102,12 @@ public:
     {
     }
 
-    exprt get_constraint();
+    exprt get_constraint() const;
+    exprt elem_bound() const;
   };
-  std::map<vart, std::vector<array_segmentt>> segmentation_map;
+  // List of all segments. We use std::list here so that pointers to the
+  // elements are stable and we can use various maps to access them (see below).
+  std::list<array_segmentt> segments;
 
   // Abstract domain for array elements
   std::unique_ptr<domaint> inner_domain;
@@ -186,6 +189,13 @@ protected:
   // A helper set to know which segment borders are pre-loop variants of
   // loop-back borders.
   std::set<exprt> loop_init_segment_borders;
+
+  // Some useful maps to access segments
+
+  // Lists of segments by array
+  std::map<vart, std::vector<const array_segmentt *>> array_segments;
+  // Mapping segment element variables to segments
+  std::map<vart, const array_segmentt *> elem_to_segment_map;
 
   static unsigned segment_cnt;
 };
