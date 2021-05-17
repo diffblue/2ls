@@ -151,6 +151,11 @@ public:
     const local_SSAt &SSA,
     message_handlert &message_handler) override;
 
+  tpolyhedra_domaint *get_tpolyhedra_domain() override
+  {
+    return this;
+  }
+
 protected:
   friend class strategy_solver_binsearcht;
   friend class strategy_solver_binsearch2t;

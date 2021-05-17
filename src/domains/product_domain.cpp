@@ -96,3 +96,14 @@ std::unique_ptr<strategy_solver_baset> product_domaint::new_strategy_solver(
     new strategy_solver_productt(
       *this, std::move(solvers), solver, SSA, message_handler));
 }
+
+tpolyhedra_domaint *product_domaint::get_tpolyhedra_domain()
+{
+  tpolyhedra_domaint *domain;
+  for(auto &d : domains)
+  {
+    if((domain = d->get_tpolyhedra_domain()))
+      return domain;
+  }
+  return nullptr;
+}

@@ -91,6 +91,8 @@ public:
     const local_SSAt &SSA,
     message_handlert &message_handler) override;
 
+  tpolyhedra_domaint *get_tpolyhedra_domain() override;
+
   // Product domain contains a vector of domains
   domain_vect domains;
 

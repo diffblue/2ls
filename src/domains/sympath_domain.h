@@ -101,6 +101,11 @@ public:
     const local_SSAt &SSA,
     message_handlert &message_handler) override;
 
+  tpolyhedra_domaint *get_tpolyhedra_domain() override
+  {
+    return inner_domain->get_tpolyhedra_domain();
+  }
+
 protected:
   // Special path containing conjunction negations of all loop-select guards
   // This must be stored explicitly since the solver is not able to explore this
