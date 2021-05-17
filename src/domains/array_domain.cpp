@@ -473,6 +473,7 @@ array_domaint::new_strategy_solver(incremental_solvert &solver_,
 ///   - difference between an array segment and a scalar variable
 ///     (both if the scalar is updated within the same loop and if it isn't)
 ///   - difference between an array segment element and its index variable
+///   - difference between two array elements at the same index
 /// \param domain Pointer to the existing template polyhedra domain
 /// \param segment_var_specs Array segment specs
 /// \param value_var_specs Scalar value specs
@@ -488,6 +489,8 @@ void array_domaint::add_array_difference_template(
   //  - difference between the segment element and scalar dependencies
   //  - difference between the segment element and its index, if the index
   //    is among dependencies
+  //  - difference between the segment element and other array element at
+  //    the same index, if the other array is among dependencies
   for(auto &segment_spec : segment_var_specs)
   {
     auto segment = elem_to_segment_map[segment_spec.var];
@@ -544,6 +547,49 @@ void array_domaint::add_array_difference_template(
             minus_exprt(segment_spec.var, segment->index_var), guards);
           domain->add_template_row(
             minus_exprt(segment->index_var, segment_spec.var), guards);
+        }
+      }
+      // Other array dependence
+      else if(dep.id() == ID_index)
+      {
+        auto dep_array = to_index_expr(dep).array();
+        auto dep_index = to_index_expr(dep).index();
+        if(dep_index.id() == ID_typecast)
+          dep_index = to_typecast_expr(dep_index).op();
+
+        if(dep_array == get_original_expr(segment->array_spec.var))
+          continue;
+
+        // For now, only handle situations when the same index is assigned in
+        // the other array
+        if(same_var(dep_index, segment->lower_bound) ||
+           same_var(dep_index, segment->upper_bound))
+        {
+          // Check if the other array loop-back has some segments
+          exprt other_array = SSA.name(ssa_objectt(dep_array, ns),
+                                       local_SSAt::LOOP_BACK,
+                                       segment_spec.loc);
+          if(array_segments.find(other_array) == array_segments.end())
+          {
+            // The other array was not updated in the same loop, use its RHS
+            other_array = SSA.read_rhs(dep_array, segment_spec.loc);
+          }
+
+          // Use the current segment index variable for other array
+          // (i.e. add differences between elements at the same index)
+          add_array_elem(index_exprt(other_array, segment->index_var));
+          auto &new_elem = array_elems.back();
+
+          guardst guards = segment_spec.guards;
+          guards.pre_guard = and_exprt(guards.pre_guard, new_elem.elem_bound());
+          guards.post_guard =
+            and_exprt(guards.post_guard, new_elem.elem_bound());
+          rename(guards.post_guard);
+
+          domain->add_template_row(
+            minus_exprt(segment_spec.var, new_elem.elem_var), guards);
+          domain->add_template_row(
+            minus_exprt(new_elem.elem_var, segment_spec.var), guards);
         }
       }
     }
