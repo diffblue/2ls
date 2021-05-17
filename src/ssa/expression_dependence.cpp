@@ -118,7 +118,18 @@ void expression_dependence_domaint::transform(const irep_idt &,
 
     make_union(lhs_exprs, rhs_exprs);
     for(auto &cond : conditionals)
+    {
+      // If the assignment LHS is an array access and the condition that it
+      // depends on contains just the accessed index, do not add the index into
+      // dependent expressions. This is to avoid creating needless dependencies
+      // as iterating through would always make the array contents dependent on
+      // the index, which is almost never the case.
+      if(cond.guard_exprs.size() == 1 && lhs.id() == ID_index &&
+         same_var(to_index_expr(lhs).index(), *cond.guard_exprs.begin()))
+        continue;
+
       make_union(lhs_exprs, cond.guard_exprs);
+    }
   }
   else if(from->is_goto() || from->is_assume() || from->is_assert())
   {

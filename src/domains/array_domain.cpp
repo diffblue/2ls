@@ -472,6 +472,7 @@ array_domaint::new_strategy_solver(incremental_solvert &solver_,
 /// Currently adds the following differences:
 ///   - difference between an array segment and a scalar variable
 ///     (both if the scalar is updated within the same loop and if it isn't)
+///   - difference between an array segment element and its index variable
 /// \param domain Pointer to the existing template polyhedra domain
 /// \param segment_var_specs Array segment specs
 /// \param value_var_specs Scalar value specs
@@ -485,6 +486,8 @@ void array_domaint::add_array_difference_template(
 
   // For each segment spec, find its dependencies and add:
   //  - difference between the segment element and scalar dependencies
+  //  - difference between the segment element and its index, if the index
+  //    is among dependencies
   for(auto &segment_spec : segment_var_specs)
   {
     auto segment = elem_to_segment_map[segment_spec.var];
@@ -531,6 +534,17 @@ void array_domaint::add_array_difference_template(
                                  guards);
         domain->add_template_row(minus_exprt(dep_expr, segment_spec.var),
                                  guards);
+
+        // If one of the bounds is dep (i.e. there's something like a[i] = i),
+        // add difference between the segment and its index variable
+        if(same_var(dep, segment->lower_bound) ||
+           same_var(dep, segment->upper_bound))
+        {
+          domain->add_template_row(
+            minus_exprt(segment_spec.var, segment->index_var), guards);
+          domain->add_template_row(
+            minus_exprt(segment->index_var, segment_spec.var), guards);
+        }
       }
     }
   }

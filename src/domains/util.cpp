@@ -631,3 +631,14 @@ exprt expr_plus_one(const exprt &expr)
 
   return result;
 }
+
+/// Check if the two given expressions are the same variable.
+/// Each of them can be possibly behind a typecast.
+bool same_var(const exprt &expr1, const exprt &expr2)
+{
+  if(expr1.id() == ID_typecast)
+    return same_var(to_typecast_expr(expr1).op(), expr2);
+  if(expr2.id() == ID_typecast)
+    return same_var(expr1, to_typecast_expr(expr2).op());
+  return get_original_expr(expr1) == get_original_expr(expr2);
+}
