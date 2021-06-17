@@ -24,7 +24,7 @@ bool strategy_solver_sympatht::iterate(
 #ifdef DEBUG
     std::cerr << "------------------------------------------\n";
     std::cerr << "Same path\n";
-    std::cerr << from_expr(ns, "", symbolic_path.get_expr()) << "\n";
+    std::cerr << from_expr(SSA.ns, "", symbolic_path.get_expr()) << "\n";
 #endif
 
     const exprt sympath=symbolic_path.get_expr();
@@ -62,7 +62,7 @@ bool strategy_solver_sympatht::iterate(
       symbolic_path=inner_solver->symbolic_path;
 #ifdef DEBUG
       std::cerr << "Path altered\n";
-      std::cerr << from_expr(ns, "", symbolic_path.get_expr()) << "\n";
+      std::cerr << from_expr(SSA.ns, "", symbolic_path.get_expr()) << "\n";
 #endif
     }
     domain.inner_domain->undo_sympath_restriction();
@@ -80,7 +80,7 @@ bool strategy_solver_sympatht::iterate(
       symbolic_path=inner_solver->symbolic_path;
 #ifdef DEBUG
       std::cerr << "Symbolic path:\n";
-      std::cerr << from_expr(ns, "", symbolic_path.get_expr()) << "\n";
+      std::cerr << from_expr(SSA.ns, "", symbolic_path.get_expr()) << "\n";
 #endif
       const exprt sympath=inner_solver->symbolic_path.get_expr();
       inv.emplace(sympath, std::move(new_value));
