@@ -45,7 +45,8 @@ array_domaint::array_domaint(unsigned int domain_number,
 
   // For the zones domain, add some custom template rows for differences among
   // segments and scalars
-  if(template_generator.options.get_bool_option("zones"))
+  zones_domain = template_generator.options.get_bool_option("zones");
+  if(zones_domain)
   {
     if(auto *tpolyhedra_domain = inner_domain->get_tpolyhedra_domain())
     {
@@ -349,18 +350,42 @@ exprt array_domaint::map_value_to_read_indices(const array_valuet &value)
   {
     auto array_name = get_original_name(to_symbol_expr(array.first));
     auto index_type = array.second.at(0)->index_var.type();
-    auto &read_indices = SSA.array_index_analysis.read_indices.at(array_name);
+    auto &read_indices_info =
+      SSA.array_index_analysis.read_indices.at(array_name);
+
+    std::set<exprt> read_indices;
+    for(auto &info : read_indices_info)
+    {
+      exprt read_index = SSA.read_rhs(info.index, info.loc);
+      if(read_index.type() != index_type)
+        read_index = typecast_exprt(read_index, index_type);
+      read_indices.insert(read_index);
+    }
+
+    if(!zones_domain)
+    {
+      for(auto &other_array : array_segments)
+      {
+        if(other_array.first == array.first ||
+           other_array.first.id() != ID_symbol || array.first.id() != ID_symbol)
+          continue;
+
+        if(get_original_name(to_symbol_expr(other_array.first)) ==
+           get_original_name(to_symbol_expr(array.first)))
+        {
+          for(auto &other_segment : other_array.second)
+          {
+            read_indices.insert(other_segment->index_var);
+          }
+        }
+      }
+    }
 
     if(read_indices.size() == 1)
     {
       // If there is a single read index, it is sufficient to bind the segment
       // index variables to the read index.
-      auto &read_index_info = *read_indices.begin();
-      exprt read_index =
-        SSA.read_rhs(read_index_info.index, read_index_info.loc);
-      if(read_index.type() != index_type)
-        read_index = typecast_exprt(read_index, index_type);
-
+      auto &read_index = *read_indices.begin();
       result.push_back(map_segments_to_index(array.second, read_index));
     }
     else
@@ -368,13 +393,8 @@ exprt array_domaint::map_value_to_read_indices(const array_valuet &value)
       // If there are multiple read indices, we have to project the current
       // invariant onto the read indices by copying the invariant and replacing
       // each segment index variable by each read index.
-      for(auto &read_index_info : read_indices)
+      for(auto &read_index : read_indices)
       {
-        exprt read_index =
-          SSA.read_rhs(read_index_info.index, read_index_info.loc);
-        if(read_index.type() != index_type)
-          read_index = typecast_exprt(read_index, index_type);
-
         for(auto *segment : array.second)
         {
           exprt segment_value;

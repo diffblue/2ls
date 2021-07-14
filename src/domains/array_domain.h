@@ -211,6 +211,7 @@ protected:
 
   const local_SSAt &SSA;
   incremental_solvert *solver;
+  bool zones_domain = false;
 
   // Renaming loop-back -> pre-loop
   replace_mapt &init_renaming_map;
