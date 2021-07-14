@@ -157,8 +157,13 @@ array_domaint::add_segment(const var_spect &var_spec,
   const symbol_exprt &index_var =
     symbol_exprt("idx#" + std::to_string(segment_cnt), lower.type());
   const symbol_exprt &elem_var =
-    symbol_exprt("elem#" + std::to_string(segment_cnt++),
+    symbol_exprt("elem#" + std::to_string(segment_cnt),
                  to_array_type(var_spec.var.type()).subtype());
+  const symbol_exprt &elem_var_post =
+    symbol_exprt("elem#" + std::to_string(segment_cnt++) + "#post",
+                 to_array_type(var_spec.var.type()).subtype());
+  renaming_map[elem_var] = elem_var_post;
+
   segments.emplace_back(
     var_spec, elem_var, index_var, lower, upper, get_array_size(var_spec));
 
@@ -393,7 +398,13 @@ exprt array_domaint::segment_elem_equality()
   // For all segments and other array elements, add equality:
   //   elem#i = a[idx#i]
   for(const auto &segment : segments)
-    result.push_back(segment.elem_bound());
+  {
+    const exprt pre_bound = segment.elem_bound();
+    exprt post_bound = pre_bound;
+    rename(post_bound);
+    result.push_back(pre_bound);
+    result.push_back(post_bound);
+  }
   for(const auto &elem : array_elems)
     result.push_back(elem.elem_bound());
   return conjunction(result);
