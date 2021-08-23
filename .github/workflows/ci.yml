@@ -19,6 +19,7 @@ jobs:
         run: ./build.sh $COMPILER -j4 && cd regression && make test
   lint:
     runs-on: ubuntu-latest
+    if: github.ref != 'refs/heads/master'
     steps:
       - uses: actions/checkout@v2
       - name: Get the latest master
