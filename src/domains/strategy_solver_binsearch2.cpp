@@ -16,6 +16,7 @@ Author: Peter Schrammel
 #endif
 
 #include <cassert>
+#include <solvers/prop/literal_expr.h>
 
 #include "strategy_solver_binsearch2.h"
 #include "ssa/local_ssa.h"

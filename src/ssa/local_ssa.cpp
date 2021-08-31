@@ -18,6 +18,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/prefix.h>
 #include <util/expr_util.h>
+#include <util/pointer_expr.h>
 #include <util/byte_operators.h>
 #include <solvers/decision_procedure.h>
 
@@ -61,8 +62,9 @@ void local_SSAt::build_SSA()
 void local_SSAt::get_entry_exit_vars()
 {
   // get parameters
+  auto function_symbol=ns.lookup(function_identifier);
   const code_typet::parameterst &parameter_types=
-    goto_function.type.parameters();
+    to_code_type(function_symbol.type).parameters();
   for(code_typet::parameterst::const_iterator
         it=parameter_types.begin(); it!=parameter_types.end(); it++)
   {
@@ -317,7 +319,7 @@ void local_SSAt::build_transfer(locationt loc)
 {
   if(loc->is_assign())
   {
-    const code_assignt &code_assign=to_code_assign(loc->code);
+    const code_assignt &code_assign=loc->get_assign();
 
     // template declarations
     if(code_assign.lhs().id()==ID_symbol &&
@@ -373,8 +375,7 @@ void local_SSAt::build_function_call(locationt loc)
 {
   if(loc->is_function_call())
   {
-    const code_function_callt &code_function_call=
-      to_code_function_call(loc->code);
+    code_function_callt code_function_call=loc->get_function_call();
 
     const exprt &lhs=code_function_call.lhs();
 
@@ -413,12 +414,6 @@ void local_SSAt::build_function_call(locationt loc)
       return;
     }
 
-    // turn function call into expression
-    function_application_exprt f(
-      to_symbol_expr(code_function_call.function()),
-      code_function_call.arguments(),
-      code_function_call.lhs().type());
-
     // access to "new" value in template declarations
     if(code_function_call.function().id()==ID_symbol &&
        has_prefix(
@@ -426,19 +421,22 @@ void local_SSAt::build_function_call(locationt loc)
          id2string(code_function_call.function().get(ID_identifier))))
     {
       assert(code_function_call.arguments().size()==1);
-      template_last_newvar=f;
+      template_last_newvar=code_function_call;
       template_newvars[template_last_newvar]=template_last_newvar;
       return;
     }
 
-    assert(f.function().id()==ID_symbol); // no function pointers
+    // no function pointers
+    assert(code_function_call.function().id()==ID_symbol);
 
-    f=to_function_application_expr(read_rhs(f, loc));
+    code_function_call=to_code_function_call(
+      to_code(read_rhs(code_function_call, loc)));
 
-    irep_idt fname=to_symbol_expr(f.function()).get_identifier();
+    symbol_exprt function=to_symbol_expr(code_function_call.function());
+    irep_idt fname=function.get_identifier();
     // add equalities for arguments
     unsigned i=0;
-    for(exprt &a : f.arguments())
+    for(exprt &a : code_function_call.arguments())
     {
       const std::string arg_name=
         id2string(fname)+"#arg"+std::to_string(i)+"#"+
@@ -449,7 +447,7 @@ void local_SSAt::build_function_call(locationt loc)
       ++i;
     }
 
-    n_it->function_calls.push_back(to_function_application_expr(f));
+    n_it->function_calls.push_back(code_function_call);
   }
 }
 
@@ -544,29 +542,33 @@ bool local_SSAt::get_deallocated_precondition(const exprt &expr, exprt &result)
 {
   if(expr.id()==ID_equal)
   {
-    auto &rhs=to_equal_expr(expr).rhs();
-    if(rhs.id()==ID_pointer_object && rhs.op0().id()==ID_symbol)
+    const equal_exprt &equal=to_equal_expr(expr);
+    auto &rhs=equal.rhs();
+    if(rhs.id()==ID_pointer_object)
     {
-      const symbol_exprt &dealloc_symbol=to_symbol_expr(rhs.op0());
-      std::string id=id2string(dealloc_symbol.get_identifier());
-      if(id.find("__CPROVER_deallocated")!=std::string::npos)
+      const unary_exprt &pointer_object=to_unary_expr(rhs);
+      if(pointer_object.op().id()==ID_symbol)
       {
-        const exprt &dealloc_symbol=expr.op1().op0();
-        exprt::operandst d;
-        for(auto &global : assignments.ssa_objects.globals)
+        const symbol_exprt &dealloc_symbol=to_symbol_expr(pointer_object.op());
+        std::string id=id2string(dealloc_symbol.get_identifier());
+        if(id.find("__CPROVER_deallocated")!=std::string::npos)
         {
-          if(global.get_expr().get_bool("#concrete"))
+          exprt::operandst d;
+          for(auto &global : assignments.ssa_objects.globals)
           {
-            d.push_back(
-              equal_exprt(
-                dealloc_symbol,
-                typecast_exprt(
-                  address_of_exprt(global.symbol_expr()),
-                  dealloc_symbol.type())));
+            if(global.get_expr().get_bool("#concrete"))
+            {
+              d.push_back(
+                equal_exprt(
+                  dealloc_symbol,
+                  typecast_exprt(
+                    address_of_exprt(global.symbol_expr()),
+                    dealloc_symbol.type())));
+            }
           }
+          result=disjunction(d);
+          return true;
         }
-        result=disjunction(d);
-        return true;
       }
     }
   }
@@ -1089,7 +1091,7 @@ void local_SSAt::assign_rec(
   else if(lhs.id()==ID_complex_real)
   {
     assert(lhs.operands().size()==1);
-    const exprt &op=lhs.op0();
+    const exprt &op=to_complex_real_expr(lhs).op();
     const complex_typet &complex_type=to_complex_type(op.type());
     exprt imag_op=unary_exprt(ID_complex_imag, op, complex_type.subtype());
     complex_exprt new_rhs(rhs, imag_op, complex_type);
@@ -1098,7 +1100,7 @@ void local_SSAt::assign_rec(
   else if(lhs.id()==ID_complex_imag)
   {
     assert(lhs.operands().size()==1);
-    const exprt &op=lhs.op0();
+    const exprt &op=to_complex_imag_expr(lhs).op();
     const complex_typet &complex_type=to_complex_type(op.type());
     exprt real_op=unary_exprt(ID_complex_real, op, complex_type.subtype());
     complex_exprt new_rhs(real_op, rhs, complex_type);
@@ -1427,7 +1429,7 @@ void local_SSAt::build_unknown_objs(locationt loc)
 {
   if(loc->is_assign())
   {
-    const code_assignt &code_assign=to_code_assign(loc->code);
+    const code_assignt &code_assign=loc->get_assign();
     const exprt &rhs=code_assign.rhs();
     if(rhs.get_bool("#malloc_result"))
     {
@@ -1545,7 +1547,8 @@ void local_SSAt::collect_record_frees(local_SSAt::locationt loc)
 {
   if(loc->is_decl())
   {
-    const exprt &symbol=to_code_decl(loc->code).symbol();
+    const code_declt &code_decl=code_declt{loc->decl_symbol()};
+    const exprt &symbol=code_decl.symbol();
     if(symbol.id()!=ID_symbol)
       return;
 

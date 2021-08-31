@@ -25,16 +25,16 @@ public:
 
   void transform(
     const irep_idt &,
-    locationt,
+    trace_ptrt,
     const irep_idt &,
-    locationt,
+    trace_ptrt,
     ai_baset &,
     const namespacet &) override;
   void output(
     std::ostream &,
     const ai_baset &,
     const namespacet &) const override;
-  bool merge(const ssa_value_domaint &, locationt, locationt);
+  bool merge(const ssa_value_domaint &, trace_ptrt, trace_ptrt);
 
   void make_bottom() override
   {

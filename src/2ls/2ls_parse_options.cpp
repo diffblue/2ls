@@ -18,6 +18,7 @@ Author: Daniel Kroening, Peter Schrammel
 #include <util/config.h>
 #include <util/options.h>
 #include <util/memory_info.h>
+#include <util/bitvector_types.h>
 
 #include <ansi-c/ansi_c_language.h>
 #include <ansi-c/cprover_library.h>
@@ -40,6 +41,7 @@ Author: Daniel Kroening, Peter Schrammel
 #include <goto-programs/show_symbol_table.h>
 #include <goto-programs/initialize_goto_model.h>
 #include <goto-programs/show_goto_functions.h>
+#include <goto-programs/add_malloc_may_fail_variable_initializations.h>
 
 #include <analyses/goto_check.h>
 
@@ -465,9 +467,9 @@ int twols_parse_optionst::doit()
   if(cmdline.isset("nontermination"))
   {
     // turn assertions (from generic checks) into assumptions
-    Forall_goto_functions(f_it, goto_model.goto_functions)
+    for(auto &f_it : goto_model.goto_functions.function_map)
     {
-      goto_programt &body=f_it->second.body;
+      goto_programt &body=f_it.second.body;
       Forall_goto_program_instructions(i_it, body)
       {
         if(i_it->is_assert())
@@ -757,10 +759,8 @@ void twols_parse_optionst::type_stats_rec(
 
   if(type.has_subtypes())
   {
-    forall_subtypes(it, type)
-    {
-      type_stats_rec(*it, stats, ns);
-    }
+    for(const auto &subtype : to_type_with_subtypes(type).subtypes())
+      type_stats_rec(subtype, stats, ns);
   }
 }
 
@@ -806,14 +806,14 @@ void twols_parse_optionst::show_stats(
   unsigned nr_loops=0;
 
   // analyze all the functions
-  forall_goto_functions(f_it, goto_model.goto_functions)
+  for(const auto &f_it : goto_model.goto_functions.function_map)
   {
-    if(!f_it->second.body_available())
+    if(!f_it.second.body_available())
       continue;
 
     ++nr_functions;
 
-    const goto_programt &goto_program=f_it->second.body;
+    const goto_programt &goto_program=f_it.second.body;
 
 #if 0
     statistics() << "function size of " << f_it->first << ": "
@@ -835,7 +835,7 @@ void twols_parse_optionst::show_stats(
       {
       case ASSIGN:
       {
-        const code_assignt &assign=to_code_assign(instruction.code);
+        const code_assignt &assign=instruction.get_assign();
         expr_stats_rec(assign.lhs(), stats);
         expr_stats_rec(assign.rhs(), stats);
         break;
@@ -852,9 +852,7 @@ void twols_parse_optionst::show_stats(
 
       case DECL:
         // someone declaring an array
-        type_stats_rec(
-          to_code_decl(instruction.code).symbol().type(), stats, ns);
-
+        type_stats_rec(instruction.decl_symbol().type(), stats, ns);
         break;
 
       default:
@@ -926,6 +924,11 @@ bool twols_parse_optionst::get_goto_program(
     status() << "Adding CPROVER library" << eom;
     link_to_library(goto_model, ui_message_handler, cprover_c_library_factory);
 
+    // TODO: 2LS currently does not support the possibility of malloc failing,
+    //       we always initialize the CPROVER variables related to failure
+    //       to default (no fail). See if there is a way to improve this.
+    add_malloc_may_fail_variable_initializations(goto_model);
+
     if(process_goto_program(options, goto_model))
       return true;
   }
@@ -977,11 +980,11 @@ bool twols_parse_optionst::process_goto_program(
       // TODO: where is limit multiplied by 2???
 
       // remove inlined functions
-      Forall_goto_functions(f_it, goto_model.goto_functions)
-        if(f_it->first!=goto_functionst::entry_point() &&
-           f_it->second.body.instructions.size()<=2*(limit/2))
+      for(auto &f_it : goto_model.goto_functions.function_map)
+        if(f_it.first!=goto_functionst::entry_point() &&
+           f_it.second.body.instructions.size()<=2*(limit/2))
         {
-          f_it->second.body.clear();
+          f_it.second.body.clear();
         }
     }
 
@@ -1050,16 +1053,19 @@ bool twols_parse_optionst::process_goto_program(
 #if 1
     // Find, inline and remove malloc function
     // TODO: find a better place for that
-    Forall_goto_functions(it, goto_model.goto_functions)
+    for(auto &it : goto_model.goto_functions.function_map)
     {
-      if(it->first=="malloc" || it->first=="free")
-        it->second.type.set(ID_C_inlined, true);
+      if(it.first=="malloc" || it.first=="free")
+      {
+        auto function_symbol=goto_model.symbol_table.get_writeable(it.first);
+        to_code_type(function_symbol->type).set_inlined(true);
+      }
     }
     goto_partial_inline(goto_model, ui_message_handler, 0);
-    Forall_goto_functions(it, goto_model.goto_functions)
+    for(auto &it : goto_model.goto_functions.function_map)
     {
-      if(it->first=="malloc" || it->first=="free")
-        it->second.body.clear();
+      if(it.first=="malloc" || it.first=="free")
+        it.second.body.clear();
     }
 #endif
 

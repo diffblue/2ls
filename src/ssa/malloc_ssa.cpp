@@ -13,6 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/std_expr.h>
 #include <util/arith_tools.h>
 #include <util/expr_util.h>
+#include <util/pointer_expr.h>
 #include <util/symbol.h>
 #include <util/pointer_offset_size.h>
 #include <util/c_types.h>
@@ -134,28 +135,30 @@ exprt malloc_ssa(
     throw "allocation expected to have two operands";
 
   namespacet ns(symbol_table);
-  exprt size=code.op0();
+  const exprt &size=to_binary_expr(code).op0();
   optionalt<typet> object_type;
 
   {
     // special treatment for sizeof(T)*x
     if(size.id()==ID_mult &&
        size.operands().size()==2 &&
-       size.op0().find(ID_C_c_sizeof_type).is_not_nil())
+       to_mult_expr(size).op0().find(ID_C_c_sizeof_type).is_not_nil())
     {
-      if(auto maybe_type=c_sizeof_type_rec(size.op0()))
+      const mult_exprt &multiplication=to_mult_expr(size);
+      if(auto maybe_type=c_sizeof_type_rec(multiplication.op0()))
         object_type=array_typet(
           *maybe_type,
-          size.op1());
+          multiplication.op1());
     }
     else if(size.id()==ID_mult &&
             size.operands().size()==2 &&
-            size.op1().find(ID_C_c_sizeof_type).is_not_nil())
+            to_mult_expr(size).op1().find(ID_C_c_sizeof_type).is_not_nil())
     {
-      if(auto maybe_type=c_sizeof_type_rec(size.op1()))
+      const mult_exprt &multiplication=to_mult_expr(size);
+      if(auto maybe_type=c_sizeof_type_rec(multiplication.op1()))
         object_type=array_typet(
           *maybe_type,
-          size.op0());
+          multiplication.op0());
     }
     else
     {
@@ -255,7 +258,7 @@ static bool replace_malloc_rec(
      to_side_effect_expr(expr).get_statement()==ID_allocate)
   {
     assert(!malloc_size.is_nil());
-    expr.op0()=malloc_size;
+    expr.operands()[0]=malloc_size;
 
     expr=malloc_ssa(
       to_side_effect_expr(expr),
@@ -292,13 +295,13 @@ bool replace_malloc(
   bool alloc_concrete)
 {
   bool result=false;
-  Forall_goto_functions(f_it, goto_model.goto_functions)
+  for(auto &f_it : goto_model.goto_functions.function_map)
   {
-    goto_programt::const_targett loop_end=f_it->second.body.instructions.end();
+    goto_programt::const_targett loop_end=f_it.second.body.instructions.end();
     exprt malloc_size=nil_exprt();
-    Forall_goto_program_instructions(i_it, f_it->second.body)
+    Forall_goto_program_instructions(i_it, f_it.second.body)
     {
-      if(loop_end==f_it->second.body.instructions.end())
+      if(loop_end==f_it.second.body.instructions.end())
       {
         for(const auto &incoming : i_it->incoming_edges)
         {
@@ -311,12 +314,12 @@ bool replace_malloc(
       }
       else if(i_it==loop_end)
       {
-        loop_end=f_it->second.body.instructions.end();
+        loop_end=f_it.second.body.instructions.end();
       }
 
       if(i_it->is_assign())
       {
-        code_assignt &code_assign=to_code_assign(i_it->code);
+        code_assignt &code_assign=to_code_assign(i_it->code_nonconst());
         if(code_assign.lhs().id()==ID_symbol)
         {
           // we have to propagate the malloc size
@@ -330,15 +333,15 @@ bool replace_malloc(
           {
             namespacet ns(goto_model.symbol_table);
             goto_functionst::goto_functiont function_copy;
-            function_copy.copy_from(f_it->second);
+            function_copy.copy_from(f_it.second);
             constant_propagator_ait const_propagator(function_copy);
-            const_propagator(f_it->first, function_copy, ns);
+            const_propagator(f_it.first, function_copy, ns);
             forall_goto_program_instructions(copy_i_it, function_copy.body)
             {
               if(copy_i_it->location_number==i_it->location_number)
               {
                 assert(copy_i_it->is_assign());
-                malloc_size=to_code_assign(copy_i_it->code).rhs();
+                malloc_size=copy_i_it->get_assign().rhs();
               }
             }
           }
@@ -348,10 +351,10 @@ bool replace_malloc(
                               goto_model.symbol_table,
                               malloc_size,
                               i_it->location_number,
-                              loop_end==f_it->second.body.instructions.end(),
+                              loop_end==f_it.second.body.instructions.end(),
                               alloc_concrete))
         {
-          result=result || (loop_end!=f_it->second.body.instructions.end());
+          result=result || (loop_end!=f_it.second.body.instructions.end());
         }
       }
     }
@@ -371,7 +374,7 @@ bool set_following_assign_to_true(
   {
     if(it->is_assign())
     {
-      code_assignt &code_assign=to_code_assign(it->code);
+      code_assignt &code_assign=to_code_assign(it->code_nonconst());
       if(code_assign.lhs().id()==ID_symbol)
       {
         std::string lhs_id=
@@ -386,7 +389,7 @@ bool set_following_assign_to_true(
     if(it->is_dead())
     {
       // Stop if the variable is invalid
-      code_deadt &code_dead=to_code_dead(it->code);
+      const code_deadt &code_dead=code_deadt{it->dead_symbol()};
       if(code_dead.symbol().id()==ID_symbol)
       {
         std::string dead_id=
@@ -414,13 +417,13 @@ void set_var_always_to_true(
   goto_modelt &goto_model,
   std::function<bool(std::string &)>name_cond)
 {
-  Forall_goto_functions(f_it, goto_model.goto_functions)
+  for(auto &f_it : goto_model.goto_functions.function_map)
   {
-    Forall_goto_program_instructions(i_it, f_it->second.body)
+    Forall_goto_program_instructions(i_it, f_it.second.body)
     {
       if(i_it->is_decl())
       {
-        code_declt &code_decl=to_code_decl(i_it->code);
+        const code_declt &code_decl=code_declt{i_it->decl_symbol()};
         if(code_decl.symbol().id()==ID_symbol)
         {
           std::string decl_id=
@@ -429,20 +432,22 @@ void set_var_always_to_true(
           {
             if(set_following_assign_to_true(
               i_it,
-              f_it->second.body.instructions.end(),
+              f_it.second.body.instructions.end(),
               decl_id))
               continue;
             // No following assignment, add one
-            auto assign=f_it->second.body.insert_after(i_it);
-            assign->make_assignment();
-            assign->code=code_assignt(code_decl.symbol(), true_exprt());
+            f_it.second.body.insert_after(
+              i_it,
+              goto_programt::make_assignment(
+                code_assignt(code_decl.symbol(),true_exprt()),
+                i_it->source_location));
           }
         }
       }
     }
-    f_it->second.body.compute_location_numbers();
-    f_it->second.body.compute_target_numbers();
-    f_it->second.body.compute_incoming_edges();
+    f_it.second.body.compute_location_numbers();
+    f_it.second.body.compute_target_numbers();
+    f_it.second.body.compute_incoming_edges();
   }
 }
 

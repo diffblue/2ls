@@ -256,7 +256,10 @@ void template_generator_baset::add_var(
   exprt aux_expr=true_exprt();
   if(std_invariants && pre_guard.id()==ID_and)
   {
-    exprt init_guard=and_exprt(pre_guard.op0(), not_exprt(pre_guard.op1()));
+    const and_exprt &pre_guard_and=to_and_expr(pre_guard);
+    exprt init_guard=and_exprt(
+      pre_guard_and.op0(),
+      not_exprt(pre_guard_and.op1()));
     exprt post_var=post_renaming_map[var];
     exprt aux_var=aux_renaming_map[var];
     aux_expr=and_exprt(
@@ -355,7 +358,7 @@ bool template_generator_baset::replace_post(
     {
       assert(f.arguments().size()==1);
       if(f.arguments()[0].id()==ID_typecast)
-        expr=replace_map[f.arguments()[0].op0()];
+        expr=replace_map[to_typecast_expr(f.arguments()[0]).op()];
       else
         expr=replace_map[f.arguments()[0]];
       return true;
@@ -481,7 +484,7 @@ bool template_generator_baset::instantiate_custom_templates(
               found_poly=true;
             }
 
-            exprt expr=t_it->op0();
+            exprt expr=to_binary_expr(*t_it).op0();
             bool contains_new_var=build_custom_expr(SSA, n_it, expr);
             if(contains_new_var)
               add_post_vars=true;

@@ -119,7 +119,7 @@ protected:
     const local_SSAt::var_sett &globals);
   void replace_params(
     const local_SSAt::var_listt &params,
-    const function_application_exprt &funapp_expr);
+    const code_function_callt &funapp_expr);
   void replace_globals_out(
     const local_SSAt::var_sett &globals_out,
     const local_SSAt::var_sett &cs_globals_in,
@@ -130,7 +130,7 @@ protected:
     const local_SSAt::var_sett &globals);
   exprt get_replace_params(
     const local_SSAt::var_listt &params,
-    const function_application_exprt &funapp_expr,
+    const code_function_callt &funapp_expr,
     const local_SSAt::var_sett &cs_globals_in,
     const local_SSAt::var_sett &cs_globals_out,
     const local_SSAt &SSA,
@@ -140,7 +140,7 @@ protected:
     const local_SSAt::var_sett &cs_globals_in,
     const local_SSAt::var_sett &cs_globals_out,
     const summaryt &summary,
-    const function_application_exprt &funapp_expr,
+    const code_function_callt &funapp_expr,
     const local_SSAt &SSA,
     local_SSAt::locationt loc);
 

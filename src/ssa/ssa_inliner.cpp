@@ -12,6 +12,7 @@ Author: Peter Schrammel
 #include <algorithm>
 
 #include <util/replace_expr.h>
+#include <util/pointer_expr.h>
 
 #include "ssa_inliner.h"
 
@@ -356,7 +357,7 @@ void ssa_inlinert::replace_globals_in(
 
 exprt ssa_inlinert::get_replace_params(
   const local_SSAt::var_listt &params,
-  const function_application_exprt &funapp_expr,
+  const code_function_callt &funapp_expr,
   const local_SSAt::var_sett &cs_globals_in,
   const local_SSAt::var_sett &cs_globals_out,
   const local_SSAt &SSA,
@@ -497,7 +498,7 @@ exprt ssa_inlinert::get_replace_params(
 
 void ssa_inlinert::replace_params(
   const local_SSAt::var_listt &params,
-  const function_application_exprt &funapp_expr)
+  const code_function_callt &funapp_expr)
 {
   // equalities for arguments
   local_SSAt::var_listt::const_iterator p_it=params.begin();
@@ -523,7 +524,7 @@ exprt ssa_inlinert::get_replace_globals_out(
   const local_SSAt::var_sett &cs_globals_in,
   const local_SSAt::var_sett &cs_globals_out,
   const summaryt &summary,
-  const function_application_exprt &funapp_expr,
+  const code_function_callt &funapp_expr,
   const local_SSAt &SSA,
   local_SSAt::locationt loc)
 {

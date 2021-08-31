@@ -28,37 +28,11 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/expr_util.h>
 #include <util/simplify_expr.h>
 #include <util/c_types.h>
+#include <util/expr_util.h>
+#include <util/pointer_expr.h>
 
 #include "ssa_dereference.h"
 #include "address_canonizer.h"
-
-exprt lift_if(const exprt &src)
-{
-  if(src.operands().size()==1 && src.op0().id()==ID_if)
-  {
-    // push operator into ?:
-    if_exprt if_expr=to_if_expr(src.op0());
-    if_expr.type()=src.type();
-
-    if(if_expr.true_case().is_not_nil())
-    {
-      exprt previous=if_expr.true_case();
-      if_expr.true_case()=src;
-      if_expr.true_case().op0()=previous;
-    }
-
-    if(if_expr.false_case().is_not_nil())
-    {
-      exprt previous=if_expr.false_case();
-      if_expr.false_case()=src;
-      if_expr.false_case().op0()=previous;
-    }
-
-    return if_expr;
-  }
-  else
-    return src;
-}
 
 bool ssa_may_alias(
   const exprt &e1,
@@ -189,7 +163,7 @@ exprt ssa_alias_guard(
   // arithmetic points to a base pointer.
   // The following hack does that:
   if(a1.id()==ID_plus)
-    a1=a1.op0();
+    a1=to_plus_expr(a1).op0();
 
   exprt a2=address_canonizer(address_of_exprt(e2), ns);
 
@@ -256,7 +230,7 @@ exprt ssa_alias_value(
 
   if(competition_mode)
     assert(!e2_type.get_bool("#dynamic"));
-  byte_extract_exprt byte_extract(byte_extract_id(), e2, offset1, e1.type());
+  byte_extract_exprt byte_extract=make_byte_extract(e2, offset1, e1.type());
 
   return byte_extract;
 }
@@ -335,7 +309,14 @@ exprt dereference_rec(
     if(tmp.struct_op().is_nil())
       return nil_exprt();
 
-    return lift_if(tmp);
+    if(tmp.compound().id()==ID_if)
+    {
+      exprt result=lift_if(tmp, 0);
+      result.set("#heap_access", tmp.get_bool("#heap_access"));
+      return result;
+    }
+    else
+      return tmp;
   }
   else if(src.id()==ID_address_of)
   {
@@ -347,7 +328,14 @@ exprt dereference_rec(
     if(tmp.object().is_nil())
       return nil_exprt();
 
-    return lift_if(tmp);
+    if(tmp.object().id()==ID_if)
+    {
+      exprt result=lift_if(tmp, 0);
+      result.set("#heap_access", tmp.get_bool("#heap_access"));
+      return result;
+    }
+    else
+      return tmp;
   }
   else
   {

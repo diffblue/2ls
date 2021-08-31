@@ -48,7 +48,7 @@ public:
 
   struct equ_valuet:simple_domaint::valuet
   {
-    union_find<vart> equs;
+    union_find<vart, irep_hash> equs;
     index_sett disequs;
 
     exprt get_row_expr(rowt row, const template_rowt &templ_row) const override;

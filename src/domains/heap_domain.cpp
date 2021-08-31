@@ -14,6 +14,7 @@ Author: Viktor Malik
 #include <memory>
 #include <ssa/address_canonizer.h>
 #include <util/mathematical_types.h>
+#include <util/pointer_expr.h>
 
 /// Initialize abstract value. Clears value with empty value rows corresponding
 /// to template.
@@ -97,11 +98,12 @@ exprt heap_domaint::value_to_ptr_exprt(const exprt &expr)
 {
   if(expr.id()==ID_constant)
   {
+    const unary_exprt &constant=to_unary_expr(expr);
     const std::string value=id2string(to_constant_expr(expr).get_value());
     if(value.substr(value.size()/2).find_first_not_of('0')!=std::string::npos)
-      return plus_exprt(expr.op0(), make_zero(integer_typet()));
+      return plus_exprt(constant.op(), make_zero(integer_typet()));
     else
-      return expr.op0();
+      return constant.op();
   }
 
   return expr;

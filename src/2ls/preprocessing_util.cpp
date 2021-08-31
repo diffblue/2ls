@@ -10,6 +10,7 @@ Author: Peter Schrammel
 /// 2LS Command Line Options Processing
 
 #include <util/replace_expr.h>
+#include <util/pointer_expr.h>
 #include <util/find_symbols.h>
 #include <util/arith_tools.h>
 
@@ -29,19 +30,18 @@ void twols_parse_optionst::inline_main(goto_modelt &goto_model)
   {
     if(target->is_function_call())
     {
-      const code_function_callt &code_function_call=
-        to_code_function_call(target->code);
+      const code_function_callt &code_function_call=target->get_function_call();
       irep_idt fname=code_function_call.function().get(ID_identifier);
 
       debug() << "Inlining " << fname << eom;
 
       goto_programt tmp;
       tmp.copy_from(goto_model.goto_functions.function_map[fname].body);
-      (--tmp.instructions.end())->make_skip();
+      (--tmp.instructions.end())->turn_into_skip();
       goto_model.goto_functions.function_map.erase(fname);
 
       goto_programt::targett next_target(target);
-      target->make_skip();
+      target->turn_into_skip();
       next_target++;
       main.instructions.splice(next_target, tmp.instructions);
       target=next_target;
@@ -57,10 +57,10 @@ void twols_parse_optionst::inline_main(goto_modelt &goto_model)
 void twols_parse_optionst::propagate_constants(goto_modelt &goto_model)
 {
   namespacet ns(goto_model.symbol_table);
-  Forall_goto_functions(f_it, goto_model.goto_functions)
+  for(auto &f_it : goto_model.goto_functions.function_map)
   {
-    constant_propagator_ait const_propagator(f_it->second);
-    const_propagator(f_it->first, f_it->second, ns);
+    constant_propagator_ait const_propagator(f_it.second);
+    const_propagator(f_it.first, f_it.second, ns);
   }
 }
 
@@ -70,29 +70,29 @@ void twols_parse_optionst::propagate_constants(goto_modelt &goto_model)
 void twols_parse_optionst::nondet_locals(goto_modelt &goto_model)
 {
   namespacet ns(goto_model.symbol_table);
-  Forall_goto_functions(f_it, goto_model.goto_functions)
+  for(auto &f_it : goto_model.goto_functions.function_map)
   {
-    Forall_goto_program_instructions(i_it, f_it->second.body)
+    Forall_goto_program_instructions(i_it, f_it.second.body)
     {
       if(i_it->is_decl())
       {
-        const code_declt& decl=to_code_decl(i_it->code);
+        const code_declt& decl=code_declt{i_it->decl_symbol()};
 
         goto_programt::const_targett next=i_it; ++next;
-        if(next!=f_it->second.body.instructions.end() &&
+        if(next!=f_it.second.body.instructions.end() &&
            next->is_assign() &&
-           to_code_assign(next->code).lhs().id()==ID_symbol &&
-           to_symbol_expr(to_code_assign(next->code).lhs())==decl.symbol())
+           next->get_assign().lhs().id()==ID_symbol &&
+           to_symbol_expr(next->get_assign().lhs())==decl.symbol())
           continue;
 
         side_effect_expr_nondett nondet(
           decl.symbol().type(),
           i_it->source_location);
-        goto_programt::targett t=f_it->second.body.insert_after(i_it);
-        t->make_assignment();
-        code_assignt c(decl.symbol(), nondet);
-        t->code.swap(c);
-        t->source_location=i_it->source_location;
+        goto_programt::targett t=f_it.second.body.insert_after(
+          i_it,
+          goto_programt::make_assignment(
+            code_assignt(decl.symbol(), nondet),
+            i_it->source_location));
       }
     }
   }
@@ -108,9 +108,9 @@ bool twols_parse_optionst::unwind_goto_into_loop(
   typedef std::vector<std::pair<goto_programt::targett,
                                 goto_programt::targett> > loopst;
 
-  Forall_goto_functions(f_it, goto_model.goto_functions)
+  for(auto &f_it : goto_model.goto_functions.function_map)
   {
-    goto_programt &body=f_it->second.body;
+    goto_programt &body=f_it.second.body;
 
     loopst loops;
     Forall_goto_program_instructions(i_it, body)
@@ -164,7 +164,7 @@ bool twols_parse_optionst::unwind_goto_into_loop(
 
       goto_unwindt goto_unwind;
       goto_unwind.unwind(
-        f_it->first,
+        f_it.first,
         body,
         l_it->second,
         l_it->first,
@@ -172,8 +172,11 @@ bool twols_parse_optionst::unwind_goto_into_loop(
         goto_unwindt::unwind_strategyt::PARTIAL, iteration_points);
 
       assert(iteration_points.size()==2);
-      goto_programt::targett t=body.insert_before(l_it->first);
-      t->make_goto(iteration_points.front());
+      body.insert_before(
+        l_it->first,
+        goto_programt::make_goto(
+          iteration_points.front(),
+          l_it->first->source_location));
     }
   }
   goto_model.goto_functions.update();
@@ -207,9 +210,11 @@ void twols_parse_optionst::remove_multiple_dereferences(
         new_symbol.base_name=new_symbol.name;
         new_symbol.pretty_name=new_symbol.name;
         goto_model.symbol_table.add(new_symbol);
-        goto_programt::targett t_new=body.insert_before(t);
-        t_new->make_assignment();
-        t_new->code=code_assignt(new_symbol.symbol_expr(), member_expr);
+        goto_programt::targett t_new=body.insert_before(
+          t,
+          goto_programt::make_assignment(
+            code_assignt(new_symbol.symbol_expr(), member_expr),
+            t->source_location));
         expr=new_symbol.symbol_expr();
         for(std::set<goto_programt::targett>::iterator t_it=
               t->incoming_edges.begin();
@@ -242,15 +247,15 @@ void twols_parse_optionst::remove_multiple_dereferences(goto_modelt &goto_model)
 {
   unsigned var_counter=0;
   namespacet ns(goto_model.symbol_table);
-  Forall_goto_functions(f_it, goto_model.goto_functions)
+  for(auto &f_it : goto_model.goto_functions.function_map)
   {
-    Forall_goto_program_instructions(i_it, f_it->second.body)
+    Forall_goto_program_instructions(i_it, f_it.second.body)
     {
       if(i_it->is_goto())
       {
         remove_multiple_dereferences(
           goto_model,
-          f_it->second.body,
+          f_it.second.body,
           i_it,
           i_it->guard,
           var_counter,
@@ -260,15 +265,15 @@ void twols_parse_optionst::remove_multiple_dereferences(goto_modelt &goto_model)
       {
         remove_multiple_dereferences(
           goto_model,
-          f_it->second.body,
+          f_it.second.body,
           i_it,
-          to_code_assign(i_it->code).lhs(),
+          to_code_assign(i_it->code_nonconst()).lhs(),
           var_counter, false);
         remove_multiple_dereferences(
           goto_model,
-          f_it->second.body,
+          f_it.second.body,
           i_it,
-          to_code_assign(i_it->code).rhs(),
+          to_code_assign(i_it->code_nonconst()).rhs(),
           var_counter, false);
       }
     }
@@ -279,17 +284,18 @@ void twols_parse_optionst::remove_multiple_dereferences(goto_modelt &goto_model)
 void twols_parse_optionst::add_assumptions_after_assertions(
   goto_modelt &goto_model)
 {
-  Forall_goto_functions(f_it, goto_model.goto_functions)
+  for(auto &f_it : goto_model.goto_functions.function_map)
   {
-    Forall_goto_program_instructions(i_it, f_it->second.body)
+    Forall_goto_program_instructions(i_it, f_it.second.body)
     {
       if(i_it->is_assert() && !i_it->guard.is_true())
       {
-        goto_programt::targett t_new=f_it->second.body.insert_after(i_it);
-        t_new->make_assumption(i_it->guard);
-        f_it->second.body.compute_location_numbers();
-        f_it->second.body.compute_target_numbers();
-        f_it->second.body.compute_incoming_edges();
+        f_it.second.body.insert_after(
+          i_it,
+          goto_programt::make_assumption(i_it->guard, i_it->source_location));
+        f_it.second.body.compute_location_numbers();
+        f_it.second.body.compute_target_numbers();
+        f_it.second.body.compute_incoming_edges();
       }
     }
   }
@@ -299,9 +305,9 @@ void twols_parse_optionst::add_assumptions_after_assertions(
 bool twols_parse_optionst::has_threads(const goto_modelt &goto_model)
 {
   namespacet ns(goto_model.symbol_table);
-  forall_goto_functions(f_it, goto_model.goto_functions)
+  for(const auto &f_it : goto_model.goto_functions.function_map)
   {
-    const goto_programt& program=f_it->second.body;
+    const goto_programt& program=f_it.second.body;
 
     forall_goto_program_instructions(i_it, program)
     {
@@ -309,7 +315,7 @@ bool twols_parse_optionst::has_threads(const goto_modelt &goto_model)
 
       if(instruction.is_function_call())
       {
-        const code_function_callt &fct=to_code_function_call(instruction.code);
+        const code_function_callt &fct=instruction.get_function_call();
         if(fct.function().id()==ID_symbol)
         {
           const symbol_exprt &fsym=to_symbol_expr(fct.function());
@@ -326,9 +332,9 @@ bool twols_parse_optionst::has_threads(const goto_modelt &goto_model)
 /// filter certain assertions for SV-COMP
 void twols_parse_optionst::filter_assertions(goto_modelt &goto_model)
 {
-  Forall_goto_functions(f_it, goto_model.goto_functions)
+  for(auto &f_it : goto_model.goto_functions.function_map)
   {
-    goto_programt &program=f_it->second.body;
+    goto_programt &program=f_it.second.body;
 
     Forall_goto_program_instructions(i_it, program)
     {
@@ -336,7 +342,7 @@ void twols_parse_optionst::filter_assertions(goto_modelt &goto_model)
         continue;
 
       if(i_it->source_location.get_comment()=="free argument is dynamic object")
-        i_it->make_skip();
+        i_it->turn_into_skip();
     }
   }
 }
@@ -344,9 +350,9 @@ void twols_parse_optionst::filter_assertions(goto_modelt &goto_model)
 /// insert skip at jump targets if they are goto, assume or assert instructions
 void twols_parse_optionst::split_loopheads(goto_modelt &goto_model)
 {
-  Forall_goto_functions(f_it, goto_model.goto_functions)
+  for(auto &f_it : goto_model.goto_functions.function_map)
   {
-    Forall_goto_program_instructions(i_it, f_it->second.body)
+    Forall_goto_program_instructions(i_it, f_it.second.body)
     {
       if(!i_it->is_backwards_goto())
         continue;
@@ -356,7 +362,7 @@ void twols_parse_optionst::split_loopheads(goto_modelt &goto_model)
 
       // inserts the skip
       goto_programt::targett new_loophead=
-        f_it->second.body.insert_before(
+        f_it.second.body.insert_before(
           loophead,
           goto_programt::make_skip(loophead->source_location));
 
@@ -379,14 +385,14 @@ void twols_parse_optionst::split_loopheads(goto_modelt &goto_model)
 /// SKIP instruction before.
 void twols_parse_optionst::remove_loops_in_entry(goto_modelt &goto_model)
 {
-  Forall_goto_functions(f_it, goto_model.goto_functions)
+  for(auto &f_it : goto_model.goto_functions.function_map)
   {
-    if(f_it->second.body_available() &&
-       f_it->second.body.instructions.begin()->is_target())
+    if(f_it.second.body_available() &&
+       f_it.second.body.instructions.begin()->is_target())
     {
-      auto insert_before=f_it->second.body.instructions.begin();
+      auto insert_before=f_it.second.body.instructions.begin();
       auto new_entry=
-        f_it->second.body.insert_before(
+        f_it.second.body.insert_before(
           insert_before,
           goto_programt::make_skip(insert_before->source_location));
     }
@@ -396,13 +402,13 @@ void twols_parse_optionst::remove_loops_in_entry(goto_modelt &goto_model)
 /// Create symbols for objects pointed by parameters of a function.
 void twols_parse_optionst::create_dynamic_objects(goto_modelt &goto_model)
 {
-  Forall_goto_functions(f_it, goto_model.goto_functions)
+  for(auto &f_it : goto_model.goto_functions.function_map)
   {
-    Forall_goto_program_instructions(i_it, f_it->second.body)
+    Forall_goto_program_instructions(i_it, f_it.second.body)
     {
       if(i_it->is_assign())
       {
-        code_assignt &code_assign=to_code_assign(i_it->code);
+        code_assignt &code_assign=to_code_assign(i_it->code_nonconst());
         add_dynamic_object_rec(code_assign.lhs(), goto_model.symbol_table);
         add_dynamic_object_rec(code_assign.rhs(), goto_model.symbol_table);
       }
@@ -455,13 +461,13 @@ void twols_parse_optionst::split_same_symbolic_object_assignments(
 {
   const namespacet ns(goto_model.symbol_table);
   unsigned counter=0;
-  Forall_goto_functions(f_it, goto_model.goto_functions)
+  for(auto &f_it : goto_model.goto_functions.function_map)
   {
-    Forall_goto_program_instructions(i_it, f_it->second.body)
+    Forall_goto_program_instructions(i_it, f_it.second.body)
     {
       if(i_it->is_assign())
       {
-        code_assignt &assign=to_code_assign(i_it->code);
+        code_assignt &assign=to_code_assign(i_it->code_nonconst());
         auto lhs_sym_deref=symbolic_dereference(assign.lhs(), ns);
         if((lhs_sym_deref.id()==ID_symbol || lhs_sym_deref.id()==ID_member)
            && has_symbolic_deref(lhs_sym_deref))
@@ -484,11 +490,11 @@ void twols_parse_optionst::split_same_symbolic_object_assignments(
 
             goto_model.symbol_table.add(tmp_symbol);
 
-            auto new_assign=f_it->second.body.insert_after(i_it);
-            new_assign->make_assignment();
-            new_assign->code=code_assignt(
-              assign.lhs(), tmp_symbol.symbol_expr());
-
+            f_it.second.body.insert_after(
+              i_it,
+              goto_programt::make_assignment(
+                code_assignt(assign.lhs(), tmp_symbol.symbol_expr()),
+                i_it->source_location));
             assign.lhs()=tmp_symbol.symbol_expr();
           }
         }
@@ -500,14 +506,14 @@ void twols_parse_optionst::split_same_symbolic_object_assignments(
 /// Remove dead backwards GOTO instructions (having false as guard)
 void twols_parse_optionst::remove_dead_goto(goto_modelt &goto_model)
 {
-  Forall_goto_functions(f_it, goto_model.goto_functions)
+  for(auto &f_it : goto_model.goto_functions.function_map)
   {
-    Forall_goto_program_instructions(i_it, f_it->second.body)
+    Forall_goto_program_instructions(i_it, f_it.second.body)
     {
       if(i_it->is_backwards_goto())
       {
         if(i_it->guard.is_false())
-          i_it->make_skip();
+          i_it->turn_into_skip();
       }
     }
   }
@@ -561,7 +567,7 @@ void twols_parse_optionst::create_dynobj_instances(
   {
     if(it->is_assign())
     {
-      auto &assign=to_code_assign(it->code);
+      auto &assign=to_code_assign(it->code_nonconst());
       if(assign.rhs().get_bool("#malloc_result"))
       {
         exprt &rhs=assign.rhs();
@@ -635,19 +641,19 @@ std::map<symbol_exprt, size_t> twols_parse_optionst::split_dynamic_objects(
   const optionst &options)
 {
   std::map<symbol_exprt, size_t> dynobj_instances;
-  Forall_goto_functions(f_it, goto_model.goto_functions)
+  for(auto &f_it : goto_model.goto_functions.function_map)
   {
-    if(!f_it->second.body_available())
+    if(!f_it.second.body_available())
       continue;
     namespacet ns(goto_model.symbol_table);
-    ssa_value_ait value_analysis(f_it->first, f_it->second, ns, options);
+    ssa_value_ait value_analysis(f_it.first, f_it.second, ns, options);
     dynobj_instance_analysist do_inst(
-      f_it->first, f_it->second, ns, options, value_analysis);
+      f_it.first, f_it.second, ns, options, value_analysis);
 
     compute_dynobj_instances(
-      f_it->second.body, do_inst, dynobj_instances, ns);
+      f_it.second.body, do_inst, dynobj_instances, ns);
     create_dynobj_instances(
-      f_it->second.body, dynobj_instances, goto_model.symbol_table);
+      f_it.second.body, dynobj_instances, goto_model.symbol_table);
   }
   return dynobj_instances;
 }
@@ -655,13 +661,14 @@ std::map<symbol_exprt, size_t> twols_parse_optionst::split_dynamic_objects(
 /// Assert size of static arrays to be max 50000.
 void twols_parse_optionst::limit_array_bounds(goto_modelt &goto_model)
 {
-  Forall_goto_functions(f_it, goto_model.goto_functions)
+  for(auto &f_it : goto_model.goto_functions.function_map)
   {
-    Forall_goto_program_instructions(i_it, f_it->second.body)
+    Forall_goto_program_instructions(i_it, f_it.second.body)
     {
       if(i_it->is_decl())
       {
-        const exprt &symbol=to_code_decl(i_it->code).symbol();
+        const code_declt &code_decl=code_declt{i_it->decl_symbol()};
+        const exprt &symbol=code_decl.symbol();
         if(symbol.type().id()==ID_array)
         {
           auto &size_expr=to_array_type(symbol.type()).size();
@@ -683,9 +690,9 @@ void twols_parse_optionst::memory_assert_info(goto_modelt &goto_model)
   irep_idt file;
   irep_idt line;
 
-  Forall_goto_functions(f_it, goto_model.goto_functions)
+  for(auto &f_it : goto_model.goto_functions.function_map)
   {
-    Forall_goto_program_instructions(i_it, f_it->second.body)
+    Forall_goto_program_instructions(i_it, f_it.second.body)
     {
       if(!i_it->source_location.get_file().empty())
       {
@@ -701,10 +708,11 @@ void twols_parse_optionst::memory_assert_info(goto_modelt &goto_model)
         const auto &guard=i_it->guard;
         if(guard.id()==ID_equal)
         {
-          if(guard.op0().id()==ID_symbol)
+          const equal_exprt &equal=to_equal_expr(guard);
+          if(equal.op0().id()==ID_symbol)
           {
             const auto &id=id2string(
-              to_symbol_expr(guard.op0()).get_identifier());
+              to_symbol_expr(equal.op0()).get_identifier());
             if(id.find("__CPROVER_memory_leak")!=std::string::npos)
             {
               if(!file.empty())
@@ -733,14 +741,15 @@ void make_freed_ptr_comparison_nondet(
   if(cond.id()==ID_equal || cond.id()==ID_notequal || cond.id()==ID_le ||
      cond.id()==ID_lt || cond.id()==ID_ge || cond.id()==ID_gt)
   {
+    binary_exprt &bin=to_binary_expr(cond);
     // Check if both operands are either pointers or type-casted pointers
-    if(cond.op0().id()==ID_symbol && cond.op1().id()==ID_symbol &&
-       !is_cprover_symbol(cond.op0()) && !is_cprover_symbol(cond.op1()) &&
-       (cond.op0().type().id()==ID_pointer ||
-        typecasted_pointers.find(to_symbol_expr(cond.op0()).get_identifier())!=
+    if(bin.op0().id() == ID_symbol && bin.op1().id() == ID_symbol &&
+       !is_cprover_symbol(bin.op0()) && !is_cprover_symbol(bin.op1()) &&
+       (bin.op0().type().id() == ID_pointer ||
+        typecasted_pointers.find(to_symbol_expr(bin.op0()).get_identifier()) !=
         typecasted_pointers.end()) &&
-       (cond.op1().type().id()==ID_pointer ||
-        typecasted_pointers.find(to_symbol_expr(cond.op1()).get_identifier())!=
+       (bin.op1().type().id() == ID_pointer ||
+        typecasted_pointers.find(to_symbol_expr(bin.op1()).get_identifier()) !=
         typecasted_pointers.end()))
     {
       const symbolt &freed=goto_model.symbol_table.lookup_ref(
@@ -748,11 +757,11 @@ void make_freed_ptr_comparison_nondet(
 
       // LHS != __CPROVER_deallocated
       auto lhs_not_freed_cond=notequal_exprt(
-        typecast_exprt(cond.op0(), freed.type), freed.symbol_expr());
+        typecast_exprt(bin.op0(), freed.type), freed.symbol_expr());
 
       // RHS != __CPROVER_deallocated
       auto rhs_not_freed_cond=notequal_exprt(
-        typecast_exprt(cond.op1(), freed.type), freed.symbol_expr());
+        typecast_exprt(bin.op1(), freed.type), freed.symbol_expr());
 
       // XOR is implemented as ==
       cond=equal_exprt(
@@ -777,19 +786,19 @@ void make_freed_ptr_comparison_nondet(
 void twols_parse_optionst::handle_freed_ptr_compare(goto_modelt &goto_model)
 {
   std::set<irep_idt> typecasted_pointers;
-  Forall_goto_functions(f_it, goto_model.goto_functions)
+  for(auto &f_it : goto_model.goto_functions.function_map)
   {
-    Forall_goto_program_instructions(i_it, f_it->second.body)
+    Forall_goto_program_instructions(i_it, f_it.second.body)
     {
       if(i_it->is_goto() || i_it->is_assert())
       {
         auto &guard=i_it->guard;
         make_freed_ptr_comparison_nondet(
-          goto_model, f_it->second, i_it, guard, typecasted_pointers);
+          goto_model, f_it.second, i_it, guard, typecasted_pointers);
       }
       else if(i_it->is_assign())
       {
-        auto &assign=to_code_assign(i_it->code);
+        const code_assignt &assign=i_it->get_assign();
         // If a pointer is casted to a non-pointer type (probably an integer),
         // save the destination variable into typecasted_pointers
         if(assign.lhs().id()==ID_symbol &&
@@ -824,7 +833,7 @@ void twols_parse_optionst::assert_no_builtin_functions(goto_modelt &goto_model)
 
     if(i_it->is_assign())
     {
-      assert(i_it->code.op1().id()!=ID_popcount);
+      assert(i_it->get_code().op1().id()!=ID_popcount);
     }
   }
 }
@@ -833,13 +842,13 @@ void twols_parse_optionst::assert_no_builtin_functions(goto_modelt &goto_model)
 /// Must be called before inlining since it will lose the calls
 void twols_parse_optionst::assert_no_atexit(goto_modelt &goto_model)
 {
-  forall_goto_functions(f_it, goto_model.goto_functions)
+  for(const auto &f_it : goto_model.goto_functions.function_map)
   {
-    forall_goto_program_instructions(i_it, f_it->second.body)
+    forall_goto_program_instructions(i_it, f_it.second.body)
     {
       if(i_it->is_function_call())
       {
-        auto &call=to_code_function_call(i_it->code);
+        const auto &call=i_it->get_function_call();
         if(!(call.function().id()==ID_symbol))
           continue;
         auto &name=id2string(to_symbol_expr(call.function()).get_identifier());

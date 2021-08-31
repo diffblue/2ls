@@ -105,11 +105,11 @@ void summarizer_fw_contextst::inline_summaries(
             xmlt xml_arg("argument-range");
             xmlt xml_lower("lower_expression");
             xmlt xml_lower_value=
-              xml(precondition_call.operands()[i+1].op1(), SSA.ns);
+              xml(precondition_call.operands()[i+1].operands()[1], SSA.ns);
             xml_lower.new_element().swap(xml_lower_value);
             xmlt xml_upper("upper_expression");
             xmlt xml_upper_value=
-              xml(precondition_call.operands()[i].op1(), SSA.ns);
+              xml(precondition_call.operands()[i].operands()[1], SSA.ns);
             xml_upper.new_element().swap(xml_upper_value);
             xml_arg.new_element().swap(xml_lower);
             xml_arg.new_element().swap(xml_upper);

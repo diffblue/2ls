@@ -179,7 +179,7 @@ void dynamic_cfgt::build_cfg(
 /// extracts assumption from invariant
 void dynamic_cfgt::build_from_invariant(
   const unwindable_local_SSAt &ssa,
-  const exprt &invariant,
+  const implies_exprt &invariant,
   assumptionst &assumptions)
 {
   dynamic_cfg_idt id;
@@ -189,9 +189,9 @@ void dynamic_cfgt::build_from_invariant(
       id.pc,
       id.iteration_stack);
   else if(invariant.op0().id()==ID_and &&
-          invariant.op0().op0().id()==ID_symbol)
+          to_and_expr(invariant.op0()).op0().id()==ID_symbol)
     ssa.get_full_ssa_name(
-      to_symbol_expr(invariant.op0().op0()),
+      to_symbol_expr(to_and_expr(invariant.op0()).op0()),
       id.pc,
       id.iteration_stack);
   else
@@ -235,7 +235,7 @@ void dynamic_cfgt::build_from_invariants(
   // expected format /\_i g_i=> inv_i
   if(invariants.id()==ID_implies)
   {
-    build_from_invariant(ssa, invariants, assumptions);
+    build_from_invariant(ssa, to_implies_expr(invariants), assumptions);
   }
   else if(invariants.id()==ID_and)
   {

@@ -18,6 +18,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <algorithm>
 
 #include <util/pointer_offset_size.h>
+#include <util/pointer_expr.h>
 #include <util/arith_tools.h>
 
 #include "ssa_value_set.h"
@@ -26,19 +27,22 @@ Author: Daniel Kroening, kroening@kroening.com
 
 void ssa_value_domaint::transform(
   const irep_idt &function_from,
-  locationt from,
+  trace_ptrt trace_from,
   const irep_idt &function_to,
-  locationt to,
+  trace_ptrt trace_to,
   ai_baset &ai,
   const namespacet &ns)
 {
+  locationt from{trace_from->current_location()};
+  locationt to{trace_to->current_location()};
+
   if(has_values.is_false())
     return;
   competition_mode=static_cast<ssa_value_ait &>(ai).options
     .get_bool_option("competition-mode");
   if(from->is_assign())
   {
-    const code_assignt &assignment=to_code_assign(from->code);
+    const code_assignt &assignment=from->get_assign();
     exprt lhs_deref=dereference(
       assignment.lhs(), *this, "", ns, competition_mode);
     exprt rhs_deref=dereference(
@@ -53,13 +57,12 @@ void ssa_value_domaint::transform(
   }
   else if(from->is_decl())
   {
-    const code_declt &code_decl=to_code_decl(from->code);
+    const code_declt &code_decl=code_declt{from->decl_symbol()};
     assign_lhs_rec(code_decl.symbol(), nil_exprt(), ns);
   }
   else if(from->is_function_call())
   {
-    const code_function_callt &code_function_call=
-      to_code_function_call(from->code);
+    const code_function_callt &code_function_call=from->get_function_call();
     const irep_idt &fname=to_symbol_expr(
       code_function_call.function()).get_identifier();
 
@@ -121,10 +124,9 @@ void ssa_value_domaint::transform(
     }
 
     // the assignment of return value might be in next instruction
-    if(to->is_assign() && to_code_assign(to->code).rhs().id()==ID_symbol)
+    if(to->is_assign() && to->get_assign().rhs().id()==ID_symbol)
     {
-      const symbol_exprt &return_value=to_symbol_expr(
-        to_code_assign(to->code).rhs());
+      const symbol_exprt &return_value=to_symbol_expr(to->get_assign().rhs());
       if(return_value.type().id()==ID_pointer &&
          return_value.get_identifier()==id2string(fname)+"#return_value")
       {
@@ -145,8 +147,7 @@ void ssa_value_domaint::transform(
   }
   else if(from->is_dead())
   {
-    const code_deadt &code_dead=to_code_dead(from->code);
-    assign_lhs_rec(code_dead.symbol(), nil_exprt(), ns);
+    assign_lhs_rec(from->dead_symbol(), nil_exprt(), ns);
   }
 }
 
@@ -331,6 +332,7 @@ void ssa_value_domaint::assign_rhs_rec(
   else if(rhs.id()==ID_minus)
   {
     assert(rhs.operands().size()==2);
+    minus_exprt minus_expr=to_minus_expr(rhs);
     if(rhs.type().id()==ID_pointer)
     {
       if(auto maybe_pointer_offset=
@@ -342,12 +344,12 @@ void ssa_value_domaint::assign_rhs_rec(
         unsigned a=merge_alignment(
           numeric_cast_v<unsigned>(pointer_offset),
           alignment);
-        assign_rhs_rec(dest, rhs.op0(), ns, true, a);
+        assign_rhs_rec(dest, minus_expr.op0(), ns, true, a);
 
         if(competition_mode)
           assert(
-            !(rhs.op1().type().id()==ID_unsignedbv ||
-              rhs.op1().type().id()==ID_signedbv));
+            !(minus_expr.op1().type().id()==ID_unsignedbv ||
+              minus_expr.op1().type().id()==ID_signedbv));
       }
     }
   }
@@ -355,7 +357,7 @@ void ssa_value_domaint::assign_rhs_rec(
   {
     // not yet removed
     // if there is an array inside a struct referenced by pointer
-    assign_rhs_rec(dest, rhs.op0(), ns, true, 1);
+    assign_rhs_rec(dest, to_dereference_expr(rhs).op(), ns, true, 1);
   }
   else
   {
@@ -545,9 +547,11 @@ bool ssa_value_domaint::valuest::merge(
 /// \return Return true if "this" has changed.
 bool ssa_value_domaint::merge(
   const ssa_value_domaint &other,
-  locationt from,
-  locationt to)
+  trace_ptrt trace_from,
+  trace_ptrt trace_to)
 {
+  locationt from{trace_from->current_location()};
+
   value_mapt::iterator v_it=value_map.begin();
   const value_mapt &new_value_map=other.value_map;
   bool result=has_values.is_false() && !other.has_values.is_false();
@@ -627,13 +631,16 @@ void ssa_value_ait::initialize(
 
   // Initialize value sets for pointer parameters
 
-  if(!goto_function.type.parameters().empty())
+  auto function_symbol=ns.lookup(function_id);
+  const code_typet::parameterst params=
+    to_code_type(function_symbol.type).parameters();
+  if(!params.empty())
   {
     auto entry_s=entry_state(goto_function.body);
     ssa_value_domaint &entry=dynamic_cast<ssa_value_domaint &>(
       get_state(entry_s));
 
-    for(auto &param : goto_function.type.parameters())
+    for(auto &param : params)
     {
       const symbol_exprt param_expr(param.get_identifier(), param.type());
       assign_ptr_param(param_expr, entry);

@@ -120,7 +120,7 @@ std::vector<domaint::guard_invariant> simple_domaint::get_guards_and_invariants(
     domaint::guard_invariant pair;
     auto row_exprt=simple_value.get_row_expr(row, templ[row]);
     exprt guard=pair.first=templ[row].guards.pre_guard;
-    pair.first=guard.op0();
+    pair.first=to_binary_expr(guard).op0();
     pair.second=row_exprt;
     invariants.push_back(pair);
   }

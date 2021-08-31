@@ -526,7 +526,7 @@ void ssa_local_unwindert::add_hoisted_assertions(loopt &loop, bool is_last)
        && is_kinduction && !it->second.assertions.empty()
 #ifdef COMPETITION
        && !(it->first->guard.id()==ID_not &&
-            it->first->guard.op0().id()==ID_overflow_shl))
+            to_not_expr(it->first->guard).op().id()==ID_overflow_shl))
 #endif
     {
       exprt e=disjunction(it->second.exit_conditions);

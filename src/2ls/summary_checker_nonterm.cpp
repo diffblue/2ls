@@ -387,11 +387,13 @@ void summary_checker_nontermt::check_properties_linear(
               it!=first_linearity_check.end();
               ++it)
           {
-            exprt ex=solver.get(it->op1().op1());
+            equal_exprt &equal=to_equal_expr(*it);
+            plus_exprt &plus=to_plus_expr(equal.op1());
+            exprt ex=solver.get(plus.op1());
             second_linearity_check.push_back(
               and_exprt(
                 *it,
-                not_exprt(equal_exprt(to_constant_expr(ex), it->op1().op1()))));
+                not_exprt(equal_exprt(to_constant_expr(ex), plus.op1()))));
           }
 
           solver.pop_context();

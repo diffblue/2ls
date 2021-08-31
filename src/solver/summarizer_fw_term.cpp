@@ -297,7 +297,7 @@ threevalt summarizer_fw_termt::check_termination_argument(exprt expr)
         result=UNKNOWN;
       if(it->id()==ID_implies)
       {
-        if(it->op1().is_true())
+        if(to_implies_expr(*it).op1().is_true())
           result=UNKNOWN;
       }
     }
@@ -307,7 +307,7 @@ threevalt summarizer_fw_termt::check_termination_argument(exprt expr)
   {
     if(expr.id()==ID_implies)
     {
-      if(expr.op1().is_true())
+      if(to_implies_expr(expr).op1().is_true())
         return UNKNOWN;
     }
     else

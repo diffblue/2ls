@@ -90,7 +90,7 @@ public:
     typedef std::vector<exprt> assertionst;
     assertionst assertions;
 
-    typedef std::vector<function_application_exprt> function_callst;
+    typedef std::vector<code_function_callt> function_callst;
     function_callst function_calls;
 
     exprt enabling_expr; // for incremental unwinding

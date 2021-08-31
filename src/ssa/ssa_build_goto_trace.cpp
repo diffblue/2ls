@@ -9,11 +9,13 @@ Author: Daniel Kroening, Peter Schrammel
 /// \file
 /// Traces of GOTO Programs for SSA Models
 
+#include <util/pointer_expr.h>
 #include <util/simplify_expr.h>
 #include <util/std_expr.h>
 #include <util/cprover_prefix.h>
 #include <util/prefix.h>
 #include <util/find_symbols.h>
+#include <util/ssa_expr.h>
 
 #include "ssa_build_goto_trace.h"
 
@@ -36,8 +38,9 @@ exprt ssa_build_goto_tracet::finalize_lhs(const exprt &src)
     exprt tmp3=prop_conv.get(tmp2);
     exprt tmp4=tmp3;
     if(tmp4.id()==ID_constant && tmp4.type().id()==ID_pointer &&
-       tmp4.operands().size()==1 && tmp4.op0().id()==ID_address_of)
-      tmp4=to_address_of_expr(tmp4.op0()).object();
+       tmp4.operands().size()==1 &&
+       to_unary_expr(tmp4).op().id()==ID_address_of)
+      tmp4=to_address_of_expr(to_unary_expr(tmp4).op()).object();
     // TODO: investigate: produces nil sometimes
     return tmp4;
   }
@@ -95,7 +98,7 @@ bool ssa_build_goto_tracet::record_step(
   case START_THREAD:
   case END_THREAD:
   case END_FUNCTION:
-  case RETURN:
+  case SET_RETURN_VALUE:
   case FUNCTION_CALL:
   case THROW:
   case CATCH:
@@ -168,8 +171,7 @@ bool ssa_build_goto_tracet::record_step(
 
   case ASSIGN:
   {
-    const code_assignt &code_assign=
-      to_code_assign(current_pc->code);
+    const code_assignt &code_assign=current_pc->get_assign();
 
     exprt rhs_ssa=unwindable_local_SSA.read_rhs(code_assign.rhs(), current_pc);
     unwindable_local_SSA.rename(rhs_ssa, current_pc);

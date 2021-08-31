@@ -117,7 +117,7 @@ void cover_goals_extt::assignment()
     for(exprt::operandst::const_iterator l_it=loophead_selects.begin();
         l_it!=loophead_selects.end(); l_it++)
     {
-      if(solver.get(l_it->op0()).is_true())
+      if(solver.get(to_not_expr(*l_it).op()).is_true())
       {
         invariants_involved=true;
         break;

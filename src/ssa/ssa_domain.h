@@ -79,11 +79,11 @@ public:
 
   virtual void transform(
     const irep_idt &,
-    locationt from,
+    trace_ptrt trace_from,
     const irep_idt &,
-    locationt to,
+    trace_ptrt trace_to,
     ai_baset &ai,
-    const namespacet &ns);
+    const namespacet &ns) override;
 
   virtual void output(
     std::ostream &out,
@@ -92,8 +92,8 @@ public:
 
   bool merge(
     const ssa_domaint &b,
-    locationt from,
-    locationt to);
+    trace_ptrt trace_from,
+    trace_ptrt trace_to);
 
   void make_bottom() override
   {

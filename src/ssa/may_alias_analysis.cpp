@@ -13,15 +13,17 @@ Author: Viktor Malik, imalik@fit.vutbr.cz
 
 void may_alias_domaint::transform(
   const irep_idt &from_function,
-  ai_domain_baset::locationt from,
+  trace_ptrt trace_from,
   const irep_idt &to_function,
-  ai_domain_baset::locationt to,
+  trace_ptrt trace_to,
   ai_baset &ai,
   const namespacet &ns)
 {
+  locationt from{trace_from->current_location()};
+
   if(from->is_assign())
   {
-    const code_assignt &code_assign=to_code_assign(from->code);
+    const code_assignt &code_assign=from->get_assign();
 
     const exprt lhs_deref=dereference(code_assign.lhs(), ns);
     const exprt rhs_deref=dereference(code_assign.rhs(), ns);
@@ -34,8 +36,8 @@ void may_alias_domaint::transform(
 
 bool may_alias_domaint::merge(
   const may_alias_domaint &other,
-  ai_domain_baset::locationt from,
-  ai_domain_baset::locationt to)
+  trace_ptrt trace_from,
+  trace_ptrt trace_to)
 {
   bool changed=has_values.is_false() && !other.has_values.is_false();
 
