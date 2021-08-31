@@ -18,8 +18,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/prefix.h>
 #include <util/expr_util.h>
-#include <util/decision_procedure.h>
 #include <util/byte_operators.h>
+#include <solvers/decision_procedure.h>
 
 #include <goto-programs/adjust_float_expressions.h>
 
@@ -83,7 +83,7 @@ void local_SSAt::get_entry_exit_vars()
   // get globals out (includes return value)
   goto_programt::const_targett
     last=goto_function.body.instructions.end(); last--;
-  get_globals(last, globals_out, true, true, last->function);
+  get_globals(last, globals_out, true, true, function_identifier);
 }
 
 void local_SSAt::get_globals(

@@ -1,6 +1,17 @@
-CORE
+KNOWNBUG
 main.c
 --preconditions
 ^EXIT=5$
 ^SIGNAL=0$
 \[__CPROVER__start\]: !\(argc' <= 1 && -\(\(signed __CPROVER_bitvector\[33\]\)argc'\) <= -1\)
+--
+--
+CBMC 5.12 introduced significant changes to solvers and this test failure
+seems to be one of its consequences. The formulae pushed into the solver
+seem to be identical to the previous 2LS version, however the solver in
+SSA analyzer then throws UNSAT on the first iteration when doing
+backward analysis (the invariants up until that point are correct)
+resulting in no improvements done to the template.
+
+This problem will require further investigation once the CBMC rebase
+is complete

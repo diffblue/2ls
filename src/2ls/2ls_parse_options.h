@@ -16,8 +16,6 @@ Author: Daniel Kroening, Peter Schrammel
 #include <util/parse_options.h>
 #include <util/replace_symbol.h>
 
-#include <langapi/language_ui.h>
-
 #include <analyses/goto_check.h>
 #include <ssa/dynobj_instance_analysis.h>
 
@@ -104,7 +102,8 @@ protected:
   void report_properties(
     const optionst &options,
     const goto_modelt &,
-    const summary_checker_baset::property_mapt &);
+    const propertiest &,
+    const tracest &traces);
 
   void show_counterexample(
     const goto_modelt &,

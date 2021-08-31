@@ -29,7 +29,8 @@ public:
     fname(_fname),
     SSA(_SSA),
     is_kinduction(_is_kinduction),
-    is_bmc(_is_bmc)
+    is_bmc(_is_bmc),
+    current_enabling_expr(bool_typet())
   {
   }
 

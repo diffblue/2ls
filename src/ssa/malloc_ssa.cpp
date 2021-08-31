@@ -23,7 +23,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "malloc_ssa.h"
 
-inline static typet c_sizeof_type_rec(const exprt &expr)
+inline static optionalt<typet> c_sizeof_type_rec(const exprt &expr)
 {
   const irept &sizeof_type=expr.find(ID_C_c_sizeof_type);
 
@@ -35,13 +35,11 @@ inline static typet c_sizeof_type_rec(const exprt &expr)
   {
     forall_operands(it, expr)
     {
-      typet t=c_sizeof_type_rec(*it);
-      if(t.is_not_nil())
-        return t;
+      if(auto maybe_t=c_sizeof_type_rec(*it))
+        return maybe_t;
     }
   }
-
-  return nil_typet();
+  return {};
 }
 
 /// Create new dynamic object, insert it into the symbol table and return its
@@ -68,9 +66,10 @@ exprt create_dynamic_object(
   if(type.id()==ID_array)
   {
     object_type=value_symbol.type.subtype();
-    index_exprt index_expr(value_symbol.type.subtype());
-    index_expr.array()=value_symbol.symbol_expr();
-    index_expr.index()=from_integer(0, index_type());
+    index_exprt index_expr(
+      value_symbol.symbol_expr(),
+      from_integer(0, index_type()),
+      value_symbol.type.subtype());
     object=index_expr;
   }
   else
@@ -136,7 +135,7 @@ exprt malloc_ssa(
 
   namespacet ns(symbol_table);
   exprt size=code.op0();
-  typet object_type=nil_typet();
+  optionalt<typet> object_type;
 
   {
     // special treatment for sizeof(T)*x
@@ -144,43 +143,46 @@ exprt malloc_ssa(
        size.operands().size()==2 &&
        size.op0().find(ID_C_c_sizeof_type).is_not_nil())
     {
-      object_type=array_typet(
-        c_sizeof_type_rec(size.op0()),
-        size.op1());
+      if(auto maybe_type=c_sizeof_type_rec(size.op0()))
+        object_type=array_typet(
+          *maybe_type,
+          size.op1());
     }
     else if(size.id()==ID_mult &&
             size.operands().size()==2 &&
             size.op1().find(ID_C_c_sizeof_type).is_not_nil())
     {
-      object_type=array_typet(
-        c_sizeof_type_rec(size.op1()),
-        size.op0());
+      if(auto maybe_type=c_sizeof_type_rec(size.op1()))
+        object_type=array_typet(
+          *maybe_type,
+          size.op0());
     }
     else
     {
-      typet tmp_type=c_sizeof_type_rec(size);
+      auto maybe_type=c_sizeof_type_rec(size);
 
-      if(tmp_type.is_not_nil())
+      if(maybe_type)
       {
         // Did the size get multiplied?
-        if(auto maybe_elem_size=pointer_offset_size(tmp_type, ns))
+        if(auto maybe_elem_size=pointer_offset_size(*maybe_type, ns))
         {
           mp_integer alloc_size;
           mp_integer elem_size=*maybe_elem_size;
-          if(elem_size<0 || to_integer(size, alloc_size))
+          if(elem_size<0 || (size.is_constant() &&
+            to_integer(to_constant_expr(size), alloc_size)))
           {
           }
           else
           {
             if(alloc_size==elem_size)
-              object_type=tmp_type;
+              object_type=*maybe_type;
             else
             {
               mp_integer elements=alloc_size/elem_size;
 
               if(elements*elem_size==alloc_size)
                 object_type=array_typet(
-                  tmp_type,
+                  *maybe_type,
                   from_integer(elements, size.type()));
             }
           }
@@ -189,7 +191,7 @@ exprt malloc_ssa(
     }
 
     // the fall-back is to produce a byte-array
-    if(object_type.is_nil())
+    if(!object_type)
       object_type=array_typet(unsigned_char_type(), size);
   }
 
@@ -197,17 +199,17 @@ exprt malloc_ssa(
   std::cout << "OBJECT_TYPE: " << from_type(ns, "", object_type) << std::endl;
 #endif
 
-  auto pointers=collect_pointer_vars(symbol_table, object_type);
+  auto pointers=collect_pointer_vars(symbol_table, *object_type);
 
   exprt object=create_dynamic_object(
-    suffix, object_type, symbol_table, is_concrete);
+    suffix, *object_type, symbol_table, is_concrete);
   if(object.type()!=code.type())
     object=typecast_exprt(object, code.type());
   exprt result;
   if(!is_concrete && alloc_concrete)
   {
     exprt concrete_object=create_dynamic_object(
-      suffix+"$co", object_type, symbol_table, true);
+      suffix+"$co", *object_type, symbol_table, true);
 
     // Create nondet symbol
     symbolt nondet_symbol;
@@ -329,10 +331,8 @@ bool replace_malloc(
             namespacet ns(goto_model.symbol_table);
             goto_functionst::goto_functiont function_copy;
             function_copy.copy_from(f_it->second);
-            constant_propagator_ait const_propagator(
-              f_it->first,
-              function_copy,
-              ns);
+            constant_propagator_ait const_propagator(function_copy);
+            const_propagator(f_it->first, function_copy, ns);
             forall_goto_program_instructions(copy_i_it, function_copy.body)
             {
               if(copy_i_it->location_number==i_it->location_number)

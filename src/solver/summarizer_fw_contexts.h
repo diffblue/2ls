@@ -14,7 +14,7 @@ Author: Peter Schrammel
 
 #include <util/message.h>
 #include <util/options.h>
-#include <langapi/language_ui.h>
+#include <util/ui_message.h>
 
 #include <ssa/ssa_inliner.h>
 #include <ssa/ssa_unwinder.h>
@@ -48,7 +48,7 @@ public:
   virtual void summarize();
 
  protected:
-  language_uit::uit ui; // use gui format
+  ui_message_handlert::uit ui; // use gui format
   std::set<irep_idt> excluded_functions;
 
   virtual void inline_summaries(

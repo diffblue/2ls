@@ -59,7 +59,8 @@ void twols_parse_optionst::propagate_constants(goto_modelt &goto_model)
   namespacet ns(goto_model.symbol_table);
   Forall_goto_functions(f_it, goto_model.goto_functions)
   {
-    constant_propagator_ait(f_it->first, f_it->second, ns);
+    constant_propagator_ait const_propagator(f_it->second);
+    const_propagator(f_it->first, f_it->second, ns);
   }
 }
 
@@ -84,7 +85,9 @@ void twols_parse_optionst::nondet_locals(goto_modelt &goto_model)
            to_symbol_expr(to_code_assign(next->code).lhs())==decl.symbol())
           continue;
 
-        side_effect_expr_nondett nondet(decl.symbol().type());
+        side_effect_expr_nondett nondet(
+          decl.symbol().type(),
+          i_it->source_location);
         goto_programt::targett t=f_it->second.body.insert_after(i_it);
         t->make_assignment();
         code_assignt c(decl.symbol(), nondet);
@@ -112,13 +115,22 @@ bool twols_parse_optionst::unwind_goto_into_loop(
     loopst loops;
     Forall_goto_program_instructions(i_it, body)
     {
-      if(i_it->is_backwards_goto())
+      bool is_loop_head=false;
+      goto_programt::targett loop_exit;
+      for(auto edge : i_it->incoming_edges)
       {
-        goto_programt::targett loop_head=i_it->get_target();
-        goto_programt::targett loop_exit=i_it;
+        if(edge->location_number>i_it->location_number)
+        {
+          is_loop_head=true;
+          loop_exit=edge;
+        }
+      }
+
+      if(is_loop_head)
+      {
         bool has_goto_into_loop=false;
 
-        goto_programt::targett it=loop_head;
+        goto_programt::targett it=i_it;
         if(it!=loop_exit)
           it++;
         for(; it!=loop_exit; it++)
@@ -128,7 +140,7 @@ bool twols_parse_optionst::unwind_goto_into_loop(
                s_it!=it->incoming_edges.end(); ++s_it)
           {
             if((*s_it)->is_goto() &&
-               (*s_it)->location_number<loop_head->location_number)
+               (*s_it)->location_number<i_it->location_number)
             {
               has_goto_into_loop=true;
               result=true;
@@ -141,7 +153,7 @@ bool twols_parse_optionst::unwind_goto_into_loop(
         if(has_goto_into_loop)
         {
           status() << "Unwinding jump into loop" << eom;
-          loops.push_back(loopst::value_type(++loop_exit, loop_head));
+          loops.push_back(loopst::value_type(++loop_exit, i_it));
         }
       }
     }
@@ -152,6 +164,7 @@ bool twols_parse_optionst::unwind_goto_into_loop(
 
       goto_unwindt goto_unwind;
       goto_unwind.unwind(
+        f_it->first,
         body,
         l_it->second,
         l_it->first,
@@ -343,10 +356,9 @@ void twols_parse_optionst::split_loopheads(goto_modelt &goto_model)
 
       // inserts the skip
       goto_programt::targett new_loophead=
-        f_it->second.body.insert_before(loophead);
-      new_loophead->make_skip();
-      new_loophead->source_location=loophead->source_location;
-      new_loophead->function=i_it->function;
+        f_it->second.body.insert_before(
+          loophead,
+          goto_programt::make_skip(loophead->source_location));
 
       // update jumps to loophead
       for(std::set<goto_programt::targett>::iterator j_it=
@@ -372,10 +384,11 @@ void twols_parse_optionst::remove_loops_in_entry(goto_modelt &goto_model)
     if(f_it->second.body_available() &&
        f_it->second.body.instructions.begin()->is_target())
     {
+      auto insert_before=f_it->second.body.instructions.begin();
       auto new_entry=
-        f_it->second.body.insert_before(f_it->second.body.instructions.begin());
-      new_entry->function=f_it->first;
-      new_entry->make_skip();
+        f_it->second.body.insert_before(
+          insert_before,
+          goto_programt::make_skip(insert_before->source_location));
     }
   }
 }
@@ -418,7 +431,7 @@ void twols_parse_optionst::add_dynamic_object_rec(
       if(pointed_type.id()==ID_symbol)
       {
         const symbolt type_symbol=symbol_table.lookup_ref(
-          to_symbol_type(pointed_type).get_identifier());
+          to_struct_tag_type(pointed_type).get_identifier());
         object_symbol.type=type_symbol.type;
       }
       else
@@ -747,10 +760,10 @@ void make_freed_ptr_comparison_nondet(
         and_exprt(
           or_exprt(
             lhs_not_freed_cond,
-            side_effect_expr_nondett(bool_typet())),
+            side_effect_expr_nondett(bool_typet(), loc->source_location)),
           or_exprt(
             rhs_not_freed_cond,
-            side_effect_expr_nondett(bool_typet()))));
+            side_effect_expr_nondett(bool_typet(), loc->source_location))));
     }
   }
   else if(cond.id()==ID_not)

@@ -204,64 +204,6 @@ void ssa_inlinert::replace(
   }
 }
 
-/// replaces inlines functions if SSA is available in functions and does nothing
-/// otherwise
-void ssa_inlinert::replace(
-  local_SSAt &SSA,
-  const ssa_dbt &ssa_db,
-  bool recursive, bool rename)
-{
-  for(local_SSAt::nodest::iterator n_it=SSA.nodes.begin();
-      n_it!=SSA.nodes.end(); n_it++)
-  {
-    for(local_SSAt::nodet::function_callst::iterator
-          f_it=n_it->function_calls.begin();
-        f_it!=n_it->function_calls.end(); f_it++)
-    {
-      assert(f_it->function().id()==ID_symbol); // no function pointers
-      irep_idt fname=to_symbol_expr(f_it->function()).get_identifier();
-
-      if(ssa_db.exists(fname))
-      {
-        status() << "Inlining function " << fname << eom;
-        local_SSAt fSSA=ssa_db.get(fname); // copy
-
-        if(rename)
-        {
-          // getting globals at call site
-          local_SSAt::var_sett cs_globals_in, cs_globals_out;
-          goto_programt::const_targett loc=n_it->location;
-          SSA.get_globals(loc, cs_globals_in);
-          SSA.get_globals(loc, cs_globals_out, false);
-
-          if(recursive)
-          {
-            replace(fSSA, ssa_db, true);
-          }
-
-          // replace
-          replace(SSA.nodes, n_it, f_it, cs_globals_in, cs_globals_out, fSSA);
-        }
-        else // just add to nodes
-        {
-          for(local_SSAt::nodest::const_iterator fn_it=fSSA.nodes.begin();
-              fn_it!=fSSA.nodes.end(); fn_it++)
-          {
-            debug() << "new node: "; fn_it->output(debug(), fSSA.ns);
-            debug() << eom;
-
-            new_nodes.push_back(*fn_it);
-          }
-        }
-      }
-      else
-        debug() << "No body available for function " << fname << eom;
-      commit_node(n_it);
-    }
-    commit_nodes(SSA.nodes, n_it);
-  }
-}
-
 /// inline summary
 void ssa_inlinert::replace(
   local_SSAt &SSA,
@@ -370,9 +312,9 @@ exprt ssa_inlinert::get_replace_globals_in(
     {
       symbol_exprt lhs=*it; // copy
       rename(lhs);
-      symbol_exprt rhs;
-      if(find_corresponding_symbol(*it, globals, rhs))
+      if(auto maybe_rhs=find_corresponding_symbol(*it, globals))
       {
+        symbol_exprt rhs=*maybe_rhs;
         debug() << "binding: " << lhs.get_identifier() << " == "
                 << rhs.get_identifier() << eom;
         c.push_back(equal_exprt(lhs, rhs));
@@ -397,9 +339,9 @@ void ssa_inlinert::replace_globals_in(
   {
     symbol_exprt lhs=*it; // copy
     rename(lhs);
-    symbol_exprt rhs;
-    if(find_corresponding_symbol(*it, globals, rhs))
+    if(auto maybe_rhs=find_corresponding_symbol(*it, globals))
     {
+      symbol_exprt rhs=*maybe_rhs;
       debug() << "binding: " << lhs.get_identifier() << "=="
               << rhs.get_identifier() << eom;
       new_equs.push_back(equal_exprt(lhs, rhs));
@@ -590,25 +532,25 @@ exprt ssa_inlinert::get_replace_globals_out(
   for(summaryt::var_sett::const_iterator it=cs_globals_out.begin();
       it!=cs_globals_out.end(); it++)
   {
-    symbol_exprt lhs;
     const exprt rhs=*it;
-
 
     if(is_pointed(*it) ||
        id2string(it->get_identifier()).find("dynamic_object$")!=
        std::string::npos)
     {
-      if(!cs_heap_covered(*it) &&
-         !find_corresponding_symbol(*it, summary.globals_out, lhs))
+      auto maybe_lhs=find_corresponding_symbol(*it, summary.globals_out);
+      if(!cs_heap_covered(*it) && !maybe_lhs)
       {
-        assert(find_corresponding_symbol(*it, cs_globals_in, lhs));
-        c.push_back(equal_exprt(lhs, rhs));
+        auto new_lhs=find_corresponding_symbol(*it, cs_globals_in);
+        assert(new_lhs);
+        c.push_back(equal_exprt(*new_lhs, rhs));
       }
     }
     else
     {
-      if(find_corresponding_symbol(*it, summary.globals_out, lhs))
+      if(auto maybe_lhs=find_corresponding_symbol(*it, summary.globals_out))
       {
+        symbol_exprt lhs=*maybe_lhs;
         // Bind function return value
         rename(lhs);
         c.push_back(equal_exprt(lhs, rhs));
@@ -691,11 +633,13 @@ exprt ssa_inlinert::get_replace_globals_out(
       }
       else
       {
-        if(find_corresponding_symbol(*it, summary.globals_out, lhs))
-          rename(lhs);
+        auto lhs=find_corresponding_symbol(*it, summary.globals_out);
+        if(lhs)
+          rename(*lhs);
         else
-          assert(find_corresponding_symbol(*it, cs_globals_in, lhs));
-        c.push_back(equal_exprt(lhs, rhs));
+          lhs=find_corresponding_symbol(*it, cs_globals_in);
+        assert(lhs);
+        c.push_back(equal_exprt(*lhs, rhs));
       }
     }
   }
@@ -713,12 +657,13 @@ void ssa_inlinert::replace_globals_out(
       it!=cs_globals_out.end(); it++)
   {
     symbol_exprt rhs=*it; // copy
-    symbol_exprt lhs;
-    if(find_corresponding_symbol(*it, globals_out, lhs))
-      rename(lhs);
+    auto maybe_lhs=find_corresponding_symbol(*it, globals_out);
+    if(maybe_lhs)
+      rename(*maybe_lhs);
     else
-      assert(find_corresponding_symbol(*it, cs_globals_in, lhs));
-    new_equs.push_back(equal_exprt(lhs, rhs));
+      maybe_lhs=find_corresponding_symbol(*it, cs_globals_in);
+    assert(maybe_lhs);
+    new_equs.push_back(equal_exprt(*maybe_lhs, rhs));
   }
 }
 
@@ -799,9 +744,8 @@ void ssa_inlinert::rename_to_caller(
   for(summaryt::var_sett::const_iterator it=globals_in.begin();
       it!=globals_in.end(); it++)
   {
-    symbol_exprt cg;
-    if(find_corresponding_symbol(*it, cs_globals_in, cg))
-      replace_map[*it]=cg;
+    if(auto maybe_cg=find_corresponding_symbol(*it, cs_globals_in))
+      replace_map[*it]=*maybe_cg;
     else
     {
 #if 0
@@ -850,9 +794,8 @@ void ssa_inlinert::rename_to_callee(
   for(summaryt::var_sett::const_iterator it=cs_globals_in.begin();
       it!=cs_globals_in.end(); it++)
   {
-    symbol_exprt cg;
-    if(find_corresponding_symbol(*it, globals_in, cg))
-      replace_map[*it]=cg;
+    if(auto maybe_cg=find_corresponding_symbol(*it, globals_in))
+      replace_map[*it]=*maybe_cg;
     else
     {
 #if 0
@@ -901,11 +844,9 @@ bool ssa_inlinert::commit_nodes(
   return false;
 }
 
-/// \return returns false if the symbol is not found
-bool ssa_inlinert::find_corresponding_symbol(
+optionalt<symbol_exprt> ssa_inlinert::find_corresponding_symbol(
   const symbol_exprt &s,
-  const local_SSAt::var_sett &globals,
-  symbol_exprt &s_found)
+  const local_SSAt::var_sett &globals)
 {
   const irep_idt &s_orig_id=get_original_identifier(s);
   for(local_SSAt::var_sett::const_iterator it=globals.begin();
@@ -917,11 +858,10 @@ bool ssa_inlinert::find_corresponding_symbol(
 #endif
     if(s_orig_id==get_original_identifier(*it))
     {
-      s_found=*it;
-      return true;
+      return *it;
     }
   }
-  return false;
+  return {};
 }
 
 /// TODO: this is a potential source of bugs. Better way to do that?
@@ -1047,8 +987,14 @@ exprt ssa_inlinert::param_out_transformer(
   else
   {
     symbol_exprt param_out=to_symbol_expr(param);
-    if(find_corresponding_symbol(to_symbol_expr(param), globals_out, param_out))
+    auto maybe_new=find_corresponding_symbol(
+      to_symbol_expr(param),
+      globals_out);
+    if(maybe_new)
+    {
+      param_out=*maybe_new;
       rename(param_out);
+    }
     return param_out;
   }
 }
@@ -1095,10 +1041,10 @@ exprt ssa_inlinert::param_out_member_transformer(
   symbol_exprt param_member(
     id2string(to_symbol_expr(param).get_identifier())+"."+
     id2string(component.get_name()), component.type());
-  symbol_exprt param_out;
-  assert(find_corresponding_symbol(param_member, globals_out, param_out));
-  rename(param_out);
-  return param_out;
+  auto param_out=find_corresponding_symbol(param_member, globals_out);
+  assert(param_out);
+  rename(*param_out);
+  return *param_out;
 }
 
 exprt ssa_inlinert::arg_out_member_transformer(

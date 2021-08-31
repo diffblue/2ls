@@ -13,6 +13,7 @@ Author: Viktor Malik
 #include <algorithm>
 #include <memory>
 #include <ssa/address_canonizer.h>
+#include <util/mathematical_types.h>
 
 /// Initialize abstract value. Clears value with empty value rows corresponding
 /// to template.

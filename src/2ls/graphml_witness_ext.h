@@ -30,11 +30,6 @@ public:
   void operator()(const summary_checker_baset &summary_checker);
 
 protected:
-  graphmlt::node_indext add_node(
-    std::map<unsigned,
-    unsigned> &loc_to_node,
-    goto_programt::const_targett it);
-
   void add_edge(
     const graphmlt::node_indext &from,
     const dynamic_cfg_nodet &from_cfg_node,
@@ -42,7 +37,8 @@ protected:
     const dynamic_cfg_nodet &to_cfg_node);
 
   graphmlt::node_indext add_node(
-    const dynamic_cfg_nodet &cfg_node);
+    const dynamic_cfg_nodet &cfg_node,
+    const irep_idt &function_identifier);
 };
 
 #endif // CPROVER_2LS_SUMMARIZER_GRAPHML_WITNESS_EXT_H

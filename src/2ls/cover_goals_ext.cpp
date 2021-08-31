@@ -130,14 +130,15 @@ void cover_goals_extt::assignment()
     for(goal_mapt::const_iterator it=goal_map.begin();
         it!=goal_map.end(); it++, g_it++)
     {
-      if(property_map[it->first].result==property_checkert::resultt::UNKNOWN &&
+      if((property_map.at(it->first).status==property_statust::UNKNOWN ||
+          property_map.at(it->first).status==property_statust::NOT_CHECKED) &&
          solver.l_get(g_it->condition).is_true())
       {
-        property_map[it->first].result=property_checkert::resultt::FAIL;
+        property_map.at(it->first).status=property_statust::FAIL;
         if(build_error_trace)
         {
           ssa_build_goto_tracet build_goto_trace(SSA, solver.get_solver());
-          build_goto_trace(property_map[it->first].error_trace);
+          build_goto_trace(traces[it->first]);
           if(!all_properties)
             break;
         }
@@ -159,14 +160,15 @@ void cover_goals_extt::assignment()
     for(goal_mapt::const_iterator it=goal_map.begin();
         it!=goal_map.end(); it++, g_it++)
     {
-      if(property_map[it->first].result==property_checkert::resultt::UNKNOWN &&
+      if((property_map.at(it->first).status==property_statust::UNKNOWN ||
+          property_map.at(it->first).status==property_statust::NOT_CHECKED) &&
          solver.l_get(g_it->condition).is_true())
       {
-        property_map[it->first].result=property_checkert::resultt::FAIL;
+        property_map.at(it->first).status=property_statust::FAIL;
         if(build_error_trace)
         {
           ssa_build_goto_tracet build_goto_trace(SSA, solver.get_solver());
-          build_goto_trace(property_map[it->first].error_trace);
+          build_goto_trace(traces[it->first]);
 
 #if 0
           show_raw_countermodel(

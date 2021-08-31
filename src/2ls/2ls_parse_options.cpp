@@ -69,7 +69,7 @@ Author: Daniel Kroening, Peter Schrammel
 #define FILTER_ASSERTIONS 1
 
 twols_parse_optionst::twols_parse_optionst(int argc, const char **argv):
-  parse_options_baset(TWOLS_OPTIONS, argc, argv),
+  parse_options_baset(TWOLS_OPTIONS, argc, argv, "2LS " TWOLS_VERSION),
   messaget(ui_message_handler),
   ui_message_handler(cmdline, "2LS " TWOLS_VERSION),
   recursion_detected(false),
@@ -630,34 +630,43 @@ int twols_parse_optionst::doit()
     // do actual analysis
     switch((*checker)(goto_model))
     {
-    case property_checkert::resultt::PASS:
+    case resultt::PASS:
       if(report_assertions)
-        report_properties(options, goto_model, checker->property_map);
+        report_properties(
+          options,
+          goto_model,
+          checker->property_map,
+          checker->traces);
       report_success();
       if(cmdline.isset("graphml-witness"))
         output_graphml_proof(options, goto_model, *checker);
       retval=0;
       break;
 
-    case property_checkert::resultt::FAIL:
+    case resultt::FAIL:
     {
       if(report_assertions)
-        report_properties(options, goto_model, checker->property_map);
+        report_properties(
+          options,
+          goto_model,
+          checker->property_map,
+          checker->traces);
 
       // validate trace
       bool trace_valid=false;
       for(const auto &p : checker->property_map)
       {
-        if(p.second.result!=property_checkert::resultt::FAIL)
+        if(p.second.status!=property_statust::FAIL)
           continue;
 
+        goto_tracet trace=checker->traces[p.first];
         if(options.get_bool_option("trace"))
-          show_counterexample(goto_model, p.second.error_trace);
+          show_counterexample(goto_model, trace);
 
         trace_valid=
-          !p.second.error_trace.steps.empty() &&
+          !trace.steps.empty() &&
           (options.get_bool_option("nontermination") ||
-           p.second.error_trace.steps.back().is_assert());
+           trace.steps.back().is_assert());
         break;
       }
 
@@ -678,9 +687,13 @@ int twols_parse_optionst::doit()
       retval=10;
       break;
     }
-    case property_checkert::resultt::UNKNOWN:
+    case resultt::UNKNOWN:
       if(report_assertions)
-        report_properties(options, goto_model, checker->property_map);
+        report_properties(
+          options,
+          goto_model,
+          checker->property_map,
+          checker->traces);
       retval=5;
       report_unknown();
       break;
@@ -693,6 +706,7 @@ int twols_parse_optionst::doit()
     {
       checker->instrument_and_output(
         goto_model,
+        ui_message_handler,
         ui_message_handler.get_verbosity());
     }
 
@@ -1128,10 +1142,7 @@ bool twols_parse_optionst::process_goto_program(
 
     if(cmdline.isset("show-properties"))
     {
-      show_properties(
-        goto_model,
-        get_message_handler(),
-        ui_message_handler.get_ui());
+      show_properties(goto_model, ui_message_handler);
       return true;
     }
 
@@ -1143,8 +1154,7 @@ bool twols_parse_optionst::process_goto_program(
     {
       show_goto_functions(
         goto_model,
-        get_message_handler(),
-        ui_message_handler.get_ui(),
+        ui_message_handler,
         false);
       return true;
     }
@@ -1179,9 +1189,10 @@ bool twols_parse_optionst::process_goto_program(
 void twols_parse_optionst::report_properties(
   const optionst &options,
   const goto_modelt &goto_model,
-  const property_checkert::property_mapt &property_map)
+  const propertiest &property_map,
+  const tracest &traces)
 {
-  for(property_checkert::property_mapt::const_iterator
+  for(propertiest::const_iterator
         it=property_map.begin();
       it!=property_map.end();
       it++)
@@ -1193,7 +1204,7 @@ void twols_parse_optionst::report_properties(
 #endif
 
     if(!options.get_bool_option("all-properties") &&
-       it->second.result!=property_checkert::resultt::FAIL)
+       it->second.status!=property_statust::FAIL)
       continue;
 
     if(ui_message_handler.get_ui()==ui_message_handlert::uit::XML_UI)
@@ -1202,27 +1213,27 @@ void twols_parse_optionst::report_properties(
       xml_result.set_attribute("property", id2string(it->first));
       xml_result.set_attribute(
         "status",
-        property_checkert::as_string(it->second.result));
+        as_string(it->second.status));
       std::cout << xml_result << "\n";
     }
     else
     {
       status() << "[" << it->first << "] "
-               << it->second.location->source_location.get_comment()
+               << it->second.pc->source_location.get_comment()
                << ": "
-               << property_checkert::as_string(it->second.result)
+               << as_string(it->second.status)
                << eom;
     }
 
     if(options.get_bool_option("trace") &&
-       it->second.result==property_checkert::resultt::FAIL)
-      show_counterexample(goto_model, it->second.error_trace);
+       it->second.status==property_statust::FAIL)
+      show_counterexample(goto_model, traces.at(it->first));
     if(cmdline.isset("json-cex") &&
-       it->second.result==property_checkert::resultt::FAIL)
+       it->second.status==property_statust::FAIL)
       output_json_cex(
         options,
         goto_model,
-        it->second.error_trace,
+        traces.at(it->first),
         id2string(it->first));
   }
 
@@ -1233,14 +1244,15 @@ void twols_parse_optionst::report_properties(
     unsigned failed=0;
     unsigned unknown=0;
 
-    for(property_checkert::property_mapt::const_iterator
+    for(propertiest::const_iterator
           it=property_map.begin();
         it!=property_map.end();
         it++)
     {
-      if(it->second.result==property_checkert::resultt::UNKNOWN)
+      if(it->second.status==property_statust::UNKNOWN ||
+         it->second.status==property_statust::NOT_CHECKED)
         unknown++;
-      if(it->second.result==property_checkert::resultt::FAIL)
+      if(it->second.status==property_statust::FAIL)
         failed++;
     }
 
@@ -1309,7 +1321,7 @@ void twols_parse_optionst::output_graphml_cex(
 {
   for(const auto &p : summary_checker.property_map)
   {
-    if(p.second.result!=property_checkert::resultt::FAIL)
+    if(p.second.status!=property_statust::FAIL)
       continue;
 
     const namespacet ns(goto_model.symbol_table);
@@ -1317,7 +1329,7 @@ void twols_parse_optionst::output_graphml_cex(
     if(!graphml.empty())
     {
       graphml_witnesst graphml_witness(ns);
-      graphml_witness(p.second.error_trace);
+      graphml_witness(summary_checker.traces.at(p.first));
 
       if(graphml=="-")
         write_graphml(graphml_witness.graph(), std::cout);

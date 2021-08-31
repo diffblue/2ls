@@ -37,7 +37,7 @@ public:
   /// Row value (parameter) is a constant
   struct row_valuet:constant_exprt
   {
-    row_valuet()=default;
+    row_valuet(): constant_exprt(false_exprt()) {}
     explicit row_valuet(const constant_exprt &value) : constant_exprt(value) {}
     using constant_exprt::operator=;
 

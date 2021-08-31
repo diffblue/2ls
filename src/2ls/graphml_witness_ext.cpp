@@ -57,7 +57,7 @@ void graphml_witness_extt::operator()(
       continue;
     }
 
-    const graphmlt::node_indext node=add_node(cfg[i]);
+    const graphmlt::node_indext node=add_node(cfg[i], function_name);
     index_map[i]=node;
   }
   for(std::size_t i=0; i<cfg.size(); ++i)
@@ -71,7 +71,8 @@ void graphml_witness_extt::operator()(
 }
 
 graphmlt::node_indext graphml_witness_extt::add_node(
-  const dynamic_cfg_nodet &cfg_node)
+  const dynamic_cfg_nodet &cfg_node,
+  const irep_idt &function_identifier)
 {
   const graphmlt::node_indext node=graphml.add_node();
   graphml[node].node_name=cfg_node.id.to_string();
@@ -81,7 +82,7 @@ graphmlt::node_indext graphml_witness_extt::add_node(
     std::ostringstream invs;
     invs << from_expr(ns, "", cfg_node.assumption);
     graphml[node].invariant=invs.str();
-    graphml[node].invariant_scope=id2string(cfg_node.id.pc->function);
+    graphml[node].invariant_scope=id2string(function_identifier);
   }
   return node;
 }

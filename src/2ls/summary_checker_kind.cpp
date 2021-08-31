@@ -11,14 +11,14 @@ Author: Peter Schrammel
 
 #include "summary_checker_kind.h"
 
-property_checkert::resultt summary_checker_kindt::operator()(
+resultt summary_checker_kindt::operator()(
   const goto_modelt &goto_model)
 {
   SSA_functions(goto_model, goto_model.symbol_table);
 
   ssa_unwinder.init(true, false);
 
-  property_checkert::resultt result=property_checkert::resultt::UNKNOWN;
+  resultt result=resultt::UNKNOWN;
   unsigned max_unwind=options.get_unsigned_int_option("unwind");
   unsigned give_up_invariants=
     options.get_unsigned_int_option("give-up-invariants");
@@ -38,21 +38,20 @@ property_checkert::resultt summary_checker_kindt::operator()(
     bool magic_limit_not_reached=
       unwind<give_up_invariants ||
       !options.get_bool_option("competition-mode");
-    if(result==property_checkert::resultt::UNKNOWN &&
-       !options.get_bool_option("havoc") &&
+    if(result==resultt::UNKNOWN && !options.get_bool_option("havoc") &&
        magic_limit_not_reached)
     {
       summarize(goto_model);
       result=check_properties();
     }
 
-    if(result==property_checkert::resultt::PASS)
+    if(result==resultt::PASS)
     {
       status() << "k-induction proof found after "
          << unwind << " unwinding(s)" << eom;
       break;
     }
-    else if(result==property_checkert::resultt::FAIL)
+    else if(result==resultt::FAIL)
     {
       status() << "k-induction counterexample found after "
          << unwind << " unwinding(s)" << eom;

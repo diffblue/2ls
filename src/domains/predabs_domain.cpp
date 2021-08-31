@@ -30,7 +30,7 @@ void predabs_domaint::initialize_value(domaint::valuet &value)
   for(std::size_t row=0; row<templ.size(); ++row)
   {
     // start from top (we can only use a gfp solver for this domain)
-    v[row]=false_exprt();
+    v[row]=row_valuet();
   }
 }
 

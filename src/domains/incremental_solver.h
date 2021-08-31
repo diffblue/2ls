@@ -37,7 +37,9 @@ class incremental_solvert:public messaget
 
   explicit incremental_solvert(
     const namespacet &_ns,
+    message_handlert &_message_handler,
     bool _arith_refinement=false):
+    messaget(_message_handler),
     sat_check(NULL),
     solver(NULL),
     ns(_ns),
@@ -110,32 +112,32 @@ class incremental_solvert:public messaget
 
   static incremental_solvert *allocate(
     const namespacet &_ns,
+    message_handlert &_message_handler,
     bool arith_refinement=false)
   {
-    return new incremental_solvert(_ns, arith_refinement);
+    return new incremental_solvert(_ns, _message_handler, arith_refinement);
   }
 
   inline prop_convt & get_solver() { return *solver; }
 
   propt *sat_check;
-  prop_convt *solver;
+  prop_conv_solvert *solver;
   const namespacet &ns;
 
   void new_context();
   void pop_context();
-  void make_context_permanent();
 
   // for debugging
   bvt formula;
   void debug_add_to_formula(const exprt &expr);
 
-  // context assumption literals
-  bvt activation_literals;
-
   // non-incremental solving
   contextst contexts;
 
  protected:
+#ifndef DEBUG
+  null_message_handlert null_message_handler;
+#endif
   unsigned activation_literal_counter;
   unsigned domain_number; // ids for each domain instance to make symbols unique
   bool arith_refinement;
@@ -145,7 +147,11 @@ class incremental_solvert:public messaget
 
   void allocate_solvers(bool arith_refinement)
   {
-    sat_check=new satcheckt();
+#ifdef DEBUG
+    sat_check=new satcheckt(get_message_handler());
+#else
+    sat_check=new satcheckt(null_message_handler);
+#endif
 #if 0
     sat_check=new satcheck_minisat_no_simplifiert();
 #endif
@@ -189,11 +195,7 @@ static inline incremental_solvert &operator<<(
   dest.contexts.back().push_back(src);
 #else
 #ifndef DEBUG_FORMULA
-  if(!dest.activation_literals.empty())
-    *dest.solver <<
-      or_exprt(src, literal_exprt(!dest.activation_literals.back()));
-  else
-    *dest.solver << src;
+  *dest.solver << src;
 #else
   if(!dest.activation_literals.empty())
   {

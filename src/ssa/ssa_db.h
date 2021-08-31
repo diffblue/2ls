@@ -18,7 +18,7 @@ Author: Peter Schrammel
 #include <domains/incremental_solver.h>
 #include <goto-programs/goto_functions.h>
 
-class ssa_dbt
+class ssa_dbt:public messaget
 {
 public:
   typedef irep_idt function_namet;
@@ -52,6 +52,7 @@ public:
     the_solvers[function_name]=
       incremental_solvert::allocate(
         store.at(function_name)->ns,
+        get_message_handler(),
         options.get_bool_option("refine"));
     return *the_solvers.at(function_name);
   }

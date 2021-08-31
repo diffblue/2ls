@@ -262,3 +262,11 @@ void dynobj_instance_domaint::output(
     out << "\n";
   }
 }
+
+void dynobj_instance_analysist::initialize(
+  const irep_idt &function_id,
+  const goto_programt &goto_program)
+{
+  forall_goto_program_instructions(i_it, goto_program)
+    get_state(i_it).make_bottom();
+}

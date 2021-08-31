@@ -19,14 +19,14 @@ Author: Stefan Marticek
 
 #include <limits>
 
-property_checkert::resultt summary_checker_nontermt::operator()(
+resultt summary_checker_nontermt::operator()(
   const goto_modelt &goto_model)
 {
   SSA_functions(goto_model, goto_model.symbol_table);
 
   ssa_unwinder.init(false, true);
 
-  property_checkert::resultt result=property_checkert::resultt::UNKNOWN;
+  resultt result=resultt::UNKNOWN;
   unsigned max_unwind=options.get_unsigned_int_option("unwind");
   status() << "Max-unwind is " << max_unwind << eom;
   ssa_unwinder.init_localunwinders();
@@ -38,14 +38,14 @@ property_checkert::resultt summary_checker_nontermt::operator()(
     if(unwind==51)  // use a different nontermination technique
     {
       result=check_nonterm_linear();
-      if(result==property_checkert::resultt::PASS)
+      if(result==resultt::PASS)
       {
         status() << "Termination proved after "
            << unwind << " unwinding(s)" << messaget::eom;
         report_statistics();
         return result;
       }
-      else if(result==property_checkert::resultt::FAIL)
+      else if(result==resultt::FAIL)
       {
         status() << "Nonterminating program execution proved after "
            << unwind << " unwinding(s)" << messaget::eom;
@@ -54,13 +54,13 @@ property_checkert::resultt summary_checker_nontermt::operator()(
       }
     }
     result=summary_checker_baset::check_properties();
-    if(result==property_checkert::resultt::PASS)
+    if(result==resultt::PASS)
     {
       status() << "Termination proved after "
          << unwind << " unwinding(s)" << messaget::eom;
       break;
     }
-    else if(result==property_checkert::resultt::FAIL)
+    else if(result==resultt::FAIL)
     {
       status() << "Nonterminating program execution proved after "
          << unwind << " unwinding(s)" << messaget::eom;
@@ -106,6 +106,7 @@ void summary_checker_nontermt::check_properties(
     solver,
     loophead_selects,
     property_map,
+    traces,
     false,
     false,
     options.get_bool_option("trace") ||
@@ -122,7 +123,7 @@ void summary_checker_nontermt::check_properties(
     if(n_it->loophead!=SSA.nodes.end()) // we've found a loop
     {
       irep_idt property_id(
-        id2string(n_it->location->function)+"."+
+        id2string(SSA.function_identifier)+"."+
         std::to_string(n_it->location->loop_number)+".term");
 
       exprt lsguard=
@@ -159,8 +160,10 @@ void summary_checker_nontermt::check_properties(
             SSA.name(*o_it, local_SSAt::PHI, n_it->loophead->location);
           ssa_local_unwinder.unwinder_rename(post_var, *n_it->loophead, false);
 
-          symbol_exprt phi_var;
-          phi_var=SSA.name(*o_it, local_SSAt::PHI, n_it->loophead->location);
+          symbol_exprt phi_var=SSA.name(
+            *o_it,
+            local_SSAt::PHI,
+            n_it->loophead->location);
           ssa_local_unwinder.unwinder_rename(phi_var, *n_it->loophead, true);
           loop_vars.push_back(equal_exprt(post_var, phi_var));
         }
@@ -169,8 +172,12 @@ void summary_checker_nontermt::check_properties(
       }
       SSA.current_unwinding=store_unwinding;
 
-      property_map[property_id].location=n_it->loophead->location;
-      property_map[property_id].result=property_checkert::resultt::UNKNOWN;
+      property_map.insert({
+        property_id,
+        property_infot(
+          n_it->loophead->location,
+          "assertion",
+          property_statust::UNKNOWN)});
       cover_goals.goal_map[property_id].conjuncts.push_back(
         disjunction(loop_check_operands));
       ls_guards.push_back(not_exprt(lsguard));
@@ -251,7 +258,7 @@ void summary_checker_nontermt::check_properties_linear(
       loop_counter++;
 
       irep_idt property_id(
-        id2string(n_it->location->function)+"."+
+        id2string(SSA.function_identifier)+"."+
         std::to_string(n_it->location->loop_number)+".term");
 
       const ssa_domaint::phi_nodest &phi_nodes=
@@ -273,8 +280,12 @@ void summary_checker_nontermt::check_properties_linear(
       exprt::operandst loop_exit_cond;
       exprt::operandst neg_loop_exit_cond;
 
-      property_map[property_id].location=n_it->loophead->location;
-      property_map[property_id].result=property_checkert::resultt::UNKNOWN;
+      property_map.insert({
+        property_id,
+        property_infot(
+          n_it->loophead->location,
+          "assertion",
+          property_statust::UNKNOWN)});
 
       unsigned const_number=0;
       for(local_SSAt::objectst::const_iterator
@@ -290,12 +301,16 @@ void summary_checker_nontermt::check_properties_linear(
         // first linearity check data preparation
 
         SSA.current_unwinding-=1;
-        symbol_exprt phi_var1;
-        phi_var1=SSA.name(*o_it, local_SSAt::PHI, n_it->loophead->location);
+        symbol_exprt phi_var1=SSA.name(
+          *o_it,
+          local_SSAt::PHI,
+          n_it->loophead->location);
         ssa_local_unwinder.unwinder_rename(phi_var1, *n_it->loophead, true);
         SSA.current_unwinding+=1;
-        symbol_exprt phi_var2;
-        phi_var2=SSA.name(*o_it, local_SSAt::PHI, n_it->loophead->location);
+        symbol_exprt phi_var2=SSA.name(
+          *o_it,
+          local_SSAt::PHI,
+          n_it->loophead->location);
         ssa_local_unwinder.unwinder_rename(phi_var2, *n_it->loophead, true);
 
         // works only for bitvectors
@@ -545,7 +560,7 @@ void summary_checker_nontermt::check_properties_linear(
 
       case decision_proceduret::resultt::D_SATISFIABLE:
         // found nontermination
-          property_map[property_id].result=property_checkert::resultt::FAIL;
+          property_map.at(property_id).status=property_statust::FAIL;
           solver.pop_context();
           solver.pop_context();
         return;
@@ -561,7 +576,7 @@ void summary_checker_nontermt::check_properties_linear(
   solver.pop_context();
 }
 
-summary_checker_baset::resultt summary_checker_nontermt::check_nonterm_linear()
+resultt summary_checker_nontermt::check_nonterm_linear()
 {
   // analyze all the functions
   for(ssa_dbt::functionst::const_iterator f_it=ssa_db.functions().begin();
@@ -572,14 +587,15 @@ summary_checker_baset::resultt summary_checker_nontermt::check_nonterm_linear()
     check_properties_linear(f_it);
   }
 
-  summary_checker_baset::resultt result=property_checkert::resultt::PASS;
-  for(property_mapt::const_iterator
+  resultt result=resultt::PASS;
+  for(propertiest::const_iterator
         p_it=property_map.begin(); p_it!=property_map.end(); p_it++)
   {
-    if(p_it->second.result==property_checkert::resultt::FAIL)
-      return property_checkert::resultt::FAIL;
-    if(p_it->second.result==property_checkert::resultt::UNKNOWN)
-      result=property_checkert::resultt::UNKNOWN;
+    if(p_it->second.status==property_statust::FAIL)
+      return resultt::FAIL;
+    if(p_it->second.status==property_statust::UNKNOWN ||
+      p_it->second.status==property_statust::NOT_CHECKED)
+      result=resultt::UNKNOWN;
   }
 
   return result;

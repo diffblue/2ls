@@ -64,6 +64,8 @@ bool ssa_build_goto_tracet::can_convert_ssa_expr(const exprt &expr)
     can_convert_ssa_expr(index.array());
 
     mp_integer idx;
+    if(!index.index().is_constant())
+      return false;
     if(to_integer(to_constant_expr(index.index()), idx))
       return false;
     return true;
@@ -166,9 +168,6 @@ bool ssa_build_goto_tracet::record_step(
 
   case ASSIGN:
   {
-    if(has_prefix(id2string(current_pc->function), CPROVER_PREFIX))
-      break;
-
     const code_assignt &code_assign=
       to_code_assign(current_pc->code);
 
@@ -178,6 +177,8 @@ bool ssa_build_goto_tracet::record_step(
     exprt rhs_simplified=simplify_expr(rhs_value, unwindable_local_SSA.ns);
     exprt lhs_ssa=finalize_lhs(code_assign.lhs());
     exprt lhs_simplified=simplify_expr(lhs_ssa, unwindable_local_SSA.ns);
+    if(from_expr(lhs_simplified).find(CPROVER_PREFIX)!=std::string::npos)
+      break;
 
 #if 0
     std::cout << "ASSIGN "
@@ -221,7 +222,7 @@ bool ssa_build_goto_tracet::record_step(
       break;
 
     // skip undetermined rhs
-    find_symbols_sett rhs_symbols;
+    std::set<symbol_exprt> rhs_symbols;
     find_symbols(rhs_simplified, rhs_symbols);
     if(!rhs_symbols.empty() || rhs_simplified.id()==ID_nondet_symbol)
       break;

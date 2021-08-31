@@ -31,7 +31,7 @@ public:
     const ssa_dbt::functionst::const_iterator f_it);
 
 protected:
-  summary_checker_baset::resultt check_nonterm_linear();
+  resultt check_nonterm_linear();
 };
 
 #endif // CPROVER_2LS_2LS_SUMMARY_CHECKER_NONTERM_H

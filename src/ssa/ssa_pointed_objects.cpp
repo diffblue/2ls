@@ -96,7 +96,7 @@ symbol_exprt pointed_object(const exprt &expr, const namespacet &ns)
     {
       pointed.set(
         level_str(level, ID_pointer_subtype),
-        to_symbol_type(pointed_type).get_identifier());
+        to_struct_tag_type(pointed_type).get_identifier());
     }
 
     return pointed;
@@ -108,7 +108,7 @@ symbol_exprt pointed_object(const exprt &expr, const namespacet &ns)
 const irep_idt pointer_root_id(const exprt &expr)
 {
   assert(expr.get_bool(ID_pointed));
-  unsigned max_level_index=expr.get_unsigned_int(ID_pointed_level)-1;
+  unsigned max_level_index=expr.get_size_t(ID_pointed_level)-1;
   if(expr.get(level_str(max_level_index, ID_pointer_id))==ID_symbol)
     return expr.get(level_str(max_level_index, ID_pointer_sym));
   else
@@ -118,7 +118,7 @@ const irep_idt pointer_root_id(const exprt &expr)
 unsigned pointed_level(const exprt &expr)
 {
   if(is_pointed(expr))
-    return expr.get_unsigned_int(ID_pointed_level);
+    return expr.get_size_t(ID_pointed_level);
   else
     return 0;
 }
@@ -134,7 +134,7 @@ const exprt get_pointer(const exprt &expr, unsigned level)
   exprt pointer;
 
   const typet &pointed_type=
-    symbol_typet(expr.get(level_str(level, ID_pointer_subtype)));
+    struct_tag_typet(expr.get(level_str(level, ID_pointer_subtype)));
 
   if(expr.get(level_str(level, ID_pointer_id))==ID_symbol)
   {

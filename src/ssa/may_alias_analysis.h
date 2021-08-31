@@ -20,6 +20,8 @@ Author: Viktor Malik, imalik@fit.vutbr.cz
 class may_alias_domaint:public ai_domain_baset
 {
 public:
+  may_alias_domaint(): has_values(false) {}
+
   void transform(
     const irep_idt &,
     locationt from,
@@ -81,6 +83,10 @@ public:
   {
     operator()(function_identifier, goto_function, ns);
   }
+protected:
+  void initialize(
+    const irep_idt &function_id,
+    const goto_functionst::goto_functiont &goto_function) override;
 };
 
 

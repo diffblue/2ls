@@ -229,16 +229,21 @@ ssa_domaint::def_mapt::const_iterator ssa_domaint::get_object_allocation_def(
   return def_map.end();
 }
 
-void ssa_ait::initialize(const goto_functionst::goto_functiont &goto_function)
+void ssa_ait::initialize(
+  const irep_idt &function_id,
+  const goto_functionst::goto_functiont &goto_function)
 {
-  ait<ssa_domaint>::initialize(goto_function);
+  ait<ssa_domaint>::initialize(function_id, goto_function);
+  forall_goto_program_instructions(i_it, goto_function.body)
+    get_state(i_it).make_bottom();
 
   // Make entry instruction have a source for the all objects.
 
   if(!goto_function.body.instructions.empty())
   {
     locationt e=goto_function.body.instructions.begin();
-    ssa_domaint &entry=operator[](e);
+    auto entry_s=entry_state(goto_function.body);
+    ssa_domaint &entry=dynamic_cast<ssa_domaint &>(get_state(entry_s));
 
     #if 0
     // parameters

@@ -116,11 +116,10 @@ protected:
     local_SSAt::nodest::const_iterator n_it,
     exprt &pre_guard,
     exprt &post_guard);
-  void get_pre_var(
+  symbol_exprt get_pre_var(
     const local_SSAt &SSA,
     local_SSAt::objectst::const_iterator o_it,
-    local_SSAt::nodest::const_iterator n_it,
-    symbol_exprt &pre_var);
+    local_SSAt::nodest::const_iterator n_it);
 
   void get_init_expr(
     const local_SSAt &SSA,

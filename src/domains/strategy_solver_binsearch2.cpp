@@ -91,10 +91,12 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
         debug() << "improve row " << row  << eom;
 #endif
         improve_rows.insert(row);
-        symb_values[row]=tpolyhedra_domain.get_row_symb_value(row);
-        lower_values[row]=
+        symb_values.insert({row, tpolyhedra_domain.get_row_symb_value(row)});
+        lower_values.insert({
+          row,
           simplify_const(
-            solver.get(tpolyhedra_domain.strategy_value_exprs[row][0]));
+            solver.get(
+              tpolyhedra_domain.strategy_value_exprs[row][0]))});
         blocking_constraint.push_back(
           literal_exprt(!tpolyhedra_domain.strategy_cond_literals[row]));
         if(inv[row].is_neg_inf())
@@ -122,12 +124,12 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
   assert(lower_values.size()>=1);
   std::map<tpolyhedra_domaint::rowt, symbol_exprt>::iterator
     it=symb_values.begin();
-  exprt _lower=lower_values[it->first];
+  exprt _lower=lower_values.at(it->first);
 #if 1
   debug() << "update row " << it->first << ": "
-          << from_expr(SSA.ns, "", lower_values[it->first]) << eom;
+          << from_expr(SSA.ns, "", lower_values.at(it->first)) << eom;
 #endif
-  inv[it->first]=lower_values[it->first];
+  inv[it->first]=lower_values.at(it->first);
   exprt _upper=
     tpolyhedra_domain.get_max_row_value(it->first);
   exprt sum=it->second;
@@ -135,13 +137,13 @@ bool strategy_solver_binsearch2t::iterate(invariantt &_inv)
   {
     sum=plus_exprt(sum, it->second);
     _upper=plus_exprt(_upper, tpolyhedra_domain.get_max_row_value(it->first));
-    _lower=plus_exprt(_lower, lower_values[it->first]);
+    _lower=plus_exprt(_lower, lower_values.at(it->first));
 
 #if 1
     debug() << "update row " << it->first << ": "
-            << from_expr(SSA.ns, "", lower_values[it->first]) << eom;
+            << from_expr(SSA.ns, "", lower_values.at(it->first)) << eom;
 #endif
-    inv[it->first]=lower_values[it->first];
+    inv[it->first]=lower_values.at(it->first);
   }
 
   // do not solve system if we have just reached a new loop

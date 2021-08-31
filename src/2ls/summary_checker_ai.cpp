@@ -12,7 +12,7 @@ Author: Peter Schrammel
 #include "summary_checker_ai.h"
 #include <ssa/ssa_build_goto_trace.h>
 
-property_checkert::resultt summary_checker_ait::operator()(
+resultt summary_checker_ait::operator()(
   const goto_modelt &goto_model)
 {
   SSA_functions(goto_model, goto_model.symbol_table);
@@ -30,9 +30,10 @@ property_checkert::resultt summary_checker_ait::operator()(
   }
 
   // properties
-  initialize_property_map(goto_model.goto_functions);
+  property_map=initialize_properties(goto_model);
+  set_properties_unknown();
 
-  property_checkert::resultt result=property_checkert::resultt::UNKNOWN;
+  resultt result=resultt::UNKNOWN;
   bool finished=false;
   while(!finished)
   {
@@ -54,7 +55,7 @@ property_checkert::resultt summary_checker_ait::operator()(
     {
       report_statistics();
       report_preconditions();
-      return property_checkert::resultt::UNKNOWN;
+      return resultt::UNKNOWN;
     }
 
     if(termination)
@@ -65,13 +66,13 @@ property_checkert::resultt summary_checker_ait::operator()(
 
 #ifdef SHOW_CALLINGCONTEXTS
     if(options.get_bool_option("show-calling-contexts"))
-      return property_checkert::resultt::UNKNOWN;
+      return resultt::UNKNOWN;
 #endif
 
     result=check_properties();
     report_statistics();
 
-    if(result==property_checkert::resultt::UNKNOWN &&
+    if(result==resultt::UNKNOWN &&
        options.get_bool_option("values-refine") &&
        options.get_bool_option("intervals"))
     {
@@ -110,7 +111,7 @@ void summary_checker_ait::report_preconditions()
   }
 }
 
-property_checkert::resultt summary_checker_ait::report_termination()
+resultt summary_checker_ait::report_termination()
 {
   result() << eom;
   result() << "** Termination: " << eom;
@@ -134,17 +135,17 @@ property_checkert::resultt summary_checker_ait::report_termination()
        << (!computed ? "not computed" : threeval2string(terminates)) << eom;
   }
   if(not_computed)
-    return property_checkert::resultt::UNKNOWN;
+    return resultt::UNKNOWN;
   if(all_terminate)
-    return property_checkert::resultt::PASS;
+    return resultt::PASS;
   if(one_nonterminate)
   {
 #if 0
-    return property_checkert::resultt::FAIL;
+    return resultt::FAIL;
 #else
     // rely on nontermination checker to find counterexample
-    return property_checkert::resultt::UNKNOWN;
+    return resultt::UNKNOWN;
 #endif
   }
-  return property_checkert::resultt::UNKNOWN;
+  return resultt::UNKNOWN;
 }

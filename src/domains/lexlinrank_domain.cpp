@@ -43,7 +43,7 @@ void lexlinrank_domaint::initialize_value(domaint::valuet &value)
 void lexlinrank_domaint::initialize()
 {
   delete inner_solver;
-  inner_solver=incremental_solvert::allocate(ns);
+  inner_solver=incremental_solvert::allocate(ns, message_handler);
 }
 
 bool lexlinrank_domaint::edit_row(const rowt &row, valuet &inv, bool improved)
@@ -133,7 +133,7 @@ bool lexlinrank_domaint::edit_row(const rowt &row, valuet &inv, bool improved)
       {
         number_elements_per_row[row]++;
         delete inner_solver;
-        inner_solver=incremental_solvert::allocate(ns);
+        inner_solver=incremental_solvert::allocate(ns, message_handler);
         reset_refinements();
 
         rank[row].add_element();

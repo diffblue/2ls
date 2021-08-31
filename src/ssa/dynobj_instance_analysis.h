@@ -144,6 +144,8 @@ protected:
 class dynobj_instance_domaint:public ai_domain_baset
 {
 public:
+  dynobj_instance_domaint(): has_values(false) {}
+
   // Must-alias relation for each dynamic object (corresponding to allocation
   // site).
   std::map<symbol_exprt, must_alias_setst> must_alias_relations;
@@ -224,6 +226,9 @@ public:
 protected:
   const optionst &options;
   ssa_value_ait &value_analysis;
+  void initialize(
+    const irep_idt &function_id,
+    const goto_programt &goto_program) override;
 
   friend class dynobj_instance_domaint;
 };

@@ -40,22 +40,23 @@ exprt address_canonizer(
     else if(object.id()==ID_member)
     {
       // get offset
-      exprt offset=member_offset_expr(to_member_expr(object), ns);
+      if(auto maybe_offset=member_offset_expr(to_member_expr(object), ns))
+      {
+        // &x.m  ---> (&x)+offset
 
-      // &x.m  ---> (&x)+offset
+        address_of_exprt address_of_expr(to_member_expr(object).struct_op());
+        exprt rec_result=address_canonizer(address_of_expr, ns); // rec. call
 
-      address_of_exprt address_of_expr(to_member_expr(object).struct_op());
-      exprt rec_result=address_canonizer(address_of_expr, ns); // rec. call
+        pointer_typet byte_pointer(
+          unsigned_char_type(),
+          config.ansi_c.pointer_width);
+        typecast_exprt typecast_expr(rec_result, byte_pointer);
+        exprt result=plus_exprt(typecast_expr, *maybe_offset);
+        if(result.type()!=address.type())
+          result=typecast_exprt(result, address.type());
 
-      pointer_typet byte_pointer(
-        unsigned_char_type(),
-        config.ansi_c.pointer_width);
-      typecast_exprt typecast_expr(rec_result, byte_pointer);
-      plus_exprt sum(typecast_expr, offset);
-      if(sum.type()!=address.type())
-        sum.make_typecast(address.type());
-
-      return sum;
+        return result;
+      }
     }
     else if(object.id()==ID_index)
     {
@@ -65,11 +66,11 @@ exprt address_canonizer(
 
       pointer_typet pointer_type(object.type(), config.ansi_c.pointer_width);
       typecast_exprt typecast_expr(rec_result, pointer_type);
-      plus_exprt sum(typecast_expr, to_index_expr(object).index());
-      if(sum.type()!=address.type())
-        sum.make_typecast(address.type());
+      exprt result=plus_exprt(typecast_expr, to_index_expr(object).index());
+      if(result.type()!=address.type())
+        result=typecast_exprt(result, address.type());
 
-      return sum;
+      return result;
     }
     else
       return address;
