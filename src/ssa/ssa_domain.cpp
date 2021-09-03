@@ -53,12 +53,14 @@ void ssa_domaint::output(
 
 void ssa_domaint::transform(
   const irep_idt &from_function,
-  locationt from,
+  trace_ptrt trace_from,
   const irep_idt &to_function,
-  locationt to,
+  trace_ptrt trace_to,
   ai_baset &ai,
   const namespacet &ns)
 {
+  locationt from{trace_from->current_location()};
+
   if(from->is_assign() || from->is_decl() || from->is_function_call())
   {
     const auto &assignments=static_cast<ssa_ait &>(ai).assignments;
@@ -112,8 +114,7 @@ void ssa_domaint::transform(
   }
   else if(from->is_dead())
   {
-    const code_deadt &code_dead=to_code_dead(from->code);
-    const irep_idt &id=code_dead.get_identifier();
+    const irep_idt &id=from->dead_symbol().get_identifier();
     def_map.erase(id);
   }
 
@@ -125,9 +126,11 @@ void ssa_domaint::transform(
 
 bool ssa_domaint::merge(
   const ssa_domaint &b,
-  locationt from,
-  locationt to)
+  trace_ptrt trace_from,
+  trace_ptrt trace_to)
 {
+  locationt to{trace_to->current_location()};
+
   bool result=has_values.is_false() && !b.has_values.is_false();
 
   // should traverse both maps simultaneously

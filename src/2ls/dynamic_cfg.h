@@ -91,7 +91,7 @@ protected:
     assumptionst &assumptions);
   void build_from_invariant(
     const unwindable_local_SSAt &ssa,
-    const exprt &invariant,
+    const implies_exprt &invariant,
     assumptionst &assumptions);
 
   void add_assumptions(const assumptionst &assumptions);

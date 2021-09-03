@@ -17,6 +17,8 @@ Author: Peter Schrammel
 #include <util/arith_tools.h>
 #include <util/ieee_float.h>
 #include <util/simplify_expr.h>
+#include <util/bitvector_types.h>
+#include <util/pointer_expr.h>
 
 #include "equality_domain.h"
 #include "util.h"

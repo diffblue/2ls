@@ -24,12 +24,15 @@ public:
 
   void transform(
     const irep_idt &,
-    locationt from,
+    trace_ptrt trace_from,
     const irep_idt &,
-    locationt to,
+    trace_ptrt trace_to,
     ai_baset &ai,
     const namespacet &ns) override;
-  bool merge(const may_alias_domaint &other, locationt from, locationt to);
+  bool merge(
+    const may_alias_domaint &other,
+    trace_ptrt trace_from,
+    trace_ptrt trace_to);
 
   void make_bottom() override
   {

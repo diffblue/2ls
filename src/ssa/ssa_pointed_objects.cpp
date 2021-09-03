@@ -10,6 +10,7 @@ Author: Viktor Malik
 /// Library of functions for working with pointed objects
 
 #include <util/c_types.h>
+#include <util/pointer_expr.h>
 
 #include "ssa_pointed_objects.h"
 #include "ssa_object.h"

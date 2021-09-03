@@ -4,4 +4,4 @@ main.c
 ^EXIT=10$
 ^SIGNAL=0$
 ^VERIFICATION FAILED$
-\[main.pointer_dereference.17\] dereference failure: deallocated dynamic object in p->n: FAILURE
+\[main.pointer_dereference.15\] dereference failure: deallocated dynamic object in p->n: FAILURE

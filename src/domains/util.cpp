@@ -12,6 +12,7 @@ Author: Peter Schrammel
 #include <util/simplify_expr.h>
 #include <util/prefix.h>
 #include <util/cprover_prefix.h>
+#include <util/bitvector_types.h>
 
 #include "util.h"
 
@@ -27,7 +28,7 @@ void extend_expr_types(exprt &expr)
 //  std::cerr << "expr: " << expr << std::endl;
   if(expr.id()==ID_typecast)
   {
-    exprt new_expr=expr.op0();
+    exprt &new_expr=to_typecast_expr(expr).op();
     extend_expr_types(new_expr);
     expr=new_expr;
     return;
@@ -38,34 +39,36 @@ void extend_expr_types(exprt &expr)
     return;
   if(expr.id()==ID_unary_minus)
   {
-    extend_expr_types(expr.op0());
+    exprt &op=to_unary_minus_expr(expr).op();
+    extend_expr_types(op);
 
-    if(expr.op0().type().id()==ID_signedbv ||
-       expr.op0().type().id()==ID_unsignedbv)
+    if(op.type().id()==ID_signedbv ||
+       op.type().id()==ID_unsignedbv)
     {
-      typet new_type=signedbv_typet(get_bitvector_width(expr.op0())+1);
-      expr=unary_minus_exprt(typecast_exprt(expr.op0(), new_type), new_type);
+      typet new_type=signedbv_typet(get_bitvector_width(op)+1);
+      expr=unary_minus_exprt(typecast_exprt(op, new_type), new_type);
     }
     // TODO: shall we extend floats?
     return;
   }
   if(expr.id()==ID_plus || expr.id()==ID_minus)
   {
-    extend_expr_types(expr.op0());
-//  std::cerr << "op0: " << expr.op0() << std::endl;
-    extend_expr_types(expr.op1());
-//  std::cerr << "op1: " << expr.op1() << std::endl;
-    unsigned size0=get_bitvector_width(expr.op0());
-    unsigned size1=get_bitvector_width(expr.op1());
+    binary_exprt &binary=to_binary_expr(expr);
+    extend_expr_types(binary.op0());
+//  std::cerr << "op0: " << binary.op0() << std::endl;
+    extend_expr_types(binary.op1());
+//  std::cerr << "op1: " << binary.op1() << std::endl;
+    unsigned size0=get_bitvector_width(binary.op0());
+    unsigned size1=get_bitvector_width(binary.op1());
     assert(size0>0); assert(size1>0);
-    typet new_type=expr.op0().type();
-    if(expr.op0().type().id()==expr.op1().type().id())
+    typet new_type=binary.op0().type();
+    if(binary.op0().type().id()==binary.op1().type().id())
     {
      if(new_type.id()==ID_signedbv)
        new_type=signedbv_typet(std::max(size0, size1)+1);
      else if(new_type.id()==ID_unsignedbv)
      {
-       if(expr.id()==ID_minus)
+       if(binary.id()==ID_minus)
          new_type=signedbv_typet(std::max(size0, size1)+1);
        else
          new_type=unsignedbv_typet(std::max(size0, size1)+1);
@@ -86,15 +89,19 @@ void extend_expr_types(exprt &expr)
      else
        assert(false); // TODO: implement floats
     }
-    if(expr.id()==ID_plus)
-      expr=plus_exprt(
-        typecast_exprt(expr.op0(), new_type),
-        typecast_exprt(expr.op1(), new_type));
-    else if(expr.id()==ID_minus)
+    if(binary.id()==ID_plus)
     {
+      const plus_exprt &plus=to_plus_expr(binary);
+      expr=plus_exprt(
+        typecast_exprt(plus.op0(), new_type),
+        typecast_exprt(plus.op1(), new_type));
+    }
+    else if(binary.id()==ID_minus)
+    {
+      const minus_exprt &minus=to_minus_expr(binary);
       expr=minus_exprt(
-        typecast_exprt(expr.op0(), new_type),
-        typecast_exprt(expr.op1(), new_type));
+        typecast_exprt(minus.op0(), new_type),
+        typecast_exprt(minus.op1(), new_type));
     }
     else
       assert(false); // TODO: implement floats
@@ -102,43 +109,44 @@ void extend_expr_types(exprt &expr)
   }
   if(expr.id()==ID_mult)
   {
-    extend_expr_types(expr.op0());
-    extend_expr_types(expr.op1());
-    unsigned size0=get_bitvector_width(expr.op0());
-//    std::cerr << "expr1: " << expr.op1() << std::endl;
-    unsigned size1=get_bitvector_width(expr.op1());
+    mult_exprt &mult=to_mult_expr(expr);
+    extend_expr_types(mult.op0());
+    extend_expr_types(mult.op1());
+    unsigned size0=get_bitvector_width(mult.op0());
+//    std::cerr << "expr1: " << mult.op1() << std::endl;
+    unsigned size1=get_bitvector_width(mult.op1());
 
     assert(size0>0); assert(size1>0);
-    if((expr.op0().type().id()==ID_unsignedbv ||
-        expr.op0().type().id()==ID_signedbv) &&
-       (expr.op1().type().id()==ID_unsignedbv ||
-        expr.op1().type().id()==ID_signedbv))
+    if((mult.op0().type().id()==ID_unsignedbv ||
+        mult.op0().type().id()==ID_signedbv) &&
+       (mult.op1().type().id()==ID_unsignedbv ||
+        mult.op1().type().id()==ID_signedbv))
     {
       typet new_type=signedbv_typet(size0+size1+1);
       expr=mult_exprt(
-        typecast_exprt(expr.op0(), new_type),
-        typecast_exprt(expr.op1(), new_type));
+        typecast_exprt(mult.op0(), new_type),
+        typecast_exprt(mult.op1(), new_type));
       return;
     }
-    else if(expr.op0().type().id()==ID_floatbv &&
-            expr.op1().type().id()==ID_floatbv)
+    else if(mult.op0().type().id()==ID_floatbv &&
+            mult.op1().type().id()==ID_floatbv)
     {
       // TODO: shall we extend floats?
     }
-    else if((expr.op0().type().id()==ID_unsignedbv ||
-             expr.op0().type().id()==ID_signedbv) &&
-            expr.op1().type().id()==ID_floatbv)
+    else if((mult.op0().type().id()==ID_unsignedbv ||
+             mult.op0().type().id()==ID_signedbv) &&
+            mult.op1().type().id()==ID_floatbv)
     {
-      typet new_type=expr.op1().type(); // TODO: shall we extend floats?
-      expr=mult_exprt(typecast_exprt(expr.op0(), new_type), expr.op1());
+      typet new_type=mult.op1().type(); // TODO: shall we extend floats?
+      expr=mult_exprt(typecast_exprt(mult.op0(), new_type), mult.op1());
       return;
     }
-    else if((expr.op1().type().id()==ID_unsignedbv ||
-             expr.op1().type().id()==ID_signedbv) &&
-            expr.op0().type().id()==ID_floatbv)
+    else if((mult.op1().type().id()==ID_unsignedbv ||
+             mult.op1().type().id()==ID_signedbv) &&
+            mult.op0().type().id()==ID_floatbv)
     {
-      typet new_type=expr.op0().type(); // TODO: shall we extend floats?
-      expr=mult_exprt(expr.op0(), typecast_exprt(expr.op1(), new_type));
+      typet new_type=mult.op0().type(); // TODO: shall we extend floats?
+      expr=mult_exprt(mult.op0(), typecast_exprt(mult.op1(), new_type));
       return;
     }
     else
@@ -146,34 +154,35 @@ void extend_expr_types(exprt &expr)
   }
   if(expr.id()==ID_div)
   {
-    extend_expr_types(expr.op0());
-    extend_expr_types(expr.op1());
-    unsigned size0=get_bitvector_width(expr.op0());
-    unsigned size1=get_bitvector_width(expr.op1());
+    div_exprt &div=to_div_expr(expr);
+    extend_expr_types(div.op0());
+    extend_expr_types(div.op1());
+    unsigned size0=get_bitvector_width(div.op0());
+    unsigned size1=get_bitvector_width(div.op1());
     assert(size0>0);
     assert(size1>0);
-    if((expr.op0().type().id()==ID_unsignedbv ||
-        expr.op0().type().id()==ID_signedbv) &&
-       (expr.op1().type().id()==ID_unsignedbv ||
-        expr.op1().type().id()==ID_signedbv))
+    if((div.op0().type().id()==ID_unsignedbv ||
+        div.op0().type().id()==ID_signedbv) &&
+       (div.op1().type().id()==ID_unsignedbv ||
+        div.op1().type().id()==ID_signedbv))
     {
       typet new_type;
-      if(expr.op0().type().id()==ID_unsignedbv &&
-         expr.op0().type().id()==ID_unsignedbv)
+      if(div.op0().type().id()==ID_unsignedbv &&
+         div.op0().type().id()==ID_unsignedbv)
         new_type=unsignedbv_typet(std::max(size0, size1));
-      else if(expr.op0().type().id()==ID_signedbv &&
-              expr.op0().type().id()==ID_unsignedbv)
+      else if(div.op0().type().id()==ID_signedbv &&
+              div.op0().type().id()==ID_unsignedbv)
         new_type=signedbv_typet(size0>size1 ? size0 : size1+1);
       else
         new_type=signedbv_typet(size0>=size1 ? size0+1 : size1);
 
       expr=div_exprt(
-        typecast_exprt(expr.op0(), new_type),
-        typecast_exprt(expr.op1(), new_type));
+        typecast_exprt(div.op0(), new_type),
+        typecast_exprt(div.op1(), new_type));
       return;
     }
-    else if(expr.op0().type().id()==ID_floatbv ||
-            expr.op1().type().id()==ID_floatbv)
+    else if(div.op0().type().id()==ID_floatbv ||
+            div.op1().type().id()==ID_floatbv)
     {
       // TODO: shall we extend floats?
       return;
@@ -195,23 +204,33 @@ mp_integer simplify_const_int(const exprt &expr)
   }
   if(expr.id()==ID_typecast)
   {
-    const exprt &op0=expr.op0();
-    assert(op0.type().id()==ID_signedbv || op0.type().id()==ID_unsignedbv);
-    return simplify_const_int(op0);
+    const exprt &op=to_typecast_expr(expr).op();
+    assert(op.type().id()==ID_signedbv || op.type().id()==ID_unsignedbv);
+    return simplify_const_int(op);
   }
   if(expr.id()==ID_unary_minus)
-    return -simplify_const_int(expr.op0());
+    return -simplify_const_int(to_unary_minus_expr(expr).op());
   if(expr.id()==ID_plus)
-    return simplify_const_int(expr.op0())+simplify_const_int(expr.op1());
+  {
+    const plus_exprt &plus=to_plus_expr(expr);
+    return simplify_const_int(plus.op0())+simplify_const_int(plus.op1());
+  }
   if(expr.id()==ID_minus)
-    return simplify_const_int(expr.op0())-simplify_const_int(expr.op1());
+  {
+    const minus_exprt &minus=to_minus_expr(expr);
+    return simplify_const_int(minus.op0())-simplify_const_int(minus.op1());
+  }
   if(expr.id()==ID_mult)
-    return simplify_const_int(expr.op0())*simplify_const_int(expr.op1());
+  {
+    const mult_exprt &mult=to_mult_expr(expr);
+    return simplify_const_int(mult.op0())*simplify_const_int(mult.op1());
+  }
   if(expr.id()==ID_div)
   {
-    mp_integer d=simplify_const_int(expr.op1());
+    const div_exprt &div=to_div_expr(expr);
+    mp_integer d=simplify_const_int(div.op1());
     assert(d!=0);
-    return simplify_const_int(expr.op0())/d;
+    return simplify_const_int(div.op0())/d;
   }
   if(expr.id()==ID_symbol)
   {
@@ -245,50 +264,54 @@ ieee_floatt simplify_const_float(const exprt &expr)
   }
   if(expr.id()==ID_typecast)
   {
-    const exprt &op0=expr.op0();
-    if(op0.type().id()==ID_signedbv || op0.type().id()==ID_unsignedbv)
+    const exprt &op=to_typecast_expr(expr).op();
+    if(op.type().id()==ID_signedbv || op.type().id()==ID_unsignedbv)
     {
       ieee_floatt v;
-      v.from_integer(simplify_const_int(op0));
+      v.from_integer(simplify_const_int(op));
       return v;
     }
-    if(op0.type().id()==ID_floatbv)
+    if(op.type().id()==ID_floatbv)
     {
-      return ieee_floatt(simplify_const(op0));
+      return ieee_floatt(simplify_const(op));
     }
     assert(false);
   }
   if(expr.id()==ID_unary_minus)
   {
-    ieee_floatt v=simplify_const_float(expr.op0());
+    ieee_floatt v=simplify_const_float(to_unary_minus_expr(expr).op());
     v.set_sign(!v.get_sign());
     return v;
   }
   if(expr.id()==ID_plus)
   {
-    ieee_floatt v1=simplify_const_float(expr.op0());
-    ieee_floatt v2=simplify_const_float(expr.op1());
+    const plus_exprt &plus=to_plus_expr(expr);
+    ieee_floatt v1=simplify_const_float(plus.op0());
+    ieee_floatt v2=simplify_const_float(plus.op1());
     v1+=v2;
     return v1;
   }
   if(expr.id()==ID_minus)
   {
-    ieee_floatt v1=simplify_const_float(expr.op0());
-    ieee_floatt v2=simplify_const_float(expr.op1());
+    const minus_exprt &minus=to_minus_expr(expr);
+    ieee_floatt v1=simplify_const_float(minus.op0());
+    ieee_floatt v2=simplify_const_float(minus.op1());
     v1-=v2;
     return v1;
   }
   if(expr.id()==ID_mult)
   {
-    ieee_floatt v1=simplify_const_float(expr.op0());
-    ieee_floatt v2=simplify_const_float(expr.op1());
+    const mult_exprt &mult=to_mult_expr(expr);
+    ieee_floatt v1=simplify_const_float(mult.op0());
+    ieee_floatt v2=simplify_const_float(mult.op1());
     v1*=v2;
     return v1;
   }
   if(expr.id()==ID_div)
   {
-    ieee_floatt v1=simplify_const_float(expr.op0());
-    ieee_floatt v2=simplify_const_float(expr.op1());
+    const div_exprt &div=to_div_expr(expr);
+    ieee_floatt v1=simplify_const_float(div.op0());
+    ieee_floatt v2=simplify_const_float(div.op1());
     v1/=v2;
     return v1;
   }
@@ -377,7 +400,7 @@ void remove_typecast(exprt& expr)
     remove_typecast(*it);
 
   if(expr.id()==ID_typecast)
-    expr=expr.op0();
+    expr=to_typecast_expr(expr).op();
 }
 
 /// print ranking argument expressions in a more readable format
@@ -401,20 +424,21 @@ void pretty_print_termination_argument(
         out << "&& ";
       if(it->id()==ID_implies)
       {
-        out << from_expr(ns, "", it->op0()) << "==> ";
-        if(it->op1().id()==ID_gt)
-          out << from_expr(ns, "", it->op1().op0());
-        else if(it->op1().id()==ID_or) // needed for lexicographic ones
+        const implies_exprt &implies=to_implies_expr(*it);
+        out << from_expr(ns, "", implies.op0()) << "==> ";
+        if(implies.op1().id()==ID_gt)
+          out << from_expr(ns, "", to_binary_expr(implies.op1()).op0());
+        else if(implies.op1().id()==ID_or) // needed for lexicographic ones
         {
-          forall_operands(it_lex, it->op1())
+          forall_operands(it_lex, implies.op1())
           {
             if(it_lex->id()==ID_and)
             {
-              if(it_lex==it->op1().operands().begin())
+              if(it_lex==implies.op1().operands().begin())
                 out << "(";
               else
                 out << "\n   " << "       " << ", ";
-              out << from_expr(ns, "", it_lex->op0());
+              out << from_expr(ns, "", to_and_expr(*it_lex).op0());
             }
             else
             {
@@ -425,7 +449,7 @@ void pretty_print_termination_argument(
           out << ")";
         }
         else
-          out << from_expr(ns, "", it->op1());
+          out << from_expr(ns, "", implies.op1());
       }
       else
         out << from_expr(ns, "", *it);
@@ -436,10 +460,12 @@ void pretty_print_termination_argument(
   {
     if(expr.id()==ID_implies)
     {
-      if(expr.op1().id()==ID_gt)
+      const implies_exprt &implies=to_implies_expr(expr);
+      if(implies.op1().id()==ID_gt)
       {
-        out << from_expr(ns, "", expr.op0()) << "==> "
-            << from_expr(ns, "", expr.op1().op0());
+        const binary_exprt &gt=to_binary_expr(implies.op1());
+        out << from_expr(ns, "", implies.op0()) << "==> "
+            << from_expr(ns, "", gt.op0());
         return;
       }
     }
@@ -526,20 +552,23 @@ void clean_expr(exprt &expr)
   }
   else if(expr.id()==ID_le)
   {
-    if(expr.op0().id()==ID_unary_minus &&
-       expr.op0().op0().id()==ID_typecast &&
-       expr.op1().id()==ID_constant)
+    binary_exprt &less=to_binary_expr(expr);
+    if(less.op0().id()==ID_unary_minus &&
+       to_unary_minus_expr(less.op0()).op().id()==ID_typecast &&
+       less.op1().id()==ID_constant)
     {
-      exprt lhs=expr.op0().op0().op0();
+      const unary_minus_exprt &minus=to_unary_minus_expr(less.op0());
+      const typecast_exprt &typecast=to_typecast_expr(minus.op());
+      exprt lhs=typecast.op();
       clean_expr(lhs);
-      constant_exprt rhs=to_constant_expr(expr.op1());
+      const constant_exprt &rhs=to_constant_expr(less.op1());
       mp_integer c;
       to_integer(rhs, c);
       expr=binary_relation_exprt(lhs, ID_ge, from_integer(-c, lhs.type()));
     }
     else
     {
-      clean_expr(expr.op0());
+      clean_expr(less.op0());
     }
   }
 }

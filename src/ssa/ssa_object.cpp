@@ -17,6 +17,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #endif
 
 #include <util/expr_util.h>
+#include <util/pointer_expr.h>
 
 #include <analyses/dirty.h>
 
@@ -211,7 +212,7 @@ void ssa_objectst::collect_objects(
   forall_goto_program_instructions(it, src.body)
   {
     collect_objects_rec(it->guard, ns, objects, literals);
-    collect_objects_rec(it->code, ns, objects, literals);
+    collect_objects_rec(it->get_code(), ns, objects, literals);
   }
 }
 

@@ -12,6 +12,7 @@ Author: Viktor Malik
 #ifndef CPROVER_2LS_DOMAINS_SYMBOLIC_PATH_H
 #define CPROVER_2LS_DOMAINS_SYMBOLIC_PATH_H
 
+#include <map>
 #include <util/expr.h>
 #include <util/std_expr.h>
 

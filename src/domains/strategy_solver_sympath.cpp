@@ -120,7 +120,10 @@ bool strategy_solver_sympatht::is_current_path_feasible(
     // Build condition of reachability of current loop
     exprt loop_cond=loop_conds_map.at(guard.first);
     if(!guard.second)
-      loop_cond.op1()=not_exprt(loop_cond.op1());
+    {
+      binary_exprt &binary=to_binary_expr(loop_cond);
+      binary.op1()=not_exprt(binary.op1());
+    }
 
     solver.new_context();
 

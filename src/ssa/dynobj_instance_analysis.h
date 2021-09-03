@@ -32,7 +32,7 @@ Description: In some cases, multiple instances must be used so that the
 class must_alias_setst
 {
 public:
-  union_find<exprt> data;
+  union_find<exprt, irep_hash> data;
 
   bool join(const must_alias_setst &other)
   {
@@ -154,9 +154,9 @@ public:
 
   void transform(
     const irep_idt &,
-    locationt from,
+    trace_ptrt trace_from,
     const irep_idt &,
-    locationt to,
+    trace_ptrt trace_to,
     ai_baset &ai,
     const namespacet &ns) override;
   void output(
@@ -165,8 +165,8 @@ public:
     const namespacet &ns) const override;
   bool merge(
     const dynobj_instance_domaint &other,
-    locationt from,
-    locationt to);
+    trace_ptrt trace_from,
+    trace_ptrt trace_to);
 
   void make_bottom() override
   {

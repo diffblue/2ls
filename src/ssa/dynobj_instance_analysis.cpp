@@ -15,6 +15,7 @@ Author: Viktor Malik, viktor.malik@gmail.com
 #include <iostream>
 #include <util/prefix.h>
 #include <util/cprover_prefix.h>
+#include <util/pointer_expr.h>
 #include <langapi/language_util.h>
 #include "dynobj_instance_analysis.h"
 #include "ssa_dereference.h"
@@ -120,18 +121,21 @@ void dynobj_instance_domaint::rhs_concretisation(
 
 void dynobj_instance_domaint::transform(
   const irep_idt &function_from,
-  ai_domain_baset::locationt from,
+  trace_ptrt trace_from,
   const irep_idt &function_to,
-  ai_domain_baset::locationt to,
+  trace_ptrt trace_to,
   ai_baset &ai,
   const namespacet &ns)
 {
+  locationt from{trace_from->current_location()};
+  locationt to{trace_to->current_location()};
+
   bool competition_mode=
     static_cast<dynobj_instance_analysist &>(ai).options
       .get_bool_option("competition-mode");
   if(from->is_assign())
   {
-    const code_assignt &assignment=to_code_assign(from->code);
+    const code_assignt &assignment=from->get_assign();
     const exprt lhs=symbolic_dereference(assignment.lhs(), ns);
 
     // Do not include CPROVER symbols
@@ -192,7 +196,7 @@ void dynobj_instance_domaint::transform(
     rhs_concretisation(from->guard, from, ai, ns);
   else if(from->is_dead())
   {
-    const exprt &symbol=to_code_dead(from->code).symbol();
+    const exprt &symbol=from->dead_symbol();
     const auto &values=
       static_cast<dynobj_instance_analysist &>(ai).value_analysis[from];
     auto value_set=values(symbol, ns).value_set;
@@ -205,8 +209,8 @@ void dynobj_instance_domaint::transform(
 
 bool dynobj_instance_domaint::merge(
   const dynobj_instance_domaint &other,
-  ai_domain_baset::locationt from,
-  ai_domain_baset::locationt to)
+  trace_ptrt trace_from,
+  trace_ptrt trace_to)
 {
   bool result=has_values.is_false() && !other.has_values.is_false();
   for(auto &obj : other.must_alias_relations)

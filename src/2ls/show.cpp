@@ -66,11 +66,11 @@ void show_assignments(
   }
   else
   {
-    forall_goto_functions(f_it, goto_model.goto_functions)
+    for(const auto &f_it : goto_model.goto_functions.function_map)
     {
-      out << ">>>> Function " << f_it->first << "\n";
+      out << ">>>> Function " << f_it.first << "\n";
 
-      show_assignments(f_it->first, f_it->second, ns, options, out);
+      show_assignments(f_it.first, f_it.second, ns, options, out);
 
       out << "\n";
     }
@@ -117,11 +117,11 @@ void show_defs(
   }
   else
   {
-    forall_goto_functions(f_it, goto_model.goto_functions)
+    for(const auto &f_it : goto_model.goto_functions.function_map)
     {
-      out << ">>>> Function " << f_it->first << "\n";
+      out << ">>>> Function " << f_it.first << "\n";
 
-      show_defs(f_it->first, f_it->second, ns, options, out);
+      show_defs(f_it.first, f_it.second, ns, options, out);
 
       out << "\n";
     }
@@ -156,11 +156,11 @@ void show_guards(
   }
   else
   {
-    forall_goto_functions(f_it, goto_model.goto_functions)
+    for(const auto &f_it : goto_model.goto_functions.function_map)
     {
-      out << ">>>> Function " << f_it->first << "\n";
+      out << ">>>> Function " << f_it.first << "\n";
 
-      show_guards(f_it->second, ns, out);
+      show_guards(f_it.second, ns, out);
 
       out << "\n";
     }
@@ -214,18 +214,18 @@ void show_ssa(
   }
   else
   {
-    forall_goto_functions(f_it, goto_model.goto_functions)
+    for(auto &f_it : goto_model.goto_functions.function_map)
     {
-      if(f_it->first=="assert")
+      if(f_it.first=="assert")
         continue;
-      if(f_it->first=="__CPROVER_assume")
+      if(f_it.first=="__CPROVER_assume")
         continue;
 
-      out << ">>>> Function " << f_it->first << "\n";
+      out << ">>>> Function " << f_it.first << "\n";
 
       show_ssa(
-        f_it->first,
-        f_it->second,
+        f_it.first,
+        f_it.second,
         simplify,
         goto_model.symbol_table,
         options,
@@ -317,8 +317,9 @@ void show_invariant(
   std::ostream &out)
 {
   // expected format (/\_j g_j)=> inv
-  const exprt &impl=expr.op0();
-  exprt inv=expr.op1(); // copy
+  const implies_exprt &implies=to_implies_expr(expr);
+  const exprt &impl=implies.op0();
+  exprt inv=implies.op1(); // copy
   local_SSAt::locationt loc;
   if(impl.id()==ID_symbol)
   {
@@ -326,8 +327,9 @@ void show_invariant(
   }
   else if(impl.id()==ID_and)
   {
-    assert(impl.op0().id()==ID_symbol);
-    loc=find_loc_by_guard(SSA, to_symbol_expr(impl.op0()));
+    const and_exprt &conjunction=to_and_expr(impl);
+    assert(conjunction.op0().id()==ID_symbol);
+    loc=find_loc_by_guard(SSA, to_symbol_expr(conjunction.op0()));
   }
   else
     assert(false);
@@ -433,11 +435,11 @@ void show_value_sets(
   }
   else
   {
-    forall_goto_functions(f_it, goto_model.goto_functions)
+    for(const auto &f_it : goto_model.goto_functions.function_map)
     {
-      out << ">>>> Function " << f_it->first << "\n";
+      out << ">>>> Function " << f_it.first << "\n";
 
-      show_value_set(f_it->first, f_it->second, ns, options, out);
+      show_value_set(f_it.first, f_it.second, ns, options, out);
 
       out << "\n";
     }

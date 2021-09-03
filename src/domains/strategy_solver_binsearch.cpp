@@ -13,6 +13,7 @@ Author: Peter Schrammel
 #include <iostream>
 #endif
 
+#include <solvers/prop/literal_expr.h>
 #include "strategy_solver_binsearch.h"
 #include "ssa/local_ssa.h"
 #include "util.h"

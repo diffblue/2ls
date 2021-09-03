@@ -47,16 +47,16 @@ void summary_checker_baset::SSA_functions(
   const symbol_tablet &symbol_table)
 {
   // compute SSA for all the functions
-  forall_goto_functions(f_it, goto_model.goto_functions)
+  for(const auto &f_it : goto_model.goto_functions.function_map)
   {
-    if(!f_it->second.body_available())
+    if(!f_it.second.body_available())
       continue;
-    if(has_prefix(id2string(f_it->first), TEMPLATE_DECL))
+    if(has_prefix(id2string(f_it.first), TEMPLATE_DECL))
       continue;
-    status() << "Computing SSA of " << f_it->first << messaget::eom;
+    status() << "Computing SSA of " << f_it.first << messaget::eom;
 
-    ssa_db.create(f_it->first, f_it->second, symbol_table);
-    local_SSAt &SSA=ssa_db.get(f_it->first);
+    ssa_db.create(f_it.first, f_it.second, symbol_table);
+    local_SSAt &SSA=ssa_db.get(f_it.first);
 
     // simplify, if requested
     if(simplify)
@@ -447,46 +447,6 @@ bool summary_checker_baset::is_fully_unwound(
   case decision_proceduret::resultt::D_UNSATISFIABLE:
     solver.pop_context();
     solver << conjunction(loophead_selects);
-    return true;
-    break;
-
-  case decision_proceduret::resultt::D_ERROR:
-  default:
-    throw "error from decision procedure";
-  }
-}
-
-/// checks whether a countermodel is spurious
-bool summary_checker_baset::is_spurious(
-  const exprt::operandst &loophead_selects,
-  incremental_solvert &solver)
-{
-  // check loop head choices in model
-  bool invariants_involved=false;
-  for(exprt::operandst::const_iterator l_it=loophead_selects.begin();
-      l_it!=loophead_selects.end(); l_it++)
-  {
-    if(solver.get(l_it->op0()).is_true())
-    {
-      invariants_involved=true;
-      break;
-    }
-  }
-  if(!invariants_involved)
-    return false;
-
-  // force avoiding paths going through invariants
-  solver << conjunction(loophead_selects);
-
-  solver_calls++; // statistics
-
-  switch(solver())
-  {
-  case decision_proceduret::resultt::D_SATISFIABLE:
-    return false;
-    break;
-
-  case decision_proceduret::resultt::D_UNSATISFIABLE:
     return true;
     break;
 

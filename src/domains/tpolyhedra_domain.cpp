@@ -15,6 +15,7 @@ Author: Peter Schrammel
 
 #include <util/find_symbols.h>
 #include <util/simplify_expr.h>
+#include <util/bitvector_types.h>
 
 #include "tpolyhedra_domain.h"
 #include "strategy_solver_binsearch.h"

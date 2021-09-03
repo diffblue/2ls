@@ -21,7 +21,10 @@ void ssa_var_collectort::add_var(
   exprt aux_expr=true_exprt();
   if(std_invariants && pre_guard.id()==ID_and)
   {
-    exprt init_guard=and_exprt(pre_guard.op0(), not_exprt(pre_guard.op1()));
+    const and_exprt &pre_guard_and=to_and_expr(pre_guard);
+    exprt init_guard=and_exprt(
+      pre_guard_and.op0(),
+      not_exprt(pre_guard_and.op1()));
     exprt post_var=post_renaming_map[var];
     exprt aux_var=aux_renaming_map[var];
     exprt aux_equals_post=equal_exprt(aux_var, post_var);

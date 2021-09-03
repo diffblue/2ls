@@ -10,6 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 /// A map of program locations to the assignments made there
 
 #include <util/byte_operators.h>
+#include <util/pointer_expr.h>
 #include <util/find_symbols.h>
 
 #include "assignments.h"
@@ -28,7 +29,7 @@ void assignmentst::build_assignment_map(
     // now fill it
     if(it->is_assign())
     {
-      const code_assignt &code_assign=to_code_assign(it->code);
+      const code_assignt &code_assign=it->get_assign();
       exprt lhs_deref=dereference(
         code_assign.lhs(), ssa_value_ai[it], "", ns,
         options.get_bool_option("competition-mode"));
@@ -51,13 +52,12 @@ void assignmentst::build_assignment_map(
     }
     else if(it->is_decl())
     {
-      const code_declt &code_decl=to_code_decl(it->code);
+      const code_declt &code_decl=code_declt{it->decl_symbol()};
       assign(code_decl.symbol(), it, ns);
     }
     else if(it->is_function_call())
     {
-      const code_function_callt &code_function_call=
-        to_code_function_call(it->code);
+      const code_function_callt &code_function_call=it->get_function_call();
 
       // Get information from ssa_heap_analysis
       auto n_it=it;
@@ -159,7 +159,7 @@ void assignmentst::assign(
   else if(lhs.id()==ID_complex_real || lhs.id()==ID_complex_imag)
   {
     assert(lhs.operands().size()==1);
-    assign(lhs.op0(), loc, ns);
+    assign(to_complex_real_expr(lhs).op(), loc, ns);
   }
 }
 

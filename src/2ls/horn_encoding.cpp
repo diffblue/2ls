@@ -44,30 +44,31 @@ protected:
 
   smt2_convt smt2_conv;
 
-  void translate(const goto_functionst::function_mapt::const_iterator);
+  void translate(const irep_idt &function_id, const goto_functiont &function);
 };
 
 void horn_encodingt::operator()()
 {
-  forall_goto_functions(f_it, goto_functions)
-    translate(f_it);
+  for(const auto &f_it : goto_functions.function_map)
+    translate(f_it.first, f_it.second);
 }
 
 void horn_encodingt::translate(
-  const goto_functionst::function_mapt::const_iterator f_it)
+  const irep_idt &function_id,
+  const goto_functiont &function)
 {
-  if(f_it->second.body.empty())
+  if(function.body.empty())
     return;
 
   out << "\n"
          ";\n"
-         "; Function " << f_it->first << "\n"
+         "; Function " << function_id << "\n"
          ";\n";
 
   // compute SSA
-  local_SSAt local_SSA(f_it->first, f_it->second, symbol_table, options, "");
+  local_SSAt local_SSA(function_id, function, symbol_table, options, "");
 
-  const goto_programt &body=f_it->second.body;
+  const goto_programt &body=function.body;
 
   // first generate the predicates for all locations
   for(goto_programt::instructionst::const_iterator
@@ -75,7 +76,7 @@ void horn_encodingt::translate(
       loc!=body.instructions.end();
       loc++)
   {
-    out << "(declare-fun h-" << f_it->first << "-"
+    out << "(declare-fun h-" << function_id << "-"
         << loc->location_number << " (";
 
     for(ssa_objectst::objectst::const_iterator
@@ -126,7 +127,7 @@ void horn_encodingt::translate(
     }
 
     out << ")\n";
-    out << "  (=> (h-" << f_it->first << '-'
+    out << "  (=> (h-" << function_id << '-'
         << loc->location_number;
 
     for(ssa_objectst::objectst::const_iterator
@@ -144,7 +145,7 @@ void horn_encodingt::translate(
     {
       if(loc->guard.is_true())
       {
-        out << "(h-" << f_it->first << '-'
+        out << "(h-" << function_id << '-'
             << loc->get_target()->location_number;
 
         for(ssa_objectst::objectst::const_iterator
@@ -164,7 +165,7 @@ void horn_encodingt::translate(
         goto_programt::instructionst::const_iterator next=loc;
         next++;
 
-        out << "(h-" << f_it->first << '-'
+        out << "(h-" << function_id << '-'
             << loc->get_target()->location_number;
 
         for(ssa_objectst::objectst::const_iterator

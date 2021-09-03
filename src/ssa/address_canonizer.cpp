@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/c_types.h>
 
 #include <util/std_expr.h>
+#include <util/pointer_expr.h>
 #include <util/pointer_offset_size.h>
 #include <util/config.h>
 
@@ -80,7 +81,7 @@ exprt address_canonizer(
   {
     // one of the operands needs to be a pointer
     assert(address.operands().size()==2);
-    exprt tmp=address;
+    binary_exprt tmp=to_binary_expr(address); // copy
     if(ns.follow(tmp.op0().type()).id()==ID_pointer)
     {
       tmp.op0()=address_canonizer(tmp.op0(), ns);
