@@ -364,6 +364,7 @@ bool summarizer_bwt::check_postcondition(
 
     break;
   }
+  case decision_proceduret::resultt::D_ERROR:
   default: assert(false); break;
   }
 

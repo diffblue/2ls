@@ -44,7 +44,6 @@ void heap_domaint::make_template(
     const vart &var=v.var;
     if(var.type().id()==ID_pointer)
     {
-      const typet &pointed_type=ns.follow(var.type().subtype());
       add_template_row({var}, v.guards);
 
       if(var.id()==ID_symbol &&

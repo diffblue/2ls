@@ -700,6 +700,7 @@ int twols_parse_optionst::doit()
       report_unknown();
       break;
 
+    case resultt::ERROR:
     default:
       assert(false);
     }
@@ -855,6 +856,21 @@ void twols_parse_optionst::show_stats(
         type_stats_rec(instruction.decl_symbol().type(), stats, ns);
         break;
 
+      case NO_INSTRUCTION_TYPE:
+      case OTHER:
+      case SKIP:
+      case START_THREAD:
+      case END_THREAD:
+      case LOCATION:
+      case END_FUNCTION:
+      case ATOMIC_BEGIN:
+      case ATOMIC_END:
+      case SET_RETURN_VALUE:
+      case DEAD:
+      case FUNCTION_CALL:
+      case THROW:
+      case CATCH:
+      case INCOMPLETE_GOTO:
       default:
         // skip
         break;
@@ -950,7 +966,7 @@ bool twols_parse_optionst::get_goto_program(
     return true;
   }
 
-  catch(std::bad_alloc)
+  catch(std::bad_alloc&)
   {
     error() << "Out of memory" << eom;
     return true;
@@ -1183,7 +1199,7 @@ bool twols_parse_optionst::process_goto_program(
     return true;
   }
 
-  catch(std::bad_alloc)
+  catch(std::bad_alloc&)
   {
     error() << "Out of memory" << eom;
     return true;
@@ -1278,6 +1294,7 @@ void twols_parse_optionst::report_success()
   switch(ui_message_handler.get_ui())
   {
   case ui_message_handlert::uit::PLAIN:
+  case ui_message_handlert::uit::JSON_UI:
     break;
 
   case ui_message_handlert::uit::XML_UI:
@@ -1315,6 +1332,7 @@ void twols_parse_optionst::show_counterexample(
   }
   break;
 
+  case ui_message_handlert::uit::JSON_UI:
   default:
     assert(false);
   }
@@ -1402,6 +1420,7 @@ void twols_parse_optionst::report_failure()
   switch(ui_message_handler.get_ui())
   {
   case ui_message_handlert::uit::PLAIN:
+  case ui_message_handlert::uit::JSON_UI:
     break;
 
   case ui_message_handlert::uit::XML_UI:
@@ -1425,6 +1444,7 @@ void twols_parse_optionst::report_unknown()
   switch(ui_message_handler.get_ui())
   {
   case ui_message_handlert::uit::PLAIN:
+  case ui_message_handlert::uit::JSON_UI:
     break;
 
   case ui_message_handlert::uit::XML_UI:

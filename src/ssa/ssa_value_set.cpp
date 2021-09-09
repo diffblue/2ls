@@ -66,8 +66,6 @@ void ssa_value_domaint::transform(
     const irep_idt &fname=to_symbol_expr(
       code_function_call.function()).get_identifier();
 
-    const ssa_value_ait &value_analysis=static_cast<ssa_value_ait &>(ai);
-
     // functions may alter state almost arbitrarily:
     // * any global-scoped variables
     // * any dirty locals

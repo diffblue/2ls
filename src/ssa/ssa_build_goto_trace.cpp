@@ -249,6 +249,7 @@ bool ssa_build_goto_tracet::record_step(
     break;
 
   case NO_INSTRUCTION_TYPE:
+  case INCOMPLETE_GOTO:
     assert(false);
     break;
   }

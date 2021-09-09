@@ -25,7 +25,7 @@ class strategy_solver_binsearch3t:public strategy_solver_baset
     incremental_solvert &_solver,
     const local_SSAt& _SSA,
     message_handlert &message_handler):
-    strategy_solver_baset(_solver, SSA, message_handler),
+    strategy_solver_baset(_solver, _SSA, message_handler),
     tpolyhedra_domain(_tpolyhedra_domain),
     sum_bound_counter(0) {}
 

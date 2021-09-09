@@ -115,6 +115,5 @@ exprt address_canonizer(
 
     return address;
   }
-  else
-    return address;
+  return address;
 }
