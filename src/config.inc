@@ -1,7 +1,13 @@
 CPROVER_DIR = ../../lib/cbmc
 
 # Variables you may want to override
-#CXXFLAGS = -Wall -O0 -g -Werror -Wno-long-long -Wno-sign-compare -Wno-parentheses -Wno-strict-aliasing -pedantic
+
+# Enable warnings
+CXXFLAGS += -Wall -Werror -Wno-long-long -Wno-sign-compare -Wno-parentheses -Wno-strict-aliasing -pedantic
+
+# Select optimisation or debug
+#CXXFLAGS += -O2
+#CXXFLAGS += -O0 -g
 
 #static compilation
 #LINKFLAGS += -static-libgcc -static-libstdc++
