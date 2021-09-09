@@ -52,7 +52,7 @@ public:
   {
     value_vect values;
     for(auto &d : domains)
-      values.push_back(std::move(d->new_value()));
+      values.push_back(d->new_value());
     return std::unique_ptr<valuet>(new valuet(std::move(values)));
   }
 

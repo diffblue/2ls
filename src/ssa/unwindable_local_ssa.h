@@ -41,7 +41,7 @@ public:
   virtual symbol_exprt name(
     const ssa_objectt &obj,
     kindt kind,
-    locationt loc) const
+    locationt loc) const override
   {
     return name(obj, kind, loc, loc);
   }
@@ -54,7 +54,7 @@ public:
     std::string prefix,
     const typet &type,
     locationt loc,
-    unsigned counter) const;
+    unsigned counter) const override;
 
   // control renaming during unwindings
   typedef std::vector<unsigned> odometert;

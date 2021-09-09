@@ -85,22 +85,22 @@ exprt address_canonizer(
     if(ns.follow(tmp.op0().type()).id()==ID_pointer)
     {
       tmp.op0()=address_canonizer(tmp.op0(), ns);
-      return tmp;
+      return std::move(tmp);
     }
     else if(ns.follow(tmp.op1().type()).id()==ID_pointer)
     {
       tmp.op1()=address_canonizer(tmp.op1(), ns);
-      return tmp;
+      return std::move(tmp);
     }
     else
-      return tmp;
+      return std::move(tmp);
   }
   else if(address.id()==ID_if)
   {
     if_exprt tmp=to_if_expr(address);
     tmp.true_case()=address_canonizer(tmp.true_case(), ns);
     tmp.false_case()=address_canonizer(tmp.false_case(), ns);
-    return tmp;
+    return std::move(tmp);
   }
   else if(address.id()==ID_typecast)
   {
@@ -110,7 +110,7 @@ exprt address_canonizer(
     if(tmp.op().type().id()==ID_pointer)
     {
       tmp.op()=address_canonizer(tmp.op(), ns);
-      return tmp;
+      return std::move(tmp);
     }
 
     return address;

@@ -936,7 +936,7 @@ exprt ssa_inlinert::param_in_transformer(const exprt &param)
   assert(param.id()==ID_symbol);
   symbol_exprt param_in=to_symbol_expr(param);
   rename(param_in);
-  return param_in;
+  return std::move(param_in);
 }
 
 exprt ssa_inlinert::arg_in_transformer(
@@ -956,7 +956,7 @@ exprt ssa_inlinert::param_in_member_transformer(
     id2string(to_symbol_expr(param).get_identifier())+"."+
     id2string(component.get_name()), component.type());
   rename(param_member);
-  return param_member;
+  return std::move(param_member);
 }
 
 exprt ssa_inlinert::arg_in_member_transformer(
@@ -983,7 +983,7 @@ exprt ssa_inlinert::param_out_transformer(
   {
     address_of_exprt param_addr=address_of_exprt(param);
     rename(param_addr);
-    return param_addr;
+    return std::move(param_addr);
   }
   else
   {
@@ -996,7 +996,7 @@ exprt ssa_inlinert::param_out_transformer(
       param_out=*maybe_new;
       rename(param_out);
     }
-    return param_out;
+    return std::move(param_out);
   }
 }
 
@@ -1021,7 +1021,7 @@ exprt ssa_inlinert::arg_out_transformer(
     }
 
     covered_cs_heap_out.insert(arg_symbol);
-    return arg_addr;
+    return std::move(arg_addr);
   }
   else
   {

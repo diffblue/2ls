@@ -181,7 +181,7 @@ const exprt symbolic_dereference(const exprt &expr, const namespacet &ns)
 
     symbol_exprt sym_deref=pointed_object(pointer_object.symbol_expr(), ns);
     sym_deref.set("#has_symbolic_deref", true);
-    return sym_deref;
+    return std::move(sym_deref);
   }
   else if(expr.id()==ID_member)
   {
@@ -193,7 +193,7 @@ const exprt symbolic_dereference(const exprt &expr, const namespacet &ns)
       "#has_symbolic_deref",
       has_symbolic_deref(member.compound()));
 
-    return member;
+    return std::move(member);
   }
   else
   {

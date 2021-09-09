@@ -249,7 +249,7 @@ const exprt heap_domaint::get_points_to_dest(
     }
 
     // Add equality p == &obj
-    return obj;
+    return std::move(obj);
   }
   else
     return nil_exprt();

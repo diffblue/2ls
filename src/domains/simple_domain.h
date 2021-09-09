@@ -33,6 +33,7 @@ public:
   /// Template row expression - defined per-domain
   struct template_row_exprt
   {
+    virtual ~template_row_exprt()=default;
     /// Get a vector of expressions used in the row
     virtual std::vector<exprt> get_row_exprs()=0;
     /// Output the template row (with the template row parameters)

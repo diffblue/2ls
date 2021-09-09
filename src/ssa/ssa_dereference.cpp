@@ -232,7 +232,7 @@ exprt ssa_alias_value(
     assert(!e2_type.get_bool("#dynamic"));
   byte_extract_exprt byte_extract=make_byte_extract(e2, offset1, e1.type());
 
-  return byte_extract;
+  return std::move(byte_extract);
 }
 
 exprt dereference_rec(
@@ -316,7 +316,7 @@ exprt dereference_rec(
       return result;
     }
     else
-      return tmp;
+      return std::move(tmp);
   }
   else if(src.id()==ID_address_of)
   {
@@ -335,7 +335,7 @@ exprt dereference_rec(
       return result;
     }
     else
-      return tmp;
+      return std::move(tmp);
   }
   else
   {
