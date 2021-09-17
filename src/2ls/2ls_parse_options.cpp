@@ -408,12 +408,6 @@ int twols_parse_optionst::doit()
   if(get_goto_program(options))
     return 6;
 
-  if(cmdline.isset("heap") && dynamic_objects->have_objects())
-  {
-    // Only use sympath domain if dynamic memory is used
-    options.set_option("sympath", true);
-  }
-
   const namespacet ns(goto_model.symbol_table);
 
   if(cmdline.isset("show-stats"))
