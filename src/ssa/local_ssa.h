@@ -217,6 +217,8 @@ public:
     const namespacet &ns,
     const locationt loc);
 
+  exprt get_fresh_rhs(const exprt &rhs, locationt loc);
+
   ssa_objectst ssa_objects;
   typedef ssa_objectst::objectst objectst;
   ssa_value_ait ssa_value_ai;

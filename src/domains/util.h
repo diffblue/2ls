@@ -47,5 +47,6 @@ std::string get_dynobj_instance(const irep_idt &id);
 void replace_symbol(exprt &expr, const irep_idt &old, const irep_idt &updated);
 
 bool same_var(const exprt &expr1, const exprt &expr2);
+bool has_index_expr(const exprt &expr);
 
 #endif

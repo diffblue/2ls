@@ -642,3 +642,17 @@ bool same_var(const exprt &expr1, const exprt &expr2)
     return same_var(expr1, to_typecast_expr(expr2).op());
   return get_original_expr(expr1) == get_original_expr(expr2);
 }
+
+bool has_index_expr(const exprt &expr)
+{
+  if(expr.id() == ID_index)
+    return true;
+
+  forall_operands(it, expr)
+  {
+    if(has_index_expr(*it))
+      return true;
+  }
+
+  return false;
+}

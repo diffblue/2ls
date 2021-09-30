@@ -1082,8 +1082,7 @@ void local_SSAt::assign_rec(
 
     if(assigned.find(lhs_object)!=assigned.end())
     {
-      exprt ssa_rhs=fresh_rhs ? name(ssa_objectt(rhs, ns), OUT, loc)
-                              : read_rhs(rhs, loc);
+      exprt ssa_rhs = fresh_rhs ? get_fresh_rhs(rhs, loc) : read_rhs(rhs, loc);
 
       const symbol_exprt ssa_symbol=name(lhs_object, OUT, loc);
 
@@ -1454,7 +1453,7 @@ exprt local_SSAt::concretise_symbolic_deref_rhs(
 
   if(deref_rhs.get_bool("#heap_access") && rhs_object)
   {
-    if(can_reuse_symderef(rhs_object, ns, loc))
+    if(!has_index_expr(rhs) && can_reuse_symderef(rhs_object, ns, loc))
     {
       return symbolic_deref_rhs;
     }
@@ -1581,4 +1580,17 @@ local_SSAt::get_loc_with_symbol_def(const symbol_exprt &symbol) const
   std::string id = id2string(symbol.get_identifier());
   auto loc_suffix = id.substr(id.find_last_not_of("0123456789") + 1);
   return get_location(std::stoi(loc_suffix));
+}
+
+exprt local_SSAt::get_fresh_rhs(const exprt &rhs, locationt loc)
+{
+  if(rhs.id() == ID_with)
+  {
+    exprt result = read_rhs(rhs, loc);
+    to_with_expr(result).new_value() =
+      get_fresh_rhs(to_with_expr(rhs).new_value(), loc);
+    return result;
+  }
+
+  return name(ssa_objectt(rhs, ns), OUT, loc);
 }
