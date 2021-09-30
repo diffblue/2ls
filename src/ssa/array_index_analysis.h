@@ -20,6 +20,7 @@ Author: Viktor Malik, imalik@fit.vutbr.cz
 #include <util/threeval.h>
 
 #include <analyses/ai.h>
+#include <ssa/ssa_value_set.h>
 
 #include <iostream>
 
@@ -95,9 +96,24 @@ public:
   }
 
 protected:
-  void collect_indices(const exprt &expr, locationt loc, index_mapt &dest_map);
-  void collect_lhs_indices(const exprt &expr, locationt loc);
-  void collect_rhs_indices(const exprt &expr, locationt loc, ai_baset &ai);
+  void collect_indices(const exprt &expr,
+                       locationt loc,
+                       ai_baset &ai,
+                       const namespacet &ns,
+                       index_mapt &dest_map);
+  void collect_lhs_indices(const exprt &expr,
+                           locationt loc,
+                           ai_baset &ai,
+                           const namespacet &ns);
+  void collect_rhs_indices(const exprt &expr,
+                           locationt loc,
+                           ai_baset &ai,
+                           const namespacet &ns);
+  void add_index(const exprt &array,
+                 const exprt &index,
+                 locationt loc,
+                 const namespacet &ns,
+                 index_mapt &dest_map);
 
   tvt has_values;
 };
@@ -107,7 +123,9 @@ class array_index_analysist : public ait<array_index_domaint>
 public:
   array_index_analysist(const irep_idt &function_identifier,
                         const goto_functionst::goto_functiont &goto_function,
-                        const namespacet &ns)
+                        const namespacet &ns,
+                        ssa_value_ait &value_ai)
+    : value_analysis(value_ai)
   {
     operator()(function_identifier, goto_function, ns);
   }
@@ -121,10 +139,13 @@ protected:
               const irep_idt &function_identifier,
               const goto_programt &goto_program,
               std::ostream &out) const override;
-
   void
   initialize(const irep_idt &function_id,
              const goto_functionst::goto_functiont &goto_function) override;
+
+  ssa_value_ait &value_analysis;
+
+  friend class array_index_domaint;
 };
 
 #endif // CPROVER_2LS_SSA_ARRAY_INDEX_ANALYSIS_H

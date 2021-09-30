@@ -13,6 +13,9 @@ Author: Viktor Malik, imalik@fit.vutbr.cz
 
 #include <langapi/language_util.h>
 
+#include "ssa_dereference.h"
+#include "ssa_object.h"
+
 void array_index_domaint::transform(const irep_idt &function_from,
                                     trace_ptrt trace_from,
                                     const irep_idt &function_to,
@@ -24,12 +27,12 @@ void array_index_domaint::transform(const irep_idt &function_from,
 
   if(from->is_assign())
   {
-    collect_lhs_indices(from->assign_lhs(), from);
-    collect_rhs_indices(from->assign_rhs(), from, ai);
+    collect_lhs_indices(from->assign_lhs(), from, ai, ns);
+    collect_rhs_indices(from->assign_rhs(), from, ai, ns);
   }
   else if(from->is_goto() || from->is_assert())
   {
-    collect_rhs_indices(from->condition(), from, ai);
+    collect_rhs_indices(from->condition(), from, ai, ns);
   }
 }
 
@@ -62,46 +65,71 @@ bool array_index_domaint::merge(const array_index_domaint &other,
   return result;
 }
 
-void array_index_domaint::collect_lhs_indices(const exprt &expr, locationt loc)
+void array_index_domaint::collect_lhs_indices(const exprt &expr,
+                                              locationt loc,
+                                              ai_baset &ai,
+                                              const namespacet &ns)
 {
-  collect_indices(expr, loc, written_indices);
+  collect_indices(expr, loc, ai, ns, written_indices);
 }
 
 void array_index_domaint::collect_rhs_indices(const exprt &expr,
                                               locationt loc,
-                                              ai_baset &ai)
+                                              ai_baset &ai,
+                                              const namespacet &ns)
 {
   auto &read_indices = dynamic_cast<array_index_analysist &>(ai).read_indices;
-  collect_indices(expr, loc, read_indices);
+  collect_indices(expr, loc, ai, ns, read_indices);
 }
 
-void array_index_domaint::collect_indices(
-  const exprt &expr,
-  ai_domain_baset::locationt loc,
-  array_index_domaint::index_mapt &dest_map)
+void array_index_domaint::add_index(const exprt &array,
+                                    const exprt &index,
+                                    locationt loc,
+                                    const namespacet &ns,
+                                    index_mapt &dest_map)
+{
+  ssa_objectt array_obj(array, ns);
+  if(array_obj)
+  {
+    dest_map[array_obj.get_identifier()].emplace(index, loc);
+  }
+  else if(array.id() == ID_typecast)
+    add_index(to_typecast_expr(array).op(), index, loc, ns, dest_map);
+  else if(array.id() == ID_if)
+  {
+    auto &if_expr = to_if_expr(array);
+    add_index(if_expr.true_case(), index, loc, ns, dest_map);
+    add_index(if_expr.false_case(), index, loc, ns, dest_map);
+  }
+}
+
+void array_index_domaint::collect_indices(const exprt &expr,
+                                          locationt loc,
+                                          ai_baset &ai,
+                                          const namespacet &ns,
+                                          index_mapt &dest_map)
 {
   if(expr.id() == ID_index)
   {
-    // Get array name
+    auto &values =
+      dynamic_cast<array_index_analysist &>(ai).value_analysis[loc];
+
+    // Get array
     auto &array = to_index_expr(expr).array();
-    if(array.id() == ID_symbol)
-    {
-      const irep_idt array_id = to_symbol_expr(array).get_identifier();
+    exprt array_deref = dereference(array, values, "", ns, false);
 
-      // Index may be a typecast
-      exprt index = to_index_expr(expr).index();
-      if(index.id() == ID_typecast)
-        index = to_typecast_expr(index).op();
+    // Index may be a typecast
+    exprt index = to_index_expr(expr).index();
+    if(index.id() == ID_typecast)
+      index = to_typecast_expr(index).op();
 
-      // Insert index into given index map
-      dest_map[array_id].emplace(index, loc);
-    }
+    add_index(array_deref, index, loc, ns, dest_map);
   }
   else
   {
     forall_operands(op, expr)
     {
-      collect_indices(*op, loc, dest_map);
+      collect_indices(*op, loc, ai, ns, dest_map);
     }
   }
 }

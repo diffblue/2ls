@@ -443,9 +443,26 @@ var_specst array_domaint::var_specs_from_segments()
     v.guards = segment.array_spec.guards;
     v.guards.pre_guard =
       and_exprt(v.guards.pre_guard, segment.get_constraint());
+
+    // Post guard in rows for dynamic objects contains a guard:
+    //   !(dynamic_object$X.lbYY == dynamic_object$X)
+    // For array rows, we replace it by:
+    //   !(dynamic_object$X.lbYY[idx#seg] == dynamic_object$X[idx#seg])
+    if(segment.is_for_dynobj(SSA.dynamic_objects))
+    {
+      assert(v.guards.post_guard.id() == ID_and &&
+             to_and_expr(v.guards.post_guard).op1().id() == ID_not);
+      exprt &obj_eq = to_not_expr(to_and_expr(v.guards.post_guard).op1()).op();
+      assert(obj_eq.id() == ID_equal);
+      auto &eq = to_equal_expr(obj_eq);
+      eq.op0() = index_exprt(eq.op0(), segment.index_var);
+      eq.op1() = index_exprt(eq.op1(), segment.index_var);
+    }
+
     v.guards.post_guard =
       and_exprt(v.guards.post_guard, segment.get_constraint());
     rename(v.guards.post_guard);
+
     v.loc = segment.array_spec.loc;
     var_specs.push_back(v);
   }
@@ -759,6 +776,16 @@ exprt array_domaint::array_segmentt::get_constraint() const
 exprt array_domaint::array_segmentt::elem_bound() const
 {
   return equal_exprt(elem_var, index_exprt(array_spec.var, index_var));
+}
+
+bool array_domaint::array_segmentt::is_for_dynobj(
+  const dynamic_objectst &dynamic_objects) const
+{
+  if(array_spec.var.id() != ID_symbol)
+    return false;
+
+  auto id = id2string(to_symbol_expr(array_spec.var).get_identifier());
+  return dynamic_objects.get_object_by_name(id) != nullptr;
 }
 
 /// For each loop-back index, add the pre-loop value of the index as a new

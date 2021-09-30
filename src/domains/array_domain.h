@@ -11,6 +11,7 @@ Author: Viktor Malik <viktor.malik@gmail.com>
 #ifndef CPROVER_2LS_DOMAINS_ARRAY_DOMAIN_H
 #define CPROVER_2LS_DOMAINS_ARRAY_DOMAIN_H
 
+#include <ssa/dynamic_objects.h>
 #include <ssa/local_ssa.h>
 
 #include "simple_domain.h"
@@ -107,6 +108,7 @@ public:
 
     exprt get_constraint() const;
     exprt elem_bound() const;
+    bool is_for_dynobj(const dynamic_objectst &dynamic_objects) const;
   };
   // List of all segments. We use std::list here so that pointers to the
   // elements are stable and we can use various maps to access them (see below).
