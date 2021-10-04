@@ -29,7 +29,7 @@ exprt ssa_build_goto_tracet::finalize_lhs(const exprt &src)
     tmp.array()=finalize_lhs(tmp.array());
     exprt index=unwindable_local_SSA.read_rhs(tmp.index(), current_pc);
     tmp.index()=simplify_expr(prop_conv.get(index), unwindable_local_SSA.ns);
-    return tmp;
+    return std::move(tmp);
   }
   else if(src.id()==ID_dereference)
   {
@@ -48,7 +48,7 @@ exprt ssa_build_goto_tracet::finalize_lhs(const exprt &src)
   {
     member_exprt tmp=to_member_expr(src);
     tmp.struct_op()=finalize_lhs(tmp.struct_op());
-    return tmp;
+    return std::move(tmp);
   }
   else
     return src;
@@ -249,6 +249,7 @@ bool ssa_build_goto_tracet::record_step(
     break;
 
   case NO_INSTRUCTION_TYPE:
+  case INCOMPLETE_GOTO:
     assert(false);
     break;
   }

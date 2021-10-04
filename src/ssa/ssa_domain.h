@@ -88,7 +88,7 @@ public:
   virtual void output(
     std::ostream &out,
     const ai_baset &ai,
-    const namespacet &ns) const;
+    const namespacet &ns) const override;
 
   bool merge(
     const ssa_domaint &b,

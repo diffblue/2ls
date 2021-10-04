@@ -121,6 +121,7 @@ bool summarizer_baset::check_call_reachable(
     debug() << "Call is not reachable" << eom;
     break;
   }
+  case decision_proceduret::resultt::D_ERROR:
   default: assert(false); break;
   }
 
@@ -313,6 +314,7 @@ bool summarizer_baset::check_precondition(
 
     break;
   }
+  case decision_proceduret::resultt::D_ERROR:
   default: assert(false); break;
   }
 

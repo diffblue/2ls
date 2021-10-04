@@ -469,7 +469,7 @@ void tpolyhedra_domaint::add_quadratic_template(
   unsigned size=2*var_specs.size();
   templ.reserve(templ.size()+size);
 
-  for(const auto v : var_specs)
+  for(const auto &v : var_specs)
   {
     if(v.guards.kind==guardst::IN)
       continue;
@@ -525,15 +525,16 @@ std::unique_ptr<strategy_solver_baset> tpolyhedra_domaint::new_strategy_solver(
   {
   case ENUMERATION:
     return simple_domaint::new_strategy_solver(solver, SSA, message_handler);
-  case BINSEARCH:
-    return std::unique_ptr<strategy_solver_baset>(
-      new strategy_solver_binsearcht(*this, solver, SSA, message_handler));
   case BINSEARCH2:
     return std::unique_ptr<strategy_solver_baset>(
       new strategy_solver_binsearch2t(*this, solver, SSA, message_handler));
   case BINSEARCH3:
     return std::unique_ptr<strategy_solver_baset>(
       new strategy_solver_binsearch3t(*this, solver, SSA, message_handler));
+  case BINSEARCH:
+  default: // Default to binsearch if value is invalid
+    return std::unique_ptr<strategy_solver_baset>(
+      new strategy_solver_binsearcht(*this, solver, SSA, message_handler));
   }
 }
 

@@ -79,6 +79,7 @@ void summarizer_fw_contextst::inline_summaries(
         switch(ui)
         {
         case ui_message_handlert::uit::PLAIN:
+        case ui_message_handlert::uit::JSON_UI:
           break;
 
         case ui_message_handlert::uit::XML_UI:

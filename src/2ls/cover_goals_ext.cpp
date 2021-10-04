@@ -98,6 +98,7 @@ void cover_goals_extt::operator()()
         return; // exit on first failure if requested
       break;
 
+    case decision_proceduret::resultt::D_ERROR:
     default:
       error() << "decision procedure has failed" << eom;
       return;

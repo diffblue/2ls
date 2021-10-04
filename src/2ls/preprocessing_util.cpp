@@ -88,7 +88,7 @@ void twols_parse_optionst::nondet_locals(goto_modelt &goto_model)
         side_effect_expr_nondett nondet(
           decl.symbol().type(),
           i_it->source_location);
-        goto_programt::targett t=f_it.second.body.insert_after(
+        f_it.second.body.insert_after(
           i_it,
           goto_programt::make_assignment(
             code_assignt(decl.symbol(), nondet),
@@ -391,10 +391,9 @@ void twols_parse_optionst::remove_loops_in_entry(goto_modelt &goto_model)
        f_it.second.body.instructions.begin()->is_target())
     {
       auto insert_before=f_it.second.body.instructions.begin();
-      auto new_entry=
-        f_it.second.body.insert_before(
-          insert_before,
-          goto_programt::make_skip(insert_before->source_location));
+      f_it.second.body.insert_before(
+        insert_before,
+        goto_programt::make_skip(insert_before->source_location));
     }
   }
 }

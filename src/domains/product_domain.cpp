@@ -91,7 +91,7 @@ std::unique_ptr<strategy_solver_baset> product_domaint::new_strategy_solver(
   solver_vect solvers;
   for(auto &d : domains)
     solvers.push_back(
-      std::move(d->new_strategy_solver(solver, SSA, message_handler)));
+      d->new_strategy_solver(solver, SSA, message_handler));
   return std::unique_ptr<strategy_solver_baset>(
     new strategy_solver_productt(
       *this, std::move(solvers), solver, SSA, message_handler));

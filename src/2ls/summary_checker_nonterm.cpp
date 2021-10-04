@@ -399,6 +399,7 @@ void summary_checker_nontermt::check_properties_linear(
           solver.pop_context();
         break;
 
+      case decision_proceduret::resultt::D_ERROR:
       default:
         error() << "decision procedure has failed" << eom;
         solver.pop_context();
@@ -418,6 +419,7 @@ void summary_checker_nontermt::check_properties_linear(
           solver.pop_context();
         continue;
 
+      case decision_proceduret::resultt::D_ERROR:
       default:
         error() << "decision procedure has failed" << eom;
         solver.pop_context();
@@ -460,6 +462,7 @@ void summary_checker_nontermt::check_properties_linear(
           solver.pop_context();
         break;
 
+      case decision_proceduret::resultt::D_ERROR:
       default:
         error() << "decision procedure has failed" << eom;
         solver.pop_context();
@@ -539,6 +542,7 @@ void summary_checker_nontermt::check_properties_linear(
             solver << not_exprt(conjunction(local_constraints));
           break;
 
+        case decision_proceduret::resultt::D_ERROR:
         default:
           error() << "decision procedure has failed" << eom;
           solver.pop_context();
@@ -567,6 +571,7 @@ void summary_checker_nontermt::check_properties_linear(
           solver.pop_context();
         return;
 
+      case decision_proceduret::resultt::D_ERROR:
       default:
         error() << "decision procedure has failed" << eom;
         solver.pop_context();
