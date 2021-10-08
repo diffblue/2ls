@@ -51,7 +51,6 @@ public:
       options,
       ssa_objects,
       ssa_value_ai),
-    alias_analysis(_function_identifier, _goto_function, ns),
     guard_map(_goto_function.body),
     function_identifier(_function_identifier),
     ssa_analysis(assignments),
@@ -148,20 +147,6 @@ public:
   // unknown heap objects
   var_sett unknown_objs;
 
-  // Maps members of dynamic object to a set of pointers used to access those
-  // objects when assigning them
-  class dyn_obj_assignt
-  {
-  public:
-    const irep_idt pointer_id;
-    const exprt cond;
-
-    dyn_obj_assignt(const irep_idt &pointer_id, const exprt &cond):
-      pointer_id(pointer_id), cond(cond) {}
-  };
-  typedef std::list<dyn_obj_assignt> dyn_obj_assignst;
-  std::map<exprt, dyn_obj_assignst> dyn_obj_assigns;
-
   // Map dynamic object names to guards of their allocation
   std::map<irep_idt, exprt> allocation_guards;
 
@@ -238,8 +223,6 @@ public:
   typedef ssa_objectst::objectst objectst;
   ssa_value_ait ssa_value_ai;
   assignmentst assignments;
-
-  may_alias_analysist alias_analysis;
 
 // protected:
   guard_mapt guard_map;

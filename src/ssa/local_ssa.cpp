@@ -1110,40 +1110,8 @@ void local_SSAt::assign_rec(
   {
     const if_exprt &if_expr=to_if_expr(lhs);
 
-    exprt::operandst other_cond_conj;
-    if(if_expr.true_case().get_bool("#heap_access") &&
-       if_expr.cond().id()==ID_equal)
-    {
-      const exprt heap_object=if_expr.true_case();
-      const ssa_objectt ptr_object(to_equal_expr(if_expr.cond()).lhs(), ns);
-      if(ptr_object)
-      {
-        const irep_idt ptr_id=ptr_object.get_identifier();
-        const exprt cond=read_rhs(if_expr.cond(), loc);
-
-        for(const dyn_obj_assignt &do_assign : dyn_obj_assigns[heap_object])
-        {
-          if(!alias_analysis[loc].aliases.same_set(
-            ptr_id, do_assign.pointer_id))
-          {
-            other_cond_conj.push_back(do_assign.cond);
-          }
-        }
-
-        dyn_obj_assigns[heap_object].emplace_back(ptr_id, cond);
-      }
-    }
-
-    exprt cond=if_expr.cond();
-    if(!other_cond_conj.empty())
-    {
-      const exprt other_cond=or_exprt(
-        not_exprt(conjunction(other_cond_conj)),
-        name(guard_symbol(), OBJECT_SELECT, loc));
-      cond=and_exprt(cond, other_cond);
-    }
     exprt orig_rhs=fresh_rhs ? name(ssa_objectt(rhs, ns), OUT, loc) : rhs;
-    exprt new_rhs=if_exprt(cond, orig_rhs, if_expr.true_case());
+    exprt new_rhs=if_exprt(if_expr.cond(), orig_rhs, if_expr.true_case());
     assign_rec(
       if_expr.true_case(),
       new_rhs,
