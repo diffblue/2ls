@@ -213,6 +213,7 @@ bool dynobj_instance_domaint::merge(
   trace_ptrt trace_to)
 {
   bool result=has_values.is_false() && !other.has_values.is_false();
+  has_values=tvt::unknown();
   for(auto &obj : other.must_alias_relations)
   {
     if(must_alias_relations.find(obj.first)==must_alias_relations.end())
