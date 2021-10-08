@@ -1141,6 +1141,12 @@ bool twols_parse_optionst::process_goto_program(
 
     remove_dead_goto(goto_model);
 
+    // There's a bug in SSA creation that causes problems when a single SKIP
+    // instruction is a target of both a forward and a backward GOTO.
+    // This transformation fixes that by splitting such SKIPs into two.
+    // TODO: fix this properly in SSA, if possible.
+    fix_goto_targets(goto_model);
+
     if(cmdline.isset("competition-mode"))
     {
       limit_array_bounds(goto_model);
