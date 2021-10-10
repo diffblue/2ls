@@ -279,6 +279,10 @@ protected:
   void collect_custom_templates();
   replace_mapt template_newvars;
   exprt template_last_newvar;
+
+  optionalt<ssa_domaint::deft> get_recent_object_alloc_def(
+    locationt loc,
+    const ssa_domaint::def_mapt::const_iterator &def) const;
 };
 
 std::list<exprt> & operator <<

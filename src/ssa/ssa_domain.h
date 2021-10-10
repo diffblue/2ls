@@ -34,6 +34,7 @@ public:
     inline bool is_input() const { return kind==INPUT; }
     inline bool is_assignment() const { return kind==ASSIGNMENT; }
     inline bool is_phi() const { return kind==PHI; }
+    inline bool is_allocation() const { return kind==ALLOCATION; }
   };
 
   friend inline bool operator==(const deft &a, const deft &b)

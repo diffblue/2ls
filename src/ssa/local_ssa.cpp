@@ -20,6 +20,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/expr_util.h>
 #include <util/pointer_expr.h>
 #include <util/byte_operators.h>
+#include <util/optional.h>
 #include <solvers/decision_procedure.h>
 
 #include <goto-programs/adjust_float_expressions.h>
@@ -883,17 +884,18 @@ exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
   {
     // If the last definition of an object is at its allocation, we can only use
     // the corresponding symbol if the object has truly been allocated
-    // (allocation guard holds). Otherwise we need to use the last definition
-    // before the allocation.
+    // (allocation guard holds). After the rebase to a newer version of CBMC,
+    // the last definition may also be a PHI node at the end of malloc (
+    // which covers the case-split whether malloc can fail).
+    // Otherwise we need to use the last definition before the allocation.
     auto def_it=ssa_analysis[loc].def_map.find(object.get_identifier());
-    if(def_it!=ssa_analysis[loc].def_map.end() &&
-       def_it->second.def.kind==ssa_domaint::deft::ALLOCATION)
+    auto maybe_alloc_def=get_recent_object_alloc_def(loc, def_it);
+    if(maybe_alloc_def.has_value())
     {
-      locationt alloc_loc=def_it->second.def.loc;
       return if_exprt(
-        read_rhs(def_it->second.def.guard, alloc_loc),
+        read_rhs(maybe_alloc_def->guard, maybe_alloc_def->loc),
         read_rhs(object, loc),
-        read_rhs(object, alloc_loc));
+        read_rhs(object, maybe_alloc_def->loc));
     }
     else
       return read_rhs(object, loc);
@@ -902,6 +904,32 @@ exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
   {
     return name_input(object);
   }
+}
+
+/// Checks whether the last definition of the object is its allocation and
+/// if so, return the allocation def. Otherwise returns nullopt.
+optionalt<ssa_domaint::deft> local_SSAt::get_recent_object_alloc_def(
+  locationt loc,
+  const ssa_domaint::def_mapt::const_iterator &def) const
+{
+  if(def==ssa_analysis[loc].def_map.end())
+    return nullopt;
+
+  if(def->second.def.is_allocation())
+    return def->second.def;
+
+  // Not a direct allocation, follow the split if it is a phi node and add
+  // guard if at least one of the branches is an allocation.
+  if(def->second.def.is_phi())
+  {
+    const auto &phi_branches=
+      ssa_analysis[def->second.def.loc].phi_nodes.find(def->first);
+    if(phi_branches!=ssa_analysis[def->second.def.loc].phi_nodes.end())
+      for(const auto &phi_branch : phi_branches->second)
+        if(phi_branch.second.is_allocation())
+          return phi_branch.second;
+  }
+  return nullopt;
 }
 
 void local_SSAt::replace_side_effects_rec(
