@@ -1541,10 +1541,10 @@ void local_SSAt::collect_allocation_guards(
 
 void local_SSAt::collect_record_frees(local_SSAt::locationt loc)
 {
-  if(loc->is_decl())
+  if(loc->is_assign())
   {
-    const code_declt &code_decl=code_declt{loc->decl_symbol()};
-    const exprt &symbol=code_decl.symbol();
+    const code_assignt &code_assign=to_code_assign(loc->get_code());
+    const exprt &symbol=code_assign.lhs();
     if(symbol.id()!=ID_symbol)
       return;
 

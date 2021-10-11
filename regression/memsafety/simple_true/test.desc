@@ -1,36 +1,6 @@
-KNOWNBUG
+CORE
 main.c
 --heap --intervals --pointer-check --no-assertions
 ^EXIT=0$
 ^SIGNAL=0$
 ^VERIFICATION SUCCESSFUL$
---
---
-CBMC 5.9 introduced changes to its implementation of some built-in functions,
-the ones affecting this test are malloc and free. Malloc changes have been
-already accounted for in 2LS codebase, however the control flow of free
-is most likely causing problems in this test making one of the asserts fail:
-
-[main.pointer_dereference.27] dereference failure: deallocated dynamic object in *p: UNKNOWN
-
-This may be related to double free assertion, where GOTO changed from:
-
-...
-    IF !(__CPROVER_deallocated == ptr) THEN GOTO 6
-    // 144 file <builtin-library-free> line 18 function free
-    ASSERT 0 != 0 // double free
-    // 145 no location
-    ASSUME 0 != 0
-    // 146 file <builtin-library-free> line 29 function free
- 6: _Bool record;
-...
-
-to:
-    ASSERT ptr == NULL || __CPROVER_deallocated != ptr // double free
-
-Note the new ptr == NULL condition, this could be the root cause of
-the problem. However further investigation is required
-and will be done once the CBMC rebase is completed. According to the
-C standard, free(NULL) is a valid construct (no operation) but 2LS doesn't
-seem to handle this case correctly.
-
