@@ -289,6 +289,38 @@ static bool replace_malloc_rec(
   }
 }
 
+/// Finds the latest assignment to lhs before location_number and:
+///  - if the assignment rhs is a symbol, continues recursively
+///  - otherwise returns the rhs
+exprt get_malloc_size(
+  const exprt &lhs,
+  unsigned location_number,
+  const goto_functiont &goto_function)
+{
+  exprt result=nil_exprt();
+  unsigned result_loc_num=0;
+  forall_goto_program_instructions(it, goto_function.body)
+  {
+    if(!it->is_assign())
+      continue;
+
+    if(lhs==it->assign_lhs())
+    {
+      result=it->assign_rhs();
+      if(result.id()==ID_typecast)
+        result=to_typecast_expr(result).op();
+      result_loc_num=it->location_number;
+    }
+
+    if(it->location_number==location_number)
+      break;
+  }
+  if(result.id()==ID_symbol)
+    return get_malloc_size(result, result_loc_num, goto_function);
+
+  return result;
+}
+
 bool replace_malloc(
   goto_modelt &goto_model,
   const std::string &suffix,
@@ -336,14 +368,8 @@ bool replace_malloc(
             function_copy.copy_from(f_it.second);
             constant_propagator_ait const_propagator(function_copy);
             const_propagator(f_it.first, function_copy, ns);
-            forall_goto_program_instructions(copy_i_it, function_copy.body)
-            {
-              if(copy_i_it->location_number==i_it->location_number)
-              {
-                assert(copy_i_it->is_assign());
-                malloc_size=copy_i_it->get_assign().rhs();
-              }
-            }
+            malloc_size=get_malloc_size(
+              i_it->assign_lhs(), i_it->location_number, function_copy);
           }
         }
         if(replace_malloc_rec(code_assign.rhs(),
