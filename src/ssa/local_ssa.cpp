@@ -51,6 +51,9 @@ void local_SSAt::build_SSA()
     build_function_call(i_it);
 //    build_unknown_objs(i_it);
     collect_record_frees(i_it);
+
+    if (options.get_bool_option("competition-mode"))
+      disable_unsupported_instructions(i_it);
   }
 
   // collect custom templates in loop heads
@@ -1643,4 +1646,14 @@ bool local_SSAt::can_reuse_symderef(
   }
 
   return true;
+}
+
+void local_SSAt::disable_unsupported_instructions(locationt loc)
+{
+  if (loc->is_other())
+  {
+    auto st = loc->get_code().get_statement();
+    if(st=="array_copy" || st=="array_replace")
+      assert(false);
+  }
 }
