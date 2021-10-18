@@ -674,7 +674,7 @@ void twols_parse_optionst::limit_array_bounds(goto_modelt &goto_model)
           if(size_expr.id()==ID_constant)
           {
             int size=std::stoi(
-              id2string(to_constant_expr(size_expr).get_value()), nullptr, 2);
+              id2string(to_constant_expr(size_expr).get_value()), nullptr, 16);
             // @TODO temporary solution - there seems to be a bug in the solver
             assert(size<=50000);
           }
