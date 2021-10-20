@@ -22,6 +22,7 @@ Author: Daniel Kroening, Peter Schrammel
 
 #include <ansi-c/ansi_c_language.h>
 #include <ansi-c/cprover_library.h>
+#include <ansi-c/gcc_version.h>
 #include <cpp/cpp_language.h>
 
 #include <goto-programs/goto_convert_functions.h>
@@ -395,6 +396,14 @@ int twols_parse_optionst::doit()
   status() << "2LS version " TWOLS_VERSION << eom;
 
   register_languages();
+
+  // configure gcc, if required
+  if(config.ansi_c.preprocessor == configt::ansi_ct::preprocessort::GCC)
+  {
+    gcc_versiont gcc_version;
+    gcc_version.get("gcc");
+    configure_gcc(gcc_version);
+  }
 
   if(get_goto_program(options))
     return 6;
