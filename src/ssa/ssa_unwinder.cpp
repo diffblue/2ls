@@ -529,7 +529,7 @@ void ssa_local_unwindert::add_hoisted_assertions(loopt &loop, bool is_last)
             to_not_expr(it->first->guard).op().id()==ID_overflow_shl))
 #endif
     {
-      exprt e=disjunction(it->second.exit_conditions);
+      exprt e=conjunction(it->second.exit_conditions);
       SSA.rename(e, loop.body_nodes.begin()->location);
       SSA.nodes.push_back(
         local_SSAt::nodet(it->first, SSA.nodes.end())); // add new node
