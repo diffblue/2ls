@@ -515,6 +515,31 @@ equal_exprt ssa_local_unwindert::build_exit_merge(
   return equal_exprt(e, re);
 }
 
+
+/// Check whether the expression contains signed left shift.
+/// This is a hack for SV-comp to disable hoisting assertions for this
+/// operation.
+bool has_overflow_shl(const exprt &expr)
+{
+  if(expr.id()==ID_shl)
+  {
+    binary_exprt shl=to_binary_expr(expr);
+    if(shl.op0().type().id()==ID_signedbv)
+      return true;
+  }
+  else
+  {
+    // Recursively go through the operands
+    if(!expr.has_operands())
+      return false;
+    else
+      forall_operands(o_it, expr)
+        if(has_overflow_shl(*o_it))
+          return true;
+  }
+  return false;
+}
+
 /// adds the assumptions for hoisted assertions for the current instance
 void ssa_local_unwindert::add_hoisted_assertions(loopt &loop, bool is_last)
 {
@@ -525,8 +550,7 @@ void ssa_local_unwindert::add_hoisted_assertions(loopt &loop, bool is_last)
     if(!is_last // only add assumptions if we are not in %0 iteration
        && is_kinduction && !it->second.assertions.empty()
 #ifdef COMPETITION
-       && !(it->first->guard.id()==ID_not &&
-            to_not_expr(it->first->guard).op().id()==ID_overflow_shl))
+       && !has_overflow_shl(it->first->guard))
 #endif
     {
       exprt e=conjunction(it->second.exit_conditions);
