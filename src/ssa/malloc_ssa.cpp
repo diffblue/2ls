@@ -72,6 +72,8 @@ exprt create_dynamic_object(
       from_integer(0, index_type()),
       value_symbol.type.subtype());
     object=index_expr;
+    if(is_concrete)
+      to_index_expr(object).array().set("#concrete", true);
   }
   else
   {
