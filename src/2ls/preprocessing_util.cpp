@@ -674,7 +674,7 @@ void twols_parse_optionst::limit_array_bounds(goto_modelt &goto_model)
           if(size_expr.id()==ID_constant)
           {
             int size=std::stoi(
-              id2string(to_constant_expr(size_expr).get_value()), nullptr, 2);
+              id2string(to_constant_expr(size_expr).get_value()), nullptr, 16);
             // @TODO temporary solution - there seems to be a bug in the solver
             assert(size<=50000);
           }
@@ -854,5 +854,53 @@ void twols_parse_optionst::assert_no_atexit(goto_modelt &goto_model)
         assert(name!="atexit");
       }
     }
+  }
+}
+
+/// Searches for SKIP instructions that are a target of both a forward and
+/// a backward GOTO. Such instructions are split into 2 - the first one is
+/// made the target of forward GOTOs and the second one is made the target of
+/// backward GOTOs.
+void twols_parse_optionst::fix_goto_targets(goto_modelt &goto_model)
+{
+  for (auto &f_it : goto_model.goto_functions.function_map)
+  {
+    Forall_goto_program_instructions(i_it, f_it.second.body)
+    {
+      if (i_it->incoming_edges.size() <= 1)
+        continue;
+      if (!i_it->is_skip())
+        continue;
+
+      bool has_backwards_goto = false;
+      bool has_forward_goto = false;
+      for (auto &incoming : i_it->incoming_edges)
+      {
+        if (incoming->location_number < i_it->location_number)
+          has_forward_goto = true;
+        if (incoming->location_number > i_it->location_number)
+          has_backwards_goto = true;
+      }
+      if (has_forward_goto && has_backwards_goto)
+      {
+        auto new_skip = f_it.second.body.insert_after(
+          i_it,
+          goto_programt::make_skip(i_it->source_location));
+
+        for (auto &incoming : i_it->incoming_edges)
+        {
+          if (incoming->location_number > i_it->location_number)
+          {
+            // Redirect backward GOTOs to the new skip
+            for (auto &target : incoming->targets)
+            {
+              if (target == i_it)
+                target = new_skip;
+            }
+          }
+        }
+      }
+    }
+    goto_model.goto_functions.update();
   }
 }

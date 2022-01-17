@@ -216,6 +216,8 @@ const exprt heap_domaint::get_points_to_dest(
 {
   // Value from the solver must be converted into an expression
   exprt ptr_value=value_to_ptr_exprt(solver_value);
+  if(ptr_value.id()==ID_typecast)
+    ptr_value=to_typecast_expr(ptr_value).op();
 
   if((ptr_value.id()==ID_constant &&
       to_constant_expr(ptr_value).get_value()==ID_NULL) ||
@@ -228,18 +230,30 @@ const exprt heap_domaint::get_points_to_dest(
   {
     // Template row pointer points to the heap (p = &obj)
     assert(ptr_value.id()==ID_address_of);
-    if(to_address_of_expr(ptr_value).object().id()!=ID_symbol)
+    exprt obj=to_address_of_expr(ptr_value).object();
+    if(obj.id()==ID_member)
+    {
+      // &(X.field) where field has offset 0 is equal to &X
+      auto &member=to_member_expr(obj);
+      auto field=member.get_component_name();
+      auto struct_type=ns.follow(member.compound().type());
+      if(struct_type.id()==ID_struct &&
+         to_struct_type(struct_type).component_number(field)==0)
+      {
+        obj=member.compound();
+      }
+    }
+    if(obj.id()!=ID_symbol)
     {
       // If solver did not return address of a symbol, it is considered
       // as nondet value.
       return nil_exprt();
     }
 
-    symbol_exprt obj=to_symbol_expr(
-      to_address_of_expr(ptr_value).object());
+    symbol_exprt symbol_obj=to_symbol_expr(obj);
 
-    if(obj.type()!=templ_row_expr.type() &&
-       ns.follow(templ_row_expr.type().subtype())!=ns.follow(obj.type()))
+    if(symbol_obj.type()!=templ_row_expr.type() &&
+       ns.follow(templ_row_expr.type().subtype())!=ns.follow(symbol_obj.type()))
     {
       if(!is_cprover_symbol(templ_row_expr))
       {
@@ -249,7 +263,7 @@ const exprt heap_domaint::get_points_to_dest(
     }
 
     // Add equality p == &obj
-    return std::move(obj);
+    return std::move(symbol_obj);
   }
   else
     return nil_exprt();

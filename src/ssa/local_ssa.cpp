@@ -20,6 +20,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/expr_util.h>
 #include <util/pointer_expr.h>
 #include <util/byte_operators.h>
+#include <util/optional.h>
 #include <solvers/decision_procedure.h>
 
 #include <goto-programs/adjust_float_expressions.h>
@@ -50,6 +51,9 @@ void local_SSAt::build_SSA()
     build_function_call(i_it);
 //    build_unknown_objs(i_it);
     collect_record_frees(i_it);
+
+    if (options.get_bool_option("competition-mode"))
+      disable_unsupported_instructions(i_it);
   }
 
   // collect custom templates in loop heads
@@ -883,17 +887,18 @@ exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
   {
     // If the last definition of an object is at its allocation, we can only use
     // the corresponding symbol if the object has truly been allocated
-    // (allocation guard holds). Otherwise we need to use the last definition
-    // before the allocation.
+    // (allocation guard holds). After the rebase to a newer version of CBMC,
+    // the last definition may also be a PHI node at the end of malloc (
+    // which covers the case-split whether malloc can fail).
+    // Otherwise we need to use the last definition before the allocation.
     auto def_it=ssa_analysis[loc].def_map.find(object.get_identifier());
-    if(def_it!=ssa_analysis[loc].def_map.end() &&
-       def_it->second.def.kind==ssa_domaint::deft::ALLOCATION)
+    auto maybe_alloc_def=get_recent_object_alloc_def(loc, def_it);
+    if(maybe_alloc_def.has_value())
     {
-      locationt alloc_loc=def_it->second.def.loc;
       return if_exprt(
-        read_rhs(def_it->second.def.guard, alloc_loc),
+        read_rhs(maybe_alloc_def->guard, maybe_alloc_def->loc),
         read_rhs(object, loc),
-        read_rhs(object, alloc_loc));
+        read_rhs(object, maybe_alloc_def->loc));
     }
     else
       return read_rhs(object, loc);
@@ -902,6 +907,32 @@ exprt local_SSAt::read_rhs_rec(const exprt &expr, locationt loc) const
   {
     return name_input(object);
   }
+}
+
+/// Checks whether the last definition of the object is its allocation and
+/// if so, return the allocation def. Otherwise returns nullopt.
+optionalt<ssa_domaint::deft> local_SSAt::get_recent_object_alloc_def(
+  locationt loc,
+  const ssa_domaint::def_mapt::const_iterator &def) const
+{
+  if(def==ssa_analysis[loc].def_map.end())
+    return nullopt;
+
+  if(def->second.def.is_allocation())
+    return def->second.def;
+
+  // Not a direct allocation, follow the split if it is a phi node and add
+  // guard if at least one of the branches is an allocation.
+  if(def->second.def.is_phi())
+  {
+    const auto &phi_branches=
+      ssa_analysis[def->second.def.loc].phi_nodes.find(def->first);
+    if(phi_branches!=ssa_analysis[def->second.def.loc].phi_nodes.end())
+      for(const auto &phi_branch : phi_branches->second)
+        if(phi_branch.second.is_allocation())
+          return phi_branch.second;
+  }
+  return nullopt;
 }
 
 void local_SSAt::replace_side_effects_rec(
@@ -1110,40 +1141,8 @@ void local_SSAt::assign_rec(
   {
     const if_exprt &if_expr=to_if_expr(lhs);
 
-    exprt::operandst other_cond_conj;
-    if(if_expr.true_case().get_bool("#heap_access") &&
-       if_expr.cond().id()==ID_equal)
-    {
-      const exprt heap_object=if_expr.true_case();
-      const ssa_objectt ptr_object(to_equal_expr(if_expr.cond()).lhs(), ns);
-      if(ptr_object)
-      {
-        const irep_idt ptr_id=ptr_object.get_identifier();
-        const exprt cond=read_rhs(if_expr.cond(), loc);
-
-        for(const dyn_obj_assignt &do_assign : dyn_obj_assigns[heap_object])
-        {
-          if(!alias_analysis[loc].aliases.same_set(
-            ptr_id, do_assign.pointer_id))
-          {
-            other_cond_conj.push_back(do_assign.cond);
-          }
-        }
-
-        dyn_obj_assigns[heap_object].emplace_back(ptr_id, cond);
-      }
-    }
-
-    exprt cond=if_expr.cond();
-    if(!other_cond_conj.empty())
-    {
-      const exprt other_cond=or_exprt(
-        not_exprt(conjunction(other_cond_conj)),
-        name(guard_symbol(), OBJECT_SELECT, loc));
-      cond=and_exprt(cond, other_cond);
-    }
     exprt orig_rhs=fresh_rhs ? name(ssa_objectt(rhs, ns), OUT, loc) : rhs;
-    exprt new_rhs=if_exprt(cond, orig_rhs, if_expr.true_case());
+    exprt new_rhs=if_exprt(if_expr.cond(), orig_rhs, if_expr.true_case());
     assign_rec(
       if_expr.true_case(),
       new_rhs,
@@ -1545,10 +1544,10 @@ void local_SSAt::collect_allocation_guards(
 
 void local_SSAt::collect_record_frees(local_SSAt::locationt loc)
 {
-  if(loc->is_decl())
+  if(loc->is_assign())
   {
-    const code_declt &code_decl=code_declt{loc->decl_symbol()};
-    const exprt &symbol=code_decl.symbol();
+    const code_assignt &code_assign=to_code_assign(loc->get_code());
+    const exprt &symbol=code_assign.lhs();
     if(symbol.id()!=ID_symbol)
       return;
 
@@ -1647,4 +1646,14 @@ bool local_SSAt::can_reuse_symderef(
   }
 
   return true;
+}
+
+void local_SSAt::disable_unsupported_instructions(locationt loc)
+{
+  if (loc->is_other())
+  {
+    auto st = loc->get_code().get_statement();
+    if(st=="array_copy" || st=="array_replace")
+      assert(false);
+  }
 }

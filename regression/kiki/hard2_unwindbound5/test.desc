@@ -1,0 +1,10 @@
+CORE
+main.c
+--heap --values-refine --k-induction --competition-mode
+^EXIT=10$
+^SIGNAL=0$
+^.*FAILURE$
+--
+--
+This is a past incorrect true benchmark from SV-comp which was caused by a bug
+in SSA unwinder where the generated constraints made the analysis unsound.
