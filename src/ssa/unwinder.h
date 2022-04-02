@@ -36,8 +36,9 @@ public:
   virtual void init()=0;
 
   /// Performs unwinding of all loops in the function up to bound k
-  /// \param The target unwind count which should be present after
+  /// \param k The target unwind count which should be present after
   ///   unwinding the loop.
+  /// \pre The unwinder has been initialized using \ref init
   virtual void unwind(unsigned k)=0;
 
   /// Gathers conditions under which loops continue.
@@ -55,6 +56,7 @@ public:
     const local_SSAt::nodet &node,
     bool pre) const=0;
 
+  /// The bound up to which loops are currently unwound.
   long current_unwinding=-1;
 };
 
@@ -63,17 +65,22 @@ class unwindert
 {
 public:
   /// Creates local unwinders for each function operating in the given mode.
+  /// \param mode Mode under which the unwinders should be initialized.
   virtual void init(unwinder_modet mode)=0;
 
   /// Runs initializing actions in all present local unwinders.
   virtual void init_localunwinders()=0;
 
   /// Unwinds all functions up to the given bound k.
+  /// \param k The target unwind count which should be present after
+  ///   unwinding the loop.
   virtual void unwind_all(unsigned k)=0;
 
   /// Returns a local unwinder for the given function name.
+  /// \param fname Name of the function to get the unwinder of.
   virtual local_unwindert &get(const irep_idt &fname)=0;
   /// Returns a const local unwinder for the given function name.
+  /// \param fname Name of the function to get the unwinder of.
   virtual const local_unwindert &get(const irep_idt &fname) const=0;
 };
 
