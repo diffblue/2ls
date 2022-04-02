@@ -29,13 +29,13 @@ class goto_local_unwindert:public local_unwindert, messaget
 public:
   goto_local_unwindert(
     ssa_dbt &_ssa_db,
-    goto_functionst &_goto_functions,
+    goto_modelt &_goto_model,
     const irep_idt &_function_name,
     goto_functiont &_goto_function,
     unwinder_modet _mode,
     bool _simplify):
     ssa_db(_ssa_db),
-    goto_functions(_goto_functions),
+    goto_model(_goto_model),
     function_name(_function_name),
     goto_function(_goto_function),
     mode(_mode),
@@ -57,8 +57,9 @@ protected:
   const irep_idt unwind_flag="unwind";
   /// Reference to a global storage of SSA.
   ssa_dbt &ssa_db;
-  /// All functions in the GOTO model. Required for calling update()
-  goto_functionst &goto_functions;
+  /// The whole GOTO model. Required for calling update() and accessing the
+  /// symbol table for SSA recomputing.
+  goto_modelt &goto_model;
   /// Name of the function to unwind.
   const irep_idt &function_name;
   /// The GOTO function which this unwinder unwinds.
@@ -79,6 +80,21 @@ protected:
     unsigned to_unwind);
   void reconnect_loops();
   void reset_loop_connections();
+  void recompute_ssa();
+  void update_ssa(
+    local_SSAt &SSA,
+    const goto_programt &goto_program);
+  void update_assertions(
+    local_SSAt &SSA,
+    const goto_programt &goto_program);
+  void add_hoisted_assertions(
+    local_SSAt &SSA,
+    const goto_programt &goto_program);
+  void convert_to_constraints(
+    local_SSAt &SSA,
+    local_SSAt::nodest::iterator &ssa_it,
+    local_SSAt::nodest::iterator &loop_back,
+    bool is_last);
 };
 
 

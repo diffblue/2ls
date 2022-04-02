@@ -8,6 +8,7 @@ Author: František Nečas
 
 #include<stack>
 
+#include <util/prefix.h>
 #include <goto-programs/remove_skip.h>
 #include <goto-instrument/unwindset.h>
 #include <goto-instrument/unwind.h>
@@ -167,16 +168,183 @@ void goto_local_unwindert::unwind(unsigned int k)
   // The update goes a bit against the concept of this class (which should
   // focus only on the one function, however there doesn't seem to be a better
   // way to support the new and the old unwinder).
-  goto_functions.update();
+  goto_model.goto_functions.update();
   current_unwinding=k;
 
   reconnect_loops();
-  goto_functions.update();
+  goto_model.goto_functions.update();
+  recompute_ssa();
 }
 
-/// No-op, no special initialization is necessary in this unwinder.
+/// Recomputes SSA based on the newly updated GOTO and performs required
+/// transformations of the SSA (see \ref update_assertions and
+/// \ref add_hoisted_assertions).
+void goto_local_unwindert::recompute_ssa()
+{
+  if(!goto_function.body_available())
+    return;
+  if(has_prefix(id2string(function_name), TEMPLATE_DECL))
+    return;
+  ssa_db.create(function_name, goto_function, goto_model.symbol_table);
+  local_SSAt &SSA=ssa_db.get(function_name);
+  if(simplify)
+    ::simplify(SSA, SSA.ns);
+  update_ssa(SSA, goto_function.body);
+  // Also clear the solver, there may be left-overs with different indices
+  // FIXME: This defeats the purpose of incremental solving
+  ssa_db.clear_solver(function_name);
+}
+
+/// Converts assertions in an SSA node to constraints in BMC and k-induction
+/// modes. Unlike assertions, constraints are pushed to the solver.
+/// \param SSA The SSA that is being processed.
+/// \param ssa_it SSA node where we are modifying the assertions.
+/// \param loop_back SSA loop-back node of the current loop.
+/// \param is_last Whether the current unwind is the last one.
+void goto_local_unwindert::convert_to_constraints(
+  local_SSAt &SSA,
+  local_SSAt::nodest::iterator &ssa_it,
+  local_SSAt::nodest::iterator &loop_back,
+  bool is_last)
+{
+  if(!is_last)
+  {
+    for(const auto &a_it: ssa_it->assertions)
+    {
+      if(mode==unwinder_modet::K_INDUCTION)
+        ssa_it->constraints.push_back(a_it);
+      else if(mode==unwinder_modet::BMC)
+      {
+        // Must come from before the loop in order for the assertions to be
+        // valid
+        exprt gs=SSA.name(
+          SSA.guard_symbol(),
+          local_SSAt::LOOP_SELECT,
+          loop_back->location);
+        ssa_it->constraints.push_back(implies_exprt(not_exprt(gs), a_it));
+      }
+    }
+    if(mode==unwinder_modet::K_INDUCTION || mode==unwinder_modet::BMC)
+      ssa_it->assertions.clear();
+  }
+}
+
+/// Converts assertions to constraints in the whole function.
+/// Unlike assertions, constraints are pushed to the solver.
+/// \param SSA: The SSA that is being processed.
+/// \param goto_program: The GOTO program corresponding to the given SSA.
+void goto_local_unwindert::update_assertions(
+  local_SSAt &SSA,
+  const goto_programt &goto_program)
+{
+  // Update the assertions/constraints
+  // Find the loop and iterate backwards from there
+  for(auto i_it=goto_program.instructions.begin();
+      i_it!=goto_program.instructions.end(); i_it++)
+  {
+    if(!i_it->is_backwards_goto())
+      continue;
+
+    bool is_dowhile=!i_it->guard.is_true();
+    auto loop_back=SSA.find_node(i_it);
+    auto ssa_it=loop_back;
+    int processing_unwind=1;
+    while(ssa_it!=SSA.nodes.begin())
+    {
+      ssa_it--;
+      int unwind=ssa_it->location->get_code().get_int(unwind_flag);
+      if(unwind>0)
+        processing_unwind=unwind+1;
+
+      if(processing_unwind>current_unwinding)
+        break;
+      bool is_last=
+        (is_dowhile && processing_unwind==0) || (processing_unwind<2);
+      convert_to_constraints(SSA, ssa_it, loop_back, is_last);
+    }
+  }
+}
+
+/// Adds hoisted assertions to the SSA.
+///
+/// Hoisted assertions allow more precise reasoning since they make a relation
+/// between assertions outside of the loops and the loop itself (which is
+/// being unwound).
+///
+/// They take the form of <assertion is reachable> => assertion where the
+/// precondition depends on the conditions to jump out of the loops.
+/// We create a disjunction of exit points (mainly unwind conditions) from
+/// a single loop and then a conjunction of all the loops preceding the
+/// assertion.
+///
+/// \param SSA: The SSA that is being processed.
+/// \param goto_program: The GOTO program corresponding to the given SSA.
+void goto_local_unwindert::add_hoisted_assertions(
+  local_SSAt &SSA,
+  const goto_programt &goto_program)
+{
+  if(mode!=unwinder_modet::K_INDUCTION)
+    return;
+  // TODO: Overflow shl hack for competition mode
+  exprt precondition=true_exprt();
+  for(auto &it : SSA.nodes)
+  {
+    if(!it.assertions.empty() && !precondition.is_true())
+    {
+      exprt assertion=implies_exprt(precondition, conjunction(it.assertions));
+      debug() << "Adding hoisted assertion: " << from_expr(assertion)
+              << messaget::eom;
+      it.constraints.push_back(assertion);
+    }
+
+    if(!it.location->is_backwards_goto())
+      continue;
+    exprt loop_precondition=false_exprt();
+    int processing_unwind=0;
+    for(auto loop_it=it.location->get_target(); loop_it!=it.location;loop_it++)
+    {
+      int unwind=loop_it->get_code().get_int(unwind_flag);
+      if(unwind > 0)
+        processing_unwind=unwind;
+      // We are collecting gotos pointing outside the loop
+      if(!loop_it->is_goto())
+        continue;
+      exprt g=SSA.guard_symbol(loop_it);
+      exprt c=SSA.cond_symbol(loop_it);
+      if(loop_it->get_target()->location_number > it.location->location_number)
+      {
+        if(processing_unwind>1)
+          loop_precondition=or_exprt(loop_precondition, and_exprt(g, c));
+      }
+      else if (!loop_it->guard.is_true() && loop_it->is_backwards_goto())
+      {
+        // Do-while loop, the condition is IF cond GOTO upward, we care about
+        // when we jump outside, hence the not
+        if(processing_unwind>0)
+          loop_precondition=or_exprt(loop_precondition, and_exprt(g, not_exprt(c)));
+      }
+    }
+    if(!loop_precondition.is_false())
+      precondition=and_exprt(precondition, loop_precondition);
+  }
+}
+
+/// Performs necessary transformations to the SSA.
+/// \param SSA: The SSA that is being processed.
+/// \param goto_program: The GOTO program corresponding to the given SSA.
+void goto_local_unwindert::update_ssa(
+  local_SSAt &SSA,
+  const goto_programt &goto_program)
+{
+  add_hoisted_assertions(SSA, goto_program);
+  update_assertions(SSA, goto_program);
+}
+
+/// No-op, no special initialization is necessary in this unwinder, just
+/// set current_unwinding to 0 to signal that we are ready.
 void goto_local_unwindert::init()
 {
+  current_unwinding=0;
 }
 
 /// No-op, the continuation of loops is not special in any way in this unwinder,
@@ -215,7 +383,7 @@ void goto_unwindert::init(unwinder_modet mode)
         f.first,
         goto_local_unwindert(
           ssa_db,
-          goto_model.goto_functions,
+          goto_model,
           f.first,
           goto_model.goto_functions.function_map.at(f.first),
           mode,
