@@ -15,6 +15,7 @@ Author: Stefan Marticek
 #include <util/prefix.h>
 
 #include <ssa/simplify_ssa.h>
+#include <ssa/unwinder.h>
 #include <2ls/show.h>
 
 #include <limits>
@@ -24,7 +25,7 @@ resultt summary_checker_nontermt::operator()(
 {
   SSA_functions(goto_model, goto_model.symbol_table);
 
-  ssa_unwinder.init(false, true);
+  ssa_unwinder.init(unwinder_modet::BMC);
 
   resultt result=resultt::UNKNOWN;
   unsigned max_unwind=options.get_unsigned_int_option("unwind");

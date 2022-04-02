@@ -382,11 +382,11 @@ void ssa_local_unwindert::add_assertions(loopt &loop, bool is_last)
       SSA.rename(*a_it, node.location);
       if(!is_last) // only add assumptions if we are not in %0 iteration
       {
-        if(is_kinduction)
+        if(mode==unwinder_modet::K_INDUCTION)
         {
           node.constraints.push_back(*a_it);
         }
-        else if(is_bmc)
+        else if(mode==unwinder_modet::BMC)
         {
           // only add in base case
           exprt gs=
@@ -398,7 +398,7 @@ void ssa_local_unwindert::add_assertions(loopt &loop, bool is_last)
         }
       }
     }
-    if(!is_last && (is_bmc || is_kinduction))
+    if(!is_last && mode!=unwinder_modet::NORMAL)
     {
       node.assertions.clear();
     }
@@ -545,7 +545,7 @@ void ssa_local_unwindert::add_hoisted_assertions(loopt &loop, bool is_last)
       it!=loop.assertion_hoisting_map.end(); ++it)
   {
     if(!is_last // only add assumptions if we are not in %0 iteration
-       && is_kinduction && !it->second.assertions.empty()
+       && mode==unwinder_modet::K_INDUCTION && !it->second.assertions.empty()
 #ifdef COMPETITION
        && !has_overflow_shl(it->first->guard))
 #endif
@@ -665,7 +665,7 @@ void ssa_unwindert::unwind_all(unsigned int k)
 /// Initialize unwinder_map by computing hierarchical tree_loopnodet for every
 /// goto-function Set is_initialized to true. Initializer must be called before
 /// unwind funcitions are called.
-void ssa_unwindert::init(bool is_kinduction, bool is_bmc)
+void ssa_unwindert::init(unwinder_modet mode)
 {
   ssa_dbt::functionst& funcs=ssa_db.functions();
   for(auto &f : funcs)
@@ -673,7 +673,7 @@ void ssa_unwindert::init(bool is_kinduction, bool is_bmc)
     unwinder_map.insert(
       unwinder_pairt(
         f.first,
-        ssa_local_unwindert(f.first, (*(f.second)), is_kinduction, is_bmc)));
+        ssa_local_unwindert(f.first, (*(f.second)), mode)));
   }
 }
 

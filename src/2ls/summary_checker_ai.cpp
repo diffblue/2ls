@@ -10,6 +10,7 @@ Author: Peter Schrammel
 /// Summary Checker for AI
 
 #include "summary_checker_ai.h"
+#include <ssa/unwinder.h>
 #include <ssa/ssa_build_goto_trace.h>
 
 resultt summary_checker_ait::operator()(
@@ -17,7 +18,7 @@ resultt summary_checker_ait::operator()(
 {
   SSA_functions(goto_model, goto_model.symbol_table);
 
-  ssa_unwinder.init(false, false);
+  ssa_unwinder.init(unwinder_modet::NORMAL);
 
   unsigned unwind=options.get_unsigned_int_option("unwind");
   if(unwind>0)

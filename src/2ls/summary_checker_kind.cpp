@@ -9,6 +9,8 @@ Author: Peter Schrammel
 /// \file
 /// Summary Checker for k-induction
 
+#include <ssa/unwinder.h>
+
 #include "summary_checker_kind.h"
 
 resultt summary_checker_kindt::operator()(
@@ -16,7 +18,7 @@ resultt summary_checker_kindt::operator()(
 {
   SSA_functions(goto_model, goto_model.symbol_table);
 
-  ssa_unwinder.init(true, false);
+  ssa_unwinder.init(unwinder_modet::K_INDUCTION);
 
   resultt result=resultt::UNKNOWN;
   unsigned max_unwind=options.get_unsigned_int_option("unwind");

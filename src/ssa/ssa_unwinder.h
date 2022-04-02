@@ -14,6 +14,7 @@ Author: Peter Schrammel, Saurabh Joshi
 
 #include "unwindable_local_ssa.h"
 #include "ssa_db.h"
+#include "unwinder.h"
 
 class ssa_local_unwindert
 {
@@ -24,13 +25,11 @@ public:
   ssa_local_unwindert(
     const irep_idt _fname,
     unwindable_local_SSAt& _SSA,
-    bool _is_kinduction,
-    bool _is_bmc):
+    unwinder_modet _mode):
     current_unwinding(-1),
     fname(_fname),
     SSA(_SSA),
-    is_kinduction(_is_kinduction),
-    is_bmc(_is_bmc),
+    mode(_mode),
     current_enabling_expr(bool_typet())
   {
   }
@@ -84,7 +83,7 @@ public:
 protected:
   const irep_idt fname;
   unwindable_local_SSAt &SSA;
-  bool is_kinduction, is_bmc;
+  unwinder_modet mode;
   symbol_exprt current_enabling_expr; // TODO must become loop-specific
 
   // use location numbers as indices, as target addresses make
@@ -128,7 +127,7 @@ public:
   {
   }
 
-  void init(bool is_kinduction, bool is_bmc);
+  void init(unwinder_modet mode);
   void init_localunwinders();
 
   void unwind_all(unsigned k);

@@ -9,6 +9,7 @@ Author: Peter Schrammel
 /// \file
 /// Summary Checker for BMC
 
+#include <ssa/unwinder.h>
 #include "summary_checker_bmc.h"
 
 
@@ -17,7 +18,7 @@ resultt summary_checker_bmct::operator()(
 {
   SSA_functions(goto_model, goto_model.symbol_table);
 
-  ssa_unwinder.init(false, true);
+  ssa_unwinder.init(unwinder_modet::BMC);
 
   resultt result=resultt::UNKNOWN;
   unsigned max_unwind=options.get_unsigned_int_option("unwind");
