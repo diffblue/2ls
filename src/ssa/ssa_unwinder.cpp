@@ -245,10 +245,7 @@ void ssa_local_unwindert::unwind(unsigned k)
     assert(SSA.current_unwindings.empty());
   }
   // update current unwinding
-  for(loop_mapt::iterator it=loops.begin(); it!=loops.end(); ++it)
-  {
-    it->second.current_unwinding=k;
-  }
+  current_unwinding=k;
 }
 
 /// unwind all instances of given loop up to k starting from previous
@@ -265,7 +262,7 @@ void ssa_local_unwindert::unwind(loopt &loop, unsigned k, bool is_new_parent)
   for(long i=0; i<=k; ++i)
   {
     // add new unwindings of this loop
-    if(i>loop.current_unwinding || is_new_parent)
+    if(i>current_unwinding || is_new_parent)
     {
       add_loop_body(loop);
       // set new loop end node
@@ -316,7 +313,7 @@ void ssa_local_unwindert::unwind(loopt &loop, unsigned k, bool is_new_parent)
 #ifdef DEBUG
       std::cout << i << ">" << loop.current_unwinding << std::endl;
 #endif
-      unwind(loops[l], k, i>loop.current_unwinding || is_new_parent);
+      unwind(loops[l], k, i>current_unwinding || is_new_parent);
     }
     SSA.increment_unwindings(0);
   }
@@ -597,7 +594,7 @@ void ssa_local_unwindert::loop_continuation_conditions(
 {
   SSA.increment_unwindings(1);
   loop_cont.push_back(get_continuation_condition(loop)); // %0
-  for(long i=0; i<=loop.current_unwinding; ++i)
+  for(long i=0; i<=current_unwinding; ++i)
   {
     // recurse into child loops
     for(const auto &l : loop.loop_nodes)
@@ -655,19 +652,6 @@ void ssa_local_unwindert::unwinder_rename(
 #ifdef DEBUG
   std::cout << "new id: " << var.get_identifier() << std::endl;
 #endif
-}
-
-
-bool ssa_local_unwindert::find_loop(
-  unsigned location_number, const loopt *&loop) const
-{
-  loop_mapt::const_iterator it=loops.find(location_number);
-  if(it!=loops.end())
-  {
-    loop=&it->second;
-    return true;
-  }
-  return false;
 }
 
 /// incrementally unwind a function 'id' up to depth k. Initializer must have

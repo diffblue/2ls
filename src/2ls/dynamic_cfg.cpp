@@ -67,19 +67,6 @@ void dynamic_cfgt::build_cfg(
     if(it->is_backwards_goto() &&
        it->get_target()!=it)
     {
-#if 0
-      // Sanity checks
-      const ssa_local_unwindert::loopt *loop=nullptr;
-      if(!ssa_unwinder.find_loop(it->get_target()->location_number, loop))
-      {
-        std::cout << "NON-LOOP BACKEDGE? " << it->location_number
-                  << " --> " << it->get_target()->location_number << std::endl;
-        assert(false);
-      }
-      assert(!iteration_stack.empty());
-      assert(!max_iteration_stack.empty());
-#endif
-
       // max_unwind reached
       if(iteration_stack.back()==max_iteration_stack.back())
       {
@@ -140,32 +127,21 @@ void dynamic_cfgt::build_cfg(
        (!it->is_goto() || !it->guard.is_true()))
       incoming_edges[next].insert(node);
 
-    // this is a loop head
-    const ssa_local_unwindert::loopt *loop=nullptr;
-    if(ssa_unwinder.find_loop(it->location_number, loop))
+    // alternative loop head detection when unwinder was not used
+    for(const auto &incoming : it->incoming_edges)
     {
-      iteration_stack.push_back(0);
-      loop_node_stack.push_back(node);
-      assert(loop->current_unwinding>=0);
-      max_iteration_stack.push_back(loop->current_unwinding);
-      nodes[node].id.iteration_stack=iteration_stack;
-      nodes[node].is_loop_head=true;
-    }
-    else
-    {
-      // alternative loop head detection when unwinder was not used
-      for(const auto &incoming : it->incoming_edges)
+      if(incoming->is_backwards_goto() &&
+         incoming!=it)
       {
-        if(incoming->is_backwards_goto() &&
-           incoming!=it)
-        {
-          iteration_stack.push_back(0);
-          loop_node_stack.push_back(node);
-          max_iteration_stack.push_back(0);
-          nodes[node].id.iteration_stack=iteration_stack;
-          nodes[node].is_loop_head=true;
-          break;
-        }
+        iteration_stack.push_back(0);
+        loop_node_stack.push_back(node);
+        unsigned max_iteration=
+          ssa_unwinder.current_unwinding > 0 ?
+            ssa_unwinder.current_unwinding : 0;
+        max_iteration_stack.push_back(max_iteration);
+        nodes[node].id.iteration_stack=iteration_stack;
+        nodes[node].is_loop_head=true;
+        break;
       }
     }
 

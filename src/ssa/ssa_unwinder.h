@@ -26,6 +26,7 @@ public:
     unwindable_local_SSAt& _SSA,
     bool _is_kinduction,
     bool _is_bmc):
+    current_unwinding(-1),
     fname(_fname),
     SSA(_SSA),
     is_kinduction(_is_kinduction),
@@ -70,8 +71,7 @@ public:
   public:
     loopt():
       is_dowhile(false),
-      is_root(false),
-      current_unwinding(-1)
+      is_root(false)
     {
     }
 
@@ -81,7 +81,6 @@ public:
     std::vector<unsigned> loop_nodes; // child loops
     bool is_dowhile;
     bool is_root;
-    long current_unwinding;
     typedef std::map<exprt, exprt::operandst> exit_mapt;
     exit_mapt exit_map;
     std::map<symbol_exprt, symbol_exprt> pre_post_map;
@@ -97,7 +96,7 @@ public:
     assertion_hoisting_mapt assertion_hoisting_map;
   };
 
-  bool find_loop(unsigned location_number, const loopt *&loop) const;
+  long current_unwinding;
 
 protected:
   const irep_idt fname;
