@@ -65,11 +65,24 @@ public:
     return store.find(function_name)!=store.end();
   }
 
+  inline void clear_solver(const function_namet &function_name)
+  {
+    solverst::iterator it=the_solvers.find(function_name);
+    if(it!=the_solvers.end())
+    {
+      delete it->second;
+      the_solvers.erase(it);
+    }
+  }
+
   inline void create(
     const function_namet &function_name,
     const goto_functionst::goto_functiont &goto_function,
     const symbol_tablet &symbol_table)
   {
+    // Avoid memory leaks if overriding
+    if(store.count(function_name))
+      delete store[function_name];
     store[function_name]=
       new unwindable_local_SSAt(
         function_name,
