@@ -29,10 +29,14 @@ class goto_local_unwindert:public local_unwindert, messaget
 public:
   goto_local_unwindert(
     ssa_dbt &_ssa_db,
+    goto_functionst &_goto_functions,
+    const irep_idt &_function_name,
     goto_functiont &_goto_function,
     unwinder_modet _mode,
     bool _simplify):
     ssa_db(_ssa_db),
+    goto_functions(_goto_functions),
+    function_name(_function_name),
     goto_function(_goto_function),
     mode(_mode),
     simplify(_simplify)
@@ -49,14 +53,32 @@ public:
     bool pre) const override;
 
 protected:
+  /// A flag which is used for marking unwind starts inside the GOTO program.
+  const irep_idt unwind_flag="unwind";
   /// Reference to a global storage of SSA.
   ssa_dbt &ssa_db;
+  /// All functions in the GOTO model. Required for calling update()
+  goto_functionst &goto_functions;
+  /// Name of the function to unwind.
+  const irep_idt &function_name;
   /// The GOTO function which this unwinder unwinds.
   goto_functiont &goto_function;
   /// Mode under which the unwinder operates.
   unwinder_modet mode;
   /// Whether the unwound SSA should be simplified.
   bool simplify;
+  /// A store used for keeping track of how loops were formerly connected
+  /// before transformations required for k-induction or BMC to correctly
+  /// work were done.
+  std::unordered_map<unsigned, goto_programt::targett> loop_targets;
+
+  void unwind_function(unsigned to_unwind);
+  void mark_unwinds(
+    const goto_programt::targett before_unwind,
+    const std::vector<goto_programt::targett> &iteration_points,
+    unsigned to_unwind);
+  void reconnect_loops();
+  void reset_loop_connections();
 };
 
 
