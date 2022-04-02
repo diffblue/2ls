@@ -48,6 +48,9 @@ public:
     const local_SSAt::nodet &node,
     bool pre) const;
 
+  long current_unwinding;
+
+protected:
   class loopt // loop tree
   {
   public:
@@ -78,9 +81,6 @@ public:
     assertion_hoisting_mapt assertion_hoisting_map;
   };
 
-  long current_unwinding;
-
-protected:
   const irep_idt fname;
   unwindable_local_SSAt &SSA;
   unwinder_modet mode;
