@@ -17,12 +17,14 @@ Author: Stefan Marticek
 class summary_checker_nontermt:public summary_checker_baset
 {
 public:
-  explicit summary_checker_nontermt(optionst &_options):
-    summary_checker_baset(_options)
+  explicit summary_checker_nontermt(
+    optionst &_options,
+    goto_modelt &_goto_model):
+    summary_checker_baset(_options, _goto_model)
   {
   }
 
-  virtual resultt operator()(const goto_modelt &);
+  virtual resultt operator()();
 
   void check_properties(
     const ssa_dbt::functionst::const_iterator f_it);

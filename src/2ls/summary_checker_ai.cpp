@@ -13,8 +13,7 @@ Author: Peter Schrammel
 #include <ssa/unwinder.h>
 #include <ssa/ssa_build_goto_trace.h>
 
-resultt summary_checker_ait::operator()(
-  const goto_modelt &goto_model)
+resultt summary_checker_ait::operator()()
 {
   SSA_functions(goto_model, goto_model.symbol_table);
 

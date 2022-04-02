@@ -578,18 +578,18 @@ int twols_parse_optionst::doit()
     if(!options.get_bool_option("k-induction") &&
        !options.get_bool_option("incremental-bmc"))
       checker=std::unique_ptr<summary_checker_baset>(
-        new summary_checker_ait(options));
+        new summary_checker_ait(options, goto_model));
     if(options.get_bool_option("k-induction") &&
        !options.get_bool_option("incremental-bmc"))
       checker=std::unique_ptr<summary_checker_baset>(
-        new summary_checker_kindt(options));
+        new summary_checker_kindt(options, goto_model));
     if(!options.get_bool_option("k-induction") &&
        options.get_bool_option("incremental-bmc"))
       checker=std::unique_ptr<summary_checker_baset>(
-        new summary_checker_bmct(options));
+        new summary_checker_bmct(options, goto_model));
     if(options.get_bool_option("nontermination"))
       checker=std::unique_ptr<summary_checker_baset>(
-        new summary_checker_nontermt(options));
+        new summary_checker_nontermt(options, goto_model));
 
     checker->set_message_handler(get_message_handler());
     checker->simplify=!cmdline.isset("no-simplify");
@@ -600,7 +600,7 @@ int twols_parse_optionst::doit()
     {
       std::cout << "VERIFICATION CONDITIONS:\n\n";
       checker->show_vcc=true;
-      (*checker)(goto_model);
+      (*checker)();
       return 0;
     }
 
@@ -639,7 +639,7 @@ int twols_parse_optionst::doit()
       !options.get_bool_option("termination") &&
       !options.get_bool_option("nontermination");
     // do actual analysis
-    switch((*checker)(goto_model))
+    switch((*checker)())
     {
     case resultt::PASS:
       if(report_assertions)

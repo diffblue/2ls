@@ -20,8 +20,7 @@ Author: Stefan Marticek
 
 #include <limits>
 
-resultt summary_checker_nontermt::operator()(
-  const goto_modelt &goto_model)
+resultt summary_checker_nontermt::operator()()
 {
   SSA_functions(goto_model, goto_model.symbol_table);
 

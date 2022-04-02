@@ -13,8 +13,7 @@ Author: Peter Schrammel
 
 #include "summary_checker_kind.h"
 
-resultt summary_checker_kindt::operator()(
-  const goto_modelt &goto_model)
+resultt summary_checker_kindt::operator()()
 {
   SSA_functions(goto_model, goto_model.symbol_table);
 
