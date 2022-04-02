@@ -16,6 +16,7 @@ Author: Peter Schrammel
 #include <goto-checker/properties.h>
 #include <goto-checker/goto_trace_storage.h>
 #include <util/ui_message.h>
+#include <util/make_unique.h>
 
 #include <ssa/local_ssa.h>
 #include <ssa/unwinder.h>
@@ -44,12 +45,19 @@ public:
     options(_options),
     goto_model(_goto_model),
     ssa_db(_options), summary_db(),
-    ssa_unwinder(new goto_unwindert(ssa_db, _goto_model, simplify)),
+    ssa_unwinder(util_make_unique<ssa_unwindert>(ssa_db)),
     ssa_inliner(summary_db),
     solver_instances(0),
     solver_calls(0),
     summaries_used(0),
-    termargs_computed(0) {}
+    termargs_computed(0)
+  {
+    if(options.get_bool_option("unwind-goto"))
+      ssa_unwinder=util_make_unique<goto_unwindert>(
+        ssa_db,
+        goto_model,
+        simplify);
+  }
 
   bool show_vcc, simplify, fixed_point;
   irep_idt function_to_check;

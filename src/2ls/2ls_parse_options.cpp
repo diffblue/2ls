@@ -550,15 +550,16 @@ int twols_parse_optionst::doit()
     status() << eom;
   }
 
-  // don't use k-induction with dynamic memory
-  if(options.get_bool_option("competition-mode") &&
-     options.get_bool_option("k-induction") &&
+  // turn on slower GOTO unwinder when dynamic memory and unwinding
+  // is combined
+  if((options.get_bool_option("k-induction") ||
+      options.get_bool_option("incremental-bmc") ||
+      options.get_unsigned_int_option("unwind")) &&
+     !options.get_bool_option("nontermination") &&
      dynamic_memory_detected)
   {
-    options.set_option("k-induction", false);
-    options.set_option("std-invariants", false);
-    options.set_option("incremental-bmc", false);
-    options.set_option("unwind", 0);
+    status() << "Using GOTO unwinder due to presence of dynamic memory" << eom;
+    options.set_option("unwind-goto", true);
   }
   // don't do nontermination with dynamic memory
   if(options.get_bool_option("competition-mode") &&
