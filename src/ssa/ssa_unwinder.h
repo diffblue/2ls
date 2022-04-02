@@ -39,26 +39,9 @@ public:
 
   void unwind(unsigned k);
 
-#if 0
-  // TODO: not yet sure how to do that
-  void unwind(locationt loop_head_loc, unsigned k)
-  {
-    unwind(loops[loop_head_loc], k);
-  }
-#endif
-
   // TODO: this should be loop specific in future,
   // maybe move to unwindable_local_ssa as it is not really unwinder related
   void loop_continuation_conditions(exprt::operandst& loop_cont) const;
-
-#if 0
-  // TODO: these two should be possible with unwindable_local_ssa facilities
-  exprt rename_invariant(const exprt& inv_in) const;
-  void unwinder_rename(
-    symbol_exprt &var,
-    const local_SSAt::nodet &node,
-    bool pre) const;
-#endif
 
   // TODO: this must go away, should use SSA.rename instead
   void unwinder_rename(
