@@ -131,7 +131,6 @@ public:
   void init(bool is_kinduction, bool is_bmc);
   void init_localunwinders();
 
-  void unwind(const irep_idt fname, unsigned k);
   void unwind_all(unsigned k);
 
   inline ssa_local_unwindert &get(const irep_idt& fname)

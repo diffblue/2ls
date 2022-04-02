@@ -654,19 +654,6 @@ void ssa_local_unwindert::unwinder_rename(
 #endif
 }
 
-/// incrementally unwind a function 'id' up to depth k. Initializer must have
-/// been invoked before calling this function
-/// \param fname:name of the goto-function to be unwound, k-unwinding depth
-/// \return false-if id does not correspond to any goto-function in the
-///   unwinder_map
-void ssa_unwindert::unwind(const irep_idt fname, unsigned int k)
-{
-  assert(is_initialized);
-  unwinder_mapt::iterator it=unwinder_map.find(fname);
-  assert(it!=unwinder_map.end());
-  it->second.unwind(k);
-}
-
 void ssa_unwindert::unwind_all(unsigned int k)
 {
   assert(is_initialized);
