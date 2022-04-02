@@ -18,16 +18,16 @@ resultt summary_checker_ait::operator()(
 {
   SSA_functions(goto_model, goto_model.symbol_table);
 
-  ssa_unwinder.init(unwinder_modet::NORMAL);
+  ssa_unwinder->init(unwinder_modet::NORMAL);
 
   unsigned unwind=options.get_unsigned_int_option("unwind");
   if(unwind>0)
   {
     status() << "Unwinding" << messaget::eom;
 
-    ssa_unwinder.init_localunwinders();
+    ssa_unwinder->init_localunwinders();
 
-    ssa_unwinder.unwind_all(unwind);
+    ssa_unwinder->unwind_all(unwind);
   }
 
   // properties

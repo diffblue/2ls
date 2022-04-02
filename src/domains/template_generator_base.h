@@ -16,7 +16,8 @@ Author: Peter Schrammel
 #include <util/replace_expr.h>
 
 #include <ssa/local_ssa.h>
-#include <ssa/ssa_unwinder.h>
+#include <ssa/ssa_db.h>
+#include <ssa/unwinder.h>
 #include "strategy_solver_base.h"
 
 // #define SHOW_TEMPLATE_VARIABLES
@@ -30,7 +31,7 @@ public:
   explicit template_generator_baset(
     optionst &_options,
     ssa_dbt &_ssa_db,
-    ssa_local_unwindert &_ssa_local_unwinder):
+    local_unwindert &_ssa_local_unwinder):
     options(_options), ssa_db(_ssa_db),
     ssa_local_unwinder(_ssa_local_unwinder)
   {
@@ -69,7 +70,7 @@ public:
 
 protected:
   const ssa_dbt &ssa_db;
-  const ssa_local_unwindert &ssa_local_unwinder;
+  const local_unwindert &ssa_local_unwinder;
   std::unique_ptr<domaint> domain_ptr;
   bool std_invariants; // include value at loop entry
 

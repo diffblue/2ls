@@ -12,6 +12,9 @@ Author: Peter Schrammel
 #ifndef CPROVER_2LS_DOMAINS_TEMPLATE_GENERATOR_SUMMARY_H
 #define CPROVER_2LS_DOMAINS_TEMPLATE_GENERATOR_SUMMARY_H
 
+#include <ssa/ssa_db.h>
+#include <ssa/unwinder.h>
+
 #include "template_generator_base.h"
 
 class template_generator_summaryt:public template_generator_baset
@@ -20,7 +23,7 @@ public:
   explicit template_generator_summaryt(
     optionst &_options,
     ssa_dbt &_ssa_db,
-    ssa_local_unwindert &_ssa_local_unwinder):
+    local_unwindert &_ssa_local_unwinder):
     template_generator_baset(_options, _ssa_db, _ssa_local_unwinder)
   {
   }

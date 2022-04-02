@@ -17,7 +17,7 @@ Author: Peter Schrammel
 
 /// generates the dynamic CFG
 void dynamic_cfgt::operator()(
-  const ssa_local_unwindert &ssa_unwinder,
+  const local_unwindert &ssa_unwinder,
   const unwindable_local_SSAt &ssa,
   const summaryt &summary)
 {
@@ -46,7 +46,7 @@ void dynamic_cfgt::add_assumptions(const assumptionst &assumptions)
 /// extracts assumptions from invariants
 void dynamic_cfgt::build_cfg(
   const goto_programt &goto_program,
-  const ssa_local_unwindert &ssa_unwinder)
+  const local_unwindert &ssa_unwinder)
 {
   std::vector<unsigned> iteration_stack;
   std::vector<node_indext> loop_node_stack;

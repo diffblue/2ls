@@ -18,6 +18,7 @@ Author: Peter Schrammel
 #include <util/ui_message.h>
 
 #include <ssa/local_ssa.h>
+#include <ssa/unwinder.h>
 #include <ssa/ssa_unwinder.h>
 #include <ssa/ssa_inliner.h>
 #include <domains/incremental_solver.h>
@@ -40,7 +41,7 @@ public:
     fixed_point(false),
     options(_options),
     ssa_db(_options), summary_db(),
-    ssa_unwinder(ssa_db),
+    ssa_unwinder(new ssa_unwindert(ssa_db)),
     ssa_inliner(summary_db),
     solver_instances(0),
     solver_calls(0),
@@ -73,7 +74,7 @@ protected:
 
   ssa_dbt ssa_db;
   summary_dbt summary_db;
-  ssa_unwindert ssa_unwinder;
+  std::unique_ptr<unwindert> ssa_unwinder;
   ssa_inlinert ssa_inliner;
 
   unsigned solver_instances;

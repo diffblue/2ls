@@ -18,18 +18,18 @@ resultt summary_checker_bmct::operator()(
 {
   SSA_functions(goto_model, goto_model.symbol_table);
 
-  ssa_unwinder.init(unwinder_modet::BMC);
+  ssa_unwinder->init(unwinder_modet::BMC);
 
   resultt result=resultt::UNKNOWN;
   unsigned max_unwind=options.get_unsigned_int_option("unwind");
   status() << "Max-unwind is " << max_unwind << eom;
-  ssa_unwinder.init_localunwinders();
+  ssa_unwinder->init_localunwinders();
 
   for(unsigned unwind=0; unwind<=max_unwind; unwind++)
   {
     status() << "Unwinding (k=" << unwind << ")" << messaget::eom;
     summary_db.mark_recompute_all();
-    ssa_unwinder.unwind_all(unwind);
+    ssa_unwinder->unwind_all(unwind);
     result=check_properties();
     if(result==resultt::PASS)
     {

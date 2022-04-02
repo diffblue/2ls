@@ -25,17 +25,17 @@ resultt summary_checker_nontermt::operator()(
 {
   SSA_functions(goto_model, goto_model.symbol_table);
 
-  ssa_unwinder.init(unwinder_modet::BMC);
+  ssa_unwinder->init(unwinder_modet::BMC);
 
   resultt result=resultt::UNKNOWN;
   unsigned max_unwind=options.get_unsigned_int_option("unwind");
   status() << "Max-unwind is " << max_unwind << eom;
-  ssa_unwinder.init_localunwinders();
+  ssa_unwinder->init_localunwinders();
 
   for(unsigned unwind=1; unwind<=max_unwind; unwind++)
   {
     status() << "Unwinding (k=" << unwind << ")" << messaget::eom;
-    ssa_unwinder.unwind_all(unwind);
+    ssa_unwinder->unwind_all(unwind);
     if(unwind==51)  // use a different nontermination technique
     {
       result=check_nonterm_linear();
@@ -79,7 +79,7 @@ void summary_checker_nontermt::check_properties(
 {
   unwindable_local_SSAt &SSA=*f_it->second;
 
-  ssa_local_unwindert &ssa_local_unwinder=ssa_unwinder.get(f_it->first);
+  local_unwindert &ssa_local_unwinder=ssa_unwinder->get(f_it->first);
 
 #if 0
   SSA.output_verbose(std::cout);
@@ -215,7 +215,7 @@ void summary_checker_nontermt::check_properties_linear(
 {
   unwindable_local_SSAt &SSA=*f_it->second;
 
-  ssa_local_unwindert &ssa_local_unwinder=ssa_unwinder.get(f_it->first);
+  local_unwindert &ssa_local_unwinder=ssa_unwinder->get(f_it->first);
 
   // solver
   incremental_solvert &solver=ssa_db.get_solver(f_it->first);

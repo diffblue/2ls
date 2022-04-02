@@ -16,7 +16,7 @@ Author: Peter Schrammel, Saurabh Joshi
 #include "ssa_db.h"
 #include "unwinder.h"
 
-class ssa_local_unwindert
+class ssa_local_unwindert:public local_unwindert
 {
 public:
   typedef local_SSAt::locationt locationt;
@@ -26,7 +26,6 @@ public:
     const irep_idt _fname,
     unwindable_local_SSAt& _SSA,
     unwinder_modet _mode):
-    current_unwinding(-1),
     fname(_fname),
     SSA(_SSA),
     mode(_mode),
@@ -34,21 +33,18 @@ public:
   {
   }
 
-  void init();
-
-  void unwind(unsigned k);
+  void init() override;
+  void unwind(unsigned k) override;
 
   // TODO: this should be loop specific in future,
   // maybe move to unwindable_local_ssa as it is not really unwinder related
-  void loop_continuation_conditions(exprt::operandst& loop_cont) const;
+  void loop_continuation_conditions(exprt::operandst& loop_cont) const override;
 
   // TODO: this must go away, should use SSA.rename instead
   void unwinder_rename(
     symbol_exprt &var,
     const local_SSAt::nodet &node,
-    bool pre) const;
-
-  long current_unwinding;
+    bool pre) const override;
 
 protected:
   class loopt // loop tree
@@ -115,7 +111,7 @@ protected:
   void add_hoisted_assertions(loopt &loop, bool is_last);
 };
 
-class ssa_unwindert:public messaget
+class ssa_unwindert:public unwindert, public messaget
 {
 public:
   typedef std::map<irep_idt, ssa_local_unwindert> unwinder_mapt;
@@ -127,17 +123,17 @@ public:
   {
   }
 
-  void init(unwinder_modet mode);
-  void init_localunwinders();
+  void init(unwinder_modet mode) override;
+  void init_localunwinders() override;
 
-  void unwind_all(unsigned k);
+  void unwind_all(unsigned k) override;
 
-  inline ssa_local_unwindert &get(const irep_idt& fname)
+  inline ssa_local_unwindert &get(const irep_idt& fname) override
   {
     return unwinder_map.at(fname);
   }
 
-  inline const ssa_local_unwindert &get(const irep_idt& fname) const
+  inline const ssa_local_unwindert &get(const irep_idt& fname) const override
   {
     return unwinder_map.at(fname);
   }

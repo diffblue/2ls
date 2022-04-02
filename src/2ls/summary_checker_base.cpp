@@ -26,7 +26,6 @@ Author: Peter Schrammel
 #include <ssa/simplify_ssa.h>
 #include <ssa/ssa_build_goto_trace.h>
 #include <domains/ssa_analyzer.h>
-#include <ssa/ssa_unwinder.h>
 
 #include <solver/summarizer_fw.h>
 #include <solver/summarizer_fw_term.h>
@@ -375,7 +374,7 @@ exprt::operandst summary_checker_baset::get_loophead_selects(
       continue;
     symbol_exprt lsguard=
       SSA.name(SSA.guard_symbol(), local_SSAt::LOOP_SELECT, n_it->location);
-    ssa_unwinder.get(function_name).unwinder_rename(lsguard, *n_it, true);
+    ssa_unwinder->get(function_name).unwinder_rename(lsguard, *n_it, true);
     loophead_selects.push_back(not_exprt(lsguard));
     solver.set_frozen(solver.convert(lsguard));
   }
@@ -402,7 +401,7 @@ exprt::operandst summary_checker_baset::get_loop_continues(
   // TODO: this should be provided by unwindable_local_SSA
   exprt::operandst loop_continues;
 
-  ssa_unwinder.get(function_name).loop_continuation_conditions(loop_continues);
+  ssa_unwinder->get(function_name).loop_continuation_conditions(loop_continues);
   if(loop_continues.size()==0)
   {
     // TODO: this should actually be done transparently by the unwinder

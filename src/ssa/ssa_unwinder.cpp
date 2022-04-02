@@ -667,8 +667,7 @@ void ssa_unwindert::unwind_all(unsigned int k)
 /// unwind funcitions are called.
 void ssa_unwindert::init(unwinder_modet mode)
 {
-  ssa_dbt::functionst& funcs=ssa_db.functions();
-  for(auto &f : funcs)
+  for(auto &f : ssa_db.functions())
   {
     unwinder_map.insert(
       unwinder_pairt(
