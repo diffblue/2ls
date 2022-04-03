@@ -71,7 +71,7 @@ protected:
   /// A store used for keeping track of how loops were formerly connected
   /// before transformations required for k-induction or BMC to correctly
   /// work were done.
-  std::unordered_map<unsigned, goto_programt::targett> loop_targets;
+  std::map<goto_programt::targett, goto_programt::targett> loop_targets;
 
   void unwind_function(unsigned to_unwind);
   void mark_unwinds(

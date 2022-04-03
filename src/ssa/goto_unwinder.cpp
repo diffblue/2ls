@@ -37,7 +37,7 @@ void goto_local_unwindert::reconnect_loops()
     }
     if(i_it->is_backwards_goto() && !unwind_starts.empty())
     {
-      loop_targets[i_it->location_number]=i_it->get_target();
+      loop_targets[i_it]=i_it->get_target();
       i_it->set_target(unwind_starts.top());
       unwind_starts.pop();
     }
@@ -50,9 +50,10 @@ void goto_local_unwindert::reconnect_loops()
 ///   \ref loop_targets map to be filled with loop configuration.
 void goto_local_unwindert::reset_loop_connections()
 {
-  for(auto &i_it : goto_function.body.instructions)
-    if(i_it.is_backwards_goto())
-      i_it.set_target(loop_targets[i_it.location_number]);
+  for(auto i_it=goto_function.body.instructions.begin();
+      i_it!=goto_function.body.instructions.end(); i_it++)
+    if(i_it->is_backwards_goto() && loop_targets.find(i_it)!=loop_targets.end())
+      i_it->set_target(loop_targets.at(i_it));
   loop_targets.clear();
 }
 
