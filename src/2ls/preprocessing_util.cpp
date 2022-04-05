@@ -251,7 +251,7 @@ void twols_parse_optionst::remove_multiple_dereferences(goto_modelt &goto_model)
   {
     Forall_goto_program_instructions(i_it, f_it.second.body)
     {
-      if(i_it->is_goto())
+      if(i_it->is_goto() || i_it->is_assert())
       {
         remove_multiple_dereferences(
           goto_model,
