@@ -148,6 +148,8 @@ void goto_local_unwindert::unwind(unsigned int k)
 {
   if(k<=current_unwinding)
     return;
+  if(!goto_function.body_available())
+    return;
 
   unsigned to_unwind=k-current_unwinding;
   debug() << "Adding " << to_unwind << " more unwindings" << messaget::eom;
@@ -159,9 +161,6 @@ void goto_local_unwindert::unwind(unsigned int k)
   // Remove skips, there may be skips made by do-while loops which would
   // make the following loop inconsistent
   remove_skip(goto_function.body);
-
-  if (!goto_function.body_available())
-    return;
   unwind_function(to_unwind);
 
   // The unwinding generated new skips and GOTOs, update
@@ -377,7 +376,7 @@ void goto_unwindert::unwind_all(unsigned int k)
 
 void goto_unwindert::init(unwinder_modet mode)
 {
-  for(auto &f : ssa_db.functions())
+  for(auto &f : goto_model.goto_functions.function_map)
   {
     unwinder_map.insert(
       {
