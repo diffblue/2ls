@@ -616,6 +616,14 @@ void twols_parse_optionst::create_dynobj_instances(
           nondet.pretty_name=nondet.name;
           symbol_table.add(nondet);
 
+          const exprt nondet_bool_expr =
+            side_effect_expr_nondett(bool_typet(), it->source_location);
+          goto_program.insert_before(
+            it,
+            goto_programt::make_assignment(
+              code_assignt(nondet.symbol_expr(), nondet_bool_expr),
+              it->source_location));
+
           suffix="$"+std::to_string(i);
           obj_symbol.name=name+suffix;
           obj_symbol.base_name=base_name+suffix;

@@ -130,6 +130,8 @@ exprt malloc_ssa(
   const side_effect_exprt &code,
   const std::string &suffix,
   symbol_tablet &symbol_table,
+  goto_programt &goto_program,
+  goto_programt::targett &i_it,
   bool is_concrete,
   bool alloc_concrete)
 {
@@ -225,6 +227,14 @@ exprt malloc_ssa(
     nondet_symbol.mode=ID_C;
     symbol_table.add(nondet_symbol);
 
+    const exprt nondet_bool_expr =
+      side_effect_expr_nondett(bool_typet(), i_it->source_location);
+    goto_program.insert_before(
+      i_it,
+      goto_programt::make_assignment(
+        code_assignt(nondet_symbol.symbol_expr(), nondet_bool_expr),
+        i_it->source_location));
+
     exprt::operandst pointer_equs;
     for(auto &ptr : pointers)
     {
@@ -251,8 +261,9 @@ static bool replace_malloc_rec(
   exprt &expr,
   const std::string &suffix,
   symbol_tablet &symbol_table,
+  goto_programt &goto_program,
+  goto_programt::targett &i_it,
   const exprt &malloc_size,
-  unsigned loc_number,
   bool is_concrete,
   bool alloc_concrete)
 {
@@ -264,8 +275,10 @@ static bool replace_malloc_rec(
 
     expr=malloc_ssa(
       to_side_effect_expr(expr),
-      "$"+std::to_string(loc_number)+suffix,
+      "$"+std::to_string(i_it->location_number)+suffix,
       symbol_table,
+      goto_program,
+      i_it,
       is_concrete,
       alloc_concrete);
 
@@ -279,8 +292,9 @@ static bool replace_malloc_rec(
       if(replace_malloc_rec(*it,
                             suffix,
                             symbol_table,
+                            goto_program,
+                            i_it,
                             malloc_size,
-                            loc_number,
                             is_concrete,
                             alloc_concrete))
       {
@@ -377,8 +391,9 @@ bool replace_malloc(
         if(replace_malloc_rec(code_assign.rhs(),
                               suffix,
                               goto_model.symbol_table,
+                              f_it.second.body,
+                              i_it,
                               malloc_size,
-                              i_it->location_number,
                               loop_end==f_it.second.body.instructions.end(),
                               alloc_concrete))
         {
@@ -387,6 +402,7 @@ bool replace_malloc(
       }
     }
   }
+  goto_model.goto_functions.update();
   return result;
 }
 
