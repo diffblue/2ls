@@ -82,6 +82,12 @@ protected:
     const goto_programt::targett before_unwind,
     const std::vector<goto_programt::targett> &iteration_points,
     unsigned to_unwind);
+  void delete_dynamic_objects_from_symtable();
+  void rename_dynamic_objects_rec(
+    goto_programt::instructiont &it,
+    exprt &expr,
+    std::map<std::string, std::string> &rename_map);
+  void rename_dynamic_objects();
   void reconnect_loops();
   void reset_loop_connections();
   void recompute_ssa();

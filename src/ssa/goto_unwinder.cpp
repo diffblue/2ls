@@ -9,12 +9,14 @@ Author: František Nečas
 #include<stack>
 
 #include <util/prefix.h>
+#include <util/pointer_expr.h>
 #include <goto-programs/remove_skip.h>
 #include <goto-instrument/unwindset.h>
 #include <goto-instrument/unwind.h>
 
 #include "simplify_ssa.h"
 #include "goto_unwinder.h"
+#include "malloc_ssa.h"
 
 /// Puts all unwindings corresponding to a loop into the loop itself.
 /// This is done by changing the backwards goto target to the first instruction
@@ -40,6 +42,121 @@ void goto_local_unwindert::reconnect_loops()
       loop_targets[i_it]=i_it->get_target();
       i_it->set_target(unwind_starts.top());
       unwind_starts.pop();
+    }
+  }
+}
+
+std::string get_object_name(const exprt &expr)
+{
+  std::string name;
+  const auto &obj_op=to_address_of_expr(expr).op();
+  if(obj_op.id()==ID_symbol)
+    name=to_symbol_expr(obj_op).get_identifier().c_str();
+  else
+    name=to_symbol_expr(
+      to_index_expr(obj_op).array()).get_identifier().c_str();
+  return name;
+}
+
+/// Recursively renames dynamic objects in the expression tree.
+///
+/// \param it The instruction we are currently processing
+/// \param expr Subexpression to process.
+/// \param rename_map Objects which have been renamed so far.
+/// \pre Symbols of the previously defined dynamic objects have been cleared.
+void goto_local_unwindert::rename_dynamic_objects_rec(
+  goto_programt::instructiont &it,
+  exprt &expr,
+  std::map<std::string, std::string> &rename_map)
+{
+  if(expr.id()==ID_address_of)
+  {
+    std::string name=get_object_name(expr);
+    std::string suffix="$" + std::to_string(it.location_number);
+    // The form is dynamic_object$loc$<other suffixes>, keep the end suffix
+    auto pos=name.find('$');
+    if(pos!=std::string::npos)
+    {
+      auto second_pos=name.find('$', pos+1);
+      if(second_pos!=std::string::npos)
+        suffix+=name.substr(second_pos);
+    }
+    expr=create_dynamic_object(
+      suffix,
+      expr.type().subtype(),
+      goto_model.symbol_table,
+      suffix.find("$co")!=std::string::npos);
+    rename_map[name]=get_object_name(expr);
+  }
+  else if(expr.id()==ID_symbol)
+  {
+    // Rename already renamed dynamic objects in expressions
+    // This occurs in memsafety (--pointer-check) due to concrete objects
+    auto &symbol_expr=to_symbol_expr(expr);
+    auto rename=rename_map.find(symbol_expr.get_identifier().c_str());
+    if(rename!=rename_map.end())
+      symbol_expr.set_identifier(rename->second);
+  }
+  else if (expr.id()==ID_if && expr.get_bool("#malloc_result") &&
+           to_if_expr(expr).cond().id()==ID_and)
+  {
+    // Update the condition for concrete object selection based on new objects
+    // Its form is <nondet> && pointer_equalities, update only pointer eqs.
+    auto &if_expr=to_if_expr(expr);
+    // Get the object, its type and calculate new pointer equalities,
+    // we do not want the new objects to be included.
+    auto &obj=to_typecast_expr(if_expr.true_case()).op();
+    auto pointers=collect_pointer_vars(
+      goto_model.symbol_table,
+      obj.type().subtype());
+    // Update the objects inside true/false cases
+    rename_dynamic_objects_rec(it, if_expr.true_case(), rename_map);
+    rename_dynamic_objects_rec(it, if_expr.false_case(), rename_map);
+
+    exprt::operandst pointer_equs;
+    for(auto &ptr : pointers)
+    {
+      pointer_equs.push_back(equal_exprt(ptr, obj));
+    }
+
+    // Replace the condition
+    auto &and_expr=to_and_expr(if_expr.cond());
+    and_expr.op1()=not_exprt(disjunction(pointer_equs));
+  }
+  else
+    for(auto &op : expr.operands())
+      rename_dynamic_objects_rec(it, op, rename_map);
+}
+
+/// Removes all dynamic_object symbols from the symbol table.
+void goto_local_unwindert::delete_dynamic_objects_from_symtable()
+{
+  std::vector<std::string> to_remove;
+  for(const auto &symbol : goto_model.symbol_table.symbols)
+    if(symbol.second.type.get_bool("#dynamic"))
+      to_remove.push_back(symbol.second.name.c_str());
+  for(const auto &symbol : to_remove)
+    goto_model.symbol_table.remove(symbol);
+}
+
+/// Renames dynamic objects on RHS of malloc result.
+////
+/// Dynamic objects are hard-coded inside malloc_ssa and hence are not
+/// correctly unwound (the malloc result remains the same across
+/// all unwinds which is incorrect).
+void goto_local_unwindert::rename_dynamic_objects()
+{
+  // First, we delete all the existing dynamic_object symbols, they will
+  // change anyway, and we do not want any mess.
+  delete_dynamic_objects_from_symtable();
+  std::map<std::string, std::string> rename_map;
+  for(auto &i_it : goto_function.body.instructions)
+  {
+    if(i_it.is_assign())
+    {
+      exprt &assign = i_it.assign_rhs_nonconst();
+      if(assign.get_bool("#malloc_result"))
+        rename_dynamic_objects_rec(i_it, assign, rename_map);
     }
   }
 }
@@ -171,6 +288,7 @@ void goto_local_unwindert::unwind(unsigned int k)
   goto_model.goto_functions.update();
   current_unwinding=k;
 
+  rename_dynamic_objects();
   reconnect_loops();
   goto_model.goto_functions.update();
   recompute_ssa();
