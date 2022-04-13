@@ -332,10 +332,17 @@ void goto_local_unwindert::add_hoisted_assertions(
 /// Performs necessary transformations to the SSA.
 /// \param SSA: The SSA that is being processed.
 /// \param goto_program: The GOTO program corresponding to the given SSA.
+///
+/// \note This is no-op if the program contains dynamic memory since by
+///   unwinding, we introduce new dynamic objects which possibly changes the
+///   semantic of the unwound assertion which goes against the concept of
+///   SSA constraints.
 void goto_local_unwindert::update_ssa(
   local_SSAt &SSA,
   const goto_programt &goto_program)
 {
+  if(dynamic_memory)
+    return;
   add_hoisted_assertions(SSA, goto_program);
   update_assertions(SSA, goto_program);
 }
@@ -387,7 +394,8 @@ void goto_unwindert::init(unwinder_modet mode)
           f.first,
           goto_model.goto_functions.function_map.at(f.first),
           mode,
-          simplify)});
+          simplify,
+          dynamic_memory)});
   }
 }
 

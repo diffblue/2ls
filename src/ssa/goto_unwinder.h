@@ -33,13 +33,15 @@ public:
     const irep_idt &_function_name,
     goto_functiont &_goto_function,
     unwinder_modet _mode,
-    bool _simplify):
+    bool _simplify,
+    bool _dynamic_memory):
     ssa_db(_ssa_db),
     goto_model(_goto_model),
     function_name(_function_name),
     goto_function(_goto_function),
     mode(_mode),
-    simplify(_simplify)
+    simplify(_simplify),
+    dynamic_memory(_dynamic_memory)
   {
   }
 
@@ -68,6 +70,8 @@ protected:
   unwinder_modet mode;
   /// Whether the unwound SSA should be simplified.
   bool simplify;
+  /// Whether dynamic memory is present in the program
+  bool dynamic_memory;
   /// A store used for keeping track of how loops were formerly connected
   /// before transformations required for k-induction or BMC to correctly
   /// work were done.
@@ -106,10 +110,12 @@ public:
   explicit goto_unwindert(
     ssa_dbt &_ssa_db,
     goto_modelt &_goto_model,
-    bool _simplify) :
+    bool _simplify,
+    bool _dynamic_memory) :
     ssa_db(_ssa_db),
     goto_model(_goto_model),
     simplify(_simplify),
+    dynamic_memory(_dynamic_memory),
     is_initialized(false)
   {}
 
@@ -137,6 +143,8 @@ protected:
   goto_modelt &goto_model;
   /// Whether the unwound SSA should be simplified.
   bool simplify;
+  /// Whether dynamic memory is present in the program
+  bool dynamic_memory;
   /// Whether the unwinder is fully initialized.
   bool is_initialized;
   /// Maps function names to their respective local unwinders.

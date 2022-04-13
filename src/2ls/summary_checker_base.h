@@ -56,7 +56,8 @@ public:
       ssa_unwinder=util_make_unique<goto_unwindert>(
         ssa_db,
         goto_model,
-        simplify);
+        simplify,
+        options.get_bool_option("dynamic-memory"));
   }
 
   bool show_vcc, simplify, fixed_point;

@@ -560,6 +560,7 @@ int twols_parse_optionst::doit()
   {
     status() << "Using GOTO unwinder due to presence of dynamic memory" << eom;
     options.set_option("unwind-goto", true);
+    options.set_option("dynamic-memory", true);
   }
   // don't do nontermination with dynamic memory
   if(options.get_bool_option("competition-mode") &&
