@@ -1,0 +1,7 @@
+CORE
+main.c
+--heap --intervals --pointer-check --k-induction
+^EXIT=10$
+^SIGNAL=0$
+^VERIFICATION FAILED$
+\[main.pointer_dereference.25\] dereference failure: pointer NULL in l->n: FAILURE

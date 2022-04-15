@@ -1,0 +1,6 @@
+THOROUGH
+main.c
+--heap --values-refine --k-induction
+^EXIT=0$
+^SIGNAL=0$
+^VERIFICATION SUCCESSFUL$
