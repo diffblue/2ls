@@ -64,6 +64,8 @@ public:
 class unwindert
 {
 public:
+  virtual ~unwindert() = default;
+
   /// Creates local unwinders for each function operating in the given mode.
   /// \param mode Mode under which the unwinders should be initialized.
   virtual void init(unwinder_modet mode)=0;
