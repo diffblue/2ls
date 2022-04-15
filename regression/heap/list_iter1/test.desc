@@ -1,10 +1,10 @@
-KNOWNBUG
+CORE
 main.c
---incremental-bmc --independent-properties --heap-interval
+--incremental-bmc --independent-properties --heap --intervals
 ^EXIT=10$
 ^SIGNAL=0$
 ^VERIFICATION FAILED$
-^\[main\.assertion\.1\] assertion l->n->x==0: OK
+^\[main\.assertion\.1\] assertion l->n->x==0: SUCCESS
 ^\[main\.assertion\.2\] assertion l->n->x==1: FAILURE
 ^\[main\.assertion\.3\] assertion l->x==2: FAILURE
-^\[main\.assertion\.4\] assertion l->x==1: OK
+^\[main\.assertion\.4\] assertion l->x==1: SUCCESS

@@ -11,11 +11,11 @@ void main()
 {
   struct list *l;
   struct list *nl1=malloc(sizeof(struct list));
-  nl1->x=0;
+  nl1->x=1;
   nl1->n=l;
   l=nl1;
   struct list *nl2=malloc(sizeof(struct list));
-  nl2->x=1;
+  nl2->x=0;
   nl2->n=l;
   l=nl2;
   

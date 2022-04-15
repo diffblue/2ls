@@ -1,8 +1,8 @@
-KNOWNBUG
+CORE
 main.c
---incremental-bmc --independent-properties --heap-interval
+--incremental-bmc --independent-properties --heap --intervals
 ^EXIT=10$
 ^SIGNAL=0$
 ^VERIFICATION FAILED$
-^\[main\.assertion\.1\] assertion m->x==i: OK
+^\[main\.assertion\.1\] assertion m->x==i: UNKNOWN
 ^\[main\.assertion\.2\] assertion m->x==-1: FAILURE
