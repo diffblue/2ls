@@ -41,5 +41,8 @@ std::vector<exprt> collect_pointer_vars(
 
 void allow_record_malloc(goto_modelt &goto_model);
 void allow_record_memleak(goto_modelt &goto_model);
+void split_memory_leak_assignments(
+  goto_programt &goto_program,
+  symbol_tablet &symbol_table);
 
 #endif

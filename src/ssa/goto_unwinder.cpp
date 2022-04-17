@@ -289,6 +289,9 @@ void goto_local_unwindert::unwind(unsigned int k)
   current_unwinding=k;
 
   rename_dynamic_objects();
+  split_memory_leak_assignments(goto_function.body, goto_model.symbol_table);
+  goto_model.goto_functions.update();
+
   reconnect_loops();
   goto_model.goto_functions.update();
   recompute_ssa();
