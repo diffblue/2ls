@@ -610,3 +610,17 @@ std::string get_dynobj_instance(const irep_idt &id)
   size_t end=name.find_first_not_of("0123456789co", start);
   return name.substr(start, end-start);
 }
+
+/// Replaces usages of a symbol with another symbol in the given expression.
+void replace_symbol(exprt &expr, const irep_idt &old, const irep_idt &updated)
+{
+  if(expr.id()==ID_symbol)
+  {
+    auto &symbol_expr=to_symbol_expr(expr);
+    if(symbol_expr.get_identifier()==old)
+      symbol_expr.set_identifier(updated);
+  }
+  else
+    for(auto &op : expr.operands())
+      replace_symbol(op, old, updated);
+}

@@ -251,7 +251,7 @@ void twols_parse_optionst::remove_multiple_dereferences(goto_modelt &goto_model)
   {
     Forall_goto_program_instructions(i_it, f_it.second.body)
     {
-      if(i_it->is_goto())
+      if(i_it->is_goto() || i_it->is_assert())
       {
         remove_multiple_dereferences(
           goto_model,
@@ -615,6 +615,14 @@ void twols_parse_optionst::create_dynobj_instances(
           nondet.base_name=nondet.name;
           nondet.pretty_name=nondet.name;
           symbol_table.add(nondet);
+
+          const exprt nondet_bool_expr =
+            side_effect_expr_nondett(bool_typet(), it->source_location);
+          goto_program.insert_before(
+            it,
+            goto_programt::make_assignment(
+              code_assignt(nondet.symbol_expr(), nondet_bool_expr),
+              it->source_location));
 
           suffix="$"+std::to_string(i);
           obj_symbol.name=name+suffix;

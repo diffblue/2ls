@@ -1,8 +1,8 @@
-KNOWNBUG
+CORE
 main.c
---incremental-bmc --heap-interval
+--incremental-bmc --heap --intervals
 ^EXIT=10$
 ^SIGNAL=0$
 ^VERIFICATION FAILED$
 ^\[main\.assertion\.1\] assertion l->n->x==1: FAILURE
-^\[main\.assertion\.2\] assertion l->x==1: OK
+^\[main\.assertion\.2\] assertion l->x==1: SUCCESS

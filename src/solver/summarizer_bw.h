@@ -16,7 +16,7 @@ Author: Peter Schrammel
 #include <util/options.h>
 
 #include <ssa/ssa_inliner.h>
-#include <ssa/ssa_unwinder.h>
+#include <ssa/unwinder.h>
 #include <ssa/local_ssa.h>
 #include <ssa/ssa_db.h>
 
@@ -29,7 +29,7 @@ public:
     optionst &options,
     summary_dbt &summary_db,
     ssa_dbt &ssa_db,
-    ssa_unwindert &ssa_unwinder,
+    std::unique_ptr<unwindert> &ssa_unwinder,
     ssa_inlinert &ssa_inliner):
     summarizer_baset(options, summary_db, ssa_db, ssa_unwinder, ssa_inliner)
   {

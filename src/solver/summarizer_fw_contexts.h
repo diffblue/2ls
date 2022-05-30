@@ -17,7 +17,7 @@ Author: Peter Schrammel
 #include <util/ui_message.h>
 
 #include <ssa/ssa_inliner.h>
-#include <ssa/ssa_unwinder.h>
+#include <ssa/unwinder.h>
 #include <ssa/local_ssa.h>
 #include <ssa/ssa_db.h>
 
@@ -31,7 +31,7 @@ public:
     optionst &_options,
     summary_dbt &_summary_db,
     ssa_dbt &_ssa_db,
-    ssa_unwindert &_ssa_unwinder,
+    std::unique_ptr<unwindert> &_ssa_unwinder,
     ssa_inlinert &_ssa_inliner):
     summarizer_fwt(_options, _summary_db, _ssa_db, _ssa_unwinder, _ssa_inliner),
     ui(ui_message_handlert::uit::PLAIN)

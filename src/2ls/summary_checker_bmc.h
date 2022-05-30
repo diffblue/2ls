@@ -17,10 +17,10 @@ Author: Peter Schrammel
 class summary_checker_bmct:public summary_checker_baset
 {
 public:
-  explicit summary_checker_bmct(optionst &_options):
-    summary_checker_baset(_options) {}
+  explicit summary_checker_bmct(optionst &_options, goto_modelt &_goto_model):
+    summary_checker_baset(_options, _goto_model) {}
 
-  virtual resultt operator()(const goto_modelt &);
+  resultt operator()() override;
 };
 
 #endif

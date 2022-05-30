@@ -1,0 +1,6 @@
+CORE
+main.c
+--heap --pointer-check --memory-leak-check --k-induction
+^EXIT=0$
+^SIGNAL=0$
+^VERIFICATION SUCCESSFUL$

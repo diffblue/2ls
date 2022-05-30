@@ -16,7 +16,6 @@ Author: Peter Schrammel, Björn Wachter
 #include <util/options.h>
 
 #include <ssa/local_ssa.h>
-#include <ssa/ssa_unwinder.h>
 #include <ssa/ssa_db.h>
 #include <solver/summary_db.h>
 

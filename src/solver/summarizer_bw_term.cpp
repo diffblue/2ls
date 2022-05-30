@@ -131,13 +131,13 @@ void summarizer_bw_termt::do_summary_term(
 
   // templates for ranking functions
   template_generator_rankingt template_generator1(
-    options, ssa_db, ssa_unwinder.get(function_name));
+    options, ssa_db, ssa_unwinder->get(function_name));
   template_generator1.set_message_handler(get_message_handler());
   template_generator1(solver.next_domain_number(), SSA, true);
 
   // templates for backward summary
   template_generator_summaryt template_generator2(
-    options, ssa_db, ssa_unwinder.get(function_name));
+    options, ssa_db, ssa_unwinder->get(function_name));
   template_generator2.set_message_handler(get_message_handler());
   template_generator2(solver.next_domain_number(), SSA, false);
 

@@ -106,7 +106,7 @@ void summarizer_fwt::do_summary(
   analyzer.set_message_handler(get_message_handler());
 
   template_generator_summaryt template_generator(
-    options, ssa_db, ssa_unwinder.get(function_name));
+    options, ssa_db, ssa_unwinder->get(function_name));
   template_generator.set_message_handler(get_message_handler());
   template_generator(solver.next_domain_number(), SSA, true);
 
@@ -120,7 +120,7 @@ void summarizer_fwt::do_summary(
   if(summary_db.exists(function_name)) // reuse existing invariants
   {
     const exprt &old_inv=summary_db.get(function_name).fw_invariant;
-    exprt inv=ssa_unwinder.get(function_name).rename_invariant(old_inv);
+    exprt inv=ssa_unwinder->get(function_name).rename_invariant(old_inv);
     conds.push_back(inv);
 
 #if 0

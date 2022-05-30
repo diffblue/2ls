@@ -17,10 +17,12 @@ Author: Peter Schrammel
 class summary_checker_kindt:public summary_checker_baset
 {
 public:
-  explicit inline summary_checker_kindt(optionst &_options):
-    summary_checker_baset(_options) {}
+  explicit inline summary_checker_kindt(
+    optionst &_options,
+    goto_modelt &_goto_model):
+    summary_checker_baset(_options, _goto_model) {}
 
-  virtual resultt operator()(const goto_modelt &);
+  resultt operator()() override;
 };
 
 #endif

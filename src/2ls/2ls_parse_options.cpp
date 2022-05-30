@@ -550,15 +550,17 @@ int twols_parse_optionst::doit()
     status() << eom;
   }
 
-  // don't use k-induction with dynamic memory
-  if(options.get_bool_option("competition-mode") &&
-     options.get_bool_option("k-induction") &&
+  // turn on slower GOTO unwinder when dynamic memory and unwinding
+  // is combined
+  if((options.get_bool_option("k-induction") ||
+      options.get_bool_option("incremental-bmc") ||
+      options.get_unsigned_int_option("unwind")) &&
+     !options.get_bool_option("nontermination") &&
      dynamic_memory_detected)
   {
-    options.set_option("k-induction", false);
-    options.set_option("std-invariants", false);
-    options.set_option("incremental-bmc", false);
-    options.set_option("unwind", 0);
+    status() << "Using GOTO unwinder due to presence of dynamic memory" << eom;
+    options.set_option("unwind-goto", true);
+    options.set_option("dynamic-memory", true);
   }
   // don't do nontermination with dynamic memory
   if(options.get_bool_option("competition-mode") &&
@@ -578,18 +580,18 @@ int twols_parse_optionst::doit()
     if(!options.get_bool_option("k-induction") &&
        !options.get_bool_option("incremental-bmc"))
       checker=std::unique_ptr<summary_checker_baset>(
-        new summary_checker_ait(options));
+        new summary_checker_ait(options, goto_model));
     if(options.get_bool_option("k-induction") &&
        !options.get_bool_option("incremental-bmc"))
       checker=std::unique_ptr<summary_checker_baset>(
-        new summary_checker_kindt(options));
+        new summary_checker_kindt(options, goto_model));
     if(!options.get_bool_option("k-induction") &&
        options.get_bool_option("incremental-bmc"))
       checker=std::unique_ptr<summary_checker_baset>(
-        new summary_checker_bmct(options));
+        new summary_checker_bmct(options, goto_model));
     if(options.get_bool_option("nontermination"))
       checker=std::unique_ptr<summary_checker_baset>(
-        new summary_checker_nontermt(options));
+        new summary_checker_nontermt(options, goto_model));
 
     checker->set_message_handler(get_message_handler());
     checker->simplify=!cmdline.isset("no-simplify");
@@ -600,7 +602,7 @@ int twols_parse_optionst::doit()
     {
       std::cout << "VERIFICATION CONDITIONS:\n\n";
       checker->show_vcc=true;
-      (*checker)(goto_model);
+      (*checker)();
       return 0;
     }
 
@@ -639,7 +641,7 @@ int twols_parse_optionst::doit()
       !options.get_bool_option("termination") &&
       !options.get_bool_option("nontermination");
     // do actual analysis
-    switch((*checker)(goto_model))
+    switch((*checker)())
     {
     case resultt::PASS:
       if(report_assertions)
@@ -1120,6 +1122,9 @@ bool twols_parse_optionst::process_goto_program(
     if(options.get_bool_option("memory-leak-check"))
       allow_record_memleak(goto_model);
 
+    for(auto &f_it : goto_model.goto_functions.function_map)
+      split_memory_leak_assignments(f_it.second.body, goto_model.symbol_table);
+    goto_model.goto_functions.update();
     split_same_symbolic_object_assignments(goto_model);
 
     // remove loop heads from function entries

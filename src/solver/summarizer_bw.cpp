@@ -123,7 +123,7 @@ void summarizer_bwt::do_summary(
   solver.set_message_handler(get_message_handler());
 
   template_generator_summaryt template_generator(
-    options, ssa_db, ssa_unwinder.get(function_name));
+    options, ssa_db, ssa_unwinder->get(function_name));
   template_generator.set_message_handler(get_message_handler());
   template_generator(solver.next_domain_number(), SSA, false);
 
@@ -394,7 +394,7 @@ exprt summarizer_bwt::compute_calling_context2(
   analyzer.set_message_handler(get_message_handler());
 
   template_generator_callingcontextt template_generator(
-    options, ssa_db, ssa_unwinder.get(function_name));
+    options, ssa_db, ssa_unwinder->get(function_name));
   template_generator.set_message_handler(get_message_handler());
   template_generator(solver.next_domain_number(), SSA, n_it, f_it, false);
 

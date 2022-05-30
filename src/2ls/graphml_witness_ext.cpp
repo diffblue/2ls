@@ -11,6 +11,8 @@ Author: Peter Schrammel
 
 #include "graphml_witness_ext.h"
 
+#include <ssa/unwinder.h>
+
 /// proof witness TODO: works only for inlined programs
 void graphml_witness_extt::operator()(
   const summary_checker_baset &summary_checker)
@@ -19,8 +21,8 @@ void graphml_witness_extt::operator()(
   const unwindable_local_SSAt &ssa=
     static_cast<const unwindable_local_SSAt &>(
       summary_checker.ssa_db.get(function_name));
-  const ssa_local_unwindert &ssa_unwinder=
-  summary_checker.ssa_unwinder.get(function_name);
+  const local_unwindert &ssa_unwinder=
+  summary_checker.ssa_unwinder->get(function_name);
 
   graphml.key_values["sourcecodelang"]="C";
 

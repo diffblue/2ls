@@ -16,7 +16,7 @@ Author: Peter Schrammel
 #include <util/options.h>
 
 #include <ssa/ssa_inliner.h>
-#include <ssa/ssa_unwinder.h>
+#include <ssa/unwinder.h>
 #include <ssa/local_ssa.h>
 #include <ssa/ssa_db.h>
 
@@ -27,7 +27,7 @@ public:
     optionst &_options,
     summary_dbt &_summary_db,
     ssa_dbt &_ssa_db,
-    ssa_unwindert &_ssa_unwinder,
+    std::unique_ptr<unwindert> &_ssa_unwinder,
     ssa_inlinert &_ssa_inliner):
     options(_options),
     summary_db(_summary_db),
@@ -60,7 +60,7 @@ public:
   optionst &options;
   summary_dbt &summary_db;
   ssa_dbt &ssa_db;
-  ssa_unwindert &ssa_unwinder;
+  std::unique_ptr<unwindert> &ssa_unwinder;
   ssa_inlinert &ssa_inliner;
 
   virtual void compute_summary_rec(

@@ -1,0 +1,7 @@
+CORE
+main.c
+--heap --pointer-check --memory-leak-check --k-induction
+^EXIT=10$
+^SIGNAL=0$
+^VERIFICATION FAILED$
+\[__CPROVER__start.memory-leak.1\] dynamically allocated memory never freed in __CPROVER_memory_leak == NULL: FAILURE

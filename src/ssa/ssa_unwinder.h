@@ -14,8 +14,9 @@ Author: Peter Schrammel, Saurabh Joshi
 
 #include "unwindable_local_ssa.h"
 #include "ssa_db.h"
+#include "unwinder.h"
 
-class ssa_local_unwindert
+class ssa_local_unwindert:public local_unwindert
 {
 public:
   typedef local_SSAt::locationt locationt;
@@ -24,54 +25,34 @@ public:
   ssa_local_unwindert(
     const irep_idt _fname,
     unwindable_local_SSAt& _SSA,
-    bool _is_kinduction,
-    bool _is_bmc):
+    unwinder_modet _mode):
     fname(_fname),
     SSA(_SSA),
-    is_kinduction(_is_kinduction),
-    is_bmc(_is_bmc),
+    mode(_mode),
     current_enabling_expr(bool_typet())
   {
   }
 
-  void init();
-
-  void unwind(unsigned k);
-
-#if 0
-  // TODO: not yet sure how to do that
-  void unwind(locationt loop_head_loc, unsigned k)
-  {
-    unwind(loops[loop_head_loc], k);
-  }
-#endif
+  void init() override;
+  void unwind(unsigned k) override;
 
   // TODO: this should be loop specific in future,
   // maybe move to unwindable_local_ssa as it is not really unwinder related
-  void loop_continuation_conditions(exprt::operandst& loop_cont) const;
-
-#if 0
-  // TODO: these two should be possible with unwindable_local_ssa facilities
-  exprt rename_invariant(const exprt& inv_in) const;
-  void unwinder_rename(
-    symbol_exprt &var,
-    const local_SSAt::nodet &node,
-    bool pre) const;
-#endif
+  void loop_continuation_conditions(exprt::operandst& loop_cont) const override;
 
   // TODO: this must go away, should use SSA.rename instead
   void unwinder_rename(
     symbol_exprt &var,
     const local_SSAt::nodet &node,
-    bool pre) const;
+    bool pre) const override;
 
+protected:
   class loopt // loop tree
   {
   public:
     loopt():
       is_dowhile(false),
-      is_root(false),
-      current_unwinding(-1)
+      is_root(false)
     {
     }
 
@@ -81,7 +62,6 @@ public:
     std::vector<unsigned> loop_nodes; // child loops
     bool is_dowhile;
     bool is_root;
-    long current_unwinding;
     typedef std::map<exprt, exprt::operandst> exit_mapt;
     exit_mapt exit_map;
     std::map<symbol_exprt, symbol_exprt> pre_post_map;
@@ -97,12 +77,9 @@ public:
     assertion_hoisting_mapt assertion_hoisting_map;
   };
 
-  bool find_loop(unsigned location_number, const loopt *&loop) const;
-
-protected:
   const irep_idt fname;
   unwindable_local_SSAt &SSA;
-  bool is_kinduction, is_bmc;
+  unwinder_modet mode;
   symbol_exprt current_enabling_expr; // TODO must become loop-specific
 
   // use location numbers as indices, as target addresses make
@@ -134,7 +111,7 @@ protected:
   void add_hoisted_assertions(loopt &loop, bool is_last);
 };
 
-class ssa_unwindert:public messaget
+class ssa_unwindert:public unwindert, public messaget
 {
 public:
   typedef std::map<irep_idt, ssa_local_unwindert> unwinder_mapt;
@@ -146,18 +123,17 @@ public:
   {
   }
 
-  void init(bool is_kinduction, bool is_bmc);
-  void init_localunwinders();
+  void init(unwinder_modet mode) override;
+  void init_localunwinders() override;
 
-  void unwind(const irep_idt fname, unsigned k);
-  void unwind_all(unsigned k);
+  void unwind_all(unsigned k) override;
 
-  inline ssa_local_unwindert &get(const irep_idt& fname)
+  inline ssa_local_unwindert &get(const irep_idt& fname) override
   {
     return unwinder_map.at(fname);
   }
 
-  inline const ssa_local_unwindert &get(const irep_idt& fname) const
+  inline const ssa_local_unwindert &get(const irep_idt& fname) const override
   {
     return unwinder_map.at(fname);
   }

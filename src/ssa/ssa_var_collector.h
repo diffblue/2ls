@@ -15,7 +15,7 @@ Author: Peter Schrammel, Stefan Marticek
 #include <util/options.h>
 
 #include "local_ssa.h"
-#include "ssa_unwinder.h"
+#include "unwinder.h"
 
 #include <domains/strategy_solver_base.h>
 
@@ -26,7 +26,7 @@ public:
 
   explicit ssa_var_collectort(
     optionst &_options,
-    ssa_local_unwindert &_ssa_local_unwinder):
+    local_unwindert &_ssa_local_unwinder):
     options(_options),
     ssa_local_unwinder(_ssa_local_unwinder)
   {
@@ -75,7 +75,7 @@ public:
 
 protected:
   bool std_invariants; // include value at loop entry
-  const ssa_local_unwindert &ssa_local_unwinder;
+  const local_unwindert &ssa_local_unwinder;
 };
 
 #endif // CPROVER_2LS_SSA_SSA_VAR_COLLECTOR_H

@@ -91,7 +91,7 @@ bool summarizer_baset::check_call_reachable(
   solver << ssa_inliner.get_summaries(SSA);
 
   symbol_exprt guard=SSA.guard_symbol(n_it->location);
-  ssa_unwinder.get(function_name).unwinder_rename(guard, *n_it, false);
+  ssa_unwinder->get(function_name).unwinder_rename(guard, *n_it, false);
   solver << guard;
 
 #if 0
@@ -159,7 +159,7 @@ exprt summarizer_baset::compute_calling_context(
   analyzer.set_message_handler(get_message_handler());
 
   template_generator_callingcontextt template_generator(
-    options, ssa_db, ssa_unwinder.get(function_name));
+    options, ssa_db, ssa_unwinder->get(function_name));
   template_generator.set_message_handler(get_message_handler());
   template_generator(solver.next_domain_number(), SSA, n_it, f_it, forward);
 

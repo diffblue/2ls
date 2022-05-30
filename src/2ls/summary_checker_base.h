@@ -16,9 +16,12 @@ Author: Peter Schrammel
 #include <goto-checker/properties.h>
 #include <goto-checker/goto_trace_storage.h>
 #include <util/ui_message.h>
+#include <util/make_unique.h>
 
 #include <ssa/local_ssa.h>
+#include <ssa/unwinder.h>
 #include <ssa/ssa_unwinder.h>
+#include <ssa/goto_unwinder.h>
 #include <ssa/ssa_inliner.h>
 #include <domains/incremental_solver.h>
 #include <ssa/ssa_db.h>
@@ -34,23 +37,33 @@ class summary_checker_baset:public messaget
 {
 public:
   summary_checker_baset(
-    optionst &_options):
+    optionst &_options,
+    goto_modelt &_goto_model):
     show_vcc(false),
     simplify(false),
     fixed_point(false),
     options(_options),
+    goto_model(_goto_model),
     ssa_db(_options), summary_db(),
-    ssa_unwinder(ssa_db),
+    ssa_unwinder(util_make_unique<ssa_unwindert>(ssa_db)),
     ssa_inliner(summary_db),
     solver_instances(0),
     solver_calls(0),
     summaries_used(0),
-    termargs_computed(0) {}
+    termargs_computed(0)
+  {
+    if(options.get_bool_option("unwind-goto"))
+      ssa_unwinder=util_make_unique<goto_unwindert>(
+        ssa_db,
+        goto_model,
+        simplify,
+        options.get_bool_option("dynamic-memory"));
+  }
 
   bool show_vcc, simplify, fixed_point;
   irep_idt function_to_check;
 
-  virtual resultt operator()(const goto_modelt &) { assert(false); }
+  virtual resultt operator()() { assert(false); }
 
   void instrument_and_output(
     goto_modelt &goto_model,
@@ -71,9 +84,10 @@ public:
 protected:
   optionst &options;
 
+  goto_modelt &goto_model;
   ssa_dbt ssa_db;
   summary_dbt summary_db;
-  ssa_unwindert ssa_unwinder;
+  std::unique_ptr<unwindert> ssa_unwinder;
   ssa_inlinert ssa_inliner;
 
   unsigned solver_instances;

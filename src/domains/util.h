@@ -43,5 +43,6 @@ bool is_cprover_symbol(const exprt &expr);
 
 int get_dynobj_line(const irep_idt &id);
 std::string get_dynobj_instance(const irep_idt &id);
+void replace_symbol(exprt &expr, const irep_idt &old, const irep_idt &updated);
 
 #endif

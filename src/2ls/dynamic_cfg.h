@@ -16,7 +16,7 @@ Author: Peter Schrammel
 #include <util/graph.h>
 #include <goto-programs/goto_program.h>
 
-#include <ssa/ssa_unwinder.h>
+#include <ssa/unwinder.h>
 #include <ssa/unwindable_local_ssa.h>
 #include <solver/summary.h>
 
@@ -73,7 +73,7 @@ public:
 
   // TODO: generalise this to non-inlined programs
   void operator()(
-    const ssa_local_unwindert &ssa_unwinder,
+    const local_unwindert &ssa_unwinder,
     const unwindable_local_SSAt &ssa,
     const summaryt &summary);
 
@@ -83,7 +83,7 @@ protected:
 
   void build_cfg(
     const goto_programt &goto_program,
-    const ssa_local_unwindert &ssa_unwinder);
+    const local_unwindert &ssa_unwinder);
 
   void build_from_invariants(
     const unwindable_local_SSAt &ssa,

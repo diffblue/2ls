@@ -245,10 +245,7 @@ void ssa_local_unwindert::unwind(unsigned k)
     assert(SSA.current_unwindings.empty());
   }
   // update current unwinding
-  for(loop_mapt::iterator it=loops.begin(); it!=loops.end(); ++it)
-  {
-    it->second.current_unwinding=k;
-  }
+  current_unwinding=k;
 }
 
 /// unwind all instances of given loop up to k starting from previous
@@ -265,7 +262,7 @@ void ssa_local_unwindert::unwind(loopt &loop, unsigned k, bool is_new_parent)
   for(long i=0; i<=k; ++i)
   {
     // add new unwindings of this loop
-    if(i>loop.current_unwinding || is_new_parent)
+    if(i>current_unwinding || is_new_parent)
     {
       add_loop_body(loop);
       // set new loop end node
@@ -316,7 +313,7 @@ void ssa_local_unwindert::unwind(loopt &loop, unsigned k, bool is_new_parent)
 #ifdef DEBUG
       std::cout << i << ">" << loop.current_unwinding << std::endl;
 #endif
-      unwind(loops[l], k, i>loop.current_unwinding || is_new_parent);
+      unwind(loops[l], k, i>current_unwinding || is_new_parent);
     }
     SSA.increment_unwindings(0);
   }
@@ -385,11 +382,11 @@ void ssa_local_unwindert::add_assertions(loopt &loop, bool is_last)
       SSA.rename(*a_it, node.location);
       if(!is_last) // only add assumptions if we are not in %0 iteration
       {
-        if(is_kinduction)
+        if(mode==unwinder_modet::K_INDUCTION)
         {
           node.constraints.push_back(*a_it);
         }
-        else if(is_bmc)
+        else if(mode==unwinder_modet::BMC)
         {
           // only add in base case
           exprt gs=
@@ -401,7 +398,7 @@ void ssa_local_unwindert::add_assertions(loopt &loop, bool is_last)
         }
       }
     }
-    if(!is_last && (is_bmc || is_kinduction))
+    if(!is_last && mode!=unwinder_modet::NORMAL)
     {
       node.assertions.clear();
     }
@@ -548,7 +545,7 @@ void ssa_local_unwindert::add_hoisted_assertions(loopt &loop, bool is_last)
       it!=loop.assertion_hoisting_map.end(); ++it)
   {
     if(!is_last // only add assumptions if we are not in %0 iteration
-       && is_kinduction && !it->second.assertions.empty()
+       && mode==unwinder_modet::K_INDUCTION && !it->second.assertions.empty()
 #ifdef COMPETITION
        && !has_overflow_shl(it->first->guard))
 #endif
@@ -597,7 +594,7 @@ void ssa_local_unwindert::loop_continuation_conditions(
 {
   SSA.increment_unwindings(1);
   loop_cont.push_back(get_continuation_condition(loop)); // %0
-  for(long i=0; i<=loop.current_unwinding; ++i)
+  for(long i=0; i<=current_unwinding; ++i)
   {
     // recurse into child loops
     for(const auto &l : loop.loop_nodes)
@@ -657,32 +654,6 @@ void ssa_local_unwindert::unwinder_rename(
 #endif
 }
 
-
-bool ssa_local_unwindert::find_loop(
-  unsigned location_number, const loopt *&loop) const
-{
-  loop_mapt::const_iterator it=loops.find(location_number);
-  if(it!=loops.end())
-  {
-    loop=&it->second;
-    return true;
-  }
-  return false;
-}
-
-/// incrementally unwind a function 'id' up to depth k. Initializer must have
-/// been invoked before calling this function
-/// \param fname:name of the goto-function to be unwound, k-unwinding depth
-/// \return false-if id does not correspond to any goto-function in the
-///   unwinder_map
-void ssa_unwindert::unwind(const irep_idt fname, unsigned int k)
-{
-  assert(is_initialized);
-  unwinder_mapt::iterator it=unwinder_map.find(fname);
-  assert(it!=unwinder_map.end());
-  it->second.unwind(k);
-}
-
 void ssa_unwindert::unwind_all(unsigned int k)
 {
   assert(is_initialized);
@@ -694,15 +665,14 @@ void ssa_unwindert::unwind_all(unsigned int k)
 /// Initialize unwinder_map by computing hierarchical tree_loopnodet for every
 /// goto-function Set is_initialized to true. Initializer must be called before
 /// unwind funcitions are called.
-void ssa_unwindert::init(bool is_kinduction, bool is_bmc)
+void ssa_unwindert::init(unwinder_modet mode)
 {
-  ssa_dbt::functionst& funcs=ssa_db.functions();
-  for(auto &f : funcs)
+  for(auto &f : ssa_db.functions())
   {
     unwinder_map.insert(
       unwinder_pairt(
         f.first,
-        ssa_local_unwindert(f.first, (*(f.second)), is_kinduction, is_bmc)));
+        ssa_local_unwindert(f.first, (*(f.second)), mode)));
   }
 }
 
