@@ -1136,7 +1136,8 @@ bool twols_parse_optionst::process_goto_program(
       inline_main(goto_model);
     }
 
-    auto dynobj_instances=split_dynamic_objects(goto_model, options);
+    auto dynobj_instances=split_dynamic_objects(
+      goto_model, options, *dynamic_objects);
 
     if(!cmdline.isset("independent-properties"))
     {

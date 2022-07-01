@@ -58,6 +58,9 @@ public:
   void clear() { db.clear(); }
   void clear(const goto_programt::instructiont &loc);
 
+  const std::vector<dynamic_objectt> &get_objects(
+    const goto_programt::instructiont &loc) const;
+
   dynamic_objectt &create_dynamic_object(
     const goto_programt::instructiont &loc,
     const typet &type,

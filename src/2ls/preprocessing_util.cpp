@@ -645,7 +645,8 @@ void twols_parse_optionst::create_dynobj_instances(
 
 std::map<symbol_exprt, size_t> twols_parse_optionst::split_dynamic_objects(
   goto_modelt &goto_model,
-  const optionst &options)
+  const optionst &options,
+  const dynamic_objectst &dynamic_objects)
 {
   std::map<symbol_exprt, size_t> dynobj_instances;
   for(auto &f_it : goto_model.goto_functions.function_map)
@@ -655,7 +656,7 @@ std::map<symbol_exprt, size_t> twols_parse_optionst::split_dynamic_objects(
     namespacet ns(goto_model.symbol_table);
     ssa_value_ait value_analysis(f_it.first, f_it.second, ns, options);
     dynobj_instance_analysist do_inst(
-      f_it.first, f_it.second, ns, options, value_analysis);
+      f_it.first, f_it.second, ns, options, value_analysis, dynamic_objects);
 
     compute_dynobj_instances(
       f_it.second.body, do_inst, dynobj_instances, ns);

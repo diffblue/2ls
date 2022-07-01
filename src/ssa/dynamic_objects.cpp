@@ -368,3 +368,9 @@ void dynamic_objectst::clear(const goto_programt::instructiont &loc)
   if(objs!=db.end())
     objs->second.clear();
 }
+
+const std::vector<dynamic_objectt> &dynamic_objectst::get_objects(
+  const goto_programt::instructiont &loc) const
+{
+  return db.at(&loc);
+}
