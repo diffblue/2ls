@@ -55,6 +55,7 @@ Author: Daniel Kroening, Peter Schrammel
 #include "graphml_witness_ext.h"
 #include <solver/summary_db.h>
 #include <ssa/dynobj_instance_analysis.h>
+#include <ssa/dynamic_objects.h>
 
 #include "2ls_parse_options.h"
 #include "summary_checker_ai.h"
@@ -76,8 +77,7 @@ twols_parse_optionst::twols_parse_optionst(int argc, const char **argv):
   messaget(ui_message_handler),
   ui_message_handler(cmdline, "2LS " TWOLS_VERSION),
   recursion_detected(false),
-  threads_detected(false),
-  dynamic_memory_detected(false)
+  threads_detected(false)
 {
 }
 
@@ -408,7 +408,7 @@ int twols_parse_optionst::doit()
   if(get_goto_program(options))
     return 6;
 
-  if(cmdline.isset("heap") && dynamic_memory_detected)
+  if(cmdline.isset("heap") && dynamic_objects->have_objects())
   {
     // Only use sympath domain if dynamic memory is used
     options.set_option("sympath", true);
@@ -556,7 +556,7 @@ int twols_parse_optionst::doit()
       options.get_bool_option("incremental-bmc") ||
       options.get_unsigned_int_option("unwind")) &&
      !options.get_bool_option("nontermination") &&
-     dynamic_memory_detected)
+     dynamic_objects->have_objects())
   {
     status() << "Using GOTO unwinder due to presence of dynamic memory" << eom;
     options.set_option("unwind-goto", true);
@@ -566,7 +566,7 @@ int twols_parse_optionst::doit()
   if(options.get_bool_option("competition-mode") &&
      (options.get_bool_option("termination") ||
       options.get_bool_option("nontermination")) &&
-     dynamic_memory_detected)
+     dynamic_objects->have_objects())
   {
     error() << "Termination analysis does not support "
             << "dynamic memory allocation" << eom;
@@ -580,18 +580,18 @@ int twols_parse_optionst::doit()
     if(!options.get_bool_option("k-induction") &&
        !options.get_bool_option("incremental-bmc"))
       checker=std::unique_ptr<summary_checker_baset>(
-        new summary_checker_ait(options, goto_model));
+        new summary_checker_ait(options, goto_model, *dynamic_objects));
     if(options.get_bool_option("k-induction") &&
        !options.get_bool_option("incremental-bmc"))
       checker=std::unique_ptr<summary_checker_baset>(
-        new summary_checker_kindt(options, goto_model));
+        new summary_checker_kindt(options, goto_model, *dynamic_objects));
     if(!options.get_bool_option("k-induction") &&
        options.get_bool_option("incremental-bmc"))
       checker=std::unique_ptr<summary_checker_baset>(
-        new summary_checker_bmct(options, goto_model));
+        new summary_checker_bmct(options, goto_model, *dynamic_objects));
     if(options.get_bool_option("nontermination"))
       checker=std::unique_ptr<summary_checker_baset>(
-        new summary_checker_nontermt(options, goto_model));
+        new summary_checker_nontermt(options, goto_model, *dynamic_objects));
 
     checker->set_message_handler(get_message_handler());
     checker->simplify=!cmdline.isset("no-simplify");
@@ -1110,8 +1110,8 @@ bool twols_parse_optionst::process_goto_program(
     goto_model.goto_functions.compute_loop_numbers();
 
     // Replace malloc
-    dynamic_memory_detected=replace_malloc(
-      goto_model, "", options.get_bool_option("pointer-check"));
+    dynamic_objects=util_make_unique<dynamic_objectst>(goto_model);
+    dynamic_objects->replace_malloc(options.get_bool_option("pointer-check"));
 
     // Allow recording of mallocs and memory leaks
     if(options.get_bool_option("pointer-check"))

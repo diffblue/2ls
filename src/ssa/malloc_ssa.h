@@ -15,20 +15,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/std_code.h>
 #include <goto-programs/goto_model.h>
 
-exprt malloc_ssa(
-  const side_effect_exprt &,
-  const std::string &suffix,
-  symbol_tablet &,
-  goto_programt &,
-  goto_programt::targett &,
-  bool is_concrete,
-  bool alloc_concrete);
-
-bool replace_malloc(
-  goto_modelt &goto_model,
-  const std::string &suffix,
-  bool alloc_concrete);
-
 exprt create_dynamic_object(
   const std::string &suffix,
   const typet &type,

@@ -17,7 +17,7 @@ Author: Daniel Kroening, Peter Schrammel
 #include <util/replace_symbol.h>
 
 #include <analyses/goto_check.h>
-#include <ssa/dynobj_instance_analysis.h>
+#include <ssa/dynamic_objects.h>
 
 class goto_modelt;
 class optionst;
@@ -83,7 +83,8 @@ protected:
   ui_message_handlert ui_message_handler;
   bool recursion_detected;
   bool threads_detected;
-  bool dynamic_memory_detected;
+  std::unique_ptr<dynamic_objectst> dynamic_objects;
+
   virtual void register_languages();
 
   void get_command_line_options(optionst &options);

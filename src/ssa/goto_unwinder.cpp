@@ -81,11 +81,12 @@ void goto_local_unwindert::rename_dynamic_objects_rec(
       if(second_pos!=std::string::npos)
         suffix+=name.substr(second_pos);
     }
-    expr=create_dynamic_object(
-      suffix,
+    auto new_obj=dynamic_objects.create_dynamic_object(
+      it,
       expr.type().subtype(),
-      goto_model.symbol_table,
+      suffix,
       suffix.find("$co")!=std::string::npos);
+    expr=new_obj.address_of(expr.type());
     rename_map[name]=get_object_name(expr);
   }
   else if(expr.id()==ID_symbol)
@@ -156,7 +157,10 @@ void goto_local_unwindert::rename_dynamic_objects()
     {
       exprt &assign = i_it.assign_rhs_nonconst();
       if(assign.get_bool("#malloc_result"))
+      {
+        dynamic_objects.clear(i_it);
         rename_dynamic_objects_rec(i_it, assign, rename_map);
+      }
     }
   }
 }
@@ -462,7 +466,7 @@ void goto_local_unwindert::update_ssa(
   local_SSAt &SSA,
   const goto_programt &goto_program)
 {
-  if(dynamic_memory)
+  if(dynamic_objects.have_objects())
     return;
   add_hoisted_assertions(SSA, goto_program);
   update_assertions(SSA, goto_program);
@@ -516,7 +520,7 @@ void goto_unwindert::init(unwinder_modet mode)
           goto_model.goto_functions.function_map.at(f.first),
           mode,
           simplify,
-          dynamic_memory)});
+          dynamic_objects)});
   }
 }
 
