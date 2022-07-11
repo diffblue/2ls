@@ -78,7 +78,8 @@ public:
   inline void create(
     const function_namet &function_name,
     const goto_functionst::goto_functiont &goto_function,
-    const symbol_tablet &symbol_table)
+    const symbol_tablet &symbol_table,
+    dynamic_objectst &dynamic_objects)
   {
     // Avoid memory leaks if overriding
     if(store.count(function_name))
@@ -88,6 +89,7 @@ public:
         function_name,
         goto_function,
         symbol_table,
+        dynamic_objects,
         options);
   }
 

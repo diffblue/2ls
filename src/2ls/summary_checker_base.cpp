@@ -54,7 +54,7 @@ void summary_checker_baset::SSA_functions(
       continue;
     status() << "Computing SSA of " << f_it.first << messaget::eom;
 
-    ssa_db.create(f_it.first, f_it.second, symbol_table);
+    ssa_db.create(f_it.first, f_it.second, symbol_table, dynamic_objects);
     local_SSAt &SSA=ssa_db.get(f_it.first);
 
     // simplify, if requested

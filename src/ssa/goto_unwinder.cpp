@@ -310,7 +310,8 @@ void goto_local_unwindert::recompute_ssa()
     return;
   if(has_prefix(id2string(function_name), TEMPLATE_DECL))
     return;
-  ssa_db.create(function_name, goto_function, goto_model.symbol_table);
+  ssa_db.create(
+    function_name, goto_function, goto_model.symbol_table, dynamic_objects);
   local_SSAt &SSA=ssa_db.get(function_name);
   if(simplify)
     ::simplify(SSA, SSA.ns);

@@ -14,6 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/find_symbols.h>
 
 #include "assignments.h"
+#include "dynamic_objects.h"
 #include "ssa_dereference.h"
 #include "local_ssa.h"
 

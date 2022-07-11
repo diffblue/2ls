@@ -30,6 +30,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #define TEMPLATE_NEWVAR TEMPLATE_PREFIX "_newvar"
 #define TEMPLATE_PARAM_PREFIX TEMPLATE_PREFIX "_param"
 
+class dynamic_objectst;
+
 class local_SSAt
 {
 public:
@@ -40,14 +42,17 @@ public:
     const irep_idt &_function_identifier,
     const goto_functiont &_goto_function,
     const symbol_tablet &_symbol_table,
+    dynamic_objectst &_dynamic_objects,
     const optionst &_options,
     const std::string &_suffix=""):
     ns(_symbol_table), goto_function(_goto_function), options(_options),
+    dynamic_objects(_dynamic_objects),
     ssa_objects(_goto_function, ns),
     ssa_value_ai(_function_identifier, _goto_function, ns, options),
     assignments(
       _goto_function.body,
       ns,
+      dynamic_objects,
       options,
       ssa_objects,
       ssa_value_ai),
@@ -149,6 +154,7 @@ public:
   const namespacet ns;
   const goto_functiont &goto_function;
   const optionst &options;
+  dynamic_objectst &dynamic_objects;
 
   // guards
   ssa_objectt cond_symbol() const;

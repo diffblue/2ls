@@ -40,12 +40,13 @@ public:
   summary_checker_baset(
     optionst &_options,
     goto_modelt &_goto_model,
-    dynamic_objectst &dynamic_objects):
+    dynamic_objectst &_dynamic_objects):
     show_vcc(false),
     simplify(false),
     fixed_point(false),
     options(_options),
     goto_model(_goto_model),
+    dynamic_objects(_dynamic_objects),
     ssa_db(_options), summary_db(),
     ssa_unwinder(util_make_unique<ssa_unwindert>(ssa_db)),
     ssa_inliner(summary_db),
@@ -87,6 +88,7 @@ protected:
   optionst &options;
 
   goto_modelt &goto_model;
+  dynamic_objectst &dynamic_objects;
   ssa_dbt ssa_db;
   summary_dbt summary_db;
   std::unique_ptr<unwindert> ssa_unwinder;

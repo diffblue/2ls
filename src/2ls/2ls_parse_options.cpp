@@ -430,6 +430,7 @@ int twols_parse_optionst::doit()
     irep_idt function=cmdline.get_value("function");
     show_ssa(
       goto_model,
+      *dynamic_objects,
       options,
       function,
       simplify,
@@ -441,7 +442,13 @@ int twols_parse_optionst::doit()
   if(cmdline.isset("show-defs"))
   {
     irep_idt function=cmdline.get_value("function");
-    show_defs(goto_model, function, options, std::cout, ui_message_handler);
+    show_defs(
+      goto_model,
+      function,
+      *dynamic_objects,
+      options,
+      std::cout,
+      ui_message_handler);
     return 7;
   }
 
@@ -449,7 +456,12 @@ int twols_parse_optionst::doit()
   {
     irep_idt function=cmdline.get_value("function");
     show_assignments(
-      goto_model, function, options, std::cout, ui_message_handler);
+      goto_model,
+      function,
+      *dynamic_objects,
+      options,
+      std::cout,
+      ui_message_handler);
     return 7;
   }
 
@@ -613,7 +625,7 @@ int twols_parse_optionst::doit()
 
       if(out_file=="-")
       {
-        horn_encoding(goto_model, options, std::cout);
+        horn_encoding(goto_model, *dynamic_objects, options, std::cout);
       }
       else
       {
@@ -630,7 +642,7 @@ int twols_parse_optionst::doit()
           return 1;
         }
 
-        horn_encoding(goto_model, options, out);
+        horn_encoding(goto_model, *dynamic_objects, options, out);
       }
 
       return 0;

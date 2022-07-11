@@ -28,6 +28,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "local_ssa.h"
 #include "ssa_dereference.h"
 #include "address_canonizer.h"
+#include "dynamic_objects.h"
 
 void local_SSAt::build_SSA()
 {

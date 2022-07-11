@@ -32,6 +32,7 @@ void show_assignments(
   const irep_idt &function_identifier,
   const goto_functionst::goto_functiont &goto_function,
   const namespacet &ns,
+  const dynamic_objectst &dynamic_objects,
   const optionst &options,
   std::ostream &out)
 {
@@ -40,6 +41,7 @@ void show_assignments(
   assignmentst assignments(
     goto_function.body,
     ns,
+    dynamic_objects,
     options,
     ssa_objects,
     ssa_value_ai);
@@ -49,6 +51,7 @@ void show_assignments(
 void show_assignments(
   const goto_modelt &goto_model,
   const irep_idt &function,
+  const dynamic_objectst &dynamic_objects,
   const optionst &options,
   std::ostream &out,
   message_handlert &message_handler)
@@ -62,7 +65,8 @@ void show_assignments(
     if(f_it==goto_model.goto_functions.function_map.end())
       out << "function " << function << " not found\n";
     else
-      show_assignments(f_it->first, f_it->second, ns, options, out);
+      show_assignments(
+        f_it->first, f_it->second, ns, dynamic_objects, options, out);
   }
   else
   {
@@ -70,7 +74,8 @@ void show_assignments(
     {
       out << ">>>> Function " << f_it.first << "\n";
 
-      show_assignments(f_it.first, f_it.second, ns, options, out);
+      show_assignments(
+        f_it.first, f_it.second, ns, dynamic_objects, options, out);
 
       out << "\n";
     }
@@ -81,6 +86,7 @@ void show_defs(
   const irep_idt &function_identifier,
   const goto_functionst::goto_functiont &goto_function,
   const namespacet &ns,
+  const dynamic_objectst &dynamic_objects,
   const optionst &options,
   std::ostream &out)
 {
@@ -89,6 +95,7 @@ void show_defs(
   assignmentst assignments(
     goto_function.body,
     ns,
+    dynamic_objects,
     options,
     ssa_objects,
     ssa_value_ai);
@@ -100,6 +107,7 @@ void show_defs(
 void show_defs(
   const goto_modelt &goto_model,
   const irep_idt &function,
+  const dynamic_objectst &dynamic_objects,
   const optionst &options,
   std::ostream &out,
   message_handlert &message_handler)
@@ -113,7 +121,7 @@ void show_defs(
     if(f_it==goto_model.goto_functions.function_map.end())
       out << "function " << function << " not found\n";
     else
-      show_defs(f_it->first, f_it->second, ns, options, out);
+      show_defs(f_it->first, f_it->second, ns, dynamic_objects, options, out);
   }
   else
   {
@@ -121,7 +129,7 @@ void show_defs(
     {
       out << ">>>> Function " << f_it.first << "\n";
 
-      show_defs(f_it.first, f_it.second, ns, options, out);
+      show_defs(f_it.first, f_it.second, ns, dynamic_objects, options, out);
 
       out << "\n";
     }
@@ -172,6 +180,7 @@ void show_ssa(
   const goto_functionst::goto_functiont &goto_function,
   bool simplify,
   const symbol_tablet &symbol_table,
+  dynamic_objectst &dynamic_objects,
   const optionst &options,
   std::ostream &out)
 {
@@ -182,6 +191,7 @@ void show_ssa(
     function_identifier,
     goto_function,
     symbol_table,
+    dynamic_objects,
     options);
   if(simplify)
     ::simplify(local_SSA, local_SSA.ns);
@@ -190,6 +200,7 @@ void show_ssa(
 
 void show_ssa(
   const goto_modelt &goto_model,
+  dynamic_objectst &dynamic_objects,
   const optionst &options,
   const irep_idt &function,
   bool simplify,
@@ -209,6 +220,7 @@ void show_ssa(
         f_it->second,
         simplify,
         goto_model.symbol_table,
+        dynamic_objects,
         options,
         out);
   }
@@ -228,6 +240,7 @@ void show_ssa(
         f_it.second,
         simplify,
         goto_model.symbol_table,
+        dynamic_objects,
         options,
         out);
 
