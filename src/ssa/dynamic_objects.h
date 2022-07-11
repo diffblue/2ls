@@ -40,10 +40,15 @@ public:
     return symbol.name==rhs.symbol.name;
   };
 
+  void set_alloc_guard(const exprt &guard) { alloc_guard=guard; }
+  const exprt &get_alloc_guard() const { return alloc_guard; }
+
 private:
   symbolt symbol;
   const goto_programt::instructiont *loc;
   bool concrete;
+
+  exprt alloc_guard=true_exprt();
 
   friend class dynamic_objectst;
 };

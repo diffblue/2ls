@@ -172,6 +172,8 @@ void dynamic_objectst::replace_malloc_rec(
       auto &concrete_dynobj=create_dynamic_object(
         loc, object_type, "$co", true);
       auto concrete_select=get_concrete_object_guard(loc, concrete_dynobj);
+      concrete_dynobj.set_alloc_guard(concrete_select);
+      db.at(&loc).front().set_alloc_guard(not_exprt(concrete_select));
 
       result_expr=if_exprt(
         concrete_select, concrete_dynobj.address_of(malloc_expr.type()),
@@ -476,20 +478,37 @@ exprt dynamic_objectst::split_object(
   // new objects.
   const dynamic_objectt obj_copy(*object);
 
-  auto &first_instance=create_dynamic_object(
-    *obj_copy.loc, obj_copy.type(), "$"+std::to_string(0), false);
-  exprt result=first_instance.address_of(result_type);
+  exprt result=nil_exprt();
+  exprt *last_object=&result;
+  exprt last_guard=obj_copy.alloc_guard;
 
-  for(auto i=1; i<cnt; i++)
+  for(unsigned i=0; i<cnt; i++)
   {
-    auto &instance=create_dynamic_object(
-      *obj_copy.loc,
-      obj_copy.type(),
-      "$"+std::to_string(i),
-      false);
-    auto guard=create_object_select(*obj_copy.loc, std::to_string(i));
+    dynamic_objectt &instance=create_dynamic_object(
+      *obj_copy.loc, obj_copy.type(), "$"+std::to_string(i), false);
 
-    result=if_exprt(guard, instance.address_of(result_type), result);
+    exprt expr=instance.address_of(result_type);
+
+    if(i!=cnt-1)
+    {
+      // For all instances except the last one, the result is an if expr with
+      // a fresh "object select" guard
+      auto guard=create_object_select(*obj_copy.loc, std::to_string(i));
+      expr=if_exprt(guard, expr, nil_exprt());
+      instance.set_alloc_guard(and_exprt(last_guard, guard));
+      last_guard=and_exprt(last_guard, not_exprt(guard));
+    }
+    else
+    {
+      // For the last instance, the result is just its address and the guard
+      // is the negation of all previous guards (which is now in last_guard)
+      instance.set_alloc_guard(last_guard);
+    }
+
+    // Update the false case of the if expr, except for the first instance
+    if(!last_object->is_nil())
+      last_object=&to_if_expr(*last_object).false_case();
+    *last_object=expr;
   }
 
   erase_obj(obj_copy);
