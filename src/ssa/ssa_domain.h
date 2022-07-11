@@ -125,12 +125,6 @@ public:
 
 protected:
   tvt has_values;
-
-private:
-  static std::map<dstringt, ssa_domaint::def_entryt>::const_iterator
-  get_object_allocation_def(
-    const irep_idt &id,
-    const def_mapt &def_map);
 };
 
 class ssa_ait:public ait<ssa_domaint>

@@ -144,12 +144,6 @@ public:
   var_listt params;
   var_sett globals_in, globals_out;
 
-  // unknown heap objects
-  var_sett unknown_objs;
-
-  // Map dynamic object names to guards of their allocation
-  std::map<irep_idt, exprt> allocation_guards;
-
   bool has_function_calls() const;
 
   const namespacet ns;
@@ -192,10 +186,6 @@ public:
     const exprt &guard,
     locationt loc,
     bool fresh_rhs=false);
-
-  exprt unknown_obj_eq(
-    const symbol_exprt &obj,
-    const struct_typet::componentt &component) const;
 
   void get_entry_exit_vars();
 
@@ -269,13 +259,10 @@ protected:
   void build_function_call(locationt loc);
   bool get_deallocated_precondition(const exprt &expr, exprt &result);
   void build_assertions(locationt loc);
-  void build_unknown_objs(locationt loc);
 
   // competition-mode specific checks
   void disable_unsupported_instructions(locationt loc);
 
-  void collect_allocation_guards(const code_assignt &assign, locationt loc);
-  void get_alloc_guard_rec(const exprt &expr, exprt old_guard);
   void collect_record_frees(locationt loc);
 
   // custom templates

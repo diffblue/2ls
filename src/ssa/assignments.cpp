@@ -121,8 +121,7 @@ void assignmentst::assign(
     // object?
     ssa_objectt ssa_object(lhs, ns);
 
-    if(ssa_object &&
-       !ssa_object.is_unknown_obj())  // unknown objects are just placeholders
+    if(ssa_object)
     {
       assign(ssa_object, loc, ns);
     }
