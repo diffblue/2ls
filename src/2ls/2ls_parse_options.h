@@ -181,19 +181,6 @@ protected:
   void add_dynamic_object_rec(exprt &expr, symbol_tablet &symbol_table);
   void split_same_symbolic_object_assignments(goto_modelt &goto_model);
   void remove_dead_goto(goto_modelt &goto_model);
-  void compute_dynobj_instances(
-    const goto_programt &goto_program,
-    const dynobj_instance_analysist &analysis,
-    std::map<symbol_exprt, size_t> &instance_counts,
-    const namespacet &ns);
-  void create_dynobj_instances(
-    goto_programt &goto_program,
-    const std::map<symbol_exprt, size_t> &instance_counts,
-    symbol_tablet &symbol_table);
-  std::map<symbol_exprt, size_t> split_dynamic_objects(
-    goto_modelt &goto_model,
-    const optionst &options,
-    const dynamic_objectst &dynamic_objects);
   void limit_array_bounds(goto_modelt &goto_model);
   void memory_assert_info(goto_modelt &goto_model);
   void handle_freed_ptr_compare(goto_modelt &goto_model);

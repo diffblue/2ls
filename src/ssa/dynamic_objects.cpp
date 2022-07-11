@@ -374,3 +374,162 @@ const std::vector<dynamic_objectt> &dynamic_objectst::get_objects(
 {
   return db.at(&loc);
 }
+
+void dynamic_objectst::generate_instances(const optionst &options)
+{
+  for(auto &f_it : goto_model.goto_functions.function_map)
+  {
+    if(!f_it.second.body_available())
+      continue;
+    ssa_value_ait value_analysis(f_it.first, f_it.second, ns, options);
+    dynobj_instance_analysist do_inst(
+      f_it.first, f_it.second, ns, options, value_analysis, *this);
+
+    auto instances=compute_instance_numbers(f_it.second.body, do_inst);
+    Forall_goto_program_instructions(i_it, f_it.second.body)
+    {
+      if(!i_it->is_assign())
+        continue;
+      auto &assign=to_code_assign(i_it->code_nonconst());
+      if(!assign.rhs().get_bool("#malloc_result"))
+        continue;
+
+      auto *obj=get_single_abstract_object(*i_it);
+      if(!obj)
+        continue;
+      const symbol_exprt obj_symbol=obj->symbol_expr(); // copy
+
+      auto new_objs=split_object(
+        obj, instances.at(obj->symbol_expr()), assign.lhs().type());
+      new_objs.set("#malloc_result", true);
+      replace_object(obj_symbol, new_objs, assign.rhs());
+    }
+  }
+}
+
+dynamic_objectst::instance_countst dynamic_objectst::compute_instance_numbers(
+  const goto_programt &goto_program,
+  const dynobj_instance_analysist &analysis)
+{
+  instance_countst instance_counts;
+  forall_goto_program_instructions(it, goto_program)
+  {
+    auto &analysis_value=analysis[it];
+    for(auto &obj : analysis_value.live_pointers)
+    {
+      auto must_alias=analysis_value.must_alias_relations.find(obj.first);
+      if(must_alias==analysis_value.must_alias_relations.end())
+        continue;
+
+      std::set<size_t> alias_classes;
+      for(auto &expr : obj.second)
+      {
+        size_t n;
+        const auto number=must_alias->second.data.get_number(expr);
+        if(!number)
+          continue;
+        n=*number;
+        alias_classes.insert(must_alias->second.data.find_number(n));
+      }
+
+      if(instance_counts.find(obj.first)==instance_counts.end() ||
+         instance_counts.at(obj.first)<alias_classes.size())
+      {
+        instance_counts[obj.first]=alias_classes.size();
+      }
+    }
+  }
+  return instance_counts;
+}
+
+const dynamic_objectt *dynamic_objectst::get_single_abstract_object(
+  const goto_programt::instructiont &loc)
+{
+  auto &objs=get_objects(loc);
+  if(objs.size()==1 && !objs.front().concrete)
+    return &objs.front();
+  if(objs.size()==2)
+  {
+    if(!objs.at(0).concrete)
+    {
+      assert(objs.at(1).concrete);
+      return &objs.at(0);
+    }
+    if(!objs.at(1).concrete)
+    {
+      assert(objs.at(0).concrete);
+      return &objs.at(1);
+    }
+  }
+  return nullptr;
+}
+
+exprt dynamic_objectst::split_object(
+  const dynamic_objectt *object,
+  unsigned int cnt,
+  const typet &result_type)
+{
+  if(cnt<=1)
+    return object->address_of(result_type);
+
+  // Need to copy the object as the pointer will get invalidated upon inserting
+  // new objects.
+  const dynamic_objectt obj_copy(*object);
+
+  auto &first_instance=create_dynamic_object(
+    *obj_copy.loc, obj_copy.type(), "$"+std::to_string(0), false);
+  exprt result=first_instance.address_of(result_type);
+
+  for(auto i=1; i<cnt; i++)
+  {
+    auto &instance=create_dynamic_object(
+      *obj_copy.loc,
+      obj_copy.type(),
+      "$"+std::to_string(i),
+      false);
+    auto guard=create_object_select(*obj_copy.loc, std::to_string(i));
+
+    result=if_exprt(guard, instance.address_of(result_type), result);
+  }
+
+  erase_obj(obj_copy);
+
+  return result;
+}
+
+void dynamic_objectst::erase_obj(const dynamic_objectt &obj)
+{
+  auto &objs=db.at(obj.loc);
+  objs.erase(std::remove(objs.begin(), objs.end(), obj), objs.end());
+}
+
+void dynamic_objectst::replace_object(
+  const symbol_exprt &object,
+  const exprt &new_expr,
+  exprt &expr)
+{
+  if(expr.id()==ID_address_of &&
+     to_address_of_expr(expr).object()==object)
+  {
+    expr=new_expr;
+  }
+  else
+    Forall_operands(o_it, expr)
+      replace_object(object, new_expr, *o_it);
+}
+
+/// \param id: Symbol identifier.
+/// \return If the symbol is a dynamic object, then the location number of the
+///   malloc call where the object was allocated, otherwise -1.
+int get_dynobj_line(const irep_idt &id)
+{
+  std::string name=id2string(id);
+  size_t pos=name.find("dynamic_object$");
+  if(pos==std::string::npos)
+    return -1;
+
+  size_t start=pos+15;
+  size_t end=name.find_first_not_of("0123456789", start);
+  std::string number=name.substr(start, end-start);
+  return std::stoi(number);
+}

@@ -55,11 +55,18 @@ public:
     goto_model(goto_model), ns(goto_model.symbol_table) {}
 
   bool have_objects() const { return !db.empty(); }
+  bool have_objects(const goto_programt::instructiont &loc) const
+  {
+    return db.find(&loc)!=db.end();
+  }
+
   void clear() { db.clear(); }
   void clear(const goto_programt::instructiont &loc);
 
   const std::vector<dynamic_objectt> &get_objects(
     const goto_programt::instructiont &loc) const;
+  const dynamic_objectt *get_single_abstract_object(
+    const goto_programt::instructiont &loc);
 
   dynamic_objectt &create_dynamic_object(
     const goto_programt::instructiont &loc,
@@ -68,9 +75,12 @@ public:
     bool concrete=false);
 
   void replace_malloc(bool with_concrete);
+  void generate_instances(const optionst &options);
 
 private:
   typedef std::map<symbol_exprt, size_t> instance_countst;
+
+  void erase_obj(const dynamic_objectt &obj);
 
   symbol_exprt create_object_select(
     const goto_programt::instructiont &loc,
@@ -89,6 +99,16 @@ private:
     const goto_programt::instructiont &loc,
     bool with_concrete);
 
+  instance_countst compute_instance_numbers(
+    const goto_programt &goto_program,
+    const dynobj_instance_analysist &analysis);
+  exprt split_object(
+    const dynamic_objectt *object, unsigned cnt, const typet &result_type);
+  static void replace_object(
+    const symbol_exprt &object,
+    const exprt &new_expr,
+    exprt &expr);
+
   std::map<const goto_programt::instructiont *,
            std::vector<dynamic_objectt>> db;
 
@@ -99,5 +119,7 @@ private:
   goto_modelt &goto_model;
   const namespacet ns;
 };
+
+int get_dynobj_line(const irep_idt &id);
 
 #endif //CPROVER_2LS_DYNAMIC_OBJECTS_H

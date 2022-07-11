@@ -22,6 +22,7 @@ Author: Peter Schrammel
 #include "strategy_solver_binsearch2.h"
 #include "strategy_solver_binsearch3.h"
 #include "util.h"
+#include "ssa/dynamic_objects.h"
 #include "domain.h"
 
 #define SYMB_BOUND_VAR "symb_bound#"
