@@ -147,7 +147,7 @@ void dynobj_instance_domaint::transform(
          CPROVER_PREFIX))
       return;
 
-    if(assignment.rhs().get_bool("#malloc_result"))
+    if(dynamic_objects.have_objects(*from))
     {
       for(auto &obj : dynamic_objects.get_objects(*from))
         must_alias_relations[obj.symbol_expr()].data.isolate(lhs);

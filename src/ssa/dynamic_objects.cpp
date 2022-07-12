@@ -181,7 +181,6 @@ void dynamic_objectst::replace_malloc_rec(
     }
 
     malloc_expr=result_expr;
-    malloc_expr.set("#malloc_result", true);
     malloc_size=nil_exprt();
   }
   else
@@ -393,7 +392,7 @@ void dynamic_objectst::generate_instances(const optionst &options)
       if(!i_it->is_assign())
         continue;
       auto &assign=to_code_assign(i_it->code_nonconst());
-      if(!assign.rhs().get_bool("#malloc_result"))
+      if(!have_objects(*i_it))
         continue;
 
       auto *obj=get_single_abstract_object(*i_it);
@@ -403,7 +402,6 @@ void dynamic_objectst::generate_instances(const optionst &options)
 
       auto new_objs=split_object(
         obj, instances.at(obj->symbol_expr()), assign.lhs().type());
-      new_objs.set("#malloc_result", true);
       replace_object(obj_symbol, new_objs, assign.rhs());
     }
   }

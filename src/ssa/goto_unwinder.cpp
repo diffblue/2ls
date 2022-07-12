@@ -98,8 +98,7 @@ void goto_local_unwindert::rename_dynamic_objects_rec(
     if(rename!=rename_map.end())
       symbol_expr.set_identifier(rename->second);
   }
-  else if (expr.id()==ID_if && expr.get_bool("#malloc_result") &&
-           to_if_expr(expr).cond().id()==ID_and)
+  else if(expr.id()==ID_if && to_if_expr(expr).cond().id()==ID_and)
   {
     // Update the condition for concrete object selection based on new objects
     // Its form is <nondet> && pointer_equalities, update only pointer eqs.
@@ -156,7 +155,7 @@ void goto_local_unwindert::rename_dynamic_objects()
     if(i_it.is_assign())
     {
       exprt &assign = i_it.assign_rhs_nonconst();
-      if(assign.get_bool("#malloc_result"))
+      if(dynamic_objects.have_objects(i_it))
       {
         dynamic_objects.clear(i_it);
         rename_dynamic_objects_rec(i_it, assign, rename_map);
