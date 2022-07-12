@@ -15,6 +15,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/goto_functions.h>
 #include <util/options.h>
 
+#include "dynamic_objects.h"
 #include "ssa_object.h"
 #include "ssa_value_set.h"
 
@@ -91,7 +92,7 @@ protected:
     const namespacet &ns);
 
   void create_alloc_decl(
-    const exprt &expr,
+    const ssa_objectt &object,
     const exprt &guard,
     const locationt loc,
     const namespacet &ns);
