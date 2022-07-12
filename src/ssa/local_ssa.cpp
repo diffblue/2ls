@@ -63,6 +63,8 @@ void local_SSAt::build_SSA()
 
   // entry and exit variables
   get_entry_exit_vars();
+
+  dynamic_objects.set_loop_guards(*this);
 }
 
 void local_SSAt::get_entry_exit_vars()

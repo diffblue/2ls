@@ -21,6 +21,8 @@ Author: Viktor Malik
 #include <string>
 #include <vector>
 
+class local_SSAt;
+
 class dynamic_objectt
 {
 public:
@@ -43,12 +45,14 @@ public:
 
   void set_alloc_guard(const exprt &guard) { alloc_guard=guard; }
   const exprt &get_alloc_guard() const { return alloc_guard; }
+  const exprt &get_loop_guard() const { return loop_guard; }
 
 private:
   symbolt symbol;
   const goto_programt::instructiont *loc;
   bool concrete;
 
+  exprt loop_guard=true_exprt();
   exprt alloc_guard=true_exprt();
 
   friend class dynamic_objectst;
@@ -72,6 +76,8 @@ public:
   const std::vector<dynamic_objectt> get_all_objects() const;
   const std::vector<dynamic_objectt> &get_objects(
     const goto_programt::instructiont &loc) const;
+  std::vector<dynamic_objectt> &get_objects(
+    const goto_programt::instructiont &loc);
   const dynamic_objectt *get_single_abstract_object(
     const goto_programt::instructiont &loc);
   const dynamic_objectt *get_object_by_name(const irep_idt &name) const;
@@ -84,6 +90,8 @@ public:
 
   void replace_malloc(bool with_concrete);
   void generate_instances(const optionst &options);
+
+  void set_loop_guards(const local_SSAt &SSA);
 
 private:
   typedef std::map<symbol_exprt, size_t> instance_countst;
@@ -123,6 +131,7 @@ private:
   // These are "state" variables used when parsing goto program
   goto_programt::instructiont *loop_end=nullptr;
   exprt malloc_size=nil_exprt();
+  exprt current_loop_guard=nil_exprt();
 
   goto_modelt &goto_model;
   const namespacet ns;

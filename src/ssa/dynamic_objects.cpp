@@ -8,6 +8,7 @@ Author: Viktor Malik
 
 #include "dynamic_objects.h"
 #include "dynobj_instance_analysis.h"
+#include "local_ssa.h"
 #include "ssa_value_set.h"
 
 #include <analyses/constant_propagator.h>
@@ -373,6 +374,12 @@ const std::vector<dynamic_objectt> &dynamic_objectst::get_objects(
   return db.at(&loc);
 }
 
+std::vector<dynamic_objectt> &dynamic_objectst::get_objects(
+  const goto_programt::instructiont &loc)
+{
+  return db.at(&loc);
+}
+
 void dynamic_objectst::generate_instances(const optionst &options)
 {
   for(auto &f_it : goto_model.goto_functions.function_map)
@@ -554,6 +561,44 @@ const std::vector<dynamic_objectt> dynamic_objectst::get_all_objects() const
   for (auto &obj : db)
     res.insert(res.end(), obj.second.begin(), obj.second.end());
   return res;
+}
+
+void dynamic_objectst::set_loop_guards(const local_SSAt &SSA)
+{
+  for(auto &f_it : goto_model.goto_functions.function_map)
+  {
+    forall_goto_program_instructions(i_it, f_it.second.body)
+    {
+      // Loop head -> add its loop-select guard to the current loop guard
+      for(auto &incoming : i_it->incoming_edges)
+      {
+        if(incoming->is_backwards_goto())
+        {
+          auto guard=SSA.name(
+            SSA.guard_symbol(), local_SSAt::LOOP_SELECT, incoming);
+          if(current_loop_guard.is_not_nil())
+            current_loop_guard=and_exprt(current_loop_guard, guard);
+          else
+            current_loop_guard=guard;
+        }
+      }
+
+      // Loop end -> remove the last loop-select from the current loop guard
+      if(i_it->is_backwards_goto())
+      {
+        if(current_loop_guard.id()==ID_and)
+          current_loop_guard=to_and_expr(current_loop_guard).op0();
+        else
+          current_loop_guard=nil_exprt();
+      }
+
+      if(current_loop_guard.is_not_nil() && have_objects(*i_it))
+      {
+        for(auto &obj : get_objects(*i_it))
+          obj.loop_guard=current_loop_guard;
+      }
+    }
+  }
 }
 
 /// \param id: Symbol identifier.
