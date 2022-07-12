@@ -12,6 +12,7 @@ Author: Peter Schrammel
 #include <util/find_symbols.h>
 
 #include <ssa/ssa_inliner.h>
+#include <ssa/dynamic_objects.h>
 
 #include "template_generator_callingcontext.h"
 #include "equality_domain.h"
@@ -73,8 +74,7 @@ void template_generator_callingcontextt::collect_variables_callingcontext(
   {
     auto dummy=ssa_inlinert::find_corresponding_symbol(*v_it, globals_in);
     if(dummy ||
-       id2string(v_it->get_identifier()).find("dynamic_object$")!=
-       std::string::npos)
+       SSA.dynamic_objects.get_object_by_name(v_it->get_identifier()))
     {
       add_var(
         *v_it,

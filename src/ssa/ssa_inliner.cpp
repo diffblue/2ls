@@ -15,6 +15,7 @@ Author: Peter Schrammel
 #include <util/pointer_expr.h>
 
 #include "ssa_inliner.h"
+#include "dynamic_objects.h"
 
 /// get summary for function call
 void ssa_inlinert::get_summary(
@@ -536,8 +537,7 @@ exprt ssa_inlinert::get_replace_globals_out(
     const exprt rhs=*it;
 
     if(is_pointed(*it) ||
-       id2string(it->get_identifier()).find("dynamic_object$")!=
-       std::string::npos)
+       SSA.dynamic_objects.get_object_by_name(it->get_identifier()))
     {
       auto maybe_lhs=find_corresponding_symbol(*it, summary.globals_out);
       if(!cs_heap_covered(*it) && !maybe_lhs)

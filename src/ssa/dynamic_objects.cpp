@@ -535,6 +535,22 @@ void dynamic_objectst::replace_object(
       replace_object(object, new_expr, *o_it);
 }
 
+/// Tries to find the object that contains a symbol of the given name
+/// (either directly or indirectly via a structure field).
+const dynamic_objectt *dynamic_objectst::get_object_by_name(
+  const irep_idt &name) const
+{
+  for(auto &loc_objs : db)
+  {
+    for(auto &dynobj : loc_objs.second)
+    {
+      if(id2string(name).find(id2string(dynobj.symbol.name))!=std::string::npos)
+        return &dynobj;
+    }
+  }
+  return nullptr;
+}
+
 /// \param id: Symbol identifier.
 /// \return If the symbol is a dynamic object, then the location number of the
 ///   malloc call where the object was allocated, otherwise -1.

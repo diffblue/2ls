@@ -16,6 +16,7 @@ Author: Peter Schrammel
 #include <util/mp_arith.h>
 
 #include <ssa/ssa_inliner.h>
+#include <ssa/dynamic_objects.h>
 
 #include "template_generator_base.h"
 #include "equality_domain.h"
@@ -155,7 +156,7 @@ void template_generator_baset::collect_variables_loop(
         // equal to the corresponding input SSA variable that represents a state
         // when the object is not allocated.
         // Example: dynamic_object$0.next#ls100 != dynamic_object$0.next
-        if(id.find("ssa::dynamic_object$")!=std::string::npos)
+        if(SSA.dynamic_objects.get_object_by_name(id))
         {
           exprt &post_var=post_renaming_map[pre_var];
           assert(post_var.id()==ID_symbol);

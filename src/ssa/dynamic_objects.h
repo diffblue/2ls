@@ -72,6 +72,7 @@ public:
     const goto_programt::instructiont &loc) const;
   const dynamic_objectt *get_single_abstract_object(
     const goto_programt::instructiont &loc);
+  const dynamic_objectt *get_object_by_name(const irep_idt &name) const;
 
   dynamic_objectt &create_dynamic_object(
     const goto_programt::instructiont &loc,
