@@ -556,16 +556,14 @@ bool local_SSAt::get_deallocated_precondition(const exprt &expr, exprt &result)
         if(id.find("__CPROVER_deallocated")!=std::string::npos)
         {
           exprt::operandst d;
-          for(auto &global : assignments.ssa_objects.globals)
+          for(auto &dynobj : dynamic_objects.get_all_objects())
           {
-            if(global.get_expr().get_bool("#concrete"))
+            if(dynobj.is_concrete())
             {
               d.push_back(
                 equal_exprt(
                   dealloc_symbol,
-                  typecast_exprt(
-                    address_of_exprt(global.symbol_expr()),
-                    dealloc_symbol.type())));
+                  dynobj.address_of(dealloc_symbol.type())));
             }
           }
           result=disjunction(d);

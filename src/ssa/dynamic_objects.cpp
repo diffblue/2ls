@@ -49,14 +49,10 @@ exprt dynamic_objectt::address_of(const typet &result_type) const
       from_integer(0, index_type()),
       symbol.type.subtype());
     object=index_expr;
-    if(concrete)
-      to_index_expr(object).array().set("#concrete", true);
   }
   else
   {
     object=symbol.symbol_expr();
-    if(concrete)
-      object.set("#concrete", true);
     object_type=symbol.type;
   }
 
@@ -549,6 +545,14 @@ const dynamic_objectt *dynamic_objectst::get_object_by_name(
     }
   }
   return nullptr;
+}
+
+const std::vector<dynamic_objectt> dynamic_objectst::get_all_objects() const
+{
+  std::vector<dynamic_objectt> res;
+  for (auto &obj : db)
+    res.insert(res.end(), obj.second.begin(), obj.second.end());
+  return res;
 }
 
 /// \param id: Symbol identifier.

@@ -34,6 +34,7 @@ public:
   symbol_exprt symbol_expr() const { return symbol.symbol_expr(); }
   exprt address_of(const typet &result_type) const;
   const symbolt &get_symbol() const { return symbol; }
+  const bool is_concrete() const { return concrete; }
 
   bool operator==(const dynamic_objectt &rhs) const
   {
@@ -68,6 +69,7 @@ public:
   void clear() { db.clear(); }
   void clear(const goto_programt::instructiont &loc);
 
+  const std::vector<dynamic_objectt> get_all_objects() const;
   const std::vector<dynamic_objectt> &get_objects(
     const goto_programt::instructiont &loc) const;
   const dynamic_objectt *get_single_abstract_object(
