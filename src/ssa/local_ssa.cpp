@@ -28,6 +28,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "local_ssa.h"
 #include "ssa_dereference.h"
 #include "address_canonizer.h"
+#include "dynamic_objects.h"
 
 void local_SSAt::build_SSA()
 {
@@ -343,9 +344,6 @@ void local_SSAt::build_transfer(locationt loc)
        id2string(code_assign.rhs().get(ID_identifier)).
        find(TEMPLATE_PREFIX)!=std::string::npos) return;
 
-    // build allocation guards map
-    collect_allocation_guards(code_assign, loc);
-
     exprt deref_lhs=dereference(code_assign.lhs(), loc);
     exprt deref_rhs=dereference(code_assign.rhs(), loc);
 
@@ -558,16 +556,14 @@ bool local_SSAt::get_deallocated_precondition(const exprt &expr, exprt &result)
         if(id.find("__CPROVER_deallocated")!=std::string::npos)
         {
           exprt::operandst d;
-          for(auto &global : assignments.ssa_objects.globals)
+          for(auto &dynobj : dynamic_objects.get_all_objects())
           {
-            if(global.get_expr().get_bool("#concrete"))
+            if(dynobj.is_concrete())
             {
               d.push_back(
                 equal_exprt(
                   dealloc_symbol,
-                  typecast_exprt(
-                    address_of_exprt(global.symbol_expr()),
-                    dealloc_symbol.type())));
+                  dynobj.address_of(dealloc_symbol.type())));
             }
           }
           result=disjunction(d);
@@ -1421,48 +1417,6 @@ bool local_SSAt::has_function_calls() const
   return found;
 }
 
-/// If a location is malloc call, create "unknown object" for return type. This
-/// is later used as a placeholder for invalid of unknown dereference of an
-/// object of that type.
-void local_SSAt::build_unknown_objs(locationt loc)
-{
-  if(loc->is_assign())
-  {
-    const code_assignt &code_assign=loc->get_assign();
-    const exprt &rhs=code_assign.rhs();
-    if(rhs.get_bool("#malloc_result"))
-    {
-      const exprt &malloc_res=
-        rhs.id()==ID_typecast ? to_typecast_expr(rhs).op() : rhs;
-      const exprt &addr_of_do=
-        malloc_res.id()==ID_if ? to_if_expr(malloc_res).true_case()
-                               : malloc_res;
-      const exprt &dyn_obj=to_address_of_expr(addr_of_do).object();
-      const typet &dyn_type=ns.follow(dyn_obj.type());
-
-      std::string dyn_type_name=dyn_type.id_string();
-      if(dyn_type.id()==ID_struct)
-        dyn_type_name+="_"+id2string(to_struct_type(dyn_type).get_tag());
-      irep_idt identifier="ssa::"+dyn_type_name+"_obj$unknown";
-
-      symbol_exprt unknown_obj(identifier, dyn_obj.type());
-      unknown_objs.insert(unknown_obj);
-    }
-  }
-}
-
-/// Create equality obj.component = &obj, which creates self-loop on "unknown"
-/// objects.
-exprt local_SSAt::unknown_obj_eq(
-  const symbol_exprt &obj,
-  const struct_typet::componentt &component) const
-{
-  const irep_idt identifier=
-    id2string(obj.get_identifier())+"."+id2string(component.get_name());
-  const symbol_exprt member(identifier, component.type());
-  return equal_exprt(member, address_of_exprt(obj));
-}
-
 /// Create new iterator access
 bool local_SSAt::all_symbolic_deref_defined(
   const exprt &expr,
@@ -1521,27 +1475,6 @@ exprt local_SSAt::concretise_symbolic_deref_rhs(
       symbolic_deref_rhs:deref_rhs;
 }
 
-/// Collect allocation guards for the given location
-void local_SSAt::collect_allocation_guards(
-  const code_assignt &assign,
-  locationt loc)
-{
-  if(!assign.rhs().get_bool("#malloc_result"))
-    return;
-
-  exprt rhs=assign.rhs();
-  if(rhs.id()==ID_typecast)
-    rhs=to_typecast_expr(rhs).op();
-  if(rhs.id()==ID_if)
-  {
-    get_alloc_guard_rec(
-      to_if_expr(rhs).true_case(), read_rhs(to_if_expr(rhs).cond(), loc));
-    get_alloc_guard_rec(
-      to_if_expr(rhs).false_case(),
-      read_rhs(not_exprt(to_if_expr(rhs).cond()), loc));
-  }
-}
-
 void local_SSAt::collect_record_frees(local_SSAt::locationt loc)
 {
   if(loc->is_assign())
@@ -1558,26 +1491,6 @@ void local_SSAt::collect_record_frees(local_SSAt::locationt loc)
       (--nodes.end())->record_free=symbol;
     }
   }
-}
-
-void local_SSAt::get_alloc_guard_rec(const exprt &expr, exprt guard)
-{
-  if(expr.id()==ID_symbol && expr.type().get_bool("#dynamic"))
-  {
-    allocation_guards.emplace(to_symbol_expr(expr).get_identifier(), guard);
-  }
-  else if(expr.id()==ID_if)
-  {
-    get_alloc_guard_rec(
-      to_if_expr(expr).true_case(), and_exprt(guard, to_if_expr(expr).cond()));
-    get_alloc_guard_rec(
-      to_if_expr(expr).false_case(),
-      and_exprt(guard, not_exprt(to_if_expr(expr).cond())));
-  }
-  else if(expr.id()==ID_typecast)
-    get_alloc_guard_rec(to_typecast_expr(expr).op(), guard);
-  else if(expr.id()==ID_address_of)
-    get_alloc_guard_rec(to_address_of_expr(expr).object(), guard);
 }
 
 /// The symbolic dereference object can be reused if and only if the pointer it

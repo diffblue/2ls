@@ -75,12 +75,6 @@ public:
     return get_root_object_rec(expr);
   }
 
-  bool is_unknown_obj()
-  {
-    std::string id_str=id2string(identifier);
-    return id_str.find("$unknown")!=std::string::npos;
-  }
-
   void set_flag(const irep_idt flag, bool value)
   {
     expr.set(flag, value);

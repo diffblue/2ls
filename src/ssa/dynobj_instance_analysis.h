@@ -29,6 +29,9 @@ Description: In some cases, multiple instances must be used so that the
 #include "ssa_object.h"
 #include "ssa_value_set.h"
 
+class dynamic_objectt;
+class dynamic_objectst;
+
 class must_alias_setst
 {
 public:
@@ -216,9 +219,11 @@ public:
     const goto_functionst::goto_functiont &goto_function,
     const namespacet &ns,
     const optionst &_options,
-    ssa_value_ait &_value_ai):
+    ssa_value_ait &_value_ai,
+    const dynamic_objectst &dynamic_objects):
     options(_options),
-    value_analysis(_value_ai)
+    value_analysis(_value_ai),
+    dynamic_objects(dynamic_objects)
   {
     operator()(function_identifier, goto_function, ns);
   }
@@ -226,6 +231,8 @@ public:
 protected:
   const optionst &options;
   ssa_value_ait &value_analysis;
+  const dynamic_objectst &dynamic_objects;
+
   void initialize(
     const irep_idt &function_id,
     const goto_programt &goto_program) override;

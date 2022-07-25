@@ -29,6 +29,7 @@ Author: Peter Schrammel
 
 #include "cover_goals_ext.h"
 #include "traces.h"
+#include "ssa/dynamic_objects.h"
 
 class graphml_witness_extt;
 
@@ -38,12 +39,14 @@ class summary_checker_baset:public messaget
 public:
   summary_checker_baset(
     optionst &_options,
-    goto_modelt &_goto_model):
+    goto_modelt &_goto_model,
+    dynamic_objectst &_dynamic_objects):
     show_vcc(false),
     simplify(false),
     fixed_point(false),
     options(_options),
     goto_model(_goto_model),
+    dynamic_objects(_dynamic_objects),
     ssa_db(_options), summary_db(),
     ssa_unwinder(util_make_unique<ssa_unwindert>(ssa_db)),
     ssa_inliner(summary_db),
@@ -57,7 +60,7 @@ public:
         ssa_db,
         goto_model,
         simplify,
-        options.get_bool_option("dynamic-memory"));
+        dynamic_objects);
   }
 
   bool show_vcc, simplify, fixed_point;
@@ -85,6 +88,7 @@ protected:
   optionst &options;
 
   goto_modelt &goto_model;
+  dynamic_objectst &dynamic_objects;
   ssa_dbt ssa_db;
   summary_dbt summary_db;
   std::unique_ptr<unwindert> ssa_unwinder;

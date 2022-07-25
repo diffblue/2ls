@@ -6,7 +6,8 @@ SRC = local_ssa.cpp ssa_var_collector.cpp \
       ssa_build_goto_trace.cpp ssa_inliner.cpp ssa_unwinder.cpp \
       unwindable_local_ssa.cpp ssa_db.cpp \
       ssa_pointed_objects.cpp  may_alias_analysis.cpp \
-      dynobj_instance_analysis.cpp goto_unwinder.cpp
+      dynobj_instance_analysis.cpp dynamic_objects.cpp \
+      goto_unwinder.cpp
 
 include ../config.inc
 include $(CPROVER_DIR)/src/config.inc

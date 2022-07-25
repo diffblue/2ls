@@ -17,8 +17,11 @@ Author: Peter Schrammel
 class summary_checker_bmct:public summary_checker_baset
 {
 public:
-  explicit summary_checker_bmct(optionst &_options, goto_modelt &_goto_model):
-    summary_checker_baset(_options, _goto_model) {}
+  explicit summary_checker_bmct(
+    optionst &_options,
+    goto_modelt &_goto_model,
+    dynamic_objectst &dynamic_objects):
+    summary_checker_baset(_options, _goto_model, dynamic_objects) {}
 
   resultt operator()() override;
 };

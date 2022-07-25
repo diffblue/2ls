@@ -18,6 +18,7 @@ Author: Viktor Malik, viktor.malik@gmail.com
 #include <util/pointer_expr.h>
 #include <langapi/language_util.h>
 #include "dynobj_instance_analysis.h"
+#include "dynamic_objects.h"
 #include "ssa_dereference.h"
 
 bool has_deref_of(const exprt &expr, const exprt &pointer)
@@ -128,8 +129,9 @@ void dynobj_instance_domaint::transform(
   const namespacet &ns)
 {
   locationt from{trace_from->current_location()};
-  locationt to{trace_to->current_location()};
 
+  auto dynamic_objects=
+    dynamic_cast<dynobj_instance_analysist &>(ai).dynamic_objects;
   bool competition_mode=
     static_cast<dynobj_instance_analysist &>(ai).options
       .get_bool_option("competition-mode");
@@ -145,16 +147,10 @@ void dynobj_instance_domaint::transform(
          CPROVER_PREFIX))
       return;
 
-    if(assignment.rhs().get_bool("#malloc_result"))
+    if(dynamic_objects.have_objects(*from))
     {
-      // For allocation site, the assigned pointer has no aliases
-      const auto &values=
-        static_cast<dynobj_instance_analysist &>(ai).value_analysis[to];
-      const auto lhs_deref=dereference(
-        assignment.lhs(), values, "", ns, competition_mode);
-      auto value_set=values(lhs_deref, ns).value_set;
-      for(auto &v : value_set)
-        must_alias_relations[v.symbol_expr()].data.isolate(lhs);
+      for(auto &obj : dynamic_objects.get_objects(*from))
+        must_alias_relations[obj.symbol_expr()].data.isolate(lhs);
     }
     else
     {
@@ -165,7 +161,7 @@ void dynobj_instance_domaint::transform(
         rhs=to_typecast_expr(rhs).op();
 
       const auto &values=
-        static_cast<dynobj_instance_analysist &>(ai).value_analysis[from];
+        dynamic_cast<dynobj_instance_analysist &>(ai).value_analysis[from];
       const auto rhs_deref=dereference(rhs, values, "", ns, competition_mode);
       auto value_set=values(rhs_deref, ns).value_set;
       for(auto &v : value_set)

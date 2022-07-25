@@ -81,11 +81,12 @@ void goto_local_unwindert::rename_dynamic_objects_rec(
       if(second_pos!=std::string::npos)
         suffix+=name.substr(second_pos);
     }
-    expr=create_dynamic_object(
-      suffix,
+    auto new_obj=dynamic_objects.create_dynamic_object(
+      it,
       expr.type().subtype(),
-      goto_model.symbol_table,
+      suffix,
       suffix.find("$co")!=std::string::npos);
+    expr=new_obj.address_of(expr.type());
     rename_map[name]=get_object_name(expr);
   }
   else if(expr.id()==ID_symbol)
@@ -97,8 +98,7 @@ void goto_local_unwindert::rename_dynamic_objects_rec(
     if(rename!=rename_map.end())
       symbol_expr.set_identifier(rename->second);
   }
-  else if (expr.id()==ID_if && expr.get_bool("#malloc_result") &&
-           to_if_expr(expr).cond().id()==ID_and)
+  else if(expr.id()==ID_if && to_if_expr(expr).cond().id()==ID_and)
   {
     // Update the condition for concrete object selection based on new objects
     // Its form is <nondet> && pointer_equalities, update only pointer eqs.
@@ -155,8 +155,11 @@ void goto_local_unwindert::rename_dynamic_objects()
     if(i_it.is_assign())
     {
       exprt &assign = i_it.assign_rhs_nonconst();
-      if(assign.get_bool("#malloc_result"))
+      if(dynamic_objects.have_objects(i_it))
+      {
+        dynamic_objects.clear(i_it);
         rename_dynamic_objects_rec(i_it, assign, rename_map);
+      }
     }
   }
 }
@@ -306,7 +309,8 @@ void goto_local_unwindert::recompute_ssa()
     return;
   if(has_prefix(id2string(function_name), TEMPLATE_DECL))
     return;
-  ssa_db.create(function_name, goto_function, goto_model.symbol_table);
+  ssa_db.create(
+    function_name, goto_function, goto_model.symbol_table, dynamic_objects);
   local_SSAt &SSA=ssa_db.get(function_name);
   if(simplify)
     ::simplify(SSA, SSA.ns);
@@ -462,7 +466,7 @@ void goto_local_unwindert::update_ssa(
   local_SSAt &SSA,
   const goto_programt &goto_program)
 {
-  if(dynamic_memory)
+  if(dynamic_objects.have_objects())
     return;
   add_hoisted_assertions(SSA, goto_program);
   update_assertions(SSA, goto_program);
@@ -516,7 +520,7 @@ void goto_unwindert::init(unwinder_modet mode)
           goto_model.goto_functions.function_map.at(f.first),
           mode,
           simplify,
-          dynamic_memory)});
+          dynamic_objects)});
   }
 }
 

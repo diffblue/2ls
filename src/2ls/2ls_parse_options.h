@@ -17,7 +17,7 @@ Author: Daniel Kroening, Peter Schrammel
 #include <util/replace_symbol.h>
 
 #include <analyses/goto_check.h>
-#include <ssa/dynobj_instance_analysis.h>
+#include <ssa/dynamic_objects.h>
 
 class goto_modelt;
 class optionst;
@@ -83,7 +83,8 @@ protected:
   ui_message_handlert ui_message_handler;
   bool recursion_detected;
   bool threads_detected;
-  bool dynamic_memory_detected;
+  std::unique_ptr<dynamic_objectst> dynamic_objects;
+
   virtual void register_languages();
 
   void get_command_line_options(optionst &options);
@@ -180,18 +181,6 @@ protected:
   void add_dynamic_object_rec(exprt &expr, symbol_tablet &symbol_table);
   void split_same_symbolic_object_assignments(goto_modelt &goto_model);
   void remove_dead_goto(goto_modelt &goto_model);
-  void compute_dynobj_instances(
-    const goto_programt &goto_program,
-    const dynobj_instance_analysist &analysis,
-    std::map<symbol_exprt, size_t> &instance_counts,
-    const namespacet &ns);
-  void create_dynobj_instances(
-    goto_programt &goto_program,
-    const std::map<symbol_exprt, size_t> &instance_counts,
-    symbol_tablet &symbol_table);
-  std::map<symbol_exprt, size_t> split_dynamic_objects(
-    goto_modelt &goto_model,
-    const optionst &options);
   void limit_array_bounds(goto_modelt &goto_model);
   void memory_assert_info(goto_modelt &goto_model);
   void handle_freed_ptr_compare(goto_modelt &goto_model);

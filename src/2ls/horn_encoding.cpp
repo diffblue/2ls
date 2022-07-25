@@ -22,11 +22,13 @@ class horn_encodingt
 public:
   horn_encodingt(
     const goto_modelt &_goto_model,
+    dynamic_objectst &_dynamic_objects,
     const optionst &_options,
     std::ostream &_out):
     goto_functions(_goto_model.goto_functions),
     symbol_table(_goto_model.symbol_table),
     ns(_goto_model.symbol_table),
+    dynamic_objects(_dynamic_objects),
     options(_options),
     out(_out),
     smt2_conv(ns, "", "Horn-clause encoding", "", smt2_convt::solvert::Z3, _out)
@@ -39,6 +41,7 @@ protected:
   const goto_functionst &goto_functions;
   const symbol_tablet &symbol_table;
   const namespacet ns;
+  dynamic_objectst &dynamic_objects;
   const optionst &options;
   std::ostream &out;
 
@@ -66,7 +69,13 @@ void horn_encodingt::translate(
          ";\n";
 
   // compute SSA
-  local_SSAt local_SSA(function_id, function, symbol_table, options, "");
+  local_SSAt local_SSA(
+    function_id,
+    function,
+    symbol_table,
+    dynamic_objects,
+    options,
+    "");
 
   const goto_programt &body=function.body;
 
@@ -214,8 +223,9 @@ void horn_encodingt::translate(
 
 void horn_encoding(
   const goto_modelt &goto_model,
+  dynamic_objectst &dynamic_objects,
   const optionst &options,
   std::ostream &out)
 {
-  horn_encodingt(goto_model, options, out)();
+  horn_encodingt(goto_model, dynamic_objects, options, out)();
 }

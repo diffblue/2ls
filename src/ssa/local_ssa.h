@@ -30,6 +30,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #define TEMPLATE_NEWVAR TEMPLATE_PREFIX "_newvar"
 #define TEMPLATE_PARAM_PREFIX TEMPLATE_PREFIX "_param"
 
+class dynamic_objectst;
+
 class local_SSAt
 {
 public:
@@ -40,14 +42,17 @@ public:
     const irep_idt &_function_identifier,
     const goto_functiont &_goto_function,
     const symbol_tablet &_symbol_table,
+    dynamic_objectst &_dynamic_objects,
     const optionst &_options,
     const std::string &_suffix=""):
     ns(_symbol_table), goto_function(_goto_function), options(_options),
+    dynamic_objects(_dynamic_objects),
     ssa_objects(_goto_function, ns),
     ssa_value_ai(_function_identifier, _goto_function, ns, options),
     assignments(
       _goto_function.body,
       ns,
+      dynamic_objects,
       options,
       ssa_objects,
       ssa_value_ai),
@@ -144,17 +149,12 @@ public:
   var_listt params;
   var_sett globals_in, globals_out;
 
-  // unknown heap objects
-  var_sett unknown_objs;
-
-  // Map dynamic object names to guards of their allocation
-  std::map<irep_idt, exprt> allocation_guards;
-
   bool has_function_calls() const;
 
   const namespacet ns;
   const goto_functiont &goto_function;
   const optionst &options;
+  dynamic_objectst &dynamic_objects;
 
   // guards
   ssa_objectt cond_symbol() const;
@@ -192,10 +192,6 @@ public:
     const exprt &guard,
     locationt loc,
     bool fresh_rhs=false);
-
-  exprt unknown_obj_eq(
-    const symbol_exprt &obj,
-    const struct_typet::componentt &component) const;
 
   void get_entry_exit_vars();
 
@@ -269,13 +265,10 @@ protected:
   void build_function_call(locationt loc);
   bool get_deallocated_precondition(const exprt &expr, exprt &result);
   void build_assertions(locationt loc);
-  void build_unknown_objs(locationt loc);
 
   // competition-mode specific checks
   void disable_unsupported_instructions(locationt loc);
 
-  void collect_allocation_guards(const code_assignt &assign, locationt loc);
-  void get_alloc_guard_rec(const exprt &expr, exprt old_guard);
   void collect_record_frees(locationt loc);
 
   // custom templates

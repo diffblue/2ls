@@ -212,25 +212,6 @@ bool ssa_domaint::merge(
   return result;
 }
 
-ssa_domaint::def_mapt::const_iterator ssa_domaint::get_object_allocation_def(
-  const irep_idt &id,
-  const ssa_domaint::def_mapt &def_map)
-{
-  auto def=def_map.find(id);
-  std::string id_str=id2string(id);
-  if(def!=def_map.end() &&
-     def->second.def.kind==deft::ASSIGNMENT &&
-     id_str.find("ssa::dynamic_object$")!=std::string::npos)
-  {
-    // Check if corresponding dynamic object has been allocated in that branch
-    std::string dyn_obj_id=id_str.substr(0, id_str.find_first_of("."));
-    auto dyn_obj_def=def_map.find(dyn_obj_id);
-    if(dyn_obj_def!=def_map.end() &&
-       dyn_obj_def->second.def.kind==deft::ALLOCATION)
-      return dyn_obj_def;
-  }
-  return def_map.end();
-}
 
 void ssa_ait::initialize(
   const irep_idt &function_id,

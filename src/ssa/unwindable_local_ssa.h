@@ -23,12 +23,14 @@ public:
     const irep_idt &function_identifier,
     const goto_functiont &_goto_function,
     const symbol_tablet &_symbol_table,
+    dynamic_objectst &_dynamic_objects,
     const optionst &_options,
     const std::string &_suffix=""):
     local_SSAt(
       function_identifier,
       _goto_function,
       _symbol_table,
+      _dynamic_objects,
       _options,
       _suffix),
     current_unwinding(-1)

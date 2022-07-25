@@ -20,6 +20,7 @@ Author: František Nečas
 #ifndef CPROVER_2LS_SSA_GOTO_UNWINDER_H
 #define CPROVER_2LS_SSA_GOTO_UNWINDER_H
 
+#include "dynamic_objects.h"
 #include "unwindable_local_ssa.h"
 #include "unwinder.h"
 #include "ssa_db.h"
@@ -34,14 +35,14 @@ public:
     goto_functiont &_goto_function,
     unwinder_modet _mode,
     bool _simplify,
-    bool _dynamic_memory):
+    dynamic_objectst &_dynamic_objects):
     ssa_db(_ssa_db),
     goto_model(_goto_model),
     function_name(_function_name),
     goto_function(_goto_function),
     mode(_mode),
     simplify(_simplify),
-    dynamic_memory(_dynamic_memory)
+    dynamic_objects(_dynamic_objects)
   {
   }
 
@@ -70,8 +71,8 @@ protected:
   unwinder_modet mode;
   /// Whether the unwound SSA should be simplified.
   bool simplify;
-  /// Whether dynamic memory is present in the program
-  bool dynamic_memory;
+  /// Collection of dynamic objects of the program
+  dynamic_objectst &dynamic_objects;
   /// A store used for keeping track of how loops were formerly connected
   /// before transformations required for k-induction or BMC to correctly
   /// work were done.
@@ -117,11 +118,11 @@ public:
     ssa_dbt &_ssa_db,
     goto_modelt &_goto_model,
     bool _simplify,
-    bool _dynamic_memory) :
+    dynamic_objectst &_dynamic_objects) :
     ssa_db(_ssa_db),
     goto_model(_goto_model),
     simplify(_simplify),
-    dynamic_memory(_dynamic_memory),
+    dynamic_objects(_dynamic_objects),
     is_initialized(false)
   {}
 
@@ -149,8 +150,8 @@ protected:
   goto_modelt &goto_model;
   /// Whether the unwound SSA should be simplified.
   bool simplify;
-  /// Whether dynamic memory is present in the program
-  bool dynamic_memory;
+  /// Collection of dynamic objects of the program
+  dynamic_objectst &dynamic_objects;
   /// Whether the unwinder is fully initialized.
   bool is_initialized;
   /// Maps function names to their respective local unwinders.

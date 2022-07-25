@@ -15,14 +15,18 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/goto_functions.h>
 #include <util/options.h>
 
+#include "dynamic_objects.h"
 #include "ssa_object.h"
 #include "ssa_value_set.h"
+
+class dynamic_objectst;
 
 class assignmentst
 {
 public:
   typedef goto_programt::const_targett locationt;
 
+  const dynamic_objectst &dynamic_objects;
   const ssa_objectst &ssa_objects;
   const ssa_value_ait &ssa_value_ai;
 
@@ -52,9 +56,11 @@ public:
   assignmentst(
     const goto_programt &_goto_program,
     const namespacet &_ns,
+    const dynamic_objectst &dynamic_objects,
     const optionst &_options,
     const ssa_objectst &_ssa_objects,
     const ssa_value_ait &_ssa_value_ai):
+    dynamic_objects(dynamic_objects),
     ssa_objects(_ssa_objects),
     ssa_value_ai(_ssa_value_ai),
     options(_options)
@@ -86,7 +92,7 @@ protected:
     const namespacet &ns);
 
   void create_alloc_decl(
-    const exprt &expr,
+    const ssa_objectt &object,
     const exprt &guard,
     const locationt loc,
     const namespacet &ns);
