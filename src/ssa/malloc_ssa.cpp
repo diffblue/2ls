@@ -102,7 +102,7 @@ void set_var_always_to_true(
               i_it,
               goto_programt::make_assignment(
                 code_assignt(code_decl.symbol(),true_exprt()),
-                i_it->source_location));
+                i_it->source_location()));
           }
         }
       }
@@ -148,7 +148,7 @@ void remove_free_memory_leak_assignments(
   // instructions.
   auto skip=goto_program.insert_before(
     i_it,
-    goto_programt::make_skip(i_it->source_location));
+    goto_programt::make_skip(i_it->source_location()));
   for(auto &target : i_it->incoming_edges)
     if(target->is_goto())
       target->set_target(skip);
@@ -156,7 +156,7 @@ void remove_free_memory_leak_assignments(
 
   while(i_it!=goto_program.instructions.end() &&
         i_it->is_goto() &&
-        i_it->source_location.get_function()=="free")
+        i_it->source_location().get_function()=="free")
   {
     auto next=std::next(i_it, 1);
     if (next==goto_program.instructions.end() || !next->is_assign())
@@ -196,14 +196,14 @@ void reinsert_free_memory_leak_assignments(
           equal_exprt(
             symbol_exprt(symbol.name, symbol.type),
             free_ptr)),
-        i_it->source_location));
+        i_it->source_location()));
     goto_program.insert_after(
       goto_it,
       goto_programt::make_assignment(
         symbol_exprt(symbol.name, symbol.type),
         null_pointer_exprt(
           to_pointer_type(symbol.type)),
-        i_it->source_location));
+        i_it->source_location()));
     jump_target=goto_it;
   }
 }
@@ -244,7 +244,7 @@ void split_memory_leak_assignments(goto_programt &goto_program, symbol_tablet &s
       std::string identif=symbol_expr.get_identifier().c_str();
       if(identif.find(base)==std::string::npos)
         continue;
-      if(i_it->source_location.get_function()=="malloc")
+      if(i_it->source_location().get_function()=="malloc")
       {
         // Replace the assignment inside malloc
         symbolt new_symbol=leak_symbol;
@@ -259,14 +259,14 @@ void split_memory_leak_assignments(goto_programt &goto_program, symbol_tablet &s
           new_symbol.name);
         defined_symbols.push_back(new_symbol);
       }
-      else if(i_it->source_location.get_function()!="free")
+      else if(i_it->source_location().get_function()!="free")
       {
         // Remove initialization, we will insert it again.
         goto_program.instructions.erase(i_it++);
         i_it--;
       }
     }
-    else if(i_it->is_goto() && i_it->source_location.get_function()=="free")
+    else if(i_it->is_goto() && i_it->source_location().get_function()=="free")
     {
       // Replace setting to null in free, add all the newly defined symbols
       auto next=std::next(i_it, 1);
@@ -279,7 +279,7 @@ void split_memory_leak_assignments(goto_programt &goto_program, symbol_tablet &s
         continue;
       // The goto is in the form IF !(memory_leak = free::ptr) GOTO
       symbol_exprt ptr=to_symbol_expr(
-        to_equal_expr(to_not_expr(i_it->get_condition()).op()).op1());
+        to_equal_expr(to_not_expr(i_it->condition()).op()).op1());
       auto prev=i_it;
       prev--;
       remove_free_memory_leak_assignments(goto_program, i_it);
@@ -297,7 +297,7 @@ void split_memory_leak_assignments(goto_programt &goto_program, symbol_tablet &s
       i_it--;
     }
     else if((i_it->is_assert() || i_it->is_assume()) &&
-            uses_memory_leak_symbol(i_it->get_condition()))
+            uses_memory_leak_symbol(i_it->condition()))
     {
       exprt::operandst equalities;
       for(const auto &symbol : defined_symbols)
@@ -305,7 +305,7 @@ void split_memory_leak_assignments(goto_programt &goto_program, symbol_tablet &s
           equal_exprt(
             symbol_exprt(symbol.name, symbol.type),
             null_pointer_exprt(to_pointer_type(symbol.type))));
-      i_it->set_condition(conjunction(equalities));
+      i_it->condition_nonconst()=conjunction(equalities);
     }
   }
   // Insert new initializations

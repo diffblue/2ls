@@ -95,10 +95,11 @@ void heap_domaint::add_template_row(
 /// expression.
 exprt heap_domaint::value_to_ptr_exprt(const exprt &expr)
 {
-  if(expr.id()==ID_constant)
+  if(expr.id()==ID_annotated_pointer_constant)
   {
     const unary_exprt &constant=to_unary_expr(expr);
-    const std::string value=id2string(to_constant_expr(expr).get_value());
+    const std::string value=id2string(
+      to_annotated_pointer_constant_expr(expr).get_value());
     if(value.substr(value.size()/2).find_first_not_of('0')!=std::string::npos)
       return plus_exprt(constant.op(), make_zero(integer_typet()));
     else

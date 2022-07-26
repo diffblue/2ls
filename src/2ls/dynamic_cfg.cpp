@@ -104,7 +104,7 @@ void dynamic_cfgt::build_cfg(
           incoming_edges[it->get_target()].insert(new_node);
         goto_programt::const_targett next=it; ++next;
         if(next!=goto_program.instructions.end() &&
-           (!it->is_goto() || !it->guard.is_true()))
+           (!it->is_goto() || !it->condition().is_true()))
           incoming_edges[next].insert(new_node);
 
         continue;
@@ -124,7 +124,7 @@ void dynamic_cfgt::build_cfg(
       incoming_edges[it->get_target()].insert(node);
     goto_programt::const_targett next=it; ++next;
     if(next!=goto_program.instructions.end() &&
-       (!it->is_goto() || !it->guard.is_true()))
+       (!it->is_goto() || !it->condition().is_true()))
       incoming_edges[next].insert(node);
 
     // alternative loop head detection when unwinder was not used

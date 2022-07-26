@@ -359,7 +359,7 @@ void unwindable_local_SSAt::output_verbose(std::ostream &out) const
     if(node.empty())
       continue;
     out << "*** " << node.location->location_number
-        << " " << node.location->source_location << "\n";
+        << " " << node.location->source_location() << "\n";
     node.output(out, ns);
     for(const auto &e : node.equalities)
     {

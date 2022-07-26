@@ -42,9 +42,9 @@ Author: Daniel Kroening, Peter Schrammel
 #include <goto-programs/show_symbol_table.h>
 #include <goto-programs/initialize_goto_model.h>
 #include <goto-programs/show_goto_functions.h>
-#include <goto-programs/add_malloc_may_fail_variable_initializations.h>
 
-#include <analyses/goto_check.h>
+#include <ansi-c/goto_check_c.h>
+#include <goto-programs/goto_check.h>
 
 #include <langapi/mode.h>
 
@@ -494,7 +494,7 @@ int twols_parse_optionst::doit()
       Forall_goto_program_instructions(i_it, body)
       {
         if(i_it->is_assert())
-          i_it->type=goto_program_instruction_typet::ASSUME;
+          i_it->turn_into_assume();
       }
     }
   }
@@ -855,23 +855,22 @@ void twols_parse_optionst::show_stats(
       if(i_it->is_backwards_goto())
         nr_loops++;
 
-      switch(instruction.type)
+      switch(instruction.type())
       {
       case ASSIGN:
       {
-        const code_assignt &assign=instruction.get_assign();
-        expr_stats_rec(assign.lhs(), stats);
-        expr_stats_rec(assign.rhs(), stats);
+        expr_stats_rec(instruction.assign_lhs(), stats);
+        expr_stats_rec(instruction.assign_rhs(), stats);
         break;
       }
       case ASSUME:
-        expr_stats_rec(instruction.guard, stats);
+        expr_stats_rec(instruction.condition(), stats);
         break;
       case ASSERT:
-        expr_stats_rec(instruction.guard, stats);
+        expr_stats_rec(instruction.condition(), stats);
         break;
       case GOTO:
-        expr_stats_rec(instruction.guard, stats);
+        expr_stats_rec(instruction.condition(), stats);
         break;
 
       case DECL:
@@ -962,11 +961,6 @@ bool twols_parse_optionst::get_goto_program(
     // finally add the library
     status() << "Adding CPROVER library" << eom;
     link_to_library(goto_model, ui_message_handler, cprover_c_library_factory);
-
-    // TODO: 2LS currently does not support the possibility of malloc failing,
-    //       we always initialize the CPROVER variables related to failure
-    //       to default (no fail). See if there is a way to improve this.
-    add_malloc_may_fail_variable_initializations(goto_model);
 
     if(process_goto_program(options, goto_model))
       return true;
@@ -1065,7 +1059,8 @@ bool twols_parse_optionst::process_goto_program(
 
     // add generic checks
     status() << "Generic Property Instrumentation" << eom;
-    goto_check(options, goto_model);
+    goto_check_c(options, goto_model, *message_handler);
+    transform_assertions_assumptions(options, goto_model);
 
 #if UNWIND_GOTO_INTO_LOOP
     unwind_goto_into_loop(goto_model, 2);
@@ -1273,7 +1268,7 @@ void twols_parse_optionst::report_properties(
     else
     {
       status() << "[" << it->first << "] "
-               << it->second.pc->source_location.get_comment()
+               << it->second.pc->source_location().get_comment()
                << ": "
                << as_string(it->second.status)
                << eom;

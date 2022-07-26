@@ -347,7 +347,7 @@ void show_invariant(
   else
     assert(false);
 
-  out << "\n** invariant: " << loc->source_location << "\n";
+  out << "\n** invariant: " << loc->source_location() << "\n";
   purify_identifiers(inv);
   out << "  " << from_expr(SSA.ns, "", inv) << "\n";
 }

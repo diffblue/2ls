@@ -48,7 +48,7 @@ void graphml_witness_extt::operator()(
   index_map.resize(cfg.size());
   for(std::size_t i=0; i<cfg.size(); ++i)
   {
-    const source_locationt &source_location=cfg[i].id.pc->source_location;
+    const source_locationt &source_location=cfg[i].id.pc->source_location();
 
     if(source_location.is_nil() ||
        source_location.get_file().empty() ||
@@ -95,7 +95,8 @@ void graphml_witness_extt::add_edge(
   const graphmlt::node_indext &to,
   const dynamic_cfg_nodet &to_cfg_node)
 {
-  const source_locationt &source_location=from_cfg_node.id.pc->source_location;
+  const source_locationt &source_location=
+    from_cfg_node.id.pc->source_location();
 
   xmlt edge("edge");
   edge.set_attribute("source", graphml[from].node_name);

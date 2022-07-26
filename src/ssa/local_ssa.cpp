@@ -21,6 +21,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/pointer_expr.h>
 #include <util/byte_operators.h>
 #include <util/optional.h>
+#include <util/std_code.h>
 #include <solvers/decision_procedure.h>
 
 #include <goto-programs/adjust_float_expressions.h>
@@ -324,33 +325,33 @@ void local_SSAt::build_transfer(locationt loc)
 {
   if(loc->is_assign())
   {
-    const code_assignt &code_assign=loc->get_assign();
+    const exprt &assign_lhs=loc->assign_lhs();
+    const exprt &assign_rhs=loc->assign_rhs();
 
     // template declarations
-    if(code_assign.lhs().id()==ID_symbol &&
-       id2string(code_assign.lhs().get(ID_identifier)).
+    if(assign_lhs.id()==ID_symbol &&
+       id2string(assign_lhs.get(ID_identifier)).
        find("return_value_" TEMPLATE_NEWVAR)!=std::string::npos)
     {
       // propagate equalities through replace map
-      exprt lhs=code_assign.lhs();
-      template_newvars[lhs]=template_newvars[template_last_newvar];
-      template_last_newvar=lhs;
+      template_newvars[assign_lhs]=template_newvars[template_last_newvar];
+      template_last_newvar=assign_lhs;
       return;
     }
-    if(code_assign.lhs().id()==ID_symbol &&
-       id2string(code_assign.lhs().get(ID_identifier)).
+    if(assign_lhs.id()==ID_symbol &&
+       id2string(assign_lhs.get(ID_identifier)).
        find(TEMPLATE_PREFIX)!=std::string::npos) return;
-    if(code_assign.rhs().id()==ID_symbol &&
-       id2string(code_assign.rhs().get(ID_identifier)).
+    if(assign_rhs.id()==ID_symbol &&
+       id2string(assign_rhs.get(ID_identifier)).
        find(TEMPLATE_PREFIX)!=std::string::npos) return;
 
-    exprt deref_lhs=dereference(code_assign.lhs(), loc);
-    exprt deref_rhs=dereference(code_assign.rhs(), loc);
+    exprt deref_lhs=dereference(assign_lhs, loc);
+    exprt deref_rhs=dereference(assign_rhs, loc);
 
     if(deref_lhs.get_bool("#heap_access") || deref_rhs.get_bool("#heap_access"))
     {
-      exprt symbolic_deref_lhs=symbolic_dereference(code_assign.lhs(), ns);
-      const exprt rhs=concretise_symbolic_deref_rhs(code_assign.rhs(), ns, loc);
+      exprt symbolic_deref_lhs=symbolic_dereference(assign_lhs, ns);
+      const exprt rhs=concretise_symbolic_deref_rhs(assign_rhs, ns, loc);
 
       if(deref_lhs.get_bool("#heap_access") &&
          has_symbolic_deref(symbolic_deref_lhs))
@@ -377,18 +378,18 @@ void local_SSAt::build_function_call(locationt loc)
 {
   if(loc->is_function_call())
   {
-    code_function_callt code_function_call=loc->get_function_call();
+    const exprt &call_lhs=loc->call_lhs();
+    const exprt &call_function=loc->call_function();
+    const exprt::operandst &call_arguments=loc->call_arguments();
 
-    const exprt &lhs=code_function_call.lhs();
-
-    if(lhs.is_not_nil())
+    if(call_lhs.is_not_nil())
     {
-      exprt deref_lhs=dereference(lhs, loc);
+      exprt deref_lhs=dereference(call_lhs, loc);
 
       // generate a symbol for rhs
       irep_idt identifier="ssa::return_value"+
         std::to_string(loc->location_number);
-      symbol_exprt rhs(identifier, code_function_call.lhs().type());
+      symbol_exprt rhs(identifier, call_lhs.type());
 
       assign_rec(deref_lhs, rhs, true_exprt(), loc);
     }
@@ -396,13 +397,13 @@ void local_SSAt::build_function_call(locationt loc)
     nodest::iterator n_it=--nodes.end();
 
     // template declarations
-    if(code_function_call.function().id()==ID_symbol &&
+    if(call_function.id()==ID_symbol &&
        has_prefix(
          TEMPLATE_DECL,
-         id2string(code_function_call.function().get(ID_identifier))))
+         id2string(call_function.get(ID_identifier))))
     {
-      assert(code_function_call.arguments().size()==1);
-      n_it->templates.push_back(code_function_call.arguments()[0]);
+      assert(call_arguments.size()==1);
+      n_it->templates.push_back(call_arguments[0]);
 
       // replace "new" vars
       replace_expr(template_newvars, n_it->templates.back());
@@ -417,22 +418,23 @@ void local_SSAt::build_function_call(locationt loc)
     }
 
     // access to "new" value in template declarations
-    if(code_function_call.function().id()==ID_symbol &&
+    if(call_function.id()==ID_symbol &&
        has_prefix(
          TEMPLATE_NEWVAR,
-         id2string(code_function_call.function().get(ID_identifier))))
+         id2string(call_function.get(ID_identifier))))
     {
-      assert(code_function_call.arguments().size()==1);
-      template_last_newvar=code_function_call;
+      assert(call_arguments.size()==1);
+      template_last_newvar=loc->code();
       template_newvars[template_last_newvar]=template_last_newvar;
       return;
     }
 
     // no function pointers
-    assert(code_function_call.function().id()==ID_symbol);
+    assert(call_function.id()==ID_symbol);
 
-    code_function_call=to_code_function_call(
-      to_code(read_rhs(code_function_call, loc)));
+    exprt rhs=read_rhs(loc->code(), loc);
+    code_function_callt &code_function_call=to_code_function_call(
+      to_code(rhs));
 
     symbol_exprt function=to_symbol_expr(code_function_call.function());
     irep_idt fname=function.get_identifier();
@@ -459,7 +461,7 @@ void local_SSAt::build_cond(locationt loc)
   if(loc->is_goto() || loc->is_assume())
   {
     // produce a symbol for the renamed branching condition
-    equal_exprt equality(cond_symbol(loc), read_rhs(loc->guard, loc));
+    equal_exprt equality(cond_symbol(loc), read_rhs(loc->condition(), loc));
     (--nodes.end())->equalities.push_back(equality);
   }
   else if(loc->is_function_call())
@@ -590,7 +592,7 @@ void local_SSAt::build_assertions(locationt loc)
 {
   if(loc->is_assert())
   {
-    exprt assert=loc->guard;
+    exprt assert=loc->condition();
     exprt precondition;
     if(get_deallocated_precondition(assert, precondition))
       assert=implies_exprt(precondition, assert);
@@ -1190,7 +1192,7 @@ void local_SSAt::output_verbose(std::ostream &out) const
     if(n_it->empty())
       continue;
     out << "*** " << n_it->location->location_number
-        << " " << n_it->location->source_location << "\n";
+        << " " << n_it->location->source_location() << "\n";
     n_it->output(out, ns);
     if(n_it->loophead!=nodes.end())
       out << "loop back to location "
@@ -1479,13 +1481,13 @@ void local_SSAt::collect_record_frees(local_SSAt::locationt loc)
 {
   if(loc->is_assign())
   {
-    const code_assignt &code_assign=to_code_assign(loc->get_code());
+    const code_assignt &code_assign=to_code_assign(loc->code());
     const exprt &symbol=code_assign.lhs();
     if(symbol.id()!=ID_symbol)
       return;
 
     std::string id=id2string(to_symbol_expr(symbol).get_identifier());
-    if(id.find("free::")!=std::string::npos &&
+    if(id.find("__CPROVER_deallocate::")!=std::string::npos &&
        id.find("::record")!=std::string::npos)
     {
       (--nodes.end())->record_free=symbol;
@@ -1565,7 +1567,7 @@ void local_SSAt::disable_unsupported_instructions(locationt loc)
 {
   if (loc->is_other())
   {
-    auto st = loc->get_code().get_statement();
+    auto st = loc->code().get_statement();
     if(st=="array_copy" || st=="array_replace")
       assert(false);
   }

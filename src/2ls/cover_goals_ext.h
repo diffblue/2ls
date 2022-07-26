@@ -32,7 +32,7 @@ struct goalt
 
   explicit goalt(const goto_programt::instructiont &instruction)
   {
-    description=id2string(instruction.source_location.get_comment());
+    description=id2string(instruction.source_location().get_comment());
   }
 
   goalt()

@@ -23,10 +23,8 @@ void may_alias_domaint::transform(
 
   if(from->is_assign())
   {
-    const code_assignt &code_assign=from->get_assign();
-
-    const exprt lhs_deref=dereference(code_assign.lhs(), ns);
-    const exprt rhs_deref=dereference(code_assign.rhs(), ns);
+    const exprt lhs_deref=dereference(from->assign_lhs(), ns);
+    const exprt rhs_deref=dereference(from->assign_rhs(), ns);
 
     std::set<irep_idt> aliases;
     get_rhs_aliases(rhs_deref, aliases);

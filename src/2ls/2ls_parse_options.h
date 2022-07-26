@@ -16,7 +16,7 @@ Author: Daniel Kroening, Peter Schrammel
 #include <util/parse_options.h>
 #include <util/replace_symbol.h>
 
-#include <analyses/goto_check.h>
+#include <goto-programs/goto_check.h>
 #include <ssa/dynamic_objects.h>
 
 class goto_modelt;
@@ -187,6 +187,7 @@ protected:
   void assert_no_builtin_functions(goto_modelt &goto_model);
   void assert_no_atexit(goto_modelt &goto_model);
   void fix_goto_targets(goto_modelt &goto_model);
+  void make_assertions_false(goto_modelt &goto_model);
 };
 
 #endif

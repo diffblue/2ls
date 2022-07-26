@@ -137,8 +137,9 @@ void dynobj_instance_domaint::transform(
       .get_bool_option("competition-mode");
   if(from->is_assign())
   {
-    const code_assignt &assignment=from->get_assign();
-    const exprt lhs=symbolic_dereference(assignment.lhs(), ns);
+    const exprt &assign_lhs=from->assign_lhs();
+    const exprt &assign_rhs=from->assign_rhs();
+    const exprt lhs=symbolic_dereference(assign_lhs, ns);
 
     // Do not include CPROVER symbols
     if(lhs.id()==ID_symbol &&
@@ -156,7 +157,7 @@ void dynobj_instance_domaint::transform(
     {
       // For other assignments, use value analysis to get all pointers pointing
       // to a dynamic object and then update must-alias sets.
-      exprt rhs=assignment.rhs();
+      exprt rhs=assign_rhs; // copy
       if(rhs.id()==ID_typecast)
         rhs=to_typecast_expr(rhs).op();
 
@@ -167,11 +168,11 @@ void dynobj_instance_domaint::transform(
       for(auto &v : value_set)
       {
         auto &instances=must_alias_relations[v.symbol_expr()];
-        instances.data.isolate(assignment.lhs());
-        instances.data.make_union(assignment.lhs(), rhs);
+        instances.data.isolate(assign_lhs);
+        instances.data.make_union(assign_lhs, rhs);
 
-        remove_dereferences(assignment.lhs(), instances);
-        add_aliased_dereferences(assignment.lhs(), instances);
+        remove_dereferences(assign_lhs, instances);
+        add_aliased_dereferences(assign_lhs, instances);
 
         // Do not include CPROVER objects
         // TODO: do it better than check for "malloc" substring
@@ -189,7 +190,7 @@ void dynobj_instance_domaint::transform(
     }
   }
   else if(from->is_goto() || from->is_assume() || from->is_assert())
-    rhs_concretisation(from->guard, from, ai, ns);
+    rhs_concretisation(from->condition(), from, ai, ns);
   else if(from->is_dead())
   {
     const exprt &symbol=from->dead_symbol();

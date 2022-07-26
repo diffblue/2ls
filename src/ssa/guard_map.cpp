@@ -47,7 +47,7 @@ void guard_mapt::build(const goto_programt &src)
     {
       map[it->get_target()->location_number].add_in(it, TAKEN);
 
-      if(!it->guard.is_true())
+      if(!it->condition().is_true())
         map[next->location_number].add_in(it, NOT_TAKEN);
       else
         map[next->location_number].has_guard=true;

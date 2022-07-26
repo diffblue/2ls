@@ -229,10 +229,10 @@ void summary_checker_baset::check_properties(
     if(!i_it->is_assert())
       continue;
 
-    const source_locationt &location=i_it->source_location;
+    const source_locationt &location=i_it->source_location();
     irep_idt property_id=location.get_property_id();
 
-    if(i_it->guard.is_true())
+    if(i_it->condition().is_true())
     {
       property_map.at(property_id).status=property_statust::PASS;
       continue;
@@ -340,8 +340,8 @@ void summary_checker_baset::do_show_vcc(
   const goto_programt::const_targett i_it,
   const local_SSAt::nodet::assertionst::const_iterator &a_it)
 {
-  std::cout << i_it->source_location << "\n";
-  std::cout << i_it->source_location.get_comment() << "\n";
+  std::cout << i_it->source_location() << "\n";
+  std::cout << i_it->source_location().get_comment() << "\n";
 
   std::list<exprt> ssa_constraints;
   ssa_constraints << SSA;
