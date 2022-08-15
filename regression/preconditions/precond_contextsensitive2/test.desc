@@ -3,4 +3,4 @@ main.c
 --context-sensitive --preconditions
 ^EXIT=5$
 ^SIGNAL=0$
-^\[__CPROVER__start\]: argc' <= 268435456 && -\(\(signed __CPROVER_bitvector\[33\]\)argc'\) <= -2$
+^\[__CPROVER__start\]: argc' <= 2147483647 && -\(\(signed __CPROVER_bitvector\[33\]\)argc'\) <= 0$

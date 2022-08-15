@@ -29,15 +29,16 @@ void assignmentst::build_assignment_map(
     // now fill it
     if(it->is_assign())
     {
-      const code_assignt &code_assign=it->get_assign();
+      const exprt &assign_lhs=it->assign_lhs();
+      const exprt &assign_rhs=it->assign_rhs();
       exprt lhs_deref=dereference(
-        code_assign.lhs(), ssa_value_ai[it], "", ns,
+        assign_lhs, ssa_value_ai[it], "", ns,
         options.get_bool_option("competition-mode"));
       assign(lhs_deref, it, ns);
-      exprt lhs_symbolic_deref=symbolic_dereference(code_assign.lhs(), ns);
+      exprt lhs_symbolic_deref=symbolic_dereference(assign_lhs, ns);
       assign(lhs_symbolic_deref, it, ns);
 
-      assign_symbolic_rhs(code_assign.rhs(), it, ns);
+      assign_symbolic_rhs(assign_rhs, it, ns);
 
       if(dynamic_objects.have_objects(*it))
       {
@@ -52,7 +53,7 @@ void assignmentst::build_assignment_map(
     }
     else if(it->is_assert())
     {
-      assign_symbolic_rhs(it->guard, it, ns);
+      assign_symbolic_rhs(it->condition(), it, ns);
     }
     else if(it->is_decl())
     {
@@ -61,13 +62,11 @@ void assignmentst::build_assignment_map(
     }
     else if(it->is_function_call())
     {
-      const code_function_callt &code_function_call=it->get_function_call();
-
       // Get information from ssa_heap_analysis
       auto n_it=it;
       ++n_it;
       const irep_idt fname=to_symbol_expr(
-        code_function_call.function()).get_identifier();
+        it->call_function()).get_identifier();
 
       for(objectst::const_iterator
             o_it=ssa_objects.globals.begin();
@@ -78,11 +77,11 @@ void assignmentst::build_assignment_map(
       }
 
       // the call might come with an assignment
-      if(code_function_call.lhs().is_not_nil())
+      if(it->call_lhs().is_not_nil())
       {
         exprt lhs_deref=
           dereference(
-            code_function_call.lhs(), ssa_value_ai[it], "", ns,
+            it->call_lhs(), ssa_value_ai[it], "", ns,
             options.get_bool_option("competition-mode"));
         assign(lhs_deref, it, ns);
       }
@@ -203,7 +202,7 @@ void assignmentst::output(
   forall_goto_program_instructions(i_it, goto_program)
   {
     out << "**** " << i_it->location_number << " "
-        << i_it->source_location << "\n";
+        << i_it->source_location() << "\n";
 
     assignment_mapt::const_iterator m_it=assignment_map.find(i_it);
     if(m_it==assignment_map.end())

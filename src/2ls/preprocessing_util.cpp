@@ -13,6 +13,7 @@ Author: Peter Schrammel
 #include <util/pointer_expr.h>
 #include <util/find_symbols.h>
 #include <util/arith_tools.h>
+#include <util/std_code.h>
 
 #include <analyses/constant_propagator.h>
 #include <goto-instrument/unwind.h>
@@ -30,8 +31,7 @@ void twols_parse_optionst::inline_main(goto_modelt &goto_model)
   {
     if(target->is_function_call())
     {
-      const code_function_callt &code_function_call=target->get_function_call();
-      irep_idt fname=code_function_call.function().get(ID_identifier);
+      irep_idt fname=target->call_function().get(ID_identifier);
 
       debug() << "Inlining " << fname << eom;
 
@@ -81,18 +81,18 @@ void twols_parse_optionst::nondet_locals(goto_modelt &goto_model)
         goto_programt::const_targett next=i_it; ++next;
         if(next!=f_it.second.body.instructions.end() &&
            next->is_assign() &&
-           next->get_assign().lhs().id()==ID_symbol &&
-           to_symbol_expr(next->get_assign().lhs())==decl.symbol())
+           next->assign_lhs().id()==ID_symbol &&
+           to_symbol_expr(next->assign_lhs())==decl.symbol())
           continue;
 
         side_effect_expr_nondett nondet(
           decl.symbol().type(),
-          i_it->source_location);
+          i_it->source_location());
         f_it.second.body.insert_after(
           i_it,
           goto_programt::make_assignment(
             code_assignt(decl.symbol(), nondet),
-            i_it->source_location));
+            i_it->source_location()));
       }
     }
   }
@@ -176,7 +176,7 @@ bool twols_parse_optionst::unwind_goto_into_loop(
         l_it->first,
         goto_programt::make_goto(
           iteration_points.front(),
-          l_it->first->source_location));
+          l_it->first->source_location()));
     }
   }
   goto_model.goto_functions.update();
@@ -214,7 +214,7 @@ void twols_parse_optionst::remove_multiple_dereferences(
           t,
           goto_programt::make_assignment(
             code_assignt(new_symbol.symbol_expr(), member_expr),
-            t->source_location));
+            t->source_location()));
         expr=new_symbol.symbol_expr();
         for(std::set<goto_programt::targett>::iterator t_it=
               t->incoming_edges.begin();
@@ -257,7 +257,7 @@ void twols_parse_optionst::remove_multiple_dereferences(goto_modelt &goto_model)
           goto_model,
           f_it.second.body,
           i_it,
-          i_it->guard,
+          i_it->condition_nonconst(),
           var_counter,
           false);
       }
@@ -288,11 +288,13 @@ void twols_parse_optionst::add_assumptions_after_assertions(
   {
     Forall_goto_program_instructions(i_it, f_it.second.body)
     {
-      if(i_it->is_assert() && !i_it->guard.is_true())
+      if(i_it->is_assert() && !i_it->condition().is_true())
       {
         f_it.second.body.insert_after(
           i_it,
-          goto_programt::make_assumption(i_it->guard, i_it->source_location));
+          goto_programt::make_assumption(
+            i_it->condition(),
+            i_it->source_location()));
         f_it.second.body.compute_location_numbers();
         f_it.second.body.compute_target_numbers();
         f_it.second.body.compute_incoming_edges();
@@ -315,10 +317,9 @@ bool twols_parse_optionst::has_threads(const goto_modelt &goto_model)
 
       if(instruction.is_function_call())
       {
-        const code_function_callt &fct=instruction.get_function_call();
-        if(fct.function().id()==ID_symbol)
+        if(instruction.call_function().id()==ID_symbol)
         {
-          const symbol_exprt &fsym=to_symbol_expr(fct.function());
+          const symbol_exprt &fsym=to_symbol_expr(instruction.call_function());
 
           if(ns.lookup(fsym.get_identifier()).base_name=="pthread_create")
             return true;
@@ -341,7 +342,8 @@ void twols_parse_optionst::filter_assertions(goto_modelt &goto_model)
       if(!i_it->is_assert())
         continue;
 
-      if(i_it->source_location.get_comment()=="free argument is dynamic object")
+      if(i_it->source_location().get_comment()==
+          "free argument is dynamic object")
         i_it->turn_into_skip();
     }
   }
@@ -357,14 +359,14 @@ void twols_parse_optionst::split_loopheads(goto_modelt &goto_model)
       if(!i_it->is_backwards_goto())
         continue;
       goto_programt::targett loophead=i_it->get_target();
-      if(i_it->guard.is_true() && !loophead->is_assert())
+      if(i_it->condition().is_true() && !loophead->is_assert())
         continue;
 
       // inserts the skip
       goto_programt::targett new_loophead=
         f_it.second.body.insert_before(
           loophead,
-          goto_programt::make_skip(loophead->source_location));
+          goto_programt::make_skip(loophead->source_location()));
 
       // update jumps to loophead
       for(std::set<goto_programt::targett>::iterator j_it=
@@ -393,7 +395,7 @@ void twols_parse_optionst::remove_loops_in_entry(goto_modelt &goto_model)
       auto insert_before=f_it.second.body.instructions.begin();
       f_it.second.body.insert_before(
         insert_before,
-        goto_programt::make_skip(insert_before->source_location));
+        goto_programt::make_skip(insert_before->source_location()));
     }
   }
 }
@@ -493,7 +495,7 @@ void twols_parse_optionst::split_same_symbolic_object_assignments(
               i_it,
               goto_programt::make_assignment(
                 code_assignt(assign.lhs(), tmp_symbol.symbol_expr()),
-                i_it->source_location));
+                i_it->source_location()));
             assign.lhs()=tmp_symbol.symbol_expr();
           }
         }
@@ -511,7 +513,7 @@ void twols_parse_optionst::remove_dead_goto(goto_modelt &goto_model)
     {
       if(i_it->is_backwards_goto())
       {
-        if(i_it->guard.is_false())
+        if(i_it->condition().is_false())
           i_it->turn_into_skip();
       }
     }
@@ -554,18 +556,18 @@ void twols_parse_optionst::memory_assert_info(goto_modelt &goto_model)
   {
     Forall_goto_program_instructions(i_it, f_it.second.body)
     {
-      if(!i_it->source_location.get_file().empty())
+      if(!i_it->source_location().get_file().empty())
       {
-        file=i_it->source_location.get_file();
+        file=i_it->source_location().get_file();
       }
-      if(!i_it->source_location.get_line().empty())
+      if(!i_it->source_location().get_line().empty())
       {
-        line=i_it->source_location.get_line();
+        line=i_it->source_location().get_line();
       }
 
       if(i_it->is_assert())
       {
-        const auto &guard=i_it->guard;
+        const auto &guard=i_it->condition();
         if(guard.id()==ID_equal)
         {
           const equal_exprt &equal=to_equal_expr(guard);
@@ -576,9 +578,9 @@ void twols_parse_optionst::memory_assert_info(goto_modelt &goto_model)
             if(id.find("__CPROVER_memory_leak")!=std::string::npos)
             {
               if(!file.empty())
-                i_it->source_location.set_file(file);
+                i_it->source_location_nonconst().set_file(file);
               if(!line.empty())
-                i_it->source_location.set_line(line);
+                i_it->source_location_nonconst().set_line(line);
             }
           }
         }
@@ -629,10 +631,10 @@ void make_freed_ptr_comparison_nondet(
         and_exprt(
           or_exprt(
             lhs_not_freed_cond,
-            side_effect_expr_nondett(bool_typet(), loc->source_location)),
+            side_effect_expr_nondett(bool_typet(), loc->source_location())),
           or_exprt(
             rhs_not_freed_cond,
-            side_effect_expr_nondett(bool_typet(), loc->source_location))));
+            side_effect_expr_nondett(bool_typet(), loc->source_location()))));
     }
   }
   else if(cond.id()==ID_not)
@@ -652,25 +654,26 @@ void twols_parse_optionst::handle_freed_ptr_compare(goto_modelt &goto_model)
     {
       if(i_it->is_goto() || i_it->is_assert())
       {
-        auto &guard=i_it->guard;
+        auto &guard=i_it->condition_nonconst();
         make_freed_ptr_comparison_nondet(
           goto_model, f_it.second, i_it, guard, typecasted_pointers);
       }
       else if(i_it->is_assign())
       {
-        const code_assignt &assign=i_it->get_assign();
+        const exprt &assign_lhs=i_it->assign_lhs();
+        const exprt &assign_rhs=i_it->assign_rhs();
         // If a pointer is casted to a non-pointer type (probably an integer),
         // save the destination variable into typecasted_pointers
-        if(assign.lhs().id()==ID_symbol &&
-           ((assign.rhs().id()==ID_typecast &&
-             to_typecast_expr(assign.rhs()).op().type().id()==ID_pointer &&
-             assign.lhs().type().id()!=ID_pointer) ||
+        if(assign_lhs.id()==ID_symbol &&
+           ((assign_rhs.id()==ID_typecast &&
+             to_typecast_expr(assign_rhs).op().type().id()==ID_pointer &&
+             assign_lhs.type().id()!=ID_pointer) ||
             typecasted_pointers.find(
-              to_symbol_expr(assign.lhs()).get_identifier())!=
+              to_symbol_expr(assign_lhs).get_identifier())!=
             typecasted_pointers.end()))
         {
           typecasted_pointers.insert(
-            to_symbol_expr(assign.lhs()).get_identifier());
+            to_symbol_expr(assign_lhs).get_identifier());
         }
       }
     }
@@ -686,14 +689,14 @@ void twols_parse_optionst::assert_no_builtin_functions(goto_modelt &goto_model)
     goto_model.goto_functions.function_map.find(
       goto_model.goto_functions.entry_point())->second.body)
   {
-    std::string name=id2string(i_it->source_location.get_function());
+    std::string name=id2string(i_it->source_location().get_function());
     assert(
       name.find("__builtin_")==std::string::npos &&
       name.find("__CPROVER_overflow")==std::string::npos);
 
     if(i_it->is_assign())
     {
-      assert(i_it->get_code().op1().id()!=ID_popcount);
+      assert(i_it->code().op1().id()!=ID_popcount);
     }
   }
 }
@@ -708,10 +711,10 @@ void twols_parse_optionst::assert_no_atexit(goto_modelt &goto_model)
     {
       if(i_it->is_function_call())
       {
-        const auto &call=i_it->get_function_call();
-        if(!(call.function().id()==ID_symbol))
+        const auto &function=i_it->call_function();
+        if(!(function.id()==ID_symbol))
           continue;
-        auto &name=id2string(to_symbol_expr(call.function()).get_identifier());
+        auto &name=id2string(to_symbol_expr(function).get_identifier());
         assert(name!="atexit");
       }
     }
@@ -746,7 +749,7 @@ void twols_parse_optionst::fix_goto_targets(goto_modelt &goto_model)
       {
         auto new_skip = f_it.second.body.insert_after(
           i_it,
-          goto_programt::make_skip(i_it->source_location));
+          goto_programt::make_skip(i_it->source_location()));
 
         for (auto &incoming : i_it->incoming_edges)
         {
@@ -764,4 +767,14 @@ void twols_parse_optionst::fix_goto_targets(goto_modelt &goto_model)
     }
     goto_model.goto_functions.update();
   }
+}
+
+
+/// Converts assertion conditions into false.
+void twols_parse_optionst::make_assertions_false(goto_modelt &goto_model)
+{
+  for(auto &f : goto_model.goto_functions.function_map)
+    for(auto &i : f.second.body.instructions)
+      if(i.is_assert())
+        i.condition_nonconst()=false_exprt();
 }

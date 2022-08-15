@@ -1,7 +1,7 @@
 int foo(int x)
 {
   int y;
-  if(x<1) while(1) y++;
+  if(x<0) while(1) y++;
   return x;
 }
 
@@ -9,6 +9,6 @@ int main(int argc, char** argv)
 {
   int x = argc;
   x = foo(x);
-  assert(x>=1);
+  assert(x>=0);
   return x;
 }

@@ -91,7 +91,7 @@ bool ssa_build_goto_tracet::record_step(
   step.step_nr=step_nr;
   step.thread_nr=0;
 
-  switch(current_pc->type)
+  switch(current_pc->type())
   {
   case LOCATION:
   case SKIP:
@@ -116,7 +116,7 @@ bool ssa_build_goto_tracet::record_step(
 
   case GOTO:
   {
-    exprt cond=current_pc->guard;
+    exprt cond=current_pc->condition();
     exprt cond_read=unwindable_local_SSA.read_rhs(cond, current_pc);
     unwindable_local_SSA.rename(cond_read, current_pc);
     exprt cond_value=
@@ -146,7 +146,7 @@ bool ssa_build_goto_tracet::record_step(
   case ASSERT:
   {
     // failed or not?
-    exprt cond=current_pc->guard;
+    exprt cond=current_pc->condition();
     exprt cond_read=unwindable_local_SSA.read_rhs(cond, current_pc);
     unwindable_local_SSA.rename(cond_read, current_pc);
     exprt cond_value=
@@ -154,7 +154,7 @@ bool ssa_build_goto_tracet::record_step(
     if(cond_value.is_false())
     {
       step.type=goto_trace_stept::typet::ASSERT;
-      step.comment=id2string(current_pc->source_location.get_comment());
+      step.comment=id2string(current_pc->source_location().get_comment());
       step.cond_expr=cond;
       step.cond_value=false;
       goto_trace.add_step(step);
@@ -171,13 +171,14 @@ bool ssa_build_goto_tracet::record_step(
 
   case ASSIGN:
   {
-    const code_assignt &code_assign=current_pc->get_assign();
+    const exprt &assign_lhs=current_pc->assign_lhs();
+    const exprt &assign_rhs=current_pc->assign_rhs();
 
-    exprt rhs_ssa=unwindable_local_SSA.read_rhs(code_assign.rhs(), current_pc);
+    exprt rhs_ssa=unwindable_local_SSA.read_rhs(assign_rhs, current_pc);
     unwindable_local_SSA.rename(rhs_ssa, current_pc);
     exprt rhs_value=prop_conv.get(rhs_ssa);
     exprt rhs_simplified=simplify_expr(rhs_value, unwindable_local_SSA.ns);
-    exprt lhs_ssa=finalize_lhs(code_assign.lhs());
+    exprt lhs_ssa=finalize_lhs(assign_lhs);
     exprt lhs_simplified=simplify_expr(lhs_ssa, unwindable_local_SSA.ns);
     if(from_expr(lhs_simplified).find(CPROVER_PREFIX)!=std::string::npos)
       break;

@@ -117,7 +117,7 @@ void horn_encodingt::translate(
     const local_SSAt::nodet &node=*local_SSA.find_node(loc);
 #endif
     out << "; PC " << loc->location_number
-        << " " << loc->source_location << '\n';
+        << " " << loc->source_location() << '\n';
 
     out << "(assert (forall (";
 
@@ -152,7 +152,7 @@ void horn_encodingt::translate(
 
     if(loc->is_goto())
     {
-      if(loc->guard.is_true())
+      if(loc->condition().is_true())
       {
         out << "(h-" << function_id << '-'
             << loc->get_target()->location_number;
@@ -169,7 +169,7 @@ void horn_encodingt::translate(
         out << ')';
       }
 
-      if(!loc->guard.is_true())
+      if(!loc->condition().is_true())
       {
         goto_programt::instructionst::const_iterator next=loc;
         next++;

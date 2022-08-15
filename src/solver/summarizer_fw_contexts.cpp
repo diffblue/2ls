@@ -91,7 +91,7 @@ void summarizer_fw_contextst::inline_summaries(
 
           // location
           const source_locationt &source_location=
-            n_it->location->source_location;
+            n_it->location->source_location();
           xmlt xml_location;
           if(source_location.is_not_nil() && source_location.get_file()!="")
             xml_location=xml(source_location);

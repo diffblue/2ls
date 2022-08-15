@@ -11,7 +11,7 @@ int foo(int x)
 int main(int argc, char** argv)
 {
   int x = argc;
-  if(x>=1) x = foo(x);
+  if(x>=0) x = foo(x);
   else bar(); //unreachable
   return x;
 }

@@ -42,11 +42,10 @@ void ssa_value_domaint::transform(
     .get_bool_option("competition-mode");
   if(from->is_assign())
   {
-    const code_assignt &assignment=from->get_assign();
     exprt lhs_deref=dereference(
-      assignment.lhs(), *this, "", ns, competition_mode);
+      from->assign_lhs(), *this, "", ns, competition_mode);
     exprt rhs_deref=dereference(
-      assignment.rhs(), *this, "", ns, competition_mode);
+      from->assign_rhs(), *this, "", ns, competition_mode);
     assign_lhs_rec(lhs_deref, rhs_deref, ns);
   }
   else if(from->is_goto())
@@ -62,9 +61,8 @@ void ssa_value_domaint::transform(
   }
   else if(from->is_function_call())
   {
-    const code_function_callt &code_function_call=from->get_function_call();
     const irep_idt &fname=to_symbol_expr(
-      code_function_call.function()).get_identifier();
+      from->call_function()).get_identifier();
 
     // functions may alter state almost arbitrarily:
     // * any global-scoped variables
@@ -84,7 +82,7 @@ void ssa_value_domaint::transform(
 
     std::list<symbol_exprt> objects;
 
-    for(auto &argument : code_function_call.arguments())
+    for(auto &argument : from->call_arguments())
     {
       exprt arg=argument;
       exprt arg_expr=argument;
@@ -114,17 +112,17 @@ void ssa_value_domaint::transform(
     }
 
     // the call might come with an assignment
-    if(code_function_call.lhs().is_not_nil())
+    if(from->call_lhs().is_not_nil())
     {
       exprt lhs_deref=dereference(
-        code_function_call.lhs(), *this, "", ns, competition_mode);
+        from->call_lhs(), *this, "", ns, competition_mode);
       assign_lhs_rec(lhs_deref, nil_exprt(), ns);
     }
 
     // the assignment of return value might be in next instruction
-    if(to->is_assign() && to->get_assign().rhs().id()==ID_symbol)
+    if(to->is_assign() && to->assign_rhs().id()==ID_symbol)
     {
-      const symbol_exprt &return_value=to_symbol_expr(to->get_assign().rhs());
+      const symbol_exprt &return_value=to_symbol_expr(to->assign_rhs());
       if(return_value.type().id()==ID_pointer &&
          return_value.get_identifier()==id2string(fname)+"#return_value")
       {

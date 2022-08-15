@@ -61,7 +61,7 @@ void ssa_local_unwindert::build_loop_tree()
       // this test is ambiguous if the loop condition is true,
       //  but shouldn't have any consequences
       assert(n_it->location->is_backwards_goto());
-      loop.is_dowhile=!n_it->location->guard.is_true();
+      loop.is_dowhile=!n_it->location->condition().is_true();
       SSA.nodes.erase(n_it--);
     }
     // beginning of loop found
@@ -162,7 +162,7 @@ void ssa_local_unwindert::build_exit_conditions()
         }
       }
       else if(next==it->second.body_nodes.end() &&
-              !n_it->location->guard.is_true())
+              !n_it->location->condition().is_true())
       { // this happens in do-whiles
         // ENHANCE: transform goto-program to make SSA uniform in this respect
         exprt g=SSA.guard_symbol(n_it->location);
@@ -547,7 +547,8 @@ void ssa_local_unwindert::add_hoisted_assertions(loopt &loop, bool is_last)
     if(!is_last // only add assumptions if we are not in %0 iteration
        && mode==unwinder_modet::K_INDUCTION && !it->second.assertions.empty()
 #ifdef COMPETITION
-       && !has_overflow_shl(it->first->guard))
+       && it->first->has_condition()
+       && !has_overflow_shl(it->first->condition()))
 #endif
     {
       exprt e=conjunction(it->second.exit_conditions);

@@ -16,6 +16,7 @@ Author: Viktor Malik
 #include <util/type.h>
 #include <util/pointer_offset_size.h>
 #include <util/arith_tools.h>
+#include <util/std_code.h>
 
 #include <algorithm>
 #include <iostream>
@@ -127,7 +128,7 @@ bool dynamic_objectst::get_malloc_size(
 {
   if(loc.is_assign())
   {
-    const code_assignt &code_assign=to_code_assign(loc.get_code());
+    const code_assignt &code_assign=to_code_assign(loc.code());
     if(code_assign.lhs().id()==ID_symbol)
     {
       // we have to propagate the malloc size

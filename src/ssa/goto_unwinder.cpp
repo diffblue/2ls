@@ -33,7 +33,7 @@ void goto_local_unwindert::reconnect_loops()
   for(auto i_it=goto_function.body.instructions.begin();
       i_it!=goto_function.body.instructions.end(); i_it++)
   {
-    if(current_unwinding-i_it->get_code().get_int(unwind_flag)==0)
+    if(current_unwinding-i_it->code().get_int(unwind_flag)==0)
     {
       unwind_starts.push(i_it);
     }
@@ -226,7 +226,7 @@ void goto_local_unwindert::unwind_function(
   {
     // The new unwinds will be inserted between the existing ones and the
     // loop, update the existing unwind flags.
-    int unwind_flag_value=i_it->get_code().get_int(unwind_flag);
+    int unwind_flag_value=i_it->code().get_int(unwind_flag);
     if(unwind_flag_value>0)
       i_it->code_nonconst().set(unwind_flag, unwind_flag_value+to_unwind);
     if(!i_it->is_backwards_goto())
@@ -370,14 +370,14 @@ void goto_local_unwindert::update_assertions(
     if(!i_it->is_backwards_goto())
       continue;
 
-    bool is_dowhile=!i_it->guard.is_true();
+    bool is_dowhile=!i_it->condition().is_true();
     auto loop_back=SSA.find_node(i_it);
     auto ssa_it=loop_back;
     int processing_unwind=1;
     while(ssa_it!=SSA.nodes.begin())
     {
       ssa_it--;
-      int unwind=ssa_it->location->get_code().get_int(unwind_flag);
+      int unwind=ssa_it->location->code().get_int(unwind_flag);
       if(unwind>0)
         processing_unwind=unwind+1;
 
@@ -428,7 +428,7 @@ void goto_local_unwindert::add_hoisted_assertions(
     int processing_unwind=0;
     for(auto loop_it=it.location->get_target(); loop_it!=it.location;loop_it++)
     {
-      int unwind=loop_it->get_code().get_int(unwind_flag);
+      int unwind=loop_it->code().get_int(unwind_flag);
       if(unwind > 0)
         processing_unwind=unwind;
       // We are collecting gotos pointing outside the loop
@@ -441,7 +441,7 @@ void goto_local_unwindert::add_hoisted_assertions(
         if(processing_unwind>1)
           loop_precondition=or_exprt(loop_precondition, and_exprt(g, c));
       }
-      else if (!loop_it->guard.is_true() && loop_it->is_backwards_goto())
+      else if (!loop_it->condition().is_true() && loop_it->is_backwards_goto())
       {
         // Do-while loop, the condition is IF cond GOTO upward, we care about
         // when we jump outside, hence the not

@@ -18,6 +18,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/expr_util.h>
 #include <util/pointer_expr.h>
+#include <util/symbol.h>
 
 #include <analyses/dirty.h>
 
@@ -211,8 +212,9 @@ void ssa_objectst::collect_objects(
   // Rummage through body.
   forall_goto_program_instructions(it, src.body)
   {
-    collect_objects_rec(it->guard, ns, objects, literals);
-    collect_objects_rec(it->get_code(), ns, objects, literals);
+    if(it->has_condition())
+      collect_objects_rec(it->condition(), ns, objects, literals);
+    collect_objects_rec(it->code(), ns, objects, literals);
   }
 }
 
