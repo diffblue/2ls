@@ -83,10 +83,10 @@ public:
     std::ostream &out,
     const namespacet &ns) const override;
 
-  void project_on_vars(
-    valuet &value,
-    const var_sett &vars,
-    exprt &result) override;
+  void project_on_vars(domaint::valuet &value,
+                       const var_sett &vars,
+                       exprt &result,
+                       bool ignore_top) override;
 
   // These do not need to be implemented since there is no domain above this
   // one that would use it.

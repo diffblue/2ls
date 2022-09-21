@@ -126,12 +126,13 @@ void array_domaint::add_segment(const var_spect &var_spec,
 /// Includes mapping of segments onto read indices of corresponding arrays.
 /// This ensures that the computed array invariant is applied every time when
 /// reading from the given array.
-void array_domaint::project_on_vars(domaint::valuet &base_value,
+void array_domaint::project_on_vars(domaint::valuet &value,
                                     const var_sett &vars,
-                                    exprt &result)
+                                    exprt &result,
+                                    bool ignore_top)
 {
-  auto &array_value = dynamic_cast<array_valuet &>(base_value);
-  inner_domain->project_on_vars(*array_value.inner_value, {}, result);
+  auto &array_value = dynamic_cast<array_valuet &>(value);
+  inner_domain->project_on_vars(*array_value.inner_value, {}, result, false);
   result = and_exprt(result, segment_elem_equality());
   result = and_exprt(result, map_segments_to_read_indices());
 }

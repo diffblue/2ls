@@ -42,17 +42,17 @@ void product_domaint::output_value(
 
 /// Project onto a set of variables. The overall invariant is a conjunction of
 /// invariants of inner domains.
-void product_domaint::project_on_vars(
-  domaint::valuet &_value,
-  const var_sett &vars,
-  exprt &result)
+void product_domaint::project_on_vars(domaint::valuet &_value,
+                                      const var_sett &vars,
+                                      exprt &result,
+                                      bool ignore_top)
 {
   auto &inv=dynamic_cast<valuet &>(_value);
   exprt::operandst c;
   for(unsigned i=0; i<domains.size(); i++)
   {
     exprt domain_result;
-    domains[i]->project_on_vars(*inv[i], vars, domain_result);
+    domains[i]->project_on_vars(*inv[i], vars, domain_result, ignore_top);
     c.push_back(domain_result);
   }
   result=conjunction(c);

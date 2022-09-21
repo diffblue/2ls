@@ -101,10 +101,10 @@ public:
     const domaint::valuet &value,
     const namespacet &ns) const override;
 
-  void project_on_vars(
-    domaint::valuet &value,
-    const var_sett &vars,
-    exprt &result) override;
+  void project_on_vars(domaint::valuet &value,
+                       const var_sett &vars,
+                       exprt &result,
+                       bool ignore_top) override;
 
   void get_index_set(index_sett &indices);
 

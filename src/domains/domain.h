@@ -164,10 +164,10 @@ public:
   /// Project invariant (abstract value) onto a set of variables.
   /// If vars is empty, project onto all variables (get the entire invariant).
   // (not useful to make value const (e.g. union-find))
-  virtual void project_on_vars(
-    valuet &value,
-    const var_sett &vars,
-    exprt &result)=0;
+  virtual void project_on_vars(valuet &value,
+                               const var_sett &vars,
+                               exprt &result,
+                               bool ignore_top = false) = 0;
 
   // Methods related to symbolic paths
 

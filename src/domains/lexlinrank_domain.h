@@ -148,10 +148,10 @@ public:
     const namespacet &ns) const override;
 
   // projection
-  void project_on_vars(
-    domaint::valuet &value,
-    const var_sett &vars,
-    exprt &result) override;
+  void project_on_vars(domaint::valuet &value,
+                       const var_sett &vars,
+                       exprt &result,
+                       bool ignore_top) override;
 
   // generating templates
   void add_template(

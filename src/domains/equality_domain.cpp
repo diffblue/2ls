@@ -129,10 +129,10 @@ exprt equality_domaint::get_permanent_expr(valuet &value)
   return true_exprt();
 }
 
-void equality_domaint::project_on_vars(
-  domaint::valuet &value,
-  const var_sett &vars,
-  exprt &result)
+void equality_domaint::project_on_vars(domaint::valuet &value,
+                                       const var_sett &vars,
+                                       exprt &result,
+                                       bool ignore_top)
 {
 #if 0
   if(templ.size()==0)

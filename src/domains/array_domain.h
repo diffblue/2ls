@@ -132,7 +132,8 @@ public:
 
   void project_on_vars(domaint::valuet &base_value,
                        const var_sett &vars,
-                       exprt &result) override;
+                       exprt &result,
+                       bool ignore_top) override;
 
   exprt segment_elem_equality();
   exprt map_segments_to_read_indices();
