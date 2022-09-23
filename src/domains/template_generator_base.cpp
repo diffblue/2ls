@@ -164,12 +164,18 @@ void template_generator_baset::collect_variables_loop(
 
         symbol_exprt pre_var=get_pre_var(SSA, o_it, n_it);
 
-        // For fields of dynamic objects, we add a guard that their value is not
-        // equal to the corresponding input SSA variable that represents a state
-        // when the object is not allocated.
-        // Example: dynamic_object$0.next#ls100 != dynamic_object$0.next
-        if(SSA.dynamic_objects.get_object_by_name(id))
+        // For fields of dynamic objects, we add two post-guards:
+        // - allocation guard of the object to avoid getting values of
+        //   un-allocated objects
+        // - guard that the field value is not equal to the corresponding input
+        //   SSA variable (with no suffix) as that variable occurs in the phi
+        //   node of objects allocated inside a loop and we want to avoid
+        //   getting its (random) value
+        //   example: dynamic_object$0.next#ls100 != dynamic_object$0.next
+        if(auto *obj = SSA.dynamic_objects.get_object_by_name(id))
         {
+          obj_post_guard = and_exprt(obj_post_guard, obj->get_alloc_guard());
+
           exprt &post_var=post_renaming_map[pre_var];
           assert(post_var.id()==ID_symbol);
           const irep_idt orig_id=get_original_name(to_symbol_expr(post_var));
