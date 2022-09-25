@@ -30,7 +30,8 @@ public:
     replace_mapt &_renaming_map,
     const var_specst &var_specs,
     const local_SSAt &SSA):
-    simple_domaint(_domain_number, _renaming_map, SSA.ns)
+    simple_domaint(_domain_number, _renaming_map, SSA.ns),
+    dynamic_objects(SSA.dynamic_objects)
   {
     make_template(var_specs, ns);
   }
@@ -64,15 +65,20 @@ public:
     // Row is nondeterministic - row expression is TRUE
     bool nondet=false;
 
-    explicit row_valuet(const namespacet &ns):ns(ns) {}
+    explicit row_valuet(
+      const namespacet &ns,
+      const dynamic_objectst &dynamic_objects):
+      ns(ns), dynamic_objects(dynamic_objects) {}
 
     exprt get_row_expr(const template_row_exprt &templ_row_expr) const;
+    exprt ptr_equality(const exprt &ptr_expr, const exprt &ptr_value) const;
 
     bool add_points_to(const points_to_relt &destinations);
     bool set_nondet();
 
   protected:
     const namespacet &ns;
+    const dynamic_objectst &dynamic_objects;
   };
 
   // Heap value is a conjunction of rows
@@ -109,6 +115,8 @@ protected:
   const exprt get_points_to_dest(
     const exprt &solver_value,
     const exprt &templ_row_expr);
+
+  const dynamic_objectst &dynamic_objects;
 };
 
 #endif // CPROVER_2LS_DOMAINS_HEAP_DOMAIN_H

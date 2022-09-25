@@ -57,6 +57,8 @@ void template_generator_baset::get_pre_post_guards(
   exprt pcond=SSA.cond_symbol(n_it->location);
   ssa_local_unwinder.unwinder_rename(to_symbol_expr(pcond), *n_it, false);
   post_guard=and_exprt(pguard, pcond);
+
+  post_renaming_map[lsguard]=pcond;
 }
 
 symbol_exprt template_generator_baset::get_pre_var(

@@ -13,6 +13,7 @@ Author: Viktor Malik
 #include <algorithm>
 #include <memory>
 #include <ssa/address_canonizer.h>
+#include <ssa/dynamic_objects.h>
 #include <util/mathematical_types.h>
 #include <util/pointer_expr.h>
 
@@ -22,7 +23,7 @@ void heap_domaint::initialize_value(domaint::valuet &value)
 {
   auto &heap_val=dynamic_cast<heap_valuet &>(value);
   for(int i=0; i<templ.size(); i++)
-    heap_val.emplace_back(row_valuet(ns));
+    heap_val.emplace_back(row_valuet(ns, dynamic_objects));
 }
 
 /// Create domain template for given set of variables. Template contains a row
@@ -112,10 +113,9 @@ exprt heap_domaint::value_to_ptr_exprt(const exprt &expr)
 /// \param ptr_expr: Pointer expression (variable)
 /// \param ptr_value: Value (object or address) of the pointer
 /// \return Equality between pointer and its value with correct types
-const exprt ptr_equality(
+exprt heap_domaint::row_valuet::ptr_equality(
   const exprt &ptr_expr,
-  const exprt &ptr_value,
-  const namespacet &ns)
+  const exprt &ptr_value) const
 {
   exprt value;
   if(ptr_expr.type()==ptr_value.type())
@@ -128,7 +128,18 @@ const exprt ptr_equality(
       address_of_exprt(ptr_value),
       ns.follow(ptr_expr.type()));
   }
-  return equal_exprt(ptr_expr, value);
+
+  exprt result=equal_exprt(ptr_expr, value);
+
+  if(ptr_value.id()==ID_symbol)
+  {
+    auto *dynobj=dynamic_objects.get_object_by_name(
+      to_symbol_expr(ptr_value).get_identifier());
+    if(dynobj)
+      result=and_exprt(result, dynobj->get_loop_guard());
+  }
+
+  return result;
 }
 
 /// Row value is a disjuction of equalities between templ_expr and addresses of
@@ -153,7 +164,7 @@ exprt heap_domaint::row_valuet::get_row_expr(
     exprt::operandst c;
     for(unsigned i=0; i<templ_row_expr.pointers.size(); i++)
     {
-      c.push_back(ptr_equality(templ_row_expr.pointers[i], points_to[i], ns));
+      c.push_back(ptr_equality(templ_row_expr.pointers[i], points_to[i]));
     }
     result.push_back(conjunction(c));
   }
