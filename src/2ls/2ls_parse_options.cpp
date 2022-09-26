@@ -1482,6 +1482,7 @@ void twols_parse_optionst::report_unknown()
   }
 }
 
+// clang-format off
 /// display command line help
 void twols_parse_optionst::help()
 {

@@ -24,6 +24,7 @@ class optionst;
 
 #include "summary_checker_base.h"
 
+// clang-format off
 #define TWOLS_OPTIONS \
   "(xml-ui)" \
   "(function):" \
@@ -67,6 +68,7 @@ class optionst;
   "(competition-mode)(slice)(no-propagation)(independent-properties)" \
   "(no-unwinding-assertions)"
   // the last line is for CBMC-regression testing only
+// clang-format on
 
 class twols_parse_optionst:
   public parse_options_baset,
