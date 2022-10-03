@@ -22,7 +22,15 @@ jobs:
     if: github.ref != 'refs/heads/master'
     steps:
       - uses: actions/checkout@v2
+      - name: Install clang-format
+        run: sudo apt-get install clang-format
+      - name: Install git-clang-format
+        run: |
+          wget https://raw.githubusercontent.com/llvm-mirror/clang/master/tools/clang-format/git-clang-format
+          sudo install -t /usr/bin git-clang-format
       - name: Get the latest master
         run: git fetch origin master:master
-      - name: Run lint
-        run: scripts/run_lint.sh master HEAD
+      - name: Run clang-format
+        run: git clang-format master
+      - name: Diff
+        run: git diff --exit-code
