@@ -1167,7 +1167,6 @@ bool twols_parse_optionst::process_goto_program(
 
     if(cmdline.isset("competition-mode"))
     {
-      limit_array_bounds(goto_model);
       if(options.get_bool_option("memory-leak-check"))
         memory_assert_info(goto_model);
     }

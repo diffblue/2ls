@@ -520,33 +520,6 @@ void twols_parse_optionst::remove_dead_goto(goto_modelt &goto_model)
   }
 }
 
-/// Assert size of static arrays to be max 50000.
-void twols_parse_optionst::limit_array_bounds(goto_modelt &goto_model)
-{
-  for(auto &f_it : goto_model.goto_functions.function_map)
-  {
-    Forall_goto_program_instructions(i_it, f_it.second.body)
-    {
-      if(i_it->is_decl())
-      {
-        const code_declt &code_decl=code_declt{i_it->decl_symbol()};
-        const exprt &symbol=code_decl.symbol();
-        if(symbol.type().id()==ID_array)
-        {
-          auto &size_expr=to_array_type(symbol.type()).size();
-          if(size_expr.id()==ID_constant)
-          {
-            int size=std::stoi(
-              id2string(to_constant_expr(size_expr).get_value()), nullptr, 16);
-            // @TODO temporary solution - there seems to be a bug in the solver
-            assert(size<=50000);
-          }
-        }
-      }
-    }
-  }
-}
-
 void twols_parse_optionst::memory_assert_info(goto_modelt &goto_model)
 {
   irep_idt file;

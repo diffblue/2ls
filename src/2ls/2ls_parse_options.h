@@ -183,7 +183,6 @@ protected:
   void add_dynamic_object_rec(exprt &expr, symbol_tablet &symbol_table);
   void split_same_symbolic_object_assignments(goto_modelt &goto_model);
   void remove_dead_goto(goto_modelt &goto_model);
-  void limit_array_bounds(goto_modelt &goto_model);
   void memory_assert_info(goto_modelt &goto_model);
   void handle_freed_ptr_compare(goto_modelt &goto_model);
   void assert_no_builtin_functions(goto_modelt &goto_model);
