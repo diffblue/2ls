@@ -158,15 +158,19 @@ void simple_domaint::output_value(
 /// Here, the projected expression is:
 ///   pre_constraint       for LOOP rows
 ///   value_row_expression for IN and OUT rows
-void simple_domaint::project_on_vars(
-  domaint::valuet &value,
-  const var_sett &vars,
-  exprt &result)
+void simple_domaint::project_on_vars(domaint::valuet &value,
+                                     const var_sett &vars,
+                                     exprt &result,
+                                     bool ignore_top)
 {
   auto &simple_value=dynamic_cast<valuet &>(value);
   exprt::operandst c;
   for(rowt row=0; row<templ.size(); row++)
   {
+    // Ignore rows with value top
+    if(ignore_top && simple_value.is_row_top(row, templ[row]))
+      continue;
+
     std::set<symbol_exprt> symbols;
     for(auto &row_expr : templ[row].expr->get_row_exprs())
     {
@@ -175,14 +179,14 @@ void simple_domaint::project_on_vars(
       symbols.insert(row_expr_symbols.begin(), row_expr_symbols.end());
     }
 
-    // If any of the symbols is not in vars and vars is not empty, continue
-    if(!vars.empty() && std::any_of(
-      symbols.begin(), symbols.end(),
-      [&vars](const symbol_exprt &s)
-      {
-        return vars.find(s)==vars.end();
-      }))
+    // If none of the symbols is in vars and vars is not empty, continue
+    // clang-format off
+    if(!vars.empty() && std::all_of(symbols.begin(),
+                                    symbols.end(),
+                                    [&vars](const symbol_exprt &s)
+                                    { return vars.find(s) == vars.end(); }))
       continue;
+    // clang-format on
 
     if(templ[row].guards.kind==guardst::LOOP)
       c.push_back(get_row_pre_constraint(row, simple_value));
@@ -190,7 +194,7 @@ void simple_domaint::project_on_vars(
       c.push_back(get_row_value_constraint(row, simple_value));
   }
 
-  result=conjunction(c);
+  result = c.empty() ? true_exprt() : conjunction(c);
 }
 
 /// Return the loop guard for the given template row.

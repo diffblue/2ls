@@ -281,26 +281,46 @@ exprt tpolyhedra_domaint::get_row_symb_value_constraint(
   return c;
 }
 
-tpolyhedra_domaint::row_valuet tpolyhedra_domaint::get_max_row_value(
-  const tpolyhedra_domaint::rowt &row)
+constant_exprt tpolyhedra_domaint::get_max_for_expr(const exprt &expr)
 {
-  const template_rowt &templ_row=templ[row];
-  auto &templ_row_expr=dynamic_cast<template_row_exprt &>(*templ_row.expr);
-  if(templ_row_expr.type().id()==ID_signedbv)
+  if(expr.type().id() == ID_signedbv)
   {
-    return row_valuet(to_signedbv_type(templ_row_expr.type()).largest_expr());
+    // The row expression may have the form:
+    //   -(signed __CPROVER_bitvector[33])expr
+    // in such case, the maximum value is the negation of the minimal value of
+    // expr.
+    signedbv_typet dst_type = to_signedbv_type(expr.type());
+    if(expr.id() == ID_unary_minus &&
+       to_unary_minus_expr(expr).op().id() == ID_typecast)
+    {
+      auto inner_expr = to_typecast_expr(to_unary_minus_expr(expr).op()).op();
+      if(inner_expr.type().id() == ID_signedbv)
+      {
+        return from_integer(-to_signedbv_type(inner_expr.type()).smallest(),
+                            expr.type());
+      }
+    }
+    return to_signedbv_type(expr.type()).largest_expr();
   }
-  if(templ_row_expr.type().id()==ID_unsignedbv)
+  if(expr.type().id() == ID_unsignedbv)
   {
-    return row_valuet(to_unsignedbv_type(templ_row_expr.type()).largest_expr());
+    return to_unsignedbv_type(expr.type()).largest_expr();
   }
-  if(templ_row_expr.type().id()==ID_floatbv)
+  if(expr.type().id() == ID_floatbv)
   {
-    ieee_floatt max(to_floatbv_type(templ_row_expr.type()));
+    ieee_floatt max(to_floatbv_type(expr.type()));
     max.make_fltmax();
-    return row_valuet(max.to_expr());
+    return max.to_expr();
   }
   assert(false); // type not supported
+}
+
+tpolyhedra_domaint::row_valuet
+tpolyhedra_domaint::get_max_row_value(const tpolyhedra_domaint::rowt &row)
+{
+  const template_rowt &templ_row = templ[row];
+  auto &templ_row_expr = dynamic_cast<template_row_exprt &>(*templ_row.expr);
+  return row_valuet(get_max_for_expr(templ_row_expr));
 }
 
 tpolyhedra_domaint::row_valuet tpolyhedra_domaint::get_min_row_value(
@@ -391,7 +411,7 @@ void tpolyhedra_domaint::add_interval_template(
   {
     if(v.guards.kind==guardst::IN)
       continue;
-    if(v.var.type().id()==ID_pointer)
+    if(v.var.type().id() == ID_pointer || v.var.type().id() == ID_array)
       continue;
 
     // x

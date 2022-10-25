@@ -42,7 +42,7 @@ void template_generator_summaryt::operator()(
 
   // either use standard templates or user-supplied ones
   if(!instantiate_custom_templates(SSA))
-    instantiate_standard_domains(SSA);
+    domain_ptr = instantiate_standard_domains(all_var_specs, SSA);
 
 #ifdef SHOW_TEMPLATE_VARIABLES
   debug() << "Template variables: " << eom;
@@ -61,39 +61,37 @@ void template_generator_summaryt::collect_variables_inout(
   // add params and globals_in
   exprt first_guard=
     SSA.guard_symbol(SSA.goto_function.body.instructions.begin());
-  add_vars(
-    SSA.params,
-    first_guard,
-    first_guard,
-    forward ? guardst::IN : guardst::OUT,
-    var_specs);
-  add_vars(
-    SSA.globals_in,
-    first_guard,
-    first_guard,
-    forward ? guardst::IN : guardst::OUT,
-    var_specs);
+  add_vars(SSA.params,
+           first_guard,
+           first_guard,
+           forward ? guardst::IN : guardst::OUT,
+           SSA.goto_function.body.instructions.begin(),
+           all_var_specs);
+  add_vars(SSA.globals_in,
+           first_guard,
+           first_guard,
+           forward ? guardst::IN : guardst::OUT,
+           SSA.goto_function.body.instructions.begin(),
+           all_var_specs);
 
   // add globals_out (includes return values)
-  exprt last_guard=
-    SSA.guard_symbol(--SSA.goto_function.body.instructions.end());
-  add_vars(
-    SSA.globals_out,
-    last_guard,
-    last_guard,
-    forward ? guardst::OUT : guardst::IN,
-    var_specs);
+  auto last_loc = --SSA.goto_function.body.instructions.end();
+  exprt last_guard = SSA.guard_symbol(last_loc);
+  add_vars(SSA.globals_out,
+           last_guard,
+           last_guard,
+           forward ? guardst::OUT : guardst::IN,
+           last_loc,
+           all_var_specs);
 }
 
 var_sett template_generator_summaryt::inout_vars()
 {
   var_sett vars;
-  for(var_specst::const_iterator v=var_specs.begin();
-      v!=var_specs.end(); v++)
+  for(const var_spect &v : all_var_specs)
   {
-    if(v->guards.kind==guardst::IN ||
-       v->guards.kind==guardst::OUT)
-      vars.insert(v->var);
+    if(v.guards.kind == guardst::IN || v.guards.kind == guardst::OUT)
+      vars.insert(v.var);
   }
   return vars;
 }
@@ -101,11 +99,10 @@ var_sett template_generator_summaryt::inout_vars()
 var_sett template_generator_summaryt::out_vars()
 {
   var_sett vars;
-  for(var_specst::const_iterator v=var_specs.begin();
-      v!=var_specs.end(); v++)
+  for(const var_spect &v : all_var_specs)
   {
-    if(v->guards.kind==guardst::OUT)
-      vars.insert(v->var);
+    if(v.guards.kind == guardst::OUT)
+      vars.insert(v.var);
   }
   return vars;
 }
@@ -113,11 +110,10 @@ var_sett template_generator_summaryt::out_vars()
 var_sett template_generator_summaryt::loop_vars()
 {
   var_sett vars;
-  for(var_specst::const_iterator v=var_specs.begin();
-      v!=var_specs.end(); v++)
+  for(const var_spect &v : all_var_specs)
   {
-    if(v->guards.kind==guardst::LOOP || v->guards.kind==guardst::IN)
-      vars.insert(v->var);
+    if(v.guards.kind == guardst::LOOP || v.guards.kind == guardst::IN)
+      vars.insert(v.var);
   }
   return vars;
 }

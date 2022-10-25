@@ -48,9 +48,9 @@ bool strategy_solver_simplet::iterate(invariantt &_inv)
     {
 #ifdef DEBUG
       std::cerr << "Pre-condition:\n";
-      debug_smt_model(pre_expr, ns);
+      debug_smt_model(pre_expr, SSA.ns);
       std::cerr << "Post-condition:\n";
-      debug_smt_model(cond, ns);
+      debug_smt_model(cond, SSA.ns);
 #endif
       for(std::size_t row=0; row<domain.strategy_cond_literals.size(); ++row)
       {

@@ -538,6 +538,13 @@ irep_idt get_original_name(
   return s.substr(0, pos1);
 }
 
+exprt get_original_expr(const exprt &expr)
+{
+  if(expr.id() == ID_symbol)
+    return symbol_exprt(get_original_name(to_symbol_expr(expr)), expr.type());
+  return expr;
+}
+
 void clean_expr(exprt &expr)
 {
   if(expr.id()==ID_symbol)
@@ -607,4 +614,45 @@ void replace_symbol(exprt &expr, const irep_idt &old, const irep_idt &updated)
   else
     for(auto &op : expr.operands())
       replace_symbol(op, old, updated);
+}
+
+/// Add +1 to expression. If the expression is a typecast, add +1 to the inner
+/// expression.
+exprt expr_plus_one(const exprt &expr)
+{
+  exprt result = expr;
+  if(result.id() == ID_typecast)
+    result = to_typecast_expr(result).op();
+
+  result = plus_exprt(result, make_one(result.type()));
+
+  if(result.type() != expr.type())
+    result = typecast_exprt(result, expr.type());
+
+  return result;
+}
+
+/// Check if the two given expressions are the same variable.
+/// Each of them can be possibly behind a typecast.
+bool same_var(const exprt &expr1, const exprt &expr2)
+{
+  if(expr1.id() == ID_typecast)
+    return same_var(to_typecast_expr(expr1).op(), expr2);
+  if(expr2.id() == ID_typecast)
+    return same_var(expr1, to_typecast_expr(expr2).op());
+  return get_original_expr(expr1) == get_original_expr(expr2);
+}
+
+bool has_index_expr(const exprt &expr)
+{
+  if(expr.id() == ID_index)
+    return true;
+
+  forall_operands(it, expr)
+  {
+    if(has_index_expr(*it))
+      return true;
+  }
+
+  return false;
 }

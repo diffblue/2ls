@@ -12,23 +12,30 @@ Author: Peter Schrammel
 #ifndef CPROVER_2LS_DOMAINS_DOMAIN_H
 #define CPROVER_2LS_DOMAINS_DOMAIN_H
 
-#include <iostream>
-#include <set>
-
-#include <util/std_expr.h>
-#include <langapi/language_util.h>
-#include <util/replace_expr.h>
 #include <util/namespace.h>
+#include <util/replace_expr.h>
+#include <util/std_expr.h>
+
+#include <goto-programs/goto_program.h>
+
+#include <langapi/language_util.h>
 #include <solvers/refinement/bv_refinement.h>
-#include <memory>
-#include "symbolic_path.h"
+
 #include "incremental_solver.h"
+#include "symbolic_path.h"
+
+#include <iostream>
+#include <memory>
+#include <set>
 
 // Forward declaration - real is in template_generator_base.h
 class template_generator_baset;
 class strategy_solver_baset;
+class tpolyhedra_domaint;
 
 class local_SSAt;
+
+typedef goto_programt::const_targett locationt;
 
 /// Guards specification
 struct guardst
@@ -59,6 +66,8 @@ struct var_spect
 {
   vart var;
   guardst guards;
+  var_listt related_vars; // currently used for array segment borders
+  locationt loc;
 
   void output(std::ostream &out, const namespacet &ns) const;
 };
@@ -155,10 +164,10 @@ public:
   /// Project invariant (abstract value) onto a set of variables.
   /// If vars is empty, project onto all variables (get the entire invariant).
   // (not useful to make value const (e.g. union-find))
-  virtual void project_on_vars(
-    valuet &value,
-    const var_sett &vars,
-    exprt &result)=0;
+  virtual void project_on_vars(valuet &value,
+                               const var_sett &vars,
+                               exprt &result,
+                               bool ignore_top = false) = 0;
 
   // Methods related to symbolic paths
 
@@ -171,6 +180,11 @@ public:
   virtual void undo_sympath_restriction()=0;
   /// Remove all symbolic path restrictions.
   virtual void remove_all_sympath_restrictions()=0;
+
+  virtual tpolyhedra_domaint *get_tpolyhedra_domain()
+  {
+    return nullptr;
+  }
 
 protected:
   unsigned domain_number; // serves as id for variables names

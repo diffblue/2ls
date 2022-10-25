@@ -64,6 +64,14 @@ public:
       return (*this)[row].get_row_expr(templ_row_expr);
     }
 
+    bool is_row_top(rowt row, const template_rowt &templ_row) const override
+    {
+      auto &templ_row_expr =
+        dynamic_cast<template_row_exprt &>(*templ_row.expr);
+      // Value is top if is is the maximum for the given data type
+      return (*this)[row] == get_max_for_expr(templ_row_expr);
+    }
+
     templ_valuet *clone() override { return new templ_valuet(*this); }
   };
 
@@ -114,6 +122,7 @@ public:
 
 
   // max, min, comparison
+  static constant_exprt get_max_for_expr(const exprt &expt);
   row_valuet get_max_row_value(const rowt &row);
   row_valuet get_min_row_value(const rowt &row);
   row_valuet between(const row_valuet &lower, const row_valuet &upper);
@@ -150,6 +159,11 @@ public:
     incremental_solvert &solver,
     const local_SSAt &SSA,
     message_handlert &message_handler) override;
+
+  tpolyhedra_domaint *get_tpolyhedra_domain() override
+  {
+    return this;
+  }
 
 protected:
   friend class strategy_solver_binsearcht;

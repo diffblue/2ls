@@ -369,8 +369,9 @@ exprt dereference(
   #endif
 
   exprt tmp2=simplify_expr(tmp1, ns);
+  tmp2.set("#heap_access", tmp1.get_bool("#heap_access"));
 
-  #ifdef DEBUG
+#ifdef DEBUG
   std::cout << "dereference tmp2: " << from_expr(ns, "", tmp2) << '\n';
   #endif
 

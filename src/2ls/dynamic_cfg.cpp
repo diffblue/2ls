@@ -159,19 +159,20 @@ void dynamic_cfgt::build_from_invariant(
   assumptionst &assumptions)
 {
   dynamic_cfg_idt id;
-  if(invariant.op0().id()==ID_symbol)
-    ssa.get_full_ssa_name(
-      to_symbol_expr(invariant.op0()),
-      id.pc,
-      id.iteration_stack);
-  else if(invariant.op0().id()==ID_and &&
-          to_and_expr(invariant.op0()).op0().id()==ID_symbol)
-    ssa.get_full_ssa_name(
-      to_symbol_expr(to_and_expr(invariant.op0()).op0()),
-      id.pc,
-      id.iteration_stack);
-  else
-    assert(false);
+  exprt guard = invariant.op0();
+  while(guard.id() != ID_symbol)
+  {
+    if(guard.id() == ID_and)
+      guard = to_and_expr(guard).op0();
+    else
+      // TODO: array invariants do not have the expected form (G => inv)
+      // since there are bindings between actual and symbolic array indices
+      // and elements.
+      // This should be solved in a better way so that the witness truly
+      // describes an array invariant
+      return;
+  }
+  ssa.get_full_ssa_name(to_symbol_expr(guard), id.pc, id.iteration_stack);
 
   for(auto &a : assumptions)
   {

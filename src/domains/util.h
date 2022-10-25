@@ -35,13 +35,18 @@ void merge_and(
 constant_exprt make_zero(const typet &type);
 constant_exprt make_one(const typet &type);
 constant_exprt make_minusone(const typet &type);
+exprt expr_plus_one(const exprt &expr);
 
 irep_idt get_original_name(const symbol_exprt &);
+exprt get_original_expr(const exprt &expr);
 void clean_expr(exprt &expr);
 
 bool is_cprover_symbol(const exprt &expr);
 
 std::string get_dynobj_instance(const irep_idt &id);
 void replace_symbol(exprt &expr, const irep_idt &old, const irep_idt &updated);
+
+bool same_var(const exprt &expr1, const exprt &expr2);
+bool has_index_expr(const exprt &expr);
 
 #endif

@@ -546,10 +546,10 @@ void lexlinrank_domaint::output_value(
   }
 }
 
-void lexlinrank_domaint::project_on_vars(
-  domaint::valuet &value,
-  const var_sett &vars,
-  exprt &result)
+void lexlinrank_domaint::project_on_vars(domaint::valuet &value,
+                                         const var_sett &vars,
+                                         exprt &result,
+                                         bool ignore_top)
 {
   // don't do any projection
   auto &v=dynamic_cast<const templ_valuet &>(value);

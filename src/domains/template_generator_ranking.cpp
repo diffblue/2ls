@@ -58,7 +58,8 @@ void template_generator_rankingt::operator()(
 
 #if 1
   debug() << "Template variables: " << eom;
-  var_specs.output(debug(), SSA.ns); debug() << eom;
+  all_var_specs.output(debug(), SSA.ns);
+  debug() << eom;
   debug() << "Template: " << eom;
   domain_ptr->output_domain(debug(), SSA.ns); debug() << eom;
 #endif
@@ -112,7 +113,13 @@ void template_generator_rankingt::collect_variables_ranking(
         symbol_exprt out=SSA.read_rhs(object, node.location);
         ssa_local_unwinder.unwinder_rename(out, node, false);
 
-        add_var(in, pre_guard, post_guard, guardst::LOOP, new_var_specs);
+        add_var(in,
+                pre_guard,
+                post_guard,
+                guardst::LOOP,
+                {},
+                node.location,
+                new_var_specs);
 
         // building map for renaming from pre into post-state
         post_renaming_map[in]=out;
@@ -132,8 +139,8 @@ void template_generator_rankingt::collect_variables_ranking(
         dynamic_cast<lexlinrank_domaint *>(domain_ptr.get())
           ->add_template(new_var_specs, SSA.ns);
 
-      var_specs.insert(
-        var_specs.end(), new_var_specs.begin(), new_var_specs.end());
+      all_var_specs.insert(
+        all_var_specs.end(), new_var_specs.begin(), new_var_specs.end());
     }
   }
 }

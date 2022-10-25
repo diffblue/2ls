@@ -65,6 +65,11 @@ public:
     virtual exprt get_row_expr(
       rowt row,
       const template_rowt &templ_row) const=0;
+
+    virtual bool is_row_top(rowt row, const template_rowt &templ_row) const
+    {
+      return false;
+    }
   };
 
   /// Domain should return true if it wants to improve its invariants.
@@ -136,10 +141,10 @@ public:
   ///   pre_constraint       for LOOP rows
   ///   value_row_expression for IN and OUT rows
   // (not useful to make value const (e.g. union-find))
-  void project_on_vars(
-    domaint::valuet &value,
-    const var_sett &vars,
-    exprt &result) override;
+  void project_on_vars(domaint::valuet &value,
+                       const var_sett &vars,
+                       exprt &result,
+                       bool ignore_top) override;
 
   /// Return the loop guard for the given template row.
   /// By default, it is the second conjunct in the row pre-guard.

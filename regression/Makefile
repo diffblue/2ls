@@ -9,7 +9,8 @@ DIRS = \
 	   heap \
 	   heap-data \
 	   memsafety \
-	 instrumentation
+	 instrumentation \
+	 arrays
 
 test:
 	$(foreach var,$(DIRS), make -C $(var) test || exit 1;)

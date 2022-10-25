@@ -7,7 +7,8 @@ SRC = local_ssa.cpp ssa_var_collector.cpp \
       unwindable_local_ssa.cpp ssa_db.cpp \
       ssa_pointed_objects.cpp  may_alias_analysis.cpp \
       dynobj_instance_analysis.cpp dynamic_objects.cpp \
-      goto_unwinder.cpp
+      goto_unwinder.cpp \
+      array_index_analysis.cpp expression_dependence.cpp
 
 include ../config.inc
 include $(CPROVER_DIR)/src/config.inc

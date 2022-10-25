@@ -1,6 +1,7 @@
 SRC = tpolyhedra_domain.cpp equality_domain.cpp domain.cpp \
   predabs_domain.cpp heap_domain.cpp \
   sympath_domain.cpp \ symbolic_path.cpp\
+  array_domain.cpp \
   ssa_analyzer.cpp util.cpp incremental_solver.cpp \
   strategy_solver_binsearch.cpp \
   strategy_solver_base.cpp \
@@ -12,7 +13,8 @@ SRC = tpolyhedra_domain.cpp equality_domain.cpp domain.cpp \
   simple_domain.cpp \
   strategy_solver_simple.cpp \
   product_domain.cpp \
-  strategy_solver_product.cpp
+  strategy_solver_product.cpp \
+  strategy_solver_array.cpp
 
 include ../config.inc
 include $(CPROVER_DIR)/src/config.inc

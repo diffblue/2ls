@@ -195,6 +195,22 @@ const exprt symbolic_dereference(const exprt &expr, const namespacet &ns)
 
     return std::move(member);
   }
+  else if(expr.id() == ID_index)
+  {
+    index_exprt index_expr = to_index_expr(expr);
+    index_expr.array() = symbolic_dereference(index_expr.array(), ns);
+    ssa_objectt array_obj(index_expr.array(), ns);
+    if(array_obj)
+    {
+      std::string id = id2string(array_obj.get_identifier()) + "'idx";
+      symbol_exprt deref(id, expr.type());
+      copy_pointed_info(deref, index_expr.array());
+      deref.set("#has_symbolic_deref", has_symbolic_deref(index_expr.array()));
+      return std::move(deref);
+    }
+    else
+      return expr;
+  }
   else
   {
     exprt tmp=expr;
