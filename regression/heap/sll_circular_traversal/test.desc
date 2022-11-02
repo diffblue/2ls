@@ -1,0 +1,6 @@
+CORE
+main.c
+--heap --intervals --havoc --unwind 4
+^EXIT=0$
+^SIGNAL=0$
+^VERIFICATION SUCCESSFUL$
