@@ -152,14 +152,11 @@ void goto_local_unwindert::rename_dynamic_objects()
   std::map<std::string, std::string> rename_map;
   for(auto &i_it : goto_function.body.instructions)
   {
-    if(i_it.is_assign())
+    if(i_it.is_assign() && i_it.code().get_bool("#malloc"))
     {
       exprt &assign = i_it.assign_rhs_nonconst();
-      if(dynamic_objects.have_objects(i_it))
-      {
-        dynamic_objects.clear(i_it);
-        rename_dynamic_objects_rec(i_it, assign, rename_map);
-      }
+      dynamic_objects.clear(i_it);
+      rename_dynamic_objects_rec(i_it, assign, rename_map);
     }
   }
 }
@@ -224,6 +221,8 @@ void goto_local_unwindert::unwind_function(
   for(auto i_it=goto_function.body.instructions.begin();
       i_it!=goto_function.body.instructions.end();)
   {
+    if(dynamic_objects.have_objects(*i_it))
+      i_it->code_nonconst().set("#malloc", true);
     // The new unwinds will be inserted between the existing ones and the
     // loop, update the existing unwind flags.
     int unwind_flag_value=i_it->code().get_int(unwind_flag);
