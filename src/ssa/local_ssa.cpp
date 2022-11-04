@@ -1527,8 +1527,8 @@ bool local_SSAt::can_reuse_symderef(
 
   // If the pointer that is dereferenced was overwritten, the symbolic deref
   // is not valid.
-  if(pointer_def.is_assignment() && pointer_def.loc->location_number>=
-                                    symbolic_def.loc->location_number)
+  if((pointer_def.is_assignment() || pointer_def.is_phi()) &&
+     pointer_def.loc->location_number >= symbolic_def.loc->location_number)
     return false;
 
   // Search all aliasing objects (objects potentially pointed by the pointer)
