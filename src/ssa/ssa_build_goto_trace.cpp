@@ -85,11 +85,12 @@ bool ssa_build_goto_tracet::record_step(
   goto_tracet &goto_trace,
   unsigned &step_nr)
 {
-  bool taken=true;
+  bool taken = true;
   goto_trace_stept step;
-  step.pc=current_pc;
-  step.step_nr=step_nr;
-  step.thread_nr=0;
+  step.pc = current_pc;
+  step.step_nr = step_nr;
+  step.thread_nr = 0;
+  step.function_id = current_pc->source_location().get_function();
 
   switch(current_pc->type())
   {
