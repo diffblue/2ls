@@ -40,8 +40,8 @@ array_domaint::array_domaint(unsigned int domain_number,
   // representing one segment.
   make_segments(var_specs, SSA.ns);
   auto segment_var_specs = var_specs_from_segments();
-  inner_domain =
-    template_generator.instantiate_standard_domains(segment_var_specs, SSA);
+  inner_domain = template_generator.instantiate_standard_domains(
+    segment_var_specs, SSA, &renaming_map);
 
   // For the zones domain, add some custom template rows for differences among
   // segments and scalars

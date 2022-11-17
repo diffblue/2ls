@@ -308,7 +308,7 @@ void template_generator_baset::add_var(const vart &var,
                                        var_specst &var_specs)
 {
   exprt aux_expr=true_exprt();
-  if(std_invariants && pre_guard.id()==ID_and)
+  if(std_invariants && var.type().id() != ID_array && pre_guard.id() == ID_and)
   {
     const and_exprt &pre_guard_and=to_and_expr(pre_guard);
     exprt init_guard=and_exprt(
@@ -592,10 +592,12 @@ bool template_generator_baset::instantiate_custom_templates(
 
 std::unique_ptr<domaint> template_generator_baset::instantiate_standard_domains(
   const var_specst &var_specs,
-  const local_SSAt &SSA)
+  const local_SSAt &SSA,
+  replace_mapt *renaming_map_)
 {
-  replace_mapt &renaming_map=
-    std_invariants ? aux_renaming_map : post_renaming_map;
+  replace_mapt &renaming_map =
+    renaming_map_ ? *renaming_map_
+                  : std_invariants ? aux_renaming_map : post_renaming_map;
 
   domain_vect domains;
   // get domains from command line options
@@ -620,7 +622,7 @@ std::unique_ptr<domaint> template_generator_baset::instantiate_standard_domains(
     auto array_var_specs = filter_array_domain(var_specs);
     if(!array_var_specs.empty())
       domains.emplace_back(new array_domaint(domain_number++,
-                                             renaming_map,
+                                             post_renaming_map,
                                              init_renaming_map,
                                              array_var_specs,
                                              SSA,
