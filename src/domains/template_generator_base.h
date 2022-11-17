@@ -153,7 +153,8 @@ protected:
   virtual void handle_special_functions(const local_SSAt &SSA);
   std::unique_ptr<domaint>
   instantiate_standard_domains(const var_specst &var_specs_,
-                               const local_SSAt &SSA);
+                               const local_SSAt &SSA,
+                               replace_mapt *renaming_map_ = nullptr);
   bool instantiate_custom_templates(const local_SSAt &SSA);
 
   void rename_aux_post(symbol_exprt &expr)

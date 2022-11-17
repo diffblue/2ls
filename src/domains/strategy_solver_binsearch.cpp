@@ -38,6 +38,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 
   exprt::operandst strategy_cond_exprs;
   tpolyhedra_domain.make_not_post_constraints(inv, strategy_cond_exprs);
+  exprt post = disjunction(strategy_cond_exprs);
 
   tpolyhedra_domain.strategy_cond_literals.resize(strategy_cond_exprs.size());
 
