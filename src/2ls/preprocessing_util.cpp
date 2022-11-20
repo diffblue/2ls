@@ -849,3 +849,43 @@ void twols_parse_optionst::make_symbolic_array_indices(goto_modelt &goto_model)
   }
   goto_model.goto_functions.update();
 }
+
+/// Makes user input nondeterministic, i.e. arguments of fscanf starting
+/// from the second one are assigned a nondeterministic value.
+void twols_parse_optionst::make_scanf_nondet(goto_modelt &goto_model)
+{
+  for(auto &f_it : goto_model.goto_functions.function_map)
+  {
+    Forall_goto_program_instructions(i_it, f_it.second.body)
+    {
+      if(!i_it->is_function_call())
+        continue;
+      auto name = to_symbol_expr(i_it->call_function()).get_identifier();
+      // FIXME: this is a bit hacky and should probably be handled better in
+      //        coordination with CBMC.
+      int start;
+      if(name == "__isoc99_fscanf" || name == "fscanf")
+        start = 2;
+      else if(name == "__isoc99_scanf" || name == "scanf")
+        start = 1;
+      else
+        continue;
+      int i = 0;
+      for(const auto &arg : i_it->call_arguments())
+      {
+        if(i >= start)
+        {
+          if(arg.id() == ID_address_of)
+          {
+            auto lhs = dereference_exprt(arg);
+            side_effect_expr_nondett rhs(
+              to_address_of_expr(arg).object().type(), i_it->source_location());
+            f_it.second.body.insert_after(
+              i_it, goto_programt::make_assignment(lhs, rhs));
+          }
+        }
+        i++;
+      }
+    }
+  }
+}
