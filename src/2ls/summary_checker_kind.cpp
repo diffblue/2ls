@@ -44,6 +44,21 @@ resultt summary_checker_kindt::operator()()
     {
       summarize(goto_model);
       result=check_properties();
+
+      if(result == resultt::UNKNOWN &&
+         options.get_bool_option("values-refine") &&
+         options.get_bool_option("intervals"))
+      {
+        // Now try with zones
+        summary_db.mark_recompute_all();
+        options.set_option("intervals", false);
+        options.set_option("zones", true);
+        summarize(goto_model);
+        result = check_properties();
+        // Reset back to intervals (for the next unwinding)
+        options.set_option("intervals", true);
+        options.set_option("zones", false);
+      }
     }
 
     if(result==resultt::PASS)
