@@ -296,7 +296,6 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
   // do k-induction refinement
   if(cmdline.isset("k-induction"))
   {
-    options.set_option("std-invariants", true);
     options.set_option("k-induction", true);
     options.set_option("inline", true);
     if(!cmdline.isset("unwind"))
