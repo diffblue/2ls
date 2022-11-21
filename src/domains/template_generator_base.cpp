@@ -628,6 +628,8 @@ std::unique_ptr<domaint> template_generator_baset::instantiate_standard_domains(
                                              SSA,
                                              solver,
                                              *this));
+    else
+      array_domaint::clear_array_renamings(post_renaming_map);
   }
 
   if(options.get_bool_option("intervals"))
