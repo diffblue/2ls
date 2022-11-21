@@ -1113,6 +1113,7 @@ bool twols_parse_optionst::process_goto_program(
     // Replace malloc
     dynamic_objects=util_make_unique<dynamic_objectst>(goto_model);
     dynamic_objects->replace_malloc(options.get_bool_option("pointer-check"));
+    dynamic_objects->generate_instances(options);
 
     // Allow recording of mallocs and memory leaks
     if(options.get_bool_option("pointer-check"))
@@ -1136,8 +1137,6 @@ bool twols_parse_optionst::process_goto_program(
     {
       inline_main(goto_model);
     }
-
-    dynamic_objects->generate_instances(options);
 
     if(!cmdline.isset("independent-properties"))
     {
