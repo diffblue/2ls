@@ -184,6 +184,8 @@ public:
                       const local_SSAt &SSA,
                       message_handlert &message_handler) override;
 
+  static void clear_array_renamings(replace_mapt &renaming_map);
+
 protected:
   void make_segments(const var_specst &var_specs, const namespacet &ns);
   array_segmentt *add_segment(const var_spect &var_spec,
@@ -203,7 +205,6 @@ protected:
                      const exprt &array_size);
 
   void extend_indices_by_loop_inits(var_listt &indices);
-  void clear_non_lb_renamings();
 
   void add_array_difference_template(tpolyhedra_domaint *domain,
                                      const var_specst &segment_var_specs,

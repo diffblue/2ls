@@ -144,7 +144,7 @@ void array_domaint::make_segments(const var_specst &var_specs,
   }
   // renaming_map contains some extra mappings that we used to determine index
   // ordering but now we have to remove them
-  clear_non_lb_renamings();
+  clear_array_renamings(renaming_map);
 }
 
 /// Add a single segment to the template.
@@ -810,7 +810,7 @@ void array_domaint::extend_indices_by_loop_inits(var_listt &indices)
 /// Remove all renamings that do not rename loop-back variables
 /// These are necessary for array domain initialization but can spoil
 /// the invariant inference process.
-void array_domaint::clear_non_lb_renamings()
+void array_domaint::clear_array_renamings(replace_mapt &renaming_map)
 {
   for(auto it = renaming_map.begin(); it != renaming_map.end();)
   {

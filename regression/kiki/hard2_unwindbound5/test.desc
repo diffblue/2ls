@@ -1,6 +1,6 @@
 CORE
 main.c
---heap --values-refine --k-induction --competition-mode
+--heap --intervals --k-induction --competition-mode
 ^EXIT=10$
 ^SIGNAL=0$
 ^.*FAILURE$
