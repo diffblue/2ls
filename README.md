@@ -42,6 +42,7 @@ Releases
 
 Download using `git clone http://github.com/diffblue/2ls; cd 2ls; git checkout 2ls-x.y`
 
+* [2LS 0.10](http://github.com/diffblue/2ls/releases/tag/2ls-0.10) (01/2023)
 * [2LS 0.9](http://github.com/diffblue/2ls/releases/tag/2ls-0.9) (03/2020)
 * [2LS 0.8](http://github.com/diffblue/2ls/releases/tag/2ls-0.8) (11/2019)
 * [2LS 0.7](http://github.com/diffblue/2ls/releases/tag/2ls-0.7) (08/2018)
@@ -100,6 +101,10 @@ Since release 0.7:
 
 * Heap abstract domain with intervals or zones: --heap-[intervals|zones]
 * Heap abstract domain with intervals or zones and loop paths: --heap-[intervals|zones] --sympath
+
+Since release 0.10:
+
+* Array abstract domain: --arrays
 
 Interprocedural Termination Analysis
 ====================================
