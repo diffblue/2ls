@@ -42,6 +42,8 @@ Releases
 
 Download using `git clone http://github.com/diffblue/2ls; cd 2ls; git checkout 2ls-x.y`
 
+* [2LS 0.9](http://github.com/diffblue/2ls/releases/tag/2ls-0.9) (03/2020)
+* [2LS 0.8](http://github.com/diffblue/2ls/releases/tag/2ls-0.8) (11/2019)
 * [2LS 0.7](http://github.com/diffblue/2ls/releases/tag/2ls-0.7) (08/2018)
 * [2LS 0.6](http://github.com/diffblue/2ls/releases/tag/2ls-0.6) (12/2017)
 * [2LS 0.5](http://github.com/diffblue/2ls/releases/tag/2ls-0.5) (01/2017)
@@ -52,6 +54,9 @@ Download using `git clone http://github.com/diffblue/2ls; cd 2ls; git checkout 2
 
 Software Verification Competition Contributions
 
+* [SV-COMP 2022](http://github.com/diffblue/2ls/releases/tag/0.9.6-sv-comp22) (01/2022)
+* [SV-COMP 2021](http://github.com/diffblue/2ls/releases/tag/0.9.1-sv-comp21) (12/2020)
+* [SV-COMP 2020](http://github.com/diffblue/2ls/releases/tag/0.8.2-sv-comp20) (03/2020)
 * [SV-COMP 2019](http://github.com/diffblue/2ls/releases/tag/0.7.2-sv-comp19) (12/2018)
 * [SV-COMP 2018](http://github.com/diffblue/2ls/releases/tag/2ls-0.6) (12/2017)
 * [SV-COMP 2017](http://github.com/diffblue/2ls/releases/tag/2ls-0.5-sv-comp-2017) (01/2017)
@@ -138,6 +143,7 @@ Contributors
 * Björn Wachter
 * Cristina David
 * Daniel Kroening
+* Frantisek Necas
 * Hongyi Chen
 * Madhukar Kumar
 * Martin Brain
