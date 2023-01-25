@@ -55,6 +55,7 @@ Download using `git clone http://github.com/diffblue/2ls; cd 2ls; git checkout 2
 
 Software Verification Competition Contributions
 
+* [SV-COMP 2023](http://github.com/diffblue/2ls/releases/tag/0.10.0-sv-comp23) (01/2023)
 * [SV-COMP 2022](http://github.com/diffblue/2ls/releases/tag/0.9.6-sv-comp22) (01/2022)
 * [SV-COMP 2021](http://github.com/diffblue/2ls/releases/tag/0.9.1-sv-comp21) (12/2020)
 * [SV-COMP 2020](http://github.com/diffblue/2ls/releases/tag/0.8.2-sv-comp20) (03/2020)
