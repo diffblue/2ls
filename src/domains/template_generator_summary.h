@@ -28,10 +28,10 @@ public:
   {
   }
 
-  virtual void operator()(
+  void operator()(
     unsigned _domain_number,
     const local_SSAt &SSA,
-    bool forward=true);
+    bool forward = true);
 
   virtual var_sett inout_vars();
   virtual var_sett loop_vars();

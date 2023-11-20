@@ -46,15 +46,6 @@ public:
   {
   }
 
-  virtual void operator()(
-    unsigned _domain_number,
-    const local_SSAt &SSA,
-    bool forward=true)
-  {
-    domain_number=_domain_number;
-    assert(false);
-  }
-
   virtual var_sett all_vars();
 
   inline domaint *domain()
