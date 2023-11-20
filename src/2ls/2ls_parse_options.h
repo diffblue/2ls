@@ -185,7 +185,7 @@ protected:
   void remove_dead_goto(goto_modelt &goto_model);
   void memory_assert_info(goto_modelt &goto_model);
   void handle_freed_ptr_compare(goto_modelt &goto_model);
-  void assert_no_builtin_functions(goto_modelt &goto_model);
+  void assert_no_unsupported_functions(goto_modelt &goto_model);
   void assert_no_atexit(goto_modelt &goto_model);
   void fix_goto_targets(goto_modelt &goto_model);
   void make_assertions_false(goto_modelt &goto_model);

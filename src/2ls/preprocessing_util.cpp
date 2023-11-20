@@ -653,9 +653,12 @@ void twols_parse_optionst::handle_freed_ptr_compare(goto_modelt &goto_model)
   }
 }
 
-/// Add assertions preventing analysis of programs using GCC builtin functions
-/// that are not supported and can cause false results.
-void twols_parse_optionst::assert_no_builtin_functions(goto_modelt &goto_model)
+/// Fail if the program contains any functions that 2LS does not currently
+/// support. These include:
+///     - builtin gcc functions
+///     - longjmp (not supported by CBMC)
+void twols_parse_optionst::assert_no_unsupported_functions(
+  goto_modelt &goto_model)
 {
   forall_goto_program_instructions(
     i_it,
@@ -666,6 +669,7 @@ void twols_parse_optionst::assert_no_builtin_functions(goto_modelt &goto_model)
     assert(
       name.find("__builtin_")==std::string::npos &&
       name.find("__CPROVER_overflow")==std::string::npos);
+    assert(name != "longjmp" && name != "_longjmp" && name != "siglongjmp");
 
     if(i_it->is_assign())
     {

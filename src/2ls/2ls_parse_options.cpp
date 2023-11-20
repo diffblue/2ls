@@ -1045,7 +1045,7 @@ bool twols_parse_optionst::process_goto_program(
     }
 
     if(options.get_bool_option("competition-mode"))
-      assert_no_builtin_functions(goto_model);
+      assert_no_unsupported_functions(goto_model);
 
     make_scanf_nondet(goto_model);
 
