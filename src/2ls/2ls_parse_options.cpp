@@ -1023,7 +1023,7 @@ bool twols_parse_optionst::process_goto_program(
     remove_returns(goto_model);
 
     if(options.get_bool_option("competition-mode"))
-      assert_no_atexit(goto_model);
+      assert_no_unsupported_function_calls(goto_model);
 
     // now do full inlining, if requested
     if(options.get_bool_option("inline"))
