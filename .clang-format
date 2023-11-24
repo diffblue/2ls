@@ -1,6 +1,6 @@
 ---
 AccessModifierOffset: '-2'
-AlignAfterOpenBracket: Align
+AlignAfterOpenBracket: AlwaysBreak
 AlignConsecutiveAssignments: 'false'
 AlignConsecutiveDeclarations: 'false'
 AlignEscapedNewlinesLeft: 'false'
