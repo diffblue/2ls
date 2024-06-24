@@ -1,0 +1,6 @@
+KNOWNBUG
+main.c
+--k-induction
+^EXIT=0$
+^SIGNAL=0$
+^** 1 of 1 failed$
