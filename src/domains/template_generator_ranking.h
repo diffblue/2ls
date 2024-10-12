@@ -28,10 +28,10 @@ public:
   {
   }
 
-  virtual void operator()(
+  void operator()(
     unsigned _domain_number,
     const local_SSAt &SSA,
-    bool forward=true);
+    bool forward = true);
 
 protected:
   void collect_variables_ranking(

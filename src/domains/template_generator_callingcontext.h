@@ -27,12 +27,12 @@ public:
   {
   }
 
-  virtual void operator()(
+  void operator()(
     unsigned _domain_number,
     const local_SSAt &SSA,
     local_SSAt::nodest::const_iterator n_it,
     local_SSAt::nodet::function_callst::const_iterator f_it,
-    bool forward=true);
+    bool forward = true);
 
   virtual var_sett callingcontext_vars();
 

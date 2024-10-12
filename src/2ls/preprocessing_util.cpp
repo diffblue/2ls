@@ -22,6 +22,8 @@ Author: Peter Schrammel
 
 #include "2ls_parse_options.h"
 
+#define NOT_MATH_FUN(call, fun) call != fun &&call != fun "f" && call != fun "l"
+
 void twols_parse_optionst::inline_main(goto_modelt &goto_model)
 {
   irep_idt start=goto_functionst::entry_point();
@@ -653,9 +655,12 @@ void twols_parse_optionst::handle_freed_ptr_compare(goto_modelt &goto_model)
   }
 }
 
-/// Add assertions preventing analysis of programs using GCC builtin functions
-/// that are not supported and can cause false results.
-void twols_parse_optionst::assert_no_builtin_functions(goto_modelt &goto_model)
+/// Fail if the program contains any functions that 2LS does not currently
+/// support. These include:
+///     - builtin gcc functions
+///     - longjmp (not supported by CBMC)
+void twols_parse_optionst::assert_no_unsupported_functions(
+  goto_modelt &goto_model)
 {
   forall_goto_program_instructions(
     i_it,
@@ -666,6 +671,7 @@ void twols_parse_optionst::assert_no_builtin_functions(goto_modelt &goto_model)
     assert(
       name.find("__builtin_")==std::string::npos &&
       name.find("__CPROVER_overflow")==std::string::npos);
+    assert(name != "longjmp" && name != "_longjmp" && name != "siglongjmp");
 
     if(i_it->is_assign())
     {
@@ -674,9 +680,13 @@ void twols_parse_optionst::assert_no_builtin_functions(goto_modelt &goto_model)
   }
 }
 
-/// Prevents usage of atexit function which is not supported, yet
-/// Must be called before inlining since it will lose the calls
-void twols_parse_optionst::assert_no_atexit(goto_modelt &goto_model)
+/// Fail if the program contains a call to an unsupported function. These
+/// include the atexit function and advanced math functions from math.h (
+/// these are either not defined in CBMC at all, or defined very imprecisely,
+/// e.g. the result of cos is in <-1, 1> without any further information).
+/// Must be called before inlining since it will lose the calls.
+void twols_parse_optionst::assert_no_unsupported_function_calls(
+  goto_modelt &goto_model)
 {
   for(const auto &f_it : goto_model.goto_functions.function_map)
   {
@@ -689,6 +699,23 @@ void twols_parse_optionst::assert_no_atexit(goto_modelt &goto_model)
           continue;
         auto &name=id2string(to_symbol_expr(function).get_identifier());
         assert(name!="atexit");
+        assert(
+          // Trigonometry
+          NOT_MATH_FUN(name, "cos") && NOT_MATH_FUN(name, "acos") &&
+          NOT_MATH_FUN(name, "sin") && NOT_MATH_FUN(name, "asin") &&
+          NOT_MATH_FUN(name, "tan") && NOT_MATH_FUN(name, "atan") &&
+          NOT_MATH_FUN(name, "atan2") &&
+          // Hyperbolic
+          NOT_MATH_FUN(name, "cosh") && NOT_MATH_FUN(name, "acosh") &&
+          NOT_MATH_FUN(name, "sinh") && NOT_MATH_FUN(name, "asinh") &&
+          NOT_MATH_FUN(name, "tanh") && NOT_MATH_FUN(name, "atanh") &&
+          // Exponential
+          NOT_MATH_FUN(name, "exp") && NOT_MATH_FUN(name, "exp2") &&
+          NOT_MATH_FUN(name, "expm1") && NOT_MATH_FUN(name, "log") &&
+          NOT_MATH_FUN(name, "log10") && NOT_MATH_FUN(name, "log2") &&
+          NOT_MATH_FUN(name, "log1p") &&
+          // Other
+          NOT_MATH_FUN(name, "erf"));
       }
     }
   }
